@@ -84,6 +84,17 @@ test_copyright() {
   return ${ret}
 }
 
+# Check that we don't use "%zu" or "%zd" in format string for size_t.
+test_printf_size_t() {
+  if grep -n -E '%[0-9]*z[udx]' \
+      $(git ls-files | grep -E '(\.c|\.cc|\.cpp|\.h)$'); then
+    echo "Don't use '%zu' or '%zd' in a format string, instead use " \
+      "'%\" PRIuS \"' or '%\" PRIdS \"'." >&2
+    return 1
+  fi
+  return 0
+}
+
 # Check that "dec_" code doesn't depend on "enc_" headers.
 test_dec_enc_deps() {
   local ret=0

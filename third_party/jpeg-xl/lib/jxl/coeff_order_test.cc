@@ -9,11 +9,11 @@
 
 #include <algorithm>
 #include <numeric>  // iota
-#include <random>
 #include <utility>
 #include <vector>
 
 #include "gtest/gtest.h"
+#include "lib/jxl/base/random.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/coeff_order_fwd.h"
 #include "lib/jxl/dec_bit_reader.h"
@@ -45,20 +45,18 @@ constexpr size_t kSwaps = 32;
 void TestPermutation(Permutation kind, size_t len) {
   std::vector<coeff_order_t> perm(len);
   std::iota(perm.begin(), perm.end(), 0);
-  std::mt19937 rng;
+  Rng rng(0);
   if (kind == kFewSwaps) {
-    std::uniform_int_distribution<size_t> dist(0, len - 1);
     for (size_t i = 0; i < kSwaps; i++) {
-      size_t a = dist(rng);
-      size_t b = dist(rng);
+      size_t a = rng.UniformU(0, len - 1);
+      size_t b = rng.UniformU(0, len - 1);
       std::swap(perm[a], perm[b]);
     }
   }
   if (kind == kFewSlides) {
-    std::uniform_int_distribution<size_t> dist(0, len - 1);
     for (size_t i = 0; i < kSwaps; i++) {
-      size_t a = dist(rng);
-      size_t b = dist(rng);
+      size_t a = rng.UniformU(0, len - 1);
+      size_t b = rng.UniformU(0, len - 1);
       size_t from = std::min(a, b);
       size_t to = std::max(a, b);
       size_t start = perm[from];
@@ -69,7 +67,7 @@ void TestPermutation(Permutation kind, size_t len) {
     }
   }
   if (kind == kRandom) {
-    std::shuffle(perm.begin(), perm.end(), rng);
+    rng.Shuffle(perm.data(), perm.size());
   }
   std::vector<coeff_order_t> out(len);
   size_t size = 0;
@@ -79,7 +77,7 @@ void TestPermutation(Permutation kind, size_t len) {
       EXPECT_EQ(perm[idx], out[idx]);
     }
   }
-  printf("Encoded size: %zu\n", size);
+  printf("Encoded size: %" PRIuS "\n", size);
 }
 
 TEST(CoeffOrderTest, IdentitySmall) { TestPermutation(kIdentity, 256); }

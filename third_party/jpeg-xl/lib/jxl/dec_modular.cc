@@ -497,10 +497,11 @@ Status ModularFrameDecoder::ModularImageToDecodedRect(
              DivCeil(decoded.xsize(), 1 << ch_in.hshift),
              DivCeil(decoded.ysize(), 1 << ch_in.vshift));
       if (r.ysize() != ch_in.h || r.xsize() != ch_in.w) {
-        return JXL_FAILURE(
-            "Dimension mismatch: trying to fit a %zux%zu modular channel into "
-            "a %zux%zu rect",
-            ch_in.w, ch_in.h, r.xsize(), r.ysize());
+        return JXL_FAILURE("Dimension mismatch: trying to fit a %" PRIuS
+                           "x%" PRIuS
+                           " modular channel into "
+                           "a %" PRIuS "x%" PRIuS " rect",
+                           ch_in.w, ch_in.h, r.xsize(), r.ysize());
       }
       if (frame_header.color_transform == ColorTransform::kXYB && c == 2) {
         JXL_ASSERT(!fp);

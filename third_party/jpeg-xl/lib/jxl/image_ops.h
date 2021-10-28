@@ -15,6 +15,7 @@
 
 #include "lib/jxl/base/profiler.h"
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/common.h"
 #include "lib/jxl/image.h"
 
 namespace jxl {

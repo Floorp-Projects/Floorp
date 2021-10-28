@@ -8,8 +8,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <algorithm>
+
 #include "lib/jxl/base/compiler_specific.h"
-#include "lib/jxl/base/robust_statistics.h"
 #include "lib/jxl/field_encodings.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/image.h"
@@ -91,8 +92,16 @@ void Quantizer::SetQuantField(const float quant_dc, const ImageF& qf,
       data[qf.xsize() * y + x] = quant;
     }
   }
-  const float quant_median = Median(&data);
-  const float quant_median_absd = MedianAbsoluteDeviation(data, quant_median);
+  std::nth_element(data.begin(), data.begin() + data.size() / 2, data.end());
+  const float quant_median = data[data.size() / 2];
+  std::vector<float> deviations(data.size());
+  for (size_t i = 0; i < data.size(); i++) {
+    deviations[i] = fabsf(data[i] - quant_median);
+  }
+  std::nth_element(deviations.begin(),
+                   deviations.begin() + deviations.size() / 2,
+                   deviations.end());
+  const float quant_median_absd = deviations[deviations.size() / 2];
   ComputeGlobalScaleAndQuant(quant_dc, quant_median, quant_median_absd);
   SetQuantFieldRect(qf, Rect(qf), raw_quant_field);
 }

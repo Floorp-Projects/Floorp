@@ -211,7 +211,6 @@ JxlEncoderStatus JxlEncoderSetBasicInfo(JxlEncoder* enc,
       break;
     default:
       return JXL_ENC_ERROR;
-      break;
   }
   enc->metadata.m.xyb_encoded = !info->uses_original_profile;
   if (info->orientation > 0 && info->orientation <= 8) {
@@ -219,6 +218,11 @@ JxlEncoderStatus JxlEncoderSetBasicInfo(JxlEncoder* enc,
   } else {
     return JXL_API_ERROR("Invalid value for orientation field");
   }
+  enc->metadata.m.SetIntensityTarget(info->intensity_target);
+  enc->metadata.m.tone_mapping.min_nits = info->min_nits;
+  enc->metadata.m.tone_mapping.relative_to_max_display =
+      info->relative_to_max_display;
+  enc->metadata.m.tone_mapping.linear_below = info->linear_below;
   enc->basic_info_set = true;
   return JXL_ENC_SUCCESS;
 }
@@ -261,6 +265,42 @@ JxlEncoderStatus JxlEncoderOptionsSetDistance(JxlEncoderOptions* options,
   }
   options->values.cparams.butteraugli_distance = distance;
   return JXL_ENC_SUCCESS;
+}
+
+JxlEncoderStatus JxlEncoderOptionsSetAsInteger(JxlEncoderOptions* options,
+                                               JxlEncoderOptionId option,
+                                               int32_t value) {
+  switch (option) {
+    case JXL_ENC_OPTION_RESAMPLING:
+      if (value != 0 && value != 1 && value != 2 && value != 4 && value != 8) {
+        return JXL_ENC_ERROR;
+      }
+      options->values.cparams.resampling = value;
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_EXTRA_CHANNEL_RESAMPLING:
+      if (value != 0 && value != 1 && value != 2 && value != 4 && value != 8) {
+        return JXL_ENC_ERROR;
+      }
+      // The implementation doesn't support the default choice between 1x1 and
+      // 2x2 for extra channels, so 1x1 is set as the default.
+      if (value == 0) value = 1;
+      options->values.cparams.ec_resampling = value;
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_NOISE:
+      options->values.cparams.noise = static_cast<jxl::Override>(value);
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_DOTS:
+      options->values.cparams.dots = static_cast<jxl::Override>(value);
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_PATCHES:
+      options->values.cparams.patches = static_cast<jxl::Override>(value);
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_GABORISH:
+      options->values.cparams.gaborish = static_cast<jxl::Override>(value);
+      return JXL_ENC_SUCCESS;
+    default:
+      return JXL_ENC_ERROR;
+  }
 }
 
 JxlEncoder* JxlEncoderCreate(const JxlMemoryManager* memory_manager) {

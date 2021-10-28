@@ -48,9 +48,9 @@ TEST(PassesTest, RoundtripSmallPasses) {
 
   CodecInOut io2;
   Roundtrip(&io, cparams, dparams, pool, &io2);
-  EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
-                                /*distmap=*/nullptr, pool),
-            1.5);
+  EXPECT_THAT(ButteraugliDistance(io, io2, cparams.ba_params,
+                                  /*distmap=*/nullptr, pool),
+              IsSlightlyBelow(1.0));
 }
 
 TEST(PassesTest, RoundtripUnalignedPasses) {
@@ -68,9 +68,9 @@ TEST(PassesTest, RoundtripUnalignedPasses) {
 
   CodecInOut io2;
   Roundtrip(&io, cparams, dparams, pool, &io2);
-  EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
-                                /*distmap=*/nullptr, pool),
-            3.2);
+  EXPECT_THAT(ButteraugliDistance(io, io2, cparams.ba_params,
+                                  /*distmap=*/nullptr, pool),
+              IsSlightlyBelow(1.6));
 }
 
 TEST(PassesTest, RoundtripMultiGroupPasses) {
@@ -88,16 +88,16 @@ TEST(PassesTest, RoundtripMultiGroupPasses) {
   cparams.progressive_mode = true;
   CodecInOut io2;
   Roundtrip(&io, cparams, dparams, &pool, &io2);
-  EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
-                                /*distmap=*/nullptr, &pool),
-            1.99f);
+  EXPECT_THAT(ButteraugliDistance(io, io2, cparams.ba_params,
+                                  /*distmap=*/nullptr, &pool),
+              IsSlightlyBelow(1.2f));
 
   cparams.butteraugli_distance = 2.0f;
   CodecInOut io3;
   Roundtrip(&io, cparams, dparams, &pool, &io3);
-  EXPECT_LE(ButteraugliDistance(io, io3, cparams.ba_params,
-                                /*distmap=*/nullptr, &pool),
-            3.0f);
+  EXPECT_THAT(ButteraugliDistance(io, io3, cparams.ba_params,
+                                  /*distmap=*/nullptr, &pool),
+              IsSlightlyBelow(2.0f));
 }
 
 TEST(PassesTest, RoundtripLargeFastPasses) {
@@ -380,9 +380,9 @@ TEST(PassesTest, RoundtripSmallNoGaborishPasses) {
 
   CodecInOut io2;
   Roundtrip(&io, cparams, dparams, pool, &io2);
-  EXPECT_LE(ButteraugliDistance(io, io2, cparams.ba_params,
-                                /*distmap=*/nullptr, pool),
-            1.7);
+  EXPECT_THAT(ButteraugliDistance(io, io2, cparams.ba_params,
+                                  /*distmap=*/nullptr, pool),
+              IsSlightlyBelow(1.2));
 }
 
 }  // namespace

@@ -10,12 +10,12 @@
 
 #include <algorithm>
 #include <numeric>
-#include <random>
 #include <vector>
 
 #include "gtest/gtest.h"
 #include "lib/jxl/base/bits.h"
 #include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/random.h"
 #include "lib/jxl/base/thread_pool_internal.h"
 
 namespace jxl {
@@ -42,7 +42,7 @@ void Roundtrip(size_t n, WorkingSet<PermutationT>* ws) {
   JXL_ASSERT(n != 0);
   const size_t padded_n = 1ull << CeilLog2Nonzero(n);
 
-  std::mt19937 rng(n * 65537 + 13);
+  Rng rng(n * 65537 + 13);
 
   // Ensure indices fit into PermutationT
   EXPECT_LE(n, 1ULL << (sizeof(PermutationT) * 8));
@@ -51,7 +51,7 @@ void Roundtrip(size_t n, WorkingSet<PermutationT>* ws) {
 
   // For various random permutations:
   for (size_t rep = 0; rep < 100; ++rep) {
-    std::shuffle(ws->permutation.begin(), ws->permutation.begin() + n, rng);
+    rng.Shuffle(ws->permutation.data(), n);
 
     // Must decode to the same permutation
     ComputeLehmerCode(ws->permutation.data(), ws->temp.data(), n,

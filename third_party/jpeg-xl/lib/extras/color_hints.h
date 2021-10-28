@@ -17,8 +17,8 @@
 #include <string>
 #include <vector>
 
+#include "lib/extras/packed_image.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/codec_in_out.h"
 
 namespace jxl {
 
@@ -61,11 +61,11 @@ class ColorHints {
 
 namespace extras {
 
-// Apply the color hints to the decoded image in CodecInOut if any.
+// Apply the color hints to the decoded image in PackedPixelFile if any.
 // color_already_set tells whether the color encoding was already set, in which
 // case the hints are ignored if any hint is passed.
 Status ApplyColorHints(const ColorHints& color_hints, bool color_already_set,
-                       bool is_gray, CodecInOut* io);
+                       bool is_gray, PackedPixelFile* ppf);
 
 }  // namespace extras
 }  // namespace jxl

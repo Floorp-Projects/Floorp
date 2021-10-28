@@ -193,7 +193,7 @@ TEST(SplinesTest, Serialization) {
   writer.ZeroPadToByte();
   const size_t bits_written = writer.BitsWritten();
 
-  printf("Wrote %zu bits of splines.\n", bits_written);
+  printf("Wrote %" PRIuS " bits of splines.\n", bits_written);
 
   BitReader reader(writer.GetSpan());
   Splines decoded_splines;

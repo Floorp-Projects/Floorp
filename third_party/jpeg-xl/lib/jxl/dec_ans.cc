@@ -207,9 +207,9 @@ Status DecodeANSCodes(const size_t num_histograms,
             return JXL_STATUS(StatusCode::kNotEnoughBytes,
                               "Not enough bytes for huffman code");
           }
-          return JXL_FAILURE(
-              "Invalid huffman tree number %zu, alphabet size %u", c,
-              alphabet_sizes[c]);
+          return JXL_FAILURE("Invalid huffman tree number %" PRIuS
+                             ", alphabet size %u",
+                             c, alphabet_sizes[c]);
         }
       } else {
         // 0-bit codes does not require extension tables.
@@ -235,7 +235,7 @@ Status DecodeANSCodes(const size_t num_histograms,
         return JXL_FAILURE("Invalid histogram bitstream.");
       }
       if (counts.size() > max_alphabet_size) {
-        return JXL_FAILURE("Alphabet size is too long: %zu", counts.size());
+        return JXL_FAILURE("Alphabet size is too long: %" PRIuS, counts.size());
       }
       while (!counts.empty() && counts.back() == 0) {
         counts.pop_back();
@@ -366,7 +366,8 @@ Status DecodeHistograms(BitReader* br, size_t num_contexts, ANSCode* code,
   // decoding. There's no benefit to doing that, though.
   if (!code->lz77.enabled && code->max_num_bits > 32) {
     // Just emit a warning as there are many opportunities for false positives.
-    JXL_WARNING("Histogram can represent numbers that are too large: %zu\n",
+    JXL_WARNING("Histogram can represent numbers that are too large: %" PRIuS
+                "\n",
                 code->max_num_bits);
   }
   return true;

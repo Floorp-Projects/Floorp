@@ -160,7 +160,8 @@ Status ImageBlender::PrepareBlending(
 
   if (bg.xsize() < image_xsize || bg.ysize() < image_ysize ||
       bg.origin.x0 != 0 || bg.origin.y0 != 0) {
-    return JXL_FAILURE("Trying to use a %zux%zu crop as a background",
+    return JXL_FAILURE("Trying to use a %" PRIuS "x%" PRIuS
+                       " crop as a background",
                        bg.xsize(), bg.ysize());
   }
   if (state.metadata->m.xyb_encoded) {
@@ -170,15 +171,16 @@ Status ImageBlender::PrepareBlending(
   }
 
   if (!overlap_.IsInside(Rect(0, 0, foreground_xsize, foreground_ysize))) {
-    return JXL_FAILURE("Trying to use a %zux%zu crop as a foreground",
+    return JXL_FAILURE("Trying to use a %" PRIuS "x%" PRIuS
+                       " crop as a foreground",
                        foreground_xsize, foreground_ysize);
   }
 
   if (!cropbox_.IsInside(bg)) {
-    return JXL_FAILURE(
-        "Trying blend %zux%zu to (%zu,%zu), but background is %zux%zu",
-        cropbox_.xsize(), cropbox_.ysize(), cropbox_.x0(), cropbox_.y0(),
-        bg.xsize(), bg.ysize());
+    return JXL_FAILURE("Trying blend %" PRIuS "x%" PRIuS " to (%" PRIuS
+                       ",%" PRIuS "), but background is %" PRIuS "x%" PRIuS,
+                       cropbox_.xsize(), cropbox_.ysize(), cropbox_.x0(),
+                       cropbox_.y0(), bg.xsize(), bg.ysize());
   }
 
   Rect frame_rects_storage[4], output_rects_storage[4];
@@ -209,8 +211,11 @@ Status ImageBlender::PrepareBlending(
           src.extra_channels()[i].ysize() < image_ysize || src.origin.x0 != 0 ||
           src.origin.y0 != 0) {
         return JXL_FAILURE(
-            "Invalid size %zux%zu or origin %+d%+d for extra channel %zu of "
-            "reference frame %zu, expected at least %zux%zu+0+0",
+            "Invalid size %" PRIuS "x%" PRIuS
+            " or origin %+d%+d for extra channel %" PRIuS
+            " of "
+            "reference frame %" PRIuS ", expected at least %" PRIuS "x%" PRIuS
+            "+0+0",
             src.extra_channels()[i].xsize(), src.extra_channels()[i].ysize(),
             static_cast<int>(src.origin.x0), static_cast<int>(src.origin.y0), i,
             static_cast<size_t>(eci.source), image_xsize, image_ysize);

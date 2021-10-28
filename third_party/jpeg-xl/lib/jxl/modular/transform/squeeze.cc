@@ -33,7 +33,7 @@ void InvHSqueeze(Image &input, uint32_t c, uint32_t rc, ThreadPool *pool) {
   Channel chout(chin.w + chin_residual.w, chin.h, chin.hshift - 1, chin.vshift);
   JXL_DEBUG_V(4,
               "Undoing horizontal squeeze of channel %i using residuals in "
-              "channel %i (going from width %zu to %zu)",
+              "channel %i (going from width %" PRIuS " to %" PRIuS ")",
               c, rc, chin.w, chout.w);
 
   if (chin_residual.h == 0) {
@@ -100,7 +100,7 @@ void InvVSqueeze(Image &input, uint32_t c, uint32_t rc, ThreadPool *pool) {
   JXL_DEBUG_V(
       4,
       "Undoing vertical squeeze of channel %i using residuals in channel "
-      "%i (going from height %zu to %zu)",
+      "%i (going from height %" PRIuS " to %" PRIuS ")",
       c, rc, chin.h, chout.h);
 
   if (chin_residual.w == 0) {
@@ -164,7 +164,8 @@ void DefaultSqueezeParameters(std::vector<SqueezeParams> *parameters,
   parameters->clear();
   size_t w = image.channel[image.nb_meta_channels].w;
   size_t h = image.channel[image.nb_meta_channels].h;
-  JXL_DEBUG_V(7, "Default squeeze parameters for %zux%zu image: ", w, h);
+  JXL_DEBUG_V(
+      7, "Default squeeze parameters for %" PRIuS "x%" PRIuS " image: ", w, h);
 
   // do horizontal first on wide images; vertical first on tall images
   bool wide = (w > h);
@@ -173,7 +174,7 @@ void DefaultSqueezeParameters(std::vector<SqueezeParams> *parameters,
       image.channel[image.nb_meta_channels + 1].h == h) {
     // assume channels 1 and 2 are chroma, and can be squeezed first for 4:2:0
     // previews
-    JXL_DEBUG_V(7, "(4:2:0 chroma), %zux%zu image", w, h);
+    JXL_DEBUG_V(7, "(4:2:0 chroma), %" PRIuS "x%" PRIuS " image", w, h);
     SqueezeParams params;
     // horizontal chroma squeeze
     params.horizontal = true;
@@ -195,7 +196,7 @@ void DefaultSqueezeParameters(std::vector<SqueezeParams> *parameters,
       params.horizontal = false;
       parameters->push_back(params);
       h = (h + 1) / 2;
-      JXL_DEBUG_V(7, "Vertical (%zux%zu), ", w, h);
+      JXL_DEBUG_V(7, "Vertical (%" PRIuS "x%" PRIuS "), ", w, h);
     }
   }
   while (w > JXL_MAX_FIRST_PREVIEW_SIZE || h > JXL_MAX_FIRST_PREVIEW_SIZE) {
@@ -203,13 +204,13 @@ void DefaultSqueezeParameters(std::vector<SqueezeParams> *parameters,
       params.horizontal = true;
       parameters->push_back(params);
       w = (w + 1) / 2;
-      JXL_DEBUG_V(7, "Horizontal (%zux%zu), ", w, h);
+      JXL_DEBUG_V(7, "Horizontal (%" PRIuS "x%" PRIuS "), ", w, h);
     }
     if (h > JXL_MAX_FIRST_PREVIEW_SIZE) {
       params.horizontal = false;
       parameters->push_back(params);
       h = (h + 1) / 2;
-      JXL_DEBUG_V(7, "Vertical (%zux%zu), ", w, h);
+      JXL_DEBUG_V(7, "Vertical (%" PRIuS "x%" PRIuS "), ", w, h);
     }
   }
   JXL_DEBUG_V(7, "that's it");

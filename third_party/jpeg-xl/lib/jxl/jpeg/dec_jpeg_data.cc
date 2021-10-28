@@ -10,6 +10,7 @@
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/dec_bit_reader.h"
+#include "lib/jxl/sanitizers.h"
 
 namespace jxl {
 namespace jpeg {
@@ -45,6 +46,9 @@ Status DecodeJPEGData(Span<const uint8_t> encoded, JPEGData* jpeg_data) {
       if (BrotliDecoderIsFinished(brotli_dec)) {
         return JXL_FAILURE("Not enough decompressed output");
       }
+      uint8_t* next_out_before = out;
+      size_t avail_out_before = available_out;
+      msan::MemoryIsInitialized(in, available_in);
       result = BrotliDecoderDecompressStream(brotli_dec, &available_in, &in,
                                              &available_out, &out, nullptr);
       if (result !=
@@ -54,6 +58,7 @@ Status DecodeJPEGData(Span<const uint8_t> encoded, JPEGData* jpeg_data) {
             "Brotli decoding error: %s\n",
             BrotliDecoderErrorString(BrotliDecoderGetErrorCode(brotli_dec)));
       }
+      msan::UnpoisonMemory(next_out_before, avail_out_before - available_out);
     }
     return true;
   };

@@ -40,7 +40,7 @@ class BitsCoder {
                           size_t* JXL_RESTRICT encoded_bits) {
     *encoded_bits = bits;
     if (value >= (1ULL << bits)) {
-      return JXL_FAILURE("Value %u too large for %zu bits", value, bits);
+      return JXL_FAILURE("Value %u too large for %" PRIuS " bits", value, bits);
     }
     return true;
   }
@@ -53,8 +53,8 @@ class BitsCoder {
   static Status Write(const size_t bits, const uint32_t value,
                       BitWriter* JXL_RESTRICT writer) {
     if (value >= (1ULL << bits)) {
-      return JXL_FAILURE("Value %d too large to encode in %zu bits", value,
-                         bits);
+      return JXL_FAILURE("Value %d too large to encode in %" PRIuS " bits",
+                         value, bits);
     }
     writer->Write(bits, value);
     return true;
@@ -181,15 +181,6 @@ class Bundle {
  public:
   static constexpr size_t kMaxExtensions = 64;  // bits in u64
 
-  // Print the type of each visitor called.
-  static constexpr bool PrintVisitors() { return false; }
-  // Print default value for each field and AllDefault result.
-  static constexpr bool PrintAllDefault() { return false; }
-  // Print values decoded for each field in Read.
-  static constexpr bool PrintRead() { return false; }
-  // Print size for each field and CanEncode total_bits.
-  static constexpr bool PrintSizes() { return false; }
-
   // Initializes fields to the default values. It is not recursive to nested
   // fields, this function is intended to be called in the constructors so
   // each nested field will already Init itself.
@@ -235,7 +226,7 @@ class Bundle {
 class Visitor {
  public:
   virtual ~Visitor() = default;
-  virtual Status Visit(Fields* fields, const char* visitor_name) = 0;
+  virtual Status Visit(Fields* fields) = 0;
 
   virtual Status Bool(bool default_value, bool* JXL_RESTRICT value) = 0;
   virtual Status U32(U32Enc, uint32_t, uint32_t*) = 0;
@@ -283,16 +274,13 @@ class Visitor {
 
   // Returns the result of visiting a nested Bundle.
   // Overridden by InitVisitor.
-  virtual Status VisitNested(Fields* fields) { return Visit(fields, ""); }
+  virtual Status VisitNested(Fields* fields) { return Visit(fields); }
 
   // Overridden by ReadVisitor. Enables dynamically-sized fields.
   virtual bool IsReading() const { return false; }
 
   virtual Status BeginExtensions(uint64_t* JXL_RESTRICT extensions) = 0;
   virtual Status EndExtensions() = 0;
-
-  // For debugging
-  virtual const char* VisitorName() = 0;
 };
 
 }  // namespace jxl

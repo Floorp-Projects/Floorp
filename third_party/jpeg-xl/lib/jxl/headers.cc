@@ -195,7 +195,8 @@ Status WriteSizeHeader(const SizeHeader& size, BitWriter* JXL_RESTRICT writer,
                        size_t layer, AuxOut* aux_out) {
   const size_t max_bits = Bundle::MaxBits(size);
   if (max_bits != SizeHeader::kMaxBits) {
-    JXL_ABORT("Please update SizeHeader::kMaxBits from %zu to %zu\n",
+    JXL_ABORT("Please update SizeHeader::kMaxBits from %" PRIuS " to %" PRIuS
+              "\n",
               SizeHeader::kMaxBits, max_bits);
   }
 

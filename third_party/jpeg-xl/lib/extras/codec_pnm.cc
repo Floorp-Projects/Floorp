@@ -22,6 +22,7 @@
 #include "lib/jxl/color_management.h"
 #include "lib/jxl/dec_external_image.h"
 #include "lib/jxl/enc_external_image.h"
+#include "lib/jxl/enc_image_bundle.h"
 #include "lib/jxl/fields.h"  // AllDefault
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_bundle.h"
@@ -257,16 +258,17 @@ Status EncodeHeader(const ImageBundle& ib, const size_t bits_per_sample,
     const char type = ib.IsGray() ? 'f' : 'F';
     const double scale = little_endian ? -1.0 : 1.0;
     *chars_written =
-        snprintf(header, kMaxHeaderSize, "P%c\n%zu %zu\n%.1f\n", type,
-                 ib.oriented_xsize(), ib.oriented_ysize(), scale);
+        snprintf(header, kMaxHeaderSize, "P%c\n%" PRIuS " %" PRIuS "\n%.1f\n",
+                 type, ib.oriented_xsize(), ib.oriented_ysize(), scale);
     JXL_RETURN_IF_ERROR(static_cast<unsigned int>(*chars_written) <
                         kMaxHeaderSize);
   } else if (bits_per_sample == 1) {  // PBM
     if (!ib.IsGray()) {
       return JXL_FAILURE("Cannot encode color as PBM");
     }
-    *chars_written = snprintf(header, kMaxHeaderSize, "P4\n%zu %zu\n",
-                              ib.oriented_xsize(), ib.oriented_ysize());
+    *chars_written =
+        snprintf(header, kMaxHeaderSize, "P4\n%" PRIuS " %" PRIuS "\n",
+                 ib.oriented_xsize(), ib.oriented_ysize());
     JXL_RETURN_IF_ERROR(static_cast<unsigned int>(*chars_written) <
                         kMaxHeaderSize);
   } else {  // PGM/PPM
@@ -274,8 +276,8 @@ Status EncodeHeader(const ImageBundle& ib, const size_t bits_per_sample,
     if (max_val >= 65536) return JXL_FAILURE("PNM cannot have > 16 bits");
     const char type = ib.IsGray() ? '5' : '6';
     *chars_written =
-        snprintf(header, kMaxHeaderSize, "P%c\n%zu %zu\n%u\n", type,
-                 ib.oriented_xsize(), ib.oriented_ysize(), max_val);
+        snprintf(header, kMaxHeaderSize, "P%c\n%" PRIuS " %" PRIuS "\n%u\n",
+                 type, ib.oriented_xsize(), ib.oriented_ysize(), max_val);
     JXL_RETURN_IF_ERROR(static_cast<unsigned int>(*chars_written) <
                         kMaxHeaderSize);
   }
@@ -306,45 +308,72 @@ void VerticallyFlipImage(Image3F* const image) {
 }  // namespace
 
 Status DecodeImagePNM(const Span<const uint8_t> bytes,
-                      const ColorHints& color_hints, ThreadPool* pool,
-                      CodecInOut* io) {
+                      const ColorHints& color_hints,
+                      const SizeConstraints& constraints,
+                      PackedPixelFile* ppf) {
   Parser parser(bytes);
   HeaderPNM header = {};
   const uint8_t* pos = nullptr;
   if (!parser.ParseHeader(&header, &pos)) return false;
   JXL_RETURN_IF_ERROR(
-      VerifyDimensions(&io->constraints, header.xsize, header.ysize));
+      VerifyDimensions(&constraints, header.xsize, header.ysize));
 
   if (header.bits_per_sample == 0 || header.bits_per_sample > 32) {
     return JXL_FAILURE("PNM: bits_per_sample invalid");
   }
 
   JXL_RETURN_IF_ERROR(ApplyColorHints(color_hints, /*color_already_set=*/false,
-                                      header.is_gray, io));
+                                      header.is_gray, ppf));
 
+  ppf->info.xsize = header.xsize;
+  ppf->info.ysize = header.ysize;
   if (header.floating_point) {
-    io->metadata.m.SetFloat32Samples();
+    ppf->info.bits_per_sample = 32;
+    ppf->info.exponent_bits_per_sample = 8;
   } else {
-    io->metadata.m.SetUintSamples(header.bits_per_sample);
+    ppf->info.bits_per_sample = header.bits_per_sample;
+    ppf->info.exponent_bits_per_sample = 0;
   }
-  io->metadata.m.SetAlphaBits(0);
-  io->dec_pixels = header.xsize * header.ysize;
 
-  const bool flipped_y = header.bits_per_sample == 32;  // PFMs are flipped
-  const bool float_in = header.bits_per_sample == 32;
-  const Span<const uint8_t> span(pos, bytes.data() + bytes.size() - pos);
-  JXL_RETURN_IF_ERROR(ConvertFromExternal(
-      span, header.xsize, header.ysize, io->metadata.m.color_encoding,
-      /*has_alpha=*/false, /*alpha_is_premultiplied=*/false,
-      io->metadata.m.bit_depth.bits_per_sample,
-      header.big_endian ? JXL_BIG_ENDIAN : JXL_LITTLE_ENDIAN, flipped_y, pool,
-      &io->Main(), float_in));
+  ppf->info.orientation = JXL_ORIENT_IDENTITY;
 
-  if (!header.floating_point) {
-    io->metadata.m.bit_depth.bits_per_sample = io->Main().DetectRealBitdepth();
+  // No alpha in PNM
+  ppf->info.alpha_bits = 0;
+  ppf->info.alpha_exponent_bits = 0;
+  ppf->info.num_color_channels = header.is_gray ? 1 : 3;
+
+  JxlDataType data_type;
+  if (header.floating_point) {
+    // There's no float16 pnm version.
+    data_type = JXL_TYPE_FLOAT;
+  } else {
+    if (header.bits_per_sample > 16) {
+      data_type = JXL_TYPE_UINT32;
+    } else if (header.bits_per_sample > 8) {
+      data_type = JXL_TYPE_UINT16;
+    } else if (header.is_bit) {
+      data_type = JXL_TYPE_BOOLEAN;
+    } else {
+      data_type = JXL_TYPE_UINT8;
+    }
   }
-  io->SetSize(header.xsize, header.ysize);
-  SetIntensityTarget(io);
+
+  const JxlPixelFormat format{
+      /*num_channels=*/ppf->info.num_color_channels,
+      /*data_type=*/data_type,
+      /*endianness=*/header.big_endian ? JXL_BIG_ENDIAN : JXL_LITTLE_ENDIAN,
+      /*align=*/0,
+  };
+  ppf->frames.clear();
+  ppf->frames.emplace_back(header.xsize, header.ysize, format);
+  auto* frame = &ppf->frames.back();
+
+  frame->color.flipped_y = header.bits_per_sample == 32;  // PFMs are flipped
+  size_t pnm_remaining_size = bytes.data() + bytes.size() - pos;
+  if (pnm_remaining_size < frame->color.pixels_size) {
+    return JXL_FAILURE("PNM file too small");
+  }
+  memcpy(frame->color.pixels(), pos, frame->color.pixels_size);
   return true;
 }
 

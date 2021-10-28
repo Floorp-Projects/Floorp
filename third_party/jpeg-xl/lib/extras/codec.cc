@@ -20,6 +20,7 @@
 #include "lib/extras/codec_png.h"
 #include "lib/extras/codec_pnm.h"
 #include "lib/extras/codec_psd.h"
+#include "lib/extras/packed_image_convert.h"
 #include "lib/jxl/image_bundle.h"
 
 namespace jxl {
@@ -89,40 +90,51 @@ Status SetFromBytes(const Span<const uint8_t> bytes,
                     ThreadPool* pool, Codec* orig_codec) {
   if (bytes.size() < kMinBytes) return JXL_FAILURE("Too few bytes");
 
-  io->metadata.m.bit_depth.bits_per_sample = 0;  // (For is-set check below)
+  extras::PackedPixelFile ppf;
+  // Default values when not set by decoders.
+  ppf.info.uses_original_profile = true;
+  ppf.info.orientation = JXL_ORIENT_IDENTITY;
 
   Codec codec;
-  if (extras::DecodeImagePNG(bytes, color_hints, pool, io)) {
+  bool skip_ppf_conversion = false;
+  if (extras::DecodeImagePNG(bytes, color_hints, io->constraints, &ppf)) {
     codec = Codec::kPNG;
   }
 #if JPEGXL_ENABLE_APNG
-  else if (extras::DecodeImageAPNG(bytes, color_hints, pool, io)) {
+  else if (extras::DecodeImageAPNG(bytes, color_hints, io->constraints, &ppf)) {
     codec = Codec::kPNG;
   }
 #endif
-  else if (extras::DecodeImagePGX(bytes, color_hints, pool, io)) {
+  else if (extras::DecodeImagePGX(bytes, color_hints, io->constraints, &ppf)) {
     codec = Codec::kPGX;
-  } else if (extras::DecodeImagePNM(bytes, color_hints, pool, io)) {
+  } else if (extras::DecodeImagePNM(bytes, color_hints, io->constraints,
+                                    &ppf)) {
     codec = Codec::kPNM;
   }
 #if JPEGXL_ENABLE_GIF
-  else if (extras::DecodeImageGIF(bytes, color_hints, pool, io)) {
+  else if (extras::DecodeImageGIF(bytes, color_hints, io->constraints, &ppf)) {
     codec = Codec::kGIF;
   }
 #endif
   else if (io->dec_target == DecodeTarget::kQuantizedCoeffs &&
            extras::DecodeImageJPGCoefficients(bytes, io)) {
     // TODO(deymo): In this case the tools should use a different API to
-    // transcode the input JPEG to JXL.
+    // transcode the input JPEG to JXL instead of expressing it as a
+    // PackedPixelFile.
     codec = Codec::kJPG;
+    skip_ppf_conversion = true;
   } else if (io->dec_target == DecodeTarget::kPixels &&
-             extras::DecodeImageJPG(bytes, color_hints, pool, io)) {
+             extras::DecodeImageJPG(bytes, color_hints, io->constraints,
+                                    &ppf)) {
     codec = Codec::kJPG;
   } else if (extras::DecodeImagePSD(bytes, color_hints, pool, io)) {
+    // TODO(deymo): Migrate PSD codec too.
     codec = Codec::kPSD;
+    skip_ppf_conversion = true;
   }
 #if JPEGXL_ENABLE_EXR
-  else if (extras::DecodeImageEXR(bytes, color_hints, pool, io)) {
+  else if (extras::DecodeImageEXR(bytes, color_hints, io->constraints,
+                                  io->target_nits, pool, &ppf)) {
     codec = Codec::kEXR;
   }
 #endif
@@ -131,7 +143,10 @@ Status SetFromBytes(const Span<const uint8_t> bytes,
   }
   if (orig_codec) *orig_codec = codec;
 
-  io->CheckMetadata();
+  if (!skip_ppf_conversion) {
+    JXL_RETURN_IF_ERROR(ConvertPackedPixelFileToCodecInOut(ppf, pool, io));
+  }
+
   return true;
 }
 

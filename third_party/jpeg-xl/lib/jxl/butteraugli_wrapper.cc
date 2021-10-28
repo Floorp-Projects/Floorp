@@ -77,8 +77,6 @@ struct JxlButteraugliApiStruct {
   // Number of nits that correspond to 1.0f input values.
   float intensity_target = jxl::kDefaultIntensityTarget;
 
-  bool approximate_border = false;
-
   JxlMemoryManager memory_manager;
   std::unique_ptr<jxl::ThreadPool> thread_pool{nullptr};
 };
@@ -166,7 +164,6 @@ JxlButteraugliResult* JxlButteraugliCompute(
   result->params.hf_asymmetry = api->hf_asymmetry;
   result->params.xmul = api->xmul;
   result->params.intensity_target = api->intensity_target;
-  result->params.approximate_border = api->approximate_border;
   jxl::ButteraugliDistance(orig_ib, dist_ib, result->params, &result->distmap,
                            api->thread_pool.get());
 

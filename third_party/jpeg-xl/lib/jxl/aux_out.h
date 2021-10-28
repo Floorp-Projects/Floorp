@@ -103,7 +103,7 @@ static inline const char* LayerName(size_t layer) {
     case kLayerExtraChannels:
       return "extra channels";
     default:
-      JXL_ABORT("Invalid layer %zu\n", layer);
+      JXL_ABORT("Invalid layer %" PRIuS "\n", layer);
   }
 }
 
@@ -119,9 +119,10 @@ struct AuxOut {
       clustered_entropy += victim.clustered_entropy;
     }
     void Print(size_t num_inputs) const {
-      printf("%10zd", total_bits);
+      printf("%10" PRIdS, total_bits);
       if (histogram_bits != 0) {
-        printf("   [c/i:%6.2f | hst:%8zd | ex:%8zd | h+c+e:%12.3f",
+        printf("   [c/i:%6.2f | hst:%8" PRIdS " | ex:%8" PRIdS
+               " | h+c+e:%12.3f",
                num_clustered_histograms * 1.0 / num_inputs, histogram_bits >> 3,
                extra_bits >> 3,
                (histogram_bits + clustered_entropy + extra_bits) / 8.0);

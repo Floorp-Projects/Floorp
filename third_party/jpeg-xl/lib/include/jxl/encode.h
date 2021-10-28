@@ -73,6 +73,51 @@ typedef enum {
 } JxlEncoderStatus;
 
 /**
+ * Id of options to set to JxlEncoderOptions.
+ */
+typedef enum {
+  /** Sets resampling option. If enabled, the image is downsampled before
+   * compression, and upsampled to original size in the decoder. Integer option,
+   * use 0 for the default behavior (resampling only applied for low quality),
+   * 1 for no downsampling (1x1), 2 for 2x2 downsampling, 4 for 4x4
+   * downsampling, 8 for 8x8 downsampling. The default value is 0.
+   */
+  JXL_ENC_OPTION_RESAMPLING = 0,
+
+  /** Similar to JXL_ENC_OPTION_RESAMPLING, but for extra channels. Integer
+   * option, use 1 for no downsampling (1x1), 2 for 2x2 downsampling, 4 for 4x4
+   * downsampling, 8 for 8x8 downsampling. The default value is 1.
+   */
+  JXL_ENC_OPTION_EXTRA_CHANNEL_RESAMPLING = 1,
+
+  /** Enables or disables noise generation. Integer option, use -1 for the
+   * encoder default, 0 to disable, 1 to enable. The
+   */
+  JXL_ENC_OPTION_NOISE = 2,
+
+  /** Enables or disables dots generation. Integer option, use -1 for the
+   * encoder default, 0 to disable, 1 to enable.
+   */
+  JXL_ENC_OPTION_DOTS = 3,
+
+  /** Enables or disables patches generation. Integer option, use -1 for the
+   * encoder default, 0 to disable, 1 to enable.
+   */
+  JXL_ENC_OPTION_PATCHES = 4,
+
+  /** Enables or disables the gaborish filter. Integer option, use -1 for the
+   * encoder default, 0 to disable, 1 to enable.
+   */
+  JXL_ENC_OPTION_GABORISH = 5,
+
+  /** Enum value not to be used as an option. This value is added to force the
+   * C compiler to have the enum to take a known size.
+   */
+  JXL_ENC_OPTION_FILL_ENUM = 65535,
+
+} JxlEncoderOptionId;
+
+/**
  * Creates an instance of JxlEncoder and initializes it.
  *
  * @p memory_manager will be used for all the library dynamic allocations made
@@ -334,14 +379,14 @@ JxlEncoderOptionsSetEffort(JxlEncoderOptions* options, int effort);
 
 /**
  * Sets the distance level for lossy compression: target max butteraugli
- *  distance, lower = higher quality. Range: 0 .. 15.
- *  0.0 = mathematically lossless (however, use JxlEncoderOptionsSetLossless to
- *  use true lossless).
- *  1.0 = visually lossless.
- *  Recommended range: 0.5 .. 3.0.
- *  Default value: 1.0.
- *  If JxlEncoderOptionsSetLossless is used, this value is unused and implied
- *  to be 0.
+ * distance, lower = higher quality. Range: 0 .. 15.
+ * 0.0 = mathematically lossless (however, use JxlEncoderOptionsSetLossless to
+ * use true lossless).
+ * 1.0 = visually lossless.
+ * Recommended range: 0.5 .. 3.0.
+ * Default value: 1.0.
+ * If JxlEncoderOptionsSetLossless is used, this value is unused and implied
+ * to be 0.
  *
  * @param options set of encoder options to update with the new mode.
  * @param distance the distance value to set.
@@ -350,6 +395,25 @@ JxlEncoderOptionsSetEffort(JxlEncoderOptions* options, int effort);
  */
 JXL_EXPORT JxlEncoderStatus
 JxlEncoderOptionsSetDistance(JxlEncoderOptions* options, float distance);
+
+/**
+ * Sets an option of integer type to the encoder option. The JxlEncoderOptionId
+ * argument determines which option is set.
+ *
+ * TODO(lode): also use the option enum for the container, lossless, speed,
+ * effort and distance options.
+ *
+ * @param options set of encoder options to update with the new mode.
+ * @param option ID of the option to set.
+ * @param value Integer value to set for this option.
+ * @return JXL_ENC_SUCCESS if the operation was successful, JXL_ENC_ERROR in
+ * case of an error, such as invalid or unknown option id, or invalid integer
+ * value for the given option. If an error is returned, the state of the
+ * JxlEncoderOptions object is still valid and is the same as before this
+ * function was called.
+ */
+JXL_EXPORT JxlEncoderStatus JxlEncoderOptionsSetAsInteger(
+    JxlEncoderOptions* options, JxlEncoderOptionId option, int32_t value);
 
 /**
  * Create a new set of encoder options, with all values initially copied from

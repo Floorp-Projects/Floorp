@@ -5,12 +5,11 @@
 
 #include <stdio.h>
 
-#include <random>
-
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/fast_math_test.cc"
 #include <hwy/foreach_target.h>
 
+#include "lib/jxl/base/random.h"
 #include "lib/jxl/dec_xyb-inl.h"
 #include "lib/jxl/enc_xyb.h"
 #include "lib/jxl/fast_math-inl.h"
@@ -26,16 +25,15 @@ namespace {
 
 HWY_NOINLINE void TestFastLog2() {
   constexpr size_t kNumTrials = 1 << 23;
-  std::mt19937 rng(1);
-  std::uniform_real_distribution<float> dist(1e-7f, 1e3f);
+  Rng rng(1);
   float max_abs_err = 0;
   HWY_FULL(float) d;
   for (size_t i = 0; i < kNumTrials; i++) {
-    const float f = dist(rng);
+    const float f = rng.UniformF(1e-7f, 1e3f);
     const auto actual_v = FastLog2f(d, Set(d, f));
     const float actual = GetLane(actual_v);
     const float abs_err = std::abs(std::log2(f) - actual);
-    EXPECT_LT(abs_err, 2.9E-6) << "f = " << f;
+    EXPECT_LT(abs_err, 3.1E-6) << "f = " << f;
     max_abs_err = std::max(max_abs_err, abs_err);
   }
   printf("max abs err %e\n", static_cast<double>(max_abs_err));
@@ -43,12 +41,11 @@ HWY_NOINLINE void TestFastLog2() {
 
 HWY_NOINLINE void TestFastPow2() {
   constexpr size_t kNumTrials = 1 << 23;
-  std::mt19937 rng(1);
-  std::uniform_real_distribution<float> dist(-100, 100);
+  Rng rng(1);
   float max_rel_err = 0;
   HWY_FULL(float) d;
   for (size_t i = 0; i < kNumTrials; i++) {
-    const float f = dist(rng);
+    const float f = rng.UniformF(-100, 100);
     const auto actual_v = FastPow2f(d, Set(d, f));
     const float actual = GetLane(actual_v);
     const float expected = std::pow(2, f);
@@ -61,14 +58,12 @@ HWY_NOINLINE void TestFastPow2() {
 
 HWY_NOINLINE void TestFastPow() {
   constexpr size_t kNumTrials = 1 << 23;
-  std::mt19937 rng(1);
-  std::uniform_real_distribution<float> distb(1e-3f, 1e3f);
-  std::uniform_real_distribution<float> diste(-10, 10);
+  Rng rng(1);
   float max_rel_err = 0;
   HWY_FULL(float) d;
   for (size_t i = 0; i < kNumTrials; i++) {
-    const float b = distb(rng);
-    const float e = diste(rng);
+    const float b = rng.UniformF(1e-3f, 1e3f);
+    const float e = rng.UniformF(-10, 10);
     const auto actual_v = FastPowf(d, Set(d, b), Set(d, e));
     const float actual = GetLane(actual_v);
     const float expected = std::pow(b, e);
@@ -81,12 +76,11 @@ HWY_NOINLINE void TestFastPow() {
 
 HWY_NOINLINE void TestFastCos() {
   constexpr size_t kNumTrials = 1 << 23;
-  std::mt19937 rng(1);
-  std::uniform_real_distribution<float> dist(-1e3f, 1e3f);
+  Rng rng(1);
   float max_abs_err = 0;
   HWY_FULL(float) d;
   for (size_t i = 0; i < kNumTrials; i++) {
-    const float f = dist(rng);
+    const float f = rng.UniformF(-1e3f, 1e3f);
     const auto actual_v = FastCosf(d, Set(d, f));
     const float actual = GetLane(actual_v);
     const float abs_err = std::abs(std::cos(f) - actual);
@@ -98,12 +92,11 @@ HWY_NOINLINE void TestFastCos() {
 
 HWY_NOINLINE void TestFastErf() {
   constexpr size_t kNumTrials = 1 << 23;
-  std::mt19937 rng(1);
-  std::uniform_real_distribution<float> dist(-5.f, 5.f);
+  Rng rng(1);
   float max_abs_err = 0;
   HWY_FULL(float) d;
   for (size_t i = 0; i < kNumTrials; i++) {
-    const float f = dist(rng);
+    const float f = rng.UniformF(-5.f, 5.f);
     const auto actual_v = FastErff(d, Set(d, f));
     const float actual = GetLane(actual_v);
     const float abs_err = std::abs(std::erf(f) - actual);
@@ -115,12 +108,11 @@ HWY_NOINLINE void TestFastErf() {
 
 HWY_NOINLINE void TestFastSRGB() {
   constexpr size_t kNumTrials = 1 << 23;
-  std::mt19937 rng(1);
-  std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+  Rng rng(1);
   float max_abs_err = 0;
   HWY_FULL(float) d;
   for (size_t i = 0; i < kNumTrials; i++) {
-    const float f = dist(rng);
+    const float f = rng.UniformF(0.0f, 1.0f);
     const auto actual_v = FastLinearToSRGB(d, Set(d, f));
     const float actual = GetLane(actual_v);
     const float expected = GetLane(TF_SRGB().EncodedFromDisplay(d, Set(d, f)));
@@ -133,12 +125,11 @@ HWY_NOINLINE void TestFastSRGB() {
 
 HWY_NOINLINE void TestFastPQEFD() {
   constexpr size_t kNumTrials = 1 << 23;
-  std::mt19937 rng(1);
-  std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+  Rng rng(1);
   float max_abs_err = 0;
   HWY_FULL(float) d;
   for (size_t i = 0; i < kNumTrials; i++) {
-    const float f = dist(rng);
+    const float f = rng.UniformF(0.0f, 1.0f);
     const float actual = GetLane(TF_PQ().EncodedFromDisplay(d, Set(d, f)));
     const float expected = TF_PQ().EncodedFromDisplay(f);
     const float abs_err = std::abs(expected - actual);
@@ -150,12 +141,11 @@ HWY_NOINLINE void TestFastPQEFD() {
 
 HWY_NOINLINE void TestFastHLGEFD() {
   constexpr size_t kNumTrials = 1 << 23;
-  std::mt19937 rng(1);
-  std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+  Rng rng(1);
   float max_abs_err = 0;
   HWY_FULL(float) d;
   for (size_t i = 0; i < kNumTrials; i++) {
-    const float f = dist(rng);
+    const float f = rng.UniformF(0.0f, 1.0f);
     const float actual = GetLane(TF_HLG().EncodedFromDisplay(d, Set(d, f)));
     const float expected = TF_HLG().EncodedFromDisplay(f);
     const float abs_err = std::abs(expected - actual);
@@ -167,12 +157,11 @@ HWY_NOINLINE void TestFastHLGEFD() {
 
 HWY_NOINLINE void TestFast709EFD() {
   constexpr size_t kNumTrials = 1 << 23;
-  std::mt19937 rng(1);
-  std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+  Rng rng(1);
   float max_abs_err = 0;
   HWY_FULL(float) d;
   for (size_t i = 0; i < kNumTrials; i++) {
-    const float f = dist(rng);
+    const float f = rng.UniformF(0.0f, 1.0f);
     const float actual = GetLane(TF_709().EncodedFromDisplay(d, Set(d, f)));
     const float expected = TF_709().EncodedFromDisplay(f);
     const float abs_err = std::abs(expected - actual);
@@ -184,12 +173,11 @@ HWY_NOINLINE void TestFast709EFD() {
 
 HWY_NOINLINE void TestFastPQDFE() {
   constexpr size_t kNumTrials = 1 << 23;
-  std::mt19937 rng(1);
-  std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+  Rng rng(1);
   float max_abs_err = 0;
   HWY_FULL(float) d;
   for (size_t i = 0; i < kNumTrials; i++) {
-    const float f = dist(rng);
+    const float f = rng.UniformF(0.0f, 1.0f);
     const float actual = GetLane(TF_PQ().DisplayFromEncoded(d, Set(d, f)));
     const float expected = TF_PQ().DisplayFromEncoded(f);
     const float abs_err = std::abs(expected - actual);

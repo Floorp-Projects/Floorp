@@ -29,8 +29,6 @@ set(JPEGXL_INTERNAL_SOURCES_DEC
   jxl/base/compiler_specific.h
   jxl/base/data_parallel.cc
   jxl/base/data_parallel.h
-  jxl/base/descriptive_statistics.cc
-  jxl/base/descriptive_statistics.h
   jxl/base/file_io.h
   jxl/base/iaca.h
   jxl/base/os_macros.h
@@ -38,13 +36,16 @@ set(JPEGXL_INTERNAL_SOURCES_DEC
   jxl/base/padded_bytes.cc
   jxl/base/padded_bytes.h
   jxl/base/profiler.h
-  jxl/base/robust_statistics.h
+  jxl/base/random.cc
+  jxl/base/random.h
   jxl/base/span.h
   jxl/base/status.cc
   jxl/base/status.h
   jxl/base/thread_pool_internal.h
   jxl/blending.cc
   jxl/blending.h
+  jxl/box_content_decoder.cc
+  jxl/box_content_decoder.h
   jxl/chroma_from_luma.cc
   jxl/chroma_from_luma.h
   jxl/codec_in_out.h
@@ -168,7 +169,6 @@ set(JPEGXL_INTERNAL_SOURCES_DEC
   jxl/modular/transform/transform.cc
   jxl/modular/transform/transform.h
   jxl/noise.h
-  jxl/noise_distributions.h
   jxl/opsin_params.cc
   jxl/opsin_params.h
   jxl/passes_state.cc
@@ -561,7 +561,9 @@ endforeach()
 # contains symbols also in libjxl which would conflict if programs try to use
 # both.
 install(TARGETS jxl
-  DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 else()
 add_library(jxl ALIAS jxl-static)
 add_library(jxl_dec ALIAS jxl_dec-static)

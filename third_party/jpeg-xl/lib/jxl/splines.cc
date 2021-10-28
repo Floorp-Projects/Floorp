@@ -417,7 +417,7 @@ Status QuantizedSpline::Decode(const std::vector<uint8_t>& context_map,
       decoder->ReadHybridUint(kNumControlPointsContext, br, context_map);
   *total_num_control_points += num_control_points;
   if (*total_num_control_points > max_control_points) {
-    return JXL_FAILURE("Too many control points: %zu",
+    return JXL_FAILURE("Too many control points: %" PRIuS,
                        *total_num_control_points);
   }
   control_points_.resize(num_control_points);
@@ -462,7 +462,7 @@ Status Splines::Decode(jxl::BitReader* br, size_t num_pixels) {
   size_t max_control_points = std::min(
       kMaxNumControlPoints, num_pixels / kMaxNumControlPointsPerPixelRatio);
   if (num_splines > max_control_points) {
-    return JXL_FAILURE("Too many splines: %zu", num_splines);
+    return JXL_FAILURE("Too many splines: %" PRIuS, num_splines);
   }
   JXL_RETURN_IF_ERROR(DecodeAllStartingPoints(&starting_points_, br, &decoder,
                                               context_map, num_splines));
@@ -513,8 +513,8 @@ Status Splines::InitializeDrawCache(size_t image_xsize, size_t image_ysize,
     if (std::adjacent_find(spline.control_points.begin(),
                            spline.control_points.end()) !=
         spline.control_points.end()) {
-      return JXL_FAILURE("identical successive control points in spline %zu",
-                         i);
+      return JXL_FAILURE(
+          "identical successive control points in spline %" PRIuS, i);
     }
     std::vector<std::pair<Spline::Point, float>> points_to_draw;
     ForEachEquallySpacedPoint(

@@ -555,7 +555,7 @@ cmd_coverage_report() {
     # is not part of the code under test.
     --filter '.*jxl/.*'
     --exclude '.*_test.cc'
-    --exclude '.*_test-only..*'
+    --exclude '.*_testonly..*'
     --exclude '.*test_utils..*'
     --object-directory "${real_build_dir}"
   )
