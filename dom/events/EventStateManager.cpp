@@ -4027,6 +4027,10 @@ static bool ShouldBlockCustomCursor(nsPresContext* aPresContext,
   // The cursor size won't be affected by our full zoom in the parent process,
   // so undo that before checking the rect.
   float zoom = topLevel->GetFullZoom();
+
+  // Also adjust for accessibility cursor scaling factor.
+  zoom /= LookAndFeel::GetFloat(LookAndFeel::FloatID::CursorScale, 1.0f);
+
   nsSize size(CSSPixel::ToAppUnits(width / zoom),
               CSSPixel::ToAppUnits(height / zoom));
   nsPoint hotspot(CSSPixel::ToAppUnits(aCursor.mHotspot.x / zoom),

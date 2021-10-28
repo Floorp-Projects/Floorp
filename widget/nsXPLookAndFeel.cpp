@@ -189,6 +189,7 @@ static const char sFloatPrefs[][37] = {
     "ui.SpellCheckerUnderlineRelativeSize",
     "ui.caretAspectRatio",
     "ui.textScaleFactor",
+    "ui.cursorScale",
 };
 // clang-format on
 
