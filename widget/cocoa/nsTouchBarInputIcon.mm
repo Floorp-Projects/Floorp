@@ -22,7 +22,7 @@
 using namespace mozilla;
 using mozilla::widget::IconLoader;
 
-static const uint32_t kIconSize = 16;
+static const uint32_t kIconHeight = 16;
 static const CGFloat kHiDPIScalingFactor = 2.0f;
 
 nsTouchBarInputIcon::nsTouchBarInputIcon(RefPtr<Document> aDocument, TouchBarInput* aInput,
@@ -82,7 +82,7 @@ nsresult nsTouchBarInputIcon::SetupIcon(nsCOMPtr<nsIURI> aIconURI) {
 
   if (!mSetIcon) {
     // Load placeholder icon.
-    NSSize iconSize = NSMakeSize(kIconSize, kIconSize);
+    NSSize iconSize = NSMakeSize(kIconHeight, kIconHeight);
     NSImage* placeholder = [MOZIconHelper placeholderIconWithSize:iconSize];
     [mButton setImage:placeholder];
     [mShareScrubber setButtonImage:placeholder];
@@ -118,7 +118,7 @@ nsresult nsTouchBarInputIcon::OnComplete(imgIContainer* aImage) {
   // We ask only for the HiDPI images since all Touch Bars are Retina
   // displays and we have no need for icons @1x.
   NSImage* image = [MOZIconHelper iconImageFromImageContainer:aImage
-                                                     withSize:NSMakeSize(kIconSize, kIconSize)
+                                                     withSize:NSMakeSize(kIconHeight, kIconHeight)
                                                 computedStyle:nullptr
                                                       subrect:mImageRegionRect
                                                   scaleFactor:kHiDPIScalingFactor];

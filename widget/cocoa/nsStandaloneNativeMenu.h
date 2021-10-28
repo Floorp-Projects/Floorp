@@ -7,10 +7,7 @@
 #define nsStandaloneNativeMenu_h_
 
 #include "nsIStandaloneNativeMenu.h"
-
-namespace mozilla::widget {
-class NativeMenuMac;
-}
+#include "NativeMenuMac.h"
 
 class nsStandaloneNativeMenu : public nsIStandaloneNativeMenu {
  public:
