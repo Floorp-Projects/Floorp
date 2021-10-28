@@ -63,7 +63,7 @@ internal suspend fun Iterable<HistoryMetadata>.into(
     icons: BrowserIcons?,
     loadUrlUseCase: SessionUseCases.LoadUrlUseCase
 ): List<AwesomeBar.Suggestion> {
-    val iconRequests = this.map { icons?.loadIcon(IconRequest(it.key.url)) }
+    val iconRequests = this.map { icons?.loadIcon(IconRequest(url = it.key.url, waitOnNetworkLoad = false)) }
     return this.zip(iconRequests) { result, icon ->
         AwesomeBar.Suggestion(
             provider = provider,

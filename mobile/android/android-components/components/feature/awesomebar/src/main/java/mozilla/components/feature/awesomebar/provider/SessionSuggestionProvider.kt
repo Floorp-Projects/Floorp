@@ -43,7 +43,9 @@ class SessionSuggestionProvider(
         val tabs = state.tabs
 
         val suggestions = mutableListOf<AwesomeBar.Suggestion>()
-        val iconRequests: List<Deferred<Icon>?> = tabs.map { icons?.loadIcon(IconRequest(it.content.url)) }
+        val iconRequests: List<Deferred<Icon>?> = tabs.map {
+            icons?.loadIcon(IconRequest(url = it.content.url, waitOnNetworkLoad = false))
+        }
 
         tabs.zip(iconRequests) { result, icon ->
             if (

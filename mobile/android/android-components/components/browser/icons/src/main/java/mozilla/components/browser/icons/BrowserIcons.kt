@@ -10,6 +10,7 @@ import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.widget.ImageView
 import androidx.annotation.MainThread
+import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -32,6 +33,7 @@ import mozilla.components.browser.icons.loader.DiskIconLoader
 import mozilla.components.browser.icons.loader.HttpIconLoader
 import mozilla.components.browser.icons.loader.IconLoader
 import mozilla.components.browser.icons.loader.MemoryIconLoader
+import mozilla.components.browser.icons.loader.NonBlockingHttpIconLoader
 import mozilla.components.browser.icons.pipeline.IconResourceComparator
 import mozilla.components.browser.icons.preparer.DiskIconPreparer
 import mozilla.components.browser.icons.preparer.IconPreprarer
@@ -59,7 +61,8 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 import java.lang.ref.WeakReference
 import java.util.concurrent.Executors
 
-private const val MAXIMUM_SCALE_FACTOR = 2.0f
+@VisibleForTesting
+internal const val MAXIMUM_SCALE_FACTOR = 2.0f
 
 private const val EXTENSION_MESSAGING_NAME = "MozacBrowserIcons"
 
@@ -77,14 +80,15 @@ internal val sharedDiskCache = IconDiskCache()
  */
 class BrowserIcons @Suppress("LongParameterList") constructor(
     private val context: Context,
-    private val httpClient: Client,
+    httpClient: Client,
     private val generator: IconGenerator = DefaultIconGenerator(),
     private val preparers: List<IconPreprarer> = listOf(
         TippyTopIconPreparer(context.assets),
         MemoryIconPreparer(sharedMemoryCache),
         DiskIconPreparer(sharedDiskCache)
     ),
-    private val loaders: List<IconLoader> = listOf(
+    @VisibleForTesting
+    internal var loaders: List<IconLoader> = listOf(
         MemoryIconLoader(sharedMemoryCache),
         DiskIconLoader(sharedDiskCache),
         HttpIconLoader(httpClient),
@@ -107,6 +111,14 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
     private val maximumSize = context.resources.getDimensionPixelSize(R.dimen.mozac_browser_icons_maximum_size)
     private val minimumSize = context.resources.getDimensionPixelSize(R.dimen.mozac_browser_icons_minimum_size)
     private val scope = CoroutineScope(jobDispatcher)
+    private val backgroundHttpIconLoader = NonBlockingHttpIconLoader(httpClient) { request, resource, result ->
+        val desiredSize = request.getDesiredSize(context, minimumSize, maximumSize)
+
+        val icon = decodeIconLoaderResult(result, decoders, desiredSize)
+            ?: generator.generate(context, request)
+
+        process(context, processors, request, resource, icon, desiredSize)
+    }
 
     /**
      * Asynchronously loads an [Icon] for the given [IconRequest].
@@ -129,11 +141,20 @@ class BrowserIcons @Suppress("LongParameterList") constructor(
         // (1) First prepare the request.
         val request = prepare(context, preparers, initialRequest)
 
-        // (2) Then try to load an icon.
-        val (icon, resource) = load(context, request, loaders, decoders, desiredSize)
+        // (2) Check whether icons should be downloaded in background.
+        val updatedLoaders = loaders.map {
+            if (it is HttpIconLoader && !initialRequest.waitOnNetworkLoad) {
+                backgroundHttpIconLoader
+            } else {
+                it
+            }
+        }
+
+        // (3) Then try to load an icon.
+        val (icon, resource) = load(context, request, updatedLoaders, decoders, desiredSize)
             ?: generator.generate(context, request) to null
 
-        // (3) Finally process the icon.
+        // (4) Finally process the icon.
         return process(context, processors, request, resource, icon, desiredSize)
             ?: generator.generate(context, request)
     }
@@ -316,6 +337,15 @@ private fun decodeIconLoaderResult(
     is IconLoader.Result.BytesResult ->
         decodeBytes(result.bytes, decoders, desiredSize)?.let { Icon(it, source = result.source) }
 }
+
+@VisibleForTesting
+internal fun IconRequest.getDesiredSize(context: Context, minimumSize: Int, maximumSize: Int) =
+    DesiredSize(
+        targetSize = context.resources.getDimensionPixelSize(size.dimen),
+        minSize = minimumSize,
+        maxSize = maximumSize,
+        maxScaleFactor = MAXIMUM_SCALE_FACTOR
+    )
 
 private fun decodeBytes(
     data: ByteArray,

@@ -309,4 +309,19 @@ class BrowserIconsTest {
         assertEquals(0, sharedDiskCache.getResources(testContext, request).size)
         assertEquals(0, sharedMemoryCache.getResources(request).size)
     }
+
+    @Test
+    fun `GIVEN an IconRequest WHEN getDesiredSize is called THEN set min and max bounds to the request target size`() {
+        val request = IconRequest("https://mozilla.org", IconRequest.Size.LAUNCHER_ADAPTIVE)
+
+        val result = request.getDesiredSize(testContext, 11, 101)
+
+        assertEquals(
+            testContext.resources.getDimensionPixelSize(IconRequest.Size.LAUNCHER_ADAPTIVE.dimen),
+            result.targetSize
+        )
+        assertEquals(11, result.minSize)
+        assertEquals(101, result.maxSize)
+        assertEquals(MAXIMUM_SCALE_FACTOR, result.maxScaleFactor)
+    }
 }

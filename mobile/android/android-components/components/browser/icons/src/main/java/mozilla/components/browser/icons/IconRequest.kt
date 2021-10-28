@@ -15,13 +15,17 @@ import mozilla.components.concept.engine.manifest.Size as HtmlSize
  * @property size The preferred size of the icon that should be loaded.
  * @property resources An optional list of icon resources to load the icon from.
  * @property color The suggested dominant color of the icon.
+ * @property isPrivate Whether this request for this icon came from a private session.
+ * @property waitOnNetworkLoad Whether client code should wait on the resource being loaded or
+ * loading can continue in background.
  */
 data class IconRequest(
     val url: String,
     val size: Size = Size.DEFAULT,
     val resources: List<Resource> = emptyList(),
     @ColorInt val color: Int? = null,
-    val isPrivate: Boolean = false
+    val isPrivate: Boolean = false,
+    val waitOnNetworkLoad: Boolean = true
 ) {
 
     /**

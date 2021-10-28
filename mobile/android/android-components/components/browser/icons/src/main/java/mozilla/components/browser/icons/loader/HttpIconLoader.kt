@@ -27,7 +27,7 @@ private const val READ_TIMEOUT = 10L // Seconds
 /**
  * [IconLoader] implementation that will try to download the icon for resources that point to an http(s) URL.
  */
-class HttpIconLoader(
+open class HttpIconLoader(
     private val httpClient: Client
 ) : IconLoader {
     private val logger = Logger("HttpIconLoader")
@@ -41,6 +41,10 @@ class HttpIconLoader(
         // Right now we always perform a download. We shouldn't retry to download from URLs that have failed just
         // recently: https://github.com/mozilla-mobile/android-components/issues/2591
 
+        return internalLoad(request, resource)
+    }
+
+    protected fun internalLoad(request: IconRequest, resource: IconRequest.Resource): IconLoader.Result {
         val downloadRequest = Request(
             url = resource.url.sanitizeURL(),
             method = Request.Method.GET,
@@ -70,7 +74,7 @@ class HttpIconLoader(
         }
     }
 
-    private fun shouldDownload(resource: IconRequest.Resource): Boolean {
+    protected fun shouldDownload(resource: IconRequest.Resource): Boolean {
         return resource.url.sanitizeURL().toUri().isHttpOrHttps && !failureCache.hasFailedRecently(resource.url)
     }
 }

@@ -60,7 +60,11 @@ class SyncedTabsStorageSuggestionProvider(
      */
     private suspend fun List<ClientTabPair>.into(): List<AwesomeBar.Suggestion> {
         val iconRequests = this.map { client ->
-            client.tab.iconUrl?.let { iconUrl -> icons?.loadIcon(IconRequest(iconUrl)) }
+            client.tab.iconUrl?.let { iconUrl ->
+                icons?.loadIcon(
+                    IconRequest(url = iconUrl, waitOnNetworkLoad = false)
+                )
+            }
         }
 
         return this.zip(iconRequests) { result, icon ->

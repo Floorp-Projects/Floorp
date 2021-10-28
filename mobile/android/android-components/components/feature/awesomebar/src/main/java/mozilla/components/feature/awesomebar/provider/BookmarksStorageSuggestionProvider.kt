@@ -59,7 +59,7 @@ class BookmarksStorageSuggestionProvider(
      * Expects list of BookmarkNode to be specifically of bookmarks (e.g. nodes with a url).
      */
     private suspend fun List<BookmarkNode>.into(): List<AwesomeBar.Suggestion> {
-        val iconRequests = this.map { icons?.loadIcon(IconRequest(it.url!!)) }
+        val iconRequests = this.map { icons?.loadIcon(IconRequest(url = it.url!!, waitOnNetworkLoad = false)) }
 
         return this.zip(iconRequests) { result, icon ->
             AwesomeBar.Suggestion(
