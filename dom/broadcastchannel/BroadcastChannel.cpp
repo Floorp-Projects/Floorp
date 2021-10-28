@@ -25,7 +25,6 @@
 #include "mozilla/StorageAccess.h"
 #include "nsContentUtils.h"
 
-#include "nsIBFCacheEntry.h"
 #include "nsICookieJarSettings.h"
 #include "mozilla/dom/Document.h"
 
