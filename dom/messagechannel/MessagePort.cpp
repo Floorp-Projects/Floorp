@@ -35,10 +35,6 @@
 #include "nsGlobalWindow.h"
 #include "nsPresContext.h"
 
-#include "nsIBFCacheEntry.h"
-#include "mozilla/dom/Document.h"
-#include "nsServiceManagerUtils.h"
-
 #ifdef XP_WIN
 #  undef PostMessage
 #endif
