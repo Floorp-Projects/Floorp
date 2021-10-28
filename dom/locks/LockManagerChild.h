@@ -26,8 +26,12 @@ class LockManagerChild final : public PLockManagerChild {
 
   void RequestLock(const LockRequest& aRequest, const LockOptions& aOptions);
 
+  void NotifyRequestDestroy() const;
+
  private:
   ~LockManagerChild() = default;
+
+  void NotifyToWindow(bool aCreated) const;
 
   nsCOMPtr<nsIGlobalObject> mOwner;
 };
