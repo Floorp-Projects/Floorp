@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "BlobSurfaceProvider.h"
+#include "SourceSurfaceBlobImage.h"
 #include "AutoRestoreSVGState.h"
 #include "ImageRegion.h"
 #include "SVGDocumentWrapper.h"
@@ -20,18 +20,23 @@ using namespace mozilla::layers;
 
 namespace mozilla::image {
 
-BlobSurfaceProvider::BlobSurfaceProvider(
-    const ImageKey aImageKey, const SurfaceKey& aSurfaceKey,
-    image::SVGDocumentWrapper* aSVGDocumentWrapper, uint32_t aImageFlags)
-    : ISurfaceProvider(aImageKey, aSurfaceKey,
-                       AvailabilityState::StartAvailable()),
-      mSVGDocumentWrapper(aSVGDocumentWrapper),
+SourceSurfaceBlobImage::SourceSurfaceBlobImage(
+    image::SVGDocumentWrapper* aSVGDocumentWrapper,
+    const Maybe<SVGImageContext>& aSVGContext,
+    const Maybe<ImageIntRegion>& aRegion, const IntSize& aSize,
+    uint32_t aWhichFrame, uint32_t aImageFlags)
+    : mSVGDocumentWrapper(aSVGDocumentWrapper),
+      mSVGContext(aSVGContext),
+      mRegion(aRegion),
+      mSize(aSize),
+      mWhichFrame(aWhichFrame),
       mImageFlags(aImageFlags) {
   MOZ_ASSERT(mSVGDocumentWrapper);
+  MOZ_ASSERT(aWhichFrame <= imgIContainer::FRAME_MAX_VALUE);
   MOZ_ASSERT(aImageFlags & imgIContainer::FLAG_RECORD_BLOB);
 }
 
-BlobSurfaceProvider::~BlobSurfaceProvider() {
+SourceSurfaceBlobImage::~SourceSurfaceBlobImage() {
   if (NS_IsMainThread()) {
     DestroyKeys(mKeys);
     return;
@@ -44,7 +49,7 @@ BlobSurfaceProvider::~BlobSurfaceProvider() {
                              [keys = std::move(mKeys)] { DestroyKeys(keys); }));
 }
 
-/* static */ void BlobSurfaceProvider::DestroyKeys(
+/* static */ void SourceSurfaceBlobImage::DestroyKeys(
     const AutoTArray<BlobImageKeyData, 1>& aKeys) {
   for (const auto& entry : aKeys) {
     if (!entry.mManager->IsDestroyed()) {
@@ -54,13 +59,9 @@ BlobSurfaceProvider::~BlobSurfaceProvider() {
   }
 }
 
-nsresult BlobSurfaceProvider::UpdateKey(
-    layers::RenderRootStateManager* aManager,
-    wr::IpcResourceUpdateQueue& aResources, wr::ImageKey& aKey) {
+Maybe<wr::BlobImageKey> SourceSurfaceBlobImage::UpdateKey(
+    WebRenderLayerManager* aManager, wr::IpcResourceUpdateQueue& aResources) {
   MOZ_ASSERT(NS_IsMainThread());
-
-  layers::WebRenderLayerManager* manager = aManager->LayerManager();
-  MOZ_ASSERT(manager);
 
   Maybe<wr::BlobImageKey> key;
   auto i = mKeys.Length();
@@ -69,8 +70,8 @@ nsresult BlobSurfaceProvider::UpdateKey(
     BlobImageKeyData& entry = mKeys[i];
     if (entry.mManager->IsDestroyed()) {
       mKeys.RemoveElementAt(i);
-    } else if (entry.mManager == manager) {
-      WebRenderBridgeChild* wrBridge = manager->WrBridge();
+    } else if (entry.mManager == aManager) {
+      WebRenderBridgeChild* wrBridge = aManager->WrBridge();
       MOZ_ASSERT(wrBridge);
 
       bool ownsKey = wrBridge->MatchesNamespace(entry.mBlobKey);
@@ -83,11 +84,12 @@ nsresult BlobSurfaceProvider::UpdateKey(
       // can change state. Either our namespace differs, and our old key has
       // already been discarded, or the blob has changed. Either way, we need
       // to rerecord it.
-      auto newEntry = RecordDrawing(manager, aResources,
+      auto newEntry = RecordDrawing(aManager, aResources,
                                     ownsKey ? Some(entry.mBlobKey) : Nothing());
       if (!newEntry) {
         if (ownsKey) {
-          aManager->AddBlobImageKeyForDiscard(entry.mBlobKey);
+          aManager->GetRenderRootStateManager()->AddBlobImageKeyForDiscard(
+              entry.mBlobKey);
         }
         mKeys.RemoveElementAt(i);
         continue;
@@ -101,22 +103,17 @@ nsresult BlobSurfaceProvider::UpdateKey(
 
   // We didn't find an entry. Attempt to record the blob with a new key.
   if (!key) {
-    auto newEntry = RecordDrawing(manager, aResources, Nothing());
+    auto newEntry = RecordDrawing(aManager, aResources, Nothing());
     if (newEntry) {
       key.emplace(newEntry.ref().mBlobKey);
       mKeys.AppendElement(std::move(newEntry.ref()));
     }
   }
 
-  if (key) {
-    aKey = wr::AsImageKey(key.value());
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
+  return key;
 }
 
-void BlobSurfaceProvider::InvalidateRecording() {
+void SourceSurfaceBlobImage::MarkDirty() {
   MOZ_ASSERT(NS_IsMainThread());
 
   auto i = mKeys.Length();
@@ -131,7 +128,7 @@ void BlobSurfaceProvider::InvalidateRecording() {
   }
 }
 
-Maybe<BlobImageKeyData> BlobSurfaceProvider::RecordDrawing(
+Maybe<BlobImageKeyData> SourceSurfaceBlobImage::RecordDrawing(
     WebRenderLayerManager* aManager, wr::IpcResourceUpdateQueue& aResources,
     Maybe<wr::BlobImageKey> aBlobKey) {
   MOZ_ASSERT(!aManager->IsDestroyed());
@@ -145,11 +142,8 @@ Maybe<BlobImageKeyData> BlobSurfaceProvider::RecordDrawing(
   auto* rootManager = aManager->GetRenderRootStateManager();
   auto* wrBridge = aManager->WrBridge();
 
-  const auto& size = GetSurfaceKey().Size();
-  const auto& region = GetSurfaceKey().Region();
-  const auto& svgContext = GetSurfaceKey().SVGContext();
-
-  IntRect imageRect = region ? region->Rect() : IntRect(IntPoint(0, 0), size);
+  IntRect imageRect =
+      mRegion ? mRegion->Rect() : IntRect(IntPoint(0, 0), mSize);
   IntRect imageRectOrigin = imageRect - imageRect.TopLeft();
 
   std::vector<RefPtr<ScaledFont>> fonts;
@@ -184,15 +178,15 @@ Maybe<BlobImageKeyData> BlobSurfaceProvider::RecordDrawing(
     return Nothing();
   }
 
-  bool contextPaint = svgContext && svgContext->GetContextPaint();
+  bool contextPaint = mSVGContext && mSVGContext->GetContextPaint();
 
-  float animTime = (GetSurfaceKey().Playback() == PlaybackType::eStatic)
+  float animTime = (mWhichFrame == imgIContainer::FRAME_FIRST)
                        ? 0.0f
                        : mSVGDocumentWrapper->GetCurrentTimeAsFloat();
 
-  IntSize viewportSize = size;
-  if (svgContext) {
-    auto cssViewportSize = svgContext->GetViewportSize();
+  IntSize viewportSize = mSize;
+  if (mSVGContext) {
+    auto cssViewportSize = mSVGContext->GetViewportSize();
     if (cssViewportSize) {
       // XXX losing unit
       viewportSize.SizeTo(cssViewportSize->width, cssViewportSize->height);
@@ -212,11 +206,11 @@ Maybe<BlobImageKeyData> BlobSurfaceProvider::RecordDrawing(
     AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
         "SVG Image recording", GRAPHICS,
         nsPrintfCString("(%d,%d) %dx%d from %dx%d %s", imageRect.x, imageRect.y,
-                        imageRect.width, imageRect.height, size.width,
-                        size.height,
+                        imageRect.width, imageRect.height, mSize.width,
+                        mSize.height,
                         uri ? uri->GetSpecOrDefault().get() : "N/A"));
 
-    AutoRestoreSVGState autoRestore(svgContext, animTime, mSVGDocumentWrapper,
+    AutoRestoreSVGState autoRestore(mSVGContext, animTime, mSVGDocumentWrapper,
                                     contextPaint);
 
     mSVGDocumentWrapper->UpdateViewportBounds(viewportSize);
@@ -227,9 +221,9 @@ Maybe<BlobImageKeyData> BlobSurfaceProvider::RecordDrawing(
 
     nsRect svgRect;
     auto auPerDevPixel = presContext->AppUnitsPerDevPixel();
-    if (size != viewportSize) {
-      auto scaleX = double(size.width) / viewportSize.width;
-      auto scaleY = double(size.height) / viewportSize.height;
+    if (mSize != viewportSize) {
+      auto scaleX = double(mSize.width) / viewportSize.width;
+      auto scaleY = double(mSize.height) / viewportSize.height;
       ctx->SetMatrix(Matrix::Scaling(float(scaleX), float(scaleY)));
 
       auto scaledVisibleRect = IntRectToRect(imageRect);
