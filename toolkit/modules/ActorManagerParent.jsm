@@ -197,8 +197,7 @@ let JSWINDOWACTORS = {
     child: {
       moduleURI: "resource://gre/actors/ContentMetaChild.jsm",
       events: {
-        DOMContentLoaded: {},
-        DOMMetaAdded: { createActor: false },
+        DOMMetaAdded: {},
       },
     },
 
