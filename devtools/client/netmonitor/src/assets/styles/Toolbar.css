@@ -72,6 +72,11 @@
   bottom: 1px;
 }
 
+#devtools-cache-checkbox {
+  vertical-align: unset;
+  bottom: -1px;
+}
+
 .devtools-toolbar .devtools-checkbox-label {
   margin-inline-start: 2px;
   margin-inline-end: 2px;
