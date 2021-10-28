@@ -29,7 +29,6 @@
 #include "nsStyleStruct.h"
 #include "gfx2DGlue.h"
 #include "gfxGradientCache.h"
-#include "mozilla/image/WebRenderImageProvider.h"
 #include "mozilla/layers/StackingContextHelper.h"
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
@@ -3629,17 +3628,20 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
               img, aForFrame, imageRect, imageRect, aSc, flags, svgContext,
               region);
 
-      RefPtr<WebRenderImageProvider> provider;
-      drawResult = img->GetImageProvider(aManager->LayerManager(), decodeSize,
-                                         svgContext, region, flags,
-                                         getter_AddRefs(provider));
-      if (!provider) {
+      RefPtr<layers::ImageContainer> container;
+      drawResult = img->GetImageContainerAtSize(
+          aManager->LayerManager(), decodeSize, svgContext, region, flags,
+          getter_AddRefs(container));
+      if (!container) {
         break;
       }
 
-      Maybe<wr::ImageKey> key =
-          aManager->CommandBuilder().CreateImageProviderKey(aItem, provider,
-                                                            aResources);
+      auto rendering =
+          wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
+      gfx::IntSize size;
+      Maybe<wr::ImageKey> key = aManager->CommandBuilder().CreateImageKey(
+          aItem, container, aBuilder, aResources, rendering, aSc, size,
+          Nothing());
       if (key.isNothing()) {
         break;
       }
@@ -3654,8 +3656,6 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
         // but there are reftests that are sensible to the test going through a
         // blob while the reference doesn't.
         if (noVerticalBorders && noHorizontalBorders) {
-          auto rendering =
-              wr::ToImageRendering(aItem->Frame()->UsedImageRendering());
           aBuilder.PushImage(dest, clip, !aItem->BackfaceIsHidden(), rendering,
                              key.value());
           break;

@@ -104,14 +104,6 @@ class AnimationFrameBuffer {
   size_t Size() const { return mSize; }
 
   /**
-   * @returns The first frame refresh area. This is used instead of the dirty
-   * rect for the last frame when transitioning back to the first frame.
-   */
-  const gfx::IntRect& FirstFrameRefreshArea() const {
-    return mFirstFrameRefreshArea;
-  }
-
-  /**
    * @returns True if encountered an error during redecode which should cause
    *          the caller to stop inserting frames.
    */
@@ -294,10 +286,6 @@ class AnimationFrameBuffer {
    */
   virtual bool ResetInternal() = 0;
 
-  /// The first frame refresh area. This is used instead of the dirty rect for
-  /// the last frame when transitioning back to the first frame.
-  gfx::IntRect mFirstFrameRefreshArea;
-
   // The total number of frames in the animation. If mSizeKnown is true, it is
   // the actual total regardless of how many frames are available, otherwise it
   // is the total number of inserted frames.
@@ -432,6 +420,7 @@ class AnimationFrameRecyclingQueue final
  public:
   explicit AnimationFrameRecyclingQueue(AnimationFrameRetainedBuffer&& aQueue);
 
+  bool MarkComplete(const gfx::IntRect& aFirstFrameRefreshArea) override;
   void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                               const AddSizeOfCb& aCallback) override;
 
@@ -458,6 +447,9 @@ class AnimationFrameRecyclingQueue final
   };
 
   const std::deque<RecycleEntry>& Recycle() const { return mRecycle; }
+  const gfx::IntRect& FirstFrameRefreshArea() const {
+    return mFirstFrameRefreshArea;
+  }
 
  protected:
   void AdvanceInternal() override;
@@ -467,6 +459,10 @@ class AnimationFrameRecyclingQueue final
   /// frames. May contain up to mBatch frames, where the last frame in the queue
   /// is adjacent to the first frame in the mDisplay queue.
   std::deque<RecycleEntry> mRecycle;
+
+  /// The first frame refresh area. This is used instead of the dirty rect for
+  /// the last frame when transitioning back to the first frame.
+  gfx::IntRect mFirstFrameRefreshArea;
 
   /// Force recycled frames to use the first frame refresh area as their dirty
   /// rect. This is used when we are recycling frames from the end of an
