@@ -1,6 +1,186 @@
 {
   "data": [
     {
+      "schema": 1635365171154,
+      "derHash": "4/NVu17BE8/cXhzSNAxlwm30xph5/vmAA27PQv0Jk3I=",
+      "subject": "CN=Network Solutions EV Server CA 3,O=Network Solutions L.L.C.,C=US",
+      "subjectDN": "MFsxCzAJBgNVBAYTAlVTMSEwHwYDVQQKExhOZXR3b3JrIFNvbHV0aW9ucyBMLkwuQy4xKTAnBgNVBAMTIE5ldHdvcmsgU29sdXRpb25zIEVWIFNlcnZlciBDQSAz",
+      "whitelist": false,
+      "attachment": {
+        "hash": "b664ac160b6b9fae1bf002842a7fb6330a0a693938bfdf258bf72df39be1e885",
+        "size": 2259,
+        "filename": "xQiXKX4gkAa0TLqAfjYeHbCD6uIQikdIAvDtjITPGTc=.pem",
+        "location": "security-state-staging/intermediates/1968bfeb-29b2-4cf5-9d88-102a54197e2a.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "xQiXKX4gkAa0TLqAfjYeHbCD6uIQikdIAvDtjITPGTc=",
+      "crlite_enrolled": false,
+      "id": "9be65b22-0950-4b2d-9cab-98e1600f6808",
+      "last_modified": 1635368388887
+    },
+    {
+      "schema": 1635365172989,
+      "derHash": "KL3bAjnS1WB+jejyI7X3Bpy40aJ4iV1MTFcefQtpdmM=",
+      "subject": "CN=E-SAFER EXTENDED SSL ECC CA  [Run by the Issuer],O=E-SAFER CONSULTORIA EM TECNOLOGIA DA INFORMACAO LTDA,C=BR",
+      "subjectDN": "MIGHMQswCQYDVQQGEwJCUjE9MDsGA1UEChM0RS1TQUZFUiBDT05TVUxUT1JJQSBFTSBURUNOT0xPR0lBIERBIElORk9STUFDQU8gTFREQTE5MDcGA1UEAwwwRS1TQUZFUiBFWFRFTkRFRCBTU0wgRUNDIENBICBbUnVuIGJ5IHRoZSBJc3N1ZXJd",
+      "whitelist": false,
+      "attachment": {
+        "hash": "cc021f38b3ec149bff6bb4259f0d64311f9a7d05015883d475094c1ab415febc",
+        "size": 1309,
+        "filename": "a-SCFBMdXh0W-FGGIMQo7sUur1zyBw7unZ6Sh2EyoDU=.pem",
+        "location": "security-state-staging/intermediates/272ee53a-5b4d-457e-9734-5adebfd00d1d.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "a+SCFBMdXh0W+FGGIMQo7sUur1zyBw7unZ6Sh2EyoDU=",
+      "crlite_enrolled": false,
+      "id": "6b479110-6891-4310-a5a7-82a74a47fe9d",
+      "last_modified": 1635368388874
+    },
+    {
+      "schema": 1635365174803,
+      "derHash": "GQmO/5wMtG4fBq363R89pXEjcPcXMzRZgTfUpVX/8Ec=",
+      "subject": "CN=E-SAFER DOMAIN SSL CA  [Run by the Issuer],O=E-SAFER CONSULTORIA EM TECNOLOGIA DA INFORMACAO LTDA,C=BR",
+      "subjectDN": "MIGBMQswCQYDVQQGEwJCUjE9MDsGA1UEChM0RS1TQUZFUiBDT05TVUxUT1JJQSBFTSBURUNOT0xPR0lBIERBIElORk9STUFDQU8gTFREQTEzMDEGA1UEAwwqRS1TQUZFUiBET01BSU4gU1NMIENBICBbUnVuIGJ5IHRoZSBJc3N1ZXJd",
+      "whitelist": false,
+      "attachment": {
+        "hash": "f72dd7cfe6c5d1436f5ded83580233c4748b1211156a5ee1acaaaa3bf4364949",
+        "size": 2324,
+        "filename": "1F-ircopaMOchYXl140IHR8UWAyuzQ40XNQ5j6A1Elo=.pem",
+        "location": "security-state-staging/intermediates/c0f1518f-d641-458f-8832-3dbac6f1eee7.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "1F+ircopaMOchYXl140IHR8UWAyuzQ40XNQ5j6A1Elo=",
+      "crlite_enrolled": false,
+      "id": "6d3efd26-5824-4230-8ccb-a238dca1217c",
+      "last_modified": 1635368388860
+    },
+    {
+      "schema": 1635365176575,
+      "derHash": "vZZq1uj8wuFrVwk6n6K3k6SlxRfDxPiwPDPU2Pk4+j8=",
+      "subject": "CN=E-SAFER DOMAIN SSL ECC CA  [Run by the Issuer],O=E-SAFER CONSULTORIA EM TECNOLOGIA DA INFORMACAO LTDA,C=BR",
+      "subjectDN": "MIGFMQswCQYDVQQGEwJCUjE9MDsGA1UEChM0RS1TQUZFUiBDT05TVUxUT1JJQSBFTSBURUNOT0xPR0lBIERBIElORk9STUFDQU8gTFREQTE3MDUGA1UEAwwuRS1TQUZFUiBET01BSU4gU1NMIEVDQyBDQSAgW1J1biBieSB0aGUgSXNzdWVyXQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a61b731fcc34d26037a24b03b94fa839f197206132327d75cdace3e4988db9fe",
+        "size": 1317,
+        "filename": "_fNfZ1t3T83OiGnI63N_nf9v5CGZhdrLS6hulZCq0Dw=.pem",
+        "location": "security-state-staging/intermediates/9c3f0176-07f2-41f7-8be6-bd68ae2773e9.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "/fNfZ1t3T83OiGnI63N/nf9v5CGZhdrLS6hulZCq0Dw=",
+      "crlite_enrolled": false,
+      "id": "9aece34b-e400-452c-ac20-c53f7ffb1c08",
+      "last_modified": 1635368388846
+    },
+    {
+      "schema": 1635365178423,
+      "derHash": "PHLh9aCgG80zsYAetARJla5Mmxuot9tRNnXcv3+CKJo=",
+      "subject": "CN=E-SAFER ORGANIZATION SSL ECC CA  [Run by the Issuer],O=E-SAFER CONSULTORIA EM TECNOLOGIA DA INFORMACAO LTDA,C=BR",
+      "subjectDN": "MIGLMQswCQYDVQQGEwJCUjE9MDsGA1UEChM0RS1TQUZFUiBDT05TVUxUT1JJQSBFTSBURUNOT0xPR0lBIERBIElORk9STUFDQU8gTFREQTE9MDsGA1UEAww0RS1TQUZFUiBPUkdBTklaQVRJT04gU1NMIEVDQyBDQSAgW1J1biBieSB0aGUgSXNzdWVyXQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "9dab0ccaebc51a809f2018209b231ffa01d10c97ee29a6bbe46740c10bf4e67e",
+        "size": 1325,
+        "filename": "Npod1XsOwiAqsSReK1vco3WHhvi_2dcU_nupbYHmSmo=.pem",
+        "location": "security-state-staging/intermediates/42e7b76e-e657-4ab1-9600-b1653834a31e.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Npod1XsOwiAqsSReK1vco3WHhvi/2dcU/nupbYHmSmo=",
+      "crlite_enrolled": false,
+      "id": "e09736ec-c1cc-43e4-bfa1-7a6a72fb8a8b",
+      "last_modified": 1635368388833
+    },
+    {
+      "schema": 1635365180434,
+      "derHash": "4g3/JvPDlj83AL8uEI8fnp3uJZwk+K/Q27tvzZobxZo=",
+      "subject": "CN=E-SAFER EXTENDED SSL CA  [Run by the Issuer],O=E-SAFER CONSULTORIA EM TECNOLOGIA DA INFORMACAO LTDA,C=BR",
+      "subjectDN": "MIGDMQswCQYDVQQGEwJCUjE9MDsGA1UEChM0RS1TQUZFUiBDT05TVUxUT1JJQSBFTSBURUNOT0xPR0lBIERBIElORk9STUFDQU8gTFREQTE1MDMGA1UEAwwsRS1TQUZFUiBFWFRFTkRFRCBTU0wgQ0EgIFtSdW4gYnkgdGhlIElzc3Vlcl0=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "e3d91b124334fcf0c2f4314cdcac7ea72151da2fe3a6f07852655dd32fabee0f",
+        "size": 2316,
+        "filename": "plm_9YONwHj1IGtrwIqZq6BKWKFZfTMWD6vczJ53lUg=.pem",
+        "location": "security-state-staging/intermediates/8fa22e55-bb73-4e52-bfa7-8f445b589de2.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "plm/9YONwHj1IGtrwIqZq6BKWKFZfTMWD6vczJ53lUg=",
+      "crlite_enrolled": false,
+      "id": "c647c617-859f-4bb3-8422-a6325636759f",
+      "last_modified": 1635368388819
+    },
+    {
+      "schema": 1635365182151,
+      "derHash": "xjHKi5oSWUVaZh4sU4jNBppwS85U+l76cGvwsJYtj/M=",
+      "subject": "CN=E-SAFER ORGANIZATION SSL CA  [Run by the Issuer],O=E-SAFER CONSULTORIA EM TECNOLOGIA DA INFORMACAO LTDA,C=BR",
+      "subjectDN": "MIGHMQswCQYDVQQGEwJCUjE9MDsGA1UEChM0RS1TQUZFUiBDT05TVUxUT1JJQSBFTSBURUNOT0xPR0lBIERBIElORk9STUFDQU8gTFREQTE5MDcGA1UEAwwwRS1TQUZFUiBPUkdBTklaQVRJT04gU1NMIENBICBbUnVuIGJ5IHRoZSBJc3N1ZXJd",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c6ffec6c7f22be452547a0bd6a8debed72719992ae9682d83a85eb0e869c9398",
+        "size": 2333,
+        "filename": "gQ064qd4IEshlJkixJLrt4o9KEXL1XNDFPkbzRjuF0s=.pem",
+        "location": "security-state-staging/intermediates/340ae012-254c-44fc-a44e-7a24b4d77426.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "gQ064qd4IEshlJkixJLrt4o9KEXL1XNDFPkbzRjuF0s=",
+      "crlite_enrolled": false,
+      "id": "28d4ebb7-fa43-4a85-902f-de8e2ae2e492",
+      "last_modified": 1635368388806
+    },
+    {
+      "schema": 1635322035494,
+      "derHash": "TKCAJjzkvCTxgRzvP/rKWl7zmPk+vQxbz1t70LrmfUo=",
+      "subject": "CN=BitCert RSA Business Secure Site CA,O=BitCert,L=Chengdu,ST=Sichuan,C=CN",
+      "subjectDN": "MHExCzAJBgNVBAYTAkNOMRAwDgYDVQQIEwdTaWNodWFuMRAwDgYDVQQHEwdDaGVuZ2R1MRAwDgYDVQQKEwdCaXRDZXJ0MSwwKgYDVQQDEyNCaXRDZXJ0IFJTQSBCdXNpbmVzcyBTZWN1cmUgU2l0ZSBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a40bf8b9f7a6cc399211e086cb3d8144ff7e721b1e16e5646fdc299974c39bc5",
+        "size": 2133,
+        "filename": "cz-x3ySlDQ6TKlRCvrhCFabpnRLASgrkOqGv8wQxW6A=.pem",
+        "location": "security-state-staging/intermediates/846ca5bb-c701-4333-a9a7-808ec99af5f5.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "cz+x3ySlDQ6TKlRCvrhCFabpnRLASgrkOqGv8wQxW6A=",
+      "crlite_enrolled": false,
+      "id": "c8d11d03-f57b-43e8-9309-17aa68d467a5",
+      "last_modified": 1635325075060
+    },
+    {
+      "schema": 1635303036837,
+      "derHash": "NsfjKXUKQD2wuvBpyanzOWPlyYpmqKtXAW22+IzFYU0=",
+      "subject": "CN=MilleniumSign SSL Certificate CA RSA R2,O=MilleniumSign Limited,L=Ebene,ST=Plaines Wilhems,C=MU",
+      "subjectDN": "MIGJMQswCQYDVQQGEwJNVTEYMBYGA1UECAwPUGxhaW5lcyBXaWxoZW1zMQ4wDAYDVQQHDAVFYmVuZTEeMBwGA1UECgwVTWlsbGVuaXVtU2lnbiBMaW1pdGVkMTAwLgYDVQQDDCdNaWxsZW5pdW1TaWduIFNTTCBDZXJ0aWZpY2F0ZSBDQSBSU0EgUjI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "3c3182c3f974165726acb2e2b6c35f9306b120ba4684e22ac91eef26e5ef70a1",
+        "size": 2552,
+        "filename": "1jNByu9N5tc5kL0IfWW4-AIUQnp6ljVLB3ROX-cA6b4=.pem",
+        "location": "security-state-staging/intermediates/03421df1-3916-4c0a-87eb-0d83ea93a06f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "1jNByu9N5tc5kL0IfWW4+AIUQnp6ljVLB3ROX+cA6b4=",
+      "crlite_enrolled": false,
+      "id": "17e6f300-d0c1-4ef6-ae0f-36ecd026b133",
+      "last_modified": 1635303547732
+    },
+    {
+      "schema": 1635260288000,
+      "derHash": "Jv1MQ2fkY9OccXlq5AEOUzgNyTvBMvsBnWcYpoc+gfQ=",
+      "subject": "CN=SHECA RSA Organization Validation Server CA G3,O=UniTrust,C=CN",
+      "subjectDN": "MFkxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDE3MDUGA1UEAwwuU0hFQ0EgUlNBIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a02a5c8205e62c2ef5dc42345a1585558c86f166ed9875d861601a465bcc4651",
+        "size": 2016,
+        "filename": "0JA1q1ctk_4J8qS0t-GhJaG5egVDq9SB33oMY7SMpfs=.pem",
+        "location": "security-state-staging/intermediates/caec957d-379a-4c23-bf42-3bd122e7cf33.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "0JA1q1ctk/4J8qS0t+GhJaG5egVDq9SB33oMY7SMpfs=",
+      "crlite_enrolled": true,
+      "id": "10ec0271-99d5-4c06-a20d-1c03ccf7d780",
+      "last_modified": 1635303547709
+    },
+    {
       "schema": 1634947052129,
       "derHash": "HE7qOker0SJWjqtUfga1IRH384hmLCRsjsviZgufJvE=",
       "subject": "CN=Certum Extended Validation RSA CA,OU=Certum Certification Authority,O=Asseco Data Systems S.A.,C=PL",
@@ -1151,24 +1331,6 @@
       "crlite_enrolled": false,
       "id": "439aea7c-dc48-43f4-8428-b9332b41b319",
       "last_modified": 1634947049468
-    },
-    {
-      "schema": 1634937150044,
-      "derHash": "NsfjKXUKQD2wuvBpyanzOWPlyYpmqKtXAW22+IzFYU0=",
-      "subject": "CN=MilleniumSign SSL Certificate CA RSA R2,O=MilleniumSign Limited,L=Ebene,ST=Plaines Wilhems,C=MU",
-      "subjectDN": "MIGJMQswCQYDVQQGEwJNVTEYMBYGA1UECAwPUGxhaW5lcyBXaWxoZW1zMQ4wDAYDVQQHDAVFYmVuZTEeMBwGA1UECgwVTWlsbGVuaXVtU2lnbiBMaW1pdGVkMTAwLgYDVQQDDCdNaWxsZW5pdW1TaWduIFNTTCBDZXJ0aWZpY2F0ZSBDQSBSU0EgUjI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "3c3182c3f974165726acb2e2b6c35f9306b120ba4684e22ac91eef26e5ef70a1",
-        "size": 2552,
-        "filename": "1jNByu9N5tc5kL0IfWW4-AIUQnp6ljVLB3ROX-cA6b4=.pem",
-        "location": "security-state-staging/intermediates/03421df1-3916-4c0a-87eb-0d83ea93a06f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "1jNByu9N5tc5kL0IfWW4+AIUQnp6ljVLB3ROX+cA6b4=",
-      "crlite_enrolled": true,
-      "id": "17e6f300-d0c1-4ef6-ae0f-36ecd026b133",
-      "last_modified": 1634947049418
     },
     {
       "schema": 1634937145491,
@@ -6281,24 +6443,6 @@
       "crlite_enrolled": false,
       "id": "74d8f446-fb98-4c65-8f25-c0c00d3aab68",
       "last_modified": 1634003890430
-    },
-    {
-      "schema": 1633960712921,
-      "derHash": "Jv1MQ2fkY9OccXlq5AEOUzgNyTvBMvsBnWcYpoc+gfQ=",
-      "subject": "CN=SHECA RSA Organization Validation Server CA G3,O=UniTrust,C=CN",
-      "subjectDN": "MFkxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDE3MDUGA1UEAwwuU0hFQ0EgUlNBIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a02a5c8205e62c2ef5dc42345a1585558c86f166ed9875d861601a465bcc4651",
-        "size": 2016,
-        "filename": "0JA1q1ctk_4J8qS0t-GhJaG5egVDq9SB33oMY7SMpfs=.pem",
-        "location": "security-state-staging/intermediates/caec957d-379a-4c23-bf42-3bd122e7cf33.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "0JA1q1ctk/4J8qS0t+GhJaG5egVDq9SB33oMY7SMpfs=",
-      "crlite_enrolled": true,
-      "id": "10ec0271-99d5-4c06-a20d-1c03ccf7d780",
-      "last_modified": 1634003890407
     },
     {
       "schema": 1633831085444,
@@ -23183,24 +23327,6 @@
       "crlite_enrolled": false,
       "id": "fa4a1c02-26b3-4bf5-8034-bb4cabca2a73",
       "last_modified": 1601517443010
-    },
-    {
-      "schema": 1601376724096,
-      "derHash": "TKCAJjzkvCTxgRzvP/rKWl7zmPk+vQxbz1t70LrmfUo=",
-      "subject": "CN=BitCert RSA Business Secure Site CA,O=BitCert,L=Chengdu,ST=Sichuan,C=CN",
-      "subjectDN": "MHExCzAJBgNVBAYTAkNOMRAwDgYDVQQIEwdTaWNodWFuMRAwDgYDVQQHEwdDaGVuZ2R1MRAwDgYDVQQKEwdCaXRDZXJ0MSwwKgYDVQQDEyNCaXRDZXJ0IFJTQSBCdXNpbmVzcyBTZWN1cmUgU2l0ZSBDQQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a40bf8b9f7a6cc399211e086cb3d8144ff7e721b1e16e5646fdc299974c39bc5",
-        "size": 2133,
-        "filename": "cz-x3ySlDQ6TKlRCvrhCFabpnRLASgrkOqGv8wQxW6A=.pem",
-        "location": "security-state-staging/intermediates/846ca5bb-c701-4333-a9a7-808ec99af5f5.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "cz+x3ySlDQ6TKlRCvrhCFabpnRLASgrkOqGv8wQxW6A=",
-      "crlite_enrolled": true,
-      "id": "c8d11d03-f57b-43e8-9309-17aa68d467a5",
-      "last_modified": 1601517442992
     },
     {
       "schema": 1601376762009,
