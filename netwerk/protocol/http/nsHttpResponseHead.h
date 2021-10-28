@@ -126,11 +126,6 @@ class nsHttpResponseHead {
   // reset the response head to it's initial state
   void Reset();
 
-  [[nodiscard]] nsresult GetAgeValue(uint32_t* result);
-  [[nodiscard]] nsresult GetMaxAgeValue(uint32_t* result);
-  [[nodiscard]] nsresult GetStaleWhileRevalidateValue(uint32_t* result);
-  [[nodiscard]] nsresult GetDateValue(uint32_t* result);
-  [[nodiscard]] nsresult GetExpiresValue(uint32_t* result);
   [[nodiscard]] nsresult GetLastModifiedValue(uint32_t* result);
 
   bool operator==(const nsHttpResponseHead& aOther) const;
@@ -162,6 +157,11 @@ class nsHttpResponseHead {
   // these return failure if the header does not exist.
   [[nodiscard]] nsresult ParseDateHeader(const nsHttpAtom& header,
                                          uint32_t* result) const;
+  [[nodiscard]] nsresult GetAgeValue(uint32_t* result);
+  [[nodiscard]] nsresult GetMaxAgeValue(uint32_t* result);
+  [[nodiscard]] nsresult GetStaleWhileRevalidateValue(uint32_t* result);
+  [[nodiscard]] nsresult GetDateValue(uint32_t* result);
+  [[nodiscard]] nsresult GetExpiresValue(uint32_t* result);
 
   bool ExpiresInPast_locked() const;
   [[nodiscard]] nsresult GetAgeValue_locked(uint32_t* result) const;
