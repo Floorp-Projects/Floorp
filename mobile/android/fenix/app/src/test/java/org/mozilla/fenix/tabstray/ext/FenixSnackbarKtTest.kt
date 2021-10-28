@@ -9,6 +9,7 @@ import android.view.View
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verifyOrder
+import org.junit.Ignore
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
@@ -65,6 +66,7 @@ class FenixSnackbarKtTest {
     }
 
     @Test
+    @Ignore("Intermittent failing test on JDK11: https://github.com/mockk/mockk/issues/598")
     fun `WHEN anchorWithAction is called THEN correct text will be set`() {
         val mockContext: Context = mockk {
             every { getString(R.string.create_collection_view) }
