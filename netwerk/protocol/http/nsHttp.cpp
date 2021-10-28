@@ -275,7 +275,8 @@ bool IsPermanentRedirect(uint32_t httpStatus) {
 bool ValidationRequired(bool isForcedValid,
                         nsHttpResponseHead* cachedResponseHead,
                         uint32_t loadFlags, bool allowStaleCacheContent,
-                        bool isImmutable, bool customConditionalRequest,
+                        bool forceValidateCacheContent, bool isImmutable,
+                        bool customConditionalRequest,
                         nsHttpRequestHead& requestHead, nsICacheEntry* entry,
                         CacheControlParser& cacheControlRequest,
                         bool fromPreviousSession,
@@ -302,7 +303,9 @@ bool ValidationRequired(bool isForcedValid,
 
   // If the VALIDATE_ALWAYS flag is set, any cached data won't be used until
   // it's revalidated with the server.
-  if ((loadFlags & nsIRequest::VALIDATE_ALWAYS) && !isImmutable) {
+  if (((loadFlags & nsIRequest::VALIDATE_ALWAYS) ||
+       forceValidateCacheContent) &&
+      !isImmutable) {
     LOG(("Validating based on VALIDATE_ALWAYS load flag\n"));
     return true;
   }

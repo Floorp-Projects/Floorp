@@ -3805,8 +3805,8 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, uint32_t* aResult) {
     }
     doValidation = nsHttp::ValidationRequired(
         isForcedValid, mCachedResponseHead.get(), mLoadFlags,
-        LoadAllowStaleCacheContent(), isImmutable,
-        LoadCustomConditionalRequest(), mRequestHead, entry,
+        LoadAllowStaleCacheContent(), LoadForceValidateCacheContent(),
+        isImmutable, LoadCustomConditionalRequest(), mRequestHead, entry,
         cacheControlRequest, fromPreviousSession, &doBackgroundValidation);
   }
 
@@ -7928,6 +7928,20 @@ NS_IMETHODIMP
 nsHttpChannel::GetAllowStaleCacheContent(bool* aAllowStaleCacheContent) {
   NS_ENSURE_ARG(aAllowStaleCacheContent);
   *aAllowStaleCacheContent = LoadAllowStaleCacheContent();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::SetForceValidateCacheContent(bool aForceValidateCacheContent) {
+  LOG(("nsHttpChannel::SetForceValidateCacheContent [this=%p, allow=%d]", this,
+       aForceValidateCacheContent));
+  StoreForceValidateCacheContent(aForceValidateCacheContent);
+  return NS_OK;
+}
+NS_IMETHODIMP
+nsHttpChannel::GetForceValidateCacheContent(bool* aForceValidateCacheContent) {
+  NS_ENSURE_ARG(aForceValidateCacheContent);
+  *aForceValidateCacheContent = LoadForceValidateCacheContent();
   return NS_OK;
 }
 

@@ -3511,7 +3511,8 @@ HttpBaseChannel::GetFetchCacheMode(uint32_t* aFetchCacheMode) {
     *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_STORE;
   } else if (ContainsAllFlags(mLoadFlags, LOAD_BYPASS_CACHE)) {
     *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_RELOAD;
-  } else if (ContainsAllFlags(mLoadFlags, VALIDATE_ALWAYS)) {
+  } else if (ContainsAllFlags(mLoadFlags, VALIDATE_ALWAYS) ||
+             LoadForceValidateCacheContent()) {
     *aFetchCacheMode = nsIHttpChannelInternal::FETCH_CACHE_MODE_NO_CACHE;
   } else if (ContainsAllFlags(
                  mLoadFlags,
@@ -4647,6 +4648,10 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     for (auto& data : mPreferredCachedAltDataTypes) {
       cacheInfoChan->PreferAlternativeDataType(data.type(), data.contentType(),
                                                data.deliverAltData());
+    }
+
+    if (LoadForceValidateCacheContent()) {
+      Unused << cacheInfoChan->SetForceValidateCacheContent(true);
     }
   }
 
