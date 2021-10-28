@@ -180,7 +180,7 @@ mod test {
         CFRunLoop::run_current();
         let elapsed = elapsed_rx.try_recv().unwrap();
         println!("wait_200_milliseconds, elapsed: {}", elapsed);
-        assert!(elapsed > 0.19 && elapsed < 0.30);
+        assert!(elapsed > 0.19 && elapsed < 0.35);
     }
 
     struct Info {
