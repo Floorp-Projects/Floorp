@@ -18,7 +18,7 @@ use crate::picture::{SurfaceInfo, SurfaceIndex, ROOT_SURFACE_INDEX, SurfaceRende
 use crate::picture::{BackdropKind, SubpixelMode, TileCacheLogger, RasterConfig, PictureCompositeMode};
 use crate::prepare::prepare_primitives;
 use crate::prim_store::{PictureIndex, PrimitiveDebugId};
-use crate::prim_store::{DeferredResolve};
+use crate::prim_store::{DeferredResolve, PrimitiveInstance};
 use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::{DataStores, ScratchBuffer};
 use crate::render_target::{RenderTarget, PictureCacheTarget, TextureCacheRenderTarget};
@@ -391,6 +391,7 @@ impl FrameBuilder {
             &mut surfaces,
             &frame_context,
             data_stores,
+            &mut scene.prim_instances,
         );
 
         {
@@ -431,6 +432,7 @@ impl FrameBuilder {
                     &mut visibility_state,
                     tile_caches,
                     true,
+                    &mut scene.prim_instances,
                 );
             }
 
@@ -499,6 +501,7 @@ impl FrameBuilder {
                     &mut scratch.primitive,
                     tile_cache_logger,
                     tile_caches,
+                    &mut scene.prim_instances,
                 );
 
                 let pic = &mut scene.prim_store.pictures[pic_index.0];
@@ -549,7 +552,7 @@ impl FrameBuilder {
         profile_scope!("build");
         profile_marker!("BuildFrame");
 
-        profile.set(profiler::PRIMITIVES, scene.prim_store.prim_count());
+        profile.set(profiler::PRIMITIVES, scene.prim_instances.len());
         profile.set(profiler::PICTURE_CACHE_SLICES, scene.tile_cache_config.picture_cache_slice_count);
         scratch.begin_frame();
         gpu_cache.begin_frame(stamp);
@@ -654,6 +657,7 @@ impl FrameBuilder {
                     &mut z_generator,
                     &mut composite_state,
                     scene.config.gpu_supports_fast_clears,
+                    &scene.prim_instances,
                 );
 
                 has_texture_cache_tasks |= !pass.texture_cache.is_empty();
@@ -782,6 +786,7 @@ pub fn build_render_pass(
     z_generator: &mut ZBufferIdGenerator,
     composite_state: &mut CompositeState,
     gpu_supports_fast_clears: bool,
+    prim_instances: &[PrimitiveInstance],
 ) -> RenderPass {
     profile_scope!("build_render_pass");
 
@@ -939,6 +944,7 @@ pub fn build_render_pass(
             surface_spatial_node_index,
             z_generator,
             composite_state,
+            prim_instances,
         );
         }
 
@@ -1020,6 +1026,7 @@ pub fn build_render_pass(
         transforms,
         z_generator,
         composite_state,
+        prim_instances,
     );
     pass.alpha.build(
         ctx,
@@ -1030,6 +1037,7 @@ pub fn build_render_pass(
         transforms,
         z_generator,
         composite_state,
+        prim_instances,
     );
 
     pass

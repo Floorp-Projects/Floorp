@@ -271,6 +271,7 @@ impl PictureChainBuilder {
         options: PictureOptions,
         interners: &mut Interners,
         prim_store: &mut PrimitiveStore,
+        prim_instances: &mut Vec<PrimitiveInstance>,
     ) -> PictureChainBuilder {
         let prim_list = match self.current {
             PictureSource::PrimitiveList { prim_list } => {
@@ -284,6 +285,7 @@ impl PictureChainBuilder {
                     LayoutRect::zero(),
                     self.spatial_node_index,
                     self.flags,
+                    prim_instances,
                 );
 
                 prim_list
@@ -452,6 +454,11 @@ pub struct SceneBuilder<'a> {
     /// to be referenced by both the owning 3d rendering context and the child
     /// pictures that contribute to the splitter.
     plane_splitters: Vec<PlaneSplitter>,
+
+    /// A list of all primitive instances in the scene. We store them as a single
+    /// array so that multiple different systems (e.g. tile-cache, visibility, property
+    /// animation bindings) can store index buffers to prim instances.
+    prim_instances: Vec<PrimitiveInstance>,
 }
 
 impl<'a> SceneBuilder<'a> {
@@ -505,6 +512,7 @@ impl<'a> SceneBuilder<'a> {
             snap_to_device,
             picture_graph: PictureGraph::new(),
             plane_splitters: Vec::new(),
+            prim_instances: Vec::new(),
         };
 
         builder.build_all(&root_pipeline);
@@ -535,6 +543,7 @@ impl<'a> SceneBuilder<'a> {
             tile_cache_pictures,
             picture_graph: builder.picture_graph,
             plane_splitters: builder.plane_splitters,
+            prim_instances: builder.prim_instances,
         }
     }
 
@@ -1673,6 +1682,7 @@ impl<'a> SceneBuilder<'a> {
                     prim_rect,
                     spatial_node_index,
                     flags,
+                    &mut self.prim_instances,
                 );
             }
             None => {
@@ -1687,6 +1697,7 @@ impl<'a> SceneBuilder<'a> {
                     &self.config,
                     &self.quality_settings,
                     self.root_iframe_clip,
+                    &mut self.prim_instances,
                 );
             }
         }
@@ -2055,6 +2066,7 @@ impl<'a> SceneBuilder<'a> {
                 &self.config,
                 self.root_iframe_clip,
                 SliceFlags::IS_BLEND_CONTAINER,
+                &self.prim_instances,
             );
 
             return;
@@ -2173,6 +2185,7 @@ impl<'a> SceneBuilder<'a> {
                     LayoutRect::zero(),
                     ext_prim.spatial_node_index,
                     ext_prim.flags,
+                    &mut self.prim_instances,
                 );
             }
 
@@ -2244,6 +2257,7 @@ impl<'a> SceneBuilder<'a> {
                     PictureOptions::default(),
                     &mut self.interners,
                     &mut self.prim_store,
+                    &mut self.prim_instances,
                 );
             } else {
                 // If we have a mix-blend-mode, the stacking context needs to be isolated
@@ -2275,6 +2289,7 @@ impl<'a> SceneBuilder<'a> {
                     LayoutRect::zero(),
                     stacking_context.spatial_node_index,
                     stacking_context.prim_flags,
+                    &mut self.prim_instances,
                 );
                 None
             }
@@ -2640,6 +2655,7 @@ impl<'a> SceneBuilder<'a> {
                                 info.rect,
                                 spatial_node_index,
                                 info.flags,
+                                &mut self.prim_instances,
                             );
                         }
                     }
@@ -3383,6 +3399,7 @@ impl<'a> SceneBuilder<'a> {
                 LayoutRect::zero(),
                 backdrop_spatial_node_index,
                 prim_flags,
+                &mut self.prim_instances,
             );
 
             backdrop_pic_index = PictureIndex(self.prim_store.pictures
@@ -3459,6 +3476,7 @@ impl<'a> SceneBuilder<'a> {
                 LayoutRect::zero(),
                 backdrop_spatial_node_index,
                 info.flags,
+                &mut self.prim_instances,
             );
     }
 
@@ -3478,6 +3496,7 @@ impl<'a> SceneBuilder<'a> {
                     LayoutRect::zero(),
                     spatial_node_index,
                     prim_flags,
+                    &mut self.prim_instances,
                 );
             }
             flattened_items = sc.cut_item_sequence(
@@ -3503,6 +3522,7 @@ impl<'a> SceneBuilder<'a> {
                 LayoutRect::zero(),
                 spatial_node_index,
                 prim_flags,
+                &mut self.prim_instances,
             );
 
         Some(pic_index)
@@ -3570,6 +3590,7 @@ impl<'a> SceneBuilder<'a> {
                 PictureOptions { inflate_if_required },
                 &mut self.interners,
                 &mut self.prim_store,
+                &mut self.prim_instances,
             );
         }
 
@@ -3606,6 +3627,7 @@ impl<'a> SceneBuilder<'a> {
                 PictureOptions { inflate_if_required },
                 &mut self.interners,
                 &mut self.prim_store,
+                &mut self.prim_instances,
             );
         }
 
