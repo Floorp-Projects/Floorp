@@ -120,7 +120,11 @@
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Cau</string>
     <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_turn_on_auto_close_button">Troi autogau ymlaen</string>
+    <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">Troi autogau ymlaen</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">Troi autogau ymlaen</string>
+
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -1384,7 +1388,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="onboarding_firefox_account_automatic_signin_failed">Wedi methu mewngofnodi</string>
 
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">Preifatrwydd bob amser</string>
+    <string name="onboarding_tracking_protection_header_3">Preifatrwydd parhaus</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
     <string name="onboarding_tracking_protection_description_3">Mae Firefox yn atal cwmnïau rhag eich dilyn yn gyfrinachol o amgylch y we, yn awtomatig.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -2015,6 +2019,9 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Gall Firefox gau tabiau nad ydych wedi edrych arnyn nhw dros y mis diwethaf.</string>
     <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">TROI AWTOGAU YMLAEN</string>
+
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">Autogau wedi’i alluogi</string>
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
