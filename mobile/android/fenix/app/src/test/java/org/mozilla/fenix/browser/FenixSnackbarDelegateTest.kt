@@ -62,6 +62,7 @@ class FenixSnackbarDelegateTest {
     }
 
     @Test
+    @Ignore("Intermittent failing test on JDK11: https://github.com/mockk/mockk/issues/598")
     fun `show with listener but no action`() {
         delegate.show(
             snackBarParentView = mockk(),
@@ -91,8 +92,8 @@ class FenixSnackbarDelegateTest {
         verify { snackbar.show() }
     }
 
-    @Ignore("Intermittent failing test.")
     @Test
+    @Ignore("Intermittent failing test on JDK11: https://github.com/mockk/mockk/issues/598")
     fun `show with listener and action`() {
         val listener = mockk<(View) -> Unit>(relaxed = true)
         delegate.show(
