@@ -10,6 +10,7 @@
 /* import-globals-from privacy.js */
 /* import-globals-from sync.js */
 /* import-globals-from experimental.js */
+/* import-globals-from moreFromMozilla.js */
 /* import-globals-from findInPage.js */
 /* import-globals-from ../../base/content/utilityOverlay.js */
 /* import-globals-from ../../../toolkit/content/preferencesBindings.js */
@@ -28,6 +29,10 @@ ChromeUtils.defineModuleGetter(
   "formAutofillParent",
   "resource://formautofill/FormAutofillParent.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+});
 
 XPCOMUtils.defineLazyGetter(this, "gSubDialog", function() {
   const { SubDialogManager } = ChromeUtils.import(
@@ -140,6 +145,12 @@ function init_all() {
       false
     );
     register_module("paneExperimental", gExperimentalPane);
+  }
+
+  NimbusFeatures.moreFromMozilla.recordExposureEvent({ once: true });
+  if (NimbusFeatures.moreFromMozilla.getVariable("enabled")) {
+    document.getElementById("category-more-from-mozilla").hidden = false;
+    register_module("paneMoreFromMozilla", gMoreFromMozillaPane);
   }
   // The Sync category needs to be the last of the "real" categories
   // registered and inititalized since many tests wait for the
