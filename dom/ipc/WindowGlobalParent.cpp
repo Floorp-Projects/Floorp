@@ -1359,7 +1359,7 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvRequestRestoreTabContent() {
   return IPC_OK();
 }
 
-nsCString BFCacheStatusToString(uint16_t aFlags) {
+nsCString BFCacheStatusToString(uint32_t aFlags) {
   if (aFlags == 0) {
     return "0"_ns;
   }
@@ -1396,7 +1396,7 @@ nsCString BFCacheStatusToString(uint16_t aFlags) {
 }
 
 mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateBFCacheStatus(
-    const uint16_t& aOnFlags, const uint16_t& aOffFlags) {
+    const uint32_t& aOnFlags, const uint32_t& aOffFlags) {
   if (MOZ_UNLIKELY(MOZ_LOG_TEST(gSHIPBFCacheLog, LogLevel::Debug))) {
     nsAutoCString uri("[no uri]");
     if (mDocumentURI) {

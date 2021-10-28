@@ -222,7 +222,7 @@ class WindowGlobalParent final : public WindowContext,
 
   Maybe<uint64_t> GetSingleChannelId() { return mSingleChannelId; }
 
-  uint16_t GetBFCacheStatus() { return mBFCacheStatus; }
+  uint32_t GetBFCacheStatus() { return mBFCacheStatus; }
 
  protected:
   already_AddRefed<JSActor> InitJSActor(JS::HandleObject aMaybeActor,
@@ -292,8 +292,8 @@ class WindowGlobalParent final : public WindowContext,
 
   mozilla::ipc::IPCResult RecvResetSessionStore(uint32_t aEpoch);
 
-  mozilla::ipc::IPCResult RecvUpdateBFCacheStatus(const uint16_t& aOnFlags,
-                                                  const uint16_t& aOffFlags);
+  mozilla::ipc::IPCResult RecvUpdateBFCacheStatus(const uint32_t& aOnFlags,
+                                                  const uint32_t& aOffFlags);
 
  public:
   mozilla::ipc::IPCResult RecvSetSingleChannelId(
@@ -385,7 +385,7 @@ class WindowGlobalParent final : public WindowContext,
   // subsequent ExpectPageUseCounters calls.
   bool mSentPageUseCounters = false;
 
-  uint16_t mBFCacheStatus = 0;
+  uint32_t mBFCacheStatus = 0;
 
   // mSingleChannelId records whether the loadgroup contains a single request
   // with an id. If there is one channel in the loadgroup and it has an id then
