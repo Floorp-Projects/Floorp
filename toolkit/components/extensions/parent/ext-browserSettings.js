@@ -509,20 +509,52 @@ this.browserSettings = class extends ExtensionAPI {
             },
           }
         ),
-        zoomFullPage: getSettingsAPI({
-          context,
-          name: "zoomFullPage",
-          callback() {
-            return Services.prefs.getBoolPref("browser.zoom.full");
-          },
-        }),
-        zoomSiteSpecific: getSettingsAPI({
-          context,
-          name: "zoomSiteSpecific",
-          callback() {
-            return Services.prefs.getBoolPref("browser.zoom.siteSpecific");
-          },
-        }),
+        zoomFullPage: Object.assign(
+          getSettingsAPI({
+            context,
+            name: "zoomFullPage",
+            callback() {
+              return Services.prefs.getBoolPref("browser.zoom.full");
+            },
+          }),
+          {
+            set: details => {
+              if (typeof details.value !== "boolean") {
+                throw new ExtensionError(
+                  `${details.value} is not a valid value for zoomFullPage.`
+                );
+              }
+              return ExtensionPreferencesManager.setSetting(
+                extension.id,
+                "zoomFullPage",
+                details.value
+              );
+            },
+          }
+        ),
+        zoomSiteSpecific: Object.assign(
+          getSettingsAPI({
+            context,
+            name: "zoomSiteSpecific",
+            callback() {
+              return Services.prefs.getBoolPref("browser.zoom.siteSpecific");
+            },
+          }),
+          {
+            set: details => {
+              if (typeof details.value !== "boolean") {
+                throw new ExtensionError(
+                  `${details.value} is not a valid value for zoomSiteSpecific.`
+                );
+              }
+              return ExtensionPreferencesManager.setSetting(
+                extension.id,
+                "zoomSiteSpecific",
+                details.value
+              );
+            },
+          }
+        ),
         colorManagement: {
           mode: getSettingsAPI({
             context,
