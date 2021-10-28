@@ -802,7 +802,7 @@ void GCRuntime::updateZonePointersToRelocatedCells(Zone* zone) {
   // Call callbacks to get the rest of the system to fixup other untraced
   // pointers.
   for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
-    callWeakPointerCompartmentCallbacks(&trc, comp);
+    callWeakPointerCompartmentCallbacks(comp);
   }
 }
 
@@ -848,7 +848,7 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
 
   // Call callbacks to get the rest of the system to fixup other untraced
   // pointers.
-  callWeakPointerZonesCallbacks(&trc);
+  callWeakPointerZonesCallbacks();
 }
 
 void GCRuntime::clearRelocatedArenas(Arena* arenaList, JS::GCReason reason) {
