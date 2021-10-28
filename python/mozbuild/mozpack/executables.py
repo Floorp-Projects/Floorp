@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import struct
 import subprocess
+from io import BytesIO
 from mozpack.errors import errors
 
 MACHO_SIGNATURES = [
@@ -25,36 +26,41 @@ MACHO = 1
 ELF = 2
 
 
-def get_type(path):
+def get_type(path_or_fileobj):
     """
     Check the signature of the give file and returns what kind of executable
     matches.
     """
-    with open(path, "rb") as f:
-        signature = f.read(4)
-        if len(signature) < 4:
-            return UNKNOWN
-        signature = struct.unpack(">L", signature)[0]
-        if signature == ELF_SIGNATURE:
-            return ELF
-        if signature in MACHO_SIGNATURES:
-            return MACHO
-        if signature != FAT_SIGNATURE:
-            return UNKNOWN
-        # We have to sanity check the second four bytes, because Java class
-        # files use the same magic number as Mach-O fat binaries.
-        # This logic is adapted from file(1), which says that Mach-O uses
-        # these bytes to count the number of architectures within, while
-        # Java uses it for a version number. Conveniently, there are only
-        # 18 labelled Mach-O architectures, and Java's first released
-        # class format used the version 43.0.
-        num = f.read(4)
-        if len(num) < 4:
-            return UNKNOWN
-        num = struct.unpack(">L", num)[0]
-        if num < 20:
-            return MACHO
+    if hasattr(path_or_fileobj, "peek"):
+        f = BytesIO(path_or_fileobj.peek(8))
+    elif hasattr(path_or_fileobj, "read"):
+        f = path_or_fileobj
+    else:
+        f = open(path_or_fileobj, "rb")
+    signature = f.read(4)
+    if len(signature) < 4:
         return UNKNOWN
+    signature = struct.unpack(">L", signature)[0]
+    if signature == ELF_SIGNATURE:
+        return ELF
+    if signature in MACHO_SIGNATURES:
+        return MACHO
+    if signature != FAT_SIGNATURE:
+        return UNKNOWN
+    # We have to sanity check the second four bytes, because Java class
+    # files use the same magic number as Mach-O fat binaries.
+    # This logic is adapted from file(1), which says that Mach-O uses
+    # these bytes to count the number of architectures within, while
+    # Java uses it for a version number. Conveniently, there are only
+    # 18 labelled Mach-O architectures, and Java's first released
+    # class format used the version 43.0.
+    num = f.read(4)
+    if len(num) < 4:
+        return UNKNOWN
+    num = struct.unpack(">L", num)[0]
+    if num < 20:
+        return MACHO
+    return UNKNOWN
 
 
 def is_executable(path):
