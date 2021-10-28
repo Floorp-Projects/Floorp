@@ -62,6 +62,8 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug1719870-lcbo.com-table-clearfix.css",
     "injections/css/bug1727080-nexity.fr-svg-size-fix.css",
     "injections/css/bug1728140-map-size-fix.css",
+    "injections/css/bug1738313-curriculum.gov.bc.ca-bootstrap-fix.css",
+    "injections/css/bug1738316-vuoriclothing.com-flexbox-fix.css",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
@@ -78,6 +80,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1722955-frontgate.com-ua-override.js",
     "injections/js/bug1724764-amextravel.com-window-print.js",
     "injections/js/bug1724868-news.yahoo.co.jp-ua-override.js",
+    "injections/js/bug1727100-slack.com-ua-override.js",
     "injections/js/bug1731825-office365-email-handling-prompt-autohide.js",
 ]
 
