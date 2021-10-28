@@ -48,6 +48,7 @@ function doTests() {
 
   is(textbox.placeholder, "random placeholder", "search textbox supports placeholder");
   is(textbox.value, "", "placeholder doesn't interfere with the real value");
+  is(textbox.shadowRoot.querySelector("input").getAttribute("inputmode"), "search", "inputmode of search textbox is search by default");
 
   function iconClick(aIcon) {
     is(icons.selectedPanel, aIcon, aIcon.className + " icon must be displayed in order to be clickable");

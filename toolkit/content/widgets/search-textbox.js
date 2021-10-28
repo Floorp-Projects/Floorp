@@ -55,7 +55,7 @@
     static get inheritedAttributes() {
       return {
         input:
-          "value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,mozactionhint,spellcheck",
+          "value,maxlength,disabled,size,readonly,placeholder,tabindex,accesskey,inputmode,spellcheck",
         ".textbox-search-icon": "label=searchbuttonlabel,disabled",
         ".textbox-search-clear": "disabled",
       };
@@ -80,7 +80,7 @@
       textboxSign.part = "search-sign";
 
       const input = this.inputField;
-      input.setAttribute("mozactionhint", "search");
+      input.setAttribute("inputmode", "search");
       input.autocomplete = "off"; // not applicable in XUL docs and confuses aria.
       input.addEventListener("focus", this);
       input.addEventListener("blur", this);
