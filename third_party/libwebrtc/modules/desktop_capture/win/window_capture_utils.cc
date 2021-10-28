@@ -69,6 +69,10 @@ BOOL CALLBACK GetWindowListHandler(HWND hwnd, LPARAM param) {
   DesktopCapturer::Source window;
   window.id = reinterpret_cast<WindowId>(hwnd);
 
+  DWORD pid;
+  GetWindowThreadProcessId(hwnd, &pid);
+  window.pid = static_cast<pid_t>(pid);
+
   // GetWindowText* are potentially blocking operations if |hwnd| is
   // owned by the current process. The APIs will send messages to the window's
   // message loop, and if the message loop is waiting on this operation we will
