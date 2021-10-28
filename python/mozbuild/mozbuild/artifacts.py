@@ -34,6 +34,7 @@ consumers will need to arrange this themselves.
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import buildconfig
 import collections
 import functools
 import glob
@@ -91,11 +92,19 @@ PROCESSED_SUFFIX = ".processed.jar"
 
 class ArtifactJob(object):
     trust_domain = "gecko"
-    candidate_trees = [
+    default_candidate_trees = [
+        "releases/mozilla-release",
+    ]
+    nightly_candidate_trees = [
         "mozilla-central",
         "integration/autoland",
+    ]
+    beta_candidate_trees = [
         "releases/mozilla-beta",
-        "releases/mozilla-release",
+    ]
+    # The list below list should be updated when we have new ESRs.
+    esr_candidate_trees = [
+        "releases/mozilla-esr91",
     ]
     try_tree = "try"
 
@@ -160,6 +169,7 @@ class ArtifactJob(object):
         elif download_symbols:
             self._symbols_archive_suffix = "crashreporter-symbols.zip"
         self._mozbuild = mozbuild
+        self._candidate_trees = None
 
     def log(self, *args, **kwargs):
         if self._log:
@@ -405,6 +415,24 @@ class ArtifactJob(object):
                     yield info.name, reader.extractfile(info)
         else:
             raise RuntimeError("Unsupported archive type for %s" % filename)
+
+    @property
+    def candidate_trees(self):
+        if not self._candidate_trees:
+            self._candidate_trees = self.select_candidate_trees()
+        return self._candidate_trees
+
+    def select_candidate_trees(self):
+        version_display = buildconfig.substs.get("MOZ_APP_VERSION_DISPLAY")
+
+        if "esr" in version_display:
+            return self.esr_candidate_trees
+        elif re.search("a\d+$", version_display):
+            return self.nightly_candidate_trees
+        elif re.search("b\d+$", version_display):
+            return self.beta_candidate_trees
+
+        return self.default_candidate_trees
 
 
 class AndroidArtifactJob(ArtifactJob):
@@ -710,8 +738,11 @@ class WinArtifactJob(ArtifactJob):
 class ThunderbirdMixin(object):
     trust_domain = "comm"
     product = "thunderbird"
-    candidate_trees = ["comm-central"]
     try_tree = "try-comm-central"
+
+    @property
+    def candidate_trees(self):
+        return ["comm-central"]
 
 
 class LinuxThunderbirdArtifactJob(ThunderbirdMixin, LinuxArtifactJob):
