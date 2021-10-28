@@ -87,6 +87,7 @@ import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.topsites.DefaultTopSitesStorage.Companion.TOP_SITES_MAX_LIMIT
 import org.mozilla.focus.topsites.DefaultTopSitesView
 import org.mozilla.focus.utils.Browsers
+import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.FocusSnackbar
 import org.mozilla.focus.utils.FocusSnackbarDelegate
 import org.mozilla.focus.utils.StatusBarUtils
@@ -701,7 +702,13 @@ class BrowserFragment :
         // Release the session from this view so that it can immediately be rendered by a different view
         sessionFeature.get()?.release()
 
-        requireComponents.customTabsUseCases.migrate(tab.id)
+        if (Features.TABS) {
+            requireComponents.customTabsUseCases.migrate(tab.id)
+        } else {
+            // A Middleware will take care of either opening a new tab for this URL or reusing an
+            // already existing tab.
+            requireComponents.tabsUseCases.addTab(tab.content.url)
+        }
 
         val intent = Intent(context, MainActivity::class.java)
         intent.action = Intent.ACTION_MAIN
