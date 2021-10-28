@@ -130,7 +130,6 @@ object TelemetryWrapper {
         val MAKE_DEFAULT_BROWSER_OPEN_WITH = "make_default_browser_open_with"
         val MAKE_DEFAULT_BROWSER_SETTINGS = "make_default_browser_settings"
         val ALLOWLIST = "allowlist"
-        val CRASH_REPORTER = "crash_reporter"
     }
 
     private object Value {
@@ -177,7 +176,6 @@ object TelemetryWrapper {
         val SEARCH_SUGGESTION = "search_suggestion"
         val TOTAL_URI_COUNT = "total_uri_count"
         val UNIQUE_DOMAINS_COUNT = "unique_domains_count"
-        val SUBMIT_CRASH = "submit_crash"
     }
 
     enum class BrowserContextMenuValue(val value: String) {
@@ -485,22 +483,6 @@ object TelemetryWrapper {
                 Value.ERASE_AND_OPEN
             )
         ).queue()
-    }
-
-    @JvmStatic
-    fun crashReporterOpened() {
-        TelemetryEvent.create(Category.ACTION, Method.SHOW, Object.CRASH_REPORTER).queue()
-    }
-
-    @JvmStatic
-    fun closeTabButtonTapped(crashSubmitted: Boolean) {
-        TelemetryEvent.create(
-            Category.ACTION,
-            Method.CLICK,
-            Object.CRASH_REPORTER,
-            Value.CLOSE_TAB
-        )
-            .extra(Extra.SUBMIT_CRASH, crashSubmitted.toString()).queue()
     }
 
     @JvmStatic

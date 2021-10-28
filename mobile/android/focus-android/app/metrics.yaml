@@ -943,3 +943,33 @@ open_with:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-11-01"
+
+crash_reporter:
+  displayed:
+    type: event
+    description: The crash report has been displayed.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5652
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5725
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  close_report:
+    type: event
+    description: The crash report has been submitted.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5652
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5725
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      submit_report:
+        description: Did the user choose to send the report?
+        type: boolean
