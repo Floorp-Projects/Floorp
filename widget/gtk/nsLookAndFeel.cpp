@@ -122,6 +122,20 @@ nsLookAndFeel::~nsLookAndFeel() {
       gtk_settings_get_default(), FuncToGpointer(settings_changed_cb), nullptr);
 }
 
+#if 0
+static void DumpStyleContext(GtkStyleContext* aStyle) {
+  static auto sGtkStyleContextToString =
+      reinterpret_cast<char* (*)(GtkStyleContext*, gint)>(
+          dlsym(RTLD_DEFAULT, "gtk_style_context_to_string"));
+  char* str = sGtkStyleContextToString(aStyle, ~0);
+  printf("%s\n", str);
+  g_free(str);
+  str = gtk_widget_path_to_string(gtk_style_context_get_path(aStyle));
+  printf("%s\n", str);
+  g_free(str);
+}
+#endif
+
 // Modifies color |*aDest| as if a pattern of color |aSource| was painted with
 // CAIRO_OPERATOR_OVER to a surface with color |*aDest|.
 static void ApplyColorOver(const GdkRGBA& aSource, GdkRGBA* aDest) {
@@ -837,6 +851,11 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = EffectiveTheme().mTitlebarRadius;
       break;
     }
+    case IntID::GtkMenuRadius: {
+      EnsureInit();
+      aResult = EffectiveTheme().mMenuRadius;
+      break;
+    }
     case IntID::AllowOverlayScrollbarsOverlap: {
       aResult = 1;
       break;
@@ -1406,6 +1425,35 @@ static nscolor GetBackgroundColor(
   return NS_TRANSPARENT;
 }
 
+static int32_t GetBorderRadius(GtkStyleContext* aStyle) {
+  GValue value = G_VALUE_INIT;
+  // NOTE(emilio): In an ideal world, we'd query the two longhands
+  // (border-top-left-radius and border-top-right-radius) separately. However,
+  // that doesn't work (GTK rejects the query with:
+  //
+  //   Style property "border-top-left-radius" is not gettable
+  //
+  // However! Getting border-radius does work, and it does return the
+  // border-top-left-radius as a gint:
+  //
+  //   https://docs.gtk.org/gtk3/const.STYLE_PROPERTY_BORDER_RADIUS.html
+  //   https://gitlab.gnome.org/GNOME/gtk/-/blob/gtk-3-20/gtk/gtkcssshorthandpropertyimpl.c#L961-977
+  //
+  // So we abuse this fact, and make the assumption here that the
+  // border-top-{left,right}-radius are the same, and roll with it.
+  gtk_style_context_get_property(aStyle, "border-radius", GTK_STATE_FLAG_NORMAL,
+                                 &value);
+  auto unset = MakeScopeExit([&] { g_value_unset(&value); });
+
+  auto type = G_VALUE_TYPE(&value);
+  if (type == G_TYPE_INT) {
+    return g_value_get_int(&value);
+  }
+  NS_WARNING(nsPrintfCString("Unknown value type %lu for titlebar radius", type)
+                 .get());
+  return 0;
+}
+
 void nsLookAndFeel::PerThemeData::Init() {
   mName = GetGtkTheme();
 
@@ -1533,36 +1581,7 @@ void nsLookAndFeel::PerThemeData::Init() {
     mTitlebarInactiveText = GDK_RGBA_TO_NS_RGBA(color);
     mTitlebarInactiveBackground =
         GetBackgroundColor(style, mTitlebarText, GTK_STATE_FLAG_BACKDROP);
-
-    GValue value = G_VALUE_INIT;
-    // NOTE(emilio): In an ideal world, we'd query the two longhands
-    // (border-top-left-radius and border-top-right-radius) separately. However,
-    // that doesn't work (GTK rejects the query with:
-    //
-    //   Style property "border-top-left-radius" is not gettable
-    //
-    // However! Getting border-radius does work, and it does return the
-    // border-top-left-radius as a gint:
-    //
-    //   https://docs.gtk.org/gtk3/const.STYLE_PROPERTY_BORDER_RADIUS.html
-    //   https://gitlab.gnome.org/GNOME/gtk/-/blob/gtk-3-20/gtk/gtkcssshorthandpropertyimpl.c#L961-977
-    //
-    // So we abuse this fact, and make the assumption here that the
-    // border-top-{left,right}-radius are the same, and roll with it.
-    gtk_style_context_get_property(style, "border-radius",
-                                   GTK_STATE_FLAG_NORMAL, &value);
-
-    mTitlebarRadius = [&]() -> int {
-      auto type = G_VALUE_TYPE(&value);
-      if (type == G_TYPE_INT) {
-        return g_value_get_int(&value);
-      }
-      NS_WARNING(
-          nsPrintfCString("Unknown value type %lu for titlebar radius", type)
-              .get());
-      return 0;
-    }();
-    g_value_unset(&value);
+    mTitlebarRadius = IsSolidCSDStyleUsed() ? 0 : GetBorderRadius(style);
   }
 
   style = GetStyleContext(MOZ_GTK_MENUPOPUP);
@@ -1585,6 +1604,14 @@ void nsLookAndFeel::PerThemeData::Init() {
         "background");
     return mMozWindowBackground;
   }();
+  mMenuRadius = 0;
+  if (!IsSolidCSDStyleUsed()) {
+    mMenuRadius = GetBorderRadius(style);
+    if (!mMenuRadius) {
+      mMenuRadius =
+          GetBorderRadius(GetStyleContext(MOZ_GTK_MENUPOPUP_DECORATION));
+    }
+  }
 
   style = GetStyleContext(MOZ_GTK_MENUITEM);
   gtk_style_context_get_color(style, GTK_STATE_FLAG_PRELIGHT, &color);
@@ -1825,6 +1852,7 @@ void nsLookAndFeel::PerThemeData::Init() {
              NS_SUCCEEDED(rv) ? color : 0);
     }
     LOGLNF(" * titlebar-radius: %d\n", mTitlebarRadius);
+    LOGLNF(" * menu-radius: %d\n", mMenuRadius);
   }
 }
 

@@ -175,6 +175,7 @@ static const char sIntPrefs[][43] = {
     "ui.systemHorizontalScrollbarHeight",
     "ui.touchDeviceSupportPresent",
     "ui.titlebarRadius",
+    "ui.GtkMenuRadius",
 };
 
 static_assert(ArrayLength(sIntPrefs) == size_t(LookAndFeel::IntID::End),
