@@ -44,17 +44,13 @@ panel[type="arrow"][side="right"] {
   border-radius: var(--panel-border-radius);
   border: 1px solid var(--panel-border-color);
   width: var(--panel-width);
+
+  box-shadow: 0 0 4px hsla(0,0%,0%,.2);
+  margin: 4px;
 }
 
 :is(panel, menupopup)[orient=vertical]::part(content) {
   -moz-box-orient: vertical;
-}
-
-:is(panel, menupopup)[type="arrow"]::part(content) {
-  /* TODO: Make this shadow apply to other popups (needs tests fixes to account
-   * for negative margins) */
-  box-shadow: 0 0 4px hsla(0,0%,0%,.2);
-  margin: 4px;
 }
 
 panel[type="arrow"].panel-no-padding::part(content) {
