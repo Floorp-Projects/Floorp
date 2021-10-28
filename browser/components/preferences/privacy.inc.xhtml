@@ -112,6 +112,20 @@
                   <label class="content-blocking-label" data-l10n-id="content-blocking-fingerprinters"/>
                 </hbox>
               </vbox>
+              <vbox id="etpStandardTCPRolloutBox" class="content-blocking-warning info-box-container">
+                <hbox>
+                  <checkbox id="etpStandardTCPRollout"
+                            class="content-blocking-warning-title"
+                            data-l10n-id="content-blocking-etp-standard-tcp-rollout-checkbox"
+                            preference="privacy.restrict3rdpartystorage.rollout.enabledByDefault"
+                            flex="1" />
+
+                </hbox>
+                <description class="indent">
+                  <html:span class="tail-with-learn-more" data-l10n-id="content-blocking-etp-standard-tcp-rollout-description"></html:span>
+                  <label id="tcp-rollout-learn-more-link" class="learnMore" data-l10n-id="content-blocking-etp-standard-tcp-rollout-learn-more" is="text-link"/>
+                </description>
+              </vbox>
               <html:div class="content-blocking-warning info-box-container reload-tabs" hidden="true">
                 <html:div class="content-blocking-reload-desc-container">
                   <html:div class="info-icon-container">
