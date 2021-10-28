@@ -52,8 +52,6 @@ import tarfile
 import tempfile
 import six.moves.urllib_parse as urlparse
 import zipfile
-from contextlib import contextmanager
-from io import BufferedReader
 
 import pylru
 from gecko_taskgraph.util.taskcluster import (
@@ -72,7 +70,6 @@ from mozpack.files import JarFinder, TarFinder
 from mozpack.mozjar import JarReader, JarWriter
 from mozpack.packager.unpack import UnpackFinder
 import mozpack.path as mozpath
-from mozpack import executables
 
 # Number of candidate pushheads to cache per parent changeset.
 NUM_PUSHHEADS_TO_QUERY_PER_PARENT = 50
@@ -145,6 +142,7 @@ class ArtifactJob(object):
         log=None,
         download_tests=True,
         download_symbols=False,
+        download_host_bins=False,
         download_maven_zip=False,
         substs=None,
         mozbuild=None,
@@ -154,6 +152,11 @@ class ArtifactJob(object):
         if download_tests:
             self._tests_re = re.compile(
                 r"public/build/(en-US/)?target\.common\.tests\.(zip|tar\.gz)"
+            )
+        self._host_bins_re = None
+        if download_host_bins:
+            self._host_bins_re = re.compile(
+                r"public/build/host/bin/(mar|mbsdiff)(.exe)?"
             )
         self._maven_zip_re = None
         if download_maven_zip:
@@ -186,6 +189,8 @@ class ArtifactJob(object):
                     continue
             elif self._package_re and self._package_re.match(name):
                 yield name
+            elif self._host_bins_re and self._host_bins_re.match(name):
+                yield name
             elif self._tests_re and self._tests_re.match(name):
                 tests_artifact = name
                 yield name
@@ -211,11 +216,6 @@ class ArtifactJob(object):
                 "found none!".format(re=self._maven_zip_re)
             )
 
-    @contextmanager
-    def get_writer(self, **kwargs):
-        with JarWriter(**kwargs) as writer:
-            yield writer
-
     def process_artifact(self, filename, processed_filename):
         if filename.endswith(ArtifactJob._test_zip_archive_suffix) and self._tests_re:
             return self.process_tests_zip_artifact(filename, processed_filename)
@@ -225,6 +225,15 @@ class ArtifactJob(object):
             self._symbols_archive_suffix
         ):
             return self.process_symbols_archive(filename, processed_filename)
+        if self._host_bins_re:
+            # Turn 'HASH-mar.exe' into 'mar.exe'.  `filename` is a path on disk
+            # without the full path to the artifact, so we must reconstruct
+            # that path here.
+            orig_basename = os.path.basename(filename).split("-", 1)[1]
+            if self._host_bins_re.match(
+                "public/build/host/bin/{}".format(orig_basename)
+            ):
+                return self.process_host_bin(filename, processed_filename)
         return self.process_package_artifact(filename, processed_filename)
 
     def process_package_artifact(self, filename, processed_filename):
@@ -237,7 +246,7 @@ class ArtifactJob(object):
 
         added_entry = False
 
-        with self.get_writer(file=processed_filename, compress_level=5) as writer:
+        with JarWriter(file=processed_filename, compress_level=5) as writer:
             reader = JarReader(filename)
             for filename, entry in six.iteritems(reader.entries):
                 for pattern, (src_prefix, dest_prefix) in self.test_artifact_patterns:
@@ -296,7 +305,7 @@ class ArtifactJob(object):
 
         added_entry = False
 
-        with self.get_writer(file=processed_filename, compress_level=5) as writer:
+        with JarWriter(file=processed_filename, compress_level=5) as writer:
             with tarfile.open(filename) as reader:
                 for filename, entry in TarFinder(filename, reader):
                     for (
@@ -357,7 +366,7 @@ class ArtifactJob(object):
     def process_symbols_archive(
         self, filename, processed_filename, skip_compressed=False
     ):
-        with self.get_writer(file=processed_filename, compress_level=5) as writer:
+        with JarWriter(file=processed_filename, compress_level=5) as writer:
             for filename, entry in self.iter_artifact_archive(filename):
                 if skip_compressed and filename.endswith(".gz"):
                     self.log(
@@ -375,6 +384,15 @@ class ArtifactJob(object):
                     "Adding {destpath} to processed archive",
                 )
                 writer.add(destpath.encode("utf-8"), entry)
+
+    def process_host_bin(self, filename, processed_filename):
+        with JarWriter(file=processed_filename, compress_level=5) as writer:
+            # Turn 'HASH-mar.exe' into 'mar.exe'.  `filename` is a path on disk
+            # without any of the path parts of the artifact, so we must inject
+            # the desired `host/bin` prefix here.
+            orig_basename = os.path.basename(filename).split("-", 1)[1]
+            destpath = mozpath.join("host/bin", orig_basename)
+            writer.add(destpath.encode("utf-8"), open(filename, "rb"))
 
     def iter_artifact_archive(self, filename):
         if filename.endswith(".zip"):
@@ -425,7 +443,7 @@ class AndroidArtifactJob(ArtifactJob):
 
     def process_package_artifact(self, filename, processed_filename):
         # Extract all .so files into the root, which will get copied into dist/bin.
-        with self.get_writer(file=processed_filename, compress_level=5) as writer:
+        with JarWriter(file=processed_filename, compress_level=5) as writer:
             for p, f in UnpackFinder(JarFinder(filename, JarReader(filename))):
                 if not any(
                     mozpath.match(p, pat) for pat in self.package_artifact_patterns
@@ -456,7 +474,7 @@ class AndroidArtifactJob(ArtifactJob):
 
         import gzip
 
-        with self.get_writer(file=processed_filename, compress_level=5) as writer:
+        with JarWriter(file=processed_filename, compress_level=5) as writer:
             for filename, entry in self.iter_artifact_archive(filename):
                 if not filename.endswith(".gz"):
                     continue
@@ -505,7 +523,7 @@ class LinuxArtifactJob(ArtifactJob):
     def process_package_artifact(self, filename, processed_filename):
         added_entry = False
 
-        with self.get_writer(file=processed_filename, compress_level=5) as writer:
+        with JarWriter(file=processed_filename, compress_level=5) as writer:
             with tarfile.open(filename) as reader:
                 for p, f in UnpackFinder(TarFinder(filename, reader)):
                     if not any(
@@ -534,41 +552,6 @@ class LinuxArtifactJob(ArtifactJob):
             )
 
 
-class ResignJarWriter(JarWriter):
-    def __init__(self, job, **kwargs):
-        super().__init__(**kwargs)
-        self._job = job
-
-    def add(self, name, data, mode=None):
-        if self._job._substs["HOST_OS_ARCH"] == "Darwin":
-            # Wrap in a BufferedReader so that executable.get_type can peek at the
-            # data signature without subsequent read() being affected.
-            data = BufferedReader(data)
-            if executables.get_type(data) == executables.MACHO:
-                # If the file is a Mach-O binary, we run `codesign -s - -f` against
-                # it to force a local codesign against the original binary, which is
-                # likely unsigned. As of writing, only arm64 macs require codesigned
-                # binaries, but it doesn't hurt to do it on intel macs as well
-                # preemptively, because they could end up with the same requirement
-                # in future versions of macOS.
-                tmp = tempfile.NamedTemporaryFile(delete=False)
-                try:
-                    shutil.copyfileobj(data, tmp)
-                    tmp.close()
-                    self._job.log(
-                        logging.DEBUG, "artifact", {"path": name}, "Re-signing {path}"
-                    )
-                    subprocess.check_call(
-                        ["codesign", "-s", "-", "-f", tmp.name],
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
-                    )
-                    data = open(tmp.name, "rb")
-                finally:
-                    os.unlink(tmp.name)
-        super().add(name, data, mode=mode)
-
-
 class MacArtifactJob(ArtifactJob):
     package_re = r"public/build/target\.dmg"
     product = "firefox"
@@ -594,11 +577,6 @@ class MacArtifactJob(ArtifactJob):
     def paths_no_keep_path(self):
         root, paths = self._paths_no_keep_path
         return (root, [p.format(product=self.product) for p in paths])
-
-    @contextmanager
-    def get_writer(self, **kwargs):
-        with ResignJarWriter(self, **kwargs) as writer:
-            yield writer
 
     def process_package_artifact(self, filename, processed_filename):
         tempdir = tempfile.mkdtemp()
@@ -652,7 +630,7 @@ class MacArtifactJob(ArtifactJob):
                 )
             ]
 
-            with self.get_writer(file=processed_filename, compress_level=5) as writer:
+            with JarWriter(file=processed_filename, compress_level=5) as writer:
                 root, paths = self.paths_no_keep_path
                 finder = UnpackFinder(mozpath.join(source, root))
                 for path in paths:
@@ -664,7 +642,7 @@ class MacArtifactJob(ArtifactJob):
                             "Adding {path} to processed archive",
                         )
                         destpath = mozpath.join("bin", os.path.basename(p))
-                        writer.add(destpath.encode("utf-8"), f.open(), mode=f.mode)
+                        writer.add(destpath.encode("utf-8"), f, mode=f.mode)
 
                 for root, paths in paths_keep_path:
                     finder = UnpackFinder(mozpath.join(source, root))
@@ -731,7 +709,7 @@ class WinArtifactJob(ArtifactJob):
 
     def process_package_artifact(self, filename, processed_filename):
         added_entry = False
-        with self.get_writer(file=processed_filename, compress_level=5) as writer:
+        with JarWriter(file=processed_filename, compress_level=5) as writer:
             for p, f in UnpackFinder(JarFinder(filename, JarReader(filename))):
                 if not any(
                     mozpath.match(p, pat) for pat in self.package_artifact_patterns
@@ -1021,6 +999,7 @@ class Artifacts(object):
         topsrcdir=None,
         download_tests=True,
         download_symbols=False,
+        download_host_bins=False,
         download_maven_zip=False,
         no_process=False,
         mozbuild=None,
@@ -1049,6 +1028,7 @@ class Artifacts(object):
                 log=self._log,
                 download_tests=download_tests,
                 download_symbols=download_symbols,
+                download_host_bins=download_host_bins,
                 download_maven_zip=download_maven_zip,
                 substs=self._substs,
                 mozbuild=mozbuild,
