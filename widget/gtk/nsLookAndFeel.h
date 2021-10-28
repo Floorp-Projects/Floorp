@@ -124,6 +124,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
     float mCaretRatio = 0.0f;
     int32_t mTitlebarRadius = 0;
+    int32_t mMenuRadius = 0;
     char16_t mInvisibleCharacter = 0;
     bool mMenuSupportsDrag = false;
 

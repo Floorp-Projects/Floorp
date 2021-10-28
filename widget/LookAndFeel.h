@@ -334,6 +334,9 @@ class LookAndFeel {
     /** GTK titlebar radius */
     TitlebarRadius,
 
+    /** GTK menu radius */
+    GtkMenuRadius,
+
     /*
      * Not an ID; used to define the range of valid IDs.  Must be last.
      */
