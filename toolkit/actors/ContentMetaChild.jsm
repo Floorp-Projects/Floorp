@@ -99,11 +99,21 @@ class ContentMetaChild extends JSWindowActorChild {
   }
 
   handleEvent(event) {
-    if (event.type != "DOMMetaAdded") {
-      return;
+    switch (event.type) {
+      case "DOMContentLoaded":
+        const metaTags = this.contentWindow.document.querySelectorAll("meta");
+        for (let metaTag of metaTags) {
+          this.onMetaTag(metaTag);
+        }
+        break;
+      case "DOMMetaAdded":
+        this.onMetaTag(event.originalTarget);
+        break;
+      default:
     }
+  }
 
-    const metaTag = event.originalTarget;
+  onMetaTag(metaTag) {
     const window = metaTag.ownerGlobal;
 
     // If there's no meta tag, ignore this. Also verify that the window
