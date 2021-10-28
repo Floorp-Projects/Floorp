@@ -864,12 +864,13 @@ impl BatchBuilder {
         surface_spatial_node_index: SpatialNodeIndex,
         z_generator: &mut ZBufferIdGenerator,
         composite_state: &mut CompositeState,
+        prim_instances: &[PrimitiveInstance],
     ) {
         for cluster in &pic.prim_list.clusters {
             if !cluster.flags.contains(ClusterFlags::IS_VISIBLE) {
                 continue;
             }
-            for prim_instance in &pic.prim_list.prim_instances[cluster.prim_range()] {
+            for prim_instance in &prim_instances[cluster.prim_range()] {
                 // Add each run in this picture to the batch.
                 self.add_prim_to_batch(
                     prim_instance,
@@ -884,6 +885,7 @@ impl BatchBuilder {
                     surface_spatial_node_index,
                     z_generator,
                     composite_state,
+                    prim_instances,
                 );
             }
         }
@@ -907,6 +909,7 @@ impl BatchBuilder {
         surface_spatial_node_index: SpatialNodeIndex,
         z_generator: &mut ZBufferIdGenerator,
         composite_state: &mut CompositeState,
+        prim_instances: &[PrimitiveInstance],
     ) {
         let (batch_filter, vis_flags) = match prim_instance.vis.state {
             VisibilityState::Culled => {
@@ -929,7 +932,7 @@ impl BatchBuilder {
                     // Convert all children of the 3D hierarchy root into batches.
                     Picture3DContext::In { root_data: Some(ref list), .. } => {
                         for child in list {
-                            let child_prim_instance = &picture.prim_list.prim_instances[child.anchor.instance_index];
+                            let child_prim_instance = &prim_instances[child.anchor.instance_index];
                             let child_prim_info = &child_prim_instance.vis;
 
                             let child_pic_index = match child_prim_instance.kind {
@@ -1028,6 +1031,7 @@ impl BatchBuilder {
                             surface_spatial_node_index,
                             z_generator,
                             composite_state,
+                            prim_instances,
                         );
                     }
                 }

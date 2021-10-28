@@ -173,6 +173,7 @@ pub fn update_primitive_visibility(
     frame_state: &mut FrameVisibilityState,
     tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
     is_root_tile_cache: bool,
+    prim_instances: &mut Vec<PrimitiveInstance>,
 ) -> Option<PictureRect> {
     profile_scope!("update_visibility");
     let (mut prim_list, surface_index, apply_local_clip_rect, world_culling_rect, is_composite) = {
@@ -249,23 +250,25 @@ pub fn update_primitive_visibility(
 
     for cluster in &mut prim_list.clusters {
         profile_scope!("cluster");
+
+        // Each prim instance must have reset called each frame, to clear
+        // indices into various scratch buffers. If this doesn't occur,
+        // the primitive may incorrectly be considered visible, which can
+        // cause unexpected conditions to occur later during the frame.
+        // Primitive instances are normally reset in the main loop below,
+        // but we must also reset them in the rare case that the cluster
+        // visibility has changed (due to an invalid transform and/or
+        // backface visibility changing for this cluster).
+        // TODO(gw): This is difficult to test for in CI - as a follow up,
+        //           we should add a debug flag that validates the prim
+        //           instance is always reset every frame to catch similar
+        //           issues in future.
+        for prim_instance in &mut prim_instances[cluster.prim_range()] {
+            prim_instance.reset();
+        }
+
         // Get the cluster and see if is visible
         if !cluster.flags.contains(ClusterFlags::IS_VISIBLE) {
-            // Each prim instance must have reset called each frame, to clear
-            // indices into various scratch buffers. If this doesn't occur,
-            // the primitive may incorrectly be considered visible, which can
-            // cause unexpected conditions to occur later during the frame.
-            // Primitive instances are normally reset in the main loop below,
-            // but we must also reset them in the rare case that the cluster
-            // visibility has changed (due to an invalid transform and/or
-            // backface visibility changing for this cluster).
-            // TODO(gw): This is difficult to test for in CI - as a follow up,
-            //           we should add a debug flag that validates the prim
-            //           instance is always reset every frame to catch similar
-            //           issues in future.
-            for prim_instance in &mut prim_list.prim_instances[cluster.prim_range()] {
-                prim_instance.reset();
-            }
             continue;
         }
 
@@ -274,16 +277,8 @@ pub fn update_primitive_visibility(
             frame_context.spatial_tree,
         );
 
-        for prim_instance in &mut prim_list.prim_instances[cluster.prim_range()] {
-            prim_instance.reset();
-
-            if prim_instance.is_chased() {
-                #[cfg(debug_assertions)] // needed for ".id" part
-                println!("\tpreparing {:?} in {:?}", prim_instance.id, pic_index);
-                println!("\t{:?}", prim_instance.kind);
-            }
-
-            let (is_passthrough, prim_local_rect, prim_shadowed_rect) = match prim_instance.kind {
+        for prim_instance_index in cluster.prim_range() {
+            let (is_passthrough, prim_local_rect, prim_shadowed_rect) = match prim_instances[prim_instance_index].kind {
                 PrimitiveInstanceKind::Picture { pic_index, .. } => {
                     let (is_visible, is_passthrough) = {
                         let pic = &store.pictures[pic_index.0];
@@ -296,7 +291,7 @@ pub fn update_primitive_visibility(
 
                     if is_passthrough {
                         frame_state.clip_chain_stack.push_clip(
-                            prim_instance.clip_set.clip_chain_id,
+                            prim_instances[prim_instance_index].clip_set.clip_chain_id,
                             frame_state.clip_store,
                         );
                     }
@@ -310,6 +305,7 @@ pub fn update_primitive_visibility(
                         frame_state,
                         tile_caches,
                         false,
+                        prim_instances,
                     );
 
                     if is_passthrough {
@@ -317,10 +313,6 @@ pub fn update_primitive_visibility(
                     }
 
                     let pic = &store.pictures[pic_index.0];
-
-                    if prim_instance.is_chased() && pic.estimated_local_rect != pic.precise_local_rect {
-                        println!("\testimate {:?} adjusted to {:?}", pic.estimated_local_rect, pic.precise_local_rect);
-                    }
 
                     let mut shadow_rect = pic.precise_local_rect;
                     match pic.raster_config {
@@ -347,11 +339,14 @@ pub fn update_primitive_visibility(
                     (is_passthrough, pic.precise_local_rect, shadow_rect)
                 }
                 _ => {
+                    let prim_instance = &prim_instances[prim_instance_index];
                     let prim_data = &frame_state.data_stores.as_common_data(&prim_instance);
 
                     (false, prim_data.prim_rect, prim_data.prim_rect)
                 }
             };
+
+            let prim_instance = &mut prim_instances[prim_instance_index];
 
             if is_passthrough {
                 // Pass through pictures are always considered visible in all dirty tiles.
