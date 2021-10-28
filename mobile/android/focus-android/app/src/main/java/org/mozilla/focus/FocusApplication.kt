@@ -47,6 +47,7 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
     private val storeLink by lazy { StoreLink(components.appStore, components.store) }
     private val lockObserver by lazy { LockObserver(this, components.store, components.appStore) }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {
         super.onCreate()
 
@@ -74,6 +75,10 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
             registerActivityLifecycleCallbacks(visibilityLifeCycleCallback)
 
             storeLink.start()
+
+            GlobalScope.launch(Dispatchers.IO) {
+                components.migrator.start(this@FocusApplication)
+            }
 
             initializeWebExtensionSupport()
 

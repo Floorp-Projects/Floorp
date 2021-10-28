@@ -33,6 +33,9 @@ class GeckoExceptionsMigrator(
                 exceptions.withEach { migrate(it) }
             }
 
+            // remove exceptions
+            preferences(context).edit().remove(KEY_DOMAINS).apply()
+
             logger.info("Finished tracking protection exceptions migration")
 
             // We are not removing the domains yet because GeckoView does not seem to persist them.

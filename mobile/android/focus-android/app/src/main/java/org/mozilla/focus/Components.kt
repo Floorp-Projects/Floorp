@@ -52,7 +52,6 @@ import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.AppContentInterceptor
 import org.mozilla.focus.engine.ClientWrapper
 import org.mozilla.focus.engine.SanityCheckMiddleware
-import org.mozilla.focus.exceptions.ExceptionMigrationMiddleware
 import org.mozilla.focus.experiments.createNimbus
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.settings
@@ -127,7 +126,6 @@ class Components(
     val store by lazy {
         BrowserStore(
             middleware = listOf(
-                ExceptionMigrationMiddleware(context),
                 PrivateNotificationMiddleware(context),
                 TelemetryMiddleware(),
                 DownloadMiddleware(context, DownloadService::class.java),
@@ -145,6 +143,8 @@ class Components(
             ) + EngineMiddleware.create(engine)
         )
     }
+
+    val migrator by lazy { EngineProvider.provideTrackingProtectionMigrator(context) }
 
     /**
      * The [CustomTabsServiceStore] holds global custom tabs related data.

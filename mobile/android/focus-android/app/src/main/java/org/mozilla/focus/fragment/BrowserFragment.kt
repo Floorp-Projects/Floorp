@@ -50,7 +50,6 @@ import mozilla.components.feature.top.sites.TopSitesFeature
 import mozilla.components.lib.crash.Crash
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import mozilla.components.support.utils.Browsers
 import org.mozilla.focus.GleanMetrics.Downloads
 import org.mozilla.focus.GleanMetrics.OpenWith
@@ -67,7 +66,6 @@ import org.mozilla.focus.browser.integration.FullScreenIntegration
 import org.mozilla.focus.contextmenu.ContextMenuCandidates
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.EngineSharedPreferencesListener
-import org.mozilla.focus.exceptions.ExceptionDomains
 import org.mozilla.focus.ext.accessibilityManager
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.disableDynamicBehavior
@@ -823,14 +821,11 @@ class BrowserFragment :
     }
 
     private fun toggleTrackingProtection(enable: Boolean) {
-        val context = requireContext()
         with(requireComponents) {
             if (enable) {
-                ExceptionDomains.remove(context, listOf(tab.content.url.tryGetHostFromUrl()))
                 trackingProtectionUseCases.removeException(tab.id)
             } else {
-                ExceptionDomains.add(context, tab.content.url.tryGetHostFromUrl())
-                trackingProtectionUseCases.addException(tab.id)
+                trackingProtectionUseCases.addException(tab.id, persistInPrivateMode = true)
             }
         }
 
