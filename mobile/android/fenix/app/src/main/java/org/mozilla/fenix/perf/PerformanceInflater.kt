@@ -10,6 +10,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.VisibleForTesting
+import mozilla.components.concept.base.profiler.Profiler
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getAndIncrementNoOverflow
 import java.lang.reflect.Modifier.PRIVATE
 import java.util.concurrent.atomic.AtomicInteger
@@ -23,7 +25,6 @@ private val classPrefixList = arrayOf(
  * Counts the number of inflations fenix does. This class behaves only as an inflation counter since
  * it takes the `inflater` that is given by the base system. This is done in order not to change
  * the behavior of the app since all we want to do is count the inflations done.
- *
  */
 open class PerformanceInflater(
     inflater: LayoutInflater,
@@ -33,13 +34,24 @@ open class PerformanceInflater(
     context
 ) {
 
+    private val profiler: Profiler? = context.components.core.engine.profiler
+
     override fun cloneInContext(newContext: Context?): LayoutInflater {
         return PerformanceInflater(this, newContext!!)
     }
 
     override fun inflate(resource: Int, root: ViewGroup?, attachToRoot: Boolean): View {
         InflationCounter.inflationCount.getAndIncrementNoOverflow()
-        return super.inflate(resource, root, attachToRoot)
+
+        val profilerStartTime = profiler?.getProfilerTime()
+        val layout = super.inflate(resource, root, attachToRoot)
+
+        // I'm not sure how expensive fetching a resource name is so only do it if the profiler is active.
+        if (profiler?.isProfilerActive() == true) {
+            val layoutName = context.resources.getResourceEntryName(resource)
+            profiler.addMarker("LayoutInflater.inflate", profilerStartTime, layoutName)
+        }
+        return layout
     }
 
     /**
