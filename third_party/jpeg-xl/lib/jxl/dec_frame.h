@@ -71,7 +71,7 @@ class FrameDecoder {
   // on callers.
   Status InitFrame(BitReader* JXL_RESTRICT br, ImageBundle* decoded,
                    bool is_preview, bool allow_partial_frames,
-                   bool allow_partial_dc_global);
+                   bool allow_partial_dc_global, bool output_needed);
 
   struct SectionInfo {
     BitReader* JXL_RESTRICT br;
@@ -263,6 +263,7 @@ class FrameDecoder {
   bool finalized_dc_ = true;
   bool is_finalized_ = true;
   size_t num_renders_ = 0;
+  bool allocated_ = false;
 
   std::vector<GroupDecCache> group_dec_caches_;
 

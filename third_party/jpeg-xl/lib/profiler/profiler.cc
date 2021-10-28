@@ -15,9 +15,8 @@
 #include <atomic>
 #include <cinttypes>  // PRIu64
 #include <hwy/cache_control.h>
+#include <limits>
 #include <new>
-
-#include "lib/jxl/base/robust_statistics.h"  // HalfSampleMode
 
 // Optionally use SIMD in StreamCacheLine if available.
 #undef HWY_TARGET_INCLUDE
@@ -327,6 +326,83 @@ void ThreadSpecific::AnalyzeRemainingPackets() {
   num_packets_ = 0;
 }
 
+namespace {
+
+class HalfSampleMode {
+ public:
+  // Returns mode. "sorted" must be in ascending order.
+  template <typename T>
+  T operator()(const T* const HWY_RESTRICT sorted,
+               const size_t num_values) const {
+    int64_t center = num_values / 2;
+    int64_t width = num_values;
+
+    // Zoom in on modal intervals of decreasing width. Stop before we reach
+    // width=1, i.e. single values, for which there is no "slope".
+    while (width > 2) {
+      // Round up so we can still reach the outer edges of odd widths.
+      width = (width + 1) / 2;
+
+      center = CenterOfIntervalWithMinSlope(sorted, num_values, center, width);
+    }
+
+    return sorted[center];  // mode := middle value in modal interval.
+  }
+
+ private:
+  // Returns center of the densest region [c-radius, c+radius].
+  template <typename T>
+  static HWY_INLINE int64_t CenterOfIntervalWithMinSlope(
+      const T* HWY_RESTRICT sorted, const int64_t total_values,
+      const int64_t center, const int64_t width) {
+    const int64_t radius = (width + 1) / 2;
+
+    auto compute_slope = [radius, total_values, sorted](
+                             int64_t c, int64_t* actual_center = nullptr) {
+      // For symmetry, check 2*radius+1 values, i.e. [min, max].
+      const int64_t min = std::max(c - radius, int64_t(0));
+      const int64_t max = std::min(c + radius, total_values - 1);
+      HWY_ASSERT(min < max);
+      HWY_ASSERT(sorted[min] <=
+                 sorted[max] + std::numeric_limits<float>::epsilon());
+      const float dx = max - min + 1;
+      const float slope = (sorted[max] - sorted[min]) / dx;
+
+      if (actual_center != nullptr) {
+        // c may be out of bounds, so return center of the clamped bounds.
+        *actual_center = (min + max + 1) / 2;
+      }
+      return slope;
+    };
+
+    // First find min_slope for all centers.
+    float min_slope = std::numeric_limits<float>::max();
+    for (int64_t c = center - radius; c <= center + radius; ++c) {
+      min_slope = std::min(min_slope, compute_slope(c));
+    }
+
+    // Candidates := centers with slope ~= min_slope.
+    std::vector<int64_t> candidates;
+    for (int64_t c = center - radius; c <= center + radius; ++c) {
+      int64_t actual_center;
+      const float slope = compute_slope(c, &actual_center);
+      if (slope <= min_slope * 1.001f) {
+        candidates.push_back(actual_center);
+      }
+    }
+
+    // Keep the median.
+    HWY_ASSERT(!candidates.empty());
+    if (candidates.size() == 1) return candidates[0];
+    std::nth_element(candidates.begin(),
+                     candidates.begin() + candidates.size() / 2,
+                     candidates.end());
+    return candidates[candidates.size() / 2];
+  }
+};
+
+}  // namespace
+
 void ThreadSpecific::ComputeOverhead() {
   // Delay after capturing timestamps before/after the actual zone runs. Even
   // with frequency throttling disabled, this has a multimodal distribution,
@@ -349,14 +425,14 @@ void ThreadSpecific::ComputeOverhead() {
         durations[idx_duration] = static_cast<uint32_t>(duration);
         HWY_ASSERT(num_packets_ == 0);
       }
-      jxl::CountingSort(durations, durations + kNumDurations);
-      samples[idx_sample] = jxl::HalfSampleMode()(durations, kNumDurations);
+      std::sort(durations, durations + kNumDurations);
+      samples[idx_sample] = HalfSampleMode()(durations, kNumDurations);
     }
     // Median.
-    jxl::CountingSort(samples, samples + kNumSamples);
+    std::sort(samples, samples + kNumSamples);
     self_overhead = samples[kNumSamples / 2];
 #if PROFILER_PRINT_OVERHEAD
-    printf("Overhead: %zu\n", self_overhead);
+    printf("Overhead: %" PRIuS "\n", self_overhead);
 #endif
     results_->SetSelfOverhead(self_overhead);
   }
@@ -386,13 +462,13 @@ void ThreadSpecific::ComputeOverhead() {
       durations[idx_duration] =
           static_cast<uint32_t>(ClampedSubtract(avg_duration, self_overhead));
     }
-    jxl::CountingSort(durations, durations + kNumDurations);
-    samples[idx_sample] = jxl::HalfSampleMode()(durations, kNumDurations);
+    std::sort(durations, durations + kNumDurations);
+    samples[idx_sample] = HalfSampleMode()(durations, kNumDurations);
   }
-  jxl::CountingSort(samples, samples + kNumSamples);
+  std::sort(samples, samples + kNumSamples);
   const uint64_t child_overhead = samples[9 * kNumSamples / 10];
 #if PROFILER_PRINT_OVERHEAD
-  printf("Child overhead: %zu\n", child_overhead);
+  printf("Child overhead: %" PRIuS "\n", child_overhead);
 #endif
   results_->SetChildOverhead(child_overhead);
 }

@@ -8,14 +8,13 @@
 
 // Macros and functions useful for tests.
 
-#include <random>
-
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "jxl/codestream_header.h"
 #include "jxl/encode.h"
 #include "lib/jxl/aux_out_fwd.h"
 #include "lib/jxl/base/data_parallel.h"
+#include "lib/jxl/base/random.h"
 #include "lib/jxl/codec_in_out.h"
 #include "lib/jxl/color_encoding_internal.h"
 #include "lib/jxl/common.h"  // JPEGXL_ENABLE_TRANSCODE_JPEG
@@ -50,6 +49,10 @@
 #else
 #define JXL_GTEST_INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
 #endif
+
+// Ensures that we don't make our test bounds too lax, effectively disabling the
+// tests.
+MATCHER_P(IsSlightlyBelow, max, "") { return max * 0.75 <= arg && arg <= max; }
 
 namespace jxl {
 namespace test {
@@ -275,12 +278,11 @@ std::vector<ColorEncodingDescriptor> AllEncodings() {
 std::vector<uint8_t> GetSomeTestImage(size_t xsize, size_t ysize,
                                       size_t num_channels, uint16_t seed) {
   // Cause more significant image difference for successive seeds.
-  std::mt19937 std_rng(seed);
-  std::uniform_int_distribution<uint16_t> std_distr(0, 65535);
+  Rng generator(seed);
 
-  // Returns random integer in interval (0, max_value - 1)
-  auto rng = [&std_rng, &std_distr](size_t max_value) -> size_t {
-    return static_cast<size_t>(std_distr(std_rng) / 65536.0f * max_value);
+  // Returns random integer in interval [0, max_value)
+  auto rng = [&generator](size_t max_value) -> size_t {
+    return generator.UniformU(0, max_value);
   };
 
   // Dark background gradient color

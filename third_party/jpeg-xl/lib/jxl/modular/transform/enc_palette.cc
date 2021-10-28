@@ -381,74 +381,81 @@ Status FwdPaletteIteration(Image &input, uint32_t begin_c, uint32_t end_c,
           delta_used = true;
         }
       } else {
-        for (size_t c = 0; c < nb; c++) {
-          color_with_error[c] = p_in[c][x] + palette_iteration_data.final_run *
-                                                 error_row[0][c][x + 2];
-          color[c] = Clamp1(lroundf(color_with_error[c]), 0l,
-                            (1l << input.bitdepth) - 1);
-        }
-        float best_distance = std::numeric_limits<float>::infinity();
         int best_index = 0;
         bool best_is_delta = false;
+        float best_distance = std::numeric_limits<float>::infinity();
         std::vector<pixel_type> best_val(nb, 0);
         std::vector<pixel_type> ideal_residual(nb, 0);
         std::vector<pixel_type> quantized_val(nb);
         std::vector<pixel_type> predictions(nb);
-        for (size_t c = 0; c < nb; ++c) {
-          predictions[c] = PredictNoTreeWP(w, p_quant[c] + x, onerow_image, x,
-                                           y, predictor, &wp_states[c])
-                               .guess;
-        }
-        const auto TryIndex = [&](const int index) {
+        static const double kDiffusionMultiplier[] = {0.55, 0.75};
+        for (int diffusion_index = 0; diffusion_index < 2; ++diffusion_index) {
           for (size_t c = 0; c < nb; c++) {
-            quantized_val[c] = palette_internal::GetPaletteValue(
-                p_palette, index, /*c=*/c,
-                /*palette_size=*/nb_colors,
-                /*onerow=*/onerow, /*bit_depth=*/bit_depth);
-            if (index < static_cast<int>(nb_deltas)) {
-              quantized_val[c] += predictions[c];
+            color_with_error[c] =
+                p_in[c][x] + palette_iteration_data.final_run *
+                                 kDiffusionMultiplier[diffusion_index] *
+                                 error_row[0][c][x + 2];
+            color[c] = Clamp1(lroundf(color_with_error[c]), 0l,
+                              (1l << input.bitdepth) - 1);
+          }
+
+          for (size_t c = 0; c < nb; ++c) {
+            predictions[c] = PredictNoTreeWP(w, p_quant[c] + x, onerow_image, x,
+                                             y, predictor, &wp_states[c])
+                                 .guess;
+          }
+          const auto TryIndex = [&](const int index) {
+            for (size_t c = 0; c < nb; c++) {
+              quantized_val[c] = palette_internal::GetPaletteValue(
+                  p_palette, index, /*c=*/c,
+                  /*palette_size=*/nb_colors,
+                  /*onerow=*/onerow, /*bit_depth=*/bit_depth);
+              if (index < static_cast<int>(nb_deltas)) {
+                quantized_val[c] += predictions[c];
+              }
             }
-          }
-          const float color_distance =
-              32.0 / (1LL << std::max(0, 2 * (bit_depth - 8))) *
-              palette_internal::ColorDistance(color_with_error, quantized_val);
-          float index_penalty = 0;
-          if (index == -1) {
-            index_penalty = -124;
-          } else if (index < 0) {
-            index_penalty = -2 * index;
-          } else if (index < static_cast<int>(nb_deltas)) {
-            index_penalty = 250;
-          } else if (index < static_cast<int>(nb_colors)) {
-            index_penalty = 150;
-          } else if (index < static_cast<int>(nb_colors) +
-                                 palette_internal::kLargeCubeOffset) {
-            index_penalty = 70;
-          } else {
-            index_penalty = 256;
-          }
-          const float distance = color_distance + index_penalty;
-          if (distance < best_distance) {
-            best_distance = distance;
-            best_index = index;
-            best_is_delta = index < static_cast<int>(nb_deltas);
-            best_val.swap(quantized_val);
-            for (size_t c = 0; c < nb; ++c) {
-              ideal_residual[c] = color_with_error[c] - predictions[c];
+            const float color_distance =
+                32.0 / (1LL << std::max(0, 2 * (bit_depth - 8))) *
+                palette_internal::ColorDistance(color_with_error,
+                                                quantized_val);
+            float index_penalty = 0;
+            if (index == -1) {
+              index_penalty = -124;
+            } else if (index < 0) {
+              index_penalty = -2 * index;
+            } else if (index < static_cast<int>(nb_deltas)) {
+              index_penalty = 250;
+            } else if (index < static_cast<int>(nb_colors)) {
+              index_penalty = 150;
+            } else if (index < static_cast<int>(nb_colors) +
+                                   palette_internal::kLargeCubeOffset) {
+              index_penalty = 70;
+            } else {
+              index_penalty = 256;
             }
+            const float distance = color_distance + index_penalty;
+            if (distance < best_distance) {
+              best_distance = distance;
+              best_index = index;
+              best_is_delta = index < static_cast<int>(nb_deltas);
+              best_val.swap(quantized_val);
+              for (size_t c = 0; c < nb; ++c) {
+                ideal_residual[c] = color_with_error[c] - predictions[c];
+              }
+            }
+          };
+          for (index = palette_internal::kMinImplicitPaletteIndex;
+               index < static_cast<int32_t>(nb_colors); index++) {
+            TryIndex(index);
           }
-        };
-        for (index = palette_internal::kMinImplicitPaletteIndex;
-             index < static_cast<int32_t>(nb_colors); index++) {
-          TryIndex(index);
-        }
-        TryIndex(palette_internal::QuantizeColorToImplicitPaletteIndex(
-            color, nb_colors, bit_depth,
-            /*high_quality=*/false));
-        if (palette_internal::kEncodeToHighQualityImplicitPalette) {
           TryIndex(palette_internal::QuantizeColorToImplicitPaletteIndex(
               color, nb_colors, bit_depth,
-              /*high_quality=*/true));
+              /*high_quality=*/false));
+          if (palette_internal::kEncodeToHighQualityImplicitPalette) {
+            TryIndex(palette_internal::QuantizeColorToImplicitPaletteIndex(
+                color, nb_colors, bit_depth,
+                /*high_quality=*/true));
+          }
         }
         index = best_index;
         delta_used |= best_is_delta;
@@ -475,8 +482,7 @@ Status FwdPaletteIteration(Image &input, uint32_t begin_c, uint32_t end_c,
           modulate *= len_limit / len_error;
         }
         for (size_t c = 0; c < nb; ++c) {
-          float local_error = (color_with_error[c] - best_val[c]);
-          float total_error = 0.65 * local_error;
+          float total_error = (color_with_error[c] - best_val[c]);
 
           // If the neighboring pixels have some error in the opposite
           // direction of total_error, cancel some or all of it out before

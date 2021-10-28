@@ -43,7 +43,10 @@ set_target_properties(${_target} PROPERTIES
 if (NOT WIN32)
   set_target_properties(${_target} PROPERTIES OUTPUT_NAME "jxl_threads")
 endif()
-install(TARGETS ${_target} DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS ${_target}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 endfunction()
 

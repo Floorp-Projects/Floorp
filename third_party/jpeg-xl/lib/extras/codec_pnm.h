@@ -15,6 +15,7 @@
 #include <hwy/highway.h>
 
 #include "lib/extras/color_hints.h"
+#include "lib/extras/packed_image.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/span.h"
@@ -28,8 +29,8 @@ namespace extras {
 // Decodes `bytes` into `io`. color_hints may specify "color_space", which
 // defaults to sRGB.
 Status DecodeImagePNM(const Span<const uint8_t> bytes,
-                      const ColorHints& color_hints, ThreadPool* pool,
-                      CodecInOut* io);
+                      const ColorHints& color_hints,
+                      const SizeConstraints& constraints, PackedPixelFile* ppf);
 
 // Transforms from io->c_current to `c_desired` and encodes into `bytes`.
 Status EncodeImagePNM(const CodecInOut* io, const ColorEncoding& c_desired,

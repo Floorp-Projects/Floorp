@@ -151,12 +151,8 @@ class ImageBundle {
   Status TransformTo(const ColorEncoding& c_desired,
                      ThreadPool* pool = nullptr);
   // Copies this:rect, converts to c_desired, and allocates+fills out.
-  Status CopyTo(const Rect& rect, const ColorEncoding& c_desired, Image3B* out,
-                ThreadPool* pool = nullptr) const;
   Status CopyTo(const Rect& rect, const ColorEncoding& c_desired, Image3F* out,
                 ThreadPool* pool = nullptr) const;
-  Status CopyToSRGB(const Rect& rect, Image3B* out,
-                    ThreadPool* pool = nullptr) const;
 
   // Detect 'real' bit depth, which can be lower than nominal bit depth
   // (this is common in PNG), returns 'real' bit depth
@@ -241,16 +237,6 @@ class ImageBundle {
   // How many bytes of the input were actually read.
   size_t decoded_bytes_ = 0;
 };
-
-// Does color transformation from in.c_current() to c_desired if the color
-// encodings are different, or nothing if they are already the same.
-// If color transformation is done, stores the transformed values into store and
-// sets the out pointer to store, else leaves store untouched and sets the out
-// pointer to &in.
-// Returns false if color transform fails.
-Status TransformIfNeeded(const ImageBundle& in, const ColorEncoding& c_desired,
-                         ThreadPool* pool, ImageBundle* store,
-                         const ImageBundle** out);
 
 }  // namespace jxl
 

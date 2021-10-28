@@ -99,7 +99,7 @@ Status GetQuantWeights(
     size_t num_bands, float* out) {
   for (size_t c = 0; c < 3; c++) {
     if (print_mode) {
-      fprintf(stderr, "Channel %zu\n", c);
+      fprintf(stderr, "Channel %" PRIuS "\n", c);
     }
     float bands[DctQuantWeightParams::kMaxDistanceBands] = {
         distance_bands[c][0]};
@@ -122,7 +122,7 @@ Status GetQuantWeights(
           fprintf(stderr, "%15.12f, ", weight);
         }
         if (print_mode == 2) {
-          fprintf(stderr, "%zu %zu %15.12f\n", x, y, weight);
+          fprintf(stderr, "%" PRIuS " %" PRIuS " %15.12f\n", x, y, weight);
         }
         out[c * COLS * ROWS + y * COLS + x] = weight;
       }

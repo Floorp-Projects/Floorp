@@ -21,6 +21,7 @@
 #include <limits>
 
 #include "lib/jxl/base/status.h"
+#include "lib/jxl/common.h"
 
 namespace jxl {
 namespace {
@@ -46,9 +47,10 @@ constexpr size_t CacheAligned::kAlignment;
 constexpr size_t CacheAligned::kAlias;
 
 void CacheAligned::PrintStats() {
-  fprintf(stderr, "Allocations: %zu (max bytes in use: %E)\n",
-          size_t(num_allocations.load(std::memory_order_relaxed)),
-          double(max_bytes_in_use.load(std::memory_order_relaxed)));
+  fprintf(
+      stderr, "Allocations: %" PRIuS " (max bytes in use: %E)\n",
+      static_cast<size_t>(num_allocations.load(std::memory_order_relaxed)),
+      static_cast<double>(max_bytes_in_use.load(std::memory_order_relaxed)));
 }
 
 size_t CacheAligned::NextOffset() {

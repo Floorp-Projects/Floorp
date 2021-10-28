@@ -5,25 +5,22 @@
 
 #include "lib/jxl/linalg.h"
 
-#include <random>
-
 #include "gtest/gtest.h"
 #include "lib/jxl/image_test_utils.h"
 
 namespace jxl {
 namespace {
 
-template <typename T, typename Random>
-Plane<T> RandomMatrix(const size_t xsize, const size_t ysize, Random& rng,
+template <typename T>
+Plane<T> RandomMatrix(const size_t xsize, const size_t ysize, Rng& rng,
                       const T vmin, const T vmax) {
   Plane<T> A(xsize, ysize);
-  GeneratorRandom<T, Random> gen(&rng, vmin, vmax);
-  GenerateImage(gen, &A);
+  GenerateImage(rng, &A, vmin, vmax);
   return A;
 }
 
-template <typename T, typename Random>
-Plane<T> RandomSymmetricMatrix(const size_t N, Random& rng, const T vmin,
+template <typename T>
+Plane<T> RandomSymmetricMatrix(const size_t N, Rng& rng, const T vmin,
                                const T vmax) {
   Plane<T> A = RandomMatrix<T>(N, N, rng, vmin, vmax);
   for (size_t i = 0; i < N; ++i) {
@@ -85,7 +82,7 @@ TEST(LinAlgTest, ConvertToTridiagonal) {
     VerifyOrthogonal(U, 1e-12);
     VerifyMatrixEqual(A, MatMul(U, MatMul(Diagonal(d), Transpose(U))), 1e-12);
   }
-  std::mt19937_64 rng;
+  Rng rng(0);
   for (int N = 2; N < 100; ++N) {
     ImageD A = RandomSymmetricMatrix(N, rng, -1.0, 1.0);
     ImageD T, U;
@@ -116,7 +113,7 @@ TEST(LinAlgTest, ConvertToDiagonal) {
     VerifyOrthogonal(U, 1e-12);
     VerifyMatrixEqual(A, MatMul(U, MatMul(Diagonal(d), Transpose(U))), 1e-12);
   }
-  std::mt19937_64 rng;
+  Rng rng(0);
   for (int N = 2; N < 100; ++N) {
     ImageD A = RandomSymmetricMatrix(N, rng, -1.0, 1.0);
     ImageD U, d;
@@ -134,7 +131,7 @@ TEST(LinAlgTest, ComputeQRFactorization) {
     VerifyMatrixEqual(I, Q, 1e-15);
     VerifyMatrixEqual(I, R, 1e-15);
   }
-  std::mt19937_64 rng;
+  Rng rng(0);
   for (int N = 2; N < 100; ++N) {
     ImageD A = RandomMatrix(N, N, rng, -1.0, 1.0);
     ImageD Q, R;

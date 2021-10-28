@@ -107,6 +107,9 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
   // bits_per_sample > 1.
   const size_t bytes_per_channel = DivCeil(bits_per_sample, jxl::kBitsPerByte);
   const size_t bytes_per_pixel = channels * bytes_per_channel;
+  if (bits_per_sample > 16 && bits_per_sample < 32) {
+    return JXL_FAILURE("not supported, try bits_per_sample=32");
+  }
 
   const size_t row_size = xsize * bytes_per_pixel;
   if (ysize && bytes.size() / ysize < row_size) {
@@ -182,14 +185,6 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
                                        bytes_per_pixel);
               } else {
                 LoadFloatRow<LoadBE16>(row_out, in + i, mul, xsize,
-                                       bytes_per_pixel);
-              }
-            } else if (bits_per_sample <= 24) {
-              if (little_endian) {
-                LoadFloatRow<LoadLE24>(row_out, in + i, mul, xsize,
-                                       bytes_per_pixel);
-              } else {
-                LoadFloatRow<LoadBE24>(row_out, in + i, mul, xsize,
                                        bytes_per_pixel);
               }
             } else {
@@ -271,14 +266,6 @@ Status ConvertFromExternal(Span<const uint8_t> bytes, size_t xsize,
                                        bytes_per_pixel);
               } else {
                 LoadFloatRow<LoadBE16>(row_out, in + i, mul, xsize,
-                                       bytes_per_pixel);
-              }
-            } else if (bits_per_sample <= 24) {
-              if (little_endian) {
-                LoadFloatRow<LoadLE24>(row_out, in + i, mul, xsize,
-                                       bytes_per_pixel);
-              } else {
-                LoadFloatRow<LoadBE24>(row_out, in + i, mul, xsize,
                                        bytes_per_pixel);
               }
             } else {

@@ -9,6 +9,7 @@
 // Encodes OpenEXR images in memory.
 
 #include "lib/extras/color_hints.h"
+#include "lib/extras/packed_image.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/span.h"
@@ -21,7 +22,8 @@ namespace extras {
 
 // Decodes `bytes` into `io`. color_hints are ignored.
 Status DecodeImageEXR(Span<const uint8_t> bytes, const ColorHints& color_hints,
-                      ThreadPool* pool, CodecInOut* io);
+                      const SizeConstraints& constraints, float target_nits,
+                      ThreadPool* pool, PackedPixelFile* ppf);
 
 // Transforms from io->c_current to `c_desired` (with the transfer function set
 // to linear as that is the OpenEXR convention) and encodes into `bytes`.

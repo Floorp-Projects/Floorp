@@ -10,7 +10,6 @@
 #include <limits>
 #include <numeric>
 #include <queue>
-#include <random>
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
@@ -72,7 +71,8 @@ void GatherTreeData(const Image &image, pixel_type chan, size_t group_id,
                     size_t *total_pixels) {
   const Channel &channel = image.channel[chan];
 
-  JXL_DEBUG_V(7, "Learning %zux%zu channel %d", channel.w, channel.h, chan);
+  JXL_DEBUG_V(7, "Learning %" PRIuS "x%" PRIuS " channel %d", channel.w,
+              channel.h, chan);
 
   std::array<pixel_type, kNumStaticProperties> static_props = {
       {chan, (int)group_id}};
@@ -172,7 +172,8 @@ Status EncodeModularChannelMAANS(const Image &image, pixel_type chan,
   if (kWantDebug) predictor_img = Image3F(channel.w, channel.h);
 
   JXL_DEBUG_V(6,
-              "Encoding %zux%zu channel %d, "
+              "Encoding %" PRIuS "x%" PRIuS
+              " channel %d, "
               "(shift=%i,%i)",
               channel.w, channel.h, chan, channel.hshift, channel.vshift);
 
@@ -185,7 +186,7 @@ Status EncodeModularChannelMAANS(const Image &image, pixel_type chan,
                              &is_wp_only, &is_gradient_only);
   Properties properties(num_props);
   MATreeLookup tree_lookup(tree);
-  JXL_DEBUG_V(3, "Encoding using a MA tree with %zu nodes", tree.size());
+  JXL_DEBUG_V(3, "Encoding using a MA tree with %" PRIuS " nodes", tree.size());
 
   // Check if this tree is a WP-only tree with a small enough property value
   // range.
@@ -382,8 +383,9 @@ Status ModularEncode(const Image &image, const ModularOptions &options,
                      size_t *width) {
   if (image.error) return JXL_FAILURE("Invalid image");
   size_t nb_channels = image.channel.size();
-  JXL_DEBUG_V(2, "Encoding %zu-channel, %i-bit, %zux%zu image.", nb_channels,
-              image.bitdepth, image.w, image.h);
+  JXL_DEBUG_V(
+      2, "Encoding %" PRIuS "-channel, %i-bit, %" PRIuS "x%" PRIuS " image.",
+      nb_channels, image.bitdepth, image.w, image.h);
 
   if (nb_channels < 1) {
     return true;  // is there any use for a zero-channel image?
@@ -531,10 +533,11 @@ Status ModularGenericCompress(Image &image, const ModularOptions &opts,
                                     header, tokens, width));
   bits = writer ? writer->BitsWritten() - bits : 0;
   if (writer) {
-    JXL_DEBUG_V(
-        4,
-        "Modular-encoded a %zux%zu bitdepth=%i nbchans=%zu image in %zu bytes",
-        image.w, image.h, image.bitdepth, image.channel.size(), bits / 8);
+    JXL_DEBUG_V(4,
+                "Modular-encoded a %" PRIuS "x%" PRIuS
+                " bitdepth=%i nbchans=%" PRIuS " image in %" PRIuS " bytes",
+                image.w, image.h, image.bitdepth, image.channel.size(),
+                bits / 8);
   }
   (void)bits;
   return true;

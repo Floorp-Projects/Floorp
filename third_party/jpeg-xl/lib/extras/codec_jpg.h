@@ -36,8 +36,7 @@ static inline bool IsJPG(const Span<const uint8_t> bytes) {
 // `elapsed_deinterleave`, if non-null, will be set to the time (in seconds)
 // that it took to deinterleave the raw JSAMPLEs to planar floats.
 Status DecodeImageJPG(Span<const uint8_t> bytes, const ColorHints& color_hints,
-                      ThreadPool* pool, CodecInOut* io,
-                      double* elapsed_deinterleave = nullptr);
+                      const SizeConstraints& constraints, PackedPixelFile* ppf);
 
 // Encodes into `bytes`.
 Status EncodeImageJPG(const CodecInOut* io, JpegEncoder encoder, size_t quality,

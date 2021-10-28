@@ -19,7 +19,7 @@ namespace {
 
 TEST(OpsinInverseTest, LinearInverseInverts) {
   Image3F linear(128, 128);
-  RandomFillImage(&linear, 1.0f);
+  RandomFillImage(&linear, 0.0f, 1.0f);
 
   CodecInOut io;
   io.metadata.m.SetFloat32Samples();
@@ -38,7 +38,7 @@ TEST(OpsinInverseTest, LinearInverseInverts) {
 
 TEST(OpsinInverseTest, YcbCrInverts) {
   Image3F rgb(128, 128);
-  RandomFillImage(&rgb, 1.0f);
+  RandomFillImage(&rgb, 0.0f, 1.0f);
 
   ThreadPool* null_pool = nullptr;
   Image3F ycbcr(rgb.xsize(), rgb.ysize());

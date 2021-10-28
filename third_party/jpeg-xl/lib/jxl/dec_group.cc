@@ -521,8 +521,9 @@ Status DecodeACVarBlock(size_t ctx_offset, size_t log2_covered_blocks,
       nzeros -= prev;
     }
     if (JXL_UNLIKELY(nzeros != 0)) {
-      return JXL_FAILURE(
-          "Invalid AC: nzeros not 0. Block (%zu, %zu), channel %zu", bx, by, c);
+      return JXL_FAILURE("Invalid AC: nzeros not 0. Block (%" PRIuS ", %" PRIuS
+                         "), channel %" PRIuS,
+                         bx, by, c);
     }
   }
   return true;
@@ -698,30 +699,42 @@ Status DecodeGroup(BitReader* JXL_RESTRICT* JXL_RESTRICT readers,
                       : kDontDraw;
 
   if (draw == kDraw && num_passes == 0 && first_pass == 0) {
-    // We reuse filter_input_storage here as it is not currently in use.
-    const Rect src_rect = dec_state->shared->BlockGroupRect(group_idx);
-    const Rect copy_rect(kBlockDim, 2, src_rect.xsize(), src_rect.ysize());
-    CopyImageToWithPadding(src_rect, *dec_state->shared->dc, 2, copy_rect,
-                           &dec_state->filter_input_storage[thread]);
-    EnsurePaddingInPlace(&dec_state->filter_input_storage[thread], copy_rect,
-                         src_rect, dec_state->shared->frame_dim.xsize_blocks,
-                         dec_state->shared->frame_dim.ysize_blocks, 2, 2);
-    Image3F* upsampling_dst = &dec_state->decoded;
-    Rect dst_rect(src_rect.x0() * 8, src_rect.y0() * 8, src_rect.xsize() * 8,
-                  src_rect.ysize() * 8);
-    if (dec_state->EagerFinalizeImageRect()) {
-      upsampling_dst = &dec_state->group_data[thread];
-      dst_rect = Rect(PassesDecoderState::kGroupDataXBorder,
-                      PassesDecoderState::kGroupDataYBorder, dst_rect.xsize(),
-                      dst_rect.ysize());
+    const YCbCrChromaSubsampling& cs =
+        dec_state->shared->frame_header.chroma_subsampling;
+    for (size_t c : {0, 1, 2}) {
+      size_t hs = cs.HShift(c);
+      size_t vs = cs.VShift(c);
+      // We reuse filter_input_storage here as it is not currently in use.
+      const Rect src_rect_precs = dec_state->shared->BlockGroupRect(group_idx);
+      const Rect src_rect =
+          Rect(src_rect_precs.x0() >> hs, src_rect_precs.y0() >> vs,
+               src_rect_precs.xsize() >> hs, src_rect_precs.ysize() >> vs);
+      const Rect copy_rect(kBlockDim, 2, src_rect.xsize(), src_rect.ysize());
+      CopyImageToWithPadding(src_rect, dec_state->shared->dc->Plane(c), 2,
+                             copy_rect,
+                             &dec_state->filter_input_storage[thread].Plane(c));
+      EnsurePaddingInPlace(
+          &dec_state->filter_input_storage[thread].Plane(c), copy_rect,
+          src_rect, DivCeil(dec_state->shared->frame_dim.xsize_blocks, 1 << hs),
+          DivCeil(dec_state->shared->frame_dim.ysize_blocks, 1 << vs), 2, 2);
+      ImageF* upsampling_dst = &dec_state->decoded.Plane(c);
+      Rect dst_rect(src_rect.x0() * 8, src_rect.y0() * 8, src_rect.xsize() * 8,
+                    src_rect.ysize() * 8);
+      if (dec_state->EagerFinalizeImageRect()) {
+        upsampling_dst = &dec_state->group_data[thread].Plane(c);
+        dst_rect = Rect(PassesDecoderState::kGroupDataXBorder,
+                        PassesDecoderState::kGroupDataYBorder, dst_rect.xsize(),
+                        dst_rect.ysize());
+      }
+      JXL_ASSERT(dst_rect.IsInside(*upsampling_dst));
+      dec_state->upsamplers[2].UpsampleRect(
+          dec_state->filter_input_storage[thread].Plane(c), copy_rect,
+          upsampling_dst, dst_rect,
+          static_cast<ssize_t>(src_rect.y0()) -
+              static_cast<ssize_t>(copy_rect.y0()),
+          dec_state->shared->frame_dim.ysize_blocks >> vs,
+          dec_state->upsampler_storage[thread].get());
     }
-    dec_state->upsamplers[2].UpsampleRect(
-        dec_state->filter_input_storage[thread], copy_rect, upsampling_dst,
-        dst_rect,
-        static_cast<ssize_t>(src_rect.y0()) -
-            static_cast<ssize_t>(copy_rect.y0()),
-        dec_state->shared->frame_dim.ysize_blocks,
-        dec_state->upsampler_storage[thread].get());
     draw = kOnlyImageFeatures;
   }
 

@@ -8,6 +8,7 @@
 #include <stddef.h>
 
 #include "gtest/gtest.h"
+#include "lib/extras/packed_image_convert.h"
 
 namespace jxl {
 namespace extras {
@@ -21,10 +22,13 @@ Span<const uint8_t> MakeSpan(const char* str) {
 TEST(CodecPGXTest, Test8bits) {
   std::string pgx = "PG ML + 8 2 3\npixels";
 
-  CodecInOut io;
+  PackedPixelFile ppf;
   ThreadPool* pool = nullptr;
 
-  EXPECT_TRUE(DecodeImagePGX(MakeSpan(pgx.c_str()), ColorHints(), pool, &io));
+  EXPECT_TRUE(DecodeImagePGX(MakeSpan(pgx.c_str()), ColorHints(),
+                             SizeConstraints(), &ppf));
+  CodecInOut io;
+  EXPECT_TRUE(ConvertPackedPixelFileToCodecInOut(ppf, pool, &io));
 
   ScaleImage(255.f, io.Main().color());
 
@@ -46,10 +50,13 @@ TEST(CodecPGXTest, Test8bits) {
 TEST(CodecPGXTest, Test16bits) {
   std::string pgx = "PG ML + 16 2 3\np_i_x_e_l_s_";
 
-  CodecInOut io;
+  PackedPixelFile ppf;
   ThreadPool* pool = nullptr;
 
-  EXPECT_TRUE(DecodeImagePGX(MakeSpan(pgx.c_str()), ColorHints(), pool, &io));
+  EXPECT_TRUE(DecodeImagePGX(MakeSpan(pgx.c_str()), ColorHints(),
+                             SizeConstraints(), &ppf));
+  CodecInOut io;
+  EXPECT_TRUE(ConvertPackedPixelFileToCodecInOut(ppf, pool, &io));
 
   ScaleImage(255.f, io.Main().color());
 
@@ -59,7 +66,8 @@ TEST(CodecPGXTest, Test16bits) {
   EXPECT_EQ(2u, io.xsize());
   EXPECT_EQ(3u, io.ysize());
 
-  float eps = 1e-7;
+  // Comparing ~16-bit numbers in floats, only ~7 bits left.
+  float eps = 1e-3;
   const auto& plane = io.Main().color()->Plane(0);
   EXPECT_NEAR(256.0f * 'p' + '_', plane.Row(0)[0] * 257, eps);
   EXPECT_NEAR(256.0f * 'i' + '_', plane.Row(0)[1] * 257, eps);

@@ -165,7 +165,7 @@ void InitializePassesEncoder(const Image3F& opsin, ThreadPool* pool,
           dc, group_index,
           enc_state->cparams.butteraugli_distance >= 2.0f &&
               enc_state->cparams.speed_tier < SpeedTier::kFalcon,
-          enc_state);
+          enc_state, /*jpeg_transcode=*/false);
     };
     RunOnPool(pool, 0, shared.frame_dim.num_dc_groups, ThreadPool::SkipInit(),
               compute_dc_coeffs, "Compute DC coeffs");

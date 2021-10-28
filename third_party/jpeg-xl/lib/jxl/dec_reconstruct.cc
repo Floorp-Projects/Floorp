@@ -557,6 +557,18 @@ void EnsurePaddingInPlace(Image3F* img, const Rect& rect,
   }
 }
 
+void EnsurePaddingInPlace(ImageF* img, const Rect& rect, const Rect& image_rect,
+                          size_t image_xsize, size_t image_ysize,
+                          size_t xpadding, size_t ypadding) {
+  ssize_t y0, y1;
+  EnsurePaddingInPlaceRowByRow impl;
+  impl.Init(img, rect, image_rect, image_xsize, image_ysize, xpadding, ypadding,
+            &y0, &y1);
+  for (ssize_t y = y0; y < y1; y++) {
+    impl.Process(y);
+  }
+}
+
 Status FinalizeImageRect(
     Image3F* input_image, const Rect& input_rect,
     const std::vector<std::pair<ImageF*, Rect>>& extra_channels,

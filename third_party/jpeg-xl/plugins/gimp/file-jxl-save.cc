@@ -5,6 +5,8 @@
 
 #include "plugins/gimp/file-jxl-save.h"
 
+#include <cmath>
+
 #include "gobject/gsignal.h"
 
 #define PLUG_IN_BINARY "file-jxl"

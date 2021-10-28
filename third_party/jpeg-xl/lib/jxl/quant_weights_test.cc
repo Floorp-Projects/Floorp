@@ -11,8 +11,8 @@
 #include <hwy/base.h>  // HWY_ALIGN_MAX
 #include <hwy/tests/test_util-inl.h>
 #include <numeric>
-#include <random>
 
+#include "lib/jxl/base/random.h"
 #include "lib/jxl/dct_for_test.h"
 #include "lib/jxl/dec_transforms_testonly.h"
 #include "lib/jxl/enc_modular.h"
@@ -150,9 +150,8 @@ TEST(QuantWeightsTest, RAW) {
   std::vector<QuantEncoding> encodings(DequantMatrices::kNum,
                                        QuantEncoding::Library(0));
   std::vector<int> matrix(3 * 32 * 32);
-  std::mt19937 rng;
-  std::uniform_int_distribution<size_t> dist(1, 255);
-  for (size_t i = 0; i < matrix.size(); i++) matrix[i] = dist(rng);
+  Rng rng(0);
+  for (size_t i = 0; i < matrix.size(); i++) matrix[i] = rng.UniformI(1, 256);
   encodings[DequantMatrices::kQuantTable[AcStrategy::DCT32X32]] =
       QuantEncoding::RAW(matrix, 2);
   RoundtripMatrices(encodings);

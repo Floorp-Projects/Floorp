@@ -7,6 +7,7 @@
 // available at once). The example outputs the pixels and color information to a
 // floating point image and an ICC profile on disk.
 
+#include <inttypes.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -96,8 +97,9 @@ bool DecodeJpegXlOneShot(const uint8_t* jxl, size_t size,
         return false;
       }
       if (buffer_size != *xsize * *ysize * 16) {
-        fprintf(stderr, "Invalid out buffer size %zu %zu\n", buffer_size,
-                *xsize * *ysize * 16);
+        fprintf(stderr, "Invalid out buffer size %" PRIu64 " %" PRIu64 "\n",
+                static_cast<uint64_t>(buffer_size),
+                static_cast<uint64_t>(*xsize * *ysize * 16));
         return false;
       }
       pixels->resize(*xsize * *ysize * 4);
