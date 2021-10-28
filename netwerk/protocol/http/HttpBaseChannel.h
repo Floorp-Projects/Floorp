@@ -818,6 +818,10 @@ class HttpBaseChannel : public nsHashPropertyBag,
     // Used to enforce that flag's behavior but not expose it externally.
     (uint32_t, AllowStaleCacheContent, 1),
 
+    // If true, we behave as if the VALIDATE_ALWAYS flag has been set.
+    // Used to force validate the cached content.
+    (uint32_t, ForceValidateCacheContent, 1),
+
     // If true, we prefer the LOAD_FROM_CACHE flag over LOAD_BYPASS_CACHE or
     // LOAD_BYPASS_LOCAL_CACHE.
     (uint32_t, PreferCacheLoadOverBypass, 1)

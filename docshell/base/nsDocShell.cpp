@@ -9857,6 +9857,15 @@ nsIPrincipal* nsDocShell::GetInheritedPrincipal(
   nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(channel));
   auto loadType = aLoadState->LoadType();
 
+  if (loadType == LOAD_RELOAD_NORMAL &&
+      StaticPrefs::
+          browser_soft_reload_only_force_validate_top_level_document()) {
+    nsCOMPtr<nsICacheInfoChannel> cachingChannel = do_QueryInterface(channel);
+    if (cachingChannel) {
+      cachingChannel->SetForceValidateCacheContent(true);
+    }
+  }
+
   // figure out if we need to set the post data stream on the channel...
   if (aLoadState->PostDataStream()) {
     if (nsCOMPtr<nsIFormPOSTActionChannel> postChannel =

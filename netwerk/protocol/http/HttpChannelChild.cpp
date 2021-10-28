@@ -2409,6 +2409,20 @@ HttpChannelChild::GetAllowStaleCacheContent(bool* aAllowStaleCacheContent) {
 }
 
 NS_IMETHODIMP
+HttpChannelChild::SetForceValidateCacheContent(
+    bool aForceValidateCacheContent) {
+  StoreForceValidateCacheContent(aForceValidateCacheContent);
+  return NS_OK;
+}
+NS_IMETHODIMP
+HttpChannelChild::GetForceValidateCacheContent(
+    bool* aForceValidateCacheContent) {
+  NS_ENSURE_ARG(aForceValidateCacheContent);
+  *aForceValidateCacheContent = LoadForceValidateCacheContent();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpChannelChild::SetPreferCacheLoadOverBypass(
     bool aPreferCacheLoadOverBypass) {
   StorePreferCacheLoadOverBypass(aPreferCacheLoadOverBypass);

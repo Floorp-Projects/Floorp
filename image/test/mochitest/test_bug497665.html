@@ -75,10 +75,6 @@ function checkReload()
 
   ok(image1third == image2third, "We got different images after a reload, but shouldn't have.");
 
-  // Sanity check that we actually reloaded properly.
-  ok(image1second != image1third, "We got the same images after a reload.");
-  ok(image1first == image1third, "We didn't loop back to the first image.");
-
   SimpleTest.finish();
 }
 

@@ -1428,6 +1428,14 @@
   value: "#551A8B"
   mirror: never
 
+# When true, soft reloads (including location.reload())
+# will only froce validate the top level document, subresources will
+# be loaded normally as-if users normally navigated to the page.
+- name: browser.soft_reload.only_force_validate_top_level_document
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "canvas."
 #---------------------------------------------------------------------------

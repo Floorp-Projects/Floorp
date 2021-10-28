@@ -208,8 +208,8 @@ CachePushChecker::OnCacheEntryCheck(nsICacheEntry* entry, uint32_t* result) {
 
   bool validationRequired = nsHttp::ValidationRequired(
       isForcedValid, &cachedResponseHead, 0 /*NWGH: ??? - loadFlags*/, false,
-      isImmutable, false, requestHead, entry, cacheControlRequest,
-      fromPreviousSession);
+      false /* forceValidateCacheContent */, isImmutable, false, requestHead,
+      entry, cacheControlRequest, fromPreviousSession);
 
   if (validationRequired) {
     // A real channel would most likely hit the net at this point, so let's
