@@ -130,6 +130,8 @@ class CroppingWindowCapturerWin : public CroppingWindowCapturer {
  public:
   explicit CroppingWindowCapturerWin(const DesktopCaptureOptions& options)
       : CroppingWindowCapturer(options),
+        enumerate_current_process_windows_(
+            options.enumerate_current_process_windows()),
         full_screen_window_detector_(options.full_screen_window_detector()) {}
 
   void CaptureFrame() override;
@@ -148,6 +150,8 @@ class CroppingWindowCapturerWin : public CroppingWindowCapturer {
 
   WindowCaptureHelperWin window_capture_helper_;
 
+  bool enumerate_current_process_windows_;
+
   rtc::scoped_refptr<FullScreenWindowDetector> full_screen_window_detector_;
 };
 
@@ -164,7 +168,12 @@ void CroppingWindowCapturerWin::CaptureFrame() {
             // it uses responsiveness check which could lead to performance
             // issues.
             SourceList result;
-            if (!webrtc::GetWindowList(GetWindowListFlags::kNone, &result))
+            int window_list_flags =
+                enumerate_current_process_windows_
+                    ? GetWindowListFlags::kNone
+                    : GetWindowListFlags::kIgnoreCurrentProcessWindows;
+
+            if (!webrtc::GetWindowList(window_list_flags, &result))
               return false;
 
             // Filter out windows not visible on current desktop
