@@ -90,6 +90,8 @@ Pre-requisites:
 
 3. Make sure to select the correct build variant in Android Studio. See the next section.
 
+4. Make sure to select "Default APK" under Installation Options inside Run/Debug configuration: see [this bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1529082).
+
 ### Build Variants
 For general development, we recommend the **debug** build variant. Here's an explanation of each variant:
 
