@@ -112,7 +112,7 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   args.loadState() = mLoadState->Serialize();
   args.cacheKey() = mCacheKey;
   args.channelId() = mChannelId;
-  args.asyncOpenTime() = mAsyncOpenTime;
+  args.asyncOpenTime() = TimeStamp::Now();
 
   Maybe<IPCClientInfo> ipcClientInfo;
   if (mInitialClientInfo.isSome()) {
