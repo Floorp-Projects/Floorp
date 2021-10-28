@@ -112,6 +112,20 @@ const FeatureManifest = {
       },
     },
   },
+  moreFromMozilla: {
+    description:
+      "New page on about:preferences to suggest more Mozilla products",
+    hasExposure: true,
+    exposureDescription:
+      "Exposure is sent once per browsing session when the about:preferences URL is first accessed.",
+    variables: {
+      enabled: {
+        type: "boolean",
+        fallbackPref: "browser.preferences.moreFromMozilla",
+        description: "Should users see the new more from Mozilla section.",
+      },
+    },
+  },
   abouthomecache: {
     description: "The startup about:home cache.",
     hasExposure: false,
