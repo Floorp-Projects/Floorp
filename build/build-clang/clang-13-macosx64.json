@@ -17,6 +17,7 @@
       "static-llvm-symbolizer_clang_12.patch",
       "compiler-rt-cross-compile.patch",
       "revert-llvmorg-13-init-7827-g2a078c307204.patch",
-      "compiler-rt-13-no-codesign.patch"
+      "compiler-rt-13-no-codesign.patch",
+      "revert-ga478b0a199f4.patch"
     ]
 }
