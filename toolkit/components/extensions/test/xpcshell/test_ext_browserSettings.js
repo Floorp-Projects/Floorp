@@ -366,6 +366,30 @@ add_task(async function test_bad_value() {
       "overrideContentColorScheme.set rejects with an invalid value."
     );
 
+    await browser.test.assertRejects(
+      browser.browserSettings.zoomFullPage.set({ value: 0 }),
+      /0 is not a valid value for zoomFullPage/,
+      "zoomFullPage.set rejects with an invalid value."
+    );
+
+    await browser.test.assertRejects(
+      browser.browserSettings.zoomFullPage.set({ value: "bad" }),
+      /bad is not a valid value for zoomFullPage/,
+      "zoomFullPage.set rejects with an invalid value."
+    );
+
+    await browser.test.assertRejects(
+      browser.browserSettings.zoomSiteSpecific.set({ value: 0 }),
+      /0 is not a valid value for zoomSiteSpecific/,
+      "zoomSiteSpecific.set rejects with an invalid value."
+    );
+
+    await browser.test.assertRejects(
+      browser.browserSettings.zoomSiteSpecific.set({ value: "bad" }),
+      /bad is not a valid value for zoomSiteSpecific/,
+      "zoomSiteSpecific.set rejects with an invalid value."
+    );
+
     browser.test.sendMessage("done");
   }
 
