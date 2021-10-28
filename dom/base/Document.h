@@ -1198,7 +1198,7 @@ class Document : public nsINode,
 
   // Instead using this method, what you probably want is
   // RemoveFromBFCacheSync() as we do in MessagePort and BroadcastChannel.
-  void DisallowBFCaching(uint16_t aStatus = BFCacheStatus::NOT_ALLOWED);
+  void DisallowBFCaching(uint32_t aStatus = BFCacheStatus::NOT_ALLOWED);
 
   bool IsBFCachingAllowed() const { return !mBFCacheDisallowed; }
 
@@ -2359,7 +2359,7 @@ class Document : public nsINode,
    * combination is when we try to BFCache aNewRequest
    */
   virtual bool CanSavePresentation(nsIRequest* aNewRequest,
-                                   uint16_t& aBFCacheCombo,
+                                   uint32_t& aBFCacheCombo,
                                    bool aIncludeSubdocuments,
                                    bool aAllowUnloadListeners = true);
 

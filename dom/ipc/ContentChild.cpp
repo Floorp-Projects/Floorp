@@ -4455,7 +4455,7 @@ mozilla::ipc::IPCResult ContentChild::RecvCanSavePresentation(
 
   bool canSave = true;
   // XXXBFCache pass the flags to telemetry.
-  uint16_t flags = 0;
+  uint32_t flags = 0;
   BrowsingContext* browsingContext = aTopLevelContext.get();
   browsingContext->PreOrderWalk([&](BrowsingContext* aContext) {
     Document* doc = aContext->GetDocument();

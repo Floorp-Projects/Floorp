@@ -6930,7 +6930,7 @@ void Document::DeletePresShell() {
   mDesignModeSheetAdded = false;
 }
 
-void Document::DisallowBFCaching(uint16_t aStatus) {
+void Document::DisallowBFCaching(uint32_t aStatus) {
   NS_ASSERTION(!mBFCacheEntry, "We're already in the bfcache!");
   if (!mBFCacheDisallowed) {
     WindowGlobalChild* wgc = GetWindowGlobalChild();
@@ -11009,7 +11009,7 @@ void Document::CollectDescendantDocuments(
 }
 
 bool Document::CanSavePresentation(nsIRequest* aNewRequest,
-                                   uint16_t& aBFCacheCombo,
+                                   uint32_t& aBFCacheCombo,
                                    bool aIncludeSubdocuments,
                                    bool aAllowUnloadListeners) {
   bool ret = true;
@@ -11164,7 +11164,7 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest,
       auto entry = static_cast<SubDocMapEntry*>(iter.Get());
       Document* subdoc = entry->mSubDocument;
 
-      uint16_t subDocBFCacheCombo = 0;
+      uint32_t subDocBFCacheCombo = 0;
       // The aIgnoreRequest we were passed is only for us, so don't pass it on.
       bool canCache =
           subdoc ? subdoc->CanSavePresentation(nullptr, subDocBFCacheCombo,

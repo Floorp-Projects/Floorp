@@ -2520,7 +2520,7 @@ bool CanonicalBrowsingContext::AllowedInBFCache(
     return false;
   }
 
-  uint16_t bfcacheCombo = 0;
+  uint32_t bfcacheCombo = 0;
   if (mRestoreState) {
     bfcacheCombo |= BFCacheStatus::RESTORING;
     MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug, (" * during session restore"));
@@ -2552,7 +2552,7 @@ bool CanonicalBrowsingContext::AllowedInBFCache(
   PreOrderWalk([&](BrowsingContext* aBrowsingContext) {
     WindowGlobalParent* wgp =
         aBrowsingContext->Canonical()->GetCurrentWindowGlobal();
-    uint16_t subDocBFCacheCombo = wgp ? wgp->GetBFCacheStatus() : 0;
+    uint32_t subDocBFCacheCombo = wgp ? wgp->GetBFCacheStatus() : 0;
     if (wgp) {
       const Maybe<uint64_t>& singleChannelId = wgp->GetSingleChannelId();
       if (singleChannelId.isSome()) {
