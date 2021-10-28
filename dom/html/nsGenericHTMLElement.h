@@ -1040,7 +1040,7 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement {
    * @note Callers of UpdateFormOwner have to be sure the element is in a
    * document (GetUncomposedDoc() != nullptr).
    */
-  void UpdateFormOwner(bool aBindToTree, Element* aFormIdElement);
+  virtual void UpdateFormOwner(bool aBindToTree, Element* aFormIdElement);
 
   /**
    * This method will update mFieldset and set it to the first fieldset parent.
