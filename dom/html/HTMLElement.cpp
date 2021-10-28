@@ -137,6 +137,16 @@ already_AddRefed<ElementInternals> HTMLElement::AttachInternals(
   return do_AddRef(ceData->GetOrCreateElementInternals(this));
 }
 
+void HTMLElement::AfterClearForm(bool aUnbindOrDelete) {
+  // No need to enqueue formAssociated callback if we aren't releasing or
+  // unbinding from tree, UpdateFormOwner() will handle it.
+  if (aUnbindOrDelete) {
+    MOZ_ASSERT(IsFormAssociatedElement());
+    nsContentUtils::EnqueueLifecycleCallback(
+        ElementCallbackType::eFormAssociated, this, {});
+  }
+}
+
 void HTMLElement::UpdateFormOwner() {
   MOZ_ASSERT(IsFormAssociatedElement());
 
@@ -147,7 +157,7 @@ void HTMLElement::UpdateFormOwner() {
   // call UpdateFormOwner if none of these conditions are fulfilled.
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::form) ? IsInComposedDoc()
                                                   : !!GetParent()) {
-    nsGenericHTMLFormElement::UpdateFormOwner(true, nullptr);
+    UpdateFormOwner(true, nullptr);
   }
   UpdateFieldSet(true);
   UpdateDisabledState(true);
@@ -205,6 +215,18 @@ void HTMLElement::UpdateDisabledState(bool aNotify) {
     args.mDisabled = !oldState;
     nsContentUtils::EnqueueLifecycleCallback(ElementCallbackType::eFormDisabled,
                                              this, args);
+  }
+}
+
+void HTMLElement::UpdateFormOwner(bool aBindToTree, Element* aFormIdElement) {
+  HTMLFormElement* oldForm = GetFormInternal();
+  nsGenericHTMLFormElement::UpdateFormOwner(aBindToTree, aFormIdElement);
+  HTMLFormElement* newForm = GetFormInternal();
+  if (newForm != oldForm) {
+    LifecycleCallbackArgs args;
+    args.mForm = newForm;
+    nsContentUtils::EnqueueLifecycleCallback(
+        ElementCallbackType::eFormAssociated, this, args);
   }
 }
 

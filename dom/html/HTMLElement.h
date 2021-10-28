@@ -35,6 +35,7 @@ class HTMLElement final : public nsGenericHTMLFormElement {
 
   // nsGenericHTMLFormElement
   bool IsFormAssociatedElement() const override;
+  void AfterClearForm(bool aUnbindOrDelete) override;
 
   void UpdateFormOwner();
 
@@ -58,6 +59,7 @@ class HTMLElement final : public nsGenericHTMLFormElement {
   bool CanBeDisabled() const override;
   bool DoesReadOnlyApply() const override;
   void UpdateDisabledState(bool aNotify) override;
+  void UpdateFormOwner(bool aBindToTree, Element* aFormIdElement) override;
 
   ElementInternals* GetElementInternals() const;
 };

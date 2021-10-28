@@ -164,6 +164,12 @@ UniquePtr<CustomElementCallback> CustomElementCallback::Create(
       }
       break;
 
+    case ElementCallbackType::eFormAssociated:
+      if (aDefinition->mCallbacks->mFormAssociatedCallback.WasPassed()) {
+        func = aDefinition->mCallbacks->mFormAssociatedCallback.Value();
+      }
+      break;
+
     case ElementCallbackType::eFormReset:
       if (aDefinition->mCallbacks->mFormResetCallback.WasPassed()) {
         func = aDefinition->mCallbacks->mFormResetCallback.Value();
@@ -208,6 +214,10 @@ void CustomElementCallback::Call() {
       static_cast<LifecycleAttributeChangedCallback*>(mCallback.get())
           ->Call(mThisObject, mArgs.mName, mArgs.mOldValue, mArgs.mNewValue,
                  mArgs.mNamespaceURI);
+      break;
+    case ElementCallbackType::eFormAssociated:
+      static_cast<LifecycleFormAssociatedCallback*>(mCallback.get())
+          ->Call(mThisObject, mArgs.mForm);
       break;
     case ElementCallbackType::eFormReset:
       static_cast<LifecycleFormResetCallback*>(mCallback.get())
@@ -1559,6 +1569,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(CustomElementDefinition)
   if (callbacks->mAdoptedCallback.WasPassed()) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCallbacks->mAdoptedCallback");
     cb.NoteXPCOMChild(callbacks->mAdoptedCallback.Value());
+  }
+
+  if (callbacks->mFormAssociatedCallback.WasPassed()) {
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
+                                       "mCallbacks->mFormAssociatedCallback");
+    cb.NoteXPCOMChild(callbacks->mFormAssociatedCallback.Value());
   }
 
   if (callbacks->mFormResetCallback.WasPassed()) {
