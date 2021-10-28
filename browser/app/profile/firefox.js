@@ -676,6 +676,10 @@ pref("security.allow_parent_unrestricted_js_loads", false);
 // Unload tabs when available memory is running low
 pref("browser.tabs.unloadOnLowMemory", true);
 
+// Tab Unloader does not unload tabs whose last inactive period is longer than
+// this value (in milliseconds).
+pref("browser.tabs.min_inactive_duration_before_unload", 600000);
+
 #if defined(XP_MACOSX)
   // During low memory periods, poll with this frequency (milliseconds)
   // until memory is no longer low. Changes to the pref take effect immediately.
