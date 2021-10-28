@@ -10,6 +10,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/EventDispatcher.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/widget/IconLoader.h"
@@ -210,6 +211,16 @@ LRESULT StatusBarEntry::OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
     nsMenuFrame* menu = do_QueryFrame(mMenu->GetPrimaryFrame());
     if (!menu) {
       return TRUE;
+    }
+
+    if (LOWORD(lp) == WM_LBUTTONUP &&
+        mMenu->HasAttr(kNameSpaceID_None, nsGkAtoms::contextmenu)) {
+      nsEventStatus status = nsEventStatus_eIgnore;
+      WidgetMouseEvent event(true, eXULSystemStatusBarClick, nullptr,
+                             WidgetMouseEvent::eReal);
+      EventDispatcher::Dispatch(mMenu, menu->PresContext(), &event, nullptr,
+                                &status);
+      return DefWindowProc(hWnd, msg, wp, lp);
     }
 
     nsMenuPopupFrame* popupFrame = menu->GetPopup();

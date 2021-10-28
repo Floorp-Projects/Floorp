@@ -422,6 +422,8 @@ NON_IDL_EVENT(overflow, eScrollPortOverflow, EventNameType_XUL,
               eBasicEventClass)
 NON_IDL_EVENT(underflow, eScrollPortUnderflow, EventNameType_XUL,
               eBasicEventClass)
+NON_IDL_EVENT(systemstatusbarclick, eXULSystemStatusBarClick, EventNameType_XUL,
+              eBasicEventClass)
 
 // Various SVG events
 NON_IDL_EVENT(SVGLoad, eSVGLoad, EventNameType_None, eBasicEventClass)
