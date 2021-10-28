@@ -25,6 +25,7 @@ import mozilla.components.concept.menu.candidate.TypefaceStyle
  * @param label The visible label of this menu item.
  * @param textSize: The size of the label.
  * @param textColorResource: The color resource to apply to the text.
+ * @param backgroundColorResource: The color resource to apply to the item background.
  * @param textStyle: The style to apply to the text.
  * @param textAlignment The alignment of text
  * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
@@ -37,6 +38,8 @@ class BrowserMenuCategory(
     private val textSize: Float = NO_ID.toFloat(),
     @ColorRes
     private val textColorResource: Int = NO_ID,
+    @ColorRes
+    private val backgroundColorResource: Int = NO_ID,
     @TypefaceStyle private val textStyle: Int = Typeface.BOLD,
     @TextAlignment private val textAlignment: Int = View.TEXT_ALIGNMENT_VIEW_START,
     override val isCollapsingMenuLimit: Boolean = false,
@@ -60,6 +63,10 @@ class BrowserMenuCategory(
 
         textView.setTypeface(textView.typeface, textStyle)
         textView.textAlignment = textAlignment
+
+        if (backgroundColorResource != NO_ID) {
+            view.setBackgroundResource(backgroundColorResource)
+        }
     }
 
     override fun asCandidate(context: Context) = DecorativeTextMenuCandidate(

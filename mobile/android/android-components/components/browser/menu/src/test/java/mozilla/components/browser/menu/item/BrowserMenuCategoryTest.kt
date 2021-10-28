@@ -12,11 +12,15 @@ import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
 import mozilla.components.concept.menu.candidate.DecorativeTextMenuCandidate
 import mozilla.components.concept.menu.candidate.TextStyle
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
+import org.mockito.Mockito.anyInt
+import org.mockito.Mockito.never
+import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class BrowserMenuCategoryTest {
@@ -58,6 +62,29 @@ class BrowserMenuCategoryTest {
         val expectedColour = ContextCompat.getColor(textView.context, android.R.color.holo_red_dark)
 
         assertEquals(expectedColour, textView.currentTextColor)
+    }
+
+    @Test
+    fun `GIVEN a BrowserMenuCategory, WHEN backgroundColorResource is provided, THEN the background resource is set to that value`() {
+        val expectedColour = android.R.color.holo_red_dark
+        val menuCategoryWithBackgroundColour = BrowserMenuCategory(label, backgroundColorResource = expectedColour)
+        val view: TextView = mock()
+        val menu: BrowserMenu = mock()
+
+        menuCategoryWithBackgroundColour.bind(menu, view)
+
+        verify(view).setBackgroundResource(expectedColour)
+    }
+
+    @Test
+    fun `GIVEN a BrowserMenuCategory, WHEN backgroundColorResource is not provided, THEN no background is set`() {
+        val menuCategoryWithNoBackgroundColour = BrowserMenuCategory(label)
+        val view: TextView = mock()
+        val menu: BrowserMenu = mock()
+
+        menuCategoryWithNoBackgroundColour.bind(menu, view)
+
+        verify(view, never()).setBackgroundResource(anyInt())
     }
 
     @Test
