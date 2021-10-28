@@ -67,17 +67,17 @@ Result<R, E> WaitFor(const RefPtr<MozPromise<R, E, Exc>>& aPromise) {
  * A variation of WaitFor that takes a callback to be called each time aEvent is
  * raised. Blocks the caller until the callback function returns true.
  */
-template <typename T, typename CallbackFunction>
-void WaitUntil(MediaEventSource<T>& aEvent, const CallbackFunction& aF) {
+template <typename... Args, typename CallbackFunction>
+void WaitUntil(MediaEventSource<Args...>& aEvent, CallbackFunction&& aF) {
   bool done = false;
   MediaEventListener listener =
-      aEvent.Connect(AbstractThread::GetCurrent(), [&](T aValue) {
+      aEvent.Connect(AbstractThread::GetCurrent(), [&](Args... aValue) {
         if (!done) {
-          done = aF(aValue);
+          done = aF(std::forward<Args>(aValue)...);
         }
       });
   SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      "WaitUntil(MediaEventSource<T>& aEvent, const CallbackFunction& aF)"_ns,
+      "WaitUntil(MediaEventSource<Args...>& aEvent, CallbackFunction&& aF)"_ns,
       [&] { return done; });
   listener.Disconnect();
 }
