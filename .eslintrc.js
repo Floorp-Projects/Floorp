@@ -610,7 +610,6 @@ module.exports = {
         "toolkit/mozapps/extensions/test/xpcshell/test_webextension.js",
         "toolkit/mozapps/extensions/test/xpcshell/test_webextension_events.js",
         "toolkit/mozapps/extensions/test/xpcshell/test_XPIStates.js",
-        "toolkit/mozapps/installer/precompile_cache.js",
       ],
       rules: {
         "mozilla/reject-chromeutils-import-params": "off",
