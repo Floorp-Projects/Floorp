@@ -6,8 +6,8 @@
 
 #include "APZThreadUtils.h"
 
-#include "GeckoProfiler.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/ProfilerRunnable.h"
 #include "mozilla/StaticMutex.h"
 
 #include "nsISerialEventTarget.h"

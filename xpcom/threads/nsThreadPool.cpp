@@ -6,7 +6,6 @@
 
 #include "nsThreadPool.h"
 
-#include "GeckoProfiler.h"
 #include "nsCOMArray.h"
 #include "ThreadDelay.h"
 #include "nsThreadManager.h"
@@ -15,6 +14,7 @@
 #include "prinrval.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ProfilerLabels.h"
+#include "mozilla/ProfilerRunnable.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/SpinEventLoopUntil.h"

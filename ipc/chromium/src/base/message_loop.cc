@@ -13,9 +13,9 @@
 #include "base/message_pump_default.h"
 #include "base/string_util.h"
 #include "base/thread_local.h"
-#include "GeckoProfiler.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/ProfilerRunnable.h"
 #include "nsThreadUtils.h"
 
 #if defined(OS_MACOSX)
