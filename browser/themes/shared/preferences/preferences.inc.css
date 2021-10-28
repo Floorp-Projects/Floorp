@@ -212,6 +212,13 @@ checkbox {
   list-style-image: url("chrome://global/skin/icons/experiments.svg");
 }
 
+#category-more-from-mozilla > .category-icon {
+  list-style-image: url("chrome://browser/skin/preferences/mozilla-logo.svg");
+  -moz-context-properties: fill, stroke, fill-opacity, stroke-opacity;
+  fill: currentColor;
+  stroke: var(--in-content-page-background);
+}
+
 /* All panes */
 
 .info-icon,
@@ -1164,4 +1171,49 @@ richlistitem .text-link:hover {
 
 .checkbox-row a {
   margin-inline-start: 6px;
+}
+
+#moreFromMozillaCategory .subtitle {
+  color: var(--in-content-deemphasized-text);
+  margin: 4px 0 10px;
+}
+
+#moreFromMozillaCategory .list-item {
+  margin-top: 30px;
+}
+
+#moreFromMozillaCategory .product-title {
+  background-repeat: no-repeat;
+  background-size: contain;
+  padding-inline-start: 30px;
+  margin: 4px 0;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+#moreFromMozillaCategory .product-title:-moz-locale-dir(rtl) {
+  background-position-x: right;
+}
+
+#moreFromMozillaCategory .description {
+  color: var(--in-content-deemphasized-text);
+  padding-inline-start: 30px;
+  margin: 4px 0;
+}
+
+#moreFromMozillaCategory button {
+  margin-block: 16px;
+  margin-inline: 30px 0;
+}
+
+#firefox-mobile {
+  background-image: url("chrome://branding/content/about-logo.svg");
+}
+
+#mozilla-vpn {
+  background-image: url("chrome://browser/skin/preferences/vpn-logo.svg");
+}
+
+#mozilla-rally {
+  background-image: url("chrome://browser/skin/preferences/rally-logo.svg");
 }
