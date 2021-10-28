@@ -58,7 +58,7 @@ add_task(async function test_content_script_cross_origin_frame() {
 
     files: {
       "cs.js"() {
-        let text = document.body.innerText;
+        let text = document.getElementById("test").textContent;
         browser.test.assertEq(text, "Sample text", "CS can access page DOM");
 
         let manifest = browser.runtime.getManifest();
