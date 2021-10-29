@@ -58,21 +58,5 @@ void IAPZHitTester::InitializeHitTestingTreeNodeAutoLock(
                        mTreeManager->mTreeLock);
 }
 
-AsyncPanZoomController* IAPZHitTester::GetTargetApzcForNode(
-    const HitTestingTreeNode* aNode) {
-  return mTreeManager->GetTargetApzcForNode(aNode);
-}
-
-bool IAPZHitTester::IsFixedToRootContent(const HitTestingTreeNode* aNode) {
-  return mTreeManager->IsFixedToRootContent(aNode);
-}
-
-LayerToParentLayerMatrix4x4 IAPZHitTester::ComputeTransformForNode(
-    const HitTestingTreeNode* aNode,
-    const AsyncPanZoomController** aOutSourceOfOverscrollTransform) const {
-  return mTreeManager->ComputeTransformForNode(aNode,
-                                               aOutSourceOfOverscrollTransform);
-}
-
 }  // namespace layers
 }  // namespace mozilla
