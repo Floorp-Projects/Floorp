@@ -6,7 +6,6 @@
 
 #include "TestWRScrollData.h"
 #include "APZTestAccess.h"
-#include "InternalHitTester.h"
 #include "gtest/gtest.h"
 #include "FrameMetrics.h"
 #include "gfxPlatform.h"
@@ -17,10 +16,8 @@
 #include "mozilla/UniquePtr.h"
 #include "apz/src/APZCTreeManager.h"
 
-using mozilla::MakeUnique;
 using mozilla::layers::APZCTreeManager;
 using mozilla::layers::APZUpdater;
-using mozilla::layers::InternalHitTester;
 using mozilla::layers::LayersId;
 using mozilla::layers::ScrollableLayerGuid;
 using mozilla::layers::ScrollMetadata;
@@ -166,8 +163,7 @@ class WebRenderScrollDataWrapperTester : public ::testing::Test {
     // This ensures ScrollMetadata::sNullMetadata is initialized.
     gfxPlatform::GetPlatform();
 
-    mManager =
-        new APZCTreeManager(LayersId{0}, MakeUnique<InternalHitTester>());
+    mManager = new APZCTreeManager(LayersId{0});
     mUpdater = new APZUpdater(mManager, false);
   }
 
