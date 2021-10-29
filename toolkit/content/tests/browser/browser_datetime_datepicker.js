@@ -109,8 +109,18 @@ async function verifyPickerPosition(browsingContext, inputId) {
       msg + ": " + got + " should be equal(-ish) to " + exp
     );
   }
-  is_close(helper.panel.screenX, inputRect.left, "datepicker x position");
-  is_close(helper.panel.screenY, inputRect.bottom, "datepicker y position");
+  const marginLeft = parseFloat(getComputedStyle(helper.panel).marginLeft);
+  const marginTop = parseFloat(getComputedStyle(helper.panel).marginTop);
+  is_close(
+    helper.panel.screenX - marginLeft,
+    inputRect.left,
+    "datepicker x position"
+  );
+  is_close(
+    helper.panel.screenY - marginTop,
+    inputRect.bottom,
+    "datepicker y position"
+  );
 }
 
 let helper = new DateTimeTestHelper();

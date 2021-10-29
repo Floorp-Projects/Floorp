@@ -33,13 +33,13 @@ function popupShowing(event)
 function popupShown()
 {
   var left, top;
-  var popuprect = document.getElementById("popup").getBoundingClientRect();
+  var popup = document.getElementById("popup");
+  var popuprect = popup.getBoundingClientRect();
   if (isSecondTest) {
     let buttonrect = document.getElementById("button").getBoundingClientRect();
     left = buttonrect.left + 6;
     top = buttonrect.top + 6;
-  }
-  else {
+  } else {
     let iframerect = parent.document.getElementById("frame").getBoundingClientRect();
     let buttonrect = parent.document.getElementById("outerbutton").getBoundingClientRect();
 
@@ -53,6 +53,9 @@ function popupShown()
     left = -(Math.round(iframerect.left) - Math.round(buttonrect.left) + 14);
     top = -(Math.round(iframerect.top) - Math.round(buttonrect.bottom) + 2);
   }
+
+  left += parseFloat(getComputedStyle(popup).marginLeft);
+  top += parseFloat(getComputedStyle(popup).marginTop);
 
   var testid = isSecondTest ? "with mouse" : "anchored to parent frame";
   parent.arguments[0].SimpleTest.is(Math.round(popuprect.left), left, "popup left " + testid);

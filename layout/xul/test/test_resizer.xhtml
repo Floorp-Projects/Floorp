@@ -28,6 +28,7 @@ XUL <resizer> tests
     var step = 0;
     function popupShown(event)
     {
+      let panel = document.getElementById("panel");
       if (step == 0) {
         // check to make sure that the popup cannot be resized past the edges of
         // the content area
@@ -37,7 +38,7 @@ XUL <resizer> tests
 
         // allow a one pixel variance as rounding is always done to the inside
         // of a rectangle.
-        var popuprect = document.getElementById("panel").getBoundingClientRect();
+        var popuprect = panel.getBoundingClientRect();
         ok(Math.round(popuprect.right) == window.innerWidth ||
            Math.round(popuprect.right) == window.innerWidth - 1,
            "resized to content edge width");
@@ -52,9 +53,11 @@ XUL <resizer> tests
         // the popup is opened twice. Make sure that for the second time, the
         // resized popup opens in the same direction as there should still be
         // room for it
-        var popuprect = document.getElementById("panel").getBoundingClientRect();
-        is(Math.round(popuprect.left), window.innerWidth - 130, "reopen popup left");
-        is(Math.round(popuprect.top), window.innerHeight - 130, "reopen popup top");
+        var popuprect = panel.getBoundingClientRect();
+        var marginLeft = parseFloat(getComputedStyle(panel).marginLeft);
+        var marginTop = parseFloat(getComputedStyle(panel).marginTop);
+        is(Math.round(popuprect.left - marginLeft), window.innerWidth - 130, "reopen popup left");
+        is(Math.round(popuprect.top - marginTop), window.innerHeight - 130, "reopen popup top");
       }
 
       event.target.hidePopup();
