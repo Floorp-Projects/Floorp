@@ -768,7 +768,8 @@ class ContentParent final
       const bool& aForWindowDotPrint, nsIURI* aURIToLoad,
       const nsCString& aFeatures, const float& aFullZoom,
       BrowserParent* aNextRemoteBrowser, const nsString& aName,
-      nsresult& aResult, bool* aWindowIsNew, int32_t& aOpenLocation,
+      nsresult& aResult, nsCOMPtr<nsIRemoteTab>& aNewRemoteTab,
+      bool* aWindowIsNew, int32_t& aOpenLocation,
       nsIPrincipal* aTriggeringPrincipal, nsIReferrerInfo* aReferrerInfo,
       bool aLoadUri, nsIContentSecurityPolicy* aCsp,
       const OriginAttributes& aOriginAttributes);
