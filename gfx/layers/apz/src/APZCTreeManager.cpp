@@ -1135,7 +1135,6 @@ void SetHitTestData(HitTestingTreeNode* aNode,
   aNode->SetHitTestData(GetEventRegions(aLayer), aLayer.GetVisibleRegion(),
                         aLayer.GetRemoteDocumentSize(),
                         aLayer.GetTransformTyped(), aClipRegion, aOverrideFlags,
-                        aLayer.IsBackfaceHidden(),
                         aLayer.GetAsyncZoomContainerId());
 }
 

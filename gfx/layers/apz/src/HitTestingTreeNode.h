@@ -107,7 +107,7 @@ class HitTestingTreeNode {
       const LayerIntSize& aRemoteDocumentSize,
       const CSSTransformMatrix& aTransform,
       const Maybe<ParentLayerIntRegion>& aClipRegion,
-      const EventRegionsOverride& aOverride, bool aIsBackfaceHidden,
+      const EventRegionsOverride& aOverride,
       const Maybe<ScrollableLayerGuid::ViewID>& aAsyncZoomContainerId);
 
   /* Scrollbar info */
@@ -221,14 +221,6 @@ class HitTestingTreeNode {
   /* This is the transform from layer L. This does NOT include any async
    * transforms. */
   CSSTransformMatrix mTransform;
-
-  /* Whether layer L is backface-visibility:hidden, and its backface is
-   * currently visible. It's true that the latter depends on the layer's
-   * shadow transform, but the sorts of changes APZ makes to the shadow
-   * transform shouldn't change the backface from hidden to visible or
-   * vice versa, so it's sufficient to record this at hit test tree
-   * building time. */
-  bool mIsBackfaceHidden;
 
   /* If the layer is the async zoom container layer then this will hold the id.
    */
