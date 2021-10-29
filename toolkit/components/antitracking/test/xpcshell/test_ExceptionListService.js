@@ -38,7 +38,7 @@ add_task(async _ => {
   let records = [
     {
       id: "1",
-      last_modified: 100000000000000000001,
+      last_modified: 1000000000000001,
       firstPartyOrigin: "https://example.org",
       thirdPartyOrigin: "https://tracking.example.com",
     },
@@ -67,7 +67,7 @@ add_task(async _ => {
 
   records.push({
     id: "2",
-    last_modified: 100000000000000000002,
+    last_modified: 1000000000000002,
     firstPartyOrigin: "https://foo.org",
     thirdPartyOrigin: "https://bar.com",
   });

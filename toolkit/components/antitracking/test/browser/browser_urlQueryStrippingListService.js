@@ -195,7 +195,7 @@ add_task(async function testRemoteSettings() {
       current: [
         {
           id: "1",
-          last_modified: 100000000000000000001,
+          last_modified: 1000000000000001,
           stripList: ["remote_query1", "remote_query2"],
           allowList: [],
         },
@@ -222,7 +222,7 @@ add_task(async function testRemoteSettings() {
       current: [
         {
           id: "2",
-          last_modified: 100000000000000000002,
+          last_modified: 1000000000000002,
           stripList: ["remote_query1", "remote_query2"],
           allowList: ["example.net"],
         },
