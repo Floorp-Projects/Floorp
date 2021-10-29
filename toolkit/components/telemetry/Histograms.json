@@ -8598,7 +8598,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["mnakano.birchill@mozilla.com"],
     "bug_numbers": [1668134, 1665530],
-    "expires_in_version": "96",
+    "expires_in_version": "never",
     "kind": "boolean",
     "releaseChannelCollection": "opt-out",
     "description": "Number of HTML editors whose window or a node in it has had beforeinput event listeners"
@@ -8608,7 +8608,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["mnakano.birchill@mozilla.com"],
     "bug_numbers": [1668134, 1665530],
-    "expires_in_version": "96",
+    "expires_in_version": "never",
     "kind": "boolean",
     "releaseChannelCollection": "opt-out",
     "description": "Number of HTML editors whose dispatching beforeinput events are canceled"
@@ -8618,7 +8618,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["mnakano.birchill@mozilla.com"],
     "bug_numbers": [1668134, 1665530],
-    "expires_in_version": "96",
+    "expires_in_version": "never",
     "kind": "boolean",
     "releaseChannelCollection": "opt-out",
     "description": "Number of HTML editors whose window or a node in it has had mutation event listeners, but has not had beforeinput event listeners"
@@ -8628,7 +8628,7 @@
     "products": ["firefox", "fennec"],
     "alert_emails": ["mnakano.birchill@mozilla.com"],
     "bug_numbers": [1668134, 1665530],
-    "expires_in_version": "96",
+    "expires_in_version": "never",
     "kind": "boolean",
     "releaseChannelCollection": "opt-out",
     "description": "Number of HTML editors a node in the window has been observed by mutation observers, but has not had beforeinput event listeners"
