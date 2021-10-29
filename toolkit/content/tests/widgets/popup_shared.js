@@ -391,8 +391,8 @@ function convertPosition(anchor, align) {
  * which can shift the bottom/right up to 0.5px from its "ideal" location,
  * and could cause it to round differently. (See bug 622507.)
  */
-function isWithinHalfPixel(a, b) {
-  return Math.abs(a - b) <= 0.5;
+function isWithinHalfPixel(a, b, message) {
+  ok(Math.abs(a - b) <= 0.5, `${message}: ${a}, ${b}`);
 }
 
 function compareEdge(anchor, popup, edge, offsetX, offsetY, testname) {
@@ -402,8 +402,6 @@ function compareEdge(anchor, popup, edge, offsetX, offsetY, testname) {
 
   var anchorrect = anchor.getBoundingClientRect();
   var popuprect = popup.getBoundingClientRect();
-  var check1 = false,
-    check2 = false;
 
   if (gPopupWidth == -1) {
     ok(
@@ -502,36 +500,68 @@ function compareEdge(anchor, popup, edge, offsetX, offsetY, testname) {
   }
 
   if (edge == "overlap") {
-    ok(
-      Math.round(anchorrect.left) + offsetY == Math.round(popuprect.left) &&
-        Math.round(anchorrect.top) + offsetY == Math.round(popuprect.top),
-      testname + " position"
+    is(
+      Math.round(anchorrect.left) + offsetY,
+      Math.round(popuprect.left),
+      testname + " position1"
+    );
+    is(
+      Math.round(anchorrect.top) + offsetY,
+      Math.round(popuprect.top),
+      testname + " position2"
     );
     return;
   }
 
   if (edge.indexOf("before") == 0) {
-    check1 = isWithinHalfPixel(anchorrect.top + offsetY, popuprect.bottom);
+    isWithinHalfPixel(
+      anchorrect.top + offsetY,
+      popuprect.bottom,
+      testname + " position1"
+    );
   } else if (edge.indexOf("after") == 0) {
-    check1 =
-      Math.round(anchorrect.bottom) + offsetY == Math.round(popuprect.top);
+    is(
+      Math.round(anchorrect.bottom) + offsetY,
+      Math.round(popuprect.top),
+      testname + " position1"
+    );
   } else if (edge.indexOf("start") == 0) {
-    check1 = isWithinHalfPixel(anchorrect.left + offsetX, popuprect.right);
+    isWithinHalfPixel(
+      anchorrect.left + offsetX,
+      popuprect.right,
+      testname + " position1"
+    );
   } else if (edge.indexOf("end") == 0) {
-    check1 =
-      Math.round(anchorrect.right) + offsetX == Math.round(popuprect.left);
+    is(
+      Math.round(anchorrect.right) + offsetX,
+      Math.round(popuprect.left),
+      testname + " position1"
+    );
   }
 
   if (0 < edge.indexOf("before")) {
-    check2 = Math.round(anchorrect.top) + offsetY == Math.round(popuprect.top);
+    is(
+      Math.round(anchorrect.top) + offsetY,
+      Math.round(popuprect.top),
+      testname + " position2"
+    );
   } else if (0 < edge.indexOf("after")) {
-    check2 = isWithinHalfPixel(anchorrect.bottom + offsetY, popuprect.bottom);
+    isWithinHalfPixel(
+      anchorrect.bottom + offsetY,
+      popuprect.bottom,
+      testname + " position2"
+    );
   } else if (0 < edge.indexOf("start")) {
-    check2 =
-      Math.round(anchorrect.left) + offsetX == Math.round(popuprect.left);
+    is(
+      Math.round(anchorrect.left) + offsetX,
+      Math.round(popuprect.left),
+      testname + " position2"
+    );
   } else if (0 < edge.indexOf("end")) {
-    check2 = isWithinHalfPixel(anchorrect.right + offsetX, popuprect.right);
+    isWithinHalfPixel(
+      anchorrect.right + offsetX,
+      popuprect.right,
+      testname + " position2"
+    );
   }
-
-  ok(check1 && check2, testname + " position");
 }
