@@ -623,8 +623,7 @@ void nsWindow::Destroy() {
   // Clear up WebRender queue
   RevokeTransactionIdAllocator();
 
-  WaylandStopVsync();
-  PauseCompositorHiddenWindow();
+  DisableRenderingToWindow();
 
   mIsDestroyed = true;
   mCreated = false;
@@ -3081,16 +3080,18 @@ void* nsWindow::GetNativeData(uint32_t aDataType) {
     case NS_NATIVE_OPENGL_CONTEXT:
       return nullptr;
     case NS_NATIVE_EGL_WINDOW: {
+      void* eglWindow = nullptr;
       if (GdkIsX11Display()) {
-        return mGdkWindow ? (void*)GDK_WINDOW_XID(mGdkWindow) : nullptr;
+        eglWindow = mGdkWindow ? (void*)GDK_WINDOW_XID(mGdkWindow) : nullptr;
       }
 #ifdef MOZ_WAYLAND
-      if (mContainer) {
-        return moz_container_wayland_get_egl_window(mContainer,
-                                                    FractionalScaleFactor());
+      else {
+        eglWindow = moz_container_wayland_get_egl_window(
+            mContainer, FractionalScaleFactor());
       }
 #endif
-      return nullptr;
+      LOG("Get NS_NATIVE_EGL_WINDOW window %p", eglWindow);
+      return eglWindow;
     }
     default:
       NS_WARNING("nsWindow::GetNativeData called with bad value");
@@ -5075,6 +5076,39 @@ static void GtkWidgetDisableUpdates(GtkWidget* aWidget) {
   g_signal_handlers_disconnect_by_data(frame_clock, window);
 }
 
+void nsWindow::EnableRenderingToWindow() {
+  LOG("nsWindow::EnableRenderingToWindow()");
+
+  if (mCompositorWidgetDelegate) {
+    mCompositorWidgetDelegate->EnableRendering(mXWindow, mIsShaped);
+  }
+
+  if (GdkIsWaylandDisplay()) {
+#ifdef MOZ_WAYLAND
+    moz_container_wayland_add_initial_draw_callback(
+        mContainer, [self = RefPtr{this}, this]() -> void {
+          LOG("moz_container_wayland initial create "
+              "ResumeCompositorHiddenWindow()");
+          self->ResumeCompositorHiddenWindow();
+          self->WaylandStartVsync();
+        });
+#endif
+  } else {
+    ResumeCompositorHiddenWindow();
+    WaylandStartVsync();
+  }
+}
+
+void nsWindow::DisableRenderingToWindow() {
+  LOG("nsWindow::DisableRenderingToWindow()");
+
+  PauseCompositorHiddenWindow();
+  WaylandStopVsync();
+  if (mCompositorWidgetDelegate) {
+    mCompositorWidgetDelegate->DisableRendering();
+  }
+}
+
 void nsWindow::ConfigureGdkWindow() {
   LOG("nsWindow::ConfigureGdkWindow() [%p]", this);
 
@@ -5111,10 +5145,6 @@ void nsWindow::ConfigureGdkWindow() {
   }
 #endif
 
-  if (mCompositorWidgetDelegate) {
-    mCompositorWidgetDelegate->EnableRendering(mXWindow, mIsShaped);
-  }
-
   if (mIsDragPopup && GdkIsWaylandDisplay()) {
     GtkWidget* parent = gtk_widget_get_parent(mShell);
     if (parent) {
@@ -5141,23 +5171,7 @@ void nsWindow::ConfigureGdkWindow() {
     mCompositorState = COMPOSITOR_PAUSED_MISSING_WINDOW;
   }
 
-  if (GdkIsWaylandDisplay()) {
-#ifdef MOZ_WAYLAND
-    RefPtr<nsWindow> self(this);
-    moz_container_wayland_add_initial_draw_callback(
-        mContainer, [self]() -> void {
-          MOZ_LOG(self->IsPopup() ? gWidgetPopupLog : gWidgetLog,
-                  mozilla::LogLevel::Debug,
-                  ("moz_container_wayland initial create "
-                   "ResumeCompositorHiddenWindow()"));
-          self->ResumeCompositorHiddenWindow();
-          self->WaylandStartVsync();
-        });
-#endif
-  } else {
-    ResumeCompositorHiddenWindow();
-    WaylandStartVsync();
-  }
+  EnableRenderingToWindow();
 
   if (mHasMappedToplevel) {
     EnsureGrabs();
@@ -5170,8 +5184,7 @@ void nsWindow::ConfigureGdkWindow() {
 void nsWindow::ReleaseGdkWindow() {
   LOG("nsWindow::ReleaseGdkWindow() [%p]", this);
 
-  WaylandStopVsync();
-  PauseCompositorHiddenWindow();
+  DisableRenderingToWindow();
 
   if (mGdkWindow) {
     g_object_set_data(G_OBJECT(mGdkWindow), "nsWindow", nullptr);
@@ -5180,9 +5193,6 @@ void nsWindow::ReleaseGdkWindow() {
 
   mSurfaceProvider.CleanupResources();
 
-  if (mCompositorWidgetDelegate) {
-    mCompositorWidgetDelegate->DisableRendering();
-  }
 #ifdef MOZ_X11
   if (GdkIsX11Display()) {
     mXWindow = X11None;
@@ -8212,9 +8222,7 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
   // There's a change of remote widget - stop compositor and VSync as
   // we're going re-init it.
   if (mCompositorWidgetDelegate && mIsMapped) {
-    mCompositorWidgetDelegate->DisableRendering();
-    PauseCompositorHiddenWindow();
-    WaylandStopVsync();
+    DisableRenderingToWindow();
   }
 
   if (delegate) {
@@ -8225,9 +8233,7 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
     // This is called from nsBaseWidget::CreateCompositor() in which case
     // we need to create a new EGL surface in RenderCompositorEGL on X11
     if (mIsMapped) {
-      mCompositorWidgetDelegate->EnableRendering(mXWindow, mIsShaped);
-      ResumeCompositorHiddenWindow();
-      WaylandStartVsync();
+      EnableRenderingToWindow();
     }
   } else {
     mCompositorWidgetDelegate = nullptr;

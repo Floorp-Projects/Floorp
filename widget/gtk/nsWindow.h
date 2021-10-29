@@ -484,9 +484,11 @@ class nsWindow final : public nsBaseWidget {
 
   void DispatchContextMenuEventFromMouseEvent(uint16_t domButton,
                                               GdkEventButton* aEvent);
+
+  void EnableRenderingToWindow();
+  void DisableRenderingToWindow();
   void ResumeCompositorHiddenWindow();
   void PauseCompositorHiddenWindow();
-
   void WaylandStartVsync();
   void WaylandStopVsync();
   GtkWidget* GetToplevelWidget();
