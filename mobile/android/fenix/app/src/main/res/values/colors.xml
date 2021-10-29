@@ -11,24 +11,8 @@
     <color name="accent_light_theme">@color/photonInk20</color>
     <color name="accent_bright_light_theme">@color/photonViolet70</color>
     <color name="about_link_normal_theme">@color/photonViolet70</color>
-    <color name="disabled_light_theme">#6620123A</color>
-    <color name="scrimStart_light_theme">#F515141A</color>
-    <color name="scrimEnd_light_theme">#F542414D</color>
     <color name="dark_grey_90_gradient_start">@color/photonDarkGrey90</color>
     <color name="dark_grey_90_gradient_end">#0015141A</color>
-    <color name="synced_tabs_separator_light_theme">@color/photonLightGrey30</color>
-    <color name="toolbar_start_gradient_light_theme">@color/foundation_light_theme</color>
-    <color name="toolbar_center_gradient_light_theme">@color/foundation_light_theme</color>
-    <color name="toolbar_end_gradient_light_theme">@color/foundation_light_theme</color>
-    <color name="toolbar_divider_color_light_theme">@color/photonLightGrey50</color>
-    <color name="fill_link_from_clipboard_light_theme">@color/accent_light_theme</color>
-    <color name="sync_disconnected_icon_fill_light_theme">@color/photonYellow70</color>
-    <color name="sync_disconnected_background_light_theme">#FFFDE2</color>
-    <color name="swipe_delete_background_light_theme">@color/photonLightGrey30</color>
-    <color name="onboarding_illustration_selected_light_theme">@color/accent_bright_light_theme</color>
-    <color name="onboarding_illustration_deselected_light_theme">#9915141A</color>
-    <color name="add_on_private_browsing_exterior_circle_background_light_theme">@color/accent_bright_light_theme</color>
-    <color name="add_on_private_browsing_interior_icon_background_light_theme">@color/photonWhite</color>
     <color name="prompt_login_edit_text_cursor_color_light_theme">@color/photonInk20</color>
     <color name="readermode_start_gradient_normal_theme">@color/photonViolet50</color>
     <color name="readermode_end_gradient_normal_theme">@color/photonBlue60</color>
@@ -163,26 +147,26 @@
     <color name="neutral_faded_normal_theme">@color/photonGrey20</color>
     <color name="shadow_normal_theme">#1F000000</color>
     <color name="destructive_normal_theme">@color/photonRed70</color>
-    <color name="disabled_normal_theme">@color/disabled_light_theme</color>
-    <color name="scrimStart_normal_theme">@color/scrimStart_light_theme</color>
-    <color name="scrimEnd_normal_theme">@color/scrimEnd_light_theme</color>
+    <color name="disabled_normal_theme">#6620123A</color>
+    <color name="scrimStart_normal_theme">#F515141A</color>
+    <color name="scrimEnd_normal_theme">#F542414D</color>
     <color name="snackbar_normal_theme">@color/accent_light_theme</color>
     <color name="accent_on_dark_background_normal_theme">@color/accent_bright_light_theme</color>
-    <color name="toolbar_start_gradient_normal_theme">@color/toolbar_start_gradient_light_theme</color>
-    <color name="toolbar_center_gradient_normal_theme">@color/toolbar_center_gradient_light_theme</color>
-    <color name="toolbar_end_gradient_normal_theme">@color/toolbar_end_gradient_light_theme</color>
-    <color name="toolbar_divider_color_normal_theme">@color/toolbar_divider_color_light_theme</color>
-    <color name="fill_link_from_clipboard_normal_theme">@color/fill_link_from_clipboard_light_theme</color>
+    <color name="toolbar_start_gradient_normal_theme">@color/foundation_light_theme</color>
+    <color name="toolbar_center_gradient_normal_theme">@color/foundation_light_theme</color>
+    <color name="toolbar_end_gradient_normal_theme">@color/foundation_light_theme</color>
+    <color name="toolbar_divider_color_normal_theme">@color/photonLightGrey50</color>
+    <color name="fill_link_from_clipboard_normal_theme">@color/accent_light_theme</color>
     <color name="menu_category_normal_theme">@color/accent_light_theme</color>
-    <color name="sync_disconnected_icon_fill_normal_theme">@color/sync_disconnected_icon_fill_light_theme</color>
-    <color name="sync_disconnected_background_normal_theme">@color/sync_disconnected_background_light_theme</color>
-    <color name="swipe_delete_background_normal_theme">@color/swipe_delete_background_light_theme</color>
+    <color name="sync_disconnected_icon_fill_normal_theme">@color/photonYellow70</color>
+    <color name="sync_disconnected_background_normal_theme">#FFFDE2</color>
+    <color name="swipe_delete_background_normal_theme">@color/photonLightGrey30</color>
     <color name="onboarding_card_background_start_gradient_normal_theme">@color/onboarding_card_background_start_gradient_dark_theme</color>
     <color name="onboarding_card_background_end_gradient_normal_theme">@color/onboarding_card_background_end_gradient_dark_theme</color>
-    <color name="onboarding_illustration_selected_normal_theme">@color/onboarding_illustration_selected_light_theme</color>
-    <color name="onboarding_illustration_deselected_normal_theme">@color/onboarding_illustration_deselected_light_theme</color>
-    <color name="add_on_private_browsing_exterior_circle_background_normal_theme">@color/add_on_private_browsing_exterior_circle_background_light_theme</color>
-    <color name="add_on_private_browsing_interior_icon_background_normal_theme">@color/add_on_private_browsing_interior_icon_background_light_theme</color>
+    <color name="onboarding_illustration_selected_normal_theme">@color/accent_bright_light_theme</color>
+    <color name="onboarding_illustration_deselected_normal_theme">#9915141A</color>
+    <color name="add_on_private_browsing_exterior_circle_background_normal_theme">@color/accent_bright_light_theme</color>
+    <color name="add_on_private_browsing_interior_icon_background_normal_theme">@color/photonWhite</color>
     <color name="prompt_login_edit_text_cursor_color_normal_theme">@color/prompt_login_edit_text_cursor_color_light_theme</color>
     <color name="search_suggestion_indicator_icon_color_normal_theme">@color/search_suggestion_indicator_icon_color_light_theme</color>
     <color name="search_suggestion_indicator_icon_bookmark_color_normal_theme">@color/search_suggestion_indicator_icon_bookmark_color_light_theme</color>
@@ -223,7 +207,7 @@
     <color name="top_sites_border_color">@color/photonLightGrey30</color>
 
     <!-- Synced tabs colors-->
-    <color name="synced_tabs_separator">@color/synced_tabs_separator_light_theme</color>
+    <color name="synced_tabs_separator">@color/photonLightGrey30</color>
 
     <!-- Collection icons-->
     <color name="collection_icon_color_violet">@color/photonViolet60</color>
