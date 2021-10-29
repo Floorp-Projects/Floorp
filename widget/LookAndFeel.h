@@ -16,6 +16,7 @@
 #include "nsTArray.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/widget/ThemeChangeKind.h"
+#include "mozilla/ColorScheme.h"
 
 struct gfxFontStyle;
 
@@ -24,9 +25,6 @@ class nsIFrame;
 namespace mozilla {
 
 struct StyleColorSchemeFlags;
-
-// Whether we should use a light or dark appearance.
-enum class ColorScheme : uint8_t { Light, Dark };
 
 namespace dom {
 class Document;
