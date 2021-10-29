@@ -1,29 +1,27 @@
 <!DOCTYPE html>
-<html class="reftest-wait">
+<html class="test-wait">
 <head>
+<meta charset="utf-8">
+<title>Testcase for bug 716456 of Mozilla</title>
 <script>
-
-function boom()
-{
-  var div = document.querySelector("div");
+function boom() {
+  const div = document.querySelector("div");
   div.contentEditable = "true";
   div.focus();
 
-  var r = document.documentElement;
-  document["removeChild"](r);
-  document["appendChild"](r);
+  const root = document.documentElement;
+  document.removeChild(root);
+  document.appendChild(root);
 
-  setTimeout(function() {
+  setTimeout(() => {
     getSelection().collapse(div, 0);
     document.execCommand("inserthtml", false, "a");
-    setTimeout(function() {
+    setTimeout(() => {
       document.documentElement.removeAttribute("class");
     }, 0);
   }, 0);
 }
-
 </script>
 </head>
-
 <body onload="boom();"><div></div></body>
 </html>
