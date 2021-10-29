@@ -16,6 +16,7 @@
 #include "APZTestCommon.h"
 #include "gfxPlatform.h"
 #include "InternalHitTester.h"
+#include "MockHitTester.h"
 #include "apz/src/WRHitTester.h"
 
 #include "mozilla/layers/APZSampler.h"
@@ -92,6 +93,19 @@ class APZCTreeManagerTester : public APZCTesterBase {
     root = layers[0];
   }
 
+  void CreateMockHitTester() {
+    mHitTester = MakeUnique<MockHitTester>();
+    // Save a pointer in a separate variable, because SetUp() will
+    // move the value out of mHitTester.
+    mMockHitTester = static_cast<MockHitTester*>(mHitTester.get());
+  }
+  void QueueMockHitResult(ScrollableLayerGuid::ViewID aScrollId,
+                          gfx::CompositorHitTestInfo aHitInfo =
+                              gfx::CompositorHitTestFlags::eVisibleToHitTest) {
+    MOZ_ASSERT(mMockHitTester);
+    mMockHitTester->QueueHitResult(aScrollId, aHitInfo);
+  }
+
   RefPtr<TestAPZCTreeManager> manager;
   RefPtr<APZSampler> sampler;
   RefPtr<APZUpdater> updater;
@@ -99,6 +113,7 @@ class APZCTreeManagerTester : public APZCTesterBase {
   WebRenderLayerScrollData* root = nullptr;
 
   UniquePtr<IAPZHitTester> mHitTester;
+  MockHitTester* mMockHitTester = nullptr;
 
  protected:
   static ScrollMetadata BuildScrollMetadata(
