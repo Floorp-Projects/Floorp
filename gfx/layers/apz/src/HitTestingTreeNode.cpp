@@ -249,11 +249,10 @@ bool HitTestingTreeNode::IsPrimaryHolder() const {
 LayersId HitTestingTreeNode::GetLayersId() const { return mLayersId; }
 
 void HitTestingTreeNode::SetHitTestData(
-    const EventRegions& aRegions, const LayerIntRegion& aVisibleRegion,
+    const LayerIntRegion& aVisibleRegion,
     const LayerIntSize& aRemoteDocumentSize,
     const CSSTransformMatrix& aTransform, const EventRegionsOverride& aOverride,
     const Maybe<ScrollableLayerGuid::ViewID>& aAsyncZoomContainerId) {
-  mEventRegions = aRegions;
   mVisibleRegion = aVisibleRegion;
   mRemoteDocumentSize = aRemoteDocumentSize;
   mTransform = aTransform;
@@ -334,7 +333,7 @@ Maybe<ScrollableLayerGuid::ViewID> HitTestingTreeNode::GetAsyncZoomContainerId()
 void HitTestingTreeNode::Dump(const char* aPrefix) const {
   MOZ_LOG(
       sApzMgrLog, LogLevel::Debug,
-      ("%sHitTestingTreeNode (%p) APZC (%p) g=(%s) %s%s%sr=(%s) t=(%s) "
+      ("%sHitTestingTreeNode (%p) APZC (%p) g=(%s) %s%s%s t=(%s) "
        "%s%s\n",
        aPrefix, this, mApzc.get(),
        mApzc ? ToString(mApzc->GetGuid()).c_str()
@@ -345,7 +344,7 @@ void HitTestingTreeNode::Dump(const char* aPrefix) const {
        (mFixedPosTarget != ScrollableLayerGuid::NULL_SCROLL_ID)
            ? nsPrintfCString("fixed=%" PRIu64 " ", mFixedPosTarget).get()
            : "",
-       ToString(mEventRegions).c_str(), ToString(mTransform).c_str(),
+       ToString(mTransform).c_str(),
        mScrollbarData.mDirection.isSome() ? " scrollbar" : "",
        IsScrollThumbNode() ? " scrollthumb" : ""));
 
