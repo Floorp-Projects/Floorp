@@ -1301,6 +1301,20 @@ metrics:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
     expires: "2022-02-01"
+  install_source:
+    type: string
+    lifetime: application
+    description: |
+      Used to identify the source the app was installed from.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22138
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22224#issuecomment-956749994
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-02-01"
 
 customize_home:
   most_visited_sites:
