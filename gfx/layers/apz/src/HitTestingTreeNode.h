@@ -103,7 +103,7 @@ class HitTestingTreeNode {
   /* Hit test related methods */
 
   void SetHitTestData(
-      const EventRegions& aRegions, const LayerIntRegion& aVisibleRegion,
+      const LayerIntRegion& aVisibleRegion,
       const LayerIntSize& aRemoteDocumentSize,
       const CSSTransformMatrix& aTransform,
       const EventRegionsOverride& aOverride,
@@ -201,15 +201,6 @@ class HitTestingTreeNode {
   // This is only set if WebRender is enabled. It holds the animation id that
   // we use to adjust sticky position content for the toolbar.
   Maybe<uint64_t> mStickyPositionAnimationId;
-
-  /* Let {L,M} be the {layer, scrollable metrics} pair that this node
-   * corresponds to in the layer tree. mEventRegions contains the event regions
-   * from L, in the case where event-regions are enabled. If event-regions are
-   * disabled, it will contain the visible region of L, which we use as an
-   * approximation to the hit region for the purposes of obscuring other layers.
-   * This value is in L's LayerPixels.
-   */
-  EventRegions mEventRegions;
 
   LayerIntRegion mVisibleRegion;
 
