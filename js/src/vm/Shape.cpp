@@ -151,7 +151,7 @@ static bool ReshapeForShadowedPropSlow(JSContext* cx, HandleNativeObject obj,
 }
 
 static MOZ_ALWAYS_INLINE bool ReshapeForShadowedProp(JSContext* cx,
-                                                     HandleObject obj,
+                                                     HandleNativeObject obj,
                                                      HandleId id) {
   // If |obj| is a prototype of another object, check if we're shadowing a
   // property on its proto chain. In this case we need to reshape that object
@@ -159,12 +159,12 @@ static MOZ_ALWAYS_INLINE bool ReshapeForShadowedProp(JSContext* cx,
   //
   // See also the 'Shape Teleporting Optimization' comment in jit/CacheIR.cpp.
 
-  // Inlined fast path for non-prototype/non-native objects.
-  if (!obj->isUsedAsPrototype() || !obj->is<NativeObject>()) {
+  // Inlined fast path for non-prototype objects.
+  if (!obj->isUsedAsPrototype()) {
     return true;
   }
 
-  return ReshapeForShadowedPropSlow(cx, obj.as<NativeObject>(), id);
+  return ReshapeForShadowedPropSlow(cx, obj, id);
 }
 
 /* static */ MOZ_ALWAYS_INLINE bool
