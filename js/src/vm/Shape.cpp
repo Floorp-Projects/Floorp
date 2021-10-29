@@ -167,6 +167,53 @@ static MOZ_ALWAYS_INLINE bool ReshapeForShadowedProp(JSContext* cx,
   return ReshapeForShadowedPropSlow(cx, obj, id);
 }
 
+static bool ReshapeForProtoMutation(JSContext* cx, HandleObject obj) {
+  // To avoid the JIT guarding on each prototype in chain to detect prototype
+  // mutation, we can instead reshape the rest of the proto chain such that a
+  // guard on any of them is sufficient. To avoid excessive reshaping and
+  // invalidation, we apply heuristics to decide when to apply this and when
+  // to require a guard.
+  //
+  // There are two cases:
+  //
+  // (1) The object is not marked IsUsedAsPrototype. This is the common case.
+  //     Because shape implies proto, we rely on the caller changing the
+  //     object's shape. The JIT guards on this object's shape or prototype so
+  //     there's nothing we have to do here for objects on the proto chain.
+  //
+  // (2) The object is marked IsUsedAsPrototype. This implies the object may be
+  //     participating in shape teleporting. To invalidate JIT ICs depending on
+  //     the proto chain being unchanged, set the InvalidatedTeleporting shape
+  //     flag for this object and objects on its proto chain.
+  //
+  //     This flag disables future shape teleporting attempts, so next time this
+  //     happens the loop below will be a no-op.
+  //
+  // NOTE: We only handle NativeObjects and don't propagate reshapes through
+  //       any non-native objects on the chain.
+  //
+  // See Also:
+  //  - GeneratePrototypeGuards
+  //  - GeneratePrototypeHoleGuards
+
+  if (!obj->isUsedAsPrototype()) {
+    return true;
+  }
+
+  RootedObject pobj(cx, obj);
+
+  while (pobj && pobj->is<NativeObject>()) {
+    if (!pobj->hasInvalidatedTeleporting()) {
+      if (!JSObject::setInvalidatedTeleporting(cx, pobj)) {
+        return false;
+      }
+    }
+    pobj = pobj->staticPrototype();
+  }
+
+  return true;
+}
+
 /* static */ MOZ_ALWAYS_INLINE bool
 NativeObject::maybeConvertToDictionaryForAdd(JSContext* cx,
                                              HandleNativeObject obj) {
@@ -917,10 +964,21 @@ bool JSObject::setFlag(JSContext* cx, HandleObject obj, ObjectFlag flag) {
 bool JSObject::setProtoUnchecked(JSContext* cx, HandleObject obj,
                                  Handle<TaggedProto> proto) {
   MOZ_ASSERT(cx->compartment() == obj->compartment());
-  MOZ_ASSERT_IF(proto.isObject(), proto.toObject()->isUsedAsPrototype());
+  MOZ_ASSERT(!obj->staticPrototypeIsImmutable());
+  MOZ_ASSERT_IF(!obj->is<ProxyObject>(), obj->nonProxyIsExtensible());
+  MOZ_ASSERT(obj->shape()->proto() != proto);
 
-  if (obj->shape()->proto() == proto) {
-    return true;
+  // Update prototype shapes if needed to invalidate JIT code that is affected
+  // by a prototype mutation.
+  if (!ReshapeForProtoMutation(cx, obj)) {
+    return false;
+  }
+
+  if (proto.isObject()) {
+    RootedObject protoObj(cx, proto.toObject());
+    if (!JSObject::setIsUsedAsPrototype(cx, protoObj)) {
+      return false;
+    }
   }
 
   if (obj->is<NativeObject>() && obj->as<NativeObject>().inDictionaryMode()) {
