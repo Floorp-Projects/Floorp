@@ -124,6 +124,49 @@ class MOZ_RAII AutoCheckShapeConsistency {
 
 }  // namespace js
 
+static bool ReshapeForShadowedPropSlow(JSContext* cx, HandleNativeObject obj,
+                                       HandleId id) {
+  MOZ_ASSERT(obj->isUsedAsPrototype());
+
+  // Lookups on integer ids cannot be cached through prototypes.
+  if (JSID_IS_INT(id)) {
+    return true;
+  }
+
+  RootedObject proto(cx, obj->staticPrototype());
+  while (proto) {
+    // Lookups will not be cached through non-native protos.
+    if (!proto->is<NativeObject>()) {
+      break;
+    }
+
+    if (proto->as<NativeObject>().contains(cx, id)) {
+      return JSObject::setInvalidatedTeleporting(cx, proto);
+    }
+
+    proto = proto->staticPrototype();
+  }
+
+  return true;
+}
+
+static MOZ_ALWAYS_INLINE bool ReshapeForShadowedProp(JSContext* cx,
+                                                     HandleObject obj,
+                                                     HandleId id) {
+  // If |obj| is a prototype of another object, check if we're shadowing a
+  // property on its proto chain. In this case we need to reshape that object
+  // for shape teleporting to work correctly.
+  //
+  // See also the 'Shape Teleporting Optimization' comment in jit/CacheIR.cpp.
+
+  // Inlined fast path for non-prototype/non-native objects.
+  if (!obj->isUsedAsPrototype() || !obj->is<NativeObject>()) {
+    return true;
+  }
+
+  return ReshapeForShadowedPropSlow(cx, obj.as<NativeObject>(), id);
+}
+
 /* static */ MOZ_ALWAYS_INLINE bool
 NativeObject::maybeConvertToDictionaryForAdd(JSContext* cx,
                                              HandleNativeObject obj) {
@@ -157,6 +200,10 @@ bool NativeObject::addCustomDataProperty(JSContext* cx, HandleNativeObject obj,
 
   AutoCheckShapeConsistency check(obj);
   AssertValidCustomDataProp(obj, flags);
+
+  if (!ReshapeForShadowedProp(cx, obj, id)) {
+    return false;
+  }
 
   if (!maybeConvertToDictionaryForAdd(cx, obj)) {
     return false;
@@ -277,6 +324,10 @@ bool NativeObject::addProperty(JSContext* cx, HandleNativeObject obj,
       obj->isExtensible() ||
           (JSID_IS_INT(id) && obj->containsDenseElement(JSID_TO_INT(id))));
 
+  if (!ReshapeForShadowedProp(cx, obj, id)) {
+    return false;
+  }
+
   if (!maybeConvertToDictionaryForAdd(cx, obj)) {
     return false;
   }
@@ -385,6 +436,10 @@ bool NativeObject::addPropertyInReservedSlot(JSContext* cx,
 
   // The object must not be in dictionary mode. This simplifies the code below.
   MOZ_ASSERT(!obj->inDictionaryMode());
+
+  // We don't need to call ReshapeForShadowedProp here because this is only used
+  // for non-prototype objects.
+  MOZ_ASSERT(!obj->isUsedAsPrototype());
 
   ObjectFlags objectFlags = obj->shape()->objectFlags();
   const JSClass* clasp = obj->shape()->getObjectClass();
