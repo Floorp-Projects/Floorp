@@ -1252,7 +1252,7 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
 }
 
 // Versions of AddOrChangeProperty optimized for adding a plain data property.
-// These function doesn't handle integer ids as we may have to store them in
+// This function doesn't handle integer ids as we may have to store them in
 // dense elements.
 static MOZ_ALWAYS_INLINE bool AddDataProperty(JSContext* cx,
                                               HandleNativeObject obj,
@@ -2699,7 +2699,7 @@ bool js::CopyDataPropertiesNative(JSContext* cx, HandlePlainObject target,
       MOZ_ASSERT(!target->containsPure(key),
                  "didn't expect to find an existing property");
 
-      if (!AddDataPropertyNonPrototype(cx, target, key, value)) {
+      if (!AddDataPropertyToPlainObject(cx, target, key, value)) {
         return false;
       }
     } else {

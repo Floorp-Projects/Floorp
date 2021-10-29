@@ -145,7 +145,7 @@ bool InterpretObjLiteralObj(JSContext* cx, HandlePlainObject obj,
     InterpretObjLiteralValue(cx, atomCache, insn, &propVal);
 
     if constexpr (kind == PropertySetKind::UniqueNames) {
-      if (!AddDataPropertyNonPrototype(cx, obj, propId, propVal)) {
+      if (!AddDataPropertyToPlainObject(cx, obj, propId, propVal)) {
         return false;
       }
     } else {
