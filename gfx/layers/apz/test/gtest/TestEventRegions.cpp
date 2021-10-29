@@ -173,14 +173,12 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
   }
 };
 
-class APZEventRegionsTesterInternal : public APZEventRegionsTester {
+class APZEventRegionsTesterMock : public APZEventRegionsTester {
  public:
-  APZEventRegionsTesterInternal() {
-    mHitTester = MakeUnique<InternalHitTester>();
-  }
+  APZEventRegionsTesterMock() { CreateMockHitTester(); }
 };
 
-TEST_F(APZEventRegionsTesterInternal, HitRegionImmediateResponse) {
+TEST_F(APZEventRegionsTesterMock, HitRegionImmediateResponse) {
   CreateEventRegionsLayerTree1();
 
   TestAsyncPanZoomController* root = ApzcOf(layers[0]);
@@ -214,17 +212,23 @@ TEST_F(APZEventRegionsTesterInternal, HitRegionImmediateResponse) {
 
   // Tap in the exposed hit regions of each of the layers once and ensure
   // the clicks are dispatched right away
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1);
   Tap(manager, ScreenIntPoint(10, 10), tapDuration);
   mcc->RunThroughDelayedTasks();  // this runs the tap event
   check.Call("Tapped on left");
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 2);
   Tap(manager, ScreenIntPoint(110, 110), tapDuration);
   mcc->RunThroughDelayedTasks();  // this runs the tap event
   check.Call("Tapped on bottom");
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
   Tap(manager, ScreenIntPoint(110, 10), tapDuration);
   mcc->RunThroughDelayedTasks();  // this runs the tap event
   check.Call("Tapped on root");
 
   // Now tap on the dispatch-to-content region where the layers overlap
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 2,
+                     {CompositorHitTestFlags::eVisibleToHitTest,
+                      CompositorHitTestFlags::eIrregularArea});
   Tap(manager, ScreenIntPoint(10, 110), tapDuration);
   mcc->RunThroughDelayedTasks();  // this runs the main-thread timeout
   check.Call("Tap pending on d-t-c region");
@@ -233,6 +237,9 @@ TEST_F(APZEventRegionsTesterInternal, HitRegionImmediateResponse) {
 
   // Now let's do that again, but simulate a main-thread response
   uint64_t inputBlockId = 0;
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 2,
+                     {CompositorHitTestFlags::eVisibleToHitTest,
+                      CompositorHitTestFlags::eIrregularArea});
   Tap(manager, ScreenIntPoint(10, 110), tapDuration, nullptr, &inputBlockId);
   nsTArray<ScrollableLayerGuid> targets;
   targets.AppendElement(left->GetGuid());
@@ -255,7 +262,7 @@ TEST_F(APZEventRegionsTester, HitRegionAccumulatesChildren) {
   Tap(manager, ScreenIntPoint(10, 160), TimeDuration::FromMilliseconds(100));
 }
 
-TEST_F(APZEventRegionsTesterInternal, Obscuration) {
+TEST_F(APZEventRegionsTesterMock, Obscuration) {
   CreateObscuringLayerTree();
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
 
@@ -266,6 +273,7 @@ TEST_F(APZEventRegionsTesterInternal, Obscuration) {
 
   Pan(parent, 75, 25, PanOptions::NoFling);
 
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 2);
   IAPZHitTester::HitTestResult hit =
       manager->GetTargetAPZC(ScreenPoint(50, 75));
   EXPECT_EQ(child, hit.mTargetApzc.get());
