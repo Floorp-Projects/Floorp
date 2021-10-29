@@ -208,7 +208,7 @@
     <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
     <string name="resync_button_content_description">Ailgydweddu</string>
     <!-- Browser menu button that opens the find in page menu -->
-    <string name="browser_menu_find_in_page">Canfod yn y dudalen</string>
+    <string name="browser_menu_find_in_page">Canfod ar y dudalen</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">Tab preifat</string>
     <!-- Browser menu button that saves the current tab to a collection -->
@@ -238,7 +238,7 @@
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Cyfaddasu’r golwg defnyddiwr</string>
     <!-- Browser menu label for adding a bookmark -->
-    <string name="browser_menu_add">Ychwanegu</string>
+    <string name="browser_menu_add">Newydd</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">Golygu</string>
 
@@ -652,7 +652,7 @@
     <!-- Option in Library to open a new tab -->
     <string name="library_new_tab">Tab newydd</string>
     <!-- Option in Library to find text in page -->
-    <string name="library_find_in_page">Canfod yn y dudalen</string>
+    <string name="library_find_in_page">Canfod ar y dudalen</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">Rhestr Ddarllen</string>
     <!-- Menu Item Label for Search in Library -->
