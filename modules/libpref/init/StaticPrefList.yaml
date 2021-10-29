@@ -817,9 +817,19 @@
   value: "#EE0000"
   mirror: never
 
+- name: browser.active_color.dark
+  type: String
+  value: "#FF9E9E"
+  mirror: never
+
 - name: browser.anchor_color
   type: String
   value: "#0000EE"
+  mirror: never
+
+- name: browser.anchor_color.dark
+  type: String
+  value: "#9E9EFF"
   mirror: never
 
 # See http://dev.w3.org/html5/spec/forms.html#attr-fe-autofocus
@@ -964,6 +974,11 @@
   value: "#FFFFFF"
   mirror: never
 
+- name: browser.display.background_color.dark
+  type: String
+  value: "#1C1B22"
+  mirror: never
+
 # This preference is a bit confusing because we use the opposite
 # string value in the colors dialog to indicate to users how FF HCM
 # will behave.
@@ -1047,9 +1062,15 @@
   type: String
   value: "#ffffff"
   mirror: never
+
 - name: browser.display.foreground_color
   type: String
   value: "#000000"
+  mirror: never
+
+- name: browser.display.foreground_color.dark
+  type: String
+  value: "#FBFBFE"
   mirror: never
 
 # Whether focus rings are always shown by default.
@@ -1426,6 +1447,11 @@
 - name: browser.visited_color
   type: String
   value: "#551A8B"
+  mirror: never
+
+- name: browser.visited_color.dark
+  type: String
+  value: "#D0ADF0"
   mirror: never
 
 # When true, soft reloads (including location.reload())

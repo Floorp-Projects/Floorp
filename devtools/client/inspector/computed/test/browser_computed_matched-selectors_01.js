@@ -36,7 +36,7 @@ async function testMatchedSelectors(view, inspector) {
   const numMatchedSelectors = propertyView.matchedSelectors.length;
   is(
     numMatchedSelectors,
-    6,
+    7,
     "CssLogic returns the correct number of matched selectors for div"
   );
   is(

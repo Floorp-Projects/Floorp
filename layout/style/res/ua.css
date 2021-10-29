@@ -376,6 +376,21 @@ xul|*:fullscreen:not(:root, [hidden="true"]) {
   display: block;
 }
 
+/**
+ * Ensure we recompute the default color for the root based on its
+ * computed color-scheme. This matches other browsers.
+ *
+ * For the default background, we look at the root
+ * element style frame in
+ * PresShell::GetDefaultBackgroundColorToDraw, however we
+ * can't make the initial style (the style the root element
+ * inherits from) depend on the root element's style, as that
+ * is trivially cyclic.
+ */
+:root {
+  color: CanvasText;
+}
+
 /* Selectors here should match the check in
  * nsViewportFrame.cpp:ShouldInTopLayerForFullscreen() */
 *|*:fullscreen:not(:root, :-moz-browser-frame) {

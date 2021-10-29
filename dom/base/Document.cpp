@@ -17621,6 +17621,10 @@ void Document::RemoveToplevelLoadingDocument(Document* aDoc) {
   }
 }
 
+ColorScheme Document::DefaultColorScheme() const {
+  return LookAndFeel::ColorSchemeForStyle(*this, {GetColorSchemeBits()});
+}
+
 ColorScheme Document::PreferredColorScheme(IgnoreRFP aIgnoreRFP) const {
   if (aIgnoreRFP == IgnoreRFP::No &&
       nsContentUtils::ShouldResistFingerprinting(this)) {
