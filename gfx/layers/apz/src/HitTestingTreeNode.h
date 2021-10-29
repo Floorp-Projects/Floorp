@@ -109,7 +109,6 @@ class HitTestingTreeNode {
       const Maybe<ParentLayerIntRegion>& aClipRegion,
       const EventRegionsOverride& aOverride, bool aIsBackfaceHidden,
       const Maybe<ScrollableLayerGuid::ViewID>& aAsyncZoomContainerId);
-  bool IsOutsideClip(const ParentLayerPoint& aPoint) const;
 
   /* Scrollbar info */
 
@@ -145,15 +144,6 @@ class HitTestingTreeNode {
   const LayerRectAbsolute& GetStickyScrollRangeInner() const;
   Maybe<uint64_t> GetStickyPositionAnimationId() const;
 
-  /* Convert |aPoint| into the LayerPixel space for the layer corresponding to
-   * this node. |aTransform| is the complete (content + async) transform for
-   * this node. */
-  Maybe<LayerPoint> Untransform(
-      const ParentLayerPoint& aPoint,
-      const LayerToParentLayerMatrix4x4& aTransform) const;
-  /* Assuming aPoint is inside the clip region for this node, check which of the
-   * event region spaces it falls inside. */
-  gfx::CompositorHitTestInfo HitTest(const LayerPoint& aPoint) const;
   /* Returns the mOverride flag. */
   EventRegionsOverride GetEventRegionsOverride() const;
   const CSSTransformMatrix& GetTransform() const;

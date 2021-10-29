@@ -19,10 +19,7 @@ static mozilla::LazyLogModule sApzMgrLog("apz.manager");
 namespace mozilla {
 namespace layers {
 
-using gfx::CompositorHitTestFlags;
 using gfx::CompositorHitTestInfo;
-using gfx::CompositorHitTestInvisibleToHit;
-using gfx::CompositorHitTestTouchActionMask;
 
 HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
                                        bool aIsPrimaryHolder,
@@ -267,94 +264,6 @@ void HitTestingTreeNode::SetHitTestData(
   mOverride = aOverride;
   mIsBackfaceHidden = aIsBackfaceHidden;
   mAsyncZoomContainerId = aAsyncZoomContainerId;
-}
-
-bool HitTestingTreeNode::IsOutsideClip(const ParentLayerPoint& aPoint) const {
-  // test against clip rect in ParentLayer coordinate space
-  return (mClipRegion.isSome() && !mClipRegion->Contains(aPoint.x, aPoint.y));
-}
-
-Maybe<LayerPoint> HitTestingTreeNode::Untransform(
-    const ParentLayerPoint& aPoint,
-    const LayerToParentLayerMatrix4x4& aTransform) const {
-  Maybe<ParentLayerToLayerMatrix4x4> inverse = aTransform.MaybeInverse();
-  if (inverse) {
-    return UntransformBy(inverse.ref(), aPoint);
-  }
-  return Nothing();
-}
-
-CompositorHitTestInfo HitTestingTreeNode::HitTest(
-    const LayerPoint& aPoint) const {
-  CompositorHitTestInfo result = CompositorHitTestInvisibleToHit;
-
-  if (mOverride & EventRegionsOverride::ForceEmptyHitRegion) {
-    return result;
-  }
-
-  auto point = LayerIntPoint::Round(aPoint);
-
-  // If the layer's backface is showing and it's hidden, don't hit it.
-  // This matches the behavior of main-thread hit testing in
-  // nsDisplayTransform::HitTest().
-  if (mIsBackfaceHidden) {
-    return result;
-  }
-
-  // test against event regions in Layer coordinate space
-  if (!mEventRegions.mHitRegion.Contains(point.x, point.y)) {
-    return result;
-  }
-
-  result = CompositorHitTestFlags::eVisibleToHitTest;
-
-  if (mOverride & EventRegionsOverride::ForceDispatchToContent) {
-    result += CompositorHitTestFlags::eApzAwareListeners;
-  }
-  if (mEventRegions.mDispatchToContentHitRegion.Contains(point.x, point.y)) {
-    // Technically this might be some combination of eInactiveScrollframe,
-    // eApzAwareListeners, and eIrregularArea, because the round-trip through
-    // mEventRegions is lossy. We just convert it back to eIrregularArea
-    // because that's the most conservative option (i.e. eIrregularArea makes
-    // APZ rely on the main thread for everything).
-    result += CompositorHitTestFlags::eIrregularArea;
-    if (mEventRegions.mDTCRequiresTargetConfirmation) {
-      result += CompositorHitTestFlags::eRequiresTargetConfirmation;
-    }
-  } else if (StaticPrefs::layout_css_touch_action_enabled()) {
-    if (mEventRegions.mNoActionRegion.Contains(point.x, point.y)) {
-      // set all the touch-action flags as disabled
-      result += CompositorHitTestTouchActionMask;
-    } else {
-      bool panX = mEventRegions.mHorizontalPanRegion.Contains(point.x, point.y);
-      bool panY = mEventRegions.mVerticalPanRegion.Contains(point.x, point.y);
-      if (panX && panY) {
-        // touch-action: pan-x pan-y
-        result += CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled;
-        result += CompositorHitTestFlags::eTouchActionPinchZoomDisabled;
-      } else if (panX) {
-        // touch-action: pan-x
-        result += CompositorHitTestFlags::eTouchActionPanYDisabled;
-        result += CompositorHitTestFlags::eTouchActionPinchZoomDisabled;
-        result += CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled;
-      } else if (panY) {
-        // touch-action: pan-y
-        result += CompositorHitTestFlags::eTouchActionPanXDisabled;
-        result += CompositorHitTestFlags::eTouchActionPinchZoomDisabled;
-        result += CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled;
-      }  // else we're in the touch-action: auto or touch-action: manipulation
-         // cases and we'll allow all actions. Technically we shouldn't allow
-         // double-tap zooming in the manipulation case but apparently this has
-         // been broken since the dawn of time.
-    }
-  }
-
-  // The scrollbar flags are set at the call site in GetAPZCAtPoint, because
-  // those require walking up the tree to see if we are contained inside a
-  // scrollbar or scrollthumb, and we do that there anyway to get the scrollbar
-  // node.
-
-  return result;
 }
 
 EventRegionsOverride HitTestingTreeNode::GetEventRegionsOverride() const {
