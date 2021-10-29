@@ -679,8 +679,6 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
       const Maybe<ZoomConstraints>& aZoomConstraints,
       const AncestorTransform& aAncestorTransform, HitTestingTreeNode* aParent,
       HitTestingTreeNode* aNextSibling, TreeBuildingState& aState);
-  Maybe<ParentLayerIntRegion> ComputeClipRegion(const LayersId& aLayersId,
-                                                const ScrollNode& aLayer);
 
   void PrintAPZCInfo(const ScrollNode& aLayer,
                      const AsyncPanZoomController* apzc);
