@@ -106,7 +106,6 @@ class HitTestingTreeNode {
       const EventRegions& aRegions, const LayerIntRegion& aVisibleRegion,
       const LayerIntSize& aRemoteDocumentSize,
       const CSSTransformMatrix& aTransform,
-      const Maybe<ParentLayerIntRegion>& aClipRegion,
       const EventRegionsOverride& aOverride,
       const Maybe<ScrollableLayerGuid::ViewID>& aAsyncZoomContainerId);
 
@@ -225,13 +224,6 @@ class HitTestingTreeNode {
   /* If the layer is the async zoom container layer then this will hold the id.
    */
   Maybe<ScrollableLayerGuid::ViewID> mAsyncZoomContainerId;
-
-  /* This is clip rect for L that we wish to use for hit-testing purposes. Note
-   * that this may not be exactly the same as the clip rect on layer L because
-   * of the touch-sensitive region provided by the GeckoContentController, or
-   * because we may use the composition bounds of the layer if the clip is not
-   * present. This value is in L's ParentLayerPixels. */
-  Maybe<ParentLayerIntRegion> mClipRegion;
 
   /* Indicates whether or not the event regions on this node need to be
    * overridden in a certain way. */
