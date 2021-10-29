@@ -10,14 +10,12 @@
 #include "InputUtils.h"
 #include "mozilla/StaticPrefs_layout.h"
 
-class APZCSnappingOnMomentumTesterInternal : public APZCTreeManagerTester {
+class APZCSnappingOnMomentumTesterMock : public APZCTreeManagerTester {
  public:
-  APZCSnappingOnMomentumTesterInternal() {
-    mHitTester = MakeUnique<InternalHitTester>();
-  }
+  APZCSnappingOnMomentumTesterMock() { CreateMockHitTester(); }
 };
 
-TEST_F(APZCSnappingOnMomentumTesterInternal, Snap_On_Momentum) {
+TEST_F(APZCSnappingOnMomentumTesterMock, Snap_On_Momentum) {
   const char* treeShape = "x";
   nsIntRegion layerVisibleRegion[] = {
       nsIntRegion(IntRect(0, 0, 100, 100)),
@@ -45,14 +43,17 @@ TEST_F(APZCSnappingOnMomentumTesterInternal, Snap_On_Momentum) {
 
   TimeStamp now = mcc->Time();
 
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
   PanGesture(PanGestureInput::PANGESTURE_START, manager, ScreenIntPoint(50, 80),
              ScreenPoint(0, 2), now);
   mcc->AdvanceByMillis(5);
   apzc->AdvanceAnimations(mcc->GetSampleTime());
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
   PanGesture(PanGestureInput::PANGESTURE_PAN, manager, ScreenIntPoint(50, 80),
              ScreenPoint(0, 25), mcc->Time());
   mcc->AdvanceByMillis(5);
   apzc->AdvanceAnimations(mcc->GetSampleTime());
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
   PanGesture(PanGestureInput::PANGESTURE_PAN, manager, ScreenIntPoint(50, 80),
              ScreenPoint(0, 25), mcc->Time());
 
@@ -61,6 +62,7 @@ TEST_F(APZCSnappingOnMomentumTesterInternal, Snap_On_Momentum) {
 
   mcc->AdvanceByMillis(5);
   apzc->AdvanceAnimations(mcc->GetSampleTime());
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
   PanGesture(PanGestureInput::PANGESTURE_END, manager, ScreenIntPoint(50, 80),
              ScreenPoint(0, 0), mcc->Time());
 
@@ -70,14 +72,17 @@ TEST_F(APZCSnappingOnMomentumTesterInternal, Snap_On_Momentum) {
   mcc->AdvanceByMillis(5);
 
   apzc->AdvanceAnimations(mcc->GetSampleTime());
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
   PanGesture(PanGestureInput::PANGESTURE_MOMENTUMSTART, manager,
              ScreenIntPoint(50, 80), ScreenPoint(0, 200), mcc->Time());
   mcc->AdvanceByMillis(10);
   apzc->AdvanceAnimations(mcc->GetSampleTime());
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
   PanGesture(PanGestureInput::PANGESTURE_MOMENTUMPAN, manager,
              ScreenIntPoint(50, 80), ScreenPoint(0, 50), mcc->Time());
   mcc->AdvanceByMillis(10);
   apzc->AdvanceAnimations(mcc->GetSampleTime());
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
   PanGesture(PanGestureInput::PANGESTURE_MOMENTUMEND, manager,
              ScreenIntPoint(50, 80), ScreenPoint(0, 0), mcc->Time());
 
