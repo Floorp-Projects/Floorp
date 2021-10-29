@@ -176,12 +176,12 @@ var messages = [
   {
     type: "number",
     shouldEqual: true,
-    value: 238573459843702923492399923049,
+    value: 12345678901234567000,
   },
   {
     type: "number",
     shouldEqual: true,
-    value: -238573459843702923492399923049,
+    value: -12345678901234567000,
   },
   {
     type: "number",

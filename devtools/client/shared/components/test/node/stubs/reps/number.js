@@ -12,6 +12,7 @@ stubs.set("NegZeroValue", -0);
 stubs.set("NegZeroGrip", {
   type: "-0",
 });
+// eslint-disable-next-line no-loss-of-precision
 stubs.set("UnsafeInt", 900719925474099122);
 
 module.exports = stubs;
