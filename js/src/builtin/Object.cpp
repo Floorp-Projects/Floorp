@@ -945,7 +945,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
       MOZ_ASSERT(toProp->writable());
       toPlain->setSlot(toProp->slot(), propValue);
     } else {
-      if (!AddDataPropertyNonPrototype(cx, toPlain, nextKey, propValue)) {
+      if (!AddDataPropertyToPlainObject(cx, toPlain, nextKey, propValue)) {
         return false;
       }
     }

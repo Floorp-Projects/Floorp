@@ -854,11 +854,13 @@ inline bool IsPackedArray(JSObject* obj) {
   return true;
 }
 
-MOZ_ALWAYS_INLINE bool AddDataPropertyNonPrototype(JSContext* cx,
-                                                   HandlePlainObject obj,
-                                                   HandleId id, HandleValue v) {
+// Like AddDataProperty but optimized for plain objects. Plain objects don't
+// have an addProperty hook.
+MOZ_ALWAYS_INLINE bool AddDataPropertyToPlainObject(JSContext* cx,
+                                                    HandlePlainObject obj,
+                                                    HandleId id,
+                                                    HandleValue v) {
   MOZ_ASSERT(!JSID_IS_INT(id));
-  MOZ_ASSERT(!obj->isUsedAsPrototype());
 
   uint32_t slot;
   if (!NativeObject::addProperty(cx, obj, id,
