@@ -812,6 +812,7 @@ const nsAString& GfxDriverInfo::GetDesktopEnvironment(DesktopEnvironment id) {
     DECLARE_DESKTOP_ENVIRONMENT_ID(LXDE, "lxde");
     DECLARE_DESKTOP_ENVIRONMENT_ID(Openbox, "openbox");
     DECLARE_DESKTOP_ENVIRONMENT_ID(i3, "i3");
+    DECLARE_DESKTOP_ENVIRONMENT_ID(Sway, "sway");
     DECLARE_DESKTOP_ENVIRONMENT_ID(Mate, "mate");
     DECLARE_DESKTOP_ENVIRONMENT_ID(Unity, "unity");
     DECLARE_DESKTOP_ENVIRONMENT_ID(Pantheon, "pantheon");

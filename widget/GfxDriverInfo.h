@@ -268,6 +268,7 @@ enum class DesktopEnvironment : uint8_t {
   Deepin,
   Dwm,
   Budgie,
+  Sway,
   Unknown,
   Max
 };
