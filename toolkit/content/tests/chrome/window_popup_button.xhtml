@@ -1,12 +1,13 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="data:text/css,menupopup{margin: 0}" type="text/css"?>
 
 <window title="Popup Tests"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
-  <script type="application/javascript" src="popup_shared.js"></script>      
-  <script type="application/javascript" src="popup_trigger.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script src="popup_shared.js"></script>
+  <script src="popup_trigger.js"></script>
 
 <script>
 window.opener.SimpleTest.waitForFocus(runTests, window);

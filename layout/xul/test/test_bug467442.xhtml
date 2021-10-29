@@ -30,8 +30,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=467442
 
     panel.addEventListener("popupshown", function onpopupshown() {
       let panelRect = panel.getBoundingClientRect();
+      let marginLeft  = parseFloat(getComputedStyle(panel).marginLeft);
       let anchorRect = anchor.getBoundingClientRect();
-      is(panelRect.left, anchorRect.left, "Panel should be anchored to the button");
+      is(panelRect.left - marginLeft, anchorRect.left, "Panel should be anchored to the button");
       panel.addEventListener("popuphidden", function onpopuphidden() {
         SimpleTest.finish();
       }, { once: true });

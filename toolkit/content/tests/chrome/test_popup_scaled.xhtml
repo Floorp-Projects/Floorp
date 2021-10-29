@@ -6,8 +6,8 @@
         onload="setTimeout(runTests, 0);"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
-  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
 <!-- This test checks that the position is correct in two cases:
       - a popup anchored at an element in a scaled document
@@ -46,17 +46,17 @@ function setScale(win, scale)
 function shown()
 {
   var popup = $("popup");
+  var marginLeft = parseFloat(getComputedStyle(popup).marginLeft);
+  var marginTop = parseFloat(getComputedStyle(popup).marginTop);
   if (screenTest) {
-    is(popup.screenX, screenx, "screen left position");
-    is(popup.screenY, screeny, "screen top position");
-  }
-  else {
+    is(popup.screenX - marginLeft, screenx, "screen left position");
+    is(popup.screenY - marginTop, screeny, "screen top position");
+  } else {
     var anchor = $("frame").contentDocument.getElementById("two");
-
     is(Math.round(anchor.getBoundingClientRect().left * 2),
-       Math.round(popup.getBoundingClientRect().left), "anchored left position");
+       Math.round(popup.getBoundingClientRect().left - marginLeft), "anchored left position");
     is(Math.round(anchor.getBoundingClientRect().bottom * 2),
-       Math.round(popup.getBoundingClientRect().top), "anchored top position");
+       Math.round(popup.getBoundingClientRect().top - marginTop), "anchored top position");
   }
 
   popup.hidePopup();

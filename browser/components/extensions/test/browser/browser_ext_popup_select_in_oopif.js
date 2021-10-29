@@ -94,10 +94,12 @@ add_task(async function testPopupSelectPopup() {
   await popupPromise;
 
   let popupRect = selectPopup.getOuterScreenRect();
+  let popupMarginLeft = parseFloat(getComputedStyle(selectPopup).marginLeft);
+  let popupMarginTop = parseFloat(getComputedStyle(selectPopup).marginTop);
 
   is(
     Math.floor(browserForPopup.screenX + selectRect.left),
-    popupRect.left,
+    popupRect.left - popupMarginLeft,
     "Select popup has the correct x origin"
   );
 
@@ -105,7 +107,11 @@ add_task(async function testPopupSelectPopup() {
   let expectedY = navigator.platform.includes("Mac")
     ? Math.floor(browserForPopup.screenY)
     : Math.floor(browserForPopup.screenY + selectRect.bottom);
-  is(expectedY, popupRect.top, "Select popup has the correct y origin");
+  is(
+    expectedY,
+    popupRect.top - popupMarginTop,
+    "Select popup has the correct y origin"
+  );
 
   const onPopupHidden = BrowserTestUtils.waitForEvent(
     selectPopup,

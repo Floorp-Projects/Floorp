@@ -6,8 +6,8 @@
   onload="setTimeout(openThePopup, 0, 'outer');"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
-  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
 <deck style="margin-top: 5px; padding-top: 5px;">
   <label id="outer" popup="outerpopup" value="Popup"/>
@@ -72,8 +72,10 @@ function popupShowingEventOccurred(event)
   is(event.rangeOffset, Array.prototype.indexOf.call(trigger.parentNode.childNodes, trigger) + 1, testname + "rangeOffset");
 
   var popuprect = event.target.getBoundingClientRect();
-  is(Math.round(popuprect.left), Math.round(rect.left + 4), "popup left");
-  is(Math.round(popuprect.top), Math.round(rect.top + 5), "popup top");
+  var marginLeft = parseFloat(getComputedStyle(event.target).marginLeft);
+  var marginTop = parseFloat(getComputedStyle(event.target).marginTop);
+  is(Math.round(popuprect.left - marginLeft), Math.round(rect.left + 4), "popup left");
+  is(Math.round(popuprect.top - marginTop), Math.round(rect.top + 5), "popup top");
   ok(popuprect.width > 0, "popup width");
   ok(popuprect.height > 0, "popup height");
 }
