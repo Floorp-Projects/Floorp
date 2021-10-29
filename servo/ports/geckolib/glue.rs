@@ -7214,3 +7214,27 @@ pub extern "C" fn Servo_GenericFontFamily_Parse(input: &nsACString) -> GenericFo
     let mut input = Parser::new(&mut input);
     GenericFontFamily::parse(&context, &mut input).unwrap_or(GenericFontFamily::None)
 }
+
+#[no_mangle]
+pub extern "C" fn Servo_ColorScheme_Parse(input: &nsACString, out: &mut u8) -> bool {
+    use style::values::specified::ColorScheme;
+
+    let context = ParserContext::new(
+        Origin::Author,
+        unsafe { dummy_url_data() },
+        Some(CssRuleType::Style),
+        ParsingMode::DEFAULT,
+        QuirksMode::NoQuirks,
+        None,
+        None,
+    );
+    let input = unsafe { input.as_str_unchecked() };
+    let mut input = ParserInput::new(&input);
+    let mut input = Parser::new(&mut input);
+    let scheme = match input.parse_entirely(|i| ColorScheme::parse(&context, i)) {
+        Ok(scheme) => scheme,
+        Err(..) => return false,
+    };
+    *out = scheme.raw_bits();
+    true
+}
