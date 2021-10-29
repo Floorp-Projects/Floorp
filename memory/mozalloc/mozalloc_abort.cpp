@@ -27,10 +27,12 @@ void mozalloc_abort(const char* const msg) {
 #else
   __android_log_print(ANDROID_LOG_ERROR, "Gecko", "mozalloc_abort: %s", msg);
 #endif
+
 #ifdef MOZ_WIDGET_ANDROID
   abortThroughJava(msg);
 #endif
-  MOZ_CRASH();
+
+  MOZ_CRASH_UNSAFE(msg);
 }
 
 #ifdef MOZ_WIDGET_ANDROID
