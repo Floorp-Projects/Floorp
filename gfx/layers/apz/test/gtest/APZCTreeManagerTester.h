@@ -15,7 +15,6 @@
 #include "APZTestAccess.h"
 #include "APZTestCommon.h"
 #include "gfxPlatform.h"
-#include "InternalHitTester.h"
 #include "MockHitTester.h"
 #include "apz/src/WRHitTester.h"
 
