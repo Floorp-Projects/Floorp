@@ -233,7 +233,7 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
                     )
                 )
 
-                Snackbar.make(requireView(), R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show()
+                ViewUtils.showBrandedSnackbar(requireView(), R.string.search_add_confirmation, Snackbar.LENGTH_SHORT)
                 requireActivity().settings.setDefaultSearchEngineByName(engineName)
 
                 requireComponents.appStore.dispatch(
