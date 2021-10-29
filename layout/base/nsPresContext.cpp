@@ -1435,6 +1435,12 @@ nsISupports* nsPresContext::GetContainerWeak() const {
   return mDocument->GetDocShell();
 }
 
+nscolor nsPresContext::DefaultBackgroundColor() const {
+  return PrefSheetPrefs()
+      .ColorsFor(mDocument->DefaultColorScheme())
+      .mDefaultBackground;
+}
+
 nsDocShell* nsPresContext::GetDocShell() const {
   return nsDocShell::Cast(mDocument->GetDocShell());
 }

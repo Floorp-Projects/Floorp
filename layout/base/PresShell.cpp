@@ -5293,29 +5293,29 @@ nscolor PresShell::GetDefaultBackgroundColorToDraw() {
     return NS_RGB(255, 255, 255);
   }
 
-  nscolor backgroundColor = mPresContext->DefaultBackgroundColor();
-  if (backgroundColor != NS_RGB(255, 255, 255)) {
-    // Return non-default color.
-    return backgroundColor;
-  }
-
-  // Use a dark background for top-level about:blank that is inaccessible to
-  // content JS.
-  //
-  // TODO(emilio): We should make this work for content-accessible documents
-  // based on the `<meta name=color-scheme>` meta tag.
   Document* doc = GetDocument();
-  BrowsingContext* bc = doc->GetBrowsingContext();
-  if (bc && bc->IsTop() && !bc->HasOpener() && doc->GetDocumentURI() &&
-      NS_IsAboutBlank(doc->GetDocumentURI()) &&
-      doc->PreferredColorScheme(Document::IgnoreRFP::Yes) ==
-          ColorScheme::Dark) {
-    auto color = LookAndFeel::ColorID::WindowBackground;
-    return LookAndFeel::Color(color, ColorScheme::Dark,
-                              LookAndFeel::ShouldUseStandins(*doc, color));
-  }
+  auto colorScheme = [&] {
+    // Use a dark background for top-level about:blank that is inaccessible to
+    // content JS.
+    {
+      BrowsingContext* bc = doc->GetBrowsingContext();
+      if (bc && bc->IsTop() && !bc->HasOpener() && doc->GetDocumentURI() &&
+          NS_IsAboutBlank(doc->GetDocumentURI())) {
+        return doc->PreferredColorScheme(Document::IgnoreRFP::Yes);
+      }
+    }
+    // Prefer the root color-scheme (since generally the default canvas
+    // background comes from the root element's background-color), and fall back
+    // to the default color-scheme if not available.
+    if (auto* frame = mFrameConstructor->GetRootElementStyleFrame()) {
+      return LookAndFeel::ColorSchemeForFrame(frame);
+    }
+    return doc->DefaultColorScheme();
+  }();
 
-  return backgroundColor;
+  return mPresContext->PrefSheetPrefs()
+      .ColorsFor(colorScheme)
+      .mDefaultBackground;
 }
 
 void PresShell::UpdateCanvasBackground() {
