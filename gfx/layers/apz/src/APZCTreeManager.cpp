@@ -966,32 +966,6 @@ bool APZCTreeManager::AdvanceAnimationsInternal(
   return activeAnimations;
 }
 
-// Compute the clip region to be used for a layer with an APZC. This function
-// is only called for layers which actually have scrollable metrics and an APZC.
-Maybe<ParentLayerIntRegion> APZCTreeManager::ComputeClipRegion(
-    const LayersId& aLayersId, const ScrollNode& aLayer) {
-  Maybe<ParentLayerIntRegion> clipRegion;
-  if (aLayer.GetClipRect()) {
-    clipRegion.emplace(*aLayer.GetClipRect());
-  } else if (aLayer.Metrics().IsRootContent() &&
-             mAsyncZoomContainerSubtree == Some(aLayersId)) {
-    // If we are using containerless scrolling, part of the root content
-    // layers' async transform has been lifted to the async zoom container
-    // layer. The composition bounds clip, which applies after the async
-    // transform, needs to be lifted too. Layout code already takes care of
-    // this for us, we just need to not mess it up by introducing a
-    // composition bounds clip here, so we leave the clip empty.
-  } else {
-    // if there is no clip on this layer (which should only happen for the
-    // root scrollable layer in a process, or for some of the LayerMetrics
-    // expansions of a multi-metrics layer), fall back to using the comp
-    // bounds which should be equivalent.
-    clipRegion.emplace(RoundedToInt(aLayer.Metrics().GetCompositionBounds()));
-  }
-
-  return clipRegion;
-}
-
 void APZCTreeManager::PrintAPZCInfo(const ScrollNode& aLayer,
                                     const AsyncPanZoomController* apzc) {
   const FrameMetrics& metrics = aLayer.Metrics();
