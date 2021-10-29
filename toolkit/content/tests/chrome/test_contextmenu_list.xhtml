@@ -83,7 +83,7 @@ var gContextMenuFired = false;
 async function startTest()
 {
   // These tests check behavior of non-native menus, and use anchored and non-anchored popups
-  // somewhat interchangibly. So disable native context menus for this test.
+  // somewhat interchangeably. So disable native context menus for this test.
   // We will have separate tests for native context menu behavior, see bug 1700727.
   await SpecialPowers.pushPrefEnv({ set: [["widget.macos.native-context-menus", false]] });
 
@@ -228,14 +228,16 @@ function checkContextMenuForMenu(event)
 function checkPopup()
 {
   var menurect = $("themenu").getBoundingClientRect();
-  
+
   // Context menus are offset by a number of pixels from the mouse click
   // which activates them. This is so that they don't appear exactly
   // under the mouse which can cause them to be mistakenly dismissed.
-  // The number of pixels depends on the platform  and is defined in
+  // The number of pixels depends on the platform and is defined in
   // each platform's nsLookAndFeel
   var contextMenuOffsetX = platformIsMac() ? 1 : 2;
   var contextMenuOffsetY = platformIsMac() ? -6 : 2;
+  contextMenuOffsetY += parseFloat(getComputedStyle($("themenu")).marginTop);
+  contextMenuOffsetX += parseFloat(getComputedStyle($("themenu")).marginLeft);
 
   if (gTestId == 0) {
     if (gTestElement == "list") {

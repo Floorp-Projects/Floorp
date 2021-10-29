@@ -4,8 +4,8 @@
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
-  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
 <vbox align="start" style="margin-left: 80px;">
   <button id="button1" label="Button 1" style="margin-top: 80px;"/>
@@ -31,32 +31,34 @@ function popupshown()
   var popupheight = popup.getBoundingClientRect().height;
   var button1rect = $("button1").getBoundingClientRect();
   var button2rect = $("button2").getBoundingClientRect();
+  var marginLeft = parseFloat(getComputedStyle(popup).marginLeft);
+  var marginTop = parseFloat(getComputedStyle(popup).marginTop);
 
-  checkCoords(popup, button1rect.left, button1rect.bottom, "initial");
+  checkCoords(popup, button1rect.left + marginLeft, button1rect.bottom + marginTop, "initial");
 
   popup.moveToAnchor($("button1"), "after_start", 0, 8);
-  checkCoords(popup, button1rect.left, button1rect.bottom + 8, "move anchor top + 8");
+  checkCoords(popup, button1rect.left + marginLeft, button1rect.bottom + 8 + marginTop, "move anchor top + 8");
 
   popup.moveToAnchor($("button1"), "after_start", 6, -10);
-  checkCoords(popup, button1rect.left + 6, button1rect.bottom - 10, "move anchor left + 6, top - 10");
+  checkCoords(popup, button1rect.left + 6 + marginLeft, button1rect.bottom - 10 + marginTop, "move anchor left + 6, top - 10");
 
   popup.moveToAnchor($("button1"), "before_start", -2, 0);
-  checkCoords(popup, button1rect.left - 2, button1rect.top - popupheight, "move anchor before_start");
+  checkCoords(popup, button1rect.left - 2 + marginLeft, button1rect.top - popupheight - marginTop, "move anchor before_start");
 
   popup.moveToAnchor($("button2"), "before_start");
-  checkCoords(popup, button2rect.left, button2rect.top - popupheight, "move button2");
+  checkCoords(popup, button2rect.left + marginLeft, button2rect.top - popupheight - marginTop, "move button2");
 
   popup.moveToAnchor($("button1"), "end_before");
-  checkCoords(popup, button1rect.right, button1rect.top, "move anchor end_before");
+  checkCoords(popup, button1rect.right + marginLeft, button1rect.top + marginTop, "move anchor end_before");
 
   popup.moveToAnchor($("button2"), "after_start", 5, 4);
-  checkCoords(popup, button2rect.left + 5, button2rect.bottom + 4, "move button2 left + 5, top + 4");
+  checkCoords(popup, button2rect.left + 5 + marginLeft, button2rect.bottom + 4 + marginTop, "move button2 left + 5, top + 4");
 
   popup.moveTo($("button1").screenX + 10, $("button1").screenY + 12);
   checkCoords(popup, button1rect.left + 10, button1rect.top + 12, "move to button1 screen with offset");
 
   popup.moveToAnchor($("button1"), "after_start", 1, 2);
-  checkCoords(popup, button1rect.left + 1, button1rect.bottom + 2, "move button2 after screen");
+  checkCoords(popup, button1rect.left + 1 + marginLeft, button1rect.bottom + 2 + marginTop, "move button2 after screen");
 
   popup.hidePopup();
 }
