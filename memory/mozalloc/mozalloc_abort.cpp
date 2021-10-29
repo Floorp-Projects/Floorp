@@ -89,8 +89,8 @@ extern "C" void abort(void) {
 
   // We won't reach here because mozalloc_abort() is MOZ_NORETURN. But that
   // annotation isn't used on ARM (see mozalloc_abort.h for why) so we add a
-  // redundant MOZ_CRASH() here to avoid a "'noreturn' function does return"
+  // unreachable marker here to avoid a "'noreturn' function does return"
   // warning.
-  MOZ_CRASH();
+  MOZ_ASSUME_UNREACHABLE_MARKER();
 }
 #endif
