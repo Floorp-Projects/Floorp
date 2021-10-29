@@ -993,18 +993,6 @@ void APZCTreeManager::AttachNodeToTree(HitTestingTreeNode* aNode,
   }
 }
 
-static EventRegions GetEventRegions(const WebRenderScrollDataWrapper& aLayer) {
-  if (aLayer.Metrics().IsScrollInfoLayer()) {
-    ParentLayerIntRect compositionBounds(
-        RoundedToInt(aLayer.Metrics().GetCompositionBounds()));
-    nsIntRegion hitRegion(compositionBounds.ToUnknownRect());
-    EventRegions eventRegions(hitRegion);
-    eventRegions.mDispatchToContentHitRegion = eventRegions.mHitRegion;
-    return eventRegions;
-  }
-  return aLayer.GetEventRegions();
-}
-
 already_AddRefed<HitTestingTreeNode> APZCTreeManager::RecycleOrCreateNode(
     const RecursiveMutexAutoLock& aProofOfTreeLock, TreeBuildingState& aState,
     AsyncPanZoomController* aApzc, LayersId aLayersId) {
@@ -1097,7 +1085,7 @@ void APZCTreeManager::NotifyAutoscrollRejected(
 void SetHitTestData(HitTestingTreeNode* aNode,
                     const WebRenderScrollDataWrapper& aLayer,
                     const EventRegionsOverride& aOverrideFlags) {
-  aNode->SetHitTestData(GetEventRegions(aLayer), aLayer.GetVisibleRegion(),
+  aNode->SetHitTestData(aLayer.GetVisibleRegion(),
                         aLayer.GetRemoteDocumentSize(),
                         aLayer.GetTransformTyped(), aOverrideFlags,
                         aLayer.GetAsyncZoomContainerId());
