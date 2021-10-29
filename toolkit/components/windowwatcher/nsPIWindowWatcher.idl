@@ -118,11 +118,14 @@ interface nsPIWindowWatcher : nsISupports
    * @param aOpenWindowInfo
    *        Information used to create the initial content browser in the new
    *        window.
+   *
+   * @return the nsIRemoteTab of the initial browser for the newly opened
+   *         window.
    */
-  void openWindowWithRemoteTab(in nsIRemoteTab aOpeningTab,
-                               in ACString aFeatures,
-                               in boolean aCalledFromJS,
-                               in float aOpenerFullZoom,
-                               in nsIOpenWindowInfo aOpenWindowInfo);
+  nsIRemoteTab openWindowWithRemoteTab(in nsIRemoteTab aOpeningTab,
+                                       in ACString aFeatures,
+                                       in boolean aCalledFromJS,
+                                       in float aOpenerFullZoom,
+                                       in nsIOpenWindowInfo aOpenWindowInfo);
 };
 

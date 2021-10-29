@@ -27,11 +27,24 @@ class nsOpenWindowInfo : public nsIOpenWindowInfo {
   RefPtr<mozilla::dom::BrowsingContext> mParent;
   RefPtr<nsIBrowsingContextReadyCallback> mBrowsingContextReadyCallback;
 
-  nsresult OnBrowsingContextReady(
-      std::function<void(mozilla::dom::BrowsingContext*)>&& aCallback);
-
  private:
   virtual ~nsOpenWindowInfo() = default;
+};
+
+class nsBrowsingContextReadyCallback : public nsIBrowsingContextReadyCallback {
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIBROWSINGCONTEXTREADYCALLBACK
+
+  explicit nsBrowsingContextReadyCallback(
+      RefPtr<mozilla::dom::BrowsingContextCallbackReceivedPromise::Private>
+          aPromise);
+
+ private:
+  virtual ~nsBrowsingContextReadyCallback();
+
+  RefPtr<mozilla::dom::BrowsingContextCallbackReceivedPromise::Private>
+      mPromise;
 };
 
 #endif  // nsOpenWindowInfo_h
