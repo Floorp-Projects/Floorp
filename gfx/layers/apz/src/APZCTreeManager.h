@@ -196,13 +196,6 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
                           const SampleTime& aSampleTime);
 
   /**
-   * Walk through all the APZCs and do the sampling steps needed when
-   * advancing to the next frame. The APZCs walked can be restricted to a
-   * specific render root by providing that as the first argument.
-   */
-  bool AdvanceAnimations(const SampleTime& aSampleTime);
-
-  /**
    * Refer to the documentation of APZInputBridge::ReceiveInputEvent() and
    * APZEventResult.
    */
