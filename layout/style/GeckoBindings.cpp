@@ -689,8 +689,9 @@ bool Gecko_IsDocumentBody(const Element* aElement) {
 
 nscolor Gecko_ComputeSystemColor(StyleSystemColor aColor, const Document* aDoc,
                                  const StyleColorScheme* aStyle) {
-  const auto& colors = PreferenceSheet::PrefsFor(*aDoc).mColors;
-  // TODO: These should be color-scheme aware too.
+  auto colorScheme = LookAndFeel::ColorSchemeForStyle(*aDoc, aStyle->bits);
+
+  const auto& colors = PreferenceSheet::PrefsFor(*aDoc).ColorsFor(colorScheme);
   switch (aColor) {
     case StyleSystemColor::Canvastext:
       return colors.mDefault;
@@ -706,7 +707,6 @@ nscolor Gecko_ComputeSystemColor(StyleSystemColor aColor, const Document* aDoc,
       break;
   }
 
-  auto colorScheme = LookAndFeel::ColorSchemeForStyle(*aDoc, aStyle->bits);
   auto useStandins = LookAndFeel::ShouldUseStandins(*aDoc, aColor);
 
   AutoWriteLock guard(*sServoFFILock);

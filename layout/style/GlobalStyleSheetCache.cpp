@@ -629,7 +629,7 @@ void GlobalStyleSheetCache::BuildPreferenceSheet(
   }
 
   if (StaticPrefs::browser_display_use_focus_colors()) {
-    const auto& colors = aPrefs.mColors;
+    const auto& colors = aPrefs.mLightColors;
     nscolor focusText = colors.mFocusText;
     nscolor focusBG = colors.mFocusBackground;
     sheetText.AppendPrintf(

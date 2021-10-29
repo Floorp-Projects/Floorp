@@ -116,8 +116,12 @@
 @media (prefers-color-scheme: dark) {
   :host,
   :root {
-    /* Keep these in sync with layout/base/PresShell.cpp, plaintext.css,
-     * and nsXPLookAndFeel::GenericDarkColor
+    /* Keep these in sync with:
+     *
+     *  * plaintext.css
+     *  * nsXPLookAndFeel::GenericDarkColor
+     *  * The default value of browser.display.foreground_color.dark and
+     *    browser.display.background_color.dark
      *
      * TODO (emilio): Once color-scheme support is complete, perhaps we can
      * just replace most of these for system colors and remove all this
