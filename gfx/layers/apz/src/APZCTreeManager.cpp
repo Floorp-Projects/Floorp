@@ -128,10 +128,6 @@ struct APZCTreeManager::TreeBuildingState {
                      ScrollableLayerGuid::EqualIgnoringPresShellFn>
       mScrollTargets;
 
-  // As the tree is traversed, the top element of this stack tracks whether
-  // the parent scroll node has a perspective transform.
-  std::stack<bool> mParentHasPerspective;
-
   // During the tree building process, the perspective transform component
   // of the ancestor transforms of some APZCs can be "deferred" to their
   // children, meaning they are added to the children's ancestor transforms
@@ -430,7 +426,6 @@ void APZCTreeManager::UpdateHitTestingTree(
     LayersId layersId = mRootLayersId;
     seenLayersIds.insert(mRootLayersId);
     ancestorTransforms.push(AncestorTransform());
-    state.mParentHasPerspective.push(false);
     state.mOverrideFlags.push(EventRegionsOverride::NoOverride);
     nsTArray<Maybe<ZoomConstraints>> zoomConstraintsStack;
 
@@ -565,8 +560,6 @@ void APZCTreeManager::UpdateHitTestingTree(
           }
 
           indents.push(gfx::TreeAutoIndent<LOG_DEFAULT>(mApzcTreeLog));
-          state.mParentHasPerspective.push(
-              aLayerMetrics.TransformIsPerspective());
         },
         [&](ScrollNode aLayerMetrics) {
           if (aLayerMetrics.GetAsyncZoomContainerId()) {
@@ -582,7 +575,6 @@ void APZCTreeManager::UpdateHitTestingTree(
           layersId = next->GetLayersId();
           ancestorTransforms.pop();
           indents.pop();
-          state.mParentHasPerspective.pop();
         });
 
     mApzcTreeLog << "[end]\n";
