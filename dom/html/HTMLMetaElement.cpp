@@ -43,15 +43,15 @@ nsresult HTMLMetaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     if (Document* document = GetUncomposedDoc()) {
       if (aName == nsGkAtoms::content) {
         if (const nsAttrValue* name = GetParsedAttr(nsGkAtoms::name)) {
-          MetaAddedOrChanged(*document, *name, FromChange::Yes);
+          MetaAddedOrChanged(*document, *name, ChangeKind::ContentChange);
         }
         CreateAndDispatchEvent(*document, u"DOMMetaChanged"_ns);
       } else if (aName == nsGkAtoms::name) {
         if (aOldValue) {
-          MetaRemoved(*document, *aOldValue, FromChange::Yes);
+          MetaRemoved(*document, *aOldValue, ChangeKind::NameChange);
         }
         if (aValue) {
-          MetaAddedOrChanged(*document, *aValue, FromChange::Yes);
+          MetaAddedOrChanged(*document, *aValue, ChangeKind::NameChange);
         }
         CreateAndDispatchEvent(*document, u"DOMMetaChanged"_ns);
       }
@@ -113,7 +113,7 @@ nsresult HTMLMetaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   }
 
   if (const nsAttrValue* name = GetParsedAttr(nsGkAtoms::name)) {
-    MetaAddedOrChanged(doc, *name, FromChange::No);
+    MetaAddedOrChanged(doc, *name, ChangeKind::TreeChange);
   }
   CreateAndDispatchEvent(doc, u"DOMMetaAdded"_ns);
   return rv;
@@ -122,7 +122,7 @@ nsresult HTMLMetaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
 void HTMLMetaElement::UnbindFromTree(bool aNullParent) {
   if (Document* oldDoc = GetUncomposedDoc()) {
     if (const nsAttrValue* name = GetParsedAttr(nsGkAtoms::name)) {
-      MetaRemoved(*oldDoc, *name, FromChange::No);
+      MetaRemoved(*oldDoc, *name, ChangeKind::TreeChange);
     }
     CreateAndDispatchEvent(*oldDoc, u"DOMMetaRemoved"_ns);
   }
@@ -143,7 +143,7 @@ JSObject* HTMLMetaElement::WrapNode(JSContext* aCx,
 
 void HTMLMetaElement::MetaAddedOrChanged(Document& aDoc,
                                          const nsAttrValue& aName,
-                                         FromChange aFromChange) {
+                                         ChangeKind aChangeKind) {
   nsAutoString content;
   const bool hasContent = GetAttr(nsGkAtoms::content, content);
   if (aName.Equals(nsGkAtoms::viewport, eIgnoreCase)) {
@@ -159,12 +159,21 @@ void HTMLMetaElement::MetaAddedOrChanged(Document& aDoc,
     return aDoc.UpdateReferrerInfoFromMeta(content,
                                            /* aPreload = */ false);
   }
+  if (aName.Equals(nsGkAtoms::color_scheme, eIgnoreCase)) {
+    if (aChangeKind != ChangeKind::ContentChange) {
+      return aDoc.AddColorSchemeMeta(*this);
+    }
+    return aDoc.RecomputeColorScheme();
+  }
 }
 
 void HTMLMetaElement::MetaRemoved(Document& aDoc, const nsAttrValue& aName,
-                                  FromChange aFromChange) {
-  // TODO(emilio): We probably want to deal with <meta name=color-scheme> and co
-  // here.
+                                  ChangeKind aChangeKind) {
+  MOZ_ASSERT(aChangeKind != ChangeKind::ContentChange,
+             "Content change can't trigger removal");
+  if (aName.Equals(nsGkAtoms::color_scheme, eIgnoreCase)) {
+    return aDoc.RemoveColorSchemeMeta(*this);
+  }
 }
 
 }  // namespace mozilla::dom
