@@ -80,11 +80,6 @@ class IAPZHitTester {
       HitTestingTreeNodeAutoLock& aAutoLock,
       const RecursiveMutexAutoLock& aProofOfTreeLock,
       RefPtr<HitTestingTreeNode>& aNode);
-  AsyncPanZoomController* GetTargetApzcForNode(const HitTestingTreeNode* aNode);
-  bool IsFixedToRootContent(const HitTestingTreeNode* aNode);
-  LayerToParentLayerMatrix4x4 ComputeTransformForNode(
-      const HitTestingTreeNode* aNode,
-      const AsyncPanZoomController** aOutSourceOfOverscrollTransform) const;
 };
 
 }  // namespace layers
