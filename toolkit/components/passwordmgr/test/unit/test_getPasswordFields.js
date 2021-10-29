@@ -8,11 +8,9 @@
 const { LoginFormFactory } = ChromeUtils.import(
   "resource://gre/modules/LoginFormFactory.jsm"
 );
-const LMCBackstagePass = ChromeUtils.import(
-  "resource://gre/modules/LoginManagerChild.jsm",
-  null
+const { LoginManagerChild } = ChromeUtils.import(
+  "resource://gre/modules/LoginManagerChild.jsm"
 );
-const { LoginManagerChild } = LMCBackstagePass;
 const TESTCASES = [
   {
     description: "Empty document",
