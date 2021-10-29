@@ -540,6 +540,10 @@ void GfxInfo::GetData() {
       CopyUTF16toUTF8(
           GfxDriverInfo::GetDesktopEnvironment(DesktopEnvironment::i3),
           mDesktopEnvironment);
+    } else if (currentDesktop.find("sway") != std::string::npos) {
+      CopyUTF16toUTF8(
+          GfxDriverInfo::GetDesktopEnvironment(DesktopEnvironment::Sway),
+          mDesktopEnvironment);
     } else if (currentDesktop.find("mate") != std::string::npos) {
       CopyUTF16toUTF8(
           GfxDriverInfo::GetDesktopEnvironment(DesktopEnvironment::Mate),
