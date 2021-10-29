@@ -899,11 +899,6 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
   aTxn.AppendTransformProperties(transforms);
 }
 
-bool APZCTreeManager::AdvanceAnimations(const SampleTime& aSampleTime) {
-  MutexAutoLock lock(mMapLock);
-  return AdvanceAnimationsInternal(lock, aSampleTime);
-}
-
 ParentLayerRect APZCTreeManager::ComputeClippedCompositionBounds(
     const MutexAutoLock& aProofOfMapLock, ClippedCompositionBoundsMap& aDestMap,
     ScrollableLayerGuid aGuid) {

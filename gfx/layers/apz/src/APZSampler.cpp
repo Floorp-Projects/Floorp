@@ -101,12 +101,6 @@ void APZSampler::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
   mApz->SampleForWebRender(aVsyncId, aTxn, sampleTime);
 }
 
-bool APZSampler::AdvanceAnimations(const SampleTime& aSampleTime) {
-  MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
-  AssertOnSamplerThread();
-  return mApz->AdvanceAnimations(aSampleTime);
-}
-
 AsyncTransform APZSampler::GetCurrentAsyncTransform(
     const LayersId& aLayersId, const ScrollableLayerGuid::ViewID& aScrollId,
     AsyncTransformComponents aComponents) const {

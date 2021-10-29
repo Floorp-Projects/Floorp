@@ -65,8 +65,6 @@ class APZSampler {
   void SampleForWebRender(const Maybe<VsyncId>& aGeneratedFrameId,
                           wr::TransactionWrapper& aTxn);
 
-  bool AdvanceAnimations(const SampleTime& aSampleTime);
-
   /**
    * Similar to above GetCurrentAsyncTransform, but get the current transform
    * with LayersId and ViewID.
