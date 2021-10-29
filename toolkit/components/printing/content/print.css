@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 html, body {
-  width: 250px;
   height: 100vh;
 }
 
@@ -221,8 +220,15 @@ input[type="text"] {
   margin-block: 5px;
 }
 
+.margin-pair {
+  width: calc(50% - 10px); /* Half minus the gap */
+}
+
 .margin-input {
-  width: 6em !important;
+  /* FIXME: Important is needed to override the photon-number styles below,
+   * probably should be refactored */
+  width: 100% !important;
+  box-sizing: border-box;
 }
 
 .margin-descriptor {
@@ -257,7 +263,7 @@ input[type="number"].photon-number {
   padding: 0;
   padding-inline-start: 8px;
   margin: 0;
-  height: 20px;
+  height: 1.5em;
   width: 4em;
 }
 
