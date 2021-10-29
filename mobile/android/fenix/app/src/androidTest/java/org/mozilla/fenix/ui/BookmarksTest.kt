@@ -166,6 +166,7 @@ class BookmarksTest {
             addNewFolderName(bookmarksFolderName)
             navigateUp()
             verifyKeyboardHidden()
+            verifyBookmarkFolderIsNotCreated(bookmarksFolderName)
         }
     }
 
