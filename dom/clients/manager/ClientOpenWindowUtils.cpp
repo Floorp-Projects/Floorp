@@ -406,38 +406,38 @@ RefPtr<ClientOpPromise> ClientOpenWindow(const ClientOpenWindowArgs& aArgs) {
   return promise.forget();
 #endif  // MOZ_WIDGET_ANDROID
 
+  RefPtr<BrowsingContextCallbackReceivedPromise::Private>
+      browsingContextReadyPromise =
+          new BrowsingContextCallbackReceivedPromise::Private(__func__);
+  RefPtr<nsIBrowsingContextReadyCallback> callback =
+      new nsBrowsingContextReadyCallback(browsingContextReadyPromise);
+
   RefPtr<nsOpenWindowInfo> openInfo = new nsOpenWindowInfo();
+  openInfo->mBrowsingContextReadyCallback = callback;
   openInfo->mOriginAttributes = principal->OriginAttributesRef();
   openInfo->mIsRemote = true;
-
-  openInfo->OnBrowsingContextReady(
-      [argsValidated, promise](BrowsingContext* aBC) {
-        if (aBC) {
-          WaitForLoad(argsValidated, aBC, promise);
-        } else {
-          // in case of failure, reject the original promise
-          CopyableErrorResult result;
-          result.ThrowTypeError("Unable to open window");
-          promise->Reject(result, __func__);
-        }
-      });
 
   RefPtr<BrowsingContext> bc;
   ErrorResult errResult;
   OpenWindow(argsValidated, openInfo, getter_AddRefs(bc), errResult);
   if (NS_WARN_IF(errResult.Failed())) {
-    // Reject the promise immediately without waiting for the callback.
-    openInfo->mBrowsingContextReadyCallback = nullptr;
     promise->Reject(errResult, __func__);
     return promise;
   }
 
-  // If we immediately got a BrowsingContext back, we can invoke the ready
-  // callback ourselves.
+  browsingContextReadyPromise->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [argsValidated, promise](const RefPtr<BrowsingContext>& aBC) {
+        WaitForLoad(argsValidated, aBC, promise);
+      },
+      [promise]() {
+        // in case of failure, reject the original promise
+        CopyableErrorResult result;
+        result.ThrowTypeError("Unable to open window");
+        promise->Reject(result, __func__);
+      });
   if (bc) {
-    if (nsCOMPtr cb = openInfo->mBrowsingContextReadyCallback.forget()) {
-      cb->BrowsingContextReady(bc);
-    }
+    browsingContextReadyPromise->Resolve(bc, __func__);
   }
   return promise;
 }

@@ -459,7 +459,8 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
                                          const nsACString& aFeatures,
                                          bool aCalledFromJS,
                                          float aOpenerFullZoom,
-                                         nsIOpenWindowInfo* aOpenWindowInfo) {
+                                         nsIOpenWindowInfo* aOpenWindowInfo,
+                                         nsIRemoteTab** aResult) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(mWindowCreator);
 
@@ -571,6 +572,14 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
 
   SizeOpenedWindow(chromeTreeOwner, parentWindowOuter, false, sizeSpec,
                    Some(aOpenerFullZoom));
+
+  nsCOMPtr<nsIRemoteTab> newBrowserParent;
+  chromeTreeOwner->GetPrimaryRemoteTab(getter_AddRefs(newBrowserParent));
+  if (NS_WARN_IF(!newBrowserParent)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  newBrowserParent.forget(aResult);
   return NS_OK;
 }
 
