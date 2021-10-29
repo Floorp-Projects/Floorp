@@ -281,33 +281,48 @@ class AboutLoginsChild extends JSWindowActorChild {
   receiveMessage(message) {
     switch (message.name) {
       case "AboutLogins:ImportReportData":
-        this.sendToContent("ImportReportData", message.data);
+        this.onImportReportData(message.data);
         break;
       case "AboutLogins:MasterPasswordResponse":
-        if (masterPasswordPromise) {
-          masterPasswordPromise.resolve(message.data.result);
-          recordTelemetryEvent(message.data.telemetryEvent);
-        }
+        this.onMasterPasswordResponse(message.data);
         break;
       case "AboutLogins:RemaskPassword":
-        this.sendToContent("RemaskPassword", message.data);
+        this.onRemaskPassword(message.data);
         break;
       case "AboutLogins:Setup":
-        let waivedContent = Cu.waiveXrays(this.browsingContext.window);
-        waivedContent.AboutLoginsUtils.masterPasswordEnabled =
-          message.data.masterPasswordEnabled;
-        waivedContent.AboutLoginsUtils.passwordRevealVisible =
-          message.data.passwordRevealVisible;
-        waivedContent.AboutLoginsUtils.importVisible =
-          message.data.importVisible;
-        waivedContent.AboutLoginsUtils.supportBaseURL = Services.urlFormatter.formatURLPref(
-          "app.support.baseURL"
-        );
-        this.sendToContent("Setup", message.data);
+        this.onSetup(message.data);
         break;
       default:
         this.passMessageDataToContent(message);
     }
+  }
+
+  onImportReportData(data) {
+    this.sendToContent("ImportReportData", data);
+  }
+
+  onMasterPasswordResponse(data) {
+    if (masterPasswordPromise) {
+      masterPasswordPromise.resolve(data.result);
+      recordTelemetryEvent(data.telemetryEvent);
+    }
+  }
+
+  onRemaskPassword(data) {
+    this.sendToContent("RemaskPassword", data);
+  }
+
+  onSetup(data) {
+    let waivedContent = Cu.waiveXrays(this.browsingContext.window);
+    waivedContent.AboutLoginsUtils.masterPasswordEnabled =
+      data.masterPasswordEnabled;
+    waivedContent.AboutLoginsUtils.passwordRevealVisible =
+      data.passwordRevealVisible;
+    waivedContent.AboutLoginsUtils.importVisible = data.importVisible;
+    waivedContent.AboutLoginsUtils.supportBaseURL = Services.urlFormatter.formatURLPref(
+      "app.support.baseURL"
+    );
+    this.sendToContent("Setup", data);
   }
 
   passMessageDataToContent(message) {
