@@ -640,9 +640,6 @@ bool ArgumentsObject::reifyIterator(JSContext* cx,
 static bool ResolveArgumentsProperty(JSContext* cx,
                                      Handle<ArgumentsObject*> obj, HandleId id,
                                      PropertyFlags flags, bool* resolvedp) {
-  // Note: we don't need to call ReshapeForShadowedProp here because we're just
-  // resolving an existing property instead of defining a new property.
-
   MOZ_ASSERT(id.isInt() || id.isAtom(cx->names().length) ||
              id.isAtom(cx->names().callee));
   MOZ_ASSERT(flags.isCustomDataProperty());
