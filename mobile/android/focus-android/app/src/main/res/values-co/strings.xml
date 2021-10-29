@@ -194,14 +194,16 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">Per i siti i più populari</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
-    <string name="preference_autocomplete_topsite_summary">Attivà per compie autumaticamente più di 450 indirizzi populari in a barra d’indirizzu.</string>
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">Attivà per chì %s compii autumaticamente più di 450 indirizzi populari in a barra d’indirizzu.</string>
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">Per i siti chì voi aghjunghjite</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
-    <string name="preference_autocomplete_user_list_summary">Attivà per compie autumaticamente più di 450 indirizzi populari in a barra d’indirizzu.</string>
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">Attivà per chì %s compii autumaticamente i vostri indirizzi web favuriti.</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">Urganizà i siti</string>

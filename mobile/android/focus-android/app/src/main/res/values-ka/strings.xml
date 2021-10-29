@@ -194,14 +194,16 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">რჩეული საიტებისთვის</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
-    <string name="preference_autocomplete_topsite_summary">ჩართეთ 450-ზე მეტი ცნობილი URL-ბმულის თვითდასრულებისთვის მისამართების ველში.</string>
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">ჩართეთ და %s თავად დაასრულებს 450-ზე მეტ ცნობილ URL-ბმულს, მისამართების ველში აკრეფისას.</string>
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">თქვენ მიერ დამატებული საიტებისთვის</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
-    <string name="preference_autocomplete_user_list_summary">ჩართეთ 450-ზე მეტი ცნობილი ბმულის თვითდასრულებისთვის მისამართების ველში.</string>
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">ჩართეთ და %s თავად დაასრულებს თქვენს რჩეულ URL-ბმულებს.</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">საიტების მართვა</string>
@@ -276,7 +278,7 @@
     <string name="preference_privacy_block_ads_summary">ზოგიერთი სარეკლამო ელემენტი, თვალს ადევნებს თქვენს გადაადგილებას საიტებზე, მაშინაც კი როცა მათზე არ აწკაპებთ</string>
     <string name="preference_privacy_block_analytics">სტატისტიკური აღრიცხვის ელემენტების შეზღუდვა</string>
     <string name="preference_privacy_block_analytics_summary">გამოიყენება მონაცემთა აღრიცხვისთვის, დამუშავებისა და ისეთი მოქმედებების შესამოწმებლად, როგორიცაა თითის შეხება და გვერდის გადაადგილება</string>
-    <string name="preference_privacy_block_social">სოც. ქსელების ელემენტების შეზღუდვა</string>
+    <string name="preference_privacy_block_social">სოცქსელების მეთვალყურეების შეზღუდვა</string>
     <string name="preference_privacy_block_social_summary">თქვენს გადაადგილებაზე თვალყურის მისადევნებლად, საიტებზე განთავსებულია მოწონების ან გაზიარების ღილაკების სახით</string>
     <string name="preference_privacy_block_content">სხვა მეთვალყურე ელემენტების შეზღუდვა</string>
     <string name="preference_privacy_block_content_summary2">ჩართვის შედეგად, ზოგიერთმა ვებგვერდმა, შესაძლოა გამართულად ვერ იმუშაოს</string>
