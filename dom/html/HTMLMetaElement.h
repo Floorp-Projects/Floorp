@@ -62,11 +62,11 @@ class HTMLMetaElement final : public nsGenericHTMLElement {
   virtual ~HTMLMetaElement();
 
  private:
-  enum class FromChange : bool { No, Yes };
+  enum class ChangeKind : uint8_t { TreeChange, NameChange, ContentChange };
   void MetaRemoved(Document& aDoc, const nsAttrValue& aName,
-                   FromChange aFromChange);
+                   ChangeKind aChangeKind);
   void MetaAddedOrChanged(Document& aDoc, const nsAttrValue& aName,
-                          FromChange aFromChange);
+                          ChangeKind aChangeKind);
 };
 
 }  // namespace dom
