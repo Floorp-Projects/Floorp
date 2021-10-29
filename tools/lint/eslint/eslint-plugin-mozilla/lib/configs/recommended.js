@@ -211,6 +211,9 @@ module.exports = {
     // No single if block inside an else block
     "no-lonely-if": "error",
 
+    // Disallow the use of number literals that immediately lose precision at runtime when converted to JS Number
+    "no-loss-of-precision": "error",
+
     // Nested ternary statements are confusing
     "no-nested-ternary": "error",
 

@@ -456,7 +456,7 @@ add_task(async function testExceptionListRemoteSettings() {
       current: [
         {
           id: "1",
-          last_modified: 100000000000000000001,
+          last_modified: 1000000000000001,
           firstPartyOrigin: TEST_DOMAIN,
           thirdPartyOrigin: TEST_3RD_PARTY_DOMAIN,
         },
