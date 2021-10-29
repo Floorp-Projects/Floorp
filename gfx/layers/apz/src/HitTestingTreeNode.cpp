@@ -251,15 +251,12 @@ LayersId HitTestingTreeNode::GetLayersId() const { return mLayersId; }
 void HitTestingTreeNode::SetHitTestData(
     const EventRegions& aRegions, const LayerIntRegion& aVisibleRegion,
     const LayerIntSize& aRemoteDocumentSize,
-    const CSSTransformMatrix& aTransform,
-    const Maybe<ParentLayerIntRegion>& aClipRegion,
-    const EventRegionsOverride& aOverride,
+    const CSSTransformMatrix& aTransform, const EventRegionsOverride& aOverride,
     const Maybe<ScrollableLayerGuid::ViewID>& aAsyncZoomContainerId) {
   mEventRegions = aRegions;
   mVisibleRegion = aVisibleRegion;
   mRemoteDocumentSize = aRemoteDocumentSize;
   mTransform = aTransform;
-  mClipRegion = aClipRegion;
   mOverride = aOverride;
   mAsyncZoomContainerId = aAsyncZoomContainerId;
 }
@@ -338,7 +335,7 @@ void HitTestingTreeNode::Dump(const char* aPrefix) const {
   MOZ_LOG(
       sApzMgrLog, LogLevel::Debug,
       ("%sHitTestingTreeNode (%p) APZC (%p) g=(%s) %s%s%sr=(%s) t=(%s) "
-       "c=(%s)%s%s\n",
+       "%s%s\n",
        aPrefix, this, mApzc.get(),
        mApzc ? ToString(mApzc->GetGuid()).c_str()
              : nsPrintfCString("l=0x%" PRIx64, uint64_t(mLayersId)).get(),
@@ -349,7 +346,6 @@ void HitTestingTreeNode::Dump(const char* aPrefix) const {
            ? nsPrintfCString("fixed=%" PRIu64 " ", mFixedPosTarget).get()
            : "",
        ToString(mEventRegions).c_str(), ToString(mTransform).c_str(),
-       mClipRegion ? ToString(mClipRegion.ref()).c_str() : "none",
        mScrollbarData.mDirection.isSome() ? " scrollbar" : "",
        IsScrollThumbNode() ? " scrollthumb" : ""));
 

@@ -1130,11 +1130,10 @@ void APZCTreeManager::NotifyAutoscrollRejected(
 
 void SetHitTestData(HitTestingTreeNode* aNode,
                     const WebRenderScrollDataWrapper& aLayer,
-                    const Maybe<ParentLayerIntRegion>& aClipRegion,
                     const EventRegionsOverride& aOverrideFlags) {
   aNode->SetHitTestData(GetEventRegions(aLayer), aLayer.GetVisibleRegion(),
                         aLayer.GetRemoteDocumentSize(),
-                        aLayer.GetTransformTyped(), aClipRegion, aOverrideFlags,
+                        aLayer.GetTransformTyped(), aOverrideFlags,
                         aLayer.GetAsyncZoomContainerId());
 }
 
@@ -1162,8 +1161,6 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     needsApzc = false;
   }
 
-  bool parentHasPerspective = aState.mParentHasPerspective.top();
-
   if (Maybe<uint64_t> zoomAnimationId = aLayer.GetZoomAnimationId()) {
     aState.mZoomAnimationId = zoomAnimationId;
   }
@@ -1175,11 +1172,7 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     // when those properties change.
     node = RecycleOrCreateNode(aProofOfTreeLock, aState, nullptr, aLayersId);
     AttachNodeToTree(node, aParent, aNextSibling);
-    SetHitTestData(node, aLayer,
-                   (!parentHasPerspective && aLayer.GetClipRect())
-                       ? Some(ParentLayerIntRegion(*aLayer.GetClipRect()))
-                       : Nothing(),
-                   aState.mOverrideFlags.top());
+    SetHitTestData(node, aLayer, aState.mOverrideFlags.top());
     node->SetScrollbarData(aLayer.GetScrollbarAnimationId(),
                            aLayer.GetScrollbarData());
     node->SetFixedPosData(aLayer.GetFixedPositionScrollContainerId(),
@@ -1296,9 +1289,7 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
     MOZ_ASSERT(node->IsPrimaryHolder() && node->GetApzc() &&
                node->GetApzc()->Matches(guid));
 
-    Maybe<ParentLayerIntRegion> clipRegion =
-        parentHasPerspective ? Nothing() : ComputeClipRegion(aLayersId, aLayer);
-    SetHitTestData(node, aLayer, clipRegion, aState.mOverrideFlags.top());
+    SetHitTestData(node, aLayer, aState.mOverrideFlags.top());
     apzc->SetAncestorTransform(aAncestorTransform);
 
     PrintAPZCInfo(aLayer, apzc);
@@ -1408,9 +1399,7 @@ HitTestingTreeNode* APZCTreeManager::PrepareNodeForLayer(
       }
     }
 
-    Maybe<ParentLayerIntRegion> clipRegion =
-        parentHasPerspective ? Nothing() : ComputeClipRegion(aLayersId, aLayer);
-    SetHitTestData(node, aLayer, clipRegion, aState.mOverrideFlags.top());
+    SetHitTestData(node, aLayer, aState.mOverrideFlags.top());
   }
 
   // Note: if layer properties must be propagated to nodes, RecvUpdate in
