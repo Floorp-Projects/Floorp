@@ -30,7 +30,6 @@ HitTestingTreeNode::HitTestingTreeNode(AsyncPanZoomController* aApzc,
       mLayersId(aLayersId),
       mFixedPosTarget(ScrollableLayerGuid::NULL_SCROLL_ID),
       mStickyPosTarget(ScrollableLayerGuid::NULL_SCROLL_ID),
-      mIsBackfaceHidden(false),
       mOverride(EventRegionsOverride::NoOverride) {
   if (mIsPrimaryApzcHolder) {
     MOZ_ASSERT(mApzc);
@@ -254,7 +253,7 @@ void HitTestingTreeNode::SetHitTestData(
     const LayerIntSize& aRemoteDocumentSize,
     const CSSTransformMatrix& aTransform,
     const Maybe<ParentLayerIntRegion>& aClipRegion,
-    const EventRegionsOverride& aOverride, bool aIsBackfaceHidden,
+    const EventRegionsOverride& aOverride,
     const Maybe<ScrollableLayerGuid::ViewID>& aAsyncZoomContainerId) {
   mEventRegions = aRegions;
   mVisibleRegion = aVisibleRegion;
@@ -262,7 +261,6 @@ void HitTestingTreeNode::SetHitTestData(
   mTransform = aTransform;
   mClipRegion = aClipRegion;
   mOverride = aOverride;
-  mIsBackfaceHidden = aIsBackfaceHidden;
   mAsyncZoomContainerId = aAsyncZoomContainerId;
 }
 
