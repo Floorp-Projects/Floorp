@@ -342,15 +342,6 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
     return false;
   }
 
-  EventRegions GetEventRegions() const {
-    MOZ_ASSERT(IsValid());
-
-    if (AtBottomLayer()) {
-      return mLayer->GetEventRegions();
-    }
-    return EventRegions();
-  }
-
   LayerIntRegion GetVisibleRegion() const {
     MOZ_ASSERT(IsValid());
 
@@ -384,21 +375,6 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
     if (AtBottomLayer()) {
       return mLayer->GetReferentId();
     }
-    return Nothing();
-  }
-
-  Maybe<ParentLayerIntRect> GetClipRect() const {
-    MOZ_ASSERT(IsValid());
-
-    // This function is only used by tests.
-    // This is a minimal implementation, which clips to the visible region,
-    // that's sufficient to satisfy the tests.
-    if (AtBottomLayer()) {
-      auto localTransform = GetTransformTyped() * AsyncTransformMatrix();
-      return Some(RoundedToInt(localTransform.TransformBounds(
-          LayerRect(mLayer->GetVisibleRegion().GetBounds()))));
-    }
-
     return Nothing();
   }
 
@@ -491,12 +467,6 @@ class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
   Maybe<uint64_t> GetZoomAnimationId() const {
     MOZ_ASSERT(IsValid());
     return mLayer->GetZoomAnimationId();
-  }
-
-  bool IsBackfaceHidden() const {
-    // This is only used by APZCTM hit testing, and WR does its own
-    // hit testing, so no need to implement this.
-    return false;
   }
 
   Maybe<ScrollableLayerGuid::ViewID> GetAsyncZoomContainerId() const {
