@@ -502,12 +502,12 @@ void Gecko_StyleSheet_AddRef(const mozilla::StyleSheet* aSheet);
 void Gecko_StyleSheet_Release(const mozilla::StyleSheet* aSheet);
 bool Gecko_IsDocumentBody(const mozilla::dom::Element* element);
 
-// We use an int32_t here instead of a LookAndFeel::ColorID
-// because forward-declaring a nested enum/struct is impossible
-nscolor Gecko_GetLookAndFeelSystemColor(int32_t color_id,
-                                        const mozilla::dom::Document*,
-                                        const mozilla::StyleColorScheme*);
+nscolor Gecko_ComputeSystemColor(mozilla::StyleSystemColor,
+                                 const mozilla::dom::Document*,
+                                 const mozilla::StyleColorScheme*);
 
+// We use an int32_t here instead of a LookAndFeel::IntID/FloatID because
+// forward-declaring a nested enum/struct is impossible.
 int32_t Gecko_GetLookAndFeelInt(int32_t int_id);
 float Gecko_GetLookAndFeelFloat(int32_t float_id);
 
