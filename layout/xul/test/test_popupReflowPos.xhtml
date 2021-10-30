@@ -26,7 +26,7 @@
       var buttonbcr = document.getElementById("thebutton").getBoundingClientRect();
       var popupbcr = popup.getOuterScreenRect();
       var popupMarginLeft = parseFloat(getComputedStyle(popup).marginLeft);
-      var popupMarginTop = parseFloat(getComputedStyle(popup).marginLeft);
+      var popupMarginTop = parseFloat(getComputedStyle(popup).marginTop);
 
       ok(Math.abs(popupbcr.x - popupMarginLeft - window.mozInnerScreenX - buttonbcr.x) < 3, "x pos is correct");
       ok(Math.abs(popupbcr.y - popupMarginTop - window.mozInnerScreenY - buttonbcr.bottom) < 3, "y pos is correct");
