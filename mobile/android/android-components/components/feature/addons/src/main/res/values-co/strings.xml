@@ -37,7 +37,7 @@
     <!-- Description for clipboard_read permission. -->
     <string name="mozac_feature_addons_permissions_clipboard_read_description">Ottene i dati da u preme’papei</string>
     <!-- Description for clipboard_write permission. -->
-    <string name="mozac_feature_addons_permissions_clipboard_write_description">Aghjunghje dati ver di u preme’papei</string>
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">Aghjunghje dati in u preme’papei</string>
     <!-- Description for downloads permission. -->
     <string name="mozac_feature_addons_permissions_downloads_description">Scaricà schedarii, è leghje è mudificà a cronolugia di i scaricamenti di u navigatore</string>
     <!-- Description for downloads_open permission. -->

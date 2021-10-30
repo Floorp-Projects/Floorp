@@ -118,7 +118,7 @@
 
     <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
     <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
-      <p>A leia cù a reta hè stata interrotta durante a neguziazione di a cunnessione. Ci vole à pruvà torna.</p>
+      <p>U liame cù a reta hè statu interrottu durante a neguziazione di a cunnessione. Ci vole à pruvà torna.</p>
       <ul>
         <li>Forse u site hè timpurariamente indispunibule o sopraccarcu. Pruvate torna da quì à pocu.</li>
         <li>S’ella ùn hè mancu pussibule di navigà nant’à un situ, verificate a cunnessione di dati o Wi-Fi di u vostru apparechju.</li>
