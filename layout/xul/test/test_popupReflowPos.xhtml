@@ -7,12 +7,10 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
-  <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
   </body>
 
-  <!-- test code goes here -->
-  <script type="application/javascript"><![CDATA[
+  <script><![CDATA[
     SimpleTest.waitForExplicitFinish();
 
     function openPopup()
@@ -23,12 +21,15 @@
     function popupShown(event)
     {
       document.getElementById("parent").className = "";
+      var popup = document.getElementById("thepopup");
 
       var buttonbcr = document.getElementById("thebutton").getBoundingClientRect();
-      var popupbcr = document.getElementById("thepopup").getOuterScreenRect();
+      var popupbcr = popup.getOuterScreenRect();
+      var popupMarginLeft = parseFloat(getComputedStyle(popup).marginLeft);
+      var popupMarginTop = parseFloat(getComputedStyle(popup).marginLeft);
 
-      ok(Math.abs(popupbcr.x - window.mozInnerScreenX - buttonbcr.x) < 3, "x pos is correct");
-      ok(Math.abs(popupbcr.y - window.mozInnerScreenY - buttonbcr.bottom) < 3, "y pos is correct");
+      ok(Math.abs(popupbcr.x - popupMarginLeft - window.mozInnerScreenX - buttonbcr.x) < 3, "x pos is correct");
+      ok(Math.abs(popupbcr.y - popupMarginTop - window.mozInnerScreenY - buttonbcr.bottom) < 3, "y pos is correct");
 
       event.target.hidePopup();
     }
