@@ -6,12 +6,10 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
-  <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
   </body>
 
-  <!-- test code goes here -->
-  <script type="application/javascript"><![CDATA[
+  <script><![CDATA[
     SimpleTest.waitForExplicitFinish();
 
     var savedzoom;
@@ -29,11 +27,13 @@
     function popupShown(event)
     {
       var panel = document.getElementById("panel");
+      var panelMarginLeft = parseFloat(getComputedStyle(panel).marginLeft);
+      var panelMarginTop = parseFloat(getComputedStyle(panel).marginLeft);
       var panelbcr = panel.getBoundingClientRect();
       var anchorbcr = document.getElementById("anchor").getBoundingClientRect();
 
-      ok(Math.abs(panelbcr.x - anchorbcr.x) < 3, "x pos is correct");
-      ok(Math.abs(panelbcr.y - anchorbcr.bottom) < 3, "y pos is correct");
+      ok(Math.abs(panelbcr.x - panelMarginLeft - anchorbcr.x) < 3, "x pos is correct");
+      ok(Math.abs(panelbcr.y - panelMarginTop - anchorbcr.bottom) < 3, "y pos is correct");
 
       SpecialPowers.setFullZoom(window, savedzoom);
 
