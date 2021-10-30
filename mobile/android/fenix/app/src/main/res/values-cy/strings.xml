@@ -2006,11 +2006,11 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Caewch bob tab anweithredol</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">Mae tabiau ar gael yma am %s. Wedi hynny, bydd y tabiau’n cael eu cau’n awtomatig.</string>
+    <string moz:removedIn="95" name="inactive_tabs_description" tools:ignore="UnusedResources">Mae tabiau ar gael yma am %s. Wedi hynny, bydd y tabiau’n cael eu cau’n awtomatig.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 diwrnod</string>
+    <string moz:removedIn="95" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 diwrnod</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 wythnos</string>
+    <string moz:removedIn="95" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 wythnos</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
@@ -2025,19 +2025,28 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Helpwch ni i wella, os gwelwch yn dda</string>
+    <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Helpwch ni i wella, os gwelwch yn dda</string>
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header_1">Helpwch i wella Firefox</string>
+
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Pam wnaethoch chi analluogi tabiau anweithredol?</string>
+    <string name="inactive_tabs_survey_content">Pam wnaethoch chi analluogi tabiau anweithredol?</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_not_interested_option" tools:ignore="UnusedResources">Dim diddordeb yn y nodwedd</string>
+    <string name="inactive_tabs_survey_do_not_understand">Dwi ddim yn deall sut mae’n gweithio</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Mae’r amser i anweithredol yn rhy hir</string>
+    <string name="inactive_tabs_survey_do_it_myself">Rwy’n hoffi clirio hen dabiau fy hun</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Mae’r amser i anweithredol yn rhy fyr</string>
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Mae’r amser i anweithredol yn rhy hir</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_long_option_1">Mae’r cyfnod o bythefnos yn rhy hir</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Mae’r amser i anweithredol yn rhy fyr</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option_1">Mae’r cyfnod o bythefnos yn rhy fyr</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Anfon</string>
+    <string name="inactive_tabs_survey_send_button">Anfon</string>
     <!-- Content description for inactive tabs survey close button -->
-    <string name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Cau</string>
+    <string name="inactive_tabs_survey_close_button_content_description">Cau</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Gosod dolenni o wefannau, e-byst, a negeseuon i agor yn awtomatig yn Firefox.</string>

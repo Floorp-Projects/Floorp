@@ -2044,11 +2044,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Embotypaite tendayke ojepuru’ỹva</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">Tendaykekuéra eipurukuaa ápe %s ndive. Uperire, tendaykekuéra oñembotýta ijehegui.</string>
+    <string moz:removedIn="95" name="inactive_tabs_description" tools:ignore="UnusedResources">Tendaykekuéra eipurukuaa ápe %s ndive. Uperire, tendaykekuéra oñembotýta ijehegui.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 ára</string>
+    <string moz:removedIn="95" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 ára</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 arapokõindy</string>
+    <string moz:removedIn="95" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 arapokõindy</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
@@ -2064,19 +2064,28 @@
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Orepytyvõ rojapoporãvévo</string>
+    <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Orepytyvõ rojapoporãvévo</string>
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header_1">Eipytyvõ Firefox iporãvévo</string>
+
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string name="inactive_tabs_survey_content" tools:ignore="UnusedResources">¿Mba’ére emboty tendayke ojepuru’ỹva?</string>
+    <string name="inactive_tabs_survey_content">¿Mba’ére emboty tendayke ojepuru’ỹva?</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_not_interested_option" tools:ignore="UnusedResources">Ndaikuaaséi hembiapoite</string>
+    <string name="inactive_tabs_survey_do_not_understand">Ndaikuaái mba’éichapa omba’apóta</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Arapa’ũ ohasa hag̃ua jepuru’ỹme ipukueterei</string>
+    <string name="inactive_tabs_survey_do_it_myself">Amopotĩse chete umi tendayke tuja</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Arapa’ũ ohasa hag̃ua jepuru’ỹme mbykyeterei</string>
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Arapa’ũ ohasa hag̃ua jepuru’ỹme ipukueterei</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_long_option_1">Mokõi arapokõindy ipukuetereíma</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Arapa’ũ ohasa hag̃ua jepuru’ỹme mbykyeterei</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option_1">Mokõi arapokõindy mbykyetereíma</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Mondo</string>
+    <string name="inactive_tabs_survey_send_button">Mondo</string>
     <!-- Content description for inactive tabs survey close button -->
-    <string name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Mboty</string>
+    <string name="inactive_tabs_survey_close_button_content_description">Mboty</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Emboheko ñanduti renda juajuha, ñanduti veve ha ñe’ẽmondo ijuruja hag̃ua ijehegui Firefox-pe.</string>

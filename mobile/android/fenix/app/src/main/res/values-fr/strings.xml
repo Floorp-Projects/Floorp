@@ -726,6 +726,8 @@
     <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
     <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Démarrer par l’écran d’accueil</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Écran à l’ouverture</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
     <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Après quatre heures</string>
     <!-- Option for always opening the homepage when re-opening the app -->
@@ -2035,11 +2037,11 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Fermer tous les onglets inactifs</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">Les onglets sont disponibles ici pendant %s jours. Après ce délai, les onglets seront automatiquement fermés.</string>
+    <string moz:removedIn="95" name="inactive_tabs_description" tools:ignore="UnusedResources">Les onglets sont disponibles ici pendant %s jours. Après ce délai, les onglets seront automatiquement fermés.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 jours</string>
+    <string moz:removedIn="95" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 jours</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 semaine</string>
+    <string moz:removedIn="95" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 semaine</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
@@ -2055,20 +2057,29 @@ Cependant, il peut être moins stable. Téléchargez la version bêta de notre n
 
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Merci de nous aider à nous améliorer</string>
+    <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Merci de nous aider à nous améliorer</string>
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header_1">Aidez à améliorer Firefox</string>
+
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Pourquoi avez-vous désactivé les onglets inactifs ?</string>
+    <string name="inactive_tabs_survey_content">Pourquoi avez-vous désactivé les onglets inactifs ?</string>
 
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_not_interested_option" tools:ignore="UnusedResources">La fonctionnalité ne m’intéresse pas</string>
+    <string name="inactive_tabs_survey_do_not_understand">Je ne comprends pas comment ça marche</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Le temps d’inactivité est trop long</string>
+    <string name="inactive_tabs_survey_do_it_myself">Je préfère effacer moi-même les anciens onglets</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Le temps d’inactivité est trop court</string>
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Le temps d’inactivité est trop long</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_long_option_1">Le délai de deux semaines est trop long</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Le temps d’inactivité est trop court</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option_1">Le délai de deux semaines est trop court</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Envoyer</string>
+    <string name="inactive_tabs_survey_send_button">Envoyer</string>
     <!-- Content description for inactive tabs survey close button -->
-    <string name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Fermer</string>
+    <string name="inactive_tabs_survey_close_button_content_description">Fermer</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Faites en sorte que les liens des sites web, des courriels et des messages s’ouvrent automatiquement dans Firefox.</string>
