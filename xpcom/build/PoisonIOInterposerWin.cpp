@@ -434,6 +434,17 @@ static mozilla::WindowsDllInterceptor sNtDllInterceptor;
 namespace mozilla {
 
 void InitPoisonIOInterposer() {
+  // Currently we hook the functions not early enough to precede third-party
+  // injections.  Until we implement a compatible way e.g. applying a hook
+  // in the parent process (bug 1646804), we skip interposing functions under
+  // the known condition(s).
+
+  // Bug 1679741: Kingsoft Internet Security calls NtReadFile in their thread
+  // simultaneously when we're applying a hook on NtReadFile.
+  if (::GetModuleHandleW(L"kwsui64.dll")) {
+    return;
+  }
+
   // Don't poison twice... as this function may only be invoked on the main
   // thread when no other threads are running, it safe to allow multiple calls
   // to InitPoisonIOInterposer() without complaining (ie. failing assertions).
