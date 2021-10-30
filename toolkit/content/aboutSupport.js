@@ -237,7 +237,7 @@ var snapshotFormatters = {
     }
 
     let daysRange = Troubleshoot.kMaxCrashAge / (24 * 60 * 60 * 1000);
-    document.l10n.setAttributes($("crashes-title"), "report-crash-for-days", {
+    document.l10n.setAttributes($("crashes"), "report-crash-for-days", {
       days: daysRange,
     });
     let reportURL;
@@ -314,7 +314,7 @@ var snapshotFormatters = {
 
   securitySoftware(data) {
     if (!AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
-      $("security-software-title").hidden = true;
+      $("security-software").hidden = true;
       $("security-software-table").hidden = true;
       return;
     }
