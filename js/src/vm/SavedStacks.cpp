@@ -195,7 +195,7 @@ struct MOZ_STACK_CLASS SavedFrame::Lookup {
     MOZ_ASSERT(source);
     MOZ_ASSERT_IF(framePtr.isSome(), activation);
     if (js::SupportDifferentialTesting()) {
-      column = 0;
+      this->column = 0;
     }
   }
 
