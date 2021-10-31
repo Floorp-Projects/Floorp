@@ -145,16 +145,6 @@ jobs:
               mozilla-esr91: [{hour: 10, minute: 0}]
               elm: [{hour: 10, minute: 0}]
 
-    - name: coverity-tree-analysis
-      job:
-          type: decision-task
-          treeherder-symbol: CoverityTA
-          target-tasks-method: coverity_static_analysis_full
-      run-on-projects:
-          - mozilla-central
-      when:
-          - {hour: 10, minute: 0}
-
     - name: linux64-clang-trunk-perf
       job:
           type: decision-task

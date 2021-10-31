@@ -31,9 +31,6 @@ integrating this process with Phabricator and mach. A list of some
 checkers that are used during automated scan can be found
 `here <https://searchfox.org/mozilla-central/source/tools/clang-tidy/config.yaml>`__.
 
-We are also running Coverity at review phase and a few times per day
-(when autoland is merged into mozilla-central).
-
 Static analysis at review phase
 -------------------------------
 

@@ -38,11 +38,6 @@ In this document, we try to list these all tools.
      - `bug 712350 <https://bugzilla.mozilla.org/show_bug.cgi?id=712350>`__
      -
      - https://clang-analyzer.llvm.org/
-   * - Coverity
-     -
-     - `bug 1230156 <https://bugzilla.mozilla.org/show_bug.cgi?id=1230156>`__
-     -
-     -
    * - cpp virtual final
      -
      -
@@ -166,4 +161,3 @@ In this document, we try to list these all tools.
      -
      -
      - https://github.com/adrienverge/yamllint
-
