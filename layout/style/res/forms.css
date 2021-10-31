@@ -983,27 +983,9 @@ input:is([type=date], [type=time], [type=datetime-local]):is(:disabled, :read-on
 }
 
 input:autofill {
-  filter: grayscale(21%) brightness(88%) contrast(161%) invert(10%) sepia(40%) saturate(206%);
-}
-
-@supports -moz-bool-pref("layout.css.autofill.background") {
-  /* We find a few pages where using `filter` causes issues because it
-   * changes the z-order (see bug 1687682, bug 1727950).
-   *
-   * The idea behind using background-image instead of plain background-color,
-   * is that it's less likely to be overridden by the page.
-   *
-   * The color is chosen so that you get the same final color on a white
-   * background as the filter above (#fffcc8), but with some alpha so as to
-   * prevent fully illegible text.
-   *
-   * NOTE(emilio): Keep the color in sync with kAutofillColor in
-   * nsNativeBasicTheme!
-   */
-  input:autofill {
-    filter: none;
-    background-image: linear-gradient(rgba(255, 249, 145, 0.5), rgba(255, 249, 145, 0.5));
-  }
+  /* The idea behind using background-image instead of plain background-color
+   * is that it's less likely to be overridden by the page. */
+  background-image: linear-gradient(-moz-autofill-background, -moz-autofill-background);
 }
 
 input:-moz-autofill-preview {
