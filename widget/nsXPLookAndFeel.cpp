@@ -305,6 +305,7 @@ static const char sColorPrefs[][41] = {
     "ui.-moz-mac-tooltip",
     "ui.-moz-accent-color",
     "ui.-moz-accent-color-foreground",
+    "ui.-moz-autofill-background",
     "ui.-moz-win-mediatext",
     "ui.-moz-win-communicationstext",
     "ui.-moz-nativehyperlinktext",
