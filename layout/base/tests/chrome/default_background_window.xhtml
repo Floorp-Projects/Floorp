@@ -9,7 +9,7 @@
 
   <iframe type="content" id="f" src="about:blank" style="border:1px solid black;"/>
 
-  <script type="application/javascript">
+  <script>
   <![CDATA[
     SimpleTest.waitForExplicitFinish();
 
@@ -17,7 +17,7 @@
     for (var name of imports) {
       window[name] = window.arguments[0][name];
     }
-    
+
     function snapshot(win) {
       var el = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
       el.width = win.innerWidth;
@@ -33,7 +33,10 @@
     var color = '#2468AC';
     var prefs = Cc["@mozilla.org/preferences-service;1"]
         .getService(Ci.nsIPrefBranch);
-    prefs.setCharPref('browser.display.background_color', color);
+    var backgroundPref = matchMedia('(prefers-color-scheme:dark)').matches
+      ? 'browser.display.background_color.dark'
+      : 'browser.display.background_color';
+    prefs.setCharPref(backgroundPref, color);
     // On Windows, this preference is true by default, we make it
     // false to ensure we're using the color set above for our reference.
     prefs.setBoolPref('browser.display.use_system_colors', false);
@@ -42,7 +45,7 @@
       var f = document.getElementById("f");
 
       var testCanvas = snapshot(f.contentWindow);
-      prefs.clearUserPref('browser.display.background_color');
+      prefs.clearUserPref(backgroundPref);
       // Reset sys colors pref so we're using the system color for our test.
       prefs.clearUserPref('browser.display.use_system_colors');
 
