@@ -87,7 +87,7 @@ const char SECTION_NAME(declarations)[] =
 "\n"
 "#if defined(WASM_USE_GUARD_PAGES) && UINTPTR_MAX == 0xffffffff\n"
 "// on 32-bit platforms we have to mask memory access into range\n"
-"#  define MEM_ACCESS_REF(mem, addr) &mem->data[addr & 0x7fffff]\n"
+"#  define MEM_ACCESS_REF(mem, addr) &mem->data[addr & WASM_HEAP_MASK]\n"
 "#else\n"
 "#  define MEM_ACCESS_REF(mem, addr) &mem->data[addr]\n"
 "#endif\n"

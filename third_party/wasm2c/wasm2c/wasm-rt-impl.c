@@ -200,6 +200,10 @@ void wasm_rt_cleanup_func_types(wasm_func_type_t** p_func_type_structs, uint32_t
 # define WASM_HEAP_RESERVE_SIZE 0x200000000ull
 # define WASM_HEAP_MAX_ALLOWED_PAGES 65536
 #elif UINTPTR_MAX == 0xffffffff
+// Check that the mask used is consistent with the below values
+# if WASM_HEAP_MASK != 0xffffff
+#   error "WASM_HEAP_MASK has an unexpected value compared to the expected value"
+# endif
 // Reserve 16MB, unaligned, max heap is 16MB
 # define WASM_HEAP_GUARD_PAGE_ALIGNMENT 0
 # define WASM_HEAP_RESERVE_SIZE 0x1000000ul
