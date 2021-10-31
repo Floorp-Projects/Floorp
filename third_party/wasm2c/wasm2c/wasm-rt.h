@@ -143,6 +143,12 @@ typedef struct {
 #endif
 } wasm_rt_memory_t;
 
+// Wasm's 32-bit implementation uses masking.
+#if UINTPTR_MAX == 0xffffffff
+// Set the mask for 16MB
+# define WASM_HEAP_MASK 0xffffff
+#endif
+
 /** A Table object. */
 typedef struct {
   /** The table element data, with an element count of `size`. */

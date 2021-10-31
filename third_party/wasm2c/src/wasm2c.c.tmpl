@@ -84,7 +84,7 @@
 
 #if defined(WASM_USE_GUARD_PAGES) && UINTPTR_MAX == 0xffffffff
 // on 32-bit platforms we have to mask memory access into range
-#  define MEM_ACCESS_REF(mem, addr) &mem->data[addr & 0x7fffff]
+#  define MEM_ACCESS_REF(mem, addr) &mem->data[addr & WASM_HEAP_MASK]
 #else
 #  define MEM_ACCESS_REF(mem, addr) &mem->data[addr]
 #endif
