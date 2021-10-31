@@ -2881,7 +2881,7 @@ nsChangeHint nsStyleTextReset::CalcDifference(
 
 static StyleRGBA DefaultColor(const Document& aDocument) {
   return StyleRGBA::FromColor(PreferenceSheet::PrefsFor(aDocument)
-                                  .ColorsFor(aDocument.PreferredColorScheme())
+                                  .ColorsFor(aDocument.DefaultColorScheme())
                                   .mDefault);
 }
 
