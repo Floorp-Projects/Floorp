@@ -344,15 +344,13 @@ class VirtualenvManager(VirtualenvHelper):
                     # each other remain the same).
                     f.write("{}\n".format(os.path.relpath(path, site_packages_dir)))
 
-        # We ignore environment variables that may have been altered by
-        # configure or a mozconfig activated in the current shell. We trust
-        # Python is smart enough to find a proper compiler and to use the
-        # proper compiler flags. If it isn't your Python is likely broken.
-        IGNORE_ENV_VARIABLES = ("CC", "CXX", "CFLAGS", "CXXFLAGS", "LDFLAGS")
-
+        old_env_variables = {}
         try:
-            old_env_variables = {}
-            for k in IGNORE_ENV_VARIABLES:
+            # We ignore environment variables that may have been altered by
+            # configure or a mozconfig activated in the current shell. We trust
+            # Python is smart enough to find a proper compiler and to use the
+            # proper compiler flags. If it isn't your Python is likely broken.
+            for k in ("CC", "CXX", "CFLAGS", "CXXFLAGS", "LDFLAGS"):
                 if k not in os.environ:
                     continue
 
@@ -375,7 +373,6 @@ class VirtualenvManager(VirtualenvHelper):
                         f"Could not install {requirement.requirement.name}, so "
                         f"{requirement.repercussion}. Continuing."
                     )
-
         finally:
             os.environ.update(old_env_variables)
 
@@ -508,11 +505,11 @@ class VirtualenvManager(VirtualenvHelper):
 
 
 def get_archflags():
-    # distutils will use the architecture of the running Python instance when building packages.
-    # However, it's possible for the Xcode Python to be a universal binary (x86_64 and
-    # arm64) without the associated macOS SDK supporting arm64, thereby causing a build
-    # failure. To avoid this, we explicitly influence the build to only target a single
-    # architecture - our current architecture.
+    # distutils will use the architecture of the running Python instance when building
+    # packages. However, it's possible for the Xcode Python to be a universal binary
+    # (x86_64 and arm64) without the associated macOS SDK supporting arm64, thereby
+    # causing a build failure. To avoid this, we explicitly influence the build to only
+    # target a single architecture - our current architecture.
     return "-arch {}".format(platform.machine())
 
 
