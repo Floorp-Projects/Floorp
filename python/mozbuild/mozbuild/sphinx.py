@@ -6,7 +6,6 @@ from __future__ import absolute_import, print_function
 
 import importlib
 import os
-import sys
 
 from docutils.parsers.rst import Directive
 from sphinx.util.docstrings import prepare_docstring
@@ -219,7 +218,6 @@ def setup(app):
         topsrcdir,
         os.path.join(app.outdir, "_venv"),
         "common",
-        log_handle=sys.stderr,
     )
     ve.ensure()
     ve.activate()

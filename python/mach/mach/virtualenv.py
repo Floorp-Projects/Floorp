@@ -104,15 +104,9 @@ class VirtualenvManager(VirtualenvHelper):
         virtualenvs_dir,
         virtualenv_name,
         *,
-        log_handle=sys.stdout,
         base_python=sys.executable,
         manifest_path=None,
     ):
-        """Create a new manager.
-
-        Each manager is associated with a source directory, a path where you
-        want the virtualenv to be created, and a handle to write output to.
-        """
         virtualenv_path = os.path.join(virtualenvs_dir, virtualenv_name)
         super(VirtualenvManager, self).__init__(virtualenv_path)
 
@@ -128,7 +122,6 @@ class VirtualenvManager(VirtualenvHelper):
         # integrity of the virtualenv.
         self.exe_info_path = os.path.join(self.virtualenv_root, "python_exe.txt")
 
-        self.log_handle = log_handle
         self._virtualenv_name = virtualenv_name
         self._manifest_path = manifest_path or os.path.join(
             topsrcdir, "build", f"{virtualenv_name}_virtualenv_packages.txt"
@@ -254,21 +247,6 @@ class VirtualenvManager(VirtualenvHelper):
             return self.virtualenv_root
         return self.build()
 
-    def _log_process_output(self, *args, **kwargs):
-        if hasattr(self.log_handle, "fileno"):
-            return subprocess.call(
-                *args, stdout=self.log_handle, stderr=subprocess.STDOUT, **kwargs
-            )
-
-        proc = subprocess.Popen(
-            *args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **kwargs
-        )
-
-        for line in proc.stdout:
-            self.log_handle.write(line.decode("UTF-8"))
-
-        return proc.wait()
-
     def create(self):
         """Create a new, empty virtualenv.
 
@@ -279,22 +257,24 @@ class VirtualenvManager(VirtualenvHelper):
         if os.path.exists(self.virtualenv_root):
             shutil.rmtree(self.virtualenv_root)
 
-        args = [
-            self._base_python,
-            os.path.join(
-                self.topsrcdir, "third_party", "python", "virtualenv", "virtualenv.py"
-            ),
-            # Without this, virtualenv.py may attempt to contact the outside
-            # world and search for or download a newer version of pip,
-            # setuptools, or wheel. This is bad for security, reproducibility,
-            # and speed.
-            "--no-seed",
-            self.virtualenv_root,
-        ]
+        result = subprocess.run(
+            [
+                self._base_python,
+                os.path.join(
+                    self.topsrcdir,
+                    "third_party",
+                    "python",
+                    "virtualenv",
+                    "virtualenv.py",
+                ),
+                # pip, setuptools and wheel are vendored and inserted into the virtualenv
+                # scope automatically, so "virtualenv" doesn't need to seed it.
+                "--no-seed",
+                self.virtualenv_root,
+            ],
+        )
 
-        result = self._log_process_output(args)
-
-        if result:
+        if result.returncode:
             raise Exception(
                 "Failed to create virtualenv: %s (virtualenv.py retcode: %s)"
                 % (self.virtualenv_root, result)
