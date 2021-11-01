@@ -113,13 +113,9 @@ object TelemetryWrapper {
         val NOTIFICATION_ACTION = "notification_action"
         val SHORTCUT = "shortcut"
         val BLOCKING_SWITCH = "blocking_switch"
-        val DESKTOP_REQUEST_CHECK = "desktop_request_check"
         val BROWSER = "browser"
         val BROWSER_CONTEXTMENU = "browser_contextmenu"
-        val CUSTOM_TAB_CLOSE_BUTTON = "custom_tab_close_but"
-        val CUSTOM_TAB_ACTION_BUTTON = "custom_tab_action_bu"
         val FIRSTRUN = "firstrun"
-        val ADD_TO_HOMESCREEN_DIALOG = "add_to_homescreen_dialog"
         val HOMESCREEN_SHORTCUT = "homescreen_shortcut"
         val RECENT_APPS = "recent_apps"
         val APP_ICON = "app_icon"
@@ -143,14 +139,12 @@ object TelemetryWrapper {
         val IMAGE = "image"
         val LINK = "link"
         val IMAGE_WITH_LINK = "image+link"
-        val CUSTOM_TAB = "custom_tab"
         val SKIP = "skip"
         val FINISH = "finish"
         val OPEN = "open"
         val URL = "url"
         val SEARCH = "search"
         val CANCEL = "cancel"
-        val ADD_TO_HOMESCREEN = "add_to_homescreen"
         val TAB = "tab"
         val WHATS_NEW = "whats_new"
         val RESUME = "resume"
@@ -159,7 +153,6 @@ object TelemetryWrapper {
         val REPORT_ISSUE = "report_issue"
         val SETTINGS = "settings"
         val QUICK_ADD = "quick_add"
-        val FIND_IN_PAGE = "find_in_page"
         val CLOSE_TAB = "close_tab"
     }
 
@@ -412,22 +405,6 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun closeCustomTabEvent() {
-        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.CUSTOM_TAB_CLOSE_BUTTON))
-            .queue()
-    }
-
-    @JvmStatic
-    fun customTabActionButtonEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.CUSTOM_TAB_ACTION_BUTTON).queue()
-    }
-
-    @JvmStatic
-    fun customTabMenuEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.CUSTOM_TAB).queue()
-    }
-
-    @JvmStatic
     fun textSelectionIntentEvent() {
         TelemetryEvent.create(Category.ACTION, Method.TEXT_SELECTION_INTENT, Object.APP).queue()
     }
@@ -521,11 +498,6 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun shareEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.SHARE, Object.MENU).queue()
-    }
-
-    @JvmStatic
     fun shareLinkEvent() {
         TelemetryEvent.create(Category.ACTION, Method.SHARE, Object.BROWSER_CONTEXTMENU, Value.LINK).queue()
     }
@@ -574,24 +546,6 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun openDefaultAppEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.DEFAULT).queue()
-    }
-
-    /**
-     * Switching from a custom tab to the full-featured browser (regular tab).
-     */
-    @JvmStatic
-    fun openFullBrowser() {
-        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.FULL_BROWSER).queue()
-    }
-
-    @JvmStatic
-    fun openFirefoxEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.FIREFOX).queue()
-    }
-
-    @JvmStatic
     fun blockingSwitchEvent(isBlockingEnabled: Boolean) {
         TelemetryEvent.create(
             Category.ACTION,
@@ -619,16 +573,6 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun desktopRequestCheckEvent(shouldRequestDesktop: Boolean) {
-        TelemetryEvent.create(
-            Category.ACTION,
-            Method.CLICK,
-            Object.DESKTOP_REQUEST_CHECK,
-            shouldRequestDesktop.toString()
-        ).queue()
-    }
-
-    @JvmStatic
     fun showFirstRunPageEvent(page: Int) {
         TelemetryEvent.create(Category.ACTION, Method.SHOW, Object.FIRSTRUN, page.toString()).queue()
     }
@@ -644,18 +588,8 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun findInPageMenuEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.MENU, Value.FIND_IN_PAGE).queue()
-    }
-
-    @JvmStatic
     fun swipeReloadEvent() {
         TelemetryEvent.create(Category.ACTION, Method.SWIPE, Object.BROWSER, Value.RELOAD).queue()
-    }
-
-    @JvmStatic
-    fun menuReloadEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.MENU, Value.RELOAD).queue()
     }
 
     @JvmStatic

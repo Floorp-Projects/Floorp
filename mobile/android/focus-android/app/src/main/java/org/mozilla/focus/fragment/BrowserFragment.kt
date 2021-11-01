@@ -692,8 +692,6 @@ class BrowserFragment :
         }
 
         startActivity(Intent.createChooser(shareIntent, getString(R.string.share_dialog_title)))
-
-        TelemetryWrapper.shareEvent()
     }
 
     private fun openInBrowser() {
@@ -712,8 +710,6 @@ class BrowserFragment :
         intent.action = Intent.ACTION_MAIN
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)
-
-        TelemetryWrapper.openFullBrowser()
 
         // Close this activity (and the task) since it is no longer displaying any session
         val activity = activity
@@ -784,7 +780,6 @@ class BrowserFragment :
                     true
                 ).apply()
         }
-        TelemetryWrapper.desktopRequestCheckEvent(enabled)
         requireComponents.sessionUseCases.requestDesktopSite(enabled, tab.id)
     }
 
