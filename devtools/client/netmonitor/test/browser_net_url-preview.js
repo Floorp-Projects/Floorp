@@ -20,7 +20,7 @@ add_task(async function() {
   store.dispatch(Actions.batchEnable(false));
 
   // Execute requests.
-  await performRequests(monitor, tab, 3);
+  await performRequests(monitor, tab, 12);
 
   let wait = waitForDOM(document, "#headers-panel .url-preview", 1);
   EventUtils.sendMouseEvent(
@@ -88,7 +88,7 @@ add_task(async function() {
 
   store.dispatch(Actions.batchEnable(false));
 
-  const netWorkEvent = waitForNetworkEvents(monitor, 2);
+  const netWorkEvent = waitForNetworkEvents(monitor, 3);
   await performRequestsInContent([
     { url: "sjs_content-type-test-server.sjs?a=3&a=45&a=60" },
     { url: "sjs_content-type-test-server.sjs?x=5&a=3&a=4&a=3&b=3" },
