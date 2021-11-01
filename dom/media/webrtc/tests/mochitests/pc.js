@@ -2150,7 +2150,16 @@ PeerConnectionWrapper.prototype = {
               ok(rem.localId == res.id, "Remote backlink match");
               if (res.type == "outbound-rtp") {
                 ok(rem.type == "remote-inbound-rtp", "Rtcp is inbound");
-                ok(rem.packetsLost !== undefined, "Rtcp packetsLost");
+                if (rem.packetsLost) {
+                  ok(
+                    rem.packetsLost >= 0,
+                    "Rtcp packetsLost " + rem.packetsLost + " >= 0"
+                  );
+                  ok(
+                    rem.packetsLost < 1000,
+                    "Rtcp packetsLost " + rem.packetsLost + " < 1000"
+                  );
+                }
                 if (!this.disableRtpCountChecking) {
                   // no guarantee which one is newer!
                   // Note: this must change when we add a timestamp field to remote RTCP reports
@@ -2168,7 +2177,10 @@ PeerConnectionWrapper.prototype = {
                     );
                   }
                 }
-                ok(rem.jitter !== undefined, "Rtcp jitter");
+                if (rem.jitter) {
+                  ok(rem.jitter >= 0, "Rtcp jitter " + rem.jitter + " >= 0");
+                  ok(rem.jitter < 5, "Rtcp jitter " + rem.jitter + " < 5 sec");
+                }
                 if (rem.roundTripTime) {
                   ok(
                     rem.roundTripTime >= 0,
@@ -2537,29 +2549,11 @@ async function runNetworkTest(testFunction, fixtureOptions = {}) {
     "resource://gre/modules/AppConstants.jsm",
     {}
   );
-  let isNightly = AppConstants.NIGHTLY_BUILD;
-  let isAndroid = AppConstants.platform == "android";
 
   await scriptsReady;
   await runTestWhenReady(async options => {
     await startNetworkAndTest();
     await setupIceServerConfig(fixtureOptions.useIceServer);
-
-    // currently we set android hardware encoder default enabled in nightly.
-    // But before QA approves the quality, we want to ensure the legacy
-    // encoder is working fine.
-    if (isNightly && isAndroid) {
-      let value = Math.random() >= 0.5;
-      await SpecialPowers.pushPrefEnv({
-        set: [
-          ["media.navigator.hardware.vp8_encode.acceleration_enabled", value],
-          [
-            "media.navigator.hardware.vp8_encode.acceleration_remote_enabled",
-            value,
-          ],
-        ],
-      });
-    }
     await testFunction(options);
     await networkTestFinished();
   });

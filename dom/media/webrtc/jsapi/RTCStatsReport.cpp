@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -12,23 +11,22 @@
 
 namespace mozilla::dom {
 
-RTCStatsTimestampMaker::RTCStatsTimestampMaker(const GlobalObject* aGlobal) {
-  nsCOMPtr<nsPIDOMWindowInner> window;
-  if (aGlobal && (window = do_QueryInterface(aGlobal->GetAsSupports())) &&
-      window->GetPerformance()) {
-    mRandomTimelineSeed = window->GetPerformance()->GetRandomTimelineSeed();
-    mStartMonotonic = window->GetPerformance()->CreationTimeStamp();
-    // Ugh. Performance::TimeOrigin is not constant, which means we need to
-    // emulate this weird behavior so our time stamps are consistent with JS
-    // timeOrigin. This is based on the code here:
-    // https://searchfox.org/mozilla-central/rev/
-    // 053826b10f838f77c27507e5efecc96e34718541/dom/performance/Performance.cpp#111-117
-    mStartWallClockRaw =
-        PerformanceService::GetOrCreate()->TimeOrigin(mStartMonotonic);
-    MOZ_ASSERT(window->AsGlobal());
-    mCrossOriginIsolated = window->AsGlobal()->CrossOriginIsolated();
-  }
-}
+RTCStatsTimestampMaker::RTCStatsTimestampMaker(nsPIDOMWindowInner* aWindow)
+    : mRandomTimelineSeed(aWindow && aWindow->GetPerformance() ?
+          aWindow->GetPerformance()->GetRandomTimelineSeed() : 0),
+      mStartMonotonic(aWindow && aWindow->GetPerformance() ?
+          aWindow->GetPerformance()->CreationTimeStamp() : mozilla::TimeStamp::Now()),
+      // Ugh. Performance::TimeOrigin is not constant, which means we need to
+      // emulate this weird behavior so our time stamps are consistent with JS
+      // timeOrigin. This is based on the code here:
+      // https://searchfox.org/mozilla-central/rev/
+      // 053826b10f838f77c27507e5efecc96e34718541/dom/performance/Performance.cpp#111-117
+      mStartWallClockRaw(
+          aWindow
+              ? PerformanceService::GetOrCreate()->TimeOrigin(mStartMonotonic)
+              : (double)PR_Now() / PR_USEC_PER_MSEC),
+      mCrossOriginIsolated(aWindow ? aWindow->AsGlobal()->CrossOriginIsolated()
+                                   : false) {}
 
 DOMHighResTimeStamp RTCStatsTimestampMaker::GetNow() const {
   // webrtc-pc says to use performance.timeOrigin + performance.now(), but

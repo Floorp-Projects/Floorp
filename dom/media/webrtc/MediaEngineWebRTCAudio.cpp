@@ -19,13 +19,8 @@
 #include "transport/runnable_utils.h"
 #include "Tracing.h"
 
-// scoped_ptr.h uses FF
-#ifdef FF
-#  undef FF
-#endif
-#include "webrtc/voice_engine/voice_engine_defines.h"
-#include "webrtc/modules/audio_processing/include/audio_processing.h"
-#include "webrtc/common_audio/include/audio_util.h"
+#include "common_audio/include/audio_util.h"
+#include "modules/audio_processing/include/audio_processing.h"
 
 using namespace webrtc;
 
@@ -49,11 +44,9 @@ extern LazyLogModule gMediaManagerLog;
 MediaEngineWebRTCMicrophoneSource::MediaEngineWebRTCMicrophoneSource(
     RefPtr<AudioDeviceInfo> aInfo, const nsString& aDeviceName,
     const nsCString& aDeviceUUID, const nsString& aDeviceGroup,
-    uint32_t aMaxChannelCount, bool aDelayAgnostic, bool aExtendedFilter)
+    uint32_t aMaxChannelCount)
     : mPrincipal(PRINCIPAL_HANDLE_NONE),
       mDeviceInfo(std::move(aInfo)),
-      mDelayAgnostic(aDelayAgnostic),
-      mExtendedFilter(aExtendedFilter),
       mDeviceName(aDeviceName),
       mDeviceUUID(aDeviceUUID),
       mDeviceGroup(aDeviceGroup),
@@ -125,9 +118,9 @@ nsresult MediaEngineWebRTCMicrophoneSource::EvaluateSettings(
   prefs.mChannels = c.mChannelCount.Get(std::min(prefs.mChannels, maxChannels));
   prefs.mChannels = std::max(1, std::min(prefs.mChannels, maxChannels));
 
-  LOG("Mic source %p Audio config: aec: %d, agc: %d, noise: %d, channels: %d",
-      this, prefs.mAecOn ? prefs.mAec : -1, prefs.mAgcOn ? prefs.mAgc : -1,
-      prefs.mNoiseOn ? prefs.mNoise : -1, prefs.mChannels);
+  LOG("Audio config: agc: %d, noise: %d, channels: %d",
+      prefs.mAgcOn ? prefs.mAgc : -1, prefs.mNoiseOn ? prefs.mNoise : -1,
+      prefs.mChannels);
 
   *aOutPrefs = prefs;
 
@@ -166,234 +159,102 @@ nsresult MediaEngineWebRTCMicrophoneSource::Reconfigure(
   return NS_OK;
 }
 
-void MediaEngineWebRTCMicrophoneSource::UpdateAECSettings(
-    bool aEnable, bool aUseAecMobile, EchoCancellation::SuppressionLevel aLevel,
-    EchoControlMobile::RoutingMode aRoutingMode) {
-  AssertIsOnOwningThread();
-
-  RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      __func__,
-      [that, track = mTrack, aEnable, aUseAecMobile, aLevel, aRoutingMode] {
-        class Message : public ControlMessage {
-         public:
-          Message(AudioInputProcessing* aInputProcessing, bool aEnable,
-                  bool aUseAecMobile, EchoCancellation::SuppressionLevel aLevel,
-                  EchoControlMobile::RoutingMode aRoutingMode)
-              : ControlMessage(nullptr),
-                mInputProcessing(aInputProcessing),
-                mEnable(aEnable),
-                mUseAecMobile(aUseAecMobile),
-                mLevel(aLevel),
-                mRoutingMode(aRoutingMode) {}
-
-          void Run() override {
-            TRACE("UpdateAECSettings");
-            mInputProcessing->UpdateAECSettings(mEnable, mUseAecMobile, mLevel,
-                                                mRoutingMode);
-          }
-
-         protected:
-          RefPtr<AudioInputProcessing> mInputProcessing;
-          bool mEnable;
-          bool mUseAecMobile;
-          EchoCancellation::SuppressionLevel mLevel;
-          EchoControlMobile::RoutingMode mRoutingMode;
-        };
-
-        if (track->IsDestroyed()) {
-          return;
-        }
-
-        track->GraphImpl()->AppendMessage(
-            MakeUnique<Message>(that->mInputProcessing, aEnable, aUseAecMobile,
-                                aLevel, aRoutingMode));
-      }));
-}
-
-void MediaEngineWebRTCMicrophoneSource::UpdateAGCSettings(
-    bool aEnable, GainControl::Mode aMode) {
-  AssertIsOnOwningThread();
-
-  RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction(__func__, [that, track = mTrack, aEnable, aMode] {
-        class Message : public ControlMessage {
-         public:
-          Message(AudioInputProcessing* aInputProcessing, bool aEnable,
-                  GainControl::Mode aMode)
-              : ControlMessage(nullptr),
-                mInputProcessing(aInputProcessing),
-                mEnable(aEnable),
-                mMode(aMode) {}
-
-          void Run() override {
-            TRACE("UpdateAGCSettings");
-            mInputProcessing->UpdateAGCSettings(mEnable, mMode);
-          }
-
-         protected:
-          RefPtr<AudioInputProcessing> mInputProcessing;
-          bool mEnable;
-          GainControl::Mode mMode;
-        };
-
-        if (track->IsDestroyed()) {
-          return;
-        }
-
-        track->GraphImpl()->AppendMessage(
-            MakeUnique<Message>(that->mInputProcessing, aEnable, aMode));
-      }));
-}
-
-void MediaEngineWebRTCMicrophoneSource::UpdateHPFSettings(bool aEnable) {
-  AssertIsOnOwningThread();
-
-  RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction(__func__, [that, track = mTrack, aEnable] {
-        class Message : public ControlMessage {
-         public:
-          Message(AudioInputProcessing* aInputProcessing, bool aEnable)
-              : ControlMessage(nullptr),
-                mInputProcessing(aInputProcessing),
-                mEnable(aEnable) {}
-
-          void Run() override {
-            TRACE("UpdateHPFSettings");
-            mInputProcessing->UpdateHPFSettings(mEnable);
-          }
-
-         protected:
-          RefPtr<AudioInputProcessing> mInputProcessing;
-          bool mEnable;
-        };
-
-        if (track->IsDestroyed()) {
-          return;
-        }
-
-        track->GraphImpl()->AppendMessage(
-            MakeUnique<Message>(that->mInputProcessing, aEnable));
-      }));
-}
-
-void MediaEngineWebRTCMicrophoneSource::UpdateNSSettings(
-    bool aEnable, webrtc::NoiseSuppression::Level aLevel) {
-  AssertIsOnOwningThread();
-
-  RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction(__func__, [that, track = mTrack, aEnable, aLevel] {
-        class Message : public ControlMessage {
-         public:
-          Message(AudioInputProcessing* aInputProcessing, bool aEnable,
-                  webrtc::NoiseSuppression::Level aLevel)
-              : ControlMessage(nullptr),
-                mInputProcessing(aInputProcessing),
-                mEnable(aEnable),
-                mLevel(aLevel) {}
-
-          void Run() override {
-            TRACE("UpdateHPFSettings");
-            mInputProcessing->UpdateNSSettings(mEnable, mLevel);
-          }
-
-         protected:
-          RefPtr<AudioInputProcessing> mInputProcessing;
-          bool mEnable;
-          webrtc::NoiseSuppression::Level mLevel;
-        };
-
-        if (track->IsDestroyed()) {
-          return;
-        }
-
-        track->GraphImpl()->AppendMessage(
-            MakeUnique<Message>(that->mInputProcessing, aEnable, aLevel));
-      }));
-}
-
-void MediaEngineWebRTCMicrophoneSource::UpdateAPMExtraOptions(
-    bool aExtendedFilter, bool aDelayAgnostic) {
-  AssertIsOnOwningThread();
-
-  RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      __func__, [that, track = mTrack, aExtendedFilter, aDelayAgnostic] {
-        class Message : public ControlMessage {
-         public:
-          Message(AudioInputProcessing* aInputProcessing, bool aExtendedFilter,
-                  bool aDelayAgnostic)
-              : ControlMessage(nullptr),
-                mInputProcessing(aInputProcessing),
-                mExtendedFilter(aExtendedFilter),
-                mDelayAgnostic(aDelayAgnostic) {}
-
-          void Run() override {
-            TRACE("UpdateAPMExtraOptions");
-            mInputProcessing->UpdateAPMExtraOptions(mExtendedFilter,
-                                                    mDelayAgnostic);
-          }
-
-         protected:
-          RefPtr<AudioInputProcessing> mInputProcessing;
-          bool mExtendedFilter;
-          bool mDelayAgnostic;
-        };
-
-        if (track->IsDestroyed()) {
-          return;
-        }
-
-        track->GraphImpl()->AppendMessage(MakeUnique<Message>(
-            that->mInputProcessing, aExtendedFilter, aDelayAgnostic));
-      }));
-}
-
 void MediaEngineWebRTCMicrophoneSource::ApplySettings(
     const MediaEnginePrefs& aPrefs) {
   AssertIsOnOwningThread();
 
+  TRACE("ApplySettings");
   MOZ_ASSERT(
       mTrack,
       "ApplySetting is to be called only after SetTrack has been called");
 
-  if (mTrack) {
-    UpdateAGCSettings(aPrefs.mAgcOn,
-                      static_cast<webrtc::GainControl::Mode>(aPrefs.mAgc));
-    UpdateNSSettings(
-        aPrefs.mNoiseOn,
-        static_cast<webrtc::NoiseSuppression::Level>(aPrefs.mNoise));
-    UpdateAECSettings(
-        aPrefs.mAecOn, aPrefs.mUseAecMobile,
-        static_cast<webrtc::EchoCancellation::SuppressionLevel>(aPrefs.mAec),
-        static_cast<webrtc::EchoControlMobile::RoutingMode>(
-            aPrefs.mRoutingMode));
-    UpdateHPFSettings(aPrefs.mHPFOn);
+  mAudioProcessingConfig.pipeline.multi_channel_render = true;
+  mAudioProcessingConfig.pipeline.multi_channel_capture = true;
 
-    UpdateAPMExtraOptions(mExtendedFilter, mDelayAgnostic);
+  mAudioProcessingConfig.echo_canceller.enabled = aPrefs.mAecOn;
+  mAudioProcessingConfig.echo_canceller.mobile_mode = aPrefs.mUseAecMobile;
+
+  if ((mAudioProcessingConfig.gain_controller1.enabled =
+           aPrefs.mAgcOn && !aPrefs.mAgc2Forced)) {
+    auto mode = static_cast<AudioProcessing::Config::GainController1::Mode>(
+        aPrefs.mAgc);
+    if (mode != AudioProcessing::Config::GainController1::kAdaptiveAnalog &&
+        mode != AudioProcessing::Config::GainController1::kAdaptiveDigital &&
+        mode != AudioProcessing::Config::GainController1::kFixedDigital) {
+      LOG_ERROR("AudioInputProcessing %p Attempt to set invalid AGC mode %d",
+                mInputProcessing.get(), static_cast<int>(mode));
+      mode = AudioProcessing::Config::GainController1::kAdaptiveDigital;
+    }
+#if defined(WEBRTC_IOS) || defined(ATA) || defined(WEBRTC_ANDROID)
+    if (mode == AudioProcessing::Config::GainController1::kAdaptiveAnalog) {
+      LOG_ERROR(
+          "AudioInputProcessing %p Invalid AGC mode kAdaptiveAnalog on "
+          "mobile",
+          mInputProcessing.get());
+      MOZ_ASSERT_UNREACHABLE(
+          "Bad pref set in all.js or in about:config"
+          " for the auto gain, on mobile.");
+      mode = AudioProcessing::Config::GainController1::kFixedDigital;
+    }
+#endif
+    mAudioProcessingConfig.gain_controller1.mode = mode;
+  }
+  mAudioProcessingConfig.gain_controller2.enabled =
+      mAudioProcessingConfig.gain_controller2.adaptive_digital.enabled =
+          aPrefs.mAgcOn && aPrefs.mAgc2Forced;
+
+  if ((mAudioProcessingConfig.noise_suppression.enabled = aPrefs.mNoiseOn)) {
+    auto level = static_cast<AudioProcessing::Config::NoiseSuppression::Level>(
+        aPrefs.mNoise);
+    if (level != AudioProcessing::Config::NoiseSuppression::kLow &&
+        level != AudioProcessing::Config::NoiseSuppression::kModerate &&
+        level != AudioProcessing::Config::NoiseSuppression::kHigh &&
+        level != AudioProcessing::Config::NoiseSuppression::kVeryHigh) {
+      LOG_ERROR(
+          "AudioInputProcessing %p Attempt to set invalid noise suppression "
+          "level %d",
+          mInputProcessing.get(), static_cast<int>(level));
+
+      level = AudioProcessing::Config::NoiseSuppression::kModerate;
+    }
+    mAudioProcessingConfig.noise_suppression.level = level;
   }
 
+  mAudioProcessingConfig.transient_suppression.enabled = aPrefs.mTransientOn;
+
+  mAudioProcessingConfig.high_pass_filter.enabled = aPrefs.mHPFOn;
+
+  mAudioProcessingConfig.residual_echo_detector.enabled =
+      aPrefs.mResidualEchoOn;
+
   RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction(__func__, [that, track = mTrack, prefs = aPrefs] {
-        that->mSettings->mEchoCancellation.Value() = prefs.mAecOn;
-        that->mSettings->mAutoGainControl.Value() = prefs.mAgcOn;
-        that->mSettings->mNoiseSuppression.Value() = prefs.mNoiseOn;
-        that->mSettings->mChannelCount.Value() = prefs.mChannels;
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__, [this, that, track = mTrack, prefs = aPrefs,
+                 audioProcessingConfig = mAudioProcessingConfig] {
+        mSettings->mEchoCancellation.Value() = prefs.mAecOn;
+        mSettings->mAutoGainControl.Value() = prefs.mAgcOn;
+        mSettings->mNoiseSuppression.Value() = prefs.mNoiseOn;
+        mSettings->mChannelCount.Value() = prefs.mChannels;
 
         class Message : public ControlMessage {
+          const RefPtr<AudioInputProcessing> mInputProcessing;
+          const AudioProcessing::Config mAudioProcessingConfig;
+          const bool mPassThrough;
+          const uint32_t mRequestedInputChannelCount;
+
          public:
           Message(MediaTrack* aTrack, AudioInputProcessing* aInputProcessing,
+                  const AudioProcessing::Config& aAudioProcessingConfig,
                   bool aPassThrough, uint32_t aRequestedInputChannelCount)
               : ControlMessage(aTrack),
                 mInputProcessing(aInputProcessing),
+                mAudioProcessingConfig(std::move(aAudioProcessingConfig)),
                 mPassThrough(aPassThrough),
                 mRequestedInputChannelCount(aRequestedInputChannelCount) {}
 
           void Run() override {
+            mInputProcessing->ApplyConfig(mTrack->GraphImpl(),
+                                          mAudioProcessingConfig);
             {
               TRACE("SetPassThrough")
               mInputProcessing->SetPassThrough(mTrack->GraphImpl(),
@@ -405,22 +266,18 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
                   mTrack->GraphImpl(), mRequestedInputChannelCount);
             }
           }
-
-         protected:
-          RefPtr<AudioInputProcessing> mInputProcessing;
-          bool mPassThrough;
-          uint32_t mRequestedInputChannelCount;
         };
 
         // The high-pass filter is not taken into account when activating the
         // pass through, since it's not controllable from content.
         bool passThrough = !(prefs.mAecOn || prefs.mAgcOn || prefs.mNoiseOn);
+
         if (track->IsDestroyed()) {
           return;
         }
-
-        track->GraphImpl()->AppendMessage(MakeUnique<Message>(
-            track, that->mInputProcessing, passThrough, prefs.mChannels));
+        track->GraphImpl()->AppendMessage(
+            MakeUnique<Message>(track, mInputProcessing, audioProcessingConfig,
+                                passThrough, prefs.mChannels));
       }));
 }
 
@@ -440,13 +297,12 @@ nsresult MediaEngineWebRTCMicrophoneSource::Allocate(
     return rv;
   }
 
-  RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction(__func__, [that, prefs = outputPrefs] {
-        that->mSettings->mEchoCancellation.Value() = prefs.mAecOn;
-        that->mSettings->mAutoGainControl.Value() = prefs.mAgcOn;
-        that->mSettings->mNoiseSuppression.Value() = prefs.mNoiseOn;
-        that->mSettings->mChannelCount.Value() = prefs.mChannels;
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__, [settings = mSettings, prefs = outputPrefs] {
+        settings->mEchoCancellation.Value() = prefs.mAecOn;
+        settings->mAutoGainControl.Value() = prefs.mAgcOn;
+        settings->mNoiseSuppression.Value() = prefs.mNoiseOn;
+        settings->mChannelCount.Value() = prefs.mChannels;
       }));
 
   mCurrentPrefs = outputPrefs;
@@ -460,35 +316,29 @@ nsresult MediaEngineWebRTCMicrophoneSource::Deallocate() {
   MOZ_ASSERT(mState == kStopped || mState == kAllocated);
 
   class EndTrackMessage : public ControlMessage {
+    const RefPtr<AudioInputProcessing> mInputProcessing;
+
    public:
-    EndTrackMessage(AudioInputTrack* aTrack,
-                    AudioInputProcessing* aAudioInputProcessing)
-        : ControlMessage(aTrack),
-          mInputProcessing(aAudioInputProcessing),
-          mInputTrack(aTrack) {}
+    explicit EndTrackMessage(AudioInputProcessing* aAudioInputProcessing)
+        : ControlMessage(nullptr), mInputProcessing(aAudioInputProcessing) {}
 
     void Run() override {
       TRACE("mInputProcessing::End");
       mInputProcessing->End();
     }
-
-   protected:
-    const RefPtr<AudioInputProcessing> mInputProcessing;
-    AudioInputTrack const* mInputTrack;
   };
 
   if (mTrack) {
-    RefPtr<AudioInputProcessing> inputProcessing = mInputProcessing;
     NS_DispatchToMainThread(NS_NewRunnableFunction(
-        __func__, [track = std::move(mTrack),
-                   audioInputProcessing = std::move(inputProcessing)] {
+        __func__,
+        [track = std::move(mTrack), inputProcessing = mInputProcessing] {
           if (track->IsDestroyed()) {
             // This track has already been destroyed on main thread by its
             // DOMMediaStream. No cleanup left to do.
             return;
           }
           track->GraphImpl()->AppendMessage(
-              MakeUnique<EndTrackMessage>(track, audioInputProcessing));
+              MakeUnique<EndTrackMessage>(inputProcessing));
         }));
   }
 
@@ -553,8 +403,8 @@ class StartStopMessage : public ControlMessage {
   }
 
  protected:
-  RefPtr<AudioInputProcessing> mInputProcessing;
-  StartStop mAction;
+  const RefPtr<AudioInputProcessing> mInputProcessing;
+  const StartStop mAction;
 };
 
 nsresult MediaEngineWebRTCMicrophoneSource::Start() {
@@ -579,16 +429,15 @@ nsresult MediaEngineWebRTCMicrophoneSource::Start() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction(__func__, [that, deviceID, track = mTrack] {
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__, [inputProcessing = mInputProcessing, deviceID, track = mTrack] {
         if (track->IsDestroyed()) {
           return;
         }
 
         track->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
-            that->mInputProcessing, StartStopMessage::Start));
-        track->OpenAudioInput(deviceID, that->mInputProcessing);
+            inputProcessing, StartStopMessage::Start));
+        track->OpenAudioInput(deviceID, inputProcessing);
       }));
 
   ApplySettings(mCurrentPrefs);
@@ -610,16 +459,16 @@ nsresult MediaEngineWebRTCMicrophoneSource::Stop() {
     return NS_OK;
   }
 
-  RefPtr<MediaEngineWebRTCMicrophoneSource> that = this;
-  NS_DispatchToMainThread(
-      NS_NewRunnableFunction(__func__, [that, track = mTrack] {
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      __func__, [inputProcessing = mInputProcessing, deviceInfo = mDeviceInfo,
+                 track = mTrack] {
         if (track->IsDestroyed()) {
           return;
         }
 
         track->GraphImpl()->AppendMessage(MakeUnique<StartStopMessage>(
-            that->mInputProcessing, StartStopMessage::Stop));
-        MOZ_ASSERT(track->DeviceId().value() == that->mDeviceInfo->DeviceID());
+            inputProcessing, StartStopMessage::Stop));
+        MOZ_ASSERT(track->DeviceId().value() == deviceInfo->DeviceID());
         track->CloseAudioInput();
       }));
 
@@ -637,7 +486,7 @@ void MediaEngineWebRTCMicrophoneSource::GetSettings(
 
 AudioInputProcessing::AudioInputProcessing(
     uint32_t aMaxChannelCount, const PrincipalHandle& aPrincipalHandle)
-    : mAudioProcessing(AudioProcessing::Create()),
+    : mAudioProcessing(AudioProcessingBuilder().Create()),
       mRequestedInputChannelCount(aMaxChannelCount),
       mSkipProcessing(false),
       mInputDownmixBuffer(MAX_SAMPLING_FREQ * MAX_CHANNELS / 100),
@@ -659,14 +508,21 @@ bool AudioInputProcessing::PassThrough(MediaTrackGraphImpl* aGraph) const {
 void AudioInputProcessing::SetPassThrough(MediaTrackGraphImpl* aGraph,
                                           bool aPassThrough) {
   MOZ_ASSERT(aGraph->OnGraphThread());
-  if (!mSkipProcessing && aPassThrough && mPacketizerInput) {
-    MOZ_ASSERT(mPacketizerInput->PacketsAvailable() == 0);
-    LOG_FRAME(
-        "AudioInputProcessing %p Appending %u frames of null data for data "
-        "discarded in the packetizer",
-        this, mPacketizerInput->FramesAvailable());
-    mSegment.AppendNullData(mPacketizerInput->FramesAvailable());
-    mPacketizerInput->Clear();
+
+  if (!mSkipProcessing && aPassThrough) {
+    // Reset AudioProcessing so that if we resume processing in the future it
+    // doesn't depend on old state.
+    mAudioProcessing->Initialize();
+
+    if (mPacketizerInput) {
+      MOZ_ASSERT(mPacketizerInput->PacketsAvailable() == 0);
+      LOG_FRAME(
+          "AudioInputProcessing %p Appending %u frames of null data for data "
+          "discarded in the packetizer",
+          this, mPacketizerInput->FramesAvailable());
+      mSegment.AppendNullData(mPacketizerInput->FramesAvailable());
+      mPacketizerInput->Clear();
+    }
   }
   mSkipProcessing = aPassThrough;
 }
@@ -680,104 +536,6 @@ void AudioInputProcessing::SetRequestedInputChannelCount(
   mRequestedInputChannelCount = aRequestedInputChannelCount;
 
   aGraph->ReevaluateInputDevice();
-}
-
-// This does an early return in case of error.
-#define HANDLE_APM_ERROR(fn)                       \
-  do {                                             \
-    int rv = fn;                                   \
-    if (rv != AudioProcessing::kNoError) {         \
-      MOZ_ASSERT_UNREACHABLE("APM error in " #fn); \
-      return;                                      \
-    }                                              \
-  } while (0);
-
-void AudioInputProcessing::UpdateAECSettings(
-    bool aEnable, bool aUseAecMobile, EchoCancellation::SuppressionLevel aLevel,
-    EchoControlMobile::RoutingMode aRoutingMode) {
-  if (aUseAecMobile) {
-    HANDLE_APM_ERROR(mAudioProcessing->echo_control_mobile()->Enable(aEnable));
-    HANDLE_APM_ERROR(mAudioProcessing->echo_control_mobile()->set_routing_mode(
-        aRoutingMode));
-    HANDLE_APM_ERROR(mAudioProcessing->echo_cancellation()->Enable(false));
-  } else {
-    if (aLevel != EchoCancellation::SuppressionLevel::kLowSuppression &&
-        aLevel != EchoCancellation::SuppressionLevel::kModerateSuppression &&
-        aLevel != EchoCancellation::SuppressionLevel::kHighSuppression) {
-      LOG_ERROR(
-          "AudioInputProcessing %p Attempt to set invalid AEC suppression "
-          "level %d",
-          this, static_cast<int>(aLevel));
-
-      aLevel = EchoCancellation::SuppressionLevel::kModerateSuppression;
-    }
-
-    HANDLE_APM_ERROR(mAudioProcessing->echo_control_mobile()->Enable(false));
-    HANDLE_APM_ERROR(mAudioProcessing->echo_cancellation()->Enable(aEnable));
-    HANDLE_APM_ERROR(
-        mAudioProcessing->echo_cancellation()->set_suppression_level(aLevel));
-  }
-}
-
-void AudioInputProcessing::UpdateAGCSettings(bool aEnable,
-                                             GainControl::Mode aMode) {
-  if (aMode != GainControl::Mode::kAdaptiveAnalog &&
-      aMode != GainControl::Mode::kAdaptiveDigital &&
-      aMode != GainControl::Mode::kFixedDigital) {
-    LOG_ERROR("AudioInputProcessing %p Attempt to set invalid AGC mode %d",
-              this, static_cast<int>(aMode));
-
-    aMode = GainControl::Mode::kAdaptiveDigital;
-  }
-
-#if defined(WEBRTC_IOS) || defined(ATA) || defined(WEBRTC_ANDROID)
-  if (aMode == GainControl::Mode::kAdaptiveAnalog) {
-    LOG_ERROR(
-        "AudioInputProcessing %p Invalid AGC mode kAgcAdaptiveAnalog on "
-        "mobile",
-        this);
-    MOZ_ASSERT_UNREACHABLE(
-        "Bad pref set in all.js or in about:config"
-        " for the auto gain, on mobile.");
-    aMode = GainControl::Mode::kFixedDigital;
-  }
-#endif
-  HANDLE_APM_ERROR(mAudioProcessing->gain_control()->set_mode(aMode));
-  HANDLE_APM_ERROR(mAudioProcessing->gain_control()->Enable(aEnable));
-}
-
-void AudioInputProcessing::UpdateHPFSettings(bool aEnable) {
-  HANDLE_APM_ERROR(mAudioProcessing->high_pass_filter()->Enable(aEnable));
-}
-
-void AudioInputProcessing::UpdateNSSettings(
-    bool aEnable, webrtc::NoiseSuppression::Level aLevel) {
-  if (aLevel != NoiseSuppression::Level::kLow &&
-      aLevel != NoiseSuppression::Level::kModerate &&
-      aLevel != NoiseSuppression::Level::kHigh &&
-      aLevel != NoiseSuppression::Level::kVeryHigh) {
-    LOG_ERROR(
-        "AudioInputProcessing %p Attempt to set invalid noise suppression "
-        "level %d",
-        this, static_cast<int>(aLevel));
-
-    aLevel = NoiseSuppression::Level::kModerate;
-  }
-
-  HANDLE_APM_ERROR(mAudioProcessing->noise_suppression()->set_level(aLevel));
-  HANDLE_APM_ERROR(mAudioProcessing->noise_suppression()->Enable(aEnable));
-}
-
-#undef HANDLE_APM_ERROR
-
-void AudioInputProcessing::UpdateAPMExtraOptions(bool aExtendedFilter,
-                                                 bool aDelayAgnostic) {
-  webrtc::Config config;
-  config.Set<webrtc::ExtendedFilter>(
-      new webrtc::ExtendedFilter(aExtendedFilter));
-  config.Set<webrtc::DelayAgnostic>(new webrtc::DelayAgnostic(aDelayAgnostic));
-
-  mAudioProcessing->SetExtraOptions(config);
 }
 
 void AudioInputProcessing::Start() {
@@ -807,11 +565,6 @@ void AudioInputProcessing::Pull(MediaTrackGraphImpl* aGraph, GraphTime aFrom,
   // Make sure there's at least one extra block buffered until audio callbacks
   // come in, since we round graph iteration durations up to the nearest block.
   buffering += WEBAUDIO_BLOCK_SIZE;
-
-  // If we're supposed to be packetizing but there's no packetizer yet,
-  // there must not have been any live frames appended yet.
-  MOZ_ASSERT_IF(!PassThrough(aGraph) && !mPacketizerInput,
-                mSegment.GetDuration() == 0);
 
   if (!PassThrough(aGraph) && mPacketizerInput) {
     // Processing is active and is processed in chunks of 10ms through the
@@ -891,6 +644,10 @@ void AudioInputProcessing::NotifyOutputData(MediaTrackGraphImpl* aGraph,
                                             uint32_t aChannels) {
   MOZ_ASSERT(aGraph->OnGraphThread());
   MOZ_ASSERT(mEnabled);
+
+  if (PassThrough(aGraph)) {
+    return;
+  }
 
   if (!mPacketizerOutput || mPacketizerOutput->mPacketSize != aRate / 100u ||
       mPacketizerOutput->mChannels != aChannels) {
@@ -1169,32 +926,17 @@ void AudioInputProcessing::NotifyInputData(MediaTrackGraphImpl* aGraph,
   mPendingData.Push(aBuffer, aFrames, aRate, aChannels);
 }
 
-#define ResetProcessingIfNeeded(_processing)                         \
-  do {                                                               \
-    bool enabled = mAudioProcessing->_processing()->is_enabled();    \
-                                                                     \
-    if (enabled) {                                                   \
-      int rv = mAudioProcessing->_processing()->Enable(!enabled);    \
-      if (rv) {                                                      \
-        NS_WARNING("Could not reset the status of the " #_processing \
-                   " on device change.");                            \
-        return;                                                      \
-      }                                                              \
-      rv = mAudioProcessing->_processing()->Enable(enabled);         \
-      if (rv) {                                                      \
-        NS_WARNING("Could not reset the status of the " #_processing \
-                   " on device change.");                            \
-        return;                                                      \
-      }                                                              \
-    }                                                                \
-  } while (0)
-
 void AudioInputProcessing::DeviceChanged(MediaTrackGraphImpl* aGraph) {
   MOZ_ASSERT(aGraph->OnGraphThread());
+
   // Reset some processing
-  ResetProcessingIfNeeded(gain_control);
-  ResetProcessingIfNeeded(echo_cancellation);
-  ResetProcessingIfNeeded(noise_suppression);
+  mAudioProcessing->Initialize();
+}
+
+void AudioInputProcessing::ApplyConfig(MediaTrackGraphImpl* aGraph,
+                                       const AudioProcessing::Config& aConfig) {
+  MOZ_ASSERT(aGraph->OnGraphThread());
+  mAudioProcessing->ApplyConfig(aConfig);
 }
 
 void AudioInputProcessing::End() {
@@ -1219,8 +961,8 @@ void AudioInputTrack::Destroy() {
 void AudioInputTrack::SetInputProcessing(
     RefPtr<AudioInputProcessing> aInputProcessing) {
   class Message : public ControlMessage {
-    RefPtr<AudioInputTrack> mTrack;
-    RefPtr<AudioInputProcessing> mProcessing;
+    const RefPtr<AudioInputTrack> mTrack;
+    const RefPtr<AudioInputProcessing> mProcessing;
 
    public:
     Message(RefPtr<AudioInputTrack> aTrack,
@@ -1337,6 +1079,8 @@ nsString MediaEngineWebRTCAudioCaptureSource::GetName() const {
 
 nsCString MediaEngineWebRTCAudioCaptureSource::GetUUID() const {
   nsID uuid;
+  char uuidBuffer[NSID_LENGTH];
+  nsCString asciiString;
   ErrorResult rv;
 
   rv = nsContentUtils::GenerateUUIDInPlace(uuid);
@@ -1344,7 +1088,11 @@ nsCString MediaEngineWebRTCAudioCaptureSource::GetUUID() const {
     return ""_ns;
   }
 
-  return NSID_TrimBracketsASCII(uuid);
+  uuid.ToProvidedString(uuidBuffer);
+  asciiString.AssignASCII(uuidBuffer);
+
+  // Remove {} and the null terminator
+  return nsCString(Substring(asciiString, 1, NSID_LENGTH - 3));
 }
 
 nsString MediaEngineWebRTCAudioCaptureSource::GetGroupId() const {

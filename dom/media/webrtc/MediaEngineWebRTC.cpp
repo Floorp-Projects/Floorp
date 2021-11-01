@@ -32,9 +32,7 @@ CubebDeviceEnumerator* GetEnumerator() {
   return CubebDeviceEnumerator::GetInstance();
 }
 
-MediaEngineWebRTC::MediaEngineWebRTC(MediaEnginePrefs& aPrefs)
-    : mDelayAgnostic(aPrefs.mDelayAgnostic),
-      mExtendedFilter(aPrefs.mExtendedFilter) {
+MediaEngineWebRTC::MediaEngineWebRTC() {
   AssertIsOnOwningThread();
 
   GetChildAndCall(
@@ -185,7 +183,7 @@ void MediaEngineWebRTC::EnumerateMicrophoneDevices(
           devices[i], devices[i]->Name(),
           // Lie and provide the name as UUID
           NS_ConvertUTF16toUTF8(devices[i]->Name()), devices[i]->GroupID(),
-          devices[i]->MaxChannels(), mDelayAgnostic, mExtendedFilter);
+          devices[i]->MaxChannels());
       RefPtr<MediaDevice> device = MakeRefPtr<MediaDevice>(
           source, source->GetName(), NS_ConvertUTF8toUTF16(source->GetUUID()),
           source->GetGroupId(), u""_ns);

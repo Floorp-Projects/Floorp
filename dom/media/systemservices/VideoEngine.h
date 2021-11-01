@@ -10,9 +10,9 @@
 #include "MediaEngine.h"
 #include "VideoFrameUtils.h"
 #include "mozilla/media/MediaUtils.h"
-#include "webrtc/modules/video_capture/video_capture_impl.h"
-#include "webrtc/modules/video_capture/video_capture_defines.h"
-#include "webrtc/modules/video_capture/video_capture_factory.h"
+#include "modules/video_capture/video_capture_impl.h"
+#include "modules/video_capture/video_capture_defines.h"
+#include "modules/video_capture/video_capture_factory.h"
 #include <memory>
 #include <functional>
 

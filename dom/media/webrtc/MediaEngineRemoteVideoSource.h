@@ -34,8 +34,8 @@
 #include "NullTransport.h"
 
 // WebRTC includes
-#include "webrtc/common_video/include/i420_buffer_pool.h"
-#include "webrtc/modules/video_capture/video_capture_defines.h"
+#include "common_video/include/i420_buffer_pool.h"
+#include "modules/video_capture/video_capture_defines.h"
 
 namespace webrtc {
 using CaptureCapability = VideoCaptureCapability;

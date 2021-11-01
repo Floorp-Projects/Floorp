@@ -15,7 +15,7 @@ LOCAL_INCLUDES += [
     "/netwerk/dns",  # For nsDNSService2.h
     "/third_party/libsrtp/src/include",
     "/third_party/libwebrtc",
-    "/third_party/libwebrtc/webrtc",
+    "/third_party/libwebrtc/third_party/abseil-cpp",
 ]
 
 UNIFIED_SOURCES += [
@@ -36,3 +36,5 @@ UNIFIED_SOURCES += [
 ]
 
 FINAL_LIBRARY = "xul"
+
+REQUIRES_UNIFIED_BUILD = True

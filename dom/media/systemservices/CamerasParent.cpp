@@ -24,7 +24,7 @@
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 
-#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+#include "common_video/libyuv/include/webrtc_libyuv.h"
 
 #if defined(_WIN32)
 #  include <process.h>

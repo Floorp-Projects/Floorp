@@ -22,7 +22,7 @@ if CONFIG["MOZ_WEBRTC"]:
         "/dom/media/webrtc",
         "/media/libyuv/libyuv/include",
         "/third_party/libwebrtc",
-        "/third_party/libwebrtc/webrtc",
+        "/third_party/libwebrtc/third_party/abseil-cpp",
         "/tools/profiler/public",
     ]
 
@@ -38,14 +38,20 @@ if CONFIG["MOZ_WEBRTC"]:
             "objc_video_capture/device_info_objc.mm",
             "objc_video_capture/rtc_video_capture_objc.mm",
             "objc_video_capture/video_capture.mm",
+            "video_engine/desktop_device_info_mac.mm",
         ]
         CMMFLAGS += [
             "-fobjc-arc",
         ]
+    elif CONFIG["OS_TARGET"] in ["FreeBSD", "NetBSD", "OpenBSD", "Linux"]:
+        UNIFIED_SOURCES += ["video_engine/desktop_device_info_x11.cc"]
+    elif CONFIG["OS_TARGET"] == "WINNT":
+        UNIFIED_SOURCES += ["video_engine/desktop_device_info_win.cc"]
 
     if CONFIG["OS_TARGET"] != "Android":
         UNIFIED_SOURCES += [
             "video_engine/desktop_capture_impl.cc",
+            "video_engine/desktop_device_info.cc",
             "video_engine/platform_uithread.cc",
             "video_engine/tab_capturer.cc",
         ]

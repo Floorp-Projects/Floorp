@@ -22,7 +22,7 @@
 #include "nss.h"
 #include "pk11pub.h"
 
-#include "webrtc/api/rtpparameters.h"
+#include "api/rtp_parameters.h"
 
 #include "jsep/JsepTrack.h"
 #include "jsep/JsepTransport.h"
@@ -412,12 +412,12 @@ std::vector<SdpExtmapAttributeList::Extmap> JsepSessionImpl::GetRtpExtensions(
               SdpAttribute::kRidAttribute)) {
         // We need RID support
         // TODO: Would it be worth checking that the direction is sane?
-        AddVideoRtpExtension(webrtc::RtpExtension::kRtpStreamIdUri,
+        AddVideoRtpExtension(webrtc::RtpExtension::kRidUri,
                              SdpDirectionAttribute::kSendonly);
 
         if (mRtxIsAllowed &&
             Preferences::GetBool("media.peerconnection.video.use_rtx", false)) {
-          AddVideoRtpExtension(webrtc::RtpExtension::kRepairedRtpStreamIdUri,
+          AddVideoRtpExtension(webrtc::RtpExtension::kRepairedRidUri,
                                SdpDirectionAttribute::kSendonly);
         }
       }
@@ -2168,7 +2168,7 @@ void JsepSessionImpl::SetupDefaultRtpExtensions() {
                        SdpDirectionAttribute::Direction::kSendrecv);
   AddAudioRtpExtension(webrtc::RtpExtension::kCsrcAudioLevelUri,
                        SdpDirectionAttribute::Direction::kRecvonly);
-  AddAudioVideoRtpExtension(webrtc::RtpExtension::kMIdUri,
+  AddAudioVideoRtpExtension(webrtc::RtpExtension::kMidUri,
                             SdpDirectionAttribute::Direction::kSendrecv);
   AddVideoRtpExtension(webrtc::RtpExtension::kAbsSendTimeUri,
                        SdpDirectionAttribute::Direction::kSendrecv);

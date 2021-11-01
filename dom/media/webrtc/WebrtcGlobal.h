@@ -260,10 +260,6 @@ struct ParamTraits<mozilla::dom::RTCInboundRtpStreamStats> {
     WriteParam(aMsg, aParam.mNackCount);
     WriteParam(aMsg, aParam.mFirCount);
     WriteParam(aMsg, aParam.mPliCount);
-    WriteParam(aMsg, aParam.mBitrateMean);
-    WriteParam(aMsg, aParam.mBitrateStdDev);
-    WriteParam(aMsg, aParam.mFramerateMean);
-    WriteParam(aMsg, aParam.mFramerateStdDev);
     WriteRTCReceivedRtpStreamStats(aMsg, aParam);
   }
 
@@ -275,10 +271,6 @@ struct ParamTraits<mozilla::dom::RTCInboundRtpStreamStats> {
            ReadParam(aMsg, aIter, &(aResult->mNackCount)) &&
            ReadParam(aMsg, aIter, &(aResult->mFirCount)) &&
            ReadParam(aMsg, aIter, &(aResult->mPliCount)) &&
-           ReadParam(aMsg, aIter, &(aResult->mBitrateMean)) &&
-           ReadParam(aMsg, aIter, &(aResult->mBitrateStdDev)) &&
-           ReadParam(aMsg, aIter, &(aResult->mFramerateMean)) &&
-           ReadParam(aMsg, aIter, &(aResult->mFramerateStdDev)) &&
            ReadRTCReceivedRtpStreamStats(aMsg, aIter, aResult);
   }
 };
@@ -309,11 +301,6 @@ struct ParamTraits<mozilla::dom::RTCOutboundRtpStreamStats> {
     WriteParam(aMsg, aParam.mNackCount);
     WriteParam(aMsg, aParam.mFirCount);
     WriteParam(aMsg, aParam.mPliCount);
-    WriteParam(aMsg, aParam.mBitrateMean);
-    WriteParam(aMsg, aParam.mBitrateStdDev);
-    WriteParam(aMsg, aParam.mFramerateMean);
-    WriteParam(aMsg, aParam.mFramerateStdDev);
-    WriteParam(aMsg, aParam.mDroppedFrames);
     WriteRTCSentRtpStreamStats(aMsg, aParam);
   }
 
@@ -325,11 +312,6 @@ struct ParamTraits<mozilla::dom::RTCOutboundRtpStreamStats> {
            ReadParam(aMsg, aIter, &(aResult->mNackCount)) &&
            ReadParam(aMsg, aIter, &(aResult->mFirCount)) &&
            ReadParam(aMsg, aIter, &(aResult->mPliCount)) &&
-           ReadParam(aMsg, aIter, &(aResult->mBitrateMean)) &&
-           ReadParam(aMsg, aIter, &(aResult->mBitrateStdDev)) &&
-           ReadParam(aMsg, aIter, &(aResult->mFramerateMean)) &&
-           ReadParam(aMsg, aIter, &(aResult->mFramerateStdDev)) &&
-           ReadParam(aMsg, aIter, &(aResult->mDroppedFrames)) &&
            ReadRTCSentRtpStreamStats(aMsg, aIter, aResult);
   }
 };
@@ -340,7 +322,6 @@ struct ParamTraits<mozilla::dom::RTCRemoteInboundRtpStreamStats> {
 
   static void Write(Message* aMsg, const paramType& aParam) {
     WriteParam(aMsg, aParam.mLocalId);
-    WriteParam(aMsg, aParam.mBytesReceived);  // To be removed in Bug 1529405
     WriteParam(aMsg, aParam.mRoundTripTime);
     WriteRTCReceivedRtpStreamStats(aMsg, aParam);
   }
@@ -348,9 +329,6 @@ struct ParamTraits<mozilla::dom::RTCRemoteInboundRtpStreamStats> {
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     return ReadParam(aMsg, aIter, &(aResult->mLocalId)) &&
-           ReadParam(
-               aMsg, aIter,
-               &(aResult->mBytesReceived)) &&  // To be removed in Bug 1529405
            ReadParam(aMsg, aIter, &(aResult->mRoundTripTime)) &&
            ReadRTCReceivedRtpStreamStats(aMsg, aIter, aResult);
   }

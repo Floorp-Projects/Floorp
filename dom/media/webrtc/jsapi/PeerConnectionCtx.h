@@ -5,17 +5,23 @@
 #ifndef peerconnectionctx_h___h__
 #define peerconnectionctx_h___h__
 
-#include <string>
 #include <map>
+#include <string>
 
-#include "WebrtcGlobalChild.h"
-
+#include "api/scoped_refptr.h"
+#include "call/audio_state.h"
+#include "MediaTransportHandler.h"  // Mostly for IceLogPromise
+#include "mozIGeckoMediaPluginService.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/StaticPtr.h"
-#include "PeerConnectionImpl.h"
-#include "mozIGeckoMediaPluginService.h"
 #include "nsIRunnable.h"
-#include "MediaTransportHandler.h"  // Mostly for IceLogPromise
+#include "PeerConnectionImpl.h"
+
+namespace webrtc {
+class AudioDecoderFactory;
+class SharedModuleThread;
+class WebRtcKeyValueConfig;
+}  // namespace webrtc
 
 namespace mozilla {
 class PeerConnectionCtxObserver;
@@ -24,14 +30,57 @@ namespace dom {
 class WebrtcGlobalInformation;
 }
 
+/**
+ * Refcounted class containing state shared across all PeerConnections and all
+ * Call instances. Managed by PeerConnectionCtx, and kept around while there are
+ * registered peer connections.
+ */
+class SharedWebrtcState {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedWebrtcState)
+
+  SharedWebrtcState(RefPtr<AbstractThread> aCallWorkerThread,
+                    webrtc::AudioState::Config&& aAudioStateConfig,
+                    RefPtr<webrtc::AudioDecoderFactory> aAudioDecoderFactory,
+                    UniquePtr<webrtc::WebRtcKeyValueConfig> aTrials);
+
+  webrtc::SharedModuleThread* GetModuleThread();
+
+  // A global Call worker thread shared between all Call instances. Implements
+  // AbstractThread for running tasks that call into a Call instance through its
+  // webrtc::TaskQueue member, and for using AbstractThread-specific higher
+  // order constructs like StateMirroring.
+  const RefPtr<AbstractThread> mCallWorkerThread;
+
+  // AudioState config containing dummy implementations of the audio stack,
+  // since we use our own audio stack instead. Shared across all Call instances.
+  const webrtc::AudioState::Config mAudioStateConfig;
+
+  // AudioDecoderFactory instance shared between calls, to limit the number of
+  // instances in large calls.
+  const RefPtr<webrtc::AudioDecoderFactory> mAudioDecoderFactory;
+
+  // Trials instance shared between calls, to limit the number of instances in
+  // large calls.
+  const UniquePtr<webrtc::WebRtcKeyValueConfig> mTrials;
+
+ private:
+  virtual ~SharedWebrtcState();
+
+  // SharedModuleThread used for processing in all Call instances.
+  // Only accessed on the global Call worker task queue. Set on first
+  // GetModuleThread(), Unset on the last external Release.
+  rtc::scoped_refptr<webrtc::SharedModuleThread> mModuleThread;
+};
+
 // A class to hold some of the singleton objects we need:
 // * The global PeerConnectionImpl table and its associated lock.
 // * Stats report objects for PCs that are gone
 // * GMP related state
+// * Upstream webrtc state shared across all Calls (processing thread)
 class PeerConnectionCtx {
  public:
-  static nsresult InitializeGlobal(nsIThread* mainThread,
-                                   nsISerialEventTarget* stsThread);
+  static nsresult InitializeGlobal(nsIThread* mainThread);
   static PeerConnectionCtx* GetInstance();
   static bool isActive();
   static void Destroy();
@@ -55,26 +104,28 @@ class PeerConnectionCtx {
     return mTransportHandler;
   }
 
-  // Make these classes friend so that they can access mPeerconnections.
-  friend class PeerConnectionImpl;
-  friend class PeerConnectionWrapper;
-  friend class mozilla::dom::WebrtcGlobalInformation;
+  SharedWebrtcState* GetSharedWebrtcState() const;
 
   // WebrtcGlobalInformation uses this; we put it here so we don't need to
   // create another shutdown observer class.
   mozilla::dom::Sequence<mozilla::dom::RTCStatsReportInternal>
       mStatsForClosedPeerConnections;
 
-  const std::map<const std::string, PeerConnectionImpl*>& GetPeerConnections();
+  void RemovePeerConnection(const std::string& aKey);
+  void AddPeerConnection(const std::string& aKey,
+                         PeerConnectionImpl* aPeerConnection);
+  PeerConnectionImpl* GetPeerConnection(const std::string& aKey) const;
+  template <typename Function>
+  void ForEachPeerConnection(Function&& aFunction) const;
 
  private:
-  // We could make these available only via accessors but it's too much trouble.
   std::map<const std::string, PeerConnectionImpl*> mPeerConnections;
 
   PeerConnectionCtx()
       : mGMPReady(false),
         mTransportHandler(
             MediaTransportHandler::Create(GetMainThreadSerialEventTarget())) {}
+
   // This is a singleton, so don't copy construct it, etc.
   PeerConnectionCtx(const PeerConnectionCtx& other) = delete;
   void operator=(const PeerConnectionCtx& other) = delete;
@@ -104,6 +155,12 @@ class PeerConnectionCtx {
 
   // Not initted, just for ICE logging stuff
   RefPtr<MediaTransportHandler> mTransportHandler;
+
+  // State used by libwebrtc that needs to be shared across all PeerConnections
+  // and all Call instances. Set while there is at least one peer connection
+  // registered. CallWrappers can hold a ref to this object to be sure members
+  // are alive long enough.
+  RefPtr<SharedWebrtcState> mSharedWebrtcState;
 
   static PeerConnectionCtx* gInstance;
 

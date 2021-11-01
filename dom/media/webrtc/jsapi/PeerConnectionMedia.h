@@ -52,8 +52,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   explicit PeerConnectionMedia(PeerConnectionImpl* parent);
 
   nsresult Init();
-  // WARNING: This destroys the object!
-  void SelfDestruct();
+  void Shutdown();
 
   // Ensure ICE transports exist that we might need when offer/answer concludes
   void EnsureTransports(const JsepSession& aSession);
@@ -91,6 +90,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // TODO: Let's move the TransceiverImpl stuff to PeerConnectionImpl.
   nsresult AddTransceiver(JsepTransceiver* aJsepTransceiver,
                           dom::MediaStreamTrack* aSendTrack,
+                          SharedWebrtcState* aSharedWebrtcState,
                           RefPtr<TransceiverImpl>* aTransceiverImpl);
 
   void GetTransmitPipelinesMatching(
@@ -131,7 +131,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   void AlpnNegotiated_m(bool aPrivacyRequested);
 
   // TODO: Move to PeerConnectionImpl
-  RefPtr<WebRtcCallWrapper> mCall;
+  RefPtr<WebrtcCallWrapper> mCall;
 
   // mtransport objects
   RefPtr<MediaTransportHandler> mTransportHandler;
@@ -155,13 +155,6 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
     RefPtr<PeerConnectionMedia> pcm_;
     virtual ~StunAddrsHandler() {}
   };
-
-  // Shutdown media transport. Must be called on STS thread.
-  void ShutdownMediaTransport_s();
-
-  // Final destruction of the media stream. Must be called on the main
-  // thread.
-  void SelfDestruct_m();
 
   // Manage ICE transports.
   void UpdateTransport(const JsepTransceiver& aTransceiver, bool aForceIceTcp);

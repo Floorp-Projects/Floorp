@@ -11,7 +11,7 @@
 #include "AudioDeviceInfo.h"
 #include "MediaEngineWebRTC.h"
 #include "MediaTrackListener.h"
-#include "webrtc/modules/audio_processing/include/audio_processing.h"
+#include "modules/audio_processing/include/audio_processing.h"
 
 namespace mozilla {
 
@@ -33,8 +33,7 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
                                     const nsString& aDeviceName,
                                     const nsCString& aDeviceUUID,
                                     const nsString& aDeviceGroup,
-                                    uint32_t aMaxChannelCount,
-                                    bool aDelayAgnostic, bool aExtendedFilter);
+                                    uint32_t aMaxChannelCount);
 
   nsString GetName() const override;
   nsCString GetUUID() const override;
@@ -87,22 +86,9 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
    */
   void ApplySettings(const MediaEnginePrefs& aPrefs);
 
-  /**
-   * Sent the AudioProcessingModule parameter for a given processing algorithm.
-   */
-  void UpdateAECSettings(bool aEnable, bool aUseAecMobile,
-                         webrtc::EchoCancellation::SuppressionLevel aLevel,
-                         webrtc::EchoControlMobile::RoutingMode aRoutingMode);
-  void UpdateAGCSettings(bool aEnable, webrtc::GainControl::Mode aMode);
-  void UpdateHPFSettings(bool aEnable);
-  void UpdateNSSettings(bool aEnable, webrtc::NoiseSuppression::Level aLevel);
-  void UpdateAPMExtraOptions(bool aExtendedFilter, bool aDelayAgnostic);
-
   PrincipalHandle mPrincipal = PRINCIPAL_HANDLE_NONE;
 
   const RefPtr<AudioDeviceInfo> mDeviceInfo;
-  const bool mDelayAgnostic;
-  const bool mExtendedFilter;
   const nsString mDeviceName;
   const nsCString mDeviceUUID;
   const nsString mDeviceGroup;
@@ -127,6 +113,10 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
 
   // See note at the top of this class.
   RefPtr<AudioInputProcessing> mInputProcessing;
+
+  // Copy of the config currently applied to AudioProcessing through
+  // mInputProcessing.
+  webrtc::AudioProcessing::Config mAudioProcessingConfig;
 };
 
 // This class is created on the MediaManager thread, and then exclusively used
@@ -183,14 +173,10 @@ class AudioInputProcessing : public AudioDataListener {
   bool PassThrough(MediaTrackGraphImpl* aGraphImpl) const;
 
   // This allow changing the APM options, enabling or disabling processing
-  // steps.
-  void UpdateAECSettings(bool aEnable, bool aUseAecMobile,
-                         webrtc::EchoCancellation::SuppressionLevel aLevel,
-                         webrtc::EchoControlMobile::RoutingMode aRoutingMode);
-  void UpdateAGCSettings(bool aEnable, webrtc::GainControl::Mode aMode);
-  void UpdateHPFSettings(bool aEnable);
-  void UpdateNSSettings(bool aEnable, webrtc::NoiseSuppression::Level aLevel);
-  void UpdateAPMExtraOptions(bool aExtendedFilter, bool aDelayAgnostic);
+  // steps. The config gets applied the next time we're about to process input
+  // data.
+  void ApplyConfig(MediaTrackGraphImpl* aGraph,
+                   const webrtc::AudioProcessing::Config& aConfig);
 
   void End();
 
