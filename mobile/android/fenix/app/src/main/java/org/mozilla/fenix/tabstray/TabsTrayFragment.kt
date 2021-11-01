@@ -388,7 +388,8 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 browserInteractor,
                 navigationInteractor,
                 trayInteractor,
-                requireComponents.core.store
+                requireComponents.core.store,
+                requireComponents.appStore
             )
             isUserInputEnabled = false
         }

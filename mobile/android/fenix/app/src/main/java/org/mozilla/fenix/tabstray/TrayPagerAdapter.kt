@@ -11,6 +11,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.state.store.BrowserStore
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.sync.SyncedTabsAdapter
 import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
@@ -24,13 +25,15 @@ import org.mozilla.fenix.tabstray.viewholders.NormalBrowserPageViewHolder
 import org.mozilla.fenix.tabstray.viewholders.PrivateBrowserPageViewHolder
 import org.mozilla.fenix.tabstray.viewholders.SyncedTabsPageViewHolder
 
+@Suppress("LongParameterList")
 class TrayPagerAdapter(
     @VisibleForTesting internal val context: Context,
     @VisibleForTesting internal val tabsTrayStore: TabsTrayStore,
     @VisibleForTesting internal val browserInteractor: BrowserTrayInteractor,
     @VisibleForTesting internal val navInteractor: NavigationInteractor,
     @VisibleForTesting internal val interactor: TabsTrayInteractor,
-    @VisibleForTesting internal val browserStore: BrowserStore
+    @VisibleForTesting internal val browserStore: BrowserStore,
+    @VisibleForTesting internal val appStore: AppStore
 ) : RecyclerView.Adapter<AbstractPageViewHolder>() {
 
     /**
@@ -67,6 +70,7 @@ class TrayPagerAdapter(
                     itemView,
                     tabsTrayStore,
                     browserStore,
+                    appStore,
                     interactor
                 )
             }

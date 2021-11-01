@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.ListAdapter
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.TabsTray
 import org.mozilla.fenix.components.Components
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.AutoCloseDialogHolder
 import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.FooterHolder
@@ -92,7 +93,7 @@ class InactiveTabsAdapter(
         }
 
         // If we have items, but we should be in a collapsed state.
-        if (!InactiveTabsState.isExpanded) {
+        if (!context.components.appStore.state.inactiveTabsExpanded) {
             submitList(listOf(Item.Header))
             return
         }

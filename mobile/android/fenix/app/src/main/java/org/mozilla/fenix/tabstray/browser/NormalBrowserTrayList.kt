@@ -52,6 +52,7 @@ class NormalBrowserTrayList @JvmOverloads constructor(
         DefaultInactiveTabsInteractor(
             InactiveTabsController(
                 context.components.core.store,
+                context.components.appStore,
                 inactiveTabsFilter,
                 concatAdapter.inactiveTabsAdapter,
                 context.components.analytics.metrics

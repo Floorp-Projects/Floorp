@@ -7,11 +7,14 @@ package org.mozilla.fenix.tabstray.browser
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabsTray
+import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.Event
 
 class InactiveTabsController(
     private val browserStore: BrowserStore,
+    private val appStore: AppStore,
     private val tabFilter: (TabSessionState) -> Boolean,
     private val tray: TabsTray,
     private val metrics: MetricController
@@ -21,7 +24,7 @@ class InactiveTabsController(
      * the title showing.
      */
     fun updateCardExpansion(isExpanded: Boolean) {
-        InactiveTabsState.isExpanded = isExpanded
+        appStore.dispatch(AppAction.UpdateInactiveExpanded(isExpanded))
 
         metrics.track(
             when (isExpanded) {

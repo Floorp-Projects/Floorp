@@ -37,7 +37,7 @@ sealed class InactiveTabViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
 
         init {
             itemView.apply {
-                isActivated = InactiveTabsState.isExpanded
+                isActivated = itemView.context.components.appStore.state.inactiveTabsExpanded
 
                 correctHeaderBorder(isActivated)
 
