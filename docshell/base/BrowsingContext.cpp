@@ -58,6 +58,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_fission.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/StaticPrefs_page_load.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/URLQueryStringStripper.h"
@@ -408,6 +409,11 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
   fields.mTouchEventsOverrideInternal = TouchEventsOverride::None;
 
   fields.mAllowJavascript = inherit ? inherit->GetAllowJavascript() : true;
+
+  if (!parentBC) {
+    fields.mShouldDelayMediaFromStart =
+        StaticPrefs::media_block_autoplay_until_in_foreground();
+  }
 
   RefPtr<BrowsingContext> context;
   if (XRE_IsParentProcess()) {
@@ -2816,6 +2822,26 @@ void BrowsingContext::DidSet(FieldIndex<IDX_Muted>) {
       win->RefreshMediaElementsVolume();
     }
   });
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_ShouldDelayMediaFromStart>,
+                             const bool& aValue, ContentParent* aSource) {
+  return IsTop();
+}
+
+void BrowsingContext::DidSet(FieldIndex<IDX_ShouldDelayMediaFromStart>,
+                             bool aOldValue) {
+  MOZ_ASSERT(IsTop(), "Set attribute on non top-level context!");
+  if (aOldValue == GetShouldDelayMediaFromStart()) {
+    return;
+  }
+  if (!GetShouldDelayMediaFromStart()) {
+    PreOrderWalk([&](BrowsingContext* aContext) {
+      if (nsPIDOMWindowOuter* win = aContext->GetDOMWindow()) {
+        win->ActivateMediaComponents();
+      }
+    });
+  }
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_OverrideDPPX>, const float& aValue,

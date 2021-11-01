@@ -1290,7 +1290,7 @@ NS_IMETHODIMP
 nsDocShell::StartDelayedAutoplayMediaComponents() {
   RefPtr<nsPIDOMWindowOuter> outerWindow = GetWindow();
   if (outerWindow) {
-    outerWindow->SetMediaSuspend(nsISuspendedTypes::NONE_SUSPENDED);
+    outerWindow->ActivateMediaComponents();
   }
   return NS_OK;
 }
