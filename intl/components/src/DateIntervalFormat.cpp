@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "unicode/udateintervalformat.h"
-
 #include "DateTimeFormatUtils.h"
 #include "ScopedICUObject.h"
 
@@ -72,63 +70,15 @@ DateIntervalFormat::~DateIntervalFormat() {
   udtitvfmt_close(mDateIntervalFormat.GetMut());
 }
 
-AutoFormattedDateInterval::AutoFormattedDateInterval() {
-  mFormatted = udtitvfmt_openResult(&mError);
-  if (U_FAILURE(mError)) {
-    mFormatted = nullptr;
-  }
-}
-
-const UFormattedValue* AutoFormattedDateInterval::Value() const {
-  if (!IsValid()) {
-    return nullptr;
-  }
-
-  UErrorCode status = U_ZERO_ERROR;
-  const UFormattedValue* value = udtitvfmt_resultAsValue(mFormatted, &status);
-  if (U_FAILURE(status)) {
-    return nullptr;
-  }
-
-  return value;
-}
-
-Result<Span<const char16_t>, ICUError> AutoFormattedDateInterval::ToSpan()
-    const {
-  if (!IsValid()) {
-    return Err(GetError());
-  }
-
-  const UFormattedValue* value = Value();
-  if (!value) {
-    return Err(ICUError::InternalError);
-  }
-
-  UErrorCode status = U_ZERO_ERROR;
-  int32_t strLength;
-  const char16_t* str = ufmtval_getString(value, &strLength, &status);
-  if (U_FAILURE(status)) {
-    return Err(ToICUError(status));
-  }
-
-  return Span{str, AssertedCast<size_t>(strLength)};
-}
-
-AutoFormattedDateInterval::~AutoFormattedDateInterval() {
-  if (mFormatted) {
-    udtitvfmt_closeResult(mFormatted);
-  }
-}
-
 ICUResult DateIntervalFormat::TryFormatCalendar(
     const Calendar& aStart, const Calendar& aEnd,
     AutoFormattedDateInterval& aFormatted, bool* aPracticallyEqual) const {
   MOZ_ASSERT(aFormatted.IsValid());
 
   UErrorCode status = U_ZERO_ERROR;
-  udtitvfmt_formatCalendarToResult(
-      mDateIntervalFormat.GetConst(), aStart.GetUCalendar(),
-      aEnd.GetUCalendar(), aFormatted.GetUFormattedDateInterval(), &status);
+  udtitvfmt_formatCalendarToResult(mDateIntervalFormat.GetConst(),
+                                   aStart.GetUCalendar(), aEnd.GetUCalendar(),
+                                   aFormatted.GetFormatted(), &status);
 
   if (U_FAILURE(status)) {
     return Err(ToICUError(status));
@@ -145,7 +95,7 @@ ICUResult DateIntervalFormat::TryFormatDateTime(
 
   UErrorCode status = U_ZERO_ERROR;
   udtitvfmt_formatToResult(mDateIntervalFormat.GetConst(), aStart, aEnd,
-                           aFormatted.GetUFormattedDateInterval(), &status);
+                           aFormatted.GetFormatted(), &status);
   if (U_FAILURE(status)) {
     return Err(ToICUError(status));
   }
