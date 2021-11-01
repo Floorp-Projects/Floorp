@@ -72,6 +72,9 @@ const { BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN } = Ci.nsICookieService;
 const PASSWORD_MANAGER_PREF_ID = "services.passwordSavingEnabled";
 const PREF_PASSWORD_MANAGER_ENABLED = "signon.rememberSignons";
 
+const PREF_DFPI_ENABLED_BY_DEFAULT =
+  "privacy.restrict3rdpartystorage.rollout.enabledByDefault";
+
 XPCOMUtils.defineLazyGetter(this, "AlertsServiceDND", function() {
   try {
     let alertsService = Cc["@mozilla.org/alerts-service;1"]
@@ -334,19 +337,22 @@ function initTCPRolloutSection() {
         )
     );
 
-  // Determines whether to show the TCP rollout preferences UI which allows
-  // users to opt-in or out of TCP in ETP standard mode.
-  const tcpOnboardingEnabledPref = Preferences.get(
-    "privacy.restrict3rdpartystorage.rollout.preferences.TCPToggleInStandard"
-  );
-
+  let dfpiPref = Preferences.get(PREF_DFPI_ENABLED_BY_DEFAULT);
   let updateTCPRolloutSectionVisibilityState = () => {
+    let onboardingEnabled =
+      NimbusFeatures.tcpPreferences.isEnabled() ||
+      (dfpiPref.value && dfpiPref.hasUserValue);
     document.getElementById(
       "etpStandardTCPRolloutBox"
-    ).hidden = !tcpOnboardingEnabledPref.value;
+    ).hidden = !onboardingEnabled;
   };
 
-  tcpOnboardingEnabledPref.on("change", updateTCPRolloutSectionVisibilityState);
+  NimbusFeatures.tcpPreferences.onUpdate(
+    updateTCPRolloutSectionVisibilityState
+  );
+  window.addEventListener("unload", () => {
+    NimbusFeatures.tcpPreferences.off(updateTCPRolloutSectionVisibilityState);
+  });
 
   updateTCPRolloutSectionVisibilityState();
 }
