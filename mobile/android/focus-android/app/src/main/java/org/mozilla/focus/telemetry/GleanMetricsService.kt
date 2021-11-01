@@ -15,13 +15,20 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
+import mozilla.components.feature.customtabs.CustomTabsFacts
 import mozilla.components.feature.search.ext.waitForSelectedOrDefaultSearchEngine
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
+import mozilla.components.service.glean.private.NoExtras
+import mozilla.components.support.base.Component
+import mozilla.components.support.base.facts.Fact
+import mozilla.components.support.base.facts.FactProcessor
+import mozilla.components.support.base.facts.Facts
 import mozilla.telemetry.glean.Glean
 import mozilla.telemetry.glean.config.Configuration
 import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.Components
 import org.mozilla.focus.GleanMetrics.Browser
+import org.mozilla.focus.GleanMetrics.CustomTabsToolbar
 import org.mozilla.focus.GleanMetrics.GleanBuildInfo
 import org.mozilla.focus.GleanMetrics.LegacyIds
 import org.mozilla.focus.GleanMetrics.MozillaProducts
@@ -89,6 +96,21 @@ class GleanMetricsService(context: Context) : MetricsService {
                 // activationPing.checkAndSend()
             }
         }
+
+        Facts.registerProcessor(object : FactProcessor {
+            override fun process(fact: Fact) {
+                fact.recordTelemetry()
+            }
+        }
+        )
+    }
+
+    private fun Fact.recordTelemetry() = when {
+        Component.FEATURE_CUSTOMTABS == component && CustomTabsFacts.Items.CLOSE == item ->
+            CustomTabsToolbar.closeTabTapped.record(NoExtras())
+        Component.FEATURE_CUSTOMTABS == component && CustomTabsFacts.Items.ACTION_BUTTON == item ->
+            CustomTabsToolbar.actionButtonTapped.record(NoExtras())
+        else -> null
     }
 
     private fun collectPrefMetrics(

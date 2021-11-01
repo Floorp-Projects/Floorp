@@ -126,7 +126,7 @@ class BrowserMenuControllerTest {
 
     @Test
     fun `GIVEN OpenInBrowser menu item WHEN the item is pressed THEN openInBrowser is called`() {
-        val menuItem = ToolbarMenu.Item.OpenInBrowser
+        val menuItem = ToolbarMenu.CustomTabItem.OpenInBrowser
         browserMenuController.handleMenuInteraction(menuItem)
         Mockito.verify(openInBrowser, times(1)).invoke()
     }

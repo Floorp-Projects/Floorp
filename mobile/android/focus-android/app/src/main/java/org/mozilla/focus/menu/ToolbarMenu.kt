@@ -18,10 +18,21 @@ interface ToolbarMenu {
         object RemoveFromShortcuts : Item()
         object FindInPage : Item()
         object AddToHomeScreen : Item()
-        object OpenInBrowser : Item()
         object OpenInApp : Item()
         object Settings : Item()
         object Stop : Item()
+    }
+
+    sealed class CustomTabItem {
+        data class RequestDesktop(val isChecked: Boolean) : Item()
+        object Reload : Item()
+        object Stop : Item()
+        object Back : Item()
+        object Forward : Item()
+        object FindInPage : Item()
+        object AddToHomeScreen : Item()
+        object OpenInBrowser : Item()
+        object OpenInApp : Item()
     }
 
     val menuBuilder: BrowserMenuBuilder

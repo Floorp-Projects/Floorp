@@ -772,13 +772,8 @@ class BrowserFragment :
     }
 
     internal fun closeCustomTab() {
-        TelemetryWrapper.closeCustomTabEvent()
-
         requireComponents.customTabsUseCases.remove(tab.id)
-
         requireActivity().finish()
-
-        TelemetryWrapper.closeCustomTabEvent()
     }
 
     fun setShouldRequestDesktop(enabled: Boolean) {

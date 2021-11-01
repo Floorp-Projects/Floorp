@@ -14,6 +14,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.top.sites.TopSitesUseCases
 import org.mozilla.focus.GleanMetrics.BrowserMenu
+import org.mozilla.focus.GleanMetrics.CustomTabsToolbar
 import org.mozilla.focus.GleanMetrics.Shortcuts
 import org.mozilla.focus.ext.titleOrDomain
 import org.mozilla.focus.menu.ToolbarMenu
@@ -48,12 +49,20 @@ class BrowserMenuController(
         recordBrowserMenuTelemetry(item)
 
         when (item) {
-            is ToolbarMenu.Item.Back -> sessionUseCases.goBack(currentTabId)
-            is ToolbarMenu.Item.Forward -> sessionUseCases.goForward(currentTabId)
-            is ToolbarMenu.Item.Reload -> sessionUseCases.reload(currentTabId)
-            is ToolbarMenu.Item.Stop -> sessionUseCases.stopLoading(currentTabId)
+            is ToolbarMenu.Item.Back, ToolbarMenu.CustomTabItem.Back -> sessionUseCases.goBack(
+                currentTabId
+            )
+            is ToolbarMenu.Item.Forward, ToolbarMenu.CustomTabItem.Forward -> sessionUseCases.goForward(
+                currentTabId
+            )
+            is ToolbarMenu.Item.Reload, ToolbarMenu.CustomTabItem.Reload -> sessionUseCases.reload(
+                currentTabId
+            )
+            is ToolbarMenu.Item.Stop, ToolbarMenu.CustomTabItem.Stop -> sessionUseCases.stopLoading(
+                currentTabId
+            )
             is ToolbarMenu.Item.Share -> shareCallback()
-            is ToolbarMenu.Item.FindInPage -> showFindInPageCallback()
+            is ToolbarMenu.Item.FindInPage, ToolbarMenu.CustomTabItem.FindInPage -> showFindInPageCallback()
             is ToolbarMenu.Item.AddToShortcuts -> {
                 ioScope.launch {
                     currentTab?.let { state ->
@@ -75,9 +84,10 @@ class BrowserMenuController(
                 }
             }
             is ToolbarMenu.Item.RequestDesktop -> requestDesktopCallback(item.isChecked)
-            is ToolbarMenu.Item.AddToHomeScreen -> addToHomeScreenCallback()
-            is ToolbarMenu.Item.OpenInBrowser -> openInBrowser()
-            is ToolbarMenu.Item.OpenInApp -> openInCallback()
+            is ToolbarMenu.CustomTabItem.RequestDesktop -> requestDesktopCallback(item.isChecked)
+            is ToolbarMenu.Item.AddToHomeScreen, ToolbarMenu.CustomTabItem.AddToHomeScreen -> addToHomeScreenCallback()
+            is ToolbarMenu.CustomTabItem.OpenInBrowser -> openInBrowser()
+            is ToolbarMenu.Item.OpenInApp, ToolbarMenu.CustomTabItem.OpenInApp -> openInCallback()
             is ToolbarMenu.Item.Settings -> appStore.dispatch(AppAction.OpenSettings(page = Screen.Settings.Page.Start))
         }
     }
@@ -109,27 +119,66 @@ class BrowserMenuController(
                 Shortcuts.shortcutRemovedCounter["removed_from_browser_menu"].add()
 
             is ToolbarMenu.Item.RequestDesktop -> {
-                if(item.isChecked) {
+                if (item.isChecked) {
                     BrowserMenu.browserMenuAction.record(
-                        BrowserMenu.BrowserMenuActionExtra("desktop_view_on"))
+                        BrowserMenu.BrowserMenuActionExtra("desktop_view_on")
+                    )
                 } else {
                     BrowserMenu.browserMenuAction.record(
-                        BrowserMenu.BrowserMenuActionExtra("desktop_view_off"))
+                        BrowserMenu.BrowserMenuActionExtra("desktop_view_off")
+                    )
                 }
             }
             is ToolbarMenu.Item.AddToHomeScreen -> BrowserMenu.browserMenuAction.record(
                 BrowserMenu.BrowserMenuActionExtra("add_to_home_screen")
             )
-            is ToolbarMenu.Item.OpenInBrowser ->BrowserMenu.browserMenuAction.record(
-                BrowserMenu.BrowserMenuActionExtra("open_in_focus")
-            )
+
             is ToolbarMenu.Item.OpenInApp -> BrowserMenu.browserMenuAction.record(
                 BrowserMenu.BrowserMenuActionExtra("open_in_app")
             )
             is ToolbarMenu.Item.Settings -> BrowserMenu.browserMenuAction.record(
                 BrowserMenu.BrowserMenuActionExtra("settings")
             )
-        }
 
+            // custom tabs
+            ToolbarMenu.CustomTabItem.Back -> CustomTabsToolbar.navigationToolbarAction.record(
+                CustomTabsToolbar.NavigationToolbarActionExtra("back")
+            )
+            ToolbarMenu.CustomTabItem.Forward -> CustomTabsToolbar.navigationToolbarAction.record(
+                CustomTabsToolbar.NavigationToolbarActionExtra("forward")
+            )
+            ToolbarMenu.CustomTabItem.Stop -> CustomTabsToolbar.navigationToolbarAction.record(
+                CustomTabsToolbar.NavigationToolbarActionExtra("stop")
+            )
+
+            ToolbarMenu.CustomTabItem.Reload -> CustomTabsToolbar.navigationToolbarAction.record(
+                CustomTabsToolbar.NavigationToolbarActionExtra("reload")
+            )
+
+            ToolbarMenu.CustomTabItem.AddToHomeScreen -> CustomTabsToolbar.browserMenuAction.record(
+                CustomTabsToolbar.BrowserMenuActionExtra("add_to_home_screen")
+            )
+            ToolbarMenu.CustomTabItem.OpenInApp -> CustomTabsToolbar.browserMenuAction.record(
+                CustomTabsToolbar.BrowserMenuActionExtra("open_in_app")
+            )
+            ToolbarMenu.CustomTabItem.OpenInBrowser -> CustomTabsToolbar.browserMenuAction.record(
+                CustomTabsToolbar.BrowserMenuActionExtra("open_in_browser")
+            )
+
+            ToolbarMenu.CustomTabItem.FindInPage -> CustomTabsToolbar.browserMenuAction.record(
+                CustomTabsToolbar.BrowserMenuActionExtra("find_in_page")
+            )
+            is ToolbarMenu.CustomTabItem.RequestDesktop -> {
+                if (item.isChecked) {
+                    CustomTabsToolbar.browserMenuAction.record(
+                        CustomTabsToolbar.BrowserMenuActionExtra("desktop_view_on")
+                    )
+                } else {
+                    CustomTabsToolbar.browserMenuAction.record(
+                        CustomTabsToolbar.BrowserMenuActionExtra("desktop_view_off")
+                    )
+                }
+            }
+        }
     }
 }

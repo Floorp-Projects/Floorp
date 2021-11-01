@@ -48,9 +48,9 @@ class CustomTabMenu(
             },
             secondaryImageTintResource = context.theme.resolveAttribute(R.attr.disabled),
             disableInSecondaryState = true,
-            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Back(true)) }
+            longClickListener = { onItemTapped.invoke(ToolbarMenu.CustomTabItem.Back) }
         ) {
-            onItemTapped.invoke(ToolbarMenu.Item.Back(true))
+            onItemTapped.invoke(ToolbarMenu.CustomTabItem.Back)
         }
 
         val forward = BrowserMenuItemToolbar.TwoStateButton(
@@ -62,9 +62,9 @@ class CustomTabMenu(
             },
             secondaryImageTintResource = context.theme.resolveAttribute(R.attr.disabled),
             disableInSecondaryState = true,
-            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Forward(true)) }
+            longClickListener = { onItemTapped.invoke(ToolbarMenu.CustomTabItem.Forward) }
         ) {
-            onItemTapped.invoke(ToolbarMenu.Item.Forward(true))
+            onItemTapped.invoke(ToolbarMenu.CustomTabItem.Forward)
         }
 
         val refresh = BrowserMenuItemToolbar.TwoStateButton(
@@ -78,12 +78,12 @@ class CustomTabMenu(
             secondaryContentDescription = context.getString(R.string.content_description_stop),
             secondaryImageTintResource = context.theme.resolveAttribute(R.attr.primaryText),
             disableInSecondaryState = false,
-            longClickListener = { onItemTapped.invoke(ToolbarMenu.Item.Reload(true)) }
+            longClickListener = { onItemTapped.invoke(ToolbarMenu.CustomTabItem.Reload) }
         ) {
             if (selectedSession?.content?.loading == true) {
-                onItemTapped.invoke(ToolbarMenu.Item.Stop(true))
+                onItemTapped.invoke(ToolbarMenu.CustomTabItem.Stop)
             } else {
-                onItemTapped.invoke(ToolbarMenu.Item.Reload(true))
+                onItemTapped.invoke(ToolbarMenu.CustomTabItem.Reload)
             }
         }
         BrowserMenuItemToolbar(listOf(back, forward, refresh))
@@ -94,7 +94,7 @@ class CustomTabMenu(
             label = context.getString(R.string.find_in_page),
             imageResource = R.drawable.mozac_ic_search
         ) {
-            onItemTapped.invoke(ToolbarMenu.Item.FindInPage(true))
+            onItemTapped.invoke(ToolbarMenu.CustomTabItem.FindInPage)
         }
 
         val desktopMode = BrowserMenuImageSwitch(
@@ -104,7 +104,7 @@ class CustomTabMenu(
                 selectedSession?.content?.desktopMode ?: true
             }
         ) { checked ->
-            onItemTapped.invoke(ToolbarMenu.Item.RequestDesktop(checked, true))
+            onItemTapped.invoke(ToolbarMenu.CustomTabItem.RequestDesktop(checked))
         }
 
         val reportSiteIssue = WebExtensionPlaceholderMenuItem(
@@ -116,20 +116,20 @@ class CustomTabMenu(
             label = context.getString(R.string.menu_add_to_home_screen),
             imageResource = R.drawable.mozac_ic_add_to_home_screen
         ) {
-            onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen(true))
+            onItemTapped.invoke(ToolbarMenu.CustomTabItem.AddToHomeScreen)
         }
 
         val appName = context.getString(R.string.app_name)
         val openInFocus = SimpleBrowserMenuItem(
             label = context.getString(R.string.menu_open_with_default_browser2, appName)
         ) {
-            onItemTapped.invoke(ToolbarMenu.Item.OpenInBrowser(true))
+            onItemTapped.invoke(ToolbarMenu.CustomTabItem.OpenInBrowser)
         }
 
         val openInApp = SimpleBrowserMenuItem(
             label = context.getString(R.string.menu_open_with_a_browser2)
         ) {
-            onItemTapped.invoke(ToolbarMenu.Item.OpenInApp(true))
+            onItemTapped.invoke(ToolbarMenu.CustomTabItem.OpenInApp)
         }
 
         val poweredBy = BrowserMenuCategory(
