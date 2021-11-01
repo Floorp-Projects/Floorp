@@ -122,6 +122,10 @@
     <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">Slå automatisk lukning til</string>
 
 
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">Slå automatisk lukning til</string>
+
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Nyt faneblad</string>
@@ -2001,16 +2005,30 @@
     <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">SLÅ AUTOMATISK LUKNING TIL</string>
 
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">Automatisk lukning aktiveret</string>
+
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
     <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Hjælp os med at gøre det bedre</string>
 
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header_1">Hjælp os med at gøre det bedre</string>
+
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
     <string name="inactive_tabs_survey_content">Hvorfor deaktiverede du inaktive faner?</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_do_not_understand">Jeg forstår ikke, hvordan det fungerer</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_do_it_myself">Jeg rydder gerne op i gamle faneblade selv</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Det tager for lang tid, inden de bliver inaktive</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_long_option_1">Det tager for lang tid, inden de bliver inaktive</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Det tager for kort tid, inden de bliver inaktive</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option_1">Det tager for kort tid, inden de bliver inaktive</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
     <string name="inactive_tabs_survey_send_button">Send</string>
     <!-- Content description for inactive tabs survey close button -->

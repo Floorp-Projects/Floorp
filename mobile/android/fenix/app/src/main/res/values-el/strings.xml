@@ -145,7 +145,7 @@
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
-    <string name="recent_tabs_header">Επιστροφή</string>
+    <string name="recent_tabs_header">Άμεση επιστροφή</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Εμφάνιση όλων</string>
 

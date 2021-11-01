@@ -659,6 +659,14 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Lat att</string>
 
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d nettstad</string>
+
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d nettstadar</string>
+
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Nyleg attlatne faner</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -694,6 +702,9 @@
     <string name="close_tabs_after_one_week">Etter ei veke</string>
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">Etter ein månad</string>
+
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Lat att opne faner automatisk</string>
 
     <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
@@ -1973,16 +1984,16 @@
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
     <string name="inactive_tabs_title">Inaktive faner</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">Faner er tilgjengelege her i %s. Etter det vert fanene automatisk attlatne.</string>
+    <string moz:removedIn="95" name="inactive_tabs_description" tools:ignore="UnusedResources">Faner er tilgjengelege her i %s. Etter det vert fanene automatisk attlatne.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 dagar</string>
+    <string moz:removedIn="95" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 dagar</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 veke</string>
+    <string moz:removedIn="95" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 veke</string>
 
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Send</string>
+    <string name="inactive_tabs_survey_send_button">Send</string>
     <!-- Content description for inactive tabs survey close button -->
-    <string name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Lat att</string>
+    <string name="inactive_tabs_survey_close_button_content_description">Lat att</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Vel at lenker frå nettstadar, e-postmeldingar og meldingar skal opnast automatisk i Firefox.</string>
@@ -1999,6 +2010,8 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Lat att</string>
 
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_categories_header">Artiklar etter emne</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">Oppdag meir</string>
     <!-- Title of an app feature. Smaller than a heading.-->

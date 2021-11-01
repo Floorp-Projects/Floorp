@@ -137,7 +137,7 @@
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
-    <string name="recent_tabs_header">Quay lại trang trước</string>
+    <string name="recent_tabs_header">Trang đã xem gần đây</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Hiển thị tất cả</string>
 
@@ -463,7 +463,7 @@
 
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
-    <string name="customize_toggle_jump_back_in">Quay lại trang trước</string>
+    <string name="customize_toggle_jump_back_in">Trang đã xem gần đây</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Đã lưu gần đây</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
