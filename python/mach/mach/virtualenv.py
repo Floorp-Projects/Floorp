@@ -37,6 +37,10 @@ defined by the $PATH environment variable and try again.
 """.lstrip()
 
 
+class MozVirtualenvMetadataOutOfDateError(Exception):
+    pass
+
+
 class MozVirtualenvMetadata:
     """Moz-specific information that is encoded into a file at the root of a virtualenv"""
 
@@ -58,6 +62,10 @@ class MozVirtualenvMetadata:
         )
 
     @classmethod
+    def from_runtime(cls):
+        return cls.from_path(os.path.join(sys.prefix, METADATA_FILENAME))
+
+    @classmethod
     def from_path(cls, path):
         try:
             with open(path, "r") as file:
@@ -67,8 +75,12 @@ class MozVirtualenvMetadata:
                 raw["virtualenv_name"],
                 path,
             )
-        except (FileNotFoundError, KeyError):
+        except FileNotFoundError:
             return None
+        except KeyError:
+            raise MozVirtualenvMetadataOutOfDateError(
+                f'The virtualenv metadata at "{path}" is out-of-date.'
+            )
 
 
 class VirtualenvHelper(object):
@@ -106,7 +118,6 @@ class VirtualenvManager(VirtualenvHelper):
         virtualenvs_dir,
         virtualenv_name,
         *,
-        populate_local_paths=True,
         log_handle=sys.stdout,
         base_python=sys.executable,
         manifest_path=None,
@@ -132,7 +143,6 @@ class VirtualenvManager(VirtualenvHelper):
         self.exe_info_path = os.path.join(self.virtualenv_root, "python_exe.txt")
 
         self.log_handle = log_handle
-        self.populate_local_paths = populate_local_paths
         self._virtualenv_name = virtualenv_name
         self._manifest_path = manifest_path or os.path.join(
             topsrcdir, "build", f"{virtualenv_name}_virtualenv_packages.txt"
@@ -201,13 +211,16 @@ class VirtualenvManager(VirtualenvHelper):
         #   built
         # * If the "hex_version" doesn't match, then the system Python has changed/been
         #   upgraded.
-        existing_metadata = MozVirtualenvMetadata.from_path(self._metadata.file_path)
-        if existing_metadata != self._metadata:
+        try:
+            existing_metadata = MozVirtualenvMetadata.from_path(
+                self._metadata.file_path
+            )
+            if existing_metadata != self._metadata:
+                return False
+        except MozVirtualenvMetadataOutOfDateError:
             return False
 
-        if (
-            env_requirements.pth_requirements or env_requirements.vendored_requirements
-        ) and self.populate_local_paths:
+        if env_requirements.pth_requirements or env_requirements.vendored_requirements:
             try:
                 with open(
                     os.path.join(self._site_packages_dir(), PTH_FILENAME)
@@ -331,19 +344,18 @@ class VirtualenvManager(VirtualenvHelper):
         """
         self.create()
         env_requirements = self.requirements()
-        if self.populate_local_paths:
-            site_packages_dir = self._site_packages_dir()
-            with open(os.path.join(site_packages_dir, PTH_FILENAME), "a") as f:
-                for pth_requirement in (
-                    env_requirements.pth_requirements
-                    + env_requirements.vendored_requirements
-                ):
-                    path = os.path.join(self.topsrcdir, pth_requirement.path)
-                    # This path is relative to the .pth file.  Using a
-                    # relative path allows the srcdir/objdir combination
-                    # to be moved around (as long as the paths relative to
-                    # each other remain the same).
-                    f.write("{}\n".format(os.path.relpath(path, site_packages_dir)))
+        site_packages_dir = self._site_packages_dir()
+        with open(os.path.join(site_packages_dir, PTH_FILENAME), "a") as f:
+            for pth_requirement in (
+                env_requirements.pth_requirements
+                + env_requirements.vendored_requirements
+            ):
+                path = os.path.join(self.topsrcdir, pth_requirement.path)
+                # This path is relative to the .pth file.  Using a
+                # relative path allows the srcdir/objdir combination
+                # to be moved around (as long as the paths relative to
+                # each other remain the same).
+                f.write("{}\n".format(os.path.relpath(path, site_packages_dir)))
 
         old_env_variables = {}
         try:
