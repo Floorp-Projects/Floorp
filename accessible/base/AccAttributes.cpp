@@ -98,3 +98,51 @@ bool AccAttributes::Equal(const AccAttributes* aOther) const {
   }
   return true;
 }
+
+void AccAttributes::CopyTo(AccAttributes* aDest) const {
+  for (auto iter = mData.ConstIter(); !iter.Done(); iter.Next()) {
+    iter.Data().match(
+        [&iter, &aDest](const bool& val) {
+          aDest->mData.InsertOrUpdate(iter.Key(), AsVariant(val));
+        },
+        [&iter, &aDest](const float& val) {
+          aDest->mData.InsertOrUpdate(iter.Key(), AsVariant(val));
+        },
+        [&iter, &aDest](const double& val) {
+          aDest->mData.InsertOrUpdate(iter.Key(), AsVariant(val));
+        },
+        [&iter, &aDest](const int32_t& val) {
+          aDest->mData.InsertOrUpdate(iter.Key(), AsVariant(val));
+        },
+        [&iter, &aDest](const RefPtr<nsAtom>& val) {
+          aDest->mData.InsertOrUpdate(iter.Key(), AsVariant(val));
+        },
+        [](const nsTArray<int32_t>& val) {
+          // We don't copy arrays.
+          MOZ_ASSERT_UNREACHABLE(
+              "Trying to copy an AccAttributes containing an array");
+        },
+        [&iter, &aDest](const CSSCoord& val) {
+          aDest->mData.InsertOrUpdate(iter.Key(), AsVariant(val));
+        },
+        [&iter, &aDest](const FontSize& val) {
+          aDest->mData.InsertOrUpdate(iter.Key(), AsVariant(val));
+        },
+        [&iter, &aDest](const Color& val) {
+          aDest->mData.InsertOrUpdate(iter.Key(), AsVariant(val));
+        },
+        [](const DeleteEntry& val) {
+          // We don't copy DeleteEntry.
+          MOZ_ASSERT_UNREACHABLE(
+              "Trying to copy an AccAttributes containing a DeleteEntry");
+        },
+        [&iter, &aDest](const UniquePtr<nsString>& val) {
+          aDest->SetAttributeStringCopy(iter.Key(), *val);
+        },
+        [](const RefPtr<AccAttributes>& val) {
+          // We don't copy nested AccAttributes.
+          MOZ_ASSERT_UNREACHABLE(
+              "Trying to copy an AccAttributes containing an AccAttributes");
+        });
+  }
+}
