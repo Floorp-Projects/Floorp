@@ -152,10 +152,7 @@ bool MediaPlaybackDelayPolicy::ShouldDelayPlayback(
   const Document* doc = aElement->OwnerDoc();
   nsPIDOMWindowInner* inner = nsPIDOMWindowInner::From(doc->GetInnerWindow());
   nsPIDOMWindowOuter* outer = nsPIDOMWindowOuter::GetFromCurrentInner(inner);
-  if (!outer) {
-    return false;
-  }
-  return outer->GetMediaSuspend() == nsISuspendedTypes::SUSPENDED_BLOCK;
+  return outer && outer->ShouldDelayMediaFromStart();
 }
 
 RefPtr<ResumeDelayedPlaybackAgent>
