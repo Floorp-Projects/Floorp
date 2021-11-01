@@ -5,7 +5,9 @@
 
 #include "HyperTextAccessibleBase.h"
 
+#include "AccAttributes.h"
 #include "mozilla/a11y/Accessible.h"
+#include "mozilla/a11y/HyperTextAccessible.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "nsAccUtils.h"
 #include "TextLeafRange.h"
@@ -290,6 +292,87 @@ bool HyperTextAccessibleBase::IsValidRange(int32_t aStartOffset,
 
 Accessible* HyperTextAccessibleBase::LinkAt(uint32_t aIndex) {
   return Acc()->EmbeddedChildAt(aIndex);
+}
+
+already_AddRefed<AccAttributes> HyperTextAccessibleBase::TextAttributes(
+    bool aIncludeDefAttrs, int32_t aOffset, int32_t* aStartOffset,
+    int32_t* aEndOffset) {
+  MOZ_ASSERT(StaticPrefs::accessibility_cache_enabled_AtStartup());
+  *aStartOffset = *aEndOffset = 0;
+  index_t offset = ConvertMagicOffset(aOffset);
+  if (!offset.IsValid() || offset > CharacterCount()) {
+    NS_ERROR("Wrong in offset!");
+    return RefPtr{new AccAttributes()}.forget();
+  }
+
+  Accessible* originAcc = GetChildAtOffset(offset);
+  if (!originAcc) {
+    // Offset 0 is correct offset when accessible has empty text. Include
+    // default attributes if they were requested, otherwise return empty set.
+    if (offset == 0) {
+      if (aIncludeDefAttrs) {
+        // XXX This will be adjusted when DefaultTextAttributes is unified.
+        if (LocalAccessible* acc = Acc()->AsLocal()) {
+          return acc->AsHyperText()->DefaultTextAttributes();
+        }
+      }
+    }
+    return RefPtr{new AccAttributes()}.forget();
+  }
+
+  if (!originAcc->IsText()) {
+    // This is an embedded object. One or more consecutive embedded objects
+    // form a single attrs run with no attributes.
+    *aStartOffset = aOffset;
+    *aEndOffset = aOffset + 1;
+    Accessible* parent = originAcc->Parent();
+    if (!parent) {
+      return RefPtr{new AccAttributes()}.forget();
+    }
+    int32_t originIdx = originAcc->IndexInParent();
+    if (originIdx > 0) {
+      // Check for embedded objects before the origin.
+      for (uint32_t idx = originIdx - 1;; --idx) {
+        Accessible* sibling = parent->ChildAt(idx);
+        if (sibling->IsText()) {
+          break;
+        }
+        --*aStartOffset;
+        if (idx == 0) {
+          break;
+        }
+      }
+    }
+    // Check for embedded objects after the origin.
+    for (uint32_t idx = originIdx + 1;; ++idx) {
+      Accessible* sibling = parent->ChildAt(idx);
+      if (!sibling || sibling->IsText()) {
+        break;
+      }
+      ++*aEndOffset;
+    }
+    return RefPtr{new AccAttributes()}.forget();
+  }
+
+  TextLeafPoint origin = ToTextLeafPoint(static_cast<int32_t>(offset));
+  RefPtr<AccAttributes> attributes = origin.GetTextAttributes(aIncludeDefAttrs);
+  TextLeafPoint start = origin.FindTextAttrsStart(
+      eDirPrevious, /* aIncludeOrigin */ true, attributes, aIncludeDefAttrs);
+  *aStartOffset =
+      static_cast<int32_t>(TransformOffset(start.mAcc, start.mOffset,
+                                           /* aIsEndOffset */ false));
+  if (*aStartOffset == static_cast<int32_t>(CharacterCount()) &&
+      (*aStartOffset > static_cast<int32_t>(offset) || start != origin)) {
+    // start is before this HyperTextAccessible. In that case,
+    // Transformoffset will return CharacterCount(), but we want to
+    // clip to the start of this HyperTextAccessible, not the end.
+    *aStartOffset = 0;
+  }
+  TextLeafPoint end = origin.FindTextAttrsStart(
+      eDirNext, /* aIncludeOrigin */ false, attributes, aIncludeDefAttrs);
+  *aEndOffset = static_cast<int32_t>(TransformOffset(end.mAcc, end.mOffset,
+                                                     /* aIsEndOffset */ true));
+  return attributes.forget();
 }
 
 }  // namespace mozilla::a11y

@@ -65,15 +65,16 @@ ia2AccessibleText::get_attributes(long aOffset, long* aStartOffset,
   *aTextAttributes = nullptr;
 
   int32_t startOffset = 0, endOffset = 0;
-  auto [textAcc, hr] = LocalTextAcc();
+  HyperTextAccessibleBase* textAcc = TextAcc();
   if (!textAcc) {
-    return hr;
+    return CO_E_OBJNOTCONNECTED;
   }
 
   RefPtr<AccAttributes> attributes =
       textAcc->TextAttributes(true, aOffset, &startOffset, &endOffset);
 
-  hr = ia2Accessible::ConvertToIA2Attributes(attributes, aTextAttributes);
+  HRESULT hr =
+      ia2Accessible::ConvertToIA2Attributes(attributes, aTextAttributes);
   if (FAILED(hr)) return hr;
 
   *aStartOffset = startOffset;

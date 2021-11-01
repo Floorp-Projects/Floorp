@@ -177,13 +177,9 @@ class HyperTextAccessible : public AccessibleWrap,
                        int32_t* aStartOffset, int32_t* aEndOffset,
                        nsAString& aText);
 
-  /**
-   * Return text attributes for the given text range.
-   */
-  already_AddRefed<AccAttributes> TextAttributes(bool aIncludeDefAttrs,
-                                                 int32_t aOffset,
-                                                 int32_t* aStartOffset,
-                                                 int32_t* aEndOffset);
+  virtual already_AddRefed<AccAttributes> TextAttributes(
+      bool aIncludeDefAttrs, int32_t aOffset, int32_t* aStartOffset,
+      int32_t* aEndOffset) override;
 
   /**
    * Return text attributes applied to the accessible.
