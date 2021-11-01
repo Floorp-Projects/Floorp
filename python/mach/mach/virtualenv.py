@@ -23,20 +23,6 @@ PTH_FILENAME = "mach.pth"
 METADATA_FILENAME = "moz_virtualenv_metadata.json"
 
 
-UPGRADE_WINDOWS = """
-Please upgrade to the latest MozillaBuild development environment. See
-https://developer.mozilla.org/en-US/docs/Developer_Guide/Build_Instructions/Windows_Prerequisites
-""".lstrip()
-
-UPGRADE_OTHER = """
-Run |mach bootstrap| to ensure your system is up to date.
-
-If you still receive this error, your shell environment is likely detecting
-another Python version. Ensure a modern Python can be found in the paths
-defined by the $PATH environment variable and try again.
-""".lstrip()
-
-
 class MozVirtualenvMetadataOutOfDateError(Exception):
     pass
 
@@ -489,25 +475,3 @@ def get_archflags():
     # causing a build failure. To avoid this, we explicitly influence the build to only
     # target a single architecture - our current architecture.
     return "-arch {}".format(platform.machine())
-
-
-def verify_python_version(log_handle):
-    """Ensure the current version of Python is sufficient."""
-    from distutils.version import LooseVersion
-
-    major, minor, micro = sys.version_info[:3]
-    minimum_python_versions = {2: LooseVersion("2.7.3"), 3: LooseVersion("3.6.0")}
-    our = LooseVersion("%d.%d.%d" % (major, minor, micro))
-
-    if major not in minimum_python_versions or our < minimum_python_versions[major]:
-        log_handle.write("One of the following Python versions are required:\n")
-        for minver in minimum_python_versions.values():
-            log_handle.write("* Python %s or greater\n" % minver)
-        log_handle.write("You are running Python %s.\n" % our)
-
-        if os.name in ("nt", "ce"):
-            log_handle.write(UPGRADE_WINDOWS)
-        else:
-            log_handle.write(UPGRADE_OTHER)
-
-        sys.exit(1)
