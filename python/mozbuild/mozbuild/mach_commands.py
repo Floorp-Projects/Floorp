@@ -2460,7 +2460,6 @@ def create_mach_environment(command_context, force=False):
         command_context.topsrcdir,
         os.path.dirname(virtualenv_path),
         "mach",
-        populate_local_paths=False,
     )
 
     if manager.up_to_date() and not force:
