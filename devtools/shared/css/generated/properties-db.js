@@ -5441,6 +5441,23 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "color-scheme": {
+    "isInherited": true,
+    "subproperties": [
+      "color-scheme"
+    ],
+    "supports": [],
+    "values": [
+      "dark",
+      "inherit",
+      "initial",
+      "light",
+      "normal",
+      "only",
+      "revert",
+      "unset"
+    ]
+  },
   "column-count": {
     "isInherited": false,
     "subproperties": [
