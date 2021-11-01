@@ -54,3 +54,6 @@ fuzzy-if(!nativeThemePref,0-5,0-1) == 1349646.html 1349646-ref.html
 == appearance-revert.html appearance-revert-ref.html
 
 needs-focus == focus-non-themed.html focus-non-themed-ref.html
+
+== button-visibility-1.html button-visibility-1-ref.html
+
