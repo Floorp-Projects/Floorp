@@ -23,6 +23,8 @@ EXTRA_DIST = \
 	subprojects/freetype2.wrap \
 	subprojects/glib.wrap \
 	subprojects/google-benchmark.wrap \
+	subprojects/ragel.wrap \
+	subprojects/packagefiles/ragel/meson.build \
 	subprojects/ttf-parser.wrap \
 	perf/meson.build \
 	perf/perf-draw.hh \

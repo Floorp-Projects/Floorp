@@ -390,6 +390,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   Atomic<uint32_t> mCapsToClear{0};
   Atomic<bool, ReleaseAcquire> mResponseIsComplete{false};
   Atomic<bool, ReleaseAcquire> mClosed{false};
+  Atomic<bool, Relaxed> mIsHttp3Used{false};
 
   // True iff WriteSegments was called while this transaction should be
   // throttled (stop reading) Used to resume read on unblock of reading.  Conn
@@ -420,8 +421,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   bool mContentDecodingCheck{false};
   bool mDeferredSendProgress{false};
   bool mWaitingOnPipeOut{false};
-
-  bool mIsHttp3Used = false;
   bool mDoNotRemoveAltSvc{false};
 
   // mClosed           := transaction has been explicitly closed

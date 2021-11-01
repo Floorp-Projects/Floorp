@@ -11,15 +11,15 @@
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 
+#include "unicode/udateintervalformat.h"
 #include "unicode/utypes.h"
 
-struct UDateIntervalFormat;
-struct UFormattedDateInterval;
-struct UFormattedValue;
-
 namespace mozilla::intl {
-class AutoFormattedDateInterval;
 class Calendar;
+
+using AutoFormattedDateInterval =
+    AutoFormattedResult<UFormattedDateInterval, udtitvfmt_openResult,
+                        udtitvfmt_resultAsValue, udtitvfmt_closeResult>;
 
 /**
  * This component is a Mozilla-focused API for the date range formatting
@@ -100,59 +100,6 @@ class DateIntervalFormat final {
 
   ICUPointer<UDateIntervalFormat> mDateIntervalFormat =
       ICUPointer<UDateIntervalFormat>(nullptr);
-};
-
-/**
- * A RAII class to hold the formatted value of DateIntervalFormat.
- *
- * The caller will need to create this AutoFormattedDateInterval on the stack,
- * and call IsValid() method to check if the native object
- * (UFormattedDateInterval) has been created properly, and then passes this
- * object to the methods of DateIntervalFormat.
- * The result of the DateIntervalFormat's method will be stored in this object,
- * the caller can use ToSpan() method to get the formatted string, or pass it
- * to DateIntervalFormat::TryFormattedToParts to get the DateTimePart vector.
- *
- * The formatted value will be released once this class is destructed.
- */
-class MOZ_RAII AutoFormattedDateInterval {
- public:
-  AutoFormattedDateInterval();
-  ~AutoFormattedDateInterval();
-
-  AutoFormattedDateInterval(const AutoFormattedDateInterval& other) = delete;
-  AutoFormattedDateInterval& operator=(const AutoFormattedDateInterval& other) =
-      delete;
-
-  AutoFormattedDateInterval(AutoFormattedDateInterval&& other) = delete;
-  AutoFormattedDateInterval& operator=(AutoFormattedDateInterval&& other) =
-      delete;
-
-  /**
-   * Check if the native UFormattedDateInterval was created successfully.
-   */
-  bool IsValid() const { return !!mFormatted; }
-
-  /**
-   *  Get error code if IsValid() returns false.
-   */
-  ICUError GetError() const { return ToICUError(mError); }
-
-  /**
-   * Get the formatted result.
-   */
-  Result<Span<const char16_t>, ICUError> ToSpan() const;
-
- private:
-  friend class DateIntervalFormat;
-  UFormattedDateInterval* GetUFormattedDateInterval() const {
-    return mFormatted;
-  }
-
-  const UFormattedValue* Value() const;
-
-  UFormattedDateInterval* mFormatted = nullptr;
-  UErrorCode mError = U_ZERO_ERROR;
 };
 }  // namespace mozilla::intl
 

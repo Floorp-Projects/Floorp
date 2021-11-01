@@ -70,10 +70,14 @@ struct NurseryChunk : public ChunkBase {
                    MemCheckKind checkKind);
   void poisonAfterEvict(size_t extent = ChunkSize);
 
-  // The end of the range is always ChunkSize.
-  void markPagesUnusedHard(size_t from);
-  // The start of the range is always the beginning of the chunk.
-  [[nodiscard]] bool markPagesInUseHard(size_t to);
+  // Mark pages from startOffset to the end of the chunk as unused. The start
+  // offset must be after the first page, which contains the chunk header and is
+  // not marked as unused.
+  void markPagesUnusedHard(size_t startOffset);
+
+  // Mark pages from the second page of the chunk to endOffset as in use,
+  // following a call to markPagesUnusedHard.
+  [[nodiscard]] bool markPagesInUseHard(size_t endOffset);
 
   uintptr_t start() const { return uintptr_t(&data); }
   uintptr_t end() const { return uintptr_t(this) + ChunkSize; }
@@ -109,17 +113,22 @@ inline void js::NurseryChunk::poisonAfterEvict(size_t extent) {
               JS_SWEPT_NURSERY_PATTERN, MemCheckKind::MakeNoAccess);
 }
 
-inline void js::NurseryChunk::markPagesUnusedHard(size_t from) {
-  MOZ_ASSERT(from >= sizeof(ChunkBase));  // Don't touch the header.
-  MOZ_ASSERT(from <= ChunkSize);
-  uintptr_t start = uintptr_t(this) + from;
-  MarkPagesUnusedHard(reinterpret_cast<void*>(start), ChunkSize - from);
+inline void js::NurseryChunk::markPagesUnusedHard(size_t startOffset) {
+  MOZ_ASSERT(startOffset >= sizeof(ChunkBase));  // Don't touch the header.
+  MOZ_ASSERT(startOffset >= SystemPageSize());
+  MOZ_ASSERT(startOffset <= ChunkSize);
+  uintptr_t start = uintptr_t(this) + startOffset;
+  size_t length = ChunkSize - startOffset;
+  MarkPagesUnusedHard(reinterpret_cast<void*>(start), length);
 }
 
-inline bool js::NurseryChunk::markPagesInUseHard(size_t to) {
-  MOZ_ASSERT(to >= sizeof(ChunkBase));
-  MOZ_ASSERT(to <= ChunkSize);
-  return MarkPagesInUseHard(this, to);
+inline bool js::NurseryChunk::markPagesInUseHard(size_t endOffset) {
+  MOZ_ASSERT(endOffset >= sizeof(ChunkBase));
+  MOZ_ASSERT(endOffset >= SystemPageSize());
+  MOZ_ASSERT(endOffset <= ChunkSize);
+  uintptr_t start = uintptr_t(this) + SystemPageSize();
+  size_t length = endOffset - SystemPageSize();
+  return MarkPagesInUseHard(reinterpret_cast<void*>(start), length);
 }
 
 // static

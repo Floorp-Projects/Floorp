@@ -448,6 +448,7 @@ nsWindow::nsWindow()
       mTitlebarBackdropState(false),
       mIsPIPWindow(false),
       mIsWaylandPanelWindow(false),
+      mIsChildWindow(false),
       mAlwaysOnTop(false),
       mNoAutoHide(false),
       mMouseTransparent(false),
@@ -615,6 +616,21 @@ bool nsWindow::AreBoundsSane() {
   return mBounds.width > 0 && mBounds.height > 0;
 }
 
+// Walk the list of child windows and call destroy on them.
+void nsWindow::DestroyChildWindows() {
+  LOG("nsWindow::DestroyChildWindows()");
+  if (!mGdkWindow) {
+    return;
+  }
+  while (GList* children = gdk_window_peek_children(mGdkWindow)) {
+    GdkWindow* child = GDK_WINDOW(children->data);
+    nsWindow* kid = get_window_for_gdk_window(child);
+    if (kid) {
+      kid->Destroy();
+    }
+  }
+}
+
 void nsWindow::Destroy() {
   if (mIsDestroyed || !mCreated) return;
 
@@ -686,13 +702,12 @@ void nsWindow::Destroy() {
     gFocusWindow = nullptr;
   }
 
-  if (mShell) {
-    gtk_widget_destroy(mShell);
-    mShell = nullptr;
-    mContainer = nullptr;
-    MOZ_ASSERT(!mGdkWindow,
-               "mGdkWindow should be NULL when mContainer is destroyed");
-  }
+  gtk_widget_destroy(mShell);
+  mShell = nullptr;
+  mContainer = nullptr;
+
+  MOZ_ASSERT(!mGdkWindow,
+             "mGdkWindow should be NULL when mContainer is destroyed");
 
 #ifdef ACCESSIBILITY
   if (mRootAccessible) {
@@ -758,6 +773,45 @@ DesktopToLayoutDeviceScale nsWindow::GetDesktopToDeviceScaleByScreen() {
   return nsBaseWidget::GetDesktopToDeviceScale();
 }
 
+// Reparent a child window to a new parent.
+void nsWindow::SetParent(nsIWidget* aNewParent) {
+  LOG("nsWindow::SetParent() new parent %p", aNewParent);
+  if (!mIsChildWindow) {
+    NS_WARNING("Used by child widgets only");
+    return;
+  }
+
+  nsCOMPtr<nsIWidget> kungFuDeathGrip = this;
+  if (mParent) {
+    mParent->RemoveChild(this);
+  }
+  mParent = aNewParent;
+
+  // We're already deleted, quit.
+  if (!mGdkWindow || mIsDestroyed || !aNewParent) {
+    return;
+  }
+  aNewParent->AddChild(this);
+
+  auto* newParent = static_cast<nsWindow*>(aNewParent);
+
+  // New parent is deleted, quit.
+  if (newParent->mIsDestroyed) {
+    Destroy();
+    return;
+  }
+
+  GdkWindow* window = GetToplevelGdkWindow();
+  GdkWindow* parentWindow = newParent->GetToplevelGdkWindow();
+  LOG("  child GdkWindow %p set parent GdkWindow %p", window, parentWindow);
+  gdk_window_reparent(window, parentWindow, 0, 0);
+
+  bool parentHasMappedToplevel = newParent && newParent->mHasMappedToplevel;
+  if (mHasMappedToplevel != parentHasMappedToplevel) {
+    SetHasMappedToplevel(parentHasMappedToplevel);
+  }
+}
+
 bool nsWindow::WidgetTypeSupportsAcceleration() {
   if (mWindowType == eWindowType_invisible) {
     return false;
@@ -774,6 +828,21 @@ bool nsWindow::WidgetTypeSupportsAcceleration() {
   }
 
   return true;
+}
+
+void nsWindow::ReparentNativeWidget(nsIWidget* aNewParent) {
+  MOZ_ASSERT(aNewParent, "null widget");
+  MOZ_ASSERT(!mIsDestroyed, "");
+  MOZ_ASSERT(!static_cast<nsWindow*>(aNewParent)->mIsDestroyed, "");
+  MOZ_ASSERT(
+      !mParent,
+      "nsWindow::ReparentNativeWidget() works on toplevel windows only.");
+
+  auto* newParent = static_cast<nsWindow*>(aNewParent);
+  GtkWindow* newParentWidget = GTK_WINDOW(newParent->GetGtkWidget());
+
+  LOG("nsWindow::ReparentNativeWidget new parent %p\n", newParent);
+  gtk_window_set_transient_for(GTK_WINDOW(mShell), newParentWidget);
 }
 
 void nsWindow::SetModal(bool aModal) {
@@ -3186,10 +3255,12 @@ LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
 
 void nsWindow::CaptureMouse(bool aCapture) {
   LOG("nsWindow::CaptureMouse() [%p]\n", (void*)this);
+
+  if (mIsDestroyed) {
+    return;
+  }
+
   if (aCapture) {
-    if (!mGdkWindow) {
-      return;
-    }
     gtk_grab_add(GTK_WIDGET(mContainer));
     GrabPointer(GetLastUserInputTime());
   } else {
@@ -3202,10 +3273,11 @@ void nsWindow::CaptureRollupEvents(nsIRollupListener* aListener,
                                    bool aDoCapture) {
   LOG("CaptureRollupEvents() %i\n", int(aDoCapture));
 
+  if (mIsDestroyed) {
+    return;
+  }
+
   if (aDoCapture) {
-    if (!mGdkWindow) {
-      return;
-    }
     gRollupListener = aListener;
     // Don't add a grab if a drag is in progress, or if the widget is a drag
     // feedback popup. (panels with type="drag").
@@ -5184,6 +5256,7 @@ void nsWindow::ConfigureGdkWindow() {
 void nsWindow::ReleaseGdkWindow() {
   LOG("nsWindow::ReleaseGdkWindow() [%p]", this);
 
+  DestroyChildWindows();
   DisableRenderingToWindow();
 
   if (mGdkWindow) {
@@ -5245,7 +5318,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                                 (aInitData && aInitData->mSupportTranslucency));
 
   // Figure out our parent window - only used for eWindowType_child
-  GtkContainer* parentGtkContainer = nullptr;
   GdkWindow* parentGdkWindow = nullptr;
   nsWindow* parentnsWindow = nullptr;
 
@@ -5258,26 +5330,30 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     if (!parentnsWindow) {
       return NS_ERROR_FAILURE;
     }
-  } else if (aNativeParent && GTK_IS_CONTAINER(aNativeParent)) {
-    parentGtkContainer = GTK_CONTAINER(aNativeParent);
   }
 
   if (mWindowType == eWindowType_child) {
+    // We don't support eWindowType_child directly but emulate it by popup
+    // windows.
     mWindowType = eWindowType_popup;
-    if (!parentnsWindow && parentGtkContainer) {
-      parentnsWindow =
-          get_window_for_gtk_widget(GTK_WIDGET(parentGtkContainer));
+    if (!parentnsWindow) {
+      if (aNativeParent && GTK_IS_CONTAINER(aNativeParent)) {
+        parentnsWindow = get_window_for_gtk_widget(GTK_WIDGET(aNativeParent));
+      }
     }
-    LOG("  child widget, switch to popup. parent nsWindow %p\n",
-        parentnsWindow);
+    mIsChildWindow = true;
+    LOG("  child widget, switch to popup. parent nsWindow %p", parentnsWindow);
   }
 
-  if (GdkIsWaylandDisplay() && mWindowType == eWindowType_popup &&
-      !aNativeParent && !aParent) {
-    // mIsWaylandPanelWindow is a special toplevel window on Wayland which
-    // emulates X11 popup window without parent.
-    mIsWaylandPanelWindow = true;
-    mWindowType = eWindowType_toplevel;
+  if (mWindowType == eWindowType_popup && !parentnsWindow) {
+    LOG_POPUP("  popup window without parent!");
+    if (GdkIsWaylandDisplay()) {
+      LOG_POPUP("  switch to toplevel on Wayland.");
+      // Wayland does not allow to create popup without parent so switch to
+      // toplevel and mark as wayland panel.
+      mIsWaylandPanelWindow = true;
+      mWindowType = eWindowType_toplevel;
+    }
   }
 
   mAlwaysOnTop = aInitData && aInitData->mAlwaysOnTop;
@@ -5386,7 +5462,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
               GTK_WINDOW(mShell), GTK_WINDOW(parentnsWindow->GetGtkWidget()));
           LOG("    set parent window [%p]\n", parentnsWindow);
         }
-
       } else if (mWindowType == eWindowType_popup) {
         MOZ_ASSERT(aInitData);
         mGtkWindowRoleName = "Popup";
@@ -5574,6 +5649,15 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected eWindowType");
       return NS_ERROR_FAILURE;
+  }
+
+  if (mIsChildWindow && parentnsWindow) {
+    GdkWindow* window = GetToplevelGdkWindow();
+    GdkWindow* parentWindow = parentnsWindow->GetToplevelGdkWindow();
+    LOG("  child GdkWindow %p set parent GdkWindow %p", window, parentWindow);
+    gdk_window_reparent(window, parentWindow,
+                        DevicePixelsToGdkCoordRoundDown(mBounds.x),
+                        DevicePixelsToGdkCoordRoundDown(mBounds.y));
   }
 
   if (mDrawToContainer) {
@@ -5823,6 +5907,7 @@ void nsWindow::NativeMoveResize(bool aMoved, bool aResized) {
   // and move it when it's shown.
   if (aMoved && GdkIsX11Display() && IsPopup() &&
       !gtk_widget_get_visible(GTK_WIDGET(mShell))) {
+    LOG("  store position of hidden popup window");
     mHiddenPopupPositioned = true;
     mPopupPosition = topLeft;
   }
@@ -5836,6 +5921,12 @@ void nsWindow::NativeMoveResize(bool aMoved, bool aResized) {
     }
     if (aResized) {
       gtk_window_resize(GTK_WINDOW(mShell), size.width, size.height);
+      if (mIsDragPopup) {
+        // DND window is placed inside container so we need to make hard size
+        // request to ensure parent container is resized too.
+        gtk_widget_set_size_request(GTK_WIDGET(mShell), size.width,
+                                    size.height);
+      }
     }
   }
 
@@ -6057,6 +6148,7 @@ void nsWindow::NativeShow(bool aAction) {
     }
 
     if (mHiddenPopupPositioned && IsPopup()) {
+      LOG("  re-position hidden popup window");
       gtk_window_move(GTK_WINDOW(mShell), mPopupPosition.x, mPopupPosition.y);
       mHiddenPopupPositioned = false;
     }
@@ -6586,27 +6678,22 @@ void nsWindow::GrabPointer(guint32 aTime) {
   LOG("GrabPointer time=0x%08x retry=%d\n", (unsigned int)aTime,
       mRetryPointerGrab);
 
+  // Don't to the grab on Wayland as it causes a regression
+  // from Bug 1377084.
+  if (mIsDestroyed || GdkIsWaylandDisplay()) {
+    return;
+  }
+
   mRetryPointerGrab = false;
   sRetryGrabTime = aTime;
 
   // If the window isn't visible, just set the flag to retry the
   // grab.  When this window becomes visible, the grab will be
   // retried.
-  if (!mHasMappedToplevel) {
-    LOG("  window not visible, mHasMappedToplevel = false, mRetryPointerGrab = "
-        "true\n");
+  if (!mHasMappedToplevel || !mGdkWindow) {
+    LOG("  quit, window not visible, mHasMappedToplevel = %d, mGdkWindow = %p",
+        mHasMappedToplevel, mGdkWindow);
     mRetryPointerGrab = true;
-    return;
-  }
-
-  if (!mGdkWindow) {
-    LOG("  mGdkWindow is null\n");
-    return;
-  }
-
-  if (GdkIsWaylandDisplay()) {
-    // Don't to the grab on Wayland as it causes a regression
-    // from Bug 1377084.
     return;
   }
 
@@ -6622,10 +6709,10 @@ void nsWindow::GrabPointer(guint32 aTime) {
       (GdkWindow*)nullptr, nullptr, aTime);
 
   if (retval == GDK_GRAB_NOT_VIEWABLE) {
-    LOG("GrabPointer: window not viewable; will retry\n");
+    LOG("  failed: window not viewable; will retry\n");
     mRetryPointerGrab = true;
   } else if (retval != GDK_GRAB_SUCCESS) {
-    LOG("GrabPointer: pointer grab failed: %i\n", retval);
+    LOG("  pointer grab failed: %i\n", retval);
     // A failed grab indicates that another app has grabbed the pointer.
     // Check for rollup now, because, without the grab, we likely won't
     // get subsequent button press events. Do this with an event so that
@@ -6655,6 +6742,10 @@ void nsWindow::ReleaseGrabs(void) {
 GtkWidget* nsWindow::GetToplevelWidget() { return mShell; }
 
 GtkWidget* nsWindow::GetMozContainerWidget() { return GTK_WIDGET(mContainer); }
+
+GdkWindow* nsWindow::GetToplevelGdkWindow() {
+  return gtk_widget_get_window(mShell);
+}
 
 nsWindow* nsWindow::GetContainerWindow() {
   GtkWidget* owningWidget = GTK_WIDGET(mContainer);

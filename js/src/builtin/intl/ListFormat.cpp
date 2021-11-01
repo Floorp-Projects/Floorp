@@ -255,56 +255,65 @@ static bool FormatList(JSContext* cx, mozilla::intl::ListFormat* lf,
 static bool FormatListToParts(JSContext* cx, mozilla::intl::ListFormat* lf,
                               const mozilla::intl::ListFormat::StringList& list,
                               MutableHandleValue result) {
-  auto formatResult = lf->FormatToParts(
-      list,
-      [cx,
-       &result](const mozilla::intl::ListFormat::PartVector& parts) -> bool {
-        RootedArrayObject partsArray(
-            cx, NewDenseFullyAllocatedArray(cx, parts.length()));
-        if (!partsArray) {
-          return false;
-        }
-        partsArray->ensureDenseInitializedLength(0, parts.length());
-
-        RootedObject singlePart(cx);
-        RootedValue val(cx);
-
-        size_t index = 0;
-        for (const mozilla::intl::ListFormat::Part& part : parts) {
-          singlePart = NewPlainObject(cx);
-          if (!singlePart) {
-            return false;
-          }
-
-          if (part.first == mozilla::intl::ListFormat::PartType::Element) {
-            val = StringValue(cx->names().element);
-          } else {
-            val = StringValue(cx->names().literal);
-          }
-
-          if (!DefineDataProperty(cx, singlePart, cx->names().type, val)) {
-            return false;
-          }
-
-          JSString* partStr = NewStringCopy<CanGC>(cx, part.second);
-          if (!partStr) {
-            return false;
-          }
-          val = StringValue(partStr);
-          if (!DefineDataProperty(cx, singlePart, cx->names().value, val)) {
-            return false;
-          }
-
-          partsArray->initDenseElement(index++, ObjectValue(*singlePart));
-        }
-        MOZ_ASSERT(index == parts.length());
-        result.setObject(*partsArray);
-        return true;
-      });
+  intl::FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> buffer(cx);
+  mozilla::intl::ListFormat::PartVector parts;
+  auto formatResult = lf->FormatToParts(list, buffer, parts);
   if (formatResult.isErr()) {
-    js::intl::ReportInternalError(cx, formatResult.unwrapErr());
+    intl::ReportInternalError(cx, formatResult.unwrapErr());
     return false;
   }
+
+  RootedString overallResult(cx, buffer.toString(cx));
+  if (!overallResult) {
+    return false;
+  }
+
+  RootedArrayObject partsArray(cx,
+                               NewDenseFullyAllocatedArray(cx, parts.length()));
+  if (!partsArray) {
+    return false;
+  }
+  partsArray->ensureDenseInitializedLength(0, parts.length());
+
+  RootedObject singlePart(cx);
+  RootedValue val(cx);
+
+  size_t index = 0;
+  size_t beginIndex = 0;
+  for (const mozilla::intl::ListFormat::Part& part : parts) {
+    singlePart = NewPlainObject(cx);
+    if (!singlePart) {
+      return false;
+    }
+
+    if (part.first == mozilla::intl::ListFormat::PartType::Element) {
+      val = StringValue(cx->names().element);
+    } else {
+      val = StringValue(cx->names().literal);
+    }
+
+    if (!DefineDataProperty(cx, singlePart, cx->names().type, val)) {
+      return false;
+    }
+
+    MOZ_ASSERT(part.second > beginIndex);
+    JSLinearString* partStr = NewDependentString(cx, overallResult, beginIndex,
+                                                 part.second - beginIndex);
+    if (!partStr) {
+      return false;
+    }
+    val = StringValue(partStr);
+    if (!DefineDataProperty(cx, singlePart, cx->names().value, val)) {
+      return false;
+    }
+
+    beginIndex = part.second;
+    partsArray->initDenseElement(index++, ObjectValue(*singlePart));
+  }
+
+  MOZ_ASSERT(index == parts.length());
+  MOZ_ASSERT(beginIndex == buffer.length());
+  result.setObject(*partsArray);
 
   return true;
 }

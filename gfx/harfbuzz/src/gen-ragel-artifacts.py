@@ -4,16 +4,16 @@
 
 import os, os.path, sys, subprocess, shutil
 
-ragel = os.getenv ('RAGEL', shutil.which ('ragel'))
+ragel = sys.argv[1]
 if not ragel:
 	sys.exit ('You have to install ragel if you are going to develop HarfBuzz itself')
 
 if len (sys.argv) < 4:
 	sys.exit (__doc__)
 
-OUTPUT = sys.argv[1]
-CURRENT_SOURCE_DIR = sys.argv[2]
-INPUT = sys.argv[3]
+OUTPUT = sys.argv[2]
+CURRENT_SOURCE_DIR = sys.argv[3]
+INPUT = sys.argv[4]
 
 outdir = os.path.dirname (OUTPUT)
 shutil.copy (INPUT, outdir)
