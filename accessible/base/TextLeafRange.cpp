@@ -21,6 +21,7 @@
 #include "nsTextFrame.h"
 #include "nsUnicodeProperties.h"
 #include "Pivot.h"
+#include "TextAttrs.h"
 
 using mozilla::intl::WordBreaker;
 
@@ -735,6 +736,95 @@ TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
   }
   MOZ_ASSERT_UNREACHABLE();
   return TextLeafPoint();
+}
+
+already_AddRefed<AccAttributes> TextLeafPoint::GetTextAttributesLocalAcc(
+    bool aIncludeDefaults) const {
+  LocalAccessible* acc = mAcc->AsLocal();
+  MOZ_ASSERT(acc);
+  MOZ_ASSERT(acc->IsText());
+  // TextAttrsMgr wants a HyperTextAccessible.
+  LocalAccessible* parent = acc->LocalParent();
+  HyperTextAccessible* hyperAcc = parent->AsHyperText();
+  MOZ_ASSERT(hyperAcc);
+  RefPtr<AccAttributes> attributes = new AccAttributes();
+  TextAttrsMgr mgr(hyperAcc, aIncludeDefaults, acc,
+                   acc ? acc->IndexInParent() : -1);
+  mgr.GetAttributes(attributes, nullptr, nullptr);
+  return attributes.forget();
+}
+
+already_AddRefed<AccAttributes> TextLeafPoint::GetTextAttributes(
+    bool aIncludeDefaults) const {
+  if (!mAcc->IsText()) {
+    return nullptr;
+  }
+  if (mAcc->IsLocal()) {
+    return GetTextAttributesLocalAcc(aIncludeDefaults);
+  }
+  return nullptr;
+}
+
+TextLeafPoint TextLeafPoint::FindTextAttrsStart(
+    nsDirection aDirection, bool aIncludeOrigin,
+    const AccAttributes* aOriginAttrs, bool aIncludeDefaults) const {
+  // XXX Add support for spelling errors.
+  RefPtr<const AccAttributes> lastAttrs;
+  if (aOriginAttrs) {
+    lastAttrs = aOriginAttrs;
+  } else {
+    lastAttrs = GetTextAttributesLocalAcc(aIncludeDefaults);
+  }
+  if (aIncludeOrigin && aDirection == eDirNext && mOffset == 0) {
+    // Even when searching forward, the only way to know whether the origin is
+    // the start of a text attrs run is to compare with the previous sibling.
+    // Anything other than text breaks an attrs run.
+    TextLeafPoint point;
+    point.mAcc = mAcc->PrevSibling();
+    if (!point.mAcc || !point.mAcc->IsText()) {
+      return *this;
+    }
+    RefPtr<const AccAttributes> attrs =
+        point.GetTextAttributesLocalAcc(aIncludeDefaults);
+    if (!attrs->Equal(lastAttrs)) {
+      return *this;
+    }
+  }
+  TextLeafPoint lastPoint(mAcc, 0);
+  for (;;) {
+    TextLeafPoint point;
+    point.mAcc = aDirection == eDirNext ? lastPoint.mAcc->NextSibling()
+                                        : lastPoint.mAcc->PrevSibling();
+    if (!point.mAcc || !point.mAcc->IsText()) {
+      break;
+    }
+    RefPtr<const AccAttributes> attrs =
+        point.GetTextAttributesLocalAcc(aIncludeDefaults);
+    if (!attrs->Equal(lastAttrs)) {
+      // The attributes change here. If we're moving forward, we want to
+      // return this point. If we're moving backward, we've now moved before
+      // the start of the attrs run containing the origin, so return the last
+      // point we hit.
+      if (aDirection == eDirPrevious) {
+        point = lastPoint;
+      }
+      if (!aIncludeOrigin && point == *this) {
+        MOZ_ASSERT(aDirection == eDirPrevious);
+        // The origin is the start of an attrs run, but the caller doesn't want
+        // the origin included.
+        continue;
+      }
+      return point;
+    }
+    lastPoint = point;
+    lastAttrs = attrs;
+  }
+  // We couldn't move any further. Use the start/end.
+  return TextLeafPoint(
+      lastPoint.mAcc,
+      aDirection == eDirPrevious
+          ? 0
+          : static_cast<int32_t>(nsAccUtils::TextLength(lastPoint.mAcc)));
 }
 
 }  // namespace mozilla::a11y
