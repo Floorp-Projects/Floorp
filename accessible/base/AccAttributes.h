@@ -151,6 +151,15 @@ class AccAttributes {
    */
   bool Equal(const AccAttributes* aOther) const;
 
+  /**
+   * Copy attributes from this instance to another instance.
+   * This should only be used in very specific cases; e.g. merging two sets of
+   * cached attributes without modifying the cache. It can only copy simple
+   * value types; e.g. it can't copy array values. Attempting to copy an
+   * AccAttributes with uncopyable values will cause an assertion.
+   */
+  void CopyTo(AccAttributes* aDest) const;
+
   // An entry class for our iterator.
   class Entry {
    public:
