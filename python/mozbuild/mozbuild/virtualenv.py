@@ -7,13 +7,14 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import argparse
 import json
 import os
 import platform
 import shutil
 import subprocess
 import sys
+
+from mach.requirements import MachEnvRequirements
 
 IS_NATIVE_WIN = sys.platform == "win32" and os.sep == "\\"
 IS_CYGWIN = sys.platform == "cygwin"
@@ -304,8 +305,6 @@ class VirtualenvManager(VirtualenvHelper):
         return self.virtualenv_root
 
     def _requirements(self):
-        from mach.requirements import MachEnvRequirements
-
         if not os.path.exists(self._manifest_path):
             raise Exception(
                 f'The current command is using the "{self._virtualenv_name}" '
@@ -324,9 +323,26 @@ class VirtualenvManager(VirtualenvHelper):
             self._manifest_path,
         )
 
-    def populate(self):
-        """Populate the virtualenv."""
-        import distutils.sysconfig
+    def build(self):
+        """Build a virtualenv per tree conventions.
+
+        This returns the path of the created virtualenv.
+        """
+        self.create()
+        env_requirements = self._requirements()
+        if self.populate_local_paths:
+            site_packages_dir = self._site_packages_dir()
+            with open(os.path.join(site_packages_dir, PTH_FILENAME), "a") as f:
+                for pth_requirement in (
+                    env_requirements.pth_requirements
+                    + env_requirements.vendored_requirements
+                ):
+                    path = os.path.join(self.topsrcdir, pth_requirement.path)
+                    # This path is relative to the .pth file.  Using a
+                    # relative path allows the srcdir/objdir combination
+                    # to be moved around (as long as the paths relative to
+                    # each other remain the same).
+                    f.write("{}\n".format(os.path.relpath(path, site_packages_dir)))
 
         # We ignore environment variables that may have been altered by
         # configure or a mozconfig activated in the current shell. We trust
@@ -342,21 +358,6 @@ class VirtualenvManager(VirtualenvHelper):
 
                 old_env_variables[k] = os.environ[k]
                 del os.environ[k]
-
-            env_requirements = self._requirements()
-            if self.populate_local_paths:
-                python_lib = distutils.sysconfig.get_python_lib()
-                with open(os.path.join(python_lib, PTH_FILENAME), "a") as f:
-                    for pth_requirement in (
-                        env_requirements.pth_requirements
-                        + env_requirements.vendored_requirements
-                    ):
-                        path = os.path.join(self.topsrcdir, pth_requirement.path)
-                        # This path is relative to the .pth file.  Using a
-                        # relative path allows the srcdir/objdir combination
-                        # to be moved around (as long as the paths relative to
-                        # each other remain the same).
-                        f.write("{}\n".format(os.path.relpath(path, python_lib)))
 
             pip = [self.python_path, "-m", "pip"]
             for pypi_requirement in env_requirements.pypi_requirements:
@@ -377,42 +378,6 @@ class VirtualenvManager(VirtualenvHelper):
 
         finally:
             os.environ.update(old_env_variables)
-
-    def build(self):
-        """Build a virtualenv per tree conventions.
-
-        This returns the path of the created virtualenv.
-        """
-        self.create()
-
-        # We need to populate the virtualenv using the Python executable in
-        # the virtualenv for paths to be proper.
-
-        # If this module was run from Python 2 then the __file__ attribute may
-        # point to a Python 2 .pyc file. If we are generating a Python 3
-        # virtualenv from Python 2 make sure we call Python 3 with the path to
-        # the module and not the Python 2 .pyc file.
-        if os.path.splitext(__file__)[1] in (".pyc", ".pyo"):
-            thismodule = __file__[:-1]
-        else:
-            thismodule = __file__
-
-        args = [
-            self.python_path,
-            thismodule,
-            "populate",
-            self.topsrcdir,
-            os.path.dirname(self.virtualenv_root),
-            self._virtualenv_name,
-            self._manifest_path,
-        ]
-        if self.populate_local_paths:
-            args.append("--populate-local-paths")
-
-        result = self._log_process_output(args, cwd=self.topsrcdir)
-
-        if result != 0:
-            raise Exception("Error populating virtualenv.")
 
         os.utime(self.activate_path, None)
         self._metadata.write()
@@ -571,45 +536,3 @@ def verify_python_version(log_handle):
             log_handle.write(UPGRADE_OTHER)
 
         sys.exit(1)
-
-
-if __name__ == "__main__":
-    verify_python_version(sys.stdout)
-
-    if len(sys.argv) < 2:
-        print("Too few arguments", file=sys.stderr)
-        sys.exit(1)
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("topsrcdir")
-    parser.add_argument("virtualenvs_dir")
-    parser.add_argument("virtualenv_name")
-    parser.add_argument("manifest_path")
-    parser.add_argument("--populate-local-paths", action="store_true")
-
-    if sys.argv[1] == "populate":
-        # This should only be called internally.
-        populate = True
-        opts = parser.parse_args(sys.argv[2:])
-    else:
-        populate = False
-        opts = parser.parse_args(sys.argv[1:])
-
-    # We want to be able to import the "mach.requirements" module.
-    sys.path.append(os.path.join(opts.topsrcdir, "python", "mach"))
-    # Virtualenv logic needs access to the vendored "packaging" library.
-    sys.path.append(os.path.join(opts.topsrcdir, "third_party", "python", "pyparsing"))
-    sys.path.append(os.path.join(opts.topsrcdir, "third_party", "python", "packaging"))
-
-    manager = VirtualenvManager(
-        opts.topsrcdir,
-        opts.virtualenvs_dir,
-        opts.virtualenv_name,
-        populate_local_paths=opts.populate_local_paths,
-        manifest_path=opts.manifest_path,
-    )
-
-    if populate:
-        manager.populate()
-    else:
-        manager.ensure()
