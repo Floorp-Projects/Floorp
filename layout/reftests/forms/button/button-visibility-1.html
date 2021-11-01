@@ -1,0 +1,26 @@
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Test for bug 1732921</title>
+  <style>
+    .parent {
+      border: 0px;
+      background: none;
+      visibility: hidden;
+      will-change: transform;
+    }
+
+    .child {
+      visibility: visible;
+    }
+  </style>
+</head>
+
+<body>
+  <button class="parent">
+    <span class="child">foo</span>
+  </button>
+</body>
+
+</html>
