@@ -101,6 +101,53 @@ function getIdentifierByFileName(fileName) {
 }
 
 /**
+ * Convert mozIStorageError to common NS_ERROR_*
+ * The conversion is mostly based on the one in
+ * mozStoragePrivateHelpers::ConvertResultCode, plus a few additions.
+ *
+ * @param {integer} result a mozIStorageError result code.
+ * @returns {integer} an NS_ERROR_* result code.
+ */
+function convertStorageErrorResult(result) {
+  switch (result) {
+    case Ci.mozIStorageError.PERM:
+    case Ci.mozIStorageError.AUTH:
+    case Ci.mozIStorageError.CANTOPEN:
+      return Cr.NS_ERROR_FILE_ACCESS_DENIED;
+    case Ci.mozIStorageError.LOCKED:
+      return Cr.NS_ERROR_FILE_IS_LOCKED;
+    case Ci.mozIStorageError.READONLY:
+      return Cr.NS_ERROR_FILE_READ_ONLY;
+    case Ci.mozIStorageError.ABORT:
+    case Ci.mozIStorageError.INTERRUPT:
+      return Cr.NS_ERROR_ABORT;
+    case Ci.mozIStorageError.TOOBIG:
+    case Ci.mozIStorageError.FULL:
+      return Cr.NS_ERROR_FILE_NO_DEVICE_SPACE;
+    case Ci.mozIStorageError.NOMEM:
+      return Cr.NS_ERROR_OUT_OF_MEMORY;
+    case Ci.mozIStorageError.BUSY:
+      return Cr.NS_ERROR_STORAGE_BUSY;
+    case Ci.mozIStorageError.CONSTRAINT:
+      return Cr.NS_ERROR_STORAGE_CONSTRAINT;
+    case Ci.mozIStorageError.NOLFS:
+    case Ci.mozIStorageError.IOERR:
+      return Cr.NS_ERROR_STORAGE_IOERR;
+    case Ci.mozIStorageError.SCHEMA:
+    case Ci.mozIStorageError.MISMATCH:
+    case Ci.mozIStorageError.MISUSE:
+    case Ci.mozIStorageError.RANGE:
+      return Ci.NS_ERROR_UNEXPECTED;
+    case Ci.mozIStorageError.CORRUPT:
+    case Ci.mozIStorageError.EMPTY:
+    case Ci.mozIStorageError.FORMAT:
+    case Ci.mozIStorageError.NOTADB:
+      return Cr.NS_ERROR_FILE_CORRUPTED;
+    default:
+      return Cr.NS_ERROR_FAILURE;
+  }
+}
+/**
  * Barriers used to ensure that Sqlite.jsm is shutdown after all
  * its clients.
  */
@@ -919,14 +966,13 @@ ConnectionData.prototype = Object.freeze({
             );
             error.errors = errors;
 
-            // Forward the error result in some cases, for example if there is
-            // a single error, or if there is corruption.
-            if (errors.length == 1 && errors[0].result) {
-              error.result = errors[0].result;
-            } else if (
-              errors.some(e => e.result == Cr.NS_ERROR_FILE_CORRUPTED)
-            ) {
+            // Forward the error result.
+            // Corruption is the most critical one so it's handled apart.
+            if (errors.some(e => e.result == Ci.mozIStorageError.CORRUPT)) {
               error.result = Cr.NS_ERROR_FILE_CORRUPTED;
+            } else {
+              // Just use the first error result in the other cases.
+              error.result = convertStorageErrorResult(errors[0]?.result);
             }
 
             deferred.reject(error);
