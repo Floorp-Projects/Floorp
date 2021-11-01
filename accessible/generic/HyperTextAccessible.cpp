@@ -1165,6 +1165,14 @@ void HyperTextAccessible::TextAfterOffset(int32_t aOffset,
 already_AddRefed<AccAttributes> HyperTextAccessible::TextAttributes(
     bool aIncludeDefAttrs, int32_t aOffset, int32_t* aStartOffset,
     int32_t* aEndOffset) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // This isn't strictly related to caching, but this new text implementation
+    // is being developed to make caching feasible. We put it behind this pref
+    // to make it easy to test while it's still under development.
+    return HyperTextAccessibleBase::TextAttributes(aIncludeDefAttrs, aOffset,
+                                                   aStartOffset, aEndOffset);
+  }
+
   // 1. Get each attribute and its ranges one after another.
   // 2. As we get each new attribute, we pass the current start and end offsets
   //    as in/out parameters. In other words, as attributes are collected,

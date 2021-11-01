@@ -226,12 +226,17 @@ char16_t RemoteAccessible::CharAt(int32_t aOffset) {
   return static_cast<char16_t>(retval);
 }
 
-void RemoteAccessible::TextAttributes(bool aIncludeDefAttrs, int32_t aOffset,
-                                      RefPtr<AccAttributes>* aAttributes,
-                                      int32_t* aStartOffset,
-                                      int32_t* aEndOffset) {
-  Unused << mDoc->SendTextAttributes(mID, aIncludeDefAttrs, aOffset,
-                                     aAttributes, aStartOffset, aEndOffset);
+already_AddRefed<AccAttributes> RemoteAccessible::TextAttributes(
+    bool aIncludeDefAttrs, int32_t aOffset, int32_t* aStartOffset,
+    int32_t* aEndOffset) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::TextAttributes(
+        aIncludeDefAttrs, aOffset, aStartOffset, aEndOffset);
+  }
+  RefPtr<AccAttributes> attrs;
+  Unused << mDoc->SendTextAttributes(mID, aIncludeDefAttrs, aOffset, &attrs,
+                                     aStartOffset, aEndOffset);
+  return attrs.forget();
 }
 
 void RemoteAccessible::DefaultTextAttributes(RefPtr<AccAttributes>* aAttrs) {
