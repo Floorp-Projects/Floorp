@@ -6851,7 +6851,7 @@
 # Whether the `color-scheme` css property and meta tags are enabled.
 - name: layout.css.color-scheme.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @EARLY_BETA_OR_EARLIER@
   mirror: always
   rust: true
 

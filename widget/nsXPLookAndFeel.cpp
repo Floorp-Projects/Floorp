@@ -635,6 +635,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::Window:  // --in-content-page-background
     case ColorID::WindowBackground:
     case ColorID::Background:
+    case ColorID::Menu:
     case ColorID::TextBackground:
       color = kWindowBackground;
       break;
@@ -643,6 +644,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
       color = NS_RGB(35, 34, 43);
       break;
     case ColorID::Windowtext:  // --in-content-page-color
+    case ColorID::Menutext:
     case ColorID::WindowForeground:
     case ColorID::TextForeground:
     case ColorID::MozDialogtext:
