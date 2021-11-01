@@ -217,6 +217,7 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   uint32_t GetCachedTextLength();
   Maybe<const nsTArray<int32_t>&> GetCachedTextLines();
+  RefPtr<const AccAttributes> GetCachedTextAttributes();
 
   virtual HyperTextAccessibleBase* AsHyperTextBase() override {
     return IsHyperText() ? static_cast<HyperTextAccessibleBase*>(this)
