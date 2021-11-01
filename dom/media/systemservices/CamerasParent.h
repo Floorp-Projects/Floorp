@@ -12,14 +12,10 @@
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/ShmemPool.h"
 #include "mozilla/Atomics.h"
-#include "webrtc/modules/video_capture/video_capture.h"
-#include "webrtc/modules/video_capture/video_capture_defines.h"
-#include "webrtc/common_video/include/incoming_video_stream.h"
-#include "webrtc/media/base/videosinkinterface.h"
-
-// conflicts with #include of scoped_ptr.h
-#undef FF
-#include "webrtc/common_types.h"
+#include "api/video/video_sink_interface.h"
+#include "common_video/include/incoming_video_stream.h"
+#include "modules/video_capture/video_capture.h"
+#include "modules/video_capture/video_capture_defines.h"
 
 #include "CamerasChild.h"
 

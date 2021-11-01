@@ -30,12 +30,11 @@ class MediaEnginePrefs {
         mAgcOn(false),
         mHPFOn(false),
         mNoiseOn(false),
-        mAec(0),
+        mTransientOn(false),
+        mResidualEchoOn(false),
+        mAgc2Forced(false),
         mAgc(0),
-        mRoutingMode(0),
         mNoise(0),
-        mExtendedFilter(false),
-        mDelayAgnostic(false),
         mFakeDeviceChangeEventOn(false),
         mChannels(0) {}
 
@@ -48,12 +47,11 @@ class MediaEnginePrefs {
   bool mAgcOn;
   bool mHPFOn;
   bool mNoiseOn;
-  int32_t mAec;
+  bool mTransientOn;
+  bool mResidualEchoOn;
+  bool mAgc2Forced;
   int32_t mAgc;
-  int32_t mRoutingMode;
   int32_t mNoise;
-  bool mExtendedFilter;
-  bool mDelayAgnostic;
   bool mFakeDeviceChangeEventOn;
   int32_t mChannels;
 

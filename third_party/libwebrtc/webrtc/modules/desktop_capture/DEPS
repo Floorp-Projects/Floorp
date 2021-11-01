@@ -1,4 +1,0 @@
-include_rules = [
-  "+system_wrappers",
-  "+third_party/libyuv",
-]

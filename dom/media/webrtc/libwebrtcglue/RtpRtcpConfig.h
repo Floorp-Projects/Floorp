@@ -4,7 +4,7 @@
 
 #ifndef __RTPRTCP_CONFIG_H__
 #define __RTPRTCP_CONFIG_H__
-#include "webrtc/common_types.h"
+#include "api/rtp_headers.h"
 
 namespace mozilla {
 class RtpRtcpConfig {
@@ -12,6 +12,10 @@ class RtpRtcpConfig {
   RtpRtcpConfig() = delete;
   explicit RtpRtcpConfig(const webrtc::RtcpMode aMode) : mRtcpMode(aMode) {}
   webrtc::RtcpMode GetRtcpMode() const { return mRtcpMode; }
+
+  bool operator==(const RtpRtcpConfig& aOther) const {
+    return mRtcpMode == aOther.mRtcpMode;
+  }
 
  private:
   webrtc::RtcpMode mRtcpMode;

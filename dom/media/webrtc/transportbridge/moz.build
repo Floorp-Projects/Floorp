@@ -15,7 +15,7 @@ LOCAL_INCLUDES += [
     "/third_party/libsrtp/src/crypto/include",
     "/third_party/libsrtp/src/include",
     "/third_party/libwebrtc",
-    "/third_party/libwebrtc/webrtc",
+    "/third_party/libwebrtc/third_party/abseil-cpp",
 ]
 
 UNIFIED_SOURCES += [

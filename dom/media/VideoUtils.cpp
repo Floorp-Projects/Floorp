@@ -241,8 +241,12 @@ already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType) {
     case MediaThreadType::PLATFORM_DECODER:
       name = "MediaPDecoder";
       break;
-    case MediaThreadType::WEBRTC_DECODER:
-      name = "WebRTCPD";
+    case MediaThreadType::WEBRTC_CALL_THREAD:
+      name = "WebrtcCallThread";
+      threads = 1;
+      break;
+    case MediaThreadType::WEBRTC_WORKER:
+      name = "WebrtcWorker";
       break;
     case MediaThreadType::MDSM:
       name = "MediaDecoderStateMachine";

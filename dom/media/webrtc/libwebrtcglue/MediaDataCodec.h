@@ -6,7 +6,6 @@
 #define MEDIA_DATA_CODEC_H_
 
 #include "MediaConduitInterface.h"
-#include "webrtc/common_types.h"
 
 namespace mozilla {
 
@@ -15,10 +14,11 @@ class WebrtcVideoEncoder;
 class MediaDataCodec {
  public:
   /**
-   * Create encoder object for codec type |aCodecType|. Return |nullptr| when
+   * Create encoder object for codec format |aFormat|. Return |nullptr| when
    * failed.
    */
-  static WebrtcVideoEncoder* CreateEncoder(webrtc::VideoCodecType aCodecType);
+  static WebrtcVideoEncoder* CreateEncoder(
+      const webrtc::SdpVideoFormat& aFormat);
 
   /**
    * Create decoder object for codec type |aCodecType|. Return |nullptr| when

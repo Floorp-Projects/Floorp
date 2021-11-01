@@ -12,7 +12,7 @@ LOCAL_INCLUDES += [
     "/dom/media/mediasink",
     "/dom/media/webrtc/common/",
     "/third_party/libwebrtc",
-    "/third_party/libwebrtc/webrtc",
+    "/third_party/libwebrtc/third_party/abseil-cpp",
 ]
 
 UNIFIED_SOURCES += [

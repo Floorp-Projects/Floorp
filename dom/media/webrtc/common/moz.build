@@ -9,7 +9,8 @@ EXPORTS.mozilla.dom += ["CandidateInfo.h"]
 
 LOCAL_INCLUDES += [
     "/dom/media/webrtc/transport/third_party/nrappkit/src/util/libekr",
-    "/third_party/libwebrtc/webrtc",
+    "/third_party/libwebrtc",
+    "/third_party/libwebrtc/third_party/abseil-cpp",
 ]
 
 UNIFIED_SOURCES += [

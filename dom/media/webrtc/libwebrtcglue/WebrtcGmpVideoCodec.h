@@ -44,7 +44,8 @@
 #include "MediaConduitInterface.h"
 #include "AudioConduit.h"
 #include "VideoConduit.h"
-#include "webrtc/modules/video_coding/include/video_codec_interface.h"
+#include "api/video/video_frame_type.h"
+#include "modules/video_coding/include/video_codec_interface.h"
 
 #include "gmp-video-host.h"
 #include "GMPVideoDecoderProxy.h"
@@ -54,32 +55,12 @@
 
 namespace mozilla {
 
-// Class that allows code on the other side of webrtc.org to tell
-// WebrtcGmpVideoEncoder/Decoder what PC they should send errors to.
-// This is necessary because webrtc.org gives us no way to plumb the handle
-// through, nor does it give us any way to inform it of an error that will
-// make it back to the PC that cares (except for errors encountered
-// synchronously in functions like InitEncode/Decode, which will not happen
-// because GMP init is async).
-// Right now, this is used in MediaPipelineFactory.
-class WebrtcGmpPCHandleSetter {
- public:
-  explicit WebrtcGmpPCHandleSetter(const std::string& aPCHandle);
-
-  ~WebrtcGmpPCHandleSetter();
-
-  static std::string GetCurrentHandle();
-
- private:
-  static std::string sCurrentHandle;
-};
-
 class GmpInitDoneRunnable : public Runnable {
  public:
-  explicit GmpInitDoneRunnable(const std::string& aPCHandle)
+  explicit GmpInitDoneRunnable(std::string aPCHandle)
       : Runnable("GmpInitDoneRunnable"),
         mResult(WEBRTC_VIDEO_CODEC_OK),
-        mPCHandle(aPCHandle) {}
+        mPCHandle(std::move(aPCHandle)) {}
 
   NS_IMETHOD Run() override {
     if (mResult == WEBRTC_VIDEO_CODEC_OK) {
@@ -112,7 +93,7 @@ class GmpInitDoneRunnable : public Runnable {
 
  private:
   int32_t mResult;
-  std::string mPCHandle;
+  const std::string mPCHandle;
   std::string mError;
 };
 
@@ -126,21 +107,15 @@ class GMPDecodeData {
         mRenderTimeMs(aRenderTimeMs) {
     // We want to use this for queuing, and the calling code recycles the
     // buffer on return from Decode()
-    MOZ_RELEASE_ASSERT(aInputImage._length <
+    MOZ_RELEASE_ASSERT(aInputImage.size() <
                        (std::numeric_limits<size_t>::max() >> 1));
-    mImage._length = aInputImage._length;
-    mImage._size =
-        aInputImage._length +
-        webrtc::EncodedImage::GetBufferPaddingBytes(webrtc::kVideoCodecH264);
-    mImage._buffer = new uint8_t[mImage._size];
-    memcpy(mImage._buffer, aInputImage._buffer, aInputImage._length);
   }
 
-  ~GMPDecodeData() { delete[] mImage._buffer; }
+  ~GMPDecodeData() = default;
 
-  webrtc::EncodedImage mImage;
-  bool mMissingFrames;
-  int64_t mRenderTimeMs;
+  const webrtc::EncodedImage mImage;
+  const bool mMissingFrames;
+  const int64_t mRenderTimeMs;
 };
 
 class RefCountedWebrtcVideoEncoder {
@@ -149,24 +124,25 @@ class RefCountedWebrtcVideoEncoder {
 
   // Implement sort of WebrtcVideoEncoder interface and support refcounting.
   // (We cannot use |Release|, since that's needed for nsRefPtr)
-  virtual uint64_t PluginID() const = 0;
+  virtual int32_t InitEncode(
+      const webrtc::VideoCodec* aCodecSettings,
+      const webrtc::VideoEncoder::Settings& aSettings) = 0;
 
-  virtual int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
-                             int32_t aNumberOfCores,
-                             size_t aMaxPayloadSize) = 0;
-
-  virtual int32_t Encode(const webrtc::VideoFrame& aInputImage,
-                         const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-                         const std::vector<webrtc::FrameType>* aFrameTypes) = 0;
+  virtual int32_t Encode(
+      const webrtc::VideoFrame& aInputImage,
+      const std::vector<webrtc::VideoFrameType>* aFrameTypes) = 0;
 
   virtual int32_t RegisterEncodeCompleteCallback(
       webrtc::EncodedImageCallback* aCallback) = 0;
 
   virtual int32_t Shutdown() = 0;
 
-  virtual int32_t SetChannelParameters(uint32_t aPacketLoss, int64_t aRTT) = 0;
+  virtual int32_t SetRates(
+      const webrtc::VideoEncoder::RateControlParameters& aParameters) = 0;
 
-  virtual int32_t SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) = 0;
+  virtual MediaEventSource<uint64_t>* InitPluginEvent() = 0;
+
+  virtual MediaEventSource<uint64_t>* ReleasePluginEvent() = 0;
 
  protected:
   virtual ~RefCountedWebrtcVideoEncoder() = default;
@@ -175,27 +151,32 @@ class RefCountedWebrtcVideoEncoder {
 class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
                               public RefCountedWebrtcVideoEncoder {
  public:
-  WebrtcGmpVideoEncoder();
+  explicit WebrtcGmpVideoEncoder(std::string aPCHandle);
 
   // Implement VideoEncoder interface, sort of.
   // (We cannot use |Release|, since that's needed for nsRefPtr)
-  uint64_t PluginID() const override { return mCachedPluginId; }
-
   int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
-                     int32_t aNumberOfCores, size_t aMaxPayloadSize) override;
+                     const webrtc::VideoEncoder::Settings& aSettings) override;
 
-  int32_t Encode(const webrtc::VideoFrame& aInputImage,
-                 const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-                 const std::vector<webrtc::FrameType>* aFrameTypes) override;
+  int32_t Encode(
+      const webrtc::VideoFrame& aInputImage,
+      const std::vector<webrtc::VideoFrameType>* aFrameTypes) override;
 
   int32_t RegisterEncodeCompleteCallback(
       webrtc::EncodedImageCallback* aCallback) override;
 
   int32_t Shutdown() override;
 
-  int32_t SetChannelParameters(uint32_t aPacketLoss, int64_t aRTT) override;
+  int32_t SetRates(
+      const webrtc::VideoEncoder::RateControlParameters& aParameters) override;
 
-  int32_t SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) override;
+  MediaEventSource<uint64_t>* InitPluginEvent() override {
+    return &mInitPluginEvent;
+  }
+
+  MediaEventSource<uint64_t>* ReleasePluginEvent() override {
+    return &mReleasePluginEvent;
+  }
 
   // GMPVideoEncoderCallback virtual functions.
   virtual void Terminated() override;
@@ -214,7 +195,7 @@ class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
                            const RefPtr<GmpInitDoneRunnable>& aInitDone);
   int32_t GmpInitDone(GMPVideoEncoderProxy* aGMP, GMPVideoHost* aHost,
                       const GMPVideoCodec& aCodecParams,
-                      uint32_t aMaxPayloadSize, std::string* aErrorOut);
+                      std::string* aErrorOut);
   int32_t GmpInitDone(GMPVideoEncoderProxy* aGMP, GMPVideoHost* aHost,
                       std::string* aErrorOut);
   int32_t InitEncoderForSize(unsigned short aWidth, unsigned short aHeight,
@@ -226,32 +207,29 @@ class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
    public:
     InitDoneCallback(const RefPtr<WebrtcGmpVideoEncoder>& aEncoder,
                      const RefPtr<GmpInitDoneRunnable>& aInitDone,
-                     const GMPVideoCodec& aCodecParams,
-                     uint32_t aMaxPayloadSize)
+                     const GMPVideoCodec& aCodecParams)
         : mEncoder(aEncoder),
           mInitDone(aInitDone),
-          mCodecParams(aCodecParams),
-          mMaxPayloadSize(aMaxPayloadSize) {}
+          mCodecParams(aCodecParams) {}
 
     virtual void Done(GMPVideoEncoderProxy* aGMP,
                       GMPVideoHost* aHost) override {
       std::string errorOut;
-      int32_t result = mEncoder->GmpInitDone(aGMP, aHost, mCodecParams,
-                                             mMaxPayloadSize, &errorOut);
+      int32_t result =
+          mEncoder->GmpInitDone(aGMP, aHost, mCodecParams, &errorOut);
 
       mInitDone->Dispatch(result, errorOut);
     }
 
    private:
-    RefPtr<WebrtcGmpVideoEncoder> mEncoder;
-    RefPtr<GmpInitDoneRunnable> mInitDone;
-    GMPVideoCodec mCodecParams;
-    uint32_t mMaxPayloadSize;
+    const RefPtr<WebrtcGmpVideoEncoder> mEncoder;
+    const RefPtr<GmpInitDoneRunnable> mInitDone;
+    const GMPVideoCodec mCodecParams;
   };
 
   static void Encode_g(const RefPtr<WebrtcGmpVideoEncoder>& aEncoder,
                        webrtc::VideoFrame aInputImage,
-                       std::vector<webrtc::FrameType> aFrameTypes);
+                       std::vector<webrtc::VideoFrameType> aFrameTypes);
   void RegetEncoderForResolutionChange(
       uint32_t aWidth, uint32_t aHeight,
       const RefPtr<GmpInitDoneRunnable>& aInitDone);
@@ -282,14 +260,14 @@ class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
     }
 
    private:
-    RefPtr<WebrtcGmpVideoEncoder> mEncoder;
-    RefPtr<GmpInitDoneRunnable> mInitDone;
-    uint32_t mWidth;
-    uint32_t mHeight;
+    const RefPtr<WebrtcGmpVideoEncoder> mEncoder;
+    const RefPtr<GmpInitDoneRunnable> mInitDone;
+    const uint32_t mWidth;
+    const uint32_t mHeight;
   };
 
   static int32_t SetRates_g(RefPtr<WebrtcGmpVideoEncoder> aThis,
-                            uint32_t aNewBitRate, uint32_t aFrameRate);
+                            uint32_t aNewBitRateKbps, Maybe<double> aFrameRate);
 
   nsCOMPtr<mozIGeckoMediaPluginService> mMPS;
   nsCOMPtr<nsIThread> mGMPThread;
@@ -303,8 +281,11 @@ class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
   // Protects mCallback
   Mutex mCallbackMutex;
   webrtc::EncodedImageCallback* mCallback;
-  uint64_t mCachedPluginId;
-  std::string mPCHandle;
+  Maybe<uint64_t> mCachedPluginId;
+  const std::string mPCHandle;
+
+  MediaEventProducer<uint64_t> mInitPluginEvent;
+  MediaEventProducer<uint64_t> mReleasePluginEvent;
 };
 
 // Basically a strong ref to a RefCountedWebrtcVideoEncoder, that also
@@ -322,18 +303,23 @@ class WebrtcVideoEncoderProxy : public WebrtcVideoEncoder {
     RegisterEncodeCompleteCallback(nullptr);
   }
 
-  uint64_t PluginID() const override { return mEncoderImpl->PluginID(); }
-
-  int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
-                     int32_t aNumberOfCores, size_t aMaxPayloadSize) override {
-    return mEncoderImpl->InitEncode(aCodecSettings, aNumberOfCores,
-                                    aMaxPayloadSize);
+  MediaEventSource<uint64_t>* InitPluginEvent() override {
+    return mEncoderImpl->InitPluginEvent();
   }
 
-  int32_t Encode(const webrtc::VideoFrame& aInputImage,
-                 const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-                 const std::vector<webrtc::FrameType>* aFrameTypes) override {
-    return mEncoderImpl->Encode(aInputImage, aCodecSpecificInfo, aFrameTypes);
+  MediaEventSource<uint64_t>* ReleasePluginEvent() override {
+    return mEncoderImpl->ReleasePluginEvent();
+  }
+
+  int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
+                     const WebrtcVideoEncoder::Settings& aSettings) override {
+    return mEncoderImpl->InitEncode(aCodecSettings, aSettings);
+  }
+
+  int32_t Encode(
+      const webrtc::VideoFrame& aInputImage,
+      const std::vector<webrtc::VideoFrameType>* aFrameTypes) override {
+    return mEncoderImpl->Encode(aInputImage, aFrameTypes);
   }
 
   int32_t RegisterEncodeCompleteCallback(
@@ -343,38 +329,35 @@ class WebrtcVideoEncoderProxy : public WebrtcVideoEncoder {
 
   int32_t Release() override { return mEncoderImpl->Shutdown(); }
 
-  int32_t SetChannelParameters(uint32_t aPacketLoss, int64_t aRTT) override {
-    return mEncoderImpl->SetChannelParameters(aPacketLoss, aRTT);
-  }
-
-  int32_t SetRates(uint32_t aNewBitRate, uint32_t aFrameRate) override {
-    return mEncoderImpl->SetRates(aNewBitRate, aFrameRate);
+  void SetRates(const RateControlParameters& aParameters) override {
+    mEncoderImpl->SetRates(aParameters);
   }
 
  private:
-  RefPtr<RefCountedWebrtcVideoEncoder> mEncoderImpl;
+  const RefPtr<RefCountedWebrtcVideoEncoder> mEncoderImpl;
 };
 
 class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
  public:
-  WebrtcGmpVideoDecoder();
+  explicit WebrtcGmpVideoDecoder(std::string aPCHandle);
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebrtcGmpVideoDecoder);
 
   // Implement VideoEncoder interface, sort of.
   // (We cannot use |Release|, since that's needed for nsRefPtr)
-  virtual uint64_t PluginID() const { return mCachedPluginId; }
-
   virtual int32_t InitDecode(const webrtc::VideoCodec* aCodecSettings,
                              int32_t aNumberOfCores);
   virtual int32_t Decode(const webrtc::EncodedImage& aInputImage,
-                         bool aMissingFrames,
-                         const webrtc::RTPFragmentationHeader* aFragmentation,
-                         const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-                         int64_t aRenderTimeMs);
+                         bool aMissingFrames, int64_t aRenderTimeMs);
   virtual int32_t RegisterDecodeCompleteCallback(
       webrtc::DecodedImageCallback* aCallback);
 
   virtual int32_t ReleaseGmp();
+
+  MediaEventSource<uint64_t>* InitPluginEvent() { return &mInitPluginEvent; }
+
+  MediaEventSource<uint64_t>* ReleasePluginEvent() {
+    return &mReleasePluginEvent;
+  }
 
   // GMPVideoDecoderCallbackProxy
   virtual void Terminated() override;
@@ -425,8 +408,8 @@ class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
     }
 
    private:
-    RefPtr<WebrtcGmpVideoDecoder> mDecoder;
-    RefPtr<GmpInitDoneRunnable> mInitDone;
+    const RefPtr<WebrtcGmpVideoDecoder> mDecoder;
+    const RefPtr<GmpInitDoneRunnable> mInitDone;
   };
 
   static void Decode_g(const RefPtr<WebrtcGmpVideoDecoder>& aThis,
@@ -443,9 +426,12 @@ class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
   // Protects mCallback
   Mutex mCallbackMutex;
   webrtc::DecodedImageCallback* mCallback;
-  Atomic<uint64_t> mCachedPluginId;
+  Maybe<uint64_t> mCachedPluginId;
   Atomic<GMPErr, ReleaseAcquire> mDecoderStatus;
-  std::string mPCHandle;
+  const std::string mPCHandle;
+
+  MediaEventProducer<uint64_t> mInitPluginEvent;
+  MediaEventProducer<uint64_t> mReleasePluginEvent;
 };
 
 // Basically a strong ref to a WebrtcGmpVideoDecoder, that also translates
@@ -455,13 +441,20 @@ class WebrtcGmpVideoDecoder : public GMPVideoDecoderCallbackProxy {
 // the "real" encoder.
 class WebrtcVideoDecoderProxy : public WebrtcVideoDecoder {
  public:
-  WebrtcVideoDecoderProxy() : mDecoderImpl(new WebrtcGmpVideoDecoder) {}
+  explicit WebrtcVideoDecoderProxy(std::string aPCHandle)
+      : mDecoderImpl(new WebrtcGmpVideoDecoder(std::move(aPCHandle))) {}
 
   virtual ~WebrtcVideoDecoderProxy() {
     RegisterDecodeCompleteCallback(nullptr);
   }
 
-  uint64_t PluginID() const override { return mDecoderImpl->PluginID(); }
+  MediaEventSource<uint64_t>* InitPluginEvent() override {
+    return mDecoderImpl->InitPluginEvent();
+  }
+
+  MediaEventSource<uint64_t>* ReleasePluginEvent() override {
+    return mDecoderImpl->ReleasePluginEvent();
+  }
 
   int32_t InitDecode(const webrtc::VideoCodec* aCodecSettings,
                      int32_t aNumberOfCores) override {
@@ -469,11 +462,8 @@ class WebrtcVideoDecoderProxy : public WebrtcVideoDecoder {
   }
 
   int32_t Decode(const webrtc::EncodedImage& aInputImage, bool aMissingFrames,
-                 const webrtc::RTPFragmentationHeader* aFragmentation,
-                 const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
                  int64_t aRenderTimeMs) override {
-    return mDecoderImpl->Decode(aInputImage, aMissingFrames, aFragmentation,
-                                aCodecSpecificInfo, aRenderTimeMs);
+    return mDecoderImpl->Decode(aInputImage, aMissingFrames, aRenderTimeMs);
   }
 
   int32_t RegisterDecodeCompleteCallback(
@@ -484,7 +474,7 @@ class WebrtcVideoDecoderProxy : public WebrtcVideoDecoder {
   int32_t Release() override { return mDecoderImpl->ReleaseGmp(); }
 
  private:
-  RefPtr<WebrtcGmpVideoDecoder> mDecoderImpl;
+  const RefPtr<WebrtcGmpVideoDecoder> mDecoderImpl;
 };
 
 }  // namespace mozilla

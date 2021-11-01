@@ -7,7 +7,7 @@
 
 #include "mozilla/Attributes.h"
 
-#include "webrtc/api/call/transport.h"
+#include "api/call/transport.h"
 
 namespace mozilla {
 

@@ -18,49 +18,21 @@
 #include "mozilla/SyncRunnable.h"
 #include "nsServiceManagerUtils.h"
 #include "transport/runnable_utils.h"
-#include "webrtc/common_video/include/video_frame_buffer.h"
-#include "webrtc/rtc_base/bind.h"
+#include "api/video/video_frame_type.h"
+#include "common_video/include/video_frame_buffer.h"
+#include "rtc_base/bind.h"
 
 namespace mozilla {
 
-WebrtcGmpPCHandleSetter::WebrtcGmpPCHandleSetter(const std::string& aPCHandle) {
-  if (!NS_IsMainThread()) {
-    MOZ_ASSERT(false, "WebrtcGmpPCHandleSetter can only be used on main");
-    return;
-  }
-  MOZ_ASSERT(sCurrentHandle.empty());
-  sCurrentHandle = aPCHandle;
-}
-
-WebrtcGmpPCHandleSetter::~WebrtcGmpPCHandleSetter() {
-  if (!NS_IsMainThread()) {
-    MOZ_ASSERT(false, "WebrtcGmpPCHandleSetter can only be used on main");
-    return;
-  }
-
-  sCurrentHandle.clear();
-}
-
-/* static */ std::string WebrtcGmpPCHandleSetter::GetCurrentHandle() {
-  if (!NS_IsMainThread()) {
-    MOZ_ASSERT(false, "WebrtcGmpPCHandleSetter can only be used on main");
-    return "";
-  }
-
-  return sCurrentHandle;
-}
-
-std::string WebrtcGmpPCHandleSetter::sCurrentHandle;
-
 // Encoder.
-WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder()
+WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder(std::string aPCHandle)
     : mGMP(nullptr),
       mInitting(false),
       mHost(nullptr),
       mMaxPayloadSize(0),
       mCallbackMutex("WebrtcGmpVideoEncoder encoded callback mutex"),
       mCallback(nullptr),
-      mCachedPluginId(0) {
+      mPCHandle(std::move(aPCHandle)) {
   mCodecParams.mGMPApiVersion = 0;
   mCodecParams.mCodecType = kGMPVideoCodecInvalid;
   mCodecParams.mPLType = 0;
@@ -75,9 +47,6 @@ WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder()
   mCodecParams.mQPMax = 0;
   mCodecParams.mNumberOfSimulcastStreams = 0;
   mCodecParams.mMode = kGMPCodecModeInvalid;
-  if (mPCHandle.empty()) {
-    mPCHandle = WebrtcGmpPCHandleSetter::GetCurrentHandle();
-  }
   MOZ_ASSERT(!mPCHandle.empty());
 }
 
@@ -86,17 +55,17 @@ WebrtcGmpVideoEncoder::~WebrtcGmpVideoEncoder() {
   MOZ_ASSERT(!mGMP);
 }
 
-static int WebrtcFrameTypeToGmpFrameType(webrtc::FrameType aIn,
+static int WebrtcFrameTypeToGmpFrameType(webrtc::VideoFrameType aIn,
                                          GMPVideoFrameType* aOut) {
   MOZ_ASSERT(aOut);
   switch (aIn) {
-    case webrtc::kVideoFrameKey:
+    case webrtc::VideoFrameType::kVideoFrameKey:
       *aOut = kGMPKeyFrame;
       break;
-    case webrtc::kVideoFrameDelta:
+    case webrtc::VideoFrameType::kVideoFrameDelta:
       *aOut = kGMPDeltaFrame;
       break;
-    case webrtc::kEmptyFrame:
+    case webrtc::VideoFrameType::kEmptyFrame:
       *aOut = kGMPSkipFrame;
       break;
     default:
@@ -107,17 +76,17 @@ static int WebrtcFrameTypeToGmpFrameType(webrtc::FrameType aIn,
 }
 
 static int GmpFrameTypeToWebrtcFrameType(GMPVideoFrameType aIn,
-                                         webrtc::FrameType* aOut) {
+                                         webrtc::VideoFrameType* aOut) {
   MOZ_ASSERT(aOut);
   switch (aIn) {
     case kGMPKeyFrame:
-      *aOut = webrtc::kVideoFrameKey;
+      *aOut = webrtc::VideoFrameType::kVideoFrameKey;
       break;
     case kGMPDeltaFrame:
-      *aOut = webrtc::kVideoFrameDelta;
+      *aOut = webrtc::VideoFrameType::kVideoFrameDelta;
       break;
     case kGMPSkipFrame:
-      *aOut = webrtc::kEmptyFrame;
+      *aOut = webrtc::VideoFrameType::kEmptyFrame;
       break;
     default:
       MOZ_CRASH("Unexpected GMPVideoFrameType");
@@ -126,9 +95,26 @@ static int GmpFrameTypeToWebrtcFrameType(GMPVideoFrameType aIn,
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
+static int SizeNumBytes(GMPBufferType aBufferType) {
+  switch (aBufferType) {
+    case GMP_BufferSingle:
+      return 0;
+    case GMP_BufferLength8:
+      return 1;
+    case GMP_BufferLength16:
+      return 2;
+    case GMP_BufferLength24:
+      return 3;
+    case GMP_BufferLength32:
+      return 4;
+    default:
+      MOZ_CRASH("Unexpected buffer type");
+  }
+}
+
 int32_t WebrtcGmpVideoEncoder::InitEncode(
-    const webrtc::VideoCodec* aCodecSettings, int32_t aNumberOfCores,
-    size_t aMaxPayloadSize) {
+    const webrtc::VideoCodec* aCodecSettings,
+    const webrtc::VideoEncoder::Settings& aSettings) {
   if (!mMPS) {
     mMPS = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
   }
@@ -140,6 +126,9 @@ int32_t WebrtcGmpVideoEncoder::InitEncode(
     }
   }
 
+  MOZ_ASSERT(aCodecSettings->numberOfSimulcastStreams == 1,
+             "Simulcast not implemented for GMP-H264");
+
   // Bug XXXXXX: transfer settings from codecSettings to codec.
   GMPVideoCodec codecParams;
   memset(&codecParams, 0, sizeof(codecParams));
@@ -149,7 +138,6 @@ int32_t WebrtcGmpVideoEncoder::InitEncode(
   codecParams.mMinBitrate = aCodecSettings->minBitrate;
   codecParams.mMaxBitrate = aCodecSettings->maxBitrate;
   codecParams.mMaxFramerate = aCodecSettings->maxFramerate;
-  mMaxPayloadSize = aMaxPayloadSize;
 
   memset(&mCodecSpecificInfo.codecSpecific, 0,
          sizeof(mCodecSpecificInfo.codecSpecific));
@@ -159,12 +147,13 @@ int32_t WebrtcGmpVideoEncoder::InitEncode(
           ? webrtc::H264PacketizationMode::NonInterleaved
           : webrtc::H264PacketizationMode::SingleNalUnit;
 
+  uint32_t maxPayloadSize = aSettings.max_payload_size;
   if (mCodecSpecificInfo.codecSpecific.H264.packetization_mode ==
       webrtc::H264PacketizationMode::NonInterleaved) {
-    mMaxPayloadSize = 0;  // No limit, use FUAs
+    maxPayloadSize = 0;  // No limit, use FUAs
   }
 
-  if (aCodecSettings->mode == webrtc::kScreensharing) {
+  if (aCodecSettings->mode == webrtc::VideoCodecMode::kScreensharing) {
     codecParams.mMode = kGMPScreensharing;
   } else {
     codecParams.mMode = kGMPRealtimeVideo;
@@ -177,7 +166,7 @@ int32_t WebrtcGmpVideoEncoder::InitEncode(
   mGMPThread->Dispatch(
       WrapRunnableNM(WebrtcGmpVideoEncoder::InitEncode_g,
                      RefPtr<WebrtcGmpVideoEncoder>(this), codecParams,
-                     aNumberOfCores, aMaxPayloadSize, initDone),
+                     aSettings.number_of_cores, maxPayloadSize, initDone),
       NS_DISPATCH_NORMAL);
 
   // Since init of the GMP encoder is a multi-step async dispatch (including
@@ -195,8 +184,9 @@ void WebrtcGmpVideoEncoder::InitEncode_g(
   nsTArray<nsCString> tags;
   tags.AppendElement("h264"_ns);
   UniquePtr<GetGMPVideoEncoderCallback> callback(
-      new InitDoneCallback(aThis, aInitDone, aCodecParams, aMaxPayloadSize));
+      new InitDoneCallback(aThis, aInitDone, aCodecParams));
   aThis->mInitting = true;
+  aThis->mMaxPayloadSize = aMaxPayloadSize;
   nsresult rv = aThis->mMPS->GetGMPVideoEncoder(nullptr, &tags, ""_ns,
                                                 std::move(callback));
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -230,14 +220,14 @@ int32_t WebrtcGmpVideoEncoder::GmpInitDone(GMPVideoEncoderProxy* aGMP,
 
   mGMP = aGMP;
   mHost = aHost;
-  mCachedPluginId = mGMP->GetPluginId();
+  mCachedPluginId = Some(mGMP->GetPluginId());
+  mInitPluginEvent.Notify(*mCachedPluginId);
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int32_t WebrtcGmpVideoEncoder::GmpInitDone(GMPVideoEncoderProxy* aGMP,
                                            GMPVideoHost* aHost,
                                            const GMPVideoCodec& aCodecParams,
-                                           uint32_t aMaxPayloadSize,
                                            std::string* aErrorOut) {
   int32_t r = GmpInitDone(aGMP, aHost, aErrorOut);
   if (r != WEBRTC_VIDEO_CODEC_OK) {
@@ -255,6 +245,11 @@ void WebrtcGmpVideoEncoder::Close_g() {
   mGMP = nullptr;
   mHost = nullptr;
   mInitting = false;
+
+  if (mCachedPluginId) {
+    mReleasePluginEvent.Notify(*mCachedPluginId);
+  }
+  mCachedPluginId = Nothing();
 
   if (gmp) {
     // Do this last, since this could cause us to be destroyed
@@ -282,8 +277,7 @@ int32_t WebrtcGmpVideoEncoder::InitEncoderForSize(unsigned short aWidth,
 
 int32_t WebrtcGmpVideoEncoder::Encode(
     const webrtc::VideoFrame& aInputImage,
-    const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-    const std::vector<webrtc::FrameType>* aFrameTypes) {
+    const std::vector<webrtc::VideoFrameType>* aFrameTypes) {
   MOZ_ASSERT(aInputImage.width() >= 0 && aInputImage.height() >= 0);
   if (!aFrameTypes) {
     return WEBRTC_VIDEO_CODEC_ERROR;
@@ -324,7 +318,7 @@ void WebrtcGmpVideoEncoder::RegetEncoderForResolutionChange(
 void WebrtcGmpVideoEncoder::Encode_g(
     const RefPtr<WebrtcGmpVideoEncoder>& aEncoder,
     webrtc::VideoFrame aInputImage,
-    std::vector<webrtc::FrameType> aFrameTypes) {
+    std::vector<webrtc::VideoFrameType> aFrameTypes) {
   if (!aEncoder->mGMP) {
     // destroyed via Terminate(), failed to init, or just not initted yet
     GMP_LOG_DEBUG("GMP Encode: not initted yet");
@@ -357,7 +351,7 @@ void WebrtcGmpVideoEncoder::Encode_g(
     return;
   }
   GMPUniquePtr<GMPVideoi420Frame> frame(static_cast<GMPVideoi420Frame*>(ftmp));
-  rtc::scoped_refptr<webrtc::I420BufferInterface> input_image =
+  const webrtc::I420BufferInterface* input_image =
       aInputImage.video_frame_buffer()->GetI420();
   // check for overflow of stride * height
   CheckedInt32 ysize =
@@ -436,35 +430,42 @@ int32_t WebrtcGmpVideoEncoder::Shutdown() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t WebrtcGmpVideoEncoder::SetChannelParameters(uint32_t aPacketLoss,
-                                                    int64_t aRTT) {
-  return WEBRTC_VIDEO_CODEC_OK;
-}
-
-int32_t WebrtcGmpVideoEncoder::SetRates(uint32_t aNewBitRate,
-                                        uint32_t aFrameRate) {
+int32_t WebrtcGmpVideoEncoder::SetRates(
+    const webrtc::VideoEncoder::RateControlParameters& aParameters) {
   MOZ_ASSERT(mGMPThread);
-  if (aFrameRate == 0) {
-    aFrameRate = 30;  // Assume 30fps if we don't know the rate
-  }
-  mGMPThread->Dispatch(WrapRunnableNM(&WebrtcGmpVideoEncoder::SetRates_g,
-                                      RefPtr<WebrtcGmpVideoEncoder>(this),
-                                      aNewBitRate, aFrameRate),
-                       NS_DISPATCH_NORMAL);
+  MOZ_ASSERT(aParameters.bitrate.IsSpatialLayerUsed(0));
+  MOZ_ASSERT(!aParameters.bitrate.HasBitrate(0, 1),
+             "No simulcast support for H264");
+  MOZ_ASSERT(!aParameters.bitrate.IsSpatialLayerUsed(1),
+             "No simulcast support for H264");
+  mGMPThread->Dispatch(
+      WrapRunnableNM(&WebrtcGmpVideoEncoder::SetRates_g,
+                     RefPtr<WebrtcGmpVideoEncoder>(this),
+                     aParameters.bitrate.GetBitrate(0, 0) / 1000,
+                     aParameters.framerate_fps > 0.0
+                         ? Some(aParameters.framerate_fps)
+                         : Nothing()),
+      NS_DISPATCH_NORMAL);
 
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
 /* static */
 int32_t WebrtcGmpVideoEncoder::SetRates_g(RefPtr<WebrtcGmpVideoEncoder> aThis,
-                                          uint32_t aNewBitRate,
-                                          uint32_t aFrameRate) {
+                                          uint32_t aNewBitRateKbps,
+                                          Maybe<double> aFrameRate) {
   if (!aThis->mGMP) {
     // destroyed via Terminate()
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  GMPErr err = aThis->mGMP->SetRates(aNewBitRate, aFrameRate);
+  GMPErr err = aThis->mGMP->SetRates(
+      aNewBitRateKbps, aFrameRate
+                           .map([](double aFr) {
+                             // Avoid rounding to 0
+                             return std::max(1U, static_cast<uint32_t>(aFr));
+                           })
+                           .valueOr(aThis->mCodecParams.mMaxFramerate));
   if (err != GMPNoErr) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
@@ -487,168 +488,125 @@ void WebrtcGmpVideoEncoder::Encoded(
     GMPVideoEncodedFrame* aEncodedFrame,
     const nsTArray<uint8_t>& aCodecSpecificInfo) {
   MutexAutoLock lock(mCallbackMutex);
-  if (mCallback) {
-    webrtc::FrameType ft;
-    GmpFrameTypeToWebrtcFrameType(aEncodedFrame->FrameType(), &ft);
-    uint32_t timestamp = (aEncodedFrame->TimeStamp() * 90ll + 999) / 1000;
+  if (!mCallback) {
+    return;
+  }
 
-    GMP_LOG_DEBUG("GMP Encoded: %" PRIu64 ", type %d, len %d",
-                  aEncodedFrame->TimeStamp(), aEncodedFrame->BufferType(),
-                  aEncodedFrame->Size());
+  webrtc::VideoFrameType ft;
+  GmpFrameTypeToWebrtcFrameType(aEncodedFrame->FrameType(), &ft);
+  uint32_t timestamp = (aEncodedFrame->TimeStamp() * 90ll + 999) / 1000;
 
-    // Right now makes one Encoded() callback per unit
-    // XXX convert to FragmentationHeader format (array of offsets and sizes
-    // plus a buffer) in combination with H264 packetization changes in
-    // webrtc/trunk code
-    uint8_t* buffer = aEncodedFrame->Buffer();
+  GMP_LOG_DEBUG("GMP Encoded: %" PRIu64 ", type %d, len %d",
+                aEncodedFrame->TimeStamp(), aEncodedFrame->BufferType(),
+                aEncodedFrame->Size());
 
-    if (!buffer) {
-      GMP_LOG_ERROR("GMP plugin returned null buffer");
+  if (!aEncodedFrame->Buffer()) {
+    GMP_LOG_ERROR("GMP plugin returned null buffer");
+    return;
+  }
+
+  // Libwebrtc's RtpPacketizerH264 expects a 3- or 4-byte NALU start sequence
+  // before the start of the NALU payload. {0,0,1} or {0,0,0,1}. We set this
+  // in-place. Any other length of the length field we reject.
+
+  const int sizeNumBytes = SizeNumBytes(aEncodedFrame->BufferType());
+  uint32_t unitOffset = 0;
+  uint32_t unitSize = 0;
+  // Make sure we don't read past the end of the buffer getting the size
+  while (unitOffset + sizeNumBytes < aEncodedFrame->Size()) {
+    uint8_t* unitBuffer = aEncodedFrame->Buffer() + unitOffset;
+    switch (aEncodedFrame->BufferType()) {
+      case GMP_BufferLength24: {
+#if MOZ_LITTLE_ENDIAN()
+        unitSize = (static_cast<uint32_t>(*unitBuffer)) |
+                   (static_cast<uint32_t>(*(unitBuffer + 1)) << 8) |
+                   (static_cast<uint32_t>(*(unitBuffer + 2)) << 16);
+#else
+        unitSize = (static_cast<uint32_t>(*unitBuffer) << 16) |
+                   (static_cast<uint32_t>(*(unitBuffer + 1)) << 8) |
+                   (static_cast<uint32_t>(*(unitBuffer + 2)));
+#endif
+        const uint8_t startSequence[] = {0, 0, 1};
+        if (memcmp(unitBuffer, startSequence, 3) == 0) {
+          // This is a bug in OpenH264 where it misses to convert the NALU start
+          // sequence to the NALU size per the GMP protocol. We mitigate this by
+          // letting it through as this is what libwebrtc already expects and
+          // scans for.
+          unitSize = aEncodedFrame->Size() - 3;
+          break;
+        }
+        memcpy(unitBuffer, startSequence, 3);
+        break;
+      }
+      case GMP_BufferLength32: {
+#if MOZ_LITTLE_ENDIAN()
+        unitSize = LittleEndian::readUint32(unitBuffer);
+#else
+        unitSize = BigEndian::readUint32(unitBuffer);
+#endif
+        const uint8_t startSequence[] = {0, 0, 0, 1};
+        if (memcmp(unitBuffer, startSequence, 4) == 0) {
+          // This is a bug in OpenH264 where it misses to convert the NALU start
+          // sequence to the NALU size per the GMP protocol. We mitigate this by
+          // letting it through as this is what libwebrtc already expects and
+          // scans for.
+          unitSize = aEncodedFrame->Size() - 4;
+          break;
+        }
+        memcpy(unitBuffer, startSequence, 4);
+        break;
+      }
+      default:
+        GMP_LOG_ERROR("GMP plugin returned type we cannot handle (%d)",
+                      aEncodedFrame->BufferType());
+        return;
+    }
+
+    MOZ_ASSERT(unitSize != 0);
+    MOZ_ASSERT(unitOffset + sizeNumBytes + unitSize <= aEncodedFrame->Size());
+    if (unitSize == 0 ||
+        unitOffset + sizeNumBytes + unitSize > aEncodedFrame->Size()) {
+      // XXX Should we kill the plugin for returning extra bytes? Probably
+      GMP_LOG_ERROR(
+          "GMP plugin returned badly formatted encoded data: "
+          "unitOffset=%u, sizeNumBytes=%d, unitSize=%u, size=%u",
+          unitOffset, sizeNumBytes, unitSize, aEncodedFrame->Size());
       return;
     }
 
-    uint8_t* end = aEncodedFrame->Buffer() + aEncodedFrame->Size();
-    size_t size_bytes;
-    switch (aEncodedFrame->BufferType()) {
-      case GMP_BufferSingle:
-        size_bytes = 0;
-        break;
-      case GMP_BufferLength8:
-        size_bytes = 1;
-        break;
-      case GMP_BufferLength16:
-        size_bytes = 2;
-        break;
-      case GMP_BufferLength24:
-        size_bytes = 3;
-        break;
-      case GMP_BufferLength32:
-        size_bytes = 4;
-        break;
-      default:
-        // Really that it's not in the enum
-        GMP_LOG_ERROR("GMP plugin returned incorrect type (%d)",
-                      aEncodedFrame->BufferType());
-        // XXX Bug 1041232 - need a better API for interfacing to the
-        // plugin so we can kill it here
-        return;
-    }
-
-    struct nal_entry {
-      uint32_t offset;
-      uint32_t size;
-    };
-    AutoTArray<nal_entry, 1> nals;
-    uint32_t size = 0;
-    // make sure we don't read past the end of the buffer getting the size
-    while (buffer + size_bytes < end) {
-      switch (aEncodedFrame->BufferType()) {
-        case GMP_BufferSingle:
-          size = aEncodedFrame->Size();
-          break;
-        case GMP_BufferLength8:
-          size = *buffer++;
-          break;
-        case GMP_BufferLength16:
-// The plugin is expected to encode data in native byte order
-#if MOZ_LITTLE_ENDIAN()
-          size = LittleEndian::readUint16(buffer);
-#else
-          size = BigEndian::readUint16(buffer);
-#endif
-          buffer += 2;
-          break;
-        case GMP_BufferLength24:
-          // 24-bits is a pain, since byte-order issues make things painful
-          // I'm going to define 24-bit as little-endian always; big-endian must
-          // convert
-          size = ((uint32_t)*buffer) | (((uint32_t) * (buffer + 1)) << 8) |
-                 (((uint32_t) * (buffer + 2)) << 16);
-          buffer += 3;
-          break;
-        case GMP_BufferLength32:
-// The plugin is expected to encode data in native byte order
-#if MOZ_LITTLE_ENDIAN()
-          size = LittleEndian::readUint32(buffer);
-#else
-          size = BigEndian::readUint32(buffer);
-#endif
-          buffer += 4;
-          break;
-        default:
-          MOZ_CRASH("GMP_BufferType already handled in switch above");
-      }
-
-      // OpenH264 1.8.1 occasionally generates a size of 0x01000000.
-      // This is a magic value in the NAL which should be replaced with a
-      // valid size, but for some reason this is not always happening.
-      // If we return early here, encoding will continue to work as expected.
-      // See Bug 1533001.
-      if (size == 0x01000000) {
-        return;
-      }
-
-      MOZ_ASSERT(size != 0 &&
-                 buffer + size <=
-                     end);  // in non-debug code, don't crash in this case
-      if (size == 0 || buffer + size > end) {
-        // XXX see above - should we kill the plugin for returning extra bytes?
-        // Probably
-        GMP_LOG_ERROR(
-            "GMP plugin returned badly formatted encoded "
-            "data: buffer=%p, size=%d, end=%p",
-            buffer, size, end);
-        return;
-      }
-      // XXX optimize by making buffer an offset
-      nal_entry nal = {((uint32_t)(buffer - aEncodedFrame->Buffer())),
-                       (uint32_t)size};
-      nals.AppendElement(nal);
-      buffer += size;
-      // on last one, buffer == end normally
-    }
-    if (buffer != end) {
-      // At most 3 bytes can be left over, depending on buffertype
-      GMP_LOG_DEBUG("GMP plugin returned %td extra bytes", end - buffer);
-    }
-
-    size_t num_nals = nals.Length();
-    if (num_nals > 0) {
-      webrtc::RTPFragmentationHeader fragmentation;
-      fragmentation.VerifyAndAllocateFragmentationHeader(num_nals);
-      for (size_t i = 0; i < num_nals; i++) {
-        fragmentation.fragmentationOffset[i] = nals[i].offset;
-        fragmentation.fragmentationLength[i] = nals[i].size;
-      }
-
-      webrtc::EncodedImage unit(aEncodedFrame->Buffer(), size, size);
-      unit._frameType = ft;
-      unit._timeStamp = timestamp;
-      // Ensure we ignore this when calculating RTCP timestamps
-      unit.capture_time_ms_ = -1;
-      unit._completeFrame = true;
-
-      // TODO: Currently the OpenH264 codec does not preserve any codec
-      //       specific info passed into it and just returns default values.
-      //       If this changes in the future, it would be nice to get rid of
-      //       mCodecSpecificInfo.
-      mCallback->OnEncodedImage(unit, &mCodecSpecificInfo, &fragmentation);
-    }
+    unitOffset += sizeNumBytes + unitSize;
   }
+
+  if (unitOffset != aEncodedFrame->Size()) {
+    // At most 3 bytes can be left over, depending on buffertype
+    GMP_LOG_DEBUG("GMP plugin returned %u extra bytes",
+                  aEncodedFrame->Size() - unitOffset);
+  }
+
+  webrtc::EncodedImage unit(aEncodedFrame->Buffer(), aEncodedFrame->Size(),
+                            aEncodedFrame->Size());
+  unit._frameType = ft;
+  unit.SetTimestamp(timestamp);
+  // Ensure we ignore this when calculating RTCP timestamps
+  unit.capture_time_ms_ = -1;
+  unit._completeFrame = true;
+
+  // TODO: Currently the OpenH264 codec does not preserve any codec
+  //       specific info passed into it and just returns default values.
+  //       If this changes in the future, it would be nice to get rid of
+  //       mCodecSpecificInfo.
+  mCallback->OnEncodedImage(unit, &mCodecSpecificInfo);
 }
 
 // Decoder.
-WebrtcGmpVideoDecoder::WebrtcGmpVideoDecoder()
+WebrtcGmpVideoDecoder::WebrtcGmpVideoDecoder(std::string aPCHandle)
     : mGMP(nullptr),
       mInitting(false),
       mHost(nullptr),
       mCallbackMutex("WebrtcGmpVideoDecoder decoded callback mutex"),
       mCallback(nullptr),
-      mCachedPluginId(0),
-      mDecoderStatus(GMPNoErr) {
-  if (mPCHandle.empty()) {
-    mPCHandle = WebrtcGmpPCHandleSetter::GetCurrentHandle();
-  }
+      mDecoderStatus(GMPNoErr),
+      mPCHandle(std::move(aPCHandle)) {
   MOZ_ASSERT(!mPCHandle.empty());
 }
 
@@ -722,7 +680,8 @@ int32_t WebrtcGmpVideoDecoder::GmpInitDone(GMPVideoDecoderProxy* aGMP,
 
   mGMP = aGMP;
   mHost = aHost;
-  mCachedPluginId = mGMP->GetPluginId();
+  mCachedPluginId = Some(mGMP->GetPluginId());
+  mInitPluginEvent.Notify(*mCachedPluginId);
   // Bug XXXXXX: transfer settings from codecSettings to codec.
   GMPVideoCodec codec;
   memset(&codec, 0, sizeof(codec));
@@ -769,20 +728,23 @@ void WebrtcGmpVideoDecoder::Close_g() {
   mHost = nullptr;
   mInitting = false;
 
+  if (mCachedPluginId) {
+    mReleasePluginEvent.Notify(*mCachedPluginId);
+  }
+  mCachedPluginId = Nothing();
+
   if (gmp) {
     // Do this last, since this could cause us to be destroyed
     gmp->Close();
   }
 }
 
-int32_t WebrtcGmpVideoDecoder::Decode(
-    const webrtc::EncodedImage& aInputImage, bool aMissingFrames,
-    const webrtc::RTPFragmentationHeader* aFragmentation,
-    const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-    int64_t aRenderTimeMs) {
+int32_t WebrtcGmpVideoDecoder::Decode(const webrtc::EncodedImage& aInputImage,
+                                      bool aMissingFrames,
+                                      int64_t aRenderTimeMs) {
   MOZ_ASSERT(mGMPThread);
   MOZ_ASSERT(!NS_IsMainThread());
-  if (!aInputImage._length) {
+  if (!aInputImage.size()) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
@@ -839,7 +801,7 @@ void WebrtcGmpVideoDecoder::Decode_g(const RefPtr<WebrtcGmpVideoDecoder>& aThis,
 
   GMPUniquePtr<GMPVideoEncodedFrame> frame(
       static_cast<GMPVideoEncodedFrame*>(ftmp));
-  err = frame->CreateEmptyFrame(aDecodeData->mImage._length);
+  err = frame->CreateEmptyFrame(aDecodeData->mImage.size());
   if (err != GMPNoErr) {
     GMP_LOG_ERROR("%s: CreateEmptyFrame failed (%u)!", __PRETTY_FUNCTION__,
                   static_cast<unsigned>(err));
@@ -852,12 +814,12 @@ void WebrtcGmpVideoDecoder::Decode_g(const RefPtr<WebrtcGmpVideoDecoder>& aThis,
   *(reinterpret_cast<uint32_t*>(frame->Buffer())) = frame->Size();
 
   // XXX It'd be wonderful not to have to memcpy the encoded data!
-  memcpy(frame->Buffer() + 4, aDecodeData->mImage._buffer + 4,
+  memcpy(frame->Buffer() + 4, aDecodeData->mImage.data() + 4,
          frame->Size() - 4);
 
   frame->SetEncodedWidth(aDecodeData->mImage._encodedWidth);
   frame->SetEncodedHeight(aDecodeData->mImage._encodedHeight);
-  frame->SetTimeStamp((aDecodeData->mImage._timeStamp * 1000ll) /
+  frame->SetTimeStamp((aDecodeData->mImage.Timestamp() * 1000ll) /
                       90);  // rounds down
   frame->SetCompleteFrame(aDecodeData->mImage._completeFrame);
   frame->SetBufferType(GMP_BufferLength32);
@@ -882,7 +844,7 @@ void WebrtcGmpVideoDecoder::Decode_g(const RefPtr<WebrtcGmpVideoDecoder>& aThis,
                                    sizeof(GMPCodecSpecificInfo));
 
   GMP_LOG_DEBUG("GMP Decode: %" PRIu64 ", len %zu%s", frame->TimeStamp(),
-                aDecodeData->mImage._length,
+                aDecodeData->mImage.size(),
                 ft == kGMPKeyFrame ? ", KeyFrame" : "");
 
   nsresult rv =
@@ -971,13 +933,13 @@ void WebrtcGmpVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
 
     MutexAutoLock lock(mCallbackMutex);
     if (mCallback) {
-      rtc::scoped_refptr<webrtc::WrappedI420Buffer> video_frame_buffer(
-          new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
-              aDecodedFrame->Width(), aDecodedFrame->Height(), buffer_y,
-              aDecodedFrame->Stride(kGMPYPlane), buffer_u,
-              aDecodedFrame->Stride(kGMPUPlane), buffer_v,
-              aDecodedFrame->Stride(kGMPVPlane),
-              rtc::Bind(&DeleteBuffer, buffer.release())));
+      rtc::scoped_refptr<webrtc::I420BufferInterface> video_frame_buffer =
+          webrtc::WrapI420Buffer(aDecodedFrame->Width(),
+                                 aDecodedFrame->Height(), buffer_y,
+                                 aDecodedFrame->Stride(kGMPYPlane), buffer_u,
+                                 aDecodedFrame->Stride(kGMPUPlane), buffer_v,
+                                 aDecodedFrame->Stride(kGMPVPlane),
+                                 rtc::Bind(&DeleteBuffer, buffer.release()));
 
       webrtc::VideoFrame image(video_frame_buffer, 0, 0,
                                webrtc::kVideoRotation_0);
