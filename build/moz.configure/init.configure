@@ -326,14 +326,12 @@ def virtualenv_python3(env_python, build_env, mozconfig, help):
             python_path=test_python,
         )
     else:
-        with LineIO(lambda l: log.info(l), "replace") as out:
-            manager = VirtualenvManager(
-                topsrcdir,
-                os.path.join(topobjdir, "_virtualenvs"),
-                "build",
-                base_python=python,
-                log_handle=out,
-            )
+        manager = VirtualenvManager(
+            topsrcdir,
+            os.path.join(topobjdir, "_virtualenvs"),
+            "build",
+            base_python=python,
+        )
 
     if not manager.up_to_date():
         log.info("Creating Python 3 environment")
