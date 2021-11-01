@@ -17,15 +17,19 @@ import mozilla.components.browser.icons.IconRequest
 import mozilla.components.ui.widgets.WidgetSiteItemView
 import org.junit.Assert.assertNotNull
 import org.junit.Before
-import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.exceptions.ExceptionsInteractor
+import org.mozilla.fenix.helpers.MockkRetryTestRule
 
 class ExceptionsListItemViewHolderTest {
 
     @MockK(relaxed = true) private lateinit var view: WidgetSiteItemView
     @MockK private lateinit var icons: BrowserIcons
     @MockK private lateinit var interactor: ExceptionsInteractor<Exception>
+
+    @get:Rule
+    val mockkRule = MockkRetryTestRule()
 
     @Before
     fun setup() {
@@ -51,7 +55,6 @@ class ExceptionsListItemViewHolderTest {
     }
 
     @Test
-    @Ignore("Intermittent failing test on JDK11: https://github.com/mockk/mockk/issues/598")
     fun `delete button calls interactor`() {
         var clickListener: ((View) -> Unit)? = null
         val exception = Exception()

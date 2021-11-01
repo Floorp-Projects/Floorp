@@ -9,13 +9,17 @@ import android.view.View
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verifyOrder
-import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.helpers.MockkRetryTestRule
 import org.mozilla.fenix.tabstray.TabsTrayFragment.Companion.ELEVATION
 
 class FenixSnackbarKtTest {
+
+    @get:Rule
+    val mockkRule = MockkRetryTestRule()
 
     @Test
     fun `WHEN collectionMessage is called with different parameters THEN correct text will be set`() {
@@ -66,7 +70,6 @@ class FenixSnackbarKtTest {
     }
 
     @Test
-    @Ignore("Intermittent failing test on JDK11: https://github.com/mockk/mockk/issues/598")
     fun `WHEN anchorWithAction is called THEN correct text will be set`() {
         val mockContext: Context = mockk {
             every { getString(R.string.create_collection_view) }

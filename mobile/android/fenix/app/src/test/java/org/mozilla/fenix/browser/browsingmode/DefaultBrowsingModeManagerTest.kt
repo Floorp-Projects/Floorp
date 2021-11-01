@@ -12,8 +12,9 @@ import io.mockk.just
 import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.helpers.MockkRetryTestRule
 import org.mozilla.fenix.utils.Settings
 
 class DefaultBrowsingModeManagerTest {
@@ -24,6 +25,9 @@ class DefaultBrowsingModeManagerTest {
 
     private val initMode = BrowsingMode.Normal
 
+    @get:Rule
+    val mockkRule = MockkRetryTestRule()
+
     @Before
     fun before() {
         MockKAnnotations.init(this)
@@ -33,7 +37,6 @@ class DefaultBrowsingModeManagerTest {
     }
 
     @Test
-    @Ignore("Intermittent failing test on JDK11: https://github.com/mockk/mockk/issues/598")
     fun `WHEN mode is updated THEN callback is invoked`() {
         verify(exactly = 0) { callback.invoke(any()) }
 
@@ -50,7 +53,6 @@ class DefaultBrowsingModeManagerTest {
     }
 
     @Test
-    @Ignore("Intermittent failing test on JDK11: https://github.com/mockk/mockk/issues/598")
     fun `WHEN mode is updated THEN it should be returned from get`() {
         assertEquals(BrowsingMode.Normal, manager.mode)
 

@@ -32,8 +32,9 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.helpers.MockkRetryTestRule
 
 class WebPushEngineIntegrationTest {
 
@@ -43,6 +44,9 @@ class WebPushEngineIntegrationTest {
     @MockK(relaxed = true) private lateinit var handler: WebPushHandler
     private lateinit var delegate: CapturingSlot<WebPushDelegate>
     private lateinit var integration: WebPushEngineIntegration
+
+    @get:Rule
+    val mockkRule = MockkRetryTestRule()
 
     @Before
     fun setup() {
@@ -89,7 +93,6 @@ class WebPushEngineIntegrationTest {
     }
 
     @Test
-    @Ignore("Intermittent failing test on JDK11: https://github.com/mockk/mockk/issues/598")
     fun `delegate calls getSubscription`() {
         integration.start()
         var subscribeFn: ((AutoPushSubscription?) -> Unit)? = null

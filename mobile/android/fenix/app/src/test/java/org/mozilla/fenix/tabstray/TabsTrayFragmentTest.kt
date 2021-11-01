@@ -36,6 +36,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.NavGraphDirections
@@ -48,6 +49,7 @@ import org.mozilla.fenix.databinding.FragmentTabTrayDialogBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.helpers.MockkRetryTestRule
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.tabstray.ext.showWithTheme
@@ -61,6 +63,9 @@ class TabsTrayFragmentTest {
     private lateinit var tabsTrayBinding: ComponentTabstray2Binding
     private lateinit var tabsTrayDialogBinding: FragmentTabTrayDialogBinding
     private lateinit var fabButtonBinding: ComponentTabstrayFabBinding
+
+    @get:Rule
+    val mockkRule = MockkRetryTestRule()
 
     @Before
     fun setup() {
