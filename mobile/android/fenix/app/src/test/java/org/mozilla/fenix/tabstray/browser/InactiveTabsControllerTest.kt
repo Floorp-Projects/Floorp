@@ -14,10 +14,14 @@ import mozilla.components.browser.tabstray.TabsTray
 import org.junit.Assert.assertEquals
 import mozilla.components.browser.state.state.createTab as createTabState
 import org.junit.Test
+import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 
 class InactiveTabsControllerTest {
+
+    private val appStore = AppStore()
+
     @Test
     fun `WHEN expanded THEN notify filtered card`() {
         val filter: (TabSessionState) -> Boolean = { !it.content.private }
@@ -32,7 +36,7 @@ class InactiveTabsControllerTest {
         )
         val tray: TabsTray = mockk(relaxed = true)
         val tabsSlot = slot<List<TabSessionState>>()
-        val controller = InactiveTabsController(store, filter, tray, mockk(relaxed = true))
+        val controller = InactiveTabsController(store, appStore, filter, tray, mockk(relaxed = true))
 
         controller.updateCardExpansion(true)
 
@@ -47,7 +51,7 @@ class InactiveTabsControllerTest {
         val metrics: MetricController = mockk(relaxed = true)
         val store = BrowserStore(BrowserState())
         val controller = InactiveTabsController(
-            store, mockk(relaxed = true), mockk(relaxed = true), metrics
+            store, appStore, mockk(relaxed = true), mockk(relaxed = true), metrics
         )
 
         controller.updateCardExpansion(true)
@@ -60,7 +64,7 @@ class InactiveTabsControllerTest {
         val metrics: MetricController = mockk(relaxed = true)
         val store = BrowserStore(BrowserState())
         val controller = InactiveTabsController(
-            store, mockk(relaxed = true), mockk(relaxed = true), metrics
+            store, appStore, mockk(relaxed = true), mockk(relaxed = true), metrics
         )
 
         controller.updateCardExpansion(false)
