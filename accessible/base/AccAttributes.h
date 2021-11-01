@@ -29,10 +29,22 @@ namespace a11y {
 
 struct FontSize {
   int32_t mValue;
+
+  bool operator==(const FontSize& aOther) const {
+    return mValue == aOther.mValue;
+  }
+
+  bool operator!=(const FontSize& aOther) const {
+    return mValue != aOther.mValue;
+  }
 };
 
 struct Color {
   nscolor mValue;
+
+  bool operator==(const Color& aOther) const { return mValue == aOther.mValue; }
+
+  bool operator!=(const Color& aOther) const { return mValue != aOther.mValue; }
 };
 
 // A special type. If an entry has a value of this type, it instructs the
@@ -40,6 +52,10 @@ struct Color {
 struct DeleteEntry {
   DeleteEntry() : mValue(true) {}
   bool mValue;
+
+  bool operator==(const DeleteEntry& aOther) const { return true; }
+
+  bool operator!=(const DeleteEntry& aOther) const { return false; }
 };
 
 class AccAttributes {
@@ -111,6 +127,12 @@ class AccAttributes {
   // Update one instance with the entries in another. The supplied AccAttributes
   // will be emptied.
   void Update(AccAttributes* aOther);
+
+  /**
+   * Return true if all the attributes in this instance are equal to all the
+   * attributes in another instance.
+   */
+  bool Equal(const AccAttributes* aOther) const;
 
   // An entry class for our iterator.
   class Entry {
