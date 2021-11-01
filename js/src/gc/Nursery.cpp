@@ -70,11 +70,13 @@ struct NurseryChunk : public ChunkBase {
                    MemCheckKind checkKind);
   void poisonAfterEvict(size_t extent = ChunkSize);
 
-  // Mark pages from startOffset to the end of the chunk as unused.
+  // Mark pages from startOffset to the end of the chunk as unused. The start
+  // offset must be after the first page, which contains the chunk header and is
+  // not marked as unused.
   void markPagesUnusedHard(size_t startOffset);
 
-  // Mark pages from the start of the chunk to endOffset as in use, following a
-  // call to markPagesUnusedHard.
+  // Mark pages from the second page of the chunk to endOffset as in use,
+  // following a call to markPagesUnusedHard.
   [[nodiscard]] bool markPagesInUseHard(size_t endOffset);
 
   uintptr_t start() const { return uintptr_t(&data); }
@@ -113,6 +115,7 @@ inline void js::NurseryChunk::poisonAfterEvict(size_t extent) {
 
 inline void js::NurseryChunk::markPagesUnusedHard(size_t startOffset) {
   MOZ_ASSERT(startOffset >= sizeof(ChunkBase));  // Don't touch the header.
+  MOZ_ASSERT(startOffset >= SystemPageSize());
   MOZ_ASSERT(startOffset <= ChunkSize);
   uintptr_t start = uintptr_t(this) + startOffset;
   size_t length = ChunkSize - startOffset;
@@ -121,8 +124,11 @@ inline void js::NurseryChunk::markPagesUnusedHard(size_t startOffset) {
 
 inline bool js::NurseryChunk::markPagesInUseHard(size_t endOffset) {
   MOZ_ASSERT(endOffset >= sizeof(ChunkBase));
+  MOZ_ASSERT(endOffset >= SystemPageSize());
   MOZ_ASSERT(endOffset <= ChunkSize);
-  return MarkPagesInUseHard(this, endOffset);
+  uintptr_t start = uintptr_t(this) + SystemPageSize();
+  size_t length = endOffset - SystemPageSize();
+  return MarkPagesInUseHard(reinterpret_cast<void*>(start), length);
 }
 
 // static
