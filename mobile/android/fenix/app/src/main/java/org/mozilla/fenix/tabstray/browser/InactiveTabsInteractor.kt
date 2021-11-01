@@ -15,12 +15,3 @@ class DefaultInactiveTabsInteractor(
         controller.updateCardExpansion(activated)
     }
 }
-
-/**
- * An experimental state holder for [InactiveTabsAdapter] that lives at the application lifetime.
- *
- * TODO This should be replaced with the AppStore.
- */
-object InactiveTabsState {
-    var isExpanded = false
-}
