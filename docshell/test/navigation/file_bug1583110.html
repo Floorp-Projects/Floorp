@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <script>
+    var bc;
+    window.onpageshow = function(pageshow) {
+      bc = new BroadcastChannel("bug1583110");
+      bc.onmessage = function(event) {
+        bc.close();
+        if (event.data == "loadnext") {
+          location.search = "?nextpage";
+        } else if (event.data == "back") {
+          history.back();
+        }
+      }
+      bc.postMessage({type: "pageshow", persisted: pageshow.persisted });
+      if (pageshow.persisted) {
+        document.body.appendChild(document.createElement("iframe"));
+        bc.close();
+        window.close();
+      }
+    }
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
