@@ -227,7 +227,6 @@ option(env="PYTHON3", nargs=1, help="Python 3 interpreter (3.6 or later)")
 @imports("distutils.sysconfig")
 @imports(_from="mozbuild.configure.util", _import="LineIO")
 @imports(_from="mach.virtualenv", _import="VirtualenvManager")
-@imports(_from="mach.virtualenv", _import="verify_python_version")
 @imports(_from="mozbuild.pythonutil", _import="find_python3_executable")
 @imports(_from="mozbuild.pythonutil", _import="python_executable_version")
 @imports(_from="six", _import="ensure_text")
@@ -265,11 +264,6 @@ def virtualenv_python3(env_python, build_env, mozconfig, help):
             python = mozconfig["vars"]["modified"]["PYTHON3"][1]
 
     log.debug("python3: executable from configuration: %r" % python)
-
-    # Verify that the Python version we executed this code with is the minimum
-    # required version to handle all project code.
-    with LineIO(lambda l: log.error(l)) as out:
-        verify_python_version(out)
 
     # If this is a mozilla-central build, we'll find the virtualenv in the top
     # source directory. If this is a SpiderMonkey build, we assume we're at
