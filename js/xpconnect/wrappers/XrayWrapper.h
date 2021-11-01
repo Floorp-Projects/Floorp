@@ -209,6 +209,9 @@ class JSXrayTraits : public XrayTraits {
                    const JS::CallArgs& args, const js::Wrapper& baseInstance) {
     JSXrayTraits& self = JSXrayTraits::singleton;
     JS::RootedObject holder(cx, self.ensureHolder(cx, wrapper));
+    if (!holder) {
+      return false;
+    }
     if (xpc::JSXrayTraits::getProtoKey(holder) == JSProto_Function) {
       return baseInstance.call(cx, wrapper, args);
     }
@@ -225,6 +228,9 @@ class JSXrayTraits : public XrayTraits {
   bool getPrototype(JSContext* cx, JS::HandleObject wrapper,
                     JS::HandleObject target, JS::MutableHandleObject protop) {
     JS::RootedObject holder(cx, ensureHolder(cx, wrapper));
+    if (!holder) {
+      return false;
+    }
     JSProtoKey key = getProtoKey(holder);
     if (isPrototype(holder)) {
       JSProtoKey protoKey = js::InheritanceProtoKeyForStandardClass(key);
