@@ -71,3 +71,27 @@ void AccAttributes::Update(AccAttributes* aOther) {
     iter.Remove();
   }
 }
+
+bool AccAttributes::Equal(const AccAttributes* aOther) const {
+  if (Count() != aOther->Count()) {
+    return false;
+  }
+  for (auto iter = mData.ConstIter(); !iter.Done(); iter.Next()) {
+    const auto otherEntry = aOther->mData.Lookup(iter.Key());
+    if (iter.Data().is<UniquePtr<nsString>>()) {
+      // Because we store nsString in a UniquePtr, we must handle it specially
+      // so we compare the string and not the pointer.
+      if (!otherEntry->is<UniquePtr<nsString>>()) {
+        return false;
+      }
+      const auto& thisStr = iter.Data().as<UniquePtr<nsString>>();
+      const auto& otherStr = otherEntry->as<UniquePtr<nsString>>();
+      if (*thisStr != *otherStr) {
+        return false;
+      }
+    } else if (!otherEntry || iter.Data() != otherEntry.Data()) {
+      return false;
+    }
+  }
+  return true;
+}
