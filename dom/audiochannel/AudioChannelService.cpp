@@ -446,7 +446,7 @@ bool AudioChannelService::IsWindowActive(nsPIDOMWindowOuter* aWindow) {
   return !winData->mAudibleAgents.IsEmpty();
 }
 
-void AudioChannelService::NotifyMediaResumedFromBlock(
+void AudioChannelService::NotifyResumingDelayedMedia(
     nsPIDOMWindowOuter* aWindow) {
   MOZ_ASSERT(aWindow);
 
@@ -461,6 +461,7 @@ void AudioChannelService::NotifyMediaResumedFromBlock(
   }
 
   winData->NotifyMediaBlockStop(aWindow);
+  RefreshAgentsSuspend(aWindow, nsISuspendedTypes::NONE_SUSPENDED);
 }
 
 void AudioChannelService::AudioChannelWindow::AppendAgent(
