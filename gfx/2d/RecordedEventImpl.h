@@ -370,7 +370,7 @@ class RecordedFillGlyphs : public RecordedDrawingEvent<RecordedFillGlyphs> {
   PatternStorage mPattern;
   DrawOptions mOptions;
   Glyph* mGlyphs = nullptr;
-  uint32_t mNumGlyphs;
+  uint32_t mNumGlyphs = 0;
 };
 
 class RecordedMask : public RecordedDrawingEvent<RecordedMask> {
@@ -1042,7 +1042,7 @@ class RecordedGradientStopsCreation
 
   ReferencePtr mRefPtr;
   GradientStop* mStops = nullptr;
-  uint32_t mNumStops;
+  uint32_t mNumStops = 0;
   ExtendMode mExtendMode;
   bool mDataOwned;
 
@@ -2384,6 +2384,11 @@ inline void RecordedFill::OutputSimpleEventInfo(
 inline RecordedFillGlyphs::~RecordedFillGlyphs() { delete[] mGlyphs; }
 
 inline bool RecordedFillGlyphs::PlayEvent(Translator* aTranslator) const {
+  if (mNumGlyphs > 0 && !mGlyphs) {
+    // Glyph allocation failed
+    return false;
+  }
+
   DrawTarget* dt = aTranslator->LookupDrawTarget(mDT);
   if (!dt) {
     return false;
@@ -2409,12 +2414,19 @@ RecordedFillGlyphs::RecordedFillGlyphs(S& aStream)
   ReadDrawOptions(aStream, mOptions);
   ReadPatternData(aStream, mPattern);
   ReadElement(aStream, mNumGlyphs);
-  if (!aStream.good()) {
+  if (!aStream.good() || mNumGlyphs <= 0) {
     return;
   }
 
-  mGlyphs = new Glyph[mNumGlyphs];
-  aStream.read((char*)mGlyphs, sizeof(Glyph) * mNumGlyphs);
+  mGlyphs = new (fallible) Glyph[mNumGlyphs];
+  if (!mGlyphs) {
+     gfxCriticalNote
+         << "RecordedFillGlyphs failed to allocate glyphs of size "
+         << mNumGlyphs;
+    aStream.SetIsBad();
+  } else {
+    aStream.read((char*)mGlyphs, sizeof(Glyph) * mNumGlyphs);
+  }
 }
 
 template <class S>
@@ -3071,8 +3083,11 @@ RecordedSourceSurfaceCreation::RecordedSourceSurfaceCreation(S& aStream)
     return;
   }
 
-  size_t size = mSize.width * mSize.height * BytesPerPixel(mFormat);
-  mData = new (fallible) uint8_t[size];
+  size_t size = 0;
+  if (mSize.width >= 0 && mSize.height >= 0) {
+    size = size_t(mSize.width) * size_t(mSize.height) * BytesPerPixel(mFormat);
+    mData = new (fallible) uint8_t[size];
+  }
   if (!mData) {
     gfxCriticalNote
         << "RecordedSourceSurfaceCreation failed to allocate data of size "
@@ -3245,6 +3260,10 @@ inline RecordedGradientStopsCreation::~RecordedGradientStopsCreation() {
 
 inline bool RecordedGradientStopsCreation::PlayEvent(
     Translator* aTranslator) const {
+  if (mNumStops > 0 && !mStops) {
+    // Stops allocation failed
+    return false;
+  }
   RefPtr<GradientStops> src =
       aTranslator->GetOrCreateGradientStops(mStops, mNumStops, mExtendMode);
   aTranslator->AddGradientStops(mRefPtr, src);
@@ -3266,13 +3285,19 @@ RecordedGradientStopsCreation::RecordedGradientStopsCreation(S& aStream)
   ReadElementConstrained(aStream, mExtendMode, ExtendMode::CLAMP,
                          ExtendMode::REFLECT);
   ReadElement(aStream, mNumStops);
-  if (!aStream.good()) {
+  if (!aStream.good() || mNumStops <= 0) {
     return;
   }
 
-  mStops = new GradientStop[mNumStops];
-
-  aStream.read((char*)mStops, mNumStops * sizeof(GradientStop));
+  mStops = new (fallible) GradientStop[mNumStops];
+  if (!mStops) {
+    gfxCriticalNote
+        << "RecordedGradientStopsCreation failed to allocate stops of size "
+        << mNumStops;
+    aStream.SetIsBad();
+  } else {
+    aStream.read((char*)mStops, mNumStops * sizeof(GradientStop));
+  }
 }
 
 inline void RecordedGradientStopsCreation::OutputSimpleEventInfo(

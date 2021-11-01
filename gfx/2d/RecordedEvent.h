@@ -60,9 +60,9 @@ struct ReferencePtr {
 };
 
 struct RecordedFontDetails {
-  uint64_t fontDataKey;
-  uint32_t size;
-  uint32_t index;
+  uint64_t fontDataKey = 0;
+  uint32_t size = 0;
+  uint32_t index = 0;
 };
 
 struct RecordedDependentSurface {
