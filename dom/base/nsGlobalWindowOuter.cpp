@@ -3055,15 +3055,6 @@ bool nsPIDOMWindowOuter::ShouldDelayMediaFromStart() const {
   return bc && bc->Top()->GetShouldDelayMediaFromStart();
 }
 
-SuspendTypes nsPIDOMWindowOuter::GetMediaSuspend() const {
-  // TODO : replace this by `ShouldDelayMediaFromStart` in following patch.
-  BrowsingContext* bc = GetBrowsingContext();
-  if (bc && bc->Top()->GetShouldDelayMediaFromStart()) {
-    return nsISuspendedTypes::SUSPENDED_BLOCK;
-  }
-  return nsISuspendedTypes::NONE_SUSPENDED;
-}
-
 void nsPIDOMWindowOuter::NotifyResumingDelayedMedia() {
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (service) {

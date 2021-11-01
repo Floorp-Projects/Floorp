@@ -780,8 +780,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   bool IsBackground() { return mIsBackground; }
 
   // Audio API
-  SuspendTypes GetMediaSuspend() const;
-
   bool GetAudioMuted() const;
 
   // No longer to delay media from starting for this window.
