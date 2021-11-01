@@ -13,9 +13,9 @@ import android.net.Uri
 import android.os.Bundle
 import android.webkit.WebView
 import mozilla.components.service.glean.private.NoExtras
+import mozilla.components.support.utils.Browsers
 import org.mozilla.focus.GleanMetrics.OpenWith
 import org.mozilla.focus.utils.AppConstants
-import org.mozilla.focus.utils.Browsers
 
 /**
  * Helper activity that will open the Google Play store by following a redirect URL.

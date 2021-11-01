@@ -9,9 +9,9 @@ package org.mozilla.focus.telemetry
 import android.content.Context
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
+import mozilla.components.support.utils.Browsers
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.utils.Browsers
 import org.mozilla.telemetry.TelemetryHolder
 import org.mozilla.telemetry.measurement.SettingsMeasurement
 
@@ -47,8 +47,8 @@ internal class TelemetrySettingsProvider(
                 // The default browser is not actually a setting. We determine if we are the
                 // default and then inject this into telemetry.
                 val context = TelemetryHolder.get().configuration.context
-                val browsers = Browsers(context, Browsers.TRADITIONAL_BROWSER_URL)
-                java.lang.Boolean.toString(browsers.isDefaultBrowser(context))
+                val browsers = Browsers.all(context)
+                browsers.isDefaultBrowser.toString()
             }
             prefKeySearchEngine -> {
                 // The default search engine is no longer saved using this pref. But we will continue

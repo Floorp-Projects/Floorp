@@ -51,6 +51,7 @@ import mozilla.components.lib.crash.Crash
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
+import mozilla.components.support.utils.Browsers
 import org.mozilla.focus.GleanMetrics.Downloads
 import org.mozilla.focus.GleanMetrics.OpenWith
 import org.mozilla.focus.GleanMetrics.TabCount
@@ -86,7 +87,6 @@ import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.topsites.DefaultTopSitesStorage.Companion.TOP_SITES_MAX_LIMIT
 import org.mozilla.focus.topsites.DefaultTopSitesView
-import org.mozilla.focus.utils.Browsers
 import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.FocusSnackbar
 import org.mozilla.focus.utils.FocusSnackbarDelegate
@@ -758,7 +758,7 @@ class BrowserFragment :
             }
 
             R.id.open_default -> {
-                val browsers = Browsers(requireContext(), tab.content.url)
+                val browsers = Browsers.all(requireContext())
 
                 val defaultBrowser = browsers.defaultBrowser
                     ?: throw IllegalStateException("<Open with \$Default> was shown when no default browser is set")
@@ -825,16 +825,16 @@ class BrowserFragment :
     }
 
     private fun openSelectBrowser() {
-        val browsers = Browsers(requireContext(), tab.content.url)
+        val browsers = Browsers.all(requireContext())
 
         val apps = browsers.installedBrowsers
-        val store = if (browsers.hasFirefoxBrandedBrowserInstalled())
+        val store = if (browsers.hasFirefoxBrandedBrowserInstalled)
             null
         else
             InstallFirefoxActivity.resolveAppStore(requireContext())
 
         val fragment = OpenWithFragment.newInstance(
-            apps,
+            apps.toTypedArray(),
             tab.content.url,
             store
         )
