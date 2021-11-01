@@ -13,6 +13,7 @@ import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.top.sites.TopSitesUseCases
+import org.mozilla.focus.GleanMetrics.BrowserMenu
 import org.mozilla.focus.GleanMetrics.Shortcuts
 import org.mozilla.focus.ext.titleOrDomain
 import org.mozilla.focus.menu.ToolbarMenu
@@ -43,6 +44,9 @@ class BrowserMenuController(
 
     @Suppress("ComplexMethod")
     fun handleMenuInteraction(item: ToolbarMenu.Item) {
+
+        recordBrowserMenuTelemetry(item)
+
         when (item) {
             is ToolbarMenu.Item.Back -> sessionUseCases.goBack(currentTabId)
             is ToolbarMenu.Item.Forward -> sessionUseCases.goForward(currentTabId)
@@ -51,8 +55,6 @@ class BrowserMenuController(
             is ToolbarMenu.Item.Share -> shareCallback()
             is ToolbarMenu.Item.FindInPage -> showFindInPageCallback()
             is ToolbarMenu.Item.AddToShortcuts -> {
-                Shortcuts.shortcutAddedCounter.add()
-
                 ioScope.launch {
                     currentTab?.let { state ->
                         topSitesUseCases.addPinnedSites(
@@ -63,8 +65,6 @@ class BrowserMenuController(
                 }
             }
             is ToolbarMenu.Item.RemoveFromShortcuts -> {
-                Shortcuts.shortcutRemovedCounter["removed_from_browser_menu"].add()
-
                 ioScope.launch {
                     currentTab?.let { state ->
                         appStore.state.topSites.find { it.url == state.content.url }
@@ -80,5 +80,56 @@ class BrowserMenuController(
             is ToolbarMenu.Item.OpenInApp -> openInCallback()
             is ToolbarMenu.Item.Settings -> appStore.dispatch(AppAction.OpenSettings(page = Screen.Settings.Page.Start))
         }
+    }
+
+    @Suppress("LongMethod")
+    private fun recordBrowserMenuTelemetry(item: ToolbarMenu.Item) {
+        when (item) {
+            is ToolbarMenu.Item.Back -> BrowserMenu.navigationToolbarAction.record(
+                BrowserMenu.NavigationToolbarActionExtra("back")
+            )
+            is ToolbarMenu.Item.Forward -> BrowserMenu.navigationToolbarAction.record(
+                BrowserMenu.NavigationToolbarActionExtra("forward")
+            )
+            is ToolbarMenu.Item.Reload -> BrowserMenu.navigationToolbarAction.record(
+                BrowserMenu.NavigationToolbarActionExtra("reload")
+            )
+            is ToolbarMenu.Item.Stop -> BrowserMenu.navigationToolbarAction.record(
+                BrowserMenu.NavigationToolbarActionExtra("stop")
+            )
+            is ToolbarMenu.Item.Share -> BrowserMenu.navigationToolbarAction.record(
+                BrowserMenu.NavigationToolbarActionExtra("share")
+            )
+            is ToolbarMenu.Item.FindInPage -> BrowserMenu.browserMenuAction.record(
+                BrowserMenu.BrowserMenuActionExtra("find_in_page")
+            )
+            is ToolbarMenu.Item.AddToShortcuts ->
+                Shortcuts.shortcutAddedCounter.add()
+            is ToolbarMenu.Item.RemoveFromShortcuts ->
+                Shortcuts.shortcutRemovedCounter["removed_from_browser_menu"].add()
+
+            is ToolbarMenu.Item.RequestDesktop -> {
+                if(item.isChecked) {
+                    BrowserMenu.browserMenuAction.record(
+                        BrowserMenu.BrowserMenuActionExtra("desktop_view_on"))
+                } else {
+                    BrowserMenu.browserMenuAction.record(
+                        BrowserMenu.BrowserMenuActionExtra("desktop_view_off"))
+                }
+            }
+            is ToolbarMenu.Item.AddToHomeScreen -> BrowserMenu.browserMenuAction.record(
+                BrowserMenu.BrowserMenuActionExtra("add_to_home_screen")
+            )
+            is ToolbarMenu.Item.OpenInBrowser ->BrowserMenu.browserMenuAction.record(
+                BrowserMenu.BrowserMenuActionExtra("open_in_focus")
+            )
+            is ToolbarMenu.Item.OpenInApp -> BrowserMenu.browserMenuAction.record(
+                BrowserMenu.BrowserMenuActionExtra("open_in_app")
+            )
+            is ToolbarMenu.Item.Settings -> BrowserMenu.browserMenuAction.record(
+                BrowserMenu.BrowserMenuActionExtra("settings")
+            )
+        }
+
     }
 }

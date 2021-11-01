@@ -973,3 +973,105 @@ crash_reporter:
       submit_report:
         description: Did the user choose to send the report?
         type: boolean
+
+browser_menu:
+  navigation_toolbar_action:
+    type: event
+    description: The user has tapped on a navigation toolbar item.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5648
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5748
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      item:
+        description: |
+          A string containing the name of the item the user tapped:
+          back, forward, share, reload, stop
+        type: string
+  browser_menu_action:
+    type: event
+    description: The user has tapped on a browser menu item.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5648
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5748
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      item:
+        description: |
+          A string containing the name of the item the user tapped:
+          add_to_homescreen, desktop_view_off, desktop_view_on,
+          find_in_page, open_in_app, settings
+        type: string
+
+custom_tabs_toolbar:
+  navigation_toolbar_action:
+    type: event
+    description: The user tapped on a navigation toolbar item in a custom tab.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5649
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5748
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      item:
+        description: |
+          A string containing the name of the item the user tapped:
+          back, forward, reload, stop
+        type: string
+  browser_menu_action:
+    type: event
+    description: The user tapped on a browser menu item item in a custom tab.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5649
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5748
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      item:
+        description: |
+          A string containing the name of the item the user tapped:
+          desktop_view_off, desktop_view_on, find_in_page, open_in_app,
+          add_to_homescreen, open_in browser
+        type: string
+  close_tab_tapped:
+    type: event
+    description: The user has closed a custom tab.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5649
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5748
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  action_button_tapped:
+    type: event
+    description: The user has tapped the actionbutton a custom tab.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5649
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5748
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"

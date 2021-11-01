@@ -821,7 +821,6 @@ class BrowserFragment :
 
     private fun showFindInPageBar() {
         findInPageIntegration.get()?.show(tab)
-        TelemetryWrapper.findInPageMenuEvent()
     }
 
     private fun openSelectBrowser() {
