@@ -164,11 +164,12 @@ xpcAccessibleHyperText::GetTextAttributes(
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsRemote()) {
+  if (mIntl->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  RefPtr<AccAttributes> attributes = IntlLocal()->TextAttributes(
+  RefPtr<AccAttributes> attributes = Intl()->TextAttributes(
       aIncludeDefAttrs, aOffset, aStartOffset, aEndOffset);
   RefPtr<nsPersistentProperties> props = new nsPersistentProperties();
   nsAutoString unused;
