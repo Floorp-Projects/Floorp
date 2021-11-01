@@ -621,57 +621,24 @@ function renderRTPStats(report, history) {
 }
 
 function renderCoderStats({
-  bitrateMean,
-  bitrateStdDev,
-  framerateMean,
-  framerateStdDev,
-  droppedFrames,
+  framesPerSecond,
+  framesDropped,
   discardedPackets,
   packetsReceived,
 }) {
   let elements = [];
 
-  if (bitrateMean) {
+  if (framesPerSecond) {
     elements.push(
       renderElement(
         "span",
         { className: "stat-label" },
-        "about-webrtc-avg-bitrate-label"
+        "about-webrtc-current-framerate-label"
       )
     );
-    elements.push(
-      renderText("span", ` ${(bitrateMean / 1000000).toFixed(2)}`, {})
-    );
-
-    if (bitrateStdDev) {
-      elements.push(
-        renderText("span", ` (${(bitrateStdDev / 1000000).toFixed(2)} SD)`, {})
-      );
-    }
+    elements.push(renderText("span", ` ${framesPerSecond.toFixed(2)} fps`, {}));
   }
-  if (bitrateMean) {
-    elements.push(
-      renderElement(
-        "span",
-        { className: "stat-label" },
-        "about-webrtc-avg-framerate-label"
-      )
-    );
-    elements.push(
-      renderText("span", ` ${(framerateMean / 1000000).toFixed(2)}`, {})
-    );
-
-    if (framerateStdDev) {
-      elements.push(
-        renderText(
-          "span",
-          ` (${(framerateStdDev / 1000000).toFixed(2)} SD)`,
-          {}
-        )
-      );
-    }
-  }
-  if (droppedFrames) {
+  if (framesDropped) {
     elements.push(
       renderElement(
         "span",
@@ -679,7 +646,7 @@ function renderCoderStats({
         "about-webrtc-dropped-frames-label"
       )
     );
-    elements.push(renderText("span", ` ${droppedFrames}`, {}));
+    elements.push(renderText("span", ` ${framesDropped}`, {}));
   }
   if (discardedPackets) {
     elements.push(

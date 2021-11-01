@@ -16,11 +16,11 @@
 #include "mozilla/TaskQueue.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageUtils.h"
-#include "webrtc/api/video/video_frame.h"
-#include "webrtc/common_video/include/i420_buffer_pool.h"
-#include "webrtc/common_video/include/video_frame_buffer.h"
-#include "webrtc/rtc_base/keep_ref_until_done.h"
-#include "webrtc/system_wrappers/include/clock.h"
+#include "api/video/video_frame.h"
+#include "common_video/include/i420_buffer_pool.h"
+#include "common_video/include/video_frame_buffer.h"
+#include "rtc_base/keep_ref_until_done.h"
+#include "system_wrappers/include/clock.h"
 
 // The number of frame buffers VideoFrameConverter may create before returning
 // errors.
@@ -56,7 +56,7 @@ class VideoFrameConverter {
 
   VideoFrameConverter()
       : mTaskQueue(
-            new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
+            new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_WORKER),
                           "VideoFrameConverter")),
         mPacingTimer(new MediaTimer()),
         mBufferPool(false, CONVERTER_BUFFER_POOL_SIZE),
@@ -345,12 +345,12 @@ class VideoFrameConverter {
       if (utils.GetFormat() == dom::ImageBitmapFormat::YUV420P &&
           image->GetData()) {
         const layers::PlanarYCbCrData* data = image->GetData();
-        rtc::scoped_refptr<webrtc::WrappedI420Buffer> video_frame_buffer(
-            new rtc::RefCountedObject<webrtc::WrappedI420Buffer>(
+        rtc::scoped_refptr<webrtc::I420BufferInterface> video_frame_buffer =
+            webrtc::WrapI420Buffer(
                 aFrame.mImage->GetSize().width, aFrame.mImage->GetSize().height,
                 data->mYChannel, data->mYStride, data->mCbChannel,
                 data->mCbCrStride, data->mCrChannel, data->mCbCrStride,
-                rtc::KeepRefUntilDone(image)));
+                rtc::KeepRefUntilDone(image));
 
         webrtc::VideoFrame i420_frame(video_frame_buffer,
                                       0,  // not setting rtp timestamp

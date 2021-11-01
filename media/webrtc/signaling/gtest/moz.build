@@ -21,6 +21,7 @@ if (
 ):
     LOCAL_INCLUDES += [
         "/dom/media",
+        "/dom/media/gtest",
         "/dom/media/webrtc",
         "/dom/media/webrtc/common",
         "/dom/media/webrtc/common/time_profiling",
@@ -34,7 +35,7 @@ if (
         "/media/webrtc/",
         "/third_party/libsrtp/src/include",
         "/third_party/libwebrtc",
-        "/third_party/libwebrtc/webrtc",
+        "/third_party/libwebrtc/third_party/abseil-cpp",
         "/third_party/sipcc",
     ]
 
@@ -43,7 +44,7 @@ if (
         "jsep_session_unittest.cpp",
         "jsep_track_unittest.cpp",
         "mediapipeline_unittest.cpp",
-        "rtpsources_unittests.cpp",
+        "MockCall.cpp",
         "sdp_unittests.cpp",
         "videoconduit_unittests.cpp",
     ]

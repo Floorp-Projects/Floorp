@@ -99,7 +99,7 @@ LOCAL_INCLUDES += [
     "/media/webrtc/",
     "/netwerk/base/",
     "/third_party/libwebrtc",
-    "/third_party/libwebrtc/webrtc",
+    "/third_party/libwebrtc/third_party/abseil-cpp",
 ]
 
 LOCAL_INCLUDES += ["/third_party/msgpack/include"]

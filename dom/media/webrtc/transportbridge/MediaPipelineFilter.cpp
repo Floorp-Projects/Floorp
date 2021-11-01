@@ -9,8 +9,8 @@
 
 #include "MediaPipelineFilter.h"
 
-#include "webrtc/common_types.h"
-#include "webrtc/api/rtpparameters.h"
+#include "api/rtp_headers.h"
+#include "api/rtp_parameters.h"
 #include "mozilla/Logging.h"
 
 // defined in MediaPipeline.cpp
@@ -37,15 +37,15 @@ bool MediaPipelineFilter::Filter(const webrtc::RTPHeader& header) {
   DEBUG_LOG(("MediaPipelineFilter inspecting seq# %u SSRC: %u",
              header.sequenceNumber, header.ssrc));
 
-  auto fromStreamId = [&](const webrtc::StreamId& aId) {
-    return Maybe<std::string>(aId.empty() ? Nothing() : Some(aId.data()));
+  auto fromStreamId = [](const std::string& aId) {
+    return Maybe<std::string>(aId.empty() ? Nothing() : Some(aId));
   };
 
   //
   //  MID Based Filtering
   //
 
-  const auto& mid = fromStreamId(header.extension.mid);
+  const auto mid = fromStreamId(header.extension.mid);
 
   // Check to see if a bound SSRC is moved to a new MID
   if (mRemoteMidBindings.count(header.ssrc) == 1 && mid && mRemoteMid != mid) {

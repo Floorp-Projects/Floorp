@@ -287,7 +287,7 @@ TEST_F(VideoFrameConverterTest, NoConversionsWhileInactive) {
 
   // SetActive needs to follow the same async path as the frames to be in sync.
   auto q =
-      MakeRefPtr<TaskQueue>(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
+      MakeRefPtr<TaskQueue>(GetMediaThreadPool(MediaThreadType::WEBRTC_WORKER),
                             "VideoFrameConverterTest");
   auto timer = MakeRefPtr<MediaTimer>(false);
   timer->WaitFor(TimeDuration::FromMilliseconds(100), __func__)

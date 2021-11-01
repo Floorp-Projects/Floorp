@@ -12,7 +12,7 @@
 #define MODULES_VIDEO_CAPTURE_OBJC_VIDEO_CAPTURE_H_
 
 #include "modules/video_capture/video_capture_impl.h"
-#include "rtc_base/scoped_ref_ptr.h"
+#include "api/scoped_refptr.h"
 
 @class RTCVideoCaptureIosObjC;
 

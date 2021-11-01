@@ -12,27 +12,42 @@ import tarfile
 
 
 LIBWEBRTC_USED_IN_FIREFOX = [
+    ".gn",
     "AUTHORS",
+    "BUILD.gn",
     "LICENSE",
     "OWNERS",
     "PATENTS",
     "api",
     "audio",
+    "build_overrides",
     "call",
     "common_audio",
-    "common_types.h",
     "common_video",
     "logging",
-    "media",
+    "media/base",
+    "media/engine",
+    "media/BUILD.gn",
     "modules",
     "rtc_base",
     "sdk/android",
     "system_wrappers",
+    "test/rtp_header_parser.h",
+    "test/rtp_header_parser.cc",
+    "test/BUILD.gn",
     "video",
+    "webrtc.gni",
 ]
 
 
-LIBWEBRTC_DIR = os.path.normpath("../../../../third_party/libwebrtc/webrtc")
+THIRDPARTY_USED_IN_FIREFOX = [
+    "abseil-cpp",
+    "pffft",
+    "rnnoise",
+]
+
+
+LIBWEBRTC_DIR = os.path.normpath("../../../../third_party/libwebrtc")
 
 
 def make_github_url(repo, commit):
@@ -44,9 +59,15 @@ def make_github_url(repo, commit):
 def make_googlesource_url(target, commit):
     if target == "libwebrtc":
         return "https://webrtc.googlesource.com/src.git/+archive/" + commit + ".tar.gz"
-    else:
+    elif target == "build":
         return (
             "https://chromium.googlesource.com/chromium/src/build/+archive/"
+            + commit
+            + ".tar.gz"
+        )
+    elif target == "third_party":
+        return (
+            "https://chromium.googlesource.com/chromium/src/third_party/+archive/"
             + commit
             + ".tar.gz"
         )
@@ -64,10 +85,10 @@ def fetch(target, url):
             file=sys.stderr,
         )
         sys.exit(1)
-    with open(os.path.join(LIBWEBRTC_DIR, "README.mozilla"), "w") as f:
+    with open(os.path.join(LIBWEBRTC_DIR, "README.mozilla"), "a") as f:
         f.write(
-            "libwebrtc updated from commit {} on {}.".format(
-                url, datetime.datetime.utcnow().isoformat()
+            "{} updated from commit {} on {}.\n".format(
+                target, url, datetime.datetime.utcnow().isoformat()
             )
         )
 
@@ -81,10 +102,11 @@ def fetch_local(target, path, commit):
             file=sys.stderr,
         )
         sys.exit(1)
-    with open(os.path.join(LIBWEBRTC_DIR, "README.mozilla"), "w") as f:
+
+    with open(os.path.join(LIBWEBRTC_DIR, "README.mozilla"), "a") as f:
         f.write(
-            "libwebrtc updated from {} commit {} on {}.".format(
-                path, commit, datetime.datetime.utcnow().isoformat()
+            "{} updated from {} commit {} on {}.\n".format(
+                target, path, commit, datetime.datetime.utcnow().isoformat()
             )
         )
     shutil.move(os.path.join(path, target_archive), target_archive)
@@ -120,7 +142,7 @@ def unpack(target):
                 shutil.move(
                     os.path.join(target_path, path), os.path.join(LIBWEBRTC_DIR, path)
                 )
-    else:
+    elif target == "build":
         try:
             shutil.rmtree(os.path.join(LIBWEBRTC_DIR, "build"))
         except FileNotFoundError:
@@ -141,6 +163,28 @@ def unpack(target):
                     os.path.join(target_path, path),
                     os.path.join(LIBWEBRTC_DIR, "build", path),
                 )
+    elif target == "third_party":
+        try:
+            shutil.rmtree(os.path.join(LIBWEBRTC_DIR, "third_party"))
+        except FileNotFoundError:
+            pass
+        except NotADirectoryError:
+            pass
+
+        if os.path.exists(os.path.join(target_path, THIRDPARTY_USED_IN_FIREFOX[0])):
+            for path in THIRDPARTY_USED_IN_FIREFOX:
+                shutil.move(
+                    os.path.join(target_path, path),
+                    os.path.join(LIBWEBRTC_DIR, "third_party", path),
+                )
+        else:
+            # GitHub packs everything inside a separate directory
+            target_path = os.path.join(target_path, os.listdir(target_path)[0])
+            for path in THIRDPARTY_USED_IN_FIREFOX:
+                shutil.move(
+                    os.path.join(target_path, path),
+                    os.path.join(LIBWEBRTC_DIR, "third_party", path),
+                )
 
 
 def cleanup(target):
@@ -150,7 +194,7 @@ def cleanup(target):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Update libwebrtc")
-    parser.add_argument("target", choices=("libwebrtc", "build"))
+    parser.add_argument("target", choices=("libwebrtc", "build", "third_party"))
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--from-github", type=str)
     group.add_argument("--from-googlesource", action="store_true", default=False)

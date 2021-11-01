@@ -1,0 +1,18 @@
+# Use the same Java binary that was specified in bootstrap. This way, if the default system
+# Java is different than what Firefox needs, users should just need to override it (with
+# $JAVA_HOME) when running bootstrap, rather than when interacting with the build.
+ac_add_options --with-java-bin-path=/usr/lib/jvm/java-8-openjdk-amd64/bin
+# Build GeckoView/Firefox for Android:
+ac_add_options --enable-application=mobile/android
+# Targeting the following architecture.
+# For regular phones, no --target is needed.
+# For x86 emulators (and x86 devices, which are uncommon):
+ac_add_options --target=i686
+# For newer phones.
+# ac_add_options --target=aarch64
+# For x86_64 emulators (and x86_64 devices, which are even less common):
+# ac_add_options --target=x86_64
+ac_add_options --enable-bootstrap
+
+mk_add_options MOZ_OBJDIR=obj-x64_False_x86_android
+

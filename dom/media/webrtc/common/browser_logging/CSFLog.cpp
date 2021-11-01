@@ -7,7 +7,6 @@
 #include <stdarg.h>
 
 #include "CSFLog.h"
-#include "rtc_base/basictypes.h"
 
 #include <map>
 #include "prrwlock.h"
