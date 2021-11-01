@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+    window.addEventListener("load", async () => {
+      const object = document.createElementNS("http://www.w3.org/2000/svg", "foreignObject")
+      const video = document.createElementNS("http://www.w3.org/1999/xhtml", "video")
+      document.documentElement.appendChild(video)
+      video.setAttribute("src", "1734008.webm")
+      video.mozCaptureStream()
+      const xhr = new XMLHttpRequest()
+      xhr.open("POST", "FOOBAR", false)
+      xhr.send()
+      const document_0 = new Document()
+      const adopted = document_0.adoptNode(document.documentElement)
+      object.insertBefore(adopted, object.childNodes[(216679474 % object.childNodes.length)])
+      try { await video.play() } catch (e) {}
+      setTimeout("location.reload()", 500)
+    })
+  </script>
+</head>
+</html>
