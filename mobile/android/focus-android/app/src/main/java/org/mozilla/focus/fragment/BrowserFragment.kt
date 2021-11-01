@@ -83,7 +83,6 @@ import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.settings.privacy.ConnectionDetailsPanel
 import org.mozilla.focus.settings.privacy.TrackingProtectionPanel
 import org.mozilla.focus.state.AppAction
-import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.topsites.DefaultTopSitesStorage.Companion.TOP_SITES_MAX_LIMIT
 import org.mozilla.focus.topsites.DefaultTopSitesView
@@ -91,7 +90,6 @@ import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.FocusSnackbar
 import org.mozilla.focus.utils.FocusSnackbarDelegate
 import org.mozilla.focus.utils.StatusBarUtils
-import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.widget.FloatingEraseButton
 import org.mozilla.focus.widget.FloatingSessionsButton
 import java.net.URLEncoder
@@ -743,79 +741,9 @@ class BrowserFragment :
                 TabCount.sessionButtonTapped.record(TabCount.SessionButtonTappedExtra(openedTabs))
             }
 
-            R.id.open_in_firefox_focus -> {
-                openInBrowser()
+            else -> {
+                throw IllegalArgumentException("Unhandled menu item in BrowserFragment")
             }
-
-            R.id.share -> {
-                shareCurrentUrl()
-            }
-
-            R.id.settings -> {
-                requireComponents.appStore.dispatch(
-                    AppAction.OpenSettings(page = Screen.Settings.Page.Start)
-                )
-            }
-
-            R.id.open_default -> {
-                val browsers = Browsers.all(requireContext())
-
-                val defaultBrowser = browsers.defaultBrowser
-                    ?: throw IllegalStateException("<Open with \$Default> was shown when no default browser is set")
-                // We only add this menu item when a third party default exists, in
-                // BrowserMenuAdapter.initializeMenu()
-
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(tab.content.url))
-                intent.setPackage(defaultBrowser.packageName)
-                startActivity(intent)
-
-                if (browsers.isFirefoxDefaultBrowser) {
-                    TelemetryWrapper.openFirefoxEvent()
-                } else {
-                    TelemetryWrapper.openDefaultAppEvent()
-                }
-            }
-
-            R.id.open_select_browser -> { openSelectBrowser() }
-
-            R.id.help -> {
-                requireComponents.tabsUseCases.addTab(
-                    SupportUtils.HELP_URL,
-                    source = SessionState.Source.Internal.Menu,
-                    selectTab = true,
-                    private = true
-                )
-            }
-
-            R.id.stop -> {
-                requireComponents.sessionUseCases.stopLoading(tabId)
-            }
-
-            R.id.refresh -> {
-                requireComponents.sessionUseCases.reload(tabId)
-            }
-
-            R.id.forward -> {
-                requireComponents.sessionUseCases.goForward(tabId)
-            }
-
-            R.id.add_to_homescreen -> { showAddToHomescreenDialog() }
-
-            R.id.report_site_issue -> {
-                val reportUrl = String.format(SupportUtils.REPORT_SITE_ISSUE_URL, tab.content.url)
-                requireComponents.tabsUseCases.addTab(
-                    reportUrl,
-                    source = SessionState.Source.Internal.Menu,
-                    selectTab = true,
-                    private = true
-                )
-
-                TelemetryWrapper.reportSiteIssueEvent()
-            }
-
-            R.id.find_in_page -> { showFindInPageBar() }
-
-            else -> throw IllegalArgumentException("Unhandled menu item in BrowserFragment")
         }
     }
 
