@@ -127,23 +127,23 @@ TEST(IntlListFormat, FormatToParts)
   MOZ_RELEASE_ASSERT(list.append(MakeStringSpan(u"Bob")));
   MOZ_RELEASE_ASSERT(list.append(MakeStringSpan(u"Charlie")));
 
-  ASSERT_TRUE(
-      lf->FormatToParts(list, [](const ListFormat::PartVector& parts) {
-          // 3 elements, and 2 literals.
-          EXPECT_EQ((parts.length()), (5u));
+  TestBuffer<char16_t> buf16;
+  mozilla::intl::ListFormat::PartVector parts;
+  ASSERT_TRUE(lf->FormatToParts(list, buf16, parts).isOk());
 
-          EXPECT_EQ(parts[0], (ListFormat::Part{ListFormat::PartType::Element,
-                                                MakeStringSpan(u"Alice")}));
-          EXPECT_EQ(parts[1], (ListFormat::Part{ListFormat::PartType::Literal,
-                                                MakeStringSpan(u", ")}));
-          EXPECT_EQ(parts[2], (ListFormat::Part{ListFormat::PartType::Element,
-                                                MakeStringSpan(u"Bob")}));
-          EXPECT_EQ(parts[3], (ListFormat::Part{ListFormat::PartType::Literal,
-                                                MakeStringSpan(u", and ")}));
-          EXPECT_EQ(parts[4], (ListFormat::Part{ListFormat::PartType::Element,
-                                                MakeStringSpan(u"Charlie")}));
-          return true;
-        }).isOk());
+  // 3 elements, and 2 literals.
+  ASSERT_EQ((parts.length()), (5u));
+
+  ASSERT_EQ(parts[0], (ListFormat::Part{ListFormat::PartType::Element,
+                                        MakeStringSpan(u"Alice")}));
+  ASSERT_EQ(parts[1], (ListFormat::Part{ListFormat::PartType::Literal,
+                                        MakeStringSpan(u", ")}));
+  ASSERT_EQ(parts[2], (ListFormat::Part{ListFormat::PartType::Element,
+                                        MakeStringSpan(u"Bob")}));
+  ASSERT_EQ(parts[3], (ListFormat::Part{ListFormat::PartType::Literal,
+                                        MakeStringSpan(u", and ")}));
+  ASSERT_EQ(parts[4], (ListFormat::Part{ListFormat::PartType::Element,
+                                        MakeStringSpan(u"Charlie")}));
 }
 
 }  // namespace mozilla::intl

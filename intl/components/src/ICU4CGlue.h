@@ -629,6 +629,7 @@ class MOZ_RAII AutoFormattedResult : FormattedResult {
 
  private:
   friend class DateIntervalFormat;
+  friend class ListFormat;
   T* GetFormatted() const { return mFormatted; }
 
   const UFormattedValue* Value() const {

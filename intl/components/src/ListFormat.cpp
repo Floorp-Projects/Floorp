@@ -55,44 +55,11 @@ ListFormat::~ListFormat() {
   return ULISTFMT_WIDTH_WIDE;
 }
 
-ICUResult ListFormat::FormatToParts(const StringList& list,
-                                    PartsCallback&& callback) {
-  UErrorCode status = U_ZERO_ERROR;
-
-  mozilla::Vector<const char16_t*, DEFAULT_LIST_LENGTH> u16strings;
-  mozilla::Vector<int32_t, DEFAULT_LIST_LENGTH> u16stringLens;
-  MOZ_TRY(ConvertStringListToVectors(list, u16strings, u16stringLens));
-
-  UFormattedList* formatted = ulistfmt_openResult(&status);
-  if (U_FAILURE(status)) {
-    return Err(ICUError::InternalError);
-  }
-  ScopedICUObject<UFormattedList, ulistfmt_closeResult> toClose(formatted);
-  ulistfmt_formatStringsToResult(mListFormatter.GetConst(), u16strings.begin(),
-                                 u16stringLens.begin(), int32_t(list.length()),
-                                 formatted, &status);
-  if (U_FAILURE(status)) {
-    return Err(ICUError::InternalError);
-  }
-
-  const UFormattedValue* formattedValue =
-      ulistfmt_resultAsValue(formatted, &status);
-  if (U_FAILURE(status)) {
-    return Err(ICUError::InternalError);
-  }
-
-  int32_t formattedCharsLen;
-  const char16_t* formattedChars =
-      ufmtval_getString(formattedValue, &formattedCharsLen, &status);
-  if (U_FAILURE(status)) {
-    return Err(ICUError::InternalError);
-  }
-
-  size_t formattedSize = AssertedCast<size_t>(formattedCharsLen);
-  mozilla::Span<const char16_t> formattedSpan{formattedChars, formattedSize};
+ICUResult ListFormat::FormattedToParts(
+    const UFormattedValue* formattedValue,
+    mozilla::Span<const char16_t> formattedSpan, PartVector& parts) {
   size_t lastEndIndex = 0;
 
-  PartVector parts;
   auto AppendPart = [&](PartType type, size_t beginIndex, size_t endIndex) {
     if (!parts.emplaceBack(type, formattedSpan.FromTo(beginIndex, endIndex))) {
       return false;
@@ -102,6 +69,7 @@ ICUResult ListFormat::FormatToParts(const StringList& list,
     return true;
   };
 
+  UErrorCode status = U_ZERO_ERROR;
   UConstrainedFieldPosition* fpos = ucfpos_open(&status);
   if (U_FAILURE(status)) {
     return Err(ICUError::InternalError);
@@ -153,16 +121,12 @@ ICUResult ListFormat::FormatToParts(const StringList& list,
   }
 
   // Append any final literal.
-  if (lastEndIndex < formattedSize) {
-    if (!AppendPart(PartType::Literal, lastEndIndex, formattedSize)) {
+  if (lastEndIndex < formattedSpan.size()) {
+    if (!AppendPart(PartType::Literal, lastEndIndex, formattedSpan.size())) {
       return Err(ICUError::InternalError);
     }
   }
 
-  if (!callback(parts)) {
-    return Err(ICUError::InternalError);
-  }
   return Ok();
 }
-
 }  // namespace mozilla::intl
