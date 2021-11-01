@@ -735,8 +735,7 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
   ~nsPIDOMWindowOuter();
 
-  void RefreshMediaElementsSuspend(SuspendTypes aSuspend);
-  void MaybeNotifyMediaResumedFromBlock(SuspendTypes aSuspend);
+  void NotifyResumingDelayedMedia();
 
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOWOUTER_IID)
@@ -782,11 +781,12 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
   // Audio API
   SuspendTypes GetMediaSuspend() const;
-  void SetMediaSuspend(SuspendTypes aSuspend);
 
   bool GetAudioMuted() const;
 
-  void MaybeActiveMediaComponents();
+  // No longer to delay media from starting for this window.
+  void ActivateMediaComponents();
+  bool ShouldDelayMediaFromStart() const;
 
   void RefreshMediaElementsVolume();
 
@@ -1139,19 +1139,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   // is false.  Too bad we have so many different concepts of
   // "active".
   bool mIsBackground;
-
-  /**
-   * The suspended types can be "disposable" or "permanent". This varable only
-   * stores the value about permanent suspend.
-   * - disposable
-   * To pause all playing media in that window, but doesn't affect the media
-   * which starts after that.
-   *
-   * - permanent
-   * To pause all media in that window, and also affect the media which starts
-   * after that.
-   */
-  SuspendTypes mMediaSuspend;
 
   // current desktop mode flag.
   bool mDesktopModeViewport;
