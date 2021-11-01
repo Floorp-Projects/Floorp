@@ -263,6 +263,11 @@ static bool FormatListToParts(JSContext* cx, mozilla::intl::ListFormat* lf,
     return false;
   }
 
+  RootedString overallResult(cx, buffer.toString(cx));
+  if (!overallResult) {
+    return false;
+  }
+
   RootedArrayObject partsArray(cx,
                                NewDenseFullyAllocatedArray(cx, parts.length()));
   if (!partsArray) {
@@ -274,6 +279,7 @@ static bool FormatListToParts(JSContext* cx, mozilla::intl::ListFormat* lf,
   RootedValue val(cx);
 
   size_t index = 0;
+  size_t beginIndex = 0;
   for (const mozilla::intl::ListFormat::Part& part : parts) {
     singlePart = NewPlainObject(cx);
     if (!singlePart) {
@@ -290,7 +296,9 @@ static bool FormatListToParts(JSContext* cx, mozilla::intl::ListFormat* lf,
       return false;
     }
 
-    JSString* partStr = NewStringCopy<CanGC>(cx, part.second);
+    MOZ_ASSERT(part.second > beginIndex);
+    JSLinearString* partStr = NewDependentString(cx, overallResult, beginIndex,
+                                                 part.second - beginIndex);
     if (!partStr) {
       return false;
     }
@@ -299,9 +307,12 @@ static bool FormatListToParts(JSContext* cx, mozilla::intl::ListFormat* lf,
       return false;
     }
 
+    beginIndex = part.second;
     partsArray->initDenseElement(index++, ObjectValue(*singlePart));
   }
+
   MOZ_ASSERT(index == parts.length());
+  MOZ_ASSERT(beginIndex == buffer.length());
   result.setObject(*partsArray);
 
   return true;
