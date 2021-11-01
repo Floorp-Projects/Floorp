@@ -101,7 +101,17 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         return view
     }
 
-    override val selectedItems get() = historyStore.state.mode.selectedItems
+    /**
+     * All the current selected items. Individual history entries and entries from a group.
+     * When a history group is selected, this will instead contain all the history entries in that group.
+     */
+    override val selectedItems
+        get() = historyStore.state.mode.selectedItems.fold(emptyList<History>()) { accumulator, item ->
+            when (item) {
+                is History.Group -> accumulator + item.items
+                else -> accumulator + item
+            }
+        }.toSet()
 
     private fun invalidateOptionsMenu() {
         activity?.invalidateOptionsMenu()
@@ -206,9 +216,8 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         }
         R.id.open_history_in_new_tabs_multi_select -> {
             openItemsInNewTab { selectedItem ->
-                selectedItem as History.Regular
                 requireComponents.analytics.metrics.track(Event.HistoryOpenedInNewTabs)
-                selectedItem.url
+                (selectedItem as? History.Regular)?.url ?: (selectedItem as? History.Metadata)?.url
             }
 
             showTabTray()
@@ -216,9 +225,8 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
         }
         R.id.open_history_in_private_tabs_multi_select -> {
             openItemsInNewTab(private = true) { selectedItem ->
-                selectedItem as History.Regular
                 requireComponents.analytics.metrics.track(Event.HistoryOpenedInPrivateTabs)
-                selectedItem.url
+                (selectedItem as? History.Regular)?.url ?: (selectedItem as? History.Metadata)?.url
             }
 
             (activity as HomeActivity).apply {
