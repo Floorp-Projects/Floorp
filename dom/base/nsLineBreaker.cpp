@@ -63,11 +63,9 @@ static void SetupCapitalization(const char16_t* aWord, uint32_t aLength,
 nsresult nsLineBreaker::FlushCurrentWord() {
   uint32_t length = mCurrentWord.Length();
   AutoTArray<uint8_t, 4000> breakState;
-  // XXX(Bug 1631371) Check if this should use a fallible operation as it
-  // pretended earlier.
-  breakState.AppendElements(length);
-
-  nsTArray<bool> capitalizationState;
+  if (!breakState.AppendElements(length, mozilla::fallible)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   if (mStrictness == LineBreaker::Strictness::Anywhere) {
     memset(breakState.Elements(),
@@ -105,6 +103,7 @@ nsresult nsLineBreaker::FlushCurrentWord() {
     }
   }
 
+  nsTArray<bool> capitalizationState;
   uint32_t offset = 0;
   for (i = 0; i < mTextItems.Length(); ++i) {
     TextItem* ti = &mTextItems[i];
@@ -130,9 +129,9 @@ nsresult nsLineBreaker::FlushCurrentWord() {
 
       if (!mWordContinuation && (ti->mFlags & BREAK_NEED_CAPITALIZATION)) {
         if (capitalizationState.Length() == 0) {
-          // XXX(Bug 1631371) Check if this should use a fallible operation as
-          // it pretended earlier.
-          capitalizationState.AppendElements(length);
+          if (!capitalizationState.AppendElements(length, mozilla::fallible)) {
+            return NS_ERROR_OUT_OF_MEMORY;
+          };
           memset(capitalizationState.Elements(), false, length * sizeof(bool));
           SetupCapitalization(mCurrentWord.Elements(), length,
                               capitalizationState.Elements());
@@ -195,17 +194,17 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
 
   AutoTArray<uint8_t, 4000> breakState;
   if (aSink) {
-    // XXX(Bug 1631371) Check if this should use a fallible operation as it
-    // pretended earlier.
-    breakState.AppendElements(aLength);
+    if (!breakState.AppendElements(aLength, mozilla::fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   bool noCapitalizationNeeded = true;
   nsTArray<bool> capitalizationState;
   if (aSink && (aFlags & BREAK_NEED_CAPITALIZATION)) {
-    // XXX(Bug 1631371) Check if this should use a fallible operation as it
-    // pretended earlier.
-    capitalizationState.AppendElements(aLength);
+    if (!capitalizationState.AppendElements(aLength, mozilla::fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     memset(capitalizationState.Elements(), false, aLength * sizeof(bool));
     noCapitalizationNeeded = false;
   }
@@ -375,9 +374,9 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
 
   AutoTArray<uint8_t, 4000> breakState;
   if (aSink) {
-    // XXX(Bug 1631371) Check if this should use a fallible operation as it
-    // pretended earlier.
-    breakState.AppendElements(aLength);
+    if (!breakState.AppendElements(aLength, mozilla::fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   uint32_t start = offset;
