@@ -3165,26 +3165,36 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
-  // We only cache text on leaf Accessibles.
-  if ((aCacheDomain & CacheDomain::Text) && !HasChildren()) {
-    // Only text Accessibles can have actual text.
-    if (IsText()) {
-      nsString text;
-      AppendTextTo(text);
-      fields->SetAttribute(nsGkAtoms::text, std::move(text));
+  if (aCacheDomain & CacheDomain::Text) {
+    if (!HasChildren()) {
+      // We only cache text and line offsets on leaf Accessibles.
+      // Only text Accessibles can have actual text.
+      if (IsText()) {
+        nsString text;
+        AppendTextTo(text);
+        fields->SetAttribute(nsGkAtoms::text, std::move(text));
+        TextLeafPoint point(this, 0);
+        RefPtr<AccAttributes> attrs = point.GetTextAttributesLocalAcc(
+            /* aIncludeDefaults */ false);
+        fields->SetAttribute(nsGkAtoms::style, std::move(attrs));
+      }
+      // We cache line start offsets for both text and non-text leaf Accessibles
+      // because non-text leaf Accessibles can still start a line.
+      nsTArray<int32_t> lineStarts;
+      for (TextLeafPoint lineStart =
+               TextLeafPoint(this, 0).FindNextLineStartSameLocalAcc(
+                   /* aIncludeOrigin */ true);
+           lineStart;
+           lineStart = lineStart.FindNextLineStartSameLocalAcc(false)) {
+        lineStarts.AppendElement(lineStart.mOffset);
+      }
+      if (!lineStarts.IsEmpty()) {
+        fields->SetAttribute(nsGkAtoms::line, std::move(lineStarts));
+      }
     }
-    // We cache line start offsets for both text and non-text leaf Accessibles
-    // because non-text leaf Accessibles can still start a line.
-    nsTArray<int32_t> lineStarts;
-    for (TextLeafPoint lineStart =
-             TextLeafPoint(this, 0).FindNextLineStartSameLocalAcc(
-                 /* aIncludeOrigin */ true);
-         lineStart;
-         lineStart = lineStart.FindNextLineStartSameLocalAcc(false)) {
-      lineStarts.AppendElement(lineStart.mOffset);
-    }
-    if (!lineStarts.IsEmpty()) {
-      fields->SetAttribute(nsGkAtoms::line, std::move(lineStarts));
+    if (HyperTextAccessible* ht = AsHyperText()) {
+      RefPtr<AccAttributes> attrs = ht->DefaultTextAttributes();
+      fields->SetAttribute(nsGkAtoms::style, std::move(attrs));
     }
   }
 
