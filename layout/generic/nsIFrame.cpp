@@ -3089,10 +3089,6 @@ void nsIFrame::BuildDisplayListForStackingContext(
   AutoCheckBuilder check(aBuilder);
   if (HasAnyStateBits(NS_FRAME_TOO_DEEP_IN_FRAME_TREE)) return;
 
-  // Replaced elements have their visibility handled here, because
-  // they're visually atomic
-  if (IsFrameOfType(eReplaced) && !IsVisibleForPainting()) return;
-
   const nsStyleDisplay* disp = StyleDisplay();
   const nsStyleEffects* effects = StyleEffects();
   EffectSet* effectSetForOpacity = EffectSet::GetEffectSetForFrame(
