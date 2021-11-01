@@ -135,6 +135,7 @@ class nsWindow final : public nsBaseWidget {
   mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScale() override;
   mozilla::DesktopToLayoutDeviceScale GetDesktopToDeviceScaleByScreen()
       override;
+  virtual void SetParent(nsIWidget* aNewParent) override;
   virtual void SetModal(bool aModal) override;
   virtual bool IsVisible() const override;
   virtual void ConstrainPosition(bool aAllowSlop, int32_t* aX,
@@ -257,7 +258,8 @@ class nsWindow final : public nsBaseWidget {
   // GetMozContainerWidget returns the MozContainer even for undestroyed
   // descendant windows
   GtkWidget* GetMozContainerWidget();
-  GdkWindow* GetGdkWindow() { return mGdkWindow; }
+  GdkWindow* GetGdkWindow() { return mGdkWindow; };
+  GdkWindow* GetToplevelGdkWindow();
   GtkWidget* GetGtkWidget() { return mShell; }
   nsIFrame* GetFrame() const;
   bool IsDestroyed() const { return mIsDestroyed; }
@@ -297,6 +299,8 @@ class nsWindow final : public nsBaseWidget {
   nsresult UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
                                                 uint8_t* aAlphas,
                                                 int32_t aStride);
+  virtual void ReparentNativeWidget(nsIWidget* aNewParent) override;
+
   void UpdateTitlebarTransparencyBitmap();
 
   virtual nsresult SynthesizeNativeMouseEvent(
@@ -491,6 +495,7 @@ class nsWindow final : public nsBaseWidget {
   void PauseCompositorHiddenWindow();
   void WaylandStartVsync();
   void WaylandStopVsync();
+  void DestroyChildWindows();
   GtkWidget* GetToplevelWidget();
   nsWindow* GetContainerWindow();
   void SetUrgencyHint(GtkWidget* top_window, bool state);
@@ -568,9 +573,13 @@ class nsWindow final : public nsBaseWidget {
   // It's PictureInPicture window.
   bool mIsPIPWindow;
   // It's undecorated popup utility window, without resizers/titlebar,
-  // movable by mouse. Used on Wayland as a workaround for popups without
-  // parent (for instance WebRTC sharing indicator).
+  // movable by mouse. Used on Wayland for popups without
+  // parent (for instance WebRTC sharing indicator, notifications).
   bool mIsWaylandPanelWindow;
+  // It's child window, i.e. window which is nested in parent window.
+  // This is obsoleted and should not be used.
+  // We use GdkWindow hierarchy for such windows.
+  bool mIsChildWindow;
   bool mAlwaysOnTop;
   bool mNoAutoHide;
   bool mMouseTransparent;
