@@ -41,7 +41,6 @@ class InactiveTabsAdapter(
 ) : Adapter(DiffCallback), TabsTray, FeatureNameHolder {
 
     internal lateinit var inactiveTabsInteractor: InactiveTabsInteractor
-    internal lateinit var inactiveTabsAutoCloseDialogInteractor: InactiveTabsAutoCloseDialogInteractor
     internal var inActiveTabsCount: Int = 0
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): InactiveTabViewHolder {
@@ -49,7 +48,7 @@ class InactiveTabsAdapter(
             .inflate(viewType, parent, false)
 
         return when (viewType) {
-            AutoCloseDialogHolder.LAYOUT_ID -> AutoCloseDialogHolder(view, inactiveTabsAutoCloseDialogInteractor)
+            AutoCloseDialogHolder.LAYOUT_ID -> AutoCloseDialogHolder(view, inactiveTabsInteractor)
             HeaderHolder.LAYOUT_ID -> HeaderHolder(view, inactiveTabsInteractor, tabsTrayInteractor)
             TabViewHolder.LAYOUT_ID -> TabViewHolder(view, browserTrayInteractor, featureName)
             FooterHolder.LAYOUT_ID -> FooterHolder(view)

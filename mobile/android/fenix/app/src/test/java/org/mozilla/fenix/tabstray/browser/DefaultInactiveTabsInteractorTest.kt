@@ -19,4 +19,24 @@ class DefaultInactiveTabsInteractorTest {
 
         verify { controller.updateCardExpansion(true) }
     }
+
+    @Test
+    fun `WHEN onCloseClicked THEN close`() {
+        val controller: InactiveTabsController = mockk(relaxed = true)
+        val interactor = DefaultInactiveTabsInteractor(controller)
+
+        interactor.onCloseClicked()
+
+        verify { controller.close() }
+    }
+
+    @Test
+    fun `WHEN onEnabledAutoCloseClicked THEN enableAutoClosed`() {
+        val controller: InactiveTabsController = mockk(relaxed = true)
+        val interactor = DefaultInactiveTabsInteractor(controller)
+
+        interactor.onEnabledAutoCloseClicked()
+
+        verify { controller.enableAutoClosed() }
+    }
 }

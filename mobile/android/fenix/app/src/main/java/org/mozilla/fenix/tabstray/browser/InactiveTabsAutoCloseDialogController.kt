@@ -24,7 +24,7 @@ class InactiveTabsAutoCloseDialogController(
      */
     fun close() {
         markDialogAsShown()
-        refeshInactiveTabsSecion()
+        refreshInactiveTabsSection()
         metrics.track(Event.TabsTrayAutoCloseDialogDismissed)
     }
 
@@ -37,7 +37,7 @@ class InactiveTabsAutoCloseDialogController(
         settings.closeTabsAfterOneWeek = false
         settings.closeTabsAfterOneDay = false
         settings.manuallyCloseTabs = false
-        refeshInactiveTabsSecion()
+        refreshInactiveTabsSection()
         metrics.track(Event.TabsTrayAutoCloseDialogTurnOnClicked)
     }
 
@@ -49,7 +49,7 @@ class InactiveTabsAutoCloseDialogController(
     }
 
     @VisibleForTesting
-    internal fun refeshInactiveTabsSecion() {
+    internal fun refreshInactiveTabsSection() {
         val tabs = browserStore.state.tabs.filter(tabFilter)
         tray.updateTabs(tabs, browserStore.state.selectedTabId)
     }
