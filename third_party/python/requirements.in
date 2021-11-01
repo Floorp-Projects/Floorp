@@ -17,6 +17,7 @@ json-e==2.7.0
 mozilla-version==0.3.4
 packaging==21.0
 pathspec==0.8
+pip==21.2.4
 pip-tools==5.5.0
 ply==3.10
 pyasn1==0.4.8
@@ -31,10 +32,12 @@ requests-unixsocket==0.2.0
 responses==0.10.6
 rsa==3.1.4
 sentry-sdk==0.14.3
+setuptools==51.2.0
 six==1.13.0
 slugid==2.0.0
 taskcluster==44.2.2
 taskcluster-taskgraph==1.0.1
 taskcluster-urls==13.0.1
 voluptuous==0.12.1
+wheel==0.37.0
 yamllint==1.23
