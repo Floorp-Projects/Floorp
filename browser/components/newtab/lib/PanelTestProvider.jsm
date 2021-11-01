@@ -286,7 +286,7 @@ const MESSAGES = () => [
             string_id: "spotlight-total-cookie-protection-secondary-button",
           },
           action: {
-            type: "CANCEL",
+            type: "ENABLE_TOTAL_COOKIE_PROTECTION_SECTION",
           },
         },
       },
