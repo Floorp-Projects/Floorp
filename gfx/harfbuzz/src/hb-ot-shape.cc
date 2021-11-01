@@ -362,12 +362,14 @@ hb_ot_shape_collect_features (hb_ot_shape_planner_t *planner,
   map->enable_feature (HB_TAG ('t','r','a','k'), F_HAS_FALLBACK);
 #endif
 
-  map->enable_feature (HB_TAG ('H','A','R','F'));
+  map->enable_feature (HB_TAG ('H','a','r','f')); /* Considered required. */
+  map->enable_feature (HB_TAG ('H','A','R','F')); /* Considered discretionary. */
 
   if (planner->shaper->collect_features)
     planner->shaper->collect_features (planner);
 
-  map->enable_feature (HB_TAG ('B','U','Z','Z'));
+  map->enable_feature (HB_TAG ('B','u','z','z')); /* Considered required. */
+  map->enable_feature (HB_TAG ('B','U','Z','Z')); /* Considered discretionary. */
 
   for (unsigned int i = 0; i < ARRAY_LENGTH (common_features); i++)
     map->add_feature (common_features[i]);

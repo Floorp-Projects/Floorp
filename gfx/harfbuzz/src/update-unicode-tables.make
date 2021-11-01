@@ -13,7 +13,7 @@ hb-ot-shape-complex-arabic-joining-list.hh: gen-arabic-joining-list.py ArabicSha
 	./$^ > $@ || ($(RM) $@; false)
 hb-ot-shape-complex-arabic-table.hh: gen-arabic-table.py ArabicShaping.txt UnicodeData.txt Blocks.txt
 	./$^ > $@ || ($(RM) $@; false)
-hb-unicode-emoji-table.hh: gen-emoji-table.py emoji-data.txt
+hb-unicode-emoji-table.hh: gen-emoji-table.py emoji-data.txt emoji-test.txt
 	./$^ > $@ || ($(RM) $@; false)
 hb-ot-shape-complex-indic-table.cc: gen-indic-table.py IndicSyllabicCategory.txt IndicPositionalCategory.txt Blocks.txt
 	./$^ > $@ || ($(RM) $@; false)
@@ -37,6 +37,8 @@ Blocks.txt:
 	curl -O https://unicode.org/Public/UCD/latest/ucd/Blocks.txt
 emoji-data.txt:
 	curl -O https://www.unicode.org/Public/UCD/latest/ucd/emoji/emoji-data.txt
+emoji-test.txt:
+	curl -O https://www.unicode.org/Public/emoji/latest/emoji-test.txt
 IndicSyllabicCategory.txt:
 	curl -O https://unicode.org/Public/UCD/latest/ucd/IndicSyllabicCategory.txt
 IndicPositionalCategory.txt:

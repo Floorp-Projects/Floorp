@@ -1,3 +1,54 @@
+Overview of changes leading to 3.0.0
+Friday, September 17, 2021
+====================================
+- Unicode 14.0 support (David Corbett).
+- The hb-subset API and the harfbuzz-subset library's ABI are now declared
+  stable. The harfbuzz-subset library would not have been possible without the
+  work of Garret Rieger and Qunxin Liu from Google Fonts, and the earlier work
+  of Michiharu Ariza from Adobe.
+- The hb-style API is now stable and no longer experimental.
+
+- New API:
++hb_style_tag_t
++hb_style_get_value()
++hb_subset_input_t
++hb_subset_flags_t
++hb_subset_sets_t
++hb_subset_input_create_or_fail()
++hb_subset_input_reference()
++hb_subset_input_destroy()
++hb_subset_input_set_user_data()
++hb_subset_input_get_user_data()
++hb_subset_input_unicode_set()
++hb_subset_input_glyph_set()
++hb_subset_input_set()
++hb_subset_input_get_flags()
++hb_subset_input_set_flags()
++hb_subset_or_fail()
+
+- Removed old unstable harfbuzz-subset API:
+-hb_subset_input_nameid_set()
+-hb_subset_input_namelangid_set()
+-hb_subset_input_layout_features_set()
+-hb_subset_input_no_subset_tables_set()
+-hb_subset_input_drop_tables_set()
+-hb_subset_input_set_drop_hints()
+-hb_subset_input_get_drop_hints()
+-hb_subset_input_set_desubroutinize()
+-hb_subset_input_get_desubroutinize()
+-hb_subset_input_set_retain_gids()
+-hb_subset_input_get_retain_gids()
+-hb_subset_input_set_name_legacy()
+-hb_subset_input_get_name_legacy()
+-hb_subset_input_set_overlaps_flag()
+-hb_subset_input_get_overlaps_flag()
+-hb_subset_input_set_notdef_outline()
+-hb_subset_input_get_notdef_outline()
+-hb_subset_input_set_no_prune_unicode_ranges()
+-hb_subset_input_get_no_prune_unicode_ranges()
+-hb_subset()
+
+
 Overview of changes leading to 2.9.1
 Tuesday, September 7, 2021
 ====================================
@@ -8,7 +59,7 @@ Tuesday, September 7, 2021
 - hb_buffer_append() now handles the pre- and post-context which previously
   were left unchanged in the destination buffer.
 - hb-view / hb-shape now accept following new arguments:
-  o --unicodes: takes a list of hex numbers that represent Unicode
+  o --unicodes-before/after: takes a list of hex numbers that represent Unicode
     codepoints.
 - Undeprecated API:
   hb_set_invert()
