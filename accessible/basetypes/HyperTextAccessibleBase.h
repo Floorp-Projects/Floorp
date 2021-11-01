@@ -133,6 +133,11 @@ class HyperTextAccessibleBase {
                                                          int32_t* aStartOffset,
                                                          int32_t* aEndOffset);
 
+  /**
+   * Return text attributes applied to the accessible.
+   */
+  virtual already_AddRefed<AccAttributes> DefaultTextAttributes() = 0;
+
  protected:
   virtual const Accessible* Acc() const = 0;
   Accessible* Acc() {

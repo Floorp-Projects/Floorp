@@ -239,8 +239,13 @@ already_AddRefed<AccAttributes> RemoteAccessible::TextAttributes(
   return attrs.forget();
 }
 
-void RemoteAccessible::DefaultTextAttributes(RefPtr<AccAttributes>* aAttrs) {
-  Unused << mDoc->SendDefaultTextAttributes(mID, aAttrs);
+already_AddRefed<AccAttributes> RemoteAccessible::DefaultTextAttributes() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::DefaultTextAttributes();
+  }
+  RefPtr<AccAttributes> attrs;
+  Unused << mDoc->SendDefaultTextAttributes(mID, &attrs);
+  return attrs.forget();
 }
 
 nsIntRect RemoteAccessible::TextBounds(int32_t aStartOffset, int32_t aEndOffset,
