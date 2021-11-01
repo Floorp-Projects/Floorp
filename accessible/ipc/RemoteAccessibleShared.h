@@ -94,8 +94,6 @@ void GetTextBeforeOffset(int32_t aOffset, AccessibleTextBoundary aBoundaryType,
 
 char16_t CharAt(int32_t aOffset);
 
-void DefaultTextAttributes(RefPtr<AccAttributes>* aAttrs);
-
 nsIntRect TextBounds(
     int32_t aStartOffset, int32_t aEndOffset,
     uint32_t aCoordType =
