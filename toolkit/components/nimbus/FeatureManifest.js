@@ -352,18 +352,4 @@ const FeatureManifest = {
       },
     },
   },
-  tcpPreferences: {
-    description:
-      "Toggles the Total Cookie Protection section in about:preferences",
-    hasExposure: false,
-    isEarlyStartup: false,
-    variables: {
-      enabled: {
-        type: "boolean",
-        fallbackPref:
-          "privacy.restrict3rdpartystorage.rollout.preferences.TCPToggleInStandard",
-        description: "Turn on the section in about:preferences",
-      },
-    },
-  },
 };
