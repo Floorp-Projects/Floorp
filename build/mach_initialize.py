@@ -173,7 +173,7 @@ def _scrub_system_site_packages():
     sys.path = [path for path in sys.path if path not in site_paths]
 
 
-def _activate_python_environment(topsrcdir):
+def _activate_python_environment(topsrcdir, state_dir):
     # We need the "mach" module to access the logic to parse virtualenv
     # requirements. Since that depends on "packaging" (and, transitively,
     # "pyparsing"), we add those to the path too.
@@ -186,19 +186,16 @@ def _activate_python_environment(topsrcdir):
         )
     ]
 
-    from mach.requirements import MachEnvRequirements
+    from mach.virtualenv import VirtualenvManager
 
-    thunderbird_dir = os.path.join(topsrcdir, "comm")
-    is_thunderbird = os.path.exists(thunderbird_dir) and bool(
-        os.listdir(thunderbird_dir)
-    )
-
-    requirements = MachEnvRequirements.from_requirements_definition(
+    mach_virtualenv = VirtualenvManager(
         topsrcdir,
-        is_thunderbird,
-        True,
-        os.path.join(topsrcdir, "build", "mach_virtualenv_packages.txt"),
+        os.path.join(state_dir, "_virtualenvs"),
+        "mach",
+        populate_local_paths=False,
     )
+
+    requirements = mach_virtualenv.requirements()
 
     if os.environ.get("MACH_USE_SYSTEM_PYTHON") or os.environ.get("MOZ_AUTOMATION"):
         env_var = (
@@ -257,6 +254,19 @@ def _activate_python_environment(topsrcdir):
         # but we're running a "nativecmd" such as "create-mach-environment".
         # Remove global site packages from sys.path to improve isolation accordingly.
         _scrub_system_site_packages()
+    else:
+        # We're running in the Mach virtualenv - check that it's up-to-date.
+        # Note that the "pip package check" exists to ensure that a virtualenv isn't
+        # corrupted by ad-hoc pip installs. Since the Mach virtualenv is unlikely
+        # to be affected by such installs, and since it takes ~400ms to get the list
+        # of installed pip packages (a *lot* of time to wait during Mach init), we
+        # skip verifying that our pip packages exist.
+        if not mach_virtualenv.up_to_date(skip_pip_package_check=True):
+            print(
+                'The "mach" virtualenv is not up-to-date, please run '
+                '"./mach create-mach-environment"'
+            )
+            sys.exit(1)
 
     sys.path[0:0] = [
         os.path.join(topsrcdir, pth.path)
@@ -288,7 +298,7 @@ def initialize(topsrcdir):
         shutil.rmtree(deleted_dir, ignore_errors=True)
 
     state_dir = _create_state_dir()
-    _activate_python_environment(topsrcdir)
+    _activate_python_environment(topsrcdir, state_dir)
 
     import mach.base
     import mach.main

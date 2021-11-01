@@ -7,6 +7,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import functools
 import json
 import os
 import platform
@@ -158,14 +159,12 @@ class VirtualenvManager(VirtualenvHelper):
     def activate_path(self):
         return os.path.join(self.bin_path, "activate_this.py")
 
-    def up_to_date(self):
+    def up_to_date(self, skip_pip_package_check=False):
         """Returns whether the virtualenv is present and up to date.
 
         Args:
-            python: Full path string to the Python executable that this virtualenv
-                should be running.  If the Python executable passed in to this
-                argument is not the same version as the Python the virtualenv was
-                built with then this method will return False.
+            skip_pip_package_check: Don't check that the pip state on-disk still meets
+                our requirements.
         """
 
         # check if virtualenv exists
@@ -174,7 +173,7 @@ class VirtualenvManager(VirtualenvHelper):
         ):
             return False
 
-        env_requirements = self._requirements()
+        env_requirements = self.requirements()
 
         virtualenv_package = os.path.join(
             self.topsrcdir,
@@ -235,10 +234,11 @@ class VirtualenvManager(VirtualenvHelper):
             if current_paths != required_paths:
                 return False
 
-        pip = os.path.join(self.bin_path, "pip")
-        package_result = env_requirements.validate_environment_packages([pip])
-        if not package_result.has_all_packages:
-            return False
+        if not skip_pip_package_check:
+            pip = os.path.join(self.bin_path, "pip")
+            package_result = env_requirements.validate_environment_packages([pip])
+            if not package_result.has_all_packages:
+                return False
 
         return True
 
@@ -304,7 +304,8 @@ class VirtualenvManager(VirtualenvHelper):
         self._disable_pip_outdated_warning()
         return self.virtualenv_root
 
-    def _requirements(self):
+    @functools.lru_cache(maxsize=None)
+    def requirements(self):
         if not os.path.exists(self._manifest_path):
             raise Exception(
                 f'The current command is using the "{self._virtualenv_name}" '
@@ -329,7 +330,7 @@ class VirtualenvManager(VirtualenvHelper):
         This returns the path of the created virtualenv.
         """
         self.create()
-        env_requirements = self._requirements()
+        env_requirements = self.requirements()
         if self.populate_local_paths:
             site_packages_dir = self._site_packages_dir()
             with open(os.path.join(site_packages_dir, PTH_FILENAME), "a") as f:
