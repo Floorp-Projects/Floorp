@@ -50,6 +50,11 @@ class Browsers private constructor(
         FENIX_PREVIEW("org.mozilla.fenix"),
         FENIX_DEBUG("org.mozilla.fenix.debug"),
 
+        FIREFOX_FOCUS_DEBUG("org.mozilla.focus.debug"),
+        FIREFOX_FOCUS_NIGHTLY("org.mozilla.focus.nightly"),
+        FIREFOX_FOCUS_BETA("org.mozilla.focus.beta"),
+        FIREFOX_FOCUS("org.mozilla.focus"),
+
         REFERENCE_BROWSER("org.mozilla.reference.browser"),
         REFERENCE_BROWSER_DEBUG("org.mozilla.reference.browser.debug"),
 
@@ -202,6 +207,17 @@ class Browsers private constructor(
             browsers.containsKey(KnownBrowser.FIREFOX_FDROID.packageName) ->
                 browsers[KnownBrowser.FIREFOX_FDROID.packageName]
 
+            browsers.containsKey(KnownBrowser.FIREFOX_FOCUS.packageName) ->
+                browsers[KnownBrowser.FIREFOX_FOCUS.packageName]
+
+            browsers.containsKey(KnownBrowser.FIREFOX_FOCUS_DEBUG.packageName) ->
+                browsers[KnownBrowser.FIREFOX_FOCUS_DEBUG.packageName]
+
+            browsers.containsKey(KnownBrowser.FIREFOX_FOCUS_BETA.packageName) ->
+                browsers[KnownBrowser.FIREFOX_FOCUS_BETA.packageName]
+
+            browsers.containsKey(KnownBrowser.FIREFOX_FOCUS_NIGHTLY.packageName) ->
+                browsers[KnownBrowser.FIREFOX_FOCUS_NIGHTLY.packageName]
             else -> null
         }
     }

@@ -11,6 +11,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **support-utils**
+  * 🌟️️ **Add Firefox Focus packages to known browsers list
+
 * **concept-tabstray**
   * ⚠️ **This is a breaking change**: This component will be removed in future release.
      * Instead use the `TabsTray` interface from `browser-tabstray`.
