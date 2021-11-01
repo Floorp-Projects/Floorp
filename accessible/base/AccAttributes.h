@@ -59,9 +59,15 @@ struct DeleteEntry {
 };
 
 class AccAttributes {
+  // Warning! An AccAttributes can contain another AccAttributes. This is
+  // intended for object and text attributes. However, the nested
+  // AccAttributes should never itself contain another AccAttributes, nor
+  // should it create a cycle. We don't do cycle collection here for
+  // performance reasons, so violating this rule will cause leaks!
   using AttrValueType =
       Variant<bool, float, double, int32_t, RefPtr<nsAtom>, nsTArray<int32_t>,
-              CSSCoord, FontSize, Color, DeleteEntry, UniquePtr<nsString>>;
+              CSSCoord, FontSize, Color, DeleteEntry, UniquePtr<nsString>,
+              RefPtr<AccAttributes>>;
   static_assert(sizeof(AttrValueType) <= 16);
   using AtomVariantMap = nsTHashMap<nsRefPtrHashKey<nsAtom>, AttrValueType>;
 
@@ -115,6 +121,17 @@ class AccAttributes {
       }
     }
     return Nothing();
+  }
+
+  template <typename T>
+  RefPtr<const T> GetAttributeRefPtr(nsAtom* aAttrName) {
+    if (auto value = mData.Lookup(aAttrName)) {
+      if (value->is<RefPtr<T>>()) {
+        RefPtr<const T> ref = value->as<RefPtr<T>>();
+        return ref;
+      }
+    }
+    return nullptr;
   }
 
   // Get stringified value

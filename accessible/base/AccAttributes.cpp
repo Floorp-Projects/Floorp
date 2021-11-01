@@ -58,6 +58,9 @@ void AccAttributes::StringFromValueAndName(nsAtom* aAttrName,
       },
       [&aValueString](const UniquePtr<nsString>& val) {
         aValueString.Assign(*val);
+      },
+      [&aValueString](const RefPtr<AccAttributes>& val) {
+        aValueString.Assign(u"AccAttributes{...}");
       });
 }
 
