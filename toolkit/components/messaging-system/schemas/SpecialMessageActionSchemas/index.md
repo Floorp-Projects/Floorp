@@ -251,3 +251,7 @@ Action for configuring the default browser to Firefox on the user's system.
 ### `ENABLE_TOTAL_COOKIE_PROTECTION`
 
 Action for enabling the Total Cookie Protection feature.
+
+### `ENABLE_TOTAL_COOKIE_PROTECTION_SECTION`
+
+Action for enabling an additional privacy section in about:preferences

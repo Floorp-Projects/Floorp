@@ -314,6 +314,12 @@ const SpecialMessageActions = {
           true
         );
         break;
+      case "ENABLE_TOTAL_COOKIE_PROTECTION_SECTION":
+        Services.prefs.setBoolPref(
+          "privacy.restrict3rdpartystorage.rollout.preferences.TCPToggleInStandard",
+          true
+        );
+        break;
       default:
         throw new Error(
           `Special message action with type ${action.type} is unsupported.`
