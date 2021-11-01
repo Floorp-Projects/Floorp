@@ -17,10 +17,8 @@ MainProcessSingleton.prototype = {
   observe(subject, topic, data) {
     switch (topic) {
       case "app-startup": {
-        ChromeUtils.import(
-          "resource://gre/modules/CustomElementsListener.jsm",
-          null
-        );
+        // Imported for side-effects.
+        ChromeUtils.import("resource://gre/modules/CustomElementsListener.jsm");
 
         Services.ppmm.loadProcessScript(
           "chrome://global/content/process-content.js",

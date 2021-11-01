@@ -127,23 +127,36 @@ TEST(IntlListFormat, FormatToParts)
   MOZ_RELEASE_ASSERT(list.append(MakeStringSpan(u"Bob")));
   MOZ_RELEASE_ASSERT(list.append(MakeStringSpan(u"Charlie")));
 
-  ASSERT_TRUE(
-      lf->FormatToParts(list, [](const ListFormat::PartVector& parts) {
-          // 3 elements, and 2 literals.
-          EXPECT_EQ((parts.length()), (5u));
+  TestBuffer<char16_t> buf16;
+  mozilla::intl::ListFormat::PartVector parts;
+  ASSERT_TRUE(lf->FormatToParts(list, buf16, parts).isOk());
 
-          EXPECT_EQ(parts[0], (ListFormat::Part{ListFormat::PartType::Element,
-                                                MakeStringSpan(u"Alice")}));
-          EXPECT_EQ(parts[1], (ListFormat::Part{ListFormat::PartType::Literal,
-                                                MakeStringSpan(u", ")}));
-          EXPECT_EQ(parts[2], (ListFormat::Part{ListFormat::PartType::Element,
-                                                MakeStringSpan(u"Bob")}));
-          EXPECT_EQ(parts[3], (ListFormat::Part{ListFormat::PartType::Literal,
-                                                MakeStringSpan(u", and ")}));
-          EXPECT_EQ(parts[4], (ListFormat::Part{ListFormat::PartType::Element,
-                                                MakeStringSpan(u"Charlie")}));
-          return true;
-        }).isOk());
+  std::u16string_view strView = buf16.get_string_view();
+  ASSERT_EQ(strView, u"Alice, Bob, and Charlie");
+
+  // 3 elements, and 2 literals.
+  ASSERT_EQ((parts.length()), (5u));
+
+  auto getSubStringView = [strView, &parts](size_t index) {
+    size_t pos = index == 0 ? 0 : parts[index - 1].second;
+    size_t count = parts[index].second - pos;
+    return strView.substr(pos, count);
+  };
+
+  ASSERT_EQ(parts[0].first, ListFormat::PartType::Element);
+  ASSERT_EQ(getSubStringView(0), u"Alice");
+
+  ASSERT_EQ(parts[1].first, ListFormat::PartType::Literal);
+  ASSERT_EQ(getSubStringView(1), u", ");
+
+  ASSERT_EQ(parts[2].first, ListFormat::PartType::Element);
+  ASSERT_EQ(getSubStringView(2), u"Bob");
+
+  ASSERT_EQ(parts[3].first, ListFormat::PartType::Literal);
+  ASSERT_EQ(getSubStringView(3), u", and ");
+
+  ASSERT_EQ(parts[4].first, ListFormat::PartType::Element);
+  ASSERT_EQ(getSubStringView(4), u"Charlie");
 }
 
 }  // namespace mozilla::intl

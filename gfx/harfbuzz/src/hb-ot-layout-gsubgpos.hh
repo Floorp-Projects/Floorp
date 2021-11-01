@@ -1618,7 +1618,14 @@ struct Rule
     const UnsizedArrayOf<LookupRecord> &lookupRecord = StructAfter<UnsizedArrayOf<LookupRecord>>
 						       (inputZ.as_array ((inputCount ? inputCount - 1 : 0)));
     for (unsigned i = 0; i < (unsigned) lookupCount; i++)
+    {
+      if (!lookup_map->has (lookupRecord[i].lookupListIndex))
+      {
+        out->lookupCount--;
+        continue;
+      }
       c->copy (lookupRecord[i], lookup_map);
+    }
 
     return_trace (true);
   }
@@ -2234,7 +2241,14 @@ struct ContextFormat3
     const LookupRecord *lookupRecord = &StructAfter<LookupRecord> (coverageZ.as_array (glyphCount));
     const hb_map_t *lookup_map = c->table_tag == HB_OT_TAG_GSUB ? c->plan->gsub_lookups : c->plan->gpos_lookups;
     for (unsigned i = 0; i < (unsigned) lookupCount; i++)
+    {
+      if (!lookup_map->has (lookupRecord[i].lookupListIndex))
+      {
+        out->lookupCount--;
+        continue;
+      }
       c->serializer->copy (lookupRecord[i], lookup_map);
+    }
 
     return_trace (true);
   }
@@ -3303,13 +3317,21 @@ struct ChainContextFormat3
       return_trace (false);
 
     const Array16Of<LookupRecord> &lookupRecord = StructAfter<Array16Of<LookupRecord>> (lookahead);
+    const hb_map_t *lookup_map = c->table_tag == HB_OT_TAG_GSUB ? c->plan->gsub_lookups : c->plan->gpos_lookups;
+    hb_set_t lookup_indices;
+    for (unsigned i = 0; i < (unsigned) lookupRecord.len; i++)
+      if (lookup_map->has (lookupRecord[i].lookupListIndex))
+        lookup_indices.add (i);
+
     HBUINT16 lookupCount;
-    lookupCount = lookupRecord.len;
+    lookupCount = lookup_indices.get_population ();
     if (!c->serializer->copy (lookupCount)) return_trace (false);
 
-    const hb_map_t *lookup_map = c->table_tag == HB_OT_TAG_GSUB ? c->plan->gsub_lookups : c->plan->gpos_lookups;
-    for (unsigned i = 0; i < (unsigned) lookupCount; i++)
-      if (!c->serializer->copy (lookupRecord[i], lookup_map)) return_trace (false);
+    for (unsigned i : lookup_indices.iter ())
+    {
+      if (!c->serializer->copy (lookupRecord[i], lookup_map))
+        return_trace (false);
+    }
 
     return_trace (true);
   }

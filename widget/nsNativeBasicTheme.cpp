@@ -488,10 +488,6 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeButtonColors(
   return std::make_pair(backgroundColor, borderColor);
 }
 
-// NOTE: This should be kept in sync with forms.css, see the comment in the
-// input:autofill rule.
-constexpr nscolor kAutofillColor = NS_RGBA(255, 249, 145, 128);
-
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeTextfieldColors(
     const EventStates& aState, const Colors& aColors,
     OutlineCoversBorder aOutlineCoversBorder) {
@@ -502,9 +498,10 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeTextfieldColors(
     return aColors.SystemNs(StyleSystemColor::Field);
   }();
 
-  if (aState.HasState(NS_EVENT_STATE_AUTOFILL) &&
-      StaticPrefs::layout_css_autofill_background()) {
-    backgroundColor = NS_ComposeColors(backgroundColor, kAutofillColor);
+  if (aState.HasState(NS_EVENT_STATE_AUTOFILL)) {
+    backgroundColor = NS_ComposeColors(
+        backgroundColor,
+        aColors.SystemNs(StyleSystemColor::MozAutofillBackground));
   }
 
   const sRGBColor borderColor =

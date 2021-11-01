@@ -4,10 +4,9 @@
 #ifndef intl_components_ListFormat_h_
 #define intl_components_ListFormat_h_
 
-#include <functional>
-
 #include "mozilla/CheckedInt.h"
 #include "mozilla/intl/ICU4CGlue.h"
+#include "mozilla/PodOperations.h"
 #include "mozilla/Result.h"
 #include "mozilla/Vector.h"
 #include "unicode/ulistformatter.h"
@@ -98,35 +97,75 @@ class ListFormat final {
   /**
    * The corresponding list of parts according to the effective locale and the
    * formatting options of ListFormat.
-   * Each part has a [[Type]] field, which must be "element" or "literal".
+   * Each part has a [[Type]] field, which must be "element" or "literal", and a
+   * [[Value]] field.
    *
-   * https://tc39.es/ecma402/#sec-createpartsfromlist
+   * To store Part more efficiently, it doesn't store the ||Value|| of type
+   * string in this struct. Instead, it stores the end index of the string in
+   * the buffer(which is passed to ListFormat::FormatToParts()). The begin index
+   * of the ||Value|| is the index of the previous part.
+   *
+   *  Buffer
+   *  0               i                j
+   * +---------------+---------------+---------------+
+   * | Part[0].Value | Part[1].Value | Part[2].Value | ....
+   * +---------------+---------------+---------------+
+   *
+   *     Part[0].index is i. Part[0].Value is stored in the Buffer[0..i].
+   *     Part[1].index is j. Part[1].Value is stored in the Buffer[i..j].
+   *
+   * See https://tc39.es/ecma402/#sec-createpartsfromlist
    */
   enum class PartType {
     Element,
     Literal,
   };
-  using Part = std::pair<PartType, mozilla::Span<const char16_t>>;
+  // The 2nd field is the end index to the buffer as mentioned above.
+  using Part = std::pair<PartType, size_t>;
   using PartVector = mozilla::Vector<Part, DEFAULT_LIST_LENGTH>;
 
-  using PartsCallback = std::function<bool(const PartVector& parts)>;
-
   /**
-   * Format the list to a list of parts, and the callback will be called with
-   * the formatted parts.
+   * Format the list to a list of parts, and store the formatted result of
+   * UTF-16 string into buffer, and formatted parts into the vector 'parts'.
    *
-   * In the callback, it has a argument of type PartVector&, which is the vector
-   * of the formatted parts. The life-cycle of the PartVector is valid only
-   * during the callback call, so the caller of FormatToParts needs to copy the
-   * data in PartVector to its own storage during the callback.
-   *
-   * The PartVector contains mozilla::Span which point to memory which may be
-   * overridden when the next format method is called.
-   *
+   * See:
    * https://tc39.es/ecma402/#sec-Intl.ListFormat.prototype.formatToParts
    * https://tc39.es/ecma402/#sec-formatlisttoparts
    */
-  ICUResult FormatToParts(const StringList& list, PartsCallback&& callback);
+  template <typename Buffer>
+  ICUResult FormatToParts(const StringList& list, Buffer& buffer,
+                          PartVector& parts) {
+    static_assert(std::is_same_v<typename Buffer::CharType, char16_t>,
+                  "Currently only UTF-16 buffers are supported.");
+
+    mozilla::Vector<const char16_t*, DEFAULT_LIST_LENGTH> u16strings;
+    mozilla::Vector<int32_t, DEFAULT_LIST_LENGTH> u16stringLens;
+    MOZ_TRY(ConvertStringListToVectors(list, u16strings, u16stringLens));
+
+    AutoFormattedList formatted;
+    UErrorCode status = U_ZERO_ERROR;
+    ulistfmt_formatStringsToResult(
+        mListFormatter.GetConst(), u16strings.begin(), u16stringLens.begin(),
+        int32_t(list.length()), formatted.GetFormatted(), &status);
+    if (U_FAILURE(status)) {
+      return Err(ToICUError(status));
+    }
+
+    auto spanResult = formatted.ToSpan();
+    if (spanResult.isErr()) {
+      return spanResult.propagateErr();
+    }
+    auto formattedSpan = spanResult.unwrap();
+    if (!FillBuffer(formattedSpan, buffer)) {
+      return Err(ICUError::OutOfMemory);
+    }
+
+    const UFormattedValue* value = formatted.Value();
+    if (!value) {
+      return Err(ICUError::InternalError);
+    }
+    return FormattedToParts(value, buffer.length(), parts);
+  }
 
  private:
   ListFormat() = delete;
@@ -168,6 +207,13 @@ class ListFormat final {
 
     return Ok{};
   }
+
+  using AutoFormattedList =
+      AutoFormattedResult<UFormattedList, ulistfmt_openResult,
+                          ulistfmt_resultAsValue, ulistfmt_closeResult>;
+
+  ICUResult FormattedToParts(const UFormattedValue* formattedValue,
+                             size_t formattedSize, PartVector& parts);
 
   static UListFormatterType ToUListFormatterType(Type type);
   static UListFormatterWidth ToUListFormatterWidth(Style style);

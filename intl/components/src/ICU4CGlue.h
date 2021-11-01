@@ -29,6 +29,7 @@
 #include <stdint.h>
 #include <string_view>
 
+struct UFormattedValue;
 namespace mozilla::intl {
 
 static inline const char* IcuLocale(const char* aLocale) {
@@ -544,6 +545,110 @@ class AvailableLocalesEnumeration final {
   Iterator end() const { return Iterator(mLocalesCount); }
 };
 
+/**
+ * A helper class to wrap calling ICU function in cpp file so we don't have to
+ * include the ICU header here.
+ */
+class FormattedResult {
+ protected:
+  static Result<Span<const char16_t>, ICUError> ToSpanImpl(
+      const UFormattedValue* value);
+};
+
+/**
+ * A RAII class to hold the formatted value of format result.
+ *
+ * The caller will need to create this AutoFormattedResult on the stack, with
+ * the following parameters:
+ * 1. Native ICU type.
+ * 2. An ICU function which opens the result.
+ * 3. An ICU function which can get the result as UFormattedValue.
+ * 4. An ICU function which closes the result.
+ *
+ * After the object is created, caller needs to call IsValid() method to check
+ * if the native object has been created properly, and then passes this
+ * object to other format interfaces.
+ * The format result will be stored in this object, the caller can use ToSpan()
+ * method to get the formatted string.
+ *
+ * The methods GetFormatted() and Value() are private methods since they expose
+ * native ICU types. If the caller wants to call these methods, the caller needs
+ * to register itself as a friend class in AutoFormattedResult.
+ *
+ * The formatted value and the native ICU object will be released once this
+ * class is destructed.
+ */
+template <typename T, T*(Open)(UErrorCode*),
+          const UFormattedValue*(GetValue)(const T*, UErrorCode*),
+          void(Close)(T*)>
+class MOZ_RAII AutoFormattedResult : FormattedResult {
+ public:
+  AutoFormattedResult() {
+    mFormatted = Open(&mError);
+    if (U_FAILURE(mError)) {
+      mFormatted = nullptr;
+    }
+  }
+  ~AutoFormattedResult() {
+    if (mFormatted) {
+      Close(mFormatted);
+    }
+  }
+
+  AutoFormattedResult(const AutoFormattedResult& other) = delete;
+  AutoFormattedResult& operator=(const AutoFormattedResult& other) = delete;
+
+  AutoFormattedResult(AutoFormattedResult&& other) = delete;
+  AutoFormattedResult& operator=(AutoFormattedResult&& other) = delete;
+
+  /**
+   * Check if the native UFormattedDateInterval was created successfully.
+   */
+  bool IsValid() const { return !!mFormatted; }
+
+  /**
+   *  Get error code if IsValid() returns false.
+   */
+  ICUError GetError() const { return ToICUError(mError); }
+
+  /**
+   * Get the formatted result.
+   */
+  Result<Span<const char16_t>, ICUError> ToSpan() const {
+    if (!IsValid()) {
+      return Err(GetError());
+    }
+
+    const UFormattedValue* value = Value();
+    if (!value) {
+      return Err(ICUError::InternalError);
+    }
+
+    return ToSpanImpl(value);
+  }
+
+ private:
+  friend class DateIntervalFormat;
+  friend class ListFormat;
+  T* GetFormatted() const { return mFormatted; }
+
+  const UFormattedValue* Value() const {
+    if (!IsValid()) {
+      return nullptr;
+    }
+
+    UErrorCode status = U_ZERO_ERROR;
+    const UFormattedValue* value = GetValue(mFormatted, &status);
+    if (U_FAILURE(status)) {
+      return nullptr;
+    }
+
+    return value;
+  };
+
+  T* mFormatted = nullptr;
+  UErrorCode mError = U_ZERO_ERROR;
+};
 }  // namespace mozilla::intl
 
 #endif /* intl_components_ICUUtils_h */

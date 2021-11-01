@@ -13,10 +13,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { X509 } = ChromeUtils.import(
-  "resource://gre/modules/psm/X509.jsm",
-  null
-);
+const { X509 } = ChromeUtils.import("resource://gre/modules/psm/X509.jsm");
 
 const INTERMEDIATES_BUCKET_PREF =
   "security.remote_settings.intermediates.bucket";

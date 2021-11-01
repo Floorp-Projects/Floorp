@@ -175,10 +175,21 @@ for ( let [pages,maxpages] of [[pages_vanilla, pages_vanilla+100],
                        WebAssembly.RuntimeError,
                        /index out of bounds/);
 
+    done:
     if (pages < maxpages) {
-        assertEq(ins.exports.grow1(), pages);
-        assertEq(ins.exports.grow1(), pages+1);
-        assertEq(ins.exports.grow1(), pages+2);
+        let res = 0;
+
+        res = ins.exports.grow1();
+        if (res == -1) break done;
+        assertEq(res, pages);
+
+        res = ins.exports.grow1();
+        if (res == -1) break done;
+        assertEq(res, pages+1);
+
+        res = ins.exports.grow1();
+        if (res == -1) break done;
+        assertEq(res, pages+2);
 
         assertEq(ins.exports.get_varaddr((pages+2)*pagesz), 0);
 
@@ -186,7 +197,9 @@ for ( let [pages,maxpages] of [[pages_vanilla, pages_vanilla+100],
         while (ins.exports.grow1() != -1) {
             i++;
         }
-        assertEq(i, maxpages-pages-3);
+        // We can't assert equality because we might OOM before we get to the
+        // max, but we can assert we did not go beyond that.
+        assertEq(i <= maxpages-pages-3, true);
     }
 }
 
