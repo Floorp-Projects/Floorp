@@ -5816,7 +5816,7 @@ recent_searches:
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/22175
     data_reviews:
-      - https://github.com/mozilla-mobile/fenix/pull/TBD
+      - https://github.com/mozilla-mobile/fenix/pull/22176#issuecomment-956421788
     data_sensitivity:
       - interaction
     notification_emails:
