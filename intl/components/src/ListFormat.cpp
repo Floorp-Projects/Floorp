@@ -55,13 +55,13 @@ ListFormat::~ListFormat() {
   return ULISTFMT_WIDTH_WIDE;
 }
 
-ICUResult ListFormat::FormattedToParts(
-    const UFormattedValue* formattedValue,
-    mozilla::Span<const char16_t> formattedSpan, PartVector& parts) {
+ICUResult ListFormat::FormattedToParts(const UFormattedValue* formattedValue,
+                                       size_t formattedSize,
+                                       PartVector& parts) {
   size_t lastEndIndex = 0;
 
-  auto AppendPart = [&](PartType type, size_t beginIndex, size_t endIndex) {
-    if (!parts.emplaceBack(type, formattedSpan.FromTo(beginIndex, endIndex))) {
+  auto AppendPart = [&](PartType type, size_t endIndex) {
+    if (!parts.emplaceBack(type, endIndex)) {
       return false;
     }
 
@@ -110,19 +110,19 @@ ICUResult ListFormat::FormattedToParts(
                "finish as expected");
 
     if (lastEndIndex < beginIndex) {
-      if (!AppendPart(PartType::Literal, lastEndIndex, beginIndex)) {
+      if (!AppendPart(PartType::Literal, beginIndex)) {
         return Err(ICUError::InternalError);
       }
     }
 
-    if (!AppendPart(PartType::Element, beginIndex, endIndex)) {
+    if (!AppendPart(PartType::Element, endIndex)) {
       return Err(ICUError::InternalError);
     }
   }
 
   // Append any final literal.
-  if (lastEndIndex < formattedSpan.size()) {
-    if (!AppendPart(PartType::Literal, lastEndIndex, formattedSpan.size())) {
+  if (lastEndIndex < formattedSize) {
+    if (!AppendPart(PartType::Literal, formattedSize)) {
       return Err(ICUError::InternalError);
     }
   }
