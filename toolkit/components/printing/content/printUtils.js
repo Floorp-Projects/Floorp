@@ -394,6 +394,19 @@ var PrintUtils = {
    */
   printPreview(aListenerObj) {
     if (PRINT_TAB_MODAL) {
+      let currentDialogBox = gBrowser.selectedBrowser.tabDialogBox;
+      if (currentDialogBox) {
+        let manager = currentDialogBox.getTabDialogManager();
+        let dialogs = manager.hasDialogs && manager.dialogs;
+        if (dialogs) {
+          for (let dialog of dialogs) {
+            if (dialog._openedURL.includes("print.html")) {
+              dialog.close();
+              return Promise.resolve();
+            }
+          }
+        }
+      }
       let browsingContext = gBrowser.selectedBrowser.browsingContext;
       let focusedBc = Services.focus.focusedContentBrowsingContext;
       if (
