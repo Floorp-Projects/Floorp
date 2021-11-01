@@ -5,7 +5,11 @@
 "use strict";
 
 /* import-globals-from ../../mochitest/text.js */
-loadScripts({ name: "text.js", dir: MOCHITESTS_DIR });
+/* import-globals-from ../../mochitest/attributes.js */
+loadScripts(
+  { name: "text.js", dir: MOCHITESTS_DIR },
+  { name: "attributes.js", dir: MOCHITESTS_DIR }
+);
 
 const isCacheEnabled = Services.prefs.getBoolPref(
   "accessibility.cache.enabled",
@@ -99,5 +103,80 @@ addAccessibleTask(
     topLevel: !isWinNoCache,
     iframe: !isWinNoCache,
     remoteIframe: !isWinNoCache,
+  }
+);
+
+/**
+ * Test text attribute methods.
+ */
+addAccessibleTask(
+  `
+<p id="plain">ab</p>
+<p id="bold" style="font-weight: bold;">ab</p>
+<p id="partialBold">ab<b>cd</b>ef</p>
+<p id="consecutiveBold">ab<b>cd</b><b>ef</b>gh</p>
+<p id="embeddedObjs">ab<a href="https://example.com/">cd</a><a href="https://example.com/">ef</a><a href="https://example.com/">gh</a>ij</p>
+<p id="empty"></p>
+<p id="fontFamilies" style="font-family: sans-serif;">ab<span style="font-family: monospace;">cd</span><span style="font-family: monospace;">ef</span>gh</p>
+  `,
+  async function(browser, docAcc) {
+    let defAttrs = {
+      "text-position": "baseline",
+      "font-style": "normal",
+      "font-weight": "400",
+    };
+    const boldAttrs = { "font-weight": "700" };
+
+    const plain = findAccessibleChildByID(docAcc, "plain");
+    testDefaultTextAttrs(plain, defAttrs, true);
+    for (let offset = 0; offset <= 2; ++offset) {
+      testTextAttrs(plain, offset, {}, defAttrs, 0, 2, true);
+    }
+
+    const bold = findAccessibleChildByID(docAcc, "bold");
+    defAttrs["font-weight"] = "700";
+    testDefaultTextAttrs(bold, defAttrs, true);
+    testTextAttrs(bold, 0, {}, defAttrs, 0, 2, true);
+
+    const partialBold = findAccessibleChildByID(docAcc, "partialBold");
+    defAttrs["font-weight"] = "400";
+    testDefaultTextAttrs(partialBold, defAttrs, true);
+    testTextAttrs(partialBold, 0, {}, defAttrs, 0, 2, true);
+    testTextAttrs(partialBold, 2, boldAttrs, defAttrs, 2, 4, true);
+    testTextAttrs(partialBold, 4, {}, defAttrs, 4, 6, true);
+
+    const consecutiveBold = findAccessibleChildByID(docAcc, "consecutiveBold");
+    testDefaultTextAttrs(consecutiveBold, defAttrs, true);
+    testTextAttrs(consecutiveBold, 0, {}, defAttrs, 0, 2, true);
+    testTextAttrs(consecutiveBold, 2, boldAttrs, defAttrs, 2, 6, true);
+    testTextAttrs(consecutiveBold, 6, {}, defAttrs, 6, 8, true);
+
+    const embeddedObjs = findAccessibleChildByID(docAcc, "embeddedObjs");
+    testDefaultTextAttrs(embeddedObjs, defAttrs, true);
+    testTextAttrs(embeddedObjs, 0, {}, defAttrs, 0, 2, true);
+    for (let offset = 2; offset <= 4; ++offset) {
+      // attrs and defAttrs should be completely empty, so we pass
+      // false for aSkipUnexpectedAttrs.
+      testTextAttrs(embeddedObjs, offset, {}, {}, 2, 5, false);
+    }
+    testTextAttrs(embeddedObjs, 5, {}, defAttrs, 5, 7, true);
+
+    const empty = findAccessibleChildByID(docAcc, "empty");
+    testDefaultTextAttrs(empty, defAttrs, true);
+    testTextAttrs(empty, 0, {}, defAttrs, 0, 0, true);
+
+    const fontFamilies = findAccessibleChildByID(docAcc, "fontFamilies", [
+      nsIAccessibleHyperText,
+    ]);
+    testDefaultTextAttrs(fontFamilies, defAttrs, true);
+    testTextAttrs(fontFamilies, 0, {}, defAttrs, 0, 2, true);
+    testTextAttrs(fontFamilies, 2, {}, defAttrs, 2, 6, true);
+    testTextAttrs(fontFamilies, 6, {}, defAttrs, 6, 8, true);
+  },
+  {
+    chrome: true,
+    topLevel: isCacheEnabled,
+    iframe: isCacheEnabled,
+    remoteIframe: isCacheEnabled,
   }
 );
