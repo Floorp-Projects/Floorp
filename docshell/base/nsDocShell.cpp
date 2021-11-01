@@ -1164,6 +1164,24 @@ void nsDocShell::FirePageHideNotificationInternal(
   }
 }
 
+void nsDocShell::ThawFreezeNonRecursive(bool aThaw) {
+  MOZ_ASSERT(mozilla::BFCacheInParent());
+
+  if (!mScriptGlobal) {
+    return;
+  }
+
+  RefPtr<nsGlobalWindowInner> inner =
+      mScriptGlobal->GetCurrentInnerWindowInternal();
+  if (inner) {
+    if (aThaw) {
+      inner->Thaw(false);
+    } else {
+      inner->Freeze(false);
+    }
+  }
+}
+
 void nsDocShell::FirePageHideShowNonRecursive(bool aShow) {
   MOZ_ASSERT(mozilla::BFCacheInParent());
 
@@ -1197,10 +1215,6 @@ void nsDocShell::FirePageHideShowNonRecursive(bool aShow) {
           // only.
           inner->GetPerformance()->GetDOMTiming()->NotifyRestoreStart();
         }
-      }
-
-      if (inner) {
-        inner->Thaw(false);
       }
 
       nsCOMPtr<nsIChannel> channel = doc->GetChannel();
@@ -1240,9 +1254,6 @@ void nsDocShell::FirePageHideShowNonRecursive(bool aShow) {
     mFiredUnloadEvent = true;
     contentViewer->PageHide(false);
 
-    if (mScriptGlobal && mScriptGlobal->GetCurrentInnerWindowInternal()) {
-      mScriptGlobal->GetCurrentInnerWindowInternal()->Freeze(false);
-    }
     RefPtr<PresShell> presShell = GetPresShell();
     if (presShell) {
       presShell->Freeze(false);

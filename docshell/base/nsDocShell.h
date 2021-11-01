@@ -946,6 +946,7 @@ class nsDocShell final : public nsDocLoader,
   void FirePageHideNotificationInternal(bool aIsUnload,
                                         bool aSkipCheckingDynEntries);
 
+  void ThawFreezeNonRecursive(bool aThaw);
   void FirePageHideShowNonRecursive(bool aShow);
 
   nsresult Dispatch(mozilla::TaskCategory aCategory,

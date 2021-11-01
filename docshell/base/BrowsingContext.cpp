@@ -2869,8 +2869,13 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsInBFCache>) {
 
   const bool isInBFCache = GetIsInBFCache();
   if (!isInBFCache) {
-    PreOrderWalk(
-        [&](BrowsingContext* aContext) { aContext->mIsInBFCache = false; });
+    PreOrderWalk([&](BrowsingContext* aContext) {
+      aContext->mIsInBFCache = false;
+      nsCOMPtr<nsIDocShell> shell = aContext->GetDocShell();
+      if (shell) {
+        nsDocShell::Cast(shell)->ThawFreezeNonRecursive(true);
+      }
+    });
   }
 
   if (isInBFCache && XRE_IsContentProcess() && mDocShell) {
@@ -2880,13 +2885,16 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsInBFCache>) {
   PreOrderWalk([&](BrowsingContext* aContext) {
     nsCOMPtr<nsIDocShell> shell = aContext->GetDocShell();
     if (shell) {
-      static_cast<nsDocShell*>(shell.get())
-          ->FirePageHideShowNonRecursive(!isInBFCache);
+      nsDocShell::Cast(shell)->FirePageHideShowNonRecursive(!isInBFCache);
     }
   });
 
   if (isInBFCache) {
     PreOrderWalk([&](BrowsingContext* aContext) {
+      nsCOMPtr<nsIDocShell> shell = aContext->GetDocShell();
+      if (shell) {
+        nsDocShell::Cast(shell)->ThawFreezeNonRecursive(false);
+      }
       aContext->mIsInBFCache = true;
       Document* doc = aContext->GetDocument();
       if (doc) {
