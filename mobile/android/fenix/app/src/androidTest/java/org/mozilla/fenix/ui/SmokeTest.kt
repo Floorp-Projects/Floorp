@@ -823,8 +823,11 @@ class SmokeTest {
     }
 
     @Test
-    @Ignore("https://github.com/mozilla-mobile/fenix/issues/21397")
     fun createFirstCollectionTest() {
+        // disabling these features to have better visibility of Collections
+        featureSettingsHelper.setRecentTabsFeatureEnabled(false)
+        featureSettingsHelper.setPocketEnabled(false)
+
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
         val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
 
@@ -855,8 +858,11 @@ class SmokeTest {
     }
 
     @Test
-    @Ignore("https://github.com/mozilla-mobile/fenix/issues/21397")
     fun verifyExpandedCollectionItemsTest() {
+        // disabling these features to have better visibility of Collections
+        featureSettingsHelper.setRecentTabsFeatureEnabled(false)
+        featureSettingsHelper.setPocketEnabled(false)
+
         val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
