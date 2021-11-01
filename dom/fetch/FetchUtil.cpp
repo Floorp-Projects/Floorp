@@ -627,7 +627,7 @@ class JSStreamConsumer final : public nsIInputStreamCallback,
     }
     MOZ_RELEASE_ASSERT(ret == Z_STREAM_END);
 
-    dstBytes.shrinkTo(zstream.next_out - compressBegin);
+    dstBytes.shrinkTo(zstream.next_out - dstBytes.begin());
 
     NS_DispatchToMainThread(new StoreOptimizedEncodingRunnable(
         std::move(mCache), std::move(dstBytes)));

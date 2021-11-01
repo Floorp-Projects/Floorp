@@ -305,6 +305,7 @@ static const char sColorPrefs[][41] = {
     "ui.-moz-mac-tooltip",
     "ui.-moz-accent-color",
     "ui.-moz-accent-color-foreground",
+    "ui.-moz-autofill-background",
     "ui.-moz-win-mediatext",
     "ui.-moz-win-communicationstext",
     "ui.-moz-nativehyperlinktext",
@@ -418,7 +419,8 @@ void nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure) {
   }
 
   for (const char* pref : sColorPrefs) {
-    if (prefName.Equals(pref)) {
+    // We use StringBeginsWith to handle .dark prefs too.
+    if (StringBeginsWith(prefName, nsDependentCString(pref))) {
       ColorPrefChanged();
       return;
     }
@@ -633,6 +635,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
     case ColorID::Window:  // --in-content-page-background
     case ColorID::WindowBackground:
     case ColorID::Background:
+    case ColorID::Menu:
     case ColorID::TextBackground:
       color = kWindowBackground;
       break;
@@ -641,6 +644,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
       color = NS_RGB(35, 34, 43);
       break;
     case ColorID::Windowtext:  // --in-content-page-color
+    case ColorID::Menutext:
     case ColorID::WindowForeground:
     case ColorID::TextForeground:
     case ColorID::MozDialogtext:
@@ -781,15 +785,27 @@ static nsresult SystemColorUseDebuggingColor(LookAndFeel::ColorID aID,
 }
 #endif
 
-static nsresult GetColorFromPref(LookAndFeel::ColorID aID, nscolor& aResult) {
-  const char* prefName = sColorPrefs[size_t(aID)];
+static nsresult GetPrefColor(const char* aPref, nscolor& aResult) {
   nsAutoCString colorStr;
-  MOZ_TRY(Preferences::GetCString(prefName, colorStr));
+  MOZ_TRY(Preferences::GetCString(aPref, colorStr));
   if (!ServoCSSParser::ComputeColor(nullptr, NS_RGB(0, 0, 0), colorStr,
                                     &aResult)) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
+}
+
+static nsresult GetColorFromPref(LookAndFeel::ColorID aID, ColorScheme aScheme,
+                                 nscolor& aResult) {
+  const char* prefName = sColorPrefs[size_t(aID)];
+  if (aScheme == ColorScheme::Dark) {
+    nsAutoCString darkPrefName(prefName);
+    darkPrefName.Append(".dark");
+    if (NS_SUCCEEDED(GetPrefColor(darkPrefName.get(), aResult))) {
+      return NS_OK;
+    }
+  }
+  return GetPrefColor(prefName, aResult);
 }
 
 // All these routines will return NS_OK if they have a value,
@@ -824,7 +840,7 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID, ColorScheme aScheme,
     return NS_OK;
   }
 
-  if (NS_SUCCEEDED(GetColorFromPref(aID, aResult))) {
+  if (NS_SUCCEEDED(GetColorFromPref(aID, aScheme, aResult))) {
     cache.Insert(aID, Some(aResult));
     return NS_OK;
   }
