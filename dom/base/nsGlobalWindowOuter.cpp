@@ -3058,8 +3058,7 @@ bool nsPIDOMWindowOuter::ShouldDelayMediaFromStart() const {
 void nsPIDOMWindowOuter::NotifyResumingDelayedMedia() {
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (service) {
-    service->NotifyMediaResumedFromBlock(this);
-    service->RefreshAgentsSuspend(this, nsISuspendedTypes::NONE_SUSPENDED);
+    service->NotifyResumingDelayedMedia(this);
   }
 }
 
