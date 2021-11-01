@@ -84,7 +84,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       gcMaxBytes_ = value;
       break;
     case JSGC_MIN_NURSERY_BYTES:
-      if (value < ArenaSize || value >= MaxNurseryBytes) {
+      if (value < SystemPageSize() || value >= MaxNurseryBytes) {
         return false;
       }
       value = Nursery::roundSize(value);
@@ -94,7 +94,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       gcMinNurseryBytes_ = value;
       break;
     case JSGC_MAX_NURSERY_BYTES:
-      if (value < ArenaSize || value >= MaxNurseryBytes) {
+      if (value < SystemPageSize() || value >= MaxNurseryBytes) {
         return false;
       }
       value = Nursery::roundSize(value);
