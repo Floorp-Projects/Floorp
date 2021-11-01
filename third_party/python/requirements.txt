@@ -452,6 +452,10 @@ voluptuous==0.12.1 \
     # via
     #   -r requirements-mach-vendor-python.in
     #   taskcluster-taskgraph
+wheel==0.37.0 \
+    --hash=sha256:21014b2bd93c6d0034b6ba5d35e4eb284340e09d63c59aef6fc14b0f346146fd \
+    --hash=sha256:e2ef7239991699e3355d54f8e968a21bb940a1dbf34a4d226741e64462516fad
+    # via -r requirements-mach-vendor-python.in
 yamllint==1.23 \
     --hash=sha256:0fa69bf8a86182b7fe14918bdd3a30354c869966bbc7cbfff176af71bda9c806 \
     --hash=sha256:59f3ff77f44e7f46be6aecdb985830f73a1c51e290b7082a7d38c2ae1940f4a9
@@ -502,7 +506,16 @@ zipp==3.4.1 \
     --hash=sha256:51cb66cc54621609dd593d1787f286ee42a5c0adbb4b29abea5a63edc3e03098
     # via importlib-metadata
 
-# WARNING: The following packages were not pinned, but pip requires them to be
-# pinned when the requirements file includes hashes. Consider using the --allow-unsafe flag.
-# pip
-# setuptools
+# The following packages are considered to be unsafe in a requirements file:
+pip==21.2.4 \
+    --hash=sha256:0eb8a1516c3d138ae8689c0c1a60fde7143310832f9dc77e11d8a4bc62de193b \
+    --hash=sha256:fa9ebb85d3fd607617c0c44aca302b1b45d87f9c2a1649b46c26167ca4296323
+    # via
+    #   -r requirements-mach-vendor-python.in
+    #   pip-tools
+setuptools==51.2.0 \
+    --hash=sha256:56948bf25c682e166cf2bfe7c1ad63e5745849b50d1ae7b0f8bff5decdcf34f2 \
+    --hash=sha256:7ef59b1790b3491f8d321f531eccc11517a07a4d7637e498465cd834d80d4c2c
+    # via
+    #   -r requirements-mach-vendor-python.in
+    #   jsonschema

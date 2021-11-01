@@ -248,8 +248,8 @@ class VirtualenvManager(VirtualenvHelper):
                 return False
 
         if not skip_pip_package_check:
-            pip = os.path.join(self.bin_path, "pip")
-            package_result = env_requirements.validate_environment_packages([pip])
+            pip = [self.python_path, "-m", "pip"]
+            package_result = env_requirements.validate_environment_packages(pip)
             if not package_result.has_all_packages:
                 return False
 
@@ -302,7 +302,7 @@ class VirtualenvManager(VirtualenvHelper):
             # world and search for or download a newer version of pip,
             # setuptools, or wheel. This is bad for security, reproducibility,
             # and speed.
-            "--no-download",
+            "--no-seed",
             self.virtualenv_root,
         ]
 
@@ -314,7 +314,6 @@ class VirtualenvManager(VirtualenvHelper):
                 % (self.virtualenv_root, result)
             )
 
-        self._disable_pip_outdated_warning()
         return self.virtualenv_root
 
     @functools.lru_cache(maxsize=None)
@@ -448,40 +447,6 @@ class VirtualenvManager(VirtualenvHelper):
 
         return self._run_pip(args, stderr=subprocess.STDOUT)
 
-    def _disable_pip_outdated_warning(self):
-        """Disables the pip outdated warning by changing pip's 'installer'
-
-        "pip" has behaviour to ensure that it doesn't print it's "outdated"
-        warning if it's part of a Linux distro package. This is because
-        Linux distros generally have a slightly out-of-date pip package
-        that they know to be stable, and users aren't always able to
-        (or want to) update it.
-
-        This behaviour works by checking if the "pip" installer
-        (encoded in the dist-info/INSTALLER file) is "pip" itself,
-        or a different value (e.g.: a distro).
-
-        We can take advantage of this behaviour by telling pip
-        that it was installed by "mach", so it won't print the
-        warning.
-
-        https://github.com/pypa/pip/blob/5ee933aab81273da3691c97f2a6e7016ecbe0ef9/src/pip/_internal/self_outdated_check.py#L100-L101 # noqa F401
-        """
-        site_packages = self._site_packages_dir()
-        pip_dist_info = next(
-            (
-                file
-                for file in os.listdir(site_packages)
-                if file.startswith("pip-") and file.endswith(".dist-info")
-            ),
-            None,
-        )
-        if not pip_dist_info:
-            raise Exception("Failed to find pip dist-info in new virtualenv")
-
-        with open(os.path.join(site_packages, pip_dist_info, "INSTALLER"), "w") as file:
-            file.write("mach")
-
     def _run_pip(self, args, **kwargs):
         kwargs.setdefault("check", True)
 
@@ -495,9 +460,9 @@ class VirtualenvManager(VirtualenvHelper):
         # force the virtualenv's interpreter to be used and all is well.
         # It /might/ be possible to cheat and set sys.executable to
         # self.python_path. However, this seems more risk than it's worth.
-        pip = os.path.join(self.bin_path, "pip")
+        pip = [self.python_path, "-m", "pip"]
         return subprocess.run(
-            [pip] + args, cwd=self.topsrcdir, env=env, universal_newlines=True, **kwargs
+            pip + args, cwd=self.topsrcdir, env=env, universal_newlines=True, **kwargs
         )
 
     def _site_packages_dir(self):
