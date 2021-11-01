@@ -325,13 +325,7 @@ class VirtualenvManager(VirtualenvHelper):
         )
 
     def populate(self):
-        """Populate the virtualenv.
-
-        Note that the Python interpreter running this function should be the
-        one from the virtualenv. If it is the system Python or if the
-        environment is not configured properly, packages could be installed
-        into the wrong place. This is how virtualenv's work.
-        """
+        """Populate the virtualenv."""
         import distutils.sysconfig
 
         # We ignore environment variables that may have been altered by
@@ -364,12 +358,17 @@ class VirtualenvManager(VirtualenvHelper):
                         # each other remain the same).
                         f.write("{}\n".format(os.path.relpath(path, python_lib)))
 
+            pip = [self.python_path, "-m", "pip"]
             for pypi_requirement in env_requirements.pypi_requirements:
-                self.install_pip_package(str(pypi_requirement.requirement))
+                subprocess.check_call(
+                    pip + ["install", str(pypi_requirement.requirement)]
+                )
 
             for requirement in env_requirements.pypi_optional_requirements:
                 try:
-                    self.install_pip_package(str(requirement.requirement))
+                    subprocess.check_call(
+                        pip + ["install", str(requirement.requirement)]
+                    )
                 except subprocess.CalledProcessError:
                     print(
                         f"Could not install {requirement.requirement.name}, so "
