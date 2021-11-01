@@ -3036,37 +3036,39 @@ nsScreen* nsGlobalWindowOuter::GetScreen() {
   FORWARD_TO_INNER(GetScreen, (IgnoreErrors()), nullptr);
 }
 
-void nsPIDOMWindowOuter::MaybeActiveMediaComponents() {
-  if (mMediaSuspend != nsISuspendedTypes::SUSPENDED_BLOCK) {
+void nsPIDOMWindowOuter::ActivateMediaComponents() {
+  if (!ShouldDelayMediaFromStart()) {
     return;
   }
-
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-          ("nsPIDOMWindowOuter, MaybeActiveMediaComponents, "
-           "resume the window from blocked, this = %p\n",
+          ("nsPIDOMWindowOuter, ActiveMediaComponents, "
+           "no longer to delay media from start, this = %p\n",
            this));
+  if (BrowsingContext* bc = GetBrowsingContext()) {
+    Unused << bc->Top()->SetShouldDelayMediaFromStart(false);
+  }
+  NotifyResumingDelayedMedia();
+}
 
-  SetMediaSuspend(nsISuspendedTypes::NONE_SUSPENDED);
+bool nsPIDOMWindowOuter::ShouldDelayMediaFromStart() const {
+  BrowsingContext* bc = GetBrowsingContext();
+  return bc && bc->Top()->GetShouldDelayMediaFromStart();
 }
 
 SuspendTypes nsPIDOMWindowOuter::GetMediaSuspend() const {
-  return mMediaSuspend;
+  // TODO : replace this by `ShouldDelayMediaFromStart` in following patch.
+  BrowsingContext* bc = GetBrowsingContext();
+  if (bc && bc->Top()->GetShouldDelayMediaFromStart()) {
+    return nsISuspendedTypes::SUSPENDED_BLOCK;
+  }
+  return nsISuspendedTypes::NONE_SUSPENDED;
 }
 
-void nsPIDOMWindowOuter::SetMediaSuspend(SuspendTypes aSuspend) {
-  MaybeNotifyMediaResumedFromBlock(aSuspend);
-  mMediaSuspend = aSuspend;
-  RefreshMediaElementsSuspend(aSuspend);
-}
-
-void nsPIDOMWindowOuter::MaybeNotifyMediaResumedFromBlock(
-    SuspendTypes aSuspend) {
-  if (mMediaSuspend == nsISuspendedTypes::SUSPENDED_BLOCK &&
-      aSuspend == nsISuspendedTypes::NONE_SUSPENDED) {
-    RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-    if (service) {
-      service->NotifyMediaResumedFromBlock(this);
-    }
+void nsPIDOMWindowOuter::NotifyResumingDelayedMedia() {
+  RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
+  if (service) {
+    service->NotifyMediaResumedFromBlock(this);
+    service->RefreshAgentsSuspend(this, nsISuspendedTypes::NONE_SUSPENDED);
   }
 }
 
@@ -3080,13 +3082,6 @@ void nsPIDOMWindowOuter::RefreshMediaElementsVolume() {
   if (service) {
     // TODO: RefreshAgentsVolume can probably be simplified further.
     service->RefreshAgentsVolume(this, 1.0f, GetAudioMuted());
-  }
-}
-
-void nsPIDOMWindowOuter::RefreshMediaElementsSuspend(SuspendTypes aSuspend) {
-  RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-  if (service) {
-    service->RefreshAgentsSuspend(this, aSuspend);
   }
 }
 
@@ -7742,9 +7737,6 @@ nsPIDOMWindowOuter::nsPIDOMWindowOuter(uint64_t aWindowID)
       mModalStateDepth(0),
       mSuppressEventHandlingDepth(0),
       mIsBackground(false),
-      mMediaSuspend(StaticPrefs::media_block_autoplay_until_in_foreground()
-                        ? nsISuspendedTypes::SUSPENDED_BLOCK
-                        : nsISuspendedTypes::NONE_SUSPENDED),
       mDesktopModeViewport(false),
       mIsRootOuterWindow(false),
       mInnerWindow(nullptr),
