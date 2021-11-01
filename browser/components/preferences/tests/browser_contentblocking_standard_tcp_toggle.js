@@ -7,10 +7,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Preferences.jsm"
 );
 
-const { ExperimentFakes } = ChromeUtils.import(
-  "resource://testing-common/NimbusTestUtils.jsm"
-);
-
 const PREF_DFPI_ENABLED_BY_DEFAULT =
   "privacy.restrict3rdpartystorage.rollout.enabledByDefault";
 const PREF_DFPI_ROLLOUT_UI_ENABLED =
@@ -58,11 +54,7 @@ add_task(async function setup() {
   );
 });
 
-async function testRolloutUI({
-  dFPIEnabledByDefault,
-  rolloutUIEnabled,
-  rolloutUIEnabledByExperiment,
-}) {
+async function testRolloutUI({ dFPIEnabledByDefault, rolloutUIEnabled }) {
   info(
     "Testing TCP preferences rollout UI " +
       JSON.stringify({ dFPIEnabledByDefault, rolloutUIEnabled })
@@ -78,12 +70,6 @@ async function testRolloutUI({
     set.push([PREF_DFPI_ROLLOUT_UI_ENABLED, true]);
   }
   await SpecialPowers.pushPrefEnv({ set });
-
-  const uiEnabled =
-    rolloutUIEnabled ||
-    rolloutUIEnabledByExperiment ||
-    (dFPIEnabledByDefault &&
-      Services.prefs.prefHasUserValue(PREF_DFPI_ENABLED_BY_DEFAULT));
 
   await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
   let doc = gBrowser.contentDocument;
@@ -105,11 +91,11 @@ async function testRolloutUI({
   let etpStandardTCPRolloutBox = doc.getElementById("etpStandardTCPRolloutBox");
   is(
     BrowserTestUtils.is_visible(etpStandardTCPRolloutBox),
-    uiEnabled,
-    `Rollout UI in standard is ${uiEnabled ? " " : "not "}visible.`
+    rolloutUIEnabled,
+    `Rollout UI in standard is ${rolloutUIEnabled ? " " : "not "}visible.`
   );
 
-  if (uiEnabled) {
+  if (rolloutUIEnabled) {
     // Test the TCP rollout section.
     let learnMoreLink = etpStandardTCPRolloutBox.querySelector(
       "#tcp-rollout-learn-more-link"
@@ -137,8 +123,8 @@ async function testRolloutUI({
 
     is(
       BrowserTestUtils.is_visible(etpStandardTCPRolloutBox),
-      uiEnabled,
-      `Rollout UI in standard is ${uiEnabled ? " " : "not "}visible.`
+      rolloutUIEnabled,
+      `Rollout UI in standard is ${rolloutUIEnabled ? " " : "not "}visible.`
     );
 
     // Test the checkbox which toggles TCP in standard mode.
@@ -237,8 +223,8 @@ async function testRolloutUI({
   await categoryPrefChange;
   is(
     BrowserTestUtils.is_visible(etpStandardTCPRolloutBox),
-    uiEnabled,
-    `Rollout UI in standard is ${uiEnabled ? " " : "not "}visible.`
+    rolloutUIEnabled,
+    `Rollout UI in standard is ${rolloutUIEnabled ? " " : "not "}visible.`
   );
 
   gBrowser.removeCurrentTab();
@@ -265,31 +251,4 @@ add_task(async function test_rollout_ui_enabled() {
 // They should see the preferences UI with the checkbox unchecked.
 add_task(async function test_rollout_ui_enabled_dfpi_disabled() {
   await testRolloutUI({ dFPIEnabledByDefault: false, rolloutUIEnabled: true });
-});
-
-add_task(async function test_rollout_ui_enabled_by_nimbus() {
-  await testRolloutUI({
-    dFPIEnabledByDefault: false,
-    rolloutUIEnabled: false,
-    rolloutUIEnabledByExperiment: false,
-  });
-
-  let doCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-    featureId: "tcpPreferences",
-    value: { enabled: true },
-  });
-
-  await testRolloutUI({
-    dFPIEnabledByDefault: false,
-    rolloutUIEnabled: false,
-    rolloutUIEnabledByExperiment: true,
-  });
-
-  await doCleanup();
-
-  await testRolloutUI({
-    dFPIEnabledByDefault: false,
-    rolloutUIEnabled: false,
-    rolloutUIEnabledByExperiment: false,
-  });
 });
