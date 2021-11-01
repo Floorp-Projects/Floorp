@@ -7,7 +7,6 @@
 
 #include "AccAttributes.h"
 #include "mozilla/a11y/Accessible.h"
-#include "mozilla/a11y/HyperTextAccessible.h"
 #include "mozilla/StaticPrefs_accessibility.h"
 #include "nsAccUtils.h"
 #include "TextLeafRange.h"
@@ -311,10 +310,7 @@ already_AddRefed<AccAttributes> HyperTextAccessibleBase::TextAttributes(
     // default attributes if they were requested, otherwise return empty set.
     if (offset == 0) {
       if (aIncludeDefAttrs) {
-        // XXX This will be adjusted when DefaultTextAttributes is unified.
-        if (LocalAccessible* acc = Acc()->AsLocal()) {
-          return acc->AsHyperText()->DefaultTextAttributes();
-        }
+        return DefaultTextAttributes();
       }
     }
     return RefPtr{new AccAttributes()}.forget();

@@ -181,10 +181,7 @@ class HyperTextAccessible : public AccessibleWrap,
       bool aIncludeDefAttrs, int32_t aOffset, int32_t* aStartOffset,
       int32_t* aEndOffset) override;
 
-  /**
-   * Return text attributes applied to the accessible.
-   */
-  already_AddRefed<AccAttributes> DefaultTextAttributes();
+  virtual already_AddRefed<AccAttributes> DefaultTextAttributes() override;
 
   // HyperTextAccessibleBase provides an overload which takes an Accessible.
   using HyperTextAccessibleBase::GetChildOffset;

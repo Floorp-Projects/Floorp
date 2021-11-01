@@ -430,6 +430,17 @@ RemoteAccessibleBase<Derived>::GetCachedTextAttributes() {
   return nullptr;
 }
 
+template <class Derived>
+already_AddRefed<AccAttributes>
+RemoteAccessibleBase<Derived>::DefaultTextAttributes() {
+  RefPtr<const AccAttributes> attrs = GetCachedTextAttributes();
+  RefPtr<AccAttributes> result = new AccAttributes();
+  if (attrs) {
+    attrs->CopyTo(result);
+  }
+  return result.forget();
+}
+
 template class RemoteAccessibleBase<RemoteAccessible>;
 
 }  // namespace a11y
