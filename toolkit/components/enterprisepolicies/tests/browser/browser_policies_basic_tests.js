@@ -124,3 +124,17 @@ add_task(async function test_simple_policies() {
   delete Policies.simple_policy2;
   delete Policies.simple_policy3;
 });
+
+add_task(async function test_policy_cleanup() {
+  await EnterprisePolicyTesting.setupPolicyEngineWithJson("");
+  is(
+    Services.policies.getActivePolicies(),
+    undefined,
+    "No policies should be defined"
+  );
+  is(
+    Services.policies.status,
+    Ci.nsIEnterprisePolicies.INACTIVE,
+    "Engine is inactive at the end of the test"
+  );
+});
