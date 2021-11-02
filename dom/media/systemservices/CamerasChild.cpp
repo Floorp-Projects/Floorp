@@ -258,18 +258,18 @@ int CamerasChild::EnsureInitialized(CaptureEngine aCapEngine) {
 int CamerasChild::GetCaptureCapability(
     CaptureEngine aCapEngine, const char* unique_idUTF8,
     const unsigned int capability_number,
-    webrtc::VideoCaptureCapability& capability) {
+    webrtc::VideoCaptureCapability* capability) {
   LOG(("GetCaptureCapability: %s %d", unique_idUTF8, capability_number));
+  MOZ_ASSERT(capability);
   nsCString unique_id(unique_idUTF8);
   nsCOMPtr<nsIRunnable> runnable =
       mozilla::NewRunnableMethod<CaptureEngine, nsCString, unsigned int>(
           "camera::PCamerasChild::SendGetCaptureCapability", this,
           &CamerasChild::SendGetCaptureCapability, aCapEngine, unique_id,
           capability_number);
+  mReplyCapability = capability;
   LockAndDispatch<> dispatcher(this, __func__, runnable, -1, mZero);
-  if (dispatcher.Success()) {
-    capability = mReplyCapability;
-  }
+  mReplyCapability = nullptr;
   return dispatcher.ReturnValue();
 }
 
@@ -279,12 +279,12 @@ mozilla::ipc::IPCResult CamerasChild::RecvReplyGetCaptureCapability(
   MonitorAutoLock monitor(mReplyMonitor);
   mReceivedReply = true;
   mReplySuccess = true;
-  mReplyCapability.width = ipcCapability.width();
-  mReplyCapability.height = ipcCapability.height();
-  mReplyCapability.maxFPS = ipcCapability.maxFPS();
-  mReplyCapability.videoType =
+  mReplyCapability->width = ipcCapability.width();
+  mReplyCapability->height = ipcCapability.height();
+  mReplyCapability->maxFPS = ipcCapability.maxFPS();
+  mReplyCapability->videoType =
       static_cast<webrtc::VideoType>(ipcCapability.videoType());
-  mReplyCapability.interlaced = ipcCapability.interlaced();
+  mReplyCapability->interlaced = ipcCapability.interlaced();
   monitor.Notify();
   return IPC_OK();
 }
@@ -327,18 +327,16 @@ mozilla::ipc::IPCResult CamerasChild::RecvReplyGetCaptureDevice(
 
 int CamerasChild::AllocateCapture(CaptureEngine aCapEngine,
                                   const char* unique_idUTF8,
-                                  const unsigned int unique_idUTF8Length,
-                                  int& aStreamId, uint64_t aWindowID) {
+                                  uint64_t aWindowID) {
   LOG(("%s", __PRETTY_FUNCTION__));
   nsCString unique_id(unique_idUTF8);
   nsCOMPtr<nsIRunnable> runnable =
       mozilla::NewRunnableMethod<CaptureEngine, nsCString, const uint64_t&>(
           "camera::PCamerasChild::SendAllocateCapture", this,
           &CamerasChild::SendAllocateCapture, aCapEngine, unique_id, aWindowID);
-  LockAndDispatch<> dispatcher(this, __func__, runnable, -1, mZero);
+  LockAndDispatch<> dispatcher(this, __func__, runnable, -1, mReplyInteger);
   if (dispatcher.Success()) {
     LOG(("Capture Device allocated: %d", mReplyInteger));
-    aStreamId = mReplyInteger;
   }
   return dispatcher.ReturnValue();
 }
@@ -388,7 +386,7 @@ void CamerasChild::RemoveCallback(const CaptureEngine aCapEngine,
 }
 
 int CamerasChild::StartCapture(CaptureEngine aCapEngine, const int capture_id,
-                               webrtc::VideoCaptureCapability& webrtcCaps,
+                               const webrtc::VideoCaptureCapability& webrtcCaps,
                                FrameRelay* cb) {
   LOG(("%s", __PRETTY_FUNCTION__));
   AddCallback(aCapEngine, capture_id, cb);
