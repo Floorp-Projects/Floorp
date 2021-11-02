@@ -134,7 +134,7 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
     LOG(("Number of Capabilities %d", numCaps));
     for (int j = 0; j < numCaps; j++) {
       if (GetChildAndCall(&CamerasChild::GetCaptureCapability, aCapEngine,
-                          uniqueId, j, cap) != 0) {
+                          uniqueId, j, &cap) != 0) {
         break;
       }
       LOG(("type=%d width=%d height=%d maxFPS=%d",
