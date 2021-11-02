@@ -82,6 +82,22 @@ class RemoteProcessMonitor(object):
                 retries -= 1
 
         self.process_name = self.package + (":xpcshell%d" % selectedProcess)
+
+        retries = 20
+        while retries > 0 and self.device.process_exist(self.process_name):
+            self.log.info(
+                "%s | %s | Killing left-over process %s"
+                % (test_name, self.pid, self.process_name)
+            )
+            self.kill()
+            time.sleep(1)
+            retries -= 1
+
+        if self.device.process_exist(self.process_name):
+            raise Exception(
+                "%s | %s | Could not kill left-over process" % (test_name, self.pid)
+            )
+
         self.device.launch_service(
             self.package,
             activity_name=("XpcshellTestRunnerService$i%d" % selectedProcess),
