@@ -119,35 +119,19 @@ void MediaEngineRemoteVideoSource::Init() {
     return;
   }
 
-  SetName(NS_ConvertUTF8toUTF16(deviceName));
+  CopyUTF8toUTF16(MakeStringSpan(deviceName), mDeviceName);
   mUniqueId = uniqueId;
-}
 
-void MediaEngineRemoteVideoSource::SetName(nsString aName) {
-  LOG("%s", __PRETTY_FUNCTION__);
-  AssertIsOnOwningThread();
-
-  mDeviceName = std::move(aName);
-
-  Maybe<VideoFacingModeEnum> facingMode;
   if (GetMediaSource() == MediaSourceEnum::Camera) {
     // Only cameras can have a facing mode.
-    facingMode = GetFacingMode(mDeviceName);
+    Maybe<VideoFacingModeEnum> facingMode = GetFacingMode(mDeviceName);
+    if (facingMode.isSome()) {
+      NS_ConvertASCIItoUTF16 facingString(
+          dom::VideoFacingModeEnumValues::GetString(*facingMode));
+      mSettings->mFacingMode.Construct(facingString);
+      mFacingMode.emplace(facingString);
+    }
   }
-
-  mFacingMode = facingMode.map([](const auto& aFM) {
-    return NS_ConvertASCIItoUTF16(
-        dom::VideoFacingModeEnumValues::GetString(aFM));
-  });
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "MediaEngineRemoteVideoSource::SetName (facingMode updater)",
-      [settings = mSettings, mode = mFacingMode]() {
-        if (mode.isNothing()) {
-          settings->mFacingMode.Reset();
-          return;
-        }
-        settings->mFacingMode.Construct(*mode);
-      }));
 }
 
 nsString MediaEngineRemoteVideoSource::GetName() const {
@@ -898,27 +882,6 @@ bool MediaEngineRemoteVideoSource::ChooseCapability(
 void MediaEngineRemoteVideoSource::GetSettings(
     MediaTrackSettings& aOutSettings) const {
   aOutSettings = *mSettings;
-}
-
-void MediaEngineRemoteVideoSource::Refresh(int aIndex) {
-  LOG("%s", __PRETTY_FUNCTION__);
-  AssertIsOnOwningThread();
-
-  // NOTE: mCaptureIndex might have changed when allocated!
-  // Use aIndex to update information, but don't change mCaptureIndex!!
-  // Caller looked up this source by uniqueId, so it shouldn't change
-  char deviceName[kMaxDeviceNameLength];
-  char uniqueId[kMaxUniqueIdLength];
-
-  if (camera::GetChildAndCall(&camera::CamerasChild::GetCaptureDevice,
-                              mCapEngine, aIndex, deviceName,
-                              sizeof(deviceName), uniqueId, sizeof(uniqueId),
-                              nullptr)) {
-    return;
-  }
-
-  SetName(NS_ConvertUTF8toUTF16(deviceName));
-  MOZ_DIAGNOSTIC_ASSERT(mUniqueId.Equals(uniqueId));
 }
 
 }  // namespace mozilla
