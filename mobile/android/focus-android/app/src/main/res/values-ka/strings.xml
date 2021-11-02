@@ -773,7 +773,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">ჩანართი გაითიშა</string>
     <!-- Headline for the tab crash report screen -->
-    <string name="tab_crash_report_headline">ვწუხვართ. ამ ჩანართს რაღაც ხარვეზები გააჩნდა.</string>
+    <string name="tab_crash_report_headline">ვწუხვართ. ამ ჩანართს რაღაც ხარვეზები ჰქონდა.</string>
     <!-- Subtitle for the tab crash report screen -->
     <string name="tab_crash_report_description">როგორც პირადი ბრაუზერი, ჩვენ არაფერს ვინახავთ და შესაბამისად არ შეგვიძლია ამ ჩანართის აღდგენა.</string>
     <!-- Label for button to close the tab-->

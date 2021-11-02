@@ -122,6 +122,19 @@
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">Nana\'uì\' riña hua huìi</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s sò\' \'nïnj rā\'a daran\' sa \'iát.</p>
+<p>Nāgi\'iaj \'ngō nabegado huìi man:
+  <ul>
+    <li>Nānà\'uì\' nī gāchē nu āsìj riña aplikasiun dan</li>
+    <li>Nārán riña nej sa naga\'nāj a (asi nāgi\'iaj nākàt man sisī dādan achín man)</li>
+    <li>Nādure\' nej koki nī nej sa atāj na\'ānj danè\' gaché nunt</li>
+  </ul>
+</p>
+<p>%1$s si rāsūn Mozilla huin man. Nù huin ñunj da\' gā ni\'nïnj internter riñant.<br/>
+<a href="%2$s">Gāhuin chrūn doj</a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Sa huìi nī sa dugumin</string>
 
@@ -181,14 +194,16 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">Guendâ nej sitiô hua hue\'ê doj</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
-    <string name="preference_autocomplete_topsite_summary">Nachrun da\' nuta\' ma\'ān ma 450 URLs sa nià\' doj ruhua guìi ni\'iaj ni.</string>
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">Nāchrūn man %s da’ nūtà\’ mān\’an man 450 URLs sa nīhià\’ ruhuâ ni gīni\’iāj ni.</string>
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">Guendâ nej sitiô nuta\'t huajt</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
-    <string name="preference_autocomplete_user_list_summary">Nachrun da\' nuta\' ma\'ān ma 450 URLs sa nià\' doj ruhua guìi ni\'iaj ni.</string>
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">Nāchrūn rasūn nan %s da’ nāhuin chrē’ si URLs.</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">Dugumî nej sîtio</string>
@@ -198,6 +213,9 @@
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Nùto\' sa nagi\'iaj ma\'ān URL</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Yi’nïn’ nuguan’ ngà nañû mān’an:</string>
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add2">Gachrun a\'ngo URL</string>
@@ -324,6 +342,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Nej sa nana\'ui\'t gà\' nikajt</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Nāguī sa rīñā ruhuât nānà’uì’t</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Nagi\'iaj nakà nû nej sa nana\'uî\'t gà\' nikajt</string>
 
@@ -332,6 +353,11 @@
     <string name="preference_search_add2">Nachrun\' \'ngo sa huin ruhuô\' nanà\'uì\'</string>
     <string name="preference_search_remove_title">Nadure\' sa nana\'ui\'</string>
     <string name="preference_search_remove">Guxūn</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Nūtà’ a’ngô sa rīñā ruhuât nānà’uì’t</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Nāguī sa rīñā ruhuât nānà’uì’t:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -493,8 +519,18 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">Nutà\'</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">GĀ’HUE</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Duyichin\'</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">SĪ GA’UE</string>
+
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Nāyi’nïn riña gātū nikô’ nikāj ‘ngō sa dugumîn ñù’ nga aché nun’ sanī huā na’àj man</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -567,11 +603,17 @@
   <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site">Gachìn\' riña ñanj sinïï</string>
 
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Si lūgâ eskrītôrio</string>
+
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
     <string name="custom_tab_copy_url_action">Ngà guxun\' URL</string>
 
     <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
     <string name="preference_advanced_summary">Rasun arajsun Firefox</string>
+
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Nā\'nīn nej lînk riña nej aplikasiûn</string>
 
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Sa huaj ñaan</string>
@@ -590,6 +632,10 @@
      When pressed, the user's previous session is cleared, and authentication is not required. -->
     <string name="biometric_auth_new_session">Sesiôn nakàa</string>
 
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Nā\'nīn lînk riña a\'ngô sesiûn nākàa</string>
+
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">Da\'nga\' ra\'a</string>
 
@@ -600,6 +646,9 @@
     <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
     This is displayed during the authentication flow as the app launches.-->
     <string name="biometric_auth_moved_too_quickly">Ûta hiò gutat ra\'at. Garahue ñu.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">Ruhuât dīganj a\'ngô nuguan\' nikāj dugui\' ngà sa nana\'uî\' raj</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Si ga\'ue</string>
@@ -664,6 +713,12 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">Guxun daran\' nej sîtio</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Nārûn\’ riña nej kôki</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Nāránt riña nej kôki aj</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">Gire\' ngè rakïj ñanj</string>
     <!-- Headline for the tab crash report screen -->
@@ -681,4 +736,47 @@
 
     <!-- Tracking protection bottom sheet -->
 
-    </resources>
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Ganarán riña nej sa naga\’nāj a āsìj %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Sa màn</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Sa duyinga\’ nuguan\’ an</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Sa yūmàn’an</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Sa nādigî’ñu</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Sa hua hue\'ê doj guendâ nará riña sa naga\'naj a</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">NITĀJ SI \'IAJ SUN nej sa dugumî sò\' riña sitiô nan</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Ngà \'IAJ SUN nej sa dugumî sò\' riña sitiô nan</string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Huā seguridâ nikāj koneksiôn</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Nitāj seguridâ nikāj koneksiôn</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Nej sa naga’nāj a nī nej skrip gā’ue nāránt riña</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Nānīkāj ne\’ rūkùu</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Nādure\'</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Têma</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Rāngà\' man</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Huā rūmin\' man</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Nanûn man da\’ dūguminj batería </string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Gānikò\' si tema aga\' dan</string>
+
+</resources>

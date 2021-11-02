@@ -45,7 +45,11 @@
     <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
     <string name="menu_remove_from_shortcuts">從捷徑中移除</string>
 
+    <!-- Menu item: Shows information about features and changes that are new to this version -->
+    <string name="menu_whats_new">有咩新嘢</string>
     <string name="menu_settings">設定</string>
+    <string name="menu_about">關於</string>
+    <string name="menu_help">說明</string>
     <string name="menu_rights">你嘅權利</string>
 
     <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
@@ -58,8 +62,37 @@
     <!-- Menu item: This is the label for turning off content blocking for the current website. -->
     <string name="menu_content_blocking">攔截內容</string>
 
+    <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+     See https://github.com/mozilla-mobile/focus-android/issues/2106
+      %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="menu_custom_tab_branding">由%1$s提供支持</string>
+
+    <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
+         sharing an URL. -->
+    <string name="share_dialog_title">分享去</string>
+
+    <!-- While a browsing session is active (in the foreground or background) we will show a notification
+         so that the user doesn't forget about the website still being open. This text is shown in
+         the notification. Clicking the notification will have the same effect as clicking the "erase"
+         button in the application. -->
+    <string name="notification_erase_text">刪除瀏覽紀錄</string>
+
     <!-- Notification action to open Focus and resume the current browsing session. -->
     <string name="notification_action_open">打開</string>
+
+
+    <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
+         to the foreground) -->
+    <string name="notification_action_erase_and_open">刪除並開啟</string>
+
+    <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+         This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
+    <string name="shortcut_erase_short_label">刪除</string>
+
+    <!-- The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+         instead of the short title when it has enough space. Android recommends a maximum length
+         of 25 characters. -->
+    <string name="shortcut_erase_long_label">刪除瀏覽記錄</string>
 
 
     <!-- Header for the Privacy and Security settings menu -->
@@ -88,8 +121,173 @@
     <!-- Text that is shown below a "switch" preference that is disabled. -->
     <string name="preference_state_off">關閉</string>
 
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">管理網站</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">管理網站</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add">+ 加入自訂網頁</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">加入網址</string>
+
+    <!-- Title of the screen for adding custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_add">加入自訂網址</string>
+
+    <!-- Label for the button to quick add custom autocomplete URLs. -->
+    <string name="custom_autocomplete_quick_add">加入自訂網址</string>
+
+    <!-- Title of the screen for removing custom autocomplete URLs. -->
+    <string name="preference_autocomplete_title_remove">移除自訂網址</string>
+
+    <!-- Label for the "custom autocomplete URL" input field -->
+    <string name="preference_autocomplete_add_title">加入嘅網址</string>
+
+    <!-- "Hint" text for the "custom autocomplete URL" input field. Shown when the field is empty. -->
+    <string name="preference_autocomplete_add_hint">貼上或輸入網址</string>
+
+    <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
+    <string name="preference_autocomplete_add_example2">例如：mozilla.org</string>
+
+    <!-- To be removed once the new hint has been translated -->
+    <string name="preference_autocomplete_add_example">例如：example.com</string>
+
+    <!-- Confirmation "snackbar" shown after a new custom autocomplete URL has been added. -->
+    <string name="preference_autocomplete_add_confirmation">已加入新嘅自訂網址。</string>
+
+    <!-- Menu item to remove existing autocomplete URLs. -->
+    <string name="preference_autocomplete_menu_remove">移除</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+    <string name="preference_autocomplete_action_remove_content_description">移除</string>
+
+    <!-- Error message shown if the entered custom autocomplete URL is not valid or empty. -->
+    <string name="preference_autocomplete_add_error">請檢查多次你輸入嘅網址。</string>
+
+    <string name="preference_language">語言</string>
+    <!-- This is shown when the user hasn't set a focus specific language, i.e. when Focus
+         is using the system default language. -->
+    <string name="preference_language_systemdefault">系統預設值</string>
+
+    <string name="preference_category_privacy">私隱</string>
+    <string name="preference_privacy_block_ads">阻擋廣告追蹤器</string>
+    <string name="preference_privacy_block_ads_summary">就算你冇撳過啲廣告，有啲廣告都會跟蹤你嘅瀏覽</string>
+    <string name="preference_privacy_block_analytics">阻擋分析追蹤器</string>
+    <string name="preference_privacy_block_analytics_summary">用嚟收集、分析並測量點擊同捲動之類嘅活動</string>
+    <string name="preference_privacy_block_social">阻擋社交媒體追蹤器</string>
+
+    <!-- Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+         and prevents the user from taking screenshots or casting the app to other displays. -->
+    <string name="preference_privacy_secure_mode">隱形</string>
+    <!-- Preference Summary: Stealth mode (previously "Secure mode") is a setting that prevents the
+     app's content (in our case especially the content of webpages) to show up in the "recent apps"
+     screen. Additionally Android will prevent the user from taking screenshots or casting the app
+     to other displays. -->
+    <string name="preference_privacy_stealth_summary">切換 app 嘅時候隱藏網頁並阻擋截圖。</string>
+
+    <string name="preference_category_security">保密</string>
+
+    <string name="preference_category_performance">效能</string>
+    <string name="preference_performance_block_webfonts">阻擋網絡字型</string>
+
+    <string name="preference_category_mozilla">Mozilla</string>
+    <string name="preference_mozilla_telemetry2">傳送使用狀況數據</string>
+
+    <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+    <string name="preference_mozilla_telemetry_summary">想知多啲</string>
+
+    <!-- In-app link (in settings) to Focus privacy notice. -->
+    <string name="preference_privacy_notice">私隱權告示</string>
+
+    <!-- Item in Preferences that shows the about page. Parameter 1 is the app name, i.e. Firefox Focus/Firefox Klar. -->
+    <string name="preference_about">關於 %1$s</string>
+
+    <!-- Action for adding an additional search engine to the list.
+    The "+" is used to emphasize that this is an "add" action -->
+    <string name="preference_search_add2">+ 加入另一個搜尋引擎</string>
+    <string name="preference_search_remove_title">移除搜尋引擎</string>
+    <string name="preference_search_remove">移除</string>
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">加入另一個搜尋引擎</string>
+
+    <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
+    <string name="action_option_add_search_engine">加入搜尋引擎</string>
+
+    <string name="search_add_manually_name_hint">搜尋引擎名稱</string>
+    <string name="search_add_manually_string">要用嘅搜尋字串</string>
+    <string name="search_add_manually_save">儲存</string>
+
+    <!-- Example of search engine url -->
+    <string name="search_add_manually_example">例如：example.com/search/?q=%s</string>
+
+    <string name="search_add_confirmation">加入新咗嘅搜尋引擎。</string>
+
+    <string name="search_add_error_empty_name">輸入搜尋引擎名稱</string>
+    <string name="search_add_error_duplicate_name">有一個已安裝嘅搜尋引擎已經用咗呢個名。</string>
+
+    <string name="search_add_error_empty_search">輸入搜尋字串</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->
+    <string name="content_description_clear_input">清除輸入</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we start
+     loading a website -->
+    <string name="accessibility_announcement_loading">載入緊</string>
+
+    <!-- This text is not visible. Instead it will be read by the accessibility service once we
+     finished loading a website -->
+    <string name="accessibility_announcement_loading_finished">載入咗網站</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site">請求桌面版網頁</string>
+
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">桌面版</string>
+
+    <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_no">唔好</string>
+
+    <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestions_yes">好</string>
+
+    <!-- Button to dismiss the message displayed  when using a search engine that doesn't provide suggestions-->
+    <string name="dismiss_no_suggestions_prompt_button">取消</string>
+
     <!-- Tips displayed on the home view -->
+
+    <!-- Label for the button in the snackbar that switches to the newly opened tab -->
+    <string name="open_new_tab_snackbar">切換</string>
+
+    <!-- Preference for safe browsing which when enabled, blocks dangerous or deceptive webpages that may include phishing or malware -->
+    <string name="preference_category_safe_browsing">安全瀏覽</string>
 
     <!-- Tracking protection bottom sheet -->
 
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">內容</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">廣告</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">社交媒體</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">數據分析</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">加強追蹤保護</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">返回</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">移除</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">色系</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">淺色</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">深色</string>
     </resources>

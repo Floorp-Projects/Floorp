@@ -195,14 +195,16 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">I yismal ifazen</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
-    <string name="preference_autocomplete_topsite_summary">Rmed t teččart tawurmant ugar n 450 URLs ittwasnen deg ufeggag n tansiwin.</string>
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">%s ur yizmir ara ad yesεu taččart tawurmant i ugar n 450 n URLs deg ufeggag n tansiwin.</string>
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">I yismal ad ternuḍ</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
-    <string name="preference_autocomplete_user_list_summary">Ur yizmir ara ad yesεu taččart tawurmant i ugar n 450 n URLs deg ufeggag n tansiwin.</string>
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">Ur izmir ara ad isεu %s taččart tawurmant n URLs inek i tḥemmleḍ.</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">Sefrerk ismal</string>

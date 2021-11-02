@@ -194,14 +194,16 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">Pikeun loka Petingan</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
-    <string name="preference_autocomplete_topsite_summary">Aktipkeun pikeun otomatis ngalengkepan leuwih ti 450 URL populér dina palang alamat.</string>
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">Hurungkeun sangkan %s otomatis ngalengkepan leuwih ti 450 URLs populér dina palang alamat.</string>
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">Pikeun Loka anu Anjeun Nambahkeun</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
-    <string name="preference_autocomplete_user_list_summary">Aktipkeun pikeun otomatis ngalengkepan leuwih ti 450 URL populér dina palang alamat.</string>
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">Hurungkeun sangkan %s otomatis ngalengkepan URLs karesep anjeun.</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">Kokolakeun loka</string>
