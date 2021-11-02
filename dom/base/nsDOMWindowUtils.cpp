@@ -17,6 +17,7 @@
 #include "nsFocusManager.h"
 #include "nsFrameManager.h"
 #include "nsRefreshDriver.h"
+#include "nsStyleUtil.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BlobBinding.h"
@@ -3997,8 +3998,8 @@ nsDOMWindowUtils::GetOMTAStyle(Element* aElement, const nsAString& aProperty,
       OMTAValue value = GetOMTAValue(
           frame, DisplayItemType::TYPE_BACKGROUND_COLOR, GetWebRenderBridge());
       if (value.type() == OMTAValue::Tnscolor) {
-        cssValue = new nsROCSSPrimitiveValue;
-        nsComputedDOMStyle::SetToRGBAColor(cssValue, value.get_nscolor());
+        nsStyleUtil::GetSerializedColorValue(value.get_nscolor(), aResult);
+        return NS_OK;
       }
     }
   }
