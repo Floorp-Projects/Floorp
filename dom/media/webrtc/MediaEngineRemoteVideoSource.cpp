@@ -70,16 +70,18 @@ static Maybe<VideoFacingModeEnum> GetFacingMode(const nsString& aDeviceName) {
 }
 
 MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
-    int aIndex, camera::CaptureEngine aCapEngine, bool aScary)
-    : mCaptureIndex(aIndex),
-      mCapEngine(aCapEngine),
+    const nsAString& aDeviceName, const nsACString& aDeviceUUID,
+    camera::CaptureEngine aCapEngine, bool aScary)
+    : mCapEngine(aCapEngine),
       mScary(aScary),
       mMutex("MediaEngineRemoteVideoSource::mMutex"),
       mRescalingBufferPool(/* zero_initialize */ false,
                            /* max_number_of_buffers */ 1),
       mSettingsUpdatedByFrame(MakeAndAddRef<media::Refcountable<AtomicBool>>()),
       mSettings(MakeAndAddRef<media::Refcountable<MediaTrackSettings>>()),
-      mFirstFramePromise(mFirstFramePromiseHolder.Ensure(__func__)) {
+      mFirstFramePromise(mFirstFramePromiseHolder.Ensure(__func__)),
+      mDeviceName(aDeviceName),
+      mDeviceUUID(aDeviceUUID) {
   mSettings->mWidth.Construct(0);
   mSettings->mHeight.Construct(0);
   mSettings->mFrameRate.Construct(0);
@@ -109,19 +111,6 @@ void MediaEngineRemoteVideoSource::Init() {
   LOG("%s", __PRETTY_FUNCTION__);
   AssertIsOnOwningThread();
 
-  char deviceName[kMaxDeviceNameLength];
-  char uniqueId[kMaxUniqueIdLength];
-  if (camera::GetChildAndCall(&camera::CamerasChild::GetCaptureDevice,
-                              mCapEngine, mCaptureIndex, deviceName,
-                              kMaxDeviceNameLength, uniqueId,
-                              kMaxUniqueIdLength, nullptr)) {
-    LOG("Error initializing RemoteVideoSource (GetCaptureDevice)");
-    return;
-  }
-
-  CopyUTF8toUTF16(MakeStringSpan(deviceName), mDeviceName);
-  mUniqueId = uniqueId;
-
   if (GetMediaSource() == MediaSourceEnum::Camera) {
     // Only cameras can have a facing mode.
     Maybe<VideoFacingModeEnum> facingMode = GetFacingMode(mDeviceName);
@@ -143,7 +132,7 @@ nsString MediaEngineRemoteVideoSource::GetName() const {
 nsCString MediaEngineRemoteVideoSource::GetUUID() const {
   AssertIsOnOwningThread();
 
-  return mUniqueId;
+  return mDeviceUUID;
 }
 
 nsString MediaEngineRemoteVideoSource::GetGroupId() const {
@@ -172,10 +161,10 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
   }
   LOG("ChooseCapability(kFitness) for mCapability (Allocate) --");
 
-  mCaptureIndex =
+  mCaptureId =
       camera::GetChildAndCall(&camera::CamerasChild::AllocateCapture,
-                              mCapEngine, mUniqueId.get(), aWindowID);
-  if (mCaptureIndex < 0) {
+                              mCapEngine, mDeviceUUID.get(), aWindowID);
+  if (mCaptureId < 0) {
     return NS_ERROR_FAILURE;
   }
 
@@ -185,7 +174,7 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
     mCapability = newCapability;
   }
 
-  LOG("Video device %d allocated", mCaptureIndex);
+  LOG("Video device %d allocated", mCaptureId);
   return NS_OK;
 }
 
@@ -213,10 +202,10 @@ nsresult MediaEngineRemoteVideoSource::Deallocate() {
   mImageContainer = nullptr;
   mRescalingBufferPool.Release();
 
-  LOG("Video device %d deallocated", mCaptureIndex);
+  LOG("Video device %d deallocated", mCaptureId);
 
   if (camera::GetChildAndCall(&camera::CamerasChild::ReleaseCapture, mCapEngine,
-                              mCaptureIndex)) {
+                              mCaptureId)) {
     MOZ_ASSERT_UNREACHABLE("Couldn't release allocated device");
   }
   return NS_OK;
@@ -259,7 +248,7 @@ nsresult MediaEngineRemoteVideoSource::Start() {
   mSettingsUpdatedByFrame->mValue = false;
 
   if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture, mCapEngine,
-                              mCaptureIndex, mCapability, this)) {
+                              mCaptureId, mCapability, this)) {
     LOG("StartCapture failed");
     MutexAutoLock lock(mMutex);
     mState = kStopped;
@@ -301,7 +290,7 @@ nsresult MediaEngineRemoteVideoSource::FocusOnSelectedSource() {
 
   int result;
   result = camera::GetChildAndCall(&camera::CamerasChild::FocusOnSelectedSource,
-                                   mCapEngine, mCaptureIndex);
+                                   mCapEngine, mCaptureId);
   return result == 0 ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -316,7 +305,7 @@ nsresult MediaEngineRemoteVideoSource::Stop() {
   MOZ_ASSERT(mState == kStarted);
 
   if (camera::GetChildAndCall(&camera::CamerasChild::StopCapture, mCapEngine,
-                              mCaptureIndex)) {
+                              mCaptureId)) {
     MOZ_DIAGNOSTIC_ASSERT(false, "Stopping a started capture failed");
     return NS_ERROR_FAILURE;
   }
@@ -357,7 +346,7 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
       GetErrorName(rv, name);
       LOG("Video source %p for video device %d Reconfigure() failed "
           "unexpectedly in Stop(). rv=%s",
-          this, mCaptureIndex, name.Data());
+          this, mCaptureId, name.Data());
       return NS_ERROR_UNEXPECTED;
     }
   }
@@ -375,7 +364,7 @@ nsresult MediaEngineRemoteVideoSource::Reconfigure(
       GetErrorName(rv, name);
       LOG("Video source %p for video device %d Reconfigure() failed "
           "unexpectedly in Start(). rv=%s",
-          this, mCaptureIndex, name.Data());
+          this, mCaptureId, name.Data());
       return NS_ERROR_UNEXPECTED;
     }
   }
@@ -391,7 +380,7 @@ size_t MediaEngineRemoteVideoSource::NumCapabilities() const {
   }
 
   int num = camera::GetChildAndCall(&camera::CamerasChild::NumberOfCapabilities,
-                                    mCapEngine, mUniqueId.get());
+                                    mCapEngine, mDeviceUUID.get());
   if (num > 0) {
     mCapabilities.SetLength(num);
   } else {
@@ -412,7 +401,7 @@ webrtc::CaptureCapability& MediaEngineRemoteVideoSource::GetCapability(
   if (!mCapabilities[aIndex]) {
     mCapabilities[aIndex] = MakeUnique<webrtc::CaptureCapability>();
     camera::GetChildAndCall(&camera::CamerasChild::GetCaptureCapability,
-                            mCapEngine, mUniqueId.get(), aIndex,
+                            mCapEngine, mDeviceUUID.get(), aIndex,
                             mCapabilities[aIndex].get());
   }
   return *mCapabilities[aIndex];
