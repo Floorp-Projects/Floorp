@@ -1582,6 +1582,8 @@ async function waitForContextMenu(dbg) {
   await new Promise(resolve => {
     popup.addEventListener("popupshown", () => resolve(), { once: true });
   });
+
+  return popup;
 }
 
 function selectContextMenuItem(dbg, selector) {
