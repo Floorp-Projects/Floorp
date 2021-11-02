@@ -16,6 +16,8 @@ panel {
   --panel-border-radius: env(-moz-gtk-menu-radius);
   --panel-border-color: ThreeDShadow;
   --panel-width: initial;
+  /* To account for the box-shadow below */
+  margin: -4px;
 }
 
 /* ::::: arrow panel ::::: */
