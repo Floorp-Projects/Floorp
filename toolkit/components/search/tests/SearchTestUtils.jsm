@@ -297,6 +297,8 @@ var SearchTestUtils = {
    *   The suggestion URL parameters to use for the search engine.
    * @param {string} [options.search_form]
    *   The search form to use for the search engine.
+   * @param {string} [options.favicon_url]
+   *   The favicon URL to use for the search engine.
    * @returns {object}
    *   The generated manifest.
    */
@@ -353,6 +355,10 @@ var SearchTestUtils = {
     if (options.search_form) {
       manifest.chrome_settings_overrides.search_provider.search_form =
         options.search_form;
+    }
+    if (options.favicon_url) {
+      manifest.chrome_settings_overrides.search_provider.favicon_url =
+        options.favicon_url;
     }
     return manifest;
   },
