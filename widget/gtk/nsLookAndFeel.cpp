@@ -610,6 +610,9 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::MozNativehyperlinktext:
       aColor = mNativeHyperLinkText;
       break;
+    case ColorID::MozNativevisitedhyperlinktext:
+      aColor = mNativeVisitedHyperLinkText;
+      break;
     case ColorID::MozComboboxtext:
       aColor = mComboBoxText;
       break;
@@ -1827,6 +1830,9 @@ void nsLookAndFeel::PerThemeData::Init() {
   style = gtk_widget_get_style_context(linkButton);
   gtk_style_context_get_color(style, GTK_STATE_FLAG_LINK, &color);
   mNativeHyperLinkText = GDK_RGBA_TO_NS_RGBA(color);
+
+  gtk_style_context_get_color(style, GTK_STATE_FLAG_VISITED, &color);
+  mNativeVisitedHyperLinkText = GDK_RGBA_TO_NS_RGBA(color);
 
   // invisible character styles
   guint value;
