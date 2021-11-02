@@ -113,6 +113,8 @@ declare_TCFType!{
     CFPropertyList, CFPropertyListRef
 }
 
+impl_CFTypeDescription!(CFPropertyList);
+
 impl CFPropertyList {
     #[inline]
     pub fn as_concrete_TypeRef(&self) -> CFPropertyListRef {

@@ -27,6 +27,12 @@ extern {
     pub fn CFDataGetBytePtr(theData: CFDataRef) -> *const u8;
     pub fn CFDataGetBytes(theData: CFDataRef, range: CFRange, buffer: *mut u8);
     pub fn CFDataGetLength(theData: CFDataRef) -> CFIndex;
+    pub fn CFDataCreateWithBytesNoCopy(
+        allocator: CFAllocatorRef,
+        bytes: *const u8,
+        length: CFIndex,
+        allocator: CFAllocatorRef,
+    ) -> CFDataRef;
 
     pub fn CFDataGetTypeID() -> CFTypeID;
 }
