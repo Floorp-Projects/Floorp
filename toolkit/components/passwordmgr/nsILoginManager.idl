@@ -7,6 +7,18 @@
 interface nsILoginInfo;
 interface nsIPropertyBag;
 
+[scriptable, uuid(43429075-ede6-41eb-ac69-a8cd4376b041)]
+interface nsILoginSearchCallback : nsISupports
+{
+  /**
+   * Called when a search is complete and the results are ready.
+   *
+   * @param aLogins
+   *        Logins found in the search.
+   */
+  void onSearchComplete(in Array<nsILoginInfo> aLogins);
+};
+
 [scriptable, uuid(38c7f6af-7df9-49c7-b558-2776b24e6cc1)]
 interface nsILoginManager : nsISupports {
   /**
@@ -137,6 +149,15 @@ interface nsILoginManager : nsISupports {
    * @return A promise which resolves with a JS Array of nsILoginInfo objects.
    */
   Promise getAllLoginsAsync();
+
+  /**
+   * Like getAllLoginsAsync, but with a callback returning the search results.
+   *
+   * @param {nsILoginSearchCallback} aCallback
+   *        The interface to notify when the search is complete.
+   *
+   */
+  void getAllLoginsWithCallbackAsync(in nsILoginSearchCallback aCallback);
 
   /**
    * Obtain a list of all origins for which password saving is disabled.
