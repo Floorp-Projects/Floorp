@@ -487,7 +487,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
               "PID is invalid even though our caller just successfully retrieved it after binding");
         }
 
-        mContentPids.put(Integer.valueOf(pid), (ContentConnection) conn);
+        mContentPids.put(pid, (ContentConnection) conn);
       }
     }
 
@@ -498,7 +498,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         throw new IllegalArgumentException("Selector is not for content!");
       }
 
-      return mContentPids.get(Integer.valueOf(selector.getPid()));
+      return mContentPids.get(selector.getPid());
     }
 
     /** Unconditionally create a new content connection for the specified priority. */
