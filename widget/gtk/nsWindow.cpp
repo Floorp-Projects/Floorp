@@ -3723,7 +3723,8 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
   //   coordinates are root coordinates.
 
   LOG("configure event %d,%d -> %d x %d scale %d\n", aEvent->x, aEvent->y,
-      aEvent->width, aEvent->height, gdk_window_get_scale_factor(mGdkWindow));
+      aEvent->width, aEvent->height,
+      mGdkWindow ? gdk_window_get_scale_factor(mGdkWindow) : -1);
 
   if (mPendingConfigures > 0) {
     mPendingConfigures--;
@@ -3732,6 +3733,8 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
   // Don't fire configure event for scale changes, we handle that
   // OnScaleChanged event. Skip that for toplevel windows only.
   if (mWindowType == eWindowType_toplevel) {
+    MOZ_DIAGNOSTIC_ASSERT(mGdkWindow,
+                          "Getting configure for invisible window?");
     if (mWindowScaleFactor != gdk_window_get_scale_factor(mGdkWindow)) {
       LOG("  scale factor changed to %d,return early",
           gdk_window_get_scale_factor(mGdkWindow));
@@ -4781,6 +4784,12 @@ void nsWindow::OnCompositedChanged() {
 }
 
 void nsWindow::OnScaleChanged() {
+  // Force scale factor recalculation
+  if (!mGdkWindow) {
+    mWindowScaleFactorChanged = true;
+    return;
+  }
+
   // Gtk supply us sometimes with doubled events so stay calm in such case.
   if (gdk_window_get_scale_factor(mGdkWindow) == mWindowScaleFactor) {
     return;
