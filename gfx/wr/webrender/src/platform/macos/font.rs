@@ -437,7 +437,7 @@ impl FontContext {
         }
 
         assert_eq!(index, 0);
-        let data = CFData_wrapping_arc_vec(bytes);
+        let data = CFData::from_arc(bytes);
         let ct_font_desc = match create_font_descriptor(data) {
             Err(_) => return,
             Ok(desc) => desc,
@@ -1027,50 +1027,6 @@ impl GraphicsContext {
 enum GlyphType {
     Vector,
     Bitmap,
-}
-
-// This stuff should eventually migrate to upstream core-foundation
-#[allow(non_snake_case)]
-fn CFData_wrapping_arc_vec(buffer: Arc<Vec<u8>>) -> CFData {
-    use core_foundation::base::*;
-    use core_foundation::data::CFDataRef;
-    use std::os::raw::c_void;
-
-    extern "C" {
-        pub fn CFDataCreateWithBytesNoCopy(
-            allocator: CFAllocatorRef,
-            bytes: *const u8,
-            length: CFIndex,
-            allocator: CFAllocatorRef,
-        ) -> CFDataRef;
-    }
-    unsafe {
-        let ptr = (*buffer).as_ptr() as *const _;
-        let len = buffer.len().to_CFIndex();
-        let info = Arc::into_raw(buffer) as *mut c_void;
-
-        extern "C" fn deallocate(_: *mut c_void, info: *mut c_void) {
-            unsafe {
-                drop(Arc::from_raw(info as *mut Vec<u8>));
-            }
-        }
-
-        // CFAllocatorContext doesn't have nullable members so we transmute
-        let allocator = CFAllocator::new(CFAllocatorContext {
-            info: info,
-            version: 0,
-            retain: None,
-            reallocate: None,
-            release: None,
-            copyDescription: None,
-            allocate: None,
-            deallocate: Some(deallocate),
-            preferredSize: None,
-        });
-        let data_ref =
-            CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, ptr, len, allocator.as_CFTypeRef());
-        TCFType::wrap_under_create_rule(data_ref)
-    }
 }
 
 fn create_font_descriptor(cf_data: CFData) -> Result<CTFontDescriptor, ()> {
