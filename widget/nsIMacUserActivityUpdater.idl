@@ -1,0 +1,24 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIBaseWindow;
+
+/**
+  * Updates macOS widget code with the current URI and page title. Widget code
+  * can use this information to update NSUserActivity, enabling Handoff
+  * functionality.
+  */
+
+[scriptable, uuid(29046c8f-cba6-4ffa-9141-1685e96c4ea0)]
+interface nsIMacUserActivityUpdater : nsISupports
+{
+  /**
+   * Update active URL and page title for the given window.
+   */
+  void updateLocation(in AString pageUrl,
+                      in AString pageTitle,
+                      in nsIBaseWindow window);
+};
