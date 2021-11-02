@@ -2942,47 +2942,46 @@ void CodeGenerator::visitWasmVariableShiftSimd128(
 #ifdef ENABLE_WASM_SIMD
   FloatRegister lhsDest = ToFloatRegister(ins->lhsDest());
   Register rhs = ToRegister(ins->rhs());
-  Register temp1 = ToTempRegisterOrInvalid(ins->getTemp(0));
-  FloatRegister temp2 = ToTempFloatRegisterOrInvalid(ins->getTemp(1));
+  FloatRegister temp = ToTempFloatRegisterOrInvalid(ins->getTemp(0));
 
   MOZ_ASSERT(ToFloatRegister(ins->output()) == lhsDest);
 
   switch (ins->simdOp()) {
     case wasm::SimdOp::I8x16Shl:
-      masm.leftShiftInt8x16(rhs, lhsDest, temp1, temp2);
+      masm.leftShiftInt8x16(rhs, lhsDest, temp);
       break;
     case wasm::SimdOp::I8x16ShrS:
-      masm.rightShiftInt8x16(rhs, lhsDest, temp1, temp2);
+      masm.rightShiftInt8x16(rhs, lhsDest, temp);
       break;
     case wasm::SimdOp::I8x16ShrU:
-      masm.unsignedRightShiftInt8x16(rhs, lhsDest, temp1, temp2);
+      masm.unsignedRightShiftInt8x16(rhs, lhsDest, temp);
       break;
     case wasm::SimdOp::I16x8Shl:
-      masm.leftShiftInt16x8(rhs, lhsDest, temp1);
+      masm.leftShiftInt16x8(rhs, lhsDest);
       break;
     case wasm::SimdOp::I16x8ShrS:
-      masm.rightShiftInt16x8(rhs, lhsDest, temp1);
+      masm.rightShiftInt16x8(rhs, lhsDest);
       break;
     case wasm::SimdOp::I16x8ShrU:
-      masm.unsignedRightShiftInt16x8(rhs, lhsDest, temp1);
+      masm.unsignedRightShiftInt16x8(rhs, lhsDest);
       break;
     case wasm::SimdOp::I32x4Shl:
-      masm.leftShiftInt32x4(rhs, lhsDest, temp1);
+      masm.leftShiftInt32x4(rhs, lhsDest);
       break;
     case wasm::SimdOp::I32x4ShrS:
-      masm.rightShiftInt32x4(rhs, lhsDest, temp1);
+      masm.rightShiftInt32x4(rhs, lhsDest);
       break;
     case wasm::SimdOp::I32x4ShrU:
-      masm.unsignedRightShiftInt32x4(rhs, lhsDest, temp1);
+      masm.unsignedRightShiftInt32x4(rhs, lhsDest);
       break;
     case wasm::SimdOp::I64x2Shl:
-      masm.leftShiftInt64x2(rhs, lhsDest, temp1);
+      masm.leftShiftInt64x2(rhs, lhsDest);
       break;
     case wasm::SimdOp::I64x2ShrS:
-      masm.rightShiftInt64x2(rhs, lhsDest, temp1, temp2);
+      masm.rightShiftInt64x2(rhs, lhsDest, temp);
       break;
     case wasm::SimdOp::I64x2ShrU:
-      masm.unsignedRightShiftInt64x2(rhs, lhsDest, temp1);
+      masm.unsignedRightShiftInt64x2(rhs, lhsDest);
       break;
     default:
       MOZ_CRASH("Shift SimdOp not implemented");

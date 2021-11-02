@@ -365,6 +365,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void Push(RegisterOrSP reg);
 #endif
 
+#ifdef ENABLE_WASM_SIMD
+  // `op` should be a shift operation. Return true if a variable-width shift
+  // operation on this architecture should pre-mask the shift count, and if so,
+  // return the mask in `*mask`.
+  static bool MustMaskShiftCountSimd128(wasm::SimdOp op, int32_t* mask);
+#endif
+
  private:
   // The value returned by GetMaxOffsetGuardLimit() in WasmTypes.h
   uint32_t wasmMaxOffsetGuardLimit_;
@@ -2819,12 +2826,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void absInt64x2(FloatRegister src, FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
-  // Left shift by scalar.  Immediates must have been masked; shifts of zero
-  // will work but may or may not generate code.
+  // Left shift by scalar. Immediates and variable shifts must have been
+  // masked; shifts of zero will work but may or may not generate code.
 
   inline void leftShiftInt8x16(Register rhs, FloatRegister lhsDest,
-                               Register temp1, FloatRegister temp2)
-      DEFINED_ON(x86_shared);
+                               FloatRegister temp) DEFINED_ON(x86_shared);
 
   inline void leftShiftInt8x16(FloatRegister lhs, Register rhs,
                                FloatRegister dest) DEFINED_ON(arm64);
@@ -2833,8 +2839,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
-  inline void leftShiftInt16x8(Register rhs, FloatRegister lhsDest,
-                               Register temp) DEFINED_ON(x86_shared);
+  inline void leftShiftInt16x8(Register rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
 
   inline void leftShiftInt16x8(FloatRegister lhs, Register rhs,
                                FloatRegister dest) DEFINED_ON(arm64);
@@ -2843,8 +2849,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
-  inline void leftShiftInt32x4(Register rhs, FloatRegister lhsDest,
-                               Register temp) DEFINED_ON(x86_shared);
+  inline void leftShiftInt32x4(Register rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
 
   inline void leftShiftInt32x4(FloatRegister lhs, Register rhs,
                                FloatRegister dest) DEFINED_ON(arm64);
@@ -2853,8 +2859,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
-  inline void leftShiftInt64x2(Register rhs, FloatRegister lhsDest,
-                               Register temp) DEFINED_ON(x86_shared);
+  inline void leftShiftInt64x2(Register rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
 
   inline void leftShiftInt64x2(FloatRegister lhs, Register rhs,
                                FloatRegister dest) DEFINED_ON(arm64);
@@ -2863,12 +2869,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
-  // Right shift by scalar.  Immediates must have been masked; shifts of zero
-  // will work but may or may not generate code.
+  // Right shift by scalar. Immediates and variable shifts must have been
+  // masked; shifts of zero will work but may or may not generate code.
 
   inline void rightShiftInt8x16(Register rhs, FloatRegister lhsDest,
-                                Register temp1, FloatRegister temp2)
-      DEFINED_ON(x86_shared);
+                                FloatRegister temp) DEFINED_ON(x86_shared);
 
   inline void rightShiftInt8x16(FloatRegister lhs, Register rhs,
                                 FloatRegister dest) DEFINED_ON(arm64);
@@ -2878,7 +2883,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared, arm64);
 
   inline void unsignedRightShiftInt8x16(Register rhs, FloatRegister lhsDest,
-                                        Register temp1, FloatRegister temp2)
+                                        FloatRegister temp)
       DEFINED_ON(x86_shared);
 
   inline void unsignedRightShiftInt8x16(FloatRegister lhs, Register rhs,
@@ -2888,8 +2893,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                         FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
-  inline void rightShiftInt16x8(Register rhs, FloatRegister lhsDest,
-                                Register temp) DEFINED_ON(x86_shared);
+  inline void rightShiftInt16x8(Register rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
 
   inline void rightShiftInt16x8(FloatRegister lhs, Register rhs,
                                 FloatRegister dest) DEFINED_ON(arm64);
@@ -2898,8 +2903,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                 FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
-  inline void unsignedRightShiftInt16x8(Register rhs, FloatRegister lhsDest,
-                                        Register temp) DEFINED_ON(x86_shared);
+  inline void unsignedRightShiftInt16x8(Register rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
 
   inline void unsignedRightShiftInt16x8(FloatRegister lhs, Register rhs,
                                         FloatRegister dest) DEFINED_ON(arm64);
@@ -2908,8 +2913,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                         FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
-  inline void rightShiftInt32x4(Register rhs, FloatRegister lhsDest,
-                                Register temp) DEFINED_ON(x86_shared);
+  inline void rightShiftInt32x4(Register rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
 
   inline void rightShiftInt32x4(FloatRegister lhs, Register rhs,
                                 FloatRegister dest) DEFINED_ON(arm64);
@@ -2918,8 +2923,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                 FloatRegister dest)
       DEFINED_ON(x86_shared, arm64);
 
-  inline void unsignedRightShiftInt32x4(Register rhs, FloatRegister lhsDest,
-                                        Register temp) DEFINED_ON(x86_shared);
+  inline void unsignedRightShiftInt32x4(Register rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
 
   inline void unsignedRightShiftInt32x4(FloatRegister lhs, Register rhs,
                                         FloatRegister dest) DEFINED_ON(arm64);
@@ -2929,8 +2934,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
       DEFINED_ON(x86_shared, arm64);
 
   inline void rightShiftInt64x2(Register rhs, FloatRegister lhsDest,
-                                Register temp1, FloatRegister temp2)
-      DEFINED_ON(x86_shared);
+                                FloatRegister temp) DEFINED_ON(x86_shared);
 
   inline void rightShiftInt64x2(Imm32 count, FloatRegister src,
                                 FloatRegister dest)
@@ -2939,8 +2943,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void rightShiftInt64x2(FloatRegister lhs, Register rhs,
                                 FloatRegister dest) DEFINED_ON(arm64);
 
-  inline void unsignedRightShiftInt64x2(Register rhs, FloatRegister lhsDest,
-                                        Register temp) DEFINED_ON(x86_shared);
+  inline void unsignedRightShiftInt64x2(Register rhs, FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
 
   inline void unsignedRightShiftInt64x2(FloatRegister lhs, Register rhs,
                                         FloatRegister dest) DEFINED_ON(arm64);
