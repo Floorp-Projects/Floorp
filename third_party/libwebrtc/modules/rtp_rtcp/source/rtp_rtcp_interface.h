@@ -389,10 +389,11 @@ class RtpRtcpInterface : public RtcpFeedbackSenderInterface {
       StreamDataCounters* rtx_counters) const = 0;
 
 
-  // Returns packet count, octet count, and timestamp from RTCP sender report.
+  // Returns packet count, octet count, and timestamps from RTCP sender report.
   virtual void RemoteRTCPSenderInfo(uint32_t* packet_count,
                                     uint32_t* octet_count,
-                                    int64_t* ntp_timestamp_ms) const = 0;
+                                    int64_t* ntp_timestamp_ms,
+                                    int64_t* remote_ntp_timestamp_ms) const = 0;
   // Returns received RTCP report block.
   // Returns -1 on failure else 0.
   // TODO(https://crbug.com/webrtc/10678): Remove this in favor of

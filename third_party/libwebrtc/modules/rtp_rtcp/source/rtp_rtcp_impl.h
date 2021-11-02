@@ -204,7 +204,8 @@ class ModuleRtpRtcpImpl : public RtpRtcp, public RTCPReceiver::ModuleRtpRtcp {
 
   void RemoteRTCPSenderInfo(uint32_t* packet_count,
                             uint32_t* octet_count,
-                            int64_t* ntp_timestamp_ms) const override;
+                            int64_t* ntp_timestamp_ms,
+                            int64_t* remote_ntp_timestamp_ms) const override;
 
   // Get received RTCP report, report block.
   int32_t RemoteRTCPStat(
