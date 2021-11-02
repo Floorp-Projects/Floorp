@@ -205,7 +205,7 @@ void RemoteAccessible::Description(nsString& aDesc) const {
   aDesc = (wchar_t*)resultWrap;
 }
 
-uint64_t RemoteAccessible::State() const {
+uint64_t RemoteAccessible::State() {
   RefPtr<IGeckoCustom> custom = QueryInterface<IGeckoCustom>(this);
   if (!custom) {
     return 0;

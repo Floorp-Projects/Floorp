@@ -15,7 +15,7 @@
 /*
  * Return the states for the proxied accessible.
  */
-uint64_t State() const;
+virtual uint64_t State() override;
 
 /*
  * Return the native states for the proxied accessible.
