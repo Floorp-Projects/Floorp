@@ -217,8 +217,8 @@ void nsListControlFrame::PaintFocus(DrawTarget* aDrawTarget, nsPoint aPt) {
 
   // set up back stop colors and then ask L&F service for the real colors
   nscolor color = LookAndFeel::Color(
-      lastItemIsSelected ? LookAndFeel::ColorID::WidgetSelectForeground
-                         : LookAndFeel::ColorID::WidgetSelectBackground,
+      lastItemIsSelected ? LookAndFeel::ColorID::Selecteditem
+                         : LookAndFeel::ColorID::Selecteditemtext,
       this);
 
   nsCSSRendering::PaintFocus(presContext, aDrawTarget, fRect, color);
