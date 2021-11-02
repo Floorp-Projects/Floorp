@@ -343,6 +343,14 @@ function fontFamily(aComputedStyle) {
 }
 
 /**
+ * Returns a computed system color for this document.
+ */
+function getSystemColor(aColor) {
+  let { r, g, b, a } = InspectorUtils.colorToRGBA(aColor, document);
+  return a == 1 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${a})`;
+}
+
+/**
  * Build an object of default text attributes expected for the given accessible.
  *
  * @param aID          [in] identifier of accessible
@@ -355,7 +363,7 @@ function buildDefaultTextAttrs(aID, aFontSize, aFontWeight, aFontFamily) {
   var computedStyle = document.defaultView.getComputedStyle(elm);
   var bgColor =
     computedStyle.backgroundColor == "rgba(0, 0, 0, 0)"
-      ? "rgb(255, 255, 255)"
+      ? getSystemColor("Canvas")
       : computedStyle.backgroundColor;
 
   var defAttrs = {
