@@ -36,7 +36,6 @@
 #include "mozilla/dom/nsHTTPSOnlyUtils.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceStorage.h"
-#include "mozilla/dom/ProcessIsolation.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/net/OpaqueResponseUtils.h"
 #include "mozilla/net/PartiallySeekableInputStream.h"
@@ -2311,6 +2310,55 @@ nsresult HttpBaseChannel::ProcessCrossOriginResourcePolicyHeader() {
   return NS_OK;
 }
 
+// Called when a document request responds with a `Cross-Origin-Opener-Policy`
+// header to add a `highValueCOOP` permission to the permissions database, and
+// make loads of that origin isolated.
+static void AddHighValueCOOPPermission(nsIPrincipal* aResultPrincipal) {
+  RefPtr<PermissionManager> perms = PermissionManager::GetInstance();
+  if (NS_WARN_IF(!perms)) {
+    return;
+  }
+
+  // We can't act on non-content principals, so if the load was sandboxed, try
+  // to use the unsandboxed precursor principal to add the highValueCOOP
+  // permission.
+  nsCOMPtr<nsIPrincipal> resultOrPrecursor(aResultPrincipal);
+  if (!aResultPrincipal->GetIsContentPrincipal()) {
+    resultOrPrecursor = aResultPrincipal->GetPrecursorPrincipal();
+    if (!resultOrPrecursor) {
+      return;
+    }
+  }
+
+  // Use the site-origin principal as we want to add the permission for the
+  // entire site, rather than a specific subdomain, as process isolation acts on
+  // a site granularity.
+  nsAutoCString siteOrigin;
+  if (NS_FAILED(resultOrPrecursor->GetSiteOrigin(siteOrigin))) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> sitePrincipal =
+      BasePrincipal::CreateContentPrincipal(siteOrigin);
+  if (!sitePrincipal || !sitePrincipal->GetIsContentPrincipal()) {
+    return;
+  }
+
+  MOZ_LOG(dom::gProcessIsolationLog, LogLevel::Verbose,
+          ("Adding HighValue COOP Permission for site '%s'", siteOrigin.get()));
+
+  // XXX: Would be nice if we could use `TimeStamp` here, but there's
+  // unfortunately no convenient way to recover a time in milliseconds since the
+  // unix epoch from `TimeStamp`.
+  int64_t expirationTime =
+      (PR_Now() / PR_USEC_PER_MSEC) +
+      (int64_t(StaticPrefs::fission_highValue_coop_expiration()) *
+       PR_MSEC_PER_SEC);
+  Unused << perms->AddFromPrincipal(
+      sitePrincipal, mozilla::dom::kHighValueCOOPPermission,
+      nsIPermissionManager::ALLOW_ACTION, nsIPermissionManager::EXPIRE_TIME,
+      expirationTime);
+}
 
 // See https://gist.github.com/annevk/6f2dd8c79c77123f39797f6bdac43f3e
 // This method runs steps 1-4 of the algorithm to compare
@@ -2381,8 +2429,7 @@ nsresult HttpBaseChannel::ComputeCrossOriginOpenerPolicyMismatch() {
 
   // Add a permission to mark this site as high-value into the permission DB.
   if (resultPolicy != nsILoadInfo::OPENER_POLICY_UNSAFE_NONE) {
-    mozilla::dom::AddHighValuePermission(
-        resultOrigin, mozilla::dom::kHighValueCOOPPermission);
+    AddHighValueCOOPPermission(resultOrigin);
   }
 
   // If bc's popup sandboxing flag set is not empty and potentialCOOP is
