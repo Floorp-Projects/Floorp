@@ -53,7 +53,7 @@ class RTC_EXPORT Clock {
   }
 
   // Returns an instance of the real-time system clock implementation.
-  static Clock* GetRealTimeClock();
+  static Clock* GetRealTimeClockRaw();
 };
 
 class SimulatedClock : public Clock {

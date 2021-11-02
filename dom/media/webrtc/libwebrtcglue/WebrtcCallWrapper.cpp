@@ -32,8 +32,9 @@ namespace mozilla {
             webrtc::AudioState::Create(aSharedState->mAudioStateConfig);
         config.task_queue_factory = wrapper->mTaskQueueFactory.get();
         config.trials = aSharedState->mTrials.get();
-        wrapper->SetCall(WrapUnique(
-            webrtc::Call::Create(config, aSharedState->GetModuleThread())));
+        wrapper->SetCall(WrapUnique(webrtc::Call::Create(
+            config, &wrapper->mClock, aSharedState->GetModuleThread(),
+            webrtc::ProcessThread::Create("PacerThread"))));
       }));
 
   return wrapper;
@@ -75,7 +76,7 @@ void WebrtcCallWrapper::Destroy() {
 
 const dom::RTCStatsTimestampMaker& WebrtcCallWrapper::GetTimestampMaker()
     const {
-  return mTimestampMaker;
+  return mClock.mTimestampMaker;
 }
 
 WebrtcCallWrapper::~WebrtcCallWrapper() { MOZ_ASSERT(!mCall); }
@@ -89,7 +90,7 @@ WebrtcCallWrapper::WebrtcCallWrapper(
     const dom::RTCStatsTimestampMaker& aTimestampMaker,
     UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket)
     : mSharedState(std::move(aSharedState)),
-      mTimestampMaker(aTimestampMaker),
+      mClock(aTimestampMaker),
       mShutdownTicket(std::move(aShutdownTicket)),
       mCallThread(mSharedState->mCallWorkerThread),
       mAudioDecoderFactory(mSharedState->mAudioDecoderFactory),

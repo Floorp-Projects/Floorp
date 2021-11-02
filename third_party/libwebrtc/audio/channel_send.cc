@@ -508,7 +508,7 @@ ChannelSend::ChannelSend(
   RtpRtcpInterface::Configuration configuration;
   configuration.bandwidth_callback = rtcp_observer_.get();
   configuration.transport_feedback_callback = feedback_observer_;
-  configuration.clock = (clock ? clock : Clock::GetRealTimeClock());
+  configuration.clock = clock;
   configuration.audio = true;
   configuration.outgoing_transport = rtp_transport;
 
