@@ -80,6 +80,15 @@ Result<NavigationIsolationOptions, nsresult> IsolationOptionsForNavigation(
 void AddHighValuePermission(nsIPrincipal* aResultPrincipal,
                             const nsACString& aPermissionType);
 
+void AddHighValuePermission(const nsACString& aOrigin,
+                            const nsACString& aPermissionType);
+
+/**
+ * Returns true when fission is enabled and the
+ * `fission.webContentIsolationStrategy` pref is set to `IsolateHighValue`.
+ */
+bool IsIsolateHighValueSiteEnabled();
+
 }  // namespace mozilla::dom
 
 #endif

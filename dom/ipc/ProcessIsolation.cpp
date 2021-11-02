@@ -955,4 +955,24 @@ void AddHighValuePermission(nsIPrincipal* aResultPrincipal,
       nsIPermissionManager::EXPIRE_TIME, expirationTime);
 }
 
+void AddHighValuePermission(const nsACString& aOrigin,
+                            const nsACString& aPermissionType) {
+  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+  nsCOMPtr<nsIPrincipal> principal;
+  nsresult rv =
+      ssm->CreateContentPrincipalFromOrigin(aOrigin, getter_AddRefs(principal));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  AddHighValuePermission(principal, aPermissionType);
+}
+
+bool IsIsolateHighValueSiteEnabled() {
+  return mozilla::FissionAutostart() &&
+         WebContentIsolationStrategy(
+             StaticPrefs::fission_webContentIsolationStrategy()) ==
+             WebContentIsolationStrategy::IsolateHighValue;
+}
+
 }  // namespace mozilla::dom
