@@ -713,62 +713,63 @@ mozilla::ipc::IPCResult CamerasParent::RecvAllocateCapture(
     const uint64_t& aWindowID) {
   LOG("%s: Verifying permissions", __PRETTY_FUNCTION__);
   RefPtr<CamerasParent> self(this);
-  RefPtr<Runnable> mainthread_runnable = NewRunnableFrom([self, aCapEngine,
-                                                          unique_id,
-                                                          aWindowID]() {
-    // Verify whether the claimed origin has received permission
-    // to use the camera, either persistently or this session (one shot).
-    bool allowed = HasCameraPermission(aWindowID);
-    if (!allowed) {
-      // Developer preference for turning off permission check.
-      if (Preferences::GetBool("media.navigator.permission.disabled", false) ||
-          Preferences::GetBool("media.navigator.permission.fake")) {
-        allowed = true;
-        LOG("No permission but checks are disabled or fake sources active");
-      } else {
-        LOG("No camera permission for this origin");
-      }
-    }
-    // After retrieving the permission (or not) on the main thread,
-    // bounce to the WebRTC thread to allocate the device (or not),
-    // then bounce back to the IPC thread for the reply to content.
-    RefPtr<Runnable> webrtc_runnable =
-        NewRunnableFrom([self, allowed, aCapEngine, unique_id]() {
-          int numdev = -1;
-          int error = -1;
-          if (allowed && self->EnsureInitialized(aCapEngine)) {
-            StaticRefPtr<VideoEngine>& engine = self->sEngines[aCapEngine];
-            engine->CreateVideoCapture(numdev, unique_id.get());
-            engine->WithEntry(numdev, [&error](VideoEngine::CaptureEntry& cap) {
-              if (cap.VideoCapture()) {
-                error = 0;
-              }
-            });
+  RefPtr<Runnable> mainthread_runnable =
+      NewRunnableFrom([self, aCapEngine, unique_id, aWindowID]() {
+        // Verify whether the claimed origin has received permission
+        // to use the camera, either persistently or this session (one shot).
+        bool allowed = HasCameraPermission(aWindowID);
+        if (!allowed) {
+          // Developer preference for turning off permission check.
+          if (Preferences::GetBool("media.navigator.permission.disabled",
+                                   false) ||
+              Preferences::GetBool("media.navigator.permission.fake")) {
+            allowed = true;
+            LOG("No permission but checks are disabled or fake sources active");
+          } else {
+            LOG("No camera permission for this origin");
           }
-          RefPtr<nsIRunnable> ipc_runnable =
-              NewRunnableFrom([self, numdev, error]() {
-                if (!self->mChildIsAlive) {
-                  LOG("RecvAllocateCapture: child not alive");
-                  return NS_ERROR_FAILURE;
-                }
+        }
+        // After retrieving the permission (or not) on the main thread,
+        // bounce to the WebRTC thread to allocate the device (or not),
+        // then bounce back to the IPC thread for the reply to content.
+        RefPtr<Runnable> webrtc_runnable =
+            NewRunnableFrom([self, allowed, aCapEngine, unique_id]() {
+              int captureId = -1;
+              int error = -1;
+              if (allowed && self->EnsureInitialized(aCapEngine)) {
+                StaticRefPtr<VideoEngine>& engine = self->sEngines[aCapEngine];
+                captureId = engine->CreateVideoCapture(unique_id.get());
+                engine->WithEntry(captureId,
+                                  [&error](VideoEngine::CaptureEntry& cap) {
+                                    if (cap.VideoCapture()) {
+                                      error = 0;
+                                    }
+                                  });
+              }
+              RefPtr<nsIRunnable> ipc_runnable =
+                  NewRunnableFrom([self, captureId, error]() {
+                    if (!self->mChildIsAlive) {
+                      LOG("RecvAllocateCapture: child not alive");
+                      return NS_ERROR_FAILURE;
+                    }
 
-                if (error) {
-                  Unused << self->SendReplyFailure();
-                  LOG("RecvAllocateCapture: WithEntry error");
-                  return NS_ERROR_FAILURE;
-                }
+                    if (error) {
+                      Unused << self->SendReplyFailure();
+                      LOG("RecvAllocateCapture: WithEntry error");
+                      return NS_ERROR_FAILURE;
+                    }
 
-                LOG("Allocated device nr %d", numdev);
-                Unused << self->SendReplyAllocateCapture(numdev);
-                return NS_OK;
-              });
-          self->mPBackgroundEventTarget->Dispatch(ipc_runnable,
-                                                  NS_DISPATCH_NORMAL);
-          return NS_OK;
-        });
-    self->DispatchToVideoCaptureThread(webrtc_runnable);
-    return NS_OK;
-  });
+                    LOG("Allocated device nr %d", captureId);
+                    Unused << self->SendReplyAllocateCapture(captureId);
+                    return NS_OK;
+                  });
+              self->mPBackgroundEventTarget->Dispatch(ipc_runnable,
+                                                      NS_DISPATCH_NORMAL);
+              return NS_OK;
+            });
+        self->DispatchToVideoCaptureThread(webrtc_runnable);
+        return NS_OK;
+      });
   NS_DispatchToMainThread(mainthread_runnable);
   return IPC_OK();
 }

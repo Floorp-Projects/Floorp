@@ -188,9 +188,10 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
   }
   LOG("ChooseCapability(kFitness) for mCapability (Allocate) --");
 
-  if (camera::GetChildAndCall(&camera::CamerasChild::AllocateCapture,
-                              mCapEngine, mUniqueId.get(), kMaxUniqueIdLength,
-                              mCaptureIndex, aWindowID)) {
+  mCaptureIndex =
+      camera::GetChildAndCall(&camera::CamerasChild::AllocateCapture,
+                              mCapEngine, mUniqueId.get(), aWindowID);
+  if (mCaptureIndex < 0) {
     return NS_ERROR_FAILURE;
   }
 
@@ -428,7 +429,7 @@ webrtc::CaptureCapability& MediaEngineRemoteVideoSource::GetCapability(
     mCapabilities[aIndex] = MakeUnique<webrtc::CaptureCapability>();
     camera::GetChildAndCall(&camera::CamerasChild::GetCaptureCapability,
                             mCapEngine, mUniqueId.get(), aIndex,
-                            *mCapabilities[aIndex]);
+                            mCapabilities[aIndex].get());
   }
   return *mCapabilities[aIndex];
 }

@@ -175,16 +175,16 @@ class CamerasChild final : public PCamerasChild {
                            const char* deviceUniqueIdUTF8);
   int ReleaseCapture(CaptureEngine aCapEngine, const int capture_id);
   int StartCapture(CaptureEngine aCapEngine, const int capture_id,
-                   webrtc::VideoCaptureCapability& capability,
+                   const webrtc::VideoCaptureCapability& capability,
                    FrameRelay* func);
   int FocusOnSelectedSource(CaptureEngine aCapEngine, const int capture_id);
   int StopCapture(CaptureEngine aCapEngine, const int capture_id);
+  // Returns a non-negative capture identifier or -1 on failure.
   int AllocateCapture(CaptureEngine aCapEngine, const char* unique_idUTF8,
-                      const unsigned int unique_idUTF8Length, int& capture_id,
                       uint64_t aWindowID);
   int GetCaptureCapability(CaptureEngine aCapEngine, const char* unique_idUTF8,
                            const unsigned int capability_number,
-                           webrtc::VideoCaptureCapability& capability);
+                           webrtc::VideoCaptureCapability* capability);
   int GetCaptureDevice(CaptureEngine aCapEngine, unsigned int list_number,
                        char* device_nameUTF8,
                        const unsigned int device_nameUTF8Length,
@@ -252,7 +252,7 @@ class CamerasChild final : public PCamerasChild {
   bool mReplySuccess;
   const int mZero;
   int mReplyInteger;
-  webrtc::VideoCaptureCapability mReplyCapability;
+  webrtc::VideoCaptureCapability* mReplyCapability = nullptr;
   nsCString mReplyDeviceName;
   nsCString mReplyDeviceID;
   bool mReplyScary;

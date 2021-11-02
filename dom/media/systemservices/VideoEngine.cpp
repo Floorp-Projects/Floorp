@@ -23,7 +23,6 @@ mozilla::LazyLogModule gVideoEngineLog("VideoEngine");
 #define LOG(args) MOZ_LOG(gVideoEngineLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gVideoEngineLog, mozilla::LogLevel::Debug)
 
-int VideoEngine::sId = 0;
 #if defined(ANDROID)
 int VideoEngine::SetAndroidObjects() {
   LOG(("%s", __PRETTY_FUNCTION__));
@@ -43,12 +42,11 @@ int VideoEngine::SetAndroidObjects() {
 }
 #endif
 
-void VideoEngine::CreateVideoCapture(int32_t& id,
-                                     const char* deviceUniqueIdUTF8) {
+int32_t VideoEngine::CreateVideoCapture(const char* deviceUniqueIdUTF8) {
   LOG(("%s", __PRETTY_FUNCTION__));
   MOZ_ASSERT(deviceUniqueIdUTF8);
 
-  id = GenerateId();
+  int32_t id = GenerateId();
   LOG(("CaptureDeviceInfo.type=%s id=%d", mCaptureDevInfo.TypeName(), id));
 
   for (auto& it : mCaps) {
@@ -57,7 +55,7 @@ void VideoEngine::CreateVideoCapture(int32_t& id,
         strcmp(it.second.VideoCapture()->CurrentDeviceName(),
                deviceUniqueIdUTF8) == 0) {
       mIdMap.emplace(id, it.first);
-      return;
+      return id;
     }
   }
 
@@ -86,7 +84,7 @@ void VideoEngine::CreateVideoCapture(int32_t& id,
     if (result == NS_OK) {
       entry = CaptureEntry(id, captureModule);
     } else {
-      return;
+      return -1;
     }
 #  else
     entry = CaptureEntry(id, webrtc::DesktopCaptureImpl::Create(
@@ -99,6 +97,7 @@ void VideoEngine::CreateVideoCapture(int32_t& id,
   }
   mCaps.emplace(id, std::move(entry));
   mIdMap.emplace(id, id);
+  return id;
 }
 
 int VideoEngine::ReleaseVideoCapture(const int32_t id) {
@@ -248,6 +247,7 @@ bool VideoEngine::WithEntry(
 int32_t VideoEngine::GenerateId() {
   // XXX Something better than this (a map perhaps, or a simple boolean TArray,
   // given the number in-use is O(1) normally!)
+  static int sId = 0;
   return mId = sId++;
 }
 
