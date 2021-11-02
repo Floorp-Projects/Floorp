@@ -165,6 +165,15 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
 
   @Nullable
   @Override
+  public GeckoResult<PromptResponse> onLoginSave(
+      @NonNull GeckoSession session,
+      @NonNull AutocompleteRequest<Autocomplete.LoginSaveOption> request) {
+    Log.i(LOGTAG, "onLoginSave");
+    return GeckoResult.fromValue(request.confirm(request.options[0]));
+  }
+
+  @Nullable
+  @Override
   public GeckoResult<PromptResponse> onBeforeUnloadPrompt(
       final GeckoSession session, final BeforeUnloadPrompt prompt) {
     final Activity activity = mActivity;
