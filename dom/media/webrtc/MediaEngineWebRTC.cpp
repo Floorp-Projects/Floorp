@@ -142,10 +142,9 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
     }
 #endif
 
-    RefPtr<MediaEngineSource> vSource;
-
-    vSource = new MediaEngineRemoteVideoSource(i, aCapEngine,
-                                               scaryKind || scarySource);
+    RefPtr<MediaEngineSource> vSource = new MediaEngineRemoteVideoSource(
+        NS_ConvertUTF8toUTF16(deviceName), nsDependentCString(uniqueId),
+        aCapEngine, scaryKind || scarySource);
     aDevices->AppendElement(MakeRefPtr<MediaDevice>(
         vSource, vSource->GetName(), NS_ConvertUTF8toUTF16(vSource->GetUUID()),
         vSource->GetGroupId(), u""_ns));
