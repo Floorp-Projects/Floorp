@@ -193,7 +193,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 
   already_AddRefed<CSSValue> GetBorderWidthFor(mozilla::Side aSide);
 
-  already_AddRefed<CSSValue> GetMarginWidthFor(mozilla::Side aSide);
+  already_AddRefed<CSSValue> GetMarginFor(mozilla::Side aSide);
 
   already_AddRefed<CSSValue> GetTransformValue(const mozilla::StyleTransform&);
 
@@ -230,7 +230,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetBottom();
 
   /* Font properties */
-  already_AddRefed<CSSValue> DoGetOsxFontSmoothing();
+  already_AddRefed<CSSValue> DoGetMozOsxFontSmoothing();
 
   /* Grid properties */
   already_AddRefed<CSSValue> DoGetGridTemplateColumns();
@@ -259,10 +259,10 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetBorderRightWidth();
 
   /* Margin Properties */
-  already_AddRefed<CSSValue> DoGetMarginTopWidth();
-  already_AddRefed<CSSValue> DoGetMarginBottomWidth();
-  already_AddRefed<CSSValue> DoGetMarginLeftWidth();
-  already_AddRefed<CSSValue> DoGetMarginRightWidth();
+  already_AddRefed<CSSValue> DoGetMarginTop();
+  already_AddRefed<CSSValue> DoGetMarginBottom();
+  already_AddRefed<CSSValue> DoGetMarginLeft();
+  already_AddRefed<CSSValue> DoGetMarginRight();
 
   /* Text Properties */
   already_AddRefed<CSSValue> DoGetLineHeight();
