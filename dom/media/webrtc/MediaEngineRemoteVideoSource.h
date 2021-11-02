@@ -99,8 +99,9 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   static void TrimLessFitCandidates(nsTArray<CapabilityCandidate>& aSet);
 
  public:
-  MediaEngineRemoteVideoSource(int aIndex, camera::CaptureEngine aCapEngine,
-                               bool aScary);
+  MediaEngineRemoteVideoSource(const nsAString& aDeviceName,
+                               const nsACString& aDeviceUUID,
+                               camera::CaptureEngine aCapEngine, bool aScary);
 
   // ExternalRenderer
   int DeliverFrame(uint8_t* aBuffer,
@@ -158,7 +159,7 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
    */
   webrtc::CaptureCapability& GetCapability(size_t aIndex) const;
 
-  int mCaptureIndex;
+  int mCaptureId = -1;
   const camera::CaptureEngine mCapEngine;  // source of media (cam, screen etc)
   const bool mScary;
 
@@ -235,8 +236,8 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
    */
   mutable bool mCapabilitiesAreHardcoded = false;
 
-  nsString mDeviceName;
-  nsCString mUniqueId;
+  const nsString mDeviceName;
+  const nsCString mDeviceUUID;
   Maybe<nsString> mFacingMode;
 };
 
