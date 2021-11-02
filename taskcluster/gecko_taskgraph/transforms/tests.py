@@ -1323,7 +1323,12 @@ def get_mobile_project(task):
         if name in task["test-name"]:
             return name
 
-    target = task.get("target")
+    target = None
+    if "target" in task:
+        resolve_keyed_by(
+            task, "target", item_name=task["test-name"], enforce_single_match=False
+        )
+        target = task["target"]
     if target:
         if isinstance(target, dict):
             target = target["name"]
