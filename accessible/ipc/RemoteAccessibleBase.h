@@ -178,6 +178,8 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   virtual nsIntRect Bounds() const override;
 
+  virtual uint64_t State() override;
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */
@@ -210,6 +212,27 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
       }
       mCachedFields->Update(aFields);
     }
+  }
+
+  void UpdateStateCache(uint64_t aState, bool aEnabled) {
+    if (aState & kRemoteCalculatedStates) {
+      return;
+    }
+    uint64_t state = 0;
+    if (mCachedFields) {
+      if (auto oldState =
+              mCachedFields->GetAttribute<uint64_t>(nsGkAtoms::state)) {
+        state = *oldState;
+      }
+    } else {
+      mCachedFields = new AccAttributes();
+    }
+    if (aEnabled) {
+      state |= aState;
+    } else {
+      state &= ~aState;
+    }
+    mCachedFields->SetAttribute(nsGkAtoms::state, state);
   }
 
   virtual void AppendTextTo(nsAString& aText, uint32_t aStartOffset = 0,
