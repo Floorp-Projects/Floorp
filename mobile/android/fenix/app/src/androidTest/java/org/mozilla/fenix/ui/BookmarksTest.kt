@@ -610,8 +610,11 @@ class BookmarksTest {
             IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
         }.clickEdit {
             clickDeleteInEditModeButton()
+            cancelDeletion()
+            clickDeleteInEditModeButton()
             confirmDeletion()
             verifyDeleteSnackBarText()
+            verifyBookmarkIsDeleted("Test_Page_1")
         }
     }
 }

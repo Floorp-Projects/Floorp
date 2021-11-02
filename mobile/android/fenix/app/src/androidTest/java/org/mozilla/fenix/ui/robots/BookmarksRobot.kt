@@ -75,6 +75,8 @@ class BookmarksRobot {
         assertBookmarkTitle(title)
     }
 
+    fun verifyBookmarkIsDeleted(expectedTitle: String) = assertBookmarkIsDeleted(expectedTitle)
+
     fun verifyDeleteSnackBarText() = assertSnackBarText("Deleted")
 
     fun verifyUndoDeleteSnackBarButton() = assertUndoDeleteSnackBarButton()
@@ -203,6 +205,12 @@ class BookmarksRobot {
     fun selectFolder(title: String) = onView(withText(title)).click()
 
     fun longTapDesktopFolder(title: String) = onView(withText(title)).perform(longClick())
+
+    fun cancelDeletion() {
+        val cancelButton = mDevice.findObject(UiSelector().textContains("CANCEL"))
+        cancelButton.waitForExists(waitingTime)
+        cancelButton.click()
+    }
 
     fun confirmDeletion() {
         onView(withText(R.string.delete_browsing_data_prompt_allow))
@@ -352,6 +360,19 @@ private fun assertFolderTitle(expectedTitle: String) =
 private fun assertBookmarkTitle(expectedTitle: String) =
     onView(withText(expectedTitle)).check(matches(isDisplayed()))
 
+private fun assertBookmarkIsDeleted(expectedTitle: String) {
+    mDevice.findObject(
+        UiSelector()
+            .resourceId("$packageName:id/bookmarks_wrapper")
+    ).waitForExists(waitingTime)
+
+    assertFalse(
+        mDevice.findObject(
+            UiSelector()
+                .textContains(expectedTitle)
+        ).waitForExists(waitingTime)
+    )
+}
 private fun assertUndoDeleteSnackBarButton() =
     snackBarUndoButton().check(matches(withText("UNDO")))
 
