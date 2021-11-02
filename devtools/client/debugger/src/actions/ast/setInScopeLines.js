@@ -10,7 +10,7 @@ import {
 
 import { getSourceLineCount } from "../../utils/source";
 
-import { range, flatMap, uniq, without } from "lodash";
+import { range, flatMap, uniq } from "lodash";
 import { isFulfilled } from "../../utils/async-value";
 
 function getOutOfScopeLines(outOfScopeLocations) {
@@ -43,7 +43,7 @@ async function getInScopeLines(cx, location, { dispatch, getState, parser }) {
 
   return !linesOutOfScope
     ? sourceLines
-    : without(sourceLines, ...linesOutOfScope);
+    : sourceLines.filter(sourceLine => !linesOutOfScope.includes(sourceLine));
 }
 
 export function setInScopeLines(cx) {
