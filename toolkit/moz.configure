@@ -2113,11 +2113,9 @@ def wasm_sandboxing_libraries():
     )
 
 
-@depends(dependable(wasm_sandboxing_libraries), target)
-def default_wasm_sandboxing_libraries(libraries, target):
+@depends(dependable(wasm_sandboxing_libraries))
+def default_wasm_sandboxing_libraries(libraries):
     non_default_libs = set()
-    if target.bitness == 32:
-        non_default_libs.add("hunspell")
 
     return tuple(l for l in libraries if l not in non_default_libs)
 
