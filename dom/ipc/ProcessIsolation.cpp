@@ -460,6 +460,8 @@ static bool ShouldIsolateSite(nsIPrincipal* aPrincipal,
 
       static constexpr nsLiteralCString kHighValuePermissions[] = {
           mozilla::dom::kHighValueCOOPPermission,
+          mozilla::dom::kHighValueHasSavedLoginPermission,
+          mozilla::dom::kHighValueIsLoggedInPermission,
       };
 
       for (const auto& type : kHighValuePermissions) {
@@ -905,6 +907,52 @@ Result<NavigationIsolationOptions, nsresult> IsolationOptionsForNavigation(
       break;
   }
   return options;
+}
+
+void AddHighValuePermission(nsIPrincipal* aResultPrincipal,
+                            const nsACString& aPermissionType) {
+  RefPtr<PermissionManager> perms = PermissionManager::GetInstance();
+  if (NS_WARN_IF(!perms)) {
+    return;
+  }
+
+  // We can't act on non-content principals, so if the load was sandboxed, try
+  // to use the unsandboxed precursor principal to add the highValue permission.
+  nsCOMPtr<nsIPrincipal> resultOrPrecursor(aResultPrincipal);
+  if (!aResultPrincipal->GetIsContentPrincipal()) {
+    resultOrPrecursor = aResultPrincipal->GetPrecursorPrincipal();
+    if (!resultOrPrecursor) {
+      return;
+    }
+  }
+
+  // Use the site-origin principal as we want to add the permission for the
+  // entire site, rather than a specific subdomain, as process isolation acts on
+  // a site granularity.
+  nsAutoCString siteOrigin;
+  if (NS_FAILED(resultOrPrecursor->GetSiteOrigin(siteOrigin))) {
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> sitePrincipal =
+      BasePrincipal::CreateContentPrincipal(siteOrigin);
+  if (!sitePrincipal || !sitePrincipal->GetIsContentPrincipal()) {
+    return;
+  }
+
+  MOZ_LOG(dom::gProcessIsolationLog, LogLevel::Verbose,
+          ("Adding HighValue COOP Permission for site '%s'", siteOrigin.get()));
+
+  // XXX: Would be nice if we could use `TimeStamp` here, but there's
+  // unfortunately no convenient way to recover a time in milliseconds since the
+  // unix epoch from `TimeStamp`.
+  int64_t expirationTime =
+      (PR_Now() / PR_USEC_PER_MSEC) +
+      (int64_t(StaticPrefs::fission_highValue_coop_expiration()) *
+       PR_MSEC_PER_SEC);
+  Unused << perms->AddFromPrincipal(
+      sitePrincipal, aPermissionType, nsIPermissionManager::ALLOW_ACTION,
+      nsIPermissionManager::EXPIRE_TIME, expirationTime);
 }
 
 }  // namespace mozilla::dom
