@@ -749,8 +749,11 @@
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Fermeture après un mois</string>
 
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">Déplacer les onglets inactifs</string>
     <!-- Title of inactive tabs preference -->
-    <string name="preferences_inactive_tabs_title">Les onglets que vous n’avez pas consultés depuis deux semaines sont déplacés vers la section inactive.</string>
+    <string name="preferences_inactive_tabs_title">Les onglets que vous n’avez pas consultés depuis deux semaines sont déplacés vers la section « Onglets inactifs ».</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
