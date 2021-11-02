@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
 http://creativecommons.org/publicdomain/zero/1.0/ */
 
-package org.mozilla.geckoview.test;
+package org.mozilla.geckoview.test_runner;
 
 import android.util.Log;
 import androidx.annotation.NonNull;
