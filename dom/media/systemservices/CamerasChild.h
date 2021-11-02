@@ -157,7 +157,7 @@ class CamerasChild final : public PCamerasChild {
   // these are response messages to our outgoing requests
   mozilla::ipc::IPCResult RecvReplyNumberOfCaptureDevices(const int&) override;
   mozilla::ipc::IPCResult RecvReplyNumberOfCapabilities(const int&) override;
-  mozilla::ipc::IPCResult RecvReplyAllocateCaptureDevice(const int&) override;
+  mozilla::ipc::IPCResult RecvReplyAllocateCapture(const int&) override;
   mozilla::ipc::IPCResult RecvReplyGetCaptureCapability(
       const VideoCaptureCapability& capability) override;
   mozilla::ipc::IPCResult RecvReplyGetCaptureDevice(
@@ -173,15 +173,15 @@ class CamerasChild final : public PCamerasChild {
   int NumberOfCaptureDevices(CaptureEngine aCapEngine);
   int NumberOfCapabilities(CaptureEngine aCapEngine,
                            const char* deviceUniqueIdUTF8);
-  int ReleaseCaptureDevice(CaptureEngine aCapEngine, const int capture_id);
+  int ReleaseCapture(CaptureEngine aCapEngine, const int capture_id);
   int StartCapture(CaptureEngine aCapEngine, const int capture_id,
                    webrtc::VideoCaptureCapability& capability,
                    FrameRelay* func);
   int FocusOnSelectedSource(CaptureEngine aCapEngine, const int capture_id);
   int StopCapture(CaptureEngine aCapEngine, const int capture_id);
-  int AllocateCaptureDevice(CaptureEngine aCapEngine, const char* unique_idUTF8,
-                            const unsigned int unique_idUTF8Length,
-                            int& capture_id, uint64_t aWindowID);
+  int AllocateCapture(CaptureEngine aCapEngine, const char* unique_idUTF8,
+                      const unsigned int unique_idUTF8Length, int& capture_id,
+                      uint64_t aWindowID);
   int GetCaptureCapability(CaptureEngine aCapEngine, const char* unique_idUTF8,
                            const unsigned int capability_number,
                            webrtc::VideoCaptureCapability& capability);
