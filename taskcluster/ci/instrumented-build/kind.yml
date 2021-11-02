@@ -159,8 +159,14 @@ jobs:
                 - name: public/build/geckoview-test_runner.apk
                   path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/test_runner/outputs/apk/withGeckoBinaries/debug/test_runner-withGeckoBinaries-debug.apk
                   type: file
+                - name: public/build/geckoview-test_runner.aab
+                  path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/test_runner/outputs/bundle/withGeckoBinariesDebug/test_runner-withGeckoBinaries-debug.aab
+                  type: file
                 - name: public/build/geckoview_example.apk
                   path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview_example/outputs/apk/withGeckoBinaries/debug/geckoview_example-withGeckoBinaries-debug.apk
+                  type: file
+                - name: public/build/geckoview_example.aab
+                  path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview_example/outputs/bundle/withGeckoBinariesDebug/geckoview_example-withGeckoBinaries-debug.aab
                   type: file
         run:
             config:
@@ -208,8 +214,14 @@ jobs:
                 - name: public/build/geckoview-test_runner.apk
                   path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/test_runner/outputs/apk/withGeckoBinaries/debug/test_runner-withGeckoBinaries-debug.apk
                   type: file
+                - name: public/build/geckoview-test_runner.aab
+                  path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/test_runner/outputs/bundle/withGeckoBinariesDebug/test_runner-withGeckoBinaries-debug.aab
+                  type: file
                 - name: public/build/geckoview_example.apk
                   path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview_example/outputs/apk/withGeckoBinaries/debug/geckoview_example-withGeckoBinaries-debug.apk
+                  type: file
+                - name: public/build/geckoview_example.aab
+                  path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview_example/outputs/bundle/withGeckoBinariesDebug/geckoview_example-withGeckoBinaries-debug.aab
                   type: file
         run:
             config:
