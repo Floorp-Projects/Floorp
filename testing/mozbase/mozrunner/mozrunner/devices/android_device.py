@@ -326,7 +326,7 @@ def verify_android_device(
         #  - it prevents testing against other builds (downloaded apk)
         #  - installation may take a couple of minutes.
         if not app:
-            app = "org.mozilla.geckoview.test"
+            app = "org.mozilla.geckoview.test_runner"
         device = _get_device(build_obj.substs, device_serial)
         response = ""
         installed = device.is_app_installed(app)
@@ -345,6 +345,14 @@ def verify_android_device(
             sub = "geckoview:installWithGeckoBinariesDebugAndroidTest"
             build_obj._mach_context.commands.dispatch(
                 "gradle", build_obj._mach_context, args=[sub]
+            )
+        elif app == "org.mozilla.geckoview.test_runner":
+            if installed:
+                device.uninstall_app(app)
+            _log_info("Installing geckoview test_runner...")
+            sub = "install-geckoview-test_runner"
+            build_obj._mach_context.commands.dispatch(
+                "android", build_obj._mach_context, subcommand=sub, args=[]
             )
         elif app == "org.mozilla.geckoview_example":
             if installed:
@@ -528,7 +536,7 @@ def get_adb_path(build_obj):
 def grant_runtime_permissions(build_obj, app, device_serial=None):
     """
     Grant required runtime permissions to the specified app
-    (eg. org.mozilla.geckoview.test).
+    (eg. org.mozilla.geckoview.test_runner).
     """
     device = _get_device(build_obj.substs, device_serial)
     device.run_as_package = app

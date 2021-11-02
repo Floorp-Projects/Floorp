@@ -1307,7 +1307,7 @@ class AndroidArguments(ArgumentContainer):
         options.webServer = options.remoteWebServer
 
         if options.app is None:
-            options.app = "org.mozilla.geckoview.test"
+            options.app = "org.mozilla.geckoview.test_runner"
 
         if build_obj and "MOZ_HOST_BIN" in os.environ:
             options.xrePath = os.environ["MOZ_HOST_BIN"]

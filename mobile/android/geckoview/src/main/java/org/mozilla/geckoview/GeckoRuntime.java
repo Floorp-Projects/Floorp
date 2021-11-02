@@ -373,7 +373,7 @@ public final class GeckoRuntime implements Parcelable {
 
     if (info.xpcshell
         && (!BuildConfig.DEBUG
-            || !"org.mozilla.geckoview.test"
+            || !"org.mozilla.geckoview.test_runner"
                 .equals(context.getApplicationContext().getPackageName()))) {
       throw new IllegalArgumentException("Only the test app can run -xpcshell.");
     }

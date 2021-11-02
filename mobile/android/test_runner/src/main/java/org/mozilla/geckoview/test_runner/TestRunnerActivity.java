@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
 http://creativecommons.org/publicdomain/zero/1.0/ */
 
-package org.mozilla.geckoview.test;
+package org.mozilla.geckoview.test_runner;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -385,8 +385,7 @@ public class TestRunnerActivity extends Activity {
           .contentBlocking(
               new ContentBlocking.Settings.Builder()
                   .safeBrowsingProviders(google, googleLegacy)
-                  .build())
-          .crashHandler(TestCrashHandler.class);
+                  .build());
 
       sRuntime = GeckoRuntime.create(this, runtimeSettingsBuilder.build());
 
@@ -400,7 +399,7 @@ public class TestRunnerActivity extends Activity {
               });
 
       webExtensionController()
-          .installBuiltIn("resource://android/assets/web_extensions/test-runner-support/")
+          .installBuiltIn("resource://android/assets/test-runner-support/")
           .accept(
               extension -> {
                 extension.setMessageDelegate(mApiEngine, "test-runner-support");

@@ -571,7 +571,7 @@ def join_ensure_dir(dir1, dir2):
 @CommandArgumentGroup("Android")
 @CommandArgument(
     "--package",
-    default="org.mozilla.geckoview.test",
+    default="org.mozilla.geckoview.test_runner",
     group="Android",
     help="Package name of test app.",
 )
@@ -1247,8 +1247,8 @@ def _run_android(
 
     if app == "org.mozilla.geckoview_example":
         activity_name = "org.mozilla.geckoview_example.GeckoViewActivity"
-    elif app == "org.mozilla.geckoview.test":
-        activity_name = "org.mozilla.geckoview.test.TestRunnerActivity"
+    elif app == "org.mozilla.geckoview.test_runner":
+        activity_name = "org.mozilla.geckoview.test_runner.TestRunnerActivity"
     elif "fennec" in app or "firefox" in app:
         activity_name = "org.mozilla.gecko.BrowserApp"
     else:

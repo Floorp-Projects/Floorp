@@ -154,7 +154,7 @@ class ReftestRunner(MozbuildObject):
         if not args.xrePath:
             args.xrePath = os.environ.get("MOZ_HOST_BIN")
         if not args.app:
-            args.app = "org.mozilla.geckoview.test"
+            args.app = "org.mozilla.geckoview.test_runner"
         if not args.utilityPath:
             args.utilityPath = args.xrePath
         args.ignoreWindowSize = True
