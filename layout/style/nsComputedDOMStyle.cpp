@@ -1192,19 +1192,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBottom() {
   return GetOffsetWidthFor(eSideBottom);
 }
 
-/* static */
-void nsComputedDOMStyle::SetToRGBAColor(nsROCSSPrimitiveValue* aValue,
-                                        nscolor aColor) {
-  nsAutoString string;
-  nsStyleUtil::GetSerializedColorValue(aColor, string);
-  aValue->SetString(string);
-}
-
-void nsComputedDOMStyle::SetValueFromComplexColor(
-    nsROCSSPrimitiveValue* aValue, const mozilla::StyleColor& aColor) {
-  SetToRGBAColor(aValue, aColor.CalcColor(*mComputedStyle));
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetColumnRuleWidth() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetAppUnits(StyleColumn()->GetComputedColumnRuleWidth());
@@ -1846,41 +1833,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetLineHeight() {
     val->SetString("normal");
   }
   return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecoration() {
-  auto getPropertyValue = [&](nsCSSPropertyID aID) {
-    RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
-    nsAutoCString string;
-    mComputedStyle->GetComputedPropertyValue(aID, string);
-    value->SetString(string);
-    return value.forget();
-  };
-
-  const nsStyleTextReset* textReset = StyleTextReset();
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-
-  if (textReset->mTextDecorationLine != StyleTextDecorationLine::NONE) {
-    valueList->AppendCSSValue(
-        getPropertyValue(eCSSProperty_text_decoration_line));
-  }
-
-  if (!textReset->mTextDecorationThickness.IsAuto()) {
-    valueList->AppendCSSValue(
-        getPropertyValue(eCSSProperty_text_decoration_thickness));
-  }
-
-  if (textReset->mTextDecorationStyle != NS_STYLE_TEXT_DECORATION_STYLE_SOLID) {
-    valueList->AppendCSSValue(
-        getPropertyValue(eCSSProperty_text_decoration_style));
-  }
-
-  // The resolved color shouldn't be currentColor, so we always serialize it.
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueFromComplexColor(val, StyleTextReset()->mTextDecorationColor);
-  valueList->AppendCSSValue(val.forget());
-
-  return valueList.forget();
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetHeight() {
