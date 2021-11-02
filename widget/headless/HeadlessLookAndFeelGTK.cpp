@@ -76,24 +76,6 @@ nsresult HeadlessLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::TextSelectBackgroundDisabled:
       aColor = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
-    case ColorID::Widget3DHighlight:
-      aColor = NS_RGB(0xa0, 0xa0, 0xa0);
-      break;
-    case ColorID::Widget3DShadow:
-      aColor = NS_RGB(0x40, 0x40, 0x40);
-      break;
-    case ColorID::WidgetBackground:
-      aColor = NS_RGB(0xdd, 0xdd, 0xdd);
-      break;
-    case ColorID::WidgetForeground:
-      aColor = NS_RGB(0x00, 0x00, 0x00);
-      break;
-    case ColorID::WidgetSelectBackground:
-      aColor = NS_RGB(0x80, 0x80, 0x80);
-      break;
-    case ColorID::WidgetSelectForeground:
-      aColor = NS_RGB(0x00, 0x00, 0x80);
-      break;
     case ColorID::Highlight:
     case ColorID::Selecteditem:
     case ColorID::MozAccentColor:

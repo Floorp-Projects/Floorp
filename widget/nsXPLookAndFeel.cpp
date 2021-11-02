@@ -199,12 +199,6 @@ static_assert(ArrayLength(sFloatPrefs) == size_t(LookAndFeel::FloatID::End),
 // This array MUST be kept in the same order as the color list in
 // specified/color.rs
 static const char sColorPrefs[][41] = {
-    "ui.widgetBackground",
-    "ui.widgetForeground",
-    "ui.widgetSelectBackground",
-    "ui.widgetSelectForeground",
-    "ui.widget3DHighlight",
-    "ui.widget3DShadow",
     "ui.textSelectBackgroundDisabled",
     "ui.textSelectBackgroundAttention",
     "ui.textHighlightBackground",
@@ -1186,12 +1180,6 @@ static bool ColorIsCSSAccessible(LookAndFeel::ColorID aId) {
   using ColorID = LookAndFeel::ColorID;
 
   switch (aId) {
-    case ColorID::WidgetBackground:
-    case ColorID::WidgetForeground:
-    case ColorID::WidgetSelectBackground:
-    case ColorID::WidgetSelectForeground:
-    case ColorID::Widget3DHighlight:
-    case ColorID::Widget3DShadow:
     case ColorID::TextSelectBackgroundDisabled:
     case ColorID::TextSelectBackgroundAttention:
     case ColorID::TextHighlightBackground:

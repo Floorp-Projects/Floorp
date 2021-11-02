@@ -127,24 +127,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
 
   int idx;
   switch (aID) {
-    case ColorID::WidgetBackground:
-      idx = COLOR_BTNFACE;
-      break;
-    case ColorID::WidgetForeground:
-      idx = COLOR_BTNTEXT;
-      break;
-    case ColorID::WidgetSelectBackground:
-      idx = COLOR_HIGHLIGHT;
-      break;
-    case ColorID::WidgetSelectForeground:
-      idx = COLOR_HIGHLIGHTTEXT;
-      break;
-    case ColorID::Widget3DHighlight:
-      idx = COLOR_BTNHIGHLIGHT;
-      break;
-    case ColorID::Widget3DShadow:
-      idx = COLOR_BTNSHADOW;
-      break;
     case ColorID::IMERawInputBackground:
     case ColorID::IMEConvertedTextBackground:
       aColor = NS_TRANSPARENT;
