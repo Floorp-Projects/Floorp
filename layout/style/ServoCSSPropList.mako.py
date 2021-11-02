@@ -99,10 +99,8 @@ LONGHANDS_NOT_SERIALIZED_WITH_SERVO = [
 
 def serialized_by_servo(prop):
     if prop.type() == "shorthand":
-        # FIXME: Need to serialize a value interpolated with currentcolor
-        # properly to be able to use text-decoration, and figure out what to do
-        # with relative mask urls.
-        return prop.name != "text-decoration" and prop.name != "mask"
+        # FIXME: Need to figure out what to do with relative mask urls.
+        return prop.name != "mask"
     # Keywords are all fine, except -moz-osx-font-smoothing, which does
     # resistfingerprinting stuff.
     if prop.keyword and prop.name != "-moz-osx-font-smoothing":
