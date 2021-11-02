@@ -2535,12 +2535,6 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
       textRun = transformingFactory->MakeTextRun(
           text, transformedLength, &params, fontGroup, flags, flags2,
           std::move(styles), true);
-      if (textRun) {
-        // ownership of the factory has passed to the textrun
-        // TODO: bug 1285316: clean up ownership transfer from the factory to
-        // the textrun
-        Unused << transformingFactory.release();
-      }
     } else {
       textRun = fontGroup->MakeTextRun(text, transformedLength, &params, flags,
                                        flags2, mMissingFonts);
@@ -2552,12 +2546,6 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
       textRun = transformingFactory->MakeTextRun(
           text, transformedLength, &params, fontGroup, flags, flags2,
           std::move(styles), true);
-      if (textRun) {
-        // ownership of the factory has passed to the textrun
-        // TODO: bug 1285316: clean up ownership transfer from the factory to
-        // the textrun
-        Unused << transformingFactory.release();
-      }
     } else {
       textRun = fontGroup->MakeTextRun(text, transformedLength, &params, flags,
                                        flags2, mMissingFonts);
@@ -2572,9 +2560,17 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
   // the breaks may be stored in the textrun during this very call.
   // This is a bit annoying because it requires another loop over the frames
   // making up the textrun, but I don't see a way to avoid this.
-  if (mDoLineBreaking) {
+  // We have to do this if line-breaking is required OR if a text-transform
+  // is in effect, because we depend on the line-breaker's scanner (via
+  // BreakSink::Finish) to finish building transformed textruns.
+  if (mDoLineBreaking || transformingFactory) {
     SetupBreakSinksForTextRun(textRun.get(), textPtr);
   }
+
+  // Ownership of the factory has passed to the textrun
+  // TODO: bug 1285316: clean up ownership transfer from the factory to
+  // the textrun
+  Unused << transformingFactory.release();
 
   if (anyTextEmphasis) {
     SetupTextEmphasisForTextRun(textRun.get(), textPtr);
