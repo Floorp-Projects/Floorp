@@ -163,8 +163,13 @@ void* sServerHandle = nullptr;
 StaticAutoPtr<ipc::FileDescriptor> sIPCConnection;
 
 static bool StartAudioIPCServer() {
-  sServerHandle =
-      audioipc::audioipc_server_start(sBrandName, sCubebBackendName);
+  audioipc::AudioIpcServerInitParams initParams;
+  initParams.mThreadCreateCallback = [](const char* aName) {
+    PROFILER_REGISTER_THREAD(aName);
+  };
+  initParams.mThreadDestroyCallback = []() { PROFILER_UNREGISTER_THREAD(); };
+  sServerHandle = audioipc::audioipc_server_start(sBrandName, sCubebBackendName,
+                                                  &initParams);
   return sServerHandle != nullptr;
 }
 
