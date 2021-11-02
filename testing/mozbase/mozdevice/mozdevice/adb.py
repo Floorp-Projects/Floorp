@@ -3890,6 +3890,88 @@ class ADBDevice(ADBCommand):
                         % (permission, app_name, e)
                     )
 
+    def install_app_bundle(self, bundletool, bundle_path, timeout=None):
+        """Installs an app bundle (AAB) on the device.
+
+        :param str bundletool: Path to the bundletool jar
+        :param str bundle_path: The aab file name to be installed.
+        :param int timeout: The maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.
+            This timeout is per adb call. The total time spent
+            may exceed this value. If it is not specified, the value
+            set in the ADB constructor is used.
+        :raises: :exc:`ADBTimeoutError`
+                 :exc:`ADBError`
+        """
+        device_serial = self._device_serial or os.environ.get("ANDROID_SERIAL")
+        with tempfile.TemporaryDirectory() as temporaryDirectory:
+            # bundletool doesn't come with a debug-key so we need to provide
+            # one ourselves.
+            keystore_path = os.path.join(temporaryDirectory, "debug.keystore")
+            key_gen = [
+                "keytool",
+                "-genkey",
+                "-v",
+                "-keystore",
+                keystore_path,
+                "-alias",
+                "androiddebugkey",
+                "-storepass",
+                "android",
+                "-keypass",
+                "android",
+                "-keyalg",
+                "RSA",
+                "-validity",
+                "14000",
+                "-dname",
+                "cn=Unknown, ou=Unknown, o=Unknown, c=Unknown",
+            ]
+            self._logger.info("key_gen: %s" % key_gen)
+            try:
+                subprocess.check_call(key_gen, timeout=timeout)
+            except subprocess.TimeoutExpired:
+                raise ADBTimeoutError("ADBDevice: unable to generate key")
+
+            apks_path = "{}/tmp.apks".format(temporaryDirectory)
+            build_apks = [
+                "java",
+                "-jar",
+                bundletool,
+                "build-apks",
+                "--bundle={}".format(bundle_path),
+                "--output={}".format(apks_path),
+                "--connected-device",
+                "--device-id={}".format(device_serial),
+                "--adb={}".format(self._adb_path),
+                "--ks={}".format(keystore_path),
+                "--ks-key-alias=androiddebugkey",
+                "--key-pass=pass:android",
+                "--ks-pass=pass:android",
+            ]
+            self._logger.info("build_apks: %s" % build_apks)
+
+            try:
+                subprocess.check_call(build_apks, timeout=timeout)
+            except subprocess.TimeoutExpired:
+                raise ADBTimeoutError("ADBDevice: unable to generate apks")
+            install_apks = [
+                "java",
+                "-jar",
+                bundletool,
+                "install-apks",
+                "--apks={}".format(apks_path),
+                "--device-id={}".format(device_serial),
+                "--adb={}".format(self._adb_path),
+            ]
+            self._logger.info("install_apks: %s" % install_apks)
+
+            try:
+                subprocess.check_call(install_apks, timeout=timeout)
+            except subprocess.TimeoutExpired:
+                raise ADBTimeoutError("ADBDevice: unable to install apks")
+
     def install_app(self, apk_path, replace=False, timeout=None):
         """Installs an app on the device.
 
