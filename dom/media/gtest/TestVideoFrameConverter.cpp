@@ -30,15 +30,24 @@ class FrameListener : public VideoConverterListener {
   MediaEventProducer<webrtc::VideoFrame, TimeStamp> mVideoFrameConvertedEvent;
 };
 
+class DebugVideoFrameConverter : public VideoFrameConverter {
+ public:
+  explicit DebugVideoFrameConverter(
+      const dom::RTCStatsTimestampMaker& aTimestampMaker)
+      : VideoFrameConverter(aTimestampMaker) {}
+  using VideoFrameConverter::mTaskQueue;
+  using VideoFrameConverter::QueueForProcessing;
+};
+
 class VideoFrameConverterTest : public ::testing::Test {
  protected:
   const dom::RTCStatsTimestampMaker mTimestampMaker;
-  RefPtr<VideoFrameConverter> mConverter;
+  RefPtr<DebugVideoFrameConverter> mConverter;
   RefPtr<FrameListener> mListener;
 
   VideoFrameConverterTest()
       : mTimestampMaker(dom::RTCStatsTimestampMaker()),
-        mConverter(MakeAndAddRef<VideoFrameConverter>(mTimestampMaker)),
+        mConverter(MakeAndAddRef<DebugVideoFrameConverter>(mTimestampMaker)),
         mListener(MakeAndAddRef<FrameListener>()) {
     mConverter->AddListener(mListener);
   }
@@ -330,4 +339,100 @@ TEST_F(VideoFrameConverterTest, TimestampPropagation) {
   EXPECT_FALSE(IsFrameBlack(frame1));
   EXPECT_EQ(frame1.timestamp_us(),
             mTimestampMaker.ConvertMozTimeToRealtime(t2).us());
+}
+
+TEST_F(VideoFrameConverterTest, IgnoreOldFrames) {
+  TimeStamp now = TimeStamp::Now();
+  TimeStamp t1 = now + TimeDuration::FromMilliseconds(100);
+  TimeStamp t2 = t1 + TimeDuration::FromMicroseconds(1);
+
+  auto framesPromise = TakeNConvertedFrames(1);
+  mConverter->SetActive(true);
+  mConverter->QueueVideoChunk(GenerateChunk(640, 480, t1), false);
+  auto frames = WaitFor(framesPromise).unwrap();
+
+  framesPromise = TakeNConvertedFrames(2);
+
+  // Time is now ~t1. This processes an extra frame using t=now().
+  mConverter->SetActive(false);
+  mConverter->SetActive(true);
+
+  // This processes a new chunk with an earlier timestamp than the extra frame
+  // above. But it gets processed after the extra frame, so time will appear to
+  // go backwards. This simulates a frame from the pacer being in flight when we
+  // flip SetActive() above. This frame is expected to get ignored.
+  Unused << WaitFor(InvokeAsync(mConverter->mTaskQueue, __func__, [&] {
+    mConverter->QueueForProcessing(
+        GenerateChunk(800, 600, t2).mFrame.GetImage(), t2,
+        gfx::IntSize(800, 600), false);
+    return GenericPromise::CreateAndResolve(true, __func__);
+  }));
+
+  {
+    auto newFrames = WaitFor(framesPromise).unwrap();
+    frames.insert(frames.end(), std::make_move_iterator(newFrames.begin()),
+                  std::make_move_iterator(newFrames.end()));
+  }
+  ASSERT_EQ(frames.size(), 3U);
+  const auto& [frame0, conversionTime0] = frames[0];
+  EXPECT_EQ(frame0.width(), 640);
+  EXPECT_EQ(frame0.height(), 480);
+  EXPECT_FALSE(IsFrameBlack(frame0));
+  EXPECT_EQ(frame0.timestamp_us(),
+            mTimestampMaker.ConvertMozTimeToRealtime(t1).us());
+
+  const auto& [frame1, conversionTime1] = frames[1];
+  EXPECT_EQ(frame1.width(), 640);
+  EXPECT_EQ(frame1.height(), 480);
+  EXPECT_FALSE(IsFrameBlack(frame1));
+  EXPECT_GT(frame1.timestamp_us(),
+            mTimestampMaker.ConvertMozTimeToRealtime(t2).us());
+
+  const auto& [frame2, conversionTime2] = frames[2];
+  EXPECT_EQ(frame2.width(), 640);
+  EXPECT_EQ(frame2.height(), 480);
+  EXPECT_FALSE(IsFrameBlack(frame2));
+  EXPECT_EQ(frame2.timestamp_us(), frame1.timestamp_us() + USECS_PER_S);
+}
+
+TEST_F(VideoFrameConverterTest, SameFrameTimerRacingWithPacing) {
+  TimeStamp now = TimeStamp::Now();
+  TimeStamp t1 = now + TimeDuration::FromMilliseconds(100);
+  TimeStamp t2 =
+      t1 + TimeDuration::FromSeconds(1) - TimeDuration::FromMicroseconds(1);
+
+  auto framesPromise = TakeNConvertedFrames(3);
+  mConverter->SetActive(true);
+  mConverter->QueueVideoChunk(GenerateChunk(640, 480, t1), false);
+  mConverter->QueueVideoChunk(GenerateChunk(640, 480, t2), false);
+  auto frames = WaitFor(framesPromise).unwrap();
+
+  // The expected order here (in timestamps) is t1, t2, t2+1s.
+  //
+  // If the same-frame timer doesn't check what is queued we could end up with
+  // t1, t1+1s, t2.
+
+  ASSERT_EQ(frames.size(), 3U);
+  const auto& [frame0, conversionTime0] = frames[0];
+  EXPECT_EQ(frame0.width(), 640);
+  EXPECT_EQ(frame0.height(), 480);
+  EXPECT_FALSE(IsFrameBlack(frame0));
+  EXPECT_EQ(frame0.timestamp_us(),
+            mTimestampMaker.ConvertMozTimeToRealtime(t1).us());
+
+  const auto& [frame1, conversionTime1] = frames[1];
+  EXPECT_EQ(frame1.width(), 640);
+  EXPECT_EQ(frame1.height(), 480);
+  EXPECT_FALSE(IsFrameBlack(frame1));
+  EXPECT_EQ(frame1.timestamp_us(),
+            mTimestampMaker.ConvertMozTimeToRealtime(t2).us());
+
+  const auto& [frame2, conversionTime2] = frames[2];
+  EXPECT_EQ(frame2.width(), 640);
+  EXPECT_EQ(frame2.height(), 480);
+  EXPECT_FALSE(IsFrameBlack(frame2));
+  EXPECT_EQ(frame2.timestamp_us(),
+            mTimestampMaker
+                .ConvertMozTimeToRealtime(t2 + TimeDuration::FromSeconds(1))
+                .us());
 }
