@@ -110,11 +110,9 @@ def serialized_by_servo(prop):
 def exposed_on_getcs(prop):
     if "Style" not in prop.rule_types_allowed_names():
         return False
-    if prop.type() == "longhand":
-        return not is_internal(prop)
-    # TODO: bug 137688 / https://github.com/w3c/csswg-drafts/issues/2529
-    if prop.type() == "shorthand":
-        return "SHORTHAND_IN_GETCS" in prop.flags
+    if is_internal(prop):
+        return False
+    return True
 
 def rules(prop):
     return ", ".join('"{}"'.format(rule) for rule in prop.rule_types_allowed_names())
@@ -133,6 +131,8 @@ def flags(prop):
         result.append("CanAnimateOnCompositor")
     if exposed_on_getcs(prop):
         result.append("ExposedOnGetCS")
+        if prop.type() == "shorthand" and "SHORTHAND_IN_GETCS" in prop.flags:
+            result.append("ShorthandUnconditionallyExposedOnGetCS")
         if serialized_by_servo(prop):
             result.append("SerializedByServo")
     if prop.type() == "longhand" and prop.logical:

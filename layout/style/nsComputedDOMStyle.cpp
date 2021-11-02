@@ -212,7 +212,15 @@ struct ComputedStyleMap {
     ComputeMethod mGetter;
 
     bool IsEnabled() const {
-      return nsCSSProps::IsEnabled(mProperty, CSSEnabledState::ForAllContent);
+      if (!nsCSSProps::IsEnabled(mProperty, CSSEnabledState::ForAllContent)) {
+        return false;
+      }
+      if (nsCSSProps::IsShorthand(mProperty) &&
+          !StaticPrefs::layout_css_computed_style_shorthands()) {
+        return nsCSSProps::PropHasFlags(
+            mProperty, CSSPropFlags::ShorthandUnconditionallyExposedOnGetCS);
+      }
+      return true;
     }
   };
 
@@ -2506,6 +2514,10 @@ void nsComputedDOMStyle::RegisterPrefChangeCallbacks() {
       prefs.InsertElementSorted(p->mPref);
     }
   }
+
+  prefs.AppendElement(
+      StaticPrefs::GetPrefName_layout_css_computed_style_shorthands());
+
   prefs.AppendElement(nullptr);
 
   MOZ_ASSERT(!gCallbackPrefs);
