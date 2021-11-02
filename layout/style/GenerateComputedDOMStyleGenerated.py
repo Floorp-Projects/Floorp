@@ -34,22 +34,9 @@ static constexpr Entry kEntries[] = {
             return False
         return True
 
-    # Some special cases we may get rid of later. See bug 1471423.
-    def method(p):
-        if p.id.startswith("margin_"):
-            return "{}Width".format(p.method)
-        if p.id.startswith("_moz_"):
-            method = p.method[3:]
-        else:
-            method = p.method
-        if p.id.startswith("_moz_outline_radius_"):
-            method = method.replace("left", "Left")
-            method = method.replace("right", "Right")
-        return method
-
     def getter_entry(p):
         if has_cpp_getter(p):
-            return "DoGet" + method(p)
+            return "DoGet" + p.method
         # Put a dummy getter here instead of nullptr because MSVC seems
         # to have bug which ruins the table when we put nullptr for
         # pointer-to-member-function. See bug 1471426.

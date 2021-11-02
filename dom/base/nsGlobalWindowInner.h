@@ -201,6 +201,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   }
 #endif
 
+  bool IsInnerWindow() const final { return true; }  // Overriding EventTarget
+
   static nsGlobalWindowInner* Cast(nsPIDOMWindowInner* aPIWin) {
     return static_cast<nsGlobalWindowInner*>(aPIWin);
   }

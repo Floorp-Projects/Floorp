@@ -125,13 +125,6 @@ class nsCSSProps {
 
  public:
   /**
-   * Returns true if the backdrop-filter pref and WebRender are enabled.
-   */
-  static bool IsBackdropFilterAvailable(JSContext*, JSObject*) {
-    return IsEnabled(eCSSProperty_backdrop_filter);
-  }
-
-  /**
    * Recoumputes the enabled state of a pref. If aPrefName is nullptr,
    * recomputes the state of all prefs in gPropertyEnabled.
    * aClosure is the pref callback closure data, which is not used.

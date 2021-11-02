@@ -50,6 +50,10 @@ enum class CSSPropFlags : uint8_t {
 
   // Whether this is a logical property.
   IsLogical = 1 << 6,
+
+  // Whether this shorthand property is unconditionally exposed in
+  // getComputedStyle.
+  ShorthandUnconditionallyExposedOnGetCS = 1 << 7,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CSSPropFlags)
