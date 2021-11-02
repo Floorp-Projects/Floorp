@@ -3986,9 +3986,7 @@ screenshots:
     expires: never
     kind: uint
     notification_emails:
-      - jhirsch@mozilla.com
-      - ibicking@mozilla.com
-      - clouserw@mozilla.com
+      - screenshots-dev@mozilla.org
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -4006,9 +4004,7 @@ screenshots:
     expires: never
     kind: uint
     notification_emails:
-      - jhirsch@mozilla.com
-      - ibicking@mozilla.com
-      - clouserw@mozilla.com
+      - screenshots-dev@mozilla.org
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -4025,9 +4021,7 @@ screenshots:
     expires: never
     kind: uint
     notification_emails:
-      - jhirsch@mozilla.com
-      - ibicking@mozilla.com
-      - clouserw@mozilla.com
+      - screenshots-dev@mozilla.org
     release_channel_collection: opt-out
     products:
       - 'firefox'
