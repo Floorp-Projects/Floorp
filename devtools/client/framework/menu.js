@@ -77,6 +77,22 @@ Menu.prototype.popupAtTarget = function(target, doc) {
 };
 
 /**
+ * Hide an existing menu, if there's any.
+ *
+ * @param {Document} doc
+ *        The document that should own the context menu.
+ */
+Menu.prototype.hide = function(doc) {
+  const win = doc.defaultView;
+  doc = DevToolsUtils.getTopWindow(win).document;
+  const popup = doc.querySelector('popupset menupopup[menu-api="true"]');
+  if (!popup) {
+    return;
+  }
+  popup.hidePopup();
+};
+
+/**
  * Show the Menu at a specified location on the screen
  *
  * Missing features:
@@ -89,27 +105,25 @@ Menu.prototype.popupAtTarget = function(target, doc) {
  *        The document that should own the context menu.
  */
 Menu.prototype.popup = function(screenX, screenY, doc) {
+  // See bug 1285229, on Windows, opening the same popup multiple times in a
+  // row ends up duplicating the popup. The newly inserted popup doesn't
+  // dismiss the old one. So remove any previously displayed popup before
+  // opening a new one.
+  this.hide(doc);
+
   // The context-menu will be created in the topmost window to preserve keyboard
   // navigation (see Bug 1543940).
   // Keep a reference on the window owning the menu to hide the popup on unload.
   const win = doc.defaultView;
-  doc = DevToolsUtils.getTopWindow(doc.defaultView).document;
+  doc = DevToolsUtils.getTopWindow(win).document;
 
   let popupset = doc.querySelector("popupset");
   if (!popupset) {
     popupset = doc.createXULElement("popupset");
     doc.documentElement.appendChild(popupset);
   }
-  // See bug 1285229, on Windows, opening the same popup multiple times in a
-  // row ends up duplicating the popup. The newly inserted popup doesn't
-  // dismiss the old one. So remove any previously displayed popup before
-  // opening a new one.
-  let popup = popupset.querySelector('menupopup[menu-api="true"]');
-  if (popup) {
-    popup.hidePopup();
-  }
 
-  popup = doc.createXULElement("menupopup");
+  const popup = doc.createXULElement("menupopup");
   popup.setAttribute("menu-api", "true");
   popup.setAttribute("consumeoutsideclicks", "false");
   popup.setAttribute("incontentshell", "false");

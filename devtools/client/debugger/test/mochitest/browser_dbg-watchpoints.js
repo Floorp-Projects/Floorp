@@ -21,11 +21,12 @@ add_task(async function() {
   await toggleScopeNode(dbg, 3);
   const addedWatchpoint = waitForDispatch(dbg.store, "SET_WATCHPOINT");
   await rightClickScopeNode(dbg, 5);
-  await waitForContextMenu(dbg);
+  let popup = await waitForContextMenu(dbg);
   let submenu = await openContextMenuSubmenu(dbg, selectors.watchpointsSubmenu);
   const getWatchpointItem = document.querySelector(selectors.addGetWatchpoint);
   submenu.activateItem(getWatchpointItem);
   await addedWatchpoint;
+  popup.hidePopup();
 
   await resume(dbg);
   await waitForPaused(dbg);
@@ -61,11 +62,12 @@ add_task(async function() {
   await toggleScopeNode(dbg, 4);
   const addedWatchpoint2 = waitForDispatch(dbg.store, "SET_WATCHPOINT");
   await rightClickScopeNode(dbg, 6);
-  await waitForContextMenu(dbg);
+  popup = await waitForContextMenu(dbg);
   submenu = await openContextMenuSubmenu(dbg, selectors.watchpointsSubmenu);
   const getWatchpointItem2 = document.querySelector(selectors.addGetWatchpoint);
   submenu.activateItem(getWatchpointItem2);
   await addedWatchpoint2;
+  popup.hidePopup();
 
   info("Resume and wait to pause at the access to b in getB");
   await resume(dbg);
@@ -81,7 +83,6 @@ add_task(async function() {
   info("Remove the get watchpoint on b");
   const removedWatchpoint2 = waitForDispatch(dbg.store, "REMOVE_WATCHPOINT");
   await toggleScopeNode(dbg, 3);
-  await rightClickScopeNode(dbg, 5);
   const el2 = await waitForElementWithSelector(dbg, ".remove-get-watchpoint");
   el2.scrollIntoView();
   clickElementWithSelector(dbg, ".remove-get-watchpoint");
@@ -90,11 +91,12 @@ add_task(async function() {
   info("Add back the get watchpoint on b");
   const addedWatchpoint3 = waitForDispatch(dbg.store, "SET_WATCHPOINT");
   await rightClickScopeNode(dbg, 5);
-  await waitForContextMenu(dbg);
+  popup = await waitForContextMenu(dbg);
   submenu = await openContextMenuSubmenu(dbg, selectors.watchpointsSubmenu);
   const getWatchpointItem3 = document.querySelector(selectors.addGetWatchpoint);
   submenu.activateItem(getWatchpointItem3);
   await addedWatchpoint3;
+  popup.hidePopup();
 
   info("Resume and wait to pause on the final `obj.b;`");
   await resume(dbg);
