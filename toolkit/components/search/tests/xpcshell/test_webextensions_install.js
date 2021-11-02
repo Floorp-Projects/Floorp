@@ -20,6 +20,7 @@ async function getEngineNames() {
 }
 
 add_task(async function setup() {
+  useHttpServer();
   await SearchTestUtils.useTestEngines("test-extensions");
   await promiseStartupManager();
 
@@ -125,4 +126,30 @@ add_task(async function test_manifest_selection() {
     "A enciclopedia Libre",
     "Should have the correct engine name for an extension of one locale using a different locale."
   );
+});
+
+add_task(async function test_load_favicon_invalid() {
+  let observed = TestUtils.topicObserved("console-api-log-event", msg => {
+    return msg.wrappedJSObject.arguments[0].includes(
+      "Content type does not match expected"
+    );
+  });
+
+  // User installs a new search engine
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      favicon_url: `${gDataUrl}engine.xml`,
+    },
+    true
+  );
+
+  await observed;
+
+  let engine = await Services.search.getEngineByName("Example");
+  Assert.equal(null, engine.iconURI, "Should not have set an iconURI");
+
+  // User uninstalls their engine
+  await extension.awaitStartup();
+  await extension.unload();
+  await promiseAfterSettings();
 });
