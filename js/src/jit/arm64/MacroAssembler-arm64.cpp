@@ -57,6 +57,36 @@ void MacroAssemblerCompat::boxValue(JSValueType type, Register src,
       Operand(ImmShiftedTag(type).value));
 }
 
+#ifdef ENABLE_WASM_SIMD
+bool MacroAssembler::MustMaskShiftCountSimd128(wasm::SimdOp op, int32_t* mask) {
+  switch (op) {
+    case wasm::SimdOp::I8x16Shl:
+    case wasm::SimdOp::I8x16ShrU:
+    case wasm::SimdOp::I8x16ShrS:
+      *mask = 7;
+      break;
+    case wasm::SimdOp::I16x8Shl:
+    case wasm::SimdOp::I16x8ShrU:
+    case wasm::SimdOp::I16x8ShrS:
+      *mask = 15;
+      break;
+    case wasm::SimdOp::I32x4Shl:
+    case wasm::SimdOp::I32x4ShrU:
+    case wasm::SimdOp::I32x4ShrS:
+      *mask = 31;
+      break;
+    case wasm::SimdOp::I64x2Shl:
+    case wasm::SimdOp::I64x2ShrU:
+    case wasm::SimdOp::I64x2ShrS:
+      *mask = 63;
+      break;
+    default:
+      MOZ_CRASH("Unexpected shift operation");
+  }
+  return true;
+}
+#endif
+
 void MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output) {
   ARMRegister dest(output, 32);
   Fcvtns(dest, ARMFPRegister(input, 64));
@@ -737,14 +767,8 @@ void MacroAssemblerCompat::rightShiftInt8x16(FloatRegister lhs, Register rhs,
   ScratchSimd128Scope scratch_(asMasm());
   ARMFPRegister shift = Simd16B(scratch_);
 
-  // Compute -(shift & 7) in all 8-bit lanes
-  {
-    vixl::UseScratchRegisterScope temps(this);
-    ARMRegister scratch = temps.AcquireW();
-    And(scratch, ARMRegister(rhs, 32), 7);
-    Neg(scratch, scratch);
-    Dup(shift, scratch);
-  }
+  Dup(shift, ARMRegister(rhs, 32));
+  Neg(shift, shift);
 
   if (isUnsigned) {
     Ushl(Simd16B(dest), Simd16B(lhs), shift);
@@ -759,14 +783,8 @@ void MacroAssemblerCompat::rightShiftInt16x8(FloatRegister lhs, Register rhs,
   ScratchSimd128Scope scratch_(asMasm());
   ARMFPRegister shift = Simd8H(scratch_);
 
-  // Compute -(shift & 15) in all 16-bit lanes
-  {
-    vixl::UseScratchRegisterScope temps(this);
-    ARMRegister scratch = temps.AcquireW();
-    And(scratch, ARMRegister(rhs, 32), 15);
-    Neg(scratch, scratch);
-    Dup(shift, scratch);
-  }
+  Dup(shift, ARMRegister(rhs, 32));
+  Neg(shift, shift);
 
   if (isUnsigned) {
     Ushl(Simd8H(dest), Simd8H(lhs), shift);
@@ -781,14 +799,8 @@ void MacroAssemblerCompat::rightShiftInt32x4(FloatRegister lhs, Register rhs,
   ScratchSimd128Scope scratch_(asMasm());
   ARMFPRegister shift = Simd4S(scratch_);
 
-  // Compute -(shift & 31) in all 32-bit lanes
-  {
-    vixl::UseScratchRegisterScope temps(this);
-    ARMRegister scratch = temps.AcquireW();
-    And(scratch, ARMRegister(rhs, 32), 31);
-    Neg(scratch, scratch);
-    Dup(shift, scratch);
-  }
+  Dup(shift, ARMRegister(rhs, 32));
+  Neg(shift, shift);
 
   if (isUnsigned) {
     Ushl(Simd4S(dest), Simd4S(lhs), shift);
@@ -803,14 +815,8 @@ void MacroAssemblerCompat::rightShiftInt64x2(FloatRegister lhs, Register rhs,
   ScratchSimd128Scope scratch_(asMasm());
   ARMFPRegister shift = Simd2D(scratch_);
 
-  // Compute -(shift & 63)
-  {
-    vixl::UseScratchRegisterScope temps(this);
-    ARMRegister scratch = temps.AcquireX();
-    And(scratch, ARMRegister(rhs, 64), 63);
-    Neg(scratch, scratch);
-    Dup(shift, scratch);
-  }
+  Dup(shift, ARMRegister(rhs, 64));
+  Neg(shift, shift);
 
   if (isUnsigned) {
     Ushl(Simd2D(dest), Simd2D(lhs), shift);
