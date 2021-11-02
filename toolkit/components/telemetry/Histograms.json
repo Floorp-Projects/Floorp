@@ -16746,21 +16746,21 @@
   "OPAQUE_RESPONSE_BLOCKING_TIME_MS" : {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "expires_in_version": "96",
+    "expires_in_version": "102",
     "kind": "exponential",
     "high": 60000,
     "n_buckets": 20,
     "keyed": false,
     "description": "The amount of time to process ORB.",
-    "alert_emails": ["echuang@mozilla.com", "necko@mozilla.com"],
-    "bug_numbers": [1683131, 1720613]
+    "alert_emails": ["annevk@annevk.nl", "necko@mozilla.com"],
+    "bug_numbers": [1683131, 1720613, 1736689]
   },
   "OPAQUE_RESPONSE_BLOCKING": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
-    "alert_emails": ["echuang@mozilla.com", "necko@mozilla.com"],
-    "bug_numbers": [1683131, 1720613],
-    "expires_in_version": "96",
+    "alert_emails": ["annevk@annevk.nl", "necko@mozilla.com"],
+    "bug_numbers": [1683131, 1720613, 1736689],
+    "expires_in_version": "102",
     "kind": "categorical",
     "releaseChannelCollection": "opt-out",
     "description": "Find out how many opaque responses are allowed, or blocked by ORB per source.",
