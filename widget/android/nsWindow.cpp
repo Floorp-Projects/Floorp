@@ -1004,9 +1004,9 @@ class LayerViewSupport final
                 }
                 results->pop();
               }
-              compositor->OnCompositorDetached();
             }
 
+            compositor->OnCompositorDetached();
             disposer->Run();
           }));
     }
