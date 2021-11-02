@@ -129,7 +129,7 @@ add_task(async function test_edit_password() {
         // Submit the form in the content page with the credentials from the test
         // case. This will cause the doorhanger notification to be displayed.
         info("Submitting the form");
-        let formSubmittedPromise = listenForTestNotification("FormSubmit");
+        let formSubmittedPromise = listenForTestNotification("ShowDoorhanger");
         let promiseShown = BrowserTestUtils.waitForEvent(
           PopupNotifications.panel,
           "popupshown",
