@@ -511,8 +511,9 @@ Maybe<uint16_t> WebrtcAudioConduit::RtpSendBaseSeqFor(uint32_t aSsrc) const {
   return Some(it->second);
 }
 
-DOMHighResTimeStamp WebrtcAudioConduit::GetNow() const {
-  return mCall->GetNow();
+const dom::RTCStatsTimestampMaker& WebrtcAudioConduit::GetTimestampMaker()
+    const {
+  return mCall->GetTimestampMaker();
 }
 
 void WebrtcAudioConduit::StopTransmitting() {

@@ -136,7 +136,8 @@ class MediaSessionConduit {
   // Sts thread only.
   virtual Maybe<uint16_t> RtpSendBaseSeqFor(uint32_t aSsrc) const = 0;
 
-  virtual DOMHighResTimeStamp GetNow() const = 0;
+  // Any thread.
+  virtual const dom::RTCStatsTimestampMaker& GetTimestampMaker() const = 0;
 
   virtual Ssrcs GetLocalSSRCs() const = 0;
 

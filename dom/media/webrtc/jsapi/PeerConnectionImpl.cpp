@@ -2649,7 +2649,8 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
             [&](RTCOutboundRtpStreamStats& aLocal) {
               ssrc.apply(
                   [&](uint32_t aSsrc) { aLocal.mSsrc.Construct(aSsrc); });
-              aLocal.mTimestamp.Construct(aPipeline->GetNow());
+              aLocal.mTimestamp.Construct(
+                  aPipeline->GetTimestampMaker().GetNow());
               aLocal.mId.Construct(localId);
               aLocal.mType.Construct(RTCStatsType::Outbound_rtp);
               aLocal.mMediaType.Construct(

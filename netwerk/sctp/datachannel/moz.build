@@ -24,6 +24,8 @@ LOCAL_INCLUDES += [
     "/dom/media/webrtc/transport",
     "/media/webrtc",
     "/netwerk/sctp/src",
+    "/third_party/libwebrtc",
+    "/third_party/libwebrtc/third_party/abseil-cpp",
 ]
 
 DEFINES["SCTP_DEBUG"] = 1
