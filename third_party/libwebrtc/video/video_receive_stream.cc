@@ -442,6 +442,8 @@ VideoReceiveStream::Stats VideoReceiveStream::GetStats() const {
   stats.total_bitrate_bps = 0;
   stats.rtcp_sender_packets_sent = 0;
   stats.rtcp_sender_octets_sent = 0;
+  stats.rtcp_sender_ntp_timestamp_ms = 0;
+  stats.rtcp_sender_remote_ntp_timestamp_ms = 0;
   StreamStatistician* statistician =
       rtp_receive_statistics_->GetStatistician(stats.ssrc);
   if (statistician) {
@@ -454,12 +456,12 @@ VideoReceiveStream::Stats VideoReceiveStream::GetStats() const {
     if (rtx_statistician)
       stats.total_bitrate_bps += rtx_statistician->BitrateReceived();
   }
-  stats.rtcp_sender_octets_sent = 0;
   RtpRtcp* rtp_rtcp = rtp_video_stream_receiver_.rtp_rtcp();
   if (rtp_rtcp) {
     rtp_rtcp->RemoteRTCPSenderInfo(&stats.rtcp_sender_packets_sent,
                                    &stats.rtcp_sender_octets_sent,
-                                   &stats.rtcp_sender_ntp_timestamp_ms);
+                                   &stats.rtcp_sender_ntp_timestamp_ms,
+                                   &stats.rtcp_sender_remote_ntp_timestamp_ms);
   }
 
   return stats;

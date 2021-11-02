@@ -952,9 +952,10 @@ void RtpVideoStreamReceiver2::RemoveSecondarySink(
 // seem to be any support for these stats right now. So, we hack this in.
 void RtpVideoStreamReceiver2::RemoteRTCPSenderInfo(
     uint32_t* packet_count, uint32_t* octet_count,
-    int64_t* ntp_timestamp_ms) const {
+    int64_t* ntp_timestamp_ms, int64_t* remote_ntp_timestamp_ms) const {
   RTC_DCHECK_RUN_ON(&worker_task_checker_);
-  rtp_rtcp_->RemoteRTCPSenderInfo(packet_count, octet_count, ntp_timestamp_ms);
+  rtp_rtcp_->RemoteRTCPSenderInfo(packet_count, octet_count, ntp_timestamp_ms,
+                                  remote_ntp_timestamp_ms);
 }
 
 void RtpVideoStreamReceiver2::ManageFrame(

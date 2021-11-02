@@ -185,7 +185,8 @@ class RtpVideoStreamReceiver2 : public LossNotificationSender,
   // stats at all, and even on the most recent libwebrtc code there does not
   // seem to be any support for these stats right now. So, we hack this in.
   void RemoteRTCPSenderInfo(uint32_t* packet_count, uint32_t* octet_count,
-                            int64_t* ntp_timestamp_ms) const;
+                            int64_t* ntp_timestamp_ms,
+                            int64_t* remote_ntp_timestamp_ms) const;
 
  private:
   // Implements RtpVideoFrameReceiver.

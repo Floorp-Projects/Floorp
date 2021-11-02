@@ -590,11 +590,11 @@ void ModuleRtpRtcpImpl::GetSendStreamDataCounters(
 }
 
 // Received RTCP report.
-void ModuleRtpRtcpImpl::RemoteRTCPSenderInfo(uint32_t* packet_count,
-                                             uint32_t* octet_count,
-                                             int64_t* ntp_timestamp_ms) const {
-  return rtcp_receiver_.RemoteRTCPSenderInfo(packet_count, octet_count,
-                                             ntp_timestamp_ms);
+void ModuleRtpRtcpImpl::RemoteRTCPSenderInfo(
+    uint32_t* packet_count, uint32_t* octet_count, int64_t* ntp_timestamp_ms,
+    int64_t* remote_ntp_timestamp_ms) const {
+  return rtcp_receiver_.RemoteRTCPSenderInfo(
+      packet_count, octet_count, ntp_timestamp_ms, remote_ntp_timestamp_ms);
 }
 
 int32_t ModuleRtpRtcpImpl::RemoteRTCPStat(
