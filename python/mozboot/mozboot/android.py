@@ -21,6 +21,8 @@ NDK_VERSION = "r21d"
 CMDLINE_TOOLS_VERSION_STRING = "4.0"
 CMDLINE_TOOLS_VERSION = "7302050"
 
+BUNDLETOOL_VERSION = "1.8.0"
+
 # We expect the emulator AVD definitions to be platform agnostic
 LINUX_X86_64_ANDROID_AVD = "linux64-android-avd-x86_64-repack"
 LINUX_ARM_ANDROID_AVD = "linux64-android-avd-arm-repack"
@@ -94,6 +96,20 @@ mk_add_options MOZ_OBJDIR=./objdir-frontend
 
 class GetNdkVersionError(Exception):
     pass
+
+
+def install_bundletool(url, path):
+    """
+    Fetch bundletool to the desired directory.
+    """
+    old_path = os.getcwd()
+    try:
+        os.chdir(path)
+        subprocess.check_call(
+            ["wget", "--continue", url, "--output-document", "bundletool.jar"]
+        )
+    finally:
+        os.chdir(old_path)
 
 
 def install_mobile_android_sdk_or_ndk(url, path):
@@ -286,6 +302,9 @@ def ensure_android(
         os_tag, CMDLINE_TOOLS_VERSION
     )
     ndk_url = android_ndk_url(os_name)
+    bundletool_url = "https://github.com/google/bundletool/releases/download/{v}/bundletool-all-{v}.jar".format(  # NOQA: E501
+        v=BUNDLETOOL_VERSION
+    )
 
     ensure_android_sdk_and_ndk(
         mozbuild_path,
@@ -294,6 +313,7 @@ def ensure_android(
         sdk_url=sdk_url,
         ndk_path=ndk_path,
         ndk_url=ndk_url,
+        bundletool_url=bundletool_url,
         artifact_mode=artifact_mode,
         ndk_only=ndk_only,
         emulator_only=emulator_only,
@@ -341,6 +361,7 @@ def ensure_android_sdk_and_ndk(
     sdk_url,
     ndk_path,
     ndk_url,
+    bundletool_url,
     artifact_mode,
     ndk_only,
     emulator_only,
@@ -395,6 +416,7 @@ def ensure_android_sdk_and_ndk(
             os.path.join(cmdline_tools_path, "cmdline-tools"),
             os.path.join(cmdline_tools_path, CMDLINE_TOOLS_VERSION_STRING),
         )
+        install_bundletool(bundletool_url, mozbuild_path)
 
 
 def get_packages_to_install(packages_file_content, avd_manifest):
