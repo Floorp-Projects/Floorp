@@ -203,10 +203,13 @@ async function copyMessageContent(hud, messageEl) {
   const copyMenuItem = menuPopup.querySelector("#console-menu-copy");
   ok(copyMenuItem, "copy menu item is enabled");
 
-  return waitForClipboardPromise(
+  const text = await waitForClipboardPromise(
     () => copyMenuItem.click(),
     data => data
   );
+
+  menuPopup.hidePopup();
+  return text;
 }
 
 /**

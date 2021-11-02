@@ -45,6 +45,9 @@ add_task(async function() {
     () => checkClipboardData(EXPECTED_CLIPBOARD_REMOVED)
   );
 
+  info("Hiding menu");
+  menu.hide(document);
+
   info(
     "Click the Copy Declaration context menu item for the added declaration"
   );

@@ -155,6 +155,8 @@ async function exportAllToFile(hud, message) {
   exportFile.click();
   info("Exporting to file");
 
+  menuPopup.hidePopup();
+
   // The file may not be ready yet.
   await waitFor(() => OS.File.exists(nsiFile.path));
   const buffer = await OS.File.read(nsiFile.path);
@@ -180,6 +182,8 @@ async function exportAllToClipboard(hud, message) {
       return data;
     }
   );
+
+  menuPopup.hidePopup();
   return clipboardText;
 }
 
