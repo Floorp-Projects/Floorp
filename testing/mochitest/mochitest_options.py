@@ -1205,6 +1205,14 @@ class AndroidArguments(ArgumentContainer):
             },
         ],
         [
+            ["--aab"],
+            {
+                "action": "store_true",
+                "default": False,
+                "help": "Install the test_runner app using AAB.",
+            },
+        ],
+        [
             ["--deviceSerial"],
             {
                 "dest": "deviceSerial",
