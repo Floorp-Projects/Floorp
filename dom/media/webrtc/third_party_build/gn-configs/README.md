@@ -25,6 +25,8 @@
    - select Change and then click Next
    - select "Debugging Tools for Windows" and then click Change.
 
+   And the aarch64 Rust target will need to be installed via: `rustup target add aarch64-pc-windows-msvc`
+
 3. See information in `third_party/libwebrtc/README.mozilla` for the proper revision of libwebrtc
 
         libwebrtc updated from commit https://github.com/mozilla/libwebrtc/archive/149d693483e9055f574d9d65b01fe75a186b654b.tar.gz on 2020-11-30T15:48:48.472088.
