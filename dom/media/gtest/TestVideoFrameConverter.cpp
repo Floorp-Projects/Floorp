@@ -6,6 +6,7 @@
 #include <iterator>
 
 #include "gtest/gtest.h"
+#include "libwebrtcglue/SystemTime.h"
 #include "MediaEventSource.h"
 #include "VideoFrameConverter.h"
 #include "WaitFor.h"
@@ -31,12 +32,13 @@ class FrameListener : public VideoConverterListener {
 
 class VideoFrameConverterTest : public ::testing::Test {
  protected:
+  const dom::RTCStatsTimestampMaker mTimestampMaker;
   RefPtr<VideoFrameConverter> mConverter;
   RefPtr<FrameListener> mListener;
 
   VideoFrameConverterTest()
-      : mConverter(
-            MakeAndAddRef<VideoFrameConverter>(dom::RTCStatsTimestampMaker())),
+      : mTimestampMaker(dom::RTCStatsTimestampMaker()),
+        mConverter(MakeAndAddRef<VideoFrameConverter>(mTimestampMaker)),
         mListener(MakeAndAddRef<FrameListener>()) {
     mConverter->AddListener(mListener);
   }
@@ -172,13 +174,7 @@ TEST_F(VideoFrameConverterTest, Duplication) {
   EXPECT_FALSE(IsFrameBlack(frame1));
   EXPECT_GT(conversionTime1 - now,
             SameFrameTimeDuration() + TimeDuration::FromMilliseconds(100));
-  // Check that the second frame comes between 1s and 2s after the first.
-  EXPECT_GT(TimeDuration::FromMicroseconds(frame1.timestamp_us()) -
-                TimeDuration::FromMicroseconds(frame0.timestamp_us()),
-            SameFrameTimeDuration());
-  EXPECT_LT(TimeDuration::FromMicroseconds(frame1.timestamp_us()) -
-                TimeDuration::FromMicroseconds(frame0.timestamp_us()),
-            TimeDuration::FromSeconds(2));
+  EXPECT_EQ(frame1.timestamp_us() - frame0.timestamp_us(), USECS_PER_S);
 }
 
 TEST_F(VideoFrameConverterTest, DropsOld) {
@@ -228,10 +224,8 @@ TEST_F(VideoFrameConverterTest, BlackOnDisable) {
   EXPECT_EQ(frame1.height(), 480);
   EXPECT_TRUE(IsFrameBlack(frame1));
   EXPECT_GT(conversionTime1 - now, SameFrameTimeDuration());
-  // Check that the second frame comes between 1s and 2s after the first.
-  EXPECT_NEAR(frame1.timestamp_us(),
-              frame0.timestamp_us() + ((PR_USEC_PER_SEC * 3) / 2),
-              PR_USEC_PER_SEC / 2);
+  // Check that the second frame comes 1s after the first.
+  EXPECT_EQ(frame1.timestamp_us(), frame0.timestamp_us() + PR_USEC_PER_SEC);
 }
 
 TEST_F(VideoFrameConverterTest, ClearFutureFramesOnJumpingBack) {
@@ -309,4 +303,31 @@ TEST_F(VideoFrameConverterTest, NoConversionsWhileInactive) {
   EXPECT_EQ(frame.width(), 800);
   EXPECT_EQ(frame.height(), 600);
   EXPECT_FALSE(IsFrameBlack(frame));
+}
+
+TEST_F(VideoFrameConverterTest, TimestampPropagation) {
+  auto framesPromise = TakeNConvertedFrames(2);
+  TimeStamp now = TimeStamp::Now();
+  TimeStamp t1 = now + TimeDuration::FromMilliseconds(1);
+  TimeStamp t2 = now + TimeDuration::FromMilliseconds(29);
+
+  mConverter->SetActive(true);
+  mConverter->QueueVideoChunk(GenerateChunk(640, 480, t1), false);
+  mConverter->QueueVideoChunk(GenerateChunk(800, 600, t2), false);
+
+  auto frames = WaitFor(framesPromise).unwrap();
+  ASSERT_EQ(frames.size(), 2U);
+  const auto& [frame0, conversionTime0] = frames[0];
+  EXPECT_EQ(frame0.width(), 640);
+  EXPECT_EQ(frame0.height(), 480);
+  EXPECT_FALSE(IsFrameBlack(frame0));
+  EXPECT_EQ(frame0.timestamp_us(),
+            mTimestampMaker.ConvertMozTimeToRealtime(t1).us());
+
+  const auto& [frame1, conversionTime1] = frames[1];
+  EXPECT_EQ(frame1.width(), 800);
+  EXPECT_EQ(frame1.height(), 600);
+  EXPECT_FALSE(IsFrameBlack(frame1));
+  EXPECT_EQ(frame1.timestamp_us(),
+            mTimestampMaker.ConvertMozTimeToRealtime(t2).us());
 }
