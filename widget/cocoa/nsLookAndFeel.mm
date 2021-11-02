@@ -199,7 +199,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       color = nsCocoaFeatures::OnMontereyOrLater() ? GetColorFromNSColor(NSColor.controlTextColor)
                                                    : NS_RGB(0xFF, 0xFF, 0xFF);
       break;
-    case ColorID::TextForeground:
     case ColorID::Captiontext:
     case ColorID::Menutext:
     case ColorID::Infotext:
