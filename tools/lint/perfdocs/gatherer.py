@@ -12,6 +12,7 @@ from perfdocs.framework_gatherers import (
     MozperftestGatherer,
     RaptorGatherer,
     StaticGatherer,
+    TalosGatherer,
 )
 
 logger = PerfDocLogger()
@@ -20,6 +21,7 @@ logger = PerfDocLogger()
 frameworks = {
     "raptor": RaptorGatherer,
     "mozperftest": MozperftestGatherer,
+    "talos": TalosGatherer,
 }
 
 

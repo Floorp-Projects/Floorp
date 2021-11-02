@@ -114,7 +114,7 @@ autosectionlabel_maxdepth = 1
 
 
 def install_sphinx_panels(app, pagename, templatename, context, doctree):
-    if "raptor" in pagename:
+    if "perfdocs" in pagename:
         app.add_js_file("sphinx_panels.js")
         app.add_css_file("sphinx_panels.css")
 
