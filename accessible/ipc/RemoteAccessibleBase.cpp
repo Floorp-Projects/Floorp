@@ -441,6 +441,26 @@ RemoteAccessibleBase<Derived>::DefaultTextAttributes() {
   return result.forget();
 }
 
+template <class Derived>
+uint64_t RemoteAccessibleBase<Derived>::State() {
+  if (mCachedFields) {
+    if (auto rawState =
+            mCachedFields->GetAttribute<uint64_t>(nsGkAtoms::state)) {
+      VERIFY_CACHE(CacheDomain::State);
+      uint64_t state = *rawState;
+      // Handle states that are derived from other states.
+      if (!(state & states::UNAVAILABLE)) {
+        state |= states::ENABLED | states::SENSITIVE;
+      }
+      if (state & states::EXPANDABLE && !(state & states::EXPANDED)) {
+        state |= states::COLLAPSED;
+      }
+      return state;
+    }
+  }
+  return 0;
+}
+
 template class RemoteAccessibleBase<RemoteAccessible>;
 
 }  // namespace a11y
