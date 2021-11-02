@@ -1,0 +1,137 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "LoginDetectionService.h"
+
+#include "nsILoginInfo.h"
+#include "nsILoginManager.h"
+#include "nsIObserver.h"
+#include "nsIXULRuntime.h"
+#include "nsServiceManagerUtils.h"
+#include "nsXULAppAPI.h"
+
+#include "mozilla/ClearOnShutdown.h"
+#include "mozilla/StaticPrefs_fission.h"
+#include "mozilla/dom/ProcessIsolation.h"
+
+namespace mozilla::dom {
+
+static StaticRefPtr<LoginDetectionService> gLoginDetectionService;
+
+namespace {
+
+void OnFissionPrefsChange(const char* aPrefName, void* aData) {
+  MOZ_ASSERT(gLoginDetectionService);
+
+  gLoginDetectionService->MaybeStartMonitoring();
+}
+
+}  // namespace
+
+NS_IMPL_ISUPPORTS(LoginDetectionService, nsILoginDetectionService,
+                  nsISupportsWeakReference, nsILoginSearchCallback, nsIObserver)
+
+// static
+already_AddRefed<LoginDetectionService> LoginDetectionService::GetSingleton() {
+  if (gLoginDetectionService) {
+    return do_AddRef(gLoginDetectionService);
+  }
+
+  gLoginDetectionService = new LoginDetectionService();
+  ClearOnShutdown(&gLoginDetectionService);
+
+  return do_AddRef(gLoginDetectionService);
+}
+
+LoginDetectionService::~LoginDetectionService() { UnregisterObserver(); }
+
+void LoginDetectionService::MaybeStartMonitoring() {
+  if (IsIsolateHighValueSiteEnabled()) {
+    // We want to isolate sites with a saved password, so fetch saved logins
+    // from the password manager, and then add the 'HighValue' permission.
+
+    // Note that we don't monitor whether a login is added or removed after
+    // logins are fetched. For adding logins, this will be covered by form
+    // submission detection heuristic. As for removing logins, it doesn't
+    // provide security benefit just to NOT isolate the removed site. The site
+    // will not be isolated when its permission expired.
+    FetchLogins();
+
+    if (!mObs) {
+      mObs = mozilla::services::GetObserverService();
+      mObs->AddObserver(this, "passwordmgr-form-submission-detected", false);
+    }
+  } else {
+    UnregisterObserver();
+  }
+}
+
+void LoginDetectionService::FetchLogins() {
+  nsresult rv;
+  nsCOMPtr<nsILoginManager> loginManager =
+      do_GetService(NS_LOGINMANAGER_CONTRACTID, &rv);
+  if (NS_WARN_IF(!loginManager)) {
+    return;
+  }
+
+  Unused << loginManager->GetAllLoginsWithCallbackAsync(this);
+}
+
+void LoginDetectionService::UnregisterObserver() {
+  if (mObs) {
+    mObs->RemoveObserver(this, "passwordmgr-form-submission-detected");
+    mObs = nullptr;
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsILoginDetectionService implementation
+NS_IMETHODIMP LoginDetectionService::Init() {
+  if (XRE_IsContentProcess()) {
+    return NS_OK;
+  }
+
+  Preferences::RegisterCallback(OnFissionPrefsChange, "fission.autostart");
+  Preferences::RegisterCallback(OnFissionPrefsChange,
+                                "fission.webContentIsolationStrategy");
+
+  MaybeStartMonitoring();
+
+  return NS_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsILoginSearchObserver implementation
+NS_IMETHODIMP
+LoginDetectionService::OnSearchComplete(
+    const nsTArray<RefPtr<nsILoginInfo>>& aLogins) {
+  // Add all origins with saved passwords to the permission manager.
+  for (const auto& login : aLogins) {
+    nsString origin;
+    login->GetOrigin(origin);
+
+    AddHighValuePermission(NS_ConvertUTF16toUTF8(origin),
+                           mozilla::dom::kHighValueHasSavedLoginPermission);
+  }
+
+  return NS_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIObserver implementation
+NS_IMETHODIMP
+LoginDetectionService::Observe(nsISupports* aSubject, const char* aTopic,
+                               const char16_t* aData) {
+  if ("passwordmgr-form-submission-detected"_ns.Equals(aTopic)) {
+    nsDependentString origin(aData);
+    AddHighValuePermission(NS_ConvertUTF16toUTF8(origin),
+                           mozilla::dom::kHighValueIsLoggedInPermission);
+  }
+
+  return NS_OK;
+}
+
+}  // namespace mozilla::dom
