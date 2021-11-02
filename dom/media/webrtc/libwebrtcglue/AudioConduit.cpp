@@ -358,11 +358,8 @@ bool WebrtcAudioConduit::OverrideRemoteSSRC(uint32_t ssrc) {
 
 bool WebrtcAudioConduit::GetRemoteSSRC(uint32_t* ssrc) const {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  if (!mRecvStream) {
-    return false;
-  }
-  *ssrc = mRecvStreamConfig.rtp.remote_ssrc;
-  return true;
+  // libwebrtc uses 0 to mean a lack of SSRC. That is not to spec.
+  return (*ssrc = mRecvStreamConfig.rtp.remote_ssrc) != 0;
 }
 
 Maybe<webrtc::AudioReceiveStream::Stats> WebrtcAudioConduit::GetReceiverStats()
@@ -501,17 +498,6 @@ void WebrtcAudioConduit::OnRtcpReceived(MediaPacket&& aPacket) {
 
   DeliverPacket(rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()),
                 PacketType::RTCP);
-
-  // TODO(bug 1496533): We will need to keep separate timestamps for each SSRC,
-  // and for each SSRC we will need to keep a timestamp for SR and RR.
-  mLastRtcpReceived = Some(GetNow());
-}
-
-// TODO(bug 1496533): We will need to add a type (ie; SR or RR) param here, or
-// perhaps break this function into two functions, one for each type.
-Maybe<DOMHighResTimeStamp> WebrtcAudioConduit::LastRtcpReceived() const {
-  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  return mLastRtcpReceived;
 }
 
 Maybe<uint16_t> WebrtcAudioConduit::RtpSendBaseSeqFor(uint32_t aSsrc) const {
