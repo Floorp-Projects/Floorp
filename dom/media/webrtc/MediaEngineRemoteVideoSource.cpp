@@ -82,10 +82,20 @@ MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
       mFirstFramePromise(mFirstFramePromiseHolder.Ensure(__func__)),
       mDeviceName(aDeviceName),
       mDeviceUUID(aDeviceUUID) {
+  LOG("%s", __PRETTY_FUNCTION__);
   mSettings->mWidth.Construct(0);
   mSettings->mHeight.Construct(0);
   mSettings->mFrameRate.Construct(0);
-  Init();
+  if (mCapEngine == camera::CameraEngine) {
+    // Only cameras can have a facing mode.
+    Maybe<VideoFacingModeEnum> facingMode = GetFacingMode(mDeviceName);
+    if (facingMode.isSome()) {
+      NS_ConvertASCIItoUTF16 facingString(
+          dom::VideoFacingModeEnumValues::GetString(*facingMode));
+      mSettings->mFacingMode.Construct(facingString);
+      mFacingMode.emplace(facingString);
+    }
+  }
 }
 
 MediaEngineRemoteVideoSource::~MediaEngineRemoteVideoSource() {
@@ -104,22 +114,6 @@ dom::MediaSourceEnum MediaEngineRemoteVideoSource::GetMediaSource() const {
       return MediaSourceEnum::Window;
     default:
       MOZ_CRASH();
-  }
-}
-
-void MediaEngineRemoteVideoSource::Init() {
-  LOG("%s", __PRETTY_FUNCTION__);
-  AssertIsOnOwningThread();
-
-  if (GetMediaSource() == MediaSourceEnum::Camera) {
-    // Only cameras can have a facing mode.
-    Maybe<VideoFacingModeEnum> facingMode = GetFacingMode(mDeviceName);
-    if (facingMode.isSome()) {
-      NS_ConvertASCIItoUTF16 facingString(
-          dom::VideoFacingModeEnumValues::GetString(*facingMode));
-      mSettings->mFacingMode.Construct(facingString);
-      mFacingMode.emplace(facingString);
-    }
   }
 }
 
