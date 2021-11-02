@@ -9,8 +9,39 @@
 #include "TimeUnits.h"
 
 namespace mozilla {
+using media::TimeUnit;
+
+RTCStatsTimestampMakerRealtimeClock::RTCStatsTimestampMakerRealtimeClock(
+    const dom::RTCStatsTimestampMaker& aTimestampMaker)
+    : mTimestampMaker(aTimestampMaker) {}
+
+webrtc::Timestamp RTCStatsTimestampMakerRealtimeClock::CurrentTime() {
+  return mTimestampMaker.GetNowRealtime();
+}
+
+webrtc::NtpTime RTCStatsTimestampMakerRealtimeClock::ConvertTimestampToNtpTime(
+    webrtc::Timestamp aRealtime) {
+  return CreateNtp(mTimestampMaker.ConvertRealtimeTo1Jan1970(aRealtime) +
+                   webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970));
+}
+
+static TimeStamp CalculateBaseOffset(TimeStamp aNow) {
+  uint32_t offset = 24 * 60 * 60;
+  // If `converted` has underflowed it is capped at 0, which is an invalid
+  // timestamp. Reduce the offset in case that happens.
+  TimeStamp base;
+  do {
+    base = aNow - TimeDuration::FromSeconds(offset);
+    offset /= 2;
+  } while (!base);
+  return base;
+}
+
 TimeStamp WebrtcSystemTimeBase() {
-  static TimeStamp base = TimeStamp::Now();
+  static TimeStamp now = TimeStamp::Now();
+  // Make it obvious that these timestamps use a different base than
+  // RTCStatsTimestampMakerRealtimeClock::CurrentTime.
+  static TimeStamp base = CalculateBaseOffset(now);
   return base;
 }
 
