@@ -83,7 +83,7 @@ class WebrtcVideoConduit
 
   Maybe<uint16_t> RtpSendBaseSeqFor(uint32_t aSsrc) const override;
 
-  DOMHighResTimeStamp GetNow() const override;
+  const dom::RTCStatsTimestampMaker& GetTimestampMaker() const override;
 
   void StopTransmitting();
   void StartTransmitting();

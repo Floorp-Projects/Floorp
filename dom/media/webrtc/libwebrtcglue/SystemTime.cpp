@@ -6,6 +6,8 @@
 
 #include "SystemTime.h"
 
+#include "TimeUnits.h"
+
 namespace mozilla {
 TimeStamp WebrtcSystemTimeBase() {
   static TimeStamp base = TimeStamp::Now();
@@ -16,6 +18,17 @@ webrtc::Timestamp WebrtcSystemTime() {
   const TimeStamp base = WebrtcSystemTimeBase();
   const TimeStamp now = TimeStamp::Now();
   return webrtc::Timestamp::Micros((now - base).ToMicroseconds());
+}
+
+webrtc::NtpTime CreateNtp(webrtc::Timestamp aTime) {
+  const int64_t timeNtpUs = aTime.us();
+  const uint32_t seconds = static_cast<uint32_t>(timeNtpUs / USECS_PER_S);
+
+  constexpr int64_t fractionsPerSec = 1LL << 32;
+  const int64_t fractionsUs = timeNtpUs % USECS_PER_S;
+  const uint32_t fractions = (fractionsUs * fractionsPerSec) / USECS_PER_S;
+
+  return webrtc::NtpTime(seconds, fractions);
 }
 }  // namespace mozilla
 

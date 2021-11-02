@@ -267,7 +267,8 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
 
             auto constructCommonInboundRtpStats =
                 [&](RTCInboundRtpStreamStats& aLocal) {
-                  aLocal.mTimestamp.Construct(pipeline->GetNow());
+                  aLocal.mTimestamp.Construct(
+                      pipeline->GetTimestampMaker().GetNow());
                   aLocal.mId.Construct(localId);
                   aLocal.mType.Construct(RTCStatsType::Inbound_rtp);
                   ssrc.apply(
@@ -483,7 +484,8 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
 
   if (mJsepTransceiver->mTransport.mComponents) {
     promises.AppendElement(mTransportHandler->GetIceStats(
-        mJsepTransceiver->mTransport.mTransportId, mPipeline->GetNow()));
+        mJsepTransceiver->mTransport.mTransportId,
+        mPipeline->GetTimestampMaker().GetNow()));
   }
 
   return promises;
