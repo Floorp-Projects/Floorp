@@ -1087,12 +1087,8 @@ void WebrtcVideoConduit::UnsetRemoteSSRC(uint32_t ssrc) {
 
 bool WebrtcVideoConduit::GetRemoteSSRC(uint32_t* aSsrc) const {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  if (!mRecvStream) {
-    return false;
-  }
   // libwebrtc uses 0 to mean a lack of SSRC. That is not to spec.
-  *aSsrc = mRecvStreamConfig.rtp.remote_ssrc;
-  return true;
+  return (*aSsrc = mRecvStreamConfig.rtp.remote_ssrc) != 0;
 }
 
 Maybe<webrtc::VideoReceiveStream::Stats> WebrtcVideoConduit::GetReceiverStats()
@@ -1489,17 +1485,6 @@ void WebrtcVideoConduit::OnRtcpReceived(MediaPacket&& aPacket) {
 
   DeliverPacket(rtc::CopyOnWriteBuffer(aPacket.data(), aPacket.len()),
                 PacketType::RTCP);
-
-  // TODO(bug 1496533): We will need to keep separate timestamps for each SSRC,
-  // and for each SSRC we will need to keep a timestamp for SR and RR.
-  mLastRtcpReceived = Some(GetNow());
-}
-
-// TODO(bug 1496533): We will need to add a type (ie; SR or RR) param here, or
-// perhaps break this function into two functions, one for each type.
-Maybe<DOMHighResTimeStamp> WebrtcVideoConduit::LastRtcpReceived() const {
-  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  return mLastRtcpReceived;
 }
 
 Maybe<uint16_t> WebrtcVideoConduit::RtpSendBaseSeqFor(uint32_t aSsrc) const {
