@@ -63,7 +63,7 @@ class RemoteProcessMonitor(object):
             # tests get foreground priority scheduling.
             self.device.launch_activity(
                 self.package,
-                intent="org.mozilla.geckoview.test.XPCSHELL_TEST_MAIN",
+                intent="org.mozilla.geckoview.test_runner.XPCSHELL_TEST_MAIN",
                 activity_name="TestRunnerActivity",
                 e10s=True,
             )
@@ -314,7 +314,7 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         self, cmd, stdout, stderr, env, cwd, timeout=None, test_name=None
     ):
         rpm = RemoteProcessMonitor(
-            "org.mozilla.geckoview.test",
+            "org.mozilla.geckoview.test_runner",
             self.device,
             self.log,
             self.remoteLogFile,
@@ -449,7 +449,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.initDir(self.profileDir)
 
         # Make sure we get a fresh start
-        self.device.stop_application("org.mozilla.geckoview.test")
+        self.device.stop_application("org.mozilla.geckoview.test_runner")
 
         for i in range(options["threadCount"]):
             RemoteProcessMonitor.processStatus += [False]

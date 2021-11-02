@@ -508,6 +508,8 @@ class AndroidMixin(object):
             # target looks like geckoview.
             if "androidTest" in self.installer_path:
                 self.app_name = "org.mozilla.geckoview.test"
+            elif "test_runner" in self.installer_path:
+                self.app_name = "org.mozilla.geckoview.test_runner"
             elif "geckoview" in self.installer_path:
                 self.app_name = "org.mozilla.geckoview_example"
         if self.app_name is None:

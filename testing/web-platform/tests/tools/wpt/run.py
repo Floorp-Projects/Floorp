@@ -286,7 +286,7 @@ class FirefoxAndroid(BrowserSetup):
             kwargs["prefs_root"] = prefs_root
 
         if kwargs["package_name"] is None:
-            kwargs["package_name"] = "org.mozilla.geckoview.test"
+            kwargs["package_name"] = "org.mozilla.geckoview.test_runner"
         app = kwargs["package_name"]
 
         if kwargs["device_serial"] is None:

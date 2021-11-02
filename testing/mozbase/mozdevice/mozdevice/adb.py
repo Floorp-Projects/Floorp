@@ -752,8 +752,8 @@ class ADBDevice(ADBCommand):
 
        adbdevice = ADBDevice()
        print(adbdevice.list_files("/mnt/sdcard"))
-       if adbdevice.process_exist("org.mozilla.geckoview.test"):
-           print("org.mozilla.geckoview.test is running")
+       if adbdevice.process_exist("org.mozilla.geckoview.test_runner"):
+           print("org.mozilla.geckoview.test_runner is running")
     """
 
     SOCKET_DIRECTION_REVERSE = "reverse"
@@ -4187,7 +4187,7 @@ class ADBDevice(ADBCommand):
         debugging arguments; convenient for geckoview apps.
 
         :param str app_name: Name of application (e.g.
-            `org.mozilla.geckoview_example` or `org.mozilla.geckoview.test`)
+            `org.mozilla.geckoview_example` or `org.mozilla.geckoview.test_runner`)
         :param str activity_name: Activity name, like `GeckoViewActivity`, or
             `TestRunnerActivity`.
         :param str intent: Intent to launch application.
@@ -4256,7 +4256,7 @@ class ADBDevice(ADBCommand):
         debugging arguments; convenient for geckoview apps.
 
         :param str app_name: Name of application (e.g.
-            `org.mozilla.geckoview_example` or `org.mozilla.geckoview.test`)
+            `org.mozilla.geckoview_example` or `org.mozilla.geckoview.test_runner`)
         :param str activity_name: Activity name, like `GeckoViewActivity`, or
             `TestRunnerActivity`.
         :param str intent: Intent to launch application.
