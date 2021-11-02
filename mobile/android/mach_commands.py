@@ -279,6 +279,31 @@ def android_install_geckoview_test_runner_aab(command_context, args):
 
 @SubCommand(
     "android",
+    "install-geckoview_example-aab",
+    """Install geckoview_example with AAB""",
+)
+@CommandArgument("args", nargs=argparse.REMAINDER)
+def android_install_geckoview_example_aab(command_context, args):
+    install_app_bundle(
+        command_context,
+        command_context.substs["GRADLE_ANDROID_GECKOVIEW_EXAMPLE_BUNDLE"],
+    )
+    return 0
+
+
+@SubCommand("android", "install-geckoview-test", """Install geckoview.test """)
+@CommandArgument("args", nargs=argparse.REMAINDER)
+def android_install_geckoview_test(command_context, args):
+    gradle(
+        command_context,
+        command_context.substs["GRADLE_ANDROID_INSTALL_GECKOVIEW_TEST_TASKS"] + args,
+        verbose=True,
+    )
+    return 0
+
+
+@SubCommand(
+    "android",
     "geckoview-docs",
     """Create GeckoView javadoc and optionally upload to Github""",
 )
