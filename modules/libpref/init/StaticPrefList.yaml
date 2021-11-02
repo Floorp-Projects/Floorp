@@ -827,6 +827,8 @@
   value: "#0000EE"
   mirror: never
 
+# If you change this, you probably also want to change
+# nsXPLookAndFeel::GenericDarkColor for MozNativehyperlinktext.
 - name: browser.anchor_color.dark
   type: String
   value: "#9E9EFF"
@@ -1449,6 +1451,8 @@
   value: "#551A8B"
   mirror: never
 
+# If you change this, you probably also want to change
+# nsXPLookAndFeel::GenericDarkColor for MozNativevisitedhyperlinktext.
 - name: browser.visited_color.dark
   type: String
   value: "#D0ADF0"

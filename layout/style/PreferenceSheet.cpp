@@ -110,13 +110,19 @@ void PreferenceSheet::Prefs::LoadColors(bool aIsLight) {
   const bool usePrefColors = !useStandins && !mIsChrome &&
                              !StaticPrefs::browser_display_use_system_colors();
   const auto scheme = aIsLight ? ColorScheme::Light : ColorScheme::Dark;
+
+  // Link colors might be provided by the OS, but they might not be. If they are
+  // not, then fall back to the pref colors.
+  //
+  // In particular, we don't query active link color to the OS.
+  GetColor("browser.anchor_color", scheme, colors.mLink);
+  GetColor("browser.active_color", scheme, colors.mActiveLink);
+  GetColor("browser.visited_color", scheme, colors.mVisitedLink);
+
   if (usePrefColors) {
     GetColor("browser.display.background_color", scheme,
              colors.mDefaultBackground);
     GetColor("browser.display.foreground_color", scheme, colors.mDefault);
-    GetColor("browser.anchor_color", scheme, colors.mLink);
-    GetColor("browser.active_color", scheme, colors.mActiveLink);
-    GetColor("browser.visited_color", scheme, colors.mVisitedLink);
   } else {
     using ColorID = LookAndFeel::ColorID;
     const auto standins = LookAndFeel::UseStandins(useStandins);
