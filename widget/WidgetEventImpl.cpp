@@ -424,8 +424,8 @@ bool WidgetEvent::WillBeSentToRemoteProcess() const {
     return false;
   }
 
-  nsCOMPtr<nsIContent> originalTarget = do_QueryInterface(mOriginalTarget);
-  return EventStateManager::IsTopLevelRemoteTarget(originalTarget);
+  return EventStateManager::IsTopLevelRemoteTarget(
+      nsIContent::FromEventTarget(mOriginalTarget));
 }
 
 bool WidgetEvent::IsIMERelatedEvent() const {

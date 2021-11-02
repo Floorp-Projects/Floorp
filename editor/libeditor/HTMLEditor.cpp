@@ -6031,11 +6031,8 @@ bool HTMLEditor::IsAcceptableInputEvent(WidgetGUIEvent* aGUIEvent) const {
     return true;
   }
 
-  RefPtr<EventTarget> eventTarget = aGUIEvent->GetOriginalDOMEventTarget();
-  if (NS_WARN_IF(!eventTarget)) {
-    return false;
-  }
-  nsCOMPtr<nsINode> eventTargetNode = do_QueryInterface(eventTarget);
+  nsCOMPtr<nsINode> eventTargetNode =
+      nsINode::FromEventTargetOrNull(aGUIEvent->GetOriginalDOMEventTarget());
   if (NS_WARN_IF(!eventTargetNode)) {
     return false;
   }
