@@ -32,9 +32,8 @@ namespace mozilla {
             webrtc::AudioState::Create(aSharedState->mAudioStateConfig);
         config.task_queue_factory = wrapper->mTaskQueueFactory.get();
         config.trials = aSharedState->mTrials.get();
-        wrapper->SetCall(WrapUnique(webrtc::Call::Create(
-            config, &wrapper->mClock, aSharedState->GetModuleThread(),
-            webrtc::ProcessThread::Create("PacerThread"))));
+        wrapper->SetCall(WrapUnique(
+            webrtc::Call::Create(config, aSharedState->GetModuleThread())));
       }));
 
   return wrapper;
@@ -68,6 +67,10 @@ void WebrtcCallWrapper::UnregisterConduit(MediaSessionConduit* conduit) {
   mConduits.erase(conduit);
 }
 
+DOMHighResTimeStamp WebrtcCallWrapper::GetNow() const {
+  return mTimestampMaker.GetNow();
+}
+
 void WebrtcCallWrapper::Destroy() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mCall = nullptr;
@@ -76,7 +79,7 @@ void WebrtcCallWrapper::Destroy() {
 
 const dom::RTCStatsTimestampMaker& WebrtcCallWrapper::GetTimestampMaker()
     const {
-  return mClock.mTimestampMaker;
+  return mTimestampMaker;
 }
 
 WebrtcCallWrapper::~WebrtcCallWrapper() { MOZ_ASSERT(!mCall); }
@@ -90,7 +93,7 @@ WebrtcCallWrapper::WebrtcCallWrapper(
     const dom::RTCStatsTimestampMaker& aTimestampMaker,
     UniquePtr<media::ShutdownBlockingTicket> aShutdownTicket)
     : mSharedState(std::move(aSharedState)),
-      mClock(aTimestampMaker),
+      mTimestampMaker(aTimestampMaker),
       mShutdownTicket(std::move(aShutdownTicket)),
       mCallThread(mSharedState->mCallWorkerThread),
       mAudioDecoderFactory(mSharedState->mAudioDecoderFactory),

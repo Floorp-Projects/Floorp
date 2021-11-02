@@ -22,7 +22,6 @@ UNIFIED_SOURCES += [
     "GmpVideoCodec.cpp",
     "MediaConduitInterface.cpp",
     "MediaDataCodec.cpp",
-    "SystemTime.cpp",
     "VideoConduit.cpp",
     "VideoStreamFactory.cpp",
     "WebrtcCallWrapper.cpp",

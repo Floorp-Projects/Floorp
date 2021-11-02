@@ -17,7 +17,6 @@
 #include <utility>
 
 #include "api/rtc_event_log/rtc_event_log.h"
-#include "api/units/timestamp.h"
 #include "logging/rtc_event_log/events/rtc_event_rtcp_packet_outgoing.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/app.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/bye.h"
@@ -133,16 +132,16 @@ class RTCPSender::RtcpContext {
   RtcpContext(const FeedbackState& feedback_state,
               int32_t nack_size,
               const uint16_t* nack_list,
-              Timestamp now)
+              int64_t now_us)
       : feedback_state_(feedback_state),
         nack_size_(nack_size),
         nack_list_(nack_list),
-        now_(now) {}
+        now_us_(now_us) {}
 
   const FeedbackState& feedback_state_;
   const int32_t nack_size_;
   const uint16_t* nack_list_;
-  const Timestamp now_;
+  const int64_t now_us_;
 };
 
 RTCPSender::RTCPSender(const RtpRtcpInterface::Configuration& config)
@@ -461,11 +460,11 @@ std::unique_ptr<rtcp::RtcpPacket> RTCPSender::BuildSR(const RtcpContext& ctx) {
   // when converted to milliseconds,
   uint32_t rtp_timestamp =
       timestamp_offset_ + last_rtp_timestamp_ +
-      ((ctx.now_.us() + 500) / 1000 - last_frame_capture_time_ms_) * rtp_rate;
+      ((ctx.now_us_ + 500) / 1000 - last_frame_capture_time_ms_) * rtp_rate;
 
   rtcp::SenderReport* report = new rtcp::SenderReport();
   report->SetSenderSsrc(ssrc_);
-  report->SetNtp(clock_->ConvertTimestampToNtpTime(ctx.now_));
+  report->SetNtp(TimeMicrosToNtp(ctx.now_us_));
   report->SetRtpTimestamp(rtp_timestamp);
   report->SetPacketCount(ctx.feedback_state_.packets_sent);
   report->SetOctetCount(ctx.feedback_state_.media_bytes_sent);
@@ -654,7 +653,7 @@ std::unique_ptr<rtcp::RtcpPacket> RTCPSender::BuildExtendedReports(
 
   if (!sending_ && xr_send_receiver_reference_time_enabled_) {
     rtcp::Rrtr rrtr;
-    rrtr.SetNtp(clock_->ConvertTimestampToNtpTime(ctx.now_));
+    rrtr.SetNtp(TimeMicrosToNtp(ctx.now_us_));
     xr->SetRrtr(rrtr);
   }
 
@@ -762,7 +761,7 @@ absl::optional<int32_t> RTCPSender::ComputeCompoundRTCPPacket(
 
   // We need to send our NTP even if we haven't received any reports.
   RtcpContext context(feedback_state, nack_size, nack_list,
-                      clock_->CurrentTime());
+                      clock_->TimeInMicroseconds());
 
   PrepareReport(feedback_state);
 
@@ -872,7 +871,7 @@ std::vector<rtcp::ReportBlock> RTCPSender::CreateReportBlocks(
   if (!result.empty() && ((feedback_state.last_rr_ntp_secs != 0) ||
                           (feedback_state.last_rr_ntp_frac != 0))) {
     // Get our NTP as late as possible to avoid a race.
-    uint32_t now = CompactNtp(clock_->CurrentNtpTime());
+    uint32_t now = CompactNtp(TimeMicrosToNtp(clock_->TimeInMicroseconds()));
 
     uint32_t receive_time = feedback_state.last_rr_ntp_secs & 0x0000FFFF;
     receive_time <<= 16;

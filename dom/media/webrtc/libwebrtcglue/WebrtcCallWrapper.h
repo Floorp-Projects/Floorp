@@ -12,7 +12,6 @@
 #include "domstubs.h"
 #include "jsapi/RTCStatsReport.h"
 #include "nsISupportsImpl.h"
-#include "SystemTime.h"
 
 // libwebrtc includes
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
@@ -55,6 +54,8 @@ class WebrtcCallWrapper {
   // Idempotent.
   void UnregisterConduit(MediaSessionConduit* conduit);
 
+  DOMHighResTimeStamp GetNow() const;
+
   // Allow destroying the Call instance on the Call worker thread.
   //
   // Note that shutdown is blocked until the Call instance is destroyed.
@@ -92,7 +93,7 @@ class WebrtcCallWrapper {
   // Allows conduits to know about one another, to avoid remote SSRC
   // collisions.
   std::set<MediaSessionConduit*> mConduits;
-  RTCStatsTimestampMakerRealtimeClock mClock;
+  dom::RTCStatsTimestampMaker mTimestampMaker;
   UniquePtr<media::ShutdownBlockingTicket> mShutdownTicket;
 
  public:

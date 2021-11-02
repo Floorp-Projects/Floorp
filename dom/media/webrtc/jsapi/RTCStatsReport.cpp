@@ -5,34 +5,30 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 #include "RTCStatsReport.h"
-#include "libwebrtcglue/SystemTime.h"
 #include "mozilla/dom/Performance.h"
+#include "mozilla/dom/PerformanceService.h"
 #include "nsRFPService.h"
 
 namespace mozilla::dom {
 
-RTCStatsTimestampMaker::RTCStatsTimestampMaker()
-    : mRandomTimelineSeed(0),
-      mStartRealtime(WebrtcSystemTimeBase()),
-      mCrossOriginIsolated(false),
-      mStartWallClockRaw(
-          PerformanceService::GetOrCreate()->TimeOrigin(mStartRealtime)) {}
-
 RTCStatsTimestampMaker::RTCStatsTimestampMaker(nsPIDOMWindowInner* aWindow)
-    : mRandomTimelineSeed(
-          aWindow && aWindow->GetPerformance()
-              ? aWindow->GetPerformance()->GetRandomTimelineSeed()
-              : 0),
-      mStartRealtime(aWindow && aWindow->GetPerformance()
-                         ? aWindow->GetPerformance()->CreationTimeStamp()
-                         : WebrtcSystemTimeBase()),
-      mCrossOriginIsolated(aWindow ? aWindow->AsGlobal()->CrossOriginIsolated()
-                                   : false),
+    : mRandomTimelineSeed(aWindow && aWindow->GetPerformance() ?
+          aWindow->GetPerformance()->GetRandomTimelineSeed() : 0),
+      mStartMonotonic(aWindow && aWindow->GetPerformance() ?
+          aWindow->GetPerformance()->CreationTimeStamp() : mozilla::TimeStamp::Now()),
+      // Ugh. Performance::TimeOrigin is not constant, which means we need to
+      // emulate this weird behavior so our time stamps are consistent with JS
+      // timeOrigin. This is based on the code here:
+      // https://searchfox.org/mozilla-central/rev/
+      // 053826b10f838f77c27507e5efecc96e34718541/dom/performance/Performance.cpp#111-117
       mStartWallClockRaw(
-          PerformanceService::GetOrCreate()->TimeOrigin(mStartRealtime)) {}
+          aWindow
+              ? PerformanceService::GetOrCreate()->TimeOrigin(mStartMonotonic)
+              : (double)PR_Now() / PR_USEC_PER_MSEC),
+      mCrossOriginIsolated(aWindow ? aWindow->AsGlobal()->CrossOriginIsolated()
+                                   : false) {}
 
-DOMHighResTimeStamp RTCStatsTimestampMaker::ReduceRealtimePrecision(
-    webrtc::Timestamp aRealtime) const {
+DOMHighResTimeStamp RTCStatsTimestampMaker::GetNow() const {
   // webrtc-pc says to use performance.timeOrigin + performance.now(), but
   // keeping a Performance object around is difficult because it is
   // main-thread-only. So, we perform the same calculation here. Note that this
@@ -40,50 +36,18 @@ DOMHighResTimeStamp RTCStatsTimestampMaker::ReduceRealtimePrecision(
   // to the wall clock, or monotonic clock drift over long periods of time.
   // We are very careful to do exactly what Performance does, to avoid timestamp
   // discrepancies.
-
-  DOMHighResTimeStamp realtime = aRealtime.ms<double>();
+  DOMHighResTimeStamp msSinceStart =
+      (TimeStamp::Now() - mStartMonotonic).ToMilliseconds();
   // mRandomTimelineSeed is not set in the unit-tests.
   if (mRandomTimelineSeed) {
-    realtime = nsRFPService::ReduceTimePrecisionAsMSecs(
-        realtime, mRandomTimelineSeed,
-        /* aIsSystemPrincipal */ false, mCrossOriginIsolated);
+    msSinceStart = nsRFPService::ReduceTimePrecisionAsMSecs(
+        msSinceStart, mRandomTimelineSeed, /* aIsSystemPrincipal */ false,
+        mCrossOriginIsolated);
   }
-
-  // Ugh. Performance::TimeOrigin is not constant, which means we need to
-  // emulate this weird behavior so our time stamps are consistent with JS
-  // timeOrigin. This is based on the code here:
-  // https://searchfox.org/mozilla-central/rev/
-  // 053826b10f838f77c27507e5efecc96e34718541/dom/performance/Performance.cpp#111-117
-  DOMHighResTimeStamp start = nsRFPService::ReduceTimePrecisionAsMSecs(
-      mStartWallClockRaw, 0, /* aIsSystemPrincipal = */ false,
-      mCrossOriginIsolated);
-
-  return start + realtime;
-}
-
-webrtc::Timestamp RTCStatsTimestampMaker::ConvertRealtimeTo1Jan1970(
-    webrtc::Timestamp aRealtime) const {
-  return aRealtime + webrtc::TimeDelta::Millis(mStartWallClockRaw);
-}
-
-DOMHighResTimeStamp RTCStatsTimestampMaker::ConvertNtpToDomTime(
-    webrtc::Timestamp aNtpTime) const {
-  const auto realtime = aNtpTime -
-                        webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970) -
-                        webrtc::TimeDelta::Millis(mStartWallClockRaw);
-  // Ntp times exposed by libwebrtc to stats are always **rounded** to
-  // milliseconds. That means they can jump up to half a millisecond into the
-  // future. We compensate for that here so that things seem consistent to js.
-  return ReduceRealtimePrecision(realtime - webrtc::TimeDelta::Micros(500));
-}
-
-DOMHighResTimeStamp RTCStatsTimestampMaker::GetNow() const {
-  return ReduceRealtimePrecision(GetNowRealtime());
-}
-
-webrtc::Timestamp RTCStatsTimestampMaker::GetNowRealtime() const {
-  return webrtc::Timestamp::Micros(
-      (TimeStamp::Now() - mStartRealtime).ToMicroseconds());
+  return msSinceStart + nsRFPService::ReduceTimePrecisionAsMSecs(
+                            mStartWallClockRaw, 0,
+                            /* aIsSystemPrincipal */ false,
+                            mCrossOriginIsolated);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(RTCStatsReport, mParent)

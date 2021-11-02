@@ -382,7 +382,11 @@ DesktopCaptureImpl::DesktopCaptureImpl(const int32_t id, const char* uniqueId,
       _deviceType(type),
       _requestedCapability(),
       _rotateFrame(kVideoRotation_0),
-      last_capture_time_ms_(rtc::TimeMillis()),
+      last_capture_time_(rtc::TimeNanos() / rtc::kNumNanosecsPerMillisec),
+      // XXX Note that this won't capture drift!
+      delta_ntp_internal_ms_(
+          Clock::GetRealTimeClock()->CurrentNtpInMilliseconds() -
+          last_capture_time_),
       time_event_(EventWrapper::Create()),
 #if defined(_WIN32)
       capturer_thread_(
@@ -436,17 +440,22 @@ int32_t DesktopCaptureImpl::StopCaptureIfAllClientsClose() {
 }
 
 int32_t DesktopCaptureImpl::DeliverCapturedFrame(
-    webrtc::VideoFrame& captureFrame) {
+    webrtc::VideoFrame& captureFrame, int64_t capture_time) {
   UpdateFrameCount();  // frame count used for local frame rate callBack.
 
   // Set the capture time
-  captureFrame.set_timestamp_us(rtc::TimeMicros());
+  if (capture_time != 0) {
+    captureFrame.set_timestamp_us(1000 *
+                                  (capture_time - delta_ntp_internal_ms_));
+  } else {
+    captureFrame.set_timestamp_us(rtc::TimeMicros());
+  }
 
-  if (captureFrame.render_time_ms() == last_capture_time_ms_) {
+  if (captureFrame.render_time_ms() == last_capture_time_) {
     // We don't allow the same capture time for two frames, drop this one.
     return -1;
   }
-  last_capture_time_ms_ = captureFrame.render_time_ms();
+  last_capture_time_ = captureFrame.render_time_ms();
 
   for (auto dataCallBack : _dataCallBacks) {
     dataCallBack->OnFrame(captureFrame);
@@ -458,7 +467,7 @@ int32_t DesktopCaptureImpl::DeliverCapturedFrame(
 // Copied from VideoCaptureImpl::IncomingFrame. See Bug 1038324
 int32_t DesktopCaptureImpl::IncomingFrame(
     uint8_t* videoFrame, size_t videoFrameLength,
-    const VideoCaptureCapability& frameInfo) {
+    const VideoCaptureCapability& frameInfo, int64_t captureTime) {
   int64_t startProcessTime = rtc::TimeNanos();
   rtc::CritScope cs(&_apiCs);
 
@@ -498,8 +507,9 @@ int32_t DesktopCaptureImpl::IncomingFrame(
   }
 
   VideoFrame captureFrame(buffer, 0, rtc::TimeMillis(), kVideoRotation_0);
+  captureFrame.set_ntp_time_ms(captureTime);
 
-  DeliverCapturedFrame(captureFrame);
+  DeliverCapturedFrame(captureFrame, captureTime);
 
   const int64_t processTime =
       (rtc::TimeNanos() - startProcessTime) / rtc::kNumNanosecsPerMillisec;

@@ -5,7 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VideoEngine.h"
-#include "libwebrtcglue/SystemTime.h"
 #include "video_engine/desktop_capture_impl.h"
 #include "system_wrappers/include/clock.h"
 #ifdef WEBRTC_ANDROID
@@ -139,7 +138,7 @@ int VideoEngine::ReleaseVideoCapture(const int32_t id) {
 std::shared_ptr<webrtc::VideoCaptureModule::DeviceInfo>
 VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
   LOG(("%s", __PRETTY_FUNCTION__));
-  webrtc::Timestamp currentTime = webrtc::Timestamp::Micros(0);
+  int64_t currentTime = 0;
 
   const char* capDevTypeName =
       webrtc::CaptureDeviceInfo(mCaptureDevInfo.type).TypeName();
@@ -152,22 +151,21 @@ VideoEngine::GetOrCreateVideoCaptureDeviceInfo() {
       return mDeviceInfo;
     }
     // Screen sharing cache is invalidated after the expiration time
-    currentTime = WebrtcSystemTime();
-    LOG(("Checking expiry, fetched current time of: %" PRId64,
-         currentTime.ms()));
-    LOG(("device cache expiration is %" PRId64, mExpiryTime.ms()));
-    if (currentTime <= mExpiryTime) {
+    currentTime = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
+    LOG(("Checking expiry, fetched current time of: %" PRId64, currentTime));
+    LOG(("device cache expiration is %" PRId64, mExpiryTimeInMs));
+    if (currentTime <= mExpiryTimeInMs) {
       LOG(("returning cached CaptureDeviceInfo of type %s", capDevTypeName));
       return mDeviceInfo;
     }
   }
 
-  if (currentTime.IsZero()) {
-    currentTime = WebrtcSystemTime();
-    LOG(("Fetched current time of: %" PRId64, currentTime.ms()));
+  if (currentTime == 0) {
+    currentTime = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
+    LOG(("Fetched current time of: %" PRId64, currentTime));
   }
-  mExpiryTime = currentTime + webrtc::TimeDelta::Millis(kCacheExpiryPeriodMs);
-  LOG(("new device cache expiration is %" PRId64, mExpiryTime.ms()));
+  mExpiryTimeInMs = currentTime + kCacheExpiryPeriodMs;
+  LOG(("new device cache expiration is %" PRId64, mExpiryTimeInMs));
   LOG(("creating a new VideoCaptureDeviceInfo of type %s", capDevTypeName));
 
   switch (mCaptureDevInfo.type) {
