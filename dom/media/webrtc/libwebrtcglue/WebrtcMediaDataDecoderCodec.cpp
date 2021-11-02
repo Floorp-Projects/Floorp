@@ -93,9 +93,11 @@ int32_t WebrtcMediaDataDecoder::Decode(const webrtc::EncodedImage& aInputImage,
       rtc::scoped_refptr<ImageBuffer> image(
           new rtc::RefCountedObject<ImageBuffer>(std::move(video->mImage)));
 
-      webrtc::VideoFrame videoFrame(image, frame->mTime.ToMicroseconds(),
-                                    frame->mDuration.ToMicroseconds() * 1000,
-                                    aInputImage.rotation_);
+      auto videoFrame = webrtc::VideoFrame::Builder()
+                            .set_video_frame_buffer(image)
+                            .set_timestamp_rtp(aInputImage.Timestamp())
+                            .set_rotation(aInputImage.rotation_)
+                            .build();
       mCallback->Decoded(videoFrame);
     }
     mResults.Clear();
