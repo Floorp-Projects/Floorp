@@ -7272,12 +7272,6 @@
   mirror: always
   rust: true
 
-# Is CSSOM-View scroll-behavior and its MSD smooth scrolling enabled?
-- name: layout.css.scroll-behavior.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Tuning of the smooth scroll motion used by CSSOM-View scroll-behavior.
 # Spring-constant controls the strength of the simulated MSD
 # (Mass-Spring-Damper).

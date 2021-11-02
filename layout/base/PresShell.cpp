@@ -3477,7 +3477,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   bool smoothScroll =
       (aScrollFlags & ScrollFlags::ScrollSmooth) ||
       ((aScrollFlags & ScrollFlags::ScrollSmoothAuto) && autoBehaviorIsSmooth);
-  if (StaticPrefs::layout_css_scroll_behavior_enabled() && smoothScroll) {
+  if (smoothScroll) {
     scrollMode = ScrollMode::SmoothMsd;
   }
   nsIFrame* frame = do_QueryFrame(aFrameAsScrollable);
