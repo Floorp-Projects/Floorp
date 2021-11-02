@@ -88,16 +88,14 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         )
         if os.environ.get("MOZ_AUTOMATION", "0") == "1":
             fetches_dir = os.environ.get("MOZ_FETCHES_DIR")
-            if self.is_emulator and fetches_dir:
-                abs_dirs["abs_sdk_dir"] = os.path.join(fetches_dir, "android-sdk-linux")
-                abs_dirs["abs_avds_dir"] = os.path.join(fetches_dir, "android-device")
-            else:
-                abs_dirs["abs_sdk_dir"] = os.path.join(
-                    abs_dirs["abs_work_dir"], "android-sdk-linux"
-                )
-                abs_dirs["abs_avds_dir"] = os.path.join(
-                    abs_dirs["abs_work_dir"], "android-device"
-                )
+            work_dir = (
+                fetches_dir
+                if fetches_dir and self.is_emulator
+                else abs_dirs["abs_work_dir"]
+            )
+            abs_dirs["abs_sdk_dir"] = os.path.join(work_dir, "android-sdk-linux")
+            abs_dirs["abs_avds_dir"] = os.path.join(work_dir, "android-device")
+            abs_dirs["abs_bundletool_path"] = os.path.join(work_dir, "bundletool.jar")
         else:
             mozbuild_path = os.environ.get(
                 "MOZBUILD_STATE_PATH", os.path.expanduser("~/.mozbuild")
@@ -110,6 +108,9 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
                 "ANDROID_EMULATOR_HOME", os.path.join(mozbuild_path, "android-device")
             )
             abs_dirs["abs_avds_dir"] = avds_dir
+            abs_dirs["abs_bundletool_path"] = os.path.join(
+                mozbuild_path, "bundletool.jar"
+            )
 
         self.abs_dirs = abs_dirs
         return self.abs_dirs
@@ -261,7 +262,7 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         self.info("Logging device properties...")
         self.info(self.shell_output("getprop"))
         self.info("Installing APK...")
-        self.install_apk(self.query_abs_dirs()["abs_apk_path"], replace=True)
+        self.install_android_app(self.query_abs_dirs()["abs_apk_path"], replace=True)
 
         if not self._errored:
             self.info("Setting up SD card...")

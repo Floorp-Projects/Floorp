@@ -239,6 +239,17 @@ TEST_VARIANTS = {
             },
         },
     },
+    "aab": {
+        "description": "{description} with aab test_runner",
+        "filterfn": gv_e10s_filter,
+        "suffix": "aab",
+        "replace": {
+            "target": "geckoview-test_runner.aab",
+            "docker-image": {
+                "in-tree": "android-test",
+            },
+        },
+    },
     "geckoview-e10s-single": {
         "description": "{description} with single-process e10s",
         "filterfn": gv_e10s_filter,

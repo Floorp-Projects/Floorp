@@ -19,6 +19,7 @@ transforms:
 
 jobs-from:
     - android.yml
+    - android-asan.yml
     - android-stuff.yml
     - linux.yml
     - linux-base-toolchains.yml

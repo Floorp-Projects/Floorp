@@ -1,0 +1,72 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+job-defaults:
+    attributes:
+        artifact_map: taskcluster/gecko_taskgraph/manifests/fennec_geckoview.yml
+    index:
+        product: mobile
+    worker:
+        docker-image: {in-tree: android-build}
+        max-run-time: 7200
+        env:
+            GRADLE_USER_HOME: "/builds/worker/checkouts/gecko/mobile/android/gradle/dotgradle-offline"
+        artifacts:
+            - name: public/build/maven
+              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/maven/
+              type: directory
+            - name: public/build/geckoview-androidTest.apk
+              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview/outputs/apk/androidTest/withGeckoBinaries/debug/geckoview-withGeckoBinaries-debug-androidTest.apk
+              type: file
+            - name: public/build/geckoview-test_runner.apk
+              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/test_runner/outputs/apk/withGeckoBinaries/debug/test_runner-withGeckoBinaries-debug.apk
+              type: file
+            - name: public/build/geckoview_example.apk
+              path: /builds/worker/workspace/obj-build/gradle/build/mobile/android/geckoview_example/outputs/apk/withGeckoBinaries/debug/geckoview_example-withGeckoBinaries-debug.apk
+              type: file
+            - name: public/build
+              path: /builds/worker/artifacts/
+              type: directory
+    run:
+        using: mozharness
+        script: "mozharness/scripts/fx_desktop_build.py"
+        secrets: true
+        mozconfig-variant: null
+        tooltool-downloads: internal
+    fetches:
+        toolchain:
+            - android-ndk-linux
+            - android-sdk-linux
+            - linux64-rust-android
+            - linux64-rust-size
+            - linux64-cbindgen
+            - linux64-dump_syms
+            - linux64-nasm
+            - linux64-node
+            - sysroot-x86_64-linux-gnu
+            - sysroot-wasm32-wasi
+
+android-x86_64-asan-fuzzing/opt:
+    description: "Android 5.0 x86-64 Fuzzing Opt ASAN"
+    index:
+        job-name: android-x86_64-fuzzing-asan
+    treeherder:
+        platform: android-5-0-x86_64/asan
+        symbol: Bof
+    worker-type: b-linux-large
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android-x86/releng.manifest"
+    run:
+        actions: [get-secrets, build]
+        config: ["builds/releng_base_android_64_builds.py"]
+        custom-build-variant-cfg: x86_64-fuzzing-asan
+    use-sccache: true
+    fetches:
+        toolchain:
+            - linux64-clang-android-cross
+            - linux64-sccache
+            - android-gradle-dependencies
+    optimization:
+        skip-unless-expanded: null

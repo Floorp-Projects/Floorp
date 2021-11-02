@@ -232,17 +232,10 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
         if self.is_android:
             dirs["abs_xre_dir"] = os.path.join(abs_dirs["abs_work_dir"], "hostutils")
         if self.is_emulator:
-            fetches_dir = os.environ.get("MOZ_FETCHES_DIR")
-            if fetches_dir:
-                dirs["abs_sdk_dir"] = os.path.join(fetches_dir, "android-sdk-linux")
-                dirs["abs_avds_dir"] = os.path.join(fetches_dir, "android-device")
-            else:
-                dirs["abs_sdk_dir"] = os.path.join(
-                    abs_dirs["abs_work_dir"], "android-sdk-linux"
-                )
-                dirs["abs_avds_dir"] = os.path.join(
-                    abs_dirs["abs_work_dir"], "android-device"
-                )
+            work_dir = os.environ.get("MOZ_FETCHES_DIR") or abs_dirs["abs_work_dir"]
+            dirs["abs_sdk_dir"] = os.path.join(work_dir, "android-sdk-linux")
+            dirs["abs_avds_dir"] = os.path.join(work_dir, "android-device")
+            dirs["abs_bundletool_path"] = os.path.join(work_dir, "bundletool.jar")
             if self.config["enable_webrender"]:
                 # AndroidMixin uses this when launching the emulator. We only want
                 # GLES3 if we're running WebRender
@@ -512,7 +505,7 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
 
     def install(self):
         if self.is_android:
-            self.install_apk(self.installer_path)
+            self.install_android_app(self.installer_path)
         else:
             super(WebPlatformTest, self).install()
 
