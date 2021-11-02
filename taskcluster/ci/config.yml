@@ -38,6 +38,7 @@ treeherder:
         'iris': 'Iris testing suite'
         'l10n-bump': 'L10n Bumper'
         'M': 'Mochitests'
+        'M-aab': 'Mochitests with AAB test_runner.'
         'M-1proc': 'Mochitests without e10s'
         'M-a11y-checks': 'Mochitests with accessibility checks enabled'
         'M-fis': 'Mochitests with fission enabled'
