@@ -31,6 +31,7 @@ import androidx.constraintlayout.widget.ConstraintProperties.BOTTOM
 import androidx.constraintlayout.widget.ConstraintProperties.PARENT_ID
 import androidx.constraintlayout.widget.ConstraintProperties.TOP
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -51,7 +52,9 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.hasCamera
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.android.content.res.getSpanned
+import mozilla.components.support.ktx.android.net.isHttpOrHttps
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.components.support.ktx.kotlin.toNormalizedUrl
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
@@ -503,29 +506,42 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
                 requestPermissions(permissions, REQUEST_CODE_CAMERA_PERMISSIONS)
             },
             onScanResult = { result ->
-                binding.qrScanButton.isChecked = false
-                activity?.let {
-                    AlertDialog.Builder(it).apply {
-                        val spannable = resources.getSpanned(
-                            R.string.qr_scanner_confirmation_dialog_message,
-                            getString(R.string.app_name) to StyleSpan(Typeface.BOLD),
-                            result to StyleSpan(Typeface.ITALIC)
-                        )
-                        setMessage(spannable)
-                        setNegativeButton(R.string.qr_scanner_dialog_negative) { dialog: DialogInterface, _ ->
-                            dialog.cancel()
-                        }
-                        setPositiveButton(R.string.qr_scanner_dialog_positive) { dialog: DialogInterface, _ ->
-                            (activity as? HomeActivity)?.openToBrowserAndLoad(
-                                searchTermOrURL = result,
-                                newTab = store.state.tabId == null,
-                                from = BrowserDirection.FromSearchDialog,
-                                flags = EngineSession.LoadUrlFlags.external()
+                val normalizedUrl = result.toNormalizedUrl()
+                if (!normalizedUrl.toUri().isHttpOrHttps) {
+                    activity?.let {
+                        AlertDialog.Builder(it).apply {
+                            setMessage(R.string.qr_scanner_dialog_invalid)
+                            setPositiveButton(R.string.qr_scanner_dialog_invalid_ok) { dialog: DialogInterface, _ ->
+                                dialog.dismiss()
+                            }
+                            create()
+                        }.show()
+                    }
+                } else {
+                    binding.qrScanButton.isChecked = false
+                    activity?.let {
+                        AlertDialog.Builder(it).apply {
+                            val spannable = resources.getSpanned(
+                                R.string.qr_scanner_confirmation_dialog_message,
+                                getString(R.string.app_name) to StyleSpan(Typeface.BOLD),
+                                normalizedUrl to StyleSpan(Typeface.ITALIC)
                             )
-                            dialog.dismiss()
-                        }
-                        create()
-                    }.show()
+                            setMessage(spannable)
+                            setNegativeButton(R.string.qr_scanner_dialog_negative) { dialog: DialogInterface, _ ->
+                                dialog.cancel()
+                            }
+                            setPositiveButton(R.string.qr_scanner_dialog_positive) { dialog: DialogInterface, _ ->
+                                (activity as? HomeActivity)?.openToBrowserAndLoad(
+                                    searchTermOrURL = normalizedUrl,
+                                    newTab = store.state.tabId == null,
+                                    from = BrowserDirection.FromSearchDialog,
+                                    flags = EngineSession.LoadUrlFlags.external()
+                                )
+                                dialog.dismiss()
+                            }
+                            create()
+                        }.show()
+                    }
                 }
             }
         )
