@@ -168,3 +168,46 @@ addAccessibleTask(
   },
   { iframe: true, remoteIframe: true }
 );
+
+/**
+ * Test caching of the focused state.
+ */
+addAccessibleTask(
+  `
+  <button id="b1">b1</button>
+  <button id="b2">b2</button>
+  `,
+  async function(browser, docAcc) {
+    const b1 = findAccessibleChildByID(docAcc, "b1");
+    const b2 = findAccessibleChildByID(docAcc, "b2");
+
+    let focused = waitForEvent(EVENT_FOCUS, b1);
+    await invokeFocus(browser, "b1");
+    await focused;
+    testStates(docAcc, 0, 0, STATE_FOCUSED);
+    testStates(b1, STATE_FOCUSED);
+    testStates(b2, 0, 0, STATE_FOCUSED);
+
+    focused = waitForEvent(EVENT_FOCUS, b2);
+    await invokeFocus(browser, "b2");
+    await focused;
+    testStates(b2, STATE_FOCUSED);
+    testStates(b1, 0, 0, STATE_FOCUSED);
+  },
+  { iframe: true, remoteIframe: true }
+);
+
+/**
+ * Test that the document initially gets the focused state.
+ * We can't do this in the test above because that test runs in iframes as well
+ * as a top level document.
+ */
+addAccessibleTask(
+  `
+  <button id="b1">b1</button>
+  <button id="b2">b2</button>
+  `,
+  async function(browser, docAcc) {
+    testStates(docAcc, STATE_FOCUSED);
+  }
+);
