@@ -34,22 +34,12 @@ namespace mozilla {
 
 static mozilla::LazyLogModule gVideoFrameConverterLog("VideoFrameConverter");
 
-class VideoConverterListener {
- public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoConverterListener)
-
-  virtual void OnVideoFrameConverted(const webrtc::VideoFrame& aVideoFrame) = 0;
-
- protected:
-  virtual ~VideoConverterListener() = default;
-};
-
 // An async video frame format converter.
 //
 // Input is typically a MediaTrackListener driven by MediaTrackGraph.
 //
-// Output is passed through to all added VideoConverterListeners on a TaskQueue
-// thread whenever a frame is converted.
+// Output is passed through to VideoFrameConvertedEvent() whenever a frame is
+// converted.
 class VideoFrameConverter {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoFrameConverter)
@@ -145,32 +135,18 @@ class VideoFrameConverter {
         })));
   }
 
-  void AddListener(const RefPtr<VideoConverterListener>& aListener) {
-    MOZ_ALWAYS_SUCCEEDS(mTaskQueue->Dispatch(NS_NewRunnableFunction(
-        "VideoFrameConverter::AddListener",
-        [self = RefPtr<VideoFrameConverter>(this), this, aListener] {
-          MOZ_ASSERT(!mListeners.Contains(aListener));
-          mListeners.AppendElement(aListener);
-        })));
-  }
-
-  void RemoveListener(const RefPtr<VideoConverterListener>& aListener) {
-    MOZ_ALWAYS_SUCCEEDS(mTaskQueue->Dispatch(NS_NewRunnableFunction(
-        "VideoFrameConverter::RemoveListener",
-        [self = RefPtr<VideoFrameConverter>(this), this, aListener] {
-          mListeners.RemoveElement(aListener);
-        })));
-  }
-
   void Shutdown() {
     mPacer->Shutdown()->Then(mTaskQueue, __func__,
                              [self = RefPtr<VideoFrameConverter>(this), this] {
                                mPacingListener.DisconnectIfExists();
-                               mListeners.Clear();
                                mBufferPool.Release();
                                mLastFrameQueuedForProcessing = FrameToProcess();
                                mLastFrameConverted = Nothing();
                              });
+  }
+
+  MediaEventSourceExc<webrtc::VideoFrame>& VideoFrameConvertedEvent() {
+    return mVideoFrameConvertedEvent;
   }
 
  protected:
@@ -235,9 +211,7 @@ class VideoFrameConverter {
 
     mLastFrameConverted = Some(FrameConverted(aVideoFrame, aSerial));
 
-    for (RefPtr<VideoConverterListener>& listener : mListeners) {
-      listener->OnVideoFrameConverted(aVideoFrame);
-    }
+    mVideoFrameConvertedEvent.Notify(std::move(aVideoFrame));
   }
 
   void QueueForProcessing(RefPtr<layers::Image> aImage, TimeStamp aTime,
@@ -423,12 +397,16 @@ class VideoFrameConverter {
                         aFrame.Serial());
   }
 
+ public:
   const dom::RTCStatsTimestampMaker mTimestampMaker;
 
   const RefPtr<TaskQueue> mTaskQueue;
 
+ protected:
   // Used to pace future frames close to their rendering-time. Thread-safe.
   const RefPtr<Pacer<FrameToProcess>> mPacer;
+
+  MediaEventProducerExc<webrtc::VideoFrame> mVideoFrameConvertedEvent;
 
   // Accessed only from mTaskQueue.
   MediaEventListener mPacingListener;
@@ -440,7 +418,6 @@ class VideoFrameConverter {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   size_t mFramesDropped = 0;
 #endif
-  nsTArray<RefPtr<VideoConverterListener>> mListeners;
 };
 
 }  // namespace mozilla
