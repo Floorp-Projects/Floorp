@@ -41,7 +41,6 @@ def add_shippable_secrets(config, tasks):
                 "path": target_file,
             } for key, target_file in (
                 ('adjust', '.adjust_token'),
-                ('firebase', f'app/src/{gradle_build_type}/res/values/firebase.xml'),
                 ('sentry_dsn', '.sentry_token'),
                 ('mls', '.mls_token'),
                 ('nimbus_url', '.nimbus'),
