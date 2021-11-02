@@ -41,6 +41,7 @@ if toolkit == "cocoa":
         "nsIMacDockSupport.idl",
         "nsIMacFinderProgress.idl",
         "nsIMacSharingService.idl",
+        "nsIMacUserActivityUpdater.idl",
         "nsIMacWebAppUtils.idl",
         "nsIStandaloneNativeMenu.idl",
         "nsITaskbarProgress.idl",
