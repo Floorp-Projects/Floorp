@@ -20,7 +20,8 @@ async function getEngineNames() {
 }
 
 add_task(async function setup() {
-  useHttpServer();
+  let server = useHttpServer();
+  server.registerContentType("sjs", "sjs");
   await SearchTestUtils.useTestEngines("test-extensions");
   await promiseStartupManager();
 
@@ -147,6 +148,62 @@ add_task(async function test_load_favicon_invalid() {
 
   let engine = await Services.search.getEngineByName("Example");
   Assert.equal(null, engine.iconURI, "Should not have set an iconURI");
+
+  // User uninstalls their engine
+  await extension.awaitStartup();
+  await extension.unload();
+  await promiseAfterSettings();
+});
+
+add_task(async function test_load_favicon_invalid_redirect() {
+  let observed = TestUtils.topicObserved("console-api-log-event", msg => {
+    return msg.wrappedJSObject.arguments[0].includes(
+      "Content type does not match expected"
+    );
+  });
+
+  // User installs a new search engine
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      favicon_url: `${gDataUrl}/iconsRedirect.sjs?type=invalid`,
+    },
+    true
+  );
+
+  await observed;
+
+  let engine = await Services.search.getEngineByName("Example");
+  Assert.equal(null, engine.iconURI, "Should not have set an iconURI");
+
+  // User uninstalls their engine
+  await extension.awaitStartup();
+  await extension.unload();
+  await promiseAfterSettings();
+});
+
+add_task(async function test_load_favicon_redirect() {
+  let promiseEngineChanged = SearchTestUtils.promiseSearchNotification(
+    SearchUtils.MODIFIED_TYPE.CHANGED,
+    SearchUtils.TOPIC_ENGINE_MODIFIED
+  );
+
+  // User installs a new search engine
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      favicon_url: `${gDataUrl}/iconsRedirect.sjs`,
+    },
+    true
+  );
+
+  let engine = await Services.search.getEngineByName("Example");
+
+  await promiseEngineChanged;
+
+  Assert.ok(engine.iconURI, "Should have set an iconURI");
+  Assert.ok(
+    engine.iconURI.spec.startsWith("data:image/x-icon;base64,"),
+    "Should have saved the expected content type for the icon"
+  );
 
   // User uninstalls their engine
   await extension.awaitStartup();
