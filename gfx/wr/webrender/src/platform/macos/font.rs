@@ -227,149 +227,183 @@ extern {
     static kCTFontVariationAxisMaximumValueKey: CFStringRef;
     static kCTFontVariationAxisDefaultValueKey: CFStringRef;
     static kCTFontVariationAttribute: CFStringRef;
+
     static kCGFontVariationAxisName: CFStringRef;
 
     fn CTFontCopyVariationAxes(font: CTFontRef) -> CFArrayRef;
     fn CGFontCopyVariationAxes(font: CGFontRef) -> CFArrayRef;
 }
 
-fn new_ct_font_with_variations(desc_or_font: &DescOrFont, size: f64, variations: &[FontVariation]) -> CTFont {
+fn get_tag_from_axis(axis: &CFDictionary, key: CFStringRef) -> Option<i64> {
+    if let Some(number_ptr) = axis.find(key as *const _) {
+        let number: CFNumber = unsafe { TCFType::wrap_under_get_rule(*number_ptr as CFNumberRef) };
+        if number.instance_of::<CFNumber>() {
+            return number.to_i64();
+        }
+    }
+    None
+}
+
+fn get_value_from_axis(axis: &CFDictionary, key: CFStringRef) -> Option<f64> {
+    if let Some(number_ptr) = axis.find(key as *const _) {
+        let number: CFNumber = unsafe { TCFType::wrap_under_get_rule(*number_ptr as CFNumberRef) };
+        if number.instance_of::<CFNumber>() {
+            return number.to_f64();
+        }
+    }
+    None
+}
+
+fn get_name_from_axis(axis: &CFDictionary, key: CFStringRef) -> Option<CFString> {
+    if let Some(name_ptr) = axis.find(key as *const _) {
+        let name: CFString = unsafe { TCFType::wrap_under_get_rule(*name_ptr as CFStringRef) };
+        if name.instance_of::<CFString>() {
+            return Some(name);
+        }
+    }
+    None
+}
+
+fn new_ct_font_with_variations_from_ct_font_desc(ct_font_desc: &CTFontDescriptor, size: f64, variations: &[FontVariation]) -> CTFont {
+    let ct_font = core_text::font::new_from_descriptor(ct_font_desc, size);
+    if variations.is_empty() {
+        return ct_font;
+    }
+    let mut vals: Vec<(CFNumber, CFNumber)> = Vec::with_capacity(variations.len() as usize);
+
     unsafe {
-        let ct_font = match desc_or_font {
-            DescOrFont::Desc(ct_font_desc) => core_text::font::new_from_descriptor(ct_font_desc, size),
-            DescOrFont::Font(cg_font) => core_text::font::new_from_CGFont(cg_font, size)
-        };
-        if variations.is_empty() {
+        let axes_ref = CTFontCopyVariationAxes(ct_font.as_concrete_TypeRef());
+        if axes_ref.is_null() {
             return ct_font;
         }
+        let axes: CFArray<CFDictionary> = TCFType::wrap_under_create_rule(axes_ref);
 
-        // We get the axes from Core Text in order to get the tags.
+        for axis in axes.iter() {
+            if !axis.instance_of::<CFDictionary>() {
+                return ct_font;
+            }
+
+            let tag = if let Some(tag) = get_tag_from_axis(&axis, kCTFontVariationAxisIdentifierKey) {
+                tag
+            } else {
+                return ct_font;
+            };
+
+            let mut val = match variations.iter().find(|variation| (variation.tag as i64) == tag) {
+                Some(variation) => variation.value as f64,
+                None => continue,
+            };
+
+            let min_val = if let Some(num) = get_value_from_axis(&axis, kCTFontVariationAxisMinimumValueKey) {
+                num
+            } else {
+                return ct_font;
+            };
+            let max_val = if let Some(num) = get_value_from_axis(&axis, kCTFontVariationAxisMaximumValueKey) {
+                num
+            } else {
+                return ct_font;
+            };
+            let def_val = if let Some(num) = get_value_from_axis(&axis, kCTFontVariationAxisDefaultValueKey) {
+                num
+            } else {
+                return ct_font;
+            };
+
+            val = val.max(min_val).min(max_val);
+            if val != def_val {
+                vals.push((CFNumber::from(tag), CFNumber::from(val)));
+            }
+        }
+        if vals.is_empty() {
+            return ct_font;
+        }
+        let vals_dict = CFDictionary::from_CFType_pairs(&vals);
+        let attrs_dict = CFDictionary::from_CFType_pairs(&[(CFString::wrap_under_get_rule(kCTFontVariationAttribute), vals_dict)]);
+        let ct_var_font_desc = create_copy_with_attributes(ct_font_desc, attrs_dict.to_untyped()).unwrap();
+        core_text::font::new_from_descriptor(&ct_var_font_desc, size)
+    }
+}
+
+fn new_ct_font_with_variations_from_cg_font(cg_font: &CGFont, size: f64, variations: &[FontVariation]) -> CTFont {
+    let ct_font = core_text::font::new_from_CGFont(cg_font, size);
+    if variations.is_empty() {
+        return ct_font;
+    }
+    let mut vals: Vec<(CFString, CFNumber)> = Vec::with_capacity(variations.len() as usize);
+
+    unsafe {
         let ct_axes_ref = CTFontCopyVariationAxes(ct_font.as_concrete_TypeRef());
         if ct_axes_ref.is_null() {
             return ct_font;
         }
         let ct_axes: CFArray<CFDictionary> = TCFType::wrap_under_create_rule(ct_axes_ref);
 
-        // And get them from Core Graphics to get non-localized names.
-        let cg_font = match desc_or_font {
-            DescOrFont::Desc(_) => ct_font.copy_to_CGFont(),
-            DescOrFont::Font(cg_font) => cg_font.clone(),
-        };
         let cg_axes_ref = CGFontCopyVariationAxes(cg_font.as_ptr());
         if cg_axes_ref.is_null() {
             return ct_font;
         }
         let cg_axes: CFArray<CFDictionary> = TCFType::wrap_under_create_rule(cg_axes_ref);
 
-        // Bail out if the array lengths don't match.
         if ct_axes.len() != cg_axes.len() {
             return ct_font;
         }
-
-        // We collect the values with either number or string keys, depending whether
-        // we're going to instantiate the CTFont from a descriptor or a CGFont.
-        // It'd probably be better to switch the CGFont-related APIs to expect numbers,
-        // but that's left for a future cleanup.
-        let mut vals: Vec<(CFNumber, CFNumber)> = Vec::with_capacity(variations.len() as usize);
-        let mut vals_str: Vec<(CFString, CFNumber)> = Vec::with_capacity(variations.len() as usize);
-
         for (ct_axis, cg_axis) in ct_axes.iter().zip(cg_axes.iter()) {
             if !ct_axis.instance_of::<CFDictionary>() {
                 return ct_font;
             }
-            let tag_val = match ct_axis.find(kCTFontVariationAxisIdentifierKey as *const _) {
-                Some(tag_ptr) => {
-                    let tag: CFNumber = TCFType::wrap_under_get_rule(*tag_ptr as CFNumberRef);
-                    if !tag.instance_of::<CFNumber>() {
-                        return ct_font;
-                    }
-                    match tag.to_i64() {
-                        Some(val) => val,
-                        None => return ct_font,
-                    }
-                }
-                None => return ct_font,
+
+            let tag = if let Some(tag) = get_tag_from_axis(&ct_axis, kCTFontVariationAxisIdentifierKey) {
+                tag
+            } else {
+                return ct_font;
             };
-            let mut val = match variations.iter().find(|variation| (variation.tag as i64) == tag_val) {
+
+            let mut val = match variations.iter().find(|variation| (variation.tag as i64) == tag) {
                 Some(variation) => variation.value as f64,
                 None => continue,
             };
 
-            let name: CFString = match cg_axis.find(kCGFontVariationAxisName as *const _) {
-                Some(name_ptr) => TCFType::wrap_under_get_rule(*name_ptr as CFStringRef),
-                None => return ct_font,
-            };
-            if !name.instance_of::<CFString>() {
+            let name = if let Some(name) = get_name_from_axis(&cg_axis, kCGFontVariationAxisName) {
+                name
+            } else {
                 return ct_font;
-            }
+            };
 
-            let min_val = match ct_axis.find(kCTFontVariationAxisMinimumValueKey as *const _) {
-                Some(min_ptr) => {
-                    let min: CFNumber = TCFType::wrap_under_get_rule(*min_ptr as CFNumberRef);
-                    if !min.instance_of::<CFNumber>() {
-                        return ct_font;
-                    }
-                    match min.to_f64() {
-                        Some(val) => val,
-                        None => return ct_font,
-                    }
-                }
-                None => return ct_font,
+            let min_val = if let Some(num) = get_value_from_axis(&ct_axis, kCTFontVariationAxisMinimumValueKey) {
+                num
+            } else {
+                return ct_font;
             };
-            let max_val = match ct_axis.find(kCTFontVariationAxisMaximumValueKey as *const _) {
-                Some(max_ptr) => {
-                    let max: CFNumber = TCFType::wrap_under_get_rule(*max_ptr as CFNumberRef);
-                    if !max.instance_of::<CFNumber>() {
-                        return ct_font;
-                    }
-                    match max.to_f64() {
-                        Some(val) => val,
-                        None => return ct_font,
-                    }
-                }
-                None => return ct_font,
+            let max_val = if let Some(num) = get_value_from_axis(&ct_axis, kCTFontVariationAxisMaximumValueKey) {
+                num
+            } else {
+                return ct_font;
             };
-            let def_val = match ct_axis.find(kCTFontVariationAxisDefaultValueKey as *const _) {
-                Some(def_ptr) => {
-                    let def: CFNumber = TCFType::wrap_under_get_rule(*def_ptr as CFNumberRef);
-                    if !def.instance_of::<CFNumber>() {
-                        return ct_font;
-                    }
-                    match def.to_f64() {
-                        Some(val) => val,
-                        None => return ct_font,
-                    }
-                }
-                None => return ct_font,
+            let def_val = if let Some(num) = get_value_from_axis(&ct_axis, kCTFontVariationAxisDefaultValueKey) {
+                num
+            } else {
+                return ct_font;
             };
 
             val = val.max(min_val).min(max_val);
             if val != def_val {
-                match desc_or_font {
-                    DescOrFont::Font(_) => vals_str.push((name, CFNumber::from(val))),
-                    DescOrFont::Desc(_) => vals.push((CFNumber::from(tag_val), CFNumber::from(val))),
-                }
+                vals.push((name, CFNumber::from(val)));
             }
         }
-        match desc_or_font {
-            DescOrFont::Desc(ct_font_desc) => {
-                if vals.is_empty() {
-                    return ct_font;
-                }
-                let vals_dict = CFDictionary::from_CFType_pairs(&vals);
-                let attrs_dict = CFDictionary::from_CFType_pairs(&[(CFString::wrap_under_get_rule(kCTFontVariationAttribute), vals_dict)]);
-                let ct_var_font_desc = create_copy_with_attributes(ct_font_desc, attrs_dict.to_untyped()).unwrap();
-                core_text::font::new_from_descriptor(&ct_var_font_desc, size)
-            }
-            DescOrFont::Font(cg_font) => {
-                if vals_str.is_empty() {
-                    return ct_font;
-                }
-                let vals_dict = CFDictionary::from_CFType_pairs(&vals_str);
-                let cg_var_font = cg_font.create_copy_from_variations(&vals_dict).unwrap();
-                core_text::font::new_from_CGFont_with_variations(&cg_var_font, size, &vals_dict)
-            }
-        }
+    }
+    if vals.is_empty() {
+        return ct_font;
+    }
+    let vals_dict = CFDictionary::from_CFType_pairs(&vals);
+    let cg_var_font = cg_font.create_copy_from_variations(&vals_dict).unwrap();
+    core_text::font::new_from_CGFont_with_variations(&cg_var_font, size, &vals_dict)
+}
+
+fn new_ct_font_with_variations(desc_or_font: &DescOrFont, size: f64, variations: &[FontVariation]) -> CTFont {
+    match desc_or_font {
+        DescOrFont::Desc(ct_font_desc) => new_ct_font_with_variations_from_ct_font_desc(ct_font_desc, size, variations),
+        DescOrFont::Font(cg_font) => new_ct_font_with_variations_from_cg_font(cg_font, size, variations)
     }
 }
 
