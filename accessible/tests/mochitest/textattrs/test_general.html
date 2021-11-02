@@ -2,24 +2,21 @@
 
 <head>
   <title>Text attributes tests</title>
-  <meta charset="utf-8" />
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
-  <style type="text/css">
+  <style>
     .gencontent:before { content: "*"; }
     .gencontent:after  { content: "*"; }
   </style>
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
-  <script type="application/javascript"
-          src="../common.js"></script>
-  <script type="application/javascript"
-          src="../attributes.js"></script>
-  <script type="application/javascript"
-          src="../events.js"></script>
+  <script src="../common.js"></script>
+  <script src="../attributes.js"></script>
+  <script src="../events.js"></script>
 
-  <script type="application/javascript">
+  <script>
     var gComputedStyle = null;
 
     function doTest() {
@@ -496,7 +493,7 @@
 
       attrs = {
         "text-underline-style": "solid",
-        "text-underline-color": "rgb(0, 0, 0)",
+        "text-underline-color": getSystemColor("CanvasText"),
       };
       testTextAttrs(ID, 0, attrs, defAttrs, 0, 10);
 
@@ -508,13 +505,13 @@
 
       attrs = {
         "text-underline-style": "dotted",
-        "text-underline-color": "rgb(0, 0, 0)",
+        "text-underline-color": getSystemColor("CanvasText"),
       };
       testTextAttrs(ID, 15, attrs, defAttrs, 15, 22);
 
       attrs = {
         "text-line-through-style": "solid",
-        "text-line-through-color": "rgb(0, 0, 0)",
+        "text-line-through-color": getSystemColor("CanvasText"),
       };
       testTextAttrs(ID, 22, attrs, defAttrs, 22, 34);
 
@@ -526,7 +523,7 @@
 
       attrs = {
         "text-line-through-style": "wavy",
-        "text-line-through-color": "rgb(0, 0, 0)",
+        "text-line-through-color": getSystemColor("CanvasText"),
       };
       testTextAttrs(ID, 39, attrs, defAttrs, 39, 44);
 
