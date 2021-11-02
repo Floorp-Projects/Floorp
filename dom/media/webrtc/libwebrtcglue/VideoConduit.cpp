@@ -1498,8 +1498,9 @@ Maybe<uint16_t> WebrtcVideoConduit::RtpSendBaseSeqFor(uint32_t aSsrc) const {
   return Some(it->second);
 }
 
-DOMHighResTimeStamp WebrtcVideoConduit::GetNow() const {
-  return mCall->GetNow();
+const dom::RTCStatsTimestampMaker& WebrtcVideoConduit::GetTimestampMaker()
+    const {
+  return mCall->GetTimestampMaker();
 }
 
 void WebrtcVideoConduit::StopTransmitting() {
@@ -1694,7 +1695,7 @@ void WebrtcVideoConduit::OnFrame(const webrtc::VideoFrame& video_frame) {
   }
 
   // Record frame history
-  const auto historyNow = mCall->GetNow();
+  const auto historyNow = mCall->GetTimestampMaker().GetNow();
   if (needsNewHistoryElement) {
     dom::RTCVideoFrameHistoryEntryInternal frameHistoryElement;
     frameHistoryElement.mConsecutiveFrames = 0;
