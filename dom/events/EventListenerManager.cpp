@@ -201,7 +201,8 @@ nsPIDOMWindowInner* EventListenerManager::GetInnerWindowForTarget() {
 
 already_AddRefed<nsPIDOMWindowInner>
 EventListenerManager::GetTargetAsInnerWindow() const {
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mTarget);
+  nsCOMPtr<nsPIDOMWindowInner> window =
+      nsPIDOMWindowInner::FromEventTargetOrNull(mTarget);
   return window.forget();
 }
 
@@ -694,10 +695,13 @@ static bool IsDefaultPassiveWhenOnRoot(EventMessage aMessage) {
 }
 
 static bool IsRootEventTarget(EventTarget* aTarget) {
-  if (nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aTarget)) {
+  if (!aTarget) {
+    return false;
+  }
+  if (aTarget->IsInnerWindow()) {
     return true;
   }
-  const nsINode* node = nsINode::FromEventTargetOrNull(aTarget);
+  const nsINode* node = nsINode::FromEventTarget(aTarget);
   if (!node) {
     return false;
   }
@@ -989,7 +993,8 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
     uri->GetSpec(url);
   }
 
-  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(mTarget);
+  nsCOMPtr<nsPIDOMWindowInner> win =
+      nsPIDOMWindowInner::FromEventTargetOrNull(mTarget);
   uint32_t argCount;
   const char** argNames;
   nsContentUtils::GetEventArgNames(aElement->GetNameSpaceID(), typeAtom, win,

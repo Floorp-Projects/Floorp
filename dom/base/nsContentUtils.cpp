@@ -9100,7 +9100,7 @@ nsIDocShell* nsContentUtils::GetDocShellForEventTarget(EventTarget* aTarget) {
     bool ignore;
     innerWindow =
         do_QueryInterface(node->OwnerDoc()->GetScriptHandlingObject(ignore));
-  } else if ((innerWindow = do_QueryInterface(aTarget))) {
+  } else if ((innerWindow = nsPIDOMWindowInner::FromEventTarget(aTarget))) {
     // Nothing else to do
   } else {
     nsCOMPtr<DOMEventTargetHelper> helper = do_QueryInterface(aTarget);
