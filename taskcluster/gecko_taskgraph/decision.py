@@ -76,10 +76,6 @@ PER_PROJECT_PARAMETERS = {
         "target_tasks_method": "mozilla_release_tasks",
         "release_type": "release",
     },
-    "mozilla-esr78": {
-        "target_tasks_method": "mozilla_esr78_tasks",
-        "release_type": "esr78",
-    },
     "mozilla-esr91": {
         "target_tasks_method": "mozilla_esr91_tasks",
         "release_type": "esr91",

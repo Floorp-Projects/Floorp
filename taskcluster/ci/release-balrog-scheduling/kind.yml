@@ -35,14 +35,12 @@ jobs:
                         by-release-type:
                             beta: [32]
                             release: [145]
-                            esr78: [3820]
                             esr91: [17638]
                             default: []
                     staging:
                         by-release-type:
                             beta: [32]
                             release: [145]
-                            esr78: [887]
                             esr91: [889]
                             default: []
             background-rate:
