@@ -402,7 +402,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
   switch (aID) {
       // These colors don't seem to be used for anything anymore in Mozilla
       // The CSS2 colors below are used.
-    case ColorID::WidgetBackground:
     case ColorID::Appworkspace:  // MDI background color
     case ColorID::Background:    // desktop background
     case ColorID::Window:
@@ -411,12 +410,10 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
     case ColorID::MozCombobox:
       aColor = mMozWindowBackground;
       break;
-    case ColorID::WidgetForeground:
     case ColorID::Windowtext:
     case ColorID::MozDialogtext:
       aColor = mMozWindowText;
       break;
-    case ColorID::WidgetSelectBackground:
     case ColorID::IMESelectedRawTextBackground:
     case ColorID::IMESelectedConvertedTextBackground:
     case ColorID::MozDragtargetzone:
@@ -429,7 +426,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
         break;
       }
       [[fallthrough]];
-    case ColorID::WidgetSelectForeground:
     case ColorID::IMESelectedRawTextForeground:
     case ColorID::IMESelectedConvertedTextForeground:
       aColor = mTextSelectedText;
@@ -447,12 +443,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       break;
     case ColorID::MozCellhighlighttext:
       aColor = mMozCellHighlightText;
-      break;
-    case ColorID::Widget3DHighlight:
-      aColor = NS_RGB(0xa0, 0xa0, 0xa0);
-      break;
-    case ColorID::Widget3DShadow:
-      aColor = NS_RGB(0x40, 0x40, 0x40);
       break;
     case ColorID::IMERawInputBackground:
     case ColorID::IMEConvertedTextBackground:

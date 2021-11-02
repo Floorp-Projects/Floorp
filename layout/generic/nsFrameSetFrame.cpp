@@ -1364,16 +1364,16 @@ void nsHTMLFramesetBorderFrame::PaintBorder(DrawTarget* aDrawTarget,
   if (widthInPixels <= 0) return;
 
   ColorPattern bgColor(ToDeviceColor(LookAndFeel::Color(
-      LookAndFeel::ColorID::WidgetBackground, this, NS_RGB(200, 200, 200))));
+      LookAndFeel::ColorID::Window, this, NS_RGB(200, 200, 200))));
 
   ColorPattern fgColor(ToDeviceColor(LookAndFeel::Color(
-      LookAndFeel::ColorID::WidgetForeground, this, NS_RGB(0, 0, 0))));
+      LookAndFeel::ColorID::Windowtext, this, NS_RGB(0, 0, 0))));
 
   ColorPattern hltColor(ToDeviceColor(LookAndFeel::Color(
-      LookAndFeel::ColorID::Widget3DHighlight, this, NS_RGB(255, 255, 255))));
+      LookAndFeel::ColorID::Threedhighlight, this, NS_RGB(255, 255, 255))));
 
   ColorPattern sdwColor(ToDeviceColor(LookAndFeel::Color(
-      LookAndFeel::ColorID::Widget3DShadow, this, NS_RGB(128, 128, 128))));
+      LookAndFeel::ColorID::Threedshadow, this, NS_RGB(128, 128, 128))));
 
   ColorPattern color(ToDeviceColor(NS_RGB(255, 255, 255)));  // default to white
   if (mVisibility) {

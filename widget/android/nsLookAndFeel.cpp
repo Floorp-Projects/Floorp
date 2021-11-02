@@ -131,15 +131,8 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
   switch (aID) {
       // These colors don't seem to be used for anything anymore in Mozilla
       // The CSS2 colors below are used.
-    case ColorID::WidgetForeground:
     case ColorID::MozMenubartext:
       aColor = mSystemColors.colorForeground;
-      break;
-    case ColorID::Widget3DHighlight:
-      aColor = NS_RGB(0xa0, 0xa0, 0xa0);
-      break;
-    case ColorID::Widget3DShadow:
-      aColor = NS_RGB(0x40, 0x40, 0x40);
       break;
 
     case ColorID::ThemedScrollbarThumbInactive:
@@ -151,7 +144,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
 
     case ColorID::IMESelectedRawTextBackground:
     case ColorID::IMESelectedConvertedTextBackground:
-    case ColorID::WidgetSelectBackground:
       aColor = mSystemColors.textColorHighlight;
       break;
     case ColorID::IMESelectedRawTextForeground:
@@ -184,7 +176,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
     case ColorID::Inactiveborder:   // inactive window border
     case ColorID::Inactivecaption:  // inactive window caption
     case ColorID::Scrollbar:        // scrollbar gray area
-    case ColorID::WidgetBackground:
       aColor = mSystemColors.colorBackground;
       break;
     case ColorID::Graytext:  // disabled text in windows, menus, etc.

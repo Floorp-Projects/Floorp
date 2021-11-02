@@ -131,9 +131,9 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
   // get the system default window background colour
   //
   // TODO(emilio): Can we get the color-scheme from somewhere here?
-  browser->mBackgroundColor = LookAndFeel::Color(
-      LookAndFeel::ColorID::WindowBackground, LookAndFeel::ColorScheme::Light,
-      LookAndFeel::UseStandins::No);
+  browser->mBackgroundColor =
+      LookAndFeel::Color(LookAndFeel::ColorID::Window, ColorScheme::Light,
+                         LookAndFeel::UseStandins::No);
 
   // HACK ALERT - this registration registers the nsDocShellTreeOwner as a
   // nsIWebBrowserListener so it can setup its MouseListener in one of the
