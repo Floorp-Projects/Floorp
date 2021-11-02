@@ -559,7 +559,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
       // For ex, regular toolbox versus browser console versus browser toolbox
       const connectionPrefix = watcherActorID.replace(/watcher\d+$/, "");
       const targetActors = TargetActorRegistry.getTargetActors(
-        context.browserId,
+        context,
         connectionPrefix
       );
 
