@@ -590,6 +590,43 @@ Telemetry Environment
     - ``browser.urlbar.suggest.searches``: True if search suggestions are
       enabled in the urlbar. Defaults to false.
 
+Merino search queries
+---------------------
+
+Overview
+~~~~~~~~
+
+  Merino is a Mozilla backend service that powers Firefox Suggest.
+  When the user opts in Firefox Suggest, Firefox would send their search queries
+  typed in the URL bar to Merino in realtime. When Merino finds relevant search
+  results (i.e. suggestions) from its search providers, it sends the results back
+  to the browser, and those suggestions will be displayed in the URL bar.
+
+Merino API
+~~~~~~~~~~
+
+  Firefox sends HTTP requests to Merino for suggestions, all the parameters are
+  listed as follows. See `here`_ for the more detailed Merino API document.
+
+.. _here: https://mozilla-services.github.io/merino/api.html#suggest
+
+Search Query
+  ``q``: When the user types in the URL bar, each keystroke will be sent to Merino in
+  realtime except for the following cases:
+
+    - Firefox Suggest is not enabled.
+    - The search query is detected as a URL.
+
+Client Variants
+  ``client_variants``: [Optional] This is a comma-separated
+  list of any experiments or rollouts that are affecting the user experience of Firefox
+  Suggest. If Merino recognizes any of them, it will modify its behavior accordingly.
+
+Providers
+  ``providers``:  [Optional]. A comma-separated list of providers to use for
+  this request. If provided, only suggestions from the listed providers will
+  be returned. If not provided, Merino will use a built-in default set of providers.
+
 Obsolete probes
 ---------------
 
