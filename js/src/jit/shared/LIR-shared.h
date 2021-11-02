@@ -3547,9 +3547,8 @@ class LWasmBinarySimd128WithConstant : public LInstructionHelper<1, 1, 0> {
 
 // (v128, i32) -> v128 effect-free variable-width shift operations
 // lhs and dest are the same.
-// temp0 is a GPR (if in use).
-// temp1 is an FPR (if in use).
-class LWasmVariableShiftSimd128 : public LInstructionHelper<1, 2, 2> {
+// temp is an FPR (if in use).
+class LWasmVariableShiftSimd128 : public LInstructionHelper<1, 2, 1> {
  public:
   LIR_HEADER(WasmVariableShiftSimd128)
 
@@ -3558,12 +3557,11 @@ class LWasmVariableShiftSimd128 : public LInstructionHelper<1, 2, 2> {
   static constexpr uint32_t Rhs = 1;
 
   LWasmVariableShiftSimd128(const LAllocation& lhs, const LAllocation& rhs,
-                            const LDefinition& temp0, const LDefinition& temp1)
+                            const LDefinition& temp)
       : LInstructionHelper(classOpcode) {
     setOperand(Lhs, lhs);
     setOperand(Rhs, rhs);
-    setTemp(0, temp0);
-    setTemp(1, temp1);
+    setTemp(0, temp);
   }
 
   const LAllocation* lhs() { return getOperand(Lhs); }

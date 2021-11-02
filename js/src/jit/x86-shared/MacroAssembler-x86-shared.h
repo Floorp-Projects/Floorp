@@ -499,53 +499,45 @@ class MacroAssemblerX86Shared : public Assembler {
                     FloatRegister temp2, FloatRegister output);
 
   void packedShiftByScalarInt8x16(
-      FloatRegister in, Register count, Register temp, FloatRegister xtmp,
-      FloatRegister dest,
+      FloatRegister in, Register count, FloatRegister xtmp, FloatRegister dest,
       void (MacroAssemblerX86Shared::*shift)(FloatRegister, FloatRegister,
                                              FloatRegister),
       void (MacroAssemblerX86Shared::*extend)(const Operand&, FloatRegister));
 
   void packedLeftShiftByScalarInt8x16(FloatRegister in, Register count,
-                                      Register temp, FloatRegister xtmp,
-                                      FloatRegister dest);
+                                      FloatRegister xtmp, FloatRegister dest);
   void packedLeftShiftByScalarInt8x16(Imm32 count, FloatRegister src,
                                       FloatRegister dest);
   void packedRightShiftByScalarInt8x16(FloatRegister in, Register count,
-                                       Register temp, FloatRegister xtmp,
-                                       FloatRegister dest);
+                                       FloatRegister xtmp, FloatRegister dest);
   void packedRightShiftByScalarInt8x16(Imm32 count, FloatRegister src,
                                        FloatRegister dest);
   void packedUnsignedRightShiftByScalarInt8x16(FloatRegister in, Register count,
-                                               Register temp,
                                                FloatRegister xtmp,
                                                FloatRegister dest);
   void packedUnsignedRightShiftByScalarInt8x16(Imm32 count, FloatRegister src,
                                                FloatRegister dest);
 
   void packedLeftShiftByScalarInt16x8(FloatRegister in, Register count,
-                                      Register temp, FloatRegister dest);
+                                      FloatRegister dest);
   void packedRightShiftByScalarInt16x8(FloatRegister in, Register count,
-                                       Register temp, FloatRegister dest);
+                                       FloatRegister dest);
   void packedUnsignedRightShiftByScalarInt16x8(FloatRegister in, Register count,
-                                               Register temp,
                                                FloatRegister dest);
 
   void packedLeftShiftByScalarInt32x4(FloatRegister in, Register count,
-                                      Register temp, FloatRegister dest);
+                                      FloatRegister dest);
   void packedRightShiftByScalarInt32x4(FloatRegister in, Register count,
-                                       Register temp, FloatRegister dest);
+                                       FloatRegister dest);
   void packedUnsignedRightShiftByScalarInt32x4(FloatRegister in, Register count,
-                                               Register temp,
                                                FloatRegister dest);
   void packedLeftShiftByScalarInt64x2(FloatRegister in, Register count,
-                                      Register temp, FloatRegister dest);
+                                      FloatRegister dest);
   void packedRightShiftByScalarInt64x2(FloatRegister in, Register count,
-                                       Register temp1, FloatRegister temp2,
-                                       FloatRegister dest);
+                                       FloatRegister temp, FloatRegister dest);
   void packedRightShiftByScalarInt64x2(Imm32 count, FloatRegister src,
                                        FloatRegister dest);
   void packedUnsignedRightShiftByScalarInt64x2(FloatRegister in, Register count,
-                                               Register temp,
                                                FloatRegister dest);
   void selectSimd128(FloatRegister mask, FloatRegister onTrue,
                      FloatRegister onFalse, FloatRegister temp,

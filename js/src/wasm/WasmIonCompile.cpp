@@ -726,6 +726,15 @@ class FunctionCompiler {
     MOZ_ASSERT(lhs->type() == MIRType::Simd128 &&
                rhs->type() == MIRType::Int32);
 
+    int32_t maskBits;
+    if (MacroAssembler::MustMaskShiftCountSimd128(op, &maskBits)) {
+      MConstant* mask = MConstant::New(alloc(), Int32Value(maskBits));
+      curBlock_->add(mask);
+      auto* rhs2 = MBitAnd::New(alloc(), rhs, mask, MIRType::Int32);
+      curBlock_->add(rhs2);
+      rhs = rhs2;
+    }
+
     auto* ins = MWasmShiftSimd128::New(alloc(), lhs, rhs, op);
     curBlock_->add(ins);
     return ins;

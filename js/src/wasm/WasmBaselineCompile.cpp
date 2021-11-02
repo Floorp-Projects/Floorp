@@ -6964,108 +6964,153 @@ static void ExtAddPairwiseUI16x8(MacroAssembler& masm, RegV128 rs,
   masm.unsignedExtAddPairwiseInt16x8(rs, rsd);
 }
 
+static void ShiftOpMask(MacroAssembler& masm, SimdOp op, RegI32 in,
+                        RegI32 out) {
+  int32_t maskBits;
+
+  masm.mov(in, out);
+  if (MacroAssembler::MustMaskShiftCountSimd128(op, &maskBits)) {
+    masm.and32(Imm32(maskBits), out);
+  }
+}
+
 #  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
 static void ShiftLeftI8x16(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
                            RegI32 temp1, RegV128 temp2) {
-  masm.leftShiftInt8x16(rs, rsd, temp1, temp2);
+  ShiftOpMask(masm, SimdOp::I8x16Shl, rs, temp1);
+  masm.leftShiftInt8x16(temp1, rsd, temp2);
 }
 
 static void ShiftLeftI16x8(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
                            RegI32 temp) {
-  masm.leftShiftInt16x8(rs, rsd, temp);
+  ShiftOpMask(masm, SimdOp::I16x8Shl, rs, temp);
+  masm.leftShiftInt16x8(temp, rsd);
 }
 
 static void ShiftLeftI32x4(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
                            RegI32 temp) {
-  masm.leftShiftInt32x4(rs, rsd, temp);
+  ShiftOpMask(masm, SimdOp::I32x4Shl, rs, temp);
+  masm.leftShiftInt32x4(temp, rsd);
 }
 
 static void ShiftLeftI64x2(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
                            RegI32 temp) {
-  masm.leftShiftInt64x2(rs, rsd, temp);
+  ShiftOpMask(masm, SimdOp::I64x2Shl, rs, temp);
+  masm.leftShiftInt64x2(temp, rsd);
 }
 
 static void ShiftRightI8x16(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
                             RegI32 temp1, RegV128 temp2) {
-  masm.rightShiftInt8x16(rs, rsd, temp1, temp2);
+  ShiftOpMask(masm, SimdOp::I8x16ShrS, rs, temp1);
+  masm.rightShiftInt8x16(temp1, rsd, temp2);
 }
 
 static void ShiftRightUI8x16(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
                              RegI32 temp1, RegV128 temp2) {
-  masm.unsignedRightShiftInt8x16(rs, rsd, temp1, temp2);
+  ShiftOpMask(masm, SimdOp::I8x16ShrU, rs, temp1);
+  masm.unsignedRightShiftInt8x16(temp1, rsd, temp2);
 }
 
 static void ShiftRightI16x8(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
                             RegI32 temp) {
-  masm.rightShiftInt16x8(rs, rsd, temp);
+  ShiftOpMask(masm, SimdOp::I16x8ShrS, rs, temp);
+  masm.rightShiftInt16x8(temp, rsd);
 }
 
 static void ShiftRightUI16x8(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
                              RegI32 temp) {
-  masm.unsignedRightShiftInt16x8(rs, rsd, temp);
+  ShiftOpMask(masm, SimdOp::I16x8ShrU, rs, temp);
+  masm.unsignedRightShiftInt16x8(temp, rsd);
 }
 
 static void ShiftRightI32x4(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
                             RegI32 temp) {
-  masm.rightShiftInt32x4(rs, rsd, temp);
+  ShiftOpMask(masm, SimdOp::I32x4ShrS, rs, temp);
+  masm.rightShiftInt32x4(temp, rsd);
 }
 
 static void ShiftRightUI32x4(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
                              RegI32 temp) {
-  masm.unsignedRightShiftInt32x4(rs, rsd, temp);
+  ShiftOpMask(masm, SimdOp::I32x4ShrU, rs, temp);
+  masm.unsignedRightShiftInt32x4(temp, rsd);
 }
 
 static void ShiftRightUI64x2(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
                              RegI32 temp) {
-  masm.unsignedRightShiftInt64x2(rs, rsd, temp);
+  ShiftOpMask(masm, SimdOp::I64x2ShrU, rs, temp);
+  masm.unsignedRightShiftInt64x2(temp, rsd);
 }
 #  elif defined(JS_CODEGEN_ARM64)
-static void ShiftLeftI8x16(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
-  masm.leftShiftInt8x16(rsd, rs, rsd);
+static void ShiftLeftI8x16(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
+                           RegI32 temp) {
+  ShiftOpMask(masm, SimdOp::I8x16Shl, rs, temp);
+  masm.leftShiftInt8x16(rsd, temp, rsd);
 }
 
-static void ShiftLeftI16x8(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
-  masm.leftShiftInt16x8(rsd, rs, rsd);
+static void ShiftLeftI16x8(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
+                           RegI32 temp) {
+  ShiftOpMask(masm, SimdOp::I16x8Shl, rs, temp);
+  masm.leftShiftInt16x8(rsd, temp, rsd);
 }
 
-static void ShiftLeftI32x4(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
-  masm.leftShiftInt32x4(rsd, rs, rsd);
+static void ShiftLeftI32x4(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
+                           RegI32 temp) {
+  ShiftOpMask(masm, SimdOp::I32x4Shl, rs, temp);
+  masm.leftShiftInt32x4(rsd, temp, rsd);
 }
 
-static void ShiftLeftI64x2(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
-  masm.leftShiftInt64x2(rsd, rs, rsd);
+static void ShiftLeftI64x2(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
+                           RegI32 temp) {
+  ShiftOpMask(masm, SimdOp::I64x2Shl, rs, temp);
+  masm.leftShiftInt64x2(rsd, temp, rsd);
 }
 
-static void ShiftRightI8x16(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
-  masm.rightShiftInt8x16(rsd, rs, rsd);
+static void ShiftRightI8x16(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
+                            RegI32 temp) {
+  ShiftOpMask(masm, SimdOp::I8x16ShrS, rs, temp);
+  masm.rightShiftInt8x16(rsd, temp, rsd);
 }
 
-static void ShiftRightUI8x16(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
-  masm.unsignedRightShiftInt8x16(rsd, rs, rsd);
+static void ShiftRightUI8x16(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
+                             RegI32 temp) {
+  ShiftOpMask(masm, SimdOp::I8x16ShrU, rs, temp);
+  masm.unsignedRightShiftInt8x16(rsd, temp, rsd);
 }
 
-static void ShiftRightI16x8(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
-  masm.rightShiftInt16x8(rsd, rs, rsd);
+static void ShiftRightI16x8(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
+                            RegI32 temp) {
+  ShiftOpMask(masm, SimdOp::I16x8ShrS, rs, temp);
+  masm.rightShiftInt16x8(rsd, temp, rsd);
 }
 
-static void ShiftRightUI16x8(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
-  masm.unsignedRightShiftInt16x8(rsd, rs, rsd);
+static void ShiftRightUI16x8(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
+                             RegI32 temp) {
+  ShiftOpMask(masm, SimdOp::I16x8ShrU, rs, temp);
+  masm.unsignedRightShiftInt16x8(rsd, temp, rsd);
 }
 
-static void ShiftRightI32x4(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
-  masm.rightShiftInt32x4(rsd, rs, rsd);
+static void ShiftRightI32x4(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
+                            RegI32 temp) {
+  ShiftOpMask(masm, SimdOp::I32x4ShrS, rs, temp);
+  masm.rightShiftInt32x4(rsd, temp, rsd);
 }
 
-static void ShiftRightUI32x4(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
-  masm.unsignedRightShiftInt32x4(rsd, rs, rsd);
+static void ShiftRightUI32x4(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
+                             RegI32 temp) {
+  ShiftOpMask(masm, SimdOp::I32x4ShrU, rs, temp);
+  masm.unsignedRightShiftInt32x4(rsd, temp, rsd);
 }
 
-static void ShiftRightI64x2(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
-  masm.rightShiftInt64x2(rsd, rs, rsd);
+static void ShiftRightI64x2(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
+                            RegI32 temp) {
+  ShiftOpMask(masm, SimdOp::I64x2ShrS, rs, temp);
+  masm.rightShiftInt64x2(rsd, temp, rsd);
 }
 
-static void ShiftRightUI64x2(MacroAssembler& masm, RegI32 rs, RegV128 rsd) {
-  masm.unsignedRightShiftInt64x2(rsd, rs, rsd);
+static void ShiftRightUI64x2(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
+                             RegI32 temp) {
+  ShiftOpMask(masm, SimdOp::I64x2ShrU, rs, temp);
+  masm.unsignedRightShiftInt64x2(rsd, temp, rsd);
 }
 #  endif
 
