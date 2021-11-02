@@ -142,13 +142,6 @@ void MediaEngineWebRTC::EnumerateVideoDevices(
     }
 #endif
 
-    if (uniqueId[0] == '\0') {
-      // In case a device doesn't set uniqueId!
-      strncpy(uniqueId, deviceName, sizeof(uniqueId));
-      uniqueId[sizeof(uniqueId) - 1] = '\0';  // strncpy isn't safe
-    }
-
-    NS_ConvertUTF8toUTF16 uuid(uniqueId);
     RefPtr<MediaEngineSource> vSource;
 
     vSource = new MediaEngineRemoteVideoSource(i, aCapEngine,
