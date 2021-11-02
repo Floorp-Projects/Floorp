@@ -54,7 +54,6 @@ UNIFIED_SOURCES += [
     "TestMuxer.cpp",
     "TestOggWriter.cpp",
     "TestOpusParser.cpp",
-    "TestPacer.cpp",
     "TestRTCStatsTimestampMaker.cpp",
     "TestRust.cpp",
     "TestTimeUnit.cpp",

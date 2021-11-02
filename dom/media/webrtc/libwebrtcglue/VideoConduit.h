@@ -105,7 +105,8 @@ class WebrtcVideoConduit
    *       be invoked. This ensures the inserted video-frames can be
    *       transmitted by the conduit.
    */
-  MediaConduitErrorCode SendVideoFrame(webrtc::VideoFrame aFrame) override;
+  MediaConduitErrorCode SendVideoFrame(
+      const webrtc::VideoFrame& frame) override;
 
   bool SendRtp(const uint8_t* aData, size_t aLength,
                const webrtc::PacketOptions& aOptions) override;

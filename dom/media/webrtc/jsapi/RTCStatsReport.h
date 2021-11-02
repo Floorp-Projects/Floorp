@@ -37,8 +37,6 @@ namespace dom {
  * and our integration with it.
  *
  * It converts and uses time from these clocks:
- * - Moz      : Monotonic, unspecified (but constant) and inaccessible epoch, as
- *              implemented by mozilla::TimeStamp
  * - Realtime : Monotonic, unspecified (but constant) epoch.
  * - 1Jan1970 : Monotonic, unix epoch (00:00:00 UTC on 1 January 1970).
  * - Ntp      : Monotonic, ntp epoch (00:00:00 UTC on 1 January 1900).
@@ -55,7 +53,6 @@ class RTCStatsTimestampMaker {
   DOMHighResTimeStamp GetNow() const;
 
   webrtc::Timestamp GetNowRealtime() const;
-  webrtc::Timestamp ConvertMozTimeToRealtime(TimeStamp aMozTime) const;
   webrtc::Timestamp ConvertRealtimeTo1Jan1970(
       webrtc::Timestamp aRealtime) const;
   DOMHighResTimeStamp ConvertNtpToDomTime(webrtc::Timestamp aNtpTime) const;
