@@ -12,6 +12,6 @@ mkdir -p $HOME/artifacts $UPLOAD_DIR
 cd $GECKO_PATH
 ./mach python python/mozboot/mozboot/android.py --artifact-mode --no-interactive --list-packages
 
-tar cavf $UPLOAD_DIR/android-sdk-linux.tar.zst -C /builds/worker/.mozbuild android-sdk-linux
+tar cavf $UPLOAD_DIR/android-sdk-linux.tar.zst -C /builds/worker/.mozbuild android-sdk-linux bundletool.jar
 
 ls -al $UPLOAD_DIR
