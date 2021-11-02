@@ -333,7 +333,6 @@ LOCAL_INCLUDES += [
     "/caps",
     "/docshell/base",
     "/dom/base",
-    "/dom/media/webrtc",
     "/layout/generic",
     "/layout/xul",
     "/media/libyuv/libyuv/include",

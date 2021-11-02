@@ -77,18 +77,13 @@ DOMHighResTimeStamp RTCStatsTimestampMaker::ConvertNtpToDomTime(
   return ReduceRealtimePrecision(realtime - webrtc::TimeDelta::Micros(500));
 }
 
-webrtc::Timestamp RTCStatsTimestampMaker::ConvertMozTimeToRealtime(
-    TimeStamp aMozTime) const {
-  return webrtc::Timestamp::Micros(
-      (aMozTime - mStartRealtime).ToMicroseconds());
-}
-
 DOMHighResTimeStamp RTCStatsTimestampMaker::GetNow() const {
   return ReduceRealtimePrecision(GetNowRealtime());
 }
 
 webrtc::Timestamp RTCStatsTimestampMaker::GetNowRealtime() const {
-  return ConvertMozTimeToRealtime(TimeStamp::Now());
+  return webrtc::Timestamp::Micros(
+      (TimeStamp::Now() - mStartRealtime).ToMicroseconds());
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(RTCStatsReport, mParent)
