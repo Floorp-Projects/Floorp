@@ -215,10 +215,12 @@ class SessionControlView(
         }
     }
 
-    fun update(state: HomeFragmentState) {
+    fun update(state: HomeFragmentState, shouldReportMetrics: Boolean = false) {
         if (state.shouldShowHomeOnboardingDialog(view.context.settings())) {
             interactor.showOnboardingDialog()
         }
+
+        if (shouldReportMetrics) interactor.reportSessionMetrics(state)
 
         val stateAdapterList = state.toAdapterList()
         if (homeScreenViewModel.shouldScrollToTopSites) {

@@ -5828,6 +5828,20 @@ recent_tabs:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-06-23"
+  section_visible:
+    type: boolean
+    description: |
+      An indication of whether the recent tabs /
+      Jump Back In section is visible on the homepage.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22107
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22166
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
 
 recent_bookmarks:
   shown:

@@ -46,6 +46,7 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentDirections
+import org.mozilla.fenix.home.HomeFragmentState
 import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.settings.SupportUtils
@@ -188,6 +189,11 @@ interface SessionControlController {
      * @see [OnboardingInteractor.showOnboardingDialog]
      */
     fun handleShowOnboardingDialog()
+
+    /**
+     * @see [SessionControlInteractor.reportSessionMetrics]
+     */
+    fun handleReportSessionMetrics(state: HomeFragmentState)
 }
 
 @Suppress("TooManyFunctions", "LargeClass")
@@ -595,5 +601,12 @@ class DefaultSessionControlController(
                 )
             }
         }
+    }
+
+    override fun handleReportSessionMetrics(state: HomeFragmentState) {
+        metrics.track(
+            if (state.recentTabs.isEmpty()) Event.RecentTabsSectionIsNotVisible
+            else Event.RecentTabsSectionIsVisible
+        )
     }
 }

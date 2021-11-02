@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.home
 
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.concept.storage.BookmarkNode
@@ -258,5 +259,13 @@ class SessionControlInteractorTest {
         interactor.onLearnMoreClicked(link)
 
         verify { pocketStoriesController.handleLearnMoreClicked(link) }
+    }
+
+    @Test
+    fun reportSessionMetrics() {
+        val homeFragmentState: HomeFragmentState = mockk(relaxed = true)
+        every { homeFragmentState.recentBookmarks } returns emptyList()
+        interactor.reportSessionMetrics(homeFragmentState)
+        verify { controller.handleReportSessionMetrics(homeFragmentState) }
     }
 }

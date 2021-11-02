@@ -14,6 +14,7 @@ import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.historymetadata.controller.HistoryMetadataController
 import org.mozilla.fenix.historymetadata.interactor.HistoryMetadataInteractor
+import org.mozilla.fenix.home.HomeFragmentState
 import org.mozilla.fenix.home.recentbookmarks.controller.RecentBookmarksController
 import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
 import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
@@ -36,6 +37,13 @@ interface TabSessionInteractor {
      * Called when a user clicks on the Private Mode button on the homescreen.
      */
     fun onPrivateModeButtonClicked(newMode: BrowsingMode, userHasBeenOnboarded: Boolean)
+
+    /**
+     * Called when there is an update to the session state and updated metrics need to be reported
+     *
+     * * @param state The state the homepage from which to report desired metrics.
+     */
+    fun reportSessionMetrics(state: HomeFragmentState)
 }
 
 /**
@@ -409,5 +417,9 @@ class SessionControlInteractor(
 
     override fun onDiscoverMoreClicked(link: String) {
         pocketStoriesController.handleDiscoverMoreClicked(link)
+    }
+
+    override fun reportSessionMetrics(state: HomeFragmentState) {
+        controller.handleReportSessionMetrics(state)
     }
 }

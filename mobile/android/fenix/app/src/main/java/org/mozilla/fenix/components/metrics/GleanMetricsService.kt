@@ -799,6 +799,14 @@ private val Event.wrapper: EventWrapper<*>?
             { RecentTabs.showAllClicked.record(it) }
         )
 
+        is Event.RecentTabsSectionIsVisible -> EventWrapper<NoExtraKeys>(
+            { RecentTabs.sectionVisible.set(true) }
+        )
+
+        is Event.RecentTabsSectionIsNotVisible -> EventWrapper<NoExtraKeys>(
+            { RecentTabs.sectionVisible.set(false) }
+        )
+
         is Event.BookmarkClicked -> EventWrapper<NoExtraKeys>(
             { RecentBookmarks.bookmarkClicked.add() }
         )
