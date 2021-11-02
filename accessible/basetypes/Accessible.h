@@ -147,6 +147,11 @@ class Accessible {
   virtual void AppendTextTo(nsAString& aText, uint32_t aStartOffset = 0,
                             uint32_t aLength = UINT32_MAX) = 0;
 
+  /**
+   * Return all states of accessible (including ARIA states).
+   */
+  virtual uint64_t State() = 0;
+
   // Type "is" methods
 
   bool IsDoc() const { return HasGenericType(eDocument); }

@@ -20,7 +20,7 @@
 namespace mozilla {
 namespace a11y {
 
-uint64_t RemoteAccessible::State() const {
+uint64_t RemoteAccessible::State() {
   uint64_t state = 0;
   Unused << mDoc->SendState(mID, &state);
   return state;

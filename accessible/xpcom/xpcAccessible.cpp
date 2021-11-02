@@ -225,13 +225,11 @@ NS_IMETHODIMP
 xpcAccessible::GetState(uint32_t* aState, uint32_t* aExtraState) {
   NS_ENSURE_ARG_POINTER(aState);
 
-  if (!IntlGeneric()) {
-    nsAccUtils::To32States(states::DEFUNCT, aState, aExtraState);
-  } else if (Intl()) {
-    nsAccUtils::To32States(Intl()->State(), aState, aExtraState);
+  Accessible* acc = IntlGeneric();
+  if (acc) {
+    nsAccUtils::To32States(acc->State(), aState, aExtraState);
   } else {
-    nsAccUtils::To32States(IntlGeneric()->AsRemote()->State(), aState,
-                           aExtraState);
+    nsAccUtils::To32States(states::DEFUNCT, aState, aExtraState);
   }
 
   return NS_OK;
