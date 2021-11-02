@@ -868,6 +868,22 @@ class TestPageLoadStrategy(BaseNavigationTestCase):
             lambda _: self.marionette.find_element(By.ID, "slow")
         )
 
+    def test_none_with_new_session_waits_for_page_loaded(self):
+        self.marionette.delete_session()
+        self.marionette.start_session({"pageLoadStrategy": "none"})
+
+        # Navigate will return immediately.
+        self.marionette.navigate(self.test_page_slow_resource)
+
+        # Make sure that when creating a new session right away it waits
+        # until the page has been finished loading.
+        self.marionette.delete_session()
+        self.marionette.start_session()
+
+        self.assertEqual(self.test_page_slow_resource, self.marionette.get_url())
+        self.assertEqual("complete", self.ready_state)
+        self.marionette.find_element(By.ID, "slow")
+
     def test_eager(self):
         self.marionette.delete_session()
         self.marionette.start_session({"pageLoadStrategy": "eager"})
