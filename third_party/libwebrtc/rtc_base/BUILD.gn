@@ -391,8 +391,6 @@ rtc_source_set("safe_conversions") {
 rtc_library("timeutils") {
   visibility = [ "*" ]
   sources = [
-    "system_time.cc",
-    "system_time.h",
     "time_utils.cc",
     "time_utils.h",
   ]
@@ -402,10 +400,6 @@ rtc_library("timeutils") {
     ":stringutils",
     "system:rtc_export",
   ]
-  if (rtc_exclude_system_time) {
-    defines = [ "WEBRTC_EXCLUDE_SYSTEM_TIME" ]
-  }
-
   libs = []
   if (is_win) {
     libs += [ "winmm.lib" ]

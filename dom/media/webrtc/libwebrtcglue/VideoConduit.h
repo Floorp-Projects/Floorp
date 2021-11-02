@@ -81,9 +81,10 @@ class WebrtcVideoConduit
       RefPtr<mozilla::VideoRenderer> aVideoRenderer) override;
   void DetachRenderer() override;
 
+  Maybe<DOMHighResTimeStamp> LastRtcpReceived() const override;
   Maybe<uint16_t> RtpSendBaseSeqFor(uint32_t aSsrc) const override;
 
-  const dom::RTCStatsTimestampMaker& GetTimestampMaker() const override;
+  DOMHighResTimeStamp GetNow() const override;
 
   void StopTransmitting();
   void StartTransmitting();
@@ -155,8 +156,10 @@ class WebrtcVideoConduit
   // Necessary Init steps on the Call thread.
   void InitCall();
 
-  Ssrcs GetLocalSSRCs() const override;
-  Maybe<Ssrc> GetRemoteSSRC() const override;
+  std::vector<uint32_t> GetLocalSSRCs() const override;
+
+  // Any thread.
+  bool GetRemoteSSRC(uint32_t* ssrc) const override;
 
   void UnsetRemoteSSRC(uint32_t ssrc) override;
   void SetRemoteSSRCConfig(uint32_t ssrc, uint32_t rtxSsrc);
@@ -467,6 +470,9 @@ class WebrtcVideoConduit
   MediaEventListener mSendPluginReleased;
   MediaEventListener mRecvPluginCreated;
   MediaEventListener mRecvPluginReleased;
+
+  // Call thread only
+  Maybe<DOMHighResTimeStamp> mLastRtcpReceived;
 
   // Call thread only. ssrc -> base_seq
   std::map<uint32_t, uint16_t> mRtpSendBaseSeqs;

@@ -18,7 +18,6 @@
 
 #include "absl/types/optional.h"
 #include "api/array_view.h"
-#include "api/units/timestamp.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/dlrr.h"
 #include "modules/rtp_rtcp/source/rtcp_packet/remb.h"
@@ -49,7 +48,7 @@ class RtcpTransceiverImpl {
 
   void SetReadyToSend(bool ready);
 
-  void ReceivePacket(rtc::ArrayView<const uint8_t> packet, Timestamp now);
+  void ReceivePacket(rtc::ArrayView<const uint8_t> packet, int64_t now_us);
 
   void SendCompoundPacket();
 
@@ -77,15 +76,15 @@ class RtcpTransceiverImpl {
   struct RemoteSenderState;
 
   void HandleReceivedPacket(const rtcp::CommonHeader& rtcp_packet_header,
-                            Timestamp now);
+                            int64_t now_us);
   // Individual rtcp packet handlers.
   void HandleBye(const rtcp::CommonHeader& rtcp_packet_header);
   void HandleSenderReport(const rtcp::CommonHeader& rtcp_packet_header,
-                          Timestamp now);
+                          int64_t now_us);
   void HandleExtendedReports(const rtcp::CommonHeader& rtcp_packet_header,
-                             Timestamp now);
+                             int64_t now_us);
   // Extended Reports blocks handlers.
-  void HandleDlrr(const rtcp::Dlrr& dlrr, Timestamp now);
+  void HandleDlrr(const rtcp::Dlrr& dlrr, int64_t now_us);
   void HandleTargetBitrate(const rtcp::TargetBitrate& target_bitrate,
                            uint32_t remote_ssrc);
 
@@ -98,7 +97,7 @@ class RtcpTransceiverImpl {
   void SendPeriodicCompoundPacket();
   void SendImmediateFeedback(const rtcp::RtcpPacket& rtcp_packet);
   // Generate Report Blocks to be send in Sender or Receiver Report.
-  std::vector<rtcp::ReportBlock> CreateReportBlocks(Timestamp now);
+  std::vector<rtcp::ReportBlock> CreateReportBlocks(int64_t now_us);
 
   const RtcpTransceiverConfig config_;
 

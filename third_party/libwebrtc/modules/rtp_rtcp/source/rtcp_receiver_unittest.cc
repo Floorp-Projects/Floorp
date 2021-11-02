@@ -254,7 +254,8 @@ TEST(RtcpReceiverTest, InjectSrPacketCalculatesRTT) {
   int64_t rtt_ms = 0;
   EXPECT_EQ(-1, receiver.RTT(kSenderSsrc, &rtt_ms, nullptr, nullptr, nullptr));
 
-  uint32_t sent_ntp = CompactNtp(mocks.clock.CurrentNtpTime());
+  uint32_t sent_ntp =
+      CompactNtp(TimeMicrosToNtp(mocks.clock.TimeInMicroseconds()));
   mocks.clock.AdvanceTimeMilliseconds(kRttMs + kDelayMs);
 
   rtcp::SenderReport sr;
@@ -285,7 +286,8 @@ TEST(RtcpReceiverTest, InjectSrPacketCalculatesNegativeRTTAsOne) {
   int64_t rtt_ms = 0;
   EXPECT_EQ(-1, receiver.RTT(kSenderSsrc, &rtt_ms, nullptr, nullptr, nullptr));
 
-  uint32_t sent_ntp = CompactNtp(mocks.clock.CurrentNtpTime());
+  uint32_t sent_ntp =
+      CompactNtp(TimeMicrosToNtp(mocks.clock.TimeInMicroseconds()));
   mocks.clock.AdvanceTimeMilliseconds(kRttMs + kDelayMs);
 
   rtcp::SenderReport sr;
@@ -315,7 +317,8 @@ TEST(RtcpReceiverTest,
   const uint32_t kDelayNtp = 123000;
   const int64_t kDelayMs = CompactNtpRttToMs(kDelayNtp);
 
-  uint32_t sent_ntp = CompactNtp(mocks.clock.CurrentNtpTime());
+  uint32_t sent_ntp =
+      CompactNtp(TimeMicrosToNtp(mocks.clock.TimeInMicroseconds()));
   mocks.clock.AdvanceTimeMilliseconds(kRttMs + kDelayMs);
 
   rtcp::SenderReport sr;
@@ -868,7 +871,8 @@ TEST(RtcpReceiverTest, InjectExtendedReportsDlrrPacketWithSubBlock) {
 
   receiver.IncomingPacket(xr.Build());
 
-  uint32_t compact_ntp_now = CompactNtp(mocks.clock.CurrentNtpTime());
+  uint32_t compact_ntp_now =
+      CompactNtp(TimeMicrosToNtp(mocks.clock.TimeInMicroseconds()));
   EXPECT_TRUE(receiver.GetAndResetXrRrRtt(&rtt_ms));
   uint32_t rtt_ntp = compact_ntp_now - kDelay - kLastRR;
   EXPECT_NEAR(CompactNtpRttToMs(rtt_ntp), rtt_ms, 1);
@@ -891,7 +895,8 @@ TEST(RtcpReceiverTest, InjectExtendedReportsDlrrPacketWithMultipleSubBlocks) {
 
   receiver.IncomingPacket(xr.Build());
 
-  uint32_t compact_ntp_now = CompactNtp(mocks.clock.CurrentNtpTime());
+  uint32_t compact_ntp_now =
+      CompactNtp(TimeMicrosToNtp(mocks.clock.TimeInMicroseconds()));
   int64_t rtt_ms = 0;
   EXPECT_TRUE(receiver.GetAndResetXrRrRtt(&rtt_ms));
   uint32_t rtt_ntp = compact_ntp_now - kDelay - kLastRR;
@@ -969,7 +974,7 @@ TEST(RtcpReceiverTest, RttCalculatedAfterExtendedReportsDlrr) {
   const uint32_t kDelayNtp = rand.Rand(0, 0x7fffffff);
   const int64_t kDelayMs = CompactNtpRttToMs(kDelayNtp);
   receiver.SetRtcpXrRrtrStatus(true);
-  NtpTime now = mocks.clock.CurrentNtpTime();
+  NtpTime now = TimeMicrosToNtp(mocks.clock.TimeInMicroseconds());
   uint32_t sent_ntp = CompactNtp(now);
   mocks.clock.AdvanceTimeMilliseconds(kRttMs + kDelayMs);
 
@@ -993,7 +998,7 @@ TEST(RtcpReceiverTest, XrDlrrCalculatesNegativeRttAsOne) {
   const int64_t kRttMs = rand.Rand(-3600 * 1000, -1);
   const uint32_t kDelayNtp = rand.Rand(0, 0x7fffffff);
   const int64_t kDelayMs = CompactNtpRttToMs(kDelayNtp);
-  NtpTime now = mocks.clock.CurrentNtpTime();
+  NtpTime now = TimeMicrosToNtp(mocks.clock.TimeInMicroseconds());
   uint32_t sent_ntp = CompactNtp(now);
   mocks.clock.AdvanceTimeMilliseconds(kRttMs + kDelayMs);
   receiver.SetRtcpXrRrtrStatus(true);
@@ -1402,7 +1407,8 @@ TEST(RtcpReceiverTest, VerifyRttObtainedFromReportBlockDataObserver) {
   const uint32_t kDelayNtp = 123000;
   const int64_t kDelayMs = CompactNtpRttToMs(kDelayNtp);
 
-  uint32_t sent_ntp = CompactNtp(mocks.clock.CurrentNtpTime());
+  uint32_t sent_ntp =
+      CompactNtp(TimeMicrosToNtp(mocks.clock.TimeInMicroseconds()));
   mocks.clock.AdvanceTimeMilliseconds(kRttMs + kDelayMs);
 
   rtcp::SenderReport sr;
