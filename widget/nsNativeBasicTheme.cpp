@@ -534,7 +534,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeProgressColors(
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeTrackColors(
     const EventStates& aState, const Colors& aColors) {
   if (aColors.HighContrast()) {
-    return aColors.SystemPair(StyleSystemColor::TextBackground,
+    return aColors.SystemPair(StyleSystemColor::Window,
                               StyleSystemColor::Buttontext);
   }
   bool isActive =
@@ -622,7 +622,7 @@ std::array<sRGBColor, 3> nsNativeBasicTheme::ComputeFocusRectColors(
   if (aColors.HighContrast()) {
     return {aColors.System(StyleSystemColor::Selecteditem),
             aColors.System(StyleSystemColor::Buttontext),
-            aColors.System(StyleSystemColor::TextBackground)};
+            aColors.System(StyleSystemColor::Window)};
   }
   const auto& accent = aColors.Accent();
   const sRGBColor middle =
@@ -642,7 +642,7 @@ sRGBColor nsNativeBasicTheme::ComputeScrollbarTrackColor(
     const EventStates& aDocumentState, const Colors& aColors) {
   const nsStyleUI* ui = aStyle.StyleUI();
   if (aColors.HighContrast()) {
-    return aColors.System(StyleSystemColor::TextBackground);
+    return aColors.System(StyleSystemColor::Window);
   }
   if (ShouldUseDarkScrollbar(aFrame, aStyle)) {
     return sRGBColor::FromU8(20, 20, 25, 77);
@@ -825,7 +825,7 @@ sRGBColor nsNativeBasicTheme::ComputeScrollbarThumbColor(
       return StyleSystemColor::ThemedScrollbarThumbHover;
     }
     if (aColors.HighContrast()) {
-      return StyleSystemColor::TextForeground;
+      return StyleSystemColor::Windowtext;
     }
     return StyleSystemColor::ThemedScrollbarThumb;
   }();
@@ -847,8 +847,8 @@ nsNativeBasicTheme::ComputeScrollbarButtonColors(
       return aColors.SystemPair(StyleSystemColor::Selecteditem,
                                 StyleSystemColor::Buttonface);
     }
-    return aColors.SystemPair(StyleSystemColor::TextBackground,
-                              StyleSystemColor::TextForeground);
+    return aColors.SystemPair(StyleSystemColor::Window,
+                              StyleSystemColor::Windowtext);
   }
 
   auto trackColor =

@@ -64,12 +64,6 @@ nsresult HeadlessLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::SpellCheckerUnderline:
       aColor = NS_RGB(0xff, 0x00, 0x00);
       break;
-    case ColorID::TextBackground:
-      aColor = NS_RGB(0xff, 0xff, 0xff);
-      break;
-    case ColorID::TextForeground:
-      aColor = NS_RGB(0x00, 0x00, 0x00);
-      break;
     case ColorID::TextHighlightBackground:
       aColor = NS_RGB(0xef, 0x0f, 0xff);
       break;

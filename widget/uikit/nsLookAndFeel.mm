@@ -64,12 +64,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID, ColorScheme, nscolor& aResult) {
     case ColorID::Widget3DShadow:
       aResult = NS_RGB(0x40, 0x40, 0x40);
       break;
-    case ColorID::TextBackground:
-      aResult = NS_RGB(0xff, 0xff, 0xff);
-      break;
-    case ColorID::TextForeground:
-      aResult = NS_RGB(0x00, 0x00, 0x00);
-      break;
     case ColorID::Highlight:
       aResult = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
