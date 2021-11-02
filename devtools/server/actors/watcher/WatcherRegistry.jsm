@@ -115,7 +115,7 @@ const WatcherRegistry = {
         // when running code in the content process. Browser ID, compared to BrowsingContext ID won't change
         // if we navigate to the parent process or if a new BrowsingContext is used for the <browser> element
         // we are currently inspecting.
-        browserId: watcher.browserId,
+        browserId: watcher.context.browserId,
         // The DevToolsServerConnection prefix will be used to compute actor IDs created in the content process
         connectionPrefix: watcher.conn.prefix,
         // Expose watcher traits so we can retrieve them in content process.
@@ -155,7 +155,10 @@ const WatcherRegistry = {
   getWatchersForBrowserId(browserId) {
     const watchers = [];
     for (const watcherActor of watcherActors.values()) {
-      if (watcherActor.browserId === browserId) {
+      if (
+        watcherActor.context.type == "browser-element" &&
+        watcherActor.context.browserId === browserId
+      ) {
         watchers.push(watcherActor);
       }
     }
