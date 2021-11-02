@@ -284,6 +284,12 @@ class WebrtcGmpVideoEncoder : public GMPVideoEncoderCallbackProxy,
   Maybe<uint64_t> mCachedPluginId;
   const std::string mPCHandle;
 
+  struct InputImageData {
+    int64_t timestamp_us;
+  };
+  // Map rtp time -> input image data
+  DataMutex<std::map<uint32_t, InputImageData>> mInputImageMap;
+
   MediaEventProducer<uint64_t> mInitPluginEvent;
   MediaEventProducer<uint64_t> mReleasePluginEvent;
 };
