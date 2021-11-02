@@ -127,8 +127,24 @@ const extraStateTests = [
 async function runStateTests(browser, accDoc, id, tests) {
   let acc = findAccessibleChildByID(accDoc, id);
   for (let { desc, attrs, expected } of tests) {
+    const [expState, expExtState, absState, absExtState] = expected;
     info(desc);
-    let onUpdate = waitForEvent(EVENT_STATE_CHANGE, id);
+    let onUpdate = waitForEvent(EVENT_STATE_CHANGE, evt => {
+      if (getAccessibleDOMNodeID(evt.accessible) != id) {
+        return false;
+      }
+      // Events can be fired for states other than the ones we're interested
+      // in. If this happens, the states we're expecting might not be exposed
+      // yet.
+      const scEvt = evt.QueryInterface(nsIAccessibleStateChangeEvent);
+      if (scEvt.isExtraState) {
+        if (scEvt.state & expExtState || scEvt.state & absExtState) {
+          return true;
+        }
+        return false;
+      }
+      return scEvt.state & expState || scEvt.state & absState;
+    });
     for (let { attr, value } of attrs) {
       await invokeSetAttribute(browser, id, attr, value);
     }
