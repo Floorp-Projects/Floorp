@@ -403,7 +403,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       // These colors don't seem to be used for anything anymore in Mozilla
       // The CSS2 colors below are used.
     case ColorID::WidgetBackground:
-    case ColorID::TextBackground:
     case ColorID::Appworkspace:  // MDI background color
     case ColorID::Background:    // desktop background
     case ColorID::Window:
@@ -413,7 +412,6 @@ nsresult nsLookAndFeel::PerThemeData::GetColor(ColorID aID,
       aColor = mMozWindowBackground;
       break;
     case ColorID::WidgetForeground:
-    case ColorID::TextForeground:
     case ColorID::Windowtext:
     case ColorID::MozDialogtext:
       aColor = mMozWindowText;
