@@ -20,9 +20,8 @@ XPCOMUtils.defineLazyGetter(this, "Management", () => {
   return Management;
 });
 
-ChromeUtils.import(
-  "resource://testing-common/CustomizableUITestUtils.jsm",
-  this
+let { CustomizableUITestUtils } = ChromeUtils.import(
+  "resource://testing-common/CustomizableUITestUtils.jsm"
 );
 let gCUITestUtils = new CustomizableUITestUtils(window);
 

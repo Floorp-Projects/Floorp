@@ -535,10 +535,7 @@ module.exports = {
     {
       // TODO: Bug 1609271 Fix all violations for ChromeUtils.import(..., null)
       files: [
-        "browser/base/content/test/forms/head.js",
-        "browser/base/content/test/general/browser_datachoices_notification.js",
         "browser/base/content/test/sync/browser_fxa_web_channel.js",
-        "browser/base/content/test/webextensions/head.js",
         "browser/components/customizableui/test/browser_1042100_default_placements_update.js",
         "browser/components/customizableui/test/browser_1096763_seen_widgets_post_reset.js",
         "browser/components/customizableui/test/browser_1161838_inserted_new_default_buttons.js",
@@ -553,7 +550,6 @@ module.exports = {
         "browser/components/migration/tests/unit/test_Edge_db_migration.js",
         "browser/components/translation/test/unit/test_cld2.js",
         "browser/extensions/formautofill/test/unit/test_sync.js",
-        "browser/extensions/report-site-issue/test/browser/head.js",
         "devtools/client/aboutdebugging/test/browser/browser_aboutdebugging_addons_debug_popup.js",
         "dom/ipc/tests/browser_memory_distribution_telemetry.js",
         "dom/push/test/xpcshell/head.js",
