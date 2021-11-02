@@ -8,7 +8,6 @@
 
 this.main = (function() {
   const exports = {};
-  const pngToJpegCutoff = 2500000;
 
   const { sendEvent, incrementCount } = analytics;
 
@@ -167,25 +166,6 @@ this.main = (function() {
       });
     }
     return null;
-  });
-
-  // This is used for truncated full page downloads and copy to clipboards.
-  // Those longer operations need to display an animated spinner/loader, so
-  // it's preferable to perform toDataURL() in the background.
-  communication.register("canvasToDataURL", (sender, imageData) => {
-    const canvas = document.createElement("canvas");
-    canvas.width = imageData.width;
-    canvas.height = imageData.height;
-    canvas.getContext("2d").putImageData(imageData, 0, 0);
-    let dataUrl = canvas.toDataURL();
-    if (dataUrl.length > pngToJpegCutoff) {
-      const jpegDataUrl = canvas.toDataURL("image/jpeg");
-      if (jpegDataUrl.length < dataUrl.length) {
-        // Only use the JPEG if it is actually smaller
-        dataUrl = jpegDataUrl;
-      }
-    }
-    return dataUrl;
   });
 
   communication.register("copyShotToClipboard", async (sender, blob) => {
