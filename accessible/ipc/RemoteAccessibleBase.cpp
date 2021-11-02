@@ -443,11 +443,12 @@ RemoteAccessibleBase<Derived>::DefaultTextAttributes() {
 
 template <class Derived>
 uint64_t RemoteAccessibleBase<Derived>::State() {
+  uint64_t state = 0;
   if (mCachedFields) {
     if (auto rawState =
             mCachedFields->GetAttribute<uint64_t>(nsGkAtoms::state)) {
       VERIFY_CACHE(CacheDomain::State);
-      uint64_t state = *rawState;
+      state = *rawState;
       // Handle states that are derived from other states.
       if (!(state & states::UNAVAILABLE)) {
         state |= states::ENABLED | states::SENSITIVE;
@@ -455,10 +456,15 @@ uint64_t RemoteAccessibleBase<Derived>::State() {
       if (state & states::EXPANDABLE && !(state & states::EXPANDED)) {
         state |= states::COLLAPSED;
       }
-      return state;
     }
   }
-  return 0;
+  auto* browser = static_cast<dom::BrowserParent*>(Document()->Manager());
+  if (browser == dom::BrowserParent::GetFocused()) {
+    if (this == Document()->GetFocusedAcc()) {
+      state |= states::FOCUSED;
+    }
+  }
+  return state;
 }
 
 template class RemoteAccessibleBase<RemoteAccessible>;

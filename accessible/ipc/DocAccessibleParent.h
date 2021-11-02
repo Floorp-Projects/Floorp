@@ -41,7 +41,8 @@ class DocAccessibleParent : public RemoteAccessible,
 #endif  // defined(XP_WIN)
         mTopLevel(false),
         mTopLevelInContentProcess(false),
-        mShutdown(false) {
+        mShutdown(false),
+        mFocus(0) {
     sMaxDocID++;
     mActorID = sMaxDocID;
     MOZ_ASSERT(!LiveDocs().Get(mActorID));
@@ -280,6 +281,13 @@ class DocAccessibleParent : public RemoteAccessible,
     return RemoteAccessible::IndexInParent();
   }
 
+  /**
+   * Get the focused Accessible in this document, if any.
+   */
+  RemoteAccessible* GetFocusedAcc() const {
+    return const_cast<DocAccessibleParent*>(this)->GetAccessible(mFocus);
+  }
+
  private:
   ~DocAccessibleParent() {
     LiveDocs().Remove(mActorID);
@@ -342,6 +350,8 @@ class DocAccessibleParent : public RemoteAccessible,
   bool mShutdown;
 
   nsTHashSet<RefPtr<dom::BrowserBridgeParent>> mPendingOOPChildDocs;
+
+  uint64_t mFocus;
 
   static uint64_t sMaxDocID;
   static nsTHashMap<nsUint64HashKey, DocAccessibleParent*>& LiveDocs() {
