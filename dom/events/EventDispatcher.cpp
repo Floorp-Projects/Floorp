@@ -100,8 +100,8 @@ static bool IsEventTargetChrome(EventTarget* aEventTarget,
   Document* doc = nullptr;
   if (nsINode* node = nsINode::FromEventTargetOrNull(aEventTarget)) {
     doc = node->OwnerDoc();
-  } else if (nsCOMPtr<nsPIDOMWindowInner> window =
-                 do_QueryInterface(aEventTarget)) {
+  } else if (nsPIDOMWindowInner* window =
+                 nsPIDOMWindowInner::FromEventTargetOrNull(aEventTarget)) {
     doc = window->GetExtantDoc();
   }
 

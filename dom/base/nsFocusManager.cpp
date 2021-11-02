@@ -2778,7 +2778,7 @@ static Document* GetDocumentHelper(EventTarget* aTarget) {
   if (const nsINode* node = nsINode::FromEventTarget(aTarget)) {
     return node->OwnerDoc();
   }
-  nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aTarget);
+  nsPIDOMWindowInner* win = nsPIDOMWindowInner::FromEventTarget(aTarget);
   return win ? win->GetExtantDoc() : nullptr;
 }
 

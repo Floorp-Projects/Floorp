@@ -237,11 +237,12 @@ nsresult KeyEventHandler::DispatchXBLCommand(dom::EventTarget* aTarget,
   nsCOMPtr<nsIController> controller;
 
   nsCOMPtr<nsPIDOMWindowOuter> privateWindow;
-  nsCOMPtr<nsPIWindowRoot> windowRoot = do_QueryInterface(aTarget);
+  nsCOMPtr<nsPIWindowRoot> windowRoot =
+      nsPIWindowRoot::FromEventTargetOrNull(aTarget);
   if (windowRoot) {
     privateWindow = windowRoot->GetWindow();
   } else {
-    privateWindow = do_QueryInterface(aTarget);
+    privateWindow = nsPIDOMWindowOuter::FromEventTargetOrNull(aTarget);
     if (!privateWindow) {
       nsCOMPtr<dom::Document> doc;
       // XXXbz sXBL/XBL2 issue -- this should be the "scope doc" or
@@ -438,8 +439,8 @@ already_AddRefed<nsIController> KeyEventHandler::GetController(
   }
 
   if (!controllers) {
-    nsCOMPtr<nsPIDOMWindowOuter> domWindow(do_QueryInterface(aTarget));
-    if (domWindow) {
+    if (nsCOMPtr<nsPIDOMWindowOuter> domWindow =
+            nsPIDOMWindowOuter::FromEventTarget(aTarget)) {
       domWindow->GetControllers(getter_AddRefs(controllers));
     }
   }
