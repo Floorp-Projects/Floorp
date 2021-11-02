@@ -333,6 +333,41 @@ class MozperftestGatherer(FrameworkGatherer):
         return self._build_section_with_header(title, content, header_type="H4")
 
 
+class TalosGatherer(FrameworkGatherer):
+    def get_test_list(self):
+        from talos import test as talos_test
+
+        test_lists = talos_test.test_dict()
+        mod = __import__("talos.test", fromlist=test_lists)
+
+        suite_name = "Talos Tests"
+
+        for test in test_lists:
+            self._test_list.setdefault(suite_name, {}).update({test: ""})
+
+            klass = getattr(mod, test)
+            self._descriptions.setdefault(test, klass.__dict__)
+
+        return self._test_list
+
+    def build_test_description(self, title, test_description="", suite_name=""):
+        result = f".. dropdown:: {title}\n"
+        result += f"   :container: + anchor-id-{title}-{suite_name.split()[0]}\n\n"
+
+        for key in sorted(self._descriptions[title]):
+            if key.startswith("__") and key.endswith("__"):
+                continue
+            elif key == "filters":
+                continue
+
+            result += f"   * **{key}**: {self._descriptions[title][key]}\n"
+
+        return [result]
+
+    def build_suite_section(self, title, content):
+        return self._build_section_with_header(title, content, header_type="H3")
+
+
 class StaticGatherer(FrameworkGatherer):
     """
     A noop gatherer for frameworks with static-only documentation.

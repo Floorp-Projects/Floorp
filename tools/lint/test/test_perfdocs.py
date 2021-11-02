@@ -481,6 +481,12 @@ def test_perfdocs_framework_gatherers(logger, structured_logger, perfdocs_sample
                 "Example": perfdocs_sample["manifest"]
             }
 
+        if framework == "talos":
+            for suite, suitetests in fg.get_test_list().items():
+                assert suite == "Talos Tests"
+                assert suitetests
+            continue
+
         for suite, suitetests in fg.get_test_list().items():
             assert suite == "suite"
             for test, manifest in suitetests.items():
