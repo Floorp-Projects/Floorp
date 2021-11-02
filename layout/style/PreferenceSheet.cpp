@@ -126,14 +126,10 @@ void PreferenceSheet::Prefs::LoadColors(bool aIsLight) {
   } else {
     using ColorID = LookAndFeel::ColorID;
     const auto standins = LookAndFeel::UseStandins(useStandins);
-    // FIXME(emilio): Why do we look at a different set of colors when using
-    // standins vs. not?
-    colors.mDefault = LookAndFeel::Color(
-        useStandins ? ColorID::Windowtext : ColorID::WindowForeground, scheme,
-        standins, colors.mDefault);
+    colors.mDefault = LookAndFeel::Color(ColorID::Windowtext, scheme, standins,
+                                         colors.mDefault);
     colors.mDefaultBackground = LookAndFeel::Color(
-        useStandins ? ColorID::Window : ColorID::WindowBackground, scheme,
-        standins, colors.mDefaultBackground);
+        ColorID::Window, scheme, standins, colors.mDefaultBackground);
     colors.mLink = LookAndFeel::Color(ColorID::MozNativehyperlinktext, scheme,
                                       standins, colors.mLink);
 

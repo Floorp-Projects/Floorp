@@ -4078,7 +4078,7 @@ void nsTextPaintStyle::InitCommonColors() {
                "default background color is not opaque");
 
   nscolor defaultWindowBackgroundColor =
-      LookAndFeel::Color(LookAndFeel::ColorID::WindowBackground, mFrame);
+      LookAndFeel::Color(LookAndFeel::ColorID::Window, mFrame);
   nscolor selectionTextColor =
       LookAndFeel::Color(LookAndFeel::ColorID::Highlighttext, mFrame);
   nscolor selectionBGColor =
