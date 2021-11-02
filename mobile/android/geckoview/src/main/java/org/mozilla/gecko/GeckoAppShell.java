@@ -1286,14 +1286,19 @@ public class GeckoAppShell {
     int result = NO_POINTER;
     final int sources = inputDevice.getSources();
 
-    if (hasInputDeviceSource(sources, InputDevice.SOURCE_TOUCHSCREEN)
-        || hasInputDeviceSource(sources, InputDevice.SOURCE_JOYSTICK)) {
-      result |= COARSE_POINTER;
-    } else if (hasInputDeviceSource(sources, InputDevice.SOURCE_MOUSE)
+    // Blink checks fine pointer at first, then it check coarse pointer.
+    // So, we should use same order for compatibility.
+    // Also, if using Chrome OS, source may be SOURCE_MOUSE | SOURCE_TOUCHSCREEN | SOURCE_STYLUS
+    // even if no touch screen. So we shouldn't check TOUCHSCREEN at first.
+
+    if (hasInputDeviceSource(sources, InputDevice.SOURCE_MOUSE)
         || hasInputDeviceSource(sources, InputDevice.SOURCE_STYLUS)
         || hasInputDeviceSource(sources, InputDevice.SOURCE_TOUCHPAD)
         || hasInputDeviceSource(sources, InputDevice.SOURCE_TRACKBALL)) {
       result |= FINE_POINTER;
+    } else if (hasInputDeviceSource(sources, InputDevice.SOURCE_TOUCHSCREEN)
+        || hasInputDeviceSource(sources, InputDevice.SOURCE_JOYSTICK)) {
+      result |= COARSE_POINTER;
     }
 
     if (hasInputDeviceSource(sources, InputDevice.SOURCE_MOUSE)
@@ -1318,27 +1323,6 @@ public class GeckoAppShell {
       }
 
       result |= getPointerCapabilities(inputDevice);
-    }
-
-    return result;
-  }
-
-  @WrapForJNI(calledFrom = "gecko")
-  // For pointer and hover media queries features.
-  private static int getPrimaryPointerCapabilities() {
-    int result = NO_POINTER;
-
-    for (final int deviceId : InputDevice.getDeviceIds()) {
-      final InputDevice inputDevice = InputDevice.getDevice(deviceId);
-      if (inputDevice == null || !InputDeviceUtils.isPointerTypeDevice(inputDevice)) {
-        continue;
-      }
-
-      result = getPointerCapabilities(inputDevice);
-
-      // We need information only for the primary pointer.
-      // (Assumes that the primary pointer appears first in the list)
-      break;
     }
 
     return result;
