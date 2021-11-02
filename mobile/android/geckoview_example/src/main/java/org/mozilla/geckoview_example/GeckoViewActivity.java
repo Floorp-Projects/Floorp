@@ -63,6 +63,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.json.JSONObject;
@@ -1580,7 +1581,20 @@ public class GeckoViewActivity extends AppCompatActivity
     }
   }
 
-  private class ExampleAutocompleteStorageDelegate implements Autocomplete.StorageDelegate {}
+  private class ExampleAutocompleteStorageDelegate implements Autocomplete.StorageDelegate {
+    private Map<String, Autocomplete.LoginEntry> mStorage = new HashMap<>();
+
+    @Nullable
+    @Override
+    public GeckoResult<Autocomplete.LoginEntry[]> onLoginFetch() {
+      return GeckoResult.fromValue(mStorage.values().toArray(new Autocomplete.LoginEntry[0]));
+    }
+
+    @Override
+    public void onLoginSave(@NonNull Autocomplete.LoginEntry login) {
+      mStorage.put(login.guid, login);
+    }
+  }
 
   private class ExampleContentDelegate implements GeckoSession.ContentDelegate {
     @Override
