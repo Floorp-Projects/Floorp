@@ -451,8 +451,7 @@ bool RTPSenderVideo::SendVideo(
           AbsoluteCaptureTimeSender::GetSource(single_packet->Ssrc(),
                                                single_packet->Csrcs()),
           single_packet->Timestamp(), kVideoPayloadTypeFrequency,
-          Int64MsToUQ32x32(
-              clock_->ConvertTimestampToNtpTimeInMilliseconds(capture_time_ms)),
+          Int64MsToUQ32x32(single_packet->capture_time_ms() + NtpOffsetMs()),
           /*estimated_capture_clock_offset=*/
           include_capture_clock_offset_ ? estimated_capture_clock_offset_ms
                                         : absl::nullopt);

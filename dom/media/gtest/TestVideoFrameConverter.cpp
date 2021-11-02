@@ -35,8 +35,7 @@ class VideoFrameConverterTest : public ::testing::Test {
   RefPtr<FrameListener> mListener;
 
   VideoFrameConverterTest()
-      : mConverter(
-            MakeAndAddRef<VideoFrameConverter>(dom::RTCStatsTimestampMaker())),
+      : mConverter(MakeAndAddRef<VideoFrameConverter>()),
         mListener(MakeAndAddRef<FrameListener>()) {
     mConverter->AddListener(mListener);
   }

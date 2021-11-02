@@ -41,11 +41,6 @@ if (is_android) {
 }
 
 declare_args() {
-  # Enable to use the Mozilla internal settings.
-  build_with_mozilla = true
-}
-
-declare_args() {
   # Setting this to true will make RTC_EXPORT (see rtc_base/system/rtc_export.h)
   # expand to code that will manage symbols visibility.
   rtc_enable_symbol_export = false
@@ -68,12 +63,6 @@ declare_args() {
   # needed to use metrics. In that case a new implementation needs to be
   # provided.
   rtc_exclude_metrics_default = build_with_chromium
-
-  # Setting this to true will define WEBRTC_EXCLUDE_SYSTEM_TIME which
-  # will tell the pre-processor to remove the default definition of the
-  # SystemTimeNanos() which is defined in rtc_base/system_time.cc. In
-  # that case a new implementation needs to be provided.
-  rtc_exclude_system_time = build_with_chromium || build_with_mozilla
 
   # Setting this to false will require the API user to pass in their own
   # SSLCertificateVerifier to verify the certificates presented from a
@@ -132,6 +121,9 @@ declare_args() {
 
   # Set this to link PipeWire directly instead of using the dlopen.
   rtc_link_pipewire = true
+
+  # Enable to use the Mozilla internal settings.
+  build_with_mozilla = true
 
   # Experimental: enable use of Android AAudio which requires Android SDK 26 or above
   # and NDK r16 or above.

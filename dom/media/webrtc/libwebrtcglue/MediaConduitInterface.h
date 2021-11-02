@@ -134,14 +134,14 @@ class MediaSessionConduit {
       MediaEventSourceExc<MediaPacket>& aEvent) = 0;
 
   // Sts thread only.
+  virtual Maybe<DOMHighResTimeStamp> LastRtcpReceived() const = 0;
   virtual Maybe<uint16_t> RtpSendBaseSeqFor(uint32_t aSsrc) const = 0;
 
-  // Any thread.
-  virtual const dom::RTCStatsTimestampMaker& GetTimestampMaker() const = 0;
+  virtual DOMHighResTimeStamp GetNow() const = 0;
 
   virtual Ssrcs GetLocalSSRCs() const = 0;
 
-  virtual Maybe<Ssrc> GetRemoteSSRC() const = 0;
+  virtual bool GetRemoteSSRC(Ssrc* ssrc) const = 0;
   virtual void UnsetRemoteSSRC(Ssrc ssrc) = 0;
 
   virtual bool HasCodecPluginID(uint64_t aPluginID) const = 0;
@@ -196,25 +196,25 @@ class MediaSessionConduit {
   // not necessarily yield exactly the same result if performed again later, we
   // need to avoid performing it more than once for each entry, which means we
   // need to remember both the JS timestamp (in dom::RTCRtpSourceEntry) and the
-  // libwebrtc timestamp (in SourceKey::mLibwebrtcTimestampMs).
+  // libwebrtc timestamp (in SourceKey::mLibwebrtcTimestamp).
   class SourceKey {
    public:
     explicit SourceKey(const webrtc::RtpSource& aSource)
         : SourceKey(aSource.timestamp_ms(), aSource.source_id()) {}
 
     SourceKey(uint32_t aTimestamp, uint32_t aSrc)
-        : mLibwebrtcTimestampMs(aTimestamp), mSrc(aSrc) {}
+        : mLibwebrtcTimestamp(aTimestamp), mSrc(aSrc) {}
 
     // TODO: Once we support = default for this in our toolchain, do so
     auto operator>(const SourceKey& aRhs) const {
-      if (mLibwebrtcTimestampMs == aRhs.mLibwebrtcTimestampMs) {
+      if (mLibwebrtcTimestamp == aRhs.mLibwebrtcTimestamp) {
         return mSrc > aRhs.mSrc;
       }
-      return mLibwebrtcTimestampMs > aRhs.mLibwebrtcTimestampMs;
+      return mLibwebrtcTimestamp > aRhs.mLibwebrtcTimestamp;
     }
 
    private:
-    uint32_t mLibwebrtcTimestampMs;
+    uint32_t mLibwebrtcTimestamp;
     uint32_t mSrc;
   };
   mutable std::map<SourceKey, dom::RTCRtpSourceEntry, std::greater<SourceKey>>

@@ -377,7 +377,8 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
   std::vector<rtcp::ReceiveTimeInfo> last_xr_rtis;
   last_xr_rtis.reserve(last_xr_rtis_size);
 
-  const uint32_t now_ntp = CompactNtp(clock_->CurrentNtpTime());
+  const uint32_t now_ntp =
+      CompactNtp(TimeMicrosToNtp(clock_->TimeInMicroseconds()));
 
   for (size_t i = 0; i < last_xr_rtis_size; ++i) {
     RrtrInformation& rrtr = received_rrtrs_.front();
@@ -392,13 +393,11 @@ RTCPReceiver::ConsumeReceivedXrReferenceTimeInfo() {
 
 void RTCPReceiver::RemoteRTCPSenderInfo(uint32_t* packet_count,
                                         uint32_t* octet_count,
-                                        int64_t* ntp_timestamp_ms,
-                                        int64_t* remote_ntp_timestamp_ms) const {
+                                        int64_t* ntp_timestamp_ms) const {
   MutexLock lock(&rtcp_receiver_lock_);
   *packet_count = remote_sender_packet_count_;
   *octet_count = remote_sender_octet_count_;
-  *ntp_timestamp_ms = last_received_sr_ntp_.ToMs();
-  *remote_ntp_timestamp_ms = remote_sender_ntp_time_.ToMs();
+  *ntp_timestamp_ms = remote_sender_ntp_time_.ToMs();
 }
 
 // We can get multiple receive reports when we receive the report from a CE.
@@ -547,7 +546,7 @@ void RTCPReceiver::HandleSenderReport(const CommonHeader& rtcp_block,
 
     remote_sender_ntp_time_ = sender_report.ntp();
     remote_sender_rtp_time_ = sender_report.rtp_timestamp();
-    last_received_sr_ntp_ = clock_->CurrentNtpTime();
+    last_received_sr_ntp_ = TimeMicrosToNtp(clock_->TimeInMicroseconds());
     remote_sender_packet_count_ = sender_report.sender_packet_count();
     remote_sender_octet_count_ = sender_report.sender_octet_count();
     remote_sender_reports_count_++;
@@ -618,13 +617,7 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
   rtcp_report_block.delay_since_last_sender_report =
       report_block.delay_since_last_sr();
   rtcp_report_block.last_sender_report_timestamp = report_block.last_sr();
-  // Number of seconds since 1900 January 1 00:00 GMT (see
-  // https://tools.ietf.org/html/rfc868).
-  constexpr int64_t kNtpJan1970Millisecs =
-      2208988800 * rtc::kNumMillisecsPerSec;
-  report_block_data->SetReportBlock(rtcp_report_block,
-      (clock_->CurrentNtpInMilliseconds() - kNtpJan1970Millisecs) *
-      rtc::kNumMicrosecsPerMillisec);
+  report_block_data->SetReportBlock(rtcp_report_block, rtc::TimeUTCMicros());
 
   int64_t rtt_ms = 0;
   uint32_t send_time_ntp = report_block.last_sr();
@@ -643,7 +636,7 @@ void RTCPReceiver::HandleReportBlock(const ReportBlock& report_block,
     uint32_t delay_ntp = report_block.delay_since_last_sr();
     // Local NTP time.
     uint32_t receive_time_ntp =
-        CompactNtp(clock_->ConvertTimestampToNtpTime(last_received_rb_));
+        CompactNtp(TimeMicrosToNtp(last_received_rb_.us()));
 
     // RTT in 1/(2^16) seconds.
     uint32_t rtt_ntp = receive_time_ntp - delay_ntp - send_time_ntp;
@@ -852,7 +845,8 @@ void RTCPReceiver::HandleXr(const CommonHeader& rtcp_block,
 void RTCPReceiver::HandleXrReceiveReferenceTime(uint32_t sender_ssrc,
                                                 const rtcp::Rrtr& rrtr) {
   uint32_t received_remote_mid_ntp_time = CompactNtp(rrtr.ntp());
-  uint32_t local_receive_mid_ntp_time = CompactNtp(clock_->CurrentNtpTime());
+  uint32_t local_receive_mid_ntp_time =
+      CompactNtp(TimeMicrosToNtp(clock_->TimeInMicroseconds()));
 
   auto it = received_rrtrs_ssrc_it_.find(sender_ssrc);
   if (it != received_rrtrs_ssrc_it_.end()) {
@@ -886,7 +880,7 @@ void RTCPReceiver::HandleXrDlrrReportBlock(const rtcp::ReceiveTimeInfo& rti) {
     return;
 
   uint32_t delay_ntp = rti.delay_since_last_rr;
-  uint32_t now_ntp = CompactNtp(clock_->CurrentNtpTime());
+  uint32_t now_ntp = CompactNtp(TimeMicrosToNtp(clock_->TimeInMicroseconds()));
 
   uint32_t rtt_ntp = now_ntp - delay_ntp - send_time_ntp;
   xr_rr_rtt_ms_ = CompactNtpRttToMs(rtt_ntp);
