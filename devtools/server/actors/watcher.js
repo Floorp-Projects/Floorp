@@ -75,6 +75,8 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    *        The connection to use in order to communicate back to the client.
    * @param {Object} context
    *        Mandatory argument to define the debugged context of this actor.
+   *        Note that as this object is passed to other processes and thread,
+   *        this should be a serializable object.
    * @param {String} context.type: The type of debugged context.
    *        Can be:
    *        - "all", to debug everything in the browser.

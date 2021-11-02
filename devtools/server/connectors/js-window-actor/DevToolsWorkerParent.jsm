@@ -48,13 +48,13 @@ class DevToolsWorkerParent extends JSWindowActorParent {
   }
 
   /**
-   * Request the content process to create Worker Targets if workers matching the browserId
+   * Request the content process to create Worker Targets if workers matching the context
    * are already available.
    */
   async instantiateWorkerTargets({
     watcherActorID,
     connectionPrefix,
-    browserId,
+    context,
     sessionData,
   }) {
     try {
@@ -63,7 +63,7 @@ class DevToolsWorkerParent extends JSWindowActorParent {
         {
           watcherActorID,
           connectionPrefix,
-          browserId,
+          context,
           sessionData,
         }
       );
@@ -78,20 +78,21 @@ class DevToolsWorkerParent extends JSWindowActorParent {
     }
   }
 
-  destroyWorkerTargets({ watcher, browserId }) {
+  destroyWorkerTargets({ watcherActorID, context }) {
     return this.sendAsyncMessage("DevToolsWorkerParent:destroy", {
-      watcherActorID: watcher.actorID,
-      browserId,
+      watcherActorID: watcherActorID,
+      context,
     });
   }
 
   /**
    * Communicate to the content process that some data have been added.
    */
-  async addSessionDataEntry({ watcherActorID, type, entries }) {
+  async addSessionDataEntry({ watcherActorID, context, type, entries }) {
     try {
       await this.sendQuery("DevToolsWorkerParent:addSessionDataEntry", {
         watcherActorID,
+        context,
         type,
         entries,
       });
@@ -109,9 +110,10 @@ class DevToolsWorkerParent extends JSWindowActorParent {
   /**
    * Communicate to the content process that some data have been removed.
    */
-  removeSessionDataEntry({ watcherActorID, type, entries }) {
+  removeSessionDataEntry({ watcherActorID, context, type, entries }) {
     this.sendAsyncMessage("DevToolsWorkerParent:removeSessionDataEntry", {
       watcherActorID,
+      context,
       type,
       entries,
     });
