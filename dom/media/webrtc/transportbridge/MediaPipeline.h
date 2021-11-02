@@ -309,9 +309,9 @@ class MediaPipelineTransmit : public MediaPipeline {
   WatchManager<MediaPipelineTransmit> mWatchManager;
   const bool mIsVideo;
   const RefPtr<PipelineListener> mListener;
-  const RefPtr<VideoFrameFeeder> mFeeder;
   RefPtr<AudioProxyThread> mAudioProcessing;
   RefPtr<VideoFrameConverter> mConverter;
+  MediaEventListener mFrameListener;
   Watchable<RefPtr<dom::MediaStreamTrack>> mDomTrack;
   // Input port connecting mDomTrack's MediaTrack to mSendTrack.
   RefPtr<MediaInputPort> mSendPort;

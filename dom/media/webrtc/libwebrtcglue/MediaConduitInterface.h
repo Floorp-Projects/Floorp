@@ -368,8 +368,7 @@ class VideoSessionConduit : public MediaSessionConduit {
    *       be invoked. This ensures the inserted video-frames can be
    *       transmitted by the conduit.
    */
-  virtual MediaConduitErrorCode SendVideoFrame(
-      const webrtc::VideoFrame& frame) = 0;
+  virtual MediaConduitErrorCode SendVideoFrame(webrtc::VideoFrame aFrame) = 0;
 
   /**
    * These methods allow unit tests to double-check that the
