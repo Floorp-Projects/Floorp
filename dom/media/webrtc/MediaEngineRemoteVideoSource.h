@@ -140,9 +140,6 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   }
 
  private:
-  // Initialize the needed Video engine interfaces.
-  void Init();
-
   /**
    * Returns the number of capabilities for the underlying device.
    *
