@@ -100,10 +100,14 @@ public class GeckoServiceChildProcess extends Service {
                       + sOwnerProcessId
                       + " process: "
                       + mainProcessId);
+              // We need to close the File Descriptors here otherwise we will leak them causing a
+              // shutdown hang.
+              pfds.close();
               return IChildProcess.STARTED_BUSY;
             }
             if (sProcessManager != null) {
               Log.e(LOGTAG, "Child process already started");
+              pfds.close();
               return IChildProcess.STARTED_FAIL;
             }
             sProcessManager = procMan;
