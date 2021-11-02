@@ -2623,7 +2623,10 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
                 const webrtc::ReportBlockData& aRtcpData) {
               remoteId = u"outbound_rtcp_"_ns + idstr;
               aRemote.mTimestamp.Construct(
-                  aRtcpData.report_block_timestamp_utc_us() / PR_USEC_PER_MSEC);
+                  aPipeline->GetTimestampMaker().ConvertNtpToDomTime(
+                      webrtc::Timestamp::Micros(
+                          aRtcpData.report_block_timestamp_utc_us()) +
+                      webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970)));
               aRemote.mId.Construct(remoteId);
               aRemote.mType.Construct(RTCStatsType::Remote_inbound_rtp);
               ssrc.apply(
