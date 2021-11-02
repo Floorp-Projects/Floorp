@@ -2673,16 +2673,6 @@ BrowserGlue.prototype = {
         },
       },
 
-      // Login detection service is used in fission to identify high value sites.
-      {
-        task: () => {
-          let loginDetection = Cc[
-            "@mozilla.org/login-detection-service;1"
-          ].createInstance(Ci.nsILoginDetectionService);
-          loginDetection.init();
-        },
-      },
-
       // WebDriver components (Remote Agent and Marionette) need to be
       // initialized as very last step.
       {
