@@ -201,6 +201,9 @@ navigate.refresh = async function(browsingContext) {
  * @param {boolean=} requireBeforeUnload
  *     If false and no beforeunload event is fired, abort waiting
  *     for the navigation. Defaults to true.
+ * @param {boolean=} unknownState
+ *     Needs to be true if a navigation check is resumed and the current
+ *     state of navigation is unknown. Defaults to false.
  */
 navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
   driver,
@@ -211,6 +214,7 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
     browsingContextFn = driver.getBrowsingContext.bind(driver),
     loadEventExpected = true,
     requireBeforeUnload = true,
+    unknownState = false,
   } = options;
 
   const chromeWindow = browsingContextFn().topChromeWindow;
@@ -227,7 +231,9 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
 
   let browsingContextChanged = false;
   let seenBeforeUnload = false;
-  let seenUnload = false;
+
+  // With an unknown state assume that unload has already been received.
+  let seenUnload = unknownState;
 
   let unloadTimer;
 
