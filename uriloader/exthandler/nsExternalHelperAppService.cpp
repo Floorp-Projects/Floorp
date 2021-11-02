@@ -16,6 +16,7 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/StaticPrefs_security.h"
+#include "mozilla/StaticPtr.h"
 #include "nsXULAppAPI.h"
 
 #include "nsExternalHelperAppService.h"
@@ -132,6 +133,8 @@ static const char NEVER_ASK_FOR_SAVE_TO_DISK_PREF[] =
     "browser.helperApps.neverAsk.saveToDisk";
 static const char NEVER_ASK_FOR_OPEN_FILE_PREF[] =
     "browser.helperApps.neverAsk.openFile";
+
+StaticRefPtr<nsIFile> sFallbackDownloadDir;
 
 // Helper functions for Content-Disposition headers
 
@@ -312,14 +315,11 @@ static nsresult GetDownloadDirectory(nsIFile** _directory,
         }
 
         // We have the directory, and now we need to make sure it exists
-        bool dirExists = false;
-        (void)dir->Exists(&dirExists);
-        if (dirExists) break;
-
         nsresult rv = dir->Create(nsIFile::DIRECTORY_TYPE, 0755);
-        if (NS_FAILED(rv)) {
+        // If we can't create this and it's not because the file already
+        // exists, clear out `dir` so we don't return it.
+        if (rv != NS_ERROR_FILE_ALREADY_EXISTS && NS_FAILED(rv)) {
           dir = nullptr;
-          break;
         }
       } break;
       case NS_FOLDER_VALUE_DOWNLOADS:
@@ -329,6 +329,51 @@ static nsresult GetDownloadDirectory(nsIFile** _directory,
     if (!dir) {
       rv = NS_GetSpecialDirectory(NS_OS_DEFAULT_DOWNLOAD_DIR,
                                   getter_AddRefs(dir));
+      if (NS_FAILED(rv)) {
+        // On some OSes, there is no guarantee this directory exists.
+        // Fall back to $HOME + Downloads.
+        if (sFallbackDownloadDir) {
+          sFallbackDownloadDir->Clone(getter_AddRefs(dir));
+        } else {
+          rv = NS_GetSpecialDirectory(NS_OS_HOME_DIR, getter_AddRefs(dir));
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          nsCOMPtr<nsIStringBundleService> bundleService =
+              do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+          NS_ENSURE_SUCCESS(rv, rv);
+          nsAutoString downloadLocalized;
+          nsCOMPtr<nsIStringBundle> downloadBundle;
+          rv = bundleService->CreateBundle(
+              "chrome://mozapps/locale/downloads/downloads.properties",
+              getter_AddRefs(downloadBundle));
+          if (NS_SUCCEEDED(rv)) {
+            rv = downloadBundle->GetStringFromName("DownloadsFolder",
+                                                   downloadLocalized);
+          }
+          if (NS_FAILED(rv)) {
+            downloadLocalized.AssignLiteral("Downloads");
+          }
+          rv = dir->Append(downloadLocalized);
+          NS_ENSURE_SUCCESS(rv, rv);
+          // Can't getter_AddRefs on StaticRefPtr, so do some copying.
+          nsCOMPtr<nsIFile> copy;
+          dir->Clone(getter_AddRefs(copy));
+          sFallbackDownloadDir = copy.forget();
+          ClearOnShutdown(&sFallbackDownloadDir);
+        }
+        if (aSkipChecks) {
+          dir.forget(_directory);
+          return NS_OK;
+        }
+
+        // We have the directory, and now we need to make sure it exists
+        rv = dir->Create(nsIFile::DIRECTORY_TYPE, 0755);
+        if (rv == NS_ERROR_FILE_ALREADY_EXISTS || NS_SUCCEEDED(rv)) {
+          dir.forget(_directory);
+          rv = NS_OK;
+        }
+        return rv;
+      }
       NS_ENSURE_SUCCESS(rv, rv);
     }
   } else {
