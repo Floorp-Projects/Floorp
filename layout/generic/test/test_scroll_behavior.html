@@ -29,19 +29,14 @@
     return Math.max(minVal, Math.min(maxVal, val));
   }
 
-  window.addEventListener("load", function(event) {
-    if (event.target != document)
+  window.addEventListener("load", async function(event) {
+    if (event.target != document) {
       return;
-
-    SpecialPowers.pushPrefEnv(
-      { 'set': [['layout.css.scroll-behavior.enabled', true]] },
-      async function () {
-        await testScrollBehaviorInterruption();
-        await testScrollBehaviorFramerate();
-        window.scrollTo(0,0);
-        SimpleTest.finish();
-      }
-    );
+    }
+    await testScrollBehaviorInterruption();
+    await testScrollBehaviorFramerate();
+    window.scrollTo(0,0);
+    SimpleTest.finish();
   });
 
   async function testScrollBehaviorInterruption() {
