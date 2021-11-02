@@ -10,7 +10,6 @@ import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
-import org.mozilla.focus.helpers.TestHelper
 import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.mDevice
@@ -69,7 +68,7 @@ class NotificationRobot {
 
     class Transition {
         fun clickEraseAndOpenNotificationButton(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-            notificationEraseAndOpenButton.waitForExists(TestHelper.waitingTime)
+            notificationEraseAndOpenButton.waitForExists(waitingTime)
             notificationEraseAndOpenButton.click()
 
             HomeScreenRobot().interact()
@@ -77,11 +76,19 @@ class NotificationRobot {
         }
 
         fun clickNotificationOpenButton(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            notificationOpenButton.waitForExists(TestHelper.waitingTime)
+            notificationOpenButton.waitForExists(waitingTime)
             notificationOpenButton.clickAndWaitForNewWindow()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
+        }
+
+        fun clickNotificationMessage(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            eraseBrowsingNotification.waitForExists(waitingTime)
+            eraseBrowsingNotification.click()
+
+            HomeScreenRobot().interact()
+            return HomeScreenRobot.Transition()
         }
     }
 }
