@@ -127,12 +127,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
 
   int idx;
   switch (aID) {
-    case ColorID::WindowBackground:
-      idx = COLOR_WINDOW;
-      break;
-    case ColorID::WindowForeground:
-      idx = COLOR_WINDOWTEXT;
-      break;
     case ColorID::WidgetBackground:
       idx = COLOR_BTNFACE;
       break;

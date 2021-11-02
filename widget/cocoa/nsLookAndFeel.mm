@@ -207,7 +207,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       color = GetColorFromNSColor(NSColor.textColor);
       break;
     case ColorID::Windowtext:
-    case ColorID::WindowForeground:
     case ColorID::WidgetForeground:
       color = GetColorFromNSColor(NSColor.windowFrameTextColor);
       break;
@@ -265,13 +264,11 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       color = NS_RGB(0xDA, 0xDA, 0xDA);
       break;
     case ColorID::Menu:
-    case ColorID::TextBackground:
       color = GetColorFromNSColor(NSColor.textBackgroundColor);
       break;
     case ColorID::Windowframe:
       color = GetColorFromNSColor(NSColor.windowFrameColor);
       break;
-    case ColorID::WindowBackground:
     case ColorID::WidgetBackground:
     case ColorID::Window: {
       if (@available(macOS 10.14, *)) {

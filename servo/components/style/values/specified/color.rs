@@ -216,10 +216,6 @@ pub enum Color {
 #[repr(u8)]
 pub enum SystemColor {
     #[css(skip)]
-    WindowBackground,
-    #[css(skip)]
-    WindowForeground,
-    #[css(skip)]
     WidgetBackground,
     #[css(skip)]
     WidgetForeground,

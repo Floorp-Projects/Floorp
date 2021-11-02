@@ -131,9 +131,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
   switch (aID) {
       // These colors don't seem to be used for anything anymore in Mozilla
       // The CSS2 colors below are used.
-    case ColorID::WindowForeground:
-      aColor = mSystemColors.textColorPrimary;
-      break;
     case ColorID::WidgetForeground:
     case ColorID::MozMenubartext:
       aColor = mSystemColors.colorForeground;
@@ -240,7 +237,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
       aColor = NS_RGB(0xec, 0xe7, 0xe2);
       break;
 
-    case ColorID::WindowBackground:
     case ColorID::Buttonhighlight:
     case ColorID::Field:
     case ColorID::Threedhighlight:
