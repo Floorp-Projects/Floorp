@@ -13,4 +13,10 @@ interface nsILoginDetectionService : nsISupports
    * called to initialize the login detection service.
    */
   void init();
+
+  /**
+   * Returns true if we have loaded logins from the password manager.
+   * This is now used by testcase only.
+   */
+  bool isLoginsLoaded();
 };
