@@ -622,6 +622,7 @@ package org.mozilla.geckoview {
     method public synchronized void completeExceptionally(@NonNull Throwable);
     method @AnyThread @NonNull public static GeckoResult<AllowOrDeny> deny();
     method @NonNull public <U> GeckoResult<U> exceptionally(@NonNull GeckoResult.OnExceptionListener<U>);
+    method @NonNull public GeckoResult<Void> finally_(@NonNull Runnable);
     method @NonNull public static <T> GeckoResult<T> fromException(@NonNull Throwable);
     method @NonNull public static <U> GeckoResult<U> fromValue(@Nullable U);
     method @Nullable public Looper getLooper();
