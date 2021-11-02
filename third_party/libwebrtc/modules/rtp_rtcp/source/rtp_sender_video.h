@@ -90,6 +90,7 @@ class RTPSenderVideo {
   virtual ~RTPSenderVideo();
 
   // expected_retransmission_time_ms.has_value() -> retransmission allowed.
+  // `capture_time_ms` and `clock::CurrentTime` should be using the same epoch.
   // Calls to this method is assumed to be externally serialized.
   // |estimated_capture_clock_offset_ms| is an estimated clock offset between
   // this sender and the original capturer, for this video packet. See
