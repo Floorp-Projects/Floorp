@@ -255,8 +255,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
    */
   void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
                          ScrollMode aMode = ScrollMode::Instant,
-                         nsIScrollbarMediator::ScrollSnapMode aSnap =
-                             nsIScrollbarMediator::DEFAULT,
                          ScrollOrigin aOrigin = ScrollOrigin::NotSpecified);
   /**
    * @note This method might destroy the frame, pres shell and other objects.
@@ -284,9 +282,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
                     nsIScrollbarMediator::DISABLE_SNAP);
   void ScrollByCSSPixels(const CSSIntPoint& aDelta,
                          ScrollMode aMode = ScrollMode::Instant,
-                         ScrollOrigin aOrigin = ScrollOrigin::NotSpecified,
-                         nsIScrollbarMediator::ScrollSnapMode aSnap =
-                             nsIScrollbarMediator::DEFAULT);
+                         ScrollOrigin aOrigin = ScrollOrigin::NotSpecified);
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
@@ -995,10 +991,8 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   void ScrollToCSSPixels(
       const CSSIntPoint& aScrollPosition,
       ScrollMode aMode = ScrollMode::Instant,
-      nsIScrollbarMediator::ScrollSnapMode aSnap =
-          nsIScrollbarMediator::DEFAULT,
       ScrollOrigin aOrigin = ScrollOrigin::NotSpecified) final {
-    mHelper.ScrollToCSSPixels(aScrollPosition, aMode, aSnap, aOrigin);
+    mHelper.ScrollToCSSPixels(aScrollPosition, aMode, aOrigin);
   }
   void ScrollToCSSPixelsApproximate(
       const mozilla::CSSPoint& aScrollPosition,
@@ -1024,12 +1018,10 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     mHelper.ScrollBy(aDelta, aUnit, aMode, aOverflow, aOrigin, aMomentum,
                      aSnap);
   }
-  void ScrollByCSSPixels(const CSSIntPoint& aDelta,
-                         ScrollMode aMode = ScrollMode::Instant,
-                         ScrollOrigin aOrigin = ScrollOrigin::NotSpecified,
-                         nsIScrollbarMediator::ScrollSnapMode aSnap =
-                             nsIScrollbarMediator::DEFAULT) final {
-    mHelper.ScrollByCSSPixels(aDelta, aMode, aOrigin, aSnap);
+  void ScrollByCSSPixels(
+      const CSSIntPoint& aDelta, ScrollMode aMode = ScrollMode::Instant,
+      ScrollOrigin aOrigin = ScrollOrigin::NotSpecified) final {
+    mHelper.ScrollByCSSPixels(aDelta, aMode, aOrigin);
   }
   void ScrollSnap() final { mHelper.ScrollSnap(); }
   /**
@@ -1478,10 +1470,8 @@ class nsXULScrollFrame final : public nsBoxFrame,
   void ScrollToCSSPixels(
       const CSSIntPoint& aScrollPosition,
       ScrollMode aMode = ScrollMode::Instant,
-      nsIScrollbarMediator::ScrollSnapMode aSnap =
-          nsIScrollbarMediator::DISABLE_SNAP,
       ScrollOrigin aOrigin = ScrollOrigin::NotSpecified) final {
-    mHelper.ScrollToCSSPixels(aScrollPosition, aMode, aSnap, aOrigin);
+    mHelper.ScrollToCSSPixels(aScrollPosition, aMode, aOrigin);
   }
   void ScrollToCSSPixelsApproximate(
       const mozilla::CSSPoint& aScrollPosition,
@@ -1504,12 +1494,10 @@ class nsXULScrollFrame final : public nsBoxFrame,
     mHelper.ScrollBy(aDelta, aUnit, aMode, aOverflow, aOrigin, aMomentum,
                      aSnap);
   }
-  void ScrollByCSSPixels(const CSSIntPoint& aDelta,
-                         ScrollMode aMode = ScrollMode::Instant,
-                         ScrollOrigin aOrigin = ScrollOrigin::NotSpecified,
-                         nsIScrollbarMediator::ScrollSnapMode aSnap =
-                             nsIScrollbarMediator::DEFAULT) final {
-    mHelper.ScrollByCSSPixels(aDelta, aMode, aOrigin, aSnap);
+  void ScrollByCSSPixels(
+      const CSSIntPoint& aDelta, ScrollMode aMode = ScrollMode::Instant,
+      ScrollOrigin aOrigin = ScrollOrigin::NotSpecified) final {
+    mHelper.ScrollByCSSPixels(aDelta, aMode, aOrigin);
   }
   void ScrollSnap() final { mHelper.ScrollSnap(); }
   /**

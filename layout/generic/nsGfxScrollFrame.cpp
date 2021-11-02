@@ -2357,15 +2357,12 @@ void ScrollFrameHelper::ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
   ScrollToWithOrigin(aScrollPosition, aMode, aOrigin, aRange, aSnap);
 }
 
-void ScrollFrameHelper::ScrollToCSSPixels(
-    const CSSIntPoint& aScrollPosition, ScrollMode aMode,
-    nsIScrollbarMediator::ScrollSnapMode aSnap, ScrollOrigin aOrigin) {
+void ScrollFrameHelper::ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
+                                          ScrollMode aMode,
+                                          ScrollOrigin aOrigin) {
   nsPoint current = GetScrollPosition();
   CSSIntPoint currentCSSPixels = GetScrollPositionCSSPixels();
   nsPoint pt = CSSPoint::ToAppUnits(aScrollPosition);
-  if (aSnap == nsIScrollableFrame::DEFAULT) {
-    aSnap = nsIScrollableFrame::ENABLE_SNAP;
-  }
 
   if (aOrigin == ScrollOrigin::NotSpecified) {
     aOrigin = ScrollOrigin::Other;
@@ -2387,7 +2384,7 @@ void ScrollFrameHelper::ScrollToCSSPixels(
     range.y = pt.y;
     range.height = 0;
   }
-  ScrollTo(pt, aMode, aOrigin, &range, aSnap);
+  ScrollTo(pt, aMode, aOrigin, &range, nsIScrollableFrame::ENABLE_SNAP);
   // 'this' might be destroyed here
 }
 
@@ -4810,9 +4807,9 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit,
   }
 }
 
-void ScrollFrameHelper::ScrollByCSSPixels(
-    const CSSIntPoint& aDelta, ScrollMode aMode, ScrollOrigin aOrigin,
-    nsIScrollbarMediator::ScrollSnapMode aSnap) {
+void ScrollFrameHelper::ScrollByCSSPixels(const CSSIntPoint& aDelta,
+                                          ScrollMode aMode,
+                                          ScrollOrigin aOrigin) {
   nsPoint current = GetScrollPosition();
   // `current` value above might be a value which was aligned to in
   // layer-pixels, so starting from such points will make the difference between
@@ -4825,10 +4822,6 @@ void ScrollFrameHelper::ScrollByCSSPixels(
   // cases should be fixed in bug 1556685.
   CSSIntPoint currentCSSPixels = GetScrollPositionCSSPixels();
   nsPoint pt = CSSPoint::ToAppUnits(currentCSSPixels + aDelta);
-
-  if (aSnap == nsIScrollableFrame::DEFAULT) {
-    aSnap = nsIScrollableFrame::ENABLE_SNAP;
-  }
 
   if (aOrigin == ScrollOrigin::NotSpecified) {
     aOrigin = ScrollOrigin::Other;
@@ -4850,7 +4843,8 @@ void ScrollFrameHelper::ScrollByCSSPixels(
     range.y = pt.y;
     range.height = 0;
   }
-  ScrollToWithOrigin(pt, aMode, aOrigin, &range, aSnap);
+  ScrollToWithOrigin(pt, aMode, aOrigin, &range,
+                     nsIScrollableFrame::ENABLE_SNAP);
   // 'this' might be destroyed here
 }
 
