@@ -69,11 +69,11 @@ class CamerasParent final : public PCamerasParent,
   static already_AddRefed<CamerasParent> Create();
 
   // Messages received form the child. These run on the IPC/PBackground thread.
-  mozilla::ipc::IPCResult RecvAllocateCaptureDevice(
+  mozilla::ipc::IPCResult RecvAllocateCapture(
       const CaptureEngine& aEngine, const nsCString& aUnique_idUTF8,
       const uint64_t& aWindowID) override;
-  mozilla::ipc::IPCResult RecvReleaseCaptureDevice(const CaptureEngine&,
-                                                   const int&) override;
+  mozilla::ipc::IPCResult RecvReleaseCapture(const CaptureEngine&,
+                                             const int&) override;
   mozilla::ipc::IPCResult RecvNumberOfCaptureDevices(
       const CaptureEngine&) override;
   mozilla::ipc::IPCResult RecvNumberOfCapabilities(const CaptureEngine&,
@@ -113,8 +113,8 @@ class CamerasParent final : public PCamerasParent,
   virtual ~CamerasParent();
 
   // We use these helpers for shutdown and for the respective IPC commands.
-  void StopCapture(const CaptureEngine& aCapEngine, const int& capnum);
-  int ReleaseCaptureDevice(const CaptureEngine& aCapEngine, const int& capnum);
+  void StopCapture(const CaptureEngine& aCapEngine, int aCaptureId);
+  int ReleaseCapture(const CaptureEngine& aCapEngine, int aCaptureId);
 
   bool SetupEngine(CaptureEngine aCapEngine);
   VideoEngine* EnsureInitialized(int aEngine);

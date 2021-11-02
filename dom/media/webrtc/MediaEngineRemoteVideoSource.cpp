@@ -188,7 +188,7 @@ nsresult MediaEngineRemoteVideoSource::Allocate(
   }
   LOG("ChooseCapability(kFitness) for mCapability (Allocate) --");
 
-  if (camera::GetChildAndCall(&camera::CamerasChild::AllocateCaptureDevice,
+  if (camera::GetChildAndCall(&camera::CamerasChild::AllocateCapture,
                               mCapEngine, mUniqueId.get(), kMaxUniqueIdLength,
                               mCaptureIndex, aWindowID)) {
     return NS_ERROR_FAILURE;
@@ -230,8 +230,8 @@ nsresult MediaEngineRemoteVideoSource::Deallocate() {
 
   LOG("Video device %d deallocated", mCaptureIndex);
 
-  if (camera::GetChildAndCall(&camera::CamerasChild::ReleaseCaptureDevice,
-                              mCapEngine, mCaptureIndex)) {
+  if (camera::GetChildAndCall(&camera::CamerasChild::ReleaseCapture, mCapEngine,
+                              mCaptureIndex)) {
     MOZ_ASSERT_UNREACHABLE("Couldn't release allocated device");
   }
   return NS_OK;
