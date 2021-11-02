@@ -65,11 +65,11 @@ async def fetch_url(url, path, connector):
 
     Returns
     -------
-    tuple
-        Err, Headers
+    dict
+        Request result. If error result['error'] is True
     """
 
-    def _result(response):
+    def _result(response, error=False):
         data = {
             "headers": dict(response.headers),
             "status": response.status,
@@ -77,26 +77,44 @@ async def fetch_url(url, path, connector):
             "_request_info": str(response._request_info),
             "url": url,
             "path": path,
+            "error": error,
         }
         return data
 
-    async with aiohttp.ClientSession(
-        connector=connector, connector_owner=False
-    ) as session:
-        log.info(f"Retrieving {url}")
-        async with session.get(url) as response:
-            if response.status >= 299:
-                log.warn(f"Failed to download {url} with status {response.status}")
-                return _result(response), None
-            with open(path, "wb") as fd:
-                while True:
-                    chunk = await response.content.read()
-                    if not chunk:
-                        break
-                    fd.write(chunk)
-            result = _result(response)
-            log.info(f'Finished downloading {url}\n{result["headers"]}')
-            return None, result
+    # Set connection timeout to 15 minutes
+    timeout = aiohttp.ClientTimeout(total=900)
+
+    try:
+        async with aiohttp.ClientSession(
+            connector=connector, connector_owner=False, timeout=timeout
+        ) as session:
+            log.info(f"Retrieving {url}")
+            async with session.get(url) as response:
+                # Any response code > 299 means something went wrong
+                if response.status > 299:
+                    log.info(f"Failed to download {url} with status {response.status}")
+                    return _result(response, True)
+
+                with open(path, "wb") as fd:
+                    while True:
+                        chunk = await response.content.read()
+                        if not chunk:
+                            break
+                        fd.write(chunk)
+                result = _result(response)
+                log.info(f'Finished downloading {url}\n{result["headers"]}')
+                return result
+
+    except (
+        UnicodeDecodeError,  # Data parsing
+        asyncio.TimeoutError,  # Async timeout
+        aiohttp.ClientError,  # aiohttp error
+    ) as e:
+        log.error("=============")
+        log.error(f"Error downloading {url}")
+        log.error(e)
+        log.error("=============")
+        return {"path": path, "url": url, "error": True}
 
 
 async def download_multi(targets, sourceFunc):
@@ -143,12 +161,15 @@ async def download_multi(targets, sourceFunc):
     results = []
     # Remove file if download failed
     for fetch in downloads:
-        if fetch[0]:
+        # If there's an error, try to remove the file, but keep going if file not present
+        if fetch["error"]:
             try:
-                os.unlink(fetch["path"])
-            except FileNotFoundError:
-                continue
-        results.append(fetch[1])
+                os.unlink(fetch.get("path", None))
+            except (TypeError, FileNotFoundError) as e:
+                log.info(f"Unable to cleanup error file: {e} continuing...")
+            continue
+
+        results.append(fetch)
 
     return results
 
@@ -184,6 +205,8 @@ async def download_builds(verifyConfig):
                 if uri is None:
                     continue
                 uri = uri.replace("%locale%", locale)
+                # /ja-JP-mac/ locale is replaced with /ja/ for updater packages
+                uri = uri.replace("ja-JP-mac", "ja")
                 updaterUrls.add(f"{ftpServerFrom}{uri}")
 
     log.info(f"About to download {len(updaterUrls)} updater packages")
