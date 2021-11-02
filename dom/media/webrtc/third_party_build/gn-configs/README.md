@@ -1,12 +1,7 @@
 # Generate new gn json files and moz.build files for building libwebrtc in our tree
 
-1. If generating on macOS for Apple Silicon (cross-compiling), download and install
-[Xcode 12.2](https://download.developer.apple.com/Developer_Tools/Xcode_12.2/Xcode_12.2.xip)
-
-        https://download.developer.apple.com/Developer_Tools/Xcode_12.2/Xcode_12.2.xip
-
-    It may be possible to use the [Command Line Tools for Xcode 12.2](https://download.developer.apple.com/Developer_Tools/Command_Line_Tools_for_Xcode_12.2/Command_Line_Tools_for_Xcode_12.2.dmg)
-    for a smaller download.
+1. If generating on macOS for Apple Silicon (cross-compiling), make sure to have at least
+[Xcode 12.2](https://download.developer.apple.com/Developer_Tools/Xcode_12.2/Xcode_12.2.xip).
 
    In addition the aarch64 Rust target will need to be installed via: `rustup target add aarch64-apple-darwin`
 
