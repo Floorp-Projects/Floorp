@@ -7596,6 +7596,14 @@
   value: false
   mirror: always
 
+# Pref to control whether we reselect scroll anchors if sub-optimal
+#
+# See https://github.com/w3c/csswg-drafts/issues/6787
+- name: layout.css.scroll-anchoring.reselect-if-suboptimal
+  type: bool
+  value: true
+  mirror: always
+
 # Are shared memory User Agent style sheets enabled?
 - name: layout.css.shared-memory-ua-sheets.enabled
   type: bool
