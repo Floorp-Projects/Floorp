@@ -2039,6 +2039,599 @@ Notes:
    stable statistics (xref `bug
    1616236 <https://bugzilla.mozilla.org/show_bug.cgi?id=1616236>`__)
 
+Talos Tests
+===========
+Talos test lists
+
+.. dropdown:: ARES6
+   :container: + anchor-id-ARES6-Talos
+
+   * **lower_is_better**: True
+   * **tpmanifest**: ${talos}/tests/ares6/ares6.manifest
+   * **tppagecycles**: 1
+
+.. dropdown:: JetStream
+   :container: + anchor-id-JetStream-Talos
+
+   * **tpmanifest**: ${talos}/tests/jetstream/jetstream.manifest
+   * **tppagecycles**: 1
+
+.. dropdown:: a11yr
+   :container: + anchor-id-a11yr-Talos
+
+   * **a11y**: True
+   * **alert_threshold**: 5.0
+   * **preferences**: {'dom.send_after_paint_to_content': False}
+   * **timeout**: 600
+   * **tpchrome**: False
+   * **tpcycles**: 1
+   * **tpmanifest**: ${talos}/tests/a11y/a11y.manifest
+   * **tpmozafterpaint**: True
+   * **tppagecycles**: 25
+   * **unit**: ms
+
+.. dropdown:: about_preferences_basic
+   :container: + anchor-id-about_preferences_basic-Talos
+
+   * **fnbpaint**: True
+   * **gecko_profile_entries**: 2000000
+   * **gecko_profile_interval**: 1
+   * **lower_is_better**: True
+   * **tpcycles**: 25
+   * **tpmanifest**: ${talos}/tests/about-preferences/about_preferences_basic.manifest
+   * **tppagecycles**: 1
+   * **unit**: ms
+
+.. dropdown:: basic_compositor_video
+   :container: + anchor-id-basic_compositor_video-Talos
+
+   * **gecko_profile_entries**: 2000000
+   * **gecko_profile_interval**: 1
+   * **lower_is_better**: True
+   * **preferences**: {'full-screen-api.allow-trusted-requests-only': False, 'layers.acceleration.force-enabled': False, 'layers.acceleration.disabled': True, 'gfx.webrender.software': True, 'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'full-screen-api.warning.timeout': 500, 'media.ruin-av-sync.enabled': True}
+   * **timeout**: 10000
+   * **tpchrome**: False
+   * **tpcycles**: 1
+   * **tpmanifest**: ${talos}/tests/video/video.manifest
+   * **tppagecycles**: 12
+   * **unit**: ms/frame
+
+.. dropdown:: cpstartup
+   :container: + anchor-id-cpstartup-Talos
+
+   * **extensions**: ['${talos}/pageloader', '${talos}/tests/cpstartup/extension']
+   * **gecko_profile_entries**: 1000000
+   * **preferences**: {'browser.link.open_newwindow': 3, 'browser.link.open_newwindow.restriction': 2}
+   * **timeout**: 600
+   * **tploadnocache**: True
+   * **tpmanifest**: ${talos}/tests/cpstartup/cpstartup.manifest
+   * **tppagecycles**: 20
+   * **unit**: ms
+
+.. dropdown:: cross_origin_pageload
+   :container: + anchor-id-cross_origin_pageload-Talos
+
+   * **extensions**: ['${talos}/pageloader']
+   * **preferences**: {'dom.ipc.processPrelaunch.fission.number': 30}
+   * **timeout**: 100
+   * **tploadnocache**: True
+   * **tpmanifest**: ${talos}/tests/cross_origin_pageload/cross_origin_pageload.manifest
+   * **tppagecycles**: 10
+   * **unit**: ms
+
+.. dropdown:: damp
+   :container: + anchor-id-damp-Talos
+
+   * **cycles**: 5
+   * **extensions**: ['${talos}/pageloader', '${talos}/tests/devtools/addon']
+   * **gecko_profile_entries**: 10000000
+   * **gecko_profile_interval**: 10
+   * **linux_counters**: None
+   * **mac_counters**: None
+   * **perfherder_framework**: devtools
+   * **preferences**: {'devtools.memory.enabled': True}
+   * **subtest_alerts**: True
+   * **tpcycles**: 1
+   * **tploadnocache**: True
+   * **tpmanifest**: ${talos}/tests/devtools/damp.manifest
+   * **tpmozafterpaint**: False
+   * **tppagecycles**: 5
+   * **unit**: ms
+   * **w7_counters**: None
+   * **win_counters**: None
+
+.. dropdown:: displaylist_mutate
+   :container: + anchor-id-displaylist_mutate-Talos
+
+   * **gecko_profile_entries**: 2000000
+   * **gecko_profile_interval**: 2
+   * **linux_counters**: None
+   * **mac_counters**: None
+   * **preferences**: {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'dom.send_after_paint_to_content': False}
+   * **timeout**: 600
+   * **tpchrome**: False
+   * **tpcycles**: 1
+   * **tploadnocache**: True
+   * **tpmanifest**: ${talos}/tests/layout/displaylist_mutate.manifest
+   * **tpmozafterpaint**: False
+   * **tppagecycles**: 5
+   * **unit**: ms
+   * **w7_counters**: None
+   * **win_counters**: None
+
+.. dropdown:: dromaeo_css
+   :container: + anchor-id-dromaeo_css-Talos
+
+   * **gecko_profile_entries**: 10000000
+   * **gecko_profile_interval**: 2
+   * **tpmanifest**: ${talos}/tests/dromaeo/css.manifest
+   * **unit**: score
+
+.. dropdown:: dromaeo_dom
+   :container: + anchor-id-dromaeo_dom-Talos
+
+   * **gecko_profile_entries**: 10000000
+   * **gecko_profile_interval**: 2
+   * **tpmanifest**: ${talos}/tests/dromaeo/dom.manifest
+   * **unit**: score
+
+.. dropdown:: glterrain
+   :container: + anchor-id-glterrain-Talos
+
+   * **gecko_profile_entries**: 2000000
+   * **gecko_profile_interval**: 10
+   * **linux_counters**: None
+   * **mac_counters**: None
+   * **preferences**: {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'dom.send_after_paint_to_content': False}
+   * **timeout**: 600
+   * **tpchrome**: False
+   * **tpcycles**: 1
+   * **tploadnocache**: True
+   * **tpmanifest**: ${talos}/tests/webgl/glterrain.manifest
+   * **tpmozafterpaint**: False
+   * **tppagecycles**: 25
+   * **unit**: frame interval
+   * **w7_counters**: None
+   * **win_counters**: None
+
+.. dropdown:: glvideo
+   :container: + anchor-id-glvideo-Talos
+
+   * **gecko_profile_entries**: 2000000
+   * **gecko_profile_interval**: 2
+   * **linux_counters**: None
+   * **mac_counters**: None
+   * **timeout**: 600
+   * **tpchrome**: False
+   * **tpcycles**: 1
+   * **tploadnocache**: True
+   * **tpmanifest**: ${talos}/tests/webgl/glvideo.manifest
+   * **tpmozafterpaint**: False
+   * **tppagecycles**: 5
+   * **unit**: ms
+   * **w7_counters**: None
+   * **win_counters**: None
+
+.. dropdown:: kraken
+   :container: + anchor-id-kraken-Talos
+
+   * **gecko_profile_entries**: 5000000
+   * **gecko_profile_interval**: 1
+   * **preferences**: {'dom.send_after_paint_to_content': False}
+   * **tpchrome**: False
+   * **tpcycles**: 1
+   * **tpmanifest**: ${talos}/tests/kraken/kraken.manifest
+   * **tpmozafterpaint**: False
+   * **tppagecycles**: 1
+   * **unit**: score
+
+.. dropdown:: motionmark_animometer
+   :container: + anchor-id-motionmark_animometer-Talos
+
+   * **tpmanifest**: ${talos}/tests/motionmark/animometer.manifest
+
+.. dropdown:: motionmark_htmlsuite
+   :container: + anchor-id-motionmark_htmlsuite-Talos
+
+   * **tpmanifest**: ${talos}/tests/motionmark/htmlsuite.manifest
+
+.. dropdown:: motionmark_webgl
+   :container: + anchor-id-motionmark_webgl-Talos
+
+   * **timeout**: 600
+   * **tpmanifest**: ${talos}/tests/motionmark/webgl.manifest
+   * **unit**: fps
+
+.. dropdown:: pdfpaint
+   :container: + anchor-id-pdfpaint-Talos
+
+   * **gecko_profile_entries**: 1000000
+   * **pdfpaint**: True
+   * **preferences**: {'pdfjs.eventBusDispatchToDOM': True}
+   * **timeout**: 600
+   * **tpmanifest**: ${talos}/tests/pdfpaint/pdfpaint.manifest
+   * **tppagecycles**: 20
+   * **unit**: ms
+
+.. dropdown:: perf_reftest
+   :container: + anchor-id-perf_reftest-Talos
+
+   * **alert_threshold**: 5.0
+   * **base_vs_ref**: True
+   * **gecko_profile_entries**: 2000000
+   * **gecko_profile_interval**: 1
+   * **lower_is_better**: True
+   * **subtest_alerts**: True
+   * **tpcycles**: 1
+   * **tpmanifest**: ${talos}/tests/perf-reftest/perf_reftest.manifest
+   * **tppagecycles**: 10
+   * **tptimeout**: 30000
+   * **unit**: ms
+
+.. dropdown:: perf_reftest_singletons
+   :container: + anchor-id-perf_reftest_singletons-Talos
+
+   * **alert_threshold**: 5.0
+   * **gecko_profile_entries**: 2000000
+   * **gecko_profile_interval**: 1
+   * **lower_is_better**: True
+   * **subtest_alerts**: True
+   * **suite_should_alert**: False
+   * **tpcycles**: 1
+   * **tpmanifest**: ${talos}/tests/perf-reftest-singletons/perf_reftest_singletons.manifest
+   * **tppagecycles**: 15
+   * **tptimeout**: 30000
+   * **unit**: ms
+
+.. dropdown:: rasterflood_gradient
+   :container: + anchor-id-rasterflood_gradient-Talos
+
+   * **gecko_profile_entries**: 2000000
+   * **gecko_profile_interval**: 2
+   * **linux_counters**: None
+   * **lower_is_better**: False
+   * **mac_counters**: None
+   * **preferences**: {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'dom.send_after_paint_to_content': False}
+   * **timeout**: 600
+   * **tpchrome**: False
+   * **tpcycles**: 1
+   * **tploadnocache**: True
+   * **tpmanifest**: ${talos}/tests/gfx/rasterflood_gradient.manifest
+   * **tpmozafterpaint**: False
+   * **tppagecycles**: 10
+   * **unit**: score
+   * **w7_counters**: None
+   * **win_counters**: None
+
+.. dropdown:: rasterflood_svg
+   :container: + anchor-id-rasterflood_svg-Talos
+
+   * **gecko_profile_entries**: 2000000
+   * **gecko_profile_interval**: 2
+   * **linux_counters**: None
+   * **mac_counters**: None
+   * **preferences**: {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'dom.send_after_paint_to_content': False}
+   * **timeout**: 600
+   * **tpchrome**: False
+   * **tpcycles**: 1
+   * **tploadnocache**: True
+   * **tpmanifest**: ${talos}/tests/gfx/rasterflood_svg.manifest
+   * **tpmozafterpaint**: False
+   * **tppagecycles**: 10
+   * **unit**: ms
+   * **w7_counters**: None
+   * **win_counters**: None
+
+.. dropdown:: sessionrestore
+   :container: + anchor-id-sessionrestore-Talos
+
+   * **cycles**: 10
+   * **extensions**: ['${talos}/startup_test/sessionrestore/addon']
+   * **gecko_profile_entries**: 10000000
+   * **gecko_profile_startup**: True
+   * **preferences**: {'browser.startup.page': 3}
+   * **profile_path**: ${talos}/startup_test/sessionrestore/profile
+   * **reinstall**: ['sessionstore.jsonlz4', 'sessionstore.js', 'sessionCheckpoints.json']
+   * **timeout**: 900
+   * **unit**: ms
+   * **url**: about:home
+
+.. dropdown:: sessionrestore_many_windows
+   :container: + anchor-id-sessionrestore_many_windows-Talos
+
+   * **profile_path**: ${talos}/startup_test/sessionrestore/profile-manywindows
+
+.. dropdown:: sessionrestore_no_auto_restore
+   :container: + anchor-id-sessionrestore_no_auto_restore-Talos
+
+   * **preferences**: {'browser.startup.page': 1, 'talos.sessionrestore.norestore': True}
+   * **timeout**: 300
+
+.. dropdown:: startup_about_home_paint
+   :container: + anchor-id-startup_about_home_paint-Talos
+
+   * **cycles**: 20
+   * **extensions**: ['${talos}/startup_test/startup_about_home_paint/addon']
+   * **preferences**: {'browser.startup.homepage.abouthome_cache.enabled': False}
+   * **timeout**: 600
+   * **tpmanifest**: ${talos}/startup_test/startup_about_home_paint/startup_about_home_paint.manifest
+   * **url**: None
+
+.. dropdown:: startup_about_home_paint_cached
+   :container: + anchor-id-startup_about_home_paint_cached-Talos
+
+   * **cycles**: 20
+   * **extensions**: ['${talos}/startup_test/startup_about_home_paint/addon']
+   * **preferences**: {'browser.startup.homepage.abouthome_cache.enabled': True}
+   * **tpmanifest**: ${talos}/startup_test/startup_about_home_paint/startup_about_home_paint.manifest
+   * **url**: None
+
+.. dropdown:: startup_about_home_paint_realworld_webextensions
+   :container: + anchor-id-startup_about_home_paint_realworld_webextensions-Talos
+
+   * **cycles**: 20
+   * **extensions**: ['${talos}/startup_test/startup_about_home_paint/addon', '${talos}/getinfooffline']
+   * **preferences**: {'browser.startup.homepage.abouthome_cache.enabled': False}
+   * **tpmanifest**: ${talos}/startup_test/startup_about_home_paint/startup_about_home_paint.manifest
+   * **url**: None
+   * **webextensions_folder**: ${talos}/webextensions
+
+.. dropdown:: stylebench
+   :container: + anchor-id-stylebench-Talos
+
+   * **tpmanifest**: ${talos}/tests/stylebench/stylebench.manifest
+
+.. dropdown:: tabpaint
+   :container: + anchor-id-tabpaint-Talos
+
+   * **extensions**: ['${talos}/tests/tabpaint', '${talos}/pageloader']
+   * **gecko_profile_entries**: 1000000
+   * **preferences**: {'browser.link.open_newwindow': 3, 'browser.link.open_newwindow.restriction': 2, 'browser.newtab.preload': False}
+   * **timeout**: 600
+   * **tploadnocache**: True
+   * **tpmanifest**: ${talos}/tests/tabpaint/tabpaint.manifest
+   * **tppagecycles**: 20
+   * **unit**: ms
+
+.. dropdown:: tabswitch
+   :container: + anchor-id-tabswitch-Talos
+
+   * **extensions**: ['${talos}/tests/tabswitch', '${talos}/pageloader']
+   * **gecko_profile_entries**: 5000000
+   * **preferences**: {'addon.test.tabswitch.urlfile': '${talos}/tests/tp5o.html', 'addon.test.tabswitch.webserver': '${webserver}', 'addon.test.tabswitch.maxurls': -1, 'browser.toolbars.bookmarks.visibility': 'never'}
+   * **timeout**: 900
+   * **tploadnocache**: True
+   * **tpmanifest**: ${talos}/tests/tabswitch/tabswitch.manifest
+   * **tppagecycles**: 5
+   * **unit**: ms
+
+.. dropdown:: tart
+   :container: + anchor-id-tart-Talos
+
+   * **extensions**: ['${talos}/pageloader', '${talos}/tests/tart/addon']
+   * **gecko_profile_entries**: 1000000
+   * **gecko_profile_interval**: 10
+   * **linux_counters**: None
+   * **mac_counters**: None
+   * **preferences**: {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'dom.send_after_paint_to_content': False}
+   * **tpcycles**: 1
+   * **tploadnocache**: True
+   * **tpmanifest**: ${talos}/tests/tart/tart.manifest
+   * **tpmozafterpaint**: False
+   * **tppagecycles**: 25
+   * **unit**: ms
+   * **w7_counters**: None
+   * **win_counters**: None
+
+.. dropdown:: tart_flex
+   :container: + anchor-id-tart_flex-Talos
+
+   * **preferences**: {'layout.css.emulate-moz-box-with-flex': True}
+
+.. dropdown:: tp5n
+   :container: + anchor-id-tp5n-Talos
+
+   * **cleanup**: ${talos}/xtalos/parse_xperf.py -c ${talos}/bcontroller.json
+   * **cycles**: 1
+   * **linux_counters**: []
+   * **mac_counters**: []
+   * **mainthread**: True
+   * **multidomain**: True
+   * **preferences**: {'extensions.enabledScopes': '', 'talos.logfile': 'browser_output.txt'}
+   * **resolution**: 20
+   * **setup**: ${talos}/xtalos/start_xperf.py -c ${talos}/bcontroller.json
+   * **timeout**: 1800
+   * **tpcycles**: 1
+   * **tpmanifest**: ${talos}/fis/tp5n/tp5n.manifest
+   * **tpmozafterpaint**: True
+   * **tppagecycles**: 1
+   * **tptimeout**: 10000
+   * **unit**: ms
+   * **w7_counters**: []
+   * **win_counters**: []
+   * **xperf_counters**: ['main_startup_fileio', 'main_startup_netio', 'main_normal_fileio', 'main_normal_netio', 'nonmain_startup_fileio', 'nonmain_normal_fileio', 'nonmain_normal_netio', 'mainthread_readcount', 'mainthread_readbytes', 'mainthread_writecount', 'mainthread_writebytes', 'time_to_session_store_window_restored_ms']
+   * **xperf_providers**: ['PROC_THREAD', 'LOADER', 'HARD_FAULTS', 'FILENAME', 'FILE_IO', 'FILE_IO_INIT']
+   * **xperf_stackwalk**: ['FileCreate', 'FileRead', 'FileWrite', 'FileFlush', 'FileClose']
+   * **xperf_user_providers**: ['Mozilla Generic Provider', 'Microsoft-Windows-TCPIP']
+
+.. dropdown:: tp5o
+   :container: + anchor-id-tp5o-Talos
+
+   * **cycles**: 1
+   * **gecko_profile_entries**: 4000000
+   * **gecko_profile_interval**: 2
+   * **linux_counters**: ['XRes']
+   * **mac_counters**: []
+   * **mainthread**: False
+   * **multidomain**: True
+   * **responsiveness**: True
+   * **timeout**: 1800
+   * **tpcycles**: 1
+   * **tpmanifest**: ${talos}/fis/tp5n/tp5o.manifest
+   * **tpmozafterpaint**: True
+   * **tppagecycles**: 25
+   * **tptimeout**: 5000
+   * **unit**: ms
+   * **w7_counters**: ['% Processor Time']
+   * **win_counters**: ['% Processor Time']
+
+.. dropdown:: tp5o_scroll
+   :container: + anchor-id-tp5o_scroll-Talos
+
+   * **gecko_profile_entries**: 2000000
+   * **gecko_profile_interval**: 2
+   * **preferences**: {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'dom.send_after_paint_to_content': True, 'apz.paint_skipping.enabled': False, 'layout.css.scroll-behavior.spring-constant': "'10'", 'toolkit.framesRecording.bufferSize': 10000}
+   * **tpcycles**: 1
+   * **tpmanifest**: ${talos}/tests/tp5n/tp5o.manifest
+   * **tpmozafterpaint**: False
+   * **tppagecycles**: 12
+   * **tpscrolltest**: True
+   * **unit**: 1/FPS
+
+.. dropdown:: tp5o_webext
+   :container: + anchor-id-tp5o_webext-Talos
+
+   * **preferences**: {'xpinstall.signatures.required': False}
+   * **webextensions**: ${talos}/webextensions/dummy/dummy.xpi
+
+.. dropdown:: tresize
+   :container: + anchor-id-tresize-Talos
+
+   * **extensions**: ['${talos}/pageloader', '${talos}/tests/tresize/addon']
+   * **gecko_profile_entries**: 1000000
+   * **gecko_profile_interval**: 2
+   * **timeout**: 900
+   * **tpmanifest**: ${talos}/tests/tresize/tresize.manifest
+   * **tpmozafterpaint**: True
+   * **tppagecycles**: 20
+   * **unit**: ms
+
+.. dropdown:: ts_paint
+   :container: + anchor-id-ts_paint-Talos
+
+   * **cycles**: 20
+   * **gecko_profile_entries**: 10000000
+   * **gecko_profile_startup**: True
+   * **mainthread**: False
+   * **responsiveness**: False
+   * **timeout**: 150
+   * **tpmozafterpaint**: True
+   * **unit**: ms
+   * **url**: startup_test/tspaint_test.html
+   * **win7_counters**: []
+   * **xperf_counters**: []
+
+.. dropdown:: ts_paint_flex
+   :container: + anchor-id-ts_paint_flex-Talos
+
+   * **preferences**: {'layout.css.emulate-moz-box-with-flex': True}
+
+.. dropdown:: ts_paint_heavy
+   :container: + anchor-id-ts_paint_heavy-Talos
+
+   * **profile**: simple
+
+.. dropdown:: ts_paint_webext
+   :container: + anchor-id-ts_paint_webext-Talos
+
+   * **preferences**: {'xpinstall.signatures.required': False}
+   * **webextensions**: ${talos}/webextensions/dummy/dummy.xpi
+
+.. dropdown:: tscrollx
+   :container: + anchor-id-tscrollx-Talos
+
+   * **gecko_profile_entries**: 1000000
+   * **gecko_profile_interval**: 1
+   * **preferences**: {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'dom.send_after_paint_to_content': True, 'apz.paint_skipping.enabled': False, 'layout.css.scroll-behavior.spring-constant': "'10'", 'toolkit.framesRecording.bufferSize': 10000}
+   * **timeout**: 600
+   * **tpchrome**: False
+   * **tpcycles**: 1
+   * **tpmanifest**: ${talos}/tests/scroll/scroll.manifest
+   * **tpmozafterpaint**: False
+   * **tppagecycles**: 25
+   * **unit**: ms
+
+.. dropdown:: tsvg_static
+   :container: + anchor-id-tsvg_static-Talos
+
+   * **gecko_profile_entries**: 10000000
+   * **gecko_profile_interval**: 1
+   * **timeout**: 600
+   * **tpchrome**: False
+   * **tpcycles**: 1
+   * **tpmanifest**: ${talos}/tests/svg_static/svg_static.manifest
+   * **tpmozafterpaint**: True
+   * **tppagecycles**: 25
+   * **unit**: ms
+
+.. dropdown:: tsvgm
+   :container: + anchor-id-tsvgm-Talos
+
+   * **gecko_profile_entries**: 1000000
+   * **gecko_profile_interval**: 10
+   * **preferences**: {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'dom.send_after_paint_to_content': False}
+   * **tpchrome**: False
+   * **tpcycles**: 1
+   * **tpmanifest**: ${talos}/tests/svgx/svgm.manifest
+   * **tpmozafterpaint**: False
+   * **tppagecycles**: 7
+   * **unit**: ms
+
+.. dropdown:: tsvgr_opacity
+   :container: + anchor-id-tsvgr_opacity-Talos
+
+   * **gecko_profile_entries**: 10000000
+   * **gecko_profile_interval**: 1
+   * **timeout**: 600
+   * **tpchrome**: False
+   * **tpcycles**: 1
+   * **tpmanifest**: ${talos}/tests/svg_opacity/svg_opacity.manifest
+   * **tpmozafterpaint**: True
+   * **tppagecycles**: 25
+   * **unit**: ms
+
+.. dropdown:: tsvgx
+   :container: + anchor-id-tsvgx-Talos
+
+   * **gecko_profile_entries**: 1000000
+   * **gecko_profile_interval**: 10
+   * **preferences**: {'layout.frame_rate': 0, 'docshell.event_starvation_delay_hint': 1, 'dom.send_after_paint_to_content': False}
+   * **timeout**: 600
+   * **tpchrome**: False
+   * **tpcycles**: 1
+   * **tpmanifest**: ${talos}/tests/svgx/svgx.manifest
+   * **tpmozafterpaint**: False
+   * **tppagecycles**: 25
+   * **unit**: ms
+
+.. dropdown:: twinopen
+   :container: + anchor-id-twinopen-Talos
+
+   * **extensions**: ['${talos}/pageloader', '${talos}/tests/twinopen']
+   * **gecko_profile_entries**: 2000000
+   * **gecko_profile_interval**: 1
+   * **preferences**: {'browser.startup.homepage': 'about:blank'}
+   * **timeout**: 300
+   * **tpmanifest**: ${talos}/tests/twinopen/twinopen.manifest
+   * **tpmozafterpaint**: True
+   * **tppagecycles**: 20
+   * **unit**: ms
+
+.. dropdown:: v8_7
+   :container: + anchor-id-v8_7-Talos
+
+   * **gecko_profile_entries**: 1000000
+   * **gecko_profile_interval**: 1
+   * **lower_is_better**: False
+   * **preferences**: {'dom.send_after_paint_to_content': False}
+   * **resolution**: 20
+   * **tpcycles**: 1
+   * **tpmanifest**: ${talos}/tests/v8_7/v8.manifest
+   * **tpmozafterpaint**: False
+   * **unit**: score
+
+
+
 Build metrics
 *************
 

@@ -2039,6 +2039,8 @@ Notes:
    stable statistics (xref `bug
    1616236 <https://bugzilla.mozilla.org/show_bug.cgi?id=1616236>`__)
 
+{documentation}
+
 Build metrics
 *************
 
