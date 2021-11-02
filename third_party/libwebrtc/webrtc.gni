@@ -64,6 +64,12 @@ declare_args() {
   # provided.
   rtc_exclude_metrics_default = build_with_chromium
 
+  # Setting this to true will define WEBRTC_EXCLUDE_SYSTEM_TIME which
+  # will tell the pre-processor to remove the default definition of the
+  # SystemTimeNanos() which is defined in rtc_base/system_time.cc. In
+  # that case a new implementation needs to be provided.
+  rtc_exclude_system_time = build_with_chromium
+
   # Setting this to false will require the API user to pass in their own
   # SSLCertificateVerifier to verify the certificates presented from a
   # TLS-TURN server. In return disabling this saves around 100kb in the binary.
