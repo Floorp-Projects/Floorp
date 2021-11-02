@@ -189,8 +189,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EventListenerManager)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 nsPIDOMWindowInner* EventListenerManager::GetInnerWindowForTarget() {
-  nsCOMPtr<nsINode> node = do_QueryInterface(mTarget);
-  if (node) {
+  if (nsINode* node = nsINode::FromEventTargetOrNull(mTarget)) {
     // XXX sXBL/XBL2 issue -- do we really want the owner here?  What
     // if that's the XBL document?
     return node->OwnerDoc()->GetInnerWindow();
@@ -446,17 +445,15 @@ void EventListenerManager::AddEventListenerInternal(
 }
 
 void EventListenerManager::ProcessApzAwareEventListenerAdd() {
+  Document* doc = nullptr;
+
   // Mark the node as having apz aware listeners
-  nsCOMPtr<nsINode> node = do_QueryInterface(mTarget);
-  if (node) {
+  if (nsINode* node = nsINode::FromEventTargetOrNull(mTarget)) {
     node->SetMayBeApzAware();
+    doc = node->OwnerDoc();
   }
 
   // Schedule a paint so event regions on the layer tree gets updated
-  Document* doc = nullptr;
-  if (node) {
-    doc = node->OwnerDoc();
-  }
   if (!doc) {
     if (nsCOMPtr<nsPIDOMWindowInner> window = GetTargetAsInnerWindow()) {
       doc = window->GetExtantDoc();
@@ -696,11 +693,11 @@ static bool IsDefaultPassiveWhenOnRoot(EventMessage aMessage) {
   return false;
 }
 
-static bool IsRootEventTaget(EventTarget* aTarget) {
+static bool IsRootEventTarget(EventTarget* aTarget) {
   if (nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(aTarget)) {
     return true;
   }
-  nsCOMPtr<nsINode> node = do_QueryInterface(aTarget);
+  const nsINode* node = nsINode::FromEventTargetOrNull(aTarget);
   if (!node) {
     return false;
   }
@@ -716,7 +713,7 @@ void EventListenerManager::MaybeMarkPassive(EventMessage aMessage,
   if (!IsDefaultPassiveWhenOnRoot(aMessage)) {
     return;
   }
-  if (!IsRootEventTaget(mTarget)) {
+  if (!IsRootEventTarget(mTarget)) {
     return;
   }
   aFlags.mPassive = true;
@@ -953,7 +950,7 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
   // here. The alternative is to store the event handler string on
   // the JSEventHandler itself, and that still doesn't address
   // the arg names issue.
-  nsCOMPtr<Element> element = do_QueryInterface(mTarget);
+  RefPtr<Element> element = Element::FromEventTargetOrNull(mTarget);
   MOZ_ASSERT(element || aBody, "Where will we get our body?");
   nsAutoString handlerBody;
   const nsAString* body = aBody;
@@ -1909,10 +1906,9 @@ void EventListenerManager::RemoveAllListeners() {
 
 already_AddRefed<nsIScriptGlobalObject>
 EventListenerManager::GetScriptGlobalAndDocument(Document** aDoc) {
-  nsCOMPtr<nsINode> node(do_QueryInterface(mTarget));
   nsCOMPtr<Document> doc;
   nsCOMPtr<nsPIDOMWindowInner> win;
-  if (node) {
+  if (nsINode* node = nsINode::FromEventTargetOrNull(mTarget)) {
     // Try to get context from doc
     doc = node->OwnerDoc();
     if (doc->IsLoadedAsData()) {

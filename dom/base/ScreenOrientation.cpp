@@ -586,14 +586,15 @@ NS_IMETHODIMP
 ScreenOrientation::VisibleEventListener::HandleEvent(Event* aEvent) {
   // Document may have become visible, if the page is visible, run the steps
   // following the "now visible algorithm" as specified.
-  nsCOMPtr<EventTarget> target = aEvent->GetCurrentTarget();
-  MOZ_ASSERT(target);
-
-  nsCOMPtr<Document> doc = do_QueryInterface(target);
-  if (!doc || doc->Hidden()) {
+  MOZ_ASSERT(aEvent->GetCurrentTarget());
+  nsCOMPtr<nsINode> eventTargetNode =
+      nsINode::FromEventTarget(aEvent->GetCurrentTarget());
+  if (!eventTargetNode || !eventTargetNode->IsDocument() ||
+      eventTargetNode->AsDocument()->Hidden()) {
     return NS_OK;
   }
 
+  RefPtr<Document> doc = eventTargetNode->AsDocument();
   auto* win = nsGlobalWindowInner::Cast(doc->GetInnerWindow());
   if (!win) {
     return NS_OK;
@@ -609,7 +610,7 @@ ScreenOrientation::VisibleEventListener::HandleEvent(Event* aEvent) {
   ScreenOrientation* orientation = screen->Orientation();
   MOZ_ASSERT(orientation);
 
-  target->RemoveSystemEventListener(u"visibilitychange"_ns, this, true);
+  doc->RemoveSystemEventListener(u"visibilitychange"_ns, this, true);
 
   BrowsingContext* bc = doc->GetBrowsingContext();
   if (bc && bc->GetCurrentOrientationType() !=
@@ -642,10 +643,10 @@ ScreenOrientation::FullscreenEventListener::HandleEvent(Event* aEvent) {
   MOZ_ASSERT(eventType.EqualsLiteral("fullscreenchange"));
 #endif
 
-  nsCOMPtr<EventTarget> target = aEvent->GetCurrentTarget();
+  EventTarget* target = aEvent->GetCurrentTarget();
   MOZ_ASSERT(target);
-
-  nsCOMPtr<Document> doc = do_QueryInterface(target);
+  MOZ_ASSERT(target->IsNode());
+  RefPtr<Document> doc = nsINode::FromEventTarget(target)->AsDocument();
   MOZ_ASSERT(doc);
 
   // We have to make sure that the event we got is the event sent when

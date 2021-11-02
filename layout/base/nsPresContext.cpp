@@ -2125,10 +2125,11 @@ static bool MayHavePaintEventListener(nsPIDOMWindowInner* aInnerWindow) {
   }
 
   if (!node) {
-    node = do_QueryInterface(parentTarget);
+    node = nsINode::FromEventTarget(parentTarget);
   }
-  if (node)
+  if (node) {
     return MayHavePaintEventListener(node->OwnerDoc()->GetInnerWindow());
+  }
 
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentTarget);
   if (window) return MayHavePaintEventListener(window);

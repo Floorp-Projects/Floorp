@@ -2208,7 +2208,7 @@ NS_IMETHODIMP nsDOMWindowUtils::DispatchDOMEventViaPresShellForTesting(
   // This API is currently used only by EventUtils.js.  Thus we should always
   // set mIsSynthesizedForTests to true.
   internalEvent->mFlags.mIsSynthesizedForTests = true;
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aTarget);
+  nsCOMPtr<nsIContent> content = nsIContent::FromNodeOrNull(aTarget);
   NS_ENSURE_STATE(content);
   nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow);
   if (content->OwnerDoc()->GetWindow() != window) {

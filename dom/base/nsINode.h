@@ -500,6 +500,10 @@ class nsINode : public mozilla::dom::EventTarget {
 
   MOZ_CAN_RUN_SCRIPT mozilla::dom::Element* GetParentFlexElement();
 
+  bool IsNode() const final { return true; }
+
+  NS_IMPL_FROMEVENTTARGET_HELPER(nsINode, IsNode())
+
   /**
    * Return whether the node is an Element node. Faster than using `NodeType()`.
    */
@@ -2238,6 +2242,24 @@ class nsINode : public mozilla::dom::EventTarget {
   nsSlots* mSlots;
 };
 
+inline nsINode* mozilla::dom::EventTarget::GetAsNode() {
+  return IsNode() ? AsNode() : nullptr;
+}
+
+inline const nsINode* mozilla::dom::EventTarget::GetAsNode() const {
+  return const_cast<mozilla::dom::EventTarget*>(this)->GetAsNode();
+}
+
+inline nsINode* mozilla::dom::EventTarget::AsNode() {
+  MOZ_DIAGNOSTIC_ASSERT(IsNode());
+  return static_cast<nsINode*>(this);
+}
+
+inline const nsINode* mozilla::dom::EventTarget::AsNode() const {
+  MOZ_DIAGNOSTIC_ASSERT(IsNode());
+  return static_cast<const nsINode*>(this);
+}
+
 // Useful inline function for getting a node given an nsIContent and a Document.
 // Returns the first argument cast to nsINode if it is non-null, otherwise
 // returns the second (which may be null).  We use type variables instead of
@@ -2268,23 +2290,51 @@ inline nsISupports* ToSupports(nsINode* aPointer) { return aPointer; }
   template <typename T>                                                  \
   static _const _class* FromNodeOrNull(_const T* aNode) {                \
     return aNode ? FromNode(*aNode) : nullptr;                           \
+  }                                                                      \
+  template <typename T>                                                  \
+  static auto FromEventTarget(_const T& aEventTarget)                    \
+      ->decltype(static_cast<_const _class*>(&aEventTarget)) {           \
+    return aEventTarget.IsNode() && aEventTarget.AsNode()->_check        \
+               ? static_cast<_const _class*>(&aEventTarget)              \
+               : nullptr;                                                \
+  }                                                                      \
+  template <typename T>                                                  \
+  static _const _class* FromEventTarget(_const T* aEventTarget) {        \
+    return FromEventTarget(*aEventTarget);                               \
+  }                                                                      \
+  template <typename T>                                                  \
+  static _const _class* FromEventTargetOrNull(_const T* aEventTarget) {  \
+    return aEventTarget ? FromEventTarget(*aEventTarget) : nullptr;      \
   }
 
-#define NS_IMPL_FROMNODE_HELPER(_class, _check)                               \
-  NS_IMPL_FROMNODE_GENERIC(_class, _check, )                                  \
-  NS_IMPL_FROMNODE_GENERIC(_class, _check, const)                             \
-                                                                              \
-  template <typename T>                                                       \
-  static _class* FromNode(T&& aNode) {                                        \
-    /* We need the double-cast in case aNode is a smartptr.  Those */         \
-    /* can cast to superclasses of the type they're templated on, */          \
-    /* but not directly to subclasses.  */                                    \
-    return aNode->_check ? static_cast<_class*>(static_cast<nsINode*>(aNode)) \
-                         : nullptr;                                           \
-  }                                                                           \
-  template <typename T>                                                       \
-  static _class* FromNodeOrNull(T&& aNode) {                                  \
-    return aNode ? FromNode(aNode) : nullptr;                                 \
+#define NS_IMPL_FROMNODE_HELPER(_class, _check)                                \
+  NS_IMPL_FROMNODE_GENERIC(_class, _check, )                                   \
+  NS_IMPL_FROMNODE_GENERIC(_class, _check, const)                              \
+                                                                               \
+  template <typename T>                                                        \
+  static _class* FromNode(T&& aNode) {                                         \
+    /* We need the double-cast in case aNode is a smartptr.  Those */          \
+    /* can cast to superclasses of the type they're templated on, */           \
+    /* but not directly to subclasses.  */                                     \
+    return aNode->_check ? static_cast<_class*>(static_cast<nsINode*>(aNode))  \
+                         : nullptr;                                            \
+  }                                                                            \
+  template <typename T>                                                        \
+  static _class* FromNodeOrNull(T&& aNode) {                                   \
+    return aNode ? FromNode(aNode) : nullptr;                                  \
+  }                                                                            \
+  template <typename T>                                                        \
+  static _class* FromEventTarget(T&& aEventTarget) {                           \
+    /* We need the double-cast in case aEventTarget is a smartptr.  Those */   \
+    /* can cast to superclasses of the type they're templated on, */           \
+    /* but not directly to subclasses.  */                                     \
+    return aEventTarget->IsNode() && aEventTarget->AsNode()->_check            \
+               ? static_cast<_class*>(static_cast<EventTarget*>(aEventTarget)) \
+               : nullptr;                                                      \
+  }                                                                            \
+  template <typename T>                                                        \
+  static _class* FromEventTargetOrNull(T&& aEventTarget) {                     \
+    return aEventTarget ? FromEventTarget(aEventTarget) : nullptr;             \
   }
 
 #define NS_IMPL_FROMNODE(_class, _nsid) \
