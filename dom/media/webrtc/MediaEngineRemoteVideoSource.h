@@ -126,16 +126,11 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
       const override;
   void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
 
-  void Refresh(int aIndex);
-
   nsString GetName() const override;
-  void SetName(nsString aName);
 
   nsCString GetUUID() const override;
-  void SetUUID(const char* aUUID);
 
   nsString GetGroupId() const override;
-  void SetGroupId(nsString aGroupId);
 
   bool GetScary() const override { return mScary; }
 
