@@ -33,7 +33,6 @@
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_impl2.h"
-#include "modules/rtp_rtcp/source/time_util.h"
 #include "rtc_base/arraysize.h"
 #include "rtc_base/rate_limiter.h"
 #include "rtc_base/task_queue_for_test.h"
@@ -845,8 +844,10 @@ TEST_P(RtpSenderVideoTest, AbsoluteCaptureTime) {
         packet.GetExtension<AbsoluteCaptureTimeExtension>();
     if (absolute_capture_time) {
       ++packets_with_abs_capture_time;
-      EXPECT_EQ(absolute_capture_time->absolute_capture_timestamp,
-                Int64MsToUQ32x32(kAbsoluteCaptureTimestampMs + NtpOffsetMs()));
+      EXPECT_EQ(
+          absolute_capture_time->absolute_capture_timestamp,
+          Int64MsToUQ32x32(fake_clock_.ConvertTimestampToNtpTimeInMilliseconds(
+              kAbsoluteCaptureTimestampMs)));
       EXPECT_FALSE(
           absolute_capture_time->estimated_capture_clock_offset.has_value());
     }
@@ -883,8 +884,10 @@ TEST_P(RtpSenderVideoTest, AbsoluteCaptureTimeWithCaptureClockOffset) {
         packet.GetExtension<AbsoluteCaptureTimeExtension>();
     if (absolute_capture_time) {
       ++packets_with_abs_capture_time;
-      EXPECT_EQ(absolute_capture_time->absolute_capture_timestamp,
-                Int64MsToUQ32x32(kAbsoluteCaptureTimestampMs + NtpOffsetMs()));
+      EXPECT_EQ(
+          absolute_capture_time->absolute_capture_timestamp,
+          Int64MsToUQ32x32(fake_clock_.ConvertTimestampToNtpTimeInMilliseconds(
+              kAbsoluteCaptureTimestampMs)));
       EXPECT_EQ(kExpectedCaptureClockOffset,
                 absolute_capture_time->estimated_capture_clock_offset);
     }
