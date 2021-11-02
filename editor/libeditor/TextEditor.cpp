@@ -389,7 +389,7 @@ nsresult TextEditor::SetTextAsSubAction(const nsAString& aString) {
 }
 
 already_AddRefed<Element> TextEditor::GetInputEventTargetElement() const {
-  nsCOMPtr<Element> target = do_QueryInterface(mEventTarget);
+  RefPtr<Element> target = Element::FromEventTargetOrNull(mEventTarget);
   return target.forget();
 }
 

@@ -3265,10 +3265,10 @@ void HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
        aVisitor.mEvent->mMessage == eFocusIn ||
        aVisitor.mEvent->mMessage == eFocusOut ||
        aVisitor.mEvent->mMessage == eBlur)) {
-    nsCOMPtr<nsIContent> originalTarget =
-        do_QueryInterface(aVisitor.mEvent->AsFocusEvent()->mOriginalTarget);
-    nsCOMPtr<nsIContent> relatedTarget =
-        do_QueryInterface(aVisitor.mEvent->AsFocusEvent()->mRelatedTarget);
+    nsIContent* originalTarget = nsIContent::FromEventTargetOrNull(
+        aVisitor.mEvent->AsFocusEvent()->mOriginalTarget);
+    nsIContent* relatedTarget = nsIContent::FromEventTargetOrNull(
+        aVisitor.mEvent->AsFocusEvent()->mRelatedTarget);
 
     if (originalTarget && relatedTarget &&
         originalTarget->FindFirstNonChromeOnlyAccessContent() ==
@@ -3485,7 +3485,7 @@ bool HTMLInputElement::ShouldPreventDOMActivateDispatch(
     return false;
   }
 
-  nsCOMPtr<Element> target = do_QueryInterface(aOriginalTarget);
+  Element* target = Element::FromEventTargetOrNull(aOriginalTarget);
   if (!target) {
     return false;
   }
@@ -3514,8 +3514,8 @@ nsresult HTMLInputElement::MaybeInitPickers(EventChainPostVisitor& aVisitor) {
     // If the user clicked on the "Choose folder..." button we open the
     // directory picker, else we open the file picker.
     FilePickerType type = FILE_PICKER_FILE;
-    nsCOMPtr<nsIContent> target =
-        do_QueryInterface(aVisitor.mEvent->mOriginalTarget);
+    nsIContent* target =
+        nsIContent::FromEventTargetOrNull(aVisitor.mEvent->mOriginalTarget);
     if (target && target->FindFirstNonChromeOnlyAccessContent() == this &&
         ((StaticPrefs::dom_input_dirpicker() && Allowdirs()) ||
          (StaticPrefs::dom_webkitBlink_dirPicker_enabled() &&
