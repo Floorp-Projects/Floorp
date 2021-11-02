@@ -258,7 +258,7 @@ class UnixRealTimeClock : public RealTimeClock {
 };
 #endif  // defined(WEBRTC_POSIX)
 
-Clock* Clock::GetRealTimeClock() {
+Clock* Clock::GetRealTimeClockRaw() {
 #if defined(WINUWP)
   static Clock* const clock = new WinUwpRealTimeClock();
 #elif defined(WEBRTC_WIN)

@@ -7,6 +7,7 @@
 #include "nsTArray.h"
 #include "mozilla/Assertions.h"
 #include "MainThreadUtils.h"
+#include "SystemTime.h"
 
 #include "system_wrappers/include/clock.h"
 
@@ -133,13 +134,13 @@ void MediaSessionConduit::InsertAudioLevelForContributingSource(
     domEntry.mAudioLevel.Construct(rtpToDomAudioLevel(aAudioLevel));
   }
 
-  int64_t libwebrtcNow =
-      webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
-  double jsNow = GetTimestampMaker().GetNow();
+  webrtc::Timestamp libwebrtcNow = GetTimestampMaker().GetNowRealtime();
+  double jsNow = GetTimestampMaker().ReduceRealtimePrecision(libwebrtcNow);
   double ago = jsNow - aTimestamp;
-  uint64_t convertedTimestamp = libwebrtcNow - ago;
+  webrtc::Timestamp convertedTimestamp =
+      libwebrtcNow - webrtc::TimeDelta::Millis(ago);
 
-  SourceKey key(convertedTimestamp, aCsrcSource);
+  SourceKey key(convertedTimestamp.ms<uint32_t>(), aCsrcSource);
   mSourcesCache[key] = domEntry;
 }
 
