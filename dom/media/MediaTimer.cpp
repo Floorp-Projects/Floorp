@@ -181,12 +181,17 @@ void MediaTimer::ArmTimer(const TimeStamp& aTarget, const TimeStamp& aNow) {
   MOZ_DIAGNOSTIC_ASSERT(!TimerIsArmed());
   MOZ_DIAGNOSTIC_ASSERT(aTarget > aNow);
 
-  const TimeDuration delay = aTarget - aNow;
-  TIMER_LOG("MediaTimer::ArmTimer delay=%.3fms", delay.ToMilliseconds());
+  // XPCOM timer resolution is in milliseconds. It's important to never resolve
+  // a timer when mTarget might compare < now (even if very close), so round up.
+  unsigned long delay = std::ceil((aTarget - aNow).ToMilliseconds());
+  TIMER_LOG("MediaTimer::ArmTimer delay=%lu", delay);
   mCurrentTimerTarget = aTarget;
-  MOZ_ALWAYS_SUCCEEDS(mTimer->InitHighResolutionWithNamedFuncCallback(
-      &TimerCallback, this, delay, nsITimer::TYPE_ONE_SHOT,
-      "MediaTimer::TimerCallback"));
+  nsresult rv = mTimer->InitWithNamedFuncCallback(&TimerCallback, this, delay,
+                                                  nsITimer::TYPE_ONE_SHOT,
+                                                  "MediaTimer::TimerCallback");
+  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
+  (void)rv;
 }
 
 }  // namespace mozilla

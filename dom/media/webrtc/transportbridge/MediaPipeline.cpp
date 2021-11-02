@@ -732,10 +732,10 @@ class MediaPipelineTransmit::PipelineListener
     mConverter = std::move(aConverter);
   }
 
-  void OnVideoFrameConverted(webrtc::VideoFrame aVideoFrame) {
+  void OnVideoFrameConverted(const webrtc::VideoFrame& aVideoFrame) {
     MOZ_RELEASE_ASSERT(mConduit->type() == MediaSessionConduit::VIDEO);
     static_cast<VideoSessionConduit*>(mConduit.get())
-        ->SendVideoFrame(std::move(aVideoFrame));
+        ->SendVideoFrame(aVideoFrame);
   }
 
   // Implement MediaTrackListener
@@ -767,6 +767,42 @@ class MediaPipelineTransmit::PipelineListener
   bool mDirectConnect;
 };
 
+// Implements VideoConverterListener for MediaPipeline.
+//
+// We pass converted frames on to MediaPipelineTransmit::PipelineListener
+// where they are further forwarded to VideoConduit.
+// MediaPipelineTransmit calls Detach() during shutdown to ensure there is
+// no cyclic dependencies between us and PipelineListener.
+class MediaPipelineTransmit::VideoFrameFeeder : public VideoConverterListener {
+ public:
+  explicit VideoFrameFeeder(RefPtr<PipelineListener> aListener)
+      : mMutex("VideoFrameFeeder"), mListener(std::move(aListener)) {
+    MOZ_COUNT_CTOR(VideoFrameFeeder);
+  }
+
+  void Detach() {
+    MutexAutoLock lock(mMutex);
+
+    mListener = nullptr;
+  }
+
+  void OnVideoFrameConverted(const webrtc::VideoFrame& aVideoFrame) override {
+    MutexAutoLock lock(mMutex);
+
+    if (!mListener) {
+      return;
+    }
+
+    mListener->OnVideoFrameConverted(aVideoFrame);
+  }
+
+ protected:
+  MOZ_COUNTED_DTOR_OVERRIDE(VideoFrameFeeder)
+
+  Mutex mMutex;  // Protects the member below.
+  RefPtr<PipelineListener> mListener;
+};
+
 MediaPipelineTransmit::MediaPipelineTransmit(
     const std::string& aPc, RefPtr<MediaTransportHandler> aTransportHandler,
     RefPtr<nsISerialEventTarget> aMainThread,
@@ -778,6 +814,12 @@ MediaPipelineTransmit::MediaPipelineTransmit(
       mWatchManager(this, AbstractThread::MainThread()),
       mIsVideo(aIsVideo),
       mListener(new PipelineListener(mConduit)),
+      mFeeder(aIsVideo ? MakeAndAddRef<VideoFrameFeeder>(mListener)
+                       : nullptr),  // For video we send frames to an
+                                    // async VideoFrameConverter that
+                                    // calls back to a VideoFrameFeeder
+                                    // that feeds I420 frames to
+                                    // VideoConduit.
       mDomTrack(nullptr, "MediaPipelineTransmit::mDomTrack"),
       mSendTrackOverride(nullptr, "MediaPipelineTransmit::mSendTrackOverride") {
   if (!IsVideo()) {
@@ -786,11 +828,7 @@ MediaPipelineTransmit::MediaPipelineTransmit(
     mListener->SetAudioProxy(mAudioProcessing);
   } else {  // Video
     mConverter = MakeAndAddRef<VideoFrameConverter>(GetTimestampMaker());
-    mFrameListener = mConverter->VideoFrameConvertedEvent().Connect(
-        mConverter->mTaskQueue,
-        [listener = mListener](webrtc::VideoFrame aFrame) {
-          listener->OnVideoFrameConverted(std::move(aFrame));
-        });
+    mConverter->AddListener(mFeeder);
     mListener->SetVideoFrameConverter(mConverter);
   }
 
@@ -803,7 +841,9 @@ MediaPipelineTransmit::MediaPipelineTransmit(
 }
 
 MediaPipelineTransmit::~MediaPipelineTransmit() {
-  mFrameListener.DisconnectIfExists();
+  if (mFeeder) {
+    mFeeder->Detach();
+  }
 
   MOZ_ASSERT(!mTransmitting);
   MOZ_ASSERT(!mDomTrack.Ref());
