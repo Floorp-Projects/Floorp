@@ -46,12 +46,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID, ColorScheme, nscolor& aResult) {
   nsresult res = NS_OK;
 
   switch (aID) {
-    case ColorID::WindowBackground:
-      aResult = NS_RGB(0xff, 0xff, 0xff);
-      break;
-    case ColorID::WindowForeground:
-      aResult = NS_RGB(0x00, 0x00, 0x00);
-      break;
     case ColorID::WidgetBackground:
       aResult = NS_RGB(0xdd, 0xdd, 0xdd);
       break;

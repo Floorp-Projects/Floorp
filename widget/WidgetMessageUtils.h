@@ -33,11 +33,11 @@ struct ParamTraits<mozilla::LookAndFeel::IntID>
 template <>
 struct ParamTraits<mozilla::LookAndFeel::ColorID>
     : ContiguousEnumSerializer<mozilla::LookAndFeel::ColorID,
-                               mozilla::LookAndFeel::ColorID::WindowBackground,
+                               mozilla::LookAndFeel::ColorID::WidgetBackground,
                                mozilla::LookAndFeel::ColorID::End> {
   using IdType = std::underlying_type_t<mozilla::LookAndFeel::ColorID>;
   static_assert(
-      static_cast<IdType>(mozilla::LookAndFeel::ColorID::WindowBackground) ==
+      static_cast<IdType>(mozilla::LookAndFeel::ColorID::WidgetBackground) ==
       IdType(0));
 };
 
