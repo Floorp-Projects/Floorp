@@ -240,6 +240,9 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvEvent(
     return IPC_OK();
   }
 
+  if (aEventType == nsIAccessibleEvent::EVENT_FOCUS) {
+    mFocus = aID;
+  }
   ProxyEvent(proxy, aEventType);
 
   if (!nsCoreUtils::AccEventObserversExist()) {
@@ -958,6 +961,7 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvFocusEvent(
     return IPC_OK();
   }
 
+  mFocus = aID;
   ProxyFocusEvent(proxy, aCaretRect);
 
   if (!nsCoreUtils::AccEventObserversExist()) {
