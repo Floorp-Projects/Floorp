@@ -96,7 +96,6 @@ object TelemetryWrapper {
         val HIDE = "hide"
         val SHARE_INTENT = "share_intent"
         val REMOVE = "remove"
-        val REMOVE_ALL = "remove_all"
         val REORDER = "reorder"
         val PAGE = "page"
         val RESOURCE = "resource"
@@ -125,7 +124,6 @@ object TelemetryWrapper {
         val SEARCH_SUGGESTION_PROMPT = "search_suggestion_prompt"
         val MAKE_DEFAULT_BROWSER_OPEN_WITH = "make_default_browser_open_with"
         val MAKE_DEFAULT_BROWSER_SETTINGS = "make_default_browser_settings"
-        val ALLOWLIST = "allowlist"
     }
 
     private object Value {
@@ -553,23 +551,6 @@ object TelemetryWrapper {
             Object.BLOCKING_SWITCH,
             isBlockingEnabled.toString()
         ).queue()
-    }
-
-    @JvmStatic
-    fun openExceptionsListSetting() {
-        TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.ALLOWLIST).queue()
-    }
-
-    fun removeExceptionDomains(count: Int) {
-        TelemetryEvent.create(Category.ACTION, Method.REMOVE, Object.ALLOWLIST)
-            .extra(Extra.TOTAL, count.toString())
-            .queue()
-    }
-
-    fun removeAllExceptionDomains(count: Int) {
-        TelemetryEvent.create(Category.ACTION, Method.REMOVE_ALL, Object.ALLOWLIST)
-            .extra(Extra.TOTAL, count.toString())
-            .queue()
     }
 
     @JvmStatic

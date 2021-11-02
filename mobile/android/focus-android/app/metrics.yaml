@@ -1075,3 +1075,49 @@ custom_tabs_toolbar:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-11-01"
+
+tracking_protection_exceptions:
+  allow_list_opened:
+    type: event
+    description: The user has opened the exceptions list.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5753
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/?
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  allow_list_cleared:
+    type: event
+    description: The user has removed all items from exceptions list.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5753
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5758
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      list_size:
+        description: The number of exceptions in the list.
+        type: quantity
+  selected_items_removed:
+    type: event
+    description: The user has removed the selected items from exceptions list.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5753
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5758
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      list_size:
+        description: The number of selected items removed.
+        type: quantity

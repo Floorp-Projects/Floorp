@@ -9,6 +9,8 @@ import android.os.Build
 import android.os.Bundle
 import androidx.preference.Preference
 import androidx.preference.SwitchPreferenceCompat
+import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.focus.GleanMetrics.TrackingProtectionExceptions
 import org.mozilla.focus.R
 import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.engine.EngineSharedPreferencesListener
@@ -116,7 +118,7 @@ class PrivacySecuritySettingsFragment :
         val engineSharedPreferencesListener = EngineSharedPreferencesListener(requireContext())
         when (preference.key) {
             resources.getString(R.string.pref_key_screen_exceptions) -> {
-                TelemetryWrapper.openExceptionsListSetting()
+                TrackingProtectionExceptions.allowListOpened.record(NoExtras())
                 requireComponents.appStore.dispatch(
                     AppAction.OpenSettings(page = Screen.Settings.Page.PrivacyExceptions)
                 )

@@ -28,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
+import org.mozilla.focus.GleanMetrics.TrackingProtectionExceptions
 import org.mozilla.focus.R
 import org.mozilla.focus.autocomplete.AutocompleteDomainFormatter
 import org.mozilla.focus.ext.components
@@ -35,7 +36,6 @@ import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.settings.BaseSettingsLikeFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.ViewUtils
 import java.util.Collections
 import kotlin.coroutines.CoroutineContext
@@ -123,9 +123,10 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
         removeAllExceptions.setOnClickListener {
             requireComponents.trackingProtectionUseCases.removeAllExceptions()
 
-            val exceptions = (exceptionList.adapter as DomainListAdapter).selection()
-            TelemetryWrapper.removeAllExceptionDomains(exceptions.count())
-
+            val exceptionsListSize = (exceptionList.adapter as DomainListAdapter).itemCount
+            TrackingProtectionExceptions.allowListCleared.record(
+                TrackingProtectionExceptions.AllowListClearedExtra(exceptionsListSize)
+            )
             requireComponents.appStore.dispatch(
                 AppAction.NavigateUp(
                     requireComponents.store.state.selectedTabId
