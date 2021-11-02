@@ -300,6 +300,12 @@ void LocalAccessible::TranslateString(const nsString& aKey,
 }
 
 uint64_t LocalAccessible::VisibilityState() const {
+  if (IPCAccessibilityActive() &&
+      StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    // Visibility states must be calculated by RemoteAccessible, so there's no
+    // point calculating them here.
+    return 0;
+  }
   nsIFrame* frame = GetFrame();
   if (!frame) {
     // Element having display:contents is considered visible semantically,
@@ -3206,6 +3212,16 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     } else if (aUpdateType == CacheUpdateType::Update) {
       fields->SetAttribute(nsGkAtoms::id, DeleteEntry());
     }
+  }
+
+  // State is only included in the initial push. Thereafter, cached state is
+  // updated via events.
+  if (aCacheDomain & CacheDomain::State &&
+      aUpdateType == CacheUpdateType::Initial) {
+    uint64_t state = State();
+    // Exclude states which must be calculated by RemoteAccessible.
+    state &= ~kRemoteCalculatedStates;
+    fields->SetAttribute(nsGkAtoms::state, state);
   }
 
   return fields.forget();
