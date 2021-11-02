@@ -59,7 +59,15 @@ void LoginDetectionService::MaybeStartMonitoring() {
     // provide security benefit just to NOT isolate the removed site. The site
     // will not be isolated when its permission expired.
     FetchLogins();
+  }
 
+  if (IsIsolateHighValueSiteEnabled() ||
+      StaticPrefs::fission_highValue_login_monitor()) {
+    // When the pref is on, we monitor users' login attempt event when we
+    // are not isolating high value sites. This is because We can't detect the
+    // case where a user is already logged in to a site, and don't save a
+    // password for it. So we want to start monitoring login attempts prior
+    // to releasing the feature.
     if (!mObs) {
       mObs = mozilla::services::GetObserverService();
       mObs->AddObserver(this, "passwordmgr-form-submission-detected", false);
