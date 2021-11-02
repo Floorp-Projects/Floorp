@@ -237,24 +237,28 @@ nsresult KeyEventHandler::DispatchXBLCommand(dom::EventTarget* aTarget,
   nsCOMPtr<nsIController> controller;
 
   nsCOMPtr<nsPIDOMWindowOuter> privateWindow;
-  nsCOMPtr<nsPIWindowRoot> windowRoot = do_QueryInterface(aTarget);
+  nsCOMPtr<nsPIWindowRoot> windowRoot =
+      nsPIWindowRoot::FromEventTargetOrNull(aTarget);
   if (windowRoot) {
     privateWindow = windowRoot->GetWindow();
   } else {
-    privateWindow = do_QueryInterface(aTarget);
+    privateWindow = nsPIDOMWindowOuter::FromEventTargetOrNull(aTarget);
     if (!privateWindow) {
-      nsCOMPtr<nsIContent> elt(do_QueryInterface(aTarget));
       nsCOMPtr<dom::Document> doc;
       // XXXbz sXBL/XBL2 issue -- this should be the "scope doc" or
       // something... whatever we use when wrapping DOM nodes
       // normally.  It's not clear that the owner doc is the right
       // thing.
-      if (elt) {
-        doc = elt->OwnerDoc();
+      if (nsIContent* content = nsIContent::FromEventTargetOrNull(aTarget)) {
+        doc = content->OwnerDoc();
       }
 
       if (!doc) {
-        doc = do_QueryInterface(aTarget);
+        if (nsINode* node = nsINode::FromEventTargetOrNull(aTarget)) {
+          if (node->IsDocument()) {
+            doc = node->AsDocument();
+          }
+        }
       }
 
       if (!doc) {
@@ -402,36 +406,41 @@ Modifiers KeyEventHandler::GetModifiersMask() const {
 
 already_AddRefed<nsIController> KeyEventHandler::GetController(
     dom::EventTarget* aTarget) {
+  if (!aTarget) {
+    return nullptr;
+  }
+
   // XXX Fix this so there's a generic interface that describes controllers,
   // This code should have no special knowledge of what objects might have
   // controllers.
   nsCOMPtr<nsIControllers> controllers;
 
-  nsCOMPtr<nsIContent> targetContent(do_QueryInterface(aTarget));
-  RefPtr<nsXULElement> xulElement = nsXULElement::FromNodeOrNull(targetContent);
-  if (xulElement) {
-    controllers = xulElement->GetControllers(IgnoreErrors());
-  }
+  if (nsIContent* targetContent = nsIContent::FromEventTarget(aTarget)) {
+    RefPtr<nsXULElement> xulElement = nsXULElement::FromNode(targetContent);
+    if (xulElement) {
+      controllers = xulElement->GetControllers(IgnoreErrors());
+    }
 
-  if (!controllers) {
-    dom::HTMLTextAreaElement* htmlTextArea =
-        dom::HTMLTextAreaElement::FromNode(targetContent);
-    if (htmlTextArea) {
-      htmlTextArea->GetControllers(getter_AddRefs(controllers));
+    if (!controllers) {
+      dom::HTMLTextAreaElement* htmlTextArea =
+          dom::HTMLTextAreaElement::FromNode(targetContent);
+      if (htmlTextArea) {
+        htmlTextArea->GetControllers(getter_AddRefs(controllers));
+      }
+    }
+
+    if (!controllers) {
+      dom::HTMLInputElement* htmlInputElement =
+          dom::HTMLInputElement::FromNode(targetContent);
+      if (htmlInputElement) {
+        htmlInputElement->GetControllers(getter_AddRefs(controllers));
+      }
     }
   }
 
   if (!controllers) {
-    dom::HTMLInputElement* htmlInputElement =
-        dom::HTMLInputElement::FromNode(targetContent);
-    if (htmlInputElement) {
-      htmlInputElement->GetControllers(getter_AddRefs(controllers));
-    }
-  }
-
-  if (!controllers) {
-    nsCOMPtr<nsPIDOMWindowOuter> domWindow(do_QueryInterface(aTarget));
-    if (domWindow) {
+    if (nsCOMPtr<nsPIDOMWindowOuter> domWindow =
+            nsPIDOMWindowOuter::FromEventTarget(aTarget)) {
       domWindow->GetControllers(getter_AddRefs(controllers));
     }
   }

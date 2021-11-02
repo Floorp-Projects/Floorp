@@ -2017,11 +2017,10 @@ void nsGlobalWindowInner::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   aVisitor.mCanHandle = true;
   aVisitor.mForceContentDispatch = true;  // FIXME! Bug 329119
   if (msg == eResize && aVisitor.mEvent->IsTrusted()) {
-    // QIing to window so that we can keep the old behavior also in case
-    // a child window is handling resize.
-    nsCOMPtr<nsPIDOMWindowInner> window =
-        do_QueryInterface(aVisitor.mEvent->mOriginalTarget);
-    if (window) {
+    // Checking whether the event target is an inner window or not, so we can
+    // keep the old behavior also in case a child window is handling resize.
+    if (aVisitor.mEvent->mOriginalTarget &&
+        aVisitor.mEvent->mOriginalTarget->IsInnerWindow()) {
       mIsHandlingResizeEvent = true;
     }
   } else if (msg == eMouseDown && aVisitor.mEvent->IsTrusted()) {

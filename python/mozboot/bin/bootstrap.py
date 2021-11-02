@@ -39,7 +39,7 @@ Failed to pull from hg.mozilla.org.
 This is most likely because of unstable network connection.
 Try running `cd %s && hg pull https://hg.mozilla.org/mozilla-unified` manually,
 or download a mercurial bundle and use it:
-https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles"""
+https://firefox-source-docs.mozilla.org/contributing/vcs/mercurial_bundles.html"""
 
 WINDOWS = sys.platform.startswith("win32") or sys.platform.startswith("msys")
 VCS_HUMAN_READABLE = {
