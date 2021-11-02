@@ -258,6 +258,7 @@ def verify_android_device(
     verbose=False,
     app=None,
     device_serial=None,
+    aab=False,
 ):
     """
     Determine if any Android device is connected via adb.
@@ -342,15 +343,21 @@ def verify_android_device(
             if installed:
                 device.uninstall_app(app)
             _log_info("Installing geckoview AndroidTest...")
-            sub = "geckoview:installWithGeckoBinariesDebugAndroidTest"
             build_obj._mach_context.commands.dispatch(
-                "gradle", build_obj._mach_context, args=[sub]
+                "android",
+                build_obj._mach_context,
+                subcommand="install-geckoview-test",
+                args=[],
             )
         elif app == "org.mozilla.geckoview.test_runner":
             if installed:
                 device.uninstall_app(app)
             _log_info("Installing geckoview test_runner...")
-            sub = "install-geckoview-test_runner"
+            sub = (
+                "install-geckoview-test_runner-aab"
+                if aab
+                else "install-geckoview-test_runner"
+            )
             build_obj._mach_context.commands.dispatch(
                 "android", build_obj._mach_context, subcommand=sub, args=[]
             )
@@ -358,7 +365,9 @@ def verify_android_device(
             if installed:
                 device.uninstall_app(app)
             _log_info("Installing geckoview_example...")
-            sub = "install-geckoview_example"
+            sub = (
+                "install-geckoview_example-aab" if aab else "install-geckoview_example"
+            )
             build_obj._mach_context.commands.dispatch(
                 "android", build_obj._mach_context, subcommand=sub, args=[]
             )
