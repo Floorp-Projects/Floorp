@@ -13,6 +13,13 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v96
+- Added [`onLoginFetch`][96.1] which allows apps to provide all saved logins to
+  GeckoView.
+  ([bug 1733423]({{bugzilla}}1733423)).
+
+[96.1]: {{javadoc_uri}}/Autocomplete.StorageDelegate.html#onLoginFetch--
+
 ## v95
 - Added [`GeckoSession.ContentDelegate.onPointerIconChange()`][95.1] to notify
   the application of changing pointer icon. If the application wants to handle
@@ -1072,4 +1079,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: d44de923c2ba7fb152398b9001d26b4ed2689138
+[api-version]: 3edddab927135fea39afc094a4eab409ef40b22f

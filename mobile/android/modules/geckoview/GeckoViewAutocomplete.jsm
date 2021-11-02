@@ -314,15 +314,16 @@ const GeckoViewAutocomplete = {
    * LoginStorage GeckoView delegate.
    *
    * @param aDomain
-   *        The domain string to fetch login entries for.
+   *        The domain string to fetch login entries for. If null, all logins
+   *        will be fetched.
    * @return {Promise}
    *         Resolves with an array of login objects or null.
    *         Rejected if no delegate is attached.
    *         Login object string properties:
    *         { guid, origin, formActionOrigin, httpRealm, username, password }
    */
-  fetchLogins(aDomain) {
-    debug`fetchLogins for ${aDomain}`;
+  fetchLogins(aDomain = null) {
+    debug`fetchLogins for ${aDomain ?? "All domains"}`;
 
     return EventDispatcher.instance.sendRequestForResult({
       type: "GeckoView:Autocomplete:Fetch:Login",

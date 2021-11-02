@@ -267,6 +267,7 @@ package org.mozilla.geckoview {
     method @Nullable @UiThread default public GeckoResult<Autocomplete.CreditCard[]> onCreditCardFetch();
     method @UiThread default public void onCreditCardSave(@NonNull Autocomplete.CreditCard);
     method @Nullable @UiThread default public GeckoResult<Autocomplete.LoginEntry[]> onLoginFetch(@NonNull String);
+    method @Nullable @UiThread default public GeckoResult<Autocomplete.LoginEntry[]> onLoginFetch();
     method @UiThread default public void onLoginSave(@NonNull Autocomplete.LoginEntry);
     method @UiThread default public void onLoginUsed(@NonNull Autocomplete.LoginEntry, int);
   }
