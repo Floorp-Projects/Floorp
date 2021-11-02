@@ -140,7 +140,7 @@ class MediaSessionConduit {
 
   virtual Ssrcs GetLocalSSRCs() const = 0;
 
-  virtual bool GetRemoteSSRC(Ssrc* ssrc) const = 0;
+  virtual Maybe<Ssrc> GetRemoteSSRC() const = 0;
   virtual void UnsetRemoteSSRC(Ssrc ssrc) = 0;
 
   virtual bool HasCodecPluginID(uint64_t aPluginID) const = 0;

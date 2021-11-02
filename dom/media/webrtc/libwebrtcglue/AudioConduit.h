@@ -147,7 +147,8 @@ class WebrtcAudioConduit : public AudioSessionConduit,
   // Called when a parameter in mControl has changed. Call thread.
   void OnControlConfigChange();
 
-  std::vector<uint32_t> GetLocalSSRCs() const override;
+  Ssrcs GetLocalSSRCs() const override;
+  Maybe<Ssrc> GetRemoteSSRC() const override;
 
  private:
   /**
@@ -162,7 +163,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
  public:
   void UnsetRemoteSSRC(uint32_t ssrc) override {}
-  bool GetRemoteSSRC(uint32_t* ssrc) const override;
 
   Maybe<webrtc::AudioReceiveStream::Stats> GetReceiverStats() const override;
   Maybe<webrtc::AudioSendStream::Stats> GetSenderStats() const override;
