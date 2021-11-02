@@ -4329,7 +4329,7 @@ bool nsWindow::TouchEventShouldStartDrag(EventMessage aEventMessage,
     DispatchInputEvent(&hittest);
 
     if (EventTarget* target = hittest.GetDOMEventTarget()) {
-      if (nsCOMPtr<nsIContent> content = do_QueryInterface(target)) {
+      if (nsIContent* content = nsIContent::FromEventTarget(target)) {
         // Check if the element or any parent element has the
         // attribute we're looking for.
         for (Element* element = content->GetAsElementOrParentElement(); element;

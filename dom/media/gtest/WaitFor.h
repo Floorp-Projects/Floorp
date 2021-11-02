@@ -6,9 +6,10 @@
 #define WAITFOR_H_
 
 #include "MediaEventSource.h"
+#include "MediaUtils.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MozPromise.h"
-#include "mozilla/Result.h"
+#include "mozilla/ResultVariant.h"
 #include "mozilla/SpinEventLoopUntil.h"
 
 namespace mozilla {
@@ -66,19 +67,49 @@ Result<R, E> WaitFor(const RefPtr<MozPromise<R, E, Exc>>& aPromise) {
  * A variation of WaitFor that takes a callback to be called each time aEvent is
  * raised. Blocks the caller until the callback function returns true.
  */
-template <typename T, typename CallbackFunction>
-void WaitUntil(MediaEventSource<T>& aEvent, const CallbackFunction& aF) {
+template <typename... Args, typename CallbackFunction>
+void WaitUntil(MediaEventSource<Args...>& aEvent, CallbackFunction&& aF) {
   bool done = false;
   MediaEventListener listener =
-      aEvent.Connect(AbstractThread::GetCurrent(), [&](T aValue) {
+      aEvent.Connect(AbstractThread::GetCurrent(), [&](Args... aValue) {
         if (!done) {
-          done = aF(aValue);
+          done = aF(std::forward<Args>(aValue)...);
         }
       });
   SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
-      "WaitUntil(MediaEventSource<T>& aEvent, const CallbackFunction& aF)"_ns,
+      "WaitUntil(MediaEventSource<Args...>& aEvent, CallbackFunction&& aF)"_ns,
       [&] { return done; });
   listener.Disconnect();
+}
+
+template <typename... Args>
+using TakeNPromise = MozPromise<std::vector<std::tuple<Args...>>, bool, true>;
+
+template <ListenerPolicy Lp, typename... Args>
+auto TakeN(MediaEventSourceImpl<Lp, Args...>& aEvent, size_t aN)
+    -> RefPtr<TakeNPromise<Args...>> {
+  using Storage = std::vector<std::tuple<Args...>>;
+  using Promise = TakeNPromise<Args...>;
+  using Values = media::Refcountable<Storage>;
+  using Listener = media::Refcountable<MediaEventListener>;
+  RefPtr<Values> values = MakeRefPtr<Values>();
+  values->reserve(aN);
+  RefPtr<Listener> listener = MakeRefPtr<Listener>();
+  auto promise = InvokeAsync(
+      AbstractThread::GetCurrent(), __func__, [values, aN]() mutable {
+        SpinEventLoopUntil<ProcessFailureBehavior::IgnoreAndContinue>(
+            "TakeN(MediaEventSourceImpl<Lp, Args...>& aEvent, size_t aN)"_ns,
+            [&] { return values->size() == aN; });
+        return Promise::CreateAndResolve(std::move(*values), __func__);
+      });
+  *listener = aEvent.Connect(AbstractThread::GetCurrent(),
+                             [values, listener, aN](Args... aValue) {
+                               values->push_back({aValue...});
+                               if (values->size() == aN) {
+                                 listener->Disconnect();
+                               }
+                             });
+  return promise;
 }
 
 /**

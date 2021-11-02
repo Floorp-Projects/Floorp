@@ -133,7 +133,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 
   static already_AddRefed<nsROCSSPrimitiveValue> MatrixToCSSValue(
       const mozilla::gfx::Matrix4x4& aMatrix);
-  static void SetToRGBAColor(nsROCSSPrimitiveValue* aValue, nscolor aColor);
 
   static void RegisterPrefChangeCallbacks();
   static void UnregisterPrefChangeCallbacks();
@@ -194,7 +193,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 
   already_AddRefed<CSSValue> GetBorderWidthFor(mozilla::Side aSide);
 
-  already_AddRefed<CSSValue> GetMarginWidthFor(mozilla::Side aSide);
+  already_AddRefed<CSSValue> GetMarginFor(mozilla::Side aSide);
 
   already_AddRefed<CSSValue> GetTransformValue(const mozilla::StyleTransform&);
 
@@ -231,7 +230,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetBottom();
 
   /* Font properties */
-  already_AddRefed<CSSValue> DoGetOsxFontSmoothing();
+  already_AddRefed<CSSValue> DoGetMozOsxFontSmoothing();
 
   /* Grid properties */
   already_AddRefed<CSSValue> DoGetGridTemplateColumns();
@@ -260,14 +259,13 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetBorderRightWidth();
 
   /* Margin Properties */
-  already_AddRefed<CSSValue> DoGetMarginTopWidth();
-  already_AddRefed<CSSValue> DoGetMarginBottomWidth();
-  already_AddRefed<CSSValue> DoGetMarginLeftWidth();
-  already_AddRefed<CSSValue> DoGetMarginRightWidth();
+  already_AddRefed<CSSValue> DoGetMarginTop();
+  already_AddRefed<CSSValue> DoGetMarginBottom();
+  already_AddRefed<CSSValue> DoGetMarginLeft();
+  already_AddRefed<CSSValue> DoGetMarginRight();
 
   /* Text Properties */
   already_AddRefed<CSSValue> DoGetLineHeight();
-  already_AddRefed<CSSValue> DoGetTextDecoration();
 
   /* Display properties */
   already_AddRefed<CSSValue> DoGetTransform();
@@ -282,8 +280,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DummyGetter();
 
   /* Helper functions */
-  void SetValueFromComplexColor(nsROCSSPrimitiveValue* aValue,
-                                const mozilla::StyleColor& aColor);
   void SetValueToPosition(const mozilla::Position& aPosition,
                           nsDOMCSSValueList* aValueList);
   void SetValueToURLValue(const mozilla::StyleComputedUrl* aURL,

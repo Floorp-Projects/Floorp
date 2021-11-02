@@ -160,6 +160,9 @@ testing/talos/talos/tests/devtools/damp.manifest.develop
 tps.log
 tps_result.json
 
+# Unit test
+.pytest_cache/
+
 # Ignore files created when running a reftest.
 lextab.py
 

@@ -191,7 +191,7 @@ void PerformanceEventTiming::FinalizeEventTiming(EventTarget* aTarget) {
 
   mProcessingEnd = mPerformance->NowUnclamped();
 
-  nsCOMPtr<nsINode> node = do_QueryInterface(aTarget);
+  nsINode* node = nsINode::FromEventTarget(aTarget);
   if (!node || node->ChromeOnlyAccess()) {
     return;
   }

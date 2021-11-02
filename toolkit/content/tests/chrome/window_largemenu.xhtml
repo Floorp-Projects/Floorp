@@ -102,6 +102,8 @@ function popupShown()
 
   var popup = document.getElementById("popup");
   var rect = popup.getBoundingClientRect();
+  var marginTop = parseFloat(getComputedStyle(popup).marginTop);
+  var marginBottom = parseFloat(getComputedStyle(popup).marginBottom);
   var scrollbox = popup.scrollBox.scrollbox;
   var expectedScrollPos = 0;
 
@@ -109,10 +111,10 @@ function popupShown()
     // the popup should be in the center of the screen
     // note that if the height is odd, the y-offset will have been rounded
     // down when we pass the fractional value to openPopupAtScreen above.
-    is(Math.round(rect.top) + gScreenY, Math.floor(screen.height / 2),
+    is(Math.round(rect.top - marginTop) + gScreenY, Math.floor(screen.height / 2),
                               gTests[gTestIndex] + " top");
-    ok(Math.round(rect.bottom) + gScreenY < screen.height,
-                                gTests[gTestIndex] + " bottom");
+    ok(Math.round(rect.bottom - marginBottom) + gScreenY < screen.height,
+                  gTests[gTestIndex] + " bottom");
     ok(!gOverflowed && !gUnderflowed, gTests[gTestIndex] + " overflow")
   }
   else if (gTestIndex == 1) {
@@ -128,8 +130,8 @@ function popupShown()
     else {
       // On other platforms the menu should be flipped to have its bottom
       // edge 100 pixels from the bottom
-      ok(Math.round(rect.top) + gScreenY >= screen.top, gTests[gTestIndex] + " top");
-      is(Math.round(rect.bottom) + gScreenY, screen.height - 100,
+      ok(Math.round(rect.top - marginTop) + gScreenY >= screen.top, gTests[gTestIndex] + " top");
+      is(Math.round(rect.bottom + marginBottom) + gScreenY, screen.height - 100,
                                   gTests[gTestIndex] + " bottom");
       ok(!gOverflowed && !gUnderflowed, gTests[gTestIndex] + " overflow");
     }
@@ -149,7 +151,7 @@ function popupShown()
   else if (gTestIndex == 4) {
     // note that if the height is odd, the y-offset will have been rounded
     // down when we pass the fractional value to openPopupAtScreen above.
-    is(Math.round(rect.top) + gScreenY, Math.floor(screen.height / 2),
+    is(Math.round(rect.top - marginTop) + gScreenY, Math.floor(screen.height / 2),
                               gTests[gTestIndex] + " top");
     ok(Math.round(rect.bottom) + gScreenY < screen.height,
                                 gTests[gTestIndex] + " bottom");
@@ -224,8 +226,10 @@ function contextMenuPopupShown()
 {
   var popup = document.getElementById("popup");
   var rect = popup.getBoundingClientRect();
+  var marginTop = parseFloat(getComputedStyle(popup).marginTop);
+  var marginLeft = parseFloat(getComputedStyle(popup).marginLeft);
   var labelrect = document.getElementById("label").getBoundingClientRect();
-  
+
   // Click to open popup in popupHidden() occurs at (4,4) in label's coordinate space
   var clickX = 4;
   var clickY = 4;
@@ -233,7 +237,7 @@ function contextMenuPopupShown()
   var testPopupAppearedRightOfCursor = true;
   switch (gTests[gTestIndex]) {
     case "context menu enough space below":
-      is(rect.top, labelrect.top + clickY + (platformIsMac() ? -6 : 2), gTests[gTestIndex] + " top");
+      is(rect.top - marginTop, labelrect.top + clickY + (platformIsMac() ? -6 : 2), gTests[gTestIndex] + " top");
       break;
     case "context menu more space above":
       if (platformIsMac()) {
@@ -242,7 +246,7 @@ function contextMenuPopupShown()
         // Macs constrain their popup menus vertically rather than flip them.
         is(screenY, screen.availTop + screen.availHeight - rect.height, gTests[gTestIndex] + " top");
       } else {
-        is(rect.top, labelrect.top + clickY - rect.height - 2, gTests[gTestIndex] + " top");
+        is(rect.top + marginTop, labelrect.top + clickY - rect.height - 2, gTests[gTestIndex] + " top");
       }
 
       break;
@@ -256,7 +260,8 @@ function contextMenuPopupShown()
          gTests[gTestIndex] + " top");
       break;
     case "context menu larger than screen":
-      ok(rect.top == -(gScreenY - screen.availTop) || rect.top == -(gScreenY - screen.top), gTests[gTestIndex] + " top");
+      ok(rect.top == -(gScreenY - screen.availTop) || rect.top == -(gScreenY - screen.top),
+          `${gTests[gTestIndex]} top (top = ${rect.top} screenY = ${gScreenY} screenAvailTop = ${screen.availTop} screenTop = ${screen.top})`);
       break;
     case "context menu flips horizontally on osx":
       testPopupAppearedRightOfCursor = false;
@@ -267,7 +272,7 @@ function contextMenuPopupShown()
   }
 
   if (testPopupAppearedRightOfCursor) {
-    is(rect.left, labelrect.left + clickX + (platformIsMac() ? 1 : 2), gTests[gTestIndex] + " left");
+    is(rect.left - marginLeft, labelrect.left + clickX + (platformIsMac() ? 1 : 2), gTests[gTestIndex] + " left");
   }
 
   hidePopup();

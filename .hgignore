@@ -184,6 +184,9 @@ _OPT\.OBJ/
 # Ignore toolchains.json created by tooltool.
 ^toolchains\.json
 
+# Unit test
+\.pytest_cache/
+
 # Ignore files created when running a reftest.
 ^lextab.py$
 

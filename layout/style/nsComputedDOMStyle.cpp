@@ -212,7 +212,15 @@ struct ComputedStyleMap {
     ComputeMethod mGetter;
 
     bool IsEnabled() const {
-      return nsCSSProps::IsEnabled(mProperty, CSSEnabledState::ForAllContent);
+      if (!nsCSSProps::IsEnabled(mProperty, CSSEnabledState::ForAllContent)) {
+        return false;
+      }
+      if (nsCSSProps::IsShorthand(mProperty) &&
+          !StaticPrefs::layout_css_computed_style_shorthands()) {
+        return nsCSSProps::PropHasFlags(
+            mProperty, CSSPropFlags::ShorthandUnconditionallyExposedOnGetCS);
+      }
+      return true;
     }
   };
 
@@ -1192,19 +1200,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBottom() {
   return GetOffsetWidthFor(eSideBottom);
 }
 
-/* static */
-void nsComputedDOMStyle::SetToRGBAColor(nsROCSSPrimitiveValue* aValue,
-                                        nscolor aColor) {
-  nsAutoString string;
-  nsStyleUtil::GetSerializedColorValue(aColor, string);
-  aValue->SetString(string);
-}
-
-void nsComputedDOMStyle::SetValueFromComplexColor(
-    nsROCSSPrimitiveValue* aValue, const mozilla::StyleColor& aColor) {
-  SetToRGBAColor(aValue, aColor.CalcColor(*mComputedStyle));
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetColumnRuleWidth() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetAppUnits(StyleColumn()->GetComputedColumnRuleWidth());
@@ -1330,7 +1325,7 @@ already_AddRefed<nsROCSSPrimitiveValue> nsComputedDOMStyle::MatrixToCSSValue(
   return val.forget();
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOsxFontSmoothing() {
+already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMozOsxFontSmoothing() {
   if (nsContentUtils::ShouldResistFingerprinting(
           mPresShell->GetPresContext()->GetDocShell())) {
     return nullptr;
@@ -1807,20 +1802,20 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBorderRightWidth() {
   return GetBorderWidthFor(eSideRight);
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMarginTopWidth() {
-  return GetMarginWidthFor(eSideTop);
+already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMarginTop() {
+  return GetMarginFor(eSideTop);
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMarginBottomWidth() {
-  return GetMarginWidthFor(eSideBottom);
+already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMarginBottom() {
+  return GetMarginFor(eSideBottom);
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMarginLeftWidth() {
-  return GetMarginWidthFor(eSideLeft);
+already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMarginLeft() {
+  return GetMarginFor(eSideLeft);
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMarginRightWidth() {
-  return GetMarginWidthFor(eSideRight);
+already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMarginRight() {
+  return GetMarginFor(eSideRight);
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetLineHeight() {
@@ -1846,41 +1841,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetLineHeight() {
     val->SetString("normal");
   }
   return val.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecoration() {
-  auto getPropertyValue = [&](nsCSSPropertyID aID) {
-    RefPtr<nsROCSSPrimitiveValue> value = new nsROCSSPrimitiveValue;
-    nsAutoCString string;
-    mComputedStyle->GetComputedPropertyValue(aID, string);
-    value->SetString(string);
-    return value.forget();
-  };
-
-  const nsStyleTextReset* textReset = StyleTextReset();
-  RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-
-  if (textReset->mTextDecorationLine != StyleTextDecorationLine::NONE) {
-    valueList->AppendCSSValue(
-        getPropertyValue(eCSSProperty_text_decoration_line));
-  }
-
-  if (!textReset->mTextDecorationThickness.IsAuto()) {
-    valueList->AppendCSSValue(
-        getPropertyValue(eCSSProperty_text_decoration_thickness));
-  }
-
-  if (textReset->mTextDecorationStyle != NS_STYLE_TEXT_DECORATION_STYLE_SOLID) {
-    valueList->AppendCSSValue(
-        getPropertyValue(eCSSProperty_text_decoration_style));
-  }
-
-  // The resolved color shouldn't be currentColor, so we always serialize it.
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetValueFromComplexColor(val, StyleTextReset()->mTextDecorationColor);
-  valueList->AppendCSSValue(val.forget());
-
-  return valueList.forget();
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetHeight() {
@@ -2222,8 +2182,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetBorderWidthFor(
   return val.forget();
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::GetMarginWidthFor(
-    mozilla::Side aSide) {
+already_AddRefed<CSSValue> nsComputedDOMStyle::GetMarginFor(Side aSide) {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
   auto& margin = StyleMargin()->mMargin.Get(aSide);
@@ -2555,6 +2514,10 @@ void nsComputedDOMStyle::RegisterPrefChangeCallbacks() {
       prefs.InsertElementSorted(p->mPref);
     }
   }
+
+  prefs.AppendElement(
+      StaticPrefs::GetPrefName_layout_css_computed_style_shorthands());
+
   prefs.AppendElement(nullptr);
 
   MOZ_ASSERT(!gCallbackPrefs);

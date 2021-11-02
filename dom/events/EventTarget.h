@@ -12,9 +12,12 @@
 #include "nsWrapperCache.h"
 #include "nsAtom.h"
 
-class nsPIDOMWindowOuter;
-class nsIGlobalObject;
 class nsIDOMEventListener;
+class nsIGlobalObject;
+class nsINode;
+class nsPIDOMWindowInner;
+class nsPIDOMWindowOuter;
+class nsPIWindowRoot;
 
 namespace mozilla {
 
@@ -121,6 +124,28 @@ class EventTarget : public nsISupports, public nsWrapperCache {
     return AddSystemEventListener(aType, aListener, aUseCapture,
                                   Nullable<bool>(aWantsUntrusted));
   }
+
+  virtual bool IsNode() const { return false; }
+  inline nsINode* GetAsNode();
+  inline const nsINode* GetAsNode() const;
+  inline nsINode* AsNode();
+  inline const nsINode* AsNode() const;
+
+  virtual bool IsInnerWindow() const { return false; }
+  virtual bool IsOuterWindow() const { return false; }
+  virtual bool IsRootWindow() const { return false; }
+  nsPIDOMWindowInner* GetAsWindowInner();
+  const nsPIDOMWindowInner* GetAsWindowInner() const;
+  nsPIDOMWindowOuter* GetAsWindowOuter();
+  const nsPIDOMWindowOuter* GetAsWindowOuter() const;
+  inline nsPIWindowRoot* GetAsWindowRoot();
+  inline const nsPIWindowRoot* GetAsWindowRoot() const;
+  nsPIDOMWindowInner* AsWindowInner();
+  const nsPIDOMWindowInner* AsWindowInner() const;
+  nsPIDOMWindowOuter* AsWindowOuter();
+  const nsPIDOMWindowOuter* AsWindowOuter() const;
+  inline nsPIWindowRoot* AsWindowRoot();
+  inline const nsPIWindowRoot* AsWindowRoot() const;
 
   /**
    * Returns the EventTarget object which should be used as the target
@@ -305,6 +330,76 @@ class EventTarget : public nsISupports, public nsWrapperCache {
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(EventTarget, NS_EVENTTARGET_IID)
+
+#define NS_IMPL_FROMEVENTTARGET_GENERIC(_class, _check, _const)             \
+  template <typename T>                                                     \
+  static auto FromEventTarget(_const T& aEventTarget)                       \
+      ->decltype(static_cast<_const _class*>(&aEventTarget)) {              \
+    return aEventTarget._check ? static_cast<_const _class*>(&aEventTarget) \
+                               : nullptr;                                   \
+  }                                                                         \
+  template <typename T>                                                     \
+  static _const _class* FromEventTarget(_const T* aEventTarget) {           \
+    MOZ_DIAGNOSTIC_ASSERT(aEventTarget);                                    \
+    return FromEventTarget(*aEventTarget);                                  \
+  }                                                                         \
+  template <typename T>                                                     \
+  static _const _class* FromEventTargetOrNull(_const T* aEventTarget) {     \
+    return aEventTarget ? FromEventTarget(*aEventTarget) : nullptr;         \
+  }
+
+#define NS_IMPL_FROMEVENTTARGET_HELPER(_class, _check)                         \
+  NS_IMPL_FROMEVENTTARGET_GENERIC(_class, _check, )                            \
+  NS_IMPL_FROMEVENTTARGET_GENERIC(_class, _check, const)                       \
+  template <typename T>                                                        \
+  static _class* FromEventTarget(T&& aEventTarget) {                           \
+    MOZ_DIAGNOSTIC_ASSERT(!!aEventTarget);                                     \
+    /* We need the double-cast in case aEventTarget is a smartptr.  Those */   \
+    /* can cast to superclasses of the type they're templated on, */           \
+    /* but not directly to subclasses.  */                                     \
+    return aEventTarget->_check                                                \
+               ? static_cast<_class*>(static_cast<EventTarget*>(aEventTarget)) \
+               : nullptr;                                                      \
+  }                                                                            \
+  template <typename T>                                                        \
+  static _class* FromEventTargetOrNull(T&& aEventTarget) {                     \
+    return aEventTarget ? FromEventTarget(aEventTarget) : nullptr;             \
+  }
+
+// Unfortunately, nsPIDOMWindowInner and nsPIDOMWindowOuter do not inherit
+// EventTarget directly, but they are public interfaces which should have
+// these helper methods.  Therefore, we cannot cast from EventTarget to
+// the interfaces in their header file.  That's the reason why we cannot use
+// the zero cost casts nor decltype for the template methods which take a
+// reference.
+#define NS_IMPL_FROMEVENTTARGET_GENERIC_WITH_GETTER(_class, _getter, _const) \
+  static _const _class* FromEventTarget(                                     \
+      _const mozilla::dom::EventTarget& aEventTarget) {                      \
+    return aEventTarget._getter;                                             \
+  }                                                                          \
+  template <typename T>                                                      \
+  static _const _class* FromEventTarget(_const T* aEventTarget) {            \
+    return aEventTarget->_getter;                                            \
+  }                                                                          \
+  template <typename T>                                                      \
+  static _const _class* FromEventTargetOrNull(_const T* aEventTarget) {      \
+    return aEventTarget ? aEventTarget->_getter : nullptr;                   \
+  }
+
+#define NS_IMPL_FROMEVENTTARGET_HELPER_WITH_GETTER_INNER(_class, _getter) \
+  template <typename T>                                                   \
+  static _class* FromEventTarget(T&& aEventTarget) {                      \
+    return aEventTarget->_getter;                                         \
+  }                                                                       \
+  template <typename T>                                                   \
+  static _class* FromEventTargetOrNull(T&& aEventTarget) {                \
+    return aEventTarget ? aEventTarget->_getter : nullptr;                \
+  }
+
+#define NS_IMPL_FROMEVENTTARGET_HELPER_WITH_GETTER(_class, _getter)   \
+  NS_IMPL_FROMEVENTTARGET_GENERIC_WITH_GETTER(_class, _getter, )      \
+  NS_IMPL_FROMEVENTTARGET_GENERIC_WITH_GETTER(_class, _getter, const) \
+  NS_IMPL_FROMEVENTTARGET_HELPER_WITH_GETTER_INNER(_class, _getter)
 
 }  // namespace dom
 }  // namespace mozilla
