@@ -56,8 +56,14 @@ var Policy = {
   now: () => new Date(),
   setShowInfobarTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
   clearShowInfobarTimeout: id => clearTimeout(id),
+  fakeSessionRestoreNotification: () => {
+    TelemetryReportingPolicyImpl.observe(
+      null,
+      "sessionstore-windows-restored",
+      null
+    );
+  },
 };
-
 /**
  * Represents a request to display data policy.
  *
