@@ -17,6 +17,8 @@ import android.os.RemoteException;
 import android.util.Log;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.GeckoThread.FileDescriptors;
+import org.mozilla.gecko.GeckoThread.ParcelFileDescriptors;
 import org.mozilla.gecko.IGeckoEditableChild;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -80,6 +82,16 @@ public class GeckoServiceChildProcess extends Service {
             final ParcelFileDescriptor ipcPfd,
             final ParcelFileDescriptor crashReporterPfd,
             final ParcelFileDescriptor crashAnnotationPfd) {
+
+          final ParcelFileDescriptors pfds =
+              ParcelFileDescriptors.builder()
+                  .prefs(prefsPfd)
+                  .prefMap(prefMapPfd)
+                  .ipc(ipcPfd)
+                  .crashReporter(crashReporterPfd)
+                  .crashAnnotation(crashAnnotationPfd)
+                  .build();
+
           synchronized (GeckoServiceChildProcess.class) {
             if (sOwnerProcessId != null && !sOwnerProcessId.equals(mainProcessId)) {
               Log.w(
@@ -98,13 +110,7 @@ public class GeckoServiceChildProcess extends Service {
             sOwnerProcessId = mainProcessId;
           }
 
-          final int prefsFd = prefsPfd != null ? prefsPfd.detachFd() : -1;
-          final int prefMapFd = prefMapPfd != null ? prefMapPfd.detachFd() : -1;
-          final int ipcFd = ipcPfd.detachFd();
-          final int crashReporterFd = crashReporterPfd != null ? crashReporterPfd.detachFd() : -1;
-          final int crashAnnotationFd =
-              crashAnnotationPfd != null ? crashAnnotationPfd.detachFd() : -1;
-
+          final FileDescriptors fds = pfds.detach();
           ThreadUtils.runOnUiThread(
               new Runnable() {
                 @Override
@@ -124,16 +130,14 @@ public class GeckoServiceChildProcess extends Service {
                     }
                   }
 
-                  final GeckoThread.InitInfo info = new GeckoThread.InitInfo();
-                  info.args = args;
-                  info.extras = extras;
-                  info.flags = flags;
-                  info.prefsFd = prefsFd;
-                  info.prefMapFd = prefMapFd;
-                  info.ipcFd = ipcFd;
-                  info.crashFd = crashReporterFd;
-                  info.crashAnnotationFd = crashAnnotationFd;
-                  info.userSerialNumber = userSerialNumber;
+                  final GeckoThread.InitInfo info =
+                      GeckoThread.InitInfo.builder()
+                          .args(args)
+                          .extras(extras)
+                          .flags(flags)
+                          .userSerialNumber(userSerialNumber)
+                          .fds(fds)
+                          .build();
 
                   if (GeckoThread.init(info)) {
                     GeckoThread.launch();
