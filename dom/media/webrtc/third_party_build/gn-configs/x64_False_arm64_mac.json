@@ -36042,6 +36042,7 @@
                 "-Wno-shorten-64-to-32"
             ],
             "defines": [
+                "WEBRTC_EXCLUDE_SYSTEM_TIME",
                 "_LIBCPP_HAS_NO_ALIGNED_ALLOCATION",
                 "__STDC_CONSTANT_MACROS",
                 "__STDC_FORMAT_MACROS",
@@ -36073,6 +36074,8 @@
             ],
             "libs": [],
             "sources": [
+                "//rtc_base/system_time.cc",
+                "//rtc_base/system_time.h",
                 "//rtc_base/time_utils.cc",
                 "//rtc_base/time_utils.h"
             ],
