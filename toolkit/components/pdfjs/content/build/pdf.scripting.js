@@ -1100,9 +1100,9 @@ exports.CheckboxField = CheckboxField;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
+exports.FieldType = void 0;
 exports.createActionsMap = createActionsMap;
 exports.getFieldType = getFieldType;
-exports.FieldType = void 0;
 const FieldType = {
   none: 0,
   number: 1,
@@ -1990,8 +1990,8 @@ var _thermometer = __w_pdfjs_require__(12);
 
 const VIEWER_TYPE = "PDF.js";
 const VIEWER_VARIATION = "Full";
-const VIEWER_VERSION = "10.0";
-const FORMS_VERSION = undefined;
+const VIEWER_VERSION = 21.00720099;
+const FORMS_VERSION = 21.00720099;
 
 class App extends _pdf_object.PDFObject {
   constructor(data) {
@@ -3078,6 +3078,7 @@ class Doc extends _pdf_object.PDFObject {
     this._numPages = data.numPages || 1;
     this._pageNum = data.pageNum || 0;
     this._producer = data.Producer || "";
+    this._securityHandler = data.EncryptFilterName || null;
     this._subject = data.Subject || "";
     this._title = data.Title || "";
     this._URL = data.URL || "";
@@ -3529,7 +3530,7 @@ class Doc extends _pdf_object.PDFObject {
   }
 
   get securityHandler() {
-    return null;
+    return this._securityHandler;
   }
 
   set securityHandler(_) {
@@ -4944,8 +4945,8 @@ Object.defineProperty(exports, "initSandbox", ({
 
 var _initialization = __w_pdfjs_require__(1);
 
-const pdfjsVersion = '2.12.69';
-const pdfjsBuild = 'e788665a2';
+const pdfjsVersion = '2.12.126';
+const pdfjsBuild = 'e1a35e7bb';
 })();
 
 /******/ 	return __webpack_exports__;
