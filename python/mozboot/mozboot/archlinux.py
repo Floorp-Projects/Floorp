@@ -52,8 +52,6 @@ class ArchlinuxBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         # It would be nice to handle alternative JDKs.  See
         # https://wiki.archlinux.org/index.php/Java.
         "jdk8-openjdk",
-        # For downloading the Android SDK and NDK.
-        "wget",
         # See comment about 32 bit binaries and multilib below.
         "multilib/lib32-ncurses",
         "multilib/lib32-readline",

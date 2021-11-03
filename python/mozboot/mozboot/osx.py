@@ -159,9 +159,6 @@ class OSXBootstrapper(BaseBootstrapper):
         # 2. Android SDK. Android NDK only if we are not in artifact mode. Android packages.
 
         # 1. System packages.
-        packages = ["wget"]
-        self._ensure_homebrew_packages(packages)
-
         casks = ["adoptopenjdk8"]
         self._ensure_homebrew_casks(casks)
 

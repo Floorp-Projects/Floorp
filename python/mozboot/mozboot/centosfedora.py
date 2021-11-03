@@ -38,8 +38,6 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
         self.mobile_android_packages = [
             "java-1.8.0-openjdk-devel",
-            # For downloading the Android SDK and NDK.
-            "wget",
         ]
 
         if self.distro in ("centos", "rocky"):
