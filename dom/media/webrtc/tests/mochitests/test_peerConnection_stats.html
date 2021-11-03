@@ -551,7 +551,20 @@ const pedanticChecks = report => {
           `${stat.kind} test. value=${stat.bytesSent}`);
 
       ok(stat.remoteTimestamp !== undefined, `${stat.type}.remoteTimestamp `
-          + ` is not undefined (${stat.kind})`);
+          + `is not undefined (${stat.kind})`);
+      const ageSeconds = (stat.timestamp - stat.remoteTimestamp) / 1000;
+      // remoteTimestamp is exact (so it can be mapped to a packet), whereas
+      // timestamp has reduced precision. It is possible that remoteTimestamp
+      // occurs a millisecond into the future from timestamp. We also subtract
+      // half a millisecond when reducing precision on libwebrtc timestamps, to
+      // counteract the potential rounding up that libwebrtc may do since it
+      // tends to round its internal timestamps to whole milliseconds. In the
+      // worst case remoteTimestamp may therefore occur 2 milliseconds ahead of
+      // timestamp.
+      ok(ageSeconds >= -0.002 && ageSeconds < 30,
+         `${stat.type}.remoteTimestamp is on the same timeline as ` +
+         `${stat.type}.timestamp, and no older than 30 seconds. ` +
+         `difference=${ageSeconds}s`);
 
     } else if (stat.type == "candidate-pair") {
       info("candidate-pair is: " + JSON.stringify(stat));
@@ -724,6 +737,11 @@ runNetworkTest(async function (options) {
     await pushPrefs(["media.navigator.mediadatadecoder_vpx_enabled", false],
                     ["media.webrtc.hw.h264.enabled", false]);
   }
+
+  // For accurate comparisons of `remoteTimestamp` (not using reduced precision)
+  // to `timestamp` (using reduced precision).
+  await pushPrefs(["privacy.resistFingerprinting.reduceTimerPrecision.jitter",
+                   false]);
 
   const test = new PeerConnectionTest(options);
 
