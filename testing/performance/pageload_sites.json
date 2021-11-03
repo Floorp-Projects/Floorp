@@ -158,7 +158,15 @@
       "login": false,
       "name": "cnn",
       "test_url": "https://www.cnn.com/2021/03/22/weather/climate-change-warm-waters-lake-michigan/index.html",
-      "secondary_url": "https://www.cnn.com/weather"
+      "secondary_url": "https://www.cnn.com/weather",
+      "preferences": {
+        "media.autoplay.default": 5,
+        "media.autoplay.ask-permission": true,
+        "media.autoplay.blocking_policy": 1,
+        "media.autoplay.block-webaudio": true,
+        "media.allowed-to-play.enabled": false,
+        "media.block-autoplay-until-in-foreground": true
+      }
     },
     {
       "login": false,
