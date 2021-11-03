@@ -32,7 +32,8 @@ WebrtcGmpVideoEncoder::WebrtcGmpVideoEncoder(std::string aPCHandle)
       mMaxPayloadSize(0),
       mCallbackMutex("WebrtcGmpVideoEncoder encoded callback mutex"),
       mCallback(nullptr),
-      mPCHandle(std::move(aPCHandle)) {
+      mPCHandle(std::move(aPCHandle)),
+      mInputImageMap("WebrtcGmpVideoEncoder::mInputImageMap") {
   mCodecParams.mGMPApiVersion = 0;
   mCodecParams.mCodecType = kGMPVideoCodecInvalid;
   mCodecParams.mPLType = 0;
@@ -397,7 +398,15 @@ void WebrtcGmpVideoEncoder::Encode_g(
     gmp_frame_types.AppendElement(ft);
   }
 
-  GMP_LOG_DEBUG("GMP Encode: %llu", (aInputImage.timestamp() * 1000ll) / 90);
+  {
+    auto inputImageMap = aEncoder->mInputImageMap.Lock();
+    DebugOnly<bool> inserted = false;
+    std::tie(std::ignore, inserted) = inputImageMap->insert(
+        {frame->Timestamp(), {aInputImage.timestamp_us()}});
+    MOZ_ASSERT(inserted, "Duplicate timestamp");
+  }
+
+  GMP_LOG_DEBUG("GMP Encode: %" PRIu64, (frame->Timestamp()));
   err = aEncoder->mGMP->Encode(std::move(frame), codecSpecificInfo,
                                gmp_frame_types);
   if (err != GMPNoErr) {
@@ -487,6 +496,16 @@ void WebrtcGmpVideoEncoder::Terminated() {
 void WebrtcGmpVideoEncoder::Encoded(
     GMPVideoEncodedFrame* aEncodedFrame,
     const nsTArray<uint8_t>& aCodecSpecificInfo) {
+  webrtc::Timestamp capture_time = webrtc::Timestamp::Micros(0);
+  {
+    auto inputImageMap = mInputImageMap.Lock();
+    auto handle = inputImageMap->extract(aEncodedFrame->TimeStamp());
+    MOZ_ASSERT(handle);
+    if (handle) {
+      capture_time = webrtc::Timestamp::Micros(handle.mapped().timestamp_us);
+    }
+  }
+
   MutexAutoLock lock(mCallbackMutex);
   if (!mCallback) {
     return;
@@ -587,8 +606,7 @@ void WebrtcGmpVideoEncoder::Encoded(
                             aEncodedFrame->Size());
   unit._frameType = ft;
   unit.SetTimestamp(timestamp);
-  // Ensure we ignore this when calculating RTCP timestamps
-  unit.capture_time_ms_ = -1;
+  unit.capture_time_ms_ = capture_time.ms();
   unit._completeFrame = true;
 
   // TODO: Currently the OpenH264 codec does not preserve any codec
