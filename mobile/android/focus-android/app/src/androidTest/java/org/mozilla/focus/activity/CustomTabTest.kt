@@ -1,23 +1,26 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 package org.mozilla.focus.activity
 
 import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.net.Uri
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.lifecycle.Lifecycle
+import androidx.test.core.app.launchActivity
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
-import junit.framework.TestCase.assertTrue
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -65,7 +68,7 @@ class CustomTabTest {
     @Test
     fun testCustomTabUI() {
         val customTabPage = webServer.url("plain_test.html").toString()
-        val customTabActivity = activityTestRule.launchActivity(createCustomTabIntent(customTabPage))
+        val customTabActivity = launchActivity<IntentReceiverActivity>(createCustomTabIntent(customTabPage))
 
         browserScreen {
             progressBar.waitUntilGone(webPageLoadwaitingTime)
@@ -82,18 +85,17 @@ class CustomTabTest {
             // Close the menu and close the tab
             mDevice.pressBack()
             closeCustomTab()
-            assertTrue(customTabActivity.isDestroyed)
+            assertEquals(Lifecycle.State.DESTROYED, customTabActivity.state)
         }
     }
 
     @SmokeTest
     @Test
-    @Ignore
     fun openCustomTabInFocusTest() {
         val browserPage = webServer.url("plain_test.html").toString()
         val customTabPage = webServer.url("tab1.html").toString()
 
-        activityTestRule.launchActivity(null)
+        launchActivity<IntentReceiverActivity>()
         homeScreen {
             skipFirstRun()
         }
@@ -103,7 +105,7 @@ class CustomTabTest {
             verifyPageURL(browserPage)
         }
 
-        activityTestRule.launchActivity(createCustomTabIntent(customTabPage))
+        launchActivity<IntentReceiverActivity>(createCustomTabIntent(customTabPage))
         customTab {
             progressBar.waitUntilGone(webPageLoadwaitingTime)
             verifyPageURL(customTabPage)
@@ -132,6 +134,7 @@ class CustomTabTest {
             .setToolbarColor(Color.MAGENTA)
             .build()
         customTabsIntent.intent.data = Uri.parse(pageUrl)
+        customTabsIntent.intent.component = ComponentName(appContext, IntentReceiverActivity::class.java)
         return customTabsIntent.intent
     }
 
