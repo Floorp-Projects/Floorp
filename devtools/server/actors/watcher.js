@@ -151,6 +151,8 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   isContextDestroyed() {
     if (this.context.type == "browser-element") {
       return !this.browserElement.browsingContext;
+    } else if (this.context.type == "webextension") {
+      return !BrowsingContext.get(this.context.addonBrowsingContextID);
     } else if (this.context.type == "all") {
       return false;
     }
@@ -186,7 +188,15 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   },
 
   form() {
-    const isBrowserElementContext = this.context.type == "browser-element";
+    // All target types and all resources types are supported for tab debugging and web extensions.
+    // But worker target type and most watcher classes are still disabled for the browser toolbox (context.type=all).
+    // And they may also be disabled for workers once we start supporting them by the watcher.
+    //
+    // So keep the traits to false for all the resources that we don't support yet
+    // and keep using the legacy listeners.
+    const shouldEnableAllWatchers =
+      this.context.type == "browser-element" ||
+      this.context.type == "webextension";
 
     return {
       actor: this.actorID,
@@ -195,7 +205,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       traits: {
         [Targets.TYPES.FRAME]: true,
         [Targets.TYPES.PROCESS]: true,
-        [Targets.TYPES.WORKER]: isBrowserElementContext,
+        [Targets.TYPES.WORKER]: shouldEnableAllWatchers,
         resources: {
           // In Firefox 81 we added support for:
           // - CONSOLE_MESSAGE
@@ -209,24 +219,24 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           // content process targets yet. Bug 1620248 should help supporting
           // them and enable this more broadly.
           [Resources.TYPES.CONSOLE_MESSAGE]: true,
-          [Resources.TYPES.CSS_CHANGE]: isBrowserElementContext,
+          [Resources.TYPES.CSS_CHANGE]: shouldEnableAllWatchers,
           [Resources.TYPES.CSS_MESSAGE]: true,
-          [Resources.TYPES.DOCUMENT_EVENT]: isBrowserElementContext,
-          [Resources.TYPES.CACHE_STORAGE]: isBrowserElementContext,
-          [Resources.TYPES.COOKIE]: isBrowserElementContext,
+          [Resources.TYPES.DOCUMENT_EVENT]: shouldEnableAllWatchers,
+          [Resources.TYPES.CACHE_STORAGE]: shouldEnableAllWatchers,
+          [Resources.TYPES.COOKIE]: shouldEnableAllWatchers,
           [Resources.TYPES.ERROR_MESSAGE]: true,
-          [Resources.TYPES.INDEXED_DB]: isBrowserElementContext,
-          [Resources.TYPES.LOCAL_STORAGE]: isBrowserElementContext,
-          [Resources.TYPES.SESSION_STORAGE]: isBrowserElementContext,
+          [Resources.TYPES.INDEXED_DB]: shouldEnableAllWatchers,
+          [Resources.TYPES.LOCAL_STORAGE]: shouldEnableAllWatchers,
+          [Resources.TYPES.SESSION_STORAGE]: shouldEnableAllWatchers,
           [Resources.TYPES.PLATFORM_MESSAGE]: true,
-          [Resources.TYPES.NETWORK_EVENT]: isBrowserElementContext,
-          [Resources.TYPES.NETWORK_EVENT_STACKTRACE]: isBrowserElementContext,
+          [Resources.TYPES.NETWORK_EVENT]: shouldEnableAllWatchers,
+          [Resources.TYPES.NETWORK_EVENT_STACKTRACE]: shouldEnableAllWatchers,
           [Resources.TYPES.REFLOW]: true,
-          [Resources.TYPES.STYLESHEET]: isBrowserElementContext,
-          [Resources.TYPES.SOURCE]: isBrowserElementContext,
-          [Resources.TYPES.THREAD_STATE]: isBrowserElementContext,
-          [Resources.TYPES.SERVER_SENT_EVENT]: isBrowserElementContext,
-          [Resources.TYPES.WEBSOCKET]: isBrowserElementContext,
+          [Resources.TYPES.STYLESHEET]: shouldEnableAllWatchers,
+          [Resources.TYPES.SOURCE]: shouldEnableAllWatchers,
+          [Resources.TYPES.THREAD_STATE]: shouldEnableAllWatchers,
+          [Resources.TYPES.SERVER_SENT_EVENT]: shouldEnableAllWatchers,
+          [Resources.TYPES.WEBSOCKET]: shouldEnableAllWatchers,
         },
 
         // @backward-compat { version 94 } Full support for event breakpoints via the watcher actor
@@ -417,14 +427,23 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
    *        It may contain actor IDs, actor forms, to be manually marshalled by the client.
    */
   notifyResourceAvailable(resources) {
+    if (this.context.type == "webextension") {
+      this._overrideResourceBrowsingContextForWebExtension(resources);
+    }
     this._emitResourcesForm("resource-available-form", resources);
   },
 
   notifyResourceDestroyed(resources) {
+    if (this.context.type == "webextension") {
+      this._overrideResourceBrowsingContextForWebExtension(resources);
+    }
     this._emitResourcesForm("resource-destroyed-form", resources);
   },
 
   notifyResourceUpdated(resources) {
+    if (this.context.type == "webextension") {
+      this._overrideResourceBrowsingContextForWebExtension(resources);
+    }
     this._emitResourcesForm("resource-updated-form", resources);
   },
 
@@ -437,6 +456,21 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
       return;
     }
     this.emit(name, resources);
+  },
+
+  /**
+   * For WebExtension, we have to hack all resource's browsingContextID
+   * in order to ensure emitting them with the fixed, original browsingContextID
+   * related to the fallback document created by devtools which always exists.
+   * The target's form will always be relating to that BrowsingContext IDs (browsing context ID and inner window id).
+   * Even if the target switches internally to another document via WindowGlobalTargetActor._setWindow.
+   *
+   * @param {Array<Objects>} List of resources
+   */
+  _overrideResourceBrowsingContextForWebExtension(resources) {
+    resources.forEach(resource => {
+      resource.browsingContextID = this.context.addonBrowsingContextID;
+    });
   },
 
   /**

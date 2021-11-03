@@ -187,15 +187,41 @@ module.exports = function(targetType, targetActorSpec, implementation) {
      *        It may contain actor IDs, actor forms, to be manually marshalled by the client.
      */
     notifyResourceAvailable(resources) {
+      if (this.devtoolsSpawnedBrowsingContextForWebExtension) {
+        this.overrideResourceBrowsingContextForWebExtension(resources);
+      }
       this._emitResourcesForm("resource-available-form", resources);
     },
 
     notifyResourceDestroyed(resources) {
+      if (this.devtoolsSpawnedBrowsingContextForWebExtension) {
+        this.overrideResourceBrowsingContextForWebExtension(resources);
+      }
       this._emitResourcesForm("resource-destroyed-form", resources);
     },
 
     notifyResourceUpdated(resources) {
+      if (this.devtoolsSpawnedBrowsingContextForWebExtension) {
+        this.overrideResourceBrowsingContextForWebExtension(resources);
+      }
       this._emitResourcesForm("resource-updated-form", resources);
+    },
+
+    /**
+     * For WebExtension, we have to hack all resource's browsingContextID
+     * in order to ensure emitting them with the fixed, original browsingContextID
+     * related to the fallback document created by devtools which always exists.
+     * The target's form will always be relating to that BrowsingContext IDs (browsing context ID and inner window id).
+     * Even if the target switches internally to another document via WindowGlobalTargetActor._setWindow.
+     *
+     * @param {Array<Objects>} List of resources
+     */
+    overrideResourceBrowsingContextForWebExtension(resources) {
+      const browsingContextID = this
+        .devtoolsSpawnedBrowsingContextForWebExtension.id;
+      resources.forEach(
+        resource => (resource.browsingContextID = browsingContextID)
+      );
     },
 
     /**
