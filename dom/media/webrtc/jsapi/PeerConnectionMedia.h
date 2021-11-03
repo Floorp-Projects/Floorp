@@ -33,14 +33,15 @@ class MediaStreamTrack;
 
 namespace mozilla {
 
-class PeerConnectionImpl;
-class PeerConnectionMedia;
-class PCUuidGenerator;
+class JsepSession;
 class MediaPipeline;
+class MediaPipelineFilter;
 class MediaPipelineReceive;
 class MediaPipelineTransmit;
-class MediaPipelineFilter;
-class JsepSession;
+class PCUuidGenerator;
+class PeerConnectionImpl;
+class PeerConnectionMedia;
+class SharedWebrtcState;
 
 // TODO(bug 1402997): If we move the TransceiverImpl stuff out of here, this
 // will be a class that handles just the transport stuff, and we can rename it
