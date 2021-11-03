@@ -15,12 +15,15 @@ import android.view.MenuItem
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
+import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.lib.crash.Crash
+import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.view.getWindowInsetsController
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.GleanMetrics.AppOpened
+import org.mozilla.focus.GleanMetrics.Notifications
 import org.mozilla.focus.R
 import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.ext.components
@@ -46,6 +49,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     }
 
     private val navigator by lazy { Navigator(components.appStore, MainActivityNavigation(this)) }
+    private val tabCount: Int
+        get() = components.store.state.privateTabs.size
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -160,7 +165,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         }
 
         if (ACTION_OPEN == action) {
-            TelemetryWrapper.openNotificationActionEvent()
+            Notifications.openButtonTapped.record(NoExtras())
         }
 
         if (ACTION_ERASE == action) {
@@ -175,15 +180,12 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     }
 
     private fun processEraseAction(intent: SafeIntent) {
-        val fromShortcut = intent.getBooleanExtra(EXTRA_SHORTCUT, false)
-        val fromNotification = intent.getBooleanExtra(EXTRA_NOTIFICATION, false)
+        val fromNotificationAction = intent.getBooleanExtra(EXTRA_NOTIFICATION, false)
 
         components.tabsUseCases.removeAllTabs()
 
-        if (fromShortcut) {
-            TelemetryWrapper.eraseShortcutEvent()
-        } else if (fromNotification) {
-            TelemetryWrapper.eraseAndOpenNotificationActionEvent()
+        if (fromNotificationAction) {
+            Notifications.eraseOpenButtonTapped.record(Notifications.EraseOpenButtonTappedExtra(tabCount))
         }
     }
 
@@ -306,7 +308,5 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         const val ACTION_OPEN = "open"
 
         const val EXTRA_NOTIFICATION = "notification"
-
-        private const val EXTRA_SHORTCUT = "shortcut"
     }
 }

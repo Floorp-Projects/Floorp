@@ -1121,3 +1121,93 @@ tracking_protection_exceptions:
       list_size:
         description: The number of selected items removed.
         type: quantity
+
+notifications:
+  open_button_tapped:
+    type: event
+    description: The user has tapped the Open option button from notification.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5651
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/?
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  erase_open_button_tapped:
+    type: event
+    description: The user has tapped the Erase & Open button from notification.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5651
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/?
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      opened_tabs:
+        description: Number of currently opened tabs
+        type: quantity
+  notification_tapped:
+    type: event
+    description: The user has tapped the notification to close the app.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5651
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/?
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+
+app_shortcuts:
+  just_erase_button_tapped:
+    type: event
+    description: The user has tapped the Erase option button from shortcuts.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5651
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/?
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      opened_tabs:
+        description: Number of currently opened tabs
+        type: quantity
+  erase_open_button_tapped:
+    type: event
+    description: The user has tapped the Erase & Open button from shortcuts.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5651
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/?
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      opened_tabs:
+        description: Number of currently opened tabs
+        type: quantity
+
+recent_apps:
+  app_removed_from_list:
+    type: event
+    description: The user removed the apps from recent apps screen.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5651
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/?
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"

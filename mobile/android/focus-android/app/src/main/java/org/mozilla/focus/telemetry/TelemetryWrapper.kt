@@ -103,20 +103,15 @@ object TelemetryWrapper {
 
     private object Object {
         val SEARCH_BAR = "search_bar"
-        val ERASE_BUTTON = "erase_button"
         val SETTING = "setting"
         val APP = "app"
         val MENU = "menu"
         val BACK_BUTTON = "back_button"
-        val NOTIFICATION = "notification"
-        val NOTIFICATION_ACTION = "notification_action"
-        val SHORTCUT = "shortcut"
         val BLOCKING_SWITCH = "blocking_switch"
         val BROWSER = "browser"
         val BROWSER_CONTEXTMENU = "browser_contextmenu"
         val FIRSTRUN = "firstrun"
         val HOMESCREEN_SHORTCUT = "homescreen_shortcut"
-        val RECENT_APPS = "recent_apps"
         val APP_ICON = "app_icon"
         val AUTOCOMPLETE_DOMAIN = "autocomplete_domain"
         val AUTOFILL = "autofill"
@@ -130,8 +125,6 @@ object TelemetryWrapper {
         val DEFAULT = "default"
         val FIREFOX = "firefox"
         val SELECTION = "selection"
-        val ERASE = "erase"
-        val ERASE_AND_OPEN = "erase_open"
         val ERASE_TO_HOME = "erase_home"
         val ERASE_TO_APP = "erase_app"
         val IMAGE = "image"
@@ -443,49 +436,8 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun eraseNotificationEvent() {
-        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.NOTIFICATION, Value.ERASE))
-            .queue()
-    }
-
-    @JvmStatic
-    fun eraseAndOpenNotificationActionEvent() {
-        withSessionCounts(
-            TelemetryEvent.create(
-                Category.ACTION,
-                Method.CLICK,
-                Object.NOTIFICATION_ACTION,
-                Value.ERASE_AND_OPEN
-            )
-        ).queue()
-    }
-
-    @JvmStatic
-    fun openNotificationActionEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.NOTIFICATION_ACTION, Value.OPEN).queue()
-    }
-
-    @JvmStatic
     fun openHomescreenShortcutEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.HOMESCREEN_SHORTCUT, Value.OPEN).queue()
-    }
-
-    @JvmStatic
-    fun eraseShortcutEvent() {
-        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.SHORTCUT, Value.ERASE))
-            .queue()
-    }
-
-    @JvmStatic
-    fun eraseAndOpenShortcutEvent() {
-        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.SHORTCUT, Value.ERASE_AND_OPEN))
-            .queue()
-    }
-
-    @JvmStatic
-    fun eraseTaskRemoved() {
-        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.RECENT_APPS, Value.ERASE))
-            .queue()
     }
 
     @JvmStatic

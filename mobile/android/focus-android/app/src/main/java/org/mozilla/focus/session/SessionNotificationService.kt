@@ -15,11 +15,13 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.utils.ThreadUtils
+import org.mozilla.focus.GleanMetrics.Notifications
+import org.mozilla.focus.GleanMetrics.RecentApps
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.telemetry.TelemetryWrapper
 
 /**
  * As long as a session is active this service will keep the notification (and our process) alive.
@@ -38,7 +40,7 @@ class SessionNotificationService : Service() {
             }
 
             ACTION_ERASE -> {
-                TelemetryWrapper.eraseNotificationEvent()
+                Notifications.notificationTapped.record(NoExtras())
                 shouldSendTaskRemovedTelemetry = false
 
                 if (VisibilityLifeCycleCallback.isInBackground(this)) {
@@ -47,7 +49,6 @@ class SessionNotificationService : Service() {
                     val eraseIntent = Intent(this, MainActivity::class.java)
 
                     eraseIntent.action = MainActivity.ACTION_ERASE
-                    eraseIntent.putExtra(MainActivity.EXTRA_NOTIFICATION, true)
                     eraseIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
 
                     startActivity(eraseIntent)
@@ -63,7 +64,7 @@ class SessionNotificationService : Service() {
     override fun onTaskRemoved(rootIntent: Intent) {
         // Do not double send telemetry for notification erase event
         if (shouldSendTaskRemovedTelemetry) {
-            TelemetryWrapper.eraseTaskRemoved()
+            RecentApps.appRemovedFromList.record(NoExtras())
         }
 
         components.tabsUseCases.removeAllTabs()
