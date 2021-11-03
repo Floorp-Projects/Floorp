@@ -36,7 +36,7 @@ nsCOMPtr<nsIAsyncShutdownClient> MustGetShutdownBarrier() {
 
 NS_IMPL_ISUPPORTS(ShutdownBlocker, nsIAsyncShutdownBlocker)
 
-namespace anon_media_utils {
+namespace {
 class MediaEventBlocker : public ShutdownBlocker {
  public:
   explicit MediaEventBlocker(nsString aName)
@@ -56,7 +56,7 @@ class MediaEventBlocker : public ShutdownBlocker {
 
 class RefCountedTicket {
   RefPtr<MediaEventBlocker> mBlocker;
-  RefPtr<MediaEventForwarder<void> > mShutdownEventForwarder;
+  RefPtr<MediaEventForwarder<void>> mShutdownEventForwarder;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefCountedTicket)
@@ -84,26 +84,37 @@ class RefCountedTicket {
     mShutdownEventForwarder->DisconnectAll();
   }
 };
+
+class ShutdownBlockingTicketImpl : public ShutdownBlockingTicket {
+ private:
+  RefPtr<RefCountedTicket> mTicket;
+
+ public:
+  ShutdownBlockingTicketImpl(nsString aName, nsString aFileName,
+                             int32_t aLineNr)
+      : mTicket(MakeAndAddRef<RefCountedTicket>()) {
+    aName.AppendPrintf(" - %p", this);
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+        __func__, [ticket = mTicket, name = std::move(aName),
+                   fileName = std::move(aFileName), lineNr = aLineNr] {
+          ticket->AddBlocker(std::move(name), std::move(fileName), lineNr);
+        }));
+  }
+
+  ~ShutdownBlockingTicketImpl() {
+    NS_ReleaseOnMainThread(__func__, mTicket.forget(), true);
+  }
+
+  MediaEventSource<void>& ShutdownEvent() override {
+    return mTicket->ShutdownEvent();
+  }
+};
 }  // namespace
 
-ShutdownBlockingTicket::ShutdownBlockingTicket(nsString aName,
-                                               nsString aFileName,
-                                               int32_t aLineNr)
-    : mTicket(MakeAndAddRef<anon_media_utils::RefCountedTicket>()) {
-  aName.AppendPrintf(" - %p", this);
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      __func__, [ticket = mTicket, name = std::move(aName),
-                 fileName = std::move(aFileName), lineNr = aLineNr] {
-        ticket->AddBlocker(std::move(name), std::move(fileName), lineNr);
-      }));
-}
-
-ShutdownBlockingTicket::~ShutdownBlockingTicket() {
-  NS_ReleaseOnMainThread(__func__, mTicket.forget(), true);
-}
-
-MediaEventSource<void>& ShutdownBlockingTicket::ShutdownEvent() {
-  return mTicket->ShutdownEvent();
+UniquePtr<ShutdownBlockingTicket> ShutdownBlockingTicket::Create(
+    nsString aName, nsString aFileName, int32_t aLineNr) {
+  return WrapUnique(new ShutdownBlockingTicketImpl(
+      std::move(aName), std::move(aFileName), aLineNr));
 }
 
 }  // namespace mozilla::media
