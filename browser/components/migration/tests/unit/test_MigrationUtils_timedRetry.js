@@ -1,7 +1,5 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
-
 let tmpFile = FileUtils.getDir("TmpD", [], true);
 let dbConn;
 
@@ -11,7 +9,7 @@ add_task(async function setup() {
 
   registerCleanupFunction(() => {
     dbConn.close();
-    OS.File.remove(tmpFile.path);
+    IOUtils.remove(tmpFile.path);
   });
 });
 

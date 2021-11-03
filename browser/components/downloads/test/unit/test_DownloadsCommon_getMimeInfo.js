@@ -153,7 +153,7 @@ async function test_getMimeInfo_basic_function(testData) {
   await download.refresh();
 
   Assert.ok(
-    await OS.File.exists(download.target.path),
+    await IOUtils.exists(download.target.path),
     "The file should actually exist."
   );
   let result = await DownloadsCommon.getMimeInfo(download);
