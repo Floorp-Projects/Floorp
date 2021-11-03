@@ -55,7 +55,6 @@ UNIFIED_SOURCES += [
     "TestOggWriter.cpp",
     "TestOpusParser.cpp",
     "TestPacer.cpp",
-    "TestRTCStatsTimestampMaker.cpp",
     "TestRust.cpp",
     "TestTimeUnit.cpp",
     "TestVideoSegment.cpp",
@@ -78,6 +77,7 @@ if CONFIG["MOZ_WEBM_ENCODER"]:
 if CONFIG["MOZ_WEBRTC"]:
     UNIFIED_SOURCES += [
         "TestAudioInputProcessing.cpp",
+        "TestRTCStatsTimestampMaker.cpp",
     ]
 
 if CONFIG["OS_TARGET"] != "Android":
