@@ -760,17 +760,26 @@ StyleEditorUI.prototype = {
    *         Promise that will resolve when the editor is selected and ready
    *         to be used.
    */
-  _selectEditor: function(editor, line, col) {
+  _selectEditor: function(editor, line = null, col = null) {
     // Don't go further if the editor was destroyed in the meantime
     if (!this.editors.includes(editor)) {
       return null;
     }
 
-    line = line || 0;
-    col = col || 0;
-
     const editorPromise = editor.getSourceEditor().then(() => {
-      editor.setCursor(line, col);
+      // line/col are null when the style editor is initialized and the first stylesheet
+      // editor is selected. Unfortunately, this function might be called also when the
+      // panel is opened from clicking on a CSS warning in the WebConsole panel, in which
+      // case we have specific line+col.
+      // There's no guarantee which one could be called first, and it happened that we
+      // were setting the cursor once for the correct line coming from the webconsole,
+      // and then re-setting it to the default value (which was <0,0>).
+      // To avoid the race, we simply don't explicitly set the cursor to any default value,
+      // which is not a big deal as CodeMirror does init it to <0,0> anyway.
+      // See Bug 1738124 for more information.
+      if (line !== null || col !== null) {
+        editor.setCursor(line, col);
+      }
       this._styleSheetBoundToSelect = null;
     });
 

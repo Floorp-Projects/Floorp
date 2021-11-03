@@ -334,6 +334,9 @@ StyleSheetEditor.prototype = {
    * @param {Number} column
    */
   setCursor(line, column) {
+    line = line || 0;
+    column = column || 0;
+
     const position = this.translateCursorPosition(line, column);
     this.sourceEditor.setCursor({ line: position.line, ch: position.column });
   },
