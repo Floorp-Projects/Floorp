@@ -17,6 +17,7 @@ import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.selection.SelectionHolder
+import org.mozilla.fenix.tabstray.TabsTrayAction
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.browser.containsTabId
@@ -84,6 +85,10 @@ class NormalBrowserPageViewHolder(
         val searchTermTabGroupsAreEnabled = containerView.context.settings().searchTermTabGroupsAreEnabled
 
         val selectedTab = browserStore.state.selectedNormalTab ?: return
+        // It's safe to read the state directly (i.e. won't cause bugs because of the store actions
+        // processed on a separate thread) instead of observing it because this value is only set during
+        // the initialState of the TabsTrayStore being created.
+        val focusGroupTabId = tabsTrayStore.state.focusGroupTabId
 
         // Update tabs into the inactive adapter.
         if (inactiveTabsAreEnabled && selectedTab.isNormalTabInactive(maxActiveTime)) {
@@ -106,7 +111,13 @@ class NormalBrowserPageViewHolder(
         }
 
         // Updates tabs into the search term group adapter.
-        if (searchTermTabGroupsAreEnabled && selectedTab.isNormalTabActiveWithSearchTerm(maxActiveTime)) {
+        if (searchTermTabGroupsAreEnabled && (
+            !focusGroupTabId.isNullOrEmpty() ||
+                selectedTab.isNormalTabActiveWithSearchTerm(maxActiveTime)
+            )
+        ) {
+            val tabId = focusGroupTabId ?: selectedTab.id
+
             tabGroupAdapter.observeFirstInsert {
                 // With a grouping, we need to use the list of the adapter that is already grouped
                 // together for the UI, so we know the final index of the grouping to scroll to.
@@ -117,35 +128,40 @@ class NormalBrowserPageViewHolder(
                 // [DiffUtil.calculateDiff] directly to submit a changed list which evades the `ListAdapter` from being
                 // notified of updates, so it therefore returns an empty list.
                 tabGroupAdapter.currentList.forEachIndexed { groupIndex, group ->
-                    if (group.containsTabId(selectedTab.id)) {
+                    if (group.containsTabId(tabId)) {
 
                         // Index is based on tabs above (inactive) with our calculated index.
                         val indexToScrollTo = inactiveTabAdapter.itemCount + groupIndex
                         layoutManager.scrollToPosition(indexToScrollTo)
 
+                        if (focusGroupTabId != null) {
+                            tabsTrayStore.dispatch(TabsTrayAction.ConsumeFocusGroupTabIdAction)
+                        }
                         return@observeFirstInsert
                     }
                 }
             }
         }
 
-        // Updates tabs into the normal browser tabs adapter.
-        browserAdapter.observeFirstInsert {
-            val activeTabsList = browserStore.state.getNormalTrayTabs(
-                searchTermTabGroupsAreEnabled,
-                inactiveTabsAreEnabled
-            )
-            activeTabsList.forEachIndexed { tabIndex, trayTab ->
-                if (trayTab.id == selectedTab.id) {
+        if (focusGroupTabId.isNullOrEmpty()) {
+            // Updates tabs into the normal browser tabs adapter.
+            browserAdapter.observeFirstInsert {
+                val activeTabsList = browserStore.state.getNormalTrayTabs(
+                    searchTermTabGroupsAreEnabled,
+                    inactiveTabsAreEnabled
+                )
+                activeTabsList.forEachIndexed { tabIndex, trayTab ->
+                    if (trayTab.id == selectedTab.id) {
 
-                    // Index is based on tabs above (inactive + groups + header) with our calculated index.
-                    val indexToScrollTo = inactiveTabAdapter.itemCount +
-                        tabGroupAdapter.itemCount +
-                        headerAdapter.itemCount + tabIndex
+                        // Index is based on tabs above (inactive + groups + header) with our calculated index.
+                        val indexToScrollTo = inactiveTabAdapter.itemCount +
+                            tabGroupAdapter.itemCount +
+                            headerAdapter.itemCount + tabIndex
 
-                    layoutManager.scrollToPosition(indexToScrollTo)
+                        layoutManager.scrollToPosition(indexToScrollTo)
 
-                    return@observeFirstInsert
+                        return@observeFirstInsert
+                    }
                 }
             }
         }

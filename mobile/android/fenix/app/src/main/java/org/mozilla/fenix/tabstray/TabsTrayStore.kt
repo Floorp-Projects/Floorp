@@ -18,11 +18,13 @@ import mozilla.components.lib.state.Store
  * currently selected tabs.
  * @property syncing Whether the Synced Tabs feature should fetch the latest tabs from paired
  * devices.
+ * @property focusGroupTabId The search group tab id to focus. Defaults to null.
  */
 data class TabsTrayState(
     val selectedPage: Page = Page.NormalTabs,
     val mode: Mode = Mode.Normal,
-    val syncing: Boolean = false
+    val syncing: Boolean = false,
+    val focusGroupTabId: String? = null
 ) : State {
 
     /**
@@ -119,6 +121,11 @@ sealed class TabsTrayAction : Action {
      * no sync action was able to be performed.
      */
     object SyncCompleted : TabsTrayAction()
+
+    /**
+     * Removes the [TabsTrayState.focusGroupTabId] of the [TabsTrayState].
+     */
+    object ConsumeFocusGroupTabIdAction : TabsTrayAction()
 }
 
 /**
@@ -149,6 +156,8 @@ internal object TabsTrayReducer {
                 state.copy(syncing = true)
             is TabsTrayAction.SyncCompleted ->
                 state.copy(syncing = false)
+            is TabsTrayAction.ConsumeFocusGroupTabIdAction ->
+                state.copy(focusGroupTabId = null)
         }
     }
 }

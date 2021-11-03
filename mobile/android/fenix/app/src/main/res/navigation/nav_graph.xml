@@ -150,6 +150,11 @@
             android:name="enterMultiselect"
             android:defaultValue="false"
             app:argType="boolean" />
+        <argument
+            android:name="focusGroupTabId"
+            app:nullable="true"
+            android:defaultValue="@null"
+            app:argType="string" />
     </dialog>
 
     <fragment

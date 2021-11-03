@@ -68,9 +68,12 @@ class DefaultRecentTabsController(
     }
 
     override fun handleRecentSearchGroupClicked(tabId: String) {
-        selectTabUseCase.invoke(tabId)
         metrics.track(Event.JumpBackInGroupTapped)
-        navController.navigate(HomeFragmentDirections.actionGlobalTabsTrayFragment())
+        navController.navigate(
+            HomeFragmentDirections.actionGlobalTabsTrayFragment(
+                focusGroupTabId = tabId
+            )
+        )
     }
 
     @VisibleForTesting(otherwise = PRIVATE)
