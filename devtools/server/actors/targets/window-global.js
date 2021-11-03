@@ -561,10 +561,21 @@ const windowGlobalTargetPrototype = {
     // as that's the one top document this target actor really represent.
     // The iframe dropdown is just a hack that temporarily focus the scope
     // of the target actor to a children iframe document.
-    const browsingContextID = this.originalDocShell.browsingContext.id;
-    const innerWindowId = this._originalWindow
+    //
+    // Also, for WebExtension, we want the target to represent the <browser> element
+    // created by DevTools, which always exists and help better connect resources to the target
+    // in the frontend. Otherwise all other <browser> element of webext may be reloaded or go away
+    // and then we would have troubles matching targets for resources.
+    const browsingContextID = this.devtoolsSpawnedBrowsingContextForWebExtension
+      ? this.devtoolsSpawnedBrowsingContextForWebExtension.id
+      : this.originalDocShell.browsingContext.id;
+    const originalInnerWindowId = this._originalWindow
       ? getInnerId(this._originalWindow)
       : null;
+    const innerWindowId = this.devtoolsSpawnedBrowsingContextForWebExtension
+      ? this.devtoolsSpawnedBrowsingContextForWebExtension.currentWindowGlobal
+          .innerWindowId
+      : originalInnerWindowId;
 
     const response = {
       actor: this.actorID,

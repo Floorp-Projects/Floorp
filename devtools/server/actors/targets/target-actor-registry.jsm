@@ -61,7 +61,10 @@ var TargetActorRegistry = {
         return actors[0];
       }
       return null;
-    } else if (context.type == "browser-element") {
+    } else if (
+      context.type == "browser-element" ||
+      context.type == "webextension"
+    ) {
       const actors = this.getTargetActors(context, connectionPrefix);
       return actors.find(actor => {
         return actor.isTopLevelTarget;
@@ -89,7 +92,8 @@ var TargetActorRegistry = {
       const isMatchingContext =
         (context.type == "all" && actor.typeName === "parentProcessTarget") ||
         (context.type == "browser-element" &&
-          actor.browserId == context.browserId);
+          actor.browserId == context.browserId) ||
+        (context.type == "webextension" && actor.addonId == context.addonId);
       if (isMatchingPrefix && isMatchingContext) {
         actors.push(actor);
       }

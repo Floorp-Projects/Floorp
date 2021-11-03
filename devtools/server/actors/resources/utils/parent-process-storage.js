@@ -67,11 +67,21 @@ class ParentProcessStorage {
       ({ windowGlobal }) => this._onNewWindowGlobal(windowGlobal, true)
     );
 
-    const {
-      browsingContext,
-      innerWindowID: innerWindowId,
-    } = watcherActor.browserElement;
-    await this._spawnActor(browsingContext.id, innerWindowId);
+    if (watcherActor.context.type == "browser-element") {
+      const {
+        browsingContext,
+        innerWindowID: innerWindowId,
+      } = watcherActor.browserElement;
+      await this._spawnActor(browsingContext.id, innerWindowId);
+    } else if (watcherActor.context.type == "webextension") {
+      const {
+        addonBrowsingContextID,
+        addonInnerWindowId,
+      } = watcherActor.context;
+      await this._spawnActor(addonBrowsingContextID, addonInnerWindowId);
+    } else {
+      throw new Error("Unsupported context type=" + watcherActor.context.type);
+    }
   }
 
   onStoresUpdate(response) {
@@ -323,12 +333,9 @@ class StorageActorMock extends EventEmitter {
   }
 
   get windows() {
-    const browsingContext = this.watcherActor.browserElement.browsingContext;
-    const contexts = browsingContext.getAllBrowsingContextsInSubtree();
     // NOTE: we are removing about:blank because we might get them for iframes
     // whose src attribute has not been set yet.
-    return contexts
-      .filter(x => !!x.currentWindowGlobal)
+    return this.getAllBrowsingContexts()
       .map(x => {
         const uri = x.currentWindowGlobal.documentURI;
         return { location: uri };
@@ -355,15 +362,34 @@ class StorageActorMock extends EventEmitter {
     }
   }
 
+  getAllBrowsingContexts() {
+    if (this.watcherActor.context.type == "browser-element") {
+      const browsingContext = this.watcherActor.browserElement.browsingContext;
+      return browsingContext
+        .getAllBrowsingContextsInSubtree()
+        .filter(x => !!x.currentWindowGlobal);
+    } else if (this.watcherActor.context.type == "webextension") {
+      return [
+        BrowsingContext.get(this.watcherActor.context.addonBrowsingContextID),
+      ];
+    }
+    throw new Error(
+      "Unsupported context type=" + this.watcherActor.context.type
+    );
+  }
+
   getWindowFromHost(host) {
-    const browsingContext = this.watcherActor.browserElement.browsingContext;
-    const contexts = browsingContext
-      .getAllBrowsingContextsInSubtree()
-      .filter(x => !!x.currentWindowGlobal);
-    const hostBrowsingContext = contexts.find(x => {
+    const hostBrowsingContext = this.getAllBrowsingContexts().find(x => {
       const hostName = this.getHostName(x.currentWindowGlobal.documentURI);
       return hostName === host;
     });
+    // In case of WebExtension or BrowserToolbox, we may pass privileged hosts
+    // which don't relate to any particular window.
+    // Like "indexeddb+++fx-devtools" or "chrome".
+    // (callsites of this method are used to handle null returned values)
+    if (!hostBrowsingContext) {
+      return null;
+    }
 
     const principal =
       hostBrowsingContext.currentWindowGlobal.documentStoragePrincipal;
