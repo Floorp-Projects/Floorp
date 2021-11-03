@@ -431,6 +431,10 @@ taskcluster==44.2.2 \
     --hash=sha256:846d73c597f0f47dd8525c85c8d9bc41111d5200b090690d3f16b2f57c56a2e1 \
     --hash=sha256:c1b0e82be25b1ed17e07c90b24a382634b2bfce273fdf2682d94568abe10716c
     # via -r requirements-mach-vendor-python.in
+tqdm==4.62.3 \
+    --hash=sha256:8dd278a422499cd6b727e6ae4061c40b48fce8b76d1ccbf5d34fca9b7f925b0c \
+    --hash=sha256:d359de7217506c9851b7869f3708d8ee53ed70a1b8edbba4dbcb47442592920d
+    # via -r requirements-mach-vendor-python.in
 typing-extensions==3.7.4.3 \
     --hash=sha256:7cb407020f00f7bfc3cb3e7881628838e69d8f3fcab2f64742a5e76b2f841918 \
     --hash=sha256:99d4073b617d30288f569d3f13d2bd7548c3a7e4c8de87db09a9d29bb3a4a60c \
