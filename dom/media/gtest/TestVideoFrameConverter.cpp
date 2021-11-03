@@ -16,10 +16,17 @@ using namespace mozilla;
 
 class VideoFrameConverterTest;
 
-class FrameListener : public VideoConverterListener {
+class FrameListener {
  public:
-  void OnVideoFrameConverted(const webrtc::VideoFrame& aVideoFrame) override {
-    mVideoFrameConvertedEvent.Notify(aVideoFrame, TimeStamp::Now());
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FrameListener)
+
+  explicit FrameListener(MediaEventSourceExc<webrtc::VideoFrame>& aSource) {
+    mListener = aSource.Connect(AbstractThread::GetCurrent(), this,
+                                &FrameListener::OnVideoFrameConverted);
+  }
+
+  void OnVideoFrameConverted(webrtc::VideoFrame aVideoFrame) {
+    mVideoFrameConvertedEvent.Notify(std::move(aVideoFrame), TimeStamp::Now());
   }
 
   MediaEventSource<webrtc::VideoFrame, TimeStamp>& VideoFrameConvertedEvent() {
@@ -27,6 +34,9 @@ class FrameListener : public VideoConverterListener {
   }
 
  private:
+  ~FrameListener() { mListener.Disconnect(); }
+
+  MediaEventListener mListener;
   MediaEventProducer<webrtc::VideoFrame, TimeStamp> mVideoFrameConvertedEvent;
 };
 
@@ -35,7 +45,6 @@ class DebugVideoFrameConverter : public VideoFrameConverter {
   explicit DebugVideoFrameConverter(
       const dom::RTCStatsTimestampMaker& aTimestampMaker)
       : VideoFrameConverter(aTimestampMaker) {}
-  using VideoFrameConverter::mTaskQueue;
   using VideoFrameConverter::QueueForProcessing;
 };
 
@@ -48,9 +57,8 @@ class VideoFrameConverterTest : public ::testing::Test {
   VideoFrameConverterTest()
       : mTimestampMaker(dom::RTCStatsTimestampMaker()),
         mConverter(MakeAndAddRef<DebugVideoFrameConverter>(mTimestampMaker)),
-        mListener(MakeAndAddRef<FrameListener>()) {
-    mConverter->AddListener(mListener);
-  }
+        mListener(MakeAndAddRef<FrameListener>(
+            mConverter->VideoFrameConvertedEvent())) {}
 
   void TearDown() override { mConverter->Shutdown(); }
 
