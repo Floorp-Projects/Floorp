@@ -2639,7 +2639,19 @@ history:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-11-01"
-
+  search_term_group_tapped:
+    type: event
+    description: |
+      A user tapped on a search term group in history
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22299
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22300
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
 
 reader_mode:
   available:

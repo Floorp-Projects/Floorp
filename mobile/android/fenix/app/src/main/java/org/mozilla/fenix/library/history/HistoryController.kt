@@ -42,6 +42,7 @@ class DefaultHistoryController(
         when (item) {
             is History.Regular -> openToBrowser(item)
             is History.Group -> {
+                metrics.track(Event.HistorySearchTermGroupTapped)
                 navController.navigate(
                     HistoryFragmentDirections.actionGlobalHistoryMetadataGroup(
                         title = item.title,

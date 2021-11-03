@@ -312,6 +312,9 @@ private val Event.wrapper: EventWrapper<*>?
             { History.recentSearchesTapped.record(it) },
             { History.recentSearchesTappedKeys.valueOf(it) }
         )
+        is Event.HistorySearchTermGroupTapped -> EventWrapper<NoExtraKeys>(
+            { History.searchTermGroupTapped.record(it) }
+        )
         is Event.CollectionRenamed -> EventWrapper<NoExtraKeys>(
             { Collections.renamed.record(it) }
         )

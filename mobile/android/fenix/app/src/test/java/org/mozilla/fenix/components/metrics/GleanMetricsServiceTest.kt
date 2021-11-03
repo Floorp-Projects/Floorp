@@ -176,6 +176,10 @@ class GleanMetricsServiceTest {
         val events = History.recentSearchesTapped.testGetValue()
         assertEquals(1, events[0].extra!!.size)
         assertEquals("5", events[0].extra!!["page_number"])
+
+        assertFalse(History.searchTermGroupTapped.testHasValue())
+        gleanService.track(Event.HistorySearchTermGroupTapped)
+        assertTrue(History.searchTermGroupTapped.testHasValue())
     }
 
     @Test

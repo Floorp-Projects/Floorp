@@ -333,6 +333,10 @@ class MetricControllerTest {
         every { marketingService1.shouldTrack(Event.HistoryOpenedInNewTabs) } returns true
         every { marketingService1.shouldTrack(Event.HistoryOpenedInPrivateTab) } returns true
         every { marketingService1.shouldTrack(Event.HistoryOpenedInPrivateTabs) } returns true
+        every { marketingService1.shouldTrack(Event.HistoryItemRemoved) } returns true
+        every { marketingService1.shouldTrack(Event.HistoryAllItemsRemoved) } returns true
+        every { marketingService1.shouldTrack(Event.HistoryRecentSearchesTapped("2")) } returns true
+        every { marketingService1.shouldTrack(Event.HistorySearchTermGroupTapped) } returns true
 
         controller.start(MetricServiceType.Marketing)
 
@@ -340,11 +344,19 @@ class MetricControllerTest {
         controller.track(Event.HistoryOpenedInNewTabs)
         controller.track(Event.HistoryOpenedInPrivateTab)
         controller.track(Event.HistoryOpenedInPrivateTabs)
+        controller.track(Event.HistoryItemRemoved)
+        controller.track(Event.HistoryAllItemsRemoved)
+        controller.track(Event.HistoryRecentSearchesTapped("2"))
+        controller.track(Event.HistorySearchTermGroupTapped)
 
         verify { marketingService1.track(Event.HistoryOpenedInNewTab) }
         verify { marketingService1.track(Event.HistoryOpenedInNewTabs) }
         verify { marketingService1.track(Event.HistoryOpenedInPrivateTab) }
         verify { marketingService1.track(Event.HistoryOpenedInPrivateTabs) }
+        verify { marketingService1.track(Event.HistoryItemRemoved) }
+        verify { marketingService1.track(Event.HistoryAllItemsRemoved) }
+        verify { marketingService1.track(Event.HistoryRecentSearchesTapped("2")) }
+        verify { marketingService1.track(Event.HistorySearchTermGroupTapped) }
     }
 
     @Test
