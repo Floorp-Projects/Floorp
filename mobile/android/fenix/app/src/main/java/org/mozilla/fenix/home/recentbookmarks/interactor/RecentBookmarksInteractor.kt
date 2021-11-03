@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.home.recentbookmarks.interactor
 
-import mozilla.components.concept.storage.BookmarkNode
+import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 
 /**
@@ -18,7 +18,7 @@ interface RecentBookmarksInteractor {
      *
      * @param bookmark The bookmark that will be opened.
      */
-    fun onRecentBookmarkClicked(bookmark: BookmarkNode)
+    fun onRecentBookmarkClicked(bookmark: RecentBookmark)
 
     /**
      * Navigates to bookmark list. Called when an user clicks on the "Show all" button for

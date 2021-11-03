@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
+import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.browser.thumbnails.storage.ThumbnailStorage
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.engine.Engine
@@ -32,4 +33,5 @@ class TestCore(context: Context, crashReporter: CrashReporting) : Core(
     override val thumbnailStorage = mockk<ThumbnailStorage>()
     override val topSitesStorage = mockk<DefaultTopSitesStorage>()
     override val bookmarksStorage = mockk<PlacesBookmarksStorage>()
+    override val historyStorage = mockk<PlacesHistoryStorage>()
 }

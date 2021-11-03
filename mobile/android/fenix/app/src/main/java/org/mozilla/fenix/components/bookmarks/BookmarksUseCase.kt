@@ -6,14 +6,18 @@ package org.mozilla.fenix.components.bookmarks
 
 import androidx.annotation.WorkerThread
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarksStorage
+import mozilla.components.concept.storage.HistoryStorage
+import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import java.util.concurrent.TimeUnit
 
 /**
  * Use cases that allow for modifying and retrieving bookmarks.
  */
-class BookmarksUseCase(storage: BookmarksStorage) {
+class BookmarksUseCase(
+    bookmarksStorage: BookmarksStorage,
+    historyStorage: HistoryStorage,
+) {
 
     class AddBookmarksUseCase internal constructor(private val storage: BookmarksStorage) {
 
@@ -40,29 +44,62 @@ class BookmarksUseCase(storage: BookmarksStorage) {
         }
     }
 
+    /**
+     * Uses for retrieving recently added bookmarks.
+     *
+     * @param bookmarksStorage [BookmarksStorage] to retrieve the bookmark data.
+     * @param historyStorage Optional [HistoryStorage] to retrieve the preview image of a visited
+     * page associated with a bookmark.
+     */
     class RetrieveRecentBookmarksUseCase internal constructor(
-        private val storage: BookmarksStorage
+        private val bookmarksStorage: BookmarksStorage,
+        private val historyStorage: HistoryStorage? = null
     ) {
         /**
          * Retrieves a list of recently added bookmarks, if any, up to maximum.
+         *
+         * @param count The number of recent bookmarks to return.
+         * @param maxAgeInMs The maximum age (ms) of a recently added bookmark to return.
+         * @return a list of [RecentBookmark] that were added no older than specify by [maxAgeInMs],
+         * if any, up to a number specified by [count].
          */
         @WorkerThread
         suspend operator fun invoke(
             count: Int = DEFAULT_BOOKMARKS_TO_RETRIEVE,
             maxAgeInMs: Long = TimeUnit.DAYS.toMillis(DEFAULT_BOOKMARKS_DAYS_AGE_TO_RETRIEVE)
-        ): List<BookmarkNode> {
-            return storage.getRecentBookmarks(
-                count,
-                maxAgeInMs
+        ): List<RecentBookmark> {
+            val currentTime = System.currentTimeMillis()
+
+            // Fetch visit information within the time range of now and the specified maximum age.
+            val history = historyStorage?.getDetailedVisits(
+                start = currentTime - maxAgeInMs,
+                end = currentTime
             )
+
+            return bookmarksStorage
+                .getRecentBookmarks(count, maxAgeInMs)
+                .map { bookmark ->
+                    RecentBookmark(
+                        title = bookmark.title,
+                        url = bookmark.url,
+                        previewImageUrl = history?.find { bookmark.url == it.url }?.previewImageUrl
+                    )
+                }
         }
     }
 
-    val addBookmark by lazy { AddBookmarksUseCase(storage) }
-    val retrieveRecentBookmarks by lazy { RetrieveRecentBookmarksUseCase(storage) }
+    val addBookmark by lazy { AddBookmarksUseCase(bookmarksStorage) }
+    val retrieveRecentBookmarks by lazy {
+        RetrieveRecentBookmarksUseCase(
+            bookmarksStorage,
+            historyStorage
+        )
+    }
 
     companion object {
+        // Number of recent bookmarks to retrieve.
         const val DEFAULT_BOOKMARKS_TO_RETRIEVE = 4
+        // The maximum age in days of a recent bookmarks to retrieve.
         const val DEFAULT_BOOKMARKS_DAYS_AGE_TO_RETRIEVE = 10L
     }
 }

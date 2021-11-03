@@ -18,10 +18,11 @@ import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.ext.getFilteredStories
 import org.mozilla.fenix.ext.recentSearchGroup
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
-import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.pocket.POCKET_STORIES_TO_SHOW_COUNT
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
+import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
+import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.recenttabs.RecentTab.SearchGroup
 
 /**
@@ -70,7 +71,7 @@ data class HomeFragmentState(
     val showCollectionPlaceholder: Boolean = false,
     val showSetAsDefaultBrowserCard: Boolean = false,
     val recentTabs: List<RecentTab> = emptyList(),
-    val recentBookmarks: List<BookmarkNode> = emptyList(),
+    val recentBookmarks: List<RecentBookmark> = emptyList(),
     val historyMetadata: List<HistoryMetadataGroup> = emptyList(),
     val pocketStories: List<PocketRecommendedStory> = emptyList(),
     val pocketStoriesCategories: List<PocketRecommendedStoriesCategory> = emptyList(),
@@ -85,7 +86,7 @@ sealed class HomeFragmentAction : Action {
         val tip: Tip? = null,
         val showCollectionPlaceholder: Boolean,
         val recentTabs: List<RecentTab>,
-        val recentBookmarks: List<BookmarkNode>,
+        val recentBookmarks: List<RecentBookmark>,
         val historyMetadata: List<HistoryMetadataGroup>
     ) :
         HomeFragmentAction()
@@ -98,7 +99,7 @@ sealed class HomeFragmentAction : Action {
     data class TopSitesChange(val topSites: List<TopSite>) : HomeFragmentAction()
     data class RemoveTip(val tip: Tip) : HomeFragmentAction()
     data class RecentTabsChange(val recentTabs: List<RecentTab>) : HomeFragmentAction()
-    data class RecentBookmarksChange(val recentBookmarks: List<BookmarkNode>) : HomeFragmentAction()
+    data class RecentBookmarksChange(val recentBookmarks: List<RecentBookmark>) : HomeFragmentAction()
     data class HistoryMetadataChange(val historyMetadata: List<HistoryMetadataGroup>) : HomeFragmentAction()
     data class DisbandSearchGroupAction(val searchTerm: String) : HomeFragmentAction()
     data class SelectPocketStoriesCategory(val categoryName: String) : HomeFragmentAction()

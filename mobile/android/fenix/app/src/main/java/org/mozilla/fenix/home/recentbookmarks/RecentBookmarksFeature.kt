@@ -16,14 +16,14 @@ import org.mozilla.fenix.home.HomeFragmentAction
 import org.mozilla.fenix.home.HomeFragmentStore
 
 /**
- *  View-bound feature that retrieves a list of recently added [BookmarkNode]s and dispatches
- *  updates to the [HomeFragmentStore].
+ * View-bound feature that retrieves a list of recently added [BookmarkNode]s and dispatches
+ * updates to the [HomeFragmentStore].
  *
- *  @param homeStore the [HomeFragmentStore]
- *  @param bookmarksUseCase the [BookmarksUseCase] for retrieving the list of recently saved
-*   bookmarks from storage.
- *  @param scope the [CoroutineScope] used to fetch the bookmarks list
- *  @param ioDispatcher the [CoroutineDispatcher] for performing read/write operations.
+ * @param homeStore the [HomeFragmentStore]
+ * @param bookmarksUseCase the [BookmarksUseCase] for retrieving the list of recently saved
+ * bookmarks from storage.
+ * @param scope the [CoroutineScope] used to fetch the bookmarks list
+ * @param ioDispatcher the [CoroutineDispatcher] for performing read/write operations.
  */
 class RecentBookmarksFeature(
     private val homeStore: HomeFragmentStore,
@@ -36,7 +36,6 @@ class RecentBookmarksFeature(
     override fun start() {
         job = scope.launch(ioDispatcher) {
             val bookmarks = bookmarksUseCase.retrieveRecentBookmarks()
-
             homeStore.dispatch(HomeFragmentAction.RecentBookmarksChange(bookmarks))
         }
     }
@@ -45,3 +44,16 @@ class RecentBookmarksFeature(
         job?.cancel()
     }
 }
+
+/**
+ * A bookmark that was recently added.
+ *
+ * @param title The title of the bookmark.
+ * @param url The url of the bookmark.
+ * @param previewImageUrl A preview image of the page (a.k.a. the hero image), if available.
+ */
+data class RecentBookmark(
+    val title: String? = null,
+    val url: String? = null,
+    val previewImageUrl: String? = null
+)

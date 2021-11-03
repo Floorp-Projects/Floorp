@@ -12,7 +12,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.concept.storage.BookmarkNode
-import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -33,15 +32,10 @@ class RecentBookmarksFeatureTest {
     private val homeStore = HomeFragmentStore(middlewares = listOf(middleware))
     private val bookmarksUseCases: BookmarksUseCase = mockk(relaxed = true)
     private val testDispatcher = TestCoroutineDispatcher()
-    private val bookmark = BookmarkNode(
-        type = BookmarkNodeType.ITEM,
-        guid = "guid#${Math.random() * 1000}",
-        parentGuid = null,
-        position = null,
+    private val bookmark = RecentBookmark(
         title = null,
         url = "https://www.example.com",
-        dateAdded = 0,
-        children = null
+        previewImageUrl = null
     )
 
     @get:Rule

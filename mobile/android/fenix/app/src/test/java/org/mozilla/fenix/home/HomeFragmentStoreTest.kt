@@ -10,7 +10,6 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
-import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.fxa.manager.FxaAccountManager
@@ -26,10 +25,11 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getFilteredStories
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
-import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.pocket.POCKET_STORIES_TO_SHOW_COUNT
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
+import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
+import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.onboarding.FenixOnboarding
 
 class HomeFragmentStoreTest {
@@ -202,7 +202,7 @@ class HomeFragmentStoreTest {
             val collections: List<TabCollection> = listOf(mockk())
             val topSites: List<TopSite> = listOf(mockk(), mockk())
             val recentTabs: List<RecentTab> = listOf(mockk(), recentGroup, mockk())
-            val recentBookmarks: List<BookmarkNode> = listOf(mockk(), mockk())
+            val recentBookmarks: List<RecentBookmark> = listOf(mockk(), mockk())
             val g1 = HistoryMetadataGroup(title = "test One")
             val g2 = HistoryMetadataGroup(title = recentGroup.searchTerm.lowercase())
             val g3 = HistoryMetadataGroup(title = "test two")

@@ -29,7 +29,6 @@ import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
@@ -56,6 +55,7 @@ import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.settings.SupportUtils
@@ -856,7 +856,7 @@ class DefaultSessionControlControllerTest {
 
     @Test
     fun `WHEN handleReportSessionMetrics is called AND there is at least one recent bookmark THEN report Event#RecentBookmarkCount(1)`() {
-        val recentBookmark: BookmarkNode = mockk(relaxed = true)
+        val recentBookmark: RecentBookmark = mockk(relaxed = true)
         every { homeFragmentState.recentBookmarks } returns listOf(recentBookmark)
         every { homeFragmentState.recentTabs } returns emptyList()
         createController().handleReportSessionMetrics(homeFragmentState)

@@ -34,22 +34,22 @@ import androidx.compose.ui.unit.sp
 import mozilla.components.browser.icons.compose.Loader
 import mozilla.components.browser.icons.compose.Placeholder
 import mozilla.components.browser.icons.compose.WithIcon
-import mozilla.components.concept.storage.BookmarkNode
-import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.components.components
+import org.mozilla.fenix.compose.Image
+import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
  * A list of recent bookmarks.
  *
- * @param bookmarks List of [BookmarkNode]s to display.
+ * @param bookmarks List of [RecentBookmark]s to display.
  * @param onRecentBookmarkClick Invoked when the user clicks on a recent bookmark.
  */
 @Composable
 fun RecentBookmarks(
-    bookmarks: List<BookmarkNode>,
-    onRecentBookmarkClick: (BookmarkNode) -> Unit = {}
+    bookmarks: List<RecentBookmark>,
+    onRecentBookmarkClick: (RecentBookmark) -> Unit = {}
 ) {
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
@@ -67,13 +67,13 @@ fun RecentBookmarks(
 /**
  * A recent bookmark item.
  *
- * @param bookmark The [BookmarkNode] to display.
+ * @param bookmark The [RecentBookmark] to display.
  * @param onRecentBookmarkClick Invoked when the user clicks on the recent bookmark item.
  */
 @Composable
 private fun RecentBookmarkItem(
-    bookmark: BookmarkNode,
-    onRecentBookmarkClick: (BookmarkNode) -> Unit = {}
+    bookmark: RecentBookmark,
+    onRecentBookmarkClick: (RecentBookmark) -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -86,36 +86,7 @@ private fun RecentBookmarkItem(
                 .height(96.dp),
             elevation = 6.dp
         ) {
-            if (bookmark.url != null) {
-                components.core.icons.Loader(bookmark.url!!) {
-                    Placeholder {
-                        Box(
-                            modifier = Modifier.background(
-                                color = when (isSystemInDarkTheme()) {
-                                    true -> PhotonColors.DarkGrey30
-                                    false -> PhotonColors.LightGrey30
-                                }
-                            )
-                        )
-                    }
-
-                    WithIcon { icon ->
-                        Box(
-                            modifier = Modifier.size(36.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = icon.painter,
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(RoundedCornerShape(8.dp)),
-                                contentScale = ContentScale.Fit
-                            )
-                        }
-                    }
-                }
-            }
+            RecentBookmarkImage(bookmark)
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -131,50 +102,75 @@ private fun RecentBookmarkItem(
 }
 
 @Composable
+private fun RecentBookmarkImage(bookmark: RecentBookmark) {
+    when {
+        !bookmark.previewImageUrl.isNullOrEmpty() -> {
+            Image(
+                url = bookmark.previewImageUrl,
+                modifier = Modifier
+                    .size(156.dp, 96.dp),
+                targetSize = 156.dp,
+                contentScale = ContentScale.Crop
+            )
+        }
+        !bookmark.url.isNullOrEmpty() -> {
+            components.core.icons.Loader(bookmark.url) {
+                Placeholder {
+                    Box(
+                        modifier = Modifier.background(
+                            color = when (isSystemInDarkTheme()) {
+                                true -> PhotonColors.DarkGrey30
+                                false -> PhotonColors.LightGrey30
+                            }
+                        )
+                    )
+                }
+
+                WithIcon { icon ->
+                    Box(
+                        modifier = Modifier.size(36.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = icon.painter,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 @Preview
 private fun RecentBookmarksPreview() {
     FirefoxTheme {
         RecentBookmarks(
             bookmarks = listOf(
-                BookmarkNode(
-                    type = BookmarkNodeType.ITEM,
-                    guid = "1",
-                    parentGuid = null,
-                    position = null,
+                RecentBookmark(
                     title = "Other Bookmark Title",
                     url = "https://www.example.com",
-                    dateAdded = 0,
-                    children = null
+                    previewImageUrl = null
                 ),
-                BookmarkNode(
-                    type = BookmarkNodeType.ITEM,
-                    guid = "2",
-                    parentGuid = null,
-                    position = null,
+                RecentBookmark(
                     title = "Other Bookmark Title",
                     url = "https://www.example.com",
-                    dateAdded = 0,
-                    children = null
+                    previewImageUrl = null
                 ),
-                BookmarkNode(
-                    type = BookmarkNodeType.ITEM,
-                    guid = "3",
-                    parentGuid = null,
-                    position = null,
+                RecentBookmark(
                     title = "Other Bookmark Title",
                     url = "https://www.example.com",
-                    dateAdded = 0,
-                    children = null
+                    previewImageUrl = null
                 ),
-                BookmarkNode(
-                    type = BookmarkNodeType.ITEM,
-                    guid = "4",
-                    parentGuid = null,
-                    position = null,
+                RecentBookmark(
                     title = "Other Bookmark Title",
                     url = "https://www.example.com",
-                    dateAdded = 0,
-                    children = null
+                    previewImageUrl = null
                 )
             )
         )

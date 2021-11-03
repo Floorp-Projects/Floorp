@@ -10,13 +10,13 @@ import androidx.navigation.NavController
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.ALLOW_JAVASCRIPT_URL
-import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.HomeFragmentDirections
+import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recentbookmarks.interactor.RecentBookmarksInteractor
 
 /**
@@ -28,7 +28,7 @@ interface RecentBookmarksController {
     /**
      * @see [RecentBookmarksInteractor.onRecentBookmarkClicked]
      */
-    fun handleBookmarkClicked(bookmark: BookmarkNode)
+    fun handleBookmarkClicked(bookmark: RecentBookmark)
 
     /**
      * @see [RecentBookmarksInteractor.onShowAllBookmarksClicked]
@@ -44,7 +44,7 @@ class DefaultRecentBookmarksController(
     private val navController: NavController
 ) : RecentBookmarksController {
 
-    override fun handleBookmarkClicked(bookmark: BookmarkNode) {
+    override fun handleBookmarkClicked(bookmark: RecentBookmark) {
         dismissSearchDialogIfDisplayed()
         activity.openToBrowserAndLoad(
             searchTermOrURL = bookmark.url!!,
