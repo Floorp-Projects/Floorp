@@ -94,13 +94,6 @@ VideoChunk GenerateChunk(int32_t aWidth, int32_t aHeight, TimeStamp aTime) {
   return c;
 }
 
-static TimeDuration SameFrameTimeDuration() {
-  // On some platforms, particularly Windows, we have observed the same-frame
-  // timer firing early. To not unittest the timer itself we allow a tiny amount
-  // of fuzziness in when the timer is allowed to fire.
-  return TimeDuration::FromSeconds(1) - TimeDuration::FromMilliseconds(0.5);
-}
-
 TEST_F(VideoFrameConverterTest, BasicConversion) {
   auto framesPromise = TakeNConvertedFrames(1);
   TimeStamp now = TimeStamp::Now();
@@ -168,8 +161,7 @@ TEST_F(VideoFrameConverterTest, Duplication) {
   mConverter->SetActive(true);
   mConverter->QueueVideoChunk(chunk, false);
   auto frames = WaitFor(framesPromise).unwrap();
-  EXPECT_GT(TimeStamp::Now() - now,
-            SameFrameTimeDuration() + TimeDuration::FromMilliseconds(100));
+  EXPECT_GT(TimeStamp::Now() - now, TimeDuration::FromMilliseconds(1100));
   ASSERT_EQ(frames.size(), 2U);
   const auto& [frame0, conversionTime0] = frames[0];
   EXPECT_EQ(frame0.width(), 640);
@@ -181,9 +173,11 @@ TEST_F(VideoFrameConverterTest, Duplication) {
   EXPECT_EQ(frame1.width(), 640);
   EXPECT_EQ(frame1.height(), 480);
   EXPECT_FALSE(IsFrameBlack(frame1));
-  EXPECT_GT(conversionTime1 - now,
-            SameFrameTimeDuration() + TimeDuration::FromMilliseconds(100));
+  EXPECT_GT(conversionTime1 - now, TimeDuration::FromMilliseconds(1100));
   EXPECT_EQ(frame1.timestamp_us() - frame0.timestamp_us(), USECS_PER_S);
+
+  // Check that we re-used the old buffer.
+  EXPECT_EQ(frame0.video_frame_buffer(), frame1.video_frame_buffer());
 }
 
 TEST_F(VideoFrameConverterTest, DropsOld) {
@@ -207,7 +201,9 @@ TEST_F(VideoFrameConverterTest, DropsOld) {
 // We check that the disabling code was triggered by sending multiple,
 // different, frames to the converter within one second. While black, it shall
 // treat all frames identical and issue one black frame per second.
-TEST_F(VideoFrameConverterTest, BlackOnDisable) {
+// This version disables before queuing a frame. A frame will have to be
+// invented.
+TEST_F(VideoFrameConverterTest, BlackOnDisableCreated) {
   auto framesPromise = TakeNConvertedFrames(2);
   TimeStamp now = TimeStamp::Now();
   TimeStamp future1 = now + TimeDuration::FromMilliseconds(100);
@@ -215,11 +211,11 @@ TEST_F(VideoFrameConverterTest, BlackOnDisable) {
   TimeStamp future3 = now + TimeDuration::FromMilliseconds(400);
   mConverter->SetActive(true);
   mConverter->SetTrackEnabled(false);
-  mConverter->QueueVideoChunk(GenerateChunk(640, 480, future1), false);
-  mConverter->QueueVideoChunk(GenerateChunk(640, 480, future2), false);
-  mConverter->QueueVideoChunk(GenerateChunk(640, 480, future3), false);
+  mConverter->QueueVideoChunk(GenerateChunk(800, 600, future1), false);
+  mConverter->QueueVideoChunk(GenerateChunk(800, 600, future2), false);
+  mConverter->QueueVideoChunk(GenerateChunk(800, 600, future3), false);
   auto frames = WaitFor(framesPromise).unwrap();
-  EXPECT_GT(TimeStamp::Now() - now, SameFrameTimeDuration());
+  EXPECT_GT(TimeStamp::Now() - now, TimeDuration::FromSeconds(1));
   ASSERT_EQ(frames.size(), 2U);
   // The first frame was created instantly by SetTrackEnabled().
   const auto& [frame0, conversionTime0] = frames[0];
@@ -232,9 +228,51 @@ TEST_F(VideoFrameConverterTest, BlackOnDisable) {
   EXPECT_EQ(frame1.width(), 640);
   EXPECT_EQ(frame1.height(), 480);
   EXPECT_TRUE(IsFrameBlack(frame1));
-  EXPECT_GT(conversionTime1 - now, SameFrameTimeDuration());
+  EXPECT_GT(conversionTime1 - now, TimeDuration::FromSeconds(1));
   // Check that the second frame comes 1s after the first.
   EXPECT_EQ(frame1.timestamp_us(), frame0.timestamp_us() + PR_USEC_PER_SEC);
+}
+
+// We check that the disabling code was triggered by sending multiple,
+// different, frames to the converter within one second. While black, it shall
+// treat all frames identical and issue one black frame per second.
+// This version queues a frame before disabling.
+TEST_F(VideoFrameConverterTest, BlackOnDisableDuplicated) {
+  TimeStamp now = TimeStamp::Now();
+  TimeStamp future1 = now + TimeDuration::FromMilliseconds(100);
+  TimeStamp future2 = now + TimeDuration::FromMilliseconds(200);
+  TimeStamp future3 = now + TimeDuration::FromMilliseconds(400);
+  mConverter->SetActive(true);
+  mConverter->QueueVideoChunk(GenerateChunk(800, 600, future1), false);
+  mConverter->QueueVideoChunk(GenerateChunk(800, 600, future2), false);
+  mConverter->QueueVideoChunk(GenerateChunk(800, 600, future3), false);
+
+  const auto [frame0, conversionTime0] =
+      WaitFor(TakeNConvertedFrames(1)).unwrap()[0];
+  mConverter->SetTrackEnabled(false);
+  // The first frame was queued.
+  EXPECT_EQ(frame0.width(), 800);
+  EXPECT_EQ(frame0.height(), 600);
+  EXPECT_FALSE(IsFrameBlack(frame0));
+  EXPECT_GT(conversionTime0 - now, future1 - now);
+
+  auto frames = WaitFor(TakeNConvertedFrames(2)).unwrap();
+  ASSERT_EQ(frames.size(), 2U);
+  // The second frame was duplicated by SetTrackEnabled.
+  const auto& [frame1, conversionTime1] = frames[0];
+  EXPECT_EQ(frame1.width(), 800);
+  EXPECT_EQ(frame1.height(), 600);
+  EXPECT_TRUE(IsFrameBlack(frame1));
+  EXPECT_GT(conversionTime1 - now, future1 - now);
+  // The third frame was created by the same-frame timer (after 1s).
+  const auto& [frame2, conversionTime2] = frames[1];
+  EXPECT_EQ(frame2.width(), 800);
+  EXPECT_EQ(frame2.height(), 600);
+  EXPECT_TRUE(IsFrameBlack(frame2));
+  EXPECT_GT(conversionTime2 - now,
+            future1 - now + TimeDuration::FromSeconds(1));
+  // Check that the third frame comes 1s after the second.
+  EXPECT_EQ(frame2.timestamp_us(), frame1.timestamp_us() + PR_USEC_PER_SEC);
 }
 
 TEST_F(VideoFrameConverterTest, ClearFutureFramesOnJumpingBack) {
@@ -254,7 +292,7 @@ TEST_F(VideoFrameConverterTest, ClearFutureFramesOnJumpingBack) {
   ASSERT_GT(step1 - start, future1 - start);
   TimeStamp future2 = step1 + TimeDuration::FromMilliseconds(200);
   TimeStamp future3 = step1 + TimeDuration::FromMilliseconds(100);
-  ASSERT_LT(future2 - start, future1 + SameFrameTimeDuration() - start);
+  ASSERT_LT(future2 - start, future1 + TimeDuration::FromSeconds(1) - start);
   mConverter->QueueVideoChunk(GenerateChunk(800, 600, future2), false);
   VideoChunk nullChunk;
   nullChunk.mFrame = VideoFrame(nullptr, gfx::IntSize(800, 600));
