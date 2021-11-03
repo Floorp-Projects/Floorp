@@ -83,7 +83,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
         });
   }
 
-  Maybe<DOMHighResTimeStamp> LastRtcpReceived() const override;
   Maybe<uint16_t> RtpSendBaseSeqFor(uint32_t aSsrc) const override;
 
   DOMHighResTimeStamp GetNow() const override;
@@ -281,9 +280,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   // Accessed from mStsThread. Last successfully polled RTT
   Maybe<DOMHighResTimeStamp> mRttSec;
-
-  // Call thread.
-  Maybe<DOMHighResTimeStamp> mLastRtcpReceived;
 
   // Call thread only. ssrc -> base_seq
   std::map<uint32_t, uint16_t> mRtpSendBaseSeqs;
