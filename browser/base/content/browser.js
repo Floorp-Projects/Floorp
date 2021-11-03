@@ -552,9 +552,9 @@ customElements.setElementCreationCallback("translation-notification", () => {
   );
 });
 
-customElements.setElementCreationCallback("screenshots-buttons", () => {
+customElements.setElementCreationCallback("screenshots-div", () => {
   Services.scriptloader.loadSubScript(
-    "chrome://browser/content/screenshots/screenshots-buttons.js",
+    "chrome://browser/content/screenshots/screenshots.js",
     window
   );
 });
