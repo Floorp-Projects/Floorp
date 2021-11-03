@@ -53,7 +53,9 @@
 }
 
 #downloadsPanel-blockedSubview[verdict="PotentiallyUnwanted"] .downloadsPanel-blockedSubview-image,
-@item@[verdict="PotentiallyUnwanted"] .downloadBlockedBadge {
+#downloadsPanel-blockedSubview[verdict="DownloadSpam"] .downloadsPanel-blockedSubview-image,
+@item@[verdict="PotentiallyUnwanted"] .downloadBlockedBadge,
+@item@[verdict="DownloadSpam"] .downloadBlockedBadge  {
   -moz-context-properties: fill;
   fill: #ffbf00;
   background-image: url("chrome://global/skin/icons/warning.svg");
