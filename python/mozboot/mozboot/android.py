@@ -11,6 +11,9 @@ import stat
 import subprocess
 import sys
 import time
+import requests
+from pathlib import Path
+from tqdm import tqdm
 
 # We need the NDK version in multiple different places, and it's inconvenient
 # to pass down the NDK version to all relevant places, so we have this global
@@ -114,19 +117,15 @@ def install_bundletool(url, path):
 
 def install_mobile_android_sdk_or_ndk(url, path):
     """
-    Fetch an Android SDK or NDK from |url| and unpack it into
-    the given |path|.
+    Fetch an Android SDK or NDK from |url| and unpack it into the given |path|.
 
-    We expect wget to be installed and found on the system path.
-
-    We use, and wget respects, https.  We could also include SHAs for a
+    We use, and 'requests' respects, https. We could also include SHAs for a
     small improvement in the integrity guarantee we give. But this script is
     bootstrapped over https anyway, so it's a really minor improvement.
 
-    We use |wget --continue| as a cheap cache of the downloaded artifacts,
-    writing into |path|/mozboot.  We don't yet clean the cache; it's better
-    to waste disk and not require a long re-download than to wipe the cache
-    prematurely.
+    We keep a cache of the downloaded artifacts, writing into |path|/mozboot.
+    We don't yet clean the cache; it's better to waste some disk space and
+    not require a long re-download than to wipe the cache prematurely.
     """
 
     old_path = os.getcwd()
@@ -141,26 +140,45 @@ def install_mobile_android_sdk_or_ndk(url, path):
                 raise
 
         os.chdir(download_path)
-        subprocess.check_call(["wget", "--continue", url])
-        file = url.split("/")[-1]
+
+        file_name = url.split("/")[-1]
+        abspath = os.path.join(download_path, file_name)
+
+        file = Path(abspath)
+
+        with requests.Session() as session:
+            request = session.head(url)
+            remote_file_size = int(request.headers["content-length"])
+
+            if file.is_file():
+                local_file_size = file.stat().st_size
+
+                if local_file_size == remote_file_size:
+                    print(f"{file} already downloaded. Skipping download...")
+                else:
+                    print(f"Partial download detected. Resuming download of {file}...")
+                    download(file_name, session, url, remote_file_size, local_file_size)
+            else:
+                print(f"Downloading {file}...")
+                download(file_name, session, url, remote_file_size)
 
         os.chdir(path)
-        abspath = os.path.join(download_path, file)
-        if file.endswith(".tar.gz") or file.endswith(".tgz"):
+
+        if file_name.endswith(".tar.gz") or file_name.endswith(".tgz"):
             cmd = ["tar", "zxf", abspath]
-        elif file.endswith(".tar.bz2"):
+        elif file_name.endswith(".tar.bz2"):
             cmd = ["tar", "jxf", abspath]
-        elif file.endswith(".zip"):
+        elif file_name.endswith(".zip"):
             cmd = ["unzip", "-q", abspath]
-        elif file.endswith(".bin"):
+        elif file_name.endswith(".bin"):
             # Execute the .bin file, which unpacks the content.
             mode = os.stat(path).st_mode
             os.chmod(abspath, mode | stat.S_IXUSR)
             cmd = [abspath]
         else:
-            raise NotImplementedError("Don't know how to unpack file: %s" % file)
+            raise NotImplementedError(f"Don't know how to unpack file: {file_name}")
 
-        print("Unpacking %s..." % abspath)
+        print(f"Unpacking {file}...")
 
         with open(os.devnull, "w") as stdout:
             # These unpack commands produce a ton of output; ignore it.  The
@@ -168,11 +186,45 @@ def install_mobile_android_sdk_or_ndk(url, path):
             # output, so we use this hammer.
             subprocess.check_call(cmd, stdout=stdout)
 
-        print("Unpacking %s... DONE" % abspath)
+        print(f"Unpacking {file}... DONE")
         # Now delete the archive
         os.unlink(abspath)
     finally:
         os.chdir(old_path)
+
+
+def download(
+    file_name, session, url, remote_file_size, resume_from_byte_pos: int = None
+):
+    """
+    Handles both a fresh SDK/NDK download, as well as resuming a partial one
+    """
+    # "ab" will behave same as "wb" if file does not exist
+    with open(file_name, "ab") as file:
+        # 64 KB/s should be fine on even the slowest internet connections
+        chunk_size = 1024 * 64
+        # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Range#directives
+        resume_header = (
+            {"Range": f"bytes={resume_from_byte_pos}-"}
+            if resume_from_byte_pos
+            else None
+        )
+
+        request = session.get(
+            url, stream=True, allow_redirects=True, headers=resume_header
+        )
+
+        with tqdm(
+            total=int(remote_file_size),
+            unit="B",
+            unit_scale=True,
+            unit_divisor=1024,
+            desc=file_name,
+            initial=resume_from_byte_pos if resume_from_byte_pos else 0,
+        ) as progress_bar:
+            for chunk in request.iter_content(chunk_size):
+                file.write(chunk)
+                progress_bar.update(len(chunk))
 
 
 def get_ndk_version(ndk_path):

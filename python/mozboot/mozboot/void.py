@@ -29,7 +29,6 @@ class VoidBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
     MOBILE_ANDROID_PACKAGES = [
         "openjdk8",  # Android's `sdkmanager` requires Java 1.8 exactly.
-        "wget",  # For downloading the Android SDK and NDK.
     ]
 
     def __init__(self, version, dist_id, **kwargs):
