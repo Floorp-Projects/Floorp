@@ -42,6 +42,7 @@ class BrowserBridgeHost : public RemoteBrowser {
   LayersId GetLayersId() const override;
   BrowsingContext* GetBrowsingContext() const override;
   nsILoadContext* GetLoadContext() const override;
+  bool CanRecv() const override;
 
   void LoadURL(nsDocShellLoadState* aLoadState) override;
   void ResumeLoad(uint64_t aPendingSwitchId) override;
