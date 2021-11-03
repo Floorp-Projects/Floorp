@@ -96,6 +96,11 @@ git = "https://github.com/bytecodealliance/wasmtime"
 replace-with = "vendored-sources"
 rev = "824fa69756523f2b6d49029fe25de94130b1f144"
 
+[source."https://github.com/alexcrichton/cc-rs/"]
+git = "https://github.com/alexcrichton/cc-rs/"
+replace-with = "vendored-sources"
+rev = "b2f6b146b75299c444e05bbde50d03705c7c4b6e"
+
 [source.crates-io]
 replace-with = "vendored-sources"
 
