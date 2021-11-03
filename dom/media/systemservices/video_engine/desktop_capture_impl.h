@@ -178,10 +178,8 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
 
   const char* CurrentDeviceName() const override;
 
-  // |capture_time| must be specified in the NTP time format in milliseconds.
   int32_t IncomingFrame(uint8_t* videoFrame, size_t videoFrameLength,
-                        const VideoCaptureCapability& frameInfo,
-                        int64_t captureTime = 0);
+                        const VideoCaptureCapability& frameInfo);
 
   // Platform dependent
   int32_t StartCapture(const VideoCaptureCapability& capability) override;
@@ -194,8 +192,7 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
   DesktopCaptureImpl(const int32_t id, const char* uniqueId,
                      const CaptureDeviceType type);
   virtual ~DesktopCaptureImpl();
-  int32_t DeliverCapturedFrame(webrtc::VideoFrame& captureFrame,
-                               int64_t capture_time);
+  int32_t DeliverCapturedFrame(webrtc::VideoFrame& captureFrame);
 
   static const uint32_t kMaxDesktopCaptureCpuUsage =
       50;  // maximum CPU usage in %
@@ -223,10 +220,7 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
   std::atomic<uint32_t> _maxFPSNeeded;
 
   // Used to make sure incoming timestamp is increasing for every frame.
-  int64_t last_capture_time_;
-
-  // Delta used for translating between NTP and internal timestamps.
-  const int64_t delta_ntp_internal_ms_;
+  int64_t last_capture_time_ms_;
 
   // DesktopCapturer::Callback interface.
   void OnCaptureResult(DesktopCapturer::Result result,
