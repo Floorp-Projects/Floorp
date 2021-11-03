@@ -22,7 +22,7 @@ class ScreenshotsUI extends HTMLElement {
   async connectedCallback() {
     this.initialize();
 
-    await this.takeScreenshot();
+    await this.takeVisibleScreenshot();
   }
 
   initialize() {
@@ -178,7 +178,7 @@ class ScreenshotsUI extends HTMLElement {
     return clipFilename + extension;
   }
 
-  async takeScreenshot() {
+  async takeVisibleScreenshot() {
     let params = new URLSearchParams(location.search);
     let browsingContextId = parseInt(params.get("browsingContextId"), 10);
     let browsingContext = BrowsingContext.get(browsingContextId);
