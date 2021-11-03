@@ -16,7 +16,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  OS: "resource://gre/modules/osfile.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -187,8 +186,8 @@ class _RemoteL10n {
     let useRemoteL10n = Services.prefs.getBoolPref(USE_REMOTE_L10N_PREF, true);
     if (useRemoteL10n && !L10nRegistry.getInstance().hasSource("cfr")) {
       const appLocale = Services.locale.appLocaleAsBCP47;
-      const l10nFluentDir = OS.Path.join(
-        OS.Constants.Path.localProfileDir,
+      const l10nFluentDir = PathUtils.joinRelative(
+        Services.dirsvc.get("ProfD", Ci.nsIFile).path,
         RS_DOWNLOADED_FILE_SUBDIR
       );
       let cfrIndexedFileSource = new L10nFileSource(
