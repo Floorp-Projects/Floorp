@@ -288,7 +288,7 @@ class AudioContext final : public DOMEventTargetHelper,
   already_AddRefed<OscillatorNode> CreateOscillator(ErrorResult& aRv);
 
   already_AddRefed<PeriodicWave> CreatePeriodicWave(
-      const Float32Array& aRealData, const Float32Array& aImagData,
+      const Sequence<float>& aRealData, const Sequence<float>& aImagData,
       const PeriodicWaveConstraints& aConstraints, ErrorResult& aRv);
 
   already_AddRefed<Promise> DecodeAudioData(
