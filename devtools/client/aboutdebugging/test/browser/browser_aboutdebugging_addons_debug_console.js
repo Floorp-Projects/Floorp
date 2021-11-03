@@ -60,6 +60,29 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
   hud.ui.wrapper.dispatchEvaluateExpression("myWebExtensionAddonFunction()");
   await onMessage;
 
+  // Verify that console evaluations still work after reloading the page
+  info("Reload the webextension document");
+  const {
+    onDomCompleteResource,
+  } = await waitForNextTopLevelDomCompleteResource(toolbox.commands);
+  hud.ui.wrapper.dispatchEvaluateExpression("location.reload()");
+  await onDomCompleteResource;
+
+  info("Try to evaluate something after reload");
+  const onEvaluationResultAfterReload = waitUntil(() => {
+    return findMessages(hud, "result:2").length > 0;
+  });
+  const onMessageAfterReload = waitUntil(() => {
+    return findMessages(hud, "message after reload", ".console-api").length > 0;
+  });
+  hud.ui.wrapper.dispatchEvaluateExpression(
+    "console.log('message after reload'); 'result:' + (1 + 1)"
+  );
+  // Both cover that the console.log worked
+  await onMessageAfterReload;
+  // And we received the evaluation result
+  await onEvaluationResultAfterReload;
+
   await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
   await removeTemporaryExtension(ADDON_NAME, document);
   await removeTab(tab);
