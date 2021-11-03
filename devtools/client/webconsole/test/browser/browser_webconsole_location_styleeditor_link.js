@@ -37,10 +37,7 @@ async function testViewSource(hud, toolbox, text) {
 
   const onStyleEditorSelected = toolbox.once("styleeditor-selected");
 
-  EventUtils.sendMouseEvent(
-    { type: "click" },
-    messageNode.querySelector(".frame-link-filename")
-  );
+  messageNode.querySelector(".frame-link-filename").click();
 
   const panel = await onStyleEditorSelected;
   ok(
@@ -64,7 +61,11 @@ async function testViewSource(hud, toolbox, text) {
 async function onStyleEditorReady(panel) {
   const win = panel.panelWindow;
   ok(win, "Style Editor Window is defined");
-  ok(panel.UI, "Style Editor UI is defined");
+  is(
+    win.location.toString(),
+    "chrome://devtools/content/styleeditor/index.xhtml",
+    "This is the expected styleEditor document"
+  );
 
   info("Waiting the style editor to be focused");
   return new Promise(resolve => {
@@ -87,16 +88,16 @@ function getEditorForHref(styleEditorUI, href) {
 
 async function checkCursorPosition(styleEditorUI, editor, line, column) {
   info("wait for source editor to load");
-  // Get out of the styleeditor-selected event loop.
-  await waitForTick();
+  await editor.getSourceEditor();
 
   // Get the updated line and column position if the CSS source was prettified.
   const position = editor.translateCursorPosition(line, column);
   line = position.line;
   column = position.column;
 
-  is(editor.sourceEditor.getCursor().line, line, "correct line is selected");
-  is(editor.sourceEditor.getCursor().ch, column, "correct column is selected");
+  const cursor = editor.sourceEditor.getCursor();
+  is(cursor.line, line, "correct line is selected");
+  is(cursor.ch, column, "correct column is selected");
   is(
     styleEditorUI.selectedStyleSheetIndex,
     editor.styleSheet.styleSheetIndex,
