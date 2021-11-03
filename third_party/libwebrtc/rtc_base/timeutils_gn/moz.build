@@ -29,6 +29,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
+    "/third_party/libwebrtc/rtc_base/system_time.cc",
     "/third_party/libwebrtc/rtc_base/time_utils.cc"
 ]
 
@@ -49,6 +50,7 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["HAVE_SYS_UIO_H"] = True
     DEFINES["WEBRTC_ANDROID"] = True
     DEFINES["WEBRTC_ANDROID_OPENSLES"] = True
+    DEFINES["WEBRTC_EXCLUDE_SYSTEM_TIME"] = True
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_GNU_SOURCE"] = True
@@ -61,6 +63,7 @@ if CONFIG["OS_TARGET"] == "Android":
 
 if CONFIG["OS_TARGET"] == "Darwin":
 
+    DEFINES["WEBRTC_EXCLUDE_SYSTEM_TIME"] = True
     DEFINES["WEBRTC_MAC"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_LIBCPP_HAS_NO_ALIGNED_ALLOCATION"] = True
@@ -76,6 +79,7 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["USE_OZONE"] = "1"
     DEFINES["USE_UDEV"] = True
     DEFINES["USE_X11"] = "1"
+    DEFINES["WEBRTC_EXCLUDE_SYSTEM_TIME"] = True
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
@@ -93,6 +97,7 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["PSAPI_VERSION"] = "2"
     DEFINES["UNICODE"] = True
     DEFINES["USE_AURA"] = "1"
+    DEFINES["WEBRTC_EXCLUDE_SYSTEM_TIME"] = True
     DEFINES["WEBRTC_WIN"] = True
     DEFINES["WIN32"] = True
     DEFINES["WIN32_LEAN_AND_MEAN"] = True
