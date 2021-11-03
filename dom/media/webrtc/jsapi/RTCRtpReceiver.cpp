@@ -233,11 +233,7 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
             nsString idstr = kind + u"_"_ns;
             idstr.AppendInt(static_cast<uint32_t>(pipeline->Level()));
 
-            Maybe<uint32_t> ssrc;
-            if (unsigned int ssrcval = 0;
-                pipeline->mConduit->GetRemoteSSRC(&ssrcval)) {
-              ssrc = Some(ssrcval);
-            }
+            Maybe<uint32_t> ssrc = pipeline->mConduit->GetRemoteSSRC();
 
             // Add frame history
             asVideo.apply([&](const auto& conduit) {

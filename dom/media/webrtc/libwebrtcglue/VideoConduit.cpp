@@ -1085,10 +1085,12 @@ void WebrtcVideoConduit::UnsetRemoteSSRC(uint32_t ssrc) {
   SetRemoteSSRCAndRestartAsNeeded(our_ssrc, 0);
 }
 
-bool WebrtcVideoConduit::GetRemoteSSRC(uint32_t* aSsrc) const {
+Maybe<Ssrc> WebrtcVideoConduit::GetRemoteSSRC() const {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   // libwebrtc uses 0 to mean a lack of SSRC. That is not to spec.
-  return (*aSsrc = mRecvStreamConfig.rtp.remote_ssrc) != 0;
+  return mRecvStreamConfig.rtp.remote_ssrc == 0
+             ? Nothing()
+             : Some(mRecvStreamConfig.rtp.remote_ssrc);
 }
 
 Maybe<webrtc::VideoReceiveStream::Stats> WebrtcVideoConduit::GetReceiverStats()
