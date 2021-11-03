@@ -303,11 +303,11 @@ dependencies = [
 
 [[package]]
 name = "core-foundation"
-version = "0.9.0"
+version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b5ed8e7e76c45974e15e41bfa8d5b0483cd90191639e01d8f5f1e606299d3fb"
+checksum = "6888e10551bb93e424d8df1d07f1a8b4fceb0001a3a4b048bfc47554946f47b3"
 dependencies = [
- "core-foundation-sys 0.8.2",
+ "core-foundation-sys 0.8.3",
  "libc",
 ]
 
@@ -325,9 +325,9 @@ checksum = "b3a71ab494c0b5b860bdc8407ae08978052417070c2ced38573a9157ad75b8ac"
 
 [[package]]
 name = "core-foundation-sys"
-version = "0.8.2"
+version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea221b5284a47e40033bf9b66f35f984ec0ea2931eb03505246cd27a963f981b"
+checksum = "5827cebf4670468b8772dd191856768aedcb1b0278a04f989f7766351917b9dc"
 
 [[package]]
 name = "core-graphics"
@@ -348,7 +348,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f6082396a349fa49674ba1bda4077332a18bf150e8fa75745ece07085e29a113"
 dependencies = [
  "bitflags",
- "core-foundation 0.9.0",
+ "core-foundation 0.9.2",
  "core-graphics-types",
  "foreign-types",
  "libc",
@@ -361,7 +361,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e92f5d519093a4178296707dbaa3880eae85a5ef5386675f361a1cf25376e93c"
 dependencies = [
  "bitflags",
- "core-foundation 0.9.0",
+ "core-foundation 0.9.2",
  "foreign-types",
  "libc",
 ]
@@ -372,7 +372,7 @@ version = "19.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04dfae50af11e72657fe7174cddb1ecddc5398037f7f6f39533ad69207c9a4e2"
 dependencies = [
- "core-foundation 0.9.0",
+ "core-foundation 0.9.2",
  "core-graphics 0.22.0",
  "foreign-types",
  "libc",
@@ -545,7 +545,7 @@ version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c49d6b4c11dca1a1dd931a34a9f397e2da91abe3de4110505f3530a80e560b52"
 dependencies = [
- "core-foundation 0.9.0",
+ "core-foundation 0.9.2",
  "core-text",
  "libc",
  "servo-fontconfig",
@@ -1674,7 +1674,7 @@ dependencies = [
  "bitflags",
  "build-parallel",
  "byteorder",
- "core-foundation 0.9.0",
+ "core-foundation 0.9.2",
  "core-graphics 0.22.0",
  "core-text",
  "derive_more",
@@ -1731,7 +1731,7 @@ dependencies = [
  "app_units",
  "bitflags",
  "byteorder",
- "core-foundation 0.9.0",
+ "core-foundation 0.9.2",
  "core-graphics 0.22.0",
  "crossbeam-channel",
  "derive_more",
@@ -1833,7 +1833,7 @@ dependencies = [
  "base64",
  "chrono",
  "clap",
- "core-foundation 0.9.0",
+ "core-foundation 0.9.2",
  "core-graphics 0.22.0",
  "crossbeam",
  "dwrote",
