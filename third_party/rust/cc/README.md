@@ -189,6 +189,7 @@ fn main() {
     cc::Build::new()
         // Switch to CUDA C++ library compilation using NVCC.
         .cuda(true)
+        .cudart("static")
         // Generate code for Maxwell (GTX 970, 980, 980 Ti, Titan X).
         .flag("-gencode").flag("arch=compute_52,code=sm_52")
         // Generate code for Maxwell (Jetson TX1).
