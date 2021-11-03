@@ -13,6 +13,7 @@
 #include "VideoUtils.h"
 #include "nsISupportsImpl.h"
 #include "nsThreadUtils.h"
+#include "jsapi/RTCStatsReport.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageUtils.h"
@@ -20,7 +21,6 @@
 #include "common_video/include/i420_buffer_pool.h"
 #include "common_video/include/video_frame_buffer.h"
 #include "rtc_base/keep_ref_until_done.h"
-#include "system_wrappers/include/clock.h"
 
 // The number of frame buffers VideoFrameConverter may create before returning
 // errors.
@@ -54,8 +54,10 @@ class VideoFrameConverter {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VideoFrameConverter)
 
-  VideoFrameConverter()
-      : mTaskQueue(
+  explicit VideoFrameConverter(
+      const dom::RTCStatsTimestampMaker& aTimestampMaker)
+      : mTimestampMaker(aTimestampMaker),
+        mTaskQueue(
             new TaskQueue(GetMediaThreadPool(MediaThreadType::WEBRTC_WORKER),
                           "VideoFrameConverter")),
         mPacingTimer(new MediaTimer()),
@@ -231,7 +233,7 @@ class VideoFrameConverter {
     }
 
     self->mLastFrameConverted->set_timestamp_us(
-        webrtc::Clock::GetRealTimeClock()->TimeInMicroseconds());
+        self->mTimestampMaker.GetNowRealtime().us());
     for (RefPtr<VideoConverterListener>& listener : self->mListeners) {
       listener->OnVideoFrameConverted(*self->mLastFrameConverted);
     }
@@ -308,7 +310,7 @@ class VideoFrameConverter {
 
     // See Bug 1529581 - Ideally we'd use the mTimestamp from the chunk
     // passed into QueueVideoChunk rather than the webrtc.org clock here.
-    int64_t now = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
+    const webrtc::Timestamp now = mTimestampMaker.GetNowRealtime();
 
     if (aFrame.mForceBlack) {
       // Send a black image.
@@ -328,7 +330,7 @@ class VideoFrameConverter {
       webrtc::I420Buffer::SetBlack(buffer);
 
       webrtc::VideoFrame frame(buffer, 0,  // not setting rtp timestamp
-                               now, webrtc::kVideoRotation_0);
+                               now.ms(), webrtc::kVideoRotation_0);
       VideoFrameConverted(frame);
       return;
     }
@@ -354,7 +356,7 @@ class VideoFrameConverter {
 
         webrtc::VideoFrame i420_frame(video_frame_buffer,
                                       0,  // not setting rtp timestamp
-                                      now, webrtc::kVideoRotation_0);
+                                      now.ms(), webrtc::kVideoRotation_0);
         MOZ_LOG(gVideoFrameConverterLog, LogLevel::Verbose,
                 ("Sending an I420 video frame"));
         VideoFrameConverted(i420_frame);
@@ -390,9 +392,11 @@ class VideoFrameConverter {
     }
 
     webrtc::VideoFrame frame(buffer, 0,  // not setting rtp timestamp
-                             now, webrtc::kVideoRotation_0);
+                             now.ms(), webrtc::kVideoRotation_0);
     VideoFrameConverted(frame);
   }
+
+  const dom::RTCStatsTimestampMaker mTimestampMaker;
 
   const RefPtr<TaskQueue> mTaskQueue;
 

@@ -29,6 +29,7 @@ constexpr int kPacketLogIntervalMs = 10000;
 
 }  // namespace
 
+/* Mozilla: Avoid this since it could use GetRealTimeClock().
 FlexfecReceiver::FlexfecReceiver(
     uint32_t ssrc,
     uint32_t protected_media_ssrc,
@@ -37,6 +38,7 @@ FlexfecReceiver::FlexfecReceiver(
                       ssrc,
                       protected_media_ssrc,
                       recovered_packet_receiver) {}
+ */
 
 FlexfecReceiver::FlexfecReceiver(
     Clock* clock,
