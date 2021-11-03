@@ -41185,6 +41185,7 @@
                 "-Wunused-lambda-capture"
             ],
             "defines": [
+                "WEBRTC_EXCLUDE_SYSTEM_TIME",
                 "_GNU_SOURCE",
                 "ANDROID",
                 "HAVE_SYS_UIO_H",
@@ -41225,6 +41226,8 @@
                 "log"
             ],
             "sources": [
+                "//rtc_base/system_time.cc",
+                "//rtc_base/system_time.h",
                 "//rtc_base/time_utils.cc",
                 "//rtc_base/time_utils.h"
             ],
