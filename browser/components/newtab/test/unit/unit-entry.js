@@ -251,9 +251,6 @@ const TEST_GLOBAL = {
     join(...parts) {
       return parts[parts.length - 1];
     },
-    joinRelative(...parts) {
-      return parts[parts.length - 1];
-    },
     getProfileDir() {
       return Promise.resolve("/");
     },
