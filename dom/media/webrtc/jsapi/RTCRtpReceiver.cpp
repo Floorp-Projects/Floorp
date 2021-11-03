@@ -292,7 +292,11 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
               if (audioStats->last_sender_report_timestamp_ms) {
                 RTCRemoteOutboundRtpStreamStats remote;
                 constructCommonRemoteOutboundRtpStats(
-                    remote, *audioStats->last_sender_report_timestamp_ms);
+                    remote,
+                    aConduit->GetTimestampMaker().ConvertNtpToDomTime(
+                        webrtc::Timestamp::Millis(
+                            *audioStats->last_sender_report_timestamp_ms) +
+                        webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970)));
                 remote.mPacketsSent.Construct(
                     audioStats->sender_reports_packets_sent);
                 remote.mBytesSent.Construct(
@@ -317,7 +321,10 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
                * Potential new stats that are now available upstream.
               if (audioStats->last_packet_received_timestamp_ms) {
                 local.mLastPacketReceivedTimestamp.Construct(
-                    *audioStats->last_packet_received_timestamp_ms);
+                    aConduit->GetTimestampMaker().ConvertNtpToDomTime(
+                        webrtc::Timestamp::Millis(
+                            *audioStats->last_packet_received_timestamp_ms) +
+                        webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970)));
               }
               local.mHeaderBytesReceived.Construct(
                   audioStats->header_and_padding_bytes_rcvd);
@@ -327,10 +334,9 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
                   audioStats->fec_packets_discarded);
               if (audioStats->estimated_playout_ntp_timestamp_ms) {
                 local.mEstimatedPlayoutTimestamp.Construct(
-                    (webrtc::Timestamp::Millis(
-                         *audioStats->estimated_playout_ntp_timestamp_ms) -
-                     webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970))
-                        .ms());
+                    aConduit->GetTimestampMaker().ConvertNtpToDomTime(
+                        webrtc::Timestamp::Millis(
+                            *audioStats->estimated_playout_ntp_timestamp_ms)));
               }
               local.mJitterBufferDelay.Construct(
                   audioStats->jitter_buffer_delay_seconds);
@@ -373,10 +379,9 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
               if (videoStats->rtcp_sender_ntp_timestamp_ms) {
                 RTCRemoteOutboundRtpStreamStats remote;
                 constructCommonRemoteOutboundRtpStats(
-                    remote, (webrtc::Timestamp::Millis(
-                                 videoStats->rtcp_sender_ntp_timestamp_ms) -
-                             webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970))
-                                .ms());
+                    remote, aConduit->GetTimestampMaker().ConvertNtpToDomTime(
+                                webrtc::Timestamp::Millis(
+                                    videoStats->rtcp_sender_ntp_timestamp_ms)));
                 remote.mPacketsSent.Construct(
                     videoStats->rtcp_sender_packets_sent);
                 remote.mBytesSent.Construct(
@@ -432,17 +437,20 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
                   videoStats->total_squared_inter_frame_delay);
               if (videoStats->rtp_stats.last_packet_received_timestamp_ms) {
                 local.mLastPacketReceiveTimestamp.Construct(
-                    *videoStats->rtp_stats.last_packet_received_timestamp_ms);
+                    aConduit->GetTimestampMaker().ConvertNtpToDomTime(
+                        webrtc::Timestamp::Millis(
+                            *videoStats->rtp_stats
+                                 .last_packet_received_timestamp_ms) +
+                        webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970)));
               }
               local.mHeaderBytesReceived.Construct(
                   videoStats->rtp_stats.packet_counter.header_bytes +
                   videoStats->rtp_stats.packet_counter.padding_bytes);
               if (videoStats->estimated_playout_ntp_timestamp_ms) {
                 local.mEstimatedPlayoutTimestamp.Construct(
-                    (webrtc::Timestamp::Millis(
-                         *videoStats->estimated_playout_ntp_timestamp_ms) -
-                     webrtc::TimeDelta::Seconds(webrtc::kNtpJan1970))
-                        .ms());
+                    aConduit->GetTimestampMaker().ConvertNtpToDomTime(
+                        webrtc::Timestamp::Millis(
+                            *videoStats->estimated_playout_ntp_timestamp_ms)));
               }
               local.mJitterBufferDelay.Construct(
                   videoStats->jitter_buffer_delay_seconds);
