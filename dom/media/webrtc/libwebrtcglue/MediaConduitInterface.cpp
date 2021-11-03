@@ -63,7 +63,7 @@ void MediaSessionConduit::UpdateRtpSources(
   // Fix up timestamps to be consistent with JS time. We assume that
   // source.timestamp_ms() was not terribly long ago, and so clock drift
   // between the libwebrtc clock and our JS clock is not that significant.
-  auto jsNow = GetNow();
+  auto jsNow = GetTimestampMaker().GetNow();
   double libwebrtcNow = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
 
   for (const auto& source : aSources) {
@@ -141,7 +141,7 @@ void MediaSessionConduit::InsertAudioLevelForContributingSource(
 
   int64_t libwebrtcNow =
       webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
-  double jsNow = GetNow();
+  double jsNow = GetTimestampMaker().GetNow();
   double ago = jsNow - aTimestamp;
   uint64_t convertedTimestamp = libwebrtcNow - ago;
 

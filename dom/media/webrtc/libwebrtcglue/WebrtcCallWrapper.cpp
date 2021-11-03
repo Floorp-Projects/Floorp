@@ -67,10 +67,6 @@ void WebrtcCallWrapper::UnregisterConduit(MediaSessionConduit* conduit) {
   mConduits.erase(conduit);
 }
 
-DOMHighResTimeStamp WebrtcCallWrapper::GetNow() const {
-  return mTimestampMaker.GetNow();
-}
-
 void WebrtcCallWrapper::Destroy() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mCall = nullptr;
