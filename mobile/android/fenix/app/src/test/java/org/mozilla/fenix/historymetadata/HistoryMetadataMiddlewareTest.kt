@@ -115,6 +115,55 @@ class HistoryMetadataMiddlewareTest {
     }
 
     @Test
+    fun `GIVEN normal tab is a search engine result page WHEN history metadata is recorded THEN search terms are provided`() {
+        service = TestingMetadataService()
+        middleware = HistoryMetadataMiddleware(service)
+        val tab = createTab("about:blank")
+        store = BrowserStore(
+            middleware = listOf(middleware) + EngineMiddleware.create(engine = mockk()),
+            initialState = BrowserState(
+                tabs = listOf(tab)
+            )
+        )
+        setupGoogleSearchEngine()
+
+        val serpUrl = "https://google.com?q=mozilla+website"
+        store.dispatch(EngineAction.LoadUrlAction(tab.id, serpUrl)).joinBlocking()
+        store.dispatch(ContentAction.UpdateUrlAction(tab.id, serpUrl)).joinBlocking()
+        store.dispatch(ContentAction.UpdateHistoryStateAction(tab.id, listOf(HistoryItem("Google Search", serpUrl)), currentIndex = 0)).joinBlocking()
+        with((service as TestingMetadataService).createdMetadata) {
+            assertEquals(1, this.count())
+            assertEquals("https://google.com?q=mozilla+website", this[0].url)
+            assertEquals("mozilla website", this[0].searchTerm)
+            assertNull(this[0].referrerUrl)
+        }
+    }
+
+    @Test
+    fun `GIVEN normal tab navigates to search engine result page WHEN history metadata is recorded THEN search terms are provided`() {
+        service = TestingMetadataService()
+        middleware = HistoryMetadataMiddleware(service)
+        val tab = createTab("https://google.com")
+        store = BrowserStore(
+            middleware = listOf(middleware) + EngineMiddleware.create(engine = mockk()),
+            initialState = BrowserState(
+                tabs = listOf(tab)
+            )
+        )
+        setupGoogleSearchEngine()
+
+        val serpUrl = "https://google.com?q=mozilla+website"
+        store.dispatch(ContentAction.UpdateUrlAction(tab.id, serpUrl)).joinBlocking()
+        store.dispatch(ContentAction.UpdateHistoryStateAction(tab.id, listOf(HistoryItem("Google Search", "https://google.com"), HistoryItem("Google Search", serpUrl)), currentIndex = 1)).joinBlocking()
+        with((service as TestingMetadataService).createdMetadata) {
+            assertEquals(1, this.count())
+            assertEquals("https://google.com?q=mozilla+website", this[0].url)
+            assertEquals("mozilla website", this[0].searchTerm)
+            assertNull(this[0].referrerUrl)
+        }
+    }
+
+    @Test
     fun `GIVEN tab opened as new tab from a search page WHEN search page navigates away THEN redirecting or navigating in tab retains original search terms`() {
         service = TestingMetadataService()
         middleware = HistoryMetadataMiddleware(service)
@@ -132,7 +181,7 @@ class HistoryMetadataMiddlewareTest {
         with((service as TestingMetadataService).createdMetadata) {
             assertEquals(2, this.count())
             assertEquals("https://google.com?q=mozilla+website", this[0].url)
-            assertNull(this[0].searchTerm)
+            assertEquals("mozilla website", this[0].searchTerm)
             assertNull(this[0].referrerUrl)
 
             assertEquals("https://google.com?url=https://mozilla.org", this[1].url)
@@ -180,7 +229,7 @@ class HistoryMetadataMiddlewareTest {
             assertEquals(5, this.count())
             assertEquals("https://mozilla.org/manifesto", this[4].url)
             assertEquals("mozilla website", this[4].searchTerm)
-            assertEquals("https://google.com?q=mozilla+website", this[4].referrerUrl)
+            assertEquals("https://mozilla.org", this[4].referrerUrl)
         }
     }
 
@@ -202,7 +251,7 @@ class HistoryMetadataMiddlewareTest {
         with((service as TestingMetadataService).createdMetadata) {
             assertEquals(2, this.count())
             assertEquals("https://google.com?q=mozilla+website", this[0].url)
-            assertNull(this[0].searchTerm)
+            assertEquals("mozilla website", this[0].searchTerm)
             assertNull(this[0].referrerUrl)
 
             assertEquals("https://google.com?url=https://mozilla.org", this[1].url)
@@ -230,6 +279,7 @@ class HistoryMetadataMiddlewareTest {
 
         // Direct load occurs on parent tab. Search terms should be cleared.
         store.dispatch(EngineAction.LoadUrlAction(parentTab.id, "https://firefox.com")).joinBlocking()
+        store.dispatch(ContentAction.UpdateSearchTermsAction(parentTab.id, "")).joinBlocking()
         store.dispatch(ContentAction.UpdateUrlAction(parentTab.id, "https://firefox.com")).joinBlocking()
         store.dispatch(ContentAction.UpdateHistoryStateAction(parentTab.id, listOf(HistoryItem("Google - mozilla website", "https://google.com?q=mozilla+website"), HistoryItem("Firefox", "https://firefox.com")), 1)).joinBlocking()
         with((service as TestingMetadataService).createdMetadata) {
@@ -258,7 +308,7 @@ class HistoryMetadataMiddlewareTest {
         with((service as TestingMetadataService).createdMetadata) {
             assertEquals(2, this.count())
             assertEquals("https://google.com?q=mozilla+website", this[0].url)
-            assertNull(this[0].searchTerm)
+            assertEquals("mozilla website", this[0].searchTerm)
             assertNull(this[0].referrerUrl)
 
             assertEquals("https://google.com?url=https://mozilla.org", this[1].url)
@@ -286,6 +336,7 @@ class HistoryMetadataMiddlewareTest {
 
         // Direct load occurs on parent tab. Search terms should be cleared.
         store.dispatch(EngineAction.OptimizedLoadUrlTriggeredAction(parentTab.id, "https://firefox.com")).joinBlocking()
+        store.dispatch(ContentAction.UpdateSearchTermsAction(parentTab.id, "")).joinBlocking()
         store.dispatch(ContentAction.UpdateUrlAction(parentTab.id, "https://firefox.com")).joinBlocking()
         store.dispatch(ContentAction.UpdateHistoryStateAction(parentTab.id, listOf(HistoryItem("Google - mozilla website", "https://google.com?q=mozilla+website"), HistoryItem("Firefox", "https://firefox.com")), 1)).joinBlocking()
         with((service as TestingMetadataService).createdMetadata) {
@@ -298,7 +349,7 @@ class HistoryMetadataMiddlewareTest {
 
     @Test
     fun `GIVEN normal tab has parent WHEN url is the same THEN nothing happens`() {
-        val parentTab = createTab("https://mozilla.org", searchTerms = "mozilla website")
+        val parentTab = createTab("https://mozilla.org")
         val tab = createTab("https://mozilla.org", parent = parentTab)
         store.dispatch(TabListAction.AddTabAction(parentTab)).joinBlocking()
         store.dispatch(TabListAction.AddTabAction(tab)).joinBlocking()

@@ -14,6 +14,7 @@ import mozilla.components.browser.state.selector.findNormalTab
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.selectedNormalTab
 import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.search.ext.parseSearchTerms
 import mozilla.components.lib.state.Middleware
@@ -141,40 +142,48 @@ class HistoryMetadataMiddleware(
         }
     }
 
-    private fun createHistoryMetadata(context: MiddlewareContext<BrowserState, BrowserAction>, tab: TabSessionState) {
+    @Suppress("ComplexMethod")
+    private fun createHistoryMetadata(
+        context: MiddlewareContext<BrowserState, BrowserAction>,
+        tab: TabSessionState
+    ) {
         val tabParent = tab.getParent(context.store)
         val previousUrlIndex = tab.content.history.currentIndex - 1
         val tabMetadataHasSearchTerms = !tab.historyMetadata?.searchTerm.isNullOrBlank()
 
         // Obtain search terms and referrer url either from tab parent, from the history stack, or
         // from the tab itself.
-        // At a high level, there are two main cases here - 1) either the tab was opened as a 'new tab'
-        // via the search results page, or 2) a page was opened in the same tab as the search results page.
-        // Details about the New Tab case:
-        // - we obtain search terms via tab's parent (the search results page)
-        // - however, it's possible that parent changed (e.g. user navigated away from the search
-        // results page).
-        // - our approach below is to capture search terms from the parent within the tab.historyMetadata
-        // state on the first load of the tab, and then rely on this data for subsequent page loads on that tab.
-        // - this way, once a tab becomes part of the search group, it won't leave this search group
-        // unless a direct navigation event happens.
+        //
+        // At a high level, there are two main cases here:
+        // 1) The tab was opened as a 'new tab' via the search engine results page (SERP). In this
+        // case we obtain search terms via the tab's parent (the search results page). However, it's
+        // possible that the parent changed (e.g. user navigated away from the search results page).
+        // Our approach below is to capture search terms from the parent within the
+        // tab.historyMetadata state on the first load of the tab, and then rely on this data for
+        // subsequent page loads on that tab. This way, once a tab becomes part of the search group,
+        // it won't leave this group unless a direct navigation event happens.
+        //
+        // 2) A page was opened in the same tab as the search results page (navigated to via content).
         val (searchTerm, referrerUrl) = when {
-            // Loading page opened in a New Tab for the first time.
+            // Page was opened in a new tab. Look for search terms in the parent tab.
             tabParent != null && !tabMetadataHasSearchTerms -> {
-                val searchTerms = tabParent.content.searchTerms.takeUnless { it.isEmpty() }
-                    ?: context.state.search.parseSearchTerms(tabParent.content.url)
+                val searchTerms = findSearchTerms(tabParent, context.state.search)
                 searchTerms to tabParent.content.url
             }
-            // We only want to inspect the previous url in history if the user navigated via
-            // web content i.e., they followed a link, not if the user navigated directly via
-            // toolbar.
+            // Page was navigated to via content i.e., the user followed a link. Look for search terms in tab history.
             !directLoadTriggered && previousUrlIndex >= 0 -> {
                 // Once a tab is within the search group, only a direct load event (via the toolbar) can change that.
+                val previousUrl = tab.content.history.items[previousUrlIndex].uri
                 val (searchTerms, referrerUrl) = if (tabMetadataHasSearchTerms) {
-                    tab.historyMetadata?.searchTerm to tab.historyMetadata?.referrerUrl
+                    tab.historyMetadata?.searchTerm to previousUrl
                 } else {
-                    val previousUrl = tab.content.history.items[previousUrlIndex].uri
-                    context.state.search.parseSearchTerms(previousUrl) to previousUrl
+                    // Find search terms by checking if page is a SERP or a result opened from a SERP
+                    val searchTerms = findSearchTerms(tab, context.state.search)
+                    if (searchTerms != null) {
+                        searchTerms to null
+                    } else {
+                        context.state.search.parseSearchTerms(previousUrl) to previousUrl
+                    }
                 }
 
                 if (searchTerms != null) {
@@ -190,11 +199,8 @@ class HistoryMetadataMiddleware(
             tabMetadataHasSearchTerms && !(directLoadTriggered && previousUrlIndex >= 0) -> {
                 tab.historyMetadata?.searchTerm to tab.historyMetadata?.referrerUrl
             }
-            // We had no search terms, no history stack, and no parent.
-            // This would be the case for any page loaded directly via the toolbar including
-            // a search results page itself. For now, the original search results page is not
-            // part of the search group: https://github.com/mozilla-mobile/fenix/issues/21659.
-            else -> null to null
+            // In all other cases (e.g. direct load) find search terms by checking if page is a SERP
+            else -> findSearchTerms(tab, context.state.search) to null
         }
 
         // Sanity check to make sure we don't record a metadata record referring to itself.
@@ -217,5 +223,9 @@ class HistoryMetadataMiddleware(
         return parentId?.let {
             store.state.findTab(it)
         }
+    }
+
+    private fun findSearchTerms(tab: TabSessionState, searchState: SearchState): String? {
+        return tab.content.searchTerms.takeUnless { it.isEmpty() } ?: searchState.parseSearchTerms(tab.content.url)
     }
 }
