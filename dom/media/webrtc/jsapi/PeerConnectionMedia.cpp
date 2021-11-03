@@ -654,7 +654,7 @@ nsresult PeerConnectionMedia::AddTransceiver(
   if (!mCall) {
     mCall = WebrtcCallWrapper::Create(
         mParent->GetTimestampMaker(),
-        MakeUnique<media::ShutdownBlockingTicket>(
+        media::ShutdownBlockingTicket::Create(
             u"WebrtcCallWrapper shutdown blocker"_ns,
             NS_LITERAL_STRING_FROM_CSTRING(__FILE__), __LINE__),
         aSharedWebrtcState);
