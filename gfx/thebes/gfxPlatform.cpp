@@ -598,6 +598,15 @@ static void WebRenderBlobTileSizePrefChangeCallback(const char* aPrefName,
   gfx::gfxVars::SetWebRenderBlobTileSize(tileSize);
 }
 
+static void WebRenderUploadThresholdPrefChangeCallback(const char* aPrefName,
+                                                       void*) {
+  int value = Preferences::GetInt(
+      StaticPrefs::GetPrefName_gfx_webrender_batched_upload_threshold(),
+      512 * 512);
+
+  gfxVars::SetWebRenderBatchedUploadThreshold(value);
+}
+
 static uint32_t GetSkiaGlyphCacheSize() {
   // Only increase font cache size on non-android to save memory.
 #if !defined(MOZ_WIDGET_ANDROID)
@@ -2611,6 +2620,11 @@ void gfxPlatform::InitWebRenderConfig() {
         WebRenderBlobTileSizePrefChangeCallback,
         nsDependentCString(
             StaticPrefs::GetPrefName_gfx_webrender_blob_tile_size()));
+
+    Preferences::RegisterCallbackAndCall(
+        WebRenderUploadThresholdPrefChangeCallback,
+        nsDependentCString(
+            StaticPrefs::GetPrefName_gfx_webrender_batched_upload_threshold()));
 
     if (WebRenderResourcePathOverride()) {
       CrashReporter::AnnotateCrashReport(
