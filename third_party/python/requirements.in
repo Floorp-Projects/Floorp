@@ -2,6 +2,10 @@ appdirs==1.4.4
 attrs==19.1.0
 blessings==1.7
 cbor2==4.0.1
+# Though we don't depend on colorama directly, we need to explicitly
+# define it here because it's needed by other dependencies on
+# Windows systems.
+colorama==0.4.4
 compare-locales==8.1.0
 cookies==2.2.1
 coverage==5.1
