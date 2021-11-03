@@ -232,8 +232,16 @@ class VideoFrameConverter {
       return;
     }
 
+    // The same frame timer can in theory skip firing. Detect the number of
+    // seconds we're offset from the last frame. This floors to whole seconds.
+    // libwebrtc cannot handle timestamps in the future.
+    const webrtc::TimeDelta diff =
+        self->mTimestampMaker.GetNowRealtime() -
+        webrtc::Timestamp::Micros(self->mLastFrameConverted->timestamp_us());
+    const int64_t seconds = diff.us() / USECS_PER_S;
+    MOZ_ASSERT(seconds > 0);
     self->mLastFrameConverted->set_timestamp_us(
-        self->mTimestampMaker.GetNowRealtime().us());
+        self->mLastFrameConverted->timestamp_us() + (seconds * USECS_PER_S));
     for (RefPtr<VideoConverterListener>& listener : self->mListeners) {
       listener->OnVideoFrameConverted(*self->mLastFrameConverted);
     }
@@ -249,8 +257,12 @@ class VideoFrameConverter {
     const int sameFrameIntervalInMs = 1000;
     NS_NewTimerWithFuncCallback(
         getter_AddRefs(mSameFrameTimer), &SameFrameTick, this,
-        sameFrameIntervalInMs, nsITimer::TYPE_REPEATING_SLACK,
+        sameFrameIntervalInMs, nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,
         "VideoFrameConverter::mSameFrameTimer", mTaskQueue);
+
+    // Check that time doesn't go backwards
+    MOZ_ASSERT_IF(mLastFrameConverted, aVideoFrame.timestamp_us() >
+                                           mLastFrameConverted->timestamp_us());
 
     mLastFrameConverted = MakeUnique<webrtc::VideoFrame>(aVideoFrame);
 
@@ -308,9 +320,8 @@ class VideoFrameConverter {
       return;
     }
 
-    // See Bug 1529581 - Ideally we'd use the mTimestamp from the chunk
-    // passed into QueueVideoChunk rather than the webrtc.org clock here.
-    const webrtc::Timestamp now = mTimestampMaker.GetNowRealtime();
+    const webrtc::Timestamp time =
+        mTimestampMaker.ConvertMozTimeToRealtime(aFrame.mTime);
 
     if (aFrame.mForceBlack) {
       // Send a black image.
@@ -329,9 +340,10 @@ class VideoFrameConverter {
               ("Sending a black video frame"));
       webrtc::I420Buffer::SetBlack(buffer);
 
-      webrtc::VideoFrame frame(buffer, 0,  // not setting rtp timestamp
-                               now.ms(), webrtc::kVideoRotation_0);
-      VideoFrameConverted(frame);
+      VideoFrameConverted(webrtc::VideoFrame::Builder()
+                              .set_video_frame_buffer(buffer)
+                              .set_timestamp_us(time.us())
+                              .build());
       return;
     }
 
@@ -354,12 +366,12 @@ class VideoFrameConverter {
                 data->mCbCrStride, data->mCrChannel, data->mCbCrStride,
                 rtc::KeepRefUntilDone(image));
 
-        webrtc::VideoFrame i420_frame(video_frame_buffer,
-                                      0,  // not setting rtp timestamp
-                                      now.ms(), webrtc::kVideoRotation_0);
         MOZ_LOG(gVideoFrameConverterLog, LogLevel::Verbose,
                 ("Sending an I420 video frame"));
-        VideoFrameConverted(i420_frame);
+        VideoFrameConverted(webrtc::VideoFrame::Builder()
+                                .set_video_frame_buffer(video_frame_buffer)
+                                .set_timestamp_us(time.us())
+                                .build());
         return;
       }
     }
@@ -391,9 +403,10 @@ class VideoFrameConverter {
       return;
     }
 
-    webrtc::VideoFrame frame(buffer, 0,  // not setting rtp timestamp
-                             now.ms(), webrtc::kVideoRotation_0);
-    VideoFrameConverted(frame);
+    VideoFrameConverted(webrtc::VideoFrame::Builder()
+                            .set_video_frame_buffer(buffer)
+                            .set_timestamp_us(time.us())
+                            .build());
   }
 
   const dom::RTCStatsTimestampMaker mTimestampMaker;
