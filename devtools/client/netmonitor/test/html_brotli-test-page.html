@@ -18,22 +18,22 @@
       /* exported performRequests */
       "use strict";
 
-      function get(address, callback) {
-        const xhr = new XMLHttpRequest();
-        xhr.open("GET", address, true);
+      function get(address) {
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", address, true);
 
-        xhr.onreadystatechange = function() {
-          if (this.readyState == this.DONE) {
-            callback();
-          }
-        };
-        xhr.send(null);
+          xhr.onreadystatechange = function() {
+            if (this.readyState == this.DONE) {
+              resolve();
+            }
+          };
+          xhr.send(null);
+        });
       }
 
-      function performRequests() {
-        get("sjs_content-type-test-server.sjs?fmt=br", function() {
-          // Done.
-        });
+      async function performRequests() {
+        await get("sjs_content-type-test-server.sjs?fmt=br");
       }
     </script>
   </body>

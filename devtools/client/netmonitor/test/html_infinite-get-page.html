@@ -17,16 +17,18 @@
     <script type="text/javascript">
       "use strict";
 
-      function get(address, callback) {
-        const xhr = new XMLHttpRequest();
-        xhr.open("GET", address, true);
+      function get(address) {
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", address, true);
 
-        xhr.onreadystatechange = function() {
-          if (this.readyState == this.DONE) {
-            callback();
-          }
-        };
-        xhr.send(null);
+          xhr.onreadystatechange = function() {
+            if (this.readyState == this.DONE) {
+              resolve();
+            }
+          };
+          xhr.send(null);
+        });
       }
 
       // Use a count parameter to defeat caching.
@@ -36,12 +38,11 @@
         doRequests = false;
       }
 
-      (function performRequests() {
-        get("request_" + (count++), function() {
-          if (doRequests) {
-            setTimeout(performRequests, 50);
-          }
-        });
+      (async function performRequests() {
+        await get("request_" + (count++));
+        if (doRequests) {
+          setTimeout(performRequests, 50);
+        }
       })();
     </script>
   </body>
