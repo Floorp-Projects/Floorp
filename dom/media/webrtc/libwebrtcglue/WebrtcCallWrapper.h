@@ -54,8 +54,6 @@ class WebrtcCallWrapper {
   // Idempotent.
   void UnregisterConduit(MediaSessionConduit* conduit);
 
-  DOMHighResTimeStamp GetNow() const;
-
   // Allow destroying the Call instance on the Call worker thread.
   //
   // Note that shutdown is blocked until the Call instance is destroyed.
