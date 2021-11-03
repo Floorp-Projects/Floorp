@@ -363,7 +363,8 @@ void MediaPipeline::GetContributingSourceStats(
     FallibleTArray<dom::RTCRTPContributingSourceStats>& aArr) const {
   ASSERT_ON_THREAD(mStsThread);
   // Get the expiry from now
-  DOMHighResTimeStamp expiry = RtpCSRCStats::GetExpiryFromTime(GetNow());
+  DOMHighResTimeStamp expiry =
+      RtpCSRCStats::GetExpiryFromTime(GetTimestampMaker().GetNow());
   for (auto info : mCsrcStats) {
     if (!info.second.Expired(expiry)) {
       RTCRTPContributingSourceStats stats;
@@ -556,7 +557,7 @@ void MediaPipeline::RtpPacketReceived(const MediaPacket& packet) {
   // Remove expired RtpCSRCStats
   if (!mCsrcStats.empty()) {
     if (!hasTime) {
-      now = GetNow();
+      now = GetTimestampMaker().GetNow();
       hasTime = true;
     }
     auto expiry = RtpCSRCStats::GetExpiryFromTime(now);
@@ -573,7 +574,7 @@ void MediaPipeline::RtpPacketReceived(const MediaPacket& packet) {
   if (header.numCSRCs) {
     for (auto i = 0; i < header.numCSRCs; i++) {
       if (!hasTime) {
-        now = GetNow();
+        now = GetTimestampMaker().GetNow();
         hasTime = true;
       }
       auto csrcInfo = mCsrcStats.find(header.arrOfCSRCs[i]);
@@ -1676,7 +1677,9 @@ void MediaPipelineReceiveVideo::UpdateListener() {
   }
 }
 
-DOMHighResTimeStamp MediaPipeline::GetNow() const { return mConduit->GetNow(); }
+const dom::RTCStatsTimestampMaker& MediaPipeline::GetTimestampMaker() const {
+  return mConduit->GetTimestampMaker();
+}
 
 DOMHighResTimeStamp MediaPipeline::RtpCSRCStats::GetExpiryFromTime(
     const DOMHighResTimeStamp aTime) {
