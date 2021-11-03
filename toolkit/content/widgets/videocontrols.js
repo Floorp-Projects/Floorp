@@ -3307,7 +3307,7 @@ this.NoControlsDesktopImplWidget = class {
 
         <div id="controlsContainer" class="controlsContainer" role="none">
           <div class="controlsOverlay stackItem">
-            <div id="pictureInPictureToggle" class="pip-wrapper" position="left" hidden="true" role="button" tabindex="0">
+            <button id="pictureInPictureToggle" class="pip-wrapper" position="left" hidden="true">
               <div class="pip-small clickable"></div>
               <div class="pip-expanded clickable">
                 <span class="pip-icon-label clickable">
@@ -3319,7 +3319,7 @@ this.NoControlsDesktopImplWidget = class {
                 </div>
               </div>
               <div class="pip-icon"></div>
-            </div>
+            </button>
           </div>
         </div>
       </div>`,
