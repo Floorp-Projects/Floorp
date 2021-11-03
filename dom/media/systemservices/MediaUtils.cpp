@@ -65,13 +65,13 @@ class RefCountedTicket {
       : mShutdownEventForwarder(
             new MediaEventForwarder<void>(GetMainThreadSerialEventTarget())) {}
 
-  void AddBlocker(nsString aName, nsString aFileName, int32_t aLineNr) {
+  void AddBlocker(const nsString& aName, const nsString& aFileName,
+                  int32_t aLineNr) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(!mBlocker);
     mBlocker = MakeAndAddRef<MediaEventBlocker>(aName);
     mShutdownEventForwarder->Forward(mBlocker->ShutdownEvent());
-    GetShutdownBarrier()->AddBlocker(mBlocker.get(), std::move(aFileName),
-                                     aLineNr, std::move(aName));
+    GetShutdownBarrier()->AddBlocker(mBlocker.get(), aFileName, aLineNr, aName);
   }
 
   MediaEventSource<void>& ShutdownEvent() { return *mShutdownEventForwarder; }
@@ -97,7 +97,7 @@ class ShutdownBlockingTicketImpl : public ShutdownBlockingTicket {
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         __func__, [ticket = mTicket, name = std::move(aName),
                    fileName = std::move(aFileName), lineNr = aLineNr] {
-          ticket->AddBlocker(std::move(name), std::move(fileName), lineNr);
+          ticket->AddBlocker(name, fileName, lineNr);
         }));
   }
 
