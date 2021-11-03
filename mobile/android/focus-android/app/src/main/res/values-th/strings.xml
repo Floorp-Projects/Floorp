@@ -194,14 +194,16 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">สำหรับไซต์เด่น</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
-    <string name="preference_autocomplete_topsite_summary">เปิดใช้งานเพื่อเติมมากกว่า 450 URL ยอดนิยมโดยอัตโนมัติในแถบที่อยู่</string>
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">เปิดใช้งานเพื่อให้ %s เติมมากกว่า 450 URL ยอดนิยมโดยอัตโนมัติในแถบที่อยู่</string>
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">สำหรับไซต์ที่คุณเพิ่ม</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
-    <string name="preference_autocomplete_user_list_summary">เปิดใช้งานเพื่อเติมมากกว่า 450 URL ยอดนิยมโดยอัตโนมัติในแถบที่อยู่</string>
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">เปิดใช้งานเพื่อให้ %s เติม URL โปรดของคุณโดยอัตโนมัติ</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">จัดการไซต์</string>
