@@ -1202,6 +1202,7 @@ fn wr_device_new(gl_context: *mut c_void, pc: Option<&mut WrProgramCache>) -> De
         resource_override_path,
         use_optimized_shaders,
         upload_method,
+        512 * 512,
         cached_programs,
         true,
         true,
@@ -1758,6 +1759,11 @@ pub extern "C" fn wr_api_set_debug_flags(dh: &mut DocumentHandle, flags: DebugFl
 #[no_mangle]
 pub extern "C" fn wr_api_set_bool(dh: &mut DocumentHandle, param_name: BoolParameter, val: bool) {
     dh.api.set_parameter(Parameter::Bool(param_name, val));
+}
+
+#[no_mangle]
+pub extern "C" fn wr_api_set_int(dh: &mut DocumentHandle, param_name: IntParameter, val: i32) {
+    dh.api.set_parameter(Parameter::Int(param_name, val));
 }
 
 #[no_mangle]
