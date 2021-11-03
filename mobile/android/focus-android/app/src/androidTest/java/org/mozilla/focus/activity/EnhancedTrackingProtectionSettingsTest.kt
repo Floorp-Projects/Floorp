@@ -249,10 +249,10 @@ class EnhancedTrackingProtectionSettingsTest {
     @Test
     fun addURLToTPExceptionsListTest() {
         webServer.enqueue(createMockResponseFromAsset("plain_test.html"))
-        val basicPage = webServer.url("plain_test.html").toString()
+        val genericPage = webServer.url("plain_test.html").toString()
 
         searchScreen {
-        }.loadPage(basicPage) {
+        }.loadPage(genericPage) {
         }.openSiteSecurityInfoSheet {
         }.clickTrackingProtectionSwitch {
         }.openMainMenu {
@@ -267,10 +267,10 @@ class EnhancedTrackingProtectionSettingsTest {
     @Test
     fun removeOneExceptionURLTest() {
         webServer.enqueue(createMockResponseFromAsset("plain_test.html"))
-        val basicPage = webServer.url("plain_test.html").toString()
+        val genericPage = webServer.url("plain_test.html").toString()
 
         searchScreen {
-        }.loadPage(basicPage) {
+        }.loadPage(genericPage) {
         }.openSiteSecurityInfoSheet {
         }.clickTrackingProtectionSwitch {
             progressBar.waitUntilGone(webPageLoadwaitingTime)
@@ -288,10 +288,10 @@ class EnhancedTrackingProtectionSettingsTest {
     @Test
     fun removeAllExceptionURLTest() {
         webServer.enqueue(createMockResponseFromAsset("plain_test.html"))
-        val basicPage = webServer.url("plain_test.html").toString()
+        val genericPage = webServer.url("plain_test.html").toString()
 
         searchScreen {
-        }.loadPage(basicPage) {
+        }.loadPage(genericPage) {
         }.openSiteSecurityInfoSheet {
         }.clickTrackingProtectionSwitch {
         }.openMainMenu {

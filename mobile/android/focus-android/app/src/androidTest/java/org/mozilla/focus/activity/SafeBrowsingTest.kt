@@ -15,7 +15,6 @@ import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
 import org.mozilla.focus.helpers.TestHelper.exitToTop
 import org.mozilla.focus.helpers.TestHelper.getStringResource
-import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.testAnnotations.SmokeTest
 
 // These tests verify the Safe Browsing feature by visiting unsafe URLs and checking they are blocked
@@ -117,16 +116,17 @@ class SafeBrowsingTest {
         searchScreen {
         }.loadPage(safePageUrl) {
             verifyPageContent("Lets test!")
-            verifySiteSecurityIconShown()
+            verifySiteTrackingProtectionIconShown()
+        }.openSiteSecurityInfoSheet {
             verifySiteConnectionInfoIsSecure(true)
-            mDevice.pressBack()
+        }.closeSecurityInfoSheet {
         }.openSearchBar {
         }.loadPage(insecurePageUrl) {
             verifyPageURL(insecurePageUrl)
             verifySiteSecurityIndicatorShown()
+        }.openSiteSecurityInfoSheet {
             verifySiteConnectionInfoIsSecure(false)
-            mDevice.pressBack()
-        }
+        }.closeSecurityInfoSheet { }
     }
 
     @Test

@@ -6,19 +6,24 @@
 package org.mozilla.focus.activity.robots
 
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.isEnabled
 import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
+import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.containsString
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.EspressoHelper.hasCousin
+import org.mozilla.focus.helpers.TestHelper.appContext
 import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
@@ -162,6 +167,36 @@ class SettingsPrivacyMenuRobot {
 
     fun switchSafeBrowsingToggle(): ViewInteraction = safeBrowsingSwitch().perform(click())
 
+    fun verifyExceptionsListDisabled() {
+        exceptionsList()
+            .check(matches(Matchers.not(isEnabled())))
+    }
+
+    fun openExceptionsList() {
+        exceptionsList()
+            .check(matches(isEnabled()))
+            .perform(click())
+    }
+
+    fun verifyExceptionURL(url: String) {
+        onView(withId(R.id.domainView)).check(matches(withText(containsString(url))))
+    }
+
+    fun removeException() {
+        openActionBarOverflowOrOptionsMenu(appContext)
+        onView(withText("Remove"))
+            .perform(click())
+        onView(withId(R.id.checkbox))
+            .perform(click())
+        onView(withId(R.id.remove))
+            .perform(click())
+    }
+
+    fun removeAllExceptions() {
+        onView(withId(R.id.removeAllExceptions))
+            .perform(click())
+    }
+
     class Transition
 }
 
@@ -232,4 +267,10 @@ private fun sendDataSwitch(): ViewInteraction {
     val sendDataSwitchSummary = getStringResource(R.string.preference_mozilla_telemetry_summary2)
     privacySettingsList.scrollTextIntoView(sendDataSwitchSummary)
     return onView(withText(sendDataSwitchSummary))
+}
+
+private fun exceptionsList(): ViewInteraction {
+    val exceptionsTitle = getStringResource(R.string.preference_exceptions)
+    privacySettingsList.scrollTextIntoView(exceptionsTitle)
+    return onView(withText(exceptionsTitle))
 }

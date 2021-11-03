@@ -148,35 +148,9 @@ class BrowserRobot {
         mDevice.findObject(UiSelector().textContains("OK")).click()
     }
 
-    fun waitForSiteSecurityIconShown() {
-        assertTrue(
-            mDevice.findObject(
-                UiSelector().resourceId(
-                    "$packageName:id/mozac_browser_toolbar_tracking_protection_indicator"
-                )
-            ).waitForExists(waitingTime)
-        )
-    }
+    fun verifySiteTrackingProtectionIconShown() = assertTrue(securityIcon.waitForExists(waitingTime))
 
-    fun verifySiteSecurityIconShown(): ViewInteraction = securityIcon.check(matches(isDisplayed()))
-
-    fun verifySiteSecurityIndicatorShown(): ViewInteraction = site_security_indicator.check(matches(isDisplayed()))
-
-    fun verifySiteConnectionInfoIsSecure(isSecure: Boolean) {
-        if (isSecure) {
-            securityIcon.perform(click())
-        } else {
-            site_security_indicator.perform(click())
-        }
-        assertTrue(site_security_info.waitForExists(waitingTime))
-        site_identity_title.check(matches(isDisplayed()))
-        site_identity_Icon.check(matches(isDisplayed()))
-        if (isSecure) {
-            assertTrue(site_security_info.text.equals("Connection is secure"))
-        } else {
-            assertTrue(site_security_info.text.equals("Connection is not secure"))
-        }
-    }
+    fun verifySiteSecurityIndicatorShown() = assertTrue(site_security_indicator.waitForExists(waitingTime))
 
     class Transition {
         fun openSearchBar(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
@@ -224,10 +198,21 @@ class BrowserRobot {
         }
 
         fun openSiteSettingsMenu(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-            securityIcon.perform(click())
+            securityIcon.click()
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
+        }
+
+        fun openSiteSecurityInfoSheet(interact: SiteSecurityInfoSheetRobot.() -> Unit): SiteSecurityInfoSheetRobot.Transition {
+            if (securityIcon.exists()) {
+                securityIcon.click()
+            } else {
+                site_security_indicator.click()
+            }
+
+            SiteSecurityInfoSheetRobot().interact()
+            return SiteSecurityInfoSheetRobot.Transition()
         }
     }
 }
@@ -261,12 +246,14 @@ private val mainMenu = onView(withId(R.id.mozac_browser_toolbar_menu))
 private val shareAppsList =
     mDevice.findObject(UiSelector().resourceId("android:id/resolver_list"))
 
-private val securityIcon = onView(withId(R.id.mozac_browser_toolbar_tracking_protection_indicator))
+private val securityIcon =
+    mDevice.findObject(
+        UiSelector()
+            .resourceId("$packageName:id/mozac_browser_toolbar_tracking_protection_indicator")
+    )
 
-private val site_security_info = mDevice.findObject(UiSelector().resourceId("$packageName:id/security_info"))
-
-private val site_identity_title = onView(withId(R.id.site_title))
-
-private val site_identity_Icon = onView(withId(R.id.site_favicon))
-
-private val site_security_indicator = onView(withId(R.id.mozac_browser_toolbar_security_indicator))
+private val site_security_indicator =
+    mDevice.findObject(
+        UiSelector()
+            .resourceId("$packageName:id/mozac_browser_toolbar_security_indicator")
+    )
