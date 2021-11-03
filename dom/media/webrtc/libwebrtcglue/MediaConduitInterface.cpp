@@ -60,12 +60,6 @@ void MediaSessionConduit::UpdateRtpSources(
   // Empty out the cache; we'll copy things back as needed
   auto cache = std::move(mSourcesCache);
 
-  // Fix up timestamps to be consistent with JS time. We assume that
-  // source.timestamp_ms() was not terribly long ago, and so clock drift
-  // between the libwebrtc clock and our JS clock is not that significant.
-  auto jsNow = GetTimestampMaker().GetNow();
-  double libwebrtcNow = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds();
-
   for (const auto& source : aSources) {
     SourceKey key(source);
     auto it = cache.find(key);
@@ -99,8 +93,8 @@ void MediaSessionConduit::UpdateRtpSources(
       domEntry.mAudioLevel.Construct(rtpToDomAudioLevel(*source.audio_level()));
     }
 
-    double ago = libwebrtcNow - source.timestamp_ms();
-    domEntry.mTimestamp = jsNow - ago;
+    domEntry.mTimestamp = GetTimestampMaker().ReduceRealtimePrecision(
+        webrtc::Timestamp::Millis(source.timestamp_ms()));
     domEntry.mRtpTimestamp = source.rtp_timestamp();
     mSourcesCache[key] = domEntry;
   }
