@@ -959,13 +959,15 @@ void WebrtcGmpVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
                                  aDecodedFrame->Stride(kGMPVPlane),
                                  rtc::Bind(&DeleteBuffer, buffer.release()));
 
-      webrtc::VideoFrame image(video_frame_buffer, 0, 0,
-                               webrtc::kVideoRotation_0);
-      image.set_timestamp((aDecodedFrame->Timestamp() * 90ll + 999) /
-                          1000);  // round up
-
       GMP_LOG_DEBUG("GMP Decoded: %" PRIu64, aDecodedFrame->Timestamp());
-      mCallback->Decoded(image);
+      auto videoFrame =
+          webrtc::VideoFrame::Builder()
+              .set_video_frame_buffer(video_frame_buffer)
+              .set_timestamp_rtp(
+                  // round up
+                  (aDecodedFrame->Timestamp() * 90ll + 999) / 1000)
+              .build();
+      mCallback->Decoded(videoFrame);
     }
   }
   aDecodedFrame->Destroy();

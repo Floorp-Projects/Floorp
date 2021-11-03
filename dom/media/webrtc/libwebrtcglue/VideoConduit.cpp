@@ -1412,8 +1412,15 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
     buffer = i420Buffer;
   }
 
-  mVideoBroadcaster.OnFrame(webrtc::VideoFrame(
-      buffer, frame.timestamp(), frame.render_time_ms(), frame.rotation()));
+  MOZ_ASSERT(!frame.color_space(), "Unexpected use of color space");
+  MOZ_ASSERT(!frame.has_update_rect(), "Unexpected use of update rect");
+
+  mVideoBroadcaster.OnFrame(webrtc::VideoFrame::Builder()
+                                .set_video_frame_buffer(buffer)
+                                .set_timestamp_us(frame.timestamp_us())
+                                .set_timestamp_rtp(frame.timestamp())
+                                .set_rotation(frame.rotation())
+                                .build());
 
   return kMediaConduitNoError;
 }
