@@ -240,9 +240,7 @@ function PopupNotifications(tabbrowser, panel, iconBox, options = {}) {
   this.iconBox = iconBox;
   this.buttonDelay = Services.prefs.getIntPref(PREF_SECURITY_DELAY);
 
-  // panel itself has a listener in the bubble phase and this listener
-  // needs to be called after that, so use bubble phase here.
-  this.panel.addEventListener("popuphidden", this);
+  this.panel.addEventListener("popuphidden", this, true);
   this.panel.classList.add("popup-notification-panel", "panel-no-padding");
 
   // This listener will be attached to the chrome window whenever a notification
