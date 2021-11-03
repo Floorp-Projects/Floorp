@@ -38,6 +38,7 @@ slugid==2.0.0
 taskcluster==44.2.2
 taskcluster-taskgraph==1.0.1
 taskcluster-urls==13.0.1
+tqdm==4.62.3
 voluptuous==0.12.1
 wheel==0.37.0
 yamllint==1.23
