@@ -15,7 +15,6 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.ui.platform.ComposeView
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
@@ -375,7 +374,7 @@ class UrlInputFragment :
 
         if (newConfig.orientation != Configuration.ORIENTATION_UNDEFINED) {
             // Make sure we update the background for landscape / portrait orientations.
-            backgroundView?.background = ContextCompat.getDrawable(
+            backgroundView?.background = AppCompatResources.getDrawable(
                 requireContext(),
                 R.drawable.home_background
             )
