@@ -96,7 +96,7 @@ class RepeatingTaskHandle {
   template <class Closure>
   static RepeatingTaskHandle Start(TaskQueueBase* task_queue,
                                    Closure&& closure,
-                                   Clock* clock = Clock::GetRealTimeClock()) {
+                                   Clock* clock = Clock::GetRealTimeClockRaw()) {
     auto repeating_task = std::make_unique<
         webrtc_repeating_task_impl::RepeatingTaskImpl<Closure>>(
         task_queue, TimeDelta::Zero(), std::forward<Closure>(closure), clock);
@@ -112,7 +112,7 @@ class RepeatingTaskHandle {
       TaskQueueBase* task_queue,
       TimeDelta first_delay,
       Closure&& closure,
-      Clock* clock = Clock::GetRealTimeClock()) {
+      Clock* clock = Clock::GetRealTimeClockRaw()) {
     auto repeating_task = std::make_unique<
         webrtc_repeating_task_impl::RepeatingTaskImpl<Closure>>(
         task_queue, first_delay, std::forward<Closure>(closure), clock);

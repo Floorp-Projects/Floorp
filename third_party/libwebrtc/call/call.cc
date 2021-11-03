@@ -454,6 +454,7 @@ std::string Call::Stats::ToString(int64_t time_ms) const {
   return ss.str();
 }
 
+/* Mozilla: Avoid this since it could use GetRealTimeClock().
 Call* Call::Create(const Call::Config& config) {
   rtc::scoped_refptr<SharedModuleThread> call_thread =
       SharedModuleThread::Create(ProcessThread::Create("ModuleProcessThread"),
@@ -466,6 +467,7 @@ Call* Call::Create(const Call::Config& config,
   return Create(config, Clock::GetRealTimeClock(), std::move(call_thread),
                 ProcessThread::Create("PacerThread"));
 }
+ */
 
 Call* Call::Create(const Call::Config& config,
                    Clock* clock,
