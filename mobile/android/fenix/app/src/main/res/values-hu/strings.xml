@@ -628,14 +628,14 @@
 
     <!-- Gestures Preferences-->
     <!-- Preferences for using pull to refresh in a webpage -->
-    <string name="preference_gestures_website_pull_to_refresh">Húzza a frissítéshez</string>
+    <string name="preference_gestures_website_pull_to_refresh">Húzás a frissítéshez</string>
     <!-- Preference for using the dynamic toolbar -->
-    <string name="preference_gestures_dynamic_toolbar">Görgessen az eszköztár elrejtéséhez</string>
+    <string name="preference_gestures_dynamic_toolbar">Görgetés az eszköztár elrejtéséhez</string>
 
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Seperje oldalra az eszköztárat a lapok közti váltáshoz</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Eszköztár oldalra seprése a lapok közti váltáshoz</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
-    <string name="preference_gestures_swipe_toolbar_show_tabs">Seperje felfelé az eszköztárat a lapok megnyitásához</string>
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Eszköztár felfelé seprése a lapok megnyitásához</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->

@@ -112,6 +112,7 @@
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">ปิด</string>
 
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">แท็บใหม่</string>
@@ -126,6 +127,13 @@
     <string name="recent_tabs_header">กลับเข้าไป</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">แสดงหมด</string>
+
+    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
+        The first parameter is the search term that the user used. (for example: your search for "cat")-->
+    <string name="recent_tabs_search_term">การค้นหา \&quot;%1$s\&quot; ของคุณ</string>
+    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
+        The first parameter is the count for number of sites in the group.  This number will always be more than one. -->
+    <string name="recent_tabs_search_term_count">ไซต์: %1$s</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
@@ -271,6 +279,9 @@
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_title_2">มีอะไรใหม่ใน Firefox</string>
 
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_title_2">ผลค้นหาล่าสุด</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">เปิดแท็บ Firefox ใหม่</string>
@@ -351,6 +362,8 @@
     <string name="preferences_theme">ชุดตกแต่ง</string>
     <!-- Preference for customizing the home screen -->
     <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">หน้าแรก</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">หน้าแรก</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">ท่าทาง</string>
     <!-- Preference for settings related to visual options -->
@@ -425,9 +438,14 @@
     <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">บันทึกไว้ล่าสุด</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string moz:removedIn="94" name="customize_toggle_recently_bookmarked" tools:ignore="UnusedResources">ที่คั่นหน้าที่เพิ่มล่าสุด</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">ที่คั่นหน้าล่าสุด</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string moz:removedIn="94" name="customize_toggle_recently_visited" tools:ignore="UnusedResources">เยี่ยมชมล่าสุด</string>
+    <!-- Title for the customize home screen settings section for recent searches. Recent searches
+     is a section where users see a list of groups of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recent_searches">ผลค้นหาล่าสุด</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">Pocket</string>
 
@@ -644,6 +662,8 @@
     <string name="tab_view_list">รายการ</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">เส้นตาราง</string>
+    <!-- Summary text for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups_summary">จัดกลุ่มเว็บไซต์ที่เกี่ยวข้องกัน</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">ปิดแท็บ</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -660,8 +680,12 @@
     <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">เริ่มที่หน้าแรก</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
     <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">หลังจาก 4 ชั่วโมง</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">หน้าแรก</string>
     <!-- Option for always starting on the home screen -->
     <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">ทุกครั้ง</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">แท็บสุดท้าย</string>
     <!-- Option for never starting on the home screen -->
     <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">ไม่เลย</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
@@ -796,6 +820,9 @@
 
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
     <string moz:removedIn="94" name="tab_tray_header_title" tools:ignore="UnusedResources">อื่น ๆ</string>
+
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title_1">แท็บอื่น ๆ</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -1906,6 +1933,8 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ตกลง เข้าใจแล้ว</string>
 
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">ไซต์เด่นที่เยี่ยมชมบ่อยที่สุด</string>
     <!-- Label for the show most visited top sites preference -->
     <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">แสดงไซต์เด่นที่เยี่ยมชมบ่อยที่สุด</string>
     <!-- Label for the show most visited sites preference -->
@@ -1923,12 +1952,29 @@
     <!-- Inactive tabs in the tabs tray -->
     <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
     <string name="inactive_tabs_title">แท็บที่ไม่ได้ใช้งาน</string>
+    <!-- Content description for closing all inactive tabs -->
+    <string name="inactive_tabs_delete_all">ปิดแท็บที่ไม่ได้ใช้งานทั้งหมด</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">แท็บจะปรากฏที่นี่เป็นเวลา %s หลังจากนั้น แท็บต่าง ๆ จะถูกปิดโดยอัตโนมัติ</string>
+    <string moz:removedIn="95" name="inactive_tabs_description" tools:ignore="UnusedResources">แท็บจะปรากฏที่นี่เป็นเวลา %s หลังจากนั้น แท็บต่าง ๆ จะถูกปิดโดยอัตโนมัติ</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 วัน</string>
+    <string moz:removedIn="95" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 วัน</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 สัปดาห์</string>
+    <string moz:removedIn="95" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 สัปดาห์</string>
+
+    <!-- Inactive tabs auto-close message in the tabs tray -->
+    <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">ปิดอัตโนมัติหลังจากหนึ่งเดือน?</string>
+
+    <!-- Inactive tabs survey -->
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">ช่วยปรับปรุง Firefox</string>
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header_1">ช่วยปรับปรุง Firefox</string>
+
+    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
+    <string name="inactive_tabs_survey_send_button">ส่ง</string>
+    <!-- Content description for inactive tabs survey close button -->
+    <string name="inactive_tabs_survey_close_button_content_description">ปิด</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">ตั้งลิงก์จากเว็บไซต์ อีเมล และข้อความให้เปิดโดยอัตโนมัติใน Firefox</string>
@@ -1945,4 +1991,12 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">ปิด</string>
 
-    </resources>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_categories_header">เรื่องตามหัวข้อ</string>
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">ค้นพบสิ่งอื่น</string>
+    <!-- Title of an app feature. Smaller than a heading.-->
+    <string name="pocket_stories_feature_title">ขับเคลื่อนโดย Pocket</string>
+    <!-- Clickable text for opening an external link for more information about Pocket. -->
+    <string name="pocket_stories_feature_learn_more">เรียนรู้เพิ่มเติม</string>
+</resources>

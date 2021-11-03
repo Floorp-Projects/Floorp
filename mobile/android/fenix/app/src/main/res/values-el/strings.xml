@@ -2046,18 +2046,30 @@
     <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">ΕΝΕΡΓΟΠΟΙΗΣΗ ΑΥΤΟΜΑΤΟΥ ΚΛΕΙΣΙΜΑΤΟΣ</string>
 
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">Το αυτόματο κλείσιμο ενεργοποιήθηκε</string>
+
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
     <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Παρακαλούμε βοηθήστε μας να βελτιωθούμε</string>
+
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header_1">Βοηθήστε μας να βελτιώσουμε το Firefox</string>
 
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
     <string name="inactive_tabs_survey_content">Γιατί απενεργοποιήσατε τις ανενεργές καρτέλες;</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_do_not_understand">Δεν καταλαβαίνω πώς λειτουργεί</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_do_it_myself">Θέλω να κλείνω εγώ τις παλιές καρτέλες</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Ο χρόνος αδράνειας είναι πολύ μεγάλος</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_long_option_1">Η χρονική περίοδος των δύο εβδομάδων είναι πολύ μεγάλη</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Ο χρόνος αδράνειας είναι πολύ μικρός</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option_1">Η χρονική περίοδος των δύο εβδομάδων είναι πολύ μικρή</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
     <string name="inactive_tabs_survey_send_button">Αποστολή</string>
     <!-- Content description for inactive tabs survey close button -->
