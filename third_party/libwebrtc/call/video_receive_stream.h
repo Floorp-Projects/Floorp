@@ -144,10 +144,11 @@ class VideoReceiveStream {
     RtpReceiveStats rtp_stats;
     RtcpPacketTypeCounter rtcp_packet_type_counts;
 
-    // Mozilla modification: Init these three.
+    // Mozilla modification: Init these.
     uint32_t rtcp_sender_packets_sent = 0;
     uint32_t rtcp_sender_octets_sent = 0;
     int64_t rtcp_sender_ntp_timestamp_ms = 0;
+    int64_t rtcp_sender_remote_ntp_timestamp_ms = 0;
 
     // Timing frame info: all important timestamps for a full lifetime of a
     // single 'timing frame'.
