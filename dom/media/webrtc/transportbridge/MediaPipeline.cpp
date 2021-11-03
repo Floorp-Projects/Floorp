@@ -827,7 +827,7 @@ MediaPipelineTransmit::MediaPipelineTransmit(
         MakeAndAddRef<AudioProxyThread>(*mConduit->AsAudioSessionConduit());
     mListener->SetAudioProxy(mAudioProcessing);
   } else {  // Video
-    mConverter = MakeAndAddRef<VideoFrameConverter>();
+    mConverter = MakeAndAddRef<VideoFrameConverter>(GetTimestampMaker());
     mConverter->AddListener(mFeeder);
     mListener->SetVideoFrameConverter(mConverter);
   }

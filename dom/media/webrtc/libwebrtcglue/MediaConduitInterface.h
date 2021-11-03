@@ -196,25 +196,25 @@ class MediaSessionConduit {
   // not necessarily yield exactly the same result if performed again later, we
   // need to avoid performing it more than once for each entry, which means we
   // need to remember both the JS timestamp (in dom::RTCRtpSourceEntry) and the
-  // libwebrtc timestamp (in SourceKey::mLibwebrtcTimestamp).
+  // libwebrtc timestamp (in SourceKey::mLibwebrtcTimestampMs).
   class SourceKey {
    public:
     explicit SourceKey(const webrtc::RtpSource& aSource)
         : SourceKey(aSource.timestamp_ms(), aSource.source_id()) {}
 
     SourceKey(uint32_t aTimestamp, uint32_t aSrc)
-        : mLibwebrtcTimestamp(aTimestamp), mSrc(aSrc) {}
+        : mLibwebrtcTimestampMs(aTimestamp), mSrc(aSrc) {}
 
     // TODO: Once we support = default for this in our toolchain, do so
     auto operator>(const SourceKey& aRhs) const {
-      if (mLibwebrtcTimestamp == aRhs.mLibwebrtcTimestamp) {
+      if (mLibwebrtcTimestampMs == aRhs.mLibwebrtcTimestampMs) {
         return mSrc > aRhs.mSrc;
       }
-      return mLibwebrtcTimestamp > aRhs.mLibwebrtcTimestamp;
+      return mLibwebrtcTimestampMs > aRhs.mLibwebrtcTimestampMs;
     }
 
    private:
-    uint32_t mLibwebrtcTimestamp;
+    uint32_t mLibwebrtcTimestampMs;
     uint32_t mSrc;
   };
   mutable std::map<SourceKey, dom::RTCRtpSourceEntry, std::greater<SourceKey>>
