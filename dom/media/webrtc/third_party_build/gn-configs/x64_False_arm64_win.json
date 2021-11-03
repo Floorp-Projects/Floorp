@@ -59290,6 +59290,7 @@
                 "-Wno-shorten-64-to-32"
             ],
             "defines": [
+                "WEBRTC_EXCLUDE_SYSTEM_TIME",
                 "USE_AURA=1",
                 "_HAS_NODISCARD",
                 "_HAS_EXCEPTIONS=0",
@@ -59339,6 +59340,8 @@
                 "winmm.lib"
             ],
             "sources": [
+                "//rtc_base/system_time.cc",
+                "//rtc_base/system_time.h",
                 "//rtc_base/time_utils.cc",
                 "//rtc_base/time_utils.h"
             ],
