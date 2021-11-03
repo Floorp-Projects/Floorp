@@ -2672,11 +2672,11 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
           // in what we can.
           Maybe<webrtc::ReportBlockData> reportBlockData;
           {
-            uint32_t remoteSsrc = 0;
-            if (ssrc && aConduit->GetRemoteSSRC(&remoteSsrc)) {
+            if (const auto remoteSsrc = aConduit->GetRemoteSSRC();
+                ssrc && remoteSsrc) {
               for (auto& data : audioStats->report_block_datas) {
                 if (data.report_block().source_ssrc == *ssrc &&
-                    data.report_block().sender_ssrc == remoteSsrc) {
+                    data.report_block().sender_ssrc == *remoteSsrc) {
                   reportBlockData.emplace(data);
                   break;
                 }

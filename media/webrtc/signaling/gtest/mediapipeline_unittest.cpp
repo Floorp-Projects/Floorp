@@ -333,9 +333,7 @@ class TestAgent {
   }
 
   uint32_t GetRemoteSSRC() {
-    uint32_t res = 0;
-    audio_conduit_->GetRemoteSSRC(&res);
-    return res;
+    return audio_conduit_->GetRemoteSSRC().valueOr(0);
   }
 
   uint32_t GetLocalSSRC() {
