@@ -228,9 +228,11 @@ class RaptorGatherer(FrameworkGatherer):
         for idx, description in enumerate(matcher):
             if description["name"] != title:
                 result += f"   {idx+1}. **{description['name']}**\n\n"
+            if "owner" in description.keys():
+                result += f"   **Owner**: {description['owner']}\n\n"
 
             for key in sorted(description.keys()):
-                if key == "name":
+                if key in ["owner", "name"]:
                     continue
                 sub_title = key.replace("_", " ")
                 if key == "test_url":

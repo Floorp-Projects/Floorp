@@ -34,6 +34,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: ares6 (FF, CH, CU)
    :container: + anchor-id-ares6-b
 
+   **Owner**: :jandem and SpiderMonkey Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **expected**: pass
@@ -90,6 +92,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: assorted-dom (FF, CH, CU)
    :container: + anchor-id-assorted-dom-b
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **expected**: pass
@@ -145,6 +149,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 .. dropdown:: jetstream2 (FF, CH, CU)
    :container: + anchor-id-jetstream2-b
+
+   **Owner**: :jandem and SpiderMonkey Team
 
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -203,6 +209,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: motionmark-animometer (FF, CH, CU)
    :container: + anchor-id-motionmark-animometer-b
 
+   **Owner**: :jgilbert and Graphics(gfx) Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **expected**: pass
@@ -256,6 +264,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 .. dropdown:: motionmark-htmlsuite (FF, CH, CU)
    :container: + anchor-id-motionmark-htmlsuite-b
+
+   **Owner**: :jgilbert and Graphics(gfx) Team
 
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -311,6 +321,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: raptor-speedometer-geckoview (GV)
    :container: + anchor-id-raptor-speedometer-geckoview-b
 
+   **Owner**: SpiderMonkey Team
+
    * **alert threshold**: 2.0
    * **apps**: geckoview
    * **expected**: pass
@@ -329,6 +341,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: raptor-youtube-playback-h264-1080p30-firefox (FF)
    :container: + anchor-id-raptor-youtube-playback-h264-1080p30-firefox-b
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
@@ -346,6 +360,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: raptor-youtube-playback-h264-1080p60-firefox (FF)
    :container: + anchor-id-raptor-youtube-playback-h264-1080p60-firefox-b
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
@@ -362,6 +378,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 .. dropdown:: raptor-youtube-playback-h264-full-1080p30-firefox (FF)
    :container: + anchor-id-raptor-youtube-playback-h264-full-1080p30-firefox-b
+
+   **Owner**: PerfTest Team
 
    * **alert threshold**: 2.0
    * **apps**: firefox
@@ -381,6 +399,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: raptor-youtube-playback-h264-full-1080p60-firefox (FF)
    :container: + anchor-id-raptor-youtube-playback-h264-full-1080p60-firefox-b
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
@@ -399,6 +419,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: raptor-youtube-playback-v9-1080p30-firefox (FF)
    :container: + anchor-id-raptor-youtube-playback-v9-1080p30-firefox-b
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
@@ -416,6 +438,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: raptor-youtube-playback-v9-1080p60-firefox (FF)
    :container: + anchor-id-raptor-youtube-playback-v9-1080p60-firefox-b
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
@@ -432,6 +456,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 .. dropdown:: raptor-youtube-playback-v9-full-1080p30-firefox (FF)
    :container: + anchor-id-raptor-youtube-playback-v9-full-1080p30-firefox-b
+
+   **Owner**: PerfTest Team
 
    * **alert threshold**: 2.0
    * **apps**: firefox
@@ -451,6 +477,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: raptor-youtube-playback-v9-full-1080p60-firefox (FF)
    :container: + anchor-id-raptor-youtube-playback-v9-full-1080p60-firefox-b
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
@@ -468,6 +496,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 .. dropdown:: speedometer (FF, CH, CU, FE, GV, RB, CH-M)
    :container: + anchor-id-speedometer-b
+
+   **Owner**: SpiderMonkey Team
 
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -520,6 +550,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
             * browsertime-benchmark-chromium-speedometer-e10s: None
             * browsertime-benchmark-firefox-speedometer-e10s: mozilla-beta, trunk
             * browsertime-benchmark-firefox-speedometer-fis-e10s: mozilla-central
+
+   **Owner**: SpiderMonkey Team
 
    * **alert threshold**: 2.0
    * **apps**: fenix, geckoview, refbrow, chrome-m
@@ -577,6 +609,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: stylebench (FF, CH, CU)
    :container: + anchor-id-stylebench-b
 
+   **Owner**: :emelio and Layout Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **expected**: pass
@@ -633,6 +667,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: sunspider (FF, CH, CU)
    :container: + anchor-id-sunspider-b
 
+   **Owner**: :jandem and SpiderMonkey Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **expected**: pass
@@ -687,6 +723,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: unity-webgl (FF, CH, CU, FE, RB, FE, CH-M)
    :container: + anchor-id-unity-webgl-b
 
+   **Owner**: :jgilbert and Graphics(gfx) Team
+
    * **alert threshold**: 2.0
    * **apps**: geckoview, refbrow, fenix, chrome-m
    * **expected**: pass
@@ -737,6 +775,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
             * browsertime-benchmark-chromium-unity-webgl-e10s: None
             * browsertime-benchmark-firefox-unity-webgl-e10s: autoland
             * browsertime-benchmark-firefox-unity-webgl-fis-e10s: mozilla-central
+
+   **Owner**: :jgilbert and Graphics(gfx) Team
 
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -793,6 +833,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: wasm-godot (FF, CH, CU)
    :container: + anchor-id-wasm-godot-b
 
+   **Owner**: :lth and SpiderMonkey Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
    * **expected**: pass
@@ -848,6 +890,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: wasm-godot-baseline (FF)
    :container: + anchor-id-wasm-godot-baseline-b
 
+   **Owner**: :lth and SpiderMonkey Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
@@ -894,6 +938,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: wasm-godot-optimizing (FF)
    :container: + anchor-id-wasm-godot-optimizing-b
 
+   **Owner**: :lth and SpiderMonkey Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
@@ -939,6 +985,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 .. dropdown:: wasm-misc (FF, CH, CU)
    :container: + anchor-id-wasm-misc-b
+
+   **Owner**: :lth and SpiderMonkey Team
 
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -995,6 +1043,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: wasm-misc-baseline (FF)
    :container: + anchor-id-wasm-misc-baseline-b
 
+   **Owner**: :lth and SpiderMonkey Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
@@ -1041,6 +1091,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: wasm-misc-optimizing (FF)
    :container: + anchor-id-wasm-misc-optimizing-b
 
+   **Owner**: :lth and SpiderMonkey Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
@@ -1086,6 +1138,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 .. dropdown:: webaudio (FF, CH, CU)
    :container: + anchor-id-webaudio-b
+
+   **Owner**: :padenot and Media Team
 
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -1141,6 +1195,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: youtube-playback (FF, GV, FE, RB, CH)
    :container: + anchor-id-youtube-playback-b
 
+   **Owner**: PerfTest Team
+
    * **alert on**: H264.1080p30@1X_dropped_frames, H264.1080p60@1X_dropped_frames, H264.1440p30@1X_dropped_frames, H264.144p15@1X_dropped_frames, H264.2160p30@1X_dropped_frames, H264.240p30@1X_dropped_frames, H264.360p30@1X_dropped_frames, H264.480p30@1X_dropped_frames, H264.720p30@1X_dropped_frames, H264.720p60@1X_dropped_frames, VP9.1080p30@1X_dropped_frames, VP9.1080p60@1X_dropped_frames, VP9.1440p30@1X_dropped_frames, VP9.1440p60@1X_dropped_frames, VP9.144p30@1X_dropped_frames, VP9.2160p30@1X_dropped_frames, VP9.2160p60@1X_dropped_frames, VP9.240p30@1X_dropped_frames, VP9.360p30@1X_dropped_frames, VP9.480p30@1X_dropped_frames, VP9.720p30@1X_dropped_frames, VP9.720p60@1X_dropped_frames
    * **alert threshold**: 2.0
    * **apps**: firefox, geckoview, fenix,refbrow, chrome
@@ -1161,6 +1217,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 .. dropdown:: youtube-playback-av1-sfr (FF , GV, FE, RB, CH)
    :container: + anchor-id-youtube-playback-av1-sfr-b
+
+   **Owner**: PerfTest Team
 
    * **alert threshold**: 2.0
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
@@ -1186,6 +1244,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: youtube-playback-h264-1080p30 (FF)
    :container: + anchor-id-youtube-playback-h264-1080p30-b
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
@@ -1206,6 +1266,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: youtube-playback-h264-1080p60 (FF)
    :container: + anchor-id-youtube-playback-h264-1080p60-b
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
@@ -1225,6 +1287,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 .. dropdown:: youtube-playback-h264-full-1080p30 (FF)
    :container: + anchor-id-youtube-playback-h264-full-1080p30-b
+
+   **Owner**: PerfTest Team
 
    * **alert threshold**: 2.0
    * **apps**: firefox
@@ -1247,6 +1311,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: youtube-playback-h264-full-1080p60 (FF)
    :container: + anchor-id-youtube-playback-h264-full-1080p60-b
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
@@ -1267,6 +1333,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 .. dropdown:: youtube-playback-h264-sfr (FF , GV, FE, RB, CH)
    :container: + anchor-id-youtube-playback-h264-sfr-b
+
+   **Owner**: PerfTest Team
 
    * **alert threshold**: 2.0
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
@@ -1315,6 +1383,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 .. dropdown:: youtube-playback-hfr (FF , GV, FE, RB, CH)
    :container: + anchor-id-youtube-playback-hfr-b
+
+   **Owner**: PerfTest Team
 
    * **alert on**: H2641080p60fps@1X_dropped_frames, H264720p60fps@1X_dropped_frames
    * **alert threshold**: 2.0
@@ -1365,6 +1435,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: youtube-playback-v9-1080p30 (FF)
    :container: + anchor-id-youtube-playback-v9-1080p30-b
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
@@ -1385,6 +1457,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: youtube-playback-v9-1080p60 (FF)
    :container: + anchor-id-youtube-playback-v9-1080p60-b
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
@@ -1404,6 +1478,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 .. dropdown:: youtube-playback-v9-full-1080p30 (FF)
    :container: + anchor-id-youtube-playback-v9-full-1080p30-b
+
+   **Owner**: PerfTest Team
 
    * **alert threshold**: 2.0
    * **apps**: firefox
@@ -1426,6 +1502,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: youtube-playback-v9-full-1080p60 (FF)
    :container: + anchor-id-youtube-playback-v9-full-1080p60-b
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox
    * **expected**: pass
@@ -1446,6 +1524,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 .. dropdown:: youtube-playback-vp9-sfr (FF , GV, FE, RB, CH)
    :container: + anchor-id-youtube-playback-vp9-sfr-b
+
+   **Owner**: PerfTest Team
 
    * **alert threshold**: 2.0
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
@@ -1494,6 +1574,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 .. dropdown:: youtube-playback-widevine-h264-sfr (FF , GV, FE, RB, CH)
    :container: + anchor-id-youtube-playback-widevine-h264-sfr-b
+
+   **Owner**: PerfTest Team
 
    * **alert threshold**: 2.0
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
@@ -1544,6 +1626,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 .. dropdown:: youtube-playback-widevine-hfr (FF , GV, FE, RB, CH)
    :container: + anchor-id-youtube-playback-widevine-hfr-b
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
    * **expected**: pass
@@ -1592,6 +1676,8 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
 
 .. dropdown:: youtube-playback-widevine-vp9-sfr (FF , GV, FE, RB, CH)
    :container: + anchor-id-youtube-playback-widevine-vp9-sfr-b
+
+   **Owner**: PerfTest Team
 
    * **alert threshold**: 2.0
    * **apps**: firefox, geckoview, fenix, refbrow, chrome
@@ -1647,6 +1733,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 .. dropdown:: process-switch (Measures process switch time)
    :container: + anchor-id-process-switch-c
 
+   **Owner**: PerfTest Team
+
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -1700,6 +1788,8 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
 .. dropdown:: welcome (Measures pageload metrics for the first-install about:welcome page)
    :container: + anchor-id-welcome-c
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -1757,6 +1847,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 .. dropdown:: amazon (BT, FF, CH, CU)
    :container: + anchor-id-amazon-d
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -1851,6 +1943,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 .. dropdown:: bing-search (BT, FF, CH, CU)
    :container: + anchor-id-bing-search-d
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -1940,6 +2034,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 .. dropdown:: buzzfeed (BT, FF, CH, CU)
    :container: + anchor-id-buzzfeed-d
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -2001,6 +2097,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 .. dropdown:: cnn (BT, FF, CH, CU)
    :container: + anchor-id-cnn-d
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -2082,6 +2180,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 .. dropdown:: ebay (BT, FF, CH, CU)
    :container: + anchor-id-ebay-d
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -2173,6 +2273,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 .. dropdown:: espn (BT, FF, CH, CU)
    :container: + anchor-id-espn-d
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -2233,6 +2335,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 .. dropdown:: expedia (BT, FF, CH, CU)
    :container: + anchor-id-expedia-d
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -2295,6 +2399,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 .. dropdown:: facebook (BT, FF, CH, CU)
    :container: + anchor-id-facebook-d
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -2386,6 +2492,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 .. dropdown:: fandom (BT, FF, CH, CU)
    :container: + anchor-id-fandom-d
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -2474,6 +2582,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 .. dropdown:: google-docs (BT, FF, CH, CU)
    :container: + anchor-id-google-docs-d
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -2566,6 +2676,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 .. dropdown:: google-docs-canvas (BT, FF, CH, CU)
    :container: + anchor-id-google-docs-canvas-d
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -2626,6 +2738,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 .. dropdown:: google-mail (BT, FF, CH, CU)
    :container: + anchor-id-google-mail-d
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -2716,6 +2830,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 .. dropdown:: google-search (BT, FF, CH, CU)
    :container: + anchor-id-google-search-d
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -2804,6 +2920,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 .. dropdown:: google-slides (BT, FF, CH, CU)
    :container: + anchor-id-google-slides-d
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -2895,6 +3013,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 .. dropdown:: imdb (BT, FF, CH, CU)
    :container: + anchor-id-imdb-d
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -2985,6 +3105,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 .. dropdown:: imgur (BT, FF, CH, CU)
    :container: + anchor-id-imgur-d
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -3073,6 +3195,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 .. dropdown:: instagram (BT, FF, CH, CU)
    :container: + anchor-id-instagram-d
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -3164,6 +3288,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 .. dropdown:: linkedin (BT, FF, CH, CU)
    :container: + anchor-id-linkedin-d
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -3253,6 +3379,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 .. dropdown:: microsoft (BT, FF, CH, CU)
    :container: + anchor-id-microsoft-d
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -3344,6 +3472,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 .. dropdown:: netflix (BT, FF, CH, CU)
    :container: + anchor-id-netflix-d
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -3434,6 +3564,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 .. dropdown:: nytimes (BT, FF, CH, CU)
    :container: + anchor-id-nytimes-d
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -3496,6 +3628,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 .. dropdown:: office (BT, FF, CH, CU)
    :container: + anchor-id-office-d
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -3557,6 +3691,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 .. dropdown:: outlook (BT, FF, CH, CU)
    :container: + anchor-id-outlook-d
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -3647,6 +3783,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 .. dropdown:: paypal (BT, FF, CH, CU)
    :container: + anchor-id-paypal-d
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -3735,6 +3873,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 .. dropdown:: pinterest (BT, FF, CH, CU)
    :container: + anchor-id-pinterest-d
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -3826,6 +3966,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 .. dropdown:: reddit (BT, FF, CH, CU)
    :container: + anchor-id-reddit-d
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -3915,6 +4057,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 .. dropdown:: tumblr (BT, FF, CH, CU)
    :container: + anchor-id-tumblr-d
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -4006,6 +4150,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 .. dropdown:: twitch (BT, FF, CH, CU)
    :container: + anchor-id-twitch-d
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -4094,6 +4240,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 .. dropdown:: twitter (BT, FF, CH, CU)
    :container: + anchor-id-twitter-d
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -4184,6 +4332,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 .. dropdown:: wikia (BT, FF, CH, CU)
    :container: + anchor-id-wikia-d
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -4244,6 +4394,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 .. dropdown:: wikipedia (BT, FF, CH, CU)
    :container: + anchor-id-wikipedia-d
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -4335,6 +4487,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 .. dropdown:: yahoo-mail (BT, FF, CH, CU)
    :container: + anchor-id-yahoo-mail-d
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
@@ -4423,6 +4577,8 @@ Tests for page-load performance. The links direct to the actual websites that ar
 
 .. dropdown:: youtube (BT, FF, CH, CU)
    :container: + anchor-id-youtube-d
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -4519,6 +4675,8 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
 .. dropdown:: cnn-nav (Navigates to cnn main page, then to the world sub-page.)
    :container: + anchor-id-cnn-nav-i
 
+   **Owner**: PerfTest Team
+
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -4583,6 +4741,8 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
 .. dropdown:: facebook-nav (Navigates to facebook, then the sub-pages friends, marketplace, groups.)
    :container: + anchor-id-facebook-nav-i
 
+   **Owner**: PerfTest Team
+
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -4609,6 +4769,8 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
 .. dropdown:: reddit-billgates-ama (Navigates from the Bill Gates AMA to the Reddit members section.)
    :container: + anchor-id-reddit-billgates-ama-i
 
+   **Owner**: PerfTest Team
+
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -4634,6 +4796,8 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
 
 .. dropdown:: reddit-billgates-post (Navigates the `thisisbillgates` user starting at the main user page, then to the posts, comments, hot, and top sections.)
    :container: + anchor-id-reddit-billgates-post-i
+
+   **Owner**: PerfTest Team
 
    * **accept zero vismet**: true
    * **alert on**: fcp, loadtime
@@ -4666,6 +4830,8 @@ A set of test pages that are run as live sites instead of recorded versions. The
 .. dropdown:: booking-sf (GV, FE, RB, CH-M, FF, CH, CU)
    :container: + anchor-id-booking-sf-l
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
@@ -4683,6 +4849,8 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
 .. dropdown:: cnn (GV, FE, RB, CH-M, FF, CH, CU)
    :container: + anchor-id-cnn-l
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -4757,6 +4925,8 @@ A set of test pages that are run as live sites instead of recorded versions. The
 .. dropdown:: cnn-ampstories (GV, FE, RB, CH-M, FF, CH, CU)
    :container: + anchor-id-cnn-ampstories-l
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
@@ -4775,6 +4945,8 @@ A set of test pages that are run as live sites instead of recorded versions. The
 .. dropdown:: discord (GV, FE, RB, CH-M, FF, CH, CU)
    :container: + anchor-id-discord-l
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
@@ -4792,6 +4964,8 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
 .. dropdown:: expedia (GV, FE, RB, CH-M, FF, CH, CU)
    :container: + anchor-id-expedia-l
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -4848,6 +5022,8 @@ A set of test pages that are run as live sites instead of recorded versions. The
 .. dropdown:: fashionbeans (GV, FE, RB, CH-M, FF, CH, CU)
    :container: + anchor-id-fashionbeans-l
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
@@ -4865,6 +5041,8 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
 .. dropdown:: google-accounts (GV, FE, RB, CH-M, FF, CH, CU)
    :container: + anchor-id-google-accounts-l
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -4884,6 +5062,8 @@ A set of test pages that are run as live sites instead of recorded versions. The
 .. dropdown:: imdb-firefox (GV, FE, RB, CH-M, FF, CH, CU)
    :container: + anchor-id-imdb-firefox-l
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
@@ -4902,6 +5082,8 @@ A set of test pages that are run as live sites instead of recorded versions. The
 .. dropdown:: medium-article (GV, FE, RB, CH-M, FF, CH, CU)
    :container: + anchor-id-medium-article-l
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
@@ -4919,6 +5101,8 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
 .. dropdown:: nytimes (GV, FE, RB, CH-M, FF, CH, CU)
    :container: + anchor-id-nytimes-l
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -4975,6 +5159,8 @@ A set of test pages that are run as live sites instead of recorded versions. The
 .. dropdown:: people-article (GV, FE, RB, CH-M, FF, CH, CU)
    :container: + anchor-id-people-article-l
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
@@ -4992,6 +5178,8 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
 .. dropdown:: reddit-thread (GV, FE, RB, CH-M, FF, CH, CU)
    :container: + anchor-id-reddit-thread-l
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -5011,6 +5199,8 @@ A set of test pages that are run as live sites instead of recorded versions. The
 .. dropdown:: rumble-fox (GV, FE, RB, CH-M, FF, CH, CU)
    :container: + anchor-id-rumble-fox-l
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
@@ -5028,6 +5218,8 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
 .. dropdown:: stackoverflow-question (GV, FE, RB, CH-M, FF, CH, CU)
    :container: + anchor-id-stackoverflow-question-l
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -5047,6 +5239,8 @@ A set of test pages that are run as live sites instead of recorded versions. The
 .. dropdown:: urbandictionary-define (GV, FE, RB, CH-M, FF, CH, CU)
    :container: + anchor-id-urbandictionary-define-l
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m, firefox, chrome, chromium
@@ -5064,6 +5258,8 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
 .. dropdown:: wikia-marvel (GV, FE, RB, CH-M, FF, CH, CU)
    :container: + anchor-id-wikia-marvel-l
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -5087,6 +5283,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 .. dropdown:: allrecipes (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-allrecipes-m
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -5164,6 +5362,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 .. dropdown:: amazon (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-amazon-m
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -5243,6 +5443,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 .. dropdown:: amazon-search (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-amazon-search-m
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
@@ -5319,6 +5521,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 .. dropdown:: bing (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-bing-m
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -5397,6 +5601,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 .. dropdown:: bing-search-restaurants (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-bing-search-restaurants-m
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
@@ -5473,6 +5679,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 .. dropdown:: booking (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-booking-m
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -5551,6 +5759,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 .. dropdown:: cnn (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-cnn-m
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
@@ -5627,6 +5837,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 .. dropdown:: cnn-ampstories (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-cnn-ampstories-m
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -5705,6 +5917,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 .. dropdown:: dailymail (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-dailymail-m
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
@@ -5781,6 +5995,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 .. dropdown:: ebay-kleinanzeigen (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-ebay-kleinanzeigen-m
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -5859,6 +6075,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 .. dropdown:: ebay-kleinanzeigen-search (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-ebay-kleinanzeigen-search-m
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
@@ -5936,6 +6154,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 .. dropdown:: espn (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-espn-m
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
@@ -6012,6 +6232,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 .. dropdown:: facebook (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-facebook-m
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -6091,6 +6313,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 .. dropdown:: facebook-cristiano (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-facebook-cristiano-m
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
@@ -6167,6 +6391,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 .. dropdown:: google (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-google-m
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -6246,6 +6472,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 .. dropdown:: google-maps (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-google-maps-m
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
@@ -6322,6 +6550,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 .. dropdown:: google-search-restaurants (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-google-search-restaurants-m
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -6401,6 +6631,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 .. dropdown:: imdb (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-imdb-m
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
@@ -6477,6 +6709,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 .. dropdown:: instagram (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-instagram-m
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -6556,6 +6790,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 .. dropdown:: microsoft-support (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-microsoft-support-m
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
@@ -6632,6 +6868,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 .. dropdown:: reddit (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-reddit-m
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -6710,6 +6948,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 .. dropdown:: sina (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-sina-m
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
@@ -6766,6 +7006,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 .. dropdown:: stackoverflow (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-stackoverflow-m
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -6844,6 +7086,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 .. dropdown:: web-de (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-web-de-m
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
@@ -6920,6 +7164,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 .. dropdown:: wikipedia (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-wikipedia-m
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -6998,6 +7244,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 .. dropdown:: youtube (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-youtube-m
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: geckoview, fenix, refbrow, chrome-m
@@ -7075,6 +7323,8 @@ Page-load performance test suite on Android. The links direct to the actual webs
 
 .. dropdown:: youtube-watch (BT, GV, FE, RB, CH-M)
    :container: + anchor-id-youtube-watch-m
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -7158,6 +7408,8 @@ Tests that perform a specific action (a scenario), i.e. idle application, idle a
 .. dropdown:: idle (FE, GV, RB)
    :container: + anchor-id-idle-s
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: fenix, geckoview, refbrow
    * **expected**: pass
@@ -7174,6 +7426,8 @@ Tests that perform a specific action (a scenario), i.e. idle application, idle a
 
 .. dropdown:: idle-bg (FE, GV, RB)
    :container: + anchor-id-idle-bg-s
+
+   **Owner**: PerfTest Team
 
    * **alert threshold**: 2.0
    * **apps**: fenix, geckoview, refbrow
@@ -7193,6 +7447,8 @@ Tests that perform a specific action (a scenario), i.e. idle application, idle a
 .. dropdown:: raptor-scn-power-idle-bg-fenix (FE)
    :container: + anchor-id-raptor-scn-power-idle-bg-fenix-s
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: fenix
    * **background test**: true
@@ -7209,6 +7465,8 @@ Tests that perform a specific action (a scenario), i.e. idle application, idle a
 
 .. dropdown:: raptor-scn-power-idle-bg-geckoview (GV)
    :container: + anchor-id-raptor-scn-power-idle-bg-geckoview-s
+
+   **Owner**: PerfTest Team
 
    * **alert threshold**: 2.0
    * **apps**: geckoview
@@ -7227,6 +7485,8 @@ Tests that perform a specific action (a scenario), i.e. idle application, idle a
 .. dropdown:: raptor-scn-power-idle-bg-refbrow (RB)
    :container: + anchor-id-raptor-scn-power-idle-bg-refbrow-s
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: refbrow
    * **background test**: true
@@ -7244,6 +7504,8 @@ Tests that perform a specific action (a scenario), i.e. idle application, idle a
 .. dropdown:: raptor-scn-power-idle-fenix (FE)
    :container: + anchor-id-raptor-scn-power-idle-fenix-s
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: fenix
    * **expected**: pass
@@ -7260,6 +7522,8 @@ Tests that perform a specific action (a scenario), i.e. idle application, idle a
 .. dropdown:: raptor-scn-power-idle-geckoview (GV)
    :container: + anchor-id-raptor-scn-power-idle-geckoview-s
 
+   **Owner**: PerfTest Team
+
    * **alert threshold**: 2.0
    * **apps**: geckoview
    * **expected**: pass
@@ -7275,6 +7539,8 @@ Tests that perform a specific action (a scenario), i.e. idle application, idle a
 
 .. dropdown:: raptor-scn-power-idle-refbrow (RB)
    :container: + anchor-id-raptor-scn-power-idle-refbrow-s
+
+   **Owner**: PerfTest Team
 
    * **alert threshold**: 2.0
    * **apps**: refbrow
@@ -7297,6 +7563,8 @@ These tests aren't used in standard testing, they are only used in the Raptor un
 .. dropdown:: raptor-tp6-unittest-amazon-firefox (FF)
    :container: + anchor-id-raptor-tp6-unittest-amazon-firefox-u
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox
@@ -7316,6 +7584,8 @@ These tests aren't used in standard testing, they are only used in the Raptor un
 
 .. dropdown:: raptor-tp6-unittest-facebook-firefox (FF)
    :container: + anchor-id-raptor-tp6-unittest-facebook-firefox-u
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -7337,6 +7607,8 @@ These tests aren't used in standard testing, they are only used in the Raptor un
 .. dropdown:: raptor-tp6-unittest-google-firefox (FF)
    :container: + anchor-id-raptor-tp6-unittest-google-firefox-u
 
+   **Owner**: PerfTest Team
+
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox
@@ -7356,6 +7628,8 @@ These tests aren't used in standard testing, they are only used in the Raptor un
 
 .. dropdown:: raptor-tp6-unittest-youtube-firefox (FF)
    :container: + anchor-id-raptor-tp6-unittest-youtube-firefox-u
+
+   **Owner**: PerfTest Team
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
@@ -8105,21 +8379,9 @@ Raptor page-load test documentation is generated by `PerfDocs <https://firefox-s
 Benchmark Tests
 ---------------
 
-assorted-dom
-============
-
-* contact: ?
-* type: benchmark
-* browsers: Firefox desktop, Chrome desktop
-* TODO
-
 motionmark-animometer, motionmark-htmlsuite
 ===========================================
 
-* contact: ?
-* type: benchmark
-* browsers: Firefox desktop, Chrome desktop
-* measuring: benchmark measuring the time to animate complex scenes
 * summarization:
 
     * subtest: FPS from the subtest, each subtest is run for 15 seconds, repeat this 5 times and report the median value
@@ -8128,11 +8390,7 @@ motionmark-animometer, motionmark-htmlsuite
 speedometer
 ===========
 
-* contact: :selena
-* type: benchmark
-* browsers: Firefox desktop, Chrome desktop, Firefox Android Geckoview
 * measuring: responsiveness of web applications
-* reporting: runs/minute score
 * data: there are 16 subtests in Speedometer; each of these are made up of 9 internal benchmarks.
 * summarization:
 
@@ -8141,73 +8399,22 @@ speedometer
 
 This is the `Speedometer v1.0 <http://browserbench.org/Speedometer/>`_ JavaScript benchmark taken verbatim and slightly modified to work with the Raptor harness.
 
-stylebench
-==========
-
-* contact: :emilio
-* type: benchmark
-* browsers: Firefox desktop, Chrome desktop
-* measuring: speed of dynamic style recalculation
-* reporting: runs/minute score
-
-sunspider
-=========
-
-* contact: ?
-* type: benchmark
-* browsers: Firefox desktop, Chrome desktop
-* TODO
-
-unity-webgl
-===========
-
-* contact: ?
-* type: benchmark
-* browsers: Firefox desktop, Chrome desktop, Firefox Android Geckoview
-* TODO
-
 youtube-playback
 ================
 
-* contact: ?
-* type: benchmark
 * details: `YouTube playback performance <https://wiki.mozilla.org/TestEngineering/Performance/Raptor/Youtube_playback_performance>`_
-* browsers: Firefox desktop, Firefox Android Geckoview
 * measuring: media streaming playback performance (dropped video frames)
 * reporting: For each video the number of dropped and decoded frames, as well as its percentage value is getting recorded. The overall reported result is the mean value of dropped video frames across all tested video files.
 * data: Given the size of the used media files those tests are currently run as live site tests, and are kept up-to-date via the `perf-youtube-playback <https://github.com/mozilla/perf-youtube-playback/>`_ repository on Github.
-* test INI: `raptor-youtube-playback.ini <https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/raptor-youtube-playback.ini>`_
 
 This are the `Playback Performance Tests <https://ytlr-cert.appspot.com/2019/main.html?test_type=playbackperf-test>`_ benchmark taken verbatim and slightly modified to work with the Raptor harness.
-
-wasm-misc, wasm-misc-baseline, wasm-misc-ion
-============================================
-
-* contact: ?
-* type: benchmark
-* browsers: Firefox desktop, Chrome desktop
-* TODO
-
-wasm-godot, wasm-godot-baseline, wasm-godot-ion
-===============================================
-
-* contact: ?
-* type: benchmark
-* browsers: Firefox desktop only
-* TODO
 
 webaudio
 ========
 
-* contact: padenot
-* type: benchmark
-* browsers: Firefox desktop, Chrome desktop
 * measuring: Rendering speed of various synthetic Web Audio API workloads
-* reporting: The time time it took to render the audio of each test case, and a
-  geometric mean of the full test suite. Lower is better
-* data: Upstream is https://github.com/padenot/webaudio-benchmark/. Those
-  benchmarks are run by other projects. Upstream is vendored in mozilla-central
-  via an simple update script, at `third_party/webkit/PerformanceTests/webaudio`
+* reporting: The time time it took to render the audio of each test case, and a geometric mean of the full test suite. Lower is better
+* data: Upstream is https://github.com/padenot/webaudio-benchmark/. Those benchmarks are run by other projects. Upstream is vendored in mozilla-central via an simple update script, at `third_party/webkit/PerformanceTests/webaudio`
 
 Scenario Tests
 --------------
@@ -8225,17 +8432,11 @@ These Android power measurement tests output 3 different PERFHERDER_DATA entries
 raptor-scn-power-idle
 ^^^^^^^^^^^^^^^^^^^^^
 
-* contact: stephend, sparky
-* type: scenario
-* browsers: Android: Fennec 64.0.2, GeckoView Example, Fenix, and Reference Browser
 * measuring: Power consumption for idle Android browsers, with about:blank loaded and app foregrounded, over a 20-minute duration
 
 raptor-scn-power-idle-bg
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-* contact: stephend, sparky
-* type: scenario
-* browsers: Android: Fennec 64.0.2, GeckoView Example, Fenix, and Reference Browser
 * measuring: Power consumption for idle Android browsers, with about:blank loaded and app backgrounded, over a 10-minute duration
 
 Debugging Desktop Product Failures
