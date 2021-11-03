@@ -19,7 +19,6 @@
 #include "modules/rtp_rtcp/source/rtp_header_extensions.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_impl2.h"
-#include "modules/rtp_rtcp/source/time_util.h"
 #include "test/field_trial.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -167,8 +166,10 @@ TEST_F(RtpSenderAudioTest, SendAudioWithAbsoluteCaptureTime) {
       transport_.last_sent_packet()
           .GetExtension<AbsoluteCaptureTimeExtension>();
   EXPECT_TRUE(absolute_capture_time);
-  EXPECT_EQ(absolute_capture_time->absolute_capture_timestamp,
-            Int64MsToUQ32x32(kAbsoluteCaptureTimestampMs + NtpOffsetMs()));
+  EXPECT_EQ(
+      absolute_capture_time->absolute_capture_timestamp,
+      Int64MsToUQ32x32(fake_clock_.ConvertTimestampToNtpTimeInMilliseconds(
+          kAbsoluteCaptureTimestampMs)));
   EXPECT_FALSE(
       absolute_capture_time->estimated_capture_clock_offset.has_value());
 }
@@ -201,8 +202,10 @@ TEST_F(RtpSenderAudioTest,
       transport_.last_sent_packet()
           .GetExtension<AbsoluteCaptureTimeExtension>();
   EXPECT_TRUE(absolute_capture_time);
-  EXPECT_EQ(absolute_capture_time->absolute_capture_timestamp,
-            Int64MsToUQ32x32(kAbsoluteCaptureTimestampMs + NtpOffsetMs()));
+  EXPECT_EQ(
+      absolute_capture_time->absolute_capture_timestamp,
+      Int64MsToUQ32x32(fake_clock_.ConvertTimestampToNtpTimeInMilliseconds(
+          kAbsoluteCaptureTimestampMs)));
   EXPECT_TRUE(
       absolute_capture_time->estimated_capture_clock_offset.has_value());
   EXPECT_EQ(0, *absolute_capture_time->estimated_capture_clock_offset);

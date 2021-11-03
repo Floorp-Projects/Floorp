@@ -19,7 +19,6 @@
 #include "modules/rtp_rtcp/source/rtcp_packet/common_header.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "modules/rtp_rtcp/source/rtp_rtcp_impl2.h"
-#include "modules/rtp_rtcp/source/time_util.h"
 #include "rtc_base/rate_limiter.h"
 #include "test/gmock.h"
 #include "test/gtest.h"
@@ -145,7 +144,7 @@ TEST_F(RtcpSenderTest, SendSr) {
   rtcp_sender_->SetSendingStatus(feedback_state, true);
   feedback_state.packets_sent = kPacketCount;
   feedback_state.media_bytes_sent = kOctetCount;
-  NtpTime ntp = TimeMicrosToNtp(clock_.TimeInMicroseconds());
+  NtpTime ntp = clock_.CurrentNtpTime();
   EXPECT_EQ(0, rtcp_sender_->SendRTCP(feedback_state, kRtcpSr));
   EXPECT_EQ(1, parser()->sender_report()->num_packets());
   EXPECT_EQ(kSenderSsrc, parser()->sender_report()->sender_ssrc());
@@ -495,7 +494,7 @@ TEST_F(RtcpSenderTest, SendXrWithRrtr) {
   rtcp_sender_->SetRTCPStatus(RtcpMode::kCompound);
   EXPECT_EQ(0, rtcp_sender_->SetSendingStatus(feedback_state(), false));
   rtcp_sender_->SendRtcpXrReceiverReferenceTime(true);
-  NtpTime ntp = TimeMicrosToNtp(clock_.TimeInMicroseconds());
+  NtpTime ntp = clock_.CurrentNtpTime();
   EXPECT_EQ(0, rtcp_sender_->SendRTCP(feedback_state(), kRtcpReport));
   EXPECT_EQ(1, parser()->xr()->num_packets());
   EXPECT_EQ(kSenderSsrc, parser()->xr()->sender_ssrc());
