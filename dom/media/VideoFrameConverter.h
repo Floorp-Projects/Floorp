@@ -85,8 +85,9 @@ class VideoFrameConverter {
       // passed to the encoder in a mixed order. We don't have an explicit way
       // of signaling this, so we must detect here if time goes backwards.
       MOZ_LOG(gVideoFrameConverterLog, LogLevel::Debug,
-              ("Clearing pacer because of source reset (%.3f)",
-               (mLastFrameQueuedForPacing - t).ToSeconds()));
+              ("VideoFrameConverter %p: Clearing pacer because of source reset "
+               "(%.3f)",
+               this, (mLastFrameQueuedForPacing - t).ToSeconds()));
       mPacingTimer->Cancel();
     }
 
@@ -109,13 +110,13 @@ class VideoFrameConverter {
    * processing, so it can be immediately sent out once activated.
    */
   void SetActive(bool aActive) {
-    nsresult rv = mTaskQueue->Dispatch(NS_NewRunnableFunction(
+    MOZ_ALWAYS_SUCCEEDS(mTaskQueue->Dispatch(NS_NewRunnableFunction(
         __func__, [self = RefPtr<VideoFrameConverter>(this), this, aActive] {
           if (mActive == aActive) {
             return;
           }
           MOZ_LOG(gVideoFrameConverterLog, LogLevel::Debug,
-                  ("VideoFrameConverter is now %s",
+                  ("VideoFrameConverter %p is now %s", this,
                    aActive ? "active" : "inactive"));
           mActive = aActive;
           if (aActive && mLastFrameQueuedForProcessing.Serial() != -2) {
@@ -124,20 +125,18 @@ class VideoFrameConverter {
             mLastFrameQueuedForProcessing.mTime = TimeStamp::Now();
             ProcessVideoFrame(mLastFrameQueuedForProcessing);
           }
-        }));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
+        })));
   }
 
   void SetTrackEnabled(bool aTrackEnabled) {
-    nsresult rv = mTaskQueue->Dispatch(NS_NewRunnableFunction(
+    MOZ_ALWAYS_SUCCEEDS(mTaskQueue->Dispatch(NS_NewRunnableFunction(
         __func__,
         [self = RefPtr<VideoFrameConverter>(this), this, aTrackEnabled] {
           if (mTrackEnabled == aTrackEnabled) {
             return;
           }
           MOZ_LOG(gVideoFrameConverterLog, LogLevel::Debug,
-                  ("VideoFrameConverter Track is now %s",
+                  ("VideoFrameConverter %p Track is now %s", this,
                    aTrackEnabled ? "enabled" : "disabled"));
           mTrackEnabled = aTrackEnabled;
           if (!aTrackEnabled) {
@@ -154,36 +153,30 @@ class VideoFrameConverter {
                                  gfx::IntSize(640, 480), true);
             }
           }
-        }));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
+        })));
   }
 
   void AddListener(const RefPtr<VideoConverterListener>& aListener) {
-    nsresult rv = mTaskQueue->Dispatch(NS_NewRunnableFunction(
+    MOZ_ALWAYS_SUCCEEDS(mTaskQueue->Dispatch(NS_NewRunnableFunction(
         "VideoFrameConverter::AddListener",
         [self = RefPtr<VideoFrameConverter>(this), this, aListener] {
           MOZ_ASSERT(!mListeners.Contains(aListener));
           mListeners.AppendElement(aListener);
-        }));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
+        })));
   }
 
   void RemoveListener(const RefPtr<VideoConverterListener>& aListener) {
-    nsresult rv = mTaskQueue->Dispatch(NS_NewRunnableFunction(
+    MOZ_ALWAYS_SUCCEEDS(mTaskQueue->Dispatch(NS_NewRunnableFunction(
         "VideoFrameConverter::RemoveListener",
         [self = RefPtr<VideoFrameConverter>(this), this, aListener] {
           mListeners.RemoveElement(aListener);
-        }));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
+        })));
   }
 
   void Shutdown() {
     mPacingTimer->Cancel();
 
-    nsresult rv = mTaskQueue->Dispatch(NS_NewRunnableFunction(
+    MOZ_ALWAYS_SUCCEEDS(mTaskQueue->Dispatch(NS_NewRunnableFunction(
         "VideoFrameConverter::Shutdown",
         [self = RefPtr<VideoFrameConverter>(this), this] {
           if (mSameFrameTimer) {
@@ -193,9 +186,7 @@ class VideoFrameConverter {
           mBufferPool.Release();
           mLastFrameQueuedForProcessing = FrameToProcess();
           mLastFrameConverted = nullptr;
-        }));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
+        })));
   }
 
  protected:
@@ -259,6 +250,16 @@ class VideoFrameConverter {
         sameFrameIntervalInMs, nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP,
         "VideoFrameConverter::mSameFrameTimer", mTaskQueue);
 
+    MOZ_LOG(
+        gVideoFrameConverterLog, LogLevel::Verbose,
+        ("VideoFrameConverter %p: Converted a frame. Diff from last: %.3fms",
+         this,
+         static_cast<double>(aVideoFrame.timestamp_us() -
+                             (mLastFrameConverted
+                                  ? mLastFrameConverted->timestamp_us()
+                                  : aVideoFrame.timestamp_us())) /
+             1000));
+
     // Check that time doesn't go backwards
     MOZ_ASSERT_IF(mLastFrameConverted, aVideoFrame.timestamp_us() >
                                            mLastFrameConverted->timestamp_us());
@@ -286,7 +287,9 @@ class VideoFrameConverter {
     if (frame.mTime <= mLastFrameQueuedForProcessing.mTime) {
       MOZ_LOG(
           gVideoFrameConverterLog, LogLevel::Debug,
-          ("Dropping a frame because time did not progress (%.3f)",
+          ("VideoFrameConverter %p: Dropping a frame because time did not "
+           "progress (%.3fs)",
+           this,
            (mLastFrameQueuedForProcessing.mTime - frame.mTime).ToSeconds()));
       return;
     }
@@ -294,18 +297,18 @@ class VideoFrameConverter {
     mLastFrameQueuedForProcessing = std::move(frame);
 
     if (!mActive) {
-      MOZ_LOG(gVideoFrameConverterLog, LogLevel::Debug,
-              ("Ignoring a frame because we're inactive"));
+      MOZ_LOG(
+          gVideoFrameConverterLog, LogLevel::Debug,
+          ("VideoFrameConverter %p: Ignoring a frame because we're inactive",
+           this));
       return;
     }
 
-    nsresult rv = mTaskQueue->Dispatch(
+    MOZ_ALWAYS_SUCCEEDS(mTaskQueue->Dispatch(
         NewRunnableMethod<StoreCopyPassByLRef<FrameToProcess>>(
             "VideoFrameConverter::ProcessVideoFrame", this,
             &VideoFrameConverter::ProcessVideoFrame,
-            mLastFrameQueuedForProcessing));
-    MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-    Unused << rv;
+            mLastFrameQueuedForProcessing)));
   }
 
   void ProcessVideoFrame(const FrameToProcess& aFrame) {
@@ -314,7 +317,9 @@ class VideoFrameConverter {
     if (aFrame.mTime < mLastFrameQueuedForProcessing.mTime) {
       MOZ_LOG(
           gVideoFrameConverterLog, LogLevel::Debug,
-          ("Dropping a frame that is %.3f seconds behind latest",
+          ("VideoFrameConverter %p: Dropping a frame that is %.3f seconds "
+           "behind latest",
+           this,
            (mLastFrameQueuedForProcessing.mTime - aFrame.mTime).ToSeconds()));
       return;
     }
@@ -331,12 +336,14 @@ class VideoFrameConverter {
                               "Buffers not leaving scope except for "
                               "reconfig, should never leak");
         MOZ_LOG(gVideoFrameConverterLog, LogLevel::Warning,
-                ("Creating a buffer for a black video frame failed"));
+                ("VideoFrameConverter %p: Creating a buffer for a black video "
+                 "frame failed",
+                 this));
         return;
       }
 
       MOZ_LOG(gVideoFrameConverterLog, LogLevel::Verbose,
-              ("Sending a black video frame"));
+              ("VideoFrameConverter %p: Sending a black video frame", this));
       webrtc::I420Buffer::SetBlack(buffer);
 
       VideoFrameConverted(webrtc::VideoFrame::Builder()
@@ -366,7 +373,7 @@ class VideoFrameConverter {
                 rtc::KeepRefUntilDone(image));
 
         MOZ_LOG(gVideoFrameConverterLog, LogLevel::Verbose,
-                ("Sending an I420 video frame"));
+                ("VideoFrameConverter %p: Sending an I420 video frame", this));
         VideoFrameConverted(webrtc::VideoFrame::Builder()
                                 .set_video_frame_buffer(video_frame_buffer)
                                 .set_timestamp_us(time.us())
@@ -383,7 +390,7 @@ class VideoFrameConverter {
 #endif
       MOZ_DIAGNOSTIC_ASSERT(mFramesDropped <= 100, "Buffers must be leaking");
       MOZ_LOG(gVideoFrameConverterLog, LogLevel::Warning,
-              ("Creating a buffer failed"));
+              ("VideoFrameConverter %p: Creating a buffer failed", this));
       return;
     }
 
@@ -398,7 +405,7 @@ class VideoFrameConverter {
 
     if (NS_FAILED(rv)) {
       MOZ_LOG(gVideoFrameConverterLog, LogLevel::Warning,
-              ("Image conversion failed"));
+              ("VideoFrameConverter %p: Image conversion failed", this));
       return;
     }
 
