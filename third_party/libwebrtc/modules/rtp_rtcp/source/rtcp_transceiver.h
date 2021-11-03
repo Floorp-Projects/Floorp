@@ -20,6 +20,7 @@
 #include "modules/rtp_rtcp/source/rtcp_transceiver_config.h"
 #include "modules/rtp_rtcp/source/rtcp_transceiver_impl.h"
 #include "rtc_base/copy_on_write_buffer.h"
+#include "system_wrappers/include/clock.h"
 
 namespace webrtc {
 //
@@ -93,6 +94,7 @@ class RtcpTransceiver : public RtcpFeedbackSenderInterface {
   void SendFullIntraRequest(std::vector<uint32_t> ssrcs, bool new_request);
 
  private:
+  Clock* const clock_;
   TaskQueueBase* const task_queue_;
   std::unique_ptr<RtcpTransceiverImpl> rtcp_transceiver_;
 };
