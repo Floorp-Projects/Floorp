@@ -1829,7 +1829,6 @@ DownloadError.BLOCK_VERDICT_MALWARE = "Malware";
 DownloadError.BLOCK_VERDICT_POTENTIALLY_UNWANTED = "PotentiallyUnwanted";
 DownloadError.BLOCK_VERDICT_INSECURE = "Insecure";
 DownloadError.BLOCK_VERDICT_UNCOMMON = "Uncommon";
-DownloadError.BLOCK_VERDICT_DOWNLOAD_SPAM = "DownloadSpam";
 
 DownloadError.prototype = {
   __proto__: Error.prototype,
