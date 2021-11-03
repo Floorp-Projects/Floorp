@@ -79,6 +79,10 @@ def before_runs(env):
         add_option(env, "browsertime.screenshot", "true")
         add_option(env, "browsertime.testName", test_site.get("name"))
 
+        prefs = test_site.get("preferences", {})
+        for pref, val in prefs.items():
+            add_option(env, "firefox.preference", f"{pref}:{val}")
+
         second_url = test_site.get("secondary_url", None)
         if second_url:
             add_option(env, "browsertime.secondary_url", second_url)
