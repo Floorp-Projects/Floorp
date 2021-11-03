@@ -32,7 +32,7 @@
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.OptionKind = exports.compatibilityParams = exports.AppOptions = void 0;
+exports.compatibilityParams = exports.OptionKind = exports.AppOptions = void 0;
 const compatibilityParams = Object.create(null);
 exports.compatibilityParams = compatibilityParams;
 ;
@@ -1589,19 +1589,22 @@ const PDFViewerApplication = {
     }
 
     const numLabels = labels.length;
+    let standardLabels = 0,
+        emptyLabels = 0;
 
-    if (numLabels !== this.pagesCount) {
-      console.error("The number of Page Labels does not match the number of pages in the document.");
-      return;
+    for (let i = 0; i < numLabels; i++) {
+      const label = labels[i];
+
+      if (label === (i + 1).toString()) {
+        standardLabels++;
+      } else if (label === "") {
+        emptyLabels++;
+      } else {
+        break;
+      }
     }
 
-    let i = 0;
-
-    while (i < numLabels && labels[i] === (i + 1).toString()) {
-      i++;
-    }
-
-    if (i === numLabels) {
+    if (standardLabels >= numLabels || emptyLabels >= numLabels) {
       return;
     }
 
@@ -2292,25 +2295,23 @@ function webViewerPresentationModeChanged(evt) {
 
 function webViewerSidebarViewChanged(evt) {
   PDFViewerApplication.pdfRenderingQueue.isThumbnailViewEnabled = PDFViewerApplication.pdfSidebar.isThumbnailViewVisible;
-  const store = PDFViewerApplication.store;
 
-  if (store && PDFViewerApplication.isInitialViewSet) {
-    store.set("sidebarView", evt.view).catch(function () {});
+  if (PDFViewerApplication.isInitialViewSet) {
+    PDFViewerApplication.store?.set("sidebarView", evt.view).catch(() => {});
   }
 }
 
 function webViewerUpdateViewarea(evt) {
-  const location = evt.location,
-        store = PDFViewerApplication.store;
+  const location = evt.location;
 
-  if (store && PDFViewerApplication.isInitialViewSet) {
-    store.setMultiple({
+  if (PDFViewerApplication.isInitialViewSet) {
+    PDFViewerApplication.store?.setMultiple({
       page: location.pageNumber,
       zoom: location.scale,
       scrollLeft: location.left,
       scrollTop: location.top,
       rotation: location.rotation
-    }).catch(function () {});
+    }).catch(() => {});
   }
 
   const href = PDFViewerApplication.pdfLinkService.getAnchorUrl(location.pdfOpenParams);
@@ -2322,18 +2323,14 @@ function webViewerUpdateViewarea(evt) {
 }
 
 function webViewerScrollModeChanged(evt) {
-  const store = PDFViewerApplication.store;
-
-  if (store && PDFViewerApplication.isInitialViewSet) {
-    store.set("scrollMode", evt.mode).catch(function () {});
+  if (PDFViewerApplication.isInitialViewSet) {
+    PDFViewerApplication.store?.set("scrollMode", evt.mode).catch(() => {});
   }
 }
 
 function webViewerSpreadModeChanged(evt) {
-  const store = PDFViewerApplication.store;
-
-  if (store && PDFViewerApplication.isInitialViewSet) {
-    store.set("spreadMode", evt.mode).catch(function () {});
+  if (PDFViewerApplication.isInitialViewSet) {
+    PDFViewerApplication.store?.set("spreadMode", evt.mode).catch(() => {});
   }
 }
 
@@ -2873,10 +2870,7 @@ function webViewerKeyDown(evt) {
           break;
         }
 
-        if (PDFViewerApplication.page > 1) {
-          PDFViewerApplication.page--;
-        }
-
+        pdfViewer.previousPage();
         handled = true;
         break;
 
@@ -2928,6 +2922,7 @@ exports.PDFPrintServiceFactory = PDFPrintServiceFactory;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
+exports.animationStarted = exports.WaitOnType = exports.VERTICAL_PADDING = exports.UNKNOWN_SCALE = exports.TextLayerMode = exports.SpreadMode = exports.SidebarView = exports.ScrollMode = exports.SCROLLBAR_PADDING = exports.RendererType = exports.ProgressBar = exports.PresentationModeState = exports.MIN_SCALE = exports.MAX_SCALE = exports.MAX_AUTO_SCALE = exports.EventBus = exports.DEFAULT_SCALE_VALUE = exports.DEFAULT_SCALE_DELTA = exports.DEFAULT_SCALE = exports.AutomationEventBus = exports.AutoPrintRegExp = void 0;
 exports.apiPageLayoutToViewerModes = apiPageLayoutToViewerModes;
 exports.apiPageModeToSidebarView = apiPageModeToSidebarView;
 exports.approximateFraction = approximateFraction;
@@ -2950,7 +2945,6 @@ exports.roundToDivide = roundToDivide;
 exports.scrollIntoView = scrollIntoView;
 exports.waitOnEventOrTimeout = waitOnEventOrTimeout;
 exports.watchScroll = watchScroll;
-exports.WaitOnType = exports.VERTICAL_PADDING = exports.UNKNOWN_SCALE = exports.TextLayerMode = exports.SpreadMode = exports.SidebarView = exports.ScrollMode = exports.SCROLLBAR_PADDING = exports.RendererType = exports.ProgressBar = exports.PresentationModeState = exports.MIN_SCALE = exports.MAX_SCALE = exports.MAX_AUTO_SCALE = exports.EventBus = exports.DEFAULT_SCALE_VALUE = exports.DEFAULT_SCALE_DELTA = exports.DEFAULT_SCALE = exports.AutoPrintRegExp = exports.AutomationEventBus = exports.animationStarted = void 0;
 const DEFAULT_SCALE_VALUE = "auto";
 exports.DEFAULT_SCALE_VALUE = DEFAULT_SCALE_VALUE;
 const DEFAULT_SCALE = 1.0;
@@ -4041,10 +4035,8 @@ class PDFRenderingQueue {
       return;
     }
 
-    if (this.pdfThumbnailViewer && this.isThumbnailViewEnabled) {
-      if (this.pdfThumbnailViewer.forceRendering()) {
-        return;
-      }
+    if (this.isThumbnailViewEnabled && this.pdfThumbnailViewer?.forceRendering()) {
+      return;
     }
 
     if (this.printing) {
@@ -4057,14 +4049,14 @@ class PDFRenderingQueue {
   }
 
   getHighestPriority(visible, views, scrolledDown, preRenderExtra = false) {
-    const visibleViews = visible.views;
-    const numVisible = visibleViews.length;
+    const visibleViews = visible.views,
+          numVisible = visibleViews.length;
 
     if (numVisible === 0) {
       return null;
     }
 
-    for (let i = 0; i < numVisible; ++i) {
+    for (let i = 0; i < numVisible; i++) {
       const view = visibleViews[i].view;
 
       if (!this.isViewFinished(view)) {
@@ -4075,8 +4067,8 @@ class PDFRenderingQueue {
     const firstId = visible.first.id,
           lastId = visible.last.id;
 
-    if (lastId - firstId > 1) {
-      for (let i = 0, ii = lastId - firstId; i <= ii; i++) {
+    if (lastId - firstId + 1 > numVisible) {
+      for (let i = 1, ii = lastId - firstId; i < ii; i++) {
         const holeId = scrolledDown ? firstId + i : lastId - i,
               holeView = views[holeId - 1];
 
@@ -5832,8 +5824,8 @@ exports.PDFFindController = PDFFindController;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.getCharacterType = getCharacterType;
 exports.CharacterType = void 0;
+exports.getCharacterType = getCharacterType;
 const CharacterType = {
   SPACE: 0,
   ALPHA_LETTER: 1,
@@ -5927,9 +5919,9 @@ function getCharacterType(charCode) {
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
+exports.PDFHistory = void 0;
 exports.isDestArraysEqual = isDestArraysEqual;
 exports.isDestHashesEqual = isDestHashesEqual;
-exports.PDFHistory = void 0;
 
 var _ui_utils = __webpack_require__(3);
 
@@ -9127,10 +9119,21 @@ class PDFThumbnailViewer {
     return promise;
   }
 
+  #getScrollAhead(visible) {
+    if (visible.first?.id === 1) {
+      return true;
+    } else if (visible.last?.id === this._thumbnails.length) {
+      return false;
+    }
+
+    return this.scroll.down;
+  }
+
   forceRendering() {
     const visibleThumbs = this._getVisibleThumbs();
 
-    const thumbView = this.renderingQueue.getHighestPriority(visibleThumbs, this._thumbnails, this.scroll.down);
+    const scrollAhead = this.#getScrollAhead(visibleThumbs);
+    const thumbView = this.renderingQueue.getHighestPriority(visibleThumbs, this._thumbnails, scrollAhead);
 
     if (thumbView) {
       this._ensurePdfPageLoaded(thumbView).then(() => {
@@ -9169,43 +9172,36 @@ const MAX_NUM_SCALING_STEPS = 3;
 const THUMBNAIL_CANVAS_BORDER_WIDTH = 1;
 const THUMBNAIL_WIDTH = 98;
 
-const TempImageFactory = function TempImageFactoryClosure() {
-  let tempCanvasCache = null;
-  return {
-    getCanvas(width, height) {
-      let tempCanvas = tempCanvasCache;
+class TempImageFactory {
+  static #tempCanvas = null;
 
-      if (!tempCanvas) {
-        tempCanvas = document.createElement("canvas");
-        tempCanvasCache = tempCanvas;
-      }
+  static getCanvas(width, height) {
+    const tempCanvas = this.#tempCanvas ||= document.createElement("canvas");
+    tempCanvas.width = width;
+    tempCanvas.height = height;
+    tempCanvas.mozOpaque = true;
+    const ctx = tempCanvas.getContext("2d", {
+      alpha: false
+    });
+    ctx.save();
+    ctx.fillStyle = "rgb(255, 255, 255)";
+    ctx.fillRect(0, 0, width, height);
+    ctx.restore();
+    return [tempCanvas, tempCanvas.getContext("2d")];
+  }
 
-      tempCanvas.width = width;
-      tempCanvas.height = height;
-      tempCanvas.mozOpaque = true;
-      const ctx = tempCanvas.getContext("2d", {
-        alpha: false
-      });
-      ctx.save();
-      ctx.fillStyle = "rgb(255, 255, 255)";
-      ctx.fillRect(0, 0, width, height);
-      ctx.restore();
-      return [tempCanvas, tempCanvas.getContext("2d")];
-    },
+  static destroyCanvas() {
+    const tempCanvas = this.#tempCanvas;
 
-    destroyCanvas() {
-      const tempCanvas = tempCanvasCache;
-
-      if (tempCanvas) {
-        tempCanvas.width = 0;
-        tempCanvas.height = 0;
-      }
-
-      tempCanvasCache = null;
+    if (tempCanvas) {
+      tempCanvas.width = 0;
+      tempCanvas.height = 0;
     }
 
-  };
-}();
+    this.#tempCanvas = null;
+  }
+
+}
 
 exports.TempImageFactory = TempImageFactory;
 
@@ -9681,12 +9677,14 @@ function isSameScale(oldScale, newScale) {
 }
 
 class BaseViewer {
+  #scrollModePageState = null;
+
   constructor(options) {
     if (this.constructor === BaseViewer) {
       throw new Error("Cannot initialize BaseViewer.");
     }
 
-    const viewerVersion = '2.12.69';
+    const viewerVersion = '2.12.126';
 
     if (_pdfjsLib.version !== viewerVersion) {
       throw new Error(`The API version "${_pdfjsLib.version}" does not match the Viewer version "${viewerVersion}".`);
@@ -9995,7 +9993,7 @@ class BaseViewer {
       this._firstPageCapability.resolve(firstPdfPage);
 
       this._optionalContentConfigPromise = optionalContentConfigPromise;
-      const viewerElement = this._scrollMode === _ui_utils.ScrollMode.PAGE ? this._scrollModePageState.shadowViewer : this.viewer;
+      const viewerElement = this._scrollMode === _ui_utils.ScrollMode.PAGE ? null : this.viewer;
       const scale = this.currentScale;
       const viewport = firstPdfPage.getViewport({
         scale: scale * _pdfjsLib.PixelsPerInch.PDF_TO_CSS_UNITS
@@ -10137,8 +10135,7 @@ class BaseViewer {
     this._scrollMode = _ui_utils.ScrollMode.VERTICAL;
     this._previousScrollMode = _ui_utils.ScrollMode.UNKNOWN;
     this._spreadMode = _ui_utils.SpreadMode.NONE;
-    this._scrollModePageState = {
-      shadowViewer: document.createDocumentFragment(),
+    this.#scrollModePageState = {
       previousPageNumber: 1,
       scrollDown: true,
       pages: []
@@ -10167,17 +10164,9 @@ class BaseViewer {
     }
 
     const pageNumber = this._currentPageNumber,
-          state = this._scrollModePageState,
+          state = this.#scrollModePageState,
           viewer = this.viewer;
-
-    if (viewer.hasChildNodes()) {
-      viewer.textContent = "";
-
-      for (const pageView of this._pages) {
-        state.shadowViewer.appendChild(pageView.div);
-      }
-    }
-
+    viewer.textContent = "";
     state.pages.length = 0;
 
     if (this._spreadMode === _ui_utils.SpreadMode.NONE) {
@@ -10656,7 +10645,7 @@ class BaseViewer {
       return this._getCurrentVisiblePage();
     }
 
-    const views = this._scrollMode === _ui_utils.ScrollMode.PAGE ? this._scrollModePageState.pages : this._pages,
+    const views = this._scrollMode === _ui_utils.ScrollMode.PAGE ? this.#scrollModePageState.pages : this._pages,
           horizontal = this._scrollMode === _ui_utils.ScrollMode.HORIZONTAL,
           rtl = horizontal && this._isContainerRtl;
     return (0, _ui_utils.getVisibleElements)({
@@ -10746,10 +10735,16 @@ class BaseViewer {
     return promise;
   }
 
-  get _scrollAhead() {
+  #getScrollAhead(visible) {
+    if (visible.first?.id === 1) {
+      return true;
+    } else if (visible.last?.id === this.pagesCount) {
+      return false;
+    }
+
     switch (this._scrollMode) {
       case _ui_utils.ScrollMode.PAGE:
-        return this._scrollModePageState.scrollDown;
+        return this.#scrollModePageState.scrollDown;
 
       case _ui_utils.ScrollMode.HORIZONTAL:
         return this.scroll.right;
@@ -10761,7 +10756,7 @@ class BaseViewer {
   forceRendering(currentlyVisiblePages) {
     const visiblePages = currentlyVisiblePages || this._getVisiblePages();
 
-    const scrollAhead = this._scrollAhead;
+    const scrollAhead = this.#getScrollAhead(visiblePages);
     const preRenderExtra = this._spreadMode !== _ui_utils.SpreadMode.NONE && this._scrollMode !== _ui_utils.ScrollMode.HORIZONTAL;
     const pageView = this.renderingQueue.getHighestPriority(visiblePages, this._pages, scrollAhead, preRenderExtra);
 
@@ -11340,9 +11335,9 @@ exports.DefaultAnnotationLayerFactory = DefaultAnnotationLayerFactory;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
+exports.NullL10n = void 0;
 exports.fixupLangCode = fixupLangCode;
 exports.getL10nFallback = getL10nFallback;
-exports.NullL10n = void 0;
 const DEFAULT_L10N_STRINGS = {
   of_pages: "of {{pagesCount}}",
   page_of_pages: "({{pageNumber}} of {{pagesCount}})",
@@ -11533,7 +11528,7 @@ class PDFPageView {
       div.setAttribute("aria-label", msg);
     });
     this.div = div;
-    container.appendChild(div);
+    container?.appendChild(div);
   }
 
   setPdfPage(pdfPage) {
@@ -13887,6 +13882,11 @@ class FirefoxExternalServices extends _app.DefaultExternalServices {
 
       switch (args.pdfjsLoadAction) {
         case "supportsRangedLoading":
+          if (args.done && !args.data) {
+            callbacks.onError();
+            break;
+          }
+
           pdfDataRangeTransport = new FirefoxComDataRangeTransport(args.length, args.data, args.done, args.filename);
           callbacks.onOpenWithTransport(args.pdfUrl, args.length, pdfDataRangeTransport);
           break;
@@ -13905,10 +13905,7 @@ class FirefoxExternalServices extends _app.DefaultExternalServices {
           break;
 
         case "progressiveDone":
-          if (pdfDataRangeTransport) {
-            pdfDataRangeTransport.onDataProgressiveDone();
-          }
-
+          pdfDataRangeTransport?.onDataProgressiveDone();
           break;
 
         case "progress":
@@ -14439,16 +14436,16 @@ var exports = __webpack_exports__;
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-Object.defineProperty(exports, "PDFViewerApplicationOptions", ({
-  enumerable: true,
-  get: function () {
-    return _app_options.AppOptions;
-  }
-}));
 Object.defineProperty(exports, "PDFViewerApplication", ({
   enumerable: true,
   get: function () {
     return _app.PDFViewerApplication;
+  }
+}));
+Object.defineProperty(exports, "PDFViewerApplicationOptions", ({
+  enumerable: true,
+  get: function () {
+    return _app_options.AppOptions;
   }
 }));
 
@@ -14456,8 +14453,8 @@ var _app_options = __webpack_require__(1);
 
 var _app = __webpack_require__(2);
 
-const pdfjsVersion = '2.12.69';
-const pdfjsBuild = 'e788665a2';
+const pdfjsVersion = '2.12.126';
+const pdfjsBuild = 'e1a35e7bb';
 window.PDFViewerApplication = _app.PDFViewerApplication;
 window.PDFViewerApplicationOptions = _app_options.AppOptions;
 ;
