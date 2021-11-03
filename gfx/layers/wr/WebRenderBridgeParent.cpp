@@ -1633,6 +1633,8 @@ void WebRenderBridgeParent::UpdateProfilerUI() {
 void WebRenderBridgeParent::UpdateParameters() {
   uint32_t count = gfxVars::WebRenderBatchingLookback();
   mApi->SetBatchingLookback(count);
+  mApi->SetInt(wr::IntParameter::BatchedUploadThreshold,
+               gfxVars::WebRenderBatchedUploadThreshold());
 
   mBlobTileSize = gfxVars::WebRenderBlobTileSize();
 }

@@ -1342,6 +1342,8 @@ void CompositorBridgeParent::InitializeStatics() {
   gfxVars::SetWebRenderBoolParametersListener(&UpdateWebRenderBoolParameters);
   gfxVars::SetWebRenderBatchingLookbackListener(&UpdateWebRenderParameters);
   gfxVars::SetWebRenderBlobTileSizeListener(&UpdateWebRenderParameters);
+  gfxVars::SetWebRenderBatchedUploadThresholdListener(
+      &UpdateWebRenderParameters);
 
   gfxVars::SetWebRenderProfilerUIListener(&UpdateWebRenderProfilerUI);
 }
