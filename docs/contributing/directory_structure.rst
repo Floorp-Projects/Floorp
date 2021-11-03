@@ -97,7 +97,7 @@ etc.
 devtools
 --------
 
-The `Firefox Developer Tools <https://developer.mozilla.org/docs/Tools>`__ server and client components.
+The Firefox Developer Tools server and client components. See :ref:`contributor <devtools-contributor-doc>` and :ref:`user <devtools-user-doc>` documentation.
 
 
 docs

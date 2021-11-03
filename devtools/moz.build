@@ -50,3 +50,4 @@ with Files("docs/tools/inspector-panel.md"):
     BUG_COMPONENT = ("DevTools", "Inspector")
 
 SPHINX_TREES["/devtools"] = "docs/contributor"
+SPHINX_TREES["/devtools-user"] = "docs/user"

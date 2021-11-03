@@ -1,6 +1,9 @@
-=================================
-Firefox Developer Tools User Docs
-=================================
+.. toctree::
+   :name: devtools-user-doc
+
+==========================
+Firefox DevTools User Docs
+==========================
 
 Firefox Developer Tools is a set of web developer tools built into Firefox. You can use them to examine, edit, and debug HTML, CSS, and JavaScript.
 
@@ -259,3 +262,6 @@ If you want to help improve the developer tools, these resources will get you st
 
    * - `bugs.firefox-dev.tools <https://bugs.firefox-dev.tools/>`_
      - A tool helping to find bugs to work on.
+
+   * - :ref:`Read source docs <devtools-contributor-doc>`
+     - Firefox DevTools source code documentation.
