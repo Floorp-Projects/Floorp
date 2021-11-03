@@ -10,16 +10,15 @@ const { RemoteL10n } = ChromeUtils.import(
 add_task(async function test_TODO() {
   const l10nRegistryInstance = L10nRegistry.getInstance();
   const CONTENT = "remote_l10n_test_string = RemoteL10n string";
-  const localProfileDir = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
-  const dirPath = PathUtils.join(
-    localProfileDir,
+  const dirPath = OS.Path.join(
+    OS.Constants.Path.localProfileDir,
     ...["settings", "main", "ms-language-packs", "browser", "newtab"]
   );
-  const filePath = PathUtils.join(dirPath, "asrouter.ftl");
+  const filePath = OS.Path.join(dirPath, "asrouter.ftl");
 
   await IOUtils.makeDirectory(dirPath, {
     ignoreExisting: true,
-    from: localProfileDir,
+    from: OS.Constants.Path.localProfileDir,
   });
   await IOUtils.writeUTF8(filePath, CONTENT, {
     tmpPath: `${filePath}.tmp`,
