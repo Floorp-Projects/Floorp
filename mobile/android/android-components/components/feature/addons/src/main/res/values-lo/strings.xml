@@ -206,4 +206,6 @@
     <string name="mozac_feature_addons_installed_dialog_title">%1$s ໄດ້ຖືກເພີ່ມເຂົ້າໃນ %2$s</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_installed_dialog_description">ເປີດມັນຢູ່ໃນເມນູ</string>
-    </resources>
+    <!-- Confirmation button text for the dialog when add-on installation is completed. -->
+    <string name="mozac_feature_addons_installed_dialog_okay_button">ໂອເຄ, ເຂົ້າໃຈແລ້ວ</string>
+</resources>
