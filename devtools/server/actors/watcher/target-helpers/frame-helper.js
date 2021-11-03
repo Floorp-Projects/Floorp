@@ -293,13 +293,29 @@ function getWatchingBrowsingContexts(watcher) {
     : [];
   // Even if we aren't watching additional target, we want to process the top level target.
   // The top level target isn't returned by getFilteredRemoteBrowsingContext, so add it in both cases.
-  if (watcher.context.type == "browser-element") {
-    const topBrowsingContext = browserElement.browsingContext;
+  if (
+    watcher.context.type == "browser-element" ||
+    watcher.context.type == "webextension"
+  ) {
+    let topBrowsingContext;
+    if (watcher.context.type == "browser-element") {
+      topBrowsingContext = watcher.browserElement.browsingContext;
+    } else if (watcher.context.type == "webextension") {
+      topBrowsingContext = BrowsingContext.get(
+        watcher.context.addonBrowsingContextID
+      );
+    }
+
     // Ignore if we are against a page running in the parent process,
     // which would not support JSWindowActor API
     // XXX May be we should toggle `includeChrome` and ensure watch/unwatch works
     // with such page?
-    if (topBrowsingContext.currentWindowGlobal.osPid != -1) {
+    //
+    // Also ignore BrowsingContext which are being destroyed or navigating.
+    if (
+      topBrowsingContext.currentWindowGlobal &&
+      topBrowsingContext.currentWindowGlobal.osPid != -1
+    ) {
       browsingContexts.push(topBrowsingContext);
     }
   }

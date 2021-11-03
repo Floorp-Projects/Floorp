@@ -94,6 +94,13 @@ webExtensionTargetPrototype.initialize = function(
   this.addonId = addonId;
   this.chromeGlobal = chromeGlobal;
 
+  // Expose the BrowsingContext of the fallback document,
+  // which is the one this target actor will always refer to via its form()
+  // and all resources should be related to this one as we currently spawn
+  // only just this one target actor to debug all webextension documents.
+  this.devtoolsSpawnedBrowsingContextForWebExtension =
+    chromeGlobal.browsingContext;
+
   // Try to discovery an existent extension page to attach (which will provide the initial
   // URL shown in the window tittle when the addon debugger is opened).
   const extensionWindow = this._searchForExtensionWindow();

@@ -48,9 +48,8 @@ class NetworkEventWatcher {
     this.onNetworkEventUpdated = onUpdated;
     // Boolean to know if we keep previous document network events or not.
     this.persist = false;
-
     this.listener = new NetworkObserver(
-      { browserId: this.browserId },
+      { browserId: this.browserId, addonId: watcherActor.context.addonId },
       { onNetworkEvent: this.onNetworkEvent.bind(this) }
     );
 

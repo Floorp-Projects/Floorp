@@ -30,6 +30,12 @@ loader.lazyImporter(
   "ExtensionParent",
   "resource://gre/modules/ExtensionParent.jsm"
 );
+loader.lazyRequireGetter(
+  this,
+  "WatcherActor",
+  "devtools/server/actors/watcher",
+  true
+);
 
 /**
  * Creates the actor that represents the addon in the parent process, which connects
@@ -84,12 +90,38 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
         temporarilyInstalled: this.addon.temporarilyInstalled,
         traits: {
           supportsReloadDescriptor: true,
+          // @backward-compat { added in 95 } Support has been added to WebExtension descriptors
+          watcher: true,
         },
         url: this.addon.sourceURI ? this.addon.sourceURI.spec : undefined,
         warnings: ExtensionParent.DebugUtils.getExtensionManifestWarnings(
           this.addonId
         ),
       };
+    },
+
+    /**
+     * Return a Watcher actor, allowing to keep track of targets which
+     * already exists or will be created. It also helps knowing when they
+     * are destroyed.
+     */
+    async getWatcher(config = {}) {
+      if (!this.watcher) {
+        // Ensure connecting to the webextension frame in order to populate this._form
+        await this._extensionFrameConnect();
+        this.watcher = new WatcherActor(
+          this.conn,
+          {
+            type: "webextension",
+            addonId: this.addonId,
+            addonBrowsingContextID: this._form.browsingContextID,
+            addonInnerWindowId: this._form.innerWindowId,
+          },
+          config
+        );
+        this.manage(this.watcher);
+      }
+      return this.watcher;
     },
 
     async getTarget() {
@@ -110,10 +142,8 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
     },
 
     async _extensionFrameConnect() {
-      if (this._browser) {
-        throw new Error(
-          "This actor is already connected to the extension process"
-        );
+      if (this._form) {
+        return this._form;
       }
 
       this._browser = await ExtensionParent.DebugUtils.getExtensionProcessBrowser(
@@ -124,7 +154,9 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
         this.conn,
         this._browser,
         this.destroy,
-        { addonId: this.addonId }
+        {
+          addonId: this.addonId,
+        }
       );
 
       // connectToFrame may resolve to a null form,

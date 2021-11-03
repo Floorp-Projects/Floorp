@@ -35,6 +35,12 @@ const webExtensionDescriptorSpec = generateActorSpec({
       },
       response: {},
     },
+    getWatcher: {
+      request: {
+        isServerTargetSwitchingEnabled: Option(0, "boolean"),
+      },
+      response: RetVal("watcher"),
+    },
   },
 
   events: {

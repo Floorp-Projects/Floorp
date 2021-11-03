@@ -544,15 +544,22 @@ class DevToolsFrameChild extends JSWindowActorChild {
     // First let's check if a target was created for this watcher actor in this specific
     // DevToolsFrameChild instance.
     const connectionInfo = this._connections.get(watcherActorID);
-    let targetActor = connectionInfo ? connectionInfo.actor : null;
+    const targetActor = connectionInfo ? connectionInfo.actor : null;
+    if (targetActor) {
+      return targetActor;
+    }
 
     // If we couldn't find such target, we want to see if a target was created for this
     // (watcherActorId,browserId, {browsingContextId}) in another DevToolsFrameChild instance.
     // This might be the case if we're navigating to a new page with server side target
     // enabled and we want to retrieve the target of the page we're navigating from.
+    const isMatchingBrowserElement =
+      this.manager.browsingContext.browserId == context.browserId;
+    const isMatchingWebExtension =
+      this.document.nodePrincipal.addonId == context.addonId;
     if (
-      !targetActor &&
-      this.manager.browsingContext.browserId == context.browserId
+      (context.type == "browser-element" && isMatchingBrowserElement) ||
+      (context.type == "webextension" && isMatchingWebExtension)
     ) {
       // Ensure retrieving the one target actor related to this connection.
       // This allows to distinguish actors created for various toolboxes.
@@ -564,15 +571,13 @@ class DevToolsFrameChild extends JSWindowActorChild {
       );
 
       if (!browsingContextId) {
-        targetActor = targetActors[0] || null;
-      } else {
-        targetActor = targetActors.find(
-          actor => actor.browsingContextID === browsingContextId
-        );
+        return targetActors[0] || null;
       }
+      return targetActors.find(
+        actor => actor.browsingContextID === browsingContextId
+      );
     }
-
-    return targetActor;
+    return null;
   }
 
   _addSessionDataEntry(watcherActorID, context, type, entries) {
