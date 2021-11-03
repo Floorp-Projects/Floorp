@@ -18,48 +18,36 @@
       /* exported performRequests, performCachedRequests, performOneCachedRequest */
       "use strict";
 
-      function get(address, callback) {
-        const xhr = new XMLHttpRequest();
-        xhr.open("GET", address, true);
+      function get(address) {
+        return new Promise(resolve => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("GET", address, true);
 
-        xhr.onreadystatechange = function() {
+          xhr.onreadystatechange = function() {
           if (this.readyState == this.DONE) {
-            callback();
-          }
-        };
-        xhr.send(null);
-      }
-
-      function performRequests() {
-        /* eslint-disable max-nested-callbacks */
-        get("sjs_status-codes-test-server.sjs?sts=100", function() {
-          get("sjs_status-codes-test-server.sjs?sts=200", function() {
-            get("sjs_status-codes-test-server.sjs?sts=300", function() {
-              get("sjs_status-codes-test-server.sjs?sts=400", function() {
-                get("sjs_status-codes-test-server.sjs?sts=500", function() {
-                  // Done.
-                });
-              });
-            });
-          });
-        });
-        /* eslint-enable max-nested-callbacks */
-      }
-
-      function performCachedRequests() {
-        get("sjs_status-codes-test-server.sjs?sts=ok&cached", function() {
-          get("sjs_status-codes-test-server.sjs?sts=redirect&cached", function() {
-            // Done.
-          });
+              resolve();
+            }
+          };
+          xhr.send(null);
         });
       }
 
-      function performOneCachedRequest() {
-        get("sjs_status-codes-test-server.sjs?sts=ok&cached", function() {
-          get("sjs_status-codes-test-server.sjs?sts=ok&cached", function() {
-            // Done.
-          });
-        });
+      async function performRequests() {
+        await get("sjs_status-codes-test-server.sjs?sts=100");
+        await get("sjs_status-codes-test-server.sjs?sts=200");
+        await get("sjs_status-codes-test-server.sjs?sts=300");
+        await get("sjs_status-codes-test-server.sjs?sts=400");
+        await get("sjs_status-codes-test-server.sjs?sts=500");
+      }
+
+      async function performCachedRequests() {
+       await get("sjs_status-codes-test-server.sjs?sts=ok&cached");
+       await get("sjs_status-codes-test-server.sjs?sts=redirect&cached");
+      }
+
+      async function performOneCachedRequest() {
+        await get("sjs_status-codes-test-server.sjs?sts=ok&cached");
+        await get("sjs_status-codes-test-server.sjs?sts=ok&cached");
       }
     </script>
   </body>
