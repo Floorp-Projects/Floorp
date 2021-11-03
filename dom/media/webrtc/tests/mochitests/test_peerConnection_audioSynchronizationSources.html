@@ -45,9 +45,12 @@
          `Synchronization source audio level <= 1.0 (${source.audioLevel})`);
       ok(source.timestamp,
          `Synchronization source has timestamp (${source.timestamp})`);
-      ok(window.performance.now() + window.performance.timeOrigin -
-         source.timestamp < 2500, // This large value is used because sometimes
-                                  // the testing hardware is _very_ slow
+      const ageSeconds =
+        (window.performance.now() + window.performance.timeOrigin -
+         source.timestamp) / 1000;
+      ok(ageSeconds >= 0,
+         `Synchronization source timestamp is in the past`);
+      ok(ageSeconds < 2.5,
          `Synchronization source timestamp is close to now`);
       is(source.voiceActivityFlag, undefined,
         "Synchronization source unsupported voiceActivity is undefined");
