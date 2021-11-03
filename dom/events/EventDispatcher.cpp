@@ -537,7 +537,7 @@ void EventTargetChainItem::HandleEventTargetChain(
   }
 
   // Target
-  aVisitor.mEvent->mFlags.mInTargetPhase = true;
+  aVisitor.mEvent->mFlags.mInBubblingPhase = true;
   EventTargetChainItem& targetItem = aChain[firstCanHandleEventTargetIdx];
   // Need to explicitly retarget touch targets so that initial targets get set
   // properly in case nothing else retargeted touches.
@@ -549,20 +549,12 @@ void EventTargetChainItem::HandleEventTargetChain(
        targetItem.ForceContentDispatch())) {
     targetItem.HandleEvent(aVisitor, aCd);
   }
-  aVisitor.mEvent->mFlags.mInCapturePhase = false;
-  aVisitor.mEvent->mFlags.mInBubblingPhase = true;
-  if (!aVisitor.mEvent->PropagationStopped() &&
-      (!aVisitor.mEvent->mFlags.mNoContentDispatch ||
-       targetItem.ForceContentDispatch())) {
-    targetItem.HandleEvent(aVisitor, aCd);
-  }
-
   if (aVisitor.mEvent->mFlags.mInSystemGroup) {
     targetItem.PostHandleEvent(aVisitor);
   }
-  aVisitor.mEvent->mFlags.mInTargetPhase = false;
 
   // Bubble
+  aVisitor.mEvent->mFlags.mInCapturePhase = false;
   for (uint32_t i = firstCanHandleEventTargetIdx + 1; i < chainLength; ++i) {
     EventTargetChainItem& item = aChain[i];
     if (item.PreHandleEventOnly()) {
