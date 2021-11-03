@@ -1,3 +1,6 @@
+.. toctree::
+   :name: devtools-contributor-doc
+
 =================================
 Firefox DevTools Contributor Docs
 =================================
