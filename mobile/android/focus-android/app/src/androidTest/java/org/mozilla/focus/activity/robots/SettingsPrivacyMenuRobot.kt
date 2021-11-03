@@ -9,11 +9,16 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
+import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
+import org.hamcrest.Matchers.allOf
 import org.mozilla.focus.R
+import org.mozilla.focus.helpers.EspressoHelper.hasCousin
 import org.mozilla.focus.helpers.TestHelper.getStringResource
 import org.mozilla.focus.helpers.TestHelper.packageName
 import org.mozilla.focus.helpers.TestHelper.waitingTime
@@ -34,6 +39,126 @@ class SettingsPrivacyMenuRobot {
         safeBrowsingSwitch().check(matches(isDisplayed()))
         sendDataSwitch().check(matches(isDisplayed()))
     }
+
+    fun verifyBlockAdTrackersEnabled(enabled: Boolean) {
+        if (enabled) {
+            adTrackersBlockSwitch()
+                .check(
+                    matches(
+                        hasCousin(
+                            allOf(
+                                withId(R.id.switchWidget),
+                                isChecked()
+                            )
+                        )
+                    )
+                )
+        } else {
+            adTrackersBlockSwitch()
+                .check(
+                    matches(
+                        hasCousin(
+                            allOf(
+                                withId(R.id.switchWidget),
+                                isNotChecked()
+                            )
+                        )
+                    )
+                )
+        }
+    }
+
+    fun verifyBlockAnalyticTrackersEnabled(enabled: Boolean) {
+        if (enabled) {
+            analyticTrackersBlockSwitch()
+                .check(
+                    matches(
+                        hasCousin(
+                            allOf(
+                                withId(R.id.switchWidget),
+                                isChecked()
+                            )
+                        )
+                    )
+                )
+        } else {
+            analyticTrackersBlockSwitch()
+                .check(
+                    matches(
+                        hasCousin(
+                            allOf(
+                                withId(R.id.switchWidget),
+                                isNotChecked()
+                            )
+                        )
+                    )
+                )
+        }
+    }
+
+    fun verifyBlockSocialTrackersEnabled(enabled: Boolean) {
+        if (enabled) {
+            socialTrackersBlockSwitch()
+                .check(
+                    matches(
+                        hasCousin(
+                            allOf(
+                                withId(R.id.switchWidget),
+                                isChecked()
+                            )
+                        )
+                    )
+                )
+        } else {
+            socialTrackersBlockSwitch()
+                .check(
+                    matches(
+                        hasCousin(
+                            allOf(
+                                withId(R.id.switchWidget),
+                                isNotChecked()
+                            )
+                        )
+                    )
+                )
+        }
+    }
+
+    fun verifyBlockOtherTrackersEnabled(enabled: Boolean) {
+        if (enabled) {
+            otherContentTrackersBlockSwitch()
+                .check(
+                    matches(
+                        hasCousin(
+                            allOf(
+                                withId(R.id.switchWidget),
+                                isChecked()
+                            )
+                        )
+                    )
+                )
+        } else {
+            otherContentTrackersBlockSwitch()
+                .check(
+                    matches(
+                        hasCousin(
+                            allOf(
+                                withId(R.id.switchWidget),
+                                isNotChecked()
+                            )
+                        )
+                    )
+                )
+        }
+    }
+
+    fun clickAdTrackersBlockSwitch() = adTrackersBlockSwitch().perform(click())
+
+    fun clickAnalyticsTrackersBlockSwitch() = analyticTrackersBlockSwitch().perform(click())
+
+    fun clickSocialTrackersBlockSwitch() = socialTrackersBlockSwitch().perform(click())
+
+    fun clickOtherContentTrackersBlockSwitch() = otherContentTrackersBlockSwitch().perform(click())
 
     fun switchSafeBrowsingToggle(): ViewInteraction = safeBrowsingSwitch().perform(click())
 

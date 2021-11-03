@@ -63,6 +63,8 @@ class SearchRobot {
     class Transition {
         fun loadPage(url: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             val sessionLoadedIdlingResource = SessionLoadedIdlingResource()
+            val geckoEngineView = mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
+            val trackingProtectionDialog = mDevice.findObject(UiSelector().resourceId("$packageName:id/message"))
 
             searchScreen { typeInSearchBar(url) }
             pressEnterKey()
@@ -72,8 +74,8 @@ class SearchRobot {
                     BrowserRobot().progressBar.waitUntilGone(webPageLoadwaitingTime)
                 )
                 assertTrue(
-                    mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
-                        .waitForExists(webPageLoadwaitingTime)
+                    geckoEngineView.waitForExists(webPageLoadwaitingTime) ||
+                        trackingProtectionDialog.waitForExists(webPageLoadwaitingTime)
                 )
             }
 

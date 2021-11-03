@@ -42,8 +42,7 @@ class SettingsScreenshots : ScreenshotTest() {
 
         searchScreen {
         }.loadPage(pageUrl) {
-            waitForSiteSecurityIconShown()
-            verifySiteSecurityIconShown()
+            verifySiteTrackingProtectionIconShown()
             SystemClock.sleep(5000)
             TestHelper.waitForWebSiteTitleLoad()
             TestHelper.waitForWebContent()

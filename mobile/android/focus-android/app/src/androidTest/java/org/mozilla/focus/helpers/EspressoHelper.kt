@@ -7,10 +7,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.StringRes
 import androidx.test.espresso.Espresso
-import androidx.test.espresso.ViewInteraction
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.matcher.ViewMatchers
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
+import androidx.test.espresso.matcher.ViewMatchers.withChild
+import androidx.test.espresso.matcher.ViewMatchers.withParent
 import org.hamcrest.Description
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers
@@ -21,6 +23,16 @@ import org.mozilla.focus.R
  * Some convenient methods for testing Focus with espresso.
  */
 object EspressoHelper {
+    fun hasCousin(matcher: Matcher<View>): Matcher<View> {
+        return withParent(
+            hasSibling(
+                withChild(
+                    matcher
+                )
+            )
+        )
+    }
+
     @JvmStatic
     fun openSettings() {
         openMenu()
@@ -37,13 +49,6 @@ object EspressoHelper {
             .perform(ViewActions.click())
     }
 
-    fun navigateToWebsite(input: String) {
-        Espresso.onView(ViewMatchers.withId(R.id.mozac_browser_toolbar_edit_url_view))
-            .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
-            .check(ViewAssertions.matches(ViewMatchers.hasFocus()))
-            .perform(ViewActions.replaceText(input), ViewActions.pressImeActionButton())
-    }
-
     @JvmStatic
     fun assertToolbarMatchesText(@StringRes titleResource: Int) {
         Espresso.onView(
@@ -54,16 +59,6 @@ object EspressoHelper {
         )
             .check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
             .check(ViewAssertions.matches(ViewMatchers.withText(titleResource)))
-    }
-
-    @JvmStatic
-    fun onFloatingEraseButton(): ViewInteraction {
-        return Espresso.onView(ViewMatchers.withId(R.id.erase))
-    }
-
-    @JvmStatic
-    fun onFloatingTabsButton(): ViewInteraction {
-        return Espresso.onView(ViewMatchers.withId(R.id.tabs))
     }
 
     @JvmStatic

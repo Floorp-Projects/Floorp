@@ -29,7 +29,7 @@ gcloud:
   app: /app/path 
   test: /test/path
 
-  auto-google-login: true
+  auto-google-login: false
   use-orchestrator: true
   environment-variables:
     clearPackageData: true
@@ -40,7 +40,7 @@ gcloud:
   test-targets:
     - package org.mozilla.focus.activity
     - package org.mozilla.focus.privacy
-  
+
   device:
    - model: Pixel2
      version: 28

@@ -54,6 +54,15 @@ class BrowserRobot {
         }
     }
 
+    fun verifyTrackingProtectionAlert(expectedText: String) {
+        assertTrue(
+            mDevice.findObject(UiSelector().textContains(expectedText))
+                .waitForExists(webPageLoadwaitingTime)
+        )
+        // close the JavaScript alert
+        mDevice.pressBack()
+    }
+
     fun verifyPageURL(expectedText: String) {
         val sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
