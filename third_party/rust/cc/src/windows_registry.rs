@@ -129,7 +129,7 @@ pub fn find_vs_version() -> Result<VsVers, String> {
             )),
         },
         _ => {
-            // Check for the presense of a specific registry key
+            // Check for the presence of a specific registry key
             // that indicates visual studio is installed.
             if impl_::has_msbuild_version("16.0") {
                 Ok(VsVers::Vs16)
@@ -277,6 +277,9 @@ mod impl_ {
                 if target.contains("x86_64") {
                     tool.env.push(("Platform".into(), "X64".into()));
                 }
+                if target.contains("aarch64") {
+                    tool.env.push(("Platform".into(), "ARM64".into()));
+                }
                 Some(tool)
             })
             .next()
@@ -406,6 +409,9 @@ mod impl_ {
             let mut tool = Tool::with_family(path, MSVC_FAMILY);
             if target.contains("x86_64") {
                 tool.env.push(("Platform".into(), "X64".into()));
+            }
+            if target.contains("aarch64") {
+                tool.env.push(("Platform".into(), "ARM64".into()));
             }
             tool
         })
@@ -676,7 +682,7 @@ mod impl_ {
 
     // Interestingly there are several subdirectories, `win7` `win8` and
     // `winv6.3`. Vcvars seems to only care about `winv6.3` though, so the same
-    // applies to us. Note that if we were targetting kernel mode drivers
+    // applies to us. Note that if we were targeting kernel mode drivers
     // instead of user mode applications, we would care.
     fn get_sdk81_dir() -> Option<PathBuf> {
         let key = r"SOFTWARE\Microsoft\Microsoft SDKs\Windows\v8.1";
@@ -810,10 +816,12 @@ mod impl_ {
             "16.0" => {
                 find_msbuild_vs16("x86_64-pc-windows-msvc").is_some()
                     || find_msbuild_vs16("i686-pc-windows-msvc").is_some()
+                    || find_msbuild_vs16("aarch64-pc-windows-msvc").is_some()
             }
             "15.0" => {
                 find_msbuild_vs15("x86_64-pc-windows-msvc").is_some()
                     || find_msbuild_vs15("i686-pc-windows-msvc").is_some()
+                    || find_msbuild_vs15("aarch64-pc-windows-msvc").is_some()
             }
             "12.0" | "14.0" => LOCAL_MACHINE
                 .open(&OsString::from(format!(
