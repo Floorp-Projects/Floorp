@@ -45,6 +45,7 @@
 @item@:is(.openWhenFinished).hoveringMainArea:hover,
 @item@:not([verdict]) > .downloadButton:hover,
 @item@[verdict]:hover,
+@item@:hover:is(.openWhenFinished),
 .downloadsPanelFooterButton:hover {
   background-color: var(--panel-item-hover-bgcolor);
 }
