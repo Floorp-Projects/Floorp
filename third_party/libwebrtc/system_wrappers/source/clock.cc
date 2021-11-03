@@ -91,10 +91,10 @@ class WinUwpRealTimeClock final : public RealTimeClock {
 
  protected:
   timeval CurrentTimeVal() override {
-    // The rtc::SystemTimeNanos() method is already time offset from a base
-    // epoch value and might as be synchronized against an NTP time server as
-    // an added bonus.
-    auto nanos = rtc::SystemTimeNanos();
+    // The rtc::WinUwpSystemTimeNanos() method is already time offset from a
+    // base epoch value and might as be synchronized against an NTP time server
+    // as an added bonus.
+    auto nanos = rtc::WinUwpSystemTimeNanos();
 
     struct timeval tv;
 
