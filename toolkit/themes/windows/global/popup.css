@@ -28,6 +28,10 @@ panel {
 menupopup {
   appearance: auto;
   -moz-default-appearance: menupopup;
+
+  /* Native menus are always light */
+  color-scheme: light;
+
   /* We set the background-color / border here so that it doesn't interfere with native styling. */
   background-color: Menu;
   border: 1px solid ThreeDShadow;
@@ -40,6 +44,8 @@ menupopup {
   menupopup {
     /* Disable the default appearance so we can override the native styling. */
     appearance: none;
+    color-scheme: unset;
+
     /* Force a rounded-rect dropshadow to appear. */
     -moz-window-shadow: cliprounded;
 
