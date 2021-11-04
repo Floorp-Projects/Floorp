@@ -168,7 +168,8 @@ bool ScopeContext::init(JSContext* cx, CompilationInput& input,
     if (!cacheEnclosingScopeBindingForEval(cx, input, parserAtoms)) {
       return false;
     }
-    if (!cachePrivateFieldsForEval(cx, input, enclosingEnv, effectiveScope,
+    JS::Rooted<InputScope> effectiveScope_(cx, effectiveScope);
+    if (!cachePrivateFieldsForEval(cx, input, enclosingEnv, effectiveScope_,
                                    parserAtoms)) {
       return false;
     }
@@ -465,7 +466,7 @@ bool ScopeContext::addToEnclosingLexicalBindingCache(
   return true;
 }
 
-static bool IsPrivateField(JSAtom* atom) {
+static bool IsPrivateField(Scope*, JSAtom* atom) {
   MOZ_ASSERT(atom->length() > 0);
 
   JS::AutoCheckCannotGC nogc;
@@ -476,10 +477,34 @@ static bool IsPrivateField(JSAtom* atom) {
   return atom->twoByteChars(nogc)[0] == '#';
 }
 
+static bool IsPrivateField(ScopeStencilRef& scope, TaggedParserAtomIndex atom) {
+  if (atom.isParserAtomIndex()) {
+    const CompilationStencil& context = scope.context_;
+    ParserAtom* parserAtom = context.parserAtomData[atom.toParserAtomIndex()];
+    return parserAtom->isPrivateName();
+  }
+
+#ifdef DEBUG
+  if (atom.isWellKnownAtomId()) {
+    const auto& info = GetWellKnownAtomInfo(atom.toWellKnownAtomId());
+    // #constructor is a well-known term, but it is invalid private name.
+    MOZ_ASSERT(!(info.length > 1 && info.content[0] == '#'));
+  } else if (atom.isLength2StaticParserString()) {
+    char content[2];
+    ParserAtomsTable::getLength2Content(atom.toLength2StaticParserString(),
+                                        content);
+    // # character is not part of the allowed character of static strings.
+    MOZ_ASSERT(content[0] != '#');
+  }
+#endif
+
+  return false;
+}
+
 bool ScopeContext::cachePrivateFieldsForEval(JSContext* cx,
                                              CompilationInput& input,
                                              JSObject* enclosingEnvironment,
-                                             Scope* effectiveScope,
+                                             const InputScope& effectiveScope,
                                              ParserAtomsTable& parserAtoms) {
   if (!input.options.privateClassFields) {
     return true;
@@ -492,28 +517,35 @@ bool ScopeContext::cachePrivateFieldsForEval(JSContext* cx,
   // we re-map them to include the hops to get the to the effective scope:
   // see EmitterScope::lookupPrivate
   uint32_t hops = effectiveScopeHops;
-  for (ScopeIter si(effectiveScope); si; si++) {
-    if (si.scope()->kind() == ScopeKind::ClassBody) {
+  for (InputScopeIter si(effectiveScope); si; si++) {
+    if (si.scope().kind() == ScopeKind::ClassBody) {
       uint32_t slots = 0;
-      for (js::BindingIter bi(si.scope()); bi; bi++) {
-        if (bi.kind() == BindingKind::PrivateMethod ||
-            (bi.kind() == BindingKind::Synthetic &&
-             IsPrivateField(bi.name()))) {
-          auto parserName =
-              parserAtoms.internJSAtom(cx, input.atomCache, bi.name());
-          if (!parserName) {
-            return false;
-          }
+      bool success = si.scope().match([&](auto& scope_ref) {
+        for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
+          if (bi.kind() == BindingKind::PrivateMethod ||
+              (bi.kind() == BindingKind::Synthetic &&
+               IsPrivateField(scope_ref, bi.name()))) {
+            InputName binding(scope_ref, bi.name());
+            auto parserName =
+                binding.internInto(cx, parserAtoms, input.atomCache);
+            if (!parserName) {
+              return false;
+            }
 
-          NameLocation loc =
-              NameLocation::DebugEnvironmentCoordinate(bi.kind(), hops, slots);
+            NameLocation loc = NameLocation::DebugEnvironmentCoordinate(
+                bi.kind(), hops, slots);
 
-          if (!effectiveScopePrivateFieldCache_->put(parserName, loc)) {
-            ReportOutOfMemory(cx);
-            return false;
+            if (!effectiveScopePrivateFieldCache_->put(parserName, loc)) {
+              ReportOutOfMemory(cx);
+              return false;
+            }
           }
+          slots++;
         }
-        slots++;
+        return true;
+      });
+      if (!success) {
+        return false;
       }
     }
 
