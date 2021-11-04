@@ -485,7 +485,7 @@ struct ScopeContext {
  private:
   void computeThisBinding(const InputScope& scope);
   void computeThisEnvironment(Scope* enclosingScope);
-  void computeInScope(Scope* enclosingScope);
+  void computeInScope(const InputScope& enclosingScope);
   void cacheEnclosingScope(Scope* enclosingScope);
 
   InputScope determineEffectiveScope(InputScope& scope, JSObject* environment);

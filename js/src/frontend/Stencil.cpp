@@ -162,7 +162,7 @@ bool ScopeContext::init(JSContext* cx, CompilationInput& input,
     computeThisBinding(effectiveScope);
     computeThisEnvironment(maybeNonDefaultEnclosingScope);
   }
-  computeInScope(maybeNonDefaultEnclosingScope);
+  computeInScope(maybeNonDefaultEnclosingScope_);
 
   cacheEnclosingScope(input.enclosingScope);
 
@@ -252,8 +252,8 @@ void ScopeContext::computeThisBinding(const InputScope& scope) {
   thisBinding = ThisBinding::Global;
 }
 
-void ScopeContext::computeInScope(Scope* enclosingScope) {
-  for (ScopeIter si(enclosingScope); si; si++) {
+void ScopeContext::computeInScope(const InputScope& enclosingScope) {
+  for (InputScopeIter si(enclosingScope); si; si++) {
     if (si.kind() == ScopeKind::ClassBody) {
       inClass = true;
     }
