@@ -4389,22 +4389,6 @@
   value: 2592000   # 30 days (in seconds)
   mirror: always
 
-# Time in seconds before a site are considered high-value by the login detection
-# service is no longer considered high-value and isolated in the "highValueHasSavedLogin"
-# or "highValueIsLoggedIn" configuration.
-- name: fission.highValue.login.expiration
-  type: uint32_t
-  value: 2592000   # 30 days (in seconds)
-  mirror: always
-
-# If true, capture login attemp, and add "highValueIsLoggedIn" permission to
-# the permission manager no matter whether fission is enabled and
-# WebContentIsolationStrateg is set to IsolateHighvalue.
-- name: fission.highValue.login.monitor
-  type: bool
-  value: false
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "font."
 #---------------------------------------------------------------------------
