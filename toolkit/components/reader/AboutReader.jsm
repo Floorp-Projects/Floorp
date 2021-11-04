@@ -74,6 +74,7 @@ var AboutReader = function(actor, articlePromise) {
   doc.documentElement.setAttribute("platform", AppConstants.platform);
 
   this._actor = actor;
+  this._isLoggedInPocketUser = undefined;
 
   this._docRef = Cu.getWeakReference(doc);
   this._winRef = Cu.getWeakReference(win);
@@ -1368,9 +1369,7 @@ AboutReader.prototype = {
         "pocket_cta",
         "rec_click",
         null,
-        {
-          url,
-        }
+        {}
       );
     });
 
@@ -1408,6 +1407,14 @@ AboutReader.prototype = {
       this._savePocketArticle(url);
       elAdd.textContent = `Saved`;
       elAdd.classList.add(`saved`);
+
+      Services.telemetry.recordEvent(
+        "readermode",
+        "pocket_cta",
+        "rec_saved",
+        null,
+        {}
+      );
     });
 
     return fragment;
@@ -1447,7 +1454,9 @@ AboutReader.prototype = {
         "pocket_cta",
         "cta_seen",
         null,
-        {}
+        {
+          logged_in: `${this._isLoggedInPocketUser}`,
+        }
       );
     }
   },
@@ -1455,15 +1464,15 @@ AboutReader.prototype = {
   async _setupPocketCTA() {
     let ctaVersion = NimbusFeatures.readerMode.getAllVariables()
       ?.pocketCTAVersion;
-    let isLoggedInUser = await this._requestPocketLoginStatus();
+    this._isLoggedInPocketUser = await this._requestPocketLoginStatus();
     let elPocketCTAWrapper = this._doc.querySelector("#pocket-cta-container");
 
     // Show the Pocket CTA container if the pref is set and valid
     if (ctaVersion === `cta-and-recs` || ctaVersion === `cta-only`) {
-      if (ctaVersion === `cta-and-recs` && isLoggedInUser) {
+      if (ctaVersion === `cta-and-recs` && this._isLoggedInPocketUser) {
         this._getAndBuildPocketRecs();
         this._enableRecShowHide();
-      } else if (ctaVersion === `cta-and-recs` && !isLoggedInUser) {
+      } else if (ctaVersion === `cta-and-recs` && !this._isLoggedInPocketUser) {
         // Fall back to cta only for logged out users:
         ctaVersion = `cta-only`;
       }
@@ -1475,7 +1484,9 @@ AboutReader.prototype = {
       elPocketCTAWrapper.hidden = false;
       elPocketCTAWrapper.classList.add(`pocket-cta-container-${ctaVersion}`);
       elPocketCTAWrapper.classList.add(
-        `pocket-cta-container-${isLoggedInUser ? `logged-in` : `logged-out`}`
+        `pocket-cta-container-${
+          this._isLoggedInPocketUser ? `logged-in` : `logged-out`
+        }`
       );
 
       // Set up tracking for sign up buttons
