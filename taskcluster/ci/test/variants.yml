@@ -16,7 +16,8 @@ a11y-checks:
 
 aab:
     description: "{description} with aab test_runner"
-    filterfn: "gv_e10s_filter"
+    when: &gv_e10s_filter
+        $eval: 'mobile == "geckoview" && task.e10s in [true, "both"]'
     suffix: "aab"
     replace:
         target: "geckoview-test_runner.aab"
@@ -25,7 +26,8 @@ aab:
 
 geckoview-e10s-single:
     description: "{description} with single-process e10s"
-    filterfn: "gv_e10s_filter"
+    when:
+        <<: *gv_e10s_filter
     replace:
         run-on-projects:
             - "trunk"
@@ -37,7 +39,8 @@ geckoview-e10s-single:
 
 geckoview-fission:
     description: "{description} with fission enabled"
-    filterfn: "gv_e10s_filter"
+    when:
+        <<: *gv_e10s_filter
     suffix: "fis"
     merge:
         mozharness:
@@ -46,7 +49,8 @@ geckoview-fission:
 
 fission:
     description: "{description} with fission enabled"
-    filterfn: "fission_filter"
+    when: &fission_filter
+        $eval: task.e10s in [true, "both"]
     suffix: "fis"
     replace:
         e10s: true
@@ -57,7 +61,8 @@ fission:
 
 fission-xorigin:
     description: "{description} with cross-origin and fission enabled"
-    filterfn: "fission_filter"
+    when:
+        <<: *fission_filter
     suffix: "fis-xorig"
     replace:
         e10s: true
@@ -143,7 +148,8 @@ webrender-sw-a11y-checks:
 
 webrender-sw-fission:
     description: "{description} with software webrender and fission enabled"
-    filterfn: "fission_filter"
+    when:
+        <<: *fission_filter
     suffix: "swr-fis"
     replace:
         e10s: true
