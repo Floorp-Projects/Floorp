@@ -40,6 +40,7 @@
 #include "common/mac/macho_utilities.h"
 #include "common/mac/scoped_task_suspend-inl.h"
 #include "google_breakpad/common/minidump_exception_mac.h"
+#include "mozilla/Assertions.h"
 
 #ifdef MOZ_PHC
 #include "replace_malloc_bridge.h"
@@ -504,11 +505,12 @@ bool ExceptionHandler::WriteMinidumpWithException(
 
     // Call user specified callback (if any)
     if (callback_) {
+      result = callback_(dump_path_c_, next_minidump_id_c_, callback_context_,
+                         &addr_info, result);
       // If the user callback returned true and we're handling an exception
       // (rather than just writing out the file), then we should exit without
       // forwarding the exception to the next handler.
-      if (callback_(dump_path_c_, next_minidump_id_c_, callback_context_,
-                    &addr_info, result)) {
+      if (result) {
         if (exit_after_write)
           _exit(exception_type);
       }
@@ -548,7 +550,7 @@ kern_return_t ForwardException(mach_port_t task, mach_port_t failed_thread,
   // Nothing to forward
   if (found == current.count) {
     fprintf(stderr, "** No previous ports for forwarding!! \n");
-    exit(KERN_FAILURE);
+    _exit(KERN_FAILURE);
   }
 
   mach_port_t target_port = current.ports[found];
@@ -646,6 +648,8 @@ void* ExceptionHandler::WaitForMessage(void* exception_handler_class) {
         if (self->use_minidump_write_mutex_)
           pthread_mutex_unlock(&self->minidump_write_mutex_);
       } else {
+        bool crash_reported = false;
+
         // When forking a child process with the exception handler installed,
         // if the child crashes, it will send the exception back to the parent
         // process.  The check for task == self_task() ensures that only
@@ -674,9 +678,10 @@ void* ExceptionHandler::WaitForMessage(void* exception_handler_class) {
           }
 
           // Generate the minidump with the exception data.
-          self->WriteMinidumpWithException(receive.exception, receive.code[0],
-                                           subcode, NULL, receive.thread.name,
-                                           mach_task_self(),  true, false);
+          crash_reported =
+            self->WriteMinidumpWithException(receive.exception, receive.code[0],
+                                             subcode, NULL, receive.thread.name,
+                                             mach_task_self(),  true, false);
 
 #if USE_PROTECTED_ALLOCATIONS
           // This may have become protected again within
@@ -695,8 +700,10 @@ void* ExceptionHandler::WaitForMessage(void* exception_handler_class) {
         }
 
         ExceptionReplyMessage reply;
-        if (!mach_exc_server(&receive.header, &reply.header))
-          exit(1);
+        if (!mach_exc_server(&receive.header, &reply.header)) {
+          MOZ_CRASH_UNSAFE_PRINTF("Mach message id: %#10x crash reported = %d",
+                                  receive.header.msgh_id, crash_reported);
+        }
 
         // Send a reply and exit
         mach_msg(&(reply.header), MACH_SEND_MSG,
