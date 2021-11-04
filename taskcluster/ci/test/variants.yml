@@ -114,12 +114,6 @@ wayland:
             extra-options:
                 - "--setpref=widget.wayland.test-workarounds.enabled=true"
 
-webrender:
-    description: "{description} with webrender enabled"
-    suffix: "wr"
-    merge:
-        webrender: true
-
 webrender-sw:
     description: "{description} with software webrender enabled"
     suffix: "swr"
