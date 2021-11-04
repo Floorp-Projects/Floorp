@@ -918,8 +918,8 @@ void WinWindowOcclusionTracker::WindowOcclusionCalculator::
   int screenLeft = ::GetSystemMetrics(SM_XVIRTUALSCREEN);
   int screenTop = ::GetSystemMetrics(SM_YVIRTUALSCREEN);
   LayoutDeviceIntRegion screenRegion = LayoutDeviceIntRect(
-      screenLeft, screenTop, screenLeft + GetSystemMetrics(SM_CXVIRTUALSCREEN),
-      screenTop + GetSystemMetrics(SM_CYVIRTUALSCREEN));
+      screenLeft, screenTop, GetSystemMetrics(SM_CXVIRTUALSCREEN),
+      GetSystemMetrics(SM_CYVIRTUALSCREEN));
   mNumRootWindowsWithUnknownOcclusionState = 0;
 
   for (auto& [hwnd, state] : mRootWindowHwndsOcclusionState) {
