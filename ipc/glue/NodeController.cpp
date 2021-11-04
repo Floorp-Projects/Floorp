@@ -651,7 +651,7 @@ void NodeController::OnRequestIntroduction(const NodeName& aFromNode,
   }
 
   RefPtr<NodeChannel> peerB = GetNodeChannel(aName);
-  auto result = AutoTransportDescriptor::Create(peerA->OtherPid());
+  auto result = AutoTransportDescriptor::Create();
   if (!peerB || result.isErr()) {
     NODECONTROLLER_WARNING(
         "Rejecting introduction request from '%s' for unknown peer '%s'",
