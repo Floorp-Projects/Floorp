@@ -420,6 +420,14 @@ class alignas(alignof(uint32_t)) ParserAtom {
     return true;
   }
 
+  bool isPrivateName() const {
+    if (length() < 2) {
+      return false;
+    }
+
+    return charAt(0) == '#';
+  }
+
   HashNumber hash() const { return hash_; }
   uint32_t length() const { return length_; }
 

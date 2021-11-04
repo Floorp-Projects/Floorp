@@ -492,7 +492,7 @@ struct ScopeContext {
 
   bool cachePrivateFieldsForEval(JSContext* cx, CompilationInput& input,
                                  JSObject* enclosingEnvironment,
-                                 Scope* effectiveScope,
+                                 const InputScope& effectiveScope,
                                  ParserAtomsTable& parserAtoms);
 
   bool cacheEnclosingScopeBindingForEval(JSContext* cx, CompilationInput& input,
