@@ -12,11 +12,12 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/intl/LineBreaker.h"
-#include "mozilla/intl/MozLocale.h"
+#include "mozilla/intl/Locale.h"
 
 using mozilla::AutoRestore;
 using mozilla::intl::LineBreaker;
-using mozilla::intl::MozLocale;
+using mozilla::intl::Locale;
+using mozilla::intl::LocaleParser;
 
 nsLineBreaker::nsLineBreaker()
     : mCurrentWordLanguage(nullptr),
@@ -470,14 +471,19 @@ void nsLineBreaker::UpdateCurrentWordLanguage(nsAtom* aHyphenationLanguage) {
     mScriptIsChineseOrJapanese = false;
   } else {
     if (aHyphenationLanguage && !mCurrentWordLanguage) {
-      MozLocale loc = MozLocale(nsAtomCString(aHyphenationLanguage));
-      if (loc.GetScript().IsEmpty()) {
-        loc.Maximize();
+      Locale loc;
+      auto result =
+          LocaleParser::tryParse(nsAtomCString(aHyphenationLanguage), loc);
+
+      if (result.isErr()) {
+        return;
       }
-      const nsDependentCSubstring& script = loc.GetScript();
+      if (loc.script().missing() && loc.addLikelySubtags().isErr()) {
+        return;
+      }
       mScriptIsChineseOrJapanese =
-          script.EqualsLiteral("Hans") || script.EqualsLiteral("Hant") ||
-          script.EqualsLiteral("Jpan") || script.EqualsLiteral("Hrkt");
+          loc.script().equalTo("Hans") || loc.script().equalTo("Hant") ||
+          loc.script().equalTo("Jpan") || loc.script().equalTo("Hrkt");
     }
     mCurrentWordLanguage = aHyphenationLanguage;
   }
