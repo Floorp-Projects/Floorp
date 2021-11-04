@@ -6,6 +6,7 @@
 
 #include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/gfx/GPUParent.h"
+#include "mozilla/gfx/CanvasManagerParent.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/ipc/Endpoint.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
@@ -317,6 +318,12 @@ mozilla::ipc::IPCResult CompositorManagerParent::RecvReportMemory(
         MOZ_ASSERT_UNREACHABLE("MemoryReport promises are never rejected");
       });
 
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult CompositorManagerParent::RecvInitCanvasManager(
+    Endpoint<PCanvasManagerParent>&& aEndpoint) {
+  gfx::CanvasManagerParent::Init(std::move(aEndpoint));
   return IPC_OK();
 }
 

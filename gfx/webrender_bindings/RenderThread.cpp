@@ -173,6 +173,15 @@ bool RenderThread::IsInRenderThread() {
   return sRenderThread && sRenderThread->mThread == NS_GetCurrentThread();
 }
 
+// static
+already_AddRefed<nsIThread> RenderThread::GetRenderThread() {
+  nsCOMPtr<nsIThread> thread;
+  if (sRenderThread) {
+    thread = sRenderThread->mThread;
+  }
+  return thread.forget();
+}
+
 void RenderThread::DoAccumulateMemoryReport(
     MemoryReport aReport,
     const RefPtr<MemoryReportPromise::Private>& aPromise) {

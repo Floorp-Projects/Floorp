@@ -146,6 +146,9 @@ class RenderThread final {
   /// Can be called from any thread.
   static bool IsInRenderThread();
 
+  /// Can be called from any thread.
+  static already_AddRefed<nsIThread> GetRenderThread();
+
   // Can be called from any thread. Dispatches an event to the Renderer thread
   // to iterate over all Renderers, accumulates memory statistics, and resolves
   // the return promise.
