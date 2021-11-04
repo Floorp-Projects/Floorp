@@ -13,8 +13,8 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/StaticRange.h"
+#include "mozilla/intl/Locale.h"           // for mozilla::intl::Locale
 #include "mozilla/intl/LocaleService.h"    // for retrieving app locale
-#include "mozilla/intl/MozLocale.h"        // for mozilla::intl::Locale
 #include "mozilla/intl/OSPreferences.h"    // for mozilla::intl::OSPreferences
 #include "mozilla/Logging.h"               // for mozilla::LazyLogModule
 #include "mozilla/mozalloc.h"              // for operator delete, etc
@@ -893,58 +893,67 @@ void EditorSpellCheck::SetFallbackDictionary(DictionaryFetcher* aFetcher) {
 
     // Required dictionary was not available. Try to get a dictionary
     // matching at least language part of dictName.
-    mozilla::intl::MozLocale loc = mozilla::intl::MozLocale(dictName);
-    nsAutoCString langCode(loc.GetLanguage());
+    mozilla::intl::Locale loc;
+    if (mozilla::intl::LocaleParser::tryParse(dictName, loc).isOk() &&
+        loc.canonicalize().isOk()) {
+      Span<const char> language = loc.language().span();
+      nsAutoCString langCode(language.data(), language.size());
 
-    // Try dictionary.spellchecker preference, if it starts with langCode,
-    // so we don't just get any random dictionary matching the language.
-    if (!preferredDict.IsEmpty() &&
-        nsStyleUtil::DashMatchCompare(NS_ConvertUTF8toUTF16(preferredDict),
-                                      NS_ConvertUTF8toUTF16(langCode),
-                                      nsTDefaultStringComparator)) {
+      // Try dictionary.spellchecker preference, if it starts with langCode,
+      // so we don't just get any random dictionary matching the language.
+      if (!preferredDict.IsEmpty() &&
+          nsStyleUtil::DashMatchCompare(NS_ConvertUTF8toUTF16(preferredDict),
+                                        NS_ConvertUTF8toUTF16(langCode),
+                                        nsTDefaultStringComparator)) {
 #ifdef DEBUG_DICT
-      printf(
-          "***** Trying preference value |%s| since it matches language code\n",
-          preferredDict.get());
+        printf(
+            "***** Trying preference value |%s| since it matches language "
+            "code\n",
+            preferredDict.get());
 #endif
-      BuildDictionaryList(preferredDict, dictList,
-                          DICT_COMPARE_CASE_INSENSITIVE, tryDictList);
-    }
+        BuildDictionaryList(preferredDict, dictList,
+                            DICT_COMPARE_CASE_INSENSITIVE, tryDictList);
+      }
 
-    if (tryDictList.IsEmpty()) {
-      // Use the application locale dictionary when the required language
-      // equlas applocation locale language.
-      LocaleService::GetInstance()->GetAppLocaleAsBCP47(appLocaleStr);
-      if (!appLocaleStr.IsEmpty()) {
-        mozilla::intl::MozLocale appLoc =
-            mozilla::intl::MozLocale(appLocaleStr);
-        if (langCode.Equals(appLoc.GetLanguage())) {
-          BuildDictionaryList(appLocaleStr, dictList,
-                              DICT_COMPARE_CASE_INSENSITIVE, tryDictList);
+      if (tryDictList.IsEmpty()) {
+        // Use the application locale dictionary when the required language
+        // equlas applocation locale language.
+        LocaleService::GetInstance()->GetAppLocaleAsBCP47(appLocaleStr);
+        if (!appLocaleStr.IsEmpty()) {
+          mozilla::intl::Locale appLoc;
+          auto result =
+              mozilla::intl::LocaleParser::tryParse(appLocaleStr, appLoc);
+          if (result.isOk() && loc.canonicalize().isOk() &&
+              loc.language().span() == appLoc.language().span()) {
+            BuildDictionaryList(appLocaleStr, dictList,
+                                DICT_COMPARE_CASE_INSENSITIVE, tryDictList);
+          }
+        }
+
+        // Use the system locale dictionary when the required language equlas
+        // system locale language.
+        nsAutoCString sysLocaleStr;
+        OSPreferences::GetInstance()->GetSystemLocale(sysLocaleStr);
+        if (!sysLocaleStr.IsEmpty()) {
+          mozilla::intl::Locale sysLoc;
+          auto result =
+              mozilla::intl::LocaleParser::tryParse(sysLocaleStr, sysLoc);
+          if (result.isOk() && loc.canonicalize().isOk() &&
+              loc.language().span() == sysLoc.language().span()) {
+            BuildDictionaryList(sysLocaleStr, dictList,
+                                DICT_COMPARE_CASE_INSENSITIVE, tryDictList);
+          }
         }
       }
 
-      // Use the system locale dictionary when the required language equlas
-      // system locale language.
-      nsAutoCString sysLocaleStr;
-      OSPreferences::GetInstance()->GetSystemLocale(sysLocaleStr);
-      if (!sysLocaleStr.IsEmpty()) {
-        mozilla::intl::MozLocale sysLoc =
-            mozilla::intl::MozLocale(sysLocaleStr);
-        if (langCode.Equals(sysLoc.GetLanguage())) {
-          BuildDictionaryList(sysLocaleStr, dictList,
-                              DICT_COMPARE_CASE_INSENSITIVE, tryDictList);
-        }
-      }
-    }
-
-    // Use any dictionary with the required language.
+      // Use any dictionary with the required language.
 #ifdef DEBUG_DICT
-    printf("***** Trying to find match for language code |%s|\n",
-           langCode.get());
+      printf("***** Trying to find match for language code |%s|\n",
+             langCode.get());
 #endif
-    BuildDictionaryList(langCode, dictList, DICT_COMPARE_DASHMATCH,
-                        tryDictList);
+      BuildDictionaryList(langCode, dictList, DICT_COMPARE_DASHMATCH,
+                          tryDictList);
+    }
   }
 
   // Priority 3:
