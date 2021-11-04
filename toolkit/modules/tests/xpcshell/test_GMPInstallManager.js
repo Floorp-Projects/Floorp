@@ -36,9 +36,17 @@ var ProductAddonCheckerScope = ChromeUtils.import(
 
 Services.prefs.setBoolPref("security.allow_eval_with_system_principal", true);
 Services.prefs.setBoolPref("media.gmp-manager.updateEnabled", true);
+// Gather the telemetry even where the probes don't exist (i.e. Thunderbird).
+Services.prefs.setBoolPref(
+  "toolkit.telemetry.testing.overrideProductsCheck",
+  true
+);
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("security.allow_eval_with_system_principal");
   Services.prefs.clearUserPref("media.gmp-manager.updateEnabled");
+  Services.prefs.clearUserPref(
+    "toolkit.telemetry.testing.overrideProductsCheck"
+  );
 });
 // Most tests do no handle the machinery for content signatures, so let
 // specific tests that need it turn it on as needed.
