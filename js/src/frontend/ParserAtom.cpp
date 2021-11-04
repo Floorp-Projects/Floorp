@@ -617,11 +617,7 @@ bool ParserAtomsTable::isPrivateName(TaggedParserAtomIndex index) const {
   }
 
   const auto* atom = getParserAtom(index.toParserAtomIndex());
-  if (atom->length() < 2) {
-    return false;
-  }
-
-  return atom->charAt(0) == '#';
+  return atom->isPrivateName();
 }
 
 bool ParserAtomsTable::isExtendedUnclonedSelfHostedFunctionName(
