@@ -51,6 +51,9 @@ class CompositorManagerParent final : public PCompositorManagerParent {
 
   mozilla::ipc::IPCResult RecvReportMemory(ReportMemoryResolver&&);
 
+  mozilla::ipc::IPCResult RecvInitCanvasManager(
+      Endpoint<PCanvasManagerParent>&&);
+
   void BindComplete(bool aIsRoot);
   void ActorDestroy(ActorDestroyReason aReason) override;
 
