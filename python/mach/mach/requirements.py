@@ -82,6 +82,14 @@ class MachEnvRequirements:
         self.pypi_optional_requirements = []
         self.vendored_requirements = []
 
+    def pths_as_absolute(self, topsrcdir):
+        return sorted(
+            [
+                os.path.normcase(os.path.join(topsrcdir, pth.path))
+                for pth in (self.pth_requirements + self.vendored_requirements)
+            ]
+        )
+
     def validate_environment_packages(self, pip_command):
         result = EnvironmentPackageValidationResult()
         if not self.pypi_requirements and not self.pypi_optional_requirements:
