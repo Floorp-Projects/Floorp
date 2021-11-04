@@ -185,7 +185,10 @@ function compare_hsts_files {
   # Run the script to get an updated preload list.
   echo "INFO: Generating new HSTS preload list..."
   cd "${BASEDIR}/${PRODUCT}"
-  LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell "${HSTS_PRELOAD_SCRIPT}" "${HSTS_PRELOAD_INC}"
+  if ! LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell "${HSTS_PRELOAD_SCRIPT}" "${HSTS_PRELOAD_INC}"; then
+    echo "HSTS preload list generation failed" >&2
+    exit 43
+  fi
 
   # The created files should be non-empty.
   echo "INFO: Checking whether new HSTS preload list is valid..."
@@ -221,7 +224,10 @@ function compare_hpkp_files {
   # Run the script to get an updated preload list.
   echo "INFO: Generating new HPKP preload list..."
   cd "${BASEDIR}/${PRODUCT}"
-  LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell "${HPKP_PRELOAD_SCRIPT}" "${HPKP_PRELOAD_JSON}" "${HPKP_PRELOAD_OUTPUT}" > "${HPKP_PRELOAD_ERRORS}"
+  if ! LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:. ./xpcshell "${HPKP_PRELOAD_SCRIPT}" "${HPKP_PRELOAD_JSON}" "${HPKP_PRELOAD_OUTPUT}" > "${HPKP_PRELOAD_ERRORS}"; then
+    echo "HPKP preload list generation failed" >&2
+    exit 54
+  fi
 
   # The created files should be non-empty.
   echo "INFO: Checking whether new HPKP preload list is valid..."
