@@ -531,13 +531,10 @@ already_AddRefed<OscillatorNode> AudioContext::CreateOscillator(
 }
 
 already_AddRefed<PeriodicWave> AudioContext::CreatePeriodicWave(
-    const Float32Array& aRealData, const Float32Array& aImagData,
+    const Sequence<float>& aRealData, const Sequence<float>& aImagData,
     const PeriodicWaveConstraints& aConstraints, ErrorResult& aRv) {
-  aRealData.ComputeState();
-  aImagData.ComputeState();
-
   RefPtr<PeriodicWave> periodicWave = new PeriodicWave(
-      this, aRealData.Data(), aRealData.Length(), aImagData.Data(),
+      this, aRealData.Elements(), aRealData.Length(), aImagData.Elements(),
       aImagData.Length(), aConstraints.mDisableNormalization, aRv);
   if (aRv.Failed()) {
     return nullptr;

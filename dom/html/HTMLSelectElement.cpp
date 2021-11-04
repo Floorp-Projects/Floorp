@@ -1539,7 +1539,8 @@ void HTMLSelectElement::VerifyOptionsArray() {
 #endif
 
 void HTMLSelectElement::UpdateBarredFromConstraintValidation() {
-  SetBarredFromConstraintValidation(IsDisabled());
+  SetBarredFromConstraintValidation(
+      HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR) || IsDisabled());
 }
 
 void HTMLSelectElement::FieldSetDisabledChanged(bool aNotify) {

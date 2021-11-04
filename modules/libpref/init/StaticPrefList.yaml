@@ -5331,6 +5331,15 @@
   value: 256
   mirror: always
 
+- name: gfx.webrender.batched-upload-threshold
+  type: int32_t
+#if defined(MOZ_WIDGET_ANDROID)
+  value: 262144
+#else
+  value: 65536
+#endif
+  mirror: always
+
 - name: gfx.webrender.compositor
   type: bool
 #if defined(XP_WIN) || defined(XP_MACOSX)
