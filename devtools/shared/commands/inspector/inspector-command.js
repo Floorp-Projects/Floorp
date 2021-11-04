@@ -134,6 +134,98 @@ class InspectorCommand {
     // Descending sort the list by count, i.e. second element of the arrays
     return sortSuggestions(mergedSuggestions);
   }
+
+  /**
+   * Find a nodeFront from an array of selectors. The last item of the array is the selector
+   * for the element in its owner document, and the previous items are selectors to iframes
+   * that lead to the frame where the searched node lives in.
+   *
+   * For example, with the following markup
+   * <html>
+   *  <iframe id="level-1" src="…">
+   *    <iframe id="level-2" src="…">
+   *      <h1>Waldo</h1>
+   *    </iframe>
+   *  </iframe>
+   *
+   * If you want to retrieve the `<h1>` nodeFront, `selectors` would be:
+   * [
+   *   "#level-1",
+   *   "#level-2",
+   *   "h1",
+   * ]
+   *
+   * @param {Array} selectors
+   *        An array of CSS selectors to find the target accessible object.
+   *        Several selectors can be needed if the element is nested in frames
+   *        and not directly in the root document.
+   * @return {Promise<NodeFront|null>} a promise that resolves when the node front is found
+   *        for selection using inspector tools. It resolves with the deepest frame document
+   *        that could be retrieved when the "final" nodeFront couldn't be found in the page.
+   */
+  async findNodeFrontFromSelectors(nodeSelectors) {
+    if (
+      !nodeSelectors ||
+      !Array.isArray(nodeSelectors) ||
+      nodeSelectors.length === 0
+    ) {
+      console.warn(
+        "findNodeFrontFromSelectors expect a non-empty array but got",
+        nodeSelectors
+      );
+      return null;
+    }
+
+    const { walker } = await this.commands.targetCommand.targetFront.getFront(
+      "inspector"
+    );
+    const querySelectors = async nodeFront => {
+      const selector = nodeSelectors.shift();
+      if (!selector) {
+        return nodeFront;
+      }
+      nodeFront = await nodeFront.walkerFront.querySelector(
+        nodeFront,
+        selector
+      );
+      // It's possible the containing iframe isn't available by the time
+      // walkerFront.querySelector is called, which causes the re-selected node to be
+      // unavailable. There also isn't a way for us to know when all iframes on the page
+      // have been created after a reload. Because of this, we should should bail here.
+      if (!nodeFront) {
+        return null;
+      }
+
+      if (nodeSelectors.length > 0) {
+        await nodeFront.waitForFrameLoad();
+
+        const { nodes } = await walker.children(nodeFront);
+
+        // If there are remaining selectors to process, they will target a document or a
+        // document-fragment under the current node. Whether the element is a frame or
+        // a web component, it can only contain one document/document-fragment, so just
+        // select the first one available.
+        nodeFront = nodes.find(node => {
+          const { nodeType } = node;
+          return (
+            nodeType === Node.DOCUMENT_FRAGMENT_NODE ||
+            nodeType === Node.DOCUMENT_NODE
+          );
+        });
+
+        // The iframe selector might have matched an element which is not an
+        // iframe in the new page (or an iframe with no document?). In this
+        // case, bail out and fallback to the root body element.
+        if (!nodeFront) {
+          return null;
+        }
+      }
+      const childrenNodeFront = await querySelectors(nodeFront);
+      return childrenNodeFront || nodeFront;
+    };
+    const rootNodeFront = await walker.getRootNode();
+    return querySelectors(rootNodeFront);
+  }
 }
 
 // This is a fork of the server sort:

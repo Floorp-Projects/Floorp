@@ -1381,7 +1381,9 @@ class HighlightersOverlay {
       return;
     }
 
-    const nodeFront = await this.inspectorFront.walker.findNodeFront(selectors);
+    const nodeFront = await this.inspector.commands.inspectorCommand.findNodeFrontFromSelectors(
+      selectors
+    );
 
     if (nodeFront) {
       await showFunction(nodeFront, options);

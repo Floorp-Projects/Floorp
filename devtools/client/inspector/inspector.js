@@ -571,7 +571,12 @@ Inspector.prototype = {
     // Try to find a default node using three strategies:
     const defaultNodeSelectors = [
       // - first try to match css selectors for the selection
-      () => (cssSelectors.length ? walker.findNodeFront(cssSelectors) : null),
+      () =>
+        cssSelectors.length
+          ? this.commands.inspectorCommand.findNodeFrontFromSelectors(
+              cssSelectors
+            )
+          : null,
       // - otherwise try to get the "body" element
       () => walker.querySelector(rootNodeFront, "body"),
       // - finally get the documentElement element if nothing else worked.
