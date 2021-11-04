@@ -55,7 +55,7 @@ fun createNimbus(context: Context, url: String?): NimbusApi =
             serverSettings,
             { message, throwable ->
                 crashReporter.submitCaughtException(throwable)
-                Logger.error("Nimubs error: $message")
+                Logger.error("Nimbus error: $message", throwable)
             }
         ).apply {
             // This performs the minimal amount of work required to load branch and enrolment data

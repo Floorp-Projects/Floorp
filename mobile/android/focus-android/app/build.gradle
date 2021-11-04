@@ -243,6 +243,8 @@ dependencies {
 
     implementation "org.mozilla.components:support-ktx:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:support-utils:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:support-rusthttp:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:support-rustlog:${AndroidComponents.VERSION}"
 
     implementation "org.mozilla.components:ui-autocomplete:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:ui-colors:${AndroidComponents.VERSION}"
