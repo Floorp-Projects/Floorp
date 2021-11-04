@@ -47,9 +47,6 @@ using EmbeddingLevel = mozilla::intl::Bidi::EmbeddingLevel;
 // an insignificant dot
 static const int32_t kMinBidiIndicatorPixels = 2;
 
-// The default caret blinking rate (in ms of blinking interval)
-static const uint32_t kDefaultCaretBlinkRate = 500;
-
 /**
  * Find the first frame in an in-order traversal of the frame subtree rooted
  * at aFrame which is either a text frame logically at the end of a line,
@@ -600,6 +597,13 @@ nsCaret::NotifySelectionChanged(Document*, Selection* aDomSel,
 }
 
 void nsCaret::ResetBlinking() {
+  using IntID = LookAndFeel::IntID;
+
+  // The default caret blinking rate (in ms of blinking interval)
+  constexpr uint32_t kDefaultBlinkRate = 500;
+  // The default caret blinking count (-1 for "never stop blinking")
+  constexpr int32_t kDefaultBlinkCount = -1;
+
   mIsBlinkOn = true;
 
   if (mReadOnly || !mVisible || mHideCount) {
@@ -607,12 +611,21 @@ void nsCaret::ResetBlinking() {
     return;
   }
 
-  uint32_t blinkRate = static_cast<uint32_t>(LookAndFeel::GetInt(
-      LookAndFeel::IntID::CaretBlinkTime, kDefaultCaretBlinkRate));
+  auto blinkRate =
+      uint32_t(LookAndFeel::GetInt(IntID::CaretBlinkTime, kDefaultBlinkRate));
+
+  if (blinkRate > 0) {
+    // Make sure to reset the remaining blink count even if the blink rate
+    // hasn't changed.
+    mBlinkCount =
+        LookAndFeel::GetInt(IntID::CaretBlinkCount, kDefaultBlinkCount);
+  }
+
   if (mBlinkRate == blinkRate) {
-    // If the rate hasn't changed, then there is nothing to do.
+    // If the rate hasn't changed, then there is nothing else to do.
     return;
   }
+
   mBlinkRate = blinkRate;
 
   if (mBlinkTimer) {
@@ -632,7 +645,6 @@ void nsCaret::ResetBlinking() {
   }
 
   if (blinkRate > 0) {
-    mBlinkCount = LookAndFeel::GetInt(LookAndFeel::IntID::CaretBlinkCount, -1);
     mBlinkTimer->InitWithNamedFuncCallback(CaretBlinkCallback, this, blinkRate,
                                            nsITimer::TYPE_REPEATING_SLACK,
                                            "nsCaret::CaretBlinkCallback_timer");
