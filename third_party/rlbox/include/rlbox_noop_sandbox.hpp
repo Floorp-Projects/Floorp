@@ -74,7 +74,9 @@ private:
     using T_Func = T_Ret (*)(T_Args...);
     T_Func func;
     {
+#ifndef RLBOX_SINGLE_THREADED_INVOCATIONS
       RLBOX_ACQUIRE_SHARED_GUARD(lock, thread_data.sandbox->callback_mutex);
+#endif
       func = reinterpret_cast<T_Func>(thread_data.sandbox->callbacks[N]);
     }
     // Callbacks are invoked through function pointers, cannot use std::forward

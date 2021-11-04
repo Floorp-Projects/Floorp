@@ -41,3 +41,27 @@ class rlbox_noop_sandbox;
 
 class rlbox_dylib_sandbox;
 }
+
+#define RLBOX_DEFINE_SANDBOX_TYPE(SBXNAME, SBXTYPE)                 \
+  namespace rlbox {                                                 \
+  class rlbox_##SBXTYPE_sandbox;                                    \
+  }                                                                 \
+  using rlbox_##SBXNAME_sandbox_type = rlbox::rlbox_##SBXTYPE_sandbox;
+
+#define RLBOX_DEFINE_BASE_TYPES_FOR(SBXNAME)                                         \
+  using rlbox_sandbox_##SBXNAME =                                                    \
+      rlbox::rlbox_sandbox<rlbox_##SBXNAME_sandbox_type>;                            \
+  template <typename T>                                                              \
+  using sandbox_callback_##SBXNAME =                                                 \
+      rlbox::sandbox_callback<T, rlbox_##SBXNAME_sandbox_type>;                      \
+  template <typename T>                                                              \
+  using tainted_##SBXNAME = rlbox::tainted<T, rlbox_##SBXNAME_sandbox_type>;         \
+  template <typename T>                                                              \
+  using tainted_opaque_##SBXNAME =                                                   \
+      rlbox::tainted_opaque<T, rlbox_##SBXNAME_sandbox_type>;                        \
+  template <typename T>                                                              \
+  using tainted_volatile_##SBXNAME =                                                 \
+      rlbox::tainted_volatile<T, rlbox_##SBXNAME_sandbox_type>;                      \
+  using rlbox::tainted_boolean_hint;                                                 \
+  template <typename T>                                                              \
+  using app_pointer_##SBXNAME = rlbox::app_pointer<T, rlbox_##SBXNAME_sandbox_type>;
