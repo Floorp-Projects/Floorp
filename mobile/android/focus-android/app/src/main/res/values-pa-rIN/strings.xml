@@ -195,14 +195,16 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">ਚੋਟੀ ਦੀਆਂ ਸਾਈਟਾਂ ਲਈ</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
-    <string name="preference_autocomplete_topsite_summary">ਸਿਰਨਾਵਾਂ ਪੱਟੀ ਵਿੱਚ 450 ਤੋਂ ਹਰਮਨਪਿਆਰੇ URLs ਨੂੰ ਆਪਣੇ-ਆਪ ਪੂਰਾ ਕਰਨਾ ਸਮਰੱਥ ਕਰੋ।</string>
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">%s ਨੂੰ ਸਿਰਨਾਵਾਂ ਪੱਟੀ ਵਿੱਚ 450 ਹਰਮਨਪਿਆਰੇ URL ਆਪਣੇ-ਆਪ ਪੂਰੇ ਕਰਨ ਦੇ ਸਮਰੱਥ ਬਣਾਓ।</string>
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">ਤੁਹਾਡੇ ਵਲੋਂ ਜੋੜਨ ਲਈ ਸਾਈਟਾਂ ਵਾਸਤੇ</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the user-defined list -->
-    <string name="preference_autocomplete_user_list_summary">ਸਿਰਨਾਵਾਂ ਪੱਟੀ ਵਿੱਚ 450 ਤੋਂ ਹਰਮਨਪਿਆਰੇ URLs ਨੂੰ ਆਪਣੇ-ਆਪ ਪੂਰਾ ਕਰਨਾ ਸਮਰੱਥ ਕਰੋ।</string>
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">%s ਨੂੰ ਤੁਹਾਡੇ ਮਨਪਸੰਦ URL ਆਪਣੇ-ਆਪ ਪੂਰੇ ਕਰਨ ਦੇ ਸਮਰੱਥ ਬਣਾਓ।</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">ਸਾਈਟਾਂ ਦਾ ਬੰਦੋਬਸਤ ਕਰੋ</string>
