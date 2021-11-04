@@ -25,6 +25,7 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLElement, nsGenericHTMLFormElement)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(HTMLElement)
   NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIFormControl, GetElementInternals())
+  NS_INTERFACE_MAP_ENTRY_TEAROFF(nsIConstraintValidation, GetElementInternals())
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLFormElement)
 
 NS_IMPL_ADDREF_INHERITED(HTMLElement, nsGenericHTMLFormElement)
@@ -35,6 +36,20 @@ NS_IMPL_ELEMENT_CLONE(HTMLElement)
 JSObject* HTMLElement::WrapNode(JSContext* aCx,
                                 JS::Handle<JSObject*> aGivenProto) {
   return dom::HTMLElement_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+nsresult HTMLElement::BindToTree(BindContext& aContext, nsINode& aParent) {
+  nsresult rv = nsGenericHTMLFormElement::BindToTree(aContext, aParent);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  UpdateBarredFromConstraintValidation();
+  return rv;
+}
+
+void HTMLElement::UnbindFromTree(bool aNullParent) {
+  nsGenericHTMLFormElement::UnbindFromTree(aNullParent);
+
+  UpdateBarredFromConstraintValidation();
 }
 
 void HTMLElement::SetCustomElementDefinition(
@@ -161,6 +176,7 @@ void HTMLElement::UpdateFormOwner() {
   }
   UpdateFieldSet(true);
   UpdateDisabledState(true);
+  UpdateBarredFromConstraintValidation();
 }
 
 nsresult HTMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
@@ -168,8 +184,14 @@ nsresult HTMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                    const nsAttrValue* aOldValue,
                                    nsIPrincipal* aMaybeScriptedPrincipal,
                                    bool aNotify) {
-  if (aNameSpaceID == kNameSpaceID_None && aName == nsGkAtoms::disabled) {
-    UpdateDisabledState(aNotify);
+  if (aNameSpaceID == kNameSpaceID_None &&
+      (aName == nsGkAtoms::disabled || aName == nsGkAtoms::readonly)) {
+    if (aName == nsGkAtoms::disabled) {
+      // This *has* to be called *before* validity state check because
+      // UpdateBarredFromConstraintValidation depend on our disabled state.
+      UpdateDisabledState(aNotify);
+    }
+    UpdateBarredFromConstraintValidation();
   }
 
   return nsGenericHTMLFormElement::AfterSetAttr(
@@ -239,6 +261,14 @@ bool HTMLElement::IsFormAssociatedElement() const {
   return isFormAssociatedCustomElement;
 }
 
+void HTMLElement::FieldSetDisabledChanged(bool aNotify) {
+  // This *has* to be called *before* UpdateBarredFromConstraintValidation
+  // because this function depend on our disabled state.
+  nsGenericHTMLFormElement::FieldSetDisabledChanged(aNotify);
+
+  UpdateBarredFromConstraintValidation();
+}
+
 ElementInternals* HTMLElement::GetElementInternals() const {
   CustomElementData* data = GetCustomElementData();
   if (!data || !data->IsFormAssociated()) {
@@ -249,6 +279,15 @@ ElementInternals* HTMLElement::GetElementInternals() const {
   }
 
   return data->GetElementInternals();
+}
+
+void HTMLElement::UpdateBarredFromConstraintValidation() {
+  CustomElementData* data = GetCustomElementData();
+  if (data && data->IsFormAssociated()) {
+    ElementInternals* internals = data->GetElementInternals();
+    MOZ_ASSERT(internals);
+    internals->UpdateBarredFromConstraintValidation();
+  }
 }
 
 }  // namespace mozilla::dom
