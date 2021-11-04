@@ -14,11 +14,14 @@
 #include "js/Utility.h"
 #include "js/experimental/TypedData.h"
 #include "jsfriendapi.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/Compression.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/ErrorNames.h"
+#include "mozilla/FileUtils.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
@@ -303,6 +306,44 @@ already_AddRefed<Promise> IOUtils::Read(GlobalObject& aGlobal,
     RejectShuttingDown(promise);
   }
   return promise.forget();
+}
+
+/* static */
+RefPtr<SyncReadFile> IOUtils::OpenFileForSyncReading(GlobalObject& aGlobal,
+                                                     const nsAString& aPath,
+                                                     ErrorResult& aRv) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+
+  // This API is only exposed to workers, so we should not be on the main
+  // thread here.
+  MOZ_RELEASE_ASSERT(!NS_IsMainThread());
+
+  nsCOMPtr<nsIFile> file = new nsLocalFile();
+  if (nsresult rv = file->InitWithPath(aPath); NS_FAILED(rv)) {
+    aRv.ThrowOperationError(FormatErrorMessage(
+        rv, "Could not parse path (%s)", NS_ConvertUTF16toUTF8(aPath).get()));
+    return nullptr;
+  }
+
+  RefPtr<nsFileStream> stream = new nsFileStream();
+  if (nsresult rv =
+          stream->Init(file, PR_RDONLY | nsIFile::OS_READAHEAD, 0666, 0);
+      NS_FAILED(rv)) {
+    aRv.ThrowOperationError(
+        FormatErrorMessage(rv, "Could not open the file at %s",
+                           NS_ConvertUTF16toUTF8(aPath).get()));
+    return nullptr;
+  }
+
+  int64_t size = 0;
+  if (nsresult rv = stream->GetSize(&size); NS_FAILED(rv)) {
+    aRv.ThrowOperationError(FormatErrorMessage(
+        rv, "Could not get the stream size for the file at %s",
+        NS_ConvertUTF16toUTF8(aPath).get()));
+    return nullptr;
+  }
+
+  return new SyncReadFile(aGlobal.GetAsSupports(), std::move(stream), size);
 }
 
 /* static */
@@ -1983,6 +2024,86 @@ JSObject* IOUtils::JsBuffer::IntoUint8Array(JSContext* aCx, JsBuffer aBuffer) {
   aValue.setObject(*array);
   return true;
 }
+
+// SyncReadFile
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(SyncReadFile)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(SyncReadFile)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SyncReadFile)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SyncReadFile, mParent)
+
+SyncReadFile::SyncReadFile(nsISupports* aParent, RefPtr<nsFileStream>&& aStream,
+                           int64_t aSize)
+    : mParent(aParent), mStream(std::move(aStream)), mSize(aSize) {
+  MOZ_RELEASE_ASSERT(mSize >= 0);
+}
+
+SyncReadFile::~SyncReadFile() = default;
+
+JSObject* SyncReadFile::WrapObject(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto) {
+  return SyncReadFile_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+void SyncReadFile::ReadBytesInto(const Uint8Array& aDestArray,
+                                 const int64_t aOffset, ErrorResult& aRv) {
+  if (!mStream) {
+    return aRv.ThrowOperationError("SyncReadFile is closed");
+  }
+
+  aDestArray.ComputeState();
+
+  auto rangeEnd = CheckedInt64(aOffset) + aDestArray.Length();
+  if (!rangeEnd.isValid()) {
+    return aRv.ThrowOperationError("Requested range overflows i64");
+  }
+
+  if (rangeEnd.value() > mSize) {
+    return aRv.ThrowOperationError(
+        "Requested range overflows SyncReadFile size");
+  }
+
+  uint32_t readLen{aDestArray.Length()};
+  if (readLen == 0) {
+    return;
+  }
+
+  if (nsresult rv = mStream->Seek(PR_SEEK_SET, aOffset); NS_FAILED(rv)) {
+    return aRv.ThrowOperationError(
+        FormatErrorMessage(rv, "Could not seek to position %lld", aOffset));
+  }
+
+  Span<char> toRead(reinterpret_cast<char*>(aDestArray.Data()), readLen);
+
+  uint32_t totalRead = 0;
+  while (totalRead != readLen) {
+    // Read no more than INT32_MAX on each call to mStream->Read, otherwise it
+    // returns an error.
+    uint32_t bytesToReadThisChunk =
+        std::min<uint32_t>(readLen - totalRead, INT32_MAX);
+
+    uint32_t bytesRead = 0;
+    if (nsresult rv =
+            mStream->Read(toRead.Elements(), bytesToReadThisChunk, &bytesRead);
+        NS_FAILED(rv)) {
+      return aRv.ThrowOperationError(FormatErrorMessage(
+          rv, "Encountered an unexpected error while reading file stream"));
+    }
+    if (bytesRead == 0) {
+      return aRv.ThrowOperationError(
+          "Reading stopped before the entire array was filled");
+    }
+    totalRead += bytesRead;
+    toRead = toRead.From(bytesRead);
+  }
+}
+
+void SyncReadFile::Close() { mStream = nullptr; }
 
 }  // namespace mozilla::dom
 
