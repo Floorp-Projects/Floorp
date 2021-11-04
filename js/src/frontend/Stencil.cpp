@@ -853,7 +853,7 @@ void InputScript::trace(JSTracer* trc) {
 
 void CompilationInput::trace(JSTracer* trc) {
   atomCache.trace(trc);
-  TraceNullableRoot(trc, &lazy_, "compilation-input-lazy");
+  lazy_.trace(trc);
   enclosingScope.trace(trc);
 }
 
