@@ -15,6 +15,7 @@
 #include "mozilla/PreferenceSheet.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/UserAgentStyleSheetID.h"
 #include "mozilla/css/Loader.h"
 
 class nsIFile;
@@ -64,7 +65,7 @@ class GlobalStyleSheetCache final : public nsIObserver,
   // Called early on in a content process' life from
   // ContentChild::InitSharedUASheets, before the GlobalStyleSheetCache
   // singleton has been created.
-  static void SetSharedMemory(const base::SharedMemoryHandle& aHandle,
+  static void SetSharedMemory(base::SharedMemoryHandle aHandle,
                               uintptr_t aAddress);
 
   // Obtain a shared memory handle for the shared UA sheets to pass into a

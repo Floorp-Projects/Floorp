@@ -381,7 +381,7 @@ ContentCompositorBridgeParent::~ContentCompositorBridgeParent() {
 }
 
 PTextureParent* ContentCompositorBridgeParent::AllocPTextureParent(
-    const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
+    const SurfaceDescriptor& aSharedData, ReadLockDescriptor& aReadLock,
     const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
     const LayersId& aId, const uint64_t& aSerial,
     const wr::MaybeExternalImageId& aExternalImageId) {
@@ -408,7 +408,7 @@ PTextureParent* ContentCompositorBridgeParent::AllocPTextureParent(
         << "Texture backend is wrong";
   }
 
-  return TextureHost::CreateIPDLActor(this, aSharedData, aReadLock,
+  return TextureHost::CreateIPDLActor(this, aSharedData, std::move(aReadLock),
                                       aLayersBackend, aFlags, aSerial,
                                       aExternalImageId);
 }
