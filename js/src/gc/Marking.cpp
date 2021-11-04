@@ -1782,26 +1782,22 @@ bool GCMarker::markUntilBudgetExhausted(SliceBudget& budget,
       AutoSetMarkColor autoSetGray(*this, MarkColor::Gray);
       do {
         processMarkStackTop(budget);
+        MOZ_ASSERT(!hasBlackEntries());
         if (budget.isOverBudget()) {
           return false;
         }
       } while (hasGrayEntries());
     }
 
-    // Do all normal marking before any delayed marking.
-    //
-    // We can end up marking black during gray marking in the following case: a
-    // WeakMap has a CCW key whose delegate (target) is black, and during gray
-    // marking we mark the map (gray). The delegate's color will be propagated
-    // to the key. (And we can't avoid this by marking the key gray, because
-    // even though the value will end up gray in either case, the WeakMap entry
-    // must be preserved because the CCW could get collected and then we could
-    // re-wrap the delegate and look it up in the map again, and need to get
-    // back the original value.)
-    MOZ_ASSERT(!hasGrayEntries());
-    if (!barrierBuffer().empty() || hasBlackEntries()) {
+    // Bug 1739345: We shouldn't be firing any barriers during marking, but this
+    // does happen at the moment.
+    if (!barrierBuffer().empty()) {
       continue;
     }
+
+    // All normal marking happens before any delayed marking.
+    MOZ_ASSERT(!hasBlackEntries() && !hasGrayEntries());
+    MOZ_ASSERT(barrierBuffer().empty());
 
     // Mark children of things that caused too deep recursion during the
     // above tracing.
