@@ -11,6 +11,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/intl/Locale.h"
 #include "mozilla/intl/OSPreferences.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoUtils.h"
@@ -187,23 +188,28 @@ nsStaticAtom* nsLanguageAtomService::GetUncachedLanguageGroup(
       langStr.Truncate(start.get() - langStr.BeginReading());
     }
 
-    MozLocale loc(langStr);
-    if (loc.IsWellFormed()) {
+    Locale loc;
+    auto result = LocaleParser::tryParse(langStr, loc);
+    if (result.isOk() && loc.canonicalize().isOk()) {
       // Fill in script subtag if not present.
-      if (loc.GetScript().IsEmpty()) {
-        loc.Maximize();
+      if (loc.script().missing()) {
+        if (loc.addLikelySubtags().isErr()) {
+          // Fall back to x-unicode if no match was found
+          return nsGkAtoms::Unicode;
+        }
       }
       // Traditional Chinese has separate prefs for Hong Kong / Taiwan;
       // check the region subtag.
-      if (loc.GetScript().EqualsLiteral("Hant")) {
-        if (loc.GetRegion().EqualsLiteral("HK")) {
+      if (loc.script().equalTo("Hant")) {
+        if (loc.region().equalTo("HK")) {
           return nsGkAtoms::HongKongChinese;
         }
         return nsGkAtoms::Taiwanese;
       }
       // Search list of known script subtags that map to langGroup codes.
       size_t foundIndex;
-      nsDependentCSubstring script = loc.GetScript();
+      Span<const char> scriptAsSpan = loc.script().span();
+      nsDependentCSubstring script(scriptAsSpan.data(), scriptAsSpan.size());
       if (BinarySearchIf(
               kScriptLangGroup, 0, ArrayLength(kScriptLangGroup),
               [script](const auto& entry) -> int {
@@ -215,19 +221,19 @@ nsStaticAtom* nsLanguageAtomService::GetUncachedLanguageGroup(
       // Script subtag was not recognized (includes "Hani"); check the language
       // subtag for CJK possibilities so that we'll prefer the appropriate font
       // rather than falling back to the browser's hardcoded preference.
-      if (loc.GetLanguage().EqualsLiteral("zh")) {
-        if (loc.GetRegion().EqualsLiteral("HK")) {
+      if (loc.language().equalTo("zh")) {
+        if (loc.region().equalTo("HK")) {
           return nsGkAtoms::HongKongChinese;
         }
-        if (loc.GetRegion().EqualsLiteral("TW")) {
+        if (loc.region().equalTo("TW")) {
           return nsGkAtoms::Taiwanese;
         }
         return nsGkAtoms::Chinese;
       }
-      if (loc.GetLanguage().EqualsLiteral("ja")) {
+      if (loc.language().equalTo("ja")) {
         return nsGkAtoms::Japanese;
       }
-      if (loc.GetLanguage().EqualsLiteral("ko")) {
+      if (loc.language().equalTo("ko")) {
         return nsGkAtoms::ko;
       }
     }
