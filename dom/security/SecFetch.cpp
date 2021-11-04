@@ -209,7 +209,9 @@ bool IsSameSite(nsIChannel* aHTTPChannel) {
   // if the initial request is not same-site, or not https, we can
   // return here because we already know it's not a same-site request
   if (!hostDomain.Equals(channelDomain) ||
-      !loadInfo->TriggeringPrincipal()->SchemeIs("https")) {
+      (!loadInfo->TriggeringPrincipal()->SchemeIs("https") &&
+       !nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(
+           hostDomain))) {
     return false;
   }
 
