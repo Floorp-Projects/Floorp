@@ -135,7 +135,8 @@ pub fn upload_to_texture_cache(
             let use_batch_upload = renderer.device.use_batched_texture_uploads() &&
                 texture.flags().contains(TextureFlags::IS_SHARED_TEXTURE_CACHE) &&
                 rect.width() <= BATCH_UPLOAD_TEXTURE_SIZE.width &&
-                rect.height() <= BATCH_UPLOAD_TEXTURE_SIZE.height;
+                rect.height() <= BATCH_UPLOAD_TEXTURE_SIZE.height &&
+                rect.area() < renderer.device.batched_upload_threshold();
 
             if use_batch_upload
                 && arc_data.is_some()
@@ -250,7 +251,7 @@ pub fn upload_to_texture_cache(
         let gpu_copy_start = precise_time_ns();
 
         if renderer.device.use_draw_calls_for_texture_copy() {
-            // Some drivers are very have a very high CPU overhead when submitting hundreds of small blit
+            // Some drivers have a very high CPU overhead when submitting hundreds of small blit
             // commands (low end intel drivers on Windows for example can take take 100+ ms submitting a
             // few hundred blits). In this case we do the copy with batched draw calls.
             copy_from_staging_to_cache_using_draw_calls(
