@@ -26,6 +26,8 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 
+#include <tuple>
+
 #if defined(MOZ_TELEMETRY_REPORTING)
 #  include "mozilla/Telemetry.h"
 #endif  // defined(MOZ_TELEMETRY_REPORTING)
@@ -256,8 +258,7 @@ static void AppendVersionInfo(nsIFile* aClientExe, nsAString& aStrToAppend) {
     return;
   }
 
-  uint16_t major, minor, patch, build;
-  Tie(major, minor, patch, build) = version.unwrap().AsTuple();
+  auto [major, minor, patch, build] = version.unwrap().AsTuple();
 
   aStrToAppend.AppendLiteral(u"|");
 
