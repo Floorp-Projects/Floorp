@@ -1,0 +1,10 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script
+    onload="parent.postMessage({status:'loaded ' + document.URL}, '*')"
+    onerror="parent.postMessage({status:'blocked ' + document.URL}, '*')"
+    src="http://example.com/tests/dom/security/test/mixedcontentblocker/file_bug1474842.js"></script>
+</head>
+</html>
