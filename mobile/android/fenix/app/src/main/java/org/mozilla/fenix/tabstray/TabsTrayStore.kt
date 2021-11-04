@@ -134,7 +134,7 @@ sealed class TabsTrayAction : Action {
     /**
      * Removes the [TabsTrayState.focusGroupTabId] of the [TabsTrayState].
      */
-    object ConsumeFocusGroupTabIdAction : TabsTrayAction()
+    object ConsumeFocusGroupTabId : TabsTrayAction()
 
     /**
      * Updates the list of tabs in [TabsTrayState.inactiveTabs].
@@ -185,7 +185,7 @@ internal object TabsTrayReducer {
                 state.copy(syncing = true)
             is TabsTrayAction.SyncCompleted ->
                 state.copy(syncing = false)
-            is TabsTrayAction.ConsumeFocusGroupTabIdAction ->
+            is TabsTrayAction.ConsumeFocusGroupTabId ->
                 state.copy(focusGroupTabId = null)
             is TabsTrayAction.UpdateInactiveTabs ->
                 state.copy(inactiveTabs = action.tabs)

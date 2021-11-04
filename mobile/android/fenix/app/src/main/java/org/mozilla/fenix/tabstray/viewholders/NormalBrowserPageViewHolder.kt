@@ -135,7 +135,7 @@ class NormalBrowserPageViewHolder(
                         layoutManager.scrollToPosition(indexToScrollTo)
 
                         if (focusGroupTabId != null) {
-                            tabsTrayStore.dispatch(TabsTrayAction.ConsumeFocusGroupTabIdAction)
+                            tabsTrayStore.dispatch(TabsTrayAction.ConsumeFocusGroupTabId)
                         }
                         return@observeFirstInsert
                     }

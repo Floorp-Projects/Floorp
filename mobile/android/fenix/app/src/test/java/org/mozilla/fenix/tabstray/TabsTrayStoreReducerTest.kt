@@ -16,7 +16,7 @@ class TabsTrayStoreReducerTest {
 
         val resultState = TabsTrayReducer.reduce(
             initialState,
-            TabsTrayAction.ConsumeFocusGroupTabIdAction
+            TabsTrayAction.ConsumeFocusGroupTabId
         )
 
         assertEquals(expectedState, resultState)
