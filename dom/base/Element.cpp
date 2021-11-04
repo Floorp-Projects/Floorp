@@ -609,6 +609,27 @@ nsDOMTokenList* Element::Part() {
   return slots->mPart;
 }
 
+void Element::RecompileScriptEventListeners() {
+  int32_t i, count = mAttrs.AttrCount();
+  for (i = 0; i < count; ++i) {
+    const nsAttrName* name = mAttrs.AttrNameAt(i);
+
+    // Eventlistenener-attributes are always in the null namespace
+    if (!name->IsAtom()) {
+      continue;
+    }
+
+    nsAtom* attr = name->Atom();
+    if (!IsEventAttributeName(attr)) {
+      continue;
+    }
+
+    nsAutoString value;
+    GetAttr(attr, value);
+    SetEventHandler(GetEventNameForAttr(attr), value, true);
+  }
+}
+
 void Element::GetAttributeNames(nsTArray<nsString>& aResult) {
   uint32_t count = mAttrs.AttrCount();
   for (uint32_t i = 0; i < count; ++i) {
