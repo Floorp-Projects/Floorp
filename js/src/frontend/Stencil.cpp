@@ -494,34 +494,45 @@ bool ScopeContext::cachePrivateFieldsForEval(JSContext* cx,
 }
 
 #ifdef DEBUG
-static bool NameIsOnEnvironment(Scope* scope, JSAtom* name) {
-  for (BindingIter bi(scope); bi; bi++) {
-    // If found, the name must already be on the environment or an import,
-    // or else there is a bug in the closed-over name analysis in the
-    // Parser.
-    if (bi.name() == name) {
-      BindingLocation::Kind kind = bi.location().kind();
+static bool NameIsOnEnvironment(JSContext* cx, ParserAtomsTable& parserAtoms,
+                                CompilationAtomCache& atomCache,
+                                InputScope& scope, TaggedParserAtomIndex name) {
+  JSAtom* jsname = nullptr;
+  return scope.match([&](auto& scope_ref) {
+    for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
+      // If found, the name must already be on the environment or an import,
+      // or else there is a bug in the closed-over name analysis in the
+      // Parser.
+      InputName binding(scope_ref, bi.name());
+      if (binding.isEqualTo(cx, parserAtoms, atomCache, name, &jsname)) {
+        BindingLocation::Kind kind = bi.location().kind();
 
-      if (bi.hasArgumentSlot()) {
-        JSScript* script = scope->as<FunctionScope>().script();
-        if (script->functionAllowsParameterRedeclaration()) {
-          // Check for duplicate positional formal parameters.
-          for (BindingIter bi2(bi); bi2 && bi2.hasArgumentSlot(); bi2++) {
-            if (bi2.name() == name) {
-              kind = bi2.location().kind();
+        if (bi.hasArgumentSlot()) {
+          // The following is equivalent to
+          // functionScope.script()->functionAllowsParameterRedeclaration()
+          if (scope.hasMappedArgsObj()) {
+            // Check for duplicate positional formal parameters.
+            using InputBindingIter = decltype(bi);
+            for (InputBindingIter bi2(bi); bi2 && bi2.hasArgumentSlot();
+                 bi2++) {
+              InputName binding2(scope_ref, bi2.name());
+              if (binding2.isEqualTo(cx, parserAtoms, atomCache, name,
+                                     &jsname)) {
+                kind = bi2.location().kind();
+              }
             }
           }
         }
+
+        return kind == BindingLocation::Kind::Global ||
+               kind == BindingLocation::Kind::Environment ||
+               kind == BindingLocation::Kind::Import;
       }
-
-      return kind == BindingLocation::Kind::Global ||
-             kind == BindingLocation::Kind::Environment ||
-             kind == BindingLocation::Kind::Import;
     }
-  }
 
-  // If not found, assume it's on the global or dynamically accessed.
-  return true;
+    // If not found, assume it's on the global or dynamically accessed.
+    return true;
+  });
 }
 #endif
 
@@ -553,7 +564,8 @@ NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
   }
 
   for (ScopeIter si(input.enclosingScope); si; si++) {
-    MOZ_ASSERT(NameIsOnEnvironment(si.scope(), jsname));
+    MOZ_ASSERT(NameIsOnEnvironment(cx, input, parserAtoms,
+                                   InputScope(si.scope()), name));
 
     bool hasEnv = si.hasSyntacticEnvironment();
 
