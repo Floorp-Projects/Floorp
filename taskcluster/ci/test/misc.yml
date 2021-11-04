@@ -86,7 +86,7 @@ test-verify:
     built-projects-only: true
     target:
         by-test-platform:
-            android-em-7.*: geckoview-androidTest.apk
+            android-em-7.*: geckoview-test_runner.apk
             default: null
     optimization:
         test-verify: ["test-verify"]
