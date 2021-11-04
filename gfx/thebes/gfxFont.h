@@ -309,7 +309,7 @@ class gfxFontCacheExpirationTracker
   }
 
  public:
-  enum { FONT_TIMEOUT_SECONDS = 5 };
+  enum { FONT_TIMEOUT_SECONDS = 10 };
 
   explicit gfxFontCacheExpirationTracker(nsIEventTarget* aEventTarget)
       : ExpirationTrackerImpl<gfxFont, 3, Lock, AutoLock>(
@@ -318,7 +318,7 @@ class gfxFontCacheExpirationTracker
 
 class gfxFontCache final : private gfxFontCacheExpirationTracker {
  public:
-  enum { SHAPED_WORD_TIMEOUT_SECONDS = 10 };
+  enum { SHAPED_WORD_TIMEOUT_SECONDS = 60 };
 
   explicit gfxFontCache(nsIEventTarget* aEventTarget);
   ~gfxFontCache();
