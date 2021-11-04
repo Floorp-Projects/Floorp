@@ -4404,6 +4404,7 @@ impl Renderer {
 
             if can_use_partial_present {
                 let mut combined_dirty_rect = DeviceRect::zero();
+                let fb_rect = DeviceRect::from_size(draw_target_dimensions.to_f32());
 
                 // Work out how many dirty rects WR produced, and if that's more than
                 // what the device supports.
@@ -4415,7 +4416,14 @@ impl Renderer {
                         &tile.local_dirty_rect,
                         tile.transform_index,
                     );
-                    combined_dirty_rect = combined_dirty_rect.union(&dirty_rect);
+
+                    // In pathological cases where a tile is extremely zoomed, it
+                    // may end up with device coords outside the range of an i32,
+                    // so clamp it to the frame buffer rect here, before it gets
+                    // casted to an i32 rect below.
+                    if let Some(dirty_rect) = dirty_rect.intersection(&fb_rect) {
+                        combined_dirty_rect = combined_dirty_rect.union(&dirty_rect);
+                    }
                 }
 
                 let combined_dirty_rect = combined_dirty_rect.round();
