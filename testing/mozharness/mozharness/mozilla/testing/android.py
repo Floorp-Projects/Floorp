@@ -426,8 +426,7 @@ class AndroidMixin(object):
 
         if not app_installed:
             self.fatal(
-                "INFRA-ERROR: %s Failed to install %s"
-                % (type(e).__name__, os.path.basename(app_path)),
+                "INFRA-ERROR: Failed to install %s" % os.path.basename(app_path),
                 EXIT_STATUS_DICT[TBPL_RETRY],
             )
 
