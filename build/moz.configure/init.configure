@@ -215,165 +215,17 @@ shell = help_shell | shell
 
 # Python 3
 # ========
-
-option(env="PYTHON3", nargs=1, help="Python 3 interpreter (3.6 or later)")
-
-
-@depends("PYTHON3", check_build_environment, mozconfig, "--help")
-@imports(_from="__builtin__", _import="Exception")
-@imports("os")
-@imports("sys")
-@imports("subprocess")
-@imports("distutils.sysconfig")
-@imports(_from="mozbuild.configure.util", _import="LineIO")
-@imports(_from="mach.virtualenv", _import="VirtualenvManager")
-@imports(_from="mozbuild.pythonutil", _import="find_python3_executable")
-@imports(_from="mozbuild.pythonutil", _import="python_executable_version")
-@imports(_from="six", _import="ensure_text")
-def virtualenv_python3(env_python, build_env, mozconfig, help):
-    # Avoid re-executing python when running configure --help.
-    if help:
-        return
-
-    # NOTE: We cannot assume the Python we are calling this code with is the
-    # Python we want to set up a virtualenv for.
-    #
-    # We also cannot assume that the Python the caller is configuring meets our
-    # build requirements.
-    #
-    # Because of this the code is written to re-execute itself with the correct
-    # interpreter if required.
-
-    log.debug("python3: running with pid %r" % os.getpid())
-    log.debug("python3: sys.executable: %r" % sys.executable)
-
-    python = env_python[0] if env_python else None
-
-    # Did our python come from mozconfig? Overrides environment setting.
-    # Ideally we'd rely on the mozconfig injection from mozconfig_options,
-    # but we'd rather avoid the verbosity when we need to reexecute with
-    # a different python.
-    if mozconfig["path"]:
-        if "PYTHON3" in mozconfig["env"]["added"]:
-            python = mozconfig["env"]["added"]["PYTHON3"]
-        elif "PYTHON3" in mozconfig["env"]["modified"]:
-            python = mozconfig["env"]["modified"]["PYTHON3"][1]
-        elif "PYTHON3" in mozconfig["vars"]["added"]:
-            python = mozconfig["vars"]["added"]["PYTHON3"]
-        elif "PYTHON3" in mozconfig["vars"]["modified"]:
-            python = mozconfig["vars"]["modified"]["PYTHON3"][1]
-
-    log.debug("python3: executable from configuration: %r" % python)
-
-    # If this is a mozilla-central build, we'll find the virtualenv in the top
-    # source directory. If this is a SpiderMonkey build, we assume we're at
-    # js/src and try to find the virtualenv from the mozilla-central root.
-    # See mozilla-central changeset d2cce982a7c809815d86d5daecefe2e7a563ecca
-    # Bug 784841
-    topsrcdir, topobjdir = build_env.topsrcdir, build_env.topobjdir
-    if topobjdir.endswith("/js/src"):
-        topobjdir = topobjdir[:-7]
-
-    # Update the path to include some necessary modules for find_program.
-    sys.path.insert(0, os.path.join(topsrcdir, "testing", "mozbase", "mozfile"))
-
-    # If we know the Python executable the caller is asking for then verify its
-    # version. If the caller did not ask for a specific executable then find
-    # a reasonable default.
-    if python:
-        found_python = find_program(python)
-        if not found_python:
-            die(
-                "The PYTHON3 environment variable does not contain "
-                "a valid path. Cannot find %s",
-                python,
-            )
-        python = found_python
-        try:
-            version = python_executable_version(python).version
-        except Exception as e:
-            raise FatalCheckError(
-                "could not determine version of PYTHON3 " "(%s): %s" % (python, e)
-            )
-    else:
-        # Fall back to the search routine.
-        python, version = find_python3_executable(min_version="3.6.0")
-
-        # The API returns a bytes whereas everything in configure is unicode.
-        if python:
-            python = ensure_text(python)
-
-    if not python:
-        raise FatalCheckError(
-            "Python 3.6 or newer is required to build. "
-            "Ensure a `python3.x` executable is in your "
-            "PATH or define PYTHON3 to point to a Python "
-            "3.6 executable."
-        )
-
-    if version < (3, 6, 0):
-        raise FatalCheckError(
-            "Python 3.6 or newer is required to build; "
-            "%s is Python %d.%d" % (python, version[0], version[1])
-        )
-
-    log.debug("python3: found executable: %r" % python)
-
-    test_python = os.environ.get("MOZ_TEST_PYTHON")
-    if test_python:
-        manager = namespace(
-            up_to_date=lambda: True,
-            python_path=test_python,
-        )
-    else:
-        manager = VirtualenvManager(
-            topsrcdir,
-            os.path.join(topobjdir, "_virtualenvs"),
-            "build",
-            base_python=python,
-        )
-
-    if not manager.up_to_date():
-        log.info("Creating Python 3 environment")
-        manager.build()
-    else:
-        log.debug("python3: venv is up to date")
-
-    python = normsep(manager.python_path)
-
-    if python != normsep(sys.executable):
-        log.debug(
-            "python3: executing as %s, should be running as %s"
-            % (sys.executable, manager.python_path)
-        )
-        log.info("Re-executing in the virtualenv")
-        if env_python:
-            del os.environ["PYTHON3"]
-        # Another quirk on macOS, with the system python, the virtualenv is
-        # not fully operational (missing entries in sys.path) if
-        # __PYVENV_LAUNCHER__ is set.
-        os.environ.pop("__PYVENV_LAUNCHER__", None)
-        # One would prefer to use os.execl, but that's completely borked on
-        # Windows.
-        sys.exit(subprocess.call([python] + sys.argv))
-
-    # We are now in the virtualenv
-    if not distutils.sysconfig.get_python_lib():
-        die("Could not determine python site packages directory")
-
-    str_version = ".".join(str(v) for v in version)
-
-    return namespace(
-        path=python,
-        version=version,
-        str_version=str_version,
-    )
-
-
-@depends(virtualenv_python3)
+@dependable
 @checking("for Python 3", callback=lambda x: "%s (%s)" % (x.path, x.str_version))
-def virtualenv_python3(venv):
-    return venv
+@imports("sys")
+@imports(_from="mach.virtualenv", _import="VirtualenvHelper")
+def virtualenv_python3():
+    return namespace(
+        # sys.executable is currently not updated for in-process activations. However,
+        # sys.prefix is, so we can calculate the python executable's path from there.
+        path=normsep(VirtualenvHelper(sys.prefix).python_path),
+        str_version=".".join(str(i) for i in sys.version_info[0:3]),
+    )
 
 
 set_config("PYTHON3", virtualenv_python3.path)
