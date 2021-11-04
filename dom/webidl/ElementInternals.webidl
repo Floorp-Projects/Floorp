@@ -21,5 +21,8 @@ interface ElementInternals {
   readonly attribute HTMLFormElement? form;
 
   [Pref="dom.webcomponents.formAssociatedCustomElement.enabled", Throws]
+  readonly attribute boolean willValidate;
+
+  [Pref="dom.webcomponents.formAssociatedCustomElement.enabled", Throws]
   readonly attribute NodeList labels;
 };

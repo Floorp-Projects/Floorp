@@ -10,6 +10,7 @@
 #include "js/TypeDecls.h"
 #include "mozilla/dom/ElementInternalsBinding.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIConstraintValidation.h"
 #include "nsIFormControl.h"
 #include "nsWrapperCache.h"
 
@@ -26,10 +27,13 @@ class HTMLFieldSetElement;
 class HTMLFormElement;
 class ShadowRoot;
 
-class ElementInternals final : public nsIFormControl, public nsWrapperCache {
+class ElementInternals final : public nsIFormControl,
+                               public nsIConstraintValidation,
+                               public nsWrapperCache {
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(ElementInternals)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(ElementInternals,
+                                                         nsIFormControl)
 
   explicit ElementInternals(HTMLElement* aTarget);
 
@@ -44,6 +48,7 @@ class ElementInternals final : public nsIFormControl, public nsWrapperCache {
                     const Optional<Nullable<FileOrUSVStringOrFormData>>& aState,
                     ErrorResult& aRv);
   mozilla::dom::HTMLFormElement* GetForm(ErrorResult& aRv) const;
+  bool GetWillValidate(ErrorResult& aRv) const;
   already_AddRefed<nsINodeList> GetLabels(ErrorResult& aRv) const;
 
   // nsIFormControl
@@ -62,6 +67,7 @@ class ElementInternals final : public nsIFormControl, public nsWrapperCache {
   }
 
   void UpdateFormOwner();
+  void UpdateBarredFromConstraintValidation();
 
   void Unlink();
 

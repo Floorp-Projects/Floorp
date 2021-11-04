@@ -24,6 +24,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(ElementInternals)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ElementInternals)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIFormControl)
+  NS_INTERFACE_MAP_ENTRY(nsIConstraintValidation)
 NS_INTERFACE_MAP_END
 
 ElementInternals::ElementInternals(HTMLElement* aTarget)
@@ -123,6 +124,16 @@ HTMLFormElement* ElementInternals::GetForm(ErrorResult& aRv) const {
   return GetForm();
 }
 
+// https://html.spec.whatwg.org/#dom-elementinternals-willvalidate
+bool ElementInternals::GetWillValidate(ErrorResult& aRv) const {
+  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+    aRv.ThrowNotSupportedError(
+        "Target element is not a form-associated custom element");
+    return false;
+  }
+  return WillValidate();
+}
+
 // https://html.spec.whatwg.org/#dom-elementinternals-labels
 already_AddRefed<nsINodeList> ElementInternals::GetLabels(
     ErrorResult& aRv) const {
@@ -185,6 +196,16 @@ NS_IMETHODIMP ElementInternals::SubmitNamesValues(FormData* aFormData) {
 void ElementInternals::UpdateFormOwner() {
   if (mTarget) {
     mTarget->UpdateFormOwner();
+  }
+}
+
+void ElementInternals::UpdateBarredFromConstraintValidation() {
+  if (mTarget) {
+    MOZ_ASSERT(mTarget->IsFormAssociatedElement());
+    SetBarredFromConstraintValidation(
+        mTarget->HasAttr(nsGkAtoms::readonly) ||
+        mTarget->HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR) ||
+        mTarget->IsDisabled());
   }
 }
 
