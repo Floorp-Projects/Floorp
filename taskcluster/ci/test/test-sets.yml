@@ -241,24 +241,25 @@ windows10-2004-tests:
     - xpcshell
 
 windows10-64-2004-ccov-tests:
+    - cppunit
     - crashtest
-    - reftest
+    - gtest
+    - jittest
+    - jsreftest
+    - marionette
     - mochitest-browser-chrome
     - mochitest-devtools-chrome
     - mochitest-plain
-    - gtest
-    - marionette
+    - mochitest-remote
+    - reftest
     - test-coverage
     - test-verify
     - test-verify-gpu
-    - cppunit
-    - jsreftest
     - web-platform-tests
     - web-platform-tests-crashtest
-    - web-platform-tests-reftest
     - web-platform-tests-print-reftest
+    - web-platform-tests-reftest
     - web-platform-tests-wdspec
-    - jittest
     - xpcshell
 
 windows10-64-2004-failure-tests:
