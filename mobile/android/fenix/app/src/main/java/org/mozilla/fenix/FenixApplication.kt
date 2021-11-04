@@ -80,8 +80,8 @@ import org.mozilla.fenix.components.Core
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
+import org.mozilla.fenix.ext.actualInactiveTabs
 import org.mozilla.fenix.perf.MarkersActivityLifecycleCallbacks
-import org.mozilla.fenix.ext.potentialInactiveTabs
 import org.mozilla.fenix.utils.Settings
 
 /**
@@ -628,7 +628,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             tabViewSetting.set(settings.getTabViewPingString())
             closeTabSetting.set(settings.getTabTimeoutPingString())
 
-            inactiveTabsCount.set(browserStore.state.potentialInactiveTabs.size.toLong())
+            inactiveTabsCount.set(browserStore.state.actualInactiveTabs(settings).size.toLong())
 
             val installSourcePackage = if (SDK_INT >= Build.VERSION_CODES.R) {
                 packageManager.getInstallSourceInfo(packageName).installingPackageName
