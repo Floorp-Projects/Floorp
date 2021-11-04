@@ -23,6 +23,10 @@ class HTMLElement final : public nsGenericHTMLFormElement {
   // nsINode
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
+  // nsIContent
+  nsresult BindToTree(BindContext&, nsINode& aParent) override;
+  void UnbindFromTree(bool aNullParent = true) override;
+
   // Element
   void SetCustomElementDefinition(
       CustomElementDefinition* aDefinition) override;
@@ -36,6 +40,7 @@ class HTMLElement final : public nsGenericHTMLFormElement {
   // nsGenericHTMLFormElement
   bool IsFormAssociatedElement() const override;
   void AfterClearForm(bool aUnbindOrDelete) override;
+  void FieldSetDisabledChanged(bool aNotify) override;
 
   void UpdateFormOwner();
 
@@ -60,6 +65,8 @@ class HTMLElement final : public nsGenericHTMLFormElement {
   bool DoesReadOnlyApply() const override;
   void UpdateDisabledState(bool aNotify) override;
   void UpdateFormOwner(bool aBindToTree, Element* aFormIdElement) override;
+
+  void UpdateBarredFromConstraintValidation();
 
   ElementInternals* GetElementInternals() const;
 };
