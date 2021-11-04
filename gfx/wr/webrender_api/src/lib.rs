@@ -509,8 +509,8 @@ pub type VoidPtrToSizeFn = unsafe extern "C" fn(ptr: *const c_void) -> usize;
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Parameter {
     Bool(BoolParameter, bool),
+    Int(IntParameter, i32),
 }
-
 
 /// Boolean configuration option.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -520,6 +520,13 @@ pub enum BoolParameter {
     Multithreading = 1,
     BatchedUploads = 2,
     DrawCallsForTextureCopy = 3,
+}
+
+/// Integer configuration option.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[repr(u32)]
+pub enum IntParameter {
+    BatchedUploadThreshold = 0,
 }
 
 bitflags! {

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use super::super::shader_source::{OPTIMIZED_SHADERS, UNOPTIMIZED_SHADERS};
-use api::{ColorF, ImageDescriptor, ImageFormat, Parameter, BoolParameter};
+use api::{ColorF, ImageDescriptor, ImageFormat, Parameter, BoolParameter, IntParameter};
 use api::{MixBlendMode, ImageBufferKind, VoidPtrToSizeFn};
 use api::{CrashAnnotator, CrashAnnotation, CrashAnnotatorGuard};
 use api::units::*;
@@ -1080,6 +1080,8 @@ pub struct Device {
     /// Note: this currently only applies to the batched texture uploads
     /// path.
     use_draw_calls_for_texture_copy: bool,
+    /// Number of pixels below which we prefer batched uploads.
+    batched_upload_threshold: i32,
 
     // HW or API capabilities
     capabilities: Capabilities,
@@ -1378,6 +1380,7 @@ impl Device {
         resource_override_path: Option<PathBuf>,
         use_optimized_shaders: bool,
         upload_method: UploadMethod,
+        batched_upload_threshold: i32,
         cached_programs: Option<Rc<ProgramCache>>,
         allow_texture_storage_support: bool,
         allow_texture_swizzling: bool,
@@ -1778,6 +1781,7 @@ impl Device {
             upload_method,
             use_batched_texture_uploads: requires_batched_texture_uploads.unwrap_or(false),
             use_draw_calls_for_texture_copy: false,
+            batched_upload_threshold,
 
             inside_frame: false,
 
@@ -1872,6 +1876,9 @@ impl Device {
                     self.use_draw_calls_for_texture_copy = *enabled;
                 }
             }
+            Parameter::Int(IntParameter::BatchedUploadThreshold, threshold) => {
+                self.batched_upload_threshold = *threshold;
+            }
             _ => {}
         }
     }
@@ -1944,6 +1951,10 @@ impl Device {
 
     pub fn use_draw_calls_for_texture_copy(&self) -> bool {
         self.use_draw_calls_for_texture_copy
+    }
+
+    pub fn batched_upload_threshold(&self) -> i32 {
+        self.batched_upload_threshold
     }
 
     pub fn reset_state(&mut self) {

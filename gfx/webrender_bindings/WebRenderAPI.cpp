@@ -574,6 +574,10 @@ void WebRenderAPI::SetBool(wr::BoolParameter aKey, bool aValue) {
   wr_api_set_bool(mDocHandle, aKey, aValue);
 }
 
+void WebRenderAPI::SetInt(wr::IntParameter aKey, int32_t aValue) {
+  wr_api_set_int(mDocHandle, aKey, aValue);
+}
+
 void WebRenderAPI::SetClearColor(const gfx::DeviceColor& aColor) {
   RenderThread::Get()->SetClearColor(mId, ToColorF(aColor));
 }

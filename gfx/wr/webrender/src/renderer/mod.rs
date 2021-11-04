@@ -964,6 +964,7 @@ impl Renderer {
             options.resource_override_path.clone(),
             options.use_optimized_shaders,
             options.upload_method.clone(),
+            options.batched_upload_threshold,
             options.cached_programs.take(),
             options.allow_texture_storage_support,
             options.allow_texture_swizzling,
@@ -5514,6 +5515,7 @@ pub struct RendererOptions {
     pub upload_method: UploadMethod,
     /// The default size in bytes for PBOs used to upload texture data.
     pub upload_pbo_default_size: usize,
+    pub batched_upload_threshold: i32,
     pub workers: Option<Arc<ThreadPool>>,
     pub enable_multithreading: bool,
     pub blob_image_handler: Option<Box<dyn BlobImageHandler>>,
@@ -5608,6 +5610,7 @@ impl Default for RendererOptions {
             // but we are unable to make this decision here, so picking the reasonable medium.
             upload_method: UploadMethod::PixelBuffer(ONE_TIME_USAGE_HINT),
             upload_pbo_default_size: 512 * 512 * 4,
+            batched_upload_threshold: 512 * 512,
             workers: None,
             enable_multithreading: true,
             blob_image_handler: None,

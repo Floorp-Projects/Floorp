@@ -1675,6 +1675,9 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
   if (IsRootOfNativeAnonymousSubtree()) {
     aParent.SetMayHaveAnonymousChildren();
   }
+  if (aParent.HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR)) {
+    SetFlags(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR);
+  }
 
   // Now set the parent.
   mParent = &aParent;
@@ -1818,6 +1821,19 @@ bool WillDetachFromShadowOnUnbind(const Element& aElement, bool aNullParent) {
 
 void Element::UnbindFromTree(bool aNullParent) {
   HandleShadowDOMRelatedRemovalSteps(aNullParent);
+
+  if (HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR) &&
+      !IsHTMLElement(nsGkAtoms::datalist)) {
+    if (aNullParent) {
+      UnsetFlags(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR);
+    } else {
+      nsIContent* parent = GetParent();
+      MOZ_ASSERT(parent);
+      if (!parent->HasFlag(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR)) {
+        UnsetFlags(ELEMENT_IS_DATALIST_OR_HAS_DATALIST_ANCESTOR);
+      }
+    }
+  }
 
   const bool detachingFromShadow =
       WillDetachFromShadowOnUnbind(*this, aNullParent);

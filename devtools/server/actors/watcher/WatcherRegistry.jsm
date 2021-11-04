@@ -327,6 +327,7 @@ const JSWindowActorsConfig = {
         "resource://devtools/server/connectors/js-window-actor/DevToolsFrameChild.jsm",
       events: {
         DOMWindowCreated: {},
+        DOMDocElementInserted: {},
         pageshow: {},
         pagehide: {},
       },
