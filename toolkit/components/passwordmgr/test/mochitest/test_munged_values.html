@@ -208,9 +208,9 @@ add_task(async function test_no_save_dialog_when_password_is_fully_munged() {
     let formSubmitListener = SpecialPowers.spawn(win, [], function() {
       return new Promise(resolve => {
         this.content.windowRoot.addEventListener(
-            "PasswordManager:onFormSubmit",
+            "PasswordManager:ShowDoorhanger",
             event => {
-              info(`PasswordManager:onFormSubmit called. Event: ${JSON.stringify(event)}`);
+              info(`PasswordManager:ShowDoorhanger called. Event: ${JSON.stringify(event)}`);
               resolve(event.detail.messageSent);
             }
           );
