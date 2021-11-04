@@ -22,6 +22,7 @@ sys.path.insert(0, os.path.join(base_dir, "python", "mozbuild"))
 sys.path.insert(0, os.path.join(base_dir, "third_party", "python", "packaging"))
 sys.path.insert(0, os.path.join(base_dir, "third_party", "python", "pyparsing"))
 sys.path.insert(0, os.path.join(base_dir, "third_party", "python", "six"))
+from mach.virtualenv import VirtualenvManager
 from mozbuild.configure import (
     ConfigureSandbox,
     TRACE,
@@ -34,6 +35,7 @@ import six
 
 
 def main(argv):
+    _activate_build_virtualenv()
     config = {}
 
     if "OLD_CONFIGURE" not in os.environ:
@@ -221,6 +223,27 @@ def config_status(config, execute=True):
 
         return config_status(args=[], **sanitized_config)
     return 0
+
+
+def _activate_build_virtualenv():
+    version = ".".join(str(i) for i in sys.version_info[0:3])
+    print(f"Using Python {version} from {sys.executable}")
+
+    topobjdir = os.path.realpath(".")
+    topsrcdir = os.path.realpath(os.path.dirname(__file__))
+
+    if topobjdir.endswith("/js/src"):
+        topobjdir = topobjdir[:-7]
+
+    build_venv = VirtualenvManager(
+        topsrcdir,
+        os.path.join(topobjdir, "_virtualenvs"),
+        "build",
+    )
+    if not build_venv.up_to_date():
+        print("Creating Python 3 virtualenv")
+        build_venv.build()
+    build_venv.activate()
 
 
 if __name__ == "__main__":
