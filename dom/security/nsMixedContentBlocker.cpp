@@ -666,8 +666,8 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
     return NS_OK;
   }
 
-  // Check the parent scheme. If it is not an HTTPS page then mixed content
-  // restrictions do not apply.
+  // Check the parent scheme and window. If it is not an HTTPS page and not a
+  // secure context then mixed content restrictions do not apply.
   nsCOMPtr<nsIURI> innerRequestingLocation =
       NS_GetInnermostURI(requestingLocation);
   if (!innerRequestingLocation) {
@@ -681,7 +681,11 @@ nsresult nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   }
 
   bool parentIsHttps = innerRequestingLocation->SchemeIs("https");
-  if (!parentIsHttps) {
+  bool parentIsSecureContext =
+      requestingWindow && requestingWindow->GetIsSecureContext();
+  // Extensions are exempt from mixed content restrictions.
+  bool parentIsExtension = innerRequestingLocation->SchemeIs("moz-extension");
+  if ((!parentIsHttps && !parentIsSecureContext) || parentIsExtension) {
     *aDecision = ACCEPT;
     MOZ_LOG(sMCBLog, LogLevel::Verbose,
             ("  -> decision: Request will be allowed because the requesting "
