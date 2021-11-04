@@ -86,7 +86,6 @@ class MathMLElement final : public MathMLElementBase,
     MathMLElementBase::NodeInfoChanged(aOldDoc);
   }
 
-  void RecompileScriptEventListeners() final;
   bool IsEventAttributeNameInternal(nsAtom* aName) final;
 
  protected:

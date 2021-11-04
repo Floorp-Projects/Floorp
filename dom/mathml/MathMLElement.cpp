@@ -979,28 +979,6 @@ already_AddRefed<nsIURI> MathMLElement::GetHrefURI() const {
   return IsLink(getter_AddRefs(hrefURI)) ? hrefURI.forget() : nullptr;
 }
 
-// XXX Bug 1586014: Share logic with other element classes.
-void MathMLElement::RecompileScriptEventListeners() {
-  int32_t i, count = mAttrs.AttrCount();
-  for (i = 0; i < count; ++i) {
-    const nsAttrName* name = mAttrs.AttrNameAt(i);
-
-    // Eventlistenener-attributes are always in the null namespace
-    if (!name->IsAtom()) {
-      continue;
-    }
-
-    nsAtom* attr = name->Atom();
-    if (!IsEventAttributeName(attr)) {
-      continue;
-    }
-
-    nsAutoString value;
-    GetAttr(kNameSpaceID_None, attr, value);
-    SetEventHandler(GetEventNameForAttr(attr), value, true);
-  }
-}
-
 bool MathMLElement::IsEventAttributeNameInternal(nsAtom* aName) {
   // The intent is to align MathML event attributes on HTML5, so the flag
   // EventNameType_HTML is used here.
