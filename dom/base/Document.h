@@ -1014,7 +1014,7 @@ class Document : public nsINode,
   /**
    * Set the Content-Type of this document.
    */
-  virtual void SetContentType(const nsAString& aContentType);
+  void SetContentType(const nsACString& aContentType);
 
   /**
    * Return the language of this document.
@@ -4365,8 +4365,6 @@ class Document : public nsINode,
   friend class mozAutoSubtreeModified;
 
   virtual Element* GetNameSpaceElement() override { return GetRootElement(); }
-
-  void SetContentTypeInternal(const nsACString& aType);
 
   nsCString GetContentTypeInternal() const { return mContentType; }
 

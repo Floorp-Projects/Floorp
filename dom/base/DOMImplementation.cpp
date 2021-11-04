@@ -108,11 +108,11 @@ nsresult DOMImplementation::CreateDocument(const nsAString& aNamespaceURI,
   // document to the new instance.
 
   if (aNamespaceURI.EqualsLiteral("http://www.w3.org/1999/xhtml")) {
-    doc->SetContentType(u"application/xhtml+xml"_ns);
+    doc->SetContentType("application/xhtml+xml"_ns);
   } else if (aNamespaceURI.EqualsLiteral("http://www.w3.org/2000/svg")) {
-    doc->SetContentType(u"image/svg+xml"_ns);
+    doc->SetContentType("image/svg+xml"_ns);
   } else {
-    doc->SetContentType(u"application/xml"_ns);
+    doc->SetContentType("application/xml"_ns);
   }
 
   doc->SetReadyStateInternal(Document::READYSTATE_COMPLETE);
