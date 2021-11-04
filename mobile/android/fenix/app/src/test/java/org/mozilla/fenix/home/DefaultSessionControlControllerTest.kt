@@ -29,6 +29,7 @@ import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.tabs.TabsUseCases
@@ -840,6 +841,27 @@ class DefaultSessionControlControllerTest {
         }
         verify {
             metrics.track(Event.RecentTabsSectionIsVisible)
+        }
+    }
+
+    @Test
+    fun `WHEN handleReportSessionMetrics is called AND there are zero recent bookmarks THEN report Event#RecentBookmarkCount(0)`() {
+        every { homeFragmentState.recentBookmarks } returns emptyList()
+        every { homeFragmentState.recentTabs } returns emptyList()
+        createController().handleReportSessionMetrics(homeFragmentState)
+        verify {
+            metrics.track(Event.RecentBookmarkCount(0))
+        }
+    }
+
+    @Test
+    fun `WHEN handleReportSessionMetrics is called AND there is at least one recent bookmark THEN report Event#RecentBookmarkCount(1)`() {
+        val recentBookmark: BookmarkNode = mockk(relaxed = true)
+        every { homeFragmentState.recentBookmarks } returns listOf(recentBookmark)
+        every { homeFragmentState.recentTabs } returns emptyList()
+        createController().handleReportSessionMetrics(homeFragmentState)
+        verify {
+            metrics.track(Event.RecentBookmarkCount(1))
         }
     }
 

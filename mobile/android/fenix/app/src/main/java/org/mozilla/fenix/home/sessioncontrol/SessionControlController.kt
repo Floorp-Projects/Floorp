@@ -604,9 +604,13 @@ class DefaultSessionControlController(
     }
 
     override fun handleReportSessionMetrics(state: HomeFragmentState) {
-        metrics.track(
-            if (state.recentTabs.isEmpty()) Event.RecentTabsSectionIsNotVisible
-            else Event.RecentTabsSectionIsVisible
-        )
+        with(metrics) {
+            track(
+                if (state.recentTabs.isEmpty()) Event.RecentTabsSectionIsNotVisible
+                else Event.RecentTabsSectionIsVisible
+            )
+
+            track(Event.RecentBookmarkCount(state.recentBookmarks.size))
+        }
     }
 }

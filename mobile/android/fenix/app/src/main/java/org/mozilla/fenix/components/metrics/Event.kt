@@ -275,6 +275,7 @@ sealed class Event {
     object BookmarkClicked : Event()
     object ShowAllBookmarks : Event()
     object RecentBookmarksShown : Event()
+    data class RecentBookmarkCount(val count: Int) : Event()
 
     // Recently visited/Recent searches
     object RecentSearchesGroupDeleted : Event()
