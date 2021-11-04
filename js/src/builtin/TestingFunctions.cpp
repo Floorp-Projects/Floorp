@@ -55,7 +55,9 @@
 #ifdef DEBUG
 #  include "frontend/TokenStream.h"
 #endif
-#include "frontend/BytecodeCompilation.h"  // frontend::CanLazilyParse
+#include "frontend/BytecodeCompilation.h"  // frontend::CanLazilyParse,
+// frontend::CompileGlobalScriptToExtensibleStencil,
+// frontend::DelazifyCanonicalScriptedFunction
 #include "frontend/BytecodeCompiler.h"  // frontend::ParseModuleToExtensibleStencil
 #include "frontend/CompilationStencil.h"  // frontend::CompilationStencil
 #include "gc/Allocator.h"
@@ -6035,6 +6037,118 @@ static bool CompileToStencil(JSContext* cx, uint32_t argc, Value* vp) {
   return true;
 }
 
+static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
+                                           Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (!args.requireAtLeast(cx, "CompileAndDelazifyAllToStencil", 1)) {
+    return false;
+  }
+
+  RootedString src(cx, ToString<CanGC>(cx, args[0]));
+  if (!src) {
+    return false;
+  }
+
+  /* Linearize the string to obtain a char16_t* range. */
+  AutoStableStringChars linearChars(cx);
+  if (!linearChars.initTwoByte(cx, src)) {
+    return false;
+  }
+  JS::SourceText<char16_t> srcBuf;
+  if (!srcBuf.init(cx, linearChars.twoByteChars(), src->length(),
+                   JS::SourceOwnership::Borrowed)) {
+    return false;
+  }
+
+  CompileOptions options(cx);
+  UniqueChars fileNameBytes;
+  if (args.length() == 2) {
+    if (!args[1].isObject()) {
+      JS_ReportErrorASCII(
+          cx, "compileAllToStencil: The 2nd argument must be an object");
+      return false;
+    }
+
+    RootedObject opts(cx, &args[1].toObject());
+
+    if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
+      return false;
+    }
+  }
+  if (options.forceFullParse()) {
+    JS_ReportErrorASCII(
+        cx,
+        "compileAndDelazifyAll: forceFullParse inhibit the delazify-all part.");
+    return false;
+  }
+
+  ScopeKind scopeKind =
+      options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
+
+  using namespace frontend;
+  Rooted<CompilationInput> input(cx, CompilationInput(options));
+
+  UniquePtr<ExtensibleCompilationStencil> topLevelStencil =
+      CompileGlobalScriptToExtensibleStencil(cx, input.get(), srcBuf,
+                                             scopeKind);
+  if (!topLevelStencil) {
+    return false;
+  }
+
+  // Iterate over all inner functions and compile them to stencil as well.
+  uint32_t nScripts = topLevelStencil->scriptData.length();
+  CompilationStencilMerger merger;
+  if (!merger.setInitial(cx, std::move(topLevelStencil))) {
+    return false;
+  }
+
+  // Start at 1, as the script 0 is the top-level.
+  for (uint32_t index = 1; index < nScripts; index++) {
+    UniquePtr<CompilationStencil> innerStencil;
+    {
+      BorrowingCompilationStencil borrow(merger.getResult());
+      ScriptIndex scriptIndex{index};
+      ScriptStencilRef scriptRef{borrow, scriptIndex};
+      if (scriptRef.scriptData().isGhost()) {
+        // Skip artifact introduced when parsing arrow functions.
+        continue;
+      }
+      if (scriptRef.scriptData().hasSharedData()) {
+        // Skip eagerly compiled inner functions.
+        continue;
+      }
+
+      innerStencil = DelazifyCanonicalScriptedFunction(cx, borrow, scriptIndex);
+      if (!innerStencil) {
+        return false;
+      }
+    }
+
+    if (!merger.addDelazification(cx, *innerStencil.get())) {
+      return false;
+    }
+  }
+
+  UniquePtr<CompilationStencil> result =
+      cx->make_unique<CompilationStencil>(input.get().source);
+  if (!result) {
+    return false;
+  }
+  if (!result->steal(cx, std::move(merger.getResult()))) {
+    return false;
+  }
+
+  Rooted<js::StencilObject*> stencilObj(
+      cx, js::StencilObject::create(cx, do_AddRef(result.release())));
+  if (!stencilObj) {
+    return false;
+  }
+
+  args.rval().setObject(*stencilObj);
+  return true;
+}
+
 static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -8579,6 +8693,12 @@ JS_FN_HELP("isSmallFunction", IsSmallFunction, 1, 0,
 "  Parses the given string argument as js script, produces the stencil"
 "  for it, XDR-encodes the stencil, and returns an object that contains the"
 "  XDR buffer."),
+
+    JS_FN_HELP("compileAndDelazifyAllToStencil",
+               CompileAndDelazifyAllToStencil, 1, 0,
+"compileAndDelazifyAllToStencil(string)",
+"  Parses the given string argument as js script, returns the stencil"
+"  for the top-level and all delazified inner functions."),
 
     JS_FN_HELP("evalStencilXDR", EvalStencilXDR, 1, 0,
 "evalStencilXDR(stencilXDR, [options])",
