@@ -688,7 +688,10 @@ bool GlobalStyleSheetCache::AffectedByPref(const nsACString& aPref) {
 bool GlobalStyleSheetCache::ShareToProcess(base::ProcessId aProcessId,
                                            base::SharedMemoryHandle* aHandle) {
   MOZ_ASSERT(XRE_IsParentProcess());
-  return sSharedMemory && sSharedMemory->ShareToProcess(aProcessId, aHandle);
+  if (sSharedMemory) {
+    *aHandle = sSharedMemory->CloneHandle();
+  }
+  return !!*aHandle;
 }
 
 StaticRefPtr<GlobalStyleSheetCache> GlobalStyleSheetCache::gStyleCache;
