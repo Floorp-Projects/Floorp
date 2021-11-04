@@ -60,6 +60,7 @@ namespace frontend {
 struct CompilationAtomCache;
 struct CompilationStencilMerger;
 class ScopeStencil;
+struct ScopeStencilRef;
 class ParserAtom;
 }  // namespace frontend
 
@@ -1640,8 +1641,8 @@ class AbstractBindingIter<JSAtom> : public BaseAbstractBindingIter<JSAtom> {
   using Base = BaseAbstractBindingIter<JSAtom>;
 
  public:
-  AbstractBindingIter<JSAtom>(ScopeKind kind, BaseScopeData* data,
-                              uint32_t firstFrameSlot);
+  AbstractBindingIter(ScopeKind kind, BaseScopeData* data,
+                      uint32_t firstFrameSlot);
 
   explicit AbstractBindingIter<JSAtom>(Scope* scope);
   explicit AbstractBindingIter<JSAtom>(JSScript* script);
@@ -1657,6 +1658,8 @@ class AbstractBindingIter<frontend::TaggedParserAtomIndex>
   using Base = BaseAbstractBindingIter<frontend::TaggedParserAtomIndex>;
 
  public:
+  explicit AbstractBindingIter(const frontend::ScopeStencilRef& ref);
+
   using Base::Base;
 };
 

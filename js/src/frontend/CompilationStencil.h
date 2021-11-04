@@ -59,6 +59,7 @@ struct CompilationStencil;
 struct CompilationGCOutput;
 class ScriptStencilIterable;
 class ParserAtomsTable;
+struct InputName;
 
 // Reference to a Scope within a CompilationStencil.
 struct ScopeStencilRef {
@@ -276,6 +277,7 @@ class InputScript {
         });
   }
 
+  InputName displayAtom() const;
   void trace(JSTracer* trc);
   bool isNull() const {
     return script_.match([](const BaseScript* ptr) { return !ptr; },
@@ -327,6 +329,55 @@ class MOZ_STACK_CLASS InputScopeIter {
   }
 
   void trace(JSTracer* trc) { scope_.trace(trc); }
+};
+
+// Reference to a Binding Name within an existing CompilationStencil.
+// TaggedParserAtomIndex are in some cases indexes in the parserAtomData of the
+// CompilationStencil.
+struct NameStencilRef {
+  const CompilationStencil& context_;
+  const TaggedParserAtomIndex atomIndex_;
+};
+
+// Wraps a name for a CompilationInput. The name is either as a GC pointer to
+// a JSAtom, or a TaggedParserAtomIndex which might reference to a non-included.
+//
+// The constructor for this class are using an InputScope as argument. This
+// InputScope is made to fetch back the CompilationStencil associated with the
+// TaggedParserAtomIndex when using a Stencil as input.
+struct InputName {
+  using InputNameStorage = mozilla::Variant<JSAtom*, NameStencilRef>;
+  InputNameStorage variant_;
+
+  InputName(Scope*, JSAtom* ptr) : variant_(ptr) {}
+  InputName(const ScopeStencilRef& scope, TaggedParserAtomIndex index)
+      : variant_(NameStencilRef{scope.context_, index}) {}
+  InputName(BaseScript*, JSAtom* ptr) : variant_(ptr) {}
+  InputName(const ScriptStencilRef& script, TaggedParserAtomIndex index)
+      : variant_(NameStencilRef{script.context_, index}) {}
+
+  // The InputName is either from an instantiated name, or from another
+  // CompilationStencil. This method interns the current name in the parser atom
+  // table of a CompilationState, which has a corresponding CompilationInput.
+  TaggedParserAtomIndex internInto(JSContext* cx, ParserAtomsTable& parserAtoms,
+                                   CompilationAtomCache& atomCache);
+
+  // Compare an InputName, which is not yet interned, with `other` is either an
+  // interned name or a well-known or static string.
+  //
+  // The `otherCached` argument should be a reference to a JSAtom*, initialized
+  // to nullptr, which is used to cache the JSAtom representation of the `other`
+  // argument if needed. If a different `other` parameter is provided, the
+  // `otherCached` argument should be reset to nullptr.
+  bool isEqualTo(JSContext* cx, ParserAtomsTable& parserAtoms,
+                 CompilationAtomCache& atomCache, TaggedParserAtomIndex other,
+                 JSAtom** otherCached) const;
+
+  bool isNull() const {
+    return variant_.match(
+        [](JSAtom* ptr) { return !ptr; },
+        [](const NameStencilRef& ref) { return !ref.atomIndex_; });
+  }
 };
 
 // ScopeContext holds information derived from the scope and environment chains

@@ -673,6 +673,19 @@ class ParserAtomsTable {
   TaggedParserAtomIndex internExternalParserAtom(JSContext* cx,
                                                  const ParserAtom* atom);
 
+  // The atomIndex given as argument is in relation with the context Stencil.
+  // The atomIndex might be a well-known or static, in which case this function
+  // is a no-op.
+  TaggedParserAtomIndex internExternalParserAtomIndex(
+      JSContext* cx, const CompilationStencil& context,
+      TaggedParserAtomIndex atomIndex);
+
+  // Compare an internal atom index with an external atom index coming from the
+  // stencil given as argument.
+  bool isEqualToExternalParserAtomIndex(TaggedParserAtomIndex internal,
+                                        const CompilationStencil& context,
+                                        TaggedParserAtomIndex external) const;
+
   bool addPlaceholder(JSContext* cx);
 
  private:
