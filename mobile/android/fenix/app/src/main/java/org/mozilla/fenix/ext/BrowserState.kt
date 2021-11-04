@@ -11,9 +11,21 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.feature.tabs.ext.hasMediaPlayed
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.tabstray.browser.TabGroup
-import org.mozilla.fenix.tabstray.browser.maxActiveTime
 import org.mozilla.fenix.tabstray.ext.isNormalTabActiveWithSearchTerm
+import org.mozilla.fenix.tabstray.ext.isNormalTabInactive
+import org.mozilla.fenix.utils.Settings
+import java.util.concurrent.TimeUnit
 import kotlin.math.max
+
+/**
+ * The time until which a tab is considered in-active (in days).
+ */
+const val DEFAULT_ACTIVE_DAYS = 14L
+
+/**
+ * The maximum time from when a tab was created or accessed until it is considered "inactive".
+ */
+val maxActiveTime = TimeUnit.DAYS.toMillis(DEFAULT_ACTIVE_DAYS)
 
 /**
  * Get the last opened normal tab, last tab with in progress media and last search term group, if available.
@@ -108,4 +120,24 @@ fun List<TabSessionState>.toSearchGroup(
     val remainderTabs = (groupings - groups).flatMap { it.tabs }
 
     return groups to remainderTabs
+}
+
+/**
+ * List of all inactive tabs based on [maxActiveTime].
+ * The user may have disabled the feature so for user interactions consider using the [actualInactiveTabs] method
+ * or an in place check of the feature status.
+ */
+val BrowserState.potentialInactiveTabs: List<TabSessionState>
+    get() = normalTabs.filter { it.isNormalTabInactive(maxActiveTime) }
+
+/**
+ * List of all inactive tabs based on [maxActiveTime].
+ * The result will be always be empty if the user disabled the feature.
+ */
+fun BrowserState.actualInactiveTabs(settings: Settings): List<TabSessionState> {
+    return if (settings.inactiveTabsAreEnabled) {
+        potentialInactiveTabs
+    } else {
+        emptyList()
+    }
 }

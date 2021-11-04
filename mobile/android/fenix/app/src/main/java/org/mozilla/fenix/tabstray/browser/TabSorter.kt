@@ -10,6 +10,7 @@ import mozilla.components.browser.tabstray.TabsTray
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.ext.maxActiveTime
 import org.mozilla.fenix.ext.toSearchGroup
 import org.mozilla.fenix.tabstray.ext.browserAdapter
 import org.mozilla.fenix.tabstray.ext.hasSearchTerm

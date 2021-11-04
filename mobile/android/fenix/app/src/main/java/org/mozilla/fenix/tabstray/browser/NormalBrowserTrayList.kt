@@ -11,21 +11,11 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.maxActiveTime
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.tabstray.ext.browserAdapter
 import org.mozilla.fenix.tabstray.ext.inactiveTabsAdapter
 import org.mozilla.fenix.tabstray.ext.isNormalTabInactive
-import java.util.concurrent.TimeUnit
-
-/**
- * The time until which a tab is considered in-active (in days).
- */
-const val DEFAULT_ACTIVE_DAYS = 14L
-
-/**
- * The maximum time from when a tab was created or accessed until it is considered "inactive".
- */
-val maxActiveTime = TimeUnit.DAYS.toMillis(DEFAULT_ACTIVE_DAYS)
 
 class NormalBrowserTrayList @JvmOverloads constructor(
     context: Context,

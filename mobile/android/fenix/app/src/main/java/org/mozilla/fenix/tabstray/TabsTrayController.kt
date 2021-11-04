@@ -21,8 +21,8 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.home.HomeFragment
-import org.mozilla.fenix.tabstray.browser.DEFAULT_ACTIVE_DAYS
-import org.mozilla.fenix.tabstray.ext.inactiveTabs
+import org.mozilla.fenix.ext.DEFAULT_ACTIVE_DAYS
+import org.mozilla.fenix.ext.potentialInactiveTabs
 import java.util.concurrent.TimeUnit
 
 interface TabsTrayController {
@@ -218,7 +218,7 @@ class DefaultTabsTrayController(
 
     override fun handleDeleteAllInactiveTabs() {
         metrics.track(Event.TabsTrayCloseAllInactiveTabs)
-        browserStore.state.inactiveTabs.map { it.id }.let {
+        browserStore.state.potentialInactiveTabs.map { it.id }.let {
             tabsUseCases.removeTabs(it)
         }
         showUndoSnackbarForTab(false)

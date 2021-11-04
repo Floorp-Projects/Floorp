@@ -33,8 +33,8 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.home.HomeFragment
-import org.mozilla.fenix.tabstray.browser.maxActiveTime
-import org.mozilla.fenix.tabstray.ext.inactiveTabs
+import org.mozilla.fenix.ext.maxActiveTime
+import org.mozilla.fenix.ext.potentialInactiveTabs
 
 class DefaultTabsTrayControllerTest {
     @MockK(relaxed = true)
@@ -409,7 +409,7 @@ class DefaultTabsTrayControllerTest {
         every { browserStore.state } returns mockk()
         try {
             mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
-            every { browserStore.state.inactiveTabs } returns listOf(inactiveTab)
+            every { browserStore.state.potentialInactiveTabs } returns listOf(inactiveTab)
 
             controller.handleDeleteAllInactiveTabs()
 
@@ -433,7 +433,7 @@ class DefaultTabsTrayControllerTest {
         every { browserStore.state } returns mockk()
         try {
             mockkStatic("mozilla.components.browser.state.selector.SelectorsKt")
-            every { browserStore.state.inactiveTabs } returns listOf(inactiveTab)
+            every { browserStore.state.potentialInactiveTabs } returns listOf(inactiveTab)
 
             createController().handleDeleteAllInactiveTabs()
 

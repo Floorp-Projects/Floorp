@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ext
 
+import io.mockk.every
 import io.mockk.mockk
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.LastMediaAccessState
@@ -11,8 +12,10 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.concept.storage.HistoryMetadataKey
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mozilla.fenix.home.recenttabs.RecentTab
+import org.mozilla.fenix.utils.Settings
 
 class BrowserStateTest {
 
@@ -317,5 +320,97 @@ class BrowserStateTest {
             tabs = listOf(normalTab1, normalTab2, normalTab3, normalTab4),
         )
         assertEquals(normalTab3.id, browserState.secondToLastOpenedNormalTab!!.id)
+    }
+
+    @Test
+    fun `GIVEN a list of tabs WHEN potentialInactiveTabs is called THEN return the normal tabs which haven't been active lately`() {
+        // An inactive tab is one created or accessed more than [maxActiveTime] ago
+        // checked against [System.currentTimeMillis]
+        //
+        // createTab() sets the [createdTime] property to [System.currentTimeMillis] this meaning
+        // that the default tab is considered active.
+
+        val normalTab1 = createTab(url = "url1", id = "1", createdAt = 1)
+        val normalTab2 = createTab(url = "url2", id = "2")
+        val normalTab3 = createTab(url = "url3", id = "3", createdAt = 1)
+        val normalTab4 = createTab(url = "url4", id = "4")
+        val privateTab1 = createTab(url = "url1", id = "6", private = true)
+        val privateTab2 = createTab(url = "url2", id = "7", private = true, createdAt = 1)
+        val privateTab3 = createTab(url = "url3", id = "8", private = true)
+        val privateTab4 = createTab(url = "url4", id = "9", private = true, createdAt = 1)
+        val browserState = BrowserState(
+            tabs = listOf(
+                normalTab1, normalTab2, normalTab3, normalTab4,
+                privateTab1, privateTab2, privateTab3, privateTab4
+            )
+        )
+
+        val result = browserState.potentialInactiveTabs
+
+        assertEquals(2, result.size)
+        assertTrue(result.containsAll(listOf(normalTab1, normalTab3)))
+    }
+
+    @Test
+    fun `GIVEN inactiveTabs feature is disabled WHEN actualInactiveTabs is called THEN return an empty result`() {
+        // An inactive tab is one created or accessed more than [maxActiveTime] ago
+        // checked against [System.currentTimeMillis]
+        //
+        // createTab() sets the [createdTime] property to [System.currentTimeMillis] this meaning
+        // that the default tab is considered active.
+
+        val normalTab1 = createTab(url = "url1", id = "1", createdAt = 1)
+        val normalTab2 = createTab(url = "url2", id = "2")
+        val normalTab3 = createTab(url = "url3", id = "3", createdAt = 1)
+        val normalTab4 = createTab(url = "url4", id = "4")
+        val privateTab1 = createTab(url = "url1", id = "6", private = true)
+        val privateTab2 = createTab(url = "url2", id = "7", private = true, createdAt = 1)
+        val privateTab3 = createTab(url = "url3", id = "8", private = true)
+        val privateTab4 = createTab(url = "url4", id = "9", private = true, createdAt = 1)
+        val browserState = BrowserState(
+            tabs = listOf(
+                normalTab1, normalTab2, normalTab3, normalTab4,
+                privateTab1, privateTab2, privateTab3, privateTab4
+            )
+        )
+        val settings: Settings = mockk() {
+            every { inactiveTabsAreEnabled } returns false
+        }
+
+        val result = browserState.actualInactiveTabs(settings)
+
+        assertTrue(result.isEmpty())
+    }
+
+    @Test
+    fun `GIVEN inactiveTabs feature is enabled WHEN actualInactiveTabs is called THEN return the normal tabs which haven't been active lately`() {
+        // An inactive tab is one created or accessed more than [maxActiveTime] ago
+        // checked against [System.currentTimeMillis]
+        //
+        // createTab() sets the [createdTime] property to [System.currentTimeMillis] this meaning
+        // that the default tab is considered active.
+
+        val normalTab1 = createTab(url = "url1", id = "1", createdAt = 1)
+        val normalTab2 = createTab(url = "url2", id = "2")
+        val normalTab3 = createTab(url = "url3", id = "3", createdAt = 1)
+        val normalTab4 = createTab(url = "url4", id = "4")
+        val privateTab1 = createTab(url = "url1", id = "6", private = true)
+        val privateTab2 = createTab(url = "url2", id = "7", private = true, createdAt = 1)
+        val privateTab3 = createTab(url = "url3", id = "8", private = true)
+        val privateTab4 = createTab(url = "url4", id = "9", private = true, createdAt = 1)
+        val browserState = BrowserState(
+            tabs = listOf(
+                normalTab1, normalTab2, normalTab3, normalTab4,
+                privateTab1, privateTab2, privateTab3, privateTab4
+            )
+        )
+        val settings: Settings = mockk() {
+            every { inactiveTabsAreEnabled } returns true
+        }
+
+        val result = browserState.actualInactiveTabs(settings)
+
+        assertEquals(2, result.size)
+        assertTrue(result.containsAll(listOf(normalTab1, normalTab3)))
     }
 }

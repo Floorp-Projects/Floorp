@@ -21,11 +21,11 @@ import org.mozilla.fenix.tabstray.TabsTrayAction
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.browser.containsTabId
-import org.mozilla.fenix.tabstray.browser.maxActiveTime
+import org.mozilla.fenix.ext.maxActiveTime
 import org.mozilla.fenix.tabstray.ext.browserAdapter
 import org.mozilla.fenix.tabstray.ext.defaultBrowserLayoutColumns
 import org.mozilla.fenix.tabstray.ext.getNormalTrayTabs
-import org.mozilla.fenix.tabstray.ext.inactiveTabs
+import org.mozilla.fenix.ext.potentialInactiveTabs
 import org.mozilla.fenix.tabstray.ext.titleHeaderAdapter
 import org.mozilla.fenix.tabstray.ext.inactiveTabsAdapter
 import org.mozilla.fenix.tabstray.ext.isNormalTabActiveWithSearchTerm
@@ -92,7 +92,7 @@ class NormalBrowserPageViewHolder(
 
         // Update tabs into the inactive adapter.
         if (inactiveTabsAreEnabled && selectedTab.isNormalTabInactive(maxActiveTime)) {
-            val inactiveTabsList = browserStore.state.inactiveTabs
+            val inactiveTabsList = browserStore.state.potentialInactiveTabs
             // We want to expand the inactive section first before we want to fire our scroll observer.
 
             appStore.dispatch(AppAction.UpdateInactiveExpanded(true))
