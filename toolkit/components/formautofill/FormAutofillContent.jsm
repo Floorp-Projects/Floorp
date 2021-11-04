@@ -274,26 +274,15 @@ AutofillProfileAutoCompleteSearch.prototype = {
     }
 
     Promise.resolve(pendingSearchResult).then(result => {
-      // Reset AutoCompleteController's state at the end of startSearch to ensure that
-      // none of form autofill result will be cached in other places and make the
-      // result out of sync. But don't reset state when returning non-autofill results
-      // such as the form history fallback above.
-      if (isFormAutofillSearch) {
-        autocompleteController.resetInternalState();
-      }
-
-      // If the search is cancelled, don't notify the result. We can also skip clearing
-      // cache result here because it is already cleared while stopping the search.
-      if (this.forceStop) {
-        return;
-      }
-
       listener.onSearchResult(this, result);
-
-      // Don't save cache results when returning non-autofill results such as the
+      // Don't save cache results or reset state when returning non-autofill results such as the
       // form history fallback above.
       if (isFormAutofillSearch) {
         ProfileAutocomplete.lastProfileAutoCompleteResult = result;
+        // Reset AutoCompleteController's state at the end of startSearch to ensure that
+        // none of form autofill result will be cached in other places and make the
+        // result out of sync.
+        autocompleteController.resetInternalState();
       } else {
         // Clear the cache so that we don't try to autofill from it after falling
         // back to form history.
