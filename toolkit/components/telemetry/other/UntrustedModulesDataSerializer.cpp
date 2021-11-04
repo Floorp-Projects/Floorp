@@ -74,9 +74,7 @@ static bool AddLengthLimitedStringProp(JSContext* cx, JS::HandleObject aObj,
 
 static JSString* ModuleVersionToJSString(JSContext* aCx,
                                          const ModuleVersion& aVersion) {
-  uint16_t major, minor, patch, build;
-
-  Tie(major, minor, patch, build) = aVersion.AsTuple();
+  auto [major, minor, patch, build] = aVersion.AsTuple();
 
   constexpr auto dot = u"."_ns;
 

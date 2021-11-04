@@ -79,12 +79,12 @@ class TNotification : public Notification {
 
   template <size_t... Indices>
   void ProcessHelper(std::index_sequence<Indices...>) {
-    (mInstance->*mCallback)(Get<Indices>(mArgs)...);
+    (mInstance->*mCallback)(std::get<Indices>(mArgs)...);
   }
 
   Class* mInstance;
   Callback mCallback;
-  Tuple<RefPtr<Args>...> mArgs;
+  std::tuple<RefPtr<Args>...> mArgs;
 };
 
 /**
