@@ -66,6 +66,17 @@ ExtensionPreferencesManager.addSetting("network.networkPredictionEnabled", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("network.globalPrivacyControl", {
+  permission: "privacy",
+  prefNames: ["privacy.globalprivacycontrol.enabled"],
+
+  setCallback(value) {
+    return {
+      "privacy.globalprivacycontrol.enabled": value,
+    };
+  },
+});
+
 ExtensionPreferencesManager.addSetting("network.httpsOnlyMode", {
   permission: "privacy",
   prefNames: [
@@ -336,6 +347,14 @@ this.privacy = class extends ExtensionAPI {
                 !getBoolPref("network.dns.disablePrefetch")
               );
             },
+          }),
+          globalPrivacyControl: getSettingsAPI({
+            context,
+            name: "network.globalPrivacyControl",
+            callback() {
+              return getBoolPref("privacy.globalprivacycontrol.enabled");
+            },
+            readOnly: true,
           }),
           httpsOnlyMode: getSettingsAPI({
             context,

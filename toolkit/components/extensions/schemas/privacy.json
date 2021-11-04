@@ -90,6 +90,10 @@
       "httpsOnlyMode": {
         "$ref": "types.Setting",
         "description": "Allow users to query the mode for 'HTTPS-Only Mode'. This setting's value is of type HTTPSOnlyModeOption, defaulting to <code>never</code>."
+      },
+      "globalPrivacyControl": {
+        "$ref": "types.Setting",
+        "description": "Allow users to query the status of 'Global Privacy Control'. This setting's value is of type boolean, defaulting to <code>false</code>."
       }
     }
   },
