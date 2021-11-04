@@ -9,6 +9,7 @@
 
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
+#include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions, JS::InstantiateOptions
 #include "js/GCVector.h"        // JS::GCVector
 #include "js/SourceText.h"  // JS::SourceText
@@ -77,6 +78,9 @@ extern JSScript* CompileEvalScript(JSContext* cx,
 
 extern bool DelazifyCanonicalScriptedFunction(JSContext* cx,
                                               JS::Handle<JSFunction*> fun);
+
+extern UniquePtr<CompilationStencil> DelazifyCanonicalScriptedFunction(
+    JSContext* cx, CompilationStencil& context, ScriptIndex scriptIndex);
 
 // Certain compile options will disable the syntax parser entirely.
 inline bool CanLazilyParse(const JS::ReadOnlyCompileOptions& options) {
