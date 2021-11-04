@@ -6013,12 +6013,12 @@
 
           browser.droppedLinkHandler = oldDroppedLinkHandler;
 
-          // This shouldn't really be necessary (it should always set the same
-          // value as activeness is correctly preserved across remoteness changes).
-          // However, this has the side effect of sending MozLayerTreeReady /
-          // MozLayerTreeCleared events for remote frames, which the tab switcher
-          // depends on.
-          browser.docShellIsActive = this.shouldActivateDocShell(browser);
+          // This shouldn't really be necessary, however, this has the side effect
+          // of sending MozLayerTreeReady / MozLayerTreeCleared events for remote
+          // frames, which the tab switcher depends on.
+          //
+          // eslint-disable-next-line no-self-assign
+          browser.docShellIsActive = browser.docShellIsActive;
 
           // Create a new tab progress listener for the new browser we just
           // injected, since tab progress listeners have logic for handling the
