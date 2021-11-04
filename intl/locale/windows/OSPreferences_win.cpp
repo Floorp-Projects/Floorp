@@ -5,8 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "OSPreferences.h"
+#include "mozilla/intl/Locale.h"
 #include "mozilla/intl/LocaleService.h"
-#include "mozilla/intl/MozLocale.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsReadableUtils.h"
 
@@ -64,12 +64,14 @@ bool OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList) {
                 // language code with no region subtag, but the
                 // GlobalizationPreferences API may give us one (e.g. "ja").
                 // So if there's no hyphen in the string at this point, we use
-                // MozLocale::Maximize to get a suitable region code to
+                // addLikelySubtags to get a suitable region code to
                 // go with it.
-                MozLocale locale(loc);
-                if (locale.Maximize() && !locale.GetRegion().IsEmpty()) {
+                Locale locale;
+                auto result = LocaleParser::tryParse(loc, locale);
+                if (result.isOk() && locale.addLikelySubtags().isOk() &&
+                    locale.region().present()) {
                   loc.Append('-');
-                  loc.Append(locale.GetRegion());
+                  loc.Append(locale.region().span());
                 }
               }
               aLocaleList.AppendElement(loc);
