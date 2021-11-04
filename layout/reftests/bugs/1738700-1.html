@@ -1,0 +1,62 @@
+<html>
+  <head>
+    <meta charset=UTF-8>
+    <title>“Amiri Quran Colored” test</title>
+    <style>
+      @font-face {
+        font-family: AmiriColored;
+        font-style: normal;
+        font-weight: 400;
+        src: url('../fonts/AmiriQuranColored.otf');
+      }
+      @font-face {
+        font-family: AmiriMonochrome;
+        font-style: normal;
+        font-weight: 400;
+        src: url('../fonts/AmiriQuran.otf');
+      }
+      .test {
+        direction: rtl;
+        text-align: justify;
+        text-align-last: center;
+        font-size: 40px;
+        margin: 1em;
+        position: absolute;
+      }
+      .colored {
+        font-family: AmiriColored;
+      }
+      .monochrome {
+        font-family: AmiriMonochrome;
+        /* Add some stroke to hide antialiased edges of the colored glyphs */
+        -webkit-text-stroke: 3px black;
+      }
+    </style>
+  </head>
+  <div>The colored Arabic text should be exactly covered by (thicker) black text:</div>
+  <div class="test colored">
+    <p>
+    ﷽ ۝١
+    <br>
+ٱلۡحَمۡدُ لِلَّهِ رَبِّ ٱلۡعَـٰلَمِینَ ۝٢
+ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ ۝٣
+مَـٰلِكِ یَوۡمِ ٱلدِّینِ ۝٤
+إِیَّاكَ نَعۡبُدُ وَإِیَّاكَ نَسۡتَعِینُ ۝٥
+ٱهۡدِنَا ٱلصِّرَ ٰطَ ٱلۡمُسۡتَقِیمَ ۝٦
+صِرَ ٰطَ ٱلَّذِینَ أَنۡعَمۡتَ عَلَیۡهِمۡ غَیۡرِ ٱلۡمَغۡضُوبِ عَلَیۡهِمۡ وَلَا ٱلضَّاۤلِّینَ ۝٧
+    </p>
+  </div>
+  <div class="test monochrome">
+    <p>
+    ﷽ ۝١
+    <br>
+ٱلۡحَمۡدُ لِلَّهِ رَبِّ ٱلۡعَـٰلَمِینَ ۝٢
+ٱلرَّحۡمَـٰنِ ٱلرَّحِیمِ ۝٣
+مَـٰلِكِ یَوۡمِ ٱلدِّینِ ۝٤
+إِیَّاكَ نَعۡبُدُ وَإِیَّاكَ نَسۡتَعِینُ ۝٥
+ٱهۡدِنَا ٱلصِّرَ ٰطَ ٱلۡمُسۡتَقِیمَ ۝٦
+صِرَ ٰطَ ٱلَّذِینَ أَنۡعَمۡتَ عَلَیۡهِمۡ غَیۡرِ ٱلۡمَغۡضُوبِ عَلَیۡهِمۡ وَلَا ٱلضَّاۤلِّینَ ۝٧
+    </p>
+  </div>
+</html>
+
