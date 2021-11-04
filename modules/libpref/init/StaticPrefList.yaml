@@ -6168,7 +6168,7 @@
 
 - name: javascript.options.wasm_caching
   type: bool
-  value: true
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # The amount of time we wait between a request to GC (due to leaving a page) and doing the actual GC, in ms.
