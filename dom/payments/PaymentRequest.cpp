@@ -15,8 +15,8 @@
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/UserActivation.h"
 #include "mozilla/dom/WindowContext.h"
+#include "mozilla/intl/Locale.h"
 #include "mozilla/intl/LocaleService.h"
-#include "mozilla/intl/MozLocale.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsContentUtils.h"
 #include "nsIDUtils.h"
@@ -95,8 +95,10 @@ bool PaymentRequest::PrefEnabled(JSContext* aCx, JSObject* aObj) {
   }
   nsAutoCString locale;
   LocaleService::GetInstance()->GetAppLocaleAsBCP47(locale);
-  mozilla::intl::MozLocale loc = mozilla::intl::MozLocale(locale);
-  if (!(loc.GetLanguage() == "en" && loc.GetRegion() == "US")) {
+  mozilla::intl::Locale loc;
+  auto result = mozilla::intl::LocaleParser::tryParse(locale, loc);
+  if (!(result.isOk() && loc.canonicalize().isOk() &&
+        loc.language().equalTo("en") && loc.region().equalTo("US"))) {
     return false;
   }
 
