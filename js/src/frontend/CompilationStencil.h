@@ -483,12 +483,12 @@ struct ScopeContext {
       TaggedParserAtomIndex name);
 
  private:
-  void computeThisBinding(Scope* scope);
+  void computeThisBinding(const InputScope& scope);
   void computeThisEnvironment(Scope* enclosingScope);
   void computeInScope(Scope* enclosingScope);
   void cacheEnclosingScope(Scope* enclosingScope);
 
-  Scope* determineEffectiveScope(Scope* scope, JSObject* environment);
+  InputScope determineEffectiveScope(InputScope& scope, JSObject* environment);
 
   bool cachePrivateFieldsForEval(JSContext* cx, CompilationInput& input,
                                  JSObject* enclosingEnvironment,
