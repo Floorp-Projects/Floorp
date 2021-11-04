@@ -260,11 +260,7 @@ def _activate_python_environment(topsrcdir, state_dir):
             # (optional) dependencies are not installed.
             _scrub_system_site_packages()
 
-        sys.path[0:0] = [
-            os.path.join(topsrcdir, pth.path)
-            for pth in requirements.pth_requirements
-            + requirements.vendored_requirements
-        ]
+        sys.path[0:0] = requirements.pths_as_absolute(topsrcdir)
     elif is_mach_virtualenv:
         # We're running in the Mach virtualenv - check that it's up-to-date.
         # Note that the "pip package check" exists to ensure that a virtualenv isn't
@@ -284,11 +280,7 @@ def _activate_python_environment(topsrcdir, state_dir):
         # Remove global site packages from sys.path to improve isolation accordingly.
         _scrub_system_site_packages()
 
-        sys.path[0:0] = [
-            os.path.join(topsrcdir, pth.path)
-            for pth in requirements.pth_requirements
-            + requirements.vendored_requirements
-        ]
+        sys.path[0:0] = requirements.pths_as_absolute(topsrcdir)
 
 
 def initialize(topsrcdir):

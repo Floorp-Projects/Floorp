@@ -80,9 +80,7 @@ def python(
         )
 
         append_env["PYTHONPATH"] = os.pathsep.join(
-            os.path.join(command_context.topsrcdir, pth.path)
-            for pth in requirements.pth_requirements
-            + requirements.vendored_requirements
+            requirements.pths_as_absolute(command_context.topsrcdir)
         )
     else:
         command_context.virtualenv_manager.ensure()
