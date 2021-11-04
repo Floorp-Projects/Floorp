@@ -165,7 +165,7 @@ add_task(async function webRequest_script_request_from_file_principals() {
             redirectUrl: `data:text/javascript,location.href='${redirectUrl}';`,
           };
         },
-        { urls: ["https://example.net/intercept_by_webRequest.js"] },
+        { urls: ["http://example.net/intercept_by_webRequest.js"] },
         ["blocking"]
       );
     },
