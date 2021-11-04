@@ -1211,3 +1211,24 @@ recent_apps:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-11-01"
+
+context_menu:
+  item_tapped:
+    type: event
+    description: The user has tapped an option from context menu.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5647
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5773
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      item_name:
+        description: |
+          The name of the item that was tapped. One of the following:
+          open_in_new_tab, open_in_private_tab, open_image_in_new_tab,
+          save_image, share_link, copy_link, copy_image_location, share_image
+        type: string
