@@ -13,9 +13,14 @@ XPIDL_SOURCES += [
     "nsIDOMProcessChild.idl",
     "nsIDOMProcessParent.idl",
     "nsIHangReport.idl",
+    "nsILoginDetectionService.idl",
 ]
 
 XPIDL_MODULE = "dom"
+
+XPCOM_MANIFESTS += [
+    "components.conf",
+]
 
 EXTRA_JS_MODULES += [
     "ManifestMessagesChild.jsm",
@@ -53,6 +58,7 @@ EXPORTS.mozilla.dom += [
     "FilePickerParent.h",
     "InProcessChild.h",
     "InProcessParent.h",
+    "LoginDetectionService.h",
     "MaybeDiscarded.h",
     "MemoryReportRequest.h",
     "NativeThreadId.h",
@@ -106,6 +112,7 @@ UNIFIED_SOURCES += [
     "DocShellMessageUtils.cpp",
     "FilePickerParent.cpp",
     "InProcessImpl.cpp",
+    "LoginDetectionService.cpp",
     "MemMapSnapshot.cpp",
     "MemoryReportRequest.cpp",
     "MMPrinter.cpp",
