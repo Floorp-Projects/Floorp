@@ -1,13 +1,13 @@
-import org.gradle.api.Project
-import java.text.SimpleDateFormat
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Date
-import java.util.Locale
-
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import org.gradle.api.Project
+import org.mozilla.fenix.gradle.ext.execReadStandardOutOrThrow
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.util.Date
+import java.util.Locale
 
 object Config {
     // Synchronized build configuration for all modules
@@ -146,5 +146,23 @@ object Config {
         version = version or (1 shl 0)
 
         return version
+    }
+
+    /**
+     * Returns the git hash of the currently checked out revision. If there are uncommitted changes,
+     * a "+" will be appended to the hash, e.g. "c8ba05ad0+".
+     */
+    @JvmStatic
+    fun getGitHash(): String {
+        val revisionCmd = arrayOf("git", "rev-parse", "--short", "HEAD")
+        val revision = Runtime.getRuntime().execReadStandardOutOrThrow(revisionCmd)
+
+        // Append "+" if there are uncommitted changes in the working directory.
+        val statusCmd = arrayOf("git", "status", "--porcelain=v2")
+        val status = Runtime.getRuntime().execReadStandardOutOrThrow(statusCmd)
+        val hasUnstagedChanges = status.isNotBlank()
+        val statusSuffix = if (hasUnstagedChanges) "+" else ""
+
+        return "${revision}${statusSuffix}"
     }
 }
