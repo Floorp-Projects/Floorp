@@ -180,7 +180,7 @@ void nsHTMLDocument::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
   // Make the content type default to "text/html", we are a HTML
   // document, after all. Once we start getting data, this may be
   // changed.
-  SetContentTypeInternal(nsDependentCString("text/html"));
+  SetContentType(nsDependentCString("text/html"));
 }
 
 void nsHTMLDocument::TryReloadCharset(nsIContentViewer* aCv,

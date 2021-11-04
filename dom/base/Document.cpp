@@ -1454,7 +1454,7 @@ Document::Document(const char* aContentType)
   // property, even if use counters are disabled.
   mStyleUseCounters = Servo_UseCounters_Create().Consume();
 
-  SetContentTypeInternal(nsDependentCString(aContentType));
+  SetContentType(nsDependentCString(aContentType));
 
   // Start out mLastStyleSheetSet as null, per spec
   SetDOMStringToNull(mLastStyleSheetSet);
@@ -2845,7 +2845,7 @@ void Document::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
   mLastModified.Truncate();
   // XXXbz I guess we're assuming that the caller will either pass in
   // a channel with a useful type or call SetContentType?
-  SetContentTypeInternal(""_ns);
+  SetContentType(""_ns);
   mContentLanguage.Truncate();
   mBaseTarget.Truncate();
 
@@ -3338,7 +3338,7 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     contentType.EndReading(end);
     semicolon = start;
     FindCharInReadable(';', semicolon, end);
-    SetContentTypeInternal(Substring(start, semicolon));
+    SetContentType(Substring(start, semicolon));
   }
 
   RetrieveRelevantHeaders(aChannel);
@@ -4142,8 +4142,14 @@ void Document::GetContentType(nsAString& aContentType) {
   CopyUTF8toUTF16(GetContentTypeInternal(), aContentType);
 }
 
-void Document::SetContentType(const nsAString& aContentType) {
-  SetContentTypeInternal(NS_ConvertUTF16toUTF8(aContentType));
+void Document::SetContentType(const nsACString& aContentType) {
+  if (!IsHTMLOrXHTML() && mDefaultElementType == kNameSpaceID_None &&
+      aContentType.EqualsLiteral("application/xhtml+xml")) {
+    mDefaultElementType = kNameSpaceID_XHTML;
+  }
+
+  mCachedEncoder = nullptr;
+  mContentType = aContentType;
 }
 
 bool Document::GetAllowPlugins() {
@@ -11937,7 +11943,7 @@ nsresult Document::CloneDocHelper(Document* clone) const {
   clone->SetCompatibilityMode(mCompatMode);
   clone->mBidiOptions = mBidiOptions;
   clone->mContentLanguage = mContentLanguage;
-  clone->SetContentTypeInternal(GetContentTypeInternal());
+  clone->SetContentType(GetContentTypeInternal());
   clone->mSecurityInfo = mSecurityInfo;
 
   // State from Document
@@ -15724,16 +15730,6 @@ already_AddRefed<nsIDocumentEncoder> Document::GetCachedEncoder() {
 
 void Document::SetCachedEncoder(already_AddRefed<nsIDocumentEncoder> aEncoder) {
   mCachedEncoder = aEncoder;
-}
-
-void Document::SetContentTypeInternal(const nsACString& aType) {
-  if (!IsHTMLOrXHTML() && mDefaultElementType == kNameSpaceID_None &&
-      aType.EqualsLiteral("application/xhtml+xml")) {
-    mDefaultElementType = kNameSpaceID_XHTML;
-  }
-
-  mCachedEncoder = nullptr;
-  mContentType = aType;
 }
 
 nsILoadContext* Document::GetLoadContext() const { return mDocumentContainer; }
