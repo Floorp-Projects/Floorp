@@ -27,6 +27,8 @@
 #include "nsTArray.h"
 #include "prio.h"
 
+class nsFileStream;
+
 namespace mozilla {
 
 /**
@@ -124,6 +126,10 @@ class IOUtils final {
   static void GetProfileBeforeChange(GlobalObject& aGlobal,
                                      JS::MutableHandle<JS::Value>,
                                      ErrorResult& aRv);
+
+  static RefPtr<SyncReadFile> OpenFileForSyncReading(GlobalObject& aGlobal,
+                                                     const nsAString& aPath,
+                                                     ErrorResult& aRv);
 
   class JsBuffer;
 
@@ -669,6 +675,31 @@ class IOUtils::JsBuffer final {
   JS::UniqueChars mBuffer;
 
   JsBuffer(BufferKind aBufferKind, size_t aCapacity);
+};
+
+class SyncReadFile : public nsISupports, public nsWrapperCache {
+ public:
+  SyncReadFile(nsISupports* aParent, RefPtr<nsFileStream>&& aStream,
+               int64_t aSize);
+
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SyncReadFile)
+
+  nsISupports* GetParentObject() const { return mParent; }
+
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
+
+  int64_t Size() const { return mSize; }
+  void ReadBytesInto(const Uint8Array&, const int64_t, ErrorResult& aRv);
+  void Close();
+
+ private:
+  virtual ~SyncReadFile();
+
+  nsCOMPtr<nsISupports> mParent;
+  RefPtr<nsFileStream> mStream;
+  int64_t mSize = 0;
 };
 
 }  // namespace dom
