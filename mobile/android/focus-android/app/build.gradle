@@ -591,10 +591,10 @@ tasks.register('printVariants') {
         variants.add([
             apks: [[
                 abi: 'noarch',
-                fileName: 'app-focus-debug-androidTest.apk',
+                fileName: 'app-debug-androidTest.apk',
             ]],
-            build_type: 'debug',
-            name: 'FocusDebugAndroidTest',
+            build_type: 'androidTest',
+            name: 'androidTest',
         ])
         println 'variants: ' + JsonOutput.toJson(variants)
     }

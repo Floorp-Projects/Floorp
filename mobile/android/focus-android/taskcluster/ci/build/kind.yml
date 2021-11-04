@@ -15,7 +15,7 @@ kind-dependencies:
 job-defaults:
     apk-artifact-template:
         type: file
-        name: 'public/build/{fileName}'
+        name: 'public/build/{gradle_build}/{abi}/target.apk'
         path: '/builds/worker/checkouts/src/app/build/outputs/apk/{gradle_build}/{gradle_build_type}/{fileName}'
     fetches:
         toolchain:
@@ -92,7 +92,7 @@ jobs:
             # any tasks that have this as a primary dependency will
             # inherit this attribute via the multi_dep loader
             nightly-task: true
-        run-on-tasks-for: [github-pull-request]
+        run-on-tasks-for: []
         include-shippable-secrets: true
         run:
             gradle-build-type: nightly
@@ -105,7 +105,7 @@ jobs:
         description: 'Beta focus build'
         attributes:
             release-type: beta
-        run-on-tasks-for: [github-pull-request]
+        run-on-tasks-for: []
         include-shippable-secrets: true
         run:
             gradle-build-type: beta
@@ -113,3 +113,77 @@ jobs:
             gradle-build: focus
         treeherder:
             symbol: beta(B)
+
+    nightly-firebase:
+        description: 'Nightly build for UI tests'
+        disable-optimization: true
+        run-on-tasks-for: [github-push] # We want this on push so that we detect problem before triggering a new nightly
+        run:
+            gradle-build-type: nightly
+            gradle-build-name: focusNightly
+            gradle-build: focus
+            test-build-type: nightly
+        treeherder:
+            symbol: nightly(Bf)
+
+    beta-firebase:
+        description: 'Beta build for UI tests'
+        disable-optimization: true
+        run-on-tasks-for: [github-push] # We want this on push so that we detect problem before triggering a new nightly
+        run:
+            gradle-build-type: beta
+            gradle-build-name: focusBeta
+            gradle-build: focus
+            test-build-type: beta
+        treeherder:
+            symbol: beta(Bf)
+
+    android-test-debug:
+        description: 'Android Test for debugging'
+        attributes:
+            code-review: true
+        run-on-tasks-for: [github-pull-request, github-push]
+        run:
+            gradle-build-type: androidTest
+            gradle-build-name: androidTest
+            gradle-build: focus
+        apk-artifact-template:
+            # we override this with a generic name to make the signing kind cleaner
+            name: 'public/build/app-focus-androidTest.apk'
+            # this path is determined by the gradle build configs
+            path: '/builds/worker/checkouts/src/app/build/outputs/apk/androidTest/focus/debug/app-focus-debug-androidTest.apk'
+        treeherder:
+            symbol: debug(Bat)
+
+    # android-test-nightly and android-test-beta, while still being debug builds, are meant to be signed
+    # with the nightly/beta key. The Firebase testing infrastructure requires both the androidTest APK
+    # and the APK under test to be signed with the same key. Thus, the nightly APK being signed with
+    # nightly means we need an androidTest APK with the same signature.
+
+    android-test-nightly:
+        description: 'Nightly Android Test for debugging'
+        run-on-tasks-for: [github-push]
+        run:
+            gradle-build-type: androidTest
+            gradle-build-name: androidTest
+            gradle-build: focus
+            test-build-type: nightly
+        apk-artifact-template:
+            name: 'public/build/app-focus-androidTest.apk'
+            path: '/builds/worker/checkouts/src/app/build/outputs/apk/androidTest/focus/nightly/app-focus-nightly-androidTest.apk'
+        treeherder:
+            symbol: nightly(Bat)
+
+    android-test-beta:
+        description: 'Beta Android Test for debugging'
+        run-on-tasks-for: [github-push]
+        run:
+            gradle-build-type: androidTest
+            gradle-build-name: androidTest
+            gradle-build: focus
+            test-build-type: beta
+        apk-artifact-template:
+            name: 'public/build/app-focus-androidTest.apk'
+            path: '/builds/worker/checkouts/src/app/build/outputs/apk/androidTest/focus/beta/app-focus-beta-androidTest.apk'
+        treeherder:
+            symbol: beta(Bat)

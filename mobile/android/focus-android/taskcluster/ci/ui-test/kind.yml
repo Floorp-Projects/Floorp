@@ -17,10 +17,10 @@ job-defaults:
         build-type: debug
         code-review: true
         retrigger: true
-    fetches:
-        toolchain:
-            - android-sdk-linux
-            - android-gradle-dependencies
+    dependencies:
+        # key is arbitrary, the value corresponds to <kind name>-<build-name> 
+        signed-debug-apk: signing-focus-debug
+        signed-android-test: signing-android-test-debug
     worker-type: b-android
     worker:
         docker-image: {in-tree: ui-tests}
@@ -39,7 +39,7 @@ job-defaults:
         tier: 2
     run:
         use-caches: false
-        using: gradlew
+        using: run-commands
         dummy-secrets:
             - content: "faketoken"
               path: .adjust_token
@@ -48,17 +48,41 @@ job-defaults:
               key: firebaseToken
               path: .firebase_token.json
               json: true
-        # TODO retrieving these from two separate tasks means they're signed differently; need to create a signing
-        # dependency in order to get this working properly (signed with same key)
-        #     - [wget, {artifact-reference: '<build-debug/public/build/app-focus-x86-debug.apk>'}, '-O', app.apk]
-        #     - [wget, {artifact-reference: '<build-android-test/public/build/app-focus-debug-androidTest.apk>'}, '-O', android-test.apk]
+        commands:
+            - [wget, {artifact-reference: '<signed-debug-apk/public/build/focus/x86/target.apk>'}, '-O', app.apk]
+            - [wget, {artifact-reference: '<signed-android-test/public/build/app-focus-androidTest.apk>'}, '-O', android-test.apk]
 
 jobs:
     x86-debug:
         description: 'UI tests with firebase'
         run:
-            gradlew: ['clean', 'assembleFocusDebug', 'assembleFocusDebugAndroidTest']
-            post-gradlew:
-                - ['automation/taskcluster/androidTest/ui-test.sh', 'x86', './app/build/outputs/apk/focus/debug/app-focus-x86-debug.apk', './app/build/outputs/apk/androidTest/focus/debug/app-focus-debug-androidTest.apk', '-1']
+            commands:
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'x86', 'app.apk', 'android-test.apk', '-1']
         treeherder:
             symbol: debug(ui-test-x86)
+    x86-nightly:
+        attributes:
+            build-type: nightly-firebase
+        description: 'UI tests on Nightly with firebase'
+        run-on-tasks-for: [github-push]
+        dependencies:
+            signed-debug-apk: signing-nightly-firebase
+            signed-android-test: signing-android-test-nightly
+        run:
+            commands:
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'x86', 'app.apk', 'android-test.apk', '-1']
+        treeherder:
+            symbol: nightly(ui-test-x86-nightly)
+    x86-beta:
+        attributes:
+            build-type: nightly-firebase
+        description: 'UI tests on Nightly with firebase'
+        run-on-tasks-for: [github-push]
+        dependencies:
+            signed-debug-apk: signing-beta-firebase
+            signed-android-test: signing-android-test-beta
+        run:
+            commands:
+                - ['automation/taskcluster/androidTest/ui-test.sh', 'x86', 'app.apk', 'android-test.apk', '-1']
+        treeherder:
+            symbol: beta(ui-test-x86-beta)

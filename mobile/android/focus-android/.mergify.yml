@@ -4,11 +4,11 @@ pull_request_rules:
       - status-success=build-klar-release
       - status-success=test-debug
       # - status-success=ui-test-x86-debug
-      - status-success=build-beta
+      # - status-success=ui-test-x86-nightly
+      # - status-success=ui-test-x86-beta
       - status-success=build-focus-debug
       - status-success=build-focus-release
       - status-success=build-klar-debug
-      - status-success=build-nightly
       - status-success=lint-compare-locales
       - status-success=lint-detekt
       - status-success=lint-ktlint
@@ -25,11 +25,11 @@ pull_request_rules:
       - status-success=build-klar-release
       - status-success=test-debug
       # - status-success=ui-test-x86-debug
-      - status-success=build-beta
+      # - status-success=ui-test-x86-nightly
+      # - status-success=ui-test-x86-beta
       - status-success=build-focus-debug
       - status-success=build-focus-release
       - status-success=build-klar-debug
-      - status-success=build-nightly
       - status-success=lint-compare-locales
       - status-success=lint-detekt
       - status-success=lint-ktlint

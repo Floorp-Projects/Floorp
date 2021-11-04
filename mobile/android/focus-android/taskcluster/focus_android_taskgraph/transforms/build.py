@@ -65,6 +65,7 @@ def build_gradle_command(config, tasks):
         gradle_build_name = task["run"]["gradle-build-name"]
         variant_config = get_variant(gradle_build_type, gradle_build_name)
         variant_name = variant_config["name"][0].upper() + variant_config["name"][1:]
+
         task["run"]["gradlew"] = [
             "clean",
             f"assemble{variant_name}",
@@ -135,6 +136,7 @@ def add_artifacts(config, tasks):
             artifact_template = task.pop("apk-artifact-template")
             for apk in variant_config["apks"]:
                 apk_name = artifact_template["name"].format(
+                    gradle_build=gradle_build,
                     **apk
                 )
                 artifacts.append({
