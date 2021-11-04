@@ -19,6 +19,7 @@
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/gfx/CanvasManagerChild.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
@@ -608,15 +609,15 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
 
     ScopedGfxFeatureReporter reporter("IpcWebGL");
 
-    auto* const cbc = layers::CompositorBridgeChild::Get();
-    MOZ_ASSERT(cbc);
-    if (!cbc) {
-      return Err("!CompositorBridgeChild::Get()");
+    auto* const cm = gfx::CanvasManagerChild::Get();
+    MOZ_ASSERT(cm);
+    if (!cm) {
+      return Err("!CanvasManagerChild::Get()");
     }
 
     RefPtr<dom::WebGLChild> outOfProcess = new dom::WebGLChild(*this);
     outOfProcess =
-        static_cast<dom::WebGLChild*>(cbc->SendPWebGLConstructor(outOfProcess));
+        static_cast<dom::WebGLChild*>(cm->SendPWebGLConstructor(outOfProcess));
     if (!outOfProcess) {
       return Err("SendPWebGLConstructor failed");
     }

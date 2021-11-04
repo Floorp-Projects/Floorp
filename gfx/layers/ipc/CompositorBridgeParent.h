@@ -37,10 +37,6 @@ namespace mozilla {
 
 class CancelableRunnable;
 
-namespace dom {
-class WebGLParent;
-}  // namespace dom
-
 namespace gfx {
 class DrawTarget;
 class GPUProcessManager;
@@ -256,8 +252,6 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
   virtual mozilla::ipc::IPCResult RecvInitPCanvasParent(
       Endpoint<PCanvasParent>&& aEndpoint) = 0;
   virtual mozilla::ipc::IPCResult RecvReleasePCanvasParent() = 0;
-
-  virtual already_AddRefed<PWebGLParent> AllocPWebGLParent() = 0;
 
   bool mCanSend;
 
@@ -584,12 +578,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 
   WebRenderBridgeParent* GetWrBridge() { return mWrBridge; }
   webgpu::WebGPUParent* GetWebGPUBridge() { return mWebGPUBridge; }
-
-  already_AddRefed<PWebGLParent> AllocPWebGLParent() override {
-    MOZ_ASSERT_UNREACHABLE(
-        "This message is CrossProcessCompositorBridgeParent only");
-    return nullptr;
-  }
 
  private:
   void Initialize();

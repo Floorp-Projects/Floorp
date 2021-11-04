@@ -16,7 +16,6 @@ include protocol PCanvas;
 include protocol PCompositorManager;
 include protocol PCompositorWidget;
 include protocol PTexture;
-include protocol PWebGL;
 include protocol PWebRenderBridge;
 include protocol PWebGPU;
 include "mozilla/GfxMessageUtils.h";
@@ -99,7 +98,6 @@ struct FrameStats {
   manages PTexture;
   manages PCompositorWidget;
   manages PWebRenderBridge;
-  manages PWebGL;
   manages PWebGPU;
 
 child:
@@ -220,9 +218,6 @@ parent:
 
   // To set up sharing the composited output to Firefox Reality on Desktop
   async RequestFxrOutput();
-
-  // Actor that represents one WebGL context.
-  async PWebGL();
 };
 
 } // layers
