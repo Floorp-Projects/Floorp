@@ -163,7 +163,7 @@ bool ScopeContext::init(JSContext* cx, CompilationInput& input,
   }
   computeInScope(maybeNonDefaultEnclosingScope);
 
-  cacheEnclosingScope(InputScope(input.enclosingScope));
+  cacheEnclosingScope(input.enclosingScope);
 
   if (input.target == CompilationInput::CompilationTarget::Eval) {
     if (!cacheEnclosingScopeBindingForEval(cx, input, parserAtoms)) {
@@ -353,10 +353,10 @@ bool ScopeContext::cacheEnclosingScopeBindingForEval(
     JSContext* cx, CompilationInput& input, ParserAtomsTable& parserAtoms) {
   enclosingLexicalBindingCache_.emplace();
 
-  InputScope enclosingScope(input.enclosingScope);
-  uint32_t varScopeDepth = DepthOfNearestVarScopeForDirectEval(enclosingScope);
+  uint32_t varScopeDepth =
+      DepthOfNearestVarScopeForDirectEval(input.enclosingScope);
   uint32_t depth = 0;
-  for (InputScopeIter si(enclosingScope); si; si++) {
+  for (InputScopeIter si(input.enclosingScope); si; si++) {
     bool success = si.scope().match([&](auto& scope_ref) {
       for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
         switch (bi.kind()) {
@@ -612,8 +612,7 @@ NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
   // NameLocation which contains relative locations to access `name`.
   mozilla::Maybe<NameLocation> result;
 
-  InputScope enclosingScope(input.enclosingScope);
-  for (InputScopeIter si(enclosingScope); si; si++) {
+  for (InputScopeIter si(input.enclosingScope); si; si++) {
     MOZ_ASSERT(NameIsOnEnvironment(cx, parserAtoms, input.atomCache, si.scope(),
                                    name));
 
@@ -805,7 +804,7 @@ bool CompilationInput::initForStandaloneFunctionInNonSyntacticScope(
   if (!initScriptSource(cx)) {
     return false;
   }
-  enclosingScope = functionEnclosingScope;
+  enclosingScope = InputScope(functionEnclosingScope);
   return true;
 }
 
@@ -855,7 +854,7 @@ void InputScript::trace(JSTracer* trc) {
 void CompilationInput::trace(JSTracer* trc) {
   atomCache.trace(trc);
   TraceNullableRoot(trc, &lazy_, "compilation-input-lazy");
-  TraceNullableRoot(trc, &enclosingScope, "compilation-input-enclosing-scope");
+  enclosingScope.trace(trc);
 }
 
 bool CompilationSyntaxParseCache::init(JSContext* cx, LifoAlloc& alloc,
@@ -1059,7 +1058,14 @@ Scope* ScopeStencil::enclosingExistingScope(
     return result;
   }
 
-  return input.enclosingScope;
+  // When creating a scope based on the input and a gc-output, we assume that
+  // the scope stencil that we are looking at has not been merged into another
+  // stencil, and thus that we still have the compilation input of the stencil.
+  //
+  // Otherwise, if this was in the case of an input generated from a Stencil
+  // instead of live-gc values, we would not know its associated gcOutput as it
+  // might not even have one yet.
+  return input.enclosingScope.variant().as<Scope*>();
 }
 
 Scope* ScopeStencil::createScope(JSContext* cx, CompilationInput& input,
@@ -1754,9 +1760,9 @@ bool CompilationStencil::instantiateStencilAfterPreparation(
     if (stencil.moduleMetadata) {
       // The enclosing script of a module is always the global scope. Fetch the
       // scope of the current global and update input data.
-      MOZ_ASSERT(input.enclosingScope == nullptr);
-      input.enclosingScope = &cx->global()->emptyGlobalScope();
-      MOZ_ASSERT(input.enclosingScope->environmentChainLength() ==
+      MOZ_ASSERT(input.enclosingScope.isNull());
+      input.enclosingScope = InputScope(&cx->global()->emptyGlobalScope());
+      MOZ_ASSERT(input.enclosingScope.environmentChainLength() ==
                  ModuleScope::EnclosingEnvironmentChainLength);
 
       if (!InstantiateModuleObject(cx, atomCache, stencil, gcOutput)) {
