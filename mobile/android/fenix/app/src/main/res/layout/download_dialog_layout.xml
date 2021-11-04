@@ -8,7 +8,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?foundation"
-    android:paddingBottom="4dp">
+    android:paddingBottom="12dp">
 
     <ImageView
         android:id="@+id/download_dialog_icon"
@@ -55,17 +55,19 @@
 
     <TextView
         android:id="@+id/download_dialog_filename"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="3dp"
+        android:layout_marginEnd="16dp"
         android:layout_marginTop="8dp"
         android:paddingStart="5dp"
         android:paddingTop="4dp"
         android:paddingEnd="5dp"
         android:textColor="?primaryText"
         app:layout_constraintStart_toEndOf="@id/download_dialog_icon"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/download_dialog_title"
-        tools:text="Firefox_Preview_v2.1.apk" />
+        tools:text="l38ID7Xze57vCac8C9oD7Z2LXzBw00HDiw7XR6ZDu5G5O8uyODAVEOTS2PrZt8OoBM77CmaFyrdGxUODuEWwpfzwnTsTTRcGDsr6Cez4Q7DK0Kr0KJIRVAFbV4czwMeiI25FIml6QCMvQR8nBZHe1oUPQn23BplLC4c3iXGvuEBGEhyU81UpqqTSwU5tfxZ7mBOYcQUqYNG0A7ixekg9awVeq8PncVdCZKLA0hXgJEW4.svg" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/download_dialog_action_button"
@@ -73,11 +75,9 @@
         android:layout_width="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="8dp"
         android:backgroundTint="?accent"
         android:text="@string/mozac_feature_downloads_button_open"
         android:textAllCaps="false"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/download_dialog_filename" />
 </androidx.constraintlayout.widget.ConstraintLayout>

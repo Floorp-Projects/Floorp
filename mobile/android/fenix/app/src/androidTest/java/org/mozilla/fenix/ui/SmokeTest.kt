@@ -30,6 +30,7 @@ import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestAssetHelper.downloadFileName
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.assertExternalAppOpens
@@ -69,7 +70,6 @@ class SmokeTest {
     private var addonsListIdlingResource: RecyclerViewIdlingResource? = null
     private var recentlyClosedTabsListIdlingResource: RecyclerViewIdlingResource? = null
     private var readerViewNotification: ViewVisibilityIdlingResource? = null
-    private val downloadFileName = "Globe.svg"
     private val collectionName = "First Collection"
     private var bookmarksListIdlingResource: RecyclerViewIdlingResource? = null
     private var localeListIdlingResource: RecyclerViewIdlingResource? = null

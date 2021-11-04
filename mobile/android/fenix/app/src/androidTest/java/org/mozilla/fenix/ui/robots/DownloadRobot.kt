@@ -12,6 +12,7 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents
 import androidx.test.espresso.intent.matcher.IntentMatchers
 import androidx.test.espresso.matcher.RootMatchers.isDialog
+import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -132,6 +133,8 @@ private fun assertDownloadNotificationPopup() {
     mDevice.waitNotNull(Until.findObjects(By.text("Open")), TestAssetHelper.waitingTime)
     onView(withId(R.id.download_dialog_title))
         .check(matches(withText(CoreMatchers.containsString("Download completed"))))
+    onView(withId(R.id.download_dialog_filename))
+        .check(matches(ViewMatchers.isCompletelyDisplayed()))
 }
 
 private fun closePromptButton() =

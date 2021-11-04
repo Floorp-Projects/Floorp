@@ -17,6 +17,11 @@ object TestAssetHelper {
     @Suppress("MagicNumber")
     val waitingTime: Long = TimeUnit.SECONDS.toMillis(15)
     val waitingTimeShort: Long = TimeUnit.SECONDS.toMillis(1)
+    // File name length in most operating systems is limited to 255 bytes,
+    // including file extension.
+    // This string is 251 char long though, as Android Studio won't compile
+    // with a resource file having a name longer than 251 chars.
+    const val downloadFileName = "tAJwqaWjJsXS8AhzSninBMCfIZbHBGgcc001lx5DIdDwIcfEgQ6vE5Gb5VgAled17DFZ2A7ZDOHA0NpQPHXXFHPSD4wzCkRWiaOorNI574zLtv4Hjiz6O6T7onmUTGgUQ2YQoiQFyrCrPv8ZB9KvmtoRFRVIZh8Pg2a1THrm9gpMoLwP44nDNN5o70USUyVXFxPeTerG9OSdpZIwCWGIVM3AZmjFSaiAyZKxJp8G1oZ2md4DBQYy6F1.svg"
 
     data class TestAsset(val url: Uri, val content: String, val title: String)
 
@@ -70,7 +75,7 @@ object TestAssetHelper {
 
     fun getDownloadAsset(server: MockWebServer): TestAsset {
         val url = server.url("pages/download.html").toString().toUri()!!
-        val content = "Page content: Globe.svg"
+        val content = "Page content: $downloadFileName"
 
         return TestAsset(url, content, "")
     }

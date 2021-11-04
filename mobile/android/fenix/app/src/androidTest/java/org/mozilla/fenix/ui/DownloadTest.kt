@@ -15,6 +15,7 @@ import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestAssetHelper.downloadFileName
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.ui.robots.downloadRobot
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -31,7 +32,6 @@ import org.mozilla.fenix.ui.robots.notificationShade
 class DownloadTest {
 
     private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-
     private lateinit var mockWebServer: MockWebServer
 
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
@@ -56,7 +56,7 @@ class DownloadTest {
     fun tearDown() {
         mockWebServer.shutdown()
 
-        TestHelper.deleteDownloadFromStorage("Globe.svg")
+        TestHelper.deleteDownloadFromStorage(downloadFileName)
     }
 
     @Test
