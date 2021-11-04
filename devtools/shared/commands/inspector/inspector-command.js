@@ -201,50 +201,8 @@ class InspectorCommand {
       }
 
       if (nodeSelectors.length > 0) {
-        const domLoadingPromises = [];
-
-        // if the flag isn't true, we don't know for sure if the iframe will be remote
-        // or not; when the nodeFront was created, the iframe might still have been loading
-        // and in such case, its associated window can be an initial document.
-        // Luckily, once EFT is enabled everywhere we can remove this call and only wait
-        // for the associated target.
-        if (!nodeFront.useChildTargetToFetchChildren) {
-          domLoadingPromises.push(nodeFront.waitForFrameLoad());
-        }
-
-        const {
-          onResource: onDomInteractiveResource,
-        } = await this.commands.resourceCommand.waitForNextResource(
-          this.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
-          {
-            // We might be in a case where the children document is already loaded (i.e. we
-            // would already have received the dom-interactive resource), so it's important
-            // to _not_ ignore existing resource.
-            predicate: resource =>
-              resource.name == "dom-interactive" &&
-              resource.targetFront !== nodeFront.targetFront &&
-              resource.targetFront.browsingContextID ==
-                nodeFront.browsingContextID,
-          }
-        );
-        const newTargetResolveValue = Symbol();
-        domLoadingPromises.push(
-          onDomInteractiveResource.then(() => newTargetResolveValue)
-        );
-
-        // Here we wait for any promise to resolve first. `waitForFrameLoad` might throw
-        // (if the iframe does end up being remote), so we don't want to use `Promise.race`.
-        const loadResult = await Promise.any(domLoadingPromises);
-
-        // The Node may have `useChildTargetToFetchChildren` set to false because the
-        // child document was still loading when fetching its form. But it may happen that
-        // the Node ends up being a remote iframe.
-        // When this happen we will try to call `waitForFrameLoad` which will throw, but
-        // we will be notified about the new target.
-        // This is the special edge case we are trying to handle here.
-        // We want WalkerFront.children to consider this as an iframe with a dedicated target.
-        if (loadResult == newTargetResolveValue) {
-          nodeFront._form.useChildTargetToFetchChildren = true;
+        if (!nodeFront.isShadowHost) {
+          await this.#waitForFrameLoad(nodeFront);
         }
 
         const { nodes } = await walker.children(nodeFront);
@@ -281,6 +239,100 @@ class InspectorCommand {
     );
     const onQuerySelectors = querySelectors(rootNodeFront);
     return Promise.race([onTimeout, onQuerySelectors]);
+  }
+
+  /**
+   * Wait for the given NodeFront child document to be loaded.
+   *
+   * @param {NodeFront} A nodeFront representing a frame
+   */
+  async #waitForFrameLoad(nodeFront) {
+    const domLoadingPromises = [];
+
+    // if the flag isn't true, we don't know for sure if the iframe will be remote
+    // or not; when the nodeFront was created, the iframe might still have been loading
+    // and in such case, its associated window can be an initial document.
+    // Luckily, once EFT is enabled everywhere we can remove this call and only wait
+    // for the associated target.
+    if (!nodeFront.useChildTargetToFetchChildren) {
+      domLoadingPromises.push(nodeFront.waitForFrameLoad());
+    }
+
+    const {
+      onResource: onDomInteractiveResource,
+    } = await this.commands.resourceCommand.waitForNextResource(
+      this.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+      {
+        // We might be in a case where the children document is already loaded (i.e. we
+        // would already have received the dom-interactive resource), so it's important
+        // to _not_ ignore existing resource.
+        predicate: resource =>
+          resource.name == "dom-interactive" &&
+          resource.targetFront !== nodeFront.targetFront &&
+          resource.targetFront.browsingContextID == nodeFront.browsingContextID,
+      }
+    );
+    const newTargetResolveValue = Symbol();
+    domLoadingPromises.push(
+      onDomInteractiveResource.then(() => newTargetResolveValue)
+    );
+
+    // Here we wait for any promise to resolve first. `waitForFrameLoad` might throw
+    // (if the iframe does end up being remote), so we don't want to use `Promise.race`.
+    const loadResult = await Promise.any(domLoadingPromises);
+
+    // The Node may have `useChildTargetToFetchChildren` set to false because the
+    // child document was still loading when fetching its form. But it may happen that
+    // the Node ends up being a remote iframe.
+    // When this happen we will try to call `waitForFrameLoad` which will throw, but
+    // we will be notified about the new target.
+    // This is the special edge case we are trying to handle here.
+    // We want WalkerFront.children to consider this as an iframe with a dedicated target.
+    if (loadResult == newTargetResolveValue) {
+      nodeFront._form.useChildTargetToFetchChildren = true;
+    }
+  }
+
+  /**
+   * Get the full array of selectors from the topmost document, going through
+   * iframes.
+   * For example, given the following markup:
+   *
+   * <html>
+   *   <body>
+   *     <iframe src="...">
+   *       <html>
+   *         <body>
+   *           <h1 id="sub-document-title">Title of sub document</h1>
+   *         </body>
+   *       </html>
+   *     </iframe>
+   *   </body>
+   * </html>
+   *
+   * If this function is called with the NodeFront for the h1#sub-document-title element,
+   * it will return something like: ["body > iframe", "#sub-document-title"]
+   *
+   * @param {NodeFront} nodeFront: The nodefront to get the selectors for
+   * @returns {Promise<Array<String>>} A promise that resolves with an array of selectors (strings)
+   */
+  async getNodeFrontSelectorsFromTopDocument(nodeFront) {
+    const selectors = [];
+
+    let currentNode = nodeFront;
+    while (currentNode) {
+      // Get the selector for the node inside its document
+      const selector = await currentNode.getUniqueSelector();
+      selectors.unshift(selector);
+
+      // Retrieve the node's document/shadowRoot nodeFront so we can get its parent
+      // (so if we're in an iframe, we'll get the <iframe> node front, and if we're in a
+      // shadow dom document, we'll get the host).
+      const rootNode = currentNode.getOwnerRootNodeFront();
+      currentNode = rootNode?.parentOrHost();
+    }
+
+    return selectors;
   }
 }
 

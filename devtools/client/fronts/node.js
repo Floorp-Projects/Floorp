@@ -189,6 +189,28 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
   }
 
   /**
+   * Returns the owner DocumentElement|ShadowRootElement NodeFront for this NodeFront,
+   * or null if such element can't be found.
+   *
+   * @returns {NodeFront|null}
+   */
+  getOwnerRootNodeFront() {
+    let currentNode = this;
+    while (currentNode) {
+      if (
+        currentNode.isShadowRoot ||
+        currentNode.nodeType === Node.DOCUMENT_NODE
+      ) {
+        return currentNode;
+      }
+
+      currentNode = currentNode.parentNode();
+    }
+
+    return null;
+  }
+
+  /**
    * Process a mutation entry as returned from the walker's `getMutations`
    * request.  Only tries to handle changes of the node's contents
    * themselves (character data and attribute changes), the walker itself

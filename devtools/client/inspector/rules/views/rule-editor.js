@@ -173,7 +173,7 @@ RuleEditor.prototype = {
           selector = await this.rule.inherited.getUniqueSelector();
         } else {
           // This is an inline style from the current node.
-          selector = this.ruleView.inspector.selectionCssSelector;
+          selector = await this.ruleView.inspector.selection.nodeFront.getUniqueSelector();
         }
 
         const isHighlighted = this.ruleView.isSelectorHighlighted(selector);

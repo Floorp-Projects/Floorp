@@ -1057,7 +1057,11 @@ class HighlightersOverlay {
     try {
       // Save grid highlighter state.
       const { url } = this.target;
-      const selectors = await node.getAllSelectors();
+
+      const selectors = await this.inspector.commands.inspectorCommand.getNodeFrontSelectorsFromTopDocument(
+        node
+      );
+
       this.state.grids.set(node, { selectors, options, url });
 
       // Emit the NodeFront of the grid container element that the grid highlighter was
