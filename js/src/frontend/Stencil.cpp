@@ -59,6 +59,85 @@
 using namespace js;
 using namespace js::frontend;
 
+// These 2 functions are used to write the same code with lambda using auto
+// arguments. The auto argument type is set by the Variant.match function of the
+// InputScope variant. Thus dispatching to either a Scope* or to a
+// ScopeStencilRef. This function can then be used as a way to specialize the
+// code within the lambda without duplicating the code.
+//
+// Identically, an InputName is constructed using the scope type and the
+// matching binding name type. This way, functions which are called by this
+// lambda can manipulate an InputName and do not have to be duplicated.
+//
+// for (InputScopeIter si(...); si; si++) {
+//   si.scope().match([](auto& scope) {
+//     for (auto bi = InputBindingIter(scope); bi; bi++) {
+//       InputName name(scope, bi.name());
+//     }
+//   });
+// }
+static js::BindingIter InputBindingIter(Scope* ptr) {
+  return js::BindingIter(ptr);
+}
+
+static ParserBindingIter InputBindingIter(const ScopeStencilRef& ref) {
+  return ParserBindingIter(ref);
+}
+
+InputName InputScript::displayAtom() const {
+  return script_.match(
+      [](BaseScript* ptr) {
+        return InputName(ptr, ptr->function()->displayAtom());
+      },
+      [](const ScriptStencilRef& ref) {
+        return InputName(ref, ref.scriptData().functionAtom);
+      });
+}
+
+TaggedParserAtomIndex InputName::internInto(JSContext* cx,
+                                            ParserAtomsTable& parserAtoms,
+                                            CompilationAtomCache& atomCache) {
+  return variant_.match(
+      [&](JSAtom* ptr) -> TaggedParserAtomIndex {
+        return parserAtoms.internJSAtom(cx, atomCache, ptr);
+      },
+      [&](NameStencilRef& ref) -> TaggedParserAtomIndex {
+        return parserAtoms.internExternalParserAtomIndex(cx, ref.context_,
+                                                         ref.atomIndex_);
+      });
+}
+
+bool InputName::isEqualTo(JSContext* cx, ParserAtomsTable& parserAtoms,
+                          CompilationAtomCache& atomCache,
+                          TaggedParserAtomIndex other,
+                          JSAtom** otherCached) const {
+  return variant_.match(
+      [&](const JSAtom* ptr) -> bool {
+        if (!*otherCached) {
+          // TODO-Stencil:
+          // Here, we convert our name into a JSAtom*, and hard-crash on failure
+          // to allocate. This conversion should not be required as we should be
+          // able to iterate up snapshotted scope chains that use parser atoms.
+          //
+          // This will be fixed when the enclosing scopes are snapshotted.
+          //
+          // See bug 1690277.
+          AutoEnterOOMUnsafeRegion oomUnsafe;
+          *otherCached = parserAtoms.toJSAtom(cx, other, atomCache);
+          if (!*otherCached) {
+            oomUnsafe.crash("InputName::isEqualTo");
+          }
+        } else {
+          MOZ_ASSERT(atomCache.getExistingAtomAt(cx, other) == *otherCached);
+        }
+        return ptr == *otherCached;
+      },
+      [&](const NameStencilRef& ref) -> bool {
+        return parserAtoms.isEqualToExternalParserAtomIndex(other, ref.context_,
+                                                            ref.atomIndex_);
+      });
+}
+
 bool ScopeContext::init(JSContext* cx, CompilationInput& input,
                         ParserAtomsTable& parserAtoms, InheritThis inheritThis,
                         JSObject* enclosingEnv) {

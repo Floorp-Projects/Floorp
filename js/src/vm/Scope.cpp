@@ -13,8 +13,8 @@
 #include <new>
 
 #include "builtin/ModuleObject.h"
-#include "frontend/CompilationStencil.h"  // CompilationState, CompilationAtomCache
-#include "frontend/Parser.h"              // Copy*ScopeData
+#include "frontend/CompilationStencil.h"  // ScopeStencilRef, CompilationStencil, CompilationState, CompilationAtomCache
+#include "frontend/Parser.h"  // Copy*ScopeData
 #include "frontend/ParserAtom.h"  // frontend::ParserAtomsTable, frontend::ParserAtom
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/SharedContext.h"
@@ -1155,6 +1155,66 @@ AbstractBindingIter<JSAtom>::AbstractBindingIter(Scope* scope)
 
 AbstractBindingIter<JSAtom>::AbstractBindingIter(JSScript* script)
     : AbstractBindingIter<JSAtom>(script->bodyScope()) {}
+
+AbstractBindingIter<frontend::TaggedParserAtomIndex>::AbstractBindingIter(
+    const frontend::ScopeStencilRef& ref)
+    : Base() {
+  const ScopeStencil& scope = ref.scope();
+  BaseParserScopeData* data = ref.context_.scopeNames[ref.scopeIndex_];
+  switch (scope.kind()) {
+    case ScopeKind::Lexical:
+    case ScopeKind::SimpleCatch:
+    case ScopeKind::Catch:
+    case ScopeKind::FunctionLexical:
+      init(*static_cast<LexicalScope::ParserData*>(data),
+           scope.firstFrameSlot(), 0);
+      break;
+    case ScopeKind::NamedLambda:
+    case ScopeKind::StrictNamedLambda:
+      init(*static_cast<LexicalScope::ParserData*>(data), LOCALNO_LIMIT,
+           IsNamedLambda);
+      break;
+    case ScopeKind::ClassBody:
+      init(*static_cast<ClassBodyScope::ParserData*>(data),
+           scope.firstFrameSlot());
+      break;
+    case ScopeKind::With:
+      // With scopes do not have bindings.
+      index_ = length_ = 0;
+      MOZ_ASSERT(done());
+      break;
+    case ScopeKind::Function: {
+      uint8_t flags = IgnoreDestructuredFormalParameters;
+      if (static_cast<FunctionScope::ParserData*>(data)
+              ->slotInfo.hasParameterExprs()) {
+        flags |= HasFormalParameterExprs;
+      }
+      init(*static_cast<FunctionScope::ParserData*>(data), flags);
+      break;
+    }
+    case ScopeKind::FunctionBodyVar:
+      init(*static_cast<VarScope::ParserData*>(data), scope.firstFrameSlot());
+      break;
+    case ScopeKind::Eval:
+    case ScopeKind::StrictEval:
+      init(*static_cast<EvalScope::ParserData*>(data),
+           scope.kind() == ScopeKind::StrictEval);
+      break;
+    case ScopeKind::Global:
+    case ScopeKind::NonSyntactic:
+      init(*static_cast<GlobalScope::ParserData*>(data));
+      break;
+    case ScopeKind::Module:
+      init(*static_cast<ModuleScope::ParserData*>(data));
+      break;
+    case ScopeKind::WasmInstance:
+      init(*static_cast<WasmInstanceScope::ParserData*>(data));
+      break;
+    case ScopeKind::WasmFunction:
+      init(*static_cast<WasmFunctionScope::ParserData*>(data));
+      break;
+  }
+}
 
 template <typename NameT>
 void BaseAbstractBindingIter<NameT>::init(
