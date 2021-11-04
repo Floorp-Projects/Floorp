@@ -45,7 +45,7 @@
 #include "vm/JSScript.h"      // BaseScript, JSScript
 #include "vm/Printer.h"       // js::Fprinter
 #include "vm/RegExpObject.h"  // js::RegExpObject
-#include "vm/Scope.h"  // Scope, *Scope, ScopeKindString, ScopeIter, ScopeKindIsCatch, BindingIter, GetScopeDataTrailingNames
+#include "vm/Scope.h"  // Scope, *Scope, ScopeKind::*, ScopeKindString, ScopeIter, ScopeKindIsCatch, BindingIter, GetScopeDataTrailingNames
 #include "vm/ScopeKind.h"     // ScopeKind
 #include "vm/SelfHosting.h"   // SetClonedSelfHostedFunctionName
 #include "vm/StencilEnums.h"  // ImmutableScriptFlagsEnum
@@ -336,65 +336,98 @@ Scope* ScopeContext::determineEffectiveScope(Scope* scope,
   return scope;
 }
 
+static uint32_t DepthOfNearestVarScopeForDirectEval(const InputScope& scope) {
+  uint32_t depth = 0;
+  if (scope.isNull()) {
+    return depth;
+  }
+  for (InputScopeIter si(scope); si; si++) {
+    depth++;
+    switch (si.scope().kind()) {
+      case ScopeKind::Function:
+      case ScopeKind::FunctionBodyVar:
+      case ScopeKind::Global:
+      case ScopeKind::NonSyntactic:
+        return depth;
+      default:
+        break;
+    }
+  }
+  return depth;
+}
+
 bool ScopeContext::cacheEnclosingScopeBindingForEval(
     JSContext* cx, CompilationInput& input, ParserAtomsTable& parserAtoms) {
   enclosingLexicalBindingCache_.emplace();
 
-  js::Scope* varScope =
-      EvalScope::nearestVarScopeForDirectEval(input.enclosingScope);
-  MOZ_ASSERT(varScope);
-  for (ScopeIter si(input.enclosingScope); si; si++) {
-    for (js::BindingIter bi(si.scope()); bi; bi++) {
-      switch (bi.kind()) {
-        case BindingKind::Let: {
-          // Annex B.3.5 allows redeclaring simple (non-destructured)
-          // catch parameters with var declarations.
-          bool annexB35Allowance = si.kind() == ScopeKind::SimpleCatch;
-          if (!annexB35Allowance) {
-            auto kind = ScopeKindIsCatch(si.kind())
-                            ? EnclosingLexicalBindingKind::CatchParameter
-                            : EnclosingLexicalBindingKind::Let;
-            if (!addToEnclosingLexicalBindingCache(cx, input, parserAtoms,
-                                                   bi.name(), kind)) {
+  InputScope enclosingScope(input.enclosingScope);
+  uint32_t varScopeDepth = DepthOfNearestVarScopeForDirectEval(enclosingScope);
+  uint32_t depth = 0;
+  for (InputScopeIter si(enclosingScope); si; si++) {
+    bool success = si.scope().match([&](auto& scope_ref) {
+      for (auto bi = InputBindingIter(scope_ref); bi; bi++) {
+        switch (bi.kind()) {
+          case BindingKind::Let: {
+            // Annex B.3.5 allows redeclaring simple (non-destructured)
+            // catch parameters with var declarations.
+            bool annexB35Allowance = si.kind() == ScopeKind::SimpleCatch;
+            if (!annexB35Allowance) {
+              auto kind = ScopeKindIsCatch(si.kind())
+                              ? EnclosingLexicalBindingKind::CatchParameter
+                              : EnclosingLexicalBindingKind::Let;
+              InputName binding(scope_ref, bi.name());
+              if (!addToEnclosingLexicalBindingCache(
+                      cx, parserAtoms, input.atomCache, binding, kind)) {
+                return false;
+              }
+            }
+            break;
+          }
+
+          case BindingKind::Const: {
+            InputName binding(scope_ref, bi.name());
+            if (!addToEnclosingLexicalBindingCache(
+                    cx, parserAtoms, input.atomCache, binding,
+                    EnclosingLexicalBindingKind::Const)) {
               return false;
             }
+            break;
           }
-          break;
+
+          case BindingKind::Synthetic: {
+            InputName binding(scope_ref, bi.name());
+            if (!addToEnclosingLexicalBindingCache(
+                    cx, parserAtoms, input.atomCache, binding,
+                    EnclosingLexicalBindingKind::Synthetic)) {
+              return false;
+            }
+            break;
+          }
+
+          case BindingKind::PrivateMethod: {
+            InputName binding(scope_ref, bi.name());
+            if (!addToEnclosingLexicalBindingCache(
+                    cx, parserAtoms, input.atomCache, binding,
+                    EnclosingLexicalBindingKind::PrivateMethod)) {
+              return false;
+            }
+            break;
+          }
+
+          case BindingKind::Import:
+          case BindingKind::FormalParameter:
+          case BindingKind::Var:
+          case BindingKind::NamedLambdaCallee:
+            break;
         }
-
-        case BindingKind::Const:
-          if (!addToEnclosingLexicalBindingCache(
-                  cx, input, parserAtoms, bi.name(),
-                  EnclosingLexicalBindingKind::Const)) {
-            return false;
-          }
-          break;
-
-        case BindingKind::Synthetic:
-          if (!addToEnclosingLexicalBindingCache(
-                  cx, input, parserAtoms, bi.name(),
-                  EnclosingLexicalBindingKind::Synthetic)) {
-            return false;
-          }
-          break;
-
-        case BindingKind::PrivateMethod:
-          if (!addToEnclosingLexicalBindingCache(
-                  cx, input, parserAtoms, bi.name(),
-                  EnclosingLexicalBindingKind::PrivateMethod)) {
-            return false;
-          }
-          break;
-
-        case BindingKind::Import:
-        case BindingKind::FormalParameter:
-        case BindingKind::Var:
-        case BindingKind::NamedLambdaCallee:
-          break;
       }
+      return true;
+    });
+    if (!success) {
+      return false;
     }
 
-    if (si.scope() == varScope) {
+    if (++depth == varScopeDepth) {
       break;
     }
   }
@@ -403,9 +436,11 @@ bool ScopeContext::cacheEnclosingScopeBindingForEval(
 }
 
 bool ScopeContext::addToEnclosingLexicalBindingCache(
-    JSContext* cx, CompilationInput& input, ParserAtomsTable& parserAtoms,
-    JSAtom* name, EnclosingLexicalBindingKind kind) {
-  auto parserName = parserAtoms.internJSAtom(cx, input.atomCache, name);
+    JSContext* cx, ParserAtomsTable& parserAtoms,
+    CompilationAtomCache& atomCache, InputName& name,
+    EnclosingLexicalBindingKind kind) {
+  TaggedParserAtomIndex parserName =
+      name.internInto(cx, parserAtoms, atomCache);
   if (!parserName) {
     return false;
   }
