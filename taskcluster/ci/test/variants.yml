@@ -1,6 +1,7 @@
 ---
 a11y-checks:
     description: "{description} with accessibility checks enabled"
+    contact: jteh
     suffix: "a11y-checks"
     replace:
         tier: 2
@@ -11,6 +12,7 @@ a11y-checks:
 
 aab:
     description: "{description} with aab test_runner"
+    contact: agi
     when: &gv_e10s_filter
         $eval: 'mobile == "geckoview" && task.e10s in [true, "both"]'
     suffix: "aab"
@@ -41,6 +43,7 @@ geckoview-fission:
 
 fission:
     description: "{description} with fission enabled"
+    contact: cpeterson
     when: &fission_filter
         $eval: task.e10s in [true, "both"]
     suffix: "fis"
@@ -53,6 +56,7 @@ fission:
 
 fission-xorigin:
     description: "{description} with cross-origin and fission enabled"
+    contact: cpeterson
     when:
         <<: *fission_filter
     suffix: "fis-xorig"
@@ -67,6 +71,7 @@ fission-xorigin:
 # TODO: After 2022-01-01, verify this variant is still needed.
 fission-webgl-ipc:
     description: "{description} with fission and WebGL IPC process enabled"
+    contact: jgilbert
     suffix: "fis-gli"
     replace:
         e10s: true
@@ -117,6 +122,7 @@ webrender-sw:
 
 webrender-sw-a11y-checks:
     description: "{description} with software webrender and accessibility checks enabled"
+    contact: jteh
     suffix: "swr-a11y-checks"
     replace:
         tier: 2
@@ -155,6 +161,7 @@ webrender-sw-wayland:
 # TODO: After 2022-01-01, verify this variant is still needed.
 webgl-ipc:
     description: "{description} with WebGL IPC process enabled"
+    contact: jgilbert
     suffix: "gli"
     merge:
         mozharness:
