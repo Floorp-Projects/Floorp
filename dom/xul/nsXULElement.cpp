@@ -1172,27 +1172,6 @@ bool nsXULElement::BoolAttrIsTrue(nsAtom* aName) const {
          attr->GetAtomValue() == nsGkAtoms::_true;
 }
 
-void nsXULElement::RecompileScriptEventListeners() {
-  int32_t i, count = mAttrs.AttrCount();
-  for (i = 0; i < count; ++i) {
-    const nsAttrName* name = mAttrs.AttrNameAt(i);
-
-    // Eventlistenener-attributes are always in the null namespace
-    if (!name->IsAtom()) {
-      continue;
-    }
-
-    nsAtom* attr = name->Atom();
-    if (!nsContentUtils::IsEventAttributeName(attr, EventNameType_XUL)) {
-      continue;
-    }
-
-    nsAutoString value;
-    GetAttr(kNameSpaceID_None, attr, value);
-    SetEventHandler(attr, value, true);
-  }
-}
-
 bool nsXULElement::IsEventAttributeNameInternal(nsAtom* aName) {
   return nsContentUtils::IsEventAttributeName(aName, EventNameType_XUL);
 }

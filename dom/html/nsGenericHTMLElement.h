@@ -609,8 +609,6 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   mozilla::dom::HTMLFormElement* FindAncestorForm(
       mozilla::dom::HTMLFormElement* aCurrentForm = nullptr);
 
-  virtual void RecompileScriptEventListeners() override;
-
   /**
    * See if the document being tested has nav-quirks mode enabled.
    * @param doc the document
