@@ -17,7 +17,7 @@ add_task(async function() {
   rightClickEl(dbg, frameEls[1]);
   await waitForContextMenu(dbg);
 
-  selectContextMenuItem(dbg, "#node-menu-restart-frame");
+  selectContextMenuItem(dbg, "#node-menu-restartFrame");
   await waitForDispatch(dbg.store, "COMMAND");
   await waitForPaused(dbg);
 
