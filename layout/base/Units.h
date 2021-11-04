@@ -319,6 +319,14 @@ struct CSSPixel {
         NSAppUnitsToIntPixels(aRect.Height(), float(AppUnitsPerCSSPixel())));
   }
 
+  static CSSIntMargin FromAppUnitsRounded(const nsMargin& aMargin) {
+    return CSSIntMargin(
+        NSAppUnitsToIntPixels(aMargin.top, float(AppUnitsPerCSSPixel())),
+        NSAppUnitsToIntPixels(aMargin.right, float(AppUnitsPerCSSPixel())),
+        NSAppUnitsToIntPixels(aMargin.bottom, float(AppUnitsPerCSSPixel())),
+        NSAppUnitsToIntPixels(aMargin.left, float(AppUnitsPerCSSPixel())));
+  }
+
   static CSSIntRect FromAppUnitsToNearest(const nsRect& aRect) {
     return CSSIntRect::FromUnknownRect(
         aRect.ToNearestPixels(AppUnitsPerCSSPixel()));
@@ -458,6 +466,15 @@ struct LayoutDevicePixel {
     return LayoutDeviceIntSize(
         NSAppUnitsToIntPixels(aSize.width, aAppUnitsPerDevPixel),
         NSAppUnitsToIntPixels(aSize.height, aAppUnitsPerDevPixel));
+  }
+
+  static LayoutDeviceIntMargin FromAppUnitsRounded(
+      const nsMargin& aMargin, nscoord aAppUnitsPerDevPixel) {
+    return LayoutDeviceIntMargin(
+        NSAppUnitsToIntPixels(aMargin.top, aAppUnitsPerDevPixel),
+        NSAppUnitsToIntPixels(aMargin.right, aAppUnitsPerDevPixel),
+        NSAppUnitsToIntPixels(aMargin.bottom, aAppUnitsPerDevPixel),
+        NSAppUnitsToIntPixels(aMargin.left, aAppUnitsPerDevPixel));
   }
 
   static nsPoint ToAppUnits(const LayoutDeviceIntPoint& aPoint,
