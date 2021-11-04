@@ -5,15 +5,21 @@
 
 add_task(async () => {
   // Build a simple test page with a remote iframe, using two distinct origins .com and .org
-  const iframeHtml = encodeURIComponent(`<h2 id="in-iframe"></h2>`);
+  const iframeOrgHtml = encodeURIComponent(
+    `<h2 id="in-iframe">in org - same origin</h2>`
+  );
+  const iframeComHtml = encodeURIComponent(`<h3>in com - remote</h3>`);
   const html = encodeURIComponent(
     `<main class="foo bar">
        <button id="child">Click</button>
      </main>
-     <iframe src="https://example.org/document-builder.sjs?html=${iframeHtml}"></iframe>`
+     <!-- adding delay to both iframe so we can check we handle loading document has expected -->
+     <iframe id="iframe-org" src="https://example.org/document-builder.sjs?delay=3000&html=${iframeOrgHtml}"></iframe>
+     <iframe id="iframe-com" src="https://example.com/document-builder.sjs?delay=6000&html=${iframeComHtml}"></iframe>`
   );
   const tab = await addTab(
-    "https://example.com/document-builder.sjs?html=" + html
+    "https://example.org/document-builder.sjs?html=" + html,
+    { waitForLoad: false }
   );
 
   const commands = await CommandsFactory.forTab(tab);
@@ -70,14 +76,25 @@ add_task(async () => {
     "findNodeFrontFromSelectors returned the appropriate nodeFront"
   );
 
-  info("Check passing a selector for an element in an iframe");
+  info("Check passing a selector for an element in a same origin iframe");
   nodeFront = await commands.inspectorCommand.findNodeFrontFromSelectors([
-    "iframe",
+    "#iframe-org",
     "#in-iframe",
   ]);
   is(
     nodeFront.displayName,
     "h2",
+    "findNodeFrontFromSelectors returned the appropriate nodeFront"
+  );
+
+  info("Check passing a selector for an element in a cross origin iframe");
+  nodeFront = await commands.inspectorCommand.findNodeFrontFromSelectors([
+    "#iframe-com",
+    "h3",
+  ]);
+  is(
+    nodeFront.displayName,
+    "h3",
     "findNodeFrontFromSelectors returned the appropriate nodeFront"
   );
 
