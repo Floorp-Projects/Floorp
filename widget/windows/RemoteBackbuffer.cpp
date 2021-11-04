@@ -437,30 +437,10 @@ bool Provider::Initialize(HWND aWindowHandle, DWORD aTargetProcessId,
 }
 
 Maybe<RemoteBackbufferHandles> Provider::CreateRemoteHandles() {
-  HANDLE fileMapping = nullptr;
-  if (!ipc::DuplicateHandle(mFileMapping, mTargetProcessId, &fileMapping,
-                            0 /*desiredAccess*/, DUPLICATE_SAME_ACCESS)) {
-    return Nothing();
-  }
-
-  HANDLE requestReadyEvent = nullptr;
-  if (!ipc::DuplicateHandle(mRequestReadyEvent, mTargetProcessId,
-                            &requestReadyEvent, 0 /*desiredAccess*/,
-                            DUPLICATE_SAME_ACCESS)) {
-    return Nothing();
-  }
-
-  HANDLE responseReadyEvent = nullptr;
-  if (!ipc::DuplicateHandle(mResponseReadyEvent, mTargetProcessId,
-                            &responseReadyEvent, 0 /*desiredAccess*/,
-                            DUPLICATE_SAME_ACCESS)) {
-    return Nothing();
-  }
-
-  return Some(RemoteBackbufferHandles(
-      reinterpret_cast<WindowsHandle>(fileMapping),
-      reinterpret_cast<WindowsHandle>(requestReadyEvent),
-      reinterpret_cast<WindowsHandle>(responseReadyEvent)));
+  return Some(
+      RemoteBackbufferHandles(ipc::FileDescriptor(mFileMapping),
+                              ipc::FileDescriptor(mRequestReadyEvent),
+                              ipc::FileDescriptor(mResponseReadyEvent)));
 }
 
 void Provider::UpdateTransparencyMode(nsTransparencyMode aTransparencyMode) {
@@ -614,15 +594,22 @@ Client::~Client() {
 }
 
 bool Client::Initialize(const RemoteBackbufferHandles& aRemoteHandles) {
-  MOZ_ASSERT(aRemoteHandles.fileMapping());
-  MOZ_ASSERT(aRemoteHandles.requestReadyEvent());
-  MOZ_ASSERT(aRemoteHandles.responseReadyEvent());
+  MOZ_ASSERT(aRemoteHandles.fileMapping().IsValid());
+  MOZ_ASSERT(aRemoteHandles.requestReadyEvent().IsValid());
+  MOZ_ASSERT(aRemoteHandles.responseReadyEvent().IsValid());
 
-  mFileMapping = reinterpret_cast<HANDLE>(aRemoteHandles.fileMapping());
+  // FIXME: Due to PCompositorWidget using virtual Recv methods,
+  // RemoteBackbufferHandles is passed by const reference, and cannot have its
+  // signature customized, meaning that we need to clone the handles here.
+  //
+  // Once PCompositorWidget is migrated to use direct call semantics, the
+  // signature can be changed to accept RemoteBackbufferHandles by rvalue
+  // reference or value, and the DuplicateHandle calls here can be avoided.
+  mFileMapping = aRemoteHandles.fileMapping().ClonePlatformHandle().release();
   mRequestReadyEvent =
-      reinterpret_cast<HANDLE>(aRemoteHandles.requestReadyEvent());
+      aRemoteHandles.requestReadyEvent().ClonePlatformHandle().release();
   mResponseReadyEvent =
-      reinterpret_cast<HANDLE>(aRemoteHandles.responseReadyEvent());
+      aRemoteHandles.responseReadyEvent().ClonePlatformHandle().release();
 
   void* mappedFilePtr =
       ::MapViewOfFile(mFileMapping, FILE_MAP_ALL_ACCESS, 0 /*offsetHigh*/,
