@@ -3104,6 +3104,7 @@ dependencies = [
  "once_cell",
  "regex",
  "tempfile",
+ "thiserror",
  "unix_path",
  "uuid",
  "walkdir",
