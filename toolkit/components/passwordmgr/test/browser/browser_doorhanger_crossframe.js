@@ -39,7 +39,7 @@ function listenForNotifications(count, expectedFormOrigin) {
     LoginManagerParent.setListenerForTests((msg, data) => {
       if (msg == "FormProcessed") {
         notifications.push("FormProcessed: " + data.browsingContext.id);
-      } else if (msg == "FormSubmit") {
+      } else if (msg == "ShowDoorhanger") {
         is(
           data.origin,
           expectedFormOrigin,
