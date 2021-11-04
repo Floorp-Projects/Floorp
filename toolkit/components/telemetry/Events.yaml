@@ -165,7 +165,7 @@ readermode:
     products:
       - "firefox"
   pocket_cta:
-    objects: ["close_cta", "sign_up_click", "rec_click", "minimize_recs_click", "cta_seen"]
+    objects: ["close_cta", "sign_up_click", "rec_click", "minimize_recs_click", "cta_seen", "rec_saved"]
     release_channel_collection: opt-out
     record_in_processes: ["content"]
     description: >
@@ -176,7 +176,7 @@ readermode:
       - "sdowne@getpocket.com"
     expiry_version: never
     extra_keys:
-      url: URL associated with click.
+      logged_in: Pocket user login status.
     products:
       - "firefox"
 
