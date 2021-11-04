@@ -12,5 +12,7 @@ browser.jar:
         content/browser/screenshots/menu-fullpage.svg                  (content/menu-fullpage.svg)
         content/browser/screenshots/menu-visible.svg                   (content/menu-visible.svg)
         content/browser/screenshots/screenshots.js                     (content/screenshots.js)
+        content/browser/screenshots/screenshots-buttons.js             (screenshots-buttons.js)
+        content/browser/screenshots/screenshots-buttons.css            (screenshots-buttons.css)
         content/browser/screenshots/screenshots.css                    (content/screenshots.css)
         content/browser/screenshots/screenshots.html                   (content/screenshots.html)
