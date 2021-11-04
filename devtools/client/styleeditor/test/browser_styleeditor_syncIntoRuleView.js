@@ -16,30 +16,26 @@ const TESTCASE_CSS_SOURCE = "#testid { color: chartreuse; }";
 add_task(async function() {
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
 
+  info("Open the inspector and select the node we want to add style to");
   const { inspector, view } = await openRuleView();
   await selectNode("#testid", inspector);
 
+  info("Open the StyleEditor");
   const { panel, ui } = await openStyleEditor();
 
   const editor = await ui.editors[0].getSourceEditor();
+  const onRuleViewRefreshed = view.once("ruleview-refreshed");
+  await new Promise(res => waitForFocus(res, panel.panelWindow));
 
-  const waitForRuleView = view.once("ruleview-refreshed");
-  await typeInEditor(editor, panel.panelWindow);
-  await waitForRuleView;
+  info("Type new rule in stylesheet");
+  editor.focus();
+  EventUtils.sendString(TESTCASE_CSS_SOURCE, panel.panelWindow);
+  ok(editor.unsaved, "new editor has unsaved flag");
 
+  info("Wait for ruleview to update");
+  await onRuleViewRefreshed;
+
+  info("Check that edits were synced to rule view");
   const value = getRuleViewPropertyValue(view, "#testid", "color");
-  is(value, "chartreuse", "check that edits were synced to rule view");
+  is(value, "chartreuse", "Got the expected color property");
 });
-
-function typeInEditor(editor, panelWindow) {
-  return new Promise(resolve => {
-    waitForFocus(function() {
-      for (const c of TESTCASE_CSS_SOURCE) {
-        EventUtils.synthesizeKey(c, {}, panelWindow);
-      }
-      ok(editor.unsaved, "new editor has unsaved flag");
-
-      resolve();
-    }, panelWindow);
-  });
-}
