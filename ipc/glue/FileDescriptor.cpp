@@ -35,14 +35,6 @@ FileDescriptor::FileDescriptor(PlatformHandleType aHandle)
 FileDescriptor::FileDescriptor(UniquePlatformHandle&& aHandle)
     : mHandle(std::move(aHandle)) {}
 
-FileDescriptor::FileDescriptor(const IPDLPrivate&, PickleType aPickle) {
-#ifdef XP_WIN
-  mHandle.reset(aPickle);
-#else
-  mHandle = std::move(aPickle);
-#endif
-}
-
 FileDescriptor::~FileDescriptor() = default;
 
 FileDescriptor& FileDescriptor::operator=(const FileDescriptor& aOther) {
@@ -57,33 +49,6 @@ FileDescriptor& FileDescriptor::operator=(FileDescriptor&& aOther) {
     mHandle = std::move(aOther.mHandle);
   }
   return *this;
-}
-
-FileDescriptor::PickleType FileDescriptor::ShareTo(
-    const FileDescriptor::IPDLPrivate&,
-    FileDescriptor::ProcessId aTargetPid) const {
-  PlatformHandleType newHandle;
-#ifdef XP_WIN
-  if (IsValid()) {
-    if (mozilla::ipc::DuplicateHandle(mHandle.get(), aTargetPid, &newHandle, 0,
-                                      DUPLICATE_SAME_ACCESS)) {
-      return newHandle;
-    }
-    NS_WARNING("Failed to duplicate file handle for other process!");
-  }
-  return INVALID_HANDLE_VALUE;
-#else  // XP_WIN
-  if (IsValid()) {
-    newHandle = dup(mHandle.get());
-    if (newHandle >= 0) {
-      return UniquePlatformHandle(newHandle);
-    }
-    NS_WARNING("Failed to duplicate file handle for other process!");
-  }
-  return nullptr;
-#endif
-
-  MOZ_CRASH("Must not get here!");
 }
 
 bool FileDescriptor::IsValid() const { return mHandle != nullptr; }
@@ -130,30 +95,19 @@ FileDescriptor::UniquePlatformHandle FileDescriptor::Clone(
 void IPDLParamTraits<FileDescriptor>::Write(IPC::Message* aMsg,
                                             IProtocol* aActor,
                                             const FileDescriptor& aParam) {
-#ifdef XP_WIN
-  FileDescriptor::PickleType pfd =
-      aParam.ShareTo(FileDescriptor::IPDLPrivate(), aActor->OtherPid());
-#else
-  // The pid returned by OtherPID() is only required for Windows to
-  // send file descriptors.  For the use case of the fork server,
-  // aActor is always null.  Since it is only for the special case of
-  // Windows, here we skip it for other platforms.
-  FileDescriptor::PickleType pfd =
-      aParam.ShareTo(FileDescriptor::IPDLPrivate(), 0);
-#endif
-  WriteIPDLParam(aMsg, aActor, std::move(pfd));
+  WriteIPDLParam(aMsg, aActor, aParam.ClonePlatformHandle());
 }
 
 bool IPDLParamTraits<FileDescriptor>::Read(const IPC::Message* aMsg,
                                            PickleIterator* aIter,
                                            IProtocol* aActor,
                                            FileDescriptor* aResult) {
-  FileDescriptor::PickleType pfd;
-  if (!ReadIPDLParam(aMsg, aIter, aActor, &pfd)) {
+  UniqueFileHandle handle;
+  if (!ReadIPDLParam(aMsg, aIter, aActor, &handle)) {
     return false;
   }
 
-  *aResult = FileDescriptor(FileDescriptor::IPDLPrivate(), std::move(pfd));
+  *aResult = FileDescriptor(std::move(handle));
   if (!aResult->IsValid()) {
     printf_stderr("IPDL protocol Error: Received an invalid file descriptor\n");
   }
