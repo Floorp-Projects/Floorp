@@ -4,9 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Quotes.h"
-#include "MozLocale.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/intl/Locale.h"
 #include "nsTHashMap.h"
 #include "nsPrintfCString.h"
 
@@ -51,32 +51,38 @@ const Quotes* QuotesForLang(const nsAtom* aLang) {
     return entry;
   }
 
-  // Try parsing lang as a Locale (which will also canonicalize case of the
-  // subtags), then see if we can match it with region or script subtags,
-  // if present, or just the primary language tag.
-  MozLocale loc(langStr);
-  if (!loc.IsWellFormed()) {
+  // Try parsing lang as a Locale and canonicalizing the subtags, then see if
+  // we can match it with region or script subtags, if present, or just the
+  // primary language tag.
+  Locale loc;
+  auto result = LocaleParser::tryParse(langStr, loc);
+  if (result.isErr()) {
     return nullptr;
   }
-  if (!loc.GetRegion().IsEmpty()) {
+  if (loc.canonicalize().isErr()) {
+    return nullptr;
+  }
+  if (loc.region().present()) {
     nsAutoCString langAndRegion;
-    langAndRegion.Append(loc.GetLanguage());
+    langAndRegion.Append(loc.language().span());
     langAndRegion.Append('-');
-    langAndRegion.Append(loc.GetRegion());
+    langAndRegion.Append(loc.region().span());
     if ((entry = sQuotesForLang->Lookup(langAndRegion).DataPtrOrNull())) {
       return entry;
     }
   }
-  if (!loc.GetScript().IsEmpty()) {
+  if (loc.script().present()) {
     nsAutoCString langAndScript;
-    langAndScript.Append(loc.GetLanguage());
+    langAndScript.Append(loc.language().span());
     langAndScript.Append('-');
-    langAndScript.Append(loc.GetScript());
+    langAndScript.Append(loc.script().span());
     if ((entry = sQuotesForLang->Lookup(langAndScript).DataPtrOrNull())) {
       return entry;
     }
   }
-  if ((entry = sQuotesForLang->Lookup(loc.GetLanguage()).DataPtrOrNull())) {
+  Span<const char> langAsSpan = loc.language().span();
+  nsAutoCString lang(langAsSpan.data(), langAsSpan.size());
+  if ((entry = sQuotesForLang->Lookup(lang).DataPtrOrNull())) {
     return entry;
   }
 
