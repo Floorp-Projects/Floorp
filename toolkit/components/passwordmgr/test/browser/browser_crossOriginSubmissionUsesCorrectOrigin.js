@@ -6,7 +6,7 @@
 function getDataFromNextSubmitMessage() {
   return new Promise(resolve => {
     LoginManagerParent.setListenerForTests((msg, data) => {
-      if (msg == "ShowDoorhanger") {
+      if (msg == "FormSubmit") {
         resolve(data);
       }
     });
