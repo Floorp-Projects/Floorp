@@ -244,8 +244,16 @@ var selectNode = async function(
   info("Selecting the node for '" + selector + "'");
   const nodeFront = await getNodeFront(selector, inspector);
   const updated = inspector.once("inspector-updated");
+
+  const { ELEMENT_NODE } = require("devtools/shared/dom-node-constants");
+  const onSelectionCssSelectorsUpdated =
+    nodeFront?.nodeType == ELEMENT_NODE
+      ? inspector.once("selection-css-selectors-updated")
+      : null;
+
   inspector.selection.setNodeFront(nodeFront, { reason, isSlotted });
   await updated;
+  await onSelectionCssSelectorsUpdated;
 };
 
 /**

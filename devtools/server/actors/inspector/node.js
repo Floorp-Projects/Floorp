@@ -13,7 +13,7 @@ const { nodeSpec, nodeListSpec } = require("devtools/shared/specs/node");
 
 loader.lazyRequireGetter(
   this,
-  ["getCssPath", "getXPath", "findCssSelector", "findAllCssSelectors"],
+  ["getCssPath", "getXPath", "findCssSelector"],
   "devtools/shared/inspector/css-logic",
   true
 );
@@ -240,6 +240,10 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    * API.
    */
   watchDocument: function(doc, callback) {
+    if (!doc.defaultView) {
+      return;
+    }
+
     const node = this.rawNode;
     // Create the observer on the node's actor.  The node will make sure
     // the observer is cleaned up when the actor is released.
@@ -509,17 +513,6 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       return [];
     }
     return findCssSelector(this.rawNode);
-  },
-
-  /**
-   * Get the full array of selectors from the topmost document, going through
-   * iframes.
-   */
-  getAllSelectors: function() {
-    if (Cu.isDeadWrapper(this.rawNode)) {
-      return "";
-    }
-    return findAllCssSelectors(this.rawNode);
   },
 
   /**

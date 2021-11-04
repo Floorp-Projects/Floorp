@@ -1432,31 +1432,22 @@ Inspector.prototype = {
   },
 
   /**
-   * Some inspector ruleview helpers rely on the selectionCssSelector to get the
-   * unique CSS selector of the selected element only within its host document,
-   * disregarding ancestor iframes.
-   * They should not care about the complete array of CSS selectors, only
-   * relevant in order to reselect the proper node when reloading pages with
-   * frames.
-   */
-  get selectionCssSelector() {
-    if (this.selectionCssSelectors.length) {
-      return this.selectionCssSelectors[this.selectionCssSelectors.length - 1];
-    }
-
-    return null;
-  },
-
-  /**
    * On any new selection made by the user, store the array of css selectors
    * of the selected node so it can be restored after reload of the same page
    */
   updateSelectionCssSelectors() {
-    if (this.selection.isElementNode()) {
-      this.selection.nodeFront.getAllSelectors().then(selectors => {
-        this.selectionCssSelectors = selectors;
-      }, this._handleRejectionIfNotDestroyed);
+    if (!this.selection.isElementNode()) {
+      return;
     }
+
+    this.commands.inspectorCommand
+      .getNodeFrontSelectorsFromTopDocument(this.selection.nodeFront)
+      .then(selectors => {
+        this.selectionCssSelectors = selectors;
+        // emit an event so tests relying on the property being set can properly wait
+        // for it.
+        this.emitForTests("selection-css-selectors-updated", selectors);
+      }, this._handleRejectionIfNotDestroyed);
   },
 
   /**
