@@ -669,6 +669,22 @@ FunctionSyntaxKind CompilationInput::functionSyntaxKind() const {
   return FunctionSyntaxKind::Statement;
 }
 
+void InputScope::trace(JSTracer* trc) {
+  using ScopePtr = Scope*;
+  if (scope_.is<ScopePtr>()) {
+    ScopePtr* ptrAddr = &scope_.as<ScopePtr>();
+    TraceNullableRoot(trc, ptrAddr, "compilation-input-scope");
+  }
+}
+
+void InputScript::trace(JSTracer* trc) {
+  using ScriptPtr = BaseScript*;
+  if (script_.is<ScriptPtr>()) {
+    ScriptPtr* ptrAddr = &script_.as<ScriptPtr>();
+    TraceNullableRoot(trc, ptrAddr, "compilation-input-lazy");
+  }
+}
+
 void CompilationInput::trace(JSTracer* trc) {
   atomCache.trace(trc);
   TraceNullableRoot(trc, &lazy_, "compilation-input-lazy");

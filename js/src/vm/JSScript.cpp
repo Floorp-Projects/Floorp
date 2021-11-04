@@ -3651,6 +3651,9 @@ BaseScript* BaseScript::CreateRawLazy(JSContext* cx, uint32_t ngcthings,
   // Allocate a PrivateScriptData if it will not be empty. Lazy class
   // constructors that use member initializers also need PrivateScriptData for
   // field data.
+  //
+  // This condition is implicit in BaseScript::hasPrivateScriptData, and should
+  // be mirrored on InputScript::hasPrivateScriptData.
   if (ngcthings || lazy->useMemberInitializers()) {
     UniquePtr<PrivateScriptData> data(PrivateScriptData::new_(cx, ngcthings));
     if (!data) {
