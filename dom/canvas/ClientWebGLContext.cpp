@@ -545,15 +545,16 @@ ClientWebGLContext::SetDimensions(const int32_t signedWidth,
 }
 
 static bool IsWebglOutOfProcessEnabled() {
-  bool useOop = StaticPrefs::webgl_out_of_process();
-
-  if (!gfx::gfxVars::AllowWebglOop()) {
-    useOop = false;
-  }
   if (StaticPrefs::webgl_out_of_process_force()) {
-    useOop = true;
+    return true;
   }
-  return useOop;
+  if (!gfx::gfxVars::AllowWebglOop()) {
+    return false;
+  }
+  if (!NS_IsMainThread()) {
+    return StaticPrefs::webgl_out_of_process_worker();
+  }
+  return StaticPrefs::webgl_out_of_process();
 }
 
 static inline bool StartsWith(const std::string& haystack,
