@@ -116,5 +116,16 @@ add_task(async () => {
     "findNodeFrontFromSelectors returned the last matching iframe document if the children selector isn't found"
   );
 
+  info("Check that timeout does work");
+  nodeFront = await commands.inspectorCommand.findNodeFrontFromSelectors(
+    ["#iframe-org", "#in-iframe"],
+    0
+  );
+  is(
+    nodeFront,
+    null,
+    "findNodeFrontFromSelectors timed out and returned null, as expected"
+  );
+
   await commands.destroy();
 });
