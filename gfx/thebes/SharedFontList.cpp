@@ -649,13 +649,13 @@ FontList::FontList(uint32_t aGeneration) {
     // Initialize using the list of shmem blocks passed by the parent via
     // SetXPCOMProcessAttributes.
     auto& blocks = dom::ContentChild::GetSingleton()->SharedFontListBlocks();
-    for (auto handle : blocks) {
+    for (auto& handle : blocks) {
       auto newShm = MakeUnique<base::SharedMemory>();
       if (!newShm->IsHandleValid(handle)) {
         // Bail out and let UpdateShmBlocks try to do its thing below.
         break;
       }
-      if (!newShm->SetHandle(handle, true)) {
+      if (!newShm->SetHandle(std::move(handle), true)) {
         MOZ_CRASH("failed to set shm handle");
       }
       if (!newShm->Map(SHM_BLOCK_SIZE) || !newShm->memory()) {
@@ -746,7 +746,7 @@ void FontList::ShmBlockAdded(uint32_t aGeneration, uint32_t aIndex,
   if (!newShm->IsHandleValid(aHandle)) {
     return;
   }
-  if (!newShm->SetHandle(aHandle, true)) {
+  if (!newShm->SetHandle(std::move(aHandle), true)) {
     MOZ_CRASH("failed to set shm handle");
   }
 
@@ -795,7 +795,7 @@ FontList::ShmBlock* FontList::GetBlockFromParent(uint32_t aIndex) {
   if (!newShm->IsHandleValid(handle)) {
     return nullptr;
   }
-  if (!newShm->SetHandle(handle, true)) {
+  if (!newShm->SetHandle(std::move(handle), true)) {
     MOZ_CRASH("failed to set shm handle");
   }
   if (!newShm->Map(SHM_BLOCK_SIZE) || !newShm->memory()) {

@@ -78,7 +78,7 @@ static UniquePtr<base::SharedMemory> GetHyphDictFromParent(nsIURI* aURI,
   if (!shm->IsHandleValid(handle)) {
     return nullptr;
   }
-  if (!shm->SetHandle(handle, true)) {
+  if (!shm->SetHandle(std::move(handle), true)) {
     return nullptr;
   }
   if (!shm->Map(size)) {

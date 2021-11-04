@@ -262,8 +262,8 @@ CompositorManagerParent::AllocPCompositorBridgeParent(
 }
 
 mozilla::ipc::IPCResult CompositorManagerParent::RecvAddSharedSurface(
-    const wr::ExternalImageId& aId, const SurfaceDescriptorShared& aDesc) {
-  SharedSurfacesParent::Add(aId, aDesc, OtherPid());
+    const wr::ExternalImageId& aId, SurfaceDescriptorShared&& aDesc) {
+  SharedSurfacesParent::Add(aId, std::move(aDesc), OtherPid());
   return IPC_OK();
 }
 

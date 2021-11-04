@@ -82,9 +82,9 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
    * @param aReaderServices provides functions required by the reader
    * @returns true if initialization succeeds
    */
-  bool InitReader(const ipc::SharedMemoryBasic::Handle& aReadHandle,
-                  const CrossProcessSemaphoreHandle& aReaderSem,
-                  const CrossProcessSemaphoreHandle& aWriterSem,
+  bool InitReader(ipc::SharedMemoryBasic::Handle aReadHandle,
+                  CrossProcessSemaphoreHandle aReaderSem,
+                  CrossProcessSemaphoreHandle aWriterSem,
                   UniquePtr<ReaderServices> aReaderServices);
 
   bool good() const final { return mGood; }

@@ -36,9 +36,9 @@ SharedMemoryBasic::~SharedMemoryBasic() {
   CloseHandle();
 }
 
-bool SharedMemoryBasic::SetHandle(const Handle& aHandle, OpenRights aRights) {
+bool SharedMemoryBasic::SetHandle(Handle aHandle, OpenRights aRights) {
   MOZ_ASSERT(-1 == mShmFd, "Already Create()d");
-  mShmFd = aHandle.fd;
+  mShmFd = aHandle.release();
   mOpenRights = aRights;
   return true;
 }
@@ -107,8 +107,7 @@ bool SharedMemoryBasic::ShareToProcess(base::ProcessId /*unused*/,
     return false;
   }
 
-  aNewHandle->fd = shmfdDup;
-  aNewHandle->auto_close = true;
+  *aNewHandle = mozilla::UniqueFileHandle(shmfdDup);
   return true;
 }
 
