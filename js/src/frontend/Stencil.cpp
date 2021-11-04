@@ -860,14 +860,20 @@ void CompilationInput::trace(JSTracer* trc) {
 bool CompilationSyntaxParseCache::init(JSContext* cx, LifoAlloc& alloc,
                                        ParserAtomsTable& parseAtoms,
                                        CompilationAtomCache& atomCache,
-                                       BaseScript* lazy) {
+                                       const InputScript& lazy) {
   if (!copyFunctionInfo(cx, parseAtoms, atomCache, lazy)) {
     return false;
   }
-  if (!copyScriptInfo(cx, alloc, parseAtoms, atomCache, lazy)) {
-    return false;
-  }
-  if (!copyClosedOverBindings(cx, alloc, parseAtoms, atomCache, lazy)) {
+  bool success = lazy.raw().match([&](auto& ref) {
+    if (!copyScriptInfo(cx, alloc, parseAtoms, atomCache, ref)) {
+      return false;
+    }
+    if (!copyClosedOverBindings(cx, alloc, parseAtoms, atomCache, ref)) {
+      return false;
+    }
+    return true;
+  });
+  if (!success) {
     return false;
   }
 #ifdef DEBUG
@@ -878,20 +884,19 @@ bool CompilationSyntaxParseCache::init(JSContext* cx, LifoAlloc& alloc,
 
 bool CompilationSyntaxParseCache::copyFunctionInfo(
     JSContext* cx, ParserAtomsTable& parseAtoms,
-    CompilationAtomCache& atomCache, BaseScript* lazy) {
-  if (lazy->function()->displayAtom()) {
-    displayAtom_ =
-        parseAtoms.internJSAtom(cx, atomCache, lazy->function()->displayAtom());
+    CompilationAtomCache& atomCache, const InputScript& lazy) {
+  InputName name = lazy.displayAtom();
+  if (!name.isNull()) {
+    displayAtom_ = name.internInto(cx, parseAtoms, atomCache);
     if (!displayAtom_) {
       return false;
     }
   }
 
-  funExtra_.immutableFlags = lazy->immutableFlags();
-  funExtra_.extent = lazy->extent();
+  funExtra_.immutableFlags = lazy.immutableFlags();
+  funExtra_.extent = lazy.extent();
   if (funExtra_.useMemberInitializers()) {
-    funExtra_.setMemberInitializers(
-        lazy->function()->baseScript()->getMemberInitializers());
+    funExtra_.setMemberInitializers(lazy.getMemberInitializers());
   }
 
   return true;
@@ -969,6 +974,68 @@ bool CompilationSyntaxParseCache::copyScriptInfo(
   return true;
 }
 
+bool CompilationSyntaxParseCache::copyScriptInfo(
+    JSContext* cx, LifoAlloc& alloc, ParserAtomsTable& parseAtoms,
+    CompilationAtomCache& atomCache, const ScriptStencilRef& lazy) {
+  using GCThingsSpan = mozilla::Span<TaggedScriptThingIndex>;
+  using ScriptDataSpan = mozilla::Span<ScriptStencil>;
+  using ScriptExtraSpan = mozilla::Span<ScriptStencilExtra>;
+  cachedGCThings_ = GCThingsSpan(nullptr);
+  cachedScriptData_ = ScriptDataSpan(nullptr);
+  cachedScriptExtra_ = ScriptExtraSpan(nullptr);
+
+  size_t offset = lazy.scriptData().gcThingsOffset.index;
+  size_t length = lazy.scriptData().gcThingsLength;
+  if (length == 0) {
+    return true;
+  }
+
+  // Reduce the length to the first element which is not a function.
+  for (size_t i = offset; i < offset + length; i++) {
+    if (!lazy.context_.gcThingData[i].isFunction()) {
+      length = i - offset;
+      break;
+    }
+  }
+
+  TaggedScriptThingIndex* gcThingsData =
+      alloc.newArrayUninitialized<TaggedScriptThingIndex>(length);
+  ScriptStencil* scriptData =
+      alloc.newArrayUninitialized<ScriptStencil>(length);
+  ScriptStencilExtra* scriptExtra =
+      alloc.newArrayUninitialized<ScriptStencilExtra>(length);
+  if (!gcThingsData || !scriptData || !scriptExtra) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  for (size_t i = 0; i < length; i++) {
+    ScriptStencilRef inner{lazy.context_,
+                           lazy.context_.gcThingData[i + offset].toFunction()};
+    gcThingsData[i] = TaggedScriptThingIndex(ScriptIndex(i));
+    new (mozilla::KnownNotNull, &scriptData[i]) ScriptStencil();
+    ScriptStencil& data = scriptData[i];
+    ScriptStencilExtra& extra = scriptExtra[i];
+
+    InputName name{inner, inner.scriptData().functionAtom};
+    if (!name.isNull()) {
+      auto displayAtom = name.internInto(cx, parseAtoms, atomCache);
+      if (!displayAtom) {
+        return false;
+      }
+      data.functionAtom = displayAtom;
+    }
+    data.functionFlags = inner.scriptData().functionFlags;
+
+    extra = inner.scriptExtra();
+  }
+
+  cachedGCThings_ = GCThingsSpan(gcThingsData, length);
+  cachedScriptData_ = ScriptDataSpan(scriptData, length);
+  cachedScriptExtra_ = ScriptExtraSpan(scriptExtra, length);
+  return true;
+}
+
 bool CompilationSyntaxParseCache::copyClosedOverBindings(
     JSContext* cx, LifoAlloc& alloc, ParserAtomsTable& parseAtoms,
     CompilationAtomCache& atomCache, BaseScript* lazy) {
@@ -1012,6 +1079,56 @@ bool CompilationSyntaxParseCache::copyClosedOverBindings(
 
   closedOverBindings_ =
       ClosedOverBindingsSpan(closedOverBindings, length - start);
+  return true;
+}
+
+bool CompilationSyntaxParseCache::copyClosedOverBindings(
+    JSContext* cx, LifoAlloc& alloc, ParserAtomsTable& parseAtoms,
+    CompilationAtomCache& atomCache, const ScriptStencilRef& lazy) {
+  using ClosedOverBindingsSpan = mozilla::Span<TaggedParserAtomIndex>;
+  closedOverBindings_ = ClosedOverBindingsSpan(nullptr);
+
+  // The gcthings array contains the inner function list followed by the
+  // closed-over bindings data. Skip the inner function list, as it is already
+  // cached in cachedGCThings_. See also: BaseScript::CreateLazy.
+  size_t offset = lazy.scriptData().gcThingsOffset.index;
+  size_t length = lazy.scriptData().gcThingsLength;
+  size_t start = cachedGCThings_.Length();
+  MOZ_ASSERT(start <= length);
+  if (length - start == 0) {
+    return true;
+  }
+  length -= start;
+  start += offset;
+
+  // Atoms from the lazy.context (CompilationStencil) are not registered in the
+  // the parseAtoms table. Thus we create a new span which will contain all the
+  // interned atoms.
+  TaggedParserAtomIndex* closedOverBindings =
+      alloc.newArrayUninitialized<TaggedParserAtomIndex>(length);
+  if (!closedOverBindings) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  for (size_t i = 0; i < length; i++) {
+    auto gcThing = lazy.context_.gcThingData[i + start];
+    if (gcThing.isNull()) {
+      closedOverBindings[i] = TaggedParserAtomIndex::null();
+      continue;
+    }
+
+    MOZ_ASSERT(gcThing.isAtom());
+    InputName name(lazy, gcThing.toAtom());
+    auto parserAtom = name.internInto(cx, parseAtoms, atomCache);
+    if (!parserAtom) {
+      return false;
+    }
+
+    closedOverBindings[i] = parserAtom;
+  }
+
+  closedOverBindings_ = ClosedOverBindingsSpan(closedOverBindings, length);
   return true;
 }
 
@@ -1514,8 +1631,9 @@ static bool InstantiateTopLevel(JSContext* cx, CompilationInput& input,
   MOZ_ASSERT(stencil.sharedData.get(CompilationStencil::TopLevelIndex));
 
   if (!stencil.isInitialStencil()) {
-    MOZ_ASSERT(input.lazyOuterScript());
-    RootedScript script(cx, JSScript::CastFromLazy(input.lazyOuterScript()));
+    MOZ_ASSERT(input.lazyOuterBaseScript());
+    RootedScript script(cx,
+                        JSScript::CastFromLazy(input.lazyOuterBaseScript()));
     if (!JSScript::fullyInitFromStencil(cx, input.atomCache, stencil, gcOutput,
                                         script,
                                         CompilationStencil::TopLevelIndex)) {
@@ -1713,7 +1831,7 @@ static void FunctionsFromExistingLazy(CompilationInput& input,
   MOZ_ASSERT(gcOutput.functions.empty());
   gcOutput.functions.infallibleAppend(input.function());
 
-  for (JS::GCCellPtr elem : input.lazyOuterScript()->gcthings()) {
+  for (JS::GCCellPtr elem : input.lazyOuterBaseScript()->gcthings()) {
     if (!elem.is<JSObject>()) {
       continue;
     }
