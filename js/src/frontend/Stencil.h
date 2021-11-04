@@ -231,6 +231,7 @@ class BigIntStencil {
 class ScopeStencil {
   friend class StencilXDR;
   friend class InputScope;
+  friend class AbstractBindingIter<frontend::TaggedParserAtomIndex>;
   friend struct CompilationStencil;
   friend struct CompilationStencilMerger;
 
