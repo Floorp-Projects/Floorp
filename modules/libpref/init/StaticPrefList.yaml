@@ -4397,6 +4397,14 @@
   value: 2592000   # 30 days (in seconds)
   mirror: always
 
+# If true, capture login attemp, and add "highValueIsLoggedIn" permission to
+# the permission manager no matter whether fission is enabled and
+# WebContentIsolationStrateg is set to IsolateHighvalue.
+- name: fission.highValue.login.monitor
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "font."
 #---------------------------------------------------------------------------
