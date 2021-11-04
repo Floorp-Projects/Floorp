@@ -271,6 +271,10 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     return this._form.baseURI;
   }
 
+  get browsingContextID() {
+    return this._form.browsingContextID;
+  }
+
   get className() {
     return this.getAttribute("class") || "";
   }
