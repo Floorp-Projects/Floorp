@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas")
+      document.documentElement.appendChild(canvas)
+      const context = canvas.getContext("2d")
+      context.arcTo(4.883000064524857e+307, 1.546661088875107e+308, 2.559553941389527e+307, 1.0153516333341025e+308, 9.633835430115978e+307)
+      canvas.animate([{
+        "scale": "1090282421 55%"
+      }], 1000)
+    })
+    setTimeout('document.documentElement.className = ""', 300);
+  </script>
+</head>
+</html>
