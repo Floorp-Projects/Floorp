@@ -895,6 +895,30 @@ add_task(async function test_privacy_other_prefs() {
     }
   );
 
+  const GLOBAL_PRIVACY_CONTROL_PREF_NAME =
+    "privacy.globalprivacycontrol.enabled";
+
+  Preferences.set(GLOBAL_PRIVACY_CONTROL_PREF_NAME, false);
+  await testGetting("network.globalPrivacyControl", {}, false);
+
+  Preferences.set(GLOBAL_PRIVACY_CONTROL_PREF_NAME, true);
+  await testGetting("network.globalPrivacyControl", {}, true);
+
+  // trying to "set" should have no effect when readonly!
+  extension.sendMessage(
+    "set",
+    { value: !Preferences.get(GLOBAL_PRIVACY_CONTROL_PREF_NAME) },
+    "network.globalPrivacyControl"
+  );
+  let readOnlyGPCData = await extension.awaitMessage("settingData");
+  equal(
+    readOnlyGPCData.value,
+    Preferences.get(GLOBAL_PRIVACY_CONTROL_PREF_NAME),
+    "extension cannot set globalPrivacyControl"
+  );
+
+  equal(Preferences.get(GLOBAL_PRIVACY_CONTROL_PREF_NAME), true);
+
   const HTTPS_ONLY_PREF_NAME = "dom.security.https_only_mode";
   const HTTPS_ONLY_PBM_PREF_NAME = "dom.security.https_only_mode_pbm";
 
