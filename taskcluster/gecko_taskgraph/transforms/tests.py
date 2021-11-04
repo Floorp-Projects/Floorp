@@ -23,6 +23,7 @@ import logging
 import re
 
 from mozbuild.schedules import INCLUSIVE_COMPONENTS
+from taskgraph.util.yaml import load_yaml
 from voluptuous import (
     Any,
     Optional,
@@ -31,6 +32,7 @@ from voluptuous import (
 )
 
 import gecko_taskgraph
+from gecko_taskgraph.optimize.schema import OptimizationSchema
 from gecko_taskgraph.transforms.base import TransformSequence
 from gecko_taskgraph.util.attributes import keymatch
 from gecko_taskgraph.util.keyed_by import evaluate_keyed_by
@@ -42,7 +44,6 @@ from gecko_taskgraph.util.schema import (
     optionally_keyed_by,
     Schema,
 )
-from gecko_taskgraph.optimize.schema import OptimizationSchema
 from gecko_taskgraph.util.chunking import (
     chunk_manifests,
     get_manifest_loader,
@@ -218,251 +219,8 @@ def fission_filter(task):
     return task.get("e10s") in (True, "both")
 
 
-TEST_VARIANTS = {
-    "a11y-checks": {
-        "description": "{description} with accessibility checks enabled",
-        "suffix": "a11y-checks",
-        "replace": {
-            "run-on-projects": {
-                "by-test-platform": {
-                    "linux.*64(-shippable)?-qr/opt": ["trunk"],
-                    "default": [],
-                },
-            },
-            "tier": 2,
-        },
-        "merge": {
-            "mozharness": {
-                "extra-options": [
-                    "--enable-a11y-checks",
-                ],
-            },
-        },
-    },
-    "aab": {
-        "description": "{description} with aab test_runner",
-        "filterfn": gv_e10s_filter,
-        "suffix": "aab",
-        "replace": {
-            "target": "geckoview-test_runner.aab",
-            "docker-image": {
-                "in-tree": "android-test",
-            },
-        },
-    },
-    "geckoview-e10s-single": {
-        "description": "{description} with single-process e10s",
-        "filterfn": gv_e10s_filter,
-        "replace": {
-            "run-on-projects": ["trunk"],
-        },
-        "suffix": "e10s-single",
-        "merge": {
-            "mozharness": {
-                "extra-options": [
-                    "--setpref=dom.ipc.processCount=1",
-                ],
-            },
-        },
-    },
-    "geckoview-fission": {
-        "description": "{description} with fission enabled",
-        "filterfn": gv_e10s_filter,
-        "suffix": "fis",
-        "merge": {
-            "mozharness": {
-                "extra-options": [
-                    "--enable-fission",
-                ],
-            },
-        },
-    },
-    "fission": {
-        "description": "{description} with fission enabled",
-        "filterfn": fission_filter,
-        "suffix": "fis",
-        "replace": {
-            "e10s": True,
-        },
-        "merge": {
-            "mozharness": {
-                "extra-options": [
-                    "--setpref=fission.autostart=true",
-                ],
-            },
-        },
-    },
-    "fission-xorigin": {
-        "description": "{description} with cross-origin and fission enabled",
-        "filterfn": fission_filter,
-        "suffix": "fis-xorig",
-        "replace": {
-            "e10s": True,
-        },
-        "merge": {
-            "mozharness": {
-                "extra-options": [
-                    "--setpref=fission.autostart=true",
-                    "--enable-xorigin-tests",
-                ],
-            },
-        },
-    },
-    "fission-webgl-ipc": {
-        # TODO: After 2021-05-01, verify this variant is still needed.
-        "description": "{description} with fission and WebGL IPC process enabled",
-        "suffix": "fis-gli",
-        "replace": {
-            "e10s": True,
-        },
-        "merge": {
-            "mozharness": {
-                "extra-options": [
-                    "--setpref=fission.autostart=true",
-                    "--setpref=dom.serviceWorkers.parent_intercept=true",
-                    "--setpref=webgl.out-of-process=true",
-                ],
-            },
-        },
-    },
-    "socketprocess": {
-        "description": "{description} with socket process enabled",
-        "suffix": "spi",
-        "merge": {
-            "mozharness": {
-                "extra-options": [
-                    "--setpref=media.peerconnection.mtransport_process=true",
-                    "--setpref=network.process.enabled=true",
-                ],
-            }
-        },
-    },
-    "socketprocess_networking": {
-        "description": "{description} with networking on socket process enabled",
-        "suffix": "spi-nw",
-        "merge": {
-            "mozharness": {
-                "extra-options": [
-                    "--setpref=network.process.enabled=true",
-                    "--setpref=network.http.network_access_on_socket_process.enabled=true",
-                    "--setpref=network.ssl_tokens_cache_enabled=true",
-                ],
-            }
-        },
-    },
-    "wayland": {
-        "description": "{description} with Wayland backend enabled",
-        "suffix": "wayland",
-        "replace": {
-            "run-on-projects": [],
-        },
-        "merge": {
-            "mozharness": {
-                "extra-options": [
-                    "--setpref=widget.wayland.test-workarounds.enabled=true",
-                ],
-            }
-        },
-    },
-    "webrender": {
-        "description": "{description} with webrender enabled",
-        "suffix": "wr",
-        "merge": {
-            "webrender": True,
-        },
-    },
-    "webrender-sw": {
-        "description": "{description} with software webrender enabled",
-        "suffix": "swr",
-        "merge": {
-            "webrender": True,
-            "mozharness": {
-                "extra-options": [
-                    "--setpref=gfx.webrender.software=true",
-                ],
-            },
-        },
-    },
-    "webrender-sw-a11y-checks": {
-        "description": "{description} with software webrender and accessibility checks enabled",
-        "suffix": "swr-a11y-checks",
-        "replace": {
-            "run-on-projects": {
-                "by-test-platform": {
-                    "linux.*64(-shippable)?-qr/opt": ["trunk"],
-                    "default": [],
-                },
-            },
-            "tier": 2,
-        },
-        "merge": {
-            "webrender": True,
-            "mozharness": {
-                "extra-options": [
-                    "--setpref=gfx.webrender.software=true",
-                    "--enable-a11y-checks",
-                ],
-            },
-        },
-    },
-    "webrender-sw-fission": {
-        "description": "{description} with software webrender and fission enabled",
-        "filterfn": fission_filter,
-        "suffix": "swr-fis",
-        "replace": {
-            "e10s": True,
-        },
-        "merge": {
-            "webrender": True,
-            "mozharness": {
-                "extra-options": [
-                    "--setpref=gfx.webrender.software=true",
-                    "--setpref=fission.autostart=true",
-                ],
-            },
-        },
-    },
-    "webrender-sw-wayland": {
-        "description": "{description} with software webrender and Wayland backend enabled",
-        "suffix": "swr-wayland",
-        "replace": {
-            "run-on-projects": [],
-        },
-        "merge": {
-            "mozharness": {
-                "extra-options": [
-                    "--setpref=gfx.webrender.software=true",
-                    "--setpref=widget.wayland.test-workarounds.enabled=true",
-                ],
-            }
-        },
-    },
-    "webgl-ipc": {
-        # TODO: After 2021-05-01, verify this variant is still needed.
-        "description": "{description} with WebGL IPC process enabled",
-        "suffix": "gli",
-        "merge": {
-            "mozharness": {
-                "extra-options": [
-                    "--setpref=webgl.out-of-process=true",
-                ],
-            },
-        },
-    },
-    "webgl-ipc-profiling": {
-        # TODO: After 2021-05-01, verify this variant is still needed.
-        "description": "{description} with WebGL IPC process enabled",
-        "suffix": "gli",
-        "merge": {
-            "mozharness": {
-                "extra-options": [
-                    "--setpref=webgl.out-of-process=true",
-                ],
-            },
-        },
-    },
-}
-
+TEST_VARIANTS = load_yaml("taskcluster", "ci", "test", "variants.yml")
+"""List of available test variants defined."""
 
 DYNAMIC_CHUNK_DURATION = 20 * 60  # seconds
 """The approximate time each test chunk should take to run."""
@@ -817,7 +575,7 @@ def split_variants(config, tasks):
         for name in variants:
             variant = TEST_VARIANTS[name]
 
-            if "filterfn" in variant and not variant["filterfn"](task):
+            if "filterfn" in variant and not globals()[variant["filterfn"]](task):
                 continue
 
             taskv = copy.deepcopy(task)
