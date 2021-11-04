@@ -181,7 +181,7 @@ static std::string ChooseDeviceReplacement(const std::string& str) {
 
     static const std::regex kIntelHD("Intel.*Graphics( P?([0-9][0-9][0-9]+))?");
     if (std::regex_search(str, m, kIntelHD)) {
-      if (!m.str(1).size()) {
+      if (m.str(1).empty()) {
         return HD_GRAPHICS;
       }
       const auto modelNum = stoul(m.str(2));
