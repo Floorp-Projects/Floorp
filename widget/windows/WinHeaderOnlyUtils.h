@@ -12,15 +12,14 @@
 #include <winnt.h>
 #include <winternl.h>
 #include <objbase.h>
-
 #include <stdlib.h>
+#include <tuple>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DynamicallyLinkedFunctionPtr.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ResultVariant.h"
-#include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsWindowsHelpers.h"
@@ -645,13 +644,13 @@ class ModuleVersion final {
 
   operator uint64_t() const { return AsInteger(); }
 
-  Tuple<uint16_t, uint16_t, uint16_t, uint16_t> AsTuple() const {
+  std::tuple<uint16_t, uint16_t, uint16_t, uint16_t> AsTuple() const {
     uint16_t major = static_cast<uint16_t>((mVersion >> 48) & 0xFFFFU);
     uint16_t minor = static_cast<uint16_t>((mVersion >> 32) & 0xFFFFU);
     uint16_t patch = static_cast<uint16_t>((mVersion >> 16) & 0xFFFFU);
     uint16_t build = static_cast<uint16_t>(mVersion & 0xFFFFU);
 
-    return MakeTuple(major, minor, patch, build);
+    return {major, minor, patch, build};
   }
 
   explicit operator bool() const { return !!mVersion; }
