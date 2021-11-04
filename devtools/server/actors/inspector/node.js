@@ -510,7 +510,7 @@ const NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
    */
   getUniqueSelector: function() {
     if (Cu.isDeadWrapper(this.rawNode)) {
-      return [];
+      return "";
     }
     return findCssSelector(this.rawNode);
   },
