@@ -162,16 +162,14 @@ int32_t WebrtcMediaDataEncoder::InitEncode(
 
   RefPtr<MediaDataEncoder> encoder = CreateEncoder(aCodecSettings);
   if (!encoder) {
-    LOG("Fail to create encoder. Falling back to SW");
-    return WEBRTC_VIDEO_CODEC_FALLBACK_SOFTWARE;
+    return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
   InitCodecSpecficInfo(mCodecSpecific, aCodecSettings);
   LOG("Init encode, mimeType %s, mode %s", mInfo.mMimeType.get(),
       PacketModeStr(mCodecSpecific));
   if (!media::Await(do_AddRef(mTaskQueue), encoder->Init()).IsResolve()) {
-    LOG("Fail to init encoder. Falling back to SW");
-    return WEBRTC_VIDEO_CODEC_FALLBACK_SOFTWARE;
+    return WEBRTC_VIDEO_CODEC_ERROR;
   }
   mEncoder = std::move(encoder);
   return WEBRTC_VIDEO_CODEC_OK;
