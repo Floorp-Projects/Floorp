@@ -1003,8 +1003,9 @@ ModuleObject* frontend::CompileModule(JSContext* cx,
 }
 
 template <typename Unit>
-static bool CompileLazyFunction(JSContext* cx, CompilationInput& input,
-                                const Unit* units, size_t length) {
+static bool CompileLazyFunctionToStencilMaybeInstantiate(
+    JSContext* cx, CompilationInput& input, const Unit* units, size_t length,
+    BytecodeCompilerOutput& output) {
   MOZ_ASSERT(input.source);
 
   AutoAssertReportedException assertException(cx);
@@ -1054,11 +1055,38 @@ static bool CompileLazyFunction(JSContext* cx, CompilationInput& input,
         .setAllowRelazify();
   }
 
-  mozilla::DebugOnly<uint32_t> lazyFlags =
-      static_cast<uint32_t>(input.immutableFlags());
+  if (output.is<UniquePtr<ExtensibleCompilationStencil>>()) {
+    auto stencil = cx->make_unique<ExtensibleCompilationStencil>(
+        std::move(compilationState));
+    if (!stencil) {
+      return false;
+    }
+    output.as<UniquePtr<ExtensibleCompilationStencil>>() = std::move(stencil);
+  } else if (output.is<UniquePtr<CompilationStencil>>()) {
+    AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
+                                       JS::ProfilingCategoryPair::JS_Parsing);
 
-  Rooted<CompilationGCOutput> gcOutput(cx);
-  {
+    auto stencil = cx->make_unique<CompilationStencil>(input.source);
+    if (!stencil) {
+      return false;
+    }
+
+    if (!stencil->steal(cx, std::move(compilationState))) {
+      return false;
+    }
+
+    output.as<UniquePtr<CompilationStencil>>() = std::move(stencil);
+  } else {
+    // We do check the type, but do not write anything to it as this is not
+    // necessary for lazy function, as the script is patched inside the
+    // JSFunction when instantiating.
+    MOZ_ASSERT(output.is<CompilationGCOutput*>());
+    MOZ_ASSERT(!output.as<CompilationGCOutput*>());
+
+    mozilla::DebugOnly<uint32_t> lazyFlags =
+        static_cast<uint32_t>(input.immutableFlags());
+
+    Rooted<CompilationGCOutput> gcOutput(cx);
     BorrowingCompilationStencil borrowingStencil(compilationState);
 
     if (input.source->hasEncoder()) {
@@ -1129,7 +1157,10 @@ static bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx,
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   input.get().initFromLazy(cx, lazy, ss);
 
-  return CompileLazyFunction(cx, input.get(), units.get(), sourceLength);
+  CompilationGCOutput* unusedGcOutput = nullptr;
+  BytecodeCompilerOutput output(unusedGcOutput);
+  return CompileLazyFunctionToStencilMaybeInstantiate(
+      cx, input.get(), units.get(), sourceLength, output);
 }
 
 bool frontend::DelazifyCanonicalScriptedFunction(JSContext* cx,
@@ -1149,6 +1180,73 @@ bool frontend::DelazifyCanonicalScriptedFunction(JSContext* cx,
 
   // UTF-16 source text.
   return DelazifyCanonicalScriptedFunctionImpl<char16_t>(cx, fun, lazy, ss);
+}
+
+template <typename Unit>
+static UniquePtr<CompilationStencil> DelazifyCanonicalScriptedFunctionImpl(
+    JSContext* cx, CompilationStencil& context, ScriptIndex scriptIndex) {
+  ScriptStencilRef script{context, scriptIndex};
+  const ScriptStencil& data = script.scriptData();
+  const ScriptStencilExtra& extra = script.scriptExtra();
+
+  MOZ_ASSERT(!data.hasSharedData(), "Script is already compiled!");
+  MOZ_DIAGNOSTIC_ASSERT(!data.isGhost());
+
+  AutoIncrementalTimer timer(cx->realm()->timers.delazificationTime);
+
+  size_t sourceStart = extra.extent.sourceStart;
+  size_t sourceLength = extra.extent.sourceEnd - sourceStart;
+
+  ScriptSource* ss = context.source;
+  MOZ_ASSERT(ss->hasSourceText());
+
+  // Parse and compile the script from source.
+  UncompressedSourceCache::AutoHoldEntry holder;
+
+  MOZ_ASSERT(ss->hasSourceType<Unit>());
+
+  ScriptSource::PinnedUnits<Unit> units(cx, ss, holder, sourceStart,
+                                        sourceLength);
+  if (!units.get()) {
+    return nullptr;
+  }
+
+  JS::CompileOptions options(cx);
+  options.setMutedErrors(ss->mutedErrors())
+      .setFileAndLine(ss->filename(), extra.extent.lineno)
+      .setColumn(extra.extent.column)
+      .setScriptSourceOffset(sourceStart)
+      .setNoScriptRval(false)
+      .setSelfHostingMode(false);
+
+  Rooted<CompilationInput> input(cx, CompilationInput(options));
+  input.get().initFromStencil(context, scriptIndex, ss);
+
+  using OutputType = UniquePtr<CompilationStencil>;
+  BytecodeCompilerOutput output((OutputType()));
+  if (!CompileLazyFunctionToStencilMaybeInstantiate(
+          cx, input.get(), units.get(), sourceLength, output)) {
+    return nullptr;
+  }
+  return std::move(output.as<OutputType>());
+}
+
+UniquePtr<CompilationStencil> frontend::DelazifyCanonicalScriptedFunction(
+    JSContext* cx, CompilationStencil& context, ScriptIndex scriptIndex) {
+  AutoGeckoProfilerEntry pseudoFrame(cx, "stencil script delazify",
+                                     JS::ProfilingCategoryPair::JS_Parsing);
+
+  ScriptSource* ss = context.source;
+  if (ss->hasSourceType<Utf8Unit>()) {
+    // UTF-8 source text.
+    return DelazifyCanonicalScriptedFunctionImpl<Utf8Unit>(cx, context,
+                                                           scriptIndex);
+  }
+
+  // UTF-16 source text.
+  MOZ_ASSERT(ss->hasSourceType<char16_t>());
+  return DelazifyCanonicalScriptedFunctionImpl<char16_t>(cx, context,
+                                                         scriptIndex);
 }
 
 static JSFunction* CompileStandaloneFunction(
