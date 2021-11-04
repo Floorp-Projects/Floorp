@@ -142,8 +142,8 @@ bool InputName::isEqualTo(JSContext* cx, ParserAtomsTable& parserAtoms,
 bool ScopeContext::init(JSContext* cx, CompilationInput& input,
                         ParserAtomsTable& parserAtoms, InheritThis inheritThis,
                         JSObject* enclosingEnv) {
-  Scope* maybeNonDefaultEnclosingScope = input.maybeNonDefaultEnclosingScope();
-  InputScope maybeNonDefaultEnclosingScope_(maybeNonDefaultEnclosingScope);
+  InputScope maybeNonDefaultEnclosingScope(
+      input.maybeNonDefaultEnclosingScope());
 
   // If this eval is in response to Debugger.Frame.eval, we may have an
   // incomplete scope chain. In order to provide a better debugging experience,
@@ -155,14 +155,13 @@ bool ScopeContext::init(JSContext* cx, CompilationInput& input,
   //       private fields and methods, while other contextual information only
   //       uses the actual scope passed to the compile.
   JS::Rooted<InputScope> effectiveScope(
-      cx, determineEffectiveScope(maybeNonDefaultEnclosingScope_,
-                                  enclosingEnv));
+      cx, determineEffectiveScope(maybeNonDefaultEnclosingScope, enclosingEnv));
 
   if (inheritThis == InheritThis::Yes) {
     computeThisBinding(effectiveScope);
     computeThisEnvironment(maybeNonDefaultEnclosingScope);
   }
-  computeInScope(maybeNonDefaultEnclosingScope_);
+  computeInScope(maybeNonDefaultEnclosingScope);
 
   cacheEnclosingScope(input.enclosingScope);
 
@@ -179,35 +178,33 @@ bool ScopeContext::init(JSContext* cx, CompilationInput& input,
   return true;
 }
 
-void ScopeContext::computeThisEnvironment(Scope* enclosingScope) {
+void ScopeContext::computeThisEnvironment(const InputScope& enclosingScope) {
   uint32_t envCount = 0;
-  for (ScopeIter si(enclosingScope); si; si++) {
+  for (InputScopeIter si(enclosingScope); si; si++) {
     if (si.kind() == ScopeKind::Function) {
-      JSFunction* fun = si.scope()->as<FunctionScope>().canonicalFunction();
-
       // Arrow function inherit the "this" environment of the enclosing script,
       // so continue ignore them.
-      if (!fun->isArrow()) {
+      if (!si.scope().isArrow()) {
         allowNewTarget = true;
 
-        if (fun->allowSuperProperty()) {
+        if (si.scope().allowSuperProperty()) {
           allowSuperProperty = true;
           enclosingThisEnvironmentHops = envCount;
         }
 
-        if (fun->isClassConstructor()) {
+        if (si.scope().isClassConstructor()) {
           memberInitializers =
-              fun->baseScript()->useMemberInitializers()
-                  ? mozilla::Some(fun->baseScript()->getMemberInitializers())
+              si.scope().useMemberInitializers()
+                  ? mozilla::Some(si.scope().getMemberInitializers())
                   : mozilla::Some(MemberInitializers::Empty());
           MOZ_ASSERT(memberInitializers->valid);
         } else {
-          if (fun->isSyntheticFunction()) {
+          if (si.scope().isSyntheticFunction()) {
             allowArguments = false;
           }
         }
 
-        if (fun->isDerivedClassConstructor()) {
+        if (si.scope().isDerivedClassConstructor()) {
           allowSuperCall = true;
         }
 
@@ -216,7 +213,7 @@ void ScopeContext::computeThisEnvironment(Scope* enclosingScope) {
       }
     }
 
-    if (si.scope()->hasEnvironment()) {
+    if (si.scope().hasEnvironment()) {
       envCount++;
     }
   }
