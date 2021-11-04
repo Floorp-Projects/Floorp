@@ -337,7 +337,10 @@ class PermissionStateRunnable final : public Runnable {
 
     RefPtr<PermissionResultRunnable> r =
         new PermissionResultRunnable(mProxy, rv, state);
-    MOZ_ALWAYS_TRUE(r->Dispatch());
+
+    // This can fail if the worker thread is already shutting down, but there's
+    // nothing we can do in that case.
+    Unused << NS_WARN_IF(!r->Dispatch());
 
     return NS_OK;
   }
