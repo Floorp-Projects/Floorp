@@ -16,6 +16,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.INACTIVE_TABS_FEATURE_NAME
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.TABS_TRAY_FEATURE_NAME
 import org.mozilla.fenix.tabstray.TrayPagerAdapter.Companion.TAB_GROUP_FEATURE_NAME
@@ -31,6 +32,7 @@ class TabSorterTest {
     private val settings: Settings = mockk()
     private val metrics: MetricController = mockk()
     private var inactiveTimestamp = 0L
+    private val tabsTrayStore = TabsTrayStore()
 
     @Before
     fun setUp() {
@@ -42,7 +44,7 @@ class TabSorterTest {
     @Test
     fun `WHEN updated with one normal tab THEN adapter have only one normal tab and no header`() {
         val adapter = ConcatAdapter(
-            InactiveTabsAdapter(context, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
+            InactiveTabsAdapter(context, tabsTrayStore, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
             TabGroupAdapter(context, mock(), mock(), TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(),
             BrowserTabsAdapter(context, mock(), mock(), TABS_TRAY_FEATURE_NAME)
@@ -66,7 +68,7 @@ class TabSorterTest {
     @Test
     fun `WHEN updated with one normal tab and two search term tab THEN adapter have normal tab and a search group`() {
         val adapter = ConcatAdapter(
-            InactiveTabsAdapter(context, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
+            InactiveTabsAdapter(context, tabsTrayStore, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
             TabGroupAdapter(context, mock(), mock(), TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(),
             BrowserTabsAdapter(context, mock(), mock(), TABS_TRAY_FEATURE_NAME)
@@ -102,7 +104,7 @@ class TabSorterTest {
     @Test
     fun `WHEN updated with one normal tab, one inactive tab and two search term tab THEN adapter have normal tab, inactive tab and a search group`() {
         val adapter = ConcatAdapter(
-            InactiveTabsAdapter(context, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
+            InactiveTabsAdapter(context, tabsTrayStore, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
             TabGroupAdapter(context, mock(), mock(), TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(),
             BrowserTabsAdapter(context, mock(), mock(), TABS_TRAY_FEATURE_NAME)
@@ -145,7 +147,7 @@ class TabSorterTest {
     fun `WHEN inactive tabs is off THEN adapter have no inactive tab`() {
         every { settings.inactiveTabsAreEnabled }.answers { false }
         val adapter = ConcatAdapter(
-            InactiveTabsAdapter(context, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
+            InactiveTabsAdapter(context, tabsTrayStore, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
             TabGroupAdapter(context, mock(), mock(), TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(),
             BrowserTabsAdapter(context, mock(), mock(), TABS_TRAY_FEATURE_NAME)
@@ -188,7 +190,7 @@ class TabSorterTest {
     fun `WHEN search term tabs is off THEN adapter have no search term group`() {
         every { settings.searchTermTabGroupsAreEnabled }.answers { false }
         val adapter = ConcatAdapter(
-            InactiveTabsAdapter(context, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
+            InactiveTabsAdapter(context, tabsTrayStore, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
             TabGroupAdapter(context, mock(), mock(), TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(),
             BrowserTabsAdapter(context, mock(), mock(), TABS_TRAY_FEATURE_NAME)
@@ -232,7 +234,7 @@ class TabSorterTest {
         every { settings.inactiveTabsAreEnabled }.answers { false }
         every { settings.searchTermTabGroupsAreEnabled }.answers { false }
         val adapter = ConcatAdapter(
-            InactiveTabsAdapter(context, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
+            InactiveTabsAdapter(context, tabsTrayStore, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
             TabGroupAdapter(context, mock(), mock(), TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(),
             BrowserTabsAdapter(context, mock(), mock(), TABS_TRAY_FEATURE_NAME)
@@ -273,7 +275,7 @@ class TabSorterTest {
     @Test
     fun `WHEN only one search term tab THEN there is no search group`() {
         val adapter = ConcatAdapter(
-            InactiveTabsAdapter(context, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
+            InactiveTabsAdapter(context, tabsTrayStore, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
             TabGroupAdapter(context, mock(), mock(), TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(),
             BrowserTabsAdapter(context, mock(), mock(), TABS_TRAY_FEATURE_NAME)
@@ -300,7 +302,7 @@ class TabSorterTest {
     @Test
     fun `WHEN remove second last one search term tab THEN search group is kept even if there's only one tab`() {
         val adapter = ConcatAdapter(
-            InactiveTabsAdapter(context, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
+            InactiveTabsAdapter(context, tabsTrayStore, mock(), mock(), INACTIVE_TABS_FEATURE_NAME, settings),
             TabGroupAdapter(context, mock(), mock(), TAB_GROUP_FEATURE_NAME),
             TitleHeaderAdapter(),
             BrowserTabsAdapter(context, mock(), mock(), TABS_TRAY_FEATURE_NAME)

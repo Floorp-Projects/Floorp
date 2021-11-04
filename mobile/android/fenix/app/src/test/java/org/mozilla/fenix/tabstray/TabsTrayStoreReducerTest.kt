@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.tabstray
 
+import mozilla.components.browser.state.state.createTab
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -16,6 +17,54 @@ class TabsTrayStoreReducerTest {
         val resultState = TabsTrayReducer.reduce(
             initialState,
             TabsTrayAction.ConsumeFocusGroupTabIdAction
+        )
+
+        assertEquals(expectedState, resultState)
+    }
+
+    @Test
+    fun `WHEN UpdateInactiveTabs THEN inactive tabs are added`() {
+        val inactiveTabs = listOf(
+            createTab("https://mozilla.org")
+        )
+        val initialState = TabsTrayState()
+        val expectedState = initialState.copy(inactiveTabs = inactiveTabs)
+
+        val resultState = TabsTrayReducer.reduce(
+            initialState,
+            TabsTrayAction.UpdateInactiveTabs(inactiveTabs)
+        )
+
+        assertEquals(expectedState, resultState)
+    }
+
+    @Test
+    fun `WHEN UpdateNormalTabs THEN normal tabs are added`() {
+        val normalTabs = listOf(
+            createTab("https://mozilla.org")
+        )
+        val initialState = TabsTrayState()
+        val expectedState = initialState.copy(normalTabs = normalTabs)
+
+        val resultState = TabsTrayReducer.reduce(
+            initialState,
+            TabsTrayAction.UpdateNormalTabs(normalTabs)
+        )
+
+        assertEquals(expectedState, resultState)
+    }
+
+    @Test
+    fun `WHEN UpdatePrivateTabs THEN private tabs are added`() {
+        val privateTabs = listOf(
+            createTab("https://mozilla.org", private = true)
+        )
+        val initialState = TabsTrayState()
+        val expectedState = initialState.copy(privateTabs = privateTabs)
+
+        val resultState = TabsTrayReducer.reduce(
+            initialState,
+            TabsTrayAction.UpdatePrivateTabs(privateTabs)
         )
 
         assertEquals(expectedState, resultState)
