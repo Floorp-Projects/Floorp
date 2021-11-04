@@ -484,7 +484,7 @@ struct ScopeContext {
 
  private:
   void computeThisBinding(const InputScope& scope);
-  void computeThisEnvironment(Scope* enclosingScope);
+  void computeThisEnvironment(const InputScope& enclosingScope);
   void computeInScope(const InputScope& enclosingScope);
   void cacheEnclosingScope(Scope* enclosingScope);
 
