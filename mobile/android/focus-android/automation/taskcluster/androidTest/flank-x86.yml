@@ -40,7 +40,6 @@ gcloud:
   test-targets:
     - package org.mozilla.focus.activity
     - package org.mozilla.focus.privacy
-    - package org.mozilla.focus.screenshots
   
   device:
    - model: Pixel2
