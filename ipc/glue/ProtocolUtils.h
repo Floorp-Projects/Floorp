@@ -639,16 +639,6 @@ MOZ_NEVER_INLINE void ArrayLengthReadError(const char* aElementName);
 
 MOZ_NEVER_INLINE void SentinelReadError(const char* aElementName);
 
-#if defined(XP_WIN)
-// This is a restricted version of Windows' DuplicateHandle() function
-// that works inside the sandbox and can send handles but not retrieve
-// them.  Unlike DuplicateHandle(), it takes a process ID rather than
-// a process handle.  It returns true on success, false otherwise.
-bool DuplicateHandle(HANDLE aSourceHandle, DWORD aTargetProcessId,
-                     HANDLE* aTargetHandle, DWORD aDesiredAccess,
-                     DWORD aOptions);
-#endif
-
 /**
  * Annotate the crash reporter with the error code from the most recent system
  * call. Returns the system error.
