@@ -11,7 +11,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_privacy.h"
-#include "mozilla/intl/MozLocale.h"
+#include "mozilla/intl/Locale.h"
 #include "mozilla/intl/OSPreferences.h"
 #include "nsDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
@@ -303,9 +303,20 @@ LocaleService::Observe(nsISupports* aSubject, const char* aTopic,
 
 bool LocaleService::LanguagesMatch(const nsACString& aRequested,
                                    const nsACString& aAvailable) {
-  MozLocale requested = MozLocale(aRequested);
-  MozLocale available = MozLocale(aAvailable);
-  return requested.GetLanguage().Equals(available.GetLanguage());
+  Locale requested;
+  auto requestedResult = LocaleParser::tryParse(aRequested, requested);
+  Locale available;
+  auto availableResult = LocaleParser::tryParse(aAvailable, available);
+
+  if (requestedResult.isErr() || availableResult.isErr()) {
+    return false;
+  }
+
+  if (requested.canonicalize().isErr() || available.canonicalize().isErr()) {
+    return false;
+  }
+
+  return requested.language().span() == available.language().span();
 }
 
 bool LocaleService::IsServer() { return mIsServer; }
@@ -527,9 +538,14 @@ LocaleService::NegotiateLanguages(const nsTArray<nsCString>& aRequested,
     return NS_ERROR_INVALID_ARG;
   }
 
+#ifdef DEBUG
+  Locale parsedLocale;
+  auto result = LocaleParser::tryParse(aDefaultLocale, parsedLocale);
+
   MOZ_ASSERT(
-      aDefaultLocale.IsEmpty() || MozLocale(aDefaultLocale).IsWellFormed(),
+      aDefaultLocale.IsEmpty() || result.isOk(),
       "If specified, default locale must be a well-formed BCP47 language tag.");
+#endif
 
   if (aStrategy == kLangNegStrategyLookup && aDefaultLocale.IsEmpty()) {
     NS_WARNING(
