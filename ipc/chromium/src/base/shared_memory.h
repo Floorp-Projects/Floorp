@@ -12,7 +12,6 @@
 #if defined(OS_POSIX)
 #  include <sys/types.h>
 #  include <semaphore.h>
-#  include "base/file_descriptor_posix.h"
 #endif
 #include <string>
 
@@ -28,7 +27,7 @@ namespace base {
 #if defined(OS_WIN)
 typedef HANDLE SharedMemoryHandle;
 #elif defined(OS_POSIX)
-typedef FileDescriptor SharedMemoryHandle;
+typedef mozilla::UniqueFileHandle SharedMemoryHandle;
 #endif
 
 // Platform abstraction for shared memory.  Provides a C++ wrapper
@@ -42,7 +41,7 @@ class SharedMemory {
   // shared memory file.
   SharedMemory(SharedMemoryHandle init_handle, bool read_only)
       : SharedMemory() {
-    SetHandle(init_handle, read_only);
+    SetHandle(std::move(init_handle), read_only);
   }
 
   // Move constructor; transfers ownership.
