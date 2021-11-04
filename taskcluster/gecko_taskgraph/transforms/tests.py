@@ -570,10 +570,17 @@ variant_description_schema = Schema(
         }
     }
 )
+"""variant description schema"""
 
 
 @transforms.add
 def split_variants(config, tasks):
+    """Splits test definitions into multiple tasks based on the `variants` key.
+
+    If `variants` are defined, the original task will be yielded along with a
+    copy of the original task for each variant defined in the list. The copies
+    will have the 'unittest_variant' attribute set.
+    """
     validate_schema(variant_description_schema, TEST_VARIANTS, "In variants.yml:")
 
     for task in tasks:
