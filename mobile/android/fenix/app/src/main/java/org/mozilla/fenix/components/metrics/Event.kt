@@ -14,7 +14,6 @@ import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.Autoplay
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.ContextMenu
-import org.mozilla.fenix.GleanMetrics.CrashReporter
 import org.mozilla.fenix.GleanMetrics.ErrorPage
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.History
@@ -619,13 +618,7 @@ sealed class Event {
         }
     }
 
-    object CrashReporterOpened : Event()
     data class AddonInstalled(val addonId: String) : Event()
-
-    data class CrashReporterClosed(val crashSubmitted: Boolean) : Event() {
-        override val extras: Map<CrashReporter.closedKeys, String>?
-            get() = mapOf(CrashReporter.closedKeys.crashSubmitted to crashSubmitted.toString())
-    }
 
     data class BrowserMenuItemTapped(val item: Item) : Event() {
         enum class Item {
@@ -638,15 +631,6 @@ sealed class Event {
 
         override val extras: Map<Events.browserMenuActionKeys, String>?
             get() = mapOf(Events.browserMenuActionKeys.item to item.toString().lowercase(Locale.ROOT))
-    }
-
-    data class TabCounterMenuItemTapped(val item: Item) : Event() {
-        enum class Item {
-            NEW_TAB, NEW_PRIVATE_TAB, CLOSE_TAB
-        }
-
-        override val extras: Map<Events.tabCounterMenuActionKeys, String>?
-            get() = mapOf(Events.tabCounterMenuActionKeys.item to item.toString().lowercase(Locale.ROOT))
     }
 
     object AutoPlaySettingVisited : Event()

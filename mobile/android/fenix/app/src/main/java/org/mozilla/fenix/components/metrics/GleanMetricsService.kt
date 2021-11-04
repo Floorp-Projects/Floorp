@@ -19,7 +19,6 @@ import org.mozilla.fenix.GleanMetrics.BrowserSearch
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.ContextualMenu
-import org.mozilla.fenix.GleanMetrics.CrashReporter
 import org.mozilla.fenix.GleanMetrics.CreditCards
 import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.CustomizeHome
@@ -157,13 +156,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.ContextMenuItemTapped -> EventWrapper(
             { ContextMenu.itemTapped.record(it) },
             { ContextMenu.itemTappedKeys.valueOf(it) }
-        )
-        is Event.CrashReporterOpened -> EventWrapper<NoExtraKeys>(
-            { CrashReporter.opened.record(it) }
-        )
-        is Event.CrashReporterClosed -> EventWrapper(
-            { CrashReporter.closed.record(it) },
-            { CrashReporter.closedKeys.valueOf(it) }
         )
         is Event.BrowserMenuItemTapped -> EventWrapper(
             { Events.browserMenuAction.record(it) },
@@ -543,10 +535,6 @@ private val Event.wrapper: EventWrapper<*>?
         )
         is Event.VoiceSearchTapped -> EventWrapper<NoExtraKeys>(
             { VoiceSearch.tapped.record(it) }
-        )
-        is Event.TabCounterMenuItemTapped -> EventWrapper(
-            { Events.tabCounterMenuAction.record(it) },
-            { Events.tabCounterMenuActionKeys.valueOf(it) }
         )
         is Event.OnboardingPrivacyNotice -> EventWrapper<NoExtraKeys>(
             { Onboarding.privacyNotice.record(it) }

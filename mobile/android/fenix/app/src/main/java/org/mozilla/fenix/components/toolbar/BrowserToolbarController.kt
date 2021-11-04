@@ -126,9 +126,6 @@ class DefaultBrowserToolbarController(
     override fun handleTabCounterItemInteraction(item: TabCounterMenu.Item) {
         when (item) {
             is TabCounterMenu.Item.CloseTab -> {
-                metrics.track(
-                    Event.TabCounterMenuItemTapped(Event.TabCounterMenuItemTapped.Item.CLOSE_TAB)
-                )
                 store.state.selectedTab?.let {
                     // When closing the last tab we must show the undo snackbar in the home fragment
                     if (store.state.getNormalOrPrivateTabs(it.content.private).count() == 1) {
@@ -143,20 +140,12 @@ class DefaultBrowserToolbarController(
                 }
             }
             is TabCounterMenu.Item.NewTab -> {
-                metrics.track(
-                    Event.TabCounterMenuItemTapped(Event.TabCounterMenuItemTapped.Item.NEW_TAB)
-                )
                 activity.browsingModeManager.mode = BrowsingMode.Normal
                 navController.navigate(
                     BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true)
                 )
             }
             is TabCounterMenu.Item.NewPrivateTab -> {
-                metrics.track(
-                    Event.TabCounterMenuItemTapped(
-                        Event.TabCounterMenuItemTapped.Item.NEW_PRIVATE_TAB
-                    )
-                )
                 activity.browsingModeManager.mode = BrowsingMode.Private
                 navController.navigate(
                     BrowserFragmentDirections.actionGlobalHome(focusOnAddressBar = true)

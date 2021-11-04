@@ -15,7 +15,6 @@ import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
-import org.mozilla.fenix.components.metrics.Event
 
 import org.mozilla.fenix.utils.Settings
 
@@ -41,18 +40,10 @@ class CrashReporterControllerTest {
     }
 
     @Test
-    fun `reports crash reporter opened`() {
-        CrashReporterController(crash, sessionId, navContoller, components, settings)
-
-        verify { components.analytics.metrics.track(Event.CrashReporterOpened) }
-    }
-
-    @Test
     fun `handle close and restore tab`() {
         val controller = CrashReporterController(crash, sessionId, navContoller, components, settings)
         controller.handleCloseAndRestore(sendCrash = false)?.joinBlocking()
 
-        verify { components.analytics.metrics.track(Event.CrashReporterClosed(false)) }
         verify { components.useCases.sessionUseCases.crashRecovery.invoke() }
         verify { navContoller.popBackStack() }
     }
@@ -62,7 +53,6 @@ class CrashReporterControllerTest {
         val controller = CrashReporterController(crash, sessionId, navContoller, components, settings)
         controller.handleCloseAndRemove(sendCrash = false)?.joinBlocking()
 
-        verify { components.analytics.metrics.track(Event.CrashReporterClosed(false)) }
         verify { components.useCases.tabsUseCases.removeTab(sessionId) }
         verify { components.useCases.sessionUseCases.crashRecovery.invoke() }
         verify {
@@ -77,7 +67,9 @@ class CrashReporterControllerTest {
         val controller = CrashReporterController(crash, sessionId, navContoller, components, settings)
         controller.handleCloseAndRestore(sendCrash = true)?.joinBlocking()
 
-        verify { components.analytics.metrics.track(Event.CrashReporterClosed(false)) }
+        verify(exactly = 0) {
+            components.analytics.crashReporter.submitReport(crash)
+        }
     }
 
     @Test
@@ -87,7 +79,8 @@ class CrashReporterControllerTest {
         val controller = CrashReporterController(crash, sessionId, navContoller, components, settings)
         controller.handleCloseAndRestore(sendCrash = true)?.joinBlocking()
 
-        verify { components.analytics.crashReporter.submitReport(crash) }
-        verify { components.analytics.metrics.track(Event.CrashReporterClosed(true)) }
+        verify {
+            components.analytics.crashReporter.submitReport(crash)
+        }
     }
 }
