@@ -13,9 +13,8 @@
 #include "mozilla/dom/RemoteType.h"
 #include "mozilla/dom/SessionHistoryEntry.h"
 #include "nsString.h"
-
-class nsIURI;
-class nsIPrincipal;
+#include "nsIPrincipal.h"
+#include "nsIURI.h"
 
 namespace mozilla::dom {
 
@@ -79,6 +78,15 @@ Result<NavigationIsolationOptions, nsresult> IsolationOptionsForNavigation(
  */
 void AddHighValuePermission(nsIPrincipal* aResultPrincipal,
                             const nsACString& aPermissionType);
+
+void AddHighValuePermission(const nsACString& aOrigin,
+                            const nsACString& aPermissionType);
+
+/**
+ * Returns true when fission is enabled and the
+ * `fission.webContentIsolationStrategy` pref is set to `IsolateHighValue`.
+ */
+bool IsIsolateHighValueSiteEnabled();
 
 }  // namespace mozilla::dom
 
