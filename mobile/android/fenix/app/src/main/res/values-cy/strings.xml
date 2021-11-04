@@ -1102,7 +1102,7 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Dewislen casgliadau</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description2">Casglwch y pethau sydd o bwys i chi.\nCrynhowch ynghyd chwiliadau, gwefannau a thabiau tebyg i gael mynediad cyflym yn hwyrach.</string>
+    <string name="no_collections_description2">Casglwch y pethau sydd o bwys i chi.\nCasglwch ynghyd chwiliadau, gwefannau a thabiau tebyg i gael mynediad cyflym yn nes ymlaen.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Dewis Tabiau</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1431,7 +1431,7 @@ Fodd bynnag, gall fod yn llai sefydlog. Llwythwch ein porwr Beta i gael profiad 
 
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Dewis eich thema</string>
+    <string name="onboarding_theme_picker_header">Dewiswch eich thema</string>
     <!-- text for the theme picker onboarding card description -->
     <string name="onboarding_theme_picker_description_2">Arbedwch ychydig o fatri a’ch golwg trwy alluogi’r modd tywyll.</string>
     <!-- Automatic theme setting (will follow device setting) -->
