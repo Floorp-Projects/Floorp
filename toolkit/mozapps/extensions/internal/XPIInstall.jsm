@@ -3941,14 +3941,6 @@ var XPIInstall = {
 
     let addon = await loadManifestFromFile(source, location);
 
-    // Ensure a staged addon is compatible with the current running version of
-    // Firefox.  If a prior version of the addon is installed, it will remain.
-    if (!addon.isCompatible) {
-      throw new Error(
-        `Add-on ${addon.id} is not compatible with application version.`
-      );
-    }
-
     if (
       XPIDatabase.mustSign(addon.type) &&
       addon.signedState <= AddonManager.SIGNEDSTATE_MISSING
@@ -3958,7 +3950,16 @@ var XPIInstall = {
       );
     }
 
+    // Import saved metadata before checking for compatibility.
     addon.importMetadata(metadata);
+
+    // Ensure a staged addon is compatible with the current running version of
+    // Firefox.  If a prior version of the addon is installed, it will remain.
+    if (!addon.isCompatible) {
+      throw new Error(
+        `Add-on ${addon.id} is not compatible with application version.`
+      );
+    }
 
     logger.debug(`Processing install of ${id} in ${location.name}`);
     let existingAddon = XPIStates.findAddon(id);

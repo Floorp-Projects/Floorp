@@ -28,6 +28,9 @@ stageDir.append("staged");
 const IGNORE_ID = "test_delay_update_ignore_webext@tests.mozilla.org";
 const COMPLETE_ID = "test_delay_update_complete_webext@tests.mozilla.org";
 const DEFER_ID = "test_delay_update_defer_webext@tests.mozilla.org";
+const STAGED_ID = "test_delay_update_staged_webext@tests.mozilla.org";
+const STAGED_NO_UPDATE_URL_ID =
+  "test_delay_update_staged_webext_no_update_url@tests.mozilla.org";
 const NOUPDATE_ID = "test_no_update_webext@tests.mozilla.org";
 
 // Create and configure the HTTP server.
@@ -55,6 +58,35 @@ const ADDONS = {
       version: "2.0",
       applications: {
         gecko: { id: DEFER_ID },
+      },
+    },
+  },
+  test_delay_update_staged_webextension_v2: {
+    "manifest.json": {
+      manifest_version: 2,
+      name: "Delay Upgrade",
+      version: "2.0",
+      applications: {
+        gecko: {
+          id: STAGED_ID,
+          update_url: `http://example.com/data/test_delay_updates_staged.json`,
+          strict_min_version: "1",
+          strict_max_version: "41",
+        },
+      },
+    },
+  },
+  test_delay_update_staged_webextension_no_update_url_v2: {
+    "manifest.json": {
+      manifest_version: 2,
+      name: "Delay Upgrade",
+      version: "2.0",
+      applications: {
+        gecko: {
+          id: STAGED_NO_UPDATE_URL_ID,
+          strict_min_version: "1",
+          strict_max_version: "41",
+        },
       },
     },
   },
@@ -325,6 +357,150 @@ add_task(async function delay_updates_defer() {
   Assert.ok(!addon_allowed.appDisabled);
   Assert.ok(addon_allowed.isActive);
   Assert.equal(addon_allowed.type, "extension");
+
+  await extension.unload();
+  await promiseShutdownManager();
+});
+
+// add-on registers upgrade listener to deny update, completes after restart,
+// even though the updated XPI is incompatible - the information returned
+// by the update server defined in its manifest returns a compatible range
+add_task(async function delay_updates_staged() {
+  await promiseStartupManager();
+
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: STAGED_ID,
+          update_url: `http://example.com/data/test_delay_updates_staged.json`,
+        },
+      },
+    },
+    background() {
+      browser.runtime.onUpdateAvailable.addListener(details => {
+        browser.test.sendMessage("denied");
+      });
+      browser.test.sendMessage("ready");
+    },
+  });
+
+  await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
+
+  let addon = await promiseAddonByID(STAGED_ID);
+  Assert.notEqual(addon, null);
+  Assert.equal(addon.version, "1.0");
+  Assert.equal(addon.name, "Generated extension");
+  Assert.ok(addon.isCompatible);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.type, "extension");
+
+  let update = await promiseFindAddonUpdates(addon);
+  let install = update.updateAvailable;
+  await promiseCompleteAllInstalls([install]);
+
+  Assert.equal(install.state, AddonManager.STATE_POSTPONED);
+
+  // upgrade is initially postponed
+  let addon_postponed = await promiseAddonByID(STAGED_ID);
+  Assert.notEqual(addon_postponed, null);
+  Assert.equal(addon_postponed.version, "1.0");
+  Assert.equal(addon_postponed.name, "Generated extension");
+  Assert.ok(addon_postponed.isCompatible);
+  Assert.ok(!addon_postponed.appDisabled);
+  Assert.ok(addon_postponed.isActive);
+  Assert.equal(addon_postponed.type, "extension");
+
+  // add-on reports an available upgrade, but denied it till next restart
+  await extension.awaitMessage("denied");
+
+  await promiseRestartManager();
+  await extension.awaitStartup();
+
+  // add-on should have been updated during restart
+  let addon_upgraded = await promiseAddonByID(STAGED_ID);
+  Assert.notEqual(addon_upgraded, null);
+  Assert.equal(addon_upgraded.version, "2.0");
+  Assert.equal(addon_upgraded.name, "Delay Upgrade");
+  Assert.ok(addon_upgraded.isCompatible);
+  Assert.ok(!addon_upgraded.appDisabled);
+  Assert.ok(addon_upgraded.isActive);
+  Assert.equal(addon_upgraded.type, "extension");
+
+  await extension.unload();
+  await promiseShutdownManager();
+});
+
+// add-on registers upgrade listener to deny update, does not complete after
+// restart, because the updated XPI is incompatible - there is no update server
+// defined in its manifest, which could return a compatible range
+add_task(async function delay_updates_staged_no_update_url() {
+  await promiseStartupManager();
+
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: STAGED_NO_UPDATE_URL_ID,
+          update_url: `http://example.com/data/test_delay_updates_staged.json`,
+        },
+      },
+    },
+    background() {
+      browser.runtime.onUpdateAvailable.addListener(details => {
+        browser.test.sendMessage("denied");
+      });
+      browser.test.sendMessage("ready");
+    },
+  });
+
+  await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
+
+  let addon = await promiseAddonByID(STAGED_NO_UPDATE_URL_ID);
+  Assert.notEqual(addon, null);
+  Assert.equal(addon.version, "1.0");
+  Assert.equal(addon.name, "Generated extension");
+  Assert.ok(addon.isCompatible);
+  Assert.ok(!addon.appDisabled);
+  Assert.ok(addon.isActive);
+  Assert.equal(addon.type, "extension");
+
+  let update = await promiseFindAddonUpdates(addon);
+  let install = update.updateAvailable;
+  await promiseCompleteAllInstalls([install]);
+
+  Assert.equal(install.state, AddonManager.STATE_POSTPONED);
+
+  // upgrade is initially postponed
+  let addon_postponed = await promiseAddonByID(STAGED_NO_UPDATE_URL_ID);
+  Assert.notEqual(addon_postponed, null);
+  Assert.equal(addon_postponed.version, "1.0");
+  Assert.equal(addon_postponed.name, "Generated extension");
+  Assert.ok(addon_postponed.isCompatible);
+  Assert.ok(!addon_postponed.appDisabled);
+  Assert.ok(addon_postponed.isActive);
+  Assert.equal(addon_postponed.type, "extension");
+
+  // add-on reports an available upgrade, but denied it till next restart
+  await extension.awaitMessage("denied");
+
+  await promiseRestartManager();
+  await extension.awaitStartup();
+
+  // add-on should not have been updated during restart
+  let addon_upgraded = await promiseAddonByID(STAGED_NO_UPDATE_URL_ID);
+  Assert.notEqual(addon_upgraded, null);
+  Assert.equal(addon_upgraded.version, "1.0");
+  Assert.equal(addon_upgraded.name, "Generated extension");
+  Assert.ok(addon_upgraded.isCompatible);
+  Assert.ok(!addon_upgraded.appDisabled);
+  Assert.ok(addon_upgraded.isActive);
+  Assert.equal(addon_upgraded.type, "extension");
 
   await extension.unload();
   await promiseShutdownManager();

@@ -1,0 +1,32 @@
+{
+  "addons": {
+    "test_delay_update_staged_webext@tests.mozilla.org": {
+      "updates": [
+        {
+          "version": "2.0",
+          "update_link": "http://example.com/addons/test_delay_update_staged_webextension_v2.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "strict_max_version": "43"
+            }
+          }
+        }
+      ]
+    },
+    "test_delay_update_staged_webext_no_update_url@tests.mozilla.org": {
+      "updates": [
+        {
+          "version": "2.0",
+          "update_link": "http://example.com/addons/test_delay_update_staged_webextension_no_update_url_v2.xpi",
+          "applications": {
+            "gecko": {
+              "strict_min_version": "1",
+              "strict_max_version": "43"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
