@@ -689,7 +689,7 @@ function startup() {
                   mozSystemGroup: true,
                   capture: false,
                 },
-                "PasswordManager:ShowDoorhanger": {},
+                "PasswordManager:onFormSubmit": {},
               },
             },
             allFrames: true,
