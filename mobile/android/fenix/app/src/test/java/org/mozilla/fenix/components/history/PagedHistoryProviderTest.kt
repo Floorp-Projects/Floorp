@@ -146,4 +146,150 @@ class PagedHistoryProviderTest {
         )
         assertEquals(results, actualResults)
     }
+
+    @Test
+    fun `history metadata matching lower bound`() {
+        val provider = DefaultPagedHistoryProvider(
+            historyStorage = storage,
+            showHistorySearchGroups = true
+        )
+        // Oldest history visit on the page is 15 seconds (buffer time) newer than matching
+        // metadata record.
+        val visitInfo1 = VisitInfo(
+            url = "http://www.mozilla.com",
+            title = "mozilla",
+            visitTime = 25000,
+            visitType = VisitType.LINK,
+            previewImageUrl = null
+        )
+
+        val historyMetadataKey1 = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null)
+        val historyEntry1 = HistoryMetadata(
+            key = historyMetadataKey1,
+            title = "mozilla",
+            createdAt = 10000,
+            updatedAt = 10,
+            totalViewTime = 10,
+            documentType = DocumentType.Regular,
+            previewImageUrl = null
+        )
+
+        coEvery { storage.getVisitsPaginated(any(), any(), any()) } returns listOf(visitInfo1)
+        coEvery { storage.getHistoryMetadataSince(any()) } returns listOf(historyEntry1)
+
+        var actualResults: List<History>? = null
+        provider.getHistory(0L, 5) {
+            actualResults = it
+        }
+
+        coVerify {
+            storage.getVisitsPaginated(
+                offset = 0L,
+                count = 5,
+                excludeTypes = listOf(
+                    VisitType.NOT_A_VISIT,
+                    VisitType.DOWNLOAD,
+                    VisitType.REDIRECT_TEMPORARY,
+                    VisitType.RELOAD,
+                    VisitType.EMBED,
+                    VisitType.FRAMED_LINK,
+                    VisitType.REDIRECT_PERMANENT
+                )
+            )
+        }
+
+        val results = listOf(
+            History.Group(
+                id = historyEntry1.createdAt.toInt(),
+                title = historyEntry1.key.searchTerm!!,
+                visitedAt = historyEntry1.createdAt,
+                // Results are de-duped by URL and sorted descending by createdAt/visitedAt
+                items = listOf(
+                    History.Metadata(
+                        id = historyEntry1.createdAt.toInt(),
+                        title = historyEntry1.title!!,
+                        url = historyEntry1.key.url,
+                        visitedAt = historyEntry1.createdAt,
+                        totalViewTime = historyEntry1.totalViewTime,
+                        historyMetadataKey = historyMetadataKey1
+                    )
+                )
+            )
+        )
+
+        assertEquals(results, actualResults)
+    }
+
+    @Test
+    fun `history metadata matching upper bound`() {
+        val provider = DefaultPagedHistoryProvider(
+            historyStorage = storage,
+            showHistorySearchGroups = true
+        )
+        // Newest history visit on the page is 15 seconds (buffer time) older than matching
+        // metadata record.
+        val visitInfo1 = VisitInfo(
+            url = "http://www.mozilla.com",
+            title = "mozilla",
+            visitTime = 10000,
+            visitType = VisitType.LINK,
+            previewImageUrl = null
+        )
+
+        val historyMetadataKey1 = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null)
+        val historyEntry1 = HistoryMetadata(
+            key = historyMetadataKey1,
+            title = "mozilla",
+            createdAt = 25000,
+            updatedAt = 10,
+            totalViewTime = 10,
+            documentType = DocumentType.Regular,
+            previewImageUrl = null
+        )
+
+        coEvery { storage.getVisitsPaginated(any(), any(), any()) } returns listOf(visitInfo1)
+        coEvery { storage.getHistoryMetadataSince(any()) } returns listOf(historyEntry1)
+
+        var actualResults: List<History>? = null
+        provider.getHistory(0L, 5) {
+            actualResults = it
+        }
+
+        coVerify {
+            storage.getVisitsPaginated(
+                offset = 0L,
+                count = 5,
+                excludeTypes = listOf(
+                    VisitType.NOT_A_VISIT,
+                    VisitType.DOWNLOAD,
+                    VisitType.REDIRECT_TEMPORARY,
+                    VisitType.RELOAD,
+                    VisitType.EMBED,
+                    VisitType.FRAMED_LINK,
+                    VisitType.REDIRECT_PERMANENT
+                )
+            )
+        }
+
+        val results = listOf(
+            History.Group(
+                id = historyEntry1.createdAt.toInt(),
+                title = historyEntry1.key.searchTerm!!,
+                visitedAt = historyEntry1.createdAt,
+                // Results are de-duped by URL and sorted descending by createdAt/visitedAt
+                items = listOf(
+                    History.Metadata(
+                        id = historyEntry1.createdAt.toInt(),
+                        title = historyEntry1.title!!,
+                        url = historyEntry1.key.url,
+                        visitedAt = historyEntry1.createdAt,
+                        totalViewTime = historyEntry1.totalViewTime,
+                        historyMetadataKey = historyMetadataKey1
+                    )
+                )
+            )
+        )
+
+        assertEquals(results, actualResults)
+    }
 }
