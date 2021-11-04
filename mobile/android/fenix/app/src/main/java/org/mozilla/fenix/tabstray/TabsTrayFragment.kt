@@ -26,6 +26,7 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.tabs.tabstray.TabsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
@@ -48,6 +49,7 @@ import org.mozilla.fenix.tabstray.browser.DefaultBrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding
 import org.mozilla.fenix.tabstray.browser.SelectionBannerBinding.VisibilityModifier
 import org.mozilla.fenix.tabstray.browser.SelectionHandleBinding
+import org.mozilla.fenix.tabstray.browser.TabSorter
 import org.mozilla.fenix.tabstray.ext.anchorWithAction
 import org.mozilla.fenix.tabstray.ext.bookmarkMessage
 import org.mozilla.fenix.tabstray.ext.collectionMessage
@@ -72,6 +74,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
     private val selectionHandleBinding = ViewBoundFeatureWrapper<SelectionHandleBinding>()
     private val tabsTrayCtaBinding = ViewBoundFeatureWrapper<TabsTrayInfoBannerBinding>()
     private val secureTabsTrayBinding = ViewBoundFeatureWrapper<SecureTabsTrayBinding>()
+    private val tabsFeature = ViewBoundFeatureWrapper<TabsFeature>()
     private val tabsTrayInactiveTabsOnboardingBinding = ViewBoundFeatureWrapper<TabsTrayInactiveTabsOnboardingBinding>()
 
     @VisibleForTesting @Suppress("VariableNaming")
@@ -221,6 +224,19 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             },
             navigationInteractor = navigationInteractor,
             displayMetrics = requireContext().resources.displayMetrics
+        )
+
+        tabsFeature.set(
+            feature = TabsFeature(
+                tabsTray = TabSorter(
+                    requireContext().settings(),
+                    requireContext().components.analytics.metrics,
+                    tabsTrayStore
+                ),
+                store = requireContext().components.core.store,
+            ),
+            owner = this,
+            view = view
         )
 
         tabsTrayCtaBinding.set(

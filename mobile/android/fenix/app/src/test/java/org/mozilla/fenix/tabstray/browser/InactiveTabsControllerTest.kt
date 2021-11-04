@@ -11,7 +11,6 @@ import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
-import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabsTray
@@ -21,6 +20,8 @@ import org.junit.Test
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.tabstray.TabsTrayState
+import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.utils.Settings
 
 class InactiveTabsControllerTest {
@@ -31,20 +32,18 @@ class InactiveTabsControllerTest {
 
     @Test
     fun `WHEN expanded THEN notify filtered card`() {
-        val filter: (TabSessionState) -> Boolean = { !it.content.private }
-        val store = BrowserStore(
-            BrowserState(
-                tabs = listOf(
+        val store = TabsTrayStore(
+            TabsTrayState(
+                inactiveTabs = listOf(
                     createTabState("https://mozilla.org", id = "1"),
-                    createTabState("https://firefox.com", id = "2"),
-                    createTabState("https://getpocket.com", id = "3", private = true)
+                    createTabState("https://firefox.com", id = "2")
                 )
             )
         )
         val tray: TabsTray = mockk(relaxed = true)
         val tabsSlot = slot<List<TabSessionState>>()
         val controller =
-            InactiveTabsController(store, appStore, filter, tray, mockk(relaxed = true), settings)
+            InactiveTabsController(store, appStore, tray, mockk(relaxed = true), settings)
 
         controller.updateCardExpansion(true)
 
@@ -56,9 +55,9 @@ class InactiveTabsControllerTest {
 
     @Test
     fun `WHEN expanded THEN track telemetry event`() {
-        val store = BrowserStore(BrowserState())
+        val store = TabsTrayStore()
         val controller = InactiveTabsController(
-            store, appStore, mockk(relaxed = true), mockk(relaxed = true), metrics, settings
+            store, appStore, mockk(relaxed = true), metrics, settings
         )
 
         controller.updateCardExpansion(true)
@@ -68,9 +67,9 @@ class InactiveTabsControllerTest {
 
     @Test
     fun `WHEN collapsed THEN track telemetry event`() {
-        val store = BrowserStore(BrowserState())
+        val store = TabsTrayStore()
         val controller = InactiveTabsController(
-            store, appStore, mockk(relaxed = true), mockk(relaxed = true), metrics, settings
+            store, appStore, mockk(relaxed = true), metrics, settings
         )
 
         controller.updateCardExpansion(false)
@@ -80,10 +79,10 @@ class InactiveTabsControllerTest {
 
     @Test
     fun `WHEN close THEN update settings and refresh`() {
-        val store = BrowserStore()
+        val store = TabsTrayStore()
         val controller = spyk(
             InactiveTabsController(
-                store, appStore, mockk(relaxed = true), mockk(relaxed = true), metrics, settings
+                store, appStore, mockk(relaxed = true), metrics, settings
             )
         )
 

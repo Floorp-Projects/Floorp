@@ -41,7 +41,7 @@ class InactiveTabsAdapter(
 ) : Adapter(DiffCallback), TabsTray, FeatureNameHolder {
 
     internal lateinit var inactiveTabsInteractor: InactiveTabsInteractor
-    internal var inActiveTabsCount: Int = 0
+    private var inActiveTabsCount: Int = 0
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): InactiveTabViewHolder {
         val view = LayoutInflater.from(parent.context)

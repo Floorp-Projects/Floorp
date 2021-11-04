@@ -5,19 +5,17 @@
 package org.mozilla.fenix.tabstray.browser
 
 import androidx.annotation.VisibleForTesting
-import mozilla.components.browser.state.state.TabSessionState
-import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabsTray
-import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction.UpdateInactiveExpanded
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.utils.Settings
 
 class InactiveTabsController(
-    private val browserStore: BrowserStore,
+    private val tabsTrayStore: TabsTrayStore,
     private val appStore: AppStore,
-    private val tabFilter: (TabSessionState) -> Boolean,
     private val tray: TabsTray,
     private val metrics: MetricController,
     private val settings: Settings
@@ -27,7 +25,11 @@ class InactiveTabsController(
      * the title showing.
      */
     fun updateCardExpansion(isExpanded: Boolean) {
-        appStore.dispatch(AppAction.UpdateInactiveExpanded(isExpanded))
+        appStore.dispatch(UpdateInactiveExpanded(isExpanded)).invokeOnCompletion {
+            // To avoid racing, we read the list of inactive tabs only after we have updated
+            // the expanded state.
+            refreshInactiveTabsSection()
+        }
 
         metrics.track(
             when (isExpanded) {
@@ -35,8 +37,6 @@ class InactiveTabsController(
                 false -> Event.TabsTrayInactiveTabsCollapsed
             }
         )
-
-        refreshInactiveTabsSection()
     }
 
     /**
@@ -70,7 +70,7 @@ class InactiveTabsController(
 
     @VisibleForTesting
     internal fun refreshInactiveTabsSection() {
-        val tabs = browserStore.state.tabs.filter(tabFilter)
-        tray.updateTabs(tabs, browserStore.state.selectedTabId)
+        val tabs = tabsTrayStore.state.inactiveTabs
+        tray.updateTabs(tabs, null)
     }
 }
