@@ -163,7 +163,7 @@ bool ScopeContext::init(JSContext* cx, CompilationInput& input,
   }
   computeInScope(maybeNonDefaultEnclosingScope);
 
-  cacheEnclosingScope(input.enclosingScope);
+  cacheEnclosingScope(InputScope(input.enclosingScope));
 
   if (input.target == CompilationInput::CompilationTarget::Eval) {
     if (!cacheEnclosingScopeBindingForEval(cx, input, parserAtoms)) {
@@ -261,39 +261,35 @@ void ScopeContext::computeInScope(const InputScope& enclosingScope) {
   }
 }
 
-void ScopeContext::cacheEnclosingScope(Scope* enclosingScope) {
-  if (!enclosingScope) {
+void ScopeContext::cacheEnclosingScope(const InputScope& enclosingScope) {
+  if (enclosingScope.isNull()) {
     return;
   }
 
   enclosingScopeEnvironmentChainLength =
-      enclosingScope->environmentChainLength();
+      enclosingScope.environmentChainLength();
+  enclosingScopeKind = enclosingScope.kind();
 
-  enclosingScopeKind = enclosingScope->kind();
-
-  if (enclosingScope->is<FunctionScope>()) {
-    MOZ_ASSERT(enclosingScope->as<FunctionScope>().canonicalFunction());
-    enclosingScopeIsArrow =
-        enclosingScope->as<FunctionScope>().canonicalFunction()->isArrow();
+  if (enclosingScopeKind == ScopeKind::Function) {
+    enclosingScopeIsArrow = enclosingScope.isArrow();
   }
 
-  enclosingScopeHasEnvironment = enclosingScope->hasEnvironment();
+  enclosingScopeHasEnvironment = enclosingScope.hasEnvironment();
 
 #ifdef DEBUG
   hasNonSyntacticScopeOnChain =
-      enclosingScope->hasOnChain(ScopeKind::NonSyntactic);
+      enclosingScope.hasOnChain(ScopeKind::NonSyntactic);
 
   // This computes a general answer for the query "does the enclosing scope
   // have a function scope that needs a home object?", but it's only asserted
   // if the parser parses eval body that contains `super` that needs a home
   // object.
-  for (ScopeIter si(enclosingScope); si; si++) {
+  for (InputScopeIter si(enclosingScope); si; si++) {
     if (si.kind() == ScopeKind::Function) {
-      JSFunction* fun = si.scope()->as<FunctionScope>().canonicalFunction();
-      if (fun->isArrow()) {
+      if (si.scope().isArrow()) {
         continue;
       }
-      if (fun->allowSuperProperty() && fun->baseScript()->needsHomeObject()) {
+      if (si.scope().allowSuperProperty() && si.scope().needsHomeObject()) {
         hasFunctionNeedsHomeObjectOnChain = true;
       }
       break;
