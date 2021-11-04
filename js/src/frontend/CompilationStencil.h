@@ -16,6 +16,7 @@
 #include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
 #include "mozilla/RefPtr.h"           // RefPtr
 #include "mozilla/Span.h"
+#include "mozilla/Variant.h"  // mozilla::Variant
 
 #include "builtin/ModuleObject.h"
 #include "ds/LifoAlloc.h"
@@ -58,6 +59,275 @@ struct CompilationStencil;
 struct CompilationGCOutput;
 class ScriptStencilIterable;
 class ParserAtomsTable;
+
+// Reference to a Scope within a CompilationStencil.
+struct ScopeStencilRef {
+  const CompilationStencil& context_;
+  const ScopeIndex scopeIndex_;
+
+  // Lookup the ScopeStencil referenced by this ScopeStencilRef.
+  inline const ScopeStencil& scope() const;
+};
+
+// Wraps a scope for a CompilationInput. The scope is either as a GC pointer to
+// an instantiated scope, or as a reference to a CompilationStencil.
+//
+// Note: A scope reference may be nullptr/InvalidIndex if there is no such
+// scope, such as the enclosingScope at the end of a scope chain. See `isNull`
+// helper.
+class InputScope {
+  using InputScopeStorage = mozilla::Variant<Scope*, ScopeStencilRef>;
+  InputScopeStorage scope_;
+
+ public:
+  // Create an InputScope given an instantiated scope.
+  explicit InputScope(Scope* ptr) : scope_(ptr) {}
+
+  // Create an InputScope given a CompilationStencil and the ScopeIndex which is
+  // an offset within the same CompilationStencil given as argument.
+  InputScope(const CompilationStencil& context, ScopeIndex scopeIndex)
+      : scope_(ScopeStencilRef{context, scopeIndex}) {}
+
+  // Returns the variant used by the InputScope. This can be useful for complex
+  // cases where the following accessors are not enough.
+  const InputScopeStorage& variant() const { return scope_; }
+  InputScopeStorage& variant() { return scope_; }
+
+  // This match function will unwrap the variant for each type, and will
+  // specialize and call the Matcher given as argument with the type and value
+  // of the stored pointer / reference.
+  //
+  // This is useful for cases where the code is literally identical despite
+  // having different specializations. This is achiveable by relying on
+  // function overloading when the usage differ between the 2 types.
+  //
+  // Example:
+  //   inputScope.match([](auto& scope) {
+  //     // scope is either a `Scope*` or a `ScopeStencilRef`.
+  //     for (auto bi = InputBindingIter(scope); bi; bi++) {
+  //       InputName name(scope, bi.name());
+  //       // ...
+  //     }
+  //   });
+  template <typename Matcher>
+  decltype(auto) match(Matcher&& matcher) const& {
+    return scope_.match(std::forward<Matcher>(matcher));
+  }
+  template <typename Matcher>
+  decltype(auto) match(Matcher&& matcher) & {
+    return scope_.match(std::forward<Matcher>(matcher));
+  }
+
+  bool isNull() const {
+    return scope_.match(
+        [](const Scope* ptr) { return !ptr; },
+        [](const ScopeStencilRef& ref) { return !ref.scopeIndex_.isValid(); });
+  }
+
+  ScopeKind kind() const {
+    return scope_.match(
+        [](const Scope* ptr) { return ptr->kind(); },
+        [](const ScopeStencilRef& ref) { return ref.scope().kind(); });
+  };
+  bool hasEnvironment() const {
+    return scope_.match([](const Scope* ptr) { return ptr->hasEnvironment(); },
+                        [](const ScopeStencilRef& ref) {
+                          return ref.scope().hasEnvironment();
+                        });
+  };
+  inline InputScope enclosing() const;
+  bool hasOnChain(ScopeKind kind) const {
+    return scope_.match(
+        [=](const Scope* ptr) { return ptr->hasOnChain(kind); },
+        [=](const ScopeStencilRef& ref) {
+          ScopeStencilRef it = ref;
+          while (true) {
+            const ScopeStencil& scope = it.scope();
+            if (scope.kind() == kind) {
+              return true;
+            }
+            if (!scope.hasEnclosing()) {
+              break;
+            }
+            new (&it) ScopeStencilRef{ref.context_, scope.enclosing()};
+          }
+          return false;
+        });
+  }
+  uint32_t environmentChainLength() const {
+    return scope_.match(
+        [](const Scope* ptr) { return ptr->environmentChainLength(); },
+        [](const ScopeStencilRef& ref) {
+          uint32_t length = 0;
+          ScopeStencilRef it = ref;
+          while (true) {
+            const ScopeStencil& scope = it.scope();
+            if (scope.hasEnvironment() &&
+                scope.kind() != ScopeKind::NonSyntactic) {
+              length++;
+            }
+            if (!scope.hasEnclosing()) {
+              break;
+            }
+            new (&it) ScopeStencilRef{ref.context_, scope.enclosing()};
+          }
+          return length;
+        });
+  }
+  void trace(JSTracer* trc);
+  bool isStencil() const { return scope_.is<ScopeStencilRef>(); };
+
+  // Various accessors which are valid only when the InputScope is a
+  // FunctionScope. Some of these accessors are returning values associated with
+  // the canonical function.
+ private:
+  inline FunctionFlags functionFlags() const;
+  inline ImmutableScriptFlags immutableFlags() const;
+
+ public:
+  inline MemberInitializers getMemberInitializers() const;
+  RO_IMMUTABLE_SCRIPT_FLAGS(immutableFlags())
+  bool isArrow() const { return functionFlags().isArrow(); }
+  bool allowSuperProperty() const {
+    return functionFlags().allowSuperProperty();
+  }
+  bool isClassConstructor() const {
+    return functionFlags().isClassConstructor();
+  }
+};
+
+// Reference to a Script within a CompilationStencil.
+struct ScriptStencilRef {
+  const CompilationStencil& context_;
+  const ScriptIndex scriptIndex_;
+
+  inline const ScriptStencil& scriptData() const;
+  inline const ScriptStencilExtra& scriptExtra() const;
+};
+
+// Wraps a script for a CompilationInput. The script is either as a BaseScript
+// pointer to an instantiated script, or as a reference to a CompilationStencil.
+class InputScript {
+  using InputScriptStorage = mozilla::Variant<BaseScript*, ScriptStencilRef>;
+  InputScriptStorage script_;
+
+ public:
+  // Create an InputScript given an instantiated BaseScript pointer.
+  explicit InputScript(BaseScript* ptr) : script_(ptr) {}
+
+  // Create an InputScript given a CompilationStencil and the ScriptIndex which
+  // is an offset within the same CompilationStencil given as argument.
+  InputScript(const CompilationStencil& context, ScriptIndex scriptIndex)
+      : script_(ScriptStencilRef{context, scriptIndex}) {}
+
+  const InputScriptStorage& raw() const { return script_; }
+  InputScriptStorage& raw() { return script_; }
+
+  SourceExtent extent() const {
+    return script_.match(
+        [](const BaseScript* ptr) { return ptr->extent(); },
+        [](const ScriptStencilRef& ref) { return ref.scriptExtra().extent; });
+  }
+  ImmutableScriptFlags immutableFlags() const {
+    return script_.match(
+        [](const BaseScript* ptr) { return ptr->immutableFlags(); },
+        [](const ScriptStencilRef& ref) {
+          return ref.scriptExtra().immutableFlags;
+        });
+  }
+  RO_IMMUTABLE_SCRIPT_FLAGS(immutableFlags())
+  FunctionFlags functionFlags() const {
+    return script_.match(
+        [](const BaseScript* ptr) { return ptr->function()->flags(); },
+        [](const ScriptStencilRef& ref) {
+          return ref.scriptData().functionFlags;
+        });
+  }
+  FunctionSyntaxKind functionSyntaxKind() const;
+  bool hasPrivateScriptData() const {
+    return script_.match(
+        [](const BaseScript* ptr) { return ptr->hasPrivateScriptData(); },
+        [](const ScriptStencilRef& ref) {
+          // See BaseScript::CreateRawLazy.
+          return ref.scriptData().hasGCThings() ||
+                 ref.scriptExtra().useMemberInitializers();
+        });
+  }
+  InputScope enclosingScope() const {
+    return script_.match(
+        [](const BaseScript* ptr) {
+          return InputScope(ptr->function()->enclosingScope());
+        },
+        [](const ScriptStencilRef& ref) {
+          // The ScriptStencilRef only reference lazy Script, otherwise we
+          // should fetch the enclosing scope using the bodyScope field of the
+          // immutable data which is a reference to the vector of gc-things.
+          MOZ_RELEASE_ASSERT(!ref.scriptData().hasSharedData());
+          MOZ_ASSERT(ref.scriptData().hasLazyFunctionEnclosingScopeIndex());
+          auto scopeIndex = ref.scriptData().lazyFunctionEnclosingScopeIndex();
+          return InputScope(ref.context_, scopeIndex);
+        });
+  }
+  MemberInitializers getMemberInitializers() const {
+    return script_.match(
+        [](const BaseScript* ptr) { return ptr->getMemberInitializers(); },
+        [](const ScriptStencilRef& ref) {
+          return ref.scriptExtra().memberInitializers();
+        });
+  }
+
+  void trace(JSTracer* trc);
+  bool isNull() const {
+    return script_.match([](const BaseScript* ptr) { return !ptr; },
+                         [](const ScriptStencilRef& ref) { return false; });
+  }
+  bool isStencil() const {
+    return script_.match([](const BaseScript* ptr) { return false; },
+                         [](const ScriptStencilRef&) { return true; });
+  };
+};
+
+// Iterator for walking the scope chain, this is identical to ScopeIter but
+// accept an InputScope instead of a Scope pointer.
+//
+// It may be placed in GC containers; for example:
+//
+//   for (Rooted<InputScopeIter> si(cx, InputScopeIter(scope)); si; si++) {
+//     use(si);
+//     SomeMayGCOperation();
+//     use(si);
+//   }
+//
+class MOZ_STACK_CLASS InputScopeIter {
+  InputScope scope_;
+
+ public:
+  explicit InputScopeIter(const InputScope& scope) : scope_(scope) {}
+
+  InputScope& scope() {
+    MOZ_ASSERT(!done());
+    return scope_;
+  }
+
+  const InputScope& scope() const {
+    MOZ_ASSERT(!done());
+    return scope_;
+  }
+
+  bool done() const { return scope_.isNull(); }
+  explicit operator bool() const { return !done(); }
+  void operator++(int) { scope_ = scope_.enclosing(); }
+  ScopeKind kind() const { return scope_.kind(); }
+
+  // Returns whether this scope has a syntactic environment (i.e., an
+  // Environment that isn't a non-syntactic With or NonSyntacticVariables)
+  // on the environment chain.
+  bool hasSyntacticEnvironment() const {
+    return scope_.hasEnvironment() && scope_.kind() != ScopeKind::NonSyntactic;
+  }
+
+  void trace(JSTracer* trc) { scope_.trace(trc); }
+};
 
 // ScopeContext holds information derived from the scope and environment chains
 // to try to avoid the parser needing to traverse VM structures directly.
@@ -1306,6 +1576,74 @@ struct CompilationStencilMerger {
 
   ExtensibleCompilationStencil& getResult() const { return *initial_; }
 };
+
+const ScopeStencil& ScopeStencilRef::scope() const {
+  return context_.scopeData[scopeIndex_];
+}
+
+InputScope InputScope::enclosing() const {
+  return scope_.match(
+      [](const Scope* ptr) {
+        // This may return a nullptr Scope pointer.
+        return InputScope(ptr->enclosing());
+      },
+      [](const ScopeStencilRef& ref) {
+        if (ref.scope().hasEnclosing()) {
+          return InputScope(ref.context_, ref.scope().enclosing());
+        }
+        return InputScope(nullptr);
+      });
+}
+
+FunctionFlags InputScope::functionFlags() const {
+  return scope_.match(
+      [](const Scope* ptr) {
+        JSFunction* fun = ptr->as<FunctionScope>().canonicalFunction();
+        return fun->flags();
+      },
+      [](const ScopeStencilRef& ref) {
+        MOZ_ASSERT(ref.scope().isFunction());
+        ScriptIndex scriptIndex = ref.scope().functionIndex();
+        ScriptStencil& data = ref.context_.scriptData[scriptIndex];
+        return data.functionFlags;
+      });
+}
+
+ImmutableScriptFlags InputScope::immutableFlags() const {
+  return scope_.match(
+      [](const Scope* ptr) {
+        JSFunction* fun = ptr->as<FunctionScope>().canonicalFunction();
+        return fun->baseScript()->immutableFlags();
+      },
+      [](const ScopeStencilRef& ref) {
+        MOZ_ASSERT(ref.scope().isFunction());
+        ScriptIndex scriptIndex = ref.scope().functionIndex();
+        ScriptStencilExtra& extra = ref.context_.scriptExtra[scriptIndex];
+        return extra.immutableFlags;
+      });
+}
+
+MemberInitializers InputScope::getMemberInitializers() const {
+  return scope_.match(
+      [](const Scope* ptr) {
+        JSFunction* fun = ptr->as<FunctionScope>().canonicalFunction();
+        return fun->baseScript()->getMemberInitializers();
+      },
+      [](const ScopeStencilRef& ref) {
+        MOZ_ASSERT(ref.scope().isFunction());
+        ScriptIndex scriptIndex = ref.scope().functionIndex();
+        ScriptStencilExtra& extra = ref.context_.scriptExtra[scriptIndex];
+        return extra.memberInitializers();
+      });
+}
+
+const ScriptStencil& ScriptStencilRef::scriptData() const {
+  return context_.scriptData[scriptIndex_];
+}
+
+const ScriptStencilExtra& ScriptStencilRef::scriptExtra() const {
+  return context_.scriptExtra[scriptIndex_];
+}
 
 }  // namespace frontend
 }  // namespace js
