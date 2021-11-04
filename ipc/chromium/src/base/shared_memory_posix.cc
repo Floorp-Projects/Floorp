@@ -527,23 +527,16 @@ void* SharedMemory::FindFreeAddressSpace(size_t size) {
   return memory != MAP_FAILED ? memory : NULL;
 }
 
-bool SharedMemory::ShareToProcessCommon(ProcessId processId,
-                                        SharedMemoryHandle* new_handle,
-                                        bool close_self) {
+SharedMemoryHandle SharedMemory::CloneHandle() {
   freezeable_ = false;
   const int new_fd = dup(mapped_file_.get());
   if (new_fd < 0) {
     CHROMIUM_LOG(WARNING) << "failed to duplicate file descriptor: "
                           << strerror(errno);
-    return false;
+    return nullptr;
   }
-  *new_handle = mozilla::UniqueFileHandle(new_fd);
-
-  if (close_self) Close();
-
-  return true;
+  return mozilla::UniqueFileHandle(new_fd);
 }
-
 void SharedMemory::Close(bool unmap_view) {
   if (unmap_view) {
     Unmap();

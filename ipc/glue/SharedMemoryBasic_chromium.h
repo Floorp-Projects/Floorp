@@ -73,10 +73,8 @@ class SharedMemoryBasic final
 
   virtual bool ShareToProcess(base::ProcessId aProcessId,
                               Handle* new_handle) override {
-    base::SharedMemoryHandle handle;
-    bool ret = mSharedMemory.ShareToProcess(aProcessId, &handle);
-    if (ret) *new_handle = std::move(handle);
-    return ret;
+    *new_handle = mSharedMemory.CloneHandle();
+    return base::SharedMemory::IsHandleValid(*new_handle);
   }
 
   static void* FindFreeAddressSpace(size_t size) {

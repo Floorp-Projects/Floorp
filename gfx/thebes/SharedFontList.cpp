@@ -828,9 +828,8 @@ void FontList::ShareBlocksToProcess(nsTArray<base::SharedMemoryHandle>* aBlocks,
                                     base::ProcessId aPid) {
   MOZ_RELEASE_ASSERT(mReadOnlyShmems.Length() == mBlocks.Length());
   for (auto& shmem : mReadOnlyShmems) {
-    base::SharedMemoryHandle* handle =
-        aBlocks->AppendElement(base::SharedMemory::NULLHandle());
-    if (!shmem->ShareToProcess(aPid, handle)) {
+    auto handle = shmem->CloneHandle();
+    if (!handle) {
       // If something went wrong here, we just bail out; the child will need to
       // request the blocks as needed, at some performance cost. (Although in
       // practice this may mean resources are so constrained the child process
@@ -838,6 +837,7 @@ void FontList::ShareBlocksToProcess(nsTArray<base::SharedMemoryHandle>* aBlocks,
       aBlocks->Clear();
       return;
     }
+    aBlocks->AppendElement(std::move(handle));
   }
 }
 
@@ -847,12 +847,7 @@ base::SharedMemoryHandle FontList::ShareBlockToProcess(uint32_t aIndex,
   MOZ_RELEASE_ASSERT(mReadOnlyShmems.Length() == mBlocks.Length());
   MOZ_RELEASE_ASSERT(aIndex < mReadOnlyShmems.Length());
 
-  base::SharedMemoryHandle handle = base::SharedMemory::NULLHandle();
-  if (mReadOnlyShmems[aIndex]->ShareToProcess(aPid, &handle)) {
-    return handle;
-  }
-
-  return base::SharedMemory::NULLHandle();
+  return mReadOnlyShmems[aIndex]->CloneHandle();
 }
 
 Pointer FontList::Alloc(uint32_t aSize) {
