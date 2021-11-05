@@ -1024,7 +1024,7 @@ void CycleCollectedJSRuntime::GCSliceCallback(JSContext* aContext,
   CycleCollectedJSRuntime* self = CycleCollectedJSRuntime::Get();
   MOZ_ASSERT(CycleCollectedJSContext::Get()->Context() == aContext);
 
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     if (aProgress == JS::GC_CYCLE_END) {
       struct GCMajorMarker {
         static constexpr mozilla::Span<const char> MarkerTypeName() {
@@ -1168,7 +1168,7 @@ void CycleCollectedJSRuntime::GCNurseryCollectionCallback(
   if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_START) {
     self->mLatestNurseryCollectionStart = TimeStamp::Now();
   } else if (aProgress == JS::GCNurseryProgress::GC_NURSERY_COLLECTION_END &&
-             profiler_thread_is_being_profiled()) {
+             profiler_thread_is_being_profiled_for_markers()) {
     struct GCMinorMarker {
       static constexpr mozilla::Span<const char> MarkerTypeName() {
         return mozilla::MakeStringSpan("GCMinor");

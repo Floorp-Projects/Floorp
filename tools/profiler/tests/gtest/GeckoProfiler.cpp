@@ -1994,6 +1994,13 @@ TEST(GeckoProfiler, Pause)
   ASSERT_TRUE(info1->mRangeEnd != info2->mRangeEnd);
 
   // Check that we are writing markers while not paused.
+  ASSERT_TRUE(profiler_thread_is_being_profiled_for_markers());
+  ASSERT_TRUE(
+      profiler_thread_is_being_profiled_for_markers(ProfilerThreadId{}));
+  ASSERT_TRUE(profiler_thread_is_being_profiled_for_markers(
+      profiler_current_thread_id()));
+  ASSERT_TRUE(
+      profiler_thread_is_being_profiled_for_markers(profiler_main_thread_id()));
   info1 = profiler_get_buffer_info();
   PROFILER_MARKER_UNTYPED("Not paused", OTHER, {});
   info2 = profiler_get_buffer_info();
@@ -2009,6 +2016,13 @@ TEST(GeckoProfiler, Pause)
     ASSERT_TRUE(!profiler_thread_is_being_profiled(profiler_current_thread_id(),
                                                    features));
   }
+  ASSERT_TRUE(!profiler_thread_is_being_profiled_for_markers());
+  ASSERT_TRUE(
+      !profiler_thread_is_being_profiled_for_markers(ProfilerThreadId{}));
+  ASSERT_TRUE(!profiler_thread_is_being_profiled_for_markers(
+      profiler_current_thread_id()));
+  ASSERT_TRUE(!profiler_thread_is_being_profiled_for_markers(
+      profiler_main_thread_id()));
 
   std::thread{[&]() {
     {

@@ -18,7 +18,7 @@ class MOZ_RAII AutoProfilerStyleMarker {
  public:
   explicit AutoProfilerStyleMarker(UniquePtr<ProfileChunkedBuffer> aCause,
                                    const Maybe<uint64_t>& aInnerWindowID)
-      : mActive(profiler_thread_is_being_profiled()),
+      : mActive(profiler_thread_is_being_profiled_for_markers()),
         mStartTime(TimeStamp::Now()),
         mCause(std::move(aCause)),
         mInnerWindowID(aInnerWindowID) {
