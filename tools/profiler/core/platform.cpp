@@ -661,6 +661,10 @@ class ActivePS {
       aFeatures |= ProfilerFeature::MainThreadIO;
     }
 
+    if (aFeatures & ProfilerFeature::CPUAllThreads) {
+      aFeatures |= ProfilerFeature::CPUUtilization;
+    }
+
     return aFeatures;
   }
 
@@ -848,7 +852,17 @@ class ActivePS {
       // This thread was selected by the user, record everything.
       return ThreadProfilingFeatures::Any;
     }
-    return ThreadProfilingFeatures::NotProfiled;
+    ThreadProfilingFeatures features = ThreadProfilingFeatures::NotProfiled;
+    if (sInstance->FeatureCPUAllThreads(aLock)) {
+      features = Combine(features, ThreadProfilingFeatures::CPUUtilization);
+    }
+    if (sInstance->FeatureSamplingAllThreads(aLock)) {
+      features = Combine(features, ThreadProfilingFeatures::Sampling);
+    }
+    if (sInstance->FeatureMarkersAllThreads(aLock)) {
+      features = Combine(features, ThreadProfilingFeatures::Markers);
+    }
+    return features;
   }
 
   [[nodiscard]] static bool AppendPostSamplingCallback(
