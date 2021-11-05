@@ -14,6 +14,7 @@ import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import junit.framework.TestCase.assertTrue
 import org.mozilla.focus.helpers.TestHelper
+import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
@@ -115,7 +116,7 @@ private val mozillaSettingsList =
 
 private val showTipsSwitch = onView(withText("Show home screen tips"))
 
-private val aboutFocusPageLink = onView(withText("About Firefox Focus"))
+private val aboutFocusPageLink = onView(withText("About $appName"))
 
 private val helpPageLink = onView(withText("Help"))
 

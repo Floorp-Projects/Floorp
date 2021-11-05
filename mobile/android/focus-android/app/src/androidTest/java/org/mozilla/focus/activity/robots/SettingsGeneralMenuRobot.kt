@@ -85,7 +85,7 @@ class SettingsGeneralMenuRobot {
     }
 }
 
-private val defaultBrowserSwitch = onView(withText("Make Firefox Focus default browser"))
+private val defaultBrowserSwitch = onView(withText("Make $appName default browser"))
 
 private val openWithDialogTitle = mDevice.findObject(
     UiSelector()
