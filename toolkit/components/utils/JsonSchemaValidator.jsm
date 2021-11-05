@@ -510,6 +510,7 @@ class JsonSchemaValidator {
             }
           }
         } catch (ex) {
+          log.error(`Ignoring parameter "${param}" - not a valid origin.`);
           valid = false;
         }
         break;
