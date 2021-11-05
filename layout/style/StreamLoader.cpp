@@ -150,7 +150,9 @@ void StreamLoader::HandleBOM() {
   MOZ_ASSERT(mEncodingFromBOM.isNothing());
   MOZ_ASSERT(mBytes.IsEmpty());
 
-  auto [encoding, bomLength] = Encoding::ForBOM(mBOMBytes);
+  const Encoding* encoding;
+  size_t bomLength;
+  Tie(encoding, bomLength) = Encoding::ForBOM(mBOMBytes);
   mEncodingFromBOM.emplace(encoding);  // Null means no BOM.
 
   // BOMs are three bytes at most, but may be fewer. Copy over anything
