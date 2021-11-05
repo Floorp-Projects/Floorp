@@ -4258,9 +4258,6 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     // Do the join
     nsresult rv = aHTMLEditor.JoinNodesWithTransaction(*leftContentToJoin,
                                                        *rightContentToJoin);
-    if (NS_WARN_IF(aHTMLEditor.Destroyed())) {
-      return Err(NS_ERROR_EDITOR_DESTROYED);
-    }
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::JoinNodesWithTransaction() failed");
       return Err(rv);
