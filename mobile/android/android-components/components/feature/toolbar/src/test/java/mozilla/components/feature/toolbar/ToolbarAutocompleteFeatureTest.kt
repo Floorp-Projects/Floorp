@@ -9,12 +9,9 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.domains.Domain
 import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider
 import mozilla.components.browser.domains.autocomplete.DomainList
-import mozilla.components.browser.storage.memory.InMemoryHistoryStorage
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
-import mozilla.components.concept.storage.PageVisit
-import mozilla.components.concept.storage.RedirectSource
-import mozilla.components.concept.storage.VisitType
 import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.AutocompleteResult
 import mozilla.components.concept.toolbar.Toolbar
@@ -26,6 +23,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
@@ -153,7 +151,7 @@ class ToolbarAutocompleteFeatureTest {
         var feature = ToolbarAutocompleteFeature(toolbar)
         val autocompleteDelegate: AutocompleteDelegate = mock()
 
-        var history: HistoryStorage = InMemoryHistoryStorage()
+        var history: HistoryStorage = mock()
         val domains = object : BaseDomainAutocompleteProvider(DomainList.CUSTOM, { emptyList() }) {
             fun testDomains(list: List<Domain>) {
                 domains = list
@@ -165,9 +163,15 @@ class ToolbarAutocompleteFeatureTest {
         verifyNoAutocompleteResult(toolbar, autocompleteDelegate, "hi")
 
         // Can autocomplete with a non-empty history provider.
-        runBlocking {
-            history.recordVisit("https://www.mozilla.org", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
-        }
+        doReturn(
+            HistoryAutocompleteResult(
+                input = "mo",
+                text = "mozilla.org",
+                url = "https://www.mozilla.org",
+                source = "memoryHistory",
+                totalItems = 1
+            )
+        ).`when`(history).getAutocompleteSuggestion("mo")
 
         verifyNoAutocompleteResult(toolbar, autocompleteDelegate, "hi")
         verifyAutocompleteResult(
@@ -206,7 +210,7 @@ class ToolbarAutocompleteFeatureTest {
         )
 
         // Can autocomplete with empty history and domain providers.
-        history = InMemoryHistoryStorage()
+        history = mock()
         domains.testDomains(listOf())
         feature.addHistoryStorageProvider(history)
 
@@ -232,9 +236,15 @@ class ToolbarAutocompleteFeatureTest {
             )
         )
 
-        runBlocking {
-            history.recordVisit("https://www.mozilla.org", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
-        }
+        doReturn(
+            HistoryAutocompleteResult(
+                input = "mo",
+                text = "mozilla.org",
+                url = "https://www.mozilla.org",
+                source = "memoryHistory",
+                totalItems = 1
+            )
+        ).`when`(history).getAutocompleteSuggestion("mo")
 
         verifyAutocompleteResult(
             toolbar, autocompleteDelegate, "mo",

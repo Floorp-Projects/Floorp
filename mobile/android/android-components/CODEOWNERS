@@ -40,7 +40,6 @@
 /components/browser/menu2/                  @jonalmeida
 /components/browser/search/                 @pocmo
 /components/browser/state/                  @pocmo @csadilek
-/components/browser/storage-memory/         @grigoryk
 /components/browser/storage-sync/           @grigoryk
 /components/browser/tabstray/               @jonalmeida
 /components/browser/thumbnails/             @jonalmeida @gabrielluong

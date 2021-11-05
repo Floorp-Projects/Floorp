@@ -17,7 +17,6 @@ treeherder:
         browser-menu2: browser-menu2
         browser-session-storage: browser-session-storage
         browser-state: browser-state
-        browser-storage-memory: browser-storage-memory
         browser-storage-sync: browser-storage-sync
         browser-tabstray: browser-tabstray
         browser-thumbnails: browser-thumbnails

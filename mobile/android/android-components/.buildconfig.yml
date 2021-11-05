@@ -235,10 +235,6 @@ projects:
     path: components/browser/state
     description: 'Component responsible for maintaining the centralized state of a browser engine.'
     publish: true
-  browser-storage-memory:
-    path: components/browser/storage-memory
-    description: 'A memory-backed implementation of core data storage.'
-    publish: true
   browser-storage-sync:
     path: components/browser/storage-sync
     description: 'A syncable, Rust Places-backed implementation of core data storage.'

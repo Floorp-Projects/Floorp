@@ -4,14 +4,11 @@
 
 package mozilla.components.feature.awesomebar.provider
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
-import mozilla.components.browser.storage.memory.InMemoryHistoryStorage
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.storage.HistoryStorage
-import mozilla.components.concept.storage.PageVisit
-import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.SearchResult
-import mozilla.components.concept.storage.VisitType
 import mozilla.components.feature.awesomebar.facts.AwesomeBarFacts
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
@@ -24,12 +21,15 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
+import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
+@RunWith(AndroidJUnit4::class)
 class HistoryStorageSuggestionProviderTest {
 
     @Before
@@ -47,39 +47,41 @@ class HistoryStorageSuggestionProviderTest {
 
     @Test
     fun `Provider returns suggestions from configured history storage`() = runBlocking {
-        val history = InMemoryHistoryStorage()
+        val history: HistoryStorage = mock()
+        Mockito.doReturn(listOf(SearchResult("id", "http://www.mozilla.com/", 10))).`when`(history).getSuggestions(eq("moz"), Mockito.anyInt())
         val provider = HistoryStorageSuggestionProvider(history, mock())
-
-        history.recordVisit("http://www.mozilla.com", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
 
         val suggestions = provider.onInputChanged("moz")
         assertEquals(1, suggestions.size)
-        assertEquals("http://www.mozilla.com", suggestions[0].description)
+        assertEquals("http://www.mozilla.com/", suggestions[0].description)
     }
 
     @Test
-    fun `Provider limits number of returned suggestions to 20 by default`() = runBlocking {
-        val history = InMemoryHistoryStorage()
+    fun `Provider limits number of returned suggestions to a max of 20 by default`() = runBlocking {
+        val history: HistoryStorage = mock()
+        Mockito.doReturn(
+            (1..100).map {
+                SearchResult("id$it", "http://www.mozilla.com/$it/", 10)
+            }
+        ).`when`(history).getSuggestions(eq("moz"), Mockito.anyInt())
+
         val provider = HistoryStorageSuggestionProvider(history, mock())
-
-        for (i in 1..100) {
-            history.recordVisit("http://www.mozilla.com/$i", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
-        }
-
         val suggestions = provider.onInputChanged("moz")
         assertEquals(20, suggestions.size)
     }
 
     @Test
     fun `Provider allows lowering the number of returned suggestions beneath the default`() = runBlocking {
-        val history = InMemoryHistoryStorage()
+        val history: HistoryStorage = mock()
+        Mockito.doReturn(
+            (1..50).map {
+                SearchResult("id$it", "http://www.mozilla.com/$it/", 10)
+            }
+        ).`when`(history).getSuggestions(eq("moz"), Mockito.anyInt())
+
         val provider = HistoryStorageSuggestionProvider(
             historyStorage = history, loadUrlUseCase = mock(), maxNumberOfSuggestions = 2
         )
-
-        for (i in 1..50) {
-            history.recordVisit("http://www.mozilla.com/$i", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
-        }
 
         val suggestions = provider.onInputChanged("moz")
         assertEquals(2, suggestions.size)
@@ -87,14 +89,16 @@ class HistoryStorageSuggestionProviderTest {
 
     @Test
     fun `Provider allows increasing the number of returned suggestions above the default`() = runBlocking {
-        val history = InMemoryHistoryStorage()
+        val history: HistoryStorage = mock()
+        Mockito.doReturn(
+            (1..50).map {
+                SearchResult("id$it", "http://www.mozilla.com/$it/", 10)
+            }
+        ).`when`(history).getSuggestions(eq("moz"), Mockito.anyInt())
+
         val provider = HistoryStorageSuggestionProvider(
             historyStorage = history, loadUrlUseCase = mock(), maxNumberOfSuggestions = 22
         )
-
-        for (i in 1..50) {
-            history.recordVisit("http://www.mozilla.com/$i", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
-        }
 
         val suggestions = provider.onInputChanged("moz")
         assertEquals(22, suggestions.size)
@@ -141,7 +145,7 @@ class HistoryStorageSuggestionProviderTest {
 
     @Test
     fun `provider calls speculative connect for URL of highest scored suggestion`() = runBlocking {
-        val history = InMemoryHistoryStorage()
+        val history: HistoryStorage = mock()
         val engine: Engine = mock()
         val provider = HistoryStorageSuggestionProvider(history, mock(), engine = engine)
 
@@ -149,17 +153,17 @@ class HistoryStorageSuggestionProviderTest {
         assertTrue(suggestions.isEmpty())
         verify(engine, never()).speculativeConnect(anyString())
 
-        history.recordVisit("http://www.mozilla.com", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
+        Mockito.doReturn(listOf(SearchResult("id", "http://www.mozilla.com/", 10))).`when`(history).getSuggestions(eq("moz"), Mockito.anyInt())
 
         suggestions = provider.onInputChanged("moz")
         assertEquals(1, suggestions.size)
-        assertEquals("http://www.mozilla.com", suggestions[0].description)
+        assertEquals("http://www.mozilla.com/", suggestions[0].description)
         verify(engine, times(1)).speculativeConnect(suggestions[0].description!!)
     }
 
     @Test
     fun `fact is emitted when suggestion is clicked`() = runBlocking {
-        val history = InMemoryHistoryStorage()
+        val history: HistoryStorage = mock()
         val engine: Engine = mock()
         val provider = HistoryStorageSuggestionProvider(history, mock(), engine = engine)
 
@@ -167,7 +171,7 @@ class HistoryStorageSuggestionProviderTest {
         assertTrue(suggestions.isEmpty())
         verify(engine, never()).speculativeConnect(anyString())
 
-        history.recordVisit("http://www.mozilla.com", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
+        Mockito.doReturn(listOf(SearchResult("id", "http://www.mozilla.com/", 10))).`when`(history).getSuggestions(eq("moz"), Mockito.anyInt())
 
         suggestions = provider.onInputChanged("moz")
         assertEquals(1, suggestions.size)

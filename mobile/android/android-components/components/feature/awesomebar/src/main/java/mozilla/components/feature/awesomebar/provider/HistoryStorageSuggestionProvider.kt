@@ -55,6 +55,7 @@ class HistoryStorageSuggestionProvider(
         val suggestions = historyStorage.getSuggestions(text, maxNumberOfSuggestions)
             .sortedByDescending { it.score }
             .distinctBy { it.id }
+            .take(maxNumberOfSuggestions)
 
         suggestions.firstOrNull()?.url?.let { url -> engine?.speculativeConnect(url) }
 
