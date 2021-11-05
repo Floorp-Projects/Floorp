@@ -229,7 +229,7 @@ function run_test() {
       refName = isWindows ? "image2jpg16x16-win.png" : "image2jpg16x16.png";
       refFile = do_get_file(refName);
       istream = getFileInputStream(refFile);
-      Assert.equal(istream.available(), 960);
+      Assert.equal(istream.available(), 955);
       referenceBytes = streamToArray(istream);
 
       // compare the encoder's output to the reference file.
@@ -249,7 +249,7 @@ function run_test() {
       refName = isWindows ? "image2jpg32x32-win.png" : "image2jpg32x32.png";
       refFile = do_get_file(refName);
       istream = getFileInputStream(refFile);
-      Assert.equal(istream.available(), 3123);
+      Assert.equal(istream.available(), 3026);
       referenceBytes = streamToArray(istream);
 
       // compare the encoder's output to the reference file.
@@ -292,7 +292,7 @@ function run_test() {
     refName = "image3ico32x32.png";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
-    Assert.equal(istream.available(), 2113);
+    Assert.equal(istream.available(), 2280);
     referenceBytes = streamToArray(istream);
 
     // compare the encoder's output to the reference file.
@@ -310,7 +310,7 @@ function run_test() {
     refName = "image3ico16x16.png";
     refFile = do_get_file(refName);
     istream = getFileInputStream(refFile);
-    Assert.equal(istream.available(), 315);
+    Assert.equal(istream.available(), 520);
     referenceBytes = streamToArray(istream);
 
     // compare the encoder's output to the reference file.
