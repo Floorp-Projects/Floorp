@@ -13,7 +13,9 @@
 #include "mozilla/CheckedInt.h"  // mozilla::CheckedInt
 #include "mozilla/Encoding.h"    // mozilla::Decoder
 #include "mozilla/Span.h"        // mozilla::Span
+#include "mozilla/Tuple.h"       // mozilla::Tie
 #include "mozilla/UniquePtr.h"   // mozilla::UniquePtr
+#include "mozilla/Unused.h"      // mozilla::Unused
 
 #include <stddef.h>     // size_t
 #include <stdint.h>     // uint8_t, uint32_t
@@ -42,7 +44,7 @@ struct ScriptDecoding<char16_t> {
     uint32_t result;
     size_t read;
     size_t written;
-    std::tie(result, read, written, std::ignore) =
+    Tie(result, read, written, Ignore) =
         aDecoder->DecodeToUTF16(aSrc, aDest, aEndOfSource);
     MOZ_ASSERT(result == kInputEmpty);
     MOZ_ASSERT(read == aSrc.Length());
@@ -74,7 +76,7 @@ struct ScriptDecoding<Utf8Unit> {
     // twos-complement is mandated, we have to play fast and loose and *hope*
     // interpreting memory storing |uint8_t| as |char| will pick up the desired
     // wrapped-around value.  ¯\_(ツ)_/¯
-    std::tie(result, read, written, std::ignore) =
+    Tie(result, read, written, Ignore) =
         aDecoder->DecodeToUTF8(aSrc, AsWritableBytes(aDest), aEndOfSource);
     MOZ_ASSERT(result == kInputEmpty);
     MOZ_ASSERT(read == aSrc.Length());

@@ -1015,7 +1015,10 @@ nsresult ExtractBytesFromUSVString(const nsAString& aStr,
                  !aBytes.SetLength(needed.value(), fallible))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  auto [result, read, written] =
+  uint32_t result;
+  size_t read;
+  size_t written;
+  Tie(result, read, written) =
       encoder->EncodeFromUTF16WithoutReplacement(aStr, aBytes, true);
   MOZ_ASSERT(result == kInputEmpty);
   MOZ_ASSERT(read == aStr.Length());
