@@ -4382,6 +4382,41 @@ void MacroAssembler::loadArgumentsObjectElement(Register obj, Register index,
   loadValue(argValue, output);
 }
 
+void MacroAssembler::loadArgumentsObjectElementHole(Register obj,
+                                                    Register index,
+                                                    ValueOperand output,
+                                                    Register temp,
+                                                    Label* fail) {
+  Register temp2 = output.scratchReg();
+
+  // Get initial length value.
+  unboxInt32(Address(obj, ArgumentsObject::getInitialLengthSlotOffset()), temp);
+
+  // Ensure no overridden elements.
+  branchTest32(Assembler::NonZero, temp,
+               Imm32(ArgumentsObject::ELEMENT_OVERRIDDEN_BIT), fail);
+
+  // Bounds check.
+  Label outOfBounds, done;
+  rshift32(Imm32(ArgumentsObject::PACKED_BITS_COUNT), temp);
+  spectreBoundsCheck32(index, temp, temp2, &outOfBounds);
+
+  // Load ArgumentsData.
+  loadPrivate(Address(obj, ArgumentsObject::getDataSlotOffset()), temp);
+
+  // Guard the argument is not a FORWARD_TO_CALL_SLOT MagicValue.
+  BaseValueIndex argValue(temp, index, ArgumentsData::offsetOfArgs());
+  branchTestMagic(Assembler::Equal, argValue, fail);
+  loadValue(argValue, output);
+  jump(&done);
+
+  bind(&outOfBounds);
+  branch32(Assembler::LessThan, index, Imm32(0), fail);
+  moveValue(UndefinedValue(), output);
+
+  bind(&done);
+}
+
 void MacroAssembler::loadArgumentsObjectLength(Register obj, Register output,
                                                Label* fail) {
   // Get initial length value.

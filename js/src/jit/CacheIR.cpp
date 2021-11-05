@@ -416,6 +416,7 @@ AttachDecision GetPropIRGenerator::tryAttachStub() {
       TRY_ATTACH(tryAttachDenseElementHole(obj, objId, index, indexId));
       TRY_ATTACH(tryAttachSparseElement(obj, objId, index, indexId));
       TRY_ATTACH(tryAttachArgumentsObjectArg(obj, objId, index, indexId));
+      TRY_ATTACH(tryAttachArgumentsObjectArgHole(obj, objId, index, indexId));
       TRY_ATTACH(tryAttachGenericElement(obj, objId, index, indexId));
 
       trackAttached(IRGenerator::NotAttached);
@@ -2262,7 +2263,8 @@ static bool ClassCanHaveExtraProperties(const JSClass* clasp) {
 }
 
 static bool CanAttachDenseElementHole(NativeObject* obj, bool ownProp,
-                                      bool allowIndexedReceiver = false) {
+                                      bool allowIndexedReceiver = false,
+                                      bool allowExtraProperties = false) {
   // Make sure the objects on the prototype don't have any indexed properties
   // or that such properties can't appear without a shape change.
   // Otherwise returning undefined for holes would obviously be incorrect,
@@ -2274,9 +2276,10 @@ static bool CanAttachDenseElementHole(NativeObject* obj, bool ownProp,
     }
     allowIndexedReceiver = false;
 
-    if (ClassCanHaveExtraProperties(obj->getClass())) {
+    if (!allowExtraProperties && ClassCanHaveExtraProperties(obj->getClass())) {
       return false;
     }
+    allowExtraProperties = false;
 
     // Don't need to check prototype for OwnProperty checks
     if (ownProp) {
@@ -2337,6 +2340,51 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectArg(
   writer.returnFromIC();
 
   trackAttached("ArgumentsObjectArg");
+  return AttachDecision::Attach;
+}
+
+AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectArgHole(
+    HandleObject obj, ObjOperandId objId, uint32_t index,
+    Int32OperandId indexId) {
+  if (!obj->is<ArgumentsObject>()) {
+    return AttachDecision::NoAction;
+  }
+  auto* args = &obj->as<ArgumentsObject>();
+
+  // No elements must have been overridden or deleted.
+  if (args->hasOverriddenElement()) {
+    return AttachDecision::NoAction;
+  }
+
+  // And also check that the argument isn't forwarded.
+  if (index < args->initialLength() && args->argIsForwarded(index)) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!CanAttachDenseElementHole(args, false, true, true)) {
+    return AttachDecision::NoAction;
+  }
+
+  // We don't need to guard on the shape, because we check if any element is
+  // overridden. Elements are marked as overridden iff any element is defined,
+  // irrespective of whether the element is in-bounds or out-of-bounds. So when
+  // that flag isn't set, we can guarantee that the arguments object doesn't
+  // have any additional own elements.
+
+  if (args->is<MappedArgumentsObject>()) {
+    writer.guardClass(objId, GuardClassKind::MappedArguments);
+  } else {
+    MOZ_ASSERT(args->is<UnmappedArgumentsObject>());
+    writer.guardClass(objId, GuardClassKind::UnmappedArguments);
+  }
+
+  GeneratePrototypeHoleGuards(writer, args, objId,
+                              /* alwaysGuardFirstProto = */ true);
+
+  writer.loadArgumentsObjectArgHoleResult(objId, indexId);
+  writer.returnFromIC();
+
+  trackAttached("ArgumentsObjectArgHole");
   return AttachDecision::Attach;
 }
 
