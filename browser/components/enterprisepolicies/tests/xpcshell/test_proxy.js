@@ -9,8 +9,7 @@ add_task(async function test_proxy_modes_and_autoconfig() {
 
   // Checks that every Mode value translates correctly to the expected pref value
   let { ProxyPolicies, PROXY_TYPES_MAP } = ChromeUtils.import(
-    "resource:///modules/policies/ProxyPolicies.jsm",
-    null
+    "resource:///modules/policies/ProxyPolicies.jsm"
   );
 
   for (let [mode, expectedValue] of PROXY_TYPES_MAP) {
