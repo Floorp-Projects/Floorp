@@ -1770,16 +1770,16 @@ class HTMLEditor final : public EditorBase,
       TreatEmptyTextNodes aTreatEmptyTextNodes);
 
   /**
-   * JoinNodesWithTransaction() joins aLeftContent and aRightContent.  Content
-   * of aLeftContent will be merged into aRightContent.  Actual implemenation of
-   * this method is JoinNodesImpl().  So, see its explanation for the detail.
+   * JoinNodesWithTransaction() joins aLeftNode and aRightNode.  Content of
+   * aLeftNode will be merged into aRightNode.  Actual implemenation of this
+   * method is JoinNodesImpl().  So, see its explanation for the detail.
    *
-   * @param aLeftContent   Will be removed from the DOM tree.
-   * @param aRightContent  The node which will be new container of the content
-   *                       of aLeftContent.
+   * @param aLeftNode   Will be removed from the DOM tree.
+   * @param aRightNode  The node which will be new container of the content of
+   *                    aLeftNode.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  JoinNodesWithTransaction(nsIContent& aLeftContent, nsIContent& aRightContent);
+  MOZ_CAN_RUN_SCRIPT nsresult JoinNodesWithTransaction(nsINode& aLeftNode,
+                                                       nsINode& aRightNode);
 
   /**
    * JoinNearestEditableNodesWithTransaction() joins two editable nodes which
