@@ -123,7 +123,6 @@ namespace jit {
   _(NewArray)                     \
   _(NewIterator)                  \
   _(NewCallObject)                \
-  _(CreateThisWithTemplate)       \
   _(Lambda)                       \
   _(LambdaArrow)                  \
   _(FunctionWithProto)            \
@@ -790,14 +789,6 @@ class RNewIterator final : public RInstruction {
 
  public:
   RINSTRUCTION_HEADER_NUM_OP_(NewIterator, 1)
-
-  [[nodiscard]] bool recover(JSContext* cx,
-                             SnapshotIterator& iter) const override;
-};
-
-class RCreateThisWithTemplate final : public RInstruction {
- public:
-  RINSTRUCTION_HEADER_NUM_OP_(CreateThisWithTemplate, 1)
 
   [[nodiscard]] bool recover(JSContext* cx,
                              SnapshotIterator& iter) const override;

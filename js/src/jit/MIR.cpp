@@ -4384,11 +4384,6 @@ void MBeta::printOpcode(GenericPrinter& out) const {
 }
 #endif
 
-bool MCreateThisWithTemplate::canRecoverOnBailout() const {
-  MOZ_ASSERT(templateObject()->is<PlainObject>());
-  return true;
-}
-
 AliasSet MCreateThis::getAliasSet() const {
   return AliasSet::Load(AliasSet::Any);
 }
@@ -4440,8 +4435,6 @@ JSObject* MObjectState::templateObjectOf(MDefinition* obj) {
 
   if (obj->isNewObject()) {
     return obj->toNewObject()->templateObject();
-  } else if (obj->isCreateThisWithTemplate()) {
-    return obj->toCreateThisWithTemplate()->templateObject();
   } else if (obj->isNewCallObject()) {
     return obj->toNewCallObject()->templateObject();
   } else if (obj->isNewIterator()) {

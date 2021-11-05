@@ -257,12 +257,6 @@ void LIRGenerator::visitInitPropGetterSetter(MInitPropGetterSetter* ins) {
   assignSafepoint(lir, ins);
 }
 
-void LIRGenerator::visitCreateThisWithTemplate(MCreateThisWithTemplate* ins) {
-  LCreateThisWithTemplate* lir = new (alloc()) LCreateThisWithTemplate(temp());
-  define(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitCreateThis(MCreateThis* ins) {
   LCreateThis* lir =
       new (alloc()) LCreateThis(useRegisterOrConstantAtStart(ins->callee()),

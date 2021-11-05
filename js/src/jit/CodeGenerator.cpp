@@ -7289,25 +7289,6 @@ void CodeGenerator::visitCreateThis(LCreateThis* lir) {
   callVM<Fn, jit::CreateThisFromIon>(lir);
 }
 
-void CodeGenerator::visitCreateThisWithTemplate(LCreateThisWithTemplate* lir) {
-  JSObject* templateObject = lir->mir()->templateObject();
-  Register objReg = ToRegister(lir->output());
-  Register tempReg = ToRegister(lir->temp0());
-
-  using Fn = JSObject* (*)(JSContext*, HandleObject);
-  OutOfLineCode* ool = oolCallVM<Fn, CreateThisWithTemplate>(
-      lir, ArgList(ImmGCPtr(templateObject)), StoreRegisterTo(objReg));
-
-  // Allocate. If the FreeList is empty, call to VM, which may GC.
-  TemplateObject templateObj(templateObject);
-  bool initContents =
-      !templateObj.isPlainObject() || ShouldInitFixedSlots(lir, templateObj);
-  masm.createGCObject(objReg, tempReg, templateObj, lir->mir()->initialHeap(),
-                      ool->entry(), initContents);
-
-  masm.bind(ool->rejoin());
-}
-
 void CodeGenerator::visitCreateArgumentsObject(LCreateArgumentsObject* lir) {
   // This should be getting constructed in the first block only, and not any OSR
   // entry blocks.
