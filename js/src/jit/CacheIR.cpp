@@ -9523,9 +9523,9 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
                                            slot - newTarget->numFixedSlots());
       }
 
-      // Call metaScriptedTemplateObject before emitting the call, so that Warp
-      // can use this template object before transpiling the call.
-      writer.metaScriptedTemplateObject(calleeFunc, thisShape);
+      // Call metaScriptedThisShape before emitting the call, so that Warp can
+      // use the shape to create the |this| object before transpiling the call.
+      writer.metaScriptedThisShape(thisShape);
     }
   } else {
     // Guard that object is a scripted function
