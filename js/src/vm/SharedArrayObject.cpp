@@ -139,7 +139,7 @@ bool SharedArrayRawBuffer::wasmGrowToPagesInPlace(const Lock&,
     return false;
   }
   MOZ_ASSERT(newPages <= wasm::MaxMemoryPages(t) &&
-             newPages.byteLength() < ArrayBufferObject::maxBufferByteLength());
+             newPages.byteLength() <= ArrayBufferObject::maxBufferByteLength());
 
   // We have checked against the clamped maximum and so we know we can convert
   // to byte lengths now.
