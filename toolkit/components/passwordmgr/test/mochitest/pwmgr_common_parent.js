@@ -234,7 +234,7 @@ addMessageListener("setMasterPassword", ({ enable }) => {
 });
 
 LoginManagerParent.setListenerForTests((msg, { origin, data }) => {
-  if (msg == "FormSubmit") {
+  if (msg == "ShowDoorhanger") {
     sendAsyncMessage("formSubmissionProcessed", { origin, data });
   } else if (msg == "PasswordEditedOrGenerated") {
     sendAsyncMessage("passwordEditedOrGenerated", { origin, data });
