@@ -18,6 +18,9 @@ static LazyLogModule sPNGEncoderLog("PNGEncoder");
 NS_IMPL_ISUPPORTS(nsPNGEncoder, imgIEncoder, nsIInputStream,
                   nsIAsyncInputStream)
 
+#define DEFAULT_ZLIB_LEVEL 6
+#define DEFAULT_FILTERS PNG_FILTER_VALUE_NONE
+
 nsPNGEncoder::nsPNGEncoder()
     : mPNG(nullptr),
       mPNGinfo(nullptr),
@@ -133,6 +136,13 @@ nsPNGEncoder::StartImageEncode(uint32_t aWidth, uint32_t aHeight,
     png_destroy_write_struct(&mPNG, &mPNGinfo);
     return NS_ERROR_FAILURE;
   }
+
+#ifdef PNG_WRITE_CUSTOMIZE_COMPRESSION_SUPPORTED
+  png_set_compression_level(mPNG, DEFAULT_ZLIB_LEVEL);
+#endif
+#ifdef PNG_WRITE_FILTER_SUPPORTED
+  png_set_filter(mPNG, PNG_FILTER_TYPE_BASE, DEFAULT_FILTERS);
+#endif
 
   // Set up to read the data into our image buffer, start out with an 8K
   // estimated size. Note: we don't have to worry about freeing this data
@@ -257,7 +267,7 @@ nsPNGEncoder::AddImageFrame(const uint8_t* aData,
   }
 
 #ifdef PNG_WRITE_FILTER_SUPPORTED
-  png_set_filter(mPNG, PNG_FILTER_TYPE_BASE, PNG_FILTER_VALUE_NONE);
+  png_set_filter(mPNG, PNG_FILTER_TYPE_BASE, DEFAULT_FILTERS);
 #endif
 
   // write each row: if we add more input formats, we may want to
