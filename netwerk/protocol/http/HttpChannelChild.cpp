@@ -867,7 +867,7 @@ void HttpChannelChild::OnStopRequest(
   mCacheReadStart = aTiming.cacheReadStart();
   mCacheReadEnd = aTiming.cacheReadEnd();
 
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
     nsAutoCString contentType;
@@ -1357,7 +1357,7 @@ void HttpChannelChild::Redirect1Begin(
 
   ResourceTimingStructArgsToTimingsStruct(timing, mTransactionTimings);
 
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
     nsAutoCString contentType;
@@ -1664,7 +1664,7 @@ HttpChannelChild::CompleteRedirectSetup(nsIStreamListener* aListener) {
    */
 
   mLastStatusReported = TimeStamp::Now();
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
 
@@ -1990,7 +1990,7 @@ nsresult HttpChannelChild::AsyncOpenInternal(nsIStreamListener* aListener) {
   gHttpHandler->OnOpeningRequest(this);
 
   mLastStatusReported = TimeStamp::Now();
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
 

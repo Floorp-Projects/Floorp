@@ -39,7 +39,7 @@ void LoggingHelper(bool aUseProfiler, const char* aFmt, va_list args) {
   static const mozilla::LogLevel logLevel = LogLevel::Warning;
 
   if (MOZ_LOG_TEST(logModule, logLevel) ||
-      (aUseProfiler && profiler_thread_is_being_profiled())) {
+      (aUseProfiler && profiler_thread_is_being_profiled_for_markers())) {
     nsAutoCString message;
 
     message.AppendVprintf(aFmt, args);

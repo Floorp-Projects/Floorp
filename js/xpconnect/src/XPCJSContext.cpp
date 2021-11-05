@@ -588,7 +588,7 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
   // Now is a good time to turn on profiling if it's pending.
   PROFILER_JS_INTERRUPT_CALLBACK();
 
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsDependentCString filename("unknown file");
     JS::AutoFilename scriptFilename;
     // Computing the line number can be very expensive (see bug 1330231 for
