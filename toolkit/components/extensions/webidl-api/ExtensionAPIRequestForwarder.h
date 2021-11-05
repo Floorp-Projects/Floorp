@@ -186,6 +186,7 @@ class RequestWorkerRunnable : public dom::WorkerMainThreadRunnable {
   Maybe<UniquePtr<dom::StructuredCloneHolder>> mArgsHolder;
   Maybe<UniquePtr<dom::SerializedStackHolder>> mStackHolder;
   Maybe<dom::ClientInfo> mClientInfo;
+  uint64_t mSWDescriptorId;
 
   // Only set for addListener/removeListener API requests.
   RefPtr<ExtensionEventListener> mEventListener;

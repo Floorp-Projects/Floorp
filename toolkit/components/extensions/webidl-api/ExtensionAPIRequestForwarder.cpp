@@ -291,6 +291,8 @@ void RequestWorkerRunnable::Init(nsIGlobalObject* aGlobal, JSContext* aCx,
                                  ErrorResult& aRv) {
   MOZ_ASSERT(dom::IsCurrentThreadRunningWorker());
 
+  mSWDescriptorId = mWorkerPrivate->ServiceWorkerID();
+
   auto* workerScope = mWorkerPrivate->GlobalScope();
   if (NS_WARN_IF(!workerScope)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -426,7 +428,7 @@ already_AddRefed<ExtensionAPIRequest> RequestWorkerRunnable::CreateAPIRequest(
 
   RefPtr<ExtensionAPIRequest> request = new ExtensionAPIRequest(
       mOuterRequest->GetRequestType(), *mOuterRequest->GetRequestTarget());
-  request->Init(mClientInfo, callArgs, callerStackValue);
+  request->Init(mClientInfo, mSWDescriptorId, callArgs, callerStackValue);
 
   if (mEventListener) {
     request->SetEventListener(mEventListener.forget());
