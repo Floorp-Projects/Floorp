@@ -42,6 +42,7 @@ android {
         testInstrumentationRunnerArguments clearPackageData: 'true'
         resValue "bool", "IS_DEBUG", "false"
         buildConfigField "boolean", "USE_RELEASE_VERSIONING", "false"
+        buildConfigField "String", "GIT_HASH", "\"\"" // see override in release builds for why it's blank.
         // This should be the "public" base URL of AMO.
         buildConfigField "String", "AMO_BASE_URL", "\"https://addons.mozilla.org\""
         buildConfigField "String", "AMO_COLLECTION_NAME", "\"7dfae8669acc4312a65e8ba5553036\""
@@ -81,6 +82,10 @@ android {
         minifyEnabled !project.hasProperty("disableOptimization")
         proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         matchingFallbacks = ['release'] // Use on the "release" build type in dependencies (AARs)
+
+        // Changing the build config can cause files that depend on BuildConfig.java to recompile
+        // so we only set the git hash in release builds to avoid possible recompilation in debug builds.
+        buildConfigField "String", "GIT_HASH", "\"${Config.getGitHash()}\""
 
         if (gradle.hasProperty("localProperties.autosignReleaseWithDebugKey")) {
             signingConfig signingConfigs.debug
@@ -227,6 +232,7 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = Versions.androidx_compose
     }
+
 }
 
 // -------------------------------------------------------------------------------------------------

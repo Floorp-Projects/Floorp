@@ -59,7 +59,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/about_content"
             app:layout_constraintWidth_percent="0.8"
-            tools:text="1.0.x (Build #x)\nAC: 1.0.0\nGV: 69.x-x\nAS: 1.0.0" />
+            tools:text="1.0.x (Build #x), 0d7383fd2\nAC: 1.0.0, 96ae23b628\nGV: 69.x-x\nAS: 1.0.0" />
 
         <TextView
             android:id="@+id/build_date"
