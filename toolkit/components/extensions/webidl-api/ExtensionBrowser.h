@@ -29,6 +29,10 @@ bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal);
 
 void CreateAndDispatchInitWorkerContextRunnable();
 
+already_AddRefed<Runnable> CreateWorkerLoadedRunnable(
+    const uint64_t aServiceWorkerDescriptorId,
+    const nsCOMPtr<nsIURI>& aWorkerBaseURI);
+
 already_AddRefed<Runnable> CreateWorkerDestroyedRunnable(
     const uint64_t aServiceWorkerDescriptorId,
     const nsCOMPtr<nsIURI>& aWorkerBaseURI);

@@ -205,6 +205,28 @@ class RequestInitWorkerRunnable : public dom::WorkerMainThreadRunnable {
   bool MainThreadRun() override;
 };
 
+class NotifyWorkerLoadedRunnable : public Runnable {
+  uint64_t mSWDescriptorId;
+  nsCOMPtr<nsIURI> mSWBaseURI;
+
+ public:
+  explicit NotifyWorkerLoadedRunnable(const uint64_t aServiceWorkerDescriptorId,
+                                      const nsCOMPtr<nsIURI>& aWorkerBaseURI)
+      : Runnable("extensions::NotifyWorkerLoadedRunnable"),
+        mSWDescriptorId(aServiceWorkerDescriptorId),
+        mSWBaseURI(aWorkerBaseURI) {
+    MOZ_ASSERT(mSWDescriptorId > 0);
+    MOZ_ASSERT(mSWBaseURI);
+  }
+
+  NS_IMETHOD Run() override;
+
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(NotifyWorkerLoadedRunnable, Runnable)
+
+ private:
+  ~NotifyWorkerLoadedRunnable() = default;
+};
+
 class NotifyWorkerDestroyedRunnable : public Runnable {
   uint64_t mSWDescriptorId;
   nsCOMPtr<nsIURI> mSWBaseURI;
