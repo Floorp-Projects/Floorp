@@ -379,7 +379,7 @@ bool ChromiumCDMParent::InitCDMInputBuffer(gmp::CDMInputBuffer& aBuffer,
                                     ? crypto.mIV
                                     : crypto.mConstantIV;
   aBuffer = gmp::CDMInputBuffer(
-      shmem, crypto.mKeyId, iv, aSample->mTime.ToMicroseconds(),
+      std::move(shmem), crypto.mKeyId, iv, aSample->mTime.ToMicroseconds(),
       aSample->mDuration.ToMicroseconds(), crypto.mPlainSizes,
       crypto.mEncryptedSizes, crypto.mCryptByteBlock, crypto.mSkipByteBlock,
       encryptionScheme);

@@ -197,7 +197,7 @@ void SharedSurfacesParent::DestroyProcess(base::ProcessId aPid) {
 
 /* static */
 void SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
-                               SurfaceDescriptorShared&& aDesc,
+                               const SurfaceDescriptorShared& aDesc,
                                base::ProcessId aPid) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(aPid != base::GetCurrentProcId());
@@ -212,8 +212,8 @@ void SharedSurfacesParent::Add(const wr::ExternalImageId& aId,
   // second, to avoid deadlock.
   //
   // Note that the surface wrapper maps in the given handle as read only.
-  surface->Init(aDesc.size(), aDesc.stride(), aDesc.format(),
-                std::move(aDesc.handle()), aPid);
+  surface->Init(aDesc.size(), aDesc.stride(), aDesc.format(), aDesc.handle(),
+                aPid);
 
   StaticMutexAutoLock lock(sMutex);
   if (!sInstance) {

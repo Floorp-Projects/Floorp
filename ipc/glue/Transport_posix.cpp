@@ -20,7 +20,8 @@ using base::ProcessHandle;
 namespace mozilla {
 namespace ipc {
 
-nsresult CreateTransport(TransportDescriptor* aOne, TransportDescriptor* aTwo) {
+nsresult CreateTransport(base::ProcessId aProcIdOne, TransportDescriptor* aOne,
+                         TransportDescriptor* aTwo) {
   auto id = IPC::Channel::GenerateVerifiedChannelID();
   // Use MODE_SERVER to force creation of the socketpair
   Transport t(id, Transport::MODE_SERVER, nullptr);
@@ -50,27 +51,33 @@ nsresult CreateTransport(TransportDescriptor* aOne, TransportDescriptor* aTwo) {
     return NS_ERROR_DUPLICATE_HANDLE;
   }
 
-  aOne->mFd = fd1;
-  aTwo->mFd = fd2;
+  aOne->mFd = base::FileDescriptor(fd1, true /*close after sending*/);
+  aTwo->mFd = base::FileDescriptor(fd2, true /*close after sending*/);
   return NS_OK;
 }
 
 UniquePtr<Transport> OpenDescriptor(const TransportDescriptor& aTd,
                                     Transport::Mode aMode) {
-  return MakeUnique<Transport>(aTd.mFd, aMode, nullptr);
+  return MakeUnique<Transport>(aTd.mFd.fd, aMode, nullptr);
+}
+
+UniquePtr<Transport> OpenDescriptor(const FileDescriptor& aFd,
+                                    Transport::Mode aMode) {
+  auto rawFD = aFd.ClonePlatformHandle();
+  return MakeUnique<Transport>(rawFD.release(), aMode, nullptr);
 }
 
 TransportDescriptor DuplicateDescriptor(const TransportDescriptor& aTd) {
   TransportDescriptor result = aTd;
-  result.mFd = dup(aTd.mFd);
-  if (result.mFd == -1) {
+  result.mFd.fd = dup(aTd.mFd.fd);
+  if (result.mFd.fd == -1) {
     AnnotateSystemError();
   }
-  MOZ_RELEASE_ASSERT(result.mFd != -1, "DuplicateDescriptor failed");
+  MOZ_RELEASE_ASSERT(result.mFd.fd != -1, "DuplicateDescriptor failed");
   return result;
 }
 
-void CloseDescriptor(const TransportDescriptor& aTd) { close(aTd.mFd); }
+void CloseDescriptor(const TransportDescriptor& aTd) { close(aTd.mFd.fd); }
 
 }  // namespace ipc
 }  // namespace mozilla

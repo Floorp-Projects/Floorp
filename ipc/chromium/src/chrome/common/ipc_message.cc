@@ -10,6 +10,10 @@
 #include "build/build_config.h"
 #include "mojo/core/ports/event.h"
 
+#if defined(OS_POSIX)
+#  include "chrome/common/file_descriptor_set_posix.h"
+#endif
+
 #include <utility>
 
 #include "nsISupportsImpl.h"
@@ -26,7 +30,9 @@ Message::Message()
     : UserMessage(&kUserMessageTypeInfo), Pickle(sizeof(Header)) {
   MOZ_COUNT_CTOR(IPC::Message);
   header()->routing = header()->type = 0;
-  header()->num_handles = 0;
+#if defined(OS_POSIX)
+  header()->num_fds = 0;
+#endif
 }
 
 Message::Message(int32_t routing_id, msgid_t type, uint32_t segment_capacity,
@@ -37,7 +43,9 @@ Message::Message(int32_t routing_id, msgid_t type, uint32_t segment_capacity,
   header()->routing = routing_id;
   header()->type = type;
   header()->flags = flags;
-  header()->num_handles = 0;
+#if defined(OS_POSIX)
+  header()->num_fds = 0;
+#endif
   header()->interrupt_remote_stack_depth_guess = static_cast<uint32_t>(-1);
   header()->interrupt_local_stack_depth = static_cast<uint32_t>(-1);
   header()->seqno = 0;
@@ -59,9 +67,11 @@ Message::Message(const char* data, int data_len)
 Message::Message(Message&& other)
     : UserMessage(&kUserMessageTypeInfo),
       Pickle(std::move(other)),
-      attached_handles_(std::move(other.attached_handles_)),
       attached_ports_(std::move(other.attached_ports_)) {
   MOZ_COUNT_CTOR(IPC::Message);
+#if defined(OS_POSIX)
+  file_descriptor_set_ = std::move(other.file_descriptor_set_);
+#endif
 }
 
 /*static*/ Message* Message::IPDLMessage(int32_t routing_id, msgid_t type,
@@ -89,8 +99,10 @@ Message::Message(Message&& other)
 
 Message& Message::operator=(Message&& other) {
   *static_cast<Pickle*>(this) = std::move(other);
-  attached_handles_ = std::move(other.attached_handles_);
   attached_ports_ = std::move(other.attached_ports_);
+#if defined(OS_POSIX)
+  file_descriptor_set_.swap(other.file_descriptor_set_);
+#endif
   return *this;
 }
 
@@ -143,38 +155,44 @@ uint32_t Message::FooterSize() const {
   return 0;
 }
 
-bool Message::WriteFileHandle(mozilla::UniqueFileHandle handle) {
-  uint32_t handle_index = attached_handles_.Length();
-  WriteUInt32(handle_index);
-  if (handle_index == MAX_DESCRIPTORS_PER_MESSAGE) {
-    return false;
+#if defined(OS_POSIX)
+bool Message::WriteFileDescriptor(const base::FileDescriptor& descriptor) {
+  // We write the index of the descriptor so that we don't have to
+  // keep the current descriptor as extra decoding state when deserialising.
+  // Also, we rely on each file descriptor being accompanied by sizeof(int)
+  // bytes of data in the message. See the comment for input_cmsg_buf_.
+  WriteInt(file_descriptor_set()->size());
+  if (descriptor.auto_close) {
+    return file_descriptor_set()->AddAndAutoClose(descriptor.fd);
+  } else {
+    return file_descriptor_set()->Add(descriptor.fd);
   }
-  attached_handles_.AppendElement(std::move(handle));
-  return true;
 }
 
-bool Message::ConsumeFileHandle(PickleIterator* iter,
-                                mozilla::UniqueFileHandle* handle) const {
-  uint32_t handle_index;
-  if (!ReadUInt32(iter, &handle_index)) {
-    return false;
-  }
-  if (handle_index >= attached_handles_.Length()) {
-    return false;
-  }
-  // NOTE: This mutates the underlying array, replacing the handle with an
-  // invalid handle.
-  *handle = std::exchange(attached_handles_[handle_index], nullptr);
-  return true;
+bool Message::ReadFileDescriptor(PickleIterator* iter,
+                                 base::FileDescriptor* descriptor) const {
+  int descriptor_index;
+  if (!ReadInt(iter, &descriptor_index)) return false;
+
+  FileDescriptorSet* file_descriptor_set = file_descriptor_set_.get();
+  if (!file_descriptor_set) return false;
+
+  descriptor->fd = file_descriptor_set->GetDescriptorAt(descriptor_index);
+  descriptor->auto_close = false;
+
+  return descriptor->fd >= 0;
 }
 
-void Message::SetAttachedFileHandles(
-    nsTArray<mozilla::UniqueFileHandle> handles) {
-  MOZ_DIAGNOSTIC_ASSERT(attached_handles_.IsEmpty());
-  attached_handles_ = std::move(handles);
+void Message::EnsureFileDescriptorSet() {
+  if (file_descriptor_set_.get() == NULL)
+    file_descriptor_set_ = new FileDescriptorSet;
 }
 
-uint32_t Message::num_handles() const { return attached_handles_.Length(); }
+uint32_t Message::num_fds() const {
+  return file_descriptor_set() ? file_descriptor_set()->size() : 0;
+}
+
+#endif
 
 void Message::WritePort(mozilla::ipc::ScopedPort port) {
   uint32_t port_index = attached_ports_.Length();
