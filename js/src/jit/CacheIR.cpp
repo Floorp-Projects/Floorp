@@ -9403,10 +9403,10 @@ AttachDecision CallIRGenerator::tryAttachInlinableNative(
   MOZ_CRASH("Shouldn't get here");
 }
 
-// Remember the template object associated with any script being called
-// as a constructor, for later use during Ion compilation.
-ScriptedThisResult CallIRGenerator::getThisForScripted(
-    HandleFunction calleeFunc, MutableHandleObject result) {
+// Remember the shape of the this object for any script being called as a
+// constructor, for later use during Ion compilation.
+ScriptedThisResult CallIRGenerator::getThisShapeForScripted(
+    HandleFunction calleeFunc, MutableHandleShape result) {
   // Some constructors allocate their own |this| object.
   if (calleeFunc->constructorNeedsUninitializedThis()) {
     return ScriptedThisResult::UninitializedThis;
@@ -9421,16 +9421,15 @@ ScriptedThisResult CallIRGenerator::getThisForScripted(
   }
 
   AutoRealm ar(cx_, calleeFunc);
-  PlainObject* thisObject =
-      CreateThisForFunction(cx_, calleeFunc, newTarget, TenuredObject);
-  if (!thisObject) {
+  Shape* thisShape = ThisShapeForFunction(cx_, calleeFunc, newTarget);
+  if (!thisShape) {
     cx_->clearPendingException();
     return ScriptedThisResult::NoAction;
   }
 
-  MOZ_ASSERT(thisObject->nonCCWRealm() == calleeFunc->realm());
-  result.set(thisObject);
-  return ScriptedThisResult::TemplateObject;
+  MOZ_ASSERT(thisShape->realm() == calleeFunc->realm());
+  result.set(thisShape);
+  return ScriptedThisResult::PlainObjectShape;
 }
 
 AttachDecision CallIRGenerator::tryAttachCallScripted(
@@ -9470,10 +9469,10 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
     return AttachDecision::NoAction;
   }
 
-  RootedObject templateObj(cx_);
+  RootedShape thisShape(cx_);
   if (isConstructing && isSpecialized) {
-    switch (getThisForScripted(calleeFunc, &templateObj)) {
-      case ScriptedThisResult::TemplateObject:
+    switch (getThisShapeForScripted(calleeFunc, &thisShape)) {
+      case ScriptedThisResult::PlainObjectShape:
         break;
       case ScriptedThisResult::UninitializedThis:
         flags.setNeedsUninitializedThis();
@@ -9492,12 +9491,11 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
   ObjOperandId calleeObjId = writer.guardToObject(calleeValId);
 
   if (isSpecialized) {
-    MOZ_ASSERT_IF(isConstructing,
-                  templateObj || flags.needsUninitializedThis());
+    MOZ_ASSERT_IF(isConstructing, thisShape || flags.needsUninitializedThis());
 
     // Ensure callee matches this stub's callee
     emitCalleeGuard(calleeObjId, calleeFunc);
-    if (templateObj) {
+    if (thisShape) {
       // Emit guards to ensure the newTarget's .prototype property is what we
       // expect. Note that getThisForScripted checked newTarget is a function
       // with a non-configurable .prototype data property.
@@ -9527,7 +9525,7 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
 
       // Call metaScriptedTemplateObject before emitting the call, so that Warp
       // can use this template object before transpiling the call.
-      writer.metaScriptedTemplateObject(calleeFunc, templateObj);
+      writer.metaScriptedTemplateObject(calleeFunc, thisShape);
     }
   } else {
     // Guard that object is a scripted function

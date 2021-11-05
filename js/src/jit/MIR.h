@@ -1931,6 +1931,8 @@ class MNewPlainObject : public MUnaryInstruction, public NoTypePolicy::Data {
   [[nodiscard]] bool writeRecoverData(
       CompactBufferWriter& writer) const override;
   bool canRecoverOnBailout() const override { return true; }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
 class MNewArrayObject : public MUnaryInstruction, public NoTypePolicy::Data {
