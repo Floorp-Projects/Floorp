@@ -13,10 +13,13 @@ const { XPCOMUtils } = ChromeUtils.import(
 const VERSION_PREF = "browser.places.snapshots.version";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  BackgroundPageThumbs: "resource://gre/modules/BackgroundPageThumbs.jsm",
   CommonNames: "resource:///modules/CommonNames.jsm",
   Interactions: "resource:///modules/Interactions.jsm",
   PageDataCollector: "resource:///modules/pagedata/PageDataCollector.jsm",
   PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
+  PageThumbs: "resource://gre/modules/PageThumbs.jsm",
+  PageThumbsStorage: "resource://gre/modules/PageThumbs.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
@@ -117,6 +120,8 @@ const Snapshots = new (class Snapshots {
     // want to accumulate changes and update on idle, plus store a cache of the
     // last notified pages to avoid hitting the same page continuously.
     // PageDataService.on("page-data", this.#onPageData);
+
+    PageThumbs.addExpirationFilter(this);
   }
 
   /**
@@ -138,6 +143,20 @@ const Snapshots = new (class Snapshots {
   }
 
   /**
+   * This is called by PageThumbs to see what thumbnails should be kept alive.
+   * Currently, the last 100 snapshots are kept alive.
+   * @param {function} callback
+   */
+  async filterForThumbnailExpiration(callback) {
+    let snapshots = await this.query();
+    let urls = [];
+    for (let snapshot of snapshots) {
+      urls.push(snapshot.url);
+    }
+    callback(urls);
+  }
+
+  /**
    * Fetches page data for the given urls and stores it with snapshots.
    * @param {Array<Objects>} urls Array of {placeId, url} tuples.
    */
@@ -147,6 +166,7 @@ const Snapshots = new (class Snapshots {
     let bindings = {};
     for (let { placeId, url } of urls) {
       let pageData = PageDataService.getCached(url);
+      let imageURL = null;
       if (pageData?.data.length) {
         for (let data of pageData.data) {
           if (Object.values(PageDataCollector.DATA_TYPE).includes(data.type)) {
@@ -158,6 +178,14 @@ const Snapshots = new (class Snapshots {
             bindings[`data${index}`] = JSON.stringify(data);
             values.push(`(:id${index}, :type${index}, :data${index})`);
             index++;
+            if (data.type === PageDataCollector.DATA_TYPE.GENERAL) {
+              let websiteData = data.data.find(
+                element => element.type === "website"
+              );
+              if (websiteData?.image) {
+                imageURL = websiteData.image;
+              }
+            }
           }
         }
       } else {
@@ -165,6 +193,7 @@ const Snapshots = new (class Snapshots {
         // was found, but we're not yet handling that, see the constructor.
         PageDataService.queueFetch(url).catch(console.error);
       }
+      this.#downloadPageImage(url, imageURL);
     }
 
     logConsole.debug(
@@ -188,6 +217,24 @@ const Snapshots = new (class Snapshots {
         );
       }
     );
+  }
+
+  /**
+   * TODO: Store the downloaded and rescaled page image. For now this
+   * only kicks off the page thumbnail if there isn't a meta data image.
+   *
+   * @param {string} url The URL of the page. This is only used if there isn't
+   *    a `metaDataImageURL`.
+   * @param {string} metaDataImageURL The URL of the meta data page image. If
+   *    this exists, it is prioritized over the page thumbnail.
+   */
+  #downloadPageImage(url, metaDataImageURL = null) {
+    if (!metaDataImageURL) {
+      // No metadata image was found, start the process to capture a thumbnail
+      // so it will be ready when needed. Ignore any errors since we can
+      // fallback to a favicon.
+      BackgroundPageThumbs.captureIfMissing(url).catch(console.error);
+    }
   }
 
   /**
@@ -484,6 +531,32 @@ const Snapshots = new (class Snapshots {
 
     snapshot.commonName = CommonNames.getName(snapshot);
     return snapshot;
+  }
+
+  /**
+   * Get the image that should represent the snapshot. The image URL
+   * returned comes from the following priority:
+   *   1) meta data page image
+   *   2) thumbnail of the page
+   * @param {Snapshot} snapshot
+   *
+   * @returns {string?}
+   */
+  async getSnapshotImageURL(snapshot) {
+    const generalPageData = snapshot.pageData
+      .get(PageDataCollector.DATA_TYPE.GENERAL)
+      ?.find(element => element.type === "website");
+    if (generalPageData) {
+      return generalPageData.image;
+    }
+    const url = snapshot.url;
+    await BackgroundPageThumbs.captureIfMissing(url).catch(console.error);
+    const exists = await PageThumbsStorage.fileExistsForURL(url);
+    if (exists) {
+      return PageThumbs.getThumbnailURL(url);
+    }
+
+    return null;
   }
 
   /**
