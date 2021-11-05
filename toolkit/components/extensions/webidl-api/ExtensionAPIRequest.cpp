@@ -43,13 +43,6 @@ ExtensionServiceWorkerInfo::GetClientInfoId(nsAString& aClientInfoId) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-ExtensionServiceWorkerInfo::GetDescriptorId(uint64_t* aDescriptorId) {
-  MOZ_ASSERT(NS_IsMainThread());
-  *aDescriptorId = mDescriptorId;
-  return NS_OK;
-}
-
 // mozIExtensionAPIRequest
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ExtensionAPIRequest)
@@ -91,12 +84,10 @@ ExtensionAPIRequest::ExtensionAPIRequest(
 }
 
 void ExtensionAPIRequest::Init(Maybe<dom::ClientInfo>& aSWClientInfo,
-                               const uint64_t aSWDescriptorId,
                                JS::HandleValue aRequestArgs,
                                JS::HandleValue aCallerStack) {
   MOZ_ASSERT(NS_IsMainThread());
   mSWClientInfo = aSWClientInfo;
-  mSWDescriptorId = aSWDescriptorId;
   mArgs.set(aRequestArgs);
   mStack.set(aCallerStack);
   mNormalizedArgs.setUndefined();
@@ -224,7 +215,7 @@ ExtensionAPIRequest::GetServiceWorkerInfo(
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG_POINTER(aSWInfo);
   if (mSWClientInfo.isSome() && !mSWInfo) {
-    mSWInfo = new ExtensionServiceWorkerInfo(*mSWClientInfo, mSWDescriptorId);
+    mSWInfo = new ExtensionServiceWorkerInfo(*mSWClientInfo);
   }
   NS_IF_ADDREF(*aSWInfo = mSWInfo);
   return NS_OK;

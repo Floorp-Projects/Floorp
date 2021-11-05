@@ -46,7 +46,7 @@ function promiseExtensionEvent(wrapper, event) {
 
 function trackEvents(wrapper) {
   let events = new Map();
-  for (let event of ["background-script-event", "start-background-script"]) {
+  for (let event of ["background-page-event", "start-background-page"]) {
     events.set(event, false);
     wrapper.extension.once(event, () => events.set(event, true));
   }
@@ -112,9 +112,9 @@ add_task(async function test_proxy_startup() {
   equal(2, nonProxiedRequests, "non proxied request ok");
 
   equal(
-    events.get("background-script-event"),
+    events.get("background-page-event"),
     false,
-    "Should not have gotten a background script event"
+    "Should not have gotten a background page event"
   );
 
   // Make a request that the extension will proxy once it is started.
@@ -123,27 +123,27 @@ add_task(async function test_proxy_startup() {
     ExtensionTestUtils.fetch("http://proxied.example.com/?a=1"),
   ]);
 
-  await promiseExtensionEvent(extension, "background-script-event");
+  await promiseExtensionEvent(extension, "background-page-event");
   equal(
-    events.get("background-script-event"),
+    events.get("background-page-event"),
     true,
-    "Should have gotten a background script event"
+    "Should have gotten a background page event"
   );
 
   // Test the background page startup.
   equal(
-    events.get("start-background-script"),
+    events.get("start-background-page"),
     false,
-    "Should have gotten a background script event"
+    "Should have gotten a background page event"
   );
 
   Services.obs.notifyObservers(null, "browser-delayed-startup-finished");
   await new Promise(executeSoon);
 
   equal(
-    events.get("start-background-script"),
+    events.get("start-background-page"),
     true,
-    "Should have gotten a background script event"
+    "Should have gotten a background page event"
   );
 
   // Verify our proxied request finishes properly and that the
