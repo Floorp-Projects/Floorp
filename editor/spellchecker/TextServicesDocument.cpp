@@ -12,10 +12,11 @@
 #include "mozilla/HTMLEditUtils.h"    // for HTMLEditUtils
 #include "mozilla/mozalloc.h"         // for operator new, etc
 #include "mozilla/OwningNonNull.h"
-#include "mozilla/UniquePtr.h"  // for UniquePtr
-#include "mozilla/dom/AbstractRange.h"
+#include "mozilla/UniquePtr.h"          // for UniquePtr
+#include "mozilla/dom/AbstractRange.h"  // for AbstractRange
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/dom/StaticRange.h"  // for StaticRange
 #include "mozilla/dom/Text.h"
 #include "mozilla/intl/WordBreaker.h"  // for WordRange, WordBreaker
 #include "nsAString.h"                 // for nsAString::Length, etc

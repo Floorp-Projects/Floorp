@@ -10,6 +10,14 @@ const TEST_PAGE =
 const key = "key" + Math.random().toString();
 const re = new RegExp(key + "=([0-9.]+)");
 
+// IsolationTestTools flushes all preferences
+// hence we explicitly pref off https-first mode
+async function prefOffHttpsFirstMode() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_first", false]],
+  });
+}
+
 // Define the testing function
 function doTest(aBrowser) {
   return SpecialPowers.spawn(aBrowser, [key, re], function(
@@ -31,4 +39,4 @@ registerCleanupFunction(() => {
   Services.cookies.removeAll();
 });
 
-IsolationTestTools.runTests(TEST_PAGE, doTest);
+IsolationTestTools.runTests(TEST_PAGE, doTest, null, prefOffHttpsFirstMode);

@@ -81,6 +81,7 @@
 #include "mozilla/dom/quota/OriginScope.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/dom/quota/StorageHelpers.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/QuotaObject.h"
 #include "mozilla/dom/quota/UsageInfo.h"
@@ -725,47 +726,6 @@ CreateArchiveStorageConnection(const nsAString& aStoragePath) {
   }
 
   return connection;
-}
-
-nsresult AttachArchiveDatabase(const nsAString& aStoragePath,
-                               mozIStorageConnection* aConnection) {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(!aStoragePath.IsEmpty());
-  MOZ_ASSERT(aConnection);
-
-  QM_TRY_INSPECT(const auto& archiveFile, GetArchiveFile(aStoragePath));
-
-#ifdef DEBUG
-  {
-    QM_TRY_INSPECT(const bool& exists,
-                   MOZ_TO_RESULT_INVOKE(archiveFile, Exists));
-
-    MOZ_ASSERT(exists);
-  }
-#endif
-
-  QM_TRY_INSPECT(const auto& path,
-                 MOZ_TO_RESULT_INVOKE_TYPED(nsString, archiveFile, GetPath));
-
-  QM_TRY_INSPECT(const auto& stmt,
-                 MOZ_TO_RESULT_INVOKE_TYPED(
-                     nsCOMPtr<mozIStorageStatement>, aConnection,
-                     CreateStatement, "ATTACH DATABASE :path AS archive;"_ns));
-
-  QM_TRY(MOZ_TO_RESULT(stmt->BindStringByName("path"_ns, path)));
-  QM_TRY(MOZ_TO_RESULT(stmt->Execute()));
-
-  return NS_OK;
-}
-
-nsresult DetachArchiveDatabase(mozIStorageConnection* aConnection) {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aConnection);
-
-  QM_TRY(MOZ_TO_RESULT(
-      aConnection->ExecuteSimpleSQL("DETACH DATABASE archive"_ns)));
-
-  return NS_OK;
 }
 
 Result<nsCOMPtr<nsIFile>, nsresult> GetShadowFile(const nsAString& aBasePath) {
@@ -6964,95 +6924,104 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
     if (hasDataForMigration) {
       MOZ_ASSERT(mUsage == 0);
 
-      QM_TRY(MOZ_TO_RESULT(
-          AttachArchiveDatabase(quotaManager->GetStoragePath(), connection)));
-
-      QM_TRY_INSPECT(const int64_t& newUsage,
-                     GetUsage(*connection, mArchivedOriginScope.get()));
-
-      if (!quotaObject->MaybeUpdateSize(newUsage, /* aTruncate */ true)) {
-        return NS_ERROR_FILE_NO_DEVICE_SPACE;
-      }
-
-      auto autoUpdateSize = MakeScopeExit([&quotaObject] {
-        MOZ_ALWAYS_TRUE(quotaObject->MaybeUpdateSize(0, /* aTruncate */ true));
-      });
-
-      mozStorageTransaction transaction(
-          connection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
-
-      QM_TRY(MOZ_TO_RESULT(transaction.Start()));
-
       {
-        nsCOMPtr<mozIStorageFunction> function = new CompressFunction();
+        QM_TRY_INSPECT(const auto& archiveFile,
+                       GetArchiveFile(quotaManager->GetStoragePath()));
+
+        auto autoArchiveDatabaseAttacher =
+            AutoDatabaseAttacher(connection, archiveFile, "archive"_ns);
+
+        QM_TRY(MOZ_TO_RESULT(autoArchiveDatabaseAttacher.Attach()));
+
+        QM_TRY_INSPECT(const int64_t& newUsage,
+                       GetUsage(*connection, mArchivedOriginScope.get()));
+
+        if (!quotaObject->MaybeUpdateSize(newUsage, /* aTruncate */ true)) {
+          return NS_ERROR_FILE_NO_DEVICE_SPACE;
+        }
+
+        auto autoUpdateSize = MakeScopeExit([&quotaObject] {
+          MOZ_ALWAYS_TRUE(
+              quotaObject->MaybeUpdateSize(0, /* aTruncate */ true));
+        });
+
+        mozStorageTransaction transaction(
+            connection, false, mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+        QM_TRY(MOZ_TO_RESULT(transaction.Start()));
+
+        {
+          nsCOMPtr<mozIStorageFunction> function = new CompressFunction();
+
+          QM_TRY(MOZ_TO_RESULT(
+              connection->CreateFunction("compress"_ns, 1, function)));
+
+          function = new CompressibleFunction();
+
+          QM_TRY(MOZ_TO_RESULT(
+              connection->CreateFunction("compressible"_ns, 1, function)));
+
+          QM_TRY_INSPECT(
+              const auto& stmt,
+              MOZ_TO_RESULT_INVOKE_TYPED(
+                  nsCOMPtr<mozIStorageStatement>, connection, CreateStatement,
+                  "INSERT INTO data (key, value, utf16Length, compressed) "
+                  "SELECT key, compress(value), utf16Length(value), "
+                  "compressible(value) "
+                  "FROM webappsstore2 "
+                  "WHERE originKey = :originKey "
+                  "AND originAttributes = :originAttributes;"_ns));
+
+          QM_TRY(MOZ_TO_RESULT(mArchivedOriginScope->BindToStatement(stmt)));
+
+          QM_TRY(MOZ_TO_RESULT(stmt->Execute()));
+
+          QM_TRY(MOZ_TO_RESULT(connection->RemoveFunction("compress"_ns)));
+
+          QM_TRY(MOZ_TO_RESULT(connection->RemoveFunction("compressible"_ns)));
+        }
+
+        {
+          QM_TRY_INSPECT(
+              const auto& stmt,
+              MOZ_TO_RESULT_INVOKE_TYPED(
+                  nsCOMPtr<mozIStorageStatement>, connection, CreateStatement,
+                  "UPDATE database SET usage = :usage;"_ns));
+
+          QM_TRY(MOZ_TO_RESULT(stmt->BindInt64ByName("usage"_ns, newUsage)));
+
+          QM_TRY(MOZ_TO_RESULT(stmt->Execute()));
+        }
+
+        {
+          QM_TRY_INSPECT(
+              const auto& stmt,
+              MOZ_TO_RESULT_INVOKE_TYPED(
+                  nsCOMPtr<mozIStorageStatement>, connection, CreateStatement,
+                  "DELETE FROM webappsstore2 "
+                  "WHERE originKey = :originKey "
+                  "AND originAttributes = :originAttributes;"_ns));
+
+          QM_TRY(MOZ_TO_RESULT(mArchivedOriginScope->BindToStatement(stmt)));
+          QM_TRY(MOZ_TO_RESULT(stmt->Execute()));
+        }
 
         QM_TRY(MOZ_TO_RESULT(
-            connection->CreateFunction("compress"_ns, 1, function)));
+            UpdateUsageFile(usageFile, usageJournalFile, newUsage)));
+        QM_TRY(MOZ_TO_RESULT(transaction.Commit()));
 
-        function = new CompressibleFunction();
+        autoUpdateSize.release();
 
-        QM_TRY(MOZ_TO_RESULT(
-            connection->CreateFunction("compressible"_ns, 1, function)));
+        QM_TRY(MOZ_TO_RESULT(usageJournalFile->Remove(false)));
 
-        QM_TRY_INSPECT(
-            const auto& stmt,
-            MOZ_TO_RESULT_INVOKE_TYPED(
-                nsCOMPtr<mozIStorageStatement>, connection, CreateStatement,
-                "INSERT INTO data (key, value, utf16Length, compressed) "
-                "SELECT key, compress(value), utf16Length(value), "
-                "compressible(value) "
-                "FROM webappsstore2 "
-                "WHERE originKey = :originKey "
-                "AND originAttributes = :originAttributes;"_ns));
+        mUsage = newUsage;
 
-        QM_TRY(MOZ_TO_RESULT(mArchivedOriginScope->BindToStatement(stmt)));
-
-        QM_TRY(MOZ_TO_RESULT(stmt->Execute()));
-
-        QM_TRY(MOZ_TO_RESULT(connection->RemoveFunction("compress"_ns)));
-
-        QM_TRY(MOZ_TO_RESULT(connection->RemoveFunction("compressible"_ns)));
+        QM_TRY(MOZ_TO_RESULT(autoArchiveDatabaseAttacher.Detach()));
       }
-
-      {
-        QM_TRY_INSPECT(
-            const auto& stmt,
-            MOZ_TO_RESULT_INVOKE_TYPED(
-                nsCOMPtr<mozIStorageStatement>, connection, CreateStatement,
-                "UPDATE database SET usage = :usage;"_ns));
-
-        QM_TRY(MOZ_TO_RESULT(stmt->BindInt64ByName("usage"_ns, newUsage)));
-
-        QM_TRY(MOZ_TO_RESULT(stmt->Execute()));
-      }
-
-      {
-        QM_TRY_INSPECT(
-            const auto& stmt,
-            MOZ_TO_RESULT_INVOKE_TYPED(
-                nsCOMPtr<mozIStorageStatement>, connection, CreateStatement,
-                "DELETE FROM webappsstore2 "
-                "WHERE originKey = :originKey "
-                "AND originAttributes = :originAttributes;"_ns));
-
-        QM_TRY(MOZ_TO_RESULT(mArchivedOriginScope->BindToStatement(stmt)));
-        QM_TRY(MOZ_TO_RESULT(stmt->Execute()));
-      }
-
-      QM_TRY(MOZ_TO_RESULT(
-          UpdateUsageFile(usageFile, usageJournalFile, newUsage)));
-      QM_TRY(MOZ_TO_RESULT(transaction.Commit()));
-
-      autoUpdateSize.release();
-
-      QM_TRY(MOZ_TO_RESULT(usageJournalFile->Remove(false)));
-      QM_TRY(MOZ_TO_RESULT(DetachArchiveDatabase(connection)));
 
       MOZ_ASSERT(gArchivedOrigins);
       MOZ_ASSERT(mArchivedOriginScope->HasMatches(gArchivedOrigins));
       mArchivedOriginScope->RemoveMatches(gArchivedOrigins);
-
-      mUsage = newUsage;
     }
 
     nsCOMPtr<mozIStorageConnection> shadowConnection;
@@ -8365,59 +8334,70 @@ nsresult QuotaClient::AboutToClearOrigins(
           return connection;
         }()));
 
-    if (hasDataForRemoval) {
-      QM_TRY(MOZ_TO_RESULT(
-          AttachArchiveDatabase(quotaManager->GetStoragePath(), connection)));
-    }
-
-    if (archivedOriginScope->IsPattern()) {
-      nsCOMPtr<mozIStorageFunction> function(
-          new MatchFunction(archivedOriginScope->GetPattern()));
-
-      QM_TRY(
-          MOZ_TO_RESULT(connection->CreateFunction("match"_ns, 2, function)));
-    }
-
     {
-      QM_TRY_INSPECT(
-          const auto& stmt,
-          MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>, connection,
-                                     CreateStatement, "BEGIN IMMEDIATE;"_ns));
+      Maybe<AutoDatabaseAttacher> maybeAutoArchiveDatabaseAttacher;
 
-      QM_TRY(MOZ_TO_RESULT(stmt->Execute()));
+      if (hasDataForRemoval) {
+        QM_TRY_INSPECT(const auto& archiveFile,
+                       GetArchiveFile(quotaManager->GetStoragePath()));
+
+        maybeAutoArchiveDatabaseAttacher.emplace(
+            AutoDatabaseAttacher(connection, archiveFile, "archive"_ns));
+
+        QM_TRY(MOZ_TO_RESULT(maybeAutoArchiveDatabaseAttacher->Attach()));
+      }
+
+      if (archivedOriginScope->IsPattern()) {
+        nsCOMPtr<mozIStorageFunction> function(
+            new MatchFunction(archivedOriginScope->GetPattern()));
+
+        QM_TRY(
+            MOZ_TO_RESULT(connection->CreateFunction("match"_ns, 2, function)));
+      }
+
+      {
+        QM_TRY_INSPECT(const auto& stmt,
+                       MOZ_TO_RESULT_INVOKE_TYPED(
+                           nsCOMPtr<mozIStorageStatement>, connection,
+                           CreateStatement, "BEGIN IMMEDIATE;"_ns));
+
+        QM_TRY(MOZ_TO_RESULT(stmt->Execute()));
+      }
+
+      if (shadowWrites) {
+        QM_TRY(MOZ_TO_RESULT(
+            PerformDelete(connection, "main"_ns, archivedOriginScope.get())));
+      }
+
+      if (hasDataForRemoval) {
+        QM_TRY(MOZ_TO_RESULT(PerformDelete(connection, "archive"_ns,
+                                           archivedOriginScope.get())));
+      }
+
+      {
+        QM_TRY_INSPECT(const auto& stmt,
+                       MOZ_TO_RESULT_INVOKE_TYPED(
+                           nsCOMPtr<mozIStorageStatement>, connection,
+                           CreateStatement, "COMMIT;"_ns));
+
+        QM_TRY(MOZ_TO_RESULT(stmt->Execute()));
+      }
+
+      if (archivedOriginScope->IsPattern()) {
+        QM_TRY(MOZ_TO_RESULT(connection->RemoveFunction("match"_ns)));
+      }
+
+      if (hasDataForRemoval) {
+        MOZ_ASSERT(maybeAutoArchiveDatabaseAttacher.isSome());
+        QM_TRY(MOZ_TO_RESULT(maybeAutoArchiveDatabaseAttacher->Detach()));
+
+        maybeAutoArchiveDatabaseAttacher.reset();
+
+        MOZ_ASSERT(gArchivedOrigins);
+        MOZ_ASSERT(archivedOriginScope->HasMatches(gArchivedOrigins));
+        archivedOriginScope->RemoveMatches(gArchivedOrigins);
+      }
     }
-
-    if (shadowWrites) {
-      QM_TRY(MOZ_TO_RESULT(
-          PerformDelete(connection, "main"_ns, archivedOriginScope.get())));
-    }
-
-    if (hasDataForRemoval) {
-      QM_TRY(MOZ_TO_RESULT(
-          PerformDelete(connection, "archive"_ns, archivedOriginScope.get())));
-    }
-
-    {
-      QM_TRY_INSPECT(
-          const auto& stmt,
-          MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>, connection,
-                                     CreateStatement, "COMMIT;"_ns));
-
-      QM_TRY(MOZ_TO_RESULT(stmt->Execute()));
-    }
-
-    if (archivedOriginScope->IsPattern()) {
-      QM_TRY(MOZ_TO_RESULT(connection->RemoveFunction("match"_ns)));
-    }
-
-    if (hasDataForRemoval) {
-      QM_TRY(MOZ_TO_RESULT(DetachArchiveDatabase(connection)));
-
-      MOZ_ASSERT(gArchivedOrigins);
-      MOZ_ASSERT(archivedOriginScope->HasMatches(gArchivedOrigins));
-      archivedOriginScope->RemoveMatches(gArchivedOrigins);
-    }
-
     QM_TRY(MOZ_TO_RESULT(connection->Close()));
   }
 

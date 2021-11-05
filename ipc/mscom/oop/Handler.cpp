@@ -271,9 +271,10 @@ HRESULT
 Handler::Unregister(REFCLSID aClsid) { return Module::Deregister(aClsid); }
 
 HRESULT
-Handler::Register(REFCLSID aClsid) {
+Handler::Register(REFCLSID aClsid, const bool aMsixContainer) {
   return Module::Register(aClsid, Module::ThreadingModel::DedicatedUiThreadOnly,
-                          Module::ClassType::InprocHandler);
+                          Module::ClassType::InprocHandler, nullptr,
+                          aMsixContainer);
 }
 
 }  // namespace mscom
