@@ -17,6 +17,11 @@ function testMainThread(script_str) {
 }
 
 function testMainThreadDelazifyAll(script_str) {
+  if (isLcovEnabled()) {
+    // Code-coverage implies forceFullParse = true, and as such it cannot be
+    // used while testing to incrementally delazify.
+    return;
+  }
   const eval_f = eval;
   const stencil = compileAndDelazifyAllToStencil(script_str, optionsLazy);
   const result = evalStencil(stencil, optionsLazy);
