@@ -72,6 +72,8 @@
 #include "hunspell_csutil.hxx"
 #include "mozilla/Encoding.h"
 #include "mozilla/Span.h"
+#include "mozilla/Tuple.h"
+
 #include "nsUnicharUtils.h"
 
 /* This is a copy of get_current_cs from the hunspell csutil.cxx file.
@@ -114,14 +116,14 @@ struct cs_info* hunspell_get_current_cs(const std::string& es) {
       uint32_t result;
       size_t read;
       size_t written;
-      std::tie(result, read, written) =
+      mozilla::Tie(result, read, written) =
           decoder->DecodeToUTF16WithoutReplacement(src1, dst1, true);
       if (result != mozilla::kInputEmpty || read != 1 || written != 1) {
         break;
       }
 
       uniCased = ToLowerCase(uni[0]);
-      std::tie(result, read, written) =
+      mozilla::Tie(result, read, written) =
           encoder->EncodeFromUTF16WithoutReplacement(src2, dst2, true);
       if (result != mozilla::kInputEmpty || read != 1 || written != 1) {
         break;
@@ -129,7 +131,7 @@ struct cs_info* hunspell_get_current_cs(const std::string& es) {
       lower = destination[0];
 
       uniCased = ToUpperCase(uni[0]);
-      std::tie(result, read, written) =
+      mozilla::Tie(result, read, written) =
           encoder->EncodeFromUTF16WithoutReplacement(src2, dst2, true);
       if (result != mozilla::kInputEmpty || read != 1 || written != 1) {
         break;

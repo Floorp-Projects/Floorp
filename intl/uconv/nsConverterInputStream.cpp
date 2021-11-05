@@ -7,9 +7,8 @@
 #include "nsIInputStream.h"
 #include "nsReadLine.h"
 #include "nsStreamUtils.h"
-
 #include <algorithm>
-#include <tuple>
+#include "mozilla/Unused.h"
 
 using namespace mozilla;
 
@@ -213,10 +212,10 @@ uint32_t nsConverterInputStream::Fill(nsresult* aErrorCode) {
   // errors are ignored. Always passing false as the last argument to
   // Decode* calls below.
   if (mErrorsAreFatal) {
-    std::tie(result, read, written) =
+    Tie(result, read, written) =
         mConverter->DecodeToUTF16WithoutReplacement(src, dst, false);
   } else {
-    std::tie(result, read, written, std::ignore) =
+    Tie(result, read, written, Ignore) =
         mConverter->DecodeToUTF16(src, dst, false);
   }
   mLeftOverBytes = mByteData.Length() - read;

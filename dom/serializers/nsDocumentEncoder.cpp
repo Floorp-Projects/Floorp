@@ -9,14 +9,17 @@
  * to strings in a gazillion different ways.
  */
 
+#include "nsIDocumentEncoder.h"
+
 #include <utility>
 
 #include "nscore.h"
 #include "nsISupports.h"
+#include "mozilla/dom/Document.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsIContentSerializer.h"
-#include "nsIDocumentEncoder.h"
+#include "mozilla/Encoding.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIOutputStream.h"
 #include "nsRange.h"
@@ -33,17 +36,15 @@
 #include "nsReadableUtils.h"
 #include "nsTArray.h"
 #include "nsIFrame.h"
-#include "nsLayoutUtils.h"
 #include "nsStringBuffer.h"
 #include "mozilla/dom/Comment.h"
-#include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/Text.h"
-#include "mozilla/Encoding.h"
+#include "nsLayoutUtils.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtr.h"
@@ -124,7 +125,7 @@ nsresult TextStreamer::EncodeAndWrite() {
     size_t read;
     size_t written;
     if (mIsPlainText) {
-      std::tie(result, read, written) =
+      Tie(result, read, written) =
           mUnicodeEncoder->EncodeFromUTF16WithoutReplacement(src, dst, false);
       if (result != kInputEmpty && result != kOutputFull) {
         // There's always room for one byte in the case of
@@ -133,7 +134,7 @@ nsresult TextStreamer::EncodeAndWrite() {
         dst[written++] = '?';
       }
     } else {
-      std::tie(result, read, written, std::ignore) =
+      Tie(result, read, written, Ignore) =
           mUnicodeEncoder->EncodeFromUTF16(src, dst, false);
     }
     src = src.From(read);
