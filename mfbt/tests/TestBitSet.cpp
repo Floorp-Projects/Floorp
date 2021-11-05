@@ -4,65 +4,114 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/Assertions.h"
 #include "mozilla/BitSet.h"
 
 using mozilla::BitSet;
 
-// Work around issue with commas in macro use.
-template <size_t N>
-using BitSetUint8 = BitSet<N, uint8_t>;
-template <size_t N>
-using BitSetUint32 = BitSet<N, uint32_t>;
+template <typename Storage>
+class BitSetSuite {
+  template <size_t N>
+  using TestBitSet = BitSet<N, Storage>;
 
-void TestBitSet() {
-  MOZ_RELEASE_ASSERT(BitSetUint8<1>().Storage().LengthBytes() == 1);
-  MOZ_RELEASE_ASSERT(BitSetUint32<1>().Storage().LengthBytes() == 4);
+  static constexpr size_t kBitsPerWord = sizeof(Storage) * 8;
 
-  MOZ_RELEASE_ASSERT(BitSetUint8<1>().Storage().Length() == 1);
-  MOZ_RELEASE_ASSERT(BitSetUint8<8>().Storage().Length() == 1);
-  MOZ_RELEASE_ASSERT(BitSetUint8<9>().Storage().Length() == 2);
+  static constexpr Storage kAllBitsSet = ~Storage{0};
 
-  MOZ_RELEASE_ASSERT(BitSetUint32<1>().Storage().Length() == 1);
-  MOZ_RELEASE_ASSERT(BitSetUint32<32>().Storage().Length() == 1);
-  MOZ_RELEASE_ASSERT(BitSetUint32<33>().Storage().Length() == 2);
+ public:
+  void testLength() {
+    MOZ_RELEASE_ASSERT(TestBitSet<1>().Storage().LengthBytes() ==
+                       sizeof(Storage));
 
-  BitSetUint8<10> bitset;
-  MOZ_RELEASE_ASSERT(!bitset.Test(3));
-  MOZ_RELEASE_ASSERT(!bitset[3]);
-
-  bitset[3] = true;
-  MOZ_RELEASE_ASSERT(bitset.Test(3));
-  MOZ_RELEASE_ASSERT(bitset[3]);
-
-  bitset.ResetAll();
-  for (size_t i = 0; i < bitset.Size(); i++) {
-    MOZ_RELEASE_ASSERT(!bitset[i]);
+    MOZ_RELEASE_ASSERT(TestBitSet<1>().Storage().Length() == 1);
+    MOZ_RELEASE_ASSERT(TestBitSet<kBitsPerWord>().Storage().Length() == 1);
+    MOZ_RELEASE_ASSERT(TestBitSet<kBitsPerWord + 1>().Storage().Length() == 2);
   }
 
-  bitset.SetAll();
-  for (size_t i = 0; i < bitset.Size(); i++) {
-    MOZ_RELEASE_ASSERT(bitset[i]);
+  void testConstruct() {
+    MOZ_RELEASE_ASSERT(TestBitSet<1>().Storage()[0] == 0);
+    MOZ_RELEASE_ASSERT(TestBitSet<kBitsPerWord>().Storage()[0] == 0);
+    MOZ_RELEASE_ASSERT(TestBitSet<kBitsPerWord + 1>().Storage()[0] == 0);
+    MOZ_RELEASE_ASSERT(TestBitSet<kBitsPerWord + 1>().Storage()[1] == 0);
+
+    TestBitSet<1> bitset1;
+    bitset1.SetAll();
+    TestBitSet<kBitsPerWord> bitsetW;
+    bitsetW.SetAll();
+    TestBitSet<kBitsPerWord + 1> bitsetW1;
+    bitsetW1.SetAll();
+
+    MOZ_RELEASE_ASSERT(bitset1.Storage()[0] == 1);
+    MOZ_RELEASE_ASSERT(bitsetW.Storage()[0] == kAllBitsSet);
+    MOZ_RELEASE_ASSERT(bitsetW1.Storage()[0] == kAllBitsSet);
+    MOZ_RELEASE_ASSERT(bitsetW1.Storage()[1] == 1);
+
+    MOZ_RELEASE_ASSERT(TestBitSet<1>(bitset1).Storage()[0] == 1);
+    MOZ_RELEASE_ASSERT(TestBitSet<kBitsPerWord>(bitsetW).Storage()[0] ==
+                       kAllBitsSet);
+    MOZ_RELEASE_ASSERT(TestBitSet<kBitsPerWord + 1>(bitsetW1).Storage()[0] ==
+                       kAllBitsSet);
+    MOZ_RELEASE_ASSERT(TestBitSet<kBitsPerWord + 1>(bitsetW1).Storage()[1] ==
+                       1);
+
+    MOZ_RELEASE_ASSERT(TestBitSet<1>(bitset1.Storage()).Storage()[0] == 1);
+    MOZ_RELEASE_ASSERT(
+        TestBitSet<kBitsPerWord>(bitsetW.Storage()).Storage()[0] ==
+        kAllBitsSet);
+    MOZ_RELEASE_ASSERT(
+        TestBitSet<kBitsPerWord + 1>(bitsetW1.Storage()).Storage()[0] ==
+        kAllBitsSet);
+    MOZ_RELEASE_ASSERT(
+        TestBitSet<kBitsPerWord + 1>(bitsetW1.Storage()).Storage()[1] == 1);
   }
 
-  bitset.ResetAll();
-  for (size_t i = 0; i < bitset.Size(); i++) {
-    MOZ_RELEASE_ASSERT(!bitset[i]);
+  void testSetBit() {
+    TestBitSet<kBitsPerWord + 2> bitset;
+    MOZ_RELEASE_ASSERT(!bitset.Test(3));
+    MOZ_RELEASE_ASSERT(!bitset[3]);
+    MOZ_RELEASE_ASSERT(!bitset.Test(kBitsPerWord + 1));
+    MOZ_RELEASE_ASSERT(!bitset[kBitsPerWord + 1]);
+
+    bitset[3] = true;
+    MOZ_RELEASE_ASSERT(bitset.Test(3));
+    MOZ_RELEASE_ASSERT(bitset[3]);
+
+    bitset[kBitsPerWord + 1] = true;
+    MOZ_RELEASE_ASSERT(bitset.Test(3));
+    MOZ_RELEASE_ASSERT(bitset[3]);
+    MOZ_RELEASE_ASSERT(bitset.Test(kBitsPerWord + 1));
+    MOZ_RELEASE_ASSERT(bitset[kBitsPerWord + 1]);
+
+    bitset.ResetAll();
+    for (size_t i = 0; i < bitset.Size(); i++) {
+      MOZ_RELEASE_ASSERT(!bitset[i]);
+    }
+
+    bitset.SetAll();
+    for (size_t i = 0; i < bitset.Size(); i++) {
+      MOZ_RELEASE_ASSERT(bitset[i]);
+    }
+
+    // Test trailing unused bits are not set by SetAll().
+    MOZ_RELEASE_ASSERT(bitset.Storage()[1] == 3);
+
+    bitset.ResetAll();
+    for (size_t i = 0; i < bitset.Size(); i++) {
+      MOZ_RELEASE_ASSERT(!bitset[i]);
+    }
   }
 
-  // Test trailing unused bits are not set by SetAll().
-  bitset.SetAll();
-  BitSetUint8<16> bitset2(bitset.Storage());
-  MOZ_RELEASE_ASSERT(bitset.Size() < bitset2.Size());
-  MOZ_RELEASE_ASSERT(bitset.Storage().Length() == bitset2.Storage().Length());
-  for (size_t i = 0; i < bitset.Size(); i++) {
-    MOZ_RELEASE_ASSERT(bitset2[i]);
+  void runTests() {
+    testLength();
+    testConstruct();
+    testSetBit();
   }
-  for (size_t i = bitset.Size(); i < bitset2.Size(); i++) {
-    MOZ_RELEASE_ASSERT(!bitset2[i]);
-  }
-}
+};
 
 int main() {
-  TestBitSet();
+  BitSetSuite<uint8_t>().runTests();
+  BitSetSuite<uint32_t>().runTests();
+  BitSetSuite<uint64_t>().runTests();
+
   return 0;
 }
