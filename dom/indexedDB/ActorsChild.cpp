@@ -4,9 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ActorsChild.h"
+
 #include <type_traits>
 
-#include "ActorsChild.h"
 #include "BackgroundChildImpl.h"
 #include "IDBDatabase.h"
 #include "IDBEvents.h"
@@ -900,7 +901,7 @@ nsresult GetFileHandleResult(const RefPtr<IDBFileRequest>& aFileRequest,
   }
 
   nsString tmpString;
-  std::tie(rv, std::ignore) = encoding->Decode(data, tmpString);
+  Tie(rv, Ignore) = encoding->Decode(data, tmpString);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR;
   }

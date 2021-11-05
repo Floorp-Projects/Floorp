@@ -4,10 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCOMPtr.h"
+
 #include "nsIOutputStream.h"
 #include "nsString.h"
+
 #include "nsConverterOutputStream.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/Unused.h"
 
 using namespace mozilla;
 
@@ -54,7 +57,7 @@ nsConverterOutputStream::Write(uint32_t aCount, const char16_t* aChars,
     uint32_t result;
     size_t read;
     size_t written;
-    std::tie(result, read, written, std::ignore) =
+    Tie(result, read, written, Ignore) =
         mConverter->EncodeFromUTF16(src, dst, false);
     src = src.From(read);
     uint32_t streamWritten;
@@ -90,8 +93,9 @@ nsConverterOutputStream::Flush() {
   auto dst = Span(buffer);
   Span<char16_t> src(nullptr);
   uint32_t result;
+  size_t read;
   size_t written;
-  std::tie(result, std::ignore, written, std::ignore) =
+  Tie(result, read, written, Ignore) =
       mConverter->EncodeFromUTF16(src, dst, true);
   MOZ_ASSERT(result == kInputEmpty);
   uint32_t streamWritten;

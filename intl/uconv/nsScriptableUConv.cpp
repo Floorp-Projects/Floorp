@@ -10,8 +10,6 @@
 #include "nsIStringStream.h"
 #include "nsComponentManagerUtils.h"
 
-#include <tuple>
-
 using namespace mozilla;
 
 /* Implementation file */
@@ -49,7 +47,10 @@ nsScriptableUnicodeConverter::ConvertFromUnicode(const nsAString& aSrc,
   auto dst = AsWritableBytes(*dstChars);
   size_t totalWritten = 0;
   for (;;) {
-    auto [result, read, written] =
+    uint32_t result;
+    size_t read;
+    size_t written;
+    Tie(result, read, written) =
         mEncoder->EncodeFromUTF16WithoutReplacement(src, dst, false);
     if (result != kInputEmpty && result != kOutputFull) {
       MOZ_RELEASE_ASSERT(written < dst.Length(),
@@ -93,7 +94,7 @@ nsScriptableUnicodeConverter::Finish(nsACString& _retval) {
   uint32_t result;
   size_t read;
   size_t written;
-  std::tie(result, read, written, std::ignore) =
+  Tie(result, read, written, Ignore) =
       mEncoder->EncodeFromUTF16(src, dst, true);
   MOZ_ASSERT(!read);
   MOZ_ASSERT(result == kInputEmpty);
@@ -131,13 +132,13 @@ nsScriptableUnicodeConverter::ConvertToUnicode(const nsACString& aSrc,
   // If callers want control over the behavior, they should switch to
   // TextDecoder.
   if (mDecoder->Encoding() == UTF_8_ENCODING) {
-    std::tie(result, read, written) =
+    Tie(result, read, written) =
         mDecoder->DecodeToUTF16WithoutReplacement(src, *dst, false);
     if (result != kInputEmpty) {
       return NS_ERROR_UDEC_ILLEGALINPUT;
     }
   } else {
-    std::tie(result, read, written, std::ignore) =
+    Tie(result, read, written, Ignore) =
         mDecoder->DecodeToUTF16(src, *dst, false);
   }
   MOZ_ASSERT(result == kInputEmpty);
@@ -169,7 +170,10 @@ nsScriptableUnicodeConverter::ConvertToByteArray(const nsAString& aString,
   auto dst = Span(data, needed.value());
   size_t totalWritten = 0;
   for (;;) {
-    auto [result, read, written] =
+    uint32_t result;
+    size_t read;
+    size_t written;
+    Tie(result, read, written) =
         mEncoder->EncodeFromUTF16WithoutReplacement(src, dst, true);
     if (result != kInputEmpty && result != kOutputFull) {
       // There's always room for one byte in the case of
