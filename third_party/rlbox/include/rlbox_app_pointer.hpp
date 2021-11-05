@@ -23,7 +23,9 @@ private:
 
   std::map<T_PointerTypeUnsigned, void*> pointer_map;
   T_PointerTypeUnsigned counter = 1;
+#ifndef RLBOX_SINGLE_THREADED_INVOCATIONS
   RLBOX_SHARED_LOCK(map_mutex);
+#endif
 
   T_PointerType get_unused_index()
   {
@@ -55,7 +57,9 @@ public:
 
   T_PointerType get_app_pointer_idx(void* ptr)
   {
+#ifndef RLBOX_SINGLE_THREADED_INVOCATIONS
     RLBOX_ACQUIRE_UNIQUE_GUARD(lock, map_mutex);
+#endif
     T_PointerType idx = get_unused_index();
     T_PointerTypeUnsigned idx_int = (T_PointerTypeUnsigned)idx;
     pointer_map[idx_int] = ptr;
@@ -64,7 +68,9 @@ public:
 
   void remove_app_ptr(T_PointerType idx)
   {
+#ifndef RLBOX_SINGLE_THREADED_INVOCATIONS
     RLBOX_ACQUIRE_UNIQUE_GUARD(lock, map_mutex);
+#endif
     T_PointerTypeUnsigned idx_int = (T_PointerTypeUnsigned)idx;
     auto it = pointer_map.find(idx_int);
     detail::dynamic_check(it != pointer_map.end(),
@@ -74,7 +80,9 @@ public:
 
   void* lookup_index(T_PointerType idx)
   {
+#ifndef RLBOX_SINGLE_THREADED_INVOCATIONS
     RLBOX_ACQUIRE_SHARED_GUARD(lock, map_mutex);
+#endif
     T_PointerTypeUnsigned idx_int = (T_PointerTypeUnsigned)idx;
     auto it = pointer_map.find(idx_int);
     detail::dynamic_check(it != pointer_map.end(),
