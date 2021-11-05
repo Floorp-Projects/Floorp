@@ -1982,6 +1982,42 @@
   value: true
   mirror: always
 
+# Enable/disable Gecko specific edit commands
+- name: dom.document.edit_command.contentReadOnly.enabled
+  type: bool
+  value: @IS_NOT_NIGHTLY_BUILD@
+  mirror: always
+
+- name: dom.document.edit_command.decreasefontsize.enabled
+  type: bool
+  value: false
+  mirror: always
+
+- name: dom.document.edit_command.gethtml.enabled
+  type: bool
+  value: false
+  mirror: always
+
+- name: dom.document.edit_command.heading.enabled
+  type: bool
+  value: false
+  mirror: always
+
+- name: dom.document.edit_command.increasefontsize.enabled
+  type: bool
+  value: false
+  mirror: always
+
+- name: dom.document.edit_command.insertBrOnReturn.enabled
+  type: bool
+  value: @IS_NOT_NIGHTLY_BUILD@
+  mirror: always
+
+- name: dom.document.edit_command.readonly.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # If set this to true, `Document.execCommand` may be performed nestedly.
 # Otherwise, nested calls just return false.
 - name: dom.document.exec_command.nested_calls_allowed
