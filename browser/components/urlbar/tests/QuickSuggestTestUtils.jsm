@@ -303,11 +303,11 @@ class TestUtils {
     let expectedPayload = {
       advertiser,
       block_id,
-      matched_keywords: scenario == "online" ? matched_keywords : undefined,
+      matched_keywords: scenario == "online" ? matched_keywords : "",
       position: index + 1,
       reporting_url,
       scenario,
-      search_query: scenario == "online" ? search_query : undefined,
+      search_query: scenario == "online" ? search_query : "",
     };
     let actualPayload = {};
     for (let key of Object.keys(expectedPayload)) {
