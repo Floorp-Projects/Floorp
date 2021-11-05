@@ -610,22 +610,21 @@ nsDOMTokenList* Element::Part() {
 }
 
 void Element::RecompileScriptEventListeners() {
-  int32_t i, count = mAttrs.AttrCount();
-  for (i = 0; i < count; ++i) {
-    const nsAttrName* name = mAttrs.AttrNameAt(i);
+  for (uint32_t i = 0, count = mAttrs.AttrCount(); i < count; ++i) {
+    BorrowedAttrInfo attrInfo = mAttrs.AttrInfoAt(i);
 
     // Eventlistenener-attributes are always in the null namespace
-    if (!name->IsAtom()) {
+    if (!attrInfo.mName->IsAtom()) {
       continue;
     }
 
-    nsAtom* attr = name->Atom();
+    nsAtom* attr = attrInfo.mName->Atom();
     if (!IsEventAttributeName(attr)) {
       continue;
     }
 
     nsAutoString value;
-    GetAttr(attr, value);
+    attrInfo.mValue->ToString(value);
     SetEventHandler(GetEventNameForAttr(attr), value, true);
   }
 }
