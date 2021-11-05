@@ -94,6 +94,7 @@ class DefaultBrowserMenu(
         val share = BrowserMenuItemToolbar.Button(
             imageResource = R.drawable.mozac_ic_share,
             contentDescription = context.getString(R.string.menu_share),
+            iconTintColorResource = context.theme.resolveAttribute(R.attr.primaryText),
             listener = {
                 onItemTapped.invoke(ToolbarMenu.Item.Share)
             }
