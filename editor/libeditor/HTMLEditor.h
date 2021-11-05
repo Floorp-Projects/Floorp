@@ -11,6 +11,7 @@
 #include "mozilla/CSSEditUtils.h"
 #include "mozilla/EditorBase.h"
 #include "mozilla/EditorUtils.h"
+#include "mozilla/HTMLEditHelpers.h"
 #include "mozilla/ManualNAC.h"
 #include "mozilla/Result.h"
 #include "mozilla/UniquePtr.h"
