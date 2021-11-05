@@ -6,6 +6,8 @@
 
 #include "Platform.h"
 
+#include <olectl.h>
+
 #include "AccEvent.h"
 #include "Compatibility.h"
 #include "HyperTextAccessibleWrap.h"
@@ -25,6 +27,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
+#include "WinUtils.h"
 
 #if defined(MOZ_TELEMETRY_REPORTING)
 #  include "mozilla/Telemetry.h"
@@ -39,6 +42,47 @@ static StaticAutoPtr<RegisteredProxy> gRegProxy;
 static StaticAutoPtr<RegisteredProxy> gRegAccTlb;
 static StaticAutoPtr<RegisteredProxy> gRegMiscTlb;
 static StaticRefPtr<nsIFile> gInstantiator;
+
+static bool RegisterHandlerMsix() {
+  // If we're running in an MSIX container, the handler isn't registered in
+  // HKLM. We could do that via registry.dat, but that file is difficult to
+  // manage. Instead, we register it in HKCU if it isn't already. This also
+  // covers the case where we registered in HKCU in a previous run, but the
+  // MSIX was updated and the dll now has a different path. In that case,
+  // IsHandlerRegistered will return false because the paths are different,
+  // RegisterHandlerMsix will get called and it will correct the HKCU entry. We
+  // don't need to unregister because we'll always need this and Windows cleans
+  // up the registry data for an MSIX app when it is uninstalled.
+  nsCOMPtr<nsIFile> handlerPath;
+  nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(handlerPath));
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  rv = handlerPath->Append(u"AccessibleHandler.dll"_ns);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  nsAutoString path;
+  rv = handlerPath->GetPath(path);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  nsModuleHandle handlerDll(LoadLibrary(path.get()));
+  if (!handlerDll.get()) {
+    return false;
+  }
+  auto RegisterMsix = reinterpret_cast<decltype(&DllRegisterServer)>(
+      GetProcAddress(handlerDll, "RegisterMsix"));
+  if (!RegisterMsix) {
+    return false;
+  }
+  if (FAILED(RegisterMsix())) {
+    return false;
+  }
+  return true;
+}
 
 void a11y::PlatformInit() {
   nsWinUtils::MaybeStartWindowEmulation();
@@ -55,6 +99,13 @@ void a11y::PlatformInit() {
   UniquePtr<RegisteredProxy> regMiscTlb(
       mscom::RegisterTypelib(L"Accessible.tlb"));
   gRegMiscTlb = regMiscTlb.release();
+
+  if (XRE_IsParentProcess() && widget::WinUtils::HasPackageIdentity() &&
+      !IsHandlerRegistered()) {
+    // See the comments at the top of RegisterHandlerMsix regarding why we do
+    // this.
+    RegisterHandlerMsix();
+  }
 }
 
 void a11y::PlatformShutdown() {
@@ -173,8 +224,12 @@ bool a11y::IsHandlerRegistered() {
   subKey.Append(clsid);
   subKey.AppendLiteral(u"\\InprocHandler32");
 
-  rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE, subKey,
-                    nsIWindowsRegKey::ACCESS_READ);
+  // If we're runnig in an MSIX container, we register this in HKCU, so look
+  // there.
+  const auto rootKey = widget::WinUtils::HasPackageIdentity()
+                           ? nsIWindowsRegKey::ROOT_KEY_CURRENT_USER
+                           : nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE;
+  rv = regKey->Open(rootKey, subKey, nsIWindowsRegKey::ACCESS_READ);
   if (NS_FAILED(rv)) {
     return false;
   }
