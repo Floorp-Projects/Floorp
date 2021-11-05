@@ -467,6 +467,11 @@ uint64_t RemoteAccessibleBase<Derived>::State() {
   return state;
 }
 
+template <class Derived>
+void RemoteAccessibleBase<Derived>::TakeFocus() const {
+  Unused << mDoc->SendTakeFocus(mID);
+}
+
 template class RemoteAccessibleBase<RemoteAccessible>;
 
 }  // namespace a11y

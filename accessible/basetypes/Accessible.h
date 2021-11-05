@@ -152,6 +152,10 @@ class Accessible {
    */
   virtual uint64_t State() = 0;
 
+  // Methods that interact with content.
+
+  virtual void TakeFocus() const = 0;
+
   // Type "is" methods
 
   bool IsDoc() const { return HasGenericType(eDocument); }

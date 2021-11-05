@@ -180,6 +180,10 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
 
   virtual uint64_t State() override;
 
+  // Methods that interact with content.
+
+  virtual void TakeFocus() const override;
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */

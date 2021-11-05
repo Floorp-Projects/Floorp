@@ -812,7 +812,10 @@ void RemoteAccessible::DOMNodeID(nsString& aID) const {
   aID = (wchar_t*)resultWrap;
 }
 
-void RemoteAccessible::TakeFocus() {
+void RemoteAccessible::TakeFocus() const {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::TakeFocus();
+  }
   RefPtr<IAccessible> acc;
   if (!GetCOMInterface((void**)getter_AddRefs(acc))) {
     return;

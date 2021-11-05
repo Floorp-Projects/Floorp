@@ -819,8 +819,6 @@ double RemoteAccessible::Step() const {
   return step;
 }
 
-void RemoteAccessible::TakeFocus() { Unused << mDoc->SendTakeFocus(mID); }
-
 RemoteAccessible* RemoteAccessible::FocusedChild() {
   if (IsOuterDoc()) {
     // If FocusedChild was called on an outer doc, it should behave
