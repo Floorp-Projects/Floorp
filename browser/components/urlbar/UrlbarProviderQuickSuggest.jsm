@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["UrlbarProviderQuickSuggest"];
+var EXPORTED_SYMBOLS = ["UrlbarProviderQuickSuggest", "QUICK_SUGGEST_SOURCE"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -34,6 +34,12 @@ const TELEMETRY_SCALAR_CLICK = "contextual.services.quicksuggest.click";
 const TELEMETRY_SCALAR_HELP = "contextual.services.quicksuggest.help";
 
 const TELEMETRY_EVENT_CATEGORY = "contextservices.quicksuggest";
+
+// Identifies the source of the QuickSuggest suggestion.
+const QUICK_SUGGEST_SOURCE = {
+  REMOTE_SETTINGS: "remote-settings",
+  MERINO: "merino",
+};
 
 /**
  * A provider that returns a suggested url to the user based on what
@@ -158,6 +164,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
       isSponsored: suggestion.is_sponsored,
       helpUrl: this.helpUrl,
       helpL10nId: "firefox-suggest-urlbar-learn-more",
+      source: suggestion.source,
+      requestId: suggestion.request_id,
     };
 
     let result = new UrlbarResult(
@@ -265,14 +273,21 @@ class ProviderQuickSuggest extends UrlbarProvider {
         sponsoredImpressionUrl,
         sponsoredClickUrl,
         sponsoredBlockId,
+        source,
+        requestId,
       } = result.payload;
 
-      let searchQuery = "";
-      let matchedKeywords = "";
+      let searchQuery;
+      let matchedKeywords;
       let scenario = UrlbarPrefs.get("quicksuggest.scenario");
-      // Only collect the search query and matched keywords for "online" scenario.
-      // For other scenarios, those fields are set as empty strings.
-      if (scenario === "online") {
+      // Only collect search query and matched keywords for the "online" scenario
+      // backed by the RemoteSettings source. For other scenarios and when the
+      // suggestions are provided by Merino, those two fields will not be sent,
+      // i.e. set as "undefined".
+      if (
+        scenario === "online" &&
+        source === QUICK_SUGGEST_SOURCE.REMOTE_SETTINGS
+      ) {
         matchedKeywords = qsSuggestion || details.searchString;
         searchQuery = details.searchString;
       }
@@ -288,6 +303,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
           position: telemetryResultIndex,
           reporting_url: sponsoredImpressionUrl,
           is_clicked: isQuickSuggestLinkClicked,
+          request_id: requestId,
         },
         CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION
       );
@@ -300,6 +316,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
             block_id: sponsoredBlockId,
             position: telemetryResultIndex,
             reporting_url: sponsoredClickUrl,
+            request_id: requestId,
           },
           CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION
         );
@@ -409,13 +426,17 @@ class ProviderQuickSuggest extends UrlbarProvider {
       return null;
     }
 
-    let { suggestions } = body;
+    let { suggestions, request_id } = body;
     if (!Array.isArray(suggestions)) {
       this.logger.error("Unexpected Merino response: " + JSON.stringify(body));
       return null;
     }
 
-    return suggestions;
+    return suggestions.map(suggestion => ({
+      ...suggestion,
+      request_id,
+      source: QUICK_SUGGEST_SOURCE.MERINO,
+    }));
   }
 
   /**
