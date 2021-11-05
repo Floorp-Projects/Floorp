@@ -14,7 +14,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityManager
 import android.webkit.MimeTypeMap
 import android.widget.FrameLayout
@@ -693,20 +692,6 @@ class BrowserFragment :
     }
 
     fun erase() {
-        val context = context
-
-        // Notify the user their session has been erased if Talk Back is enabled:
-        if (context != null) {
-            val manager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-            if (manager.isEnabled) {
-                val event = AccessibilityEvent.obtain()
-                event.eventType = AccessibilityEvent.TYPE_ANNOUNCEMENT
-                event.className = javaClass.name
-                event.packageName = requireContext().packageName
-                event.text.add(getString(R.string.feedback_erase2))
-            }
-        }
-
         requireComponents.tabsUseCases.removeTab(tab.id)
         requireComponents.appStore.dispatch(
             AppAction.NavigateUp(
