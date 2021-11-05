@@ -625,5 +625,25 @@ void RequestWorkerRunnable::ReadResult(JSContext* aCx,
   aRv.Throw(NS_ERROR_UNEXPECTED);
 }
 
+// NotifyWorkerDestroyedRunnable
+
+nsresult NotifyWorkerDestroyedRunnable::Run() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<WebExtensionPolicy> policy =
+      ExtensionPolicyService::GetSingleton().GetByURL(mSWBaseURI.get());
+
+  nsCOMPtr<mozIExtensionAPIRequestHandler> handler =
+      &ExtensionAPIRequestForwarder::APIRequestHandler();
+  MOZ_ASSERT(handler);
+
+  if (NS_FAILED(handler->OnExtensionWorkerDestroyed(policy, mSWDescriptorId))) {
+    NS_WARNING(
+        "nsIExtensionAPIRequestHandler.onExtensionWorkerDestroyed call failed");
+  }
+
+  return NS_OK;
+}
+
 }  // namespace extensions
 }  // namespace mozilla
