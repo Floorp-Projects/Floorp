@@ -170,11 +170,9 @@ class WorkerPrivate final : public RelativeTimeline {
   }
 
   bool ExtensionAPIAllowed() {
-    // This method should never be actually called if the extension background
-    // service worker is disabled by pref.
-    MOZ_ASSERT(
-        StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup());
-    return mExtensionAPIAllowed;
+    return (
+        StaticPrefs::extensions_backgroundServiceWorker_enabled_AtStartup() &&
+        mExtensionAPIAllowed);
   }
 
   void SetIsDebuggerRegistered(bool aDebuggerRegistered) {
