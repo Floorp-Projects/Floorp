@@ -111,6 +111,8 @@ child:
    */
   async RestoreFocus();
 
+  async TakeFocus(uint64_t aID);
+
   /*
    * Verify the cache. Used for testing purposes.
    */

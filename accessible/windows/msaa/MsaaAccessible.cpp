@@ -1457,11 +1457,8 @@ MsaaAccessible::accSelect(
   if (accessible) {
     return accessible->accSelect(flagsSelect, kVarChildIdSelf);
   }
-  if (mAcc->IsRemote()) {
-    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
-  }
 
-  LocalAccessible* localAcc = LocalAcc();
+  LocalAccessible* localAcc = mAcc->AsLocal();
   if (flagsSelect & SELFLAG_TAKEFOCUS) {
     if (XRE_IsContentProcess()) {
       // In this case we might have been invoked while the IPC MessageChannel is
@@ -1473,8 +1470,12 @@ MsaaAccessible::accSelect(
       NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
       return S_OK;
     }
-    localAcc->TakeFocus();
+    mAcc->TakeFocus();
     return S_OK;
+  }
+
+  if (!localAcc) {
+    return E_NOTIMPL;  // XXX Not supported for RemoteAccessible yet.
   }
 
   if (flagsSelect & SELFLAG_TAKESELECTION) {

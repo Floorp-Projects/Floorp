@@ -57,6 +57,8 @@ class DocAccessibleChildBase : public PDocAccessibleChild {
     mDoc = nullptr;
   }
 
+  virtual mozilla::ipc::IPCResult RecvTakeFocus(const uint64_t& aID) override;
+
   virtual mozilla::ipc::IPCResult RecvVerifyCache(
       const uint64_t& aID, const uint64_t& aCacheDomain,
       AccAttributes* aFields) override;

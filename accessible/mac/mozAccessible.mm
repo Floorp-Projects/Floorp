@@ -885,11 +885,7 @@ struct RoleDescrComparator {
   MOZ_ASSERT(mGeckoAccessible);
 
   if ([focused boolValue]) {
-    if (mGeckoAccessible->IsLocal()) {
-      mGeckoAccessible->AsLocal()->TakeFocus();
-    } else {
-      mGeckoAccessible->AsRemote()->TakeFocus();
-    }
+    mGeckoAccessible->TakeFocus();
   }
 }
 

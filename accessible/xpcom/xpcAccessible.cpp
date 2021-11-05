@@ -657,12 +657,7 @@ NS_IMETHODIMP
 xpcAccessible::TakeFocus() {
   if (!IntlGeneric()) return NS_ERROR_FAILURE;
 
-  if (RemoteAccessible* proxy = IntlGeneric()->AsRemote()) {
-    proxy->TakeFocus();
-  } else {
-    Intl()->TakeFocus();
-  }
-
+  IntlGeneric()->TakeFocus();
   return NS_OK;
 }
 

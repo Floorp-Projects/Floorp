@@ -33,18 +33,11 @@ static void getExtentsCB(AtkComponent* aComponent, gint* aX, gint* aY,
 
 static gboolean grabFocusCB(AtkComponent* aComponent) {
   AtkObject* atkObject = ATK_OBJECT(aComponent);
-  AccessibleWrap* accWrap = GetAccessibleWrap(atkObject);
-  if (accWrap) {
-    accWrap->TakeFocus();
+  Accessible* acc = GetInternalObj(atkObject);
+  if (acc) {
+    acc->TakeFocus();
     return TRUE;
   }
-
-  RemoteAccessible* proxy = GetProxy(atkObject);
-  if (proxy) {
-    proxy->TakeFocus();
-    return TRUE;
-  }
-
   return FALSE;
 }
 
