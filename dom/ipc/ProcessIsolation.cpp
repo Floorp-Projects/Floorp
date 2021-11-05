@@ -941,15 +941,26 @@ void AddHighValuePermission(nsIPrincipal* aResultPrincipal,
   }
 
   MOZ_LOG(dom::gProcessIsolationLog, LogLevel::Verbose,
-          ("Adding HighValue COOP Permission for site '%s'", siteOrigin.get()));
+          ("Adding %s Permission for site '%s'", aPermissionType.BeginReading(),
+           siteOrigin.get()));
+
+  uint32_t expiration = 0;
+  if (aPermissionType.Equals(mozilla::dom::kHighValueCOOPPermission)) {
+    expiration = StaticPrefs::fission_highValue_coop_expiration();
+  } else if (aPermissionType.Equals(
+                 mozilla::dom::kHighValueHasSavedLoginPermission) ||
+             aPermissionType.Equals(
+                 mozilla::dom::kHighValueIsLoggedInPermission)) {
+    expiration = StaticPrefs::fission_highValue_login_expiration();
+  } else {
+    MOZ_ASSERT_UNREACHABLE("Unknown permission type");
+  }
 
   // XXX: Would be nice if we could use `TimeStamp` here, but there's
   // unfortunately no convenient way to recover a time in milliseconds since the
   // unix epoch from `TimeStamp`.
   int64_t expirationTime =
-      (PR_Now() / PR_USEC_PER_MSEC) +
-      (int64_t(StaticPrefs::fission_highValue_coop_expiration()) *
-       PR_MSEC_PER_SEC);
+      (PR_Now() / PR_USEC_PER_MSEC) + (int64_t(expiration) * PR_MSEC_PER_SEC);
   Unused << perms->AddFromPrincipal(
       sitePrincipal, aPermissionType, nsIPermissionManager::ALLOW_ACTION,
       nsIPermissionManager::EXPIRE_TIME, expirationTime);
