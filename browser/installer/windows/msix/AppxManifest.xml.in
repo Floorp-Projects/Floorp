@@ -81,6 +81,12 @@
                        Path="VFS\ProgramFiles\@APPX_INSTDIR@\AccessibleMarshal.dll" />
         <com:Interface Id="@MOZ_IGECKOBACKCHANNEL_IID@"
                        ProxyStubClsid="@MOZ_IGECKOBACKCHANNEL_IID@" />
+        <com:Interface Id="@MOZ_IHANDLERCONTROL_IID@"
+                       ProxyStubClsid="@MOZ_IGECKOBACKCHANNEL_IID@"
+                       AsynchronousInterface="@MOZ_ASYNCIHANDLERCONTROL_IID@" />
+        <com:Interface Id="@MOZ_ASYNCIHANDLERCONTROL_IID@"
+                       ProxyStubClsid="@MOZ_IGECKOBACKCHANNEL_IID@"
+                       SynchronousInterface="@MOZ_IHANDLERCONTROL_IID@" />
         <com:Interface Id="4e747be5-2052-4265-8af0-8ecad7aad1c0"
                        ProxyStubClsid="1814ceeb-49e2-407f-af99-fa755a7d2607" />
         <com:Interface Id="1814ceeb-49e2-407f-af99-fa755a7d2607"

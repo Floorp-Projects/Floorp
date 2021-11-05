@@ -344,6 +344,41 @@ void LIRGenerator::visitGetInlinedArgument(MGetInlinedArgument* ins) {
   defineBox(lir, ins);
 }
 
+void LIRGenerator::visitGetInlinedArgumentHole(MGetInlinedArgumentHole* ins) {
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_MIPS64)
+  // On some 64-bit architectures, we don't support boxing a typed
+  // register in-place without using a scratch register, so the result
+  // register can't be the same as any of the inputs. Fortunately,
+  // those architectures have registers to spare.
+  const bool useAtStart = false;
+#else
+  const bool useAtStart = true;
+#endif
+
+  LAllocation index =
+      useAtStart ? useRegisterAtStart(ins->index()) : useRegister(ins->index());
+  uint32_t numActuals = ins->numActuals();
+  uint32_t numOperands =
+      numActuals * BOX_PIECES + LGetInlinedArgumentHole::NumNonArgumentOperands;
+
+  auto* lir = allocateVariadic<LGetInlinedArgumentHole>(numOperands);
+  if (!lir) {
+    abort(AbortReason::Alloc, "OOM: LIRGenerator::visitGetInlinedArgumentHole");
+    return;
+  }
+
+  lir->setOperand(LGetInlinedArgumentHole::Index, index);
+  for (uint32_t i = 0; i < numActuals; i++) {
+    MDefinition* arg = ins->getArg(i);
+    uint32_t index = LGetInlinedArgumentHole::ArgIndex(i);
+    lir->setBoxOperand(
+        index, useBoxOrTypedOrConstant(arg,
+                                       /*useConstant = */ true, useAtStart));
+  }
+  assignSnapshot(lir, ins->bailoutKind());
+  defineBox(lir, ins);
+}
+
 void LIRGenerator::visitGetArgumentsObjectArg(MGetArgumentsObjectArg* ins) {
   LAllocation argsObj = useRegister(ins->argsObject());
   LGetArgumentsObjectArg* lir =
@@ -367,6 +402,20 @@ void LIRGenerator::visitLoadArgumentsObjectArg(MLoadArgumentsObjectArg* ins) {
 
   auto* lir = new (alloc())
       LLoadArgumentsObjectArg(useRegister(argsObj), useRegister(index), temp());
+  assignSnapshot(lir, ins->bailoutKind());
+  defineBox(lir, ins);
+}
+
+void LIRGenerator::visitLoadArgumentsObjectArgHole(
+    MLoadArgumentsObjectArgHole* ins) {
+  MDefinition* argsObj = ins->argsObject();
+  MOZ_ASSERT(argsObj->type() == MIRType::Object);
+
+  MDefinition* index = ins->index();
+  MOZ_ASSERT(index->type() == MIRType::Int32);
+
+  auto* lir = new (alloc()) LLoadArgumentsObjectArgHole(
+      useRegister(argsObj), useRegister(index), temp());
   assignSnapshot(lir, ins->bailoutKind());
   defineBox(lir, ins);
 }
@@ -4555,6 +4604,16 @@ void LIRGenerator::visitArgumentsLength(MArgumentsLength* ins) {
 void LIRGenerator::visitGetFrameArgument(MGetFrameArgument* ins) {
   LGetFrameArgument* lir =
       new (alloc()) LGetFrameArgument(useRegisterOrConstant(ins->index()));
+  defineBox(lir, ins);
+}
+
+void LIRGenerator::visitGetFrameArgumentHole(MGetFrameArgumentHole* ins) {
+  LDefinition spectreTemp =
+      BoundsCheckNeedsSpectreTemp() ? temp() : LDefinition::BogusTemp();
+
+  auto* lir = new (alloc()) LGetFrameArgumentHole(
+      useRegister(ins->index()), useRegister(ins->length()), spectreTemp);
+  assignSnapshot(lir, ins->bailoutKind());
   defineBox(lir, ins);
 }
 

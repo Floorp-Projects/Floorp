@@ -57,7 +57,12 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
   });
 });
 
-var EXPORTED_SYMBOLS = ["Policies"];
+var EXPORTED_SYMBOLS = [
+  "Policies",
+  "setAndLockPref",
+  "PoliciesUtils",
+  "runOnce",
+];
 
 /*
  * ============================
@@ -154,21 +159,21 @@ var Policies = {
       }
 
       if ("SPNEGO" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "network.negotiate-auth.trusted-uris",
           param.SPNEGO.join(", "),
           locked
         );
       }
       if ("Delegated" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "network.negotiate-auth.delegation-uris",
           param.Delegated.join(", "),
           locked
         );
       }
       if ("NTLM" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "network.automatic-ntlm-auth.trusted-uris",
           param.NTLM.join(", "),
           locked
@@ -176,14 +181,14 @@ var Policies = {
       }
       if ("AllowNonFQDN" in param) {
         if ("NTLM" in param.AllowNonFQDN) {
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "network.automatic-ntlm-auth.allow-non-fqdn",
             param.AllowNonFQDN.NTLM,
             locked
           );
         }
         if ("SPNEGO" in param.AllowNonFQDN) {
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "network.negotiate-auth.allow-non-fqdn",
             param.AllowNonFQDN.SPNEGO,
             locked
@@ -192,14 +197,14 @@ var Policies = {
       }
       if ("AllowProxies" in param) {
         if ("NTLM" in param.AllowProxies) {
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "network.automatic-ntlm-auth.allow-proxies",
             param.AllowProxies.NTLM,
             locked
           );
         }
         if ("SPNEGO" in param.AllowProxies) {
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "network.negotiate-auth.allow-proxies",
             param.AllowProxies.SPNEGO,
             locked
@@ -207,7 +212,7 @@ var Policies = {
         }
       }
       if ("PrivateBrowsing" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "network.auth.private-browsing-sso",
           param.PrivateBrowsing,
           locked
@@ -448,12 +453,12 @@ var Policies = {
           newCookieBehavior = REJECT_TRACKER;
         }
 
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "network.cookie.cookieBehavior",
           newCookieBehavior,
           param.Locked
         );
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "network.cookie.cookieBehavior.pbmode",
           newCookieBehavior,
           param.Locked
@@ -469,7 +474,7 @@ var Policies = {
           newLifetimePolicy = KEEP_COOKIES_UNTIL_END_OF_SESSION;
         }
 
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "network.cookie.lifetimePolicy",
           newLifetimePolicy,
           param.Locked
@@ -480,7 +485,10 @@ var Policies = {
 
   DefaultDownloadDirectory: {
     onBeforeAddons(manager, param) {
-      setDefaultPref("browser.download.dir", replacePathVariables(param));
+      PoliciesUtils.setDefaultPref(
+        "browser.download.dir",
+        replacePathVariables(param)
+      );
       // If a custom download directory is being used, just lock folder list to 2.
       setAndLockPref("browser.download.folderList", 2);
     },
@@ -842,13 +850,17 @@ var Policies = {
       }
       if ("Enabled" in param) {
         let mode = param.Enabled ? 2 : 5;
-        setDefaultPref("network.trr.mode", mode, locked);
+        PoliciesUtils.setDefaultPref("network.trr.mode", mode, locked);
       }
       if ("ProviderURL" in param) {
-        setDefaultPref("network.trr.uri", param.ProviderURL.href, locked);
+        PoliciesUtils.setDefaultPref(
+          "network.trr.uri",
+          param.ProviderURL.href,
+          locked
+        );
       }
       if ("ExcludedDomains" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "network.trr.excluded-domains",
           param.ExcludedDomains.join(","),
           locked
@@ -877,12 +889,12 @@ var Policies = {
   EnableTrackingProtection: {
     onBeforeUIStartup(manager, param) {
       if (param.Value) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "privacy.trackingprotection.enabled",
           true,
           param.Locked
         );
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "privacy.trackingprotection.pbmode.enabled",
           true,
           param.Locked
@@ -892,14 +904,14 @@ var Policies = {
         setAndLockPref("privacy.trackingprotection.pbmode.enabled", false);
       }
       if ("Cryptomining" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "privacy.trackingprotection.cryptomining.enabled",
           param.Cryptomining,
           param.Locked
         );
       }
       if ("Fingerprinting" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "privacy.trackingprotection.fingerprinting.enabled",
           param.Fingerprinting,
           param.Locked
@@ -918,7 +930,11 @@ var Policies = {
         locked = param.Locked;
       }
       if ("Enabled" in param) {
-        setDefaultPref("media.eme.enabled", param.Enabled, locked);
+        PoliciesUtils.setDefaultPref(
+          "media.eme.enabled",
+          param.Enabled,
+          locked
+        );
       }
     },
   },
@@ -1106,54 +1122,54 @@ var Policies = {
     onBeforeAddons(manager, param) {
       let locked = param.Locked || false;
       if ("Search" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.showSearch",
           param.Search,
           locked
         );
       }
       if ("TopSites" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.feeds.topsites",
           param.TopSites,
           locked
         );
       }
       if ("SponsoredTopSites" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.showSponsoredTopSites",
           param.SponsoredTopSites,
           locked
         );
       }
       if ("Highlights" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.feeds.section.highlights",
           param.Highlights,
           locked
         );
       }
       if ("Pocket" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.feeds.system.topstories",
           param.Pocket,
           locked
         );
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.feeds.section.topstories",
           param.Pocket,
           locked
         );
       }
       if ("SponsoredPocket" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.showSponsored",
           param.SponsoredPocket,
           locked
         );
       }
       if ("Snippets" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.feeds.snippets",
           param.Snippets,
           locked
@@ -1178,7 +1194,7 @@ var Policies = {
       if (param.Locked) {
         setAndLockPref("plugin.state.flash", flashPrefVal);
       } else if (param.Default !== undefined) {
-        setDefaultPref("plugin.state.flash", flashPrefVal);
+        PoliciesUtils.setDefaultPref("plugin.state.flash", flashPrefVal);
       }
     },
   },
@@ -1241,7 +1257,11 @@ var Policies = {
         if (param.Additional && param.Additional.length) {
           homepages += "|" + param.Additional.map(url => url.href).join("|");
         }
-        setDefaultPref("browser.startup.homepage", homepages, param.Locked);
+        PoliciesUtils.setDefaultPref(
+          "browser.startup.homepage",
+          homepages,
+          param.Locked
+        );
         if (param.Locked) {
           setAndLockPref(
             "pref.browser.homepage.disable_button.current_page",
@@ -1276,7 +1296,7 @@ var Policies = {
             prefValue = 3;
             break;
         }
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "browser.startup.page",
           prefValue,
           param.StartPage == "homepage-locked"
@@ -1314,13 +1334,16 @@ var Policies = {
 
   LegacySameSiteCookieBehaviorEnabled: {
     onBeforeAddons(manager, param) {
-      setDefaultPref("network.cookie.sameSite.laxByDefault", !param);
+      PoliciesUtils.setDefaultPref(
+        "network.cookie.sameSite.laxByDefault",
+        !param
+      );
     },
   },
 
   LegacySameSiteCookieBehaviorEnabledForDomainList: {
     onBeforeAddons(manager, param) {
-      setDefaultPref(
+      PoliciesUtils.setDefaultPref(
         "network.cookie.sameSite.laxByDefault.disabledHosts",
         param.join(",")
       );
@@ -1392,7 +1415,7 @@ var Policies = {
           `OfferToSaveLoginsDefault ignored because OfferToSaveLogins is present.`
         );
       } else {
-        setDefaultPref("signon.rememberSignons", param);
+        PoliciesUtils.setDefaultPref("signon.rememberSignons", param);
       }
     },
   },
@@ -1476,7 +1499,7 @@ var Policies = {
               prefValue = 5;
               break;
           }
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "media.autoplay.default",
             prefValue,
             param.Autoplay.Locked
@@ -1516,7 +1539,7 @@ var Policies = {
   PictureInPicture: {
     onBeforeAddons(manager, param) {
       if ("Enabled" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "media.videocontrols.picture-in-picture.video-toggle.enabled",
           param.Enabled
         );
@@ -1540,7 +1563,10 @@ var Policies = {
         }
         setAndLockPref("dom.disable_open_during_load", blockValue);
       } else if (param.Default !== undefined) {
-        setDefaultPref("dom.disable_open_during_load", !!param.Default);
+        PoliciesUtils.setDefaultPref(
+          "dom.disable_open_during_load",
+          !!param.Default
+        );
       }
     },
   },
@@ -1694,7 +1720,10 @@ var Policies = {
         manager.disallowFeature("changeProxySettings");
         ProxyPolicies.configureProxySettings(param, setAndLockPref);
       } else {
-        ProxyPolicies.configureProxySettings(param, setDefaultPref);
+        ProxyPolicies.configureProxySettings(
+          param,
+          PoliciesUtils.setDefaultPref
+        );
       }
     },
   },
@@ -1739,90 +1768,98 @@ var Policies = {
           locked = param.Locked;
           lockDefaultPrefs = false;
         }
-        setDefaultPref("privacy.sanitize.sanitizeOnShutdown", true, locked);
+        PoliciesUtils.setDefaultPref(
+          "privacy.sanitize.sanitizeOnShutdown",
+          true,
+          locked
+        );
         if ("Cache" in param) {
-          setDefaultPref("privacy.clearOnShutdown.cache", param.Cache, locked);
+          PoliciesUtils.setDefaultPref(
+            "privacy.clearOnShutdown.cache",
+            param.Cache,
+            locked
+          );
         } else {
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "privacy.clearOnShutdown.cache",
             false,
             lockDefaultPrefs
           );
         }
         if ("Cookies" in param) {
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "privacy.clearOnShutdown.cookies",
             param.Cookies,
             locked
           );
         } else {
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "privacy.clearOnShutdown.cookies",
             false,
             lockDefaultPrefs
           );
         }
         if ("Downloads" in param) {
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "privacy.clearOnShutdown.downloads",
             param.Downloads,
             locked
           );
         } else {
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "privacy.clearOnShutdown.downloads",
             false,
             lockDefaultPrefs
           );
         }
         if ("FormData" in param) {
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "privacy.clearOnShutdown.formdata",
             param.FormData,
             locked
           );
         } else {
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "privacy.clearOnShutdown.formdata",
             false,
             lockDefaultPrefs
           );
         }
         if ("History" in param) {
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "privacy.clearOnShutdown.history",
             param.History,
             locked
           );
         } else {
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "privacy.clearOnShutdown.history",
             false,
             lockDefaultPrefs
           );
         }
         if ("Sessions" in param) {
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "privacy.clearOnShutdown.sessions",
             param.Sessions,
             locked
           );
         } else {
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "privacy.clearOnShutdown.sessions",
             false,
             lockDefaultPrefs
           );
         }
         if ("SiteSettings" in param) {
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "privacy.clearOnShutdown.siteSettings",
             param.SiteSettings,
             locked
           );
         }
         if ("OfflineApps" in param) {
-          setDefaultPref(
+          PoliciesUtils.setDefaultPref(
             "privacy.clearOnShutdown.offlineApps",
             param.OfflineApps,
             locked
@@ -2096,21 +2133,21 @@ var Policies = {
         locked = param.Locked;
       }
       if ("WhatsNew" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "browser.messaging-system.whatsNewPanel.enabled",
           param.WhatsNew,
           locked
         );
       }
       if ("ExtensionRecommendations" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.addons",
           param.ExtensionRecommendations,
           locked
         );
       }
       if ("FeatureRecommendations" in param) {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features",
           param.FeatureRecommendations,
           locked
@@ -2120,7 +2157,7 @@ var Policies = {
         manager.disallowFeature("urlbarinterventions");
       }
       if ("SkipOnboarding") {
-        setDefaultPref(
+        PoliciesUtils.setDefaultPref(
           "browser.aboutwelcome.enabled",
           !param.SkipOnboarding,
           locked
@@ -2164,7 +2201,7 @@ var Policies = {
  *        The value to set and lock
  */
 function setAndLockPref(prefName, prefValue) {
-  setDefaultPref(prefName, prefValue, true);
+  PoliciesUtils.setDefaultPref(prefName, prefValue, true);
 }
 
 /**
@@ -2180,48 +2217,51 @@ function setAndLockPref(prefName, prefValue) {
  * @param {boolean} locked
  *        Optionally lock the pref
  */
-function setDefaultPref(prefName, prefValue, locked = false) {
-  if (Services.prefs.prefIsLocked(prefName)) {
-    Services.prefs.unlockPref(prefName);
-  }
 
-  let defaults = Services.prefs.getDefaultBranch("");
+var PoliciesUtils = {
+  setDefaultPref(prefName, prefValue, locked = false) {
+    if (Services.prefs.prefIsLocked(prefName)) {
+      Services.prefs.unlockPref(prefName);
+    }
 
-  switch (typeof prefValue) {
-    case "boolean":
-      defaults.setBoolPref(prefName, prefValue);
-      break;
+    let defaults = Services.prefs.getDefaultBranch("");
 
-    case "number":
-      if (!Number.isInteger(prefValue)) {
-        throw new Error(`Non-integer value for ${prefName}`);
-      }
+    switch (typeof prefValue) {
+      case "boolean":
+        defaults.setBoolPref(prefName, prefValue);
+        break;
 
-      // This is ugly, but necessary. On Windows GPO and macOS
-      // configs, booleans are converted to 0/1. In the previous
-      // Preferences implementation, the schema took care of
-      // automatically converting these values to booleans.
-      // Since we allow arbitrary prefs now, we have to do
-      // something different. See bug 1666836.
-      if (
-        defaults.getPrefType(prefName) == defaults.PREF_INT ||
-        ![0, 1].includes(prefValue)
-      ) {
-        defaults.setIntPref(prefName, prefValue);
-      } else {
-        defaults.setBoolPref(prefName, !!prefValue);
-      }
-      break;
+      case "number":
+        if (!Number.isInteger(prefValue)) {
+          throw new Error(`Non-integer value for ${prefName}`);
+        }
 
-    case "string":
-      defaults.setStringPref(prefName, prefValue);
-      break;
-  }
+        // This is ugly, but necessary. On Windows GPO and macOS
+        // configs, booleans are converted to 0/1. In the previous
+        // Preferences implementation, the schema took care of
+        // automatically converting these values to booleans.
+        // Since we allow arbitrary prefs now, we have to do
+        // something different. See bug 1666836.
+        if (
+          defaults.getPrefType(prefName) == defaults.PREF_INT ||
+          ![0, 1].includes(prefValue)
+        ) {
+          defaults.setIntPref(prefName, prefValue);
+        } else {
+          defaults.setBoolPref(prefName, !!prefValue);
+        }
+        break;
 
-  if (locked) {
-    Services.prefs.lockPref(prefName);
-  }
-}
+      case "string":
+        defaults.setStringPref(prefName, prefValue);
+        break;
+    }
+
+    if (locked) {
+      Services.prefs.lockPref(prefName);
+    }
+  },
+};
 
 /**
  * setDefaultPermission
@@ -2238,9 +2278,9 @@ function setDefaultPermission(policyName, policyParam) {
     let prefName = "permissions.default." + policyName;
 
     if (policyParam.BlockNewRequests) {
-      setDefaultPref(prefName, 2, policyParam.Locked);
+      PoliciesUtils.setDefaultPref(prefName, 2, policyParam.Locked);
     } else {
-      setDefaultPref(prefName, 0, policyParam.Locked);
+      PoliciesUtils.setDefaultPref(prefName, 0, policyParam.Locked);
     }
   }
 }

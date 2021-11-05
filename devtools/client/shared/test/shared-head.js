@@ -598,15 +598,15 @@ async function _watchForToolboxReload(
   { isErrorPage, waitForLoad } = {}
 ) {
   const tab = gBrowser.getTabForBrowser(browser);
+
   const toolbox = await gDevTools.getToolboxForTab(tab);
+
   if (!toolbox) {
     // No toolbox to wait for
     return function() {};
   }
-  const currentToolId = toolbox.currentToolId;
-  const panel = toolbox.getCurrentPanel();
 
-  const waitForCurrentPanelReload = watchForPanelReload(currentToolId, panel);
+  const waitForCurrentPanelReload = watchForCurrentPanelReload(toolbox);
   const waitForToolboxCommandsReload = await watchForCommandsReload(
     toolbox.commands,
     { isErrorPage, waitForLoad }
@@ -671,7 +671,20 @@ async function _watchForResponsiveReload(
   };
 }
 
-function watchForPanelReload(toolId, panel) {
+/**
+ * Watch for the current panel selected in the provided toolbox to be reloaded.
+ * Some panels implement custom events that should be expected for every reload.
+ *
+ * @param {Toolbox}
+ *        The Toolbox instance which is going to experience a reload
+ * @return {function} An async method to be called and awaited after the reload
+ *         started. Will return `null` for panels which don't implement any
+ *         specific reload event.
+ */
+function watchForCurrentPanelReload(toolbox) {
+  const toolId = toolbox.currentToolId;
+  const panel = toolbox.getCurrentPanel();
+
   if (toolId == "inspector") {
     const markuploaded = panel.once("markuploaded");
     const onNewRoot = panel.once("new-root");

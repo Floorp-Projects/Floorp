@@ -382,7 +382,10 @@ async function doTestForAllTabsFavicon(
 add_task(async function setup() {
   // Make sure first party isolation is enabled.
   await SpecialPowers.pushPrefEnv({
-    set: [["privacy.firstparty.isolate", true]],
+    set: [
+      ["privacy.firstparty.isolate", true],
+      ["dom.security.https_first", false],
+    ],
   });
 });
 

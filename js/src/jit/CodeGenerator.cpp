@@ -7401,10 +7401,10 @@ void CodeGenerator::visitCreateInlinedArgumentsObject(
   masm.freeStack(argc * sizeof(Value));
 }
 
-void CodeGenerator::visitGetInlinedArgument(LGetInlinedArgument* lir) {
-  Register index = ToRegister(lir->getIndex());
-  ValueOperand output = ToOutValue(lir);
-
+template <class GetInlinedArgument>
+void CodeGenerator::emitGetInlinedArgument(GetInlinedArgument* lir,
+                                           Register index,
+                                           ValueOperand output) {
   uint32_t numActuals = lir->mir()->numActuals();
   MOZ_ASSERT(numActuals > 0 && numActuals <= ArgumentsObject::MaxInlinedArgs);
 
@@ -7413,7 +7413,7 @@ void CodeGenerator::visitGetInlinedArgument(LGetInlinedArgument* lir) {
   for (uint32_t i = 0; i < numActuals - 1; i++) {
     Label skip;
     ConstantOrRegister arg = toConstantOrRegister(
-        lir, LGetInlinedArgument::ArgIndex(i), lir->mir()->getArg(i)->type());
+        lir, GetInlinedArgument::ArgIndex(i), lir->mir()->getArg(i)->type());
     masm.branch32(Assembler::NotEqual, index, Imm32(i), &skip);
     masm.moveValue(arg, output);
 
@@ -7431,9 +7431,42 @@ void CodeGenerator::visitGetInlinedArgument(LGetInlinedArgument* lir) {
   // The index has already been bounds-checked, so load the last argument.
   uint32_t lastIdx = numActuals - 1;
   ConstantOrRegister arg =
-      toConstantOrRegister(lir, LGetInlinedArgument::ArgIndex(lastIdx),
+      toConstantOrRegister(lir, GetInlinedArgument::ArgIndex(lastIdx),
                            lir->mir()->getArg(lastIdx)->type());
   masm.moveValue(arg, output);
+  masm.bind(&done);
+}
+
+void CodeGenerator::visitGetInlinedArgument(LGetInlinedArgument* lir) {
+  Register index = ToRegister(lir->getIndex());
+  ValueOperand output = ToOutValue(lir);
+
+  emitGetInlinedArgument(lir, index, output);
+}
+
+void CodeGenerator::visitGetInlinedArgumentHole(LGetInlinedArgumentHole* lir) {
+  Register index = ToRegister(lir->getIndex());
+  ValueOperand output = ToOutValue(lir);
+
+  uint32_t numActuals = lir->mir()->numActuals();
+
+  if (numActuals == 0) {
+    bailoutCmp32(Assembler::LessThan, index, Imm32(0), lir->snapshot());
+    masm.moveValue(UndefinedValue(), output);
+    return;
+  }
+
+  Label outOfBounds, done;
+  masm.branch32(Assembler::AboveOrEqual, index, Imm32(numActuals),
+                &outOfBounds);
+
+  emitGetInlinedArgument(lir, index, output);
+  masm.jump(&done);
+
+  masm.bind(&outOfBounds);
+  bailoutCmp32(Assembler::LessThan, index, Imm32(0), lir->snapshot());
+  masm.moveValue(UndefinedValue(), output);
+
   masm.bind(&done);
 }
 
@@ -7484,6 +7517,18 @@ void CodeGenerator::visitLoadArgumentsObjectArg(LLoadArgumentsObjectArg* lir) {
 
   Label bail;
   masm.loadArgumentsObjectElement(argsObj, index, out, temp, &bail);
+  bailoutFrom(&bail, lir->snapshot());
+}
+
+void CodeGenerator::visitLoadArgumentsObjectArgHole(
+    LLoadArgumentsObjectArgHole* lir) {
+  Register temp = ToRegister(lir->temp0());
+  Register argsObj = ToRegister(lir->argsObject());
+  Register index = ToRegister(lir->index());
+  ValueOperand out = ToOutValue(lir);
+
+  Label bail;
+  masm.loadArgumentsObjectElementHole(argsObj, index, out, temp, &bail);
   bailoutFrom(&bail, lir->snapshot());
 }
 
@@ -11444,6 +11489,27 @@ void CodeGenerator::visitGetFrameArgument(LGetFrameArgument* lir) {
     BaseValueIndex argPtr(masm.getStackPointer(), i, argvOffset);
     masm.loadValue(argPtr, result);
   }
+}
+
+void CodeGenerator::visitGetFrameArgumentHole(LGetFrameArgumentHole* lir) {
+  ValueOperand result = ToOutValue(lir);
+  Register index = ToRegister(lir->index());
+  Register length = ToRegister(lir->length());
+  Register spectreTemp = ToTempRegisterOrInvalid(lir->temp0());
+  size_t argvOffset = frameSize() + JitFrameLayout::offsetOfActualArgs();
+
+  Label outOfBounds, done;
+  masm.spectreBoundsCheck32(index, length, spectreTemp, &outOfBounds);
+
+  BaseValueIndex argPtr(masm.getStackPointer(), index, argvOffset);
+  masm.loadValue(argPtr, result);
+  masm.jump(&done);
+
+  masm.bind(&outOfBounds);
+  bailoutCmp32(Assembler::LessThan, index, Imm32(0), lir->snapshot());
+  masm.moveValue(UndefinedValue(), result);
+
+  masm.bind(&done);
 }
 
 void CodeGenerator::emitRest(LInstruction* lir, Register array,
