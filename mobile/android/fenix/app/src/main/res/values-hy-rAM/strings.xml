@@ -24,7 +24,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 բաց ներդիր: Հպեք՝ փոխարկելու համար:</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s բաց ներդիրներ: Հպեք՝ փոխարկելու համար:</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s բաց ներդիրներ: Հպեք՝ փոխարկելու համար:</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">Ընտրված է %1$d</string>
@@ -108,9 +108,22 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">Բաց թողնել</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">Երկու շաբաթ չնայած էջանիշերը տեղափոխվում են այստեղ:</string>
+    <string name="tab_tray_inactive_onboarding_message">Երկու շաբաթ չնայած էջանիշերը տեղափոխվում են այստեղ:</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">Անջատել կարգավորումներում</string>
+    <string name="tab_tray_inactive_onboarding_button_text">Անջատել կարգավորումներում</string>
+
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Ինքնափակե՞լ մեկ ամսից:</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Firefox-ը կարող է փակել ներդիրները, որոնք չեք դիտել վերջին ամսում:</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Փակել</string>
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">Միացնել ինքնափակումը</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">Միացնել ինքնափակումը</string>
+
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -120,7 +133,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">Նոր գաղտնի ներդիր</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Լավագույն կայքեր</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Լավագույն կայքեր</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -167,7 +180,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Կանգնեցնել</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Էջանիշ</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Էջանիշ</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Խմբագրել Էջանիշը</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -378,7 +391,9 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Ոճ</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">Տուն</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Տուն</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">Տնային էջ</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Ժեստեր</string>
     <!-- Preference for settings related to visual options -->
@@ -572,7 +587,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Միացնել համաժամեցումը</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Firefox-ում աշխատասեղանի զուգավորման կոդ սկանավորեք</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Firefox-ում աշխատասեղանի զուգավորման կոդ սկանավորեք</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Մուտք գործել</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -696,15 +711,23 @@
     <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Ինքնափակել բաց ներդիրները</string>
 
-    <!-- Start on Home -->
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">Սկսել տնից</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Սկսել տնից</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">Ողջյունի պատուհան</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">Չորս ժամ անց</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Չորս ժամ անց</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">Տնային էջ</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">Միշտ</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">Միշտ</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">Վերջին ներդիրը</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">Երբեք</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Երբեք</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Տնային էջը չորս ժամ անգործությունից հետո</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Ձեռքով փակեք</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -761,13 +784,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Պահպանել հավաքածուում</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">Ընտրել</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Ընտրել</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Համօգտագործել ներդիրները</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Վերջերս փակված ներդիրներ</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">Վերջին փակվածը</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Վերջին փակվածը</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Հաշվի կարգավորումներ</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -888,10 +911,6 @@
     <string name="history_empty_message">Այստեղ պատմություն չկա</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">Ջնջել ներբեռնումները</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">Համոզվա՞ծ եք, որ ցանկանում եք մաքրել ներբեռնումերը:</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Ներբեռնումները հեռացված են</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -932,7 +951,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">Էջանիշերի ցանկ</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">Խմբագրել Էջանիշը</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Խմբագրել Էջանիշը</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Ընտրել պանակ</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1963,8 +1982,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">Հասկանալի է</string>
 
+    <!-- Label for the preference to show the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_3">Ամենաշատ այցելված լավագույն կայքերը</string>
     <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2">Ցուցադրել ամենաշատ այցելված կայքերը</string>
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">Ցուցադրել ամենաշատ այցելված կայքերը</string>
     <!-- Label for the show most visited sites preference -->
     <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">Ցուցադրել ամենաշատ այցելվող կայքերը</string>
 
@@ -1983,11 +2004,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Փակել բոլոր անգործուն ներդիրները</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string name="inactive_tabs_description">Ներդիրներն այստեղ հասանելի են %s: Այդ ժամանակից հետո ներդիրներն ինքնաբար կփակվեն:</string>
+    <string moz:removedIn="95" name="inactive_tabs_description" tools:ignore="UnusedResources">Ներդիրներն այստեղ հասանելի են %s: Այդ ժամանակից հետո ներդիրներն ինքնաբար կփակվեն:</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 օր</string>
+    <string moz:removedIn="95" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 օր</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">1 շաբաթ</string>
+    <string moz:removedIn="95" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 շաբաթ</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
@@ -1997,21 +2018,33 @@
     <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">ՄԻԱՑՆԵԼ ԻՆՔՆԱՓԱԿՈՒՄԸ</string>
 
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">Ինքնափակումը միացված է</string>
+
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Օգնեք մեզ բարելավել</string>
+    <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Օգնեք մեզ բարելավել</string>
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header_1">Օգնեք բարելավել Firefox-ը</string>
+
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Ինչու՞ եք անջատել անգործուն ներդիրները:</string>
+    <string name="inactive_tabs_survey_content">Ինչու՞ եք անջատել անգործուն ներդիրները:</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_not_interested_option" tools:ignore="UnusedResources">Հետաքրքրված չեմ</string>
+    <string name="inactive_tabs_survey_do_not_understand">Ես չեմ հասկանում, թե ինչպես է դա աշխատում</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Անգործունության ժամանակը երկար է</string>
+    <string name="inactive_tabs_survey_do_it_myself">Ես ինքս սիրում եմ մաքրել հին ներդիրները</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Անգործունության ժամանակը կարճ է</string>
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Անգործունության ժամանակը երկար է</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_long_option_1">Երկշաբաթյա ժամկետը չափազանց երկար է</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Անգործունության ժամանակը կարճ է</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option_1">Երկշաբաթյա ժամկետը չափազանց կարճ է</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Ուղարկել</string>
+    <string name="inactive_tabs_survey_send_button">Ուղարկել</string>
     <!-- Content description for inactive tabs survey close button -->
-    <string name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Փակել</string>
+    <string name="inactive_tabs_survey_close_button_content_description">Փակել</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Կայեք հղումներ կայքերից, էլ. նամակներից և հաղորդագրություններից, որոնք ինքնաբար կերպով կբացվեն Firefox-ում:</string>

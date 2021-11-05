@@ -114,6 +114,12 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Descartar</string>
 
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">Desactivar en ajustes</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">¿Cerrar automáticamente después de un mes?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Firefox puede cerrar pestañas que no has visto durante el último mes.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Cerrar</string>
     <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
@@ -162,6 +168,9 @@
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">Eliminar</string>
+
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description">Mostrar el botón de todas las exploraciones anteriores</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -240,6 +249,8 @@
 
     <!-- Browser menu button that opens the Customize menu -->
     <string name="browser_menu_customize_home">Personalizar inicio</string>
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">Personalizar la página de inicio</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">Pantalla de inicio</string>
@@ -287,11 +298,16 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">Busca directamente desde la barra de direcciones</string>
 
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_title_2">Novedades en Firefox</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Ahora es más fácil retomar desde donde quedaste.</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_section_home_title_2">Página de inicio de Firefox personalizada</string>
 
+    <!-- Onboarding home screen dialog description text for the home section. -->
+    <string name="onboarding_home_screen_section_home_description_2">Accede a tus pestañas abiertas, marcadores e historial de navegación.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
     <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Pestañas limpias y organizadas</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
@@ -2018,6 +2034,12 @@
     <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
     <string name="inactive_tabs_auto_close_message_snackbar">Cierre automático activado</string>
 
+    <!-- Inactive tabs survey -->
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Ayúdanos a mejorar</string>
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header_1">Ayuda a mejorar Firefox</string>
+
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
     <string name="inactive_tabs_survey_content">¿Por qué desactivaste pestañas inactivas?</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
@@ -2044,6 +2066,11 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Cerrar</string>
 
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string moz:removedIn="94" name="pocket_stories_header" tools:ignore="UnusedResources">Historias que te hacen reflexionar</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header_1">Historias que te hacen reflexionar</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_categories_header">Historias por tema</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
