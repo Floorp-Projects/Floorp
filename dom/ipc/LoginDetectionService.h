@@ -40,7 +40,7 @@ class LoginDetectionService final : public nsILoginDetectionService,
   void MaybeStartMonitoring();
 
  private:
-  LoginDetectionService() = default;
+  LoginDetectionService();
   virtual ~LoginDetectionService();
 
   // Fetch saved logins from the password manager.
@@ -50,6 +50,9 @@ class LoginDetectionService final : public nsILoginDetectionService,
   void UnregisterObserver();
 
   nsCOMPtr<nsIObserverService> mObs;
+
+  // Used by testcase to make sure logins are fetched.
+  bool mIsLoginsLoaded;
 };
 
 }  // namespace mozilla::dom
