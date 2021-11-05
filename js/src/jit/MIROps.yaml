@@ -378,9 +378,6 @@
 - name: AssertShape
   gen_boilerplate: false
 
-- name: CreateThisWithTemplate
-  gen_boilerplate: false
-
 # Caller-side allocation of |this| for |new|:
 # Constructs |this| when possible, else MagicValue(JS_IS_CONSTRUCTING).
 - name: CreateThis

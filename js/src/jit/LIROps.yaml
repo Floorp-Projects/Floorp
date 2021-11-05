@@ -368,13 +368,6 @@
   call_instruction: true
   mir_op: true
 
-# Allocate an object for |new| on the caller-side.
-# Always performs object initialization with a fast path.
-- name: CreateThisWithTemplate
-  result_type: WordSized
-  num_temps: 1
-  mir_op: true
-
 # Allocate a new arguments object for the frame.
 - name: CreateArgumentsObject
   result_type: WordSized

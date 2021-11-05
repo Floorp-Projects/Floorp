@@ -1695,31 +1695,6 @@ bool RNewIterator::recover(JSContext* cx, SnapshotIterator& iter) const {
   return true;
 }
 
-bool MCreateThisWithTemplate::writeRecoverData(
-    CompactBufferWriter& writer) const {
-  MOZ_ASSERT(canRecoverOnBailout());
-  writer.writeUnsigned(uint32_t(RInstruction::Recover_CreateThisWithTemplate));
-  return true;
-}
-
-RCreateThisWithTemplate::RCreateThisWithTemplate(CompactBufferReader& reader) {}
-
-bool RCreateThisWithTemplate::recover(JSContext* cx,
-                                      SnapshotIterator& iter) const {
-  RootedObject templateObject(cx, &iter.read().toObject());
-
-  // See CodeGenerator::visitCreateThisWithTemplate
-  JSObject* resultObject = CreateThisWithTemplate(cx, templateObject);
-  if (!resultObject) {
-    return false;
-  }
-
-  RootedValue result(cx);
-  result.setObject(*resultObject);
-  iter.storeInstructionResult(result);
-  return true;
-}
-
 bool MLambda::writeRecoverData(CompactBufferWriter& writer) const {
   MOZ_ASSERT(canRecoverOnBailout());
   writer.writeUnsigned(uint32_t(RInstruction::Recover_Lambda));

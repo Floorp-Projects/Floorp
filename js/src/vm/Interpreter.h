@@ -626,8 +626,6 @@ JSObject* NewPlainObjectOptimizedFallback(JSContext* cx, HandleShape shape,
                                           gc::AllocKind allocKind,
                                           gc::InitialHeap initialHeap);
 
-JSObject* CreateThisWithTemplate(JSContext* cx, HandleObject templateObject);
-
 ArrayObject* NewArrayOperation(JSContext* cx, uint32_t length,
                                NewObjectKind newKind = GenericObject);
 
