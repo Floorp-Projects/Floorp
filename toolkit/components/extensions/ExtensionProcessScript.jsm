@@ -359,6 +359,13 @@ var ExtensionAPIRequestHandler = {
     );
   },
 
+  onExtensionWorkerLoaded(policy, serviceWorkerDescriptorId) {
+    ExtensionWorkerChild.notifyExtensionWorkerContextLoaded(
+      serviceWorkerDescriptorId,
+      policy
+    );
+  },
+
   onExtensionWorkerDestroyed(policy, serviceWorkerDescriptorId) {
     ExtensionWorkerChild.destroyExtensionWorkerContext(
       serviceWorkerDescriptorId
