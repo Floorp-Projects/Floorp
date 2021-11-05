@@ -111,7 +111,6 @@ namespace jit {
   _(CreateGeneratorFromFrame, js::jit::CreateGeneratorFromFrame)               \
   _(CreateThisFromIC, js::jit::CreateThisFromIC)                               \
   _(CreateThisFromIon, js::jit::CreateThisFromIon)                             \
-  _(CreateThisWithTemplate, js::CreateThisWithTemplate)                        \
   _(DebugAfterYield, js::jit::DebugAfterYield)                                 \
   _(DebugEpilogueOnBaselineReturn, js::jit::DebugEpilogueOnBaselineReturn)     \
   _(DebugLeaveLexicalEnv, js::jit::DebugLeaveLexicalEnv)                       \

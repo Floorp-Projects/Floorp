@@ -2812,39 +2812,6 @@ class MAssertShape : public MUnaryInstruction, public NoTypePolicy::Data {
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
-// Caller-side allocation of |this| for |new|:
-// Given a templateobject, construct |this| for JSOp::New.
-// Not used for JSOp::SuperCall, because Baseline doesn't attach template
-// objects for super calls.
-class MCreateThisWithTemplate : public MUnaryInstruction,
-                                public NoTypePolicy::Data {
-  gc::InitialHeap initialHeap_;
-
-  MCreateThisWithTemplate(MConstant* templateConst, gc::InitialHeap initialHeap)
-      : MUnaryInstruction(classOpcode, templateConst),
-        initialHeap_(initialHeap) {
-    setResultType(MIRType::Object);
-  }
-
- public:
-  INSTRUCTION_HEADER(CreateThisWithTemplate)
-  TRIVIAL_NEW_WRAPPERS
-
-  // Template for |this|, provided by TI.
-  JSObject* templateObject() const {
-    return &getOperand(0)->toConstant()->toObject();
-  }
-
-  gc::InitialHeap initialHeap() const { return initialHeap_; }
-
-  // Although creation of |this| modifies global state, it is safely repeatable.
-  AliasSet getAliasSet() const override { return AliasSet::None(); }
-
-  [[nodiscard]] bool writeRecoverData(
-      CompactBufferWriter& writer) const override;
-  bool canRecoverOnBailout() const override;
-};
-
 // Eager initialization of arguments object.
 class MCreateArgumentsObject : public MUnaryInstruction,
                                public ObjectPolicy<0>::Data {

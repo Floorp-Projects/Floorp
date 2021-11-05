@@ -26,7 +26,6 @@ KnownClass jit::GetObjectKnownClass(const MDefinition* def) {
 
     case MDefinition::Opcode::NewObject:
     case MDefinition::Opcode::CreateThis:
-    case MDefinition::Opcode::CreateThisWithTemplate:
       return KnownClass::PlainObject;
 
     case MDefinition::Opcode::Lambda:

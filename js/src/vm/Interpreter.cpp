@@ -5046,18 +5046,6 @@ JSObject* js::NewPlainObjectOptimizedFallback(JSContext* cx, HandleShape shape,
   return NativeObject::create(cx, allocKind, initialHeap, shape, site);
 }
 
-JSObject* js::CreateThisWithTemplate(JSContext* cx,
-                                     HandleObject templateObject) {
-  mozilla::Maybe<AutoRealm> ar;
-  if (cx->realm() != templateObject->nonCCWRealm()) {
-    MOZ_ASSERT(cx->compartment() == templateObject->compartment());
-    ar.emplace(cx, templateObject);
-  }
-
-  RootedShape shape(cx, templateObject->shape());
-  return PlainObject::createWithShape(cx, shape);
-}
-
 ArrayObject* js::NewArrayOperation(
     JSContext* cx, uint32_t length,
     NewObjectKind newKind /* = GenericObject */) {
