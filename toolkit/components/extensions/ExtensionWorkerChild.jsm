@@ -594,6 +594,7 @@ class WorkerContextChild extends BaseContext {
     this.viewType = "background_worker";
     this.uri = Services.io.newURI(serviceWorkerInfo.scriptURL);
     this.workerClientInfoId = serviceWorkerInfo.clientInfoId;
+    this.workerDescriptorId = serviceWorkerInfo.descriptorId;
     this.workerPrincipal = serviceWorkerInfo.principal;
     this.incognito = serviceWorkerInfo.principal.privateBrowsingId > 0;
 
@@ -704,31 +705,80 @@ defineLazyGetter(
 );
 
 var ExtensionWorkerChild = {
-  // Map<workerClientInfoId, ExtensionWorkerContextChild>
+  // Map<serviceWorkerDescriptorId, ExtensionWorkerContextChild>
   extensionWorkerContexts: new Map(),
 
   apiManager: ExtensionPageChild.apiManager,
 
-  getContextForWorker(extension, serviceWorkerInfo) {
+  /**
+   * Create an extension worker context (on a mozExtensionAPIRequest with
+   * requestType "initWorkerContext").
+   *
+   * @param {BrowserExtensionContent} extension
+   *     The extension for which the context should be created.
+   * @param {mozIExtensionServiceWorkerInfo} serviceWorkerInfo
+   */
+  initExtensionWorkerContext(extension, serviceWorkerInfo) {
+    if (!WebExtensionPolicy.isExtensionProcess) {
+      throw new Error(
+        "Cannot create an extension worker context in current process"
+      );
+    }
+
+    const swId = serviceWorkerInfo.descriptorId;
+    let context = this.extensionWorkerContexts.get(swId);
+    if (context) {
+      if (context.extension !== extension) {
+        throw new Error(
+          "A different extension context already exists for this service worker"
+        );
+      }
+      throw new Error(
+        "An extension context was already initialized for this service worker"
+      );
+    }
+
+    context = new WorkerContextChild(extension, { serviceWorkerInfo });
+    this.extensionWorkerContexts.set(swId, context);
+  },
+
+  /**
+   * Get an existing extension worker context for the given extension and
+   * service worker.
+   *
+   * @param {BrowserExtensionContent} extension
+   *     The extension for which the context should be created.
+   * @param {mozIExtensionServiceWorkerInfo} serviceWorkerInfo
+   *
+   * @returns {ExtensionWorkerContextChild}
+   */
+  getExtensionWorkerContext(extension, serviceWorkerInfo) {
     if (!serviceWorkerInfo) {
       return null;
     }
 
-    let context = this.extensionWorkerContexts.get(
-      serviceWorkerInfo.clientInfoId
+    const context = this.extensionWorkerContexts.get(
+      serviceWorkerInfo.descriptorId
     );
-    if (context && context.extension === extension) {
+
+    if (context?.extension === extension) {
       return context;
     }
 
-    // Lazily create the context.
-    if (!context) {
-      context = new WorkerContextChild(extension, { serviceWorkerInfo });
+    return null;
+  },
 
-      this.extensionWorkerContexts.set(serviceWorkerInfo.clientInfoId, context);
+  /**
+   * Close the ExtensionWorkerContextChild belonging to the given service worker, if any.
+   *
+   * @param {number} descriptorId The service worker descriptor ID of the destroyed context.
+   */
+  destroyExtensionWorkerContext(descriptorId) {
+    let context = this.extensionWorkerContexts.get(descriptorId);
+    if (context) {
+      context.unload();
+      this.extensionWorkerContexts.delete(descriptorId);
     }
-
-    return context;
   },
 
   shutdownExtension(extensionId) {
