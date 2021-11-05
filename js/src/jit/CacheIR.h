@@ -1074,8 +1074,8 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     callNativeSetter_(receiver, setter, rhs, sameRealm, nargsAndFlags);
   }
 
-  void metaScriptedTemplateObject(JSFunction* callee, Shape* thisShape) {
-    metaTwoByte_(callee, thisShape);
+  void metaScriptedThisShape(Shape* thisShape) {
+    metaScriptedThisShape_(thisShape);
   }
   friend class CacheIRCloner;
 

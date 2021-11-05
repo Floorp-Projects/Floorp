@@ -1659,13 +1659,12 @@
 
 
 # Meta ops generate no code, but contain data for BaselineInspector.
-- name: MetaTwoByte
+- name: MetaScriptedThisShape
   shared: true
   transpile: true
   cost_estimate: 0
   custom_writer: true
   args:
-    functionObject: ObjectField
     thisShape: ShapeField
 
 - name: LoadFixedSlotResult
