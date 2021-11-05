@@ -205,7 +205,16 @@ class MOZ_RAII AutoProfilerStats {
                                                                                \
     MACRO(19, "notimerresolutionchange", NoTimerResolutionChange,              \
           "Do not adjust the timer resolution for fast sampling, so that "     \
-          "other Firefox timers do not get affected")
+          "other Firefox timers do not get affected")                          \
+                                                                               \
+    MACRO(20, "cpuallthreads", CPUAllThreads,                                  \
+          "Sample the CPU utilization of all registered threads")              \
+                                                                               \
+    MACRO(21, "samplingallthreads", SamplingAllThreads,                        \
+          "Sample the stacks of all registered threads")                       \
+                                                                               \
+    MACRO(22, "markersallthreads", MarkersAllThreads,                          \
+          "Record markers from all registered threads")
 
 struct ProfilerFeature {
 #  define DECLARE(n_, str_, Name_, desc_)                                \

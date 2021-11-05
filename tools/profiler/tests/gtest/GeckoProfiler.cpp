@@ -4000,38 +4000,22 @@ TEST(GeckoProfiler, FeatureCombinations)
 {
   const char* filters[] = {"*"};
 
-  // List of features to test. Every combination (from none to all of them) will
-  // be tested, so be careful not to add too many to keep the test run at a
+  // List of features to test. Every combination of up to 3 of them will be
+  // tested, so be careful not to add too many to keep the test run at a
   // reasonable time.
   uint32_t featureList[] = {ProfilerFeature::JS,
                             ProfilerFeature::Screenshots,
                             ProfilerFeature::StackWalk,
                             ProfilerFeature::NoStackSampling,
                             ProfilerFeature::NativeAllocations,
-                            ProfilerFeature::CPUUtilization};
+                            ProfilerFeature::CPUUtilization,
+                            ProfilerFeature::CPUAllThreads,
+                            ProfilerFeature::SamplingAllThreads,
+                            ProfilerFeature::MarkersAllThreads};
   constexpr uint32_t featureCount = uint32_t(MOZ_ARRAY_LENGTH(featureList));
-  ASSERT_LT(featureCount, 32u);
-  constexpr uint32_t combinationCount = uint32_t(1) << featureCount;
 
-  std::string featuresString;
-
-  for (uint32_t combination = 0u; combination < combinationCount;
-       ++combination) {
-    uint32_t features = 0u;
-    featuresString = "Features:";
-    for (uint32_t featureIndex = 0u; featureIndex < featureCount;
-         ++featureIndex) {
-      if ((combination & (uint32_t(1) << featureIndex)) != 0u) {
-        features |= featureList[featureIndex];
-        featuresString += " ";
-        featuresString += GetFeatureName(featureList[featureIndex]);
-      }
-    }
-
-    if (features == 0) {
-      featuresString += " (none)";
-    }
-
+  auto testFeatures = [&](uint32_t features,
+                          const std::string& featuresString) {
     SCOPED_TRACE(featuresString.c_str());
 
     ASSERT_TRUE(!profiler_is_active());
@@ -4044,7 +4028,8 @@ TEST(GeckoProfiler, FeatureCombinations)
     // Write some Gecko Profiler samples.
     EXPECT_EQ(WaitForSamplingState(),
               (((features & ProfilerFeature::NoStackSampling) != 0) &&
-               ((features & ProfilerFeature::CPUUtilization) == 0))
+               ((features & (ProfilerFeature::CPUUtilization |
+                             ProfilerFeature::CPUAllThreads)) == 0))
                   ? SamplingState::NoStackSamplingCompleted
                   : SamplingState::SamplingCompleted);
 
@@ -4055,6 +4040,32 @@ TEST(GeckoProfiler, FeatureCombinations)
 
     profiler_stop();
     ASSERT_TRUE(!profiler_is_active());
+  };
+
+  testFeatures(0, "Features: (none)");
+
+  for (uint32_t f1 = 0u; f1 < featureCount; ++f1) {
+    const uint32_t features1 = featureList[f1];
+    std::string features1String = "Features: ";
+    features1String += GetFeatureName(featureList[f1]);
+
+    testFeatures(features1, features1String);
+
+    for (uint32_t f2 = f1 + 1u; f2 < featureCount; ++f2) {
+      const uint32_t features12 = f1 | featureList[f2];
+      std::string features12String = features1String + " ";
+      features12String += GetFeatureName(featureList[f2]);
+
+      testFeatures(features12, features12String);
+
+      for (uint32_t f3 = f2 + 1u; f3 < featureCount; ++f3) {
+        const uint32_t features123 = features12 | featureList[f3];
+        std::string features123String = features12String + " ";
+        features123String += GetFeatureName(featureList[f3]);
+
+        testFeatures(features123, features123String);
+      }
+    }
   }
 }
 
@@ -4217,6 +4228,233 @@ TEST(GeckoProfiler, CPUUsage)
     ASSERT_TRUE(!profiler_is_active());
     ASSERT_TRUE(!profiler_callback_after_sampling(
         [&](SamplingState) { ASSERT_TRUE(false); }));
+  }
+}
+
+TEST(GeckoProfiler, AllThreads)
+{
+  profiler_init_main_thread_id();
+  ASSERT_TRUE(profiler_is_main_thread())
+  << "This test assumes it runs on the main thread";
+
+  ASSERT_EQ(static_cast<uint32_t>(ThreadProfilingFeatures::Any), 1u + 2u + 4u)
+      << "This test assumes that there are 3 binary choices 1+2+4; "
+         "Is this test up to date?";
+
+  for (uint32_t threadFeaturesBinary = 0u;
+       threadFeaturesBinary <=
+       static_cast<uint32_t>(ThreadProfilingFeatures::Any);
+       ++threadFeaturesBinary) {
+    ThreadProfilingFeatures threadFeatures =
+        static_cast<ThreadProfilingFeatures>(threadFeaturesBinary);
+    const bool threadCPU = DoFeaturesIntersect(
+        threadFeatures, ThreadProfilingFeatures::CPUUtilization);
+    const bool threadSampling =
+        DoFeaturesIntersect(threadFeatures, ThreadProfilingFeatures::Sampling);
+    const bool threadMarkers =
+        DoFeaturesIntersect(threadFeatures, ThreadProfilingFeatures::Markers);
+
+    ASSERT_TRUE(!profiler_is_active());
+
+    uint32_t features = ProfilerFeature::StackWalk | ProfilerFeature::Threads;
+    std::string featuresString = "Features: StackWalk Threads";
+    if (threadCPU) {
+      features |= ProfilerFeature::CPUAllThreads;
+      featuresString += " CPUAllThreads";
+    }
+    if (threadSampling) {
+      features |= ProfilerFeature::SamplingAllThreads;
+      featuresString += " SamplingAllThreads";
+    }
+    if (threadMarkers) {
+      features |= ProfilerFeature::MarkersAllThreads;
+      featuresString += " MarkersAllThreads";
+    }
+
+    SCOPED_TRACE(featuresString.c_str());
+
+    const char* filters[] = {"GeckoMain", "Selected"};
+
+    EXPECT_FALSE(profiler_thread_is_being_profiled(
+        ThreadProfilingFeatures::CPUUtilization));
+    EXPECT_FALSE(
+        profiler_thread_is_being_profiled(ThreadProfilingFeatures::Sampling));
+    EXPECT_FALSE(
+        profiler_thread_is_being_profiled(ThreadProfilingFeatures::Markers));
+    EXPECT_FALSE(profiler_thread_is_being_profiled_for_markers());
+
+    profiler_start(PROFILER_DEFAULT_ENTRIES, PROFILER_DEFAULT_INTERVAL,
+                   features, filters, MOZ_ARRAY_LENGTH(filters), 0);
+
+    EXPECT_TRUE(profiler_thread_is_being_profiled(
+        ThreadProfilingFeatures::CPUUtilization));
+    EXPECT_TRUE(
+        profiler_thread_is_being_profiled(ThreadProfilingFeatures::Sampling));
+    EXPECT_TRUE(
+        profiler_thread_is_being_profiled(ThreadProfilingFeatures::Markers));
+    EXPECT_TRUE(profiler_thread_is_being_profiled_for_markers());
+
+    // This will signal all threads to stop spinning.
+    Atomic<bool> stopThreads{false};
+
+    Atomic<int> selectedThreadSpins{0};
+    std::thread selectedThread([&]() {
+      AUTO_PROFILER_REGISTER_THREAD("Selected test thread");
+      EXPECT_TRUE(profiler_thread_is_being_profiled(
+          ThreadProfilingFeatures::CPUUtilization));
+      EXPECT_TRUE(
+          profiler_thread_is_being_profiled(ThreadProfilingFeatures::Sampling));
+      EXPECT_TRUE(
+          profiler_thread_is_being_profiled(ThreadProfilingFeatures::Markers));
+      EXPECT_TRUE(profiler_thread_is_being_profiled_for_markers());
+      while (!stopThreads) {
+        PROFILER_MARKER_UNTYPED("Spinning Selected!", PROFILER);
+        ++selectedThreadSpins;
+        PR_Sleep(PR_MillisecondsToInterval(1));
+      }
+    });
+
+    Atomic<int> unselectedThreadSpins{0};
+    std::thread unselectedThread([&]() {
+      AUTO_PROFILER_REGISTER_THREAD("Registered test thread");
+      // This thread is *not* selected for full profiling, but it may still be
+      // profiled depending on the -allthreads features.
+      EXPECT_EQ(profiler_thread_is_being_profiled(
+                    ThreadProfilingFeatures::CPUUtilization),
+                threadCPU);
+      EXPECT_EQ(
+          profiler_thread_is_being_profiled(ThreadProfilingFeatures::Sampling),
+          threadSampling);
+      EXPECT_EQ(
+          profiler_thread_is_being_profiled(ThreadProfilingFeatures::Markers),
+          threadMarkers);
+      EXPECT_EQ(profiler_thread_is_being_profiled_for_markers(), threadMarkers);
+      while (!stopThreads) {
+        PROFILER_MARKER_UNTYPED("Spinning Registered!", PROFILER);
+        ++unselectedThreadSpins;
+        PR_Sleep(PR_MillisecondsToInterval(1));
+      }
+    });
+
+    Atomic<int> unregisteredThreadSpins{0};
+    std::thread unregisteredThread([&]() {
+      // No `AUTO_PROFILER_REGISTER_THREAD` here.
+      EXPECT_FALSE(profiler_thread_is_being_profiled(
+          ThreadProfilingFeatures::CPUUtilization));
+      EXPECT_FALSE(
+          profiler_thread_is_being_profiled(ThreadProfilingFeatures::Sampling));
+      EXPECT_FALSE(
+          profiler_thread_is_being_profiled(ThreadProfilingFeatures::Markers));
+      EXPECT_FALSE(profiler_thread_is_being_profiled_for_markers());
+      while (!stopThreads) {
+        PROFILER_MARKER_UNTYPED("Spinning Unregistered!", PROFILER);
+        ++unregisteredThreadSpins;
+        PR_Sleep(PR_MillisecondsToInterval(1));
+      }
+    });
+
+    // Wait for all threads to have started at least one spin.
+    while (selectedThreadSpins == 0 || unselectedThreadSpins == 0 ||
+           unregisteredThreadSpins == 0) {
+      PR_Sleep(PR_MillisecondsToInterval(1));
+    }
+
+    // Wait until the sampler has done at least one loop.
+    ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
+
+    // Restart the spin counts, and ensure each threads will do at least one
+    // more spin each. Since spins are increased after PROFILER_MARKER calls, in
+    // the worst case, each thread will have attempted to record at least one
+    // marker.
+    selectedThreadSpins = 0;
+    unselectedThreadSpins = 0;
+    unregisteredThreadSpins = 0;
+    while (selectedThreadSpins < 1 && unselectedThreadSpins < 1 &&
+           unregisteredThreadSpins < 1) {
+      ASSERT_EQ(WaitForSamplingState(), SamplingState::SamplingCompleted);
+    }
+
+    profiler_pause();
+    UniquePtr<char[]> profile = profiler_get_profile();
+
+    profiler_stop();
+    stopThreads = true;
+    unregisteredThread.join();
+    unselectedThread.join();
+    selectedThread.join();
+
+    JSONOutputCheck(profile.get(), [&](const Json::Value& aRoot) {
+      GET_JSON(threads, aRoot["threads"], Array);
+      int foundMain = 0;
+      int foundSelected = 0;
+      int foundSelectedMarker = 0;
+      int foundUnselected = 0;
+      int foundUnselectedMarker = 0;
+      for (const Json::Value& thread : threads) {
+        ASSERT_TRUE(thread.isObject());
+        GET_JSON(stringTable, thread["stringTable"], Array);
+        GET_JSON(name, thread["name"], String);
+        if (name.asString() == "GeckoMain") {
+          ++foundMain;
+          // Don't check the main thread further in this test.
+
+        } else if (name.asString() == "Selected test thread") {
+          ++foundSelected;
+
+          GET_JSON(samples, thread["samples"], Object);
+          GET_JSON(samplesData, samples["data"], Array);
+          EXPECT_GT(samplesData.size(), 0u);
+
+          GET_JSON(markers, thread["markers"], Object);
+          GET_JSON(markersData, markers["data"], Array);
+          for (const Json::Value& marker : markersData) {
+            const unsigned int NAME = 0u;
+            ASSERT_TRUE(marker[NAME].isUInt());  // name id
+            GET_JSON(name, stringTable[marker[NAME].asUInt()], String);
+            if (name == "Spinning Selected!") {
+              ++foundSelectedMarker;
+            }
+          }
+        } else if (name.asString() == "Registered test thread") {
+          ++foundUnselected;
+
+          GET_JSON(samples, thread["samples"], Object);
+          GET_JSON(samplesData, samples["data"], Array);
+          if (threadCPU || threadSampling) {
+            EXPECT_GT(samplesData.size(), 0u);
+          } else {
+            EXPECT_EQ(samplesData.size(), 0u);
+          }
+
+          GET_JSON(markers, thread["markers"], Object);
+          GET_JSON(markersData, markers["data"], Array);
+          for (const Json::Value& marker : markersData) {
+            const unsigned int NAME = 0u;
+            ASSERT_TRUE(marker[NAME].isUInt());  // name id
+            GET_JSON(name, stringTable[marker[NAME].asUInt()], String);
+            if (name == "Spinning Registered!") {
+              ++foundUnselectedMarker;
+            }
+          }
+
+        } else {
+          EXPECT_STRNE(name.asString().c_str(),
+                       "Unregistered test thread label");
+        }
+      }
+      EXPECT_EQ(foundMain, 1);
+      EXPECT_EQ(foundSelected, 1);
+      EXPECT_GT(foundSelectedMarker, 0);
+      EXPECT_EQ(foundUnselected,
+                (threadCPU || threadSampling || threadMarkers) ? 1 : 0)
+          << "Unselected thread should only be present if at least one of the "
+             "allthreads feature is on";
+      if (threadMarkers) {
+        EXPECT_GT(foundUnselectedMarker, 0);
+      } else {
+        EXPECT_EQ(foundUnselectedMarker, 0);
+      }
+    });
   }
 }
 
