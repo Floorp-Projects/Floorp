@@ -5,6 +5,8 @@ ok(
   "this test requires fission to function!"
 );
 
+requestLongerTimeout(3);
+
 const WebContentIsolationStrategy = {
   IsolateNothing: 0,
   IsolateEverything: 1,
