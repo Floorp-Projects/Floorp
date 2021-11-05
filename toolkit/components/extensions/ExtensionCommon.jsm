@@ -2293,7 +2293,7 @@ class EventManager {
                 return;
               }
               primed.pendingEvents.push({ args, resolve, reject });
-              extension.emit("background-script-event");
+              extension.emit("background-page-event");
             });
 
           let fire = {

@@ -346,32 +346,6 @@ var ExtensionProcessScript = {
 };
 
 var ExtensionAPIRequestHandler = {
-  initExtensionWorker(policy, serviceWorkerInfo) {
-    let extension = extensions.get(policy);
-
-    if (!extension) {
-      throw new Error(`Extension instance not found for addon ${policy.id}`);
-    }
-
-    ExtensionWorkerChild.initExtensionWorkerContext(
-      extension,
-      serviceWorkerInfo
-    );
-  },
-
-  onExtensionWorkerLoaded(policy, serviceWorkerDescriptorId) {
-    ExtensionWorkerChild.notifyExtensionWorkerContextLoaded(
-      serviceWorkerDescriptorId,
-      policy
-    );
-  },
-
-  onExtensionWorkerDestroyed(policy, serviceWorkerDescriptorId) {
-    ExtensionWorkerChild.destroyExtensionWorkerContext(
-      serviceWorkerDescriptorId
-    );
-  },
-
   handleAPIRequest(policy, request) {
     try {
       let extension = extensions.get(policy);
@@ -384,12 +358,6 @@ var ExtensionAPIRequestHandler = {
         extension,
         request,
       });
-
-      if (!context) {
-        throw new Error(
-          `Extension context not found for API request: ${request}`
-        );
-      }
 
       // Add a property to the request object for the normalizedArgs.
       request.normalizedArgs = this.validateAndNormalizeRequestArgs({
@@ -411,14 +379,36 @@ var ExtensionAPIRequestHandler = {
   },
 
   getExtensionContextForAPIRequest({ extension, request }) {
-    if (request.serviceWorkerInfo) {
-      return ExtensionWorkerChild.getExtensionWorkerContext(
+    let context;
+
+    if (request.window) {
+      throw new Error(
+        `Extension API request originated from an extension window are not yet supported`
+      );
+    } else if (request.serviceWorkerInfo) {
+      context = ExtensionWorkerChild.getContextForWorker(
         extension,
         request.serviceWorkerInfo
       );
+      if (!context) {
+        throw new Error(
+          `Extension context not found for the extension service worker`
+        );
+      }
+    } else {
+      throw new Error(
+        `Extension API request originated from an unsupported extension global`
+      );
     }
 
-    return null;
+    if (!context.useWebIDLBindings) {
+      const { viewType, contextId } = context;
+      throw new Error(
+        `Extension ${extension.id} context "${viewType}" ${contextId} does not support WebIDL bindings`
+      );
+    }
+
+    return context;
   },
 
   validateAndNormalizeRequestArgs({ context, request }) {

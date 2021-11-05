@@ -38,7 +38,7 @@ Services.prefs.setBoolPref(
 
 function trackEvents(wrapper) {
   let events = new Map();
-  for (let event of ["background-script-event", "start-background-script"]) {
+  for (let event of ["background-page-event", "start-background-page"]) {
     events.set(event, false);
     wrapper.extension.once(event, () => events.set(event, true));
   }
@@ -47,23 +47,23 @@ function trackEvents(wrapper) {
 
 async function testPersistentRequestStartup(extension, events, expect) {
   equal(
-    events.get("background-script-event"),
+    events.get("background-page-event"),
     expect.background,
-    "Should have gotten a background script event"
+    "Should have gotten a background page event"
   );
   equal(
-    events.get("start-background-script"),
+    events.get("start-background-page"),
     false,
-    "Background script should not be started"
+    "Background page should not be started"
   );
 
   Services.obs.notifyObservers(null, "browser-delayed-startup-finished");
   await ExtensionParent.browserPaintedPromise;
 
   equal(
-    events.get("start-background-script"),
+    events.get("start-background-page"),
     expect.delayedStart,
-    "Should have gotten start-background-script event"
+    "Should have gotten start-background-page event"
   );
 
   if (expect.request) {
