@@ -60,12 +60,13 @@ XPCOMUtils.defineLazyGetter(this, "AboutLoginsL10n", () => {
 });
 
 const ABOUT_LOGINS_ORIGIN = "about:logins";
+const AUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 const MASTER_PASSWORD_NOTIFICATION_ID = "master-password-login-required";
 
 // about:logins will always use the privileged content process,
 // even if it is disabled for other consumers such as about:newtab.
 const EXPECTED_ABOUTLOGINS_REMOTE_TYPE = E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
-let _passwordRemaskTimeout;
+let _gPasswordRemaskTimeout = null;
 const convertSubjectToLogin = subject => {
   subject.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
   const login = LoginHelper.loginToVanillaObject(subject);
@@ -158,7 +159,7 @@ class AboutLoginsParent extends JSWindowActorParent {
         ownerGlobal.gSync.openFxAManagePage("password-manager");
         break;
       }
-      case "AboutLogins:Import": {
+      case "AboutLogins:ImportFromBrowser": {
         try {
           MigrationUtils.showMigrationWizard(ownerGlobal, [
             MigrationUtils.MIGRATION_ENTRYPOINT_PASSWORDS,
@@ -226,13 +227,15 @@ class AboutLoginsParent extends JSWindowActorParent {
           telemetryEvent,
         });
         if (isAuthorized) {
-          const AUTH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
           AboutLogins._authExpirationTime = Date.now() + AUTH_TIMEOUT_MS;
           const remaskPasswords = () => {
             this.sendAsyncMessage("AboutLogins:RemaskPassword");
           };
-          clearTimeout(_passwordRemaskTimeout);
-          _passwordRemaskTimeout = setTimeout(remaskPasswords, AUTH_TIMEOUT_MS);
+          clearTimeout(_gPasswordRemaskTimeout);
+          _gPasswordRemaskTimeout = setTimeout(
+            remaskPasswords,
+            AUTH_TIMEOUT_MS
+          );
         }
         break;
       }
@@ -397,7 +400,7 @@ class AboutLoginsParent extends JSWindowActorParent {
         fp.open(fpCallback);
         break;
       }
-      case "AboutLogins:ImportPasswords": {
+      case "AboutLogins:ImportFromFile": {
         let [
           title,
           okButtonLabel,
