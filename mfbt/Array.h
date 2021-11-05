@@ -29,7 +29,7 @@ class Array {
   using ElementType = T;
   static constexpr size_t Length = _Length;
 
-  constexpr Array() = default;
+  Array() = default;
 
   template <typename... Args>
   MOZ_IMPLICIT constexpr Array(Args&&... aArgs)
