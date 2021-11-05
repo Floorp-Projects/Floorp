@@ -736,6 +736,26 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
   }
 }
 
+/**
+ * The parent side of proxied API context for extension background service
+ * worker script.
+ */
+class BackgroundWorkerContextParent extends ProxyContextParent {
+  constructor(envType, extension, params) {
+    // TODO: split out from ProxyContextParent a base class that
+    // doesn't expect a xulBrowser and one for contexts that are
+    // expected to have a xulBrowser associated.
+    super(envType, extension, params, null, extension.principal);
+
+    this.viewType = params.viewType;
+    this.workerDescriptorId = params.workerDescriptorId;
+
+    this.extension.views.add(this);
+
+    extension.emit("extension-proxy-context-load", this);
+  }
+}
+
 ParentAPIManager = {
   proxyContexts: new Map(),
 
@@ -844,7 +864,9 @@ ParentAPIManager = {
         }
       }
 
-      if (envType == "addon_parent") {
+      if (envType == "addon_parent" && data.viewType === "background_worker") {
+        context = new BackgroundWorkerContextParent(envType, extension, data);
+      } else if (envType == "addon_parent") {
         context = new ExtensionPageContextParent(
           envType,
           extension,

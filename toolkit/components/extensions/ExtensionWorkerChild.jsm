@@ -619,6 +619,11 @@ class WorkerContextChild extends BaseContext {
     };
   }
 
+  getCreateProxyContextData() {
+    const { workerDescriptorId } = this;
+    return { workerDescriptorId };
+  }
+
   openConduit(subject, address) {
     let proc = ChromeUtils.domProcessChild;
     let conduit = proc.getActor("ProcessConduits").openConduit(subject, {
@@ -626,6 +631,7 @@ class WorkerContextChild extends BaseContext {
       extensionId: this.extension.id,
       envType: this.envType,
       workerScriptURL: this.uri.spec,
+      workerDescriptorId: this.workerDescriptorId,
       ...address,
     });
     this.callOnClose(conduit);
@@ -639,6 +645,7 @@ class WorkerContextChild extends BaseContext {
     this.childManager.conduit.sendContextLoaded({
       childId: this.childManager.id,
       extensionId: this.extension.id,
+      workerDescriptorId: this.workerDescriptorId,
     });
   }
 
