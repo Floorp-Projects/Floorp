@@ -5,9 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "HTMLFormSubmission.h"
+
 #include "HTMLFormElement.h"
 #include "HTMLFormSubmissionConstants.h"
 #include "nsCOMPtr.h"
+#include "mozilla/dom/Document.h"
 #include "nsComponentManagerUtils.h"
 #include "nsGkAtoms.h"
 #include "nsIFormControl.h"
@@ -29,14 +31,11 @@
 #include "nsCExternalHandlerService.h"
 #include "nsContentUtils.h"
 
-#include "mozilla/dom/Document.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/RandomNum.h"
-
-#include <tuple>
 
 namespace mozilla::dom {
 
@@ -717,7 +716,7 @@ nsresult EncodingFormSubmission::EncodeVal(const nsAString& aStr,
                                            nsCString& aOut,
                                            EncodeType aEncodeType) {
   nsresult rv;
-  std::tie(rv, std::ignore) = mEncoding->Encode(aStr, aOut);
+  Tie(rv, Ignore) = mEncoding->Encode(aStr, aOut);
   if (NS_FAILED(rv)) {
     return rv;
   }
