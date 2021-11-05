@@ -1186,11 +1186,13 @@ template <typename Unit>
 static UniquePtr<CompilationStencil> DelazifyCanonicalScriptedFunctionImpl(
     JSContext* cx, CompilationStencil& context, ScriptIndex scriptIndex) {
   ScriptStencilRef script{context, scriptIndex};
-  const ScriptStencil& data = script.scriptData();
   const ScriptStencilExtra& extra = script.scriptExtra();
 
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
+  const ScriptStencil& data = script.scriptData();
   MOZ_ASSERT(!data.hasSharedData(), "Script is already compiled!");
   MOZ_DIAGNOSTIC_ASSERT(!data.isGhost());
+#endif
 
   AutoIncrementalTimer timer(cx->realm()->timers.delazificationTime);
 
