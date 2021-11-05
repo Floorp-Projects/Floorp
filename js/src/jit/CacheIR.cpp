@@ -2262,27 +2262,34 @@ static bool ClassCanHaveExtraProperties(const JSClass* clasp) {
          clasp->getOpsGetProperty() || IsTypedArrayClass(clasp);
 }
 
-static bool CanAttachDenseElementHole(NativeObject* obj, bool ownProp,
-                                      bool allowIndexedReceiver = false,
-                                      bool allowExtraProperties = false) {
+enum class OwnProperty : bool { No, Yes };
+enum class AllowIndexedReceiver : bool { No, Yes };
+enum class AllowExtraReceiverProperties : bool { No, Yes };
+
+static bool CanAttachDenseElementHole(
+    NativeObject* obj, OwnProperty ownProp,
+    AllowIndexedReceiver allowIndexedReceiver = AllowIndexedReceiver::No,
+    AllowExtraReceiverProperties allowExtraReceiverProperties =
+        AllowExtraReceiverProperties::No) {
   // Make sure the objects on the prototype don't have any indexed properties
   // or that such properties can't appear without a shape change.
   // Otherwise returning undefined for holes would obviously be incorrect,
   // because we would have to lookup a property on the prototype instead.
   do {
     // The first two checks are also relevant to the receiver object.
-    if (!allowIndexedReceiver && obj->isIndexed()) {
+    if (allowIndexedReceiver == AllowIndexedReceiver::No && obj->isIndexed()) {
       return false;
     }
-    allowIndexedReceiver = false;
+    allowIndexedReceiver = AllowIndexedReceiver::No;
 
-    if (!allowExtraProperties && ClassCanHaveExtraProperties(obj->getClass())) {
+    if (allowExtraReceiverProperties == AllowExtraReceiverProperties::No &&
+        ClassCanHaveExtraProperties(obj->getClass())) {
       return false;
     }
-    allowExtraProperties = false;
+    allowExtraReceiverProperties = AllowExtraReceiverProperties::No;
 
     // Don't need to check prototype for OwnProperty checks
-    if (ownProp) {
+    if (ownProp == OwnProperty::Yes) {
       return true;
     }
 
@@ -2361,7 +2368,9 @@ AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectArgHole(
     return AttachDecision::NoAction;
   }
 
-  if (!CanAttachDenseElementHole(args, false, true, true)) {
+  if (!CanAttachDenseElementHole(args, OwnProperty::No,
+                                 AllowIndexedReceiver::Yes,
+                                 AllowExtraReceiverProperties::Yes)) {
     return AttachDecision::NoAction;
   }
 
@@ -2449,7 +2458,7 @@ AttachDecision GetPropIRGenerator::tryAttachDenseElementHole(
   if (nobj->containsDenseElement(index)) {
     return AttachDecision::NoAction;
   }
-  if (!CanAttachDenseElementHole(nobj, false)) {
+  if (!CanAttachDenseElementHole(nobj, OwnProperty::No)) {
     return AttachDecision::NoAction;
   }
 
@@ -3141,6 +3150,7 @@ AttachDecision HasPropIRGenerator::tryAttachDenseHole(HandleObject obj,
                                                       uint32_t index,
                                                       Int32OperandId indexId) {
   bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
+  OwnProperty ownProp = hasOwn ? OwnProperty::Yes : OwnProperty::No;
 
   if (!obj->is<NativeObject>()) {
     return AttachDecision::NoAction;
@@ -3150,7 +3160,7 @@ AttachDecision HasPropIRGenerator::tryAttachDenseHole(HandleObject obj,
   if (nobj->containsDenseElement(index)) {
     return AttachDecision::NoAction;
   }
-  if (!CanAttachDenseElementHole(nobj, hasOwn)) {
+  if (!CanAttachDenseElementHole(nobj, ownProp)) {
     return AttachDecision::NoAction;
   }
 
@@ -3177,6 +3187,7 @@ AttachDecision HasPropIRGenerator::tryAttachSparse(HandleObject obj,
                                                    ObjOperandId objId,
                                                    Int32OperandId indexId) {
   bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
+  OwnProperty ownProp = hasOwn ? OwnProperty::Yes : OwnProperty::No;
 
   if (!obj->is<NativeObject>()) {
     return AttachDecision::NoAction;
@@ -3186,8 +3197,7 @@ AttachDecision HasPropIRGenerator::tryAttachSparse(HandleObject obj,
   if (!nobj->isIndexed()) {
     return AttachDecision::NoAction;
   }
-  if (!CanAttachDenseElementHole(nobj, hasOwn,
-                                 /* allowIndexedReceiver = */ true)) {
+  if (!CanAttachDenseElementHole(nobj, ownProp, AllowIndexedReceiver::Yes)) {
     return AttachDecision::NoAction;
   }
 
