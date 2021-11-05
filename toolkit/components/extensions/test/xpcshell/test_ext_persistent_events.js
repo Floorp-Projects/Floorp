@@ -451,7 +451,7 @@ add_task(async function test_shutdown_before_background_loaded() {
         fireWakeupBeforeBgFail = fire.wakeup();
         fireAsyncBeforeBgFail = fire.async();
 
-        extension.extension.once("background-page-aborted", resolve);
+        extension.extension.once("background-script-aborted", resolve);
         info("Forcing the background load to fail");
         browser.remove();
       };
