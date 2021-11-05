@@ -196,6 +196,15 @@ class RequestWorkerRunnable : public dom::WorkerMainThreadRunnable {
   ExtensionAPIRequestForwarder* mOuterRequest;
 };
 
+class RequestInitWorkerRunnable : public dom::WorkerMainThreadRunnable {
+  Maybe<dom::ClientInfo> mClientInfo;
+
+ public:
+  RequestInitWorkerRunnable(dom::WorkerPrivate* aWorkerPrivate,
+                            Maybe<dom::ClientInfo>& aSWClientInfo);
+  bool MainThreadRun() override;
+};
+
 class NotifyWorkerDestroyedRunnable : public Runnable {
   uint64_t mSWDescriptorId;
   nsCOMPtr<nsIURI> mSWBaseURI;
