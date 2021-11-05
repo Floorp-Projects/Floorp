@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/BitSet.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/Vector.h"
 
@@ -32,9 +31,7 @@ enum SeaBird {
   GULL,
   TERN,
   SKIMMER,
-  AUK,
-
-  SEA_BIRD_COUNT
+  AUK
 };
 
 enum class SmallEnum : uint8_t {
@@ -47,12 +44,8 @@ enum class BigEnum : uint64_t {
   Bar = 35,
 };
 
-template <typename Storage = typename std::make_unsigned<
-              typename std::underlying_type<SeaBird>::type>::type>
 class EnumSetSuite {
  public:
-  using EnumSetSeaBird = EnumSet<SeaBird, Storage>;
-
   EnumSetSuite()
       : mAlcidae(),
         mDiomedeidae(ALBATROSS),
@@ -124,7 +117,7 @@ class EnumSetSuite {
   }
 
   void testCopy() {
-    EnumSetSeaBird likes = mPetrels;
+    EnumSet<SeaBird> likes = mPetrels;
     likes -= TRUE_PETREL;
     MOZ_RELEASE_ASSERT(mPetrels.size() == 4);
     MOZ_RELEASE_ASSERT(mPetrels.contains(TRUE_PETREL));
@@ -136,7 +129,7 @@ class EnumSetSuite {
   }
 
   void testAddTo() {
-    EnumSetSeaBird seen = mPetrels;
+    EnumSet<SeaBird> seen = mPetrels;
     seen += CORMORANT;
     seen += TRUE_PETREL;
     MOZ_RELEASE_ASSERT(mPetrels.size() == 4);
@@ -150,7 +143,7 @@ class EnumSetSuite {
   }
 
   void testAdd() {
-    EnumSetSeaBird seen = mPetrels + CORMORANT + STORM_PETREL;
+    EnumSet<SeaBird> seen = mPetrels + CORMORANT + STORM_PETREL;
     MOZ_RELEASE_ASSERT(mPetrels.size() == 4);
     MOZ_RELEASE_ASSERT(!mPetrels.contains(CORMORANT));
     MOZ_RELEASE_ASSERT(seen.size() == 5);
@@ -162,13 +155,13 @@ class EnumSetSuite {
   }
 
   void testAddAll() {
-    EnumSetSeaBird procellariidae;
+    EnumSet<SeaBird> procellariidae;
     procellariidae += mPetrelProcellariidae;
     procellariidae += mNonPetrelProcellariidae;
     MOZ_RELEASE_ASSERT(procellariidae.size() == 5);
 
     // Both procellariidae and mPetrels include GADFLY_PERTEL and TRUE_PETREL
-    EnumSetSeaBird procellariiformes;
+    EnumSet<SeaBird> procellariiformes;
     procellariiformes += mDiomedeidae;
     procellariiformes += procellariidae;
     procellariiformes += mPetrels;
@@ -176,17 +169,18 @@ class EnumSetSuite {
   }
 
   void testUnion() {
-    EnumSetSeaBird procellariidae =
+    EnumSet<SeaBird> procellariidae =
         mPetrelProcellariidae + mNonPetrelProcellariidae;
     MOZ_RELEASE_ASSERT(procellariidae.size() == 5);
 
     // Both procellariidae and mPetrels include GADFLY_PETREL and TRUE_PETREL
-    EnumSetSeaBird procellariiformes = mDiomedeidae + procellariidae + mPetrels;
+    EnumSet<SeaBird> procellariiformes =
+        mDiomedeidae + procellariidae + mPetrels;
     MOZ_RELEASE_ASSERT(procellariiformes.size() == 8);
   }
 
   void testRemoveFrom() {
-    EnumSetSeaBird likes = mPetrels;
+    EnumSet<SeaBird> likes = mPetrels;
     likes -= TRUE_PETREL;
     likes -= DIVING_PETREL;
     MOZ_RELEASE_ASSERT(likes.size() == 2);
@@ -195,14 +189,14 @@ class EnumSetSuite {
   }
 
   void testRemove() {
-    EnumSetSeaBird likes = mPetrels - TRUE_PETREL - DIVING_PETREL;
+    EnumSet<SeaBird> likes = mPetrels - TRUE_PETREL - DIVING_PETREL;
     MOZ_RELEASE_ASSERT(likes.size() == 2);
     MOZ_RELEASE_ASSERT(likes.contains(GADFLY_PETREL));
     MOZ_RELEASE_ASSERT(likes.contains(STORM_PETREL));
   }
 
   void testRemoveAllFrom() {
-    EnumSetSeaBird likes = mPetrels;
+    EnumSet<SeaBird> likes = mPetrels;
     likes -= mPetrelProcellariidae;
     MOZ_RELEASE_ASSERT(likes.size() == 2);
     MOZ_RELEASE_ASSERT(likes.contains(DIVING_PETREL));
@@ -210,14 +204,14 @@ class EnumSetSuite {
   }
 
   void testRemoveAll() {
-    EnumSetSeaBird likes = mPetrels - mPetrelProcellariidae;
+    EnumSet<SeaBird> likes = mPetrels - mPetrelProcellariidae;
     MOZ_RELEASE_ASSERT(likes.size() == 2);
     MOZ_RELEASE_ASSERT(likes.contains(DIVING_PETREL));
     MOZ_RELEASE_ASSERT(likes.contains(STORM_PETREL));
   }
 
   void testIntersect() {
-    EnumSetSeaBird likes = mPetrels;
+    EnumSet<SeaBird> likes = mPetrels;
     likes &= mPetrelProcellariidae;
     MOZ_RELEASE_ASSERT(likes.size() == 2);
     MOZ_RELEASE_ASSERT(likes.contains(GADFLY_PETREL));
@@ -225,19 +219,19 @@ class EnumSetSuite {
   }
 
   void testInsersection() {
-    EnumSetSeaBird likes = mPetrels & mPetrelProcellariidae;
+    EnumSet<SeaBird> likes = mPetrels & mPetrelProcellariidae;
     MOZ_RELEASE_ASSERT(likes.size() == 2);
     MOZ_RELEASE_ASSERT(likes.contains(GADFLY_PETREL));
     MOZ_RELEASE_ASSERT(likes.contains(TRUE_PETREL));
   }
 
   void testEquality() {
-    EnumSetSeaBird likes = mPetrels & mPetrelProcellariidae;
-    MOZ_RELEASE_ASSERT(likes == EnumSetSeaBird(GADFLY_PETREL, TRUE_PETREL));
+    EnumSet<SeaBird> likes = mPetrels & mPetrelProcellariidae;
+    MOZ_RELEASE_ASSERT(likes == EnumSet<SeaBird>(GADFLY_PETREL, TRUE_PETREL));
   }
 
   void testDuplicates() {
-    EnumSetSeaBird likes = mPetrels;
+    EnumSet<SeaBird> likes = mPetrels;
     likes += GADFLY_PETREL;
     likes += TRUE_PETREL;
     likes += DIVING_PETREL;
@@ -247,7 +241,7 @@ class EnumSetSuite {
   }
 
   void testIteration() {
-    EnumSetSeaBird birds;
+    EnumSet<SeaBird> birds;
     Vector<SeaBird> vec;
 
     for (auto bird : birds) {
@@ -271,11 +265,10 @@ class EnumSetSuite {
   }
 
   void testInitializerListConstuctor() {
-    EnumSetSeaBird empty{};
+    EnumSet<SeaBird> empty{};
     MOZ_RELEASE_ASSERT(empty.size() == 0);
-    MOZ_RELEASE_ASSERT(empty.isEmpty());
 
-    EnumSetSeaBird someBirds{SKIMMER, GULL, BOOBY};
+    EnumSet<SeaBird> someBirds{SKIMMER, GULL, BOOBY};
     MOZ_RELEASE_ASSERT(someBirds.size() == 3);
     MOZ_RELEASE_ASSERT(someBirds.contains(SKIMMER));
     MOZ_RELEASE_ASSERT(someBirds.contains(GULL));
@@ -289,18 +282,15 @@ class EnumSetSuite {
                        (uint64_t(1) << uint64_t(BigEnum::Bar)));
   }
 
-  EnumSetSeaBird mAlcidae;
-  EnumSetSeaBird mDiomedeidae;
-  EnumSetSeaBird mPetrelProcellariidae;
-  EnumSetSeaBird mNonPetrelProcellariidae;
-  EnumSetSeaBird mPetrels;
+  EnumSet<SeaBird> mAlcidae;
+  EnumSet<SeaBird> mDiomedeidae;
+  EnumSet<SeaBird> mPetrelProcellariidae;
+  EnumSet<SeaBird> mNonPetrelProcellariidae;
+  EnumSet<SeaBird> mPetrels;
 };
 
 int main() {
-  EnumSetSuite suite1;
-  suite1.runTests();
-
-  EnumSetSuite<BitSet<SEA_BIRD_COUNT>> suite2;
-  suite2.runTests();
+  EnumSetSuite suite;
+  suite.runTests();
   return 0;
 }
