@@ -126,6 +126,14 @@ void CreateAndDispatchInitWorkerContextRunnable() {
   }
 }
 
+already_AddRefed<Runnable> CreateWorkerLoadedRunnable(
+    const uint64_t aServiceWorkerDescriptorId,
+    const nsCOMPtr<nsIURI>& aWorkerBaseURI) {
+  RefPtr<NotifyWorkerLoadedRunnable> runnable = new NotifyWorkerLoadedRunnable(
+      aServiceWorkerDescriptorId, aWorkerBaseURI);
+  return runnable.forget();
+}
+
 already_AddRefed<Runnable> CreateWorkerDestroyedRunnable(
     const uint64_t aServiceWorkerDescriptorId,
     const nsCOMPtr<nsIURI>& aWorkerBaseURI) {
