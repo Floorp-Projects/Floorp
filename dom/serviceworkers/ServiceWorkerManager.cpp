@@ -2741,6 +2741,41 @@ ServiceWorkerManager::RegisterForAddonPrincipal(nsIPrincipal* aPrincipal,
 }
 
 NS_IMETHODIMP
+ServiceWorkerManager::GetRegistrationForAddonPrincipal(
+    nsIPrincipal* aPrincipal, nsIServiceWorkerRegistrationInfo** aInfo) {
+  MOZ_ASSERT(aPrincipal);
+
+  MOZ_ASSERT(aPrincipal);
+  auto* addonPolicy = BasePrincipal::Cast(aPrincipal)->AddonPolicy();
+  if (!addonPolicy) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCString scope;
+  auto result = addonPolicy->GetURL(u""_ns);
+  if (result.isOk()) {
+    scope.Assign(NS_ConvertUTF16toUTF8(result.unwrap()));
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIURI> scopeURI;
+  nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), scope);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<ServiceWorkerRegistrationInfo> info =
+      GetServiceWorkerRegistrationInfo(aPrincipal, scopeURI);
+  if (!info) {
+    aInfo = nullptr;
+    return NS_OK;
+  }
+  info.forget(aInfo);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 ServiceWorkerManager::GetRegistrationByPrincipal(
     nsIPrincipal* aPrincipal, const nsAString& aScope,
     nsIServiceWorkerRegistrationInfo** aInfo) {
