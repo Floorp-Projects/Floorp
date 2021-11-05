@@ -661,10 +661,6 @@ class ActivePS {
       aFeatures |= ProfilerFeature::MainThreadIO;
     }
 
-    if (aFeatures & ProfilerFeature::CPUAllThreads) {
-      aFeatures |= ProfilerFeature::CPUUtilization;
-    }
-
     return aFeatures;
   }
 
@@ -844,25 +840,11 @@ class ActivePS {
     return n;
   }
 
-  static ThreadProfilingFeatures ProfilingFeaturesForThread(
-      PSLockRef aLock, const ThreadRegistrationInfo& aInfo) {
+  static bool ShouldProfileThread(PSLockRef aLock,
+                                  const ThreadRegistrationInfo& aInfo) {
     MOZ_ASSERT(sInstance);
-    if ((aInfo.IsMainThread() || FeatureThreads(aLock)) &&
-        sInstance->ThreadSelected(aInfo.Name())) {
-      // This thread was selected by the user, record everything.
-      return ThreadProfilingFeatures::Any;
-    }
-    ThreadProfilingFeatures features = ThreadProfilingFeatures::NotProfiled;
-    if (sInstance->FeatureCPUAllThreads(aLock)) {
-      features = Combine(features, ThreadProfilingFeatures::CPUUtilization);
-    }
-    if (sInstance->FeatureSamplingAllThreads(aLock)) {
-      features = Combine(features, ThreadProfilingFeatures::Sampling);
-    }
-    if (sInstance->FeatureMarkersAllThreads(aLock)) {
-      features = Combine(features, ThreadProfilingFeatures::Markers);
-    }
-    return features;
+    return ((aInfo.IsMainThread() || FeatureThreads(aLock)) &&
+            sInstance->ThreadSelected(aInfo.Name()));
   }
 
   [[nodiscard]] static bool AppendPostSamplingCallback(
@@ -3663,27 +3645,11 @@ void SamplerThread::Run() {
               // This thread is not being profiled, continue with the next one.
               continue;
             }
-
-            const ThreadProfilingFeatures whatToProfile =
-                unlockedThreadData.ProfilingFeatures();
-            const bool threadCPUUtilization =
-                cpuUtilization &&
-                DoFeaturesIntersect(whatToProfile,
-                                    ThreadProfilingFeatures::CPUUtilization);
-            const bool threadStackSampling =
-                stackSampling &&
-                DoFeaturesIntersect(whatToProfile,
-                                    ThreadProfilingFeatures::Sampling);
-            if (!threadCPUUtilization && !threadStackSampling) {
-              // Nothing to profile on this thread, continue with the next one.
-              continue;
-            }
-
             const ProfilerThreadId threadId =
                 unlockedThreadData.Info().ThreadId();
 
             const RunningTimes runningTimesDiff = [&]() {
-              if (!threadCPUUtilization) {
+              if (!cpuUtilization) {
                 // If we don't need CPU measurements, we only need a timestamp.
                 return RunningTimes(TimeStamp::Now());
               }
@@ -3706,9 +3672,8 @@ void SamplerThread::Run() {
             //     could result in an unneeded sample.
             // However we're using current running times (instead of copying the
             // old ones) because some work could have happened.
-            if (threadStackSampling &&
-                (unlockedThreadData.CanDuplicateLastSampleDueToSleep() ||
-                 runningTimesDiff.GetThreadCPUDelta() == Some(uint64_t(0)))) {
+            if (unlockedThreadData.CanDuplicateLastSampleDueToSleep() ||
+                runningTimesDiff.GetThreadCPUDelta() == Some(uint64_t(0))) {
               const bool dup_ok = ActivePS::Buffer(lock).DuplicateLastSample(
                   threadId, threadSampleDeltaMs,
                   profiledThreadData->LastSample(), runningTimesDiff);
@@ -3744,7 +3709,7 @@ void SamplerThread::Run() {
                   ProfileBufferEntry::Kind::RunningTimes, runningTimesDiff);
             }
 
-            if (threadStackSampling) {
+            if (stackSampling) {
               ThreadRegistry::OffThreadRef::RWFromAnyThreadWithLock
                   lockedThreadData = offThreadRef.LockedRWFromAnyThread();
               // Suspend the thread and collect its stack data in the local
@@ -4157,36 +4122,33 @@ static ProfilingStack* locked_register_thread(
 
   VTUNE_REGISTER_THREAD(aOffThreadRef.UnlockedConstReaderCRef().Info().Name());
 
-  if (ActivePS::Exists(aLock)) {
-    ThreadProfilingFeatures threadProfilingFeatures =
-        ActivePS::ProfilingFeaturesForThread(
-            aLock, aOffThreadRef.UnlockedConstReaderCRef().Info());
-    if (threadProfilingFeatures != ThreadProfilingFeatures::NotProfiled) {
-      ThreadRegistry::OffThreadRef::RWFromAnyThreadWithLock
-          lockedRWFromAnyThread = aOffThreadRef.LockedRWFromAnyThread();
+  if (ActivePS::Exists(aLock) &&
+      ActivePS::ShouldProfileThread(
+          aLock, aOffThreadRef.UnlockedConstReaderCRef().Info())) {
+    ThreadRegistry::OffThreadRef::RWFromAnyThreadWithLock
+        lockedRWFromAnyThread = aOffThreadRef.LockedRWFromAnyThread();
 
-      nsCOMPtr<nsIEventTarget> eventTarget =
-          lockedRWFromAnyThread->GetEventTarget();
-      ProfiledThreadData* profiledThreadData = ActivePS::AddLiveProfiledThread(
-          aLock,
-          MakeUnique<ProfiledThreadData>(
-              aOffThreadRef.UnlockedConstReaderCRef().Info(), eventTarget));
-      lockedRWFromAnyThread->SetProfilingFeaturesAndData(
-          threadProfilingFeatures, profiledThreadData, aLock);
+    nsCOMPtr<nsIEventTarget> eventTarget =
+        lockedRWFromAnyThread->GetEventTarget();
+    ProfiledThreadData* profiledThreadData = ActivePS::AddLiveProfiledThread(
+        aLock,
+        MakeUnique<ProfiledThreadData>(
+            aOffThreadRef.UnlockedConstReaderCRef().Info(), eventTarget));
+    lockedRWFromAnyThread->SetIsBeingProfiledWithProfiledThreadData(
+        profiledThreadData, aLock);
 
-      if (ActivePS::FeatureJS(aLock)) {
-        lockedRWFromAnyThread->StartJSSampling(ActivePS::JSFlags(aLock));
-        if (ThreadRegistration::LockedRWOnThread* lockedRWOnThread =
-                lockedRWFromAnyThread.GetLockedRWOnThread();
-            lockedRWOnThread) {
-          // We can manually poll the current thread so it starts sampling
-          // immediately.
-          lockedRWOnThread->PollJSSampling();
-        }
-        if (lockedRWFromAnyThread->GetJSContext()) {
-          profiledThreadData->NotifyReceivedJSContext(
-              ActivePS::Buffer(aLock).BufferRangeEnd());
-        }
+    if (ActivePS::FeatureJS(aLock)) {
+      lockedRWFromAnyThread->StartJSSampling(ActivePS::JSFlags(aLock));
+      if (ThreadRegistration::LockedRWOnThread* lockedRWOnThread =
+              lockedRWFromAnyThread.GetLockedRWOnThread();
+          lockedRWOnThread) {
+        // We can manually poll the current thread so it starts sampling
+        // immediately.
+        lockedRWOnThread->PollJSSampling();
+      }
+      if (lockedRWFromAnyThread->GetJSContext()) {
+        profiledThreadData->NotifyReceivedJSContext(
+            ActivePS::Buffer(aLock).BufferRangeEnd());
       }
     }
   }
@@ -4950,16 +4912,14 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
     const ThreadRegistrationInfo& info =
         offThreadRef.UnlockedConstReaderCRef().Info();
 
-    ThreadProfilingFeatures threadProfilingFeatures =
-        ActivePS::ProfilingFeaturesForThread(aLock, info);
-    if (threadProfilingFeatures != ThreadProfilingFeatures::NotProfiled) {
+    if (ActivePS::ShouldProfileThread(aLock, info)) {
       ThreadRegistry::OffThreadRef::RWFromAnyThreadWithLock lockedThreadData =
           offThreadRef.LockedRWFromAnyThread();
       nsCOMPtr<nsIEventTarget> eventTarget = lockedThreadData->GetEventTarget();
       ProfiledThreadData* profiledThreadData = ActivePS::AddLiveProfiledThread(
           aLock, MakeUnique<ProfiledThreadData>(info, eventTarget));
-      lockedThreadData->SetProfilingFeaturesAndData(threadProfilingFeatures,
-                                                    profiledThreadData, aLock);
+      lockedThreadData->SetIsBeingProfiledWithProfiledThreadData(
+          profiledThreadData, aLock);
       if (ActivePS::FeatureJS(aLock)) {
         lockedThreadData->StartJSSampling(ActivePS::JSFlags(aLock));
         if (ThreadRegistration::LockedRWOnThread* lockedRWOnThread =
@@ -5156,15 +5116,14 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
   // Stop sampling live threads.
   ThreadRegistry::LockedRegistry lockedRegistry;
   for (ThreadRegistry::OffThreadRef offThreadRef : lockedRegistry) {
-    if (offThreadRef.UnlockedRWForLockedProfilerRef().ProfilingFeatures() ==
-        ThreadProfilingFeatures::NotProfiled) {
+    if (!offThreadRef.UnlockedRWForLockedProfilerRef().IsBeingProfiled(aLock)) {
       continue;
     }
 
     ThreadRegistry::OffThreadRef::RWFromAnyThreadWithLock lockedThreadData =
         offThreadRef.LockedRWFromAnyThread();
 
-    lockedThreadData->ClearProfilingFeaturesAndData(aLock);
+    lockedThreadData->ClearIsBeingProfiledAndProfiledThreadData(aLock);
 
     if (ActivePS::FeatureJS(aLock)) {
       lockedThreadData->StopJSSampling();
@@ -5489,7 +5448,7 @@ static void locked_unregister_thread(
 
   ProfiledThreadData* profiledThreadData =
       lockedThreadData->GetProfiledThreadData(lock);
-  lockedThreadData->ClearProfilingFeaturesAndData(lock);
+  lockedThreadData->ClearIsBeingProfiledAndProfiledThreadData(lock);
 
   MOZ_RELEASE_ASSERT(
       lockedThreadData->Info().ThreadId() == profiler_current_thread_id(),

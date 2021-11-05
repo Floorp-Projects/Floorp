@@ -120,16 +120,6 @@ inline mozilla::ProfileBufferBlockIndex AddMarkerToBuffer(
 }
 #endif
 
-[[nodiscard]] inline bool profiler_thread_is_being_profiled_for_markers() {
-  return profiler_thread_is_being_profiled(ThreadProfilingFeatures::Markers);
-}
-
-[[nodiscard]] inline bool profiler_thread_is_being_profiled_for_markers(
-    const ProfilerThreadId& aThreadId) {
-  return profiler_thread_is_being_profiled(aThreadId,
-                                           ThreadProfilingFeatures::Markers);
-}
-
 // Add a marker to the Gecko Profiler buffer.
 // - aName: Main name of this marker.
 // - aCategory: Category for this marker.
@@ -146,8 +136,7 @@ mozilla::ProfileBufferBlockIndex profiler_add_marker(
 #ifndef MOZ_GECKO_PROFILER
   return {};
 #else
-  if (!profiler_thread_is_being_profiled_for_markers(
-          aOptions.ThreadId().ThreadId())) {
+  if (!profiler_thread_is_being_profiled(aOptions.ThreadId().ThreadId())) {
     return {};
   }
   return ::AddMarkerToBuffer(profiler_markers_detail::CachedCoreBuffer(), aName,
