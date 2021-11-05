@@ -110,7 +110,7 @@ class Handler : public IMarshal {
 
   IUnknown* GetProxy() const { return mInnerUnk; }
 
-  static HRESULT Register(REFCLSID aClsid);
+  static HRESULT Register(REFCLSID aClsid, const bool aMsixContainer = false);
   static HRESULT Unregister(REFCLSID aClsid);
 
  protected:
