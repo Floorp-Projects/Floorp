@@ -84,7 +84,7 @@
     },
 
     "AutoLaunchProtocolsFromOrigins": {
-      "type": ["JSON", "array"],
+      "type": "array",
       "items": {
         "type": "object",
         "properties": {
@@ -457,7 +457,7 @@
     },
 
     "ExtensionSettings": {
-      "type": ["JSON", "object"],
+      "type": "object",
       "properties": {
         "*": {
           "type": "object",
@@ -577,7 +577,7 @@
     },
 
     "Handlers": {
-      "type": ["JSON", "object"],
+      "type": "object",
       "patternProperties": {
         "^(mimeTypes|extensions|schemes)$": {
           "type": "object",
@@ -719,7 +719,7 @@
         },
         "type": "object"
       },
-      "type": ["JSON", "array"]
+      "type": "array"
     },
 
     "ManualAppUpdateOnly": {
@@ -984,7 +984,7 @@
     },
 
     "Preferences": {
-      "type": ["JSON", "object"],
+      "type": "object",
       "patternProperties": {
         "^.*$": {
           "type": ["number", "boolean", "string", "object"],
