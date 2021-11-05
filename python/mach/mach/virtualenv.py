@@ -416,13 +416,20 @@ class VirtualenvManager(VirtualenvHelper):
         # because it's needed by the "virtualenv" package.
         from distutils import dist
 
+        normalized_venv_root = os.path.normpath(self.virtualenv_root)
+
         distribution = dist.Distribution({"script_args": "--no-user-cfg"})
         installer = distribution.get_command_obj("install")
-        installer.prefix = os.path.normpath(self.virtualenv_root)
+        installer.prefix = normalized_venv_root
         installer.finalize_options()
 
         # Path to virtualenv's "site-packages" directory
-        return installer.install_purelib
+        path = installer.install_purelib
+        local_folder = os.path.join(normalized_venv_root, "local")
+        # Hack around https://github.com/pypa/virtualenv/issues/2208
+        if path.startswith(local_folder):
+            path = os.path.join(normalized_venv_root, path[len(local_folder) + 1 :])
+        return path
 
 
 def get_archflags():
