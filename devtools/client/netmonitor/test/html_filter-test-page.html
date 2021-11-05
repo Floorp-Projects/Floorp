@@ -39,6 +39,7 @@
         await get("sjs_content-type-test-server.sjs?fmt=html&res=" + options.htmlContent);
         await get("sjs_content-type-test-server.sjs?fmt=css");
         await get("sjs_content-type-test-server.sjs?fmt=js");
+        await get("sjs_content-type-test-server.sjs?fmt=xhtml");
         if (!options.getMedia) {
           return;
         }
