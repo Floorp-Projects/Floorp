@@ -33,7 +33,7 @@ var PROXY_TYPES_MAP = new Map([
   ["autoConfig", Ci.nsIProtocolProxyService.PROXYCONFIG_PAC],
 ]);
 
-var EXPORTED_SYMBOLS = ["ProxyPolicies"];
+var EXPORTED_SYMBOLS = ["ProxyPolicies", "PROXY_TYPES_MAP"];
 
 var ProxyPolicies = {
   configureProxySettings(param, setPref) {

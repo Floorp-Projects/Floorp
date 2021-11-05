@@ -49,7 +49,7 @@ var png1A = {
     },
   ],
   expected:
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEUlEQVQImWP4z8AAQTAamQkAhpcI+DeMzFcAAAAASUVORK5CYII=",
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAFElEQVQIW2P8zwAFjAwwJiMDjAkANiQDAUpvlioAAAAASUVORK5CYII=",
 };
 
 var png1B = {
@@ -98,7 +98,7 @@ var png1B = {
     },
   ],
   expected:
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEUlEQVQImWP4z8AAQTAamQkAhpcI+DeMzFcAAAAASUVORK5CYII=",
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAFElEQVQIW2P8zwAFjAwwJiMDjAkANiQDAUpvlioAAAAASUVORK5CYII=",
 };
 
 var png2A = {
@@ -155,7 +155,7 @@ var png2A = {
     },
   ],
   expected:
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAIElEQVQImWP4z8DwH4hXAXEokAmGq4AYyAFL/F8FxKEAJw4O8vJXhZoAAAAASUVORK5CYII=",
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAGUlEQVQIW2P8z8AARAyrQZgRyETiMPyHcwDKCwoAGxxLEQAAAABJRU5ErkJggg==",
 };
 
 var png2B = {
@@ -213,7 +213,7 @@ var png2B = {
     },
   ],
   expected:
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAEUlEQVQImWP4z8AAQTAamQkAhpcI+DeMzFcAAAAASUVORK5CYII=",
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAIAAADZSiLoAAAAFElEQVQIW2P8zwAFjAwwJiMDjAkANiQDAUpvlioAAAAASUVORK5CYII=",
 };
 
 // Main test entry point.
