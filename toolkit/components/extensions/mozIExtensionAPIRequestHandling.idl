@@ -159,4 +159,13 @@ interface mozIExtensionAPIRequestHandler : nsISupports
   void handleAPIRequest(in nsISupports extension,
                         in mozIExtensionAPIRequest apiRequest,
                         [optional, retval] out mozIExtensionAPIRequestResult apiRequestResult);
+
+  /**
+   * A method called when an extension background service worker is destroyed.
+   *
+   * @param extension An instance of the WebExtensionPolicy webidl interface.
+   * @param serviceWorkerDescriptorId
+   */
+   void onExtensionWorkerDestroyed(in nsISupports extension,
+                                   in unsigned long long serviceWorkerDescriptorId);
 };
