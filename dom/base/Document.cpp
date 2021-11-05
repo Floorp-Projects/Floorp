@@ -4901,6 +4901,55 @@ Document::InternalCommandData Document::ConvertToInternalCommand(
   if (!sInternalCommandDataHashtable->Get(aHTMLCommandName, &commandData)) {
     return InternalCommandData();
   }
+  // Ignore if the command is disabled by a corresponding pref due to Gecko
+  // specific.
+  switch (commandData.mCommand) {
+    case Command::FormatIncreaseFontSize:
+      MOZ_DIAGNOSTIC_ASSERT(
+          aHTMLCommandName.LowerCaseEqualsLiteral("increasefontsize"));
+      if (!StaticPrefs::dom_document_edit_command_increasefontsize_enabled()) {
+        return InternalCommandData();
+      }
+      break;
+    case Command::FormatDecreaseFontSize:
+      MOZ_DIAGNOSTIC_ASSERT(
+          aHTMLCommandName.LowerCaseEqualsLiteral("decreasefontsize"));
+      if (!StaticPrefs::dom_document_edit_command_decreasefontsize_enabled()) {
+        return InternalCommandData();
+      }
+      break;
+    case Command::GetHTML:
+      MOZ_DIAGNOSTIC_ASSERT(aHTMLCommandName.LowerCaseEqualsLiteral("gethtml"));
+      if (!StaticPrefs::dom_document_edit_command_gethtml_enabled()) {
+        return InternalCommandData();
+      }
+      break;
+    case Command::FormatBlock:
+      if (!StaticPrefs::dom_document_edit_command_heading_enabled() &&
+          aHTMLCommandName.LowerCaseEqualsLiteral("heading")) {
+        return InternalCommandData();
+      }
+      break;
+    case Command::SetDocumentReadOnly:
+      if (!StaticPrefs::dom_document_edit_command_contentReadOnly_enabled() &&
+          aHTMLCommandName.LowerCaseEqualsLiteral("contentreadonly")) {
+        return InternalCommandData();
+      }
+      if (!StaticPrefs::dom_document_edit_command_readonly_enabled() &&
+          aHTMLCommandName.LowerCaseEqualsLiteral("readonly")) {
+        return InternalCommandData();
+      }
+      break;
+    case Command::SetDocumentInsertBROnEnterKeyPress:
+      MOZ_DIAGNOSTIC_ASSERT(
+          aHTMLCommandName.LowerCaseEqualsLiteral("insertbronreturn"));
+      if (!StaticPrefs::dom_document_edit_command_insertBrOnReturn_enabled()) {
+        return InternalCommandData();
+      }
+      break;
+    default:
+      break;
+  }
   if (!aAdjustedValue) {
     // No further work to do
     return commandData;
