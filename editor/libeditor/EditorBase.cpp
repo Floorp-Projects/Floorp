@@ -6539,27 +6539,8 @@ void EditorBase::TopLevelEditSubActionData::DidSplitContent(
                        "failed, but ignored");
 }
 
-void EditorBase::TopLevelEditSubActionData::WillJoinContents(
-    EditorBase& aEditorBase, nsIContent& aLeftContent,
-    nsIContent& aRightContent) {
-  MOZ_ASSERT(aEditorBase.AsHTMLEditor());
-
-  if (!aEditorBase.mInitSucceeded || aEditorBase.Destroyed()) {
-    return;  // We have not been initialized yet or already been destroyed.
-  }
-
-  if (!aEditorBase.EditSubActionDataRef().mAdjustChangedRangeFromListener) {
-    return;  // Temporarily disabled by edit sub-action handler.
-  }
-
-  // remember split point
-  aEditorBase.EditSubActionDataRef().mJoinedLeftNodeLength =
-      aLeftContent.Length();
-}
-
 void EditorBase::TopLevelEditSubActionData::DidJoinContents(
-    EditorBase& aEditorBase, nsIContent& aLeftContent,
-    nsIContent& aRightContent) {
+    EditorBase& aEditorBase, const EditorRawDOMPoint& aJoinedPoint) {
   MOZ_ASSERT(aEditorBase.AsHTMLEditor());
 
   if (!aEditorBase.mInitSucceeded || aEditorBase.Destroyed()) {
@@ -6570,11 +6551,8 @@ void EditorBase::TopLevelEditSubActionData::DidJoinContents(
     return;  // Temporarily disabled by edit sub-action handler.
   }
 
-  DebugOnly<nsresult> rvIgnored = AddPointToChangedRange(
-      *aEditorBase.AsHTMLEditor(),
-      EditorRawDOMPoint(
-          &aRightContent,
-          aEditorBase.EditSubActionDataRef().mJoinedLeftNodeLength));
+  DebugOnly<nsresult> rvIgnored =
+      AddPointToChangedRange(*aEditorBase.AsHTMLEditor(), aJoinedPoint);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "TopLevelEditSubActionData::AddPointToChangedRange() "
                        "failed, but ignored");
