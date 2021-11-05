@@ -153,6 +153,7 @@ async function doInit(aMode) {
       ["network.predictor.enabled", false],
       ["network.predictor.enable-prefetch", false],
       ["privacy.partition.network_state", false],
+      ["dom.security.https_first", false],
     ],
   });
   clearAllImageCaches();

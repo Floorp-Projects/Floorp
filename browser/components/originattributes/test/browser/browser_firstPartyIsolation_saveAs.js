@@ -36,7 +36,10 @@ add_task(async function setup() {
   info("Setting the prefs.");
 
   await SpecialPowers.pushPrefEnv({
-    set: [["privacy.firstparty.isolate", true]],
+    set: [
+      ["privacy.firstparty.isolate", true],
+      ["dom.security.https_first", false],
+    ],
   });
 
   info("Setting MockFilePicker.");
