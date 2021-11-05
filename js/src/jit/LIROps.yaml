@@ -414,6 +414,14 @@
     index: WordSized
   num_temps: 1
 
+# Load an element from an arguments object. Handles out-of-bounds accesses.
+- name: LoadArgumentsObjectArgHole
+  result_type: BoxedValue
+  operands:
+    argsObject: WordSized
+    index: WordSized
+  num_temps: 1
+
 # Return |arguments.length| unless it has been overridden.
 - name: ArgumentsObjectLength
   result_type: WordSized
