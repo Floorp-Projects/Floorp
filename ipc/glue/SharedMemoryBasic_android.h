@@ -7,8 +7,9 @@
 #ifndef mozilla_ipc_SharedMemoryBasic_android_h
 #define mozilla_ipc_SharedMemoryBasic_android_h
 
+#include "base/file_descriptor_posix.h"
+
 #include "mozilla/ipc/SharedMemory.h"
-#include "mozilla/UniquePtrExtensions.h"
 
 #ifdef FUZZING
 #  include "mozilla/ipc/SharedMemoryFuzzer.h"
@@ -23,11 +24,11 @@ namespace mozilla {
 namespace ipc {
 
 class SharedMemoryBasic final
-    : public SharedMemoryCommon<mozilla::UniqueFileHandle> {
+    : public SharedMemoryCommon<base::FileDescriptor> {
  public:
   SharedMemoryBasic();
 
-  virtual bool SetHandle(Handle aHandle, OpenRights aRights) override;
+  virtual bool SetHandle(const Handle& aHandle, OpenRights aRights) override;
 
   virtual bool Create(size_t aNbytes) override;
 
@@ -52,7 +53,7 @@ class SharedMemoryBasic final
   static void* FindFreeAddressSpace(size_t aSize);
 
   virtual bool IsHandleValid(const Handle& aHandle) const override {
-    return aHandle != nullptr;
+    return aHandle.fd >= 0;
   }
 
   virtual bool ShareToProcess(base::ProcessId aProcessId,

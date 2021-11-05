@@ -149,13 +149,12 @@ class SharedImage {
                               0 /*offset*/);
   }
 
-  HANDLE CreateRemoteFileMapping(HANDLE aTargetProcess) {
-    MOZ_ASSERT(aTargetProcess);
+  HANDLE CreateRemoteFileMapping(DWORD aTargetProcessId) {
+    MOZ_ASSERT(aTargetProcessId);
 
     HANDLE fileMapping = nullptr;
-    if (!::DuplicateHandle(GetCurrentProcess(), mFileMapping, aTargetProcess,
-                           &fileMapping, 0 /*desiredAccess*/,
-                           FALSE /*inheritHandle*/, DUPLICATE_SAME_ACCESS)) {
+    if (!ipc::DuplicateHandle(mFileMapping, aTargetProcessId, &fileMapping,
+                              0 /*desiredAccess*/, DUPLICATE_SAME_ACCESS)) {
       return nullptr;
     }
     return fileMapping;
@@ -315,8 +314,8 @@ class PresentableSharedImage {
     return result;
   }
 
-  HANDLE CreateRemoteFileMapping(HANDLE aTargetProcess) {
-    return mSharedImage.CreateRemoteFileMapping(aTargetProcess);
+  HANDLE CreateRemoteFileMapping(DWORD aTargetProcessId) {
+    return mSharedImage.CreateRemoteFileMapping(aTargetProcessId);
   }
 
   already_AddRefed<gfx::DrawTarget> CreateDrawTarget() {
@@ -345,7 +344,7 @@ class PresentableSharedImage {
 
 Provider::Provider()
     : mWindowHandle(nullptr),
-      mTargetProcess(nullptr),
+      mTargetProcessId(0),
       mFileMapping(nullptr),
       mRequestReadyEvent(nullptr),
       mResponseReadyEvent(nullptr),
@@ -378,10 +377,6 @@ Provider::~Provider() {
   if (mFileMapping) {
     MOZ_ALWAYS_TRUE(::CloseHandle(mFileMapping));
   }
-
-  if (mTargetProcess) {
-    MOZ_ALWAYS_TRUE(::CloseHandle(mTargetProcess));
-  }
 }
 
 bool Provider::Initialize(HWND aWindowHandle, DWORD aTargetProcessId,
@@ -390,12 +385,7 @@ bool Provider::Initialize(HWND aWindowHandle, DWORD aTargetProcessId,
   MOZ_ASSERT(aTargetProcessId);
 
   mWindowHandle = aWindowHandle;
-
-  mTargetProcess = ::OpenProcess(PROCESS_DUP_HANDLE, FALSE /*inheritHandle*/,
-                                 aTargetProcessId);
-  if (!mTargetProcess) {
-    return false;
-  }
+  mTargetProcessId = aTargetProcessId;
 
   mFileMapping = ::CreateFileMappingW(
       INVALID_HANDLE_VALUE, nullptr /*secattr*/, PAGE_READWRITE, 0 /*sizeHigh*/,
@@ -447,10 +437,30 @@ bool Provider::Initialize(HWND aWindowHandle, DWORD aTargetProcessId,
 }
 
 Maybe<RemoteBackbufferHandles> Provider::CreateRemoteHandles() {
-  return Some(
-      RemoteBackbufferHandles(ipc::FileDescriptor(mFileMapping),
-                              ipc::FileDescriptor(mRequestReadyEvent),
-                              ipc::FileDescriptor(mResponseReadyEvent)));
+  HANDLE fileMapping = nullptr;
+  if (!ipc::DuplicateHandle(mFileMapping, mTargetProcessId, &fileMapping,
+                            0 /*desiredAccess*/, DUPLICATE_SAME_ACCESS)) {
+    return Nothing();
+  }
+
+  HANDLE requestReadyEvent = nullptr;
+  if (!ipc::DuplicateHandle(mRequestReadyEvent, mTargetProcessId,
+                            &requestReadyEvent, 0 /*desiredAccess*/,
+                            DUPLICATE_SAME_ACCESS)) {
+    return Nothing();
+  }
+
+  HANDLE responseReadyEvent = nullptr;
+  if (!ipc::DuplicateHandle(mResponseReadyEvent, mTargetProcessId,
+                            &responseReadyEvent, 0 /*desiredAccess*/,
+                            DUPLICATE_SAME_ACCESS)) {
+    return Nothing();
+  }
+
+  return Some(RemoteBackbufferHandles(
+      reinterpret_cast<WindowsHandle>(fileMapping),
+      reinterpret_cast<WindowsHandle>(requestReadyEvent),
+      reinterpret_cast<WindowsHandle>(responseReadyEvent)));
 }
 
 void Provider::UpdateTransparencyMode(nsTransparencyMode aTransparencyMode) {
@@ -542,7 +552,7 @@ void Provider::HandleBorrowRequest(BorrowResponseData* aResponseData,
   }
 
   HANDLE remoteFileMapping =
-      newBackbuffer->CreateRemoteFileMapping(mTargetProcess);
+      newBackbuffer->CreateRemoteFileMapping(mTargetProcessId);
   if (!remoteFileMapping) {
     return;
   }
@@ -604,22 +614,15 @@ Client::~Client() {
 }
 
 bool Client::Initialize(const RemoteBackbufferHandles& aRemoteHandles) {
-  MOZ_ASSERT(aRemoteHandles.fileMapping().IsValid());
-  MOZ_ASSERT(aRemoteHandles.requestReadyEvent().IsValid());
-  MOZ_ASSERT(aRemoteHandles.responseReadyEvent().IsValid());
+  MOZ_ASSERT(aRemoteHandles.fileMapping());
+  MOZ_ASSERT(aRemoteHandles.requestReadyEvent());
+  MOZ_ASSERT(aRemoteHandles.responseReadyEvent());
 
-  // FIXME: Due to PCompositorWidget using virtual Recv methods,
-  // RemoteBackbufferHandles is passed by const reference, and cannot have its
-  // signature customized, meaning that we need to clone the handles here.
-  //
-  // Once PCompositorWidget is migrated to use direct call semantics, the
-  // signature can be changed to accept RemoteBackbufferHandles by rvalue
-  // reference or value, and the DuplicateHandle calls here can be avoided.
-  mFileMapping = aRemoteHandles.fileMapping().ClonePlatformHandle().release();
+  mFileMapping = reinterpret_cast<HANDLE>(aRemoteHandles.fileMapping());
   mRequestReadyEvent =
-      aRemoteHandles.requestReadyEvent().ClonePlatformHandle().release();
+      reinterpret_cast<HANDLE>(aRemoteHandles.requestReadyEvent());
   mResponseReadyEvent =
-      aRemoteHandles.responseReadyEvent().ClonePlatformHandle().release();
+      reinterpret_cast<HANDLE>(aRemoteHandles.responseReadyEvent());
 
   void* mappedFilePtr =
       ::MapViewOfFile(mFileMapping, FILE_MAP_ALL_ACCESS, 0 /*offsetHigh*/,

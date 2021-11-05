@@ -47,7 +47,8 @@ class SourceSurfaceSharedDataWrapper final : public DataSourceSurface {
         mCreatorRef(true) {}
 
   void Init(const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat,
-            SharedMemoryBasic::Handle aHandle, base::ProcessId aCreatorPid);
+            const SharedMemoryBasic::Handle& aHandle,
+            base::ProcessId aCreatorPid);
 
   void Init(SourceSurfaceSharedData* aSurface);
 
