@@ -1499,7 +1499,7 @@ void PerformanceCounterState::MaybeReportAccumulatedTime(TimeStamp aNow) {
     }
     mLastLongTaskEnd = aNow;
 
-    if (profiler_thread_is_being_profiled_for_markers()) {
+    if (profiler_thread_is_being_profiled()) {
       struct LongTaskMarker {
         static constexpr Span<const char> MarkerTypeName() {
           return MakeStringSpan("MainThreadLongTask");

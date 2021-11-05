@@ -1750,9 +1750,7 @@ void gfxFontFamily::FindFontForChar(GlobalFontMatch* aMatchData) {
   }
 
   nsCString charAndName;
-  if (profiler_thread_is_being_profiled(
-          Combine(ThreadProfilingFeatures::Sampling,
-                  ThreadProfilingFeatures::Markers))) {
+  if (profiler_thread_is_being_profiled()) {
     charAndName = nsPrintfCString("\\u%x %s", aMatchData->mCh, mName.get());
   }
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("gfxFontFamily::FindFontForChar",

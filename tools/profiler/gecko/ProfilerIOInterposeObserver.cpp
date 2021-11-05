@@ -75,9 +75,8 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
   }
   uint32_t features = *maybeFeatures;
 
-  if (!profiler_thread_is_being_profiled_for_markers(
-          profiler_main_thread_id()) &&
-      !profiler_thread_is_being_profiled_for_markers()) {
+  if (!profiler_thread_is_being_profiled(profiler_main_thread_id()) &&
+      !profiler_thread_is_being_profiled()) {
     return;
   }
 
@@ -87,7 +86,7 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
     // This is the main thread.
     // Capture a marker if any "IO" feature is on.
     // If it's not being profiled, we have nowhere to store FileIO markers.
-    if (!profiler_thread_is_being_profiled_for_markers() ||
+    if (!profiler_thread_is_being_profiled() ||
         !(features & ProfilerFeature::MainThreadIO)) {
       return;
     }
@@ -114,7 +113,7 @@ void ProfilerIOInterposeObserver::Observe(Observation& aObservation) {
         // from another thread.
         MarkerThreadId{});
 
-  } else if (profiler_thread_is_being_profiled_for_markers()) {
+  } else if (profiler_thread_is_being_profiled()) {
     // This is a non-main thread that is being profiled.
     if (!(features & ProfilerFeature::FileIO)) {
       return;
