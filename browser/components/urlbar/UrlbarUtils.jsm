@@ -1314,8 +1314,14 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       qsSuggestion: {
         type: "string",
       },
+      requestId: {
+        type: "string",
+      },
       sendAttributionRequest: {
         type: "boolean",
+      },
+      source: {
+        type: "string",
       },
       sponsoredAdvertiser: {
         type: "string",

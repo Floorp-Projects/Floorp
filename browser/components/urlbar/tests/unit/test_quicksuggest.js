@@ -75,6 +75,7 @@ const EXPECTED_SPONSORED_RESULT = {
     helpUrl: UrlbarProviderQuickSuggest.helpUrl,
     helpL10nId: "firefox-suggest-urlbar-learn-more",
     displayUrl: "http://test.com/q=frabbits",
+    source: "remote-settings",
   },
 };
 
@@ -95,6 +96,7 @@ const EXPECTED_NONSPONSORED_RESULT = {
     helpUrl: UrlbarProviderQuickSuggest.helpUrl,
     helpL10nId: "firefox-suggest-urlbar-learn-more",
     displayUrl: "http://test.com/?q=nonsponsored",
+    source: "remote-settings",
   },
 };
 
@@ -115,6 +117,7 @@ const EXPECTED_HTTP_RESULT = {
     helpUrl: UrlbarProviderQuickSuggest.helpUrl,
     helpL10nId: "firefox-suggest-urlbar-learn-more",
     displayUrl: "http://" + PREFIX_SUGGESTIONS_STRIPPED_URL,
+    source: "remote-settings",
   },
 };
 
@@ -135,6 +138,7 @@ const EXPECTED_HTTPS_RESULT = {
     helpUrl: UrlbarProviderQuickSuggest.helpUrl,
     helpL10nId: "firefox-suggest-urlbar-learn-more",
     displayUrl: PREFIX_SUGGESTIONS_STRIPPED_URL,
+    source: "remote-settings",
   },
 };
 

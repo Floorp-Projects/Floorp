@@ -58,6 +58,7 @@ add_task(async function oneEnabled_merino() {
 
   setMerinoResponse({
     body: {
+      request_id: "merinoOnly request_id",
       suggestions: [
         {
           full_keyword: "merinoOnly full_keyword",
@@ -101,6 +102,8 @@ add_task(async function oneEnabled_merino() {
           helpUrl: UrlbarProviderQuickSuggest.helpUrl,
           helpL10nId: "firefox-suggest-urlbar-learn-more",
           displayUrl: "merinoOnly url",
+          requestId: "merinoOnly request_id",
+          source: "merino",
         },
       },
     ],
@@ -116,6 +119,7 @@ add_task(async function oneEnabled_remoteSettings() {
   // we don't fetch it.
   setMerinoResponse({
     body: {
+      request_id: "merinoOnly request_id",
       suggestions: [
         {
           full_keyword: "remoteSettingsOnly full_keyword",
@@ -157,6 +161,7 @@ add_task(async function oneEnabled_remoteSettings() {
           helpUrl: UrlbarProviderQuickSuggest.helpUrl,
           helpL10nId: "firefox-suggest-urlbar-learn-more",
           displayUrl: "http://test.com/q=frabbits",
+          source: "remote-settings",
         },
       },
     ],
@@ -171,6 +176,7 @@ add_task(async function higherScore_merino() {
 
   setMerinoResponse({
     body: {
+      request_id: "merinoOnly request_id",
       suggestions: [
         {
           full_keyword: "higherScore full_keyword",
@@ -212,6 +218,8 @@ add_task(async function higherScore_merino() {
           helpUrl: UrlbarProviderQuickSuggest.helpUrl,
           helpL10nId: "firefox-suggest-urlbar-learn-more",
           displayUrl: "higherScore url",
+          requestId: "merinoOnly request_id",
+          source: "merino",
         },
       },
     ],
@@ -226,6 +234,7 @@ add_task(async function higherScore_remoteSettings() {
 
   setMerinoResponse({
     body: {
+      request_id: "merinoOnly request_id",
       suggestions: [
         {
           full_keyword: "higherScore full_keyword",
@@ -267,6 +276,7 @@ add_task(async function higherScore_remoteSettings() {
           helpUrl: UrlbarProviderQuickSuggest.helpUrl,
           helpL10nId: "firefox-suggest-urlbar-learn-more",
           displayUrl: "http://test.com/q=frabbits",
+          source: "remote-settings",
         },
       },
     ],
@@ -281,6 +291,7 @@ add_task(async function sameScore() {
 
   setMerinoResponse({
     body: {
+      request_id: "merinoOnly request_id",
       suggestions: [
         {
           full_keyword: "sameScore full_keyword",
@@ -322,6 +333,7 @@ add_task(async function sameScore() {
           helpUrl: UrlbarProviderQuickSuggest.helpUrl,
           helpL10nId: "firefox-suggest-urlbar-learn-more",
           displayUrl: "http://test.com/q=frabbits",
+          source: "remote-settings",
         },
       },
     ],
@@ -336,6 +348,7 @@ add_task(async function noMerinoScore() {
 
   setMerinoResponse({
     body: {
+      request_id: "merinoOnly request_id",
       suggestions: [
         {
           full_keyword: "noMerinoScore full_keyword",
@@ -377,6 +390,7 @@ add_task(async function noMerinoScore() {
           helpUrl: UrlbarProviderQuickSuggest.helpUrl,
           helpL10nId: "firefox-suggest-urlbar-learn-more",
           displayUrl: "http://test.com/q=frabbits",
+          source: "remote-settings",
         },
       },
     ],
@@ -391,6 +405,7 @@ add_task(async function noSuggestion_remoteSettings() {
 
   setMerinoResponse({
     body: {
+      request_id: "merinoOnly request_id",
       suggestions: [
         {
           full_keyword: "noSuggestion full_keyword",
@@ -432,6 +447,8 @@ add_task(async function noSuggestion_remoteSettings() {
           helpUrl: UrlbarProviderQuickSuggest.helpUrl,
           helpL10nId: "firefox-suggest-urlbar-learn-more",
           displayUrl: "noSuggestion url",
+          requestId: "merinoOnly request_id",
+          source: "merino",
         },
       },
     ],
@@ -446,6 +463,7 @@ add_task(async function noSuggestion_merino() {
 
   setMerinoResponse({
     body: {
+      request_id: "merinoOnly request_id",
       suggestions: [],
     },
   });
@@ -474,6 +492,7 @@ add_task(async function noSuggestion_merino() {
           helpUrl: UrlbarProviderQuickSuggest.helpUrl,
           helpL10nId: "firefox-suggest-urlbar-learn-more",
           displayUrl: "http://test.com/q=frabbits",
+          source: "remote-settings",
         },
       },
     ],
@@ -489,6 +508,7 @@ add_task(async function bothDisabled() {
   // we don't fetch it.
   setMerinoResponse({
     body: {
+      request_id: "merinoOnly request_id",
       suggestions: [
         {
           full_keyword: "bothDisabled full_keyword",
@@ -521,6 +541,7 @@ add_task(async function multipleMerinoSuggestions() {
 
   setMerinoResponse({
     body: {
+      request_id: "merinoOnly request_id",
       suggestions: [
         {
           full_keyword: "multipleMerinoSuggestions 0 full_keyword",
@@ -586,6 +607,8 @@ add_task(async function multipleMerinoSuggestions() {
           helpUrl: UrlbarProviderQuickSuggest.helpUrl,
           helpL10nId: "firefox-suggest-urlbar-learn-more",
           displayUrl: "multipleMerinoSuggestions 1 url",
+          requestId: "merinoOnly request_id",
+          source: "merino",
         },
       },
     ],
@@ -602,6 +625,7 @@ add_task(async function unexpectedResponseProperties() {
       unexpectedString: "some value",
       unexpectedArray: ["a", "b", "c"],
       unexpectedObject: { foo: "bar" },
+      request_id: "merinoOnly request_id",
       suggestions: [
         {
           full_keyword: "unexpected full_keyword",
@@ -643,6 +667,8 @@ add_task(async function unexpectedResponseProperties() {
           helpUrl: UrlbarProviderQuickSuggest.helpUrl,
           helpL10nId: "firefox-suggest-urlbar-learn-more",
           displayUrl: "unexpected url",
+          requestId: "merinoOnly request_id",
+          source: "merino",
         },
       },
     ],
@@ -708,6 +734,7 @@ add_task(async function latencyTelemetry() {
 
   setMerinoResponse({
     body: {
+      request_id: "merinoOnly request_id",
       suggestions: [
         {
           full_keyword: "latencyTelemetry full_keyword",
@@ -756,6 +783,8 @@ add_task(async function latencyTelemetry() {
           helpUrl: UrlbarProviderQuickSuggest.helpUrl,
           helpL10nId: "firefox-suggest-urlbar-learn-more",
           displayUrl: "latencyTelemetry url",
+          requestId: "merinoOnly request_id",
+          source: "merino",
         },
       },
     ],
@@ -787,6 +816,7 @@ add_task(async function latencyTelemetryCancel() {
   setMerinoResponse({
     delay: 3000,
     body: {
+      request_id: "merinoOnly request_id",
       suggestions: [
         {
           full_keyword: "latencyTelemetryCancel full_keyword",

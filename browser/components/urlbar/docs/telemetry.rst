@@ -434,9 +434,9 @@ QuickSuggest Impression
   - ``context_id``
     A UUID representing this user. Note that it's not client_id, nor can it be used to link to a client_id.
   - ``search_query``
-    The exact search query typed in by the user.
+    The exact search query typed in by the user. This is only sent for the "online" scenario when the suggestion is provided by RemoteSettings.
   - ``matched_keywords``
-    The matched keywords that leads to the QuickSuggest link.
+    The matched keywords that leads to the QuickSuggest link. This is only sent for the "online" scenario when the suggestion is provided by RemoteSettings.
   - ``is_clicked``
     Whether or not the use has clicked on the QuickSuggest link.
   - ``block_id``
@@ -449,6 +449,8 @@ QuickSuggest Impression
     The reporting URL of the QuickSuggest link, normally pointing to the ad partner's reporting endpoint.
   - ``scenario``
     The scenario of the QuickSuggest, could be one of "history", "offline", and "online".
+  - ``request_id``
+    A request identifier for each API request to Merino. This is only sent for suggestions provided by Merino.
 
 QuickSuggest Click
   This records a click ping when a QuickSuggest link is clicked by the user.
@@ -466,6 +468,8 @@ QuickSuggest Click
     The reporting URL of the QuickSuggest link, normally pointing to the ad partner's reporting endpoint.
   - ``scenario``
     The scenario of the QuickSuggest, could be one of "history", "offline", and "online".
+  - ``request_id``
+    A request identifier for each API request to Merino. This is only sent for suggestions provided by Merino.
 
 
 Other telemetry relevant to the Address Bar

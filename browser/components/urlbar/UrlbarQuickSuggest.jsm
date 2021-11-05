@@ -23,6 +23,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.jsm",
+  QUICK_SUGGEST_SOURCE: "resource:///modules/UrlbarProviderQuickSuggest.jsm",
 });
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["TextDecoder"]);
@@ -123,6 +124,7 @@ class Suggestions {
       advertiser: result.advertiser.toLocaleLowerCase(),
       is_sponsored: !NONSPONSORED_IAB_CATEGORIES.has(result.iab_category),
       score: SUGGESTION_SCORE,
+      source: QUICK_SUGGEST_SOURCE.REMOTE_SETTINGS,
       icon,
     };
   }
