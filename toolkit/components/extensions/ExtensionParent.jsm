@@ -746,7 +746,13 @@ ParentAPIManager = {
     this.conduit = new BroadcastConduit(this, {
       id: "ParentAPIManager",
       reportOnClosed: "childId",
-      recv: ["CreateProxyContext", "APICall", "AddListener", "RemoveListener"],
+      recv: [
+        "CreateProxyContext",
+        "ContextLoaded",
+        "APICall",
+        "AddListener",
+        "RemoveListener",
+      ],
       send: ["CallResult"],
       query: ["RunListener"],
     });
@@ -865,6 +871,13 @@ ParentAPIManager = {
       throw new Error(`Invalid WebExtension context envType: ${envType}`);
     }
     this.proxyContexts.set(childId, context);
+  },
+
+  recvContextLoaded(data, { actor, sender }) {
+    let context = this.getContextById(data.childId);
+    verifyActorForContext(actor, context);
+    const { extension } = context;
+    extension.emit("extension-proxy-context-load:completed", context);
   },
 
   recvConduitClosed(sender) {
@@ -1562,6 +1575,40 @@ function watchExtensionProxyContextLoad(
   };
 }
 
+/**
+ * This helper is used to subscribe a listener (e.g. in the ext-backgroundPage)
+ * to be called for every ExtensionProxyContext created for an extension
+ * background service worker given its related extension.
+ *
+ * @param {object} params.extension
+ *        The Extension on which we are going to listen for the newly created ExtensionProxyContext.
+ * @param {function} onExtensionWorkerContextLoaded
+ *        The callback that is called when the worker script has been fully loaded (as `callback(context)`);
+ *
+ * @returns {function}
+ *          Unsubscribe the listener.
+ */
+function watchExtensionWorkerContextLoaded(
+  { extension },
+  onExtensionWorkerContextLoaded
+) {
+  if (typeof onExtensionWorkerContextLoaded !== "function") {
+    throw new Error("Missing onExtensionWorkerContextLoaded handler");
+  }
+
+  const listener = (event, context) => {
+    if (context.viewType == "background_worker") {
+      onExtensionWorkerContextLoaded(context);
+    }
+  };
+
+  extension.on("extension-proxy-context-load:completed", listener);
+
+  return () => {
+    extension.off("extension-proxy-context-load:completed", listener);
+  };
+}
+
 // Manages icon details for toolbar buttons in the |pageAction| and
 // |browserAction| APIs.
 let IconDetails = {
@@ -1914,6 +1961,7 @@ var ExtensionParent = {
   apiManager,
   promiseExtensionViewLoaded,
   watchExtensionProxyContextLoad,
+  watchExtensionWorkerContextLoaded,
   DebugUtils,
 };
 
