@@ -52,6 +52,7 @@ import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.AppContentInterceptor
 import org.mozilla.focus.engine.ClientWrapper
 import org.mozilla.focus.engine.SanityCheckMiddleware
+import org.mozilla.focus.experiments.ExperimentalFeatures
 import org.mozilla.focus.experiments.createNimbus
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.settings
@@ -139,7 +140,7 @@ class Components(
                 PromptMiddleware(),
                 AdsTelemetryMiddleware(adsTelemetry),
                 BlockedTrackersMiddleware(context),
-                MergeTabsMiddleware(),
+                MergeTabsMiddleware(context),
             ) + EngineMiddleware.create(engine)
         )
     }
@@ -191,6 +192,10 @@ class Components(
                 context.settings.openLinksInExternalApp
             }
         )
+    }
+
+    val experimentalFeatures by lazy {
+        ExperimentalFeatures(experiments)
     }
 }
 

@@ -85,7 +85,6 @@ import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.topsites.DefaultTopSitesStorage.Companion.TOP_SITES_MAX_LIMIT
 import org.mozilla.focus.topsites.DefaultTopSitesView
-import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.FocusSnackbar
 import org.mozilla.focus.utils.FocusSnackbarDelegate
 import org.mozilla.focus.utils.StatusBarUtils
@@ -721,7 +720,7 @@ class BrowserFragment :
         // Release the session from this view so that it can immediately be rendered by a different view
         sessionFeature.get()?.release()
 
-        if (Features.TABS) {
+        if (requireComponents.experimentalFeatures.tabs.isMultiTab) {
             requireComponents.customTabsUseCases.migrate(tab.id)
         } else {
             // A Middleware will take care of either opening a new tab for this URL or reusing an

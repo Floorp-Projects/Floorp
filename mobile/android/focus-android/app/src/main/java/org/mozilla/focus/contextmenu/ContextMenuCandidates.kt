@@ -11,7 +11,7 @@ import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.contextmenu.DefaultSnackbarDelegate
 import mozilla.components.feature.tabs.TabsUseCases
-import org.mozilla.focus.utils.Features
+import org.mozilla.focus.ext.components
 
 object ContextMenuCandidates {
     @Suppress("LongParameterList")
@@ -23,7 +23,7 @@ object ContextMenuCandidates {
         snackBarParentView: View,
         snackbarDelegate: ContextMenuCandidate.SnackbarDelegate = DefaultSnackbarDelegate()
     ): List<ContextMenuCandidate> =
-        if (Features.TABS) {
+        if (context.components.experimentalFeatures.tabs.isMultiTab) {
             listOf(
                 ContextMenuCandidate.createOpenInPrivateTabCandidate(
                     context,
@@ -39,7 +39,7 @@ object ContextMenuCandidates {
             ContextMenuCandidate.createDownloadLinkCandidate(context, contextMenuUseCases),
             ContextMenuCandidate.createShareLinkCandidate(context),
             ContextMenuCandidate.createShareImageCandidate(context, contextMenuUseCases)
-        ) + if (Features.TABS) {
+        ) + if (context.components.experimentalFeatures.tabs.isMultiTab) {
             listOf(
                 ContextMenuCandidate.createOpenImageInNewTabCandidate(
                     context,

@@ -9,6 +9,4 @@ package org.mozilla.focus.utils
  */
 object Features {
     const val SEARCH_TERMS_OR_URL: Boolean = true
-
-    const val TABS = true
 }
