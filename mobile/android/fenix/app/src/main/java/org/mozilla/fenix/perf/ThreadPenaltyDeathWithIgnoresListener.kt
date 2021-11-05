@@ -12,6 +12,7 @@ import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.utils.ManufacturerCodes
 
 private const val FCQN_EDM_STORAGE_PROVIDER_BASE = "com.android.server.enterprise.storage.EdmStorageProviderBase"
+private const val INSTRUMENTED_HOOKS_CLASS = "com.android.tools.deploy.instrument.InstrumentationHooks"
 
 /**
  * A [StrictMode.OnThreadViolationListener] that recreates
@@ -45,7 +46,8 @@ class ThreadPenaltyDeathWithIgnoresListener(
     }
 
     private fun shouldViolationBeIgnored(violation: Violation): Boolean =
-        isSamsungLgEdmStorageProviderStartupViolation(violation)
+        isSamsungLgEdmStorageProviderStartupViolation(violation) ||
+            containsInstrumentedHooksClass(violation)
 
     private fun isSamsungLgEdmStorageProviderStartupViolation(violation: Violation): Boolean {
         // Root issue: https://github.com/mozilla-mobile/fenix/issues/17920
@@ -69,5 +71,14 @@ class ThreadPenaltyDeathWithIgnoresListener(
         // code may ignore them. I think it's okay - we keep this code simple and if it was a serious
         // issue, we'd catch it on other manufacturers.
         return violation.stackTrace.any { it.className == FCQN_EDM_STORAGE_PROVIDER_BASE }
+    }
+
+    private fun containsInstrumentedHooksClass(violation: Violation): Boolean {
+        // See https://github.com/mozilla-mobile/fenix/issues/21695
+        // When deploying debug builds from Android Studio then we may hit a DiskReadViolation
+        // occasionally. There's an upstream fix for this, but the stable version of Android Studio
+        // still seems to be affected.
+        // https://cs.android.com/android-studio/platform/tools/base/+/abbbe67087626460e0127d3f5377f9cf896e9941
+        return violation.stackTrace.any { it.className == INSTRUMENTED_HOOKS_CLASS }
     }
 }

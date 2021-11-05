@@ -69,10 +69,21 @@ class ThreadPenaltyDeathWithIgnoresListenerTest {
     }
 
     @Test
+    fun `WHEN provided the InstrumentationHooks violation THEN it will be ignored and logged`() {
+        every { violation.stackTrace } returns getInstrumentationHooksStackTrace()
+        listener.onThreadViolation(violation)
+
+        verify { logger.debug("Ignoring StrictMode ThreadPolicy violation", violation) }
+    }
+
+    @Test
     fun `WHEN violation is null THEN we don't throw an exception`() {
         listener.onThreadViolation(null)
     }
 
     private fun getEdmStorageProviderStackTrace() =
         StackTraces.getStackTraceFromLogcat("EdmStorageProviderBaseLogcat.txt")
+
+    private fun getInstrumentationHooksStackTrace() =
+        StackTraces.getStackTraceFromLogcat("InstrumentationHooksLogcat.txt")
 }
