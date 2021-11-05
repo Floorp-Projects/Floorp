@@ -7,7 +7,11 @@
 var { ExtensionParent } = ChromeUtils.import(
   "resource://gre/modules/ExtensionParent.jsm"
 );
-var { HiddenExtensionPage, promiseExtensionViewLoaded } = ExtensionParent;
+var {
+  HiddenExtensionPage,
+  promiseExtensionViewLoaded,
+  watchExtensionWorkerContextLoaded,
+} = ExtensionParent;
 
 ChromeUtils.defineModuleGetter(
   this,
@@ -123,7 +127,18 @@ class BackgroundWorker {
   async build() {
     const { extension } = this;
 
+    let context;
     try {
+      const contextPromise = new Promise(resolve => {
+        let unwatch = watchExtensionWorkerContextLoaded(
+          { extension, viewType: "background_worker" },
+          context => {
+            unwatch();
+            resolve(context);
+          }
+        );
+      });
+
       // TODO(Bug 17228327): follow up to spawn the active worker for a previously installed
       // background service worker.
       const regInfo = await serviceWorkerManager.registerForAddonPrincipal(
@@ -133,8 +148,8 @@ class BackgroundWorker {
         Ci.nsIServiceWorkerRegistrationInfo
       );
 
-      // TODO(bug 17228326): wait for worker context to be loaded (as we currently do
-      // for the delayed background page).
+      context = await contextPromise;
+
       await this.waitForActiveWorker();
     } catch (e) {
       // Extension may be shutting down before the background worker has registered or
@@ -150,10 +165,12 @@ class BackgroundWorker {
       return;
     }
 
-    // TODO(bug 17228326): wait for worker context to be loaded and
-    // wait for all persistent event listeners registered by the worker
-    // script to be handled (as we currently do for the delayed background
-    // page).
+    if (context) {
+      // Wait until all event listeners registered by the script so far
+      // to be handled.
+      await Promise.all(context.listenerPromises);
+      context.listenerPromises = null;
+    }
 
     if (extension.persistentListeners) {
       // |this.extension| may be null if the extension was shut down.
