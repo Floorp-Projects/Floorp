@@ -115,12 +115,29 @@ class BackgroundPage extends HiddenExtensionPage {
 // Responsible for the background.service_worker section of the manifest.
 class BackgroundWorker {
   constructor(extension, options) {
-    this.registrationInfo = null;
     this.extension = extension;
     this.workerScript = options.service_worker;
 
     if (!this.workerScript) {
       throw new Error("Missing mandatory background.service_worker property");
+    }
+  }
+
+  get registrationInfo() {
+    const { principal } = this.extension;
+    return serviceWorkerManager.getRegistrationForAddonPrincipal(principal);
+  }
+
+  getWorkerInfo(descriptorId) {
+    return this.registrationInfo?.getWorkerByID(descriptorId);
+  }
+
+  validateWorkerInfoForContext(context) {
+    const { extension } = this;
+    if (!this.getWorkerInfo(context.workerDescriptorId)) {
+      throw new Error(
+        `ServiceWorkerInfo not found for ${extension.policy.debugName} contextId ${context.contextId}`
+      );
     }
   }
 
@@ -134,6 +151,7 @@ class BackgroundWorker {
           { extension, viewType: "background_worker" },
           context => {
             unwatch();
+            this.validateWorkerInfoForContext(context);
             resolve(context);
           }
         );
@@ -141,11 +159,8 @@ class BackgroundWorker {
 
       // TODO(Bug 17228327): follow up to spawn the active worker for a previously installed
       // background service worker.
-      const regInfo = await serviceWorkerManager.registerForAddonPrincipal(
+      await serviceWorkerManager.registerForAddonPrincipal(
         this.extension.principal
-      );
-      this.registrationInfo = regInfo.QueryInterface(
-        Ci.nsIServiceWorkerRegistrationInfo
       );
 
       context = await contextPromise;
@@ -192,8 +207,6 @@ class BackgroundWorker {
     if (!isAppShutdown) {
       this.registrationInfo?.forceShutdown();
     }
-
-    this.registrationInfo = null;
   }
 
   waitForActiveWorker() {
