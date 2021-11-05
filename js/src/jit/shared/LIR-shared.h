@@ -340,6 +340,26 @@ class LGetInlinedArgument : public LVariadicInstruction<BOX_PIECES, 0> {
   MGetInlinedArgument* mir() const { return mir_->toGetInlinedArgument(); }
 };
 
+class LGetInlinedArgumentHole : public LVariadicInstruction<BOX_PIECES, 0> {
+ public:
+  LIR_HEADER(GetInlinedArgumentHole)
+
+  static const size_t Index = 0;
+  static const size_t NumNonArgumentOperands = 1;
+  static size_t ArgIndex(size_t i) {
+    return NumNonArgumentOperands + BOX_PIECES * i;
+  }
+
+  explicit LGetInlinedArgumentHole(uint32_t numOperands)
+      : LVariadicInstruction(classOpcode, numOperands) {}
+
+  const LAllocation* getIndex() { return getOperand(Index); }
+
+  MGetInlinedArgumentHole* mir() const {
+    return mir_->toGetInlinedArgumentHole();
+  }
+};
+
 // Common code for LIR descended from MCall.
 template <size_t Defs, size_t Operands, size_t Temps>
 class LJSCallInstructionHelper

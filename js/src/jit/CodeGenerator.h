@@ -197,6 +197,10 @@ class CodeGenerator final : public CodeGeneratorSpecific {
   void emitPushArguments(LConstructArrayGeneric* construct,
                          Register extraStackSpace);
 
+  template <class GetInlinedArgument>
+  void emitGetInlinedArgument(GetInlinedArgument* lir, Register index,
+                              ValueOperand output);
+
   void visitNewArrayCallVM(LNewArray* lir);
   void visitNewObjectVMCall(LNewObject* lir);
 
