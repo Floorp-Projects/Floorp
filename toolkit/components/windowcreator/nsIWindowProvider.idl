@@ -69,6 +69,10 @@ interface nsIWindowProvider : nsISupports
    *        the feature string to the window it returns in any way it sees fit.
    *        See the nsIWindowWatcher interface for details on feature strings.
    *
+   * @param aIsPopupRequested  True if this window is opened by window.open
+   *        with requesting a popup window.  This doesn't necessarily mean
+   *        whether the actual window is shown as minimal popup or not.
+   *
    * @param aLoadState Specify setup information of the load in the new window
    *
    * @param aWindowIsNew [out] Whether the window being returned was just
@@ -99,6 +103,7 @@ interface nsIWindowProvider : nsISupports
                                 in AUTF8String aFeatures,
                                 in boolean aForceNoOpener,
                                 in boolean aForceNoReferrer,
+                                in boolean aIsPopupRequested,
                                 in nsDocShellLoadStatePtr aLoadState,
                                 out boolean aWindowIsNew);
 };
