@@ -816,9 +816,9 @@ BrowserChild::GetInterface(const nsIID& aIID, void** aSink) {
 NS_IMETHODIMP
 BrowserChild::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
                             uint32_t aChromeFlags, bool aCalledFromJS,
-                            bool aWidthSpecified, nsIURI* aURI,
-                            const nsAString& aName, const nsACString& aFeatures,
-                            bool aForceNoOpener, bool aForceNoReferrer,
+                            nsIURI* aURI, const nsAString& aName,
+                            const nsACString& aFeatures, bool aForceNoOpener,
+                            bool aForceNoReferrer,
                             nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
                             BrowsingContext** aReturn) {
   *aReturn = nullptr;
@@ -826,7 +826,7 @@ BrowserChild::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
   RefPtr<BrowsingContext> parent = aOpenWindowInfo->GetParent();
 
   int32_t openLocation = nsWindowWatcher::GetWindowOpenLocation(
-      parent->GetDOMWindow(), aChromeFlags, aCalledFromJS, aWidthSpecified,
+      parent->GetDOMWindow(), aChromeFlags, aCalledFromJS,
       aOpenWindowInfo->GetIsForPrinting());
 
   // If it turns out we're opening in the current browser, just hand over the
@@ -849,9 +849,9 @@ BrowserChild::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
   // code back to our caller.
   ContentChild* cc = ContentChild::GetSingleton();
   return cc->ProvideWindowCommon(this, aOpenWindowInfo, aChromeFlags,
-                                 aCalledFromJS, aWidthSpecified, aURI, aName,
-                                 aFeatures, aForceNoOpener, aForceNoReferrer,
-                                 aLoadState, aWindowIsNew, aReturn);
+                                 aCalledFromJS, aURI, aName, aFeatures,
+                                 aForceNoOpener, aForceNoReferrer, aLoadState,
+                                 aWindowIsNew, aReturn);
 }
 
 void BrowserChild::DestroyWindow() {
