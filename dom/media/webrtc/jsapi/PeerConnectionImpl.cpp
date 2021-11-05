@@ -3102,7 +3102,7 @@ void PeerConnectionImpl::StoreConfigurationForAboutWebrtc(
   // This will only be called once, when the PeerConnection is initially
   // configured, at least until setConfiguration is implemented
   // see https://bugzilla.mozilla.org/show_bug.cgi?id=1253706
-  // @TODO call this from setConfiguration
+  // @TODO bug 1739451 call this from setConfiguration
   if (aConfig.mIceServers.WasPassed()) {
     for (const auto& server : aConfig.mIceServers.Value()) {
       RTCIceServerInternal internal;
@@ -3123,11 +3123,12 @@ void PeerConnectionImpl::StoreConfigurationForAboutWebrtc(
       if (!mJsConfiguration.mIceServers.AppendElement(internal, fallible)) {
         mozalloc_handle_oom(0);
       }
-      if (aConfig.mSdpSemantics.WasPassed()) {
-        mJsConfiguration.mSdpSemantics.Construct(aConfig.mSdpSemantics.Value());
-      }
     }
   }
+  if (aConfig.mSdpSemantics.WasPassed()) {
+    mJsConfiguration.mSdpSemantics.Construct(aConfig.mSdpSemantics.Value());
+  }
+
   mJsConfiguration.mIceTransportPolicy.Construct(aConfig.mIceTransportPolicy);
   mJsConfiguration.mBundlePolicy.Construct(aConfig.mBundlePolicy);
   mJsConfiguration.mPeerIdentityProvided = !aConfig.mPeerIdentity.IsEmpty();
