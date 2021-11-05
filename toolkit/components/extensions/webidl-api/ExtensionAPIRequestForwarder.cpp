@@ -659,6 +659,26 @@ bool RequestInitWorkerRunnable::MainThreadRun() {
   return true;
 }
 
+// NotifyWorkerLoadedRunnable
+
+nsresult NotifyWorkerLoadedRunnable::Run() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  RefPtr<WebExtensionPolicy> policy =
+      ExtensionPolicyService::GetSingleton().GetByURL(mSWBaseURI.get());
+
+  nsCOMPtr<mozIExtensionAPIRequestHandler> handler =
+      &ExtensionAPIRequestForwarder::APIRequestHandler();
+  MOZ_ASSERT(handler);
+
+  if (NS_FAILED(handler->OnExtensionWorkerLoaded(policy, mSWDescriptorId))) {
+    NS_WARNING(
+        "nsIExtensionAPIRequestHandler.onExtensionWorkerLoaded call failed");
+  }
+
+  return NS_OK;
+}
+
 // NotifyWorkerDestroyedRunnable
 
 nsresult NotifyWorkerDestroyedRunnable::Run() {
