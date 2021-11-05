@@ -22,6 +22,7 @@
 #include "FuzzingTraits.h"
 #include "chrome/common/ipc_channel.h"
 #include "chrome/common/ipc_message.h"
+#include "chrome/common/file_descriptor_set_posix.h"
 #include "mozilla/ipc/Faulty.h"
 #include "nsComponentManagerUtils.h"
 #include "nsNetCID.h"
@@ -658,7 +659,14 @@ std::vector<uint8_t> Faulty::GetDataFromIPCMessage(IPC::Message* aMsg) {
 
 // static
 void Faulty::CopyFDs(IPC::Message* aDstMsg, IPC::Message* aSrcMsg) {
-  std::swap(aDstMsg->attached_handles_, aSrcMsg->attached_handles_);
+#ifndef _WINDOWS
+  FileDescriptorSet* dstFdSet = aDstMsg->file_descriptor_set();
+  FileDescriptorSet* srcFdSet = aSrcMsg->file_descriptor_set();
+  for (size_t i = 0; i < srcFdSet->size(); i++) {
+    int fd = srcFdSet->GetDescriptorAt(i);
+    dstFdSet->Add(fd);
+  }
+#endif
 }
 
 UniquePtr<IPC::Message> Faulty::MutateIPCMessage(const char* aChannel,

@@ -195,7 +195,7 @@ class TextureReadLock {
   virtual bool IsValid() const = 0;
 
   static already_AddRefed<TextureReadLock> Deserialize(
-      ReadLockDescriptor&& aDescriptor, ISurfaceAllocator* aAllocator);
+      const ReadLockDescriptor& aDescriptor, ISurfaceAllocator* aAllocator);
 
   virtual bool Serialize(ReadLockDescriptor& aOutput,
                          base::ProcessId aOther) = 0;

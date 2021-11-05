@@ -64,7 +64,7 @@ bool SharedMemory::SetHandle(SharedMemoryHandle handle, bool read_only) {
 #endif
 
   freezeable_ = false;
-  mapped_file_ = std::move(handle);
+  mapped_file_.reset(handle.fd);
   read_only_ = read_only;
   // is_memfd_ only matters for freezing, which isn't possible
   return true;
@@ -72,11 +72,11 @@ bool SharedMemory::SetHandle(SharedMemoryHandle handle, bool read_only) {
 
 // static
 bool SharedMemory::IsHandleValid(const SharedMemoryHandle& handle) {
-  return handle != nullptr;
+  return handle.fd >= 0;
 }
 
 // static
-SharedMemoryHandle SharedMemory::NULLHandle() { return nullptr; }
+SharedMemoryHandle SharedMemory::NULLHandle() { return SharedMemoryHandle(); }
 
 #ifdef ANDROID
 
@@ -527,16 +527,24 @@ void* SharedMemory::FindFreeAddressSpace(size_t size) {
   return memory != MAP_FAILED ? memory : NULL;
 }
 
-SharedMemoryHandle SharedMemory::CloneHandle() {
+bool SharedMemory::ShareToProcessCommon(ProcessId processId,
+                                        SharedMemoryHandle* new_handle,
+                                        bool close_self) {
   freezeable_ = false;
   const int new_fd = dup(mapped_file_.get());
   if (new_fd < 0) {
     CHROMIUM_LOG(WARNING) << "failed to duplicate file descriptor: "
                           << strerror(errno);
-    return nullptr;
+    return false;
   }
-  return mozilla::UniqueFileHandle(new_fd);
+  new_handle->fd = new_fd;
+  new_handle->auto_close = true;
+
+  if (close_self) Close();
+
+  return true;
 }
+
 void SharedMemory::Close(bool unmap_view) {
   if (unmap_view) {
     Unmap();

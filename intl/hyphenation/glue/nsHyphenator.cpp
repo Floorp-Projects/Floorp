@@ -78,7 +78,7 @@ static UniquePtr<base::SharedMemory> GetHyphDictFromParent(nsIURI* aURI,
   if (!shm->IsHandleValid(handle)) {
     return nullptr;
   }
-  if (!shm->SetHandle(std::move(handle), true)) {
+  if (!shm->SetHandle(handle, true)) {
     return nullptr;
   }
   if (!shm->Map(size)) {
@@ -496,6 +496,9 @@ void nsHyphenator::ShareToProcess(base::ProcessId aPid,
   if (!mDict.is<UniquePtr<base::SharedMemory>>()) {
     return;
   }
-  *aOutHandle = mDict.as<UniquePtr<base::SharedMemory>>()->CloneHandle();
+  if (!mDict.as<UniquePtr<base::SharedMemory>>()->ShareToProcess(aPid,
+                                                                 aOutHandle)) {
+    return;
+  }
   *aOutSize = mDictSize;
 }

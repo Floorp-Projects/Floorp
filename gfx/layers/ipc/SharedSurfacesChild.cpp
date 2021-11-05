@@ -244,9 +244,8 @@ nsresult SharedSurfacesChild::ShareInternal(SourceSurfaceSharedData* aSurface,
 
   data->MarkShared();
   manager->SendAddSharedSurface(
-      data->Id(),
-      SurfaceDescriptorShared(aSurface->GetSize(), aSurface->Stride(), format,
-                              std::move(handle)));
+      data->Id(), SurfaceDescriptorShared(aSurface->GetSize(),
+                                          aSurface->Stride(), format, handle));
   *aUserData = data;
   return NS_OK;
 }

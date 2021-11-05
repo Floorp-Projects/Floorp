@@ -105,10 +105,8 @@ class NodeController final : public mojo::core::ports::NodeDelegate,
   ~NodeController();
 
   UniquePtr<IPC::Message> SerializeEventMessage(
-      UniquePtr<Event> aEvent, const NodeName* aRelayTarget = nullptr,
-      uint32_t aType = EVENT_MESSAGE_TYPE);
-  UniquePtr<Event> DeserializeEventMessage(UniquePtr<IPC::Message> aMessage,
-                                           NodeName* aRelayTarget = nullptr);
+      UniquePtr<Event> aEvent, uint32_t aType = EVENT_MESSAGE_TYPE);
+  UniquePtr<Event> DeserializeEventMessage(UniquePtr<IPC::Message> aMessage);
 
   // Get the `NodeChannel` for the named node.
   already_AddRefed<NodeChannel> GetNodeChannel(const NodeName& aName);

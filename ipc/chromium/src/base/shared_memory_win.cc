@@ -69,7 +69,7 @@ bool SharedMemory::SetHandle(SharedMemoryHandle handle, bool read_only) {
 
   external_section_ = true;
   freezeable_ = false;  // just in case
-  mapped_file_ = std::move(handle);
+  mapped_file_.reset(handle);
   read_only_ = read_only;
   return true;
 }
@@ -191,16 +191,39 @@ void* SharedMemory::FindFreeAddressSpace(size_t size) {
   return memory;
 }
 
-SharedMemoryHandle SharedMemory::CloneHandle() {
+bool SharedMemory::ShareToProcessCommon(ProcessId processId,
+                                        SharedMemoryHandle* new_handle,
+                                        bool close_self) {
   freezeable_ = false;
-  HANDLE handle = INVALID_HANDLE_VALUE;
-  if (DuplicateHandle(GetCurrentProcess(), mapped_file_.get(),
-                      GetCurrentProcess(), &handle, 0, false,
-                      DUPLICATE_SAME_ACCESS)) {
-    return SharedMemoryHandle(handle);
+  *new_handle = 0;
+  DWORD access = FILE_MAP_READ | SECTION_QUERY;
+  DWORD options = 0;
+  HANDLE mapped_file;
+  HANDLE result;
+  if (!read_only_) {
+    access |= FILE_MAP_WRITE;
   }
-  NS_WARNING("DuplicateHandle Failed!");
-  return nullptr;
+  if (close_self) {
+    // DUPLICATE_CLOSE_SOURCE causes DuplicateHandle to close mapped_file.
+    mapped_file = mapped_file_.release();
+    options = DUPLICATE_CLOSE_SOURCE;
+    Unmap();
+  } else {
+    mapped_file = mapped_file_.get();
+  }
+
+  if (processId == GetCurrentProcId() && close_self) {
+    *new_handle = mapped_file;
+    return true;
+  }
+
+  if (!mozilla::ipc::DuplicateHandle(mapped_file, processId, &result, access,
+                                     options)) {
+    return false;
+  }
+
+  *new_handle = result;
+  return true;
 }
 
 void SharedMemory::Close(bool unmap_view) {

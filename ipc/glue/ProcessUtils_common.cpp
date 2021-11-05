@@ -109,10 +109,8 @@ SharedPreferenceDeserializer::~SharedPreferenceDeserializer() {
 bool SharedPreferenceDeserializer::DeserializeFromSharedMemory(
     uint64_t aPrefsHandle, uint64_t aPrefMapHandle, uint64_t aPrefsLen,
     uint64_t aPrefMapSize) {
-  Maybe<base::SharedMemoryHandle> prefsHandle;
-
 #ifdef XP_WIN
-  prefsHandle = Some(UniqueFileHandle(HANDLE((uintptr_t)(aPrefsHandle))));
+  mPrefsHandle = Some(HANDLE((uintptr_t)(aPrefsHandle)));
   if (!aPrefsHandle) {
     return false;
   }
@@ -139,16 +137,17 @@ bool SharedPreferenceDeserializer::DeserializeFromSharedMemory(
 #ifdef ANDROID
   // Android is different; get the FD via gPrefsFd instead of a fixed fd.
   MOZ_RELEASE_ASSERT(gPrefsFd != -1);
-  prefsHandle = Some(UniqueFileHandle(gPrefsFd));
+  mPrefsHandle = Some(base::FileDescriptor(gPrefsFd, /* auto_close */ true));
 
   mPrefMapHandle.emplace(UniqueFileHandle(gPrefMapFd));
 #elif XP_UNIX
-  prefsHandle = Some(UniqueFileHandle(kPrefsFileDescriptor));
+  mPrefsHandle = Some(base::FileDescriptor(kPrefsFileDescriptor,
+                                           /* auto_close */ true));
 
   mPrefMapHandle.emplace(UniqueFileHandle(kPrefMapFileDescriptor));
 #endif
 
-  if (prefsHandle.isNothing() || mPrefsLen.isNothing() ||
+  if (mPrefsHandle.isNothing() || mPrefsLen.isNothing() ||
       mPrefMapHandle.isNothing() || mPrefMapSize.isNothing()) {
     return false;
   }
@@ -158,7 +157,7 @@ bool SharedPreferenceDeserializer::DeserializeFromSharedMemory(
   Preferences::InitSnapshot(mPrefMapHandle.ref(), *mPrefMapSize);
 
   // Set up early prefs from the shared memory.
-  if (!mShmem.SetHandle(std::move(*prefsHandle), /* read_only */ true)) {
+  if (!mShmem.SetHandle(*mPrefsHandle, /* read_only */ true)) {
     NS_ERROR("failed to open shared memory in the child");
     return false;
   }
@@ -170,6 +169,13 @@ bool SharedPreferenceDeserializer::DeserializeFromSharedMemory(
                                       *mPrefsLen);
 
   return true;
+}
+
+const base::SharedMemoryHandle& SharedPreferenceDeserializer::GetPrefsHandle()
+    const {
+  MOZ_ASSERT(mPrefsHandle.isSome());
+
+  return mPrefsHandle.ref();
 }
 
 const FileDescriptor& SharedPreferenceDeserializer::GetPrefMapHandle() const {
@@ -248,13 +254,14 @@ bool ImportSharedJSInit(uint64_t aJsInitHandle, uint64_t aJsInitLen) {
   }
 
 #ifdef XP_UNIX
-  auto handle = UniqueFileHandle(kJSInitFileDescriptor);
+  auto handle = base::FileDescriptor(kJSInitFileDescriptor,
+                                     /* auto_close */ true);
 #endif
 
   // Initialize the shared memory with the file handle and size of the content
   // of the self-hosted Xdr.
   auto& shmem = xpc::SelfHostedShmem::GetSingleton();
-  if (!shmem.InitFromChild(std::move(handle), len)) {
+  if (!shmem.InitFromChild(handle, len)) {
     NS_ERROR("failed to open shared memory in the child");
     return false;
   }
