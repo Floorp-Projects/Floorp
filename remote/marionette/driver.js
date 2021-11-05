@@ -462,49 +462,13 @@ GeckoDriver.prototype.newSession = async function(cmd) {
       const browsingContext = this.curBrowser.contentBrowser.browsingContext;
       this.currentSession.contentBrowsingContext = browsingContext;
 
-      let resolveNavigation;
-
-      // Prepare a promise that will resolve upon a navigation.
-      const onProgressListenerNavigation = new Promise(
-        resolve => (resolveNavigation = resolve)
-      );
-
-      // Create a basic webprogress listener which will check if the browsing
-      // context is ready for the new session on every state change.
-      const navigationListener = {
-        onStateChange: (progress, request, flag, status) => {
-          const isStop = flag & Ci.nsIWebProgressListener.STATE_STOP;
-          if (isStop) {
-            resolveNavigation();
-          }
-        },
-
-        QueryInterface: ChromeUtils.generateQI([
-          "nsIWebProgressListener",
-          "nsISupportsWeakReference",
-        ]),
-      };
-
-      // Monitor the webprogress listener before checking isLoadingDocument to
-      // avoid race conditions.
-      browsingContext.webProgress.addProgressListener(
-        navigationListener,
-        Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
-          Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT
-      );
-
-      if (
-        browsingContext.webProgress.isLoadingDocument ||
-        browsingContext.currentWindowGlobal.isInitialDocument
-      ) {
-        await onProgressListenerNavigation;
+      // If the currently selected tab is loading, wait until it's done.
+      if (browsingContext.webProgress.isLoadingDocument) {
+        await navigate.waitForNavigationCompleted(this, () => {}, {
+          loadEventExpected: true,
+          unknownState: true,
+        });
       }
-
-      browsingContext.webProgress.removeProgressListener(
-        navigationListener,
-        Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
-          Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT
-      );
 
       this.curBrowser.contentBrowser.focus();
     }
