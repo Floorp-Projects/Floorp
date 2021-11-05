@@ -757,7 +757,13 @@ class ChildAPIManager {
 
     this.conduit = context.openConduit(this, {
       childId: this.id,
-      send: ["CreateProxyContext", "APICall", "AddListener", "RemoveListener"],
+      send: [
+        "CreateProxyContext",
+        "ContextLoaded",
+        "APICall",
+        "AddListener",
+        "RemoveListener",
+      ],
       recv: ["CallResult", "RunListener"],
     });
 
