@@ -162,6 +162,16 @@ interface mozIExtensionAPIRequestHandler : nsISupports
                         [optional, retval] out mozIExtensionAPIRequestResult apiRequestResult);
 
   /**
+   * A method called when an extension background service worker is initialized and
+   * ready to execute its main script.
+   *
+   * @param extension An instance of the WebExtensionPolicy webidl interface.
+   * @param serviceWorkerInfo
+   */ 
+  void initExtensionWorker(in nsISupports extension,
+                           in mozIExtensionServiceWorkerInfo serviceWorkerInfo);
+
+  /**
    * A method called when an extension background service worker is destroyed.
    *
    * @param extension An instance of the WebExtensionPolicy webidl interface.
