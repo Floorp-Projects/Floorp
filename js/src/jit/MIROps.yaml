@@ -402,6 +402,9 @@
 - name: GetInlinedArgument
   gen_boilerplate: false
 
+- name: GetInlinedArgumentHole
+  gen_boilerplate: false
+
 - name: GetArgumentsObjectArg
   operands:
     argsObject: Object
@@ -1851,6 +1854,21 @@
   operands:
     index: Int32
   result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
+  # This instruction is never aliased, because ops like JSOp::SetArg don't
+  # write to the argument frames. We create an arguments object in that case.
+  alias_set: none
+
+# This MIR instruction is used to get an argument from the actual arguments.
+# Returns undefined if |index| is larger-or-equals to |length|. Bails out if
+# |index| is negative.
+- name: GetFrameArgumentHole
+  operands:
+    index: Int32
+    length: Int32
+  result_type: Value
+  guard: true
   movable: true
   congruent_to: if_operands_equal
   # This instruction is never aliased, because ops like JSOp::SetArg don't

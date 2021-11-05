@@ -390,6 +390,9 @@
 - name: GetInlinedArgument
   gen_boilerplate: false
 
+- name: GetInlinedArgumentHole
+  gen_boilerplate: false
+
 # Get argument from arguments object.
 - name: GetArgumentsObjectArg
   result_type: BoxedValue
@@ -2094,6 +2097,16 @@
   result_type: BoxedValue
   operands:
     index: WordSized
+
+# Load a value from the actual arguments.
+# Returns undefined if |index| is larger-or-equals to |length|. Bails out if
+# |index| is negative.
+- name: GetFrameArgumentHole
+  result_type: BoxedValue
+  operands:
+    index: WordSized
+    length: WordSized
+  num_temps: 1
 
 # Create the rest parameter.
 - name: Rest
