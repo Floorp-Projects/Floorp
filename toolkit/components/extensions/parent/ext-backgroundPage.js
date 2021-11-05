@@ -83,7 +83,7 @@ class BackgroundPage extends HiddenExtensionPage {
       if (extension.persistentListeners) {
         EventManager.clearPrimedListeners(this.extension, false);
       }
-      extension.emit("background-page-aborted");
+      extension.emit("background-script-aborted");
       return;
     }
 
@@ -103,7 +103,7 @@ class BackgroundPage extends HiddenExtensionPage {
       EventManager.clearPrimedListeners(extension, !!this.extension);
     }
 
-    extension.emit("background-page-started");
+    extension.emit("background-script-started");
   }
 
   shutdown() {
@@ -175,8 +175,7 @@ class BackgroundWorker {
         EventManager.clearPrimedListeners(this.extension, false);
       }
 
-      // TODO(bug 17228326): rename this to "background-script-aborted".
-      extension.emit("background-page-aborted");
+      extension.emit("background-script-aborted");
       return;
     }
 
@@ -194,8 +193,7 @@ class BackgroundWorker {
       EventManager.clearPrimedListeners(extension, !!this.extension);
     }
 
-    // TODO(bug 17228326): rename this to "background-script-started".
-    extension.emit("background-page-started");
+    extension.emit("background-script-started");
   }
 
   shutdown(isAppShutdown) {
@@ -286,18 +284,18 @@ this.backgroundPage = class extends ExtensionAPI {
     // Used by runtime messaging to wait for background page listeners.
     let bgStartupPromise = new Promise(resolve => {
       let done = () => {
-        extension.off("background-page-started", done);
-        extension.off("background-page-aborted", done);
+        extension.off("background-script-started", done);
+        extension.off("background-script-aborted", done);
         extension.off("shutdown", done);
         resolve();
       };
-      extension.on("background-page-started", done);
-      extension.on("background-page-aborted", done);
+      extension.on("background-script-started", done);
+      extension.on("background-script-aborted", done);
       extension.on("shutdown", done);
     });
 
     extension.wakeupBackground = () => {
-      extension.emit("background-page-event");
+      extension.emit("background-script-event");
       extension.wakeupBackground = () => bgStartupPromise;
       return bgStartupPromise;
     };
@@ -308,7 +306,7 @@ this.backgroundPage = class extends ExtensionAPI {
 
     EventManager.primeListeners(extension);
 
-    extension.once("start-background-page", async () => {
+    extension.once("start-background-script", async () => {
       if (!this.extension) {
         // Extension was shut down. Don't build the background page.
         // Primed listeners have been cleared in onShutdown.
@@ -324,13 +322,13 @@ this.backgroundPage = class extends ExtensionAPI {
     //    or else we can miss it if the event occurs after the first
     //    window is painted but before #2
     // 2. After all windows have been restored.
-    extension.once("background-page-event", async () => {
+    extension.once("background-script-event", async () => {
       await ExtensionParent.browserPaintedPromise;
-      extension.emit("start-background-page");
+      extension.emit("start-background-script");
     });
 
     ExtensionParent.browserStartupPromise.then(() => {
-      extension.emit("start-background-page");
+      extension.emit("start-background-script");
     });
   }
 
