@@ -2256,6 +2256,53 @@ AttachDecision GetPropIRGenerator::tryAttachStringChar(ValOperandId valId,
   return AttachDecision::Attach;
 }
 
+static bool ClassCanHaveExtraProperties(const JSClass* clasp) {
+  return clasp->getResolve() || clasp->getOpsLookupProperty() ||
+         clasp->getOpsGetProperty() || IsTypedArrayClass(clasp);
+}
+
+static bool CanAttachDenseElementHole(NativeObject* obj, bool ownProp,
+                                      bool allowIndexedReceiver = false) {
+  // Make sure the objects on the prototype don't have any indexed properties
+  // or that such properties can't appear without a shape change.
+  // Otherwise returning undefined for holes would obviously be incorrect,
+  // because we would have to lookup a property on the prototype instead.
+  do {
+    // The first two checks are also relevant to the receiver object.
+    if (!allowIndexedReceiver && obj->isIndexed()) {
+      return false;
+    }
+    allowIndexedReceiver = false;
+
+    if (ClassCanHaveExtraProperties(obj->getClass())) {
+      return false;
+    }
+
+    // Don't need to check prototype for OwnProperty checks
+    if (ownProp) {
+      return true;
+    }
+
+    JSObject* proto = obj->staticPrototype();
+    if (!proto) {
+      break;
+    }
+
+    if (!proto->is<NativeObject>()) {
+      return false;
+    }
+
+    // Make sure objects on the prototype don't have dense elements.
+    if (proto->as<NativeObject>().getDenseInitializedLength() != 0) {
+      return false;
+    }
+
+    obj = &proto->as<NativeObject>();
+  } while (true);
+
+  return true;
+}
+
 AttachDecision GetPropIRGenerator::tryAttachArgumentsObjectArg(
     HandleObject obj, ObjOperandId objId, uint32_t index,
     Int32OperandId indexId) {
@@ -2341,53 +2388,6 @@ AttachDecision GetPropIRGenerator::tryAttachDenseElement(
 
   trackAttached("DenseElement");
   return AttachDecision::Attach;
-}
-
-static bool ClassCanHaveExtraProperties(const JSClass* clasp) {
-  return clasp->getResolve() || clasp->getOpsLookupProperty() ||
-         clasp->getOpsGetProperty() || IsTypedArrayClass(clasp);
-}
-
-static bool CanAttachDenseElementHole(NativeObject* obj, bool ownProp,
-                                      bool allowIndexedReceiver = false) {
-  // Make sure the objects on the prototype don't have any indexed properties
-  // or that such properties can't appear without a shape change.
-  // Otherwise returning undefined for holes would obviously be incorrect,
-  // because we would have to lookup a property on the prototype instead.
-  do {
-    // The first two checks are also relevant to the receiver object.
-    if (!allowIndexedReceiver && obj->isIndexed()) {
-      return false;
-    }
-    allowIndexedReceiver = false;
-
-    if (ClassCanHaveExtraProperties(obj->getClass())) {
-      return false;
-    }
-
-    // Don't need to check prototype for OwnProperty checks
-    if (ownProp) {
-      return true;
-    }
-
-    JSObject* proto = obj->staticPrototype();
-    if (!proto) {
-      break;
-    }
-
-    if (!proto->is<NativeObject>()) {
-      return false;
-    }
-
-    // Make sure objects on the prototype don't have dense elements.
-    if (proto->as<NativeObject>().getDenseInitializedLength() != 0) {
-      return false;
-    }
-
-    obj = &proto->as<NativeObject>();
-  } while (true);
-
-  return true;
 }
 
 AttachDecision GetPropIRGenerator::tryAttachDenseElementHole(
