@@ -66,7 +66,7 @@ bool is_in_render_thread() {
 }
 
 bool gecko_profiler_thread_is_being_profiled() {
-  return profiler_thread_is_being_profiled(ThreadProfilingFeatures::Any);
+  return profiler_thread_is_being_profiled();
 }
 
 bool is_glcontext_gles(void* const glcontext_ptr) {
@@ -221,7 +221,7 @@ class SceneBuiltNotification : public wr::NotificationHandler {
     CompositorThread()->Dispatch(NS_NewRunnableFunction(
         "SceneBuiltNotificationRunnable", [parent, epoch, startTime]() {
           auto endTime = TimeStamp::Now();
-          if (profiler_thread_is_being_profiled_for_markers()) {
+          if (profiler_thread_is_being_profiled()) {
             PROFILER_MARKER("CONTENT_FULL_PAINT_TIME", GRAPHICS,
                             MarkerTiming::Interval(startTime, endTime),
                             ContentBuildMarker);
