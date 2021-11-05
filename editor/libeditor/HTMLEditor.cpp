@@ -4565,13 +4565,14 @@ void HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   }
 }
 
-nsresult HTMLEditor::JoinNodesWithTransaction(nsIContent& aLeftContent,
-                                              nsIContent& aRightContent) {
+nsresult HTMLEditor::JoinNodesWithTransaction(nsINode& aLeftNode,
+                                              nsINode& aRightNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
-  MOZ_ASSERT(&aLeftContent != &aRightContent);
-  MOZ_ASSERT(aLeftContent.GetParentNode());
-  MOZ_ASSERT(aRightContent.GetParentNode());
-  MOZ_ASSERT(aLeftContent.GetParentNode() == aRightContent.GetParentNode());
+  MOZ_ASSERT(aLeftNode.IsContent());
+  MOZ_ASSERT(aRightNode.IsContent());
+
+  nsCOMPtr<nsINode> parent = aLeftNode.GetParentNode();
+  MOZ_ASSERT(parent);
 
   IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
@@ -4585,29 +4586,24 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsIContent& aLeftContent,
 
   // Remember some values; later used for saved selection updating.
   // Find the offset between the nodes to be joined.
-  EditorDOMPoint atRightContent(&aRightContent);
-  if (MOZ_UNLIKELY(NS_WARN_IF(!atRightContent.IsSet()))) {
+  int32_t offset = parent->ComputeIndexOf(&aRightNode);
+  if (NS_WARN_IF(offset < 0)) {
     return NS_ERROR_FAILURE;
   }
-  Unused << atRightContent.Offset();  // Compute the offset first.
-
   // Find the number of children of the lefthand node
-  const uint32_t oldLeftNodeLen = aLeftContent.Length();
+  uint32_t oldLeftNodeLen = aLeftNode.Length();
 
-  RefPtr<JoinNodeTransaction> transaction =
-      JoinNodeTransaction::MaybeCreate(*this, aLeftContent, aRightContent);
-  if (MOZ_UNLIKELY(!transaction)) {
-    NS_WARNING("JoinNodeTransaction::MaybeCreate() failed");
-    return NS_ERROR_FAILURE;
-  }
+  TopLevelEditSubActionDataRef().WillJoinContents(*this, *aLeftNode.AsContent(),
+                                                  *aRightNode.AsContent());
 
-  nsresult rv;
-  {
-    AutoEditorDOMPointChildInvalidator lockOffset(atRightContent);
+  RefPtr<JoinNodeTransaction> transaction = JoinNodeTransaction::MaybeCreate(
+      *this, *aLeftNode.AsContent(), *aRightNode.AsContent());
+  NS_WARNING_ASSERTION(
+      transaction, "JoinNodeTransaction::MaybeCreate() failed, but ignored");
+
+  nsresult rv = NS_OK;
+  if (transaction) {
     rv = DoTransactionInternal(transaction);
-    if (MOZ_UNLIKELY(Destroyed())) {
-      rv = NS_ERROR_EDITOR_DESTROYED;
-    }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "EditorBase::DoTransactionInternal() failed");
   }
@@ -4615,35 +4611,36 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsIContent& aLeftContent,
   // XXX Some other transactions manage range updater by themselves.
   //     Why doesn't JoinNodeTransaction do it?
   DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjJoinNodes(
-      aLeftContent, aRightContent, *atRightContent.GetContainer(),
-      atRightContent.Offset(), oldLeftNodeLen);
+      aLeftNode, aRightNode, *parent, AssertedCast<uint32_t>(offset),
+      oldLeftNodeLen);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "RangeUpdater::SelAdjJoinNodes() failed, but ignored");
 
-  TopLevelEditSubActionDataRef().DidJoinContents(
-      *this, EditorRawDOMPoint(&aRightContent, oldLeftNodeLen));
+  TopLevelEditSubActionDataRef().DidJoinContents(*this, *aLeftNode.AsContent(),
+                                                 *aRightNode.AsContent());
 
   if (mInlineSpellChecker) {
     RefPtr<mozInlineSpellChecker> spellChecker = mInlineSpellChecker;
-    spellChecker->DidJoinNodes(aLeftContent, aRightContent);
+    spellChecker->DidJoinNodes(aLeftNode, aRightNode);
   }
 
   if (mTextServicesDocument && NS_SUCCEEDED(rv)) {
     RefPtr<TextServicesDocument> textServicesDocument = mTextServicesDocument;
-    textServicesDocument->DidJoinNodes(aLeftContent, aRightContent);
+    textServicesDocument->DidJoinNodes(*aLeftNode.AsContent(),
+                                       *aRightNode.AsContent());
   }
 
   if (!mActionListeners.IsEmpty()) {
     for (auto& listener : mActionListeners.Clone()) {
-      DebugOnly<nsresult> rvIgnored = listener->DidJoinNodes(
-          &aLeftContent, &aRightContent, atRightContent.GetContainer(), rv);
+      DebugOnly<nsresult> rvIgnored =
+          listener->DidJoinNodes(&aLeftNode, &aRightNode, parent, rv);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
           "nsIEditActionListener::DidJoinNodes() failed, but ignored");
     }
   }
 
-  return MOZ_UNLIKELY(NS_WARN_IF(Destroyed())) ? NS_ERROR_EDITOR_DESTROYED : rv;
+  return rv;
 }
 
 nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
