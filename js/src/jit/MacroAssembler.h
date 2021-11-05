@@ -4787,6 +4787,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void loadArgumentsObjectElement(Register obj, Register index,
                                   ValueOperand output, Register temp,
                                   Label* fail);
+  void loadArgumentsObjectElementHole(Register obj, Register index,
+                                      ValueOperand output, Register temp,
+                                      Label* fail);
 
   void loadArgumentsObjectLength(Register obj, Register output, Label* fail);
 
