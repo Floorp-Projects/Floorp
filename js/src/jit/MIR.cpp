@@ -3203,6 +3203,10 @@ AliasSet MLoadArgumentsObjectArg::getAliasSet() const {
   return AliasSet::Load(AliasSet::Any);
 }
 
+AliasSet MLoadArgumentsObjectArgHole::getAliasSet() const {
+  return AliasSet::Load(AliasSet::Any);
+}
+
 AliasSet MArgumentsObjectLength::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields | AliasSet::FixedSlot |
                         AliasSet::DynamicSlot);

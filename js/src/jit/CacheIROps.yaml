@@ -1799,7 +1799,7 @@
 
 - name: LoadArgumentsObjectArgHoleResult
   shared: true
-  transpile: false
+  transpile: true
   cost_estimate: 2
   args:
     obj: ObjId
