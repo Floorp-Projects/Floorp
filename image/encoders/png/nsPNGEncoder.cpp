@@ -18,8 +18,8 @@ static LazyLogModule sPNGEncoderLog("PNGEncoder");
 NS_IMPL_ISUPPORTS(nsPNGEncoder, imgIEncoder, nsIInputStream,
                   nsIAsyncInputStream)
 
-#define DEFAULT_ZLIB_LEVEL 6
-#define DEFAULT_FILTERS PNG_FILTER_VALUE_NONE
+#define DEFAULT_ZLIB_LEVEL 3
+#define DEFAULT_FILTERS PNG_FILTER_SUB
 
 nsPNGEncoder::nsPNGEncoder()
     : mPNG(nullptr),
