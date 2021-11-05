@@ -12144,7 +12144,7 @@
 
 - name: widget.windows.window_occlusion_tracking.enabled
   type: bool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 - name: widget.windows.window_occlusion_tracking_display_state.enabled
