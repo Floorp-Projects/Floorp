@@ -1,0 +1,171 @@
+<!DOCTYPE HTML>
+<title>Canvas test: toDataURL parameters for png moz specific</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<p>
+This test covers the png compression options moz specific.
+</p>
+<canvas id="c" width="400" height="400"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+let canvas = document.getElementById('c');
+let ctx = canvas.getContext("2d");
+
+ctx.strokeStyle = '#FF0000';
+ctx.fillStyle = '#00FF00';
+ctx.fillRect(0, 0, 100, 100);
+ctx.beginPath();
+ctx.moveTo(10, 10);
+ctx.lineTo(90, 90);
+ctx.stroke();
+ctx.strokeStyle = '#0000FF';
+ctx.beginPath();
+ctx.moveTo(90, 10);
+ctx.lineTo(10, 90);
+ctx.stroke();
+
+ctx.beginPath();
+ctx.arc(75, 75, 50, 0, Math.PI * 2, true); // Outer circle
+ctx.moveTo(110, 75);
+ctx.arc(75, 75, 35, 0, Math.PI, false);  // Mouth (clockwise)
+ctx.moveTo(65, 65);
+ctx.arc(60, 65, 5, 0, Math.PI * 2, true);  // Left eye
+ctx.moveTo(95, 65);
+ctx.arc(90, 65, 5, 0, Math.PI * 2, true);  // Right eye
+ctx.stroke();
+
+ctx.strokeStyle = '#FF0000';
+// Set line width
+ctx.lineWidth = 10;
+
+// Wall
+ctx.strokeRect(75, 140, 150, 110);
+
+// Door
+ctx.fillRect(130, 190, 40, 60);
+
+// Roof
+ctx.beginPath();
+ctx.moveTo(50, 140);
+ctx.lineTo(150, 60);
+ctx.lineTo(250, 140);
+ctx.closePath();
+ctx.stroke();
+
+
+for (let i = 0; i < 4; i++) {
+  for (let j = 0; j < 3; j++) {
+    ctx.beginPath();
+    let x = 25 + j * 50; // x coordinate
+    let y = 25 + i * 50; // y coordinate
+    let radius = 20; // Arc radius
+    let startAngle = 0; // Starting point on circle
+    let endAngle = Math.PI + (Math.PI * j) / 2; // End point on circle
+    let counterclockwise = i % 2 !== 0; // clockwise or counterclockwise
+
+    ctx.arc(x, y, radius, startAngle, endAngle, counterclockwise);
+
+    if (i > 1) {
+      ctx.fill();
+    } else {
+      ctx.stroke();
+    }
+  }
+}
+
+for (let i = 0; i < 6; i++) {
+  for (let j = 0; j < 6; j++) {
+    ctx.fillStyle = `rgb(
+        ${Math.floor(255 - 42.5 * i)},
+        ${Math.floor(255 - 42.5 * j)},
+        0)`;
+    ctx.fillRect(200 + j * 25, 100 + i * 25, 25, 25);
+  }
+}
+
+for (let i = 0; i < 6; i++) {
+  for (let j = 0; j < 6; j++) {
+    ctx.fillStyle = `rgb(
+        ${Math.floor(255 - 42.5 * i)},
+        0,
+        ${Math.floor(255 - 42.5 * j)})`;
+    ctx.fillRect(200 + j * 25, 250 + i * 25, 25, 25);
+  }
+}
+
+for (let i = 0; i < 6; i++) {
+  for (let j = 0; j < 6; j++) {
+    ctx.fillStyle = `rgb(
+        0,
+        ${Math.floor(255 - 42.5 * i)},
+        ${Math.floor(255 - 42.5 * j)})`;
+    ctx.fillRect(0 + j * 25, 250 + i * 25, 25, 25);
+  }
+}
+
+
+// vary the zlib level
+{
+    let zlib0 = canvas.toDataURL("image/png", "-moz-parse-options:png-zlib-level=0");
+    let zlib3 = canvas.toDataURL("image/png", "-moz-parse-options:png-zlib-level=3");
+    let zlibDefaultLevel = canvas.toDataURL("image/png");
+    let zlib9 = canvas.toDataURL("image/png", "-moz-parse-options:png-zlib-level=9");
+    // zlib0 > zlib3, zlibDefaultLevel > zlib9
+    ok(zlib0.length > zlib3.length, "zlib 3 better compression than zlib 0");
+    ok(zlib0.length > zlibDefaultLevel.length, "zlib default better compression than zlib 0");
+    ok(zlib3.length > zlib9.length, "zlib 9 better compression than zlib 3");
+    ok(zlibDefaultLevel.length > zlib9.length, "zlib 9 better compression than zlib default");
+}
+
+// vary the filter
+{
+    let zlibNone = canvas.toDataURL("image/png", "-moz-parse-options:png-filter=none");
+    let zlibSub = canvas.toDataURL("image/png", "-moz-parse-options:png-filter=sub");
+    let zlibDefaultFilter = canvas.toDataURL("image/png");
+    let zlibAll = canvas.toDataURL("image/png", "-moz-parse-options:png-filter=all");
+    // zlibNone, zlibSub, zlibDefaultFilter > zlibAll
+    ok(zlibNone.length != zlibSub.length, "sub filter different compression than none filter");
+    ok(zlibNone.length != zlibDefaultFilter.length, "default filter different compression than none filter");
+    ok(zlibNone.length > zlibAll.length, "all filter better compression than none filter");
+    ok(zlibSub.length > zlibAll.length, "all filter better compression than sub filter");
+    ok(zlibDefaultFilter.length > zlibAll.length, "all filter better compression than default filter");
+}
+
+// non-default zlib level, vary the filter
+{
+    let zlibNone = canvas.toDataURL("image/png", "-moz-parse-options:png-zlib-level=6;png-filter=none");
+    let zlibSub = canvas.toDataURL("image/png", "-moz-parse-options:png-zlib-level=6;png-filter=sub");
+    let zlibDefaultFilter = canvas.toDataURL("image/png", "-moz-parse-options:png-zlib-level=6");
+    let zlibAll = canvas.toDataURL("image/png", "-moz-parse-options:png-zlib-level=6;png-filter=all");
+    // zlibNone, zlibSub, zlibDefaultFilter > zlibAll
+    ok(zlibNone.length != zlibSub.length, "sub filter different compression than none filter");
+    ok(zlibNone.length != zlibDefaultFilter.length, "default filter different compression than none filter");
+    ok(zlibNone.length > zlibAll.length, "all filter better compression than none filter");
+    ok(zlibSub.length > zlibAll.length, "all filter better compression than sub filter");
+    ok(zlibDefaultFilter.length > zlibAll.length, "all filter better compression than default filter");
+}
+
+// non-default filter, vary the zlib level
+{
+    let zlib0 = canvas.toDataURL("image/png", "-moz-parse-options:png-zlib-level=0;png-filter=all");
+    let zlib3 = canvas.toDataURL("image/png", "-moz-parse-options:png-zlib-level=3;png-filter=all");
+    let zlibDefaultLevel = canvas.toDataURL("image/png", "-moz-parse-options:png-filter=all");
+    let zlib9 = canvas.toDataURL("image/png", "-moz-parse-options:png-zlib-level=9;png-filter=all");
+    // zlib0 > zlib3, zlibDefaultLevel > zlib9
+    ok(zlib0.length > zlib3.length, "(all) zlib 3 better compression than zlib 0");
+    ok(zlib0.length > zlibDefaultLevel.length, "(all) zlib default better compression than zlib 0");
+    ok(zlib3.length > zlib9.length, "(all) zlib 9 better compression than zlib 3");
+    ok(zlibDefaultLevel.length > zlib9.length, "(all) zlib 9 better compression than zlib default");
+}
+
+// vary both
+{
+    let zlib2 = canvas.toDataURL("image/png", "-moz-parse-options:png-zlib-level=2;png-filter=none");
+    let zlib5 = canvas.toDataURL("image/png", "-moz-parse-options:png-zlib-level=5;png-filter=paeth");
+    let zlib7 = canvas.toDataURL("image/png", "-moz-parse-options:png-zlib-level=7;png-filter=all");
+    // zlib2 > zlib5 > zlib7
+    ok(zlib2.length > zlib5.length, "zlib 5 with paeth filter better than zlib 2 with none filter");
+    ok(zlib5.length > zlib7.length, "zlib 7 with all filter better than zlib 5 with paeth filter");
+}
+
+</script>
