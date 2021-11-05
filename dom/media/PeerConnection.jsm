@@ -405,8 +405,6 @@ class RTCPeerConnection {
             `follow standard "unified-plan".`
         );
       }
-      // Don't let it show up in getConfiguration.
-      delete rtcConfig.sdpSemantics;
     }
     this._config = Object.assign({}, rtcConfig);
 
@@ -530,7 +528,9 @@ class RTCPeerConnection {
   }
 
   getConfiguration() {
-    return this._config;
+    const config = Object.assign({}, this._config);
+    delete config.sdpSemantics;
+    return config;
   }
 
   async _initCertificate(certificate) {
