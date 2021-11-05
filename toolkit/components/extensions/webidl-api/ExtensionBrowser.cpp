@@ -97,6 +97,15 @@ bool ExtensionAPIAllowed(JSContext* aCx, JSObject* aGlobal) {
 #endif
 }
 
+already_AddRefed<Runnable> CreateWorkerDestroyedRunnable(
+    const uint64_t aServiceWorkerDescriptorId,
+    const nsCOMPtr<nsIURI>& aWorkerBaseURI) {
+  RefPtr<NotifyWorkerDestroyedRunnable> runnable =
+      new NotifyWorkerDestroyedRunnable(aServiceWorkerDescriptorId,
+                                        aWorkerBaseURI);
+  return runnable.forget();
+}
+
 void ExtensionBrowser::SetLastError(JS::Handle<JS::Value> aLastError) {
   mLastError.set(aLastError);
   mCheckedLastError = false;

@@ -195,6 +195,29 @@ class RequestWorkerRunnable : public dom::WorkerMainThreadRunnable {
   ExtensionAPIRequestForwarder* mOuterRequest;
 };
 
+class NotifyWorkerDestroyedRunnable : public Runnable {
+  uint64_t mSWDescriptorId;
+  nsCOMPtr<nsIURI> mSWBaseURI;
+
+ public:
+  explicit NotifyWorkerDestroyedRunnable(
+      const uint64_t aServiceWorkerDescriptorId,
+      const nsCOMPtr<nsIURI>& aWorkerBaseURI)
+      : Runnable("extensions::NotifyWorkerDestroyedRunnable"),
+        mSWDescriptorId(aServiceWorkerDescriptorId),
+        mSWBaseURI(aWorkerBaseURI) {
+    MOZ_ASSERT(mSWDescriptorId > 0);
+    MOZ_ASSERT(mSWBaseURI);
+  }
+
+  NS_IMETHOD Run() override;
+
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(NotifyWorkerDestroyedRunnable, Runnable)
+
+ private:
+  ~NotifyWorkerDestroyedRunnable() = default;
+};
+
 }  // namespace extensions
 }  // namespace mozilla
 
