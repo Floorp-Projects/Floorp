@@ -286,7 +286,6 @@ struct DIGroup {
   nsTHashSet<BlobItemData*> mDisplayItems;
 
   LayerIntRect mInvalidRect;
-  nsRect mGroupBounds;
   LayerIntRect mVisibleRect;
   // This is the last visible rect sent to WebRender. It's used
   // to compute the invalid rect and ensure that we send
@@ -1201,7 +1200,6 @@ void Grouper::ConstructGroups(nsDisplayListBuilder* aDisplayListBuilder,
         groupData->mFollowingGroup.ClearImageKey(
             aCommandBuilder->mManager->GetRenderRootStateManager());
       }
-      groupData->mFollowingGroup.mGroupBounds = currentGroup->mGroupBounds;
       groupData->mFollowingGroup.mAppUnitsPerDevPixel =
           currentGroup->mAppUnitsPerDevPixel;
       groupData->mFollowingGroup.mLayerBounds = currentGroup->mLayerBounds;
@@ -1434,8 +1432,6 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
   auto snappedTrans = LayerIntPoint::Floor(trans);
   LayerPoint residualOffset = trans - snappedTrans;
 
-  auto p = group.mGroupBounds;
-  auto q = groupBounds;
   // XXX: we currently compute the paintRect for the entire svg, but if the svg
   // gets split into multiple groups (blobs), then they will all inherit this
   // overall size even though they may each be much smaller. This can lead to
@@ -1460,8 +1456,6 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
      visibleRect.width, visibleRect.height);
 
   GP("Inherrited scale %f %f\n", scale.width, scale.height);
-  GP("Bounds: %d %d %d %d vs %d %d %d %d\n", p.x, p.y, p.width, p.height, q.x,
-     q.y, q.width, q.height);
 
   group.mInvalidRect.SetEmpty();
   if (group.mAppUnitsPerDevPixel != appUnitsPerDevPixel ||
@@ -1471,14 +1465,6 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
     if (group.mAppUnitsPerDevPixel != appUnitsPerDevPixel) {
       GP(" App unit change %d -> %d\n", group.mAppUnitsPerDevPixel,
          appUnitsPerDevPixel);
-    }
-    // The bounds have changed so we need to discard the old image and add all
-    // the commands again.
-    auto p = group.mGroupBounds;
-    auto q = groupBounds;
-    if (!group.mGroupBounds.IsEqualEdges(groupBounds)) {
-      GP(" Bounds change: %d %d %d %d -> %d %d %d %d\n", p.x, p.y, p.width,
-         p.height, q.x, q.y, q.width, q.height);
     }
 
     if (group.mScale != scale) {
@@ -1502,7 +1488,6 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
 
   g.mAppUnitsPerDevPixel = appUnitsPerDevPixel;
   group.mResidualOffset = residualOffset;
-  group.mGroupBounds = groupBounds;
   group.mLayerBounds = layerBounds;
   group.mVisibleRect = visibleRect;
   group.mActualBounds = LayerIntRect();
