@@ -57,7 +57,7 @@ void EventQueueInternal<ItemsPerPage>::PutEvent(
     return;
   }
 
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled(ThreadProfilingFeatures::Sampling)) {
     // check to see if the profiler has been enabled since the last PutEvent
     while (mDispatchTimes.Count() < mQueue.Count()) {
       mDispatchTimes.Push(TimeStamp());
