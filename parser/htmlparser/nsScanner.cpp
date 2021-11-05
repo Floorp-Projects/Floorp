@@ -224,10 +224,7 @@ nsresult nsScanner::Append(const char* aBuffer, uint32_t aLen) {
     NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
     char16_t* unichars = buffer->DataStart();
 
-    uint32_t result;
-    size_t read;
-    size_t written;
-    Tie(result, read, written) =
+    auto [result, read, written] =
         mUnicodeDecoder->DecodeToUTF16WithoutReplacement(
             AsBytes(Span(aBuffer, aLen)), Span(unichars, needed.value()),
             false);  // Retain bug about failure to handle EOF
