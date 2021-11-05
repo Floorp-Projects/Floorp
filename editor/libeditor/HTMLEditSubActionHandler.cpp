@@ -8147,9 +8147,6 @@ nsresult HTMLEditor::JoinNearestEditableNodesWithTransaction(
   if (HTMLEditUtils::IsAnyListElement(&aNodeLeft) || aNodeLeft.IsText()) {
     // For lists, merge shallow (wouldn't want to combine list items)
     nsresult rv = JoinNodesWithTransaction(aNodeLeft, aNodeRight);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::JoinNodesWithTransaction failed");
     if (NS_SUCCEEDED(rv)) {
@@ -8175,9 +8172,6 @@ nsresult HTMLEditor::JoinNearestEditableNodesWithTransaction(
 
   // For list items, divs, etc., merge smart
   nsresult rv = JoinNodesWithTransaction(aNodeLeft, aNodeRight);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
   if (NS_FAILED(rv)) {
     NS_WARNING("HTMLEditor::JoinNodesWithTransaction() failed");
     return rv;
