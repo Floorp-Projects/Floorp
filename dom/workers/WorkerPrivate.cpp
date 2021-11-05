@@ -52,7 +52,7 @@
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/dom/WindowContext.h"
-#include "mozilla/extensions/ExtensionBrowser.h"  // extensions::CreateWorkerDestroyedRunnable
+#include "mozilla/extensions/ExtensionBrowser.h"  // extensions::Create{AndDispatchInitWorkerContext,WorkerDestroyed}Runnable
 #include "mozilla/extensions/WebExtensionPolicy.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/StoragePrincipalHelper.h"
@@ -3329,6 +3329,10 @@ void WorkerPrivate::ExecutionReady() {
   }
 
   data->mScope->MutableClientSourceRef().WorkerExecutionReady(this);
+
+  if (ExtensionAPIAllowed()) {
+    extensions::CreateAndDispatchInitWorkerContextRunnable();
+  }
 }
 
 void WorkerPrivate::InitializeGCTimers() {
