@@ -89,20 +89,16 @@ class FakeKind(Kind):
         FakeKind.loaded_kinds.append(self.name)
         return super().load_tasks(parameters, loaded_tasks, write_artifacts)
 
-    @staticmethod
-    def create(name, extra_config, graph_config):
-        config = {
-            "transforms": [],
-        }
-        if extra_config:
-            config.update(extra_config)
-        return FakeKind(name, "/fake", config, graph_config)
-
 
 class WithFakeKind(TaskGraphGenerator):
     def _load_kinds(self, graph_config, target_kind=None):
         for kind_name, cfg in self.parameters["_kinds"]:
-            yield FakeKind.create(kind_name, cfg, graph_config)
+            config = {
+                "transforms": [],
+            }
+            if cfg:
+                config.update(cfg)
+            yield FakeKind(kind_name, "/fake", config, graph_config)
 
 
 def fake_load_graph_config(root_dir):
@@ -171,19 +167,5 @@ def maketgg(monkeypatch):
         tgg = WithFakeKind("/root", parameters)
         tgg.loaded_kinds = loaded_kinds
         return tgg
-
-    return inner
-
-
-@pytest.fixture
-def run_transform():
-
-    graph_config = fake_load_graph_config("/root")
-    kind = FakeKind.create("fake", {}, graph_config)
-
-    def inner(xform, tasks):
-        if isinstance(tasks, dict):
-            tasks = [tasks]
-        return xform(kind.config, tasks)
 
     return inner

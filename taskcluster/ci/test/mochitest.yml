@@ -185,10 +185,7 @@ mochitest-browser-chrome:
                     linux.*64-devedition-qr/opt: built-projects
                     windows10-64-2004-qr/debug: built-projects
                     default: []
-            webrender-sw-a11y-checks:
-                by-test-platform:
-                    linux.*64(-shippable)?-qr/opt: ['trunk']
-                    default: []
+            webrender-sw-a11y-checks: []  # run-on-projects defined in variant config
             webrender-sw-fission:
                 by-test-platform:
                     linux.*64(-asan|-shippable)?-qr/(opt|debug): ['trunk']
@@ -399,7 +396,7 @@ mochitest-devtools-chrome:
         by-variant:
             a11y-checks:
                 by-test-platform:
-                    linux.*64(-shippable)?-qr/opt: ['trunk']
+                    linux.*64(-shippable)?-qr/opt: built-projects
                     default: []
             fission:
                 by-test-platform:
