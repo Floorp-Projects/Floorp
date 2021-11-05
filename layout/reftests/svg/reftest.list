@@ -237,7 +237,7 @@ fuzzy(0-1,0-800000) == filters-and-group-opacity-01.svg filters-and-group-opacit
 == foreignObject-ancestor-style-change-01.svg foreignObject-ancestor-style-change-01-ref.svg
 == foreignObject-change-transform-01.svg pass.svg
 == foreignObject-display-01.svg pass.svg
-fuzzy(0-1,0-2) fuzzy-if(geckoview,0-4,0-9) == foreignObject-form-theme.svg foreignObject-form-theme-ref.html
+fuzzy-if(cocoaWidget,0-1,0-1) fuzzy-if(gtkWidget,0-2,0-2) fuzzy-if(geckoview,0-4,0-9) == foreignObject-form-theme.svg foreignObject-form-theme-ref.html # Bug 1727811
 == foreignObject-img.html foreignObject-img-ref.html
 == foreignObject-img-form-theme.html foreignObject-img-form-theme-ref.html
 == foreignObject-move-repaint-01.svg pass.svg
