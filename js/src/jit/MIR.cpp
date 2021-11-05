@@ -6332,6 +6332,54 @@ MDefinition* MGetInlinedArgument::foldsTo(TempAllocator& alloc) {
   return arg;
 }
 
+MGetInlinedArgumentHole* MGetInlinedArgumentHole::New(
+    TempAllocator& alloc, MDefinition* index,
+    MCreateInlinedArgumentsObject* args) {
+  auto* ins = new (alloc) MGetInlinedArgumentHole();
+
+  uint32_t argc = args->numActuals();
+  MOZ_ASSERT(argc <= ArgumentsObject::MaxInlinedArgs);
+
+  if (!ins->init(alloc, argc + NumNonArgumentOperands)) {
+    return nullptr;
+  }
+
+  ins->initOperand(0, index);
+  for (uint32_t i = 0; i < argc; i++) {
+    ins->initOperand(i + NumNonArgumentOperands, args->getArg(i));
+  }
+
+  return ins;
+}
+
+MDefinition* MGetInlinedArgumentHole::foldsTo(TempAllocator& alloc) {
+  MDefinition* indexDef = SkipUninterestingInstructions(index());
+  if (!indexDef->isConstant() || indexDef->type() != MIRType::Int32) {
+    return this;
+  }
+
+  int32_t indexConst = indexDef->toConstant()->toInt32();
+  if (indexConst < 0) {
+    return this;
+  }
+
+  MDefinition* arg;
+  if (uint32_t(indexConst) < numActuals()) {
+    arg = getArg(indexConst);
+
+    if (arg->type() != MIRType::Value) {
+      arg = MBox::New(alloc, arg);
+    }
+  } else {
+    auto* undefined = MConstant::New(alloc, UndefinedValue());
+    block()->insertBefore(this, undefined);
+
+    arg = MBox::New(alloc, undefined);
+  }
+
+  return arg;
+}
+
 bool MWasmShiftSimd128::congruentTo(const MDefinition* ins) const {
   return ins->toWasmShiftSimd128()->simdOp() == simdOp_ &&
          congruentIfOperandsEqual(ins);
