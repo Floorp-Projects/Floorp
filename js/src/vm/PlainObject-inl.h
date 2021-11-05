@@ -74,7 +74,12 @@ static MOZ_ALWAYS_INLINE bool CreateThis(JSContext* cx,
 
   MOZ_ASSERT(thisv.isMagic(JS_IS_CONSTRUCTING));
 
-  PlainObject* obj = CreateThisForFunction(cx, callee, newTarget, newKind);
+  RootedShape shape(cx, ThisShapeForFunction(cx, callee, newTarget));
+  if (!shape) {
+    return false;
+  }
+
+  PlainObject* obj = PlainObject::createWithShape(cx, shape, newKind);
   if (!obj) {
     return false;
   }
