@@ -4591,10 +4591,7 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsINode& aLeftNode,
     return NS_ERROR_FAILURE;
   }
   // Find the number of children of the lefthand node
-  uint32_t oldLeftNodeLen = aLeftNode.Length();
-
-  TopLevelEditSubActionDataRef().WillJoinContents(*this, *aLeftNode.AsContent(),
-                                                  *aRightNode.AsContent());
+  const uint32_t oldLeftNodeLen = aLeftNode.Length();
 
   RefPtr<JoinNodeTransaction> transaction = JoinNodeTransaction::MaybeCreate(
       *this, *aLeftNode.AsContent(), *aRightNode.AsContent());
@@ -4616,8 +4613,8 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsINode& aLeftNode,
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "RangeUpdater::SelAdjJoinNodes() failed, but ignored");
 
-  TopLevelEditSubActionDataRef().DidJoinContents(*this, *aLeftNode.AsContent(),
-                                                 *aRightNode.AsContent());
+  TopLevelEditSubActionDataRef().DidJoinContents(
+      *this, EditorRawDOMPoint(&aRightNode, oldLeftNodeLen));
 
   if (mInlineSpellChecker) {
     RefPtr<mozInlineSpellChecker> spellChecker = mInlineSpellChecker;
