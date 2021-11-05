@@ -66,7 +66,7 @@ bool is_in_render_thread() {
 }
 
 bool gecko_profiler_thread_is_being_profiled() {
-  return profiler_thread_is_being_profiled();
+  return profiler_thread_is_being_profiled(ThreadProfilingFeatures::Any);
 }
 
 bool is_glcontext_gles(void* const glcontext_ptr) {
