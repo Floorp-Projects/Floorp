@@ -100,6 +100,15 @@ void DocAccessibleChildBase::ShowEvent(AccShowEvent* aShowEvent) {
                     false);
 }
 
+mozilla::ipc::IPCResult DocAccessibleChildBase::RecvTakeFocus(
+    const uint64_t& aID) {
+  LocalAccessible* acc = IdToAccessible(aID);
+  if (acc) {
+    acc->TakeFocus();
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult DocAccessibleChildBase::RecvVerifyCache(
     const uint64_t& aID, const uint64_t& aCacheDomain, AccAttributes* aFields) {
 #ifdef A11Y_LOG

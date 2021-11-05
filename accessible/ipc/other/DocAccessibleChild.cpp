@@ -1503,15 +1503,6 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvStep(const uint64_t& aID,
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult DocAccessibleChild::RecvTakeFocus(const uint64_t& aID) {
-  LocalAccessible* acc = IdToAccessible(aID);
-  if (acc) {
-    acc->TakeFocus();
-  }
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult DocAccessibleChild::RecvFocusedChild(
     const uint64_t& aID, PDocAccessibleChild** aResultDoc,
     uint64_t* aResultID) {
