@@ -149,8 +149,7 @@ void CanvasChild::EnsureRecorder(TextureType aTextureType) {
     }
 
     if (CanSend()) {
-      Unused << SendInitTranslator(mTextureType, std::move(handle),
-                                   std::move(readerSem), std::move(writerSem));
+      Unused << SendInitTranslator(mTextureType, handle, readerSem, writerSem);
     }
   }
 

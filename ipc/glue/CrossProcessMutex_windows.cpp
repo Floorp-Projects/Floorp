@@ -30,10 +30,10 @@ CrossProcessMutex::CrossProcessMutex(const char*) {
 
 CrossProcessMutex::CrossProcessMutex(CrossProcessMutexHandle aHandle) {
   DWORD flags;
-  if (!::GetHandleInformation(aHandle.get(), &flags)) {
+  if (!::GetHandleInformation(aHandle, &flags)) {
     MOZ_CRASH("Attempt to construct a mutex from an invalid handle!");
   }
-  mMutex = aHandle.release();
+  mMutex = aHandle;
   MOZ_COUNT_CTOR(CrossProcessMutex);
 }
 
@@ -56,11 +56,14 @@ void CrossProcessMutex::Unlock() {
 CrossProcessMutexHandle CrossProcessMutex::ShareToProcess(
     base::ProcessId aTargetPid) {
   HANDLE newHandle;
-  if (!::DuplicateHandle(GetCurrentProcess(), mMutex, GetCurrentProcess(),
-                         &newHandle, 0, false, DUPLICATE_SAME_ACCESS)) {
+  bool succeeded = ipc::DuplicateHandle(mMutex, aTargetPid, &newHandle, 0,
+                                        DUPLICATE_SAME_ACCESS);
+
+  if (!succeeded) {
     return nullptr;
   }
-  return mozilla::UniqueFileHandle(newHandle);
+
+  return newHandle;
 }
 
 }  // namespace mozilla

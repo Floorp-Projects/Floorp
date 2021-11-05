@@ -670,13 +670,13 @@ bool GlobalStyleSheetCache::AffectedByPref(const nsACString& aPref) {
 }
 
 /* static */ void GlobalStyleSheetCache::SetSharedMemory(
-    base::SharedMemoryHandle aHandle, uintptr_t aAddress) {
+    const base::SharedMemoryHandle& aHandle, uintptr_t aAddress) {
   MOZ_ASSERT(!XRE_IsParentProcess());
   MOZ_ASSERT(!gStyleCache, "Too late, GlobalStyleSheetCache already created!");
   MOZ_ASSERT(!sSharedMemory, "Shouldn't call this more than once");
 
   auto shm = MakeUnique<base::SharedMemory>();
-  if (!shm->SetHandle(std::move(aHandle), /* read_only */ true)) {
+  if (!shm->SetHandle(aHandle, /* read_only */ true)) {
     return;
   }
 
@@ -688,10 +688,7 @@ bool GlobalStyleSheetCache::AffectedByPref(const nsACString& aPref) {
 bool GlobalStyleSheetCache::ShareToProcess(base::ProcessId aProcessId,
                                            base::SharedMemoryHandle* aHandle) {
   MOZ_ASSERT(XRE_IsParentProcess());
-  if (sSharedMemory) {
-    *aHandle = sSharedMemory->CloneHandle();
-  }
-  return !!*aHandle;
+  return sSharedMemory && sSharedMemory->ShareToProcess(aProcessId, aHandle);
 }
 
 StaticRefPtr<GlobalStyleSheetCache> GlobalStyleSheetCache::gStyleCache;

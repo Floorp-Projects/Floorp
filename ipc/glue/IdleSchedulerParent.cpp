@@ -191,9 +191,10 @@ IPCResult IdleSchedulerParent::RecvInitForIdleUse(
     }
   }
   Maybe<SharedMemoryHandle> activeCounter;
-  if (SharedMemoryHandle handle =
-          sActiveChildCounter ? sActiveChildCounter->CloneHandle() : nullptr) {
-    activeCounter.emplace(std::move(handle));
+  SharedMemoryHandle handle;
+  if (sActiveChildCounter &&
+      sActiveChildCounter->ShareToProcess(OtherPid(), &handle)) {
+    activeCounter.emplace(handle);
   }
 
   uint32_t unusedId = 0;
@@ -208,8 +209,8 @@ IPCResult IdleSchedulerParent::RecvInitForIdleUse(
   // If there wasn't an empty item, we'll fallback to 0.
   mChildId = unusedId;
 
-  aResolve(Tuple<mozilla::Maybe<SharedMemoryHandle>&&, const uint32_t&>(
-      std::move(activeCounter), mChildId));
+  aResolve(Tuple<const mozilla::Maybe<SharedMemoryHandle>&, const uint32_t&>(
+      activeCounter, mChildId));
   return IPC_OK();
 }
 

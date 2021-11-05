@@ -109,12 +109,11 @@ void VideoBridgeParent::ActorDealloc() {
 }
 
 PTextureParent* VideoBridgeParent::AllocPTextureParent(
-    const SurfaceDescriptor& aSharedData, ReadLockDescriptor& aReadLock,
+    const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
     const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
     const uint64_t& aSerial) {
-  PTextureParent* parent =
-      TextureHost::CreateIPDLActor(this, aSharedData, std::move(aReadLock),
-                                   aLayersBackend, aFlags, aSerial, Nothing());
+  PTextureParent* parent = TextureHost::CreateIPDLActor(
+      this, aSharedData, aReadLock, aLayersBackend, aFlags, aSerial, Nothing());
 
   if (!parent) {
     return nullptr;

@@ -236,13 +236,8 @@ class UsingStmt(Node):
     def isRefcounted(self):
         return "RefCounted" in self.attributes
 
-    def isSendMoveOnly(self):
-        moveonly = self.attributes.get("MoveOnly")
-        return moveonly and moveonly.value in (None, "send")
-
-    def isDataMoveOnly(self):
-        moveonly = self.attributes.get("MoveOnly")
-        return moveonly and moveonly.value in (None, "data")
+    def isMoveonly(self):
+        return "MoveOnly" in self.attributes
 
 
 # "singletons"
