@@ -79,8 +79,8 @@ class TextureParent : public ParentActor<PTextureParent> {
   virtual ~TextureParent();
 
   bool Init(const SurfaceDescriptor& aSharedData,
-            ReadLockDescriptor&& aReadLock, const LayersBackend& aLayersBackend,
-            const TextureFlags& aFlags);
+            const ReadLockDescriptor& aReadLock,
+            const LayersBackend& aLayersBackend, const TextureFlags& aFlags);
 
   void NotifyNotUsed(uint64_t aTransactionId);
 
@@ -115,12 +115,12 @@ static bool WrapWithWebRenderTextureHost(ISurfaceAllocator* aDeallocator,
 ////////////////////////////////////////////////////////////////////////////////
 PTextureParent* TextureHost::CreateIPDLActor(
     HostIPCAllocator* aAllocator, const SurfaceDescriptor& aSharedData,
-    ReadLockDescriptor&& aReadLock, LayersBackend aLayersBackend,
+    const ReadLockDescriptor& aReadLock, LayersBackend aLayersBackend,
     TextureFlags aFlags, uint64_t aSerial,
     const wr::MaybeExternalImageId& aExternalImageId) {
   TextureParent* actor =
       new TextureParent(aAllocator, aSerial, aExternalImageId);
-  if (!actor->Init(aSharedData, std::move(aReadLock), aLayersBackend, aFlags)) {
+  if (!actor->Init(aSharedData, aReadLock, aLayersBackend, aFlags)) {
     actor->ActorDestroy(ipc::IProtocol::ActorDestroyReason::FailedConstructor);
     delete actor;
     return nullptr;
@@ -182,7 +182,7 @@ already_AddRefed<TextureHost> CreateDummyBufferTextureHost(
 }
 
 already_AddRefed<TextureHost> TextureHost::Create(
-    const SurfaceDescriptor& aDesc, ReadLockDescriptor&& aReadLock,
+    const SurfaceDescriptor& aDesc, const ReadLockDescriptor& aReadLock,
     ISurfaceAllocator* aDeallocator, LayersBackend aBackend,
     TextureFlags aFlags, wr::MaybeExternalImageId& aExternalImageId) {
   RefPtr<TextureHost> result;
@@ -225,9 +225,8 @@ already_AddRefed<TextureHost> TextureHost::Create(
         break;
       }
 
-      result =
-          TextureHost::Create(*realDesc, std::move(aReadLock), aDeallocator,
-                              aBackend, aFlags, aExternalImageId);
+      result = TextureHost::Create(*realDesc, aReadLock, aDeallocator, aBackend,
+                                   aFlags, aExternalImageId);
       return result.forget();
     }
     default:
@@ -245,7 +244,7 @@ already_AddRefed<TextureHost> TextureHost::Create(
   }
 
   if (result) {
-    result->DeserializeReadLock(std::move(aReadLock), aDeallocator);
+    result->DeserializeReadLock(aReadLock, aDeallocator);
   }
 
   return result.forget();
@@ -681,13 +680,13 @@ void BufferTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
   }
 }
 
-void TextureHost::DeserializeReadLock(ReadLockDescriptor&& aDesc,
+void TextureHost::DeserializeReadLock(const ReadLockDescriptor& aDesc,
                                       ISurfaceAllocator* aAllocator) {
   if (mReadLock) {
     return;
   }
 
-  mReadLock = TextureReadLock::Deserialize(std::move(aDesc), aAllocator);
+  mReadLock = TextureReadLock::Deserialize(aDesc, aAllocator);
 }
 
 void TextureHost::SetReadLocked() {
@@ -1225,12 +1224,11 @@ void TextureParent::NotifyNotUsed(uint64_t aTransactionId) {
 }
 
 bool TextureParent::Init(const SurfaceDescriptor& aSharedData,
-                         ReadLockDescriptor&& aReadLock,
+                         const ReadLockDescriptor& aReadLock,
                          const LayersBackend& aBackend,
                          const TextureFlags& aFlags) {
-  mTextureHost =
-      TextureHost::Create(aSharedData, std::move(aReadLock), mSurfaceAllocator,
-                          aBackend, aFlags, mExternalImageId);
+  mTextureHost = TextureHost::Create(aSharedData, aReadLock, mSurfaceAllocator,
+                                     aBackend, aFlags, mExternalImageId);
   if (mTextureHost) {
     mTextureHost->mActor = this;
   }

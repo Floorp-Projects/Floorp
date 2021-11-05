@@ -46,10 +46,11 @@ TEST(IPCSharedMemory, FreezeAndMapRW)
   ASSERT_FALSE(shm.memory());
 
   // Re-create as writeable
-  auto handle = shm.TakeHandle();
+  auto handle = base::SharedMemory::NULLHandle();
+  ASSERT_TRUE(shm.GiveToProcess(base::GetCurrentProcId(), &handle));
   ASSERT_TRUE(shm.IsHandleValid(handle));
   ASSERT_FALSE(shm.IsValid());
-  ASSERT_TRUE(shm.SetHandle(std::move(handle), /* read-only */ false));
+  ASSERT_TRUE(shm.SetHandle(handle, /* read-only */ false));
   ASSERT_TRUE(shm.IsValid());
 
   // This should fail
@@ -102,10 +103,11 @@ TEST(IPCSharedMemory, Reprotect)
   *mem = 'A';
 
   // Re-create as read-only
-  auto handle = shm.TakeHandle();
+  auto handle = base::SharedMemory::NULLHandle();
+  ASSERT_TRUE(shm.GiveToProcess(base::GetCurrentProcId(), &handle));
   ASSERT_TRUE(shm.IsHandleValid(handle));
   ASSERT_FALSE(shm.IsValid());
-  ASSERT_TRUE(shm.SetHandle(std::move(handle), /* read-only */ true));
+  ASSERT_TRUE(shm.SetHandle(handle, /* read-only */ true));
   ASSERT_TRUE(shm.IsValid());
 
   // Re-map
@@ -139,14 +141,14 @@ TEST(IPCSharedMemory, WinUnfreeze)
   ASSERT_FALSE(shm.memory());
 
   // Extract handle.
-  auto handle = shm.TakeHandle();
+  auto handle = base::SharedMemory::NULLHandle();
+  ASSERT_TRUE(shm.GiveToProcess(base::GetCurrentProcId(), &handle));
   ASSERT_TRUE(shm.IsHandleValid(handle));
   ASSERT_FALSE(shm.IsValid());
 
   // Unfreeze.
-  HANDLE newHandle = INVALID_HANDLE_VALUE;
   bool unfroze = ::DuplicateHandle(
-      GetCurrentProcess(), handle.release(), GetCurrentProcess(), &newHandle,
+      GetCurrentProcess(), handle, GetCurrentProcess(), &handle,
       FILE_MAP_ALL_ACCESS, false, DUPLICATE_CLOSE_SOURCE);
   ASSERT_FALSE(unfroze);
 }
@@ -233,10 +235,11 @@ TEST(IPCSharedMemory, ROCopyAndMapRW)
   ASSERT_TRUE(shmRO.IsValid());
 
   // Re-create as writeable
-  auto handle = shmRO.TakeHandle();
+  auto handle = base::SharedMemory::NULLHandle();
+  ASSERT_TRUE(shmRO.GiveToProcess(base::GetCurrentProcId(), &handle));
   ASSERT_TRUE(shmRO.IsHandleValid(handle));
   ASSERT_FALSE(shmRO.IsValid());
-  ASSERT_TRUE(shmRO.SetHandle(std::move(handle), /* read-only */ false));
+  ASSERT_TRUE(shmRO.SetHandle(handle, /* read-only */ false));
   ASSERT_TRUE(shmRO.IsValid());
 
   // This should fail

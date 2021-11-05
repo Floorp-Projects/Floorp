@@ -649,13 +649,13 @@ FontList::FontList(uint32_t aGeneration) {
     // Initialize using the list of shmem blocks passed by the parent via
     // SetXPCOMProcessAttributes.
     auto& blocks = dom::ContentChild::GetSingleton()->SharedFontListBlocks();
-    for (auto& handle : blocks) {
+    for (auto handle : blocks) {
       auto newShm = MakeUnique<base::SharedMemory>();
       if (!newShm->IsHandleValid(handle)) {
         // Bail out and let UpdateShmBlocks try to do its thing below.
         break;
       }
-      if (!newShm->SetHandle(std::move(handle), true)) {
+      if (!newShm->SetHandle(handle, true)) {
         MOZ_CRASH("failed to set shm handle");
       }
       if (!newShm->Map(SHM_BLOCK_SIZE) || !newShm->memory()) {
@@ -746,7 +746,7 @@ void FontList::ShmBlockAdded(uint32_t aGeneration, uint32_t aIndex,
   if (!newShm->IsHandleValid(aHandle)) {
     return;
   }
-  if (!newShm->SetHandle(std::move(aHandle), true)) {
+  if (!newShm->SetHandle(aHandle, true)) {
     MOZ_CRASH("failed to set shm handle");
   }
 
@@ -795,7 +795,7 @@ FontList::ShmBlock* FontList::GetBlockFromParent(uint32_t aIndex) {
   if (!newShm->IsHandleValid(handle)) {
     return nullptr;
   }
-  if (!newShm->SetHandle(std::move(handle), true)) {
+  if (!newShm->SetHandle(handle, true)) {
     MOZ_CRASH("failed to set shm handle");
   }
   if (!newShm->Map(SHM_BLOCK_SIZE) || !newShm->memory()) {
@@ -828,8 +828,9 @@ void FontList::ShareBlocksToProcess(nsTArray<base::SharedMemoryHandle>* aBlocks,
                                     base::ProcessId aPid) {
   MOZ_RELEASE_ASSERT(mReadOnlyShmems.Length() == mBlocks.Length());
   for (auto& shmem : mReadOnlyShmems) {
-    auto handle = shmem->CloneHandle();
-    if (!handle) {
+    base::SharedMemoryHandle* handle =
+        aBlocks->AppendElement(base::SharedMemory::NULLHandle());
+    if (!shmem->ShareToProcess(aPid, handle)) {
       // If something went wrong here, we just bail out; the child will need to
       // request the blocks as needed, at some performance cost. (Although in
       // practice this may mean resources are so constrained the child process
@@ -837,7 +838,6 @@ void FontList::ShareBlocksToProcess(nsTArray<base::SharedMemoryHandle>* aBlocks,
       aBlocks->Clear();
       return;
     }
-    aBlocks->AppendElement(std::move(handle));
   }
 }
 
@@ -847,7 +847,12 @@ base::SharedMemoryHandle FontList::ShareBlockToProcess(uint32_t aIndex,
   MOZ_RELEASE_ASSERT(mReadOnlyShmems.Length() == mBlocks.Length());
   MOZ_RELEASE_ASSERT(aIndex < mReadOnlyShmems.Length());
 
-  return mReadOnlyShmems[aIndex]->CloneHandle();
+  base::SharedMemoryHandle handle = base::SharedMemory::NULLHandle();
+  if (mReadOnlyShmems[aIndex]->ShareToProcess(aPid, &handle)) {
+    return handle;
+  }
+
+  return base::SharedMemory::NULLHandle();
 }
 
 Pointer FontList::Alloc(uint32_t aSize) {

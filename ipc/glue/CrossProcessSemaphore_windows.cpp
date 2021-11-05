@@ -35,11 +35,11 @@ CrossProcessSemaphore* CrossProcessSemaphore::Create(const char*,
 CrossProcessSemaphore* CrossProcessSemaphore::Create(
     CrossProcessSemaphoreHandle aHandle) {
   DWORD flags;
-  if (!::GetHandleInformation(aHandle.get(), &flags)) {
+  if (!::GetHandleInformation(aHandle, &flags)) {
     return nullptr;
   }
 
-  return new CrossProcessSemaphore(aHandle.release());
+  return new CrossProcessSemaphore(aHandle);
 }
 
 CrossProcessSemaphore::CrossProcessSemaphore(HANDLE aSemaphore)
@@ -68,15 +68,14 @@ void CrossProcessSemaphore::Signal() {
 CrossProcessSemaphoreHandle CrossProcessSemaphore::ShareToProcess(
     base::ProcessId aTargetPid) {
   HANDLE newHandle;
-  bool succeeded =
-      ::DuplicateHandle(GetCurrentProcess(), mSemaphore, GetCurrentProcess(),
-                        &newHandle, 0, false, DUPLICATE_SAME_ACCESS);
+  bool succeeded = ipc::DuplicateHandle(mSemaphore, aTargetPid, &newHandle, 0,
+                                        DUPLICATE_SAME_ACCESS);
 
   if (!succeeded) {
     return nullptr;
   }
 
-  return UniqueFileHandle(newHandle);
+  return newHandle;
 }
 
 void CrossProcessSemaphore::CloseHandle() {}

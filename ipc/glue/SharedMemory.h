@@ -121,7 +121,7 @@ class SharedMemoryCommon : public SharedMemory {
 
   virtual bool ShareToProcess(base::ProcessId aProcessId, Handle* aHandle) = 0;
   virtual bool IsHandleValid(const Handle& aHandle) const = 0;
-  virtual bool SetHandle(Handle aHandle, OpenRights aRights) = 0;
+  virtual bool SetHandle(const Handle& aHandle, OpenRights aRights) = 0;
 
   virtual bool ShareHandle(base::ProcessId aProcessId,
                            IPC::Message* aMessage) override {
@@ -129,7 +129,7 @@ class SharedMemoryCommon : public SharedMemory {
     if (!ShareToProcess(aProcessId, &handle)) {
       return false;
     }
-    IPC::WriteParam(aMessage, std::move(handle));
+    IPC::WriteParam(aMessage, handle);
     return true;
   }
 
@@ -137,7 +137,7 @@ class SharedMemoryCommon : public SharedMemory {
                           PickleIterator* aIter) override {
     Handle handle;
     return IPC::ReadParam(aMessage, aIter, &handle) && IsHandleValid(handle) &&
-           SetHandle(std::move(handle), RightsReadWrite);
+           SetHandle(handle, RightsReadWrite);
   }
 };
 

@@ -423,7 +423,7 @@ bool CompositorBridgeChild::SendStopFrameTimeRecording(
 }
 
 PTextureChild* CompositorBridgeChild::AllocPTextureChild(
-    const SurfaceDescriptor&, ReadLockDescriptor&, const LayersBackend&,
+    const SurfaceDescriptor&, const ReadLockDescriptor&, const LayersBackend&,
     const TextureFlags&, const LayersId&, const uint64_t& aSerial,
     const wr::MaybeExternalImageId& aExternalImageId) {
   return TextureClient::CreateIPDLActor();
@@ -555,7 +555,7 @@ CompositorBridgeChild::GetTileLockAllocator() {
 }
 
 PTextureChild* CompositorBridgeChild::CreateTexture(
-    const SurfaceDescriptor& aSharedData, ReadLockDescriptor&& aReadLock,
+    const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
     LayersBackend aLayersBackend, TextureFlags aFlags, uint64_t aSerial,
     wr::MaybeExternalImageId& aExternalImageId, nsISerialEventTarget* aTarget) {
   PTextureChild* textureChild =
@@ -568,7 +568,7 @@ PTextureChild* CompositorBridgeChild::CreateTexture(
   }
 
   return SendPTextureConstructor(
-      textureChild, aSharedData, std::move(aReadLock), aLayersBackend, aFlags,
+      textureChild, aSharedData, aReadLock, aLayersBackend, aFlags,
       LayersId{0} /* FIXME? */, aSerial, aExternalImageId);
 }
 

@@ -163,13 +163,12 @@ VOID = VoidType()
 
 
 class ImportedCxxType(Type):
-    def __init__(self, qname, refcounted, sendmoveonly, datamoveonly):
+    def __init__(self, qname, refcounted, moveonly):
         assert isinstance(qname, QualifiedId)
         self.loc = qname.loc
         self.qname = qname
         self.refcounted = refcounted
-        self.sendmoveonly = sendmoveonly
-        self.datamoveonly = datamoveonly
+        self.moveonly = moveonly
 
     def isCxx(self):
         return True
@@ -180,11 +179,8 @@ class ImportedCxxType(Type):
     def isRefcounted(self):
         return self.refcounted
 
-    def isSendMoveOnly(self):
-        return self.sendmoveonly
-
-    def isDataMoveOnly(self):
-        return self.datamoveonly
+    def isMoveonly(self):
+        return self.moveonly
 
     def name(self):
         return self.qname.baseid
@@ -1111,7 +1107,7 @@ class GatherDecls(TcheckVisitor):
         self.checkAttributes(
             using.attributes,
             {
-                "MoveOnly": (None, "data", "send"),
+                "MoveOnly": None,
                 "RefCounted": None,
             },
         )
@@ -1124,10 +1120,7 @@ class GatherDecls(TcheckVisitor):
             ipdltype = FDType(using.type.spec)
         else:
             ipdltype = ImportedCxxType(
-                using.type.spec,
-                using.isRefcounted(),
-                using.isSendMoveOnly(),
-                using.isDataMoveOnly(),
+                using.type.spec, using.isRefcounted(), using.isMoveonly()
             )
             existingType = self.symtab.lookup(ipdltype.fullname())
             if existingType and existingType.fullname == ipdltype.fullname():
@@ -1137,10 +1130,7 @@ class GatherDecls(TcheckVisitor):
                         "inconsistent refcounted status of type `%s`",
                         str(using.type),
                     )
-                if (
-                    ipdltype.isSendMoveOnly() != existingType.type.isSendMoveOnly()
-                    or ipdltype.isDataMoveOnly() != existingType.type.isDataMoveOnly()
-                ):
+                if ipdltype.isMoveonly() != existingType.type.isMoveonly():
                     self.error(
                         using.loc,
                         "inconsistent moveonly status of type `%s`",
