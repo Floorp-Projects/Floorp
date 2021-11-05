@@ -808,7 +808,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Label that indicates a site is using a secure connection -->
     <string name="secure_connection">A conexão é segura</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="insecure_connection">A conexão não é segura</string>
+    <string name="insecure_connection">Conexão não segura</string>
     <!-- Title for the list of trackers enhanced tracking ptotection can block-->
     <string name="trackers_and_scripts">Rastreadores e scripts a bloquear</string>
 
