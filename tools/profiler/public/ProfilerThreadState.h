@@ -26,8 +26,7 @@
 // profiled for any of the given features? (Same caveats and recommended usage
 // as profiler_is_active().)
 [[nodiscard]] inline bool profiler_thread_is_being_profiled(
-    ThreadProfilingFeatures aThreadProfilingFeatures =
-        ThreadProfilingFeatures::Any) {
+    ThreadProfilingFeatures aThreadProfilingFeatures) {
   return profiler_is_active_and_unpaused() &&
          mozilla::profiler::ThreadRegistration::WithOnThreadRefOr(
              [aThreadProfilingFeatures](
@@ -45,8 +44,7 @@
 // as current thread id).
 [[nodiscard]] inline bool profiler_thread_is_being_profiled(
     const ProfilerThreadId& aThreadId,
-    ThreadProfilingFeatures aThreadProfilingFeatures =
-        ThreadProfilingFeatures::Any) {
+    ThreadProfilingFeatures aThreadProfilingFeatures) {
   if (!profiler_is_active_and_unpaused()) {
     return false;
   }
