@@ -52,7 +52,7 @@
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/dom/WindowContext.h"
-#include "mozilla/extensions/ExtensionBrowser.h"  // extensions::Create{AndDispatchInitWorkerContext,WorkerDestroyed}Runnable
+#include "mozilla/extensions/ExtensionBrowser.h"  // extensions::Create{AndDispatchInitWorkerContext,WorkerLoaded,WorkerDestroyed}Runnable
 #include "mozilla/extensions/WebExtensionPolicy.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/StoragePrincipalHelper.h"
@@ -369,6 +369,20 @@ class CompileScriptRunnable final : public WorkerDebuggeeRunnable {
     ErrorResult rv;
     workerinternals::LoadMainScript(aWorkerPrivate, std::move(mOriginStack),
                                     mScriptURL, WorkerScript, rv);
+
+    if (aWorkerPrivate->ExtensionAPIAllowed()) {
+      MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
+      RefPtr<Runnable> extWorkerRunnable =
+          extensions::CreateWorkerLoadedRunnable(
+              aWorkerPrivate->ServiceWorkerID(), aWorkerPrivate->GetBaseURI());
+      // Dispatch as a low priority runnable.
+      if (NS_FAILED(aWorkerPrivate->DispatchToMainThreadForMessaging(
+              extWorkerRunnable.forget()))) {
+        NS_WARNING(
+            "Failed to dispatch runnable to notify extensions worker loaded");
+      }
+    }
+
     rv.WouldReportJSException();
     // Explicitly ignore NS_BINDING_ABORTED on rv.  Or more precisely, still
     // return false and don't SetWorkerScriptExecutedSuccessfully() in that
