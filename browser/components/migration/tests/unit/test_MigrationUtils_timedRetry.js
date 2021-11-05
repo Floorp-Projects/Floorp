@@ -1,7 +1,5 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
-
 let tmpFile = FileUtils.getDir("TmpD", [], true);
 let dbConn;
 
@@ -9,9 +7,9 @@ add_task(async function setup() {
   tmpFile.append("TestDB");
   dbConn = await Sqlite.openConnection({ path: tmpFile.path });
 
-  registerCleanupFunction(() => {
-    dbConn.close();
-    OS.File.remove(tmpFile.path);
+  registerCleanupFunction(async () => {
+    await dbConn.close();
+    IOUtils.remove(tmpFile.path);
   });
 });
 
