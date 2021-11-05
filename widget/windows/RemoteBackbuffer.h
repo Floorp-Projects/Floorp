@@ -50,7 +50,7 @@ class Provider {
                             PresentResponseData* aResponseData);
 
   HWND mWindowHandle;
-  HANDLE mTargetProcess;
+  DWORD mTargetProcessId;
   HANDLE mFileMapping;
   HANDLE mRequestReadyEvent;
   HANDLE mResponseReadyEvent;

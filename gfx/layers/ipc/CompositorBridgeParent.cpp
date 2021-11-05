@@ -1877,11 +1877,11 @@ CompositorBridgeParent::GetGeckoContentControllerForRoot(
 }
 
 PTextureParent* CompositorBridgeParent::AllocPTextureParent(
-    const SurfaceDescriptor& aSharedData, ReadLockDescriptor& aReadLock,
+    const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
     const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
     const LayersId& aId, const uint64_t& aSerial,
     const wr::MaybeExternalImageId& aExternalImageId) {
-  return TextureHost::CreateIPDLActor(this, aSharedData, std::move(aReadLock),
+  return TextureHost::CreateIPDLActor(this, aSharedData, aReadLock,
                                       aLayersBackend, aFlags, aSerial,
                                       aExternalImageId);
 }

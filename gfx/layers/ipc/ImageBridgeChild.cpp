@@ -786,7 +786,7 @@ bool ImageBridgeChild::DeallocShmem(ipc::Shmem& aShmem) {
 }
 
 PTextureChild* ImageBridgeChild::AllocPTextureChild(
-    const SurfaceDescriptor&, ReadLockDescriptor&, const LayersBackend&,
+    const SurfaceDescriptor&, const ReadLockDescriptor&, const LayersBackend&,
     const TextureFlags&, const uint64_t& aSerial,
     const wr::MaybeExternalImageId& aExternalImageId) {
   MOZ_ASSERT(CanSend());
@@ -877,13 +877,12 @@ mozilla::ipc::IPCResult ImageBridgeChild::RecvReportFramesDropped(
 }
 
 PTextureChild* ImageBridgeChild::CreateTexture(
-    const SurfaceDescriptor& aSharedData, ReadLockDescriptor&& aReadLock,
+    const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
     LayersBackend aLayersBackend, TextureFlags aFlags, uint64_t aSerial,
     wr::MaybeExternalImageId& aExternalImageId, nsISerialEventTarget* aTarget) {
   MOZ_ASSERT(CanSend());
-  return SendPTextureConstructor(aSharedData, std::move(aReadLock),
-                                 aLayersBackend, aFlags, aSerial,
-                                 aExternalImageId);
+  return SendPTextureConstructor(aSharedData, aReadLock, aLayersBackend, aFlags,
+                                 aSerial, aExternalImageId);
 }
 
 static bool IBCAddOpDestroy(CompositableTransaction* aTxn,

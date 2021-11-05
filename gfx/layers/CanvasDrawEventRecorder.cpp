@@ -84,13 +84,13 @@ bool CanvasEventRingBuffer::InitWriter(
 }
 
 bool CanvasEventRingBuffer::InitReader(
-    ipc::SharedMemoryBasic::Handle aReadHandle,
-    CrossProcessSemaphoreHandle aReaderSem,
-    CrossProcessSemaphoreHandle aWriterSem,
+    const ipc::SharedMemoryBasic::Handle& aReadHandle,
+    const CrossProcessSemaphoreHandle& aReaderSem,
+    const CrossProcessSemaphoreHandle& aWriterSem,
     UniquePtr<ReaderServices> aReaderServices) {
   mSharedMemory = MakeAndAddRef<ipc::SharedMemoryBasic>();
   if (NS_WARN_IF(!mSharedMemory->SetHandle(
-          std::move(aReadHandle), ipc::SharedMemory::RightsReadWrite)) ||
+          aReadHandle, ipc::SharedMemory::RightsReadWrite)) ||
       NS_WARN_IF(!mSharedMemory->Map(kShmemSize))) {
     return false;
   }
@@ -100,9 +100,9 @@ bool CanvasEventRingBuffer::InitReader(
   mBuf = static_cast<char*>(mSharedMemory->memory());
   mRead = reinterpret_cast<ReadFooter*>(mBuf + kStreamSize);
   mWrite = reinterpret_cast<WriteFooter*>(mBuf + kStreamSize + kCacheLineSize);
-  mReaderSemaphore.reset(CrossProcessSemaphore::Create(std::move(aReaderSem)));
+  mReaderSemaphore.reset(CrossProcessSemaphore::Create(aReaderSem));
   mReaderSemaphore->CloseHandle();
-  mWriterSemaphore.reset(CrossProcessSemaphore::Create(std::move(aWriterSem)));
+  mWriterSemaphore.reset(CrossProcessSemaphore::Create(aWriterSem));
   mWriterSemaphore->CloseHandle();
 
   mReaderServices = std::move(aReaderServices);

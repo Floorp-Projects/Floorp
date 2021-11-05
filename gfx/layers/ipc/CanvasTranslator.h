@@ -58,9 +58,9 @@ class CanvasTranslator final : public gfx::InlineTranslator,
    */
   ipc::IPCResult RecvInitTranslator(
       const TextureType& aTextureType,
-      ipc::SharedMemoryBasic::Handle&& aReadHandle,
-      CrossProcessSemaphoreHandle&& aReaderSem,
-      CrossProcessSemaphoreHandle&& aWriterSem);
+      const ipc::SharedMemoryBasic::Handle& aReadHandle,
+      const CrossProcessSemaphoreHandle& aReaderSem,
+      const CrossProcessSemaphoreHandle& aWriterSem);
 
   /**
    * Used to tell the CanvasTranslator to start translating again after it has

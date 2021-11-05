@@ -15,7 +15,6 @@
 #include "mojo/core/ports/port_ref.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/ipc/ScopedPort.h"
 #include "nsTArray.h"
 
@@ -23,11 +22,17 @@
 #  include "mozilla/ipc/Faulty.h"
 #endif
 
+namespace base {
+struct FileDescriptor;
+}
+
 namespace mozilla {
 namespace ipc {
 class MiniTransceiver;
 }
 }  // namespace mozilla
+
+class FileDescriptorSet;
 
 namespace IPC {
 
@@ -89,10 +94,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
     REPLY = 1,
   };
 
-  // Mac and Linux both limit the number of file descriptors per message to
-  // slightly more than 250.
-  enum { MAX_DESCRIPTORS_PER_MESSAGE = 200 };
-
   class HeaderFlags {
     friend class Message;
 
@@ -106,7 +107,6 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
       COMPRESS_BIT = 0x0200,
       COMPRESSALL_BIT = 0x0400,
       CONSTRUCTOR_BIT = 0x0800,
-      RELAY_BIT = 0x1000,
     };
 
    public:
@@ -147,20 +147,12 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
     bool IsReply() const { return (mFlags & REPLY_BIT) != 0; }
 
     bool IsReplyError() const { return (mFlags & REPLY_ERROR_BIT) != 0; }
-    bool IsRelay() const { return (mFlags & RELAY_BIT) != 0; }
 
    private:
     void SetSync() { mFlags |= SYNC_BIT; }
     void SetInterrupt() { mFlags |= INTERRUPT_BIT; }
     void SetReply() { mFlags |= REPLY_BIT; }
     void SetReplyError() { mFlags |= REPLY_ERROR_BIT; }
-    void SetRelay(bool relay) {
-      if (relay) {
-        mFlags |= RELAY_BIT;
-      } else {
-        mFlags &= ~RELAY_BIT;
-      }
-    }
 
     uint32_t mFlags;
   };
@@ -254,10 +246,9 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
 
   const mozilla::TimeStamp& create_time() const { return create_time_; }
 
-  uint32_t num_handles() const;
-
-  bool is_relay() const { return header()->flags.IsRelay(); }
-  void set_relay(bool new_relay) { header()->flags.SetRelay(new_relay); }
+#if defined(OS_POSIX)
+  uint32_t num_fds() const;
+#endif
 
   template <class T>
   static bool Dispatch(const Message* msg, T* obj, void (T::*func)()) {
@@ -309,21 +300,21 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
     return Pickle::MessageSize(HeaderSize(), range_start, range_end);
   }
 
-  bool WriteFileHandle(mozilla::UniqueFileHandle handle);
+#if defined(OS_POSIX)
+  // On POSIX, a message supports reading / writing FileDescriptor objects.
+  // This is used to pass a file descriptor to the peer of an IPC channel.
 
-  // WARNING: This method is marked as `const` so it can be called when
-  // deserializing the message, but will mutate it, consuming the handle.
-  bool ConsumeFileHandle(PickleIterator* iter,
-                         mozilla::UniqueFileHandle* handle) const;
+  // Add a descriptor to the end of the set. Returns false iff the set is full.
+  bool WriteFileDescriptor(const base::FileDescriptor& descriptor);
+  // Get a file descriptor from the message. Returns false on error.
+  //   iter: a Pickle iterator to the current location in the message.
+  bool ReadFileDescriptor(PickleIterator* iter,
+                          base::FileDescriptor* descriptor) const;
 
-  // Called when receiving an IPC message to attach file handles which were
-  // received from IPC. Must only be called when there are no handles on this
-  // IPC::Message.
-  void SetAttachedFileHandles(nsTArray<mozilla::UniqueFileHandle> handles);
-
-#if defined(OS_MACOSX)
+#  if defined(OS_MACOSX)
   void set_fd_cookie(uint32_t cookie) { header()->cookie = cookie; }
   uint32_t fd_cookie() const { return header()->cookie; }
+#  endif
 #endif
 
   void WritePort(mozilla::ipc::ScopedPort port);
@@ -353,12 +344,14 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
 #endif
 
   struct Header : Pickle::Header {
-    int32_t routing;       // ID of the view that this message is destined for
-    msgid_t type;          // specifies the user-defined message type
-    HeaderFlags flags;     // specifies control flags for the message
-    uint32_t num_handles;  // the number of handles included with this message
-#if defined(OS_MACOSX)
+    int32_t routing;    // ID of the view that this message is destined for
+    msgid_t type;       // specifies the user-defined message type
+    HeaderFlags flags;  // specifies control flags for the message
+#if defined(OS_POSIX)
+    uint32_t num_fds;  // the number of descriptors included with this message
+#  if defined(OS_MACOSX)
     uint32_t cookie;  // cookie to ACK that the descriptors have been read.
+#  endif
 #endif
     union {
       // For Interrupt messages, a guess at what the *other* side's stack depth
@@ -379,11 +372,21 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   Header* header() { return headerT<Header>(); }
   const Header* header() const { return headerT<Header>(); }
 
-  // The set of file handles which are attached to this message.
-  //
-  // Mutable, as this array can be mutated during `ReadHandle` when
-  // deserializing a message.
-  mutable nsTArray<mozilla::UniqueFileHandle> attached_handles_;
+#if defined(OS_POSIX)
+  // The set of file descriptors associated with this message.
+  RefPtr<FileDescriptorSet> file_descriptor_set_;
+
+  // Ensure that a FileDescriptorSet is allocated
+  void EnsureFileDescriptorSet();
+
+  FileDescriptorSet* file_descriptor_set() {
+    EnsureFileDescriptorSet();
+    return file_descriptor_set_.get();
+  }
+  const FileDescriptorSet* file_descriptor_set() const {
+    return file_descriptor_set_.get();
+  }
+#endif
 
   // The set of mojo ports which are attached to this message.
   //

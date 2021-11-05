@@ -34,7 +34,7 @@ class VideoBridgeParent final : public PVideoBridgeParent,
   // PVideoBridgeParent
   void ActorDestroy(ActorDestroyReason aWhy) override;
   PTextureParent* AllocPTextureParent(const SurfaceDescriptor& aSharedData,
-                                      ReadLockDescriptor& aReadLock,
+                                      const ReadLockDescriptor& aReadLock,
                                       const LayersBackend& aLayersBackend,
                                       const TextureFlags& aFlags,
                                       const uint64_t& aSerial);

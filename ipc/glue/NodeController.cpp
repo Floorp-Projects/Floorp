@@ -163,7 +163,6 @@ bool NodeController::SendUserMessage(const PortRef& aPort,
 }
 
 auto NodeController::SerializeEventMessage(UniquePtr<Event> aEvent,
-                                           const NodeName* aRelayTarget,
                                            uint32_t aType)
     -> UniquePtr<IPC::Message> {
   UniquePtr<IPC::Message> message;
@@ -177,30 +176,18 @@ auto NodeController::SerializeEventMessage(UniquePtr<Event> aEvent,
     message = MakeUnique<IPC::Message>(MSG_ROUTING_CONTROL, aType);
   }
 
-  message->set_relay(aRelayTarget != nullptr);
-
-  size_t length = aEvent->GetSerializedSize();
-  if (aRelayTarget) {
-    length += sizeof(NodeName);
-  }
-
   // Use an intermediate buffer to serialize to avoid potential issues with the
   // segmented `IPC::Message` bufferlist. This should be fairly cheap, as the
   // majority of events are fairly small.
   Vector<char, 256, InfallibleAllocPolicy> buffer;
-  (void)buffer.initLengthUninitialized(length);
-  if (aRelayTarget) {
-    memcpy(buffer.begin(), aRelayTarget, sizeof(NodeName));
-    aEvent->Serialize(buffer.begin() + sizeof(NodeName));
-  } else {
-    aEvent->Serialize(buffer.begin());
-  }
+  (void)buffer.initLengthUninitialized(aEvent->GetSerializedSize());
+  aEvent->Serialize(buffer.begin());
 
   message->WriteFooter(buffer.begin(), buffer.length());
 
 #ifdef DEBUG
   // Debug-assert that we can read the same data back out of the buffer.
-  MOZ_ASSERT(message->FooterSize() == length);
+  MOZ_ASSERT(message->FooterSize() == aEvent->GetSerializedSize());
   Vector<char, 256, InfallibleAllocPolicy> buffer2;
   (void)buffer2.initLengthUninitialized(message->FooterSize());
   MOZ_ASSERT(message->ReadFooter(buffer2.begin(), buffer2.length(),
@@ -211,14 +198,8 @@ auto NodeController::SerializeEventMessage(UniquePtr<Event> aEvent,
   return message;
 }
 
-auto NodeController::DeserializeEventMessage(UniquePtr<IPC::Message> aMessage,
-                                             NodeName* aRelayTarget)
+auto NodeController::DeserializeEventMessage(UniquePtr<IPC::Message> aMessage)
     -> UniquePtr<Event> {
-  if (aMessage->is_relay() && !aRelayTarget) {
-    NODECONTROLLER_WARNING("Unexpected relay message '%s'", aMessage->name());
-    return nullptr;
-  }
-
   Vector<char, 256, InfallibleAllocPolicy> buffer;
   (void)buffer.initLengthUninitialized(aMessage->FooterSize());
   // Truncate the message when reading the footer, so that the extra footer data
@@ -231,22 +212,7 @@ auto NodeController::DeserializeEventMessage(UniquePtr<IPC::Message> aMessage,
     return nullptr;
   }
 
-  UniquePtr<Event> event;
-  if (aRelayTarget) {
-    MOZ_ASSERT(aMessage->is_relay());
-    if (buffer.length() < sizeof(NodeName)) {
-      NODECONTROLLER_WARNING(
-          "Insufficient space in message footer for message '%s'",
-          aMessage->name());
-      return nullptr;
-    }
-    memcpy(aRelayTarget, buffer.begin(), sizeof(NodeName));
-    event = Event::Deserialize(buffer.begin() + sizeof(NodeName),
-                               buffer.length() - sizeof(NodeName));
-  } else {
-    event = Event::Deserialize(buffer.begin(), buffer.length());
-  }
-
+  UniquePtr<Event> event = Event::Deserialize(buffer.begin(), buffer.length());
   if (!event) {
     NODECONTROLLER_WARNING("Call to Event::Deserialize for message '%s' Failed",
                            aMessage->name());
@@ -306,22 +272,7 @@ void NodeController::ForwardEvent(const NodeName& aNode,
   if (aNode == mName) {
     (void)mNode->AcceptEvent(std::move(aEvent));
   } else {
-    // On Windows, messages holding HANDLEs must be relayed via the broker
-    // process so it can transfer handle ownership.
-    bool needsRelay = false;
-#ifdef XP_WIN
-    if (!IsBroker() && aNode != kBrokerNodeName &&
-        aEvent->type() == Event::kUserMessage) {
-      auto* userEvent = static_cast<UserMessageEvent*>(aEvent.get());
-      needsRelay = userEvent->HasMessage() &&
-                   userEvent->GetMessage<IPC::Message>()->num_handles() > 0;
-    }
-#endif
-
-    UniquePtr<IPC::Message> message =
-        SerializeEventMessage(std::move(aEvent), needsRelay ? &aNode : nullptr);
-    MOZ_ASSERT(message->is_relay() == needsRelay,
-               "Message relay status set incorrectly");
+    UniquePtr<IPC::Message> message = SerializeEventMessage(std::move(aEvent));
 
     RefPtr<NodeChannel> peer;
     RefPtr<NodeChannel> broker;
@@ -332,7 +283,7 @@ void NodeController::ForwardEvent(const NodeName& aNode,
       // Check if we know this peer. If we don't, we'll need to request an
       // introduction.
       peer = state->mPeers.Get(aNode);
-      if (!peer || needsRelay) {
+      if (!peer) {
         if (IsBroker()) {
           NODECONTROLLER_WARNING("Ignoring message '%s' to unknown peer %s",
                                  message->name(), ToString(aNode).c_str());
@@ -347,32 +298,18 @@ void NodeController::ForwardEvent(const NodeName& aNode,
           return;
         }
 
-        if (!needsRelay) {
-          auto& queue =
-              state->mPendingMessages.LookupOrInsertWith(aNode, [&]() {
-                needsIntroduction = true;
-                return Queue<UniquePtr<IPC::Message>, 64>{};
-              });
-          queue.Push(std::move(message));
-        }
+        auto& queue = state->mPendingMessages.LookupOrInsertWith(aNode, [&]() {
+          needsIntroduction = true;
+          return Queue<UniquePtr<IPC::Message>, 64>{};
+        });
+        queue.Push(std::move(message));
       }
     }
 
-    MOZ_ASSERT(!needsIntroduction || !needsRelay,
-               "Only one of the two should ever be set");
+    // TODO: On windows, we can relay the message through the broker process
+    // here to handle transferring handles without using sync IPC.
 
-    if (needsRelay) {
-#ifdef XP_WIN
-      NODECONTROLLER_LOG(LogLevel::Info,
-                         "Relaying message '%s' for peer %s due to %lu handles",
-                         message->name(), ToString(aNode).c_str(),
-                         message->num_handles());
-      MOZ_ASSERT(broker);
-      broker->SendEventMessage(std::move(message));
-#else
-      MOZ_ASSERT_UNREACHABLE("relaying messages is only supported on windows");
-#endif
-    } else if (needsIntroduction) {
+    if (needsIntroduction) {
       MOZ_ASSERT(broker);
       broker->RequestIntroduction(aNode);
     } else if (peer) {
@@ -383,7 +320,7 @@ void NodeController::ForwardEvent(const NodeName& aNode,
 
 void NodeController::BroadcastEvent(UniquePtr<Event> aEvent) {
   UniquePtr<IPC::Message> message =
-      SerializeEventMessage(std::move(aEvent), nullptr, BROADCAST_MESSAGE_TYPE);
+      SerializeEventMessage(std::move(aEvent), BROADCAST_MESSAGE_TYPE);
 
   if (IsBroker()) {
     OnBroadcast(mName, std::move(message));
@@ -415,81 +352,13 @@ void NodeController::OnEventMessage(const NodeName& aFromNode,
                                     UniquePtr<IPC::Message> aMessage) {
   AssertIOThread();
 
-  bool isRelay = aMessage->is_relay();
-  NodeName relayTarget;
-
-  UniquePtr<Event> event = DeserializeEventMessage(
-      std::move(aMessage), isRelay ? &relayTarget : nullptr);
+  UniquePtr<Event> event = DeserializeEventMessage(std::move(aMessage));
   if (!event) {
     NODECONTROLLER_WARNING("Invalid EventMessage from peer %s!",
                            ToString(aFromNode).c_str());
     DropPeer(aFromNode);
     return;
   }
-
-  NodeName fromNode = aFromNode;
-#ifdef XP_WIN
-  if (isRelay) {
-    if (event->type() != Event::kUserMessage) {
-      NODECONTROLLER_WARNING(
-          "Unexpected relay of non-UserMessage event from peer %s!",
-          ToString(aFromNode).c_str());
-      DropPeer(aFromNode);
-      return;
-    }
-
-    // If we're the broker, then we'll need to forward this message on to the
-    // true recipient. To do this, we re-serialize the message, passing along
-    // the original source node, and send it to the final node.
-    if (IsBroker()) {
-      UniquePtr<IPC::Message> message =
-          SerializeEventMessage(std::move(event), &aFromNode);
-      if (!message) {
-        NODECONTROLLER_WARNING(
-            "Relaying EventMessage from peer %s failed to re-serialize!",
-            ToString(aFromNode).c_str());
-        DropPeer(aFromNode);
-        return;
-      }
-      MOZ_ASSERT(message->is_relay(), "Message stopped being a relay message?");
-
-      NODECONTROLLER_LOG(
-          LogLevel::Info,
-          "Relaying message '%s' from peer %s to peer %s (%lu handles)",
-          message->name(), ToString(aFromNode).c_str(),
-          ToString(relayTarget).c_str(), message->num_handles());
-
-      RefPtr<NodeChannel> peer;
-      {
-        auto state = mState.Lock();
-        peer = state->mPeers.Get(relayTarget);
-      }
-      if (!peer) {
-        NODECONTROLLER_WARNING(
-            "Dropping relayed message from %s to unknown peer %s",
-            ToString(aFromNode).c_str(), ToString(relayTarget).c_str());
-        return;
-      }
-
-      peer->SendEventMessage(std::move(message));
-      return;
-    }
-
-    // Otherwise, we're the final recipient, so we can continue & process the
-    // message as usual.
-    if (aFromNode != kBrokerNodeName) {
-      NODECONTROLLER_WARNING(
-          "Unexpected relayed EventMessage from non-broker peer %s!",
-          ToString(aFromNode).c_str());
-      DropPeer(aFromNode);
-      return;
-    }
-    fromNode = relayTarget;
-
-    NODECONTROLLER_LOG(LogLevel::Info, "Got relayed message from peer %s",
-                       ToString(fromNode).c_str());
-  }
-#endif
 
   // If we're getting a requested port merge from another process, check to make
   // sure that we're expecting the request, and record that the merge has
@@ -500,8 +369,8 @@ void NodeController::OnEventMessage(const NodeName& aFromNode,
     if (!targetPort.is_valid()) {
       NODECONTROLLER_WARNING(
           "Unexpected MergePortEvent from peer %s for unknown port %s",
-          ToString(fromNode).c_str(), ToString(event->port_name()).c_str());
-      DropPeer(fromNode);
+          ToString(aFromNode).c_str(), ToString(event->port_name()).c_str());
+      DropPeer(aFromNode);
       return;
     }
 
@@ -524,8 +393,8 @@ void NodeController::OnEventMessage(const NodeName& aFromNode,
     if (!expectingMerge) {
       NODECONTROLLER_WARNING(
           "Unexpected MergePortEvent from peer %s for port %s",
-          ToString(fromNode).c_str(), ToString(event->port_name()).c_str());
-      DropPeer(fromNode);
+          ToString(aFromNode).c_str(), ToString(event->port_name()).c_str());
+      DropPeer(aFromNode);
       return;
     }
   }
@@ -651,7 +520,7 @@ void NodeController::OnRequestIntroduction(const NodeName& aFromNode,
   }
 
   RefPtr<NodeChannel> peerB = GetNodeChannel(aName);
-  auto result = AutoTransportDescriptor::Create();
+  auto result = AutoTransportDescriptor::Create(peerA->OtherPid());
   if (!peerB || result.isErr()) {
     NODECONTROLLER_WARNING(
         "Rejecting introduction request from '%s' for unknown peer '%s'",
