@@ -10,6 +10,7 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.store.BrowserStore
+import org.mozilla.focus.GleanMetrics.TabCount
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.AppStore
 
@@ -20,7 +21,11 @@ class LockObserver(
 ) : LifecycleObserver {
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     fun onPause() {
-        if (browserStore.state.privateTabs.isEmpty()) {
+
+        val tabCount = browserStore.state.privateTabs.size.toLong()
+        TabCount.appBackgrounded.accumulateSamples(longArrayOf(tabCount))
+
+        if (tabCount == 0L) {
             return
         }
 
