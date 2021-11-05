@@ -69,11 +69,6 @@ using mozilla::FilePreferences::kPathSeparator;
     if (mWorkingPath.IsEmpty()) return NS_ERROR_NOT_INITIALIZED; \
   } while (0)
 
-// CopyFileEx only supports unbuffered I/O in Windows Vista and above
-#ifndef COPY_FILE_NO_BUFFERING
-#  define COPY_FILE_NO_BUFFERING 0x00001000
-#endif
-
 #ifndef FILE_ATTRIBUTE_NOT_CONTENT_INDEXED
 #  define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED 0x00002000
 #endif
@@ -1809,6 +1804,14 @@ nsresult nsLocalFile::CopySingleFile(nsIFile* aSourceFile, nsIFile* aDestParent,
 
     copyOK = ::CopyFileExW(filePath.get(), destPath.get(), nullptr, nullptr,
                            nullptr, dwCopyFlags);
+    // On Windows 10, copying without buffering has started failing, so try
+    // with buffering...
+    if (!copyOK && (dwCopyFlags & COPY_FILE_NO_BUFFERING) &&
+        GetLastError() == ERROR_INVALID_PARAMETER) {
+      dwCopyFlags &= ~COPY_FILE_NO_BUFFERING;
+      copyOK = ::CopyFileExW(filePath.get(), destPath.get(), nullptr, nullptr,
+                             nullptr, dwCopyFlags);
+    }
 
     if (move && copyOK) {
       DeleteFileW(filePath.get());
