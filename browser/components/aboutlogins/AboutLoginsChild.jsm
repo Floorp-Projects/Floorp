@@ -30,9 +30,9 @@ XPCOMUtils.defineLazyServiceGetter(
 const TELEMETRY_EVENT_CATEGORY = "pwmgr";
 const TELEMETRY_MIN_MS_BETWEEN_OPEN_MANAGEMENT = 5000;
 
-let lastOpenManagementBrowserId = null;
-let lastOpenManagementEventTime = Number.NEGATIVE_INFINITY;
-let masterPasswordPromise;
+let gLastOpenManagementBrowserId = null;
+let gLastOpenManagementEventTime = Number.NEGATIVE_INFINITY;
+let gMasterPasswordPromise;
 
 function recordTelemetryEvent(event) {
   try {
@@ -151,13 +151,13 @@ class AboutLoginsChild extends JSWindowActorChild {
        *                  This string will be displayed only when the OS auth dialog is used.
        */
       async promptForMasterPassword(resolve, messageId) {
-        masterPasswordPromise = {
+        gMasterPasswordPromise = {
           resolve,
         };
 
         that.sendAsyncMessage("AboutLogins:MasterPasswordRequest", messageId);
 
-        return masterPasswordPromise;
+        return gMasterPasswordPromise;
       },
       fileImportEnabled: Services.prefs.getBoolPref(
         "signon.management.page.fileImport.enabled"
@@ -209,7 +209,7 @@ class AboutLoginsChild extends JSWindowActorChild {
   }
 
   onAboutLoginsImportFromBrowser() {
-    this.sendAsyncMessage("AboutLogins:Import");
+    this.sendAsyncMessage("AboutLogins:ImportFromBrowser");
     recordTelemetryEvent({
       object: "import_from_browser",
       method: "mgmt_menu_item_used",
@@ -217,7 +217,7 @@ class AboutLoginsChild extends JSWindowActorChild {
   }
 
   onAboutLoginsImportFromFile() {
-    this.sendAsyncMessage("AboutLogins:ImportPasswords");
+    this.sendAsyncMessage("AboutLogins:ImportFromFile");
     recordTelemetryEvent({
       object: "import_from_csv",
       method: "mgmt_menu_item_used",
@@ -244,14 +244,14 @@ class AboutLoginsChild extends JSWindowActorChild {
       // compare that number between different tabs and this JSM is shared.
       let now = docShell.now();
       if (
-        this.browsingContext.browserId == lastOpenManagementBrowserId &&
-        now - lastOpenManagementEventTime <
+        this.browsingContext.browserId == gLastOpenManagementBrowserId &&
+        now - gLastOpenManagementEventTime <
           TELEMETRY_MIN_MS_BETWEEN_OPEN_MANAGEMENT
       ) {
         return;
       }
-      lastOpenManagementEventTime = now;
-      lastOpenManagementBrowserId = this.browsingContext.browserId;
+      gLastOpenManagementEventTime = now;
+      gLastOpenManagementBrowserId = this.browsingContext.browserId;
     }
     recordTelemetryEvent(event.detail);
   }
@@ -302,8 +302,8 @@ class AboutLoginsChild extends JSWindowActorChild {
   }
 
   onMasterPasswordResponse(data) {
-    if (masterPasswordPromise) {
-      masterPasswordPromise.resolve(data.result);
+    if (gMasterPasswordPromise) {
+      gMasterPasswordPromise.resolve(data.result);
       recordTelemetryEvent(data.telemetryEvent);
     }
   }
