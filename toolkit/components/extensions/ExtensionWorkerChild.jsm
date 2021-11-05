@@ -594,7 +594,6 @@ class WorkerContextChild extends BaseContext {
     this.viewType = "background_worker";
     this.uri = Services.io.newURI(serviceWorkerInfo.scriptURL);
     this.workerClientInfoId = serviceWorkerInfo.clientInfoId;
-    this.workerDescriptorId = serviceWorkerInfo.descriptorId;
     this.workerPrincipal = serviceWorkerInfo.principal;
     this.incognito = serviceWorkerInfo.principal.privateBrowsingId > 0;
 
@@ -619,11 +618,6 @@ class WorkerContextChild extends BaseContext {
     };
   }
 
-  getCreateProxyContextData() {
-    const { workerDescriptorId } = this;
-    return { workerDescriptorId };
-  }
-
   openConduit(subject, address) {
     let proc = ChromeUtils.domProcessChild;
     let conduit = proc.getActor("ProcessConduits").openConduit(subject, {
@@ -631,7 +625,6 @@ class WorkerContextChild extends BaseContext {
       extensionId: this.extension.id,
       envType: this.envType,
       workerScriptURL: this.uri.spec,
-      workerDescriptorId: this.workerDescriptorId,
       ...address,
     });
     this.callOnClose(conduit);
@@ -639,14 +632,6 @@ class WorkerContextChild extends BaseContext {
       this.forgetOnClose(conduit);
     });
     return conduit;
-  }
-
-  notifyWorkerLoaded() {
-    this.childManager.conduit.sendContextLoaded({
-      childId: this.childManager.id,
-      extensionId: this.extension.id,
-      workerDescriptorId: this.workerDescriptorId,
-    });
   }
 
   withAPIRequest(request, callable) {
@@ -719,101 +704,31 @@ defineLazyGetter(
 );
 
 var ExtensionWorkerChild = {
-  // Map<serviceWorkerDescriptorId, ExtensionWorkerContextChild>
+  // Map<workerClientInfoId, ExtensionWorkerContextChild>
   extensionWorkerContexts: new Map(),
 
   apiManager: ExtensionPageChild.apiManager,
 
-  /**
-   * Create an extension worker context (on a mozExtensionAPIRequest with
-   * requestType "initWorkerContext").
-   *
-   * @param {BrowserExtensionContent} extension
-   *     The extension for which the context should be created.
-   * @param {mozIExtensionServiceWorkerInfo} serviceWorkerInfo
-   */
-  initExtensionWorkerContext(extension, serviceWorkerInfo) {
-    if (!WebExtensionPolicy.isExtensionProcess) {
-      throw new Error(
-        "Cannot create an extension worker context in current process"
-      );
-    }
-
-    const swId = serviceWorkerInfo.descriptorId;
-    let context = this.extensionWorkerContexts.get(swId);
-    if (context) {
-      if (context.extension !== extension) {
-        throw new Error(
-          "A different extension context already exists for this service worker"
-        );
-      }
-      throw new Error(
-        "An extension context was already initialized for this service worker"
-      );
-    }
-
-    context = new WorkerContextChild(extension, { serviceWorkerInfo });
-    this.extensionWorkerContexts.set(swId, context);
-  },
-
-  /**
-   * Get an existing extension worker context for the given extension and
-   * service worker.
-   *
-   * @param {BrowserExtensionContent} extension
-   *     The extension for which the context should be created.
-   * @param {mozIExtensionServiceWorkerInfo} serviceWorkerInfo
-   *
-   * @returns {ExtensionWorkerContextChild}
-   */
-  getExtensionWorkerContext(extension, serviceWorkerInfo) {
+  getContextForWorker(extension, serviceWorkerInfo) {
     if (!serviceWorkerInfo) {
       return null;
     }
 
-    const context = this.extensionWorkerContexts.get(
-      serviceWorkerInfo.descriptorId
+    let context = this.extensionWorkerContexts.get(
+      serviceWorkerInfo.clientInfoId
     );
-
-    if (context?.extension === extension) {
+    if (context && context.extension === extension) {
       return context;
     }
 
-    return null;
-  },
+    // Lazily create the context.
+    if (!context) {
+      context = new WorkerContextChild(extension, { serviceWorkerInfo });
 
-  /**
-   * Notify the main process when an extension worker script has been loaded.
-   *
-   * @param {number} descriptorId The service worker descriptor ID of the destroyed context.
-   * @param {WebExtensionPolicy} policy
-   */
-  notifyExtensionWorkerContextLoaded(descriptorId, policy) {
-    let context = this.extensionWorkerContexts.get(descriptorId);
-    if (context) {
-      if (context.extension.id !== policy.id) {
-        Cu.reportError(
-          new Error(
-            `ServiceWorker ${descriptorId} does not belong to the expected extension: ${policy.id}`
-          )
-        );
-        return;
-      }
-      context.notifyWorkerLoaded();
+      this.extensionWorkerContexts.set(serviceWorkerInfo.clientInfoId, context);
     }
-  },
 
-  /**
-   * Close the ExtensionWorkerContextChild belonging to the given service worker, if any.
-   *
-   * @param {number} descriptorId The service worker descriptor ID of the destroyed context.
-   */
-  destroyExtensionWorkerContext(descriptorId) {
-    let context = this.extensionWorkerContexts.get(descriptorId);
-    if (context) {
-      context.unload();
-      this.extensionWorkerContexts.delete(descriptorId);
-    }
+    return context;
   },
 
   shutdownExtension(extensionId) {

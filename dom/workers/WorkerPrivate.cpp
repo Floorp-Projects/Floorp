@@ -52,7 +52,6 @@
 #include "mozilla/dom/WorkerBinding.h"
 #include "mozilla/dom/JSExecutionManager.h"
 #include "mozilla/dom/WindowContext.h"
-#include "mozilla/extensions/ExtensionBrowser.h"  // extensions::Create{AndDispatchInitWorkerContext,WorkerLoaded,WorkerDestroyed}Runnable
 #include "mozilla/extensions/WebExtensionPolicy.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/StoragePrincipalHelper.h"
@@ -369,20 +368,6 @@ class CompileScriptRunnable final : public WorkerDebuggeeRunnable {
     ErrorResult rv;
     workerinternals::LoadMainScript(aWorkerPrivate, std::move(mOriginStack),
                                     mScriptURL, WorkerScript, rv);
-
-    if (aWorkerPrivate->ExtensionAPIAllowed()) {
-      MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
-      RefPtr<Runnable> extWorkerRunnable =
-          extensions::CreateWorkerLoadedRunnable(
-              aWorkerPrivate->ServiceWorkerID(), aWorkerPrivate->GetBaseURI());
-      // Dispatch as a low priority runnable.
-      if (NS_FAILED(aWorkerPrivate->DispatchToMainThreadForMessaging(
-              extWorkerRunnable.forget()))) {
-        NS_WARNING(
-            "Failed to dispatch runnable to notify extensions worker loaded");
-      }
-    }
-
     rv.WouldReportJSException();
     // Explicitly ignore NS_BINDING_ABORTED on rv.  Or more precisely, still
     // return false and don't SetWorkerScriptExecutedSuccessfully() in that
@@ -3343,10 +3328,6 @@ void WorkerPrivate::ExecutionReady() {
   }
 
   data->mScope->MutableClientSourceRef().WorkerExecutionReady(this);
-
-  if (ExtensionAPIAllowed()) {
-    extensions::CreateAndDispatchInitWorkerContextRunnable();
-  }
 }
 
 void WorkerPrivate::InitializeGCTimers() {
@@ -3547,20 +3528,6 @@ void WorkerPrivate::ScheduleDeletion(WorkerRanOrNot aRanOrNot) {
       NS_WARNING("Failed to dispatch runnable!");
     }
   } else {
-    if (ExtensionAPIAllowed()) {
-      MOZ_ASSERT(IsServiceWorker());
-      RefPtr<Runnable> extWorkerRunnable =
-          extensions::CreateWorkerDestroyedRunnable(ServiceWorkerID(),
-                                                    GetBaseURI());
-      // Dispatch as a low priority runnable.
-      if (NS_FAILED(
-              DispatchToMainThreadForMessaging(extWorkerRunnable.forget()))) {
-        NS_WARNING(
-            "Failed to dispatch runnable to notify extensions worker "
-            "destroyed");
-      }
-    }
-
     // Note, this uses the lower priority DispatchToMainThreadForMessaging for
     // dispatching TopLevelWorkerFinishedRunnable to the main thread so that
     // other relevant runnables are guaranteed to run before it.
@@ -3569,12 +3536,6 @@ void WorkerPrivate::ScheduleDeletion(WorkerRanOrNot aRanOrNot) {
     if (NS_FAILED(DispatchToMainThreadForMessaging(runnable.forget()))) {
       NS_WARNING("Failed to dispatch runnable!");
     }
-
-    // NOTE: Calling any WorkerPrivate methods (or accessing member data) after
-    // this point is unsafe (the TopLevelWorkerFinishedRunnable just dispatched
-    // may be able to call ClearSelfAndParentEventTargetRef on this
-    // WorkerPrivate instance and by the time we get here the WorkerPrivate
-    // instance destructor may have been already called).
   }
 }
 
