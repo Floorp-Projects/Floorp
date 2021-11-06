@@ -9,6 +9,7 @@
 XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.jsm",
+  UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
 const SPONSORED_SEARCH_STRING = "frab";
@@ -152,9 +153,6 @@ add_task(async function init() {
   let engine = await addTestSuggestionsEngine();
   await Services.search.setDefault(engine);
 
-  // Set up the remote settings client with the test data. Need to set the
-  // `suggest.quicksuggest` pref to make `init` finish.
-  UrlbarPrefs.set("suggest.quicksuggest", true);
   await QuickSuggestTestUtils.ensureQuickSuggestInit(REMOTE_SETTINGS_DATA);
 });
 
@@ -660,3 +658,72 @@ async function doDedupeAgainstURLTest({
   UrlbarPrefs.clear("suggest.searches");
   await PlacesUtils.history.clear();
 }
+
+// Tests setup and teardown of the remote settings client depending on whether
+// quick suggest is enabled.
+add_task(async function setupAndTeardown() {
+  // Sanity check pref values at the start of this task. We assume all previous
+  // tasks have left `quicksuggest.enabled` set to true (from the init task) and
+  // the `suggest.quicksuggest` prefs set to false.
+  let initialPrefs = {
+    "quicksuggest.enabled": true,
+    "suggest.quicksuggest": false,
+    "suggest.quicksuggest.sponsored": false,
+  };
+  for (let [name, expectedValue] of Object.entries(initialPrefs)) {
+    Assert.equal(
+      UrlbarPrefs.get(name),
+      expectedValue,
+      `Initial value of ${name} is ${expectedValue}`
+    );
+  }
+
+  // Initially the settings client will be null since both
+  // `suggest.quicksuggest` prefs are false.
+  Assert.ok(!UrlbarQuickSuggest._rs, "Settings client is null initially");
+
+  UrlbarPrefs.set("suggest.quicksuggest", true);
+  await UrlbarQuickSuggest.readyPromise;
+  Assert.ok(
+    UrlbarQuickSuggest._rs,
+    "Settings client is non-null after enabling suggest.quicksuggest"
+  );
+
+  UrlbarPrefs.set("suggest.quicksuggest", false);
+  await UrlbarQuickSuggest.readyPromise;
+  Assert.ok(
+    !UrlbarQuickSuggest._rs,
+    "Settings client is null after disabling suggest.quicksuggest"
+  );
+
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+  await UrlbarQuickSuggest.readyPromise;
+  Assert.ok(
+    !UrlbarQuickSuggest._rs,
+    "Settings client remains null after enabling suggest.quicksuggest.sponsored"
+  );
+
+  UrlbarPrefs.set("suggest.quicksuggest", true);
+  await UrlbarQuickSuggest.readyPromise;
+  Assert.ok(
+    UrlbarQuickSuggest._rs,
+    "Settings client is non-null after enabling suggest.quicksuggest"
+  );
+
+  UrlbarPrefs.set("quicksuggest.enabled", false);
+  await UrlbarQuickSuggest.readyPromise;
+  Assert.ok(
+    !UrlbarQuickSuggest._rs,
+    "Settings client is null after disabling quicksuggest.enabled"
+  );
+
+  // Leave the prefs in the same state as when the task started.
+  UrlbarPrefs.clear("suggest.quicksuggest");
+  UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
+  UrlbarPrefs.set("quicksuggest.enabled", true);
+  await UrlbarQuickSuggest.readyPromise;
+  Assert.ok(
+    !UrlbarQuickSuggest._rs,
+    "Settings client remains null at end of task"
+  );
+});
