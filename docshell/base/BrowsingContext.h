@@ -156,14 +156,6 @@ enum class ExplicitActiveStatus : uint8_t {
   FIELD(ForceEnableTrackingProtection, bool)                                  \
   FIELD(UseGlobalHistory, bool)                                               \
   FIELD(FullscreenAllowedByOwner, bool)                                       \
-  /*                                                                          \
-   * "is popup" in the spec.                                                  \
-   * Set only on top browsing contexts.                                       \
-   * This doesn't indicate whether this is actually a popup or not,           \
-   * but whether this browsing context is created by requesting popup or not. \
-   * See also: nsWindowWatcher::ShouldOpenPopup.                              \
-   */                                                                         \
-  FIELD(IsPopupRequested, bool)                                               \
   /* These field are used to store the states of autoplay media request on    \
    * GeckoView only, and it would only be modified on the top level browsing  \
    * context. */                                                              \
@@ -291,7 +283,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   static already_AddRefed<BrowsingContext> CreateDetached(
       nsGlobalWindowInner* aParent, BrowsingContext* aOpener,
       BrowsingContextGroup* aSpecificGroup, const nsAString& aName, Type aType,
-      bool aIsPopupRequested, bool aCreatedDynamically = false);
+      bool aCreatedDynamically = false);
 
   void EnsureAttached();
 

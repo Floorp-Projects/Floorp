@@ -15,6 +15,11 @@ add_task(async function test_popup_conditions() {
     //   * resizable (defaults to true)
     //   * scrollbars (defaults to false)
     //   * status (defaults to false)
+    // and also the following shouldn't be specified:
+    //   * left or screenX
+    //   * top or screenY
+    //   * width or innerWidth
+    //   * height or innerHeight
     { features: "location,menubar,resizable,scrollbars,status", popup: false },
     { features: "toolbar,menubar,resizable,scrollbars,status", popup: false },
     {
@@ -71,11 +76,11 @@ add_task(async function test_popup_conditions() {
     { features: "location,menubar,resizable,scrollbars", popup: true },
     { features: "location,menubar,resizable,scrollbars,status=0", popup: true },
 
-    // width and innerWidth have no effect.
-    { features: "location,menubar,scrollbars,status,width=100", popup: false },
+    // If either width or innerWidth is specified, popup.
+    { features: "location,menubar,scrollbars,status,width=100", popup: true },
     {
       features: "location,menubar,scrollbars,status,innerWidth=100",
-      popup: false,
+      popup: true,
     },
 
     // outerWidth has no effect.
