@@ -132,6 +132,17 @@ IPCResult RemoteWorkerParent::RecvError(const ErrorValue& aValue) {
   return IPC_OK();
 }
 
+IPCResult RemoteWorkerParent::RecvNotifyLock(const bool& aCreated) {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (mController) {
+    mController->NotifyLock(aCreated);
+  }
+
+  return IPC_OK();
+}
+
 void RemoteWorkerParent::MaybeSendDelete() {
   if (mDeleteSent) {
     return;

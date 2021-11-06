@@ -102,6 +102,8 @@ class RemoteWorkerObserver {
 
   virtual void ErrorReceived(const ErrorValue& aValue) = 0;
 
+  virtual void LockNotified(bool aCreated) = 0;
+
   virtual void Terminated() = 0;
 };
 
@@ -167,6 +169,8 @@ class RemoteWorkerController final {
   void NoteDeadWorkerActor();
 
   void ErrorPropagation(const ErrorValue& aValue);
+
+  void NotifyLock(bool aCreated);
 
   void WorkerTerminated();
 

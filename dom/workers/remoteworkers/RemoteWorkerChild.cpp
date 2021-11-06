@@ -688,6 +688,21 @@ void RemoteWorkerChild::ErrorPropagationOnMainThread(
   GetOwningEventTarget()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
+void RemoteWorkerChild::NotifyLock(bool aCreated) {
+  nsCOMPtr<nsIRunnable> r =
+      NS_NewRunnableFunction(__func__, [self = RefPtr(this), aCreated] {
+        auto launcherData = self->mLauncherData.Access();
+
+        if (!launcherData->mIPCActive) {
+          return;
+        }
+
+        Unused << self->SendNotifyLock(aCreated);
+      });
+
+  GetOwningEventTarget()->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+}
+
 void RemoteWorkerChild::FlushReportsOnMainThread(
     nsIConsoleReportCollector* aReporter) {
   AssertIsOnMainThread();

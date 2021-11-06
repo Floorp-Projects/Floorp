@@ -107,6 +107,10 @@ class ServiceWorkerPrivateImpl final : public ServiceWorkerPrivate::Inner,
 
   void ErrorReceived(const ErrorValue& aError) override;
 
+  void LockNotified(bool aCreated) final {
+    // no-op for service workers
+  }
+
   void Terminated() override;
 
   // Refreshes only the parts of mRemoteWorkerData that may change over time.

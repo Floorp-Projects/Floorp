@@ -115,6 +115,10 @@ void SharedWorkerManager::AddActor(SharedWorkerParent* aParent) {
 
   mActors.AppendElement(aParent);
 
+  if (mLockCount) {
+    Unused << aParent->SendNotifyLock(true);
+  }
+
   // NB: We don't update our Suspended/Frozen state here, yet. The aParent is
   // responsible for doing so from SharedWorkerParent::ManagerCreated.
   // XXX But we could avoid iterating all of our actors because if aParent is
@@ -228,6 +232,22 @@ void SharedWorkerManager::ErrorReceived(const ErrorValue& aValue) {
     Unused << actor->SendError(aValue);
   }
 }
+
+void SharedWorkerManager::LockNotified(bool aCreated) {
+  ::mozilla::ipc::AssertIsOnBackgroundThread();
+  MOZ_ASSERT_IF(!aCreated, mLockCount > 0);
+
+  mLockCount += aCreated ? 1 : -1;
+
+  // Notify only when we either:
+  // 1. Got a new lock when nothing were there
+  // 2. Lost all locks
+  if ((aCreated && mLockCount == 1) || !mLockCount) {
+    for (SharedWorkerParent* actor : mActors) {
+      Unused << actor->SendNotifyLock(aCreated);
+    }
+  }
+};
 
 void SharedWorkerManager::Terminated() {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
