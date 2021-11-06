@@ -20,7 +20,6 @@ namespace layers {
 struct FrameMetrics;
 
 class WheelScrollAnimation;
-class KeyboardScrollAnimation;
 class OverscrollAnimation;
 class SmoothMsdScrollAnimation;
 class SmoothScrollAnimation;
@@ -71,9 +70,6 @@ class AsyncPanZoomAnimation {
     return std::move(mDeferredTasks);
   }
 
-  virtual KeyboardScrollAnimation* AsKeyboardScrollAnimation() {
-    return nullptr;
-  }
   virtual WheelScrollAnimation* AsWheelScrollAnimation() { return nullptr; }
   virtual SmoothMsdScrollAnimation* AsSmoothMsdScrollAnimation() {
     return nullptr;
