@@ -64,7 +64,6 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ThreadLocal.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 #include "BaseProfiler.h"
