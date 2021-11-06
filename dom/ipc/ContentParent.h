@@ -518,8 +518,9 @@ class ContentParent final
       PBrowserParent* aThisBrowserParent,
       const MaybeDiscarded<BrowsingContext>& aParent, PBrowserParent* aNewTab,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
-      const bool& aForPrinting, const bool& aForWindowDotPrint,
-      nsIURI* aURIToLoad, const nsCString& aFeatures, const float& aFullZoom,
+      const bool& aWidthSpecified, const bool& aForPrinting,
+      const bool& aForWindowDotPrint, nsIURI* aURIToLoad,
+      const nsCString& aFeatures, const float& aFullZoom,
       const IPC::Principal& aTriggeringPrincipal,
       nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo,
       const OriginAttributes& aOriginAttributes,
@@ -528,9 +529,10 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvCreateWindowInDifferentProcess(
       PBrowserParent* aThisTab, const MaybeDiscarded<BrowsingContext>& aParent,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
-      nsIURI* aURIToLoad, const nsCString& aFeatures, const float& aFullZoom,
-      const nsString& aName, nsIPrincipal* aTriggeringPrincipal,
-      nsIContentSecurityPolicy* aCsp, nsIReferrerInfo* aReferrerInfo,
+      const bool& aWidthSpecified, nsIURI* aURIToLoad,
+      const nsCString& aFeatures, const float& aFullZoom, const nsString& aName,
+      nsIPrincipal* aTriggeringPrincipal, nsIContentSecurityPolicy* aCsp,
+      nsIReferrerInfo* aReferrerInfo,
       const OriginAttributes& aOriginAttributes);
 
   static void BroadcastBlobURLRegistration(
@@ -762,8 +764,9 @@ class ContentParent final
   mozilla::ipc::IPCResult CommonCreateWindow(
       PBrowserParent* aThisTab, BrowsingContext* aParent, bool aSetOpener,
       const uint32_t& aChromeFlags, const bool& aCalledFromJS,
-      const bool& aForPrinting, const bool& aForWindowDotPrint,
-      nsIURI* aURIToLoad, const nsCString& aFeatures, const float& aFullZoom,
+      const bool& aWidthSpecified, const bool& aForPrinting,
+      const bool& aForWindowDotPrint, nsIURI* aURIToLoad,
+      const nsCString& aFeatures, const float& aFullZoom,
       BrowserParent* aNextRemoteBrowser, const nsString& aName,
       nsresult& aResult, nsCOMPtr<nsIRemoteTab>& aNewRemoteTab,
       bool* aWindowIsNew, int32_t& aOpenLocation,
