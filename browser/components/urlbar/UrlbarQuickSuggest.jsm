@@ -14,16 +14,15 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  RemoteSettings: "resource://services-settings/remote-settings.js",
-  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+  QUICK_SUGGEST_SOURCE: "resource:///modules/UrlbarProviderQuickSuggest.jsm",
+  RemoteSettings: "resource://services-settings/remote-settings.js",
+  Services: "resource://gre/modules/Services.jsm",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.jsm",
-  QUICK_SUGGEST_SOURCE: "resource:///modules/UrlbarProviderQuickSuggest.jsm",
 });
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["TextDecoder"]);
@@ -67,34 +66,48 @@ const SUGGESTION_SCORE = 0.2;
  * to provide suggestions for UrlbarProviderQuickSuggest.
  */
 class Suggestions {
-  // The RemoteSettings client.
-  _rs = null;
-  // Let tests wait for init to complete.
-  _initPromise = null;
-  // Resolver function stored to call when init is complete.
-  _initResolve = null;
-  // A tree that maps keywords to a result.
-  _tree = new KeywordTree();
-  // A map of the result data.
-  _results = new Map();
-
-  async init() {
-    if (this._initPromise) {
-      return this._initPromise;
-    }
-    this._initPromise = Promise.resolve();
-    if (UrlbarPrefs.get(FEATURE_AVAILABLE)) {
-      this._initPromise = new Promise(resolve => (this._initResolve = resolve));
-      Services.tm.idleDispatchToMainThread(this.onEnabledUpdate.bind(this));
-    } else {
-      NimbusFeatures.urlbar.onUpdate(this.onEnabledUpdate.bind(this));
-    }
+  constructor() {
     UrlbarPrefs.addObserver(this);
-    return this._initPromise;
+    NimbusFeatures.urlbar.onUpdate(() => this._queueSettingsSetup());
+
+    this._queueSettingsTask(() => {
+      return new Promise(resolve => {
+        Services.tm.idleDispatchToMainThread(() => {
+          this._queueSettingsSetup();
+          resolve();
+        });
+      });
+    });
   }
 
-  /*
+  /**
+   * @returns {number}
+   *   A score in the range [0, 1] that can be used to compare suggestions from
+   *   remote settings to suggestions from Merino. Remote settings suggestions
+   *   don't have a natural score so we hardcode a value.
+   */
+  get SUGGESTION_SCORE() {
+    return SUGGESTION_SCORE;
+  }
+
+  /**
+   * @returns {Promise}
+   *   Resolves when any ongoing updates to the suggestions data are done.
+   */
+  get readyPromise() {
+    if (!this._settingsTaskQueue.length) {
+      return Promise.resolve();
+    }
+    return new Promise(resolve => {
+      this._emptySettingsTaskQueueCallbacks.push(resolve);
+    });
+  }
+
+  /**
    * Handle queries from the Urlbar.
+   *
+   * @param {string} phrase
+   *   The search string.
    */
   async query(phrase) {
     log.info("Handling query for", phrase);
@@ -112,7 +125,7 @@ class Suggestions {
     let date =
       `${d.getFullYear()}${pad(d.getMonth() + 1)}` +
       `${pad(d.getDate())}${pad(d.getHours())}`;
-    let icon = await this.fetchIcon(result.icon);
+    let icon = await this._fetchIcon(result.icon);
     return {
       full_keyword: this.getFullKeyword(phrase, result.keywords),
       title: result.title,
@@ -179,55 +192,6 @@ class Suggestions {
       }
     }
     return longerPhrase || trimmedQuery;
-  }
-
-  /**
-   * Called when a urlbar pref changes. The onboarding dialog will set the
-   * `browser.urlbar.suggest.quicksuggest` prefs if the user has opted in, at
-   * which point we can start showing results.
-   *
-   * @param {string} pref
-   *   The name of the pref relative to `browser.urlbar`.
-   */
-  onPrefChanged(pref) {
-    switch (pref) {
-      // Both sponsored and non-sponsored results come from the same remote
-      // settings dataset, so we only need to listen for `suggest.quicksuggest`
-      // and not also `suggest.quicksuggest.sponsored`.
-      case "suggest.quicksuggest":
-        this.onEnabledUpdate();
-        break;
-    }
-  }
-
-  /*
-   * Called when an update that may change whether this feature is enabled
-   * or not has occured.
-   *
-   * Quick suggest is controlled by the following preferences. All three must be
-   * enabled to show sponsored results. The first two must be enabled to show
-   * non-sponsored results.
-   *
-   * * `quicksuggest.enabled`: The global toggle for the entire quick suggest
-   *   feature. This pref can be overridden by the `quickSuggestEnabled` Nimbus
-   *   variable. If false, neither sponsored nor non-sponsored suggestions will
-   *   be shown. If true, then we look at the individual prefs
-   *   `suggest.quicksuggest` and `suggest.quicksuggest.sponsored`.
-   *
-   * * `suggest.quicksuggest`: Whether any quick suggest results are shown. This
-   *    must be true to show both non-sponsored and sponsored results.
-   *
-   * * `suggest.quicksuggest.sponsored`: Whether sponsored quick suggest results
-   *    are shown. Both this pref and `suggest.quicksuggest` must be true to
-   *    show sponsored results.
-   */
-  onEnabledUpdate() {
-    if (
-      UrlbarPrefs.get(FEATURE_AVAILABLE) &&
-      UrlbarPrefs.get("suggest.quicksuggest")
-    ) {
-      this._setupRemoteSettings();
-    }
   }
 
   /*
@@ -336,102 +300,108 @@ class Suggestions {
     );
   }
 
-  /*
-   * Set up RemoteSettings listeners.
+  /**
+   * Called when a urlbar pref changes. The onboarding dialog will set the
+   * `browser.urlbar.suggest.quicksuggest` prefs if the user has opted in, at
+   * which point we can start showing results.
+   *
+   * @param {string} pref
+   *   The name of the pref relative to `browser.urlbar`.
    */
-  async _setupRemoteSettings() {
-    this._rs = RemoteSettings(RS_COLLECTION);
-    this._rs.on("sync", this._onSettingsSync.bind(this));
-    await this._ensureAttachmentsDownloaded();
-    if (this._initResolve) {
-      this._initResolve();
-      this._initResolve = null;
+  onPrefChanged(pref) {
+    switch (pref) {
+      // Both sponsored and non-sponsored results come from the same remote
+      // settings dataset, so we only need to listen for `suggest.quicksuggest`
+      // and not also `suggest.quicksuggest.sponsored`.
+      case "suggest.quicksuggest":
+        this._queueSettingsSetup();
+        break;
     }
   }
 
-  /*
-   * Called when RemoteSettings updates are received.
+  // The RemoteSettings client.
+  _rs = null;
+
+  // Queue of callback functions for serializing access to remote settings and
+  // related data. See _queueSettingsTask().
+  _settingsTaskQueue = [];
+
+  // Functions to call when the settings task queue becomes empty.
+  _emptySettingsTaskQueueCallbacks = [];
+
+  // Maps from result IDs to the corresponding results.
+  _results = new Map();
+
+  // A tree that maps keywords to a result.
+  _tree = new KeywordTree();
+
+  /**
+   * Queues a task to ensure our remote settings client is initialized or torn
+   * down as appropriate.
    */
-  async _onSettingsSync({ data: { deleted } }) {
-    const toDelete = deleted?.filter(d => d.attachment);
-    // Remove local files of deleted records
-    if (toDelete) {
-      await Promise.all(
-        toDelete.map(entry => this._rs.attachments.delete(entry))
-      );
-    }
-    await this._ensureAttachmentsDownloaded();
+  _queueSettingsSetup() {
+    this._queueSettingsTask(() => {
+      let enabled =
+        UrlbarPrefs.get(FEATURE_AVAILABLE) &&
+        UrlbarPrefs.get("suggest.quicksuggest");
+      if (enabled && !this._rs) {
+        this._onSettingsSync = (...args) => this._queueSettingsSync(...args);
+        this._rs = RemoteSettings(RS_COLLECTION);
+        this._rs.on("sync", this._onSettingsSync);
+        this._queueSettingsSync();
+      } else if (!enabled && this._rs) {
+        this._rs.off("sync", this._onSettingsSync);
+        this._rs = null;
+        this._onSettingsSync = null;
+      }
+    });
   }
 
-  /*
-   * We store our RemoteSettings data in attachments, ensure the attachments
-   * are saved locally.
+  /**
+   * Queues a task to (re)create the results map and keyword tree from the
+   * remote settings data plus any other work that needs to be done on sync.
+   *
+   * @param {object} [event]
+   *   The event object passed to the "sync" event listener if you're calling
+   *   this from the listener.
    */
-  async _ensureAttachmentsDownloaded() {
-    // Make sure we don't re-enter this method, which can happen due to a cycle
-    // created by our remote settings sync listener as follows:
-    //
-    // Pref change -> onPrefChanged -> onEnabledUpdate -> _setupRemoteSettings
-    // -> _ensureAttachmentsDownloaded -> this._rs.get -> RemoteSettingsClient
-    // calls sync on itself -> RemoteSettingsClient emits a sync event ->
-    // _onSettingsSync -> _ensureAttachmentsDownloaded
-    //
-    // Because RemoteSettingsClient awaits when it emits its sync event, we get
-    // a deadlock in that call stack. Quick suggest will not be able to complete
-    // initialization and return suggestions until something else causes it to
-    // fetch the data again. Restarting the app also fixes it because it seems
-    // RemoteSettingsClient takes a different code path on initialization after
-    // restart, presumably because the data was successfully downloaded and
-    // cached before the deadlock.
-    if (this._ensureAttachmentsDownloadedRunning) {
-      return;
-    }
-    this._ensureAttachmentsDownloadedRunning = true;
-    try {
-      await this._ensureAttachmentsDownloadedHelper();
-    } finally {
-      this._ensureAttachmentsDownloadedRunning = false;
-    }
+  _queueSettingsSync(event = null) {
+    this._queueSettingsTask(async () => {
+      // Remove local files of deleted records
+      if (event?.data?.deleted) {
+        await Promise.all(
+          event.data.deleted
+            .filter(d => d.attachment)
+            .map(entry => this._rs.attachments.delete(entry))
+        );
+      }
+
+      let data = await this._rs.get({ filters: { type: "data" } });
+      let icons = await this._rs.get({ filters: { type: "icon" } });
+      await Promise.all(icons.map(r => this._rs.attachments.download(r)));
+
+      this._results = new Map();
+      this._tree = new KeywordTree();
+
+      for (let record of data) {
+        let { buffer } = await this._rs.attachments.download(record, {
+          useCache: true,
+        });
+        let results = JSON.parse(new TextDecoder("utf-8").decode(buffer));
+        this._addResults(results);
+      }
+    });
   }
 
-  async _ensureAttachmentsDownloadedHelper() {
-    log.info("_ensureAttachmentsDownloaded started");
-    let dataOpts = { useCache: true };
-    let data = await this._rs.get({ filters: { type: "data" } });
-    await Promise.all(
-      data.map(r => this._rs.attachments.download(r, dataOpts))
-    );
-
-    let icons = await this._rs.get({ filters: { type: "icon" } });
-    await Promise.all(icons.map(r => this._rs.attachments.download(r)));
-
-    await this._createTree();
-    log.info("_ensureAttachmentsDownloaded complete");
-  }
-
-  /*
-   * Recreate the KeywordTree on startup or with RemoteSettings updates.
+  /**
+   * Adds a list of result objects to the results map and keyword tree. This
+   * method is also used by tests to set up mock suggestions.
+   *
+   * @param {array} results
+   *   Array of result objects.
    */
-  async _createTree() {
-    log.info("Building new KeywordTree");
-    this._results = new Map();
-    this._tree = new KeywordTree();
-    let data = await this._rs.get({ filters: { type: "data" } });
-
-    for (let record of data) {
-      let { buffer } = await this._rs.attachments.download(record, {
-        useCache: true,
-      });
-      let json = JSON.parse(new TextDecoder("utf-8").decode(buffer));
-      this._processSuggestionsJSON(json);
-    }
-  }
-
-  /*
-   * Handle incoming suggestions data and add to local data.
-   */
-  async _processSuggestionsJSON(json) {
-    for (let result of json) {
+  _addResults(results) {
+    for (let result of results) {
       this._results.set(result.id, result);
       for (let keyword of result.keywords) {
         this._tree.set(keyword, result.id);
@@ -439,10 +409,54 @@ class Suggestions {
     }
   }
 
-  /*
-   * Fetch the icon from RemoteSettings attachments.
+  /**
+   * Adds a function to the remote settings task queue. Methods in this class
+   * should call this when they need to to modify or access the settings client.
+   * It ensures settings accesses are serialized, do not overlap, and happen
+   * only one at a time. It also lets clients, especially tests, use this class
+   * without having to worry about whether a settings sync or initialization is
+   * ongoing; see `readyPromise`.
+   *
+   * @param {function} callback
+   *   The function to queue.
    */
-  async fetchIcon(path) {
+  _queueSettingsTask(callback) {
+    this._settingsTaskQueue.push(callback);
+    if (this._settingsTaskQueue.length == 1) {
+      this._doNextSettingsTask();
+    }
+  }
+
+  /**
+   * Calls the next function in the settings task queue and recurses until the
+   * queue is empty. Once empty, all empty-queue callback functions are called.
+   */
+  async _doNextSettingsTask() {
+    if (!this._settingsTaskQueue.length) {
+      while (this._emptySettingsTaskQueueCallbacks.length) {
+        let callback = this._emptySettingsTaskQueueCallbacks.shift();
+        callback();
+      }
+      return;
+    }
+
+    let task = this._settingsTaskQueue[0];
+    try {
+      await task();
+    } catch (error) {
+      log.error(error);
+    }
+    this._settingsTaskQueue.shift();
+    this._doNextSettingsTask();
+  }
+
+  /**
+   * Fetch the icon from RemoteSettings attachments.
+   *
+   * @param {string} path
+   *   The icon's remote settings path.
+   */
+  async _fetchIcon(path) {
     if (!path) {
       return null;
     }
@@ -485,10 +499,6 @@ const RESULT_KEY = "^";
 class KeywordTree {
   constructor() {
     this.tree = new Map();
-  }
-
-  static get SUGGESTION_SCORE() {
-    return SUGGESTION_SCORE;
   }
 
   /*
@@ -625,4 +635,3 @@ class KeywordTree {
 }
 
 let UrlbarQuickSuggest = new Suggestions();
-UrlbarQuickSuggest.init();
