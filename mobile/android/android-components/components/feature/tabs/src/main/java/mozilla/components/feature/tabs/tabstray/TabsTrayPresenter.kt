@@ -24,9 +24,11 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 class TabsTrayPresenter(
     private val tabsTray: TabsTray,
     private val store: BrowserStore,
-    internal var tabsFilter: (TabSessionState) -> Boolean
+    internal var tabsFilter: (TabSessionState) -> Boolean,
+    private val closeTabsTray: () -> Unit
 ) {
     private var scope: CoroutineScope? = null
+    private var initialOpen: Boolean = true
 
     fun start() {
         scope = store.flowScoped { flow -> collect(flow) }
@@ -40,7 +42,14 @@ class TabsTrayPresenter(
         flow.ifChanged { it.toTabs(tabsFilter) }
             .collect { state ->
                 val (tabs, selectedTabId) = state.toTabList(tabsFilter)
+                // Do not invoke the callback on start if this is the initial state.
+                if (tabs.isEmpty() && !initialOpen) {
+                    closeTabsTray.invoke()
+                }
+
                 tabsTray.updateTabs(tabs, selectedTabId)
+
+                initialOpen = false
             }
     }
 }

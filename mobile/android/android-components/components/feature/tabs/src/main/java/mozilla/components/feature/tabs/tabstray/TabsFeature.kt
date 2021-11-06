@@ -16,18 +16,21 @@ import mozilla.components.support.base.feature.LifecycleAwareFeature
  *
  * @param defaultTabsFilter A tab filter that is used for the initial presenting of tabs that will be used by
  * [TabsFeature.filterTabs] by default as well.
+ * @param onCloseTray a callback invoked when the last tab is closed.
  */
 @Suppress("LongParameterList")
 class TabsFeature(
     private val tabsTray: TabsTray,
     private val store: BrowserStore,
+    private val onCloseTray: () -> Unit = {},
     private val defaultTabsFilter: (TabSessionState) -> Boolean = { true }
 ) : LifecycleAwareFeature {
     @VisibleForTesting
     internal var presenter = TabsTrayPresenter(
         tabsTray,
         store,
-        defaultTabsFilter
+        defaultTabsFilter,
+        onCloseTray
     )
 
     override fun start() {

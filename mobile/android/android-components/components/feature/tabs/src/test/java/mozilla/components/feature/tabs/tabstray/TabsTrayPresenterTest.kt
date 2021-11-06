@@ -18,7 +18,9 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabsTray
 import mozilla.components.support.test.ext.joinBlocking
 import org.junit.After
+import org.junit.Assert
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -59,6 +61,7 @@ class TabsTrayPresenterTest {
         val presenter = TabsTrayPresenter(
             tabsTray,
             store,
+            closeTabsTray = {},
             tabsFilter = { true }
         )
 
@@ -94,6 +97,7 @@ class TabsTrayPresenterTest {
         val presenter = TabsTrayPresenter(
             tabsTray,
             store,
+            closeTabsTray = {},
             tabsFilter = { true }
         )
 
@@ -130,6 +134,7 @@ class TabsTrayPresenterTest {
         val presenter = TabsTrayPresenter(
             tabsTray,
             store,
+            closeTabsTray = {},
             tabsFilter = { true }
         )
 
@@ -168,6 +173,7 @@ class TabsTrayPresenterTest {
         val presenter = TabsTrayPresenter(
             tabsTray,
             store,
+            closeTabsTray = {},
             tabsFilter = { true }
         )
 
@@ -204,6 +210,7 @@ class TabsTrayPresenterTest {
         val presenter = TabsTrayPresenter(
             tabsTray,
             store,
+            closeTabsTray = {},
             tabsFilter = { true }
         )
 
@@ -236,6 +243,7 @@ class TabsTrayPresenterTest {
         val presenter = TabsTrayPresenter(
             tabsTray,
             store,
+            closeTabsTray = {},
             tabsFilter = { it.content.private }
         )
 
@@ -243,6 +251,108 @@ class TabsTrayPresenterTest {
         testDispatcher.advanceUntilIdle()
 
         assertTrue(tabsTray.updateTabs?.size == 1)
+    }
+
+    @Test
+    fun `presenter will close tabs tray when all sessions get removed`() {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "a"),
+                    createTab("https://getpocket.com", id = "b"),
+                    createTab("https://developer.mozilla.org", id = "c"),
+                    createTab("https://www.firefox.com", id = "d"),
+                    createTab("https://www.google.com", id = "e")
+                ),
+                selectedTabId = "a"
+            )
+        )
+
+        var closed = false
+
+        val tabsTray: MockedTabsTray = spy(MockedTabsTray())
+        val presenter = TabsTrayPresenter(
+            tabsTray,
+            store,
+            tabsFilter = { true },
+            closeTabsTray = { closed = true }
+        )
+
+        presenter.start()
+        testDispatcher.advanceUntilIdle()
+
+        Assert.assertFalse(closed)
+
+        store.dispatch(TabListAction.RemoveAllTabsAction()).joinBlocking()
+        testDispatcher.advanceUntilIdle()
+
+        assertTrue(closed)
+
+        presenter.stop()
+    }
+
+    @Test
+    fun `presenter will close tabs tray when last session gets removed`() {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = listOf(
+                    createTab("https://www.mozilla.org", id = "a"),
+                    createTab("https://getpocket.com", id = "b")
+                ),
+                selectedTabId = "a"
+            )
+        )
+
+        var closed = false
+
+        val tabsTray: MockedTabsTray = spy(MockedTabsTray())
+        val presenter = TabsTrayPresenter(
+            tabsTray,
+            store,
+            tabsFilter = { true },
+            closeTabsTray = { closed = true }
+        )
+
+        presenter.start()
+        testDispatcher.advanceUntilIdle()
+
+        Assert.assertFalse(closed)
+
+        store.dispatch(TabListAction.RemoveTabAction("a")).joinBlocking()
+        testDispatcher.advanceUntilIdle()
+
+        Assert.assertFalse(closed)
+
+        store.dispatch(TabListAction.RemoveTabAction("b")).joinBlocking()
+        testDispatcher.advanceUntilIdle()
+
+        assertTrue(closed)
+
+        presenter.stop()
+    }
+
+    @Test
+    fun `tabs tray should not invoke the close callback on start`() {
+        val store = BrowserStore(
+            BrowserState(
+                tabs = emptyList(),
+                selectedTabId = null
+            )
+        )
+
+        var invoked = false
+        val tabsTray: MockedTabsTray = spy(MockedTabsTray())
+        val presenter = TabsTrayPresenter(
+            tabsTray,
+            store,
+            tabsFilter = { it.content.private },
+            closeTabsTray = { invoked = true }
+        )
+
+        presenter.start()
+        testDispatcher.advanceUntilIdle()
+
+        assertFalse(invoked)
     }
 }
 

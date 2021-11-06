@@ -59,6 +59,7 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
             feature = TabsFeature(
                 tabsTray = tabsAdapter,
                 store = components.store,
+                onCloseTray = ::closeTabsTray
             ),
             owner = this,
             view = view
@@ -94,9 +95,6 @@ class TabsTrayFragment : Fragment(), UserInteractionHandler {
                 override fun onTabClosed(tab: TabSessionState, source: String?) {
                     removeUseCase.invoke(tab.id)
                 }
-            },
-            onCloseTray = {
-                closeTabsTray()
             }
         )
     }

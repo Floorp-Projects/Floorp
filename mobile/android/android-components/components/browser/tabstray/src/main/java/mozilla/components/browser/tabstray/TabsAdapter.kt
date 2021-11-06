@@ -23,7 +23,6 @@ typealias ViewHolderProvider = (ViewGroup) -> TabViewHolder
  * @param viewHolderProvider a function that creates a [TabViewHolder].
  * @param styling the default styling for the [TabsTrayStyling].
  * @param delegate a delegate to handle interactions in the tabs tray.
- * @param onCloseTray a callback invoked when the last tab is closed.
  */
 open class TabsAdapter(
     thumbnailLoader: ImageLoader? = null,
@@ -35,10 +34,8 @@ open class TabsAdapter(
     },
     private val styling: TabsTrayStyling = TabsTrayStyling(),
     private val delegate: TabsTray.Delegate,
-    private val onCloseTray: () -> Unit = {}
 ) : ListAdapter<TabSessionState, TabViewHolder>(DiffCallback), TabsTray {
 
-    private var previouslyOpened: Boolean = false
     private var selectedTabId: String? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabViewHolder {
@@ -74,13 +71,7 @@ open class TabsAdapter(
     }
 
     override fun updateTabs(tabs: List<TabSessionState>, selectedTabId: String?) {
-        if (tabs.isEmpty() && previouslyOpened) {
-            onCloseTray.invoke()
-            return
-        }
-
         this.selectedTabId = selectedTabId
-        this.previouslyOpened = true
 
         submitList(tabs)
     }
