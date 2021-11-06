@@ -141,6 +141,8 @@
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">Mostrar todo</string>
 
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description">Mostrar el botón de todas las pestañas recientes</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Tu búsqueda de \&quot;%1$s\&quot;</string>
@@ -163,6 +165,9 @@
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">Eliminar</string>
+
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description">Mostrar el botón de todas las exploraciones pasadas</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -295,6 +300,10 @@
     <string name="onboarding_home_screen_title_2">Novedades en Firefox</string>
     <!-- Onboarding home screen dialog description text. -->
     <string name="onboarding_home_screen_description_2">Ahora es más fácil continuar donde lo dejaste.</string>
+    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_section_home_title_2">Página de inicio personalizada de Firefox</string>
+    <!-- Onboarding home screen dialog description text for the home section. -->
+    <string name="onboarding_home_screen_section_home_description_2">Salta a tus pestañas abiertas, marcadores e historial de navegación.</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
     <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Pestañas limpias y organizadas</string>
     <!-- Onboarding home screen dialog description text for the tab tray section. -->
@@ -304,6 +313,9 @@
 
     <!-- Onboarding home screen dialog description text for the history section. -->
     <string name="onboarding_home_screen_section_useful_history_description_2">Revisa tus últimas búsquedas desde tú página de inicio y pestañas.</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Tú página de inicio personalizada de Firefox ahora hace que sea más fácil continuar donde lo dejaste. Encuentra tus pestañas, marcadores y resultados de búsqueda recientes.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -715,6 +727,8 @@
     <string name="opening_screen_last_tab">Última pestaña</string>
     <!-- Option for never starting on the home screen -->
     <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Nunca</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">Página de inicio después de cuatro horas de inactividad</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Cerrar manualmente</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -1564,6 +1578,9 @@
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Limpia las cookies creadas por redirecciones a sitios web de seguimiento conocidos.</string>
 
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Algunos rastreadores marcados abajo han sido parcialmente desbloqueados en esta página porque interactuaste con ellos*.</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">Saber más</string>
 
@@ -1925,6 +1942,8 @@
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
 
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string moz:removedIn="94" name="add_login_hostname_invalid_text_1" tools:ignore="UnusedResources">La dirección web debe contener \“https://\“ o \“http://</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
     <string name="add_login_hostname_invalid_text_3">La dirección web debe contener &quot;https://&quot; o &quot;http://&quot;</string>
 
     <!-- Synced Tabs -->
@@ -1996,6 +2015,10 @@
 
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
     <string name="inactive_tabs_survey_content">¿Por qué desactivaste las pestañas inactivas?</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_do_not_understand">No entiendo como funciona</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_long_option_1">El periodo de dos semanas es muy largo</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
     <string name="inactive_tabs_survey_send_button">Enviar</string>
 
@@ -2017,6 +2040,11 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Cerrar</string>
 
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string moz:removedIn="94" name="pocket_stories_header" tools:ignore="UnusedResources">Historias que invitan a la reflexión</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header_1">Historias que invitan a la reflexión</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_categories_header">Historias por tema</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
