@@ -19,17 +19,40 @@ const PREF_MERINO_ENDPOINT_URL = "merino.endpointURL";
 
 const TELEMETRY_MERINO_LATENCY = "FX_URLBAR_MERINO_LATENCY_MS";
 
+const REMOTE_SETTINGS_SEARCH_STRING = "frab";
+
 const REMOTE_SETTINGS_DATA = [
   {
     id: 1,
     url: "http://test.com/q=frabbits",
     title: "frabbits",
-    keywords: ["fra", "frab"],
+    keywords: [REMOTE_SETTINGS_SEARCH_STRING],
     click_url: "http://click.reporting.test.com/",
     impression_url: "http://impression.reporting.test.com/",
     advertiser: "TestAdvertiser",
   },
 ];
+
+const EXPECTED_REMOTE_SETTINGS_RESULT = {
+  type: UrlbarUtils.RESULT_TYPE.URL,
+  source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+  heuristic: false,
+  payload: {
+    qsSuggestion: REMOTE_SETTINGS_SEARCH_STRING,
+    title: "frabbits",
+    url: "http://test.com/q=frabbits",
+    icon: null,
+    sponsoredImpressionUrl: "http://impression.reporting.test.com/",
+    sponsoredClickUrl: "http://click.reporting.test.com/",
+    sponsoredBlockId: 1,
+    sponsoredAdvertiser: "testadvertiser",
+    isSponsored: true,
+    helpUrl: UrlbarProviderQuickSuggest.helpUrl,
+    helpL10nId: "firefox-suggest-urlbar-learn-more",
+    displayUrl: "http://test.com/q=frabbits",
+    source: "remote-settings",
+  },
+};
 
 let gMerinoResponse;
 
@@ -49,6 +72,12 @@ add_task(async function init() {
 
   // Set up the remote settings client with the test data.
   await QuickSuggestTestUtils.ensureQuickSuggestInit(REMOTE_SETTINGS_DATA);
+
+  Assert.equal(
+    typeof UrlbarQuickSuggest.SUGGESTION_SCORE,
+    "number",
+    "Sanity check: UrlbarQuickSuggest.SUGGESTION_SCORE is defined"
+  );
 });
 
 // Tests with Merino enabled and remote settings disabled.
@@ -78,7 +107,7 @@ add_task(async function oneEnabled_merino() {
     },
   });
 
-  let context = createContext("frab", {
+  let context = createContext(REMOTE_SETTINGS_SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
     isPrivate: false,
   });
@@ -137,34 +166,13 @@ add_task(async function oneEnabled_remoteSettings() {
     },
   });
 
-  let context = createContext("frab", {
+  let context = createContext(REMOTE_SETTINGS_SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
     isPrivate: false,
   });
   await check_results({
     context,
-    matches: [
-      {
-        type: UrlbarUtils.RESULT_TYPE.URL,
-        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-        heuristic: false,
-        payload: {
-          qsSuggestion: "frab",
-          title: "frabbits",
-          url: "http://test.com/q=frabbits",
-          icon: null,
-          sponsoredImpressionUrl: "http://impression.reporting.test.com/",
-          sponsoredClickUrl: "http://click.reporting.test.com/",
-          sponsoredBlockId: 1,
-          sponsoredAdvertiser: "testadvertiser",
-          isSponsored: true,
-          helpUrl: UrlbarProviderQuickSuggest.helpUrl,
-          helpL10nId: "firefox-suggest-urlbar-learn-more",
-          displayUrl: "http://test.com/q=frabbits",
-          source: "remote-settings",
-        },
-      },
-    ],
+    matches: [EXPECTED_REMOTE_SETTINGS_RESULT],
   });
 });
 
@@ -194,7 +202,7 @@ add_task(async function higherScore_merino() {
     },
   });
 
-  let context = createContext("frab", {
+  let context = createContext(REMOTE_SETTINGS_SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
     isPrivate: false,
   });
@@ -252,34 +260,13 @@ add_task(async function higherScore_remoteSettings() {
     },
   });
 
-  let context = createContext("frab", {
+  let context = createContext(REMOTE_SETTINGS_SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
     isPrivate: false,
   });
   await check_results({
     context,
-    matches: [
-      {
-        type: UrlbarUtils.RESULT_TYPE.URL,
-        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-        heuristic: false,
-        payload: {
-          qsSuggestion: "frab",
-          title: "frabbits",
-          url: "http://test.com/q=frabbits",
-          icon: null,
-          sponsoredImpressionUrl: "http://impression.reporting.test.com/",
-          sponsoredClickUrl: "http://click.reporting.test.com/",
-          sponsoredBlockId: 1,
-          sponsoredAdvertiser: "testadvertiser",
-          isSponsored: true,
-          helpUrl: UrlbarProviderQuickSuggest.helpUrl,
-          helpL10nId: "firefox-suggest-urlbar-learn-more",
-          displayUrl: "http://test.com/q=frabbits",
-          source: "remote-settings",
-        },
-      },
-    ],
+    matches: [EXPECTED_REMOTE_SETTINGS_RESULT],
   });
 });
 
@@ -309,34 +296,13 @@ add_task(async function sameScore() {
     },
   });
 
-  let context = createContext("frab", {
+  let context = createContext(REMOTE_SETTINGS_SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
     isPrivate: false,
   });
   await check_results({
     context,
-    matches: [
-      {
-        type: UrlbarUtils.RESULT_TYPE.URL,
-        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-        heuristic: false,
-        payload: {
-          qsSuggestion: "frab",
-          title: "frabbits",
-          url: "http://test.com/q=frabbits",
-          icon: null,
-          sponsoredImpressionUrl: "http://impression.reporting.test.com/",
-          sponsoredClickUrl: "http://click.reporting.test.com/",
-          sponsoredBlockId: 1,
-          sponsoredAdvertiser: "testadvertiser",
-          isSponsored: true,
-          helpUrl: UrlbarProviderQuickSuggest.helpUrl,
-          helpL10nId: "firefox-suggest-urlbar-learn-more",
-          displayUrl: "http://test.com/q=frabbits",
-          source: "remote-settings",
-        },
-      },
-    ],
+    matches: [EXPECTED_REMOTE_SETTINGS_RESULT],
   });
 });
 
@@ -366,34 +332,13 @@ add_task(async function noMerinoScore() {
     },
   });
 
-  let context = createContext("frab", {
+  let context = createContext(REMOTE_SETTINGS_SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
     isPrivate: false,
   });
   await check_results({
     context,
-    matches: [
-      {
-        type: UrlbarUtils.RESULT_TYPE.URL,
-        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-        heuristic: false,
-        payload: {
-          qsSuggestion: "frab",
-          title: "frabbits",
-          url: "http://test.com/q=frabbits",
-          icon: null,
-          sponsoredImpressionUrl: "http://impression.reporting.test.com/",
-          sponsoredClickUrl: "http://click.reporting.test.com/",
-          sponsoredBlockId: 1,
-          sponsoredAdvertiser: "testadvertiser",
-          isSponsored: true,
-          helpUrl: UrlbarProviderQuickSuggest.helpUrl,
-          helpL10nId: "firefox-suggest-urlbar-learn-more",
-          displayUrl: "http://test.com/q=frabbits",
-          source: "remote-settings",
-        },
-      },
-    ],
+    matches: [EXPECTED_REMOTE_SETTINGS_RESULT],
   });
 });
 
@@ -468,34 +413,13 @@ add_task(async function noSuggestion_merino() {
     },
   });
 
-  let context = createContext("frab", {
+  let context = createContext(REMOTE_SETTINGS_SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
     isPrivate: false,
   });
   await check_results({
     context,
-    matches: [
-      {
-        type: UrlbarUtils.RESULT_TYPE.URL,
-        source: UrlbarUtils.RESULT_SOURCE.SEARCH,
-        heuristic: false,
-        payload: {
-          qsSuggestion: "frab",
-          title: "frabbits",
-          url: "http://test.com/q=frabbits",
-          icon: null,
-          sponsoredImpressionUrl: "http://impression.reporting.test.com/",
-          sponsoredClickUrl: "http://click.reporting.test.com/",
-          sponsoredBlockId: 1,
-          sponsoredAdvertiser: "testadvertiser",
-          isSponsored: true,
-          helpUrl: UrlbarProviderQuickSuggest.helpUrl,
-          helpL10nId: "firefox-suggest-urlbar-learn-more",
-          displayUrl: "http://test.com/q=frabbits",
-          source: "remote-settings",
-        },
-      },
-    ],
+    matches: [EXPECTED_REMOTE_SETTINGS_RESULT],
   });
 });
 
@@ -526,7 +450,7 @@ add_task(async function bothDisabled() {
     },
   });
 
-  let context = createContext("frab", {
+  let context = createContext(REMOTE_SETTINGS_SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
     isPrivate: false,
   });
