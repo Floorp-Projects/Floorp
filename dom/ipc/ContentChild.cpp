@@ -968,7 +968,8 @@ nsresult ContentChild::ProvideWindowCommon(
     BrowserChild* aTabOpener, nsIOpenWindowInfo* aOpenWindowInfo,
     uint32_t aChromeFlags, bool aCalledFromJS, nsIURI* aURI,
     const nsAString& aName, const nsACString& aFeatures, bool aForceNoOpener,
-    bool aForceNoReferrer, nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
+    bool aForceNoReferrer, bool aIsPopupRequested,
+    nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
     BrowsingContext** aReturn) {
   MOZ_DIAGNOSTIC_ASSERT(aTabOpener, "We must have a tab opener");
 
@@ -1058,7 +1059,8 @@ nsresult ContentChild::ProvideWindowCommon(
   }
 
   RefPtr<BrowsingContext> browsingContext = BrowsingContext::CreateDetached(
-      nullptr, openerBC, nullptr, aName, BrowsingContext::Type::Content);
+      nullptr, openerBC, nullptr, aName, BrowsingContext::Type::Content,
+      aIsPopupRequested);
   MOZ_ALWAYS_SUCCEEDS(browsingContext->SetRemoteTabs(true));
   MOZ_ALWAYS_SUCCEEDS(browsingContext->SetRemoteSubframes(useRemoteSubframes));
   MOZ_ALWAYS_SUCCEEDS(browsingContext->SetOriginAttributes(

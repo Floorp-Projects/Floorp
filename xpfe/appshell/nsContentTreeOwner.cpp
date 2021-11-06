@@ -519,14 +519,12 @@ NS_IMETHODIMP nsContentTreeOwner::SetTitle(const nsAString& aTitle) {
 // nsContentTreeOwner: nsIWindowProvider
 //*****************************************************************************
 NS_IMETHODIMP
-nsContentTreeOwner::ProvideWindow(nsIOpenWindowInfo* aOpenWindowInfo,
-                                  uint32_t aChromeFlags, bool aCalledFromJS,
-                                  nsIURI* aURI, const nsAString& aName,
-                                  const nsACString& aFeatures,
-                                  bool aForceNoOpener, bool aForceNoReferrer,
-                                  nsDocShellLoadState* aLoadState,
-                                  bool* aWindowIsNew,
-                                  dom::BrowsingContext** aReturn) {
+nsContentTreeOwner::ProvideWindow(
+    nsIOpenWindowInfo* aOpenWindowInfo, uint32_t aChromeFlags,
+    bool aCalledFromJS, nsIURI* aURI, const nsAString& aName,
+    const nsACString& aFeatures, bool aForceNoOpener, bool aForceNoReferrer,
+    bool aIsPopupRequested, nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
+    dom::BrowsingContext** aReturn) {
   NS_ENSURE_ARG_POINTER(aOpenWindowInfo);
 
   RefPtr<dom::BrowsingContext> parent = aOpenWindowInfo->GetParent();
