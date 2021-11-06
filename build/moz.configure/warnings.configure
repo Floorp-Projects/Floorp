@@ -74,6 +74,13 @@ check_and_add_gcc_warning("-Wno-error=tautological-type-limit-compare")
 add_gcc_warning("-Wunreachable-code")
 check_and_add_gcc_warning("-Wunreachable-code-return")
 
+# catches parameters that are set but not read
+# Only enable on clang because gcc reports false positives.
+check_and_add_gcc_warning(
+    "-Wunused-but-set-parameter",
+    when=depends(c_compiler)(lambda c: c.type == "clang"),
+)
+
 # turned on by -Wall, but we use offsetof on non-POD types frequently
 add_gcc_warning("-Wno-invalid-offsetof", cxx_compiler)
 
