@@ -520,7 +520,11 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
   SizeSpec sizeSpec;
   CalcSizeSpec(features, false, sizeSpec);
 
-  uint32_t chromeFlags = CalculateChromeFlagsForContent(features);
+  // This is not initiated by window.open call in content context, and we
+  // don't need to propagate isPopupRequested out-parameter to the resulting
+  // browsing context.
+  bool unused = false;
+  uint32_t chromeFlags = CalculateChromeFlagsForContent(features, &unused);
 
   if (isPrivateBrowsingWindow) {
     chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
@@ -697,6 +701,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   SizeSpec sizeSpec;
   CalcSizeSpec(features, hasChromeParent, sizeSpec);
 
+  bool isPopupRequested = false;
+
   // Make sure we calculate the chromeFlags *before* we push the
   // callee context onto the context stack so that
   // the calculation sees the actual caller when doing its
@@ -707,7 +713,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   } else {
     MOZ_DIAGNOSTIC_ASSERT(parentBC && parentBC->IsContent(),
                           "content caller must provide content parent");
-    chromeFlags = CalculateChromeFlagsForContent(features);
+    chromeFlags = CalculateChromeFlagsForContent(features, &isPopupRequested);
 
     if (aDialog) {
       MOZ_ASSERT(XRE_IsParentProcess());
@@ -841,8 +847,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       if (provider) {
         rv = provider->ProvideWindow(
             openWindowInfo, chromeFlags, aCalledFromJS, uriToLoad, name,
-            featuresStr, aForceNoOpener, aForceNoReferrer, aLoadState,
-            &windowIsNew, getter_AddRefs(newBC));
+            featuresStr, aForceNoOpener, aForceNoReferrer, isPopupRequested,
+            aLoadState, &windowIsNew, getter_AddRefs(newBC));
 
         if (NS_SUCCEEDED(rv) && newBC) {
           nsCOMPtr<nsIDocShell> newDocShell = newBC->GetDocShell();
@@ -1762,11 +1768,13 @@ bool nsWindowWatcher::ShouldOpenPopup(const WindowFeatures& aFeatures) {
  * from a child process. The feature string can only control whether to open a
  * new tab or a new popup.
  * @param aFeatures a string containing a list of named features
+ * @param aIsPopupRequested an out parameter that indicates whether a popup
+ *        is requested by aFeatures
  * @return the chrome bitmask
  */
 // static
 uint32_t nsWindowWatcher::CalculateChromeFlagsForContent(
-    const WindowFeatures& aFeatures) {
+    const WindowFeatures& aFeatures, bool* aIsPopupRequested) {
   if (aFeatures.IsEmpty() || !ShouldOpenPopup(aFeatures)) {
     // Open the current/new tab in the current/new window
     // (depends on browser.link.open_newwindow).
@@ -1774,6 +1782,7 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsForContent(
   }
 
   // Open a minimal popup.
+  *aIsPopupRequested = true;
   return nsIWebBrowserChrome::CHROME_MINIMAL_POPUP;
 }
 

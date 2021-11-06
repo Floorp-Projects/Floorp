@@ -90,7 +90,7 @@ class nsWindowWatcher : public nsIWindowWatcher,
   static bool ShouldOpenPopup(const mozilla::dom::WindowFeatures& aFeatures);
 
   static uint32_t CalculateChromeFlagsForContent(
-      const mozilla::dom::WindowFeatures& aFeatures);
+      const mozilla::dom::WindowFeatures& aFeatures, bool* aIsPopupRequested);
 
   static uint32_t CalculateChromeFlagsForSystem(
       const mozilla::dom::WindowFeatures& aFeatures, bool aDialog,
