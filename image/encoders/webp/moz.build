@@ -4,10 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    "ico",
-    "png",
-    "jpeg",
-    "bmp",
-    "webp",
+SOURCES += [
+    "nsWebPEncoder.cpp",
 ]
+
+LOCAL_INCLUDES += [
+    "/image",
+]
+
+FINAL_LIBRARY = "xul"
