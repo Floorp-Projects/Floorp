@@ -26,7 +26,6 @@ FuzzingStreamListener::OnDataAvailable(nsIRequest* aRequest,
     if (NS_FAILED(rv)) {
       return rv;
     }
-    aOffset += toRead;
     aCount -= toRead;
     toRead = std::min<uint32_t>(aCount, kCopyChunkSize);
   }
