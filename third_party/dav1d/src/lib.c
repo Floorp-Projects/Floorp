@@ -562,6 +562,7 @@ static COLD void close_internal(Dav1dContext **const c_out, int flush) {
             freep(&f->frame_thread.cbi);
             pthread_cond_destroy(&f->task_thread.cond);
         }
+        freep(&f->frame_thread.frame_progress);
         freep(&f->task_thread.tasks);
         freep(&f->task_thread.tile_tasks[0]);
         dav1d_free_aligned(f->ts);
@@ -575,7 +576,7 @@ static COLD void close_internal(Dav1dContext **const c_out, int flush) {
         free(f->lf.start_of_tile_row);
         dav1d_refmvs_clear(&f->rf);
         dav1d_free_aligned(f->lf.cdef_line_buf);
-        dav1d_free_aligned(f->lf.lr_lpf_line[0]);
+        dav1d_free_aligned(f->lf.lr_line_buf);
     }
     dav1d_free_aligned(c->fc);
     dav1d_data_unref_internal(&c->in);
