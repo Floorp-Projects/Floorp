@@ -40,6 +40,8 @@
 #include "nsWeakReference.h"         // for nsSupportsWeakReference
 #include "nscore.h"                  // for nsresult, nsAString, etc.
 
+#include <tuple>  // for std::tuple
+
 class mozInlineSpellChecker;
 class nsAtom;
 class nsCaret;
@@ -2523,7 +2525,7 @@ class EditorBase : public nsIEditor,
    * in a text node.  If mutation event listener changed the text data, this
    * returns a range which covers all over the text data.
    */
-  Tuple<EditorDOMPointInText, EditorDOMPointInText> ComputeInsertedRange(
+  std::tuple<EditorDOMPointInText, EditorDOMPointInText> ComputeInsertedRange(
       const EditorDOMPointInText& aInsertedPoint,
       const nsAString& aInsertedString) const;
 
