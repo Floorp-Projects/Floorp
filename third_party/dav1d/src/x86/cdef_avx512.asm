@@ -26,7 +26,7 @@
 %include "config.asm"
 %include "ext/x86/x86inc.asm"
 
-%if HAVE_AVX512ICL && ARCH_X86_64
+%if ARCH_X86_64
 
 %macro DUP4 1-*
     %rep %0
@@ -93,9 +93,9 @@ pd_268435568:  dd 268435568
 SECTION .text
 
 %if WIN64
-DECLARE_REG_TMP 5, 6
+DECLARE_REG_TMP 4
 %else
-DECLARE_REG_TMP 8, 5
+DECLARE_REG_TMP 8
 %endif
 
 ; lut:
@@ -109,7 +109,7 @@ DECLARE_REG_TMP 8, 5
 ; 5e 5f 50 51 52 53 54 55
 
 INIT_ZMM avx512icl
-cglobal cdef_filter_4x4_8bpc, 4, 8, 13, dst, stride, left, top, \
+cglobal cdef_filter_4x4_8bpc, 5, 8, 13, dst, stride, left, top, bot, \
                                         pri, sec, dir, damping, edge
 %define base r7-edge_mask
     movq         xmm0, [dstq+strideq*0]
@@ -125,9 +125,8 @@ cglobal cdef_filter_4x4_8bpc, 4, 8, 13, dst, stride, left, top, \
     vinserti32x4   m0, [dstq+r2], 2
     test          r6b, 0x08      ; avoid buffer overread
     jz .main
-    lea            r3, [dstq+strideq*4-4]
-    vinserti32x4   m1, [r3+strideq*0], 2
-    vinserti32x4   m0, [r3+strideq*1], 3
+    vinserti32x4   m1, [botq+strideq*0-4], 2
+    vinserti32x4   m0, [botq+strideq*1-4], 3
 .main:
     movifnidn    prid, prim
     mov           t0d, dirm
@@ -152,7 +151,7 @@ cglobal cdef_filter_4x4_8bpc, 4, 8, 13, dst, stride, left, top, \
     vpbroadcastb   m4, prid
     and          prid, 1
     vgf2p8affineqb m9, m2, [r3+r6*8] {1to8}, 0 ; abs(diff) >> shift
-    movifnidn     t1d, secm
+    movifnidn    secd, secm
     vpbroadcastd  m10, [base+pri_tap+priq*4]
     vpsubb    m10{k1}, m7, m10   ; apply_sign(pri_tap)
     psubusb        m4, m9        ; imax(0, pri_strength - (abs(diff) >> shift)))
@@ -160,7 +159,7 @@ cglobal cdef_filter_4x4_8bpc, 4, 8, 13, dst, stride, left, top, \
     vpdpbusd       m0, m2, m10   ; sum
 %endmacro
     CDEF_FILTER_4x4_PRI
-    test          t1d, t1d       ; sec
+    test         secd, secd
     jz .end_no_clip
     call .sec
 .end_clip:
@@ -187,7 +186,7 @@ cglobal cdef_filter_4x4_8bpc, 4, 8, 13, dst, stride, left, top, \
     pminub         m0, m2
     jmp .end
 .sec_only:
-    movifnidn     t1d, secm
+    movifnidn    secd, secm
     call .sec
 .end_no_clip:
     vpshldd        m6, m0, 8  ; (px << 8) + ((sum > -8) << 4)
@@ -201,7 +200,7 @@ cglobal cdef_filter_4x4_8bpc, 4, 8, 13, dst, stride, left, top, \
     pextrd [dstq+r2       ], xm0, 3
     RET
 .mask_edges_sec_only:
-    movifnidn     t1d, secm
+    movifnidn    secd, secm
     call .mask_edges_sec
     jmp .end_no_clip
 ALIGN function_align
@@ -214,7 +213,7 @@ ALIGN function_align
     mova           m1, m6
     vpermb     m1{k1}, m2, m5
     CDEF_FILTER_4x4_PRI
-    test          t1d, t1d
+    test         secd, secd
     jz .end_no_clip
     call .mask_edges_sec
     jmp .end_clip
@@ -238,11 +237,11 @@ ALIGN function_align
     vpbroadcastd   m8, [base+sec_tap]
     vpcmpub        k1, m6, m2, 6
     psubb          m4, m2, m6
-    vpbroadcastb  m12, t1d
-    lzcnt         t1d, t1d
+    vpbroadcastb  m12, secd
+    lzcnt        secd, secd
     vpsubb     m4{k1}, m6, m2
     vpcmpub        k2, m6, m3, 6
-    vpbroadcastq  m11, [r3+t1*8]
+    vpbroadcastq  m11, [r3+secq*8]
     gf2p8affineqb m10, m4, m11, 0
     psubb          m5, m3, m6
     mova           m9, m8
@@ -270,7 +269,8 @@ DECLARE_REG_TMP 2, 7
 ; L8 L9 40 41 42 43 44 45  8e 8f 80 81 82 83 84 85
 ; La Lb 50 51 52 53 54 55  9e 9f 90 91 92 93 94 95
 
-cglobal cdef_filter_4x8_8bpc, 4, 9, 22, dst, stride, left, top, pri, sec, dir, damping, edge
+cglobal cdef_filter_4x8_8bpc, 5, 9, 22, dst, stride, left, top, bot, \
+                                        pri, sec, dir, damping, edge
 %define base r8-edge_mask
     vpbroadcastd ym21, strided
     mov           r6d, edgem
@@ -284,9 +284,8 @@ cglobal cdef_filter_4x8_8bpc, 4, 9, 22, dst, stride, left, top, pri, sec, dir, d
     movu          m15, [base+lut_perm_4x8b]
     test          r6b, 0x08         ; avoid buffer overread
     jz .main
-    lea            r7, [dstq+strideq*8-2]
-    vinserti32x4  ym1, [r7+strideq*0], 1
-    vinserti32x4  ym2, [r7+strideq*1], 1
+    vinserti32x4  ym1, [botq+strideq*0-2], 1
+    vinserti32x4  ym2, [botq+strideq*1-2], 1
 .main:
     punpcklqdq    ym1, ym2
     vinserti32x4   m1, [leftq], 2   ; -2-1 +8+9 left ____
@@ -504,7 +503,7 @@ ALIGN function_align
 ; 8e 8f 80 81 82 83 84 85  84 85 86 87 88 89 8a 8b
 ; 9e 9f 90 91 92 93 94 95  94 95 96 97 98 99 9a 9b
 
-cglobal cdef_filter_8x8_8bpc, 4, 11, 32, 4*64, dst, stride, left, top, \
+cglobal cdef_filter_8x8_8bpc, 5, 11, 32, 4*64, dst, stride, left, top, bot, \
                                                pri, sec, dir, damping, edge
 %define base r8-edge_mask
     mov           r6d, edgem
@@ -518,7 +517,6 @@ cglobal cdef_filter_8x8_8bpc, 4, 11, 32, 4*64, dst, stride, left, top, \
     vinserti32x4  ym0, ymm0, [topq+strideq*1-2], 1
     vinserti32x4  ym1, ymm1, [dstq+r9       -2], 1
     vinserti32x4  ym2, ymm2, [r10 +r9         ], 1
-    lea            r7, [r10 +strideq*4  ]
     pmovzxwq      m11, [leftq+4]
     vinserti32x4   m0, [dstq+strideq*0-2], 2
     vinserti32x4   m1, [r10 +strideq*0  ], 2
@@ -528,8 +526,8 @@ cglobal cdef_filter_8x8_8bpc, 4, 11, 32, 4*64, dst, stride, left, top, \
     vinserti32x4   m1, [r10 +strideq*1  ], 3
     test          r6b, 0x08       ; avoid buffer overread
     jz .main
-    vinserti32x4   m2, [r7  +strideq*0], 2
-    vinserti32x4   m2, [r7  +strideq*1], 3
+    vinserti32x4   m2, [botq+strideq*0-2], 2
+    vinserti32x4   m2, [botq+strideq*1-2], 3
 .main:
     mov           t1d, 0x11111100
     mova          m14, m12
@@ -865,4 +863,4 @@ ALIGN function_align
     CDEF_FILTER_8x8_SEC m12, m13, m14, m15
     ret
 
-%endif ; HAVE_AVX512ICL && ARCH_X86_64
+%endif ; ARCH_X86_64
