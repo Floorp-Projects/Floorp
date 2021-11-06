@@ -394,7 +394,7 @@ static int8_t GetClass(uint32_t u, LineBreaker::Strictness aLevel,
       /* AMBIGUOUS = 1,                     [AI] */ CLASS_CHARACTER,
       /* ALPHABETIC = 2,                    [AL] */ CLASS_CHARACTER,
       /* BREAK_BOTH = 3,                    [B2] */ CLASS_CHARACTER,
-      /* BREAK_AFTER = 4,                   [BA] */ CLASS_CHARACTER,
+      /* BREAK_AFTER = 4,                   [BA] */ CLASS_BREAKABLE,
       /* BREAK_BEFORE = 5,                  [BB] */ CLASS_OPEN_LIKE_CHARACTER,
       /* MANDATORY_BREAK = 6,               [BK] */ CLASS_CHARACTER,
       /* CONTINGENT_BREAK = 7,              [CB] */ CLASS_CHARACTER,
@@ -622,10 +622,11 @@ static int8_t GetClass(uint32_t u, LineBreaker::Strictness aLevel,
         return GETCLASSFROMTABLE(gLBClass00, uint16_t(U_HYPHEN));
       }
     } else if (0x0F00 == h) {
-      // Tibetan chars with class = BA
-      if (0x34 == l || 0x7f == l || 0x85 == l || 0xbe == l || 0xbf == l ||
-          0xd2 == l) {
-        return CLASS_BREAKABLE;
+      // We treat Tibetan TSHEG as a hyphen (when not using platform breaker);
+      // other Tibetan chars with LineBreak class=BA will be handled by the
+      // default sUnicodeLineBreakToClass mapping below.
+      if (l == 0x0B) {
+        return GETCLASSFROMTABLE(gLBClass00, uint16_t(U_HYPHEN));
       }
     } else if (0x1800 == h) {
       if (0x0E == l) {
