@@ -113,11 +113,10 @@ class ContentChild final : public PContentChild,
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult ProvideWindowCommon(
       BrowserChild* aTabOpener, nsIOpenWindowInfo* aOpenWindowInfo,
-      uint32_t aChromeFlags, bool aCalledFromJS, bool aWidthSpecified,
-      nsIURI* aURI, const nsAString& aName, const nsACString& aFeatures,
-      bool aForceNoOpener, bool aForceNoReferrer,
-      nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
-      BrowsingContext** aReturn);
+      uint32_t aChromeFlags, bool aCalledFromJS, nsIURI* aURI,
+      const nsAString& aName, const nsACString& aFeatures, bool aForceNoOpener,
+      bool aForceNoReferrer, nsDocShellLoadState* aLoadState,
+      bool* aWindowIsNew, BrowsingContext** aReturn);
 
   void Init(base::ProcessId aParentPid, const char* aParentBuildID,
             mozilla::ipc::ScopedPort aPort, uint64_t aChildID,

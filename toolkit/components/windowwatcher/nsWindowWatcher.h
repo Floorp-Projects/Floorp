@@ -54,8 +54,7 @@ class nsWindowWatcher : public nsIWindowWatcher,
 
   static int32_t GetWindowOpenLocation(nsPIDOMWindowOuter* aParent,
                                        uint32_t aChromeFlags,
-                                       bool aCalledFromJS, bool aWidthSpecified,
-                                       bool aIsForPrinting);
+                                       bool aCalledFromJS, bool aIsForPrinting);
 
   // Will first look for a caller on the JS stack, and then fall back on
   // aCurrentContext if it can't find one.
@@ -88,11 +87,10 @@ class nsWindowWatcher : public nsIWindowWatcher,
   static nsresult URIfromURL(const nsACString& aURL,
                              mozIDOMWindowProxy* aParent, nsIURI** aURI);
 
-  static bool ShouldOpenPopup(const mozilla::dom::WindowFeatures& aFeatures,
-                              const SizeSpec& aSizeSpec);
+  static bool ShouldOpenPopup(const mozilla::dom::WindowFeatures& aFeatures);
 
   static uint32_t CalculateChromeFlagsForContent(
-      const mozilla::dom::WindowFeatures& aFeatures, const SizeSpec& aSizeSpec);
+      const mozilla::dom::WindowFeatures& aFeatures);
 
   static uint32_t CalculateChromeFlagsForSystem(
       const mozilla::dom::WindowFeatures& aFeatures, bool aDialog,
