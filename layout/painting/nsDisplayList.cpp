@@ -5027,12 +5027,37 @@ bool nsDisplayBlendMode::CreateWebRenderCommands(
 
 void nsDisplayBlendMode::Paint(nsDisplayListBuilder* aBuilder,
                                gfxContext* aCtx) {
-  aCtx->GetDrawTarget()->PushLayerWithBlend(false, 1.0, nullptr,
-                                            mozilla::gfx::Matrix(), IntRect(),
-                                            false, BlendMode());
-  GetChildren()->Paint(aBuilder, aCtx,
+  // This should be switched to use PushLayerWithBlend, once it's
+  // been implemented for all DrawTarget backends.
+  DrawTarget* dt = aCtx->GetDrawTarget();
+  int32_t appUnitsPerDevPixel = mFrame->PresContext()->AppUnitsPerDevPixel();
+  Rect rect = NSRectToRect(GetPaintRect(aBuilder, aCtx), appUnitsPerDevPixel);
+  rect.RoundOut();
+
+  // Create a temporary DrawTarget that is clipped to the area that
+  // we're going to draw to. This will include the same transform as
+  // is currently on |dt|.
+  RefPtr<DrawTarget> temp =
+      dt->CreateClippedDrawTarget(rect, SurfaceFormat::B8G8R8A8);
+  if (!temp) {
+    return;
+  }
+
+  RefPtr<gfxContext> ctx = gfxContext::CreatePreservingTransformOrNull(temp);
+
+  GetChildren()->Paint(aBuilder, ctx,
                        mFrame->PresContext()->AppUnitsPerDevPixel());
-  aCtx->GetDrawTarget()->PopLayer();
+
+  // Draw the temporary DT to the real destination, applying the blend mode, but
+  // no transform.
+  temp->Flush();
+  RefPtr<SourceSurface> surface = temp->Snapshot();
+  gfxContextMatrixAutoSaveRestore saveMatrix(aCtx);
+  dt->SetTransform(Matrix());
+  dt->DrawSurface(
+      surface, Rect(surface->GetRect()), Rect(surface->GetRect()),
+      DrawSurfaceOptions(),
+      DrawOptions(1.0f, nsCSSRendering::GetGFXBlendMode(mBlendMode)));
 }
 
 gfx::CompositionOp nsDisplayBlendMode::BlendMode() {
