@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">페이지 로딩 오류</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">다시 시도</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">뒤로 가기</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">요청을 완료할 수 없습니다</string>
@@ -173,7 +168,7 @@
     <string name="mozac_browser_errorpages_no_internet_refresh_button">새로 고침</string>
 
     <!-- The document title and heading of an error page. -->
-    <string name="mozac_browser_errorpages_malformed_uri_title">유효하지 않은 주소</string>
+    <string name="mozac_browser_errorpages_malformed_uri_title">잘못된 주소</string>
     <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[<p>제시된 주소는 인정된 형식이 아닙니다. 주소 표시줄에 오류가 있지 않은지 확인한 다음 다시 시도해보십시오.</p>]]></string>
     
 	<!-- The document title and heading of an error page. -->
