@@ -136,6 +136,12 @@ void RemoteWorkerController::ErrorPropagation(const ErrorValue& aValue) {
   mObserver->ErrorReceived(aValue);
 }
 
+void RemoteWorkerController::NotifyLock(bool aCreated) {
+  AssertIsOnBackgroundThread();
+
+  mObserver->LockNotified(aCreated);
+}
+
 void RemoteWorkerController::WorkerTerminated() {
   AssertIsOnBackgroundThread();
 

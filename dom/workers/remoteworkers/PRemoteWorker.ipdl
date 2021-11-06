@@ -67,6 +67,8 @@ parent:
 
   async Error(ErrorValue aValue);
 
+  async NotifyLock(bool aCreated);
+
   async Close();
 
   async SetServiceWorkerSkipWaitingFlag() returns (bool aOk);

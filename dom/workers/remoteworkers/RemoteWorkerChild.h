@@ -64,6 +64,8 @@ class RemoteWorkerChild final
   void ErrorPropagationOnMainThread(const WorkerErrorReport* aReport,
                                     bool aIsErrorEvent);
 
+  void NotifyLock(bool aCreated);
+
   void FlushReportsOnMainThread(nsIConsoleReportCollector* aReporter);
 
   void AddPortIdentifier(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
