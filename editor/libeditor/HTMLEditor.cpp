@@ -3416,8 +3416,7 @@ nsresult HTMLEditor::ReplaceTextWithTransaction(
                        "EditorBase::DoTransactionInternal() failed");
 
   if (pointToInsert.IsSet()) {
-    EditorDOMPointInText begin, end;
-    Tie(begin, end) = ComputeInsertedRange(pointToInsert, aStringToInsert);
+    auto [begin, end] = ComputeInsertedRange(pointToInsert, aStringToInsert);
     if (begin.IsSet() && end.IsSet()) {
       TopLevelEditSubActionDataRef().DidDeleteText(*this, begin);
       TopLevelEditSubActionDataRef().DidInsertText(*this, begin, end);
