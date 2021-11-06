@@ -107,27 +107,34 @@ class TestUtils {
    * be updated again during the test, and also optionally sets it up with mock
    * data.
    *
-   * @param {array} [data]
-   *   Array of quick suggest data objects. If not given, then this function
+   * @param {array} [results]
+   *   Array of quick suggest result objects. If not given, then this function
    *   won't set up any mock data.
    * @returns {function}
    *   A cleanup function. You only need to call this function if you're in a
    *   browser chrome test and you did not also call `init`. You can ignore it
    *   otherwise.
    */
-  async ensureQuickSuggestInit(data = null) {
-    this.info?.("Awaiting UrlbarQuickSuggest.init");
-    await UrlbarQuickSuggest.init();
-    this.info?.("Done awaiting UrlbarQuickSuggest.init");
+  async ensureQuickSuggestInit(results = null) {
+    this.info?.(
+      "ensureQuickSuggestInit awaiting UrlbarQuickSuggest.readyPromise"
+    );
+    await UrlbarQuickSuggest.readyPromise;
+    this.info?.(
+      "ensureQuickSuggestInit done awaiting UrlbarQuickSuggest.readyPromise"
+    );
+
+    // Stub _queueSettingsSync() so any actual remote settings syncs that happen
+    // during the test are ignored.
     let sandbox = sinon.createSandbox();
-    sandbox.stub(UrlbarQuickSuggest, "_ensureAttachmentsDownloadedHelper");
+    sandbox.stub(UrlbarQuickSuggest, "_queueSettingsSync");
     let cleanup = () => sandbox.restore();
     this.registerCleanupFunction?.(cleanup);
-    if (data) {
-      this.info?.("Awaiting UrlbarQuickSuggest._processSuggestionsJSON");
-      await UrlbarQuickSuggest._processSuggestionsJSON(data);
-      this.info?.("Done awaiting UrlbarQuickSuggest._processSuggestionsJSON");
+
+    if (results) {
+      UrlbarQuickSuggest._addResults(results);
     }
+
     return cleanup;
   }
 
