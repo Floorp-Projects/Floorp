@@ -520,7 +520,7 @@ nsWindowWatcher::OpenWindowWithRemoteTab(nsIRemoteTab* aRemoteTab,
   SizeSpec sizeSpec;
   CalcSizeSpec(features, false, sizeSpec);
 
-  uint32_t chromeFlags = CalculateChromeFlagsForContent(features, sizeSpec);
+  uint32_t chromeFlags = CalculateChromeFlagsForContent(features);
 
   if (isPrivateBrowsingWindow) {
     chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
@@ -707,7 +707,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   } else {
     MOZ_DIAGNOSTIC_ASSERT(parentBC && parentBC->IsContent(),
                           "content caller must provide content parent");
-    chromeFlags = CalculateChromeFlagsForContent(features, sizeSpec);
+    chromeFlags = CalculateChromeFlagsForContent(features);
 
     if (aDialog) {
       MOZ_ASSERT(XRE_IsParentProcess());
@@ -839,11 +839,10 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
       nsCOMPtr<nsIWindowProvider> provider = do_GetInterface(parentTreeOwner);
       if (provider) {
-        rv = provider->ProvideWindow(openWindowInfo, chromeFlags, aCalledFromJS,
-                                     sizeSpec.WidthSpecified(), uriToLoad, name,
-                                     featuresStr, aForceNoOpener,
-                                     aForceNoReferrer, aLoadState, &windowIsNew,
-                                     getter_AddRefs(newBC));
+        rv = provider->ProvideWindow(
+            openWindowInfo, chromeFlags, aCalledFromJS, uriToLoad, name,
+            featuresStr, aForceNoOpener, aForceNoReferrer, aLoadState,
+            &windowIsNew, getter_AddRefs(newBC));
 
         if (NS_SUCCEEDED(rv) && newBC) {
           nsCOMPtr<nsIDocShell> newDocShell = newBC->GetDocShell();
@@ -1723,14 +1722,17 @@ uint32_t nsWindowWatcher::CalculateChromeFlagsHelper(
 }
 
 // static
-bool nsWindowWatcher::ShouldOpenPopup(const WindowFeatures& aFeatures,
-                                      const SizeSpec& aSizeSpec) {
+bool nsWindowWatcher::ShouldOpenPopup(const WindowFeatures& aFeatures) {
   if (aFeatures.IsEmpty()) {
     return false;
   }
 
-  // Follow Google Chrome's behavior that opens a popup depending on
-  // the following features.
+  // NOTE: This is different than chrome-only "popup" feature that is handled
+  //       in nsWindowWatcher::CalculateChromeFlagsForSystem.
+  if (aFeatures.Exists("popup")) {
+    return aFeatures.GetBool("popup");
+  }
+
   if (!aFeatures.GetBoolWithDefault("location", false) &&
       !aFeatures.GetBoolWithDefault("toolbar", false)) {
     return true;
@@ -1752,11 +1754,6 @@ bool nsWindowWatcher::ShouldOpenPopup(const WindowFeatures& aFeatures,
     return true;
   }
 
-  // Follow Safari's behavior that opens a popup when width is specified.
-  if (aSizeSpec.WidthSpecified()) {
-    return true;
-  }
-
   return false;
 }
 
@@ -1765,13 +1762,12 @@ bool nsWindowWatcher::ShouldOpenPopup(const WindowFeatures& aFeatures,
  * from a child process. The feature string can only control whether to open a
  * new tab or a new popup.
  * @param aFeatures a string containing a list of named features
- * @param aSizeSpec the result of CalcSizeSpec
  * @return the chrome bitmask
  */
 // static
 uint32_t nsWindowWatcher::CalculateChromeFlagsForContent(
-    const WindowFeatures& aFeatures, const SizeSpec& aSizeSpec) {
-  if (aFeatures.IsEmpty() || !ShouldOpenPopup(aFeatures, aSizeSpec)) {
+    const WindowFeatures& aFeatures) {
+  if (aFeatures.IsEmpty() || !ShouldOpenPopup(aFeatures)) {
     // Open the current/new tab in the current/new window
     // (depends on browser.link.open_newwindow).
     return nsIWebBrowserChrome::CHROME_ALL;
@@ -2404,7 +2400,6 @@ void nsWindowWatcher::SizeOpenedWindow(nsIDocShellTreeOwner* aTreeOwner,
 int32_t nsWindowWatcher::GetWindowOpenLocation(nsPIDOMWindowOuter* aParent,
                                                uint32_t aChromeFlags,
                                                bool aCalledFromJS,
-                                               bool aWidthSpecified,
                                                bool aIsForPrinting) {
   // These windows are not actually visible to the user, so we return the thing
   // that we can always handle.
@@ -2460,16 +2455,16 @@ int32_t nsWindowWatcher::GetWindowOpenLocation(nsPIDOMWindowOuter* aParent,
     }
 
     if (restrictionPref == 2) {
-      // Only continue if there are no width feature and no special
-      // chrome flags - with the exception of the remoteness and private flags,
-      // which might have been automatically flipped by Gecko.
+      // Only continue if there is no special chrome flags - with the exception
+      // of the remoteness and private flags, which might have been
+      // automatically flipped by Gecko.
       int32_t uiChromeFlags = aChromeFlags;
       uiChromeFlags &= ~(nsIWebBrowserChrome::CHROME_REMOTE_WINDOW |
                          nsIWebBrowserChrome::CHROME_FISSION_WINDOW |
                          nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW |
                          nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW |
                          nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME);
-      if (uiChromeFlags != nsIWebBrowserChrome::CHROME_ALL || aWidthSpecified) {
+      if (uiChromeFlags != nsIWebBrowserChrome::CHROME_ALL) {
         return nsIBrowserDOMWindow::OPEN_NEWWINDOW;
       }
     }
