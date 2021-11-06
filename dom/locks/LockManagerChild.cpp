@@ -15,9 +15,17 @@
 
 namespace mozilla::dom::locks {
 
-void NotifyImpl(nsPIDOMWindowInner* inner, Document& aDoc, bool aCreated) {
-  uint32_t count = aDoc.UpdateLockCount(aCreated);
-  if (WindowGlobalChild* child = inner->GetWindowGlobalChild()) {
+void NotifyImpl(nsPIDOMWindowInner* aInner, bool aCreated) {
+  if (!aInner) {
+    return;
+  }
+  Document* doc = aInner->GetExtantDoc();
+  if (!doc) {
+    return;
+  }
+
+  uint32_t count = doc->UpdateLockCount(aCreated);
+  if (WindowGlobalChild* child = aInner->GetWindowGlobalChild()) {
     if (aCreated && count == 1) {
       // The first lock is active.
       child->BlockBFCacheFor(BFCacheStatus::ACTIVE_LOCK);
@@ -27,7 +35,7 @@ void NotifyImpl(nsPIDOMWindowInner* inner, Document& aDoc, bool aCreated) {
   }
   // window actor is dead, so we should be just
   // destroying things
-  MOZ_ASSERT_IF(!inner->GetWindowGlobalChild(), !aCreated);
+  MOZ_ASSERT_IF(!aInner->GetWindowGlobalChild(), !aCreated);
 }
 
 class BFCacheNotifyLockRunnable final : public WorkerProxyToMainThreadRunnable {
@@ -37,18 +45,14 @@ class BFCacheNotifyLockRunnable final : public WorkerProxyToMainThreadRunnable {
   void RunOnMainThread(WorkerPrivate* aWorkerPrivate) override {
     MOZ_ASSERT(aWorkerPrivate);
     AssertIsOnMainThread();
-    Document* doc = aWorkerPrivate->GetDocument();
-    if (!doc) {
-      return;
-    }
-    nsPIDOMWindowInner* inner = doc->GetInnerWindow();
+    nsPIDOMWindowInner* inner = aWorkerPrivate->GetAncestorWindow();
     if (!inner) {
       return;
     }
     if (mCreated) {
       inner->RemoveFromBFCacheSync();
     }
-    NotifyImpl(inner, *doc, mCreated);
+    NotifyImpl(inner, mCreated);
   }
 
   void RunBackOnWorkerThreadForCleanup(WorkerPrivate* aWorkerPrivate) override {
@@ -79,7 +83,7 @@ void LockManagerChild::NotifyToWindow(bool aCreated) const {
   if (NS_IsMainThread()) {
     nsPIDOMWindowInner* inner = GetParentObject()->AsInnerWindow();
     MOZ_ASSERT(inner);
-    NotifyImpl(inner, *inner->GetExtantDoc(), aCreated);
+    NotifyImpl(inner, aCreated);
     return;
   }
 

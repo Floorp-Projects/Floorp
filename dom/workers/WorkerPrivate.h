@@ -751,6 +751,8 @@ class WorkerPrivate final : public RelativeTimeline {
     return mLoadInfo.mWindow;
   }
 
+  nsPIDOMWindowInner* GetAncestorWindow() const;
+
   nsIContentSecurityPolicy* GetCSP() const {
     AssertIsOnMainThread();
     return mLoadInfo.mCSP;

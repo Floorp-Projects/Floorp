@@ -1331,19 +1331,28 @@ WorkerPrivate::SyncLoopInfo::SyncLoopInfo(EventTarget* aEventTarget)
 
 Document* WorkerPrivate::GetDocument() const {
   AssertIsOnMainThread();
+  if (nsPIDOMWindowInner* window = GetAncestorWindow()) {
+    return window->GetExtantDoc();
+  }
+  // couldn't query a document, give up and return nullptr
+  return nullptr;
+}
+
+nsPIDOMWindowInner* WorkerPrivate::GetAncestorWindow() const {
+  AssertIsOnMainThread();
   if (mLoadInfo.mWindow) {
-    return mLoadInfo.mWindow->GetExtantDoc();
+    return mLoadInfo.mWindow;
   }
   // if we don't have a document, we should query the document
   // from the parent in case of a nested worker
   WorkerPrivate* parent = mParent;
   while (parent) {
     if (parent->mLoadInfo.mWindow) {
-      return parent->mLoadInfo.mWindow->GetExtantDoc();
+      return parent->mLoadInfo.mWindow;
     }
     parent = parent->GetParent();
   }
-  // couldn't query a document, give up and return nullptr
+  // couldn't query a window, give up and return nullptr
   return nullptr;
 }
 
