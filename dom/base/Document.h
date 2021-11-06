@@ -1454,6 +1454,7 @@ class Document : public nsINode,
   void DeferredContentEditableCountChange(Element*);
 
   uint32_t UpdateLockCount(bool aIncrement) {
+    MOZ_ASSERT_IF(!aIncrement, mLockCount > 0);
     mLockCount += aIncrement ? 1 : -1;
     return mLockCount;
   };

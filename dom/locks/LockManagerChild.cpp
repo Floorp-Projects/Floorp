@@ -15,13 +15,18 @@
 
 namespace mozilla::dom::locks {
 
-void NotifyImpl(nsPIDOMWindowInner* aInner, bool aCreated) {
+void LockManagerChild::NotifyBFCacheOnMainThread(nsPIDOMWindowInner* aInner,
+                                                 bool aCreated) {
+  AssertIsOnMainThread();
   if (!aInner) {
     return;
   }
   Document* doc = aInner->GetExtantDoc();
   if (!doc) {
     return;
+  }
+  if (aCreated) {
+    aInner->RemoveFromBFCacheSync();
   }
 
   uint32_t count = doc->UpdateLockCount(aCreated);
@@ -45,14 +50,16 @@ class BFCacheNotifyLockRunnable final : public WorkerProxyToMainThreadRunnable {
   void RunOnMainThread(WorkerPrivate* aWorkerPrivate) override {
     MOZ_ASSERT(aWorkerPrivate);
     AssertIsOnMainThread();
-    nsPIDOMWindowInner* inner = aWorkerPrivate->GetAncestorWindow();
-    if (!inner) {
+    if (aWorkerPrivate->IsDedicatedWorker()) {
+      LockManagerChild::NotifyBFCacheOnMainThread(
+          aWorkerPrivate->GetAncestorWindow(), mCreated);
       return;
     }
-    if (mCreated) {
-      inner->RemoveFromBFCacheSync();
+    if (aWorkerPrivate->IsSharedWorker()) {
+      aWorkerPrivate->GetRemoteWorkerController()->NotifyLock(mCreated);
+      return;
     }
-    NotifyImpl(inner, mCreated);
+    MOZ_ASSERT_UNREACHABLE("Unexpected worker type");
   }
 
   void RunBackOnWorkerThreadForCleanup(WorkerPrivate* aWorkerPrivate) override {
@@ -81,21 +88,17 @@ void LockManagerChild::NotifyRequestDestroy() const { NotifyToWindow(false); }
 
 void LockManagerChild::NotifyToWindow(bool aCreated) const {
   if (NS_IsMainThread()) {
-    nsPIDOMWindowInner* inner = GetParentObject()->AsInnerWindow();
-    MOZ_ASSERT(inner);
-    NotifyImpl(inner, aCreated);
+    NotifyBFCacheOnMainThread(GetParentObject()->AsInnerWindow(), aCreated);
     return;
   }
 
   WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
-  if (!wp || !wp->IsDedicatedWorker()) {
-    return;
+  if (wp->IsDedicatedWorker() || wp->IsSharedWorker()) {
+    RefPtr<BFCacheNotifyLockRunnable> runnable =
+        new BFCacheNotifyLockRunnable(aCreated);
+
+    runnable->Dispatch(wp);
   }
-
-  RefPtr<BFCacheNotifyLockRunnable> runnable =
-      new BFCacheNotifyLockRunnable(aCreated);
-
-  runnable->Dispatch(wp);
 };
 
 }  // namespace mozilla::dom::locks

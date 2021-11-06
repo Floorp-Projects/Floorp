@@ -97,6 +97,8 @@ class SharedWorkerManager final : public RemoteWorkerObserver {
 
   void ErrorReceived(const ErrorValue& aValue) override;
 
+  void LockNotified(bool aCreated) final;
+
   void Terminated() override;
 
   // Called on PBackground thread methods
@@ -142,6 +144,7 @@ class SharedWorkerManager final : public RemoteWorkerObserver {
   const bool mIsSecureContext;
   bool mSuspended;
   bool mFrozen;
+  uint32_t mLockCount = 0;
 
   // Raw pointers because SharedWorkerParent unregisters itself in
   // ActorDestroy().
