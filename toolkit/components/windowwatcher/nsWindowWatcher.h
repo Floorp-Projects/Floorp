@@ -95,8 +95,8 @@ class nsWindowWatcher : public nsIWindowWatcher,
       const mozilla::dom::WindowFeatures& aFeatures, const SizeSpec& aSizeSpec);
 
   static uint32_t CalculateChromeFlagsForSystem(
-      const mozilla::dom::WindowFeatures& aFeatures, const SizeSpec& aSizeSpec,
-      bool aDialog, bool aChromeURL, bool aHasChromeParent);
+      const mozilla::dom::WindowFeatures& aFeatures, bool aDialog,
+      bool aChromeURL);
 
   /* Compute the right SizeSpec based on aFeatures */
   static void CalcSizeSpec(const mozilla::dom::WindowFeatures& aFeatures,
@@ -117,10 +117,7 @@ class nsWindowWatcher : public nsIWindowWatcher,
 
   static uint32_t CalculateChromeFlagsHelper(
       uint32_t aInitialFlags, const mozilla::dom::WindowFeatures& aFeatures,
-      const SizeSpec& aSizeSpec, bool* presenceFlag = nullptr,
-      bool aHasChromeParent = false);
-  static uint32_t EnsureFlagsSafeForContent(uint32_t aChromeFlags,
-                                            bool aChromeURL = false);
+      bool* presenceFlag = nullptr);
 
  protected:
   nsTArray<nsWatcherWindowEnumerator*> mEnumeratorList;
