@@ -4096,8 +4096,8 @@ macro_rules! println_stderr {
 fn dump_properties_and_rules(cv: &ComputedValues, properties: &LonghandIdSet) {
     println_stderr!("  Properties:");
     for p in properties.iter() {
-        let mut v = String::new();
-        cv.get_resolved_value(p, &mut CssWriter::new(&mut v)).unwrap();
+        let mut v = nsCString::new();
+        cv.get_resolved_value(p, &mut v).unwrap();
         println_stderr!("    {:?}: {}", p, v);
     }
     println_stderr!("  Rules:");
@@ -6466,7 +6466,7 @@ pub unsafe extern "C" fn Servo_GetPropertyValue(
     value: &mut nsACString,
 ) {
     if let Ok(longhand) = LonghandId::from_nscsspropertyid(prop) {
-        style.get_resolved_value(longhand, &mut CssWriter::new(value)).unwrap();
+        style.get_resolved_value(longhand, value).unwrap();
         return;
     }
 
