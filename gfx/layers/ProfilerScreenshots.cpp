@@ -16,6 +16,30 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
+struct ScreenshotMarker {
+  static constexpr mozilla::Span<const char> MarkerTypeName() {
+    return mozilla::MakeStringSpan("CompositorScreenshot");
+  }
+  static void StreamJSONMarkerData(
+      mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
+      const mozilla::ProfilerString8View& aScreenshotDataURL,
+      const mozilla::gfx::IntSize& aWindowSize, uint32_t aWindowIdentifier) {
+    if (aScreenshotDataURL.Length() != 0) {
+      aWriter.UniqueStringProperty("url", aScreenshotDataURL);
+    }
+
+    aWriter.IntProperty("windowID", aWindowIdentifier);
+
+    if (!aWindowSize.IsEmpty()) {
+      aWriter.DoubleProperty("windowWidth", aWindowSize.width);
+      aWriter.DoubleProperty("windowHeight", aWindowSize.height);
+    }
+  }
+  static mozilla::MarkerSchema MarkerTypeDisplay() {
+    return mozilla::MarkerSchema::SpecialFrontendLocation{};
+  }
+};
+
 uint32_t ProfilerScreenshots::sWindowCounter = 0;
 
 ProfilerScreenshots::ProfilerScreenshots()
@@ -25,22 +49,10 @@ ProfilerScreenshots::ProfilerScreenshots()
 
 ProfilerScreenshots::~ProfilerScreenshots() {
   if (mWindowIdentifier) {
-    struct ScreenshotWindowDestroyedMarker {
-      static constexpr mozilla::Span<const char> MarkerTypeName() {
-        return mozilla::MakeStringSpan("CompositorScreenshot");
-      }
-      static void StreamJSONMarkerData(
-          mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
-          uint32_t aWindowIdentifier) {
-        aWriter.IntProperty("windowID", aWindowIdentifier);
-      }
-      static mozilla::MarkerSchema MarkerTypeDisplay() {
-        return mozilla::MarkerSchema::SpecialFrontendLocation{};
-      }
-    };
     profiler_add_marker("CompositorScreenshotWindowDestroyed",
                         geckoprofiler::category::GRAPHICS, {},
-                        ScreenshotWindowDestroyedMarker{}, mWindowIdentifier);
+                        ScreenshotMarker{}, /* aScreenshotDataURL */ "",
+                        mozilla::gfx::IntSize{}, mWindowIdentifier);
   }
 }
 
@@ -99,25 +111,6 @@ void ProfilerScreenshots::SubmitScreenshot(
               nullptr, &dataURL);
           if (NS_SUCCEEDED(rv)) {
             // Add a marker with the data URL.
-            struct ScreenshotMarker {
-              static constexpr mozilla::Span<const char> MarkerTypeName() {
-                return mozilla::MakeStringSpan("CompositorScreenshot");
-              }
-              static void StreamJSONMarkerData(
-                  mozilla::baseprofiler::SpliceableJSONWriter& aWriter,
-                  const mozilla::ProfilerString8View& aScreenshotDataURL,
-                  const mozilla::gfx::IntSize& aWindowSize,
-                  uint32_t aWindowIdentifier) {
-                aWriter.UniqueStringProperty("url", aScreenshotDataURL);
-
-                aWriter.IntProperty("windowID", aWindowIdentifier);
-                aWriter.DoubleProperty("windowWidth", aWindowSize.width);
-                aWriter.DoubleProperty("windowHeight", aWindowSize.height);
-              }
-              static mozilla::MarkerSchema MarkerTypeDisplay() {
-                return mozilla::MarkerSchema::SpecialFrontendLocation{};
-              }
-            };
             profiler_add_marker(
                 "CompositorScreenshot", geckoprofiler::category::GRAPHICS,
                 {MarkerThreadId(sourceThread),
