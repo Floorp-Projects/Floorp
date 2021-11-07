@@ -129,7 +129,7 @@ void DMABUFTextureHostOGL::CreateRenderTexture(
   }
   RefPtr<wr::RenderTextureHost> texture =
       new wr::RenderDMABUFTextureHost(mSurface);
-  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
+  wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
 }
 
