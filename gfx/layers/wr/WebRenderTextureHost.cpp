@@ -145,7 +145,7 @@ gfx::SurfaceFormat WebRenderTextureHost::GetFormat() const {
 void WebRenderTextureHost::NotifyNotUsed() {
 #ifdef MOZ_WIDGET_ANDROID
   if (mWrappedTextureHost->AsSurfaceTextureHost()) {
-    wr::RenderThread::Get()->NotifyNotUsed(wr::AsUint64(GetExternalImageKey()));
+    wr::RenderThread::Get()->NotifyNotUsed(GetExternalImageKey());
   }
 #endif
   TextureHost::NotifyNotUsed();
@@ -154,7 +154,7 @@ void WebRenderTextureHost::NotifyNotUsed() {
 void WebRenderTextureHost::MaybeNotifyForUse(wr::TransactionBuilder& aTxn) {
 #if defined(MOZ_WIDGET_ANDROID)
   if (mWrappedTextureHost->AsSurfaceTextureHost()) {
-    wr::RenderThread::Get()->NotifyForUse(wr::AsUint64(GetExternalImageKey()));
+    wr::RenderThread::Get()->NotifyForUse(GetExternalImageKey());
     aTxn.Notify(wr::Checkpoint::FrameTexturesUpdated,
                 MakeUnique<ScheduleHandleRenderTextureOps>());
   }
@@ -166,7 +166,7 @@ void WebRenderTextureHost::PrepareForUse() {
       mWrappedTextureHost->AsBufferTextureHost()) {
     // Call PrepareForUse on render thread.
     // See RenderAndroidSurfaceTextureHostOGL::PrepareForUse.
-    wr::RenderThread::Get()->PrepareForUse(wr::AsUint64(GetExternalImageKey()));
+    wr::RenderThread::Get()->PrepareForUse(GetExternalImageKey());
   }
 }
 

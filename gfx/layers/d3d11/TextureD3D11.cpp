@@ -998,7 +998,7 @@ void DXGITextureHostD3D11::CreateRenderTexture(
   RefPtr<wr::RenderTextureHost> texture = new wr::RenderDXGITextureHost(
       mHandle, mFormat, mYUVColorSpace, mColorRange, mSize);
 
-  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
+  wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
 }
 
@@ -1299,7 +1299,7 @@ void DXGIYCbCrTextureHostD3D11::CreateRenderTexture(
   RefPtr<wr::RenderTextureHost> texture = new wr::RenderDXGIYCbCrTextureHost(
       mHandles, mYUVColorSpace, mColorDepth, mColorRange, mSizeY, mSizeCbCr);
 
-  wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
+  wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
                                                  texture.forget());
 }
 

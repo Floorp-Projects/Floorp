@@ -71,8 +71,8 @@ TextureHost* GPUVideoTextureHost::EnsureWrappedTextureHost() {
 
     RefPtr<wr::RenderTextureHost> texture =
         new wr::RenderTextureHostWrapper(wrappedId);
-    wr::RenderThread::Get()->RegisterExternalImage(
-        wr::AsUint64(mExternalImageId.ref()), texture.forget());
+    wr::RenderThread::Get()->RegisterExternalImage(mExternalImageId.ref(),
+                                                   texture.forget());
   }
 
   if (mPendingSourceProvider) {
@@ -220,8 +220,8 @@ void GPUVideoTextureHost::CreateRenderTexture(
 
     RefPtr<wr::RenderTextureHost> texture =
         new wr::RenderTextureHostWrapper(wrappedId);
-    wr::RenderThread::Get()->RegisterExternalImage(
-        wr::AsUint64(mExternalImageId.ref()), texture.forget());
+    wr::RenderThread::Get()->RegisterExternalImage(mExternalImageId.ref(),
+                                                   texture.forget());
     return;
   }
 
