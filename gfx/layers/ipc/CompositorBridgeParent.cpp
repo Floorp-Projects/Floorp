@@ -1084,11 +1084,6 @@ static CompositorOptionsChangeKind ClassifyCompositorOptionsChange(
   if (aOld == aNew) {
     return CompositorOptionsChangeKind::eSupported;
   }
-  if (aOld.UseAdvancedLayers() == aNew.UseAdvancedLayers() &&
-      aOld.InitiallyPaused() == aNew.InitiallyPaused()) {
-    // Only APZ enablement changed.
-    return CompositorOptionsChangeKind::eBestEffort;
-  }
   return CompositorOptionsChangeKind::eUnsupported;
 }
 

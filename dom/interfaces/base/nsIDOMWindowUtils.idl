@@ -1520,11 +1520,6 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute boolean layerManagerRemote;
 
   /**
-   * True if advanced layers is enabled on this window, false otherwise.
-   */
-  readonly attribute boolean usingAdvancedLayers;
-
-  /**
    * True if webrender was requested by the user (via pref or env-var), false
    * otherwise. Note that this doesn't represent whether or not webrender is
    * *actually* enabled, just whether or not it was requested.

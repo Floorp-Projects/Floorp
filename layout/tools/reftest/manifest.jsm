@@ -507,8 +507,6 @@ function BuildConditionSandbox(aURL) {
       g.windowUtils.layerManagerType.startsWith("WebRender");
     sandbox.layersOMTC =
       g.windowUtils.layerManagerRemote == true;
-    sandbox.advancedLayers =
-      g.windowUtils.usingAdvancedLayers == true;
     sandbox.layerChecksEnabled = !sandbox.webrender;
 
     // Shortcuts for widget toolkits.
