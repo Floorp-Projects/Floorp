@@ -654,7 +654,8 @@ void RenderThread::DecPendingFrameBuildCount(wr::WindowId aWindowId) {
 }
 
 void RenderThread::RegisterExternalImage(
-    uint64_t aExternalImageId, already_AddRefed<RenderTextureHost> aTexture) {
+    const wr::ExternalImageId& aExternalImageId,
+    already_AddRefed<RenderTextureHost> aTexture) {
   MutexAutoLock lock(mRenderTextureMapLock);
 
   if (mHasShutdown) {
@@ -668,7 +669,8 @@ void RenderThread::RegisterExternalImage(
   mRenderTextures.emplace(aExternalImageId, texture);
 }
 
-void RenderThread::UnregisterExternalImage(uint64_t aExternalImageId) {
+void RenderThread::UnregisterExternalImage(
+    const wr::ExternalImageId& aExternalImageId) {
   MutexAutoLock lock(mRenderTextureMapLock);
   if (mHasShutdown) {
     return;
@@ -703,20 +705,20 @@ void RenderThread::UnregisterExternalImage(uint64_t aExternalImageId) {
   }
 }
 
-void RenderThread::PrepareForUse(uint64_t aExternalImageId) {
+void RenderThread::PrepareForUse(const wr::ExternalImageId& aExternalImageId) {
   AddRenderTextureOp(RenderTextureOp::PrepareForUse, aExternalImageId);
 }
 
-void RenderThread::NotifyNotUsed(uint64_t aExternalImageId) {
+void RenderThread::NotifyNotUsed(const wr::ExternalImageId& aExternalImageId) {
   AddRenderTextureOp(RenderTextureOp::NotifyNotUsed, aExternalImageId);
 }
 
-void RenderThread::NotifyForUse(uint64_t aExternalImageId) {
+void RenderThread::NotifyForUse(const wr::ExternalImageId& aExternalImageId) {
   AddRenderTextureOp(RenderTextureOp::NotifyForUse, aExternalImageId);
 }
 
-void RenderThread::AddRenderTextureOp(RenderTextureOp aOp,
-                                      uint64_t aExternalImageId) {
+void RenderThread::AddRenderTextureOp(
+    RenderTextureOp aOp, const wr::ExternalImageId& aExternalImageId) {
   MOZ_ASSERT(!IsInRenderThread());
 
   MutexAutoLock lock(mRenderTextureMapLock);
@@ -759,7 +761,7 @@ void RenderThread::HandleRenderTextureOps() {
 }
 
 void RenderThread::UnregisterExternalImageDuringShutdown(
-    uint64_t aExternalImageId) {
+    const wr::ExternalImageId& aExternalImageId) {
   MOZ_ASSERT(IsInRenderThread());
   MutexAutoLock lock(mRenderTextureMapLock);
   MOZ_ASSERT(mHasShutdown);
@@ -779,11 +781,11 @@ void RenderThread::DeferredRenderTextureHostDestroy() {
 }
 
 RenderTextureHost* RenderThread::GetRenderTexture(
-    wr::ExternalImageId aExternalImageId) {
+    const wr::ExternalImageId& aExternalImageId) {
   MOZ_ASSERT(IsInRenderThread());
 
   MutexAutoLock lock(mRenderTextureMapLock);
-  auto it = mRenderTextures.find(AsUint64(aExternalImageId));
+  auto it = mRenderTextures.find(aExternalImageId);
   MOZ_ASSERT(it != mRenderTextures.end());
   if (it == mRenderTextures.end()) {
     return nullptr;
