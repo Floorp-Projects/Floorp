@@ -213,8 +213,27 @@ LRESULT StatusBarEntry::OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
       return TRUE;
     }
 
+    nsMenuPopupFrame* popupFrame = menu->GetPopup();
+    MOZ_DIAGNOSTIC_ASSERT(popupFrame);
+    if (!popupFrame) {
+      return TRUE;
+    }
+
+    nsIWidget* widget = popupFrame->GetNearestWidget();
+    MOZ_DIAGNOSTIC_ASSERT(widget);
+    if (!widget) {
+      return TRUE;
+    }
+
+    HWND win = static_cast<HWND>(widget->GetNativeData(NS_NATIVE_WINDOW));
+    MOZ_DIAGNOSTIC_ASSERT(win);
+    if (!win) {
+      return TRUE;
+    }
+
     if (LOWORD(lp) == WM_LBUTTONUP &&
         mMenu->HasAttr(kNameSpaceID_None, nsGkAtoms::contextmenu)) {
+      ::SetForegroundWindow(win);
       nsEventStatus status = nsEventStatus_eIgnore;
       WidgetMouseEvent event(true, eXULSystemStatusBarClick, nullptr,
                              WidgetMouseEvent::eReal);
@@ -223,23 +242,9 @@ LRESULT StatusBarEntry::OnMessage(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
       return DefWindowProc(hWnd, msg, wp, lp);
     }
 
-    nsMenuPopupFrame* popupFrame = menu->GetPopup();
-    if (!popupFrame) {
-      return TRUE;
-    }
-
-    nsIWidget* widget = popupFrame->GetNearestWidget();
-    if (!widget) {
-      return TRUE;
-    }
-
-    HWND win = static_cast<HWND>(widget->GetNativeData(NS_NATIVE_WINDOW));
-    if (!win) {
-      return TRUE;
-    }
-
     nsCOMPtr<nsIDocShell> docShell = popupFrame->PresContext()->GetDocShell();
     nsCOMPtr<nsIBaseWindow> baseWin = do_QueryInterface(docShell);
+    MOZ_DIAGNOSTIC_ASSERT(baseWin);
     if (!baseWin) {
       return TRUE;
     }
