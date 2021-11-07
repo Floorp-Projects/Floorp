@@ -2624,25 +2624,6 @@ nsDOMWindowUtils::GetLayerManagerRemote(bool* retval) {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetUsingAdvancedLayers(bool* retval) {
-  nsCOMPtr<nsIWidget> widget = GetWidget();
-  if (!widget) {
-    return NS_ERROR_FAILURE;
-  }
-
-  WindowRenderer* renderer = widget->GetWindowRenderer();
-  if (!renderer) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *retval = false;
-  if (KnowsCompositor* fwd = renderer->AsKnowsCompositor()) {
-    *retval = fwd->GetTextureFactoryIdentifier().mUsingAdvancedLayers;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::GetIsWebRenderRequested(bool* retval) {
   *retval = gfxPlatform::WebRenderPrefEnabled() ||
             gfxPlatform::WebRenderEnvvarEnabled();

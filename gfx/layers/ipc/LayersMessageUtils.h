@@ -494,7 +494,6 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier> {
     WriteParam(aMsg, aParam.mSupportsTextureBlitting);
     WriteParam(aMsg, aParam.mSupportsPartialUploads);
     WriteParam(aMsg, aParam.mSupportsComponentAlpha);
-    WriteParam(aMsg, aParam.mUsingAdvancedLayers);
     WriteParam(aMsg, aParam.mSyncHandle);
   }
 
@@ -513,7 +512,6 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier> {
         ReadParam(aMsg, aIter, &aResult->mSupportsTextureBlitting) &&
         ReadParam(aMsg, aIter, &aResult->mSupportsPartialUploads) &&
         ReadParam(aMsg, aIter, &aResult->mSupportsComponentAlpha) &&
-        ReadParam(aMsg, aIter, &aResult->mUsingAdvancedLayers) &&
         ReadParam(aMsg, aIter, &aResult->mSyncHandle);
     return result;
   }
@@ -848,7 +846,6 @@ struct ParamTraits<mozilla::layers::CompositorOptions> {
     WriteParam(aMsg, aParam.mUseSoftwareWebRender);
     WriteParam(aMsg, aParam.mAllowSoftwareWebRenderD3D11);
     WriteParam(aMsg, aParam.mAllowSoftwareWebRenderOGL);
-    WriteParam(aMsg, aParam.mUseAdvancedLayers);
     WriteParam(aMsg, aParam.mInitiallyPaused);
   }
 
@@ -858,7 +855,6 @@ struct ParamTraits<mozilla::layers::CompositorOptions> {
            ReadParam(aMsg, aIter, &aResult->mUseSoftwareWebRender) &&
            ReadParam(aMsg, aIter, &aResult->mAllowSoftwareWebRenderD3D11) &&
            ReadParam(aMsg, aIter, &aResult->mAllowSoftwareWebRenderOGL) &&
-           ReadParam(aMsg, aIter, &aResult->mUseAdvancedLayers) &&
            ReadParam(aMsg, aIter, &aResult->mInitiallyPaused);
   }
 };

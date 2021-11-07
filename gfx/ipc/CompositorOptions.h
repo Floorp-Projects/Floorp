@@ -40,7 +40,6 @@ class CompositorOptions {
     return mAllowSoftwareWebRenderD3D11;
   }
   bool AllowSoftwareWebRenderOGL() const { return mAllowSoftwareWebRenderOGL; }
-  bool UseAdvancedLayers() const { return mUseAdvancedLayers; }
   bool InitiallyPaused() const { return mInitiallyPaused; }
 
   void SetUseAPZ(bool aUseAPZ) { mUseAPZ = aUseAPZ; }
@@ -51,10 +50,6 @@ class CompositorOptions {
 
   void SetAllowSoftwareWebRenderOGL(bool aAllowSoftwareWebRenderOGL) {
     mAllowSoftwareWebRenderOGL = aAllowSoftwareWebRenderOGL;
-  }
-
-  void SetUseAdvancedLayers(bool aUseAdvancedLayers) {
-    mUseAdvancedLayers = aUseAdvancedLayers;
   }
 
   bool UseWebGPU() const { return mUseWebGPU; }
@@ -70,7 +65,6 @@ class CompositorOptions {
            mAllowSoftwareWebRenderD3D11 ==
                aOther.mAllowSoftwareWebRenderD3D11 &&
            mAllowSoftwareWebRenderOGL == aOther.mAllowSoftwareWebRenderOGL &&
-           mUseAdvancedLayers == aOther.mUseAdvancedLayers &&
            mUseWebGPU == aOther.mUseWebGPU;
   }
 
@@ -81,7 +75,6 @@ class CompositorOptions {
   bool mUseSoftwareWebRender = false;
   bool mAllowSoftwareWebRenderD3D11 = false;
   bool mAllowSoftwareWebRenderOGL = false;
-  bool mUseAdvancedLayers = false;
   bool mUseWebGPU = false;
   bool mInitiallyPaused = false;
 
