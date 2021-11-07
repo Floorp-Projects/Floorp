@@ -82,18 +82,13 @@ void ProfilerScreenshots::SubmitScreenshot(
     return;
   }
 
-  ProfilerThreadId sourceThread = profiler_current_thread_id();
-  uint32_t windowIdentifier = mWindowIdentifier;
-  IntSize originalSize = aOriginalSize;
-  IntSize scaledSize = aScaledSize;
-  TimeStamp timeStamp = aTimeStamp;
-
-  RefPtr<ProfilerScreenshots> self = this;
-
   NS_DispatchBackgroundTask(NS_NewRunnableFunction(
       "ProfilerScreenshots::SubmitScreenshot",
-      [self{std::move(self)}, backingSurface, sourceThread, windowIdentifier,
-       originalSize, scaledSize, timeStamp]() {
+      [self = RefPtr<ProfilerScreenshots>{this},
+       backingSurface = std::move(backingSurface),
+       sourceThread = profiler_current_thread_id(),
+       windowIdentifier = mWindowIdentifier, originalSize = aOriginalSize,
+       scaledSize = aScaledSize, timeStamp = aTimeStamp]() {
         // Create a new surface that wraps backingSurface's data but has the
         // correct size.
         if (profiler_thread_is_being_profiled(sourceThread)) {
