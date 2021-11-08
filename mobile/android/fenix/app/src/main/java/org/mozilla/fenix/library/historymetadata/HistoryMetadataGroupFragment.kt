@@ -23,6 +23,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.databinding.FragmentHistoryMetadataGroupBinding
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.setTextColor
 import org.mozilla.fenix.ext.showToolbar
 import org.mozilla.fenix.library.LibraryPageFragment
@@ -73,6 +74,7 @@ class HistoryMetadataGroupFragment :
             controller = DefaultHistoryMetadataGroupController(
                 activity = activity as HomeActivity,
                 store = historyMetadataGroupStore,
+                metrics = requireComponents.analytics.metrics,
                 navController = findNavController(),
                 scope = lifecycleScope,
                 searchTerm = args.title

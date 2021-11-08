@@ -10,6 +10,8 @@ import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.prompt.ShareData
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentAction
@@ -74,6 +76,7 @@ interface HistoryMetadataGroupController {
 class DefaultHistoryMetadataGroupController(
     private val activity: HomeActivity,
     private val store: HistoryMetadataGroupFragmentStore,
+    private val metrics: MetricController,
     private val navController: NavController,
     private val scope: CoroutineScope,
     private val searchTerm: String,
@@ -86,6 +89,7 @@ class DefaultHistoryMetadataGroupController(
             from = BrowserDirection.FromHistoryMetadataGroup,
             historyMetadata = item.historyMetadataKey
         )
+        metrics.track(Event.HistorySearchTermGroupOpenTab)
     }
 
     override fun handleSelect(item: History.Metadata) {
@@ -118,6 +122,7 @@ class DefaultHistoryMetadataGroupController(
             items.forEach {
                 store.dispatch(HistoryMetadataGroupFragmentAction.Delete(it))
                 activity.components.core.historyStorage.deleteHistoryMetadata(it.historyMetadataKey)
+                metrics.track(Event.HistorySearchTermGroupRemoveTab)
             }
         }
     }
@@ -126,6 +131,7 @@ class DefaultHistoryMetadataGroupController(
         scope.launch {
             store.dispatch(HistoryMetadataGroupFragmentAction.DeleteAll)
             activity.components.core.historyStorage.deleteHistoryMetadata(searchTerm)
+            metrics.track(Event.HistorySearchTermGroupRemoveAll)
         }
     }
 }

@@ -25,6 +25,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -44,6 +46,7 @@ class HistoryMetadataGroupControllerTest {
 
     private val activity: HomeActivity = mockk(relaxed = true)
     private val store: HistoryMetadataGroupFragmentStore = mockk(relaxed = true)
+    private val metrics: MetricController = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
     private val historyStorage: PlacesHistoryStorage = mockk(relaxed = true)
 
@@ -73,6 +76,7 @@ class HistoryMetadataGroupControllerTest {
         controller = DefaultHistoryMetadataGroupController(
             activity = activity,
             store = store,
+            metrics = metrics,
             navController = navController,
             scope = scope,
             searchTerm = "mozilla"
@@ -97,6 +101,7 @@ class HistoryMetadataGroupControllerTest {
                 from = BrowserDirection.FromHistoryMetadataGroup,
                 historyMetadata = mozillaHistoryMetadataItem.historyMetadataKey
             )
+            metrics.track(Event.HistorySearchTermGroupOpenTab)
         }
     }
 
@@ -160,6 +165,7 @@ class HistoryMetadataGroupControllerTest {
             store.dispatch(HistoryMetadataGroupFragmentAction.Delete(firefoxHistoryMetadataItem))
             historyStorage.deleteHistoryMetadata(mozillaHistoryMetadataItem.historyMetadataKey)
             historyStorage.deleteHistoryMetadata(firefoxHistoryMetadataItem.historyMetadataKey)
+            metrics.track(Event.HistorySearchTermGroupRemoveTab)
         }
     }
 
@@ -170,6 +176,7 @@ class HistoryMetadataGroupControllerTest {
         coVerify {
             store.dispatch(HistoryMetadataGroupFragmentAction.DeleteAll)
             historyStorage.deleteHistoryMetadata(searchTerm)
+            metrics.track(Event.HistorySearchTermGroupRemoveAll)
         }
     }
 }

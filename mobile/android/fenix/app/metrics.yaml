@@ -2669,6 +2669,45 @@ history:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-11-01"
+  search_term_group_open_tab:
+    type: event
+    description: |
+      A user opens a tab from the search term group in history.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22147
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22368#issuecomment-964223263
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  search_term_group_remove_tab:
+    type: event
+    description: |
+      A user closes a single tab in the search term group in history.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22147
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22368#issuecomment-964223263
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  search_term_group_remove_all:
+    type: event
+    description: |
+      A user closes all tabs in the search term group in history.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22147
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22368#issuecomment-964223263
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
 
 reader_mode:
   available:

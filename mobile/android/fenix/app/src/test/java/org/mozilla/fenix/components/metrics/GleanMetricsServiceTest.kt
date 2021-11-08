@@ -180,6 +180,18 @@ class GleanMetricsServiceTest {
         assertFalse(History.searchTermGroupTapped.testHasValue())
         gleanService.track(Event.HistorySearchTermGroupTapped)
         assertTrue(History.searchTermGroupTapped.testHasValue())
+
+        assertFalse(History.searchTermGroupOpenTab.testHasValue())
+        gleanService.track(Event.HistorySearchTermGroupOpenTab)
+        assertTrue(History.searchTermGroupOpenTab.testHasValue())
+
+        assertFalse(History.searchTermGroupRemoveTab.testHasValue())
+        gleanService.track(Event.HistorySearchTermGroupRemoveTab)
+        assertTrue(History.searchTermGroupRemoveTab.testHasValue())
+
+        assertFalse(History.searchTermGroupRemoveAll.testHasValue())
+        gleanService.track(Event.HistorySearchTermGroupRemoveAll)
+        assertTrue(History.searchTermGroupRemoveAll.testHasValue())
     }
 
     @Test

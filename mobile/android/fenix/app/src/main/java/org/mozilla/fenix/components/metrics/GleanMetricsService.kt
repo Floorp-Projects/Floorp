@@ -315,6 +315,15 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.HistorySearchTermGroupTapped -> EventWrapper<NoExtraKeys>(
             { History.searchTermGroupTapped.record(it) }
         )
+        is Event.HistorySearchTermGroupOpenTab -> EventWrapper<NoExtraKeys>(
+            { History.searchTermGroupOpenTab.record(it) }
+        )
+        is Event.HistorySearchTermGroupRemoveTab -> EventWrapper<NoExtraKeys>(
+            { History.searchTermGroupRemoveTab.record(it) }
+        )
+        is Event.HistorySearchTermGroupRemoveAll -> EventWrapper<NoExtraKeys>(
+            { History.searchTermGroupRemoveAll.record(it) }
+        )
         is Event.CollectionRenamed -> EventWrapper<NoExtraKeys>(
             { Collections.renamed.record(it) }
         )
