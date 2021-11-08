@@ -309,6 +309,10 @@ test_description_schema = Schema(
         # The different configurations that should be run against this task, defined
         # in the TEST_VARIANTS object.
         Optional("variants"): Any(list(TEST_VARIANTS)),
+        # Internal config set by 'split_variants' transform. Do not use.
+        # TODO This is needed as variants get split before schema validation.
+        # We should handle variants in a new file to avoid this.
+        Optional("variant-suffix"): str,
         # Whether to run this task with e10s.  If false, run
         # without e10s; if true, run with e10s; if 'both', run one task with and
         # one task without e10s.  E10s tasks have "-e10s" appended to the test name
@@ -586,33 +590,47 @@ def split_variants(config, tasks):
     """
     validate_schema(variant_description_schema, TEST_VARIANTS, "In variants.yml:")
 
+    def apply_variant(variant, task):
+        task["description"] = variant["description"].format(**task)
+
+        suffix = f"-{variant['suffix']}"
+        group, symbol = split_symbol(task["treeherder-symbol"])
+        if group != "?":
+            group += suffix
+        else:
+            symbol += suffix
+        task["treeherder-symbol"] = join_symbol(group, symbol)
+
+        # This will be used to set the label and try-name in 'make_job_description'.
+        task.setdefault("variant-suffix", "")
+        task["variant-suffix"] += suffix
+
+        # Replace and/or merge the configuration.
+        task.update(variant.get("replace", {}))
+        return merge(task, variant.get("merge", {}))
+
     for task in tasks:
         variants = task.pop("variants", [])
 
         yield copy.deepcopy(task)
 
         for name in variants:
-            variant = TEST_VARIANTS[name]
-
-            if "when" in variant:
-                context = {"task": task, "mobile": get_mobile_project(task)}
-                if not jsone.render(variant["when"], context):
-                    continue
-
+            # Apply composite variants (joined by '+') in order.
+            parts = name.split("+")
             taskv = copy.deepcopy(task)
-            taskv["attributes"]["unittest_variant"] = name
-            taskv["description"] = variant["description"].format(**taskv)
+            for part in parts:
+                variant = TEST_VARIANTS[part]
 
-            suffix = f"-{variant['suffix']}"
-            group, symbol = split_symbol(taskv["treeherder-symbol"])
-            if group != "?":
-                group += suffix
+                # If any variant in a composite fails this check we skip it.
+                if "when" in variant:
+                    context = {"task": task, "mobile": get_mobile_project(task)}
+                    if not jsone.render(variant["when"], context):
+                        break
+
+                taskv = apply_variant(variant, taskv)
             else:
-                symbol += suffix
-            taskv["treeherder-symbol"] = join_symbol(group, symbol)
-
-            taskv.update(variant.get("replace", {}))
-            yield merge(taskv, variant.get("merge", {}))
+                taskv["attributes"]["unittest_variant"] = name
+                yield taskv
 
 
 @transforms.add
@@ -1841,9 +1859,9 @@ def make_job_description(config, tasks):
 
         try_name = task["try-name"]
         if attributes.get("unittest_variant"):
-            suffix = TEST_VARIANTS[attributes["unittest_variant"]]["suffix"]
-            label += f"-{suffix}"
-            try_name += f"-{suffix}"
+            suffix = task.pop("variant-suffix")
+            label += suffix
+            try_name += suffix
 
         if task["e10s"]:
             label += "-e10s"

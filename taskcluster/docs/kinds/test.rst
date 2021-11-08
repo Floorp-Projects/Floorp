@@ -77,5 +77,24 @@ This will split the task into three. The original task, the task with the
 config from the variant named 'foo' merged in and the task with the config from
 the variant named 'bar' merged in.
 
+
+Composite Variants
+~~~~~~~~~~~~~~~~~~
+
+Sometimes we want to run tasks with multiple variants enabled at once. This can
+be achieved with "composite variants". Composite variants are simply two or
+more variant names joined with the ``+`` sign. Using the previous example, if
+we wanted to run both the ``foo`` and ``bar`` variants together, we could do:
+
+.. code-block:: yaml
+
+   example-suite:
+       variants:
+           - foo+bar
+
+This will first merge or replace the config of ``foo`` into the task, followed
+by the config of ``bar``. Care should be taken if both variants are replacing
+the same keys. The last variant's configuration will be the one that gets used.
+
 .. _variants.yml: https://searchfox.org/mozilla-central/source/taskcluster/ci/test/variants.yml
 .. _json-e: https://json-e.js.org/
