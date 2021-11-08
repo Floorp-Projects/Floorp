@@ -60,14 +60,6 @@ add_task(async function testCrossOriginIframeShouldBeAbleToStart() {
 /**
  * Following are helper functions
  */
-function getTestWebBasedURL(fileName, { crossOrigin = false } = {}) {
-  const origin = crossOrigin ? "http://example.org" : "http://example.com";
-  return (
-    getRootDirectory(gTestPath).replace("chrome://mochitests/content", origin) +
-    fileName
-  );
-}
-
 function createIframe(browser, iframeUrl) {
   return SpecialPowers.spawn(browser, [iframeUrl], async url => {
     info(`Create iframe and wait until it finishes loading`);
