@@ -51,6 +51,7 @@
 #include "nsXPCOM.h"
 #include "xpcpublic.h"
 
+#include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/ArrayAlgorithm.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/LoadContext.h"
@@ -1103,6 +1104,15 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
 
     if (IsMainWorkerScript()) {
       MOZ_DIAGNOSTIC_ASSERT(aLoadInfo.mReservedClientInfo.isSome());
+
+      // In order to get the correct foreign partitioned prinicpal, we need to
+      // set the `IsThirdPartyContextToTopWindow` to the channel's loadInfo.
+      // This flag reflects the fact that if the worker is created under a
+      // third-party context.
+      nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+      loadInfo->SetIsThirdPartyContextToTopWindow(
+          mWorkerPrivate->IsThirdPartyContextToTopWindow());
+
       rv = AddClientChannelHelper(
           channel, std::move(aLoadInfo.mReservedClientInfo),
           Maybe<ClientInfo>(), mWorkerPrivate->HybridEventTarget());
