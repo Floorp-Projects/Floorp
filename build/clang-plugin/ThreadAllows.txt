@@ -72,6 +72,7 @@ SpinEventLoop
 StressRunner
 SuicideManager
 SuicideThread
+System Proxy
 TEQ AwaitIdle
 TelemetryModule
 Test Thread

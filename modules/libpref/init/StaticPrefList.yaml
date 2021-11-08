@@ -9673,6 +9673,11 @@
   value: false
   mirror: always
 
+- name: network.proxy.detect_system_proxy_changes
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Some requests during a page load are marked as "tail", mainly trackers, but not only.
 # This pref controls whether such requests are put to the tail, behind other requests
 # emerging during page loading process.
