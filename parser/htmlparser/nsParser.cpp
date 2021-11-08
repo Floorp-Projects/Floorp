@@ -25,15 +25,15 @@
 #include "nsHTMLTokenizer.h"
 #include "nsXPCOMCIDInternal.h"
 #include "nsMimeTypes.h"
-#include "mozilla/CondVar.h"
-#include "mozilla/Mutex.h"
 #include "nsCharsetSource.h"
 #include "nsThreadUtils.h"
 #include "nsIHTMLContentSink.h"
 
 #include "mozilla/BinarySearch.h"
+#include "mozilla/CondVar.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/Mutex.h"
 
 using namespace mozilla;
 
@@ -1215,7 +1215,7 @@ static nsresult ParserWriteFunc(nsIInputStream* in, void* closure,
     // This code was bogus when I found it. It expects the BOM or the XML
     // declaration to be entirely in the first network buffer. -- hsivonen
     const Encoding* encoding;
-    Tie(encoding, Ignore) = Encoding::ForBOM(Span(buf, count));
+    std::tie(encoding, std::ignore) = Encoding::ForBOM(Span(buf, count));
     if (encoding) {
       // The decoder will swallow the BOM. The UTF-16 will re-sniff for
       // endianness. The value of preferred is now "UTF-8", "UTF-16LE"
