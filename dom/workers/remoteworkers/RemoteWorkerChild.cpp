@@ -358,6 +358,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   info.mUseRegularPrincipal = aData.useRegularPrincipal();
   info.mHasStorageAccessPermissionGranted =
       aData.hasStorageAccessPermissionGranted();
+  info.mIsThirdPartyContextToTopWindow = aData.isThirdPartyContextToTopWindow();
   info.mOriginAttributes =
       BasePrincipal::Cast(principal)->OriginAttributesRef();
   net::CookieJarSettings::Deserialize(aData.cookieJarSettings(),
