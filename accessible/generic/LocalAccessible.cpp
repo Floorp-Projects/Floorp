@@ -906,7 +906,7 @@ void LocalAccessible::XULElmName(DocAccessible* aDocument, nsIContent* aElm,
 nsresult LocalAccessible::HandleAccEvent(AccEvent* aEvent) {
   NS_ENSURE_ARG_POINTER(aEvent);
 
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsAutoCString strEventType;
     GetAccService()->GetStringEventType(aEvent->GetEventType(), strEventType);
     nsAutoCString strMarker;

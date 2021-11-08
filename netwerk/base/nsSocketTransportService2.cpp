@@ -686,7 +686,7 @@ int32_t nsSocketTransportService::Poll(TimeDuration* pollDuration,
     if (pollTimeout != PR_INTERVAL_NO_WAIT) {
       profiler_thread_wake();
     }
-    if (profiler_thread_is_being_profiled()) {
+    if (profiler_thread_is_being_profiled_for_markers()) {
       PROFILER_MARKER_TEXT(
           "SocketTransportService::Poll", NETWORK,
           MarkerTiming::IntervalUntilNowFrom(startTime),
