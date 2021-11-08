@@ -120,44 +120,6 @@ webrender-sw:
             extra-options:
                 - "--setpref=gfx.webrender.software=true"
 
-webrender-sw-a11y-checks:
-    description: "{description} with software webrender and accessibility checks enabled"
-    contact: jteh
-    suffix: "swr-a11y-checks"
-    replace:
-        tier: 2
-    merge:
-        webrender: true
-        mozharness:
-            extra-options:
-                - "--setpref=gfx.webrender.software=true"
-                - "--enable-a11y-checks"
-
-webrender-sw-fission:
-    description: "{description} with software webrender and fission enabled"
-    when:
-        <<: *fission_filter
-    suffix: "swr-fis"
-    replace:
-        e10s: true
-    merge:
-        webrender: true
-        mozharness:
-            extra-options:
-                - "--setpref=gfx.webrender.software=true"
-                - "--setpref=fission.autostart=true"
-
-webrender-sw-wayland:
-    description: "{description} with software webrender and Wayland backend enabled"
-    suffix: "swr-wayland"
-    replace:
-        run-on-projects: []
-    merge:
-        mozharness:
-            extra-options:
-                - "--setpref=gfx.webrender.software=true"
-                - "--setpref=widget.wayland.test-workarounds.enabled=true"
-
 # TODO: After 2022-01-01, verify this variant is still needed.
 webgl-ipc:
     description: "{description} with WebGL IPC process enabled"
