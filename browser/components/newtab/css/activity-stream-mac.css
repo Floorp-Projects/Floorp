@@ -1240,6 +1240,9 @@ main.has-snippet {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   border: 1px solid transparent;
   border-radius: 8px;
+  color: var(--newtab-text-primary-color);
+  -moz-context-properties: fill;
+  fill: var(--newtab-text-secondary-color);
 }
 .search-wrapper .search-handoff-button:dir(rtl),
 .search-wrapper input:dir(rtl) {
@@ -1428,16 +1431,36 @@ main.has-snippet {
   border: 0;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.2);
   transform: translateY(4px);
+  background-color: var(--newtab-background-color);
+}
+.contentSearchSuggestionTable .contentSearchHeader {
+  color: var(--newtab-text-secondary-color);
+  background-color: var(--newtab-background-color-secondary);
 }
 .contentSearchSuggestionTable .contentSearchHeader,
 .contentSearchSuggestionTable .contentSearchSettingsButton {
   border-color: var(--newtab-border-color);
 }
 .contentSearchSuggestionTable .contentSearchSuggestionsList {
+  color: var(--newtab-text-primary-color);
   border: 0;
 }
 .contentSearchSuggestionTable .contentSearchOneOffsTable {
   border-top: solid 1px var(--newtab-border-color);
+  background-color: var(--newtab-background-color);
+}
+.contentSearchSuggestionTable .contentSearchSearchWithHeaderSearchText {
+  color: var(--newtab-text-primary-color);
+}
+.contentSearchSuggestionTable .contentSearchSuggestionRow.selected {
+  background: var(--newtab-element-hover-color);
+  color: var(--newtab-text-primary-color);
+}
+.contentSearchSuggestionTable .contentSearchSuggestionRow.selected:active {
+  background: var(--newtab-element-active-color);
+}
+.contentSearchSuggestionTable .contentSearchSuggestionRow.selected .historyIcon {
+  fill: var(--newtab-text-secondary-color);
 }
 .contentSearchSuggestionTable .contentSearchOneOffItem {
   background-image: none;
@@ -1453,6 +1476,7 @@ main.has-snippet {
 }
 .contentSearchSuggestionTable .contentSearchSettingsButton:hover {
   background: var(--newtab-element-hover-color);
+  color: var(--newtab-text-primary-color);
 }
 
 .contentSearchHeaderRow > td > img,
