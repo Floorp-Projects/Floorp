@@ -22,6 +22,7 @@ import copy
 import logging
 import re
 
+import jsone
 from mozbuild.schedules import INCLUSIVE_COMPONENTS
 from taskgraph.util.yaml import load_yaml
 from voluptuous import (
@@ -209,14 +210,6 @@ MACOSX_WORKER_TYPES = {
     "macosx1015-64": "t-osx-1015-r8",
     "macosx1100-64": "t-osx-1100-m1",
 }
-
-
-def gv_e10s_filter(task):
-    return get_mobile_project(task) == "geckoview" and task["e10s"]
-
-
-def fission_filter(task):
-    return task.get("e10s") in (True, "both")
 
 
 TEST_VARIANTS = load_yaml(
@@ -577,8 +570,10 @@ def split_variants(config, tasks):
         for name in variants:
             variant = TEST_VARIANTS[name]
 
-            if "filterfn" in variant and not globals()[variant["filterfn"]](task):
-                continue
+            if "when" in variant:
+                context = {"task": task, "mobile": get_mobile_project(task)}
+                if not jsone.render(variant["when"], context):
+                    continue
 
             taskv = copy.deepcopy(task)
             taskv["attributes"]["unittest_variant"] = name

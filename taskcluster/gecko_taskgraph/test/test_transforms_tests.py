@@ -35,12 +35,6 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
     # mock out variant definitions
     monkeypatch.setattr(
         test_transforms,
-        "bar_filter",
-        lambda t: t["test-platform"].startswith("linux"),
-        raising=False,
-    )
-    monkeypatch.setattr(
-        test_transforms,
         "TEST_VARIANTS",
         {
             "foo": {
@@ -57,7 +51,9 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
             "bar": {
                 "description": "bar variant",
                 "suffix": "bar",
-                "filterfn": "bar_filter",
+                "when": {
+                    "$eval": "task['test-platform'][:5] == 'linux'",
+                },
                 "merge": {
                     "mozharness": {
                         "extra-options": [
@@ -102,7 +98,7 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
     expected["tier"] = 2
     assert tasks[2] == expected
 
-    # test filterfn
+    # test 'when' filter
     input_task = make_test_task(
         **{
             "variants": ["foo", "bar"],
