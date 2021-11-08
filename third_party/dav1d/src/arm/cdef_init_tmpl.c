@@ -31,13 +31,11 @@ decl_cdef_dir_fn(BF(dav1d_cdef_find_dir, neon));
 
 void BF(dav1d_cdef_padding4, neon)(uint16_t *tmp, const pixel *src,
                                    ptrdiff_t src_stride, const pixel (*left)[2],
-                                   const pixel *const top,
-                                   const pixel *const bottom, int h,
+                                   const pixel *const top, int h,
                                    enum CdefEdgeFlags edges);
 void BF(dav1d_cdef_padding8, neon)(uint16_t *tmp, const pixel *src,
                                    ptrdiff_t src_stride, const pixel (*left)[2],
-                                   const pixel *const top,
-                                   const pixel *const bottom, int h,
+                                   const pixel *const top, int h,
                                    enum CdefEdgeFlags edges);
 
 // Passing edges to this function, to allow it to switch to a more
@@ -54,10 +52,9 @@ void BF(dav1d_cdef_filter8, neon)(pixel *dst, ptrdiff_t dst_stride,
 
 #define DEFINE_FILTER(w, h, tmp_stride)                                      \
 static void                                                                  \
-cdef_filter_##w##x##h##_neon(pixel *dst, const ptrdiff_t stride,             \
-                             const pixel (*left)[2],                         \
-                             const pixel *const top,                         \
-                             const pixel *const bottom,                      \
+cdef_filter_##w##x##h##_neon(pixel *dst,                                     \
+                             const ptrdiff_t stride,                         \
+                             const pixel (*left)[2], const pixel *const top, \
                              const int pri_strength, const int sec_strength, \
                              const int dir, const int damping,               \
                              const enum CdefEdgeFlags edges                  \
@@ -65,8 +62,7 @@ cdef_filter_##w##x##h##_neon(pixel *dst, const ptrdiff_t stride,             \
 {                                                                            \
     ALIGN_STK_16(uint16_t, tmp_buf, 12 * tmp_stride + 8,);                   \
     uint16_t *tmp = tmp_buf + 2 * tmp_stride + 8;                            \
-    BF(dav1d_cdef_padding##w, neon)(tmp, dst, stride,                        \
-                                    left, top, bottom, h, edges);            \
+    BF(dav1d_cdef_padding##w, neon)(tmp, dst, stride, left, top, h, edges);  \
     BF(dav1d_cdef_filter##w, neon)(dst, stride, tmp, pri_strength,           \
                                    sec_strength, dir, damping, h, edges      \
                                    HIGHBD_TAIL_SUFFIX);                      \
