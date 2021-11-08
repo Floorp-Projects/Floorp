@@ -46,6 +46,7 @@ import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.clickAtLocationInView
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.idlingresource.BottomSheetBehaviorStateIdlingResource
+import org.mozilla.fenix.helpers.isSelected
 import org.mozilla.fenix.helpers.matchers.BottomSheetBehaviorHalfExpandedMaxRatioMatcher
 import org.mozilla.fenix.helpers.matchers.BottomSheetBehaviorStateMatcher
 
@@ -66,6 +67,12 @@ class TabDrawerRobot {
     }
 
     fun verifyNormalBrowsingButtonIsDisplayed() = assertNormalBrowsingButton()
+    fun verifyNormalBrowsingButtonIsSelected(isSelected: Boolean) =
+        assertNormalBrowsingButtonIsSelected(isSelected)
+    fun verifyPrivateBrowsingButtonIsSelected(isSelected: Boolean) =
+        assertPrivateBrowsingButtonIsSelected(isSelected)
+    fun verifySyncedTabsButtonIsSelected(isSelected: Boolean) =
+        assertSyncedTabsButtonIsSelected(isSelected)
     fun verifyExistingOpenTabs(title: String) = assertExistingOpenTabs(title)
     fun verifyCloseTabsButton(title: String) = assertCloseTabsButton(title)
 
@@ -450,6 +457,7 @@ private fun normalBrowsingButton() = onView(
 )
 
 private fun privateBrowsingButton() = onView(withContentDescription("Private tabs"))
+private fun syncedTabsButton() = onView(withContentDescription("Synced tabs"))
 private fun newTabButton() = mDevice.findObject(UiSelector().resourceId("$packageName:id/new_tab_button"))
 private fun threeDotMenu() = onView(withId(R.id.tab_tray_overflow))
 
@@ -540,6 +548,18 @@ private fun assertBehaviorState(expectedState: Int) {
 
 private fun assertNormalBrowsingButton() {
     normalBrowsingButton().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+}
+
+private fun assertNormalBrowsingButtonIsSelected(isSelected: Boolean) {
+    normalBrowsingButton().check(matches(isSelected(isSelected)))
+}
+
+private fun assertPrivateBrowsingButtonIsSelected(isSelected: Boolean) {
+    privateBrowsingButton().check(matches(isSelected(isSelected)))
+}
+
+private fun assertSyncedTabsButtonIsSelected(isSelected: Boolean) {
+    syncedTabsButton().check(matches(isSelected(isSelected)))
 }
 
 private fun assertTabThumbnail() {

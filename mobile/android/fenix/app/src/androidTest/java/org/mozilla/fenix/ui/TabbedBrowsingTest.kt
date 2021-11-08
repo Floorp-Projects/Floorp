@@ -298,10 +298,16 @@ class TabbedBrowsingTest {
     fun verifyEmptyTabTray() {
         navigationToolbar {
         }.openTabTray {
+            verifyNormalBrowsingButtonIsSelected(true)
+            verifyPrivateBrowsingButtonIsSelected(false)
+            verifySyncedTabsButtonIsSelected(false)
             verifyNoTabsOpened()
             verifyNewTabButton()
             verifyTabTrayOverflowMenu(true)
         }.toggleToPrivateTabs {
+            verifyNormalBrowsingButtonIsSelected(false)
+            verifyPrivateBrowsingButtonIsSelected(true)
+            verifySyncedTabsButtonIsSelected(false)
             verifyNoTabsOpened()
             verifyNewTabButton()
             verifyTabTrayOverflowMenu(true)
