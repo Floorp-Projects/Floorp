@@ -229,10 +229,10 @@ StoragePrincipalHelper::PrepareEffectiveStoragePrincipalOriginAttributes(
 
 // static
 bool StoragePrincipalHelper::VerifyValidStoragePrincipalInfoForPrincipalInfo(
-    const mozilla::ipc::PrincipalInfo& aPartitionedPrincipalInfo,
+    const mozilla::ipc::PrincipalInfo& aStoragePrincipalInfo,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
   return VerifyValidPartitionedPrincipalInfoForPrincipalInfoInternal(
-      aPartitionedPrincipalInfo, aPrincipalInfo, false, false);
+      aStoragePrincipalInfo, aPrincipalInfo, false, false);
 }
 
 // static
@@ -265,6 +265,25 @@ nsresult StoragePrincipalHelper::GetPrincipal(nsIChannel* aChannel,
                                       getter_AddRefs(partitionedPrincipal));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  // The aChannel might not be opened in some cases, e.g. getting principal
+  // for the new channel during a redirect. So, the value
+  // `IsThirdPartyToTopWindow` is incorrect in this case because this value is
+  // calculated during opening a channel. And we need to know the value in order
+  // to get the correct principal. To fix this, we compute the value here even
+  // the channel hasn't been opened yet.
+  //
+  // Note that we don't need to compute the value if there is no browsing
+  // context ID assigned. This could happen in a GTest or XPCShell.
+  //
+  // ToDo: The AntiTrackingUtils::ComputeIsThirdPartyToTopWindow() is only
+  //       available in the parent process. So, this can only work in the parent
+  //       process. It's fine for now, but we should change this to also work in
+  //       content processes. Bug 1736452 will address this.
+  //
+  if (XRE_IsParentProcess() && loadInfo->GetBrowsingContextID() != 0) {
+    AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(aChannel);
   }
 
   nsCOMPtr<nsIPrincipal> outPrincipal = principal;
