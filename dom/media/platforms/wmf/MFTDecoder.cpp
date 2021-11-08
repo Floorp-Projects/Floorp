@@ -9,6 +9,7 @@
 #include "mozilla/Logging.h"
 #include "nsThreadUtils.h"
 #include "mozilla/mscom/Utils.h"
+#include "PlatformDecoderModule.h"
 
 #define LOG(...) MOZ_LOG(sPDMLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
@@ -133,6 +134,7 @@ HRESULT
 MFTDecoder::SendMFTMessage(MFT_MESSAGE_TYPE aMsg, ULONG_PTR aData) {
   MOZ_ASSERT(mscom::IsCurrentThreadMTA());
   NS_ENSURE_TRUE(mDecoder != nullptr, E_POINTER);
+  LOG("Send message '%s'", MFTMessageTypeToStr(aMsg));
   HRESULT hr = mDecoder->ProcessMessage(aMsg, aData);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
   return S_OK;
