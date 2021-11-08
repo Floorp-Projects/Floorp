@@ -159,7 +159,7 @@ WHITELISTED_SCHEMA_IDENTIFIERS = [
 
 
 def check_schema(schema):
-    identifier_re = re.compile("^[a-z][a-z0-9-]*$")
+    identifier_re = re.compile(r"^\$?[a-z][a-z0-9-]*$")
 
     def whitelisted(path):
         return any(f(path) for f in WHITELISTED_SCHEMA_IDENTIFIERS)

@@ -41,8 +41,9 @@ from gecko_taskgraph.util.templates import merge
 from gecko_taskgraph.util.treeherder import split_symbol, join_symbol
 from gecko_taskgraph.util.platforms import platform_family
 from gecko_taskgraph.util.schema import (
-    resolve_keyed_by,
     optionally_keyed_by,
+    resolve_keyed_by,
+    validate_schema,
     Schema,
 )
 from gecko_taskgraph.util.chunking import (
@@ -560,8 +561,23 @@ def set_defaults(config, tasks):
         yield task
 
 
+variant_description_schema = Schema(
+    {
+        str: {
+            Required("description"): str,
+            Required("suffix"): str,
+            Optional("when"): {Any("$eval", "$if"): str},
+            Optional("replace"): {str: object},
+            Optional("merge"): {str: object},
+        }
+    }
+)
+
+
 @transforms.add
 def split_variants(config, tasks):
+    validate_schema(variant_description_schema, TEST_VARIANTS, "In variants.yml:")
+
     for task in tasks:
         variants = task.pop("variants", [])
 
