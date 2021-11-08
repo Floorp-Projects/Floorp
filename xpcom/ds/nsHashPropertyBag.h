@@ -43,6 +43,25 @@ class nsHashPropertyBag : public nsHashPropertyBagBase {
   virtual ~nsHashPropertyBag();
 };
 
+/*
+ * Off Main Thread variant of nsHashPropertyBag. Instances of this class
+ * should not be created on a main thread, nor should it contain main thread
+ * only objects, such as XPCVariants. The purpose of this class is to provide a
+ * way to use the property bag off main thread.
+ * Note: this class needs to be created and destroyed on the same thread and
+ * should be used single threaded.
+ */
+class nsHashPropertyBagOMT final : public nsHashPropertyBagBase {
+ public:
+  nsHashPropertyBagOMT();
+  NS_DECL_ISUPPORTS
+
+ protected:
+  // Doesn't need to dispatch to main thread because it cannot contain
+  // XPCVariants
+  virtual ~nsHashPropertyBagOMT() = default;
+};
+
 /* A cycle collected nsHashPropertyBag for main-thread-only use. */
 class nsHashPropertyBagCC final : public nsHashPropertyBagBase {
  public:
