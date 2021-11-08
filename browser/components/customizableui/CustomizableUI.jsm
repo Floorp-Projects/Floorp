@@ -1857,12 +1857,27 @@ var CustomizableUIInternal = {
 
       if (aWidget.l10nId) {
         node.setAttribute("data-l10n-id", aWidget.l10nId);
+        if (button != node) {
+          // This is probably a "button-and-view" widget, such as the Profiler
+          // button. In that case, "node" is the "toolbaritem" container, and
+          // "button" the main button (see above).
+          // In this case, the values on the "node" is used in the Customize
+          // view, as well as the tooltips over both buttons; the values on the
+          // "button" are used in the overflow menu.
+          button.setAttribute("data-l10n-id", aWidget.l10nId);
+        }
+
         if (shortcut) {
           node.setAttribute("data-l10n-args", JSON.stringify({ shortcut }));
+          if (button != node) {
+            // This is probably a "button-and-view" widget.
+            button.setAttribute("data-l10n-args", JSON.stringify({ shortcut }));
+          }
         }
       } else {
         node.setAttribute("label", this.getLocalizedProperty(aWidget, "label"));
         if (button != node) {
+          // This is probably a "button-and-view" widget.
           button.setAttribute("label", node.getAttribute("label"));
         }
 
@@ -1874,6 +1889,7 @@ var CustomizableUIInternal = {
         if (tooltip) {
           node.setAttribute("tooltiptext", tooltip);
           if (button != node) {
+            // This is probably a "button-and-view" widget.
             button.setAttribute("tooltiptext", tooltip);
           }
         }
