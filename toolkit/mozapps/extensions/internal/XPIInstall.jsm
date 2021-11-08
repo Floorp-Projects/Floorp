@@ -45,6 +45,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionData: "resource://gre/modules/Extension.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   NetUtil: "resource://gre/modules/NetUtil.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
   ProductAddonChecker: "resource://gre/modules/addons/ProductAddonChecker.jsm",
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
 
@@ -268,21 +269,15 @@ DirPackage = class DirPackage extends Package {
   }
 
   hasResource(...path) {
-    return IOUtils.exists(PathUtils.join(this.filePath, ...path));
+    return OS.File.exists(OS.Path.join(this.filePath, ...path));
   }
 
   async iterDirectory(path, callback) {
-    let fullPath = PathUtils.join(this.filePath, ...path);
+    let fullPath = OS.Path.join(this.filePath, ...path);
 
-    let children = await IOUtils.getChildren(fullPath);
-    for (let path of children) {
-      let { type } = await IOUtils.stat(path);
-      callback({
-        isDir: type == "directory",
-        name: PathUtils.filename(path),
-        path,
-      });
-    }
+    let iter = new OS.File.DirectoryIterator(fullPath);
+    await iter.forEach(callback);
+    iter.close();
   }
 
   iterFiles(callback, path = []) {
@@ -304,7 +299,7 @@ DirPackage = class DirPackage extends Package {
   }
 
   readBinary(...path) {
-    return IOUtils.read(PathUtils.join(this.filePath, ...path));
+    return OS.File.read(OS.Path.join(this.filePath, ...path));
   }
 
   async verifySignedStateForRoot(addon, root) {
@@ -966,7 +961,20 @@ function addonMap(addons) {
 }
 
 async function removeAsync(aFile) {
-  await IOUtils.remove(aFile.path, { ignoreAbsent: true, recursive: true });
+  let info = null;
+  try {
+    info = await OS.File.stat(aFile.path);
+    if (info.isDir) {
+      await OS.File.removeDir(aFile.path);
+    } else {
+      await OS.File.remove(aFile.path);
+    }
+  } catch (e) {
+    if (!(e instanceof OS.File.Error) || !e.becauseNoSuchFile) {
+      throw e;
+    }
+    // The file has already gone away
+  }
 }
 
 /**
@@ -1868,7 +1876,7 @@ class AddonInstall {
     logger.debug(`Addon ${this.addon.id} will be installed as a packed xpi`);
     stagedAddon.leafName = `${this.addon.id}.xpi`;
 
-    await IOUtils.copy(this.file.path, stagedAddon.path);
+    await OS.File.copy(this.file.path, stagedAddon.path);
 
     if (restartRequired) {
       // Point the add-on to its extracted files as the xpi may get deleted
@@ -3086,11 +3094,12 @@ class DirectoryInstaller {
       return this._stagingDirPromise;
     }
 
-    let stagepath = PathUtils.join(this.dir.path, DIR_STAGE);
-    return (this._stagingDirPromise = IOUtils.makeDirectory(stagepath, {
-      createAncestors: true,
-      ignoreExisting: true,
-    }).catch(e => {
+    OS.File.makeDir(this.dir.path);
+    let stagepath = OS.Path.join(this.dir.path, DIR_STAGE);
+    return (this._stagingDirPromise = OS.File.makeDir(stagepath).catch(e => {
+      if (e instanceof OS.File.Error && e.becauseExists) {
+        return;
+      }
       logger.error("Failed to create staging directory", e);
       throw e;
     }));
@@ -3217,9 +3226,9 @@ class DirectoryInstaller {
 
         {
           // Move the data directories.
-          /* XXX ajvincent We can't use IOUtils: installAddon isn't compatible
-           * with Promises, nor is SafeInstallOperation. Bug 1462855 has been filed
-           * for porting to async.
+          /* XXX ajvincent We can't use OS.File:  installAddon isn't compatible
+           * with Promises, nor is SafeInstallOperation.  Bug 945540 has been filed
+           * for porting to OS.File.
            */
           let oldDataDir = FileUtils.getDir(
             KEY_PROFILEDIR,
@@ -3478,30 +3487,50 @@ class SystemAddonInstaller extends DirectoryInstaller {
    */
   async cleanDirectories() {
     // System add-ons directory does not exist
-    if (!(await IOUtils.exists(this._baseDir.path))) {
+    if (!(await OS.File.exists(this._baseDir.path))) {
+      return;
+    }
+
+    let iterator;
+    try {
+      iterator = new OS.File.DirectoryIterator(this._baseDir.path);
+    } catch (e) {
+      logger.error("Failed to clean updated system add-ons directories.", e);
       return;
     }
 
     try {
-      let children = await IOUtils.getChildren(this._baseDir.path);
-      for (let path of children) {
+      for (;;) {
+        let { value: entry, done } = await iterator.next();
+        if (done) {
+          break;
+        }
+
         // Skip the directory currently in use
-        if (this.dir && this.dir.path == path) {
+        if (this.dir && this.dir.path == entry.path) {
           continue;
         }
 
         // Skip the next directory
-        if (this._nextDir && this._nextDir.path == path) {
+        if (this._nextDir && this._nextDir.path == entry.path) {
           continue;
         }
 
-        await IOUtils.remove(path, {
-          ignoreAbsent: true,
-          recursive: true,
-        });
+        if (entry.isDir) {
+          await OS.File.removeDir(entry.path, {
+            ignoreAbsent: true,
+            ignorePermissions: true,
+          });
+        } else {
+          await OS.File.remove(entry.path, {
+            ignoreAbsent: true,
+          });
+        }
       }
     } catch (e) {
       logger.error("Failed to clean updated system add-ons directories.", e);
+    } finally {
+      iterator.close();
     }
   }
 
@@ -3513,7 +3542,7 @@ class SystemAddonInstaller extends DirectoryInstaller {
    */
   async installAddonSet(aAddons) {
     // Make sure the base dir exists
-    await IOUtils.makeDirectory(this._baseDir.path, { ignoreExisting: true });
+    await OS.File.makeDir(this._baseDir.path, { ignoreExisting: true });
 
     let addonSet = SystemAddonInstaller._loadAddonSet();
 
@@ -3531,7 +3560,7 @@ class SystemAddonInstaller extends DirectoryInstaller {
     while (true) {
       newDir.leafName = Services.uuid.generateUUID().toString();
       try {
-        await IOUtils.makeDirectory(newDir.path, { ignoreExisting: false });
+        await OS.File.makeDir(newDir.path, { ignoreExisting: false });
         break;
       } catch (e) {
         logger.debug(
@@ -3620,7 +3649,7 @@ class SystemAddonInstaller extends DirectoryInstaller {
       await this.resetAddonSet();
 
       try {
-        await IOUtils.remove(newDir.path, { recursive: true });
+        await OS.File.removeDir(newDir.path, { ignorePermissions: true });
       } catch (e) {
         logger.warn(
           `Failed to remove failed system add-on directory ${newDir.path}.`,
@@ -4075,16 +4104,14 @@ var XPIInstall = {
           // downloading a fresh copy. We later mark the install object with
           // ownsTempFile so that we will cleanup later (see installAddonSet).
           try {
-            let path = PathUtils.join(
-              Services.dirsvc.get("TmpD", Ci.nsIFile).path,
-              "tmpaddon"
-            );
-            let uniquePath = PathUtils.createUniquePath(path);
-            await IOUtils.copy(sourceAddon._sourceBundle.path, uniquePath);
+            let path = OS.Path.join(OS.Constants.Path.tmpDir, "tmpaddon");
+            let unique = await OS.File.openUnique(path);
+            unique.file.close();
+            await OS.File.copy(sourceAddon._sourceBundle.path, unique.path);
             // Make sure to update file modification times so this is detected
             // as a new add-on.
-            await IOUtils.touch(uniquePath);
-            item.path = uniquePath;
+            await OS.File.setDates(unique.path);
+            item.path = unique.path;
           } catch (e) {
             logger.warn(
               `Failed make temporary copy of ${sourceAddon._sourceBundle.path}.`,

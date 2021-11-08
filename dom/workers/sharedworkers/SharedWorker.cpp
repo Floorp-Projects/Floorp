@@ -6,6 +6,7 @@
 
 #include "SharedWorker.h"
 
+#include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/EventDispatcher.h"
@@ -213,6 +214,7 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
       loadInfo.mUseRegularPrincipal,
       loadInfo.mHasStorageAccessPermissionGranted, cjsData, loadInfo.mDomain,
       isSecureContext, ipcClientInfo, loadInfo.mReferrerInfo, storageAllowed,
+      AntiTrackingUtils::IsThirdPartyWindow(window, nullptr),
       void_t() /* OptionalServiceWorkerData */, agentClusterId,
       remoteType.unwrap());
 

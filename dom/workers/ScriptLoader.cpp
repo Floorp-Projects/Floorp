@@ -51,6 +51,7 @@
 #include "nsXPCOM.h"
 #include "xpcpublic.h"
 
+#include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/ArrayAlgorithm.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/LoadContext.h"
@@ -813,8 +814,8 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     aLoadInfo.mChannel = channel;
 
     // We synthesize the result code, but its never exposed to content.
-    RefPtr<mozilla::dom::InternalResponse> ir =
-        new mozilla::dom::InternalResponse(200, "OK"_ns);
+    SafeRefPtr<mozilla::dom::InternalResponse> ir =
+        MakeSafeRefPtr<mozilla::dom::InternalResponse>(200, "OK"_ns);
     ir->SetBody(aLoadInfo.mCacheReadStream,
                 InternalResponse::UNKNOWN_BODY_SIZE);
 
@@ -841,8 +842,8 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     ir->SetPrincipalInfo(std::move(principalInfo));
     ir->Headers()->FillResponseHeaders(aLoadInfo.mChannel);
 
-    RefPtr<mozilla::dom::Response> response =
-        new mozilla::dom::Response(mCacheCreator->Global(), ir, nullptr);
+    RefPtr<mozilla::dom::Response> response = new mozilla::dom::Response(
+        mCacheCreator->Global(), std::move(ir), nullptr);
 
     mozilla::dom::RequestOrUSVString request;
 
@@ -1103,6 +1104,15 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
 
     if (IsMainWorkerScript()) {
       MOZ_DIAGNOSTIC_ASSERT(aLoadInfo.mReservedClientInfo.isSome());
+
+      // In order to get the correct foreign partitioned prinicpal, we need to
+      // set the `IsThirdPartyContextToTopWindow` to the channel's loadInfo.
+      // This flag reflects the fact that if the worker is created under a
+      // third-party context.
+      nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+      loadInfo->SetIsThirdPartyContextToTopWindow(
+          mWorkerPrivate->IsThirdPartyContextToTopWindow());
+
       rv = AddClientChannelHelper(
           channel, std::move(aLoadInfo.mReservedClientInfo),
           Maybe<ClientInfo>(), mWorkerPrivate->HybridEventTarget());

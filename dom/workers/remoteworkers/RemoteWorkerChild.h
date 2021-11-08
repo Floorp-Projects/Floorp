@@ -123,14 +123,12 @@ class RemoteWorkerChild final
   mozilla::ipc::IPCResult RecvExecServiceWorkerOp(
       ServiceWorkerOpArgs&& aArgs, ExecServiceWorkerOpResolver&& aResolve);
 
-  PFetchEventOpProxyChild* AllocPFetchEventOpProxyChild(
+  already_AddRefed<PFetchEventOpProxyChild> AllocPFetchEventOpProxyChild(
       const ServiceWorkerFetchEventOpArgs& aArgs);
 
   mozilla::ipc::IPCResult RecvPFetchEventOpProxyConstructor(
       PFetchEventOpProxyChild* aActor,
       const ServiceWorkerFetchEventOpArgs& aArgs) override;
-
-  bool DeallocPFetchEventOpProxyChild(PFetchEventOpProxyChild* aActor);
 
   nsresult ExecWorkerOnMainThread(RemoteWorkerData&& aData);
 

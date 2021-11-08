@@ -919,7 +919,7 @@ bool ConvertHTMLtoUCS2(const char* data, int32_t dataLength, nsCString& charset,
     uint32_t result;
     size_t read;
     size_t written;
-    Tie(result, read, written, Ignore) = decoder->DecodeToUTF16(
+    std::tie(result, read, written, std::ignore) = decoder->DecodeToUTF16(
         AsBytes(dataSpan), Span(*unicodeData, needed.value()), true);
     MOZ_ASSERT(result == kInputEmpty);
     MOZ_ASSERT(read == size_t(dataSpan.Length()));

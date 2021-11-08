@@ -1047,11 +1047,7 @@ nsresult nsHtml5StreamParser::WriteStreamBytes(
   auto src = aFromSegment;
   for (;;) {
     auto dst = mLastBuffer->TailAsSpan(READ_BUFFER_SIZE);
-    uint32_t result;
-    size_t read;
-    size_t written;
-    bool hadErrors;
-    Tie(result, read, written, hadErrors) =
+    auto [result, read, written, hadErrors] =
         mUnicodeDecoder->DecodeToUTF16(src, dst, false);
     if (!mDecodingLocalFileWithoutTokenizing) {
       OnNewContent(dst.To(written));
@@ -1377,7 +1373,8 @@ void nsHtml5StreamParser::DoStopRequest() {
     size_t read;
     size_t written;
     bool hadErrors;
-    Tie(result, read, written, hadErrors) =
+    // Do not use structured binding lest deal with [-Werror=unused-variable]
+    std::tie(result, read, written, hadErrors) =
         mUnicodeDecoder->DecodeToUTF16(src, dst, true);
     if (!mDecodingLocalFileWithoutTokenizing) {
       OnNewContent(dst.To(written));

@@ -643,35 +643,43 @@ Toolbox.prototype = {
    */
   _onThreadStateChanged(resource) {
     if (resource.state == "paused") {
-      const reason = resource.why.type;
-      // Suppress interrupted events by default because the thread is
-      // paused/resumed a lot for various actions.
-      if (reason === "interrupted") {
-        return;
-      }
-
-      this.highlightTool("jsdebugger");
-
-      if (
-        reason === "debuggerStatement" ||
-        reason === "mutationBreakpoint" ||
-        reason === "eventBreakpoint" ||
-        reason === "breakpoint" ||
-        reason === "exception" ||
-        reason === "resumeLimit" ||
-        reason === "XHR"
-      ) {
-        this.raise();
-        this.selectTool("jsdebugger", reason);
-        // Each Target/Thread can be paused only once at a time,
-        // so, for each pause, we should have a related resumed event.
-        // But we may have multiple targets paused at the same time
-        this._pausedTargets++;
-        this.emit("toolbox-paused");
-      }
+      this._pauseToolbox(resource.why.type);
     } else if (resource.state == "resumed") {
-      this._pausedTargets--;
+      this._resumeToolbox();
+    }
+  },
 
+  _pauseToolbox(reason) {
+    // Suppress interrupted events by default because the thread is
+    // paused/resumed a lot for various actions.
+    if (reason === "interrupted") {
+      return;
+    }
+
+    this.highlightTool("jsdebugger");
+
+    if (
+      reason === "debuggerStatement" ||
+      reason === "mutationBreakpoint" ||
+      reason === "eventBreakpoint" ||
+      reason === "breakpoint" ||
+      reason === "exception" ||
+      reason === "resumeLimit" ||
+      reason === "XHR"
+    ) {
+      this.raise();
+      this.selectTool("jsdebugger", reason);
+      // Each Target/Thread can be paused only once at a time,
+      // so, for each pause, we should have a related resumed event.
+      // But we may have multiple targets paused at the same time
+      this._pausedTargets++;
+      this.emit("toolbox-paused");
+    }
+  },
+
+  _resumeToolbox() {
+    if (this.isHighlighted("jsdebugger")) {
+      this._pausedTargets--;
       if (this._pausedTargets == 0) {
         this.emit("toolbox-resumed");
         this.unhighlightTool("jsdebugger");
@@ -730,6 +738,10 @@ Toolbox.prototype = {
         consoleFront.off("inspectObject", this._onInspectObject);
       }
       targetFront.off("frame-update", this._updateFrames);
+      // When navigating the old target can get destroyed before the thread state changed
+      // event for the target is received, so it gets lost. This currently happens with bf-cache
+      // navigations when paused, so lets make sure we resumed if not.
+      this._resumeToolbox();
     } else if (this.selection) {
       this.selection.onTargetDestroyed(targetFront);
     }

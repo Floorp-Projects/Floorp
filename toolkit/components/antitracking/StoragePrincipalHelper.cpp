@@ -11,6 +11,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StorageAccess.h"
 #include "nsContentUtils.h"
+#include "nsIDocShell.h"
 #include "nsIEffectiveTLDService.h"
 
 namespace mozilla {
@@ -81,6 +82,78 @@ bool ChooseOriginAttributes(nsIChannel* aChannel, OriginAttributes& aAttrs,
 
   aAttrs.SetPartitionKey(principalURI);
   return true;
+}
+
+bool VerifyValidPartitionedPrincipalInfoForPrincipalInfoInternal(
+    const ipc::PrincipalInfo& aPartitionedPrincipalInfo,
+    const ipc::PrincipalInfo& aPrincipalInfo,
+    bool aIgnoreSpecForContentPrincipal,
+    bool aIgnoreDomainForContentPrincipal) {
+  if (aPartitionedPrincipalInfo.type() != aPrincipalInfo.type()) {
+    return false;
+  }
+
+  if (aPartitionedPrincipalInfo.type() ==
+      mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) {
+    const mozilla::ipc::ContentPrincipalInfo& spInfo =
+        aPartitionedPrincipalInfo.get_ContentPrincipalInfo();
+    const mozilla::ipc::ContentPrincipalInfo& pInfo =
+        aPrincipalInfo.get_ContentPrincipalInfo();
+
+    return spInfo.attrs().EqualsIgnoringPartitionKey(pInfo.attrs()) &&
+           spInfo.originNoSuffix() == pInfo.originNoSuffix() &&
+           (aIgnoreSpecForContentPrincipal || spInfo.spec() == pInfo.spec()) &&
+           (aIgnoreDomainForContentPrincipal ||
+            spInfo.domain() == pInfo.domain()) &&
+           spInfo.baseDomain() == pInfo.baseDomain();
+  }
+
+  if (aPartitionedPrincipalInfo.type() ==
+      mozilla::ipc::PrincipalInfo::TSystemPrincipalInfo) {
+    // Nothing to check here.
+    return true;
+  }
+
+  if (aPartitionedPrincipalInfo.type() ==
+      mozilla::ipc::PrincipalInfo::TNullPrincipalInfo) {
+    const mozilla::ipc::NullPrincipalInfo& spInfo =
+        aPartitionedPrincipalInfo.get_NullPrincipalInfo();
+    const mozilla::ipc::NullPrincipalInfo& pInfo =
+        aPrincipalInfo.get_NullPrincipalInfo();
+
+    return spInfo.spec() == pInfo.spec() &&
+           spInfo.attrs().EqualsIgnoringPartitionKey(pInfo.attrs());
+  }
+
+  if (aPartitionedPrincipalInfo.type() ==
+      mozilla::ipc::PrincipalInfo::TExpandedPrincipalInfo) {
+    const mozilla::ipc::ExpandedPrincipalInfo& spInfo =
+        aPartitionedPrincipalInfo.get_ExpandedPrincipalInfo();
+    const mozilla::ipc::ExpandedPrincipalInfo& pInfo =
+        aPrincipalInfo.get_ExpandedPrincipalInfo();
+
+    if (!spInfo.attrs().EqualsIgnoringPartitionKey(pInfo.attrs())) {
+      return false;
+    }
+
+    if (spInfo.allowlist().Length() != pInfo.allowlist().Length()) {
+      return false;
+    }
+
+    for (uint32_t i = 0; i < spInfo.allowlist().Length(); ++i) {
+      if (!VerifyValidPartitionedPrincipalInfoForPrincipalInfoInternal(
+              spInfo.allowlist()[i], pInfo.allowlist()[i],
+              aIgnoreSpecForContentPrincipal,
+              aIgnoreDomainForContentPrincipal)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  MOZ_CRASH("Invalid principalInfo type");
+  return false;
 }
 
 }  // namespace
@@ -158,71 +231,16 @@ StoragePrincipalHelper::PrepareEffectiveStoragePrincipalOriginAttributes(
 bool StoragePrincipalHelper::VerifyValidStoragePrincipalInfoForPrincipalInfo(
     const mozilla::ipc::PrincipalInfo& aStoragePrincipalInfo,
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
-  if (aStoragePrincipalInfo.type() != aPrincipalInfo.type()) {
-    return false;
-  }
+  return VerifyValidPartitionedPrincipalInfoForPrincipalInfoInternal(
+      aStoragePrincipalInfo, aPrincipalInfo, false, false);
+}
 
-  if (aStoragePrincipalInfo.type() ==
-      mozilla::ipc::PrincipalInfo::TContentPrincipalInfo) {
-    const mozilla::ipc::ContentPrincipalInfo& spInfo =
-        aStoragePrincipalInfo.get_ContentPrincipalInfo();
-    const mozilla::ipc::ContentPrincipalInfo& pInfo =
-        aPrincipalInfo.get_ContentPrincipalInfo();
-
-    if (!spInfo.attrs().EqualsIgnoringFPD(pInfo.attrs()) ||
-        spInfo.originNoSuffix() != pInfo.originNoSuffix() ||
-        spInfo.spec() != pInfo.spec() || spInfo.domain() != pInfo.domain() ||
-        spInfo.baseDomain() != pInfo.baseDomain()) {
-      return false;
-    }
-
-    return true;
-  }
-
-  if (aStoragePrincipalInfo.type() ==
-      mozilla::ipc::PrincipalInfo::TSystemPrincipalInfo) {
-    // Nothing to check here.
-    return true;
-  }
-
-  if (aStoragePrincipalInfo.type() ==
-      mozilla::ipc::PrincipalInfo::TNullPrincipalInfo) {
-    const mozilla::ipc::NullPrincipalInfo& spInfo =
-        aStoragePrincipalInfo.get_NullPrincipalInfo();
-    const mozilla::ipc::NullPrincipalInfo& pInfo =
-        aPrincipalInfo.get_NullPrincipalInfo();
-
-    return spInfo.spec() == pInfo.spec() &&
-           spInfo.attrs().EqualsIgnoringFPD(pInfo.attrs());
-  }
-
-  if (aStoragePrincipalInfo.type() ==
-      mozilla::ipc::PrincipalInfo::TExpandedPrincipalInfo) {
-    const mozilla::ipc::ExpandedPrincipalInfo& spInfo =
-        aStoragePrincipalInfo.get_ExpandedPrincipalInfo();
-    const mozilla::ipc::ExpandedPrincipalInfo& pInfo =
-        aPrincipalInfo.get_ExpandedPrincipalInfo();
-
-    if (!spInfo.attrs().EqualsIgnoringFPD(pInfo.attrs())) {
-      return false;
-    }
-
-    if (spInfo.allowlist().Length() != pInfo.allowlist().Length()) {
-      return false;
-    }
-
-    for (uint32_t i = 0; i < spInfo.allowlist().Length(); ++i) {
-      if (!VerifyValidStoragePrincipalInfoForPrincipalInfo(
-              spInfo.allowlist()[i], pInfo.allowlist()[i])) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  MOZ_CRASH("Invalid principalInfo type");
-  return false;
+// static
+bool StoragePrincipalHelper::VerifyValidClientPrincipalInfoForPrincipalInfo(
+    const mozilla::ipc::PrincipalInfo& aClientPrincipalInfo,
+    const mozilla::ipc::PrincipalInfo& aPrincipalInfo) {
+  return VerifyValidPartitionedPrincipalInfoForPrincipalInfoInternal(
+      aClientPrincipalInfo, aPrincipalInfo, true, true);
 }
 
 // static
@@ -247,6 +265,25 @@ nsresult StoragePrincipalHelper::GetPrincipal(nsIChannel* aChannel,
                                       getter_AddRefs(partitionedPrincipal));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  // The aChannel might not be opened in some cases, e.g. getting principal
+  // for the new channel during a redirect. So, the value
+  // `IsThirdPartyToTopWindow` is incorrect in this case because this value is
+  // calculated during opening a channel. And we need to know the value in order
+  // to get the correct principal. To fix this, we compute the value here even
+  // the channel hasn't been opened yet.
+  //
+  // Note that we don't need to compute the value if there is no browsing
+  // context ID assigned. This could happen in a GTest or XPCShell.
+  //
+  // ToDo: The AntiTrackingUtils::ComputeIsThirdPartyToTopWindow() is only
+  //       available in the parent process. So, this can only work in the parent
+  //       process. It's fine for now, but we should change this to also work in
+  //       content processes. Bug 1736452 will address this.
+  //
+  if (XRE_IsParentProcess() && loadInfo->GetBrowsingContextID() != 0) {
+    AntiTrackingUtils::ComputeIsThirdPartyToTopWindow(aChannel);
   }
 
   nsCOMPtr<nsIPrincipal> outPrincipal = principal;
@@ -318,6 +355,48 @@ nsresult StoragePrincipalHelper::GetPrincipal(nsPIDOMWindowInner* aWindow,
 
   outPrincipal.forget(aPrincipal);
   return NS_OK;
+}
+
+// static
+bool StoragePrincipalHelper::ShouldUsePartitionPrincipalForServiceWorker(
+    nsIDocShell* aDocShell) {
+  MOZ_ASSERT(aDocShell);
+
+  RefPtr<Document> document = aDocShell->GetExtantDocument();
+
+  // If we cannot get the document from the docShell, we turn to get its
+  // parent's document.
+  if (!document) {
+    nsCOMPtr<nsIDocShellTreeItem> parentItem;
+    aDocShell->GetInProcessSameTypeParent(getter_AddRefs(parentItem));
+
+    if (parentItem) {
+      document = parentItem->GetDocument();
+    }
+  }
+
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+
+  if (document) {
+    cookieJarSettings = document->CookieJarSettings();
+  } else {
+    // If there was no document, we create one cookieJarSettings here in order
+    // to get the cookieBehavior.
+    cookieJarSettings = CookieJarSettings::Create(CookieJarSettings::eRegular);
+  }
+
+  // We only support partitioned service workers when dFPI is enabled.
+  if (cookieJarSettings->GetCookieBehavior() !=
+      nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
+    return false;
+  }
+
+  // Only the third-party context will need to use the partitioned principal. A
+  // first-party context is still using the regular principal for the service
+  // worker.
+  return AntiTrackingUtils::IsThirdPartyContext(
+      document ? document->GetBrowsingContext()
+               : aDocShell->GetBrowsingContext());
 }
 
 // static
