@@ -37,6 +37,12 @@ enum class JoinNodesDirection {
   LeftNodeIntoRightNode,
   RightNodeIntoLeftNode,
 };
+// SplitNodeDirection is also affected to which one is removed at joining a
+// node because a couple of undo/redo.
+enum class SplitNodeDirection {
+  LeftNodeIsNewOne,
+  RightNodeIsNewOne,
+};
 
 /*****************************************************************************
  * EditResult returns nsresult and preferred point where selection should be
