@@ -1756,6 +1756,34 @@ BrowserGlue.prototype = {
         ? Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
         : Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
     );
+
+    if (dFPIEnabled) {
+      Services.prefs.setStringPref(
+        "browser.search.param.google_channel_us",
+        "tus7"
+      );
+      Services.prefs.setStringPref(
+        "browser.search.param.google_channel_row",
+        "trow7"
+      );
+      Services.prefs.setStringPref(
+        "browser.search.param.bing_ptag",
+        "MOZZ0000000031"
+      );
+    } else {
+      Services.prefs.setStringPref(
+        "browser.search.param.google_channel_us",
+        "xus7"
+      );
+      Services.prefs.setStringPref(
+        "browser.search.param.google_channel_row",
+        "xrow7"
+      );
+      Services.prefs.setStringPref(
+        "browser.search.param.bing_ptag",
+        "MOZZ0000000032"
+      );
+    }
   },
 
   _setPrefExpectations() {

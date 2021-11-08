@@ -362,7 +362,7 @@
           "properties": {
             "type": {
               "type": "string",
-              "enum": ["ENABLE_TOTAL_COOKIE_PROTECTION_SECTION"]
+              "enum": ["ENABLE_TOTAL_COOKIE_PROTECTION_SECTION_AND_OPT_OUT"]
             }
           }
         },
