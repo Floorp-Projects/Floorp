@@ -7,10 +7,16 @@
 "use strict";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
   UrlbarProviderQuickSuggest:
     "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
+
+// We set the Merino timeout to a large value to avoid intermittent failures in
+// CI, especially TV tests, where the Merino fetch unexpectedly doesn't finish
+// before the default timeout.
+const TEST_MERINO_TIMEOUT_MS = 1000;
 
 // relative to `browser.urlbar`
 const PREF_MERINO_ENABLED = "merino.enabled";
@@ -18,6 +24,14 @@ const PREF_REMOTE_SETTINGS_ENABLED = "quicksuggest.remoteSettings.enabled";
 const PREF_MERINO_ENDPOINT_URL = "merino.endpointURL";
 
 const TELEMETRY_MERINO_LATENCY = "FX_URLBAR_MERINO_LATENCY_MS";
+const TELEMETRY_MERINO_RESPONSE = "FX_URLBAR_MERINO_RESPONSE";
+const FETCH_RESPONSE = {
+  none: -1,
+  success: 0,
+  timeout: 1,
+  network_error: 2,
+  http_error: 3,
+};
 
 const REMOTE_SETTINGS_SEARCH_STRING = "frab";
 
@@ -112,10 +126,7 @@ add_task(async function init() {
   url.port = server.identity.primaryPort;
   UrlbarPrefs.set(PREF_MERINO_ENDPOINT_URL, url.toString());
 
-  // Set the Merino timeout to a large value to avoid intermittent failures in
-  // CI, especially TV tests, where the Merino fetch unexpectedly doesn't finish
-  // before the default timeout.
-  UrlbarPrefs.set("merino.timeoutMs", 1000);
+  UrlbarPrefs.set("merino.timeoutMs", TEST_MERINO_TIMEOUT_MS);
 
   // Set up the remote settings client with the test data.
   await QuickSuggestTestUtils.ensureQuickSuggestInit(REMOTE_SETTINGS_DATA);
@@ -132,6 +143,8 @@ add_task(async function oneEnabled_merino() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
 
+  let histograms = getAndClearHistograms();
+
   // Use a score lower than the remote settings score to make sure the
   // suggestion is included regardless.
   setMerinoResponse().body.suggestions[0].score =
@@ -145,12 +158,21 @@ add_task(async function oneEnabled_merino() {
     context,
     matches: [EXPECTED_MERINO_RESULT],
   });
+
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
+  });
 });
 
 // Tests with Merino disabled and remote settings enabled.
 add_task(async function oneEnabled_remoteSettings() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, false);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+
+  let histograms = getAndClearHistograms();
 
   // Make sure the server is prepared to return a response so we can make sure
   // we don't fetch it.
@@ -164,13 +186,22 @@ add_task(async function oneEnabled_remoteSettings() {
     context,
     matches: [EXPECTED_REMOTE_SETTINGS_RESULT],
   });
+
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.none,
+    latencyRecorded: false,
+  });
 });
 
 // When the Merino suggestion has a higher score than the remote settings
 // suggestion, the Merino suggestion should be used.
-add_task(async function higherScore_merino() {
+add_task(async function higherScore() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+
+  let histograms = getAndClearHistograms();
 
   setMerinoResponse().body.suggestions[0].score =
     2 * UrlbarQuickSuggest.SUGGESTION_SCORE;
@@ -183,13 +214,22 @@ add_task(async function higherScore_merino() {
     context,
     matches: [EXPECTED_MERINO_RESULT],
   });
+
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
+  });
 });
 
-// When the remote settings suggestion has a higher score than the Merino
+// When the Merino suggestion has a lower score than the remote settings
 // suggestion, the remote settings suggestion should be used.
-add_task(async function higherScore_remoteSettings() {
+add_task(async function lowerScore() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+
+  let histograms = getAndClearHistograms();
 
   setMerinoResponse().body.suggestions[0].score =
     UrlbarQuickSuggest.SUGGESTION_SCORE / 2;
@@ -202,6 +242,13 @@ add_task(async function higherScore_remoteSettings() {
     context,
     matches: [EXPECTED_REMOTE_SETTINGS_RESULT],
   });
+
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
+  });
 });
 
 // When the Merino and remote settings suggestions have the same score, the
@@ -209,6 +256,8 @@ add_task(async function higherScore_remoteSettings() {
 add_task(async function sameScore() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+
+  let histograms = getAndClearHistograms();
 
   setMerinoResponse().body.suggestions[0].score =
     UrlbarQuickSuggest.SUGGESTION_SCORE;
@@ -221,6 +270,13 @@ add_task(async function sameScore() {
     context,
     matches: [EXPECTED_REMOTE_SETTINGS_RESULT],
   });
+
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
+  });
 });
 
 // When the Merino suggestion does not include a score, the remote settings
@@ -228,6 +284,8 @@ add_task(async function sameScore() {
 add_task(async function noMerinoScore() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+
+  let histograms = getAndClearHistograms();
 
   let resp = setMerinoResponse();
   Assert.equal(
@@ -245,6 +303,13 @@ add_task(async function noMerinoScore() {
     context,
     matches: [EXPECTED_REMOTE_SETTINGS_RESULT],
   });
+
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
+  });
 });
 
 // When remote settings doesn't return a suggestion but Merino does, the Merino
@@ -252,6 +317,8 @@ add_task(async function noMerinoScore() {
 add_task(async function noSuggestion_remoteSettings() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+
+  let histograms = getAndClearHistograms();
 
   setMerinoResponse();
 
@@ -263,6 +330,13 @@ add_task(async function noSuggestion_remoteSettings() {
     context,
     matches: [EXPECTED_MERINO_RESULT],
   });
+
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
+  });
 });
 
 // When Merino doesn't return a suggestion but remote settings does, the remote
@@ -270,6 +344,8 @@ add_task(async function noSuggestion_remoteSettings() {
 add_task(async function noSuggestion_merino() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+
+  let histograms = getAndClearHistograms();
 
   setMerinoResponse({
     body: {
@@ -286,12 +362,21 @@ add_task(async function noSuggestion_merino() {
     context,
     matches: [EXPECTED_REMOTE_SETTINGS_RESULT],
   });
+
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
+  });
 });
 
 // Tests with both Merino and remote settings disabled.
 add_task(async function bothDisabled() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, false);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+
+  let histograms = getAndClearHistograms();
 
   // Make sure the server is prepared to return a response so we can make sure
   // we don't fetch it.
@@ -302,6 +387,13 @@ add_task(async function bothDisabled() {
     isPrivate: false,
   });
   await check_results({ context, matches: [] });
+
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.none,
+    latencyRecorded: false,
+  });
 });
 
 // When Merino returns multiple suggestions, the one with the largest score
@@ -309,6 +401,8 @@ add_task(async function bothDisabled() {
 add_task(async function multipleMerinoSuggestions() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+
+  let histograms = getAndClearHistograms();
 
   setMerinoResponse({
     body: {
@@ -384,12 +478,21 @@ add_task(async function multipleMerinoSuggestions() {
       },
     ],
   });
+
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
+  });
 });
 
 // Checks a response that's valid but also has some unexpected properties.
 add_task(async function unexpectedResponseProperties() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+
+  let histograms = getAndClearHistograms();
 
   let resp = setMerinoResponse();
   resp.body.unexpectedString = "some value";
@@ -404,12 +507,21 @@ add_task(async function unexpectedResponseProperties() {
     context,
     matches: [EXPECTED_MERINO_RESULT],
   });
+
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
+  });
 });
 
-// Checks some bad/unexpected responses.
-add_task(async function badResponses() {
+// Checks some responses with unexpected response bodies.
+add_task(async function unexpectedResponseBody() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+
+  let histograms = getAndClearHistograms();
 
   let context;
   let contextArgs = [
@@ -422,30 +534,60 @@ add_task(async function badResponses() {
   });
   context = createContext(...contextArgs);
   await check_results({ context, matches: [] });
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
+  });
 
   setMerinoResponse({
     body: { bogus: [] },
   });
   context = createContext(...contextArgs);
   await check_results({ context, matches: [] });
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
+  });
 
   setMerinoResponse({
     body: { suggestions: {} },
   });
   context = createContext(...contextArgs);
   await check_results({ context, matches: [] });
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
+  });
 
   setMerinoResponse({
     body: { suggestions: [] },
   });
   context = createContext(...contextArgs);
   await check_results({ context, matches: [] });
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
+  });
 
   setMerinoResponse({
     body: "",
   });
   context = createContext(...contextArgs);
   await check_results({ context, matches: [] });
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
+  });
 
   setMerinoResponse({
     contentType: "text/html",
@@ -453,76 +595,62 @@ add_task(async function badResponses() {
   });
   context = createContext(...contextArgs);
   await check_results({ context, matches: [] });
-});
-
-// Tests the Merino latency stopwatch histogram.
-add_task(async function latencyTelemetry() {
-  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
-  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
-
-  let histogram = Services.telemetry.getHistogramById(TELEMETRY_MERINO_LATENCY);
-  histogram.clear();
-
-  setMerinoResponse();
-
-  let context = createContext("test", {
-    providers: [UrlbarProviderQuickSuggest.name],
-    isPrivate: false,
-  });
-
-  Assert.strictEqual(
-    histogram.snapshot().sum,
-    0,
-    "Sanity check: Latency histogram is empty before search"
-  );
-
-  await check_results({
+  assertAndClearHistograms({
+    histograms,
     context,
-    matches: [EXPECTED_MERINO_RESULT],
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
   });
-
-  // In the latency histogram, there should be a single value across all
-  // buckets.
-  Assert.deepEqual(
-    Object.values(histogram.snapshot().values).filter(v => v > 0),
-    [1],
-    "Latency histogram updated after search"
-  );
-  Assert.ok(
-    !TelemetryStopwatch.running(TELEMETRY_MERINO_LATENCY, context),
-    "Stopwatch not running after search"
-  );
 });
 
-// The Merino latency histogram should not be updated when there's a network
-// error, i.e., when an exception is thrown fetching the Merino response. This
-// does not include HTTP errors since in that case a response is still fetched.
-add_task(async function latencyTelemetryException() {
+// When there's a network error and remote settings is disabled, no results
+// should be returned.
+add_task(async function networkError_merinoOnly() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  await doNetworkErrorTest([]);
+});
 
+// When there's a network error and remote settings is enabled, the remote
+// settings result should be returned.
+add_task(async function networkError_withRemoteSettings() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+  await doNetworkErrorTest([EXPECTED_REMOTE_SETTINGS_RESULT]);
+});
+
+async function doNetworkErrorTest(expectedResults) {
   // Set the endpoint to a valid, unreachable URL.
   let originalURL = UrlbarPrefs.get(PREF_MERINO_ENDPOINT_URL);
   UrlbarPrefs.set(
     PREF_MERINO_ENDPOINT_URL,
-    "http://localhost/latencyTelemetryException"
+    "http://localhost/test_quicksuggest_merino"
   );
 
-  let histogram = Services.telemetry.getHistogramById(TELEMETRY_MERINO_LATENCY);
-  histogram.clear();
+  // Set the timeout high enough that the network error exception will happen
+  // first. On Mac and Linux the fetch naturally times out fairly quickly but on
+  // Windows it seems to take 5s, so set our artificial timeout to 10s.
+  UrlbarPrefs.set("merino.timeoutMs", 10000);
 
-  let context = createContext("test", {
+  let histograms = getAndClearHistograms();
+
+  let context = createContext(REMOTE_SETTINGS_SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
     isPrivate: false,
   });
   await check_results({
     context,
-    matches: [],
+    matches: expectedResults,
   });
 
+  // The provider should have nulled out the timeout timer.
+  Assert.ok(
+    !UrlbarProviderQuickSuggest._merinoTimeoutTimer,
+    "_merinoTimeoutTimer does not exist after search finished"
+  );
+
   // Wait for the fetch to finish. The provider will null out the fetch
-  // controller when that happens. On Mac and Linux the fetch times out fairly
-  // quickly but on Windows it seems to take 5s, so wait for 10s.
+  // controller when that happens. Wait for 10s as above.
   await TestUtils.waitForCondition(
     () => !UrlbarProviderQuickSuggest._merinoFetchController,
     "Waiting for fetch to finish",
@@ -530,25 +658,63 @@ add_task(async function latencyTelemetryException() {
     100 // number of tries
   );
 
-  // The latency histogram should not be updated.
-  Assert.strictEqual(
-    histogram.snapshot().sum,
-    0,
-    "Latency histogram not updated after search with exception"
-  );
-  Assert.ok(
-    !TelemetryStopwatch.running(TELEMETRY_MERINO_LATENCY, context),
-    "Stopwatch not running after search"
-  );
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.network_error,
+    latencyRecorded: false,
+  });
 
   UrlbarPrefs.set(PREF_MERINO_ENDPOINT_URL, originalURL);
+  UrlbarPrefs.set("merino.timeoutMs", TEST_MERINO_TIMEOUT_MS);
+}
+
+// When there's an HTTP error and remote settings is disabled, no results should
+// be returned.
+add_task(async function httpError_merinoOnly() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  await doHTTPErrorTest([]);
 });
+
+// When there's an HTTP error and remote settings is enabled, the remote
+// settings result should be returned.
+add_task(async function httpError_withRemoteSettings() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+  await doHTTPErrorTest([EXPECTED_REMOTE_SETTINGS_RESULT]);
+});
+
+async function doHTTPErrorTest(expectedResults) {
+  let histograms = getAndClearHistograms();
+
+  setMerinoResponse({
+    status: 500,
+  });
+
+  let context = createContext(REMOTE_SETTINGS_SEARCH_STRING, {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: expectedResults,
+  });
+
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.http_error,
+    latencyRecorded: true,
+  });
+}
 
 // When Merino times out and remote settings is disabled, no results should be
 // returned.
 add_task(async function timeout_merinoOnly() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  setMerinoResponse();
   await doSimpleTimeoutTest([]);
 });
 
@@ -557,17 +723,28 @@ add_task(async function timeout_merinoOnly() {
 add_task(async function timeout_withRemoteSettings() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+  setMerinoResponse();
   await doSimpleTimeoutTest([EXPECTED_REMOTE_SETTINGS_RESULT]);
 });
 
+// When Merino times out but then responds with an HTTP error, only the timeout
+// should be recorded.
+add_task(async function timeout_followedByHTTPError() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  let resp = setMerinoResponse();
+  resp.status = 500;
+  delete resp.body;
+  await doSimpleTimeoutTest([]);
+});
+
 async function doSimpleTimeoutTest(expectedResults) {
-  let histogram = Services.telemetry.getHistogramById(TELEMETRY_MERINO_LATENCY);
-  histogram.clear();
+  let histograms = getAndClearHistograms();
 
   // Make the server return a delayed response so it times out.
-  setMerinoResponse().delay = 2 * UrlbarPrefs.get("merinoTimeoutMs");
+  gMerinoResponse.delay = 2 * UrlbarPrefs.get("merinoTimeoutMs");
 
-  let context = createContext("frab", {
+  let context = createContext(REMOTE_SETTINGS_SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
     isPrivate: false,
   });
@@ -595,15 +772,13 @@ async function doSimpleTimeoutTest(expectedResults) {
 
   // The latency histogram should not be updated since the fetch is still
   // ongoing.
-  Assert.strictEqual(
-    histogram.snapshot().sum,
-    0,
-    "Latency histogram not updated after search finished"
-  );
-  Assert.ok(
-    TelemetryStopwatch.running(TELEMETRY_MERINO_LATENCY, context),
-    "Stopwatch still running after search finished"
-  );
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.timeout,
+    latencyRecorded: false,
+    latencyStopwatchRunning: true,
+  });
 
   // Wait for the fetch to finish. The provider will null out the fetch
   // controller when that happens.
@@ -612,17 +787,14 @@ async function doSimpleTimeoutTest(expectedResults) {
     "Waiting for fetch to finish"
   );
 
-  // In the latency histogram, there should be a single value across all
-  // buckets.
-  Assert.deepEqual(
-    Object.values(histogram.snapshot().values).filter(v => v > 0),
-    [1],
-    "Latency histogram updated after search finished"
-  );
-  Assert.ok(
-    !TelemetryStopwatch.running(TELEMETRY_MERINO_LATENCY, context),
-    "Stopwatch not running after fetch finished"
-  );
+  assertAndClearHistograms({
+    histograms,
+    context,
+    // The assertAndClearHistograms() call above cleared the histograms. After
+    // that call, nothing else should have been recorded for the response.
+    response: FETCH_RESPONSE.none,
+    latencyRecorded: true,
+  });
 }
 
 // By design, when a fetch times out, the provider finishes the search but it
@@ -633,8 +805,7 @@ add_task(async function newFetchAbortsPrevious() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
 
-  let histogram = Services.telemetry.getHistogramById(TELEMETRY_MERINO_LATENCY);
-  histogram.clear();
+  let histograms = getAndClearHistograms();
 
   // Make the server return a very delayed response so that it would time out
   // and we can start a second search that will abort the first fetch.
@@ -673,11 +844,13 @@ add_task(async function newFetchAbortsPrevious() {
 
   // The latency histogram should not be updated since the fetch is still
   // ongoing.
-  Assert.strictEqual(
-    histogram.snapshot().sum,
-    0,
-    "Latency histogram not updated after first search finished"
-  );
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.timeout,
+    latencyRecorded: false,
+    latencyStopwatchRunning: true,
+  });
 
   // Do the second search. This time don't delay the response.
   delete resp.delay;
@@ -701,14 +874,12 @@ add_task(async function newFetchAbortsPrevious() {
     "_merinoTimeoutTimer does not exist after second search finished"
   );
 
-  // In the latency histogram, there should be a single value across all
-  // buckets, the value for the second search. The first search should not have
-  // been recorded when it finished since it was aborted.
-  Assert.deepEqual(
-    Object.values(histogram.snapshot().values).filter(v => v > 0),
-    [1],
-    "Latency histogram updated only once after second search finished"
-  );
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
+  });
 });
 
 // By design, canceling a search after the fetch has started should allow the
@@ -718,8 +889,7 @@ add_task(async function cancelDoesNotAbortFetch() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
 
-  let histogram = Services.telemetry.getHistogramById(TELEMETRY_MERINO_LATENCY);
-  histogram.clear();
+  let histograms = getAndClearHistograms();
 
   // Make the server return a delayed response so we can cancel it before the
   // search finishes.
@@ -767,6 +937,16 @@ add_task(async function cancelDoesNotAbortFetch() {
     "_merinoFetchController is not aborted"
   );
 
+  // The latency histogram should not be updated since the fetch is still
+  // ongoing.
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.none,
+    latencyRecorded: false,
+    latencyStopwatchRunning: true,
+  });
+
   // Wait for the fetch to finish. The provider will null out the fetch
   // controller when that happens.
   await TestUtils.waitForCondition(
@@ -774,13 +954,12 @@ add_task(async function cancelDoesNotAbortFetch() {
     "Waiting for provider to null out _merinoFetchController"
   );
 
-  // In the latency histogram, there should be a single value across all
-  // buckets.
-  Assert.deepEqual(
-    Object.values(histogram.snapshot().values).filter(v => v > 0),
-    [1],
-    "Latency histogram updated after search finished"
-  );
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.none,
+    latencyRecorded: true,
+  });
 });
 
 function makeMerinoServer(endpointPath) {
@@ -796,6 +975,9 @@ function makeMerinoServer(endpointPath) {
           Ci.nsITimer.TYPE_ONE_SHOT
         );
       });
+    }
+    if (typeof gMerinoResponse.status == "number") {
+      resp.setStatusLine("", gMerinoResponse.status, gMerinoResponse.status);
     }
     resp.setHeader("Content-Type", gMerinoResponse.contentType, false);
     if (typeof gMerinoResponse.body == "string") {
@@ -816,4 +998,75 @@ function setMerinoResponse(resp = { ...MERINO_RESPONSE }) {
 
   info("Set Merino response: " + JSON.stringify(resp));
   return resp;
+}
+
+function getAndClearHistograms() {
+  return {
+    latency: TelemetryTestUtils.getAndClearHistogram(TELEMETRY_MERINO_LATENCY),
+    response: TelemetryTestUtils.getAndClearHistogram(
+      TELEMETRY_MERINO_RESPONSE
+    ),
+  };
+}
+
+/**
+ * Asserts the Merino latency and response histograms are updated as expected.
+ * Clears the histograms before returning.
+ *
+ * @param {object} histograms
+ *   The histograms object returned from getAndClearHistograms().
+ * @param {number} response
+ *   The expected `FETCH_RESPONSE`.
+ * @param {boolean} latencyRecorded
+ *   Whether the Merino latency histogram is expected to contain a value.
+ * @param {UrlbarQueryContext} context
+ * @param {boolean} latencyStopwatchRunning
+ *   Whether the Merino latency stopwatch is expected to be running.
+ */
+function assertAndClearHistograms({
+  histograms,
+  response,
+  latencyRecorded,
+  context,
+  latencyStopwatchRunning = false,
+}) {
+  // Check the response histogram.
+  Assert.equal(typeof response, "number", "Sanity check: response is defined");
+  if (response != FETCH_RESPONSE.none) {
+    TelemetryTestUtils.assertHistogram(histograms.response, response, 1);
+  } else {
+    Assert.strictEqual(
+      histograms.response.snapshot().sum,
+      0,
+      "Response histogram not updated"
+    );
+  }
+
+  // Check the latency histogram.
+  if (latencyRecorded) {
+    // There should be a single value across all buckets.
+    Assert.deepEqual(
+      Object.values(histograms.latency.snapshot().values).filter(v => v > 0),
+      [1],
+      "Latency histogram updated"
+    );
+  } else {
+    Assert.strictEqual(
+      histograms.latency.snapshot().sum,
+      0,
+      "Latency histogram not updated"
+    );
+  }
+
+  // Check the latency stopwatch.
+  Assert.equal(
+    TelemetryStopwatch.running(TELEMETRY_MERINO_LATENCY, context),
+    latencyStopwatchRunning,
+    "Latency stopwatch running as expected"
+  );
+
+  // Clear histograms.
+  for (let histogram of Object.values(histograms)) {
+    histogram.clear();
+  }
 }
