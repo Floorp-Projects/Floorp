@@ -283,8 +283,7 @@ using namespace mozilla::net;
 
 class OSXSystemProxySettingsAsync final : public nsOSXSystemProxySettings {
  public:
-  NS_INLINE_DECL_REFCOUNTING_INHERITED(OSXSystemProxySettingsAsync,
-                                       nsOSXSystemProxySettings)
+  NS_INLINE_DECL_REFCOUNTING_INHERITED(OSXSystemProxySettingsAsync, nsOSXSystemProxySettings)
   NS_DECL_NSISYSTEMPROXYSETTINGS
 
   OSXSystemProxySettingsAsync();
@@ -303,9 +302,7 @@ OSXSystemProxySettingsAsync::OSXSystemProxySettingsAsync() = default;
 
 OSXSystemProxySettingsAsync::~OSXSystemProxySettingsAsync() = default;
 
-void OSXSystemProxySettingsAsync::InitDone() {
-  OnProxyConfigChangedInternal();
-}
+void OSXSystemProxySettingsAsync::InitDone() { OnProxyConfigChangedInternal(); }
 
 void OSXSystemProxySettingsAsync::OnProxyConfigChangedInternal() {
   ProxyConfig config;
@@ -317,8 +314,7 @@ void OSXSystemProxySettingsAsync::OnProxyConfigChangedInternal() {
   }
 
   // proxies (for now: PROXY and SOCKS)
-  for (const SchemeMapping* keys = gSchemeMappingList; keys->mScheme != NULL;
-       ++keys) {
+  for (const SchemeMapping* keys = gSchemeMappingList; keys->mScheme != NULL; ++keys) {
     // Check the proxy is enabled
     NSNumber* enabled = [mProxyDict objectForKey:(NSString*)keys->mEnabled];
     if (!(enabled == NULL || [enabled isKindOfClass:[NSNumber class]])) {
@@ -346,20 +342,17 @@ void OSXSystemProxySettingsAsync::OnProxyConfigChangedInternal() {
     }
 
     int32_t resultPort = [port intValue];
-    ProxyServer server(ProxyConfig::ToProxyType(keys->mScheme), resultHost,
-                       resultPort);
+    ProxyServer server(ProxyConfig::ToProxyType(keys->mScheme), resultHost, resultPort);
     config.Rules().mProxyServers[server.Type()] = std::move(server);
   }
 
   // exceptions
-  NSArray* exceptionList =
-      [mProxyDict objectForKey:(NSString*)kSCPropNetProxiesExceptionsList];
+  NSArray* exceptionList = [mProxyDict objectForKey:(NSString*)kSCPropNetProxiesExceptionsList];
   if (exceptionList != NULL && [exceptionList isKindOfClass:[NSArray class]]) {
     NSEnumerator* exceptionEnumerator = [exceptionList objectEnumerator];
     NSString* currentValue = NULL;
     while ((currentValue = [exceptionEnumerator nextObject])) {
-      if (currentValue != NULL &&
-          [currentValue isKindOfClass:[NSString class]]) {
+      if (currentValue != NULL && [currentValue isKindOfClass:[NSString class]]) {
         nsCString overrideStr([currentValue UTF8String]);
         config.ByPassRules().mExceptions.AppendElement(std::move(overrideStr));
       }
@@ -381,11 +374,9 @@ OSXSystemProxySettingsAsync::GetPACURI(nsACString& aResult) {
 }
 
 NS_IMETHODIMP
-OSXSystemProxySettingsAsync::GetProxyForURI(const nsACString& aSpec,
-                                          const nsACString& aScheme,
-                                          const nsACString& aHost,
-                                          const int32_t aPort,
-                                          nsACString& aResult) {
+OSXSystemProxySettingsAsync::GetProxyForURI(const nsACString& aSpec, const nsACString& aScheme,
+                                            const nsACString& aHost, const int32_t aPort,
+                                            nsACString& aResult) {
   for (const auto& bypassRule : mConfig.ByPassRules().mExceptions) {
     if (mozilla::toolkit::system::IsHostProxyEntry(aHost, bypassRule)) {
       aResult.AssignLiteral("DIRECT");
@@ -398,10 +389,9 @@ OSXSystemProxySettingsAsync::GetProxyForURI(const nsACString& aSpec,
 }
 
 NS_IMPL_COMPONENT_FACTORY(nsOSXSystemProxySettings) {
-  auto settings =
-      mozilla::StaticPrefs::network_proxy_detect_system_proxy_changes()
-          ? mozilla::MakeRefPtr<OSXSystemProxySettingsAsync>()
-          : mozilla::MakeRefPtr<nsOSXSystemProxySettings>();
+  auto settings = mozilla::StaticPrefs::network_proxy_detect_system_proxy_changes()
+                      ? mozilla::MakeRefPtr<OSXSystemProxySettingsAsync>()
+                      : mozilla::MakeRefPtr<nsOSXSystemProxySettings>();
   if (NS_SUCCEEDED(settings->Init())) {
     return settings.forget().downcast<nsISupports>();
   }
