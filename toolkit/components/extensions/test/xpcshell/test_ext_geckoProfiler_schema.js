@@ -40,12 +40,14 @@ add_task(async function() {
   // Check that the list of available values in the ProfilerFeature enum
   // matches the list of features supported by the profiler.
   for (const feature of allFeaturesAcceptedByProfiler) {
+    // If this fails, check the lists in {,Base}ProfilerState.h and geckoProfiler.json.
     ok(
       acceptedFeatures.includes(feature),
       `The schema of the geckoProfiler.start() method should accept the "${feature}" feature.`
     );
   }
   for (const feature of acceptedFeatures) {
+    // If this fails, check the lists in {,Base}ProfilerState.h and geckoProfiler.json.
     ok(
       // Bug 1594566 - ignore Responsiveness until the extension is updated
       allFeaturesAcceptedByProfiler.includes(feature) ||
