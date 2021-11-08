@@ -314,7 +314,11 @@ const SpecialMessageActions = {
           true
         );
         break;
-      case "ENABLE_TOTAL_COOKIE_PROTECTION_SECTION":
+      case "ENABLE_TOTAL_COOKIE_PROTECTION_SECTION_AND_OPT_OUT":
+        Services.prefs.setBoolPref(
+          "privacy.restrict3rdpartystorage.rollout.enabledByDefault",
+          false
+        );
         Services.prefs.setBoolPref(
           "privacy.restrict3rdpartystorage.rollout.preferences.TCPToggleInStandard",
           true
