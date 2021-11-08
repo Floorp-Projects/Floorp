@@ -44,6 +44,8 @@ import mozilla.components.feature.downloads.manager.FetchDownloadManager
 import mozilla.components.feature.downloads.share.ShareDownloadFeature
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.SessionFeature
+import mozilla.components.feature.sitepermissions.SitePermissionsFeature
+import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.tabs.WindowFeature
 import mozilla.components.feature.top.sites.TopSitesConfig
 import mozilla.components.feature.top.sites.TopSitesFeature
@@ -120,6 +122,7 @@ class BrowserFragment :
     private val windowFeature = ViewBoundFeatureWrapper<WindowFeature>()
     private val appLinksFeature = ViewBoundFeatureWrapper<AppLinksFeature>()
     private val topSitesFeature = ViewBoundFeatureWrapper<TopSitesFeature>()
+    private var sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
 
     private val toolbarIntegration = ViewBoundFeatureWrapper<BrowserToolbarIntegration>()
 
@@ -331,6 +334,39 @@ class BrowserFragment :
                 view = view
             )
         }
+
+        setSitePermissions(view)
+    }
+
+    private fun setSitePermissions(rootView: View) {
+        val sitePermissionsRules = SitePermissionsRules(
+            notification = SitePermissionsRules.Action.BLOCKED,
+            microphone = SitePermissionsRules.Action.BLOCKED,
+            location = SitePermissionsRules.Action.BLOCKED,
+            camera = SitePermissionsRules.Action.BLOCKED,
+            autoplayAudible = SitePermissionsRules.AutoplayAction.BLOCKED,
+            autoplayInaudible = SitePermissionsRules.AutoplayAction.ALLOWED,
+            persistentStorage = SitePermissionsRules.Action.BLOCKED,
+            mediaKeySystemAccess = SitePermissionsRules.Action.BLOCKED
+        )
+        sitePermissionsFeature.set(
+            feature = SitePermissionsFeature(
+                context = requireContext(),
+                fragmentManager = parentFragmentManager,
+                onNeedToRequestPermissions = {
+                    // This it will be always empty because we are not asking for user input
+                },
+                onShouldShowRequestPermissionRationale = {
+                    // Since we don't request permissions this it will not be called
+                    false
+                },
+                sitePermissionsRules = sitePermissionsRules,
+                sessionId = tabId,
+                store = requireComponents.store
+            ),
+            owner = this,
+            view = rootView
+        )
     }
 
     override fun onAccessibilityStateChanged(enabled: Boolean) = when (enabled) {

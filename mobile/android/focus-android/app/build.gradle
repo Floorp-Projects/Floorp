@@ -231,7 +231,7 @@ dependencies {
     implementation "org.mozilla.components:feature-tabs:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-toolbar:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-top-sites:${AndroidComponents.VERSION}"
-
+    implementation "org.mozilla.components:feature-sitepermissions:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:lib-crash:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:lib-state:${AndroidComponents.VERSION}"
 
