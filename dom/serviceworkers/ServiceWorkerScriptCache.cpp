@@ -546,7 +546,8 @@ class CompareManager final : public PromiseNativeHandler {
       return rv;
     }
 
-    RefPtr<InternalResponse> ir = new InternalResponse(200, "OK"_ns);
+    SafeRefPtr<InternalResponse> ir =
+        MakeSafeRefPtr<InternalResponse>(200, "OK"_ns);
     ir->SetBody(body, aCN->Buffer().Length());
     ir->SetURLList(aCN->URLList());
 
@@ -560,7 +561,7 @@ class CompareManager final : public PromiseNativeHandler {
     ir->Headers()->Fill(*(internalHeaders.get()), IgnoreErrors());
 
     RefPtr<Response> response =
-        new Response(aCache->GetGlobalObject(), ir, nullptr);
+        new Response(aCache->GetGlobalObject(), std::move(ir), nullptr);
 
     RequestOrUSVString request;
     request.SetAsUSVString().ShareOrDependUpon(aCN->URL());
