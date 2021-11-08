@@ -2,7 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// Basic tests for the quick suggest provider.
+// Basic tests for the quick suggest provider using the remote settings source.
+// See also test_quicksuggest_merino.js.
 
 "use strict";
 
@@ -11,6 +12,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
+
+const TELEMETRY_REMOTE_SETTINGS_LATENCY =
+  "FX_URLBAR_QUICK_SUGGEST_REMOTE_SETTINGS_LATENCY_MS";
 
 const SPONSORED_SEARCH_STRING = "frab";
 const NONSPONSORED_SEARCH_STRING = "nonspon";
@@ -659,29 +663,52 @@ async function doDedupeAgainstURLTest({
   await PlacesUtils.history.clear();
 }
 
+// Tests the remote settings latency histogram.
+add_task(async function latencyTelemetry() {
+  UrlbarPrefs.set("suggest.quicksuggest", true);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+
+  let histogram = Services.telemetry.getHistogramById(
+    TELEMETRY_REMOTE_SETTINGS_LATENCY
+  );
+  histogram.clear();
+
+  let context = createContext(SPONSORED_SEARCH_STRING, {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [EXPECTED_SPONSORED_RESULT],
+  });
+
+  // In the latency histogram, there should be a single value across all
+  // buckets.
+  Assert.deepEqual(
+    Object.values(histogram.snapshot().values).filter(v => v > 0),
+    [1],
+    "Latency histogram updated after search"
+  );
+  Assert.ok(
+    !TelemetryStopwatch.running(TELEMETRY_REMOTE_SETTINGS_LATENCY, context),
+    "Stopwatch not running after search"
+  );
+});
+
 // Tests setup and teardown of the remote settings client depending on whether
 // quick suggest is enabled.
 add_task(async function setupAndTeardown() {
-  // Sanity check pref values at the start of this task. We assume all previous
-  // tasks have left `quicksuggest.enabled` set to true (from the init task) and
-  // the `suggest.quicksuggest` prefs set to false.
-  let initialPrefs = {
-    "quicksuggest.enabled": true,
-    "suggest.quicksuggest": false,
-    "suggest.quicksuggest.sponsored": false,
-  };
-  for (let [name, expectedValue] of Object.entries(initialPrefs)) {
-    Assert.equal(
-      UrlbarPrefs.get(name),
-      expectedValue,
-      `Initial value of ${name} is ${expectedValue}`
-    );
-  }
+  // Disable the suggest prefs so the settings client starts out torn down.
+  UrlbarPrefs.set("suggest.quicksuggest", false);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
+  Assert.ok(
+    !UrlbarQuickSuggest._rs,
+    "Settings client is null after disabling suggest prefs"
+  );
 
-  // Initially the settings client will be null since both
-  // `suggest.quicksuggest` prefs are false.
-  Assert.ok(!UrlbarQuickSuggest._rs, "Settings client is null initially");
-
+  // Setting the main suggest pref should cause the client to be set up. We
+  // assume all previous tasks left `quicksuggest.enabled` true (from the init
+  // task).
   UrlbarPrefs.set("suggest.quicksuggest", true);
   await UrlbarQuickSuggest.readyPromise;
   Assert.ok(
