@@ -30,12 +30,12 @@ class StudiesViewModel(application: Application) : AndroidViewModel(application)
 
     private fun getExperiments(components: Components) {
         viewModelScope.launch(Dispatchers.IO) {
-            val activeSection = StudiesListItem.Section(R.string.studies_active, true)
-            localStudies.add(activeSection)
+            localStudies.add(StudiesListItem.Section(R.string.studies_active, true))
 
             components.experiments.getActiveExperiments().map { activeExperiment ->
                 localStudies.add(StudiesListItem.ActiveStudy(activeExperiment))
             }
+            localStudies.add(StudiesListItem.Section(R.string.studies_completed, true))
             exposedStudies.postValue(localStudies)
         }
     }
