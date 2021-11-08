@@ -31,6 +31,13 @@ namespace mozilla {
 template <class T>
 class OwningNonNull;
 
+// JoinNodesDirection is also affected to which one is new node at splitting
+// a node because a couple of undo/redo.
+enum class JoinNodesDirection {
+  LeftNodeIntoRightNode,
+  RightNodeIntoLeftNode,
+};
+
 /*****************************************************************************
  * EditResult returns nsresult and preferred point where selection should be
  * collapsed or the range where selection should select.
