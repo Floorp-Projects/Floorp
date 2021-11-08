@@ -3,11 +3,6 @@ a11y-checks:
     description: "{description} with accessibility checks enabled"
     suffix: "a11y-checks"
     replace:
-        run-on-projects:
-            by-test-platform:
-                linux.*64(-shippable)?-qr/opt:
-                    - "trunk"
-                default: []
         tier: 2
     merge:
         mozharness:
@@ -28,9 +23,6 @@ geckoview-e10s-single:
     description: "{description} with single-process e10s"
     when:
         <<: *gv_e10s_filter
-    replace:
-        run-on-projects:
-            - "trunk"
     suffix: "e10s-single"
     merge:
         mozharness:
@@ -127,11 +119,6 @@ webrender-sw-a11y-checks:
     description: "{description} with software webrender and accessibility checks enabled"
     suffix: "swr-a11y-checks"
     replace:
-        run-on-projects:
-            by-test-platform:
-                linux.*64(-shippable)?-qr/opt:
-                    - "trunk"
-                default: []
         tier: 2
     merge:
         webrender: true
