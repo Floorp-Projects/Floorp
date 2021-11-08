@@ -566,6 +566,7 @@ variant_description_schema = Schema(
         str: {
             Required("description"): str,
             Required("suffix"): str,
+            Optional("contact"): str,
             Optional("when"): {Any("$eval", "$if"): str},
             Optional("replace"): {str: object},
             Optional("merge"): {str: object},
