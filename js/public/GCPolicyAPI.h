@@ -150,8 +150,8 @@ struct GCPolicy<JS::Heap<T>> {
   static void trace(JSTracer* trc, JS::Heap<T>* thingp, const char* name) {
     TraceEdge(trc, thingp, name);
   }
-  static bool needsSweep(JS::Heap<T>* thingp) {
-    return *thingp && js::gc::EdgeNeedsSweep(thingp);
+  static bool traceWeak(JSTracer* trc, JS::Heap<T>* thingp) {
+    return !*thingp || js::gc::TraceWeakEdge(trc, thingp);
   }
 };
 
