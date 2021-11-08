@@ -40,6 +40,8 @@ class WordBreaker final {
   //
   // If aPos is already at the end of aText or beyond, i.e. aPos >= aLen, return
   // NS_WORDBREAKER_NEED_MORE_TEXT.
+  //
+  // DEPRECATED: Use WordBreakIteratorUtf16 instead.
   static int32_t Next(const char16_t* aText, uint32_t aLen, uint32_t aPos);
 
  private:
