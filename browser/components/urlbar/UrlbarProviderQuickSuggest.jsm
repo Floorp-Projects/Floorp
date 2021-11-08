@@ -31,6 +31,9 @@ const MERINO_ENDPOINT_PARAM_QUERY = "q";
 const TELEMETRY_MERINO_LATENCY = "FX_URLBAR_MERINO_LATENCY_MS";
 const TELEMETRY_MERINO_RESPONSE = "FX_URLBAR_MERINO_RESPONSE";
 
+const TELEMETRY_REMOTE_SETTINGS_LATENCY =
+  "FX_URLBAR_QUICK_SUGGEST_REMOTE_SETTINGS_LATENCY_MS";
+
 const TELEMETRY_SCALAR_IMPRESSION =
   "contextual.services.quicksuggest.impression";
 const TELEMETRY_SCALAR_CLICK = "contextual.services.quicksuggest.click";
@@ -124,11 +127,13 @@ class ProviderQuickSuggest extends UrlbarProvider {
     // affect the suggestions.
     let searchString = queryContext.searchString.trimStart();
 
-    // We currently have two sources for quick suggest: remote settings
-    // (from `UrlbarQuickSuggest`) and Merino.
+    // There are two sources for quick suggest: remote settings (from
+    // `UrlbarQuickSuggest`) and Merino.
     let promises = [];
     if (UrlbarPrefs.get("quickSuggestRemoteSettingsEnabled")) {
-      promises.push(UrlbarQuickSuggest.query(searchString));
+      promises.push(
+        this._fetchRemoteSettingsSuggestion(queryContext, searchString)
+      );
     }
     if (UrlbarPrefs.get("merinoEnabled") && queryContext.allowRemoteResults()) {
       promises.push(this._fetchMerinoSuggestions(queryContext, searchString));
@@ -370,6 +375,39 @@ class ProviderQuickSuggest extends UrlbarProvider {
 
     // Don't abort the Merino fetch if one is ongoing. By design we allow
     // fetches to finish so we can record their latency.
+  }
+
+  /**
+   * Fetches a remote settings suggestion.
+   *
+   * @param {UrlbarQueryContext} queryContext
+   * @param {string} searchString
+   * @returns {object}
+   *   The remote settings suggestion or null if there's no match.
+   */
+  async _fetchRemoteSettingsSuggestion(queryContext, searchString) {
+    let instance = this.queryInstance;
+
+    let suggestion;
+    TelemetryStopwatch.start(TELEMETRY_REMOTE_SETTINGS_LATENCY, queryContext);
+    try {
+      suggestion = await UrlbarQuickSuggest.query(searchString);
+      TelemetryStopwatch.finish(
+        TELEMETRY_REMOTE_SETTINGS_LATENCY,
+        queryContext
+      );
+      if (instance != this.queryInstance) {
+        return null;
+      }
+    } catch (error) {
+      TelemetryStopwatch.cancel(
+        TELEMETRY_REMOTE_SETTINGS_LATENCY,
+        queryContext
+      );
+      this.logger.error("Could not fetch remote settings suggestion: " + error);
+    }
+
+    return suggestion;
   }
 
   /**
