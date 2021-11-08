@@ -861,11 +861,11 @@ class ResourceCommand {
    * @return {Boolean} True, if the server supports this type.
    */
   hasResourceCommandSupport(resourceType) {
-    // If the targetCommand top level target is a parent process, we're in the browser console or browser toolbox.
-    // In such case, if the browser toolbox fission pref is disabled, we don't want to use watchers
+    // If we're in the browser console or browser toolbox and the browser
+    // toolbox fission pref is disabled, we don't want to use watchers
     // (even if traits on the server are enabled).
     if (
-      this.targetCommand.descriptorFront.isParentProcessDescriptor &&
+      this.targetCommand.descriptorFront.isBrowserProcessDescriptor &&
       !Services.prefs.getBoolPref(BROWSERTOOLBOX_FISSION_ENABLED, false)
     ) {
       return false;

@@ -31,9 +31,14 @@ export async function onConnect(_commands, _resourceCommand, _actions, store) {
 
   const { descriptorFront } = commands;
   const { targetFront } = targetCommand;
+
+  // For tab, browser and webextension toolboxes, we want to enable watching for
+  // worker targets as soon as the debugger is opened.
+  // And also for service workers, if the related experimental feature is enabled
   if (
-    targetFront.isBrowsingContext ||
-    descriptorFront.isParentProcessDescriptor
+    descriptorFront.isTabDescriptor ||
+    descriptorFront.isWebExtensionDescriptor ||
+    descriptorFront.isBrowserProcessDescriptor
   ) {
     targetCommand.listenForWorkers = true;
     if (descriptorFront.isLocalTab && features.windowlessServiceWorkers) {
@@ -108,7 +113,7 @@ export function onDisconnect() {
 }
 
 async function onTargetAvailable({ targetFront, isTargetSwitching }) {
-  const isBrowserToolbox = commands.descriptorFront.isParentProcessDescriptor;
+  const isBrowserToolbox = commands.descriptorFront.isBrowserProcessDescriptor;
   const isNonTopLevelFrameTarget =
     !targetFront.isTopLevel &&
     targetFront.targetType === targetCommand.TYPES.FRAME;
