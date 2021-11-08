@@ -5,8 +5,6 @@
 
 #include "InternetCiter.h"
 
-#include "mozilla/Casting.h"
-#include "mozilla/intl/Segmenter.h"
 #include "HTMLEditUtils.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
@@ -14,6 +12,7 @@
 #include "nsDebug.h"
 #include "nsDependentSubstring.h"
 #include "nsError.h"
+#include "mozilla/intl/LineBreaker.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsStringIterator.h"
@@ -224,19 +223,16 @@ void InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
         continue;  // continue inner loop, with outStringCol now at bol
       }
 
-      MOZ_ASSERT(eol >= 0 && eol - posInString > 0);
-
-      uint32_t breakPt = 0;
-      Maybe<uint32_t> nextBreakPt;
-      intl::LineBreakIteratorUtf16 lineBreakIter(Span<const char16_t>(
-          tString.get() + posInString, length - posInString));
+      int32_t breakPt = 0;
+      int32_t nextBreakPt = 0;
       while (true) {
-        nextBreakPt = lineBreakIter.Next();
-        if (!nextBreakPt ||
-            *nextBreakPt > AssertedCast<uint32_t>(eol) - posInString) {
+        nextBreakPt = intl::LineBreaker::Next(tString.get() + posInString,
+                                              length - posInString, breakPt);
+        if (nextBreakPt == NS_LINEBREAKER_NEED_MORE_TEXT ||
+            nextBreakPt > eol - (int32_t)posInString) {
           break;
         }
-        breakPt = *nextBreakPt;
+        breakPt = nextBreakPt;
       }
 
       if (breakPt == 0) {
@@ -248,9 +244,9 @@ void InternetCiter::Rewrap(const nsAString& aInString, uint32_t aWrapCol,
           continue;  // continue inner loop, with outStringCol now at bol
         }
 
-        MOZ_ASSERT(nextBreakPt.isSome(),
+        breakPt = nextBreakPt;
+        MOZ_ASSERT(breakPt != NS_LINEBREAKER_NEED_MORE_TEXT,
                    "Next() always treats end-of-text as a break");
-        breakPt = *nextBreakPt;
       }
 
       // Special case: maybe we should have wrapped last time.
