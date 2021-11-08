@@ -50,7 +50,13 @@ object SupportUtils {
         WHATS_NEW_KLAR("whats-new-firefox-klar-android"),
         SEARCH_SUGGESTIONS("search-suggestions-focus-android"),
         ALLOWLIST("focus-android-allowlist"),
-        STUDIES("studies")
+        STUDIES("how-opt-out-studies-firefox-android")
+    }
+
+    fun getGenericSumoURLForTopic(topic: SumoTopic): String {
+        val escapedTopic = getEncodedTopicUTF8(topic.topicStr)
+        val langTag = Locales.getLanguageTag(Locale.getDefault())
+        return "https://support.mozilla.org/$langTag/kb/$escapedTopic"
     }
 
     fun getSumoURLForTopic(context: Context, topic: SumoTopic): String {

@@ -51,7 +51,7 @@ class StudiesFragment : BaseSettingsLikeFragment() {
 
     private fun setLearnMore() {
         val sumoUrl =
-            SupportUtils.getSumoURLForTopic(requireContext(), SupportUtils.SumoTopic.STUDIES)
+            SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.STUDIES)
         val description = getString(R.string.preference_studies_summary)
         val learnMore = getString(R.string.studies_learn_more)
         val rawText = "$description <a href=\"$sumoUrl\">$learnMore</a>"
@@ -83,7 +83,7 @@ class StudiesFragment : BaseSettingsLikeFragment() {
 
     private val openLearnMore = {
         val tabId = requireContext().components.tabsUseCases.addTab(
-            url = SupportUtils.getSumoURLForTopic(requireContext(), SupportUtils.SumoTopic.STUDIES),
+            url = SupportUtils.getGenericSumoURLForTopic(SupportUtils.SumoTopic.STUDIES),
             source = SessionState.Source.Internal.Menu,
             selectTab = true,
             private = true
