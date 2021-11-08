@@ -29,6 +29,8 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["AbortController", "fetch"]);
 const MERINO_ENDPOINT_PARAM_QUERY = "q";
 
 const TELEMETRY_MERINO_LATENCY = "FX_URLBAR_MERINO_LATENCY_MS";
+const TELEMETRY_MERINO_RESPONSE = "FX_URLBAR_MERINO_RESPONSE";
+
 const TELEMETRY_SCALAR_IMPRESSION =
   "contextual.services.quicksuggest.impression";
 const TELEMETRY_SCALAR_CLICK = "contextual.services.quicksuggest.click";
@@ -392,6 +394,14 @@ class ProviderQuickSuggest extends UrlbarProvider {
     }
     url.searchParams.set(MERINO_ENDPOINT_PARAM_QUERY, searchString);
 
+    let responseHistogram = Services.telemetry.getHistogramById(
+      TELEMETRY_MERINO_RESPONSE
+    );
+    let maybeRecordResponse = category => {
+      responseHistogram?.add(category);
+      responseHistogram = null;
+    };
+
     // Set up the timeout timer.
     let timeout = UrlbarPrefs.get("merinoTimeoutMs");
     let timer = (this._merinoTimeoutTimer = new SkippableTimer({
@@ -401,6 +411,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       callback: () => {
         // The fetch timed out.
         this.logger.info(`Merino fetch timed out (timeout = ${timeout}ms)`);
+        maybeRecordResponse("timeout");
       },
     }));
 
@@ -431,10 +442,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
           // returned by `Promise.race`.
           response = await fetch(url, { signal: controller.signal });
           TelemetryStopwatch.finish(TELEMETRY_MERINO_LATENCY, queryContext);
+          maybeRecordResponse(response.ok ? "success" : "http_error");
         } catch (error) {
           TelemetryStopwatch.cancel(TELEMETRY_MERINO_LATENCY, queryContext);
           if (error.name != "AbortError") {
             this.logger.error("Could not fetch Merino endpoint: " + error);
+            maybeRecordResponse("network_error");
           }
         } finally {
           // Now that the fetch is done, cancel the timeout timer so it doesn't
