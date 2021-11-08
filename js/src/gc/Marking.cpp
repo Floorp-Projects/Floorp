@@ -2879,8 +2879,9 @@ namespace js {
 namespace gc {
 
 template <typename T>
-JS_PUBLIC_API bool EdgeNeedsSweep(JS::Heap<T>* thingp) {
-  return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeGet()));
+JS_PUBLIC_API bool TraceWeakEdge(JSTracer* trc, JS::Heap<T>* thingp) {
+  return TraceEdgeInternal(trc, gc::ConvertToBase(thingp->unsafeGet()),
+                           "JS::Heap edge");
 }
 
 template <typename T>
@@ -2889,8 +2890,9 @@ JS_PUBLIC_API bool EdgeNeedsSweepUnbarrieredSlow(T* thingp) {
 }
 
 // Instantiate a copy of the Tracing templates for each public GC type.
-#define INSTANTIATE_ALL_VALID_HEAP_TRACE_FUNCTIONS(type)             \
-  template JS_PUBLIC_API bool EdgeNeedsSweep<type>(JS::Heap<type>*); \
+#define INSTANTIATE_ALL_VALID_HEAP_TRACE_FUNCTIONS(type)            \
+  template JS_PUBLIC_API bool TraceWeakEdge<type>(JSTracer * trc,   \
+                                                  JS::Heap<type>*); \
   template JS_PUBLIC_API bool EdgeNeedsSweepUnbarrieredSlow<type>(type*);
 JS_FOR_EACH_PUBLIC_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_HEAP_TRACE_FUNCTIONS)
 JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(
