@@ -548,7 +548,6 @@ class SmokeTest {
         }
     }
 
-    @Ignore("Failing intermittently https://github.com/mozilla-mobile/fenix/issues/22256")
     @Test
     // Verifies setting as default a customized search engine name and URL
     fun editCustomSearchEngineTest() {
