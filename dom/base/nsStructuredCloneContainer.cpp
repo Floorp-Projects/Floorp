@@ -14,6 +14,7 @@
 #include "js/Value.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/fallible.h"
@@ -143,6 +144,11 @@ nsStructuredCloneContainer::GetDataAsBase64(nsAString& aOut) {
 
   auto iter = Data().Start();
   size_t size = Data().Size();
+  CheckedInt<nsAutoCString::size_type> sizeCheck(size);
+  if (!sizeCheck.isValid()) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsAutoCString binaryData;
   if (!binaryData.SetLength(size, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
