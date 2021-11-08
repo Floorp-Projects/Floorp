@@ -304,6 +304,7 @@ void CanonicalBrowsingContext::ReplacedBy(
   txn.SetHistoryID(GetHistoryID());
   txn.SetExplicitActive(GetExplicitActive());
   txn.SetHasRestoreData(GetHasRestoreData());
+  txn.SetShouldDelayMediaFromStart(GetShouldDelayMediaFromStart());
   if (aNewContext->EverAttached()) {
     MOZ_ALWAYS_SUCCEEDS(txn.Commit(aNewContext));
   } else {
