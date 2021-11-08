@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Sahifa yuklanmadi</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Qayta urining</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Orqaga</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Soʻrov bajarilmadi</string>
@@ -17,6 +12,44 @@
 
     <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_title">Xavfsiz ulanmadi</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      <ul>
+        <li>Siz koʻrmoqchi boʻlgan sahifani koʻrsatib boʻlmaydi, chunki olingan maʼlumotlarning haqiqiyligini tekshirib boʻlmadi.</li>
+        <li>Iltimos, ushbu muammo haqida veb-sayt egalariga murojaat qiling.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Xavfsiz ulanish amalga oshmadi</string>
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      <ul>
+        <li>Bu server konfiguratsiyasida muammo boʻlishi mumkin yoki kimdir oʻzini serverga oʻxshatmoqchi boʻlgan boʻlishi mumkin.</li>
+        <li>Agar ilgari ushbu serverga muvaffaqiyatli ulangan boʻlsangiz, xato vaqtinchalik boʻlishi mumkin va keyinroq qayta urinib koʻrishingiz mumkin.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">Qoʻshimcha…</string>
+
+    <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_back">Orqaga qaytish (Tavsiya etiladi)</string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">Aloqa uzilib qoldi</string>
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      <p>Brauzer muvaffaqiyatli bogʻlandi, lekin maʼlumot uzatish vaqtida ulanish toʻxtatildi. Iltimos, qayta urinib koʻring.</p>
+      <ul>
+        <li>Sayt vaqtincha ishlamay qolishi yoki band boʻlishi mumkin. Oz vaqtdan soʻng yana urinib koʻring.</li>
+        <li>Agar siz biron bir sahifani yuklay olmasangiz, qurilmangiz maʼlumotlarini yoki Wi-Fi ulanishini tekshiring.</li>
+      </ul>
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">Ulanish muddati tugadi</string>
 
     <!-- The document title and heading of the error page shown when a website could not be reached. -->
     <string name="mozac_browser_errorpages_connection_failure_title">Ulana olmadi</string>
