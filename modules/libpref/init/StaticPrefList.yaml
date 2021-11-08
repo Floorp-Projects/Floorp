@@ -3865,7 +3865,7 @@
   mirror: always
 
 # Points in the native bounds geometry are required to be quantized
-# sufficiently to prevent fingerprinting. The WebXR spec suggests
+# sufficiently to prevent fingerprinting. The WebXR spec suggests 
 # quantizing to the nearest 5 centimeters.
 - name: dom.vr.webxr.quantization
   type: AtomicFloat
@@ -3982,7 +3982,7 @@
 # Whether the Web Locks API is enabled
 - name: dom.weblocks.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 # Whether the WebMIDI API is enabled
