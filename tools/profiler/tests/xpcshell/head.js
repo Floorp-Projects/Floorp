@@ -128,7 +128,8 @@ function getInflatedFileIOMarkers(thread, filename) {
   const markers = getInflatedMarkerData(thread);
   return markers.filter(
     marker =>
-      marker.data?.type === "FileIO" && marker.data?.filename.endsWith(filename)
+      marker.data?.type === "FileIO" &&
+      marker.data?.filename?.endsWith(filename)
   );
 }
 
