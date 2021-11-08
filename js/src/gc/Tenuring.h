@@ -56,6 +56,9 @@ class TenuringTracer final : public GenericTracer {
  public:
   Nursery& nursery() { return nursery_; }
 
+  size_t getTenuredSize() const;
+  size_t getTenuredCells() const;
+
   void traverse(JS::Value* thingp);
 
   // The store buffers need to be able to call these directly.
