@@ -13,6 +13,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   PageDataCollector: "resource:///modules/pagedata/PageDataCollector.jsm",
   PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  Snapshots: "resource:///modules/Snapshots.jsm",
 });
 
 add_task(async function test_pageDataDiscoverd_notifies() {
