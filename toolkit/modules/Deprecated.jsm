@@ -37,7 +37,9 @@ function stringifyCallstack(aStack) {
   let msg = "";
   // Get every frame in the callstack.
   while (frame) {
-    msg += frame.filename + " " + frame.lineNumber + " " + frame.name + "\n";
+    if (frame.filename || frame.lineNumber || frame.name) {
+      msg += frame.filename + " " + frame.lineNumber + " " + frame.name + "\n";
+    }
     frame = frame.caller;
   }
   return msg;
