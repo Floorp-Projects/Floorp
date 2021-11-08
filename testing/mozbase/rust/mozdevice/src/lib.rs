@@ -162,7 +162,7 @@ fn read_response(stream: &mut TcpStream, has_output: bool, has_length: bool) -> 
 
     stream.read_exact(&mut bytes[0..4])?;
 
-    if &bytes[0..4] != SyncCommand::Okay.code() {
+    if !bytes.starts_with(SyncCommand::Okay.code()) {
         let n = bytes.len().min(read_length(stream)?);
         stream.read_exact(&mut bytes[0..n])?;
 
@@ -176,13 +176,13 @@ fn read_response(stream: &mut TcpStream, has_output: bool, has_length: bool) -> 
     if has_output {
         stream.read_to_end(&mut response)?;
 
-        if response.len() >= 4 && &response[0..4] == SyncCommand::Okay.code() {
+        if response.starts_with(SyncCommand::Okay.code()) {
             // Sometimes the server produces OKAYOKAY.  Sometimes there is a transport OKAY and
             // then the underlying command OKAY.  This is straight from `chromedriver`.
             response = response.split_off(4);
         }
 
-        if response.len() >= 4 && &response[0..4] == SyncCommand::Fail.code() {
+        if response.starts_with(SyncCommand::Fail.code()) {
             // The server may even produce OKAYFAIL, which means the underlying
             // command failed. First split-off the `FAIL` and length of the message.
             response = response.split_off(8);
@@ -752,7 +752,7 @@ impl Device {
         // Status.
         stream.read_exact(&mut buf[0..4])?;
 
-        if &buf[0..4] == SyncCommand::Okay.code() {
+        if buf.starts_with(SyncCommand::Okay.code()) {
             if enable_run_as {
                 // Use cp -a to preserve the permissions set by push.
                 let result = self.execute_host_shell_command_as(
@@ -765,7 +765,7 @@ impl Device {
                 result?;
             }
             Ok(())
-        } else if &buf[0..4] == SyncCommand::Fail.code() {
+        } else if buf.starts_with(SyncCommand::Fail.code()) {
             if enable_run_as && self.remove(dest1).is_err() {
                 debug!("Failed to remove {}", dest1.display());
             }
