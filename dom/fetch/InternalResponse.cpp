@@ -55,14 +55,14 @@ InternalResponse::InternalResponse(uint16_t aStatus,
       mCredentialsMode(aCredentialsMode),
       mCloned(false) {}
 
-/* static */ RefPtr<InternalResponse> InternalResponse::FromIPC(
+/* static */ SafeRefPtr<InternalResponse> InternalResponse::FromIPC(
     const IPCInternalResponse& aIPCResponse) {
   if (aIPCResponse.type() == ResponseType::Error) {
     return InternalResponse::NetworkError(aIPCResponse.errorCode());
   }
 
-  RefPtr<InternalResponse> response =
-      new InternalResponse(aIPCResponse.status(), aIPCResponse.statusText());
+  SafeRefPtr<InternalResponse> response = MakeSafeRefPtr<InternalResponse>(
+      aIPCResponse.status(), aIPCResponse.statusText());
 
   response->SetURLList(aIPCResponse.urlList());
   response->mHeaders =
@@ -162,9 +162,8 @@ void InternalResponse::ToIPC(
   }
 }
 
-already_AddRefed<InternalResponse> InternalResponse::Clone(
-    CloneType aCloneType) {
-  RefPtr<InternalResponse> clone = CreateIncompleteCopy();
+SafeRefPtr<InternalResponse> InternalResponse::Clone(CloneType aCloneType) {
+  SafeRefPtr<InternalResponse> clone = CreateIncompleteCopy();
   clone->mCloned = (mCloned = true);
 
   clone->mHeaders = new InternalHeaders(*mHeaders);
@@ -178,11 +177,11 @@ already_AddRefed<InternalResponse> InternalResponse::Clone(
   if (mWrappedResponse) {
     clone->mWrappedResponse = mWrappedResponse->Clone(aCloneType);
     MOZ_ASSERT(!mBody);
-    return clone.forget();
+    return clone;
   }
 
   if (!mBody || aCloneType == eDontCloneInputStream) {
-    return clone.forget();
+    return clone;
   }
 
   nsCOMPtr<nsIInputStream> clonedBody;
@@ -199,27 +198,27 @@ already_AddRefed<InternalResponse> InternalResponse::Clone(
     mBody.swap(replacementBody);
   }
 
-  return clone.forget();
+  return clone;
 }
 
-already_AddRefed<InternalResponse> InternalResponse::BasicResponse() {
+SafeRefPtr<InternalResponse> InternalResponse::BasicResponse() {
   MOZ_ASSERT(!mWrappedResponse,
              "Can't BasicResponse a already wrapped response");
-  RefPtr<InternalResponse> basic = CreateIncompleteCopy();
+  SafeRefPtr<InternalResponse> basic = CreateIncompleteCopy();
   basic->mType = ResponseType::Basic;
   basic->mHeaders = InternalHeaders::BasicHeaders(Headers());
-  basic->mWrappedResponse = this;
-  return basic.forget();
+  basic->mWrappedResponse = SafeRefPtrFromThis();
+  return basic;
 }
 
-already_AddRefed<InternalResponse> InternalResponse::CORSResponse() {
+SafeRefPtr<InternalResponse> InternalResponse::CORSResponse() {
   MOZ_ASSERT(!mWrappedResponse,
              "Can't CORSResponse a already wrapped response");
-  RefPtr<InternalResponse> cors = CreateIncompleteCopy();
+  SafeRefPtr<InternalResponse> cors = CreateIncompleteCopy();
   cors->mType = ResponseType::Cors;
   cors->mHeaders = InternalHeaders::CORSHeaders(Headers(), mCredentialsMode);
-  cors->mWrappedResponse = this;
-  return cors.forget();
+  cors->mWrappedResponse = SafeRefPtrFromThis();
+  return cors;
 }
 
 uint32_t InternalResponse::GetPaddingInfo() {
@@ -315,41 +314,43 @@ LoadTainting InternalResponse::GetTainting() const {
   }
 }
 
-already_AddRefed<InternalResponse> InternalResponse::Unfiltered() {
-  RefPtr<InternalResponse> ref = mWrappedResponse;
+SafeRefPtr<InternalResponse> InternalResponse::Unfiltered() {
+  SafeRefPtr<InternalResponse> ref = mWrappedResponse.clonePtr();
   if (!ref) {
-    ref = this;
+    ref = SafeRefPtrFromThis();
   }
-  return ref.forget();
+  return ref;
 }
 
-already_AddRefed<InternalResponse> InternalResponse::OpaqueResponse() {
+SafeRefPtr<InternalResponse> InternalResponse::OpaqueResponse() {
   MOZ_ASSERT(!mWrappedResponse,
              "Can't OpaqueResponse a already wrapped response");
-  RefPtr<InternalResponse> response = new InternalResponse(0, ""_ns);
+  SafeRefPtr<InternalResponse> response =
+      MakeSafeRefPtr<InternalResponse>(0, ""_ns);
   response->mType = ResponseType::Opaque;
   response->mChannelInfo = mChannelInfo;
   if (mPrincipalInfo) {
     response->mPrincipalInfo =
         MakeUnique<mozilla::ipc::PrincipalInfo>(*mPrincipalInfo);
   }
-  response->mWrappedResponse = this;
-  return response.forget();
+  response->mWrappedResponse = SafeRefPtrFromThis();
+  return response;
 }
 
-already_AddRefed<InternalResponse> InternalResponse::OpaqueRedirectResponse() {
+SafeRefPtr<InternalResponse> InternalResponse::OpaqueRedirectResponse() {
   MOZ_ASSERT(!mWrappedResponse,
              "Can't OpaqueRedirectResponse a already wrapped response");
   MOZ_ASSERT(!mURLList.IsEmpty(),
              "URLList should not be emtpy for internalResponse");
-  RefPtr<InternalResponse> response = OpaqueResponse();
+  SafeRefPtr<InternalResponse> response = OpaqueResponse();
   response->mType = ResponseType::Opaqueredirect;
   response->mURLList = mURLList.Clone();
-  return response.forget();
+  return response;
 }
 
-already_AddRefed<InternalResponse> InternalResponse::CreateIncompleteCopy() {
-  RefPtr<InternalResponse> copy = new InternalResponse(mStatus, mStatusText);
+SafeRefPtr<InternalResponse> InternalResponse::CreateIncompleteCopy() {
+  SafeRefPtr<InternalResponse> copy =
+      MakeSafeRefPtr<InternalResponse>(mStatus, mStatusText);
   copy->mType = mType;
   copy->mURLList = mURLList.Clone();
   copy->mChannelInfo = mChannelInfo;
@@ -357,7 +358,7 @@ already_AddRefed<InternalResponse> InternalResponse::CreateIncompleteCopy() {
     copy->mPrincipalInfo =
         MakeUnique<mozilla::ipc::PrincipalInfo>(*mPrincipalInfo);
   }
-  return copy.forget();
+  return copy;
 }
 
 }  // namespace mozilla::dom
