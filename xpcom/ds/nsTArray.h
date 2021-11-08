@@ -3167,8 +3167,7 @@ class CopyableAutoTArray : public AutoTArray<E, N> {
 
 namespace mozilla {
 template <typename E, typename ArrayT>
-class nsTArrayBackInserter
-    : public std::iterator<std::output_iterator_tag, void, void, void, void> {
+class nsTArrayBackInserter {
   ArrayT* mArray;
 
   class Proxy {
@@ -3184,6 +3183,11 @@ class nsTArrayBackInserter
   };
 
  public:
+  using iterator_category = std::output_iterator_tag;
+  using value_type = void;
+  using difference_type = void;
+  using pointer = void;
+  using reference = void;
   explicit nsTArrayBackInserter(ArrayT& aArray) : mArray{&aArray} {}
 
   // Return a proxy so that nsTArrayBackInserter has the default special member
