@@ -11,6 +11,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StorageAccess.h"
 #include "nsContentUtils.h"
+#include "nsIDocShell.h"
 #include "nsIEffectiveTLDService.h"
 
 namespace mozilla {
@@ -318,6 +319,48 @@ nsresult StoragePrincipalHelper::GetPrincipal(nsPIDOMWindowInner* aWindow,
 
   outPrincipal.forget(aPrincipal);
   return NS_OK;
+}
+
+// static
+bool StoragePrincipalHelper::ShouldUsePartitionPrincipalForServiceWorker(
+    nsIDocShell* aDocShell) {
+  MOZ_ASSERT(aDocShell);
+
+  RefPtr<Document> document = aDocShell->GetExtantDocument();
+
+  // If we cannot get the document from the docShell, we turn to get its
+  // parent's document.
+  if (!document) {
+    nsCOMPtr<nsIDocShellTreeItem> parentItem;
+    aDocShell->GetInProcessSameTypeParent(getter_AddRefs(parentItem));
+
+    if (parentItem) {
+      document = parentItem->GetDocument();
+    }
+  }
+
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+
+  if (document) {
+    cookieJarSettings = document->CookieJarSettings();
+  } else {
+    // If there was no document, we create one cookieJarSettings here in order
+    // to get the cookieBehavior.
+    cookieJarSettings = CookieJarSettings::Create(CookieJarSettings::eRegular);
+  }
+
+  // We only support partitioned service workers when dFPI is enabled.
+  if (cookieJarSettings->GetCookieBehavior() !=
+      nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
+    return false;
+  }
+
+  // Only the third-party context will need to use the partitioned principal. A
+  // first-party context is still using the regular principal for the service
+  // worker.
+  return AntiTrackingUtils::IsThirdPartyContext(
+      document ? document->GetBrowsingContext()
+               : aDocShell->GetBrowsingContext());
 }
 
 // static
