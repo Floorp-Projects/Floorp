@@ -1156,6 +1156,16 @@ class UrlbarView {
       item._elements.set("helpButton", helpButton);
       item._content.setAttribute("selectable", "true");
 
+      // If the content is marked as selectable, the screen reader will not be
+      // able to read the text directly child of the "urlbarView-row". As the
+      // group label is shown as pseudo element of urlbarView-row now, it isn't
+      // readable. To avoid it, we add an element for aria-label explictly,
+      // and set group label that should be read into it in _updateIndices().
+      const groupAriaLabel = this._createElement("span");
+      groupAriaLabel.className = "urlbarView-group-aria-label";
+      item._content.insertBefore(groupAriaLabel, item._content.firstChild);
+      item._elements.set("groupAriaLabel", groupAriaLabel);
+
       // Remove role=option on the row and set it on row-inner since the latter
       // is the selectable logical row element when the help button is present.
       // Since row-inner is not a child of the role=listbox element (the row
@@ -1687,14 +1697,19 @@ class UrlbarView {
           }
         }
       }
+
+      const groupAriaLabel = item._elements.get("groupAriaLabel");
+
       if (label) {
         this._setElementL10n(item, {
           attribute: "label",
           id: label.id,
           args: label.args,
         });
+        groupAriaLabel?.setAttribute("aria-label", item.getAttribute("label"));
       } else {
         this._removeElementL10n(item, { attribute: "label" });
+        groupAriaLabel?.removeAttribute("aria-label");
       }
     }
 
