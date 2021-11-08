@@ -340,13 +340,21 @@ void AssertLoadingPrincipalAndClientInfoMatch(
       return;
     }
     // Fall back to a slower origin equality test to support null principals.
-    nsAutoCString loadingOrigin;
-    MOZ_ALWAYS_SUCCEEDS(aLoadingPrincipal->GetOrigin(loadingOrigin));
+    nsAutoCString loadingOriginNoSuffix;
+    MOZ_ALWAYS_SUCCEEDS(
+        aLoadingPrincipal->GetOriginNoSuffix(loadingOriginNoSuffix));
 
-    nsAutoCString clientOrigin;
-    MOZ_ALWAYS_SUCCEEDS(clientPrincipal->GetOrigin(clientOrigin));
+    nsAutoCString clientOriginNoSuffix;
+    MOZ_ALWAYS_SUCCEEDS(
+        clientPrincipal->GetOriginNoSuffix(clientOriginNoSuffix));
 
-    MOZ_DIAGNOSTIC_ASSERT(loadingOrigin == clientOrigin);
+    // The client principal will have the partitionKey set if it's in a third
+    // party context, but the loading principal won't. So, we ignore he
+    // partitionKey when doing the verification here.
+    MOZ_DIAGNOSTIC_ASSERT(loadingOriginNoSuffix == clientOriginNoSuffix);
+    MOZ_DIAGNOSTIC_ASSERT(
+        aLoadingPrincipal->OriginAttributesRef().EqualsIgnoringPartitionKey(
+            clientPrincipal->OriginAttributesRef()));
   }
 #endif
 }
