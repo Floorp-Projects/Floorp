@@ -340,7 +340,6 @@ class ResponsePanel extends Component {
         targetSearchResult,
         defaultSelectFirstNode: false,
         mode: MODE.LONG,
-        useBaseTreeViewExpand: true,
       };
       hasFormattedDisplay = true;
     } else if (Filters.html(this.props.request)) {
