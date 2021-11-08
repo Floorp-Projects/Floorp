@@ -601,7 +601,7 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
   uint32_t oldDelay;
   TimeStamp oldTimeout;
   Callback callbackDuringFire{UnknownCallback{}};
-  nsCOMPtr<nsITimer> kungFuDeathGrip;
+  nsCOMPtr<nsITimer> timer;
 
   {
     // Don't fire callbacks or fiddle with refcounts when the mutex is locked.
@@ -619,7 +619,7 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
     // Ensure that the nsITimer does not unhook from the nsTimerImpl during
     // Fire; this will cause null pointer crashes if the user of the timer drops
     // its reference, and then uses the nsITimer* passed in the callback.
-    kungFuDeathGrip = mITimer;
+    timer = mITimer;
   }
 
   AUTO_PROFILER_LABEL("nsTimerImpl::Fire", OTHER);
@@ -651,12 +651,12 @@ void nsTimerImpl::Fire(int32_t aGeneration) {
 
   callbackDuringFire.match(
       [](const UnknownCallback&) {},
-      [&](const InterfaceCallback& i) { i->Notify(mITimer); },
+      [&](const InterfaceCallback& i) { i->Notify(timer); },
       [&](const ObserverCallback& o) {
-        o->Observe(mITimer, NS_TIMER_CALLBACK_TOPIC, nullptr);
+        o->Observe(timer, NS_TIMER_CALLBACK_TOPIC, nullptr);
       },
-      [&](const FuncCallback& f) { f.mFunc(mITimer, f.mClosure); },
-      [&](const ClosureCallback& c) { c.mFunc(mITimer); });
+      [&](const FuncCallback& f) { f.mFunc(timer, f.mClosure); },
+      [&](const ClosureCallback& c) { c.mFunc(timer); });
 
   TimeStamp now = TimeStamp::Now();
 
