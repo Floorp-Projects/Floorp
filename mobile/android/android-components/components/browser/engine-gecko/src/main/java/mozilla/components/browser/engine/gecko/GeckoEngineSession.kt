@@ -708,7 +708,7 @@ class GeckoEngineSession(
                     RedirectSource.PERMANENT
                 flags and GeckoSession.HistoryDelegate.VISIT_REDIRECT_SOURCE != 0 ->
                     RedirectSource.TEMPORARY
-                else -> RedirectSource.NOT_A_SOURCE
+                else -> null
             }
 
             val delegate = settings.historyTrackingDelegate ?: return GeckoResult.fromValue(false)

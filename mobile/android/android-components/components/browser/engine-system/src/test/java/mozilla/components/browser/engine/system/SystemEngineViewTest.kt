@@ -45,7 +45,6 @@ import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.fetch.Response
 import mozilla.components.concept.storage.PageVisit
-import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -302,10 +301,10 @@ class SystemEngineViewTest {
         whenever(historyDelegate.shouldStoreUri(any())).thenReturn(true)
 
         engineSession.webView.webViewClient.doUpdateVisitedHistory(webView, "https://www.mozilla.com", false)
-        verify(historyDelegate).onVisited(eq("https://www.mozilla.com"), eq(PageVisit(VisitType.LINK, RedirectSource.NOT_A_SOURCE)))
+        verify(historyDelegate).onVisited(eq("https://www.mozilla.com"), eq(PageVisit(VisitType.LINK)))
 
         engineSession.webView.webViewClient.doUpdateVisitedHistory(webView, "https://www.mozilla.com", true)
-        verify(historyDelegate).onVisited(eq("https://www.mozilla.com"), eq(PageVisit(VisitType.RELOAD, RedirectSource.NOT_A_SOURCE)))
+        verify(historyDelegate).onVisited(eq("https://www.mozilla.com"), eq(PageVisit(VisitType.RELOAD)))
     }
 
     @Test
@@ -322,7 +321,7 @@ class SystemEngineViewTest {
 
         // Verify that engine session asked delegate if uri should be stored.
         engineSession.webView.webViewClient.doUpdateVisitedHistory(webView, "https://www.mozilla.com", false)
-        verify(historyDelegate).onVisited(eq("https://www.mozilla.com"), eq(PageVisit(VisitType.LINK, RedirectSource.NOT_A_SOURCE)))
+        verify(historyDelegate).onVisited(eq("https://www.mozilla.com"), eq(PageVisit(VisitType.LINK)))
         verify(historyDelegate).shouldStoreUri("https://www.mozilla.com")
 
         // Verify that engine won't try to store a uri that delegate doesn't want.

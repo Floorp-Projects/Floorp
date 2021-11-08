@@ -11,7 +11,6 @@ import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
 import mozilla.components.concept.storage.PageVisit
-import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.SearchResult
 import mozilla.components.concept.storage.TopFrecentSiteInfo
 import mozilla.components.concept.storage.VisitInfo
@@ -34,17 +33,17 @@ class HistoryDelegateTest {
         val storage = mock<HistoryStorage>()
         val delegate = HistoryDelegate(lazy { storage })
 
-        delegate.onVisited("about:blank", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
-        verify(storage, never()).recordVisit("about:blank", PageVisit(VisitType.TYPED, RedirectSource.NOT_A_SOURCE))
+        delegate.onVisited("about:blank", PageVisit(VisitType.TYPED))
+        verify(storage, never()).recordVisit("about:blank", PageVisit(VisitType.TYPED))
 
-        delegate.onVisited("http://www.mozilla.org", PageVisit(VisitType.LINK, RedirectSource.NOT_A_SOURCE))
-        verify(storage).recordVisit("http://www.mozilla.org", PageVisit(VisitType.LINK, RedirectSource.NOT_A_SOURCE))
+        delegate.onVisited("http://www.mozilla.org", PageVisit(VisitType.LINK))
+        verify(storage).recordVisit("http://www.mozilla.org", PageVisit(VisitType.LINK))
 
-        delegate.onVisited("http://www.firefox.com", PageVisit(VisitType.RELOAD, RedirectSource.NOT_A_SOURCE))
-        verify(storage).recordVisit("http://www.firefox.com", PageVisit(VisitType.RELOAD, RedirectSource.NOT_A_SOURCE))
+        delegate.onVisited("http://www.firefox.com", PageVisit(VisitType.RELOAD))
+        verify(storage).recordVisit("http://www.firefox.com", PageVisit(VisitType.RELOAD))
 
-        delegate.onVisited("http://www.firefox.com", PageVisit(VisitType.BOOKMARK, RedirectSource.NOT_A_SOURCE))
-        verify(storage).recordVisit("http://www.firefox.com", PageVisit(VisitType.BOOKMARK, RedirectSource.NOT_A_SOURCE))
+        delegate.onVisited("http://www.firefox.com", PageVisit(VisitType.BOOKMARK))
+        verify(storage).recordVisit("http://www.firefox.com", PageVisit(VisitType.BOOKMARK))
     }
 
     @Test

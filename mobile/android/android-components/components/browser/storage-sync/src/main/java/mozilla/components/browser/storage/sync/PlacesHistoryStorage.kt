@@ -53,14 +53,8 @@ open class PlacesHistoryStorage(
                     VisitObservation(
                         uri,
                         visitType = visit.visitType.into(),
-                        isRedirectSource = when (visit.redirectSource) {
-                            RedirectSource.PERMANENT, RedirectSource.TEMPORARY -> true
-                            RedirectSource.NOT_A_SOURCE -> false
-                        },
-                        isPermanentRedirectSource = when (visit.redirectSource) {
-                            RedirectSource.PERMANENT -> true
-                            RedirectSource.TEMPORARY, RedirectSource.NOT_A_SOURCE -> false
-                        }
+                        isRedirectSource = visit.redirectSource != null,
+                        isPermanentRedirectSource = visit.redirectSource == RedirectSource.PERMANENT
                     )
                 )
             }

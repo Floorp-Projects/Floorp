@@ -60,7 +60,6 @@ import mozilla.components.concept.engine.request.RequestInterceptor.Interception
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.storage.PageVisit
-import mozilla.components.concept.storage.RedirectSource
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.ktx.android.view.getRectWithViewLocation
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
@@ -161,10 +160,7 @@ class SystemEngineView @JvmOverloads constructor(
             }
 
             runBlocking {
-                session?.settings?.historyTrackingDelegate?.onVisited(
-                    url,
-                    PageVisit(visitType, RedirectSource.NOT_A_SOURCE)
-                )
+                session?.settings?.historyTrackingDelegate?.onVisited(url, PageVisit(visitType))
             }
         }
 

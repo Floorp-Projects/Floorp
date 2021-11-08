@@ -901,8 +901,13 @@ class GeckoEngineSessionTest {
         captureDelegates()
 
         engineSession.settings.historyTrackingDelegate = historyTrackingDelegate
+        whenever(historyTrackingDelegate.shouldStoreUri(any())).thenReturn(true)
 
-        historyDelegate.value.onVisited(geckoSession, "about:neterror", null, GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL or GeckoSession.HistoryDelegate.VISIT_UNRECOVERABLE_ERROR)
+        historyDelegate.value.onVisited(
+            geckoSession, "about:neterror", null,
+            GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL
+                or GeckoSession.HistoryDelegate.VISIT_UNRECOVERABLE_ERROR
+        )
         engineSession.job.children.forEach { it.join() }
         verify(historyTrackingDelegate, never()).onVisited(anyString(), any())
     }
@@ -923,7 +928,7 @@ class GeckoEngineSessionTest {
 
         historyDelegate.value.onVisited(geckoSession, "https://www.mozilla.com", null, GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL)
         engineSession.job.children.forEach { it.join() }
-        verify(historyTrackingDelegate).onVisited(eq("https://www.mozilla.com"), eq(PageVisit(VisitType.LINK, RedirectSource.NOT_A_SOURCE)))
+        verify(historyTrackingDelegate).onVisited(eq("https://www.mozilla.com"), eq(PageVisit(VisitType.LINK)))
     }
 
     @Test
@@ -942,7 +947,7 @@ class GeckoEngineSessionTest {
 
         historyDelegate.value.onVisited(geckoSession, "https://www.mozilla.com", "https://www.mozilla.com", GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL)
         engineSession.job.children.forEach { it.join() }
-        verify(historyTrackingDelegate).onVisited(eq("https://www.mozilla.com"), eq(PageVisit(VisitType.RELOAD, RedirectSource.NOT_A_SOURCE)))
+        verify(historyTrackingDelegate).onVisited(eq("https://www.mozilla.com"), eq(PageVisit(VisitType.RELOAD)))
     }
 
     @Test
@@ -964,7 +969,7 @@ class GeckoEngineSessionTest {
 
         engineSession.job.children.forEach { it.join() }
         verify(historyTrackingDelegate).shouldStoreUri("https://www.mozilla.com/allowed")
-        verify(historyTrackingDelegate).onVisited(eq("https://www.mozilla.com/allowed"), eq(PageVisit(VisitType.LINK, RedirectSource.NOT_A_SOURCE)))
+        verify(historyTrackingDelegate).onVisited(eq("https://www.mozilla.com/allowed"), eq(PageVisit(VisitType.LINK)))
 
         historyDelegate.value.onVisited(geckoSession, "https://www.mozilla.com/not-allowed", null, GeckoSession.HistoryDelegate.VISIT_TOP_LEVEL)
 

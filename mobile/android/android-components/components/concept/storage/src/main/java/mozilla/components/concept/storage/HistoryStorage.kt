@@ -136,21 +136,18 @@ interface HistoryStorage : Storage {
  * Information to record about a visit.
  *
  * @property visitType The transition type for this visit. See [VisitType].
- * @property redirectSource If this visit is redirecting to another page,
+ * @property redirectSource Optional; if this visit is redirecting to another page,
  *  what kind of redirect is it? See [RedirectSource] for the options.
  */
 data class PageVisit(
     val visitType: VisitType,
-    val redirectSource: RedirectSource
+    val redirectSource: RedirectSource? = null
 )
 
 /**
  * A redirect source describes how a page redirected to another page.
  */
 enum class RedirectSource {
-    // The page didn't redirect to another page.
-    NOT_A_SOURCE,
-
     // The page temporarily redirected to another page.
     TEMPORARY,
 
