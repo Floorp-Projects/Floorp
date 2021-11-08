@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
@@ -131,6 +132,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       promises.push(this._fetchMerinoSuggestions(queryContext, searchString));
     }
 
+    // Wait for both sources to finish before adding a suggestion.
     let allSuggestions = await Promise.all(promises);
     if (instance != this.queryInstance) {
       return;
@@ -360,12 +362,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
    * @param {UrlbarQueryContext} queryContext
    */
   cancelQuery(queryContext) {
-    try {
-      this._merinoFetchController?.abort();
-    } catch (error) {
-      this.logger.error(error);
-    }
-    this._merinoFetchController = null;
+    // Cancel the Merino timeout timer so it doesn't fire and record a timeout.
+    // If it's already canceled or has fired, this is a no-op.
+    this._merinoTimeoutTimer?.cancel();
+
+    // Don't abort the Merino fetch if one is ongoing. By design we allow
+    // fetches to finish so we can record their latency.
   }
 
   /**
@@ -380,46 +382,87 @@ class ProviderQuickSuggest extends UrlbarProvider {
   async _fetchMerinoSuggestions(queryContext, searchString) {
     let instance = this.queryInstance;
 
-    // Fetch a response from the endpoint.
-    let response;
-    let controller;
+    // Get the URL.
+    let url;
     try {
-      let url = new URL(UrlbarPrefs.get("merino.endpointURL"));
-      url.searchParams.set(MERINO_ENDPOINT_PARAM_QUERY, searchString);
-
-      controller = this._merinoFetchController = new AbortController();
-      TelemetryStopwatch.start(TELEMETRY_MERINO_LATENCY, queryContext);
-      response = await fetch(url, {
-        signal: controller.signal,
-      });
-      TelemetryStopwatch.finish(TELEMETRY_MERINO_LATENCY, queryContext);
-      if (instance != this.queryInstance) {
-        return null;
-      }
+      url = new URL(UrlbarPrefs.get("merino.endpointURL"));
     } catch (error) {
-      TelemetryStopwatch.cancel(TELEMETRY_MERINO_LATENCY, queryContext);
-      if (error.name != "AbortError") {
-        this.logger.error(error);
-      }
-    } finally {
-      if (controller == this._merinoFetchController) {
-        this._merinoFetchController = null;
-      }
+      this.logger.error("Could not make Merino endpoint URL: " + error);
+      return null;
+    }
+    url.searchParams.set(MERINO_ENDPOINT_PARAM_QUERY, searchString);
+
+    // Set up the timeout timer.
+    let timeout = UrlbarPrefs.get("merinoTimeoutMs");
+    let timer = (this._merinoTimeoutTimer = new SkippableTimer({
+      name: "Merino timeout",
+      time: timeout,
+      logger: this.logger,
+      callback: () => {
+        // The fetch timed out.
+        this.logger.info(`Merino fetch timed out (timeout = ${timeout}ms)`);
+      },
+    }));
+
+    // If there's an ongoing fetch, abort it so there's only one at a time. By
+    // design we do not abort fetches on timeout or when the query is canceled
+    // so we can record their latency.
+    try {
+      this._merinoFetchController?.abort();
+    } catch (error) {
+      this.logger.error("Could not abort Merino fetch: " + error);
     }
 
-    if (!response) {
+    // Do the fetch.
+    let response;
+    let controller = (this._merinoFetchController = new AbortController());
+    TelemetryStopwatch.start(TELEMETRY_MERINO_LATENCY, queryContext);
+    await Promise.race([
+      timer.promise,
+      (async () => {
+        try {
+          // Canceling the timer below resolves its promise, which can resolve
+          // the outer promise created by `Promise.race`. This inner async
+          // function happens not to await anything after canceling the timer,
+          // but if it did, `timer.promise` could win the race and resolve the
+          // outer promise without a value. For that reason, we declare
+          // `response` in the outer scope and set it here instead of returning
+          // the response from this inner function and assuming it will also be
+          // returned by `Promise.race`.
+          response = await fetch(url, { signal: controller.signal });
+          TelemetryStopwatch.finish(TELEMETRY_MERINO_LATENCY, queryContext);
+        } catch (error) {
+          TelemetryStopwatch.cancel(TELEMETRY_MERINO_LATENCY, queryContext);
+          if (error.name != "AbortError") {
+            this.logger.error("Could not fetch Merino endpoint: " + error);
+          }
+        } finally {
+          // Now that the fetch is done, cancel the timeout timer so it doesn't
+          // fire and record a timeout. If it already fired, which it would have
+          // on timeout, or was already canceled, this is a no-op.
+          timer.cancel();
+          if (controller == this._merinoFetchController) {
+            this._merinoFetchController = null;
+          }
+        }
+      })(),
+    ]);
+    if (timer == this._merinoTimeoutTimer) {
+      this._merinoTimeoutTimer = null;
+    }
+    if (instance != this.queryInstance) {
       return null;
     }
 
     // Get the response body as an object.
     let body;
     try {
-      body = await response.json();
+      body = await response?.json();
       if (instance != this.queryInstance) {
         return null;
       }
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error("Could not get Merino response as JSON: " + error);
     }
 
     if (!body?.suggestions?.length) {

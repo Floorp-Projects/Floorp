@@ -37,6 +37,11 @@ const FeatureManifest = {
         fallbackPref: "browser.urlbar.merino.enabled",
         description: "Whether Merino is enabled as a quick suggest source",
       },
+      merinoTimeoutMs: {
+        type: "int",
+        fallbackPref: "browser.urlbar.merino.timeoutMs",
+        description: "Timeout for Merino fetches (ms)",
+      },
       quickSuggestEnabled: {
         type: "boolean",
         fallbackPref: "browser.urlbar.quicksuggest.enabled",
