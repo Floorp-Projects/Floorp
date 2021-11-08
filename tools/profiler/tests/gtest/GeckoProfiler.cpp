@@ -175,6 +175,68 @@ TEST(GeckoProfiler, ThreadRegistrationInfo)
   }
 }
 
+static constexpr ThreadProfilingFeatures scEachAndAnyThreadProfilingFeatures[] =
+    {ThreadProfilingFeatures::CPUUtilization, ThreadProfilingFeatures::Sampling,
+     ThreadProfilingFeatures::Markers, ThreadProfilingFeatures::Any};
+
+TEST(GeckoProfiler, ThreadProfilingFeaturesType)
+{
+  ASSERT_EQ(static_cast<uint32_t>(ThreadProfilingFeatures::Any), 1u + 2u + 4u)
+      << "This test assumes that there are 3 binary choices 1+2+4; "
+         "Is this test up to date?";
+
+  EXPECT_EQ(Combine(ThreadProfilingFeatures::CPUUtilization,
+                    ThreadProfilingFeatures::Sampling,
+                    ThreadProfilingFeatures::Markers),
+            ThreadProfilingFeatures::Any);
+
+  constexpr ThreadProfilingFeatures allThreadProfilingFeatures[] = {
+      ThreadProfilingFeatures::NotProfiled,
+      ThreadProfilingFeatures::CPUUtilization,
+      ThreadProfilingFeatures::Sampling, ThreadProfilingFeatures::Markers,
+      ThreadProfilingFeatures::Any};
+
+  for (ThreadProfilingFeatures f1 : allThreadProfilingFeatures) {
+    // Combine and Intersect are commutative.
+    for (ThreadProfilingFeatures f2 : allThreadProfilingFeatures) {
+      EXPECT_EQ(Combine(f1, f2), Combine(f2, f1));
+      EXPECT_EQ(Intersect(f1, f2), Intersect(f2, f1));
+    }
+
+    // Combine works like OR.
+    EXPECT_EQ(Combine(f1, f1), f1);
+    EXPECT_EQ(Combine(f1, f1, f1), f1);
+
+    // 'OR NotProfiled' doesn't change anything.
+    EXPECT_EQ(Combine(f1, ThreadProfilingFeatures::NotProfiled), f1);
+
+    // 'OR Any' makes Any.
+    EXPECT_EQ(Combine(f1, ThreadProfilingFeatures::Any),
+              ThreadProfilingFeatures::Any);
+
+    // Intersect works like AND.
+    EXPECT_EQ(Intersect(f1, f1), f1);
+    EXPECT_EQ(Intersect(f1, f1, f1), f1);
+
+    // 'AND NotProfiled' erases anything.
+    EXPECT_EQ(Intersect(f1, ThreadProfilingFeatures::NotProfiled),
+              ThreadProfilingFeatures::NotProfiled);
+
+    // 'AND Any' doesn't change anything.
+    EXPECT_EQ(Intersect(f1, ThreadProfilingFeatures::Any), f1);
+  }
+
+  for (ThreadProfilingFeatures f1 : scEachAndAnyThreadProfilingFeatures) {
+    EXPECT_TRUE(DoFeaturesIntersect(f1, f1));
+
+    // NotProfiled doesn't intersect with any feature.
+    EXPECT_FALSE(DoFeaturesIntersect(f1, ThreadProfilingFeatures::NotProfiled));
+
+    // Any intersects with any feature.
+    EXPECT_TRUE(DoFeaturesIntersect(f1, ThreadProfilingFeatures::Any));
+  }
+}
+
 static void TestConstUnlockedConstReader(
     const profiler::ThreadRegistration::UnlockedConstReader& aData,
     const TimeStamp& aBeforeRegistration, const TimeStamp& aAfterRegistration,
@@ -233,7 +295,7 @@ static void TestConstUnlockedConstReaderAndAtomicRW(
 
   (void)aData.ProfilingStackCRef();
 
-  EXPECT_FALSE(aData.IsBeingProfiled());
+  EXPECT_EQ(aData.ProfilingFeatures(), ThreadProfilingFeatures::NotProfiled);
 
   EXPECT_FALSE(aData.IsSleeping());
 };
@@ -285,9 +347,9 @@ static void TestConstUnlockedRWForLockedProfiler(
 
   // We can't create a PSAutoLock here, so just verify that the call would
   // compile and return the expected type.
-  static_assert(
-      std::is_same_v<
-          decltype(aData.IsBeingProfiled(std::declval<PSAutoLock>())), bool>);
+  static_assert(std::is_same_v<decltype(aData.GetProfiledThreadData(
+                                   std::declval<PSAutoLock>())),
+                               const ProfiledThreadData*>);
 };
 
 static void TestConstUnlockedReaderAndAtomicRWOnThread(
@@ -359,11 +421,11 @@ static void TestLockedRWFromAnyThread(
 
   // We can't create a ProfiledThreadData nor PSAutoLock here, so just verify
   // that the call would compile and return the expected type.
-  static_assert(
-      std::is_same_v<decltype(aData.SetIsBeingProfiledWithProfiledThreadData(
-                         std::declval<ProfiledThreadData*>(),
-                         std::declval<PSAutoLock>())),
-                     void>);
+  static_assert(std::is_same_v<decltype(aData.SetProfilingFeaturesAndData(
+                                   std::declval<ThreadProfilingFeatures>(),
+                                   std::declval<ProfiledThreadData*>(),
+                                   std::declval<PSAutoLock>())),
+                               void>);
 
   aData.ResetMainThread(nullptr);
 
@@ -1817,39 +1879,56 @@ TEST(GeckoProfiler, Pause)
   const char* filters[] = {"GeckoMain", "Profiled GeckoProfiler.Pause"};
 
   ASSERT_TRUE(!profiler_is_paused());
-  ASSERT_TRUE(!profiler_thread_is_being_profiled());
-  ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
-  ASSERT_TRUE(!profiler_thread_is_being_profiled(profiler_current_thread_id()));
-  ASSERT_TRUE(!profiler_thread_is_being_profiled(profiler_main_thread_id()));
+  for (ThreadProfilingFeatures features : scEachAndAnyThreadProfilingFeatures) {
+    ASSERT_TRUE(!profiler_thread_is_being_profiled(features));
+    ASSERT_TRUE(
+        !profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+    ASSERT_TRUE(!profiler_thread_is_being_profiled(profiler_current_thread_id(),
+                                                   features));
+    ASSERT_TRUE(!profiler_thread_is_being_profiled(profiler_main_thread_id(),
+                                                   features));
+  }
 
   std::thread{[&]() {
     {
-      ASSERT_TRUE(!profiler_thread_is_being_profiled());
-      ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_current_thread_id()));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_main_thread_id()));
+      for (ThreadProfilingFeatures features :
+           scEachAndAnyThreadProfilingFeatures) {
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(features));
+        ASSERT_TRUE(
+            !profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_current_thread_id(), features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_main_thread_id(), features));
+      }
     }
     {
       AUTO_PROFILER_REGISTER_THREAD(
           "Ignored GeckoProfiler.Pause - before start");
-      ASSERT_TRUE(!profiler_thread_is_being_profiled());
-      ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_current_thread_id()));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_main_thread_id()));
+      for (ThreadProfilingFeatures features :
+           scEachAndAnyThreadProfilingFeatures) {
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(features));
+        ASSERT_TRUE(
+            !profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_current_thread_id(), features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_main_thread_id(), features));
+      }
     }
     {
       AUTO_PROFILER_REGISTER_THREAD(
           "Profiled GeckoProfiler.Pause - before start");
-      ASSERT_TRUE(!profiler_thread_is_being_profiled());
-      ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_current_thread_id()));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_main_thread_id()));
+      for (ThreadProfilingFeatures features :
+           scEachAndAnyThreadProfilingFeatures) {
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(features));
+        ASSERT_TRUE(
+            !profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_current_thread_id(), features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_main_thread_id(), features));
+      }
     }
   }}.join();
 
@@ -1857,35 +1936,54 @@ TEST(GeckoProfiler, Pause)
                  filters, MOZ_ARRAY_LENGTH(filters), 0);
 
   ASSERT_TRUE(!profiler_is_paused());
-  ASSERT_TRUE(profiler_thread_is_being_profiled());
-  ASSERT_TRUE(profiler_thread_is_being_profiled(ProfilerThreadId{}));
-  ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_current_thread_id()));
+  for (ThreadProfilingFeatures features : scEachAndAnyThreadProfilingFeatures) {
+    ASSERT_TRUE(profiler_thread_is_being_profiled(features));
+    ASSERT_TRUE(
+        profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+    ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_current_thread_id(),
+                                                  features));
+  }
 
   std::thread{[&]() {
     {
-      ASSERT_TRUE(!profiler_thread_is_being_profiled());
-      ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_current_thread_id()));
-      ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_main_thread_id()));
+      for (ThreadProfilingFeatures features :
+           scEachAndAnyThreadProfilingFeatures) {
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(features));
+        ASSERT_TRUE(
+            !profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_current_thread_id(), features));
+        ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_main_thread_id(),
+                                                      features));
+      }
     }
     {
       AUTO_PROFILER_REGISTER_THREAD(
           "Ignored GeckoProfiler.Pause - after start");
-      ASSERT_TRUE(!profiler_thread_is_being_profiled());
-      ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_current_thread_id()));
-      ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_main_thread_id()));
+      for (ThreadProfilingFeatures features :
+           scEachAndAnyThreadProfilingFeatures) {
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(features));
+        ASSERT_TRUE(
+            !profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_current_thread_id(), features));
+        ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_main_thread_id(),
+                                                      features));
+      }
     }
     {
       AUTO_PROFILER_REGISTER_THREAD(
           "Profiled GeckoProfiler.Pause - after start");
-      ASSERT_TRUE(profiler_thread_is_being_profiled());
-      ASSERT_TRUE(profiler_thread_is_being_profiled(ProfilerThreadId{}));
-      ASSERT_TRUE(
-          profiler_thread_is_being_profiled(profiler_current_thread_id()));
-      ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_main_thread_id()));
+      for (ThreadProfilingFeatures features :
+           scEachAndAnyThreadProfilingFeatures) {
+        ASSERT_TRUE(profiler_thread_is_being_profiled(features));
+        ASSERT_TRUE(
+            profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+        ASSERT_TRUE(profiler_thread_is_being_profiled(
+            profiler_current_thread_id(), features));
+        ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_main_thread_id(),
+                                                      features));
+      }
     }
   }}.join();
 
@@ -1904,38 +2002,54 @@ TEST(GeckoProfiler, Pause)
   profiler_pause();
 
   ASSERT_TRUE(profiler_is_paused());
-  ASSERT_TRUE(!profiler_thread_is_being_profiled());
-  ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
-  ASSERT_TRUE(!profiler_thread_is_being_profiled(profiler_current_thread_id()));
+  for (ThreadProfilingFeatures features : scEachAndAnyThreadProfilingFeatures) {
+    ASSERT_TRUE(!profiler_thread_is_being_profiled(features));
+    ASSERT_TRUE(
+        !profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+    ASSERT_TRUE(!profiler_thread_is_being_profiled(profiler_current_thread_id(),
+                                                   features));
+  }
 
   std::thread{[&]() {
     {
-      ASSERT_TRUE(!profiler_thread_is_being_profiled());
-      ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_current_thread_id()));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_main_thread_id()));
+      for (ThreadProfilingFeatures features :
+           scEachAndAnyThreadProfilingFeatures) {
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(features));
+        ASSERT_TRUE(
+            !profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_current_thread_id(), features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_main_thread_id(), features));
+      }
     }
     {
       AUTO_PROFILER_REGISTER_THREAD(
           "Ignored GeckoProfiler.Pause - after pause");
-      ASSERT_TRUE(!profiler_thread_is_being_profiled());
-      ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_current_thread_id()));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_main_thread_id()));
+      for (ThreadProfilingFeatures features :
+           scEachAndAnyThreadProfilingFeatures) {
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(features));
+        ASSERT_TRUE(
+            !profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_current_thread_id(), features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_main_thread_id(), features));
+      }
     }
     {
       AUTO_PROFILER_REGISTER_THREAD(
           "Profiled GeckoProfiler.Pause - after pause");
-      ASSERT_TRUE(!profiler_thread_is_being_profiled());
-      ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_current_thread_id()));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_main_thread_id()));
+      for (ThreadProfilingFeatures features :
+           scEachAndAnyThreadProfilingFeatures) {
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(features));
+        ASSERT_TRUE(
+            !profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_current_thread_id(), features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_main_thread_id(), features));
+      }
     }
   }}.join();
 
@@ -1957,72 +2071,107 @@ TEST(GeckoProfiler, Pause)
   profiler_resume();
 
   ASSERT_TRUE(!profiler_is_paused());
-  ASSERT_TRUE(profiler_thread_is_being_profiled());
-  ASSERT_TRUE(profiler_thread_is_being_profiled(ProfilerThreadId{}));
-  ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_current_thread_id()));
+  for (ThreadProfilingFeatures features : scEachAndAnyThreadProfilingFeatures) {
+    ASSERT_TRUE(profiler_thread_is_being_profiled(features));
+    ASSERT_TRUE(
+        profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+    ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_current_thread_id(),
+                                                  features));
+  }
 
   std::thread{[&]() {
     {
-      ASSERT_TRUE(!profiler_thread_is_being_profiled());
-      ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_current_thread_id()));
-      ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_main_thread_id()));
+      for (ThreadProfilingFeatures features :
+           scEachAndAnyThreadProfilingFeatures) {
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(features));
+        ASSERT_TRUE(
+            !profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_current_thread_id(), features));
+        ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_main_thread_id(),
+                                                      features));
+      }
     }
     {
       AUTO_PROFILER_REGISTER_THREAD(
           "Ignored GeckoProfiler.Pause - after resume");
-      ASSERT_TRUE(!profiler_thread_is_being_profiled());
-      ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_current_thread_id()));
-      ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_main_thread_id()));
+      for (ThreadProfilingFeatures features :
+           scEachAndAnyThreadProfilingFeatures) {
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(features));
+        ASSERT_TRUE(
+            !profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_current_thread_id(), features));
+        ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_main_thread_id(),
+                                                      features));
+      }
     }
     {
       AUTO_PROFILER_REGISTER_THREAD(
           "Profiled GeckoProfiler.Pause - after resume");
-      ASSERT_TRUE(profiler_thread_is_being_profiled());
-      ASSERT_TRUE(profiler_thread_is_being_profiled(ProfilerThreadId{}));
-      ASSERT_TRUE(
-          profiler_thread_is_being_profiled(profiler_current_thread_id()));
-      ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_main_thread_id()));
+      for (ThreadProfilingFeatures features :
+           scEachAndAnyThreadProfilingFeatures) {
+        ASSERT_TRUE(profiler_thread_is_being_profiled(features));
+        ASSERT_TRUE(
+            profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+        ASSERT_TRUE(profiler_thread_is_being_profiled(
+            profiler_current_thread_id(), features));
+        ASSERT_TRUE(profiler_thread_is_being_profiled(profiler_main_thread_id(),
+                                                      features));
+      }
     }
   }}.join();
 
   profiler_stop();
 
   ASSERT_TRUE(!profiler_is_paused());
-  ASSERT_TRUE(!profiler_thread_is_being_profiled());
-  ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
-  ASSERT_TRUE(!profiler_thread_is_being_profiled(profiler_current_thread_id()));
+  for (ThreadProfilingFeatures features : scEachAndAnyThreadProfilingFeatures) {
+    ASSERT_TRUE(!profiler_thread_is_being_profiled(features));
+    ASSERT_TRUE(
+        !profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+    ASSERT_TRUE(!profiler_thread_is_being_profiled(profiler_current_thread_id(),
+                                                   features));
+  }
 
   std::thread{[&]() {
     {
-      ASSERT_TRUE(!profiler_thread_is_being_profiled());
-      ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_current_thread_id()));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_main_thread_id()));
+      for (ThreadProfilingFeatures features :
+           scEachAndAnyThreadProfilingFeatures) {
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(features));
+        ASSERT_TRUE(
+            !profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_current_thread_id(), features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_main_thread_id(), features));
+      }
     }
     {
       AUTO_PROFILER_REGISTER_THREAD("Ignored GeckoProfiler.Pause - after stop");
-      ASSERT_TRUE(!profiler_thread_is_being_profiled());
-      ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_current_thread_id()));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_main_thread_id()));
+      for (ThreadProfilingFeatures features :
+           scEachAndAnyThreadProfilingFeatures) {
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(features));
+        ASSERT_TRUE(
+            !profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_current_thread_id(), features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_main_thread_id(), features));
+      }
     }
     {
       AUTO_PROFILER_REGISTER_THREAD(
           "Profiled GeckoProfiler.Pause - after stop");
-      ASSERT_TRUE(!profiler_thread_is_being_profiled());
-      ASSERT_TRUE(!profiler_thread_is_being_profiled(ProfilerThreadId{}));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_current_thread_id()));
-      ASSERT_TRUE(
-          !profiler_thread_is_being_profiled(profiler_main_thread_id()));
+      for (ThreadProfilingFeatures features :
+           scEachAndAnyThreadProfilingFeatures) {
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(features));
+        ASSERT_TRUE(
+            !profiler_thread_is_being_profiled(ProfilerThreadId{}, features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_current_thread_id(), features));
+        ASSERT_TRUE(!profiler_thread_is_being_profiled(
+            profiler_main_thread_id(), features));
+      }
     }
   }}.join();
 }
