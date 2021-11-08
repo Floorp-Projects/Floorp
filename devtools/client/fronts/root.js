@@ -166,7 +166,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
       const processWorkers = await Promise.all(
         processes.map(async processDescriptorFront => {
           // Ignore parent process
-          if (processDescriptorFront.isParent) {
+          if (processDescriptorFront.isParentProcessDescriptor) {
             return [];
           }
           const front = await processDescriptorFront.getTarget();

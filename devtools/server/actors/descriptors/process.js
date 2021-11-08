@@ -57,13 +57,20 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
     return null;
   },
 
-  _parentProcessConnect() {
+  get isWindowlessParent() {
+    return this.isParent && this.isXpcshell;
+  },
+
+  get isXpcshell() {
     const env = Cc["@mozilla.org/process/environment;1"].getService(
       Ci.nsIEnvironment
     );
-    const isXpcshell = env.exists("XPCSHELL_TEST_PROFILE_DIR");
+    return env.exists("XPCSHELL_TEST_PROFILE_DIR");
+  },
+
+  _parentProcessConnect() {
     let targetActor;
-    if (isXpcshell) {
+    if (this.isXpcshell) {
       // Check if we are running on xpcshell.
       // When running on xpcshell, there is no valid browsing context to attach to
       // and so ParentProcessTargetActor doesn't make sense as it inherits from
@@ -163,19 +170,20 @@ const ProcessDescriptorActor = ActorClassWithSpec(processDescriptorSpec, {
       actor: this.actorID,
       id: this.id,
       isParent: this.isParent,
+      isWindowlessParent: this.isWindowlessParent,
       traits: {
         // Supports the Watcher actor. Can be removed as part of Bug 1680280.
         watcher: true,
         // ParentProcessTargetActor can be reloaded.
-        supportsReloadDescriptor: this.isParent,
+        supportsReloadDescriptor: this.isParent && !this.isWindowlessParent,
       },
     };
   },
 
   async reloadDescriptor({ bypassCache }) {
-    if (!this.isParent) {
+    if (!this.isParent || this.isWindowlessParent) {
       throw new Error(
-        "reloadDescriptor is not available for content process descriptors"
+        "reloadDescriptor is only available for parent process descriptors linked to a window"
       );
     }
 
