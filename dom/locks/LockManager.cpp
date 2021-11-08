@@ -113,6 +113,13 @@ already_AddRefed<Promise> LockManager::Request(const nsAString& aName,
                                                const LockOptions& aOptions,
                                                LockGrantedCallback& aCallback,
                                                ErrorResult& aRv) {
+  if (!mActor) {
+    aRv.ThrowInvalidStateError(
+        "The document of the lock manager is not fully active or web locks "
+        "aren't enabled for the document.");
+    return nullptr;
+  }
+
   if (mOwner->GetStorageAccess() <= StorageAccess::eDeny) {
     // Step 4: If origin is an opaque origin, then return a promise rejected
     // with a "SecurityError" DOMException.
@@ -122,14 +129,6 @@ already_AddRefed<Promise> LockManager::Request(const nsAString& aName,
     return nullptr;
   }
   if (!ValidateRequestArguments(aName, aOptions, aRv)) {
-    return nullptr;
-  }
-
-  if (!mActor) {
-    // TODO: https://github.com/WICG/web-locks/issues/78
-    aRv.ThrowInvalidStateError(
-        "The document of the lock manager is not fully active or web locks "
-        "aren't enabled for the document.");
     return nullptr;
   }
 
@@ -143,16 +142,15 @@ already_AddRefed<Promise> LockManager::Request(const nsAString& aName,
 };
 
 already_AddRefed<Promise> LockManager::Query(ErrorResult& aRv) {
-  if (mOwner->GetStorageAccess() <= StorageAccess::eDeny) {
-    aRv.ThrowSecurityError("query() is not allowed in this context");
-    return nullptr;
-  }
-
   if (!mActor) {
-    // TODO: https://github.com/WICG/web-locks/issues/78
     aRv.ThrowInvalidStateError(
         "The document of the lock manager is not fully active or web locks "
         "aren't enabled for the document.");
+    return nullptr;
+  }
+
+  if (mOwner->GetStorageAccess() <= StorageAccess::eDeny) {
+    aRv.ThrowSecurityError("query() is not allowed in this context");
     return nullptr;
   }
 
