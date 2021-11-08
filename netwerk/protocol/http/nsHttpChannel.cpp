@@ -5014,7 +5014,7 @@ nsresult nsHttpChannel::SetupReplacementChannel(nsIURI* newURI,
        "[this=%p newChannel=%p preserveMethod=%d]",
        this, newChannel, preserveMethod));
 
-  if (!mEndMarkerAdded && profiler_thread_is_being_profiled()) {
+  if (!mEndMarkerAdded && profiler_thread_is_being_profiled_for_markers()) {
     mEndMarkerAdded = true;
 
     nsAutoCString requestMethod;
@@ -5542,7 +5542,7 @@ nsresult nsHttpChannel::CancelInternal(nsresult status) {
   mStatus = NS_FAILED(status) ? status : NS_ERROR_ABORT;
 
   if (mLastStatusReported && !mEndMarkerAdded &&
-      profiler_thread_is_being_profiled()) {
+      profiler_thread_is_being_profiled_for_markers()) {
     // These do allocations/frees/etc; avoid if not active
     // mLastStatusReported can be null if Cancel is called before we added the
     // start marker.
@@ -5861,7 +5861,7 @@ void nsHttpChannel::AsyncOpenFinal(TimeStamp aTimeStamp) {
   // We save this timestamp from outside of the if block in case we enable the
   // profiler after AsyncOpen().
   mLastStatusReported = TimeStamp::Now();
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsAutoCString requestMethod;
     GetRequestMethod(requestMethod);
 
@@ -7485,7 +7485,7 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
 
   MaybeFlushConsoleReports();
 
-  if (!mEndMarkerAdded && profiler_thread_is_being_profiled()) {
+  if (!mEndMarkerAdded && profiler_thread_is_being_profiled_for_markers()) {
     // These do allocations/frees/etc; avoid if not active
     mEndMarkerAdded = true;
 
