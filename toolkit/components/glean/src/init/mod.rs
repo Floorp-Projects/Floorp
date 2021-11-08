@@ -41,12 +41,13 @@ pub extern "C" fn fog_init(
     app_id_override: &nsACString,
 ) -> nsresult {
     let upload_enabled = static_prefs::pref!("datareporting.healthreport.uploadEnabled");
+    let recording_enabled = static_prefs::pref!("telemetry.fog.test.localhost_port") < 0;
     let uploader = Some(Box::new(ViaductUploader) as Box<dyn glean::net::PingUploader>);
 
     fog_init_internal(
         data_path_override,
         app_id_override,
-        upload_enabled,
+        upload_enabled || recording_enabled,
         uploader,
     )
     .into()
