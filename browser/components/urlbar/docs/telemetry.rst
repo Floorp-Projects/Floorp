@@ -26,6 +26,16 @@ FX_URLBAR_MERINO_LATENCY_MS
   response. It is an exponential histogram with values between 0 and 30000 (0s
   and 30s).
 
+FX_URLBAR_MERINO_RESPONSE
+  This probe is related to the Firefox Suggest (quick suggest) feature. It is a
+  categorical histogram that records whether each Merino fetch was successful or
+  not. It has the following categories. ``success`` (0): The fetch completed
+  without any error before the timeout elapsed. ``timeout`` (1): The timeout
+  elapsed before the fetch completed or otherwise failed. ``network_error`` (2):
+  The fetch failed due to a network error before the timeout elapsed. e.g., the
+  user's network or the Merino server was down. ``http_error`` (3): The fetch
+  completed before the timeout elapsed but the server returned an error.
+
 FX_URLBAR_SELECTED_RESULT_METHOD
   This probe tracks how a result was picked by the user from the list.
   It is a categorical histogram with these values:
