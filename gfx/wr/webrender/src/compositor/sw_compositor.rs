@@ -101,8 +101,8 @@ impl SwTile {
         // Offset the valid rect to the appropriate surface origin.
         let valid = self.local_bounds(surface);
         // The destination rect is the valid rect transformed and then clipped.
-        let dest_rect = transform.outer_transformed_box2d(&valid.to_f32())?.round_out().try_cast()?;
-        if !dest_rect.intersects(clip_rect) {
+        let dest_rect = transform.outer_transformed_box2d(&valid.to_f32())?.round_out();
+        if !dest_rect.intersects(&clip_rect.to_f32()) {
             return None;
         }
         // To get a valid source rect, we need to inverse transform the clipped destination rect to find out the effect
@@ -110,11 +110,17 @@ impl SwTile {
         // a source rect that is now relative to the surface origin rather than absolute.
         let inv_transform = transform.inverse()?;
         let src_rect = inv_transform
-            .outer_transformed_box2d(&dest_rect.to_f32())?
+            .outer_transformed_box2d(&dest_rect)?
             .round()
-            .to_i32()
-            .translate(-valid.min.to_vector());
-        Some((src_rect, dest_rect, transform.m22 < 0.0))
+            .translate(-valid.min.to_vector().to_f32());
+        // Ensure source and dest rects when transformed from Box2D to Rect formats will still fit in an i32.
+        // If p0=i32::MIN and p1=i32::MAX, then evaluating the size with p1-p0 will overflow an i32 and not
+        // be representable. 
+        if src_rect.size().try_cast::<i32>().is_none() ||
+           dest_rect.size().try_cast::<i32>().is_none() {
+            return None;
+        }
+        Some((src_rect.try_cast()?, dest_rect.try_cast()?, transform.m22 < 0.0))
     }
 }
 
