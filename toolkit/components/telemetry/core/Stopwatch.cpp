@@ -383,7 +383,7 @@ int32_t Timers::Finish(JSContext* aCx, const nsAString& aHistogram,
   } else {
     rv = TelemetryHistogram::Accumulate(histogram.get(), delta);
   }
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsCString markerText = histogram;
     if (!aKey.IsVoid()) {
       markerText.AppendLiteral(":");
@@ -531,7 +531,7 @@ bool Timers::FinishUserInteraction(
     return false;
   }
 
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     nsAutoCString markerText(timer->GetBHRAnnotationValue());
     if (aAdditionalText.WasPassed()) {
       markerText.Append(",");

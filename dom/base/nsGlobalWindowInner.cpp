@@ -6248,7 +6248,7 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
   const char* reason = GetTimeoutReasonString(timeout);
 
   nsCString str;
-  if (profiler_thread_is_being_profiled()) {
+  if (profiler_thread_is_being_profiled_for_markers()) {
     TimeDuration originalInterval = timeout->When() - timeout->SubmitTime();
     str.Append(reason);
     str.Append(" with interval ");

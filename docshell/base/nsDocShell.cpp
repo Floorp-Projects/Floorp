@@ -7919,7 +7919,7 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
       NS_ENSURE_SUCCESS(rv, rv);
 
       if (!parentSite.Equals(thisSite)) {
-        if (profiler_thread_is_being_profiled()) {
+        if (profiler_thread_is_being_profiled_for_markers()) {
           nsCOMPtr<nsIURI> prinURI;
           BasePrincipal::Cast(thisPrincipal)->GetURI(getter_AddRefs(prinURI));
           nsPrintfCString marker("Iframe loaded in background: %s",

@@ -91,7 +91,7 @@ void ProfilerScreenshots::SubmitScreenshot(
        scaledSize = aScaledSize, timeStamp = aTimeStamp]() {
         // Create a new surface that wraps backingSurface's data but has the
         // correct size.
-        if (profiler_thread_is_being_profiled(sourceThread)) {
+        if (profiler_thread_is_being_profiled_for_markers(sourceThread)) {
           DataSourceSurface::ScopedMap scopedMap(backingSurface,
                                                  DataSourceSurface::READ);
           RefPtr<DataSourceSurface> surf =
