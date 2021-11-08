@@ -160,12 +160,3 @@ webgl-ipc:
         mozharness:
             extra-options:
                 - "--setpref=webgl.out-of-process=true"
-
-# TODO: After 2022-01-01, verify this variant is still needed.
-webgl-ipc-profiling:
-    description: "{description} with WebGL IPC process enabled"
-    suffix: "gli"
-    merge:
-        mozharness:
-            extra-options:
-                - "--setpref=webgl.out-of-process=true"
