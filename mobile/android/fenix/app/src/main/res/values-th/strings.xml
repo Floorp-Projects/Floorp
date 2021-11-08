@@ -107,10 +107,23 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">ยกเลิก</string>
 
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">แท็บที่คุณไม่ได้ดูเป็นเวลา 2 สัปดาห์จะถูกย้ายมาที่นี่</string>
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">ปิดในการตั้งค่า</string>
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">ปิดอัตโนมัติหลังจากหนึ่งเดือน?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Firefox สามารถปิดแท็บที่คุณไม่ได้ดูในช่วงเดือนที่ผ่านมาได้</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">ปิด</string>
+
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">เปิดการปิดอัตโนมัติ</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">เปิดการปิดอัตโนมัติ</string>
 
 
     <!-- Home screen icons - Long press shortcuts -->
@@ -128,6 +141,8 @@
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">แสดงหมด</string>
 
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description">แสดงปุ่มแท็บล่าสุดทั้งหมด</string>
     <!-- Title for showing a group item in the 'Jump back in' section of the new tab
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">การค้นหา \&quot;%1$s\&quot; ของคุณ</string>
@@ -149,6 +164,9 @@
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">ลบ</string>
+
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description">แสดงปุ่มการสำรวจที่ผ่านมาทั้งหมด</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -279,8 +297,24 @@
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_title_2">มีอะไรใหม่ใน Firefox</string>
 
+    <!-- Onboarding home screen dialog description text. -->
+    <string name="onboarding_home_screen_description_2">คุณสามารถกลับมาดูหน้าเว็บที่คุณดูค้างไว้ได้ง่ายขึ้นแล้ว</string>
+    <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_section_home_title_2">หน้าแรกของ Firefox ที่ปรับแต่งแบบส่วนตัว</string>
+    <!-- Onboarding home screen dialog description text for the home section. -->
+    <string name="onboarding_home_screen_section_home_description_2">ข้ามไปยังแท็บที่เปิดอยู่ ที่คั่นหน้า และประวัติการเรียกดู</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">แท็บที่สะอาดและเป็นระเบียบ</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">ขจัดความยุ่งเหยิงของแท็บด้วยเลย์เอาต์ที่ได้รับการปรับปรุงและแท็บที่ปิดอัตโนมัติ</string>
     <!-- Onboarding home screen dialog description text for the history section. -->
     <string name="onboarding_home_screen_section_useful_history_title_2">ผลค้นหาล่าสุด</string>
+
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_description_2">เยี่ยมชมการค้นหาล่าสุดของคุณใหม่จากหน้าแรกและแท็บของคุณ</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">ขณะนี้หน้าแรกของ Firefox ที่ปรับแต่งแบบคุณได้รับการปรับปรุงให้คุณสามารถกลับมาดูหน้าเว็บที่คุณดูค้างไว้ได้ง่ายขึ้นแล้ว ค้นหาแท็บ ที่คั่นหน้า และผลการค้นหาล่าสุดของคุณ</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -662,6 +696,8 @@
     <string name="tab_view_list">รายการ</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">เส้นตาราง</string>
+    <!-- Option for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups">ค้นหากลุ่ม</string>
     <!-- Summary text for search term tab groups -->
     <string name="tab_view_search_term_tab_groups_summary">จัดกลุ่มเว็บไซต์ที่เกี่ยวข้องกัน</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
@@ -675,9 +711,14 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">หลังจากผ่านไปหนึ่งเดือน</string>
 
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">ปิดแท็บที่เปิดอยู่อัตโนมัติ</string>
+
     <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
     <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">เริ่มที่หน้าแรก</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">หน้าจอเมื่อเปิด</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
     <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">หลังจาก 4 ชั่วโมง</string>
     <!-- Option for always opening the homepage when re-opening the app -->
@@ -688,6 +729,8 @@
     <string name="opening_screen_last_tab">แท็บสุดท้าย</string>
     <!-- Option for never starting on the home screen -->
     <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">ไม่เลย</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">หน้าแรกหลังจากไม่มีการใช้งานเป็นเวลา 4 ชั่วโมง</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">ปิดด้วยตนเอง</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -696,6 +739,13 @@
     <string name="close_tabs_after_one_week_summary">ปิดหลังจากหนึ่งสัปดาห์</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">ปิดหลังจากหนึ่งเดือน</string>
+
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">ย้ายแท็บเก่าไปยังส่วนที่ไม่ได้ใช้งาน</string>
+
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">แท็บที่คุณไม่ได้ดูเป็นเวลา 2 สัปดาห์จะถูกย้ายไปยังส่วนที่ไม่ได้ใช้งาน</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -1197,6 +1247,10 @@
     <string name="qr_scanner_dialog_positive">อนุญาต</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">ปฏิเสธ</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">ที่อยู่เว็บไม่ถูกต้อง</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">ตกลง</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">คุณแน่ใจหรือไม่ว่าต้องการลบ %1$s?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
@@ -1965,12 +2019,33 @@
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">ปิดอัตโนมัติหลังจากหนึ่งเดือน?</string>
 
+    <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox สามารถปิดแท็บที่คุณไม่ได้ดูในช่วงเดือนที่ผ่านมาได้</string>
+    <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">เปิดการปิดอัตโนมัติ</string>
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">เปิดใช้งานการปิดอัตโนมัติแล้ว</string>
+
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
     <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">ช่วยปรับปรุง Firefox</string>
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
     <string name="inactive_tabs_survey_header_1">ช่วยปรับปรุง Firefox</string>
 
+    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
+    <string name="inactive_tabs_survey_content">เหตุใดคุณจึงปิดใช้งานแท็บที่ไม่ได้ใช้งาน</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_do_not_understand">ฉันไม่เข้าใจว่ามันทำงานอย่างไร</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_do_it_myself">ฉันชอบล้างแท็บเก่าด้วยตัวเอง</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">ระยะเวลา 2 สัปดาห์ยาวเกินไป</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_long_option_1">ระยะเวลา 2 สัปดาห์ยาวเกินไป</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">ระยะเวลา 2 สัปดาห์สั้นเกินไป</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option_1">ระยะเวลา 2 สัปดาห์สั้นเกินไป</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
     <string name="inactive_tabs_survey_send_button">ส่ง</string>
     <!-- Content description for inactive tabs survey close button -->
@@ -1991,12 +2066,19 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">ปิด</string>
 
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string moz:removedIn="94" name="pocket_stories_header" tools:ignore="UnusedResources">เรื่องราวที่จุดประกายความคิด</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header_1">เรื่องราวที่จุดประกายความคิด</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_categories_header">เรื่องตามหัวข้อ</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
     <string name="pocket_stories_placeholder_text">ค้นพบสิ่งอื่น</string>
     <!-- Title of an app feature. Smaller than a heading.-->
     <string name="pocket_stories_feature_title">ขับเคลื่อนโดย Pocket</string>
+    <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
+    <string name="pocket_stories_feature_caption">ส่วนหนึ่งของตระกูล Firefox %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">เรียนรู้เพิ่มเติม</string>
 </resources>

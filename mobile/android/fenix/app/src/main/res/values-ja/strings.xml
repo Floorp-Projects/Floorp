@@ -448,7 +448,7 @@
     <!-- Preference for enabling url autocomplete-->
     <string name="preferences_enable_autocomplete_urls">自動補完 URL</string>
     <!-- Preference for open links in third party apps -->
-    <string name="preferences_open_links_in_apps">アプリ内のリンクを開く</string>
+    <string name="preferences_open_links_in_apps">リンクをアプリで開く</string>
 
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">外部のダウンロードマネージャー</string>
@@ -1266,6 +1266,10 @@
     <string name="qr_scanner_dialog_positive">許可</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">拒否</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">ウェブアドレスが正しくありません。</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">OK</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">本当に %1$s を削除してもよろしいですか？</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
@@ -1498,7 +1502,7 @@
     <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
     <string name="etp_settings">追跡防止の設定</string>
     <!-- Preference title for enhanced tracking protection settings -->
-    <string name="preference_enhanced_tracking_protection">強化されたトラッキング防止</string>
+    <string name="preference_enhanced_tracking_protection">強化型トラッキング防止</string>
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">閲覧中のプライバシーを保護します</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
@@ -1579,7 +1583,7 @@
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
     <string name="etp_panel_off">このサイトでは保護が無効になっています</string>
     <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
-    <string name="enhanced_tracking_protection_exceptions">これらのウェブサイトでは強化されたトラッキング防止が無効になります</string>
+    <string name="enhanced_tracking_protection_exceptions">これらのウェブサイトでは強化型トラッキング防止が無効になります</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">前のページへ戻る</string>
