@@ -417,6 +417,25 @@ const featureDescriptions = [
       "increase in some processes.",
     disabledReason: "Windows only.",
   },
+  {
+    name: "CPU Utilization - All Threads",
+    value: "cpuallthreads",
+    title:
+      "Record how much CPU has been used between samples by ALL registered thread.",
+    experimental: true,
+  },
+  {
+    name: "Periodic Sampling - All Threads",
+    value: "samplingallthreads",
+    title: "Capture stack samples in ALL registered thread.",
+    experimental: true,
+  },
+  {
+    name: "Markers - All Threads",
+    value: "markersallthreads",
+    title: "Record markers in ALL registered threads.",
+    experimental: true,
+  },
 ];
 
 module.exports = {
