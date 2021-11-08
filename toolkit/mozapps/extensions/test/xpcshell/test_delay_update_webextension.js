@@ -7,6 +7,12 @@
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref(PREF_EM_CHECK_UPDATE_SECURITY, false);
 
+// The test simulates restarts, enforce delayed background startup.
+Services.prefs.setBoolPref(
+  "extensions.webextensions.background-delayed-startup",
+  true
+);
+
 if (AppConstants.platform == "win" && AppConstants.DEBUG) {
   // Shutdown timing is flaky in this test, and remote extensions
   // sometimes wind up leaving the XPI locked at the point when we try
