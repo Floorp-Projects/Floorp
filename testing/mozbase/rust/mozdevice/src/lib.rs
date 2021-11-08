@@ -204,11 +204,12 @@ fn read_response(stream: &mut TcpStream, has_output: bool, has_length: bool) -> 
                 let slice: &mut &[u8] = &mut &*response;
 
                 let n = read_length(slice)?;
-                warn!(
-                    "adb server response contained hexstring length {} and message length was {} \
-                     and message was {:?}",
-                    n,
-                    message.len(),
+                if n != message.len() {
+                    warn!("adb server response contained hexstring len {} but remaining message length is {}", n, message.len());
+                }
+
+                debug!(
+                    "adb server response was {:?}",
                     std::str::from_utf8(&message)?
                 );
 
