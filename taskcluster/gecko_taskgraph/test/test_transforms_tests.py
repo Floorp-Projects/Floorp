@@ -76,6 +76,7 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
                     "extra-options": [f"--setpref={variant}=1"],
                 },
                 "treeherder-symbol": f"g-{variant}(t)",
+                "variant-suffix": f"-{variant}",
             }
         )
 
@@ -98,11 +99,26 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
     expected["tier"] = 2
     assert tasks[2] == expected
 
+    # test composite variants
+    input_task = make_test_task(
+        **{
+            "variants": ["foo+bar"],
+        }
+    )
+    tasks = list(run_split_variants(input_task))
+    assert len(tasks) == 2
+    assert tasks[1]["attributes"]["unittest_variant"] == "foo+bar"
+    assert tasks[1]["mozharness"]["extra-options"] == [
+        "--setpref=foo=1",
+        "--setpref=bar=1",
+    ]
+    assert tasks[1]["treeherder-symbol"] == "g-foo-bar(t)"
+
     # test 'when' filter
     input_task = make_test_task(
         **{
-            "variants": ["foo", "bar"],
-            # this should cause task to be filtered out of 'bar' variant
+            "variants": ["foo", "bar", "foo+bar"],
+            # this should cause task to be filtered out of 'bar' and 'foo+bar' variants
             "test-platform": "windows",
         }
     )
