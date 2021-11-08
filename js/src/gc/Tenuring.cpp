@@ -779,7 +779,7 @@ JSString* js::TenuringTracer::moveToTenured(JSString* src) {
 }
 
 template <typename CharT>
-void js::Nursery::relocateDependentStringChars(
+void js::TenuringTracer::relocateDependentStringChars(
     JSDependentString* tenuredDependentStr, JSLinearString* baseOrRelocOverlay,
     size_t* offset, bool* rootBaseNotYetForwarded, JSLinearString** rootBase) {
   MOZ_ASSERT(*offset == 0);
@@ -860,15 +860,15 @@ JS::BigInt* js::TenuringTracer::moveToTenured(JS::BigInt* src) {
   return dst;
 }
 
-void js::Nursery::collectToObjectFixedPoint(TenuringTracer& mover) {
-  for (RelocationOverlay* p = mover.objHead; p; p = p->next()) {
+void js::TenuringTracer::collectToObjectFixedPoint() {
+  for (RelocationOverlay* p = objHead; p; p = p->next()) {
     auto* obj = static_cast<JSObject*>(p->forwardingAddress());
-    mover.traceObject(obj);
+    traceObject(obj);
   }
 }
 
-void js::Nursery::collectToStringFixedPoint(TenuringTracer& mover) {
-  for (StringRelocationOverlay* p = mover.stringHead; p; p = p->next()) {
+void js::TenuringTracer::collectToStringFixedPoint() {
+  for (StringRelocationOverlay* p = stringHead; p; p = p->next()) {
     auto* tenuredStr = static_cast<JSString*>(p->forwardingAddress());
     // To ensure the NON_DEDUP_BIT was reset properly.
     MOZ_ASSERT(tenuredStr->isDeduplicatable());
@@ -893,7 +893,7 @@ void js::Nursery::collectToStringFixedPoint(TenuringTracer& mover) {
       }
     }
 
-    mover.traceString(tenuredStr);
+    traceString(tenuredStr);
 
     if (rootBaseNotYetForwarded) {
       MOZ_ASSERT(rootBase->isForwarded(),
