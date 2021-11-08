@@ -3724,7 +3724,7 @@ static nsresult ConvertToUnicode(nsIChannel* aChannel, const uint8_t* aData,
   UniquePtr<Decoder> unicodeDecoder;
 
   const Encoding* encoding;
-  Tie(encoding, Ignore) = Encoding::ForBOM(data);
+  std::tie(encoding, std::ignore) = Encoding::ForBOM(data);
   if (encoding) {
     unicodeDecoder = encoding->NewDecoderWithBOMRemoval();
   }

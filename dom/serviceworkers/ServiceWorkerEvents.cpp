@@ -1018,7 +1018,8 @@ nsresult ExtractBytesFromUSVString(const nsAString& aStr,
   uint32_t result;
   size_t read;
   size_t written;
-  Tie(result, read, written) =
+  // Do not use structured binding lest deal with [-Werror=unused-variable]
+  std::tie(result, read, written) =
       encoder->EncodeFromUTF16WithoutReplacement(aStr, aBytes, true);
   MOZ_ASSERT(result == kInputEmpty);
   MOZ_ASSERT(read == aStr.Length());

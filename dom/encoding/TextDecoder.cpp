@@ -9,6 +9,7 @@
 #include "mozilla/Encoding.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "nsContentUtils.h"
+
 #include <stdint.h>
 
 namespace mozilla::dom {
@@ -64,14 +65,14 @@ void TextDecoder::Decode(Span<const uint8_t> aInput, const bool aStream,
   size_t read;
   size_t written;
   if (mFatal) {
-    Tie(result, read, written) =
+    std::tie(result, read, written) =
         mDecoder->DecodeToUTF16WithoutReplacement(aInput, *output, !aStream);
     if (result != kInputEmpty) {
       aRv.ThrowTypeError<MSG_DOM_DECODING_FAILED>();
       return;
     }
   } else {
-    Tie(result, read, written, Ignore) =
+    std::tie(result, read, written, std::ignore) =
         mDecoder->DecodeToUTF16(aInput, *output, !aStream);
   }
   MOZ_ASSERT(result == kInputEmpty);
