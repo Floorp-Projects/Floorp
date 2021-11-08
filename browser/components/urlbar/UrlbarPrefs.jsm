@@ -132,6 +132,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // The Merino endpoint URL, not including parameters.
   ["merino.endpointURL", "https://merino.services.mozilla.com/api/v1/suggest"],
 
+  // Timeout for Merino fetches (ms).
+  ["merino.timeoutMs", 200],
+
   // Whether addresses and search results typed into the address bar
   // should be opened in new tabs by default.
   ["openintab", false],
