@@ -2,19 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#[macro_use]
-extern crate log;
-extern crate once_cell;
-extern crate regex;
-extern crate tempfile;
-extern crate walkdir;
-
 pub mod adb;
 pub mod shell;
 
 #[cfg(test)]
 pub mod test;
 
+use log::{debug, warn};
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::BTreeMap;
