@@ -249,7 +249,6 @@
     --checkbox-checked-bgcolor: SelectedItem;
     --checkbox-checked-color: SelectedItemText;
     --checkbox-checked-border-color: SelectedItem;
-    --checkbox-checked-border-color-hover: SelectedItem;
     --checkbox-checked-hover-bgcolor: -moz-Field;
     --checkbox-checked-active-bgcolor: -moz-Field;
   }
