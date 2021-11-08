@@ -29,6 +29,10 @@ process-type-weblargeallocation = Large Allocation
 # to improve security
 process-type-webisolated = Isolated Web Content
 
+# process used to isolate a ServiceWorker to improve
+# performance
+process-type-webserviceworker = Isolated Service Worker
+
 # process preallocated; may change to other types
 process-type-prealloc = Preallocated
 

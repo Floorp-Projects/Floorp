@@ -31,7 +31,7 @@ nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult);
 // WebIDLProcType, ChromeUtils::RequestProcInfo and ProcTypeToWebIDL to
 // mirror the changes.
 enum class ProcType {
-  // These must match the ones in ContentParent.h, and E10SUtils.jsm
+  // These must match the ones in RemoteType.h, and E10SUtils.jsm
   Web,
   WebIsolated,
   File,
@@ -40,6 +40,7 @@ enum class ProcType {
   PrivilegedMozilla,
   WebLargeAllocation,
   WebCOOPCOEP,
+  WebServiceWorker,
   // the rest matches GeckoProcessTypes.h
   Browser,  // Default is named Browser here
   IPDLUnitTest,
