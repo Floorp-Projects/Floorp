@@ -61,6 +61,7 @@
 #include "mozilla/PermissionManager.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_extensions.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Unused.h"
 #include "mozilla/EnumSet.h"
 
@@ -2042,8 +2043,13 @@ void ServiceWorkerManager::DispatchFetchEvent(nsIInterceptedChannel* aChannel,
     }
 
     // non-subresource request means the URI contains the principal
-    nsCOMPtr<nsIPrincipal> principal = BasePrincipal::CreateContentPrincipal(
-        uri, loadInfo->GetOriginAttributes());
+    OriginAttributes attrs = loadInfo->GetOriginAttributes();
+    StoragePrincipalHelper::GetOriginAttributes(
+        internalChannel, attrs,
+        StoragePrincipalHelper::eForeignPartitionedPrincipal);
+
+    nsCOMPtr<nsIPrincipal> principal =
+        BasePrincipal::CreateContentPrincipal(uri, attrs);
 
     RefPtr<ServiceWorkerRegistrationInfo> registration =
         GetServiceWorkerRegistrationInfo(principal, uri);
