@@ -6,7 +6,7 @@
 #include "SelectionState.h"
 
 #include "EditorUtils.h"      // for EditorUtils
-#include "HTMLEditHelpers.h"  // for JoinNodesDirection
+#include "HTMLEditHelpers.h"  // for JoinNodesDirection, SplitNodeDirection
 
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc.
 #include "mozilla/dom/RangeBinding.h"
@@ -304,8 +304,10 @@ void RangeUpdater::SelAdjDeleteNode(nsINode& aNodeToDelete) {
   }
 }
 
-nsresult RangeUpdater::SelAdjSplitNode(nsIContent& aRightNode,
-                                       nsIContent& aNewLeftNode) {
+nsresult RangeUpdater::SelAdjSplitNode(nsIContent& aOriginalContent,
+                                       uint32_t aSplitOffset,
+                                       nsIContent& aNewContent,
+                                       SplitNodeDirection aSplitNodeDirection) {
   if (mLocked) {
     // lock set by Will/DidReplaceParent, etc...
     return NS_OK;
@@ -315,36 +317,40 @@ nsresult RangeUpdater::SelAdjSplitNode(nsIContent& aRightNode,
     return NS_OK;
   }
 
-  EditorRawDOMPoint atLeftNode(&aNewLeftNode);
-  nsresult rv = SelAdjInsertNode(atLeftNode);
+  EditorRawDOMPoint atNewNode(&aNewContent);
+  nsresult rv = SelAdjInsertNode(atNewNode);
   if (NS_FAILED(rv)) {
     NS_WARNING("RangeUpdater::SelAdjInsertNode() failed");
     return rv;
   }
 
-  // If point in the ranges is in left node, change its container to the left
-  // node.  If point in the ranges is in right node, subtract numbers of
-  // children moved to left node from the offset.
-  uint32_t lengthOfLeftNode = aNewLeftNode.Length();
+  // If point is in the range which are moved from aOriginalContent to
+  // aNewContent, we need to change its container to aNewContent and may need to
+  // adjust the offset. If point is in the range which are not moved from
+  // aOriginalContent, we may need to adjust the offset.
+  auto AdjustDOMPoint = [&](nsCOMPtr<nsINode>& aContainer,
+                            uint32_t& aOffset) -> void {
+    if (aContainer != &aOriginalContent) {
+      return;
+    }
+    if (aSplitNodeDirection == SplitNodeDirection::LeftNodeIsNewOne) {
+      if (aOffset > aSplitOffset) {
+        aOffset -= aSplitOffset;
+      } else {
+        aContainer = &aNewContent;
+      }
+    } else if (aOffset >= aSplitOffset) {
+      aContainer = &aNewContent;
+      aOffset = aSplitOffset - aOffset;
+    }
+  };
+
   for (RefPtr<RangeItem>& rangeItem : mArray) {
     if (NS_WARN_IF(!rangeItem)) {
       return NS_ERROR_FAILURE;
     }
-
-    if (rangeItem->mStartContainer == &aRightNode) {
-      if (rangeItem->mStartOffset > lengthOfLeftNode) {
-        rangeItem->mStartOffset -= lengthOfLeftNode;
-      } else {
-        rangeItem->mStartContainer = &aNewLeftNode;
-      }
-    }
-    if (rangeItem->mEndContainer == &aRightNode) {
-      if (rangeItem->mEndOffset > lengthOfLeftNode) {
-        rangeItem->mEndOffset -= lengthOfLeftNode;
-      } else {
-        rangeItem->mEndContainer = &aNewLeftNode;
-      }
-    }
+    AdjustDOMPoint(rangeItem->mStartContainer, rangeItem->mStartOffset);
+    AdjustDOMPoint(rangeItem->mEndContainer, rangeItem->mEndOffset);
   }
   return NS_OK;
 }
