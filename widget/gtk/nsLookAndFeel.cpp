@@ -1494,10 +1494,26 @@ void nsLookAndFeel::PerThemeData::Init() {
   mThemedScrollbarThumbInactive = GDK_RGBA_TO_NS_RGBA(color);
 
   // Make sure that the thumb is visible, at least.
-  const bool fallbackToUnthemedColors = !ShouldHonorThemeScrollbarColors() ||
-                                        !NS_GET_A(mThemedScrollbarThumb) ||
-                                        !NS_GET_A(mThemedScrollbarThumbHover) ||
-                                        !NS_GET_A(mThemedScrollbarThumbActive);
+  const bool fallbackToUnthemedColors = [&] {
+    if (!ShouldHonorThemeScrollbarColors()) {
+      return true;
+    }
+    // If any of the scrollbar thumb colors are fully transparent, fall back to
+    // non-native ones.
+    if (!NS_GET_A(mThemedScrollbarThumb) ||
+        !NS_GET_A(mThemedScrollbarThumbHover) ||
+        !NS_GET_A(mThemedScrollbarThumbActive)) {
+      return true;
+    }
+    // If the thumb and track are the same color and opaque, fall back to
+    // non-native colors as well.
+    if (mThemedScrollbar == mThemedScrollbarThumb &&
+        NS_GET_A(mThemedScrollbar) == 0xff) {
+      return true;
+    }
+    return false;
+  }();
+
   if (fallbackToUnthemedColors) {
     mMozScrollbar = mThemedScrollbar = widget::sScrollbarColor.ToABGR();
     mThemedScrollbarInactive = widget::sScrollbarColor.ToABGR();
