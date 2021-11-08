@@ -49,6 +49,7 @@ class ThreeDotMenuMainRobot {
     fun verifyShareAllTabsButton() = assertShareAllTabsButton()
     fun clickShareAllTabsButton() = shareAllTabsButton().click()
     fun verifySettingsButton() = assertSettingsButton()
+    fun verifyCustomizeHomeButton() = assertCustomizeHomeButton()
     fun verifyAddOnsButton() = assertAddOnsButton()
     fun verifyHistoryButton() = assertHistoryButton()
     fun verifyBookmarksButton() = assertBookmarksButton()
@@ -200,6 +201,26 @@ class ThreeDotMenuMainRobot {
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
+        }
+
+        fun openCustomizeHome(interact: SettingsSubMenuHomepageRobot.() -> Unit): SettingsSubMenuHomepageRobot.Transition {
+
+            mDevice.wait(
+                Until
+                    .findObject(
+                        By.textContains("$packageName:id/browser_menu_customize_home")
+                    ),
+                waitingTime
+            )
+
+            customizeHomeButton().click()
+
+            mDevice.findObject(
+                UiSelector().resourceId("$packageName:id/recycler_view")
+            ).waitForExists(waitingTime)
+
+            SettingsSubMenuHomepageRobot().interact()
+            return SettingsSubMenuHomepageRobot.Transition()
         }
 
         fun goForward(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
@@ -356,6 +377,17 @@ private fun threeDotMenuRecyclerViewExists() {
 
 private fun settingsButton() = mDevice.findObject(UiSelector().text("Settings"))
 private fun assertSettingsButton() = assertTrue(settingsButton().waitForExists(waitingTime))
+
+private fun customizeHomeButton() =
+    onView(
+        allOf(
+            withId(R.id.text),
+            withText(R.string.browser_menu_customize_home)
+        )
+    )
+
+private fun assertCustomizeHomeButton() =
+    customizeHomeButton().check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun addOnsButton() = onView(allOf(withText("Add-ons")))
 private fun assertAddOnsButton() {

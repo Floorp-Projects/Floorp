@@ -54,9 +54,14 @@ class ThreeDotMenuMainTest {
             verifyDesktopSite()
             verifyWhatsNewButton()
             verifyHelpButton()
+            verifyCustomizeHomeButton()
             verifySettingsButton()
         }.openSettings {
             verifySettingsView()
+        }.goBack {
+        }.openThreeDotMenu {
+        }.openCustomizeHome {
+            verifyHomePageView()
         }.goBack {
         }.openThreeDotMenu {
         }.openHelp {
