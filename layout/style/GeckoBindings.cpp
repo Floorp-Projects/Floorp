@@ -1243,7 +1243,12 @@ void Gecko_GetComputedURLSpec(const StyleComputedUrl* aURL, nsCString* aOut) {
 
 void Gecko_GetComputedImageURLSpec(const StyleComputedUrl* aURL,
                                    nsCString* aOut) {
-  // Image URIs don't serialize local refs as local.
+  if (aURL->IsLocalRef() &&
+      StaticPrefs::layout_css_computed_style_dont_resolve_image_local_refs()) {
+    aOut->Assign(aURL->SpecifiedSerialization());
+    return;
+  }
+
   if (nsIURI* uri = aURL->GetURI()) {
     nsresult rv = uri->GetSpec(*aOut);
     if (NS_SUCCEEDED(rv)) {
