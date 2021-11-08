@@ -7,13 +7,6 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xml-stylesheet href="chrome://mozapps/skin/downloads/unknownContentType.css" type="text/css"?>
 
-<!DOCTYPE window [
-  <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
-  %brandDTD;
-  <!ENTITY % uctDTD SYSTEM "chrome://mozapps/locale/downloads/unknownContentType.dtd" >
-  %uctDTD;
-]>
-
 <window id="unknownContentTypeWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
@@ -38,7 +31,7 @@
   <script src="chrome://global/content/editMenuOverlay.js"/>
 
   <vbox flex="1" id="container">
-    <description id="intro">&intro2.label;</description>
+    <description id="intro" data-l10n-id="unknowncontenttype-intro"></description>
     <separator class="thin"/>
     <hbox align="start" class="small-indent">
       <image id="contentTypeImage"/>
@@ -46,11 +39,11 @@
         <description id="location" class="plain" crop="start" flex="1"/>
         <separator class="thin"/>
         <hbox align="center">
-          <label id="whichIs" value="&whichIs.label;"/>
+          <label id="whichIs" data-l10n-id="unknowncontenttype-which-is"/>
           <html:input id="type" class="plain" readonly="readonly" noinitialfocus="true"/>
         </hbox>
         <hbox align="center">
-          <label value="&from.label;" id="from"/>
+          <label data-l10n-id="unknowncontenttype-from" id="from"/>
           <description id="source" class="plain" crop="start" flex="1"/>
         </hbox>
       </vbox>
@@ -59,17 +52,17 @@
     <separator class="thin"/>
 
     <hbox align="center" id="basicBox" collapsed="true">
-      <label id="unknownPrompt" value="&unknownPromptText.label;" flex="1"/>
+      <label id="unknownPrompt" data-l10n-id="unknowncontenttype-prompt" flex="1"/>
     </hbox>
 
     <vbox flex="1" id="normalBox">
       <separator/>
-      <label control="mode" class="header" value="&actionQuestion.label;"/>
+      <label control="mode" class="header" data-l10n-id="unknowncontenttype-action-question"/>
       <radiogroup id="mode" class="small-indent">
         <radio id="handleInternally" hidden="true" data-l10n-id="unknowncontenttype-handleinternally"/>
 
         <hbox>
-          <radio id="open" label="&openWith.label;" accesskey="&openWith.accesskey;"/>
+          <radio id="open" data-l10n-id="unknowncontenttype-open-with"/>
           <deck id="modeDeck" flex="1">
             <hbox id="openHandlerBox" flex="1" align="center">
               <menulist id="openHandler" flex="1" native="true">
@@ -77,27 +70,22 @@
                   <menuitem id="defaultHandler" default="true" crop="right"/>
                   <menuitem id="otherHandler" hidden="true" crop="left"/>
                   <menuseparator/>
-                  <menuitem id="choose" label="&other.label;"/>
+                  <menuitem id="choose" data-l10n-id="unknowncontenttype-other"/>
                 </menupopup>
               </menulist>
             </hbox>
             <hbox flex="1" align="center">
               <button id="chooseButton" oncommand="dialog.chooseApp();"
-#ifdef XP_MACOSX
-                      label="&chooseHandlerMac.label;" accesskey="&chooseHandlerMac.accesskey;"/>
-#else
-                      label="&chooseHandler.label;" accesskey="&chooseHandler.accesskey;"/>
-#endif
+                      data-l10n-id="unknowncontenttype-choose-handler"/>
             </hbox>
           </deck>
         </hbox>
 
-        <radio id="save" label="&saveFile.label;" accesskey="&saveFile.accesskey;"/>
+        <radio id="save" data-l10n-id="unknowncontenttype-save-file"/>
       </radiogroup>
       <separator class="thin"/>
       <hbox class="small-indent">
-        <checkbox id="rememberChoice" label="&rememberChoice.label;"
-                  accesskey="&rememberChoice.accesskey;"
+        <checkbox id="rememberChoice" data-l10n-id="unknowncontenttype-remember-choice"
                   oncommand="dialog.toggleRememberChoice(event.target);"
                   native="true"/>
       </hbox>
