@@ -157,6 +157,11 @@ already_AddRefed<FetchEvent> FetchEvent::Constructor(
     rv.SuppressException();
     return nullptr;
   }
+  e->mPreloadResponse = Promise::Create(global, rv);
+  if (rv.Failed()) {
+    rv.SuppressException();
+    return nullptr;
+  }
   return e.forget();
 }
 
