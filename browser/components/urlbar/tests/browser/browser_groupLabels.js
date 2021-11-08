@@ -410,6 +410,56 @@ add_task(async function clickLabel() {
   });
 });
 
+add_task(async function ariaLabel() {
+  const helpUrl = "http://example.com/help";
+  const results = [
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      { url: "http://example.com/1", helpUrl }
+    ),
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      { url: "http://example.com/2", helpUrl }
+    ),
+    new UrlbarResult(
+      UrlbarUtils.RESULT_TYPE.URL,
+      UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+      { url: "http://example.com/3" }
+    ),
+  ];
+
+  for (let i = 0; i < results.length; i++) {
+    results[i].suggestedIndex = i;
+  }
+
+  const provider = new UrlbarTestUtils.TestProvider({
+    results,
+    priority: Infinity,
+  });
+  UrlbarProvidersManager.registerProvider(provider);
+
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "test",
+  });
+  await checkLabels(results.length, {
+    0: FIREFOX_SUGGEST_LABEL,
+  });
+
+  const expectedRows = [
+    { hasGroupAriaLabel: true, ariaLabel: FIREFOX_SUGGEST_LABEL },
+    { hasGroupAriaLabel: true, ariaLabel: null },
+    { hasGroupAriaLabel: false },
+  ];
+  await checkGroupAriaLabels(expectedRows);
+
+  await UrlbarTestUtils.promisePopupClose(window);
+
+  UrlbarProvidersManager.unregisterProvider(provider);
+});
+
 /**
  * Provider that returns a suggested-index result.
  */
@@ -489,6 +539,41 @@ async function checkLabels(resultCount, labelsByIndex) {
       Assert.ok(
         !row.hasAttribute("label"),
         `Row does not have label attribute at index ${i}`
+      );
+    }
+  }
+}
+
+/**
+ * Asserts that an element for group aria label.
+ *
+ * @param {object} expectedRows
+ */
+async function checkGroupAriaLabels(expectedRows) {
+  Assert.equal(
+    UrlbarTestUtils.getResultCount(window),
+    expectedRows.length,
+    "Expected result count"
+  );
+
+  for (let i = 0; i < expectedRows.length; i++) {
+    const result = await UrlbarTestUtils.getDetailsOfResultAt(window, i);
+    const { row } = result.element;
+    const groupAriaLabel = row.querySelector(".urlbarView-group-aria-label");
+
+    const expected = expectedRows[i];
+
+    Assert.equal(
+      !!groupAriaLabel,
+      expected.hasGroupAriaLabel,
+      `Group aria label exists as expected in the results[${i}]`
+    );
+
+    if (expected.hasGroupAriaLabel) {
+      Assert.equal(
+        groupAriaLabel.getAttribute("aria-label"),
+        expected.ariaLabel,
+        `Content of aria-label attribute in the element for group aria label in the results[${i}] is correct`
       );
     }
   }
