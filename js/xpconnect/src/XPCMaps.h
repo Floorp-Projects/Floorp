@@ -80,7 +80,7 @@ class JSObject2WrappedJSMap {
     }
   }
 
-  void UpdateWeakPointersAfterGC();
+  void UpdateWeakPointersAfterGC(JSTracer* trc);
 
   void ShutdownMarker();
 
@@ -385,7 +385,7 @@ class JSObject2JSObjectMap {
 
   inline uint32_t Count() { return mTable.count(); }
 
-  void Sweep() { mTable.sweep(); }
+  void UpdateWeakPointers(JSTracer* trc) { mTable.traceWeak(trc); }
 
  private:
   Map mTable{XPC_WRAPPER_MAP_LENGTH};
