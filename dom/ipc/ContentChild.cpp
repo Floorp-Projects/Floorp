@@ -2739,6 +2739,11 @@ mozilla::ipc::IPCResult ContentChild::RecvRemoteType(
     nsDependentCSubstring etld =
         Substring(aRemoteType, FISSION_WEB_REMOTE_TYPE.Length() + 1);
     SetProcessName("Isolated Web Content"_ns, &etld);
+  } else if (remoteTypePrefix == SERVICEWORKER_REMOTE_TYPE) {
+    // The profiler can sanitize out the eTLD+1
+    nsDependentCSubstring etld =
+        Substring(aRemoteType, SERVICEWORKER_REMOTE_TYPE.Length() + 1);
+    SetProcessName("Isolated Service Worker"_ns, &etld);
   }
   // else "prealloc" or "web" type -> "Web Content" already set
 

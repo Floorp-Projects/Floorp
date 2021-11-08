@@ -26,6 +26,7 @@ const ProcessType = Object.freeze({
     privilegedmozilla: "process-type-privilegedmozilla",
     web: "process-type-web",
     webIsolated: "process-type-webisolated",
+    webServiceWorker: "process-type-webserviceworker",
     webLargeAllocation: "process-type-weblargeallocation",
   },
 
