@@ -150,40 +150,13 @@ spidermonkey portion.  Each task runs specific tests after the build.
 test
 ----
 
-The ``desktop-test`` kind defines tests for builds.  Its ``tests.yml`` defines
-the full suite of desktop tests and their particulars, leaving it to the
-transforms to determine how those particulars apply to the various platforms.
+See the :doc:`test kind documentation <kinds/test>` for more info.
 
-The process of generating tests goes like this, based on a set of YAML files
-named in ``kind.yml``:
+.. toctree::
+   :hidden:
 
- * For each build task, determine the related test platforms based on the build
-   platform.  For example, a Windows 2010 build might be tested on Windows 7
-   and Windows 10.  Each test platform specifies "test sets" indicating which
-   tests to run.  This is configured in the file named
-   ``test-platforms.yml``.
+   kinds/test
 
- * Each test set is expanded to a list of tests to run.  This is configured in
-   the file named by ``test-sets.yml``. A platform may specify several test
-   sets, in which case the union of those sets is used.
-
- * Each named test is looked up in the file named by ``tests.yml`` to find a
-   test description.  This test description indicates what the test does, how
-   it is reported to treeherder, and how to perform the test, all in a
-   platform-independent fashion.
-
- * Each test description is converted into one or more tasks.  This is
-   performed by a sequence of transforms defined in the ``transforms`` key in
-   ``kind.yml``.  See :doc:`transforms`: for more information on these
-   transforms.
-
- * The resulting tasks become a part of the task graph.
-
-.. important::
-
-    This process generates *all* test jobs, regardless of tree or try syntax.
-    It is up to a later stages of the task-graph generation (the target set and
-    optimization) to select the tests that will actually be performed.
 
 docker-image
 ------------

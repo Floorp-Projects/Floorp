@@ -893,8 +893,9 @@ class GCRuntime {
 #endif
 
   void callFinalizeCallbacks(JSFreeOp* fop, JSFinalizeStatus status) const;
-  void callWeakPointerZonesCallbacks() const;
-  void callWeakPointerCompartmentCallbacks(JS::Compartment* comp) const;
+  void callWeakPointerZonesCallbacks(JSTracer* trc) const;
+  void callWeakPointerCompartmentCallbacks(JSTracer* trc,
+                                           JS::Compartment* comp) const;
   void callDoCycleCollectionCallback(JSContext* cx);
 
  public:

@@ -25,14 +25,15 @@ class ProcessDescriptorFront extends DescriptorMixin(
 ) {
   constructor(client, targetFront, parentFront) {
     super(client, targetFront, parentFront);
-    this.isParent = false;
+    this._isParent = false;
     this._processTargetFront = null;
     this._targetFrontPromise = null;
   }
 
   form(json) {
     this.id = json.id;
-    this.isParent = json.isParent;
+    this._isParent = json.isParent;
+    this._isWindowlessParent = json.isWindowlessParent;
     this.traits = json.traits || {};
   }
 
@@ -64,8 +65,23 @@ class ProcessDescriptorFront extends DescriptorMixin(
     return front;
   }
 
+  /**
+   * This flag should be true for parent process descriptors of a regular
+   * browser instance, where you can expect the target to be associated with a
+   * window global.
+   *
+   * This will typically be true for the descriptor used by the Browser Toolbox
+   * or the Browser Console opened against a regular Firefox instance.
+   *
+   * On the contrary this will be false for parent process descriptors created
+   * for xpcshell debugging or for background task debugging.
+   */
+  get isBrowserProcessDescriptor() {
+    return this._isParent && !this._isWindowlessParent;
+  }
+
   get isParentProcessDescriptor() {
-    return this.isParent;
+    return this._isParent;
   }
 
   get isProcessDescriptor() {

@@ -25,7 +25,7 @@ class FetchEventOpProxyChild final : public PFetchEventOpProxyChild {
   friend class PFetchEventOpProxyChild;
 
  public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchEventOpProxyChild)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchEventOpProxyChild, override);
 
   FetchEventOpProxyChild() = default;
 

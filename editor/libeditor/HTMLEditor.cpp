@@ -4233,7 +4233,8 @@ already_AddRefed<nsIContent> HTMLEditor::SplitNodeWithTransaction(
     // XXX Some other transactions manage range updater by themselves.
     //     Why doesn't SplitNodeTransaction do it?
     DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjSplitNode(
-        *aStartOfRightNode.GetContainerAsContent(), *newLeftContent);
+        *aStartOfRightNode.GetContainerAsContent(), aStartOfRightNode.Offset(),
+        *newLeftContent, SplitNodeDirection::LeftNodeIsNewOne);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "RangeUpdater::SelAdjSplitNode() failed, but ignored");
   }
@@ -4611,11 +4612,19 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsIContent& aLeftContent,
                          "EditorBase::DoTransactionInternal() failed");
   }
 
+  // If joined node is moved to different place, offset may not have any
+  // meaning.  In this case, the web app modified the DOM tree takes on the
+  // responsibility for the remaning things.
+  if (MOZ_UNLIKELY(NS_WARN_IF(aRightContent.GetParentNode() !=
+                              atRightContent.GetContainer()))) {
+    return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+  }
+
   // XXX Some other transactions manage range updater by themselves.
   //     Why doesn't JoinNodeTransaction do it?
   DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjJoinNodes(
-      aLeftContent, aRightContent, *atRightContent.GetContainer(),
-      atRightContent.Offset(), oldLeftNodeLen);
+      EditorRawDOMPoint(&aRightContent, oldLeftNodeLen), aLeftContent,
+      atRightContent.Offset(), JoinNodesDirection::LeftNodeIntoRightNode);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "RangeUpdater::SelAdjJoinNodes() failed, but ignored");
 

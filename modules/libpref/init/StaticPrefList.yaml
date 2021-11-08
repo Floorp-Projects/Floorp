@@ -6964,6 +6964,16 @@
   value: true
   mirror: always
 
+# Whether computed local-fragment-only image urls serialize using the same
+# rules as filter/mask/etc (not resolving the URL for local refs).
+#
+# See https://github.com/w3c/csswg-drafts/issues/3195
+- name: layout.css.computed-style.dont-resolve-image-local-refs
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+  rust: true
+
 # Whether we should expose all shorthands in getComputedStyle().
 - name: layout.css.computed-style.shorthands
   type: bool
@@ -9669,6 +9679,11 @@
 #endif
 
 - name: network.proxy.parse_pac_on_socket_process
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: network.proxy.detect_system_proxy_changes
   type: RelaxedAtomicBool
   value: false
   mirror: always

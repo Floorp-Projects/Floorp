@@ -462,13 +462,46 @@ GeckoDriver.prototype.newSession = async function(cmd) {
       const browsingContext = this.curBrowser.contentBrowser.browsingContext;
       this.currentSession.contentBrowsingContext = browsingContext;
 
-      // If the currently selected tab is loading, wait until it's done.
+      let resolveNavigation;
+
+      // Prepare a promise that will resolve upon a navigation.
+      const onProgressListenerNavigation = new Promise(
+        resolve => (resolveNavigation = resolve)
+      );
+
+      // Create a basic webprogress listener which will check if the browsing
+      // context is ready for the new session on every state change.
+      const navigationListener = {
+        onStateChange: (progress, request, flag, status) => {
+          const isStop = flag & Ci.nsIWebProgressListener.STATE_STOP;
+          if (isStop) {
+            resolveNavigation();
+          }
+        },
+
+        QueryInterface: ChromeUtils.generateQI([
+          "nsIWebProgressListener",
+          "nsISupportsWeakReference",
+        ]),
+      };
+
+      // Monitor the webprogress listener before checking isLoadingDocument to
+      // avoid race conditions.
+      browsingContext.webProgress.addProgressListener(
+        navigationListener,
+        Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
+          Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT
+      );
+
       if (browsingContext.webProgress.isLoadingDocument) {
-        await navigate.waitForNavigationCompleted(this, () => {}, {
-          loadEventExpected: true,
-          unknownState: true,
-        });
+        await onProgressListenerNavigation;
       }
+
+      browsingContext.webProgress.removeProgressListener(
+        navigationListener,
+        Ci.nsIWebProgress.NOTIFY_STATE_WINDOW |
+          Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT
+      );
 
       this.curBrowser.contentBrowser.focus();
     }
@@ -2830,9 +2863,9 @@ GeckoDriver.prototype.teardownReftest = function() {
  *     Right margin in cm. Defaults to 1cm (~0.4 inches).
  * @param {number=} margin.top
  *     Top margin in cm. Defaults to 1cm (~0.4 inches).
- * @param {string=} pageRanges (not supported)
- *     Paper ranges to print, e.g., '1-5, 8, 11-13'.
- *     Defaults to the empty string, which means print all pages.
+ * @param {Array.<string|number>=} pageRanges
+ *     Paper ranges to print, e.g., ['1-5', 8, '11-13'].
+ *     Defaults to the empty array, which means print all pages.
  * @param {number=} page.height
  *     Paper height in cm. Defaults to US letter height (11 inches / 27.94cm)
  * @param {number=} page.width
@@ -2881,6 +2914,7 @@ GeckoDriver.prototype.print = async function(cmd) {
   assert.boolean(settings.shrinkToFit);
   assert.boolean(settings.landscape);
   assert.boolean(settings.printBackground);
+  assert.array(settings.pageRanges);
 
   const linkedBrowser = this.curBrowser.tab.linkedBrowser;
   const filePath = await print.printToFile(linkedBrowser, settings);

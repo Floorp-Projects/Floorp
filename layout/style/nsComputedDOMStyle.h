@@ -240,9 +240,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   already_AddRefed<CSSValue> DoGetImageLayerPosition(
       const nsStyleImageLayers& aLayers);
 
-  /* Mask properties */
-  already_AddRefed<CSSValue> DoGetMask();
-
   /* Padding properties */
   already_AddRefed<CSSValue> DoGetPaddingTop();
   already_AddRefed<CSSValue> DoGetPaddingBottom();

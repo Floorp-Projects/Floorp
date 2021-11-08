@@ -17,7 +17,8 @@
  */
 .profiler-dialog__header {
   align-items: center;
-  background-color: var(--grey-20);
+  background-color: var(--popup-header-background-color);
+  color: var(--popup-header-color);
   display: grid;
   grid-template-columns: 1fr max-content;
   padding: var(--base-unit);
@@ -32,7 +33,7 @@
 }
 
 .profiler-dialog__inner {
-  background-color: var(--white-100);
+  background-color: var(--box-background);
   display: grid;
   grid-template-rows: max-content auto;
   max-height: calc(100% - calc(var(--base-unit) * 25)); /* 100% - 100px */

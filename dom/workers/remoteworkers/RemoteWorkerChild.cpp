@@ -358,6 +358,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(RemoteWorkerData&& aData) {
   info.mUseRegularPrincipal = aData.useRegularPrincipal();
   info.mHasStorageAccessPermissionGranted =
       aData.hasStorageAccessPermissionGranted();
+  info.mIsThirdPartyContextToTopWindow = aData.isThirdPartyContextToTopWindow();
   info.mOriginAttributes =
       BasePrincipal::Cast(principal)->OriginAttributesRef();
   net::CookieJarSettings::Deserialize(aData.cookieJarSettings(),
@@ -1062,11 +1063,10 @@ RemoteWorkerChild::MaybeSendSetServiceWorkerSkipWaitingFlag() {
 /**
  * PFetchEventOpProxy methods
  */
-PFetchEventOpProxyChild* RemoteWorkerChild::AllocPFetchEventOpProxyChild(
+already_AddRefed<PFetchEventOpProxyChild>
+RemoteWorkerChild::AllocPFetchEventOpProxyChild(
     const ServiceWorkerFetchEventOpArgs& aArgs) {
-  RefPtr<FetchEventOpProxyChild> actor = new FetchEventOpProxyChild();
-
-  return actor.forget().take();
+  return RefPtr{new FetchEventOpProxyChild()}.forget();
 }
 
 IPCResult RemoteWorkerChild::RecvPFetchEventOpProxyConstructor(
@@ -1077,16 +1077,6 @@ IPCResult RemoteWorkerChild::RecvPFetchEventOpProxyConstructor(
   (static_cast<FetchEventOpProxyChild*>(aActor))->Initialize(aArgs);
 
   return IPC_OK();
-}
-
-bool RemoteWorkerChild::DeallocPFetchEventOpProxyChild(
-    PFetchEventOpProxyChild* aActor) {
-  MOZ_ASSERT(aActor);
-
-  RefPtr<FetchEventOpProxyChild> actor =
-      dont_AddRef(static_cast<FetchEventOpProxyChild*>(aActor));
-
-  return true;
 }
 
 }  // namespace dom

@@ -31,18 +31,20 @@ class FetchEventOpProxyParent final : public PFetchEventOpProxyParent {
   friend class PFetchEventOpProxyParent;
 
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FetchEventOpProxyParent, override);
+
   static void Create(
       PRemoteWorkerParent* aManager,
       RefPtr<ServiceWorkerFetchEventOpPromise::Private>&& aPromise,
       const ServiceWorkerFetchEventOpArgs& aArgs,
       RefPtr<FetchEventOpParent> aReal, nsCOMPtr<nsIInputStream> aBodyStream);
 
-  ~FetchEventOpProxyParent();
-
  private:
   FetchEventOpProxyParent(
       RefPtr<FetchEventOpParent>&& aReal,
       RefPtr<ServiceWorkerFetchEventOpPromise::Private>&& aPromise);
+
+  ~FetchEventOpProxyParent();
 
   mozilla::ipc::IPCResult RecvAsyncLog(const nsCString& aScriptSpec,
                                        const uint32_t& aLineNumber,

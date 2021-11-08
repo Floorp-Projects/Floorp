@@ -17,6 +17,7 @@ geckoview-junit:
     max-run-time: 3600
     run-on-projects:
         by-variant:
+            geckoview-e10s-single: ['trunk']
             geckoview-fission: ['trunk']
             default: built-projects
     tier: default
