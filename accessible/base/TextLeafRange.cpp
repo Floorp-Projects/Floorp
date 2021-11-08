@@ -11,8 +11,6 @@
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/LocalAccessible.h"
 #include "mozilla/BinarySearch.h"
-#include "mozilla/Casting.h"
-#include "mozilla/intl/Segmenter.h"
 #include "mozilla/intl/WordBreaker.h"
 #include "mozilla/StaticPrefs_layout.h"
 #include "nsAccUtils.h"
@@ -640,17 +638,16 @@ TextLeafPoint TextLeafPoint::FindNextWordStartSameAcc(
     }
   }
   // Keep walking forward until we find an acceptable word start.
-  intl::WordBreakIteratorUtf16 wordBreakIter(text);
-  Maybe<uint32_t> nextBreak = wordBreakIter.Seek(wordStart);
   for (;;) {
-    if (!nextBreak || *nextBreak == text.Length()) {
+    wordStart = WordBreaker::Next(text.get(), text.Length(), wordStart);
+    if (wordStart == NS_WORDBREAKER_NEED_MORE_TEXT ||
+        wordStart == static_cast<int32_t>(text.Length())) {
       if (lineStart) {
         // A line start always starts a new word.
         return lineStart;
       }
       return TextLeafPoint();
     }
-    wordStart = AssertedCast<int32_t>(*nextBreak);
     if (lineStart && wordStart > lineStart.mOffset) {
       // A line start always starts a new word.
       return lineStart;
@@ -658,7 +655,6 @@ TextLeafPoint TextLeafPoint::FindNextWordStartSameAcc(
     if (IsAcceptableWordStart(mAcc, text, wordStart)) {
       break;
     }
-    nextBreak = wordBreakIter.Next();
   }
   return TextLeafPoint(mAcc, wordStart);
 }
