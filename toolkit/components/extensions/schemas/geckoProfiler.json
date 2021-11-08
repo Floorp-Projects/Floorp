@@ -43,6 +43,9 @@
           "audiocallbacktracing",
           "cpu",
           "notimerresolutionchange",
+          "cpuallthreads",
+          "samplingallthreads",
+          "markersallthreads",
           "responsiveness"
         ]
       },
