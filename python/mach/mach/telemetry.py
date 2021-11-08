@@ -53,17 +53,19 @@ def create_telemetry_from_environment(settings):
     ):
         return NoopTelemetry(False)
 
+    is_enabled = is_telemetry_enabled(settings)
+
     try:
         from glean import Glean
     except ImportError:
-        return NoopTelemetry(True)
+        return NoopTelemetry(is_enabled)
 
     from pathlib import Path
 
     Glean.initialize(
         "mozilla.mach",
         "Unknown",
-        is_telemetry_enabled(settings),
+        is_enabled,
         data_dir=Path(get_state_dir()) / "glean",
     )
     return GleanTelemetry()
