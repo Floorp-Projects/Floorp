@@ -58,6 +58,9 @@ inline bool IsFlagSet(DWORD flags, DWORD pattern) {
 // Will return %ProgramW6432% value as per:
 // https://msdn.microsoft.com/library/windows/desktop/aa384274.aspx
 nsString GetProgramW6432Path();
+
+const char* MFTMessageTypeToStr(MFT_MESSAGE_TYPE aMsg);
+
 }  // namespace mozilla
 
 #endif
