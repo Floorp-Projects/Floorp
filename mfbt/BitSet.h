@@ -8,8 +8,6 @@
 #define mozilla_BitSet_h
 
 #include "mozilla/Array.h"
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/MathAlgorithms.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Span.h"
 
@@ -30,17 +28,9 @@ class BitSet {
  private:
   static constexpr size_t kBitsPerWord = 8 * sizeof(Word);
   static constexpr size_t kNumWords = (N + kBitsPerWord - 1) / kBitsPerWord;
-  static constexpr size_t kPaddingBits = (kNumWords * kBitsPerWord) - N;
-  static constexpr Word kPaddingMask = Word(-1) >> kPaddingBits;
 
   // The zeroth bit in the bitset is the least significant bit of mStorage[0].
   Array<Word, kNumWords> mStorage;
-
-  constexpr void ResetPaddingBits() {
-    if constexpr (kPaddingBits != 0) {
-      mStorage[kNumWords - 1] &= kPaddingMask;
-    }
-  }
 
  public:
   class Reference {
@@ -62,7 +52,7 @@ class BitSet {
     size_t mPos;
   };
 
-  constexpr BitSet() : mStorage() {}
+  BitSet() { ResetAll(); }
 
   BitSet(const BitSet& aOther) { *this = aOther; }
 
@@ -81,17 +71,6 @@ class BitSet {
     MOZ_ASSERT(aPos < N);
     return mStorage[aPos / kBitsPerWord] & (Word(1) << (aPos % kBitsPerWord));
   }
-
-  constexpr bool IsEmpty() const {
-    for (const Word& word : mStorage) {
-      if (word) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  explicit constexpr operator bool() { return !IsEmpty(); }
 
   constexpr bool operator[](size_t aPos) const { return Test(aPos); }
 
@@ -113,58 +92,17 @@ class BitSet {
     return *this;
   }
 
-  BitSet operator~() const {
-    BitSet result = *this;
-    result.Flip();
-    return result;
-  }
-
-  BitSet& operator&=(const BitSet<N, Word>& aOther) {
-    for (size_t i = 0; i < ArrayLength(mStorage); i++) {
-      mStorage[i] &= aOther.mStorage[i];
-    }
-    return *this;
-  }
-
-  BitSet operator&(const BitSet<N, Word>& aOther) const {
-    BitSet result = *this;
-    result &= aOther;
-    return result;
-  }
-
-  bool operator==(const BitSet<N, Word>& aOther) const {
-    return mStorage == aOther.mStorage;
-  }
-
-  size_t Count() const {
-    size_t count = 0;
-
-    for (const Word& word : mStorage) {
-      if constexpr (kBitsPerWord > 32) {
-        count += CountPopulation64(word);
-      } else {
-        count += CountPopulation32(word);
-      }
-    }
-
-    return count;
-  }
-
   // Set all bits to false.
   void ResetAll() { PodArrayZero(mStorage); }
 
   // Set all bits to true.
   void SetAll() {
     memset(mStorage.begin(), 0xff, kNumWords * sizeof(Word));
-    ResetPaddingBits();
-  }
-
-  void Flip() {
-    for (Word& word : mStorage) {
-      word = ~word;
+    constexpr size_t paddingBits = (kNumWords * kBitsPerWord) - N;
+    constexpr Word paddingMask = Word(-1) >> paddingBits;
+    if constexpr (paddingBits != 0) {
+      mStorage[kNumWords - 1] &= paddingMask;
     }
-
-    ResetPaddingBits();
   }
 
   Span<Word> Storage() { return mStorage; }

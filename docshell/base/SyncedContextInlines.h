@@ -61,8 +61,7 @@ void FormatFieldValue(nsACString& aStr, const T& aValue) {
 // a synced context transaction is going to perform.
 template <typename Context>
 nsAutoCString FormatTransaction(
-    typename Transaction<Context>::IndexSet aModified,
-    const typename Context::FieldValues& aOldValues,
+    IndexSet aModified, const typename Context::FieldValues& aOldValues,
     const typename Context::FieldValues& aNewValues) {
   nsAutoCString result;
   Context::FieldValues::EachIndex([&](auto idx) {
@@ -79,8 +78,7 @@ nsAutoCString FormatTransaction(
 }
 
 template <typename Context>
-nsCString FormatValidationError(
-    typename Transaction<Context>::IndexSet aFailedFields, const char* prefix) {
+nsCString FormatValidationError(IndexSet aFailedFields, const char* prefix) {
   MOZ_ASSERT(!aFailedFields.isEmpty());
   return nsDependentCString{prefix} +
          StringJoin(", "_ns, aFailedFields,
@@ -247,8 +245,8 @@ inline CanSetResult AsCanSetResult(bool aValue) {
 }
 
 template <typename Context>
-typename Transaction<Context>::IndexSet Transaction<Context>::Validate(
-    Context* aOwner, ContentParent* aSource) {
+IndexSet Transaction<Context>::Validate(Context* aOwner,
+                                        ContentParent* aSource) {
   IndexSet failedFields;
   Transaction<Context> revertTxn;
 
@@ -297,7 +295,7 @@ void Transaction<Context>::Write(IPC::Message* aMsg,
                                  mozilla::ipc::IProtocol* aActor) const {
   // Record which field indices will be included, and then write those fields
   // out.
-  typename IndexSet::serializedType modified = mModified.serialize();
+  uint64_t modified = mModified.serialize();
   WriteIPDLParam(aMsg, aActor, modified);
   EachIndex([&](auto idx) {
     if (mModified.contains(idx)) {
@@ -311,8 +309,7 @@ bool Transaction<Context>::Read(const IPC::Message* aMsg, PickleIterator* aIter,
                                 mozilla::ipc::IProtocol* aActor) {
   // Read in which field indices were sent by the remote, followed by the fields
   // identified by those indices.
-  typename IndexSet::serializedType modified =
-      typename IndexSet::serializedType{};
+  uint64_t modified = 0;
   if (!ReadIPDLParam(aMsg, aIter, aActor, &modified)) {
     return false;
   }
