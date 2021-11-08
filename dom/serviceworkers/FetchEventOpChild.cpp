@@ -53,7 +53,8 @@ namespace dom {
 
 namespace {
 
-bool CSPPermitsResponse(nsILoadInfo* aLoadInfo, InternalResponse* aResponse,
+bool CSPPermitsResponse(nsILoadInfo* aLoadInfo,
+                        SafeRefPtr<InternalResponse> aResponse,
                         const nsACString& aWorkerScriptSpec) {
   AssertIsOnMainThread();
   MOZ_ASSERT(aLoadInfo);
@@ -330,7 +331,7 @@ nsresult FetchEventOpChild::StartSynthesizedResponse(
    * there isn't a prefect-forwarding or rvalue-ref-parameter overload of
    * `InternalResponse::FromIPC().`
    */
-  RefPtr<InternalResponse> response =
+  SafeRefPtr<InternalResponse> response =
       InternalResponse::FromIPC(aArgs.internalResponse());
   if (NS_WARN_IF(!response)) {
     return NS_ERROR_FAILURE;
@@ -344,7 +345,8 @@ nsresult FetchEventOpChild::StartSynthesizedResponse(
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo = underlyingChannel->LoadInfo();
-  if (!CSPPermitsResponse(loadInfo, response, mArgs.workerScriptSpec())) {
+  if (!CSPPermitsResponse(loadInfo, response.clonePtr(),
+                          mArgs.workerScriptSpec())) {
     return NS_ERROR_CONTENT_BLOCKED;
   }
 

@@ -813,8 +813,8 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     aLoadInfo.mChannel = channel;
 
     // We synthesize the result code, but its never exposed to content.
-    RefPtr<mozilla::dom::InternalResponse> ir =
-        new mozilla::dom::InternalResponse(200, "OK"_ns);
+    SafeRefPtr<mozilla::dom::InternalResponse> ir =
+        MakeSafeRefPtr<mozilla::dom::InternalResponse>(200, "OK"_ns);
     ir->SetBody(aLoadInfo.mCacheReadStream,
                 InternalResponse::UNKNOWN_BODY_SIZE);
 
@@ -841,8 +841,8 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
     ir->SetPrincipalInfo(std::move(principalInfo));
     ir->Headers()->FillResponseHeaders(aLoadInfo.mChannel);
 
-    RefPtr<mozilla::dom::Response> response =
-        new mozilla::dom::Response(mCacheCreator->Global(), ir, nullptr);
+    RefPtr<mozilla::dom::Response> response = new mozilla::dom::Response(
+        mCacheCreator->Global(), std::move(ir), nullptr);
 
     mozilla::dom::RequestOrUSVString request;
 
