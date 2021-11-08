@@ -141,6 +141,7 @@ struct WorkerLoadInfoData {
   bool mHasStorageAccessPermissionGranted;
   bool mServiceWorkersTestingInWindow;
   OriginAttributes mOriginAttributes;
+  bool mIsThirdPartyContextToTopWindow;
 
   enum {
     eNotSet,
