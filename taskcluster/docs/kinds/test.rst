@@ -52,6 +52,8 @@ Each variant must conform to the
 
 * **description** (required) - A description explaining what the variant is for
 * **suffix** (required) - A suffix to apply to the task label and treeherder symbol
+* **contact** - Person to contact with questions around cost / capacity planning or
+  relative priority.
 * **when** - A `json-e`_ expression that must evaluate to ``true`` for the variant
   to be applied. The ``task`` definition is passed in as context
 * **replace** - A dictionary that will overwrite keys in the task definition
