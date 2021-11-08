@@ -118,14 +118,8 @@
     switchTheme(getTheme());
   }
 
-  // Check if the current document or the embedder of the document enforces a
-  // theme.
-  const forcedTheme =
-    documentElement.getAttribute("force-theme") ||
-    window.top.document.documentElement.getAttribute("force-theme");
-
-  if (forcedTheme) {
-    switchTheme(forcedTheme);
+  if (documentElement.hasAttribute("force-theme")) {
+    switchTheme(documentElement.getAttribute("force-theme"));
   } else {
     switchTheme(getTheme());
 
