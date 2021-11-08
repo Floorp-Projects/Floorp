@@ -52,6 +52,7 @@
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/RootedDictionary.h"
+#include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/dom/WorkerCommon.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -1447,7 +1448,7 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
     }
   }
 
-  RefPtr<InternalResponse> ir = response->GetInternalResponse();
+  SafeRefPtr<InternalResponse> ir = response->GetInternalResponse();
   if (NS_WARN_IF(!ir)) {
     return;
   }
@@ -1506,7 +1507,7 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
   mHandled->MaybeResolveWithUndefined();
   mRespondWithPromiseHolder.Resolve(
       FetchEventRespondWithResult(MakeTuple(
-          ir, mRespondWithClosure.ref(),
+          std::move(ir), mRespondWithClosure.ref(),
           FetchEventTimeStamps(mFetchHandlerStart, mFetchHandlerFinish))),
       __func__);
 }

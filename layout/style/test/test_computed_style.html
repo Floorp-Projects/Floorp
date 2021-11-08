@@ -220,99 +220,6 @@ var noframe_container = document.getElementById("content");
   p.remove();
 })();
 
-(function test_bug_1235015() {
-  // "masks" object contains non-initial mask longhand values.
-  var emptyMasks = {
-    // More then one <mask-reference>, or any mask-image value other then
-    // <mask-source>,
-    "mask-image": [
-      "url(#mask1), url(#mask2)",
-      "linear-gradient(red, yellow)",
-      "-moz-element(#test)"
-    ],
-    // any mask-clip value other than "border-box".
-    "mask-clip": [
-      "content-box", "padding-box", "margin-box", "fill-box", "stroke-box",
-      "view-box", "no-clip"
-    ],
-    // any mask-origin  value other than "border-box".
-    "mask-origin": [
-      "content-box", "padding-box", "margin-box", "fill-box", "stroke-box",
-      "view-box"
-    ],
-    // any mask-composite value other than "add".
-    "mask-composite": [
-      "subtract", "intersect", "exclude"
-    ],
-    // any mask-mode value other than "match-source".
-    "mask-mode": [
-      "alpha", "luminance"
-    ],
-    // any mask-position value other then "0%" "top" "left"
-    // "center center".
-    "mask-position": [
-      "0%", "center", "right", "bottom", "50%", "100%"
-    ],
-    // any mask-repeat value other then "repeat" "repeat repeat".
-    "mask-repeat": [
-      "repeat-x", "repeat-y", "no-repeat", "space", "round"
-    ],
-    // any mask-size value other then "auto" "auto auto".
-    "mask-size": [
-      "10px", "100%", "cover", "contain", "auto 5px"
-    ],
-  };
-
-  // "masks" object contains initial mask longhand values.
-  var nonEmptyMasks = {
-    "mask-image": [
-      "url(#mask1)", "none"
-    ],
-    "mask-clip": [
-      "border-box"
-    ],
-    "mask-origin": [
-      "border-box"
-    ],
-    "mask-composite": [
-      "add"
-    ],
-    "mask-mode": [
-      "match-source"
-    ],
-    "mask-position": [
-      "0% 0%", "left top"
-    ],
-    "mask-repeat": [
-      "repeat", "repeat repeat"
-    ],
-    "mask-size": [
-      "auto", "auto auto"
-    ],
-  };
-
-  var p = document.createElement("p");
-  var cs = getComputedStyle(p, "");
-  frame_container.appendChild(p);
-
-  for (var prop in emptyMasks) {
-    var subProp = emptyMasks[prop];
-    for (var i = 0; i < subProp.length; i++) {
-      p.style.mask = subProp[i];
-      is(cs.mask, "", "computed value of " + subProp[i] + " mask");
-    }
-  }
-
-  for (var prop in nonEmptyMasks) {
-    var subProp = nonEmptyMasks[prop];
-    for (var i = 0; i < subProp.length; i++) {
-      p.style.mask = subProp[i];
-      isnot(cs.mask, "", "computed value of " + subProp[i] + " mask");
-    }
-  }
-  p.remove();
-})();
-
 (function test_bug_1363349_linear() {
   const specPrefix = "-webkit-gradient(linear, ";
   const specSuffix = ", from(blue), to(lime))";
@@ -512,7 +419,6 @@ var noframe_container = document.getElementById("content");
 })();
 
 (function test_bug_1293164() {
-
   var p = document.createElement("p");
   var cs = getComputedStyle(p, "");
   frame_container.appendChild(p);
@@ -524,7 +430,8 @@ var noframe_container = document.getElementById("content");
   var resolvedNonLocalURL = "url(\"" + docPath + "foo.svg#foo\")";
 
   var testStyles = [
-    "mask",
+    "maskImage",
+    "backgroundImage",
     "markerStart",
     "markerMid",
     "markerEnd",

@@ -834,6 +834,11 @@ class WorkerPrivate final : public RelativeTimeline {
     return mLoadInfo.mServiceWorkersTestingInWindow;
   }
 
+  // Determin if the worker was created under a third-party context.
+  bool IsThirdPartyContextToTopWindow() const {
+    return mLoadInfo.mIsThirdPartyContextToTopWindow;
+  }
+
   bool IsWatchedByDevTools() const { return mLoadInfo.mWatchedByDevTools; }
 
   // Determine if the worker is currently loading its top level script.

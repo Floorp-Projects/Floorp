@@ -1,0 +1,131 @@
+---
+a11y-checks:
+    description: "{description} with accessibility checks enabled"
+    contact: jteh
+    suffix: "a11y-checks"
+    replace:
+        tier: 2
+    merge:
+        mozharness:
+            extra-options:
+                - "--enable-a11y-checks"
+
+aab:
+    description: "{description} with aab test_runner"
+    contact: agi
+    when: &gv_e10s_filter
+        $eval: 'mobile == "geckoview" && task.e10s in [true, "both"]'
+    suffix: "aab"
+    replace:
+        target: "geckoview-test_runner.aab"
+        docker-image:
+            in-tree: "android-test"
+
+geckoview-e10s-single:
+    description: "{description} with single-process e10s"
+    when:
+        <<: *gv_e10s_filter
+    suffix: "e10s-single"
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=dom.ipc.processCount=1"
+
+geckoview-fission:
+    description: "{description} with fission enabled"
+    when:
+        <<: *gv_e10s_filter
+    suffix: "fis"
+    merge:
+        mozharness:
+            extra-options:
+                - "--enable-fission"
+
+fission:
+    description: "{description} with fission enabled"
+    contact: cpeterson
+    when: &fission_filter
+        $eval: task.e10s in [true, "both"]
+    suffix: "fis"
+    replace:
+        e10s: true
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=fission.autostart=true"
+
+fission-xorigin:
+    description: "{description} with cross-origin and fission enabled"
+    contact: cpeterson
+    when:
+        <<: *fission_filter
+    suffix: "fis-xorig"
+    replace:
+        e10s: true
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=fission.autostart=true"
+                - "--enable-xorigin-tests"
+
+# TODO: After 2022-01-01, verify this variant is still needed.
+fission-webgl-ipc:
+    description: "{description} with fission and WebGL IPC process enabled"
+    contact: jgilbert
+    suffix: "fis-gli"
+    replace:
+        e10s: true
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=fission.autostart=true"
+                - "--setpref=dom.serviceWorkers.parent_intercept=true"
+                - "--setpref=webgl.out-of-process=true"
+
+socketprocess:
+    description: "{description} with socket process enabled"
+    suffix: "spi"
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=media.peerconnection.mtransport_process=true"
+                - "--setpref=network.process.enabled=true"
+
+socketprocess_networking:
+    description: "{description} with networking on socket process enabled"
+    suffix: "spi-nw"
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=network.process.enabled=true"
+                - "--setpref=network.http.network_access_on_socket_process.enabled=true"
+                - "--setpref=network.ssl_tokens_cache_enabled=true"
+
+wayland:
+    description: "{description} with Wayland backend enabled"
+    suffix: "wayland"
+    replace:
+        run-on-projects: []
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=widget.wayland.test-workarounds.enabled=true"
+
+webrender-sw:
+    description: "{description} with software webrender enabled"
+    suffix: "swr"
+    merge:
+        webrender: true
+        mozharness:
+            extra-options:
+                - "--setpref=gfx.webrender.software=true"
+
+# TODO: After 2022-01-01, verify this variant is still needed.
+webgl-ipc:
+    description: "{description} with WebGL IPC process enabled"
+    contact: jgilbert
+    suffix: "gli"
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=webgl.out-of-process=true"

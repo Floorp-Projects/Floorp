@@ -26,6 +26,9 @@ class Selection;
 class Text;
 }  // namespace dom
 
+enum class JoinNodesDirection;  // Declared in HTMLEditHelpers.h
+enum class SplitNodeDirection;  // Declared in HTMLEditHelpers.h
+
 /**
  * A helper struct for saving/setting ranges.
  */
@@ -140,10 +143,39 @@ class MOZ_STACK_CLASS RangeUpdater final {
   template <typename PT, typename CT>
   nsresult SelAdjInsertNode(const EditorDOMPointBase<PT, CT>& aPoint);
   void SelAdjDeleteNode(nsINode& aNode);
-  nsresult SelAdjSplitNode(nsIContent& aRightNode, nsIContent& aNewLeftNode);
-  nsresult SelAdjJoinNodes(nsINode& aLeftNode, nsINode& aRightNode,
-                           nsINode& aParent, uint32_t aOffset,
-                           uint32_t aOldLeftNodeLength);
+
+  /**
+   * SelAdjSplitNode() is called immediately after spliting aOriginalNode
+   * and inserted aNewContent into the DOM tree.
+   *
+   * @param aOriginalContent    The node which was split.
+   * @param aSplitOffset        The old offset in aOriginalContent at splitting
+   *                            it.
+   * @param aNewContent         The new content node which was inserted into
+   *                            the DOM tree.
+   * @param aSplitNodeDirection Whether aNewNode was inserted before or after
+   *                            aOriginalContent.
+   */
+  nsresult SelAdjSplitNode(nsIContent& aOriginalContent, uint32_t aSplitOffset,
+                           nsIContent& aNewContent,
+                           SplitNodeDirection aSplitNodeDirection);
+
+  /**
+   * SelAdjJoinNodes() is called immediately after joining aRemovedContent and
+   * the container of aStartOfRightContent.
+   *
+   * @param aStartOfRightContent    The container is joined content node which
+   *                                now has all children or text data which were
+   *                                in aRemovedContent.  And this points where
+   *                                the joined position.
+   * @param aRemovedContent         The removed content.
+   * @param aOffsetOfRemovedContent The offset which aRemovedContent was in
+   *                                its ex-parent.
+   */
+  nsresult SelAdjJoinNodes(const EditorRawDOMPoint& aStartOfRightContent,
+                           const nsIContent& aRemovedContent,
+                           uint32_t aOffsetOfRemovedContent,
+                           JoinNodesDirection aJoinNodesDirection);
   void SelAdjInsertText(const dom::Text& aTextNode, uint32_t aOffset,
                         uint32_t aInsertedLength);
   void SelAdjDeleteText(const dom::Text& aTextNode, uint32_t aOffset,

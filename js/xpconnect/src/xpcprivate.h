@@ -547,8 +547,8 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   static void DoCycleCollectionCallback(JSContext* cx);
   static void FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status,
                                void* data);
-  static void WeakPointerZonesCallback(JSContext* cx, void* data);
-  static void WeakPointerCompartmentCallback(JSContext* cx,
+  static void WeakPointerZonesCallback(JSTracer* trc, void* data);
+  static void WeakPointerCompartmentCallback(JSTracer* trc,
                                              JS::Compartment* comp, void* data);
 
   inline void AddVariantRoot(XPCTraceableVariant* variant);
@@ -613,9 +613,10 @@ class XPCJSRuntime final : public mozilla::CycleCollectedJSRuntime {
   };
 
   struct SweepPolicy {
-    static bool needsSweep(RefPtr<mozilla::BasePrincipal>* /* unused */,
-                           JS::Heap<JSObject*>* value) {
-      return JS::GCPolicy<JS::Heap<JSObject*>>::needsSweep(value);
+    static bool traceWeak(JSTracer* trc,
+                          RefPtr<mozilla::BasePrincipal>* /* unused */,
+                          JS::Heap<JSObject*>* value) {
+      return JS::GCPolicy<JS::Heap<JSObject*>>::traceWeak(trc, value);
     }
   };
 
@@ -850,7 +851,7 @@ class XPCWrappedNativeScope final
 
   static void SweepAllWrappedNativeTearOffs();
 
-  void UpdateWeakPointersAfterGC();
+  void UpdateWeakPointersAfterGC(JSTracer* trc);
 
   static void DebugDumpAllScopes(int16_t depth);
 
@@ -2637,16 +2638,16 @@ class CompartmentPrivate {
   bool wasShutdown;
 
   JSObject2WrappedJSMap* GetWrappedJSMap() const { return mWrappedJSMap.get(); }
-  void UpdateWeakPointersAfterGC();
+  void UpdateWeakPointersAfterGC(JSTracer* trc);
 
   void SystemIsBeingShutDown();
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
   struct SweepPolicy {
-    static bool needsSweep(const void* /* unused */,
-                           JS::Heap<JSObject*>* value) {
-      return JS::GCPolicy<JS::Heap<JSObject*>>::needsSweep(value);
+    static bool traceWeak(JSTracer* trc, const void* /* unused */,
+                          JS::Heap<JSObject*>* value) {
+      return JS::GCPolicy<JS::Heap<JSObject*>>::traceWeak(trc, value);
     }
   };
 

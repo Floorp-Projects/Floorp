@@ -328,6 +328,27 @@ nsHashPropertyBag::~nsHashPropertyBag() {
 }
 
 /*
+ * nsHashPropertyBagOMT implementation
+ */
+NS_IMPL_ADDREF(nsHashPropertyBagOMT)
+NS_IMPL_RELEASE(nsHashPropertyBagOMT)
+
+NS_INTERFACE_MAP_BEGIN(nsHashPropertyBagOMT)
+  NS_INTERFACE_MAP_ENTRY(nsIWritablePropertyBag)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIPropertyBag, nsIWritablePropertyBag)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWritablePropertyBag)
+  NS_INTERFACE_MAP_ENTRY(nsIPropertyBag2)
+  NS_INTERFACE_MAP_ENTRY(nsIWritablePropertyBag2)
+NS_INTERFACE_MAP_END
+
+nsHashPropertyBagOMT::nsHashPropertyBagOMT() {
+  // nsHashPropertyBagOMT is supposed to be used off-main thread. If you need a
+  // single threaded property bag on the main thread, you should consider using
+  // nsHashPropertyBagCC instead, to prevent leaks.
+  MOZ_ASSERT(!NS_IsMainThread());
+}
+
+/*
  * nsHashPropertyBagCC implementation.
  */
 

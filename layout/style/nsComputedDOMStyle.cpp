@@ -2441,32 +2441,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetTransformValue(
   return MatrixToCSSValue(matrix);
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetMask() {
-  const nsStyleSVGReset* svg = StyleSVGReset();
-  const nsStyleImageLayers::Layer& firstLayer = svg->mMask.mLayers[0];
-
-  // Mask is now a shorthand, but it used to be a longhand, so that we
-  // need to support computed style for the cases where it used to be
-  // a longhand.
-  if (svg->mMask.mImageCount > 1 ||
-      firstLayer.mClip != StyleGeometryBox::BorderBox ||
-      firstLayer.mOrigin != StyleGeometryBox::BorderBox ||
-      firstLayer.mComposite != StyleMaskComposite::Add ||
-      firstLayer.mMaskMode != StyleMaskMode::MatchSource ||
-      firstLayer.mPosition != Position::FromPercentage(0.0f) ||
-      !firstLayer.mRepeat.IsInitialValue() ||
-      !firstLayer.mSize.IsInitialValue() ||
-      !(firstLayer.mImage.IsNone() || firstLayer.mImage.IsUrl())) {
-    return nullptr;
-  }
-
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-
-  SetValueToURLValue(firstLayer.mImage.GetImageRequestURLValue(), val);
-
-  return val.forget();
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DummyGetter() {
   MOZ_CRASH("DummyGetter is not supposed to be invoked");
 }

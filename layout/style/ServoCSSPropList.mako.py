@@ -99,8 +99,7 @@ LONGHANDS_NOT_SERIALIZED_WITH_SERVO = [
 
 def serialized_by_servo(prop):
     if prop.type() == "shorthand":
-        # FIXME: Need to figure out what to do with relative mask urls.
-        return prop.name != "mask"
+        return True
     # Keywords are all fine, except -moz-osx-font-smoothing, which does
     # resistfingerprinting stuff.
     if prop.keyword and prop.name != "-moz-osx-font-smoothing":

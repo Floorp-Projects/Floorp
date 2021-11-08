@@ -809,10 +809,12 @@ void BaseCompiler::storeCommon(MemoryAccessDesc* access, AccessCheck check,
 // used in an access.
 
 static inline Register ToRegister(RegI32 r) { return Register(r); }
-#ifdef JS_PUNBOX64
+#ifdef ENABLE_WASM_MEMORY64
+#  ifdef JS_PUNBOX64
 static inline Register ToRegister(RegI64 r) { return r.reg; }
-#else
+#  else
 static inline Register ToRegister(RegI64 r) { return r.low; }
+#  endif
 #endif
 
 //////////////////////////////////////////////////////////////////////////////

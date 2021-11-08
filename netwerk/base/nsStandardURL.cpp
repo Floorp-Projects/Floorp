@@ -143,10 +143,7 @@ int32_t nsStandardURL::nsSegmentEncoder::EncodeSegmentCount(
 
       size_t totalRead = 0;
       for (;;) {
-        uint32_t encoderResult;
-        size_t read;
-        size_t written;
-        Tie(encoderResult, read, written) =
+        auto [encoderResult, read, written] =
             encoder->EncodeFromUTF8WithoutReplacement(
                 AsBytes(span.From(totalRead)), AsWritableBytes(buffer), true);
         totalRead += read;
