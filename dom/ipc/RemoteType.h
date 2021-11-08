@@ -10,8 +10,8 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 
-// These must match the similar ones in E10SUtils.jsm and ProcInfo.h.
-// Process names as reported by about:memory are defined in
+// These must match the similar ones in E10SUtils.jsm and ProcInfo.h and
+// ChromeUtils.webidl Process names as reported by about:memory are defined in
 // ContentChild:RecvRemoteType.  Add your value there too or it will be called
 // "Web Content".
 #define PREALLOC_REMOTE_TYPE "prealloc"_ns
@@ -28,6 +28,7 @@
 #define WITH_COOP_COEP_REMOTE_TYPE "webCOOP+COEP"_ns
 #define WITH_COOP_COEP_REMOTE_TYPE_PREFIX "webCOOP+COEP="_ns
 #define LARGE_ALLOCATION_REMOTE_TYPE "webLargeAllocation"_ns
+#define SERVICEWORKER_REMOTE_TYPE "webServiceWorker"_ns
 
 // Remote type value used to represent being non-remote.
 #define NOT_REMOTE_TYPE VoidCString()

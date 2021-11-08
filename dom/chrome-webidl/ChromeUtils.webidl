@@ -597,6 +597,7 @@ partial namespace ChromeUtils {
 
 /*
  * This type is a WebIDL representation of mozilla::ProcType.
+ * These must match the similar ones in E10SUtils.jsm, RemoteTypes.h, ProcInfo.h and ChromeUtils.cpp
  */
 enum WebIDLProcType {
  "web",
@@ -607,6 +608,7 @@ enum WebIDLProcType {
  "privilegedmozilla",
  "webLargeAllocation",
  "withCoopCoep",
+ "webServiceWorker",
  "browser",
  "ipdlUnitTest",
  "gmpPlugin",
