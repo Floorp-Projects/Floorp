@@ -57,7 +57,7 @@ add_task(async function testWebExtensionToolboxReload() {
   );
   ok(initialMessage, "Found the expected message from the background script");
 
-  const waitForCurrentPanelReload = watchForCurrentPanelReload(toolbox);
+  const waitForLoadedPanelsReload = await watchForLoadedPanelsReload(toolbox);
 
   info("Reload the addon using a toolbox reload shortcut");
   toolbox.win.focus();
@@ -69,9 +69,7 @@ add_task(async function testWebExtensionToolboxReload() {
     return newMessage && newMessage !== initialMessage;
   });
 
-  if (waitForCurrentPanelReload) {
-    await waitForCurrentPanelReload();
-  }
+  await waitForLoadedPanelsReload();
 
   await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
   await removeTemporaryExtension(ADDON_NAME, document);

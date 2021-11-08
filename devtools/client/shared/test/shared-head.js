@@ -675,6 +675,12 @@ async function _watchForResponsiveReload(
  * Watch for the current panel selected in the provided toolbox to be reloaded.
  * Some panels implement custom events that should be expected for every reload.
  *
+ * Note about returning a method instead of a promise:
+ * In general this pattern is useful so that we can check if a target switch
+ * occurred or not, and decide which events to listen for. So far no panel is
+ * behaving differently whether there was a target switch or not. But to remain
+ * consistent with other watch* methods we still return a function here.
+ *
  * @param {Toolbox}
  *        The Toolbox instance which is going to experience a reload
  * @return {function} An async method to be called and awaited after the reload
@@ -682,8 +688,42 @@ async function _watchForResponsiveReload(
  *         specific reload event.
  */
 function watchForCurrentPanelReload(toolbox) {
-  const toolId = toolbox.currentToolId;
-  const panel = toolbox.getCurrentPanel();
+  return _watchForPanelReload(toolbox, toolbox.currentToolId);
+}
+
+/**
+ * Watch for all the panels loaded in the provided toolbox to be reloaded.
+ * Some panels implement custom events that should be expected for every reload.
+ *
+ * Note about returning a method instead of a promise:
+ * See comment for watchForCurrentPanelReload
+ *
+ * @param {Toolbox}
+ *        The Toolbox instance which is going to experience a reload
+ * @return {function} An async method to be called and awaited after the reload
+ *         started.
+ */
+function watchForLoadedPanelsReload(toolbox) {
+  const waitForPanels = [];
+  for (const [id] of toolbox.getToolPanels()) {
+    // Store a watcher method for each panel already loaded.
+    waitForPanels.push(_watchForPanelReload(toolbox, id));
+  }
+
+  return function() {
+    return Promise.all(
+      waitForPanels.map(async watchPanel => {
+        // Wait for all panels to be reloaded.
+        if (watchPanel) {
+          await watchPanel();
+        }
+      })
+    );
+  };
+}
+
+function _watchForPanelReload(toolbox, toolId) {
+  const panel = toolbox.getPanel(toolId);
 
   if (toolId == "inspector") {
     const markuploaded = panel.once("markuploaded");
