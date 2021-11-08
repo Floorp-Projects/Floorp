@@ -482,6 +482,9 @@ pref("browser.urlbar.merino.enabled", false);
 // The Merino endpoint URL, not including parameters.
 pref("browser.urlbar.merino.endpointURL", "https://merino.services.mozilla.com/api/v1/suggest");
 
+// Timeout for Merino fetches (ms).
+pref("browser.urlbar.merino.timeoutMs", 200);
+
 pref("browser.altClickSave", false);
 
 // Enable logging downloads operations to the Console.
