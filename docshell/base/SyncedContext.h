@@ -11,6 +11,7 @@
 #include <type_traits>
 #include <utility>
 #include "mozilla/Attributes.h"
+#include "mozilla/BitSet.h"
 #include "mozilla/EnumSet.h"
 #include "nsStringFwd.h"
 #include "nscore.h"
@@ -43,11 +44,11 @@ namespace syncedcontext {
 template <size_t I>
 using Index = typename std::integral_constant<size_t, I>;
 
-using IndexSet = EnumSet<size_t, uint64_t>;
-
 template <typename Context>
 class Transaction {
  public:
+  using IndexSet = EnumSet<size_t, BitSet<Context::FieldValues::count>>;
+
   // Set a field at the given index in this `Transaction`. Creating a
   // `Transaction` object and setting multiple fields on it allows for
   // multiple mutations to be performed atomically.
@@ -122,9 +123,6 @@ class FieldValues : public Base {
  public:
   // The number of fields stored by this type.
   static constexpr size_t count = Count;
-  static_assert(count < 64,
-                "At most 64 synced fields are supported. Please file a bug if "
-                "you need additional fields.");
 
   // The base type will define a series of `Get` methods for looking up a field
   // by its field index.
