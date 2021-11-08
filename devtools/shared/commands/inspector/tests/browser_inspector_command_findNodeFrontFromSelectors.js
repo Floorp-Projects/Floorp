@@ -117,9 +117,18 @@ add_task(async () => {
   );
 
   info("Check that timeout does work");
+  // Reload the page so we'll have the iframe loading (for 3s) and we can check that
+  // putting a smaller timeout will result in the function returning null.
+  // we need to wait until it's fully processed to avoid pending promises.
+  const onNewTargetProcessed = commands.targetCommand.once(
+    "processed-available-target"
+  );
+  await reloadBrowser({ waitForLoad: false });
+  await onNewTargetProcessed;
   nodeFront = await commands.inspectorCommand.findNodeFrontFromSelectors(
     ["#iframe-org", "#in-iframe"],
-    0
+    // timeout in ms (smaller than 3s)
+    100
   );
   is(
     nodeFront,
