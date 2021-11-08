@@ -148,6 +148,7 @@ class MOZ_RAII AutoProfilerStats {
 // values are used internally only and so can be changed without consequence.
 // Any changes to this list should also be applied to the feature list in
 // toolkit/components/extensions/schemas/geckoProfiler.json.
+// *** Synchronize with lists in ProfilerState.h and geckoProfiler.json ***
 #  define BASE_PROFILER_FOR_EACH_FEATURE(MACRO)                                \
     MACRO(0, "java", Java, "Profile Java code, Android only")                  \
                                                                                \
@@ -206,6 +207,7 @@ class MOZ_RAII AutoProfilerStats {
     MACRO(19, "notimerresolutionchange", NoTimerResolutionChange,              \
           "Do not adjust the timer resolution for fast sampling, so that "     \
           "other Firefox timers do not get affected")
+// *** Synchronize with lists in ProfilerState.h and geckoProfiler.json ***
 
 struct ProfilerFeature {
 #  define DECLARE(n_, str_, Name_, desc_)                                \
