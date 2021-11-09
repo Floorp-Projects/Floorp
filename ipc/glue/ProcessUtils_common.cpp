@@ -112,7 +112,7 @@ bool SharedPreferenceDeserializer::DeserializeFromSharedMemory(
   Maybe<base::SharedMemoryHandle> prefsHandle;
 
 #ifdef XP_WIN
-  prefsHandle = Some(HANDLE((uintptr_t)(aPrefsHandle)));
+  prefsHandle = Some(UniqueFileHandle(HANDLE((uintptr_t)(aPrefsHandle))));
   if (!aPrefsHandle) {
     return false;
   }

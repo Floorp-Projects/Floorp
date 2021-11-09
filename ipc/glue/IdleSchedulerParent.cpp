@@ -191,9 +191,8 @@ IPCResult IdleSchedulerParent::RecvInitForIdleUse(
     }
   }
   Maybe<SharedMemoryHandle> activeCounter;
-  SharedMemoryHandle handle;
-  if (sActiveChildCounter &&
-      sActiveChildCounter->ShareToProcess(OtherPid(), &handle)) {
+  if (SharedMemoryHandle handle =
+          sActiveChildCounter ? sActiveChildCounter->CloneHandle() : nullptr) {
     activeCounter.emplace(std::move(handle));
   }
 
