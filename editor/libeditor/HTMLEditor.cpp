@@ -4243,12 +4243,6 @@ already_AddRefed<nsIContent> HTMLEditor::SplitNodeWithTransaction(
         *this, *aStartOfRightNode.GetContainerAsContent(), *newLeftContent);
   }
 
-  if (mInlineSpellChecker) {
-    RefPtr<mozInlineSpellChecker> spellChecker = mInlineSpellChecker;
-    spellChecker->DidSplitNode(aStartOfRightNode.GetContainer(),
-                               newLeftContent);
-  }
-
   if (aError.Failed()) {
     return nullptr;
   }
@@ -4620,6 +4614,10 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsIContent& aLeftContent,
     return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
   }
 
+  // Be aware, the joined point should be created for each call because
+  // they may refer the child node, but some of them may change the DOM tree
+  // after that, thus we need to avoid invalid point (Although it shouldn't
+  // occur).
   // XXX Some other transactions manage range updater by themselves.
   //     Why doesn't JoinNodeTransaction do it?
   DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjJoinNodes(
@@ -4631,23 +4629,23 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsIContent& aLeftContent,
   TopLevelEditSubActionDataRef().DidJoinContents(
       *this, EditorRawDOMPoint(&aRightContent, oldLeftNodeLen));
 
-  if (mInlineSpellChecker) {
-    RefPtr<mozInlineSpellChecker> spellChecker = mInlineSpellChecker;
-    spellChecker->DidJoinNodes(aLeftContent, aRightContent);
-  }
-
-  if (mTextServicesDocument && NS_SUCCEEDED(rv)) {
-    RefPtr<TextServicesDocument> textServicesDocument = mTextServicesDocument;
-    textServicesDocument->DidJoinNodes(aLeftContent, aRightContent);
+  if (NS_SUCCEEDED(rv)) {
+    if (RefPtr<TextServicesDocument> textServicesDocument =
+            mTextServicesDocument) {
+      textServicesDocument->DidJoinContents(
+          EditorRawDOMPoint(&aRightContent, oldLeftNodeLen), aLeftContent,
+          JoinNodesDirection::LeftNodeIntoRightNode);
+    }
   }
 
   if (!mActionListeners.IsEmpty()) {
     for (auto& listener : mActionListeners.Clone()) {
-      DebugOnly<nsresult> rvIgnored = listener->DidJoinNodes(
-          &aLeftContent, &aRightContent, atRightContent.GetContainer(), rv);
+      DebugOnly<nsresult> rvIgnored = listener->DidJoinContents(
+          EditorRawDOMPoint(&aRightContent, oldLeftNodeLen), &aLeftContent,
+          true);
       NS_WARNING_ASSERTION(
           NS_SUCCEEDED(rvIgnored),
-          "nsIEditActionListener::DidJoinNodes() failed, but ignored");
+          "nsIEditActionListener::DidJoinContents() failed, but ignored");
     }
   }
 

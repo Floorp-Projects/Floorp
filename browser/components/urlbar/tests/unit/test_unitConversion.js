@@ -390,27 +390,44 @@ const TEST_DATA = [
       { queryString: "23:30 pm pst to cet", expected: "8:30 AM CET" },
       {
         queryString: "0:00 utc to here",
-        timezone: "EST5EDT",
-        expected: "20:00 UTC-400",
+        timezone: "Asia/Tokyo",
+        expected: "09:00 UTC+900",
       },
       {
         queryString: "0:00 utc to here",
-        timezone: "PST8PDT",
-        expected: "17:00 UTC-700",
+        timezone: "Pacific/Honolulu",
+        expected: "14:00 UTC-1000",
+      },
+      {
+        queryString: "0:00 utc to here",
+        timezone: "EST5EDT",
+        assertResult: output => {
+          const date = new Date();
+          const offset = date.getTimezoneOffset();
+          if (offset === 240) {
+            // Summer time.
+            Assert.equal(output, "20:00 UTC-400");
+          } else if (offset === 300) {
+            // Standard time.
+            Assert.equal(output, "19:00 UTC-500");
+          } else {
+            Assert.ok(false, "Unexpected time");
+          }
+        },
       },
       {
         queryString: "9:00 to utc",
-        timezone: "EST5EDT",
-        expected: "13:00 UTC",
+        timezone: "Asia/Tokyo",
+        expected: "00:00 UTC",
       },
       {
-        queryString: "9 am to utc",
-        timezone: "EST5EDT",
-        expected: "1:00 PM UTC",
+        queryString: "3 am to utc",
+        timezone: "Asia/Tokyo",
+        expected: "6:00 PM UTC",
       },
       {
         queryString: "now to utc",
-        timezone: "EST5EDT",
+        timezone: "Asia/Tokyo",
         assertResult: output => {
           const outputRegexResult = /([0-9]+):([0-9]+)/.exec(output);
           const outputMinutes =
@@ -427,7 +444,7 @@ const TEST_DATA = [
       },
       {
         queryString: "now to here",
-        timezone: "EST5EDT",
+        timezone: "Asia/Tokyo",
         assertResult: output => {
           const outputRegexResult = /([0-9]+):([0-9]+)/.exec(output);
           const outputMinutes =

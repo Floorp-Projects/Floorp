@@ -1,0 +1,197 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Spellcheck result after edit</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script>
+let {onSpellCheck} =
+  SpecialPowers.Cu.import("resource://testing-common/AsyncSpellCheckTestHelper.jsm", {});
+
+function waitForTick() {
+  return new Promise(resolve =>
+    SimpleTest.executeSoon(
+      () => requestAnimationFrame(
+        () => requestAnimationFrame(resolve)
+      )
+    )
+  );
+}
+
+async function waitForOnSpellCheck(
+  aSpellCheckSelection,
+  aEditingHost,
+  aWaitForNumberOfMisspelledWords,
+  aWhen
+) {
+  info(`Waiting for onSpellCheck (${aWhen})...`);
+  for (let retry = 0; retry < 100; retry++) {
+    await waitForTick();
+    await new Promise(resolve => onSpellCheck(aEditingHost, resolve));
+    if (aWaitForNumberOfMisspelledWords === 0) {
+      if (aSpellCheckSelection.rangeCount === 0) {
+        break;
+      }
+    } else if (aSpellCheckSelection.rangeCount >= aWaitForNumberOfMisspelledWords) {
+      break;
+    }
+  }
+}
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(async () => {
+  /**
+   * test object should have:
+   *   init function
+   *     @param normalSel       The normal selection for the editing host
+   *     @param editingHost     The editing host of the editor
+   *     @return                Number of misspelled word in the editor
+   *
+   *  run function
+   *     @param editingHost     The editing host of the editor
+   *     @return                Expected number of misspelled word in the editor
+   *
+   *  check function
+   *     @param spellCheckSel   The spellcheck selection for the editing host
+   *     @param editingHost     The editing host of the editor
+   */
+  for (const test of [
+      {
+        init: (normalSel, editingHost) => {
+          info("Staring to test spellcheck of misspelled word after joining paragraphs");
+          // eslint-disable-next-line no-unsanitized/property
+          editingHost.innerHTML = "<p>It is</p><p>what I want</p>";
+          normalSel.collapse(editingHost.querySelector("p + p").firstChild, 0);
+          return 0;
+        },
+        run: (editingHost) => {
+          document.execCommand("delete");
+          return 0;
+        },
+        check: (spellCheckSel, editingHost) => {
+          is(
+            spellCheckSel.rangeCount,
+            0,
+            "The joined misspelled word shouldn't be marked as misspelled word because caret is in the word"
+          );
+        },
+      },
+      {
+        init: (normalSel, editingHost) => {
+          info("Staring to test spellcheck of correct word after joining paragraphs");
+          // eslint-disable-next-line no-unsanitized/property
+          editingHost.innerHTML = "<p>It's beco</p><p>ming nicer</p>";
+          normalSel.collapse(editingHost.querySelector("p + p").firstChild, 0);
+          return 2;
+        },
+        run: (editingHost) => {
+          document.execCommand("delete");
+          return 0;
+        },
+        check: (spellCheckSel, editingHost) => {
+          is(
+            spellCheckSel.rangeCount,
+            0,
+            "There shouldn't be misspelled word after joining separated word anyway"
+          );
+        },
+      },
+      {
+        init: (normalSel, editingHost) => {
+          info("Staring to test spellcheck of correct words after splitting a paragraph");
+          // eslint-disable-next-line no-unsanitized/property
+          editingHost.innerHTML = "<p>It iswhat I want</p>";
+          normalSel.collapse(editingHost.querySelector("p").firstChild, "It is".length);
+          return 1;
+        },
+        run: (editingHost) => {
+          document.execCommand("insertParagraph");
+          return 0;
+        },
+        check: (spellCheckSel, editingHost) => {
+          is(
+            spellCheckSel.rangeCount,
+            0,
+            "No word should be marked as misspelled after split"
+          );
+        },
+      },
+      {
+        init: (normalSel, editingHost) => {
+          info("Staring to test spellcheck of misspelled words after splitting a paragraph");
+          // eslint-disable-next-line no-unsanitized/property
+          editingHost.innerHTML = "<p>It's becoming nicer</p>";
+          normalSel.collapse(editingHost.querySelector("p").firstChild, "It's beco".length);
+          return 0;
+        },
+        run: (editingHost) => {
+          document.execCommand("insertParagraph");
+          return 1;
+        },
+        check: (spellCheckSel, editingHost) => {
+          is(
+            spellCheckSel.rangeCount,
+            1,
+            "The split word in the first paragraph should be marked as misspelled, but the second paragraph's should be so because of caret is in it"
+          );
+          if (!spellCheckSel.rangeCount) {
+            return;
+          }
+          is(
+            SpecialPowers.unwrap(spellCheckSel.getRangeAt(0).startContainer),
+            editingHost.querySelector("p").firstChild,
+            "First misspelled word should start in the first child of the first <p>"
+          );
+          is(
+            SpecialPowers.unwrap(spellCheckSel.getRangeAt(0).endContainer),
+            editingHost.querySelector("p").firstChild,
+            "First misspelled word should end in the first child of the first <p>"
+          );
+          is(
+            spellCheckSel.getRangeAt(0).startOffset,
+            "It's ".length,
+            "First misspelled word should start after 'It '"
+          );
+          is(
+            spellCheckSel.getRangeAt(0).endOffset,
+            "It's beco".length,
+            "First misspelled word should end by after 'bec'"
+          );
+        },
+      },
+    ]) {
+    const editingHost = document.createElement("div");
+    editingHost.setAttribute("contenteditable", "");
+    editingHost.setAttribute("spellcheck", "true");
+    document.body.appendChild(editingHost);
+    editingHost.focus();
+    const editor =
+      SpecialPowers.wrap(window).docShell.editingSession.getEditorForWindow(window);
+    const nsISelectionController = SpecialPowers.Ci.nsISelectionController;
+    const normalSel = editor.selectionController.getSelection(
+        nsISelectionController.SELECTION_NORMAL
+    );
+    const spellCheckSel = editor.selectionController.getSelection(
+      nsISelectionController.SELECTION_SPELLCHECK
+    );
+    const initialMisspelledWords = test.init(normalSel, editingHost);
+    await waitForOnSpellCheck(
+      spellCheckSel, editingHost, initialMisspelledWords, "before edit"
+    );
+    await waitForTick();
+    const expectedMisspelledWords = test.run(editingHost);
+    await waitForOnSpellCheck(
+      spellCheckSel, editingHost, expectedMisspelledWords, "after edit"
+    );
+    test.check(spellCheckSel, editingHost);
+    editingHost.remove();
+    await waitForTick();
+  }
+  SimpleTest.finish();
+});
+</script>
+</body>
+</html>
