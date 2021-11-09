@@ -78,7 +78,7 @@ struct ReturnTypeToDataType<T*> {
   // Assume by default that any pointer return types are cells.
   static_assert(std::is_base_of_v<gc::Cell, T>);
 
-  static const DataType result = Type_Object;
+  static const DataType result = Type_Cell;
 };
 
 // Convert argument types to properties of the argument known by the jit.
