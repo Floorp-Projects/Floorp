@@ -587,9 +587,7 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
     }
 
     const bool resistFingerprinting = ShouldResistFingerprinting();
-
-    const auto& principal = GetCanvas()->NodePrincipal();
-    const auto principalKey = principal->GetHashValue();
+    const auto principalKey = GetPrincipalHashValue();
     const auto initDesc = webgl::InitContextDesc{
         mIsWebGL2, resistFingerprinting, requestedSize, options, principalKey};
 
@@ -5286,6 +5284,16 @@ bool ClientWebGLContext::ShouldResistFingerprinting() const {
   }
   // Last resort, just check the global preference
   return nsContentUtils::ShouldResistFingerprinting();
+}
+
+uint32_t ClientWebGLContext::GetPrincipalHashValue() const {
+  if (mCanvasElement) {
+    return mCanvasElement->NodePrincipal()->GetHashValue();
+  }
+  if (mOffscreenCanvas) {
+    return mOffscreenCanvas->GetOwnerGlobal()->GetPrincipalHashValue();
+  }
+  return 0;
 }
 
 // ---------------------------

@@ -739,6 +739,10 @@ class WorkerPrivate final : public RelativeTimeline {
     return *mLoadInfo.mPrincipalInfo;
   }
 
+  uint32_t GetPrincipalHashValue() const {
+    return mLoadInfo.mPrincipalHashValue;
+  }
+
   const mozilla::ipc::PrincipalInfo& GetEffectiveStoragePrincipalInfo() const;
 
   already_AddRefed<nsIChannel> ForgetWorkerChannel() {

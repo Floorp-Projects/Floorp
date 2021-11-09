@@ -1695,6 +1695,13 @@ bool nsGlobalWindowOuter::ShouldResistFingerprinting() const {
   return nsIScriptGlobalObject::ShouldResistFingerprinting();
 }
 
+uint32_t nsGlobalWindowOuter::GetPrincipalHashValue() const {
+  if (mDoc) {
+    return mDoc->NodePrincipal()->GetHashValue();
+  }
+  return 0;
+}
+
 nsresult nsGlobalWindowOuter::EnsureScriptEnvironment() {
   if (GetWrapperPreserveColor()) {
     return NS_OK;
