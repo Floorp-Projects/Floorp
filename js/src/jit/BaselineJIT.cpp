@@ -656,7 +656,7 @@ const RetAddrEntry& BaselineScript::prologueRetAddrEntry(
 }
 
 const RetAddrEntry& BaselineScript::retAddrEntryFromReturnAddress(
-    uint8_t* returnAddr) {
+    const uint8_t* returnAddr) {
   MOZ_ASSERT(returnAddr > method_->raw());
   MOZ_ASSERT(returnAddr < method_->raw() + method_->instructionsSize());
   CodeOffset offset(returnAddr - method_->raw());

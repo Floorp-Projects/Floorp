@@ -604,7 +604,7 @@ inline bool InitElemIncOperation(JSContext* cx, HandleArrayObject arr,
 
 static inline ArrayObject* ProcessCallSiteObjOperation(JSContext* cx,
                                                        HandleScript script,
-                                                       jsbytecode* pc) {
+                                                       const jsbytecode* pc) {
   MOZ_ASSERT(JSOp(*pc) == JSOp::CallSiteObj);
 
   RootedArrayObject cso(cx, &script->getObject(pc)->as<ArrayObject>());

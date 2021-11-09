@@ -2559,7 +2559,7 @@ bool BaselineInterpreterCodeGen::emit_CallSiteObj() {
   pushBytecodePCArg();
   pushScriptArg();
 
-  using Fn = ArrayObject* (*)(JSContext*, HandleScript, jsbytecode*);
+  using Fn = ArrayObject* (*)(JSContext*, HandleScript, const jsbytecode*);
   if (!callVM<Fn, ProcessCallSiteObjOperation>()) {
     return false;
   }
@@ -4804,7 +4804,7 @@ bool BaselineCodeGen<Handler>::emit_PopLexicalEnv() {
     pushBytecodePCArg();
     pushArg(scratch1);
 
-    using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*);
+    using Fn = bool (*)(JSContext*, BaselineFrame*, const jsbytecode*);
     return callVM<Fn, jit::DebugLeaveThenPopLexicalEnv>();
   };
   auto ifNotDebuggee = [this, scratch1]() {
@@ -4832,7 +4832,7 @@ bool BaselineCodeGen<Handler>::emit_FreshenLexicalEnv() {
     pushBytecodePCArg();
     pushArg(R0.scratchReg());
 
-    using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*);
+    using Fn = bool (*)(JSContext*, BaselineFrame*, const jsbytecode*);
     return callVM<Fn, jit::DebugLeaveThenFreshenLexicalEnv>();
   };
   auto ifNotDebuggee = [this]() {
@@ -4856,7 +4856,7 @@ bool BaselineCodeGen<Handler>::emit_RecreateLexicalEnv() {
     pushBytecodePCArg();
     pushArg(R0.scratchReg());
 
-    using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*);
+    using Fn = bool (*)(JSContext*, BaselineFrame*, const jsbytecode*);
     return callVM<Fn, jit::DebugLeaveThenRecreateLexicalEnv>();
   };
   auto ifNotDebuggee = [this]() {
@@ -4877,7 +4877,7 @@ bool BaselineCodeGen<Handler>::emit_DebugLeaveLexicalEnv() {
     pushBytecodePCArg();
     pushArg(R0.scratchReg());
 
-    using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*);
+    using Fn = bool (*)(JSContext*, BaselineFrame*, const jsbytecode*);
     return callVM<Fn, jit::DebugLeaveLexicalEnv>();
   };
   return emitDebugInstrumentation(ifDebuggee);
@@ -4972,7 +4972,7 @@ bool BaselineCodeGen<Handler>::emitDebugEpilogue() {
 
     const RetAddrEntry::Kind kind = RetAddrEntry::Kind::DebugEpilogue;
 
-    using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*);
+    using Fn = bool (*)(JSContext*, BaselineFrame*, const jsbytecode*);
     if (!callVM<Fn, jit::DebugEpilogueOnBaselineReturn>(kind)) {
       return false;
     }
@@ -5677,7 +5677,7 @@ bool BaselineCodeGen<Handler>::emitSuspend(JSOp op) {
     pushArg(genObj);
 
     using Fn = bool (*)(JSContext*, HandleObject, BaselineFrame*, uint32_t,
-                        jsbytecode*);
+                        const jsbytecode*);
     if (!callVM<Fn, jit::NormalSuspend>()) {
       return false;
     }
@@ -5779,7 +5779,7 @@ bool BaselineCodeGen<Handler>::emit_FinalYieldRval() {
   pushBytecodePCArg();
   pushArg(R0.scratchReg());
 
-  using Fn = bool (*)(JSContext*, HandleObject, jsbytecode*);
+  using Fn = bool (*)(JSContext*, HandleObject, const jsbytecode*);
   if (!callVM<Fn, jit::FinalSuspend>()) {
     return false;
   }
@@ -6949,7 +6949,7 @@ JitCode* JitRuntime::generateDebugTrapHandler(JSContext* cx,
   masm.movePtr(ImmPtr(nullptr), ICStubReg);
   EmitBaselineEnterStubFrame(masm, scratch3);
 
-  using Fn = bool (*)(JSContext*, BaselineFrame*, uint8_t*);
+  using Fn = bool (*)(JSContext*, BaselineFrame*, const uint8_t*);
   VMFunctionId id = VMFunctionToId<Fn, jit::HandleDebugTrap>::id;
   TrampolinePtr code = cx->runtime()->jitRuntime()->getVMWrapper(id);
 

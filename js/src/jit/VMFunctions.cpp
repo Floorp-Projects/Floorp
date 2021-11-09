@@ -196,11 +196,6 @@ struct OutParamToDataType<const T*> {
   static const DataType result = Type_Void;
 };
 template <>
-struct OutParamToDataType<uint8_t*> {
-  // Already used as an input type, so it can't be used as an output param.
-  static const DataType result = Type_Void;
-};
-template <>
 struct OutParamToDataType<uint64_t*> {
   // Already used as an input type, so it can't be used as an output param.
   static const DataType result = Type_Void;
@@ -994,7 +989,7 @@ bool DebugPrologue(JSContext* cx, BaselineFrame* frame) {
 }
 
 bool DebugEpilogueOnBaselineReturn(JSContext* cx, BaselineFrame* frame,
-                                   jsbytecode* pc) {
+                                   const jsbytecode* pc) {
   if (!DebugEpilogue(cx, frame, pc, true)) {
     // DebugEpilogue popped the frame by updating packedExitFP, so run the
     // stop event here before we enter the exception handler.
@@ -1007,7 +1002,7 @@ bool DebugEpilogueOnBaselineReturn(JSContext* cx, BaselineFrame* frame,
   return true;
 }
 
-bool DebugEpilogue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc,
+bool DebugEpilogue(JSContext* cx, BaselineFrame* frame, const jsbytecode* pc,
                    bool ok) {
   // If DebugAPI::onLeaveFrame returns |true| we have to return the frame's
   // return value. If it returns |false|, the debugger threw an exception.
@@ -1050,7 +1045,7 @@ JSObject* CreateGenerator(JSContext* cx, HandleFunction callee,
 }
 
 bool NormalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame,
-                   uint32_t frameSize, jsbytecode* pc) {
+                   uint32_t frameSize, const jsbytecode* pc) {
   MOZ_ASSERT(JSOp(*pc) == JSOp::InitialYield || JSOp(*pc) == JSOp::Yield ||
              JSOp(*pc) == JSOp::Await);
 
@@ -1060,7 +1055,7 @@ bool NormalSuspend(JSContext* cx, HandleObject obj, BaselineFrame* frame,
   return AbstractGeneratorObject::suspend(cx, obj, frame, pc, numSlots);
 }
 
-bool FinalSuspend(JSContext* cx, HandleObject obj, jsbytecode* pc) {
+bool FinalSuspend(JSContext* cx, HandleObject obj, const jsbytecode* pc) {
   MOZ_ASSERT(JSOp(*pc) == JSOp::FinalYieldRval);
   AbstractGeneratorObject::finalSuspend(obj);
   return true;
@@ -1114,7 +1109,7 @@ bool GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame,
 }
 
 bool GlobalDeclInstantiationFromIon(JSContext* cx, HandleScript script,
-                                    jsbytecode* pc) {
+                                    const jsbytecode* pc) {
   MOZ_ASSERT(!script->hasNonSyntacticScope());
 
   RootedObject envChain(cx, &cx->global()->lexicalEnvironment());
@@ -1170,7 +1165,8 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
   return NewDenseCopiedArray(cx, length, rest);
 }
 
-bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr) {
+bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame,
+                     const uint8_t* retAddr) {
   RootedScript script(cx, frame->script());
   jsbytecode* pc;
   if (frame->runningInInterpreter()) {
@@ -1236,7 +1232,7 @@ bool PushLexicalEnv(JSContext* cx, BaselineFrame* frame,
 }
 
 bool DebugLeaveThenPopLexicalEnv(JSContext* cx, BaselineFrame* frame,
-                                 jsbytecode* pc) {
+                                 const jsbytecode* pc) {
   MOZ_ALWAYS_TRUE(DebugLeaveLexicalEnv(cx, frame, pc));
   frame->popOffEnvironmentChain<ScopedLexicalEnvironmentObject>();
   return true;
@@ -1247,7 +1243,7 @@ bool FreshenLexicalEnv(JSContext* cx, BaselineFrame* frame) {
 }
 
 bool DebugLeaveThenFreshenLexicalEnv(JSContext* cx, BaselineFrame* frame,
-                                     jsbytecode* pc) {
+                                     const jsbytecode* pc) {
   MOZ_ALWAYS_TRUE(DebugLeaveLexicalEnv(cx, frame, pc));
   return frame->freshenLexicalEnvironment(cx);
 }
@@ -1257,12 +1253,13 @@ bool RecreateLexicalEnv(JSContext* cx, BaselineFrame* frame) {
 }
 
 bool DebugLeaveThenRecreateLexicalEnv(JSContext* cx, BaselineFrame* frame,
-                                      jsbytecode* pc) {
+                                      const jsbytecode* pc) {
   MOZ_ALWAYS_TRUE(DebugLeaveLexicalEnv(cx, frame, pc));
   return frame->recreateLexicalEnvironment(cx);
 }
 
-bool DebugLeaveLexicalEnv(JSContext* cx, BaselineFrame* frame, jsbytecode* pc) {
+bool DebugLeaveLexicalEnv(JSContext* cx, BaselineFrame* frame,
+                          const jsbytecode* pc) {
   MOZ_ASSERT_IF(!frame->runningInInterpreter(),
                 frame->script()->baselineScript()->hasDebugInstrumentation());
   if (cx->realm()->isDebuggee()) {
