@@ -37,7 +37,6 @@ import org.mozilla.focus.shortcut.HomeScreen
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
 
 @Suppress("TooManyFunctions")
@@ -59,7 +58,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         }
 
         @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/5016
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        window.decorView.systemUiVisibility =
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
 
         window.statusBarColor = ContextCompat.getColor(this, android.R.color.transparent)
         when (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
@@ -207,7 +207,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             return
         }
 
-        val urlInputFragment = fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG) as UrlInputFragment?
+        val urlInputFragment =
+            fragmentManager.findFragmentByTag(UrlInputFragment.FRAGMENT_TAG) as UrlInputFragment?
         if (urlInputFragment != null &&
             urlInputFragment.isVisible &&
             urlInputFragment.onBackPressed()
@@ -217,7 +218,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             return
         }
 
-        val browserFragment = fragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG) as BrowserFragment?
+        val browserFragment =
+            fragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG) as BrowserFragment?
         if (browserFragment != null &&
             browserFragment.isVisible &&
             browserFragment.onBackPressed()
@@ -274,6 +276,12 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // API level can display handle light navigation bar color
             window.getWindowInsetsController().isAppearanceLightNavigationBars = true
+            window.navigationBarColor = ContextCompat.getColor(this, android.R.color.transparent)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                window.navigationBarDividerColor =
+                    ContextCompat.getColor(this, android.R.color.transparent)
+            }
         }
     }
 
