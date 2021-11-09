@@ -389,12 +389,6 @@ async function test_CNAME() {
   dns.clearCache(true);
   // First mode 3.
   if (runningODoHTests) {
-    let chan = makeChan(
-      `https://foo.example.com:${h2Port}/reset_cname_confirm`,
-      Ci.nsIRequest.TRR_DISABLED_MODE
-    );
-    await new Promise(resolve => chan.asyncOpen(new ChannelListener(resolve)));
-
     setModeAndURI(3, "odoh?responseIP=none&cnameloop=true");
   } else {
     setModeAndURI(3, "doh?responseIP=none&cnameloop=true");
