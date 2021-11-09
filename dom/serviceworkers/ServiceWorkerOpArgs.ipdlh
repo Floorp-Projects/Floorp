@@ -71,6 +71,14 @@ struct ServiceWorkerFetchEventOpArgs {
   nsString clientId;
   nsString resultingClientId;
   bool isNonSubresourceRequest;
+  // Is navigation preload enabled for this fetch? If true, if some
+  // preloadResponse was not already provided in this structure, then it's
+  // expected that a PreloadResponse message will eventually be sent.
+  bool preloadNavigation;
+  // For the case the preload response is ready before fetch event is created,
+  // the preload response is sent with this parameter for initializing
+  // FetchEvent.preloadResponse.
+  IPCInternalResponse? preloadResponse;
   // Failure injection helper; non-NS_OK values indicate that the event, instead
   // of dispatching should instead return a `CancelInterceptionArgs` response
   // with this nsresult.  This value originates from

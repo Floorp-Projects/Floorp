@@ -8,6 +8,7 @@
 
 #include <utility>
 
+#include "ServiceWorkerOpPromise.h"
 #include "js/Exception.h"  // JS::ExceptionStack, JS::StealPendingExceptionStack
 #include "jsapi.h"
 
@@ -1260,6 +1261,8 @@ void FetchEventOp::MaybeFinished() {
     // if the worker was terminated before the respondWith promise settled.
 
     mHandled = nullptr;
+    mPreloadResponse = nullptr;
+    mPreloadResponsePromiseRequestHolder.DisconnectIfExists();
 
     ServiceWorkerFetchEventOpResult result(
         mResult.value() == Resolved ? NS_OK : NS_ERROR_FAILURE);
@@ -1653,6 +1656,35 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
   fetchEvent->SetTrusted(true);
   fetchEvent->PostInit(args.workerScriptSpec(), this);
   mHandled = fetchEvent->Handled();
+  mPreloadResponse = fetchEvent->PreloadResponse();
+
+  if (args.preloadNavigation()) {
+    RefPtr<FetchEventPreloadResponsePromise> preloadResponsePromise =
+        mActor->GetPreloadResponsePromise();
+    MOZ_ASSERT(preloadResponsePromise);
+
+    // If preloadResponsePromise has already settled then this callback will get
+    // run synchronously here.
+    RefPtr<FetchEventOp> self = this;
+    preloadResponsePromise
+        ->Then(
+            GetCurrentSerialEventTarget(), __func__,
+            [self, globalObjectAsSupports = std::move(globalObjectAsSupports)](
+                SafeRefPtr<InternalResponse> aInternalResponse) {
+              self->mPreloadResponse->MaybeResolve(
+                  MakeRefPtr<Response>(globalObjectAsSupports,
+                                       std::move(aInternalResponse), nullptr));
+              self->mPreloadResponsePromiseRequestHolder.Complete();
+            },
+            [self](int) {
+              self->mPreloadResponsePromiseRequestHolder.Complete();
+            })
+        ->Track(mPreloadResponsePromiseRequestHolder);
+  } else {
+    // preload navigation is disabled, resolved preload response promise with
+    // undefined as default behavior.
+    mPreloadResponse->MaybeResolveWithUndefined();
+  }
 
   mFetchHandlerStart = TimeStamp::Now();
 
@@ -1665,6 +1697,7 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
 
   if (NS_WARN_IF(dispatchFailed)) {
     mHandled = nullptr;
+    mPreloadResponse = nullptr;
     return rv;
   }
 
