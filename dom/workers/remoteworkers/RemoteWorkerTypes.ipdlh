@@ -70,8 +70,6 @@ struct RemoteWorkerData
 
   StorageAccess storageAccess;
 
-  bool isThirdPartyContextToTopWindow;
-
   OptionalServiceWorkerData serviceWorkerData;
 
   nsID agentClusterId;
