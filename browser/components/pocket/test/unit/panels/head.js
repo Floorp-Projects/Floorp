@@ -11,10 +11,6 @@ const testGlobal = {
 };
 
 Services.scriptloader.loadSubScript(
-  "chrome://pocket/content/panels/js/messages.js",
-  testGlobal
-);
-Services.scriptloader.loadSubScript(
-  "chrome://pocket/content/panels/js/main.js",
+  "chrome://pocket/content/panels/js/main.bundle.js",
   testGlobal
 );
