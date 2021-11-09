@@ -5459,6 +5459,11 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
                              &notPrimitive);
     masm.loadValue(Address(masm.getStackPointer(), unusedStack),
                    JSReturnOperand);
+#ifdef DEBUG
+    masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand,
+                             &notPrimitive);
+    masm.assumeUnreachable("CreateThis creates an object");
+#endif
     masm.bind(&notPrimitive);
   }
 }
@@ -5531,6 +5536,11 @@ void CodeGenerator::visitCallKnown(LCallKnown* call) {
                              &notPrimitive);
     masm.loadValue(Address(masm.getStackPointer(), unusedStack),
                    JSReturnOperand);
+#ifdef DEBUG
+    masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand,
+                             &notPrimitive);
+    masm.assumeUnreachable("CreateThis creates an object");
+#endif
     masm.bind(&notPrimitive);
   }
 }
@@ -6049,6 +6059,13 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
     masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand,
                              &notPrimitive);
     masm.loadValue(Address(masm.getStackPointer(), 0), JSReturnOperand);
+
+#ifdef DEBUG
+    masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand,
+                             &notPrimitive);
+    masm.assumeUnreachable("CreateThis creates an object");
+#endif
+
     masm.bind(&notPrimitive);
   }
 
