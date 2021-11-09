@@ -153,7 +153,7 @@ Preferences.addAll([
   { id: "browser.urlbar.suggest.openpage", type: "bool" },
   { id: "browser.urlbar.suggest.topsites", type: "bool" },
   { id: "browser.urlbar.suggest.engines", type: "bool" },
-  { id: "browser.urlbar.suggest.quicksuggest", type: "bool" },
+  { id: "browser.urlbar.suggest.quicksuggest.nonsponsored", type: "bool" },
   { id: "browser.urlbar.suggest.quicksuggest.sponsored", type: "bool" },
   { id: "browser.urlbar.quicksuggest.dataCollection.enabled", type: "bool" },
 
@@ -2002,7 +2002,7 @@ var gPrivacyPane = {
     // The Firefox Suggest info box potentially needs updating when any of the
     // toggles change.
     let infoBoxPrefs = [
-      "browser.urlbar.suggest.quicksuggest",
+      "browser.urlbar.suggest.quicksuggest.nonsponsored",
       "browser.urlbar.suggest.quicksuggest.sponsored",
       "browser.urlbar.quicksuggest.dataCollection.enabled",
     ];
@@ -2072,8 +2072,9 @@ var gPrivacyPane = {
    * on the states of the Firefox Suggest toggles.
    */
   _updateFirefoxSuggestInfoBox() {
-    let nonsponsored = Preferences.get("browser.urlbar.suggest.quicksuggest")
-      .value;
+    let nonsponsored = Preferences.get(
+      "browser.urlbar.suggest.quicksuggest.nonsponsored"
+    ).value;
     let sponsored = Preferences.get(
       "browser.urlbar.suggest.quicksuggest.sponsored"
     ).value;

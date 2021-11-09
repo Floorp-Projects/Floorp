@@ -213,7 +213,7 @@ class Suggestions {
       !UrlbarPrefs.get(FEATURE_AVAILABLE) ||
       !UrlbarPrefs.get("quickSuggestShouldShowOnboardingDialog") ||
       UrlbarPrefs.get(SEEN_DIALOG_PREF) ||
-      UrlbarPrefs.get("suggest.quicksuggest") ||
+      UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
       UrlbarPrefs.get("suggest.quicksuggest.sponsored")
     ) {
       return;
@@ -270,7 +270,7 @@ class Suggestions {
     //
     // Opting in enables both kinds of results and data collection.
     let optedIn = params.choice == ONBOARDING_CHOICE.ACCEPT;
-    UrlbarPrefs.set("suggest.quicksuggest", optedIn);
+    UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", optedIn);
     UrlbarPrefs.set("suggest.quicksuggest.sponsored", optedIn);
     UrlbarPrefs.set("quicksuggest.dataCollection.enabled", optedIn);
 
@@ -318,7 +318,7 @@ class Suggestions {
    */
   onPrefChanged(pref) {
     switch (pref) {
-      case "suggest.quicksuggest":
+      case "suggest.quicksuggest.nonsponsored":
       case "suggest.quicksuggest.sponsored":
         this._queueSettingsSetup();
         break;
@@ -349,7 +349,7 @@ class Suggestions {
     this._queueSettingsTask(() => {
       let enabled =
         UrlbarPrefs.get(FEATURE_AVAILABLE) &&
-        (UrlbarPrefs.get("suggest.quicksuggest") ||
+        (UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
           UrlbarPrefs.get("suggest.quicksuggest.sponsored"));
       if (enabled && !this._rs) {
         this._onSettingsSync = (...args) => this._queueSettingsSync(...args);

@@ -2944,8 +2944,9 @@ contextservices.quicksuggest:
       - "firefox"
     record_in_processes: ["main"]
     description: >
-      This is recorded when the `browser.urlbar.suggest.quicksuggest` boolean
-      pref is toggled.
+      This is recorded when the
+      `browser.urlbar.suggest.quicksuggest.nonsponsored` boolean pref is
+      toggled.
     bug_numbers: [1693126]
     notification_emails:
       - fx-search@mozilla.com
