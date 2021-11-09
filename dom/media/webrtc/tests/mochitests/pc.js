@@ -1885,80 +1885,6 @@ PeerConnectionWrapper.prototype = {
     ]);
   },
 
-  async waitForSyncedRtcp() {
-    // Ensures that RTCP is present
-    let ensureSyncedRtcp = async () => {
-      let report = await this._pc.getStats();
-      for (const v of report.values()) {
-        if (v.type.endsWith("bound-rtp") && !(v.remoteId || v.localId)) {
-          info(`${v.id} is missing remoteId or localId: ${JSON.stringify(v)}`);
-          return null;
-        }
-        if (v.type == "remote-inbound-rtp" && v.roundTripTime === undefined) {
-          info(`${v.id} is missing roundTripTime: ${JSON.stringify(v)}`);
-          return null;
-        }
-      }
-      return report;
-    };
-    // Returns true if there is proof in aStats of rtcp flow for all remote stats
-    // objects, compared to baseStats.
-    const hasAllRtcpUpdated = (baseStats, stats) => {
-      let hasRtcpStats = false;
-      for (const v of stats.values()) {
-        if (v.type == "remote-outbound-rtp") {
-          hasRtcpStats = true;
-          if (!v.remoteTimestamp) {
-            // `remoteTimestamp` is 0 or not present.
-            return false;
-          }
-          if (v.remoteTimestamp <= baseStats.get(v.id)?.remoteTimestamp) {
-            // `remoteTimestamp` has not advanced further than the base stats,
-            // i.e., no new sender report has been received.
-            return false;
-          }
-        } else if (v.type == "remote-inbound-rtp") {
-          hasRtcpStats = true;
-          // The ideal thing here would be to check `reportsReceived`, but it's
-          // not yet implemented.
-          if (!v.packetsReceived) {
-            // `packetsReceived` is 0 or not present.
-            return false;
-          }
-          if (v.packetsReceived <= baseStats.get(v.id)?.packetsReceived) {
-            // `packetsReceived` has not advanced further than the base stats,
-            // i.e., no new receiver report has been received.
-            return false;
-          }
-        }
-      }
-      return hasRtcpStats;
-    };
-    let attempts = 0;
-    const baseStats = await this._pc.getStats();
-    // Time-units are MS
-    const waitPeriod = 100;
-    const maxTime = 20000;
-    for (let totalTime = maxTime; totalTime > 0; totalTime -= waitPeriod) {
-      try {
-        let syncedStats = await ensureSyncedRtcp();
-        if (syncedStats && hasAllRtcpUpdated(baseStats, syncedStats)) {
-          return syncedStats;
-        }
-      } catch (e) {
-        info(e);
-        info(e.stack);
-        throw e;
-      }
-      attempts += 1;
-      info(`waitForSyncedRtcp: no sync on attempt ${attempts}, retrying.`);
-      await wait(waitPeriod);
-    }
-    throw Error(
-      "Waiting for synced RTCP timed out after at least " + maxTime + "ms"
-    );
-  },
-
   /**
    * Check that correct audio (typically a flat tone) is flowing to this
    * PeerConnection for each transceiver that should be receiving. Uses
@@ -2075,16 +2001,14 @@ PeerConnectionWrapper.prototype = {
   /**
    * Check that stats are present by checking for known stats.
    */
-  getStats(selector) {
-    return this._pc.getStats(selector).then(stats => {
-      let dict = {};
-      for (const [k, v] of stats.entries()) {
-        dict[k] = v;
-      }
-      info(this + ": Got stats: " + JSON.stringify(dict));
-      this._last_stats = stats;
-      return stats;
-    });
+  async getStats(selector) {
+    const stats = await this._pc.getStats(selector);
+    const dict = {};
+    for (const [k, v] of stats.entries()) {
+      dict[k] = v;
+    }
+    info(`${this}: Got stats: ${JSON.stringify(dict)}`);
+    return stats;
   },
 
   /**
