@@ -344,10 +344,24 @@ enum class DeprecatedOperations : uint16_t {
 
 // Document states
 
-// RTL locale: specific to the XUL localedir attribute
-#define NS_DOCUMENT_STATE_RTL_LOCALE NS_DEFINE_EVENT_STATE_MACRO(0)
 // Window activation status
-#define NS_DOCUMENT_STATE_WINDOW_INACTIVE NS_DEFINE_EVENT_STATE_MACRO(1)
+#define NS_DOCUMENT_STATE_WINDOW_INACTIVE NS_DEFINE_EVENT_STATE_MACRO(0)
+// RTL locale: specific to the XUL localedir attribute.
+#define NS_DOCUMENT_STATE_RTL_LOCALE NS_DEFINE_EVENT_STATE_MACRO(1)
+// LTR locale: specific to the XUL localedir attribute. This is mutually
+// exclusive with the RTL bit, but the style system invalidation code is simpler
+// if we differentiate between the two states.
+#define NS_DOCUMENT_STATE_LTR_LOCALE NS_DEFINE_EVENT_STATE_MACRO(2)
+// Lightweight-theme status.
+#define NS_DOCUMENT_STATE_LWTHEME NS_DEFINE_EVENT_STATE_MACRO(3)
+#define NS_DOCUMENT_STATE_LWTHEME_BRIGHTTEXT NS_DEFINE_EVENT_STATE_MACRO(4)
+#define NS_DOCUMENT_STATE_LWTHEME_DARKTEXT NS_DEFINE_EVENT_STATE_MACRO(5)
+
+#define NS_DOCUMENT_STATE_ALL_LOCALEDIR_BITS \
+  (NS_DOCUMENT_STATE_RTL_LOCALE | NS_DOCUMENT_STATE_LTR_LOCALE)
+#define NS_DOCUMENT_STATE_ALL_LWTHEME_BITS                            \
+  (NS_DOCUMENT_STATE_LWTHEME | NS_DOCUMENT_STATE_LWTHEME_BRIGHTTEXT | \
+   NS_DOCUMENT_STATE_LWTHEME_DARKTEXT)
 
 class DocHeaderData {
  public:
@@ -2081,7 +2095,7 @@ class Document : public nsINode,
   // implementation of Document::GetDocumentState.
   //
   // aNotify controls whether we notify our DocumentStatesChanged observers.
-  void UpdateDocumentStates(EventStates aStateMask, bool aNotify);
+  void UpdateDocumentStates(EventStates aMaybeChangedStates, bool aNotify);
 
   void ResetDocumentDirection();
 
@@ -3021,14 +3035,6 @@ class Document : public nsINode,
    */
   void MaybePreconnect(nsIURI* uri, CORSMode aCORSMode);
 
-  enum DocumentTheme {
-    Doc_Theme_Uninitialized,  // not determined yet
-    Doc_Theme_None,
-    Doc_Theme_Neutral,
-    Doc_Theme_Dark,
-    Doc_Theme_Bright
-  };
-
   /**
    * Set the document's pending state object (as serialized using structured
    * clone).
@@ -3043,15 +3049,18 @@ class Document : public nsINode,
     SetStateObject(aDocument->mStateObjectContainer);
   }
 
+  enum class DocumentTheme { None, Neutral, Dark, Bright };
+
   /**
-   * Returns Doc_Theme_None if there is no lightweight theme specified,
-   * Doc_Theme_Dark for a dark theme, Doc_Theme_Bright for a light theme, and
-   * Doc_Theme_Neutral for any other theme. This is used to determine the state
-   * of the pseudoclasses :-moz-lwtheme and :-moz-lwtheme-text.
+   * Returns DocumentTheme::None if there is no lightweight theme specified,
+   * Dark for a dark theme, Bright for a light theme, and Neutral for any other
+   * theme. This is used to determine the state of the pseudoclasses
+   * :-moz-lwtheme and :-moz-lwtheme-*text.
    */
-  DocumentTheme GetDocumentLWTheme();
-  DocumentTheme ThreadSafeGetDocumentLWTheme() const;
-  void ResetDocumentLWTheme() { mDocLWTheme = Doc_Theme_Uninitialized; }
+  DocumentTheme GetDocumentLWTheme() const;
+  void ResetDocumentLWTheme() {
+    UpdateDocumentStates(NS_DOCUMENT_STATE_ALL_LWTHEME_BITS, true);
+  }
 
   // Whether we're a media document or not.
   enum class MediaDocumentKind {
@@ -4506,7 +4515,7 @@ class Document : public nsINode,
   // focus has never occurred then mLastFocusTime.IsNull() will be true.
   TimeStamp mLastFocusTime;
 
-  EventStates mDocumentState;
+  EventStates mDocumentState{NS_DOCUMENT_STATE_LTR_LOCALE};
 
   RefPtr<Promise> mReadyForIdle;
 
@@ -5267,10 +5276,6 @@ class Document : public nsINode,
   RefPtr<ChromeObserver> mChromeObserver;
 
   RefPtr<HTMLAllCollection> mAll;
-
-  // document lightweight theme for use with :-moz-lwtheme,
-  // :-moz-lwtheme-brighttext and :-moz-lwtheme-darktext
-  DocumentTheme mDocLWTheme;
 
   // Pres shell resolution saved before entering fullscreen mode.
   float mSavedResolution;
