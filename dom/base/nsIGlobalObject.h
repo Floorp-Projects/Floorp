@@ -209,6 +209,12 @@ class nsIGlobalObject : public nsISupports,
 
   void RemoveReportRecords();
 
+  /**
+   * Check whether we should avoid leaking distinguishing information to JS/CSS.
+   * https://w3c.github.io/fingerprinting-guidance/
+   */
+  virtual bool ShouldResistFingerprinting() const;
+
  protected:
   virtual ~nsIGlobalObject();
 
