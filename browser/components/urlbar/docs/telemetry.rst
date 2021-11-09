@@ -535,7 +535,7 @@ contextservices.quicksuggest
     - Extra: Not used
 
   The following event is recorded when the
-  ``browser.urlbar.suggest.quicksuggest`` pref is toggled:
+  ``browser.urlbar.suggest.quicksuggest.nonsponsored`` pref is toggled:
 
     - Category: ``contextservices.quicksuggest``
     - Method: ``enable_toggled``
@@ -613,8 +613,8 @@ Telemetry Environment
       true when the user opts in to the Firefox Suggest onboarding dialog
       modal. The user can also toggle the pref using a toggle switch in the
       Firefox Suggest preferences UI.
-    - ``browser.urlbar.suggest.quicksuggest``: True if non-sponsored Firefox
-      Suggest suggestions are enabled in the urlbar.
+    - ``browser.urlbar.suggest.quicksuggest.nonsponsored``: True if
+      non-sponsored Firefox Suggest suggestions are enabled in the urlbar.
     - ``browser.urlbar.suggest.quicksuggest.sponsored``: True if sponsored
       Firefox Suggest suggestions are enabled in the urlbar.
     - ``browser.urlbar.suggest.searches``: True if search suggestions are

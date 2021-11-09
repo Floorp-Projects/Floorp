@@ -30,7 +30,7 @@ const PREFS = [
     expectedOtherValue: true,
   },
   {
-    name: "browser.urlbar.suggest.quicksuggest",
+    name: "browser.urlbar.suggest.quicksuggest.nonsponsored",
     get: "getBoolPref",
     set: "setBoolPref",
     expectedOfflineValue: true,

@@ -524,7 +524,7 @@ async function doDialogTest({
     // Set all the required prefs for showing the onboarding dialog.
     await SpecialPowers.pushPrefEnv({
       set: [
-        ["browser.urlbar.suggest.quicksuggest", false],
+        ["browser.urlbar.suggest.quicksuggest.nonsponsored", false],
         ["browser.urlbar.suggest.quicksuggest.sponsored", false],
         ["browser.urlbar.quicksuggest.dataCollection.enabled", false],
         ["browser.urlbar.quicksuggest.enabled", true],
@@ -541,7 +541,7 @@ async function doDialogTest({
     await callback();
 
     Assert.equal(
-      UrlbarPrefs.get("suggest.quicksuggest"),
+      UrlbarPrefs.get("suggest.quicksuggest.nonsponsored"),
       expectOptIn,
       "Main pref enabled status"
     );

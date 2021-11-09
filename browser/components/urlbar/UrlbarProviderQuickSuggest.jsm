@@ -108,7 +108,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       !queryContext.searchMode &&
       !queryContext.isPrivate &&
       UrlbarPrefs.get("quickSuggestEnabled") &&
-      (UrlbarPrefs.get("suggest.quicksuggest") ||
+      (UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
         UrlbarPrefs.get("suggest.quicksuggest.sponsored"))
     );
   }
@@ -334,8 +334,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
   }
 
   /**
-   * Called when a urlbar pref changes.  We use this to listen for changes to
-   * `browser.urlbar.suggest.quicksuggest` so we can record a telemetry event.
+   * Called when a urlbar pref changes.
    *
    * @param {string} pref
    *   The name of the pref relative to `browser.urlbar`.
@@ -351,7 +350,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
           );
         }
         break;
-      case "suggest.quicksuggest":
+      case "suggest.quicksuggest.nonsponsored":
         if (!UrlbarPrefs.updatingFirefoxSuggestScenario) {
           Services.telemetry.recordEvent(
             TELEMETRY_EVENT_CATEGORY,
@@ -555,7 +554,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
     return (
       (suggestion.is_sponsored &&
         UrlbarPrefs.get("suggest.quicksuggest.sponsored")) ||
-      (!suggestion.is_sponsored && UrlbarPrefs.get("suggest.quicksuggest"))
+      (!suggestion.is_sponsored &&
+        UrlbarPrefs.get("suggest.quicksuggest.nonsponsored"))
     );
   }
 

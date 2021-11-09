@@ -189,7 +189,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["suggest.openpage", true],
 
   // Whether results will include non-sponsored quick suggest suggestions.
-  ["suggest.quicksuggest", false],
+  ["suggest.quicksuggest.nonsponsored", false],
 
   // Whether results will include sponsored quick suggest suggestions.
   ["suggest.quicksuggest.sponsored", false],
@@ -220,8 +220,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // show sponsored suggestions, both prefs must be true.
   // `quicksuggest.dataCollection.enabled` does not exist.
   //
-  // 1: `suggest.quicksuggest` and `suggest.quicksuggest.sponsored` are
-  // independent: `suggest.quicksuggest` controls non-sponsored results and
+  // 1: `suggest.quicksuggest` is removed, `suggest.quicksuggest.nonsponsored`
+  // is introduced. `suggest.quicksuggest.nonsponsored` and
+  // `suggest.quicksuggest.sponsored` are independent:
+  // `suggest.quicksuggest.nonsponsored` controls non-sponsored results and
   // `suggest.quicksuggest.sponsored` controls sponsored results.
   // `quicksuggest.dataCollection.enabled` is introduced.
   ["quicksuggest.migrationVersion", 0],
@@ -681,7 +683,9 @@ class Preferences {
     //    neccesary across app versions: introducing and initializing new prefs,
     //    removing prefs, or changing the meaning of existing prefs.
 
-    let nonSponsoredInitiallyEnabled = this.get("suggest.quicksuggest");
+    let nonSponsoredInitiallyEnabled = this.get(
+      "suggest.quicksuggest.nonsponsored"
+    );
     let sponsoredInitiallyEnabled = this.get("suggest.quicksuggest.sponsored");
 
     // 1. Pick a scenario
@@ -709,7 +713,7 @@ class Preferences {
     // 3. Set default-branch values for prefs that are both exposed in the UI
     // and configurable via Nimbus
     let uiPrefNamesByVariable = {
-      quickSuggestNonSponsoredEnabled: "suggest.quicksuggest",
+      quickSuggestNonSponsoredEnabled: "suggest.quicksuggest.nonsponsored",
       quickSuggestSponsoredEnabled: "suggest.quicksuggest.sponsored",
       quickSuggestDataCollectionEnabled: "quicksuggest.dataCollection.enabled",
     };
@@ -746,7 +750,7 @@ class Preferences {
       )
     ) {
       if (nonSponsoredInitiallyEnabled) {
-        this.set("suggest.quicksuggest", true);
+        this.set("suggest.quicksuggest.nonsponsored", true);
       }
       if (sponsoredInitiallyEnabled) {
         this.set("suggest.quicksuggest.sponsored", true);
@@ -804,14 +808,14 @@ class Preferences {
         "quicksuggest.enabled": true,
         "quicksuggest.dataCollection.enabled": false,
         "quicksuggest.shouldShowOnboardingDialog": false,
-        "suggest.quicksuggest": true,
+        "suggest.quicksuggest.nonsponsored": true,
         "suggest.quicksuggest.sponsored": true,
       },
       online: {
         "quicksuggest.enabled": true,
         "quicksuggest.dataCollection.enabled": false,
         "quicksuggest.shouldShowOnboardingDialog": true,
-        "suggest.quicksuggest": false,
+        "suggest.quicksuggest.nonsponsored": false,
         "suggest.quicksuggest.sponsored": false,
       },
     };
@@ -829,10 +833,21 @@ class Preferences {
       return;
     }
 
+    // Copy `suggest.quicksuggest` to `suggest.quicksuggest.nonsponsored` and
+    // clear the first.
+    let suggestQuicksuggest = "browser.urlbar.suggest.quicksuggest";
+    if (Services.prefs.prefHasUserValue(suggestQuicksuggest)) {
+      this.set(
+        "suggest.quicksuggest.nonsponsored",
+        Services.prefs.getBoolPref(suggestQuicksuggest)
+      );
+      Services.prefs.clearUserPref(suggestQuicksuggest);
+    }
+
     // In the unversioned prefs, sponsored suggestions were shown only if the
-    // main suggestions pref was true, but now the two prefs are independent, so
-    // disable sponsored if the main pref was false.
-    if (!this.get("suggest.quicksuggest")) {
+    // main suggestions pref `suggest.quicksuggest` was true, but now there are
+    // two independent prefs, so disable sponsored if the main pref was false.
+    if (!this.get("suggest.quicksuggest.nonsponsored")) {
       switch (scenario) {
         case "offline":
           // Set the pref on the user branch. Suggestions are enabled by default
@@ -853,7 +868,7 @@ class Preferences {
     // The data collection pref is new in this version. Enable it iff the
     // scenario is online and the user opted in to suggestions. In offline, it
     // should always start off false.
-    if (scenario == "online" && this.get("suggest.quicksuggest")) {
+    if (scenario == "online" && this.get("suggest.quicksuggest.nonsponsored")) {
       this.set("quicksuggest.dataCollection.enabled", true);
     }
 
