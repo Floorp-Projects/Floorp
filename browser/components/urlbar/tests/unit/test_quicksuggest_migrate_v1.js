@@ -148,7 +148,7 @@ add_task(async function() {
     expectedPrefs: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
       userBranch: {
-        "suggest.quicksuggest": false,
+        "suggest.quicksuggest.nonsponsored": false,
         "suggest.quicksuggest.sponsored": false,
       },
     },
@@ -180,7 +180,7 @@ add_task(async function() {
     expectedPrefs: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
       userBranch: {
-        "suggest.quicksuggest": false,
+        "suggest.quicksuggest.nonsponsored": false,
         "suggest.quicksuggest.sponsored": false,
       },
     },
@@ -266,7 +266,7 @@ add_task(async function() {
     expectedPrefs: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
       userBranch: {
-        "suggest.quicksuggest": false,
+        "suggest.quicksuggest.nonsponsored": false,
       },
     },
   });
@@ -297,7 +297,7 @@ add_task(async function() {
     expectedPrefs: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
       userBranch: {
-        "suggest.quicksuggest": false,
+        "suggest.quicksuggest.nonsponsored": false,
         "suggest.quicksuggest.sponsored": false,
       },
     },
@@ -396,7 +396,7 @@ add_task(async function() {
     expectedPrefs: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
       userBranch: {
-        "suggest.quicksuggest": true,
+        "suggest.quicksuggest.nonsponsored": true,
       },
     },
   });
@@ -427,7 +427,7 @@ add_task(async function() {
     expectedPrefs: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.offline,
       userBranch: {
-        "suggest.quicksuggest": true,
+        "suggest.quicksuggest.nonsponsored": true,
         "suggest.quicksuggest.sponsored": true,
       },
     },
@@ -511,7 +511,7 @@ add_task(async function() {
     expectedPrefs: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
       userBranch: {
-        "suggest.quicksuggest": true,
+        "suggest.quicksuggest.nonsponsored": true,
         "quicksuggest.dataCollection.enabled": true,
       },
     },
@@ -544,7 +544,7 @@ add_task(async function() {
     expectedPrefs: {
       defaultBranch: UrlbarPrefs.FIREFOX_SUGGEST_DEFAULT_PREFS.online,
       userBranch: {
-        "suggest.quicksuggest": true,
+        "suggest.quicksuggest.nonsponsored": true,
         "suggest.quicksuggest.sponsored": true,
         "quicksuggest.dataCollection.enabled": true,
       },
