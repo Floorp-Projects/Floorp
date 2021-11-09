@@ -1625,6 +1625,13 @@ bool nsGlobalWindowInner::ShouldResistFingerprinting() const {
   return nsIScriptGlobalObject::ShouldResistFingerprinting();
 }
 
+uint32_t nsGlobalWindowInner::GetPrincipalHashValue() const {
+  if (mDoc) {
+    return mDoc->NodePrincipal()->GetHashValue();
+  }
+  return 0;
+}
+
 nsresult nsGlobalWindowInner::EnsureScriptEnvironment() {
   // NOTE: We can't use FORWARD_TO_OUTER here because we don't want to fail if
   // we're called on an inactive inner window.

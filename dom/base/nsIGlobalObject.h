@@ -215,6 +215,12 @@ class nsIGlobalObject : public nsISupports,
    */
   virtual bool ShouldResistFingerprinting() const;
 
+  /**
+   * Threadsafe way to get nsIPrincipal::GetHashValue for the associated
+   * principal.
+   */
+  virtual uint32_t GetPrincipalHashValue() const { return 0; }
+
  protected:
   virtual ~nsIGlobalObject();
 
