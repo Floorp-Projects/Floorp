@@ -1,7 +1,11 @@
 //error: inconsistent moveonly status of type `mozilla::ipc::SomeMoveonlyType`
+//error: inconsistent moveonly status of type `mozilla::ipc::SomeMoveonlySendType`
 
 [MoveOnly] using class mozilla::ipc::SomeMoveonlyType from "SomeFile.h";
 using class mozilla::ipc::SomeMoveonlyType from "SomeFile.h";
+
+[MoveOnly=send] using class mozilla::ipc::SomeMoveonlySendType from "SomeFile.h";
+[MoveOnly=data] using class mozilla::ipc::SomeMoveonlySendType from "SomeFile.h";
 
 protocol PInconsistentMoveOnly {
 child:
