@@ -135,7 +135,7 @@ browser.urlbar.quicksuggest.enabled (boolean, default: false)
   results related to the user's search string. This pref can be overridden by
   the ``quickSuggestEnabled`` Nimbus variable. If false, neither sponsored nor
   non-sponsored quick suggest results will be shown. If true, then we look at
-  the individual prefs ``browser.urlbar.suggest.quicksuggest`` and
+  the individual prefs ``browser.urlbar.suggest.quicksuggest.nonsponsored`` and
   ``browser.urlbar.suggest.quicksuggest.sponsored``.
 
 browser.urlbar.quicksuggest.log (boolean, default: false)
@@ -166,7 +166,7 @@ browser.urlbar.speculativeConnect.enabled (boolean, default: true)
 browser.urlbar.sponsoredTopSites (boolean, default: false)
   Whether top sites may include sponsored ones.
 
-browser.urlbar.suggest.quicksuggest (boolean, default: false)
+browser.urlbar.suggest.quicksuggest.nonsponsored (boolean, default: false)
   Whether results will include non-sponsored quick suggest suggestions.
 
 browser.urlbar.suggest.quicksuggest.sponsored (boolean, default: false)
