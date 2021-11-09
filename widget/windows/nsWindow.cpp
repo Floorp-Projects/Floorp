@@ -7361,6 +7361,13 @@ bool nsWindow::ShouldUseOffMainThreadCompositing() {
     return false;
   }
 
+  // Content rendering of popup is always done by child window.
+  // See nsDocumentViewer::ShouldAttachToTopLevel().
+  if (mWindowType == eWindowType_popup && !mIsChildWindow) {
+    MOZ_ASSERT(!mParent);
+    return false;
+  }
+
   return nsBaseWidget::ShouldUseOffMainThreadCompositing();
 }
 
