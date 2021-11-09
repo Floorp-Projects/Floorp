@@ -1,13 +1,16 @@
 /* global Handlebars:false */
-/* import-globals-from messages.js */
-/* import-globals-from main.js */
 
 /*
-PKT_PANEL_OVERLAY is the view itself and contains all of the methods to manipute the overlay and messaging.
+HomeOverlay is the view itself and contains all of the methods to manipute the overlay and messaging.
 It does not contain any logic for saving or communication with the extension or server.
 */
 
-var PKT_PANEL_OVERLAY = function(options) {
+import React from "react";
+import ReactDOM from "react-dom";
+import PopularTopics from "../components/PopularTopics";
+import pktPanelMessaging from "../messages.js";
+
+var HomeOverlay = function(options) {
   this.inited = false;
   this.active = false;
   this.pockethost = "getpocket.com";
@@ -17,15 +20,15 @@ var PKT_PANEL_OVERLAY = function(options) {
   };
 
   this.setupClickEvents = function() {
-    thePKT_PANEL.clickHelper(document.querySelector(`.pkt_ext_mylist`), {
+    pktPanelMessaging.clickHelper(document.querySelector(`.pkt_ext_mylist`), {
       source: `home_view_list`,
     });
-    thePKT_PANEL.clickHelper(document.querySelector(`.pkt_ext_discover`), {
+    pktPanelMessaging.clickHelper(document.querySelector(`.pkt_ext_discover`), {
       source: `home_discover`,
     });
 
     document.querySelectorAll(`.pkt_ext_topic`).forEach((el, position) => {
-      thePKT_PANEL.clickHelper(el, {
+      pktPanelMessaging.clickHelper(el, {
         source: `home_topic`,
         position,
       });
@@ -33,7 +36,7 @@ var PKT_PANEL_OVERLAY = function(options) {
   };
 };
 
-PKT_PANEL_OVERLAY.prototype = {
+HomeOverlay.prototype = {
   create() {
     var host = window.location.href.match(/pockethost=([\w|\.]*)&?/);
     if (host && host.length > 1) {
@@ -73,19 +76,19 @@ PKT_PANEL_OVERLAY.prototype = {
     // We only have topic pages in English,
     // so ensure we only show a topics section for English browsers.
     if (this.locale.startsWith("en")) {
-      const data = {
-        pockethost: templateData.pockethost,
-        utmsource: templateData.utmsource,
-        topics: [
-          { title: "Self Improvement", topic: "self-improvement" },
-          { title: "Food", topic: "food" },
-          { title: "Entertainment", topic: "entertainment" },
-          { title: "Science", topic: "science" },
-        ],
-      };
-      document
-        .querySelector(`.pkt_ext_more`)
-        .append(this.parseHTML(Handlebars.templates.popular_topics(data)));
+      ReactDOM.render(
+        <PopularTopics
+          pockethost={templateData.pockethost}
+          utmsource={templateData.utmsource}
+          topics={[
+            { title: "Self Improvement", topic: "self-improvement" },
+            { title: "Food", topic: "food" },
+            { title: "Entertainment", topic: "entertainment" },
+            { title: "Science", topic: "science" },
+          ]}
+        />,
+        document.querySelector(`.pkt_ext_more`)
+      );
     } else if (enableLocalizedExploreMore) {
       // For non English, we have a slightly different component to the page.
       document
@@ -100,3 +103,5 @@ PKT_PANEL_OVERLAY.prototype = {
     pktPanelMessaging.sendMessage("PKT_show_home");
   },
 };
+
+export default HomeOverlay;
