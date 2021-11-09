@@ -11864,6 +11864,18 @@
   value: 100000 # 100KB
   mirror: always
 
+# Override the blocklist to assume that GL is threadsafe.
+- name: webgl.threadsafe-gl.force-enabled
+  type: bool
+  value: false
+  mirror: once
+
+# Override the blocklist to assume that GL is not threadsafe.
+- name: webgl.threadsafe-gl.force-disabled
+  type: bool
+  value: false
+  mirror: once
+
 - name: webgl.override-unmasked-renderer
   type: String
   value: ""
