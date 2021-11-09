@@ -195,7 +195,7 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
       PAPZCTreeManagerParent* aActor) = 0;
 
   virtual PTextureParent* AllocPTextureParent(
-      const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
+      const SurfaceDescriptor& aSharedData, ReadLockDescriptor& aReadLock,
       const LayersBackend& aBackend, const TextureFlags& aTextureFlags,
       const LayersId& id, const uint64_t& aSerial,
       const MaybeExternalImageId& aExternalImageId) = 0;
@@ -360,7 +360,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   void SetFixedLayerMargins(ScreenIntCoord aTop, ScreenIntCoord aBottom);
 
   PTextureParent* AllocPTextureParent(
-      const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
+      const SurfaceDescriptor& aSharedData, ReadLockDescriptor& aReadLock,
       const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
       const LayersId& aId, const uint64_t& aSerial,
       const wr::MaybeExternalImageId& aExternalImageId) override;

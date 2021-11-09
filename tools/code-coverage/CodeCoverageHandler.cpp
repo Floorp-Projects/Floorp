@@ -121,8 +121,8 @@ CodeCoverageHandler::CodeCoverageHandler() : mGcovLock("GcovLock") {
   SetSignalHandlers();
 }
 
-CodeCoverageHandler::CodeCoverageHandler(const CrossProcessMutexHandle& aHandle)
-    : mGcovLock(aHandle) {
+CodeCoverageHandler::CodeCoverageHandler(CrossProcessMutexHandle aHandle)
+    : mGcovLock(std::move(aHandle)) {
   SetSignalHandlers();
 }
 
@@ -136,10 +136,10 @@ void CodeCoverageHandler::Init() {
   FlushCounters(true);
 }
 
-void CodeCoverageHandler::Init(const CrossProcessMutexHandle& aHandle) {
+void CodeCoverageHandler::Init(CrossProcessMutexHandle aHandle) {
   MOZ_ASSERT(!instance);
   MOZ_ASSERT(!XRE_IsParentProcess());
-  instance = new CodeCoverageHandler(aHandle);
+  instance = new CodeCoverageHandler(std::move(aHandle));
   ClearOnShutdown(&instance);
 
   // Don't really flush but just make FlushCounters usable.

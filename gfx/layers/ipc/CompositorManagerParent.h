@@ -40,8 +40,8 @@ class CompositorManagerParent final : public PCompositorManagerParent {
                                           bool aUseExternalSurfaceSize,
                                           const gfx::IntSize& aSurfaceSize);
 
-  mozilla::ipc::IPCResult RecvAddSharedSurface(
-      const wr::ExternalImageId& aId, const SurfaceDescriptorShared& aDesc);
+  mozilla::ipc::IPCResult RecvAddSharedSurface(const wr::ExternalImageId& aId,
+                                               SurfaceDescriptorShared&& aDesc);
   mozilla::ipc::IPCResult RecvRemoveSharedSurface(
       const wr::ExternalImageId& aId);
   mozilla::ipc::IPCResult RecvReportSharedSurfacesMemory(

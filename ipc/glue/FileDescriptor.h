@@ -11,10 +11,6 @@
 #include "base/process.h"
 #include "mozilla/UniquePtrExtensions.h"
 
-#ifdef XP_UNIX
-#  include "base/file_descriptor_posix.h"
-#endif
-
 namespace mozilla {
 namespace ipc {
 
@@ -40,7 +36,7 @@ class FileDescriptor {
 #ifdef XP_WIN
   typedef PlatformHandleType PickleType;
 #else
-  typedef base::FileDescriptor PickleType;
+  typedef UniquePlatformHandle PickleType;
 #endif
 
   // This should only ever be created by IPDL.
@@ -62,7 +58,7 @@ class FileDescriptor {
 
   // This constructor WILL NOT duplicate the handle.
   // FileDescriptor takes the ownership from IPC message.
-  FileDescriptor(const IPDLPrivate&, const PickleType& aPickle);
+  FileDescriptor(const IPDLPrivate&, PickleType aPickle);
 
   ~FileDescriptor();
 

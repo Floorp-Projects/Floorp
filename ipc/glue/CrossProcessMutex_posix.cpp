@@ -75,7 +75,8 @@ CrossProcessMutex::CrossProcessMutex(CrossProcessMutexHandle aHandle)
     MOZ_CRASH();
   }
 
-  if (!mSharedBuffer->SetHandle(aHandle, ipc::SharedMemory::RightsReadWrite)) {
+  if (!mSharedBuffer->SetHandle(std::move(aHandle),
+                                ipc::SharedMemory::RightsReadWrite)) {
     MOZ_CRASH();
   }
 
