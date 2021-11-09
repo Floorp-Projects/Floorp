@@ -168,8 +168,10 @@ MDefinition* ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block,
                               const LinearSum& sum, BailoutKind bailoutKind);
 
 bool DeadIfUnused(const MDefinition* def);
+bool DeadIfUnusedAllowEffectful(const MDefinition* def);
 
 bool IsDiscardable(const MDefinition* def);
+bool IsDiscardableAllowEffectful(const MDefinition* def);
 
 class CompileInfo;
 void DumpMIRExpressions(MIRGraph& graph, const CompileInfo& info,
