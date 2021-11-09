@@ -5034,6 +5034,13 @@ JSObject* js::NewPlainObjectBaselineFallback(JSContext* cx, HandleShape shape,
                                              gc::AllocKind allocKind,
                                              gc::AllocSite* site) {
   MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
+
+  mozilla::Maybe<AutoRealm> ar;
+  if (cx->realm() != shape->realm()) {
+    MOZ_ASSERT(cx->compartment() == shape->compartment());
+    ar.emplace(cx, shape);
+  }
+
   gc::InitialHeap initialHeap = site->initialHeap();
   return NativeObject::create(cx, allocKind, initialHeap, shape, site);
 }
@@ -5042,6 +5049,13 @@ JSObject* js::NewPlainObjectOptimizedFallback(JSContext* cx, HandleShape shape,
                                               gc::AllocKind allocKind,
                                               gc::InitialHeap initialHeap) {
   MOZ_ASSERT(shape->getObjectClass() == &PlainObject::class_);
+
+  mozilla::Maybe<AutoRealm> ar;
+  if (cx->realm() != shape->realm()) {
+    MOZ_ASSERT(cx->compartment() == shape->compartment());
+    ar.emplace(cx, shape);
+  }
+
   gc::AllocSite* site = cx->zone()->optimizedAllocSite();
   return NativeObject::create(cx, allocKind, initialHeap, shape, site);
 }
