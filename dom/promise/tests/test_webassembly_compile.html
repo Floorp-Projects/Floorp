@@ -14,6 +14,7 @@ const testingFunctions = SpecialPowers.Cu.getJSTestingFunctions();
 const wasmIsSupported = SpecialPowers.unwrap(testingFunctions.wasmIsSupported);
 const wasmHasTier2CompilationCompleted = SpecialPowers.unwrap(testingFunctions.wasmHasTier2CompilationCompleted);
 const wasmLoadedFromCache = SpecialPowers.unwrap(testingFunctions.wasmLoadedFromCache);
+const isCachingEnabled = SpecialPowers.getBoolPref("javascript.options.wasm_caching");
 
 // The test_webassembly_compile_sample.wasm is a medium-sized module with 100
 // functions that call each other recursively, returning a computed sum.
@@ -410,13 +411,15 @@ var tests = [ propertiesExist,
               compileStreamingDoubleUseFail,
               compileStreamingNullBody,
               compileStreamingFetch,
-              compileCachedBasic,
-              compileCachedCompressed,
-              compileCachedTooLargeForCache,
-              compileCachedBothClonesHitCache.bind(Original),
-              compileCachedBothClonesHitCache.bind(Clone),
-              compileCachedCacheThroughClone.bind(Original),
-              compileCachedCacheThroughClone.bind(Clone),
+              ...(isCachingEnabled ? [
+                compileCachedBasic,
+                compileCachedCompressed,
+                compileCachedTooLargeForCache,
+                compileCachedBothClonesHitCache.bind(Original),
+                compileCachedBothClonesHitCache.bind(Clone),
+                compileCachedCacheThroughClone.bind(Original),
+                compileCachedCacheThroughClone.bind(Clone),
+              ]: []),
               instantiateStreamingFetch,
               compileManyStreamingFetch,
               runWorkerTests,
