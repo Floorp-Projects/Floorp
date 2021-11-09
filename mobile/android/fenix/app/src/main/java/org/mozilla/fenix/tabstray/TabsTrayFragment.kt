@@ -254,6 +254,7 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         tabLayoutMediator.set(
             feature = TabLayoutMediator(
                 tabLayout = tabsTrayBinding.tabLayout,
+                tabPager = tabsTrayBinding.tabsTray,
                 interactor = tabsTrayInteractor,
                 browsingModeManager = activity.browsingModeManager,
                 tabsTrayStore = tabsTrayStore,

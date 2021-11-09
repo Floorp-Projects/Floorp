@@ -5,6 +5,7 @@
 package org.mozilla.fenix.tabstray
 
 import androidx.annotation.VisibleForTesting
+import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.base.feature.LifecycleAwareFeature
@@ -21,6 +22,7 @@ import org.mozilla.fenix.utils.Do
  */
 class TabLayoutMediator(
     private val tabLayout: TabLayout,
+    private val tabPager: ViewPager2,
     interactor: TabsTrayInteractor,
     private val browsingModeManager: BrowsingModeManager,
     private val tabsTrayStore: TabsTrayStore,
@@ -55,6 +57,7 @@ class TabLayoutMediator(
 
     fun selectTabAtPosition(position: Int) {
         tabLayout.getTabAt(position)?.select()
+        tabPager.setCurrentItem(position, false)
         tabsTrayStore.dispatch(TabsTrayAction.PageSelected(Page.positionToPage(position)))
     }
 }
