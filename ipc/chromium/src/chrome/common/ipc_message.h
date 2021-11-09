@@ -106,6 +106,7 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
       COMPRESS_BIT = 0x0200,
       COMPRESSALL_BIT = 0x0400,
       CONSTRUCTOR_BIT = 0x0800,
+      RELAY_BIT = 0x1000,
     };
 
    public:
@@ -146,12 +147,20 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
     bool IsReply() const { return (mFlags & REPLY_BIT) != 0; }
 
     bool IsReplyError() const { return (mFlags & REPLY_ERROR_BIT) != 0; }
+    bool IsRelay() const { return (mFlags & RELAY_BIT) != 0; }
 
    private:
     void SetSync() { mFlags |= SYNC_BIT; }
     void SetInterrupt() { mFlags |= INTERRUPT_BIT; }
     void SetReply() { mFlags |= REPLY_BIT; }
     void SetReplyError() { mFlags |= REPLY_ERROR_BIT; }
+    void SetRelay(bool relay) {
+      if (relay) {
+        mFlags |= RELAY_BIT;
+      } else {
+        mFlags &= ~RELAY_BIT;
+      }
+    }
 
     uint32_t mFlags;
   };
@@ -246,6 +255,9 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   const mozilla::TimeStamp& create_time() const { return create_time_; }
 
   uint32_t num_handles() const;
+
+  bool is_relay() const { return header()->flags.IsRelay(); }
+  void set_relay(bool new_relay) { header()->flags.SetRelay(new_relay); }
 
   template <class T>
   static bool Dispatch(const Message* msg, T* obj, void (T::*func)()) {
