@@ -11,6 +11,7 @@
 #include "nsIEditorSpellCheck.h"
 #include "nsIInlineSpellChecker.h"
 #include "mozInlineSpellWordUtil.h"
+#include "mozilla/EditorDOMPoint.h"
 #include "mozilla/Result.h"
 #include "nsRange.h"
 #include "nsWeakReference.h"
@@ -24,6 +25,7 @@ namespace mozilla {
 class EditorBase;
 class EditorSpellCheck;
 enum class EditSubAction : int32_t;
+enum class JoinNodesDirection;
 
 namespace dom {
 class Event;
@@ -282,11 +284,6 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   nsresult SaveCurrentSelectionPosition();
 
   nsresult ResumeCheck(mozilla::UniquePtr<mozInlineSpellStatus>&& aStatus);
-
-  // Those methods are called when mEditorBase splits a node or joins the
-  // given nodes.
-  void DidSplitNode(nsINode* aExistingRightNode, nsINode* aNewLeftNode);
-  void DidJoinNodes(nsINode& aRightNode, nsINode& aLeftNode);
 
   nsresult SpellCheckAfterEditorChange(mozilla::EditSubAction aEditSubAction,
                                        mozilla::dom::Selection& aSelection,
