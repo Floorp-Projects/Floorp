@@ -46,15 +46,15 @@ class ScrollbarActivity;
 
 class ScrollFrameHelper : public nsIReflowCallback {
  public:
-  typedef nsIFrame::Sides Sides;
-  typedef mozilla::CSSIntPoint CSSIntPoint;
-  typedef mozilla::layout::ScrollbarActivity ScrollbarActivity;
-  typedef mozilla::layers::FrameMetrics FrameMetrics;
-  typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
-  typedef mozilla::layers::ScrollSnapInfo ScrollSnapInfo;
-  typedef mozilla::layers::Layer Layer;
-  typedef mozilla::layers::WebRenderLayerManager WebRenderLayerManager;
-  typedef mozilla::layout::ScrollAnchorContainer ScrollAnchorContainer;
+  using Sides = nsIFrame::Sides;
+  using CSSIntPoint = mozilla::CSSIntPoint;
+  using ScrollbarActivity = mozilla::layout::ScrollbarActivity;
+  using FrameMetrics = mozilla::layers::FrameMetrics;
+  using ScrollableLayerGuid = mozilla::layers::ScrollableLayerGuid;
+  using ScrollSnapInfo = mozilla::layers::ScrollSnapInfo;
+  using Layer = mozilla::layers::Layer;
+  using WebRenderLayerManager = mozilla::layers::WebRenderLayerManager;
+  using ScrollAnchorContainer = mozilla::layout::ScrollAnchorContainer;
   using Element = mozilla::dom::Element;
 
   class AsyncScroll;
@@ -811,10 +811,10 @@ class nsHTMLScrollFrame : public nsContainerFrame,
                           public nsIAnonymousContentCreator,
                           public nsIStatefulFrame {
  public:
-  typedef mozilla::ScrollFrameHelper ScrollFrameHelper;
-  typedef mozilla::CSSIntPoint CSSIntPoint;
-  typedef mozilla::ScrollReflowInput ScrollReflowInput;
-  typedef mozilla::layout::ScrollAnchorContainer ScrollAnchorContainer;
+  using ScrollFrameHelper = mozilla::ScrollFrameHelper;
+  using CSSIntPoint = mozilla::CSSIntPoint;
+  using ScrollReflowInput = mozilla::ScrollReflowInput;
+  using ScrollAnchorContainer = mozilla::layout::ScrollAnchorContainer;
   friend nsHTMLScrollFrame* NS_NewHTMLScrollFrame(
       mozilla::PresShell* aPresShell, ComputedStyle* aStyle, bool aIsRoot);
 
@@ -1286,9 +1286,9 @@ class nsXULScrollFrame final : public nsBoxFrame,
                                public nsIAnonymousContentCreator,
                                public nsIStatefulFrame {
  public:
-  typedef mozilla::ScrollFrameHelper ScrollFrameHelper;
-  typedef mozilla::CSSIntPoint CSSIntPoint;
-  typedef mozilla::layout::ScrollAnchorContainer ScrollAnchorContainer;
+  using ScrollFrameHelper = mozilla::ScrollFrameHelper;
+  using CSSIntPoint = mozilla::CSSIntPoint;
+  using ScrollAnchorContainer = mozilla::layout::ScrollAnchorContainer;
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsXULScrollFrame)
