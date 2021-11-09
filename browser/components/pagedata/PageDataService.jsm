@@ -28,25 +28,21 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
 const ALLOWED_SCHEMES = ["http", "https", "data", "blob"];
 
 /**
- * @typedef {object} Data
- *   An individual piece of data about a page.
- * @property {number} type
- *   The type of data, see PageDataCollector.DATA_TYPE.*
- * @property {object} data
- *   The data in a format specific to the type of data.
- *
  * @typedef {object} PageData
- *   A set of discovered from a page.
+ *   A set of discovered from a page. Other than the `data` property this is the
+ *   schema at `browser/components/pagedata/schemas/general.schema.json`.
  * @property {string} url
  *   The page's url.
  * @property {number} date
  *   The epoch based timestamp for when the data was discovered.
- * @property {xpcIJSWeakReference|null} weakBrowser
- *   A weak reference to the <browser> that did the discovery, or null
- *   if discovery hasn't occurred yet. If the weak reference exists,
- *   use `.get()` on it to return the <browser> if it still exists.
- * @property {Data[]} data
- *   The array of data found which may be empty if no data was found.
+ * @property {string} siteName
+ *   The page's friendly site name.
+ * @property {string} image
+ *   The page's image.
+ * @property {object} data
+ *   The map of data found which may be empty if no data was found. The key in
+ *   map is from the `PageDataSchema.DATA_TYPE` enumeration. The values are in
+ *   the format defined by the schemas at `browser/components/pagedata/schemas`.
  */
 
 const PageDataService = new (class PageDataService extends EventEmitter {
@@ -55,7 +51,7 @@ const PageDataService = new (class PageDataService extends EventEmitter {
    *
    * TODO: Currently the cache never expires.
    *
-   * @type {Map<string, PageData[]>}
+   * @type {Map<string, PageData>}
    */
   #pageDataCache = new Map();
 
@@ -127,35 +123,26 @@ const PageDataService = new (class PageDataService extends EventEmitter {
     }
 
     let data = await actor.collectPageData();
-    this.pageDataDiscovered(url, data, browser);
+    this.pageDataDiscovered(data);
   }
 
   /**
    * Adds data for a url. This should generally only be called by other components of the
    * page data service or tests for simulating page data collection.
    *
-   * @param {string} url
-   *   The url of the page.
-   * @param {Data[]} data
+   * @param {PageData} pageData
    *   The set of data discovered.
-   * @param {DOMElement} browser
-   *   The browser that performed the discovery.
    */
-  pageDataDiscovered(url, data, browser) {
-    logConsole.debug("Discovered page data", url, data);
+  pageDataDiscovered(pageData) {
+    logConsole.debug("Discovered page data", pageData);
 
-    let pageData = {
-      url,
-      date: Date.now(),
-      data,
-      weakBrowser: Cu.getWeakReference(browser),
-    };
+    this.#pageDataCache.set(pageData.url, {
+      ...pageData,
+      data: pageData.data ?? {},
+    });
 
-    this.#pageDataCache.set(url, pageData);
-
-    // Send out a notification. The `no-page-data` notification is intended
-    // for test use only.
-    this.emit(data.length ? "page-data" : "no-page-data", pageData);
+    // Send out a notification.
+    this.emit("page-data", pageData);
   }
 
   /**
@@ -187,15 +174,14 @@ const PageDataService = new (class PageDataService extends EventEmitter {
     let pageData = {
       url,
       date: Date.now(),
-      data: [],
-      weakBrowser: null,
+      data: {},
     };
 
     this.#pageDataCache.set(url, pageData);
 
     // Send out a notification. The `no-page-data` notification is intended
     // for test use only.
-    this.emit(pageData.data.length ? "page-data" : "no-page-data", pageData);
+    this.emit("page-data", pageData);
   }
 
   /**

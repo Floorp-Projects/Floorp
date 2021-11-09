@@ -5,7 +5,7 @@
  * Tests that adding a snapshot also adds related page data.
  */
 XPCOMUtils.defineLazyModuleGetters(this, {
-  PageDataCollector: "resource:///modules/pagedata/PageDataCollector.jsm",
+  PageDataSchema: "resource:///modules/pagedata/PageDataSchema.jsm",
   PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
 });
 
@@ -15,30 +15,36 @@ const TEST_URL3 = "https://example.com/14235";
 
 add_task(async function pagedata() {
   // Register some page data.
-  PageDataService.pageDataDiscovered(TEST_URL1, [
-    {
-      type: PageDataCollector.DATA_TYPE.PRODUCT,
-      data: {
-        price: 276,
+  PageDataService.pageDataDiscovered({
+    url: TEST_URL1,
+    date: Date.now(),
+    siteName: "Mozilla",
+    data: {
+      [PageDataSchema.DATA_TYPE.PRODUCT]: {
+        price: {
+          value: 276,
+          currency: "USD",
+        },
       },
-    },
-    {
-      // Unsupported page data.
-      type: 1234,
-      data: {
+      // Unsupported page data
+      1: {
         bacon: "good",
+        kale: "bad",
       },
     },
-  ]);
+  });
 
-  PageDataService.pageDataDiscovered(TEST_URL2, [
-    {
-      type: PageDataCollector.DATA_TYPE.PRODUCT,
-      data: {
-        price: 384,
+  PageDataService.pageDataDiscovered({
+    url: TEST_URL2,
+    date: Date.now(),
+    data: {
+      [PageDataSchema.DATA_TYPE.PRODUCT]: {
+        price: {
+          value: 384,
+        },
       },
     },
-  ]);
+  });
 
   let now = Date.now();
 
@@ -87,19 +93,20 @@ add_task(async function pagedata() {
   ]);
 
   let snap = await Snapshots.get(TEST_URL1);
-  Assert.equal(snap.pageData.size, 1, "Should have some page data.");
-  Assert.equal(
-    snap.pageData.get(PageDataCollector.DATA_TYPE.PRODUCT).price,
-    276,
+  Assert.equal(snap.siteName, "Mozilla", "Should have the site name.");
+  Assert.equal(snap.pageData.size, 2, "Should have some page data.");
+  Assert.deepEqual(
+    snap.pageData.get(PageDataSchema.DATA_TYPE.PRODUCT),
+    { price: { value: 276, currency: "USD" } },
     "Should have the right price."
   );
 
   await Snapshots.add({ url: TEST_URL2 });
   snap = await Snapshots.get(TEST_URL2);
   Assert.equal(snap.pageData.size, 1, "Should have some page data.");
-  Assert.equal(
-    snap.pageData.get(PageDataCollector.DATA_TYPE.PRODUCT).price,
-    384,
+  Assert.deepEqual(
+    snap.pageData.get(PageDataSchema.DATA_TYPE.PRODUCT),
+    { price: { value: 384 } },
     "Should have the right price."
   );
 
@@ -120,7 +127,7 @@ add_task(async function pagedata() {
         documentType: Interactions.DOCUMENT_TYPE.GENERIC,
       },
     ],
-    { type: PageDataCollector.DATA_TYPE.PRODUCT }
+    { type: PageDataSchema.DATA_TYPE.PRODUCT }
   );
 
   info("Ensure that removing a snapshot removes pagedata for it");
@@ -140,10 +147,11 @@ add_task(async function pagedata() {
   info("Ensure adding back the snapshot adds pagedata for it");
   await Snapshots.add({ url: TEST_URL1, userPersisted: true });
   snap = await Snapshots.get(TEST_URL1);
-  Assert.equal(snap.pageData.size, 1, "Should have some page data.");
-  Assert.equal(
-    snap.pageData.get(PageDataCollector.DATA_TYPE.PRODUCT).price,
-    276,
+  Assert.equal(snap.siteName, "Mozilla", "Should have the site name.");
+  Assert.equal(snap.pageData.size, 2, "Should have some page data.");
+  Assert.deepEqual(
+    snap.pageData.get(PageDataSchema.DATA_TYPE.PRODUCT),
+    { price: { value: 276, currency: "USD" } },
     "Should have the right price."
   );
 

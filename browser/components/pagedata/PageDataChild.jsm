@@ -12,6 +12,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   OpenGraphPageData: "resource:///modules/pagedata/OpenGraphPageData.jsm",
+  PageDataSchema: "resource:///modules/pagedata/PageDataSchema.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   SchemaOrgPageData: "resource:///modules/pagedata/SchemaOrgPageData.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -36,15 +37,20 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 
 /**
- * Returns the list of page data collectors for a document.
+ * The list of page data collectors. These should be sorted in order of
+ * specificity, if the same piece of data is provided by two collectors then the
+ * earlier wins.
  *
- * @param {Document} document
- *   The DOM document to collect data for.
- * @returns {PageDataCollector[]}
+ * Collectors must provide a `collect` function which will be passed the
+ * document object and should return the PageData structure. The function may be
+ * asynchronous if needed.
+ *
+ * The data returned need not be valid, collectors should return whatever they
+ * can and then we drop anything that is invalid once all data is joined.
  */
-function getCollectors(document) {
-  return [new SchemaOrgPageData(document), new OpenGraphPageData(document)];
-}
+XPCOMUtils.defineLazyGetter(this, "DATA_COLLECTORS", function() {
+  return [SchemaOrgPageData, OpenGraphPageData];
+});
 
 /**
  * The actor responsible for monitoring a page for page data.
@@ -56,12 +62,6 @@ class PageDataChild extends JSWindowActorChild {
    * @type {Timer | null}
    */
   #deferTimer = null;
-  /**
-   * The current set of page data collectors for the page and their current data
-   * or null if data collection has not begun.
-   * @type {Map<PageDataCollector, Data[]> | null}
-   */
-  #collectors = null;
 
   /**
    * Called when the actor is created for a new page.
@@ -104,79 +104,33 @@ class PageDataChild extends JSWindowActorChild {
   }
 
   /**
-   * Coalesces the data from the page data collectors into a single array.
-   *
-   * @returns {Data[]}
+   * Collects data from the page.
    */
-  #buildData() {
-    if (!this.#collectors) {
-      return [];
-    }
-
-    let results = [];
-    for (let data of this.#collectors.values()) {
-      if (data !== null) {
-        results = results.concat(data);
-      }
-    }
-
-    return results;
-  }
-
-  /**
-   * Begins page data collection on the page.
-   */
-  async #beginCollection() {
-    if (this.#collectors !== null) {
-      // Already collecting.
-      return this.#buildData();
-    }
-
+  async #collectData() {
     logConsole.debug("Starting collection", this.document.documentURI);
 
-    // let initialCollection = true;
+    let pending = DATA_COLLECTORS.map(async collector => {
+      try {
+        return await collector.collect(this.document);
+      } catch (e) {
+        logConsole.error("Error collecting page data", e);
+        return {};
+      }
+    });
 
-    this.#collectors = new Map();
-    let pending = [];
-    for (let collector of getCollectors(this.document)) {
-      // TODO: Implement monitoring of pages for changes, e.g. for SPAs changing
-      // video without reloading.
-      //
-      // The commented out code below is a first attempt, that would allow
-      // individual collectors to provide updates. It will need fixing to
-      // ensure that listeners are either removed or not re-added on fresh
-      // page loads, as would happen currently.
-      //
-      // collector.on("data", (type, data) => {
-      //   this.#collectors.set(collector, data);
-      //
-      //   // Do nothing if intial collection is still ongoing.
-      //   if (!initialCollection) {
-      //     // TODO debounce this.
-      //     this.sendAsyncMessage("PageData:Collected", {
-      //       url: this.document.documentURI,
-      //       data: this.#buildData(),
-      //     });
-      //   }
-      // });
+    let pageDataList = await Promise.all(pending);
 
-      pending.push(
-        collector.init().then(
-          data => {
-            this.#collectors.set(collector, data);
-          },
-          error => {
-            this.#collectors.set(collector, []);
-            logConsole.error(`Failed collecting page data`, error);
-          }
-        )
-      );
+    let pageData = pageDataList.reduce(PageDataSchema.coalescePageData, {
+      date: Date.now(),
+      url: this.document.documentURI,
+    });
+
+    try {
+      return PageDataSchema.validatePageData(pageData);
+    } catch (e) {
+      logConsole.error("Failed to collect valid page data", e);
+      return null;
     }
-
-    await Promise.all(pending);
-    // initialCollection = false;
-
-    return this.#buildData();
   }
 
   /**
@@ -202,7 +156,7 @@ class PageDataChild extends JSWindowActorChild {
         }
         break;
       case "PageData:Collect":
-        return this.#beginCollection();
+        return this.#collectData();
     }
 
     return undefined;

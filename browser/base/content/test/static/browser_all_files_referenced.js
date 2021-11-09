@@ -269,9 +269,6 @@ var whitelist = [
 
   // toolkit/xre/MacRunFromDmgUtils.mm
   { file: "resource://gre/localization/en-US/toolkit/global/run-from-dmg.ftl" },
-
-  // Will be referenced in bug 1739379
-  { file: "resource://app/modules/pagedata/PageDataSchema.jsm" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {
