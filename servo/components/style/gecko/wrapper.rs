@@ -2098,7 +2098,8 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
             NonTSPseudoClass::MozTopmostModalDialog |
             NonTSPseudoClass::Active |
             NonTSPseudoClass::Hover |
-            NonTSPseudoClass::MozAutofillPreview => {
+            NonTSPseudoClass::MozAutofillPreview |
+            NonTSPseudoClass::Dir(..) => {
                 self.state().intersects(pseudo_class.state_flag())
             },
             NonTSPseudoClass::AnyLink => self.is_link(),
@@ -2184,7 +2185,6 @@ impl<'le> ::selectors::Element for GeckoElement<'le> {
                     None => false,
                 }
             },
-            NonTSPseudoClass::Dir(ref dir) => self.state().intersects(dir.element_state()),
         }
     }
 
