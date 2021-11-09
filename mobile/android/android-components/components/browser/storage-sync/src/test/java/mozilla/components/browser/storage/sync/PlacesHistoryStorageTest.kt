@@ -27,6 +27,7 @@ import mozilla.components.support.test.robolectric.testContext
 import org.json.JSONObject
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -1297,6 +1298,29 @@ class PlacesHistoryStorageTest {
             throw PlacesException("test")
         }
         assertEquals(emptyList<HistoryMetadata>(), result)
+    }
+
+    @Test
+    fun `history delegate's shouldStoreUri works as expected`() {
+        // Not an excessive list of allowed schemes.
+        assertTrue(history.canAddUri("http://www.mozilla.com"))
+        assertTrue(history.canAddUri("https://www.mozilla.com"))
+        assertTrue(history.canAddUri("ftp://files.mozilla.com/stuff/fenix.apk"))
+        assertTrue(history.canAddUri("about:reader?url=http://www.mozilla.com/interesting-article.html"))
+        assertTrue(history.canAddUri("https://john.doe@www.example.com:123/forum/questions/?tag=networking&order=newest#top"))
+        assertTrue(history.canAddUri("ldap://2001:db8::7/c=GB?objectClass?one"))
+        assertTrue(history.canAddUri("telnet://192.0.2.16:80/"))
+
+        assertFalse(history.canAddUri("withoutSchema.html"))
+        assertFalse(history.canAddUri("about:blank"))
+        assertFalse(history.canAddUri("news:comp.infosystems.www.servers.unix"))
+        assertFalse(history.canAddUri("imap://mail.example.com/~mozilla"))
+        assertFalse(history.canAddUri("chrome://config"))
+        assertFalse(history.canAddUri("data:text/plain;base64,SGVsbG8sIFdvcmxkIQ%3D%3D"))
+        assertFalse(history.canAddUri("data:text/html,<script>alert('hi');</script>"))
+        assertFalse(history.canAddUri("resource://internal-thingy-js-inspector/script.js"))
+        assertFalse(history.canAddUri("javascript:alert('hello!');"))
+        assertFalse(history.canAddUri("blob:https://api.mozilla.com/resource.png"))
     }
 
     private fun assertHistoryMetadataRecord(

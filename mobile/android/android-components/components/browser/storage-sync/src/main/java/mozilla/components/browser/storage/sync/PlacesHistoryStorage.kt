@@ -5,6 +5,7 @@
 package mozilla.components.browser.storage.sync
 
 import android.content.Context
+import android.net.Uri
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.PlacesApi
 import mozilla.appservices.places.PlacesException
@@ -47,6 +48,10 @@ open class PlacesHistoryStorage(
     override val logger = Logger("PlacesHistoryStorage")
 
     override suspend fun recordVisit(uri: String, visit: PageVisit) {
+        if (!canAddUri(uri)) {
+            logger.debug("Not recording visit (canAddUri=false) for: $uri")
+            return
+        }
         withContext(writeScope.coroutineContext) {
             handlePlacesExceptions("recordVisit") {
                 places.writer().noteObservation(
@@ -62,6 +67,10 @@ open class PlacesHistoryStorage(
     }
 
     override suspend fun recordObservation(uri: String, observation: PageObservation) {
+        if (!canAddUri(uri)) {
+            logger.debug("Not recording observation (canAddUri=false) for: $uri")
+            return
+        }
         // NB: visitType 'UPDATE_PLACE' means "record meta information about this URL".
         withContext(writeScope.coroutineContext) {
             // Ignore exceptions related to uris. This means we may drop some of the data on the floor
@@ -275,6 +284,10 @@ open class PlacesHistoryStorage(
         key: HistoryMetadataKey,
         observation: HistoryMetadataObservation
     ) {
+        if (!canAddUri(key.url)) {
+            logger.debug("Not recording metadata (canAddUri=false) for: ${key.url}")
+            return
+        }
         withContext(writeScope.coroutineContext) {
             handlePlacesExceptions("noteHistoryMetadataObservation") {
                 places.writer().noteHistoryMetadataObservation(observation.into(key))
@@ -318,5 +331,32 @@ open class PlacesHistoryStorage(
                     }
             }
         }
+    }
+
+    @SuppressWarnings("ReturnCount")
+    override fun canAddUri(uri: String): Boolean {
+        // Filter out unwanted URIs, such as "chrome:", "about:", etc.
+        // Ported from nsAndroidHistory::CanAddURI
+        // See https://dxr.mozilla.org/mozilla-central/source/mobile/android/components/build/nsAndroidHistory.cpp#326
+        val parsedUri = Uri.parse(uri)
+        val scheme = parsedUri.normalizeScheme().scheme ?: return false
+
+        // Short-circuit most common schemes.
+        if (scheme == "http" || scheme == "https") {
+            return true
+        }
+
+        // Allow about about:reader uris. They are of the form:
+        // about:reader?url=http://some.interesting.page/to/read.html
+        if (uri.startsWith("about:reader")) {
+            return true
+        }
+
+        val schemasToIgnore = listOf(
+            "about", "imap", "news", "mailbox", "moz-anno", "moz-extension",
+            "view-source", "chrome", "resource", "data", "javascript", "blob"
+        )
+
+        return !schemasToIgnore.contains(scheme)
     }
 }

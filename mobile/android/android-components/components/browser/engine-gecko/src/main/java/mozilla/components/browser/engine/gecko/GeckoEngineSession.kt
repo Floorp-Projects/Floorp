@@ -680,6 +680,13 @@ class GeckoEngineSession(
                 return GeckoResult.fromValue(false)
             }
 
+            val delegate = settings.historyTrackingDelegate ?: return GeckoResult.fromValue(false)
+
+            // Check if the delegate wants this type of url.
+            if (!delegate.shouldStoreUri(url)) {
+                return GeckoResult.fromValue(false)
+            }
+
             val isReload = lastVisitedURL?.let { it == url } ?: false
 
             // Note the difference between `VISIT_REDIRECT_PERMANENT`,
@@ -709,13 +716,6 @@ class GeckoEngineSession(
                 flags and GeckoSession.HistoryDelegate.VISIT_REDIRECT_SOURCE != 0 ->
                     RedirectSource.TEMPORARY
                 else -> null
-            }
-
-            val delegate = settings.historyTrackingDelegate ?: return GeckoResult.fromValue(false)
-
-            // Check if the delegate wants this type of url.
-            if (!delegate.shouldStoreUri(url)) {
-                return GeckoResult.fromValue(false)
             }
 
             return launchGeckoResult {
@@ -757,7 +757,7 @@ class GeckoEngineSession(
         }
     }
 
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "NestedBlockDepth")
     internal fun createContentDelegate() = object : GeckoSession.ContentDelegate {
         override fun onFirstComposite(session: GeckoSession) = Unit
 
@@ -848,12 +848,14 @@ class GeckoEngineSession(
             if (!privateMode) {
                 currentUrl?.let { url ->
                     settings.historyTrackingDelegate?.let { delegate ->
-                        // NB: There's no guarantee that the title change will be processed by the
-                        // delegate before the session is closed (and the corresponding coroutine
-                        // job is cancelled). Observers will always be notified of the title
-                        // change though.
-                        launch(coroutineContext) {
-                            delegate.onTitleChanged(url, title ?: "")
+                        if (delegate.shouldStoreUri(url)) {
+                            // NB: There's no guarantee that the title change will be processed by the
+                            // delegate before the session is closed (and the corresponding coroutine
+                            // job is cancelled). Observers will always be notified of the title
+                            // change though.
+                            launch(coroutineContext) {
+                                delegate.onTitleChanged(url, title ?: "")
+                            }
                         }
                     }
                 }
@@ -865,8 +867,10 @@ class GeckoEngineSession(
             if (!privateMode) {
                 currentUrl?.let { url ->
                     settings.historyTrackingDelegate?.let { delegate ->
-                        launch(coroutineContext) {
-                            delegate.onPreviewImageChange(url, previewImageUrl)
+                        if (delegate.shouldStoreUri(url)) {
+                            launch(coroutineContext) {
+                                delegate.onPreviewImageChange(url, previewImageUrl)
+                            }
                         }
                     }
                 }

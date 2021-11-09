@@ -23,6 +23,11 @@ interface HistoryStorage : Storage {
     suspend fun recordObservation(uri: String, observation: PageObservation)
 
     /**
+     * @return True if provided [uri] can be added to the storage layer.
+     */
+    fun canAddUri(uri: String): Boolean
+
+    /**
      * Maps a list of page URIs to a list of booleans indicating if each URI was visited.
      * @param uris a list of page URIs about which "visited" information is being requested.
      * @return A list of booleans indicating visited status of each

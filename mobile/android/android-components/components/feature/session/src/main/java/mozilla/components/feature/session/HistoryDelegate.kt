@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.session
 
-import android.net.Uri
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.PageObservation
@@ -15,27 +14,18 @@ import mozilla.components.concept.storage.PageVisit
  */
 class HistoryDelegate(private val historyStorage: Lazy<HistoryStorage>) : HistoryTrackingDelegate {
     override suspend fun onVisited(uri: String, visit: PageVisit) {
-        // While we expect engine implementations to check URIs against `shouldStoreUri`, we don't
-        // depend on them to actually do this check.
-        if (shouldStoreUri(uri)) {
-            historyStorage.value.recordVisit(uri, visit)
-        }
+        historyStorage.value.recordVisit(uri, visit)
     }
 
     override suspend fun onTitleChanged(uri: String, title: String) {
-        // Ignore title changes for URIs which we're ignoring.
-        if (shouldStoreUri(uri)) {
-            historyStorage.value.recordObservation(uri, PageObservation(title = title))
-        }
+        historyStorage.value.recordObservation(uri, PageObservation(title = title))
     }
 
     override suspend fun onPreviewImageChange(uri: String, previewImageUrl: String) {
-        if (shouldStoreUri(uri)) {
-            historyStorage.value.recordObservation(
-                uri,
-                PageObservation(previewImageUrl = previewImageUrl)
-            )
-        }
+        historyStorage.value.recordObservation(
+            uri,
+            PageObservation(previewImageUrl = previewImageUrl)
+        )
     }
 
     override suspend fun getVisited(uris: List<String>): List<Boolean> {
@@ -46,32 +36,5 @@ class HistoryDelegate(private val historyStorage: Lazy<HistoryStorage>) : Histor
         return historyStorage.value.getVisited()
     }
 
-    /**
-     * Filter out unwanted URIs, such as "chrome:", "about:", etc.
-     * Ported from nsAndroidHistory::CanAddURI
-     * See https://dxr.mozilla.org/mozilla-central/source/mobile/android/components/build/nsAndroidHistory.cpp#326
-     */
-    @SuppressWarnings("ReturnCount")
-    override fun shouldStoreUri(uri: String): Boolean {
-        val parsedUri = Uri.parse(uri)
-        val scheme = parsedUri.scheme ?: return false
-
-        // Short-circuit most common schemes.
-        if (scheme == "http" || scheme == "https") {
-            return true
-        }
-
-        // Allow about about:reader uris. They are of the form:
-        // about:reader?url=http://some.interesting.page/to/read.html
-        if (uri.startsWith("about:reader")) {
-            return true
-        }
-
-        val schemasToIgnore = listOf(
-            "about", "imap", "news", "mailbox", "moz-anno", "moz-extension",
-            "view-source", "chrome", "resource", "data", "javascript", "blob"
-        )
-
-        return !schemasToIgnore.contains(scheme)
-    }
+    override fun shouldStoreUri(uri: String) = historyStorage.value.canAddUri(uri)
 }

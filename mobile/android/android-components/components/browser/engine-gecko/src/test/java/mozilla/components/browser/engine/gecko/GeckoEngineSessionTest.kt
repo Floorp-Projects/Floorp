@@ -785,6 +785,7 @@ class GeckoEngineSessionTest {
         contentDelegate.value.onTitleChange(geckoSession, "Hello World!")
 
         engineSession.settings.historyTrackingDelegate = historyTrackingDelegate
+        whenever(historyTrackingDelegate.shouldStoreUri(eq("https://www.mozilla.com"))).thenReturn(true)
 
         contentDelegate.value.onTitleChange(geckoSession, "Hello World!")
         verify(historyTrackingDelegate, never()).onTitleChanged(anyString(), anyString())
@@ -794,6 +795,7 @@ class GeckoEngineSessionTest {
 
         contentDelegate.value.onTitleChange(geckoSession, "Hello World!")
         verify(historyTrackingDelegate).onTitleChanged(eq("https://www.mozilla.com"), eq("Hello World!"))
+        verify(historyTrackingDelegate).shouldStoreUri(eq("https://www.mozilla.com"))
     }
 
     @Test
@@ -846,6 +848,7 @@ class GeckoEngineSessionTest {
         contentDelegate.value.onPreviewImage(geckoSession, previewImageUrl)
 
         engineSession.settings.historyTrackingDelegate = historyTrackingDelegate
+        whenever(historyTrackingDelegate.shouldStoreUri(eq("https://www.mozilla.com"))).thenReturn(true)
 
         contentDelegate.value.onPreviewImage(geckoSession, previewImageUrl)
         verify(historyTrackingDelegate, never()).onPreviewImageChange(anyString(), anyString())
@@ -855,6 +858,7 @@ class GeckoEngineSessionTest {
 
         contentDelegate.value.onPreviewImage(geckoSession, previewImageUrl)
         verify(historyTrackingDelegate).onPreviewImageChange(eq("https://www.mozilla.com"), eq(previewImageUrl))
+        verify(historyTrackingDelegate).shouldStoreUri(eq("https://www.mozilla.com"))
     }
 
     @Test
