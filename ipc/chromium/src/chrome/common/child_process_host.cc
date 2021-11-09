@@ -29,6 +29,9 @@ bool ChildProcessHost::CreateChannel() {
   channel_id_ = IPC::Channel::GenerateVerifiedChannelID();
   channel_.reset(
       new IPC::Channel(channel_id_, IPC::Channel::MODE_SERVER, &listener_));
+#if defined(OS_WIN)
+  channel_->StartAcceptingHandles(IPC::Channel::MODE_SERVER);
+#endif
   if (!channel_->Connect()) return false;
 
   opening_channel_ = true;
