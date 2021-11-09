@@ -478,12 +478,19 @@ impl FontContext {
             load_flags |= FT_LOAD_NO_BITMAP;
         }
 
-        load_flags |= FT_LOAD_COLOR;
+        let face_flags = unsafe { (*face).face_flags };
+        if (face_flags & (FT_FACE_FLAG_FIXED_SIZES as FT_Long)) != 0 {
+          // We only set FT_LOAD_COLOR if there are bitmap strikes;
+          // COLR (color-layer) fonts are handled internally by Gecko, and
+          // WebRender is just asked to paint individual layers.
+          load_flags |= FT_LOAD_COLOR;
+        }
+
         load_flags |= FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH;
 
         let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
         let req_size = font.size.to_f64_px();
-        let face_flags = unsafe { (*face).face_flags };
+
         let mut result = if (face_flags & (FT_FACE_FLAG_FIXED_SIZES as FT_Long)) != 0 &&
                             (face_flags & (FT_FACE_FLAG_SCALABLE as FT_Long)) == 0 &&
                             (load_flags & FT_LOAD_NO_BITMAP) == 0 {
