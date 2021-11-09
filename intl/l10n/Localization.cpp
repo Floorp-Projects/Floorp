@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Localization.h"
-#include "nsContentUtils.h"
 #include "nsIObserverService.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Preferences.h"
@@ -20,48 +19,6 @@ using namespace mozilla::dom;
 using namespace mozilla::intl;
 
 static const char* kObservedPrefs[] = {L10N_PSEUDO_PREF, nullptr};
-
-// The state where the application contains incomplete localization resources
-// is much more common than for other types of core resources.
-//
-// In result, we our localization is designed to handle missing resources
-// gracefully, and we need a more fine-tuned way to communicate those problems
-// to developers.
-//
-// In particular, we want developers and early adopters to be able to reason
-// about missing translations, without bothering end user in production, where
-// the user cannot react to that.
-//
-// We currently differentiate between nightly/dev-edition builds or automation
-// where we report the errors, and beta/release, where we silence them.
-static bool MaybeReportErrorsToGecko(const nsTArray<nsCString>& aErrors,
-                                     ErrorResult& aRv,
-                                     nsIGlobalObject* global) {
-  if (!aErrors.IsEmpty()) {
-    if (xpc::IsInAutomation()) {
-      aRv.ThrowInvalidStateError(aErrors.ElementAt(0));
-      return true;
-    }
-
-#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
-    Document* doc = nullptr;
-    if (global) {
-      nsPIDOMWindowInner* innerWindow = global->AsInnerWindow();
-      if (innerWindow) {
-        doc = innerWindow->GetExtantDoc();
-      }
-    }
-
-    for (const auto& error : aErrors) {
-      nsContentUtils::ReportToConsoleNonLocalized(NS_ConvertUTF8toUTF16(error),
-                                                  nsIScriptError::warningFlag,
-                                                  "l10n"_ns, doc);
-    }
-#endif
-  }
-
-  return false;
-}
 
 static nsTArray<ffi::L10nKey> ConvertFromL10nKeys(
     const Sequence<OwningUTF8StringOrL10nIdArgs>& aKeys) {
