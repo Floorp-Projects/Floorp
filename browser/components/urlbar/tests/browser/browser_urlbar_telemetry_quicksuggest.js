@@ -562,7 +562,7 @@ add_task(async function sponsoredToggled() {
   }
 
   // Set the main quicksuggest.enabled pref to false and toggle the
-  // suggest.quicksuggest pref again. We shouldn't get any events.
+  // suggest.quicksuggest.sponsored pref again. We shouldn't get any events.
   await SpecialPowers.pushPrefEnv({
     set: [[EXPERIMENT_PREF, false]],
   });
@@ -575,6 +575,51 @@ add_task(async function sponsoredToggled() {
 
   // Set the pref back to what it was at the start of the task.
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", !enabled);
+});
+
+// Tests telemetry recorded when toggling the
+// `quicksuggest.dataCollection.enabled` pref:
+// * contextservices.quicksuggest data_collect_toggled event telemetry
+// * TelemetryEnvironment
+add_task(async function dataCollectionToggled() {
+  Services.telemetry.clearEvents();
+
+  // Toggle the quicksuggest.dataCollection.enabled pref twice. We should get
+  // two events.
+  let enabled = UrlbarPrefs.get("quicksuggest.dataCollection.enabled");
+  for (let i = 0; i < 2; i++) {
+    enabled = !enabled;
+    UrlbarPrefs.set("quicksuggest.dataCollection.enabled", enabled);
+    TelemetryTestUtils.assertEvents([
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "data_collect_toggled",
+        object: enabled ? "enabled" : "disabled",
+      },
+    ]);
+    Assert.equal(
+      TelemetryEnvironment.currentEnvironment.settings.userPrefs[
+        "browser.urlbar.quicksuggest.dataCollection.enabled"
+      ],
+      enabled,
+      "quicksuggest.dataCollection.enabled is correct in TelemetryEnvironment"
+    );
+  }
+
+  // Set the main quicksuggest.enabled pref to false and toggle the data
+  // collection pref again. We shouldn't get any events.
+  await SpecialPowers.pushPrefEnv({
+    set: [[EXPERIMENT_PREF, false]],
+  });
+  enabled = !enabled;
+  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", enabled);
+  TelemetryTestUtils.assertEvents([], {
+    category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+  });
+  await SpecialPowers.popPrefEnv();
+
+  // Set the pref back to what it was at the start of the task.
+  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", !enabled);
 });
 
 // Tests the Nimbus exposure event gets recorded after a quick suggest result

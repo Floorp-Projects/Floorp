@@ -259,6 +259,10 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
     "browser.urlbar.quicksuggest.onboardingDialogChoice",
     { what: RECORD_DEFAULTPREF_VALUE },
   ],
+  [
+    "browser.urlbar.quicksuggest.dataCollection.enabled",
+    { what: RECORD_DEFAULTPREF_VALUE },
+  ],
   ["browser.urlbar.showSearchSuggestionsFirst", { what: RECORD_PREF_VALUE }],
   ["browser.urlbar.suggest.quicksuggest", { what: RECORD_DEFAULTPREF_VALUE }],
   [

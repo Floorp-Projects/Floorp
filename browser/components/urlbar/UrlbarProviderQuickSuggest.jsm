@@ -342,6 +342,15 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   onPrefChanged(pref) {
     switch (pref) {
+      case "quicksuggest.dataCollection.enabled":
+        if (!UrlbarPrefs.updatingFirefoxSuggestScenario) {
+          Services.telemetry.recordEvent(
+            TELEMETRY_EVENT_CATEGORY,
+            "data_collect_toggled",
+            UrlbarPrefs.get(pref) ? "enabled" : "disabled"
+          );
+        }
+        break;
       case "suggest.quicksuggest":
         if (!UrlbarPrefs.updatingFirefoxSuggestScenario) {
           Services.telemetry.recordEvent(
