@@ -2922,6 +2922,21 @@ installation:
     expiry_version: "100"
 
 contextservices.quicksuggest:
+  data_collect_toggled:
+    objects: ["enabled", "disabled"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: >
+      This is recorded when the
+      `browser.urlbar.quicksuggest.dataCollection.enabled` boolean pref is
+      toggled.
+    bug_numbers: [1735976]
+    notification_emails:
+      - fx-search@mozilla.com
+      - adw@mozilla.com
+    expiry_version: never
   enable_toggled:
     objects: ["enabled", "disabled"]
     release_channel_collection: opt-out
