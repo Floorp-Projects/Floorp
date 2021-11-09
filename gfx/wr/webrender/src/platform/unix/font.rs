@@ -367,11 +367,7 @@ impl FontContext {
             if let Some(face) = new_ft_face(font_key, self.lib, &file, index) {
                 self.faces.insert(*font_key, FontFace { file, index, face, mm_var: ptr::null_mut() });
             } else {
-                let file = File::open(str);
-                match file {
-                    Err(e) => panic!("adding native font failed: file={}, err={:?}", str, e),
-                    Ok(_) => panic!("adding native font failed but opened file={}", str)
-                }
+                panic!("adding native font failed: file={}", str);
             }
         }
     }
