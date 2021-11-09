@@ -57,6 +57,11 @@ add_task(async function accept() {
       },
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "data_collect_toggled",
+        object: "enabled",
+      },
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
         object: "accept",
       },
@@ -354,6 +359,11 @@ add_task(async function focus_accept() {
       },
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "data_collect_toggled",
+        object: "enabled",
+      },
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
         object: "accept",
       },
@@ -488,6 +498,11 @@ add_task(async function focus_accept_wraparound() {
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "sponsored_toggled",
+        object: "enabled",
+      },
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "data_collect_toggled",
         object: "enabled",
       },
       {
