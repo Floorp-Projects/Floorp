@@ -583,12 +583,25 @@ impl FontFamilyList {
         self.list = crate::ArcSlice::from_iter(new_list.into_iter());
     }
 
+    /// Return the first generic font-family in the list, and whether it is
+    /// already the first font.
+    pub fn first_generic(&self) -> Option<(GenericFontFamily, bool)> {
+        let mut first = true;
+        for f in self.iter() {
+            if let SingleFontFamily::Generic(f) = f {
+                return Some((*f, first));
+            }
+            first = false;
+        }
+        None
+    }
+
     /// Return the generic ID if it is a single generic font
     pub fn single_generic(&self) -> Option<GenericFontFamily> {
         let mut iter = self.iter();
         if let Some(SingleFontFamily::Generic(f)) = iter.next() {
             if iter.next().is_none() {
-                return Some(f.clone());
+                return Some(*f);
             }
         }
         None
