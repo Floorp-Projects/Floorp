@@ -986,7 +986,9 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   void ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
                 const nsRect* aRange = nullptr,
                 nsIScrollbarMediator::ScrollSnapMode aSnap =
-                    nsIScrollbarMediator::DISABLE_SNAP) final {
+                    nsIScrollbarMediator::DISABLE_SNAP,
+                mozilla::ScrollTriggeredByScript aTriggeredByScript =
+                    mozilla::ScrollTriggeredByScript::No) final {
     mHelper.ScrollTo(aScrollPosition, aMode, ScrollOrigin::Other, aRange,
                      aSnap);
   }
@@ -1460,9 +1462,11 @@ class nsXULScrollFrame final : public nsBoxFrame,
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  void ScrollTo(
-      nsPoint aScrollPosition, ScrollMode aMode, const nsRect* aRange = nullptr,
-      ScrollSnapMode aSnap = nsIScrollbarMediator::DISABLE_SNAP) final {
+  void ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
+                const nsRect* aRange = nullptr,
+                ScrollSnapMode aSnap = nsIScrollbarMediator::DISABLE_SNAP,
+                mozilla::ScrollTriggeredByScript aTriggeredByScript =
+                    mozilla::ScrollTriggeredByScript::No) final {
     mHelper.ScrollTo(aScrollPosition, aMode, ScrollOrigin::Other, aRange,
                      aSnap);
   }
