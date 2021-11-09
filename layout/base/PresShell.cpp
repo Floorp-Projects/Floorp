@@ -3485,7 +3485,10 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   aFrameAsScrollable->ScrollTo(scrollPt, scrollMode, &allowedRange,
                                aScrollFlags & ScrollFlags::ScrollSnap
                                    ? nsIScrollbarMediator::ENABLE_SNAP
-                                   : nsIScrollbarMediator::DISABLE_SNAP);
+                                   : nsIScrollbarMediator::DISABLE_SNAP,
+                               aScrollFlags & ScrollFlags::TriggeredByScript
+                                   ? ScrollTriggeredByScript::Yes
+                                   : ScrollTriggeredByScript::No);
   if (!weakFrame.IsAlive()) {
     return;
   }
