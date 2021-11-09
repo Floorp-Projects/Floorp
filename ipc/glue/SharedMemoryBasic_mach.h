@@ -7,7 +7,6 @@
 #ifndef mozilla_ipc_SharedMemoryBasic_mach_h
 #define mozilla_ipc_SharedMemoryBasic_mach_h
 
-#include "base/file_descriptor_posix.h"
 #include "base/process.h"
 
 #include "mozilla/ipc/SharedMemory.h"
@@ -67,7 +66,7 @@ class SharedMemoryBasic final : public SharedMemoryCommon<mach_port_t> {
 
   SharedMemoryBasic();
 
-  virtual bool SetHandle(const Handle& aHandle, OpenRights aRights) override;
+  virtual bool SetHandle(Handle aHandle, OpenRights aRights) override;
 
   virtual bool Create(size_t aNbytes) override;
 

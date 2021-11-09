@@ -30,9 +30,10 @@ using namespace mozilla::layers;
 namespace mozilla {
 namespace gfx {
 
-void SourceSurfaceSharedDataWrapper::Init(
-    const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat,
-    const SharedMemoryBasic::Handle& aHandle, base::ProcessId aCreatorPid) {
+void SourceSurfaceSharedDataWrapper::Init(const IntSize& aSize, int32_t aStride,
+                                          SurfaceFormat aFormat,
+                                          SharedMemoryBasic::Handle aHandle,
+                                          base::ProcessId aCreatorPid) {
   MOZ_ASSERT(!mBuf);
   mSize = aSize;
   mStride = aStride;
@@ -41,7 +42,7 @@ void SourceSurfaceSharedDataWrapper::Init(
 
   size_t len = GetAlignedDataLength();
   mBuf = MakeAndAddRef<SharedMemoryBasic>();
-  if (!mBuf->SetHandle(aHandle, ipc::SharedMemory::RightsReadOnly)) {
+  if (!mBuf->SetHandle(std::move(aHandle), ipc::SharedMemory::RightsReadOnly)) {
     MOZ_CRASH("Invalid shared memory handle!");
   }
 

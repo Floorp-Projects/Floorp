@@ -117,14 +117,14 @@ using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
 #endif  // defined(XP_WIN)
 
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
-using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
+[MoveOnly] using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextTransaction from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextInitializer from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::PermitUnloadResult from "nsIContentViewer.h";
 using mozilla::dom::MaybeDiscardedWindowContext from "mozilla/dom/WindowContext.h";
 using mozilla::dom::WindowContextTransaction from "mozilla/dom/WindowContext.h";
-using base::SharedMemoryHandle from "base/shared_memory.h";
+[MoveOnly] using base::SharedMemoryHandle from "base/shared_memory.h";
 using mozilla::fontlist::Pointer from "SharedFontList.h";
 using gfxSparseBitSet from "gfxFontUtils.h";
 using FontVisibility from "gfxFontEntry.h";

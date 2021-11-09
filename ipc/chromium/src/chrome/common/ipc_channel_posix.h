@@ -18,11 +18,11 @@
 
 #include "base/message_loop.h"
 #include "base/task.h"
-#include "chrome/common/file_descriptor_set_posix.h"
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Queue.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 namespace IPC {
 
@@ -123,7 +123,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
   // it's big enough.
   static constexpr size_t kControlBufferHeaderSize = 32;
   static constexpr size_t kControlBufferSize =
-      FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE * sizeof(int) +
+      IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE * sizeof(int) +
       kControlBufferHeaderSize;
 
   // Large incoming messages that span multiple pipe buffers get built-up in the
@@ -151,11 +151,7 @@ class Channel::ChannelImpl : public MessageLoopForIO::Watcher {
 #if defined(OS_MACOSX)
   struct PendingDescriptors {
     uint32_t id;
-    RefPtr<FileDescriptorSet> fds;
-
-    PendingDescriptors() : id(0) {}
-    PendingDescriptors(uint32_t id, FileDescriptorSet* fds)
-        : id(id), fds(fds) {}
+    nsTArray<mozilla::UniqueFileHandle> handles;
   };
 
   std::list<PendingDescriptors> pending_fds_;
