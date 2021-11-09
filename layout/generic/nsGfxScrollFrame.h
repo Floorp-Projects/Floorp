@@ -55,6 +55,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   using Layer = mozilla::layers::Layer;
   using WebRenderLayerManager = mozilla::layers::WebRenderLayerManager;
   using ScrollAnchorContainer = mozilla::layout::ScrollAnchorContainer;
+  using APZScrollAnimationType = mozilla::APZScrollAnimationType;
   using Element = mozilla::dom::Element;
 
   class AsyncScroll;
@@ -480,7 +481,9 @@ class ScrollFrameHelper : public nsIReflowCallback {
   void HandleScrollbarStyleSwitching();
 
   ScrollOrigin LastScrollOrigin() const { return mLastScrollOrigin; }
-  bool IsApzAnimationInProgress() const { return mApzAnimationInProgress; }
+  bool IsApzAnimationInProgress() const {
+    return mCurrentAPZScrollAnimationType != APZScrollAnimationType::No;
+  }
   ScrollGeneration CurrentScrollGeneration() const { return mScrollGeneration; }
   nsPoint LastScrollDestination() const { return mDestination; }
   nsTArray<ScrollPositionUpdate> GetScrollUpdates() const;
@@ -491,7 +494,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool IsScrollAnimating(IncludeApzAnimation = IncludeApzAnimation::Yes) const;
 
   void ResetScrollInfoIfNeeded(const ScrollGeneration& aGeneration,
-                               bool aApzAnimationInProgress);
+                               APZScrollAnimationType aAPZScrollAnimationType);
   bool WantAsyncScroll() const;
   Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
       WebRenderLayerManager* aLayerManager, const nsIFrame* aItemFrame,
@@ -633,6 +636,14 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   ScrollAnchorContainer mAnchor;
 
+  // Representing there's an APZ animation is in progress and what caused the
+  // animation. Note that this is only set when repainted via APZ, which means
+  // that there may be a request for an APZ animation in flight for example,
+  // while this is still `No`. In order to answer "is an APZ animation in the
+  // process of starting or in progress" you need to check mScrollUpdates,
+  // mApzAnimationRequested, and this type.
+  APZScrollAnimationType mCurrentAPZScrollAnimationType;
+
   bool mAllowScrollOriginDowngrade : 1;
   bool mHadDisplayPortAtLastFrameUpdate : 1;
   bool mHasVerticalScrollbar : 1;
@@ -722,12 +733,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // True if we're processing an scroll event.
   bool mProcessingScrollEvent : 1;
 
-  // Whether an APZ animation is in progress. Note that this is only set to true
-  // when repainted via APZ, which means that there may be a request for an APZ
-  // animation in flight for example, while this is still false. In order to
-  // answer "is an APZ animation in the process of starting or in progress" you
-  // need to check mScrollUpdates, mApzAnimationRequested, and this bit.
-  bool mApzAnimationInProgress : 1;
   // This is true from the time a scroll animation is requested of APZ to the
   // time that APZ responds with an up-to-date repaint request. More precisely,
   // this is flipped to true if a repaint request is dispatched to APZ where
@@ -1079,9 +1084,10 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     return mHelper.GetScrollUpdates();
   }
   bool HasScrollUpdates() const final { return mHelper.HasScrollUpdates(); }
-  void ResetScrollInfoIfNeeded(const mozilla::ScrollGeneration& aGeneration,
-                               bool aApzAnimationInProgress) final {
-    mHelper.ResetScrollInfoIfNeeded(aGeneration, aApzAnimationInProgress);
+  void ResetScrollInfoIfNeeded(
+      const mozilla::ScrollGeneration& aGeneration,
+      mozilla::APZScrollAnimationType aAPZScrollAnimationType) final {
+    mHelper.ResetScrollInfoIfNeeded(aGeneration, aAPZScrollAnimationType);
   }
   bool WantAsyncScroll() const final { return mHelper.WantAsyncScroll(); }
   mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(
@@ -1554,9 +1560,10 @@ class nsXULScrollFrame final : public nsBoxFrame,
     return mHelper.GetScrollUpdates();
   }
   bool HasScrollUpdates() const final { return mHelper.HasScrollUpdates(); }
-  void ResetScrollInfoIfNeeded(const mozilla::ScrollGeneration& aGeneration,
-                               bool aApzAnimationInProgress) final {
-    mHelper.ResetScrollInfoIfNeeded(aGeneration, aApzAnimationInProgress);
+  void ResetScrollInfoIfNeeded(
+      const mozilla::ScrollGeneration& aGeneration,
+      mozilla::APZScrollAnimationType aAPZScrollAnimationType) final {
+    mHelper.ResetScrollInfoIfNeeded(aGeneration, aAPZScrollAnimationType);
   }
   bool WantAsyncScroll() const final { return mHelper.WantAsyncScroll(); }
   mozilla::Maybe<mozilla::layers::ScrollMetadata> ComputeScrollMetadata(

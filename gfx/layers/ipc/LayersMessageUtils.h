@@ -276,6 +276,12 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
 };
 
 template <>
+struct ParamTraits<mozilla::APZScrollAnimationType>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::APZScrollAnimationType, mozilla::APZScrollAnimationType::No,
+          mozilla::APZScrollAnimationType::TriggeredByUserInput> {};
+
+template <>
 struct ParamTraits<mozilla::layers::RepaintRequest>
     : BitfieldHelper<mozilla::layers::RepaintRequest> {
   typedef mozilla::layers::RepaintRequest paramType;
@@ -295,8 +301,8 @@ struct ParamTraits<mozilla::layers::RepaintRequest>
     WriteParam(aMsg, aParam.mTransformToAncestorScale);
     WriteParam(aMsg, aParam.mPaintRequestTime);
     WriteParam(aMsg, aParam.mScrollUpdateType);
+    WriteParam(aMsg, aParam.mScrollAnimationType);
     WriteParam(aMsg, aParam.mIsRootContent);
-    WriteParam(aMsg, aParam.mIsAnimationInProgress);
     WriteParam(aMsg, aParam.mIsScrollInfoLayer);
   }
 
@@ -316,10 +322,9 @@ struct ParamTraits<mozilla::layers::RepaintRequest>
             ReadParam(aMsg, aIter, &aResult->mTransformToAncestorScale) &&
             ReadParam(aMsg, aIter, &aResult->mPaintRequestTime) &&
             ReadParam(aMsg, aIter, &aResult->mScrollUpdateType) &&
+            ReadParam(aMsg, aIter, &aResult->mScrollAnimationType) &&
             ReadBoolForBitfield(aMsg, aIter, aResult,
                                 &paramType::SetIsRootContent) &&
-            ReadBoolForBitfield(aMsg, aIter, aResult,
-                                &paramType::SetIsAnimationInProgress) &&
             ReadBoolForBitfield(aMsg, aIter, aResult,
                                 &paramType::SetIsScrollInfoLayer));
   }
