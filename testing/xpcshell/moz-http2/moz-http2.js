@@ -866,13 +866,13 @@ function handleRequest(req, res) {
   else if (u.pathname === "/dns-cname") {
     // asking for cname.example.com
 
-    function emitResponse(res, payload) {
-      let content = createCNameContent(payload);
-      res.setHeader("Content-Type", "application/dns-message");
-      res.setHeader("Content-Length", content.length);
-      res.writeHead(200);
-      res.write(content);
-      res.end("");
+    function emitResponse(response, payload) {
+      let pcontent = createCNameContent(payload);
+      response.setHeader("Content-Type", "application/dns-message");
+      response.setHeader("Content-Length", pcontent.length);
+      response.writeHead(200);
+      response.write(pcontent);
+      response.end("");
     }
 
     let payload = Buffer.from("");

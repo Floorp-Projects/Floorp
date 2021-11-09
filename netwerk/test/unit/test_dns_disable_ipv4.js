@@ -6,9 +6,6 @@
 "use strict";
 
 var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
-var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
-  Ci.nsIIOService
-);
 const gOverride = Cc["@mozilla.org/network/native-dns-override;1"].getService(
   Ci.nsINativeDNSResolverOverride
 );
@@ -16,7 +13,7 @@ const gOverride = Cc["@mozilla.org/network/native-dns-override;1"].getService(
 const defaultOriginAttributes = {};
 
 add_task(async function test_none() {
-  let [inRequest, inRecord, inStatus] = await new Promise(resolve => {
+  let [, inRecord] = await new Promise(resolve => {
     let listener = {
       onLookupComplete(inRequest, inRecord, inStatus) {
         resolve([inRequest, inRecord, inStatus]);
@@ -47,7 +44,7 @@ add_task(async function test_some() {
   dns.clearCache(true);
   gOverride.addIPOverride("example.com", "1.1.1.1");
   gOverride.addIPOverride("example.org", "::1:2:3");
-  let [inRequest, inRecord, inStatus] = await new Promise(resolve => {
+  let [, inRecord] = await new Promise(resolve => {
     let listener = {
       onLookupComplete(inRequest, inRecord, inStatus) {
         resolve([inRequest, inRecord, inStatus]);
