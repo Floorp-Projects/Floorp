@@ -57,11 +57,11 @@ add_task(async function unspec_first() {
     flags: Ci.nsIDNSService.RESOLVE_DISABLE_IPV6,
     expectedAnswer: "1.2.3.4",
   });
-  let [, , status] = await new TRRDNSListener("example.org", {
+  let { inStatus } = await new TRRDNSListener("example.org", {
     flags: Ci.nsIDNSService.RESOLVE_DISABLE_IPV4,
     expectedSuccess: false,
   });
-  equal(status, Cr.NS_ERROR_UNKNOWN_HOST);
+  equal(inStatus, Cr.NS_ERROR_UNKNOWN_HOST);
 });
 
 add_task(async function A_then_AAAA_fails() {
@@ -87,11 +87,11 @@ add_task(async function A_then_AAAA_fails() {
     flags: Ci.nsIDNSService.RESOLVE_DISABLE_IPV6,
     expectedAnswer: "1.2.3.4",
   });
-  let [, , status] = await new TRRDNSListener("example.org", {
+  let { inStatus } = await new TRRDNSListener("example.org", {
     flags: Ci.nsIDNSService.RESOLVE_DISABLE_IPV4,
     expectedSuccess: false,
   });
-  equal(status, Cr.NS_ERROR_UNKNOWN_HOST);
+  equal(inStatus, Cr.NS_ERROR_UNKNOWN_HOST);
 });
 
 add_task(async function just_AAAA_fails() {
@@ -113,9 +113,9 @@ add_task(async function just_AAAA_fails() {
     ],
   });
   // We only do an IPv6 req - we expect IPv6 not to fallback to Do53 because we have an IPv4 record
-  let [, , status] = await new TRRDNSListener("example.org", {
+  let { inStatus } = await new TRRDNSListener("example.org", {
     flags: Ci.nsIDNSService.RESOLVE_DISABLE_IPV4,
     expectedSuccess: false,
   });
-  equal(status, Cr.NS_ERROR_UNKNOWN_HOST);
+  equal(inStatus, Cr.NS_ERROR_UNKNOWN_HOST);
 });
