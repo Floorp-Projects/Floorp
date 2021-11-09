@@ -72,80 +72,11 @@ template <>
 struct TypeToDataType<bool> {
   static const DataType result = Type_Bool;
 };
-template <>
-struct TypeToDataType<JSObject*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<JSFunction*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<NativeObject*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<PlainObject*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<InlineTypedObject*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<NamedLambdaObject*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<BlockLexicalEnvironmentObject*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<ClassBodyLexicalEnvironmentObject*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<ArgumentsObject*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<ArrayObject*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<TypedArrayObject*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<ArrayIteratorObject*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<StringIteratorObject*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<RegExpStringIteratorObject*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<JSString*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<JSLinearString*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<JSAtom*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<JS::Symbol*> {
-  static const DataType result = Type_Object;
-};
-template <>
-struct TypeToDataType<BigInt*> {
+template <class T>
+struct TypeToDataType<T*> {
+  // Assume by default that any pointer return types are cells.
+  static_assert(std::is_base_of_v<gc::Cell, T>);
+
   static const DataType result = Type_Object;
 };
 
