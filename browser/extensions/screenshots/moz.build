@@ -18,7 +18,6 @@ FINAL_TARGET_FILES.features["screenshots@mozilla.org"] += [
     "clipboard.js",
     "domainFromUrl.js",
     "log.js",
-    "makeUuid.js",
     "manifest.json",
     "moz.build",
     "randomString.js",
