@@ -31,7 +31,7 @@
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ProcessingInstruction.h"
-#include "mozilla/intl/LineBreaker.h"
+#include "mozilla/intl/Segmenter.h"
 #include "nsParserConstants.h"
 #include "mozilla/Encoding.h"
 
@@ -1532,8 +1532,7 @@ bool nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
       } else {
         // we must wrap
         onceAgainBecauseWeAddedBreakInFront = false;
-        bool foundWrapPosition = false;
-        int32_t wrapPosition = 0;
+        Maybe<uint32_t> wrapPosition;
 
         if (mAllowLineBreaking) {
           MOZ_ASSERT(aPos < aEnd,
@@ -1541,37 +1540,34 @@ bool nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
 
           // Search forward from aSequenceStart until we find the largest
           // wrap position less than or equal to aPos.
-          int32_t nextWrapPosition = 0;
+          Maybe<uint32_t> nextWrapPosition;
+          Span<const char16_t> subSeq(aSequenceStart, aEnd);
+          intl::LineBreakIteratorUtf16 lineBreakIter(subSeq);
           while (true) {
-            nextWrapPosition = intl::LineBreaker::Next(
-                aSequenceStart, aEnd - aSequenceStart, wrapPosition);
-            MOZ_ASSERT(nextWrapPosition != NS_LINEBREAKER_NEED_MORE_TEXT,
+            nextWrapPosition = lineBreakIter.Next();
+            MOZ_ASSERT(nextWrapPosition.isSome(),
                        "We should've exited the loop when reaching the end of "
                        "text in the previous iteration!");
-            if (aSequenceStart + nextWrapPosition > aPos) {
+            if (aSequenceStart + *nextWrapPosition > aPos) {
               break;
             }
             wrapPosition = nextWrapPosition;
           }
 
-          if (wrapPosition != 0) {
-            foundWrapPosition = true;
-          } else {
+          if (!wrapPosition) {
             // The wrap position found in the first iteration of the above loop
-            // already exceeds aPos. We however still accept it as valid a wrap
-            // position.
-            wrapPosition = nextWrapPosition;
-
-            // If the line-breaker returned end-of-text, we don't know that it
-            // is actually a good wrap position, so ignore it and continue to
-            // use the fallback code below.
-            if (wrapPosition < aEnd - aSequenceStart) {
-              foundWrapPosition = true;
+            // already exceeds aPos. We accept it as valid a wrap position only
+            // if it is not end-of-text. If the line-breaker returned
+            // end-of-text, we don't know that it is actually a good wrap
+            // position, so ignore it and continue to use the fallback code
+            // below.
+            if (*nextWrapPosition < subSeq.Length()) {
+              wrapPosition = nextWrapPosition;
             }
           }
         }
 
-        if (foundWrapPosition) {
+        if (wrapPosition) {
           if (!mColPos && mDoFormat) {
             NS_ENSURE_TRUE(AppendIndentation(aOutputStr), false);
           } else if (mAddSpace) {
@@ -1579,12 +1575,12 @@ bool nsXMLContentSerializer::AppendWrapped_NonWhitespaceSequence(
             mAddSpace = false;
             NS_ENSURE_TRUE(result, false);
           }
-          NS_ENSURE_TRUE(aOutputStr.Append(aSequenceStart, wrapPosition,
+          NS_ENSURE_TRUE(aOutputStr.Append(aSequenceStart, *wrapPosition,
                                            mozilla::fallible),
                          false);
 
           NS_ENSURE_TRUE(AppendNewLineToString(aOutputStr), false);
-          aPos = aSequenceStart + wrapPosition;
+          aPos = aSequenceStart + *wrapPosition;
           aMayIgnoreStartOfLineWhitespaceSequence = true;
         } else {
           // try some simple fallback logic

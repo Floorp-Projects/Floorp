@@ -24,12 +24,13 @@
 #include "nsUnicharUtils.h"
 #include "nsUnicodeProperties.h"
 #include "nsCRT.h"
+#include "mozilla/Casting.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Text.h"
-#include "mozilla/intl/LineBreaker.h"
+#include "mozilla/intl/Segmenter.h"
 #include "mozilla/Span.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_converter.h"
@@ -128,22 +129,16 @@ int32_t nsPlainTextSerializer::CurrentLine::FindWrapIndexForContent(
     // We advance one line break point at a time from the beginning of the
     // mContent until we find a width less than or equal to wrap column.
     uint32_t width = 0;
-    const auto len = mContent.Length();
-    while (true) {
-      int32_t nextGoodSpace =
-          intl::LineBreaker::Next(mContent.get(), len, goodSpace);
-      if (nextGoodSpace == NS_LINEBREAKER_NEED_MORE_TEXT) {
-        // Line breaker reaches the end of mContent.
-        break;
-      }
+    intl::LineBreakIteratorUtf16 lineBreakIter(mContent);
+    while (const Maybe<uint32_t> nextGoodSpace = lineBreakIter.Next()) {
       width += GetUnicharStringWidth(Span<const char16_t>(
-          mContent.get() + goodSpace, nextGoodSpace - goodSpace));
+          mContent.get() + goodSpace, *nextGoodSpace - goodSpace));
       if (prefixwidth + width > aWrapColumn) {
         // The next break point makes the width exceeding the wrap column, so
         // goodSpace is what we want.
         break;
       }
-      goodSpace = nextGoodSpace;
+      goodSpace = AssertedCast<int32_t>(*nextGoodSpace);
     }
 
     return goodSpace;

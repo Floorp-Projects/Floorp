@@ -6370,7 +6370,9 @@ already_AddRefed<nsRange> HTMLEditor::CreateRangeIncludingAdjuscentWhiteSpaces(
     }
   }
   EditorRawDOMPoint lastRawPoint(endPoint);
-  lastRawPoint.RewindOffset();  // XXX Fail if it's start of the container
+  if (!lastRawPoint.IsStartOfContainer()) {
+    lastRawPoint.RewindOffset();
+  }
   if (!IsDescendantOfEditorRoot(lastRawPoint.GetChildOrContainerIfDataNode())) {
     return nullptr;
   }
