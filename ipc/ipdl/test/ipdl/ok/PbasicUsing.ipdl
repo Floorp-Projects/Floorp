@@ -14,6 +14,14 @@ using struct SomeStruct from "SomeFile.h";
 [RefCounted, MoveOnly] using class SomeRefcountedMoveonlyClass from "SomeFile.h";
 [RefCounted, MoveOnly] using struct SomeRefcountedMoveonlyStruct from "SomeFile.h";
 
+[MoveOnly=data] using SomeMoveonlyDataType from "SomeFile.h";
+[MoveOnly=data] using class SomeMoveonlyDataClass from "SomeFile.h";
+[MoveOnly=data] using struct SomeMoveonlyDataStruct from "SomeFile.h";
+
+[MoveOnly=send] using SomeMoveonlySendType from "SomeFile.h";
+[MoveOnly=send] using class SomeMoveonlySendClass from "SomeFile.h";
+[MoveOnly=send] using struct SomeMoveonlySendStruct from "SomeFile.h";
+
 union SomeUnion
 {
   SomeType;
@@ -28,6 +36,12 @@ union SomeUnion
   SomeRefcountedMoveonlyType;
   SomeRefcountedMoveonlyClass;
   SomeRefcountedMoveonlyStruct;
+  SomeMoveonlyDataType;
+  SomeMoveonlyDataClass;
+  SomeMoveonlyDataStruct;
+  SomeMoveonlySendType;
+  SomeMoveonlySendClass;
+  SomeMoveonlySendStruct;
 };
 
 protocol PbasicUsing {
