@@ -90,6 +90,8 @@ class nsTextFragment final {
    */
   uint32_t GetLength() const { return mState.mLength; }
 
+#define NS_MAX_TEXT_FRAGMENT_LENGTH (static_cast<uint32_t>(0x1FFFFFFF))
+
   bool CanGrowBy(size_t n) const {
     return n < (1 << 29) && mState.mLength + n < (1 << 29);
   }
@@ -106,6 +108,9 @@ class nsTextFragment final {
              bool aForce2b);
 
   bool SetTo(const nsString& aString, bool aUpdateBidi, bool aForce2b) {
+    if (MOZ_UNLIKELY(aString.Length() > NS_MAX_TEXT_FRAGMENT_LENGTH)) {
+      return false;
+    }
     ReleaseText();
     if (aForce2b && !aUpdateBidi) {
       nsStringBuffer* buffer = nsStringBuffer::FromString(aString);
@@ -279,8 +284,6 @@ class nsTextFragment final {
     // NS_MAX_TEXT_FRAGMENT_LENGTH.
     uint32_t mLength : 29;
   };
-
-#define NS_MAX_TEXT_FRAGMENT_LENGTH (static_cast<uint32_t>(0x1FFFFFFF))
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
