@@ -55,7 +55,7 @@ enum DataType : uint8_t {
   Type_Int32,
   Type_Double,
   Type_Pointer,
-  Type_Object,
+  Type_Cell,
   Type_Value,
   Type_Handle
 };
@@ -216,7 +216,7 @@ struct VMFunctionData {
   // Whether this function returns anything more than a boolean flag for
   // failures.
   bool returnsData() const {
-    return returnType == Type_Object || outParam != Type_Void;
+    return returnType == Type_Cell || outParam != Type_Void;
   }
 
   ArgProperties argProperties(uint32_t explicitArg) const {
@@ -322,7 +322,7 @@ struct VMFunctionData {
     MOZ_ASSERT_IF(outParam != Type_Void,
                   returnType == Type_Void || returnType == Type_Bool);
     MOZ_ASSERT(returnType == Type_Void || returnType == Type_Bool ||
-               returnType == Type_Object);
+               returnType == Type_Cell);
   }
 
   constexpr VMFunctionData(const VMFunctionData& o) = default;
