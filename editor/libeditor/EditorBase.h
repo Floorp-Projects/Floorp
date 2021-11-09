@@ -97,6 +97,8 @@ class TextServicesDocument;
 class TypeInState;
 class WhiteSpaceVisibilityKeeper;
 
+enum class SplitNodeDirection;  // Declrared in HTMLEditor.h
+
 template <typename NodeType>
 class CreateNodeResultBase;
 typedef CreateNodeResultBase<dom::Element> CreateElementResult;
@@ -877,9 +879,9 @@ class EditorBase : public nsIEditor,
     void DidInsertContent(EditorBase& aEditorBase, nsIContent& aNewContent);
     void WillDeleteContent(EditorBase& aEditorBase,
                            nsIContent& aRemovingContent);
-    void DidSplitContent(EditorBase& aEditorBase,
-                         nsIContent& aExistingRightContent,
-                         nsIContent& aNewLeftContent);
+    void DidSplitContent(EditorBase& aEditorBase, nsIContent& aSplitContent,
+                         nsIContent& aNewContent,
+                         SplitNodeDirection aSplitNodeDirection);
     void DidJoinContents(EditorBase& aEditorBase,
                          const EditorRawDOMPoint& aJoinedPoint);
     void DidInsertText(EditorBase& aEditorBase,

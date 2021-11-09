@@ -5,6 +5,10 @@
 
 #include "HTMLEditor.h"
 
+#include "EditAction.h"
+#include "EditorBase.h"
+#include "EditorDOMPoint.h"
+#include "EditorUtils.h"
 #include "HTMLEditorEventListener.h"
 #include "HTMLEditUtils.h"
 #include "JoinNodeTransaction.h"
@@ -16,9 +20,6 @@
 #include "mozilla/ComposerCommandsUpdater.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/EditAction.h"
-#include "mozilla/EditorDOMPoint.h"
-#include "mozilla/EditorUtils.h"
 #include "mozilla/Encoding.h"  // for Encoding
 #include "mozilla/EventStates.h"
 #include "mozilla/InternalMutationEvent.h"
@@ -4233,14 +4234,14 @@ already_AddRefed<nsIContent> HTMLEditor::SplitNodeWithTransaction(
     // XXX Some other transactions manage range updater by themselves.
     //     Why doesn't SplitNodeTransaction do it?
     DebugOnly<nsresult> rvIgnored = RangeUpdaterRef().SelAdjSplitNode(
-        *aStartOfRightNode.GetContainerAsContent(), aStartOfRightNode.Offset(),
+        *aStartOfRightNode.ContainerAsContent(), aStartOfRightNode.Offset(),
         *newLeftContent, SplitNodeDirection::LeftNodeIsNewOne);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                          "RangeUpdater::SelAdjSplitNode() failed, but ignored");
-  }
-  if (newLeftContent) {
+
     TopLevelEditSubActionDataRef().DidSplitContent(
-        *this, *aStartOfRightNode.GetContainerAsContent(), *newLeftContent);
+        *this, *aStartOfRightNode.ContainerAsContent(), *newLeftContent,
+        SplitNodeDirection::LeftNodeIsNewOne);
   }
 
   if (aError.Failed()) {
