@@ -294,8 +294,9 @@ LightweightThemeConsumer.prototype = {
         theme.id == DARK_THEME_ID
     );
     this._setExperiment(active, themeData.experiment, theme.experimental);
-    _setImage(root, active, "--lwt-header-image", theme.headerURL);
+    _setImage(this._win, root, active, "--lwt-header-image", theme.headerURL);
     _setImage(
+      this._win,
       root,
       active,
       "--lwt-additional-images",
@@ -403,7 +404,7 @@ function _getContentProperties(doc, active, data) {
   return properties;
 }
 
-function _setImage(aRoot, aActive, aVariableName, aURLs) {
+function _setImage(aWin, aRoot, aActive, aVariableName, aURLs) {
   if (aURLs && !Array.isArray(aURLs)) {
     aURLs = [aURLs];
   }
@@ -411,7 +412,7 @@ function _setImage(aRoot, aActive, aVariableName, aURLs) {
     aRoot,
     aActive,
     aVariableName,
-    aURLs && aURLs.map(v => `url("${v.replace(/"/g, '\\"')}")`).join(",")
+    aURLs && aURLs.map(v => `url(${aWin.CSS.escape(v)})`).join(", ")
   );
 }
 
