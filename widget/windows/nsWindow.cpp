@@ -1552,6 +1552,18 @@ void nsWindow::Show(bool bState) {
     // we're actually already showing, we won't hit it in the normal way.
     ::SendMessageW(mWnd, WM_CHANGEUISTATE,
                    MAKEWPARAM(UIS_SET, UISF_HIDEFOCUS | UISF_HIDEACCEL), 0);
+#if defined(ACCESSIBILITY)
+    // If our HWND has focus and the a11y engine hasn't started yet, fire a
+    // focus win event. Windows already did this when the skeleton UI appeared,
+    // but a11y wouldn't have been able to start at that point even if a client
+    // responded. Firing this now gives clients the chance to respond with
+    // WM_GETOBJECT, which will trigger the a11y engine. We don't want to do
+    // this if the a11y engine has already started because it has probably
+    // already fired focus on a descendant.
+    if (::GetFocus() == mWnd && !GetAccService()) {
+      ::NotifyWinEvent(EVENT_OBJECT_FOCUS, mWnd, OBJID_CLIENT, CHILDID_SELF);
+    }
+#endif  // defined(ACCESSIBILITY)
   }
 
   if (mWindowType == eWindowType_popup) {
