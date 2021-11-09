@@ -116,6 +116,7 @@ const PREFERENCES_PANES = [
   "paneSync",
   "paneContainers",
   "paneExperimental",
+  "paneMoreFromMozilla",
 ];
 
 const IGNORABLE_EVENTS = new WeakMap();
