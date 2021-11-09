@@ -7,9 +7,6 @@
 const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
   Ci.nsIDNSService
 );
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
-);
 
 trr_test_setup();
 registerCleanupFunction(async () => {
