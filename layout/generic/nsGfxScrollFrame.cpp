@@ -2212,6 +2212,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mDisplayPortAtLastFrameUpdate(),
       mScrollParentID(mozilla::layers::ScrollableLayerGuid::NULL_SCROLL_ID),
       mAnchor(this),
+      mCurrentAPZScrollAnimationType(APZScrollAnimationType::No),
       mAllowScrollOriginDowngrade(false),
       mHadDisplayPortAtLastFrameUpdate(false),
       mHasVerticalScrollbar(false),
@@ -2243,7 +2244,6 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mIsUsingMinimumScaleSize(false),
       mMinimumScaleSizeChanged(false),
       mProcessingScrollEvent(false),
-      mApzAnimationInProgress(false),
       mApzAnimationRequested(false),
       mReclampVVOffsetInReflowFinished(false),
       mVelocityQueue(aOuter->PresContext()) {
@@ -7227,14 +7227,15 @@ bool ScrollFrameHelper::IsScrollAnimating(
 }
 
 void ScrollFrameHelper::ResetScrollInfoIfNeeded(
-    const ScrollGeneration& aGeneration, bool aApzAnimationInProgress) {
+    const ScrollGeneration& aGeneration,
+    APZScrollAnimationType aAPZScrollAnimationType) {
   if (aGeneration == mScrollGeneration) {
     mLastScrollOrigin = ScrollOrigin::None;
     mApzAnimationRequested = false;
   }
   // We can reset this regardless of scroll generation, as this is only set
   // here, as a response to APZ requesting a repaint.
-  mApzAnimationInProgress = aApzAnimationInProgress;
+  mCurrentAPZScrollAnimationType = aAPZScrollAnimationType;
 }
 
 UniquePtr<PresState> ScrollFrameHelper::SaveState() const {

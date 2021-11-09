@@ -459,7 +459,7 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    */
   virtual void ResetScrollInfoIfNeeded(
       const mozilla::ScrollGeneration& aGeneration,
-      bool aApzAnimationInProgress) = 0;
+      mozilla::APZScrollAnimationType aAPZScrollAnimationType) = 0;
   /**
    * Determine whether it is desirable to be able to asynchronously scroll this
    * scroll frame.
