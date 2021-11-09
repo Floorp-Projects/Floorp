@@ -2779,7 +2779,6 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
             // present)
             RTCOutboundRtpStreamStats local;
             constructCommonOutboundRtpStats(local);
-            local.mFramesEncoded.Construct(videoStats->frames_encoded);
             streamStats.apply([&](auto& aStreamStats) {
               local.mPacketsSent.Construct(
                   aStreamStats.rtp_stats.transmitted.packets);
@@ -2791,6 +2790,7 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
                   aStreamStats.rtcp_packet_type_counts.fir_packets);
               local.mPliCount.Construct(
                   aStreamStats.rtcp_packet_type_counts.pli_packets);
+              local.mFramesEncoded.Construct(aStreamStats.frames_encoded);
               if (aStreamStats.qp_sum) {
                 local.mQpSum.Construct(*aStreamStats.qp_sum);
               }
