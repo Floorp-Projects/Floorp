@@ -5050,6 +5050,11 @@ void MLoadDynamicSlot::printOpcode(GenericPrinter& out) const {
   out.printf(" %u", slot());
 }
 
+void MLoadDynamicSlotAndUnbox::printOpcode(GenericPrinter& out) const {
+  MDefinition::printOpcode(out);
+  out.printf(" %zu", slot());
+}
+
 void MStoreDynamicSlot::printOpcode(GenericPrinter& out) const {
   PrintOpcodeName(out, op());
   out.printf(" ");
