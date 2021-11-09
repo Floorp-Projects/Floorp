@@ -640,6 +640,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Nâng cao</string>
 
+    <!-- Preference for studies -->
+    <string name="preference_studies">Nghiên cứu</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox có thể cài đặt và chạy các nghiên cứu theo thời gian.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Tìm hiểu thêm</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">Ứng dụng sẽ thoát để áp dụng các thay đổi</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Xóa</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Hoạt động</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Gỡ lỗi từ xa qua USB/Wi-Fi</string>
 

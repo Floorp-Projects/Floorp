@@ -641,6 +641,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Geavanceerd</string>
 
+    <!-- Preference for studies -->
+    <string name="preference_studies">Onderzoeken</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox kan af en toe onderzoeken installeren en uitvoeren.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Meer info</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">De toepassing wordt afgesloten om wijzigingen toe te passen</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Verwijderen</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Actief</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Remote debugging via USB/wifi</string>
 

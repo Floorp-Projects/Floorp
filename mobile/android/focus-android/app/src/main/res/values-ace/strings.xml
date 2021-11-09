@@ -8,17 +8,17 @@
     <!-- Label used for buttons, e.g. in dialogs -->
     <string name="action_cancel">Bateue</string>
     <!-- Label used for buttons, e.g. in dialogs -->
-    <string name="action_ok">OK</string>
+    <string name="action_ok">GÖT</string>
 
     <string name="action_save">Keubah</string>
 
     <!-- This text is shown in the URL bar when it's empty -->
     <string name="urlbar_hint">Mita atawa pasoe alamat</string>
 
-    <string name="teaser">Browsing bèk na soe kalön.\nPeuhah. Sampôh. Gisa Keulayi.</string>
+    <string name="teaser">Seumeulop rahsia otomatis.\nLop. Sampôh. Ulang.</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
-    <string name="feedback_erase">Seujarah browsing droen ka jisampôh.</string>
+    <string name="feedback_erase">Riwayat seumeulop droeneuh ka geusampôh.</string>
     <string name="feedback_erase2">Riwayat peuhah wèb geusampôh</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
@@ -122,6 +122,19 @@
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">Mita deungön Rahsia</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s peuduek droeneuh lam keumudoe.</p>
+<p>Ngui sibagoe browser rahsia:
+  <ul>
+    <li>Mita ngön lop lam aplikasi</li>
+    <li>Tham ureueng seutöt (atawa pubarô seuneuatô keu peuidin ureueng seutöt)</li>
+    <li>Lhi keu sampôh cookies lagèe riwayat mita ngön seumeulop</li>
+  </ul>
+</p>
+<p>%1$s geupeugöt lé Mozilla. Misi kamoe nakeuh keu meusatoh internet nyang sihat ngön teuhah.<br/>
+<a href="%2$s">Learn more</a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Privasi &amp; Keuamanan</string>
 
@@ -178,8 +191,20 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">Keu situs hayeue</string>
 
+    <!-- Preference category: Manage (user-defined) sites -->
+    <string name="preference_category_autocomplete_manage_sites">Atô situs</string>
+
+    <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list-->
+    <string name="preference_autocomplete_subitem_manage_sites">Atô situs</string>
+
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Tamah URL kustom</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Dapeuta auto leungkap droeneuh:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Tamah URL</string>
 
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Tamah URL kustom</string>
@@ -234,6 +259,13 @@
     <string name="preference_category_privacy">Privasi</string>
     <string name="preference_privacy_block_ads">Tham peulacak iklan</string>
 
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">Han</string>
+    <string name="preference_privacy_should_block_cookies_yes_option2">Nyo</string>
+
+    <string name="preference_category_security">Seuneuaman</string>
+
     <string name="preference_category_mozilla">Mozilla</string>
 
     <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
@@ -246,6 +278,22 @@
 
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Bateuë</string>
+
+    <!-- Label for the Find in page button -->
+    <string name="find_in_page">Mita lam laman</string>
+
+    <!-- Watermark/Hint for the find in page input field -->
+    <string name="find_in_page_input">Mita lam laman</string>
+
+    <!-- String to show the number of results found in the page and the
+        position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="find_in_page_result">%1$d/%2$d</string>
+    <!-- String to be read by the accessibility service presenting the number of results found in the page
+        and the position the user is at. The first argument is the position, the second argument is the total -->
+    <string name="accessibility_find_in_page_result">%1$d nibak %2$d</string>
+
+    <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI -->
+    <string name="accessibility_dismiss_find_in_page">Sampôh nyang meuteumèe lam laman</string>
 
     <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_yes">Nyo</string>

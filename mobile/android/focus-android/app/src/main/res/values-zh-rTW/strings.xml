@@ -640,6 +640,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">進階</string>
 
+    <!-- Preference for studies -->
+    <string name="preference_studies">使用者研究</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox 會不定時安裝並執行使用者研究。</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">了解更多</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">應用程式將結束以套用變更</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">移除</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">進行中</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">透過 USB/Wi-Fi 進行遠端除錯</string>
 

@@ -640,6 +640,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Avançado</string>
 
+    <!-- Preference for studies -->
+    <string name="preference_studies">Estudos</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">O Firefox pode instalar e executar estudos de vez em quando.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Saiba mais</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">O aplicativo irá fechar para aplicar as alterações</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Remover</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Ativo</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Depuração remota via USB/WiFi</string>
 

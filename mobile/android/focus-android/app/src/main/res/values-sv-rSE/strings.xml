@@ -640,6 +640,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Avancerat</string>
 
+    <!-- Preference for studies -->
+    <string name="preference_studies">Studier</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox kan installera och köra studier då och då.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Läs mer</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">Applikationen avslutas för att tillämpa ändringar</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Ta bort</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Aktiv</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Fjärrfelsökning via USB/Wi-Fi</string>
 

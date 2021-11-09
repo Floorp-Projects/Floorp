@@ -643,6 +643,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Για προχωρημένους</string>
 
+    <!-- Preference for studies -->
+    <string name="preference_studies">Μελέτες</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Το Firefox ενδέχεται να εγκαθιστά και να εκτελεί περιστασιακά μελέτες.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Μάθετε περισσότερα</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">Η εφαρμογή θα κλείσει για την εφαρμογή των αλλαγών</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Αφαίρεση</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Ενεργές</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Απομακρυσμένος έλεγχος σφαλμάτων μέσω USB/Wi-Fi</string>
 

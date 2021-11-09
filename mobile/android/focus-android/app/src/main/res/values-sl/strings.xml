@@ -640,6 +640,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Napredno</string>
 
+    <!-- Preference for studies -->
+    <string name="preference_studies">Raziskave</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox lahko občasno namesti in zažene raziskave.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Več o tem</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">Aplikacija se bo zaprla za uveljavitev sprememb</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Odstrani</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Dejavna</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Oddaljeno razhroščevanje preko USB/Wi-Fi</string>
 

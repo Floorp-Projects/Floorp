@@ -637,6 +637,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Leuwih lengkep</string>
 
+    <!-- Preference for studies -->
+    <string name="preference_studies">Studi</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox bisa masang jeung ngajalankeun studi iraha baé.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Lenyepan</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">Aplikasi bakal kaluar pikeun nerapkeun parobahan</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Piceun</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Aktip</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Debugging ti kajauhan liwat USB/Wi-Fi</string>
 

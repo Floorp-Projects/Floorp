@@ -194,8 +194,16 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">For Top sites</string>
 
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">Enable to have %s autocomplete over 450 popular URLs in the address bar.</string>
+
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">For Sites You Add</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">Enable to have %s autocomplete your favourite URLs.</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">Manage sites</string>
@@ -631,6 +639,24 @@
 
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Advanced</string>
+
+    <!-- Preference for studies -->
+    <string name="preference_studies">Studies</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox may install and run studies from time to time.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Learn more</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">The application will quit to apply changes</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Remove</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Active</string>
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Remote debugging via USB/Wi-Fi</string>
