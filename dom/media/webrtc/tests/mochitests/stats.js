@@ -821,15 +821,98 @@ function pedanticChecks(report) {
   });
 }
 
+function dumpStats(stats) {
+  const dict = {};
+  for (const [k, v] of stats.entries()) {
+    dict[k] = v;
+  }
+  info(`Got stats: ${JSON.stringify(dict)}`);
+}
+
+async function waitForSyncedRtcp(pc) {
+  // Ensures that RTCP is present
+  let ensureSyncedRtcp = async () => {
+    let report = await pc.getStats();
+    for (const v of report.values()) {
+      if (v.type.endsWith("bound-rtp") && !(v.remoteId || v.localId)) {
+        info(`${v.id} is missing remoteId or localId: ${JSON.stringify(v)}`);
+        return null;
+      }
+      if (v.type == "remote-inbound-rtp" && v.roundTripTime === undefined) {
+        info(`${v.id} is missing roundTripTime: ${JSON.stringify(v)}`);
+        return null;
+      }
+    }
+    return report;
+  };
+  // Returns true if there is proof in aStats of rtcp flow for all remote stats
+  // objects, compared to baseStats.
+  const hasAllRtcpUpdated = (baseStats, stats) => {
+    let hasRtcpStats = false;
+    for (const v of stats.values()) {
+      if (v.type == "remote-outbound-rtp") {
+        hasRtcpStats = true;
+        if (!v.remoteTimestamp) {
+          // `remoteTimestamp` is 0 or not present.
+          return false;
+        }
+        if (v.remoteTimestamp <= baseStats.get(v.id)?.remoteTimestamp) {
+          // `remoteTimestamp` has not advanced further than the base stats,
+          // i.e., no new sender report has been received.
+          return false;
+        }
+      } else if (v.type == "remote-inbound-rtp") {
+        hasRtcpStats = true;
+        // The ideal thing here would be to check `reportsReceived`, but it's
+        // not yet implemented.
+        if (!v.packetsReceived) {
+          // `packetsReceived` is 0 or not present.
+          return false;
+        }
+        if (v.packetsReceived <= baseStats.get(v.id)?.packetsReceived) {
+          // `packetsReceived` has not advanced further than the base stats,
+          // i.e., no new receiver report has been received.
+          return false;
+        }
+      }
+    }
+    return hasRtcpStats;
+  };
+  let attempts = 0;
+  const baseStats = await pc.getStats();
+  // Time-units are MS
+  const waitPeriod = 100;
+  const maxTime = 20000;
+  for (let totalTime = maxTime; totalTime > 0; totalTime -= waitPeriod) {
+    try {
+      let syncedStats = await ensureSyncedRtcp();
+      if (syncedStats && hasAllRtcpUpdated(baseStats, syncedStats)) {
+        dumpStats(syncedStats);
+        return syncedStats;
+      }
+    } catch (e) {
+      info(e);
+      info(e.stack);
+      throw e;
+    }
+    attempts += 1;
+    info(`waitForSyncedRtcp: no sync on attempt ${attempts}, retrying.`);
+    await wait(waitPeriod);
+  }
+  throw Error(
+    "Waiting for synced RTCP timed out after at least " + maxTime + "ms"
+  );
+}
+
 function PC_LOCAL_TEST_LOCAL_STATS(test) {
-  return test.pcLocal.waitForSyncedRtcp().then(stats => {
+  return waitForSyncedRtcp(test.pcLocal._pc).then(stats => {
     checkExpectedFields(stats);
     pedanticChecks(stats);
   });
 }
 
 function PC_REMOTE_TEST_REMOTE_STATS(test) {
-  return test.pcRemote.waitForSyncedRtcp().then(stats => {
+  return waitForSyncedRtcp(test.pcRemote._pc).then(stats => {
     checkExpectedFields(stats);
     pedanticChecks(stats);
   });

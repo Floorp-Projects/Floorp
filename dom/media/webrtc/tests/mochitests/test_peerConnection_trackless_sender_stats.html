@@ -2,6 +2,7 @@
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="stats.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -22,8 +23,8 @@
     test.chain.append(
       async function PC_LOCAL_AND_REMOTE_TRACKLESS_SENDER_STATS(test) {
         await Promise.all([
-          test.pcLocal.waitForSyncedRtcp(),
-          test.pcRemote.waitForSyncedRtcp(),
+          waitForSyncedRtcp(test.pcLocal._pc),
+          waitForSyncedRtcp(test.pcRemote._pc),
         ]);
         let senders = test.pcLocal.getSenders();
         let receivers = test.pcRemote.getReceivers();
