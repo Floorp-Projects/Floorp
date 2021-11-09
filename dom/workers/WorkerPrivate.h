@@ -834,6 +834,10 @@ class WorkerPrivate final : public RelativeTimeline {
     return mLoadInfo.mServiceWorkersTestingInWindow;
   }
 
+  bool ShouldResistFingerprinting() const {
+    return mLoadInfo.mShouldResistFingerprinting;
+  }
+
   bool IsWatchedByDevTools() const { return mLoadInfo.mWatchedByDevTools; }
 
   // Determine if the worker is currently loading its top level script.
