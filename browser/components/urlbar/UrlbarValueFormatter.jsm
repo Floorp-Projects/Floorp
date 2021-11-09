@@ -429,7 +429,7 @@ class UrlbarValueFormatter {
     // them, which we can do by passing "currentColor".  See
     // nsTextPaintStyle::GetHighlightColors for details.
     if (
-      this.document.documentElement.querySelector(":-moz-lwtheme") ||
+      this.document.documentElement.hasAttribute("lwtheme") ||
       this.window.matchMedia("(prefers-contrast)").matches
     ) {
       // non-default theme(s)
