@@ -103,11 +103,11 @@ class PagedHistoryProviderTest {
                 excludeTypes = listOf(
                     VisitType.NOT_A_VISIT,
                     VisitType.DOWNLOAD,
+                    VisitType.REDIRECT_PERMANENT,
                     VisitType.REDIRECT_TEMPORARY,
                     VisitType.RELOAD,
                     VisitType.EMBED,
                     VisitType.FRAMED_LINK,
-                    VisitType.REDIRECT_PERMANENT
                 )
             )
         }
@@ -189,11 +189,11 @@ class PagedHistoryProviderTest {
                 excludeTypes = listOf(
                     VisitType.NOT_A_VISIT,
                     VisitType.DOWNLOAD,
+                    VisitType.REDIRECT_PERMANENT,
                     VisitType.REDIRECT_TEMPORARY,
                     VisitType.RELOAD,
                     VisitType.EMBED,
                     VisitType.FRAMED_LINK,
-                    VisitType.REDIRECT_PERMANENT
                 )
             )
         }
@@ -262,11 +262,11 @@ class PagedHistoryProviderTest {
                 excludeTypes = listOf(
                     VisitType.NOT_A_VISIT,
                     VisitType.DOWNLOAD,
+                    VisitType.REDIRECT_PERMANENT,
                     VisitType.REDIRECT_TEMPORARY,
                     VisitType.RELOAD,
                     VisitType.EMBED,
                     VisitType.FRAMED_LINK,
-                    VisitType.REDIRECT_PERMANENT
                 )
             )
         }

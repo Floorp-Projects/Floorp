@@ -37,6 +37,18 @@ class DefaultPagedHistoryProvider(
     private val historyStorage: PlacesHistoryStorage,
     private val showHistorySearchGroups: Boolean = FeatureFlags.showHistorySearchGroups,
 ) : PagedHistoryProvider {
+    /**
+     * Types of visits we currently do not display in the History UI.
+     */
+    private val excludedVisitTypes = listOf(
+        VisitType.NOT_A_VISIT,
+        VisitType.DOWNLOAD,
+        VisitType.REDIRECT_PERMANENT,
+        VisitType.REDIRECT_TEMPORARY,
+        VisitType.RELOAD,
+        VisitType.EMBED,
+        VisitType.FRAMED_LINK,
+    )
 
     @Volatile private var historyGroups: List<History.Group>? = null
 
@@ -75,15 +87,7 @@ class DefaultPagedHistoryProvider(
                     .getVisitsPaginated(
                         offset,
                         numberOfItems,
-                        excludeTypes = listOf(
-                            VisitType.NOT_A_VISIT,
-                            VisitType.DOWNLOAD,
-                            VisitType.REDIRECT_TEMPORARY,
-                            VisitType.RELOAD,
-                            VisitType.EMBED,
-                            VisitType.FRAMED_LINK,
-                            VisitType.REDIRECT_PERMANENT
-                        )
+                        excludeTypes = excludedVisitTypes
                     )
                     .mapIndexed(transformVisitInfoToHistoryItem(offset.toInt()))
             }
@@ -102,15 +106,7 @@ class DefaultPagedHistoryProvider(
         val history = historyStorage.getDetailedVisits(
             start = historyMetadata.visitedAt - BUFFER_TIME,
             end = historyMetadata.visitedAt + BUFFER_TIME,
-            excludeTypes = listOf(
-                VisitType.NOT_A_VISIT,
-                VisitType.DOWNLOAD,
-                VisitType.REDIRECT_TEMPORARY,
-                VisitType.RELOAD,
-                VisitType.EMBED,
-                VisitType.FRAMED_LINK,
-                VisitType.REDIRECT_PERMANENT
-            )
+            excludeTypes = excludedVisitTypes
         )
         return history
             .filter { it.url == historyMetadata.url }
@@ -134,15 +130,7 @@ class DefaultPagedHistoryProvider(
             .getVisitsPaginated(
                 offset,
                 numberOfItems,
-                excludeTypes = listOf(
-                    VisitType.NOT_A_VISIT,
-                    VisitType.DOWNLOAD,
-                    VisitType.REDIRECT_TEMPORARY,
-                    VisitType.RELOAD,
-                    VisitType.EMBED,
-                    VisitType.FRAMED_LINK,
-                    VisitType.REDIRECT_PERMANENT
-                )
+                excludeTypes = excludedVisitTypes
             )
             .mapIndexed(transformVisitInfoToHistoryItem(offset.toInt()))
 
