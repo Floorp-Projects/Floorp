@@ -35,11 +35,11 @@ FileDescriptor::FileDescriptor(PlatformHandleType aHandle)
 FileDescriptor::FileDescriptor(UniquePlatformHandle&& aHandle)
     : mHandle(std::move(aHandle)) {}
 
-FileDescriptor::FileDescriptor(const IPDLPrivate&, const PickleType& aPickle) {
+FileDescriptor::FileDescriptor(const IPDLPrivate&, PickleType aPickle) {
 #ifdef XP_WIN
   mHandle.reset(aPickle);
 #else
-  mHandle.reset(aPickle.fd);
+  mHandle = std::move(aPickle);
 #endif
 }
 
@@ -76,11 +76,11 @@ FileDescriptor::PickleType FileDescriptor::ShareTo(
   if (IsValid()) {
     newHandle = dup(mHandle.get());
     if (newHandle >= 0) {
-      return base::FileDescriptor(newHandle, /* auto_close */ true);
+      return UniquePlatformHandle(newHandle);
     }
     NS_WARNING("Failed to duplicate file handle for other process!");
   }
-  return base::FileDescriptor();
+  return nullptr;
 #endif
 
   MOZ_CRASH("Must not get here!");
@@ -141,7 +141,7 @@ void IPDLParamTraits<FileDescriptor>::Write(IPC::Message* aMsg,
   FileDescriptor::PickleType pfd =
       aParam.ShareTo(FileDescriptor::IPDLPrivate(), 0);
 #endif
-  WriteIPDLParam(aMsg, aActor, pfd);
+  WriteIPDLParam(aMsg, aActor, std::move(pfd));
 }
 
 bool IPDLParamTraits<FileDescriptor>::Read(const IPC::Message* aMsg,
@@ -153,7 +153,7 @@ bool IPDLParamTraits<FileDescriptor>::Read(const IPC::Message* aMsg,
     return false;
   }
 
-  *aResult = FileDescriptor(FileDescriptor::IPDLPrivate(), pfd);
+  *aResult = FileDescriptor(FileDescriptor::IPDLPrivate(), std::move(pfd));
   if (!aResult->IsValid()) {
     printf_stderr("IPDL protocol Error: Received an invalid file descriptor\n");
   }
