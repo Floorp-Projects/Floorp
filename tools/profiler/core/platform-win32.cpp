@@ -132,6 +132,33 @@ static RunningTimes GetThreadRunningTimesDiff(
   return diff;
 }
 
+static void DiscardSuspendedThreadRunningTimes(
+    PSLockRef aLock,
+    ThreadRegistration::UnlockedRWForLockedProfiler& aThreadData) {
+  AUTO_PROFILER_STATS(DiscardSuspendedThreadRunningTimes);
+
+  // On Windows, suspending a thread makes that thread work a little bit. So we
+  // want to discard any added running time since the call to
+  // GetThreadRunningTimesDiff, which is done by overwriting the thread's
+  // PreviousThreadRunningTimesRef() with the current running time now.
+
+  const mozilla::profiler::PlatformData& platformData =
+      aThreadData.PlatformDataCRef();
+  const HANDLE profiledThread = platformData.ProfiledThread();
+
+  ProfiledThreadData* profiledThreadData =
+      aThreadData.GetProfiledThreadData(aLock);
+  MOZ_ASSERT(profiledThreadData);
+  RunningTimes& previousRunningTimes =
+      profiledThreadData->PreviousThreadRunningTimesRef();
+
+  if (ULONG64 cycles; QueryThreadCycleTime(profiledThread, &cycles) != 0) {
+    previousRunningTimes.ResetThreadCPUDelta(cycles);
+  } else {
+    previousRunningTimes.ClearThreadCPUDelta();
+  }
+}
+
 template <typename Func>
 void Sampler::SuspendAndSampleAndResumeThread(
     PSLockRef aLock,

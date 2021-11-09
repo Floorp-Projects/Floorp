@@ -3316,6 +3316,13 @@ class Sampler {
 static RunningTimes GetThreadRunningTimesDiff(
     PSLockRef aLock,
     ThreadRegistration::UnlockedRWForLockedProfiler& aThreadData);
+// Platform-specific function that *may* discard CPU measurements since the
+// previous call to GetThreadRunningTimesDiff, if the way to suspend threads on
+// this platform may add running times to that thread.
+// No-op otherwise, if suspending a thread doesn't make it work.
+static void DiscardSuspendedThreadRunningTimes(
+    PSLockRef aLock,
+    ThreadRegistration::UnlockedRWForLockedProfiler& aThreadData);
 
 // Template function to be used by `GetThreadRunningTimesDiff()` (unless some
 // platform has a better way to achieve this).
@@ -3943,6 +3950,13 @@ void SamplerThread::Run() {
                         Some(currentEventDelay.ToMilliseconds() +
                              currentEventRunning.ToMilliseconds());
                   });
+
+              if (cpuUtilization) {
+                // Suspending the thread for sampling could have added some
+                // running time to it, discard any since the call to
+                // GetThreadRunningTimesDiff above.
+                DiscardSuspendedThreadRunningTimes(lock, unlockedThreadData);
+              }
 
               // If we got eventDelay data, store it before the CompactStack.
               // Note: It is not stored inside the CompactStack so that it
