@@ -190,6 +190,11 @@ template <class>
 struct OutParamToDataType {
   static const DataType result = Type_Void;
 };
+template <class T>
+struct OutParamToDataType<const T*> {
+  // Const pointers can't be output parameters.
+  static const DataType result = Type_Void;
+};
 template <>
 struct OutParamToDataType<uint8_t*> {
   // Already used as an input type, so it can't be used as an output param.
@@ -202,11 +207,6 @@ struct OutParamToDataType<uint64_t*> {
 };
 template <>
 struct OutParamToDataType<JSObject*> {
-  // Already used as an input type, so it can't be used as an output param.
-  static const DataType result = Type_Void;
-};
-template <>
-struct OutParamToDataType<BigInt*> {
   // Already used as an input type, so it can't be used as an output param.
   static const DataType result = Type_Void;
 };
@@ -2480,7 +2480,8 @@ BigInt* AtomicsLoad64(JSContext* cx, TypedArrayObject* typedArray,
   });
 }
 
-void AtomicsStore64(TypedArrayObject* typedArray, size_t index, BigInt* value) {
+void AtomicsStore64(TypedArrayObject* typedArray, size_t index,
+                    const BigInt* value) {
   AutoUnsafeCallWithABI unsafe;
 
   AtomicAccess64(
@@ -2492,8 +2493,8 @@ void AtomicsStore64(TypedArrayObject* typedArray, size_t index, BigInt* value) {
 }
 
 BigInt* AtomicsCompareExchange64(JSContext* cx, TypedArrayObject* typedArray,
-                                 size_t index, BigInt* expected,
-                                 BigInt* replacement) {
+                                 size_t index, const BigInt* expected,
+                                 const BigInt* replacement) {
   return AtomicAccess64(
       cx, typedArray, index,
       [](auto addr, auto oldval, auto newval) {
@@ -2504,7 +2505,7 @@ BigInt* AtomicsCompareExchange64(JSContext* cx, TypedArrayObject* typedArray,
 }
 
 BigInt* AtomicsExchange64(JSContext* cx, TypedArrayObject* typedArray,
-                          size_t index, BigInt* value) {
+                          size_t index, const BigInt* value) {
   return AtomicAccess64(
       cx, typedArray, index,
       [](auto addr, auto val) {
@@ -2514,7 +2515,7 @@ BigInt* AtomicsExchange64(JSContext* cx, TypedArrayObject* typedArray,
 }
 
 BigInt* AtomicsAdd64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                     BigInt* value) {
+                     const BigInt* value) {
   return AtomicAccess64(
       cx, typedArray, index,
       [](auto addr, auto val) {
@@ -2524,7 +2525,7 @@ BigInt* AtomicsAdd64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
 }
 
 BigInt* AtomicsAnd64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                     BigInt* value) {
+                     const BigInt* value) {
   return AtomicAccess64(
       cx, typedArray, index,
       [](auto addr, auto val) {
@@ -2534,7 +2535,7 @@ BigInt* AtomicsAnd64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
 }
 
 BigInt* AtomicsOr64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                    BigInt* value) {
+                    const BigInt* value) {
   return AtomicAccess64(
       cx, typedArray, index,
       [](auto addr, auto val) {
@@ -2544,7 +2545,7 @@ BigInt* AtomicsOr64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
 }
 
 BigInt* AtomicsSub64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                     BigInt* value) {
+                     const BigInt* value) {
   return AtomicAccess64(
       cx, typedArray, index,
       [](auto addr, auto val) {
@@ -2554,7 +2555,7 @@ BigInt* AtomicsSub64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
 }
 
 BigInt* AtomicsXor64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                     BigInt* value) {
+                     const BigInt* value) {
   return AtomicAccess64(
       cx, typedArray, index,
       [](auto addr, auto val) {

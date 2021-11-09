@@ -848,7 +848,7 @@ class MOZ_RAII CacheIRCompiler {
 
   using AtomicsReadWriteModify64Fn = JS::BigInt* (*)(JSContext*,
                                                      TypedArrayObject*, size_t,
-                                                     JS::BigInt*);
+                                                     const JS::BigInt*);
 
   template <AtomicsReadWriteModify64Fn fn>
   [[nodiscard]] bool emitAtomicsReadModifyWriteResult64(ObjOperandId objId,
