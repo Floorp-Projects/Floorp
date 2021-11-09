@@ -6059,6 +6059,27 @@ MDefinition* MCheckIsObj::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+static bool IsBoxedObject(MDefinition* def) {
+  MOZ_ASSERT(def->type() == MIRType::Value);
+
+  if (def->isBox()) {
+    return def->toBox()->input()->type() == MIRType::Object;
+  }
+
+  // Construct calls are always returning a boxed object.
+  //
+  // TODO: We should consider encoding this directly in the graph instead of
+  // having to special case it here.
+  if (def->isCall()) {
+    return def->toCall()->isConstructing();
+  }
+  if (def->isConstructArray()) {
+    return true;
+  }
+
+  return false;
+}
+
 MDefinition* MCheckReturn::foldsTo(TempAllocator& alloc) {
   auto* returnVal = returnValue();
   if (!returnVal->isBox()) {
@@ -6075,12 +6096,7 @@ MDefinition* MCheckReturn::foldsTo(TempAllocator& alloc) {
   }
 
   auto* thisVal = thisValue();
-  if (!thisVal->isBox()) {
-    return this;
-  }
-
-  auto* unboxedThisVal = thisVal->getOperand(0);
-  if (unboxedThisVal->type() == MIRType::Object) {
+  if (IsBoxedObject(thisVal)) {
     return thisVal;
   }
 
