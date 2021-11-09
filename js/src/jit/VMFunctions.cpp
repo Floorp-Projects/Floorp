@@ -191,6 +191,36 @@ struct OutParamToDataType {
   static const DataType result = Type_Void;
 };
 template <>
+struct OutParamToDataType<uint8_t*> {
+  // Already used as an input type, so it can't be used as an output param.
+  static const DataType result = Type_Void;
+};
+template <>
+struct OutParamToDataType<uint64_t*> {
+  // Already used as an input type, so it can't be used as an output param.
+  static const DataType result = Type_Void;
+};
+template <>
+struct OutParamToDataType<JSObject*> {
+  // Already used as an input type, so it can't be used as an output param.
+  static const DataType result = Type_Void;
+};
+template <>
+struct OutParamToDataType<BigInt*> {
+  // Already used as an input type, so it can't be used as an output param.
+  static const DataType result = Type_Void;
+};
+template <>
+struct OutParamToDataType<BaselineFrame*> {
+  // Already used as an input type, so it can't be used as an output param.
+  static const DataType result = Type_Void;
+};
+template <>
+struct OutParamToDataType<gc::AllocSite*> {
+  // Already used as an input type, so it can't be used as an output param.
+  static const DataType result = Type_Void;
+};
+template <>
 struct OutParamToDataType<Value*> {
   static const DataType result = Type_Value;
 };
@@ -209,6 +239,10 @@ struct OutParamToDataType<bool*> {
 template <>
 struct OutParamToDataType<double*> {
   static const DataType result = Type_Double;
+};
+template <class T>
+struct OutParamToDataType<T*> {
+  // Fail for pointer types that aren't specialized above.
 };
 template <class T>
 struct OutParamToDataType<T**> {
