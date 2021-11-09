@@ -909,7 +909,13 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
                 return;
             }
 
-            let generic = font.mFont.family.families.single_generic().unwrap_or(GenericFontFamily::None);
+            let (generic, is_first) = font
+                .mFont
+                .family
+                .families
+                .first_generic()
+                .unwrap_or((GenericFontFamily::None, false));
+
             let default_font_type = unsafe {
                 bindings::Gecko_nsStyleFont_ComputeDefaultFontType(
                     builder.device.document(),
@@ -924,7 +930,7 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             // we have a generic family to actually replace it with.
             let prioritize_user_fonts = !use_document_fonts &&
                 default_font_type != GenericFontFamily::None &&
-                !generic.valid_for_user_font_prioritization();
+                (!is_first || !generic.valid_for_user_font_prioritization());
 
             if !prioritize_user_fonts && default_font_type == font.mFont.family.families.fallback {
                 // Nothing to do.
