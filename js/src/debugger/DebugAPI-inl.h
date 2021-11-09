@@ -65,7 +65,7 @@ bool DebugAPI::onLogAllocationSite(JSContext* cx, JSObject* obj,
 
 /* static */
 bool DebugAPI::onLeaveFrame(JSContext* cx, AbstractFramePtr frame,
-                            jsbytecode* pc, bool ok) {
+                            const jsbytecode* pc, bool ok) {
   MOZ_ASSERT_IF(frame.isInterpreterFrame(),
                 frame.asInterpreterFrame() == cx->interpreterFrame());
   MOZ_ASSERT_IF(frame.hasScript() && frame.script()->isDebuggee(),

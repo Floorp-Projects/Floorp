@@ -1089,7 +1089,7 @@ class MOZ_RAII AutoSetGeneratorRunning {
  */
 /* static */
 bool DebugAPI::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
-                                    jsbytecode* pc, bool frameOk) {
+                                    const jsbytecode* pc, bool frameOk) {
   MOZ_ASSERT_IF(!frame.isWasmDebugFrame(), pc);
 
   mozilla::DebugOnly<Handle<GlobalObject*>> debuggeeGlobal = cx->global();
@@ -1658,7 +1658,7 @@ bool js::ParseResumptionValue(JSContext* cx, HandleValue rval,
 }
 
 static bool CheckResumptionValue(JSContext* cx, AbstractFramePtr frame,
-                                 jsbytecode* pc, ResumeMode resumeMode,
+                                 const jsbytecode* pc, ResumeMode resumeMode,
                                  MutableHandleValue vp) {
   // Only forced returns from a frame need to be validated because forced
   // throw values behave just like debuggee `throw` statements. Since
@@ -1834,7 +1834,7 @@ static bool CheckResumptionValue(JSContext* cx, AbstractFramePtr frame,
 }
 
 bool Debugger::processParsedHandlerResult(JSContext* cx, AbstractFramePtr frame,
-                                          jsbytecode* pc, bool success,
+                                          const jsbytecode* pc, bool success,
                                           ResumeMode resumeMode,
                                           HandleValue value,
                                           ResumeMode& resultMode,
@@ -1879,7 +1879,7 @@ bool Debugger::processHandlerResult(JSContext* cx, bool success, HandleValue rv,
 }
 
 bool Debugger::prepareResumption(JSContext* cx, AbstractFramePtr frame,
-                                 jsbytecode* pc, ResumeMode& resumeMode,
+                                 const jsbytecode* pc, ResumeMode& resumeMode,
                                  MutableHandleValue vp) {
   return unwrapDebuggeeValue(cx, vp) &&
          CheckResumptionValue(cx, frame, pc, resumeMode, vp);

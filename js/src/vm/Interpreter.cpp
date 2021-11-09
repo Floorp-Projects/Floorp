@@ -5020,7 +5020,7 @@ bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg, bool* optimized) {
 }
 
 JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
-                                 jsbytecode* pc) {
+                                 const jsbytecode* pc) {
   if (JSOp(*pc) == JSOp::NewObject) {
     RootedShape shape(cx, script->getShape(pc));
     return PlainObject::createWithShape(cx, shape);

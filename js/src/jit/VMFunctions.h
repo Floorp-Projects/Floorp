@@ -426,10 +426,10 @@ JSObject* WrapObjectPure(JSContext* cx, JSObject* obj);
 
 [[nodiscard]] bool DebugPrologue(JSContext* cx, BaselineFrame* frame);
 [[nodiscard]] bool DebugEpilogue(JSContext* cx, BaselineFrame* frame,
-                                 jsbytecode* pc, bool ok);
+                                 const jsbytecode* pc, bool ok);
 [[nodiscard]] bool DebugEpilogueOnBaselineReturn(JSContext* cx,
                                                  BaselineFrame* frame,
-                                                 jsbytecode* pc);
+                                                 const jsbytecode* pc);
 void FrameIsDebuggeeCheck(BaselineFrame* frame);
 
 JSObject* CreateGeneratorFromFrame(JSContext* cx, BaselineFrame* frame);
@@ -438,9 +438,9 @@ JSObject* CreateGenerator(JSContext* cx, HandleFunction, HandleScript,
 
 [[nodiscard]] bool NormalSuspend(JSContext* cx, HandleObject obj,
                                  BaselineFrame* frame, uint32_t frameSize,
-                                 jsbytecode* pc);
+                                 const jsbytecode* pc);
 [[nodiscard]] bool FinalSuspend(JSContext* cx, HandleObject obj,
-                                jsbytecode* pc);
+                                const jsbytecode* pc);
 [[nodiscard]] bool InterpretResume(JSContext* cx, HandleObject obj,
                                    Value* stackValues, MutableHandleValue rval);
 [[nodiscard]] bool DebugAfterYield(JSContext* cx, BaselineFrame* frame);
@@ -451,7 +451,7 @@ JSObject* CreateGenerator(JSContext* cx, HandleFunction, HandleScript,
 
 [[nodiscard]] bool GlobalDeclInstantiationFromIon(JSContext* cx,
                                                   HandleScript script,
-                                                  jsbytecode* pc);
+                                                  const jsbytecode* pc);
 [[nodiscard]] bool InitFunctionEnvironmentObjects(JSContext* cx,
                                                   BaselineFrame* frame);
 
@@ -465,7 +465,7 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
                             HandleObject res);
 
 [[nodiscard]] bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame,
-                                   uint8_t* retAddr);
+                                   const uint8_t* retAddr);
 [[nodiscard]] bool OnDebuggerStatement(JSContext* cx, BaselineFrame* frame);
 [[nodiscard]] bool GlobalHasLiveOnDebuggerStatement(JSContext* cx);
 
@@ -479,17 +479,17 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
                                     Handle<ClassBodyScope*> scope);
 [[nodiscard]] bool DebugLeaveThenPopLexicalEnv(JSContext* cx,
                                                BaselineFrame* frame,
-                                               jsbytecode* pc);
+                                               const jsbytecode* pc);
 [[nodiscard]] bool FreshenLexicalEnv(JSContext* cx, BaselineFrame* frame);
 [[nodiscard]] bool DebugLeaveThenFreshenLexicalEnv(JSContext* cx,
                                                    BaselineFrame* frame,
-                                                   jsbytecode* pc);
+                                                   const jsbytecode* pc);
 [[nodiscard]] bool RecreateLexicalEnv(JSContext* cx, BaselineFrame* frame);
 [[nodiscard]] bool DebugLeaveThenRecreateLexicalEnv(JSContext* cx,
                                                     BaselineFrame* frame,
-                                                    jsbytecode* pc);
+                                                    const jsbytecode* pc);
 [[nodiscard]] bool DebugLeaveLexicalEnv(JSContext* cx, BaselineFrame* frame,
-                                        jsbytecode* pc);
+                                        const jsbytecode* pc);
 
 [[nodiscard]] bool PushVarEnv(JSContext* cx, BaselineFrame* frame,
                               HandleScope scope);
