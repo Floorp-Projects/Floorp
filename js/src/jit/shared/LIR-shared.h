@@ -1865,10 +1865,6 @@ class LLoadElementV : public LInstructionHelper<BOX_PIECES, 2, 0> {
     setOperand(1, index);
   }
 
-  const char* extraName() const {
-    return mir()->needsHoleCheck() ? "HoleCheck" : nullptr;
-  }
-
   const MLoadElement* mir() const { return mir_->toLoadElement(); }
   const LAllocation* elements() { return getOperand(0); }
   const LAllocation* index() { return getOperand(1); }

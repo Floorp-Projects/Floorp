@@ -13132,11 +13132,9 @@ void CodeGenerator::visitLoadElementV(LLoadElementV* load) {
                    out);
   }
 
-  if (load->mir()->needsHoleCheck()) {
-    Label testMagic;
-    masm.branchTestMagic(Assembler::Equal, out, &testMagic);
-    bailoutFrom(&testMagic, load->snapshot());
-  }
+  Label testMagic;
+  masm.branchTestMagic(Assembler::Equal, out, &testMagic);
+  bailoutFrom(&testMagic, load->snapshot());
 }
 
 void CodeGenerator::visitLoadElementHole(LLoadElementHole* lir) {
