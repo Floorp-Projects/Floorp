@@ -17,6 +17,11 @@ const ONBOARDING_URI =
 
 const OTHER_DIALOG_URI = getRootDirectory(gTestPath) + "subdialog.xhtml";
 
+// Allow more time for Mac machines so they don't time out in verify mode.
+if (AppConstants.platform == "macosx") {
+  requestLongerTimeout(3);
+}
+
 // When the accept button is clicked, the user should be opted in.
 add_task(async function accept() {
   await doDialogTest({
@@ -506,6 +511,7 @@ async function doDialogTest({
       set: [
         ["browser.urlbar.suggest.quicksuggest", false],
         ["browser.urlbar.suggest.quicksuggest.sponsored", false],
+        ["browser.urlbar.quicksuggest.dataCollection.enabled", false],
         ["browser.urlbar.quicksuggest.enabled", true],
         ["browser.urlbar.quicksuggest.shouldShowOnboardingDialog", true],
         ["browser.urlbar.quicksuggest.showedOnboardingDialog", false],
@@ -528,6 +534,11 @@ async function doDialogTest({
       UrlbarPrefs.get("suggest.quicksuggest.sponsored"),
       expectOptIn,
       "Sponsored pref enabled status"
+    );
+    Assert.equal(
+      UrlbarPrefs.get("quicksuggest.dataCollection.enabled"),
+      expectOptIn,
+      "Data collection pref enabled status"
     );
 
     if (onboardingDialogChoice) {

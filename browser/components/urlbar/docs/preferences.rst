@@ -144,6 +144,9 @@ browser.urlbar.quicksuggest.log (boolean, default: false)
 browser.urlbar.quicksuggest.remoteSettings.enabled (boolean, default: true)
   Whether remote settings is enabled as a quick suggest source.
 
+browser.urlbar.quicksuggest.dataCollection.enabled (boolean, default: false)
+  Whether data collection is enabled for quick suggest results.
+
 browser.urlbar.quicksuggest.shouldShowOnboardingDialog (boolean, default: true)
   Whether to show the quick suggest onboarding dialog.
 
@@ -162,6 +165,12 @@ browser.urlbar.speculativeConnect.enabled (boolean, default: true)
 
 browser.urlbar.sponsoredTopSites (boolean, default: false)
   Whether top sites may include sponsored ones.
+
+browser.urlbar.suggest.quicksuggest (boolean, default: false)
+  Whether results will include non-sponsored quick suggest suggestions.
+
+browser.urlbar.suggest.quicksuggest.sponsored (boolean, default: false)
+  Whether results will include sponsored quick suggest suggestions.
 
 browser.urlbar.switchTabs.adoptIntoActiveWindow (boolean, default: false)
   When using switch to tabs, if set to true this will move the tab into the
@@ -211,15 +220,6 @@ browser.urlbar.restyleSearches (boolean, default: false)
 browser.urlbar.update2.emptySearchBehavior (integer, default: 0)
   Controls the empty search behavior in Search Mode: 0. Show nothing, 1. Show
   search history, 2. Show search and browsing history
-
-browser.urlbar.suggest.quicksuggest (boolean, default: false)
-  Whether results will include quick suggest suggestions. This pref must be true
-  to show both non-sponsored and sponsored suggestions.
-
-browser.urlbar.suggest.quicksuggest.sponsored (boolean, default: false)
-  Whether results will include sponsored quick suggest suggestions. Both this
-  pref and browser.urlbar.suggest.quicksuggest must be true to show sponsored
-  suggestions.
 
 Deprecated
 ----------

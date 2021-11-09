@@ -12,10 +12,14 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   CONTEXTUAL_SERVICES_PING_TYPES:
     "resource:///modules/PartnerLinkAttribution.jsm",
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
+  ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
   Services: "resource://gre/modules/Services.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
+  TestUtils: "resource://testing-common/TestUtils.jsm",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
@@ -40,6 +44,8 @@ const SCALARS = {
 
 const TELEMETRY_EVENT_CATEGORY = "contextservices.quicksuggest";
 
+const UPDATE_TOPIC = "firefox-suggest-update";
+
 // On `init`, the following properties and methods are copied from the test
 // scope to the `TestUtils` object so they can be easily accessed. Be careful
 // about assuming a particular property will be defined because depending on the
@@ -54,7 +60,7 @@ const TEST_SCOPE_PROPERTIES = [
 /**
  * Test utils for quick suggest.
  */
-class TestUtils {
+class QSTestUtils {
   get LEARN_MORE_URL() {
     return LEARN_MORE_URL;
   }
@@ -65,6 +71,10 @@ class TestUtils {
 
   get TELEMETRY_EVENT_CATEGORY() {
     return TELEMETRY_EVENT_CATEGORY;
+  }
+
+  get UPDATE_TOPIC() {
+    return UPDATE_TOPIC;
   }
 
   /**
@@ -136,6 +146,29 @@ class TestUtils {
     }
 
     return cleanup;
+  }
+
+  /**
+   * Sets the Firefox Suggest scenario and waits for prefs to be updated.
+   *
+   * @param {string} scenario
+   *   Pass falsey to reset the scenario to the default.
+   */
+  async setScenario(scenario) {
+    // If we try to set the scenario before a previous update has finished,
+    // `updateFirefoxSuggestScenario` will bail, so wait.
+    await this.waitForScenarioUpdated();
+    await UrlbarPrefs.updateFirefoxSuggestScenario(false, scenario);
+  }
+
+  /**
+   * Waits for any prior scenario update to finish.
+   */
+  async waitForScenarioUpdated() {
+    await TestUtils.waitForCondition(
+      () => !UrlbarPrefs.updatingFirefoxSuggestScenario,
+      "Waiting for updatingFirefoxSuggestScenario to be false"
+    );
   }
 
   /**
@@ -289,32 +322,32 @@ class TestUtils {
    */
   assertImpressionPing({
     index,
-    search_query,
     spy,
     advertiser = "test-advertiser",
     block_id = 1,
+    search_query = undefined,
     matched_keywords = search_query,
     reporting_url = "http://impression.reporting.test.com/",
     scenario = "offline",
   }) {
-    this.Assert.ok(spy.calledOnce, "Should send a custom impression ping");
+    // Find the call for `QS_IMPRESSION`.
+    let calls = spy.getCalls().filter(call => {
+      let endpoint = call.args[1];
+      return endpoint.includes(CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION);
+    });
+    this.Assert.equal(calls.length, 1, "Sent one impression ping");
 
-    let [payload, endpoint] = spy.firstCall.args;
-
-    this.Assert.ok(
-      endpoint.includes(CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION),
-      "Should set the endpoint for QuickSuggest impression"
-    );
+    let payload = calls[0].args[0];
 
     // Check payload properties that should match exactly.
     let expectedPayload = {
       advertiser,
       block_id,
-      matched_keywords: scenario == "online" ? matched_keywords : undefined,
+      matched_keywords,
       position: index + 1,
       reporting_url,
       scenario,
-      search_query: scenario == "online" ? search_query : undefined,
+      search_query,
     };
     let actualPayload = {};
     for (let key of Object.keys(expectedPayload)) {
@@ -333,7 +366,12 @@ class TestUtils {
    *   A `sinon.spy` object. See `createTelemetryPingSpy`.
    */
   assertNoImpressionPing(spy) {
-    this.Assert.ok(spy.notCalled, "Should not send a custom impression");
+    // Find the call for `QS_IMPRESSION`.
+    let calls = spy.getCalls().filter(call => {
+      let endpoint = call.args[1];
+      return endpoint.includes(CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION);
+    });
+    this.Assert.equal(calls.length, 0, "Did not send an impression ping");
   }
 
   /**
@@ -361,15 +399,14 @@ class TestUtils {
     reporting_url = "http://click.reporting.test.com/",
     scenario = "offline",
   }) {
-    // Impression is sent first, followed by the click
-    this.Assert.ok(spy.calledTwice, "Should send a custom impression ping");
+    // Find the call for `QS_SELECTION`.
+    let calls = spy.getCalls().filter(call => {
+      let endpoint = call.args[1];
+      return endpoint.includes(CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION);
+    });
+    this.Assert.equal(calls.length, 1, "Sent one click ping");
 
-    let [payload, endpoint] = spy.secondCall.args;
-
-    this.Assert.ok(
-      endpoint.includes(CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION),
-      "Should set the endpoint for QuickSuggest click"
-    );
+    let payload = calls[0].args[0];
 
     // Check payload properties that should match exactly.
     let expectedPayload = {
@@ -396,9 +433,74 @@ class TestUtils {
    *   A `sinon.spy` object. See `createTelemetryPingSpy`.
    */
   assertNoClickPing(spy) {
-    // Only called once for the impression
-    this.Assert.ok(spy.calledOnce, "Should not send a custom impression");
+    // Find the call for `QS_SELECTION`.
+    let calls = spy.getCalls().filter(call => {
+      let endpoint = call.args[1];
+      return endpoint.includes(CONTEXTUAL_SERVICES_PING_TYPES.QS_SELECTION);
+    });
+    this.Assert.equal(calls.length, 0, "Did not send a click ping");
+  }
+
+  /**
+   * Calls a callback while enrolled in a mock Nimbus experiment. The experiment
+   * is automatically unenrolled and cleaned up after the callback returns.
+   *
+   * @param {function} callback
+   * @param {object} options
+   *   See enrollExperiment().
+   */
+  async withExperiment({ callback, ...options }) {
+    let doExperimentCleanup = await this.enrollExperiment(options);
+    await callback();
+    await doExperimentCleanup();
+  }
+
+  /**
+   * Enrolls in a mock Nimbus experiment.
+   *
+   * @param {object} [valueOverrides]
+   *   Values for feature variables.
+   * @returns {function}
+   *   The experiment cleanup function (async).
+   */
+  async enrollExperiment({ valueOverrides = {} }) {
+    this.info?.("Awaiting ExperimentAPI.ready");
+    await ExperimentAPI.ready();
+
+    // Wait for any prior scenario updates to finish. If updates are ongoing,
+    // UrlbarPrefs will ignore the Nimbus update when the experiment is
+    // installed. This shouldn't be a problem in practice because in reality
+    // scenario updates are triggered only on app startup and Nimbus
+    // enrollments, but tests can trigger lots of updates back to back.
+    await this.waitForScenarioUpdated();
+
+    // This notification signals that pref updates due to enrollment are done.
+    let updatePromise = TestUtils.topicObserved(
+      QuickSuggestTestUtils.UPDATE_TOPIC
+    );
+
+    let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
+      enabled: true,
+      featureId: "urlbar",
+      value: valueOverrides,
+    });
+
+    // Wait for the pref updates triggered by the experiment enrollment.
+    this.info?.("Awaiting update after enrolling in experiment");
+    await updatePromise;
+
+    return async () => {
+      // The same pref updates will be triggered by unenrollment, so wait for
+      // them again.
+      let unenrollUpdatePromise = TestUtils.topicObserved(
+        QuickSuggestTestUtils.UPDATE_TOPIC
+      );
+      this.info?.("Awaiting experiment cleanup");
+      await doExperimentCleanup();
+      this.info?.("Awaiting update after unenrolling in experiment");
+      await unenrollUpdatePromise;
+    };
   }
 }
 
-var QuickSuggestTestUtils = new TestUtils();
+var QuickSuggestTestUtils = new QSTestUtils();

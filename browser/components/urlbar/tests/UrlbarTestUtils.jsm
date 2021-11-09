@@ -15,8 +15,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserTestUtils: "resource://testing-common/BrowserTestUtils.jsm",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
-  ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
   FormHistoryTestUtils: "resource://testing-common/FormHistoryTestUtils.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
@@ -789,38 +787,6 @@ var UrlbarTestUtils = {
         throw error;
       }
     }
-  },
-
-  /**
-   * Calls a callback while enrolled in a mock Nimbus experiment. The experiment
-   * is automatically unenrolled and cleaned up after the callback returns.
-   *
-   * @param {function} callback
-   * @param {object} options
-   *   See enrollExperiment().
-   */
-  async withExperiment({ callback, ...options }) {
-    let doExperimentCleanup = await this.enrollExperiment(options);
-    await callback();
-    await doExperimentCleanup();
-  },
-
-  /**
-   * Enrolls in a mock Nimbus experiment.
-   *
-   * @param {object} [valueOverrides]
-   *   Values for feature variables.
-   * @returns {function}
-   *   The experiment cleanup function (async).
-   */
-  async enrollExperiment({ valueOverrides = {} }) {
-    await ExperimentAPI.ready();
-    let doExperimentCleanup = await ExperimentFakes.enrollWithFeatureConfig({
-      enabled: true,
-      featureId: "urlbar",
-      value: valueOverrides,
-    });
-    return doExperimentCleanup;
   },
 };
 
