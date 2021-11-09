@@ -2,6 +2,7 @@
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="stats.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -25,11 +26,11 @@ const checkJitter = stats => {
 };
 
 const PC_LOCAL_TEST_LOCAL_JITTER = async test => {
-  checkJitter(await test.pcLocal.waitForSyncedRtcp());
+  checkJitter(await waitForSyncedRtcp(test.pcLocal._pc));
 }
 
 const PC_REMOTE_TEST_REMOTE_JITTER = async test => {
-  checkJitter(await test.pcRemote.waitForSyncedRtcp());
+  checkJitter(await waitForSyncedRtcp(test.pcRemote._pc));
 }
 
 runNetworkTest(async function (options) {
