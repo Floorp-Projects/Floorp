@@ -409,6 +409,16 @@ __attribute__((weak))
   }
 #endif
 
+  // function takes a 32-bit value and returns the next power of 2
+  // return is a 64-bit value as large 32-bit values will return 2^32
+  static inline uint64_t next_power_of_two(uint32_t value) {
+    uint64_t power = 1;
+    while(power < value) {
+      power *= 2;
+    }
+    return power;
+  }
+
 protected:
 
 #ifndef RLBOX_USE_STATIC_CALLS
@@ -458,6 +468,7 @@ protected:
    *
    * @param wasm2c_module_path path to shared library compiled with wasm2c. This param is not specified if you are creating a statically linked sandbox.
    * @param infallible if set to true, the sandbox aborts on failure. If false, the sandbox returns creation status as a return value
+   * @param override_max_heap_size optional override of the maximum size of the wasm heap allowed for this sandbox instance. When the value is zero, platform defaults are used. Non-zero values are rounded to max(64k, next power of 2).
    * @param wasm_module_name optional module name used when compiling with wasm2c
    * @return true when sandbox is successfully created
    * @return false when infallible if set to false and sandbox was not successfully created. If infallible is set to true, this function will never return false.
@@ -466,7 +477,7 @@ protected:
 #ifndef RLBOX_USE_STATIC_CALLS
     path_buf wasm2c_module_path,
 #endif
-    bool infallible = true, const char* wasm_module_name = "")
+    bool infallible = true, uint64_t override_max_heap_size = 0, const char* wasm_module_name = "")
   {
     FALLIBLE_DYNAMIC_CHECK(infallible, sandbox == nullptr, "Sandbox already initialized");
 
@@ -515,7 +526,25 @@ protected:
       sandbox_info.wasm_rt_sys_init();
     });
 
-    sandbox = sandbox_info.create_wasm2c_sandbox();
+#define WASM_PAGE_SIZE 65536
+#define WASM_HEAP_MAX_ALLOWED_PAGES 65536
+#define WASM_MAX_HEAP (static_cast<uint64_t>(1) << 32)
+    if (override_max_heap_size != 0){
+      if(override_max_heap_size < WASM_PAGE_SIZE) {
+        override_max_heap_size = WASM_PAGE_SIZE;
+      } else if (override_max_heap_size > WASM_MAX_HEAP) {
+        override_max_heap_size = WASM_MAX_HEAP;
+      } else {
+        override_max_heap_size = next_power_of_two(override_max_heap_size);
+      }
+    }
+    const uint64_t override_max_wasm_pages = override_max_heap_size / WASM_PAGE_SIZE;
+    FALLIBLE_DYNAMIC_CHECK(infallible, override_max_wasm_pages <= 65536, "Wasm allows a max heap size of 4GB");
+#undef WASM_MAX_HEAP
+#undef WASM_HEAP_MAX_ALLOWED_PAGES
+#undef WASM_PAGE_SIZE
+
+    sandbox = sandbox_info.create_wasm2c_sandbox(static_cast<uint32_t>(override_max_wasm_pages));
     FALLIBLE_DYNAMIC_CHECK(infallible, sandbox != nullptr, "Sandbox could not be created");
 
     sandbox_memory_info = (wasm_rt_memory_t*) sandbox_info.lookup_wasm2c_nonfunc_export(sandbox, "w2c_memory");

@@ -1263,13 +1263,13 @@ void CWriter::WriteDataInitializers() {
     memory = module_->memories[0];
   }
 
-  Write(Newline(), "static bool init_memory(wasm2c_sandbox_t* const sbx) ", OpenBrace());
+  Write(Newline(), "static bool init_memory(wasm2c_sandbox_t* const sbx, uint32_t max_wasm_pages_from_rt) ", OpenBrace());
   if (memory && module_->num_memory_imports == 0) {
-    uint32_t max =
-        memory->page_limits.has_max ? memory->page_limits.max : 65536;
-      Write("bool success = wasm_rt_allocate_memory(&(sbx->", ExternalRef(memory->name), "), ",
-            memory->page_limits.initial, ", ", max, ");", Newline());
-      Write("if (!success) { return false; }", Newline());
+    Write("const uint32_t max_pages_specified_in_module = ", memory->page_limits.has_max ? memory->page_limits.max : 0, ";", Newline());
+    Write("const uint32_t max_pages = max_wasm_pages_from_rt == 0? max_pages_specified_in_module : max_wasm_pages_from_rt;", Newline());
+    Write("const bool success = wasm_rt_allocate_memory(&(sbx->", ExternalRef(memory->name), "), ",
+          memory->page_limits.initial, ", max_pages);", Newline());
+    Write("if (!success) { return false; }", Newline(), Newline());
   }
   data_segment_index = 0;
   for (const DataSegment* data_segment : module_->data_segments) {

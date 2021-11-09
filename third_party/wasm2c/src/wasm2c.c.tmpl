@@ -84,7 +84,7 @@
 
 #if defined(WASM_USE_GUARD_PAGES) && UINTPTR_MAX == 0xffffffff
 // on 32-bit platforms we have to mask memory access into range
-#  define MEM_ACCESS_REF(mem, addr) &mem->data[addr & WASM_HEAP_MASK]
+#  define MEM_ACCESS_REF(mem, addr) &mem->data[addr & mem->mem_mask]
 #else
 #  define MEM_ACCESS_REF(mem, addr) &mem->data[addr]
 #endif
@@ -378,9 +378,9 @@ static u32 lookup_wasm2c_func_index(void* sbx_ptr, u32 param_count, u32 result_c
   return wasm_rt_register_func_type(&sbx->func_type_structs, &sbx->func_type_count, param_count, result_count, types);
 }
 
-static void* create_wasm2c_sandbox(void) {
+static void* create_wasm2c_sandbox(uint32_t max_wasm_pages) {
   wasm2c_sandbox_t* const sbx = (wasm2c_sandbox_t* const) calloc(sizeof(wasm2c_sandbox_t), 1);
-  if (!init_memory(sbx)) {
+  if (!init_memory(sbx, max_wasm_pages)) {
     free(sbx);
     return 0;
   }
