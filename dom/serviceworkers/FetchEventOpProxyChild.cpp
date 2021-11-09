@@ -8,6 +8,7 @@
 
 #include <utility>
 
+#include "mozilla/dom/ServiceWorkerOpPromise.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsThreadUtils.h"
@@ -64,6 +65,19 @@ void FetchEventOpProxyChild::Initialize(
   MOZ_ASSERT(!mOp);
 
   mInternalRequest = MakeSafeRefPtr<InternalRequest>(aArgs.internalRequest());
+
+  if (aArgs.preloadNavigation()) {
+    // We use synchronous task dispatch here to make sure that if the preload
+    // response arrived before we dispatch the fetch event, then the JS preload
+    // response promise will get resolved immediately.
+    mPreloadResponsePromise =
+        MakeRefPtr<FetchEventPreloadResponsePromise::Private>(__func__);
+    mPreloadResponsePromise->UseSynchronousTaskDispatch(__func__);
+    if (aArgs.preloadResponse().isSome()) {
+      mPreloadResponsePromise->Resolve(
+          InternalResponse::FromIPC(aArgs.preloadResponse().ref()), __func__);
+    }
+  }
 
   RemoteWorkerChild* manager = static_cast<RemoteWorkerChild*>(Manager());
   MOZ_ASSERT(manager);
@@ -152,6 +166,23 @@ SafeRefPtr<InternalRequest> FetchEventOpProxyChild::ExtractInternalRequest() {
   MOZ_ASSERT(mInternalRequest);
 
   return std::move(mInternalRequest);
+}
+
+RefPtr<FetchEventPreloadResponsePromise>
+FetchEventOpProxyChild::GetPreloadResponsePromise() {
+  return mPreloadResponsePromise;
+}
+
+mozilla::ipc::IPCResult FetchEventOpProxyChild::RecvPreloadResponse(
+    IPCInternalResponse&& aResponse) {
+  // Receiving this message implies that navigation preload is enabled, so
+  // Initialize() should have created this promise.
+  MOZ_ASSERT(mPreloadResponsePromise);
+
+  mPreloadResponsePromise->Resolve(InternalResponse::FromIPC(aResponse),
+                                   __func__);
+
+  return IPC_OK();
 }
 
 void FetchEventOpProxyChild::ActorDestroy(ActorDestroyReason) {

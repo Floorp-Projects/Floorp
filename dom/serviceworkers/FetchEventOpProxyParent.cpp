@@ -73,10 +73,23 @@ nsresult MaybeDeserializeAndWrapForMainThread(
   MOZ_ASSERT(aManager);
   MOZ_ASSERT(aReal);
 
+  ServiceWorkerFetchEventOpArgs copyArgs = aArgs;
+
   FetchEventOpProxyParent* actor =
       new FetchEventOpProxyParent(std::move(aReal), std::move(aPromise));
 
-  ServiceWorkerFetchEventOpArgs copyArgs = aArgs;
+  // As long as the fetch event was pending, the FetchEventOpParent was
+  // responsible for keeping the preload response, if it already arrived. Once
+  // the fetch event starts it gives up the preload response (if any) and we
+  // need to add it to the arguments. Note that we have to make sure that the
+  // arguments don't contain the preload response already, otherwise we'll end
+  // up overwriting it with a Nothing.
+  Maybe<IPCInternalResponse> preloadResponse =
+      actor->mReal->OnStart(WrapNotNull(actor));
+  if (copyArgs.preloadResponse().isNothing()) {
+    copyArgs.preloadResponse() = std::move(preloadResponse);
+  }
+
   IPCInternalRequest& copyRequest = copyArgs.internalRequest();
 
   if (aBodyStream) {
@@ -135,6 +148,7 @@ mozilla::ipc::IPCResult FetchEventOpProxyParent::RecvRespondWith(
     // Do nothing if neither the body nor the alt. body can be deserialized.
     if (!originalResponse.body() && !originalResponse.alternativeBody()) {
       Unused << mReal->SendRespondWith(aResult);
+      mReal->OnFinish();
       return IPC_OK();
     }
 
@@ -159,6 +173,7 @@ mozilla::ipc::IPCResult FetchEventOpProxyParent::RecvRespondWith(
     Unused << mReal->SendRespondWith(aResult);
   }
 
+  mReal->OnFinish();
   return IPC_OK();
 }
 
