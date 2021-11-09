@@ -11,6 +11,8 @@
 #include "mozilla/dom/DocumentL10nBinding.h"
 #include "mozilla/Telemetry.h"
 
+using namespace mozilla;
+using namespace mozilla::intl;
 using namespace mozilla::dom;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(DocumentL10n)
@@ -64,27 +66,30 @@ class L10nReadyHandler final : public PromiseNativeHandler {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(L10nReadyHandler)
 
-  explicit L10nReadyHandler(Promise* aPromise, DocumentL10n* aDocumentL10n)
-      : mPromise(aPromise), mDocumentL10n(aDocumentL10n) {}
+  explicit L10nReadyHandler(DocumentL10n* aDocumentL10n)
+      : mDocumentL10n(aDocumentL10n) {}
 
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     mDocumentL10n->InitialTranslationCompleted(true);
-    mPromise->MaybeResolveWithUndefined();
   }
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     mDocumentL10n->InitialTranslationCompleted(false);
-    mPromise->MaybeRejectWithUndefined();
+
+    nsTArray<nsCString> errors{
+        "[dom/l10n] Could not complete initial document translation."_ns,
+    };
+    IgnoredErrorResult rv;
+    MaybeReportErrorsToGecko(errors, rv, mDocumentL10n->GetParentObject());
   }
 
  private:
   ~L10nReadyHandler() = default;
 
-  RefPtr<Promise> mPromise;
   RefPtr<DocumentL10n> mDocumentL10n;
 };
 
-NS_IMPL_CYCLE_COLLECTION(L10nReadyHandler, mPromise, mDocumentL10n)
+NS_IMPL_CYCLE_COLLECTION(L10nReadyHandler, mDocumentL10n)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(L10nReadyHandler)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
@@ -134,8 +139,7 @@ void DocumentL10n::TriggerInitialTranslation() {
     InitialTranslationCompleted(true);
     mReady->MaybeResolveWithUndefined();
   } else {
-    RefPtr<PromiseNativeHandler> l10nReadyHandler =
-        new L10nReadyHandler(mReady, this);
+    RefPtr<PromiseNativeHandler> l10nReadyHandler = new L10nReadyHandler(this);
     promise->AppendNativeHandler(l10nReadyHandler);
 
     mState = DocumentL10nState::InitialTranslationTriggered;
