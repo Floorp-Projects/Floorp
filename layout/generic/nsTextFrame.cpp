@@ -70,7 +70,7 @@
 #include "nsLineBreaker.h"
 #include "nsIFrameInlines.h"
 #include "mozilla/intl/Bidi.h"
-#include "mozilla/intl/WordBreaker.h"
+#include "mozilla/intl/Segmenter.h"
 #include "mozilla/ServoStyleSet.h"
 
 #include <algorithm>
@@ -8172,19 +8172,17 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
     mFrag->AppendTo(str, textOffset, textLen);
     aContext.Insert(str, 0);
   }
-  uint32_t nextWord = textStart > 0 ? textStart - 1 : textStart;
-  while (true) {
-    const int32_t scanResult =
-        intl::WordBreaker::Next(aContext.get(), aContext.Length(), nextWord);
-    if (NS_WORDBREAKER_NEED_MORE_TEXT == scanResult ||
-        AssertedCast<uint32_t>(scanResult) > textStart + textLen) {
-      break;
-    }
-    nextWord = AssertedCast<uint32_t>(scanResult);
-    mWordBreaks[nextWord - textStart] = true;
+
+  const uint32_t textEnd = textStart + textLen;
+  intl::WordBreakIteratorUtf16 wordBreakIter(aContext);
+  Maybe<uint32_t> nextBreak =
+      wordBreakIter.Seek(textStart > 0 ? textStart - 1 : textStart);
+  while (nextBreak && *nextBreak <= textEnd) {
+    mWordBreaks[*nextBreak - textStart] = true;
+    nextBreak = wordBreakIter.Next();
   }
 
-  MOZ_ASSERT(textStart + textLen != aContext.Length() || mWordBreaks[textLen],
+  MOZ_ASSERT(textEnd != aContext.Length() || mWordBreaks[textLen],
              "There should be a word break at the end of a line or text run!");
 }
 
