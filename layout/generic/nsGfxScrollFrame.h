@@ -281,8 +281,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
                 nsIScrollbarMediator::ScrollSnapMode aSnap =
                     nsIScrollbarMediator::DISABLE_SNAP);
   void ScrollByCSSPixels(const CSSIntPoint& aDelta,
-                         ScrollMode aMode = ScrollMode::Instant,
-                         ScrollOrigin aOrigin = ScrollOrigin::NotSpecified);
+                         ScrollMode aMode = ScrollMode::Instant);
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
@@ -1018,10 +1017,9 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     mHelper.ScrollBy(aDelta, aUnit, aMode, aOverflow, aOrigin, aMomentum,
                      aSnap);
   }
-  void ScrollByCSSPixels(
-      const CSSIntPoint& aDelta, ScrollMode aMode = ScrollMode::Instant,
-      ScrollOrigin aOrigin = ScrollOrigin::NotSpecified) final {
-    mHelper.ScrollByCSSPixels(aDelta, aMode, aOrigin);
+  void ScrollByCSSPixels(const CSSIntPoint& aDelta,
+                         ScrollMode aMode = ScrollMode::Instant) final {
+    mHelper.ScrollByCSSPixels(aDelta, aMode);
   }
   void ScrollSnap() final { mHelper.ScrollSnap(); }
   /**
@@ -1494,10 +1492,9 @@ class nsXULScrollFrame final : public nsBoxFrame,
     mHelper.ScrollBy(aDelta, aUnit, aMode, aOverflow, aOrigin, aMomentum,
                      aSnap);
   }
-  void ScrollByCSSPixels(
-      const CSSIntPoint& aDelta, ScrollMode aMode = ScrollMode::Instant,
-      ScrollOrigin aOrigin = ScrollOrigin::NotSpecified) final {
-    mHelper.ScrollByCSSPixels(aDelta, aMode, aOrigin);
+  void ScrollByCSSPixels(const CSSIntPoint& aDelta,
+                         ScrollMode aMode = ScrollMode::Instant) final {
+    mHelper.ScrollByCSSPixels(aDelta, aMode);
   }
   void ScrollSnap() final { mHelper.ScrollSnap(); }
   /**
