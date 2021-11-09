@@ -45,6 +45,8 @@ function makeChan(url) {
   return chan;
 }
 
+let processId;
+
 function channelOpenPromise(chan) {
   return new Promise(resolve => {
     function finish(req, buffer) {
@@ -94,7 +96,7 @@ add_task(async function test_add_nat64_prefix_to_trr() {
       },
     ],
   });
-  let { inRecord } = await new TRRDNSListener("xyz.foo", {
+  let [, inRecord] = await new TRRDNSListener("xyz.foo", {
     expectedSuccess: false,
   });
 
