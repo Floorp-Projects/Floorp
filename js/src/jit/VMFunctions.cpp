@@ -62,18 +62,18 @@ struct PopValues {
 };
 
 template <class>
-struct TypeToDataType { /* Unexpected return type for a VMFunction. */
+struct ReturnTypeToDataType { /* Unexpected return type for a VMFunction. */
 };
 template <>
-struct TypeToDataType<void> {
+struct ReturnTypeToDataType<void> {
   static const DataType result = Type_Void;
 };
 template <>
-struct TypeToDataType<bool> {
+struct ReturnTypeToDataType<bool> {
   static const DataType result = Type_Bool;
 };
 template <class T>
-struct TypeToDataType<T*> {
+struct ReturnTypeToDataType<T*> {
   // Assume by default that any pointer return types are cells.
   static_assert(std::is_base_of_v<gc::Cell, T>);
 
@@ -420,7 +420,9 @@ struct VMFunctionDataHelper<R (*)(JSContext*, Args...)>
     : public VMFunctionData {
   using Fun = R (*)(JSContext*, Args...);
 
-  static constexpr DataType returnType() { return TypeToDataType<R>::result; }
+  static constexpr DataType returnType() {
+    return ReturnTypeToDataType<R>::result;
+  }
   static constexpr DataType outParam() {
     return OutParamToDataType<typename LastArg<Args...>::Type>::result;
   }
