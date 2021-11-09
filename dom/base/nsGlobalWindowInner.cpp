@@ -1618,6 +1618,13 @@ bool nsGlobalWindowInner::IsBlackForCC(bool aTracingNeeded) {
 // nsGlobalWindowInner::nsIScriptGlobalObject
 //*****************************************************************************
 
+bool nsGlobalWindowInner::ShouldResistFingerprinting() const {
+  if (mDoc) {
+    return nsContentUtils::ShouldResistFingerprinting(mDoc);
+  }
+  return nsIScriptGlobalObject::ShouldResistFingerprinting();
+}
+
 nsresult nsGlobalWindowInner::EnsureScriptEnvironment() {
   // NOTE: We can't use FORWARD_TO_OUTER here because we don't want to fail if
   // we're called on an inactive inner window.

@@ -140,6 +140,7 @@ struct WorkerLoadInfoData {
   bool mUseRegularPrincipal;
   bool mHasStorageAccessPermissionGranted;
   bool mServiceWorkersTestingInWindow;
+  bool mShouldResistFingerprinting;
   OriginAttributes mOriginAttributes;
 
   enum {

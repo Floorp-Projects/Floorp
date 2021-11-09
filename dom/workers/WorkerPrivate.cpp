@@ -2648,6 +2648,8 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     loadInfo.mOriginAttributes = aParent->GetOriginAttributes();
     loadInfo.mServiceWorkersTestingInWindow =
         aParent->ServiceWorkersTestingInWindow();
+    loadInfo.mShouldResistFingerprinting =
+        aParent->ShouldResistFingerprinting();
     loadInfo.mParentController = aParent->GlobalScope()->GetController();
     loadInfo.mWatchedByDevTools = aParent->IsWatchedByDevTools();
   } else {
@@ -2785,6 +2787,8 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
       loadInfo.mUseRegularPrincipal = document->UseRegularPrincipal();
       loadInfo.mHasStorageAccessPermissionGranted =
           document->HasStorageAccessPermissionGranted();
+      loadInfo.mShouldResistFingerprinting =
+          nsContentUtils::ShouldResistFingerprinting(document);
 
       // This is an hack to deny the storage-access-permission for workers of
       // sub-iframes.

@@ -243,6 +243,11 @@ bool WorkerGlobalScopeBase::IsSharedMemoryAllowed() const {
   return mWorkerPrivate->IsSharedMemoryAllowed();
 }
 
+bool WorkerGlobalScopeBase::ShouldResistFingerprinting() const {
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  return mWorkerPrivate->ShouldResistFingerprinting();
+}
+
 StorageAccess WorkerGlobalScopeBase::GetStorageAccess() {
   mWorkerPrivate->AssertIsOnWorkerThread();
   return mWorkerPrivate->StorageAccess();
