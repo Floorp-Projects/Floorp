@@ -701,7 +701,7 @@ void* ExceptionHandler::WaitForMessage(void* exception_handler_class) {
 
         ExceptionReplyMessage reply;
         if (!mach_exc_server(&receive.header, &reply.header)) {
-          MOZ_CRASH_UNSAFE_PRINTF("Mach message id: %#10x crash reported = %d",
+          MOZ_CRASH_UNSAFE_PRINTF("Mach message id: %d crash reported = %d",
                                   receive.header.msgh_id, crash_reported);
         }
 
