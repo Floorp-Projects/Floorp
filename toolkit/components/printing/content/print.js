@@ -2204,14 +2204,6 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
         this._pagesSet.clear();
         return;
       }
-
-      if (rangeParts[0] == "odd") {
-        for (let i = 1; i <= numPages; i += 2) {
-          this._pagesSet.add(i);
-        }
-        return;
-      }
-
       let startRange = parseInt(rangeParts[0], 10);
       let endRange = parseInt(
         rangeParts.length == 2 ? rangeParts[1] : rangeParts[0],
