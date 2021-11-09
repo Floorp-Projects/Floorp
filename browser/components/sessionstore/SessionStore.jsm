@@ -2722,8 +2722,7 @@ var SessionStoreInternal = {
       if (TAB_STATE_FOR_BROWSER.get(browser) == TAB_STATE_NEEDS_RESTORE) {
         // If BROWSER_STATE is still available for the browser and it is
         // If __SS_restoreState is still on the browser and it is
-        // TAB_STATE_NEEDS_RESTORE, then then we haven't restored
-        // this tab yet.
+        // TAB_STATE_NEEDS_RESTORE, then we haven't restored this tab yet.
         //
         // It's possible that this tab was recently revived, and that
         // we've deferred showing the tab crashed page for it (if the
