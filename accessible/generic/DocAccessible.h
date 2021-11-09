@@ -572,7 +572,7 @@ class DocAccessible : public HyperTextAccessibleWrap,
    * previous active descendant, thus making this element the new active
    * descendant. In that case, accessible focus must be changed accordingly.
    */
-  void ARIAActiveDescendantIDMaybeMoved(dom::Element* aElm);
+  void ARIAActiveDescendantIDMaybeMoved(LocalAccessible* aAccessible);
 
   /**
    * Traverse content subtree and for each node do one of 3 things:
