@@ -7210,6 +7210,10 @@ class MLoadDynamicSlotAndUnbox : public MUnaryInstruction,
     return AliasSet::Load(AliasSet::DynamicSlot);
   }
 
+#ifdef JS_JITSPEW
+  void printOpcode(GenericPrinter& out) const override;
+#endif
+
   ALLOW_CLONE(MLoadDynamicSlotAndUnbox);
 };
 
