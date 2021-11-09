@@ -68,6 +68,10 @@ class TRRQuery : public AHostResolver {
   mozilla::TimeDuration Duration() { return mTrrDuration; }
 
  private:
+  nsresult DispatchByTypeLookup(TRR* pushedTRR = nullptr,
+                                bool aUseODoHProxy = false);
+
+ private:
   ~TRRQuery() = default;
   RefPtr<nsHostResolver> mHostResolver;
   RefPtr<nsHostRecord> mRecord;
