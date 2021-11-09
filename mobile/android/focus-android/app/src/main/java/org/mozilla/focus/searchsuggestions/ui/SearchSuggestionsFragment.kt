@@ -47,9 +47,9 @@ import org.mozilla.focus.R
 import org.mozilla.focus.components
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 import org.mozilla.focus.searchsuggestions.State
-import org.mozilla.focus.theme.FocusTheme
-import org.mozilla.focus.theme.focusColors
 import org.mozilla.focus.topsites.TopSites
+import org.mozilla.focus.ui.theme.FocusTheme
+import org.mozilla.focus.ui.theme.focusColors
 import kotlin.coroutines.CoroutineContext
 
 class SearchSuggestionsFragment : Fragment(), CoroutineScope {

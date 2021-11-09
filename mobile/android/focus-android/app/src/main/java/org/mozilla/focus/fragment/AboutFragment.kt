@@ -25,10 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Start
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Job
 import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
@@ -36,8 +33,9 @@ import org.mozilla.focus.databinding.FragmentAboutBinding
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.settings.BaseSettingsLikeFragment
 import org.mozilla.focus.state.AppAction
-import org.mozilla.focus.theme.FocusTheme
-import org.mozilla.focus.theme.focusColors
+import org.mozilla.focus.ui.theme.FocusTheme
+import org.mozilla.focus.ui.theme.focusColors
+import org.mozilla.focus.ui.theme.focusTypography
 import org.mozilla.focus.utils.SupportUtils.manifestoURL
 import org.mozilla.geckoview.BuildConfig
 
@@ -148,8 +146,7 @@ private fun VersionInfo(aboutVersion: String) {
     Text(
         text = aboutVersion,
         color = focusColors.aboutPageText,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
+        style = focusTypography.body1,
         modifier = Modifier
             .padding(10.dp)
     )
@@ -160,8 +157,7 @@ private fun AboutContent(content: String) {
     Text(
         text = content,
         color = focusColors.aboutPageText,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
+        style = focusTypography.body1,
         modifier = Modifier
             .padding(10.dp)
     )
@@ -175,9 +171,7 @@ fun ColumnScope.LearnMoreLink(
     Text(
         text = learnMore,
         color = focusColors.aboutPageLink,
-        style = TextStyle(textDecoration = TextDecoration.Underline),
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
+        style = focusTypography.links,
         modifier = Modifier
             .padding(10.dp)
             .fillMaxWidth()

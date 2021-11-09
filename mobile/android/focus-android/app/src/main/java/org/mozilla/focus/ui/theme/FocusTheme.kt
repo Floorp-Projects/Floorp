@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.focus.theme
+package org.mozilla.focus.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.Colors
@@ -35,6 +35,7 @@ fun FocusTheme(
     CompositionLocalProvider(localColors provides colors) {
         MaterialTheme(
             colors = colors.material,
+            typography = focusTypography.materialTypography,
             content = content,
         )
     }

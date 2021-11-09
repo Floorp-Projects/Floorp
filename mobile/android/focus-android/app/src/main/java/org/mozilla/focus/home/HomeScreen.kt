@@ -14,8 +14,8 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.DelicateCoroutinesApi
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.focus.components
-import org.mozilla.focus.theme.FocusTheme
 import org.mozilla.focus.topsites.TopSites
+import org.mozilla.focus.ui.theme.FocusTheme
 
 /**
  * The home screen.

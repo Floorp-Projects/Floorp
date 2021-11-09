@@ -40,7 +40,7 @@ import mozilla.components.support.ktx.kotlin.getRepresentativeCharacter
 import org.mozilla.focus.GleanMetrics.Shortcuts
 import org.mozilla.focus.R
 import org.mozilla.focus.components
-import org.mozilla.focus.theme.focusColors
+import org.mozilla.focus.ui.theme.focusColors
 
 /**
  * A list of top sites.
