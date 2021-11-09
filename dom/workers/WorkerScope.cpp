@@ -248,6 +248,11 @@ bool WorkerGlobalScopeBase::ShouldResistFingerprinting() const {
   return mWorkerPrivate->ShouldResistFingerprinting();
 }
 
+uint32_t WorkerGlobalScopeBase::GetPrincipalHashValue() const {
+  mWorkerPrivate->AssertIsOnWorkerThread();
+  return mWorkerPrivate->GetPrincipalHashValue();
+}
+
 StorageAccess WorkerGlobalScopeBase::GetStorageAccess() {
   mWorkerPrivate->AssertIsOnWorkerThread();
   return mWorkerPrivate->StorageAccess();
