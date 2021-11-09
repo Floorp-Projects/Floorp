@@ -8,10 +8,11 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.prompt.ShareData
-import org.mozilla.fenix.BrowserDirection
+import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.historymetadata.HistoryMetadataGroupFragmentAction
@@ -76,6 +77,7 @@ interface HistoryMetadataGroupController {
 class DefaultHistoryMetadataGroupController(
     private val activity: HomeActivity,
     private val store: HistoryMetadataGroupFragmentStore,
+    private val selectOrAddUseCase: TabsUseCases.SelectOrAddUseCase,
     private val metrics: MetricController,
     private val navController: NavController,
     private val scope: CoroutineScope,
@@ -83,12 +85,8 @@ class DefaultHistoryMetadataGroupController(
 ) : HistoryMetadataGroupController {
 
     override fun handleOpen(item: History.Metadata) {
-        activity.openToBrowserAndLoad(
-            searchTermOrURL = item.url,
-            newTab = true,
-            from = BrowserDirection.FromHistoryMetadataGroup,
-            historyMetadata = item.historyMetadataKey
-        )
+        selectOrAddUseCase.invoke(item.url, item.historyMetadataKey)
+        navController.navigate(R.id.browserFragment)
         metrics.track(Event.HistorySearchTermGroupOpenTab)
     }
 

@@ -14,6 +14,7 @@ import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.prompt.ShareData
 import mozilla.components.concept.storage.HistoryMetadataKey
+import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Assert.assertFalse
@@ -22,10 +23,10 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.directionsEq
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
@@ -45,6 +46,7 @@ class HistoryMetadataGroupControllerTest {
 
     private val activity: HomeActivity = mockk(relaxed = true)
     private val store: HistoryMetadataGroupFragmentStore = mockk(relaxed = true)
+    private val selectOrAddUseCase: TabsUseCases.SelectOrAddUseCase = mockk(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
     private val navController: NavController = mockk(relaxed = true)
     private val historyStorage: PlacesHistoryStorage = mockk(relaxed = true)
@@ -77,6 +79,7 @@ class HistoryMetadataGroupControllerTest {
         controller = DefaultHistoryMetadataGroupController(
             activity = activity,
             store = store,
+            selectOrAddUseCase = selectOrAddUseCase,
             metrics = metrics,
             navController = navController,
             scope = scope,
@@ -96,12 +99,8 @@ class HistoryMetadataGroupControllerTest {
         controller.handleOpen(mozillaHistoryMetadataItem)
 
         verify {
-            activity.openToBrowserAndLoad(
-                searchTermOrURL = mozillaHistoryMetadataItem.url,
-                newTab = true,
-                from = BrowserDirection.FromHistoryMetadataGroup,
-                historyMetadata = mozillaHistoryMetadataItem.historyMetadataKey
-            )
+            selectOrAddUseCase.invoke(mozillaHistoryMetadataItem.url, mozillaHistoryMetadataItem.historyMetadataKey)
+            navController.navigate(R.id.browserFragment)
             metrics.track(Event.HistorySearchTermGroupOpenTab)
         }
     }
