@@ -70,9 +70,41 @@ class FakeThunderbirdJob(ThunderbirdMixin, FakeArtifactJob):
 
 
 class TestThunderbirdMixin(TestCase):
-    def test_candidate_trees(self):
+    def _assert_candidate_trees(self, version_display, expected_trees):
+        buildconfig.substs["MOZ_APP_VERSION_DISPLAY"] = version_display
+
         job = FakeThunderbirdJob()
-        self.assertEqual(job.candidate_trees, ["comm-central"])
+        self.assertGreater(len(job.candidate_trees), 0)
+        self.assertEqual(job.candidate_trees, expected_trees)
+
+    def test_candidate_trees_with_beta_version(self):
+        self._assert_candidate_trees(
+            version_display="92.1b2",
+            expected_trees=ThunderbirdMixin.beta_candidate_trees,
+        )
+
+    def test_candidate_trees_with_esr_version(self):
+        self._assert_candidate_trees(
+            version_display="91.3.0esr",
+            expected_trees=ThunderbirdMixin.esr_candidate_trees,
+        )
+
+    def test_candidate_trees_with_nightly_version(self):
+        self._assert_candidate_trees(
+            version_display="95.0a1",
+            expected_trees=ThunderbirdMixin.nightly_candidate_trees,
+        )
+
+    def test_property_is_cached(self):
+        job = FakeThunderbirdJob()
+        expected_trees = ThunderbirdMixin.esr_candidate_trees
+
+        buildconfig.substs["MOZ_APP_VERSION_DISPLAY"] = "91.3.0.esr"
+        self.assertEqual(job.candidate_trees, expected_trees)
+        # Because the property is cached, changing the
+        # `MOZ_APP_VERSION_DISPLAY` won't have any impact.
+        buildconfig.substs["MOZ_APP_VERSION_DISPLAY"] = ""
+        self.assertEqual(job.candidate_trees, expected_trees)
 
 
 if __name__ == "__main__":
