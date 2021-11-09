@@ -776,10 +776,6 @@ nsAtom* Gecko_GetXMLLangValue(const Element* aElement) {
   return atom.forget().take();
 }
 
-Document::DocumentTheme Gecko_GetDocumentLWTheme(const Document* aDocument) {
-  return aDocument->ThreadSafeGetDocumentLWTheme();
-}
-
 const PreferenceSheet::Prefs* Gecko_GetPrefSheetPrefs(const Document* aDoc) {
   return &PreferenceSheet::PrefsFor(*aDoc);
 }
