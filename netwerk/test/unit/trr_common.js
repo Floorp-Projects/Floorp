@@ -837,49 +837,6 @@ async function test_fqdn() {
 async function test_ipv6_trr_fallback() {
   info("Testing fallback with ipv6");
   dns.clearCache(true);
-  let httpserver = new HttpServer();
-  httpserver.registerPathHandler("/content", (metadata, response) => {
-    response.setHeader("Content-Type", "text/plain");
-    response.setHeader("Cache-Control", "no-cache");
-
-    const responseBody = "anybody";
-    response.bodyOutputStream.write(responseBody, responseBody.length);
-  });
-  httpserver.start(-1);
-
-  Services.prefs.setBoolPref("network.captive-portal-service.testMode", true);
-  let url = `http://127.0.0.1:666/doom_port_should_not_be_open`;
-  Services.prefs.setCharPref("network.connectivity-service.IPv6.url", url);
-  let ncs = Cc[
-    "@mozilla.org/network/network-connectivity-service;1"
-  ].getService(Ci.nsINetworkConnectivityService);
-
-  function promiseObserverNotification(topic, matchFunc) {
-    return new Promise((resolve, reject) => {
-      Services.obs.addObserver(function observe(subject, topic, data) {
-        let matches =
-          typeof matchFunc != "function" || matchFunc(subject, data);
-        if (!matches) {
-          return;
-        }
-        Services.obs.removeObserver(observe, topic);
-        resolve({ subject, data });
-      }, topic);
-    });
-  }
-
-  let checks = promiseObserverNotification(
-    "network:connectivity-service:ip-checks-complete"
-  );
-
-  ncs.recheckIPConnectivity();
-
-  await checks;
-  equal(
-    ncs.IPv6,
-    Ci.nsINetworkConnectivityService.NOT_AVAILABLE,
-    "Check IPv6 support (expect NOT_AVAILABLE)"
-  );
 
   setModeAndURI(2, "doh?responseIP=4.4.4.4");
   const override = Cc["@mozilla.org/network/native-dns-override;1"].getService(
@@ -887,21 +844,46 @@ async function test_ipv6_trr_fallback() {
   );
   gOverride.addIPOverride("ipv6.host.com", "1:1::2");
 
-  await new TRRDNSListener(
-    "ipv6.host.com",
-    "1:1::2",
-    true,
-    0,
-    "",
-    false,
-    Ci.nsIDNSService.RESOLVE_DISABLE_IPV4
-  );
+  // Should not fallback to Do53 because A request for ipv6.host.com returns
+  // 4.4.4.4
+  let { inStatus } = await new TRRDNSListener("ipv6.host.com", {
+    flags: Ci.nsIDNSService.RESOLVE_DISABLE_IPV4,
+    expectedSuccess: false,
+  });
+  equal(inStatus, Cr.NS_ERROR_UNKNOWN_HOST);
 
-  Services.prefs.clearUserPref("network.captive-portal-service.testMode");
-  Services.prefs.clearUserPref("network.connectivity-service.IPv6.url");
+  // This time both requests fail, so we do fall back
+  dns.clearCache(true);
+  setModeAndURI(2, "doh?responseIP=none");
+  await new TRRDNSListener("ipv6.host.com", "1:1::2");
 
   override.clearOverrides();
-  await httpserver.stop();
+}
+
+async function test_ipv4_trr_fallback() {
+  info("Testing fallback with ipv4");
+  dns.clearCache(true);
+
+  setModeAndURI(2, "doh?responseIP=1:2::3");
+  const override = Cc["@mozilla.org/network/native-dns-override;1"].getService(
+    Ci.nsINativeDNSResolverOverride
+  );
+  gOverride.addIPOverride("ipv4.host.com", "3.4.5.6");
+
+  // Should not fallback to Do53 because A request for ipv4.host.com returns
+  // 1:2::3
+  let { inStatus } = await new TRRDNSListener("ipv4.host.com", {
+    flags: Ci.nsIDNSService.RESOLVE_DISABLE_IPV6,
+    expectedSuccess: false,
+  });
+  equal(inStatus, Cr.NS_ERROR_UNKNOWN_HOST);
+
+  // This time both requests fail, so we do fall back
+  dns.clearCache(true);
+  setModeAndURI(2, "doh?responseIP=none");
+  await new TRRDNSListener("ipv4.host.com", "3.4.5.6");
+
+  override.clearOverrides();
 }
 
 async function test_no_retry_without_doh() {
