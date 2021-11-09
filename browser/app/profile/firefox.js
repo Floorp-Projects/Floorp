@@ -388,7 +388,7 @@ pref("browser.urlbar.suggest.calculator",           false);
 // pref is exposed to the user in the UI, and it's sticky so that its
 // user-branch value persists regardless of whatever Firefox Suggest scenarios,
 // with their various default-branch values, the user is enrolled in over time.
-pref("browser.urlbar.suggest.quicksuggest", false, sticky);
+pref("browser.urlbar.suggest.quicksuggest.nonsponsored", false, sticky);
 
 // Whether sponsored quick suggest results are shown in the urlbar. This pref is
 // exposed to the user in the UI, and it's sticky so that its user-branch value
