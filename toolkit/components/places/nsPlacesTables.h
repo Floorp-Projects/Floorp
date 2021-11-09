@@ -24,6 +24,7 @@
       ", url_hash INTEGER DEFAULT 0 NOT NULL "         \
       ", description TEXT"                             \
       ", preview_image_url TEXT"                       \
+      ", site_name TEXT"                               \
       ", origin_id INTEGER REFERENCES moz_origins(id)" \
       ")")
 
