@@ -27,6 +27,7 @@ pull_request_rules:
       queue:
         method: rebase
         name: default
+        rebase_fallback: none
   - name: Needs landing - Squash
     conditions:
       - base=main
@@ -37,6 +38,7 @@ pull_request_rules:
       queue:
         method: rebase
         name: default
+        rebase_fallback: none
   - name: Relbot - Auto Merge
     conditions:
       - base=main
@@ -49,3 +51,4 @@ pull_request_rules:
       queue:
         method: rebase
         name: default
+        rebase_fallback: none
