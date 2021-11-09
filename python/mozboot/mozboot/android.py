@@ -32,6 +32,7 @@ LINUX_ARM_ANDROID_AVD = "linux64-android-avd-arm-repack"
 
 MACOS_X86_64_ANDROID_AVD = "linux64-android-avd-x86_64-repack"
 MACOS_ARM_ANDROID_AVD = "linux64-android-avd-arm-repack"
+MACOS_ARM64_ANDROID_AVD = "linux64-android-avd-arm64-repack"
 
 WINDOWS_X86_64_ANDROID_AVD = "linux64-android-avd-x86_64-repack"
 WINDOWS_ARM_ANDROID_AVD = "linux64-android-avd-arm-repack"
@@ -41,6 +42,9 @@ AVD_MANIFEST_X86_64 = os.path.abspath(
 )
 AVD_MANIFEST_ARM = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "android-avds/arm.json")
+)
+AVD_MANIFEST_ARM64 = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "android-avds/arm64.json")
 )
 
 ANDROID_NDK_EXISTS = """
@@ -77,7 +81,7 @@ ac_add_options --enable-application=mobile/android
 # For regular phones, no --target is needed.
 # For x86 emulators (and x86 devices, which are uncommon):
 # ac_add_options --target=i686
-# For newer phones.
+# For newer phones or Apple silicon
 # ac_add_options --target=aarch64
 # For x86_64 emulators (and x86_64 devices, which are even less common):
 # ac_add_options --target=x86_64
@@ -320,6 +324,7 @@ def ensure_dir(dir):
 
 def ensure_android(
     os_name,
+    os_arch,
     artifact_mode=False,
     ndk_only=False,
     system_images_only=False,
@@ -361,6 +366,7 @@ def ensure_android(
     ensure_android_sdk_and_ndk(
         mozbuild_path,
         os_name,
+        os_arch,
         sdk_path=sdk_path,
         sdk_url=sdk_url,
         ndk_path=ndk_path,
@@ -378,10 +384,16 @@ def ensure_android(
     if avd_manifest_path is not None:
         with open(avd_manifest_path) as f:
             avd_manifest = json.load(f)
+        # Some AVDs cannot be prewarmed in CI because they cannot run on linux64
+        # (like the arm64 AVD).
+        if "emulator_prewarm" in avd_manifest:
+            prewarm_avd = prewarm_avd and avd_manifest["emulator_prewarm"]
 
     # We expect the |sdkmanager| tool to be at
     # ~/.mozbuild/android-sdk-$OS_NAME/tools/cmdline-tools/$CMDLINE_TOOLS_VERSION_STRING/bin/sdkmanager. # NOQA: E501
     ensure_android_packages(
+        os_name,
+        os_arch,
         sdkmanager_tool=sdkmanager_tool(sdk_path),
         emulator_only=emulator_only,
         system_images_only=system_images_only,
@@ -409,6 +421,7 @@ def ensure_android(
 def ensure_android_sdk_and_ndk(
     mozbuild_path,
     os_name,
+    os_arch,
     sdk_path,
     sdk_url,
     ndk_path,
@@ -600,6 +613,8 @@ def run_prewarm_avd(
 
 
 def ensure_android_packages(
+    os_name,
+    os_arch,
     sdkmanager_tool,
     emulator_only=False,
     system_images_only=False,
@@ -631,6 +646,9 @@ def ensure_android_packages(
     print(INSTALLING_ANDROID_PACKAGES % "\n".join(packages))
 
     args = [sdkmanager_tool]
+    if os_name == "macosx" and os_arch == "arm64":
+        # Support for Apple Silicon is still in nightly
+        args.append("--channel=3")
     args.extend(packages)
 
     if not no_interactive:
@@ -769,8 +787,10 @@ def main(argv):
             "NDK) on {0} yet!".format(platform.system())
         )
 
+    os_arch = platform.machine()
     ensure_android(
         os_name,
+        os_arch,
         artifact_mode=options.artifact_mode,
         ndk_only=options.ndk_only,
         system_images_only=options.system_images_only,

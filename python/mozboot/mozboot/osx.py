@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import platform
 import subprocess
 import sys
 import tempfile
@@ -162,8 +163,8 @@ class OSXBootstrapper(BaseBootstrapper):
         casks = ["adoptopenjdk8"]
         self._ensure_homebrew_casks(casks)
 
-        is_64bits = sys.maxsize > 2 ** 32
-        if not is_64bits:
+        os_arch = platform.machine()
+        if os_arch != "x86_64" and os_arch != "arm64":
             raise Exception(
                 "You need a 64-bit version of Mac OS X to build "
                 "GeckoView/Firefox for Android."
@@ -176,10 +177,14 @@ class OSXBootstrapper(BaseBootstrapper):
         from mozboot import android
 
         android.ensure_android(
-            "macosx", artifact_mode=artifact_mode, no_interactive=self.no_interactive
+            "macosx",
+            os_arch,
+            artifact_mode=artifact_mode,
+            no_interactive=self.no_interactive,
         )
         android.ensure_android(
             "macosx",
+            os_arch,
             system_images_only=True,
             artifact_mode=artifact_mode,
             no_interactive=self.no_interactive,
@@ -187,6 +192,7 @@ class OSXBootstrapper(BaseBootstrapper):
         )
         android.ensure_android(
             "macosx",
+            os_arch,
             system_images_only=True,
             artifact_mode=artifact_mode,
             no_interactive=self.no_interactive,
