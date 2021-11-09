@@ -683,8 +683,8 @@ function pedanticChecks(report) {
 
         // bytesReceived
         ok(
-          stat.bytesReceived > 5000,
-          `${stat.type}.bytesReceived is a sane number (>5,000) for a short ` +
+          stat.bytesReceived > 500,
+          `${stat.type}.bytesReceived is a sane number (>500) for a short ` +
             `${stat.kind} test. value=${stat.bytesReceived}`
         );
 
