@@ -116,7 +116,7 @@ class WeakRefHeapPtrVector
   using GCVector::GCVector;
 
   // call in compacting, to update the target in each WeakRefObject.
-  void sweep(js::HeapPtrObject& target);
+  void traceWeak(JSTracer* trc, JSObject* target);
 };
 
 // WeakRefMap is a per-zone GCHashMap, which maps from the target of the JS
@@ -128,7 +128,7 @@ class WeakRefMap
   using GCHashMap::GCHashMap;
   using Base = GCHashMap<HeapPtrObject, WeakRefHeapPtrVector,
                          MovableCellHasher<HeapPtrObject>, ZoneAllocPolicy>;
-  void sweep(gc::StoreBuffer* sbToLock);
+  void traceWeak(JSTracer* trc, gc::StoreBuffer* sbToLock);
 };
 
 }  // namespace js
