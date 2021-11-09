@@ -153,7 +153,7 @@ class TRRDNSListener {
       Assert.ok(!this.options.expectEarlyFail);
     } catch (e) {
       Assert.ok(this.options.expectEarlyFail);
-      this.resolve([e]);
+      this.resolve({ error: e });
     }
   }
 
@@ -166,14 +166,14 @@ class TRRDNSListener {
     // If we don't expect success here, just resolve and the caller will
     // decide what to do with the results.
     if (!this.expectedSuccess) {
-      this.resolve([inRequest, inRecord, inStatus]);
+      this.resolve({ inRequest, inRecord, inStatus });
       return;
     }
 
     Assert.equal(inStatus, Cr.NS_OK, "Checking status");
 
     if (this.type != Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT) {
-      this.resolve([inRequest, inRecord, inStatus]);
+      this.resolve({ inRequest, inRecord, inStatus });
       return;
     }
 
@@ -215,7 +215,7 @@ class TRRDNSListener {
       }
     }
 
-    this.resolve([inRequest, inRecord, inStatus]);
+    this.resolve({ inRequest, inRecord, inStatus });
   }
 
   QueryInterface(aIID) {
