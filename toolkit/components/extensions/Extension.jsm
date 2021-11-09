@@ -173,6 +173,10 @@ const PRIVILEGED_PERMS = new Set([
   "networkStatus",
 ]);
 
+if (AppConstants.platform == "android") {
+  PRIVILEGED_PERMS.add("nativeMessaging");
+}
+
 const INSTALL_AND_UPDATE_STARTUP_REASONS = new Set([
   "ADDON_INSTALL",
   "ADDON_UPGRADE",
