@@ -6964,7 +6964,7 @@ void CodeGenerator::visitNewObjectVMCall(LNewObject* lir) {
       pushArg(ImmPtr(lir->mir()->resumePoint()->pc()));
       pushArg(ImmGCPtr(lir->mir()->block()->info().script()));
 
-      using Fn = JSObject* (*)(JSContext*, HandleScript, jsbytecode * pc);
+      using Fn = JSObject* (*)(JSContext*, HandleScript, const jsbytecode * pc);
       callVM<Fn, NewObjectOperation>(lir);
       break;
     }
@@ -15009,7 +15009,7 @@ void CodeGenerator::visitGlobalDeclInstantiation(
   pushArg(ImmPtr(ins->mir()->resumePoint()->pc()));
   pushArg(ImmGCPtr(ins->mir()->block()->info().script()));
 
-  using Fn = bool (*)(JSContext*, HandleScript, jsbytecode*);
+  using Fn = bool (*)(JSContext*, HandleScript, const jsbytecode*);
   callVM<Fn, GlobalDeclInstantiationFromIon>(ins);
 }
 
