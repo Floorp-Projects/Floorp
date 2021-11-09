@@ -41,7 +41,38 @@ RLBoxHunspell::RLBoxHunspell(const nsAutoCString& affpath,
                              const nsAutoCString& dpath)
     : mHandle(nullptr) {
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+
+#if defined(MOZ_WASM_SANDBOXING_HUNSPELL) && !defined(HAVE_64BIT_BUILD)
+  // By default, the rlbox sandbox size is smaller on 32-bit builds than the max
+  // 4GB We may need to ask for a larger sandbox size for hunspell to spellcheck
+  // in some locales See Bug 1739669 for more details
+
+  const uint64_t defaultMaxSizeForSandbox =
+      wasm_rt_get_default_max_linear_memory_size();
+
+  // We first get the size of the dictionary
+  Result<int64_t, nsresult> dictSizeResult =
+      mozHunspellFileMgrHost::GetSize(dpath);
+  MOZ_RELEASE_ASSERT(dictSizeResult.isOk());
+
+  int64_t dictSize = dictSizeResult.unwrap();
+  MOZ_RELEASE_ASSERT(dictSize >= 0);
+
+  // Next, we compute the expected memory needed for hunspell spell checking.
+  // This seems to be about 7x the size of the dictionary (See Bug 1739669)
+  const uint64_t expectedMaxMemory = 7 * dictSize;
+
+  // If we expect a higher memory usage, override the defaults
+  // else stick with the defaults for the sandbox
+  if (expectedMaxMemory > defaultMaxSizeForSandbox) {
+    mSandbox.create_sandbox(true /* abort on creation failure */,
+                            expectedMaxMemory);
+  } else {
+    mSandbox.create_sandbox();
+  }
+#else
   mSandbox.create_sandbox();
+#endif
 
   // Add the aff and dict files to allow list
   if (!affpath.IsEmpty()) {
