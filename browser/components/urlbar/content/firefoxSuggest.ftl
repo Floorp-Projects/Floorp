@@ -28,21 +28,59 @@ addressbar-header-firefox-suggest = Address Bar — { -firefox-suggest-brand-nam
 # the address bar section in the preferences UI.
 addressbar-suggest-firefox-suggest = Choose the type of suggestions that appear in the address bar:
 
-# The main Firefox Suggest checkbox that controls whether Firefox Suggest
-# results in the urlbar are enabled.
-addressbar-locbar-firefox-suggest-option =
-  .label = Contextual suggestions
+# First Firefox Suggest toggle button main label and description. This toggle
+# controls non-sponsored suggestions related to the user's search string.
+addressbar-firefox-suggest-nonsponsored = Suggestions from the web
+addressbar-firefox-suggest-nonsponsored-description = Get suggestions from { -brand-product-name } related to your search.
 
-# "Learn more" link text for the main Firefox Suggest checkbox.
+# Second Firefox Suggest toggle button main label and description. This toggle
+# controls sponsored suggestions related to the user's search string.
+addressbar-firefox-suggest-sponsored = Sponsored suggestions
+addressbar-firefox-suggest-sponsored-description = Occasionally include sponsored suggestions. These support the continuing development of { -brand-short-name }.
+
+# Third Firefox Suggest toggle button main label and description. This toggle
+# controls data collection related to the user's search string.
+addressbar-firefox-suggest-data-collection = Make { -firefox-suggest-brand-name } better
+addressbar-firefox-suggest-data-collection-description = Allow { -vendor-short-name } to process your search queries to improve the feature, and provide richer suggestions.
+
+# The "Learn more" link shown in the Firefox Suggest info box.
 addressbar-locbar-firefox-suggest-learn-more = Learn more
 
-# The informational description under the main Firefox Suggest checkbox.
-addressbar-locbar-firefox-suggest-description = { -brand-short-name } will have access to your location, search queries, and visited sites.
+## The following addressbar-firefox-suggest-info strings are shown in the
+## Firefox Suggest preferences UI in the info box underneath the toggle buttons.
+## Each string is shown when a particular toggle combination is active.
 
-# The checkbox that controls whether sponsored Firefox Suggest results in the
-# urlbar are enabled.
-addressbar-locbar-firefox-suggest-sponsored-option =
-  .label = Include occasional sponsored suggestions
+# Non-sponsored suggestions: on
+# Sponsored suggestions: on
+# Data collection: on
+addressbar-firefox-suggest-info-all = Based on your selection, you’ll receive suggestions from the web, including sponsored sites. { -vendor-short-name } will process your search query data to develop the { -firefox-suggest-brand-name } feature.
 
-# The informational description under the sponsored Firefox Suggest checkbox.
-addressbar-locbar-firefox-suggest-sponsored-description = Helps fund { -brand-short-name } development and optimization.
+# Non-sponsored suggestions: on
+# Sponsored suggestions: on
+# Data collection: off
+addressbar-firefox-suggest-info-nonsponsored-sponsored = Based on your selection, you’ll receive suggestions from the web, including sponsored sites. Your search query data won’t be processed.
+
+# Non-sponsored suggestions: on
+# Sponsored suggestions: off
+# Data collection: on
+addressbar-firefox-suggest-info-nonsponsored-data = Based on your selection, you’ll receive suggestions from the web, but no sponsored sites. { -vendor-short-name } will process your search query data to develop the { -firefox-suggest-brand-name } feature.
+
+# Non-sponsored suggestions: on
+# Sponsored suggestions: off
+# Data collection: off
+addressbar-firefox-suggest-info-nonsponsored = Based on your selection, you’ll receive suggestions from the web, but no sponsored sites. Your search query data won’t be processed.
+
+# Non-sponsored suggestions: off
+# Sponsored suggestions: on
+# Data collection: on
+addressbar-firefox-suggest-info-sponsored-data = Based on your selection, you’ll receive sponsored suggestions. { -vendor-short-name } will process your search query data to develop the { -firefox-suggest-brand-name } feature.
+
+# Non-sponsored suggestions: off
+# Sponsored suggestions: on
+# Data collection: off
+addressbar-firefox-suggest-info-sponsored = Based on your selection, you’ll receive sponsored suggestions. { -vendor-short-name } will not process your search query data to develop the { -firefox-suggest-brand-name } feature.
+
+# Non-sponsored suggestions: off
+# Sponsored suggestions: off
+# Data collection: on
+addressbar-firefox-suggest-info-data = Based on your selection, you won’t receive suggestions from the web or sponsored sites. { -vendor-short-name } will process your search query data to develop the { -firefox-suggest-brand-name } feature.

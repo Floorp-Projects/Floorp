@@ -322,3 +322,61 @@
 #submitHealthReportBox {
   display: -moz-inline-box;
 }
+
+/* Address bar */
+
+.firefoxSuggestOptionBox {
+  /* With this value we're trying to keep the apparent vertical space between
+     option boxes the same as the apparent vertical space between the labels of
+     the checkboxes above the Firefox Suggest subsection. */
+  margin-block-start: 11px;
+}
+
+.firefoxSuggestOptionBox:first-child {
+  /* Similar here: Make the apparent vertical space between the last checkbox
+     and first option box the same as elsewhere. */
+  margin-block-start: 5px;
+}
+
+.firefoxSuggestToggle {
+  /* These variables and comments are copied from and override
+     toggle-button.css. We include values for all variables, even those that are
+     the same at the time this comment was written, for sanity and locality of
+     reference. */
+  --button-height: 16px !important;
+  --button-half-height: 8px !important;
+  --button-width: 32px !important;
+  --button-border-width: 1px !important;
+  /* dot-size = button-height - 2*dot-margin - 2*button-border-width */
+  --dot-size: 14px !important;
+  --dot-margin: 0px !important;
+  /* --dot-transform-x = button-width - 2*dot-margin - dot-size - 2*button-border-width */
+  --dot-transform-x: 16px !important;
+}
+
+.firefoxSuggestOptionDescription {
+  /* Prevent the description from flowing under the toggle button.
+     32px = toggle button width
+     1em = a little extra */
+  padding-inline-end: calc(32px + 1em);
+  color: var(--in-content-deemphasized-text);
+}
+
+#firefoxSuggestInfoBox {
+  margin-block-start: 16px;
+  padding: 12px;
+}
+
+#firefoxSuggestInfoBox > description {
+  margin-inline-start: 2px;
+  margin-block: 2px;
+}
+
+#openSearchEnginePreferences {
+  margin-block-start: 6px;
+  line-height: 30px;
+}
+
+#openSearchEnginePreferences.extraMargin {
+  margin-block-start: 24px;
+}
