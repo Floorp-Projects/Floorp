@@ -33,9 +33,9 @@ AutoTransportDescriptor::~AutoTransportDescriptor() {
 }
 
 Result<std::pair<AutoTransportDescriptor, AutoTransportDescriptor>, nsresult>
-AutoTransportDescriptor::Create(int32_t aProcIdOne) {
+AutoTransportDescriptor::Create() {
   TransportDescriptor one, two;
-  MOZ_TRY(CreateTransport(aProcIdOne, &one, &two));
+  MOZ_TRY(CreateTransport(&one, &two));
   return std::pair{AutoTransportDescriptor(one), AutoTransportDescriptor(two)};
 }
 
