@@ -829,6 +829,15 @@ static bool IsElementEscaped(MDefinition* def, MInstruction* newArray,
         }
         break;
 
+      case MDefinition::Opcode::ConstructArray:
+        MOZ_ASSERT(access->toConstructArray()->getElements() == def);
+        if (!IsPackedArray(newArray)) {
+          JitSpewDef(JitSpew_Escape, "is not guaranteed to be packed\n",
+                     access);
+          return true;
+        }
+        break;
+
       default:
         JitSpewDef(JitSpew_Escape, "is escaped by\n", access);
         return true;
@@ -1030,6 +1039,7 @@ class ArrayMemoryView : public MDefinitionVisitorDefaultNoop {
   void visitGuardArrayIsPacked(MGuardArrayIsPacked* ins);
   void visitUnbox(MUnbox* ins);
   void visitApplyArray(MApplyArray* ins);
+  void visitConstructArray(MConstructArray* ins);
 };
 
 const char* ArrayMemoryView::phaseName = "Scalar Replacement of Array";
@@ -1406,6 +1416,48 @@ void ArrayMemoryView::visitApplyArray(MApplyArray* ins) {
   auto addUndefined = [this]() { return undefinedVal_; };
 
   bool needsThisCheck = false;
+  bool isDOMCall = false;
+  auto* call = MakeCall(alloc_, addUndefined, callInfo, needsThisCheck,
+                        ins->getSingleTarget(), isDOMCall);
+  if (!ins->maybeCrossRealm()) {
+    call->setNotCrossRealm();
+  }
+
+  ins->block()->insertBefore(ins, call);
+  ins->replaceAllUsesWith(call);
+
+  call->stealResumePoint(ins);
+
+  // Remove original instruction.
+  discardInstruction(ins, elements);
+}
+
+void ArrayMemoryView::visitConstructArray(MConstructArray* ins) {
+  // Skip other array objects.
+  MDefinition* elements = ins->getElements();
+  if (!isArrayStateElements(elements)) {
+    return;
+  }
+
+  uint32_t numElements = state_->numElements();
+
+  CallInfo callInfo(alloc_, /*constructing=*/true, ins->ignoresReturnValue());
+  if (!callInfo.initForConstructArray(ins->getFunction(), ins->getThis(),
+                                      ins->getNewTarget(), numElements)) {
+    oom_ = true;
+    return;
+  }
+
+  for (uint32_t i = 0; i < numElements; i++) {
+    auto* element = state_->getElement(i);
+    MOZ_ASSERT(element->type() != MIRType::MagicHole);
+
+    callInfo.initArg(i, element);
+  }
+
+  auto addUndefined = [this]() { return undefinedVal_; };
+
+  bool needsThisCheck = true;
   bool isDOMCall = false;
   auto* call = MakeCall(alloc_, addUndefined, callInfo, needsThisCheck,
                         ins->getSingleTarget(), isDOMCall);

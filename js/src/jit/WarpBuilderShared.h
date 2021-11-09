@@ -148,6 +148,20 @@ class MOZ_STACK_CLASS CallInfo {
     return args_.reserve(numActuals);
   }
 
+  [[nodiscard]] bool initForConstructArray(MDefinition* callee,
+                                           MDefinition* thisVal,
+                                           MDefinition* newTarget,
+                                           uint32_t numActuals) {
+    MOZ_ASSERT(args_.empty());
+    MOZ_ASSERT(constructing_);
+
+    setCallee(callee);
+    setThis(thisVal);
+    setNewTarget(newTarget);
+
+    return args_.reserve(numActuals);
+  }
+
   void popCallStack(MBasicBlock* current) { current->popn(numFormals()); }
 
   [[nodiscard]] bool pushCallStack(MBasicBlock* current) {
