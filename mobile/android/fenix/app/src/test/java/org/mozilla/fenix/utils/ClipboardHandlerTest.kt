@@ -52,18 +52,18 @@ class ClipboardHandlerTest {
 
     @Test
     fun getUrl() {
-        assertEquals(null, clipboardHandler.url)
+        assertEquals(null, clipboardHandler.extractURL())
 
         clipboard.setPrimaryClip(ClipData.newPlainText("Text", clipboardUrl))
-        assertEquals(clipboardUrl, clipboardHandler.url)
+        assertEquals(clipboardUrl, clipboardHandler.extractURL())
     }
 
     @Test
     fun getUrlfromTextUrlMIME() {
-        assertEquals(null, clipboardHandler.url)
+        assertEquals(null, clipboardHandler.extractURL())
 
         clipboard.setPrimaryClip(ClipData.newHtmlText("Html", clipboardUrl, clipboardUrl))
-        assertEquals(clipboardUrl, clipboardHandler.url)
+        assertEquals(clipboardUrl, clipboardHandler.extractURL())
     }
 
     @Test

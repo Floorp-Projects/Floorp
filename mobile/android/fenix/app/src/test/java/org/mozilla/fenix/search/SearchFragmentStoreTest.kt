@@ -203,16 +203,13 @@ class SearchFragmentStoreTest {
         val initialState = emptyDefaultState()
         val store = SearchFragmentStore(initialState)
 
-        assertNull(store.state.clipboardUrl)
+        assertFalse(store.state.clipboardHasUrl)
 
         store.dispatch(
-            SearchFragmentAction.UpdateClipboardUrl("https://www.mozilla.org")
+            SearchFragmentAction.UpdateClipboardHasUrl(true)
         ).joinBlocking()
 
-        assertEquals(
-            "https://www.mozilla.org",
-            store.state.clipboardUrl
-        )
+        assertTrue(store.state.clipboardHasUrl)
     }
 
     @Test

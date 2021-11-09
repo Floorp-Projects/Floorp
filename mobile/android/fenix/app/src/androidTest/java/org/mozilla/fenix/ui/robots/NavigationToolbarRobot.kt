@@ -7,6 +7,7 @@
 package org.mozilla.fenix.ui.robots
 
 import android.net.Uri
+import android.os.Build
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.IdlingRegistry
@@ -162,10 +163,15 @@ class NavigationToolbarRobot {
                 waitingTime
             )
 
-            mDevice.waitNotNull(
-                Until.findObject(By.res("org.mozilla.fenix.debug:id/clipboard_url")),
-                waitingTime
-            )
+            // On Android 12 or above we don't SHOW the URL unless the user requests to do so.
+            // See for mor information https://github.com/mozilla-mobile/fenix/issues/22271
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                mDevice.waitNotNull(
+                    Until.findObject(By.res("org.mozilla.fenix.debug:id/clipboard_url")),
+                    waitingTime
+                )
+            }
+
             fillLinkButton().click()
 
             BrowserRobot().interact()

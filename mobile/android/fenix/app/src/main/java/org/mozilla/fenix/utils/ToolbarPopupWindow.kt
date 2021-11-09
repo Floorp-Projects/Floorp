@@ -34,7 +34,7 @@ object ToolbarPopupWindow {
     ) {
         val context = view.get()?.context ?: return
         val clipboard = context.components.clipboardHandler
-        if (!copyVisible && clipboard.text.isNullOrEmpty()) return
+        if (!copyVisible && !clipboard.containsURL()) return
 
         val isCustomTabSession = customTabId != null
 
@@ -54,9 +54,9 @@ object ToolbarPopupWindow {
 
         binding.copy.isVisible = copyVisible
 
-        binding.paste.isVisible = !clipboard.text.isNullOrEmpty() && !isCustomTabSession
+        binding.paste.isVisible = clipboard.containsURL() && !isCustomTabSession
         binding.pasteAndGo.isVisible =
-            !clipboard.text.isNullOrEmpty() && !isCustomTabSession
+            clipboard.containsURL() && !isCustomTabSession
 
         binding.copy.setOnClickListener {
             popupWindow.dismiss()

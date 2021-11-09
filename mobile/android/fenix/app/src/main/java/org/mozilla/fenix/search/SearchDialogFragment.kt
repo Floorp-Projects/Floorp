@@ -288,14 +288,22 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
         binding.fillLinkFromClipboard.setOnClickListener {
             requireComponents.analytics.metrics.track(Event.ClipboardSuggestionClicked)
-            view.hideKeyboard()
-            toolbarView.view.clearFocus()
-            (activity as HomeActivity)
-                .openToBrowserAndLoad(
-                    searchTermOrURL = requireContext().components.clipboardHandler.url ?: "",
-                    newTab = store.state.tabId == null,
-                    from = BrowserDirection.FromSearchDialog
-                )
+            val clipboardUrl = requireContext().components.clipboardHandler.extractURL() ?: ""
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                toolbarView.view.edit.updateUrl(clipboardUrl)
+                hideClipboardSection()
+                inlineAutocompleteEditText.setSelection(clipboardUrl.length)
+            } else {
+                view.hideKeyboard()
+                toolbarView.view.clearFocus()
+                (activity as HomeActivity)
+                    .openToBrowserAndLoad(
+                        searchTermOrURL = clipboardUrl,
+                        newTab = store.state.tabId == null,
+                        from = BrowserDirection.FromSearchDialog
+                    )
+            }
         }
 
         val stubListener = ViewStub.OnInflateListener { _, inflated ->
@@ -356,6 +364,15 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         }
     }
 
+    private fun hideClipboardSection() {
+        binding.fillLinkFromClipboard.isVisible = false
+        binding.fillLinkDivider.isVisible = false
+        binding.pillWrapperDivider.isVisible = false
+        binding.clipboardUrl.isVisible = false
+        binding.clipboardTitle.isVisible = false
+        binding.linkIcon.isVisible = false
+    }
+
     private fun observeSuggestionProvidersState() = consumeFlow(store) { flow ->
         flow.map { state -> state.toSearchProviderState() }
             .ifChanged()
@@ -389,12 +406,12 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         flow.map { state ->
             val shouldShowView = state.showClipboardSuggestions &&
                 state.query.isEmpty() &&
-                !state.clipboardUrl.isNullOrEmpty() && !state.showSearchShortcuts
-            Pair(shouldShowView, state.clipboardUrl)
+                state.clipboardHasUrl && !state.showSearchShortcuts
+            Pair(shouldShowView, state.clipboardHasUrl)
         }
             .ifChanged()
-            .collect { (shouldShowView, clipboardUrl) ->
-                updateClipboardSuggestion(shouldShowView, clipboardUrl)
+            .collect { (shouldShowView) ->
+                updateClipboardSuggestion(shouldShowView)
             }
     }
 
@@ -418,9 +435,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
             // We delay querying the clipboard by posting this code to the main thread message queue,
             // because ClipboardManager will return null if the does app not have input focus yet.
             lifecycleScope.launch(Dispatchers.Cached) {
-                context?.components?.clipboardHandler?.url?.let { clipboardUrl ->
-                    store.dispatch(SearchFragmentAction.UpdateClipboardUrl(clipboardUrl))
-                }
+                val hasUrl = context?.components?.clipboardHandler?.containsURL() ?: false
+                store.dispatch(SearchFragmentAction.UpdateClipboardHasUrl(hasUrl))
             }
         }
     }
@@ -655,25 +671,29 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
     private fun isSpeechAvailable(): Boolean = speechIntent.resolveActivity(requireContext().packageManager) != null
 
     private fun updateClipboardSuggestion(
-        shouldShowView: Boolean,
-        clipboardUrl: String?
+        shouldShowView: Boolean
     ) {
         binding.fillLinkFromClipboard.isVisible = shouldShowView
         binding.fillLinkDivider.isVisible = shouldShowView
         binding.pillWrapperDivider.isVisible =
             !(shouldShowView && requireComponents.settings.shouldUseBottomToolbar)
-        binding.clipboardUrl.isVisible = shouldShowView
         binding.clipboardTitle.isVisible = shouldShowView
         binding.linkIcon.isVisible = shouldShowView
 
-        binding.clipboardUrl.text = clipboardUrl
+        val contentDescription = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            "${binding.clipboardTitle.text}."
+        } else {
+            val clipboardUrl = context?.components?.clipboardHandler?.extractURL()
 
-        binding.fillLinkFromClipboard.contentDescription =
+            if (clipboardUrl != null && !((activity as HomeActivity).browsingModeManager.mode.isPrivate)) {
+                requireComponents.core.engine.speculativeConnect(clipboardUrl)
+            }
+            binding.clipboardUrl.text = clipboardUrl
+            binding.clipboardUrl.isVisible = shouldShowView
             "${binding.clipboardTitle.text}, ${binding.clipboardUrl.text}."
-
-        if (clipboardUrl != null && !((activity as HomeActivity).browsingModeManager.mode.isPrivate)) {
-            requireComponents.core.engine.speculativeConnect(clipboardUrl)
         }
+
+        binding.fillLinkFromClipboard.contentDescription = contentDescription
     }
 
     private fun updateToolbarContentDescription(source: SearchEngineSource) {
