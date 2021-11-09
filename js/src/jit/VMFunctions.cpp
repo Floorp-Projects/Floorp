@@ -93,93 +93,6 @@ struct TypeToArgProperties<const Value&> {
       TypeToArgProperties<Value>::result | VMFunctionData::ByRef;
 };
 template <>
-struct TypeToArgProperties<HandleObject> {
-  static const uint32_t result =
-      TypeToArgProperties<JSObject*>::result | VMFunctionData::ByRef;
-};
-template <>
-struct TypeToArgProperties<HandleString> {
-  static const uint32_t result =
-      TypeToArgProperties<JSString*>::result | VMFunctionData::ByRef;
-};
-template <>
-struct TypeToArgProperties<HandleAtom> {
-  static const uint32_t result =
-      TypeToArgProperties<JSAtom*>::result | VMFunctionData::ByRef;
-};
-template <>
-struct TypeToArgProperties<HandlePropertyName> {
-  static const uint32_t result =
-      TypeToArgProperties<PropertyName*>::result | VMFunctionData::ByRef;
-};
-template <>
-struct TypeToArgProperties<HandleFunction> {
-  static const uint32_t result =
-      TypeToArgProperties<JSFunction*>::result | VMFunctionData::ByRef;
-};
-template <>
-struct TypeToArgProperties<Handle<NativeObject*> > {
-  static const uint32_t result =
-      TypeToArgProperties<NativeObject*>::result | VMFunctionData::ByRef;
-};
-template <>
-struct TypeToArgProperties<Handle<InlineTypedObject*> > {
-  static const uint32_t result =
-      TypeToArgProperties<InlineTypedObject*>::result | VMFunctionData::ByRef;
-};
-template <>
-struct TypeToArgProperties<Handle<ArrayObject*> > {
-  static const uint32_t result =
-      TypeToArgProperties<ArrayObject*>::result | VMFunctionData::ByRef;
-};
-template <>
-struct TypeToArgProperties<Handle<AbstractGeneratorObject*> > {
-  static const uint32_t result =
-      TypeToArgProperties<AbstractGeneratorObject*>::result |
-      VMFunctionData::ByRef;
-};
-template <>
-struct TypeToArgProperties<Handle<AsyncFunctionGeneratorObject*> > {
-  static const uint32_t result =
-      TypeToArgProperties<AsyncFunctionGeneratorObject*>::result |
-      VMFunctionData::ByRef;
-};
-template <>
-struct TypeToArgProperties<Handle<PlainObject*> > {
-  static const uint32_t result =
-      TypeToArgProperties<PlainObject*>::result | VMFunctionData::ByRef;
-};
-template <>
-struct TypeToArgProperties<Handle<RegExpObject*> > {
-  static const uint32_t result =
-      TypeToArgProperties<RegExpObject*>::result | VMFunctionData::ByRef;
-};
-template <>
-struct TypeToArgProperties<Handle<WithScope*> > {
-  static const uint32_t result =
-      TypeToArgProperties<WithScope*>::result | VMFunctionData::ByRef;
-};
-template <>
-struct TypeToArgProperties<Handle<LexicalScope*> > {
-  static const uint32_t result =
-      TypeToArgProperties<LexicalScope*>::result | VMFunctionData::ByRef;
-};
-template <>
-struct TypeToArgProperties<Handle<ClassBodyScope*> > {
-  static const uint32_t result =
-      TypeToArgProperties<ClassBodyScope*>::result | VMFunctionData::ByRef;
-};
-template <>
-struct TypeToArgProperties<Handle<Scope*> > {
-  static const uint32_t result =
-      TypeToArgProperties<Scope*>::result | VMFunctionData::ByRef;
-};
-template <>
-struct TypeToArgProperties<HandleScript> {
-  static const uint32_t result =
-      TypeToArgProperties<JSScript*>::result | VMFunctionData::ByRef;
-};
-template <>
 struct TypeToArgProperties<HandleValue> {
   static const uint32_t result =
       TypeToArgProperties<Value>::result | VMFunctionData::ByRef;
@@ -194,15 +107,17 @@ struct TypeToArgProperties<HandleId> {
   static const uint32_t result =
       TypeToArgProperties<jsid>::result | VMFunctionData::ByRef;
 };
-template <>
-struct TypeToArgProperties<HandleShape> {
+template <class T>
+struct TypeToArgProperties<Handle<T*>> {
+  // Assume by default that any pointer handle types are cells.
+  static_assert(std::is_base_of_v<gc::Cell, T>);
+
   static const uint32_t result =
-      TypeToArgProperties<Shape*>::result | VMFunctionData::ByRef;
+      TypeToArgProperties<T*>::result | VMFunctionData::ByRef;
 };
-template <>
-struct TypeToArgProperties<HandleBigInt> {
-  static const uint32_t result =
-      TypeToArgProperties<BigInt*>::result | VMFunctionData::ByRef;
+template <class T>
+struct TypeToArgProperties<Handle<T>> {
+  // Fail for Handle types that aren't specialized above.
 };
 
 // Convert argument type to whether or not it should be passed in a float
