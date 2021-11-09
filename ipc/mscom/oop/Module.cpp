@@ -62,14 +62,11 @@ static const Range<const wchar_t> ThreadingModelAsString(
 /* static */
 HRESULT Module::Register(const CLSID* const* aClsids, const size_t aNumClsids,
                          const ThreadingModel aThreadingModel,
-                         const ClassType aClassType, const GUID* const aAppId,
-                         const bool aMsixContainer) {
+                         const ClassType aClassType, const GUID* const aAppId) {
   MOZ_ASSERT(aClsids && aNumClsids);
   if (!aClsids || !aNumClsids) {
     return E_INVALIDARG;
   }
-  MOZ_ASSERT(!aAppId || !aMsixContainer,
-             "aAppId isn't valid in an MSIX container");
 
   const wchar_t* inprocName = SubkeyNameFromClassType(aClassType);
 
@@ -102,23 +99,19 @@ HRESULT Module::Register(const CLSID* const* aClsids, const size_t aNumClsids,
   const DWORD actualPathLenBytesInclNul =
       (actualPathLenCharsExclNul + 1) * sizeof(wchar_t);
 
-  nsAutoHandle txn;
-  // RegCreateKeyTransacted doesn't work in MSIX containers.
-  if (!aMsixContainer) {
-    // Use the name of this DLL as the name of the transaction
-    wchar_t txnName[_MAX_FNAME] = {};
-    if (_wsplitpath_s(absThisModulePath, nullptr, 0, nullptr, 0, txnName,
-                      ArrayLength(txnName), nullptr, 0)) {
-      return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
-    }
+  // Use the name of this DLL as the name of the transaction
+  wchar_t txnName[_MAX_FNAME] = {};
+  if (_wsplitpath_s(absThisModulePath, nullptr, 0, nullptr, 0, txnName,
+                    ArrayLength(txnName), nullptr, 0)) {
+    return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
+  }
 
-    // Manipulate the registry using a transaction so that any failures are
-    // rolled back.
-    txn.own(::CreateTransaction(nullptr, nullptr, TRANSACTION_DO_NOT_PROMOTE, 0,
-                                0, 0, txnName));
-    if (txn.get() == INVALID_HANDLE_VALUE) {
-      return HRESULT_FROM_WIN32(::GetLastError());
-    }
+  // Manipulate the registry using a transaction so that any failures are
+  // rolled back.
+  nsAutoHandle txn(::CreateTransaction(
+      nullptr, nullptr, TRANSACTION_DO_NOT_PROMOTE, 0, 0, 0, txnName));
+  if (txn.get() == INVALID_HANDLE_VALUE) {
+    return HRESULT_FROM_WIN32(::GetLastError());
   }
 
   HRESULT hr;
@@ -140,18 +133,9 @@ HRESULT Module::Register(const CLSID* const* aClsids, const size_t aNumClsids,
 
     // Create the CLSID key
     HKEY rawClsidKey;
-    // Subtle: If aMsixContainer is true, as well as calling a different
-    // function, we also use HKEY_CURRENT_USER. When false, we use
-    // HKEY_LOCAL_MACHINE.
-    if (aMsixContainer) {
-      status = ::RegCreateKeyExW(HKEY_CURRENT_USER, clsidKeyPath, 0, nullptr,
-                                 REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
-                                 nullptr, &rawClsidKey, nullptr);
-    } else {
-      status = ::RegCreateKeyTransactedW(
-          HKEY_LOCAL_MACHINE, clsidKeyPath, 0, nullptr, REG_OPTION_NON_VOLATILE,
-          KEY_ALL_ACCESS, nullptr, &rawClsidKey, nullptr, txn, nullptr);
-    }
+    status = ::RegCreateKeyTransactedW(
+        HKEY_LOCAL_MACHINE, clsidKeyPath, 0, nullptr, REG_OPTION_NON_VOLATILE,
+        KEY_ALL_ACCESS, nullptr, &rawClsidKey, nullptr, txn, nullptr);
     if (status != ERROR_SUCCESS) {
       return HRESULT_FROM_WIN32(status);
     }
@@ -168,15 +152,9 @@ HRESULT Module::Register(const CLSID* const* aClsids, const size_t aNumClsids,
     }
 
     HKEY rawInprocKey;
-    if (aMsixContainer) {
-      status = ::RegCreateKeyExW(clsidKey, inprocName, 0, nullptr,
-                                 REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS,
-                                 nullptr, &rawInprocKey, nullptr);
-    } else {
-      status = ::RegCreateKeyTransactedW(
-          clsidKey, inprocName, 0, nullptr, REG_OPTION_NON_VOLATILE,
-          KEY_ALL_ACCESS, nullptr, &rawInprocKey, nullptr, txn, nullptr);
-    }
+    status = ::RegCreateKeyTransactedW(
+        clsidKey, inprocName, 0, nullptr, REG_OPTION_NON_VOLATILE,
+        KEY_ALL_ACCESS, nullptr, &rawInprocKey, nullptr, txn, nullptr);
     if (status != ERROR_SUCCESS) {
       return HRESULT_FROM_WIN32(status);
     }
@@ -226,10 +204,8 @@ HRESULT Module::Register(const CLSID* const* aClsids, const size_t aNumClsids,
     }
   }
 
-  if (!aMsixContainer) {
-    if (!::CommitTransaction(txn)) {
-      return HRESULT_FROM_WIN32(::GetLastError());
-    }
+  if (!::CommitTransaction(txn)) {
+    return HRESULT_FROM_WIN32(::GetLastError());
   }
 
   return S_OK;

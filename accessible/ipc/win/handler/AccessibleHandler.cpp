@@ -2139,8 +2139,3 @@ extern "C" HRESULT __stdcall DllUnregisterServer() {
 
   return ProxyDllUnregisterServer();
 }
-
-extern "C" HRESULT __stdcall RegisterMsix() {
-  return mozilla::mscom::Handler::Register(CLSID_AccessibleHandler,
-                                           /* aMsixContainer */ true);
-}
