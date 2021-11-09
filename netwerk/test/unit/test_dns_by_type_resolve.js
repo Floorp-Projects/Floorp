@@ -39,7 +39,7 @@ add_task(async function testTXTResolve() {
     "https://foo.example.com:" + h2Port + "/doh"
   );
 
-  let [, inRecord] = await new TRRDNSListener("_esni.example.com", {
+  let { inRecord } = await new TRRDNSListener("_esni.example.com", {
     type: dns.RESOLVE_TYPE_TXT,
   });
 
@@ -55,7 +55,7 @@ add_task(async function testTXTRecordPushPart1() {
     "network.trr.uri",
     "https://foo.example.com:" + h2Port + "/txt-dns-push"
   );
-  let [, inRecord] = await new TRRDNSListener("_esni_push.example.com", {
+  let { inRecord } = await new TRRDNSListener("_esni_push.example.com", {
     type: dns.RESOLVE_TYPE_DEFAULT,
     expectedAnswer: "127.0.0.1",
   });
@@ -73,7 +73,7 @@ add_task(async function testTXTRecordPushPart2() {
     "network.trr.uri",
     "https://foo.example.com:" + h2Port + "/404"
   );
-  let [, inRecord] = await new TRRDNSListener("_esni_push.example.com", {
+  let { inRecord } = await new TRRDNSListener("_esni_push.example.com", {
     type: dns.RESOLVE_TYPE_TXT,
   });
 

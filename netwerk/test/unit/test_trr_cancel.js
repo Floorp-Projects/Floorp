@@ -63,7 +63,7 @@ add_task(async function cancel_immediately() {
   let r1 = new TRRDNSListener("example.org", { expectedSuccess: false });
   let r2 = new TRRDNSListener("example.org", { expectedAnswer: "2.3.4.5" });
   r1.cancel();
-  let [, , inStatus] = await r1;
+  let { inStatus } = await r1;
   equal(inStatus, Cr.NS_ERROR_ABORT);
   await r2;
   equal(await trrServer.requestCount("example.org", "A"), 1);
@@ -74,9 +74,9 @@ add_task(async function cancel_immediately() {
   r2 = new TRRDNSListener("example.org", { expectedSuccess: false });
   r1.cancel();
   r2.cancel();
-  [, , inStatus] = await r1;
+  ({ inStatus } = await r1);
   equal(inStatus, Cr.NS_ERROR_ABORT);
-  [, , inStatus] = await r2;
+  ({ inStatus } = await r2);
   equal(inStatus, Cr.NS_ERROR_ABORT);
   await new Promise(resolve => do_timeout(50, resolve));
   equal(await trrServer.requestCount("example.org", "A"), 2);
@@ -100,7 +100,7 @@ add_task(async function cancel_delayed() {
   let r2 = new TRRDNSListener("example.com", { expectedAnswer: "1.1.1.1" });
   await new Promise(resolve => do_timeout(50, resolve));
   r1.cancel();
-  let [, , inStatus] = await r1;
+  let { inStatus } = await r1;
   equal(inStatus, Cr.NS_ERROR_ABORT);
   await r2;
 });

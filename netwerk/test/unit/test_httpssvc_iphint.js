@@ -80,7 +80,7 @@ add_task(async function testStoreIPHint() {
     ],
   });
 
-  let [, inRecord] = await new TRRDNSListener("test.IPHint.com", {
+  let { inRecord } = await new TRRDNSListener("test.IPHint.com", {
     type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   });
 
@@ -124,7 +124,7 @@ add_task(async function testStoreIPHint() {
   );
 
   async function verifyAnswer(flags, answer) {
-    let [, inRecord] = await new TRRDNSListener("test.IPHint.com", {
+    let { inRecord } = await new TRRDNSListener("test.IPHint.com", {
       flags,
       expectedSuccess: false,
     });
@@ -186,7 +186,7 @@ add_task(async function testConnectionWithIPHint() {
   );
 
   // Resolving test.iphint.com should be failed.
-  let [, , inStatus] = await new TRRDNSListener("test.iphint.com", {
+  let { inStatus } = await new TRRDNSListener("test.iphint.com", {
     expectedSuccess: false,
   });
   Assert.equal(
@@ -265,7 +265,7 @@ add_task(async function testIPHintWithFreshDNS() {
     ],
   });
 
-  let [, inRecord] = await new TRRDNSListener("test.iphint.org", {
+  let { inRecord } = await new TRRDNSListener("test.iphint.org", {
     type: dns.RESOLVE_TYPE_HTTPSSVC,
   });
 
