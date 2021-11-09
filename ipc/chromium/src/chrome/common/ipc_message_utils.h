@@ -393,9 +393,6 @@ struct ParamTraitsIPC : ParamTraitsWindows<P> {};
 //
 // A UniqueFileHandle may only be read once. After it has been read once, it
 // will be consumed, and future reads will return an invalid handle.
-//
-// XXX: This is currently only implemented on POSIX, and will not work on
-// windows yet!
 template <>
 struct ParamTraitsIPC<mozilla::UniqueFileHandle> {
   typedef mozilla::UniqueFileHandle param_type;
