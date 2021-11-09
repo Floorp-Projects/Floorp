@@ -9,11 +9,13 @@ TEST_DIRS += ["gtest"]
 EXPORTS.mozilla.intl += [
     "LineBreaker.h",
     "nsComplexBreaker.h",
+    "Segmenter.h",
     "WordBreaker.h",
 ]
 
 UNIFIED_SOURCES += [
     "LineBreaker.cpp",
+    "Segmenter.cpp",
     "WordBreaker.cpp",
 ]
 
@@ -37,8 +39,6 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
 else:
     SOURCES += [
         "nsRuleBreaker.cpp",
-    ]
-    SOURCES += [
         "rulebrk.c",
     ]
 
