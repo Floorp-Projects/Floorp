@@ -702,7 +702,21 @@ void DocAccessible::AttributeWillChange(dom::Element* aElement,
   }
 
   if (aAttribute == nsGkAtoms::id) {
+    if (accessible->IsActiveDescendant()) {
+      RefPtr<AccEvent> event =
+          new AccStateChangeEvent(accessible, states::ACTIVE, false);
+      FireDelayedEvent(event);
+    }
+
     RelocateARIAOwnedIfNeeded(aElement);
+  }
+
+  if (aAttribute == nsGkAtoms::aria_activedescendant) {
+    if (LocalAccessible* activeDescendant = accessible->CurrentItem()) {
+      RefPtr<AccEvent> event =
+          new AccStateChangeEvent(activeDescendant, states::ACTIVE, false);
+      FireDelayedEvent(event);
+    }
   }
 
   // If attribute affects accessible's state, store the old state so we can
@@ -770,7 +784,7 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
   if (aAttribute == nsGkAtoms::id) {
     dom::Element* elm = accessible->Elm();
     RelocateARIAOwnedIfNeeded(elm);
-    ARIAActiveDescendantIDMaybeMoved(elm);
+    ARIAActiveDescendantIDMaybeMoved(accessible);
     accessible->SendCache(CacheDomain::DOMNodeID, CacheUpdateType::Update);
   }
 
@@ -802,22 +816,25 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
 }
 
 void DocAccessible::ARIAActiveDescendantChanged(LocalAccessible* aAccessible) {
-  nsIContent* elm = aAccessible->GetContent();
-  if (elm && elm->IsElement() && aAccessible->IsActiveWidget()) {
+  if (dom::Element* elm = aAccessible->Elm()) {
     nsAutoString id;
-    if (elm->AsElement()->GetAttr(kNameSpaceID_None,
-                                  nsGkAtoms::aria_activedescendant, id)) {
+    if (elm->GetAttr(kNameSpaceID_None, nsGkAtoms::aria_activedescendant, id)) {
       dom::Element* activeDescendantElm = IDRefsIterator::GetElem(elm, id);
       if (activeDescendantElm) {
         LocalAccessible* activeDescendant = GetAccessible(activeDescendantElm);
         if (activeDescendant) {
-          FocusMgr()->ActiveItemChanged(activeDescendant, false);
+          RefPtr<AccEvent> event =
+              new AccStateChangeEvent(activeDescendant, states::ACTIVE, true);
+          FireDelayedEvent(event);
+          if (aAccessible->IsActiveWidget()) {
+            FocusMgr()->ActiveItemChanged(activeDescendant, false);
 #ifdef A11Y_LOG
-          if (logging::IsEnabled(logging::eFocus)) {
-            logging::ActiveItemChangeCausedBy("ARIA activedescedant changed",
-                                              activeDescendant);
-          }
+            if (logging::IsEnabled(logging::eFocus)) {
+              logging::ActiveItemChangeCausedBy("ARIA activedescedant changed",
+                                                activeDescendant);
+            }
 #endif
+          }
           return;
         }
       }
@@ -2480,46 +2497,17 @@ void DocAccessible::DispatchScrollingEvent(nsINode* aTarget,
   nsEventShell::FireEvent(event);
 }
 
-void DocAccessible::ARIAActiveDescendantIDMaybeMoved(dom::Element* aElm) {
-  nsINode* focusNode = FocusMgr()->FocusedDOMNode();
-  // The focused element must be within this document.
-  if (!focusNode || focusNode->OwnerDoc() != mDocumentNode) {
-    return;
+void DocAccessible::ARIAActiveDescendantIDMaybeMoved(
+    LocalAccessible* aAccessible) {
+  LocalAccessible* widget = nullptr;
+  if (aAccessible->IsActiveDescendant(&widget) && widget) {
+    // The active descendant might have just been inserted and may not be in the
+    // tree yet. Therefore, schedule this async to ensure the tree is up to
+    // date.
+    mNotificationController
+        ->ScheduleNotification<DocAccessible, LocalAccessible>(
+            this, &DocAccessible::ARIAActiveDescendantChanged, widget);
   }
-
-  dom::Element* focusElm = nullptr;
-  if (focusNode == mDocumentNode) {
-    // The document is focused, so look for aria-activedescendant on the
-    // body/root.
-    focusElm = Elm();
-    if (!focusElm) {
-      return;
-    }
-  } else {
-    MOZ_ASSERT(focusNode->IsElement());
-    focusElm = focusNode->AsElement();
-  }
-
-  // Check if the focus has aria-activedescendant and whether
-  // it refers to the id just set on aElm.
-  nsAutoString id;
-  aElm->GetAttr(kNameSpaceID_None, nsGkAtoms::id, id);
-  if (!focusElm->AttrValueIs(kNameSpaceID_None,
-                             nsGkAtoms::aria_activedescendant, id,
-                             eCaseMatters)) {
-    return;
-  }
-
-  // The aria-activedescendant target has probably changed.
-  LocalAccessible* acc = GetAccessibleEvenIfNotInMapOrContainer(focusNode);
-  if (!acc) {
-    return;
-  }
-
-  // The active descendant might have just been inserted and may not be in the
-  // tree yet. Therefore, schedule this async to ensure the tree is up to date.
-  mNotificationController->ScheduleNotification<DocAccessible, LocalAccessible>(
-      this, &DocAccessible::ARIAActiveDescendantChanged, acc);
 }
 
 void DocAccessible::SetRoleMapEntryForDoc(dom::Element* aElement) {
