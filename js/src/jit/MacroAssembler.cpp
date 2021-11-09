@@ -2968,7 +2968,6 @@ void MacroAssembler::PushEmptyRooted(VMFunctionData::RootType rootType) {
       MOZ_CRASH("Handle must have root type");
     case VMFunctionData::RootObject:
     case VMFunctionData::RootString:
-    case VMFunctionData::RootFunction:
     case VMFunctionData::RootCell:
     case VMFunctionData::RootBigInt:
       Push(ImmPtr(nullptr));
@@ -2989,7 +2988,6 @@ void MacroAssembler::popRooted(VMFunctionData::RootType rootType,
       MOZ_CRASH("Handle must have root type");
     case VMFunctionData::RootObject:
     case VMFunctionData::RootString:
-    case VMFunctionData::RootFunction:
     case VMFunctionData::RootCell:
     case VMFunctionData::RootId:
     case VMFunctionData::RootBigInt:

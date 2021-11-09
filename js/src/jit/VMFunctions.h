@@ -148,7 +148,6 @@ struct VMFunctionData {
     RootObject,
     RootString,
     RootId,
-    RootFunction,
     RootValue,
     RootCell,
     RootBigInt

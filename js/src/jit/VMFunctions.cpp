@@ -154,7 +154,7 @@ struct TypeToRootType<HandlePropertyName> {
 };
 template <>
 struct TypeToRootType<HandleFunction> {
-  static const uint32_t result = VMFunctionData::RootFunction;
+  static const uint32_t result = VMFunctionData::RootObject;
 };
 template <>
 struct TypeToRootType<HandleValue> {
