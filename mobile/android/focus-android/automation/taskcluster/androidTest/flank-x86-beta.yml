@@ -38,8 +38,8 @@ gcloud:
   performance-metrics: true
 
   test-targets:
-    - package org.mozilla.focus.activity
-    - package org.mozilla.focus.privacy
+    - class org.mozilla.focus.activity.SearchTest#testBlankSearchDoesNothing
+    - class org.mozilla.focus.activity.EraseBrowsingDataTest#deleteHistoryOnRestartTest
   
   device:
    - model: Pixel2

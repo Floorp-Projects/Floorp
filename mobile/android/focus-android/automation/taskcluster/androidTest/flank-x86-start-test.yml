@@ -39,6 +39,7 @@ gcloud:
 
   test-targets:
     - class org.mozilla.focus.activity.SearchTest#testBlankSearchDoesNothing
+    - class org.mozilla.focus.activity.EraseBrowsingDataTest#deleteHistoryOnRestartTest
   
   device:
    - model: Pixel2
