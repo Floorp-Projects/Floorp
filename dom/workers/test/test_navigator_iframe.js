@@ -26,31 +26,20 @@ worker.onmessage = function(event) {
     return;
   }
 
-  if (args.name === "storage") {
-    is(typeof navigator.storage, typeof args.value, "storage type matches");
-    return;
-  }
+  const objectProperties = [
+    "connection",
+    "gpu",
+    "locks",
+    "mediaCapabilities",
+    "storage",
+  ];
 
-  if (args.name === "connection") {
+  if (objectProperties.includes(args.name)) {
     is(
-      typeof navigator.connection,
+      typeof navigator[args.name],
       typeof args.value,
-      "connection type matches"
+      `${args.name} type matches`
     );
-    return;
-  }
-
-  if (args.name === "mediaCapabilities") {
-    is(
-      typeof navigator.mediaCapabilities,
-      typeof args.value,
-      "mediaCapabilities type matches"
-    );
-    return;
-  }
-
-  if (args.name === "gpu") {
-    is(typeof navigator.gpu, typeof args.value, "gpu type matches");
     return;
   }
 
