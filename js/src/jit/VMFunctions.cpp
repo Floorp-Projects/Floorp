@@ -24,6 +24,7 @@
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/friend/WindowProxy.h"    // js::IsWindow
 #include "js/Printf.h"
+#include "js/TraceKind.h"
 #include "vm/ArrayObject.h"
 #include "vm/Interpreter.h"
 #include "vm/PlainObject.h"  // js::PlainObject
@@ -137,26 +138,6 @@ struct TypeToRootType {
   static const uint32_t result = VMFunctionData::RootNone;
 };
 template <>
-struct TypeToRootType<HandleObject> {
-  static const uint32_t result = VMFunctionData::RootObject;
-};
-template <>
-struct TypeToRootType<HandleString> {
-  static const uint32_t result = VMFunctionData::RootString;
-};
-template <>
-struct TypeToRootType<HandleAtom> {
-  static const uint32_t result = VMFunctionData::RootString;
-};
-template <>
-struct TypeToRootType<HandlePropertyName> {
-  static const uint32_t result = VMFunctionData::RootString;
-};
-template <>
-struct TypeToRootType<HandleFunction> {
-  static const uint32_t result = VMFunctionData::RootObject;
-};
-template <>
 struct TypeToRootType<HandleValue> {
   static const uint32_t result = VMFunctionData::RootValue;
 };
@@ -168,61 +149,37 @@ template <>
 struct TypeToRootType<HandleId> {
   static const uint32_t result = VMFunctionData::RootId;
 };
-template <>
-struct TypeToRootType<HandleShape> {
-  static const uint32_t result = VMFunctionData::RootCell;
-};
-template <>
-struct TypeToRootType<HandleScript> {
-  static const uint32_t result = VMFunctionData::RootCell;
-};
-template <>
-struct TypeToRootType<Handle<NativeObject*> > {
-  static const uint32_t result = VMFunctionData::RootObject;
-};
-template <>
-struct TypeToRootType<Handle<InlineTypedObject*> > {
-  static const uint32_t result = VMFunctionData::RootObject;
-};
-template <>
-struct TypeToRootType<Handle<ArrayObject*> > {
-  static const uint32_t result = VMFunctionData::RootObject;
-};
-template <>
-struct TypeToRootType<Handle<AbstractGeneratorObject*> > {
-  static const uint32_t result = VMFunctionData::RootObject;
-};
-template <>
-struct TypeToRootType<Handle<AsyncFunctionGeneratorObject*> > {
-  static const uint32_t result = VMFunctionData::RootObject;
-};
-template <>
-struct TypeToRootType<Handle<PlainObject*> > {
-  static const uint32_t result = VMFunctionData::RootObject;
-};
-template <>
-struct TypeToRootType<Handle<RegExpObject*> > {
-  static const uint32_t result = VMFunctionData::RootObject;
-};
-template <>
-struct TypeToRootType<Handle<LexicalScope*> > {
-  static const uint32_t result = VMFunctionData::RootCell;
-};
-template <>
-struct TypeToRootType<Handle<ClassBodyScope*> > {
-  static const uint32_t result = VMFunctionData::RootCell;
-};
-template <>
-struct TypeToRootType<Handle<WithScope*> > {
-  static const uint32_t result = VMFunctionData::RootCell;
-};
-template <>
-struct TypeToRootType<Handle<Scope*> > {
-  static const uint32_t result = VMFunctionData::RootCell;
-};
-template <>
-struct TypeToRootType<HandleBigInt> {
-  static const uint32_t result = VMFunctionData::RootBigInt;
+template <class T>
+struct TypeToRootType<Handle<T*>> {
+  // Assume by default that any pointer types are cells.
+  static_assert(std::is_base_of_v<gc::Cell, T>);
+
+  static constexpr uint32_t rootType() {
+    using JS::TraceKind;
+
+    switch (JS::MapTypeToTraceKind<T>::kind) {
+      case TraceKind::Object:
+        return VMFunctionData::RootObject;
+      case TraceKind::BigInt:
+        return VMFunctionData::RootBigInt;
+      case TraceKind::String:
+        return VMFunctionData::RootString;
+      case TraceKind::Shape:
+      case TraceKind::Script:
+      case TraceKind::Scope:
+        return VMFunctionData::RootCell;
+      case TraceKind::Symbol:
+      case TraceKind::BaseShape:
+      case TraceKind::Null:
+      case TraceKind::JitCode:
+      case TraceKind::RegExpShared:
+      case TraceKind::GetterSetter:
+      case TraceKind::PropMap:
+        MOZ_CRASH("Unexpected trace kind");
+    }
+  }
+
+  static constexpr uint32_t result = rootType();
 };
 template <class T>
 struct TypeToRootType<Handle<T> > {
