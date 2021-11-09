@@ -203,14 +203,6 @@ struct OutParamToDataType<uint32_t*> {
   static const DataType result = Type_Int32;
 };
 template <>
-struct OutParamToDataType<uint8_t**> {
-  static const DataType result = Type_Pointer;
-};
-template <>
-struct OutParamToDataType<IonOsrTempData**> {
-  static const DataType result = Type_Pointer;
-};
-template <>
 struct OutParamToDataType<bool*> {
   static const DataType result = Type_Bool;
 };
@@ -218,20 +210,12 @@ template <>
 struct OutParamToDataType<double*> {
   static const DataType result = Type_Double;
 };
-template <>
-struct OutParamToDataType<MutableHandleValue> {
-  static const DataType result = Type_Handle;
+template <class T>
+struct OutParamToDataType<T**> {
+  static const DataType result = Type_Pointer;
 };
-template <>
-struct OutParamToDataType<MutableHandleObject> {
-  static const DataType result = Type_Handle;
-};
-template <>
-struct OutParamToDataType<MutableHandleString> {
-  static const DataType result = Type_Handle;
-};
-template <>
-struct OutParamToDataType<MutableHandleBigInt> {
+template <class T>
+struct OutParamToDataType<MutableHandle<T>> {
   static const DataType result = Type_Handle;
 };
 
