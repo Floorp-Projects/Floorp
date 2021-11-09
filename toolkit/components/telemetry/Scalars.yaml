@@ -1121,6 +1121,25 @@ browser.ui.interaction:
     record_in_processes:
       - 'main'
 
+  preferences_paneMoreFromMozilla:
+    bug_numbers:
+      - 1738187
+    description: >
+      Records the items interacted with in the More From Mozilla section of
+      preferences.
+      See https://firefox-source-docs.mozilla.org/browser/BrowserUsageTelemetry.html
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - shong@mozilla.com
+      - pdahiya@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+
   preferences_paneUnknown:
     bug_numbers:
       - 1620358
