@@ -136,9 +136,6 @@ bool Gecko_MatchLang(const mozilla::dom::Element*, nsAtom* override_lang,
 
 nsAtom* Gecko_GetXMLLangValue(const mozilla::dom::Element*);
 
-mozilla::dom::Document::DocumentTheme Gecko_GetDocumentLWTheme(
-    const mozilla::dom::Document*);
-
 const mozilla::PreferenceSheet::Prefs* Gecko_GetPrefSheetPrefs(
     const mozilla::dom::Document*);
 
