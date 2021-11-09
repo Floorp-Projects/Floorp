@@ -6059,6 +6059,34 @@ MDefinition* MCheckIsObj::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+MDefinition* MCheckReturn::foldsTo(TempAllocator& alloc) {
+  auto* returnVal = returnValue();
+  if (!returnVal->isBox()) {
+    return this;
+  }
+
+  auto* unboxedReturnVal = returnVal->toBox()->input();
+  if (unboxedReturnVal->type() == MIRType::Object) {
+    return returnVal;
+  }
+
+  if (unboxedReturnVal->type() != MIRType::Undefined) {
+    return this;
+  }
+
+  auto* thisVal = thisValue();
+  if (!thisVal->isBox()) {
+    return this;
+  }
+
+  auto* unboxedThisVal = thisVal->getOperand(0);
+  if (unboxedThisVal->type() == MIRType::Object) {
+    return thisVal;
+  }
+
+  return this;
+}
+
 MDefinition* MCheckThis::foldsTo(TempAllocator& alloc) {
   MDefinition* input = thisValue();
   if (!input->isBox()) {

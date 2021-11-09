@@ -1976,6 +1976,7 @@
     thisValue: Value
   result_type: Value
   guard: true
+  folds_to: custom
   alias_set: custom
 
 - name: CheckThis
