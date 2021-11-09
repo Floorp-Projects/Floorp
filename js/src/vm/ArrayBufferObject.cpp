@@ -1741,7 +1741,7 @@ void InnerViewTable::sweepAfterMinorGC(JSTracer* trc) {
       JSObject* buffer = MaybeForwarded(nurseryKeys[i]);
       Map::Ptr p = map.lookup(buffer);
       if (p &&
-          !Map::SweepPolicy::traceWeak(trc, &p->mutableKey(), &p->value())) {
+          !Map::EntryGCPolicy::traceWeak(trc, &p->mutableKey(), &p->value())) {
         map.remove(p);
       }
     }
