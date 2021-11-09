@@ -642,25 +642,26 @@ AtomicsReadWriteModifyFn AtomicsXor(Scalar::Type elementType);
 BigInt* AtomicsLoad64(JSContext* cx, TypedArrayObject* typedArray,
                       size_t index);
 
-void AtomicsStore64(TypedArrayObject* typedArray, size_t index, BigInt* value);
+void AtomicsStore64(TypedArrayObject* typedArray, size_t index,
+                    const BigInt* value);
 
 BigInt* AtomicsCompareExchange64(JSContext* cx, TypedArrayObject* typedArray,
-                                 size_t index, BigInt* expected,
-                                 BigInt* replacement);
+                                 size_t index, const BigInt* expected,
+                                 const BigInt* replacement);
 
 BigInt* AtomicsExchange64(JSContext* cx, TypedArrayObject* typedArray,
-                          size_t index, BigInt* value);
+                          size_t index, const BigInt* value);
 
 BigInt* AtomicsAdd64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                     BigInt* value);
+                     const BigInt* value);
 BigInt* AtomicsAnd64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                     BigInt* value);
+                     const BigInt* value);
 BigInt* AtomicsOr64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                    BigInt* value);
+                    const BigInt* value);
 BigInt* AtomicsSub64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                     BigInt* value);
+                     const BigInt* value);
 BigInt* AtomicsXor64(JSContext* cx, TypedArrayObject* typedArray, size_t index,
-                     BigInt* value);
+                     const BigInt* value);
 
 JSAtom* AtomizeStringNoGC(JSContext* cx, JSString* str);
 
