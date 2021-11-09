@@ -58,10 +58,12 @@ input[type="checkbox"].toggle-button::before {
   border-radius: 50%;
   outline: 1px solid var(--border-color);
   transition: transform 100ms;
+  transform: translate(0, calc(50% - var(--dot-size) / 2));
 }
 input[type="checkbox"].toggle-button:checked::before {
-  transform: translateX(var(--dot-transform-x));
+  transform: translate(var(--dot-transform-x), calc(50% - var(--dot-size) / 2));
 }
+input[type="checkbox"].toggle-button:-moz-locale-dir(rtl)::before,
 input[type="checkbox"].toggle-button:dir(rtl)::before {
   scale: -1;
 }
