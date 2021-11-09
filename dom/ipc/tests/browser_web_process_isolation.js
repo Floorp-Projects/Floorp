@@ -5,7 +5,7 @@ ok(
   "this test requires fission to function!"
 );
 
-requestLongerTimeout(2);
+requestLongerTimeout(3);
 
 const WebContentIsolationStrategy = {
   IsolateNothing: 0,
@@ -303,3 +303,69 @@ async function do_tests(expected) {
     }
   }
 }
+
+add_task(async function test_isolate_nothing() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.tabs.remote.separatedMozillaDomains", "mozilla.org"],
+      [
+        "fission.webContentIsolationStrategy",
+        WebContentIsolationStrategy.IsolateNothing,
+      ],
+    ],
+  });
+
+  await do_tests({
+    com_normal: "web",
+    org_normal: "web",
+    moz_normal: "privilegedmozilla",
+    com_high: "web",
+    com_coop_coep: "webCOOP+COEP=https://example.com",
+    org_coop_coep: "webCOOP+COEP=https://example.org",
+    moz_coop_coep: "privilegedmozilla",
+  });
+});
+
+add_task(async function test_isolate_everything() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.tabs.remote.separatedMozillaDomains", "mozilla.org"],
+      [
+        "fission.webContentIsolationStrategy",
+        WebContentIsolationStrategy.IsolateEverything,
+      ],
+    ],
+  });
+
+  await do_tests({
+    com_normal: "webIsolated=https://example.com",
+    org_normal: "webIsolated=https://example.org",
+    moz_normal: "privilegedmozilla",
+    com_high: "webIsolated=https://example.com",
+    com_coop_coep: "webCOOP+COEP=https://example.com",
+    org_coop_coep: "webCOOP+COEP=https://example.org",
+    moz_coop_coep: "privilegedmozilla",
+  });
+});
+
+add_task(async function test_isolate_high_value() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.tabs.remote.separatedMozillaDomains", "mozilla.org"],
+      [
+        "fission.webContentIsolationStrategy",
+        WebContentIsolationStrategy.IsolateHighValue,
+      ],
+    ],
+  });
+
+  await do_tests({
+    com_normal: "web",
+    org_normal: "web",
+    moz_normal: "privilegedmozilla",
+    com_high: "webIsolated=https://example.com",
+    com_coop_coep: "webCOOP+COEP=https://example.com",
+    org_coop_coep: "webCOOP+COEP=https://example.org",
+    moz_coop_coep: "privilegedmozilla",
+  });
+});
