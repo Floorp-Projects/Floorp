@@ -17,9 +17,8 @@ internal object LastAccessReducer {
      */
     fun reduce(state: BrowserState, action: LastAccessAction): BrowserState = when (action) {
         is UpdateLastAccessAction -> {
-            state.updateTabOrCustomTabState(action.tabId) { sessionState ->
-                val tabSessionState = sessionState as TabSessionState
-                tabSessionState.copy(lastAccess = action.lastAccess)
+            state.updateTabState(action.tabId) { sessionState ->
+                sessionState.copy(lastAccess = action.lastAccess)
             }
         }
         is UpdateLastMediaAccessAction -> {

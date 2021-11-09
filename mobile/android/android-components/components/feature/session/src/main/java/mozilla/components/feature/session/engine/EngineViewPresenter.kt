@@ -10,6 +10,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
@@ -82,6 +83,9 @@ internal class EngineViewPresenter(
             // method will get invoked again.
             store.dispatch(EngineAction.CreateEngineSessionAction(tab.id))
         } else {
+            // Since we render the tab again let's update its last access flag. In the future, we
+            // may need more fine-grained flags to differentiate viewing from tab selection.
+            store.dispatch(LastAccessAction.UpdateLastAccessAction(tab.id, System.currentTimeMillis()))
             engineView.render(engineSession)
         }
     }
