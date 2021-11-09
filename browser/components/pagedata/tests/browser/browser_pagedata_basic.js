@@ -10,24 +10,19 @@ const TEST_URL = "https://example.com/";
 const TEST_URL2 = "https://example.com/browser";
 
 add_task(async function test_pagedata_no_data() {
-  let promise = PageDataService.once("no-page-data");
+  let promise = PageDataService.once("page-data");
 
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     let pageData = await promise;
     Assert.equal(pageData.url, TEST_URL, "Should have returned the loaded URL");
-    Assert.deepEqual(pageData.data, [], "Should have returned no data");
+    Assert.deepEqual(pageData.data, {}, "Should have returned no data");
     Assert.deepEqual(
       PageDataService.getCached(TEST_URL),
       pageData,
       "Should return the same data from the cache"
     );
-    Assert.equal(
-      pageData.weakBrowser.get(),
-      browser,
-      "Should return the collection browser"
-    );
 
-    promise = PageDataService.once("no-page-data");
+    promise = PageDataService.once("page-data");
     BrowserTestUtils.loadURI(browser, TEST_URL2);
     await BrowserTestUtils.browserLoaded(browser, false, TEST_URL2);
     pageData = await promise;
@@ -36,21 +31,16 @@ add_task(async function test_pagedata_no_data() {
       TEST_URL2,
       "Should have returned the loaded URL"
     );
-    Assert.deepEqual(pageData.data, [], "Should have returned no data");
+    Assert.deepEqual(pageData.data, {}, "Should have returned no data");
     Assert.deepEqual(
       PageDataService.getCached(TEST_URL2),
       pageData,
       "Should return the same data from the cache"
     );
-    Assert.equal(
-      pageData.weakBrowser.get(),
-      browser,
-      "Should return the collection browser"
-    );
 
     info("Test going back still triggers collection");
 
-    promise = PageDataService.once("no-page-data");
+    promise = PageDataService.once("page-data");
     let locationChangePromise = BrowserTestUtils.waitForLocationChange(
       gBrowser,
       TEST_URL
@@ -64,16 +54,11 @@ add_task(async function test_pagedata_no_data() {
       TEST_URL,
       "Should have returned the URL of the previous page"
     );
-    Assert.deepEqual(pageData.data, [], "Should have returned no data");
+    Assert.deepEqual(pageData.data, {}, "Should have returned no data");
     Assert.deepEqual(
       PageDataService.getCached(TEST_URL),
       pageData,
       "Should return the same data from the cache"
-    );
-    Assert.equal(
-      pageData.weakBrowser.get(),
-      browser,
-      "Should return the collection browser"
     );
   });
 });
