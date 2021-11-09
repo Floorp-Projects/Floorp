@@ -904,10 +904,61 @@ async function waitForSyncedRtcp(pc) {
   );
 }
 
+function checkSenderStats(senderStats, streamCount) {
+  const outboundRtpReports = [];
+  const remoteInboundRtpReports = [];
+  for (const v of senderStats.values()) {
+    if (v.type == "outbound-rtp") {
+      outboundRtpReports.push(v);
+    } else if (v.type == "remote-inbound-rtp") {
+      remoteInboundRtpReports.push(v);
+    }
+  }
+  is(
+    outboundRtpReports.length,
+    streamCount,
+    `Sender with ${streamCount} simulcast streams has ${streamCount} outbound-rtp reports`
+  );
+  is(
+    remoteInboundRtpReports.length,
+    streamCount,
+    `Sender with ${streamCount} simulcast streams has ${streamCount} remote-inbound-rtp reports`
+  );
+  for (const outboundRtpReport of outboundRtpReports) {
+    is(
+      outboundRtpReports.filter(r => r.ssrc == outboundRtpReport.ssrc).length,
+      1,
+      "Simulcast send track SSRCs are distinct"
+    );
+    const remoteReports = remoteInboundRtpReports.filter(
+      r => r.id == outboundRtpReport.remoteId
+    );
+    is(
+      remoteReports.length,
+      1,
+      "Simulcast send tracks have exactly one remote counterpart"
+    );
+    const remoteInboundRtpReport = remoteReports[0];
+    is(
+      outboundRtpReport.ssrc,
+      remoteInboundRtpReport.ssrc,
+      "SSRC matches for outbound-rtp and remote-inbound-rtp"
+    );
+  }
+}
+
 function PC_LOCAL_TEST_LOCAL_STATS(test) {
   return waitForSyncedRtcp(test.pcLocal._pc).then(stats => {
     checkExpectedFields(stats);
     pedanticChecks(stats);
+    return Promise.all([
+      test.pcLocal._pc.getSenders().map(async s => {
+        checkSenderStats(
+          await s.getStats(),
+          Math.max(1, s.getParameters()?.encodings?.length ?? 0)
+        );
+      }),
+    ]);
   });
 }
 
@@ -915,5 +966,13 @@ function PC_REMOTE_TEST_REMOTE_STATS(test) {
   return waitForSyncedRtcp(test.pcRemote._pc).then(stats => {
     checkExpectedFields(stats);
     pedanticChecks(stats);
+    return Promise.all([
+      test.pcRemote._pc.getSenders().map(async s => {
+        checkSenderStats(
+          await s.getStats(),
+          Math.max(1, s.getParameters()?.encodings?.length ?? 0)
+        );
+      }),
+    ]);
   });
 }
