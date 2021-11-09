@@ -496,9 +496,6 @@ void nsHyphenator::ShareToProcess(base::ProcessId aPid,
   if (!mDict.is<UniquePtr<base::SharedMemory>>()) {
     return;
   }
-  if (!mDict.as<UniquePtr<base::SharedMemory>>()->ShareToProcess(aPid,
-                                                                 aOutHandle)) {
-    return;
-  }
+  *aOutHandle = mDict.as<UniquePtr<base::SharedMemory>>()->CloneHandle();
   *aOutSize = mDictSize;
 }
