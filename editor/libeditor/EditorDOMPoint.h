@@ -688,6 +688,7 @@ class EditorDOMPointBase final {
         // We're already referring the start of the container or
         // the offset is invalid since perhaps, the offset was set before
         // the last DOM tree change.
+        NS_ASSERTION(false, "Failed to rewind offset");
         return false;
       }
       mOffset = mozilla::Some(mOffset.value() - 1);

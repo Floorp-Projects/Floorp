@@ -4243,12 +4243,6 @@ already_AddRefed<nsIContent> HTMLEditor::SplitNodeWithTransaction(
         *this, *aStartOfRightNode.GetContainerAsContent(), *newLeftContent);
   }
 
-  if (mInlineSpellChecker) {
-    RefPtr<mozInlineSpellChecker> spellChecker = mInlineSpellChecker;
-    spellChecker->DidSplitNode(aStartOfRightNode.GetContainer(),
-                               newLeftContent);
-  }
-
   if (aError.Failed()) {
     return nullptr;
   }
@@ -4630,11 +4624,6 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsIContent& aLeftContent,
 
   TopLevelEditSubActionDataRef().DidJoinContents(
       *this, EditorRawDOMPoint(&aRightContent, oldLeftNodeLen));
-
-  if (mInlineSpellChecker) {
-    RefPtr<mozInlineSpellChecker> spellChecker = mInlineSpellChecker;
-    spellChecker->DidJoinNodes(aLeftContent, aRightContent);
-  }
 
   if (mTextServicesDocument && NS_SUCCEEDED(rv)) {
     RefPtr<TextServicesDocument> textServicesDocument = mTextServicesDocument;
