@@ -3881,11 +3881,9 @@ bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
 
       MOZ_ASSERT(!IsMagicType(unbox->type()));
 
-      // If this is a LoadElement that needs a hole check, we only support
-      // folding it with a fallible unbox so that we can eliminate the hole
-      // check.
-      if (load->isLoadElement() && load->toLoadElement()->needsHoleCheck() &&
-          !unbox->fallible()) {
+      // If this is a LoadElement, we only support folding it with a fallible
+      // unbox so that we can eliminate the hole check.
+      if (load->isLoadElement() && !unbox->fallible()) {
         continue;
       }
 
@@ -3913,7 +3911,7 @@ bool jit::FoldLoadsWithUnbox(MIRGenerator* mir, MIRGraph& graph) {
         }
         case MDefinition::Opcode::LoadElement: {
           auto* loadIns = load->toLoadElement();
-          MOZ_ASSERT_IF(loadIns->needsHoleCheck(), unbox->fallible());
+          MOZ_ASSERT(unbox->fallible());
           replacement = MLoadElementAndUnbox::New(
               graph.alloc(), loadIns->elements(), loadIns->index(), mode, type);
           break;

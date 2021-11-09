@@ -3469,9 +3469,7 @@ void LIRGenerator::visitLoadElement(MLoadElement* ins) {
 
   auto* lir = new (alloc()) LLoadElementV(useRegister(ins->elements()),
                                           useRegisterOrConstant(ins->index()));
-  if (ins->fallible()) {
-    assignSnapshot(lir, ins->bailoutKind());
-  }
+  assignSnapshot(lir, ins->bailoutKind());
   defineBox(lir, ins);
 }
 
