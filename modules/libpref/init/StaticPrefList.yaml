@@ -819,7 +819,7 @@
 
 - name: browser.active_color.dark
   type: String
-  value: "#FF9E9E"
+  value: "#FF6666"
   mirror: never
 
 - name: browser.anchor_color
@@ -831,7 +831,7 @@
 # nsXPLookAndFeel::GenericDarkColor for MozNativehyperlinktext.
 - name: browser.anchor_color.dark
   type: String
-  value: "#9E9EFF"
+  value: "#8C8CFF"
   mirror: never
 
 # See http://dev.w3.org/html5/spec/forms.html#attr-fe-autofocus
@@ -1463,7 +1463,7 @@
 # nsXPLookAndFeel::GenericDarkColor for MozNativevisitedhyperlinktext.
 - name: browser.visited_color.dark
   type: String
-  value: "#D0ADF0"
+  value: "#FFADFF"
   mirror: never
 
 # When true, soft reloads (including location.reload())
