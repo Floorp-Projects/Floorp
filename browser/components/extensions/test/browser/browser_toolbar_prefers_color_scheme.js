@@ -3,7 +3,7 @@
 
 "use strict";
 
-async function testThemeDeterminesToolbarQuery(toolbarProp) {
+add_task(async function testThemeDeterminesToolbarQuery() {
   let darkModeQuery = window.matchMedia("(-moz-system-dark-theme)");
   let darkToolbarQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
@@ -16,7 +16,7 @@ async function testThemeDeterminesToolbarQuery(toolbarProp) {
       },
       theme: {
         colors: {
-          [toolbarProp]: "rgba(12, 12, 12, 1)",
+          toolbar: "rgba(12, 12, 12, 1)",
         },
       },
     },
@@ -30,7 +30,7 @@ async function testThemeDeterminesToolbarQuery(toolbarProp) {
       },
       theme: {
         colors: {
-          [toolbarProp]: "rgba(255, 255, 255, 1)",
+          toolbar: "rgba(255, 255, 255, 1)",
         },
       },
     },
@@ -45,7 +45,7 @@ async function testThemeDeterminesToolbarQuery(toolbarProp) {
       },
       theme: {
         colors: {
-          [toolbarProp]: "rgba(12, 12, 12, 1)",
+          toolbar: "rgba(12, 12, 12, 1)",
           ntp_background: "rgba(255, 255, 255, 1)",
         },
       },
@@ -61,7 +61,7 @@ async function testThemeDeterminesToolbarQuery(toolbarProp) {
       },
       theme: {
         colors: {
-          [toolbarProp]: "rgba(255, 255, 255, 1)",
+          toolbar: "rgba(255, 255, 255, 1)",
           ntp_background: "rgba(12, 12, 12, 1)",
         },
       },
@@ -187,13 +187,4 @@ async function testThemeDeterminesToolbarQuery(toolbarProp) {
   }
   BrowserTestUtils.removeTab(contentTab);
   BrowserTestUtils.removeTab(preferencesTab);
-}
-
-add_task(function test_toolbar() {
-  return testThemeDeterminesToolbarQuery("toolbar");
-});
-
-// Assert that we fall back to "frame" (accentcolor) if toolbar is not present.
-add_task(function test_frame() {
-  return testThemeDeterminesToolbarQuery("frame");
 });
