@@ -1210,6 +1210,13 @@ nsresult Database::InitSchema(bool* aDatabaseMigrated) {
 
       // Firefox 94 uses schema version 59
 
+      if (currentSchemaVersion < 60) {
+        rv = MigrateV60Up();
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      // Firefox 96 uses schema version 60
+
       // Schema Upgrades must add migration code here.
       // >>> IMPORTANT! <<<
       // NEVER MIX UP SYNC AND ASYNC EXECUTION IN MIGRATORS, YOU MAY LOCK THE
@@ -2305,6 +2312,19 @@ nsresult Database::MigrateV59Up() {
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_SESSION_METADATA);
     NS_ENSURE_SUCCESS(rv, rv);
     rv = mMainConn->ExecuteSimpleSQL(CREATE_MOZ_SESSION_TO_PLACES);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  return NS_OK;
+}
+
+nsresult Database::MigrateV60Up() {
+  // Add the site_name column to moz_places.
+  nsCOMPtr<mozIStorageStatement> stmt;
+  nsresult rv = mMainConn->CreateStatement(
+      "SELECT site_name FROM moz_places"_ns, getter_AddRefs(stmt));
+  if (NS_FAILED(rv)) {
+    rv = mMainConn->ExecuteSimpleSQL(
+        "ALTER TABLE moz_places ADD COLUMN site_name TEXT"_ns);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
