@@ -53,7 +53,7 @@
 }
 
 .notificationbox .notification[data-type="new"] {
-  color: -moz-DialogText;
+  color: var(--theme-contrast-color);
   background-color: var(--theme-selection-background-hover);
 }
 
