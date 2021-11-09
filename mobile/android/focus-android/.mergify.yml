@@ -1,43 +1,51 @@
-pull_request_rules:
-  - name: Needs landing - Rebase
+queue_rules:
+  - name: default
     conditions:
-      - status-success=build-klar-release
-      - status-success=test-debug
-      # - status-success=ui-test-x86-debug
-      # - status-success=ui-test-x86-nightly
-      # - status-success=ui-test-x86-beta
+      - status-success=build-android-test-beta
+      - status-success=build-android-test-debug
+      - status-success=build-android-test-nightly
+      - status-success=build-beta-firebase
       - status-success=build-focus-debug
-      - status-success=build-focus-release
       - status-success=build-klar-debug
+      - status-success=build-nightly-firebase
       - status-success=lint-compare-locales
       - status-success=lint-detekt
       - status-success=lint-ktlint
       - status-success=lint-lint
+      - status-success=test-debug
+      - status-success=ui-test-x86-beta
+      - status-success=ui-test-x86-debug
+      - status-success=ui-test-x86-nightly
+pull_request_rules:
+  - name: Needs landing - Rebase
+    conditions:
+      - base=main
       - label=🛬 needs landing
       - "#approved-reviews-by>=1"
       - -draft
     actions:
-      merge:
+      queue:
         method: rebase
-        strict: smart
+        name: default
   - name: Needs landing - Squash
     conditions:
-      - status-success=build-klar-release
-      - status-success=test-debug
-      # - status-success=ui-test-x86-debug
-      # - status-success=ui-test-x86-nightly
-      # - status-success=ui-test-x86-beta
-      - status-success=build-focus-debug
-      - status-success=build-focus-release
-      - status-success=build-klar-debug
-      - status-success=lint-compare-locales
-      - status-success=lint-detekt
-      - status-success=lint-ktlint
-      - status-success=lint-lint
-      - label=🛬 needs landing (squash)
+      - base=main
+      - label=🛬 needs landing
       - "#approved-reviews-by>=1"
       - -draft
     actions:
-      merge:
-        method: squash
-        strict: smart
+      queue:
+        method: rebase
+        name: default
+  - name: Relbot - Auto Merge
+    conditions:
+      - base=main
+      - files~=AndroidComponents.kt
+      - author=github-actions[bot]
+    actions:
+      review:
+        type: APPROVE
+        message: ✅ Cleared to land.
+      queue:
+        method: rebase
+        name: default
