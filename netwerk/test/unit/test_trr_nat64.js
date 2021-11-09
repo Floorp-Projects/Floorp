@@ -45,8 +45,6 @@ function makeChan(url) {
   return chan;
 }
 
-let processId;
-
 function channelOpenPromise(chan) {
   return new Promise(resolve => {
     function finish(req, buffer) {
