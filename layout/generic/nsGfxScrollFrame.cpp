@@ -2358,15 +2358,10 @@ void ScrollFrameHelper::ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
 }
 
 void ScrollFrameHelper::ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
-                                          ScrollMode aMode,
-                                          ScrollOrigin aOrigin) {
+                                          ScrollMode aMode) {
   nsPoint current = GetScrollPosition();
   CSSIntPoint currentCSSPixels = GetScrollPositionCSSPixels();
   nsPoint pt = CSSPoint::ToAppUnits(aScrollPosition);
-
-  if (aOrigin == ScrollOrigin::NotSpecified) {
-    aOrigin = ScrollOrigin::Other;
-  }
 
   nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
   nsRect range(pt.x - halfPixel, pt.y - halfPixel, 2 * halfPixel - 1,
@@ -2384,7 +2379,8 @@ void ScrollFrameHelper::ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
     range.y = pt.y;
     range.height = 0;
   }
-  ScrollTo(pt, aMode, aOrigin, &range, nsIScrollableFrame::ENABLE_SNAP);
+  ScrollTo(pt, aMode, ScrollOrigin::Other, &range,
+           nsIScrollableFrame::ENABLE_SNAP);
   // 'this' might be destroyed here
 }
 
