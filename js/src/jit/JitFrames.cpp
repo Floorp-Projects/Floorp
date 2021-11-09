@@ -1158,9 +1158,6 @@ static void TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame) {
       case VMFunctionData::RootString:
         TraceRoot(trc, reinterpret_cast<JSString**>(argBase), "ion-vm-args");
         break;
-      case VMFunctionData::RootFunction:
-        TraceRoot(trc, reinterpret_cast<JSFunction**>(argBase), "ion-vm-args");
-        break;
       case VMFunctionData::RootValue:
         TraceRoot(trc, reinterpret_cast<Value*>(argBase), "ion-vm-args");
         break;
@@ -1197,9 +1194,6 @@ static void TraceJitExitFrame(JSTracer* trc, const JSJitFrameIter& frame) {
         break;
       case VMFunctionData::RootString:
         TraceRoot(trc, footer->outParam<JSString*>(), "ion-vm-out");
-        break;
-      case VMFunctionData::RootFunction:
-        TraceRoot(trc, footer->outParam<JSFunction*>(), "ion-vm-out");
         break;
       case VMFunctionData::RootValue:
         TraceRoot(trc, footer->outParam<Value>(), "ion-vm-outvp");
