@@ -4071,7 +4071,37 @@ TEST(GeckoProfiler, FeatureCombinations)
 
 TEST(GeckoProfiler, CPUUsage)
 {
-  const char* filters[] = {"GeckoMain"};
+  profiler_init_main_thread_id();
+  ASSERT_TRUE(profiler_is_main_thread())
+  << "This test assumes it runs on the main thread";
+
+  const char* filters[] = {"GeckoMain", "Idle test"};
+
+  enum class IdleThreadState {
+    // Initial state, while constructing and starting the idle thread.
+    STARTING,
+    // Set by the idle thread just before running its main mostly-idle loop.
+    RUNNING,
+    // Set by the main thread when it wants the idle thread to stop.
+    STOPPING
+  };
+  Atomic<IdleThreadState> idleThreadState{IdleThreadState::STARTING};
+
+  std::thread idle([&]() {
+    AUTO_PROFILER_REGISTER_THREAD("Idle test");
+    idleThreadState = IdleThreadState::RUNNING;
+
+    while (idleThreadState == IdleThreadState::RUNNING) {
+      // Sleep for multiple profiler intervals, so the profiler should have
+      // samples with zero CPU utilization.
+      PR_Sleep(PR_MillisecondsToInterval(PROFILER_DEFAULT_INTERVAL * 10));
+    }
+  });
+
+  // Wait for idle thread to start running its main loop.
+  while (idleThreadState != IdleThreadState::RUNNING) {
+    PR_Sleep(PR_MillisecondsToInterval(1));
+  }
 
   // We want to ensure that CPU usage numbers are present whether or not we are
   // collecting stack samples.
@@ -4153,10 +4183,11 @@ TEST(GeckoProfiler, CPUUsage)
 
       // Check that the sample schema contains "threadCPUDelta".
       GET_JSON(threads, aRoot["threads"], Array);
-      {
-        GET_JSON(thread0, threads[0], Object);
-        {
-          GET_JSON(samples, thread0["samples"], Object);
+      for (const Json::Value& thread : threads) {
+        ASSERT_TRUE(thread.isObject());
+        GET_JSON(name, thread["name"], String);
+        if (name.asString() == "GeckoMain") {
+          GET_JSON(samples, thread["samples"], Object);
           {
             Json::ArrayIndex stackIndex = 0;
             Json::ArrayIndex threadCPUDeltaIndex = 0;
@@ -4215,6 +4246,70 @@ TEST(GeckoProfiler, CPUUsage)
           EXPECT_EQ(threadCPUDeltaCount, 0u);
 #  endif
           }
+        } else if (name.asString() == "Idle test") {
+          GET_JSON(samples, thread["samples"], Object);
+          {
+            Json::ArrayIndex threadCPUDeltaIndex = 0;
+            GET_JSON(schema, samples["schema"], Object);
+            {
+              GET_JSON(jsonThreadCPUDeltaIndex, schema["threadCPUDelta"], UInt);
+              threadCPUDeltaIndex = jsonThreadCPUDeltaIndex.asUInt();
+            }
+
+            unsigned threadCPUDeltaZeroCount = 0;
+            unsigned threadCPUDeltaNonZeroCount = 0;
+            GET_JSON(data, samples["data"], Array);
+            if (testWithNoStackSampling) {
+              // When not sampling stacks, the first sampling loop will have no
+              // running times, so it won't output anything.
+              EXPECT_GE(data.size(), scMinSamplings - 1);
+            } else {
+              EXPECT_GE(data.size(), scMinSamplings);
+            }
+            for (const Json::Value& sample : data) {
+              ASSERT_TRUE(sample.isArray());
+              if (sample.isValidIndex(threadCPUDeltaIndex)) {
+                if (!sample[threadCPUDeltaIndex].isNull()) {
+                  GET_JSON(cpuDelta, sample[threadCPUDeltaIndex], UInt64);
+                  if (cpuDelta == 0) {
+                    ++threadCPUDeltaZeroCount;
+                  } else {
+                    ++threadCPUDeltaNonZeroCount;
+                  }
+                }
+              }
+            }
+
+#  if defined(GP_OS_windows) || defined(GP_OS_darwin) || \
+      defined(GP_OS_linux) || defined(GP_OS_android) || defined(GP_OS_freebsd)
+            EXPECT_GE(threadCPUDeltaZeroCount + threadCPUDeltaNonZeroCount,
+                      data.size() - 1u)
+                << "There should be 'threadCPUDelta' values in all but 1 "
+                   "samples";
+#    if defined(GP_OS_windows)
+            // On Windows, sampling threads makes them work a little bit, even
+            // when removing the CPU values around the sampling itself, so we
+            // cannot expect any zeroes!
+            // TODO: Would it be possible to reliably test that the values are
+            // at least "small"? (Whatever that means for cycles.)
+            if (testWithNoStackSampling) {
+              // Note: This test is a bit hand-wavy, and may not be reliable. If
+              // intermittents happen, it may need tweaking.
+              EXPECT_GT(threadCPUDeltaZeroCount, threadCPUDeltaNonZeroCount)
+                  << "There should be more zero-CPUs than non-zero";
+            }
+#    else
+            // Note: This test is a bit hand-wavy, and may not be reliable. If
+            // intermittents happen, it may need tweaking.
+            EXPECT_GT(threadCPUDeltaZeroCount, threadCPUDeltaNonZeroCount)
+                << "There should be more zero-CPUs than non-zero";
+#    endif
+#  else
+          // All "threadCPUDelta" data should be absent or null on unsupported
+          // platforms.
+          EXPECT_EQ(threadCPUDeltaCount, 0u);
+#  endif
+          }
         }
       }
     });
@@ -4229,6 +4324,9 @@ TEST(GeckoProfiler, CPUUsage)
     ASSERT_TRUE(!profiler_callback_after_sampling(
         [&](SamplingState) { ASSERT_TRUE(false); }));
   }
+
+  idleThreadState = IdleThreadState::STOPPING;
+  idle.join();
 }
 
 TEST(GeckoProfiler, AllThreads)
