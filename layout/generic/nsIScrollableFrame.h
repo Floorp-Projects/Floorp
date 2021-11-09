@@ -265,7 +265,9 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
   virtual void ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
                         const nsRect* aRange = nullptr,
                         nsIScrollbarMediator::ScrollSnapMode aSnap =
-                            nsIScrollbarMediator::DISABLE_SNAP) = 0;
+                            nsIScrollbarMediator::DISABLE_SNAP,
+                        mozilla::ScrollTriggeredByScript aTriggeredByScript =
+                            mozilla::ScrollTriggeredByScript::No) = 0;
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    * Scrolls to a particular position in integer CSS pixels.
