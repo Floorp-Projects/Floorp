@@ -2232,13 +2232,14 @@ bool InlineFrameIterator::isConstructing() const {
     InlineFrameIterator parent(TlsContext.get(), this);
     ++parent;
 
-    // Inlined Getters and Setters are never constructing.
+    // In the case of a JS frame, look up the pc from the snapshot.
     JSOp parentOp = JSOp(*parent.pc());
+
+    // Inlined Getters and Setters are never constructing.
     if (IsIonInlinableGetterOrSetterOp(parentOp)) {
       return false;
     }
 
-    // In the case of a JS frame, look up the pc from the snapshot.
     MOZ_ASSERT(IsInvokeOp(parentOp) && !IsSpreadOp(parentOp));
 
     return IsConstructOp(parentOp);
