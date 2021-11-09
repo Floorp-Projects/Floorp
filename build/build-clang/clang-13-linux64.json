@@ -18,6 +18,7 @@
       "revert-llvmorg-13-init-7827-g2a078c307204.patch",
       "loosen-msvc-detection.patch",
       "fuzzing_ccov_build_clang_12.patch",
+      "llvmorg-14-init-6706-g6404f4b5af39.patch",
       "revert-ga478b0a199f4.patch"
     ]
 }
