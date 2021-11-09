@@ -16,9 +16,9 @@ namespace mozilla {
 namespace widget {
 
 struct RemoteBackbufferHandles {
-  WindowsHandle fileMapping;
-  WindowsHandle requestReadyEvent;
-  WindowsHandle responseReadyEvent;
+  FileDescriptor fileMapping;
+  FileDescriptor requestReadyEvent;
+  FileDescriptor responseReadyEvent;
 };
 
 sync protocol PCompositorWidget
