@@ -8,11 +8,11 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import os
+import platform
 
 
 def is_non_x86_64():
-    return os.uname()[4] != "x86_64"
+    return platform.machine() != "x86_64"
 
 
 class SccacheInstall(object):
@@ -127,11 +127,16 @@ class MobileAndroidBootstrapper(object):
     def install_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
         from mozboot import android
 
+        os_arch = platform.machine()
         android.ensure_android(
-            "linux", artifact_mode=artifact_mode, no_interactive=self.no_interactive
+            "linux",
+            os_arch,
+            artifact_mode=artifact_mode,
+            no_interactive=self.no_interactive,
         )
         android.ensure_android(
             "linux",
+            os_arch,
             artifact_mode=artifact_mode,
             no_interactive=self.no_interactive,
             system_images_only=True,
@@ -139,6 +144,7 @@ class MobileAndroidBootstrapper(object):
         )
         android.ensure_android(
             "linux",
+            os_arch,
             artifact_mode=artifact_mode,
             no_interactive=self.no_interactive,
             system_images_only=True,

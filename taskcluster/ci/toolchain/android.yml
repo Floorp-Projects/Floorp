@@ -48,6 +48,22 @@ linux64-android-avd-arm-repack:
         toolchain-artifact: public/build/android-avd-linux.tar.zst
         toolchain-alias: android-avd-arm-linux
 
+linux64-android-avd-arm64-repack:
+    attributes:
+        local-toolchain: true
+    description: "Android AVD (Linux) repack toolchain build"
+    treeherder:
+        symbol: TL(avd-arm64-linux)
+    run-on-projects: [trunk]
+    run:
+        script: repack-android-avd-linux.sh
+        arguments:
+            - 'python/mozboot/mozboot/android-avds/arm64.json'
+        resources:
+            - 'python/mozboot/**/*android*'
+        toolchain-artifact: public/build/android-avd-linux.tar.zst
+        toolchain-alias: android-avd-arm64-linux
+
 linux64-android-system-image-x86_64-repack:
     description: "Android System Images (Linux) repack toolchain build"
     treeherder:
