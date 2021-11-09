@@ -232,9 +232,6 @@ def _activate_build_virtualenv():
     topobjdir = os.path.realpath(".")
     topsrcdir = os.path.realpath(os.path.dirname(__file__))
 
-    if topobjdir.endswith("/js/src"):
-        topobjdir = topobjdir[:-7]
-
     build_venv = VirtualenvManager(
         topsrcdir,
         os.path.join(topobjdir, "_virtualenvs"),
