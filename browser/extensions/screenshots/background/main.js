@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals browser, getStrings, selectorLoader, analytics, communication, catcher, log, makeUuid, auth, senderror, startBackground, blobConverters, startSelectionWithOnboarding */
+/* globals browser, getStrings, selectorLoader, analytics, communication, catcher, log, auth, senderror, startBackground, blobConverters, startSelectionWithOnboarding */
 
 "use strict";
 
@@ -153,7 +153,7 @@ this.main = (function() {
 
   communication.register("openShot", async (sender, { url, copied }) => {
     if (copied) {
-      const id = makeUuid();
+      const id = crypto.randomUUID();
       const [title, message] = await getStrings([
         { id: "screenshots-notification-link-copied-title" },
         { id: "screenshots-notification-link-copied-details" },
