@@ -22,41 +22,37 @@ namespace JS {
 // Define a reasonable default GC policy for GC-aware Maps.
 template <typename Key, typename Value>
 struct DefaultMapSweepPolicy {
-  static bool needsSweep(Key* key, Value* value) {
-    return GCPolicy<Key>::needsSweep(key) || GCPolicy<Value>::needsSweep(value);
-  }
-
   static bool traceWeak(JSTracer* trc, Key* key, Value* value) {
     return GCPolicy<Key>::traceWeak(trc, key) &&
            GCPolicy<Value>::traceWeak(trc, value);
   }
 };
 
-// A GCHashMap is a GC-aware HashMap, meaning that it has additional trace and
-// sweep methods that know how to visit all keys and values in the table.
-// HashMaps that contain GC pointers will generally want to use this GCHashMap
+// A GCHashMap is a GC-aware HashMap, meaning that it has additional trace
+// methods that know how to visit all keys and values in the table. HashMaps
+// that contain GC pointers will generally want to use this GCHashMap
 // specialization instead of HashMap, because this conveniently supports tracing
 // keys and values, and cleaning up weak entries.
 //
 // GCHashMap::trace applies GCPolicy<T>::trace to each entry's key and value.
 // Most types of GC pointers already have appropriate specializations of
 // GCPolicy, so they should just work as keys and values. Any struct type with a
-// default constructor and trace and sweep functions should work as well. If you
-// need to define your own GCPolicy specialization, generic helpers can be found
-// in js/public/TracingAPI.h.
+// default constructor and trace function should work as well. If you need to
+// define your own GCPolicy specialization, generic helpers can be found in
+// js/public/TracingAPI.h.
 //
 // The MapSweepPolicy template parameter controls how the table drops entries
-// when swept. GCHashMap::sweep applies MapSweepPolicy::needsSweep to each table
-// entry; if it returns true, the entry is dropped. The default MapSweepPolicy
-// drops the entry if either the key or value is about to be finalized,
-// according to its GCPolicy<T>::needsSweep method. (This default is almost
-// always fine: it's hard to imagine keeping such an entry around anyway.)
+// when edges are weakly held. GCHashMap::traceWeak applies the MapSweepPolicy's
+// traceWeak method to each table entry; if it returns true, the entry is
+// dropped. The default MapSweepPolicy drops the entry if either the key or
+// value is about to be finalized, according to its GCPolicy<T>::traceWeak
+// method. (This default is almost always fine: it's hard to imagine keeping
+// such an entry around anyway.)
 //
-// Note that this HashMap only knows *how* to trace and sweep, but it does not
-// itself cause tracing or sweeping to be invoked. For tracing, it must be used
-// as Rooted<GCHashMap> or PersistentRooted<GCHashMap>, or barriered and traced
-// manually. For sweeping, currently it requires an explicit call to
-// <map>.sweep().
+// Note that this HashMap only knows *how* to trace, but it does not itself
+// cause tracing to be invoked. For tracing, it must be used as
+// Rooted<GCHashMap> or PersistentRooted<GCHashMap>, or barriered and traced
+// manually.
 template <typename Key, typename Value,
           typename HashPolicy = js::DefaultHasher<Key>,
           typename AllocPolicy = js::TempAllocPolicy,
@@ -75,15 +71,6 @@ class GCHashMap : public js::HashMap<Key, Value, HashPolicy, AllocPolicy> {
     for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
       GCPolicy<Value>::trace(trc, &e.front().value(), "hashmap value");
       GCPolicy<Key>::trace(trc, &e.front().mutableKey(), "hashmap key");
-    }
-  }
-
-  void sweep() {
-    for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
-      if (MapSweepPolicy::needsSweep(&e.front().mutableKey(),
-                                     &e.front().value())) {
-        e.removeFront();
-      }
     }
   }
 
@@ -138,17 +125,6 @@ class GCRekeyableHashMap : public JS::GCHashMap<Key, Value, HashPolicy,
   explicit GCRekeyableHashMap(size_t length) : Base(length) {}
   GCRekeyableHashMap(AllocPolicy a, size_t length)
       : Base(std::move(a), length) {}
-
-  void sweep() {
-    for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
-      Key key(e.front().key());
-      if (MapSweepPolicy::needsSweep(&key, &e.front().value())) {
-        e.removeFront();
-      } else if (!HashPolicy::match(key, e.front().key())) {
-        e.rekeyFront(key);
-      }
-    }
-  }
 
   bool traceWeak(JSTracer* trc) {
     for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
