@@ -4432,7 +4432,13 @@ nsresult Http2Session::OnHeadersAvailable(nsAHttpTransaction* transaction,
                                          reset);
 }
 
-bool Http2Session::IsReused() { return mConnection->IsReused(); }
+bool Http2Session::IsReused() {
+  if (!mConnection) {
+    return false;
+  }
+
+  return mConnection->IsReused();
+}
 
 nsresult Http2Session::PushBack(const char* buf, uint32_t len) {
   return mConnection->PushBack(buf, len);
