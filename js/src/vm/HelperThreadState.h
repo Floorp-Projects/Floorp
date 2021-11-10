@@ -365,6 +365,8 @@ class GlobalHelperThreadState {
       const AutoLockHelperThreadState& lock);
   HelperThreadTask* maybeGetIonCompileTask(
       const AutoLockHelperThreadState& lock);
+  HelperThreadTask* maybeGetLowPrioIonCompileTask(
+      const AutoLockHelperThreadState& lock);
   HelperThreadTask* maybeGetIonFreeTask(const AutoLockHelperThreadState& lock);
   HelperThreadTask* maybeGetParseTask(const AutoLockHelperThreadState& lock);
   HelperThreadTask* maybeGetCompressionTask(
@@ -380,7 +382,7 @@ class GlobalHelperThreadState {
                                      const AutoLockHelperThreadState& lock);
 
   jit::IonCompileTask* highestPriorityPendingIonCompile(
-      const AutoLockHelperThreadState& lock);
+      const AutoLockHelperThreadState& lock, bool checkExecutionStatus);
 
  private:
   UniquePtr<ParseTask> finishParseTaskCommon(JSContext* cx, ParseTaskKind kind,

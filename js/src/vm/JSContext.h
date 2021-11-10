@@ -205,6 +205,10 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // double-count execution time in reentrant situations.
   js::ContextData<bool> measuringExecutionTime_;
 
+  // This variable is used by the HelperThread scheduling to update the priority
+  // of task based on whether JavaScript is being executed on the main thread.
+  mozilla::Atomic<bool, mozilla::ReleaseAcquire> isExecuting_;
+
  public:
   // This is used by helper threads to change the runtime their context is
   // currently operating on.
@@ -228,6 +232,15 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   void setIsMeasuringExecutionTime(bool value) {
     measuringExecutionTime_ = value;
   }
+
+  // While JSContexts are meant to be used on a single thread, this reference is
+  // meant to be shared to helper thread tasks. This is used by helper threads
+  // to change the priority of tasks based on whether JavaScript is executed on
+  // the main thread.
+  const mozilla::Atomic<bool, mozilla::ReleaseAcquire>& isExecutingRef() const {
+    return isExecuting_;
+  }
+  void setIsExecuting(bool value) { isExecuting_ = value; }
 
 #ifdef DEBUG
   bool isInitialized() const { return kind_ != js::ContextKind::Uninitialized; }
