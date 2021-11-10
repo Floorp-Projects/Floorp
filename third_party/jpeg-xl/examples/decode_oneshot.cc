@@ -52,6 +52,7 @@ bool DecodeJpegXlOneShot(const uint8_t* jxl, size_t size,
   JxlPixelFormat format = {4, JXL_TYPE_FLOAT, JXL_NATIVE_ENDIAN, 0};
 
   JxlDecoderSetInput(dec.get(), jxl, size);
+  JxlDecoderCloseInput(dec.get());
 
   for (;;) {
     JxlDecoderStatus status = JxlDecoderProcessInput(dec.get());

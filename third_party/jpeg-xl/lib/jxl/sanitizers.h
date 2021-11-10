@@ -6,6 +6,7 @@
 #ifndef LIB_JXL_SANITIZERS_H_
 #define LIB_JXL_SANITIZERS_H_
 
+#include <inttypes.h>
 #include <stddef.h>
 
 #include "lib/jxl/base/compiler_specific.h"
@@ -99,8 +100,8 @@ template <typename T>
 static JXL_INLINE JXL_MAYBE_UNUSED void PrintImageUninitialized(
     const Plane<T>& im) {
   fprintf(stderr,
-          "Uninitialized regions for image of size %" PRIuS "x%" PRIuS ":\n",
-          im.xsize(), im.ysize());
+          "Uninitialized regions for image of size %" PRIu64 "x%" PRIu64 ":\n",
+          static_cast<uint64_t>(im.xsize()), static_cast<uint64_t>(im.ysize()));
 
   // A segment of uninitialized pixels in a row, in the format [first, second).
   typedef std::pair<size_t, size_t> PixelSegment;
@@ -138,15 +139,18 @@ static JXL_INLINE JXL_MAYBE_UNUSED void PrintImageUninitialized(
         return;
       }
       if (end_y - start_y_ > 1) {
-        fprintf(stderr, " y=[%" PRIdS ", %" PRIuS "):", start_y_, end_y);
+        fprintf(stderr, " y=[%" PRId64 ", %" PRIu64 "):",
+                static_cast<int64_t>(start_y_), static_cast<uint64_t>(end_y));
       } else {
-        fprintf(stderr, " y=[%" PRIdS "]:", start_y_);
+        fprintf(stderr, " y=[%" PRId64 "]:", static_cast<int64_t>(start_y_));
       }
       for (const auto& seg : segments_) {
         if (seg.first + 1 == seg.second) {
-          fprintf(stderr, " [%" PRIdS "]", seg.first);
+          fprintf(stderr, " [%" PRId64 "]", static_cast<int64_t>(seg.first));
         } else {
-          fprintf(stderr, " [%" PRIdS ", %" PRIuS ")", seg.first, seg.second);
+          fprintf(stderr, " [%" PRId64 ", %" PRIu64 ")",
+                  static_cast<int64_t>(seg.first),
+                  static_cast<uint64_t>(seg.second));
         }
       }
       fprintf(stderr, "\n");
@@ -203,16 +207,20 @@ static JXL_INLINE JXL_MAYBE_UNUSED void CheckImageInitialized(
     const auto* row = im.Row(y);
     intptr_t ret = __msan_test_shadow(row + r.x0(), sizeof(*row) * r.xsize());
     if (ret != -1) {
-      JXL_DEBUG(1,
-                "Checking an image of %" PRIuS " x %" PRIuS ", rect x0=%" PRIuS
-                ", y0=%" PRIuS
-                ", "
-                "xsize=%" PRIuS ", ysize=%" PRIuS,
-                im.xsize(), im.ysize(), r.x0(), r.y0(), r.xsize(), r.ysize());
+      JXL_DEBUG(
+          1,
+          "Checking an image of %" PRIu64 " x %" PRIu64 ", rect x0=%" PRIu64
+          ", y0=%" PRIu64
+          ", "
+          "xsize=%" PRIu64 ", ysize=%" PRIu64,
+          static_cast<uint64_t>(im.xsize()), static_cast<uint64_t>(im.ysize()),
+          static_cast<uint64_t>(r.x0()), static_cast<uint64_t>(r.y0()),
+          static_cast<uint64_t>(r.xsize()), static_cast<uint64_t>(r.ysize()));
       size_t x = ret / sizeof(*row);
       JXL_DEBUG(
-          1, "CheckImageInitialized failed at x=%" PRIuS ", y=%" PRIuS ": %s",
-          r.x0() + x, y, message ? message : "");
+          1, "CheckImageInitialized failed at x=%" PRIu64 ", y=%" PRIu64 ": %s",
+          static_cast<uint64_t>(r.x0() + x), static_cast<uint64_t>(y),
+          message ? message : "");
       PrintImageUninitialized(im);
     }
     // This will report an error if memory is not initialized.

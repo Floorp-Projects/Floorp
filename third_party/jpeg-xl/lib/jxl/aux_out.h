@@ -8,6 +8,7 @@
 
 // Optional output information for debugging and analyzing size usage.
 
+#include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -103,7 +104,7 @@ static inline const char* LayerName(size_t layer) {
     case kLayerExtraChannels:
       return "extra channels";
     default:
-      JXL_ABORT("Invalid layer %" PRIuS "\n", layer);
+      JXL_ABORT("Invalid layer %d\n", static_cast<int>(layer));
   }
 }
 
@@ -119,12 +120,13 @@ struct AuxOut {
       clustered_entropy += victim.clustered_entropy;
     }
     void Print(size_t num_inputs) const {
-      printf("%10" PRIdS, total_bits);
+      printf("%10" PRId64, static_cast<int64_t>(total_bits));
       if (histogram_bits != 0) {
-        printf("   [c/i:%6.2f | hst:%8" PRIdS " | ex:%8" PRIdS
+        printf("   [c/i:%6.2f | hst:%8" PRId64 " | ex:%8" PRId64
                " | h+c+e:%12.3f",
-               num_clustered_histograms * 1.0 / num_inputs, histogram_bits >> 3,
-               extra_bits >> 3,
+               num_clustered_histograms * 1.0 / num_inputs,
+               static_cast<int64_t>(histogram_bits >> 3),
+               static_cast<int64_t>(extra_bits >> 3),
                (histogram_bits + clustered_entropy + extra_bits) / 8.0);
         printf("]");
       }

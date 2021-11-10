@@ -48,10 +48,18 @@ JxlEncoderStatus JxlEncoderStruct::RefillOutputByteQueue() {
   jxl::BitWriter writer;
 
   if (!wrote_bytes) {
-    if (use_container) {
+    if (MustUseContainer()) {
+      // Add "JXL " and ftyp box.
       output_byte_queue.insert(
           output_byte_queue.end(), jxl::kContainerHeader,
           jxl::kContainerHeader + sizeof(jxl::kContainerHeader));
+      if (codestream_level != 5) {
+        // Add jxll box.
+        output_byte_queue.insert(
+            output_byte_queue.end(), jxl::kLevelBoxHeader,
+            jxl::kLevelBoxHeader + sizeof(jxl::kLevelBoxHeader));
+        output_byte_queue.push_back(codestream_level);
+      }
       if (store_jpeg_metadata && jpeg_metadata.size() > 0) {
         jxl::AppendBoxHeader(jxl::MakeBoxType("jbrd"), jpeg_metadata.size(),
                              false, &output_byte_queue);
@@ -100,7 +108,7 @@ JxlEncoderStatus JxlEncoderStruct::RefillOutputByteQueue() {
 
   jxl::PaddedBytes bytes = std::move(writer).TakeBytes();
 
-  if (use_container && !wrote_bytes) {
+  if (MustUseContainer() && !wrote_bytes) {
     if (input_closed && input_frame_queue.empty()) {
       jxl::AppendBoxHeader(jxl::MakeBoxType("jxlc"), bytes.size(),
                            /*unbounded=*/false, &output_byte_queue);
@@ -251,11 +259,7 @@ JxlEncoderStatus JxlEncoderOptionsSetLossless(JxlEncoderOptions* options,
 
 JxlEncoderStatus JxlEncoderOptionsSetEffort(JxlEncoderOptions* options,
                                             const int effort) {
-  if (effort < 1 || effort > 9) {
-    return JXL_ENC_ERROR;
-  }
-  options->values.cparams.speed_tier = static_cast<jxl::SpeedTier>(10 - effort);
-  return JXL_ENC_SUCCESS;
+  return JxlEncoderOptionsSetInteger(options, JXL_ENC_OPTION_EFFORT, effort);
 }
 
 JxlEncoderStatus JxlEncoderOptionsSetDistance(JxlEncoderOptions* options,
@@ -264,39 +268,192 @@ JxlEncoderStatus JxlEncoderOptionsSetDistance(JxlEncoderOptions* options,
     return JXL_ENC_ERROR;
   }
   options->values.cparams.butteraugli_distance = distance;
+  float jpeg_quality;
+  // Formula to translate butteraugli distance roughly into JPEG 0-100 quality.
+  // This is the inverse of the formula in cjxl.cc to translate JPEG quality
+  // into butteraugli distance.
+  if (distance < 6.56f) {
+    jpeg_quality = -5.456783f * std::log(0.0256f * distance - 0.16384f);
+  } else {
+    jpeg_quality = -11.11111f * distance + 101.11111f;
+  }
+  // Translate JPEG quality into the quality_pair setting for modular encoding.
+  // This is the formula also used in cjxl.cc to convert the command line JPEG
+  // quality parameter to the quality_pair setting.
+  // TODO(lode): combine the distance -> quality_pair conversion into a single
+  // formula, possibly altering it to a more suitable heuristic.
+  float quality;
+  if (jpeg_quality < 7) {
+    quality = std::min<float>(35 + (jpeg_quality - 7) * 3.0f, 100.0f);
+  } else {
+    quality = std::min<float>(35 + (jpeg_quality - 7) * 65.f / 93.f, 100.0f);
+  }
+  options->values.cparams.quality_pair.first =
+      options->values.cparams.quality_pair.second = quality;
   return JXL_ENC_SUCCESS;
 }
 
-JxlEncoderStatus JxlEncoderOptionsSetAsInteger(JxlEncoderOptions* options,
-                                               JxlEncoderOptionId option,
-                                               int32_t value) {
+JxlEncoderStatus JxlEncoderOptionsSetDecodingSpeed(JxlEncoderOptions* options,
+                                                   int tier) {
+  return JxlEncoderOptionsSetInteger(options, JXL_ENC_OPTION_DECODING_SPEED,
+                                     tier);
+}
+
+JxlEncoderStatus JxlEncoderOptionsSetInteger(JxlEncoderOptions* options,
+                                             JxlEncoderOptionId option,
+                                             int32_t value) {
   switch (option) {
+    case JXL_ENC_OPTION_EFFORT:
+      if (value < 1 || value > 9) {
+        return JXL_ENC_ERROR;
+      }
+      options->values.cparams.speed_tier =
+          static_cast<jxl::SpeedTier>(10 - value);
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_DECODING_SPEED:
+      if (value < 0 || value > 4) {
+        return JXL_ENC_ERROR;
+      }
+      options->values.cparams.decoding_speed_tier = value;
+      return JXL_ENC_SUCCESS;
     case JXL_ENC_OPTION_RESAMPLING:
-      if (value != 0 && value != 1 && value != 2 && value != 4 && value != 8) {
+      if (value != -1 && value != 1 && value != 2 && value != 4 && value != 8) {
         return JXL_ENC_ERROR;
       }
       options->values.cparams.resampling = value;
       return JXL_ENC_SUCCESS;
     case JXL_ENC_OPTION_EXTRA_CHANNEL_RESAMPLING:
-      if (value != 0 && value != 1 && value != 2 && value != 4 && value != 8) {
+      if (value != -1 && value != 1 && value != 2 && value != 4 && value != 8) {
         return JXL_ENC_ERROR;
       }
       // The implementation doesn't support the default choice between 1x1 and
       // 2x2 for extra channels, so 1x1 is set as the default.
-      if (value == 0) value = 1;
+      if (value == -1) value = 1;
       options->values.cparams.ec_resampling = value;
       return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_PHOTON_NOISE:
+      if (value < 0) return JXL_ENC_ERROR;
+      // TODO(lode): add encoder setting to set the 8 floating point values of
+      // the noise synthesis parameters per frame for more fine grained control.
+      options->values.cparams.photon_noise_iso = static_cast<float>(value);
+      return JXL_ENC_SUCCESS;
     case JXL_ENC_OPTION_NOISE:
+      if (value < -1 || value > 1) return JXL_ENC_ERROR;
       options->values.cparams.noise = static_cast<jxl::Override>(value);
       return JXL_ENC_SUCCESS;
     case JXL_ENC_OPTION_DOTS:
+      if (value < -1 || value > 1) return JXL_ENC_ERROR;
       options->values.cparams.dots = static_cast<jxl::Override>(value);
       return JXL_ENC_SUCCESS;
     case JXL_ENC_OPTION_PATCHES:
+      if (value < -1 || value > 1) return JXL_ENC_ERROR;
       options->values.cparams.patches = static_cast<jxl::Override>(value);
       return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_EPF:
+      if (value < -1 || value > 3) return JXL_ENC_ERROR;
+      options->values.cparams.epf = static_cast<int>(value);
+      return JXL_ENC_SUCCESS;
     case JXL_ENC_OPTION_GABORISH:
+      if (value < -1 || value > 1) return JXL_ENC_ERROR;
       options->values.cparams.gaborish = static_cast<jxl::Override>(value);
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_MODULAR:
+      if (value == 1) {
+        options->values.cparams.modular_mode = true;
+      } else if (value == -1 || value == 0) {
+        options->values.cparams.modular_mode = false;
+      } else {
+        return JXL_ENC_ERROR;
+      }
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_KEEP_INVISIBLE:
+      if (value < -1 || value > 1) return JXL_ENC_ERROR;
+      options->values.cparams.keep_invisible =
+          static_cast<jxl::Override>(value);
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_GROUP_ORDER:
+      if (value < -1 || value > 1) return JXL_ENC_ERROR;
+      options->values.cparams.centerfirst = (value == 1);
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_GROUP_ORDER_CENTER_X:
+      if (value < -1) return JXL_ENC_ERROR;
+      options->values.cparams.center_x = static_cast<size_t>(value);
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_GROUP_ORDER_CENTER_Y:
+      if (value < -1) return JXL_ENC_ERROR;
+      options->values.cparams.center_y = static_cast<size_t>(value);
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_RESPONSIVE:
+      if (value < -1 || value > 1) return JXL_ENC_ERROR;
+      options->values.cparams.responsive = value;
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_PROGRESSIVE_AC:
+      if (value < -1 || value > 1) return JXL_ENC_ERROR;
+      options->values.cparams.progressive_mode = value;
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_QPROGRESSIVE_AC:
+      if (value < -1 || value > 1) return JXL_ENC_ERROR;
+      options->values.cparams.qprogressive_mode = value;
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_PROGRESSIVE_DC:
+      if (value < -1 || value > 2) return JXL_ENC_ERROR;
+      options->values.cparams.progressive_dc = value;
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_CHANNEL_COLORS_PRE_TRANSFORM_PERCENT:
+      if (value < -1 || value > 100) return JXL_ENC_ERROR;
+      if (value == -1) {
+        options->values.cparams.channel_colors_pre_transform_percent = 95.0f;
+      } else {
+        options->values.cparams.channel_colors_pre_transform_percent =
+            static_cast<float>(value);
+      }
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_CHANNEL_COLORS_PERCENT:
+      if (value < -1 || value > 100) return JXL_ENC_ERROR;
+      if (value == -1) {
+        options->values.cparams.channel_colors_percent = 80.0f;
+      } else {
+        options->values.cparams.channel_colors_percent =
+            static_cast<float>(value);
+      }
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_PALETTE_COLORS:
+      if (value < -1 || value > 70913) return JXL_ENC_ERROR;
+      if (value == -1) {
+        options->values.cparams.palette_colors = 1 << 10;
+      } else {
+        options->values.cparams.palette_colors = value;
+      }
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_LOSSY_PALETTE:
+      if (value < -1 || value > 1) return JXL_ENC_ERROR;
+      // TODO(lode): the defaults of some palette settings depend on others.
+      // See the logic in cjxl. Similar for other settings. This should be
+      // handled in the encoder during JxlEncoderProcessOutput (or,
+      // alternatively, in the cjxl binary like now)
+      options->values.cparams.lossy_palette = (value == 1);
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_MODULAR_COLOR_SPACE:
+      // TODO(lode): also add color transform option (xyb, none, ycbcr)
+      if (value < -1 || value > 37) return JXL_ENC_ERROR;
+      options->values.cparams.colorspace = value;
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_MODULAR_GROUP_SIZE:
+      if (value < -1 || value > 3) return JXL_ENC_ERROR;
+      // TODO(lode): the default behavior of this parameter for cjxl is
+      // to choose 1 or 2 depending on the situation. This behavior needs to be
+      // implemented either in the C++ library by allowing to set this to -1, or
+      // kept in cjxl and set it to 1 or 2 using this API.
+      if (value == -1) {
+        options->values.cparams.modular_group_size_shift = 1;
+      } else {
+        options->values.cparams.modular_group_size_shift = value;
+      }
+      return JXL_ENC_SUCCESS;
+    case JXL_ENC_OPTION_MODULAR_PREDICTOR:
+      if (value < -1 || value > 15) return JXL_ENC_ERROR;
+      options->values.cparams.options.predictor =
+          static_cast<jxl::Predictor>(value);
       return JXL_ENC_SUCCESS;
     default:
       return JXL_ENC_ERROR;
@@ -329,6 +486,8 @@ void JxlEncoderReset(JxlEncoder* enc) {
   enc->input_closed = false;
   enc->basic_info_set = false;
   enc->color_encoding_set = false;
+  enc->use_container = false;
+  enc->codestream_level = 5;
 }
 
 void JxlEncoderDestroy(JxlEncoder* enc) {
@@ -341,13 +500,28 @@ void JxlEncoderDestroy(JxlEncoder* enc) {
 
 JxlEncoderStatus JxlEncoderUseContainer(JxlEncoder* enc,
                                         JXL_BOOL use_container) {
+  if (enc->wrote_bytes) {
+    return JXL_API_ERROR("this setting can only be set at the beginning");
+  }
   enc->use_container = static_cast<bool>(use_container);
   return JXL_ENC_SUCCESS;
 }
 
 JxlEncoderStatus JxlEncoderStoreJPEGMetadata(JxlEncoder* enc,
                                              JXL_BOOL store_jpeg_metadata) {
+  if (enc->wrote_bytes) {
+    return JXL_API_ERROR("this setting can only be set at the beginning");
+  }
   enc->store_jpeg_metadata = static_cast<bool>(store_jpeg_metadata);
+  return JXL_ENC_SUCCESS;
+}
+
+JxlEncoderStatus JxlEncoderSetCodestreamLevel(JxlEncoder* enc, int level) {
+  if (level != 5 && level != 10) return JXL_API_ERROR("invalid level");
+  if (enc->wrote_bytes) {
+    return JXL_API_ERROR("this setting can only be set at the beginning");
+  }
+  enc->codestream_level = level;
   return JXL_ENC_SUCCESS;
 }
 
@@ -504,15 +678,6 @@ JxlEncoderStatus JxlEncoderProcessOutput(JxlEncoder* enc, uint8_t** next_out,
   if (!enc->output_byte_queue.empty() || !enc->input_frame_queue.empty()) {
     return JXL_ENC_NEED_MORE_OUTPUT;
   }
-  return JXL_ENC_SUCCESS;
-}
-
-JxlEncoderStatus JxlEncoderOptionsSetDecodingSpeed(JxlEncoderOptions* options,
-                                                   int tier) {
-  if (tier < 0 || tier > 4) {
-    return JXL_ENC_ERROR;
-  }
-  options->values.cparams.decoding_speed_tier = tier;
   return JXL_ENC_SUCCESS;
 }
 

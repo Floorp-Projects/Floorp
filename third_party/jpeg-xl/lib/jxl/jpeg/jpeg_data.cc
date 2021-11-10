@@ -5,6 +5,7 @@
 
 #include "lib/jxl/jpeg/jpeg_data.h"
 
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/status.h"
 
 namespace jxl {
@@ -143,15 +144,14 @@ Status JPEGData::VisitFields(Visitor* visitor) {
   }
 
   JPEGComponentType component_type =
-      components.size() == 1 && components[0].id == 1
-          ? JPEGComponentType::kGray
-          : components.size() == 3 && components[0].id == 1 &&
-                    components[1].id == 2 && components[2].id == 3
-                ? JPEGComponentType::kYCbCr
-                : components.size() == 3 && components[0].id == 'R' &&
-                          components[1].id == 'G' && components[2].id == 'B'
-                      ? JPEGComponentType::kRGB
-                      : JPEGComponentType::kCustom;
+      components.size() == 1 && components[0].id == 1 ? JPEGComponentType::kGray
+      : components.size() == 3 && components[0].id == 1 &&
+              components[1].id == 2 && components[2].id == 3
+          ? JPEGComponentType::kYCbCr
+      : components.size() == 3 && components[0].id == 'R' &&
+              components[1].id == 'G' && components[2].id == 'B'
+          ? JPEGComponentType::kRGB
+          : JPEGComponentType::kCustom;
   JXL_RETURN_IF_ERROR(
       visitor->Bits(2, JPEGComponentType::kYCbCr,
                     reinterpret_cast<uint32_t*>(&component_type)));
@@ -195,10 +195,15 @@ Status JPEGData::VisitFields(Visitor* visitor) {
     }
     used_tables |= 1U << components[i].quant_idx;
   }
-  if (used_tables + 1 != 1U << quant.size()) {
-    return JXL_FAILURE("Not all quant tables are used (%" PRIuS
-                       " tables, %" PRIx64 " used table mask)",
-                       quant.size(), static_cast<uint64_t>(used_tables));
+  for (size_t i = 0; i < quant.size(); i++) {
+    if (used_tables & (1 << i)) continue;
+    if (i == 0) return JXL_FAILURE("First quant table unused.");
+    // Unused quant table has to be set to copy of previous quant table
+    for (size_t j = 0; j < 64; j++) {
+      if (quant[i].values[j] != quant[i - 1].values[j]) {
+        return JXL_FAILURE("Non-trivial unused quant table");
+      }
+    }
   }
 
   uint32_t num_huff = huffman_code.size();

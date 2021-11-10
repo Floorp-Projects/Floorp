@@ -12,6 +12,7 @@
 #include <utility>
 
 #include "gtest/gtest.h"
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/image.h"
 #include "lib/jxl/image_test_utils.h"
 

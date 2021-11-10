@@ -13,7 +13,7 @@ namespace jxl {
 
 void Image::undo_transforms(const weighted::Header &wp_header,
                             jxl::ThreadPool *pool) {
-  while (transform.size() > 0) {
+  while (!transform.empty()) {
     Transform t = transform.back();
     JXL_DEBUG_V(4, "Undoing transform");
     Status result = t.Inverse(*this, wp_header, pool);

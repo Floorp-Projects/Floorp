@@ -20,8 +20,8 @@
 #include <hwy/base.h>  // kMaxVectorSize
 #include <limits>
 
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/status.h"
-#include "lib/jxl/common.h"
 
 namespace jxl {
 namespace {

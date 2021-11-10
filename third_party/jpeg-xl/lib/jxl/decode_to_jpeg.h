@@ -37,12 +37,6 @@ class JxlToJpegDecoder {
   // Returns whether the decoder is parsing a boxa JPEG box was parsed.
   bool IsParsingBox() const { return inside_box_; }
 
-  const jpeg::JPEGData* JpegData() const { return jpeg_data_.get(); }
-
-  // Return the parsed jpeg::JPEGData object and removes it from the
-  // JxlToJpegDecoder.
-  jpeg::JPEGData* ReleaseJpegData() { return jpeg_data_.release(); }
-
   // Sets the output buffer used when producing JPEG output.
   JxlDecoderStatus SetOutputBuffer(uint8_t* data, size_t size) {
     if (next_out_) return JXL_DEC_ERROR;
@@ -74,7 +68,38 @@ class JxlToJpegDecoder {
   // Uses box_size_, inside_box_ and box_until_eof_ to calculate how much to
   // consume. Potentially stores unparsed data in buffer_.
   // Potentially populates jpeg_data_. Potentially updates inside_box_.
+  // Returns JXL_DEC_JPEG_RECONSTRUCTION when finished, JXL_DEC_NEED_MORE_INPUT
+  // if more input is needed, JXL_DEC_ERROR on parsing error.
   JxlDecoderStatus Process(const uint8_t** next_in, size_t* avail_in);
+
+  // Returns non-owned copy of the JPEGData, only after Process finished and
+  // the JPEGData was not yet moved to an image bundle with
+  // SetImageBundleJpegData.
+  jpeg::JPEGData* GetJpegData() { return jpeg_data_.get(); }
+
+  // Returns how many exif or xmp app markers are present in the JPEG data. A
+  // return value higher than 1 would require multiple exif boxes or multiple
+  // xmp boxes in the container format, and this is not supported by the API and
+  // considered an error. May only be called after Process returned success.
+  static size_t NumExifMarkers(const jpeg::JPEGData& jpeg_data);
+  static size_t NumXmpMarkers(const jpeg::JPEGData& jpeg_data);
+
+  // Returns box content size for metadata, using the known data from the app
+  // markers.
+  static JxlDecoderStatus ExifBoxContentSize(const jpeg::JPEGData& jpeg_data,
+                                             size_t* size);
+  static JxlDecoderStatus XmlBoxContentSize(const jpeg::JPEGData& jpeg_data,
+                                            size_t* size);
+
+  // Returns JXL_DEC_ERROR if there is no exif/XMP marker or the data size
+  // does not match, or this function is called before Process returned
+  // success, JXL_DEC_SUCCESS otherwise. As input, provide the full box contents
+  // but not the box header. In case of exif, this includes the 4-byte TIFF
+  // header, even though it won't be copied into the JPEG.
+  static JxlDecoderStatus SetExif(const uint8_t* data, size_t size,
+                                  jpeg::JPEGData* jpeg_data);
+  static JxlDecoderStatus SetXmp(const uint8_t* data, size_t size,
+                                 jpeg::JPEGData* jpeg_data);
 
   // Sets the JpegData of the ImageBundle passed if there is anything to set.
   // Releases the JpegData from this decoder if set.
@@ -145,9 +170,6 @@ class JxlToJpegDecoder {
   bool IsOutputSet() const { return false; }
   bool IsParsingBox() const { return false; }
 
-  const jpeg::JPEGData* JpegData() const { return nullptr; }
-  jpeg::JPEGData* ReleaseJpegData() { return nullptr; }
-
   JxlDecoderStatus SetOutputBuffer(uint8_t* /* data */, size_t /* size */) {
     return JXL_DEC_ERROR;
   }
@@ -158,8 +180,30 @@ class JxlToJpegDecoder {
   JxlDecoderStatus Process(const uint8_t** next_in, size_t* avail_in) {
     return JXL_DEC_ERROR;
   }
+  jpeg::JPEGData* GetJpegData() { return nullptr; }
 
   Status SetImageBundleJpegData(ImageBundle* /* ib */) { return true; }
+
+  static size_t NumExifMarkers(const jpeg::JPEGData& /*jpeg_data*/) {
+    return 0;
+  }
+  static size_t NumXmpMarkers(const jpeg::JPEGData& /*jpeg_data*/) { return 0; }
+  static size_t ExifBoxContentSize(const jpeg::JPEGData& /*jpeg_data*/,
+                                   size_t* /*size*/) {
+    return JXL_DEC_ERROR;
+  }
+  static size_t XmlBoxContentSize(const jpeg::JPEGData& /*jpeg_data*/,
+                                  size_t* /*size*/) {
+    return JXL_DEC_ERROR;
+  }
+  static JxlDecoderStatus SetExif(const uint8_t* /*data*/, size_t /*size*/,
+                                  jpeg::JPEGData* /*jpeg_data*/) {
+    return JXL_DEC_ERROR;
+  }
+  static JxlDecoderStatus SetXmp(const uint8_t* /*data*/, size_t /*size*/,
+                                 jpeg::JPEGData* /*jpeg_data*/) {
+    return JXL_DEC_ERROR;
+  }
 
   JxlDecoderStatus WriteOutput(const jpeg::JPEGData& /* jpeg_data */) {
     return JXL_DEC_SUCCESS;

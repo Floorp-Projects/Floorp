@@ -52,6 +52,7 @@ libjxl_dec_sources = [
     "jxl/base/override.h",
     "jxl/base/padded_bytes.cc",
     "jxl/base/padded_bytes.h",
+    "jxl/base/printf_macros.h",
     "jxl/base/profiler.h",
     "jxl/base/random.cc",
     "jxl/base/random.h",
@@ -321,6 +322,7 @@ libjxl_enc_sources = [
 libjxl_gbench_sources = [
     "extras/tone_mapping_gbench.cc",
     "jxl/dec_external_image_gbench.cc",
+    "jxl/dec_reconstruct_gbench.cc",
     "jxl/enc_external_image_gbench.cc",
     "jxl/gauss_blur_gbench.cc",
     "jxl/splines_gbench.cc",
@@ -389,6 +391,7 @@ libjxl_testlib_sources = [
     "jxl/dct_for_test.h",
     "jxl/dec_transforms_testonly.cc",
     "jxl/dec_transforms_testonly.h",
+    "jxl/fake_parallel_runner_testonly.h",
     "jxl/image_test_utils.h",
     "jxl/test_utils.h",
     "jxl/testdata.h",

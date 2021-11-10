@@ -11,6 +11,7 @@
 
 #include "gtest/gtest.h"
 #include "lib/extras/time.h"
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/convolve.h"
 #include "lib/jxl/image_ops.h"
 #include "lib/jxl/image_test_utils.h"
