@@ -541,6 +541,7 @@ void ChooseUintConfigs(const HistogramParams& params,
                        std::vector<Histogram>* clustered_histograms,
                        EntropyEncodingData* codes, size_t* log_alpha_size) {
   codes->uint_config.resize(clustered_histograms->size());
+
   if (params.uint_method == HistogramParams::HybridUintMethod::kNone) return;
   if (params.uint_method == HistogramParams::HybridUintMethod::kContextMap) {
     codes->uint_config.clear();
@@ -622,6 +623,9 @@ void ChooseUintConfigs(const HistogramParams& params,
     for (size_t i = 0; i < clustered_histograms->size(); i++) {
       if (!is_valid[i]) continue;
       float cost = (*clustered_histograms)[i].PopulationCost() + extra_bits[i];
+      // add signaling cost of the hybriduintconfig itself
+      cost += CeilLog2Nonzero(cfg.split_exponent + 1);
+      cost += CeilLog2Nonzero(cfg.split_exponent - cfg.msb_in_token + 1);
       if (cost < costs[i]) {
         codes->uint_config[i] = cfg;
         costs[i] = cost;

@@ -6,6 +6,7 @@
 #include "lib/jxl/frame_header.h"
 
 #include "lib/jxl/aux_out.h"
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/fields.h"
 

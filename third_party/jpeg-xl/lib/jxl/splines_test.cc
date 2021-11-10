@@ -8,6 +8,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "lib/extras/codec.h"
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/dec_file.h"
 #include "lib/jxl/enc_butteraugli_comparator.h"
 #include "lib/jxl/enc_splines.h"

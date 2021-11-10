@@ -5,6 +5,7 @@
 
 #include "lib/jxl/modular/transform/transform.h"
 
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/fields.h"
 #include "lib/jxl/modular/modular_image.h"
 #include "lib/jxl/modular/transform/palette.h"

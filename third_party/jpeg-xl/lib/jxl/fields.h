@@ -8,6 +8,7 @@
 
 // Forward/backward-compatible 'bundles' with auto-serialized 'fields'.
 
+#include <inttypes.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -40,7 +41,8 @@ class BitsCoder {
                           size_t* JXL_RESTRICT encoded_bits) {
     *encoded_bits = bits;
     if (value >= (1ULL << bits)) {
-      return JXL_FAILURE("Value %u too large for %" PRIuS " bits", value, bits);
+      return JXL_FAILURE("Value %u too large for %" PRIu64 " bits", value,
+                         static_cast<uint64_t>(bits));
     }
     return true;
   }
@@ -53,8 +55,8 @@ class BitsCoder {
   static Status Write(const size_t bits, const uint32_t value,
                       BitWriter* JXL_RESTRICT writer) {
     if (value >= (1ULL << bits)) {
-      return JXL_FAILURE("Value %d too large to encode in %" PRIuS " bits",
-                         value, bits);
+      return JXL_FAILURE("Value %d too large to encode in %" PRIu64 " bits",
+                         value, static_cast<uint64_t>(bits));
     }
     writer->Write(bits, value);
     return true;

@@ -27,8 +27,8 @@ extern "C" {
  *
  * @param opaque custom memory manager handle provided by the caller.
  * @param size in bytes of the requested memory region.
- * @returns @c NULL if the memory can not be allocated,
- * @returns pointer to the memory otherwise.
+ * @return @c NULL if the memory can not be allocated,
+ * @return pointer to the memory otherwise.
  */
 typedef void* (*jpegxl_alloc_func)(void* opaque, size_t size);
 

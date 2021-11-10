@@ -55,6 +55,8 @@
 #define JXL_NORETURN __declspec(noreturn)
 #elif JXL_COMPILER_GCC || JXL_COMPILER_CLANG
 #define JXL_NORETURN __attribute__((noreturn))
+#else
+#define JXL_NORETURN
 #endif
 
 #if JXL_COMPILER_MSVC
