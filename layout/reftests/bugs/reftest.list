@@ -837,7 +837,7 @@ fails-if(cocoaWidget||winWidget) random-if(!cocoaWidget&&!winWidget) != 399636-q
 == 400813-1.html 400813-1-ref.html
 == 400826-1.html 400826-1-ref.html
 == chrome://reftest/content/bugs/401946-1.xhtml about:blank
-pref(layout.outline.include-overflow,true) == 402338-1.html 402338-1-ref.html
+== 402338-1.html 402338-1-ref.html
 == 402567-1.html 402567-1-ref.html
 fuzzy-if(winWidget&&!nativeThemePref,0-8,0-1) == 402567-2.html 402567-2-ref.html
 == 402567-3.html 402567-3-ref.html
@@ -1006,17 +1006,17 @@ fails == 423823-1.html 423823-1-ref.html # scrolling rowgroups were removed in b
 == chrome://reftest/content/bugs/424074-1.xhtml chrome://reftest/content/bugs/424074-1-ref.xhtml
 fails-if(Android) != chrome://reftest/content/bugs/424074-1.xhtml chrome://reftest/content/bugs/424074-1-ref2.xhtml
 random-if(gtkWidget) == chrome://reftest/content/bugs/424074-1-ref2.xhtml chrome://reftest/content/bugs/424074-1-ref3.xhtml
-pref(layout.outline.include-overflow,true) == 424236-1.html 424236-1-ref.html
-pref(layout.outline.include-overflow,true) == 424236-2.html 424236-2-ref.html
-pref(layout.outline.include-overflow,true) == 424236-3.html 424236-3-ref.html
-pref(layout.outline.include-overflow,true) == 424236-4.html 424236-4-ref.html
-pref(layout.outline.include-overflow,true) == 424236-5.html 424236-5-ref.html
-pref(layout.outline.include-overflow,true) == 424236-6.html 424236-6-ref.html
-pref(layout.outline.include-overflow,true) == 424236-7.html 424236-7-ref.html
-pref(layout.outline.include-overflow,true) == 424236-8.html 424236-8-ref.html
-pref(layout.outline.include-overflow,true) == 424236-9.html 424236-9-ref.html
-pref(layout.outline.include-overflow,true) == 424236-10.html 424236-10-ref.html
-pref(layout.outline.include-overflow,true) == 424236-11.html 424236-3-ref.html
+== 424236-1.html 424236-1-ref.html
+== 424236-2.html 424236-2-ref.html
+== 424236-3.html 424236-3-ref.html
+== 424236-4.html 424236-4-ref.html
+== 424236-5.html 424236-5-ref.html
+== 424236-6.html 424236-6-ref.html
+== 424236-7.html 424236-7-ref.html
+== 424236-8.html 424236-8-ref.html
+== 424236-9.html 424236-9-ref.html
+== 424236-10.html 424236-10-ref.html
+== 424236-11.html 424236-3-ref.html
 == 424434-1.html 424434-1-ref.html
 == 424465-1.html 424465-1-ref.html
 == 424631-1.html 424631-1-ref.html
