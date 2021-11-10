@@ -61,7 +61,7 @@ def before_runs(env):
             app_name = "firefox"
 
         name = [
-            "mitm6",
+            "mitm7",
             platform_name,
             "gve" if app_name == "geckoview_example" else app_name,
             test_site["name"],
