@@ -8,8 +8,6 @@
 #define mozilla_net_TRRServiceChild_h
 
 #include "mozilla/net/PTRRServiceChild.h"
-#include "nsIObserver.h"
-#include "nsWeakReference.h"
 
 namespace mozilla {
 
@@ -19,12 +17,9 @@ class FileDescriptor;
 
 namespace net {
 
-class TRRServiceChild : public PTRRServiceChild,
-                        public nsIObserver,
-                        public nsSupportsWeakReference {
+class TRRServiceChild : public PTRRServiceChild {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
+  NS_INLINE_DECL_REFCOUNTING(TRRServiceChild, override)
 
   explicit TRRServiceChild() = default;
 
