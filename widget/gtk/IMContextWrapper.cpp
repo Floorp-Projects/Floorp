@@ -219,6 +219,10 @@ static Maybe<nscolor> GetSystemColor(LookAndFeel::ColorID aId) {
 
 class SelectionStyleProvider final {
  public:
+  static SelectionStyleProvider* GetExistingInstance() {
+    return sInstance;
+  }
+
   static SelectionStyleProvider* GetInstance() {
     if (sHasShutDown) {
       return nullptr;
@@ -1550,10 +1554,9 @@ void IMContextWrapper::OnSelectionChange(
 
 /* static */
 void IMContextWrapper::OnThemeChanged() {
-  if (!SelectionStyleProvider::GetInstance()) {
-    return;
+  if (auto* provider = SelectionStyleProvider::GetExistingInstance()) {
+    provider->OnThemeChanged();
   }
-  SelectionStyleProvider::GetInstance()->OnThemeChanged();
 }
 
 /* static */
