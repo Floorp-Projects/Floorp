@@ -831,6 +831,16 @@ class TargetCommand extends EventEmitter {
     await this._onTargetAvailable(newTarget);
   }
 
+  /**
+   * Called when the user selects a frame in the iframe picker.
+   *
+   * @param {WindowGlobalTargetFront} targetFront
+   *        The target front we want the toolbox to focus on.
+   */
+  selectTarget(targetFront) {
+    console.warn("Not implemented yet");
+  }
+
   isTargetRegistered(targetFront) {
     return this._targets.has(targetFront);
   }
