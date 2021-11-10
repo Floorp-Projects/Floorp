@@ -93,7 +93,7 @@ class ContextChecks {
 
   void checkObject(JSObject* obj) {
     JS::AssertObjectIsNotGray(obj);
-    MOZ_ASSERT(!js::gc::IsAboutToBeFinalizedUnbarriered(&obj));
+    MOZ_ASSERT(!js::gc::IsAboutToBeFinalizedUnbarriered(obj));
   }
 
   template <typename T>
