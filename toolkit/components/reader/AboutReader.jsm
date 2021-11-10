@@ -1479,7 +1479,7 @@ AboutReader.prototype = {
       );
 
       // Set up tracking for sign up buttons
-      this._doc.querySelectorAll(`.pocket-sign-up`).forEach(el => {
+      this._doc.querySelectorAll(`.pocket-sign-up, .pocket-discover-more`).forEach(el => {
         el.addEventListener(`click`, e => {
           Services.telemetry.recordEvent(
             "readermode",
