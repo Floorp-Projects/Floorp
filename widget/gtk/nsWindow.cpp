@@ -5705,131 +5705,119 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                       this);
   }
 
-  if (mContainer) g_object_set_data(G_OBJECT(mContainer), "nsWindow", this);
-
-  if (mShell) g_object_set_data(G_OBJECT(mShell), "nsWindow", this);
+  g_object_set_data(G_OBJECT(mContainer), "nsWindow", this);
+  g_object_set_data(G_OBJECT(mShell), "nsWindow", this);
 
   // attach listeners for events
-  if (mShell) {
-    g_signal_connect(mShell, "configure_event", G_CALLBACK(configure_event_cb),
-                     nullptr);
-    g_signal_connect(mShell, "delete_event", G_CALLBACK(delete_event_cb),
-                     nullptr);
-    g_signal_connect(mShell, "window_state_event",
-                     G_CALLBACK(window_state_event_cb), nullptr);
-    g_signal_connect(mShell, "check-resize", G_CALLBACK(check_resize_cb),
-                     nullptr);
-    g_signal_connect(mShell, "composited-changed",
-                     G_CALLBACK(widget_composited_changed_cb), nullptr);
-    g_signal_connect(mShell, "property-notify-event",
-                     G_CALLBACK(property_notify_event_cb), nullptr);
-    g_signal_connect(mShell, "map", G_CALLBACK(widget_map_cb), nullptr);
-    g_signal_connect(mShell, "unrealize", G_CALLBACK(widget_unrealize_cb),
-                     nullptr);
+  g_signal_connect(mShell, "configure_event", G_CALLBACK(configure_event_cb),
+                   nullptr);
+  g_signal_connect(mShell, "delete_event", G_CALLBACK(delete_event_cb),
+                   nullptr);
+  g_signal_connect(mShell, "window_state_event",
+                   G_CALLBACK(window_state_event_cb), nullptr);
+  g_signal_connect(mShell, "check-resize", G_CALLBACK(check_resize_cb),
+                   nullptr);
+  g_signal_connect(mShell, "composited-changed",
+                   G_CALLBACK(widget_composited_changed_cb), nullptr);
+  g_signal_connect(mShell, "property-notify-event",
+                   G_CALLBACK(property_notify_event_cb), nullptr);
+  g_signal_connect(mShell, "map", G_CALLBACK(widget_map_cb), nullptr);
+  g_signal_connect(mShell, "unrealize", G_CALLBACK(widget_unrealize_cb),
+                   nullptr);
 
-    if (mWindowType == eWindowType_toplevel) {
-      g_signal_connect_after(mShell, "size_allocate",
-                             G_CALLBACK(toplevel_window_size_allocate_cb),
-                             nullptr);
-    }
-
-    GdkScreen* screen = gtk_widget_get_screen(mShell);
-    if (!g_signal_handler_find(screen, G_SIGNAL_MATCH_FUNC, 0, 0, nullptr,
-                               FuncToGpointer(screen_composited_changed_cb),
-                               nullptr)) {
-      g_signal_connect(screen, "composited-changed",
-                       G_CALLBACK(screen_composited_changed_cb), nullptr);
-    }
-
-    GtkSettings* default_settings = gtk_settings_get_default();
-    g_signal_connect_after(default_settings, "notify::gtk-xft-dpi",
-                           G_CALLBACK(settings_xft_dpi_changed_cb), this);
+  if (mWindowType == eWindowType_toplevel) {
+    g_signal_connect_after(mShell, "size_allocate",
+                           G_CALLBACK(toplevel_window_size_allocate_cb),
+                           nullptr);
   }
 
-  if (mContainer) {
-    // Widget signals
-    g_signal_connect_after(mContainer, "size_allocate",
-                           G_CALLBACK(size_allocate_cb), nullptr);
-    g_signal_connect(mContainer, "hierarchy-changed",
-                     G_CALLBACK(hierarchy_changed_cb), nullptr);
-    g_signal_connect(mContainer, "notify::scale-factor",
-                     G_CALLBACK(scale_changed_cb), nullptr);
-    // Initialize mHasMappedToplevel.
-    hierarchy_changed_cb(GTK_WIDGET(mContainer), nullptr);
-    // Expose, focus, key, and drag events are sent even to GTK_NO_WINDOW
-    // widgets.
-    g_signal_connect(G_OBJECT(mContainer), "draw", G_CALLBACK(expose_event_cb),
-                     nullptr);
-    g_signal_connect(mContainer, "focus_in_event",
-                     G_CALLBACK(focus_in_event_cb), nullptr);
-    g_signal_connect(mContainer, "focus_out_event",
-                     G_CALLBACK(focus_out_event_cb), nullptr);
-    g_signal_connect(mContainer, "key_press_event",
-                     G_CALLBACK(key_press_event_cb), nullptr);
-    g_signal_connect(mContainer, "key_release_event",
-                     G_CALLBACK(key_release_event_cb), nullptr);
+  GdkScreen* screen = gtk_widget_get_screen(mShell);
+  if (!g_signal_handler_find(screen, G_SIGNAL_MATCH_FUNC, 0, 0, nullptr,
+                             FuncToGpointer(screen_composited_changed_cb),
+                             nullptr)) {
+    g_signal_connect(screen, "composited-changed",
+                     G_CALLBACK(screen_composited_changed_cb), nullptr);
+  }
 
-    gtk_drag_dest_set((GtkWidget*)mContainer, (GtkDestDefaults)0, nullptr, 0,
-                      (GdkDragAction)0);
+  GtkSettings* default_settings = gtk_settings_get_default();
+  g_signal_connect_after(default_settings, "notify::gtk-xft-dpi",
+                         G_CALLBACK(settings_xft_dpi_changed_cb), this);
 
-    g_signal_connect(mContainer, "drag_motion",
-                     G_CALLBACK(drag_motion_event_cb), nullptr);
-    g_signal_connect(mContainer, "drag_leave", G_CALLBACK(drag_leave_event_cb),
-                     nullptr);
-    g_signal_connect(mContainer, "drag_drop", G_CALLBACK(drag_drop_event_cb),
-                     nullptr);
-    g_signal_connect(mContainer, "drag_data_received",
-                     G_CALLBACK(drag_data_received_event_cb), nullptr);
+  // Widget signals
+  g_signal_connect_after(mContainer, "size_allocate",
+                         G_CALLBACK(size_allocate_cb), nullptr);
+  g_signal_connect(mContainer, "hierarchy-changed",
+                   G_CALLBACK(hierarchy_changed_cb), nullptr);
+  g_signal_connect(mContainer, "notify::scale-factor",
+                   G_CALLBACK(scale_changed_cb), nullptr);
+  // Initialize mHasMappedToplevel.
+  hierarchy_changed_cb(GTK_WIDGET(mContainer), nullptr);
+  // Expose, focus, key, and drag events are sent even to GTK_NO_WINDOW
+  // widgets.
+  g_signal_connect(G_OBJECT(mContainer), "draw", G_CALLBACK(expose_event_cb),
+                   nullptr);
+  g_signal_connect(mContainer, "focus_in_event", G_CALLBACK(focus_in_event_cb),
+                   nullptr);
+  g_signal_connect(mContainer, "focus_out_event",
+                   G_CALLBACK(focus_out_event_cb), nullptr);
+  g_signal_connect(mContainer, "key_press_event",
+                   G_CALLBACK(key_press_event_cb), nullptr);
+  g_signal_connect(mContainer, "key_release_event",
+                   G_CALLBACK(key_release_event_cb), nullptr);
+
+  gtk_drag_dest_set((GtkWidget*)mContainer, (GtkDestDefaults)0, nullptr, 0,
+                    (GdkDragAction)0);
+
+  g_signal_connect(mContainer, "drag_motion", G_CALLBACK(drag_motion_event_cb),
+                   nullptr);
+  g_signal_connect(mContainer, "drag_leave", G_CALLBACK(drag_leave_event_cb),
+                   nullptr);
+  g_signal_connect(mContainer, "drag_drop", G_CALLBACK(drag_drop_event_cb),
+                   nullptr);
+  g_signal_connect(mContainer, "drag_data_received",
+                   G_CALLBACK(drag_data_received_event_cb), nullptr);
 
 #ifdef MOZ_X11
-    if (GdkIsX11Display()) {
-      GtkWidget* widgets[] = {GTK_WIDGET(mContainer),
-                              !mDrawToContainer ? mShell : nullptr};
-      for (size_t i = 0; i < ArrayLength(widgets) && widgets[i]; ++i) {
-        // Double buffering is controlled by the window's owning
-        // widget. Disable double buffering for painting directly to the
-        // X Window.
-        gtk_widget_set_double_buffered(widgets[i], FALSE);
-      }
+  if (GdkIsX11Display()) {
+    GtkWidget* widgets[] = {GTK_WIDGET(mContainer),
+                            !mDrawToContainer ? mShell : nullptr};
+    for (size_t i = 0; i < ArrayLength(widgets) && widgets[i]; ++i) {
+      // Double buffering is controlled by the window's owning
+      // widget. Disable double buffering for painting directly to the
+      // X Window.
+      gtk_widget_set_double_buffered(widgets[i], FALSE);
     }
+  }
 #endif
 
-    // We create input contexts for all containers, except for
-    // toplevel popup windows
-    if (mWindowType != eWindowType_popup) {
-      mIMContext = new IMContextWrapper(this);
-    }
-  } else if (!mIMContext) {
-    nsWindow* container = GetContainerWindow();
-    if (container) {
-      mIMContext = container->mIMContext;
-    }
+  // We create input contexts for all containers, except for
+  // toplevel popup windows
+  if (mWindowType != eWindowType_popup) {
+    mIMContext = new IMContextWrapper(this);
   }
 
-  if (eventWidget) {
-    // These events are sent to the owning widget of the relevant window
-    // and propagate up to the first widget that handles the events, so we
-    // need only connect on mShell, if it exists, to catch events on its
-    // window and windows of mContainer.
-    g_signal_connect(eventWidget, "enter-notify-event",
-                     G_CALLBACK(enter_notify_event_cb), nullptr);
-    g_signal_connect(eventWidget, "leave-notify-event",
-                     G_CALLBACK(leave_notify_event_cb), nullptr);
-    g_signal_connect(eventWidget, "motion-notify-event",
-                     G_CALLBACK(motion_notify_event_cb), nullptr);
-    g_signal_connect(eventWidget, "button-press-event",
-                     G_CALLBACK(button_press_event_cb), nullptr);
-    g_signal_connect(eventWidget, "button-release-event",
-                     G_CALLBACK(button_release_event_cb), nullptr);
-    g_signal_connect(eventWidget, "scroll-event", G_CALLBACK(scroll_event_cb),
-                     nullptr);
-    if (gtk_check_version(3, 18, 0) == nullptr) {
-      g_signal_connect(eventWidget, "event", G_CALLBACK(generic_event_cb),
-                       nullptr);
-    }
-    g_signal_connect(eventWidget, "touch-event", G_CALLBACK(touch_event_cb),
+  // These events are sent to the owning widget of the relevant window
+  // and propagate up to the first widget that handles the events, so we
+  // need only connect on mShell, if it exists, to catch events on its
+  // window and windows of mContainer.
+  g_signal_connect(eventWidget, "enter-notify-event",
+                   G_CALLBACK(enter_notify_event_cb), nullptr);
+  g_signal_connect(eventWidget, "leave-notify-event",
+                   G_CALLBACK(leave_notify_event_cb), nullptr);
+  g_signal_connect(eventWidget, "motion-notify-event",
+                   G_CALLBACK(motion_notify_event_cb), nullptr);
+  g_signal_connect(eventWidget, "button-press-event",
+                   G_CALLBACK(button_press_event_cb), nullptr);
+  g_signal_connect(eventWidget, "button-release-event",
+                   G_CALLBACK(button_release_event_cb), nullptr);
+  g_signal_connect(eventWidget, "scroll-event", G_CALLBACK(scroll_event_cb),
+                   nullptr);
+  if (gtk_check_version(3, 18, 0) == nullptr) {
+    g_signal_connect(eventWidget, "event", G_CALLBACK(generic_event_cb),
                      nullptr);
   }
+  g_signal_connect(eventWidget, "touch-event", G_CALLBACK(touch_event_cb),
+                   nullptr);
 
   LOG("nsWindow [%p] type %d %s\n", (void*)this, mWindowType,
       mIsPIPWindow ? "PIP window" : "");
