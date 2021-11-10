@@ -643,6 +643,15 @@ private val Event.wrapper: EventWrapper<*>?
             { Preferences.turnOffInactiveTabsSurvey.record(it) },
             { Preferences.turnOffInactiveTabsSurveyKeys.valueOf(it) }
         )
+        is Event.TabsTrayInactiveTabsCFRGotoSettings -> EventWrapper<NoExtraKeys>(
+            { TabsTray.inactiveTabsCfrSettings.record(it) }
+        )
+        is Event.TabsTrayInactiveTabsCFRDismissed -> EventWrapper<NoExtraKeys>(
+            { TabsTray.inactiveTabsCfrDismissed.record(it) }
+        )
+        is Event.TabsTrayInactiveTabsCFRIsVisible -> EventWrapper<NoExtraKeys>(
+            { TabsTray.inactiveTabsCfrVisible.record(it) }
+        )
         is Event.AutoPlaySettingVisited -> EventWrapper<NoExtraKeys>(
             { Autoplay.visitedSetting.record(it) }
         )

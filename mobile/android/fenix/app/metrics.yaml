@@ -3110,6 +3110,45 @@ tabs_tray:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-11-01"
+  inactive_tabs_cfr_settings:
+    type: event
+    description: |
+      A user has opened settings via the inactive tabs CFR.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22298
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22301
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  inactive_tabs_cfr_dismissed:
+    type: event
+    description: |
+      A user has dismissed the inactive tabs CFR.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22298
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22301
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  inactive_tabs_cfr_visible:
+    type: event
+    description: |
+      An indication of whether the inactive tabs CFR is visible.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22298
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22301
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
 
 collections:
   renamed:

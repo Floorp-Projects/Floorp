@@ -212,6 +212,9 @@ sealed class Event {
     object TabsTrayCloseAllInactiveTabs : Event()
     data class TabsTrayCloseInactiveTab(val amountClosed: Int = 1) : Event()
     object TabsTrayOpenInactiveTab : Event()
+    object TabsTrayInactiveTabsCFRGotoSettings : Event()
+    object TabsTrayInactiveTabsCFRDismissed : Event()
+    object TabsTrayInactiveTabsCFRIsVisible : Event()
 
     object InactiveTabsSurveyOpened : Event()
     data class InactiveTabsOffSurvey(val feedback: String) : Event() {

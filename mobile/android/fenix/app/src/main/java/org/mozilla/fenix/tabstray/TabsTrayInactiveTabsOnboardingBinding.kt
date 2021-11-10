@@ -27,8 +27,10 @@ import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.infobanner.InfoBanner
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.ComponentTabstray2Binding
 import org.mozilla.fenix.databinding.OnboardingInactiveTabsCfrBinding
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.potentialInactiveTabs
 import org.mozilla.fenix.utils.Settings
 
@@ -62,6 +64,7 @@ class TabsTrayInactiveTabsOnboardingBinding(
 
     private fun createInactiveCFR() {
         val context: Context = context
+        val metrics = context.components.analytics.metrics
         val anchorPosition = IntArray(2)
         val popupBinding = OnboardingInactiveTabsCfrBinding.inflate(LayoutInflater.from(context))
         val popup = Dialog(context)
@@ -75,12 +78,14 @@ class TabsTrayInactiveTabsOnboardingBinding(
         popupBinding.closeInfoBanner.setOnClickListener {
             popup.dismiss()
             settings.shouldShowInactiveTabsOnboardingPopup = false
+            metrics.track(Event.TabsTrayInactiveTabsCFRDismissed)
         }
 
         popupBinding.bannerInfoMessage.setOnClickListener {
             popup.dismiss()
             settings.shouldShowInactiveTabsOnboardingPopup = false
             navigationInteractor.onTabSettingsClicked()
+            metrics.track(Event.TabsTrayInactiveTabsCFRGotoSettings)
         }
 
         val messageText = context.getString(R.string.tab_tray_inactive_onboarding_message)
@@ -110,5 +115,6 @@ class TabsTrayInactiveTabsOnboardingBinding(
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         }
         popup.show()
+        metrics.track(Event.TabsTrayInactiveTabsCFRIsVisible)
     }
 }
