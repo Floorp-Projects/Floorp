@@ -341,7 +341,6 @@ devtools.jar:
     # Perfomance
     content/performance/index.xhtml (performance/index.xhtml)
     content/performance-new/index.xhtml (performance-new/index.xhtml)
-    content/performance-new/frame-script.js (performance-new/frame-script.js)
 
     # Memory
     content/memory/index.xhtml (memory/index.xhtml)

@@ -29,12 +29,17 @@ const AppConstants = ChromeUtils.import(
  * @typedef {import("../@types/perf").Library} Library
  * @typedef {import("../@types/perf").PerformancePref} PerformancePref
  * @typedef {import("../@types/perf").ProfilerWebChannel} ProfilerWebChannel
- * @typedef {import("../@types/perf").MessageFromFrontend} MessageFromFrontend
  * @typedef {import("../@types/perf").PageContext} PageContext
  * @typedef {import("../@types/perf").PrefObserver} PrefObserver
  * @typedef {import("../@types/perf").PrefPostfix} PrefPostfix
  * @typedef {import("../@types/perf").Presets} Presets
  * @typedef {import("../@types/perf").ProfilerViewMode} ProfilerViewMode
+ * @typedef {import("../@types/perf").MessageFromFrontend} MessageFromFrontend
+ * @typedef {import("../@types/perf").RequestFromFrontend} RequestFromFrontend
+ * @typedef {import("../@types/perf").ResponseToFrontend} ResponseToFrontend
+ * @typedef {import("../@types/perf").SymbolicationService} SymbolicationService
+ * @typedef {import("../@types/perf").ProfilerBrowserInfo} ProfilerBrowserInfo
+ * @typedef {import("../@types/perf").ProfileCaptureResult} ProfileCaptureResult
  */
 
 /** @type {PerformancePref["Entries"]} */
@@ -55,6 +60,13 @@ const PRESET_PREF = "devtools.performance.recording.preset";
 const POPUP_FEATURE_FLAG_PREF = "devtools.performance.popup.feature-flag";
 /* This will be used to observe all profiler-related prefs. */
 const PREF_PREFIX = "devtools.performance.recording.";
+
+// The version of the profiler WebChannel.
+// This is reported from the STATUS_QUERY message, and identifies the
+// capabilities of the WebChannel. The front-end can handle old WebChannel
+// versions and has a full list of versions and capabilities here:
+// https://github.com/firefox-devtools/profiler/blob/main/src/app-logic/web-channel.js
+const CURRENT_WEBCHANNEL_VERSION = 1;
 
 // Lazily load the require function, when it's needed.
 ChromeUtils.defineModuleGetter(
@@ -264,12 +276,16 @@ async function captureProfile(pageContext) {
   // more samples while the parent process waits for subprocess profiles.
   Services.profiler.Pause();
 
-  const profile = await Services.profiler
+  /**
+   * @type {ProfileCaptureResult}
+   */
+  const profileCaptureResult = await Services.profiler
     .getProfileDataAsGzippedArrayBuffer()
-    .catch(
-      /** @type {(e: any) => {}} */ e => {
-        console.error(e);
-        return {};
+    .then(
+      profile => ({ type: "SUCCESS", profile }),
+      error => {
+        console.error(error);
+        return { type: "ERROR", error };
       }
     );
 
@@ -283,10 +299,11 @@ async function captureProfile(pageContext) {
     objdirs
   );
 
-  const { openProfilerAndDisplayProfile } = lazy.BrowserModule();
-  openProfilerAndDisplayProfile(
-    profile,
-    profilerViewMode,
+  const { openProfilerTab } = lazy.BrowserModule();
+  const browser = openProfilerTab(profilerViewMode);
+  registerProfileCaptureForBrowser(
+    browser,
+    profileCaptureResult,
     symbolicationService
   );
 
@@ -609,40 +626,48 @@ function removePrefObserver(observer) {
 }
 
 /**
- * This handler handles any messages coming from the WebChannel from profiler.firefox.com.
+ * This map stores information that is associated with a "profile capturing"
+ * action, so that we can look up this information for WebChannel messages
+ * from the profiler tab.
+ * Most importantly, this stores the captured profile. When the profiler tab
+ * requests the profile, we can respond to the message with the correct profile.
+ * This works even if the request happens long after the tab opened. It also
+ * works for an "old" tab even if new profiles have been captured since that
+ * tab was opened.
+ * Supporting tab refresh is important because the tab sometimes reloads itself:
+ * If an old version of the front-end is cached in the service worker, and the
+ * browser supplies a profile with a newer format version, then the front-end
+ * updates its service worker and reloads itself, so that the updated version
+ * can parse the profile.
  *
- * @param {ProfilerWebChannel} channel
- * @param {string} id
- * @param {any} message
- * @param {MockedExports.WebChannelTarget} target
+ * This is a WeakMap so that the profile can be garbage-collected when the tab
+ * is closed.
+ *
+ * @type {WeakMap<MockedExports.Browser, ProfilerBrowserInfo>}
  */
-function handleWebChannelMessage(channel, id, message, target) {
-  if (typeof message !== "object" || typeof message.type !== "string") {
-    console.error(
-      "An malformed message was received by the profiler's WebChannel handler.",
-      message
-    );
-    return;
-  }
-  const messageFromFrontend = /** @type {MessageFromFrontend} */ (message);
-  const { requestId } = messageFromFrontend;
-  switch (messageFromFrontend.type) {
+const infoForBrowserMap = new WeakMap();
+
+/**
+ * This handler computes the response for any messages coming
+ * from the WebChannel from profiler.firefox.com.
+ *
+ * @param {RequestFromFrontend} request
+ * @param {MockedExports.Browser} browser - The tab's browser.
+ * @return {Promise<ResponseToFrontend>}
+ */
+async function getResponseForMessage(request, browser) {
+  switch (request.type) {
     case "STATUS_QUERY": {
       // The content page wants to know if this channel exists. It does, so respond
       // back to the ping.
       const { ProfilerMenuButton } = lazy.ProfilerMenuButton();
-      channel.send(
-        {
-          type: "STATUS_RESPONSE",
-          menuButtonIsEnabled: ProfilerMenuButton.isInNavbar(),
-          requestId,
-        },
-        target
-      );
-      break;
+      return {
+        version: CURRENT_WEBCHANNEL_VERSION,
+        menuButtonIsEnabled: ProfilerMenuButton.isInNavbar(),
+      };
     }
     case "ENABLE_MENU_BUTTON": {
-      const { ownerDocument } = target.browser;
+      const { ownerDocument } = browser;
       if (!ownerDocument) {
         throw new Error(
           "Could not find the owner document for the current browser while enabling " +
@@ -664,22 +689,122 @@ function handleWebChannelMessage(channel, id, message, target) {
       // Open the popup with a message.
       ProfilerMenuButton.openPopup(ownerDocument);
 
-      // Respond back that we've done it.
-      channel.send(
-        {
-          type: "ENABLE_MENU_BUTTON_DONE",
-          requestId,
-        },
-        target
+      // There is no response data for this message.
+      return undefined;
+    }
+    case "GET_PROFILE": {
+      const infoForBrowser = infoForBrowserMap.get(browser);
+      if (infoForBrowser === undefined) {
+        throw new Error("Could not find a profile for this tab.");
+      }
+      const { profileCaptureResult } = infoForBrowser;
+      switch (profileCaptureResult.type) {
+        case "SUCCESS":
+          return profileCaptureResult.profile;
+        case "ERROR":
+          throw profileCaptureResult.error;
+        default:
+          const { UnhandledCaseError } = lazy.Utils();
+          throw new UnhandledCaseError(
+            profileCaptureResult,
+            "profileCaptureResult"
+          );
+      }
+    }
+    case "GET_SYMBOL_TABLE": {
+      const infoForBrowser = infoForBrowserMap.get(browser);
+      if (infoForBrowser === undefined) {
+        throw new Error("Could not find a symbolication service for this tab.");
+      }
+      const { debugName, breakpadId } = request;
+      return infoForBrowser.symbolicationService.getSymbolTable(
+        debugName,
+        breakpadId
       );
-      break;
+    }
+    case "QUERY_SYMBOLICATION_API": {
+      const infoForBrowser = infoForBrowserMap.get(browser);
+      if (infoForBrowser === undefined) {
+        throw new Error("Could not find a symbolication service for this tab.");
+      }
+      const { path, requestJson } = request;
+      return infoForBrowser.symbolicationService.querySymbolicationApi(
+        path,
+        requestJson
+      );
     }
     default:
       console.error(
         "An unknown message type was received by the profiler's WebChannel handler.",
-        message
+        request
       );
+      const { UnhandledCaseError } = lazy.Utils();
+      throw new UnhandledCaseError(request, "WebChannel request");
   }
+}
+
+/**
+ * This handler handles any messages coming from the WebChannel from profiler.firefox.com.
+ *
+ * @param {ProfilerWebChannel} channel
+ * @param {string} id
+ * @param {any} message
+ * @param {MockedExports.WebChannelTarget} target
+ */
+async function handleWebChannelMessage(channel, id, message, target) {
+  if (typeof message !== "object" || typeof message.type !== "string") {
+    console.error(
+      "An malformed message was received by the profiler's WebChannel handler.",
+      message
+    );
+    return;
+  }
+  const messageFromFrontend = /** @type {MessageFromFrontend} */ (message);
+  const { requestId } = messageFromFrontend;
+
+  try {
+    const response = await getResponseForMessage(
+      messageFromFrontend,
+      target.browser
+    );
+    channel.send(
+      {
+        type: "SUCCESS_RESPONSE",
+        requestId,
+        response,
+      },
+      target
+    );
+  } catch (error) {
+    channel.send(
+      {
+        type: "ERROR_RESPONSE",
+        requestId,
+        error: `${error.name}: ${error.message}`,
+      },
+      target
+    );
+  }
+}
+
+/**
+ * @param {MockedExports.Browser} browser - The tab's browser.
+ * @param {ProfileCaptureResult} profileCaptureResult - The Gecko profile.
+ * @param {SymbolicationService} symbolicationService - An object which implements the
+ *   SymbolicationService interface, whose getSymbolTable method will be invoked
+ *   when profiler.firefox.com sends GET_SYMBOL_TABLE WebChannel messages to us. This
+ *   method should obtain a symbol table for the requested binary and resolve the
+ *   returned promise with it.
+ */
+function registerProfileCaptureForBrowser(
+  browser,
+  profileCaptureResult,
+  symbolicationService
+) {
+  infoForBrowserMap.set(browser, {
+    profileCaptureResult,
+    symbolicationService,
+  });
 }
 
 // Provide a fake module.exports for the JSM to be properly read by TypeScript.
@@ -698,6 +823,7 @@ module.exports = {
   revertRecordingSettings,
   changePreset,
   handleWebChannelMessage,
+  registerProfileCaptureForBrowser,
   addPrefObserver,
   removePrefObserver,
   getProfilerViewModeForCurrentPreset,
