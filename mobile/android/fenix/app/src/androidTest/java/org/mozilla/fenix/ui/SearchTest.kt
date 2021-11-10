@@ -8,6 +8,7 @@ import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.ui.robots.homeScreen
 
@@ -40,6 +41,7 @@ class SearchTest {
         }
     }
 
+    @SmokeTest
     @Ignore("This test cannot run on virtual devices due to camera permissions being required")
     @Test
     fun scanButtonTest() {

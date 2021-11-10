@@ -15,6 +15,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
+import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -170,6 +171,7 @@ class BookmarksTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun editBookmarkTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -278,6 +280,7 @@ class BookmarksTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun deleteBookmarkTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -297,6 +300,7 @@ class BookmarksTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun undoDeleteBookmarkTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -321,8 +325,9 @@ class BookmarksTest {
         }
     }
 
+    @SmokeTest
     @Test
-    fun multiSelectionToolbarItemsTest() {
+    fun bookmarksMultiSelectionToolbarItemsTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         browserScreen {
@@ -346,6 +351,7 @@ class BookmarksTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun openSelectionInNewTabTest() {
         val settings = activityTestRule.activity.applicationContext.settings()
@@ -376,6 +382,7 @@ class BookmarksTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun openSelectionInPrivateTabTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -399,6 +406,7 @@ class BookmarksTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun deleteMultipleSelectionTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -428,6 +436,7 @@ class BookmarksTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun undoDeleteMultipleSelectionTest() {
         val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -516,6 +525,7 @@ class BookmarksTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun changeBookmarkParentFolderTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)

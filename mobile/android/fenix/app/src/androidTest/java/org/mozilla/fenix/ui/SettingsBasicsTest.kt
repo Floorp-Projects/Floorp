@@ -13,11 +13,12 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.FenixApplication
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.getLoremIpsumAsset
+import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.ui.robots.checkTextSizeOnWebsite
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
@@ -32,6 +33,7 @@ class SettingsBasicsTest {
 
     private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     private lateinit var mockWebServer: MockWebServer
+    private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule
     val activityIntentTestRule = HomeActivityIntentTestRule()
@@ -42,13 +44,16 @@ class SettingsBasicsTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
-        val settings = activityIntentTestRule.activity.settings()
-        settings.shouldShowJumpBackInCFR = false
+
+        featureSettingsHelper.setJumpBackCFREnabled(false)
     }
 
     @After
     fun tearDown() {
         mockWebServer.shutdown()
+
+        // resetting modified features enabled setting to default
+        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     private fun getUiTheme(): Boolean {
@@ -156,8 +161,6 @@ class SettingsBasicsTest {
         // Goes through the settings and changes the default text on a webpage, then verifies if the text has changed.
         val fenixApp = activityIntentTestRule.activity.applicationContext as FenixApplication
         val webpage = getLoremIpsumAsset(mockWebServer).url
-        val settings = fenixApp.applicationContext.settings()
-        settings.shouldShowJumpBackInCFR = false
 
         // This value will represent the text size percentage the webpage will scale to. The default value is 100%.
         val textSizePercentage = 180
@@ -180,6 +183,26 @@ class SettingsBasicsTest {
         }.openAccessibilitySubMenu {
             clickFontSizingSwitch()
             verifyMenuItemsAreDisabled()
+        }
+    }
+
+    @Test
+    fun startOnHomepageTest() {
+        val genericURL = getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+            mDevice.waitForIdle()
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openHomepageSubMenu {
+            clickStartOnHomepageButton()
+        }
+
+        restartApp(activityIntentTestRule)
+
+        homeScreen {
+            verifyHomeScreen()
         }
     }
 }

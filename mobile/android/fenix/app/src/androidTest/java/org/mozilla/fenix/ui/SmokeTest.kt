@@ -22,6 +22,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -59,10 +60,13 @@ import org.mozilla.fenix.ui.util.ROMANIAN_LANGUAGE_HEADER
 import org.mozilla.fenix.ui.util.STRING_ONBOARDING_TRACKING_PROTECTION_HEADER
 
 /**
- * Test Suite that contains tests defined as part of the Smoke and Sanity check defined in Test rail.
+ * Test Suite that contains a part of the Smoke and Sanity tests defined in TestRail:
+ * https://testrail.stage.mozaws.net/index.php?/suites/view/3192
+ * Other smoke tests have been marked with the @SmokeTest annotation throughout the ui package in order to limit this class expansion.
  * These tests will verify different functionalities of the app as a way to quickly detect regressions in main areas
  */
 @Suppress("ForbiddenComment")
+@SmokeTest
 class SmokeTest {
     private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     private lateinit var mockWebServer: MockWebServer
@@ -74,18 +78,7 @@ class SmokeTest {
     private var bookmarksListIdlingResource: RecyclerViewIdlingResource? = null
     private var localeListIdlingResource: RecyclerViewIdlingResource? = null
     private val customMenuItem = "TestMenuItem"
-
-    // This finds the dialog fragment child of the homeFragment, otherwise the awesomeBar would return null
-    private fun getAwesomebarView(): View? {
-        val homeFragment = activityTestRule.activity.supportFragmentManager.primaryNavigationFragment
-        val searchDialogFragment = homeFragment?.childFragmentManager?.fragments?.first {
-            it.javaClass.simpleName == "SearchDialogFragment"
-        }
-        return searchDialogFragment?.view?.findViewById(R.id.awesome_bar)
-    }
-
     private lateinit var browserStore: BrowserStore
-
     private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule

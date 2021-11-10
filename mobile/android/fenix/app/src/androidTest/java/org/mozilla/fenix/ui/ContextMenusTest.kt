@@ -11,6 +11,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
@@ -53,6 +54,7 @@ class ContextMenusTest {
         mockWebServer.shutdown()
     }
 
+    @SmokeTest
     @Test
     fun verifyContextOpenLinkNewTab() {
         val pageLinks =
@@ -76,6 +78,7 @@ class ContextMenusTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun verifyContextOpenLinkPrivateTab() {
         val pageLinks =
