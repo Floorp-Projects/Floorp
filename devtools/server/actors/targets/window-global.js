@@ -585,7 +585,6 @@ const windowGlobalTargetPrototype = {
       innerWindowId,
       topInnerWindowId: this.browsingContext.topWindowContext.innerWindowId,
       isTopLevelTarget: this.isTopLevelTarget,
-      ignoreSubFrames: this.ignoreSubFrames,
       traits: {
         // @backward-compat { version 64 } Exposes a new trait to help identify
         // BrowsingContextActor's inherited actors from the client side.
@@ -995,7 +994,6 @@ const windowGlobalTargetPrototype = {
     return {
       id,
       parentID,
-      isTopLevel: window == this.originalWindow && this.isTopLevelTarget,
       url: window.location.href,
       title: window.document.title,
     };
