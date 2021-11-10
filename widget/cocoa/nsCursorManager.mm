@@ -240,6 +240,10 @@ static constexpr nsCursor kCustomCursor = eCursorCount;
 
   // As the user moves the mouse, this gets called repeatedly with the same aCursorImage
   if (sCurrentCursor == aCursor && sCurrentCursorScaleFactor == scaleFactor && mCurrentMacCursor) {
+    // Native dragging can unset our cursor apparently (see bug 1739352).
+    if (MOZ_UNLIKELY(![mCurrentMacCursor isSet])) {
+      [mCurrentMacCursor set];
+    }
     return NS_OK;
   }
 
