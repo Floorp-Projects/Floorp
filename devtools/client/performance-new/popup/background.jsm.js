@@ -191,6 +191,7 @@ const presets = {
       "GraphRunner",
       "IncomingVideoStream",
       "InotifyEventThread",
+      "libwebrtcModuleThread",
       "MediaDecoderStateMachine",
       "MediaPDecoder",
       "MediaSupervisor",
@@ -203,6 +204,7 @@ const presets = {
       "Renderer",
       "SwComposite",
       "VoiceProcessThread",
+      "WebrtcWorker",
     ],
     duration: 0,
     l10nIds: {
