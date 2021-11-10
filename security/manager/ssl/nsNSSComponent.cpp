@@ -6,6 +6,7 @@
 
 #include "nsNSSComponent.h"
 
+#include "BinaryPath.h"
 #include "CryptoTask.h"
 #include "EnterpriseRoots.h"
 #include "ExtendedValidation.h"
@@ -100,6 +101,28 @@ int nsNSSComponent::mInstanceCount = 0;
 // Forward declaration.
 nsresult CommonInit();
 
+// Take an nsIFile and get a c-string representation of the location of that
+// file (encapsulated in an nsACString). This function handles a
+// platform-specific issue on Windows where Unicode characters that cannot be
+// mapped to the system's codepage will be dropped, resulting in a c-string
+// that is useless to describe the location of the file in question.
+// This operation is generally to be avoided, except when interacting with
+// third-party or legacy libraries that cannot handle `nsIFile`s (such as NSS).
+nsresult FileToCString(const nsCOMPtr<nsIFile>& file, nsACString& result) {
+#ifdef XP_WIN
+  // Native path will drop Unicode characters that cannot be mapped to system's
+  // codepage, using short (canonical) path as workaround.
+  nsCOMPtr<nsILocalFileWin> fileWin = do_QueryInterface(file);
+  if (!fileWin) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't get nsILocalFileWin"));
+    return NS_ERROR_FAILURE;
+  }
+  return fileWin->GetNativeCanonicalPath(result);
+#else
+  return file->GetNativePath(result);
+#endif
+}
+
 // This function can be called from chrome or content or socket processes
 // to ensure that NSS is initialized.
 bool EnsureNSSInitializedChromeOrContent() {
@@ -147,6 +170,40 @@ bool EnsureNSSInitializedChromeOrContent() {
 
   if (XRE_IsSocketProcess()) {
     if (NS_FAILED(CommonInit())) {
+      return false;
+    }
+    nsCOMPtr<nsIFile> pluginContainerFile;
+    // This returns the "plugin-container" file.
+    if (NS_FAILED(mozilla::BinaryPath::GetFile(
+            getter_AddRefs(pluginContainerFile)))) {
+      return false;
+    }
+    // On most platforms, ipcclientcerts is in the same directory as
+    // plugin-container.
+    nsCOMPtr<nsIFile> ipcClientCertsDir;
+    if (NS_FAILED(pluginContainerFile->GetParent(
+            getter_AddRefs(ipcClientCertsDir)))) {
+      return false;
+    }
+#ifdef XP_MACOSX
+    // On macOS, plugin-container is in
+    // Firefox.app/Contents/MacOS/plugin-container.app/Contents/MacOS/,
+    // whereas ipcclientcerts is in Firefox.app/Contents/MacOS/.
+    const size_t depth = 3;
+    for (size_t d = 0; d < depth; d++) {
+      nsCOMPtr<nsIFile> parentDir;
+      if (NS_FAILED(ipcClientCertsDir->GetParent(getter_AddRefs(parentDir)))) {
+        return false;
+      }
+      ipcClientCertsDir = parentDir;
+    }
+#endif
+    nsAutoCString ipcClientCertsDirString;
+    if (NS_FAILED(FileToCString(ipcClientCertsDir, ipcClientCertsDirString))) {
+      return false;
+    }
+    if (!LoadIPCClientCertsModule(ipcClientCertsDirString)) {
+      MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("failed to load ipcclientcerts"));
       return false;
     }
     initialized = true;
@@ -750,18 +807,7 @@ static nsresult GetDirectoryPath(const char* directoryKey, nsCString& result) {
             ("could not get '%s' from directory service", directoryKey));
     return rv;
   }
-#ifdef XP_WIN
-  // Native path will drop Unicode characters that cannot be mapped to system's
-  // codepage, using short (canonical) path as workaround.
-  nsCOMPtr<nsILocalFileWin> directoryWin = do_QueryInterface(directory);
-  if (!directoryWin) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't get nsILocalFileWin"));
-    return NS_ERROR_FAILURE;
-  }
-  return directoryWin->GetNativeCanonicalPath(result);
-#else
-  return directory->GetNativePath(result);
-#endif
+  return FileToCString(directory, result);
 }
 
 class BackgroundLoadOSClientCertsModuleTask final : public CryptoTask {
@@ -840,8 +886,6 @@ nsNSSComponent::HasActiveSmartCards(bool* result) {
 NS_IMETHODIMP
 nsNSSComponent::HasUserCertsInstalled(bool* result) {
   NS_ENSURE_ARG_POINTER(result);
-
-  BlockUntilLoadableCertsLoaded();
 
   // FindClientCertificatesWithPrivateKeys won't ever return an empty list, so
   // all we need to do is check if this is null or not.
@@ -941,18 +985,7 @@ static nsresult GetNSS3Directory(nsCString& result) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't get parent directory?"));
     return rv;
   }
-#ifdef XP_WIN
-  // Native path will drop Unicode characters that cannot be mapped to system's
-  // codepage, using short (canonical) path as workaround.
-  nsCOMPtr<nsILocalFileWin> nss3DirectoryWin = do_QueryInterface(nss3Directory);
-  if (!nss3DirectoryWin) {
-    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("couldn't get nsILocalFileWin"));
-    return NS_ERROR_FAILURE;
-  }
-  return nss3DirectoryWin->GetNativeCanonicalPath(result);
-#else
-  return nss3Directory->GetNativePath(result);
-#endif
+  return FileToCString(nss3Directory, result);
 }
 
 // The loadable roots library is probably in the same directory we loaded the
@@ -2620,6 +2653,9 @@ UniqueCERTCertList FindClientCertificatesWithPrivateKeys() {
   });
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("FindClientCertificatesWithPrivateKeys"));
+
+  BlockUntilLoadableCertsLoaded();
+
   UniqueCERTCertList certsWithPrivateKeys(CERT_NewCertList());
   if (!certsWithPrivateKeys) {
     return nullptr;
