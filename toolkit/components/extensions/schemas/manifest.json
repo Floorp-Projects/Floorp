@@ -16,31 +16,14 @@
           },
 
           "applications": {
-            "type": "object",
-            "optional": true,
-            "properties": {
-              "gecko": {
-                "$ref": "FirefoxSpecificProperties",
-                "optional": true
-              }
-            }
+            "$ref": "BrowserSpecificSettings",
+            "description": "The applications property is deprecated, please use 'browser_specific_settings'",
+            "optional": true
           },
 
           "browser_specific_settings": {
-            "type": "object",
-            "optional": true,
-            "properties": {
-              "gecko": {
-                "$ref": "FirefoxSpecificProperties",
-                "optional": true
-              },
-              "edge": {
-                "type": "object",
-                "additionalProperties": { "type": "any" },
-                "optional": true
-              }
-            },
-            "additionalProperties": { "$ref": "UnrecognizedProperty" }
+            "$ref": "BrowserSpecificSettings",
+            "optional": true
           },
 
           "name": {
@@ -554,6 +537,17 @@
             "optional": true
           }
         }
+      },
+      {
+        "id": "BrowserSpecificSettings",
+        "type": "object",
+        "properties": {
+          "gecko": {
+            "$ref": "FirefoxSpecificProperties",
+            "optional": true
+          }
+        },
+        "additionalProperties": { "type": "any" }
       },
       {
         "id": "MatchPattern",

@@ -460,20 +460,10 @@ async function loadManifestFromWebManifest(aPackage) {
     throw error;
   }
 
-  let bss =
-    (manifest.browser_specific_settings &&
-      manifest.browser_specific_settings.gecko) ||
-    (manifest.applications && manifest.applications.gecko) ||
-    {};
-  if (manifest.browser_specific_settings && manifest.applications) {
-    logger.warn("Ignoring applications property in manifest");
-  }
+  let bss = manifest.applications?.gecko || {};
 
   // A * is illegal in strict_min_version
-  if (
-    bss.strict_min_version &&
-    bss.strict_min_version.split(".").some(part => part == "*")
-  ) {
+  if (bss.strict_min_version?.split(".").some(part => part == "*")) {
     throw new Error("The use of '*' in strict_min_version is invalid");
   }
 

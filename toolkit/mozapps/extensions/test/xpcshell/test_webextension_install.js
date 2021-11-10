@@ -663,3 +663,30 @@ add_task(async function test_non_gecko_bss_install() {
 
   await extension.unload();
 });
+
+// Test that bss overrides applications if both are present.
+add_task(async function test_duplicate_bss() {
+  const ID = "expected@tests.mozilla.org";
+
+  const manifest = {
+    manifest_version: 2,
+    version: "1.0",
+    applications: { gecko: { id: "unexepected@tests.mozilla.org" } },
+    browser_specific_settings: {
+      gecko: { id: ID },
+    },
+  };
+
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest,
+    useAddonManager: "temporary",
+  });
+  ExtensionTestUtils.failOnSchemaWarnings(false);
+  await extension.startup();
+  ExtensionTestUtils.failOnSchemaWarnings(true);
+
+  const addon = await promiseAddonByID(ID);
+  notEqual(addon, null, "Add-on is installed");
+
+  await extension.unload();
+});
