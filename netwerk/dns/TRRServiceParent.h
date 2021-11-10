@@ -30,8 +30,6 @@ class TRRServiceParent : public TRRServiceBase,
   void SetDetectedTrrURI(const nsACString& aURI);
   bool MaybeSetPrivateURI(const nsACString& aURI) override;
   void GetTrrURI(nsACString& aURI);
-  mozilla::ipc::IPCResult RecvNotifyNetworkConnectivityServiceObservers(
-      const nsCString& aTopic);
 
  private:
   virtual ~TRRServiceParent() = default;

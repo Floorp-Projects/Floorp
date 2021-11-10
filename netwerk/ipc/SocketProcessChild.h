@@ -145,9 +145,6 @@ class SocketProcessChild final
   mozilla::ipc::IPCResult RecvInitProxyAutoConfigChild(
       Endpoint<PProxyAutoConfigChild>&& aEndpoint);
 
-  mozilla::ipc::IPCResult RecvRecheckIPConnectivity();
-  mozilla::ipc::IPCResult RecvRecheckDNS();
-
  protected:
   friend class SocketProcessImpl;
   ~SocketProcessChild();
