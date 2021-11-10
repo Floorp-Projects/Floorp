@@ -2090,8 +2090,8 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
   }
 
   // Report any error or warnings generated during the parse.
-  for (size_t i = 0; i < parseTask->errors.errors.length(); i++) {
-    parseTask->errors.errors[i]->throwError(cx);
+  for (UniquePtr<CompileError>& error: parseTask->errors.errors) {
+    error->throwError(cx);
   }
   if (parseTask->errors.overRecursed) {
     ReportOverRecursed(cx);
