@@ -726,6 +726,14 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
     @VisibleForTesting
     internal fun reportHomeScreenMetrics(settings: Settings) {
+        CustomizeHome.openingScreen.set(
+            when {
+                settings.alwaysOpenTheHomepageWhenOpeningTheApp -> "homepage"
+                settings.alwaysOpenTheLastTabWhenOpeningTheApp -> "last tab"
+                settings.openHomepageAfterFourHoursOfInactivity -> "homepage after four hours"
+                else -> ""
+            }
+        )
         components.analytics.experiments.register(object : NimbusInterface.Observer {
             override fun onUpdatesApplied(updated: List<EnrolledExperiment>) {
                 CustomizeHome.jumpBackIn.set(settings.showRecentTabsFeature)

@@ -1381,6 +1381,22 @@ customize_home:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-09-20"
+  opening_screen:
+    type: string
+    description: |
+      What opening screen preference the user has selected
+      under "Customize Home".
+      "homepage," "last tab," or "homepage after 4 hours"
+      default: "homepage after 4 hours"
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22145
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22333
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
 
 preferences:
   studies_enabled:
