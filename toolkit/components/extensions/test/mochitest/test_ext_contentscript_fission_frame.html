@@ -14,11 +14,11 @@ add_task(async function test_content_script_cross_origin_frame() {
   const extensionData = {
     manifest: {
       content_scripts: [{
-        matches: ["http://example.net/*/file_sample.html"],
+        matches: ["https://example.net/*/file_sample.html"],
         all_frames: true,
         js: ["cs.js"],
       }],
-      permissions: ["http://example.net/"],
+      permissions: ["https://example.net/"],
     },
 
     background() {
@@ -91,7 +91,7 @@ add_task(async function test_content_script_cross_origin_frame() {
   await ext1.startup();
 
   info("Load a page, test content scripts in new frame with extension loaded");
-  let base = "http://example.org/tests/toolkit/components/extensions/test";
+  let base = "https://example.org/tests/toolkit/components/extensions/test";
   let win = window.open(`${base}/mochitest/file_with_xorigin_frame.html`);
 
   await ext1.awaitFinish();

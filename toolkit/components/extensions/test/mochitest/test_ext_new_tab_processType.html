@@ -28,7 +28,7 @@ function promiseObserved(topic, check) {
 }
 
 add_task(async function test_target_blank_link_no_opener_from_privileged() {
-  const linkURL = "http://example.com/";
+  const linkURL = "https://example.com/";
 
   function extension_tab() {
     document.getElementById("link").click();
@@ -42,7 +42,7 @@ add_task(async function test_target_blank_link_no_opener_from_privileged() {
     manifest: {
       content_scripts: [{
         js: ["content_script.js"],
-        matches: ["http://example.com/*"],
+        matches: ["https://example.com/*"],
         run_at: "document_idle",
       }],
       permissions: ["tabs"],

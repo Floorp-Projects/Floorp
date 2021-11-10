@@ -35,18 +35,18 @@ add_task(async function test_contentscript() {
     manifest: {
       content_scripts: [
         {
-          "matches": ["http://example.org/", "http://*.example.org/"],
+          "matches": ["https://example.org/", "https://*.example.org/"],
           "exclude_globs": [],
           "include_globs": ["*"],
           "js": ["content_script_all.js"],
         },
         {
-          "matches": ["http://example.org/", "http://*.example.org/"],
+          "matches": ["https://example.org/", "https://*.example.org/"],
           "include_globs": ["*test1*"],
           "js": ["content_script_includes_test1.js"],
         },
         {
-          "matches": ["http://example.org/", "http://*.example.org/"],
+          "matches": ["https://example.org/", "https://*.example.org/"],
           "exclude_globs": ["*test1*"],
           "js": ["content_script_excludes_test1.js"],
         },
@@ -72,12 +72,12 @@ add_task(async function test_contentscript() {
   await Promise.all([extension.startup(), extension.awaitMessage("running")]);
   info("extension loaded");
 
-  let win = window.open("http://example.org/");
+  let win = window.open("https://example.org/");
   await Promise.all([extension.awaitMessage("run-all"), extension.awaitMessage("run-excludes-test1")]);
   win.close();
   is(ran, 2);
 
-  win = window.open("http://test1.example.org/");
+  win = window.open("https://test1.example.org/");
   await Promise.all([extension.awaitMessage("run-all"), extension.awaitMessage("run-includes-test1")]);
   win.close();
   is(ran, 4);
