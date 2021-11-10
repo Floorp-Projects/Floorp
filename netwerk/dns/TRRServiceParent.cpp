@@ -88,6 +88,16 @@ TRRServiceParent::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
+mozilla::ipc::IPCResult
+TRRServiceParent::RecvNotifyNetworkConnectivityServiceObservers(
+    const nsCString& aTopic) {
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  if (obs) {
+    obs->NotifyObservers(nullptr, aTopic.get(), nullptr);
+  }
+  return IPC_OK();
+}
+
 bool TRRServiceParent::MaybeSetPrivateURI(const nsACString& aURI) {
   nsAutoCString newURI(aURI);
   ProcessURITemplate(newURI);
