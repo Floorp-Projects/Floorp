@@ -158,10 +158,10 @@ HTTP(..) == font-redirect.html order-1-ref.html
 == dynamic-duplicate-rule-1c.html dynamic-duplicate-rule-1-ref.html
 
 # Test for COLR and CPAL support
-fails-if(OSX) == color-1a.html color-1-ref.html
+fuzzy-if(OSX,198-198,172-172) == color-1a.html color-1-ref.html
 != color-1a.html color-1-notref.html
-fails-if(OSX) == color-1b.html color-1-ref.html
-fails-if(OSX) == color-2a.html color-2-ref.html
+fuzzy-if(OSX,198-198,172-172) == color-1b.html color-1-ref.html
+== color-2a.html color-2-ref.html
 != color-2a.html color-2-notref.html
 
 == woff2-1.html woff2-1-ref.html
