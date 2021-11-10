@@ -15,11 +15,7 @@ const TEST_URI =
 add_task(async function() {
   info("Enable command-button-frames preference setting");
   Services.prefs.setBoolPref("devtools.command-button-frames.enabled", true);
-  const {
-    inspector,
-    toolbox,
-    highlighterTestFront,
-  } = await openInspectorForURL(TEST_URI);
+  const { inspector, toolbox } = await openInspectorForURL(TEST_URI);
 
   await assertMarkupViewAsTree(
     `
@@ -44,7 +40,12 @@ add_task(async function() {
 
   info("Check highlighting is correct after switching iframe context");
   await selectAndHighlightNode("#inner", inspector);
-  const isHighlightCorrect = await highlighterTestFront.assertHighlightedNode(
+
+  const nodeFront = await getNodeFront("#inner", inspector);
+  const iframeHighlighterTestFront = await getHighlighterTestFront(toolbox, {
+    target: nodeFront.targetFront,
+  });
+  const isHighlightCorrect = await iframeHighlighterTestFront.assertHighlightedNode(
     "#inner"
   );
   ok(isHighlightCorrect, "The selected node is properly highlighted.");
