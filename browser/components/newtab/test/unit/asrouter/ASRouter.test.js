@@ -1738,13 +1738,14 @@ describe("ASRouter", () => {
           slug: `slug-${feature}`,
           branch: {
             slug: `branch-${feature}`,
-            feature: { value: null, enabled: true },
+            features: [{ featureId: feature, value: null }],
+            [feature]: { value: { id: "unit-test" } },
           },
         });
         getAllBranchesStub.withArgs(`slug-${feature}`).resolves([
           {
             slug: `other-branch-${feature}`,
-            feature: { value: { trigger: "unit-test" }, enabled: true },
+            [feature]: { value: { trigger: "unit-test" } },
           },
         ]);
       });
@@ -2644,9 +2645,8 @@ describe("ASRouter", () => {
       const enrollment = {
         branch: {
           slug: "branch01",
-          feature: {
+          asrouter: {
             featureId: "asrouter",
-            enabled: true,
             value: { id: "id01", trigger: { id: "openURL" } },
           },
         },
@@ -2666,10 +2666,9 @@ describe("ASRouter", () => {
       const enrollment = {
         branch: {
           slug: "branch01",
-          feature: {
+          asrouter: {
             featureId: "asrouter",
-            enabled: false,
-            value: { id: "id01", trigger: { id: "openURL" } },
+            value: {},
           },
         },
       };
@@ -2689,9 +2688,8 @@ describe("ASRouter", () => {
         slug: "exp01",
         branch: {
           slug: "branch01",
-          feature: {
+          cfr: {
             featureId: "cfr",
-            enabled: true,
             value: { id: "id01", trigger: { id: "openURL" } },
           },
         },
@@ -2702,18 +2700,16 @@ describe("ASRouter", () => {
         enrollment.branch,
         {
           slug: "branch02",
-          feature: {
+          cfr: {
             featureId: "cfr",
-            enabled: true,
             value: { id: "id02", trigger: { id: "openURL" } },
           },
         },
         {
           // This branch should not be loaded as it doesn't have the trigger
           slug: "branch03",
-          feature: {
+          cfr: {
             featureId: "cfr",
-            enabled: true,
             value: { id: "id03" },
           },
         },
@@ -2740,10 +2736,9 @@ describe("ASRouter", () => {
         slug: "exp01",
         branch: {
           slug: "branch01",
-          feature: {
+          cfr: {
             featureId: "cfr",
-            enabled: false,
-            value: { id: "id01", trigger: { id: "openURL" } },
+            value: {},
           },
         },
       };
@@ -2753,18 +2748,16 @@ describe("ASRouter", () => {
         enrollment.branch,
         {
           slug: "branch02",
-          feature: {
+          cfr: {
             featureId: "cfr",
-            enabled: true,
             value: { id: "id02", trigger: { id: "openURL" } },
           },
         },
         {
           // This branch should not be loaded as it doesn't have the trigger
           slug: "branch03",
-          feature: {
+          cfr: {
             featureId: "cfr",
-            enabled: true,
             value: { id: "id03" },
           },
         },
