@@ -186,6 +186,9 @@ child:
 
   async InitProxyAutoConfigChild(Endpoint<PProxyAutoConfigChild> endpoint);
 
+  async RecheckIPConnectivity();
+  async RecheckDNS();
+
 both:
   async PFileDescriptorSet(FileDescriptor fd);
   async PDNSRequest(nsCString hostName, nsCString trrServer, uint16_t type,

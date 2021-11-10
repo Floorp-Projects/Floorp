@@ -222,6 +222,9 @@ static const char* gCallbackPrefsForSocketProcess[] = {
     "network.offline-mirrors-connectivity",
     "network.disable-localhost-when-offline",
     "network.proxy.parse_pac_on_socket_process",
+    "network.proxy.allow_hijacking_localhost",
+    "network.connectivity-service.",
+    "network.captive-portal-service.testMode",
     nullptr,
 };
 

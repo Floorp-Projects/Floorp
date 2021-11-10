@@ -6,6 +6,7 @@
 
 #include "mozilla/net/TRRServiceChild.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIDNService.h"
 #include "nsIObserverService.h"
@@ -16,6 +17,8 @@ namespace mozilla {
 namespace net {
 
 static StaticRefPtr<nsIDNSService> sDNSService;
+
+NS_IMPL_ISUPPORTS(TRRServiceChild, nsIObserver, nsISupportsWeakReference)
 
 void TRRServiceChild::Init(const bool& aCaptiveIsPassed,
                            const bool& aParentalControlEnabled,
@@ -32,6 +35,24 @@ void TRRServiceChild::Init(const bool& aCaptiveIsPassed,
   trrService->mCaptiveIsPassed = aCaptiveIsPassed;
   trrService->mParentalControlEnabled = aParentalControlEnabled;
   trrService->RebuildSuffixList(std::move(aDNSSuffixList));
+
+  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  obs->AddObserver(this, "network:connectivity-service:dns-checks-complete",
+                   true);
+  obs->AddObserver(this, "network:connectivity-service:ip-checks-complete",
+                   true);
+}
+
+NS_IMETHODIMP
+TRRServiceChild::Observe(nsISupports* aSubject, const char* aTopic,
+                         const char16_t* aData) {
+  if (!strcmp(aTopic, "network:connectivity-service:ip-checks-complete") ||
+      !strcmp(aTopic, "network:connectivity-service:dns-checks-complete")) {
+    Unused << SendNotifyNetworkConnectivityServiceObservers(
+        nsPrintfCString("%s-from-socket-process", aTopic));
+  }
+
+  return NS_OK;
 }
 
 mozilla::ipc::IPCResult TRRServiceChild::RecvUpdatePlatformDNSInformation(
