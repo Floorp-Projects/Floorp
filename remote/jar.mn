@@ -30,6 +30,8 @@ remote.jar:
   content/shared/messagehandler/RootMessageHandler.jsm (shared/messagehandler/RootMessageHandler.jsm)
   content/shared/messagehandler/RootMessageHandlerRegistry.jsm (shared/messagehandler/RootMessageHandlerRegistry.jsm)
   content/shared/messagehandler/WindowGlobalMessageHandler.jsm (shared/messagehandler/WindowGlobalMessageHandler.jsm)
+  content/shared/messagehandler/sessiondata/SessionData.jsm (shared/messagehandler/sessiondata/SessionData.jsm)
+  content/shared/messagehandler/sessiondata/SessionDataReader.jsm (shared/messagehandler/sessiondata/SessionDataReader.jsm)
   content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameActor.jsm (shared/messagehandler/transports/js-window-actors/MessageHandlerFrameActor.jsm)
   content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameChild.jsm (shared/messagehandler/transports/js-window-actors/MessageHandlerFrameChild.jsm)
   content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameParent.jsm (shared/messagehandler/transports/js-window-actors/MessageHandlerFrameParent.jsm)
