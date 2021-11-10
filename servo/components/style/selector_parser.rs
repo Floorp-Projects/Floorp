@@ -46,7 +46,7 @@ pub struct SelectorParser<'a> {
     pub namespaces: &'a Namespaces,
     /// The extra URL data of the stylesheet, which is used to look up
     /// whether we are parsing a chrome:// URL style sheet.
-    pub url_data: &'a UrlExtraData,
+    pub url_data: Option<&'a UrlExtraData>,
 }
 
 impl<'a> SelectorParser<'a> {
@@ -54,15 +54,14 @@ impl<'a> SelectorParser<'a> {
     /// account namespaces.
     ///
     /// This is used for some DOM APIs like `querySelector`.
-    pub fn parse_author_origin_no_namespace<'i>(
-        input: &'i str,
-        url_data: &UrlExtraData,
-    ) -> Result<SelectorList<SelectorImpl>, ParseError<'i>> {
+    pub fn parse_author_origin_no_namespace(
+        input: &str,
+    ) -> Result<SelectorList<SelectorImpl>, ParseError> {
         let namespaces = Namespaces::default();
         let parser = SelectorParser {
             stylesheet_origin: Origin::Author,
             namespaces: &namespaces,
-            url_data,
+            url_data: None,
         };
         let mut input = ParserInput::new(input);
         SelectorList::parse(&parser, &mut CssParser::new(&mut input))
@@ -76,7 +75,7 @@ impl<'a> SelectorParser<'a> {
     /// Whether we're parsing selectors in a stylesheet that has chrome
     /// privilege.
     pub fn chrome_rules_enabled(&self) -> bool {
-        self.url_data.chrome_rules_enabled() ||
+        self.url_data.map_or(false, |d| d.chrome_rules_enabled()) ||
             self.stylesheet_origin == Origin::User
     }
 }
