@@ -372,7 +372,7 @@ export interface PerformancePref {
    */
   UIBaseUrl: "devtools.performance.recording.ui-base-url";
   /**
-   * This pref allows tests to override the /from-addon in order to more easily
+   * This pref allows tests to override the /from-browser in order to more easily
    * test the profile injection mechanism.
    */
   UIBaseUrlPathPref: "devtools.performance.recording.ui-base-url-path";
