@@ -57,6 +57,7 @@
 #include "mozilla/dom/WebAuthnTransactionChild.h"
 #include "mozilla/dom/MIDIPortChild.h"
 #include "mozilla/dom/MIDIManagerChild.h"
+#include "mozilla/psm/IPCClientCertsChild.h"
 #include "mozilla/RemoteLazyInputStreamChild.h"
 #include "nsID.h"
 #include "nsTraceRefcnt.h"
