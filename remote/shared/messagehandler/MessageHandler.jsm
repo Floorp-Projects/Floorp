@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["MessageHandler"];
+const EXPORTED_SYMBOLS = ["CONTEXT_DESCRIPTOR_TYPES", "MessageHandler"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -19,6 +19,34 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
+
+/**
+ * A ContextDescriptor object provides information to decide if a broadcast or
+ * a session data item should be applied to a specific MessageHandler context.
+ *
+ * TODO: At the moment we only support one value: { type: "all", id: "all" },
+ * but the format of the ContextDescriptor object is designed to fit more
+ * complex values.
+ * As soon as we start supporting broadcasts targeting only a part of the
+ * context tree, we will add additional context types. This work will begin with
+ * Bug 1725111, where we will support filtering on a single navigable. It will
+ * be later expanded to filter on a worker, a webextension, a process etc...
+ *
+ * @typedef {Object} ContextDescriptor
+ * @property {String} type
+ *     The type of context, one of CONTEXT_DESCRIPTOR_TYPES
+ * @property {String=} id
+ *     Unique id of a given context for the provided type. Optional for
+ *     CONTEXT_DESCRIPTOR_TYPES.ALL, since there is only one context
+ */
+
+// Enum of ContextDescriptor types.
+// TODO: At the moment we only support the type "all", but additional context
+// types will be added. See comment for the Context type definition.
+//
+const CONTEXT_DESCRIPTOR_TYPES = {
+  ALL: "all",
+};
 
 /**
  * MessageHandler instances are dedicated to handle both Commands and Events
