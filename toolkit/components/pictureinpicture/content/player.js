@@ -81,6 +81,7 @@ let Player = {
     "dblclick",
     "keydown",
     "mouseup",
+    "mousemove",
     "MozDOMFullscreen:Entered",
     "MozDOMFullscreen:Exited",
     "resize",
@@ -249,6 +250,11 @@ let Player = {
 
       case "mouseup": {
         this.onMouseUp(event);
+        break;
+      }
+
+      case "mousemove": {
+        this.onMouseMove();
         break;
       }
 
@@ -544,6 +550,15 @@ let Player = {
     } // Metakey close.
     this.oldMouseUpWindowX = window.screenX;
     this.oldMouseUpWindowY = window.screenY;
+  },
+
+  /**
+   * Event handler for mousemove the PiP Window
+   */
+  onMouseMove() {
+    if (document.fullscreenElement) {
+      this.revealControls(false);
+    }
   },
 
   /**
