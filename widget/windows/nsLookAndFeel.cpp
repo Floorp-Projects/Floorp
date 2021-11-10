@@ -324,7 +324,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
       idx = COLOR_HOTLIGHT;
       break;
     default:
-      NS_WARNING("Unknown color for nsLookAndFeel");
       idx = COLOR_WINDOW;
       res = NS_ERROR_FAILURE;
       break;
