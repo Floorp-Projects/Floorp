@@ -23,7 +23,8 @@ nsMacUserActivityUpdater::UpdateLocation(const nsAString& aPageUrl, const nsAStr
   }
 
   NSURL* pageUrl = nsCocoaUtils::ToNSURL(aPageUrl);
-  if (![pageUrl.scheme isEqualToString:@"https"] && ![pageUrl.scheme isEqualToString:@"http"]) {
+  if (!pageUrl ||
+      (![pageUrl.scheme isEqualToString:@"https"] && ![pageUrl.scheme isEqualToString:@"http"])) {
     [cocoaWin.userActivity invalidate];
     return NS_OK;
   }
