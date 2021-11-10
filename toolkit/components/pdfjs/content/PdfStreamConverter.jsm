@@ -1209,8 +1209,10 @@ PdfStreamConverter.prototype = {
 
     aRequest.QueryInterface(Ci.nsIWritablePropertyBag);
 
+    var contentDisposition = aRequest.DISPOSITION_INLINE;
     var contentDispositionFilename;
     try {
+      contentDisposition = aRequest.contentDisposition;
       contentDispositionFilename = aRequest.contentDispositionFilename;
     } catch (e) {}
 
@@ -1229,7 +1231,9 @@ PdfStreamConverter.prototype = {
       aRequest.setResponseHeader("Refresh", "", false);
     }
 
-    PdfJsTelemetry.onViewerIsUsed();
+    PdfJsTelemetry.onViewerIsUsed(
+      contentDisposition == aRequest.DISPOSITION_ATTACHMENT
+    );
     PdfJsTelemetry.onDocumentSize(aRequest.contentLength);
 
     // Creating storage for PDF data
