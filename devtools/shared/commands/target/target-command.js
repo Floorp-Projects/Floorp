@@ -23,7 +23,6 @@ const {
 } = require("devtools/shared/commands/target/legacy-target-watchers/legacy-workers-watcher");
 
 class TargetCommand extends EventEmitter {
-  #selectedTargetFront;
   /**
    * This class helps managing, iterating over and listening for Targets.
    *
@@ -79,14 +78,12 @@ class TargetCommand extends EventEmitter {
     // time watchTargets is called.
     this._pendingWatchTargetInitialization = new Map();
 
-    // Listeners for target creation, destruction and selection
+    // Listeners for target creation and destruction
     this._createListeners = new EventEmitter();
     this._destroyListeners = new EventEmitter();
-    this._selectListeners = new EventEmitter();
 
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
-    this._onTargetSelected = this._onTargetSelected.bind(this);
 
     this.legacyImplementation = {
       process: new LegacyProcessesWatcher(
@@ -133,10 +130,6 @@ class TargetCommand extends EventEmitter {
     this._onResourceAvailable = this._onResourceAvailable.bind(this);
   }
 
-  get selectedTargetFront() {
-    return this.#selectedTargetFront || this.targetFront;
-  }
-
   // Called whenever a new Target front is available.
   // Either because a target was already available as we started calling startListening
   // or if it has just been created
@@ -178,7 +171,6 @@ class TargetCommand extends EventEmitter {
       // Update the reference to the memoized top level target
       this.targetFront = targetFront;
       this.descriptorFront.setTarget(targetFront);
-      this.#selectedTargetFront = null;
 
       if (isFirstTarget && this.isServerTargetSwitchingEnabled()) {
         this._gotFirstTopLevelTarget = true;
@@ -305,17 +297,6 @@ class TargetCommand extends EventEmitter {
     });
     this._targets.delete(targetFront);
 
-    // If the destroyed target was the selected one, we need to do some cleanup
-    if (this.#selectedTargetFront == targetFront) {
-      // If we're doing a targetSwitch, simply nullify #selectedTargetFront
-      if (isTargetSwitching) {
-        this.#selectedTargetFront = null;
-      } else {
-        // Otherwise we want to select the top level target
-        this.selectTarget(this.targetFront);
-      }
-    }
-
     if (shouldDestroyTargetFront) {
       // When calling targetFront.destroy(), we will first call TargetFrontMixin.destroy,
       // which will try to call `detach` RDP method.
@@ -327,23 +308,6 @@ class TargetCommand extends EventEmitter {
 
       targetFront.destroy();
     }
-  }
-
-  /**
-   *
-   * @param {TargetFront} targetFront
-   */
-  async _onTargetSelected(targetFront) {
-    if (this.#selectedTargetFront == targetFront) {
-      // Target is already selected, we can bail out.
-      return;
-    }
-
-    this.#selectedTargetFront = targetFront;
-    const targetType = this.getTargetType(targetFront);
-    await this._selectListeners.emitAsync(targetType, {
-      targetFront,
-    });
   }
 
   _setListening(type, value) {
@@ -628,19 +592,15 @@ class TargetCommand extends EventEmitter {
    *        The type of target to listen for. Constant of TargetCommand.TYPES.
    * @param {Function} onAvailable
    *        Callback fired when a target has been just created or was already available.
-   *        The function is called with a single object argument containing the following properties:
+   *        The function is called with the following arguments:
    *        - {TargetFront} targetFront: The target Front
    *        - {Boolean} isTargetSwitching: Is this target relates to a navigation and
    *                    this replaced a previously available target, this flag will be true
    * @param {Function} onDestroy
    *        Callback fired in case of target front destruction.
    *        The function is called with the same arguments than onAvailable.
-   * @param {Function} onSelect.
-   *        Callback fired when a given target is selected from the iframe picker
-   *        The function is called with a single object argument containing the following properties:
-   *        - {TargetFront} targetFront: The target Front
    */
-  async watchTargets(types, onAvailable, onDestroy, onSelect) {
+  async watchTargets(types, onAvailable, onDestroy) {
     if (typeof onAvailable != "function") {
       throw new Error(
         "TargetCommand.watchTargets expects a function as second argument"
@@ -710,9 +670,6 @@ class TargetCommand extends EventEmitter {
       if (onDestroy) {
         this._destroyListeners.on(type, onDestroy);
       }
-      if (onSelect) {
-        this._selectListeners.on(type, onSelect);
-      }
     }
 
     await Promise.all(promises);
@@ -723,7 +680,7 @@ class TargetCommand extends EventEmitter {
    * Stop listening for the creation and/or destruction of a given type of target fronts.
    * See `watchTargets()` for documentation of the arguments.
    */
-  unwatchTargets(types, onAvailable, onDestroy, onSelect) {
+  unwatchTargets(types, onAvailable, onDestroy) {
     if (typeof onAvailable != "function") {
       throw new Error(
         "TargetCommand.unwatchTargets expects a function as second argument"
@@ -740,9 +697,6 @@ class TargetCommand extends EventEmitter {
       this._createListeners.off(type, onAvailable);
       if (onDestroy) {
         this._destroyListeners.off(type, onDestroy);
-      }
-      if (onSelect) {
-        this._selectListeners.off(type, onSelect);
       }
     }
     this._pendingWatchTargetInitialization.delete(onAvailable);
@@ -877,16 +831,6 @@ class TargetCommand extends EventEmitter {
     await this._onTargetAvailable(newTarget);
   }
 
-  /**
-   * Called when the user selects a frame in the iframe picker.
-   *
-   * @param {WindowGlobalTargetFront} targetFront
-   *        The target front we want the toolbox to focus on.
-   */
-  selectTarget(targetFront) {
-    return this._onTargetSelected(targetFront);
-  }
-
   isTargetRegistered(targetFront) {
     return this._targets.has(targetFront);
   }
@@ -910,9 +854,7 @@ class TargetCommand extends EventEmitter {
     this.stopListening();
     this._createListeners.off();
     this._destroyListeners.off();
-    this._selectListeners.off();
 
-    this.#selectedTargetFront = null;
     this._isDestroyed = true;
   }
 }
