@@ -180,7 +180,7 @@ add_task(async function() {
     "Undo reset button should be hidden at start of test"
   );
 
-  let prefName = "browser.tabs.drawInTitlebar";
+  let prefName = "browser.tabs.inTitlebar";
   Services.prefs.setIntPref(prefName, !kDefaultValue);
   ok(
     !restoreDefaultsButton.disabled,

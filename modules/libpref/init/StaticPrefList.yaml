@@ -1326,7 +1326,7 @@
 # Whether we should draw the tabs on top of the titlebar.
 #
 # no (0), yes (1), or default (2), which is true everywhere except Linux.
-- name: browser.tabs.drawInTitlebar
+- name: browser.tabs.inTitlebar
   type: int32_t
   value: 2
   mirror: always
