@@ -209,7 +209,14 @@ var PictureInPicture = {
 
   _focusPipBrowserWindow(win) {
     let browser = this.weakWinToBrowser.get(win);
-    let gBrowser = browser.ownerGlobal.gBrowser;
+    let gBrowser = browser?.ownerGlobal?.gBrowser;
+
+    // In some cases, gBrowser can be null. One example is if the parent browser
+    // was already closed.
+    if (!gBrowser) {
+      return;
+    }
+
     let tab = gBrowser.getTabForBrowser(browser);
 
     // focus the tab's window
