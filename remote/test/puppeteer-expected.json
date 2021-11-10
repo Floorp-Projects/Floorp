@@ -860,6 +860,9 @@
   "Launcher specs Puppeteer Puppeteer.launch userDataDir argument (launcher.spec.ts)": [
     "PASS"
   ],
+  "Launcher specs Puppeteer Puppeteer.launch userDataDir option restores preferences (launcher.spec.ts)":[
+    "PASS"
+  ],
   "Launcher specs Puppeteer Puppeteer.launch userDataDir option should restore state (launcher.spec.ts)": [
     "PASS"
   ],
@@ -876,13 +879,13 @@
     "FAIL", "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should filter out ignored default arguments (launcher.spec.ts)": [
-    "FAIL", "PASS"
+    "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should have default URL when launching browser (launcher.spec.ts)": [
     "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should have custom URL when launching browser (launcher.spec.ts)": [
-    "PASS", "TIMEOUT"
+    "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should set the default viewport (launcher.spec.ts)": [
     "PASS"
@@ -900,7 +903,7 @@
     "SKIP"
   ],
   "Launcher specs Puppeteer Puppeteer.launch falls back to launching chrome if there is an unknown product but logs a warning (launcher.spec.ts)": [
-    "FAIL"
+    "SKIP"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should be able to launch Firefox (launcher.spec.ts)": [
     "SKIP"
