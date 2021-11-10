@@ -23,6 +23,7 @@ import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.historymetadata.view.HistoryMetadataGroupViewHolder
 import org.mozilla.fenix.historymetadata.view.HistoryMetadataHeaderViewHolder
 import org.mozilla.fenix.home.HomeFragmentStore
+import org.mozilla.fenix.home.TopPlaceholderViewHolder
 import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.recentbookmarks.view.RecentBookmarksViewHolder
 import org.mozilla.fenix.home.recenttabs.view.RecentTabViewHolder
@@ -49,6 +50,7 @@ import org.mozilla.fenix.home.topsites.TopSitePagerViewHolder
 import mozilla.components.feature.tab.collections.Tab as ComponentTab
 
 sealed class AdapterItem(@LayoutRes val viewType: Int) {
+    object TopPlaceholderItem : AdapterItem(TopPlaceholderViewHolder.LAYOUT_ID)
     data class TipItem(val tip: Tip) : AdapterItem(
         ButtonTipViewHolder.LAYOUT_ID
     )
@@ -255,6 +257,7 @@ class SessionControlAdapter(
 
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
         return when (viewType) {
+            TopPlaceholderViewHolder.LAYOUT_ID -> TopPlaceholderViewHolder(view)
             ButtonTipViewHolder.LAYOUT_ID -> ButtonTipViewHolder(view, interactor)
             TopSitePagerViewHolder.LAYOUT_ID -> TopSitePagerViewHolder(view, interactor)
             PrivateBrowsingDescriptionViewHolder.LAYOUT_ID -> PrivateBrowsingDescriptionViewHolder(
@@ -349,6 +352,9 @@ class SessionControlAdapter(
             is ButtonTipViewHolder -> {
                 val tipItem = item as AdapterItem.TipItem
                 holder.bind(tipItem.tip)
+            }
+            is TopPlaceholderViewHolder -> {
+                holder.bind()
             }
             is TopSitePagerViewHolder -> {
                 holder.bind((item as AdapterItem.TopSitePager).topSites)

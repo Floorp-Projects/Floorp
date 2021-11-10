@@ -20,7 +20,6 @@ import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.home.HomeFragmentState
 import org.mozilla.fenix.home.HomeFragmentStore
-import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.home.Mode
 import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.recenttabs.RecentTab
@@ -45,6 +44,9 @@ internal fun normalModeAdapterItems(
 ): List<AdapterItem> {
     val items = mutableListOf<AdapterItem>()
     var shouldShowCustomizeHome = false
+
+    // Add a synchronous, unconditional and invisible placeholder so home is anchored to the top when created.
+    items.add(AdapterItem.TopPlaceholderItem)
 
     tip?.let { items.add(AdapterItem.TipItem(it)) }
 
@@ -182,8 +184,7 @@ class SessionControlView(
     store: HomeFragmentStore,
     val containerView: View,
     viewLifecycleOwner: LifecycleOwner,
-    internal val interactor: SessionControlInteractor,
-    private var homeScreenViewModel: HomeScreenViewModel
+    internal val interactor: SessionControlInteractor
 ) {
 
     val view: RecyclerView = containerView as RecyclerView
@@ -222,20 +223,6 @@ class SessionControlView(
 
         if (shouldReportMetrics) interactor.reportSessionMetrics(state)
 
-        val stateAdapterList = state.toAdapterList()
-        if (homeScreenViewModel.shouldScrollToTopSites) {
-            sessionControlAdapter.submitList(stateAdapterList) {
-
-                val loadedTopSites = stateAdapterList.find { adapterItem ->
-                    adapterItem is AdapterItem.TopSitePager && adapterItem.topSites.isNotEmpty()
-                }
-                loadedTopSites?.run {
-                    homeScreenViewModel.shouldScrollToTopSites = false
-                    view.scrollToPosition(0)
-                }
-            }
-        } else {
-            sessionControlAdapter.submitList(stateAdapterList)
-        }
+        sessionControlAdapter.submitList(state.toAdapterList())
     }
 }

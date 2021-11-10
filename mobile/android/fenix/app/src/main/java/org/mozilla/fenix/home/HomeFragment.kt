@@ -377,8 +377,7 @@ class HomeFragment : Fragment() {
             homeFragmentStore,
             binding.sessionControlRecyclerView,
             viewLifecycleOwner,
-            sessionControlInteractor,
-            homeViewModel
+            sessionControlInteractor
         )
 
         updateSessionControlView()
@@ -546,8 +545,6 @@ class HomeFragment : Fragment() {
         if (bundleArgs.getBoolean(FOCUS_ON_ADDRESS_BAR)) {
             navigateToSearch()
         } else if (bundleArgs.getLong(FOCUS_ON_COLLECTION, -1) >= 0) {
-            // No need to scroll to async'd loaded TopSites if we want to scroll to collections.
-            homeViewModel.shouldScrollToTopSites = false
             /* Triggered when the user has added a tab to a collection and has tapped
             * the View action on the [TabsTrayDialogFragment] snackbar.*/
             scrollAndAnimateCollection(bundleArgs.getLong(FOCUS_ON_COLLECTION, -1))

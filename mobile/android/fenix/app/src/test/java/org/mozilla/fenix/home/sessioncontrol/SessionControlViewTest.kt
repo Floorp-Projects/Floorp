@@ -14,6 +14,7 @@ import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.service.pocket.PocketRecommendedStory
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
 import org.junit.Test
@@ -96,8 +97,7 @@ class SessionControlViewTest {
             mockk(relaxed = true),
             view,
             mockk(relaxed = true),
-            interactor,
-            mockk(relaxed = true)
+            interactor
         )
         val recentTabs = listOf<RecentTab>(mockk(relaxed = true))
 
@@ -118,8 +118,7 @@ class SessionControlViewTest {
             mockk(relaxed = true),
             view,
             mockk(relaxed = true),
-            interactor,
-            mockk(relaxed = true)
+            interactor
         )
 
         val state = HomeFragmentState()
@@ -155,8 +154,9 @@ class SessionControlViewTest {
             pocketArticles
         )
 
-        assertTrue(results[0] is AdapterItem.RecentBookmarks)
-        assertTrue(results[1] is AdapterItem.CustomizeHomeButton)
+        assertTrue(results[0] is AdapterItem.TopPlaceholderItem)
+        assertTrue(results[1] is AdapterItem.RecentBookmarks)
+        assertTrue(results[2] is AdapterItem.CustomizeHomeButton)
     }
 
     @Test
@@ -182,9 +182,10 @@ class SessionControlViewTest {
             pocketArticles
         )
 
-        assertTrue(results[0] is AdapterItem.RecentTabsHeader)
-        assertTrue(results[1] is AdapterItem.RecentTabItem)
-        assertTrue(results[2] is AdapterItem.CustomizeHomeButton)
+        assertTrue(results[0] is AdapterItem.TopPlaceholderItem)
+        assertTrue(results[1] is AdapterItem.RecentTabsHeader)
+        assertTrue(results[2] is AdapterItem.RecentTabItem)
+        assertTrue(results[3] is AdapterItem.CustomizeHomeButton)
     }
 
     @Test
@@ -210,9 +211,10 @@ class SessionControlViewTest {
             pocketArticles
         )
 
-        assertTrue(results[0] is AdapterItem.HistoryMetadataHeader)
-        assertTrue(results[1] is AdapterItem.HistoryMetadataGroup)
-        assertTrue(results[2] is AdapterItem.CustomizeHomeButton)
+        assertTrue(results[0] is AdapterItem.TopPlaceholderItem)
+        assertTrue(results[1] is AdapterItem.HistoryMetadataHeader)
+        assertTrue(results[2] is AdapterItem.HistoryMetadataGroup)
+        assertTrue(results[3] is AdapterItem.CustomizeHomeButton)
     }
 
     @Test
@@ -238,8 +240,9 @@ class SessionControlViewTest {
             pocketArticles
         )
 
-        assertTrue(results[0] is AdapterItem.PocketStoriesItem)
-        assertTrue(results[1] is AdapterItem.CustomizeHomeButton)
+        assertTrue(results[0] is AdapterItem.TopPlaceholderItem)
+        assertTrue(results[1] is AdapterItem.PocketStoriesItem)
+        assertTrue(results[2] is AdapterItem.CustomizeHomeButton)
     }
 
     @Test
@@ -264,6 +267,36 @@ class SessionControlViewTest {
             historyMetadata,
             pocketArticles
         )
-        assertTrue(results.isEmpty())
+        assertEquals(results.size, 1)
+        assertTrue(results[0] is AdapterItem.TopPlaceholderItem)
+    }
+
+    @Test
+    fun `GIVEN all items THEN top placeholder item is always the first item`() {
+        val collection = mockk<TabCollection> {
+            every { id } returns 123L
+        }
+        val topSites = listOf<TopSite>(mockk())
+        val collections = listOf(collection)
+        val expandedCollections = emptySet<Long>()
+        val recentBookmarks = listOf<BookmarkNode>(mockk())
+        val recentTabs = listOf<RecentTab.Tab>(mockk())
+        val historyMetadata = listOf<HistoryMetadataGroup>(mockk())
+        val pocketArticles = listOf<PocketRecommendedStory>(mockk())
+
+        val results = normalModeAdapterItems(
+            topSites,
+            collections,
+            expandedCollections,
+            null,
+            recentBookmarks,
+            false,
+            false,
+            recentTabs,
+            historyMetadata,
+            pocketArticles
+        )
+
+        assertTrue(results[0] is AdapterItem.TopPlaceholderItem)
     }
 }
