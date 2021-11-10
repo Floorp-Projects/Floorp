@@ -1749,36 +1749,18 @@ nsresult NS_NewURIWithNSURLEncoding(nsIURI** aResult, const nsACString& aSpec) {
   nsresult rv = NS_NewURI(getter_AddRefs(uri), aSpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Escape the ref portion of the URL. An unescaped '#' to indicate
-  // the beginning of the ref component is accepted by NSURL, but '#'
-  // characters in the ref must be escaped. The ref returned from
-  // GetRef() does not include the leading '#'.
+  // Escape the ref portion of the URL. NSURL is more strict about which
+  // characters in the URL must be % encoded. For example, an unescaped '#'
+  // to indicate the beginning of the ref component is accepted by NSURL, but
+  // '#' characters in the ref must be escaped. Also adds encoding for other
+  // characters not accepted by NSURL in the ref such as '{', '|', '}', and '^'.
+  // The ref returned from GetRef() does not include the leading '#'.
   nsAutoCString ref, escapedRef;
   if (NS_SUCCEEDED(uri->GetRef(ref)) && !ref.IsEmpty()) {
-    if (!NS_Escape(ref, escapedRef, url_AppleExtra)) {
+    if (!NS_Escape(ref, escapedRef, url_NSURLRef)) {
       return NS_ERROR_INVALID_ARG;
     }
     rv = NS_MutateURI(uri).SetRef(escapedRef).Finalize(uri);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Escape the file path
-  nsAutoCString filePath, escapedFilePath;
-  if (NS_SUCCEEDED(uri->GetFilePath(filePath)) && !filePath.IsEmpty()) {
-    if (!NS_Escape(filePath, escapedFilePath, url_AppleExtra)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    rv = NS_MutateURI(uri).SetFilePath(escapedFilePath).Finalize(uri);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // Escape the query
-  nsAutoCString query, escapedQuery;
-  if (NS_SUCCEEDED(uri->GetQuery(query)) && !query.IsEmpty()) {
-    if (!NS_Escape(query, escapedQuery, url_AppleExtra)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    rv = NS_MutateURI(uri).SetQuery(escapedQuery).Finalize(uri);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
