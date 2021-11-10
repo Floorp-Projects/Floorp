@@ -2813,34 +2813,23 @@ bool js::gc::IsAboutToBeFinalizedInternal(T** thingp) {
   MOZ_ASSERT_IF(IsOwnedByOtherRuntime(rt, thing), thing->isMarkedBlack());
 #endif
 
+  // This is not used during minor sweeping nor used to update moved GC things.
+  MOZ_ASSERT(!IsForwarded(thing));
+
   if (!thing->isTenured()) {
-    return JS::RuntimeHeapIsMinorCollecting() &&
-           !Nursery::getForwardedPointer(reinterpret_cast<Cell**>(thingp));
-  }
-
-  Zone* zone = thing->asTenured().zoneFromAnyThread();
-  if (zone->isGCSweeping()) {
-    return !thing->asTenured().isMarkedAny();
-  }
-
-  if (zone->isGCCompacting() && IsForwarded(thing)) {
-    *thingp = Forwarded(thing);
     return false;
   }
 
-  return false;
+  TenuredCell* cell = &thing->asTenured();
+  Zone* zone = cell->zoneFromAnyThread();
+  return zone->isGCSweeping() && !cell->isMarkedAny();
 }
 
 template <typename T>
 bool js::gc::IsAboutToBeFinalizedInternal(T* thingp) {
   bool dying = false;
-  auto thing = MapGCThingTyped(*thingp, [&dying](auto t) {
-    dying = IsAboutToBeFinalizedInternal(&t);
-    return TaggedPtr<T>::wrap(t);
-  });
-  if (thing.isSome() && thing.value() != *thingp) {
-    *thingp = thing.value();
-  }
+  ApplyGCThingTyped(
+      *thingp, [&dying](auto t) { dying = IsAboutToBeFinalizedInternal(&t); });
   return dying;
 }
 

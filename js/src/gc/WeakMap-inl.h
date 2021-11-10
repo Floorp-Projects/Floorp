@@ -405,7 +405,6 @@ void WeakMap<K, V>::assertEntriesNotAboutToBeFinalized() {
                  "weakmap marking depends on a key tracing its delegate");
     }
     MOZ_ASSERT(!gc::IsAboutToBeFinalized(&r.front().value()));
-    MOZ_ASSERT(k == r.front().key());
   }
 }
 #endif

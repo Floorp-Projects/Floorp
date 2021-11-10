@@ -72,15 +72,19 @@ inline bool IsMarked(JSRuntime* rt, BarrieredBase<T>* thingp) {
   return IsMarkedInternal(rt, ConvertToBase(thingp->unbarrieredAddress()));
 }
 
-template <typename T>
-inline bool IsAboutToBeFinalizedUnbarriered(T* thingp) {
-  return IsAboutToBeFinalizedInternal(ConvertToBase(thingp));
-}
-
+// Report whether a GC thing is dead and will be finalized in the current sweep
+// group. This is mainly used in read barriers for incremental sweeping.
+//
+// This no longer updates pointers moved by the GC (tracing should be used for
+// this instead).
 template <typename T>
 inline bool IsAboutToBeFinalized(const BarrieredBase<T>* thingp) {
   return IsAboutToBeFinalizedInternal(
       ConvertToBase(thingp->unbarrieredAddress()));
+}
+template <typename T>
+inline bool IsAboutToBeFinalizedUnbarriered(T* thingp) {
+  return IsAboutToBeFinalizedInternal(ConvertToBase(thingp));
 }
 
 inline bool IsAboutToBeFinalizedDuringMinorSweep(Cell* cell);
