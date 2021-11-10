@@ -128,6 +128,7 @@ class ToolboxToolbar extends Component {
     this.hideMenu = this.hideMenu.bind(this);
     this.createFrameList = this.createFrameList.bind(this);
     this.highlightFrame = this.highlightFrame.bind(this);
+    this.clickFrameButton = this.clickFrameButton.bind(this);
   }
 
   componentDidMount() {
@@ -310,12 +311,17 @@ class ToolboxToolbar extends Component {
     );
   }
 
-  highlightFrame(id) {
+  clickFrameButton(event) {
     const { toolbox } = this.props;
+    toolbox.onSelectFrame(event.target.id);
+  }
+
+  highlightFrame(id) {
     if (!id) {
       return;
     }
 
+    const { toolbox } = this.props;
     toolbox.onHighlightFrame(id);
   }
 
@@ -330,21 +336,15 @@ class ToolboxToolbar extends Component {
       const label = toolbox.target.isWebExtension
         ? toolbox.target.getExtensionPathName(frame.url)
         : getUnicodeUrl(frame.url);
-
-      const item = MenuItem({
-        id: frame.id.toString(),
-        key: "toolbox-frame-key-" + frame.id,
-        label,
-        checked: frame.id === toolbox.selectedFrameId,
-        onClick: () => toolbox.onIframePickerFrameSelected(frame.id),
-      });
-
-      // Always put the top level frame at the top
-      if (frame.isTopLevel) {
-        items.unshift(item);
-      } else {
-        items.push(item);
-      }
+      items.push(
+        MenuItem({
+          id: frame.id.toString(),
+          key: "toolbox-frame-key-" + frame.id,
+          label,
+          checked: frame.id === toolbox.selectedFrameId,
+          onClick: this.clickFrameButton,
+        })
+      );
     });
 
     return MenuList(

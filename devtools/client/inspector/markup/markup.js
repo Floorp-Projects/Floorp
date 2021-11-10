@@ -2329,22 +2329,7 @@ MarkupView.prototype = {
    * of the markup-view tree, and not from the perspective of the actual DOM.
    */
   _getParentInTree: function(node) {
-    const parent = node.parentOrHost();
-    if (!parent) {
-      return null;
-    }
-
-    // If the parent node belongs to a different target while the node's target is the
-    // one selected by the user in the iframe picker, we don't want to go further up.
-    if (
-      node.targetFront !== parent.targetFront &&
-      node.targetFront ==
-        this.inspector.commands.targetCommand.selectedTargetFront
-    ) {
-      return null;
-    }
-
-    return parent;
+    return node.parentOrHost();
   },
 
   /**
