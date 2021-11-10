@@ -15,6 +15,8 @@ printui-sheets-count =
     }
 
 printui-page-range-all = All
+printui-page-range-odd = Odd
+printui-page-range-even = Even
 printui-page-range-custom = Custom
 printui-page-range-label = Pages
 printui-page-range-picker =
