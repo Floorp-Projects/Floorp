@@ -109,7 +109,8 @@ int main(int argc, char const *argv[])
     get_info_func_t get_info_func = (get_info_func_t) symbol_lookup(library, info_func_name);
     wasm2c_sandbox_funcs_t sandbox_info = get_info_func();
 
-    void* sandbox = sandbox_info.create_wasm2c_sandbox();
+    const uint32_t dont_override_heap_size = 0;
+    void* sandbox = sandbox_info.create_wasm2c_sandbox(dont_override_heap_size);
     if (!sandbox) {
         printf("Error: Could not create sandbox" LINETERM);
         exit(1);

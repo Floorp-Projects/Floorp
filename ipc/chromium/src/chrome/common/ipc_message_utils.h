@@ -21,9 +21,6 @@
 #include "build/build_config.h"
 #include "chrome/common/ipc_message.h"
 
-#if defined(OS_POSIX)
-#  include "chrome/common/file_descriptor_set_posix.h"
-#endif
 #if defined(OS_WIN)
 #  include <windows.h>
 #endif
@@ -386,56 +383,42 @@ struct ParamTraitsWindows<HWND> {
 template <class P>
 struct ParamTraitsIPC : ParamTraitsWindows<P> {};
 
-#if defined(OS_POSIX)
-// FileDescriptors may be serialised over IPC channels on POSIX. On the
-// receiving side, the FileDescriptor is a valid duplicate of the file
-// descriptor which was transmitted: *it is not just a copy of the integer like
-// HANDLEs on Windows*. The only exception is if the file descriptor is < 0. In
-// this case, the receiving end will see a value of -1. *Zero is a valid file
-// descriptor*.
+// `UniqueFileHandle` may be serialized over IPC channels. On the receiving
+// side, the UniqueFileHandle is a valid duplicate of the handle which was
+// transmitted.
 //
-// The received file descriptor will have the |auto_close| flag set to true. The
-// code which handles the message is responsible for taking ownership of it.
-// File descriptors are OS resources and must be closed when no longer needed.
+// When sending a UniqueFileHandle, the handle must be valid at the time of
+// transmission. As transmission is asynchronous, this requires passing
+// ownership of the handle to IPC.
 //
-// When sending a file descriptor, the file descriptor must be valid at the time
-// of transmission. Since transmission is not synchronous, one should consider
-// dup()ing any file descriptors to be transmitted and setting the |auto_close|
-// flag, which causes the file descriptor to be closed after writing.
+// A UniqueFileHandle may only be read once. After it has been read once, it
+// will be consumed, and future reads will return an invalid handle.
 template <>
-struct ParamTraitsIPC<base::FileDescriptor> {
-  typedef base::FileDescriptor param_type;
-  static void Write(Message* m, const param_type& p) {
-    const bool valid = p.fd >= 0;
+struct ParamTraitsIPC<mozilla::UniqueFileHandle> {
+  typedef mozilla::UniqueFileHandle param_type;
+  static void Write(Message* m, param_type&& p) {
+    const bool valid = p != nullptr;
     WriteParam(m, valid);
-
     if (valid) {
-      if (!m->WriteFileDescriptor(p)) {
-        NOTREACHED() << "Too many file descriptors for one message!";
+      if (!m->WriteFileHandle(std::move(p))) {
+        NOTREACHED() << "Too many file handles for one message!";
       }
     }
   }
   static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
     bool valid;
-    if (!ReadParam(m, iter, &valid)) return false;
+    if (!ReadParam(m, iter, &valid)) {
+      return false;
+    }
 
     if (!valid) {
-      r->fd = -1;
-      r->auto_close = false;
+      *r = nullptr;
       return true;
     }
 
-    return m->ReadFileDescriptor(iter, r);
-  }
-  static void Log(const param_type& p, std::wstring* l) {
-    if (p.auto_close) {
-      l->append(StringPrintf(L"FD(%d auto-close)", p.fd));
-    } else {
-      l->append(StringPrintf(L"FD(%d)", p.fd));
-    }
+    return m->ConsumeFileHandle(iter, r);
   }
 };
-#endif  // defined(OS_POSIX)
 
 // Mozilla-specific types.
 

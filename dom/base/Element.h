@@ -1310,10 +1310,14 @@ class Element : public FragmentOrElement {
   }
 
  private:
+  // DO NOT USE THIS FUNCTION directly in C++. This function is supposed to be
+  // called from JS. Use PresShell::ScrollContentIntoView instead.
   MOZ_CAN_RUN_SCRIPT void ScrollIntoView(const ScrollIntoViewOptions& aOptions);
 
  public:
   MOZ_CAN_RUN_SCRIPT
+  // DO NOT USE THIS FUNCTION directly in C++. This function is supposed to be
+  // called from JS. Use PresShell::ScrollContentIntoView instead.
   void ScrollIntoView(const BooleanOrScrollIntoViewOptions& aObject);
   MOZ_CAN_RUN_SCRIPT void Scroll(double aXScroll, double aYScroll);
   MOZ_CAN_RUN_SCRIPT void Scroll(const ScrollToOptions& aOptions);

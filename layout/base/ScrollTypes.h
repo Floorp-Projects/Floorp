@@ -16,27 +16,27 @@ namespace mozilla {
  * When a scroll operation is requested, we ask for instant, smooth,
  * smooth msd, or normal scrolling.
  *
- * |eSmooth| scrolls have a symmetrical acceleration and deceleration curve
+ * |Smooth| scrolls have a symmetrical acceleration and deceleration curve
  * modeled with a set of splines that guarantee that the destination will be
- * reached over a fixed time interval.  |eSmooth| will only be smooth if smooth
+ * reached over a fixed time interval.  |Smooth| will only be smooth if smooth
  * scrolling is actually enabled.  This behavior is utilized by keyboard and
  * mouse wheel scrolling events.
  *
- * |eSmoothMsd| implements a physically based model that approximates the
- * behavior of a mass-spring-damper system.  |eSmoothMsd| scrolls have a
+ * |SmoothMsd| implements a physically based model that approximates the
+ * behavior of a mass-spring-damper system.  |SmoothMsd| scrolls have a
  * non-symmetrical acceleration and deceleration curve, can potentially
  * overshoot the destination on intermediate frames, and complete over a
- * variable time interval.  |eSmoothMsd| will only be smooth if cssom-view
+ * variable time interval.  |SmoothMsd| will only be smooth if cssom-view
  * smooth-scrolling is enabled.
  *
- * |eInstant| is always synchronous, |eNormal| can be asynchronous.
+ * |Instant| is always synchronous, |Normal| can be asynchronous.
  *
- * If an |eInstant| scroll request happens while a |eSmooth| or async scroll is
+ * If an |Instant| scroll request happens while a |Smooth| or async scroll is
  * already in progress, the async scroll is interrupted and we instantly
  * scroll to the destination.
  *
- * If an |eInstant| or |eSmooth| scroll request happens while a |eSmoothMsd|
- * scroll is already in progress, the |eSmoothMsd| scroll is interrupted without
+ * If an |Instant| or |Smooth| scroll request happens while a |SmoothMsd|
+ * scroll is already in progress, the |SmoothMsd| scroll is interrupted without
  * first scrolling to the destination.
  */
 enum class ScrollMode { Instant, Smooth, SmoothMsd, Normal };
@@ -45,6 +45,16 @@ enum class ScrollMode { Instant, Smooth, SmoothMsd, Normal };
  * When scrolling by a relative amount, we can choose various units.
  */
 enum class ScrollUnit { DEVICE_PIXELS, LINES, PAGES, WHOLE };
+
+/**
+ * Representing whether there's an on-going animation in APZC and it was
+ * triggered by script or by user input.
+ */
+enum class APZScrollAnimationType {
+  No,                   // No animation.
+  TriggeredByScript,    // Animation triggered by script.
+  TriggeredByUserInput  // Animation triggered by user input.
+};
 
 }  // namespace mozilla
 

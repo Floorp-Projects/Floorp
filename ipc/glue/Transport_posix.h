@@ -13,7 +13,7 @@ namespace mozilla {
 namespace ipc {
 
 struct TransportDescriptor {
-  base::FileDescriptor mFd;
+  int mFd;
 };
 
 }  // namespace ipc
@@ -25,11 +25,16 @@ template <>
 struct ParamTraits<mozilla::ipc::TransportDescriptor> {
   typedef mozilla::ipc::TransportDescriptor paramType;
   static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mFd);
+    WriteParam(aMsg, mozilla::UniqueFileHandle{aParam.mFd});
   }
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    return ReadParam(aMsg, aIter, &aResult->mFd);
+    mozilla::UniqueFileHandle fd;
+    if (!ReadParam(aMsg, aIter, &fd)) {
+      return false;
+    }
+    aResult->mFd = fd.release();
+    return true;
   }
 };
 

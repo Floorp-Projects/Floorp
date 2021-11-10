@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import ctypes
 import os
+import platform
 import sys
 import subprocess
 
@@ -157,11 +158,20 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
 
         from mozboot import android
 
+        os_arch = platform.machine()
+        if os_arch == "AMD64":
+            # On Windows, x86_64 is reported as AMD64 but we use x86_64
+            # everywhere else, so let's normalized it here.
+            os_arch = "x86_64"
         android.ensure_android(
-            "windows", artifact_mode=artifact_mode, no_interactive=self.no_interactive
+            "windows",
+            os_arch,
+            artifact_mode=artifact_mode,
+            no_interactive=self.no_interactive,
         )
         android.ensure_android(
             "windows",
+            os_arch,
             system_images_only=True,
             artifact_mode=artifact_mode,
             no_interactive=self.no_interactive,
@@ -169,6 +179,7 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
         )
         android.ensure_android(
             "windows",
+            os_arch,
             system_images_only=True,
             artifact_mode=artifact_mode,
             no_interactive=self.no_interactive,

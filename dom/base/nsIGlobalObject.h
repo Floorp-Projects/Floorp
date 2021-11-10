@@ -209,6 +209,18 @@ class nsIGlobalObject : public nsISupports,
 
   void RemoveReportRecords();
 
+  /**
+   * Check whether we should avoid leaking distinguishing information to JS/CSS.
+   * https://w3c.github.io/fingerprinting-guidance/
+   */
+  virtual bool ShouldResistFingerprinting() const;
+
+  /**
+   * Threadsafe way to get nsIPrincipal::GetHashValue for the associated
+   * principal.
+   */
+  virtual uint32_t GetPrincipalHashValue() const { return 0; }
+
  protected:
   virtual ~nsIGlobalObject();
 

@@ -3485,7 +3485,10 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   aFrameAsScrollable->ScrollTo(scrollPt, scrollMode, &allowedRange,
                                aScrollFlags & ScrollFlags::ScrollSnap
                                    ? nsIScrollbarMediator::ENABLE_SNAP
-                                   : nsIScrollbarMediator::DISABLE_SNAP);
+                                   : nsIScrollbarMediator::DISABLE_SNAP,
+                               aScrollFlags & ScrollFlags::TriggeredByScript
+                                   ? ScrollTriggeredByScript::Yes
+                                   : ScrollTriggeredByScript::No);
   if (!weakFrame.IsAlive()) {
     return;
   }
@@ -3615,17 +3618,19 @@ void PresShell::DoScrollContentIntoView() {
   bool haveRect = false;
   bool useWholeLineHeightForInlines = data->mContentScrollVAxis.mWhenToScroll !=
                                       WhenToScroll::IfNotFullyVisible;
-  // Reuse the same line iterator across calls to AccumulateFrameBounds.  We set
-  // it every time we detect a new block (stored in prevBlock).
-  nsIFrame* prevBlock = nullptr;
-  nsAutoLineIterator lines;
-  // The last line we found a continuation on in |lines|.  We assume that later
-  // continuations cannot come on earlier lines.
-  int32_t curLine = 0;
-  do {
-    AccumulateFrameBounds(container, frame, useWholeLineHeightForInlines,
-                          frameBounds, haveRect, prevBlock, lines, curLine);
-  } while ((frame = frame->GetNextContinuation()));
+  {
+    nsIFrame* prevBlock = nullptr;
+    // Reuse the same line iterator across calls to AccumulateFrameBounds.
+    // We set it every time we detect a new block (stored in prevBlock).
+    nsAutoLineIterator lines;
+    // The last line we found a continuation on in |lines|.  We assume that later
+    // continuations cannot come on earlier lines.
+    int32_t curLine = 0;
+    do {
+      AccumulateFrameBounds(container, frame, useWholeLineHeightForInlines,
+                            frameBounds, haveRect, prevBlock, lines, curLine);
+    } while ((frame = frame->GetNextContinuation()));
+  }
 
   ScrollFrameRectIntoView(container, frameBounds, scrollMargin,
                           data->mContentScrollVAxis, data->mContentScrollHAxis,

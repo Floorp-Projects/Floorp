@@ -14,11 +14,21 @@ enabled by setting `browser.pagedata.log` to true.
 ## PageData Data Structure
 
 At a high level the page data service can collect many different kinds of data. When queried the
-service will respond with a `PageData` structure which holds the page's url the time when the data
-was discovered and an array of the different types of data found. This array will be empty if no
-data was found. Each item in the array is an object with two properties. `type` is a string
-indicating the type of data. `data` is the actual data, the specific format will vary depending on
-the type.
+service will respond with a `PageData` structure which holds some general information about the
+page, the time when the data was discovered and a map of the different types of data found. This map
+will be empty if no specific data was found. The key of the map is from the
+`PageDataSchema.DATA_TYPE` enumeration. The value is the JSON data which differs in structure
+depending on the data type.
+
+```json
+{
+  "url": <url of the page as a string>,
+  "date": <epoch based timestamp>,
+  "siteName": <a friendly name for the website>,
+  "image": <url for an image for the page as a string>,
+  "data": <map of data types>,
+}
+```
 
 ## PageData Collection
 
@@ -31,6 +41,10 @@ When page data has been found a `page-data` event is emitted. The event's argume
 
 ## Supported Types of page data
 
-The following types of page data (`PageDataCollector.DATA_TYPE`) are currently supported:
+The following types of page data (`PageDataSchema.DATA_TYPE`) are currently supported:
 
-- [`PRODUCT`](./schema-org.html#Product)
+- `PRODUCT`
+- `DOCUMENT`
+- `ARTICLE`
+- `AUDIO`
+- `VIDEO`

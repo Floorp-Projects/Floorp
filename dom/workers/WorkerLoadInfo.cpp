@@ -87,6 +87,7 @@ WorkerLoadInfoData::WorkerLoadInfoData()
     : mLoadFlags(nsIRequest::LOAD_NORMAL),
       mWindowID(UINT64_MAX),
       mReferrerInfo(new ReferrerInfo(nullptr)),
+      mPrincipalHashValue(0),
       mFromWindow(false),
       mEvalAllowed(false),
       mReportCSPViolations(false),
@@ -98,6 +99,7 @@ WorkerLoadInfoData::WorkerLoadInfoData()
       mUseRegularPrincipal(false),
       mHasStorageAccessPermissionGranted(false),
       mServiceWorkersTestingInWindow(false),
+      mShouldResistFingerprinting(false),
       mSecureContext(eNotSet) {}
 
 nsresult WorkerLoadInfo::SetPrincipalsAndCSPOnMainThread(
@@ -155,6 +157,7 @@ nsresult WorkerLoadInfo::SetPrincipalsAndCSPOnMainThread(
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
+  mPrincipalHashValue = aPrincipal->GetHashValue();
   return NS_OK;
 }
 

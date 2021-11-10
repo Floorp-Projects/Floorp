@@ -29,7 +29,6 @@
 #include "base/process_util.h"
 #include "base/string_util.h"
 #include "chrome/common/chrome_switches.h"
-#include "chrome/common/file_descriptor_set_posix.h"
 #include "chrome/common/ipc_channel_utils.h"
 #include "chrome/common/ipc_message_utils.h"
 #include "mozilla/ipc/Endpoint.h"
@@ -483,17 +482,17 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
 
       Message& m = incoming_message_.ref();
 
-      if (m.header()->num_fds) {
+      if (m.header()->num_handles) {
         // the message has file descriptors
         const char* error = NULL;
-        if (m.header()->num_fds > num_fds - fds_i) {
+        if (m.header()->num_handles > num_fds - fds_i) {
           // the message has been completely received, but we didn't get
           // enough file descriptors.
           error = "Message needs unreceived descriptors";
         }
 
-        if (m.header()->num_fds >
-            FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE) {
+        if (m.header()->num_handles >
+            IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE) {
           // There are too many descriptors in this message
           error = "Message requires an excessive number of descriptors";
         }
@@ -501,7 +500,7 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
         if (error) {
           CHROMIUM_LOG(WARNING)
               << error << " channel:" << this << " message-type:" << m.type()
-              << " header()->num_fds:" << m.header()->num_fds
+              << " header()->num_handles:" << m.header()->num_handles
               << " num_fds:" << num_fds << " fds_i:" << fds_i;
           // close the existing file descriptors so that we don't leak them
           for (unsigned i = fds_i; i < num_fds; ++i)
@@ -521,9 +520,12 @@ bool Channel::ChannelImpl::ProcessIncomingMessages() {
         OutputQueuePush(std::move(fdAck));
 #endif
 
-        m.file_descriptor_set()->SetDescriptors(&fds[fds_i],
-                                                m.header()->num_fds);
-        fds_i += m.header()->num_fds;
+        nsTArray<mozilla::UniqueFileHandle> handles(m.header()->num_handles);
+        for (unsigned end_i = fds_i + m.header()->num_handles; fds_i < end_i;
+             ++fds_i) {
+          handles.AppendElement(mozilla::UniqueFileHandle(fds[fds_i]));
+        }
+        m.SetAttachedFileHandles(std::move(handles));
       }
 
       // Note: We set other_pid_ below when we receive a Hello message (which
@@ -591,7 +593,7 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
     struct msghdr msgh = {0};
 
     static const int tmp =
-        CMSG_SPACE(sizeof(int[FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE]));
+        CMSG_SPACE(sizeof(int[IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE]));
     char buf[tmp];
 
     if (partial_write_iter_.isNothing()) {
@@ -610,12 +612,12 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
       AddIPCProfilerMarker(*msg, other_pid_, MessageDirection::eSending,
                            MessagePhase::TransferStart);
 
-      if (!msg->file_descriptor_set()->empty()) {
+      if (!msg->attached_handles_.IsEmpty()) {
         // This is the first chunk of a message which has descriptors to send
         struct cmsghdr* cmsg;
-        const unsigned num_fds = msg->file_descriptor_set()->size();
+        const unsigned num_fds = msg->attached_handles_.Length();
 
-        if (num_fds > FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE) {
+        if (num_fds > IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE) {
           MOZ_DIAGNOSTIC_ASSERT(false, "Too many file descriptors!");
           CHROMIUM_LOG(FATAL) << "Too many file descriptors!";
           // This should not be reached.
@@ -628,11 +630,13 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
         cmsg->cmsg_level = SOL_SOCKET;
         cmsg->cmsg_type = SCM_RIGHTS;
         cmsg->cmsg_len = CMSG_LEN(sizeof(int) * num_fds);
-        msg->file_descriptor_set()->GetDescriptors(
-            reinterpret_cast<int*>(CMSG_DATA(cmsg)));
+        for (unsigned i = 0; i < num_fds; ++i) {
+          reinterpret_cast<int*>(CMSG_DATA(cmsg))[i] =
+              msg->attached_handles_[i].get();
+        }
         msgh.msg_controllen = cmsg->cmsg_len;
 
-        msg->header()->num_fds = num_fds;
+        msg->header()->num_handles = num_fds;
 #if defined(OS_MACOSX)
         msg->set_fd_cookie(++last_pending_fd_id_);
 #endif
@@ -678,9 +682,11 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
         HANDLE_EINTR(corrected_sendmsg(pipe_, &msgh, MSG_DONTWAIT));
 
 #if !defined(OS_MACOSX)
-    // On OSX CommitAll gets called later, once we get the
+    // On OSX the attached_handles_ array gets cleared later, once we get the
     // RECEIVED_FDS_MESSAGE_TYPE message.
-    if (bytes_written > 0) msg->file_descriptor_set()->CommitAll();
+    if (bytes_written > 0) {
+      msg->attached_handles_.Clear();
+    }
 #endif
 
     if (bytes_written < 0) {
@@ -745,9 +751,10 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
       partial_write_iter_.reset();
 
 #if defined(OS_MACOSX)
-      if (!msg->file_descriptor_set()->empty())
-        pending_fds_.push_back(
-            PendingDescriptors(msg->fd_cookie(), msg->file_descriptor_set()));
+      if (!msg->attached_handles_.IsEmpty()) {
+        pending_fds_.push_back(PendingDescriptors{
+            msg->fd_cookie(), std::move(msg->attached_handles_)});
+      }
 #endif
 
       // Message sent OK!
@@ -834,7 +841,6 @@ void Channel::ChannelImpl::CloseDescriptors(uint32_t pending_fd_id) {
   for (std::list<PendingDescriptors>::iterator i = pending_fds_.begin();
        i != pending_fds_.end(); i++) {
     if ((*i).id == pending_fd_id) {
-      (*i).fds->CommitAll();
       pending_fds_.erase(i);
       return;
     }
@@ -904,10 +910,6 @@ void Channel::ChannelImpl::Close() {
   input_overflow_fds_.clear();
 
 #if defined(OS_MACOSX)
-  for (std::list<PendingDescriptors>::iterator i = pending_fds_.begin();
-       i != pending_fds_.end(); i++) {
-    (*i).fds->CommitAll();
-  }
   pending_fds_.clear();
 #endif
 

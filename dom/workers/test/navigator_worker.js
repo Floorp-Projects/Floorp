@@ -14,6 +14,7 @@ var supportedProps = [
   "onLine",
   "language",
   "languages",
+  { name: "locks", isSecureContext: true, nightly: true },
   "mediaCapabilities",
   "hardwareConcurrency",
   { name: "storage", isSecureContext: true },

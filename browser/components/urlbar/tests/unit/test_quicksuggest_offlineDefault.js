@@ -23,13 +23,6 @@ const PREFS = [
     expectedOtherValue: false,
   },
   {
-    name: "browser.urlbar.quicksuggest.scenario",
-    get: "getCharPref",
-    set: "setCharPref",
-    expectedOfflineValue: "offline",
-    expectedOtherValue: "history",
-  },
-  {
     name: "browser.urlbar.quicksuggest.shouldShowOnboardingDialog",
     get: "getBoolPref",
     set: "setBoolPref",
@@ -37,7 +30,7 @@ const PREFS = [
     expectedOtherValue: true,
   },
   {
-    name: "browser.urlbar.suggest.quicksuggest",
+    name: "browser.urlbar.suggest.quicksuggest.nonsponsored",
     get: "getBoolPref",
     set: "setBoolPref",
     expectedOfflineValue: true,

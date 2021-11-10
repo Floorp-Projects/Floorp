@@ -143,7 +143,7 @@ var History = Object.freeze({
    *           PageInfo needs to contain VisitInfo in a reverse chronological order.
    *           By default, `visits` is undefined inside the returned `PageInfo`.
    *        - `includeMeta` (boolean) set this to true to fetch page meta fields,
-   *           i.e. `description` and `preview_image_url`.
+   *           i.e. `description`, `site_name` and `preview_image_url`.
    *        - `includeAnnotations` (boolean) set this to true to fetch any
    *           annotations that are associated with the page.
    *
@@ -697,6 +697,13 @@ var History = Object.freeze({
    *      2). Descriptions longer than DB_DESCRIPTION_LENGTH_MAX will be
    *          truncated.
    *
+   *      If a property `siteName` is provided, the site name of the
+   *      page is updated. Note that:
+   *      1). An empty string or null `siteName` will clear the existing
+   *          value in the database.
+   *      2). Descriptions longer than DB_SITENAME_LENGTH_MAX will be
+   *          truncated.
+   *
    *      If a property `previewImageURL` is provided, the preview image
    *      URL of the page is updated. Note that:
    *      1). A null `previewImageURL` will clear the existing value in the
@@ -732,11 +739,12 @@ var History = Object.freeze({
 
     if (
       info.description === undefined &&
+      info.siteName === undefined &&
       info.previewImageURL === undefined &&
       info.annotations === undefined
     ) {
       throw new TypeError(
-        "pageInfo object must at least have either a description, previewImageURL or annotations property."
+        "pageInfo object must at least have either a description, siteName, previewImageURL or annotations property."
       );
     }
 
@@ -1144,7 +1152,7 @@ var fetch = async function(db, guidOrURL, options) {
 
   let pageMetaSelectionFragment = "";
   if (options.includeMeta) {
-    pageMetaSelectionFragment = ", description, preview_image_url";
+    pageMetaSelectionFragment = ", description, site_name, preview_image_url";
   }
 
   let query = `SELECT h.id, guid, url, title, frecency
@@ -1167,6 +1175,7 @@ var fetch = async function(db, guidOrURL, options) {
     }
     if (options.includeMeta) {
       pageInfo.description = row.getResultByName("description") || "";
+      pageInfo.siteName = row.getResultByName("site_name") || "";
       let previewImageURL = row.getResultByName("preview_image_url");
       pageInfo.previewImageURL = previewImageURL
         ? new URL(previewImageURL)
@@ -1666,6 +1675,10 @@ var update = async function(db, pageInfo) {
   if ("description" in pageInfo) {
     updateFragments.push("description");
     params.description = pageInfo.description;
+  }
+  if ("siteName" in pageInfo) {
+    updateFragments.push("site_name");
+    params.site_name = pageInfo.siteName;
   }
   if ("previewImageURL" in pageInfo) {
     updateFragments.push("preview_image_url");

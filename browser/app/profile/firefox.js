@@ -382,11 +382,27 @@ pref("browser.urlbar.suggest.openpage",             true);
 pref("browser.urlbar.suggest.searches",             true);
 pref("browser.urlbar.suggest.topsites",             true);
 pref("browser.urlbar.suggest.engines",              true);
-pref("browser.urlbar.suggest.quicksuggest",         false);
-pref("browser.urlbar.suggest.quicksuggest.sponsored", false);
 pref("browser.urlbar.suggest.calculator",           false);
 
-// Whether the QuickSuggest experiment is enabled.
+// Whether non-sponsored quick suggest results are shown in the urlbar. This
+// pref is exposed to the user in the UI, and it's sticky so that its
+// user-branch value persists regardless of whatever Firefox Suggest scenarios,
+// with their various default-branch values, the user is enrolled in over time.
+pref("browser.urlbar.suggest.quicksuggest.nonsponsored", false, sticky);
+
+// Whether sponsored quick suggest results are shown in the urlbar. This pref is
+// exposed to the user in the UI, and it's sticky so that its user-branch value
+// persists regardless of whatever Firefox Suggest scenarios, with their various
+// default-branch values, the user is enrolled in over time.
+pref("browser.urlbar.suggest.quicksuggest.sponsored", false, sticky);
+
+// Whether data collection is enabled for quick suggest results in the urlbar.
+// This pref is exposed to the user in the UI, and it's sticky so that its
+// user-branch value persists regardless of whatever Firefox Suggest scenarios,
+// with their various default-branch values, the user is enrolled in over time.
+pref("browser.urlbar.quicksuggest.dataCollection.enabled", false, sticky);
+
+// Whether the quick suggest feature in the urlbar is enabled.
 pref("browser.urlbar.quicksuggest.enabled", false);
 
 // Whether to show the QuickSuggest onboarding dialog.
@@ -402,10 +418,6 @@ pref("browser.urlbar.quicksuggest.nonSponsoredIndex", -1);
 
 // Whether Remote Settings is enabled as a quick suggest source.
 pref("browser.urlbar.quicksuggest.remoteSettings.enabled", true);
-
-// The Firefox Suggest scenario in which the user is enrolled, one of:
-// "history", "offline", "online"
-pref("browser.urlbar.quicksuggest.scenario", "history");
 
 // Whether unit conversion is enabled.
 #ifdef NIGHTLY_BUILD

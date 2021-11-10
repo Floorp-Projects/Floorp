@@ -2629,17 +2629,9 @@ nsresult nsExternalAppHandler::ContinueSave(nsIFile* aNewFileLocation) {
 
   int32_t action = nsIMIMEInfo::saveToDisk;
   mMimeInfo->GetPreferredAction(&action);
-  bool shouldAutomaticallyHandleInternally =
+  mHandleInternally =
       action == nsIMIMEInfo::handleInternally &&
       StaticPrefs::browser_download_improvements_to_download_panel();
-
-  if (StaticPrefs::browser_download_improvements_to_download_panel() &&
-      (action == nsIMIMEInfo::useHelperApp ||
-       action == nsIMIMEInfo::useSystemDefault ||
-       shouldAutomaticallyHandleInternally)) {
-    return LaunchWithApplication(shouldAutomaticallyHandleInternally,
-                                 aNewFileLocation);
-  }
 
   nsresult rv = NS_OK;
   nsCOMPtr<nsIFile> fileToUse = aNewFileLocation;

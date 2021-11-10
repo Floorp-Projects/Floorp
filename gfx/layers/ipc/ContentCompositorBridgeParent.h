@@ -130,7 +130,7 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
                           TimeStamp& aCompositeStart, TimeStamp& aCompositeEnd);
 
   PTextureParent* AllocPTextureParent(
-      const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
+      const SurfaceDescriptor& aSharedData, ReadLockDescriptor& aReadLock,
       const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
       const LayersId& aId, const uint64_t& aSerial,
       const wr::MaybeExternalImageId& aExternalImageId) override;

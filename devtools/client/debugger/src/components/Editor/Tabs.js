@@ -19,7 +19,6 @@ import { getHiddenTabs } from "../../utils/tabs";
 import { getFilename, isPretty, getFileURL } from "../../utils/source";
 import actions from "../../actions";
 
-import { debounce } from "lodash";
 import "./Tabs.css";
 
 import Tab from "./Tab";
@@ -27,6 +26,8 @@ import { PaneToggleButton } from "../shared/Button";
 import Dropdown from "../shared/Dropdown";
 import AccessibleImage from "../shared/AccessibleImage";
 import CommandBar from "../SecondaryPanes/CommandBar";
+
+const { debounce } = require("devtools/shared/debounce");
 
 function haveTabSourcesChanged(tabSources, prevTabSources) {
   if (tabSources.length !== prevTabSources.length) {

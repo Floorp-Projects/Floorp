@@ -19,30 +19,23 @@ add_task(async function test_single_product_data() {
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     let pageData = await promise;
     Assert.equal(pageData.url, TEST_URL, "Should have returned the loaded URL");
-    Assert.equal(pageData.data.length, 1, "Should have only one data item");
+    Assert.equal(
+      pageData.image,
+      BASE_URL + "bon-echo-microwave-17in.jpg",
+      "Should have returned the product image"
+    );
     Assert.deepEqual(
       pageData.data,
-      [
-        {
-          type: PageDataCollector.DATA_TYPE.PRODUCT,
-          data: [
-            {
-              gtin: "13572468",
-              name: "Bon Echo Microwave",
-              image: BASE_URL + "bon-echo-microwave-17in.jpg",
-              url: BASE_URL + "microwave.html",
-              price: "3.00",
-              currency: "GBP",
-            },
-          ],
+      {
+        [PageDataSchema.DATA_TYPE.PRODUCT]: {
+          name: "Bon Echo Microwave",
+          price: {
+            value: 3,
+            currency: "GBP",
+          },
         },
-      ],
+      },
       "Should have returned the expected data"
-    );
-    Assert.equal(
-      pageData.weakBrowser.get(),
-      browser,
-      "Should return the collection browser"
     );
   });
 });
@@ -55,38 +48,23 @@ add_task(async function test_single_multiple_data() {
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     let pageData = await promise;
     Assert.equal(pageData.url, TEST_URL, "Should have returned the loaded URL");
-    Assert.equal(pageData.data.length, 1, "Should have only one data item");
+    Assert.equal(
+      pageData.image,
+      BASE_URL + "bon-echo-microwave-17in.jpg",
+      "Should have the right image."
+    );
     Assert.deepEqual(
       pageData.data,
-      [
-        {
-          type: PageDataCollector.DATA_TYPE.PRODUCT,
-          data: [
-            {
-              gtin: "13572468",
-              name: "Bon Echo Microwave",
-              image: BASE_URL + "bon-echo-microwave-17in.jpg",
-              url: BASE_URL + "microwave.html",
-              price: "3.00",
-              currency: "GBP",
-            },
-            {
-              gtin: "15263748",
-              name: "Gran Paradiso Toaster",
-              image: BASE_URL + "gran-paradiso-toaster-17in.jpg",
-              url: BASE_URL + "toaster.html",
-              price: undefined,
-              currency: undefined,
-            },
-          ],
+      {
+        [PageDataSchema.DATA_TYPE.PRODUCT]: {
+          name: "Bon Echo Microwave",
+          price: {
+            value: 3,
+            currency: "GBP",
+          },
         },
-      ],
+      },
       "Should have returned the expected data"
-    );
-    Assert.equal(
-      pageData.weakBrowser.get(),
-      browser,
-      "Should return the collection browser"
     );
   });
 });

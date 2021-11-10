@@ -6,101 +6,42 @@
 
 var EXPORTED_SYMBOLS = ["OpenGraphPageData"];
 
-const { PageDataCollector } = ChromeUtils.import(
-  "resource:///modules/pagedata/PageDataCollector.jsm"
-);
-
 /**
- * @typedef {object} GeneralPageData
- *   Data about a product.
- * @property {string | undefined} title
- *   The title describing the page.
- * @property {string | undefined} site_name
- *   The name of the site the page is on.
- * @property {string | undefined} type
- *   The type of the object being described by Open Graph. See
- *   https://ogp.me/#types for a list of possible types.
- * @property {string | undefined} image
- *   A URL pointing to an image that describes the page.
- * @property {string | undefined} url
- *   The permalink to the page.
+ * Collects Open Graph (https://opengraphprotocol.org/) related data from a page.
  */
-
-const RELEVANT_TAGS = ["title", "site_name", "image", "type", "url"];
-
-/**
- * Collects Open Graph related data from a page.
- *
- * TODO: Respond to DOM mutations to trigger recollection.
- */
-class OpenGraphPageData extends PageDataCollector {
+const OpenGraphPageData = {
   /**
-   * @see PageDataCollector.init
-   */
-  async init() {
-    return this.#collect();
-  }
-
-  /**
-   * Collects data from the meta tags on the page.
-   * See https://ogp.me/ for the parsing spec.
+   * Collects the opengraph data from the page.
    *
-   * @param {NodeList} tags
-   *  A NodeList of Open Graph meta tags.
-   * @returns {GeneralPageData}
-   *   Data describing the webpage.
-   */
-  #collectOpenGraphTags(tags) {
-    // Ensure all tags are present in the returned object, even if their values
-    // are undefined.
-    let pageData = Object.fromEntries(
-      RELEVANT_TAGS.map(tag => [tag, undefined])
-    );
-
-    for (let tag of tags) {
-      // Stripping "og:" from the property name.
-      let propertyName = tag.getAttribute("property").substring(3);
-      if (RELEVANT_TAGS.includes(propertyName)) {
-        pageData[propertyName] = tag.getAttribute("content");
-      }
-    }
-
-    return pageData;
-  }
-
-  /**
-   * Collects the existing data from the page.
+   * @param {Document} document
+   *   The document to collect from
    *
-   * @returns {Data[]}
+   * @returns {PageData}
    */
-  #collect() {
-    /**
-     * A map from item type to an array of the items found in the page.
-     */
-    let items = new Map();
-    let insert = (type, item) => {
-      let data = items.get(type);
-      if (!data) {
-        data = [];
-        items.set(type, data);
-      }
-      data.push(item);
-    };
+  collect(document) {
+    let pageData = {};
 
     // Sites can technically define an Open Graph prefix other than `og:`.
     // However, `og:` is one of the default RDFa prefixes and it's likely
     // uncommon that sites use a custom prefix. If we find that metadata is
     // missing for common sites due to this issue, we could consider adding a
     // basic RDFa parser.
-    let openGraphTags = this.document.querySelectorAll("meta[property^='og:'");
-    if (!openGraphTags.length) {
-      return [];
-    }
-    insert(
-      PageDataCollector.DATA_TYPE.GENERAL,
-      this.#collectOpenGraphTags(openGraphTags)
-    );
+    let openGraphTags = document.querySelectorAll("meta[property^='og:'");
 
-    return Array.from(items, ([type, data]) => ({ type, data }));
-  }
-}
+    for (let tag of openGraphTags) {
+      // Stripping "og:" from the property name.
+      let propertyName = tag.getAttribute("property").substring(3);
+
+      switch (propertyName) {
+        case "site_name":
+          pageData.siteName = tag.getAttribute("content");
+          break;
+        case "image":
+          pageData.image = tag.getAttribute("content");
+          break;
+      }
+    }
+
+    return pageData;
+  },
+};

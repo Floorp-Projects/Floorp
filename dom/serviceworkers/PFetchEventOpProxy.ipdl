@@ -5,6 +5,7 @@
 include protocol PRemoteWorker;
 
 include ServiceWorkerOpArgs;
+include FetchTypes;
 
 namespace mozilla {
 namespace dom {
@@ -20,6 +21,9 @@ namespace dom {
   async RespondWith(IPCFetchEventRespondWithResult aResult);
 
   async __delete__(ServiceWorkerFetchEventOpResult aResult);
+
+ child:
+  async PreloadResponse(IPCInternalResponse aResponse);
 };
 
 }  // namespace dom

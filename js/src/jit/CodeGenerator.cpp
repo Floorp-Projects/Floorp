@@ -5459,6 +5459,11 @@ void CodeGenerator::visitCallGeneric(LCallGeneric* call) {
                              &notPrimitive);
     masm.loadValue(Address(masm.getStackPointer(), unusedStack),
                    JSReturnOperand);
+#ifdef DEBUG
+    masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand,
+                             &notPrimitive);
+    masm.assumeUnreachable("CreateThis creates an object");
+#endif
     masm.bind(&notPrimitive);
   }
 }
@@ -5531,6 +5536,11 @@ void CodeGenerator::visitCallKnown(LCallKnown* call) {
                              &notPrimitive);
     masm.loadValue(Address(masm.getStackPointer(), unusedStack),
                    JSReturnOperand);
+#ifdef DEBUG
+    masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand,
+                             &notPrimitive);
+    masm.assumeUnreachable("CreateThis creates an object");
+#endif
     masm.bind(&notPrimitive);
   }
 }
@@ -6049,6 +6059,13 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
     masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand,
                              &notPrimitive);
     masm.loadValue(Address(masm.getStackPointer(), 0), JSReturnOperand);
+
+#ifdef DEBUG
+    masm.branchTestPrimitive(Assembler::NotEqual, JSReturnOperand,
+                             &notPrimitive);
+    masm.assumeUnreachable("CreateThis creates an object");
+#endif
+
     masm.bind(&notPrimitive);
   }
 
@@ -6964,7 +6981,7 @@ void CodeGenerator::visitNewObjectVMCall(LNewObject* lir) {
       pushArg(ImmPtr(lir->mir()->resumePoint()->pc()));
       pushArg(ImmGCPtr(lir->mir()->block()->info().script()));
 
-      using Fn = JSObject* (*)(JSContext*, HandleScript, jsbytecode * pc);
+      using Fn = JSObject* (*)(JSContext*, HandleScript, const jsbytecode * pc);
       callVM<Fn, NewObjectOperation>(lir);
       break;
     }
@@ -13115,11 +13132,9 @@ void CodeGenerator::visitLoadElementV(LLoadElementV* load) {
                    out);
   }
 
-  if (load->mir()->needsHoleCheck()) {
-    Label testMagic;
-    masm.branchTestMagic(Assembler::Equal, out, &testMagic);
-    bailoutFrom(&testMagic, load->snapshot());
-  }
+  Label testMagic;
+  masm.branchTestMagic(Assembler::Equal, out, &testMagic);
+  bailoutFrom(&testMagic, load->snapshot());
 }
 
 void CodeGenerator::visitLoadElementHole(LLoadElementHole* lir) {
@@ -15009,7 +15024,7 @@ void CodeGenerator::visitGlobalDeclInstantiation(
   pushArg(ImmPtr(ins->mir()->resumePoint()->pc()));
   pushArg(ImmGCPtr(ins->mir()->block()->info().script()));
 
-  using Fn = bool (*)(JSContext*, HandleScript, jsbytecode*);
+  using Fn = bool (*)(JSContext*, HandleScript, const jsbytecode*);
   callVM<Fn, GlobalDeclInstantiationFromIon>(ins);
 }
 

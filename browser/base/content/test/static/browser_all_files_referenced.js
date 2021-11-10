@@ -57,6 +57,9 @@ var gExceptionPaths = [
   // Points to theme preview images, which are defined in browser/ but only used
   // in toolkit/mozapps/extensions/content/aboutaddons.js.
   "resource://usercontext-content/builtin-themes/",
+
+  // Page data schemas are referenced programmatically.
+  "chrome://browser/content/pagedata/schemas/",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running

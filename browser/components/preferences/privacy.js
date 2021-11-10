@@ -156,8 +156,9 @@ Preferences.addAll([
   { id: "browser.urlbar.suggest.openpage", type: "bool" },
   { id: "browser.urlbar.suggest.topsites", type: "bool" },
   { id: "browser.urlbar.suggest.engines", type: "bool" },
-  { id: "browser.urlbar.suggest.quicksuggest", type: "bool" },
+  { id: "browser.urlbar.suggest.quicksuggest.nonsponsored", type: "bool" },
   { id: "browser.urlbar.suggest.quicksuggest.sponsored", type: "bool" },
+  { id: "browser.urlbar.quicksuggest.dataCollection.enabled", type: "bool" },
 
   // History
   { id: "places.history.enabled", type: "bool" },
@@ -1992,7 +1993,7 @@ var gPrivacyPane = {
     // or scenario changes.
     this._urlbarPrefObserver = {
       onPrefChanged: pref => {
-        if (["quicksuggest.enabled", "quicksuggest.scenario"].includes(pref)) {
+        if (pref == "quicksuggest.enabled") {
           this._updateFirefoxSuggestSection();
         }
       },
@@ -2004,31 +2005,24 @@ var gPrivacyPane = {
       this._urlbarPrefObserver = null;
     });
 
-    // Set up the sponsored checkbox. When the main checkbox is checked, the
-    // sponsored checkbox should be enabled and its checked status should
-    // reflect the sponsored pref. When the main checkbox is unchecked, the
-    // sponsored checkbox should be disabled and unchecked, but the sponsored
-    // pref should retain its value. Due to this complexity, we manage the
-    // sponsored checkbox manually.
-    Preferences.get("browser.urlbar.suggest.quicksuggest").on("change", () =>
-      // Update the enabled and checked status of the sponsored checkbox when
-      // the main pref changes.
-      this._updateFirefoxSuggestSponsoredCheckbox()
-    );
-    setEventListener("firefoxSuggestSponsoredSuggestion", "command", () => {
-      // Update the sponsored pref value when the sponsored checkbox is
-      // toggled.
-      Preferences.get(
-        "browser.urlbar.suggest.quicksuggest.sponsored"
-      ).value = document.getElementById(
-        "firefoxSuggestSponsoredSuggestion"
-      ).checked;
-    });
+    // The Firefox Suggest info box potentially needs updating when any of the
+    // toggles change.
+    let infoBoxPrefs = [
+      "browser.urlbar.suggest.quicksuggest.nonsponsored",
+      "browser.urlbar.suggest.quicksuggest.sponsored",
+      "browser.urlbar.quicksuggest.dataCollection.enabled",
+    ];
+    for (let pref of infoBoxPrefs) {
+      Preferences.get(pref).on("change", () =>
+        this._updateFirefoxSuggestInfoBox()
+      );
+    }
 
-    // Set the Firefox Suggest learn-more link URL.
-    document
-      .getElementById("firefoxSuggestSuggestionLearnMore")
-      .setAttribute("href", UrlbarProviderQuickSuggest.helpUrl);
+    // Set the URL of the Firefox Suggest learn-more links.
+    let links = document.querySelectorAll(".firefoxSuggestLearnMore");
+    for (let link of links) {
+      link.setAttribute("href", UrlbarProviderQuickSuggest.helpUrl);
+    }
 
     this._updateFirefoxSuggestSection(true);
   },
@@ -2051,15 +2045,15 @@ var gPrivacyPane = {
       };
       for (let [elementId, l10nId] of Object.entries(l10nIdByElementId)) {
         let element = document.getElementById(elementId);
-        element.dataset.l10nIdOriginal = element.dataset.l10nId;
+        element.dataset.l10nIdOriginal ??= element.dataset.l10nId;
         element.dataset.l10nId = l10nId;
       }
-      // The main checkbox description discusses data collection, which we
-      // perform only in the "online" scenario. Hide it otherwise.
-      document.getElementById("firefoxSuggestSuggestionDescription").hidden =
-        UrlbarPrefs.get("quicksuggest.scenario") != "online";
+      // Add the extraMargin class to the engine-prefs link.
+      document
+        .getElementById("openSearchEnginePreferences")
+        .classList.add("extraMargin");
       // Show the container.
-      this._updateFirefoxSuggestSponsoredCheckbox();
+      this._updateFirefoxSuggestInfoBox();
       container.removeAttribute("hidden");
     } else if (!onInit) {
       // Firefox Suggest is not enabled. This is the default, so to avoid
@@ -2073,23 +2067,63 @@ var gPrivacyPane = {
         delete element.dataset.l10nIdOriginal;
         document.l10n.translateElements([element]);
       }
+      document
+        .getElementById("openSearchEnginePreferences")
+        .classList.remove("extraMargin");
     }
   },
 
   /**
-   * Updates the sponsored Firefox Suggest checkbox (in the address bar section)
-   * depending on the status of the main Firefox Suggest checkbox.
+   * Updates the Firefox Suggest info box (in the address bar section) depending
+   * on the states of the Firefox Suggest toggles.
    */
-  _updateFirefoxSuggestSponsoredCheckbox() {
-    let sponsoredCheckbox = document.getElementById(
-      "firefoxSuggestSponsoredSuggestion"
-    );
-    sponsoredCheckbox.disabled = !Preferences.get(
-      "browser.urlbar.suggest.quicksuggest"
+  _updateFirefoxSuggestInfoBox() {
+    let nonsponsored = Preferences.get(
+      "browser.urlbar.suggest.quicksuggest.nonsponsored"
     ).value;
-    sponsoredCheckbox.checked =
-      !sponsoredCheckbox.disabled &&
-      Preferences.get("browser.urlbar.suggest.quicksuggest.sponsored").value;
+    let sponsored = Preferences.get(
+      "browser.urlbar.suggest.quicksuggest.sponsored"
+    ).value;
+    let dataCollection = Preferences.get(
+      "browser.urlbar.quicksuggest.dataCollection.enabled"
+    ).value;
+
+    // Get the l10n ID of the appropriate text based on the values of the three
+    // prefs.
+    let l10nId;
+    if (nonsponsored && sponsored && dataCollection) {
+      l10nId = "addressbar-firefox-suggest-info-all";
+    } else if (nonsponsored && sponsored && !dataCollection) {
+      l10nId = "addressbar-firefox-suggest-info-nonsponsored-sponsored";
+    } else if (nonsponsored && !sponsored && dataCollection) {
+      l10nId = "addressbar-firefox-suggest-info-nonsponsored-data";
+    } else if (nonsponsored && !sponsored && !dataCollection) {
+      l10nId = "addressbar-firefox-suggest-info-nonsponsored";
+    } else if (!nonsponsored && sponsored && dataCollection) {
+      l10nId = "addressbar-firefox-suggest-info-sponsored-data";
+    } else if (!nonsponsored && sponsored && !dataCollection) {
+      l10nId = "addressbar-firefox-suggest-info-sponsored";
+    } else if (!nonsponsored && !sponsored && dataCollection) {
+      l10nId = "addressbar-firefox-suggest-info-data";
+    }
+
+    let instance = (this._firefoxSuggestInfoBoxInstance = {});
+    let infoBox = document.getElementById("firefoxSuggestInfoBox");
+    if (!l10nId) {
+      infoBox.hidden = true;
+    } else {
+      let infoText = document.getElementById("firefoxSuggestInfoText");
+      infoText.dataset.l10nId = l10nId;
+
+      // If the info box is currently hidden and we unhide it immediately, it
+      // will show its old text until the new text is asyncly fetched and shown.
+      // That's ugly, so wait for the fetch to finish before unhiding it.
+      document.l10n.translateElements([infoText]).then(() => {
+        if (instance == this._firefoxSuggestInfoBoxInstance) {
+          infoBox.hidden = false;
+        }
+      });
+    }
   },
 
   // GEOLOCATION

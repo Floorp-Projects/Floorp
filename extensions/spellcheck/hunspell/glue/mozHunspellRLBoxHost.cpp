@@ -9,7 +9,6 @@
 #include "mozHunspellRLBoxHost.h"
 #include "mozilla/DebugOnly.h"
 #include "nsContentUtils.h"
-#include "nsIChannel.h"
 #include "nsILoadInfo.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
@@ -19,21 +18,24 @@
 using namespace mozilla;
 
 mozHunspellFileMgrHost::mozHunspellFileMgrHost(const nsCString& aFilename) {
-  DebugOnly<Result<Ok, nsresult>> result = Open(aFilename);
+  nsCOMPtr<nsIChannel> channel;
+  DebugOnly<Result<Ok, nsresult>> result = Open(aFilename, channel, mStream);
   NS_WARNING_ASSERTION(result.value.isOk(), "Failed to open Hunspell file");
 }
 
-Result<Ok, nsresult> mozHunspellFileMgrHost::Open(const nsCString& aPath) {
+/* static */
+Result<Ok, nsresult> mozHunspellFileMgrHost::Open(
+    const nsCString& aPath, nsCOMPtr<nsIChannel>& aChannel,
+    nsCOMPtr<nsIInputStream>& aStream) {
   nsCOMPtr<nsIURI> uri;
   MOZ_TRY(NS_NewURI(getter_AddRefs(uri), aPath));
 
-  nsCOMPtr<nsIChannel> channel;
   MOZ_TRY(NS_NewChannel(
-      getter_AddRefs(channel), uri, nsContentUtils::GetSystemPrincipal(),
+      getter_AddRefs(aChannel), uri, nsContentUtils::GetSystemPrincipal(),
       nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_INHERITS_SEC_CONTEXT,
       nsIContentPolicy::TYPE_OTHER));
 
-  MOZ_TRY(channel->Open(getter_AddRefs(mStream)));
+  MOZ_TRY(aChannel->Open(getter_AddRefs(aStream)));
   return Ok();
 }
 
@@ -50,6 +52,19 @@ Result<Ok, nsresult> mozHunspellFileMgrHost::ReadLine(nsCString& aLine) {
 
   mLineNum++;
   return Ok();
+}
+
+/* static */
+Result<int64_t, nsresult> mozHunspellFileMgrHost::GetSize(
+    const nsCString& aFilename) {
+  int64_t ret = -1;
+
+  nsCOMPtr<nsIChannel> channel;
+  nsCOMPtr<nsIInputStream> stream;
+  MOZ_TRY(Open(aFilename, channel, stream));
+
+  channel->GetContentLength(&ret);
+  return ret;
 }
 
 bool mozHunspellFileMgrHost::GetLine(std::string& aResult) {

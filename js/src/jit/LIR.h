@@ -1415,7 +1415,7 @@ class LSafepoint : public TempObject {
   // For call instructions, the live regs are empty. Call instructions may
   // have register inputs or temporaries, which will *not* be in the live
   // registers: if passed to the call, the values passed will be marked via
-  // MarkJitExitFrame, and no registers can be live after the instruction
+  // TraceJitExitFrame, and no registers can be live after the instruction
   // except its outputs.
   LiveRegisterSet liveRegs_;
 

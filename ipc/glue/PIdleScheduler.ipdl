@@ -5,7 +5,7 @@
 
 include protocol PBackground;
 using mozilla::TimeDuration from "mozilla/TimeStamp.h";
-using base::SharedMemoryHandle from "base/shared_memory.h";
+[MoveOnly] using base::SharedMemoryHandle from "base/shared_memory.h";
 namespace mozilla {
 namespace ipc {
 

@@ -40,8 +40,8 @@ XPCOM_MANIFESTS += [
     "components.conf",
 ]
 
-XPCOM_MANIFESTS += [
-    "components.conf",
+LOCAL_INCLUDES += [
+    "/netwerk/protocol/http",  # for nsHttpHandler.h
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")

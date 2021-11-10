@@ -232,6 +232,10 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
     return EnsureInnerWindow() ? GetWrapper() : nullptr;
   }
 
+  // nsIGlobalObject
+  bool ShouldResistFingerprinting() const final;
+  uint32_t GetPrincipalHashValue() const final;
+
   // nsIGlobalJSObjectHolder
   JSObject* GetGlobalJSObject() final { return GetWrapper(); }
   JSObject* GetGlobalJSObjectPreserveColor() const final {
@@ -628,8 +632,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                  bool aWrapAround, bool aWholeWord, bool aSearchInFrames,
                  bool aShowDialog, mozilla::ErrorResult& aError);
   uint64_t GetMozPaintCountOuter();
-
-  bool ShouldResistFingerprinting();
 
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> OpenDialogOuter(
       JSContext* aCx, const nsAString& aUrl, const nsAString& aName,

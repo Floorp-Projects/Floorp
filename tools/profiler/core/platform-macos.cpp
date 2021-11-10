@@ -96,6 +96,13 @@ static RunningTimes GetThreadRunningTimesDiff(
   return diff;
 }
 
+static void DiscardSuspendedThreadRunningTimes(
+    PSLockRef aLock,
+    ThreadRegistration::UnlockedRWForLockedProfiler& aThreadData) {
+  // Nothing to do!
+  // On macOS, suspending a thread doesn't make that thread work.
+}
+
 template <typename Func>
 void Sampler::SuspendAndSampleAndResumeThread(
     PSLockRef aLock,

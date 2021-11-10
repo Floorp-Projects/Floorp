@@ -1299,7 +1299,7 @@ EnvironmentIter::EnvironmentIter(JSContext* cx, JSObject* env, Scope* scope)
 }
 
 EnvironmentIter::EnvironmentIter(JSContext* cx, AbstractFramePtr frame,
-                                 jsbytecode* pc)
+                                 const jsbytecode* pc)
     : si_(cx, frame.script()->innermostScope(pc)),
       env_(cx, frame.environmentChain()),
       frame_(frame) {
@@ -2813,7 +2813,7 @@ void DebugEnvironments::onPopCall(JSContext* cx, AbstractFramePtr frame) {
 }
 
 void DebugEnvironments::onPopLexical(JSContext* cx, AbstractFramePtr frame,
-                                     jsbytecode* pc) {
+                                     const jsbytecode* pc) {
   cx->check(frame);
 
   DebugEnvironments* envs = cx->realm()->debugEnvs();
@@ -3419,7 +3419,7 @@ static bool GetThisValueForDebuggerEnvironmentIterMaybeOptimizedOut(
 
 bool js::GetThisValueForDebuggerFrameMaybeOptimizedOut(JSContext* cx,
                                                        AbstractFramePtr frame,
-                                                       jsbytecode* pc,
+                                                       const jsbytecode* pc,
                                                        MutableHandleValue res) {
   RootedObject scopeChain(cx);
   RootedScope scope(cx);
@@ -3952,7 +3952,8 @@ bool js::PushVarEnvironmentObject(JSContext* cx, HandleScope scope,
 }
 
 bool js::GetFrameEnvironmentAndScope(JSContext* cx, AbstractFramePtr frame,
-                                     jsbytecode* pc, MutableHandleObject env,
+                                     const jsbytecode* pc,
+                                     MutableHandleObject env,
                                      MutableHandleScope scope) {
   env.set(frame.environmentChain());
 
