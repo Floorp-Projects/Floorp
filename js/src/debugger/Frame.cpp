@@ -337,7 +337,7 @@ class DebuggerFrame::GeneratorInfo {
   JSScript* generatorScript() { return generatorScript_; }
 
   bool isGeneratorScriptAboutToBeFinalized() {
-    return IsAboutToBeFinalized(&generatorScript_);
+    return IsAboutToBeFinalized(generatorScript_);
   }
 };
 

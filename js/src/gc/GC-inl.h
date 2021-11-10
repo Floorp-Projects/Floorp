@@ -327,7 +327,7 @@ class ZoneCellIter : protected ZoneAllCellIter<T> {
   void skipDying() {
     while (!ZoneAllCellIter<T>::done()) {
       T* current = ZoneAllCellIter<T>::get();
-      if (!IsAboutToBeFinalizedUnbarriered(&current)) {
+      if (!IsAboutToBeFinalizedUnbarriered(current)) {
         return;
       }
       ZoneAllCellIter<T>::next();

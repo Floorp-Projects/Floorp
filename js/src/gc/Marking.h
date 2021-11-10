@@ -52,9 +52,9 @@ template <typename T>
 bool IsMarkedInternal(JSRuntime* rt, T** thing);
 
 template <typename T>
-bool IsAboutToBeFinalizedInternal(T* thingp);
+bool IsAboutToBeFinalizedInternal(T* thing);
 template <typename T>
-bool IsAboutToBeFinalizedInternal(T** thingp);
+bool IsAboutToBeFinalizedInternal(const T& thing);
 
 // Report whether a GC thing has been marked with any color. Things which are in
 // zones that are not currently being collected or are owned by another runtime
@@ -78,13 +78,13 @@ inline bool IsMarked(JSRuntime* rt, BarrieredBase<T>* thingp) {
 // This no longer updates pointers moved by the GC (tracing should be used for
 // this instead).
 template <typename T>
-inline bool IsAboutToBeFinalized(const BarrieredBase<T>* thingp) {
+inline bool IsAboutToBeFinalized(const BarrieredBase<T>& thing) {
   return IsAboutToBeFinalizedInternal(
-      ConvertToBase(thingp->unbarrieredAddress()));
+      *ConvertToBase(thing.unbarrieredAddress()));
 }
 template <typename T>
-inline bool IsAboutToBeFinalizedUnbarriered(T* thingp) {
-  return IsAboutToBeFinalizedInternal(ConvertToBase(thingp));
+inline bool IsAboutToBeFinalizedUnbarriered(T thing) {
+  return IsAboutToBeFinalizedInternal(*ConvertToBase(&thing));
 }
 
 inline bool IsAboutToBeFinalizedDuringMinorSweep(Cell* cell);

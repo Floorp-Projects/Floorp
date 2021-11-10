@@ -155,7 +155,7 @@ static MOZ_ALWAYS_INLINE SharedPropMap* PropMapChildReadBarrier(
   }
 
   if (MOZ_UNLIKELY(zone->isGCSweeping() &&
-                   IsAboutToBeFinalizedUnbarriered(&child))) {
+                   IsAboutToBeFinalizedUnbarriered(child))) {
     // The map we've found is unreachable and due to be finalized, so
     // remove our weak reference to it and don't use it.
     MOZ_ASSERT(parent->isMarkedAny());
