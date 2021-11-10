@@ -29,7 +29,7 @@ void JSObject2WrappedJSMap::UpdateWeakPointersAfterGC(JSTracer* trc) {
     // Walk the wrapper chain and update all JSObjects.
     while (wrapper) {
       if (wrapper->IsSubjectToFinalization()) {
-        wrapper->UpdateObjectPointerAfterGC();
+        wrapper->UpdateObjectPointerAfterGC(trc);
         if (!wrapper->GetJSObjectPreserveColor()) {
           dying.AppendElement(dont_AddRef(wrapper));
         }
@@ -38,12 +38,8 @@ void JSObject2WrappedJSMap::UpdateWeakPointersAfterGC(JSTracer* trc) {
     }
 
     // Remove or update the JSObject key in the table if necessary.
-    JSObject* obj = iter.get().key().unbarrieredGet();
-    JS_UpdateWeakPointerAfterGCUnbarriered(&obj);
-    if (!obj) {
+    if (!JS_UpdateWeakPointerAfterGC(trc, &iter.get().mutableKey())) {
       iter.remove();
-    } else {
-      iter.get().mutableKey() = obj;
     }
   }
 }
