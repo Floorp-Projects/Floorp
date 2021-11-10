@@ -24,10 +24,13 @@ class RecentlyClosedItemViewHolder(
     private var item: RecoverableTab? = null
 
     init {
-        binding.historyLayout.overflowView.setImageResource(R.drawable.ic_close)
-        binding.historyLayout.overflowView.setOnClickListener {
-            val item = this.item ?: return@setOnClickListener
-            recentlyClosedFragmentInteractor.onDelete(item)
+        binding.historyLayout.overflowView.apply {
+            setImageResource(R.drawable.ic_close)
+            contentDescription = view.context.getString(R.string.history_delete_item)
+            setOnClickListener {
+                val item = item ?: return@setOnClickListener
+                recentlyClosedFragmentInteractor.onDelete(item)
+            }
         }
     }
 

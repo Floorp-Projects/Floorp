@@ -28,10 +28,13 @@ class HistoryMetadataGroupItemViewHolder(
     private var item: History.Metadata? = null
 
     init {
-        binding.historyLayout.overflowView.setImageResource(R.drawable.ic_close)
-        binding.historyLayout.overflowView.setOnClickListener {
-            val item = this.item ?: return@setOnClickListener
-            interactor.onDelete(setOf(item))
+        binding.historyLayout.overflowView.apply {
+            setImageResource(R.drawable.ic_close)
+            contentDescription = view.context.getString(R.string.history_delete_item)
+            setOnClickListener {
+                val item = item ?: return@setOnClickListener
+                interactor.onDelete(setOf(item))
+            }
         }
     }
 

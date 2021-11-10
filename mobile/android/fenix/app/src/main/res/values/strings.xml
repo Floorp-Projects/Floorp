@@ -863,8 +863,8 @@
     <string name="history_menu_open_in_new_tab_button" moz:removedIn="94" tools:ignore="UnusedResources">Open in new tab</string>
     <!-- History overflow menu open in private tab button -->
     <string name="history_menu_open_in_private_tab_button" moz:removedIn="94" tools:ignore="UnusedResources">Open in private tab</string>
-    <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item" moz:removedIn="94" tools:ignore="UnusedResources">Delete</string>
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">Delete</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d selected</string>
