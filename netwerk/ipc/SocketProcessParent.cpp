@@ -25,7 +25,6 @@
 #include "nsIConsoleService.h"
 #include "nsIHttpActivityObserver.h"
 #include "nsIObserverService.h"
-#include "nsNSSComponent.h"
 #include "nsNSSIOLayer.h"
 #include "nsIOService.h"
 #include "nsHttpHandler.h"
@@ -312,7 +311,8 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvGetTLSClientCert(
     const int32_t& aPort, const uint32_t& aProviderFlags,
     const uint32_t& aProviderTlsFlags, const ByteArray& aServerCert,
     Maybe<ByteArray>&& aClientCert, nsTArray<ByteArray>&& aCollectedCANames,
-    bool* aSucceeded, ByteArray* aOutCert, nsTArray<ByteArray>* aBuiltChain) {
+    bool* aSucceeded, ByteArray* aOutCert, ByteArray* aOutKey,
+    nsTArray<ByteArray>* aBuiltChain) {
   *aSucceeded = false;
 
   SECItem serverCertItem = {
@@ -342,15 +342,16 @@ mozilla::ipc::IPCResult SocketProcessParent::RecvGetTLSClientCert(
   }
 
   UniqueCERTCertificate cert;
+  UniqueSECKEYPrivateKey key;
   UniqueCERTCertList builtChain;
   SECStatus status =
       DoGetClientAuthData(std::move(info), serverCert,
-                          std::move(collectedCANames), cert, builtChain);
+                          std::move(collectedCANames), cert, key, builtChain);
   if (status != SECSuccess) {
     return IPC_OK();
   }
 
-  aOutCert->data().AppendElements(cert->derCert.data, cert->derCert.len);
+  SerializeClientCertAndKey(cert, key, *aOutCert, *aOutKey);
 
   if (builtChain) {
     for (CERTCertListNode* n = CERT_LIST_HEAD(builtChain);

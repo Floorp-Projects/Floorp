@@ -12,8 +12,6 @@ if (CONFIG["OS_ARCH"] == "WINNT" and CONFIG["CPU_ARCH"] != "aarch64") or CONFIG[
 ] == "Darwin":
     DIRS += ["osclientcerts"]
 
-DIRS += ["ipcclientcerts"]
-
 TEST_DIRS += ["tests"]
 
 XPIDL_SOURCES += [
@@ -95,8 +93,6 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.psm += [
-    "IPCClientCertsChild.h",
-    "IPCClientCertsParent.h",
     "PSMIPCCommon.h",
     "TransportSecurityInfo.h",
     "VerifySSLServerCertChild.h",
@@ -115,8 +111,6 @@ UNIFIED_SOURCES += [
     "CSTrustDomain.cpp",
     "DataStorage.cpp",
     "EnterpriseRoots.cpp",
-    "IPCClientCertsChild.cpp",
-    "IPCClientCertsParent.cpp",
     "LocalCertService.cpp",
     "nsCertOverrideService.cpp",
     "nsClientAuthRemember.cpp",
@@ -195,7 +189,6 @@ if CONFIG["OS_ARCH"] == "WINNT":
     ]
 
 IPDL_SOURCES += [
-    "PIPCClientCerts.ipdl",
     "PSMIPCTypes.ipdlh",
     "PVerifySSLServerCert.ipdl",
 ]
@@ -216,7 +209,6 @@ LOCAL_INCLUDES += [
     "/dom/crypto",
     "/netwerk/base",
     "/security/certverifier",
-    "/xpcom/build",
 ]
 
 LOCAL_INCLUDES += [
