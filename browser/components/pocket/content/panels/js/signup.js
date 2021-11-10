@@ -1,33 +1,27 @@
 /* global Handlebars:false */
+/* import-globals-from messages.js */
+/* import-globals-from main.js */
 
 /*
-SignupOverlay is the view itself and contains all of the methods to manipute the overlay and messaging.
+PKT_PANEL_OVERLAY is the view itself and contains all of the methods to manipute the overlay and messaging.
 It does not contain any logic for saving or communication with the extension or server.
 */
 
-import pktPanelMessaging from "../messages.js";
-
-var SignupOverlay = function(options) {
+var PKT_PANEL_OVERLAY = function(options) {
   this.inited = false;
   this.active = false;
 
   this.setupClickEvents = function() {
-    pktPanelMessaging.clickHelper(
-      document.querySelector(`.pkt_ext_learnmore`),
-      {
-        source: `learn_more`,
-      }
-    );
-    pktPanelMessaging.clickHelper(
-      document.querySelector(`.signup-btn-firefox`),
-      {
-        source: `sign_up_1`,
-      }
-    );
-    pktPanelMessaging.clickHelper(document.querySelector(`.signup-btn-email`), {
+    thePKT_PANEL.clickHelper(document.querySelector(`.pkt_ext_learnmore`), {
+      source: `learn_more`,
+    });
+    thePKT_PANEL.clickHelper(document.querySelector(`.signup-btn-firefox`), {
+      source: `sign_up_1`,
+    });
+    thePKT_PANEL.clickHelper(document.querySelector(`.signup-btn-email`), {
       source: `sign_up_2`,
     });
-    pktPanelMessaging.clickHelper(document.querySelector(`.pkt_ext_login`), {
+    thePKT_PANEL.clickHelper(document.querySelector(`.pkt_ext_login`), {
       source: `log_in`,
     });
   };
@@ -77,5 +71,3 @@ var SignupOverlay = function(options) {
     pktPanelMessaging.sendMessage("PKT_show_signup");
   };
 };
-
-export default SignupOverlay;
