@@ -94,6 +94,18 @@ sealed class PromptRequest(
     ) : PromptRequest()
 
     /**
+     * Value type that represents a request for a save credit card prompt.
+     * @property creditCard the [CreditCardEntry] to save or update.
+     * @property onConfirm callback that is called when the user confirms the save credit card request.
+     * @property onDismiss callback to let the page know the user dismissed the dialog.
+     */
+    data class SaveCreditCard(
+        val creditCard: CreditCardEntry,
+        val onConfirm: (CreditCardEntry) -> Unit,
+        override val onDismiss: () -> Unit
+    ) : PromptRequest(shouldDismissOnLoad = false), Dismissible
+
+    /**
      * Value type that represents a request for a select credit card prompt.
      * @property creditCards a list of [CreditCardEntry]s to select from.
      * @property onConfirm callback that is called when the user confirms the credit card selection.

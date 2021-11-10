@@ -67,6 +67,43 @@ typealias AC_FILE_FACING_MODE = PromptRequest.File.FacingMode
 internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSession) :
     PromptDelegate {
 
+    override fun onCreditCardSave(
+        session: GeckoSession,
+        request: AutocompleteRequest<Autocomplete.CreditCardSaveOption>
+    ): GeckoResult<PromptResponse> {
+        val geckoResult = GeckoResult<PromptResponse>()
+
+        val onConfirm: (CreditCardEntry) -> Unit = { creditCard ->
+            if (!request.isComplete) {
+                geckoResult.complete(
+                    request.confirm(
+                        Autocomplete.CreditCardSelectOption(creditCard.toAutocompleteCreditCard())
+                    )
+                )
+            }
+        }
+
+        val onDismiss: () -> Unit = {
+            request.dismissSafely(geckoResult)
+        }
+
+        geckoEngineSession.notifyObservers {
+            onPromptRequest(
+                PromptRequest.SaveCreditCard(
+                    creditCard = request.options[0].value.toCreditCardEntry(),
+                    onConfirm = onConfirm,
+                    onDismiss = onDismiss
+                ).also {
+                    request.delegate = PromptInstanceDismissDelegate(
+                        geckoEngineSession, it
+                    )
+                }
+            )
+        }
+
+        return geckoResult
+    }
+
     /**
      * Handle a credit card selection prompt request. This is triggered by the user
      * focusing on a credit card input field.
@@ -757,7 +794,6 @@ internal fun Date.toString(format: String): String {
  * Only dismiss if the prompt is not already dismissed.
  */
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-
 internal fun PromptDelegate.BasePrompt.dismissSafely(geckoResult: GeckoResult<PromptResponse>) {
     if (!this.isComplete) {
         geckoResult.complete(dismiss())

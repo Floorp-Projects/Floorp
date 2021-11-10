@@ -837,6 +837,95 @@ class GeckoPromptDelegateTest {
     )
 
     @Test
+    fun `Calling onCreditCardSave must provide an SaveCreditCard PromptRequest`() {
+        val mockSession = GeckoEngineSession(runtime)
+        var onCreditCardSaved = false
+        var onDismissWasCalled = false
+
+        var saveCreditCardPrompt: PromptRequest.SaveCreditCard = mock()
+
+        val promptDelegate = spy(GeckoPromptDelegate(mockSession))
+
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                saveCreditCardPrompt = promptRequest as PromptRequest.SaveCreditCard
+            }
+        })
+
+        val creditCard = CreditCardEntry(
+            guid = "1",
+            name = "Banana Apple",
+            number = "4111111111111110",
+            expiryMonth = "5",
+            expiryYear = "2030",
+            cardType = "amex"
+        )
+        val creditCardSaveOption =
+            Autocomplete.CreditCardSaveOption(creditCard.toAutocompleteCreditCard())
+
+        var geckoResult = promptDelegate.onCreditCardSave(
+            mock(),
+            geckoCreditCardSavePrompt(arrayOf(creditCardSaveOption))
+        )
+
+        geckoResult.accept {
+            onDismissWasCalled = true
+        }
+
+        saveCreditCardPrompt.onDismiss()
+        shadowOf(getMainLooper()).idle()
+        assertTrue(onDismissWasCalled)
+
+        val geckoPrompt = geckoCreditCardSavePrompt(arrayOf(creditCardSaveOption))
+        geckoResult = promptDelegate.onCreditCardSave(mock(), geckoPrompt)
+
+        geckoResult.accept {
+            onCreditCardSaved = true
+        }
+
+        saveCreditCardPrompt.onConfirm(creditCard)
+        shadowOf(getMainLooper()).idle()
+
+        assertTrue(onCreditCardSaved)
+
+        whenever(geckoPrompt.isComplete).thenReturn(true)
+        onCreditCardSaved = false
+        saveCreditCardPrompt.onConfirm(creditCard)
+
+        assertFalse(onCreditCardSaved)
+    }
+
+    @Test
+    fun `Calling onCreditSave must set a PromptInstanceDismissDelegate`() {
+        val mockSession = GeckoEngineSession(runtime)
+        var saveCreditCardPrompt: PromptRequest.SaveCreditCard = mock()
+        val promptDelegate = spy(GeckoPromptDelegate(mockSession))
+
+        mockSession.register(object : EngineSession.Observer {
+            override fun onPromptRequest(promptRequest: PromptRequest) {
+                saveCreditCardPrompt = promptRequest as PromptRequest.SaveCreditCard
+            }
+        })
+
+        val creditCard = CreditCardEntry(
+            guid = "1",
+            name = "Banana Apple",
+            number = "4111111111111110",
+            expiryMonth = "5",
+            expiryYear = "2030",
+            cardType = "amex"
+        )
+        val creditCardSaveOption =
+            Autocomplete.CreditCardSaveOption(creditCard.toAutocompleteCreditCard())
+        val geckoPrompt = geckoCreditCardSavePrompt(arrayOf(creditCardSaveOption))
+
+        promptDelegate.onCreditCardSave(mock(), geckoPrompt)
+
+        assertNotNull(saveCreditCardPrompt)
+        assertNotNull(geckoPrompt.delegate)
+    }
+
+    @Test
     fun `Calling onCreditCardSelect must provide as CreditCardSelectOption PromptRequest`() {
         val mockSession = GeckoEngineSession(runtime)
         var onConfirmWasCalled = false
@@ -1696,6 +1785,19 @@ class GeckoPromptDelegateTest {
             mock()
         whenever(prompt.isComplete).thenReturn(isComplete)
         ReflectionUtils.setField(prompt, "options", addresses)
+        return prompt
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun geckoCreditCardSavePrompt(
+        creditCard: Array<Autocomplete.CreditCardSaveOption>
+    ): GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.CreditCardSaveOption> {
+        val prompt = Mockito.mock(
+            GeckoSession.PromptDelegate.AutocompleteRequest::class.java,
+            Mockito.RETURNS_DEEP_STUBS // for testing prompt.delegate
+        ) as GeckoSession.PromptDelegate.AutocompleteRequest<Autocomplete.CreditCardSaveOption>
+
+        ReflectionUtils.setField(prompt, "options", creditCard)
         return prompt
     }
 }

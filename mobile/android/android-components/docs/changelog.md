@@ -16,7 +16,8 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: `MainCoroutineRule.runBlockingTest` is replaced with a `runTestOnMain` top level function. . This method is preferred over the global `runTest` because it reparents new child coroutines to the test coroutine context.
 
 * **concept-engine**:
-  * Added support for `SelectAddress` prompt request. See [issue #12060](https://github.com/mozilla-mobile/android-components/issues/12060)
+  * Adds a new `SelectAddress` in `PromptRequest` to display a prompt for selecting an address to autofill. [#12060](https://github.com/mozilla-mobile/android-components/issues/12060)
+  * Adds a new `SaveCreditCard` in `PromptRequest` to display a prompt for saving a credit card on autofill. [#11249](https://github.com/mozilla-mobile/android-components/issues/11249)
 
 * **feature-autofill**
   * 🚒 Bug fixed [issue #11893](https://github.com/mozilla-mobile/android-components/issues/11893) - Fix issue with autofilling in 3rd party applications not being immediately available after unlocking the autofill service.
