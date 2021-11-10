@@ -1,5 +1,0 @@
-defaults pref(layout.css.moz-submit-invalid.enabled,true)
-
-== input-submit.html input-submit-ref.html
-== input-image.html input-image-ref.html
-== button-submit.html button-submit-ref.html

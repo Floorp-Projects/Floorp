@@ -2020,37 +2020,6 @@ void HTMLFormElement::UpdateValidity(bool aElementValidity) {
     return;
   }
 
-  /*
-   * We are going to update states assuming submit controls want to
-   * be notified because we can't know.
-   * UpdateValidity shouldn't be called so much during parsing so it _should_
-   * be safe.
-   */
-
-  nsAutoScriptBlocker scriptBlocker;
-
-  // Inform submit controls that the form validity has changed.
-  for (uint32_t i = 0, length = mControls->mElements.Length(); i < length;
-       ++i) {
-    nsCOMPtr<nsIFormControl> fc = do_QueryInterface(mControls->mElements[i]);
-    MOZ_ASSERT(fc);
-    if (fc->IsSubmitControl()) {
-      mControls->mElements[i]->UpdateState(true);
-    }
-  }
-
-  // Because of backward compatibility, <input type='image'> is not in elements
-  // so we have to check for controls not in elements too.
-  uint32_t length = mControls->mNotInElements.Length();
-  for (uint32_t i = 0; i < length; ++i) {
-    nsCOMPtr<nsIFormControl> fc =
-        do_QueryInterface(mControls->mNotInElements[i]);
-    MOZ_ASSERT(fc);
-    if (fc->IsSubmitControl()) {
-      mControls->mNotInElements[i]->UpdateState(true);
-    }
-  }
-
   UpdateState(true);
 }
 
