@@ -15,7 +15,6 @@ class nsIChannel;
 namespace mozilla {
 namespace net {
 
-class NetworkConnectivityService;
 class ODoHService;
 class TRR;
 
@@ -23,7 +22,6 @@ class DNSUtils final {
  private:
   friend class ODoHService;
   friend class TRR;
-  friend class NetworkConnectivityService;
   static nsresult CreateChannelHelper(nsIURI* aUri, nsIChannel** aResult);
 };
 

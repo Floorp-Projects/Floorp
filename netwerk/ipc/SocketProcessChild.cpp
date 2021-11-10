@@ -35,7 +35,6 @@
 #include "mozilla/RemoteLazyInputStreamChild.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
-#include "NetworkConnectivityService.h"
 #include "nsDebugImpl.h"
 #include "nsHttpConnectionInfo.h"
 #include "nsHttpHandler.h"
@@ -645,24 +644,6 @@ mozilla::ipc::IPCResult SocketProcessChild::RecvGetHttpConnectionData(
 mozilla::ipc::IPCResult SocketProcessChild::RecvInitProxyAutoConfigChild(
     Endpoint<PProxyAutoConfigChild>&& aEndpoint) {
   Unused << ProxyAutoConfigChild::Create(std::move(aEndpoint));
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult SocketProcessChild::RecvRecheckIPConnectivity() {
-  RefPtr<NetworkConnectivityService> ncs =
-      NetworkConnectivityService::GetSingleton();
-  if (ncs) {
-    ncs->RecheckIPConnectivity();
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult SocketProcessChild::RecvRecheckDNS() {
-  RefPtr<NetworkConnectivityService> ncs =
-      NetworkConnectivityService::GetSingleton();
-  if (ncs) {
-    ncs->RecheckDNS();
-  }
   return IPC_OK();
 }
 

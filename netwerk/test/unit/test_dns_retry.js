@@ -205,11 +205,9 @@ async function setup_connectivity(ipv6, ipv4) {
     );
   }
 
-  let topic = "network:connectivity-service:ip-checks-complete";
-  if (mozinfo.socketprocess_networking) {
-    topic += "-from-socket-process";
-  }
-  let observerNotification = promiseObserverNotification(topic);
+  let observerNotification = promiseObserverNotification(
+    "network:connectivity-service:ip-checks-complete"
+  );
   ncs.recheckIPConnectivity();
   await observerNotification;
 
