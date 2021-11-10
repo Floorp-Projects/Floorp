@@ -5589,9 +5589,15 @@ var XULBrowserWindow = {
       return;
     }
 
+    let url = uri.spec;
+    if (PrivateBrowsingUtils.isWindowPrivate(win)) {
+      // Passing an empty string to MacUserActivityUpdater will invalidate the
+      // current user activity.
+      url = "";
+    }
     let baseWin = win.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
     MacUserActivityUpdater.updateLocation(
-      uri.spec,
+      url,
       win.gBrowser.contentTitle,
       baseWin
     );
