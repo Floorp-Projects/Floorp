@@ -2867,7 +2867,15 @@ const RawServoSelectorList* nsINode::ParseSelectorList(
   RawServoSelectorList* list = cache.GetListOrInsertFrom(aSelectorString, [&] {
     // Note that we want to cache even if null was returned, because we
     // want to cache the "This is not a valid selector" result.
-    return Servo_SelectorList_Parse(&aSelectorString).Consume();
+    //
+    // NOTE(emilio): Off-hand, getting a CallerType here might seem like a
+    // better idea than using IsDocumentURISchemeChrome(), but that would mean
+    // that we'd need to key the selector cache by that.
+    // IsDocumentURISchemeChrome() gives us the same semantics as any inline
+    // style associated to a document, which seems reasonable.
+    return Servo_SelectorList_Parse(&aSelectorString,
+                                    doc->IsDocumentURISchemeChrome())
+        .Consume();
   });
 
   if (!list) {
