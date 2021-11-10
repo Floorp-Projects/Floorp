@@ -2257,7 +2257,7 @@ static inline bool NeedNegativeZeroCheck(MDefinition* def) {
   // Test if all uses have the same semantics for -0 and 0
   for (MUseIterator use = def->usesBegin(); use != def->usesEnd(); use++) {
     if (use->consumer()->isResumePoint()) {
-      continue;
+      return true;
     }
 
     MDefinition* use_def = use->consumer()->toDefinition();
