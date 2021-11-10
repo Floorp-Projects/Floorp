@@ -51,7 +51,7 @@ var TabsInTitlebar = {
 
   _initialized: false,
   _disallowed: {},
-  _prefName: "browser.tabs.drawInTitlebar",
+  _prefName: "browser.tabs.inTitlebar",
 
   _readPref() {
     let hiddenTitlebar = Services.appinfo.drawInTitlebar;

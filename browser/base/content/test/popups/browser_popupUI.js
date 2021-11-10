@@ -77,7 +77,7 @@ add_task(async function titlebar_buttons_visibility() {
   const menuBarShownValues = [true, false];
 
   for (const [drawInTitlebar, drawInTitlebarButtons] of drawInTitlebarValues) {
-    Services.prefs.setIntPref("browser.tabs.drawInTitlebar", drawInTitlebar);
+    Services.prefs.setIntPref("browser.tabs.inTitlebar", drawInTitlebar);
 
     for (const [
       windowFeatures,
@@ -139,7 +139,7 @@ add_task(async function titlebar_buttons_visibility() {
   }
 
   CustomizableUI.setToolbarVisibility("toolbar-menubar", false);
-  Services.prefs.clearUserPref("browser.tabs.drawInTitlebar");
+  Services.prefs.clearUserPref("browser.tabs.inTitlebar");
   Services.prefs.clearUserPref("browser.link.open_newwindow");
 });
 
