@@ -2752,49 +2752,30 @@ static inline void CheckIsMarkedThing(T* thing) {
 }
 
 template <typename T>
-static inline bool ShouldCheckMarkState(JSRuntime* rt, T** thingp) {
-  MOZ_ASSERT(thingp);
-  CheckIsMarkedThing(*thingp);
-  MOZ_ASSERT(!IsInsideNursery(*thingp));
-
-  TenuredCell& thing = (*thingp)->asTenured();
-  Zone* zone = thing.zoneFromAnyThread();
-
-  if (zone->gcState() <= Zone::Prepare || zone->isGCFinished()) {
-    return false;
-  }
-
-  if (zone->isGCCompacting() && IsForwarded(*thingp)) {
-    *thingp = Forwarded(*thingp);
-    return false;
-  }
-
-  return true;
-}
-
-template <typename T>
 bool js::gc::IsMarkedInternal(JSRuntime* rt, T** thingp) {
   // Don't depend on the mark state of other cells during finalization.
   MOZ_ASSERT(!CurrentThreadIsGCFinalizing());
+  MOZ_ASSERT(!JS::RuntimeHeapIsMinorCollecting());
+  MOZ_ASSERT(thingp);
+  CheckIsMarkedThing(*thingp);
 
   T* thing = *thingp;
-  // Permanent things are never marked by non-owning runtimes. Zone state is
-  // unknown in this case.
-#ifdef DEBUG
-  MOZ_ASSERT_IF(IsOwnedByOtherRuntime(rt, thing), thing->isMarkedBlack());
-#endif
-
-  if (!thing->isTenured()) {
-    MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-    auto** cellp = reinterpret_cast<Cell**>(thingp);
-    return Nursery::getForwardedPointer(cellp);
-  }
-
-  if (!ShouldCheckMarkState(rt, thingp)) {
+  if (IsOwnedByOtherRuntime(rt, thing)) {
     return true;
   }
 
-  return (*thingp)->asTenured().isMarkedAny();
+  // This is not used during minor sweeping nor used to update moved GC things.
+  MOZ_ASSERT(!IsForwarded(thing));
+
+  // Permanent things are never marked by non-owning runtimes. Zone state is
+  // unknown in this case.
+#ifdef DEBUG
+  MOZ_ASSERT_IF(!thing->isTenured(), thing->isMarkedBlack());
+#endif
+
+  TenuredCell* cell = &thing->asTenured();
+  Zone* zone = cell->zoneFromAnyThread();
+  return !zone->isGCMarking() || cell->isMarkedAny();
 }
 
 template <typename T>
