@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Test that the selector highlighter works when selecting frames in the iframe picker
+// Test that the selector highlighter is hidden when selecting frames in the iframe picker
 
 const TEST_URI = `
   <style type="text/css">
@@ -24,6 +24,13 @@ add_task(async function() {
 
   ok(highlighter, "The selector highlighter instance was created");
   ok(isShown, "The selector highlighter was shown");
+  is(
+    highlighter,
+    inspector.highlighters.getActiveHighlighter(
+      inspector.highlighters.TYPES.SELECTOR
+    ),
+    "The selector highlighter is the active highlighter"
+  );
 
   // Open frame menu and wait till it's available on the screen.
   const panel = toolbox.doc.getElementById("command-button-frames-panel");
@@ -40,11 +47,11 @@ add_task(async function() {
   frames[1].click();
   await onNewRoot;
 
-  const activeHighlighter = inspector.highlighters.getActiveHighlighter(
-    inspector.highlighters.TYPES.SELECTOR
+  await waitFor(
+    () =>
+      !inspector.highlighters.getActiveHighlighter(
+        inspector.highlighters.TYPES.SELECTOR
+      )
   );
-  ok(
-    !activeHighlighter,
-    "No selector highlighter is active after selecting a frame"
-  );
+  ok(true, "The selector highlighter gets hidden after selecting a frame");
 });
