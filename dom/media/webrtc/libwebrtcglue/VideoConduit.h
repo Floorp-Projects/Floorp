@@ -387,6 +387,17 @@ class WebrtcVideoConduit
   // Guarded by mMutex, except for reads on the frame feeding thread.
   unsigned short mLastHeight = 0;
 
+  // Written on the frame feeding thread, the timestamp of the last frame on the
+  // send side, in microseconds. This is a local timestamp using the system
+  // clock with a unspecified epoch (Like mozilla::TimeStamp).
+  // Guarded by mMutex.
+  Maybe<uint64_t> mLastTimestampSendUs;
+
+  // Written on the frame receive thread, the rtp timestamp of the last frame
+  // on the receive side, in 90kHz base. This comes from the RTP packet.
+  // Guarded by mMutex.
+  Maybe<uint32_t> mLastRTPTimestampReceive;
+
   // Accessed under mMutex.
   unsigned int mSendingFramerate;
 

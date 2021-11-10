@@ -23,6 +23,7 @@
 #include "nsServiceManagerUtils.h"
 #include "RtpRtcpConfig.h"
 #include "transport/SrtpFlow.h"  // For SRTP_MAX_EXPANSION
+#include "Tracing.h"
 #include "VideoStreamFactory.h"
 #include "WebrtcCallWrapper.h"
 #include "WebrtcGmpVideoCodec.h"
@@ -1418,6 +1419,28 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
   MOZ_ASSERT(!aFrame.color_space(), "Unexpected use of color space");
   MOZ_ASSERT(!aFrame.has_update_rect(), "Unexpected use of update rect");
 
+  if (profiler_is_active()) {
+    MutexAutoLock lock(mMutex);
+    nsAutoCStringN<256> ssrcsCommaSeparated;
+    bool first = true;
+    for (auto ssrc : mSendStreamConfig.rtp.ssrcs) {
+      if (!first) {
+        ssrcsCommaSeparated.AppendASCII(", ");
+      } else {
+        first = false;
+      }
+      ssrcsCommaSeparated.AppendInt(ssrc);
+    }
+    // The first frame has a delta of zero.
+    uint64_t timestampDelta =
+        mLastTimestampSendUs.isSome()
+            ? aFrame.timestamp_us() - mLastTimestampSendUs.value()
+            : 0;
+    mLastTimestampSendUs = Some(aFrame.timestamp_us());
+    TRACE_COMMENT("VideoConduit::SendVideoFrame", "t-delta=%.1fms, ssrcs=%s",
+                  timestampDelta / 1000.f, ssrcsCommaSeparated.get());
+  }
+
   mVideoBroadcaster.OnFrame(webrtc::VideoFrame::Builder()
                                 .set_video_frame_buffer(buffer)
                                 .set_timestamp_us(aFrame.timestamp_us())
@@ -1737,6 +1760,19 @@ void WebrtcVideoConduit::OnFrame(const webrtc::VideoFrame& video_frame) {
     if (ok) {
       VideoLatencyUpdate(now - timestamp);
     }
+  }
+  if (profiler_is_active()) {
+    MutexAutoLock lock(mMutex);
+    // The first frame has a delta of zero.
+    uint32_t rtpTimestamp = video_frame.timestamp();
+    uint32_t timestampDelta =
+        mLastRTPTimestampReceive.isSome()
+            ? rtpTimestamp - mLastRTPTimestampReceive.value()
+            : 0;
+    mLastRTPTimestampReceive = Some(rtpTimestamp);
+    TRACE_COMMENT("VideoConduit::OnFrame", "t-delta=%.1fms, ssrc=%u",
+                  timestampDelta * 1000.f / webrtc::kVideoPayloadTypeFrequency,
+                  localRecvSsrc);
   }
 
   mRenderer->RenderVideoFrame(*video_frame.video_frame_buffer(),
