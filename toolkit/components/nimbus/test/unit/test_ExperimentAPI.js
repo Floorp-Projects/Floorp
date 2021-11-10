@@ -1,17 +1,13 @@
 "use strict";
 
-const {
-  ExperimentAPI,
-  _ExperimentFeature: ExperimentFeature,
-} = ChromeUtils.import("resource://nimbus/ExperimentAPI.jsm");
+const { ExperimentAPI } = ChromeUtils.import(
+  "resource://nimbus/ExperimentAPI.jsm"
+);
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
-);
-const { TelemetryTestUtils } = ChromeUtils.import(
-  "resource://testing-common/TelemetryTestUtils.jsm"
 );
 const COLLECTION_ID_PREF = "messaging-system.rsexperimentloader.collection_id";
 
@@ -191,6 +187,29 @@ add_task(async function test_getExperiment_safe() {
   sandbox.restore();
 });
 
+add_task(async function test_getExperiment_featureAccess() {
+  const sandbox = sinon.createSandbox();
+  const expected = ExperimentFakes.experiment("foo", {
+    branch: {
+      slug: "treatment",
+      value: { title: "hi" },
+      features: [{ featureId: "cfr", value: { message: "content" } }],
+    },
+  });
+  const stub = sandbox
+    .stub(ExperimentAPI._store, "getExperimentForFeature")
+    .returns(expected);
+
+  let { branch } = ExperimentAPI.getExperiment({ featureId: "cfr" });
+
+  Assert.equal(branch.slug, "treatment");
+  let feature = branch.cfr;
+  Assert.ok(feature, "Should allow to access by featureId");
+  Assert.equal(feature.value.message, "content");
+
+  stub.restore();
+});
+
 /**
  * #getRecipe
  */
@@ -239,6 +258,29 @@ add_task(async function test_getAllBranches() {
     RECIPE.branches,
     "should return all branches if found a recipe"
   );
+
+  sandbox.restore();
+});
+
+// API used by Messaging System
+add_task(async function test_getAllBranches_featureIdAccessor() {
+  const sandbox = sinon.createSandbox();
+  const RECIPE = ExperimentFakes.recipe("foo");
+  sandbox.stub(ExperimentAPI._remoteSettingsClient, "get").resolves([RECIPE]);
+
+  const branches = await ExperimentAPI.getAllBranches("foo");
+  Assert.deepEqual(
+    branches,
+    RECIPE.branches,
+    "should return all branches if found a recipe"
+  );
+  branches.forEach(branch => {
+    Assert.equal(
+      branch["test-feature"].featureId,
+      "test-feature",
+      "Should use the experimentBranchAccessor proxy getter"
+    );
+  });
 
   sandbox.restore();
 });
