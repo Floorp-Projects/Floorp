@@ -551,9 +551,6 @@ class nsLayoutUtils {
       const nsIFrame* aAncestorFrame, const nsIFrame* aFrame,
       const nsIFrame* aCommonAncestor = nullptr);
 
-  static mozilla::SideBits GetSideBitsAndAdjustAnchorForFixedPositionContent(
-      const nsIFrame* aViewportFrame, const nsIFrame* aFixedPosFrame,
-      mozilla::LayerPoint* aAnchor, const Rect* aAnchorRect);
   static mozilla::SideBits GetSideBitsForFixedPositionContent(
       const nsIFrame* aFixedPosFrame);
 
