@@ -746,6 +746,7 @@ Toolbox.prototype = {
 
   async _onTargetSelected({ targetFront }) {
     this._updateFrames({ selected: targetFront.actorID });
+    this.selectTarget(targetFront.actorID);
   },
 
   _onTargetDestroyed({ targetFront }) {
