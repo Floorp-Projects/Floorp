@@ -15,6 +15,9 @@ namespace net {
 {
   manager PSocketProcess;
 
+parent:
+  async NotifyNetworkConnectivityServiceObservers(nsCString aTopic);
+
 child:
   async __delete__();
   async UpdatePlatformDNSInformation(nsCString[] aSuffixList);
