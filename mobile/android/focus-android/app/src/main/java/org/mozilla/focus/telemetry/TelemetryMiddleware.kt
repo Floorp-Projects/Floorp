@@ -19,6 +19,7 @@ import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.focus.GleanMetrics.AppOpened
 import org.mozilla.focus.GleanMetrics.Browser
 import org.mozilla.focus.GleanMetrics.Downloads
 import org.mozilla.focus.GleanMetrics.TabCount
@@ -72,12 +73,20 @@ class TelemetryMiddleware : Middleware<BrowserState, BrowserAction> {
         val tabCount = context.state.tabs.size
 
         when (tab.source) {
-            is SessionState.Source.External.ActionView -> TelemetryWrapper.browseIntentEvent()
-            is SessionState.Source.External.ActionSend -> {
-                TelemetryWrapper.shareIntentEvent(tab.content.searchTerms.isNotEmpty())
+            is SessionState.Source.External.ActionView -> {
+                AppOpened.browseIntent.record(NoExtras())
             }
-            SessionState.Source.Internal.TextSelection -> TelemetryWrapper.textSelectionIntentEvent()
-            SessionState.Source.Internal.HomeScreen -> TelemetryWrapper.openHomescreenShortcutEvent()
+            is SessionState.Source.External.ActionSend -> {
+                AppOpened.shareIntent.record(
+                    AppOpened.ShareIntentExtra(tab.content.searchTerms.isNotEmpty())
+                )
+            }
+            SessionState.Source.Internal.TextSelection -> {
+                AppOpened.textSelectionIntent.record(NoExtras())
+            }
+            SessionState.Source.Internal.HomeScreen -> {
+                AppOpened.fromLauncherSiteShortcut.record(NoExtras())
+            }
             SessionState.Source.Internal.NewTab -> {
                 val parentTab = (tab as TabSessionState).parentId?.let { context.state.findTab(it) }
                 if (parentTab?.content?.windowRequest?.type == WindowRequest.Type.OPEN) {

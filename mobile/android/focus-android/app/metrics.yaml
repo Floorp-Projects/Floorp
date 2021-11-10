@@ -483,6 +483,63 @@ app_opened:
         description: |
           Can be "Launch" if Focus was not already opened or "Resume" if it was.
         type: string
+  from_launcher_site_shortcut:
+    type: event
+    description: |
+      The user has opened the app using launcher website shortcut
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5547
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5839
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  browse_intent:
+    type: event
+    description: |
+      The user has opened the app using launcher website shortcut
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5547
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5839
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  text_selection_intent:
+    type: event
+    description: |
+      The user has opened the app using launcher website shortcut
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5547
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5839
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  share_intent:
+    type: event
+    description: |
+      The user has opened the app using launcher website shortcut
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5547
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5839
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      is_search:
+        description: Is the shared intent a search?
+        type: boolean
+
 
 add_to_home_screen:
   dialog_displayed:

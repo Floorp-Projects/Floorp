@@ -56,8 +56,6 @@ object TelemetryWrapper {
 
     private val dateFormat = SimpleDateFormat("yyyyMMdd", Locale.US)
 
-    private const val MAXIMUM_CUSTOM_TAB_EXTRAS = 10
-
     private const val HISTOGRAM_SIZE = 200
     private const val BUCKET_SIZE_MS = 100
     private const val HISTOGRAM_MIN_INDEX = 0
@@ -72,8 +70,6 @@ object TelemetryWrapper {
     }
 
     private object Method {
-        val TYPE_URL = "type_url"
-        val TYPE_QUERY = "type_query"
         val TYPE_SELECT_QUERY = "select_query"
         val CLICK = "click"
         val CANCEL = "cancel"
@@ -84,12 +80,8 @@ object TelemetryWrapper {
         val SAVE = "save"
         val OPEN = "open"
         val INSTALL = "install"
-        val INTENT_URL = "intent_url"
-        val INTENT_CUSTOM_TAB = "intent_custom_tab"
-        val TEXT_SELECTION_INTENT = "text_selection_intent"
         val SHOW = "show"
         val HIDE = "hide"
-        val SHARE_INTENT = "share_intent"
         val REMOVE = "remove"
         val REORDER = "reorder"
     }
@@ -103,8 +95,6 @@ object TelemetryWrapper {
         val BLOCKING_SWITCH = "blocking_switch"
         val BROWSER = "browser"
         val FIRSTRUN = "firstrun"
-        val HOMESCREEN_SHORTCUT = "homescreen_shortcut"
-        val APP_ICON = "app_icon"
         val AUTOCOMPLETE_DOMAIN = "autocomplete_domain"
         val SEARCH_SUGGESTION_PROMPT = "search_suggestion_prompt"
         val MAKE_DEFAULT_BROWSER_OPEN_WITH = "make_default_browser_open_with"
@@ -338,46 +328,6 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun browseIntentEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.INTENT_URL, Object.APP).queue()
-    }
-
-    @JvmStatic
-    fun shareIntentEvent(isSearch: Boolean) {
-        if (isSearch) {
-            TelemetryEvent.create(Category.ACTION, Method.SHARE_INTENT, Object.APP, Value.SEARCH).queue()
-        } else {
-            TelemetryEvent.create(Category.ACTION, Method.SHARE_INTENT, Object.APP, Value.URL).queue()
-        }
-    }
-
-    /**
-     * Sends a list of the custom tab options that a custom-tab intent made use of.
-     */
-    @JvmStatic
-    fun customTabsIntentEvent(options: List<String>) {
-        val event = TelemetryEvent.create(Category.ACTION, Method.INTENT_CUSTOM_TAB, Object.APP)
-
-        // We can send at most 10 extras per event - we just ignore the rest if there are too many
-        val extrasCount: Int = if (options.size > MAXIMUM_CUSTOM_TAB_EXTRAS) {
-            MAXIMUM_CUSTOM_TAB_EXTRAS
-        } else {
-            options.size
-        }
-
-        for (option in options.subList(0, extrasCount)) {
-            event.extra(option, "true")
-        }
-
-        event.queue()
-    }
-
-    @JvmStatic
-    fun textSelectionIntentEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.TEXT_SELECTION_INTENT, Object.APP).queue()
-    }
-
-    @JvmStatic
     fun searchSelectEvent(isSearchSuggestion: Boolean) {
         val telemetry = TelemetryHolder.get()
 
@@ -410,11 +360,6 @@ object TelemetryWrapper {
     fun eraseBackToAppEvent() {
         withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.BACK_BUTTON, Value.ERASE_TO_APP))
             .queue()
-    }
-
-    @JvmStatic
-    fun openHomescreenShortcutEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.HOMESCREEN_SHORTCUT, Value.OPEN).queue()
     }
 
     @JvmStatic
