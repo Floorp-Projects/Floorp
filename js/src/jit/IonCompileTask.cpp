@@ -63,8 +63,11 @@ void IonCompileTask::trace(JSTracer* trc) {
   snapshot_->trace(trc);
 }
 
-IonCompileTask::IonCompileTask(MIRGenerator& mirGen, WarpSnapshot* snapshot)
-    : mirGen_(mirGen), snapshot_(snapshot) {}
+IonCompileTask::IonCompileTask(JSContext* cx, MIRGenerator& mirGen,
+                               WarpSnapshot* snapshot)
+    : mirGen_(mirGen),
+      snapshot_(snapshot),
+      isExecuting_(cx->isExecutingRef()) {}
 
 size_t IonCompileTask::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
   // See js::jit::FreeIonCompileTask.
