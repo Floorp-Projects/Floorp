@@ -60,6 +60,16 @@
     wasm_rt_callback_error_trap(&table, x, func_types[ft]);                                          \
   }
 
+#if defined(WASM2C_MALLOC_FAIL_CALLBACK)
+void WASM2C_MALLOC_FAIL_CALLBACK(u32 ptr_size);
+# define WASM2C_MALLOC_FAIL_CHECK(ptr, ptr_size)  \
+  if (!ptr) {                                     \
+    WASM2C_MALLOC_FAIL_CALLBACK(ptr_size);        \
+  }
+#else
+# define WASM2C_MALLOC_FAIL_CHECK(ptr, ptr_size)
+#endif
+
 #if defined(WASM_CHECK_SHADOW_MEMORY)
 #  define WASM2C_SHADOW_MEMORY_LOAD(mem, func_name, ptr, ptr_size)  wasm2c_shadow_memory_load(mem, func_name, ptr, ptr_size)
 #  define WASM2C_SHADOW_MEMORY_STORE(mem, func_name, ptr, ptr_size) wasm2c_shadow_memory_store(mem, func_name, ptr, ptr_size)
