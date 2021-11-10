@@ -1976,6 +1976,7 @@
     thisValue: Value
   result_type: Value
   guard: true
+  folds_to: custom
   alias_set: custom
 
 - name: CheckThis
@@ -2130,6 +2131,8 @@
   operands: 
     callee: Object
   result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
   alias_set: custom
 
 - name: InitHomeObject

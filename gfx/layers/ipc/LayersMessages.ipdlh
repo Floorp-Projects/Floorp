@@ -54,7 +54,7 @@ using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::LayerHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::CompositableHandle from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::CompositionPayload from "mozilla/layers/LayersTypes.h";
-using mozilla::CrossProcessSemaphoreHandle from "mozilla/ipc/CrossProcessSemaphore.h";
+[MoveOnly] using mozilla::CrossProcessSemaphoreHandle from "mozilla/ipc/CrossProcessSemaphore.h";
 using struct mozilla::void_t from "mozilla/ipc/IPCCore.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::layers::TransactionId from "mozilla/layers/LayersTypes.h";

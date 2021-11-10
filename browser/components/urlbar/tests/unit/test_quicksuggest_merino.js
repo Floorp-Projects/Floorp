@@ -22,6 +22,7 @@ const TEST_MERINO_TIMEOUT_MS = 1000;
 const PREF_MERINO_ENABLED = "merino.enabled";
 const PREF_REMOTE_SETTINGS_ENABLED = "quicksuggest.remoteSettings.enabled";
 const PREF_MERINO_ENDPOINT_URL = "merino.endpointURL";
+const PREF_DATA_COLLECTION_ENABLED = "quicksuggest.dataCollection.enabled";
 
 const TELEMETRY_MERINO_LATENCY = "FX_URLBAR_MERINO_LATENCY_MS";
 const TELEMETRY_MERINO_RESPONSE = "FX_URLBAR_MERINO_RESPONSE";
@@ -114,7 +115,7 @@ let gMerinoResponse;
 
 add_task(async function init() {
   UrlbarPrefs.set("quicksuggest.enabled", true);
-  UrlbarPrefs.set("suggest.quicksuggest", true);
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
   UrlbarPrefs.set("quicksuggest.shouldShowOnboardingDialog", false);
 
@@ -142,6 +143,7 @@ add_task(async function init() {
 add_task(async function oneEnabled_merino() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
   let histograms = getAndClearHistograms();
 
@@ -171,6 +173,7 @@ add_task(async function oneEnabled_merino() {
 add_task(async function oneEnabled_remoteSettings() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, false);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
   let histograms = getAndClearHistograms();
 
@@ -195,11 +198,34 @@ add_task(async function oneEnabled_remoteSettings() {
   });
 });
 
+// Tests with Merino enabled but with data collection disabled. Results should
+// not be fetched from Merino in that case. Also tests with remote settings
+// enabled.
+add_task(async function dataCollectionDisabled() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, false);
+
+  // Make sure the server is prepared to return a response so we can make sure
+  // we don't fetch it.
+  setMerinoResponse();
+
+  let context = createContext("frab", {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [EXPECTED_REMOTE_SETTINGS_RESULT],
+  });
+});
+
 // When the Merino suggestion has a higher score than the remote settings
 // suggestion, the Merino suggestion should be used.
 add_task(async function higherScore() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
   let histograms = getAndClearHistograms();
 
@@ -228,6 +254,7 @@ add_task(async function higherScore() {
 add_task(async function lowerScore() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
   let histograms = getAndClearHistograms();
 
@@ -256,6 +283,7 @@ add_task(async function lowerScore() {
 add_task(async function sameScore() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
   let histograms = getAndClearHistograms();
 
@@ -284,6 +312,7 @@ add_task(async function sameScore() {
 add_task(async function noMerinoScore() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
   let histograms = getAndClearHistograms();
 
@@ -317,6 +346,7 @@ add_task(async function noMerinoScore() {
 add_task(async function noSuggestion_remoteSettings() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
   let histograms = getAndClearHistograms();
 
@@ -344,6 +374,7 @@ add_task(async function noSuggestion_remoteSettings() {
 add_task(async function noSuggestion_merino() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
   let histograms = getAndClearHistograms();
 
@@ -375,6 +406,7 @@ add_task(async function noSuggestion_merino() {
 add_task(async function bothDisabled() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, false);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
   let histograms = getAndClearHistograms();
 
@@ -401,6 +433,7 @@ add_task(async function bothDisabled() {
 add_task(async function multipleMerinoSuggestions() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
   let histograms = getAndClearHistograms();
 
@@ -491,6 +524,7 @@ add_task(async function multipleMerinoSuggestions() {
 add_task(async function unexpectedResponseProperties() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
   let histograms = getAndClearHistograms();
 
@@ -520,6 +554,7 @@ add_task(async function unexpectedResponseProperties() {
 add_task(async function unexpectedResponseBody() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
   let histograms = getAndClearHistograms();
 
@@ -608,6 +643,7 @@ add_task(async function unexpectedResponseBody() {
 add_task(async function networkError_merinoOnly() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
   await doNetworkErrorTest([]);
 });
 
@@ -616,6 +652,7 @@ add_task(async function networkError_merinoOnly() {
 add_task(async function networkError_withRemoteSettings() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
   await doNetworkErrorTest([EXPECTED_REMOTE_SETTINGS_RESULT]);
 });
 
@@ -674,6 +711,7 @@ async function doNetworkErrorTest(expectedResults) {
 add_task(async function httpError_merinoOnly() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
   await doHTTPErrorTest([]);
 });
 
@@ -682,6 +720,7 @@ add_task(async function httpError_merinoOnly() {
 add_task(async function httpError_withRemoteSettings() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
   await doHTTPErrorTest([EXPECTED_REMOTE_SETTINGS_RESULT]);
 });
 
@@ -714,6 +753,7 @@ async function doHTTPErrorTest(expectedResults) {
 add_task(async function timeout_merinoOnly() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
   setMerinoResponse();
   await doSimpleTimeoutTest([]);
 });
@@ -723,6 +763,7 @@ add_task(async function timeout_merinoOnly() {
 add_task(async function timeout_withRemoteSettings() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, true);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
   setMerinoResponse();
   await doSimpleTimeoutTest([EXPECTED_REMOTE_SETTINGS_RESULT]);
 });
@@ -732,6 +773,7 @@ add_task(async function timeout_withRemoteSettings() {
 add_task(async function timeout_followedByHTTPError() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
   let resp = setMerinoResponse();
   resp.status = 500;
   delete resp.body;
@@ -804,6 +846,7 @@ async function doSimpleTimeoutTest(expectedResults) {
 add_task(async function newFetchAbortsPrevious() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
   let histograms = getAndClearHistograms();
 
@@ -888,6 +931,7 @@ add_task(async function newFetchAbortsPrevious() {
 add_task(async function cancelDoesNotAbortFetch() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
 
   let histograms = getAndClearHistograms();
 

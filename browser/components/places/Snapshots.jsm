@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   BackgroundPageThumbs: "resource://gre/modules/BackgroundPageThumbs.jsm",
   CommonNames: "resource:///modules/CommonNames.jsm",
   Interactions: "resource:///modules/Interactions.jsm",
-  PageDataCollector: "resource:///modules/pagedata/PageDataCollector.jsm",
   PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
   PageThumbsStorage: "resource://gre/modules/PageThumbs.jsm",
@@ -161,60 +160,79 @@ const Snapshots = new (class Snapshots {
    * @param {Array<Objects>} urls Array of {placeId, url} tuples.
    */
   async #addPageData(urls) {
-    let index = 0;
-    let values = [];
-    let bindings = {};
+    let pageDataIndex = 0;
+    let pageDataValues = [];
+    let pageDataBindings = {};
+
+    let placesIndex = 0;
+    let placesValues = [];
+    let placesBindings = {};
+
     for (let { placeId, url } of urls) {
       let pageData = PageDataService.getCached(url);
-      let imageURL = null;
-      if (pageData?.data.length) {
-        for (let data of pageData.data) {
-          if (Object.values(PageDataCollector.DATA_TYPE).includes(data.type)) {
-            bindings[`id${index}`] = placeId;
-            bindings[`type${index}`] = data.type;
-            // We store the whole data object that also includes type because
-            // it makes easier to query all the data at once and then build a
-            // Map from it.
-            bindings[`data${index}`] = JSON.stringify(data);
-            values.push(`(:id${index}, :type${index}, :data${index})`);
-            index++;
-            if (data.type === PageDataCollector.DATA_TYPE.GENERAL) {
-              let websiteData = data.data.find(
-                element => element.type === "website"
-              );
-              if (websiteData?.image) {
-                imageURL = websiteData.image;
-              }
-            }
-          }
+      if (pageData) {
+        for (let [type, data] of Object.entries(pageData.data)) {
+          pageDataBindings[`id${pageDataIndex}`] = placeId;
+          pageDataBindings[`type${pageDataIndex}`] = type;
+          pageDataBindings[`data${pageDataIndex}`] = JSON.stringify(data);
+          pageDataValues.push(
+            `(:id${pageDataIndex}, :type${pageDataIndex}, :data${pageDataIndex})`
+          );
+          pageDataIndex++;
         }
+
+        placesBindings[`id${placesIndex}`] = placeId;
+        placesBindings[`site${placesIndex}`] = pageData.siteName ?? null;
+        placesBindings[`image${placesIndex}`] = pageData.image ?? null;
+        placesValues.push(
+          `(:id${placesIndex}, :site${placesIndex}, :image${placesIndex})`
+        );
+        placesIndex++;
       } else {
         // TODO: queuing a fetch will notify page-data once done, if any data
         // was found, but we're not yet handling that, see the constructor.
         PageDataService.queueFetch(url).catch(console.error);
       }
-      this.#downloadPageImage(url, imageURL);
+
+      this.#downloadPageImage(url, pageData?.image);
     }
 
     logConsole.debug(
-      `Inserting ${index} page data for: ${urls.map(u => u.url)}.`
+      `Inserting ${pageDataIndex} page data for: ${urls.map(u => u.url)}.`
     );
 
-    if (index == 0) {
+    if (pageDataIndex == 0 && placesIndex == 0) {
       return;
     }
 
     await PlacesUtils.withConnectionWrapper(
       "Snapshots.jsm::addPageData",
       async db => {
-        await db.execute(
-          `
+        if (placesIndex) {
+          await db.execute(
+            `
+          WITH pd("place_id", "siteName", "image") AS (
+            VALUES ${placesValues.join(", ")}
+          )
+          UPDATE moz_places
+            SET site_name = pd.siteName, preview_image_url = pd.image
+            FROM pd
+            WHERE moz_places.id = pd.place_id;
+          `,
+            placesBindings
+          );
+        }
+
+        if (pageDataIndex) {
+          await db.execute(
+            `
           INSERT OR REPLACE INTO moz_places_metadata_snapshots_extra
             (place_id, type, data)
-            VALUES ${values.join(", ")}
+            VALUES ${pageDataValues.join(", ")}
           `,
-          bindings
-        );
+            pageDataBindings
+          );
+        }
       }
     );
   }
@@ -390,7 +408,8 @@ const Snapshots = new (class Snapshots {
       `
       SELECT h.url AS url, h.title AS title, created_at, removed_at,
              document_type, first_interaction_at, last_interaction_at,
-             user_persisted, group_concat(e.data, ",") AS page_data
+             user_persisted, site_name, preview_image_url,
+             group_concat('[' || e.type || ', ' || e.data || ']') AS page_data
              FROM moz_places_metadata_snapshots s
       JOIN moz_places h ON h.id = s.place_id
       LEFT JOIN moz_places_metadata_snapshots_extra e ON e.place_id = s.place_id
@@ -447,7 +466,8 @@ const Snapshots = new (class Snapshots {
       `
       SELECT h.url AS url, h.title AS title, created_at, removed_at,
              document_type, first_interaction_at, last_interaction_at,
-             user_persisted, group_concat(e.data, ",") AS page_data
+             user_persisted, site_name, preview_image_url,
+             group_concat('[' || e.type || ', ' || e.data || ']') AS page_data
       FROM moz_places_metadata_snapshots s
       JOIN moz_places h ON h.id = s.place_id
       LEFT JOIN moz_places_metadata_snapshots_extra e ON e.place_id = s.place_id
@@ -502,12 +522,12 @@ const Snapshots = new (class Snapshots {
    */
   #translateRow(row) {
     // Maps data type to data.
-    let pageData = new Map();
+    let pageData;
     let pageDataStr = row.getResultByName("page_data");
     if (pageDataStr) {
       try {
         let dataArray = JSON.parse(`[${pageDataStr}]`);
-        dataArray.forEach(d => pageData.set(d.type, d.data));
+        pageData = new Map(dataArray);
       } catch (e) {
         logConsole.error(e);
       }
@@ -516,6 +536,8 @@ const Snapshots = new (class Snapshots {
     let snapshot = {
       url: row.getResultByName("url"),
       title: row.getResultByName("title"),
+      siteName: row.getResultByName("site_name"),
+      image: row.getResultByName("preview_image_url"),
       createdAt: this.#toDate(row.getResultByName("created_at")),
       removedAt: this.#toDate(row.getResultByName("removed_at")),
       firstInteractionAt: this.#toDate(
@@ -526,7 +548,7 @@ const Snapshots = new (class Snapshots {
       ),
       documentType: row.getResultByName("document_type"),
       userPersisted: !!row.getResultByName("user_persisted"),
-      pageData,
+      pageData: pageData ?? new Map(),
     };
 
     snapshot.commonName = CommonNames.getName(snapshot);
@@ -543,11 +565,8 @@ const Snapshots = new (class Snapshots {
    * @returns {string?}
    */
   async getSnapshotImageURL(snapshot) {
-    const generalPageData = snapshot.pageData
-      .get(PageDataCollector.DATA_TYPE.GENERAL)
-      ?.find(element => element.type === "website");
-    if (generalPageData) {
-      return generalPageData.image;
+    if (snapshot.image) {
+      return snapshot.image;
     }
     const url = snapshot.url;
     await BackgroundPageThumbs.captureIfMissing(url).catch(console.error);

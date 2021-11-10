@@ -1435,7 +1435,6 @@ Document::Document(const char* aContentType)
       mServoRestyleRootDirtyBits(0),
       mThrowOnDynamicMarkupInsertionCounter(0),
       mIgnoreOpensDuringUnloadCounter(0),
-      mDocLWTheme(Doc_Theme_Uninitialized),
       mSavedResolution(1.0f),
       mSavedResolutionBeforeMVM(1.0f),
       mGeneration(0),
@@ -12378,12 +12377,34 @@ void Document::ForgetImagePreload(nsIURI* aURI) {
 
 void Document::UpdateDocumentStates(EventStates aMaybeChangedStates,
                                     bool aNotify) {
-  EventStates oldStates = mDocumentState;
-  if (aMaybeChangedStates.HasState(NS_DOCUMENT_STATE_RTL_LOCALE)) {
+  const EventStates oldStates = mDocumentState;
+  if (aMaybeChangedStates.HasAtLeastOneOfStates(
+          NS_DOCUMENT_STATE_ALL_LOCALEDIR_BITS)) {
+    mDocumentState &= ~NS_DOCUMENT_STATE_ALL_LOCALEDIR_BITS;
     if (IsDocumentRightToLeft()) {
       mDocumentState |= NS_DOCUMENT_STATE_RTL_LOCALE;
     } else {
-      mDocumentState &= ~NS_DOCUMENT_STATE_RTL_LOCALE;
+      mDocumentState |= NS_DOCUMENT_STATE_LTR_LOCALE;
+    }
+  }
+
+  if (aMaybeChangedStates.HasAtLeastOneOfStates(
+          NS_DOCUMENT_STATE_ALL_LWTHEME_BITS)) {
+    mDocumentState &= ~NS_DOCUMENT_STATE_ALL_LWTHEME_BITS;
+    switch (GetDocumentLWTheme()) {
+      case DocumentTheme::None:
+        break;
+      case DocumentTheme::Bright:
+        mDocumentState |=
+            NS_DOCUMENT_STATE_LWTHEME | NS_DOCUMENT_STATE_LWTHEME_BRIGHTTEXT;
+        break;
+      case DocumentTheme::Dark:
+        mDocumentState |=
+            NS_DOCUMENT_STATE_LWTHEME | NS_DOCUMENT_STATE_LWTHEME_DARKTEXT;
+        break;
+      case DocumentTheme::Neutral:
+        mDocumentState |= NS_DOCUMENT_STATE_LWTHEME;
+        break;
     }
   }
 
@@ -12457,7 +12478,7 @@ void Document::ResetDocumentDirection() {
   if (!nsContentUtils::IsChromeDoc(this)) {
     return;
   }
-  UpdateDocumentStates(NS_DOCUMENT_STATE_RTL_LOCALE, true);
+  UpdateDocumentStates(NS_DOCUMENT_STATE_ALL_LOCALEDIR_BITS, true);
 }
 
 bool Document::IsDocumentRightToLeft() {
@@ -15783,33 +15804,22 @@ void Document::SetStateObject(nsIStructuredCloneContainer* scContainer) {
   mStateObjectCached = nullptr;
 }
 
-Document::DocumentTheme Document::GetDocumentLWTheme() {
-  if (mDocLWTheme == Doc_Theme_Uninitialized) {
-    mDocLWTheme = ThreadSafeGetDocumentLWTheme();
-  }
-  return mDocLWTheme;
-}
-
-Document::DocumentTheme Document::ThreadSafeGetDocumentLWTheme() const {
+Document::DocumentTheme Document::GetDocumentLWTheme() const {
   if (!NodePrincipal()->IsSystemPrincipal()) {
-    return Doc_Theme_None;
+    return DocumentTheme::None;
   }
 
-  if (mDocLWTheme != Doc_Theme_Uninitialized) {
-    return mDocLWTheme;
-  }
-
-  DocumentTheme theme = Doc_Theme_None;  // No lightweight theme by default
+  auto theme = DocumentTheme::None;  // No lightweight theme by default
   Element* element = GetRootElement();
   if (element && element->AttrValueIs(kNameSpaceID_None, nsGkAtoms::lwtheme,
                                       nsGkAtoms::_true, eCaseMatters)) {
-    theme = Doc_Theme_Neutral;
+    theme = DocumentTheme::Neutral;
     nsAutoString lwTheme;
     element->GetAttr(kNameSpaceID_None, nsGkAtoms::lwthemetextcolor, lwTheme);
     if (lwTheme.EqualsLiteral("dark")) {
-      theme = Doc_Theme_Dark;
+      theme = DocumentTheme::Dark;
     } else if (lwTheme.EqualsLiteral("bright")) {
-      theme = Doc_Theme_Bright;
+      theme = DocumentTheme::Bright;
     }
   }
 

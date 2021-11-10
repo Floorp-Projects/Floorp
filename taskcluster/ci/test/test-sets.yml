@@ -205,12 +205,6 @@ windows32-2004-tests:
     - test-verify-gpu
     - test-verify-wpt
 
-windows-ccov-tests:
-    # jittest run on regular windows builds is redundant with SM(p), so we omit
-    # it from the windows-tests set. But, we still want to run it on ccov builds,
-    # so we have this set that has it and which runs on ccov builds.
-    - jittest
-
 windows10-2004-tests:
     - cppunit
     - crashtest
@@ -241,26 +235,13 @@ windows10-2004-tests:
     - xpcshell
 
 windows10-64-2004-ccov-tests:
-    - cppunit
-    - crashtest
-    - gtest
     - jittest
-    - jsreftest
-    - marionette
-    - mochitest-browser-chrome
-    - mochitest-devtools-chrome
-    - mochitest-plain
-    - mochitest-remote
-    - reftest
     - test-coverage
-    - test-verify
-    - test-verify-gpu
     - web-platform-tests
     - web-platform-tests-crashtest
     - web-platform-tests-print-reftest
     - web-platform-tests-reftest
     - web-platform-tests-wdspec
-    - xpcshell
 
 windows10-64-2004-failure-tests:
     - mochitest-browser-chrome-failures

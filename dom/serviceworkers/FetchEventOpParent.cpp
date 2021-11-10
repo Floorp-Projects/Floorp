@@ -6,6 +6,7 @@
 
 #include "FetchEventOpParent.h"
 
+#include "mozilla/dom/FetchTypes.h"
 #include "nsDebug.h"
 
 #include "mozilla/Assertions.h"
@@ -21,6 +22,40 @@ namespace mozilla {
 using namespace ipc;
 
 namespace dom {
+
+Maybe<IPCInternalResponse> FetchEventOpParent::OnStart(
+    MovingNotNull<RefPtr<FetchEventOpProxyParent>> aFetchEventOpProxyParent) {
+  Maybe<IPCInternalResponse> preloadResponse =
+      std::move(mState.as<Pending>().mPreloadResponse);
+  mState = AsVariant(Started{std::move(aFetchEventOpProxyParent)});
+  return preloadResponse;
+}
+
+void FetchEventOpParent::OnFinish() {
+  MOZ_ASSERT(mState.is<Started>());
+  mState = AsVariant(Finished());
+}
+
+mozilla::ipc::IPCResult FetchEventOpParent::RecvPreloadResponse(
+    IPCInternalResponse&& aResponse) {
+  AssertIsOnBackgroundThread();
+
+  // TODO: preload response's body and alternativeBody need to be converted to
+  //       ParentToChildStream. This would be done in the following patch.
+
+  mState.match(
+      [&aResponse](Pending& aPending) {
+        MOZ_ASSERT(aPending.mPreloadResponse.isNothing());
+        aPending.mPreloadResponse = Some(std::move(aResponse));
+      },
+      [&aResponse](Started& aStarted) {
+        Unused << aStarted.mFetchEventOpProxyParent->SendPreloadResponse(
+            aResponse);
+      },
+      [](const Finished&) {});
+
+  return IPC_OK();
+}
 
 void FetchEventOpParent::ActorDestroy(ActorDestroyReason) {
   AssertIsOnBackgroundThread();

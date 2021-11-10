@@ -65,42 +65,6 @@ IPCResult IPCResult::Fail(NotNull<IProtocol*> actor, const char* where,
   return IPCResult(false);
 }
 
-#if defined(XP_WIN)
-bool DuplicateHandle(HANDLE aSourceHandle, DWORD aTargetProcessId,
-                     HANDLE* aTargetHandle, DWORD aDesiredAccess,
-                     DWORD aOptions) {
-  // If our process is the target just duplicate the handle.
-  if (aTargetProcessId == base::GetCurrentProcId()) {
-    return !!::DuplicateHandle(::GetCurrentProcess(), aSourceHandle,
-                               ::GetCurrentProcess(), aTargetHandle,
-                               aDesiredAccess, false, aOptions);
-  }
-
-#  if defined(MOZ_SANDBOX)
-  // Try the broker next (will fail if not sandboxed).
-  if (SandboxTarget::Instance()->BrokerDuplicateHandle(
-          aSourceHandle, aTargetProcessId, aTargetHandle, aDesiredAccess,
-          aOptions)) {
-    return true;
-  }
-#  endif
-
-  // Finally, see if we already have access to the process.
-  ScopedProcessHandle targetProcess(
-      OpenProcess(PROCESS_DUP_HANDLE, FALSE, aTargetProcessId));
-  if (!targetProcess) {
-    CrashReporter::AnnotateCrashReport(
-        CrashReporter::Annotation::IPCTransportFailureReason,
-        "Failed to open target process."_ns);
-    return false;
-  }
-
-  return !!::DuplicateHandle(::GetCurrentProcess(), aSourceHandle,
-                             targetProcess, aTargetHandle, aDesiredAccess,
-                             FALSE, aOptions);
-}
-#endif
-
 void AnnotateSystemError() {
   int64_t error = 0;
 #if defined(XP_WIN)

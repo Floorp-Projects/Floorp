@@ -5050,6 +5050,11 @@ void MLoadDynamicSlot::printOpcode(GenericPrinter& out) const {
   out.printf(" %u", slot());
 }
 
+void MLoadDynamicSlotAndUnbox::printOpcode(GenericPrinter& out) const {
+  MDefinition::printOpcode(out);
+  out.printf(" %zu", slot());
+}
+
 void MStoreDynamicSlot::printOpcode(GenericPrinter& out) const {
   PrintOpcodeName(out, op());
   out.printf(" ");
@@ -6049,6 +6054,50 @@ MDefinition* MCheckIsObj::foldsTo(TempAllocator& alloc) {
   MDefinition* unboxed = input()->getOperand(0);
   if (unboxed->type() == MIRType::Object) {
     return unboxed;
+  }
+
+  return this;
+}
+
+static bool IsBoxedObject(MDefinition* def) {
+  MOZ_ASSERT(def->type() == MIRType::Value);
+
+  if (def->isBox()) {
+    return def->toBox()->input()->type() == MIRType::Object;
+  }
+
+  // Construct calls are always returning a boxed object.
+  //
+  // TODO: We should consider encoding this directly in the graph instead of
+  // having to special case it here.
+  if (def->isCall()) {
+    return def->toCall()->isConstructing();
+  }
+  if (def->isConstructArray()) {
+    return true;
+  }
+
+  return false;
+}
+
+MDefinition* MCheckReturn::foldsTo(TempAllocator& alloc) {
+  auto* returnVal = returnValue();
+  if (!returnVal->isBox()) {
+    return this;
+  }
+
+  auto* unboxedReturnVal = returnVal->toBox()->input();
+  if (unboxedReturnVal->type() == MIRType::Object) {
+    return returnVal;
+  }
+
+  if (unboxedReturnVal->type() != MIRType::Undefined) {
+    return this;
+  }
+
+  auto* thisVal = thisValue();
+  if (IsBoxedObject(thisVal)) {
+    return thisVal;
   }
 
   return this;

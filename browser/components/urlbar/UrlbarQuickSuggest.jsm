@@ -213,7 +213,7 @@ class Suggestions {
       !UrlbarPrefs.get(FEATURE_AVAILABLE) ||
       !UrlbarPrefs.get("quickSuggestShouldShowOnboardingDialog") ||
       UrlbarPrefs.get(SEEN_DIALOG_PREF) ||
-      UrlbarPrefs.get("suggest.quicksuggest") ||
+      UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
       UrlbarPrefs.get("suggest.quicksuggest.sponsored")
     ) {
       return;
@@ -263,21 +263,29 @@ class Suggestions {
 
     UrlbarPrefs.set(SEEN_DIALOG_PREF, true);
 
+    // Record the user's opt-in choice on the user prefs branch regardless of
+    // what it was. These prefs are sticky, so they'll retain their user-branch
+    // values regardless of what the particular defaults were at the time. See
+    // UrlbarPrefs for details.
+    //
+    // Opting in enables both kinds of results and data collection.
+    let optedIn = params.choice == ONBOARDING_CHOICE.ACCEPT;
+    UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", optedIn);
+    UrlbarPrefs.set("suggest.quicksuggest.sponsored", optedIn);
+    UrlbarPrefs.set("quicksuggest.dataCollection.enabled", optedIn);
+
     switch (params.choice) {
-      case ONBOARDING_CHOICE.ACCEPT:
-        // Opting in enables both non-sponsored and sponsored results.
-        UrlbarPrefs.set("suggest.quicksuggest", true);
-        UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
-        break;
       case ONBOARDING_CHOICE.LEARN_MORE:
         win.openTrustedLinkIn(UrlbarProviderQuickSuggest.helpUrl, "tab", {
           fromChrome: true,
         });
         break;
-      case ONBOARDING_CHOICE.NOT_NOW:
-        break;
       case ONBOARDING_CHOICE.SETTINGS:
         win.openPreferences("privacy-locationBar");
+        break;
+      case ONBOARDING_CHOICE.ACCEPT:
+      case ONBOARDING_CHOICE.NOT_NOW:
+        // No other action required.
         break;
       default:
         if (escapeKeyPressed) {
@@ -310,10 +318,8 @@ class Suggestions {
    */
   onPrefChanged(pref) {
     switch (pref) {
-      // Both sponsored and non-sponsored results come from the same remote
-      // settings dataset, so we only need to listen for `suggest.quicksuggest`
-      // and not also `suggest.quicksuggest.sponsored`.
-      case "suggest.quicksuggest":
+      case "suggest.quicksuggest.nonsponsored":
+      case "suggest.quicksuggest.sponsored":
         this._queueSettingsSetup();
         break;
     }
@@ -343,7 +349,8 @@ class Suggestions {
     this._queueSettingsTask(() => {
       let enabled =
         UrlbarPrefs.get(FEATURE_AVAILABLE) &&
-        UrlbarPrefs.get("suggest.quicksuggest");
+        (UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
+          UrlbarPrefs.get("suggest.quicksuggest.sponsored"));
       if (enabled && !this._rs) {
         this._onSettingsSync = (...args) => this._queueSettingsSync(...args);
         this._rs = RemoteSettings(RS_COLLECTION);

@@ -179,6 +179,7 @@ class DesktopCaptureImpl : public DesktopCapturer::Callback,
   const char* CurrentDeviceName() const override;
 
   int32_t IncomingFrame(uint8_t* videoFrame, size_t videoFrameLength,
+                        size_t widthWithPadding,
                         const VideoCaptureCapability& frameInfo);
 
   // Platform dependent

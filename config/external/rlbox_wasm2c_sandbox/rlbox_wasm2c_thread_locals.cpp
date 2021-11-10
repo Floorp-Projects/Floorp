@@ -15,6 +15,8 @@
 
 #  include "mozilla/rlbox/rlbox.hpp"
 
+#  include "nsExceptionHandler.h"
+
 // The MingW compiler does not correctly handle static thread_local inline
 // members. We instead TLS storage via functions. This can be removed if the
 // MingW bug is fixed.
@@ -26,6 +28,16 @@ extern "C" {
 // is configured to call the below trap handler.
 void moz_wasm2c_trap_handler(const char* msg) {
   MOZ_CRASH_UNSAFE_PRINTF("wasm2c crash: %s", msg);
+}
+
+// The below function is called if a malloc in sandboxed code returns null
+// This indicates that the sandbox has run out of memory.
+void moz_wasm2c_malloc_failed(uint32_t size) {
+  // We don't use the allocation size information for now
+  (void) size;
+
+  CrashReporter::AnnotateCrashReport(
+      CrashReporter::Annotation::WasmLibrarySandboxMallocFailed, true);
 }
 }
 

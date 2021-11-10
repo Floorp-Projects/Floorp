@@ -6516,8 +6516,8 @@ void EditorBase::TopLevelEditSubActionData::WillDeleteContent(
 }
 
 void EditorBase::TopLevelEditSubActionData::DidSplitContent(
-    EditorBase& aEditorBase, nsIContent& aExistingRightContent,
-    nsIContent& aNewLeftContent) {
+    EditorBase& aEditorBase, nsIContent& aSplitContent, nsIContent& aNewContent,
+    SplitNodeDirection aSplitNodeDirection) {
   MOZ_ASSERT(aEditorBase.AsHTMLEditor());
 
   if (!aEditorBase.mInitSucceeded || aEditorBase.Destroyed()) {
@@ -6528,9 +6528,14 @@ void EditorBase::TopLevelEditSubActionData::DidSplitContent(
     return;  // Temporarily disabled by edit sub-action handler.
   }
 
-  DebugOnly<nsresult> rvIgnored = AddRangeToChangedRange(
-      *aEditorBase.AsHTMLEditor(), EditorRawDOMPoint(&aNewLeftContent, 0),
-      EditorRawDOMPoint(&aExistingRightContent, 0));
+  DebugOnly<nsresult> rvIgnored =
+      aSplitNodeDirection == SplitNodeDirection::LeftNodeIsNewOne
+          ? AddRangeToChangedRange(*aEditorBase.AsHTMLEditor(),
+                                   EditorRawDOMPoint(&aNewContent, 0),
+                                   EditorRawDOMPoint(&aSplitContent, 0))
+          : AddRangeToChangedRange(*aEditorBase.AsHTMLEditor(),
+                                   EditorRawDOMPoint::AtEndOf(aSplitContent),
+                                   EditorRawDOMPoint::AtEndOf(aNewContent));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "TopLevelEditSubActionData::AddRangeToChangedRange() "
                        "failed, but ignored");

@@ -137,8 +137,8 @@ class BigInt final : public js::gc::CellWithLengthAndFlags {
   static BigInt* bitOr(JSContext* cx, Handle<BigInt*> x, Handle<BigInt*> y);
   static BigInt* bitNot(JSContext* cx, Handle<BigInt*> x);
 
-  static int64_t toInt64(BigInt* x);
-  static uint64_t toUint64(BigInt* x);
+  static int64_t toInt64(const BigInt* x);
+  static uint64_t toUint64(const BigInt* x);
 
   // Return true if the BigInt is without loss of precision representable as an
   // int64 and store the int64 value in the output. Otherwise return false and

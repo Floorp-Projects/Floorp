@@ -348,3 +348,7 @@ void nsIGlobalObject::RemoveReportRecords() {
     observer->ForgetReports();
   }
 }
+
+bool nsIGlobalObject::ShouldResistFingerprinting() const {
+  return nsContentUtils::ShouldResistFingerprinting();
+}

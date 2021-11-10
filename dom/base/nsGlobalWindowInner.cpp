@@ -1618,6 +1618,20 @@ bool nsGlobalWindowInner::IsBlackForCC(bool aTracingNeeded) {
 // nsGlobalWindowInner::nsIScriptGlobalObject
 //*****************************************************************************
 
+bool nsGlobalWindowInner::ShouldResistFingerprinting() const {
+  if (mDoc) {
+    return nsContentUtils::ShouldResistFingerprinting(mDoc);
+  }
+  return nsIScriptGlobalObject::ShouldResistFingerprinting();
+}
+
+uint32_t nsGlobalWindowInner::GetPrincipalHashValue() const {
+  if (mDoc) {
+    return mDoc->NodePrincipal()->GetHashValue();
+  }
+  return 0;
+}
+
 nsresult nsGlobalWindowInner::EnsureScriptEnvironment() {
   // NOTE: We can't use FORWARD_TO_OUTER here because we don't want to fail if
   // we're called on an inactive inner window.
@@ -3910,8 +3924,7 @@ void nsGlobalWindowInner::ScrollBy(const ScrollToOptions& aOptions) {
                                 ? ScrollMode::SmoothMsd
                                 : ScrollMode::Instant;
 
-    sf->ScrollByCSSPixels(scrollDelta, scrollMode,
-                          mozilla::ScrollOrigin::Relative);
+    sf->ScrollByCSSPixels(scrollDelta, scrollMode);
   }
 }
 

@@ -107,6 +107,10 @@ class WorkerGlobalScopeBase : public DOMEventTargetHelper,
 
   bool IsSharedMemoryAllowed() const final;
 
+  bool ShouldResistFingerprinting() const final;
+
+  uint32_t GetPrincipalHashValue() const final;
+
   StorageAccess GetStorageAccess() final;
 
   Maybe<ClientInfo> GetClientInfo() const final;

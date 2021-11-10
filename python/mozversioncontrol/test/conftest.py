@@ -18,6 +18,7 @@ SETUP = {
         hg init
         hg add *
         hg commit -m "Initial commit"
+        hg phase --public .
         """,
         """
         echo "[paths]\ndefault = ../remoterepo" > .hg/hgrc

@@ -145,17 +145,6 @@ static const struct EVInfo kEVInfos[] = {
   },
 #endif
   {
-    // CN=Cybertrust Global Root,O=Cybertrust, Inc
-    "1.3.6.1.4.1.6334.1.100.1",
-    "Cybertrust EV OID",
-    { 0x96, 0x0A, 0xDF, 0x00, 0x63, 0xE9, 0x63, 0x56, 0x75, 0x0C, 0x29,
-      0x65, 0xDD, 0x0A, 0x08, 0x67, 0xDA, 0x0B, 0x9C, 0xBD, 0x6E, 0x77,
-      0x71, 0x4A, 0xEA, 0xFB, 0x23, 0x49, 0xAB, 0x39, 0x3D, 0xA3 },
-    "MDsxGDAWBgNVBAoTD0N5YmVydHJ1c3QsIEluYzEfMB0GA1UEAxMWQ3liZXJ0cnVz"
-    "dCBHbG9iYWwgUm9vdA==",
-    "BAAAAAABD4WqLUg=",
-  },
-  {
     // CN=SwissSign Gold CA - G2,O=SwissSign AG,C=CH
     "2.16.756.1.89.1.2.1.1",
     "SwissSign EV OID",

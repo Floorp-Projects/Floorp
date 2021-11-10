@@ -2158,6 +2158,8 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
  protected:
   bool ShouldResistFingerprinting() const;
 
+  uint32_t GetPrincipalHashValue() const;
+
   // Prepare the context for capture before compositing
   void BeginComposition();
 

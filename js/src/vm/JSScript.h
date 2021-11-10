@@ -2002,7 +2002,7 @@ class JSScript : public js::BaseScript {
     return &gcthings()[index].as<JSObject>();
   }
 
-  JSObject* getObject(jsbytecode* pc) const {
+  JSObject* getObject(const jsbytecode* pc) const {
     MOZ_ASSERT(containsPC<js::GCThingIndex>(pc));
     return getObject(GET_GCTHING_INDEX(pc));
   }
@@ -2011,7 +2011,7 @@ class JSScript : public js::BaseScript {
     return &gcthings()[index].as<js::Shape>();
   }
 
-  js::Shape* getShape(jsbytecode* pc) const {
+  js::Shape* getShape(const jsbytecode* pc) const {
     MOZ_ASSERT(containsPC<js::GCThingIndex>(pc));
     return getShape(GET_GCTHING_INDEX(pc));
   }
@@ -2050,9 +2050,9 @@ class JSScript : public js::BaseScript {
   // The following 3 functions find the static scope just before the
   // execution of the instruction pointed to by pc.
 
-  js::Scope* lookupScope(jsbytecode* pc) const;
+  js::Scope* lookupScope(const jsbytecode* pc) const;
 
-  js::Scope* innermostScope(jsbytecode* pc) const;
+  js::Scope* innermostScope(const jsbytecode* pc) const;
   js::Scope* innermostScope() const { return innermostScope(main()); }
 
   /*

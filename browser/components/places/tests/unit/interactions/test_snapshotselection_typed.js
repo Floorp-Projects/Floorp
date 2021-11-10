@@ -12,8 +12,8 @@ const TEST_URL3 = "https://example.com/14235";
 const TEST_URL4 = "https://example.com/14345";
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  PageDataSchema: "resource:///modules/pagedata/PageDataSchema.jsm",
   PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
-  PageDataCollector: "resource:///modules/pagedata/PageDataCollector.jsm",
 });
 
 add_task(async () => {
@@ -24,14 +24,16 @@ add_task(async () => {
     { url: TEST_URL3, created_at: now - 3000 },
   ]);
 
-  PageDataService.pageDataDiscovered(TEST_URL1, [
-    {
-      type: PageDataCollector.DATA_TYPE.PRODUCT,
-      data: {
-        price: 276,
+  PageDataService.pageDataDiscovered({
+    url: TEST_URL1,
+    data: {
+      [PageDataSchema.DATA_TYPE.PRODUCT]: {
+        price: {
+          value: 276,
+        },
       },
     },
-  ]);
+  });
 
   await Snapshots.add({ url: TEST_URL1 });
   await Snapshots.add({ url: TEST_URL2 });
@@ -51,7 +53,7 @@ add_task(async () => {
   ]);
 
   snapshotPromise = selector.once("snapshots-updated");
-  selector.setType(PageDataCollector.DATA_TYPE.PRODUCT);
+  selector.setType(PageDataSchema.DATA_TYPE.PRODUCT);
   snapshots = await snapshotPromise;
 
   // Only finds the product snapshot.

@@ -29,8 +29,9 @@ class SharedMemoryBasic final
  public:
   SharedMemoryBasic() = default;
 
-  virtual bool SetHandle(const Handle& aHandle, OpenRights aRights) override {
-    return mSharedMemory.SetHandle(aHandle, aRights == RightsReadOnly);
+  virtual bool SetHandle(Handle aHandle, OpenRights aRights) override {
+    return mSharedMemory.SetHandle(std::move(aHandle),
+                                   aRights == RightsReadOnly);
   }
 
   virtual bool Create(size_t aNbytes) override {
@@ -72,10 +73,8 @@ class SharedMemoryBasic final
 
   virtual bool ShareToProcess(base::ProcessId aProcessId,
                               Handle* new_handle) override {
-    base::SharedMemoryHandle handle;
-    bool ret = mSharedMemory.ShareToProcess(aProcessId, &handle);
-    if (ret) *new_handle = handle;
-    return ret;
+    *new_handle = mSharedMemory.CloneHandle();
+    return base::SharedMemory::IsHandleValid(*new_handle);
   }
 
   static void* FindFreeAddressSpace(size_t size) {

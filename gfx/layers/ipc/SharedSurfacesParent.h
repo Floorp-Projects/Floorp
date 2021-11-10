@@ -48,7 +48,7 @@ class SharedSurfacesParent final {
   static bool Release(const wr::ExternalImageId& aId, bool aForCreator = false);
 
   static void Add(const wr::ExternalImageId& aId,
-                  const SurfaceDescriptorShared& aDesc, base::ProcessId aPid);
+                  SurfaceDescriptorShared&& aDesc, base::ProcessId aPid);
 
   static void Remove(const wr::ExternalImageId& aId);
 

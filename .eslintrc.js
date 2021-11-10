@@ -99,7 +99,6 @@ module.exports = {
         "mozilla/use-services": "warn",
         "mozilla/use-includes-instead-of-indexOf": "warn",
         "mozilla/no-compare-against-boolean-literals": "warn",
-        "mozilla/reject-importGlobalProperties": "warn",
       },
     },
     {

@@ -57,14 +57,14 @@ struct RepaintRequest {
         mTransformToAncestorScale(),
         mPaintRequestTime(),
         mScrollUpdateType(eNone),
+        mScrollAnimationType(APZScrollAnimationType::No),
         mIsRootContent(false),
-        mIsAnimationInProgress(false),
         mIsScrollInfoLayer(false) {}
 
   RepaintRequest(const FrameMetrics& aOther,
                  const ScreenMargin& aDisplayportMargins,
                  const ScrollOffsetUpdateType aScrollUpdateType,
-                 bool aIsAnimationInProgress)
+                 APZScrollAnimationType aScrollAnimationType)
       : mScrollId(aOther.GetScrollId()),
         mPresShellResolution(aOther.GetPresShellResolution()),
         mCompositionBounds(aOther.GetCompositionBounds()),
@@ -79,8 +79,8 @@ struct RepaintRequest {
         mTransformToAncestorScale(aOther.GetTransformToAncestorScale()),
         mPaintRequestTime(aOther.GetPaintRequestTime()),
         mScrollUpdateType(aScrollUpdateType),
+        mScrollAnimationType(aScrollAnimationType),
         mIsRootContent(aOther.IsRootContent()),
-        mIsAnimationInProgress(aIsAnimationInProgress),
         mIsScrollInfoLayer(aOther.IsScrollInfoLayer()) {}
 
   // Default copy ctor and operator= are fine
@@ -101,8 +101,8 @@ struct RepaintRequest {
            mTransformToAncestorScale == aOther.mTransformToAncestorScale &&
            mPaintRequestTime == aOther.mPaintRequestTime &&
            mScrollUpdateType == aOther.mScrollUpdateType &&
+           mScrollAnimationType == aOther.mScrollAnimationType &&
            mIsRootContent == aOther.mIsRootContent &&
-           mIsAnimationInProgress == aOther.mIsAnimationInProgress &&
            mIsScrollInfoLayer == aOther.mIsScrollInfoLayer;
   }
 
@@ -148,7 +148,9 @@ struct RepaintRequest {
     return mDevPixelsPerCSSPixel;
   }
 
-  bool IsAnimationInProgress() const { return mIsAnimationInProgress; }
+  bool IsAnimationInProgress() const {
+    return mScrollAnimationType != APZScrollAnimationType::No;
+  }
 
   bool IsRootContent() const { return mIsRootContent; }
 
@@ -184,11 +186,11 @@ struct RepaintRequest {
 
   bool IsScrollInfoLayer() const { return mIsScrollInfoLayer; }
 
- protected:
-  void SetIsAnimationInProgress(bool aInProgress) {
-    mIsAnimationInProgress = aInProgress;
+  APZScrollAnimationType GetScrollAnimationType() const {
+    return mScrollAnimationType;
   }
 
+ protected:
   void SetIsRootContent(bool aIsRootContent) {
     mIsRootContent = aIsRootContent;
   }
@@ -279,11 +281,10 @@ struct RepaintRequest {
   // The type of repaint request this represents.
   ScrollOffsetUpdateType mScrollUpdateType;
 
+  APZScrollAnimationType mScrollAnimationType;
+
   // Whether or not this is the root scroll frame for the root content document.
   bool mIsRootContent : 1;
-
-  // Whether or not we are in the middle of a scroll animation.
-  bool mIsAnimationInProgress : 1;
 
   // True if this scroll frame is a scroll info layer. A scroll info layer is
   // not layerized and its content cannot be truly async-scrolled, but its

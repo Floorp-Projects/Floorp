@@ -122,6 +122,31 @@ AVD_DICT = {
         ],
         False,
     ),
+    "arm64": AvdInfo(
+        "Android arm64",
+        "mozemulator-arm64",
+        [
+            "-skip-adb-auth",
+            "-verbose",
+            "-show-kernel",
+            "-ranchu",
+            "-selinux",
+            "permissive",
+            "-memory",
+            "3072",
+            "-cores",
+            "4",
+            "-skin",
+            "800x1280",
+            "-gpu",
+            "on",
+            "-no-snapstorage",
+            "-no-snapshot",
+            "-prop",
+            "ro.test_harness=true",
+        ],
+        False,
+    ),
     "x86_64": AvdInfo(
         "Android x86_64",
         "mozemulator-x86_64",
@@ -844,9 +869,10 @@ class AndroidEmulator(object):
         if requested in AVD_DICT.keys():
             return requested
         if self.substs:
-            if not self.substs["TARGET_CPU"].startswith("arm"):
-                return "x86_64"
-            else:
+            target_cpu = self.substs["TARGET_CPU"]
+            if target_cpu == "aarch64":
+                return "arm64"
+            elif target_cpu.startswith("arm"):
                 return "arm"
         return "x86_64"
 

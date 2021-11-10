@@ -6,7 +6,6 @@
 
 // eslint-disable-next-line mozilla/use-chromeutils-import
 Cu.import("resource://gre/modules/NetUtil.jsm");
-// eslint-disable-next-line mozilla/reject-importGlobalProperties
 Cu.importGlobalProperties(["URLSearchParams"]);
 
 function loadHTMLFromFile(path) {

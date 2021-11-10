@@ -11,37 +11,23 @@
 #include "base/process.h"
 #include "mozilla/UniquePtrExtensions.h"
 
-#ifdef XP_UNIX
-#  include "base/file_descriptor_posix.h"
-#endif
-
 namespace mozilla {
 namespace ipc {
 
 // This class is used by IPDL to share file descriptors across processes. When
-// sending a FileDescriptor IPDL will first duplicate a platform-specific file
-// handle type ('PlatformHandleType') into a handle that is valid in the other
-// process. Then IPDL will convert the duplicated handle into a type suitable
-// for pickling ('PickleType') and then send that through the IPC pipe. In the
-// receiving process the pickled data is converted into a platform-specific file
-// handle and then returned to the receiver.
+// sending a FileDescriptor, IPDL will transfer a duplicate of the handle into
+// the remote process.
 //
 // To use this class add 'FileDescriptor' as an argument in the IPDL protocol
-// and then pass a file descriptor from C++ to the Call/Send method. The
-// Answer/Recv method will receive a FileDescriptor& on which PlatformHandle()
-// can be called to return the platform file handle.
+// and then pass a file descriptor from C++ to the Send method. The Recv method
+// will receive a FileDescriptor& on which PlatformHandle() can be called to
+// return the platform file handle.
 class FileDescriptor {
  public:
   typedef base::ProcessId ProcessId;
 
   using UniquePlatformHandle = mozilla::UniqueFileHandle;
   using PlatformHandleType = UniquePlatformHandle::ElementType;
-
-#ifdef XP_WIN
-  typedef PlatformHandleType PickleType;
-#else
-  typedef base::FileDescriptor PickleType;
-#endif
 
   // This should only ever be created by IPDL.
   struct IPDLPrivate {};
@@ -60,20 +46,11 @@ class FileDescriptor {
 
   explicit FileDescriptor(UniquePlatformHandle&& aHandle);
 
-  // This constructor WILL NOT duplicate the handle.
-  // FileDescriptor takes the ownership from IPC message.
-  FileDescriptor(const IPDLPrivate&, const PickleType& aPickle);
-
   ~FileDescriptor();
 
   FileDescriptor& operator=(const FileDescriptor& aOther);
 
   FileDescriptor& operator=(FileDescriptor&& aOther);
-
-  // Performs platform-specific actions to duplicate mHandle in the other
-  // process (e.g. dup() on POSIX, DuplicateHandle() on Windows). Returns a
-  // pickled value that can be passed to the other process via IPC.
-  PickleType ShareTo(const IPDLPrivate&, ProcessId aTargetPid) const;
 
   // Tests mHandle against a well-known invalid platform-specific file handle
   // (e.g. -1 on POSIX, INVALID_HANDLE_VALUE on Windows).

@@ -536,13 +536,13 @@ def gradle_install_REMOVED(command_context):
 @CommandArgument(
     "--version",
     metavar="VERSION",
-    choices=["arm", "x86_64"],
+    choices=["arm", "arm64", "x86_64"],
     help="Specify which AVD to run in emulator. "
-    'One of "arm" (Android supporting armv7 binaries), or '
+    'One of "arm" (Android supporting armv7 binaries), '
+    '"arm64" (for Apple Silicon), or '
     '"x86_64" (Android supporting x86 or x86_64 binaries, '
     "recommended for most applications). "
-    'By default, "arm" will be used if the current build environment '
-    'architecture is arm; otherwise "x86_64".',
+    "By default, the value will match the current build environment.",
 )
 @CommandArgument("--wait", action="store_true", help="Wait for emulator to be closed.")
 @CommandArgument("--gpu", help="Over-ride the emulator -gpu argument.")

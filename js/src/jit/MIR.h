@@ -6451,20 +6451,15 @@ class MSpectreMaskIndex
   ALLOW_CLONE(MSpectreMaskIndex)
 };
 
-// Load a value from a dense array's element vector and does a hole check if the
-// array is not known to be packed.
+// Load a value from a dense array's element vector. Bails out if the element is
+// a hole.
 class MLoadElement : public MBinaryInstruction, public NoTypePolicy::Data {
-  bool needsHoleCheck_;
-
-  MLoadElement(MDefinition* elements, MDefinition* index, bool needsHoleCheck)
-      : MBinaryInstruction(classOpcode, elements, index),
-        needsHoleCheck_(needsHoleCheck) {
-    if (needsHoleCheck) {
-      // Uses may be optimized away based on this instruction's result
-      // type. This means it's invalid to DCE this instruction, as we
-      // have to invalidate when we read a hole.
-      setGuard();
-    }
+  MLoadElement(MDefinition* elements, MDefinition* index)
+      : MBinaryInstruction(classOpcode, elements, index) {
+    // Uses may be optimized away based on this instruction's result
+    // type. This means it's invalid to DCE this instruction, as we
+    // have to invalidate when we read a hole.
+    setGuard();
     setResultType(MIRType::Value);
     setMovable();
     MOZ_ASSERT(elements->type() == MIRType::Elements);
@@ -6476,18 +6471,8 @@ class MLoadElement : public MBinaryInstruction, public NoTypePolicy::Data {
   TRIVIAL_NEW_WRAPPERS
   NAMED_OPERANDS((0, elements), (1, index))
 
-  bool needsHoleCheck() const { return needsHoleCheck_; }
-  bool fallible() const { return needsHoleCheck(); }
-
   bool congruentTo(const MDefinition* ins) const override {
-    if (!ins->isLoadElement()) {
-      return false;
-    }
-    const MLoadElement* other = ins->toLoadElement();
-    if (needsHoleCheck() != other->needsHoleCheck()) {
-      return false;
-    }
-    return congruentIfOperandsEqual(other);
+    return congruentIfOperandsEqual(ins);
   }
   AliasType mightAlias(const MDefinition* store) const override;
   MDefinition* foldsTo(TempAllocator& alloc) override;
@@ -7209,6 +7194,10 @@ class MLoadDynamicSlotAndUnbox : public MUnaryInstruction,
   AliasSet getAliasSet() const override {
     return AliasSet::Load(AliasSet::DynamicSlot);
   }
+
+#ifdef JS_JITSPEW
+  void printOpcode(GenericPrinter& out) const override;
+#endif
 
   ALLOW_CLONE(MLoadDynamicSlotAndUnbox);
 };

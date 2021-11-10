@@ -56,7 +56,8 @@ add_task(async function test_onboarding() {
         false,
       ],
       ["browser.urlbar.quicksuggest.seenRestarts", 0],
-      ["browser.urlbar.suggest.quicksuggest", false],
+      ["browser.urlbar.quicksuggest.dataCollection.enabled", false],
+      ["browser.urlbar.suggest.quicksuggest.nonsponsored", false],
       ["browser.urlbar.suggest.quicksuggest.sponsored", false],
     ],
   });
@@ -95,6 +96,9 @@ add_task(async function test_onboarding() {
   UrlbarPrefs.clear("quicksuggest.shouldShowOnboardingDialog");
   UrlbarPrefs.clear("quicksuggest.showedOnboardingDialog");
   UrlbarPrefs.clear("quicksuggest.seenRestarts");
+  UrlbarPrefs.clear("quicksuggest.dataCollection.enabled");
+  UrlbarPrefs.clear("suggest.quicksuggest.nonsponsored");
+  UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
 });
 
 // Tests a sponsored result and keyword highlighting.

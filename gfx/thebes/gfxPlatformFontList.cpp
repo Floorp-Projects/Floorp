@@ -2777,7 +2777,7 @@ base::SharedMemoryHandle gfxPlatformFontList::ShareShmBlockToProcess(
 void gfxPlatformFontList::ShmBlockAdded(uint32_t aGeneration, uint32_t aIndex,
                                         base::SharedMemoryHandle aHandle) {
   if (SharedFontList()) {
-    SharedFontList()->ShmBlockAdded(aGeneration, aIndex, aHandle);
+    SharedFontList()->ShmBlockAdded(aGeneration, aIndex, std::move(aHandle));
   }
 }
 

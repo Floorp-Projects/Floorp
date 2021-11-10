@@ -379,15 +379,7 @@ class Enumeration {
     return *this;
   }
 
-  // TODO(#1715800) - Extending from std::iterator was deprecated in C++17.
-  // Instead define the iterator traits directly in the class.
-  class Iterator
-      : public std::iterator<std::input_iterator_tag,
-                             const CharType*,  // "value_type"
-                             void,             // "difference_type" (unused)
-                             void,             // "pointer" (unused)
-                             T  // "reference" - Value returned in iterator
-                             > {
+  class Iterator {
     Enumeration& mEnumeration;
     // `Nothing` signifies that no enumeration has been loaded through ICU yet.
     Maybe<int32_t> mIteration = Nothing{};
@@ -395,6 +387,10 @@ class Enumeration {
     int32_t mNextLength = 0;
 
    public:
+    using value_type = const CharType*;
+    using reference = T;
+    using iterator_category = std::input_iterator_tag;
+
     explicit Iterator(Enumeration& aEnumeration, bool aIsBegin)
         : mEnumeration(aEnumeration) {
       if (aIsBegin) {
