@@ -42,7 +42,7 @@ const UI_BASE_URL_PREF = "devtools.performance.recording.ui-base-url";
 const UI_BASE_URL_PATH_PREF = "devtools.performance.recording.ui-base-url-path";
 
 const UI_BASE_URL_DEFAULT = "https://profiler.firefox.com";
-const UI_BASE_URL_PATH_DEFAULT = "/from-addon";
+const UI_BASE_URL_PATH_DEFAULT = "/from-browser";
 
 /**
  * This file contains all of the privileged browser-specific functionality. This helps
