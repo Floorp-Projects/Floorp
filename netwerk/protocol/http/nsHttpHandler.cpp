@@ -1358,10 +1358,10 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
   }
 
   if (PREF_CHANGED(HTTP_PREF("spdy.chunk-size"))) {
-    // keep this within http/2 ranges of 1 to 2^14-1
+    // keep this within http/2 ranges of 1 to 2^24-1
     rv = Preferences::GetInt(HTTP_PREF("spdy.chunk-size"), &val);
     if (NS_SUCCEEDED(rv)) {
-      mSpdySendingChunkSize = (uint32_t)clamped(val, 1, 0x3fff);
+      mSpdySendingChunkSize = (uint32_t)clamped(val, 1, 0xffffff);
     }
   }
 
