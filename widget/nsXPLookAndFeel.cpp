@@ -1271,7 +1271,7 @@ uint32_t LookAndFeel::GetPasswordMaskDelay() {
 }
 
 bool LookAndFeel::DrawInTitlebar() {
-  switch (StaticPrefs::browser_tabs_drawInTitlebar()) {
+  switch (StaticPrefs::browser_tabs_inTitlebar()) {
     case 0:
       return false;
     case 1:
