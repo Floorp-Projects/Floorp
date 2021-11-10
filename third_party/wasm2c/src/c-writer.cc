@@ -1440,6 +1440,7 @@ void CWriter::Write(const Func& func) {
     Write(GetFuncStaticOrExport(out_func_name), "u32 w2c_dlmalloc(wasm2c_sandbox_t* const sbx, u32 ptr_size) ", OpenBrace());
     Write("u32 ret = w2c_dlmalloc_wrapped(sbx, ptr_size);", Newline());
     Write("WASM2C_SHADOW_MEMORY_DLMALLOC(&(sbx->", memory_name, "), ret, ptr_size);", Newline());
+    Write("WASM2C_MALLOC_FAIL_CHECK(ret, ptr_size);", Newline());
     Write("return ret;", Newline());
     Write(CloseBrace());
   } else if (out_func_name == "w2c_dlfree") {
