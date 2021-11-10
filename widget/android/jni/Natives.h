@@ -8,13 +8,12 @@
 #define mozilla_jni_Natives_h__
 
 #include <jni.h>
-
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/RWLock.h"
-#include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
@@ -1181,7 +1180,7 @@ class ProxyNativeCall {
   // Saved this arg.
   typename ThisArgClass::GlobalRef mThisArg;
   // Saved arguments.
-  mozilla::Tuple<typename ProxyArg<Args>::Type...> mArgs;
+  std::tuple<typename ProxyArg<Args>::Type...> mArgs;
 
   // We cannot use IsStatic and HasThisArg directly (without going through
   // extra hoops) because GCC complains about invalid overloads, so we use
@@ -1190,13 +1189,13 @@ class ProxyNativeCall {
   template <bool Static, bool ThisArg, size_t... Indices>
   std::enable_if_t<Static && ThisArg, void> Call(
       const Class::LocalRef& cls, std::index_sequence<Indices...>) const {
-    (*mNativeCall)(cls, mozilla::Get<Indices>(mArgs)...);
+    (*mNativeCall)(cls, std::get<Indices>(mArgs)...);
   }
 
   template <bool Static, bool ThisArg, size_t... Indices>
   std::enable_if_t<Static && !ThisArg, void> Call(
       const Class::LocalRef& cls, std::index_sequence<Indices...>) const {
-    (*mNativeCall)(mozilla::Get<Indices>(mArgs)...);
+    (*mNativeCall)(std::get<Indices>(mArgs)...);
   }
 
   template <bool Static, bool ThisArg, size_t... Indices>
@@ -1205,7 +1204,7 @@ class ProxyNativeCall {
       std::index_sequence<Indices...>) const {
     auto impl = NativePtrTraits<Impl>::Access(NativePtrTraits<Impl>::Get(inst));
     MOZ_CATCH_JNI_EXCEPTION(inst.Env());
-    (impl->*mNativeCall)(inst, mozilla::Get<Indices>(mArgs)...);
+    (impl->*mNativeCall)(inst, std::get<Indices>(mArgs)...);
   }
 
   template <bool Static, bool ThisArg, size_t... Indices>
@@ -1214,12 +1213,13 @@ class ProxyNativeCall {
       std::index_sequence<Indices...>) const {
     auto impl = NativePtrTraits<Impl>::Access(NativePtrTraits<Impl>::Get(inst));
     MOZ_CATCH_JNI_EXCEPTION(inst.Env());
-    (impl->*mNativeCall)(mozilla::Get<Indices>(mArgs)...);
+    (impl->*mNativeCall)(std::get<Indices>(mArgs)...);
   }
 
   template <size_t... Indices>
   void Clear(JNIEnv* env, std::index_sequence<Indices...>) {
-    int dummy[] = {(ProxyArg<Args>::Clear(env, Get<Indices>(mArgs)), 0)...};
+    int dummy[] = {
+        (ProxyArg<Args>::Clear(env, std::get<Indices>(mArgs)), 0)...};
     mozilla::Unused << dummy;
   }
 
