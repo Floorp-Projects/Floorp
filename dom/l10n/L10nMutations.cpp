@@ -7,7 +7,10 @@
 #include "L10nMutations.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "nsRefreshDriver.h"
+#include "mozilla/intl/Localization.h"
 
+using namespace mozilla;
+using namespace mozilla::intl;
 using namespace mozilla::dom;
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(L10nMutations)
@@ -124,6 +127,44 @@ void L10nMutations::WillRefresh(mozilla::TimeStamp aTime) {
   FlushPendingTranslations();
 }
 
+/**
+ * The handler for the `TranslateElements` promise used to turn
+ * a potential rejection into a console warning.
+ **/
+class L10nMutationFinalizationHandler final : public PromiseNativeHandler {
+ public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(L10nMutationFinalizationHandler)
+
+  explicit L10nMutationFinalizationHandler(nsIGlobalObject* aGlobal)
+      : mGlobal(aGlobal) {}
+
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+  }
+
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
+    nsTArray<nsCString> errors{
+        "[dom/l10n] Errors during l10n mutation frame."_ns,
+    };
+    IgnoredErrorResult rv;
+    MaybeReportErrorsToGecko(errors, rv, mGlobal);
+  }
+
+ private:
+  ~L10nMutationFinalizationHandler() = default;
+
+  nsCOMPtr<nsIGlobalObject> mGlobal;
+};
+
+NS_IMPL_CYCLE_COLLECTION(L10nMutationFinalizationHandler, mGlobal)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(L10nMutationFinalizationHandler)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(L10nMutationFinalizationHandler)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(L10nMutationFinalizationHandler)
+
 void L10nMutations::FlushPendingTranslations() {
   if (!mDOMLocalization) {
     return;
@@ -147,6 +188,10 @@ void L10nMutations::FlushPendingTranslations() {
   mPendingElements.Clear();
 
   RefPtr<Promise> promise = mDOMLocalization->TranslateElements(elements, rv);
+
+  RefPtr<PromiseNativeHandler> l10nMutationFinalizationHandler =
+      new L10nMutationFinalizationHandler(mDOMLocalization->GetParentObject());
+  promise->AppendNativeHandler(l10nMutationFinalizationHandler);
 }
 
 void L10nMutations::Disconnect() {
