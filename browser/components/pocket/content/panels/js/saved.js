@@ -1,13 +1,13 @@
 /* global Handlebars:false */
+/* import-globals-from messages.js */
+/* import-globals-from main.js */
 
 /*
-SavedOverlay is the view itself and contains all of the methods to manipute the overlay and messaging.
+PKT_PANEL_OVERLAY is the view itself and contains all of the methods to manipute the overlay and messaging.
 It does not contain any logic for saving or communication with the extension or server.
 */
 
-import pktPanelMessaging from "../messages.js";
-
-var SavedOverlay = function(options) {
+var PKT_PANEL_OVERLAY = function(options) {
   var myself = this;
 
   this.inited = false;
@@ -442,12 +442,9 @@ var SavedOverlay = function(options) {
       });
   };
   this.initOpenListInput = function() {
-    pktPanelMessaging.clickHelper(
-      document.querySelector(`.pkt_ext_openpocket`),
-      {
-        source: `view_list`,
-      }
-    );
+    thePKT_PANEL.clickHelper(document.querySelector(`.pkt_ext_openpocket`), {
+      source: `view_list`,
+    });
   };
 
   this.showTagsLocalizedError = function(l10nId) {
@@ -571,12 +568,9 @@ var SavedOverlay = function(options) {
         .querySelector(`.pkt_ext_item_recs`)
         .append(myself.parseHTML(renderedRecs));
 
-      pktPanelMessaging.clickHelper(
-        document.querySelector(`.pkt_ext_learn_more`),
-        {
-          source: `recs_learn_more`,
-        }
-      );
+      thePKT_PANEL.clickHelper(document.querySelector(`.pkt_ext_learn_more`), {
+        source: `recs_learn_more`,
+      });
 
       document
         .querySelectorAll(`.pkt_ext_item_recs_link`)
@@ -651,7 +645,7 @@ var SavedOverlay = function(options) {
   };
 };
 
-SavedOverlay.prototype = {
+PKT_PANEL_OVERLAY.prototype = {
   create() {
     if (this.active) {
       return;
@@ -752,5 +746,3 @@ SavedOverlay.prototype = {
     pktPanelMessaging.sendMessage("PKT_show_saved");
   },
 };
-
-export default SavedOverlay;
