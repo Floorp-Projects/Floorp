@@ -345,16 +345,19 @@ class FirefoxLauncher implements ProductLauncher {
   }
 
   defaultArgs(options: BrowserLaunchArgumentOptions = {}): string[] {
-    const firefoxArguments = ['--no-remote', '--foreground'];
-    if (os.platform().startsWith('win')) {
-      firefoxArguments.push('--wait-for-browser');
-    }
     const {
       devtools = false,
       headless = !devtools,
       args = [],
       userDataDir = null,
     } = options;
+
+    const firefoxArguments = ['--no-remote'];
+
+    if (os.platform() === 'darwin') firefoxArguments.push('--foreground');
+    else if (os.platform().startsWith('win')) {
+      firefoxArguments.push('--wait-for-browser');
+    }
     if (userDataDir) {
       firefoxArguments.push('--profile');
       firefoxArguments.push(userDataDir);
