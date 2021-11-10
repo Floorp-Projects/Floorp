@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <algorithm>
 #include <android/log.h>
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
@@ -12,18 +13,56 @@
 #include <type_traits>
 #include <unistd.h>
 
+#include "AndroidGraphics.h"
+#include "AndroidBridge.h"
+#include "AndroidBridgeUtilities.h"
+#include "AndroidContentController.h"
+#include "AndroidUiThread.h"
+#include "AndroidView.h"
+#include "gfxContext.h"
+#include "GeckoEditableSupport.h"
+#include "GeckoViewSupport.h"
+#include "GLContext.h"
+#include "GLContextProvider.h"
+#include "JavaBuiltins.h"
+#include "JavaExceptions.h"
+#include "KeyEvent.h"
+#include "Layers.h"
+#include "MotionEvent.h"
+#include "ScopedGLHelpers.h"
+#include "ScreenHelperAndroid.h"
+#include "TouchResampler.h"
+#include "WidgetUtils.h"
+#include "WindowRenderer.h"
+
+#include "nsAppShell.h"
+#include "nsContentUtils.h"
+#include "nsFocusManager.h"
+#include "nsGkAtoms.h"
+#include "nsGfxCIID.h"
+#include "nsLayoutUtils.h"
+#include "nsNetUtil.h"
+#include "nsPrintfCString.h"
+#include "nsString.h"
+#include "nsTArray.h"
+#include "nsThreadUtils.h"
+#include "nsUserIdleService.h"
+#include "nsViewManager.h"
+#include "nsWidgetsCID.h"
+#include "nsWindow.h"
+
+#include "nsIWidgetListener.h"
+#include "nsIWindowWatcher.h"
+#include "nsIAppWindow.h"
+
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_android.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/TouchEvents.h"
-#include "mozilla/Unused.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/WheelHandlingHelper.h"  // for WheelDeltaAdjustmentStrategy
-
-#include "mozilla/Preferences.h"
-#include "mozilla/Unused.h"
 #include "mozilla/a11y/SessionAccessibility.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
@@ -34,65 +73,7 @@
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/gfx/Types.h"
-#include "mozilla/layers/LayersTypes.h"
-#include "mozilla/widget/AndroidVsync.h"
-#include <algorithm>
-
-using mozilla::Unused;
-using mozilla::dom::ContentChild;
-using mozilla::dom::ContentParent;
-using mozilla::gfx::DataSourceSurface;
-using mozilla::gfx::IntSize;
-using mozilla::gfx::Matrix;
-using mozilla::gfx::SurfaceFormat;
-
-#include "nsWindow.h"
-
-#include "AndroidGraphics.h"
-#include "JavaExceptions.h"
-
-#include "nsIWidgetListener.h"
-#include "nsIWindowWatcher.h"
-#include "nsIAppWindow.h"
-
-#include "nsAppShell.h"
-#include "nsFocusManager.h"
-#include "nsUserIdleService.h"
-#include "nsLayoutUtils.h"
-#include "nsNetUtil.h"
-#include "nsViewManager.h"
-
-#include "WidgetUtils.h"
-#include "nsContentUtils.h"
-
-#include "nsGfxCIID.h"
-#include "nsGkAtoms.h"
-#include "nsWidgetsCID.h"
-
-#include "gfxContext.h"
-
-#include "AndroidContentController.h"
-#include "GLContext.h"
-#include "GLContextProvider.h"
-#include "Layers.h"
-#include "WindowRenderer.h"
-#include "ScopedGLHelpers.h"
-#include "mozilla/layers/APZEventState.h"
-#include "mozilla/layers/APZInputBridge.h"
-#include "mozilla/layers/APZThreadUtils.h"
-#include "mozilla/layers/CompositorOGL.h"
-#include "mozilla/layers/IAPZCTreeManager.h"
-
-#include "nsTArray.h"
-
-#include "AndroidBridge.h"
-#include "AndroidBridgeUtilities.h"
-#include "AndroidUiThread.h"
-#include "AndroidView.h"
-#include "GeckoEditableSupport.h"
-#include "GeckoViewSupport.h"
-#include "KeyEvent.h"
-#include "MotionEvent.h"
+#include "mozilla/ipc/Shmem.h"
 #include "mozilla/java/EventDispatcherWrappers.h"
 #include "mozilla/java/GeckoAppShellWrappers.h"
 #include "mozilla/java/GeckoEditableChildWrappers.h"
@@ -101,16 +82,17 @@ using mozilla::gfx::SurfaceFormat;
 #include "mozilla/java/GeckoSystemStateListenerWrappers.h"
 #include "mozilla/java/PanZoomControllerNatives.h"
 #include "mozilla/java/SessionAccessibilityWrappers.h"
-#include "ScreenHelperAndroid.h"
-#include "TouchResampler.h"
-
+#include "mozilla/layers/APZEventState.h"
+#include "mozilla/layers/APZInputBridge.h"
+#include "mozilla/layers/APZThreadUtils.h"
+#include "mozilla/layers/CompositorBridgeChild.h"
+#include "mozilla/layers/CompositorOGL.h"
+#include "mozilla/layers/CompositorSession.h"
+#include "mozilla/layers/LayersTypes.h"
+#include "mozilla/layers/UiCompositorControllerChild.h"
+#include "mozilla/layers/IAPZCTreeManager.h"
 #include "mozilla/ProfilerLabels.h"
-#include "nsPrintfCString.h"
-#include "nsString.h"
-
-#include "JavaBuiltins.h"
-
-#include "mozilla/ipc/Shmem.h"
+#include "mozilla/widget/AndroidVsync.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -118,12 +100,13 @@ using namespace mozilla::layers;
 using namespace mozilla::widget;
 using namespace mozilla::ipc;
 
+using mozilla::dom::ContentChild;
+using mozilla::dom::ContentParent;
+using mozilla::gfx::DataSourceSurface;
+using mozilla::gfx::IntSize;
+using mozilla::gfx::Matrix;
+using mozilla::gfx::SurfaceFormat;
 using mozilla::java::GeckoSession;
-
-#include "mozilla/layers/CompositorBridgeChild.h"
-#include "mozilla/layers/CompositorSession.h"
-#include "mozilla/layers/UiCompositorControllerChild.h"
-#include "nsThreadUtils.h"
 
 // All the toplevel windows that have been created; these are in
 // stacking order, so the window at gTopLevelWindows[0] is the topmost
@@ -716,9 +699,7 @@ class NPZCSupport final
     MOZ_ASSERT(toolMinor.Length() == pointerCount);
 
     for (size_t i = startIndex; i < endIndex; i++) {
-      float orien;
-      ScreenSize radius;
-      std::tie(orien, radius) = ConvertOrientationAndRadius(
+      auto [orien, radius] = ConvertOrientationAndRadius(
           orientation[i], toolMajor[i], toolMinor[i]);
 
       ScreenIntPoint point(int32_t(floorf(x[i])), int32_t(floorf(y[i])));
@@ -728,12 +709,9 @@ class NPZCSupport final
       for (size_t historyIndex = 0; historyIndex < historySize;
            historyIndex++) {
         size_t historicalI = historyIndex * pointerCount + i;
-        float historicalAngle;
-        ScreenSize historicalRadius;
-        std::tie(historicalAngle, historicalRadius) =
-            ConvertOrientationAndRadius(historicalOrientation[historicalI],
-                                        historicalToolMajor[historicalI],
-                                        historicalToolMinor[historicalI]);
+        auto [historicalAngle, historicalRadius] = ConvertOrientationAndRadius(
+            historicalOrientation[historicalI],
+            historicalToolMajor[historicalI], historicalToolMinor[historicalI]);
         ScreenIntPoint historicalPoint(
             int32_t(floorf(historicalX[historicalI])),
             int32_t(floorf(historicalY[historicalI])));
