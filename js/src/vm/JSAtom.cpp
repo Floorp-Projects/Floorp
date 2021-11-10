@@ -596,7 +596,7 @@ bool AtomsTable::sweepIncrementally(SweepIterator& atomsToSweep,
     AtomStateEntry entry = atomsToSweep.front();
     JSAtom* atom = entry.asPtrUnbarriered();
     MOZ_DIAGNOSTIC_ASSERT(atom);
-    if (IsAboutToBeFinalizedUnbarriered(&atom)) {
+    if (IsAboutToBeFinalizedUnbarriered(atom)) {
       MOZ_ASSERT(!entry.isPinned());
       atomsToSweep.removeFront();
     } else {
@@ -770,7 +770,7 @@ MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
     if (!p) {
       if (AtomSet::AddPtr p2 = atoms.lookupForAdd(lookup)) {
         JSAtom* atom = p2->asPtrUnbarriered();
-        if (!IsAboutToBeFinalizedUnbarriered(&atom)) {
+        if (!IsAboutToBeFinalizedUnbarriered(atom)) {
           p = p2;
         }
       }
