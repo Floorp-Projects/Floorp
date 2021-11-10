@@ -2506,7 +2506,7 @@ pub extern "C" fn Servo_StyleRule_SetSelectorText(
         let parser = SelectorParser {
             stylesheet_origin: contents.origin,
             namespaces: &namespaces,
-            url_data: Some(&url_data),
+            url_data: &url_data,
         };
 
         let mut parser_input = ParserInput::new(&value_str);
@@ -6638,11 +6638,18 @@ pub extern "C" fn Servo_HasPendingRestyleAncestor(
 #[no_mangle]
 pub unsafe extern "C" fn Servo_SelectorList_Parse(
     selector_list: &nsACString,
+    is_chrome: bool,
 ) -> OwnedOrNull<RawServoSelectorList> {
     use style::selector_parser::SelectorParser;
 
+    let url_data = UrlExtraData::from_ptr_ref(if is_chrome {
+        &DUMMY_CHROME_URL_DATA
+    } else {
+        &DUMMY_URL_DATA
+    });
+
     let input = selector_list.as_str_unchecked();
-    let selector_list = match SelectorParser::parse_author_origin_no_namespace(&input) {
+    let selector_list = match SelectorParser::parse_author_origin_no_namespace(&input, url_data) {
         Ok(selector_list) => selector_list,
         Err(..) => return OwnedOrNull::null(),
     };
