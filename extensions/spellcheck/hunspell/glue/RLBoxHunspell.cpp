@@ -59,8 +59,9 @@ RLBoxHunspell::RLBoxHunspell(const nsAutoCString& affpath,
   MOZ_RELEASE_ASSERT(dictSize >= 0);
 
   // Next, we compute the expected memory needed for hunspell spell checking.
-  // This seems to be about 7x the size of the dictionary (See Bug 1739669)
-  const uint64_t expectedMaxMemory = 7 * dictSize;
+  // This seems to be about 6 to 7x the size of the dictionary (See Bug 1739669)
+  // We have chosen 6.4x i.e. a 10mb dictionary will take about 64mb of memory.
+  const uint64_t expectedMaxMemory = static_cast<uint64_t>(6.4 * dictSize);
 
   // If we expect a higher memory usage, override the defaults
   // else stick with the defaults for the sandbox
