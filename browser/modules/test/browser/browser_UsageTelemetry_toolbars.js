@@ -112,7 +112,7 @@ function organizeToolbars(state = {}) {
   );
 
   Services.prefs.setIntPref(
-    "browser.tabs.drawInTitlebar",
+    "browser.tabs.inTitlebar",
     !targetState.titlebarVisible
   );
 

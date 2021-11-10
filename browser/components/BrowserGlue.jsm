@@ -3338,7 +3338,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 119;
+    const UI_VERSION = 120;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     const PROFILE_DIR = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
@@ -4004,6 +4004,28 @@ BrowserGlue.prototype = {
             "likely because the upgrader is being run from an xpcshell test where " +
             "the AddonManager is not initialized."
         );
+      }
+    }
+
+    if (currentUIVersion < 120) {
+      // Migrate old titlebar bool pref to new int-based one.
+      const oldPref = "browser.tabs.drawInTitlebar";
+      const newPref = "browser.tabs.inTitlebar";
+      if (Services.prefs.prefHasUserValue(oldPref)) {
+        // We may have int prefs for builds between bug 1736518 and bug 1739539.
+        const oldPrefType = Services.prefs.getPrefType(oldPref);
+        if (oldPrefType == Services.prefs.PREF_BOOL) {
+          Services.prefs.setIntPref(
+            newPref,
+            Services.prefs.getBoolPref(oldPref) ? 1 : 0
+          );
+        } else {
+          Services.prefs.setIntPref(
+            newPref,
+            Services.prefs.getIntPref(oldPref)
+          );
+        }
+        Services.prefs.clearUserPref(oldPref);
       }
     }
 
