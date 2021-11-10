@@ -253,8 +253,6 @@ nsresult HeadlessLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 0;
       break;
     default:
-      NS_WARNING(
-          "HeadlessLookAndFeel::NativeGetInt called with an unrecognized aID");
       aResult = 0;
       res = NS_ERROR_FAILURE;
       break;
@@ -279,9 +277,6 @@ nsresult HeadlessLookAndFeel::NativeGetFloat(FloatID aID, float& aResult) {
       res = NS_ERROR_FAILURE;
       break;
     default:
-      NS_WARNING(
-          "HeadlessLookAndFeel::NativeGetFloat called with an unrecognized "
-          "aID");
       aResult = -1.0;
       res = NS_ERROR_FAILURE;
       break;
