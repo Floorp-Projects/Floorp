@@ -20,6 +20,11 @@
   font: message-box;
 }
 
+.autoscroller::part(content) {
+  box-shadow: none;
+  margin: 0;
+}
+
 /* ::::: Alert icons :::::*/
 
 .message-icon {
