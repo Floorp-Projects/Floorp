@@ -43,6 +43,16 @@ add_task(async function() {
   const evaluationContextSelectorButton = hud.ui.outputNode.querySelector(
     ".webconsole-evaluation-selector-button"
   );
+
+  if (!isFissionEnabled() && !isEveryFrameTargetEnabled()) {
+    is(
+      evaluationContextSelectorButton,
+      null,
+      "context selector is only displayed when Fission or EFT is enabled"
+    );
+    return;
+  }
+
   await waitFor(
     () => evaluationContextSelectorButton.innerText.includes("example.org"),
     "The context selector wasn't updated"

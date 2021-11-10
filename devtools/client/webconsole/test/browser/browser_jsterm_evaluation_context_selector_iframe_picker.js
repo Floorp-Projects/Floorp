@@ -25,19 +25,13 @@ add_task(async function() {
   info("Wait until the iframe picker button is displayed");
   try {
     await waitFor(() => getFramesButton(hud.toolbox));
-    if (isFissionEnabled() && !isEveryFrameTargetEnabled()) {
-      todo(
-        true,
-        "iframe picker should only display remote frames when EFT is enabled"
-      );
-      return;
-    }
+    ok(
+      !isFissionEnabled() || isEveryFrameTargetEnabled(),
+      "iframe picker should only display remote frames when EFT is enabled"
+    );
   } catch (e) {
     if (isFissionEnabled() && !isEveryFrameTargetEnabled()) {
-      todo(
-        false,
-        "iframe picker displays remote frames only when EFT is enabled"
-      );
+      ok(true, "iframe picker displays remote frames only when EFT is enabled");
       return;
     }
     throw e;
