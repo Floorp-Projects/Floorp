@@ -124,14 +124,12 @@ ScaledFontMac::ScaledFontMac(CGFontRef aFont,
                              const RefPtr<UnscaledFont>& aUnscaledFont,
                              Float aSize, bool aOwnsFont,
                              const DeviceColor& aFontSmoothingBackgroundColor,
-                             bool aUseFontSmoothing, bool aApplySyntheticBold,
-                             bool aHasColorGlyphs)
+                             bool aUseFontSmoothing, bool aApplySyntheticBold)
     : ScaledFontBase(aUnscaledFont, aSize),
       mFont(aFont),
       mFontSmoothingBackgroundColor(aFontSmoothingBackgroundColor),
       mUseFontSmoothing(aUseFontSmoothing),
-      mApplySyntheticBold(aApplySyntheticBold),
-      mHasColorGlyphs(aHasColorGlyphs) {
+      mApplySyntheticBold(aApplySyntheticBold) {
   if (!aOwnsFont) {
     // XXX: should we be taking a reference
     CGFontRetain(aFont);
@@ -145,14 +143,12 @@ ScaledFontMac::ScaledFontMac(CGFontRef aFont,
 ScaledFontMac::ScaledFontMac(CTFontRef aFont,
                              const RefPtr<UnscaledFont>& aUnscaledFont,
                              const DeviceColor& aFontSmoothingBackgroundColor,
-                             bool aUseFontSmoothing, bool aApplySyntheticBold,
-                             bool aHasColorGlyphs)
+                             bool aUseFontSmoothing, bool aApplySyntheticBold)
     : ScaledFontBase(aUnscaledFont, CTFontGetSize(aFont)),
       mCTFont(aFont),
       mFontSmoothingBackgroundColor(aFontSmoothingBackgroundColor),
       mUseFontSmoothing(aUseFontSmoothing),
-      mApplySyntheticBold(aApplySyntheticBold),
-      mHasColorGlyphs(aHasColorGlyphs) {
+      mApplySyntheticBold(aApplySyntheticBold) {
   mFont = CTFontCopyGraphicsFont(aFont, nullptr);
 
   CFRetain(mCTFont);
@@ -452,9 +448,6 @@ bool ScaledFontMac::GetWRFontInstanceOptions(
   if (mApplySyntheticBold) {
     options.flags |= wr::FontInstanceFlags::SYNTHETIC_BOLD;
   }
-  if (mHasColorGlyphs) {
-    options.flags |= wr::FontInstanceFlags::EMBEDDED_BITMAPS;
-  }
   options.bg_color = wr::ToColorU(mFontSmoothingBackgroundColor);
   options.synthetic_italics =
       wr::DegreesToSyntheticItalics(GetSyntheticObliqueAngle());
@@ -465,18 +458,13 @@ bool ScaledFontMac::GetWRFontInstanceOptions(
 ScaledFontMac::InstanceData::InstanceData(
     const wr::FontInstanceOptions* aOptions,
     const wr::FontInstancePlatformOptions* aPlatformOptions)
-    : mUseFontSmoothing(true),
-      mApplySyntheticBold(false),
-      mHasColorGlyphs(false) {
+    : mUseFontSmoothing(true), mApplySyntheticBold(false) {
   if (aOptions) {
     if (!(aOptions->flags & wr::FontInstanceFlags::FONT_SMOOTHING)) {
       mUseFontSmoothing = false;
     }
     if (aOptions->flags & wr::FontInstanceFlags::SYNTHETIC_BOLD) {
       mApplySyntheticBold = true;
-    }
-    if (aOptions->flags & wr::FontInstanceFlags::EMBEDDED_BITMAPS) {
-      mHasColorGlyphs = true;
     }
     if (aOptions->bg_color.a != 0) {
       mFontSmoothingBackgroundColor =
@@ -729,8 +717,7 @@ already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFont(
     }
     scaledFont = new ScaledFontMac(
         font, this, instanceData.mFontSmoothingBackgroundColor,
-        instanceData.mUseFontSmoothing, instanceData.mApplySyntheticBold,
-        instanceData.mHasColorGlyphs);
+        instanceData.mUseFontSmoothing, instanceData.mApplySyntheticBold);
   } else {
     CGFontRef fontRef = mFont;
     if (aNumVariations > 0) {
@@ -744,8 +731,7 @@ already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFont(
     scaledFont = new ScaledFontMac(fontRef, this, aGlyphSize, fontRef != mFont,
                                    instanceData.mFontSmoothingBackgroundColor,
                                    instanceData.mUseFontSmoothing,
-                                   instanceData.mApplySyntheticBold,
-                                   instanceData.mHasColorGlyphs);
+                                   instanceData.mApplySyntheticBold);
   }
   return scaledFont.forget();
 }

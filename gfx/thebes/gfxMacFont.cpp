@@ -570,12 +570,10 @@ void gfxMacFont::InitMetricsFromPlatform() {
 
 already_AddRefed<ScaledFont> gfxMacFont::GetScaledFont(DrawTarget* aTarget) {
   if (!mAzureScaledFont) {
-    gfxFontEntry* fe = GetFontEntry();
-    bool hasColorGlyphs = fe->HasColorBitmapTable() || fe->TryGetColorGlyphs();
     mAzureScaledFont = Factory::CreateScaledFontForMacFont(
         GetCGFontRef(), GetUnscaledFont(), GetAdjustedSize(),
         ToDeviceColor(mFontSmoothingBackgroundColor),
-        !mStyle.useGrayscaleAntialiasing, IsSyntheticBold(), hasColorGlyphs);
+        !mStyle.useGrayscaleAntialiasing, IsSyntheticBold());
     if (!mAzureScaledFont) {
       return nullptr;
     }
