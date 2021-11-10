@@ -67,18 +67,11 @@ class Channel {
   enum Mode { MODE_SERVER, MODE_CLIENT };
 
   enum {
-
-  // The maximum message size in bytes. Attempting to receive a
-  // message of this size or bigger results in a channel error.
-  // This is larger in fuzzing builds to allow the fuzzing of passing
-  // large data structures into DOM methods without crashing.
-#ifndef FUZZING
+    // The maximum message size in bytes. Attempting to receive a
+    // message of this size or bigger results in a channel error.
     kMaximumMessageSize = 256 * 1024 * 1024,
-#else
-    kMaximumMessageSize = 4 * 1024 * 1024 * 1024,
-#endif
 
-    // Amount of data to read at once from the pipe.
+    // Ammount of data to read at once from the pipe.
     kReadBufferSize = 4 * 1024,
 
     // Maximum size of a message that we allow to be copied (rather than moved).
