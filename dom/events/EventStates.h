@@ -226,8 +226,7 @@ class EventStates {
 #define NS_EVENT_STATE_READWRITE NS_DEFINE_EVENT_STATE_MACRO(25)
 // Content is the default one (meaning depends of the context).
 #define NS_EVENT_STATE_DEFAULT NS_DEFINE_EVENT_STATE_MACRO(26)
-// Content is a submit control and the form isn't valid.
-#define NS_EVENT_STATE_MOZ_SUBMITINVALID NS_DEFINE_EVENT_STATE_MACRO(27)
+// Free bit here.
 // Content is in the optimum region.
 #define NS_EVENT_STATE_OPTIMUM NS_DEFINE_EVENT_STATE_MACRO(28)
 // Content is in the suboptimal region.

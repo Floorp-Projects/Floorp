@@ -41,10 +41,6 @@ const NON_CONTENT_ACCESIBLE_PSEUDOS = [
   "::-moz-tree-row(foo)",
 ];
 
-if (!SpecialPowers.getBoolPref("layout.css.autofill.enabled")) {
-  NON_CONTENT_ACCESIBLE_PSEUDOS.push(":autofill", ":-webkit-autofill");
-}
-
 test(function() {
   sheet.textContent = `div { color: initial }`;
   assert_equals(sheet.sheet.cssRules.length, 1);

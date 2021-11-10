@@ -6890,20 +6890,6 @@
   mirror: always
   rust: true
 
-# Whether the `:autofill` pseudo-class is exposed to content.
-- name: layout.css.autofill.enabled
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-  rust: true
-
-# Whether the `:-moz-submit-invalid` pseudo-class is exposed to content.
-- name: layout.css.moz-submit-invalid.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-  rust: true
-
 # Whether the `:-moz-lwtheme` pseudo-class is exposed to content.
 - name: layout.css.moz-lwtheme.content.enabled
   type: RelaxedAtomicBool
