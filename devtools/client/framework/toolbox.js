@@ -2504,6 +2504,10 @@ Toolbox.prototype = {
     }
 
     const inspector = this.getPanel("inspector");
+    if (!inspector) {
+      return;
+    }
+
     inspector.addExtensionSidebar(id, options);
   },
 
