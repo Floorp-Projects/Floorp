@@ -6,61 +6,78 @@
 #![allow(non_snake_case)]
 
 extern crate byteorder;
-#[cfg(target_os = "macos")]
-#[macro_use]
-extern crate core_foundation;
 extern crate env_logger;
 #[macro_use]
 extern crate lazy_static;
-#[cfg(target_os = "macos")]
-extern crate libloading;
 #[macro_use]
 extern crate log;
 extern crate pkcs11;
-#[cfg(target_os = "macos")]
-#[macro_use]
-extern crate rental;
 #[macro_use]
 extern crate rsclientcerts;
 extern crate sha2;
-#[cfg(target_os = "windows")]
-extern crate winapi;
 
 use pkcs11::types::*;
-use rsclientcerts::manager::{ManagerProxy, SlotType};
+use rsclientcerts::manager::{Manager, SlotType};
+use std::ffi::{c_void, CStr};
 use std::sync::Mutex;
 use std::thread;
 
-#[cfg(target_os = "macos")]
-mod backend_macos;
-#[cfg(target_os = "windows")]
-mod backend_windows;
-
-#[cfg(target_os = "macos")]
-use crate::backend_macos::Backend;
-#[cfg(target_os = "windows")]
-use crate::backend_windows::Backend;
-
-lazy_static! {
-    /// The singleton `ManagerProxy` that handles state with respect to PKCS #11. Only one thread
-    /// may use it at a time, but there is no restriction on which threads may use it. However, as
-    /// OS APIs being used are not necessarily thread-safe (e.g. they may be using
-    /// thread-local-storage), the `ManagerProxy` forwards calls from any thread to a single thread
-    /// where the real `Manager` does the actual work.
-    static ref MANAGER_PROXY: Mutex<Option<ManagerProxy>> = Mutex::new(None);
+// Helper macro to prefix log messages with the current thread ID.
+macro_rules! log_with_thread_id {
+    ($log_level:ident, $($message:expr),*) => {{
+        $log_level!("{:?} {}", thread::current().id(), format_args!($($message),*));
+    }};
 }
 
-// Obtaining a handle on the manager proxy is a two-step process. First the mutex must be locked,
-// which (if successful), results in a mutex guard object. We must then get a mutable refence to the
-// underlying manager proxy (if set - otherwise we return an error). This can't happen all in one
-// macro without dropping a reference that needs to live long enough for this to be safe. In
+mod backend;
+
+use backend::Backend;
+
+type FindObjectsCallback = Option<
+    unsafe extern "C" fn(
+        typ: u8,
+        data_len: usize,
+        data: *const u8,
+        extra_len: usize,
+        extra: *const u8,
+        slot_type: u32,
+        ctx: *mut c_void,
+    ),
+>;
+
+type FindObjectsFunction = extern "C" fn(callback: FindObjectsCallback, ctx: *mut c_void);
+
+type SignCallback =
+    Option<unsafe extern "C" fn(data_len: usize, data: *const u8, ctx: *mut c_void)>;
+
+type SignFunction = extern "C" fn(
+    cert_len: usize,
+    cert: *const u8,
+    data_len: usize,
+    data: *const u8,
+    params_len: usize,
+    params: *const u8,
+    callback: SignCallback,
+    ctx: *mut c_void,
+);
+
+lazy_static! {
+    /// The singleton `Manager` that handles state with respect to PKCS #11. Only one thread
+    /// may use it at a time, but there is no restriction on which threads may use it.
+    static ref MANAGER: Mutex<Option<Manager<Backend>>> = Mutex::new(None);
+}
+
+// Obtaining a handle on the manager is a two-step process. First the mutex must be locked, which
+// (if successful), results in a mutex guard object. We must then get a mutable refence to the
+// underlying manager (if set - otherwise we return an error). This can't happen all in one macro
+// without dropping a reference that needs to live long enough for this to be safe. In
 // practice, this looks like:
 //   let mut manager_guard = try_to_get_manager_guard!();
 //   let manager = manager_guard_to_manager!(manager_guard);
 macro_rules! try_to_get_manager_guard {
     () => {
-        match MANAGER_PROXY.lock() {
-            Ok(maybe_manager_proxy) => maybe_manager_proxy,
+        match MANAGER.lock() {
+            Ok(maybe_manager) => maybe_manager,
             Err(poison_error) => {
                 log_with_thread_id!(
                     error,
@@ -76,7 +93,7 @@ macro_rules! try_to_get_manager_guard {
 macro_rules! manager_guard_to_manager {
     ($manager_guard:ident) => {
         match $manager_guard.as_mut() {
-            Some(manager_proxy) => manager_proxy,
+            Some(manager) => manager,
             None => {
                 log_with_thread_id!(error, "manager expected to be set, but it is not");
                 return CKR_DEVICE_ERROR;
@@ -85,28 +102,50 @@ macro_rules! manager_guard_to_manager {
     };
 }
 
-// Helper macro to prefix log messages with the current thread ID.
-macro_rules! log_with_thread_id {
-    ($log_level:ident, $($message:expr),*) => {
-        $log_level!("{:?} {}", thread::current().id(), format_args!($($message),*));
-    };
-}
-
 /// This gets called to initialize the module. For this implementation, this consists of
-/// instantiating the `ManagerProxy`.
-extern "C" fn C_Initialize(_pInitArgs: CK_C_INITIALIZE_ARGS_PTR) -> CK_RV {
+/// instantiating the `Manager`.
+extern "C" fn C_Initialize(pInitArgs: CK_C_INITIALIZE_ARGS_PTR) -> CK_RV {
     // This will fail if this has already been called, but this isn't a problem because either way,
     // logging has been initialized.
     let _ = env_logger::try_init();
-    let mut manager_guard = try_to_get_manager_guard!();
-    let manager_proxy = match ManagerProxy::new(Backend {}) {
-        Ok(p) => p,
-        Err(e) => {
-            log_with_thread_id!(error, "C_Initialize: ManagerProxy: {}", e);
+
+    // pInitArgs.pReserved will be a c-string containing the base-16
+    // stringification of the addresses of the functions to call to communicate
+    // with the main process.
+    if pInitArgs.is_null() {
+        log_with_thread_id!(error, "pInitArgs is null?");
+        return CKR_DEVICE_ERROR;
+    }
+    let serialized_addresses_ptr = unsafe { (*pInitArgs).pReserved };
+    if serialized_addresses_ptr.is_null() {
+        log_with_thread_id!(error, "pInitArgs.pReserved is null?");
+        return CKR_DEVICE_ERROR;
+    }
+    let serialized_addresses_cstr =
+        unsafe { CStr::from_ptr(serialized_addresses_ptr as *mut std::os::raw::c_char) };
+    let serialized_addresses = match serialized_addresses_cstr.to_str() {
+        Ok(serialized_addresses) => serialized_addresses,
+        Err(_) => {
+            log_with_thread_id!(error, "pInitArgs.pReserved isn't a valid utf-8 string?");
             return CKR_DEVICE_ERROR;
         }
     };
-    match manager_guard.replace(manager_proxy) {
+    let function_addresses: Vec<usize> = serialized_addresses
+        .split(',')
+        .filter_map(|serialized_address| usize::from_str_radix(serialized_address, 16).ok())
+        .collect();
+    if function_addresses.len() != 2 {
+        log_with_thread_id!(
+            error,
+            "expected 2 hex addresses, found {}",
+            function_addresses.len()
+        );
+        return CKR_DEVICE_ERROR;
+    }
+    let find_objects: FindObjectsFunction = unsafe { std::mem::transmute(function_addresses[0]) };
+    let sign: SignFunction = unsafe { std::mem::transmute(function_addresses[1]) };
+    let mut manager_guard = try_to_get_manager_guard!();
+    match manager_guard.replace(Manager::new(Backend::new(find_objects, sign))) {
         Some(_unexpected_previous_manager) => {
             #[cfg(target_os = "macos")]
             {
@@ -124,25 +163,15 @@ extern "C" fn C_Initialize(_pInitArgs: CK_C_INITIALIZE_ARGS_PTR) -> CK_RV {
 }
 
 extern "C" fn C_Finalize(_pReserved: CK_VOID_PTR) -> CK_RV {
-    let mut manager_guard = try_to_get_manager_guard!();
-    let manager = manager_guard_to_manager!(manager_guard);
-    match manager.stop() {
-        Ok(()) => {
-            log_with_thread_id!(debug, "C_Finalize: CKR_OK");
-            CKR_OK
-        }
-        Err(e) => {
-            log_with_thread_id!(error, "C_Finalize: CKR_DEVICE_ERROR: {}", e);
-            CKR_DEVICE_ERROR
-        }
-    }
+    log_with_thread_id!(debug, "C_Finalize: CKR_OK");
+    CKR_OK
 }
 
 // The specification mandates that these strings be padded with spaces to the appropriate length.
 // Since the length of fixed-size arrays in rust is part of the type, the compiler enforces that
 // these byte strings are of the correct length.
 const MANUFACTURER_ID_BYTES: &[u8; 32] = b"Mozilla Corporation             ";
-const LIBRARY_DESCRIPTION_BYTES: &[u8; 32] = b"OS Client Cert Module           ";
+const LIBRARY_DESCRIPTION_BYTES: &[u8; 32] = b"IPC Client Cert Module          ";
 
 /// This gets called to gather some information about the module. In particular, this implementation
 /// supports (portions of) cryptoki (PKCS #11) version 2.2.
@@ -199,9 +228,9 @@ extern "C" fn C_GetSlotList(
 }
 
 const SLOT_DESCRIPTION_MODERN_BYTES: &[u8; 64] =
-    b"OS Client Cert Slot (Modern)                                    ";
+    b"IPC Client Cert Slot (Modern)                                   ";
 const SLOT_DESCRIPTION_LEGACY_BYTES: &[u8; 64] =
-    b"OS Client Cert Slot (Legacy)                                    ";
+    b"IPC Client Cert Slot (Legacy)                                   ";
 
 /// This gets called to obtain information about slots. In this implementation, the tokens are
 /// always present in the slots.
@@ -229,9 +258,9 @@ extern "C" fn C_GetSlotInfo(slotID: CK_SLOT_ID, pInfo: CK_SLOT_INFO_PTR) -> CK_R
     CKR_OK
 }
 
-const TOKEN_LABEL_MODERN_BYTES: &[u8; 32] = b"OS Client Cert Token (Modern)   ";
-const TOKEN_LABEL_LEGACY_BYTES: &[u8; 32] = b"OS Client Cert Token (Legacy)   ";
-const TOKEN_MODEL_BYTES: &[u8; 16] = b"osclientcerts   ";
+const TOKEN_LABEL_MODERN_BYTES: &[u8; 32] = b"IPC Client Cert Token (Modern)  ";
+const TOKEN_LABEL_LEGACY_BYTES: &[u8; 32] = b"IPC Client Cert Token (Legacy)  ";
+const TOKEN_MODEL_BYTES: &[u8; 16] = b"ipcclientcerts  ";
 const TOKEN_SERIAL_NUMBER_BYTES: &[u8; 16] = b"0000000000000000";
 
 /// This gets called to obtain some information about tokens. This implementation has two slots,
@@ -1204,10 +1233,11 @@ static mut FUNCTION_LIST: CK_FUNCTION_LIST = CK_FUNCTION_LIST {
     C_WaitForSlotEvent: Some(C_WaitForSlotEvent),
 };
 
-/// This is the only function this module exposes. NSS calls it to obtain the list of functions
+/// This is the only function this module exposes. The C stub calls it when NSS
+/// calls its exposed C_GetFunctionList function to obtain the list of functions
 /// comprising this module.
 #[no_mangle]
-pub extern "C" fn C_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) -> CK_RV {
+pub extern "C" fn IPCCC_GetFunctionList(ppFunctionList: CK_FUNCTION_LIST_PTR_PTR) -> CK_RV {
     if ppFunctionList.is_null() {
         return CKR_ARGUMENTS_BAD;
     }
