@@ -1866,7 +1866,18 @@ HelperThreadTask* GlobalHelperThreadState::maybeGetIonCompileTask(
     return nullptr;
   }
 
-  return highestPriorityPendingIonCompile(lock);
+  return highestPriorityPendingIonCompile(lock,
+                                          /* checkExecutionStatus */ true);
+}
+
+HelperThreadTask* GlobalHelperThreadState::maybeGetLowPrioIonCompileTask(
+    const AutoLockHelperThreadState& lock) {
+  if (!canStartIonCompileTask(lock)) {
+    return nullptr;
+  }
+
+  return highestPriorityPendingIonCompile(lock,
+                                          /* checkExecutionStatus */ false);
 }
 
 bool GlobalHelperThreadState::canStartIonCompileTask(
@@ -1893,19 +1904,26 @@ bool GlobalHelperThreadState::canStartIonFreeTask(
 }
 
 jit::IonCompileTask* GlobalHelperThreadState::highestPriorityPendingIonCompile(
-    const AutoLockHelperThreadState& lock) {
+    const AutoLockHelperThreadState& lock, bool checkExecutionStatus) {
   auto& worklist = ionWorklist(lock);
   MOZ_ASSERT(!worklist.empty());
 
   // Get the highest priority IonCompileTask which has not started compilation
   // yet.
-  size_t index = 0;
-  for (size_t i = 1; i < worklist.length(); i++) {
-    if (IonCompileTaskHasHigherPriority(worklist[i], worklist[index])) {
+  size_t index = worklist.length();
+  for (size_t i = 0; i < worklist.length(); i++) {
+    if (checkExecutionStatus && !worklist[i]->isMainThreadRunningJS()) {
+      continue;
+    }
+    if (i < index ||
+        IonCompileTaskHasHigherPriority(worklist[i], worklist[index])) {
       index = i;
     }
   }
 
+  if (index == worklist.length()) {
+    return nullptr;
+  }
   jit::IonCompileTask* task = worklist[index];
   worklist.erase(&worklist[index]);
   return task;
@@ -2709,6 +2727,7 @@ const GlobalHelperThreadState::Selector GlobalHelperThreadState::selectors[] = {
     &GlobalHelperThreadState::maybeGetPromiseHelperTask,
     &GlobalHelperThreadState::maybeGetParseTask,
     &GlobalHelperThreadState::maybeGetCompressionTask,
+    &GlobalHelperThreadState::maybeGetLowPrioIonCompileTask,
     &GlobalHelperThreadState::maybeGetIonFreeTask,
     &GlobalHelperThreadState::maybeGetWasmTier2CompileTask,
     &GlobalHelperThreadState::maybeGetWasmTier2GeneratorTask};

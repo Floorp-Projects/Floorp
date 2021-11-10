@@ -331,6 +331,7 @@ bool js::RunScript(JSContext* cx, RunState& state) {
   mozilla::TimeStamp startTime;
   if (measuringTime) {
     cx->setIsMeasuringExecutionTime(true);
+    cx->setIsExecuting(true);
     startTime = ReallyNow();
   }
   auto timerEnd = mozilla::MakeScopeExit([&]() {
@@ -338,6 +339,7 @@ bool js::RunScript(JSContext* cx, RunState& state) {
       mozilla::TimeDuration delta = ReallyNow() - startTime;
       cx->realm()->timers.executionTime += delta;
       cx->setIsMeasuringExecutionTime(false);
+      cx->setIsExecuting(false);
     }
   });
 
