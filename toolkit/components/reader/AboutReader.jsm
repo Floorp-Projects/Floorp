@@ -1479,17 +1479,19 @@ AboutReader.prototype = {
       );
 
       // Set up tracking for sign up buttons
-      this._doc.querySelectorAll(`.pocket-sign-up, .pocket-discover-more`).forEach(el => {
-        el.addEventListener(`click`, e => {
-          Services.telemetry.recordEvent(
-            "readermode",
-            "pocket_cta",
-            "sign_up_click",
-            null,
-            {}
-          );
+      this._doc
+        .querySelectorAll(`.pocket-sign-up, .pocket-discover-more`)
+        .forEach(el => {
+          el.addEventListener(`click`, e => {
+            Services.telemetry.recordEvent(
+              "readermode",
+              "pocket_cta",
+              "sign_up_click",
+              null,
+              {}
+            );
+          });
         });
-      });
 
       // Set up tracking for user seeing CTA
       this._ctaIntersectionObserver.observe(
