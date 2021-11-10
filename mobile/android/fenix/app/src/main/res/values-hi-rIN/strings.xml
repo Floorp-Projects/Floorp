@@ -55,8 +55,15 @@
     <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">हाल ही में सहेजा गया</string>
     <!-- Title for the home screen section with recently saved bookmarks. -->
     <string moz:removedIn="94" name="recently_bookmarked" tools:ignore="UnusedResources">हाल ही में बुकमार्क किया गया</string>
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recent_bookmarks_title">हाल के बुकमार्क</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">हाल ही में सहेजे गए बुकमार्क</string>
+
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">सभी दिखाएँ</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description">सभी सहेजे गए बुकमार्क बटन दिखाएँ</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s को Mozilla द्वारा निर्मित किया गया है।</string>
@@ -96,8 +103,17 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">खारिज</string>
 
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">एक महीने के बाद स्वत: बंद करें?</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">बंद करें</string>
+
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">स्वत: बंद चालू करें</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">स्वत: बंद चालू करें</string>
 
 
     <!-- Home screen icons - Long press shortcuts -->
@@ -108,6 +124,30 @@
 
     <!-- Heading for the Top Sites block -->
     <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">शीर्ष साइटें</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">वापस अंदर जायें</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">सभी दिखाएँ</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description">सभी हाल के टैब बटन दिखाएँ </string>
+    <!-- Title for showing a group item in the 'Jump back in' section of the new tab
+        The first parameter is the search term that the user used. (for example: your search for "cat")-->
+    <string name="recent_tabs_search_term">\&quot;%1$s\&quot; के लिए आपकी खोज</string>
+    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
+        The first parameter is the count for number of sites in the group.  This number will always be more than one. -->
+    <string name="recent_tabs_search_term_count">साइट: %1$s</string>
+
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string moz:removedIn="94" name="history_metadata_header_2" tools:ignore="UnusedResources">हाल ही में देखे गए</string>
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_3">हाल के खोज</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">हटाएँ</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -146,6 +186,8 @@
     <string name="browser_menu_install_on_homescreen">स्थापित करें</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">सिंक हुए टैब</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">पुन: सिंक करें</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">पृष्ठ में ढूँढें</string>
     <!-- Browser menu button that creates a private tab -->
@@ -177,8 +219,20 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">उपस्थिति</string>
 
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">पाठक विचार मनपसंद बनाएँ</string>
     <!-- Browser menu label for adding a bookmark -->
     <string name="browser_menu_add">जोड़ें</string>
+
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">संपादन</string>
+    <!-- Browser menu button that opens the Customize menu -->
+    <string name="browser_menu_customize_home">मुखपृष्ठ मनपसंद बनाएँ</string>
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">मुखपृष्ठ मनपसंद बनाएँ</string>
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">होम स्क्रीन</string>
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
@@ -217,6 +271,20 @@
     <string name="search_suggestions_onboarding_text">%s आपके द्वारा पता बार में टाइप की गई सभी चीज़ों को आपके डिफ़ॉल्ट खोज इंजन के साथ साझा करेगा।</string>
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">अधिक जानें</string>
+
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">%s खोजें</string>
+
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">सीधे पता बार से खोजें</string>
+
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_title_2">फ़ायरफ़ॉक्स में नया क्या है</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">साफ, व्यवस्थित टैब</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_title_2">हाल के खोज</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -296,6 +364,8 @@
     <string name="preferences_theme">थीम</string>
     <!-- Preference for customizing the home screen -->
     <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">मुख्य पृष्ठ</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">मुख्यपृष्ठ</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">अनुकूलित करें</string>
     <!-- Preference description for banner about signing in -->
@@ -337,6 +407,8 @@
     <string name="preferences_account_settings">खाता सेटिंग</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">ऐप में लिंक खोलें</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">बाहरी डाउनलोड प्रबंधक</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">ऐड-ऑन</string>
 
@@ -539,6 +611,9 @@
     <string name="close_tabs_after_one_week">एक हफ्ते के बाद</string>
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">एक महीने बाद</string>
+
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">खुले टैब को स्वतः बंद करें</string>
 
     <!-- Option for starting on the home screen after after four hours or inactivity -->
     <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">चार घंटे बाद</string>
@@ -1631,6 +1706,12 @@
     <string moz:removedIn="95" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 दिन</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
     <string moz:removedIn="95" name="inactive_tabs_7_days" tools:ignore="UnusedResources">1 सप्ताह</string>
+
+    <!-- Inactive tabs auto-close message in the tabs tray -->
+    <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">एक महीने के बाद स्वत: बंद करें?</string>
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">स्वत: बंद सक्षम हैं</string>
 
     <!-- Content description radio buttons with a link to more information -->
     <string name="radio_preference_info_content_description">अधिक जानकारी के लिए क्लिक करें</string>
