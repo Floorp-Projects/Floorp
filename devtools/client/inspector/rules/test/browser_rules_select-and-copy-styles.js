@@ -61,13 +61,13 @@ async function checkCopySelection(view) {
   info("Checking that _Copy() returns the correct clipboard value");
 
   const expectedPattern =
-    "    margin: 10em;[\\r\\n]+" +
-    "    font-size: 14pt;[\\r\\n]+" +
-    "    font-family: helvetica, sans-serif;[\\r\\n]+" +
-    "    color: #AAA;[\\r\\n]+" +
+    "  margin: 10em;[\\r\\n]+" +
+    "  font-size: 14pt;[\\r\\n]+" +
+    "  font-family: helvetica, sans-serif;[\\r\\n]+" +
+    "  color: #AAA;[\\r\\n]+" +
     "}[\\r\\n]+" +
     "html {[\\r\\n]+" +
-    "    color: #000000;[\\r\\n]*";
+    "  color: #000000;[\\r\\n]*";
 
   const allMenuItems = openStyleContextMenuAndGetAllItems(view, prop);
   const menuitemCopy = allMenuItems.find(
@@ -119,13 +119,13 @@ async function checkSelectAll(view) {
   view.contextMenu._onSelectAll();
   const expectedPattern =
     "element {[\\r\\n]+" +
-    "    margin: 10em;[\\r\\n]+" +
-    "    font-size: 14pt;[\\r\\n]+" +
-    "    font-family: helvetica, sans-serif;[\\r\\n]+" +
-    "    color: #AAA;[\\r\\n]+" +
+    "  margin: 10em;[\\r\\n]+" +
+    "  font-size: 14pt;[\\r\\n]+" +
+    "  font-family: helvetica, sans-serif;[\\r\\n]+" +
+    "  color: #AAA;[\\r\\n]+" +
     "}[\\r\\n]+" +
     "html {[\\r\\n]+" +
-    "    color: #000000;[\\r\\n]+" +
+    "  color: #000000;[\\r\\n]+" +
     "}[\\r\\n]*";
 
   const allMenuItems = openStyleContextMenuAndGetAllItems(view, prop);
