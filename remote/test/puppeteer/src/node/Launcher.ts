@@ -370,14 +370,12 @@ class FirefoxLauncher implements ProductLauncher {
     return firefoxArguments;
   }
 
-  async _createProfile(extraPrefs: { [x: string]: unknown }): Promise<string> {
-    const profilePath = await mkdtempAsync(
-      path.join(os.tmpdir(), 'puppeteer_dev_firefox_profile-')
-    );
-    const prefsJS = [];
-    const userJS = [];
+  defaultPreferences(extraPrefs: {
+    [x: string]: unknown;
+  }): { [x: string]: unknown } {
     const server = 'dummy.test';
-    const defaultPreferences = {
+
+    const defaultPrefs = {
       // Make sure Shield doesn't hit the network.
       'app.normandy.api_url': '',
       // Disable Firefox old build background check
@@ -544,8 +542,8 @@ class FirefoxLauncher implements ProductLauncher {
 
       'privacy.trackingprotection.enabled': false,
 
-      // Enable Remote Agent
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1544393
+      // Can be removed once Firefox 89 is no longer supported
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1710839
       'remote.enabled': true,
 
       // Don't do network connections for mitm priming
@@ -579,8 +577,18 @@ class FirefoxLauncher implements ProductLauncher {
       'toolkit.startup.max_resumed_crashes': -1,
     };
 
-    Object.assign(defaultPreferences, extraPrefs);
-    for (const [key, value] of Object.entries(defaultPreferences))
+    return Object.assign(defaultPrefs, extraPrefs);
+  }
+
+  async _createProfile(extraPrefs: { [x: string]: unknown }): Promise<string> {
+    const profilePath = await mkdtempAsync(
+      path.join(os.tmpdir(), 'puppeteer_dev_firefox_profile-')
+    );
+    const prefsJS = [];
+    const userJS = [];
+
+    const prefs = this.defaultPreferences(extraPrefs);
+    for (const [key, value] of Object.entries(prefs))
       userJS.push(
         `user_pref(${JSON.stringify(key)}, ${JSON.stringify(value)});`
       );
