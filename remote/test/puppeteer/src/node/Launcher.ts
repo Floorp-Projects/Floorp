@@ -580,14 +580,13 @@ class FirefoxLauncher implements ProductLauncher {
     return Object.assign(defaultPrefs, extraPrefs);
   }
 
-  async _createProfile(extraPrefs: { [x: string]: unknown }): Promise<string> {
-    const profilePath = await mkdtempAsync(
-      path.join(os.tmpdir(), 'puppeteer_dev_firefox_profile-')
-    );
+  async writePreferences(
+    prefs: { [x: string]: unknown },
+    profilePath: string
+  ): Promise<void> {
     const prefsJS = [];
     const userJS = [];
 
-    const prefs = this.defaultPreferences(extraPrefs);
     for (const [key, value] of Object.entries(prefs))
       userJS.push(
         `user_pref(${JSON.stringify(key)}, ${JSON.stringify(value)});`
@@ -597,6 +596,16 @@ class FirefoxLauncher implements ProductLauncher {
       path.join(profilePath, 'prefs.js'),
       prefsJS.join('\n')
     );
+  }
+
+  async _createProfile(extraPrefs: { [x: string]: unknown }): Promise<string> {
+    const profilePath = await mkdtempAsync(
+      path.join(os.tmpdir(), 'puppeteer_dev_firefox_profile-')
+    );
+
+    const prefs = this.defaultPreferences(extraPrefs);
+    await this.writePreferences(prefs, profilePath);
+
     return profilePath;
   }
 }
