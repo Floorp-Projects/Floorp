@@ -72,8 +72,8 @@ async function testDocumentEventResources() {
   let domInteractiveResource = await onInteractiveAtInit;
   is(
     domInteractiveResource.url,
-    undefined,
-    `resource ${domInteractiveResource.name} does not have a url property`
+    url,
+    `resource ${domInteractiveResource.name} has expected url`
   );
   is(
     domInteractiveResource.title,
@@ -124,8 +124,8 @@ async function testDocumentEventResources() {
   domInteractiveResource = await onInteractiveAtInit;
   is(
     domInteractiveResource.url,
-    undefined,
-    `resource ${domInteractiveResource.name} does not have a url property after reloading`
+    url,
+    `resource ${domInteractiveResource.name} has url property after reloading`
   );
   is(
     domInteractiveResource.title,
@@ -373,8 +373,8 @@ async function testBfCacheNavigation() {
 
   is(
     interactiveEvent.url,
-    undefined,
-    `resource ${interactiveEvent.name} does not have a url property after navigating back`
+    firstLocation,
+    `resource ${interactiveEvent.name} has expected url property after navigating back`
   );
   is(
     interactiveEvent.title,
@@ -484,8 +484,8 @@ async function testCrossOriginNavigation() {
 
   is(
     interactiveEvent.url,
-    undefined,
-    `resource ${interactiveEvent.name} does not have a url property after reloading`
+    encodeURI(netUrl),
+    `resource ${interactiveEvent.name} has expected url property after reloading`
   );
   is(
     interactiveEvent.title,

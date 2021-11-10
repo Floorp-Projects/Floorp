@@ -700,7 +700,9 @@ Toolbox.prototype = {
 
       // Attach to a new top-level target.
       // For now, register these event listeners only on the top level target
-      targetFront.on("frame-update", this._updateFrames);
+      if (!targetFront.targetForm.ignoreSubFrames) {
+        targetFront.on("frame-update", this._updateFrames);
+      }
       const consoleFront = await targetFront.getFront("console");
       consoleFront.on("inspectObject", this._onInspectObject);
     }
@@ -725,6 +727,20 @@ Toolbox.prototype = {
       }
       await this.initPerformance();
     }
+
+    if (targetFront.targetForm.ignoreSubFrames) {
+      this._updateFrames({
+        frames: [
+          {
+            id: targetFront.actorID,
+            targetFront,
+            url: targetFront.url,
+            title: targetFront.title,
+            isTopLevel: targetFront.isTopLevel,
+          },
+        ],
+      });
+    }
   },
 
   _onTargetDestroyed({ targetFront }) {
@@ -748,6 +764,17 @@ Toolbox.prototype = {
 
     if (this.hostType !== Toolbox.HostType.PAGE) {
       this.store.dispatch(unregisterTarget(targetFront));
+    }
+
+    if (targetFront.targetForm.ignoreSubFrames) {
+      this._updateFrames({
+        frames: [
+          {
+            id: targetFront.actorID,
+            destroy: true,
+          },
+        ],
+      });
     }
   },
 
@@ -2295,7 +2322,7 @@ Toolbox.prototype = {
     this.frameButton.isVisible = isVisible;
 
     if (isVisible) {
-      this.frameButton.isChecked = selectedFrame.parentID != null;
+      this.frameButton.isChecked = !selectedFrame.isTopLevel;
     }
   },
 
@@ -3224,14 +3251,22 @@ Toolbox.prototype = {
   },
 
   _listFrames: async function(event) {
-    if (!this.target.getTrait("frames")) {
-      // We are not targetting a regular WindowGlobalTargetActor
-      // it can be either an addon or browser toolbox actor
+    if (
+      !this.target.getTrait("frames") ||
+      this.target.targetForm.ignoreSubFrames
+    ) {
+      // We are not targetting a regular WindowGlobalTargetActor (it can be either an
+      // addon or browser toolbox actor), or EFT is enabled.
       return Promise.resolve();
     }
 
     try {
       const { frames } = await this.target.listFrames();
+
+      // @backward-compat { version 95 } frame.isTopLevel was added in 95.
+      for (const frame of frames) {
+        frame.isTopLevel = !frame.parentID;
+      }
       this._updateFrames({ frames });
     } catch (e) {
       console.error("Error while listing frames", e);
@@ -3239,48 +3274,96 @@ Toolbox.prototype = {
   },
 
   /**
-   * Select a frame by sending 'switchToFrame' packet to the backend.
+   * Called by the iframe picker when the user selected a frame.
+   *
+   * @param {String} frameIdOrTargetActorId
    */
-  onSelectFrame: function(frameId) {
-    // Send packet to the backend to select specified frame and
-    // wait for 'frameUpdate' event packet to update the UI.
-    this.target.switchToFrame({ windowId: frameId });
+  onIframePickerFrameSelected: function(frameIdOrTargetActorId) {
+    if (!this.frameMap.has(frameIdOrTargetActorId)) {
+      console.error(
+        `Can't focus on frame "${frameIdOrTargetActorId}", it is not a known frame`
+      );
+      return;
+    }
+
+    const frameInfo = this.frameMap.get(frameIdOrTargetActorId);
+    // If there is no targetFront in the frameData, this means EFT is not enabled.
+    // Send packet to the backend to select specified frame and  wait for 'frameUpdate'
+    // event packet to update the UI.
+    if (!frameInfo.targetFront) {
+      this.target.switchToFrame({ windowId: frameIdOrTargetActorId });
+      return;
+    }
+
+    // Here, EFT is enabled, so we want to focus the toolbox on the specific targetFront
+    // that was selected by the user.
+    this.commands.targetCommand.selectTarget(frameInfo.targetFront);
+    this._updateFrames({ selected: frameIdOrTargetActorId });
   },
 
   /**
    * Highlight a frame in the page
+   *
+   * @param {String} frameIdOrTargetActorId
    */
-  onHighlightFrame: async function(frameId) {
-    const inspectorFront = await this.target.getFront("inspector");
-    const highlighter = this.getHighlighter();
-
+  onHighlightFrame: async function(frameIdOrTargetActorId) {
     // Only enable frame highlighting when the top level document is targeted
-    if (this.rootFrameSelected) {
-      const nodeFront = await inspectorFront.walker.getNodeActorFromWindowID(
-        frameId
-      );
-      return highlighter.highlight(nodeFront);
+    if (!this.rootFrameSelected) {
+      return;
     }
+
+    const frameInfo = this.frameMap.get(frameIdOrTargetActorId);
+    if (!frameInfo) {
+      return;
+    }
+
+    let nodeFront;
+    if (frameInfo.targetFront) {
+      const inspectorFront = await frameInfo.targetFront.getFront("inspector");
+      nodeFront = await inspectorFront.walker.documentElement();
+    } else {
+      const inspectorFront = await this.target.getFront("inspector");
+      nodeFront = await inspectorFront.walker.getNodeActorFromWindowID(
+        frameIdOrTargetActorId
+      );
+    }
+    const highlighter = this.getHighlighter();
+    return highlighter.highlight(nodeFront);
   },
 
   /**
-   * A handler for 'frameUpdate' packets received from the backend.
-   * Following properties might be set on the packet:
+   * Handles changes in document frames.
    *
-   * destroyAll {Boolean}: All frames have been destroyed.
-   * selected {Number}: A frame has been selected
-   * frames {Array}: list of frames. Every frame can have:
-   *                 id {Number}: frame ID
-   *                 url {String}: frame URL
-   *                 title {String}: frame title
-   *                 destroy {Boolean}: Set to true if destroyed
-   *                 parentID {Number}: ID of the parent frame (not set
-   *                                    for top level window)
+   * @param {Object} data
+   * @param {Boolean} data.destroyAll: All frames have been destroyed.
+   * @param {Number} data.selected: A frame has been selected
+   * @param {Object} data.frameData: Some frame data were updated
+   * @param {String} data.frameData.url: new frame URL (it might have been blank or about:blank)
+   * @param {String} data.frameData.title: new frame title
+   * @param {Number|String} data.frameData.id: frame ID / targetFront actorID when EFT is enabled.
+   * @param {Array<Object>} data.frames: List of frames. Every frame can have:
+   * @param {Number|String} data.frames[].id: frame ID / targetFront actorID when EFT is enabled.
+   * @param {String} data.frames[].url: frame URL
+   * @param {String} data.frames[].title: frame title
+   * @param {Boolean} data.frames[].destroy: Set to true if destroyed
+   * @param {Boolean} data.frames[].isTopLevel: true for top level window
    */
   _updateFrames: function(data) {
-    // We may receive this event before the toolbox is ready.
-    if (!this.isReady) {
-      return;
+    // At the moment, frames `id` can either be outerWindowID (a Number),
+    // or a targetActorID (a String).
+    // In order to have the same type of data as a key of `frameMap`, we transform any
+    // outerWindowID into a string.
+    // This can be removed once EFT is enabled by default
+    if (data.selected) {
+      data.selected = data.selected.toString();
+    } else if (data.frameData) {
+      data.frameData.id = data.frameData.id.toString();
+    } else if (data.frames) {
+      data.frames.forEach(frame => {
+        if (frame.id) {
+          frame.id = frame.id.toString();
+        }
+      });
     }
 
     // Store (synchronize) data about all existing frames on the backend
@@ -3289,6 +3372,20 @@ Toolbox.prototype = {
       this.selectedFrameId = null;
     } else if (data.selected) {
       this.selectedFrameId = data.selected;
+    } else if (data.frameData && this.frameMap.has(data.frameData.id)) {
+      const existingFrameData = this.frameMap.get(data.frameData.id);
+      if (
+        existingFrameData.title == data.frameData.title &&
+        existingFrameData.url == data.frameData.url
+      ) {
+        return;
+      }
+
+      this.frameMap.set(data.frameData.id, {
+        ...existingFrameData,
+        url: data.frameData.url,
+        title: data.frameData.title,
+      });
     } else if (data.frames) {
       data.frames.forEach(frame => {
         if (frame.destroy) {
@@ -3309,12 +3406,9 @@ Toolbox.prototype = {
     // frames in case of the BrowserToolbox.
     if (!this.selectedFrameId) {
       const frames = [...this.frameMap.values()];
-      const topFrames = frames.filter(frame => !frame.parentID);
+      const topFrames = frames.filter(frame => frame.isTopLevel);
       this.selectedFrameId = topFrames.length ? topFrames[0].id : null;
     }
-
-    // We may need to hide/show the frames button now.
-    this.updateFrameButton();
 
     // Debounce the update to avoid unnecessary flickering/rendering.
     if (!this.debouncedToolbarUpdate) {
@@ -3331,37 +3425,35 @@ Toolbox.prototype = {
       );
     }
 
-    if (this.debouncedToolbarUpdate) {
-      this.debouncedToolbarUpdate();
-    }
-  },
+    const updateUiElements = () => {
+      // We may need to hide/show the frames button now.
+      this.updateFrameButton();
 
-  /**
-   * Returns a 0-based selected frame depth.
-   *
-   * For example, if the root frame is selected, the returned value is 0.  For a sub-frame
-   * of the root document, the returned value is 1, and so on.
-   */
-  get selectedFrameDepth() {
-    // If the frame switcher is disabled, we won't have a selected frame ID.
-    // In this case, we're always showing the root frame.
-    if (!this.selectedFrameId) {
-      return 0;
+      if (this.debouncedToolbarUpdate) {
+        this.debouncedToolbarUpdate();
+      }
+    };
+
+    // This may have been called before the toolbox is ready (= the dom elements for
+    // the iframe picker don't exist yet).
+    if (!this.isReady) {
+      this.once("ready").then(() => updateUiElements);
+    } else {
+      updateUiElements();
     }
-    let depth = 0;
-    let frame = this.frameMap.get(this.selectedFrameId);
-    while (frame) {
-      depth++;
-      frame = this.frameMap.get(frame.parentID);
-    }
-    return depth - 1;
   },
 
   /**
    * Returns whether a root frame (with no parent frame) is selected.
    */
   get rootFrameSelected() {
-    return this.selectedFrameDepth == 0;
+    // If the frame switcher is disabled, we won't have a selected frame ID.
+    // In this case, we're always showing the root frame.
+    if (!this.selectedFrameId) {
+      return true;
+    }
+
+    return this.frameMap.get(this.selectedFrameId).isTopLevel;
   },
 
   /**
@@ -4477,12 +4569,20 @@ Toolbox.prototype = {
         // the "newer" event.
         resource.name === "dom-interactive"
       ) {
-        // the targetFront title and url are update on dom-interactive, so delay refreshing
+        // the targetFront title and url are updated on dom-interactive, so delay refreshing
         // the host title a bit in order for the event listener in targetCommand to be
         // executed.
         setTimeout(() => {
           // Update the EvaluationContext selector so url/title of targets can be updated
           this.store.dispatch(refreshTargets());
+
+          this._updateFrames({
+            frameData: {
+              id: resource.targetFront.actorID,
+              url: resource.targetFront.url,
+              title: resource.targetFront.title,
+            },
+          });
 
           if (resource.targetFront.isTopLevel) {
             this._refreshHostTitle();
