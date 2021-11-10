@@ -1300,7 +1300,8 @@ GtkTargetList* nsDragService::GetSourceList(void) {
           TargetArrayAddTarget(targetArray, gMozUrlType);
         }
         // XdndDirectSave
-        else if (flavorStr.EqualsLiteral(kFilePromiseMime)) {
+        else if (widget::GdkIsX11Display() &&
+                 flavorStr.EqualsLiteral(kFilePromiseMime)) {
           TargetArrayAddTarget(targetArray, gXdndDirectSaveType);
         }
         // kNativeImageMime
