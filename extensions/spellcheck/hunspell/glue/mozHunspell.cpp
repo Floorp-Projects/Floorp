@@ -188,7 +188,7 @@ mozHunspell::SetDictionary(const nsACString& aDictionary) {
   mDictionary = dict;
   mAffixFileName = affFileName;
 
-  mHunspell = new RLBoxHunspell(affFileName, dictFileName);
+  mHunspell = RLBoxHunspell::Create(affFileName, dictFileName);
   if (!mHunspell) return NS_ERROR_OUT_OF_MEMORY;
 
   auto encoding =
