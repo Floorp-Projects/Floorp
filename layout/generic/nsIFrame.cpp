@@ -9338,13 +9338,15 @@ bool nsIFrame::SetOverflowAreas(const OverflowAreas& aOverflowAreas) {
   }
 }
 
+enum class ApplyTransform : bool { No, Yes };
+
 /**
- * Compute the union of the border boxes of aFrame and its descendants,
- * in aFrame's coordinate space (if aApplyTransform is false) or its
- * post-transform coordinate space (if aApplyTransform is true).
+ * Compute the outline inner rect (so without outline-width and outline-offset)
+ * of aFrame, maybe iterating over its descendants, in aFrame's coordinate space
+ * or its post-transform coordinate space (depending on aApplyTransform).
  */
-static nsRect UnionBorderBoxes(
-    nsIFrame* aFrame, bool aApplyTransform, bool& aOutValid,
+static nsRect ComputeOutlineInnerRect(
+    nsIFrame* aFrame, ApplyTransform aApplyTransform, bool& aOutValid,
     const nsSize* aSizeOverride = nullptr,
     const OverflowAreas* aOverflowOverride = nullptr) {
   const nsRect bounds(nsPoint(0, 0),
@@ -9367,12 +9369,17 @@ static nsRect UnionBorderBoxes(
 
   // Start from our border-box, transformed.  See comment below about
   // transform of children.
-  bool doTransform = aApplyTransform && aFrame->IsTransformed();
+  bool doTransform =
+      aApplyTransform == ApplyTransform::Yes && aFrame->IsTransformed();
   TransformReferenceBox boundsRefBox(nullptr, bounds);
   if (doTransform) {
     u = nsDisplayTransform::TransformRect(bounds, aFrame, boundsRefBox);
   } else {
     u = bounds;
+  }
+
+  if (aOutValid && !StaticPrefs::layout_outline_include_overflow()) {
+    return u;
   }
 
   // Only iterate through the children if the overflow areas suggest
@@ -9419,18 +9426,18 @@ static nsRect UnionBorderBoxes(
         continue;
       }
 
-      // Note that passing |true| for aApplyTransform when
-      // child->Combines3DTransformWithAncestors() is incorrect if our
-      // aApplyTransform is false... but the opposite would be as
-      // well.  This is because elements within a preserve-3d scene
-      // are always transformed up to the top of the scene.  This
-      // means we don't have a mechanism for getting a transform up to
-      // an intermediate point within the scene.  We choose to
-      // over-transform rather than under-transform because this is
-      // consistent with other overflow areas.
+      // Note that passing ApplyTransform::Yes when
+      // child->Combines3DTransformWithAncestors() returns true is incorrect if
+      // our aApplyTransform is No... but the opposite would be as well.
+      // This is because elements within a preserve-3d scene are always
+      // transformed up to the top of the scene.  This means we don't have a
+      // mechanism for getting a transform up to an intermediate point within
+      // the scene.  We choose to over-transform rather than under-transform
+      // because this is consistent with other overflow areas.
       bool validRect = true;
       nsRect childRect =
-          UnionBorderBoxes(child, true, validRect) + child->GetPosition();
+          ComputeOutlineInnerRect(child, ApplyTransform::Yes, validRect) +
+          child->GetPosition();
 
       if (!validRect) {
         continue;
@@ -9505,13 +9512,14 @@ static void ComputeAndIncludeOutlineArea(nsIFrame* aFrame,
   // calling FinishAndStoreOverflow again, which in turn calls this
   // function again.  We still need to deal with preserve-3d a bit.
   nsRect innerRect;
-  bool validRect;
+  bool validRect = false;
   if (frameForArea == aFrame) {
-    innerRect =
-        UnionBorderBoxes(aFrame, false, validRect, &aNewSize, &aOverflowAreas);
+    innerRect = ComputeOutlineInnerRect(aFrame, ApplyTransform::No, validRect,
+                                        &aNewSize, &aOverflowAreas);
   } else {
     for (; frameForArea; frameForArea = frameForArea->GetNextSibling()) {
-      nsRect r(UnionBorderBoxes(frameForArea, true, validRect));
+      nsRect r =
+          ComputeOutlineInnerRect(frameForArea, ApplyTransform::Yes, validRect);
 
       // Adjust for offsets transforms up to aFrame's pre-transform
       // (i.e., normal) coordinate space; see comments in

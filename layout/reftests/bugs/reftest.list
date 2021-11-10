@@ -837,7 +837,7 @@ fails-if(cocoaWidget||winWidget) random-if(!cocoaWidget&&!winWidget) != 399636-q
 == 400813-1.html 400813-1-ref.html
 == 400826-1.html 400826-1-ref.html
 == chrome://reftest/content/bugs/401946-1.xhtml about:blank
-== 402338-1.html 402338-1-ref.html
+pref(layout.outline.include-overflow,true) == 402338-1.html 402338-1-ref.html
 == 402567-1.html 402567-1-ref.html
 fuzzy-if(winWidget&&!nativeThemePref,0-8,0-1) == 402567-2.html 402567-2-ref.html
 == 402567-3.html 402567-3-ref.html
