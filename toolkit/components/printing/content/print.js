@@ -2054,6 +2054,7 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
     this._rangeInput = this.querySelector("#custom-range");
     this._rangeInput.title = "";
     this._rangePicker = this.querySelector("#range-picker");
+    this._rangePickerEvenOption = this._rangePicker.namedItem("even");
     this._rangeError = this.querySelector("#error-invalid-range");
     this._startRangeOverflowError = this.querySelector(
       "#error-invalid-start-range-overflow"
@@ -2071,15 +2072,26 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
   }
 
   updatePageRange() {
-    let isAll = this._rangePicker.value == "all";
-    if (isAll) {
+    let isCustom = this._rangePicker.value == "custom";
+    if (isCustom) {
+      this.validateRangeInput();
+    } else {
       this._pagesSet.clear();
+
+      if (this._rangePicker.value == "odd") {
+        for (let i = 1; i <= this._numPages; i += 2) {
+          this._pagesSet.add(i);
+        }
+      } else if (this._rangePicker.value == "even") {
+        for (let i = 2; i <= this._numPages; i += 2) {
+          this._pagesSet.add(i);
+        }
+      }
+
       if (!this._rangeInput.checkValidity()) {
         this._rangeInput.setCustomValidity("");
         this._rangeInput.value = "";
       }
-    } else {
-      this.validateRangeInput();
     }
 
     this.dispatchEvent(new Event("revalidate", { bubbles: true }));
@@ -2094,7 +2106,7 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
 
     // If it's valid, update the page range and hide the error messages.
     // Otherwise, set the appropriate error message
-    if (this._rangeInput.validity.valid || isAll) {
+    if (this._rangeInput.validity.valid || !isCustom) {
       window.clearTimeout(this.showErrorTimeoutId);
       this._startRangeOverflowError.hidden = this._rangeError.hidden = true;
     } else {
@@ -2104,7 +2116,10 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
 
   dispatchPageRange(shouldCancel = true) {
     window.clearTimeout(this.showErrorTimeoutId);
-    if (this._rangeInput.validity.valid || this._rangePicker.value == "all") {
+    if (
+      this._rangeInput.validity.valid ||
+      this._rangePicker.value != "custom"
+    ) {
       this.dispatchSettingsChange({
         pageRanges: this.formatPageRange(),
       });
@@ -2129,7 +2144,7 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
   formatPageRange() {
     if (
       this._pagesSet.size == 0 ||
-      this._rangeInput.value == "" ||
+      (this._rangePicker.value == "custom" && this._rangeInput.value == "") ||
       this._rangePicker.value == "all"
     ) {
       // Show all pages.
@@ -2250,7 +2265,8 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
   }
 
   validateRangeInput() {
-    let value = this._rangePicker.value == "all" ? "" : this._rangeInput.value;
+    let value =
+      this._rangePicker.value == "custom" ? this._rangeInput.value : "";
     this._validateRangeInput(value, this._numPages);
   }
 
@@ -2277,6 +2293,7 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
 
       this._numPages = totalPages;
       this._rangeInput.disabled = false;
+      this._rangePickerEvenOption.disabled = this._numPages < 2;
 
       let prevPages = Array.from(this._pagesSet);
       this.updatePageRange();
@@ -2296,7 +2313,7 @@ class PageRangeInput extends PrintUIControlMixin(HTMLElement) {
     }
 
     if (e.target == this._rangePicker) {
-      this._rangeInput.hidden = e.target.value == "all";
+      this._rangeInput.hidden = e.target.value != "custom";
       this.updatePageRange();
       this.dispatchPageRange();
       if (!this._rangeInput.hidden) {

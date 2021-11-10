@@ -3,22 +3,31 @@
 
 "use strict";
 
-function changeAllToCustom(helper) {
+function changeRangeTo(helper, destination) {
   let rangeSelect = helper.get("range-picker");
+  let options = getRangeOptions(helper);
+  let numberMove =
+    options.indexOf(destination) - options.indexOf(rangeSelect.value);
+  let direction = numberMove > 0 ? "down" : "up";
+
   rangeSelect.focus();
   rangeSelect.scrollIntoView({ block: "center" });
   EventUtils.sendKey("space", helper.win);
-  EventUtils.sendKey("down", helper.win);
+  for (let i = Math.abs(numberMove); i > 0; i--) {
+    EventUtils.sendKey(direction, helper.win);
+  }
   EventUtils.sendKey("return", helper.win);
 }
 
-function changeCustomToAll(helper) {
+function getRangeOptions(helper) {
   let rangeSelect = helper.get("range-picker");
-  rangeSelect.focus();
-  rangeSelect.scrollIntoView({ block: "center" });
-  EventUtils.sendKey("space", helper.win);
-  EventUtils.sendKey("up", helper.win);
-  EventUtils.sendKey("return", helper.win);
+  let options = [];
+  for (let el of rangeSelect.options) {
+    if (!el.disabled) {
+      options.push(el.value);
+    }
+  }
+  return options;
 }
 
 function getSheetCount(helper) {
@@ -34,7 +43,7 @@ add_task(async function testRangeResetAfterScale() {
     await helper.setupMockPrint();
 
     helper.mockFilePicker("changeRangeFromScale.pdf");
-    changeAllToCustom(helper);
+    changeRangeTo(helper, "custom");
 
     await helper.openMoreSettings();
     let scaleRadio = helper.get("percent-scale-choice");
@@ -74,7 +83,7 @@ add_task(async function testRangeResetAfterPaperSize() {
     await helper.waitForPreview(() => helper.text(percentScale, "200"));
 
     let customRange = helper.get("custom-range");
-    changeAllToCustom(helper);
+    changeRangeTo(helper, "custom");
     await BrowserTestUtils.waitForAttributeRemoval("hidden", customRange);
 
     let rangeError = helper.get("error-invalid-range");
@@ -107,7 +116,7 @@ add_task(async function testInvalidRangeResetAfterDestinationChange() {
     let customPageRange = helper.get("custom-range");
 
     await helper.assertSettingsNotChanged({ pageRanges: [] }, async () => {
-      changeAllToCustom(helper);
+      changeRangeTo(helper, "custom");
     });
     let rangeError = helper.get("error-invalid-range");
 
@@ -142,7 +151,7 @@ add_task(async function testPageRangeSets() {
 
     ok(customRange.hidden, "Custom range input is hidden");
 
-    changeAllToCustom(helper);
+    changeRangeTo(helper, "custom");
     await BrowserTestUtils.waitForAttributeRemoval("hidden", customRange);
 
     ok(!customRange.hidden, "Custom range is showing");
@@ -167,8 +176,7 @@ add_task(async function testPageRangeSets() {
       "1-": [1, 50],
       "-": [],
       "-20": [1, 20],
-      "-,1": [],
-      "-1,1-": [],
+      "-1,1-": [1, 50],
       "-1,1-2": [1, 2],
       ",9": [9, 9],
       ",": [],
@@ -180,10 +188,9 @@ add_task(async function testPageRangeSets() {
     for (let [str, expected] of Object.entries(validStrings)) {
       pageRangeInput._validateRangeInput(str, 50);
       let pageRanges = pageRangeInput.formatPageRange();
-
-      is(
-        expected.every((page, index) => page === pageRanges[index]),
-        true,
+      ok(
+        expected.length == pageRanges.length &&
+          expected.every((page, index) => page === pageRanges[index]),
         `Expected page range for "${str}" matches "${expected}"`
       );
 
@@ -203,11 +210,39 @@ add_task(async function testPageRangeSets() {
   });
 });
 
+add_task(async function testPageRangeSelect() {
+  await PrintHelper.withTestPage(async helper => {
+    await helper.startPrint();
+
+    let pageRangeInput = helper.get("page-range-input");
+
+    changeRangeTo(helper, "all");
+    let pageRanges = pageRangeInput.formatPageRange();
+    ok(!pageRanges.length, "Page range for all should be []");
+
+    changeRangeTo(helper, "odd");
+    pageRanges = pageRangeInput.formatPageRange();
+    ok(
+      pageRanges.length == 4 &&
+        [1, 1, 3, 3].every((page, index) => page === pageRanges[index]),
+      "Page range for odd should be [1, 1, 3, 3]"
+    );
+
+    changeRangeTo(helper, "even");
+    pageRanges = pageRangeInput.formatPageRange();
+    ok(
+      pageRanges.length == 2 &&
+        [2, 2].every((page, index) => page === pageRanges[index]),
+      "Page range for even should be [2, 2]"
+    );
+  }, "longerArticle.html");
+});
+
 add_task(async function testRangeError() {
   await PrintHelper.withTestPage(async helper => {
     await helper.startPrint();
 
-    changeAllToCustom(helper);
+    changeRangeTo(helper, "custom");
 
     let invalidError = helper.get("error-invalid-range");
     let invalidOverflowError = helper.get("error-invalid-start-range-overflow");
@@ -230,7 +265,7 @@ add_task(async function testStartOverflowRangeError() {
   await PrintHelper.withTestPage(async helper => {
     await helper.startPrint();
 
-    changeAllToCustom(helper);
+    changeRangeTo(helper, "custom");
 
     await helper.openMoreSettings();
     let scaleRadio = helper.get("percent-scale-choice");
@@ -262,7 +297,7 @@ add_task(async function testErrorClearedAfterSwitchingToAll() {
   await PrintHelper.withTestPage(async helper => {
     await helper.startPrint();
 
-    changeAllToCustom(helper);
+    changeRangeTo(helper, "custom");
 
     let customRange = helper.get("custom-range");
     let rangeError = helper.get("error-invalid-range");
@@ -273,7 +308,7 @@ add_task(async function testErrorClearedAfterSwitchingToAll() {
     await BrowserTestUtils.waitForAttributeRemoval("hidden", rangeError);
     ok(!rangeError.hidden, "Generic error message is showing");
 
-    changeCustomToAll(helper);
+    changeRangeTo(helper, "all");
 
     await BrowserTestUtils.waitForCondition(
       () => rangeError.hidden,
@@ -368,7 +403,7 @@ add_task(async function testPageCountChangeRangeNoRerender() {
         ]);
 
         await helper.waitForPreview(async () => {
-          changeAllToCustom(helper);
+          changeRangeTo(helper, "custom");
           helper.text(helper.get("custom-range"), "1");
         });
       }
@@ -425,7 +460,7 @@ add_task(async function testPageCountChangeRangeRerender() {
         ]);
 
         await helper.waitForPreview(async () => {
-          changeAllToCustom(helper);
+          changeRangeTo(helper, "custom");
           helper.text(helper.get("custom-range"), "1-");
         });
       }
