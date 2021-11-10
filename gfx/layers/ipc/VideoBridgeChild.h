@@ -29,7 +29,7 @@ class VideoBridgeChild final : public PVideoBridgeChild,
 
   // PVideoBridgeChild
   PTextureChild* AllocPTextureChild(const SurfaceDescriptor& aSharedData,
-                                    const ReadLockDescriptor& aReadLock,
+                                    ReadLockDescriptor& aReadLock,
                                     const LayersBackend& aLayersBackend,
                                     const TextureFlags& aFlags,
                                     const uint64_t& aSerial);
@@ -49,7 +49,7 @@ class VideoBridgeChild final : public PVideoBridgeChild,
 
   // TextureForwarder
   PTextureChild* CreateTexture(
-      const SurfaceDescriptor& aSharedData, const ReadLockDescriptor& aReadLock,
+      const SurfaceDescriptor& aSharedData, ReadLockDescriptor&& aReadLock,
       LayersBackend aLayersBackend, TextureFlags aFlags, uint64_t aSerial,
       wr::MaybeExternalImageId& aExternalImageId,
       nsISerialEventTarget* aTarget = nullptr) override;

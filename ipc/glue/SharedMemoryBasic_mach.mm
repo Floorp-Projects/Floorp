@@ -509,7 +509,7 @@ SharedMemoryBasic::~SharedMemoryBasic() {
   CloseHandle();
 }
 
-bool SharedMemoryBasic::SetHandle(const Handle& aHandle, OpenRights aRights) {
+bool SharedMemoryBasic::SetHandle(Handle aHandle, OpenRights aRights) {
   MOZ_ASSERT(mPort == MACH_PORT_NULL, "already initialized");
 
   mPort = aHandle;

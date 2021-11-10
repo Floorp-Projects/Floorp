@@ -5,7 +5,6 @@
  * Tests that adding a snapshot also adds related page data.
  */
 XPCOMUtils.defineLazyModuleGetters(this, {
-  PageDataCollector: "resource:///modules/pagedata/PageDataCollector.jsm",
   PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
 });
 
@@ -16,17 +15,10 @@ const TEST_IMAGE_URL = "https://example.com/dummy.png";
 
 add_task(async function pageImage() {
   // Register some page data.
-  PageDataService.pageDataDiscovered(TEST_URL1, [
-    {
-      type: PageDataCollector.DATA_TYPE.GENERAL,
-      data: [
-        {
-          type: "website",
-          image: TEST_IMAGE_URL,
-        },
-      ],
-    },
-  ]);
+  PageDataService.pageDataDiscovered({
+    url: TEST_URL1,
+    image: TEST_IMAGE_URL,
+  });
 
   let now = Date.now();
 
@@ -69,7 +61,7 @@ add_task(async function pageImage() {
 
   let snap = await Snapshots.get(TEST_URL1);
   let imageUrl = await Snapshots.getSnapshotImageURL(snap);
-  Assert.equal(snap.pageData.size, 1, "Should have some page data.");
+  Assert.equal(snap.pageData.size, 0, "Should have no page data.");
   Assert.equal(imageUrl, TEST_IMAGE_URL, "Should have a page image.");
 
   // In the browser a snapshot would usually have a thumbnail generated, but the

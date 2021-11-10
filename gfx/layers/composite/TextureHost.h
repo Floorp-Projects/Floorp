@@ -409,7 +409,7 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
    * Factory method.
    */
   static already_AddRefed<TextureHost> Create(
-      const SurfaceDescriptor& aDesc, const ReadLockDescriptor& aReadLock,
+      const SurfaceDescriptor& aDesc, ReadLockDescriptor&& aReadLock,
       ISurfaceAllocator* aDeallocator, LayersBackend aBackend,
       TextureFlags aFlags, wr::MaybeExternalImageId& aExternalImageId);
 
@@ -571,7 +571,7 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
    */
   static PTextureParent* CreateIPDLActor(
       HostIPCAllocator* aAllocator, const SurfaceDescriptor& aSharedData,
-      const ReadLockDescriptor& aDescriptor, LayersBackend aLayersBackend,
+      ReadLockDescriptor&& aDescriptor, LayersBackend aLayersBackend,
       TextureFlags aFlags, uint64_t aSerial,
       const wr::MaybeExternalImageId& aExternalImageId);
   static bool DestroyIPDLActor(PTextureParent* actor);
@@ -643,7 +643,7 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
 
   void SetLastFwdTransactionId(uint64_t aTransactionId);
 
-  void DeserializeReadLock(const ReadLockDescriptor& aDesc,
+  void DeserializeReadLock(ReadLockDescriptor&& aDesc,
                            ISurfaceAllocator* aAllocator);
   void SetReadLocked();
 

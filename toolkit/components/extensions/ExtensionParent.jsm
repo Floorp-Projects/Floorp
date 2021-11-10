@@ -285,6 +285,7 @@ const ProxyMessenger = {
     } else if (sender.verified) {
       return new NativeApp(context, nativeApp);
     }
+    sender = this.getSender(context.extension, sender);
     throw new Error(`Native messaging not allowed: ${JSON.stringify(sender)}`);
   },
 

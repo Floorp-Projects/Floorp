@@ -6,6 +6,7 @@
   <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
   <script type="application/javascript" src="helpers_from_wpt/sdp.js"></script>
   <script type="application/javascript" src="simulcast.js"></script>
+  <script type="application/javascript" src="stats.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -76,6 +77,9 @@
     info('Waiting for 2 loadedmetadata events');
     const videoElems = await Promise.all(metadataToBeLoaded);
 
+    const statsReady =
+      Promise.all([waitForSyncedRtcp(offerer), waitForSyncedRtcp(answerer)]);
+
     const helper = new VideoStreamHelper();
     info('Waiting for first video element to start playing');
     await helper.checkVideoPlaying(videoElems[0]);
@@ -90,6 +94,12 @@
        "sink is 1/2 width of source, modulo our cropping algorithm");
     is(videoElems[0].videoHeight, 24,
        "sink is 1/2 height of source, modulo our cropping algorithm");
+
+    await statsReady;
+    const senderStats = await sender.getStats();
+    checkSenderStats(senderStats, 2);
+    checkExpectedFields(senderStats);
+    pedanticChecks(senderStats);
 
     emitter.stop();
     videoStream.getVideoTracks()[0].stop();

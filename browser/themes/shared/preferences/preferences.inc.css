@@ -493,11 +493,6 @@ richlistitem[selected] .actionsMenu:focus-visible {
 
 /* Privacy Pane */
 
-#locationBarGroup > .text-link {
-  margin-top: 6px;
-  line-height: 30px;
-}
-
 #allowSmartSize {
   margin-block: 0 4px;
 }

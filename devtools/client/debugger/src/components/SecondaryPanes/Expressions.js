@@ -20,9 +20,10 @@ import { getValue } from "../../utils/expressions";
 import { getGrip, getFront } from "../../utils/evaluation-result";
 
 import { CloseButton } from "../shared/Button";
-import { debounce } from "lodash";
 
 import "./Expressions.css";
+
+const { debounce } = require("devtools/shared/debounce");
 
 const { ObjectInspector } = objectInspector;
 

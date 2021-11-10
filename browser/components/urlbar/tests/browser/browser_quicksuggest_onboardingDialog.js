@@ -17,6 +17,11 @@ const ONBOARDING_URI =
 
 const OTHER_DIALOG_URI = getRootDirectory(gTestPath) + "subdialog.xhtml";
 
+// Allow more time for Mac machines so they don't time out in verify mode.
+if (AppConstants.platform == "macosx") {
+  requestLongerTimeout(3);
+}
+
 // When the accept button is clicked, the user should be opted in.
 add_task(async function accept() {
   await doDialogTest({
@@ -48,6 +53,11 @@ add_task(async function accept() {
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "sponsored_toggled",
+        object: "enabled",
+      },
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "data_collect_toggled",
         object: "enabled",
       },
       {
@@ -349,6 +359,11 @@ add_task(async function focus_accept() {
       },
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "data_collect_toggled",
+        object: "enabled",
+      },
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
         object: "accept",
       },
@@ -487,6 +502,11 @@ add_task(async function focus_accept_wraparound() {
       },
       {
         category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
+        method: "data_collect_toggled",
+        object: "enabled",
+      },
+      {
+        category: QuickSuggestTestUtils.TELEMETRY_EVENT_CATEGORY,
         method: "opt_in_dialog",
         object: "accept",
       },
@@ -504,8 +524,9 @@ async function doDialogTest({
     // Set all the required prefs for showing the onboarding dialog.
     await SpecialPowers.pushPrefEnv({
       set: [
-        ["browser.urlbar.suggest.quicksuggest", false],
+        ["browser.urlbar.suggest.quicksuggest.nonsponsored", false],
         ["browser.urlbar.suggest.quicksuggest.sponsored", false],
+        ["browser.urlbar.quicksuggest.dataCollection.enabled", false],
         ["browser.urlbar.quicksuggest.enabled", true],
         ["browser.urlbar.quicksuggest.shouldShowOnboardingDialog", true],
         ["browser.urlbar.quicksuggest.showedOnboardingDialog", false],
@@ -520,7 +541,7 @@ async function doDialogTest({
     await callback();
 
     Assert.equal(
-      UrlbarPrefs.get("suggest.quicksuggest"),
+      UrlbarPrefs.get("suggest.quicksuggest.nonsponsored"),
       expectOptIn,
       "Main pref enabled status"
     );
@@ -528,6 +549,11 @@ async function doDialogTest({
       UrlbarPrefs.get("suggest.quicksuggest.sponsored"),
       expectOptIn,
       "Sponsored pref enabled status"
+    );
+    Assert.equal(
+      UrlbarPrefs.get("quicksuggest.dataCollection.enabled"),
+      expectOptIn,
+      "Data collection pref enabled status"
     );
 
     if (onboardingDialogChoice) {

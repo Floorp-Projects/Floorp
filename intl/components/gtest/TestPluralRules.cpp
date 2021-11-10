@@ -27,7 +27,7 @@ TEST(IntlPluralRules, CategoriesEnCardinal)
   ASSERT_TRUE(catResult.isOk());
   auto categories = catResult.unwrap();
 
-  ASSERT_EQ(categories.size(), 2);
+  ASSERT_EQ(categories.size(), 2u);
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
 }
@@ -45,7 +45,7 @@ TEST(IntlPluralRules, CategoriesEnOrdinal)
   ASSERT_TRUE(catResult.isOk());
   auto categories = catResult.unwrap();
 
-  ASSERT_EQ(categories.size(), 4);
+  ASSERT_EQ(categories.size(), 4u);
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Few));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
@@ -64,7 +64,7 @@ TEST(IntlPluralRules, CategoriesCyCardinal)
   ASSERT_TRUE(catResult.isOk());
   auto categories = catResult.unwrap();
 
-  ASSERT_EQ(categories.size(), 6);
+  ASSERT_EQ(categories.size(), 6u);
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Few));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
@@ -86,7 +86,7 @@ TEST(IntlPluralRules, CategoriesCyOrdinal)
   ASSERT_TRUE(catResult.isOk());
   auto categories = catResult.unwrap();
 
-  ASSERT_EQ(categories.size(), 6);
+  ASSERT_EQ(categories.size(), 6u);
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Few));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
@@ -107,7 +107,7 @@ TEST(IntlPluralRules, CategoriesBrCardinal)
   ASSERT_TRUE(catResult.isOk());
   auto categories = catResult.unwrap();
 
-  ASSERT_EQ(categories.size(), 5);
+  ASSERT_EQ(categories.size(), 5u);
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Few));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
@@ -128,7 +128,7 @@ TEST(IntlPluralRules, CategoriesBrOrdinal)
   ASSERT_TRUE(catResult.isOk());
   auto categories = catResult.unwrap();
 
-  ASSERT_EQ(categories.size(), 1);
+  ASSERT_EQ(categories.size(), 1u);
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
 }
 
@@ -144,7 +144,7 @@ TEST(IntlPluralRules, CategoriesHsbCardinal)
   ASSERT_TRUE(catResult.isOk());
   auto categories = catResult.unwrap();
 
-  ASSERT_EQ(categories.size(), 4);
+  ASSERT_EQ(categories.size(), 4u);
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Few));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::One));
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
@@ -164,7 +164,7 @@ TEST(IntlPluralRules, CategoriesHsbOrdinal)
   ASSERT_TRUE(catResult.isOk());
   auto categories = catResult.unwrap();
 
-  ASSERT_EQ(categories.size(), 1);
+  ASSERT_EQ(categories.size(), 1u);
   ASSERT_TRUE(categories.contains(PluralRules::Keyword::Other));
 }
 

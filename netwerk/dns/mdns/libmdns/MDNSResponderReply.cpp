@@ -5,6 +5,7 @@
 
 #include "MDNSResponderReply.h"
 #include "mozilla/EndianUtils.h"
+#include "nsHttpHandler.h"  // for OnSocketThread()
 #include "private/pprio.h"
 
 namespace mozilla {

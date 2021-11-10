@@ -24,10 +24,10 @@ import { scrollList } from "../../utils/result-list";
 import classnames from "classnames";
 
 import SearchInput from "../shared/SearchInput";
-import { debounce } from "lodash";
 import "./SearchBar.css";
 
 const { PluralForm } = require("devtools/shared/plural-form");
+const { debounce } = require("devtools/shared/debounce");
 
 function getShortcuts() {
   const searchAgainKey = L10N.getStr("sourceSearch.search.again.key3");
@@ -65,6 +65,7 @@ class SearchBar extends Component {
     shortcuts.off("Escape");
     shortcuts.off(searchAgainShortcut);
     shortcuts.off(shiftSearchAgainShortcut);
+    this.doSearch.cancel();
   }
 
   componentDidMount() {

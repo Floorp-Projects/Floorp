@@ -819,7 +819,7 @@
 
 - name: browser.active_color.dark
   type: String
-  value: "#FF9E9E"
+  value: "#FF6666"
   mirror: never
 
 - name: browser.anchor_color
@@ -831,7 +831,7 @@
 # nsXPLookAndFeel::GenericDarkColor for MozNativehyperlinktext.
 - name: browser.anchor_color.dark
   type: String
-  value: "#9E9EFF"
+  value: "#8C8CFF"
   mirror: never
 
 # See http://dev.w3.org/html5/spec/forms.html#attr-fe-autofocus
@@ -1463,7 +1463,7 @@
 # nsXPLookAndFeel::GenericDarkColor for MozNativevisitedhyperlinktext.
 - name: browser.visited_color.dark
   type: String
-  value: "#D0ADF0"
+  value: "#FFADFF"
   mirror: never
 
 # When true, soft reloads (including location.reload())
@@ -3865,7 +3865,7 @@
   mirror: always
 
 # Points in the native bounds geometry are required to be quantized
-# sufficiently to prevent fingerprinting. The WebXR spec suggests 
+# sufficiently to prevent fingerprinting. The WebXR spec suggests
 # quantizing to the nearest 5 centimeters.
 - name: dom.vr.webxr.quantization
   type: AtomicFloat
@@ -3982,7 +3982,7 @@
 # Whether the Web Locks API is enabled
 - name: dom.weblocks.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Whether the WebMIDI API is enabled
@@ -11863,6 +11863,18 @@
   type: RelaxedAtomicUint32
   value: 100000 # 100KB
   mirror: always
+
+# Override the blocklist to assume that GL is threadsafe.
+- name: webgl.threadsafe-gl.force-enabled
+  type: bool
+  value: false
+  mirror: once
+
+# Override the blocklist to assume that GL is not threadsafe.
+- name: webgl.threadsafe-gl.force-disabled
+  type: bool
+  value: false
+  mirror: once
 
 - name: webgl.override-unmasked-renderer
   type: String

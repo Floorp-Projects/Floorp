@@ -19,30 +19,13 @@ add_task(async function test_type_website() {
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     let pageData = await promise;
     Assert.equal(pageData.url, TEST_URL, "Should have returned the loaded URL");
-    Assert.equal(pageData.data.length, 1, "Should have only one data item");
-    Assert.deepEqual(
-      pageData.data,
-      [
-        {
-          type: PageDataCollector.DATA_TYPE.GENERAL,
-          data: [
-            {
-              type: "website",
-              site_name: "Mozilla",
-              url: "https://www.mozilla.org/",
-              image: "https://example.com/preview-image",
-              title: "Internet for people, not profit",
-            },
-          ],
-        },
-      ],
-      "Should have returned the expected data"
-    );
+    Assert.equal(pageData.siteName, "Mozilla", "Should have the site name");
     Assert.equal(
-      pageData.weakBrowser.get(),
-      browser,
-      "Should return the collection browser"
+      pageData.image,
+      "https://example.com/preview-image",
+      "Should have the image"
     );
+    Assert.deepEqual(pageData.data, {}, "Should have no specific data");
   });
 });
 
@@ -54,29 +37,12 @@ add_task(async function test_type_movie() {
   await BrowserTestUtils.withNewTab(TEST_URL, async browser => {
     let pageData = await promise;
     Assert.equal(pageData.url, TEST_URL, "Should have returned the loaded URL");
-    Assert.equal(pageData.data.length, 1, "Should have only one data item");
-    Assert.deepEqual(
-      pageData.data,
-      [
-        {
-          type: PageDataCollector.DATA_TYPE.GENERAL,
-          data: [
-            {
-              type: "video.movie",
-              site_name: undefined,
-              url: "https://www.imdb.com/title/tt0499004/",
-              image: "https://example.com/preview-code-rush",
-              title: "Code Rush (TV Movie 2000) - IMDb",
-            },
-          ],
-        },
-      ],
-      "Should have returned the expected data"
-    );
+    Assert.equal(pageData.siteName, undefined, "Should not have the site name");
     Assert.equal(
-      pageData.weakBrowser.get(),
-      browser,
-      "Should return the collection browser"
+      pageData.image,
+      "https://example.com/preview-code-rush",
+      "Should have the image"
     );
+    Assert.deepEqual(pageData.data, {}, "Should have no specific data");
   });
 });

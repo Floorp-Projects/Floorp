@@ -650,28 +650,70 @@
             preference="browser.urlbar.suggest.topsites"/>
   <checkbox id="enginesSuggestion" data-l10n-id="addressbar-locbar-engines-option"
             preference="browser.urlbar.suggest.engines"/>
-  <!-- #firefoxSuggestContainer is visible only for users enrolled in Firefox Suggest rollouts. -->
   <vbox id="firefoxSuggestContainer" hidden="true">
-    <hbox align="center">
-      <checkbox id="firefoxSuggestSuggestion"
-                class="tail-with-learn-more"
-                data-l10n-id="addressbar-locbar-firefox-suggest-option"
-                preference="browser.urlbar.suggest.quicksuggest"/>
-      <label id="firefoxSuggestSuggestionLearnMore"
-             class="learnMore"
-             is="text-link"
-             data-l10n-id="addressbar-locbar-firefox-suggest-learn-more"/>
-    </hbox>
-    <description id="firefoxSuggestSuggestionDescription"
-                 hidden="true"
-                 class="indent tip-caption"
-                 data-l10n-id="addressbar-locbar-firefox-suggest-description"/>
-    <vbox class="indent">
-      <checkbox id="firefoxSuggestSponsoredSuggestion"
-                data-l10n-id="addressbar-locbar-firefox-suggest-sponsored-option"/>
-      <description class="indent tip-caption"
-                   data-l10n-id="addressbar-locbar-firefox-suggest-sponsored-description"/>
+    <vbox class="firefoxSuggestOptionBox">
+      <hbox align="center">
+        <label id="firefoxSuggestNonsponsoredLabel"
+               flex="1"
+               data-l10n-id="addressbar-firefox-suggest-nonsponsored"/>
+        <html:input id="firefoxSuggestNonsponsoredToggle"
+                    type="checkbox"
+                    class="toggle-button firefoxSuggestToggle"
+                    preference="browser.urlbar.suggest.quicksuggest.nonsponsored"
+                    aria-labelledby="firefoxSuggestNonsponsoredLabel"
+                    aria-describedby="firefoxSuggestNonsponsoredDescription"/>
+      </hbox>
+      <description id="firefoxSuggestNonsponsoredDescription"
+                   class="tip-caption firefoxSuggestOptionDescription"
+                   data-l10n-id="addressbar-firefox-suggest-nonsponsored-description"/>
     </vbox>
+    <vbox class="firefoxSuggestOptionBox">
+      <hbox align="center">
+        <label id="firefoxSuggestSponsoredLabel"
+               flex="1"
+               data-l10n-id="addressbar-firefox-suggest-sponsored"/>
+        <html:input id="firefoxSuggestSponsoredToggle"
+                    type="checkbox"
+                    class="toggle-button firefoxSuggestToggle"
+                    preference="browser.urlbar.suggest.quicksuggest.sponsored"
+                    aria-labelledby="firefoxSuggestSponsoredLabel"
+                    aria-describedby="firefoxSuggestSponsoredDescription"/>
+      </hbox>
+      <description id="firefoxSuggestSponsoredDescription"
+                   class="tip-caption firefoxSuggestOptionDescription"
+                   data-l10n-id="addressbar-firefox-suggest-sponsored-description"/>
+    </vbox>
+    <vbox class="firefoxSuggestOptionBox">
+      <hbox align="center">
+        <label id="firefoxSuggestDataCollectionLabel"
+               flex="1"
+               data-l10n-id="addressbar-firefox-suggest-data-collection"/>
+        <html:input id="firefoxSuggestDataCollectionToggle"
+                    type="checkbox"
+                    class="toggle-button firefoxSuggestToggle"
+                    preference="browser.urlbar.quicksuggest.dataCollection.enabled"
+                    aria-labelledby="firefoxSuggestDataCollectionLabel"
+                    aria-describedby="firefoxSuggestDataCollectionDescription"/>
+      </hbox>
+      <description class="tip-caption firefoxSuggestOptionDescription">
+        <html:span id="firefoxSuggestDataCollectionDescription"
+                   class="tail-with-learn-more"
+                   data-l10n-id="addressbar-firefox-suggest-data-collection-description"/>
+      <label id="firefoxSuggestDataCollectionLearnMore"
+             class="learnMore firefoxSuggestLearnMore" is="text-link"
+             data-l10n-id="addressbar-locbar-firefox-suggest-learn-more"/>
+      </description>
+    </vbox>
+    <hbox id="firefoxSuggestInfoBox" class="info-box-container" align="start"
+          hidden="true">
+      <image class="info-icon"/>
+      <description class="tip-caption" flex="1">
+        <html:span id="firefoxSuggestInfoText" class="tail-with-learn-more"/>
+        <label id="firefoxSuggestInfoBoxLearnMore"
+               class="learnMore firefoxSuggestLearnMore" is="text-link"
+               data-l10n-id="addressbar-locbar-firefox-suggest-learn-more"/>
+      </description>
+    </hbox>
   </vbox>
   <label id="openSearchEnginePreferences" is="text-link"
          data-l10n-id="addressbar-suggestions-settings"/>

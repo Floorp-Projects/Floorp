@@ -11,13 +11,11 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  PageDataCollector: "resource:///modules/pagedata/PageDataCollector.jsm",
   PageDataService: "resource:///modules/pagedata/PageDataService.jsm",
-  Services: "resource://gre/modules/Services.jsm",
-  Snapshots: "resource:///modules/Snapshots.jsm",
+  PageDataSchema: "resource:///modules/pagedata/PageDataSchema.jsm",
 });
 
-add_task(async function test_pageDataDiscoverd_notifies() {
+add_task(async function test_pageDataDiscovered_notifies() {
   let url = "https://www.mozilla.org/";
 
   Assert.equal(
@@ -27,20 +25,17 @@ add_task(async function test_pageDataDiscoverd_notifies() {
   );
 
   let promise = PageDataService.once("page-data");
-  let fakeBrowser = {};
 
-  PageDataService.pageDataDiscovered(
+  PageDataService.pageDataDiscovered({
     url,
-    [
-      {
-        type: PageDataCollector.DATA_TYPE.PRODUCT,
-        data: {
-          price: 276,
-        },
+    date: 32453456,
+    data: {
+      [PageDataSchema.DATA_TYPE.PRODUCT]: {
+        name: "Bolts",
+        price: { value: 276 },
       },
-    ],
-    fakeBrowser
-  );
+    },
+  });
 
   let pageData = await promise;
   Assert.equal(
@@ -49,21 +44,18 @@ add_task(async function test_pageDataDiscoverd_notifies() {
     "Should have notified data for the expected url"
   );
   Assert.deepEqual(
-    pageData.data,
-    [
-      {
-        type: PageDataCollector.DATA_TYPE.PRODUCT,
-        data: {
-          price: 276,
+    pageData,
+    {
+      url,
+      date: 32453456,
+      data: {
+        [PageDataSchema.DATA_TYPE.PRODUCT]: {
+          name: "Bolts",
+          price: { value: 276 },
         },
       },
-    ],
+    },
     "Should have returned the correct product data"
-  );
-  Assert.equal(
-    pageData.weakBrowser.get(),
-    fakeBrowser,
-    "Should have returned the fakeBrowser object"
   );
 
   Assert.deepEqual(
@@ -74,7 +66,7 @@ add_task(async function test_pageDataDiscoverd_notifies() {
 });
 
 add_task(async function test_queueFetch_notifies() {
-  let promise = PageDataService.once("no-page-data");
+  let promise = PageDataService.once("page-data");
 
   PageDataService.queueFetch("https://example.org");
 
@@ -84,10 +76,5 @@ add_task(async function test_queueFetch_notifies() {
     "https://example.org",
     "Should have notified data for the expected url"
   );
-  Assert.equal(pageData.data.length, 0, "Should have returned no data");
-  Assert.equal(
-    pageData.weakBrowser,
-    null,
-    "Should have returned a null weakBrowser"
-  );
+  Assert.deepEqual(pageData.data, {}, "Should have returned no data");
 });

@@ -8,7 +8,6 @@ import { bindActionCreators } from "redux";
 import ReactDOM from "react-dom";
 import { connect } from "../../utils/connect";
 import classnames from "classnames";
-import { debounce } from "lodash";
 
 import { getLineText } from "./../../utils/source";
 import { features } from "../../utils/prefs";
@@ -76,8 +75,10 @@ import {
 
 import { resizeToggleButton, resizeBreakpointGutter } from "../../utils/ui";
 import Services from "devtools-services";
-const { appinfo } = Services;
 
+const { debounce } = require("devtools/shared/debounce");
+
+const { appinfo } = Services;
 const isMacOS = appinfo.OS === "Darwin";
 
 function isSecondary(ev) {

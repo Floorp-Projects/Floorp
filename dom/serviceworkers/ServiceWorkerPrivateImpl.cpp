@@ -614,10 +614,12 @@ ServiceWorkerPrivateImpl::PendingFetchEvent::PendingFetchEvent(
     ServiceWorkerPrivateImpl* aOwner,
     RefPtr<ServiceWorkerRegistrationInfo>&& aRegistration,
     ServiceWorkerFetchEventOpArgs&& aArgs,
-    nsCOMPtr<nsIInterceptedChannel>&& aChannel)
+    nsCOMPtr<nsIInterceptedChannel>&& aChannel,
+    RefPtr<FetchServiceResponsePromise>&& aPreloadResponseReadyPromise)
     : PendingFunctionalEvent(aOwner, std::move(aRegistration)),
       mArgs(std::move(aArgs)),
-      mChannel(std::move(aChannel)) {
+      mChannel(std::move(aChannel)),
+      mPreloadResponseReadyPromise(std::move(aPreloadResponseReadyPromise)) {
   AssertIsOnMainThread();
   MOZ_ASSERT(mChannel);
 }
@@ -627,8 +629,9 @@ nsresult ServiceWorkerPrivateImpl::PendingFetchEvent::Send() {
   MOZ_ASSERT(mOwner->mOuter);
   MOZ_ASSERT(mOwner->mOuter->mInfo);
 
-  return mOwner->SendFetchEventInternal(std::move(mRegistration),
-                                        std::move(mArgs), std::move(mChannel));
+  return mOwner->SendFetchEventInternal(
+      std::move(mRegistration), std::move(mArgs), std::move(mChannel),
+      std::move(mPreloadResponseReadyPromise));
 }
 
 ServiceWorkerPrivateImpl::PendingFetchEvent::~PendingFetchEvent() {
@@ -841,16 +844,39 @@ nsresult ServiceWorkerPrivateImpl::SendFetchEvent(
 
   scopeExit.release();
 
+  bool isNonSubresourceRequest =
+      nsContentUtils::IsNonSubresourceRequest(channel);
+  bool preloadNavigation = isNonSubresourceRequest &&
+                           request.method().LowerCaseEqualsASCII("get") &&
+                           aRegistration->GetNavigationPreloadState().enabled();
+  if (preloadNavigation) {
+    // TODO: Need to trigger navigation preloading through FetchService
+    // 1. Clone the request for preload
+    // 2. Append Service-Worker-Navigation-Preload header with
+    //    registration->GetNavigationPreloadState().headerValue() on request's
+    //    header list.
+    // 3. Passing aChannel and cloned request to FetchService to perform fetch
+    //    with BypassServiceWorker flag
+    //
+    // Here we assume FetchService provides an interface as following to perform
+    // asynchronous fetch in the main thread of the parent process .
+    //
+    // RefPtr<FetchServiceResponsePromise> Fetch(
+    //     SafeRefPtr<InternalRequest>&&, nsCOMPtr<nsIInterceptedChannel>);
+  }
+
   ServiceWorkerFetchEventOpArgs args(
       mOuter->mInfo->ScriptSpec(), std::move(request), nsString(aClientId),
-      nsString(aResultingClientId),
-      nsContentUtils::IsNonSubresourceRequest(channel),
-      mOuter->mInfo->TestingInjectCancellation());
+      nsString(aResultingClientId), isNonSubresourceRequest, preloadNavigation,
+      Nothing(), mOuter->mInfo->TestingInjectCancellation());
 
   if (mOuter->mInfo->State() == ServiceWorkerState::Activating) {
     UniquePtr<PendingFunctionalEvent> pendingEvent =
         MakeUnique<PendingFetchEvent>(this, std::move(aRegistration),
-                                      std::move(args), std::move(aChannel));
+                                      std::move(args), std::move(aChannel),
+                                      // The FetchServiceResponsePromise from
+                                      // FetchService
+                                      nullptr);
 
     mPendingFunctionalEvents.AppendElement(std::move(pendingEvent));
 
@@ -860,13 +886,17 @@ nsresult ServiceWorkerPrivateImpl::SendFetchEvent(
   MOZ_ASSERT(mOuter->mInfo->State() == ServiceWorkerState::Activated);
 
   return SendFetchEventInternal(std::move(aRegistration), std::move(args),
-                                std::move(aChannel));
+                                std::move(aChannel),
+                                // The FetchServiceResponsePromise from
+                                // FetchService
+                                nullptr);
 }
 
 nsresult ServiceWorkerPrivateImpl::SendFetchEventInternal(
     RefPtr<ServiceWorkerRegistrationInfo>&& aRegistration,
     ServiceWorkerFetchEventOpArgs&& aArgs,
-    nsCOMPtr<nsIInterceptedChannel>&& aChannel) {
+    nsCOMPtr<nsIInterceptedChannel>&& aChannel,
+    RefPtr<FetchServiceResponsePromise>&& aPreloadResponseReadyPromise) {
   AssertIsOnMainThread();
   MOZ_ASSERT(mOuter);
 
@@ -888,7 +918,8 @@ nsresult ServiceWorkerPrivateImpl::SendFetchEventInternal(
 
   FetchEventOpChild::SendFetchEvent(
       mControllerChild->get(), std::move(aArgs), std::move(aChannel),
-      std::move(aRegistration), mOuter->CreateEventKeepAliveToken())
+      std::move(aRegistration), std::move(aPreloadResponseReadyPromise),
+      mOuter->CreateEventKeepAliveToken())
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [holder = std::move(holder)](
                  const GenericPromise::ResolveOrRejectValue& aResult) {

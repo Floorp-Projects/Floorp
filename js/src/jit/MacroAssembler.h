@@ -884,7 +884,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // correctly, we have to push additional information, called the Exit frame
   // footer, which is used to identify how the stack is marked.
   //
-  // See JitFrames.h, and MarkJitExitFrame in JitFrames.cpp.
+  // See JitFrames.h, and TraceJitExitFrame in JitFrames.cpp.
 
   // Push stub code and the VMFunctionData pointer.
   inline void enterExitFrame(Register cxreg, Register scratch,

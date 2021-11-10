@@ -108,7 +108,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
       !queryContext.searchMode &&
       !queryContext.isPrivate &&
       UrlbarPrefs.get("quickSuggestEnabled") &&
-      UrlbarPrefs.get("suggest.quicksuggest")
+      (UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
+        UrlbarPrefs.get("suggest.quicksuggest.sponsored"))
     );
   }
 
@@ -135,7 +136,11 @@ class ProviderQuickSuggest extends UrlbarProvider {
         this._fetchRemoteSettingsSuggestion(queryContext, searchString)
       );
     }
-    if (UrlbarPrefs.get("merinoEnabled") && queryContext.allowRemoteResults()) {
+    if (
+      UrlbarPrefs.get("merinoEnabled") &&
+      UrlbarPrefs.get("quicksuggest.dataCollection.enabled") &&
+      queryContext.allowRemoteResults()
+    ) {
       promises.push(this._fetchMerinoSuggestions(queryContext, searchString));
     }
 
@@ -145,17 +150,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
       return;
     }
 
-    // Filter out sponsored suggestions if they're disabled. Also filter out
-    // null suggestions since both the remote settings and Merino fetches return
-    // null when there are no matches. Take the remaining suggestion with the
-    // largest score.
+    // Filter suggestions, keeping in mind both the remote settings and Merino
+    // fetches return null when there are no matches. Take the remaining one
+    // with the largest score.
     let suggestion = allSuggestions
       .flat()
-      .filter(
-        s =>
-          s &&
-          (!s.is_sponsored || UrlbarPrefs.get("suggest.quicksuggest.sponsored"))
-      )
+      .filter(s => s && this._canAddSuggestion(s))
       .sort((a, b) => b.score - a.score)[0];
     if (!suggestion) {
       return;
@@ -286,15 +286,15 @@ class ProviderQuickSuggest extends UrlbarProvider {
         requestId,
       } = result.payload;
 
-      let searchQuery;
-      let matchedKeywords;
       let scenario = UrlbarPrefs.get("quicksuggest.scenario");
-      // Only collect search query and matched keywords for the "online" scenario
-      // backed by the RemoteSettings source. For other scenarios and when the
-      // suggestions are provided by Merino, those two fields will not be sent,
-      // i.e. set as "undefined".
+
+      // Collect the search query and matched keywords only when the user has
+      // opted in to data collection and only for remote settings suggestions.
+      // Otherwise record those fields as undefined.
+      let matchedKeywords;
+      let searchQuery;
       if (
-        scenario === "online" &&
+        UrlbarPrefs.get("quicksuggest.dataCollection.enabled") &&
         source === QUICK_SUGGEST_SOURCE.REMOTE_SETTINGS
       ) {
         matchedKeywords = qsSuggestion || details.searchString;
@@ -334,15 +334,23 @@ class ProviderQuickSuggest extends UrlbarProvider {
   }
 
   /**
-   * Called when a urlbar pref changes.  We use this to listen for changes to
-   * `browser.urlbar.suggest.quicksuggest` so we can record a telemetry event.
+   * Called when a urlbar pref changes.
    *
    * @param {string} pref
    *   The name of the pref relative to `browser.urlbar`.
    */
   onPrefChanged(pref) {
     switch (pref) {
-      case "suggest.quicksuggest":
+      case "quicksuggest.dataCollection.enabled":
+        if (!UrlbarPrefs.updatingFirefoxSuggestScenario) {
+          Services.telemetry.recordEvent(
+            TELEMETRY_EVENT_CATEGORY,
+            "data_collect_toggled",
+            UrlbarPrefs.get(pref) ? "enabled" : "disabled"
+          );
+        }
+        break;
+      case "suggest.quicksuggest.nonsponsored":
         if (!UrlbarPrefs.updatingFirefoxSuggestScenario) {
           Services.telemetry.recordEvent(
             TELEMETRY_EVENT_CATEGORY,
@@ -531,6 +539,24 @@ class ProviderQuickSuggest extends UrlbarProvider {
       request_id,
       source: QUICK_SUGGEST_SOURCE.MERINO,
     }));
+  }
+
+  /**
+   * Returns whether a given suggestion can be added for a query, assuming the
+   * provider itself should be active.
+   *
+   * @param {object} suggestion
+   *   A suggestion object fetched from UrlbarQuickSuggest.
+   * @returns {boolean}
+   *   Whether the suggestion can be added.
+   */
+  _canAddSuggestion(suggestion) {
+    return (
+      (suggestion.is_sponsored &&
+        UrlbarPrefs.get("suggest.quicksuggest.sponsored")) ||
+      (!suggestion.is_sponsored &&
+        UrlbarPrefs.get("suggest.quicksuggest.nonsponsored"))
+    );
   }
 
   /**

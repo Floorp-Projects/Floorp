@@ -40,7 +40,8 @@ std::ostream& operator<<(std::ostream& aStream, const ScrollGeneration& aGen) {
 ScrollPositionUpdate::ScrollPositionUpdate()
     : mType(ScrollUpdateType::Absolute),
       mScrollMode(ScrollMode::Normal),
-      mScrollOrigin(ScrollOrigin::None) {}
+      mScrollOrigin(ScrollOrigin::None),
+      mTriggeredByScript(ScrollTriggeredByScript::No) {}
 
 /*static*/
 ScrollPositionUpdate ScrollPositionUpdate::NewScrollframe(
@@ -82,7 +83,8 @@ ScrollPositionUpdate ScrollPositionUpdate::NewRelativeScroll(
 
 /*static*/
 ScrollPositionUpdate ScrollPositionUpdate::NewSmoothScroll(
-    ScrollOrigin aOrigin, nsPoint aDestination) {
+    ScrollOrigin aOrigin, nsPoint aDestination,
+    ScrollTriggeredByScript aTriggeredByScript) {
   MOZ_ASSERT(aOrigin != ScrollOrigin::NotSpecified);
   MOZ_ASSERT(aOrigin != ScrollOrigin::None);
 
@@ -92,6 +94,7 @@ ScrollPositionUpdate ScrollPositionUpdate::NewSmoothScroll(
   ret.mScrollMode = ScrollMode::SmoothMsd;
   ret.mScrollOrigin = aOrigin;
   ret.mDestination = CSSPoint::FromAppUnits(aDestination);
+  ret.mTriggeredByScript = aTriggeredByScript;
   return ret;
 }
 
@@ -150,7 +153,8 @@ std::ostream& operator<<(std::ostream& aStream,
           << ", mode=" << (int)aUpdate.mScrollMode
           << ", origin=" << (int)aUpdate.mScrollOrigin
           << ", dst=" << aUpdate.mDestination << ", src=" << aUpdate.mSource
-          << ", delta=" << aUpdate.mDelta << " }";
+          << ", delta=" << aUpdate.mDelta
+          << ", triggered by script=" << aUpdate.WasTriggeredByScript() << " }";
   return aStream;
 }
 

@@ -728,10 +728,22 @@ static bool IndexOf(MDefinition* ins, int32_t* res) {
   return true;
 }
 
+static inline bool IsOptimizableArrayInstruction(MInstruction* ins) {
+  return ins->isNewArray() || ins->isNewArrayObject();
+}
+
+// We don't support storing holes when doing scalar replacement, so any
+// optimizable MNewArrayObject instruction is guaranteed to be packed.
+static inline bool IsPackedArray(MInstruction* ins) {
+  return ins->isNewArrayObject();
+}
+
 // Returns False if the elements is not escaped and if it is optimizable by
 // ScalarReplacementOfArray.
-static bool IsElementEscaped(MDefinition* def, uint32_t arraySize) {
+static bool IsElementEscaped(MDefinition* def, MInstruction* newArray,
+                             uint32_t arraySize) {
   MOZ_ASSERT(def->isElements());
+  MOZ_ASSERT(IsOptimizableArrayInstruction(newArray));
 
   JitSpewDef(JitSpew_Escape, "Check elements\n", def);
   JitSpewIndent spewIndent(JitSpew_Escape);
@@ -808,6 +820,24 @@ static bool IsElementEscaped(MDefinition* def, uint32_t arraySize) {
         MOZ_ASSERT(access->toArrayLength()->elements() == def);
         break;
 
+      case MDefinition::Opcode::ApplyArray:
+        MOZ_ASSERT(access->toApplyArray()->getElements() == def);
+        if (!IsPackedArray(newArray)) {
+          JitSpewDef(JitSpew_Escape, "is not guaranteed to be packed\n",
+                     access);
+          return true;
+        }
+        break;
+
+      case MDefinition::Opcode::ConstructArray:
+        MOZ_ASSERT(access->toConstructArray()->getElements() == def);
+        if (!IsPackedArray(newArray)) {
+          JitSpewDef(JitSpew_Escape, "is not guaranteed to be packed\n",
+                     access);
+          return true;
+        }
+        break;
+
       default:
         JitSpewDef(JitSpew_Escape, "is escaped by\n", access);
         return true;
@@ -815,10 +845,6 @@ static bool IsElementEscaped(MDefinition* def, uint32_t arraySize) {
   }
   JitSpew(JitSpew_Escape, "Elements is not escaped");
   return false;
-}
-
-static inline bool IsOptimizableArrayInstruction(MInstruction* ins) {
-  return ins->isNewArray() || ins->isNewArrayObject();
 }
 
 // Returns False if the array is not escaped and if it is optimizable by
@@ -872,7 +898,7 @@ static bool IsArrayEscaped(MInstruction* ins, MInstruction* newArray) {
       case MDefinition::Opcode::Elements: {
         MElements* elem = def->toElements();
         MOZ_ASSERT(elem->object() == ins);
-        if (IsElementEscaped(elem, length)) {
+        if (IsElementEscaped(elem, newArray, length)) {
           JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", elem);
           return true;
         }
@@ -905,6 +931,19 @@ static bool IsArrayEscaped(MInstruction* ins, MInstruction* newArray) {
           return true;
         }
 
+        break;
+      }
+
+      case MDefinition::Opcode::GuardArrayIsPacked: {
+        auto* guard = def->toGuardArrayIsPacked();
+        if (!IsPackedArray(newArray)) {
+          JitSpewDef(JitSpew_Escape, "is not guaranteed to be packed\n", def);
+          return true;
+        }
+        if (IsArrayEscaped(guard, newArray)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
         break;
       }
 
@@ -997,7 +1036,10 @@ class ArrayMemoryView : public MDefinitionVisitorDefaultNoop {
   void visitPostWriteElementBarrier(MPostWriteElementBarrier* ins);
   void visitGuardShape(MGuardShape* ins);
   void visitGuardToClass(MGuardToClass* ins);
+  void visitGuardArrayIsPacked(MGuardArrayIsPacked* ins);
   void visitUnbox(MUnbox* ins);
+  void visitApplyArray(MApplyArray* ins);
+  void visitConstructArray(MConstructArray* ins);
 };
 
 const char* ArrayMemoryView::phaseName = "Scalar Replacement of Array";
@@ -1321,6 +1363,19 @@ void ArrayMemoryView::visitGuardToClass(MGuardToClass* ins) {
   ins->block()->discard(ins);
 }
 
+void ArrayMemoryView::visitGuardArrayIsPacked(MGuardArrayIsPacked* ins) {
+  // Skip guards on other objects.
+  if (ins->array() != arr_) {
+    return;
+  }
+
+  // Replace the guard by its object.
+  ins->replaceAllUsesWith(arr_);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
 void ArrayMemoryView::visitUnbox(MUnbox* ins) {
   // Skip unrelated unboxes.
   if (ins->getOperand(0) != arr_) {
@@ -1333,6 +1388,90 @@ void ArrayMemoryView::visitUnbox(MUnbox* ins) {
 
   // Remove the unbox.
   ins->block()->discard(ins);
+}
+
+void ArrayMemoryView::visitApplyArray(MApplyArray* ins) {
+  // Skip other array objects.
+  MDefinition* elements = ins->getElements();
+  if (!isArrayStateElements(elements)) {
+    return;
+  }
+
+  uint32_t numElements = state_->numElements();
+
+  CallInfo callInfo(alloc_, /*constructing=*/false, ins->ignoresReturnValue());
+  if (!callInfo.initForApplyArray(ins->getFunction(), ins->getThis(),
+                                  numElements)) {
+    oom_ = true;
+    return;
+  }
+
+  for (uint32_t i = 0; i < numElements; i++) {
+    auto* element = state_->getElement(i);
+    MOZ_ASSERT(element->type() != MIRType::MagicHole);
+
+    callInfo.initArg(i, element);
+  }
+
+  auto addUndefined = [this]() { return undefinedVal_; };
+
+  bool needsThisCheck = false;
+  bool isDOMCall = false;
+  auto* call = MakeCall(alloc_, addUndefined, callInfo, needsThisCheck,
+                        ins->getSingleTarget(), isDOMCall);
+  if (!ins->maybeCrossRealm()) {
+    call->setNotCrossRealm();
+  }
+
+  ins->block()->insertBefore(ins, call);
+  ins->replaceAllUsesWith(call);
+
+  call->stealResumePoint(ins);
+
+  // Remove original instruction.
+  discardInstruction(ins, elements);
+}
+
+void ArrayMemoryView::visitConstructArray(MConstructArray* ins) {
+  // Skip other array objects.
+  MDefinition* elements = ins->getElements();
+  if (!isArrayStateElements(elements)) {
+    return;
+  }
+
+  uint32_t numElements = state_->numElements();
+
+  CallInfo callInfo(alloc_, /*constructing=*/true, ins->ignoresReturnValue());
+  if (!callInfo.initForConstructArray(ins->getFunction(), ins->getThis(),
+                                      ins->getNewTarget(), numElements)) {
+    oom_ = true;
+    return;
+  }
+
+  for (uint32_t i = 0; i < numElements; i++) {
+    auto* element = state_->getElement(i);
+    MOZ_ASSERT(element->type() != MIRType::MagicHole);
+
+    callInfo.initArg(i, element);
+  }
+
+  auto addUndefined = [this]() { return undefinedVal_; };
+
+  bool needsThisCheck = true;
+  bool isDOMCall = false;
+  auto* call = MakeCall(alloc_, addUndefined, callInfo, needsThisCheck,
+                        ins->getSingleTarget(), isDOMCall);
+  if (!ins->maybeCrossRealm()) {
+    call->setNotCrossRealm();
+  }
+
+  ins->block()->insertBefore(ins, call);
+  ins->replaceAllUsesWith(call);
+
+  call->stealResumePoint(ins);
+
+  // Remove original instruction.
+  discardInstruction(ins, elements);
 }
 
 static inline bool IsOptimizableArgumentsInstruction(MInstruction* ins) {

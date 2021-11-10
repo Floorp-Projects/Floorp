@@ -3465,7 +3465,7 @@ size_t JSScript::calculateLiveFixed(jsbytecode* pc) {
   return nlivefixed;
 }
 
-Scope* JSScript::lookupScope(jsbytecode* pc) const {
+Scope* JSScript::lookupScope(const jsbytecode* pc) const {
   MOZ_ASSERT(containsPC(pc));
 
   size_t offset = pc - code();
@@ -3514,7 +3514,7 @@ Scope* JSScript::lookupScope(jsbytecode* pc) const {
   return scope;
 }
 
-Scope* JSScript::innermostScope(jsbytecode* pc) const {
+Scope* JSScript::innermostScope(const jsbytecode* pc) const {
   if (Scope* scope = lookupScope(pc)) {
     return scope;
   }

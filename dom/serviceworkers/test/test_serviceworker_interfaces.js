@@ -200,6 +200,10 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "ImageData",
   // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "Lock", nightly: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
+  { name: "LockManager", nightly: true },
+  // IMPORTANT: Do not change this list without review from a DOM peer!
   "MediaCapabilities",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   "MediaCapabilitiesInfo",
