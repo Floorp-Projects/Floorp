@@ -2752,14 +2752,13 @@ static inline void CheckIsMarkedThing(T* thing) {
 }
 
 template <typename T>
-bool js::gc::IsMarkedInternal(JSRuntime* rt, T** thingp) {
+bool js::gc::IsMarkedInternal(JSRuntime* rt, T* thing) {
   // Don't depend on the mark state of other cells during finalization.
   MOZ_ASSERT(!CurrentThreadIsGCFinalizing());
   MOZ_ASSERT(!JS::RuntimeHeapIsMinorCollecting());
-  MOZ_ASSERT(thingp);
-  CheckIsMarkedThing(*thingp);
+  MOZ_ASSERT(thing);
+  CheckIsMarkedThing(thing);
 
-  T* thing = *thingp;
   if (IsOwnedByOtherRuntime(rt, thing)) {
     return true;
   }
@@ -2868,7 +2867,7 @@ JS_FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(
 
 #define INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND(_1, type, _2, \
                                                               _3)           \
-  INSTANTIATE_INTERNAL_IS_MARKED_FUNCTION(type**)                           \
+  INSTANTIATE_INTERNAL_IS_MARKED_FUNCTION(type*)                            \
   INSTANTIATE_INTERNAL_IATBF_FUNCTION(type*)
 
 JS_FOR_EACH_TRACEKIND(INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND)
