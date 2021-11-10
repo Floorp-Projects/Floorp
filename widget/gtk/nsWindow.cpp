@@ -5393,300 +5393,292 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     }
   }
 
+  if (mWindowType != eWindowType_dialog && mWindowType != eWindowType_popup &&
+      mWindowType != eWindowType_toplevel &&
+      mWindowType != eWindowType_invisible) {
+    MOZ_ASSERT_UNREACHABLE("Unexpected eWindowType");
+    return NS_ERROR_FAILURE;
+  }
+
   mAlwaysOnTop = aInitData && aInitData->mAlwaysOnTop;
   mIsPIPWindow = aInitData && aInitData->mPIPWindow;
   mNoAutoHide = aInitData && aInitData->mNoAutoHide;
   mMouseTransparent = aInitData && aInitData->mMouseTransparent;
 
-  // ok, create our windows
-  switch (mWindowType) {
-    case eWindowType_dialog:
-    case eWindowType_popup:
-    case eWindowType_toplevel:
-    case eWindowType_invisible: {
-      // Popups that are not noautohide are only temporary. The are used
-      // for menus and the like and disappear when another window is used.
-      // For most popups, use the standard GtkWindowType GTK_WINDOW_POPUP,
-      // which will use a Window with the override-redirect attribute
-      // (for temporary windows).
-      // For long-lived windows, their stacking order is managed by the
-      // window manager, as indicated by GTK_WINDOW_TOPLEVEL.
-      // For Wayland we have to always use GTK_WINDOW_POPUP to control
-      // popup window position.
-      GtkWindowType type = GTK_WINDOW_TOPLEVEL;
-      if (mWindowType == eWindowType_popup) {
-        MOZ_ASSERT(aInitData);
-        type = GTK_WINDOW_POPUP;
-        if (GdkIsX11Display() && mNoAutoHide) {
-          type = GTK_WINDOW_TOPLEVEL;
-        }
-      }
-      mShell = gtk_window_new(type);
+  // Popups that are not noautohide are only temporary. The are used
+  // for menus and the like and disappear when another window is used.
+  // For most popups, use the standard GtkWindowType GTK_WINDOW_POPUP,
+  // which will use a Window with the override-redirect attribute
+  // (for temporary windows).
+  // For long-lived windows, their stacking order is managed by the
+  // window manager, as indicated by GTK_WINDOW_TOPLEVEL.
+  // For Wayland we have to always use GTK_WINDOW_POPUP to control
+  // popup window position.
+  GtkWindowType type = GTK_WINDOW_TOPLEVEL;
+  if (mWindowType == eWindowType_popup) {
+    MOZ_ASSERT(aInitData);
+    type = GTK_WINDOW_POPUP;
+    if (GdkIsX11Display() && mNoAutoHide) {
+      type = GTK_WINDOW_TOPLEVEL;
+    }
+  }
+  mShell = gtk_window_new(type);
 
-      // Ensure gfxPlatform is initialized, since that is what initializes
-      // gfxVars, used below.
-      Unused << gfxPlatform::GetPlatform();
+  // Ensure gfxPlatform is initialized, since that is what initializes
+  // gfxVars, used below.
+  Unused << gfxPlatform::GetPlatform();
 
-      if (mWindowType == eWindowType_toplevel ||
-          mWindowType == eWindowType_dialog) {
-        mGtkWindowDecoration = GetSystemGtkWindowDecoration();
-      }
+  if (mWindowType == eWindowType_toplevel ||
+      mWindowType == eWindowType_dialog) {
+    mGtkWindowDecoration = GetSystemGtkWindowDecoration();
+  }
 
-      // Don't use transparency for PictureInPicture windows.
-      bool toplevelNeedsAlphaVisual = false;
-      if (mWindowType == eWindowType_toplevel && !mIsPIPWindow) {
-        toplevelNeedsAlphaVisual = IsToplevelWindowTransparent();
-      }
+  // Don't use transparency for PictureInPicture windows.
+  bool toplevelNeedsAlphaVisual = false;
+  if (mWindowType == eWindowType_toplevel && !mIsPIPWindow) {
+    toplevelNeedsAlphaVisual = IsToplevelWindowTransparent();
+  }
 
-      bool isGLVisualSet = false;
-      mIsAccelerated = ComputeShouldAccelerate();
+  bool isGLVisualSet = false;
+  mIsAccelerated = ComputeShouldAccelerate();
 #ifdef MOZ_X11
-      if (GdkIsX11Display() && mIsAccelerated) {
-        isGLVisualSet = ConfigureX11GLVisual();
-      }
+  if (GdkIsX11Display() && mIsAccelerated) {
+    isGLVisualSet = ConfigureX11GLVisual();
+  }
 #endif
-      if (!isGLVisualSet &&
-          (popupNeedsAlphaVisual || toplevelNeedsAlphaVisual)) {
-        // We're running on composited screen so we can use alpha visual
-        // for both toplevel and popups.
-        if (mCompositedScreen) {
-          GdkVisual* visual =
-              gdk_screen_get_rgba_visual(gtk_widget_get_screen(mShell));
-          if (visual) {
-            gtk_widget_set_visual(mShell, visual);
-            mHasAlphaVisual = true;
-          }
+  if (!isGLVisualSet && (popupNeedsAlphaVisual || toplevelNeedsAlphaVisual)) {
+    // We're running on composited screen so we can use alpha visual
+    // for both toplevel and popups.
+    if (mCompositedScreen) {
+      GdkVisual* visual =
+          gdk_screen_get_rgba_visual(gtk_widget_get_screen(mShell));
+      if (visual) {
+        gtk_widget_set_visual(mShell, visual);
+        mHasAlphaVisual = true;
+      }
+    }
+  }
+
+  // Use X shape mask to draw round corners of Firefox titlebar.
+  // We don't use shape masks any more as we switched to ARGB visual
+  // by default and non-compositing screens use solid-csd decorations
+  // without round corners.
+  // Leave the shape mask code here as it can be used to draw round
+  // corners on EGL (https://gitlab.freedesktop.org/mesa/mesa/-/issues/149)
+  // or when custom titlebar theme is used.
+  mTransparencyBitmapForTitlebar = TitlebarUseShapeMask();
+
+  // We have a toplevel window with transparency.
+  // Calls to UpdateTitlebarTransparencyBitmap() from OnExposeEvent()
+  // occur before SetTransparencyMode() receives eTransparencyTransparent
+  // from layout, so set mIsTransparent here.
+  if (mWindowType == eWindowType_toplevel &&
+      (mHasAlphaVisual || mTransparencyBitmapForTitlebar)) {
+    mIsTransparent = true;
+  }
+
+  // We only move a general managed toplevel window if someone has
+  // actually placed the window somewhere.  If no placement has taken
+  // place, we just let the window manager Do The Right Thing.
+  if (AreBoundsSane()) {
+    GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mBounds.Size());
+    LOG("nsWindow::Create() Initial resize to %d x %d\n", size.width,
+        size.height);
+    gtk_window_resize(GTK_WINDOW(mShell), size.width, size.height);
+  }
+
+  if (mWindowType == eWindowType_dialog) {
+    mGtkWindowRoleName = "Dialog";
+
+    SetDefaultIcon();
+    gtk_window_set_type_hint(GTK_WINDOW(mShell), GDK_WINDOW_TYPE_HINT_DIALOG);
+    LOG("nsWindow::Create(): dialog [%p]\n", this);
+    if (parentnsWindow) {
+      gtk_window_set_transient_for(GTK_WINDOW(mShell),
+                                   GTK_WINDOW(parentnsWindow->GetGtkWidget()));
+      LOG("    set parent window [%p]\n", parentnsWindow);
+    }
+  } else if (mWindowType == eWindowType_popup) {
+    MOZ_ASSERT(aInitData);
+    mGtkWindowRoleName = "Popup";
+    mPopupHint = aInitData->mPopupHint;
+
+    LOG("nsWindow::Create() Popup [%p]\n", this);
+
+    if (mNoAutoHide) {
+      // ... but the window manager does not decorate this window,
+      // nor provide a separate taskbar icon.
+      if (mBorderStyle == eBorderStyle_default) {
+        gtk_window_set_decorated(GTK_WINDOW(mShell), FALSE);
+      } else {
+        bool decorate = mBorderStyle & eBorderStyle_title;
+        gtk_window_set_decorated(GTK_WINDOW(mShell), decorate);
+        if (decorate) {
+          gtk_window_set_deletable(GTK_WINDOW(mShell),
+                                   mBorderStyle & eBorderStyle_close);
         }
       }
-
-      // Use X shape mask to draw round corners of Firefox titlebar.
-      // We don't use shape masks any more as we switched to ARGB visual
-      // by default and non-compositing screens use solid-csd decorations
-      // without round corners.
-      // Leave the shape mask code here as it can be used to draw round
-      // corners on EGL (https://gitlab.freedesktop.org/mesa/mesa/-/issues/149)
-      // or when custom titlebar theme is used.
-      mTransparencyBitmapForTitlebar = TitlebarUseShapeMask();
-
-      // We have a toplevel window with transparency.
-      // Calls to UpdateTitlebarTransparencyBitmap() from OnExposeEvent()
-      // occur before SetTransparencyMode() receives eTransparencyTransparent
-      // from layout, so set mIsTransparent here.
-      if (mWindowType == eWindowType_toplevel &&
-          (mHasAlphaVisual || mTransparencyBitmapForTitlebar)) {
-        mIsTransparent = true;
-      }
-
-      // We only move a general managed toplevel window if someone has
-      // actually placed the window somewhere.  If no placement has taken
-      // place, we just let the window manager Do The Right Thing.
-      if (AreBoundsSane()) {
-        GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mBounds.Size());
-        LOG("nsWindow::Create() Initial resize to %d x %d\n", size.width,
-            size.height);
-        gtk_window_resize(GTK_WINDOW(mShell), size.width, size.height);
-      }
-
-      if (mWindowType == eWindowType_dialog) {
-        mGtkWindowRoleName = "Dialog";
-
-        SetDefaultIcon();
-        gtk_window_set_type_hint(GTK_WINDOW(mShell),
-                                 GDK_WINDOW_TYPE_HINT_DIALOG);
-        LOG("nsWindow::Create(): dialog [%p]\n", this);
-        if (parentnsWindow) {
-          gtk_window_set_transient_for(
-              GTK_WINDOW(mShell), GTK_WINDOW(parentnsWindow->GetGtkWidget()));
-          LOG("    set parent window [%p]\n", parentnsWindow);
-        }
-      } else if (mWindowType == eWindowType_popup) {
-        MOZ_ASSERT(aInitData);
-        mGtkWindowRoleName = "Popup";
-        mPopupHint = aInitData->mPopupHint;
-
-        LOG("nsWindow::Create() Popup [%p]\n", this);
-
-        if (mNoAutoHide) {
-          // ... but the window manager does not decorate this window,
-          // nor provide a separate taskbar icon.
-          if (mBorderStyle == eBorderStyle_default) {
-            gtk_window_set_decorated(GTK_WINDOW(mShell), FALSE);
-          } else {
-            bool decorate = mBorderStyle & eBorderStyle_title;
-            gtk_window_set_decorated(GTK_WINDOW(mShell), decorate);
-            if (decorate) {
-              gtk_window_set_deletable(GTK_WINDOW(mShell),
-                                       mBorderStyle & eBorderStyle_close);
-            }
-          }
-          gtk_window_set_skip_taskbar_hint(GTK_WINDOW(mShell), TRUE);
-          // Element focus is managed by the parent window so the
-          // WM_HINTS input field is set to False to tell the window
-          // manager not to set input focus to this window ...
-          gtk_window_set_accept_focus(GTK_WINDOW(mShell), FALSE);
+      gtk_window_set_skip_taskbar_hint(GTK_WINDOW(mShell), TRUE);
+      // Element focus is managed by the parent window so the
+      // WM_HINTS input field is set to False to tell the window
+      // manager not to set input focus to this window ...
+      gtk_window_set_accept_focus(GTK_WINDOW(mShell), FALSE);
 #ifdef MOZ_X11
-          // ... but when the window manager offers focus through
-          // WM_TAKE_FOCUS, focus is requested on the parent window.
-          if (GdkIsX11Display()) {
-            gtk_widget_realize(mShell);
-            gdk_window_add_filter(gtk_widget_get_window(mShell),
-                                  popup_take_focus_filter, nullptr);
-          }
-#endif
-        }
-
-        if (aInitData->mIsDragPopup) {
-          gtk_window_set_type_hint(GTK_WINDOW(mShell),
-                                   GDK_WINDOW_TYPE_HINT_DND);
-          mIsDragPopup = true;
-          LOG_POPUP("nsWindow::Create() Drag popup [%p]\n", this);
-        } else if (GdkIsX11Display()) {
-          // Set the window hints on X11 only. Wayland popups are configured
-          // at WaylandPopupNeedsTrackInHierarchy().
-          GdkWindowTypeHint gtkTypeHint;
-          switch (mPopupHint) {
-            case ePopupTypeMenu:
-              gtkTypeHint = GDK_WINDOW_TYPE_HINT_POPUP_MENU;
-              break;
-            case ePopupTypeTooltip:
-              gtkTypeHint = GDK_WINDOW_TYPE_HINT_TOOLTIP;
-              break;
-            default:
-              gtkTypeHint = GDK_WINDOW_TYPE_HINT_UTILITY;
-              break;
-          }
-          gtk_window_set_type_hint(GTK_WINDOW(mShell), gtkTypeHint);
-          LOG_POPUP("nsWindow::Create() popup type %s\n",
-                    GetPopupTypeName().get());
-        }
-        if (parentnsWindow) {
-          LOG_POPUP("    set parent window [%p] %s\n", parentnsWindow,
-                    parentnsWindow->mGtkWindowRoleName.get());
-          GtkWindow* parentWidget = GTK_WINDOW(parentnsWindow->GetGtkWidget());
-          gtk_window_set_transient_for(GTK_WINDOW(mShell), parentWidget);
-          if (GdkIsWaylandDisplay() && gtk_window_get_modal(parentWidget)) {
-            gtk_window_set_modal(GTK_WINDOW(mShell), true);
-          }
-        }
-
-        // We need realized mShell at NativeMoveResize().
+      // ... but when the window manager offers focus through
+      // WM_TAKE_FOCUS, focus is requested on the parent window.
+      if (GdkIsX11Display()) {
         gtk_widget_realize(mShell);
-
-        if (GdkIsX11Display()) {
-          // With popup windows, we want to control their position, so don't
-          // wait for the window manager to place them (which wouldn't
-          // happen with override-redirect windows anyway).
-          NativeMoveResize(/* move */ true, /* resize */ false);
-        }
-      } else {  // must be eWindowType_toplevel
-        mGtkWindowRoleName = "Toplevel";
-        SetDefaultIcon();
-
-        LOG("nsWindow::Create() Toplevel\n");
-
-        if (mIsPIPWindow) {
-          LOG("    Is PIP Window\n");
-          gtk_window_set_type_hint(GTK_WINDOW(mShell),
-                                   GDK_WINDOW_TYPE_HINT_UTILITY);
-        }
-
-        // each toplevel window gets its own window group
-        GtkWindowGroup* group = gtk_window_group_new();
-        gtk_window_group_add_window(group, GTK_WINDOW(mShell));
-        g_object_unref(group);
+        gdk_window_add_filter(gtk_widget_get_window(mShell),
+                              popup_take_focus_filter, nullptr);
       }
+#endif
+    }
 
-      if (mAlwaysOnTop) {
-        gtk_window_set_keep_above(GTK_WINDOW(mShell), TRUE);
+    if (aInitData->mIsDragPopup) {
+      gtk_window_set_type_hint(GTK_WINDOW(mShell), GDK_WINDOW_TYPE_HINT_DND);
+      mIsDragPopup = true;
+      LOG_POPUP("nsWindow::Create() Drag popup [%p]\n", this);
+    } else if (GdkIsX11Display()) {
+      // Set the window hints on X11 only. Wayland popups are configured
+      // at WaylandPopupNeedsTrackInHierarchy().
+      GdkWindowTypeHint gtkTypeHint;
+      switch (mPopupHint) {
+        case ePopupTypeMenu:
+          gtkTypeHint = GDK_WINDOW_TYPE_HINT_POPUP_MENU;
+          break;
+        case ePopupTypeTooltip:
+          gtkTypeHint = GDK_WINDOW_TYPE_HINT_TOOLTIP;
+          break;
+        default:
+          gtkTypeHint = GDK_WINDOW_TYPE_HINT_UTILITY;
+          break;
       }
-
-      // Create a container to hold child windows and child GtkWidgets.
-      GtkWidget* container = moz_container_new();
-      mContainer = MOZ_CONTAINER(container);
-
-      // Don't render to invisible window.
-      mCompositorState = COMPOSITOR_PAUSED_INITIALLY;
-
-      // "csd" style is set when widget is realized so we need to call
-      // it explicitly now.
-      gtk_widget_realize(mShell);
-
-      /* There are several cases here:
-       *
-       * 1) We're running on Gtk+ without client side decorations.
-       *    Content is rendered to mShell window and we listen
-       *    to the Gtk+ events on mShell
-       * 2) We're running on Gtk+ and client side decorations
-       *    are drawn by Gtk+ to mShell. Content is rendered to mContainer
-       *    and we listen to the Gtk+ events on mContainer.
-       * 3) We're running on Wayland. All gecko content is rendered
-       *    to mContainer and we listen to the Gtk+ events on mContainer.
-       */
-      GtkStyleContext* style = gtk_widget_get_style_context(mShell);
-      mDrawToContainer = GdkIsWaylandDisplay() ||
-                         (mGtkWindowDecoration == GTK_DECORATION_CLIENT) ||
-                         gtk_style_context_has_class(style, "csd");
-      eventWidget = mDrawToContainer ? container : mShell;
-
-      // Prevent GtkWindow from painting a background to avoid flickering.
-      gtk_widget_set_app_paintable(eventWidget, gTransparentWindows);
-
-      gtk_widget_add_events(eventWidget, kEvents);
-
-      if (mDrawToContainer) {
-        gtk_widget_add_events(mShell, GDK_PROPERTY_CHANGE_MASK);
-        gtk_widget_set_app_paintable(mShell, gTransparentWindows);
+      gtk_window_set_type_hint(GTK_WINDOW(mShell), gtkTypeHint);
+      LOG_POPUP("nsWindow::Create() popup type %s\n", GetPopupTypeName().get());
+    }
+    if (parentnsWindow) {
+      LOG_POPUP("    set parent window [%p] %s\n", parentnsWindow,
+                parentnsWindow->mGtkWindowRoleName.get());
+      GtkWindow* parentWidget = GTK_WINDOW(parentnsWindow->GetGtkWidget());
+      gtk_window_set_transient_for(GTK_WINDOW(mShell), parentWidget);
+      if (GdkIsWaylandDisplay() && gtk_window_get_modal(parentWidget)) {
+        gtk_window_set_modal(GTK_WINDOW(mShell), true);
       }
-      if (mTransparencyBitmapForTitlebar) {
-        moz_container_force_default_visual(mContainer);
-      }
+    }
 
-      // If we draw to mContainer window then configure it now because
-      // gtk_container_add() realizes the child widget.
-      gtk_widget_set_has_window(container, mDrawToContainer);
+    // We need realized mShell at NativeMoveResize().
+    gtk_widget_realize(mShell);
 
-      gtk_container_add(GTK_CONTAINER(mShell), container);
+    if (GdkIsX11Display()) {
+      // With popup windows, we want to control their position, so don't
+      // wait for the window manager to place them (which wouldn't
+      // happen with override-redirect windows anyway).
+      NativeMoveResize(/* move */ true, /* resize */ false);
+    }
+  } else {  // must be eWindowType_toplevel
+    mGtkWindowRoleName = "Toplevel";
+    SetDefaultIcon();
 
-      // alwaysontop windows are generally used for peripheral indicators,
-      // so we don't focus them by default.
-      if (mAlwaysOnTop) {
-        gtk_window_set_focus_on_map(GTK_WINDOW(mShell), FALSE);
-      }
+    LOG("nsWindow::Create() Toplevel\n");
 
-      gtk_widget_realize(container);
+    if (mIsPIPWindow) {
+      LOG("    Is PIP Window\n");
+      gtk_window_set_type_hint(GTK_WINDOW(mShell),
+                               GDK_WINDOW_TYPE_HINT_UTILITY);
+    }
 
-      // make sure this is the focus widget in the container
-      gtk_widget_show(container);
+    // each toplevel window gets its own window group
+    GtkWindowGroup* group = gtk_window_group_new();
+    gtk_window_group_add_window(group, GTK_WINDOW(mShell));
+    g_object_unref(group);
+  }
 
-      if (!mAlwaysOnTop) {
-        gtk_widget_grab_focus(container);
-      }
+  if (mAlwaysOnTop) {
+    gtk_window_set_keep_above(GTK_WINDOW(mShell), TRUE);
+  }
 
-      if (mIsWaylandPanelWindow) {
-        gtk_window_set_decorated(GTK_WINDOW(mShell), false);
-      }
+  // Create a container to hold child windows and child GtkWidgets.
+  GtkWidget* container = moz_container_new();
+  mContainer = MOZ_CONTAINER(container);
+
+  // Don't render to invisible window.
+  mCompositorState = COMPOSITOR_PAUSED_INITIALLY;
+
+  // "csd" style is set when widget is realized so we need to call
+  // it explicitly now.
+  gtk_widget_realize(mShell);
+
+  /* There are several cases here:
+   *
+   * 1) We're running on Gtk+ without client side decorations.
+   *    Content is rendered to mShell window and we listen
+   *    to the Gtk+ events on mShell
+   * 2) We're running on Gtk+ and client side decorations
+   *    are drawn by Gtk+ to mShell. Content is rendered to mContainer
+   *    and we listen to the Gtk+ events on mContainer.
+   * 3) We're running on Wayland. All gecko content is rendered
+   *    to mContainer and we listen to the Gtk+ events on mContainer.
+   */
+  GtkStyleContext* style = gtk_widget_get_style_context(mShell);
+  mDrawToContainer = GdkIsWaylandDisplay() ||
+                     (mGtkWindowDecoration == GTK_DECORATION_CLIENT) ||
+                     gtk_style_context_has_class(style, "csd");
+  eventWidget = mDrawToContainer ? container : mShell;
+
+  // Prevent GtkWindow from painting a background to avoid flickering.
+  gtk_widget_set_app_paintable(eventWidget, gTransparentWindows);
+
+  gtk_widget_add_events(eventWidget, kEvents);
+
+  if (mDrawToContainer) {
+    gtk_widget_add_events(mShell, GDK_PROPERTY_CHANGE_MASK);
+    gtk_widget_set_app_paintable(mShell, gTransparentWindows);
+  }
+  if (mTransparencyBitmapForTitlebar) {
+    moz_container_force_default_visual(mContainer);
+  }
+
+  // If we draw to mContainer window then configure it now because
+  // gtk_container_add() realizes the child widget.
+  gtk_widget_set_has_window(container, mDrawToContainer);
+
+  gtk_container_add(GTK_CONTAINER(mShell), container);
+
+  // alwaysontop windows are generally used for peripheral indicators,
+  // so we don't focus them by default.
+  if (mAlwaysOnTop) {
+    gtk_window_set_focus_on_map(GTK_WINDOW(mShell), FALSE);
+  }
+
+  gtk_widget_realize(container);
+
+  // make sure this is the focus widget in the container
+  gtk_widget_show(container);
+
+  if (!mAlwaysOnTop) {
+    gtk_widget_grab_focus(container);
+  }
+
+  if (mIsWaylandPanelWindow) {
+    gtk_window_set_decorated(GTK_WINDOW(mShell), false);
+  }
 
 #ifdef MOZ_WAYLAND
-      if (mIsDragPopup && GdkIsWaylandDisplay()) {
-        LOG("  set commit to parent");
-        moz_container_wayland_set_commit_to_parent(mContainer);
-      }
+  if (mIsDragPopup && GdkIsWaylandDisplay()) {
+    LOG("  set commit to parent");
+    moz_container_wayland_set_commit_to_parent(mContainer);
+  }
 #endif
 
-      if (mWindowType == eWindowType_popup) {
-        MOZ_ASSERT(aInitData);
-        // gdk does not automatically set the cursor for "temporary"
-        // windows, which are what gtk uses for popups.
+  if (mWindowType == eWindowType_popup) {
+    MOZ_ASSERT(aInitData);
+    // gdk does not automatically set the cursor for "temporary"
+    // windows, which are what gtk uses for popups.
 
-        // force SetCursor to actually set the cursor, even though our internal
-        // state indicates that we already have the standard cursor.
-        mUpdateCursor = true;
-        SetCursor(Cursor{eCursor_standard});
-      }
-    } break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected eWindowType");
-      return NS_ERROR_FAILURE;
+    // force SetCursor to actually set the cursor, even though our internal
+    // state indicates that we already have the standard cursor.
+    mUpdateCursor = true;
+    SetCursor(Cursor{eCursor_standard});
   }
 
   if (mIsChildWindow && parentnsWindow) {
