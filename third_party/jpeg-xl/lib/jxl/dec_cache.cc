@@ -87,18 +87,20 @@ void LoadBorders(const Rect& block_rect, size_t hshift, size_t vshift,
   // Limits of the area to copy from, in image coordinates.
   JXL_DASSERT(r.x0() == 0 || r.x0() >= borderx);
   size_t x0src = DivCeil(r.x0() == 0 ? r.x0() : r.x0() - borderx, 1 << hshift);
+  // r may be such that r.x1 (namely x0() + xsize()) is within borderx of the
+  // right side of the image, so we use min() here.
   size_t x1src =
-      DivCeil(r.x0() + r.xsize() +
-                  (r.x0() + r.xsize() == frame_dim.xsize_padded ? 0 : borderx),
+      DivCeil(std::min(r.x0() + r.xsize() + borderx, frame_dim.xsize_padded),
               1 << hshift);
   JXL_DASSERT(r.y0() == 0 || r.y0() >= bordery);
   size_t y0src = DivCeil(r.y0() == 0 ? r.y0() : r.y0() - bordery, 1 << vshift);
+  // Similar to x1, y1 might be closer than bordery from the bottom.
   size_t y1src =
-      DivCeil(r.y0() + r.ysize() +
-                  (r.y0() + r.ysize() == frame_dim.ysize_padded ? 0 : bordery),
+      DivCeil(std::min(r.y0() + r.ysize() + bordery, frame_dim.ysize_padded),
               1 << vshift);
   // Copy other groups' borders from the border storage.
   if (y0src < y0) {
+    JXL_DASSERT(gy > 0);
     CopyImageTo(
         Rect(x0src, (gy * 2 - 1) * bordery_write, x1src - x0src, bordery_write),
         border_storage_h,
@@ -107,6 +109,8 @@ void LoadBorders(const Rect& block_rect, size_t hshift, size_t vshift,
         plane_out);
   }
   if (y1src > y1) {
+    // When copying the bottom border we must not be on the bottom groups.
+    JXL_DASSERT(gy + 1 < frame_dim.ysize_groups);
     CopyImageTo(
         Rect(x0src, (gy * 2 + 2) * bordery_write, x1src - x0src, bordery_write),
         border_storage_h,
@@ -115,6 +119,7 @@ void LoadBorders(const Rect& block_rect, size_t hshift, size_t vshift,
         plane_out);
   }
   if (x0src < x0) {
+    JXL_DASSERT(gx > 0);
     CopyImageTo(
         Rect((gx * 2 - 1) * borderx_write, y0src, borderx_write, y1src - y0src),
         border_storage_v,
@@ -123,6 +128,8 @@ void LoadBorders(const Rect& block_rect, size_t hshift, size_t vshift,
         plane_out);
   }
   if (x1src > x1) {
+    // When copying the right border we must not be on the rightmost groups.
+    JXL_DASSERT(gx + 1 < frame_dim.xsize_groups);
     CopyImageTo(
         Rect((gx * 2 + 2) * borderx_write, y0src, borderx_write, y1src - y0src),
         border_storage_v,

@@ -35,6 +35,7 @@ set(JPEGXL_INTERNAL_SOURCES_DEC
   jxl/base/override.h
   jxl/base/padded_bytes.cc
   jxl/base/padded_bytes.h
+  jxl/base/printf_macros.h
   jxl/base/profiler.h
   jxl/base/random.cc
   jxl/base/random.h

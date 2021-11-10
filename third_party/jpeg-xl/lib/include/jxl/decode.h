@@ -405,6 +405,19 @@ JXL_EXPORT JxlDecoderStatus JxlDecoderSubscribeEvents(JxlDecoder* dec,
 JXL_EXPORT JxlDecoderStatus
 JxlDecoderSetKeepOrientation(JxlDecoder* dec, JXL_BOOL keep_orientation);
 
+/** Enables or disables rendering spot colors. By default, spot colors
+ * are rendered, which is OK for viewing the decoded image. If render_spotcolors
+ * is JXL_FALSE, then spot colors are not rendered, and have to be retrieved
+ * separately using JxlDecoderSetExtraChannelBuffer. This is useful for e.g.
+ * printing applications.
+ *
+ * @param dec decoder object
+ * @param render_spotcolors JXL_TRUE to enable (default), JXL_FALSE to disable.
+ * @return JXL_DEC_SUCCESS if no error, JXL_DEC_ERROR otherwise.
+ */
+JXL_EXPORT JxlDecoderStatus
+JxlDecoderSetRenderSpotcolors(JxlDecoder* dec, JXL_BOOL render_spotcolors);
+
 /**
  * Decodes JPEG XL file using the available bytes. Requires input has been
  * set with JxlDecoderSetInput. After JxlDecoderProcessInput, input can
@@ -454,11 +467,14 @@ JXL_EXPORT JxlDecoderStatus JxlDecoderProcessInput(JxlDecoder* dec);
  * Sets input data for JxlDecoderProcessInput. The data is owned by the caller
  * and may be used by the decoder until JxlDecoderReleaseInput is called or
  * the decoder is destroyed or reset so must be kept alive until then.
+ * Cannot be called if JxlDecoderSetInput was already called and
+ * JxlDecoderReleaseInput was not yet called, and cannot be called after
+ * JxlDecoderCloseInput indicating the end of input was called.
  * @param dec decoder object
  * @param data pointer to next bytes to read from
  * @param size amount of bytes available starting from data
- * @return JXL_DEC_ERROR if input was already set without releasing,
- * JXL_DEC_SUCCESS otherwise.
+ * @return JXL_DEC_ERROR if input was already set without releasing or
+ * JxlDecoderCloseInput was already called, JXL_DEC_SUCCESS otherwise.
  */
 JXL_EXPORT JxlDecoderStatus JxlDecoderSetInput(JxlDecoder* dec,
                                                const uint8_t* data,
@@ -482,6 +498,23 @@ JXL_EXPORT JxlDecoderStatus JxlDecoderSetInput(JxlDecoder* dec,
  * file are.
  */
 JXL_EXPORT size_t JxlDecoderReleaseInput(JxlDecoder* dec);
+
+/**
+ * Marks the input as finished, indicates that no more JxlDecoderSetInput will
+ * be called. This function allows the decoder to determine correctly if it
+ * should return success, need more input or error in certain cases. For
+ * backwards compatibility with a previous version of the API, using this
+ * function is optional when not using the JXL_DEC_BOX event (the decoder is
+ * able to determine the end of the image frames without marking the end), but
+ * using this function is required when using JXL_DEC_BOX for getting metadata
+ * box contents. This function does not replace JxlDecoderReleaseInput, that
+ * function should still be called if its return value is needed.
+ * JxlDecoderCloseInput should be called as soon as all known input bytes are
+ * set (e.g. at the beginning when not streaming but setting all input at once),
+ * before the final JxlDecoderProcessInput calls.
+ * @param dec decoder object
+ */
+JXL_EXPORT void JxlDecoderCloseInput(JxlDecoder* dec);
 
 /**
  * Outputs the basic image information, such as image dimensions, bit depth and

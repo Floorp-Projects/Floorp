@@ -5,6 +5,7 @@
 
 #include "lib/jxl/headers.h"
 
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/common.h"
 #include "lib/jxl/fields.h"
 

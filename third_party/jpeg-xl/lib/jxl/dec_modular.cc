@@ -18,6 +18,7 @@
 
 #include "lib/jxl/alpha.h"
 #include "lib/jxl/base/compiler_specific.h"
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/base/span.h"
 #include "lib/jxl/base/status.h"
 #include "lib/jxl/compressed_dc.h"
@@ -158,17 +159,18 @@ Status ModularFrameDecoder::DecodeGlobalInfo(BitReader* reader,
   if (is_gray && frame_header.color_transform == ColorTransform::kNone) {
     nb_chans = 1;
   }
+  do_color = decode_color;
+  if (!do_color) nb_chans = 0;
+  size_t nb_extra = metadata.extra_channel_info.size();
   bool has_tree = reader->ReadBits(1);
   if (has_tree) {
-    size_t tree_size_limit =
-        1024 + frame_dim.xsize * frame_dim.ysize * nb_chans / 16;
+    size_t tree_size_limit = std::min(
+        static_cast<size_t>(1 << 22),
+        1024 + frame_dim.xsize * frame_dim.ysize * (nb_chans + nb_extra) / 16);
     JXL_RETURN_IF_ERROR(DecodeTree(reader, &tree, tree_size_limit));
     JXL_RETURN_IF_ERROR(
         DecodeHistograms(reader, (tree.size() + 1) / 2, &code, &context_map));
   }
-  do_color = decode_color;
-  if (!do_color) nb_chans = 0;
-  size_t nb_extra = metadata.extra_channel_info.size();
 
   bool fp = metadata.bit_depth.floating_point_sample;
 

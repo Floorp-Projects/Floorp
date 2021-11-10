@@ -70,8 +70,8 @@ typedef int JxlParallelRetCode;
  * JxlParallelRunner() must be passed here.
  * @param num_threads the maximum number of threads. This value must be
  * positive.
- * @returns 0 if the initialization process was successful.
- * @returns an error code if there was an error, which should be returned by
+ * @return 0 if the initialization process was successful.
+ * @return an error code if there was an error, which should be returned by
  * JxlParallelRunner().
  */
 typedef JxlParallelRetCode (*JxlParallelRunInit)(void* jpegxl_opaque,
@@ -110,9 +110,9 @@ typedef void (*JxlParallelRunFunction)(void* jpegxl_opaque, uint32_t value,
  * or encoding instance may call the provided JxlParallelRunner multiple
  * times for different parts of the decoding or encoding process.
  *
- * @returns 0 if the @p init call succeeded (returned 0) and no other error
+ * @return 0 if the @p init call succeeded (returned 0) and no other error
  * occurred in the runner code.
- * @returns JXL_PARALLEL_RET_RUNNER_ERROR if an error occurred in the runner
+ * @return JXL_PARALLEL_RET_RUNNER_ERROR if an error occurred in the runner
  * code, for example, setting up the threads.
  * @return the return value of @p init() if non-zero.
  */

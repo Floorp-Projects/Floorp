@@ -72,6 +72,98 @@ JxlDecoderStatus JxlToJpegDecoder::Process(const uint8_t** next_in,
   return JXL_DEC_NEED_MORE_INPUT;
 }
 
+size_t JxlToJpegDecoder::NumExifMarkers(const jpeg::JPEGData& jpeg_data) {
+  size_t num = 0;
+  for (size_t i = 0; i < jpeg_data.app_data.size(); ++i) {
+    if (jpeg_data.app_marker_type[i] == jxl::jpeg::AppMarkerType::kExif) {
+      num++;
+    }
+  }
+  return num;
+}
+
+size_t JxlToJpegDecoder::NumXmpMarkers(const jpeg::JPEGData& jpeg_data) {
+  size_t num = 0;
+  for (size_t i = 0; i < jpeg_data.app_data.size(); ++i) {
+    if (jpeg_data.app_marker_type[i] == jxl::jpeg::AppMarkerType::kXMP) {
+      num++;
+    }
+  }
+  return num;
+}
+
+JxlDecoderStatus JxlToJpegDecoder::ExifBoxContentSize(
+    const jpeg::JPEGData& jpeg_data, size_t* size) {
+  for (size_t i = 0; i < jpeg_data.app_data.size(); ++i) {
+    if (jpeg_data.app_marker_type[i] == jxl::jpeg::AppMarkerType::kExif) {
+      if (jpeg_data.app_data[i].size() < 3 + sizeof(jpeg::kExifTag)) {
+        // too small for app marker header
+        return JXL_DEC_ERROR;
+      }
+      // The first 4 bytes are the TIFF header from the box contents, and are
+      // not included in the JPEG
+      *size = jpeg_data.app_data[i].size() + 4 - 3 - sizeof(jpeg::kExifTag);
+      return JXL_DEC_SUCCESS;
+    }
+  }
+  return JXL_DEC_ERROR;
+}
+
+JxlDecoderStatus JxlToJpegDecoder::XmlBoxContentSize(
+    const jpeg::JPEGData& jpeg_data, size_t* size) {
+  for (size_t i = 0; i < jpeg_data.app_data.size(); ++i) {
+    if (jpeg_data.app_marker_type[i] == jxl::jpeg::AppMarkerType::kXMP) {
+      if (jpeg_data.app_data[i].size() < 3 + sizeof(jpeg::kXMPTag)) {
+        // too small for app marker header
+        return JXL_DEC_ERROR;
+      }
+      *size = jpeg_data.app_data[i].size() - 3 - sizeof(jpeg::kXMPTag);
+      return JXL_DEC_SUCCESS;
+    }
+  }
+  return JXL_DEC_ERROR;
+}
+
+JxlDecoderStatus JxlToJpegDecoder::SetExif(const uint8_t* data, size_t size,
+                                           jpeg::JPEGData* jpeg_data) {
+  for (size_t i = 0; i < jpeg_data->app_data.size(); ++i) {
+    if (jpeg_data->app_marker_type[i] == jxl::jpeg::AppMarkerType::kExif) {
+      if (jpeg_data->app_data[i].size() !=
+          size + 3 + sizeof(jpeg::kExifTag) - 4)
+        return JXL_DEC_ERROR;
+      // The first 9 bytes are used for JPEG marker header.
+      jpeg_data->app_data[i][0] = 0xE1;
+      // The second and third byte are already filled in correctly
+      memcpy(jpeg_data->app_data[i].data() + 3, jpeg::kExifTag,
+             sizeof(jpeg::kExifTag));
+      // The first 4 bytes are the TIFF header from the box contents, and are
+      // not included in the JPEG
+      memcpy(jpeg_data->app_data[i].data() + 3 + sizeof(jpeg::kExifTag),
+             data + 4, size - 4);
+      return JXL_DEC_SUCCESS;
+    }
+  }
+  return JXL_DEC_ERROR;
+}
+JxlDecoderStatus JxlToJpegDecoder::SetXmp(const uint8_t* data, size_t size,
+                                          jpeg::JPEGData* jpeg_data) {
+  for (size_t i = 0; i < jpeg_data->app_data.size(); ++i) {
+    if (jpeg_data->app_marker_type[i] == jxl::jpeg::AppMarkerType::kXMP) {
+      if (jpeg_data->app_data[i].size() != size + 3 + sizeof(jpeg::kXMPTag))
+        return JXL_DEC_ERROR;
+      // The first 9 bytes are used for JPEG marker header.
+      jpeg_data->app_data[i][0] = 0xE1;
+      // The second and third byte are already filled in correctly
+      memcpy(jpeg_data->app_data[i].data() + 3, jpeg::kXMPTag,
+             sizeof(jpeg::kXMPTag));
+      memcpy(jpeg_data->app_data[i].data() + 3 + sizeof(jpeg::kXMPTag), data,
+             size);
+      return JXL_DEC_SUCCESS;
+    }
+  }
+  return JXL_DEC_ERROR;
+}
+
 #endif  // JPEGXL_ENABLE_TRANSCODE_JPEG
 
 }  // namespace jxl

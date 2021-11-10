@@ -10,6 +10,7 @@
 #include <numeric>  // accumulate
 
 #include "lib/jxl/aux_out_fwd.h"
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/enc_bit_writer.h"
 
 namespace jxl {
