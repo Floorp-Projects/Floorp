@@ -314,7 +314,7 @@ class IProtocol : public HasResultCodes {
       GetIPCChannel()->Send(std::move(msg), this, std::move(aResolve),
                             std::move(aReject));
     } else {
-      NS_WARNING("IPC message discarded: actor cannot send");
+      WarnMessageDiscarded(msg.get());
       aReject(ResponseRejectReason::SendError);
     }
   }
@@ -358,6 +358,12 @@ class IProtocol : public HasResultCodes {
   static const int32_t kFreedActorId = 1;
 
  private:
+#ifdef DEBUG
+  void WarnMessageDiscarded(IPC::Message* aMsg);
+#else
+  void WarnMessageDiscarded(IPC::Message*) {}
+#endif
+
   int32_t mId;
   ProtocolId mProtocolId;
   Side mSide;
