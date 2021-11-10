@@ -1646,9 +1646,9 @@ class nsXPCWrappedJS final : protected nsAutoXPTCStub,
   // XPCWrappedJS.cpp for more details.
   bool IsSubjectToFinalization() const { return IsValid() && mRefCnt == 1; }
 
-  void UpdateObjectPointerAfterGC() {
+  void UpdateObjectPointerAfterGC(JSTracer* trc) {
     MOZ_ASSERT(IsRootWrapper());
-    JS_UpdateWeakPointerAfterGC(&mJSObj);
+    JS_UpdateWeakPointerAfterGC(trc, &mJSObj);
   }
 
   bool IsAggregatedToNative() const { return mRoot->mOuter != nullptr; }

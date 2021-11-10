@@ -1130,6 +1130,10 @@ extern JS_PUBLIC_API void JS_RemoveFinalizeCallback(JSContext* cx,
  * referent has been moved then the pointer will be updated to point to the new
  * location.
  *
+ * The return value of JS_UpdateWeakPointerAfterGC() indicates whether the
+ * referent is still alive. If the referent is is about to be finalized, this
+ * will return false.
+ *
  * Callers of this method are responsible for updating any state that is
  * dependent on the object's address. For example, if the object's address is
  * used as a key in a hashtable, then the object must be removed and
@@ -1153,11 +1157,11 @@ template <typename T>
 class Heap;
 }
 
-extern JS_PUBLIC_API void JS_UpdateWeakPointerAfterGC(
-    JS::Heap<JSObject*>* objp);
+extern JS_PUBLIC_API bool JS_UpdateWeakPointerAfterGC(
+    JSTracer* trc, JS::Heap<JSObject*>* objp);
 
-extern JS_PUBLIC_API void JS_UpdateWeakPointerAfterGCUnbarriered(
-    JSObject** objp);
+extern JS_PUBLIC_API bool JS_UpdateWeakPointerAfterGCUnbarriered(
+    JSTracer* trc, JSObject** objp);
 
 extern JS_PUBLIC_API void JS_SetGCParameter(JSContext* cx, JSGCParamKey key,
                                             uint32_t value);
