@@ -497,11 +497,14 @@ bool js::HasOffThreadIonCompile(Realm* realm) {
 }
 #endif
 
-struct MOZ_RAII AutoSetContextParse {
-  explicit AutoSetContextParse(ParseTask* task) {
-    TlsContext.get()->setParseTask(task);
+struct MOZ_RAII AutoSetContextOffThreadFrontendErrors {
+  explicit AutoSetContextOffThreadFrontendErrors(
+      OffThreadFrontendErrors* errors) {
+    TlsContext.get()->setOffThreadFrontendErrors(errors);
   }
-  ~AutoSetContextParse() { TlsContext.get()->setParseTask(nullptr); }
+  ~AutoSetContextOffThreadFrontendErrors() {
+    TlsContext.get()->setOffThreadFrontendErrors(nullptr);
+  }
 };
 
 AutoSetHelperThreadContext::AutoSetHelperThreadContext(
@@ -535,9 +538,7 @@ ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx,
       options(cx),
       parseGlobal(nullptr),
       callback(callback),
-      callbackData(callbackData),
-      overRecursed(false),
-      outOfMemory(false) {
+      callbackData(callbackData) {
   // Note that |cx| is the main thread context here but the parse task will
   // run with a different, helper thread, context.
   MOZ_ASSERT(!cx->isHelperThreadContext());
@@ -644,7 +645,7 @@ void ParseTask::runTask(AutoLockHelperThreadState& lock) {
   JSContext* cx = TlsContext.get();
 
   AutoSetContextRuntime ascr(runtime);
-  AutoSetContextParse parsetask(this);
+  AutoSetContextOffThreadFrontendErrors recordErrors(&this->errors);
   gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(cx);
 
   Zone* zone = nullptr;
@@ -1310,7 +1311,7 @@ void js::EnqueuePendingParseTasksAfterGC(JSRuntime* rt) {
 #ifdef DEBUG
 bool js::CurrentThreadIsParseThread() {
   JSContext* cx = TlsContext.get();
-  return cx->isHelperThreadContext() && cx->parseTask();
+  return cx->isHelperThreadContext() && cx->offThreadFrontendErrors();
 }
 #endif
 
@@ -2083,16 +2084,16 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
   }
 
   // Report out of memory errors eagerly, or errors could be malformed.
-  if (parseTask->outOfMemory) {
+  if (parseTask->errors.outOfMemory) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
 
   // Report any error or warnings generated during the parse.
-  for (size_t i = 0; i < parseTask->errors.length(); i++) {
-    parseTask->errors[i]->throwError(cx);
+  for (size_t i = 0; i < parseTask->errors.errors.length(); i++) {
+    parseTask->errors.errors[i]->throwError(cx);
   }
-  if (parseTask->overRecursed) {
+  if (parseTask->errors.overRecursed) {
     ReportOverRecursed(cx);
   }
   if (cx->isExceptionPending()) {
@@ -2456,28 +2457,28 @@ bool JSContext::addPendingCompileError(js::CompileError** error) {
   if (!errorPtr) {
     return false;
   }
-  if (!parseTask_->errors.append(std::move(errorPtr))) {
+  if (!errors_->errors.append(std::move(errorPtr))) {
     ReportOutOfMemory(this);
     return false;
   }
-  *error = parseTask_->errors.back().get();
+  *error = errors_->errors.back().get();
   return true;
 }
 
 bool JSContext::isCompileErrorPending() const {
-  return parseTask_->errors.length() > 0;
+  return errors_->errors.length() > 0;
 }
 
 void JSContext::addPendingOverRecursed() {
-  if (parseTask_) {
-    parseTask_->overRecursed = true;
+  if (errors_) {
+    errors_->overRecursed = true;
   }
 }
 
 void JSContext::addPendingOutOfMemory() {
   // Keep in sync with recoverFromOutOfMemory.
-  if (parseTask_) {
-    parseTask_->outOfMemory = true;
+  if (errors_) {
+    errors_->outOfMemory = true;
   }
 }
 
