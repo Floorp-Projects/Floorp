@@ -723,8 +723,6 @@ class LocalAccessible : public nsISupports, public Accessible {
    */
   virtual LocalAccessible* ContainerWidget() const;
 
-  bool IsActiveDescendant(LocalAccessible** aWidget = nullptr) const;
-
   /**
    * Return the localized string for the given key.
    */
