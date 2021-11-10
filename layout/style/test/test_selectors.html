@@ -1024,32 +1024,11 @@ function runTests() {
                           xul_default_ns + html_ns);
 
     // Test -moz-locale-dir
-    test_parseable(":-moz-locale-dir(ltr)");
-    test_parseable(":-moz-locale-dir(rtl)");
-    test_parseable(":-moz-locale-dir(rTl)");
-    test_parseable(":-moz-locale-dir(LTR)");
-    test_parseable(":-moz-locale-dir(other)");
-    if (document.body.matches(":-moz-locale-dir(ltr)")) {
-        test_selector_in_html("a:-moz-locale-dir(LTr)", single_a,
-                              set_single, empty_set);
-        test_selector_in_html("a:-moz-locale-dir(ltR)", single_a,
-                              set_single, empty_set);
-        test_selector_in_html("a:-moz-locale-dir(LTR)", single_a,
-                              set_single, empty_set);
-        test_selector_in_html("a:-moz-locale-dir(RTl)", single_a,
-                              empty_set, set_single);
-    } else {
-        test_selector_in_html("a:-moz-locale-dir(RTl)", single_a,
-                              set_single, empty_set);
-        test_selector_in_html("a:-moz-locale-dir(rtL)", single_a,
-                              set_single, empty_set);
-        test_selector_in_html("a:-moz-locale-dir(RTL)", single_a,
-                              set_single, empty_set);
-        test_selector_in_html("a:-moz-locale-dir(LTr)", single_a,
-                              empty_set, set_single);
-    }
-    test_selector_in_html("a:-moz-locale-dir(other)", single_a,
-                          empty_set, set_single);
+    test_balanced_unparseable(":-moz-locale-dir(ltr)");
+    test_balanced_unparseable(":-moz-locale-dir(rtl)");
+    test_balanced_unparseable(":-moz-locale-dir(rTl)");
+    test_balanced_unparseable(":-moz-locale-dir(LTR)");
+    test_balanced_unparseable(":-moz-locale-dir(other)");
 
     test_balanced_unparseable(":-moz-locale-dir()");
     test_balanced_unparseable(":-moz-locale-dir(())");
@@ -1097,10 +1076,10 @@ function runTests() {
     test_balanced_unparseable(":dir(ltr other)");
     test_balanced_unparseable(":dir");
 
-    // Test -moz-lwtheme and -moz-lwtheme-[darktext|brighttext]
-    test_parseable(":-moz-lwtheme");
-    test_parseable(":-moz-lwtheme-brighttext");
-    test_parseable(":-moz-lwtheme-darktext");
+    // Test chrome-only -moz-lwtheme and -moz-lwtheme-[darktext|brighttext]
+    test_balanced_unparseable(":-moz-lwtheme");
+    test_balanced_unparseable(":-moz-lwtheme-brighttext");
+    test_balanced_unparseable(":-moz-lwtheme-darktext");
 
     test_balanced_unparseable(":-moz-tree-row(selected)");
     test_balanced_unparseable("::-moz-tree-row(selected)");
