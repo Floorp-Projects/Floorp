@@ -83,7 +83,7 @@ class MOZ_RAII AutoCycleDetector {
 
 struct AutoResolving;
 
-struct ParseTask;
+struct OffThreadFrontendErrors;  // vm/HelperThreadState.h
 
 class InternalJobQueue : public JS::JobQueue {
  public:
@@ -195,7 +195,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // Thread that the JSContext is currently running on, if in use.
   js::ThreadId currentThread_;
 
-  js::ParseTask* parseTask_;
+  js::OffThreadFrontendErrors* errors_;
 
   // When a helper thread is using a context, it may need to periodically
   // free unused memory.
@@ -343,8 +343,12 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   inline void leaveRealm(JS::Realm* oldRealm);
 
-  void setParseTask(js::ParseTask* parseTask) { parseTask_ = parseTask; }
-  js::ParseTask* parseTask() const { return parseTask_; }
+  void setOffThreadFrontendErrors(js::OffThreadFrontendErrors* errors) {
+    errors_ = errors;
+  }
+  js::OffThreadFrontendErrors* offThreadFrontendErrors() const {
+    return errors_;
+  }
 
   bool isNurseryAllocSuppressed() const { return nurserySuppressions_; }
 

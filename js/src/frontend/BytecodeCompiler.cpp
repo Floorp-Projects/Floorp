@@ -27,7 +27,7 @@
 #include "vm/FunctionFlags.h"          // FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 #include "vm/GlobalObject.h"
-#include "vm/HelperThreadState.h"  // ParseTask
+#include "vm/HelperThreadState.h"  // OffThreadFrontendErrors
 #include "vm/JSContext.h"
 #include "vm/JSScript.h"       // ScriptSource, UncompressedSourceCache
 #include "vm/ModuleBuilder.h"  // js::ModuleBuilder
@@ -70,9 +70,9 @@ class MOZ_RAII AutoAssertReportedException {
       return;
     }
 
-    ParseTask* task = cx_->parseTask();
-    MOZ_ASSERT(task->outOfMemory || task->overRecursed ||
-               !task->errors.empty());
+    OffThreadFrontendErrors* errors = cx_->offThreadFrontendErrors();
+    MOZ_ASSERT(errors->outOfMemory || errors->overRecursed ||
+               !errors->errors.empty());
   }
 #else
  public:
