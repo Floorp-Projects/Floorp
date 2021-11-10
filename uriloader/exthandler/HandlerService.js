@@ -398,8 +398,12 @@ HandlerService.prototype = {
     let handlers = Cc["@mozilla.org/array;1"].createInstance(
       Ci.nsIMutableArray
     );
-    for (let type of Object.keys(this._store.data.mimeTypes)) {
-      let handler = gMIMEService.getFromTypeAndExtension(type, null);
+    for (let [type, typeInfo] of Object.entries(this._store.data.mimeTypes)) {
+      let primaryExtension = typeInfo.extensions?.[0] ?? null;
+      let handler = gMIMEService.getFromTypeAndExtension(
+        type,
+        primaryExtension
+      );
       handlers.appendElement(handler);
     }
     for (let type of Object.keys(this._store.data.schemes)) {
