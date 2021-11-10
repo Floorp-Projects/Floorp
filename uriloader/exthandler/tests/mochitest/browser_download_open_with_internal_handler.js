@@ -55,15 +55,34 @@ async function waitForPdfJS(browser, url) {
  * To retain coverage for the non-default scenario, each task sets `alwaysAskBeforeHandling`
  * to true for the relevant mime-type and extensions.
  */
-function alwaysAskForHandlingTypes(typeExtensions) {
+function alwaysAskForHandlingTypes(typeExtensions, ask = true) {
   let mimeInfos = [];
   for (let [type, ext] of Object.entries(typeExtensions)) {
     const mimeInfo = MimeSvc.getFromTypeAndExtension(type, ext);
-    mimeInfo.alwaysAskBeforeHandling = true;
+    mimeInfo.alwaysAskBeforeHandling = ask;
+    if (!ask) {
+      mimeInfo.preferredAction = mimeInfo.handleInternally;
+    }
     HandlerSvc.store(mimeInfo);
     mimeInfos.push(mimeInfo);
   }
   return mimeInfos;
+}
+
+function checkTelemetry(desc, expectedAction, expectedType, expectedReason) {
+  let events = Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+    true
+  );
+  events = (events.parent || []).filter(
+    e => e[1] == "downloads" && e[2] == "helpertype"
+  );
+  is(events.length, 1, desc + " number of events");
+
+  let event = events[0];
+  is(event[4], expectedAction, desc + " telemetry action");
+  is(event[5].type, expectedType, desc + " telemetry type");
+  is(event[5].reason, expectedReason, desc + " telemetry reason");
 }
 
 add_task(async function setup() {
@@ -101,6 +120,8 @@ add_task(async function setup() {
  * is clicked from pdf.js.
  */
 add_task(async function test_check_open_with_internal_handler() {
+  Services.telemetry.clearEvents();
+
   const mimeInfosToRestore = alwaysAskForHandlingTypes({
     "application/pdf": "pdf",
     "binary/octet-stream": "pdf",
@@ -134,6 +155,13 @@ add_task(async function test_check_open_with_internal_handler() {
     let internalHandlerRadio = doc.querySelector("#handleInternally");
 
     await waitForAcceptButtonToGetEnabled(doc);
+
+    checkTelemetry(
+      "open " + file + " internal",
+      "ask",
+      file.includes("octet") ? "octetstream" : "pdf",
+      "attachment"
+    );
 
     ok(!internalHandlerRadio.hidden, "The option should be visible for PDF");
     ok(internalHandlerRadio.selected, "The option should be selected");
@@ -173,6 +201,14 @@ add_task(async function test_check_open_with_internal_handler() {
     BrowserTestUtils.loadURI(newTab.linkedBrowser, TEST_PATH + file);
     let subDialogWindow = await subdialogPromise;
     let subDoc = subDialogWindow.document;
+
+    checkTelemetry(
+      "open " + file + " internal from current tab",
+      "ask",
+      file.includes("octet") ? "octetstream" : "pdf",
+      "attachment"
+    );
+
     // Prevent racing with initialization of the dialog and make sure that
     // the final state of the dialog has the correct visibility of the internal-handler option.
     await waitForAcceptButtonToGetEnabled(subDoc);
@@ -199,6 +235,15 @@ add_task(async function test_check_open_with_internal_handler() {
     );
     subDialogWindow = await subdialogPromise;
     subDoc = subDialogWindow.document;
+
+    // There is no content type here, so the type will be 'other'.
+    checkTelemetry(
+      "open " + file + " internal from download button",
+      "ask",
+      "other",
+      "attachment"
+    );
+
     // Prevent racing with initialization of the dialog and make sure that
     // the final state of the dialog has the correct visibility of the internal-handler option.
     await waitForAcceptButtonToGetEnabled(subDoc);
@@ -270,6 +315,8 @@ add_task(async function test_check_open_with_internal_handler() {
  * open the PDF into pdf.js
  */
 add_task(async function test_check_open_with_external_application() {
+  Services.telemetry.clearEvents();
+
   const mimeInfosToRestore = alwaysAskForHandlingTypes({
     "application/pdf": "pdf",
     "binary/octet-stream": "pdf",
@@ -303,6 +350,13 @@ add_task(async function test_check_open_with_external_application() {
         resolve();
       };
     });
+
+    checkTelemetry(
+      "open " + file + " external",
+      "ask",
+      file.includes("octet") ? "octetstream" : "pdf",
+      "attachment"
+    );
 
     let doc = dialogWindow.document;
     await waitForAcceptButtonToGetEnabled(doc);
@@ -506,6 +560,8 @@ add_task(async function test_check_open_with_external_then_internal() {
  */
 add_task(
   async function test_internal_handler_hidden_with_viewable_internally_type() {
+    Services.telemetry.clearEvents();
+
     const mimeInfosToRestore = alwaysAskForHandlingTypes({
       "text/xml": "xml",
       "binary/octet-stream": "xml",
@@ -535,6 +591,13 @@ add_task(
       // the final state of the dialog has the correct visibility of the internal-handler option.
       await waitForAcceptButtonToGetEnabled(doc);
 
+      checkTelemetry(
+        "open " + file + " for viewable internal type",
+        "ask",
+        file == "file_xml_attachment_test.xml" ? "other" : "octetstream",
+        "attachment"
+      );
+
       ok(!internalHandlerRadio.hidden, "The option should be visible for XML");
       if (checkDefault) {
         ok(internalHandlerRadio.selected, "The option should be selected");
@@ -555,6 +618,8 @@ add_task(
  * for non-PDF, non-viewable-internally types.
  */
 add_task(async function test_internal_handler_hidden_with_other_type() {
+  Services.telemetry.clearEvents();
+
   const mimeInfosToRestore = alwaysAskForHandlingTypes({
     "text/plain": "txt",
   });
@@ -575,6 +640,13 @@ add_task(async function test_internal_handler_hidden_with_other_type() {
   // Prevent racing with initialization of the dialog and make sure that
   // the final state of the dialog has the correct visibility of the internal-handler option.
   await waitForAcceptButtonToGetEnabled(doc);
+
+  checkTelemetry(
+    "open file_txt_attachment_test.txt for non-viewable internal type",
+    "ask",
+    "other",
+    "attachment"
+  );
 
   let internalHandlerRadio = doc.querySelector("#handleInternally");
   ok(
@@ -677,3 +749,83 @@ add_task(
     }
   }
 );
+
+/*
+ * This test sets the action to internal. The files should open directly without asking.
+ */
+add_task(async function test_check_open_with_internal_handler_noask() {
+  Services.telemetry.clearEvents();
+
+  const mimeInfosToRestore = alwaysAskForHandlingTypes(
+    {
+      "application/pdf": "pdf",
+      "binary/octet-stream": "pdf",
+    },
+    false
+  );
+
+  for (let improvements of [false, true]) {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.helperApps.showOpenOptionForPdfJS", true],
+        ["browser.helperApps.showOpenOptionForViewableInternally", true],
+        ["browser.download.improvements_to_download_panel", improvements],
+      ],
+    });
+
+    for (let file of [
+      "file_pdf_application_pdf.pdf",
+      "file_pdf_binary_octet_stream.pdf",
+    ]) {
+      await BrowserTestUtils.withNewTab(
+        { gBrowser, url: "about:blank" },
+        async browser => {
+          let newTabPromise;
+          if (improvements) {
+            newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+            await SpecialPowers.spawn(
+              browser,
+              [TEST_PATH + file],
+              async contentUrl => {
+                content.location = contentUrl;
+              }
+            );
+          } else {
+            let dialogWindowPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
+            await SpecialPowers.spawn(
+              browser,
+              [TEST_PATH + file],
+              async contentUrl => {
+                content.location = contentUrl;
+              }
+            );
+
+            let dialogWindow = await dialogWindowPromise;
+
+            newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+            let dialog = dialogWindow.document.querySelector(
+              "#unknownContentType"
+            );
+            dialog.getButton("accept").disabled = false;
+            dialog.acceptDialog();
+          }
+
+          await newTabPromise;
+
+          checkTelemetry(
+            "open " + file + " internal",
+            improvements ? "internal" : "ask",
+            file.includes("octet") ? "octetstream" : "pdf",
+            "attachment"
+          );
+
+          await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+        }
+      );
+    }
+  }
+
+  for (let mimeInfo of mimeInfosToRestore) {
+    HandlerSvc.remove(mimeInfo);
+  }
+});
