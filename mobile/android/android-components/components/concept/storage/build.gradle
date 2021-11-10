@@ -29,6 +29,10 @@ dependencies {
     api Dependencies.kotlin_coroutines
 
     implementation project(':support-ktx')
+
+    testImplementation project(':support-test')
+    testImplementation Dependencies.testing_junit
+    testImplementation Dependencies.testing_mockito
 }
 
 apply from: '../../../publish.gradle'

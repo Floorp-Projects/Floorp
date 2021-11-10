@@ -11,6 +11,9 @@ import mozilla.components.concept.storage.CreditCard.Companion.ellipsesEnd
 import mozilla.components.concept.storage.CreditCard.Companion.ellipsesStart
 import mozilla.components.concept.storage.CreditCard.Companion.ellipsis
 import mozilla.components.support.ktx.kotlin.last4Digits
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 /**
  * An interface which defines read/write methods for credit card and address data.
@@ -235,6 +238,7 @@ data class CreditCard(
  * @property expiryYear The credit card expiry year.
  * @property cardType The credit card network ID.
  */
+@Parcelize
 data class CreditCardEntry(
     val guid: String? = null,
     val name: String,
@@ -242,12 +246,33 @@ data class CreditCardEntry(
     val expiryMonth: String,
     val expiryYear: String,
     val cardType: String
-) {
+) : Parcelable {
     val obfuscatedCardNumber: String
         get() = ellipsesStart +
             ellipsis + ellipsis + ellipsis + ellipsis +
             number.last4Digits() +
             ellipsesEnd
+
+    /**
+     * Credit card expiry date formatted according to the locale.
+     */
+    val expiryDate: String
+        get() {
+            val dateFormat = SimpleDateFormat(DATE_PATTERN, Locale.getDefault())
+
+            val calendar = Calendar.getInstance()
+            calendar.set(Calendar.DAY_OF_MONTH, 1)
+            // Subtract 1 from the expiry month since Calendar.Month is based on a 0-indexed.
+            calendar.set(Calendar.MONTH, expiryMonth.toInt() - 1)
+            calendar.set(Calendar.YEAR, expiryYear.toInt())
+
+            return dateFormat.format(calendar.time)
+        }
+
+    companion object {
+        // Date format pattern for the credit card expiry date.
+        private const val DATE_PATTERN = "MM/yyyy"
+    }
 }
 
 /**

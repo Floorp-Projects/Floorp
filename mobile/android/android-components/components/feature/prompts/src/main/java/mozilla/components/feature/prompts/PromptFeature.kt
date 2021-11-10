@@ -43,11 +43,13 @@ import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
 import mozilla.components.concept.storage.CreditCardEntry
+import mozilla.components.concept.storage.CreditCardValidationDelegate
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.feature.prompts.concept.SelectablePromptView
 import mozilla.components.feature.prompts.creditcard.CreditCardPicker
+import mozilla.components.feature.prompts.creditcard.CreditCardSaveDialogFragment
 import mozilla.components.feature.prompts.dialog.AlertDialogFragment
 import mozilla.components.feature.prompts.dialog.AuthenticationDialogFragment
 import mozilla.components.feature.prompts.dialog.ChoiceDialogFragment
@@ -139,6 +141,7 @@ class PromptFeature private constructor(
     private var customTabId: String?,
     private val fragmentManager: FragmentManager,
     private val shareDelegate: ShareDelegate,
+    override val creditCardValidationDelegate: CreditCardValidationDelegate? = null,
     override val loginValidationDelegate: LoginValidationDelegate? = null,
     private val isSaveLoginEnabled: () -> Boolean = { false },
     private val isCreditCardAutofillEnabled: () -> Boolean = { false },
@@ -177,6 +180,7 @@ class PromptFeature private constructor(
         customTabId: String? = null,
         fragmentManager: FragmentManager,
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
+        creditCardValidationDelegate: CreditCardValidationDelegate? = null,
         loginValidationDelegate: LoginValidationDelegate? = null,
         isSaveLoginEnabled: () -> Boolean = { false },
         isCreditCardAutofillEnabled: () -> Boolean = { false },
@@ -193,6 +197,7 @@ class PromptFeature private constructor(
         customTabId = customTabId,
         fragmentManager = fragmentManager,
         shareDelegate = shareDelegate,
+        creditCardValidationDelegate = creditCardValidationDelegate,
         loginValidationDelegate = loginValidationDelegate,
         isSaveLoginEnabled = isSaveLoginEnabled,
         isCreditCardAutofillEnabled = isCreditCardAutofillEnabled,
@@ -211,6 +216,7 @@ class PromptFeature private constructor(
         customTabId: String? = null,
         fragmentManager: FragmentManager,
         shareDelegate: ShareDelegate = DefaultShareDelegate(),
+        creditCardValidationDelegate: CreditCardValidationDelegate? = null,
         loginValidationDelegate: LoginValidationDelegate? = null,
         isSaveLoginEnabled: () -> Boolean = { false },
         isCreditCardAutofillEnabled: () -> Boolean = { false },
@@ -227,6 +233,7 @@ class PromptFeature private constructor(
         customTabId = customTabId,
         fragmentManager = fragmentManager,
         shareDelegate = shareDelegate,
+        creditCardValidationDelegate = creditCardValidationDelegate,
         loginValidationDelegate = loginValidationDelegate,
         isSaveLoginEnabled = isSaveLoginEnabled,
         isCreditCardAutofillEnabled = isCreditCardAutofillEnabled,
@@ -282,6 +289,8 @@ class PromptFeature private constructor(
                                 loginPicker?.dismissCurrentLoginSelect(activePromptRequest as SelectLoginPrompt)
                             } else if (activePromptRequest is SaveLoginPrompt) {
                                 (activePrompt?.get() as? SaveLoginDialogFragment)?.dismissAllowingStateLoss()
+                            } else if (activePromptRequest is SaveCreditCard) {
+                                (activePrompt?.get() as? CreditCardSaveDialogFragment)?.dismissAllowingStateLoss()
                             } else if (activePromptRequest is SelectCreditCard) {
                                 creditCardPicker?.dismissSelectCreditCardRequest(
                                     activePromptRequest as SelectCreditCard
@@ -490,6 +499,7 @@ class PromptFeature private constructor(
 
                 is Share -> it.onSuccess()
 
+                is SaveCreditCard -> it.onConfirm(value as CreditCardEntry)
                 is SaveLoginPrompt -> it.onConfirm(value as LoginEntry)
 
                 is Confirm -> {
@@ -557,6 +567,9 @@ class PromptFeature private constructor(
         )
     }
 
+    /**
+     * Called from on [onPromptRequested] to handle requests for showing native dialogs.
+     */
     @Suppress("ComplexMethod", "LongMethod")
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun handleDialogsRequest(
@@ -565,16 +578,41 @@ class PromptFeature private constructor(
     ) {
         // Requests that are handled with dialogs
         val dialog = when (promptRequest) {
+            is SaveCreditCard -> {
+                if (!isCreditCardAutofillEnabled.invoke() || creditCardValidationDelegate == null) {
+                    dismissDialogRequest(promptRequest, session)
+
+                    if (creditCardValidationDelegate == null) {
+                        logger.debug(
+                            "Ignoring received SaveCreditCard because PromptFeature." +
+                                "creditCardValidationDelegate is null. If you are trying to autofill " +
+                                "credit cards, try attaching a CreditCardValidationDelegate to PromptFeature"
+                        )
+                    }
+
+                    return
+                }
+
+                CreditCardSaveDialogFragment.newInstance(
+                    sessionId = session.id,
+                    promptRequestUID = promptRequest.uid,
+                    shouldDismissOnLoad = false,
+                    creditCard = promptRequest.creditCard
+                )
+            }
 
             is SaveLoginPrompt -> {
-                if (!isSaveLoginEnabled.invoke()) return
+                if (!isSaveLoginEnabled.invoke() || loginValidationDelegate == null) {
+                    dismissDialogRequest(promptRequest, session)
 
-                if (loginValidationDelegate == null) {
-                    logger.debug(
-                        "Ignoring received SaveLoginPrompt because PromptFeature." +
-                            "loginValidationDelegate is null. If you are trying to autofill logins, " +
-                            "try attaching a LoginValidationDelegate to PromptFeature"
-                    )
+                    if (loginValidationDelegate == null) {
+                        logger.debug(
+                            "Ignoring received SaveLoginPrompt because PromptFeature." +
+                                "loginValidationDelegate is null. If you are trying to autofill logins, " +
+                                "try attaching a LoginValidationDelegate to PromptFeature"
+                        )
+                    }
+
                     return
                 }
 
@@ -773,10 +811,18 @@ class PromptFeature private constructor(
                 activePromptsToDismiss.add(dialog)
             }
         } else {
-            (promptRequest as Dismissible).onDismiss()
-            store.dispatch(ContentAction.ConsumePromptRequestAction(session.id, promptRequest))
+            dismissDialogRequest(promptRequest, session)
         }
         promptAbuserDetector.updateJSDialogAbusedState()
+    }
+
+    /**
+     * Dismiss and consume the given prompt request for the session.
+     */
+    @VisibleForTesting
+    internal fun dismissDialogRequest(promptRequest: PromptRequest, session: SessionState) {
+        (promptRequest as Dismissible).onDismiss()
+        store.dispatch(ContentAction.ConsumePromptRequestAction(session.id, promptRequest))
     }
 
     private fun canShowThisPrompt(promptRequest: PromptRequest): Boolean {

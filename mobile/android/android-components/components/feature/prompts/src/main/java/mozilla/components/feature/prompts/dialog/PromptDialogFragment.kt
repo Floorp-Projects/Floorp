@@ -6,6 +6,7 @@ package mozilla.components.feature.prompts.dialog
 
 import androidx.fragment.app.DialogFragment
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.storage.CreditCardValidationDelegate
 import mozilla.components.concept.storage.LoginValidationDelegate
 import mozilla.components.feature.prompts.login.LoginExceptions
 
@@ -41,6 +42,11 @@ internal abstract class PromptDialogFragment : DialogFragment() {
 }
 
 internal interface Prompter {
+
+    /**
+     * Validates whether or not a given [CreditCard] may be stored.
+     */
+    val creditCardValidationDelegate: CreditCardValidationDelegate?
 
     /**
      * Validates whether or not a given Login may be stored.

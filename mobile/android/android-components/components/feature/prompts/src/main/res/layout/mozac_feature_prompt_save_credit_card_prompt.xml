@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?android:windowBackground"
+    android:paddingStart="16dp"
+    android:paddingTop="16dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="16dp"
+    tools:ignore="Overdraw">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/lock_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/mozac_ic_lock"
+        app:tint="?android:attr/textColorPrimary"
+        android:importantForAccessibility="no" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/save_credit_card_header"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:gravity="center_vertical"
+        android:textColor="?android:textColorPrimary"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        app:layout_constraintStart_toEndOf="@id/lock_icon"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Securely save this card?" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/save_credit_card_message"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:text="@string/mozac_feature_prompts_save_credit_card_prompt_body"
+        android:textColor="?android:textColorSecondary"
+        android:textSize="14sp"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="@id/save_credit_card_header"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/save_credit_card_header"
+        app:layout_goneMarginTop="20dp"
+        tools:text="Card number will be encrypted. Security coded won\'t be saved."
+        tools:visibility="visible" />
+
+    <ImageView
+        android:id="@+id/credit_card_logo"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="16dp"
+        android:scaleType="fitCenter"
+        android:importantForAccessibility="no"
+        app:layout_constraintStart_toStartOf="@id/save_credit_card_header"
+        app:layout_constraintTop_toBottomOf="@id/save_credit_card_message" />
+
+    <TextView
+        android:id="@+id/credit_card_number"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="48dp"
+        android:clickable="false"
+        android:focusable="false"
+        android:importantForAutofill="no"
+        android:textAppearance="?android:attr/textAppearanceListItem"
+        android:textIsSelectable="false"
+        app:layout_constraintBottom_toTopOf="@id/credit_card_expiration_date"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/credit_card_logo"
+        app:layout_constraintTop_toBottomOf="@id/save_credit_card_message"
+        app:layout_constraintVertical_chainStyle="packed"
+        tools:text="Card 0000000000" />
+
+    <TextView
+        android:id="@+id/credit_card_expiration_date"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="48dp"
+        android:clickable="false"
+        android:focusable="false"
+        android:importantForAutofill="no"
+        android:textAppearance="?android:attr/textAppearanceListItemSecondary"
+        android:textIsSelectable="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/credit_card_logo"
+        app:layout_constraintTop_toBottomOf="@id/credit_card_number"
+        tools:text="01/2022" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/save_cancel"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="12dp"
+        android:background="?android:attr/selectableItemBackground"
+        android:letterSpacing="0"
+        android:text="@string/mozac_feature_prompt_not_now"
+        android:textAllCaps="false"
+        android:textColor="@color/button_state_list"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/save_confirm"
+        app:layout_constraintTop_toBottomOf="@id/credit_card_logo"
+        app:rippleColor="?android:textColorSecondary" />
+
+    <Button
+        android:id="@+id/save_confirm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="16dp"
+        android:text="@string/mozac_feature_prompt_save_confirmation"
+        android:textAllCaps="false"
+        android:textColor="?android:windowBackground"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:backgroundTint="@color/button_state_list"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/credit_card_logo"
+        app:rippleColor="?android:textColorSecondary" />
+</androidx.constraintlayout.widget.ConstraintLayout>

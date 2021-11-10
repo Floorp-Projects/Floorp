@@ -11,9 +11,6 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.feature.prompts.R
 import mozilla.components.support.utils.creditCardIssuerNetwork
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
 
 /**
  * View holder for displaying a credit card item.
@@ -37,33 +34,15 @@ class CreditCardItemViewHolder(
         itemView.findViewById<TextView>(R.id.credit_card_number).text =
             creditCard.obfuscatedCardNumber
 
-        bindCreditCardExpiryDate(creditCard)
+        itemView.findViewById<TextView>(R.id.credit_card_expiration_date).text =
+            creditCard.expiryDate
 
         itemView.setOnClickListener {
             onCreditCardSelected(creditCard)
         }
     }
 
-    /**
-     * Set the credit card expiry date formatted according to the locale.
-     */
-    private fun bindCreditCardExpiryDate(creditCard: CreditCardEntry) {
-        val dateFormat = SimpleDateFormat(DATE_PATTERN, Locale.getDefault())
-
-        val calendar = Calendar.getInstance()
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-        // Subtract 1 from the expiry month since Calendar.Month is based on a 0-indexed.
-        calendar.set(Calendar.MONTH, creditCard.expiryMonth.toInt() - 1)
-        calendar.set(Calendar.YEAR, creditCard.expiryYear.toInt())
-
-        itemView.findViewById<TextView>(R.id.credit_card_expiration_date).text =
-            dateFormat.format(calendar.time)
-    }
-
     companion object {
         val LAYOUT_ID = R.layout.mozac_feature_prompts_credit_card_list_item
-
-        // Date format pattern for the credit card expiry date.
-        private const val DATE_PATTERN = "MM/yyyy"
     }
 }
