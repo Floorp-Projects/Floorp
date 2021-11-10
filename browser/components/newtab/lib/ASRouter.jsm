@@ -344,8 +344,8 @@ const MessageLoaderUtils = {
       // If the feature is not enabled there is no message to send back.
       // Other branches might be enabled so we check those as well in case we
       // need to send a reach ping.
-      let featureData = experimentData.branch.feature;
-      if (featureData.enabled) {
+      let featureData = experimentData.branch[featureId];
+      if (featureData?.value?.id) {
         experiments.push({
           forExposureEvent: {
             experimentSlug: experimentData.slug,
@@ -365,8 +365,11 @@ const MessageLoaderUtils = {
       const branches =
         (await ExperimentAPI.getAllBranches(experimentData.slug)) || [];
       for (const branch of branches) {
-        let branchValue = branch.feature.value;
-        if (branch.slug !== experimentData.branch.slug && branchValue.trigger) {
+        let branchValue = branch[featureId].value;
+        if (
+          branch.slug !== experimentData.branch.slug &&
+          branchValue?.trigger
+        ) {
           experiments.push({
             forReachEvent: { sent: false, group: featureId },
             experimentSlug: experimentData.slug,
