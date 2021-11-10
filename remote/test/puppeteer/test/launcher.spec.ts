@@ -312,7 +312,11 @@ describe('Launcher specs', function () {
         } else if (isFirefox) {
           expect(puppeteer.defaultArgs()).toContain('--headless');
           expect(puppeteer.defaultArgs()).toContain('--no-remote');
-          expect(puppeteer.defaultArgs()).toContain('--foreground');
+          if (os.platform() === 'darwin') {
+            expect(puppeteer.defaultArgs()).toContain('--foreground');
+          } else {
+            expect(puppeteer.defaultArgs()).not.toContain('--foreground');
+          }
           expect(puppeteer.defaultArgs({ headless: false })).not.toContain(
             '--headless'
           );
