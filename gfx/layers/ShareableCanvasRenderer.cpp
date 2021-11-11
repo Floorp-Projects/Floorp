@@ -134,11 +134,6 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
   // -
 
   const auto fnGetExistingTc = [&]() -> RefPtr<TextureClient> {
-    if (webgl) {
-      const auto desc = webgl->GetFrontBuffer(nullptr);
-      if (!desc) return nullptr;
-      return GetFrontBufferFromDesc(*desc, flags);
-    }
     if (provider) {
       if (!provider->SetKnowsCompositor(forwarder)) {
         gfxCriticalNote << "BufferProvider::SetForwarder failed";
@@ -147,7 +142,12 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
 
       return provider->GetTextureClient();
     }
-    return nullptr;
+
+    if (!webgl) return nullptr;
+
+    const auto desc = webgl->GetFrontBuffer(nullptr);
+    if (!desc) return nullptr;
+    return GetFrontBufferFromDesc(*desc, flags);
   };
 
   // -
