@@ -29,7 +29,7 @@ gcloud:
   app: /app/path 
   test: /test/path
 
-  auto-google-login: true
+  auto-google-login: false
   use-orchestrator: true
   environment-variables:
     clearPackageData: true
