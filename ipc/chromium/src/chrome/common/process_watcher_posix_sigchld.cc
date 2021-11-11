@@ -130,6 +130,10 @@ class ChildLaxReaper : public ChildReaper,
   virtual void WillDestroyCurrentMessageLoop() override {
     DCHECK(process_);
 
+#ifdef NS_FREE_PERMANENT_DATA
+    printf_stderr("Waiting in WillDestroyCurrentMessageLoop for pid %d\n",
+                  process_);
+#endif
     WaitForChildExit();
     process_ = 0;
 
