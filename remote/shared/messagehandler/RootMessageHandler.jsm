@@ -15,6 +15,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://remote/content/shared/messagehandler/transports/FrameTransport.jsm",
   MessageHandler:
     "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
+  SessionData:
+    "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.jsm",
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.jsm",
 });
@@ -61,6 +63,16 @@ class RootMessageHandler extends MessageHandler {
     super(sessionId, null);
 
     this._frameTransport = new FrameTransport(this);
+    this._sessionData = new SessionData(this);
+  }
+
+  get sessionData() {
+    return this._sessionData;
+  }
+
+  destroy() {
+    this._sessionData.destroy();
+    super.destroy();
   }
 
   /**
