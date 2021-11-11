@@ -159,10 +159,10 @@ class WebrtcAudioConduit : public AudioSessionConduit,
    *
    * Call thread only.
    */
-  bool OverrideRemoteSSRC(uint32_t aSsrc);
+  bool OverrideRemoteSSRC(uint32_t ssrc);
 
  public:
-  void UnsetRemoteSSRC(uint32_t aSsrc) override {}
+  void UnsetRemoteSSRC(uint32_t ssrc) override {}
 
   Maybe<webrtc::AudioReceiveStream::Stats> GetReceiverStats() const override;
   Maybe<webrtc::AudioSendStream::Stats> GetSenderStats() const override;
