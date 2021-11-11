@@ -12,7 +12,6 @@
  * @typedef {import("./@types/perf").PanelWindow} PanelWindow
  * @typedef {import("./@types/perf").Store} Store
  * @typedef {import("./@types/perf").MinimallyTypedGeckoProfile} MinimallyTypedGeckoProfile
- * @typedef {import("./@types/perf").ProfileCaptureResult} ProfileCaptureResult
  * @typedef {import("./@types/perf").ProfilerViewMode} ProfilerViewMode
  */
 "use strict";
@@ -65,17 +64,13 @@ const selectors = require("devtools/client/performance-new/store/selectors");
 const reducers = require("devtools/client/performance-new/store/reducers");
 const actions = require("devtools/client/performance-new/store/actions");
 const {
-  openProfilerTab,
+  openProfilerAndDisplayProfile,
   sharedLibrariesFromProfile,
 } = require("devtools/client/performance-new/browser");
 const { createLocalSymbolicationService } = ChromeUtils.import(
   "resource://devtools/client/performance-new/symbolication.jsm.js"
 );
-const {
-  presets,
-  getProfilerViewModeForCurrentPreset,
-  registerProfileCaptureForBrowser,
-} = ChromeUtils.import(
+const { presets, getProfilerViewModeForCurrentPreset } = ChromeUtils.import(
   "resource://devtools/client/performance-new/popup/background.jsm.js"
 );
 
@@ -145,16 +140,9 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
       objdirs,
       perfFront
     );
-    const browser = openProfilerTab(profilerViewMode);
-
-    /**
-     * @type {ProfileCaptureResult}
-     */
-    const profileCaptureResult = { type: "SUCCESS", profile };
-
-    registerProfileCaptureForBrowser(
-      browser,
-      profileCaptureResult,
+    openProfilerAndDisplayProfile(
+      profile,
+      profilerViewMode,
       symbolicationService
     );
   };
