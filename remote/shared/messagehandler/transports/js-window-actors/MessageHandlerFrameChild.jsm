@@ -10,6 +10,10 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+ChromeUtils.import(
+  "chrome://remote/content/shared/messagehandler/sessiondata/SessionDataReader.jsm"
+);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   error: "chrome://remote/content/shared/messagehandler/Errors.jsm",
   MessageHandlerRegistry:
