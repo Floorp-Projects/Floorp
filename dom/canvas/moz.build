@@ -71,10 +71,6 @@ EXPORTS.mozilla.dom += [
 ]
 # XRWebGLLayer.h must be exported for use by the generated WebXRBinding.h
 
-EXPORTS.mozilla.gfx += [
-    "DrawTargetWebgl.h",
-]
-
 # Canvas 2D and common sources
 UNIFIED_SOURCES += [
     "CanvasGradient.cpp",
@@ -92,7 +88,6 @@ UNIFIED_SOURCES += [
 ]
 
 SOURCES += [
-    "DrawTargetWebgl.cpp",  # Isolate Skia
     "ImageUtils.cpp",
 ]
 

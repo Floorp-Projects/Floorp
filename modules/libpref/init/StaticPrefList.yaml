@@ -4839,41 +4839,6 @@
   value: 0
   mirror: once
 
-- name: gfx.canvas.accelerated
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: gfx.canvas.accelerated.cache-items
-  type: RelaxedAtomicUint32
-  value: 1024
-  mirror: always
-
-- name: gfx.canvas.accelerated.cache-size
-  type: RelaxedAtomicUint32
-  value: 128
-  mirror: always
-
-- name: gfx.canvas.accelerated.max-size
-  type: RelaxedAtomicInt32
-  value: 0
-  mirror: always
-
-- name: gfx.canvas.accelerated.min-size
-  type: RelaxedAtomicInt32
-  value: 128
-  mirror: always
-
-- name: gfx.canvas.accelerated.max-surface-size
-  type: RelaxedAtomicUint32
-  value: 5280
-  mirror: always
-
-- name: gfx.canvas.accelerated.shared-page-size
-  type: RelaxedAtomicUint32
-  value: 1024
-  mirror: always
-
 # 0x7fff is the maximum supported xlib surface size and is more than enough for canvases.
 - name: gfx.canvas.max-size
   type: RelaxedAtomicInt32
