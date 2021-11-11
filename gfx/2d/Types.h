@@ -550,7 +550,6 @@ enum class BackendType : int8_t {
   RECORDING,
   DIRECT2D1_1,
   WEBRENDER_TEXT,
-  WEBGL,
 
   // Add new entries above this line.
   BACKEND_LAST
@@ -570,8 +569,7 @@ enum class NativeSurfaceType : int8_t {
   CAIRO_CONTEXT,
   CGCONTEXT,
   CGCONTEXT_ACCELERATED,
-  OPENGL_TEXTURE,
-  WEBGL_CONTEXT
+  OPENGL_TEXTURE
 };
 
 enum class FontStyle : int8_t { NORMAL, ITALIC, BOLD, BOLD_ITALIC };

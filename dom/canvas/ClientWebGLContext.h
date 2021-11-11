@@ -37,10 +37,6 @@ namespace dom {
 class WebGLChild;
 }
 
-namespace gfx {
-class DrawTargetWebgl;
-}
-
 namespace webgl {
 class AvailabilityRunnable;
 class TexUnpackBlob;
@@ -697,7 +693,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   friend class webgl::ObjectJS;
   friend class webgl::ProgramKeepAlive;
   friend class webgl::ShaderKeepAlive;
-  friend class gfx::DrawTargetWebgl;
 
   // ----------------------------- Lifetime and DOM ---------------------------
  public:
@@ -926,12 +921,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   }
 
   void OnMemoryPressure() override;
-  void SetContextOptions(const WebGLContextOptions& aOptions) {
-    mInitialOptions.emplace(aOptions);
-  }
-  const WebGLContextOptions& GetContextOptions() const {
-    return mInitialOptions.ref();
-  }
   NS_IMETHOD
   SetContextOptions(JSContext* cx, JS::Handle<JS::Value> options,
                     ErrorResult& aRvForDictionaryInit) override;
@@ -1396,8 +1385,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void BufferData(GLenum target, const dom::ArrayBufferView& srcData,
                   GLenum usage, GLuint srcElemOffset = 0,
                   GLuint srcElemCountOverride = 0);
-  void RawBufferData(GLenum target, const Range<const uint8_t>& srcData,
-                     GLenum usage);
 
   void BufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,
                      const dom::ArrayBufferView& src, GLuint srcElemOffset = 0,
@@ -1516,9 +1503,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
                   GLenum internalFormat, const ivec3& size) const;
 
   // Primitive tex upload functions
-  void RawTexImage(uint32_t level, GLenum respecFormat, uvec3 offset,
-                   const webgl::PackingInfo& pi,
-                   const webgl::TexUnpackBlobDesc&) const;
   void TexImage(uint8_t funcDims, GLenum target, GLint level,
                 GLenum respecFormat, const ivec3& offset, const ivec3& size,
                 GLint border, const webgl::PackingInfo& pi,
