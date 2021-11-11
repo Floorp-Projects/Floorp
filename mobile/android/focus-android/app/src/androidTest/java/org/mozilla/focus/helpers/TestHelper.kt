@@ -98,6 +98,17 @@ object TestHelper {
         }
     }
 
+    // exit to the browser view
+    fun exitToBrowser() {
+        val browserScreen =
+            mDevice.findObject(UiSelector().resourceId("$packageName:id/main_content"))
+        var browserScreenVisible = false
+        while (!browserScreenVisible) {
+            mDevice.pressBack()
+            browserScreenVisible = browserScreen.waitForExists(2000)
+        }
+    }
+
     fun setNetworkEnabled(enabled: Boolean) {
         when (enabled) {
             true -> {

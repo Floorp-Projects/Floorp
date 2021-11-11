@@ -7,14 +7,15 @@ import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.focus.activity.robots.browserScreen
 import org.mozilla.focus.activity.robots.homeScreen
 import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper.createMockResponseFromAsset
+import org.mozilla.focus.helpers.TestHelper.exitToBrowser
 import org.mozilla.focus.helpers.TestHelper.exitToTop
 import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
 import org.mozilla.focus.testAnnotations.SmokeTest
@@ -280,10 +281,14 @@ class EnhancedTrackingProtectionSettingsTest {
             openExceptionsList()
             removeException()
             verifyExceptionsListDisabled()
+            exitToBrowser()
+        }
+        browserScreen {
+        }.openSiteSecurityInfoSheet {
+            verifyTrackingProtectionIsEnabled(true)
         }
     }
 
-    @Ignore("Failing due to: https://github.com/mozilla-mobile/focus-android/issues/5738")
     @SmokeTest
     @Test
     fun removeAllExceptionURLTest() {
@@ -299,7 +304,13 @@ class EnhancedTrackingProtectionSettingsTest {
         }.openPrivacySettingsMenu {
             openExceptionsList()
             removeAllExceptions()
-            verifyExceptionsListDisabled()
+            // Failing due to: https://github.com/mozilla-mobile/focus-android/issues/5738
+            // verifyExceptionsListDisabled()
+            exitToBrowser()
+        }
+        browserScreen {
+        }.openSiteSecurityInfoSheet {
+            verifyTrackingProtectionIsEnabled(true)
         }
     }
 }
