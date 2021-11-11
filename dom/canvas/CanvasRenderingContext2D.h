@@ -611,11 +611,17 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
 
   void RestoreClipsAndTransformToTarget();
 
+  bool TryAcceleratedTarget(
+      RefPtr<gfx::DrawTarget>& aOutDT,
+      RefPtr<layers::PersistentBufferProvider>& aOutProvider);
+
   bool TrySharedTarget(RefPtr<gfx::DrawTarget>& aOutDT,
                        RefPtr<layers::PersistentBufferProvider>& aOutProvider);
 
   bool TryBasicTarget(RefPtr<gfx::DrawTarget>& aOutDT,
                       RefPtr<layers::PersistentBufferProvider>& aOutProvider);
+
+  ClientWebGLContext* AsWebgl() override;
 
   void RegisterAllocation();
 

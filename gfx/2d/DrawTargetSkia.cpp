@@ -1281,6 +1281,67 @@ void DrawTargetSkia::DrawGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
   }
 }
 
+Maybe<Rect> DrawTargetSkia::GetGlyphLocalBounds(
+    ScaledFont* aFont, const GlyphBuffer& aBuffer, const Pattern& aPattern,
+    const StrokeOptions* aStrokeOptions, const DrawOptions& aOptions) {
+  if (!CanDrawFont(aFont)) {
+    return Nothing();
+  }
+
+  ScaledFontBase* skiaFont = static_cast<ScaledFontBase*>(aFont);
+  SkTypeface* typeface = skiaFont->GetSkTypeface();
+  if (!typeface) {
+    return Nothing();
+  }
+
+  AutoPaintSetup paint(mCanvas, aOptions, aPattern);
+  if (aStrokeOptions && !StrokeOptionsToPaint(paint.mPaint, *aStrokeOptions)) {
+    return Nothing();
+  }
+
+  AntialiasMode aaMode = aFont->GetDefaultAAMode();
+  if (aOptions.mAntialiasMode != AntialiasMode::DEFAULT) {
+    aaMode = aOptions.mAntialiasMode;
+  }
+  bool aaEnabled = aaMode != AntialiasMode::NONE;
+  paint.mPaint.setAntiAlias(aaEnabled);
+
+  SkFont font(sk_ref_sp(typeface), SkFloatToScalar(skiaFont->mSize));
+
+  bool useSubpixelAA =
+      GetPermitSubpixelAA() &&
+      (aaMode == AntialiasMode::DEFAULT || aaMode == AntialiasMode::SUBPIXEL);
+  font.setEdging(useSubpixelAA ? SkFont::Edging::kSubpixelAntiAlias
+                               : (aaEnabled ? SkFont::Edging::kAntiAlias
+                                            : SkFont::Edging::kAlias));
+
+  skiaFont->SetupSkFontDrawOptions(font);
+
+  // Limit the amount of internal batch allocations Skia does.
+  const uint32_t kMaxGlyphBatchSize = 8192;
+
+  Rect bounds;
+  for (uint32_t offset = 0; offset < aBuffer.mNumGlyphs;) {
+    uint32_t batchSize =
+        std::min(aBuffer.mNumGlyphs - offset, kMaxGlyphBatchSize);
+    SkTextBlobBuilder builder;
+    auto runBuffer = builder.allocRunPos(font, batchSize);
+    for (uint32_t i = 0; i < batchSize; i++, offset++) {
+      runBuffer.glyphs[i] = aBuffer.mGlyphs[offset].mIndex;
+      runBuffer.points()[i] = PointToSkPoint(aBuffer.mGlyphs[offset].mPosition);
+    }
+
+    sk_sp<SkTextBlob> text = builder.make();
+    bounds = bounds.Union(SkRectToRect(text->bounds()));
+  }
+
+  if (bounds.IsEmpty()) {
+    return Nothing();
+  }
+
+  return Some(bounds);
+}
+
 void DrawTargetSkia::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
                                 const Pattern& aPattern,
                                 const DrawOptions& aOptions) {
@@ -1776,6 +1837,19 @@ void DrawTargetSkia::PushClipRect(const Rect& aRect) {
 void DrawTargetSkia::PopClip() {
   mCanvas->restore();
   SetTransform(GetTransform());
+}
+
+Maybe<Rect> DrawTargetSkia::GetDeviceClipRect() const {
+  if (mCanvas->isClipEmpty()) {
+    return Some(Rect());
+  }
+  if (mCanvas->isClipRect()) {
+    SkIRect deviceBounds;
+    if (mCanvas->getDeviceClipBounds(&deviceBounds)) {
+      return Some(Rect(SkIRectToIntRect(deviceBounds)));
+    }
+  }
+  return Nothing();
 }
 
 void DrawTargetSkia::PushLayer(bool aOpaque, Float aOpacity,
