@@ -208,12 +208,13 @@ vendoring:
   # Actions to take after updating. Applied in order.
   # The action subfield is required. It must be one of:
   #   - copy-file
+  #   - move-dir
   #   - replace-in-file
   #   - delete-path
   #   - run-script
   # Unless otherwise noted, all subfields of action are required.
   #
-  # If the action is copy-file:
+  # If the action is copy-file or move-dir:
   #   from is the source file
   #   to is the destination
   #
@@ -409,6 +410,7 @@ def _schema_1():
                             Required("action"): In(
                                 [
                                     "copy-file",
+                                    "move-dir",
                                     "replace-in-file",
                                     "run-script",
                                     "delete-path",
@@ -506,10 +508,11 @@ class UpdateActions(object):
         for v in values:
             if "action" not in v:
                 raise Invalid("All file-update entries must specify a valid action")
-            if v["action"] == "copy-file":
+            if v["action"] in ["copy-file", "move-dir"]:
                 if "from" not in v or "to" not in v or len(v.keys()) != 3:
                     raise Invalid(
-                        "copy-file action must (only) specify 'from' and 'to' keys"
+                        "%s action must (only) specify 'from' and 'to' keys"
+                        % v["action"]
                     )
             elif v["action"] == "replace-in-file":
                 if (

@@ -8,6 +8,7 @@ import os
 import re
 import sys
 import glob
+import shutil
 import logging
 import tarfile
 import requests
@@ -215,6 +216,10 @@ class VendorManifest(MozbuildObject):
                 path = path.replace("{cwd}", ".")
             elif "{yaml_dir}" in path:
                 path = path.replace("{yaml_dir}", os.path.dirname(yaml_file))
+            elif "{vendor_dir}" in path:
+                path = path.replace(
+                    "{vendor_dir}", self.manifest["vendoring"]["vendor-directory"]
+                )
             else:
                 path = mozpath.join(
                     self.manifest["vendoring"]["vendor-directory"], path
@@ -230,7 +235,7 @@ class VendorManifest(MozbuildObject):
                 dst = get_full_path(update["to"])
 
                 self.log(
-                    logging.DEBUG,
+                    logging.INFO,
                     "vendor",
                     {"src": src, "dst": dst},
                     "Performing copy-file action src: {src} dst: {dst}",
@@ -240,11 +245,45 @@ class VendorManifest(MozbuildObject):
                     contents = f.read()
                 with open(dst, "w") as f:
                     f.write(contents)
+            elif update["action"] == "move-dir":
+                src = get_full_path(update["from"])
+                dst = get_full_path(update["to"])
+
+                self.log(
+                    logging.INFO,
+                    "vendor",
+                    {"src": src, "dst": dst},
+                    "action: move-dir src: {src} dst: {dst}",
+                )
+
+                if not os.path.isdir(src):
+                    raise Exception(
+                        "Cannot move from a source directory %s that is not a directory"
+                        % src
+                    )
+                os.makedirs(dst, exist_ok=True)
+
+                def copy_tree(src, dst):
+                    names = os.listdir(src)
+                    os.makedirs(dst, exist_ok=True)
+
+                    for name in names:
+                        srcname = os.path.join(src, name)
+                        dstname = os.path.join(dst, name)
+
+                        if os.path.isdir(srcname):
+                            copy_tree(srcname, dstname)
+                        else:
+                            shutil.copy2(srcname, dstname)
+
+                copy_tree(src, dst)
+                shutil.rmtree(src)
+
             elif update["action"] == "replace-in-file":
                 file = get_full_path(update["file"])
 
                 self.log(
-                    logging.DEBUG,
+                    logging.INFO,
                     "vendor",
                     {"file": file},
                     "Performing replace-in-file action file: {file}",
@@ -261,7 +300,7 @@ class VendorManifest(MozbuildObject):
             elif update["action"] == "delete-path":
                 path = get_full_path(update["path"])
                 self.log(
-                    logging.DEBUG,
+                    logging.INFO,
                     "vendor",
                     {"path": path},
                     "Performing delete-path action path: {path}",
@@ -271,7 +310,7 @@ class VendorManifest(MozbuildObject):
                 script = get_full_path(update["script"], support_cwd=True)
                 run_dir = get_full_path(update["cwd"])
                 self.log(
-                    logging.DEBUG,
+                    logging.INFO,
                     "vendor",
                     {"script": script, "run_dir": run_dir},
                     "Performing run-script action script: {script} working dir: {run_dir}",
