@@ -702,11 +702,14 @@ pref("accessibility.browsewithcaret_shortcut.enabled", true);
 // These are some selection-related colors which have no per platform
 // implementation.
 #if !defined(XP_MACOSX)
-pref("ui.textSelectBackgroundDisabled", "#b0b0b0");
+pref("ui.textSelectDisabledBackground", "#b0b0b0");
 #endif
+
 // This makes the selection stand out when typeaheadfind is on.
 // Used with nsISelectionController::SELECTION_ATTENTION
-pref("ui.textSelectBackgroundAttention", "#38d878");
+pref("ui.textSelectAttentionBackground", "#38d878");
+pref("ui.textSelectAttentionForeground", "#ffffff");
+
 // This makes the matched text stand out when findbar highlighting is on.
 // Used with nsISelectionController::SELECTION_FIND
 pref("ui.textHighlightBackground", "#ef0fff");

@@ -234,8 +234,6 @@ var didRst = false;
 var rstConnection = null;
 var illegalheader_conn = null;
 
-var cname_confirm = 0;
-
 // eslint-disable-next-line complexity
 function handleRequest(req, res) {
   // We do this first to ensure nothing goes wonky in our tests that don't want
@@ -249,23 +247,62 @@ function handleRequest(req, res) {
   // PushService tests.
   var pushPushServer1, pushPushServer2, pushPushServer3, pushPushServer4;
 
-  function createCNameContent() {
-    let rContent;
-    if (0 == cname_confirm) {
-      // ... this sends a CNAME back to pointing-elsewhere.example.com
-      rContent = Buffer.from(
-        "00000100000100010000000005636E616D65076578616D706C6503636F6D0000050001C00C0005000100000037002012706F696E74696E672D656C73657768657265076578616D706C6503636F6D00",
-        "hex"
-      );
-      cname_confirm++;
-    } else {
-      // ... this sends an A 99.88.77.66 entry back for pointing-elsewhere.example.com
-      rContent = Buffer.from(
-        "00000100000100010000000012706F696E74696E672D656C73657768657265076578616D706C6503636F6D0000010001C00C0001000100000037000463584D42",
-        "hex"
-      );
+  function createCNameContent(payload) {
+    let packet = dnsPacket.decode(payload);
+    if (
+      packet.questions[0].name == "cname.example.com" &&
+      packet.questions[0].type == "A"
+    ) {
+      return dnsPacket.encode({
+        id: 0,
+        type: "response",
+        flags: dnsPacket.RECURSION_DESIRED,
+        questions: [{ name: packet.questions[0].name, type: "A", class: "IN" }],
+        answers: [
+          {
+            name: packet.questions[0].name,
+            ttl: 55,
+            type: "CNAME",
+            flush: false,
+            data: "pointing-elsewhere.example.com",
+          },
+        ],
+      });
     }
-    return rContent;
+    if (
+      packet.questions[0].name == "pointing-elsewhere.example.com" &&
+      packet.questions[0].type == "A"
+    ) {
+      return dnsPacket.encode({
+        id: 0,
+        type: "response",
+        flags: dnsPacket.RECURSION_DESIRED,
+        questions: [{ name: packet.questions[0].name, type: "A", class: "IN" }],
+        answers: [
+          {
+            name: packet.questions[0].name,
+            ttl: 55,
+            type: "A",
+            flush: false,
+            data: "99.88.77.66",
+          },
+        ],
+      });
+    }
+
+    return dnsPacket.encode({
+      id: 0,
+      type: "response",
+      flags: dnsPacket.RECURSION_DESIRED | dnsPacket.rcodes.toRcode("NXDOMAIN"),
+      questions: [
+        {
+          name: packet.questions[0].name,
+          type: packet.questions[0].type,
+          class: "IN",
+        },
+      ],
+      answers: [],
+    });
   }
 
   function createCNameARecord() {
@@ -828,17 +865,25 @@ function handleRequest(req, res) {
   // for use with test_trr.js
   else if (u.pathname === "/dns-cname") {
     // asking for cname.example.com
-    let rContent = createCNameContent();
 
-    res.setHeader("Content-Type", "application/dns-message");
-    res.setHeader("Content-Length", rContent.length);
-    res.writeHead(200);
-    res.write(rContent);
-    res.end("");
+    function emitResponse(response, payload) {
+      let pcontent = createCNameContent(payload);
+      response.setHeader("Content-Type", "application/dns-message");
+      response.setHeader("Content-Length", pcontent.length);
+      response.writeHead(200);
+      response.write(pcontent);
+      response.end("");
+    }
+
+    let payload = Buffer.from("");
+    req.on("data", function receiveData(chunk) {
+      payload = Buffer.concat([payload, chunk]);
+    });
+    req.on("end", function finishedData() {
+      emitResponse(res, payload);
+    });
     return;
   } else if (u.pathname == "/doh") {
-    cname_confirm = 0; // back to first reply for dns-cname
-
     let responseIP = u.query.responseIP;
     if (!responseIP) {
       responseIP = "5.5.5.5";
@@ -1173,12 +1218,12 @@ function handleRequest(req, res) {
       }
 
       if (u.query.cname) {
-        odoh.decrypt_query(payload);
+        let decryptedQuery = odoh.decrypt_query(payload);
         let rContent;
         if (u.query.cname === "ARecord") {
           rContent = createCNameARecord();
         } else {
-          rContent = createCNameContent();
+          rContent = createCNameContent(Buffer.from(decryptedQuery.buffer));
         }
         let encryptedResponse = odoh.create_response(rContent);
         res.setHeader("Content-Type", "application/oblivious-dns-message");
@@ -1193,13 +1238,6 @@ function handleRequest(req, res) {
         emitResponse(res, payload);
       }
     });
-    return;
-  } else if (u.pathname === "/reset_cname_confirm") {
-    cname_confirm = 0;
-    res.setHeader("Content-Length", 4);
-    res.writeHead(200);
-    res.write("done");
-    res.end();
     return;
   } else if (u.pathname === "/httpssvc_as_altsvc") {
     let payload = Buffer.from("");

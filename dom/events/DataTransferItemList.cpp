@@ -459,6 +459,20 @@ void DataTransferItemList::GetTypes(nsTArray<nsString>& aTypes,
     }
   }
 
+  // Additional files will be added at a non-zero index.
+  if (!foundFile) {
+    for (uint32_t i = 1; i < mIndexedItems.Length(); i++) {
+      for (const RefPtr<DataTransferItem>& item : mIndexedItems[i]) {
+        MOZ_ASSERT(item);
+
+        foundFile = item->Kind() == DataTransferItem::KIND_FILE;
+        if (foundFile) {
+          break;
+        }
+      }
+    }
+  }
+
   if (foundFile) {
     aTypes.AppendElement(u"Files"_ns);
   }

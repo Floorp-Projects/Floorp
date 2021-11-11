@@ -7,19 +7,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1131371
   <meta charset="utf-8">
   <title>Test for Bug 1131371</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1131371">Mozilla Bug 1131371</a>
+<style>
+  #elemWithScrollbars { overflow: scroll }
+</style>
 <div id="display">
   <div id="content">
   </div>
   <div id="elemWithAbsPosChild"><div style="position:absolute"></div></div>
   <div id="elemWithFixedPosChild"><div style="position:fixed"></div></div>
-  <div id="elemWithScrollbars" style="overflow: scroll"></div>
+  <div id="elemWithScrollbars"></div>
+  <select id="selectElem">
+    <option>A</option>
+    <option>B</option>
+    <option>C</option>
+  </select>
+  <button id="buttonElem">
+    Something
+  </button>
+  <button id="buttonElemWithAbsPosChild"><div style="position:absolute"></div></button>
 </div>
 <pre id="test">
-<script type="application/javascript">
+<script>
 "use strict";
 
 /** Test for Bug 1131371 **/
@@ -27,6 +39,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1131371
 const elemWithAbsPosChild = document.getElementById("elemWithAbsPosChild");
 const elemWithFixedPosChild = document.getElementById("elemWithFixedPosChild");
 const elemWithScrollbars = document.getElementById("elemWithScrollbars");
+const selectElem = document.getElementById("selectElem");
+const buttonElem = document.getElementById("buttonElem");
+const buttonElemWithAbsPosChild = document.getElementById("buttonElemWithAbsPosChild");
 
 /**
  * This test verifies that certain style changes do or don't cause reflow
@@ -250,6 +265,7 @@ const gTestcases = [
     expectConstruction: false,
     expectReflow: true,
   },
+
   // * Changing 'display' should cause frame construction and reflow.
   {
     beforeStyle: "display: inline",
@@ -348,6 +364,49 @@ const gTestcases = [
     elem: elemWithAbsPosChild,
     afterStyle: "position: static; overflow: auto;",
     beforeStyle:  "position: relative; overflow: auto;",
+    expectConstruction: true,
+    expectReflow: true,
+  },
+
+  // Adding transform to a scrollframe without abspos / fixedpos children shouldn't reframe.
+  {
+    elem: elemWithScrollbars,
+    afterStyle: "transform: translateX(1px)",
+    expectConstruction: false,
+    expectReflow: false,
+  },
+
+  // <select> can't contain abspos / floating children so shouldn't reframe
+  // when changing containing block-ness.
+  {
+    elem: selectElem,
+    afterStyle: "transform: translateX(1px)",
+    expectConstruction: false,
+    expectReflow: false,
+  },
+  {
+    elem: selectElem,
+    afterStyle: "position: relative",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+
+  // <button> shouldn't be reframed either in the absence of positioned descendants.
+  {
+    elem: buttonElem,
+    afterStyle: "transform: translateX(1px)",
+    expectConstruction: false,
+    expectReflow: false,
+  },
+  {
+    elem: buttonElem,
+    afterStyle: "position: relative",
+    expectConstruction: false,
+    expectReflow: true,
+  },
+  {
+    elem: buttonElemWithAbsPosChild,
+    afterStyle: "position: relative",
     expectConstruction: true,
     expectReflow: true,
   },

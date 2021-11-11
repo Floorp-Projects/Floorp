@@ -102,7 +102,7 @@ async function test_A_record() {
   setModeAndURI(3, "doh?responseIP=4.4.4.4&auth=true");
   Services.prefs.setCharPref("network.trr.credentials", "evil:person");
 
-  let [, , inStatus] = await new TRRDNSListener(
+  let { inStatus } = await new TRRDNSListener(
     "wrong.example.com",
     undefined,
     false
@@ -139,7 +139,7 @@ async function test_RFC1918() {
   dns.clearCache(true);
   setModeAndURI(3, "doh?responseIP=192.168.0.1");
 
-  let [, , inStatus] = await new TRRDNSListener(
+  let { inStatus } = await new TRRDNSListener(
     "rfc1918.example.com",
     undefined,
     false
@@ -150,11 +150,11 @@ async function test_RFC1918() {
     `${inStatus} should be an error code`
   );
   setModeAndURI(3, "doh?responseIP=::ffff:192.168.0.1");
-  [, , inStatus] = await new TRRDNSListener(
+  ({ inStatus } = await new TRRDNSListener(
     "rfc1918-ipv6.example.com",
     undefined,
     false
-  );
+  ));
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -209,7 +209,7 @@ async function test_timeout_mode3() {
   Services.prefs.setIntPref("network.trr.request_timeout_ms", 10);
   Services.prefs.setIntPref("network.trr.request_timeout_mode_trronly_ms", 10);
 
-  let [, , inStatus] = await new TRRDNSListener(
+  let { inStatus } = await new TRRDNSListener(
     "timeout.example.com",
     undefined,
     false
@@ -238,7 +238,7 @@ async function test_strict_native_fallback() {
   Services.prefs.setIntPref("network.trr.request_timeout_ms", 10);
   Services.prefs.setIntPref("network.trr.request_timeout_mode_trronly_ms", 10);
 
-  let [, , inStatus] = await new TRRDNSListener(
+  let { inStatus } = await new TRRDNSListener(
     "timeout.example.com",
     undefined,
     false
@@ -253,7 +253,7 @@ async function test_strict_native_fallback() {
   setModeAndURI(2, "doh?responseIP=2.2.2.2");
   Services.prefs.clearUserPref("network.trr.request_timeout_ms");
   Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
-  [, , inStatus] = await new TRRDNSListener("closeme.com", undefined, false);
+  ({ inStatus } = await new TRRDNSListener("closeme.com", undefined, false));
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -262,11 +262,11 @@ async function test_strict_native_fallback() {
   info("Now a decode error");
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=2.2.2.2&corruptedAnswer=true");
-  [, , inStatus] = await new TRRDNSListener(
+  ({ inStatus } = await new TRRDNSListener(
     "bar.example.com",
     undefined,
     false
-  );
+  ));
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -389,18 +389,12 @@ async function test_CNAME() {
   dns.clearCache(true);
   // First mode 3.
   if (runningODoHTests) {
-    let chan = makeChan(
-      `https://foo.example.com:${h2Port}/reset_cname_confirm`,
-      Ci.nsIRequest.TRR_DISABLED_MODE
-    );
-    await new Promise(resolve => chan.asyncOpen(new ChannelListener(resolve)));
-
     setModeAndURI(3, "odoh?responseIP=none&cnameloop=true");
   } else {
     setModeAndURI(3, "doh?responseIP=none&cnameloop=true");
   }
 
-  let [, , inStatus] = await new TRRDNSListener(
+  let { inStatus } = await new TRRDNSListener(
     "test18.example.com",
     undefined,
     false
@@ -439,7 +433,7 @@ async function test_name_mismatch() {
   // regardless of what was requested.
   setModeAndURI(3, "doh?hostname=mismatch.example.com");
 
-  let [, , inStatus] = await new TRRDNSListener(
+  let { inStatus } = await new TRRDNSListener(
     "bar.example.com",
     undefined,
     false
@@ -718,11 +712,7 @@ async function test_connection_closed() {
   await new TRRDNSListener("bar.example.com", "2.2.2.2");
 
   // makes the TRR connection shut down.
-  let [, , inStatus] = await new TRRDNSListener(
-    "closeme.com",
-    undefined,
-    false
-  );
+  let { inStatus } = await new TRRDNSListener("closeme.com", undefined, false);
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -739,7 +729,7 @@ async function test_connection_closed() {
   await new TRRDNSListener("bar.example.com", "2.2.2.2");
 
   // makes the TRR connection shut down.
-  [, , inStatus] = await new TRRDNSListener("closeme.com", undefined, false);
+  ({ inStatus } = await new TRRDNSListener("closeme.com", undefined, false));
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -755,7 +745,7 @@ async function test_connection_closed() {
   await new TRRDNSListener("bar.example.com", "2.2.2.2");
 
   // makes the TRR connection shut down.
-  [, , inStatus] = await new TRRDNSListener("closeme.com", undefined, false);
+  ({ inStatus } = await new TRRDNSListener("closeme.com", undefined, false));
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -774,7 +764,7 @@ async function test_connection_closed() {
   await new TRRDNSListener("bar.example.com", "2.2.2.2");
 
   // makes the TRR connection shut down.
-  [, , inStatus] = await new TRRDNSListener("closeme.com", undefined, false);
+  ({ inStatus } = await new TRRDNSListener("closeme.com", undefined, false));
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -847,49 +837,6 @@ async function test_fqdn() {
 async function test_ipv6_trr_fallback() {
   info("Testing fallback with ipv6");
   dns.clearCache(true);
-  let httpserver = new HttpServer();
-  httpserver.registerPathHandler("/content", (metadata, response) => {
-    response.setHeader("Content-Type", "text/plain");
-    response.setHeader("Cache-Control", "no-cache");
-
-    const responseBody = "anybody";
-    response.bodyOutputStream.write(responseBody, responseBody.length);
-  });
-  httpserver.start(-1);
-
-  Services.prefs.setBoolPref("network.captive-portal-service.testMode", true);
-  let url = `http://127.0.0.1:666/doom_port_should_not_be_open`;
-  Services.prefs.setCharPref("network.connectivity-service.IPv6.url", url);
-  let ncs = Cc[
-    "@mozilla.org/network/network-connectivity-service;1"
-  ].getService(Ci.nsINetworkConnectivityService);
-
-  function promiseObserverNotification(topic, matchFunc) {
-    return new Promise((resolve, reject) => {
-      Services.obs.addObserver(function observe(subject, topic, data) {
-        let matches =
-          typeof matchFunc != "function" || matchFunc(subject, data);
-        if (!matches) {
-          return;
-        }
-        Services.obs.removeObserver(observe, topic);
-        resolve({ subject, data });
-      }, topic);
-    });
-  }
-
-  let checks = promiseObserverNotification(
-    "network:connectivity-service:ip-checks-complete"
-  );
-
-  ncs.recheckIPConnectivity();
-
-  await checks;
-  equal(
-    ncs.IPv6,
-    Ci.nsINetworkConnectivityService.NOT_AVAILABLE,
-    "Check IPv6 support (expect NOT_AVAILABLE)"
-  );
 
   setModeAndURI(2, "doh?responseIP=4.4.4.4");
   const override = Cc["@mozilla.org/network/native-dns-override;1"].getService(
@@ -897,21 +844,46 @@ async function test_ipv6_trr_fallback() {
   );
   gOverride.addIPOverride("ipv6.host.com", "1:1::2");
 
-  await new TRRDNSListener(
-    "ipv6.host.com",
-    "1:1::2",
-    true,
-    0,
-    "",
-    false,
-    Ci.nsIDNSService.RESOLVE_DISABLE_IPV4
-  );
+  // Should not fallback to Do53 because A request for ipv6.host.com returns
+  // 4.4.4.4
+  let { inStatus } = await new TRRDNSListener("ipv6.host.com", {
+    flags: Ci.nsIDNSService.RESOLVE_DISABLE_IPV4,
+    expectedSuccess: false,
+  });
+  equal(inStatus, Cr.NS_ERROR_UNKNOWN_HOST);
 
-  Services.prefs.clearUserPref("network.captive-portal-service.testMode");
-  Services.prefs.clearUserPref("network.connectivity-service.IPv6.url");
+  // This time both requests fail, so we do fall back
+  dns.clearCache(true);
+  setModeAndURI(2, "doh?responseIP=none");
+  await new TRRDNSListener("ipv6.host.com", "1:1::2");
 
   override.clearOverrides();
-  await httpserver.stop();
+}
+
+async function test_ipv4_trr_fallback() {
+  info("Testing fallback with ipv4");
+  dns.clearCache(true);
+
+  setModeAndURI(2, "doh?responseIP=1:2::3");
+  const override = Cc["@mozilla.org/network/native-dns-override;1"].getService(
+    Ci.nsINativeDNSResolverOverride
+  );
+  gOverride.addIPOverride("ipv4.host.com", "3.4.5.6");
+
+  // Should not fallback to Do53 because A request for ipv4.host.com returns
+  // 1:2::3
+  let { inStatus } = await new TRRDNSListener("ipv4.host.com", {
+    flags: Ci.nsIDNSService.RESOLVE_DISABLE_IPV6,
+    expectedSuccess: false,
+  });
+  equal(inStatus, Cr.NS_ERROR_UNKNOWN_HOST);
+
+  // This time both requests fail, so we do fall back
+  dns.clearCache(true);
+  setModeAndURI(2, "doh?responseIP=none");
+  await new TRRDNSListener("ipv4.host.com", "3.4.5.6");
+
+  override.clearOverrides();
 }
 
 async function test_no_retry_without_doh() {

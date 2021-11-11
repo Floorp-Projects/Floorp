@@ -21,8 +21,6 @@ function makeChan(url) {
   return chan;
 }
 
-let processId;
-
 function channelOpenPromise(chan) {
   return new Promise(resolve => {
     function finish(req, buffer) {
@@ -82,7 +80,7 @@ add_task(async function test_follow_cnames_same_response() {
       },
     ],
   });
-  let [, inRecord] = await new TRRDNSListener("something.foo", {
+  let { inRecord } = await new TRRDNSListener("something.foo", {
     expectedAnswer: "1.2.3.4",
     flags: Ci.nsIDNSService.RESOLVE_CANONICAL_NAME,
   });
