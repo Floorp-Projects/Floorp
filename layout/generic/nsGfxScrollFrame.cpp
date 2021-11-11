@@ -779,6 +779,19 @@ void nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput* aState,
       LogicalPoint(wm), dummyContainerSize,
       ReflowChildFlags::NoMoveFrame | ReflowChildFlags::NoSizeView);
 
+  if (mHelper.mScrolledFrame->HasAnyStateBits(
+          NS_FRAME_CONTAINS_RELATIVE_BSIZE)) {
+    // Propagate NS_FRAME_CONTAINS_RELATIVE_BSIZE from our inner scrolled frame
+    // to ourselves so that our containing block is aware of it.
+    //
+    // Note: If the scrolled frame has any child whose block-size depends on the
+    // containing block's block-size, the NS_FRAME_CONTAINS_RELATIVE_BSIZE bit
+    // is set on the scrolled frame when initializing the child's ReflowInput in
+    // ReflowInput::InitResizeFlags(). Therefore, we propagate the bit here
+    // after we reflowed the scrolled frame.
+    AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
+  }
+
   // XXX Some frames (e.g. nsFrameFrame, nsTextFrame) don't
   // bother setting their mOverflowArea. This is wrong because every frame
   // should always set mOverflowArea. In fact nsFrameFrame doesn't
