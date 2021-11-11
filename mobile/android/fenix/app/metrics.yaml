@@ -4370,6 +4370,23 @@ first_session:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
+  distribution_id:
+    type: string
+    description: |
+      A string containing the distribution identifier. This is currently used
+      to identify installs from Mozilla Online.
+    send_in_pings:
+      - first-session
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/20376
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22543#issuecomment-977456848
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - android-probes@mozilla.com
+      - rxu@mozilla.com
+    expires: never
   timestamp:
     send_in_pings:
       - first-session

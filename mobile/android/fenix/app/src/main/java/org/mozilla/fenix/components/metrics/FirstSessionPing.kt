@@ -11,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.FirstSession
 import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.ext.settings
@@ -60,6 +61,12 @@ class FirstSessionPing(private val context: Context) {
                 FirstSession.adgroup.set(it.adjustAdGroup)
                 FirstSession.creative.set(it.adjustCreative)
                 FirstSession.network.set(it.adjustNetwork)
+                FirstSession.distributionId.set(
+                    when (Config.channel.isMozillaOnline) {
+                        true -> "MozillaOnline"
+                        false -> "Mozilla"
+                    }
+                )
                 FirstSession.timestamp.set()
             }
 
