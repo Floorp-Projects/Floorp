@@ -4130,6 +4130,9 @@ pub extern "C" fn Servo_ComputedValues_EqualForCachedAnonymousContentStyle(
     // rules in minimal-xul.css, but which makes no difference for the
     // anonymous content subtrees we cache style for.
     differing_properties.remove(LonghandId::XLang);
+    // Similarly, -x-lang can influence the font-family fallback we have for
+    // the initial font-family so remove it as well.
+    differing_properties.remove(LonghandId::FontFamily);
 
     // Ignore any difference in pref-controlled, inherited properties.  These
     // properties may or may not be set by the 'all' declaration in the
