@@ -133,6 +133,7 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   Geolocation* GetGeolocation(ErrorResult& aRv);
   Promise* GetBattery(ErrorResult& aRv);
 
+  bool CanShare(const ShareData& aData);
   Promise* Share(const ShareData& aData, ErrorResult& aRv);
 
   static void AppName(nsAString& aAppName, nsIPrincipal* aCallerPrincipal,
