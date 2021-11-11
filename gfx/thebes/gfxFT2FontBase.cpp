@@ -304,6 +304,7 @@ void gfxFT2FontBase::InitMetrics() {
     mMetrics.strikeoutSize = underlineSize;
 
     SanitizeMetrics(&mMetrics, false);
+    UnlockFTFace();
     return;
   }
 
