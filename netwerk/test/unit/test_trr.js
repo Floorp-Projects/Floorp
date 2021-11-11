@@ -760,6 +760,8 @@ add_task(async function test_dohrollout_mode() {
 
 add_task(test_ipv6_trr_fallback);
 
+add_task(test_ipv4_trr_fallback);
+
 add_task(test_no_retry_without_doh);
 
 // This test checks that normally when the TRR mode goes from ON -> OFF
