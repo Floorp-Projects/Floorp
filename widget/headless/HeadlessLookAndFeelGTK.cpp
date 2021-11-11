@@ -70,10 +70,7 @@ nsresult HeadlessLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme,
     case ColorID::TextHighlightForeground:
       aColor = NS_RGB(0xff, 0xff, 0xff);
       break;
-    case ColorID::TextSelectBackgroundAttention:
-      aColor = NS_TRANSPARENT;
-      break;
-    case ColorID::TextSelectBackgroundDisabled:
+    case ColorID::TextSelectDisabledBackground:
       aColor = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
     case ColorID::Highlight:

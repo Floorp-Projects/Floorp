@@ -124,7 +124,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       break;
     // This is used to gray out the selection when it's not focused. Used with
     // nsISelectionController::SELECTION_DISABLED.
-    case ColorID::TextSelectBackgroundDisabled:
+    case ColorID::TextSelectDisabledBackground:
       color = ProcessSelectionBackground(GetColorFromNSColor(NSColor.secondarySelectedControlColor),
                                          aScheme);
       break;

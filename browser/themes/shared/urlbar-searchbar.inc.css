@@ -136,7 +136,7 @@
 
 #urlbar-input:not(:focus):-moz-lwtheme::selection,
 .searchbar-textbox:not(:focus-within):-moz-lwtheme::selection {
-  background-color: var(--lwt-toolbar-field-highlight, text-select-background-disabled);
+  background-color: var(--lwt-toolbar-field-highlight, text-select-disabled-background);
 }
 
 #urlbar:not([focused="true"]) {
