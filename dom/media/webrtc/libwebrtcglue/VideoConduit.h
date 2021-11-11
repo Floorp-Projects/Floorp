@@ -157,9 +157,15 @@ class WebrtcVideoConduit
   Ssrcs GetLocalSSRCs() const override;
   Maybe<Ssrc> GetRemoteSSRC() const override;
 
-  void UnsetRemoteSSRC(uint32_t ssrc) override;
-  void SetRemoteSSRCConfig(uint32_t ssrc, uint32_t rtxSsrc);
-  void SetRemoteSSRCAndRestartAsNeeded(uint32_t ssrc, uint32_t rtxSsrc);
+  // Call thread.
+  void UnsetRemoteSSRC(uint32_t aSsrc) override;
+
+ private:
+  void NotifyUnsetCurrentRemoteSSRC();
+  void SetRemoteSSRCConfig(uint32_t aSsrc, uint32_t aRtxSsrc);
+  void SetRemoteSSRCAndRestartAsNeeded(uint32_t aSsrc, uint32_t aRtxSsrc);
+
+ public:
   // Creating a recv stream or a send stream requires a local ssrc to be
   // configured. This method will generate one if needed.
   void EnsureLocalSSRC();
@@ -317,8 +323,8 @@ class WebrtcVideoConduit
     explicit Control(const RefPtr<AbstractThread>& aCallThread);
   } mControl;
 
-  // WatchManager allowing Mirrors to trigger functions that will update the
-  // webrtc.org configuration.
+  // WatchManager allowing Mirrors and other watch targets to trigger functions
+  // that will update the webrtc.org configuration.
   WatchManager<WebrtcVideoConduit> mWatchManager;
 
   mutable Mutex mMutex;
