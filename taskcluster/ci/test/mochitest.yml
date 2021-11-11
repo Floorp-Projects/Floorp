@@ -966,7 +966,6 @@ mochitest-webgl2-core:
                     default: []
             default:
                 by-test-platform:
-                    windows10-64-2004-ccov.*/.*: []  # Bug 1727943 / Bug 1740155
                     .*-tsan-qr/opt: ['trunk']
                     android-hw-.*(?<!-shippable)(-qr)?/opt: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
                     android-hw.*aarch.*-shippable-qr/opt: ['mozilla-central']
