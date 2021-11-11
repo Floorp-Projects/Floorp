@@ -96,8 +96,6 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   void Invalidate();
   nsPIDOMWindowInner* GetWindow() const { return mWindow; }
 
-  void RefreshMIMEArray();
-
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
   /**
