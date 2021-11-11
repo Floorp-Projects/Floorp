@@ -7,7 +7,6 @@ treeherder:
         TL: Toolchain builds for Linux 64-bits
 
         # This list is based on .buildconfig.yml except the exceptions down below
-        browser-awesomebar: browser-awesomebar
         browser-domains: browser-domains
         browser-engine-gecko: browser-engine-gecko
         browser-engine-system: browser-engine-system

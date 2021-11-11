@@ -195,10 +195,6 @@ projects:
     path: components/feature/addons
     description: 'A feature that provides for managing add-ons.'
     publish: true
-  browser-awesomebar:
-    path: components/browser/awesomebar
-    description: 'A customizable awesomebar component for browsers.'
-    publish: true
   browser-domains:
     path: components/browser/domains
     description: 'Localized and customizable domain lists for auto-completion in browsers.'
