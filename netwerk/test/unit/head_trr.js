@@ -44,8 +44,6 @@ function trr_test_setup() {
   Services.prefs.setBoolPref("network.dns.native-is-localhost", true);
 
   Services.prefs.setBoolPref("network.trr.wait-for-portal", false);
-  // By default wait for all responses before notifying the listeners.
-  Services.prefs.setBoolPref("network.trr.wait-for-A-and-AAAA", true);
   // don't confirm that TRR is working, just go!
   Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
   // some tests rely on the cache not being cleared on pref change.
@@ -80,8 +78,6 @@ function trr_clear_prefs() {
   Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
   Services.prefs.clearUserPref("network.trr.disable-ECS");
   Services.prefs.clearUserPref("network.trr.early-AAAA");
-  Services.prefs.clearUserPref("network.trr.skip-AAAA-when-not-supported");
-  Services.prefs.clearUserPref("network.trr.wait-for-A-and-AAAA");
   Services.prefs.clearUserPref("network.trr.excluded-domains");
   Services.prefs.clearUserPref("network.trr.builtin-excluded-domains");
   Services.prefs.clearUserPref("network.trr.clear-cache-on-pref-change");
@@ -153,7 +149,7 @@ class TRRDNSListener {
       Assert.ok(!this.options.expectEarlyFail);
     } catch (e) {
       Assert.ok(this.options.expectEarlyFail);
-      this.resolve([e]);
+      this.resolve({ error: e });
     }
   }
 
@@ -166,14 +162,14 @@ class TRRDNSListener {
     // If we don't expect success here, just resolve and the caller will
     // decide what to do with the results.
     if (!this.expectedSuccess) {
-      this.resolve([inRequest, inRecord, inStatus]);
+      this.resolve({ inRequest, inRecord, inStatus });
       return;
     }
 
     Assert.equal(inStatus, Cr.NS_OK, "Checking status");
 
     if (this.type != Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT) {
-      this.resolve([inRequest, inRecord, inStatus]);
+      this.resolve({ inRequest, inRecord, inStatus });
       return;
     }
 
@@ -215,7 +211,7 @@ class TRRDNSListener {
       }
     }
 
-    this.resolve([inRequest, inRecord, inStatus]);
+    this.resolve({ inRequest, inRecord, inStatus });
   }
 
   QueryInterface(aIID) {

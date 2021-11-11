@@ -459,12 +459,16 @@ class TextInputDelegateTest : BaseSessionTest() {
     // Test deleteSurroundingText
     @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
     @Test fun inputConnection_deleteSurroundingText() {
-        setupContent("foobarfoo")
+        setupContent("")
 
         val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
-        assertText("Can set initial text", ic, "foobarfoo")
 
-        setSelection(ic, 5, 5)
+        commitText(ic, "foobarfoo", 1)
+        assertTextAndSelectionAt("Set initial text and selection", ic, "foobarfoo", 9)
+        pressKey(ic, KeyEvent.KEYCODE_DPAD_LEFT)
+        pressKey(ic, KeyEvent.KEYCODE_DPAD_LEFT)
+        pressKey(ic, KeyEvent.KEYCODE_DPAD_LEFT)
+        pressKey(ic, KeyEvent.KEYCODE_DPAD_LEFT)
         assertSelection("Can set selection to range", ic, 5, 5)
 
         deleteSurroundingText(ic, 1, 0)

@@ -992,7 +992,38 @@ static bool ContainingBlockChangeAffectsDescendants(
   return false;
 }
 
-static bool NeedToReframeToUpdateContainingBlock(nsIFrame* aFrame) {
+// Returns the frame that would serve as the containing block for aFrame's
+// positioned descendants, if aFrame had styles to make it a CB for such
+// descendants. (Typically this is just aFrame itself, or its insertion frame).
+//
+// Returns nullptr if this frame can't be easily determined.
+static nsIFrame* ContainingBlockForFrame(nsIFrame* aFrame) {
+  if (aFrame->IsFieldSetFrame()) {
+    // FIXME: This should be easily implementable.
+    return nullptr;
+  }
+  nsIFrame* insertionFrame = aFrame->GetContentInsertionFrame();
+  if (insertionFrame == aFrame) {
+    return insertionFrame;
+  }
+  // Generally frames with a different insertion frame are hard to deal with,
+  // but scrollframes are easy because the containing block is just the
+  // insertion frame.
+  if (aFrame->IsScrollFrame()) {
+    return insertionFrame;
+  }
+  // Combobox frames are easy as well because they can't have positioned
+  // children anyways.
+  // Button frames are also easy because the containing block is the frame
+  // itself.
+  if (aFrame->IsComboboxControlFrame() || aFrame->IsHTMLButtonControlFrame()) {
+    return aFrame;
+  }
+  return nullptr;
+}
+
+static bool NeedToReframeToUpdateContainingBlock(nsIFrame* aFrame,
+                                                 nsIFrame* aMaybeChangingCB) {
   // NOTE: This looks at the new style.
   const bool isFixedContainingBlock = aFrame->IsFixedPosContainingBlock();
   MOZ_ASSERT_IF(isFixedContainingBlock, aFrame->IsAbsPosContainingBlock());
@@ -1000,10 +1031,9 @@ static bool NeedToReframeToUpdateContainingBlock(nsIFrame* aFrame) {
   const bool isAbsPosContainingBlock =
       isFixedContainingBlock || aFrame->IsAbsPosContainingBlock();
 
-  nsIFrame* maybeChangingCB = aFrame->GetContentInsertionFrame();
   for (nsIFrame* f = aFrame; f;
        f = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(f)) {
-    if (ContainingBlockChangeAffectsDescendants(maybeChangingCB, f,
+    if (ContainingBlockChangeAffectsDescendants(aMaybeChangingCB, f,
                                                 isAbsPosContainingBlock,
                                                 isFixedContainingBlock)) {
       return true;
@@ -1336,21 +1366,6 @@ static inline void TryToDealWithScrollbarChange(nsChangeHint& aHint,
   aHint |= nsChangeHint_ReconstructFrame;
 }
 
-static bool IsUnsupportedFrameForContainingBlockChangeFastPath(
-    nsIFrame* aFrame) {
-  if (aFrame->IsFieldSetFrame()) {
-    return true;
-  }
-  // Generally frames with a different insertion frame are hard to deal with,
-  // but scrollframes are easy because the containing block is just the
-  // insertion frame.
-  if (aFrame->GetContentInsertionFrame() != aFrame &&
-      !aFrame->IsScrollFrame()) {
-    return true;
-  }
-  return false;
-}
-
 static void TryToHandleContainingBlockChange(nsChangeHint& aHint,
                                              nsIFrame* aFrame) {
   if (!(aHint & nsChangeHint_UpdateContainingBlock)) {
@@ -1360,22 +1375,18 @@ static void TryToHandleContainingBlockChange(nsChangeHint& aHint,
     return;
   }
   MOZ_ASSERT(aFrame, "If we're not reframing, we ought to have a frame");
-  if (NeedToReframeToUpdateContainingBlock(aFrame) ||
-      IsUnsupportedFrameForContainingBlockChangeFastPath(aFrame)) {
+  nsIFrame* containingBlock = ContainingBlockForFrame(aFrame);
+  if (!containingBlock ||
+      NeedToReframeToUpdateContainingBlock(aFrame, containingBlock)) {
     // The frame has positioned children that need to be reparented, or it can't
     // easily be converted to/from being an abs-pos container correctly.
     aHint |= nsChangeHint_ReconstructFrame;
     return;
   }
   const bool isCb = aFrame->IsAbsPosContainingBlock();
-  nsIFrame* cont = aFrame->GetContentInsertionFrame();
 
-  // The absolute container should be the content insertion frame, in cases
-  // where aFrame has a separate content-insertion frame.  Otherwise we need to
-  // fix the loop below, and NeedToReframeToUpdateContainingBlock too.
-  MOZ_ASSERT(cont == aFrame || !aFrame->IsAbsoluteContainer(),
-             "Are we updating the wrong frame?");
-  for (; cont;
+  // The absolute container should be containingBlock.
+  for (nsIFrame* cont = containingBlock; cont;
        cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
     // Normally frame construction would set state bits as needed,
     // but we're not going to reconstruct the frame so we need to set

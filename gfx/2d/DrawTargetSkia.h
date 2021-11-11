@@ -4,16 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef _MOZILLA_GFX_SOURCESURFACESKIA_H
-#define _MOZILLA_GFX_SOURCESURFACESKIA_H
-
-#include "skia/include/core/SkCanvas.h"
-#include "skia/include/core/SkSurface.h"
+#ifndef _MOZILLA_GFX_DRAWTARGETSKIA_H
+#define _MOZILLA_GFX_DRAWTARGETSKIA_H
 
 #include "2D.h"
-#include "HelpersSkia.h"
-#include "Rect.h"
-#include "PathSkia.h"
 #include <sstream>
 #include <vector>
 
@@ -21,7 +15,18 @@
 #  include <ApplicationServices/ApplicationServices.h>
 #endif
 
+class SkCanvas;
+class SkSurface;
+
 namespace mozilla {
+
+template <>
+class RefPtrTraits<SkSurface> {
+ public:
+  static void Release(SkSurface* aSurface);
+  static void AddRef(SkSurface* aSurface);
+};
+
 namespace gfx {
 
 class DataSourceSurface;
@@ -146,6 +151,13 @@ class DrawTargetSkia : public DrawTarget {
     return stream.str();
   }
 
+  Maybe<Rect> GetDeviceClipRect() const;
+
+  Maybe<Rect> GetGlyphLocalBounds(ScaledFont* aFont, const GlyphBuffer& aBuffer,
+                                  const Pattern& aPattern,
+                                  const StrokeOptions* aStrokeOptions,
+                                  const DrawOptions& aOptions);
+
  private:
   friend class SourceSurfaceSkia;
 
@@ -167,8 +179,8 @@ class DrawTargetSkia : public DrawTarget {
   std::vector<PushedLayer> mPushedLayers;
 
   IntSize mSize;
-  sk_sp<SkSurface> mSurface;
-  SkCanvas* mCanvas;
+  RefPtr<SkSurface> mSurface;
+  SkCanvas* mCanvas = nullptr;
   RefPtr<DataSourceSurface> mBackingSurface;
   RefPtr<SourceSurfaceSkia> mSnapshot;
   Mutex mSnapshotLock;

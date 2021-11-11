@@ -61,6 +61,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsStyleUtil.h"
 #include "CanvasImageCache.h"
+#include "DrawTargetWebgl.h"
 
 #include <algorithm>
 
@@ -1312,7 +1313,8 @@ bool CanvasRenderingContext2D::EnsureTarget(const gfx::Rect* aCoveredRect,
   RefPtr<DrawTarget> newTarget;
   RefPtr<PersistentBufferProvider> newProvider;
 
-  if (!TrySharedTarget(newTarget, newProvider) &&
+  if (!TryAcceleratedTarget(newTarget, newProvider) &&
+      !TrySharedTarget(newTarget, newProvider) &&
       !TryBasicTarget(newTarget, newProvider)) {
     gfxCriticalError(
         CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(GetSize())))
@@ -1423,6 +1425,18 @@ static WindowRenderer* WindowRendererFromCanvasElement(
   return nsContentUtils::WindowRendererForDocument(aCanvasElement->OwnerDoc());
 }
 
+bool CanvasRenderingContext2D::TryAcceleratedTarget(
+    RefPtr<gfx::DrawTarget>& aOutDT,
+    RefPtr<layers::PersistentBufferProvider>& aOutProvider) {
+  aOutDT = DrawTargetWebgl::Create(GetSize(), GetSurfaceFormat());
+  if (!aOutDT) {
+    return false;
+  }
+
+  aOutProvider = new PersistentBufferProviderAccelerated(aOutDT);
+  return true;
+}
+
 bool CanvasRenderingContext2D::TrySharedTarget(
     RefPtr<gfx::DrawTarget>& aOutDT,
     RefPtr<layers::PersistentBufferProvider>& aOutProvider) {
@@ -1433,9 +1447,7 @@ bool CanvasRenderingContext2D::TrySharedTarget(
     return false;
   }
 
-  if (mBufferProvider &&
-      (mBufferProvider->GetType() == LayersBackend::LAYERS_CLIENT ||
-       mBufferProvider->GetType() == LayersBackend::LAYERS_WR)) {
+  if (mBufferProvider && mBufferProvider->IsShared()) {
     // we are already using a shared buffer provider, we are allocating a new
     // one because the current one failed so let's just fall back to the basic
     // provider.
@@ -1483,6 +1495,13 @@ bool CanvasRenderingContext2D::TryBasicTarget(
 
   aOutProvider = new PersistentBufferProviderBasic(aOutDT);
   return true;
+}
+
+ClientWebGLContext* CanvasRenderingContext2D::AsWebgl() {
+  if (mBufferProvider) {
+    return mBufferProvider->AsWebgl();
+  }
+  return nullptr;
 }
 
 PresShell* CanvasRenderingContext2D::GetPresShell() {
@@ -4912,9 +4931,7 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
     }
   }
   if (op == CompositionOp::OP_OVER &&
-      (!mBufferProvider ||
-       (mBufferProvider->GetType() != LayersBackend::LAYERS_CLIENT &&
-        mBufferProvider->GetType() != LayersBackend::LAYERS_WR))) {
+      (!mBufferProvider || !mBufferProvider->IsShared())) {
     thebes = gfxContext::CreateOrNull(mTarget);
     MOZ_ASSERT(thebes);  // already checked the draw target above
                          // (in SupportsAzureContentForDrawTarget)
