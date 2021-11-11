@@ -976,40 +976,33 @@ void WebrtcVideoConduit::CreateRecvStream() {
               mRecvStreamConfig.rtp.remote_ssrc);
 }
 
-void WebrtcVideoConduit::NotifyUnsetCurrentRemoteSSRC() {
+void WebrtcVideoConduit::SetRemoteSSRCConfig(uint32_t ssrc, uint32_t rtxSsrc) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  CSFLogDebug(LOGTAG, "%s (%p): Unsetting SSRC %u in other conduits",
-              __FUNCTION__, this, mRecvStreamConfig.rtp.remote_ssrc);
+  mMutex.AssertNotCurrentThreadOwns();
+  // Don't unset (and call back into) ourselves.
   mCall->UnregisterConduit(this);
-  mCall->UnsetRemoteSSRC(mRecvStreamConfig.rtp.remote_ssrc);
+
+  CSFLogDebug(LOGTAG, "%s: SSRC %u (0x%x)", __FUNCTION__, ssrc, ssrc);
+  mCall->UnsetRemoteSSRC(ssrc);
+
+  // Remote SSRC set -- listen for unsets from other conduits.
   mCall->RegisterConduit(this);
+
+  mRecvSSRC = mRecvStreamConfig.rtp.remote_ssrc = ssrc;
+  mRecvStreamConfig.rtp.rtx_ssrc = rtxSsrc;
 }
 
-void WebrtcVideoConduit::SetRemoteSSRCConfig(uint32_t aSsrc,
-                                             uint32_t aRtxSsrc) {
+void WebrtcVideoConduit::SetRemoteSSRCAndRestartAsNeeded(uint32_t ssrc,
+                                                         uint32_t rtxSsrc) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
+  mMutex.AssertNotCurrentThreadOwns();
 
-  CSFLogDebug(LOGTAG, "%s: SSRC %u (0x%x)", __FUNCTION__, aSsrc, aSsrc);
-
-  if (mRecvStreamConfig.rtp.remote_ssrc != aSsrc) {
-    mWatchManager.ManualNotify(
-        &WebrtcVideoConduit::NotifyUnsetCurrentRemoteSSRC);
-  }
-
-  mRecvSSRC = mRecvStreamConfig.rtp.remote_ssrc = aSsrc;
-  mRecvStreamConfig.rtp.rtx_ssrc = aRtxSsrc;
-}
-
-void WebrtcVideoConduit::SetRemoteSSRCAndRestartAsNeeded(uint32_t aSsrc,
-                                                         uint32_t aRtxSsrc) {
-  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-
-  if (mRecvStreamConfig.rtp.remote_ssrc == aSsrc &&
-      mRecvStreamConfig.rtp.rtx_ssrc == aRtxSsrc) {
+  if (mRecvStreamConfig.rtp.remote_ssrc == ssrc &&
+      mRecvStreamConfig.rtp.rtx_ssrc == rtxSsrc) {
     return;
   }
 
-  SetRemoteSSRCConfig(aSsrc, aRtxSsrc);
+  SetRemoteSSRCConfig(ssrc, rtxSsrc);
 
   const bool wasReceiving = mEngineReceiving;
   const bool hadRecvStream = mRecvStream;
@@ -1072,12 +1065,12 @@ void WebrtcVideoConduit::EnsureLocalSSRC() {
   mRecvStreamConfig.rtp.local_ssrc = ssrcs[0];
 }
 
-void WebrtcVideoConduit::UnsetRemoteSSRC(uint32_t aSsrc) {
+void WebrtcVideoConduit::UnsetRemoteSSRC(uint32_t ssrc) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mMutex.AssertNotCurrentThreadOwns();
 
-  if (mRecvStreamConfig.rtp.remote_ssrc != aSsrc &&
-      mRecvStreamConfig.rtp.rtx_ssrc != aSsrc) {
+  if (mRecvStreamConfig.rtp.remote_ssrc != ssrc &&
+      mRecvStreamConfig.rtp.rtx_ssrc != ssrc) {
     return;
   }
 
@@ -1085,12 +1078,10 @@ void WebrtcVideoConduit::UnsetRemoteSSRC(uint32_t aSsrc) {
   uint32_t our_ssrc = 0;
   do {
     our_ssrc = GenerateRandomSSRC();
-  } while (NS_WARN_IF(our_ssrc == aSsrc) ||
-           NS_WARN_IF(std::find(ssrcs.begin(), ssrcs.end(), our_ssrc) !=
-                      ssrcs.end()));
-
-  CSFLogDebug(LOGTAG, "%s (%p): Generated remote SSRC %u", __FUNCTION__, this,
-              our_ssrc);
+  } while (NS_WARN_IF(our_ssrc == ssrc) ||
+           NS_WARN_IF(std::any_of(
+               ssrcs.begin(), ssrcs.end(),
+               [&](const auto& aSsrc) { return our_ssrc == aSsrc; })));
 
   // There is a (tiny) chance that this new random ssrc will collide with some
   // other conduit's remote ssrc, in which case that conduit will choose a new
@@ -1153,7 +1144,6 @@ MediaConduitErrorCode WebrtcVideoConduit::Init() {
 
 void WebrtcVideoConduit::InitCall() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  mCall->RegisterConduit(this);
   mSendPluginCreated = mEncoderFactory->CreatedGmpPluginEvent().Connect(
       GetMainThreadSerialEventTarget(),
       [self = detail::RawPtr(this)](uint64_t aPluginID) {
