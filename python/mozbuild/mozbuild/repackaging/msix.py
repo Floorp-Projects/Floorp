@@ -406,16 +406,23 @@ def repackage_msix(
 
     # We don't have a build at repackage-time to give us these values, and the
     # source of truth is a branding-specific `configure.sh` shell script that we
-    # can't easily evaluate completely here.  Instead, we take the last value
-    # from `configure.sh`.
+    # can't easily evaluate completely here.  Instead, we choose a value from
+    # `configure.sh` depending on the channel.
     brandingUuids = {}
     lines = open(mozpath.join(branding, "configure.sh")).readlines()
+    # For official (release) and unofficial channels, we want the second UUID in
+    # configure.sh. For official, this is because the first set of UUIDs are for
+    # beta, but we want release. For unofficial, the first set of UUIDs are for
+    # debug builds; we assume non-debug here.
+    if channel in ("official", "unofficial"):
+        # To get the last UUID, we reverse the lines.
+        lines.reverse()
     for key in (
         "MOZ_IGECKOBACKCHANNEL_IID",
         "MOZ_IHANDLERCONTROL_IID",
         "MOZ_ASYNCIHANDLERCONTROL_IID",
     ):
-        for line in reversed(lines):
+        for line in lines:
             if key not in line:
                 continue
             _, _, uuid = line.partition("=")
