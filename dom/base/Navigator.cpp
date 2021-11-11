@@ -648,12 +648,6 @@ uint64_t Navigator::HardwareConcurrency() {
   return rts->ClampedHardwareConcurrency();
 }
 
-void Navigator::RefreshMIMEArray() {
-  if (mMimeTypes) {
-    mMimeTypes->Refresh();
-  }
-}
-
 namespace {
 
 class VibrateWindowListener : public nsIDOMEventListener {
