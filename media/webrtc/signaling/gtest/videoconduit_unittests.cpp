@@ -20,6 +20,7 @@
 #include "media/base/video_adapter.h"
 
 #include "MockCall.h"
+#include "MockConduit.h"
 
 using namespace mozilla;
 using namespace testing;
@@ -1935,6 +1936,37 @@ TEST_F(VideoConduitTest, TestLocalAndRemoteSsrcCollision) {
                               Call()->mVideoReceiveConfig->rtp.remote_ssrc))));
   ASSERT_EQ(Call()->mVideoReceiveConfig->rtp.local_ssrc,
             Call()->mVideoSendConfig->rtp.ssrcs[0]);
+}
+
+TEST_F(VideoConduitTest, TestExternalRemoteSsrcCollision) {
+  auto other = MakeRefPtr<MockConduit>();
+  mCallWrapper->RegisterConduit(other);
+
+  // First the mControl update should trigger an UnsetRemoteSSRC(1) from us.
+  // Then we simulate another conduit using that same ssrc, which should trigger
+  // us to generate a fresh ssrc that is not 0 and not 1.
+  {
+    InSequence s;
+    EXPECT_CALL(*other, UnsetRemoteSSRC(1U)).Times(2);
+    EXPECT_CALL(*other, UnsetRemoteSSRC(Not(testing::AnyOf(0U, 1U))));
+  }
+
+  mControl.Update([&](auto& aControl) {
+    aControl.mRemoteSsrc = 1;
+    aControl.mReceiving = true;
+  });
+  EXPECT_TRUE(Call()->mVideoReceiveConfig);
+  EXPECT_EQ(Call()->mVideoReceiveConfig->rtp.remote_ssrc, 1U);
+
+  mozilla::Unused << WaitFor(InvokeAsync(
+      GetCurrentSerialEventTarget(), __func__, [wrapper = mCallWrapper] {
+        wrapper->UnsetRemoteSSRC(1);
+        return GenericPromise::CreateAndResolve(true, __func__);
+      }));
+
+  EXPECT_TRUE(Call()->mVideoReceiveConfig);
+  EXPECT_THAT(Call()->mVideoReceiveConfig->rtp.remote_ssrc,
+              Not(testing::AnyOf(0U, 1U)));
 }
 
 }  // End namespace test.
