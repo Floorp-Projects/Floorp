@@ -61,7 +61,7 @@ add_task(async function testODoHConfig() {
     "https://foo.example.com:" + h2Port + "/odohconfig"
   );
 
-  let [, inRecord] = await new TRRDNSListener("odoh_host.example.com", {
+  let { inRecord } = await new TRRDNSListener("odoh_host.example.com", {
     type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   });
   let answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;
