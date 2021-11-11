@@ -80,58 +80,50 @@
       };
     }
 
-    function waitForStateChange(aID, aState, aIsEnabled) {
-      return PromEvents.waitForEvent(EVENT_STATE_CHANGE, e => {
-        e.QueryInterface(nsIAccessibleStateChangeEvent);
-        return e.state == aState && !e.isExtraState &&
-          aIsEnabled == e.isEnabled && getAccessible(aID) == e.accessible;
-      });
-    }
-
     async function testToggleAttribute(aID, aAttribute, aIncludeMixed) {
       let toggleState = aAttribute == "aria-pressed" ? STATE_PRESSED : STATE_CHECKED;
 
       // bug 472142. Role changes here if aria-pressed is added,
       // accessible should be recreated?
-      let stateChange = waitForStateChange(aID, toggleState, true);
+      let stateChange = PromEvents.waitForStateChange(aID, toggleState, true);
       getNode(aID).setAttribute(aAttribute, "true");
       await stateChange;
 
-      stateChange = waitForStateChange(aID, toggleState, false);
+      stateChange = PromEvents.waitForStateChange(aID, toggleState, false);
       getNode(aID).setAttribute(aAttribute, "false");
       await stateChange;
 
       if (aIncludeMixed) {
-        stateChange = waitForStateChange(aID, STATE_MIXED, true);
+        stateChange = PromEvents.waitForStateChange(aID, STATE_MIXED, true);
         getNode(aID).setAttribute(aAttribute, "mixed");
         await stateChange;
 
-        stateChange = waitForStateChange(aID, STATE_MIXED, false);
+        stateChange = PromEvents.waitForStateChange(aID, STATE_MIXED, false);
         getNode(aID).setAttribute(aAttribute, "");
         await stateChange;
       }
 
-      stateChange = waitForStateChange(aID, toggleState, true);
+      stateChange = PromEvents.waitForStateChange(aID, toggleState, true);
       getNode(aID).setAttribute(aAttribute, "true");
       await stateChange;
 
       if (aIncludeMixed) {
         stateChange = Promise.all([
-          waitForStateChange(aID, STATE_MIXED, true),
-          waitForStateChange(aID, toggleState, false)]);
+          PromEvents.waitForStateChange(aID, STATE_MIXED, true),
+          PromEvents.waitForStateChange(aID, toggleState, false)]);
         getNode(aID).setAttribute(aAttribute, "mixed");
         await stateChange;
 
         stateChange = Promise.all([
-          waitForStateChange(aID, STATE_MIXED, false),
-          waitForStateChange(aID, toggleState, true)]);
+          PromEvents.waitForStateChange(aID, STATE_MIXED, false),
+          PromEvents.waitForStateChange(aID, toggleState, true)]);
         getNode(aID).setAttribute(aAttribute, "true");
         await stateChange;
       }
 
       // bug 472142. Role changes here too if aria-pressed is removed,
       // accessible should be recreated?
-      stateChange = waitForStateChange(aID, toggleState, false);
+      stateChange = PromEvents.waitForStateChange(aID, toggleState, false);
       getNode(aID).removeAttribute(aAttribute);
       await stateChange;
     }
