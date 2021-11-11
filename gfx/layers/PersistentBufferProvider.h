@@ -18,6 +18,8 @@
 
 namespace mozilla {
 
+class ClientWebGLContext;
+
 namespace gfx {
 class SourceSurface;
 class DrawTarget;
@@ -41,7 +43,8 @@ class PersistentBufferProvider : public RefCounted<PersistentBufferProvider>,
 
   virtual ~PersistentBufferProvider() = default;
 
-  virtual LayersBackend GetType() { return LayersBackend::LAYERS_NONE; }
+  virtual bool IsShared() const { return false; }
+  virtual bool IsAccelerated() const { return false; }
 
   /**
    * Get a DrawTarget from the PersistentBufferProvider.
@@ -66,6 +69,8 @@ class PersistentBufferProvider : public RefCounted<PersistentBufferProvider>,
       already_AddRefed<gfx::SourceSurface> aSnapshot) = 0;
 
   virtual TextureClient* GetTextureClient() { return nullptr; }
+
+  virtual ClientWebGLContext* AsWebgl() { return nullptr; }
 
   virtual void OnShutdown() {}
 
@@ -96,8 +101,6 @@ class PersistentBufferProviderBasic : public PersistentBufferProvider {
 
   explicit PersistentBufferProviderBasic(gfx::DrawTarget* aTarget);
 
-  LayersBackend GetType() override { return LayersBackend::LAYERS_BASIC; }
-
   already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(
       const gfx::IntRect& aPersistedRect) override;
 
@@ -114,11 +117,26 @@ class PersistentBufferProviderBasic : public PersistentBufferProvider {
  protected:
   void Destroy();
 
- private:
-  virtual ~PersistentBufferProviderBasic();
+  ~PersistentBufferProviderBasic() override;
 
   RefPtr<gfx::DrawTarget> mDrawTarget;
   RefPtr<gfx::SourceSurface> mSnapshot;
+};
+
+class PersistentBufferProviderAccelerated
+    : public PersistentBufferProviderBasic {
+ public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PersistentBufferProviderAccelerated,
+                                          override)
+
+  explicit PersistentBufferProviderAccelerated(gfx::DrawTarget* aTarget);
+
+  bool IsAccelerated() const override { return true; }
+
+  ClientWebGLContext* AsWebgl() override;
+
+ protected:
+  ~PersistentBufferProviderAccelerated() override;
 };
 
 /**
@@ -135,7 +153,7 @@ class PersistentBufferProviderShared : public PersistentBufferProvider,
       gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
       KnowsCompositor* aKnowsCompositor);
 
-  LayersBackend GetType() override;
+  bool IsShared() const override { return true; }
 
   already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(
       const gfx::IntRect& aPersistedRect) override;
