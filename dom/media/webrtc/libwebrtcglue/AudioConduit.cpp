@@ -331,13 +331,13 @@ std::vector<uint32_t> WebrtcAudioConduit::GetLocalSSRCs() const {
   return std::vector<uint32_t>(1, mRecvStreamConfig.rtp.local_ssrc);
 }
 
-bool WebrtcAudioConduit::OverrideRemoteSSRC(uint32_t ssrc) {
+bool WebrtcAudioConduit::OverrideRemoteSSRC(uint32_t aSsrc) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
 
-  if (mRecvStreamConfig.rtp.remote_ssrc == ssrc) {
+  if (mRecvStreamConfig.rtp.remote_ssrc == aSsrc) {
     return true;
   }
-  mRecvStreamConfig.rtp.remote_ssrc = ssrc;
+  mRecvStreamConfig.rtp.remote_ssrc = aSsrc;
 
   const bool wasReceiving = mRecvStreamRunning;
   const bool hadRecvStream = mRecvStream;
