@@ -211,9 +211,7 @@ class WatchManager {
 
   void ManualNotify(CallbackMethod aMethod) {
     MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-    PerCallbackWatcher* watcher = GetWatcher(aMethod);
-    MOZ_ASSERT(watcher);
-    watcher->Notify();
+    EnsureWatcher(aMethod).Notify();
   }
 
  private:
