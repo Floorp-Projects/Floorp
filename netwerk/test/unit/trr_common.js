@@ -102,7 +102,7 @@ async function test_A_record() {
   setModeAndURI(3, "doh?responseIP=4.4.4.4&auth=true");
   Services.prefs.setCharPref("network.trr.credentials", "evil:person");
 
-  let [, , inStatus] = await new TRRDNSListener(
+  let { inStatus } = await new TRRDNSListener(
     "wrong.example.com",
     undefined,
     false
@@ -139,7 +139,7 @@ async function test_RFC1918() {
   dns.clearCache(true);
   setModeAndURI(3, "doh?responseIP=192.168.0.1");
 
-  let [, , inStatus] = await new TRRDNSListener(
+  let { inStatus } = await new TRRDNSListener(
     "rfc1918.example.com",
     undefined,
     false
@@ -150,11 +150,11 @@ async function test_RFC1918() {
     `${inStatus} should be an error code`
   );
   setModeAndURI(3, "doh?responseIP=::ffff:192.168.0.1");
-  [, , inStatus] = await new TRRDNSListener(
+  ({ inStatus } = await new TRRDNSListener(
     "rfc1918-ipv6.example.com",
     undefined,
     false
-  );
+  ));
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -209,7 +209,7 @@ async function test_timeout_mode3() {
   Services.prefs.setIntPref("network.trr.request_timeout_ms", 10);
   Services.prefs.setIntPref("network.trr.request_timeout_mode_trronly_ms", 10);
 
-  let [, , inStatus] = await new TRRDNSListener(
+  let { inStatus } = await new TRRDNSListener(
     "timeout.example.com",
     undefined,
     false
@@ -238,7 +238,7 @@ async function test_strict_native_fallback() {
   Services.prefs.setIntPref("network.trr.request_timeout_ms", 10);
   Services.prefs.setIntPref("network.trr.request_timeout_mode_trronly_ms", 10);
 
-  let [, , inStatus] = await new TRRDNSListener(
+  let { inStatus } = await new TRRDNSListener(
     "timeout.example.com",
     undefined,
     false
@@ -253,7 +253,7 @@ async function test_strict_native_fallback() {
   setModeAndURI(2, "doh?responseIP=2.2.2.2");
   Services.prefs.clearUserPref("network.trr.request_timeout_ms");
   Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
-  [, , inStatus] = await new TRRDNSListener("closeme.com", undefined, false);
+  ({ inStatus } = await new TRRDNSListener("closeme.com", undefined, false));
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -262,11 +262,11 @@ async function test_strict_native_fallback() {
   info("Now a decode error");
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=2.2.2.2&corruptedAnswer=true");
-  [, , inStatus] = await new TRRDNSListener(
+  ({ inStatus } = await new TRRDNSListener(
     "bar.example.com",
     undefined,
     false
-  );
+  ));
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -400,7 +400,7 @@ async function test_CNAME() {
     setModeAndURI(3, "doh?responseIP=none&cnameloop=true");
   }
 
-  let [, , inStatus] = await new TRRDNSListener(
+  let { inStatus } = await new TRRDNSListener(
     "test18.example.com",
     undefined,
     false
@@ -439,7 +439,7 @@ async function test_name_mismatch() {
   // regardless of what was requested.
   setModeAndURI(3, "doh?hostname=mismatch.example.com");
 
-  let [, , inStatus] = await new TRRDNSListener(
+  let { inStatus } = await new TRRDNSListener(
     "bar.example.com",
     undefined,
     false
@@ -718,11 +718,7 @@ async function test_connection_closed() {
   await new TRRDNSListener("bar.example.com", "2.2.2.2");
 
   // makes the TRR connection shut down.
-  let [, , inStatus] = await new TRRDNSListener(
-    "closeme.com",
-    undefined,
-    false
-  );
+  let { inStatus } = await new TRRDNSListener("closeme.com", undefined, false);
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -739,7 +735,7 @@ async function test_connection_closed() {
   await new TRRDNSListener("bar.example.com", "2.2.2.2");
 
   // makes the TRR connection shut down.
-  [, , inStatus] = await new TRRDNSListener("closeme.com", undefined, false);
+  ({ inStatus } = await new TRRDNSListener("closeme.com", undefined, false));
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -755,7 +751,7 @@ async function test_connection_closed() {
   await new TRRDNSListener("bar.example.com", "2.2.2.2");
 
   // makes the TRR connection shut down.
-  [, , inStatus] = await new TRRDNSListener("closeme.com", undefined, false);
+  ({ inStatus } = await new TRRDNSListener("closeme.com", undefined, false));
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
@@ -774,7 +770,7 @@ async function test_connection_closed() {
   await new TRRDNSListener("bar.example.com", "2.2.2.2");
 
   // makes the TRR connection shut down.
-  [, , inStatus] = await new TRRDNSListener("closeme.com", undefined, false);
+  ({ inStatus } = await new TRRDNSListener("closeme.com", undefined, false));
   Assert.ok(
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`

@@ -87,7 +87,7 @@ add_task(async function test_extended_error_bogus() {
   });
 
   // Check that we don't fall back to DNS
-  let [, , inStatus] = await new TRRDNSListener("a.foo", {
+  let { inStatus } = await new TRRDNSListener("a.foo", {
     expectedSuccess: false,
   });
   Assert.ok(
@@ -116,7 +116,7 @@ add_task(async function test_extended_error_filtered() {
   });
 
   // Check that we don't fall back to DNS
-  let [, , inStatus] = await new TRRDNSListener("b.foo", {
+  let { inStatus } = await new TRRDNSListener("b.foo", {
     expectedSuccess: false,
   });
   Assert.ok(
@@ -315,7 +315,7 @@ add_task(async function test_only_ipv4_extended_error() {
       },
     ],
   });
-  let [, , inStatus] = await new TRRDNSListener("only.com", {
+  let { inStatus } = await new TRRDNSListener("only.com", {
     expectedSuccess: false,
   });
   Assert.ok(
