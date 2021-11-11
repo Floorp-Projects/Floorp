@@ -11905,6 +11905,11 @@ fireweb.app
 // Submitted by Louis Chemineau <louis@chmn.me>
 flap.id
 
+// FlashDrive : https://flashdrive.io
+// Submitted by Eric Chan <support@flashdrive.io>
+onflashdrive.app
+fldrv.com
+
 // fly.io: https://fly.io
 // Submitted by Kurt Mackey <kurt@fly.io>
 fly.dev
