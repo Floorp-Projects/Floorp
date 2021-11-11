@@ -121,7 +121,11 @@
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Nechci</string>
     <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_turn_on_auto_close_button">Zapnout automatické zavírání</string>
+    <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">Zapnout automatické zavírání</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">Zapnout automatické zavírání</string>
+
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -1253,6 +1257,10 @@
     <string name="qr_scanner_dialog_positive">POVOLIT</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">ZAKÁZAT</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">Webová adresa není platná.</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">OK</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Opravdu chcete odstranit sbírku „%1$s“?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
@@ -2013,11 +2021,11 @@
     <!-- Content description for closing all inactive tabs -->
     <string name="inactive_tabs_delete_all">Zavřít všechny neaktivní panely</string>
     <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
-    <string moz:removedIn="93" name="inactive_tabs_description" tools:ignore="UnusedResources">Panely zde budou k dispozici po dobu %s. Poté se automaticky zavřou.</string>
+    <string moz:removedIn="95" name="inactive_tabs_description" tools:ignore="UnusedResources">Panely zde budou k dispozici po dobu %s. Poté se automaticky zavřou.</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="93" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 dnů</string>
+    <string moz:removedIn="95" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 dnů</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string moz:removedIn="93" name="inactive_tabs_7_days" tools:ignore="UnusedResources">jednoho týdne</string>
+    <string moz:removedIn="95" name="inactive_tabs_7_days" tools:ignore="UnusedResources">jednoho týdne</string>
 
     <!-- Inactive tabs auto-close message in the tabs tray -->
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
@@ -2027,21 +2035,33 @@
     <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">ZAPNOUT AUTOMATICKÉ ZAVÍRÁNÍ</string>
 
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">Automatické zavírání povoleno</string>
+
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
-    <string name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Pomozte nám se zlepšit</string>
+    <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Pomozte nám se zlepšit</string>
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header_1">Pomozte zlepšovat Firefox</string>
+
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
-    <string name="inactive_tabs_survey_content" tools:ignore="UnusedResources">Proč jste vypnuli funkci neaktivních panelů?</string>
+    <string name="inactive_tabs_survey_content">Proč jste vypnuli funkci neaktivních panelů?</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_not_interested_option" tools:ignore="UnusedResources">Tato funkce mě nezajímá</string>
+    <string name="inactive_tabs_survey_do_not_understand">Nerozumím, jak to funguje</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Doba před označením panelů jako neaktivních je moc dlouhá</string>
+    <string name="inactive_tabs_survey_do_it_myself">Raději staré panely zavírám na vlastní pěst</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Doba před označením panelů jako neaktivních je moc krátká</string>
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Doba před označením panelů jako neaktivních je moc dlouhá</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_long_option_1">Dva týdny jsou moc dlouhá doba</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Doba před označením panelů jako neaktivních je moc krátká</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option_1">Dva týdny jsou moc krátká doba</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
-    <string name="inactive_tabs_survey_send_button" tools:ignore="UnusedResources">Odeslat</string>
+    <string name="inactive_tabs_survey_send_button">Odeslat</string>
     <!-- Content description for inactive tabs survey close button -->
-    <string name="inactive_tabs_survey_close_button_content_description" tools:ignore="UnusedResources">Zavřít</string>
+    <string name="inactive_tabs_survey_close_button_content_description">Zavřít</string>
 
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Nastavte si automatické otevírání odkazů, e-mailů a zpráv ve Firefoxu.</string>

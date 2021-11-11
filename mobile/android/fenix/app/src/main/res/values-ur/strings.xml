@@ -24,7 +24,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 کھلا ٹیب۔ ٹیبز بدلنے کے لئے دبائیں۔</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s کھلے ٹیب۔ ٹیب بدلنے کے لئے دبائیں۔</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s کھلے ٹیب۔ ٹیب بدلنے کے لئے دبائیں۔</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d منتخب کیا گیا</string>
@@ -53,7 +53,7 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_bookmarks">حال ہی میں محفوظ شدہ</string>
+    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">حال ہی میں محفوظ شدہ</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">حالیہ محفوظ  شدہ بک مارک </string>
     <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
@@ -100,6 +100,21 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">برخاست کریں</string>
 
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">سیٹنگز میں بند کر دیں۔</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">ایک ماہ کے بعد خودکار بند کریں ؟</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">بند کریں</string>
+
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">خودکار بند چالو کریں۔</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">خودکار بند چالو کریں۔</string>
+
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">نیا ٹیب</string>
@@ -107,7 +122,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">نیا نجی ٹیب</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">سر فہرست سائٹین</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">سر فہرست سائٹین</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -118,7 +133,17 @@
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header">ماضی کی تحقیقات</string>
+    <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">ماضی کی تحقیقات</string>
+
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string moz:removedIn="94" name="history_metadata_header_2" tools:ignore="UnusedResources">حال ہی میں ملاحظہ کی گئی</string>
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_3">حالیہ تلاشیں۔</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">ہٹائیں</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -132,7 +157,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">روکیں</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">بک مارک</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">بک مارک</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">بُک مارک کی تدوین کریں</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -243,6 +268,14 @@
     <!-- Search engine suggestion description text -->
     <string name="search_engine_suggestions_description">ایڈریس بار سے براہ راست تلاش کریں</string>
 
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_title_2">Firefox میں نیا کیا  ہے</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">صاف، منظم ٹیبز</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_title_2">حالیہ تلاشیں۔</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">ایک نیا Firefox ٹیب کھولیں</string>
@@ -321,7 +354,9 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">تھیم</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">ابتدائی صفحہ</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">ابتدائی صفحہ</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">ابتدائی صفحہ</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">اشارے</string>
     <!-- Preference for settings related to visual options -->
@@ -384,6 +419,24 @@
     <string name="customize_addon_collection_hint">مجموعہ کا نام</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">مجموعہ کرنے والا مالک (صارف شناخت)</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">واپس جائیں</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">حال ہی میں محفوظ شدہ</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string moz:removedIn="94" name="customize_toggle_recently_bookmarked" tools:ignore="UnusedResources">حالیہ بک مارک کردہ</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">حالیہ بُک مارکس</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string moz:removedIn="94" name="customize_toggle_recently_visited" tools:ignore="UnusedResources">حال ہی میں ملاحظہ کی گئی</string>
+    <!-- Title for the customize home screen settings section for recent searches. Recent searches
+     is a section where users see a list of groups of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recent_searches">حالیہ تلاشیں۔</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -495,7 +548,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">سینک آن کریں</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">ڈیسک ٹاپ کے لئے Firefox میں جوڑا سازی کے کوڈ کو اسکین کریں</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">ڈیسک ٹاپ کے لئے Firefox میں جوڑا سازی کے کوڈ کو اسکین کریں</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">سائن ان کریں</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -607,15 +660,23 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">ایک مہینے کے بعد</string>
 
-    <!-- Start on Home -->
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">گھر سے شروع کریں۔</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">گھر سے شروع کریں۔</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">اسکرین کھول رہا ہے</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">چار گھنٹے بعد</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">چار گھنٹے بعد</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">ابتدائی صفحہ</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">ہمیشہ</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">ہمیشہ</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">آخری ٹیب</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">کبھی نہیں</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">کبھی نہیں</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">چار گھنٹے کی غیرفعالیت کے بعد  ابتدائی صفحہ</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">دستی طور پر بند کریں</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -625,6 +686,10 @@
 
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">ایک ماہ کے بعد بند کریں</string>
+
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">پرانے ٹیبز کو غیر فعال میں منتقل کریں۔</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -665,13 +730,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">مجموعہ میں محفوظ کریں</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">منتخب کریں</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">منتخب کریں</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">تمام ٹیبز شیئر کریں</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">حالیہ بند کیے گئے ٹیبز</string>
     <!-- Text shown in the tabs tray inactive tabs section -->
-    <string name="tab_tray_inactive_recently_closed">حالیہ بند کی گئی</string>
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">حالیہ بند کی گئی</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">اکاؤنٹ کی سیٹنگز</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -744,6 +809,11 @@
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string name="tab_tray_save_to_collection">محفوظ کریں</string>
 
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string moz:removedIn="94" name="tab_tray_header_title" tools:ignore="UnusedResources">دیگر</string>
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title_1">دیگر ٹیبز</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">سابقات حذف کریں</string>
@@ -756,15 +826,15 @@
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">صاف کریں</string>
     <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">نقل کریں</string>
+    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">نقل کریں</string>
     <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">شیئر کریں</string>
+    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">شیئر کریں</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">نئے ٹیب میں کھولیں</string>
+    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">نئے ٹیب میں کھولیں</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">نجی ٹیب میں کھولیں</string>
+    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">نجی ٹیب میں کھولیں</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">مٹائیں</string>
+    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">مٹائیں</string>
 
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
@@ -788,10 +858,6 @@
     <string name="history_empty_message">یہاں کوئی سابقات نہیں ہے</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">ڈاؤن لوڈ حذف کریں</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">کیا آپ واقعی اپنے ڈاؤن لوڈ صاف کرنا چاہتے ہیں؟</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">ڈاؤن لوڈز کو ہٹا دیا گیا</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -831,7 +897,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">بکمارک مینیو</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">بکمارک میں ترمیم کریں</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">بکمارک میں ترمیم کریں</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">فولڈر منتخب کریں</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1125,6 +1191,8 @@
     <string name="qr_scanner_dialog_positive">اجازت دیں</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">‏‏رد کریں</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">ٹھیک ہے</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">کیا آپ واقعی %1$s کو حذف کرنا چاہتے ہیں؟</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
@@ -1228,9 +1296,9 @@
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">کیا پہلے سے ہی ایک اکاؤنٹ ہے؟</string>
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">دیکھیں نیا کیا ہے</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">دیکھیں نیا کیا ہے</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">یہاں جوابات حاصل کریں</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">یہاں جوابات حاصل کریں</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">آلات کے درمیان Firefox کو سنک کریں</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1247,6 +1315,8 @@
     <string name="onboarding_firefox_account_sync_is_on">Sync چالو ہے</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">سائن ان کرنے میں ناکام</string>
+    <!-- text for the tracking protection onboarding card header -->
+    <string name="onboarding_tracking_protection_header_3">ہمیشہ پرائیویسی پر</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">معیاری (پہلے سے طے شدہ)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
@@ -1256,15 +1326,15 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">اپنے ٹول بار کی جگہ کا انتخاب کریں</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">رازداری سے براؤز کریں</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">رازداری سے براؤز کریں</string>
 
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">ایک نجی ٹیب ایک بار کھولیں: %s آئیکن پر ٹیپ کریں۔</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">ایک نجی ٹیب ایک بار کھولیں: %s آئیکن پر ٹیپ کریں۔</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">ہر بار نجی ٹیب کھولیں: اپنی نجی براؤزنگ کی ترتیبات کو اپ ڈیٹ کریں۔</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">ہر بار نجی ٹیب کھولیں: اپنی نجی براؤزنگ کی ترتیبات کو اپ ڈیٹ کریں۔</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">سیٹنگز کھولیں</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">سیٹنگز کھولیں</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">آپ کی رازداری</string>
 
@@ -1280,6 +1350,8 @@
     <!-- Onboarding theme -->
     <!-- text for the theme picker onboarding card header -->
     <string name="onboarding_theme_picker_header">اپنے تھیم کا انتخاب کریں</string>
+    <!-- text for the theme picker onboarding card description -->
+    <string name="onboarding_theme_picker_description_2">ڈارک موڈ کے ساتھ کچھ بیٹری اور اپنی بینائی کو بچائیں۔</string>
     <!-- Automatic theme setting (will follow device setting) -->
     <string name="onboarding_theme_automatic_title">خود بخود</string>
     <!-- Summary of automatic theme setting (will follow device setting) -->
@@ -1407,6 +1479,9 @@
     The first parameter is the app name -->
     <string name="open_source_licenses_title">OSS | %s لائبریریاں</string>
 
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">مزید سیکھیں</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">معاونت</string>
 
@@ -1473,6 +1548,9 @@
 
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill_description">اپنے آلے پر موجود دیگر ایپس میں صارف نام اور پاس ورڈ بھریں۔</string>
+
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">لاگ شامل کریں</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">لاگ ان کو Sync کریں</string>
@@ -1697,9 +1775,13 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> کو چالو کرنے کے لئے ٹو گل کریں]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">مھفوظ کنکشن</string>
+    <string name="quick_settings_sheet_secure_connection_2">کنکشن محفوظ ہے۔</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">غیر مھفوظ کنکشن</string>
+    <string name="quick_settings_sheet_insecure_connection_2">کنکشن محفوظ نہیں ہے</string>
+    <!-- Label that indicates a site is using a secure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">مھفوظ کنکشن</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">غیر مھفوظ کنکشن</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">کیا آپ واقعی تمام سائٹوں پر موجود تمام اجازتوں کو ختم کرنا چاہتے ہیں؟</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1740,8 +1822,12 @@
     <!--  The page title for editing a saved login. -->
     <string name="edit">تدوین</string>
 
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The page title for adding new login. -->
+    <string name="add_login">نیا لاگ ان شامل کریں۔</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">پاس ورڈ کی درکار</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">صارف نام درکار ہے۔</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">آواز سے تلاش</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1749,6 +1835,9 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">اس صارف نام کے ساتھ لاگ ان پہلے سے موجود ہے</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1773,8 +1862,10 @@
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">ٹھیک ہے سمجھ گیا</string>
 
+    <!-- Label for the show most visited top sites preference -->
+    <string moz:removedIn="94" name="top_sites_toggle_top_frecent_sites_2" tools:ignore="UnusedResources">سب سے زیادہ دیکھی جانے والی بہترین سائٹیں دکھائیں۔</string>
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">سب سے زیادہ ملاحظہ کی جانے والی سائٹیں دکھائیں</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">سب سے زیادہ ملاحظہ کی جانے والی سائٹیں دکھائیں</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">نام</string>
 	<!-- Hint for renaming title of a top site -->
@@ -1784,13 +1875,42 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">منسوخ کریں</string>
 
-    <!-- In-activate tabs in the tabs tray -->
-    <!-- Title text displayed in the tabs tray when a tab has been unused for 4 days. -->
+    <!-- Inactive tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
     <string name="inactive_tabs_title">غیر فعال ٹیبز</string>
+    <!-- Content description for closing all inactive tabs -->
+    <string name="inactive_tabs_delete_all">تمام غیر فعال ٹیبز کو بند کریں۔</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_30_days">30 دن</string>
+    <string moz:removedIn="95" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 دن</string>
     <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
-    <string name="inactive_tabs_7_days">۱ ہفتہ</string>
+    <string moz:removedIn="95" name="inactive_tabs_7_days" tools:ignore="UnusedResources">۱ ہفتہ</string>
+
+    <!-- Inactive tabs auto-close message in the tabs tray -->
+    <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">ایک ماہ کے بعد خودکار بند کریں ؟</string>
+
+    <!-- Inactive tabs survey -->
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Firefox کو بہتر بنانے میں مدد کریں۔</string>
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header_1">Firefox کو بہتر بنانے میں مدد کریں۔</string>
+
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_do_not_understand">مجھے سمجھ نہیں آتی کہ یہ کیسے کام کرتا ہے۔</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_do_it_myself">میں خود پرانے ٹیبز کو صاف کرنا پسند کرتا ہوں۔</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">دو ہفتے کا وقت بہت طویل ہے۔</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_long_option_1">دو ہفتے کا وقت بہت طویل ہے۔</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">دو ہفتے کا وقت بہت کم ہے۔</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option_1">دو ہفتے کا وقت بہت کم ہے۔</string>
+    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
+    <string name="inactive_tabs_survey_send_button">ارسال کریں</string>
+    <!-- Content description for inactive tabs survey close button -->
+    <string name="inactive_tabs_survey_close_button_content_description">بند کریں</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">ہٹائیں</string>
@@ -1804,4 +1924,17 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">بند کریں</string>
 
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string moz:removedIn="94" name="pocket_stories_header" tools:ignore="UnusedResources">فکر انگیز کہانیاں</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header_1">فکر انگیز کہانیاں</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_categories_header">موضوع کے لحاظ سے کہانیاں</string>
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">مزید تلاش کریں</string>
+    <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
+    <string name="pocket_stories_feature_caption">%s کے خاندان کا حصہ</string>
+    <!-- Clickable text for opening an external link for more information about Pocket. -->
+    <string name="pocket_stories_feature_learn_more">مزید سیکھیں</string>
 </resources>
