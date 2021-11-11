@@ -73,7 +73,7 @@ class TabSheetFragment : LocaleAwareFragment(), View.OnClickListener {
     private fun playAnimation(reverse: Boolean): Animator {
         isAnimating = true
 
-        val offset = resources.getDimensionPixelSize(R.dimen.floating_action_button_size) / 2
+        val offset = resources.getDimensionPixelSize(R.dimen.tab_sheet_end_margin) / 2
         val cx = cardView.measuredWidth - offset
         val cy = cardView.measuredHeight - offset
 

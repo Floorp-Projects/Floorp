@@ -249,6 +249,7 @@ dependencies {
     implementation "org.mozilla.components:ui-autocomplete:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:ui-colors:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:ui-icons:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:ui-tabcounter:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-webcompat:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-webcompat-reporter:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:support-webextensions:${AndroidComponents.VERSION}"

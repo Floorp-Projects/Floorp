@@ -59,7 +59,6 @@ import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.InstallFirefoxActivity
 import org.mozilla.focus.activity.MainActivity
-import org.mozilla.focus.browser.binding.TabCountBinding
 import org.mozilla.focus.browser.integration.BrowserMenuController
 import org.mozilla.focus.browser.integration.BrowserToolbarIntegration
 import org.mozilla.focus.browser.integration.FindInPageIntegration
@@ -88,8 +87,6 @@ import org.mozilla.focus.topsites.DefaultTopSitesView
 import org.mozilla.focus.utils.FocusSnackbar
 import org.mozilla.focus.utils.FocusSnackbarDelegate
 import org.mozilla.focus.utils.StatusBarUtils
-import org.mozilla.focus.widget.FloatingEraseButton
-import org.mozilla.focus.widget.FloatingSessionsButton
 import java.net.URLEncoder
 
 /**
@@ -98,7 +95,6 @@ import java.net.URLEncoder
 @Suppress("LargeClass", "TooManyFunctions")
 class BrowserFragment :
     BaseFragment(),
-    View.OnClickListener,
     AccessibilityManager.AccessibilityStateChangeListener {
 
     private var statusBar: View? = null
@@ -106,8 +102,6 @@ class BrowserFragment :
 
     private lateinit var engineView: EngineView
     private lateinit var toolbar: BrowserToolbar
-    private lateinit var eraseFab: FloatingEraseButton
-    private lateinit var sessionsFab: FloatingSessionsButton
 
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val fullScreenIntegration = ViewBoundFeatureWrapper<FullScreenIntegration>()
@@ -124,7 +118,6 @@ class BrowserFragment :
 
     private val toolbarIntegration = ViewBoundFeatureWrapper<BrowserToolbarIntegration>()
 
-    private val tabCountBinding = ViewBoundFeatureWrapper<TabCountBinding>()
     private lateinit var trackingProtectionPanel: TrackingProtectionPanel
     /**
      * The ID of the tab associated with this fragment.
@@ -160,8 +153,6 @@ class BrowserFragment :
 
         engineView = (view.findViewById<View>(R.id.engineView) as EngineView)
         toolbar = view.findViewById(R.id.browserToolbar)
-        eraseFab = view.findViewById(R.id.erase)
-        sessionsFab = view.findViewById(R.id.tabs)
 
         findInPageIntegration.set(
             FindInPageIntegration(
@@ -181,9 +172,7 @@ class BrowserFragment :
                 requireContext().settings,
                 toolbar,
                 statusBar!!,
-                engineView,
-                eraseFab,
-                sessionsFab
+                engineView
             ),
             this, view
         )
@@ -321,7 +310,7 @@ class BrowserFragment :
             // back to us through the intent system, we need to register a unique schema that we
             // can handle. For example, Fenix Nighlyt does this today with `fenix-nightly://`.
         } else {
-            initialiseNormalBrowserUi(view)
+            initialiseNormalBrowserUi()
 
             windowFeature.set(
                 feature = WindowFeature(
@@ -423,49 +412,24 @@ class BrowserFragment :
                 customTabId = tryGetCustomTabId(),
                 customTabsUseCases = requireComponents.customTabsUseCases,
                 sessionUseCases = requireComponents.sessionUseCases,
-                onUrlLongClicked = ::onUrlLongClicked
+                onUrlLongClicked = ::onUrlLongClicked,
+                eraseActionListener = { erase(shouldEraseAllTabs = true) },
+                tabCounterListener = ::tabCounterListener
             ),
             owner = this,
             view = browserToolbar
         )
     }
 
-    private fun initialiseNormalBrowserUi(view: View) {
+    private fun initialiseNormalBrowserUi() {
         if (!requireContext().settings.isAccessibilityEnabled()) {
             toolbar.enableDynamicBehavior(requireContext(), engineView)
         } else {
             toolbar.showAsFixed(requireContext(), engineView)
         }
-
-        val eraseButton = view.findViewById<FloatingEraseButton>(R.id.erase)
-        eraseButton.setOnClickListener(this)
-
-        val tabsButton = view.findViewById<FloatingSessionsButton>(R.id.tabs)
-        tabsButton.setOnClickListener(this)
-
-        tabCountBinding.set(
-            TabCountBinding(
-                requireComponents.store,
-                eraseButton,
-                tabsButton
-            ),
-            owner = this,
-            view = eraseButton
-        )
     }
 
     private fun initialiseCustomTabUi(customTabConfig: CustomTabConfig) {
-        // Unfortunately there's no simpler way to have the FAB only in normal-browser mode.
-        // - ViewStub: requires splitting attributes for the FAB between the ViewStub, and actual FAB layout file.
-        //             Moreover, the layout behaviour just doesn't work unless you set it programatically.
-        // - View.GONE: doesn't work because the layout-behaviour makes the FAB visible again when scrolling.
-        // - Adding at runtime: works, but then we need to use a separate layout file (and you need
-        //   to set some attributes programatically, same as ViewStub).
-        val eraseContainer = eraseFab.parent as ViewGroup
-        eraseContainer.removeView(eraseFab)
-
-        eraseContainer.removeView(sessionsFab)
-
         if (customTabConfig.enableUrlbarHiding && !requireContext().settings.isAccessibilityEnabled()) {
             toolbar.enableDynamicBehavior(requireContext(), engineView)
         } else {
@@ -521,8 +485,6 @@ class BrowserFragment :
             .commit()
 
         crash_container.visibility = View.VISIBLE
-        tabs.hide()
-        erase.hide()
     }
 
     private fun hideCrashReporter() {
@@ -536,8 +498,6 @@ class BrowserFragment :
             .commit()
 
         crash_container.visibility = View.GONE
-        tabs.show()
-        erase.show()
     }
 
     fun crashReporterIsVisible(): Boolean = requireActivity().supportFragmentManager.let {
@@ -576,7 +536,6 @@ class BrowserFragment :
     ) {
         val snackbar = FocusSnackbar.make(
             requireView(),
-            (requireView().findViewById(R.id.tabs) as? FloatingSessionsButton)?.visibility == View.VISIBLE,
             Snackbar.LENGTH_LONG
         )
 
@@ -690,8 +649,12 @@ class BrowserFragment :
         return true
     }
 
-    fun erase() {
-        requireComponents.tabsUseCases.removeTab(tab.id)
+    fun erase(shouldEraseAllTabs: Boolean = false) {
+        if (shouldEraseAllTabs) {
+            requireComponents.tabsUseCases.removeAllTabs()
+        } else {
+            requireComponents.tabsUseCases.removeTab(tab.id)
+        }
         requireComponents.appStore.dispatch(
             AppAction.NavigateUp(
                 requireComponents.store.state.selectedTabId
@@ -744,25 +707,12 @@ class BrowserFragment :
         )
     }
 
-    @Suppress("ComplexMethod")
-    override fun onClick(view: View) {
-        val openedTabs = view.context.components.store.state.tabs.size
-        when (view.id) {
-            R.id.erase -> {
-                TabCount.eraseButtonTapped.record(TabCount.EraseButtonTappedExtra(openedTabs))
-                erase()
-            }
+    private fun tabCounterListener() {
+        val openedTabs = requireComponents.store.state.tabs.size
 
-            R.id.tabs -> {
-                requireComponents.appStore.dispatch(AppAction.ShowTabs)
+        requireComponents.appStore.dispatch(AppAction.ShowTabs)
 
-                TabCount.sessionButtonTapped.record(TabCount.SessionButtonTappedExtra(openedTabs))
-            }
-
-            else -> {
-                throw IllegalArgumentException("Unhandled menu item in BrowserFragment")
-            }
-        }
+        TabCount.sessionButtonTapped.record(TabCount.SessionButtonTappedExtra(openedTabs))
     }
 
     private fun showFindInPageBar() {

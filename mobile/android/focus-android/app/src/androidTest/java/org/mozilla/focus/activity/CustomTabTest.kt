@@ -21,6 +21,7 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -91,6 +92,7 @@ class CustomTabTest {
 
     @SmokeTest
     @Test
+    @Ignore("Refactoring is required because of erase and tabs counter relocation")
     fun openCustomTabInFocusTest() {
         val browserPage = webServer.url("plain_test.html").toString()
         val customTabPage = webServer.url("tab1.html").toString()
@@ -115,7 +117,6 @@ class CustomTabTest {
 
         browserScreen {
             mDevice.waitForIdle(waitingTime)
-            verifyNumberOfTabsOpened(2)
             mDevice.pressBack()
             verifyPageURL(browserPage)
         }

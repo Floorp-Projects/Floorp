@@ -27,15 +27,13 @@ import org.mozilla.focus.ext.enableDynamicBehavior
 import org.mozilla.focus.ext.hide
 import org.mozilla.focus.ext.showAsFixed
 import org.mozilla.focus.utils.Settings
-import org.mozilla.focus.widget.FloatingEraseButton
-import org.mozilla.focus.widget.FloatingSessionsButton
 
 internal class FullScreenIntegrationTest {
     @Test
     fun `WHEN the integration is started THEN start FullScreenFeature`() {
         val feature: FullScreenFeature = mock()
         val integration = FullScreenIntegration(
-            mock(), mock(), null, mock(), mock(), mock(), mock(), mock(), mock(), mock()
+            mock(), mock(), null, mock(), mock(), mock(), mock(), mock()
         ).apply {
             this.feature = feature
         }
@@ -49,7 +47,7 @@ internal class FullScreenIntegrationTest {
     fun `WHEN the integration is stopped THEN stop FullScreenFeature`() {
         val feature: FullScreenFeature = mock()
         val integration = FullScreenIntegration(
-            mock(), mock(), null, mock(), mock(), mock(), mock(), mock(), mock(), mock()
+            mock(), mock(), null, mock(), mock(), mock(), mock(), mock()
         ).apply {
             this.feature = feature
         }
@@ -63,7 +61,7 @@ internal class FullScreenIntegrationTest {
     fun `WHEN back is pressed THEN send this to the feature`() {
         val feature: FullScreenFeature = mock()
         val integration = FullScreenIntegration(
-            mock(), mock(), null, mock(), mock(), mock(), mock(), mock(), mock(), mock()
+            mock(), mock(), null, mock(), mock(), mock(), mock(), mock()
         ).apply {
             this.feature = feature
         }
@@ -81,7 +79,7 @@ internal class FullScreenIntegrationTest {
         doReturn(activityWindow).`when`(activity).window
         doReturn(windowAttributes).`when`(activityWindow).attributes
         val integration = FullScreenIntegration(
-            activity, mock(), null, mock(), mock(), mock(), mock(), mock(), mock(), mock()
+            activity, mock(), null, mock(), mock(), mock(), mock(), mock()
         )
 
         integration.viewportFitChanged(33)
@@ -98,7 +96,7 @@ internal class FullScreenIntegrationTest {
         doReturn(activityWindow).`when`(activity).window
         doReturn(decorView).`when`(activityWindow).decorView
         val integration = FullScreenIntegration(
-            activity, mock(), null, mock(), mock(), mock(), mock(), mock(), mock(), mock()
+            activity, mock(), null, mock(), mock(), mock(), mock(), mock()
         )
 
         integration.switchToImmersiveMode()
@@ -123,7 +121,7 @@ internal class FullScreenIntegrationTest {
         doReturn(decorView).`when`(activityWindow).decorView
         doReturn(windowAttributes).`when`(activityWindow).attributes
         val integration = FullScreenIntegration(
-            activity, mock(), null, mock(), mock(), mock(), mock(), mock(), mock(), mock()
+            activity, mock(), null, mock(), mock(), mock(), mock(), mock()
         )
 
         integration.exitImmersiveModeIfNeeded()
@@ -145,7 +143,7 @@ internal class FullScreenIntegrationTest {
         doReturn(decorView).`when`(activityWindow).decorView
         doReturn(windowAttributes).`when`(activityWindow).attributes
         val integration = FullScreenIntegration(
-            activity, mock(), null, mock(), mock(), mock(), mock(), mock(), mock(), mock()
+            activity, mock(), null, mock(), mock(), mock(), mock(), mock()
         )
 
         integration.exitImmersiveModeIfNeeded()
@@ -155,23 +153,19 @@ internal class FullScreenIntegrationTest {
     }
 
     @Test
-    fun `GIVEN a11y is enabled WHEN enterBrowserFullscreen THEN hide the toolbar and the fabs`() {
+    fun `GIVEN a11y is enabled WHEN enterBrowserFullscreen THEN hide the toolbar`() {
         val toolbar: BrowserToolbar = mock()
         val engineView: GeckoEngineView = mock()
         doReturn(mock<View>()).`when`(engineView).asView()
-        val eraseFab: FloatingEraseButton = mock()
-        val sessionsFab: FloatingSessionsButton = mock()
         val settings: Settings = mock()
         doReturn(true).`when`(settings).isAccessibilityEnabled()
         val integration = FullScreenIntegration(
-            mock(), mock(), null, mock(), settings, toolbar, mock(), engineView, eraseFab, sessionsFab
+            mock(), mock(), null, mock(), settings, toolbar, mock(), engineView
         )
 
         integration.enterBrowserFullscreen()
 
         verify(toolbar).hide(engineView)
-        verify(eraseFab).visibility = View.GONE
-        verify(sessionsFab).visibility = View.GONE
         verify(toolbar, never()).collapse()
         verify(toolbar, never()).disableDynamicBehavior(engineView)
     }
@@ -181,19 +175,15 @@ internal class FullScreenIntegrationTest {
         val toolbar: BrowserToolbar = mock()
         val engineView: GeckoEngineView = mock()
         doReturn(mock<View>()).`when`(engineView).asView()
-        val eraseFab: FloatingEraseButton = mock()
-        val sessionsFab: FloatingSessionsButton = mock()
         val settings: Settings = mock()
         doReturn(false).`when`(settings).isAccessibilityEnabled()
         val integration = FullScreenIntegration(
-            mock(), mock(), null, mock(), settings, toolbar, mock(), engineView, eraseFab, sessionsFab
+            mock(), mock(), null, mock(), settings, toolbar, mock(), engineView
         )
 
         integration.enterBrowserFullscreen()
 
         verify(toolbar, never()).hide(engineView)
-        verify(eraseFab, never()).visibility = View.GONE
-        verify(sessionsFab, never()).visibility = View.GONE
         with(inOrder(toolbar)) {
             verify(toolbar).collapse()
             verify(toolbar).disableDynamicBehavior(engineView)
@@ -201,26 +191,22 @@ internal class FullScreenIntegrationTest {
     }
 
     @Test
-    fun `GIVEN a11y is enabled WHEN exitBrowserFullscreen THEN show the toolbar and the fabs`() {
+    fun `GIVEN a11y is enabled WHEN exitBrowserFullscreen THEN show the toolbar`() {
         val toolbar: BrowserToolbar = mock()
         val engineView: GeckoEngineView = mock()
         doReturn(mock<View>()).`when`(engineView).asView()
-        val eraseFab: FloatingEraseButton = mock()
-        val sessionsFab: FloatingSessionsButton = mock()
         val settings: Settings = mock()
         doReturn(true).`when`(settings).isAccessibilityEnabled()
         val resources: Resources = mock()
         val activity: Activity = mock()
         doReturn(resources).`when`(activity).resources
         val integration = FullScreenIntegration(
-            activity, mock(), null, mock(), settings, toolbar, mock(), engineView, eraseFab, sessionsFab
+            activity, mock(), null, mock(), settings, toolbar, mock(), engineView
         )
 
         integration.exitBrowserFullscreen()
 
         verify(toolbar).showAsFixed(activity, engineView)
-        verify(eraseFab).visibility = View.VISIBLE
-        verify(sessionsFab).visibility = View.VISIBLE
         verify(toolbar, never()).expand()
         verify(toolbar, never()).enableDynamicBehavior(activity, engineView)
     }
@@ -230,22 +216,18 @@ internal class FullScreenIntegrationTest {
         val toolbar: BrowserToolbar = mock()
         val engineView: GeckoEngineView = mock()
         doReturn(mock<View>()).`when`(engineView).asView()
-        val eraseFab: FloatingEraseButton = mock()
-        val sessionsFab: FloatingSessionsButton = mock()
         val settings: Settings = mock()
         doReturn(false).`when`(settings).isAccessibilityEnabled()
         val resources: Resources = mock()
         val activity: Activity = mock()
         doReturn(resources).`when`(activity).resources
         val integration = FullScreenIntegration(
-            activity, mock(), null, mock(), settings, toolbar, mock(), engineView, eraseFab, sessionsFab
+            activity, mock(), null, mock(), settings, toolbar, mock(), engineView
         )
 
         integration.exitBrowserFullscreen()
 
         verify(toolbar, never()).showAsFixed(activity, engineView)
-        verify(eraseFab, never()).visibility = View.VISIBLE
-        verify(sessionsFab, never()).visibility = View.VISIBLE
         with(inOrder(toolbar)) {
             verify(toolbar).enableDynamicBehavior(activity, engineView)
             verify(toolbar).expand()
@@ -257,8 +239,6 @@ internal class FullScreenIntegrationTest {
         val toolbar: BrowserToolbar = mock()
         val engineView: GeckoEngineView = mock()
         doReturn(mock<View>()).`when`(engineView).asView()
-        val eraseFab: FloatingEraseButton = mock()
-        val sessionsFab: FloatingSessionsButton = mock()
         val settings: Settings = mock()
         doReturn(false).`when`(settings).isAccessibilityEnabled()
         val resources: Resources = mock()
@@ -271,7 +251,7 @@ internal class FullScreenIntegrationTest {
         val statusBar: View = mock()
         val integration = spy(
             FullScreenIntegration(
-                activity, mock(), null, mock(), settings, toolbar, statusBar, engineView, eraseFab, sessionsFab
+                activity, mock(), null, mock(), settings, toolbar, statusBar, engineView
             )
         )
 
@@ -287,8 +267,6 @@ internal class FullScreenIntegrationTest {
         val toolbar: BrowserToolbar = mock()
         val engineView: GeckoEngineView = mock()
         doReturn(mock<View>()).`when`(engineView).asView()
-        val eraseFab: FloatingEraseButton = mock()
-        val sessionsFab: FloatingSessionsButton = mock()
         val settings: Settings = mock()
         doReturn(false).`when`(settings).isAccessibilityEnabled()
         val resources: Resources = mock()
@@ -303,7 +281,7 @@ internal class FullScreenIntegrationTest {
         val statusBar: View = mock()
         val integration = spy(
             FullScreenIntegration(
-                activity, mock(), null, mock(), settings, toolbar, statusBar, engineView, eraseFab, sessionsFab
+                activity, mock(), null, mock(), settings, toolbar, statusBar, engineView
             )
         )
 

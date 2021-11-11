@@ -20,11 +20,14 @@ import mozilla.components.browser.toolbar.display.DisplayToolbar.Indicators
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
+import mozilla.components.feature.tabs.toolbar.TabCounterToolbarButton
 import mozilla.components.feature.toolbar.ToolbarBehaviorController
 import mozilla.components.feature.toolbar.ToolbarPresenter
 import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import org.mozilla.focus.GleanMetrics.TabCount
 import org.mozilla.focus.GleanMetrics.TrackingProtection
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.isCustomTab
@@ -41,8 +44,10 @@ class BrowserToolbarIntegration(
     sessionUseCases: SessionUseCases,
     customTabsUseCases: CustomTabsUseCases,
     private val onUrlLongClicked: () -> Boolean,
+    private val eraseActionListener: () -> Unit,
+    private val tabCounterListener: () -> Unit,
     private val customTabId: String? = null,
-    inTesting: Boolean = false
+    private val inTesting: Boolean = false
 ) : LifecycleAwareFeature {
     private val presenter = ToolbarPresenter(
         toolbar,
@@ -52,8 +57,31 @@ class BrowserToolbarIntegration(
 
     @VisibleForTesting
     internal var securityIndicatorScope: CoroutineScope? = null
+    private var tabsCounterScope: CoroutineScope? = null
     private var customTabsFeature: CustomTabsToolbarFeature? = null
     private var navigationButtonsIntegration: NavigationButtonsIntegration? = null
+    private val eraseAction = BrowserToolbar.Button(
+        imageDrawable = AppCompatResources.getDrawable(
+            toolbar.context,
+            R.drawable.mozac_ic_delete
+        )!!,
+        contentDescription = toolbar.context.getString(R.string.content_description_erase),
+        iconTintColorResource = R.color.primaryText,
+        listener = {
+            val openedTabs = store.state.tabs.size
+            TabCount.eraseButtonTapped.record(TabCount.EraseButtonTappedExtra(openedTabs))
+            eraseActionListener.invoke()
+        }
+    )
+    private val tabsAction = TabCounterToolbarButton(
+        lifecycleOwner = fragment,
+        showTabs = {
+            toolbar.hideKeyboard()
+            tabCounterListener.invoke()
+        },
+        store = store
+    )
+
     @VisibleForTesting
     internal var toolbarController = ToolbarBehaviorController(toolbar, store, customTabId)
 
@@ -105,10 +133,6 @@ class BrowserToolbarIntegration(
             fragment.showTrackingProtectionPanel()
         }
 
-        if (!inTesting) {
-            setUrlBackground()
-        }
-
         if (customTabId != null) {
             val menu = CustomTabMenu(
                 context = fragment.requireContext(),
@@ -136,15 +160,16 @@ class BrowserToolbarIntegration(
                 customTabId
             )
         }
+        if (store.state.findCustomTabOrSelectedTab(customTabId)?.isCustomTab() == false) {
+            toolbar.addNavigationAction(eraseAction)
+            if (!inTesting) {
+                setUrlBackground()
+            }
+        }
     }
 
     // Use the same background for display/edit modes.
     private fun setUrlBackground() {
-        // For custom tabs, we don't use a background for the url.
-        if (store.state.findCustomTabOrSelectedTab(customTabId)?.isCustomTab() == true) {
-            return
-        }
-
         val urlBackground = ResourcesCompat.getDrawable(
             fragment.resources,
             R.drawable.toolbar_url_background,
@@ -153,13 +178,28 @@ class BrowserToolbarIntegration(
         toolbar.display.setUrlBackground(urlBackground)
     }
 
+    private fun setBrowserActionButtons() {
+        tabsCounterScope = store.flowScoped { flow ->
+            flow.ifChanged { state -> state.tabs.size > 1 }
+                .collect { state ->
+                    if (state.tabs.size > 1) {
+                        toolbar.addBrowserAction(tabsAction)
+                    } else {
+                        toolbar.removeBrowserAction(tabsAction)
+                    }
+                }
+        }
+    }
+
     override fun start() {
         presenter.start()
-
         toolbarController.start()
         customTabsFeature?.start()
         navigationButtonsIntegration?.start()
         observerSecurityIndicatorChanges()
+        if (store.state.findCustomTabOrSelectedTab(customTabId)?.isCustomTab() == false) {
+            setBrowserActionButtons()
+        }
     }
 
     @VisibleForTesting
@@ -188,6 +228,8 @@ class BrowserToolbarIntegration(
         customTabsFeature?.stop()
         navigationButtonsIntegration?.stop()
         stopObserverSecurityIndicatorChanges()
+        toolbar.removeBrowserAction(tabsAction)
+        tabsCounterScope?.cancel()
     }
 
     @VisibleForTesting

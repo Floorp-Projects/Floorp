@@ -14,7 +14,6 @@ import androidx.core.view.updatePadding
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.ContentViewCallback
 import com.google.android.material.snackbar.Snackbar
-import org.mozilla.focus.R
 import org.mozilla.focus.databinding.FocusSnackbarBinding
 import org.mozilla.focus.ext.settings
 
@@ -29,11 +28,11 @@ class FocusSnackbar private constructor(
         view.setPadding(0, 0, 0, 0)
     }
 
-    fun setText(text: String) = this.apply {
+    fun setText(text: String) = apply {
         binding.snackbarText.text = text
     }
 
-    fun setAction(text: String, action: () -> Unit) = this.apply {
+    fun setAction(text: String, action: () -> Unit) = apply {
         binding.snackbarAction.apply {
             setText(text)
             visibility = View.VISIBLE
@@ -54,7 +53,6 @@ class FocusSnackbar private constructor(
          */
         fun make(
             view: View,
-            isFabVisible: Boolean,
             duration: Int = LENGTH_LONG,
         ): FocusSnackbar {
             val parent = findSuitableParent(view) ?: run {
@@ -75,17 +73,10 @@ class FocusSnackbar private constructor(
 
             val callback = FocusSnackbarCallback(binding.root)
 
-            val bottomPadding = if (isFabVisible) {
-                view.context.resources.getDimensionPixelSize(R.dimen.floating_action_button_size) +
-                    view.context.resources.getDimensionPixelSize(R.dimen.floating_action_button_margin)
-            } else {
-                0
-            }
-
             return FocusSnackbar(parent, binding, callback).also {
                 it.duration = durationOrAccessibleDuration
                 it.view.updatePadding(
-                    bottom = bottomPadding
+                    bottom = 0
                 )
             }
         }

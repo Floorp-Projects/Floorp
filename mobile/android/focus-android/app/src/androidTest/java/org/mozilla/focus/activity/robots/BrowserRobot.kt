@@ -235,7 +235,8 @@ private val browserURLbar = mDevice.findObject(
     UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_url_view")
 )
 
-private val floatingEraseButton = onView(allOf(withId(R.id.erase), isDisplayed()))
+// Replace -1 with the real id of erase button
+private val floatingEraseButton = onView(allOf(withId(-1), isDisplayed()))
 
 private val tabsCounter = onView(withId(R.id.tabs))
 

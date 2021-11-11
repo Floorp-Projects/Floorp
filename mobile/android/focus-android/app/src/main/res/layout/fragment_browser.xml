@@ -21,7 +21,6 @@
             android:background="@drawable/background_gradient" />
 
         <org.mozilla.focus.widget.ResizableKeyboardCoordinatorLayout
-            app:viewsToHideWhenActivated="@array/viewsToHide"
             android:layout_marginTop="0dp"
             android:id="@+id/main_content"
             android:layout_width="match_parent"
@@ -60,40 +59,6 @@
                 app:browserToolbarMenuColor="?primaryText"
                 app:browserToolbarProgressBarGravity="bottom"
                 app:browserToolbarSecureColor="?primaryText" />
-
-            <org.mozilla.focus.widget.FloatingSessionsButton
-                android:id="@+id/tabs"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end|bottom"
-                android:layout_marginBottom="@dimen/floating_action_button_margin"
-                android:layout_marginEnd="@dimen/floating_action_button_margin"
-                android:elevation="4dp"
-                android:visibility="gone"
-                app:backgroundTint="@color/accentBright"
-                app:rippleColor="@color/accent"
-                app:layout_behavior="org.mozilla.focus.widget.FloatingActionButtonBehavior"
-                app:fabSize="normal"
-                app:layout_dodgeInsetEdges="bottom"/>
-
-            <!-- Intentionally hardcoded color for delete icon on both themes. -->
-            <org.mozilla.focus.widget.FloatingEraseButton
-                android:id="@+id/erase"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="end|bottom"
-                android:layout_marginBottom="@dimen/floating_action_button_margin"
-                android:layout_marginEnd="@dimen/floating_action_button_margin"
-                android:elevation="4dp"
-                android:src="@drawable/mozac_ic_delete"
-                android:tint="@color/photonLightGrey05"
-                app:backgroundTint="@color/accentBright"
-                app:rippleColor="@color/accent"
-                android:visibility="gone"
-                app:fabSize="normal"
-                app:layout_behavior="org.mozilla.focus.widget.FloatingActionButtonBehavior"
-                android:contentDescription="@string/content_description_erase"
-                app:layout_dodgeInsetEdges="bottom"/>
 
             <mozilla.components.feature.findinpage.view.FindInPageBar
                 android:id="@+id/find_in_page"

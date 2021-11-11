@@ -5,7 +5,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <dimen name="menu_elevation">8dp</dimen>
 
-    <dimen name="floating_action_button_margin">16dp</dimen>
+    <dimen name="tab_sheet_end_margin">40dp</dimen>
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
 
@@ -30,8 +30,6 @@
     <dimen name="fingerprint_status_layout_margin_vertical">48dp</dimen>
 
     <dimen name="tabs_button_text_size">12dp</dimen>
-
-    <dimen name="floating_action_button_size">56dp</dimen>
 
     <dimen name="adaptive_icon_drawable_dimen">108dp</dimen> <!-- Specified in AdaptiveIconDrawable docs. -->
 

@@ -29,6 +29,7 @@ import org.mozilla.focus.testAnnotations.SmokeTest
  * Open multiple sessions and verify that the trash icon changes to a tabs counter
  */
 @RunWith(AndroidJUnit4ClassRunner::class)
+@Ignore("Refactoring is required because of erase and tabs counter relocation")
 class MultitaskingTest {
     private lateinit var webServer: MockWebServer
     private val store = InstrumentationRegistry.getInstrumentation()

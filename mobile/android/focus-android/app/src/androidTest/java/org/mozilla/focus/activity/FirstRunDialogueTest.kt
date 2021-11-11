@@ -8,6 +8,7 @@ import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -63,6 +64,7 @@ class FirstRunDialogueTest {
 
     @SmokeTest
     @Test
+    @Ignore("Refactoring is required because of erase and tabs counter relocation")
     fun homeScreenTipsTest() {
         webServer.start()
         webServer.enqueue(createMockResponseFromAsset("tab1.html"))

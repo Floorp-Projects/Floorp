@@ -4,7 +4,6 @@
 
 package org.mozilla.focus.widget;
 
-
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
@@ -15,7 +14,6 @@ import android.view.View;
 import android.view.ViewTreeObserver;
 import androidx.annotation.NonNull;
 import org.mozilla.focus.R;
-import java.util.ArrayList;
 
 /**
  * A helper class to implement a ViewGroup that resizes dynamically (by adding padding to the bottom)
@@ -24,9 +22,6 @@ import java.util.ArrayList;
  * Implementation based on:
  * https://github.com/mikepenz/MaterialDrawer/blob/master/library/src/main/java/com/mikepenz/materialdrawer/util/KeyboardUtil.java
  *
- * An optional viewsToHideWhenActivated can be set: this is a an array of views that will be hidden when the keyboard
- * is showing. That can be useful for things like FABs that you don't need when someone is typing.
- *
  * A View using this delegate needs to forward the calls to onAttachedToWindow() and onDetachedFromWindow()
  * to this class.
  */
@@ -34,8 +29,6 @@ import java.util.ArrayList;
     private final Rect rect;
     private final View delegateView;
     private View decorView;
-    private final int viewsToHideAttrId;
-    private final ArrayList<Integer> arrayOfViewsToHide = new ArrayList<>();
     private final boolean shouldAnimate;
     private boolean isAnimating;
 
@@ -54,13 +47,11 @@ import java.util.ArrayList;
                 // Keyboard showing -> Set difference has bottom padding.
                 if (delegateView.getPaddingBottom() != difference) {
                     updateBottomPadding(difference);
-                    updateDynamicViewsVisibility(View.GONE);
                 }
             } else {
                 // Keyboard not showing -> Reset bottom padding.
                 if (delegateView.getPaddingBottom() != 0) {
                     updateBottomPadding(0);
-                    updateDynamicViewsVisibility(View.VISIBLE);
                 }
             }
         }
@@ -76,34 +67,17 @@ import java.util.ArrayList;
                 0, 0);
 
         try {
-             viewsToHideAttrId = styleAttributeArray.getResourceId(
-                    R.styleable.ResizableKeyboardViewDelegate_viewsToHideWhenActivated,
-                    0
-            );
             shouldAnimate = styleAttributeArray.getBoolean(R.styleable.ResizableKeyboardViewDelegate_animate, false);
         } finally {
             styleAttributeArray.recycle();
         }
     }
 
-    private void populateArrayOfViewsToHide(int viewsToHideAttrId) {
-        if (viewsToHideAttrId != 0) {
-            final TypedArray resourceArray = delegateView.getResources().obtainTypedArray(viewsToHideAttrId);
-            for (int index = 0; index < resourceArray.length(); index++) {
-                final int resourceId = resourceArray.getResourceId(index, 0);
-                arrayOfViewsToHide.add(resourceId);
-            }
-            resourceArray.recycle();
-        }
-    }
-
     /* package */ void onAttachedToWindow() {
-        populateArrayOfViewsToHide(viewsToHideAttrId);
         delegateView.getViewTreeObserver().addOnGlobalLayoutListener(layoutListener);
     }
 
     /* package */ void onDetachedFromWindow() {
-        arrayOfViewsToHide.clear();
         delegateView.getViewTreeObserver().removeOnGlobalLayoutListener(layoutListener);
     }
 
@@ -148,16 +122,5 @@ import java.util.ArrayList;
         decorView.getWindowVisibleDisplayFrame(rect);
 
         return delegateView.getResources().getDisplayMetrics().heightPixels - rect.bottom;
-    }
-
-    private void updateDynamicViewsVisibility(int visibility) {
-        if (!arrayOfViewsToHide.isEmpty()) {
-            for (Integer viewId : arrayOfViewsToHide) {
-                View viewToHide = delegateView.findViewById(viewId);
-                if (viewToHide != null) {
-                    viewToHide.setVisibility(visibility);
-                }
-            }
-        }
     }
 }

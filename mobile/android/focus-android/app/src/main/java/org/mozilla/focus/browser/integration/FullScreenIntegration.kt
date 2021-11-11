@@ -22,8 +22,6 @@ import org.mozilla.focus.ext.enableDynamicBehavior
 import org.mozilla.focus.ext.hide
 import org.mozilla.focus.ext.showAsFixed
 import org.mozilla.focus.utils.Settings
-import org.mozilla.focus.widget.FloatingEraseButton
-import org.mozilla.focus.widget.FloatingSessionsButton
 
 class FullScreenIntegration(
     val activity: Activity,
@@ -34,8 +32,6 @@ class FullScreenIntegration(
     private val toolbarView: BrowserToolbar,
     private val statusBar: View,
     private val engineView: EngineView,
-    private val eraseFab: FloatingEraseButton,
-    private val sessionsFab: FloatingSessionsButton
 ) : LifecycleAwareFeature, UserInteractionHandler {
     @VisibleForTesting
     internal var feature = FullScreenFeature(
@@ -118,8 +114,6 @@ class FullScreenIntegration(
     internal fun enterBrowserFullscreen() {
         if (settings.isAccessibilityEnabled()) {
             toolbarView.hide(engineView)
-            eraseFab.visibility = View.GONE
-            sessionsFab.visibility = View.GONE
         } else {
             toolbarView.collapse()
             toolbarView.disableDynamicBehavior(engineView)
@@ -130,8 +124,6 @@ class FullScreenIntegration(
     internal fun exitBrowserFullscreen() {
         if (settings.isAccessibilityEnabled()) {
             toolbarView.showAsFixed(activity, engineView)
-            eraseFab.visibility = View.VISIBLE
-            sessionsFab.visibility = View.VISIBLE
         } else {
             toolbarView.enableDynamicBehavior(activity, engineView)
             toolbarView.expand()

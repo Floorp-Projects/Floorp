@@ -27,6 +27,7 @@
         <item name="android:progressBarStyleHorizontal">@style/progressBarStyleHorizontal</item>
         <item name="android:itemBackground">@color/menuBackground</item>
         <item name="android:itemTextAppearance">@style/ItemTextAppearance</item>
+        <item name="tabCounterTintColor">?primaryText</item>
     </style>
 
     <style name="ItemTextAppearance" parent="TextAppearance.AppCompat.Widget.DropDownItem">

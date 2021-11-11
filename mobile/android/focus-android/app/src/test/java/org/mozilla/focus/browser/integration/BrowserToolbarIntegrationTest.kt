@@ -75,13 +75,15 @@ class BrowserToolbarIntegrationTest {
 
         browserToolbarIntegration = spy(
             BrowserToolbarIntegration(
-                store,
-                toolbar,
-                fragment,
-                mock(),
-                mock(),
-                mock(),
-                { false },
+                store = store,
+                toolbar = toolbar,
+                fragment = fragment,
+                controller = mock(),
+                sessionUseCases = mock(),
+                customTabsUseCases = mock(),
+                onUrlLongClicked = { false },
+                eraseActionListener = {},
+                tabCounterListener = {},
                 inTesting = true
             )
         )

@@ -4,6 +4,4 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <dimen name="firstrun_container_width">320dp</dimen>
-
-    <dimen name="floating_action_button_margin">24dp</dimen>
 </resources>

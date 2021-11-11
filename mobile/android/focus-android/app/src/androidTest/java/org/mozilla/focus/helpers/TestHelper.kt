@@ -201,7 +201,8 @@ object TestHelper {
 
     @JvmField
     var floatingEraseButton = Espresso.onView(
-        Matchers.allOf(ViewMatchers.withId(R.id.erase), ViewMatchers.isDisplayed())
+        // Replace -1 with the real id of erase button
+        Matchers.allOf(ViewMatchers.withId(-1), ViewMatchers.isDisplayed())
     )
 
     @JvmField

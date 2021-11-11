@@ -16,50 +16,28 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 
 /**
- * Adapter implementation to show a list of active tabs and an "erase" button at the end.
+ * Adapter implementation to show a list of active tabs.
  */
 class TabsAdapter internal constructor(
     private val fragment: TabSheetFragment,
     private var tabs: List<TabSessionState> = emptyList()
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
 
-        return when (viewType) {
-            EraseViewHolder.LAYOUT_ID -> EraseViewHolder(
-                fragment,
-                inflater.inflate(EraseViewHolder.LAYOUT_ID, parent, false)
-            )
-            TabViewHolder.LAYOUT_ID -> TabViewHolder(
-                fragment,
-                inflater.inflate(TabViewHolder.LAYOUT_ID, parent, false) as TextView
-            )
-            else -> throw IllegalStateException("Unknown viewType")
-        }
+        return TabViewHolder(
+            fragment,
+            inflater.inflate(TabViewHolder.LAYOUT_ID, parent, false) as TextView
+        )
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when (holder.itemViewType) {
-            EraseViewHolder.LAYOUT_ID -> { /* Nothing to do */ }
-            TabViewHolder.LAYOUT_ID -> (holder as TabViewHolder).bind(tabs[position])
-            else -> throw IllegalStateException("Unknown viewType")
-        }
-    }
-
-    override fun getItemViewType(position: Int): Int {
-        return if (isErasePosition(position)) {
-            EraseViewHolder.LAYOUT_ID
-        } else {
-            TabViewHolder.LAYOUT_ID
-        }
-    }
-
-    private fun isErasePosition(position: Int): Boolean {
-        return position == tabs.size
+        (holder as TabViewHolder).bind(tabs[position])
     }
 
     override fun getItemCount(): Int {
-        return tabs.size + 1
+        return tabs.size
     }
 
     suspend fun onFlow(flow: Flow<BrowserState>) {
