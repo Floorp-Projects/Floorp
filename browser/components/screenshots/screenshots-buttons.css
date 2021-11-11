@@ -23,3 +23,9 @@
 .all-buttons-container .visible-page {
   background-image: url("chrome://browser/content/screenshots/menu-visible.svg");
 }
+
+.full-page, .visible-page {
+  -moz-context-properties: fill, stroke;
+  fill: buttonText;
+  stroke: #00fdff;
+}
