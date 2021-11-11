@@ -215,25 +215,7 @@ class ReentrancySentinel {
 
 std::map<DWORD, const char*>* ReentrancySentinel::sThreadMap;
 
-class WritableBuffer {
- public:
-  WritableBuffer() : mBuffer{0}, mLen(0) {}
-
-  void Write(const char* aData, size_t aLen) {
-    size_t writable_len = std::min(aLen, Available());
-    memcpy(mBuffer + mLen, aData, writable_len);
-    mLen += writable_len;
-  }
-
-  size_t const Length() { return mLen; }
-  const char* Data() { return mBuffer; }
-
- private:
-  size_t const Available() { return sizeof(mBuffer) - mLen; }
-
-  char mBuffer[1024];
-  size_t mLen;
-};
+using WritableBuffer = mozilla::glue::detail::WritableBuffer<1024>;
 
 /**
  * This is a linked list of DLLs that have been blocked. It doesn't use
