@@ -96,6 +96,21 @@ PersistentBufferProviderBasic::Create(gfx::IntSize aSize,
   return provider.forget();
 }
 
+PersistentBufferProviderAccelerated::PersistentBufferProviderAccelerated(
+    DrawTarget* aDt)
+    : PersistentBufferProviderBasic(aDt) {
+  MOZ_COUNT_CTOR(PersistentBufferProviderAccelerated);
+}
+
+PersistentBufferProviderAccelerated::~PersistentBufferProviderAccelerated() {
+  MOZ_COUNT_DTOR(PersistentBufferProviderAccelerated);
+}
+
+ClientWebGLContext* PersistentBufferProviderAccelerated::AsWebgl() {
+  return (ClientWebGLContext*)mDrawTarget->GetNativeSurface(
+      NativeSurfaceType::WEBGL_CONTEXT);
+}
+
 // static
 already_AddRefed<PersistentBufferProviderShared>
 PersistentBufferProviderShared::Create(gfx::IntSize aSize,
@@ -182,15 +197,6 @@ PersistentBufferProviderShared::~PersistentBufferProviderShared() {
   }
 
   Destroy();
-}
-
-LayersBackend PersistentBufferProviderShared::GetType() {
-  if (mKnowsCompositor->GetCompositorBackendType() ==
-      LayersBackend::LAYERS_WR) {
-    return LayersBackend::LAYERS_WR;
-  } else {
-    return LayersBackend::LAYERS_CLIENT;
-  }
 }
 
 bool PersistentBufferProviderShared::SetKnowsCompositor(

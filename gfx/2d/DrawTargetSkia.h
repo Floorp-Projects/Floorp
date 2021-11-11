@@ -151,6 +151,13 @@ class DrawTargetSkia : public DrawTarget {
     return stream.str();
   }
 
+  Maybe<Rect> GetDeviceClipRect() const;
+
+  Maybe<Rect> GetGlyphLocalBounds(ScaledFont* aFont, const GlyphBuffer& aBuffer,
+                                  const Pattern& aPattern,
+                                  const StrokeOptions* aStrokeOptions,
+                                  const DrawOptions& aOptions);
+
  private:
   friend class SourceSurfaceSkia;
 
