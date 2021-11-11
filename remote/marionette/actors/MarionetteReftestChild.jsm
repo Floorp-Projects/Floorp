@@ -103,7 +103,9 @@ class MarionetteReftestChild extends JSWindowActorChild {
     await this.paintComplete({ useRemote, ignoreThrottledAnimations: true });
 
     if (hasReftestWait) {
-      const event = new Event("TestRendered", { bubbles: true });
+      const event = new this.document.defaultView.Event("TestRendered", {
+        bubbles: true,
+      });
       documentElement.dispatchEvent(event);
       logger.info("Emitted TestRendered event");
       await this.reftestWaitRemoved();
