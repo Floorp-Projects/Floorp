@@ -6,7 +6,6 @@
 
 #include "mozilla/glean/bindings/Ping.h"
 
-#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
 #include "nsIClassInfoImpl.h"
 #include "nsString.h"
@@ -23,10 +22,6 @@ static MetricIdToCallbackMutex::AutoLock GetCallbackMapLock() {
   auto lock = sCallbacks.Lock();
   if (!*lock) {
     *lock = MakeUnique<CallbackMapType>();
-    RunOnShutdown([&] {
-      auto lock = sCallbacks.Lock();
-      *lock = nullptr;  // deletes, see UniquePtr.h
-    });
   }
   return lock;
 }
