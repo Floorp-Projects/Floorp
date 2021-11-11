@@ -1255,9 +1255,9 @@ metrics:
     expires: "2022-02-01"
   inactive_tabs_count:
     type: quantity
-    lifetime: application
     description: |
-      How many inactive tabs does the user have.
+      How many inactive tabs does the user have, checked when the user opens
+      the tabs tray.
       Value will be 0 if the feature is disabled.
     send_in_pings:
       - metrics

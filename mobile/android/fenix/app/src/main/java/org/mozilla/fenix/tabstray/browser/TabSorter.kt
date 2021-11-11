@@ -57,6 +57,8 @@ class TabSorter(
         if (shouldReportMetrics) {
             shouldReportMetrics = false
 
+            metrics.track(Event.InactiveTabsCountUpdate(inactiveTabs.size))
+
             if (settings.inactiveTabsAreEnabled) {
                 metrics.track(Event.TabsTrayHasInactiveTabs(inactiveTabs.size))
             }

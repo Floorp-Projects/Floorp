@@ -6,11 +6,13 @@ package org.mozilla.fenix.tabstray.browser
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.utils.Settings
@@ -283,5 +285,38 @@ class TabSorterTest {
         assertEquals(tabsTrayStore.state.inactiveTabs.size, 0)
         assertEquals(tabsTrayStore.state.searchTermGroups.size, 1)
         assertEquals(tabsTrayStore.state.normalTabs.size, 0)
+    }
+
+    @Test
+    fun `GIVEN the inactive tabs feature is enabled WHEN the tray is opened THEN we report the number of inactive tabs`() {
+        val tabSorter = TabSorter(settings, metrics, tabsTrayStore)
+
+        tabSorter.updateTabs(
+            listOf(
+                createTab(url = "url", id = "tab1", createdAt = inactiveTimestamp),
+                createTab(url = "url", id = "tab2", createdAt = inactiveTimestamp),
+            ),
+            selectedTabId = "tab2"
+        )
+        tabsTrayStore.waitUntilIdle()
+
+        verify { metrics.track(Event.InactiveTabsCountUpdate(2)) }
+    }
+
+    @Test
+    fun `GIVEN the inactive tabs feature is disabled WHEN the tray is opened THEN we report 0 for the number of inactive tabs`() {
+        val tabSorter = TabSorter(settings, metrics, tabsTrayStore)
+        every { settings.inactiveTabsAreEnabled }.answers { false }
+
+        tabSorter.updateTabs(
+            listOf(
+                createTab(url = "url", id = "tab1", createdAt = inactiveTimestamp),
+                createTab(url = "url", id = "tab2", createdAt = inactiveTimestamp),
+            ),
+            selectedTabId = "tab2"
+        )
+        tabsTrayStore.waitUntilIdle()
+
+        verify { metrics.track(Event.InactiveTabsCountUpdate(0)) }
     }
 }

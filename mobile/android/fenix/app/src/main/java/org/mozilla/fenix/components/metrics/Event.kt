@@ -224,6 +224,7 @@ sealed class Event {
         override val extras: Map<Preferences.turnOffInactiveTabsSurveyKeys, String>
             get() = mapOf(Preferences.turnOffInactiveTabsSurveyKeys.feedback to feedback.lowercase(Locale.ROOT))
     }
+    data class InactiveTabsCountUpdate(val count: Int) : Event()
 
     object ProgressiveWebAppOpenFromHomescreenTap : Event()
     object ProgressiveWebAppInstallAsShortcut : Event()
