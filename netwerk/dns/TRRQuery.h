@@ -8,6 +8,7 @@
 #define mozilla_net_TRRQuery_h
 
 #include "nsHostResolver.h"
+#include "DNSPacket.h"
 
 namespace mozilla {
 namespace net {
@@ -73,6 +74,12 @@ class TRRQuery : public AHostResolver {
 
  private:
   ~TRRQuery() = default;
+
+  void MarkSendingTRR(TRR* trr, TrrType rectype, MutexAutoLock&);
+  void PrepareQuery(bool aUseODoH, TrrType aRecType,
+                    nsTArray<RefPtr<TRR>>& aRequestsToSend);
+  bool SendQueries(nsTArray<RefPtr<TRR>>& aRequestsToSend);
+
   RefPtr<nsHostResolver> mHostResolver;
   RefPtr<nsHostRecord> mRecord;
 
@@ -88,12 +95,16 @@ class TRRQuery : public AHostResolver {
   Atomic<uint32_t> mTRRRequestCounter{0};
 
   uint8_t mTRRSuccess = 0;  // number of successful TRR responses
+  bool mUsingODoH = false;
+  bool mCalledCompleteLookup = false;
 
   mozilla::TimeDuration mTrrDuration;
   mozilla::TimeStamp mTrrStart;
 
-  RefPtr<mozilla::net::AddrInfo> mFirstTRR;  // partial TRR storage
-  nsresult mFirstTRRresult = NS_OK;
+  RefPtr<mozilla::net::AddrInfo> mAddrInfoA;
+  RefPtr<mozilla::net::AddrInfo> mAddrInfoAAAA;
+  nsresult mAResult = NS_OK;
+  nsresult mAAAAResult = NS_OK;
 };
 
 }  // namespace net
