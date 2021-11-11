@@ -11,7 +11,7 @@
         android:shortcutLongLabel="@string/shortcut_erase_long_label">
         <intent
             android:action="erase"
-            android:targetPackage="org.mozilla.focus"
+            android:targetPackage="org.mozilla.focus.nightly"
             android:targetClass="org.mozilla.focus.activity.EraseShortcutActivity">
                 <extra android:name="shortcut" android:value="true" />
         </intent>
@@ -24,7 +24,7 @@
       android:shortcutLongLabel="@string/shortcut_erase_and_open_long_label">
     <intent
         android:action="erase"
-        android:targetPackage="org.mozilla.focus"
+        android:targetPackage="org.mozilla.focus.nightly"
         android:targetClass="org.mozilla.focus.activity.EraseAndOpenShortcutActivity">
       <extra android:name="shortcut" android:value="true" />
     </intent>
