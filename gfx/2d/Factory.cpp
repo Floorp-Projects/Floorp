@@ -13,6 +13,7 @@
 #endif
 
 #include "DrawTargetSkia.h"
+#include "PathSkia.h"
 #include "ScaledFontBase.h"
 
 #if defined(WIN32)

@@ -14,9 +14,10 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Vector.h"
 
+#include "skia/include/core/SkCanvas.h"
 #include "skia/include/core/SkFont.h"
-#include "skia/include/core/SkTextBlob.h"
 #include "skia/include/core/SkSurface.h"
+#include "skia/include/core/SkTextBlob.h"
 #include "skia/include/core/SkTypeface.h"
 #include "skia/include/effects/SkGradientShader.h"
 #include "skia/include/core/SkColorFilter.h"
@@ -27,6 +28,7 @@
 #include "Tools.h"
 #include "DataSurfaceHelpers.h"
 #include "PathHelpers.h"
+#include "PathSkia.h"
 #include "Swizzle.h"
 #include <algorithm>
 
@@ -38,6 +40,18 @@
 #ifdef XP_WIN
 #  include "ScaledFontDWrite.h"
 #endif
+
+namespace mozilla {
+
+void RefPtrTraits<SkSurface>::Release(SkSurface* aSurface) {
+  SkSafeUnref(aSurface);
+}
+
+void RefPtrTraits<SkSurface>::AddRef(SkSurface* aSurface) {
+  SkSafeRef(aSurface);
+}
+
+}  // namespace mozilla
 
 namespace mozilla::gfx {
 
@@ -292,7 +306,7 @@ DrawTargetSkia::~DrawTargetSkia() {
   if (mSnapshot) {
     MutexAutoLock lock(mSnapshotLock);
     // We're going to go away, hand our SkSurface to the SourceSurface.
-    mSnapshot->GiveSurface(mSurface);
+    mSnapshot->GiveSurface(mSurface.forget().take());
   }
 
 #ifdef MOZ_WIDGET_COCOA
@@ -1590,6 +1604,11 @@ static inline SkPixelGeometry GetSkPixelGeometry() {
                                         : kRGB_H_SkPixelGeometry;
 }
 
+template <typename T>
+[[nodiscard]] static already_AddRefed<T> AsRefPtr(sk_sp<T>&& aSkPtr) {
+  return already_AddRefed<T>(aSkPtr.release());
+}
+
 bool DrawTargetSkia::Init(const IntSize& aSize, SurfaceFormat aFormat) {
   if (size_t(std::max(aSize.width, aSize.height)) > GetMaxSurfaceSize()) {
     return false;
@@ -1600,7 +1619,7 @@ bool DrawTargetSkia::Init(const IntSize& aSize, SurfaceFormat aFormat) {
   SkImageInfo info = MakeSkiaImageInfo(aSize, aFormat);
   size_t stride = SkAlign4(info.minRowBytes());
   SkSurfaceProps props(0, GetSkPixelGeometry());
-  mSurface = SkSurface::MakeRaster(info, stride, &props);
+  mSurface = AsRefPtr(SkSurface::MakeRaster(info, stride, &props));
   if (!mSurface) {
     return false;
   }
@@ -1645,8 +1664,8 @@ bool DrawTargetSkia::Init(unsigned char* aData, const IntSize& aSize,
              VerifyRGBXFormat(aData, aSize, aStride, aFormat));
 
   SkSurfaceProps props(0, GetSkPixelGeometry());
-  mSurface = SkSurface::MakeRasterDirect(MakeSkiaImageInfo(aSize, aFormat),
-                                         aData, aStride, &props);
+  mSurface = AsRefPtr(SkSurface::MakeRasterDirect(
+      MakeSkiaImageInfo(aSize, aFormat), aData, aStride, &props));
   if (!mSurface) {
     return false;
   }
@@ -1672,9 +1691,9 @@ bool DrawTargetSkia::Init(RefPtr<DataSourceSurface>&& aSurface) {
              VerifyRGBXFormat(map->GetData(), size, map->GetStride(), format));
 
   SkSurfaceProps props(0, GetSkPixelGeometry());
-  mSurface = SkSurface::MakeRasterDirectReleaseProc(
+  mSurface = AsRefPtr(SkSurface::MakeRasterDirectReleaseProc(
       MakeSkiaImageInfo(size, format), map->GetData(), map->GetStride(),
-      DrawTargetSkia::ReleaseMappedSkSurface, map, &props);
+      DrawTargetSkia::ReleaseMappedSkSurface, map, &props));
   if (!mSurface) {
     delete map;
     return false;
