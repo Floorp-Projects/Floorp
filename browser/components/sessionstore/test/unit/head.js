@@ -1,5 +1,5 @@
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
+
 ChromeUtils.defineModuleGetter(
   this,
   "SessionStartup",
@@ -34,7 +34,7 @@ function afterSessionStartupInitialization(cb) {
 // Compress the source file using lz4 and put the result to destination file.
 // After that, source file is deleted.
 async function writeCompressedFile(source, destination) {
-  let s = await OS.File.read(source);
-  await OS.File.writeAtomic(destination, s, { compression: "lz4" });
-  await OS.File.remove(source);
+  let s = await IOUtils.read(source);
+  await IOUtils.write(destination, s, { compress: true });
+  await IOUtils.remove(source);
 }
