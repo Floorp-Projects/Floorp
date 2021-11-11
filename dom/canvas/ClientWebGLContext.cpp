@@ -3172,6 +3172,14 @@ void ClientWebGLContext::BufferData(GLenum target,
   Run<RPROC(BufferData)>(target, RawBuffer<>(range), usage);
 }
 
+void ClientWebGLContext::RawBufferData(GLenum target,
+                                       const Range<const uint8_t>& srcData,
+                                       GLenum usage) {
+  const FuncScope funcScope(*this, "bufferData");
+
+  Run<RPROC(BufferData)>(target, RawBuffer<>(srcData), usage);
+}
+
 ////
 
 void ClientWebGLContext::BufferSubData(GLenum target,
@@ -4083,6 +4091,14 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
   Run<RPROC(TexImage)>(static_cast<uint32_t>(level), respecFormat,
                        CastUvec3(offset), pi, std::move(*desc));
   scopedArr.Reset();  // (For the hazard analysis) Done with the data.
+}
+
+void ClientWebGLContext::RawTexImage(
+    uint32_t level, GLenum respecFormat, uvec3 offset,
+    const webgl::PackingInfo& pi, const webgl::TexUnpackBlobDesc& desc) const {
+  const FuncScope funcScope(*this, "tex(Sub)Image[23]D");
+  if (IsContextLost()) return;
+  Run<RPROC(TexImage)>(level, respecFormat, offset, pi, desc);
 }
 
 void ClientWebGLContext::CompressedTexImage(bool sub, uint8_t funcDims,
