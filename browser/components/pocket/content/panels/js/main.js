@@ -1,14 +1,31 @@
-/* global PKT_PANEL_OVERLAY:false */
-/* import-globals-from messages.js */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+import HomeOverlay from "./home/overlay.js";
+import SignupOverlay from "./signup/overlay.js";
+import SavedOverlay from "./saved/overlay.js";
+import pktPanelMessaging from "./messages.js";
 
 var PKT_PANEL = function() {};
 
 PKT_PANEL.prototype = {
-  init() {
-    if (this.inited) {
-      return;
-    }
-    this.overlay = new PKT_PANEL_OVERLAY();
+  initHome() {
+    this.overlay = new HomeOverlay();
+    this.init();
+  },
+
+  initSignup() {
+    this.overlay = new SignupOverlay();
+    this.init();
+  },
+
+  initSaved() {
+    this.overlay = new SavedOverlay();
+    this.init();
+  },
+
+  setupObservers() {
     this.setupMutationObserver();
     // Mutation observer isn't always enough for fast loading, static pages.
     // Sometimes the mutation observer fires before the page is totally visible.
@@ -17,7 +34,13 @@ PKT_PANEL.prototype = {
     // So in this case, we have a backup intersection observer that fires when
     // the page is first visible, and thus, the page is going to guarantee a height.
     this.setupIntersectionObserver();
+  },
 
+  init() {
+    if (this.inited) {
+      return;
+    }
+    this.setupObservers();
     this.inited = true;
   },
 
@@ -36,21 +59,6 @@ PKT_PANEL.prototype = {
         height: clientHeight,
       });
     }
-  },
-
-  // Click helper to reduce bugs caused by oversight
-  // from different implementations of similar code.
-  clickHelper(element, { source = "", position }) {
-    element?.addEventListener(`click`, event => {
-      event.preventDefault();
-
-      pktPanelMessaging.sendMessage("PKT_openTabWithUrl", {
-        url: event.currentTarget.getAttribute(`href`),
-        activate: true,
-        source,
-        position,
-      });
-    });
   },
 
   setupIntersectionObserver() {
@@ -97,18 +105,5 @@ PKT_PANEL.prototype = {
   },
 };
 
-function onDOMLoaded() {
-  if (!window.thePKT_PANEL) {
-    var thePKT_PANEL = new PKT_PANEL();
-    /* global thePKT_PANEL */
-    window.thePKT_PANEL = thePKT_PANEL;
-    thePKT_PANEL.init();
-  }
-  window.thePKT_PANEL.create();
-}
-
-if (document.readyState != `loading`) {
-  onDOMLoaded();
-} else {
-  document.addEventListener(`DOMContentLoaded`, onDOMLoaded);
-}
+window.PKT_PANEL = PKT_PANEL;
+window.pktPanelMessaging = pktPanelMessaging;
