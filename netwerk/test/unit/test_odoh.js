@@ -61,7 +61,7 @@ add_task(async function testODoHConfig() {
     "https://foo.example.com:" + h2Port + "/odohconfig"
   );
 
-  let [, inRecord] = await new TRRDNSListener("odoh_host.example.com", {
+  let { inRecord } = await new TRRDNSListener("odoh_host.example.com", {
     type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   });
   let answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;
@@ -257,5 +257,7 @@ add_task(test_fetch_time);
 add_task(test_fqdn);
 
 add_task(test_ipv6_trr_fallback);
+
+add_task(test_ipv4_trr_fallback);
 
 add_task(test_no_retry_without_doh);

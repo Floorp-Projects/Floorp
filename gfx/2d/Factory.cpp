@@ -13,6 +13,7 @@
 #endif
 
 #include "DrawTargetSkia.h"
+#include "PathSkia.h"
 #include "ScaledFontBase.h"
 
 #if defined(WIN32)
@@ -477,6 +478,7 @@ bool Factory::DoesBackendSupportDataDrawtarget(BackendType aType) {
     case BackendType::NONE:
     case BackendType::BACKEND_LAST:
     case BackendType::WEBRENDER_TEXT:
+    case BackendType::WEBGL:
       return false;
     case BackendType::CAIRO:
     case BackendType::SKIA:

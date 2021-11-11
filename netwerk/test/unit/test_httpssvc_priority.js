@@ -79,7 +79,7 @@ add_task(async function testPriorityAndECHConfig() {
     ],
   });
 
-  let [, inRecord] = await new TRRDNSListener("test.priority.com", {
+  let { inRecord } = await new TRRDNSListener("test.priority.com", {
     type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
   });
 
@@ -100,9 +100,9 @@ add_task(async function testPriorityAndECHConfig() {
 
   Services.prefs.setBoolPref("network.dns.echconfig.enabled", true);
   dns.clearCache(true);
-  [, inRecord] = await new TRRDNSListener("test.priority.com", {
+  ({ inRecord } = await new TRRDNSListener("test.priority.com", {
     type: Ci.nsIDNSService.RESOLVE_TYPE_HTTPSSVC,
-  });
+  }));
 
   answer = inRecord.QueryInterface(Ci.nsIDNSHTTPSSVCRecord).records;
   Assert.equal(answer.length, 4);
