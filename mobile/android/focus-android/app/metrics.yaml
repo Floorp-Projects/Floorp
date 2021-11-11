@@ -768,6 +768,48 @@ search_bar:
         description: The name of the engine used to perform the search.
         type: string
 
+show_search_suggestions:
+  enabled_from_panel:
+    type: event
+    description: The "yes" option from the suggestion panel has been tapped.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5840
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/?
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  disabled_from_panel:
+    type: event
+    description: The "no"" option from the suggestion panel has been tapped.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5840
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/?
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  changed_from_settings:
+    type: event
+    description: The enabled state has been changed from the settings screen.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5840
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/?
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      is_enabled:
+        description: The new setting value, true for ON, false for OFF
+        type: boolean
+
 downloads:
   download_started:
     type: event

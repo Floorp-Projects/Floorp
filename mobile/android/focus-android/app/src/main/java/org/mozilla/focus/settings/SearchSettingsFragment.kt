@@ -9,6 +9,7 @@ import android.os.Bundle
 import androidx.preference.Preference
 import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.focus.GleanMetrics.SearchEngines
+import org.mozilla.focus.GleanMetrics.ShowSearchSuggestions
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.state.AppAction
@@ -53,6 +54,13 @@ class SearchSettingsFragment :
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
         TelemetryWrapper.settingsEvent(key, sharedPreferences.all[key].toString())
+
+        when (key) {
+            resources.getString(R.string.pref_key_screen_autocomplete) ->
+                ShowSearchSuggestions.changedFromSettings.record(
+                    ShowSearchSuggestions.ChangedFromSettingsExtra(sharedPreferences.getBoolean(key, false))
+                )
+        }
     }
 
     companion object {

@@ -427,13 +427,6 @@ object TelemetryWrapper {
     }
 
     @JvmStatic
-    fun respondToSearchSuggestionPrompt(enable: Boolean) {
-        TelemetryEvent
-            .create(Category.ACTION, Method.CLICK, Object.SEARCH_SUGGESTION_PROMPT, "$enable")
-            .queue()
-    }
-
-    @JvmStatic
     fun dayPassedSinceLastUpload(context: Context): Boolean {
         val dateOfLastPing = PreferenceManager
             .getDefaultSharedPreferences(context).getLong(LAST_MOBILE_METRICS_PINGS, 0)

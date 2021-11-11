@@ -42,7 +42,9 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.lib.state.ext.observeAsComposableState
+import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import org.mozilla.focus.GleanMetrics.ShowSearchSuggestions
 import org.mozilla.focus.R
 import org.mozilla.focus.components
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
@@ -125,10 +127,12 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
 
         enable_search_suggestions_button.setOnClickListener {
             searchSuggestionsViewModel.enableSearchSuggestions()
+            ShowSearchSuggestions.enabledFromPanel.record(NoExtras())
         }
 
         disable_search_suggestions_button.setOnClickListener {
             searchSuggestionsViewModel.disableSearchSuggestions()
+            ShowSearchSuggestions.disabledFromPanel.record(NoExtras())
         }
 
         dismiss_no_suggestions_message.setOnClickListener {
