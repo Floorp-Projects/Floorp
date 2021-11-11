@@ -14,6 +14,8 @@
     <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_title">सुरक्षित जडान असफल भयो</string>
 
+    <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_advanced">उन्नत…</string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">पछाडि जानुहोस् (सुझाव गरिएको)</string>
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
@@ -46,7 +48,35 @@
     <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
     <string name="mozac_browser_errorpages_unsafe_content_type_title">असुरक्षित फाईल प्रकार</string>
 
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">सामग्री क्रास भयो</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">ठेगाना फेला परेन</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_no_internet_title">इन्टरनेट जडान छैन</string>
     <!-- The main body text of this error page. It will be shown beneath the title -->
     <string name="mozac_browser_errorpages_no_internet_message">तपाईंको नेटवर्क जडान जाँच गर्नुहोस् वा केही क्षणमा पृष्ठ पुन: लोड गर्न प्रयास गर्नुहोस् ।</string>
+
+    <!-- Text that will show up on the button at the bottom of the error page -->
+    <string name="mozac_browser_errorpages_no_internet_refresh_button">फेरि लोड गर्नुहोस्</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">अवैध ठेगाना</string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">यो ठेगाना मान्य छैन</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">अज्ञात प्रोटोकल</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">फाइल फेला परेन</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">फाइलसम्मको पहुँच अस्वीकृत भयो</string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">प्रोक्सी सर्भरले जडान अस्वीकार गर्यो</string>
 
     </resources>
