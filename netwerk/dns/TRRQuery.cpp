@@ -56,118 +56,45 @@ nsresult TRRQuery::DispatchLookup(TRR* pushedTRR, bool aUseODoH) {
     return NS_ERROR_UNKNOWN_HOST;
   }
 
-  mTrrStart = TimeStamp::Now();
+  if (!mRecord->IsAddrRecord()) {
+    return DispatchByTypeLookup(pushedTRR, aUseODoH);
+  }
 
-  RefPtr<AddrHostRecord> addrRec;
-  RefPtr<TypeHostRecord> typeRec;
-
-  if (mRecord->IsAddrRecord()) {
-    addrRec = do_QueryObject(mRecord);
-    MOZ_ASSERT(addrRec);
-  } else {
-    typeRec = do_QueryObject(mRecord);
-    MOZ_ASSERT(typeRec);
+  RefPtr<AddrHostRecord> addrRec = do_QueryObject(mRecord);
+  MOZ_ASSERT(addrRec);
+  if (!addrRec) {
+    return NS_ERROR_UNEXPECTED;
   }
 
   mTrrStart = TimeStamp::Now();
   bool madeQuery = false;
 
-  if (addrRec) {
-    mTrrAUsed = INIT;
-    mTrrAAAAUsed = INIT;
+  mTrrAUsed = INIT;
+  mTrrAAAAUsed = INIT;
 
-    // If asking for AF_UNSPEC, issue both A and AAAA.
-    // If asking for AF_INET6 or AF_INET, do only that single type
-    enum TrrType rectype = (mRecord->af == AF_INET6) ? TRRTYPE_AAAA : TRRTYPE_A;
+  // If asking for AF_UNSPEC, issue both A and AAAA.
+  // If asking for AF_INET6 or AF_INET, do only that single type
+  enum TrrType rectype = (mRecord->af == AF_INET6) ? TRRTYPE_AAAA : TRRTYPE_A;
 
-    if (pushedTRR) {
-      rectype = pushedTRR->Type();
+  if (pushedTRR) {
+    rectype = pushedTRR->Type();
+  }
+  bool sendAgain;
+  // Need to dispatch TRR requests after |mTrrA| and |mTrrAAAA| are set
+  // properly so as to avoid the race when CompleteLookup() is called at the
+  // same time.
+  nsTArray<RefPtr<TRR>> requestsToSend;
+  do {
+    sendAgain = false;
+    if ((TRRTYPE_AAAA == rectype) && TRRService::Get() &&
+        (TRRService::Get()->DisableIPv6() ||
+         (StaticPrefs::network_trr_skip_AAAA_when_not_supported() &&
+          mHostResolver->GetNCS() &&
+          mHostResolver->GetNCS()->GetIPv6() ==
+              nsINetworkConnectivityService::NOT_AVAILABLE))) {
+      break;
     }
-    bool sendAgain;
-    // Need to dispatch TRR requests after |mTrrA| and |mTrrAAAA| are set
-    // properly so as to avoid the race when CompleteLookup() is called at the
-    // same time.
-    nsTArray<RefPtr<TRR>> requestsToSend;
-    do {
-      sendAgain = false;
-      if ((TRRTYPE_AAAA == rectype) && TRRService::Get() &&
-          (TRRService::Get()->DisableIPv6() ||
-           (StaticPrefs::network_trr_skip_AAAA_when_not_supported() &&
-            mHostResolver->GetNCS() &&
-            mHostResolver->GetNCS()->GetIPv6() ==
-                nsINetworkConnectivityService::NOT_AVAILABLE))) {
-        break;
-      }
-      LOG(("TRR Resolve %s type %d\n", addrRec->host.get(), (int)rectype));
-      RefPtr<TRR> trr;
-      if (aUseODoH) {
-        trr = new ODoH(this, mRecord, rectype);
-      } else {
-        trr = pushedTRR ? pushedTRR : new TRR(this, mRecord, rectype);
-      }
-
-      {
-        MutexAutoLock trrlock(mTrrLock);
-        if (rectype == TRRTYPE_A) {
-          MOZ_ASSERT(!mTrrA);
-          mTrrA = trr;
-          mTrrAUsed = STARTED;
-        } else if (rectype == TRRTYPE_AAAA) {
-          MOZ_ASSERT(!mTrrAAAA);
-          mTrrAAAA = trr;
-          mTrrAAAAUsed = STARTED;
-        } else {
-          LOG(("TrrLookup called with bad type set: %d\n", rectype));
-          MOZ_ASSERT(0);
-        }
-
-        if (!pushedTRR) {
-          requestsToSend.AppendElement(trr);
-          if ((mRecord->af == AF_UNSPEC) && (rectype == TRRTYPE_A)) {
-            rectype = TRRTYPE_AAAA;
-            sendAgain = true;
-          }
-        } else {
-          madeQuery = true;
-        }
-      }
-    } while (sendAgain);
-
-    mTRRRequestCounter = requestsToSend.Length();
-    for (const auto& request : requestsToSend) {
-      if (NS_SUCCEEDED(TRRService::Get()->DispatchTRRRequest(request))) {
-        madeQuery = true;
-      } else {
-        mTRRRequestCounter--;
-        MutexAutoLock trrlock(mTrrLock);
-        if (request == mTrrA) {
-          mTrrA = nullptr;
-          mTrrAUsed = INIT;
-        }
-        if (request == mTrrAAAA) {
-          mTrrAAAA = nullptr;
-          mTrrAAAAUsed = INIT;
-        }
-      }
-    }
-    requestsToSend.Clear();
-  } else {
-    typeRec->mStart = TimeStamp::Now();
-    enum TrrType rectype;
-
-    // XXX this could use a more extensible approach.
-    if (mRecord->type == nsIDNSService::RESOLVE_TYPE_TXT) {
-      rectype = TRRTYPE_TXT;
-    } else if (mRecord->type == nsIDNSService::RESOLVE_TYPE_HTTPSSVC) {
-      rectype = TRRTYPE_HTTPSSVC;
-    } else if (pushedTRR) {
-      rectype = pushedTRR->Type();
-    } else {
-      MOZ_ASSERT(false, "Not an expected request type");
-      return NS_ERROR_UNKNOWN_HOST;
-    }
-
-    LOG(("TRR Resolve %s type %d\n", typeRec->host.get(), (int)rectype));
+    LOG(("TRR Resolve %s type %d\n", addrRec->host.get(), (int)rectype));
     RefPtr<TRR> trr;
     if (aUseODoH) {
       trr = new ODoH(this, mRecord, rectype);
@@ -175,15 +102,93 @@ nsresult TRRQuery::DispatchLookup(TRR* pushedTRR, bool aUseODoH) {
       trr = pushedTRR ? pushedTRR : new TRR(this, mRecord, rectype);
     }
 
-    if (pushedTRR || NS_SUCCEEDED(TRRService::Get()->DispatchTRRRequest(trr))) {
+    {
       MutexAutoLock trrlock(mTrrLock);
-      MOZ_ASSERT(!mTrrByType);
-      mTrrByType = trr;
+      if (rectype == TRRTYPE_A) {
+        MOZ_ASSERT(!mTrrA);
+        mTrrA = trr;
+        mTrrAUsed = STARTED;
+      } else if (rectype == TRRTYPE_AAAA) {
+        MOZ_ASSERT(!mTrrAAAA);
+        mTrrAAAA = trr;
+        mTrrAAAAUsed = STARTED;
+      } else {
+        LOG(("TrrLookup called with bad type set: %d\n", rectype));
+        MOZ_ASSERT(0);
+      }
+
+      if (!pushedTRR) {
+        requestsToSend.AppendElement(trr);
+        if ((mRecord->af == AF_UNSPEC) && (rectype == TRRTYPE_A)) {
+          rectype = TRRTYPE_AAAA;
+          sendAgain = true;
+        }
+      } else {
+        madeQuery = true;
+      }
+    }
+  } while (sendAgain);
+
+  mTRRRequestCounter = requestsToSend.Length();
+  for (const auto& request : requestsToSend) {
+    if (NS_SUCCEEDED(TRRService::Get()->DispatchTRRRequest(request))) {
       madeQuery = true;
+    } else {
+      mTRRRequestCounter--;
+      MutexAutoLock trrlock(mTrrLock);
+      if (request == mTrrA) {
+        mTrrA = nullptr;
+        mTrrAUsed = INIT;
+      }
+      if (request == mTrrAAAA) {
+        mTrrAAAA = nullptr;
+        mTrrAAAAUsed = INIT;
+      }
     }
   }
+  requestsToSend.Clear();
 
   return madeQuery ? NS_OK : NS_ERROR_UNKNOWN_HOST;
+}
+
+nsresult TRRQuery::DispatchByTypeLookup(TRR* pushedTRR, bool aUseODoH) {
+  RefPtr<TypeHostRecord> typeRec = do_QueryObject(mRecord);
+  MOZ_ASSERT(typeRec);
+  if (!typeRec) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  typeRec->mStart = TimeStamp::Now();
+  enum TrrType rectype;
+
+  // XXX this could use a more extensible approach.
+  if (mRecord->type == nsIDNSService::RESOLVE_TYPE_TXT) {
+    rectype = TRRTYPE_TXT;
+  } else if (mRecord->type == nsIDNSService::RESOLVE_TYPE_HTTPSSVC) {
+    rectype = TRRTYPE_HTTPSSVC;
+  } else if (pushedTRR) {
+    rectype = pushedTRR->Type();
+  } else {
+    MOZ_ASSERT(false, "Not an expected request type");
+    return NS_ERROR_UNKNOWN_HOST;
+  }
+
+  LOG(("TRR Resolve %s type %d\n", typeRec->host.get(), (int)rectype));
+  RefPtr<TRR> trr;
+  if (aUseODoH) {
+    trr = new ODoH(this, mRecord, rectype);
+  } else {
+    trr = pushedTRR ? pushedTRR : new TRR(this, mRecord, rectype);
+  }
+
+  if (pushedTRR || NS_SUCCEEDED(TRRService::Get()->DispatchTRRRequest(trr))) {
+    MutexAutoLock trrlock(mTrrLock);
+    MOZ_ASSERT(!mTrrByType);
+    mTrrByType = trr;
+    return NS_OK;
+  }
+
+  return NS_ERROR_UNKNOWN_HOST;
 }
 
 AHostResolver::LookupStatus TRRQuery::CompleteLookup(
