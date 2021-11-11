@@ -12,6 +12,7 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.crash.handler.CrashHandlerService
 import org.mozilla.focus.exceptions.GeckoExceptionsMigrator
+import org.mozilla.focus.utils.AppConstants
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 
@@ -24,7 +25,7 @@ object EngineProvider {
             val builder = GeckoRuntimeSettings.Builder()
 
             builder.crashHandler(CrashHandlerService::class.java)
-            builder.aboutConfigEnabled(true)
+            builder.aboutConfigEnabled(AppConstants.isDevOrNightlyBuild)
 
             runtime = GeckoRuntime.create(context, builder.build())
         }
