@@ -47,7 +47,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   AddonManagerPrivate: "resource://gre/modules/AddonManager.jsm",
   AddonSettings: "resource://gre/modules/addons/AddonSettings.jsm",
-  AMTelemetry: "resource://gre/modules/AddonManager.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   E10SUtils: "resource://gre/modules/E10SUtils.jsm",
@@ -2557,25 +2556,6 @@ class Extension extends ExtensionData {
       ) {
         Services.perms.removeFromPrincipal(principal, "geo");
       }
-    }
-  }
-
-  static async migratePrivateBrowsing(addonData) {
-    if (addonData.incognito !== "not_allowed") {
-      ExtensionPermissions.add(addonData.id, {
-        permissions: [PRIVATE_ALLOWED_PERMISSION],
-        origins: [],
-      });
-      await StartupCache.clearAddonData(addonData.id);
-
-      // Record a telemetry event for the extension automatically allowed on private browsing as
-      // part of the Firefox upgrade.
-      AMTelemetry.recordActionEvent({
-        extra: { addonId: addonData.id },
-        object: "appUpgrade",
-        action: "privateBrowsingAllowed",
-        value: "on",
-      });
     }
   }
 
