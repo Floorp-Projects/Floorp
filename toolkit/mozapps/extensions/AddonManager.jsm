@@ -4268,8 +4268,7 @@ AMTelemetry = {
   init() {
     // Enable the addonsManager telemetry event category before the AddonManager
     // has completed its startup, otherwise telemetry events recorded during the
-    // AddonManager/XPIProvider startup will not be recorded (e.g. the telemetry
-    // events for the extension migrated to the private browsing permission).
+    // AddonManager/XPIProvider startup will not be recorded.
     Services.telemetry.setEventRecordingEnabled("addonsManager", true);
   },
 
