@@ -6,19 +6,30 @@
     "start": "npm run build && npm run watch",
     "build": "npx run-p build:*",
     "build:handlebars": "node compile_handlebars.js",
+    "build:webpack": "webpack --config webpack.config.js",
     "build:sass": "npx sass content/panels/css/main.scss content/panels/css/main.compiled.css --style=compressed",
     "watch": "npx run-p watch:*",
     "watch:handlebars": "npx chokidar \"content/panels/tmpl/**/*.handlebars\" -c \"npm run build:handlebars\"",
+    "watch:webpack": "npm run build:webpack -- --env development -w",
     "watch:sass": "npx chokidar \"content/panels/css/**/*.scss\" -c \"npm run build:sass\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Mozilla (https://mozilla.org/)",
   "license": "MPL-2.0",
   "devDependencies": {
+    "@babel/core": "7.15.8",
+    "@babel/preset-react": "7.14.5",
+    "babel-loader": "8.2.2",
     "chokidar-cli": "2.1.0",
     "handlebars": "3.0.0",
     "npm-run-all": "4.1.5",
-    "sass": "1.32.8"
+    "sass": "1.32.8",
+    "webpack": "5.58.2",
+    "webpack-cli": "4.9.0"
   },
-  "repository": "https://hg.mozilla.org/"
+  "repository": "https://hg.mozilla.org/",
+  "dependencies": {
+    "react": "17.0.2",
+    "react-dom": "17.0.2"
+  }
 }
