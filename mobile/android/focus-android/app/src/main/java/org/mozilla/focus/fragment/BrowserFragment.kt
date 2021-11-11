@@ -767,7 +767,7 @@ class BrowserFragment :
     }
 
     private fun openSelectBrowser() {
-        val browsers = Browsers.all(requireContext())
+        val browsers = Browsers.forUrl(requireContext(), tab.content.url)
 
         val apps = browsers.installedBrowsers
         val store = if (browsers.hasFirefoxBrandedBrowserInstalled)
