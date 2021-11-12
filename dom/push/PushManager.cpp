@@ -10,6 +10,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Components.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/PermissionStatusBinding.h"
 #include "mozilla/dom/PushManagerBinding.h"
 #include "mozilla/dom/PushSubscription.h"
 #include "mozilla/dom/PushSubscriptionOptionsBinding.h"
@@ -35,8 +36,7 @@ namespace dom {
 
 namespace {
 
-nsresult GetPermissionState(nsIPrincipal* aPrincipal,
-                            PushPermissionState& aState) {
+nsresult GetPermissionState(nsIPrincipal* aPrincipal, PermissionState& aState) {
   nsCOMPtr<nsIPermissionManager> permManager =
       mozilla::components::PermissionManager::Service();
 
@@ -52,11 +52,11 @@ nsresult GetPermissionState(nsIPrincipal* aPrincipal,
 
   if (permission == nsIPermissionManager::ALLOW_ACTION ||
       Preferences::GetBool("dom.push.testing.ignorePermission", false)) {
-    aState = PushPermissionState::Granted;
+    aState = PermissionState::Granted;
   } else if (permission == nsIPermissionManager::DENY_ACTION) {
-    aState = PushPermissionState::Denied;
+    aState = PermissionState::Denied;
   } else {
-    aState = PushPermissionState::Prompt;
+    aState = PermissionState::Prompt;
   }
 
   return NS_OK;
@@ -231,14 +231,14 @@ class GetSubscriptionRunnable final : public Runnable {
     RefPtr<GetSubscriptionCallback> callback =
         new GetSubscriptionCallback(mProxy, mScope);
 
-    PushPermissionState state;
+    PermissionState state;
     nsresult rv = GetPermissionState(principal, state);
     if (NS_FAILED(rv)) {
       callback->OnPushSubscriptionError(NS_ERROR_FAILURE);
       return NS_OK;
     }
 
-    if (state != PushPermissionState::Granted) {
+    if (state != PermissionState::Granted) {
       if (mAction == PushManager::GetSubscriptionAction) {
         callback->OnPushSubscriptionError(NS_OK);
         return NS_OK;
@@ -286,7 +286,7 @@ class GetSubscriptionRunnable final : public Runnable {
 class PermissionResultRunnable final : public WorkerRunnable {
  public:
   PermissionResultRunnable(PromiseWorkerProxy* aProxy, nsresult aStatus,
-                           PushPermissionState aState)
+                           PermissionState aState)
       : WorkerRunnable(aProxy->GetWorkerPrivate()),
         mProxy(aProxy),
         mStatus(aStatus),
@@ -315,7 +315,7 @@ class PermissionResultRunnable final : public WorkerRunnable {
 
   RefPtr<PromiseWorkerProxy> mProxy;
   nsresult mStatus;
-  PushPermissionState mState;
+  PermissionState mState;
 };
 
 class PermissionStateRunnable final : public Runnable {
@@ -331,7 +331,7 @@ class PermissionStateRunnable final : public Runnable {
       return NS_OK;
     }
 
-    PushPermissionState state;
+    PermissionState state;
     nsresult rv =
         GetPermissionState(mProxy->GetWorkerPrivate()->GetPrincipal(), state);
 
