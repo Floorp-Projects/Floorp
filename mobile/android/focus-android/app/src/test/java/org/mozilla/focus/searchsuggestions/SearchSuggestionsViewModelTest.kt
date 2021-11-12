@@ -50,7 +50,7 @@ class SearchSuggestionsViewModelTest {
     fun alwaysSearchSelected() {
         viewModel.selectedSearchSuggestion.observeForever(observer)
 
-        viewModel.selectSearchSuggestion("mozilla.com", true)
+        viewModel.selectSearchSuggestion("mozilla.com", "google", true)
         verify(observer).onChanged("mozilla.com")
         assertEquals(true, viewModel.alwaysSearch)
     }

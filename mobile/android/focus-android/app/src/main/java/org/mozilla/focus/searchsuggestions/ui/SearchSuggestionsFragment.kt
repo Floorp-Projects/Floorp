@@ -47,6 +47,8 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.focus.GleanMetrics.ShowSearchSuggestions
 import org.mozilla.focus.R
 import org.mozilla.focus.components
+import org.mozilla.focus.ext.defaultSearchEngineName
+import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 import org.mozilla.focus.searchsuggestions.State
 import org.mozilla.focus.topsites.TopSites
@@ -60,6 +62,9 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
         get() = job + Dispatchers.Main
 
     lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
+
+    private val defaultSearchEngineName: String
+        get() = requireComponents.store.defaultSearchEngineName()
 
     override fun onResume() {
         super.onResume()
@@ -141,7 +146,10 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
 
         val searchSuggestionsView = view.findViewById<ComposeView>(R.id.search_suggestions_view)
         searchSuggestionsView.setContent {
-            SearchOverlay(searchSuggestionsViewModel) { view.hideKeyboard() }
+            SearchOverlay(
+                searchSuggestionsViewModel,
+                defaultSearchEngineName
+            ) { view.hideKeyboard() }
         }
     }
 
@@ -154,6 +162,7 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
 @Composable
 private fun SearchOverlay(
     viewModel: SearchSuggestionsViewModel,
+    defaultSearchEngineName: String,
     onListScrolled: () -> Unit
 ) {
     val topSitesState =
@@ -178,7 +187,8 @@ private fun SearchOverlay(
                     text = query.value ?: "",
                     onSuggestionClicked = { suggestion ->
                         viewModel.selectSearchSuggestion(
-                            suggestion.title!!
+                            suggestion.title!!,
+                            defaultSearchEngineName
                         )
                     },
                     onAutoComplete = { suggestion ->

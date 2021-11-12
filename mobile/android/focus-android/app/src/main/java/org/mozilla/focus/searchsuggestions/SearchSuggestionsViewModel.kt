@@ -10,7 +10,9 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.feature.search.ext.canProvideSearchSuggestions
+import mozilla.components.service.glean.private.NoExtras
 import org.mozilla.focus.FocusApplication
+import org.mozilla.focus.GleanMetrics.SearchSuggestions
 
 sealed class State {
     data class Disabled(val givePrompt: Boolean) : State()
@@ -36,9 +38,23 @@ class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(ap
     var alwaysSearch = false
         private set
 
-    fun selectSearchSuggestion(suggestion: String, alwaysSearch: Boolean = false) {
+    fun selectSearchSuggestion(
+        suggestion: String,
+        defaultSearchEngineName: String,
+        alwaysSearch: Boolean = false
+    ) {
         this.alwaysSearch = alwaysSearch
         _selectedSearchSuggestion.postValue(suggestion)
+
+        if (suggestion == searchQuery.value) {
+            SearchSuggestions.searchTapped.record(
+                SearchSuggestions.SearchTappedExtra(defaultSearchEngineName)
+            )
+        } else {
+            SearchSuggestions.suggestionTapped.record(
+                SearchSuggestions.SuggestionTappedExtra(defaultSearchEngineName)
+            )
+        }
     }
 
     fun clearSearchSuggestion() {
@@ -47,6 +63,7 @@ class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(ap
 
     fun setAutocompleteSuggestion(text: String) {
         _autocompleteSuggestion.postValue(text)
+        SearchSuggestions.autocompleteArrowTapped.record(NoExtras())
     }
 
     fun clearAutocompleteSuggestion() {
