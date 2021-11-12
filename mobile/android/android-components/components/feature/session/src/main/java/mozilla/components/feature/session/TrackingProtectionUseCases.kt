@@ -97,12 +97,12 @@ class TrackingProtectionUseCases(
         /**
          * Removes all domains from the exception list.
          */
-        operator fun invoke() {
+        operator fun invoke(onRemove: () -> Unit = {}) {
             val engineSessions = (store.state.tabs + store.state.customTabs).mapNotNull { tab ->
                 tab.engineState.engineSession
             }
 
-            engine.trackingProtectionExceptionStore.removeAll(engineSessions)
+            engine.trackingProtectionExceptionStore.removeAll(engineSessions, onRemove)
         }
     }
 

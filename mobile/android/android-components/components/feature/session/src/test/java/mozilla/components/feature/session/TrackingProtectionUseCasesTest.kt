@@ -231,7 +231,7 @@ class TrackingProtectionUseCasesTest {
     fun `removeAll exceptions`() {
         useCases.removeAllExceptions()
 
-        verify(exceptionStore).removeAll(any())
+        verify(exceptionStore).removeAll(any(), any())
     }
 
     @Test

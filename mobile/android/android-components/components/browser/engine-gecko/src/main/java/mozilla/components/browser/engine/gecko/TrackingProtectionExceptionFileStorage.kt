@@ -146,7 +146,7 @@ internal class TrackingProtectionExceptionFileStorage(
         runtime.storageController.setPermission(contentPermission, VALUE_DENY)
     }
 
-    override fun removeAll(activeSessions: List<EngineSession>?) {
+    override fun removeAll(activeSessions: List<EngineSession>?, onRemove: () -> Unit) {
         val storage = runtime.storageController
         activeSessions?.forEach { engineSession ->
             engineSession.notifyObservers {
@@ -158,6 +158,7 @@ internal class TrackingProtectionExceptionFileStorage(
             trackingExceptions.forEach {
                 storage.setPermission(it, VALUE_DENY)
             }
+            onRemove.invoke()
         }
     }
 

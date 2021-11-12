@@ -18,6 +18,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/v95.0.0/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/v95.0.0/.config.yml)
 
+* **feature-session**
+  * 🌟️️ **Add callback as a parameter to RemoveAllExceptionsUseCase which will be called after exceptions removing
+
 * **concept-toolbar**
   * 🌟️️ **Add removeNavigationAction method which removes a previously added navigation action
 
