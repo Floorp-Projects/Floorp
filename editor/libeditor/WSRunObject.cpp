@@ -2351,6 +2351,8 @@ WhiteSpaceVisibilityKeeper::MakeSureToKeepVisibleWhiteSpacesVisibleAfterSplit(
       // pointToSplit will be referred bellow so that we need to keep
       // it a valid point.
       AutoEditorDOMPointChildInvalidator forgetChild(pointToSplit);
+      AutoTrackDOMPoint trackSplitPoint(aHTMLEditor.RangeUpdaterRef(),
+                                        &pointToSplit);
       if (atNextCharOfStart.IsStartOfContainer() ||
           atNextCharOfStart.IsPreviousCharASCIISpace()) {
         atNextCharOfStart = textFragmentDataAtSplitPoint
