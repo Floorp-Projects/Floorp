@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
+
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">थप बिकल्पहरु</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">नाम</string>
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">छानिएका %1$s</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">नछानिएका %1$s</string>
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">छानिएका</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string moz:removedIn="94" name="recently_saved_bookmarks" tools:ignore="UnusedResources">भर्खर सेभ गरिएका</string>
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">सबै देखाउनुहोस्</string>
+
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">सेटिङ्गहरुमा जानुहोस्</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">खारेज गर्नुहोस्</string>
+
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">बन्द गर्नुहोस्</string>
+
+
+    <!-- Home screen icons - Long press shortcuts -->
+    <!-- Shortcut action to open new tab -->
+    <string name="home_screen_shortcut_open_new_tab_2">नयाँ ट्याब</string>
+    <!-- Heading for the Top Sites block -->
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">शिर्ष साइटहरु</string>
+
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">सबै देखाउनुहोस्</string>
+
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">हटाउनुहोस्</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">पछाडी</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">अगाडी</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">ताजा गर्नुहोस्</string>
+
+
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">रोक्नुहोस्</string>
+    <!-- Browser menu button that opens the addon manager -->
+    <string name="browser_menu_add_ons">एड-अनहरु</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">बिस्तारहरु</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">सहयोग</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">नयाँ के छ</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">सेटिङ्गहरु</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">पुस्तकालय</string>
+    <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
+    <string name="browser_menu_install_on_homescreen">स्थापना</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">सेयर</string>
+
+
+    </resources>
