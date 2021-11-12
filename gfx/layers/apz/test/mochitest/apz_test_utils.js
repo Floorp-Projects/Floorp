@@ -1230,3 +1230,16 @@ async function promiseApzFlushedRepaintsInPopup(popup) {
     await promiseAllPaintsDone();
   });
 }
+
+// A utility function to make sure there's no scroll animation on the given
+// |aElement|.
+async function cancelScrollAnimation(aElement, aWindow = window) {
+  // In fact there's no good way to directly cancel the active animation on the
+  // element, so we destroy the corresponding scrollable frame then reconstruct
+  // a new scrollable frame so that it clobbers the animation.
+  const originalStyle = aElement.style.display;
+  aElement.style.display = "none";
+  await aWindow.promiseApzFlushedRepaints();
+  aElement.style.display = originalStyle;
+  await aWindow.promiseApzFlushedRepaints();
+}

@@ -7,6 +7,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1369072
   <title>Test for Bug 1369072</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="/tests/gfx/layers/apz/test/mochitest/apz_test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -40,8 +42,13 @@ async function runTests()
   var anchor = iframe.contentDocument.getElementById("anchor");
   var div = iframe.contentDocument.getElementById("div");
 
-  function resetScroll()
+  async function resetScroll()
   {
+    // Cancel any scroll animation on the target scroll elements to make sure
+    // setting scrollTop or scrolLeft works as expected.
+    await cancelScrollAnimation(document.documentElement);
+    await cancelScrollAnimation(iframe.contentDocument.documentElement);
+
     return new Promise(resolve => {
       var scrollParent = document.documentElement.scrollTop || document.documentElement.scrollLeft;
       var scrollChild = iframe.contentDocument.documentElement.scrollTop || iframe.contentDocument.documentElement.scrollLeft;
