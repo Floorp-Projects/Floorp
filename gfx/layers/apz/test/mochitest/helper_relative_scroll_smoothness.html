@@ -3,6 +3,7 @@
 <meta charset="utf-8">
 <script src="/tests/SimpleTest/EventUtils.js"></script>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/NativeKeyCodes.js"></script>
 <script src="/tests/SimpleTest/paint_listener.js"></script>
 <script src="apz_test_utils.js"></script>
 <script src="apz_test_native_event_utils.js"></script>
@@ -76,6 +77,13 @@ async function test() {
       case "key":
         synthesizeKey("KEY_ArrowDown");
         break;
+      case "native-key":
+        const DownArrowKeyCode = nativeArrowDownKey();
+        ok(synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US,
+                               DownArrowKeyCode, {}  /* no modifier */,
+                               "", ""),
+          "Dispatched an down arrow key event");
+        break;
       case "wheel":
         synthesizeNativeWheel(window, 50, 50, 0, -50);
         break;
@@ -113,8 +121,24 @@ async function test() {
   }
 }
 
-waitUntilApzStable()
-.then(test)
-.then(subtestDone, subtestFailed);
+function isOnChaosMode() {
+  const env = SpecialPowers.Cc["@mozilla.org/process/environment;1"]
+                           .getService(SpecialPowers.Ci.nsIEnvironment);
+  return env.get("MOZ_CHAOSMODE");
+}
 
+if (searchParams.get("input-type") == "native-key" &&
+    getPlatform() != "mac" && getPlatform() != "windows") {
+  ok(true, "Skipping test because native key events are not supported on " +
+     getPlatform());
+  subtestDone();
+} else if (searchParams.get("input-type") == "native-key" &&
+           getPlatform() == "mac" && isOnChaosMode()) {
+  ok(true, "Skipping native-key tests on verify runs on Mac");
+  subtestDone();
+} else {
+  waitUntilApzStable()
+  .then(test)
+  .then(subtestDone, subtestFailed);
+}
 </script>
