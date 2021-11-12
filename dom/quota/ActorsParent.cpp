@@ -6016,9 +6016,8 @@ OkOrErr QuotaManager::MaybeRemoveLocalStorageArchiveTmpFile() {
       const auto& lsArchiveTmpFile,
       GetLocalStorageArchiveTmpFile(*mStoragePath).mapErr(ToQMResult));
 
-  QM_TRY_INSPECT(
-      const bool& exists,
-      MOZ_TO_RESULT_INVOKE(lsArchiveTmpFile, Exists).mapErr(ToQMResult));
+  QM_TRY_INSPECT(const bool& exists,
+                 QM_TO_RESULT_INVOKE(lsArchiveTmpFile, Exists));
 
   if (exists) {
     QM_TRY(QM_TO_RESULT(lsArchiveTmpFile->Remove(false)));
