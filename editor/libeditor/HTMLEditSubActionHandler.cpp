@@ -7151,8 +7151,30 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
       }
     } else {
       if (doesCRCreateNewP) {
+        // XXX We split a text node here if caret is middle of it to insert
+        //     <br> element **before** splitting aParentDivOrP.  Then, if
+        //     the <br> element becomes unnecessary, it'll be removed again.
+        //     So this does much more complicated things than what we want to
+        //     do here.  We should handle this case separately to make the code
+        //     much simpler.
+        Result<EditorDOMPoint, nsresult> pointToSplitOrError =
+            WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
+                *this, pointToSplitParentDivOrP, aParentDivOrP);
+        if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
+          return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
+        }
+        if (MOZ_UNLIKELY(pointToSplitOrError.isErr())) {
+          NS_WARNING(
+              "WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement() "
+              "failed");
+          return EditActionResult(pointToSplitOrError.unwrapErr());
+        }
+        MOZ_ASSERT(pointToSplitOrError.inspect().IsSetAndValid());
+        if (pointToSplitOrError.inspect().IsSet()) {
+          pointToSplitParentDivOrP = pointToSplitOrError.unwrap();
+        }
         ErrorResult error;
-        nsCOMPtr<nsIContent> newLeftDivOrP =
+        nsCOMPtr<nsIContent> newLeftTextNode =
             SplitNodeWithTransaction(pointToSplitParentDivOrP, error);
         if (NS_WARN_IF(Destroyed())) {
           error = NS_ERROR_EDITOR_DESTROYED;
@@ -7162,16 +7184,12 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
                                "HTMLEditor::SplitNodeWithTransaction() failed");
           return EditActionResult(error.StealNSResult());
         }
-        pointToSplitParentDivOrP.SetToEndOf(newLeftDivOrP);
+        pointToSplitParentDivOrP.SetToEndOf(newLeftTextNode);
       }
 
       // We need to put new <br> after the left node if given node was split
       // above.
-      pointToInsertBR.Set(pointToSplitParentDivOrP.GetContainer());
-      DebugOnly<bool> advanced = pointToInsertBR.AdvanceOffset();
-      NS_WARNING_ASSERTION(advanced,
-                           "Failed to advance offset to after the container "
-                           "of selection start");
+      pointToInsertBR.SetAfter(pointToSplitParentDivOrP.GetContainer());
     }
   } else {
     // not in a text node.
