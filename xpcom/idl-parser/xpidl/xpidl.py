@@ -849,7 +849,7 @@ class Interface(object):
         return False
 
     def countEntries(self):
-        """ Returns the number of entries in the vtable for this interface. """
+        """Returns the number of entries in the vtable for this interface."""
         total = sum(member.count() for member in self.members)
         if self.base is not None:
             realbase = self.idl.getName(TypeId(self.base), self.location)
@@ -1638,7 +1638,7 @@ class IDLParser(object):
         p[0] = IDL(p[1])
 
     def p_productions_start(self, p):
-        """productions : """
+        """productions :"""
         p[0] = []
 
     def p_productions_cdata(self, p):
@@ -1678,7 +1678,7 @@ class IDLParser(object):
         )
 
     def p_afternativeid(self, p):
-        """afternativeid : """
+        """afternativeid :"""
         # this is a place marker: we switch the lexer into literal identifier
         # mode here, to slurp up everything until the closeparen
         self.lexer.begin("nativeid")
@@ -1765,7 +1765,7 @@ class IDLParser(object):
             p[0] = p[2]
 
     def p_members_start(self, p):
-        """members : """
+        """members :"""
         p[0] = []
 
     def p_members_continue(self, p):
@@ -1778,7 +1778,7 @@ class IDLParser(object):
         p[0] = CDATA(p[1], self.getLocation(p, 1))
 
     def p_member_const(self, p):
-        """member : CONST type IDENTIFIER '=' number ';' """
+        """member : CONST type IDENTIFIER '=' number ';'"""
         p[0] = ConstMember(
             type=p[2],
             name=p[3],
@@ -1854,7 +1854,7 @@ class IDLParser(object):
         )
 
     def p_variants_start(self, p):
-        """variants : """
+        """variants :"""
         p[0] = []
 
     def p_variants_single(self, p):

@@ -13120,7 +13120,7 @@ class CGUnionConversionStruct(CGThing):
 
 
 class ClassItem:
-    """ Use with CGClass """
+    """Use with CGClass"""
 
     def __init__(self, name, visibility):
         self.name = name

@@ -15,7 +15,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 
 
 class ProcTestWait(proctest.ProcTest):
-    """ Class to test process waits and timeouts """
+    """Class to test process waits and timeouts"""
 
     def test_normal_finish(self):
         """Process is started, runs to completion while we wait for it"""

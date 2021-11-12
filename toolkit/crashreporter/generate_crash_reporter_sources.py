@@ -18,7 +18,7 @@ template_header = (
 
 
 def validate_annotations(annotations):
-    """ Ensure that the annotations have all the required fields """
+    """Ensure that the annotations have all the required fields"""
 
     for (name, data) in sorted(annotations.items()):
         if "description" not in data:
