@@ -376,7 +376,7 @@ PlacesTreeView.prototype = {
 
         if (uri) {
           let val = Services.xulStore.getValue(
-            document.documentURI,
+            PlacesUIUtils.obfuscateUrlForXulStore(uri),
             uri,
             "open"
           );
@@ -1658,9 +1658,18 @@ PlacesTreeView.prototype = {
       let docURI = document.documentURI;
 
       if (node.containerOpen) {
-        Services.xulStore.removeValue(docURI, uri, "open");
+        Services.xulStore.removeValue(
+          PlacesUIUtils.obfuscateUrlForXulStore(uri),
+          uri,
+          "open"
+        );
       } else {
-        Services.xulStore.setValue(docURI, uri, "open", "true");
+        Services.xulStore.setValue(
+          docURI,
+          PlacesUIUtils.obfuscateUrlForXulStore(uri),
+          "open",
+          "true"
+        );
       }
     }
 
