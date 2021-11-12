@@ -23,6 +23,10 @@ SOURCES += [
 # Configure the wasm runtime to use a custom trap handler that calls MOZ_CRASH
 DEFINES["WASM_RT_CUSTOM_TRAP_HANDLER"] = "moz_wasm2c_trap_handler"
 
+# Configure the wasm runtime to invoke a callback when a malloc fails inside
+# the sandbox. This information is used to annotate crash reports
+DEFINES["WASM2C_MALLOC_FAIL_CALLBACK"] = "moz_wasm2c_malloc_failed"
+
 # Configuration that removes the wasm2c functions from shared library exports
 DEFINES["WASM_DONT_EXPORT_FUNCS"] = True
 

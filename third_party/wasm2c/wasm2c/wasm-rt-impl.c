@@ -192,44 +192,75 @@ void wasm_rt_cleanup_func_types(wasm_func_type_t** p_func_type_structs, uint32_t
   free(*p_func_type_structs);
 }
 
+#if UINTPTR_MAX == 0xffffffff
+static int is_power_of_two(uint64_t x)
+{
+  return ((x != 0) && !(x & (x - 1)));
+}
+#endif
+
 #define WASM_PAGE_SIZE 65536
 
 #if UINTPTR_MAX == 0xffffffffffffffff
-// Reserve 8GiB, aligned to 4GB, max heap is 4GB
-# define WASM_HEAP_GUARD_PAGE_ALIGNMENT 0x100000000ull
-# define WASM_HEAP_RESERVE_SIZE 0x200000000ull
+// Guard page of 4GiB
+# define WASM_HEAP_GUARD_PAGE_SIZE 0x100000000ull
+// Heap aligned to 4GB
+# define WASM_HEAP_ALIGNMENT 0x100000000ull
+// By default max heap is 4GB
+# define WASM_HEAP_DEFAULT_MAX_PAGES 65536
+// Runtime can override the max heap up to 4GB
 # define WASM_HEAP_MAX_ALLOWED_PAGES 65536
 #elif UINTPTR_MAX == 0xffffffff
-// Check that the mask used is consistent with the below values
-# if WASM_HEAP_MASK != 0xffffff
-#   error "WASM_HEAP_MASK has an unexpected value compared to the expected value"
-# endif
-// Reserve 16MB, unaligned, max heap is 16MB
-# define WASM_HEAP_GUARD_PAGE_ALIGNMENT 0
-# define WASM_HEAP_RESERVE_SIZE 0x1000000ul
+// No guard pages
+# define WASM_HEAP_GUARD_PAGE_SIZE 0
+// Unaligned heap
+# define WASM_HEAP_ALIGNMENT 0
+// Default max heap is 16MB (1GB if you enable incremental heaps)
 # ifdef WASM_USE_INCREMENTAL_MOVEABLE_MEMORY_ALLOC
-#   define WASM_HEAP_MAX_ALLOWED_PAGES 65536
+#   define WASM_HEAP_DEFAULT_MAX_PAGES 16384
 # else
-#   define WASM_HEAP_MAX_ALLOWED_PAGES 256
+#   define WASM_HEAP_DEFAULT_MAX_PAGES 256
 # endif
+// Runtime can override the max heap up to 1GB
+# define WASM_HEAP_MAX_ALLOWED_PAGES 16384
 #else
 # error "Unknown pointer size"
 #endif
+
+uint64_t wasm_rt_get_default_max_linear_memory_size() {
+  uint64_t ret = ((uint64_t) WASM_HEAP_DEFAULT_MAX_PAGES) * WASM_PAGE_SIZE;
+  return ret;
+}
 
 bool wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
                              uint32_t initial_pages,
                              uint32_t max_pages) {
   const uint32_t byte_length = initial_pages * WASM_PAGE_SIZE;
-  const uint32_t chosen_max_pages = (WASM_HEAP_MAX_ALLOWED_PAGES < max_pages)? WASM_HEAP_MAX_ALLOWED_PAGES : max_pages;
+
+  const uint32_t suggested_max_pages = max_pages == 0? WASM_HEAP_DEFAULT_MAX_PAGES : max_pages;
+  const uint32_t chosen_max_pages = (WASM_HEAP_MAX_ALLOWED_PAGES < suggested_max_pages)? WASM_HEAP_MAX_ALLOWED_PAGES : suggested_max_pages;
+
+  if (chosen_max_pages < initial_pages) {
+    return false;
+  }
 
 #ifdef WASM_USE_GUARD_PAGES
   // mmap based heaps with guard pages
   // Guard pages already allocates memory incrementally thus we don't need to look at WASM_USE_INCREMENTAL_MOVEABLE_MEMORY_ALLOC
   void* addr = NULL;
   const uint64_t retries = 10;
+  const uint64_t heap_reserve_size = ((uint64_t) chosen_max_pages) * WASM_PAGE_SIZE + WASM_HEAP_GUARD_PAGE_SIZE;
+
+  // 32-bit platforms rely on masking for sandboxing
+  // thus we require the heap reserve size to always be a power of 2
+#if UINTPTR_MAX == 0xffffffff
+  if (!is_power_of_two(heap_reserve_size)) {
+    return false;
+  }
+#endif
 
   for (uint64_t i = 0; i < retries; i++) {
-    addr = os_mmap_aligned(NULL, WASM_HEAP_RESERVE_SIZE, MMAP_PROT_NONE, MMAP_MAP_NONE, WASM_HEAP_GUARD_PAGE_ALIGNMENT, 0 /* alignment_offset */);
+    addr = os_mmap_aligned(NULL, heap_reserve_size, MMAP_PROT_NONE, MMAP_MAP_NONE, WASM_HEAP_ALIGNMENT, 0 /* alignment_offset */);
     if (addr) {
       break;
     }
@@ -262,6 +293,11 @@ bool wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
   memory->pages = initial_pages;
   memory->max_pages = chosen_max_pages;
 
+  // 32-bit platforms use masking for sandboxing. Compute the mask
+#if UINTPTR_MAX == 0xffffffff
+  *(uint32_t*) &memory->mem_mask = heap_reserve_size - 1;
+#endif
+
 #if defined(WASM_CHECK_SHADOW_MEMORY)
   wasm2c_shadow_memory_create(memory);
 #endif
@@ -270,7 +306,8 @@ bool wasm_rt_allocate_memory(wasm_rt_memory_t* memory,
 
 void wasm_rt_deallocate_memory(wasm_rt_memory_t* memory) {
 #ifdef WASM_USE_GUARD_PAGES
-  os_munmap(memory->data, WASM_HEAP_RESERVE_SIZE);
+  const uint64_t heap_reserve_size = ((uint64_t) memory->max_pages) * WASM_PAGE_SIZE + WASM_HEAP_GUARD_PAGE_SIZE;
+  os_munmap(memory->data, heap_reserve_size);
 #else
   free(memory->data);
 #endif
@@ -385,9 +422,10 @@ void wasm2c_ensure_linked() {
   // We use this to ensure the dynamic library with the wasi symbols is loaded for the host application
 }
 
-#undef WASM_HEAP_GUARD_PAGE_ALIGNMENT
-#undef WASM_HEAP_RESERVE_SIZE
-#undef WASM_HEAP_MAX_ALLOWED_PAGES
 #undef WASM_PAGE_SIZE
+#undef WASM_HEAP_GUARD_PAGE_SIZE
+#undef WASM_HEAP_ALIGNMENT
+#undef WASM_HEAP_DEFAULT_MAX_PAGES
+#undef WASM_HEAP_MAX_ALLOWED_PAGES
 #undef WASM_SATURATING_U32_ADD
 #undef WASM_CHECKED_U32_RET_SIZE_T_MULTIPLY

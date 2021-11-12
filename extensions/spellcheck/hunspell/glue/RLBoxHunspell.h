@@ -29,7 +29,9 @@
 
 class RLBoxHunspell {
  public:
-  RLBoxHunspell(const nsAutoCString& affpath, const nsAutoCString& dpath);
+  static RLBoxHunspell* Create(const nsAutoCString& affpath,
+                               const nsAutoCString& dpath);
+
   ~RLBoxHunspell();
 
   int spell(const std::string& stdWord);
@@ -38,7 +40,18 @@ class RLBoxHunspell {
   std::vector<std::string> suggest(const std::string& word);
 
  private:
-  rlbox_sandbox_hunspell mSandbox;
+  struct RLBoxDeleter {
+    void operator()(rlbox_sandbox_hunspell* sandbox) {
+      sandbox->destroy_sandbox();
+      delete sandbox;
+    }
+  };
+
+  RLBoxHunspell(
+      mozilla::UniquePtr<rlbox_sandbox_hunspell, RLBoxDeleter> aSandbox,
+      const nsAutoCString& affpath, const nsAutoCString& dpath);
+
+  mozilla::UniquePtr<rlbox_sandbox_hunspell, RLBoxDeleter> mSandbox;
   sandbox_callback_hunspell<hunspell_create_filemgr_t*> mCreateFilemgr;
   sandbox_callback_hunspell<hunspell_get_line_t*> mGetLine;
   sandbox_callback_hunspell<hunspell_get_line_num_t*> mGetLineNum;

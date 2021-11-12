@@ -952,6 +952,13 @@ VRProcessStatus:
     Status of the VR process, can be set to "Running" or "Destroyed"
   type: string
 
+WasmLibrarySandboxMallocFailed:
+  description: >
+    Set to 1 if a rlbox wasm library sandbox ran out of memory, causing a
+    malloc inside the sandbox to fail.
+  type: boolean
+  ping: true
+
 WindowsErrorReporting:
   description: >
     Set to 1 if this crash was intercepted via the Windows Error Reporting

@@ -138,16 +138,16 @@ typedef struct {
   /** The current size of the linear memory, in bytes. */
   uint32_t size;
 
+  /** 32-bit platforms use masking for sandboxing. This sets the mask, which is
+   * computed based on the heap size */
+#if UINTPTR_MAX == 0xffffffff
+  const uint32_t mem_mask;
+#endif
+
 #if defined(WASM_CHECK_SHADOW_MEMORY)
   wasm2c_shadow_memory_t shadow_memory;
 #endif
 } wasm_rt_memory_t;
-
-// Wasm's 32-bit implementation uses masking.
-#if UINTPTR_MAX == 0xffffffff
-// Set the mask for 16MB
-# define WASM_HEAP_MASK 0xffffff
-#endif
 
 /** A Table object. */
 typedef struct {
@@ -188,7 +188,7 @@ typedef struct wasm_sandbox_wasi_data {
 } wasm_sandbox_wasi_data;
 
 typedef void (*wasm_rt_sys_init_t)(void);
-typedef void* (*create_wasm2c_sandbox_t)(void);
+typedef void* (*create_wasm2c_sandbox_t)(uint32_t max_wasm_pages);
 typedef void (*destroy_wasm2c_sandbox_t)(void* sbx_ptr);
 typedef void* (*lookup_wasm2c_nonfunc_export_t)(void* sbx_ptr, const char* name);
 typedef uint32_t (*lookup_wasm2c_func_index_t)(void* sbx_ptr, uint32_t param_count, uint32_t result_count, wasm_rt_type_t* types);
@@ -241,8 +241,13 @@ extern uint32_t wasm_rt_register_func_type(wasm_func_type_t** p_func_type_struct
                                            uint32_t results,
                                            wasm_rt_type_t* types);
 
-void wasm_rt_cleanup_func_types(wasm_func_type_t** p_func_type_structs,
+extern void wasm_rt_cleanup_func_types(wasm_func_type_t** p_func_type_structs,
                                uint32_t* p_func_type_count);
+
+/**
+ * Return the default value of the maximum size allowed for wasm memory.
+ */
+extern uint64_t wasm_rt_get_default_max_linear_memory_size();
 
 /** Initialize a Memory object with an initial page size of `initial_pages` and
  * a maximum page size of `max_pages`.
@@ -323,6 +328,8 @@ extern void wasm2c_shadow_memory_dlfree(wasm_rt_memory_t* mem, uint32_t ptr);
 extern void wasm2c_shadow_memory_mark_globals_heap_boundary(wasm_rt_memory_t* mem, uint32_t ptr);
 // Print a list of all allocations currently active
 WASM2C_FUNC_EXPORT extern void wasm2c_shadow_memory_print_allocations(wasm_rt_memory_t* mem);
+// Print the size of allocations currently active
+WASM2C_FUNC_EXPORT uint64_t wasm2c_shadow_memory_print_total_allocations(wasm_rt_memory_t* mem);
 
 #ifdef __cplusplus
 }
