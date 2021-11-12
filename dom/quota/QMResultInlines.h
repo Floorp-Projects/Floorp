@@ -12,11 +12,11 @@
 #endif
 
 #include "mozilla/Result.h"
+#include "mozilla/ResultExtensions.h"
+
 #ifdef QM_ERROR_STACKS_ENABLED
-#  include "mozilla/ResultVariant.h"
 #  include "nsError.h"
-#else
-#  include "mozilla/ResultExtensions.h"
+#  include "mozilla/ResultVariant.h"
 #endif
 
 namespace mozilla {
@@ -53,6 +53,11 @@ class [[nodiscard]] GenericErrorResult<QMResult> {
   operator QMResult() const { return mErrorValue; }
 
   operator nsresult() const { return mErrorValue.NSResult(); }
+};
+
+template <>
+struct ResultTypeTraits<QMResult> {
+  static QMResult From(nsresult aValue) { return ToQMResult(aValue); }
 };
 
 inline OkOrErr ToResult(const QMResult& aValue) {
