@@ -234,7 +234,6 @@ class MOZ_STACK_CLASS AutoTrackDOMPoint final {
       : mRangeUpdater(aRangeUpdater),
         mNode(aNode),
         mOffset(aOffset),
-        mPoint(nullptr),
         mRangeItem(do_AddRef(new RangeItem())) {
     mRangeItem->mStartContainer = *mNode;
     mRangeItem->mEndContainer = *mNode;
@@ -247,33 +246,40 @@ class MOZ_STACK_CLASS AutoTrackDOMPoint final {
       : mRangeUpdater(aRangeUpdater),
         mNode(nullptr),
         mOffset(nullptr),
-        mPoint(aPoint),
+        mPoint(Some(aPoint->IsSet() ? aPoint : nullptr)),
         mRangeItem(do_AddRef(new RangeItem())) {
-    mRangeItem->mStartContainer = mPoint->GetContainer();
-    mRangeItem->mEndContainer = mPoint->GetContainer();
-    mRangeItem->mStartOffset = mPoint->Offset();
-    mRangeItem->mEndOffset = mPoint->Offset();
+    if (!aPoint->IsSet()) {
+      return;  // Nothing should be tracked.
+    }
+    mRangeItem->mStartContainer = aPoint->GetContainer();
+    mRangeItem->mEndContainer = aPoint->GetContainer();
+    mRangeItem->mStartOffset = aPoint->Offset();
+    mRangeItem->mEndOffset = aPoint->Offset();
     mRangeUpdater.RegisterRangeItem(mRangeItem);
   }
 
   ~AutoTrackDOMPoint() {
-    mRangeUpdater.DropRangeItem(mRangeItem);
-    if (mPoint) {
+    if (mPoint.isSome()) {
+      if (!mPoint.ref()) {
+        return;  // We don't track anything.
+      }
+      mRangeUpdater.DropRangeItem(mRangeItem);
       // Setting `mPoint` with invalid DOM point causes hitting `NS_ASSERTION()`
       // and the number of times may be too many.  (E.g., 1533913.html hits
       // over 700 times!)  We should just put warning instead.
       if (NS_WARN_IF(!mRangeItem->mStartContainer)) {
-        mPoint->Clear();
+        mPoint.ref()->Clear();
         return;
       }
       if (NS_WARN_IF(mRangeItem->mStartContainer->Length() <
                      mRangeItem->mStartOffset)) {
-        mPoint->SetToEndOf(mRangeItem->mStartContainer);
+        mPoint.ref()->SetToEndOf(mRangeItem->mStartContainer);
         return;
       }
-      mPoint->Set(mRangeItem->mStartContainer, mRangeItem->mStartOffset);
+      mPoint.ref()->Set(mRangeItem->mStartContainer, mRangeItem->mStartOffset);
       return;
     }
+    mRangeUpdater.DropRangeItem(mRangeItem);
     *mNode = mRangeItem->mStartContainer;
     *mOffset = mRangeItem->mStartOffset;
   }
@@ -283,7 +289,7 @@ class MOZ_STACK_CLASS AutoTrackDOMPoint final {
   // Allow tracking nsINode until nsNode is gone
   nsCOMPtr<nsINode>* mNode;
   uint32_t* mOffset;
-  EditorDOMPoint* mPoint;
+  Maybe<EditorDOMPoint*> mPoint;
   OwningNonNull<RangeItem> mRangeItem;
 };
 
