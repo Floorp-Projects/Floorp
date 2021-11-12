@@ -40,6 +40,7 @@ import org.mozilla.focus.utils.ViewUtils
 import java.util.Collections
 import kotlin.coroutines.CoroutineContext
 
+private const val REMOVE_EXCEPTIONS_DISABLED_ALPHA = 0.5f
 typealias DomainFormatter = (String) -> String
 
 /**
@@ -120,18 +121,22 @@ open class ExceptionsListFragment : BaseSettingsLikeFragment(), CoroutineScope {
             itemTouchHelper.attachToRecyclerView(exceptionList)
         }
 
-        removeAllExceptions.setOnClickListener {
-            requireComponents.trackingProtectionUseCases.removeAllExceptions()
-
-            val exceptionsListSize = (exceptionList.adapter as DomainListAdapter).itemCount
-            TrackingProtectionExceptions.allowListCleared.record(
-                TrackingProtectionExceptions.AllowListClearedExtra(exceptionsListSize)
-            )
-            requireComponents.appStore.dispatch(
-                AppAction.NavigateUp(
-                    requireComponents.store.state.selectedTabId
+        removeAllExceptions.setOnClickListener { removeButton ->
+            removeButton.apply {
+                isEnabled = false
+                alpha = REMOVE_EXCEPTIONS_DISABLED_ALPHA
+            }
+            requireComponents.trackingProtectionUseCases.removeAllExceptions {
+                val exceptionsListSize = (exceptionList.adapter as DomainListAdapter).itemCount
+                TrackingProtectionExceptions.allowListCleared.record(
+                    TrackingProtectionExceptions.AllowListClearedExtra(exceptionsListSize)
                 )
-            )
+                requireComponents.appStore.dispatch(
+                    AppAction.NavigateUp(
+                        requireComponents.store.state.selectedTabId
+                    )
+                )
+            }
         }
     }
 

@@ -25,6 +25,7 @@
         android:layout_height="match_parent"
         android:background="@color/settings_background"
         android:orientation="vertical"
+        android:weightSum="1"
         android:padding="@dimen/preference_padding_horizontal">
 
         <TextView
@@ -38,8 +39,9 @@
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/exceptionList"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" />
+            android:layout_height="0dp"
+            android:orientation="vertical"
+            android:layout_weight="0.9"/>
 
         <Button
             android:id="@+id/removeAllExceptions"
