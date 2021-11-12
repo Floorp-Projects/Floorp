@@ -2374,16 +2374,26 @@ void ScrollFrameHelper::ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
 
 void ScrollFrameHelper::ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
                                           ScrollMode aMode) {
-  nsPoint current = GetScrollPosition();
   CSSIntPoint currentCSSPixels = GetScrollPositionCSSPixels();
-  nsPoint pt = CSSPoint::ToAppUnits(aScrollPosition);
+  // Transmogrify this scroll to a relative one if there's any on-going
+  // animation in APZ triggered by __user__.
+  // Bug 1740164: We will apply it for cases there's no animation in APZ.
+  if (mCurrentAPZScrollAnimationType ==
+          APZScrollAnimationType::TriggeredByUserInput &&
+      !IsScrollAnimating(IncludeApzAnimation::No)) {
+    CSSIntPoint delta = aScrollPosition - currentCSSPixels;
+    ScrollByCSSPixels(delta, aMode);
+    return;
+  }
 
   nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
+  nsPoint pt = CSSPoint::ToAppUnits(aScrollPosition);
   nsRect range(pt.x - halfPixel, pt.y - halfPixel, 2 * halfPixel - 1,
                2 * halfPixel - 1);
   // XXX I don't think the following blocks are needed anymore, now that
   // ScrollToImpl simply tries to scroll an integer number of layer
   // pixels from the current position
+  nsPoint current = GetScrollPosition();
   if (currentCSSPixels.x == aScrollPosition.x) {
     pt.x = current.x;
     range.x = pt.x;
