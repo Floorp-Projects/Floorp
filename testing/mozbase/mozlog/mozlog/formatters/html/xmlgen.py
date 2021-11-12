@@ -147,7 +147,7 @@ class raw(object):
 
 
 class SimpleUnicodeVisitor(object):
-    """ recursive visitor to write unicode. """
+    """recursive visitor to write unicode."""
 
     def __init__(self, write, indent=0, curindent=0, shortempty=True):
         self.write = write
@@ -159,7 +159,7 @@ class SimpleUnicodeVisitor(object):
         self.shortempty = shortempty  # short empty tags or not
 
     def visit(self, node):
-        """ dispatcher on node's class/bases name. """
+        """dispatcher on node's class/bases name."""
         cls = node.__class__
         try:
             visitmethod = self.cache[cls]
@@ -238,7 +238,7 @@ class SimpleUnicodeVisitor(object):
             return ' %s="%s"' % (name, insert)
 
     def getstyle(self, tag):
-        """ return attribute list suitable for styling. """
+        """return attribute list suitable for styling."""
         try:
             styledict = tag.style.__dict__
         except AttributeError:
@@ -306,7 +306,7 @@ class _escape:
         return self.escape[match.group(0)]
 
     def __call__(self, ustring):
-        """ xml-escape the given unicode string. """
+        """xml-escape the given unicode string."""
         ustring = unicode(ustring)
         return self.charef_rex.sub(self._replacer, ustring)
 

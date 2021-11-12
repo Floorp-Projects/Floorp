@@ -17,7 +17,7 @@ import re
 
 
 def get_prerelease_suffix(version):
-    """ Returns the prerelease suffix from the version string argument """
+    """Returns the prerelease suffix from the version string argument"""
 
     def mfunc(m):
         return " {0} {1} {2}".format(
