@@ -34,7 +34,7 @@ class LockRequestChild final : public PLockRequestChild,
       const Optional<OwningNonNull<AbortSignal>>& aSignal);
 
   IPCResult RecvResolve(const LockMode& aLockMode, bool aIsAvailable);
-  IPCResult RecvAbort();
+  IPCResult Recv__delete__(bool aAborted);
 
   void ActorDestroy(ActorDestroyReason aReason) final;
 
