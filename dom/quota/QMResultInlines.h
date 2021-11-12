@@ -58,18 +58,24 @@ class [[nodiscard]] GenericErrorResult<QMResult> {
 template <>
 struct ResultTypeTraits<QMResult> {
   static QMResult From(nsresult aValue) { return ToQMResult(aValue); }
+
+  static QMResult From(const QMResult& aValue) { return aValue; }
+
+  static QMResult From(QMResult&& aValue) { return std::move(aValue); }
 };
 
-inline OkOrErr ToResult(const QMResult& aValue) {
+template <typename E>
+inline Result<Ok, E> ToResult(const QMResult& aValue) {
   if (NS_FAILED(aValue.NSResult())) {
-    return Err(aValue);
+    return Err(ResultTypeTraits<E>::From(aValue));
   }
   return Ok();
 }
 
-inline OkOrErr ToResult(QMResult&& aValue) {
+template <typename E>
+inline Result<Ok, E> ToResult(QMResult&& aValue) {
   if (NS_FAILED(aValue.NSResult())) {
-    return Err(std::move(aValue));
+    return Err(ResultTypeTraits<E>::From(aValue));
   }
   return Ok();
 }

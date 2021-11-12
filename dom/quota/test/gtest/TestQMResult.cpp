@@ -77,7 +77,7 @@ TEST_F(DOM_Quota_QMResult, ToResult) {
   // copy
   {
     const auto res = ToQMResult(NS_ERROR_FAILURE);
-    auto okOrErr = ToResult(res);
+    auto okOrErr = ToResult<QMResult>(res);
     static_assert(std::is_same_v<decltype(okOrErr), OkOrErr>);
     ASSERT_TRUE(okOrErr.isErr());
     auto err = okOrErr.unwrapErr();
@@ -93,7 +93,7 @@ TEST_F(DOM_Quota_QMResult, ToResult) {
   // move
   {
     auto res = ToQMResult(NS_ERROR_FAILURE);
-    auto okOrErr = ToResult(std::move(res));
+    auto okOrErr = ToResult<QMResult>(std::move(res));
     static_assert(std::is_same_v<decltype(okOrErr), OkOrErr>);
     ASSERT_TRUE(okOrErr.isErr());
     auto err = okOrErr.unwrapErr();
@@ -122,7 +122,7 @@ TEST_F(DOM_Quota_QMResult, ToResult_Macro) {
 }
 
 TEST_F(DOM_Quota_QMResult, ErrorPropagation) {
-  OkOrErr okOrErr1 = ToResult(ToQMResult(NS_ERROR_FAILURE));
+  OkOrErr okOrErr1 = ToResult<QMResult>(ToQMResult(NS_ERROR_FAILURE));
   const auto& err1 = okOrErr1.inspectErr();
 #ifdef QM_ERROR_STACKS_ENABLED
   ASSERT_EQ(err1.StackId(), gBaseStackId + 8);
