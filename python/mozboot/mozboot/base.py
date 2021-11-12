@@ -526,7 +526,7 @@ class BaseBootstrapper(object):
             print("ERROR! Please enter a valid option!")
 
     def prompt_yesno(self, prompt):
-        """ Prompts the user with prompt and requires a yes/no answer."""
+        """Prompts the user with prompt and requires a yes/no answer."""
         if self.no_interactive:
             print(prompt)
             print('Selecting "Y" because context is not interactive.')

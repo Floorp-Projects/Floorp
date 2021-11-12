@@ -96,7 +96,7 @@ def get_disqualification_time(time_str):
 
 
 def get_hex_lines(blob, width):
-    """ Convert a binary string to a multiline text of C escape sequences. """
+    """Convert a binary string to a multiline text of C escape sequences."""
     text = "".join(["\\x{:02x}".format(ord(c)) for c in blob])
     # When escaped, a single byte takes 4 chars (e.g. "\x00").
     # Make sure we don't break an escaped byte between the lines.
@@ -104,7 +104,7 @@ def get_hex_lines(blob, width):
 
 
 def get_operator_and_index(json_data, operator_id):
-    """ Return operator's entry from the JSON along with its array index. """
+    """Return operator's entry from the JSON along with its array index."""
     matches = [
         (operator, index)
         for (index, operator) in enumerate(json_data["operators"])
@@ -118,7 +118,7 @@ def get_operator_and_index(json_data, operator_id):
 
 
 def get_log_info_structs(json_data):
-    """ Return array of CTLogInfo initializers for the known logs. """
+    """Return array of CTLogInfo initializers for the known logs."""
     tmpl = Template(
         textwrap.dedent(
             """\
@@ -177,7 +177,7 @@ def get_log_info_structs(json_data):
 
 
 def get_log_operator_structs(json_data):
-    """ Return array of CTLogOperatorInfo initializers. """
+    """Return array of CTLogOperatorInfo initializers."""
     tmpl = Template("  { $name, $id }")
     initializers = []
     for operator in json_data["operators"]:
@@ -193,7 +193,7 @@ def get_log_operator_structs(json_data):
 
 
 def generate_cpp_header_file(json_data, out_file):
-    """ Generate the C++ header file for the known logs. """
+    """Generate the C++ header file for the known logs."""
     filename = os.path.basename(out_file.name)
     include_guard = filename.replace(".", "_").replace("/", "_")
     log_info_initializers = get_log_info_structs(json_data)
@@ -209,7 +209,7 @@ def generate_cpp_header_file(json_data, out_file):
 
 
 def patch_in_test_logs(json_data):
-    """ Insert Mozilla-specific test log data. """
+    """Insert Mozilla-specific test log data."""
     max_id = 0
     for operator in json_data["operators"]:
         if operator["id"] > max_id:
@@ -300,7 +300,7 @@ def run(args):
 
 
 def parse_arguments_and_run():
-    """ Parse the command line arguments and run the program. """
+    """Parse the command line arguments and run the program."""
     arg_parser = argparse.ArgumentParser(
         description="Parses a JSON file listing the known "
         "Certificate Transparency logs and generates "

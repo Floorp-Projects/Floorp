@@ -178,7 +178,7 @@ def get_token(params):
 
 
 def query_api(query, token):
-    """ Make a query with a Github auth header, returning the json """
+    """Make a query with a Github auth header, returning the json"""
     headers = {"Authorization": "bearer %s" % token}
     r = requests.post(GITHUB_API_ENDPOINT, json={"query": query}, headers=headers)
     r.raise_for_status()
@@ -195,7 +195,7 @@ def check_login(token):
 
 
 def get_repo_params(repo):
-    """ Parse the organisation and repo name from an https or git url for a repo """
+    """Parse the organisation and repo name from an https or git url for a repo"""
     if repo.startswith("https"):
         # eg https://github.com/mozilla-partners/mozilla-EME-free
         return repo.rsplit("/", 2)[-2:]
@@ -279,7 +279,7 @@ def parse_config(data):
 
 
 def get_repack_configs(repackRepo, token):
-    """ For a partner repository, retrieve all the repack.cfg files and parse them into a dict """
+    """For a partner repository, retrieve all the repack.cfg files and parse them into a dict"""
     log.debug("Querying for configs in %s", repackRepo)
     query = REPACK_CFG_QUERY % repackRepo
     raw_configs = query_api(query, token)

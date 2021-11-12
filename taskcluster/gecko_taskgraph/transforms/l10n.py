@@ -180,7 +180,7 @@ transforms.add_validate(l10n_description_schema)
 
 @transforms.add
 def setup_shippable_dependency(config, jobs):
-    """ Sets up a task dependency to the signing job this relates to """
+    """Sets up a task dependency to the signing job this relates to"""
     for job in jobs:
         job["dependencies"] = {"build": job["dependent-tasks"]["build"].label}
         if job["attributes"]["build_platform"].startswith("win") or job["attributes"][
@@ -269,7 +269,7 @@ def all_locales_attribute(config, jobs):
 
 @transforms.add
 def chunk_locales(config, jobs):
-    """ Utilizes chunking for l10n stuff """
+    """Utilizes chunking for l10n stuff"""
     for job in jobs:
         locales_per_chunk = job.get("locales-per-chunk")
         locales_with_changesets = job["attributes"]["all_locales_with_changesets"]

@@ -321,7 +321,7 @@ def move(src, dst):
 
 
 def depth(directory):
-    """returns the integer depth of a directory or path relative to '/' """
+    """returns the integer depth of a directory or path relative to '/'"""
 
     directory = os.path.abspath(directory)
     level = 0
