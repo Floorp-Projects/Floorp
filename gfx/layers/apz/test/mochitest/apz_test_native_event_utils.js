@@ -395,7 +395,11 @@ async function synthesizeNativeWheel(
     aDeltaY,
     0,
     0,
-    0,
+    // Specify MOUSESCROLL_SCROLL_LINES if the test wants to run through wheel
+    // input code path on Mac since it's normal mouse wheel inputs.
+    SpecialPowers.getBoolPref("apz.test.mac.synth_wheel_input", false)
+      ? SpecialPowers.DOMWindowUtils.MOUSESCROLL_SCROLL_LINES
+      : 0,
     element,
     aObserver
   );
