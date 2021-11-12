@@ -45,7 +45,20 @@ window.addEventListener("scroll",  () => {
     document.documentElement.style.backgroundPosition = `0px ${offset}px`;
     document.body.style.height = `${initialBodyHeight + offset}px`;
 
-    window.scrollBy(0, 10);
+    switch (searchParams.get("scroll-method")) {
+      case "scrollBy":
+        window.scrollBy(0, 10);
+        break;
+      case "scrollTop":
+        document.scrollingElement.scrollTop += 10;
+        break;
+      case "scrollTo":
+        window.scrollTo(0, window.scrollY + 10);
+        break;
+      default:
+        ok(false, "Unsupported scroll method: " + searchParams.get("scroll-method"));
+        break;
+    }
 
     // Simulate some jank.
     var freezeDurationInMilliseconds = 100;
