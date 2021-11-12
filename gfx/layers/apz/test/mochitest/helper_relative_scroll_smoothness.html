@@ -5,6 +5,7 @@
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <script src="/tests/SimpleTest/paint_listener.js"></script>
 <script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
 <title>What happens if main thread scrolls?</title>
 <style>
 html, body { margin: 0; }
@@ -29,6 +30,7 @@ body {
 </style>
 
 <script>
+const searchParams = new URLSearchParams(location.search);
 var intervalId;
 // Start periodic content expansions after we get a scroll event triggered by
 // a key press in test() function below, otherwise we may have same scroll
@@ -70,7 +72,17 @@ async function test() {
   // sending arrow down keys for 1500ms will cause some jank.
   const timeAtStart = performance.now();
   while (performance.now() - timeAtStart < 1500) {
-    synthesizeKey("KEY_ArrowDown");
+    switch (searchParams.get("input-type")) {
+      case "key":
+        synthesizeKey("KEY_ArrowDown");
+        break;
+      case "wheel":
+        synthesizeNativeWheel(window, 50, 50, 0, -50);
+        break;
+      default:
+        ok(false, "Unsupported input type: " + searchParams.get("input-type"));
+        break;
+    }
     await promiseFrame(window);
   }
 
@@ -87,13 +99,13 @@ async function test() {
     }
     ok(
       record.scrollOffsetY > previousRecord.scrollOffsetY,
-      "scroll offset should be strictly monotonically increasing" +
+      "scroll offset should be strictly monotonically increasing " +
       "previous offset: " + previousRecord.scrollOffsetY +
       ", offset: " + record.scrollOffsetY
     );
     ok(
       record.sampledTimeStamp > previousRecord.sampledTimeStamp,
-      "sampled time stamp should be strictly monotonically increasing" +
+      "sampled time stamp should be strictly monotonically increasing " +
       "previous timestamp: " + previousRecord.sampledTimeStamp +
       ", timestamp: " + record.sampledTimeStamp
     );
