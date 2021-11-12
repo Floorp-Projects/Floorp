@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_dark">अँध्यारो</string>
+    <!-- Color option for the background -->
+    <string name="mozac_feature_readerview_light">उज्यालो</string>
+    </resources>
