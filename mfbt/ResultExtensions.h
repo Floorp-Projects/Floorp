@@ -78,10 +78,11 @@ auto ResultRefAsParam(R& aResult) {
   return &aResult;
 }
 
-template <typename R, typename RArgMapper, typename Func, typename... Args>
-Result<R, nsresult> ToResultInvokeInternal(const Func& aFunc,
-                                           const RArgMapper& aRArgMapper,
-                                           Args&&... aArgs) {
+template <typename R, typename E, typename RArgMapper, typename Func,
+          typename... Args>
+Result<R, E> ToResultInvokeInternal(const Func& aFunc,
+                                    const RArgMapper& aRArgMapper,
+                                    Args&&... aArgs) {
   // XXX Thereotically, if R is a pointer to a non-refcounted type, this might
   // be a non-owning pointer, but unless we find a case where this actually is
   // relevant, it's safe to forbid any raw pointer result.
@@ -93,7 +94,7 @@ Result<R, nsresult> ToResultInvokeInternal(const Func& aFunc,
   R res;
   nsresult rv = aFunc(std::forward<Args>(aArgs)..., aRArgMapper(res));
   if (NS_FAILED(rv)) {
-    return Err(rv);
+    return Err(ResultTypeTraits<E>::From(rv));
   }
   return res;
 }
@@ -114,14 +115,14 @@ struct outparam_as_reference<T*> {
   using type = T&;
 };
 
-template <typename R, template <typename> typename RArg, typename Func,
-          typename... Args>
+template <typename R, typename E, template <typename> typename RArg,
+          typename Func, typename... Args>
 using to_result_retval_t =
     decltype(std::declval<Func&>()(
                  std::declval<Args&&>()...,
                  std::declval<typename RArg<decltype(ResultRefAsParam(
                      std::declval<R&>()))>::type>()),
-             Result<R, nsresult>(Err(NS_ERROR_FAILURE)));
+             Result<R, E>(Err(ResultTypeTraits<E>::From(NS_ERROR_FAILURE))));
 
 // There are two ToResultInvokeSelector overloads, which cover the cases of a) a
 // pointer-typed output parameter, and b) a reference-typed output parameter,
@@ -131,18 +132,18 @@ using to_result_retval_t =
 // that implicitly convert/bind to a raw pointer/reference. The overload that is
 // used is selected by expression SFINAE: the decltype expression in
 // to_result_retval_t is only valid in either case.
-template <typename R, typename Func, typename... Args>
+template <typename R, typename E, typename Func, typename... Args>
 auto ToResultInvokeSelector(const Func& aFunc, Args&&... aArgs)
-    -> to_result_retval_t<R, outparam_as_pointer, Func, Args...> {
-  return ToResultInvokeInternal<R>(
+    -> to_result_retval_t<R, E, outparam_as_pointer, Func, Args...> {
+  return ToResultInvokeInternal<R, E>(
       aFunc, [](R& res) -> decltype(auto) { return ResultRefAsParam(res); },
       std::forward<Args>(aArgs)...);
 }
 
-template <typename R, typename Func, typename... Args>
+template <typename R, typename E, typename Func, typename... Args>
 auto ToResultInvokeSelector(const Func& aFunc, Args&&... aArgs)
-    -> to_result_retval_t<R, outparam_as_reference, Func, Args...> {
-  return ToResultInvokeInternal<R>(
+    -> to_result_retval_t<R, E, outparam_as_reference, Func, Args...> {
+  return ToResultInvokeInternal<R, E>(
       aFunc, [](R& res) -> decltype(auto) { return *ResultRefAsParam(res); },
       std::forward<Args>(aArgs)...);
 }
@@ -167,9 +168,9 @@ auto ToResultInvokeSelector(const Func& aFunc, Args&&... aArgs)
  *    nsCOMPtr<nsIFile> file = ...;
  *    auto existsOrErr = ToResultInvoke(*file, &nsIFile::Exists);
  */
-template <typename R, typename Func, typename... Args>
-Result<R, nsresult> ToResultInvoke(const Func& aFunc, Args&&... aArgs) {
-  return detail::ToResultInvokeSelector<R, Func, Args&&...>(
+template <typename R, typename E = nsresult, typename Func, typename... Args>
+Result<R, E> ToResultInvoke(const Func& aFunc, Args&&... aArgs) {
+  return detail::ToResultInvokeSelector<R, E, Func, Args&&...>(
       aFunc, std::forward<Args>(aArgs)...);
 }
 
@@ -192,7 +193,8 @@ struct select_last<> {
   using type = void;
 };
 
-template <typename RArg, typename T, typename Func, typename... Args>
+template <typename E, typename RArg, typename T, typename Func,
+          typename... Args>
 auto ToResultInvokeMemberFunction(T& aObj, const Func& aFunc, Args&&... aArgs) {
   if constexpr (std::is_pointer_v<RArg> ||
                 (std::is_lvalue_reference_v<RArg> &&
@@ -201,11 +203,11 @@ auto ToResultInvokeMemberFunction(T& aObj, const Func& aFunc, Args&&... aArgs) {
       return (aObj.*aFunc)(std::forward<Args>(aArgs)..., res);
     };
     return detail::ToResultInvokeSelector<
-        std::remove_reference_t<std::remove_pointer_t<RArg>>, decltype(lambda)>(
-        lambda);
+        std::remove_reference_t<std::remove_pointer_t<RArg>>, E,
+        decltype(lambda)>(lambda);
   } else {
-    // No output parameter present, return a Result<Ok, nsresult>
-    return mozilla::ToResult((aObj.*aFunc)(std::forward<Args>(aArgs)...));
+    // No output parameter present, return a Result<Ok, E>
+    return mozilla::ToResult<E>((aObj.*aFunc)(std::forward<Args>(aArgs)...));
   }
 }
 
@@ -225,99 +227,111 @@ using DerefedType =
     std::remove_reference_t<decltype(DerefHelper(std::declval<const T&>()))>;
 }  // namespace detail
 
-template <typename T, typename U, typename... XArgs, typename... Args,
+template <typename E = nsresult, typename T, typename U, typename... XArgs,
+          typename... Args,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>>
 auto ToResultInvoke(T& aObj, nsresult (U::*aFunc)(XArgs...), Args&&... aArgs) {
-  return detail::ToResultInvokeMemberFunction<detail::select_last_t<XArgs...>>(
+  return detail::ToResultInvokeMemberFunction<E,
+                                              detail::select_last_t<XArgs...>>(
       aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
-template <typename T, typename U, typename... XArgs, typename... Args,
+template <typename E = nsresult, typename T, typename U, typename... XArgs,
+          typename... Args,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>>
 auto ToResultInvoke(const T& aObj, nsresult (U::*aFunc)(XArgs...) const,
                     Args&&... aArgs) {
-  return detail::ToResultInvokeMemberFunction<detail::select_last_t<XArgs...>>(
+  return detail::ToResultInvokeMemberFunction<E,
+                                              detail::select_last_t<XArgs...>>(
       aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
-template <typename T, typename U, typename... XArgs, typename... Args>
+template <typename E = nsresult, typename T, typename U, typename... XArgs,
+          typename... Args>
 auto ToResultInvoke(T* const aObj, nsresult (U::*aFunc)(XArgs...),
                     Args&&... aArgs) {
-  return ToResultInvoke(*aObj, aFunc, std::forward<Args>(aArgs)...);
+  return ToResultInvoke<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
-template <typename T, typename U, typename... XArgs, typename... Args>
+template <typename E = nsresult, typename T, typename U, typename... XArgs,
+          typename... Args>
 auto ToResultInvoke(const T* const aObj, nsresult (U::*aFunc)(XArgs...) const,
                     Args&&... aArgs) {
-  return ToResultInvoke(*aObj, aFunc, std::forward<Args>(aArgs)...);
+  return ToResultInvoke<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
-template <template <class> class SmartPtr, typename T, typename U,
-          typename... XArgs, typename... Args,
+template <typename E = nsresult, template <class> class SmartPtr, typename T,
+          typename U, typename... XArgs, typename... Args,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>,
           typename = decltype(*std::declval<const SmartPtr<T>>())>
 auto ToResultInvoke(const SmartPtr<T>& aObj, nsresult (U::*aFunc)(XArgs...),
                     Args&&... aArgs) {
-  return ToResultInvoke(*aObj, aFunc, std::forward<Args>(aArgs)...);
+  return ToResultInvoke<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
-template <template <class> class SmartPtr, typename T, typename U,
-          typename... XArgs, typename... Args,
+template <typename E = nsresult, template <class> class SmartPtr, typename T,
+          typename U, typename... XArgs, typename... Args,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>,
           typename = decltype(*std::declval<const SmartPtr<T>>())>
 auto ToResultInvoke(const SmartPtr<const T>& aObj,
                     nsresult (U::*aFunc)(XArgs...) const, Args&&... aArgs) {
-  return ToResultInvoke(*aObj, aFunc, std::forward<Args>(aArgs)...);
+  return ToResultInvoke<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
 #if defined(XP_WIN) && !defined(_WIN64)
-template <typename T, typename U, typename... XArgs, typename... Args,
+template <typename E = nsresult, typename T, typename U, typename... XArgs,
+          typename... Args,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>>
 auto ToResultInvoke(T& aObj, nsresult (__stdcall U::*aFunc)(XArgs...),
                     Args&&... aArgs) {
-  return detail::ToResultInvokeMemberFunction<detail::select_last_t<XArgs...>>(
+  return detail::ToResultInvokeMemberFunction<E,
+                                              detail::select_last_t<XArgs...>>(
       aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
-template <typename T, typename U, typename... XArgs, typename... Args,
+template <typename E = nsresult, typename T, typename U, typename... XArgs,
+          typename... Args,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>>
 auto ToResultInvoke(const T& aObj,
                     nsresult (__stdcall U::*aFunc)(XArgs...) const,
                     Args&&... aArgs) {
-  return detail::ToResultInvokeMemberFunction<detail::select_last_t<XArgs...>>(
+  return detail::ToResultInvokeMemberFunction<E,
+                                              detail::select_last_t<XArgs...>>(
       aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
-template <typename T, typename U, typename... XArgs, typename... Args>
+template <typename E = nsresult, typename T, typename U, typename... XArgs,
+          typename... Args>
 auto ToResultInvoke(T* const aObj, nsresult (__stdcall U::*aFunc)(XArgs...),
                     Args&&... aArgs) {
-  return ToResultInvoke(*aObj, aFunc, std::forward<Args>(aArgs)...);
+  return ToResultInvoke<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
-template <typename T, typename U, typename... XArgs, typename... Args>
+template <typename E = nsresult, typename T, typename U, typename... XArgs,
+          typename... Args>
 auto ToResultInvoke(const T* const aObj,
                     nsresult (__stdcall U::*aFunc)(XArgs...) const,
                     Args&&... aArgs) {
-  return ToResultInvoke(*aObj, aFunc, std::forward<Args>(aArgs)...);
+  return ToResultInvoke<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
-template <template <class> class SmartPtr, typename T, typename U,
-          typename... XArgs, typename... Args,
+template <typename E = nsresult, template <class> class SmartPtr, typename T,
+          typename U, typename... XArgs, typename... Args,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>,
           typename = decltype(*std::declval<const SmartPtr<T>>())>
 auto ToResultInvoke(const SmartPtr<T>& aObj,
                     nsresult (__stdcall U::*aFunc)(XArgs...), Args&&... aArgs) {
-  return ToResultInvoke(*aObj, aFunc, std::forward<Args>(aArgs)...);
+  return ToResultInvoke<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
-template <template <class> class SmartPtr, typename T, typename U,
-          typename... XArgs, typename... Args,
+template <typename E = nsresult, template <class> class SmartPtr, typename T,
+          typename U, typename... XArgs, typename... Args,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>,
           typename = decltype(*std::declval<const SmartPtr<T>>())>
 auto ToResultInvoke(const SmartPtr<const T>& aObj,
                     nsresult (__stdcall U::*aFunc)(XArgs...) const,
                     Args&&... aArgs) {
-  return ToResultInvoke(*aObj, aFunc, std::forward<Args>(aArgs)...);
+  return ToResultInvoke<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 #endif
 
