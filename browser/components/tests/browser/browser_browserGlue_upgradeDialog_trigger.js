@@ -75,6 +75,11 @@ add_task(async function enterprise_disabled() {
 });
 
 add_task(async function show_major_upgrade() {
+  const defaultPrefs = Services.prefs.getDefaultBranch("");
+  const pref = "browser.startup.upgradeDialog.enabled";
+  const orig = defaultPrefs.getBoolPref(pref, true);
+  defaultPrefs.setBoolPref(pref, true);
+
   const promise = waitForDialog(async win => {
     await BrowserTestUtils.waitForEvent(win, "ready");
     win.close();
@@ -91,6 +96,7 @@ add_task(async function show_major_upgrade() {
   );
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
+  defaultPrefs.setBoolPref(pref, orig);
 });
 
 add_task(async function dont_reshow() {
