@@ -5,6 +5,7 @@
 package mozilla.components.feature.downloads.share
 
 import android.content.Context
+import android.webkit.MimeTypeMap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -16,6 +17,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.content.ShareInternetResourceState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.Headers.Names.CONTENT_TYPE
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
@@ -38,8 +40,14 @@ import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import org.robolectric.Shadows.shadowOf
 import java.io.File
 import java.nio.charset.StandardCharsets
+
+/**
+ * The 89a gif header as seen on https://www.w3.org/Graphics/GIF/spec-gif89a.txt
+ */
+private const val GIF_HEADER = "GIF89a"
 
 @RunWith(AndroidJUnit4::class)
 class ShareDownloadFeatureTest {
@@ -177,11 +185,12 @@ class ShareDownloadFeatureTest {
         doReturn(Response.Body(inputStream)).`when`(responseFromShareState).body
         val shareState = ShareInternetResourceState("randomUrl.jpg", response = responseFromShareState)
         doReturn(Response.SUCCESS).`when`(responseFromShareState).status
+        doReturn(MutableHeaders()).`when`(responseFromShareState).headers
 
         val result = shareFeature.download(shareState)
 
         assertTrue(result.exists())
-        assertTrue(result.name.endsWith(".jpg"))
+        assertTrue(result.name.endsWith(".$DEFAULT_IMAGE_EXTENSION"))
         assertEquals(cacheDirName, result.parentFile!!.name)
         assertEquals("test", result.inputStream().bufferedReader().use { it.readText() })
     }
@@ -203,15 +212,15 @@ class ShareDownloadFeatureTest {
     fun `download() will download from the provided url the response#body() if is unavailable`() {
         val client: Client = mock()
         val inputStream = "clientTest".byteInputStream(StandardCharsets.UTF_8)
-        doAnswer { Response("randomUrl.png", 200, MutableHeaders(), Response.Body(inputStream)) }
+        doAnswer { Response("randomUrl", 200, MutableHeaders(), Response.Body(inputStream)) }
             .`when`(client).fetch(any())
         val shareFeature = ShareDownloadFeature(context, client, mock(), null, Dispatchers.Main)
-        val shareState = ShareInternetResourceState("randomUrl.png")
+        val shareState = ShareInternetResourceState("randomUrl")
 
         val result = shareFeature.download(shareState)
 
         assertTrue(result.exists())
-        assertTrue(result.name.endsWith(".png"))
+        assertTrue(result.name.endsWith(".$DEFAULT_IMAGE_EXTENSION"))
         assertEquals(mozilla.components.feature.downloads.share.cacheDirName, result.parentFile!!.name)
         assertEquals("clientTest", result.inputStream().bufferedReader().use { it.readText() })
     }
@@ -287,39 +296,41 @@ class ShareDownloadFeatureTest {
 
         assertEquals(cacheDirName, result.name)
         assertTrue(result.exists())
-
-        // // cleanup for future test runs
-        // result.deleteRecursively()
     }
 
     @Test
-    fun `getFileExtension returns a default extension if one cannot be extracted from the data url`() {
+    fun `getFileExtension returns a default extension if one cannot be extracted`() {
         val shareFeature = ShareDownloadFeature(context, mock(), mock(), null)
-        val base64Image = "data:;base64,testImage"
 
-        val result = shareFeature.getFileExtension(base64Image)
+        val result = shareFeature.getFileExtension(mock(), mock())
 
         assertEquals(DEFAULT_IMAGE_EXTENSION, result)
     }
 
     @Test
-    fun `getFileExtension returns an extension based on the media type included in the the data url`() {
+    fun `getFileExtension returns an extension based on the media type inferred from the stream`() {
         val shareFeature = ShareDownloadFeature(context, mock(), mock(), null)
-        val base64Image = "data:image/gif;base64,testImage"
+        val gifStream = (GIF_HEADER + "testImage").byteInputStream(StandardCharsets.UTF_8)
+        // Add the gif mapping to a by default empty shadow of MimeTypeMap.
+        shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("gif", "image/gif")
 
-        val result = shareFeature.getFileExtension(base64Image)
+        val result = shareFeature.getFileExtension(mock(), gifStream)
 
         assertEquals("gif", result)
     }
 
     @Test
-    fun `getFileExtension returns an extension based on the resource url`() {
+    fun `getFileExtension returns an extension based on the response headers`() {
         val shareFeature = ShareDownloadFeature(context, mock(), mock(), null)
-        val imageUrl = "http://website/image.jpg"
+        val gifHeaders = MutableHeaders().apply {
+            set(CONTENT_TYPE, "image/gif")
+        }
+        // Add the gif mapping to a by default empty shadow of MimeTypeMap.
+        shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("gif", "image/gif")
 
-        val result = shareFeature.getFileExtension(imageUrl)
+        val result = shareFeature.getFileExtension(gifHeaders, mock())
 
-        assertEquals("jpg", result)
+        assertEquals("gif", result)
     }
 
     @Test

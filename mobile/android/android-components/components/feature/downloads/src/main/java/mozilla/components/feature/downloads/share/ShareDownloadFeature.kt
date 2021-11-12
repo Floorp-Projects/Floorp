@@ -23,6 +23,8 @@ import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.content.ShareInternetResourceState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.Headers
+import mozilla.components.concept.fetch.Headers.Names.CONTENT_TYPE
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Response
 import mozilla.components.lib.state.Middleware
@@ -30,12 +32,14 @@ import mozilla.components.lib.state.ext.flowScoped
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.shareMedia
-import mozilla.components.support.ktx.kotlin.getDataUrlImageExtension
+import mozilla.components.support.ktx.kotlin.ifNullOrEmpty
 import mozilla.components.support.ktx.kotlin.sanitizeURL
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
+import java.net.URLConnection
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 
@@ -164,13 +168,14 @@ class ShareDownloadFeature(
             throw(RuntimeException("Resource is not available to download"))
         }
 
-        val fileExtension = '.' + getFileExtension(request.url)
-        val tempFile = getTempFile(fileExtension)
+        var tempFile: File? = null
         response.body.useStream { input ->
+            val fileExtension = '.' + getFileExtension(response.headers, input)
+            tempFile = getTempFile(fileExtension)
             FileOutputStream(tempFile).use { output -> input.copyTo(output) }
         }
 
-        return tempFile
+        return tempFile!!
     }
 
     @VisibleForTesting
@@ -193,12 +198,10 @@ class ShareDownloadFeature(
     internal fun getCacheDirectory() = File(context.cacheDir, cacheDirName)
 
     @VisibleForTesting
-    internal fun getFileExtension(resourceUrl: String): String {
-        return if (resourceUrl.startsWith("data")) {
-            resourceUrl.getDataUrlImageExtension()
-        } else {
-            MimeTypeMap.getFileExtensionFromUrl(resourceUrl).ifBlank { DEFAULT_IMAGE_EXTENSION }
-        }
+    internal fun getFileExtension(responseHeaders: Headers, responseStream: InputStream): String {
+        val mimeType = URLConnection.guessContentTypeFromStream(responseStream) ?: responseHeaders[CONTENT_TYPE]
+
+        return MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType).ifNullOrEmpty { DEFAULT_IMAGE_EXTENSION }
     }
 
     @VisibleForTesting
