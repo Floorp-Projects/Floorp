@@ -3339,7 +3339,7 @@ BrowserGlue.prototype = {
       .filter(id => id.startsWith("place:"))
       .forEach(id => {
         Services.xulStore.removeValue(docUrl, id, "open");
-        let hashedId = PlacesUtils.obfuscateUrlForXulStore(id);
+        let hashedId = PlacesUIUtils.obfuscateUrlForXulStore(id);
         Services.xulStore.setValue(docUrl, hashedId, "open", "true");
       });
   },
