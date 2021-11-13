@@ -85,7 +85,7 @@ class MozlintParser(ArgumentParser):
         [
             ["-o", "--outgoing"],
             {
-                "const": "default",
+                "const": True,
                 "nargs": "?",
                 "help": "Lint files touched by commits that are not on the remote repository. "
                 "Without arguments, finds the default remote that would be pushed to. "
@@ -358,7 +358,7 @@ def run(
                 "--workdir instead. If you want to lint the entire repo, run `./mach lint .`"
             )
             # Setting the default values
-            outgoing = "default"
+            outgoing = True
             workdir = "all"
 
         # Always run bootstrapping, but return early if --setup was passed in.

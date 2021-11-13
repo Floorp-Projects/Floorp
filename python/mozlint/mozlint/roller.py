@@ -317,9 +317,10 @@ class LintRoller(object):
             if rev:
                 vcs_paths.update(self.vcs.get_changed_files("AM", rev=rev))
             if outgoing:
+                upstream = outgoing if isinstance(outgoing, str) else None
                 try:
                     vcs_paths.update(
-                        self.vcs.get_outgoing_files("AM", upstream=outgoing)
+                        self.vcs.get_outgoing_files("AM", upstream=upstream)
                     )
                 except MissingUpstreamRepo:
                     print(
