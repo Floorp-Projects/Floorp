@@ -179,10 +179,6 @@ class KnowsCompositor {
     return lock.ref().mTextureFactoryIdentifier;
   }
 
-  bool DeviceCanReset() const {
-    return GetCompositorBackendType() != LayersBackend::LAYERS_BASIC;
-  }
-
   int32_t GetSerial() const { return mSerial; }
 
   /**
