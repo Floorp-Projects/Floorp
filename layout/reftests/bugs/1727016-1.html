@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html reftest-async-scroll reftest-async-scroll-y="100">
+   <head>
+    <style>
+
+.mask--6 .mask__clip-path{
+    clip-path:url(#notfound)
+}
+
+.mask--6 .mask__container{
+    padding-top:117%
+}
+.mask__container{
+    position:relative
+}
+.mask__clip-path{
+    background:blue;
+    position:absolute;
+    width: 100px;
+    height: 200px;
+}
+    </style>
+
+   </head>
+   <body>
+
+  <div style="height: 1vh;"></div>
+
+  <div class="mask--6" style="max-width: 500px;">
+     <div class="mask__container">
+        <i class="mask__clip-path"></i>
+     </div>
+  </div>
+
+  <div style="height: 4000vh;"></div>
