@@ -84,7 +84,10 @@ add_task(async function runTests() {
 
   // First, we test the scenario that the first party isolation is enabled.
   await SpecialPowers.pushPrefEnv({
-    set: [["privacy.firstparty.isolate", true]],
+    set: [
+      ["privacy.firstparty.isolate", true],
+      ["dom.security.https_first", false],
+    ],
   });
 
   for (let enabled of tests) {

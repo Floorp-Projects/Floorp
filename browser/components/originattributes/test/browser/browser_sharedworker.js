@@ -2,7 +2,7 @@
  * Bug 1264593 - A test case for the shared worker by first party isolation.
  */
 
-const TEST_DOMAIN = "http://example.net/";
+const TEST_DOMAIN = "https://example.net/";
 const TEST_PATH =
   TEST_DOMAIN + "browser/browser/components/originattributes/test/browser/";
 const TEST_PAGE = TEST_PATH + "file_sharedworker.html";
