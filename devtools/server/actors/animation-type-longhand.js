@@ -98,7 +98,6 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "list-style-image",
       "list-style-position",
       "list-style-type",
-      "-moz-list-reversed",
       "marker-end",
       "marker-mid",
       "marker-start",

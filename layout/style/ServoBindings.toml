@@ -498,7 +498,6 @@ cbindgen-types = [
     { gecko = "StyleTextDecorationLine", servo = "crate::values::computed::TextDecorationLine" },
     { gecko = "StyleTextTransform", servo = "crate::values::computed::TextTransform" },
     { gecko = "StyleTextUnderlinePosition", servo = "crate::values::computed::TextUnderlinePosition" },
-    { gecko = "StyleMozListReversed", servo = "crate::values::computed::MozListReversed" },
     { gecko = "StyleOwned", servo = "crate::gecko_bindings::sugar::ownership::Owned" },
     { gecko = "StyleOwnedOrNull", servo = "crate::gecko_bindings::sugar::ownership::OwnedOrNull" },
     { gecko = "StyleStrong", servo = "crate::gecko_bindings::sugar::ownership::Strong" },
