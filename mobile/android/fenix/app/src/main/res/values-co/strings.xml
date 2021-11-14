@@ -85,7 +85,7 @@
     <!-- Text for the main message -->
     <string name="cfr_message">Aghjunghjite un accurtatoghju per apre unghjette private da u vostru screnu d’accolta.</string>
     <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Aghjunghje un accurtatoghjiu</string>
+    <string name="cfr_pos_button_text">Aghjunghje un accurtatoghju</string>
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">Innò, vi ringraziu</string>
 
@@ -378,7 +378,7 @@
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
     <string name="preferences_screenshots_in_private_mode_disclaimer">S’ella hè permessa, l’unghjette private seranu ancu videvule quandu parechje appiecazioni sò aperte</string>
     <!-- Preference for adding private browsing shortcut -->
-    <string name="preferences_add_private_browsing_shortcut">Aghjunghje un accurtatoghjiu per a navigazione privata</string>
+    <string name="preferences_add_private_browsing_shortcut">Aghjunghje un accurtatoghju per a navigazione privata</string>
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Accessibilità</string>
     <!-- Preference to override the Firefox Account server -->

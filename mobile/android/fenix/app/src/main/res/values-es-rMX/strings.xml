@@ -1805,7 +1805,7 @@
     <string name="credit_cards_number_validation_error_message">Favor de ingresar un número de tarjeta de crédito válido</string>
 
     <!-- Error message for credit card name on card validation -->
-    <string name="credit_cards_name_on_card_validation_error_message">Por favor, lleva este campo</string>
+    <string name="credit_cards_name_on_card_validation_error_message">Por favor, llena este campo</string>
     <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
     <string name="credit_cards_biometric_prompt_message">Desbloquear para ver tus tarjetas guardadas</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
