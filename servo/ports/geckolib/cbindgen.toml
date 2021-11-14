@@ -157,7 +157,6 @@ include = [
   "TextOverflow",
   "MozControlCharacterVisibility",
   "RubyPosition",
-  "MozListReversed",
   "Owned",
   "OwnedOrNull",
   "Strong",

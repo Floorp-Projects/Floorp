@@ -588,11 +588,6 @@ ul, menu, dir {
 
 ul, ol, menu {
   counter-reset: list-item;
-  -moz-list-reversed: false;
-}
-
-ol[reversed] {
-  -moz-list-reversed: true;
 }
 
 ol {
