@@ -23,9 +23,10 @@ class PageDataParent extends JSWindowActorParent {
 
   /**
    * Starts data collection in the child process. Returns a promise that
-   * resolves to the initial set of data discovered.
+   * resolves to the page data or null if the page is closed before data
+   * collection completes.
    *
-   * @returns {Promise<Data[]>}
+   * @returns {Promise<PageData|null>}
    */
   collectPageData() {
     if (!this.#deferredCollection) {
@@ -43,9 +44,7 @@ class PageDataParent extends JSWindowActorParent {
    * Called when the page is destroyed.
    */
   didDestroy() {
-    this.#deferredCollection?.reject(
-      new Error("Page destroyed before collection completed.")
-    );
+    this.#deferredCollection?.resolve(null);
   }
 
   /**
@@ -59,11 +58,6 @@ class PageDataParent extends JSWindowActorParent {
       case "PageData:DocumentReady":
         PageDataService.pageLoaded(this, msg.data.url);
         break;
-      // TODO: This is for supporting listening to dynamic changes. See
-      // PageDataChild.jsm for more information.
-      // case "PageData:Collected":
-      //   PageDataService.pageDataDiscovered(msg.data.url, msg.data.data);
-      //   break;
     }
   }
 }
