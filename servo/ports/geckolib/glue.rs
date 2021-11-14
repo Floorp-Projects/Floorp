@@ -5089,13 +5089,15 @@ pub extern "C" fn Servo_DeclarationBlock_SetMathDepthValue(
 pub extern "C" fn Servo_DeclarationBlock_SetCounterResetListItem(
     declarations: &RawServoDeclarationBlock,
     counter_value: i32,
+    is_reversed: bool,
 ) {
     use style::properties::PropertyDeclaration;
-    use style::values::generics::counters::{CounterPair, CounterSetOrReset};
+    use style::values::generics::counters::{CounterPair, CounterReset};
 
-    let prop = PropertyDeclaration::CounterReset(CounterSetOrReset::new(vec![CounterPair {
+    let prop = PropertyDeclaration::CounterReset(CounterReset::new(vec![CounterPair {
         name: CustomIdent(atom!("list-item")),
         value: style::values::specified::Integer::new(counter_value),
+        is_reversed,
     }]));
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(prop, Importance::Normal);
@@ -5108,11 +5110,12 @@ pub extern "C" fn Servo_DeclarationBlock_SetCounterSetListItem(
     counter_value: i32,
 ) {
     use style::properties::PropertyDeclaration;
-    use style::values::generics::counters::{CounterPair, CounterSetOrReset};
+    use style::values::generics::counters::{CounterPair, CounterSet};
 
-    let prop = PropertyDeclaration::CounterSet(CounterSetOrReset::new(vec![CounterPair {
+    let prop = PropertyDeclaration::CounterSet(CounterSet::new(vec![CounterPair {
         name: CustomIdent(atom!("list-item")),
         value: style::values::specified::Integer::new(counter_value),
+        is_reversed: false,
     }]));
     write_locked_arc(declarations, |decls: &mut PropertyDeclarationBlock| {
         decls.push(prop, Importance::Normal);
