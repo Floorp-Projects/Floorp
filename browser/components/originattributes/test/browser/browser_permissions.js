@@ -11,7 +11,10 @@ const { PermissionTestUtils } = ChromeUtils.import(
 const TEST_PAGE = "http://example.net";
 const uri = Services.io.newURI(TEST_PAGE);
 
-function disableCookies() {
+async function disableCookies() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_first", false]],
+  });
   Services.cookies.removeAll();
   PermissionTestUtils.add(uri, "cookie", Services.perms.DENY_ACTION);
 
@@ -50,7 +53,10 @@ IsolationTestTools.runTests(
   disableCookies
 );
 
-function enableCookies() {
+async function enableCookies() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["dom.security.https_first", false]],
+  });
   Services.cookies.removeAll();
   PermissionTestUtils.add(uri, "cookie", Services.perms.ALLOW_ACTION);
 
