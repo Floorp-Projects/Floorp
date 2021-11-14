@@ -122,8 +122,14 @@ const PageDataService = new (class PageDataService extends EventEmitter {
       return;
     }
 
-    let data = await actor.collectPageData();
-    this.pageDataDiscovered(data);
+    try {
+      let data = await actor.collectPageData();
+      if (data) {
+        this.pageDataDiscovered(data);
+      }
+    } catch (e) {
+      logConsole.error(e);
+    }
   }
 
   /**
