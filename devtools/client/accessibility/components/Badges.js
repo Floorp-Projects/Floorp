@@ -62,7 +62,7 @@ class Badges extends Component {
     for (const type in checks) {
       const component = getComponentForAuditType(type);
       if (checks[type] && component) {
-        items.push(component(checks[type]));
+        items.push(component({ key: type, ...checks[type] }));
       }
     }
 
