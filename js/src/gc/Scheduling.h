@@ -343,6 +343,9 @@ struct Cell;
  */
 namespace TuningDefaults {
 
+/* JSGC_MAX_BYTES */
+static const size_t GCMaxBytes = 0xffffffff;
+
 /* JSGC_ALLOCATION_THRESHOLD */
 static const size_t GCZoneAllocThresholdBase = 27 * 1024 * 1024;
 
@@ -675,6 +678,9 @@ class GCSchedulingTunables {
   void setLowFrequencyHeapGrowth(double value);
   void setMinEmptyChunkCount(uint32_t value);
   void setMaxEmptyChunkCount(uint32_t value);
+
+  static bool megabytesToBytes(uint32_t value, size_t* bytesOut);
+  static bool kilobytesToBytes(uint32_t value, size_t* bytesOut);
 };
 
 class GCSchedulingState {

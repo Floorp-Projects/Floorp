@@ -39,7 +39,7 @@ static constexpr double MinHeapGrowthFactor =
                     LowFrequencyEagerAllocTriggerFactor);
 
 GCSchedulingTunables::GCSchedulingTunables()
-    : gcMaxBytes_(0),
+    : gcMaxBytes_(TuningDefaults::GCMaxBytes),
       gcMinNurseryBytes_(Nursery::roundSize(TuningDefaults::GCMinNurseryBytes)),
       gcMaxNurseryBytes_(Nursery::roundSize(JS::DefaultNurseryMaxBytes)),
       gcZoneAllocThresholdBase_(TuningDefaults::GCZoneAllocThresholdBase),
@@ -75,16 +75,17 @@ GCSchedulingTunables::GCSchedulingTunables()
 
 bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
                                         const AutoLockGC& lock) {
-  // Limit heap growth factor to one hundred times size of current heap.
+  // Limit various parameters to reasonable levels to catch errors.
   const double MaxHeapGrowthFactor = 100;
-  const size_t MaxNurseryBytes = 128 * 1024 * 1024;
+  const size_t MaxNurseryBytesParam = 128 * 1024 * 1024;
+  const size_t MaxHeapBytesParam = 0xffffffff;  // ~4GB, must fit in 32bit word.
 
   switch (key) {
     case JSGC_MAX_BYTES:
       gcMaxBytes_ = value;
       break;
     case JSGC_MIN_NURSERY_BYTES:
-      if (value < SystemPageSize() || value >= MaxNurseryBytes) {
+      if (value < SystemPageSize() || value >= MaxNurseryBytesParam) {
         return false;
       }
       value = Nursery::roundSize(value);
@@ -94,7 +95,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       gcMinNurseryBytes_ = value;
       break;
     case JSGC_MAX_NURSERY_BYTES:
-      if (value < SystemPageSize() || value >= MaxNurseryBytes) {
+      if (value < SystemPageSize() || value >= MaxNurseryBytesParam) {
         return false;
       }
       value = Nursery::roundSize(value);
@@ -107,16 +108,17 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       highFrequencyThreshold_ = TimeDuration::FromMilliseconds(value);
       break;
     case JSGC_SMALL_HEAP_SIZE_MAX: {
-      CheckedInt<size_t> newLimit = CheckedInt<size_t>(value) * 1024 * 1024;
-      if (!newLimit.isValid()) {
+      size_t newLimit;
+      if (!megabytesToBytes(value, &newLimit) || newLimit > MaxHeapBytesParam) {
         return false;
       }
-      setSmallHeapSizeMaxBytes(newLimit.value());
+      setSmallHeapSizeMaxBytes(newLimit);
       break;
     }
     case JSGC_LARGE_HEAP_SIZE_MIN: {
-      size_t newLimit = (size_t)value * 1024 * 1024;
-      if (newLimit == 0) {
+      size_t newLimit;
+      if (!megabytesToBytes(value, &newLimit) || newLimit == 0 ||
+          newLimit > MaxHeapBytesParam) {
         return false;
       }
       setLargeHeapSizeMinBytes(newLimit);
@@ -146,9 +148,15 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       setLowFrequencyHeapGrowth(newGrowth);
       break;
     }
-    case JSGC_ALLOCATION_THRESHOLD:
-      gcZoneAllocThresholdBase_ = value * 1024 * 1024;
+    case JSGC_ALLOCATION_THRESHOLD: {
+      size_t threshold;
+      if (!megabytesToBytes(value, &threshold) ||
+          threshold > MaxHeapBytesParam) {
+        return false;
+      }
+      gcZoneAllocThresholdBase_ = threshold;
       break;
+    }
     case JSGC_SMALL_HEAP_INCREMENTAL_LIMIT: {
       double newFactor = value / 100.0;
       if (newFactor < 1.0f || newFactor > MaxHeapGrowthFactor) {
@@ -216,19 +224,61 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
     case JSGC_MIN_LAST_DITCH_GC_PERIOD:
       minLastDitchGCPeriod_ = TimeDuration::FromSeconds(value);
       break;
-    case JSGC_ZONE_ALLOC_DELAY_KB:
-      zoneAllocDelayBytes_ = value * 1024;
+    case JSGC_ZONE_ALLOC_DELAY_KB: {
+      size_t delay;
+      if (!kilobytesToBytes(value, &delay) || delay == 0 ||
+          delay > MaxHeapBytesParam) {
+        return false;
+      }
+      zoneAllocDelayBytes_ = delay;
       break;
-    case JSGC_MALLOC_THRESHOLD_BASE:
-      mallocThresholdBase_ = value * 1024 * 1024;
+    }
+    case JSGC_MALLOC_THRESHOLD_BASE: {
+      size_t threshold;
+      if (!megabytesToBytes(value, &threshold) ||
+          threshold > MaxHeapBytesParam) {
+        return false;
+      }
+      mallocThresholdBase_ = threshold;
       break;
-    case JSGC_URGENT_THRESHOLD_MB:
-      urgentThresholdBytes_ = value * 1024 * 1024;
+    }
+    case JSGC_URGENT_THRESHOLD_MB: {
+      size_t threshold;
+      if (!megabytesToBytes(value, &threshold) ||
+          threshold > MaxHeapBytesParam) {
+        return false;
+      }
+      urgentThresholdBytes_ = threshold;
       break;
+    }
     default:
       MOZ_CRASH("Unknown GC parameter.");
   }
 
+  return true;
+}
+
+/* static */
+bool GCSchedulingTunables::megabytesToBytes(uint32_t value, size_t* bytesOut) {
+  MOZ_ASSERT(bytesOut);
+  CheckedInt<size_t> size = CheckedInt<size_t>(value) * 1024 * 1024;
+  if (!size.isValid()) {
+    return false;
+  }
+
+  *bytesOut = size.value();
+  return true;
+}
+
+/* static */
+bool GCSchedulingTunables::kilobytesToBytes(uint32_t value, size_t* bytesOut) {
+  MOZ_ASSERT(bytesOut);
+  CheckedInt<size_t> size = CheckedInt<size_t>(value) * 1024;
+  if (!size.isValid()) {
+    return false;
+  }
+
+  *bytesOut = size.value();
   return true;
 }
 
@@ -291,7 +341,7 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
                                           const AutoLockGC& lock) {
   switch (key) {
     case JSGC_MAX_BYTES:
-      gcMaxBytes_ = 0xffffffff;
+      gcMaxBytes_ = TuningDefaults::GCMaxBytes;
       break;
     case JSGC_MIN_NURSERY_BYTES:
     case JSGC_MAX_NURSERY_BYTES:

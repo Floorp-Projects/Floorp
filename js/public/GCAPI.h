@@ -207,7 +207,7 @@ typedef enum JSGCParamKey {
   JSGC_LOW_FREQUENCY_HEAP_GROWTH = 16,
 
   /**
-   * Lower limit for collecting a zone.
+   * Lower limit for collecting a zone (MB).
    *
    * Zones smaller than this size will not normally be collected.
    *
