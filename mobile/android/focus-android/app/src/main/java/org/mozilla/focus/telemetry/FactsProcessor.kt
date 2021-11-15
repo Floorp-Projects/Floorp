@@ -14,6 +14,7 @@ import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.FactProcessor
 import mozilla.components.support.base.facts.Facts
+import org.mozilla.focus.GleanMetrics.BrowserSearch
 import org.mozilla.focus.GleanMetrics.ContextMenu
 import org.mozilla.focus.GleanMetrics.CustomTabsToolbar
 
@@ -33,13 +34,13 @@ object FactsProcessor {
     @VisibleForTesting
     internal fun Fact.process() = when (Pair(component, item)) {
         Component.FEATURE_SEARCH to AdsTelemetry.SERP_ADD_CLICKED -> {
-            TelemetryWrapper.clickAddInSearchEvent(value!!)
+            BrowserSearch.adClicks[value!!].add()
         }
         Component.FEATURE_SEARCH to AdsTelemetry.SERP_SHOWN_WITH_ADDS -> {
-            TelemetryWrapper.searchWithAdsShownEvent(value!!)
+            BrowserSearch.withAds[value!!].add()
         }
         Component.FEATURE_SEARCH to InContentTelemetry.IN_CONTENT_SEARCH -> {
-            TelemetryWrapper.inContentSearchEvent(value!!)
+            BrowserSearch.inContent[value!!].add()
         }
 
         Component.FEATURE_CUSTOMTABS to CustomTabsFacts.Items.CLOSE -> {

@@ -20,7 +20,6 @@ import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import org.json.JSONObject
 import org.mozilla.focus.BuildConfig
-import org.mozilla.focus.GleanMetrics.BrowserSearch
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.utils.AppConstants
@@ -496,18 +495,6 @@ object TelemetryWrapper {
         // Make sure a minimum of 1 day has passed since we collected data
         val currentDateLong = dateFormat.format(Date()).toLong()
         return currentDateLong > dateOfLastPing
-    }
-
-    fun searchWithAdsShownEvent(provider: String) {
-        BrowserSearch.withAds[provider].add()
-    }
-
-    fun clickAddInSearchEvent(provider: String) {
-        BrowserSearch.adClicks[provider].add()
-    }
-
-    fun inContentSearchEvent(provider: String) {
-        BrowserSearch.inContent[provider].add()
     }
 
     private fun isDeviceWithTelemetryDisabled(): Boolean {
