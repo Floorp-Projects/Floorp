@@ -7,27 +7,21 @@
 #ifndef nsNativeThemeWin_h
 #define nsNativeThemeWin_h
 
-#include <windows.h>
-
-#include "gfxTypes.h"
-#include "mozilla/Maybe.h"
-#include "mozilla/TimeStamp.h"
-#include "nsAtom.h"
-#include "nsCOMPtr.h"
 #include "nsITheme.h"
-#include "nsNativeBasicTheme.h"
+#include "nsCOMPtr.h"
+#include "nsAtom.h"
 #include "nsNativeTheme.h"
-#include "nsSize.h"
 #include "nsStyleConsts.h"
 #include "nsUXThemeConstants.h"
 #include "nsUXThemeData.h"
-#include "ScrollbarDrawingWin.h"
+#include "nsNativeBasicThemeWin.h"
+#include "gfxTypes.h"
+#include <windows.h>
+#include "mozilla/Maybe.h"
+#include "mozilla/TimeStamp.h"
+#include "nsSize.h"
 
-namespace mozilla::widget {
-
-class nsNativeThemeWin : public nsNativeBasicTheme {
- protected:
-  using ScrollbarDrawingWin = mozilla::widget::ScrollbarDrawingWin;
+class nsNativeThemeWin : public nsNativeBasicThemeWin {
   virtual ~nsNativeThemeWin();
 
  public:
@@ -105,8 +99,7 @@ class nsNativeThemeWin : public nsNativeBasicTheme {
   ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
                                    Overlay) override;
 
-  explicit nsNativeThemeWin(
-      mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawingWin);
+  nsNativeThemeWin();
 
  protected:
   mozilla::Maybe<nsUXThemeClass> GetThemeClass(StyleAppearance aAppearance);
@@ -187,7 +180,5 @@ class nsNativeThemeWin : public nsNativeBasicTheme {
   bool mGutterSizeCacheValid;
   SIZE mGutterSizeCache;
 };
-
-}  // namespace mozilla::widget
 
 #endif

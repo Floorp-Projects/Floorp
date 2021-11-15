@@ -21,7 +21,6 @@
 #include "nsIPrintSettingsService.h"
 #include "nsPIDOMWindow.h"
 #include "nsIGIOService.h"
-#include "nsServiceManagerUtils.h"
 #include "WidgetUtils.h"
 #include "WidgetUtilsGtk.h"
 #include "nsIObserverService.h"

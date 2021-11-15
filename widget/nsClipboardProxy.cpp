@@ -12,7 +12,6 @@
 #include "nsXULAppAPI.h"
 #include "nsContentUtils.h"
 #include "nsStringStream.h"
-#include "PermissionMessageUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
