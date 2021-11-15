@@ -21,7 +21,7 @@ use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureCont
 use crate::gpu_cache::{GpuCacheHandle, GpuDataRequest};
 use crate::gpu_types::{BrushFlags};
 use crate::internal_types::{FastHashMap, PlaneSplitAnchor};
-use crate::picture::{PicturePrimitive, SliceId, TileCacheLogger, ClusterFlags, SurfaceRenderTasks};
+use crate::picture::{PicturePrimitive, SliceId, ClusterFlags, SurfaceRenderTasks};
 use crate::picture::{PrimitiveList, PrimitiveCluster, SurfaceIndex, TileCacheInstance, SubpixelMode, Picture3DContext};
 use crate::prim_store::line_dec::MAX_LINE_DECORATION_RESOLUTION;
 use crate::prim_store::*;
@@ -50,7 +50,6 @@ pub fn prepare_primitives(
     frame_state: &mut FrameBuildingState,
     data_stores: &mut DataStores,
     scratch: &mut PrimitiveScratchBuffer,
-    tile_cache_log: &mut TileCacheLogger,
     tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
     prim_instances: &mut Vec<PrimitiveInstance>,
 ) {
@@ -120,7 +119,6 @@ pub fn prepare_primitives(
                 plane_split_anchor,
                 data_stores,
                 scratch,
-                tile_cache_log,
                 tile_caches,
                 prim_instances,
             ) {
@@ -151,7 +149,6 @@ fn prepare_prim_for_render(
     plane_split_anchor: PlaneSplitAnchor,
     data_stores: &mut DataStores,
     scratch: &mut PrimitiveScratchBuffer,
-    tile_cache_log: &mut TileCacheLogger,
     tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
     prim_instances: &mut Vec<PrimitiveInstance>,
 ) -> bool {
@@ -174,7 +171,6 @@ fn prepare_prim_for_render(
             frame_state,
             frame_context,
             scratch,
-            tile_cache_log,
             tile_caches,
         ) {
             Some((pic_context_for_children, mut pic_state_for_children, mut prim_list)) => {
@@ -187,7 +183,6 @@ fn prepare_prim_for_render(
                     frame_state,
                     data_stores,
                     scratch,
-                    tile_cache_log,
                     tile_caches,
                     prim_instances,
                 );
