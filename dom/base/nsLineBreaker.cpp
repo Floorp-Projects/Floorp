@@ -18,6 +18,7 @@ using mozilla::AutoRestore;
 using mozilla::intl::LineBreaker;
 using mozilla::intl::Locale;
 using mozilla::intl::LocaleParser;
+using mozilla::intl::WordBreakRule;
 
 nsLineBreaker::nsLineBreaker()
     : mCurrentWordLanguage(nullptr),
@@ -26,7 +27,7 @@ nsLineBreaker::nsLineBreaker()
       mScriptIsChineseOrJapanese(false),
       mAfterBreakableSpace(false),
       mBreakHere(false),
-      mWordBreak(LineBreaker::WordBreak::Normal),
+      mWordBreak(WordBreakRule::Normal),
       mStrictness(LineBreaker::Strictness::Auto),
       mWordContinuation(false) {}
 
@@ -76,7 +77,7 @@ nsresult nsLineBreaker::FlushCurrentWord() {
     // For break-strict set everything internal to "break", otherwise
     // to "no break"!
     memset(breakState.Elements(),
-           mWordBreak == LineBreaker::WordBreak::BreakAll
+           mWordBreak == WordBreakRule::BreakAll
                ? gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NORMAL
                : gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NONE,
            length * sizeof(uint8_t));
@@ -243,7 +244,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
     if (aSink && !noBreaksNeeded) {
       breakState[offset] =
           mBreakHere || (mAfterBreakableSpace && !isBreakableSpace) ||
-                  mWordBreak == LineBreaker::WordBreak::BreakAll ||
+                  mWordBreak == WordBreakRule::BreakAll ||
                   mStrictness == LineBreaker::Strictness::Anywhere
               ? gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NORMAL
               : gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NONE;
@@ -408,7 +409,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
       // will be set by nsILineBreaker, we don't consider CJK at this point.
       breakState[offset] =
           mBreakHere || (mAfterBreakableSpace && !isBreakableSpace) ||
-                  mWordBreak == LineBreaker::WordBreak::BreakAll ||
+                  mWordBreak == WordBreakRule::BreakAll ||
                   mStrictness == LineBreaker::Strictness::Anywhere
               ? gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NORMAL
               : gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NONE;
