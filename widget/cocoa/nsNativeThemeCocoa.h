@@ -16,7 +16,8 @@
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
 #include "nsNativeTheme.h"
-#include "ScrollbarDrawingMac.h"
+#include "nsNativeBasicThemeCocoa.h"
+#include "ScrollbarDrawingCocoa.h"
 
 @class MOZCellDrawWindow;
 @class MOZCellDrawView;
@@ -32,7 +33,10 @@ class DrawTarget;
 }  // namespace gfx
 }  // namespace mozilla
 
-class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
+class nsNativeThemeCocoa : public nsNativeBasicThemeCocoa {
+ protected:
+  using ScrollbarDrawingCocoa = mozilla::widget::ScrollbarDrawingCocoa;
+
  public:
   enum class MenuIcon : uint8_t {
     eCheckmark,
@@ -168,7 +172,7 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
     bool reverse = false;
   };
 
-  using ScrollbarParams = mozilla::widget::ScrollbarParams;
+  using ScrollbarParams = mozilla::widget::ScrollbarDrawing::ScrollbarParams;
 
   enum Widget : uint8_t {
     eColorFill,      // mozilla::gfx::sRGBColor
@@ -308,9 +312,7 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
     enum Widget mWidget;
   };
 
-  using ScrollbarDrawingMac = mozilla::widget::ScrollbarDrawingMac;
-
-  nsNativeThemeCocoa();
+  explicit nsNativeThemeCocoa(mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawingCocoa);
 
   NS_DECL_ISUPPORTS_INHERITED
 

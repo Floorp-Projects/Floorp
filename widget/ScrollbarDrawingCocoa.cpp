@@ -4,63 +4,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ScrollbarDrawingMac.h"
+#include "ScrollbarDrawingCocoa.h"
+
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/RelativeLuminanceUtils.h"
-#include "nsLayoutUtils.h"
-#include "nsIFrame.h"
-#include "nsLookAndFeel.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "nsContainerFrame.h"
+#include "nsIFrame.h"
+#include "nsLayoutUtils.h"
+#include "nsLookAndFeel.h"
 #include "nsNativeTheme.h"
 
-namespace mozilla {
+using namespace mozilla;
+using namespace mozilla::gfx;
+using namespace mozilla::widget;
 
-using namespace gfx;
+LayoutDeviceIntSize ScrollbarDrawingCocoa::GetMinimumWidgetSize(
+    nsPresContext* aPresContext, StyleAppearance aAppearance,
+    nsIFrame* aFrame) {
+  MOZ_ASSERT(nsNativeTheme::IsWidgetScrollbarPart(aAppearance));
 
-namespace widget {
-
-static nsIFrame* GetParentScrollbarFrame(nsIFrame* aFrame) {
-  // Walk our parents to find a scrollbar frame
-  nsIFrame* scrollbarFrame = aFrame;
-  do {
-    if (scrollbarFrame->IsScrollbarFrame()) {
-      break;
-    }
-  } while ((scrollbarFrame = scrollbarFrame->GetParent()));
-
-  // We return null if we can't find a parent scrollbar frame
-  return scrollbarFrame;
-}
-
-static bool IsParentScrollbarRolledOver(nsIFrame* aFrame) {
-  nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
-  return nsLookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0
-             ? nsNativeTheme::CheckBooleanAttr(scrollbarFrame, nsGkAtoms::hover)
-             : nsNativeTheme::GetContentState(scrollbarFrame,
-                                              StyleAppearance::None)
-                   .HasState(NS_EVENT_STATE_HOVER);
-}
-
-CSSIntCoord ScrollbarDrawingMac::GetScrollbarSize(StyleScrollbarWidth aWidth,
-                                                  bool aOverlay) {
-  bool isSmall = aWidth == StyleScrollbarWidth::Thin;
-  if (aOverlay) {
-    return isSmall ? 14 : 16;
-  }
-  return isSmall ? 11 : 15;
-}
-
-LayoutDeviceIntCoord ScrollbarDrawingMac::GetScrollbarSize(
-    StyleScrollbarWidth aWidth, bool aOverlay, float aDpiRatio) {
-  CSSIntCoord size = GetScrollbarSize(aWidth, aOverlay);
-  if (aDpiRatio >= 2.0f) {
-    return int32_t(size) * 2;
-  }
-  return int32_t(size);
-}
-
-LayoutDeviceIntSize ScrollbarDrawingMac::GetMinimumWidgetSize(
-    StyleAppearance aAppearance, nsIFrame* aFrame, float aDpiRatio) {
   auto minSize = [&] {
     switch (aAppearance) {
       case StyleAppearance::ScrollbarthumbHorizontal:
@@ -78,11 +41,6 @@ LayoutDeviceIntSize ScrollbarDrawingMac::GetMinimumWidgetSize(
             LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars));
         return IntSize{size, size};
       }
-      case StyleAppearance::MozMenulistArrowButton: {
-        auto size =
-            GetScrollbarSize(StyleScrollbarWidth::Auto, /* aOverlay = */ false);
-        return IntSize{size, size};
-      }
       case StyleAppearance::ScrollbarbuttonUp:
       case StyleAppearance::ScrollbarbuttonDown:
         return IntSize{15, 16};
@@ -94,42 +52,46 @@ LayoutDeviceIntSize ScrollbarDrawingMac::GetMinimumWidgetSize(
     }
   }();
 
-  if (aDpiRatio >= 2.0f) {
+  auto dpi = GetDPIRatioForScrollbarPart(aPresContext).scale;
+  if (dpi >= 2.0f) {
     return LayoutDeviceIntSize{minSize.width * 2, minSize.height * 2};
   }
   return LayoutDeviceIntSize{minSize.width, minSize.height};
 }
 
-ScrollbarParams ScrollbarDrawingMac::ComputeScrollbarParams(
-    nsIFrame* aFrame, const ComputedStyle& aStyle, bool aIsHorizontal) {
-  ScrollbarParams params;
-  params.overlay =
-      nsLookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0;
-  params.rolledOver = IsParentScrollbarRolledOver(aFrame);
-  params.small =
-      aStyle.StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin;
-  params.rtl = nsNativeTheme::IsFrameRTL(aFrame);
-  params.horizontal = aIsHorizontal;
-  params.onDarkBackground = !StaticPrefs::widget_disable_dark_scrollbar() &&
-                            nsNativeTheme::IsDarkBackground(aFrame);
-  // Don't use custom scrollbars for overlay scrollbars since they are
-  // generally good enough for use cases of custom scrollbars.
-  if (!params.overlay) {
-    const nsStyleUI* ui = aStyle.StyleUI();
-    if (ui->HasCustomScrollbars()) {
-      const auto& colors = ui->mScrollbarColor.AsColors();
-      params.custom = true;
-      params.trackColor = colors.track.CalcColor(aStyle);
-      params.faceColor = colors.thumb.CalcColor(aStyle);
-    }
+/*static*/
+CSSIntCoord ScrollbarDrawingCocoa::GetScrollbarSize(StyleScrollbarWidth aWidth,
+                                                    bool aOverlay) {
+  bool isSmall = aWidth == StyleScrollbarWidth::Thin;
+  if (aOverlay) {
+    return isSmall ? 14 : 16;
   }
-
-  return params;
+  return isSmall ? 11 : 15;
 }
 
-auto ScrollbarDrawingMac::GetThumbRect(const Rect& aRect,
-                                       const ScrollbarParams& aParams,
-                                       float aScale) -> ThumbRect {
+/*static*/
+LayoutDeviceIntCoord ScrollbarDrawingCocoa::GetScrollbarSize(
+    StyleScrollbarWidth aWidth, bool aOverlay, DPIRatio aDpiRatio) {
+  CSSIntCoord size = GetScrollbarSize(aWidth, aOverlay);
+  if (aDpiRatio.scale >= 2.0f) {
+    return int32_t(size) * 2;
+  }
+  return int32_t(size);
+}
+
+auto ScrollbarDrawingCocoa::GetScrollbarSizes(nsPresContext* aPresContext,
+                                              StyleScrollbarWidth aWidth,
+                                              Overlay aOverlay)
+    -> ScrollbarSizes {
+  auto size = GetScrollbarSize(aWidth, aOverlay == Overlay::Yes,
+                               GetDPIRatioForScrollbarPart(aPresContext));
+  return {size, size};
+}
+
+/*static*/
+auto ScrollbarDrawingCocoa::GetThumbRect(const Rect& aRect,
+                                         const ScrollbarParams& aParams,
+                                         float aScale) -> ThumbRect {
   // This matches the sizing checks in GetMinimumWidgetSize etc.
   aScale = aScale >= 2.0f ? 2.0f : 1.0f;
 
@@ -224,10 +186,10 @@ static ScrollbarTrackDecorationColors ComputeScrollbarTrackDecorationColors(
   return result;
 }
 
-bool ScrollbarDrawingMac::GetScrollbarTrackRects(const Rect& aRect,
-                                                 const ScrollbarParams& aParams,
-                                                 float aScale,
-                                                 ScrollbarTrackRects& aRects) {
+/*static*/
+bool ScrollbarDrawingCocoa::GetScrollbarTrackRects(
+    const Rect& aRect, const ScrollbarParams& aParams, float aScale,
+    ScrollbarTrackRects& aRects) {
   if (aParams.overlay && !aParams.rolledOver) {
     // Non-hovered overlay scrollbars don't have a track. Draw nothing.
     return false;
@@ -293,10 +255,11 @@ bool ScrollbarDrawingMac::GetScrollbarTrackRects(const Rect& aRect,
   return true;
 }
 
-bool ScrollbarDrawingMac::GetScrollCornerRects(const Rect& aRect,
-                                               const ScrollbarParams& aParams,
-                                               float aScale,
-                                               ScrollCornerRects& aRects) {
+/*static*/
+bool ScrollbarDrawingCocoa::GetScrollCornerRects(const Rect& aRect,
+                                                 const ScrollbarParams& aParams,
+                                                 float aScale,
+                                                 ScrollCornerRects& aRects) {
   if (aParams.overlay && !aParams.rolledOver) {
     // Non-hovered overlay scrollbars don't have a corner. Draw nothing.
     return false;
@@ -360,5 +323,129 @@ bool ScrollbarDrawingMac::GetScrollCornerRects(const Rect& aRect,
   return true;
 }
 
-}  // namespace widget
-}  // namespace mozilla
+template <typename PaintBackendData>
+void ScrollbarDrawingCocoa::DoPaintScrollbarThumb(
+    PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
+    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aElementState, const EventStates& aDocumentState,
+    const DPIRatio& aDpiRatio) {
+  ScrollbarParams params = ComputeScrollbarParams(aFrame, aStyle, aHorizontal);
+  auto thumb = GetThumbRect(aRect.ToUnknownRect(), params, aDpiRatio.scale);
+  auto thumbRect = LayoutDeviceRect::FromUnknownRect(thumb.mRect);
+  LayoutDeviceCoord radius =
+      (params.horizontal ? thumbRect.Height() : thumbRect.Width()) / 2.0f;
+  ThemeDrawing::PaintRoundedRectWithRadius(
+      aPaintData, thumbRect, thumbRect, sRGBColor::FromABGR(thumb.mFillColor),
+      sRGBColor::White(0.0f), 0.0f, radius / aDpiRatio, aDpiRatio);
+  if (!thumb.mStrokeColor) {
+    return;
+  }
+
+  // Paint the stroke if needed.
+  thumbRect.Inflate(thumb.mStrokeOutset + thumb.mStrokeWidth);
+  radius = (params.horizontal ? thumbRect.Height() : thumbRect.Width()) / 2.0f;
+  ThemeDrawing::PaintRoundedRectWithRadius(
+      aPaintData, thumbRect, sRGBColor::White(0.0f),
+      sRGBColor::FromABGR(thumb.mStrokeColor), thumb.mStrokeWidth,
+      radius / aDpiRatio, aDpiRatio);
+}
+
+bool ScrollbarDrawingCocoa::PaintScrollbarThumb(
+    DrawTarget& aDt, const LayoutDeviceRect& aRect, bool aHorizontal,
+    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aElementState, const EventStates& aDocumentState,
+    const Colors&, const DPIRatio& aDpiRatio) {
+  // TODO: Maybe respect the UseSystemColors setting?
+  DoPaintScrollbarThumb(aDt, aRect, aHorizontal, aFrame, aStyle, aElementState,
+                        aDocumentState, aDpiRatio);
+  return true;
+}
+
+bool ScrollbarDrawingCocoa::PaintScrollbarThumb(
+    WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
+    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aElementState, const EventStates& aDocumentState,
+    const Colors&, const DPIRatio& aDpiRatio) {
+  // TODO: Maybe respect the UseSystemColors setting?
+  DoPaintScrollbarThumb(aWrData, aRect, aHorizontal, aFrame, aStyle,
+                        aElementState, aDocumentState, aDpiRatio);
+  return true;
+}
+
+template <typename PaintBackendData>
+void ScrollbarDrawingCocoa::DoPaintScrollbarTrack(
+    PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
+    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aDocumentState, const DPIRatio& aDpiRatio) {
+  ScrollbarParams params = ComputeScrollbarParams(aFrame, aStyle, aHorizontal);
+  ScrollbarTrackRects rects;
+  if (GetScrollbarTrackRects(aRect.ToUnknownRect(), params, aDpiRatio.scale,
+                             rects)) {
+    for (const auto& rect : rects) {
+      ThemeDrawing::FillRect(aPaintData,
+                             LayoutDeviceRect::FromUnknownRect(rect.mRect),
+                             sRGBColor::FromABGR(rect.mColor));
+    }
+  }
+}
+
+bool ScrollbarDrawingCocoa::PaintScrollbarTrack(
+    DrawTarget& aDt, const LayoutDeviceRect& aRect, bool aHorizontal,
+    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aDocumentState, const Colors&,
+    const DPIRatio& aDpiRatio) {
+  // TODO: Maybe respect the UseSystemColors setting?
+  DoPaintScrollbarTrack(aDt, aRect, aHorizontal, aFrame, aStyle, aDocumentState,
+                        aDpiRatio);
+  return true;
+}
+
+bool ScrollbarDrawingCocoa::PaintScrollbarTrack(
+    WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
+    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aDocumentState, const Colors&,
+    const DPIRatio& aDpiRatio) {
+  // TODO: Maybe respect the UseSystemColors setting?
+  DoPaintScrollbarTrack(aWrData, aRect, aHorizontal, aFrame, aStyle,
+                        aDocumentState, aDpiRatio);
+  return true;
+}
+
+template <typename PaintBackendData>
+void ScrollbarDrawingCocoa::DoPaintScrollCorner(
+    PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
+    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aDocumentState, const DPIRatio& aDpiRatio) {
+  ScrollbarParams params = ComputeScrollbarParams(aFrame, aStyle, false);
+  ScrollCornerRects rects;
+  if (GetScrollCornerRects(aRect.ToUnknownRect(), params, aDpiRatio.scale,
+                           rects)) {
+    for (const auto& rect : rects) {
+      ThemeDrawing::FillRect(aPaintData,
+                             LayoutDeviceRect::FromUnknownRect(rect.mRect),
+                             sRGBColor::FromABGR(rect.mColor));
+    }
+  }
+}
+
+bool ScrollbarDrawingCocoa::PaintScrollCorner(
+    DrawTarget& aDt, const LayoutDeviceRect& aRect, nsIFrame* aFrame,
+    const ComputedStyle& aStyle, const EventStates& aDocumentState,
+    const Colors&, const DPIRatio& aDpiRatio) {
+  // TODO: Maybe respect the UseSystemColors setting?
+  DoPaintScrollCorner(aDt, aRect, aFrame, aStyle, aDocumentState, aDpiRatio);
+  return true;
+}
+
+bool ScrollbarDrawingCocoa::PaintScrollCorner(WebRenderBackendData& aWrData,
+                                              const LayoutDeviceRect& aRect,
+                                              nsIFrame* aFrame,
+                                              const ComputedStyle& aStyle,
+                                              const EventStates& aDocumentState,
+                                              const Colors&,
+                                              const DPIRatio& aDpiRatio) {
+  // TODO: Maybe respect the UseSystemColors setting?
+  DoPaintScrollCorner(aWrData, aRect, aFrame, aStyle, aDocumentState,
+                      aDpiRatio);
+  return true;
+}

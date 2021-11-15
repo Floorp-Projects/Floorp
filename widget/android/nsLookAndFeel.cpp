@@ -16,8 +16,10 @@
 #include "mozilla/java/GeckoAppShellWrappers.h"
 #include "mozilla/java/GeckoRuntimeWrappers.h"
 #include "mozilla/java/GeckoSystemStateListenerWrappers.h"
+#include "ThemeColors.h"
 
 using namespace mozilla;
+using namespace mozilla::widget;
 
 static const char16_t UNICODE_BULLET = 0x2022;
 
@@ -191,10 +193,9 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
     case ColorID::MozCellhighlighttext:
     case ColorID::Selecteditemtext:
     case ColorID::MozAccentColorForeground:
-      aColor = UseNativeAccent()
-                   ? nsNativeBasicTheme::ComputeCustomAccentForeground(
-                         mSystemColors.colorAccent)
-                   : widget::sDefaultAccentForeground.ToABGR();
+      aColor = UseNativeAccent() ? ThemeColors::ComputeCustomAccentForeground(
+                                       mSystemColors.colorAccent)
+                                 : widget::sDefaultAccentForeground.ToABGR();
       break;
     case ColorID::Fieldtext:
       aColor = NS_RGB(0x1a, 0x1a, 0x1a);

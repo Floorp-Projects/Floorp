@@ -55,7 +55,6 @@ UNIFIED_SOURCES += [
     "nsGtkKeyUtils.cpp",
     "nsImageToPixbuf.cpp",
     "nsLookAndFeel.cpp",
-    "nsNativeBasicThemeGTK.cpp",
     "nsSound.cpp",
     "nsToolkit.cpp",
     "nsWidgetFactory.cpp",
