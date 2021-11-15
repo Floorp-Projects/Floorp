@@ -113,8 +113,6 @@
       var position = event.alignmentPosition;
       var offset = event.alignmentOffset;
 
-      this.setAttribute("arrowposition", position);
-
       if (position.indexOf("start_") == 0 || position.indexOf("end_") == 0) {
         container.setAttribute("orient", "horizontal");
         arrowbox.setAttribute("orient", "vertical");
