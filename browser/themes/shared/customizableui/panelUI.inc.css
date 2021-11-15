@@ -2047,16 +2047,6 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   opacity: 0;
 }
 
-/* Fill the little arrow part of the Profiler panel with the color closest to
-   the panel itself, when the info section is expanded */
-#customizationui-widget-panel[viewId="PanelUI-profiler"][mainviewshowing][arrowposition="after_end"][isinfoexpanded="true"]::part(arrow) {
-  fill: #03b1f4;
-}
-
-#customizationui-widget-panel[viewId="PanelUI-profiler"][mainviewshowing][arrowposition="after_start"][isinfoexpanded="true"]::part(arrow) {
-  fill: #0556cd;
-}
-
 /* Override themes for the Pocket panel, because the Pocket
    panel doesn't currently support multiple themes. */
 #customizationui-widget-panel[viewId="PanelUI-savetopocket"] {
