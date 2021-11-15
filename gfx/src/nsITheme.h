@@ -255,7 +255,7 @@ class nsITheme : public nsISupports {
    */
   virtual bool ThemeNeedsComboboxDropmarker() = 0;
 
-  virtual bool ThemeSupportsScrollbarButtons() { return true; }
+  virtual bool ThemeSupportsScrollbarButtons() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsITheme, NS_ITHEME_IID)
