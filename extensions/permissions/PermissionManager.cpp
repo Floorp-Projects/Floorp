@@ -3166,6 +3166,15 @@ PermissionManager::GetAllKeysForPrincipal(nsIPrincipal* aPrincipal) {
     // Don't force strip origin attributes.
     GetKeyForPrincipal(prin, false, pair->first);
 
+    // On origins with a derived key set to an empty string
+    // (basically any non-web URI scheme), we want to make sure
+    // to return earlier, and leave [("", "")] as the resulting
+    // pairs (but still run the same debug assertions near the
+    // end of this method).
+    if (pair->first.IsEmpty()) {
+      break;
+    }
+
     Unused << GetOriginFromPrincipal(prin, false, pair->second);
     prin = prin->GetNextSubDomainPrincipal();
     // Get the next subdomain principal and loop back around.
