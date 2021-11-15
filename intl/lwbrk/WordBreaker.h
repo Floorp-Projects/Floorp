@@ -5,7 +5,7 @@
 #ifndef mozilla_intl_WordBreaker_h__
 #define mozilla_intl_WordBreaker_h__
 
-#include "nscore.h"
+#include <cstdint>
 
 #define NS_WORDBREAKER_NEED_MORE_TEXT -1
 

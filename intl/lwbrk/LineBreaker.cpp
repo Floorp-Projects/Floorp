@@ -941,7 +941,7 @@ int32_t LineBreaker::Next(const char16_t* aText, uint32_t aLen, uint32_t aPos) {
     // XXX(Bug 1631371) Check if this should use a fallible operation as it
     // pretended earlier.
     breakState.AppendElements(end - begin);
-    ComputeBreakPositions(aText + begin, end - begin, WordBreak::Normal,
+    ComputeBreakPositions(aText + begin, end - begin, WordBreakRule::Normal,
                           Strictness::Auto, false, breakState.Elements());
 
     ret = aPos;
@@ -981,11 +981,9 @@ static bool SuppressBreakForKeepAll(uint32_t aPrev, uint32_t aCh) {
          affectedByKeepAll(GetLineBreakClass(aCh));
 }
 
-void LineBreaker::ComputeBreakPositions(const char16_t* aChars,
-                                        uint32_t aLength, WordBreak aWordBreak,
-                                        Strictness aLevel,
-                                        bool aIsChineseOrJapanese,
-                                        uint8_t* aBreakBefore) {
+void LineBreaker::ComputeBreakPositions(
+    const char16_t* aChars, uint32_t aLength, WordBreakRule aWordBreak,
+    Strictness aLevel, bool aIsChineseOrJapanese, uint8_t* aBreakBefore) {
   uint32_t cur;
   int8_t lastClass = CLASS_NONE;
   ContextState state(aChars, aLength);
@@ -1027,7 +1025,7 @@ void LineBreaker::ComputeBreakPositions(const char16_t* aChars,
     // _CLOSE_LIKE_CHARACTER, or _NUMERIC by GetClass(), but those classes also
     // include others that we don't want to touch here, so we re-check the
     // Unicode line-break class to determine which ones to modify.
-    if (aWordBreak == WordBreak::BreakAll &&
+    if (aWordBreak == WordBreakRule::BreakAll &&
         (cl == CLASS_CHARACTER || cl == CLASS_CLOSE ||
          cl == CLASS_CLOSE_LIKE_CHARACTER || cl == CLASS_NUMERIC)) {
       auto cls = GetLineBreakClass(ch);
@@ -1053,14 +1051,14 @@ void LineBreaker::ComputeBreakPositions(const char16_t* aChars,
       if (allowBreak) {
         // word-break:keep-all suppresses breaks between certain line-break
         // classes.
-        if (aWordBreak == WordBreak::KeepAll &&
+        if (aWordBreak == WordBreakRule::KeepAll &&
             SuppressBreakForKeepAll(prev(), ch)) {
           allowBreak = false;
         }
         // We also don't allow a break within a run of U+3000 chars unless
         // word-break:break-all is in effect.
         if (ch == 0x3000 && prev() == 0x3000 &&
-            aWordBreak != WordBreak::BreakAll) {
+            aWordBreak != WordBreakRule::BreakAll) {
           allowBreak = false;
         }
       }
@@ -1082,7 +1080,7 @@ void LineBreaker::ComputeBreakPositions(const char16_t* aChars,
         }
       }
 
-      if (aWordBreak == WordBreak::BreakAll) {
+      if (aWordBreak == WordBreakRule::BreakAll) {
         // For break-all, we don't need to run a dictionary-based breaking
         // algorithm, we just allow breaks between all grapheme clusters.
         ClusterIterator ci(aChars + cur, end - cur);
@@ -1111,7 +1109,8 @@ void LineBreaker::ComputeBreakPositions(const char16_t* aChars,
 }
 
 void LineBreaker::ComputeBreakPositions(const uint8_t* aChars, uint32_t aLength,
-                                        WordBreak aWordBreak, Strictness aLevel,
+                                        WordBreakRule aWordBreak,
+                                        Strictness aLevel,
                                         bool aIsChineseOrJapanese,
                                         uint8_t* aBreakBefore) {
   uint32_t cur;
@@ -1131,7 +1130,7 @@ void LineBreaker::ComputeBreakPositions(const uint8_t* aChars, uint32_t aLength,
       state.NotifyNonHyphenCharacter(ch);
       cl = GetClass(ch, aLevel, aIsChineseOrJapanese);
     }
-    if (aWordBreak == WordBreak::BreakAll &&
+    if (aWordBreak == WordBreakRule::BreakAll &&
         (cl == CLASS_CHARACTER || cl == CLASS_CLOSE ||
          cl == CLASS_CLOSE_LIKE_CHARACTER || cl == CLASS_NUMERIC)) {
       auto cls = GetLineBreakClass(ch);
@@ -1147,7 +1146,7 @@ void LineBreaker::ComputeBreakPositions(const uint8_t* aChars, uint32_t aLength,
       allowBreak =
           (state.UseConservativeBreaking() ? GetPairConservative(lastClass, cl)
                                            : GetPair(lastClass, cl)) &&
-          (aWordBreak != WordBreak::KeepAll ||
+          (aWordBreak != WordBreakRule::KeepAll ||
            !SuppressBreakForKeepAll(aChars[cur - 1], ch));
     }
     aBreakBefore[cur] = allowBreak;
