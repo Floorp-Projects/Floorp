@@ -3127,17 +3127,7 @@ var AddonManagerInternal = {
 
   setupPromptHandler(browser, url, install, requireConfirm, source) {
     install.promptHandler = info =>
-      new Promise((resolve, _reject) => {
-        let reject = () => {
-          this.installNotifyObservers(
-            "addon-install-cancelled",
-            browser,
-            url,
-            install
-          );
-          _reject();
-        };
-
+      new Promise((resolve, reject) => {
         this._verifyThirdPartyInstall(browser, url, install, info, source)
           .then(() => {
             // All installs end up in this callback when the add-on is available
