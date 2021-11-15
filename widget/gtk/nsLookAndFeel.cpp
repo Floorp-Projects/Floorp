@@ -31,7 +31,7 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/WidgetUtilsGtk.h"
 #include "ScreenHelperGTK.h"
-#include "ScrollbarDrawing.h"
+#include "nsNativeBasicThemeGTK.h"
 
 #include "gtkdrawing.h"
 #include "nsStyleConsts.h"
@@ -47,7 +47,6 @@
 #include "nsCSSColorUtils.h"
 
 using namespace mozilla;
-using namespace mozilla::widget;
 
 #ifdef MOZ_LOGGING
 #  include "mozilla/Logging.h"
@@ -1519,11 +1518,12 @@ void nsLookAndFeel::PerThemeData::Init() {
     mMozScrollbar = mThemedScrollbar = widget::sScrollbarColor.ToABGR();
     mThemedScrollbarInactive = widget::sScrollbarColor.ToABGR();
     mThemedScrollbarThumb = widget::sScrollbarThumbColor.ToABGR();
-    mThemedScrollbarThumbHover = ThemeColors::AdjustUnthemedScrollbarThumbColor(
-        mThemedScrollbarThumb, NS_EVENT_STATE_HOVER);
+    mThemedScrollbarThumbHover =
+        nsNativeBasicTheme::AdjustUnthemedScrollbarThumbColor(
+            mThemedScrollbarThumb, NS_EVENT_STATE_HOVER);
     mThemedScrollbarThumbActive =
-        ThemeColors::AdjustUnthemedScrollbarThumbColor(mThemedScrollbarThumb,
-                                                       NS_EVENT_STATE_ACTIVE);
+        nsNativeBasicTheme::AdjustUnthemedScrollbarThumbColor(
+            mThemedScrollbarThumb, NS_EVENT_STATE_ACTIVE);
     mThemedScrollbarThumbInactive = mThemedScrollbarThumb;
   }
 
