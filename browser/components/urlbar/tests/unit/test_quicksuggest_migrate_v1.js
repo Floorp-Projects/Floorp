@@ -9,6 +9,10 @@
 let gDefaultBranch = Services.prefs.getDefaultBranch("browser.urlbar.");
 let gUserBranch = Services.prefs.getBranch("browser.urlbar.");
 
+add_task(async function init() {
+  await QuickSuggestTestUtils.initNimbusFeature();
+});
+
 // Migrating from:
 // * History (quick suggest feature disabled)
 //

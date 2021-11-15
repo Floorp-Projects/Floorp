@@ -45,6 +45,10 @@ const PREFS = [
   },
 ];
 
+add_task(async function init() {
+  await QuickSuggestTestUtils.initNimbusFeature();
+});
+
 add_task(async function test() {
   let tests = [
     { locale: "en-US", home: "US", expectedOfflineDefault: true },
