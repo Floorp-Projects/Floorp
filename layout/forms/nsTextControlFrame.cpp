@@ -735,6 +735,11 @@ void nsTextControlFrame::ReflowTextControlChild(
   // or percentage, if we're not the button box.
   auto overridePadding =
       isButtonBox ? Nothing() : Some(aReflowInput.ComputedLogicalPadding(wm));
+  if (!isButtonBox && aButtonBoxISize) {
+    // Button box respects inline-end-padding, so we don't need to.
+    overridePadding->IEnd(outerWM) = 0;
+  }
+
   // We want to let our button box fill the frame in the block axis, up to the
   // edge of the control's border. So, we use the control's padding-box as the
   // containing block size for our button box.
