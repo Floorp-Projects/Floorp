@@ -437,10 +437,23 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
     return false;
   }
 
-  if (aAssumeVScroll != aState->mReflowedContentsWithVScrollbar ||
-      (aAssumeHScroll != aState->mReflowedContentsWithHScrollbar &&
-       ScrolledContentDependsOnBSize(aState))) {
-    if (aAssumeHScroll != aState->mReflowedContentsWithHScrollbar) {
+  const bool assumeVScrollChanged =
+      aAssumeVScroll != aState->mReflowedContentsWithVScrollbar;
+  const bool assumeHScrollChanged =
+      aAssumeHScroll != aState->mReflowedContentsWithHScrollbar;
+  const bool isVertical = GetWritingMode().IsVertical();
+
+  const bool shouldReflowScolledFrame = [=]() {
+    if (isVertical) {
+      return assumeHScrollChanged ||
+             (assumeVScrollChanged && ScrolledContentDependsOnBSize(aState));
+    }
+    return assumeVScrollChanged ||
+           (assumeHScrollChanged && ScrolledContentDependsOnBSize(aState));
+  }();
+
+  if (shouldReflowScolledFrame) {
+    if (isVertical ? assumeVScrollChanged : assumeHScrollChanged) {
       nsLayoutUtils::MarkIntrinsicISizesDirtyIfDependentOnBSize(
           mHelper.mScrolledFrame);
     }
@@ -644,9 +657,6 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput* aState,
   return true;
 }
 
-// XXX Height/BSize mismatch needs to be addressed here; check the caller!
-// Currently this will only behave as expected for horizontal writing modes.
-// (See bug 1175509.)
 bool nsHTMLScrollFrame::ScrolledContentDependsOnBSize(
     ScrollReflowInput* aState) const {
   return mHelper.mScrolledFrame->HasAnyStateBits(
