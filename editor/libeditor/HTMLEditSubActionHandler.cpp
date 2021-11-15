@@ -1862,10 +1862,7 @@ nsresult HTMLEditor::HandleInsertBRElement(const EditorDOMPoint& aPointToBreak,
     if (linkNode) {
       SplitNodeResult splitLinkNodeResult = SplitNodeDeepWithTransaction(
           *linkNode, pointToBreak, SplitAtEdges::eDoNotCreateEmptyContainer);
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (splitLinkNodeResult.Failed()) {
+      if (MOZ_UNLIKELY(splitLinkNodeResult.Failed())) {
         NS_WARNING(
             "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
             "eDoNotCreateEmptyContainer) failed");
@@ -2128,10 +2125,7 @@ EditActionResult HTMLEditor::SplitMailCiteElements(
 
   SplitNodeResult splitCiteNodeResult = SplitNodeDeepWithTransaction(
       *citeNode, pointToSplit, SplitAtEdges::eDoNotCreateEmptyContainer);
-  if (NS_WARN_IF(Destroyed())) {
-    return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
-  }
-  if (splitCiteNodeResult.Failed()) {
+  if (MOZ_UNLIKELY(splitCiteNodeResult.Failed())) {
     NS_WARNING(
         "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
         "eDoNotCreateEmptyContainer) failed");
@@ -3583,10 +3577,7 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
       SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
           *editableBlockElement, pointToInsertBlock,
           SplitAtEdges::eDoNotCreateEmptyContainer);
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (splitNodeResult.Failed()) {
+      if (MOZ_UNLIKELY(splitNodeResult.Failed())) {
         NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
         return splitNodeResult.Rv();
       }
@@ -4950,7 +4941,7 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
   SplitNodeResult splitAtStartResult = SplitNodeDeepWithTransaction(
       aBlockElement, EditorDOMPoint(&aStartOfMiddleElement),
       SplitAtEdges::eDoNotCreateEmptyContainer);
-  if (NS_WARN_IF(Destroyed())) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(splitAtStartResult.EditorDestroyed()))) {
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(splitAtStartResult.Succeeded(),
@@ -4963,7 +4954,7 @@ SplitRangeOffFromNodeResult HTMLEditor::SplitRangeOffFromBlock(
   NS_WARNING_ASSERTION(advanced, "Failed to advance offset after the end node");
   SplitNodeResult splitAtEndResult = SplitNodeDeepWithTransaction(
       aBlockElement, atAfterEnd, SplitAtEdges::eDoNotCreateEmptyContainer);
-  if (NS_WARN_IF(Destroyed())) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(splitAtEndResult.EditorDestroyed()))) {
     return SplitRangeOffFromNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(splitAtEndResult.Succeeded(),
@@ -5124,10 +5115,7 @@ nsresult HTMLEditor::CreateStyleForInsertText(
       SplitNodeResult splitTextNodeResult = SplitNodeDeepWithTransaction(
           MOZ_KnownLive(*pointToPutCaret.GetContainerAsText()), pointToPutCaret,
           SplitAtEdges::eAllowToCreateEmptyContainer);
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (splitTextNodeResult.Failed()) {
+      if (MOZ_UNLIKELY(splitTextNodeResult.Failed())) {
         NS_WARNING(
             "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
             "eAllowToCreateEmptyContainer) failed");
@@ -6750,16 +6738,13 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
       SplitNodeResult splitEndInlineResult = SplitNodeDeepWithTransaction(
           *mostAncestorInlineContentAtEnd, aRangeItem.EndPoint(),
           SplitAtEdges::eDoNotCreateEmptyContainer);
-      if (NS_WARN_IF(Destroyed())) {
-        return NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (splitEndInlineResult.Failed()) {
+      if (MOZ_UNLIKELY(splitEndInlineResult.Failed())) {
         NS_WARNING(
             "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
             "eDoNotCreateEmptyContainer) failed");
         return splitEndInlineResult.Rv();
       }
-      if (editingHost != GetActiveEditingHost()) {
+      if (MOZ_UNLIKELY(editingHost != GetActiveEditingHost())) {
         NS_WARNING(
             "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
             "eDoNotCreateEmptyContainer) caused changing editing host");
@@ -6789,10 +6774,7 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
     SplitNodeResult splitStartInlineResult = SplitNodeDeepWithTransaction(
         *mostAncestorInlineContentAtStart, aRangeItem.StartPoint(),
         SplitAtEdges::eDoNotCreateEmptyContainer);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    if (splitStartInlineResult.Failed()) {
+    if (MOZ_UNLIKELY(splitStartInlineResult.Failed())) {
       NS_WARNING(
           "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
           "eDoNotCreateEmptyContainer) failed");
@@ -6802,7 +6784,7 @@ nsresult HTMLEditor::SplitParentInlineElementsAtRangeEdges(
     //     only start point of aRangeItem.  Shouldn't we modify end point here
     //     if it's collapsed?
     EditorRawDOMPoint splitPointAtStart(splitStartInlineResult.SplitPoint());
-    if (!splitPointAtStart.IsSet()) {
+    if (MOZ_UNLIKELY(!splitPointAtStart.IsSet())) {
       NS_WARNING(
           "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
           "eDoNotCreateEmptyContainer) didn't return split point");
@@ -6840,20 +6822,17 @@ nsresult HTMLEditor::SplitElementsAtEveryBRElement(
     }
     SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
         *nextContent, atBRNode, SplitAtEdges::eAllowToCreateEmptyContainer);
-    if (NS_WARN_IF(Destroyed())) {
-      return NS_ERROR_EDITOR_DESTROYED;
-    }
-    if (splitNodeResult.Failed()) {
+    if (MOZ_UNLIKELY(splitNodeResult.Failed())) {
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
       return splitNodeResult.Rv();
     }
 
     // Put previous node at the split point.
-    if (splitNodeResult.GetPreviousNode()) {
+    if (nsIContent* previousContent = splitNodeResult.GetPreviousNode()) {
       // Might not be a left node.  A break might have been at the very
       // beginning of inline container, in which case
       // SplitNodeDeepWithTransaction() would not actually split anything.
-      aOutArrayOfContents.AppendElement(*splitNodeResult.GetPreviousNode());
+      aOutArrayOfContents.AppendElement(*previousContent);
     }
 
     // Move break outside of container and also put in node list
@@ -6905,27 +6884,26 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(
     AutoEditorDOMPointChildInvalidator rememberOnlyOffset(atHeader);
   }
 
-  // Get ws code to adjust any ws
-  Result<EditorDOMPoint, nsresult> preparationResult =
-      WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
-          *this, aPointToSplit, aHeader);
-  if (preparationResult.isErr()) {
-    NS_WARNING(
-        "WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement() failed");
-    return preparationResult.unwrapErr();
-  }
-  EditorDOMPoint pointToSplit = preparationResult.unwrap();
-  MOZ_ASSERT(pointToSplit.IsInContentNode());
+  {
+    // Get ws code to adjust any ws
+    Result<EditorDOMPoint, nsresult> preparationResult =
+        WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(
+            *this, aPointToSplit, aHeader);
+    if (preparationResult.isErr()) {
+      NS_WARNING(
+          "WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement() failed");
+      return preparationResult.unwrapErr();
+    }
+    EditorDOMPoint pointToSplit = preparationResult.unwrap();
+    MOZ_ASSERT(pointToSplit.IsInContentNode());
 
-  // Split the header
-  SplitNodeResult splitHeaderResult = SplitNodeDeepWithTransaction(
-      aHeader, pointToSplit, SplitAtEdges::eAllowToCreateEmptyContainer);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  if (splitHeaderResult.Failed()) {
-    NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
-    return NS_ERROR_FAILURE;
+    // Split the header
+    SplitNodeResult splitHeaderResult = SplitNodeDeepWithTransaction(
+        aHeader, pointToSplit, SplitAtEdges::eAllowToCreateEmptyContainer);
+    if (MOZ_UNLIKELY(splitHeaderResult.Failed())) {
+      NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
+      return NS_ERROR_FAILURE;
+    }
   }
 
   // If the previous heading of split point is empty, put a padding <br>
@@ -7252,14 +7230,11 @@ nsresult HTMLEditor::SplitParagraph(Element& aParentDivOrP,
   // Split the paragraph.
   SplitNodeResult splitDivOrPResult = SplitNodeDeepWithTransaction(
       aParentDivOrP, pointToSplit, SplitAtEdges::eAllowToCreateEmptyContainer);
-  if (NS_WARN_IF(Destroyed())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  if (splitDivOrPResult.Failed()) {
+  if (MOZ_UNLIKELY(splitDivOrPResult.Failed())) {
     NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
     return splitDivOrPResult.Rv();
   }
-  if (!splitDivOrPResult.DidSplit()) {
+  if (MOZ_UNLIKELY(!splitDivOrPResult.DidSplit())) {
     NS_WARNING(
         "HTMLEditor::SplitNodeDeepWithTransaction() didn't split any nodes");
     return NS_ERROR_FAILURE;
@@ -7443,7 +7418,7 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(
   // Now split the list item.
   SplitNodeResult splitListItemResult = SplitNodeDeepWithTransaction(
       aListItem, pointToSplit, SplitAtEdges::eAllowToCreateEmptyContainer);
-  if (NS_WARN_IF(Destroyed())) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(splitListItemResult.EditorDestroyed()))) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
   NS_WARNING_ASSERTION(
@@ -8110,9 +8085,6 @@ SplitNodeResult HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction(
   SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
       MOZ_KnownLive(*pointToInsert.GetChild()), aStartOfDeepestRightNode,
       SplitAtEdges::eAllowToCreateEmptyContainer);
-  if (NS_WARN_IF(Destroyed())) {
-    return SplitNodeResult(NS_ERROR_EDITOR_DESTROYED);
-  }
   NS_WARNING_ASSERTION(splitNodeResult.Succeeded(),
                        "HTMLEditor::SplitNodeDeepWithTransaction(SplitAtEdges::"
                        "eAllowToCreateEmptyContainer) failed");

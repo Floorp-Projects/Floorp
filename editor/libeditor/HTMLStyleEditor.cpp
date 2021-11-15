@@ -919,7 +919,7 @@ SplitNodeResult HTMLEditor::SplitAncestorStyledInlineElementsAt(
     SplitNodeResult splitNodeResult = SplitNodeDeepWithTransaction(
         MOZ_KnownLive(content), result.SplitPoint(),
         SplitAtEdges::eAllowToCreateEmptyContainer);
-    if (splitNodeResult.Failed()) {
+    if (MOZ_UNLIKELY(splitNodeResult.Failed())) {
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
       return splitNodeResult;
     }
