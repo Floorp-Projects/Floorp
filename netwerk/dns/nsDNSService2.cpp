@@ -56,13 +56,11 @@ static const char kPrefDnsCacheGrace[] =
     "network.dnsCacheExpirationGracePeriod";
 static const char kPrefIPv4OnlyDomains[] = "network.dns.ipv4OnlyDomains";
 static const char kPrefDisableIPv6[] = "network.dns.disableIPv6";
-static const char kPrefDisablePrefetch[] = "network.dns.disablePrefetch";
 static const char kPrefBlockDotOnion[] = "network.dns.blockDotOnion";
 static const char kPrefDnsLocalDomains[] = "network.dns.localDomains";
 static const char kPrefDnsForceResolve[] = "network.dns.forceResolve";
 static const char kPrefDnsOfflineLocalhost[] = "network.dns.offline-localhost";
 static const char kPrefDnsNotifyResolution[] = "network.dns.notifyResolution";
-static const char kPrefNetworkProxySOCKS[] = "network.proxy.socks";
 
 //-----------------------------------------------------------------------------
 
@@ -603,8 +601,8 @@ class NotifyDNSResolution : public Runnable {
 
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS(nsDNSService, nsIDNSService, nsPIDNSService, nsIObserver,
-                  nsIMemoryReporter)
+NS_IMPL_ISUPPORTS_INHERITED(nsDNSService, DNSServiceBase, nsIDNSService,
+                            nsPIDNSService, nsIMemoryReporter)
 
 /******************************************************************************
  * nsDNSService impl:
@@ -692,7 +690,9 @@ already_AddRefed<nsDNSService> nsDNSService::GetSingleton() {
   return do_AddRef(gDNSService);
 }
 
-nsresult nsDNSService::ReadPrefs(const char* name) {
+void nsDNSService::ReadPrefs(const char* name) {
+  DNSServiceBase::ReadPrefs(name);
+
   bool tmpbool;
   uint32_t tmpint;
   mResolverPrefsUpdated = false;
@@ -735,11 +735,6 @@ nsresult nsDNSService::ReadPrefs(const char* name) {
       mOfflineLocalhost = tmpbool;
     }
   }
-  if (!name || !strcmp(name, kPrefDisablePrefetch)) {
-    if (NS_SUCCEEDED(Preferences::GetBool(kPrefDisablePrefetch, &tmpbool))) {
-      mDisablePrefetch = tmpbool;
-    }
-  }
   if (!name || !strcmp(name, kPrefBlockDotOnion)) {
     if (NS_SUCCEEDED(Preferences::GetBool(kPrefBlockDotOnion, &tmpbool))) {
       mBlockDotOnion = tmpbool;
@@ -749,12 +744,6 @@ nsresult nsDNSService::ReadPrefs(const char* name) {
     if (NS_SUCCEEDED(
             Preferences::GetBool(kPrefDnsNotifyResolution, &tmpbool))) {
       mNotifyResolution = tmpbool;
-    }
-  }
-  if (!name || !strcmp(name, kPrefNetworkProxySOCKS)) {
-    nsAutoCString socks;
-    if (NS_SUCCEEDED(Preferences::GetCString(kPrefNetworkProxySOCKS, socks))) {
-      mHasSocksProxy = !socks.IsEmpty();
     }
   }
   if (!name || !strcmp(name, kPrefIPv4OnlyDomains)) {
@@ -777,14 +766,6 @@ nsresult nsDNSService::ReadPrefs(const char* name) {
     Preferences::GetCString(kPrefDnsForceResolve, mForceResolve);
     mForceResolveOn = !mForceResolve.IsEmpty();
   }
-
-  if (StaticPrefs::network_proxy_type() ==
-      nsIProtocolProxyService::PROXYCONFIG_MANUAL) {
-    // Disable prefetching either by explicit preference or if a
-    // manual proxy is configured
-    mDisablePrefetch = true;
-  }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -823,12 +804,9 @@ nsDNSService::Init() {
     prefs->AddObserver(kPrefDnsForceResolve, this, false);
     prefs->AddObserver(kPrefDisableIPv6, this, false);
     prefs->AddObserver(kPrefDnsOfflineLocalhost, this, false);
-    prefs->AddObserver(kPrefDisablePrefetch, this, false);
     prefs->AddObserver(kPrefBlockDotOnion, this, false);
     prefs->AddObserver(kPrefDnsNotifyResolution, this, false);
-
-    // Monitor these to see if there is a change in proxy configuration
-    prefs->AddObserver(kPrefNetworkProxySOCKS, this, false);
+    AddPrefObserver(prefs);
   }
 
   nsDNSPrefetch::Initialize(this);
@@ -892,25 +870,6 @@ nsDNSService::SetPrefetchEnabled(bool inVal) {
   MutexAutoLock lock(mLock);
   mDisablePrefetch = !inVal;
   return NS_OK;
-}
-
-bool nsDNSService::DNSForbiddenByActiveProxy(const nsACString& aHostname,
-                                             uint32_t flags) {
-  if (flags & nsIDNSService::RESOLVE_IGNORE_SOCKS_DNS) {
-    return false;
-  }
-
-  // We should avoid doing DNS when a proxy is in use.
-  NetAddr tempAddr;
-  if (StaticPrefs::network_proxy_type() ==
-          nsIProtocolProxyService::PROXYCONFIG_MANUAL &&
-      mHasSocksProxy && StaticPrefs::network_proxy_socks_remote_dns()) {
-    // Allow IP lookups through, but nothing else.
-    if (!HostIsIPLiteral(aHostname)) {
-      return true;
-    }
-  }
-  return false;
 }
 
 already_AddRefed<nsHostResolver> nsDNSService::GetResolverLocked() {

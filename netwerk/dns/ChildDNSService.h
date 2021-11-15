@@ -7,8 +7,8 @@
 #ifndef mozilla_net_ChildDNSService_h
 #define mozilla_net_ChildDNSService_h
 
+#include "DNSServiceBase.h"
 #include "nsPIDNSService.h"
-#include "nsIObserver.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
 #include "DNSRequestChild.h"
@@ -21,10 +21,10 @@ namespace net {
 
 class TRRServiceParent;
 
-class ChildDNSService final : public nsPIDNSService, public nsIObserver {
+class ChildDNSService final : public DNSServiceBase, public nsPIDNSService {
  public:
   // AsyncResolve (and CancelAsyncResolve) can be called off-main
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSPIDNSSERVICE
   NS_DECL_NSIDNSSERVICE
   NS_DECL_NSIOBSERVER
@@ -53,8 +53,6 @@ class ChildDNSService final : public nsPIDNSService, public nsIObserver {
       nsIDNSResolverInfo* aResolver, nsIDNSListener* aListener,
       nsresult aReason, const OriginAttributes& aOriginAttributes);
 
-  bool mFirstTime = true;
-  bool mDisablePrefetch = false;
   bool mODoHActivated = false;
 
   // We need to remember pending dns requests to be able to cancel them.
