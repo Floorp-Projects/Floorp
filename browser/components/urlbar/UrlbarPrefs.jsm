@@ -600,7 +600,15 @@ class Preferences {
 
     try {
       this._updatingFirefoxSuggestScenario = true;
+
+      // This is called early in startup by BrowserGlue, so make sure the user's
+      // region and our Nimbus variables are initialized since the scenario may
+      // depend on them. Also note that pref migrations may depend on the
+      // scenario, and since each migration is performed only once, at startup,
+      // prefs can end up wrong if their migrations use the wrong scenario.
       await Region.init();
+      await NimbusFeatures.urlbar.ready();
+
       this._updateFirefoxSuggestScenarioHelper(isStartup, scenarioOverride);
     } finally {
       this._updatingFirefoxSuggestScenario = false;
