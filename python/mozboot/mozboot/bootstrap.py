@@ -91,7 +91,16 @@ mozilla-unified).
 Would you like to run a few configuration steps to ensure Git is
 optimally configured?"""
 
-DEBIAN_DISTROS = ("debian", "ubuntu", "linuxmint", "elementary", "neon", "pop", "kali")
+DEBIAN_DISTROS = (
+    "debian",
+    "ubuntu",
+    "linuxmint",
+    "elementary",
+    "neon",
+    "pop",
+    "kali",
+    "devuan",
+)
 
 ADD_GIT_CINNABAR_PATH = """
 To add git-cinnabar to the PATH, edit your shell initialization script, which
