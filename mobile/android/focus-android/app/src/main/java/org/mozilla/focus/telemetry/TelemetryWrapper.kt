@@ -107,7 +107,6 @@ object TelemetryWrapper {
         val HOMESCREEN_SHORTCUT = "homescreen_shortcut"
         val APP_ICON = "app_icon"
         val AUTOCOMPLETE_DOMAIN = "autocomplete_domain"
-        val AUTOFILL = "autofill"
         val SEARCH_SUGGESTION_PROMPT = "search_suggestion_prompt"
         val MAKE_DEFAULT_BROWSER_OPEN_WITH = "make_default_browser_open_with"
         val MAKE_DEFAULT_BROWSER_SETTINGS = "make_default_browser_settings"
@@ -476,15 +475,6 @@ object TelemetryWrapper {
             .extra(Extra.FROM, from.toString())
             .extra(Extra.TO, to.toString())
             .queue()
-    }
-
-    fun autofillShownEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.SHOW, Object.AUTOFILL).queue()
-    }
-
-    @JvmStatic
-    fun autofillPerformedEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.AUTOFILL).queue()
     }
 
     @JvmStatic
