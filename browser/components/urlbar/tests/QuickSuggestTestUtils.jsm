@@ -14,6 +14,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource:///modules/PartnerLinkAttribution.jsm",
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
+  ExperimentManager: "resource://nimbus/lib/ExperimentManager.jsm",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
   PartnerLinkAttribution: "resource:///modules/PartnerLinkAttribution.jsm",
   Services: "resource://gre/modules/Services.jsm",
   sinon: "resource://testing-common/Sinon.jsm",
@@ -146,6 +148,32 @@ class QSTestUtils {
     }
 
     return cleanup;
+  }
+
+  /**
+   * If you call UrlbarPrefs.updateFirefoxSuggestScenario() from an xpcshell
+   * test, you must call this first to intialize the Nimbus urlbar feature.
+   */
+  async initNimbusFeature() {
+    this.info?.("initNimbusFeature awaiting ExperimentManager.onStartup");
+    await ExperimentManager.onStartup();
+
+    this.info?.("initNimbusFeature awaiting ExperimentAPI.ready");
+    await ExperimentAPI.ready();
+
+    this.info?.(
+      "initNimbusFeature awaiting ExperimentFakes.remoteDefaultsHelper"
+    );
+    await ExperimentFakes.remoteDefaultsHelper({
+      feature: NimbusFeatures.urlbar,
+      configuration: {
+        slug: "QuickSuggestTestUtils",
+        variables: { enabled: true },
+        targeting: "true",
+      },
+    });
+
+    this.info?.("initNimbusFeature done");
   }
 
   /**
