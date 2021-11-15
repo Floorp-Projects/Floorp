@@ -402,20 +402,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PullIfNeededNativePromiseHandler)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-// Note: We have inlined the default algorithms in this implementation -- The
-// ability to gin up an UnderlyingSource callback type might be nicer, but for
-// now this will have to suffice.
-already_AddRefed<Promise> DefaultUndefinedPromise(
-    const ReadableStreamDefaultController* aController, ErrorResult& aRv) {
-  RefPtr<Promise> promise =
-      Promise::Create(aController->GetParentObject(), aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  promise->MaybeResolveWithUndefined();
-  return promise.forget();
-}
-
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-call-pull-if-needed
 MOZ_CAN_RUN_SCRIPT
 static void ReadableStreamDefaultControllerCallPullIfNeeded(
@@ -458,7 +444,8 @@ static void ReadableStreamDefaultControllerCallPullIfNeeded(
 
   RefPtr<Promise> pullPromise =
       pullAlgorithm ? pullAlgorithm->PullCallback(aCx, *aController, aRv)
-                    : DefaultUndefinedPromise(aController, aRv);
+                    : Promise::CreateResolvedWithUndefined(
+                          aController->GetParentObject(), aRv);
 
   // The below failure handling code is all about implmenting WebIDL promise
   // rejection semantics until
@@ -656,9 +643,9 @@ already_AddRefed<Promise> ReadableStreamDefaultController::CancelSteps(
   Optional<JS::Handle<JS::Value>> errorOption(aCx, aReason);
   RefPtr<UnderlyingSourceCancelCallbackHelper> callback =
       this->GetCancelAlgorithm();
-  RefPtr<Promise> result = callback
-                               ? callback->CancelCallback(aCx, errorOption, aRv)
-                               : DefaultUndefinedPromise(this, aRv);
+  RefPtr<Promise> result =
+      callback ? callback->CancelCallback(aCx, errorOption, aRv)
+               : Promise::CreateResolvedWithUndefined(GetParentObject(), aRv);
 
   // Step 3.
   ReadableStreamDefaultControllerClearAlgorithms(this);
