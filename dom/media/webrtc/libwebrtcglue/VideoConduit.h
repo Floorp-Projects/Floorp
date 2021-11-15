@@ -248,7 +248,7 @@ class WebrtcVideoConduit
   void DumpCodecDB() const;
 
   // Video Latency Test averaging filter
-  void VideoLatencyUpdate(uint64_t new_sample);
+  void VideoLatencyUpdate(uint64_t aNewSample);
 
   void CreateSendStream();
   void DeleteSendStream();
