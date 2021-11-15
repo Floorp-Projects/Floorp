@@ -1916,11 +1916,11 @@ var Policies = {
           );
         }
         if (param.Add) {
-          // Only rerun if the list of engine names has changed.
-          let engineNameList = param.Add.map(engine => engine.Name);
+          // Rerun if any engine info has changed.
+          let engineInfoHash = md5Hash(JSON.stringify(param.Add));
           await runOncePerModification(
             "addSearchEngines",
-            JSON.stringify(engineNameList),
+            engineInfoHash,
             async function() {
               for (let newEngine of param.Add) {
                 let manifest = {
@@ -1942,10 +1942,19 @@ var Policies = {
                     },
                   },
                 };
-                try {
-                  await Services.search.addPolicyEngine(manifest);
-                } catch (ex) {
-                  log.error("Unable to add search engine", ex);
+                let engine = Services.search.getEngineByName(newEngine.Name);
+                if (engine) {
+                  try {
+                    await Services.search.updatePolicyEngine(manifest);
+                  } catch (ex) {
+                    log.error("Unable to update the search engine", ex);
+                  }
+                } else {
+                  try {
+                    await Services.search.addPolicyEngine(manifest);
+                  } catch (ex) {
+                    log.error("Unable to add search engine", ex);
+                  }
                 }
               }
             }
@@ -2638,4 +2647,33 @@ function processMIMEInfo(mimeInfo, realMIMEInfo) {
     realMIMEInfo.alwaysAskBeforeHandling = mimeInfo.ask;
   }
   gHandlerService.store(realMIMEInfo);
+}
+
+// Copied from PlacesUIUtils.jsm
+
+// Keep a hasher for repeated hashings
+let gCryptoHash = null;
+
+/**
+ * Run some text through md5 and return the base64 result.
+ * @param {string} data The string to hash.
+ * @returns {string} md5 hash of the input string.
+ */
+function md5Hash(data) {
+  // Lazily create a reusable hasher
+  if (gCryptoHash === null) {
+    gCryptoHash = Cc["@mozilla.org/security/hash;1"].createInstance(
+      Ci.nsICryptoHash
+    );
+  }
+
+  gCryptoHash.init(gCryptoHash.MD5);
+
+  // Convert the data to a byte array for hashing
+  gCryptoHash.update(
+    data.split("").map(c => c.charCodeAt(0)),
+    data.length
+  );
+  // Request the has result as ASCII base64
+  return gCryptoHash.finish(true);
 }
