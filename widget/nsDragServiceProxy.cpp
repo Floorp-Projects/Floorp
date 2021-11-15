@@ -51,8 +51,8 @@ nsresult nsDragServiceProxy::InvokeDragSessionImpl(
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
   cookieJarSettings = mSourceDocument->CookieJarSettings();
-  net::CookieJarSettingsArgs csArgs;
-  net::CookieJarSettings::Cast(cookieJarSettings)->Serialize(csArgs);
+  mozilla::net::CookieJarSettingsArgs csArgs;
+  mozilla::net::CookieJarSettings::Cast(cookieJarSettings)->Serialize(csArgs);
 
   LayoutDeviceIntRect dragRect;
   if (mHasImage || mSelection) {

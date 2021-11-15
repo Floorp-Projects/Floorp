@@ -54,6 +54,8 @@ class HeadlessThemeGTK final : private nsNativeTheme, public nsITheme {
   ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
                                    Overlay) override;
 
+  bool ThemeSupportsScrollbarButtons() override { return true; }
+
  protected:
   virtual ~HeadlessThemeGTK() = default;
 };

@@ -64,7 +64,6 @@ UNIFIED_SOURCES += [
     "nsMenuItemX.mm",
     "nsMenuUtilsX.mm",
     "nsMenuX.mm",
-    "nsNativeBasicThemeCocoa.cpp",
     "nsPrintDialogX.mm",
     "nsPrintSettingsServiceX.mm",
     "nsPrintSettingsX.mm",
@@ -113,6 +112,7 @@ include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
+    "/dom/events",
     "/dom/media/platforms/apple",
     "/layout/base",
     "/layout/forms",
