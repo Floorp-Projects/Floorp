@@ -449,3 +449,13 @@ bool ScrollbarDrawingCocoa::PaintScrollCorner(WebRenderBackendData& aWrData,
                       aDpiRatio);
   return true;
 }
+
+void ScrollbarDrawingCocoa::RecomputeScrollbarParams() {
+  uint32_t defaultSize = 17;
+  uint32_t overrideSize =
+      StaticPrefs::widget_non_native_theme_scrollbar_size_override();
+  if (overrideSize > 0) {
+    defaultSize = overrideSize;
+  }
+  mHorizontalScrollbarHeight = mVerticalScrollbarWidth = defaultSize;
+}
