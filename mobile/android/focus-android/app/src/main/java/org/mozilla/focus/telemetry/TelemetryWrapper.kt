@@ -78,7 +78,6 @@ object TelemetryWrapper {
         val TYPE_QUERY = "type_query"
         val TYPE_SELECT_QUERY = "select_query"
         val CLICK = "click"
-        val SWIPE = "swipe"
         val CANCEL = "cancel"
         val LONG_PRESS = "long_press"
         val CHANGE = "change"
@@ -133,7 +132,6 @@ object TelemetryWrapper {
         val TAB = "tab"
         val WHATS_NEW = "whats_new"
         val RESUME = "resume"
-        val RELOAD = "refresh"
         val FULL_BROWSER = "full_browser"
         val REPORT_ISSUE = "report_issue"
         val SETTINGS = "settings"
@@ -456,11 +454,6 @@ object TelemetryWrapper {
     @JvmStatic
     fun finishFirstRunEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.FIRSTRUN, Value.FINISH).queue()
-    }
-
-    @JvmStatic
-    fun swipeReloadEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.SWIPE, Object.BROWSER, Value.RELOAD).queue()
     }
 
     @JvmStatic
