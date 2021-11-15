@@ -735,11 +735,6 @@ void nsTextControlFrame::ReflowTextControlChild(
   // or percentage, if we're not the button box.
   auto overridePadding =
       isButtonBox ? Nothing() : Some(aReflowInput.ComputedLogicalPadding(wm));
-  if (!isButtonBox && aButtonBoxISize) {
-    // Button box respects inline-end-padding, so we don't need to.
-    overridePadding->IEnd(outerWM) = 0;
-  }
-
   // We want to let our button box fill the frame in the block axis, up to the
   // edge of the control's border. So, we use the control's padding-box as the
   // containing block size for our button box.
@@ -748,6 +743,8 @@ void nsTextControlFrame::ReflowTextControlChild(
   kidReflowInput.Init(aPresContext, overrideCBSize, Nothing(), overridePadding);
 
   LogicalPoint position(wm);
+  const auto& bp = aReflowInput.ComputedLogicalBorderPadding(outerWM);
+
   if (!isButtonBox) {
     MOZ_ASSERT(wm == outerWM,
                "Shouldn't have to care about orthogonal "
@@ -755,13 +752,10 @@ void nsTextControlFrame::ReflowTextControlChild(
                "except for the number spin-box which forces "
                "horizontal-tb");
 
-    const auto& border = aReflowInput.ComputedLogicalBorder(wm);
-
-    // Offset the frame by the size of the parent's border. Note that we don't
-    // have to account for the parent's padding here, because this child
-    // actually "inherits" that padding and manages it on behalf of the parent.
-    position.B(wm) = border.BStart(wm);
-    position.I(wm) = border.IStart(wm);
+    // Offset the frame by the size of the parent's border
+    const auto& padding = aReflowInput.ComputedLogicalPadding(wm);
+    position.B(wm) = bp.BStart(wm) - padding.BStart(wm);
+    position.I(wm) = bp.IStart(wm) - padding.IStart(wm);
 
     // Set computed width and computed height for the child (the button box is
     // the only exception, which has an auto size).
@@ -779,7 +773,6 @@ void nsTextControlFrame::ReflowTextControlChild(
               containerSize, ReflowChildFlags::Default, aStatus);
 
   if (isButtonBox) {
-    const auto& bp = aReflowInput.ComputedLogicalBorderPadding(outerWM);
     auto size = desiredSize.Size(outerWM);
     // Center button in the block axis of our content box. We do this
     // computation in terms of outerWM for simplicity.
