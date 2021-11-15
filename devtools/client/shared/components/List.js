@@ -114,7 +114,7 @@ class ListItemClass extends Component {
         }`,
         id: item.key,
         onClick,
-        onKeyDownCapture: active && this._onKeyDown,
+        onKeyDownCapture: active ? this._onKeyDown : null,
       },
       div(
         {
