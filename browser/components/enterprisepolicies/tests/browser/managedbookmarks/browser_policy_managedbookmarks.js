@@ -190,4 +190,11 @@ add_task(async function test_copy_managedbookmark() {
       }
     );
   });
+
+  let popupHidden = BrowserTestUtils.waitForEvent(
+    managedBookmarksMenu.menupopup,
+    "popuphidden"
+  );
+  managedBookmarksMenu.menupopup.hidePopup();
+  await popupHidden;
 });
