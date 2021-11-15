@@ -241,7 +241,8 @@ nsresult HTMLSelectOptionAccessible::HandleAccEvent(AccEvent* aEvent) {
 
   AccStateChangeEvent* event = downcast_accEvent(aEvent);
   if (event && (event->GetState() == states::SELECTED)) {
-    if (!ContainerWidget()->AreItemsOperable()) {
+    LocalAccessible* widget = ContainerWidget();
+    if (widget && !widget->AreItemsOperable()) {
       // Collapsed options' ACTIVE state reflects their SELECT state.
       nsEventShell::FireEvent(this, states::ACTIVE, event->IsStateEnabled(),
                               true);
