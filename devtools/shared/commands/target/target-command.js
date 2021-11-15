@@ -570,11 +570,7 @@ class TargetCommand extends EventEmitter {
 
   getTargetType(target) {
     const { typeName } = target;
-    // @backward-compat { version 94 } Fx 94 renamed typeName from browsingContextTarget to windowGlobalTarget
-    if (
-      typeName == "windowGlobalTarget" ||
-      typeName == "browsingContextTarget"
-    ) {
+    if (typeName == "windowGlobalTarget") {
       return TargetCommand.TYPES.FRAME;
     }
 
