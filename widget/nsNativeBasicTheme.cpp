@@ -1458,16 +1458,39 @@ bool nsNativeBasicTheme::ThemeSupportsScrollbarButtons() {
 already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
   static mozilla::StaticRefPtr<nsITheme> gInstance;
   if (MOZ_UNLIKELY(!gInstance)) {
+    UniquePtr<ScrollbarDrawing> scrollbarDrawing = nullptr;
+    switch (StaticPrefs::widget_non_native_theme_scrollbar_style()) {
+      case 1:
+        scrollbarDrawing = MakeUnique<ScrollbarDrawingCocoa>();
+        break;
+      case 2:
+        scrollbarDrawing = MakeUnique<ScrollbarDrawingGTK>();
+        break;
+      case 3:
+        scrollbarDrawing = MakeUnique<ScrollbarDrawingAndroid>();
+        break;
+      case 4:
+        scrollbarDrawing = MakeUnique<ScrollbarDrawingWin>();
+        break;
+      default:
 #ifdef XP_WIN
-    gInstance = new nsNativeBasicTheme(MakeUnique<ScrollbarDrawingWin>());
+        scrollbarDrawing = MakeUnique<ScrollbarDrawingWin>();
 #elif MOZ_WIDGET_COCOA
-    gInstance =
-        new nsNativeBasicThemeCocoa(MakeUnique<ScrollbarDrawingCocoa>());
+        scrollbarDrawing = MakeUnique<ScrollbarDrawingCocoa>();
 #elif MOZ_WIDGET_GTK
-    gInstance = new nsNativeBasicTheme(MakeUnique<ScrollbarDrawingGTK>());
+        scrollbarDrawing = MakeUnique<ScrollbarDrawingGTK>();
 #elif ANDROID
-    gInstance = new nsNativeBasicTheme(MakeUnique<ScrollbarDrawingAndroid>());
+        scrollbarDrawing = MakeUnique<ScrollbarDrawingAndroid>();
 #endif
+        break;
+    }
+
+#ifdef MOZ_WIDGET_COCOA
+    gInstance = new nsNativeBasicThemeCocoa(std::move(scrollbarDrawing));
+#else
+    gInstance = new nsNativeBasicTheme(std::move(scrollbarDrawing));
+#endif
+
     ClearOnShutdown(&gInstance);
   }
   return do_AddRef(gInstance);
