@@ -7936,35 +7936,36 @@ void CodeGenerator::visitWasmCall(LWasmCall* lir) {
 
   const wasm::CallSiteDesc& desc = mir->desc();
   const wasm::CalleeDesc& callee = mir->callee();
+  CodeOffset retOffset;
   switch (callee.which()) {
     case wasm::CalleeDesc::Func:
-      masm.call(desc, callee.funcIndex());
+      retOffset = masm.call(desc, callee.funcIndex());
       reloadRegs = false;
       switchRealm = false;
       break;
     case wasm::CalleeDesc::Import:
-      masm.wasmCallImport(desc, callee);
+      retOffset = masm.wasmCallImport(desc, callee);
       break;
     case wasm::CalleeDesc::AsmJSTable:
     case wasm::CalleeDesc::WasmTable:
-      masm.wasmCallIndirect(desc, callee, needsBoundsCheck);
+      retOffset = masm.wasmCallIndirect(desc, callee, needsBoundsCheck);
       reloadRegs = switchRealm = callee.which() == wasm::CalleeDesc::WasmTable;
       break;
     case wasm::CalleeDesc::Builtin:
-      masm.call(desc, callee.builtin());
+      retOffset = masm.call(desc, callee.builtin());
       reloadRegs = false;
       switchRealm = false;
       break;
     case wasm::CalleeDesc::BuiltinInstanceMethod:
-      masm.wasmCallBuiltinInstanceMethod(desc, mir->instanceArg(),
-                                         callee.builtin(),
-                                         mir->builtinMethodFailureMode());
+      retOffset = masm.wasmCallBuiltinInstanceMethod(
+          desc, mir->instanceArg(), callee.builtin(),
+          mir->builtinMethodFailureMode());
       switchRealm = false;
       break;
   }
 
   // Note the assembler offset for the associated LSafePoint.
-  markSafepointAt(masm.currentOffset(), lir);
+  markSafepointAt(retOffset.offset(), lir);
 
   // Now that all the outbound in-memory args are on the stack, note the
   // required lower boundary point of the associated StackMap.
