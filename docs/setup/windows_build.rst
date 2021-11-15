@@ -21,22 +21,28 @@ Requirements
 1. System preparation
 ---------------------
 
-1.1 Install Visual Studio
-~~~~~~~~~~~~~~~~~~~~~~~~~
+1.1 Install Visual Studio Build Tools
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`Download and install the Community edition
-<https://visualstudio.microsoft.com/downloads/>`_ of Visual
-Studio 2019. If you have the Professional or Enterprise edition, that
-is also supported.
-
+`Download and install the Build Tools for Visual Studio 2022
+<https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022>`_.
+If you have a full install of Visual Studio (Community/Professional/Enterprise),
+that is also supported.
 Ensure you've checked the following items for installation:
 
 -  In the Workloads tab:
     -  Desktop development with C++.
-    -  Game development with C++.
 -  In the Individual components tab:
-    -  Windows 10 SDK (at least **10.0.17134.0**).
-    -  C++ ATL for v142 build tools (x86 and x64).
+    -  Windows 10 SDK (at least **10.0.19041.0**).
+    -  C++ ATL for v143 build tools (x86 and x64).
+
+.. note::
+
+    The recommended Visual Studio version and components has recently changed. If you run
+    into unexpected build errors, you should `report a bug
+    <https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox%20Build%20System&component=General>`_
+    or ask about it in the ``#build`` Matrix channel - the solution may be to downgrade back to
+    `Visual Studio 2019 <https://docs.microsoft.com/en-ca/visualstudio/releases/2019/release-notes>`_.
 
 1.2 Install MozillaBuild
 ~~~~~~~~~~~~~~~~~~~~~~~~
