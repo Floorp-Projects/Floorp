@@ -648,8 +648,6 @@
       var position = event.alignmentPosition;
       var offset = event.alignmentOffset;
 
-      this.setAttribute("arrowposition", position);
-
       // if this panel has a "sliding" arrow, we may have previously set margins...
       arrowbox.style.removeProperty("transform");
       if (position.indexOf("start_") == 0 || position.indexOf("end_") == 0) {
