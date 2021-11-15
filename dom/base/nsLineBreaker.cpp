@@ -11,11 +11,12 @@
 #include "nsHyphenator.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/intl/LineBreaker.h"
+#include "mozilla/intl/LineBreaker.h"  // for LineBreaker::ComputeBreakPositions
 #include "mozilla/intl/Locale.h"
 
 using mozilla::AutoRestore;
 using mozilla::intl::LineBreaker;
+using mozilla::intl::LineBreakRule;
 using mozilla::intl::Locale;
 using mozilla::intl::LocaleParser;
 using mozilla::intl::WordBreakRule;
@@ -28,7 +29,7 @@ nsLineBreaker::nsLineBreaker()
       mAfterBreakableSpace(false),
       mBreakHere(false),
       mWordBreak(WordBreakRule::Normal),
-      mStrictness(LineBreaker::Strictness::Auto),
+      mLineBreak(LineBreakRule::Auto),
       mWordContinuation(false) {}
 
 nsLineBreaker::~nsLineBreaker() {
@@ -69,7 +70,7 @@ nsresult nsLineBreaker::FlushCurrentWord() {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  if (mStrictness == LineBreaker::Strictness::Anywhere) {
+  if (mLineBreak == LineBreakRule::Anywhere) {
     memset(breakState.Elements(),
            gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NORMAL,
            length * sizeof(uint8_t));
@@ -83,7 +84,7 @@ nsresult nsLineBreaker::FlushCurrentWord() {
            length * sizeof(uint8_t));
   } else {
     LineBreaker::ComputeBreakPositions(
-        mCurrentWord.Elements(), length, mWordBreak, mStrictness,
+        mCurrentWord.Elements(), length, mWordBreak, mLineBreak,
         mScriptIsChineseOrJapanese, breakState.Elements());
   }
 
@@ -245,7 +246,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
       breakState[offset] =
           mBreakHere || (mAfterBreakableSpace && !isBreakableSpace) ||
                   mWordBreak == WordBreakRule::BreakAll ||
-                  mStrictness == LineBreaker::Strictness::Anywhere
+                  mLineBreak == LineBreakRule::Anywhere
               ? gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NORMAL
               : gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NONE;
     }
@@ -255,7 +256,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
     if (isSpace || ch == '\n') {
       if (offset > wordStart && aSink) {
         if (!(aFlags & BREAK_SUPPRESS_INSIDE)) {
-          if (mStrictness == LineBreaker::Strictness::Anywhere) {
+          if (mLineBreak == LineBreakRule::Anywhere) {
             memset(breakState.Elements() + wordStart,
                    gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NORMAL,
                    offset - wordStart);
@@ -264,7 +265,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
             // will set it to false.
             AutoRestore<uint8_t> saveWordStartBreakState(breakState[wordStart]);
             LineBreaker::ComputeBreakPositions(
-                aText + wordStart, offset - wordStart, mWordBreak, mStrictness,
+                aText + wordStart, offset - wordStart, mWordBreak, mLineBreak,
                 mScriptIsChineseOrJapanese, breakState.Elements() + wordStart);
           }
           if (hyphenator) {
@@ -410,7 +411,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
       breakState[offset] =
           mBreakHere || (mAfterBreakableSpace && !isBreakableSpace) ||
                   mWordBreak == WordBreakRule::BreakAll ||
-                  mStrictness == LineBreaker::Strictness::Anywhere
+                  mLineBreak == LineBreakRule::Anywhere
               ? gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NORMAL
               : gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NONE;
     }
@@ -419,7 +420,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
 
     if (isSpace) {
       if (offset > wordStart && aSink && !(aFlags & BREAK_SUPPRESS_INSIDE)) {
-        if (mStrictness == LineBreaker::Strictness::Anywhere) {
+        if (mLineBreak == LineBreakRule::Anywhere) {
           memset(breakState.Elements() + wordStart,
                  gfxTextRun::CompressedGlyph::FLAG_BREAK_TYPE_NORMAL,
                  offset - wordStart);
@@ -428,7 +429,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
           // will set it to false.
           AutoRestore<uint8_t> saveWordStartBreakState(breakState[wordStart]);
           LineBreaker::ComputeBreakPositions(
-              aText + wordStart, offset - wordStart, mWordBreak, mStrictness,
+              aText + wordStart, offset - wordStart, mWordBreak, mLineBreak,
               mScriptIsChineseOrJapanese, breakState.Elements() + wordStart);
         }
       }

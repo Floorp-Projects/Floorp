@@ -10,6 +10,7 @@
 #include "nsTArray.h"
 #include "nsUnicodeProperties.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/intl/Segmenter.h"
 
 using namespace mozilla::unicode;
 using namespace mozilla::intl;
@@ -377,7 +378,7 @@ static inline bool IS_HYPHEN(char16_t u) {
           u == 0x058A);  // ARMENIAN HYPHEN
 }
 
-static int8_t GetClass(uint32_t u, LineBreaker::Strictness aLevel,
+static int8_t GetClass(uint32_t u, LineBreakRule aLevel,
                        bool aIsChineseOrJapanese) {
   // Mapping for Unicode LineBreak.txt classes to the (simplified) set of
   // character classes used here.
@@ -443,12 +444,12 @@ static int8_t GetClass(uint32_t u, LineBreaker::Strictness aLevel,
   // Overrides based on rules for the different line-break values given in
   // https://drafts.csswg.org/css-text-3/#line-break-property
   switch (aLevel) {
-    case LineBreaker::Strictness::Auto:
+    case LineBreakRule::Auto:
       // For now, just use legacy Gecko behavior.
       // XXX Possible enhancement - vary strictness according to line width
       // or other criteria.
       break;
-    case LineBreaker::Strictness::Strict:
+    case LineBreakRule::Strict:
       if (cls == U_LB_CONDITIONAL_JAPANESE_STARTER ||
           (u == 0x3095 || u == 0x3096 || u == 0x30f5 || u == 0x30f6)) {
         return CLASS_CLOSE;
@@ -472,7 +473,7 @@ static int8_t GetClass(uint32_t u, LineBreaker::Strictness aLevel,
         }
       }
       break;
-    case LineBreaker::Strictness::Normal:
+    case LineBreakRule::Normal:
       if (cls == U_LB_CONDITIONAL_JAPANESE_STARTER) {
         return CLASS_BREAKABLE;
       }
@@ -495,7 +496,7 @@ static int8_t GetClass(uint32_t u, LineBreaker::Strictness aLevel,
         }
       }
       break;
-    case LineBreaker::Strictness::Loose:
+    case LineBreakRule::Loose:
       if (cls == U_LB_CONDITIONAL_JAPANESE_STARTER) {
         return CLASS_BREAKABLE;
       }
@@ -523,7 +524,7 @@ static int8_t GetClass(uint32_t u, LineBreaker::Strictness aLevel,
         }
       }
       break;
-    case LineBreaker::Strictness::Anywhere:
+    case LineBreakRule::Anywhere:
       MOZ_ASSERT_UNREACHABLE("should have been handled already");
       break;
   }
@@ -826,8 +827,7 @@ class ContextState {
 };
 
 static int8_t ContextualAnalysis(char32_t prev, char32_t cur, char32_t next,
-                                 ContextState& aState,
-                                 LineBreaker::Strictness aLevel,
+                                 ContextState& aState, LineBreakRule aLevel,
                                  bool aIsChineseOrJapanese) {
   // Don't return CLASS_OPEN/CLASS_CLOSE if aState.UseJISX4051 is FALSE.
 
@@ -942,7 +942,7 @@ int32_t LineBreaker::Next(const char16_t* aText, uint32_t aLen, uint32_t aPos) {
     // pretended earlier.
     breakState.AppendElements(end - begin);
     ComputeBreakPositions(aText + begin, end - begin, WordBreakRule::Normal,
-                          Strictness::Auto, false, breakState.Elements());
+                          LineBreakRule::Auto, false, breakState.Elements());
 
     ret = aPos;
     do {
@@ -983,7 +983,7 @@ static bool SuppressBreakForKeepAll(uint32_t aPrev, uint32_t aCh) {
 
 void LineBreaker::ComputeBreakPositions(
     const char16_t* aChars, uint32_t aLength, WordBreakRule aWordBreak,
-    Strictness aLevel, bool aIsChineseOrJapanese, uint8_t* aBreakBefore) {
+    LineBreakRule aLevel, bool aIsChineseOrJapanese, uint8_t* aBreakBefore) {
   uint32_t cur;
   int8_t lastClass = CLASS_NONE;
   ContextState state(aChars, aLength);
@@ -1110,7 +1110,7 @@ void LineBreaker::ComputeBreakPositions(
 
 void LineBreaker::ComputeBreakPositions(const uint8_t* aChars, uint32_t aLength,
                                         WordBreakRule aWordBreak,
-                                        Strictness aLevel,
+                                        LineBreakRule aLevel,
                                         bool aIsChineseOrJapanese,
                                         uint8_t* aBreakBefore) {
   uint32_t cur;
