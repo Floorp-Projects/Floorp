@@ -312,7 +312,10 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
       return false;
     }
 
-    return this._form.useChildTargetToFetchChildren;
+    // @backward-compat { version 94 } useChildTargetToFetchChildren was added in 94, so
+    // we still need to check for `remoteFrame` when connecting to older server.
+    // When 94 is in release, we can check useChildTargetToFetchChildren only
+    return this._form.useChildTargetToFetchChildren || this._form.remoteFrame;
   }
   get hasEventListeners() {
     return this._form.hasEventListeners;
