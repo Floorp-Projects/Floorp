@@ -47,10 +47,8 @@ class AccessibleFront extends FrontClassWithSpec(accessibleSpec) {
     if (!BROWSER_TOOLBOX_FISSION_ENABLED && this.targetFront.isParentProcess) {
       return false;
     }
-    // @backward-compat { version 94 } useChildTargetToFetchChildren was added in 94, so
-    // we still need to check for `remoteFrame` when connecting to older server.
-    // When 94 is in release, we can check useChildTargetToFetchChildren only
-    return this._form.useChildTargetToFetchChildren || this._form.remoteFrame;
+
+    return this._form.useChildTargetToFetchChildren;
   }
 
   get role() {
