@@ -59,7 +59,7 @@ struct js::gc::FinalizePhase {
  * Finalization order for objects swept incrementally on the main thread.
  */
 static constexpr FinalizePhase ForegroundObjectFinalizePhase = {
-    gcstats::PhaseKind::SWEEP_OBJECT,
+    gcstats::PhaseKind::FINALIZE_OBJECT,
     {AllocKind::OBJECT0, AllocKind::OBJECT2, AllocKind::OBJECT4,
      AllocKind::OBJECT8, AllocKind::OBJECT12, AllocKind::OBJECT16}};
 
@@ -67,33 +67,25 @@ static constexpr FinalizePhase ForegroundObjectFinalizePhase = {
  * Finalization order for GC things swept incrementally on the main thread.
  */
 static constexpr FinalizePhase ForegroundNonObjectFinalizePhase = {
-    gcstats::PhaseKind::SWEEP_SCRIPT, {AllocKind::SCRIPT, AllocKind::JITCODE}};
+    gcstats::PhaseKind::FINALIZE_NON_OBJECT,
+    {AllocKind::SCRIPT, AllocKind::JITCODE}};
 
 /*
  * Finalization order for GC things swept on the background thread.
  */
 static constexpr FinalizePhase BackgroundFinalizePhases[] = {
-    {gcstats::PhaseKind::SWEEP_OBJECT,
+    {gcstats::PhaseKind::FINALIZE_OBJECT,
      {AllocKind::FUNCTION, AllocKind::FUNCTION_EXTENDED,
       AllocKind::OBJECT0_BACKGROUND, AllocKind::OBJECT2_BACKGROUND,
       AllocKind::ARRAYBUFFER4, AllocKind::OBJECT4_BACKGROUND,
       AllocKind::ARRAYBUFFER8, AllocKind::OBJECT8_BACKGROUND,
       AllocKind::ARRAYBUFFER12, AllocKind::OBJECT12_BACKGROUND,
       AllocKind::ARRAYBUFFER16, AllocKind::OBJECT16_BACKGROUND}},
-    {gcstats::PhaseKind::SWEEP_SCOPE,
-     {
-         AllocKind::SCOPE,
-     }},
-    {gcstats::PhaseKind::SWEEP_REGEXP_SHARED,
-     {
-         AllocKind::REGEXP_SHARED,
-     }},
-    {gcstats::PhaseKind::SWEEP_STRING,
-     {AllocKind::FAT_INLINE_STRING, AllocKind::STRING,
-      AllocKind::EXTERNAL_STRING, AllocKind::FAT_INLINE_ATOM, AllocKind::ATOM,
-      AllocKind::SYMBOL, AllocKind::BIGINT}},
-    {gcstats::PhaseKind::SWEEP_SHAPE,
-     {AllocKind::SHAPE, AllocKind::BASE_SHAPE, AllocKind::GETTER_SETTER,
+    {gcstats::PhaseKind::FINALIZE_NON_OBJECT,
+     {AllocKind::SCOPE, AllocKind::REGEXP_SHARED, AllocKind::FAT_INLINE_STRING,
+      AllocKind::STRING, AllocKind::EXTERNAL_STRING, AllocKind::FAT_INLINE_ATOM,
+      AllocKind::ATOM, AllocKind::SYMBOL, AllocKind::BIGINT, AllocKind::SHAPE,
+      AllocKind::BASE_SHAPE, AllocKind::GETTER_SETTER,
       AllocKind::COMPACT_PROP_MAP, AllocKind::NORMAL_PROP_MAP,
       AllocKind::DICT_PROP_MAP}}};
 
@@ -1944,7 +1936,8 @@ IncrementalProgress GCRuntime::finalizeAllocKind(JSFreeOp* fop,
 
 IncrementalProgress GCRuntime::sweepPropMapTree(JSFreeOp* fop,
                                                 SliceBudget& budget) {
-  // Remove dead SharedPropMaps from the tree, but don't finalize them yet.
+  // Remove dead SharedPropMaps from the tree. This happens incrementally on the
+  // main thread. PropMaps are finalized later on the a background thread.
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_PROP_MAP);
 
