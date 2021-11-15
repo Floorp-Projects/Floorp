@@ -8241,11 +8241,17 @@ bool nsDisplayBackdropFilters::CreateWebRenderCommands(
   WrFiltersHolder wrFilters;
   Maybe<nsRect> filterClip;
   auto filterChain = mFrame->StyleEffects()->mBackdropFilters.AsSpan();
+  bool initialized = true;
   if (!SVGIntegrationUtils::CreateWebRenderCSSFilters(filterChain, mFrame,
                                                       wrFilters) &&
-      !SVGIntegrationUtils::BuildWebRenderFilters(mFrame, filterChain,
-                                                  wrFilters, filterClip)) {
+      !SVGIntegrationUtils::BuildWebRenderFilters(
+          mFrame, filterChain, wrFilters, filterClip, initialized)) {
     return false;
+  }
+
+  if (!initialized) {
+    // draw nothing
+    return true;
   }
 
   nsCSSRendering::ImageLayerClipState clip;
@@ -8352,12 +8358,18 @@ bool nsDisplayFilters::CreateWebRenderCommands(
 
   WrFiltersHolder wrFilters;
   Maybe<nsRect> filterClip;
+  bool initialized = true;
   auto filterChain = mFrame->StyleEffects()->mFilters.AsSpan();
   if (!SVGIntegrationUtils::CreateWebRenderCSSFilters(filterChain, mFrame,
                                                       wrFilters) &&
-      !SVGIntegrationUtils::BuildWebRenderFilters(mFrame, filterChain,
-                                                  wrFilters, filterClip)) {
+      !SVGIntegrationUtils::BuildWebRenderFilters(
+          mFrame, filterChain, wrFilters, filterClip, initialized)) {
     return false;
+  }
+
+  if (!initialized) {
+    // draw nothing
+    return true;
   }
 
   wr::WrStackingContextClip clip{};

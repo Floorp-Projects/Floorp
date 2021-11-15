@@ -222,7 +222,8 @@ class SVGIntegrationUtils final {
   static bool BuildWebRenderFilters(nsIFrame* aFilteredFrame,
                                     Span<const StyleFilter> aFilters,
                                     WrFiltersHolder& aWrFilters,
-                                    Maybe<nsRect>& aPostFilterClip);
+                                    Maybe<nsRect>& aPostFilterClip,
+                                    bool& aInitialized);
 
   /**
    * Check if the filters present on |aFrame| are supported by WebRender.
