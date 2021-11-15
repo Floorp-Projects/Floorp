@@ -743,8 +743,6 @@ void nsTextControlFrame::ReflowTextControlChild(
   kidReflowInput.Init(aPresContext, overrideCBSize, Nothing(), overridePadding);
 
   LogicalPoint position(wm);
-  const auto& bp = aReflowInput.ComputedLogicalBorderPadding(outerWM);
-
   if (!isButtonBox) {
     MOZ_ASSERT(wm == outerWM,
                "Shouldn't have to care about orthogonal "
@@ -752,10 +750,13 @@ void nsTextControlFrame::ReflowTextControlChild(
                "except for the number spin-box which forces "
                "horizontal-tb");
 
-    // Offset the frame by the size of the parent's border
-    const auto& padding = aReflowInput.ComputedLogicalPadding(wm);
-    position.B(wm) = bp.BStart(wm) - padding.BStart(wm);
-    position.I(wm) = bp.IStart(wm) - padding.IStart(wm);
+    const auto& border = aReflowInput.ComputedLogicalBorder(wm);
+
+    // Offset the frame by the size of the parent's border. Note that we don't
+    // have to account for the parent's padding here, because this child
+    // actually "inherits" that padding and manages it on behalf of the parent.
+    position.B(wm) = border.BStart(wm);
+    position.I(wm) = border.IStart(wm);
 
     // Set computed width and computed height for the child (the button box is
     // the only exception, which has an auto size).
@@ -773,6 +774,7 @@ void nsTextControlFrame::ReflowTextControlChild(
               containerSize, ReflowChildFlags::Default, aStatus);
 
   if (isButtonBox) {
+    const auto& bp = aReflowInput.ComputedLogicalBorderPadding(outerWM);
     auto size = desiredSize.Size(outerWM);
     // Center button in the block axis of our content box. We do this
     // computation in terms of outerWM for simplicity.
