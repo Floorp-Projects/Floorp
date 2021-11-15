@@ -7,18 +7,6 @@ const { CustomizableUITestUtils } = ChromeUtils.import(
 );
 let gCUITestUtils = new CustomizableUITestUtils(window);
 
-registerCleanupFunction(() => {
-  Services.prefs.clearUserPref(
-    "browser.policies.runonce.setDefaultSearchEngine"
-  );
-  Services.prefs.clearUserPref(
-    "browser.policies.runonce.setDefaultPrivateSearchEngine"
-  );
-  Services.prefs.clearUserPref(
-    "browser.policies.runOncePerModification.addSearchEngines"
-  );
-});
-
 add_task(async function test_setup() {
   await gCUITestUtils.addSearchBar();
   registerCleanupFunction(() => {
@@ -385,6 +373,57 @@ add_task(async function test_install_with_encoding() {
     engine.wrappedJSObject.queryCharset,
     "windows-1252",
     "Should have correct encoding"
+  );
+
+  // Clean up
+  await Services.search.removeEngine(engine);
+  EnterprisePolicyTesting.resetRunOnceState();
+});
+
+add_task(async function test_install_and_update() {
+  await setupPolicyEngineWithJson({
+    policies: {
+      SearchEngines: {
+        Add: [
+          {
+            Name: "ToUpdate",
+            URLTemplate: "http://initial.example.com/?q={searchTerms}",
+          },
+        ],
+      },
+    },
+  });
+  // Get in line, because the Search policy callbacks are async.
+  await TestUtils.waitForTick();
+
+  let engine = Services.search.getEngineByName("ToUpdate");
+  isnot(engine, null, "Specified search engine should be installed");
+
+  is(
+    engine.getSubmission("test").uri.spec,
+    "http://initial.example.com/?q=test",
+    "Initial submission URL should be correct."
+  );
+
+  await setupPolicyEngineWithJson({
+    policies: {
+      SearchEngines: {
+        Add: [
+          {
+            Name: "ToUpdate",
+            URLTemplate: "http://update.example.com/?q={searchTerms}",
+          },
+        ],
+      },
+    },
+  });
+  // Get in line, because the Search policy callbacks are async.
+  await TestUtils.waitForTick();
+
+  is(
+    engine.getSubmission("test").uri.spec,
+    "http://update.example.com/?q=test",
+    "Updated Submission URL should be correct."
   );
 
   // Clean up
