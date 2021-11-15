@@ -9,6 +9,7 @@
 #include "js/Value.h"
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/dom/ReadableStream.h"
+#include "mozilla/dom/ReadableStreamTee.h"
 #include "mozilla/dom/Promise.h"
 
 namespace mozilla::dom {
@@ -26,6 +27,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TeeState)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBranch1)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBranch2)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCancelPromise)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPullAlgorithm)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TeeState)
@@ -34,6 +36,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TeeState)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBranch1)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBranch2)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCancelPromise)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPullAlgorithm)
   tmp->mReason1.setNull();
   tmp->mReason2.setNull();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -75,6 +78,11 @@ already_AddRefed<TeeState> TeeState::Create(JSContext* aCx,
   teeState->SetCancelPromise(promise);
 
   return teeState.forget();
+}
+
+void TeeState::SetPullAlgorithm(
+    ReadableStreamDefaultTeePullAlgorithm* aPullAlgorithm) {
+  mPullAlgorithm = aPullAlgorithm;
 }
 
 }  // namespace mozilla::dom
