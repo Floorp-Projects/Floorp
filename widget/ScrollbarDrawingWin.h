@@ -43,6 +43,8 @@ class ScrollbarDrawingWin final : public ScrollbarDrawing {
                            const EventStates& aElementState,
                            const EventStates& aDocumentState, const Colors&,
                            const DPIRatio&) override;
+
+  void RecomputeScrollbarParams() override;
 };
 
 }  // namespace mozilla::widget

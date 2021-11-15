@@ -150,3 +150,20 @@ bool ScrollbarDrawingWin::PaintScrollbarThumb(
                                aElementState, aDocumentState, aColors,
                                aDpiRatio);
 }
+
+void ScrollbarDrawingWin::RecomputeScrollbarParams() {
+  uint32_t defaultSize = 17;
+  uint32_t overrideSize =
+      StaticPrefs::widget_non_native_theme_scrollbar_size_override();
+  if (overrideSize > 0) {
+    defaultSize = overrideSize;
+  }
+  mHorizontalScrollbarHeight = mVerticalScrollbarWidth = defaultSize;
+
+  if (StaticPrefs::widget_non_native_theme_win_scrollbar_use_system_size()) {
+    mHorizontalScrollbarHeight = LookAndFeel::GetInt(
+        LookAndFeel::IntID::SystemHorizontalScrollbarHeight, defaultSize);
+    mVerticalScrollbarWidth = LookAndFeel::GetInt(
+        LookAndFeel::IntID::SystemVerticalScrollbarWidth, defaultSize);
+  }
+}

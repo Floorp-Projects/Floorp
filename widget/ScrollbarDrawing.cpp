@@ -21,9 +21,6 @@ using namespace mozilla::widget;
 using ScrollbarParams = ScrollbarDrawing::ScrollbarParams;
 using mozilla::RelativeLuminanceUtils;
 
-uint32_t ScrollbarDrawing::sHorizontalScrollbarHeight = 0;
-uint32_t ScrollbarDrawing::sVerticalScrollbarWidth = 0;
-
 /* static */
 auto ScrollbarDrawing::GetDPIRatioForScrollbarPart(nsPresContext* aPc)
     -> DPIRatio {
@@ -86,8 +83,8 @@ bool ScrollbarDrawing::IsScrollbarWidthThin(nsIFrame* aFrame) {
 auto ScrollbarDrawing::GetScrollbarSizes(nsPresContext* aPresContext,
                                          StyleScrollbarWidth aWidth, Overlay)
     -> ScrollbarSizes {
-  uint32_t h = sHorizontalScrollbarHeight;
-  uint32_t w = sVerticalScrollbarWidth;
+  uint32_t h = GetHorizontalScrollbarHeight();
+  uint32_t w = GetVerticalScrollbarWidth();
   if (aWidth == StyleScrollbarWidth::Thin) {
     h /= 2;
     w /= 2;
@@ -448,28 +445,4 @@ bool ScrollbarDrawing::PaintScrollbarButton(
   ThemeDrawing::PaintArrow(aDrawTarget, aRect, arrowPolygonX, arrowPolygonY,
                            kPolygonSize, arrowNumPoints, arrowColor);
   return true;
-}
-
-/*static*/
-void ScrollbarDrawing::RecomputeScrollbarParams() {
-  uint32_t defaultSize = StaticPrefs::widget_non_native_theme_scrollbar_size();
-  if (StaticPrefs::widget_non_native_theme_win_scrollbar_use_system_size()) {
-    sHorizontalScrollbarHeight = LookAndFeel::GetInt(
-        LookAndFeel::IntID::SystemHorizontalScrollbarHeight, defaultSize);
-    sVerticalScrollbarWidth = LookAndFeel::GetInt(
-        LookAndFeel::IntID::SystemVerticalScrollbarWidth, defaultSize);
-  } else {
-    sHorizontalScrollbarHeight = sVerticalScrollbarWidth = defaultSize;
-  }
-  // On GTK, widgets don't account for text scale factor, but that's included
-  // in the usual DPI computations, so we undo that here, just like
-  // GetMonitorScaleFactor does it in nsNativeThemeGTK.
-  float scale =
-      LookAndFeel::GetFloat(LookAndFeel::FloatID::TextScaleFactor, 1.0f);
-  if (scale != 1.0f) {
-    sVerticalScrollbarWidth =
-        uint32_t(round(float(sVerticalScrollbarWidth) / scale));
-    sHorizontalScrollbarHeight =
-        uint32_t(round(float(sHorizontalScrollbarHeight) / scale));
-  }
 }
