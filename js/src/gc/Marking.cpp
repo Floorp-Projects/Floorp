@@ -2376,6 +2376,18 @@ void GCMarker::start() {
   MOZ_ASSERT(markLaterArenas == 0);
 }
 
+static void ClearEphemeronEdges(JSRuntime* rt) {
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+  for (GCZonesIter zone(rt); !zone.done(); zone.next()) {
+    if (!zone->gcEphemeronEdges().clear()) {
+      oomUnsafe.crash("clearing weak keys in GCMarker::stop()");
+    }
+    if (!zone->gcNurseryEphemeronEdges().clear()) {
+      oomUnsafe.crash("clearing (nursery) weak keys in GCMarker::stop()");
+    }
+  }
+}
+
 void GCMarker::stop() {
   MOZ_ASSERT(isDrained());
   MOZ_ASSERT(!delayedMarkingList);
@@ -2390,15 +2402,7 @@ void GCMarker::stop() {
   stack.clear();
   auxStack.clear();
   setMainStackColor(MarkColor::Black);
-  AutoEnterOOMUnsafeRegion oomUnsafe;
-  for (GCZonesIter zone(runtime()); !zone.done(); zone.next()) {
-    if (!zone->gcEphemeronEdges().clear()) {
-      oomUnsafe.crash("clearing weak keys in GCMarker::stop()");
-    }
-    if (!zone->gcNurseryEphemeronEdges().clear()) {
-      oomUnsafe.crash("clearing (nursery) weak keys in GCMarker::stop()");
-    }
-  }
+  ClearEphemeronEdges(runtime());
 }
 
 template <typename F>
@@ -2419,6 +2423,7 @@ void GCMarker::reset() {
   stack.clear();
   auxStack.clear();
   setMainStackColor(MarkColor::Black);
+  ClearEphemeronEdges(runtime());
   MOZ_ASSERT(isMarkStackEmpty());
 
   forEachDelayedMarkingArena([&](Arena* arena) {
