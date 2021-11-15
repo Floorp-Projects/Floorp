@@ -10,6 +10,7 @@ import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.engine.EngineMiddleware
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createCustomTab
@@ -23,6 +24,7 @@ import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -462,5 +464,47 @@ class SessionUseCasesTest {
         store.waitUntilIdle()
 
         middleware.findFirstAction(EngineAction.PurgeHistoryAction::class)
+    }
+
+    @Test
+    fun `UpdateLastAccessUseCase sets timestamp`() {
+        val tab = createTab("https://firefox.com")
+        val otherTab = createTab("https://example.com")
+        val customTab = createCustomTab("https://getpocket.com")
+        store = BrowserStore(
+            initialState = BrowserState(
+                tabs = listOf(tab, otherTab),
+                customTabs = listOf(customTab)
+            )
+        )
+        useCases = SessionUseCases(store)
+
+        // Make sure use case doesn't crash for custom tab and non-existent tab
+        useCases.updateLastAccess(customTab.id)
+        store.waitUntilIdle()
+        assertEquals(0L, store.state.findTab(tab.id)?.lastAccess)
+
+        // Update last access for a specific tab with default value
+        useCases.updateLastAccess(tab.id)
+        store.waitUntilIdle()
+        assertNotEquals(0L, store.state.findTab(tab.id)?.lastAccess)
+
+        // Update last access for a specific tab with specific value
+        useCases.updateLastAccess(tab.id, 123L)
+        store.waitUntilIdle()
+        assertEquals(123L, store.state.findTab(tab.id)?.lastAccess)
+
+        // Update last access for currently selected tab
+        store.dispatch(TabListAction.SelectTabAction(otherTab.id)).joinBlocking()
+        assertEquals(0L, store.state.findTab(otherTab.id)?.lastAccess)
+        useCases.updateLastAccess()
+        store.waitUntilIdle()
+        assertNotEquals(0L, store.state.findTab(otherTab.id)?.lastAccess)
+
+        // Update last access for currently selected tab with specific value
+        store.dispatch(TabListAction.SelectTabAction(otherTab.id)).joinBlocking()
+        useCases.updateLastAccess(lastAccess = 345L)
+        store.waitUntilIdle()
+        assertEquals(345L, store.state.findTab(otherTab.id)?.lastAccess)
     }
 }

@@ -6,6 +6,7 @@ package mozilla.components.feature.session
 
 import mozilla.components.browser.state.action.CrashAction
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.action.LastAccessAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.TabSessionState
@@ -358,6 +359,43 @@ class SessionUseCases(
         }
     }
 
+    /**
+     * Sets the [TabSessionState.lastAccess] timestamp of the provided tab. This timestamp
+     * is updated automatically by our EngineViewPresenter and LastAccessMiddleware, but
+     * there are app-specific flows where this can't happen automatically e.g., the app
+     * being resumed to the home screen despite having a selected tab. In this case, the app
+     * may want to update the last access timestamp of the selected tab.
+     *
+     * It will likely make sense to support finer-grained timestamps in the future so applications
+     * can differentiate viewing from tab selection for instance.s
+     */
+    class UpdateLastAccessUseCase internal constructor(
+        private val store: BrowserStore
+    ) {
+        /**
+         * Updates [TabSessionState.lastAccess] of the tab with the provided ID. Note that this
+         * method has no effect in case the tab doesn't exist or is a custom tab.
+         *
+         * @param tabId the ID of the tab to update, defaults to the ID of the currently selected tab.
+         * @param lastAccess the timestamp to set [TabSessionState.lastAccess] to, defaults to now.
+         */
+        operator fun invoke(
+            tabId: String? = store.state.selectedTabId,
+            lastAccess: Long = System.currentTimeMillis()
+        ) {
+            if (tabId == null) {
+                return
+            }
+
+            store.dispatch(
+                LastAccessAction.UpdateLastAccessAction(
+                    tabId,
+                    lastAccess
+                )
+            )
+        }
+    }
+
     val loadUrl: DefaultLoadUrlUseCase by lazy { DefaultLoadUrlUseCase(store, onNoTab) }
     val loadData: LoadDataUseCase by lazy { LoadDataUseCase(store, onNoTab) }
     val reload: ReloadUrlUseCase by lazy { ReloadUrlUseCase(store) }
@@ -369,4 +407,5 @@ class SessionUseCases(
     val exitFullscreen: ExitFullScreenUseCase by lazy { ExitFullScreenUseCase(store) }
     val crashRecovery: CrashRecoveryUseCase by lazy { CrashRecoveryUseCase(store) }
     val purgeHistory: PurgeHistoryUseCase by lazy { PurgeHistoryUseCase(store) }
+    val updateLastAccess: UpdateLastAccessUseCase by lazy { UpdateLastAccessUseCase(store) }
 }
