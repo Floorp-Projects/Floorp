@@ -2041,3 +2041,26 @@ JS::ArrayBuffer JS::ArrayBuffer::unwrap(JSObject* maybeWrapped) {
   auto* ab = maybeWrapped->maybeUnwrapIf<ArrayBufferObjectMaybeShared>();
   return fromObject(ab);
 }
+
+void JS::ArrayBufferCopyData(JSContext* cx, Handle<JSObject*> toBlock,
+                             size_t toIndex, Handle<JSObject*> fromBlock,
+                             size_t fromIndex, size_t count) {
+  MOZ_ASSERT(toBlock->is<ArrayBufferObjectMaybeShared>());
+  MOZ_ASSERT(fromBlock->is<ArrayBufferObjectMaybeShared>());
+
+  // If both are array bufferrs, can use ArrayBufferCopyData
+  if (toBlock->is<ArrayBufferObject>() && fromBlock->is<ArrayBufferObject>()) {
+    Rooted<ArrayBufferObject*> toArray(cx, &toBlock->as<ArrayBufferObject>());
+    Rooted<ArrayBufferObject*> fromArray(cx,
+                                         &fromBlock->as<ArrayBufferObject>());
+    ArrayBufferObject::copyData(toArray, toIndex, fromArray, fromIndex, count);
+    return;
+  }
+
+  Rooted<ArrayBufferObjectMaybeShared*> toArray(
+      cx, &toBlock->as<ArrayBufferObjectMaybeShared>());
+  Rooted<ArrayBufferObjectMaybeShared*> fromArray(
+      cx, &toBlock->as<ArrayBufferObjectMaybeShared>());
+  SharedArrayBufferObject::copyData(toArray, toIndex, fromArray, fromIndex,
+                                    count);
+}
