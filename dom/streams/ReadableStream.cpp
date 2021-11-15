@@ -680,8 +680,11 @@ static void ReadableStreamDefaultTee(JSContext* aCx, ReadableStream* aStream,
   }
 
   // Step 12:
-  RefPtr<UnderlyingSourcePullCallbackHelper> pullAlgorithm =
+  RefPtr<ReadableStreamDefaultTeePullAlgorithm> pullAlgorithm =
       new ReadableStreamDefaultTeePullAlgorithm(teeState);
+
+  // Link pull algorithm into tee state for use in readRequest
+  teeState->SetPullAlgorithm(pullAlgorithm);
 
   // Step 13.
   RefPtr<UnderlyingSourceCancelCallbackHelper> cancel1Algorithm =

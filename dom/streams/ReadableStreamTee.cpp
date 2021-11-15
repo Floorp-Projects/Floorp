@@ -33,34 +33,35 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamDefaultTeePullAlgorithm)
 NS_INTERFACE_MAP_END_INHERITING(UnderlyingSourcePullCallbackHelper)
 
 already_AddRefed<Promise> ReadableStreamDefaultTeePullAlgorithm::PullCallback(
-    JSContext* aCx, ReadableStreamDefaultController& aController,
-    ErrorResult& aRv) {
+    JSContext* aCx, nsIGlobalObject* aGlobal, ErrorResult& aRv) {
   // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
   // Pull Algorithm Steps:
 
-  // Step 12.1:
+  // Step 13.1:
   if (mTeeState->Reading()) {
-    return Promise::CreateResolvedWithUndefined(aController.GetParentObject(),
-                                                aRv);
+    // Step 13.1.1
+    mTeeState->SetReadAgain(true);
+
+    // Step 13.1.2
+    return Promise::CreateResolvedWithUndefined(aGlobal, aRv);
   }
 
-  // Step 12.2:
+  // Step 13.2:
   mTeeState->SetReading(true);
 
-  // Step 12.3:
+  // Step 13.3:
   RefPtr<ReadRequest> readRequest =
       new ReadableStreamDefaultTeeReadRequest(mTeeState);
 
-  // Step 12.4:
+  // Step 13.4:
   RefPtr<ReadableStreamDefaultReader> reader(mTeeState->GetReader());
   ReadableStreamDefaultReaderRead(aCx, reader, readRequest, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  // Step 12.5
-  return Promise::CreateResolvedWithUndefined(aController.GetParentObject(),
-                                              aRv);
+  // Step 13.5
+  return Promise::CreateResolvedWithUndefined(aGlobal, aRv);
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableStreamDefaultTeeReadRequest)
@@ -105,7 +106,7 @@ void ReadableStreamDefaultTeeReadRequest::ChunkSteps(
       // Step Numbering below is relative to Chunk steps Microtask:
       //
       // Step 1.
-      mTeeState->SetReading(false);
+      mTeeState->SetReadAgain(false);
 
       // Step 2.
       JS::RootedValue chunk1(cx, mChunk);
@@ -129,6 +130,24 @@ void ReadableStreamDefaultTeeReadRequest::ChunkSteps(
         RefPtr<ReadableStreamDefaultController> controller(
             mTeeState->Branch2()->Controller());
         ReadableStreamDefaultControllerEnqueue(cx, controller, chunk2, rv);
+        (void)NS_WARN_IF(rv.Failed());
+      }
+
+      // Step 6.
+      mTeeState->SetReading(false);
+
+      // Step 7. If |readAgain| is true, perform |pullAlgorithm|.
+      if (mTeeState->ReadAgain()) {
+        RefPtr<ReadableStreamDefaultTeePullAlgorithm> pullAlgorithm(
+            mTeeState->PullAlgorithm());
+        IgnoredErrorResult rv;
+        nsCOMPtr<nsIGlobalObject> global(
+            mTeeState->GetStream()->GetParentObject());
+        // MG:XXX: A future refactoring could rewrite pull callbacks innards to
+        // not produce this promise, which is currently always a promise
+        // resolved with undefined.
+        RefPtr<Promise> ignoredPromise =
+            pullAlgorithm->PullCallback(cx, global, rv);
         (void)NS_WARN_IF(rv.Failed());
       }
     }
