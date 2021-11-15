@@ -11,12 +11,13 @@
 #include "nsAtom.h"
 #include "nsNativeTheme.h"
 #include "nsStyleConsts.h"
-#include "nsNativeBasicThemeGTK.h"
+#include "nsNativeBasicTheme.h"
+#include "ScrollbarDrawingGTK.h"
 
 #include <gtk/gtk.h>
 #include "gtkdrawing.h"
 
-class nsNativeThemeGTK final : public nsNativeBasicThemeGTK {
+class nsNativeThemeGTK final : public nsNativeBasicTheme {
  public:
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
@@ -84,9 +85,8 @@ class nsNativeThemeGTK final : public nsNativeBasicThemeGTK {
   ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
                                    Overlay) override;
 
-  bool ThemeSupportsScrollbarButtons() override;
-
-  nsNativeThemeGTK();
+  explicit nsNativeThemeGTK(
+      mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawingGTK);
 
  protected:
   virtual ~nsNativeThemeGTK();
