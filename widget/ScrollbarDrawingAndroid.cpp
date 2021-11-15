@@ -79,3 +79,13 @@ bool ScrollbarDrawingAndroid::PaintScrollbarThumb(
                         aElementState, aDocumentState, aColors, aDpiRatio);
   return true;
 }
+
+void ScrollbarDrawingAndroid::RecomputeScrollbarParams() {
+  uint32_t defaultSize = 6;
+  uint32_t overrideSize =
+      StaticPrefs::widget_non_native_theme_scrollbar_size_override();
+  if (overrideSize > 0) {
+    defaultSize = overrideSize;
+  }
+  mHorizontalScrollbarHeight = mVerticalScrollbarWidth = defaultSize;
+}

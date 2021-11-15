@@ -103,6 +103,8 @@ class ScrollbarDrawingCocoa final : public ScrollbarDrawing {
                          const EventStates& aDocumentState, const Colors&,
                          const DPIRatio&) override;
 
+  void RecomputeScrollbarParams() override;
+
   bool ShouldDrawScrollbarButtons() override { return false; }
 };
 
