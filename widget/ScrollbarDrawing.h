@@ -161,12 +161,18 @@ class ScrollbarDrawing {
                                  const EventStates& aDocumentState,
                                  const Colors&, const DPIRatio&);
 
-  static void RecomputeScrollbarParams();
+  virtual void RecomputeScrollbarParams() = 0;
 
   virtual bool ShouldDrawScrollbarButtons() { return true; }
 
-  static uint32_t sHorizontalScrollbarHeight;
-  static uint32_t sVerticalScrollbarWidth;
+  uint32_t GetHorizontalScrollbarHeight() const {
+    return mHorizontalScrollbarHeight;
+  }
+  uint32_t GetVerticalScrollbarWidth() const { return mVerticalScrollbarWidth; }
+
+ protected:
+  uint32_t mHorizontalScrollbarHeight = 0;
+  uint32_t mVerticalScrollbarWidth = 0;
 };
 
 }  // namespace mozilla::widget

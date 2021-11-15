@@ -89,11 +89,15 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   using AccentColor = mozilla::widget::ThemeAccentColor;
   using ScrollbarDrawing = mozilla::widget::ScrollbarDrawing;
   using WebRenderBackendData = mozilla::widget::WebRenderBackendData;
+  using LookAndFeel = mozilla::LookAndFeel;
+  using ThemeChangeKind = mozilla::widget::ThemeChangeKind;
 
  public:
   explicit nsNativeBasicTheme(
       mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawing)
-      : mScrollbarDrawing(std::move(aScrollbarDrawing)) {}
+      : mScrollbarDrawing(std::move(aScrollbarDrawing)) {
+    mScrollbarDrawing->RecomputeScrollbarParams();
+  }
 
   static void Init();
   static void Shutdown();
@@ -153,6 +157,10 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                                    Overlay) override;
 
   nscoord GetCheckboxRadioPrefSize() override;
+
+  static mozilla::UniquePtr<ScrollbarDrawing>
+  DetermineScrollbarStyleSetByPrefs();
+  static mozilla::UniquePtr<ScrollbarDrawing> DetermineScrollbarStyle();
 
  protected:
   virtual ~nsNativeBasicTheme() = default;
@@ -247,8 +255,14 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   void PaintButton(nsIFrame*, PaintBackendData&, const LayoutDeviceRect&,
                    const EventStates&, const Colors&, DPIRatio);
 
-  static void PrefChangedCallback(const char*, void*) { LookAndFeelChanged(); }
+  static void PrefChangedCallback(const char*, void*) {
+    LookAndFeel::NotifyChangedAllWindows(ThemeChangeKind::Layout);
+  }
 
+  void SetScrollbarDrawing(
+      mozilla::UniquePtr<ScrollbarDrawing>&& aScrollbarDrawing) {
+    mScrollbarDrawing = std::move(aScrollbarDrawing);
+  }
   ScrollbarDrawing& GetScrollbarDrawing() const { return *mScrollbarDrawing; }
   mozilla::UniquePtr<ScrollbarDrawing> mScrollbarDrawing;
 
