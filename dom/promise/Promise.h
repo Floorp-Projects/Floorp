@@ -283,6 +283,9 @@ class Promise : public SupportsWeakPtr {
 
   PromiseState State() const;
 
+  static already_AddRefed<Promise> CreateResolvedWithUndefined(
+      nsIGlobalObject* aGlobal, ErrorResult& aRv);
+
  protected:
   // Legacy method for throwing DOMExceptions.  Only used by media code at this
   // point, via DetailedPromise.  Do NOT add new uses!  When this is removed,
