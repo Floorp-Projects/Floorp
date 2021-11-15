@@ -111,7 +111,6 @@ object TelemetryWrapper {
         val APP_ICON = "app_icon"
         val AUTOCOMPLETE_DOMAIN = "autocomplete_domain"
         val AUTOFILL = "autofill"
-        val GECKO_ENGINE = "gecko_engine"
         val SEARCH_SUGGESTION_PROMPT = "search_suggestion_prompt"
         val MAKE_DEFAULT_BROWSER_OPEN_WITH = "make_default_browser_open_with"
         val MAKE_DEFAULT_BROWSER_SETTINGS = "make_default_browser_settings"
@@ -507,11 +506,6 @@ object TelemetryWrapper {
     @JvmStatic
     fun autofillPerformedEvent() {
         TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.AUTOFILL).queue()
-    }
-
-    @JvmStatic
-    fun changeToGeckoEngineEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CHANGE, Object.GECKO_ENGINE).queue()
     }
 
     @JvmStatic
