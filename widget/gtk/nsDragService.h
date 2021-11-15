@@ -9,8 +9,10 @@
 
 #include "mozilla/RefPtr.h"
 #include "nsBaseDragService.h"
+#include "nsCOMArray.h"
 #include "nsIObserver.h"
 #include <gtk/gtk.h>
+#include "nsITimer.h"
 
 class nsICookieJarSettings;
 class nsWindow;
@@ -36,7 +38,6 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   nsDragService();
 
   NS_DECL_ISUPPORTS_INHERITED
-
   NS_DECL_NSIOBSERVER
 
   // nsBaseDragService
@@ -239,6 +240,19 @@ class nsDragService final : public nsBaseDragService, public nsIObserver {
   void GetDragFlavors(nsTArray<nsCString>& aFlavors);
   gboolean DispatchDropEvent();
   static uint32_t GetCurrentModifiers();
+
+  nsresult CreateTempFile(nsITransferable* aItem,
+                          GtkSelectionData* aSelectionData);
+  bool RemoveTempFiles();
+  static gboolean TaskRemoveTempFiles(gpointer data);
+
+  // the url of the temporary file that has been created in the current drag
+  // session
+  nsCString mTempFileUrl;
+  // stores all temporary files
+  nsCOMArray<nsIFile> mTemporaryFiles;
+  // timer to trigger deletion of temporary files
+  guint mTempFileTimerID;
 };
 
 #endif  // nsDragService_h__
