@@ -118,35 +118,32 @@ for (let [name, files] of Object.entries(ADDONS)) {
 add_task(async function delay_updates_ignore() {
   await promiseStartupManager();
 
-  let extension = ExtensionTestUtils.loadExtension(
-    {
-      useAddonManager: "permanent",
-      manifest: {
-        version: "1.0",
-        applications: {
-          gecko: {
-            id: IGNORE_ID,
-            update_url: `http://example.com/data/test_delay_updates_ignore.json`,
-          },
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: IGNORE_ID,
+          update_url: `http://example.com/data/test_delay_updates_ignore.json`,
         },
       },
-      background() {
-        browser.runtime.onUpdateAvailable.addListener(details => {
-          if (details) {
-            if (details.version) {
-              // This should be the version of the pending update.
-              browser.test.assertEq("2.0", details.version, "correct version");
-              browser.test.notifyPass("delay");
-            }
-          } else {
-            browser.test.fail("no details object passed");
-          }
-        });
-        browser.test.sendMessage("ready");
-      },
     },
-    IGNORE_ID
-  );
+    background() {
+      browser.runtime.onUpdateAvailable.addListener(details => {
+        if (details) {
+          if (details.version) {
+            // This should be the version of the pending update.
+            browser.test.assertEq("2.0", details.version, "correct version");
+            browser.test.notifyPass("delay");
+          }
+        } else {
+          browser.test.fail("no details object passed");
+        }
+      });
+      browser.test.sendMessage("ready");
+    },
+  });
 
   await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
   BootstrapMonitor.checkInstalled(IGNORE_ID, "1.0");
@@ -203,28 +200,25 @@ add_task(async function delay_updates_ignore() {
 add_task(async function delay_updates_complete() {
   await promiseStartupManager();
 
-  let extension = ExtensionTestUtils.loadExtension(
-    {
-      useAddonManager: "permanent",
-      manifest: {
-        version: "1.0",
-        applications: {
-          gecko: {
-            id: COMPLETE_ID,
-            update_url: `http://example.com/data/test_delay_updates_complete.json`,
-          },
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: COMPLETE_ID,
+          update_url: `http://example.com/data/test_delay_updates_complete.json`,
         },
       },
-      background() {
-        browser.runtime.onUpdateAvailable.addListener(details => {
-          browser.test.notifyPass("reload");
-          browser.runtime.reload();
-        });
-        browser.test.sendMessage("ready");
-      },
     },
-    COMPLETE_ID
-  );
+    background() {
+      browser.runtime.onUpdateAvailable.addListener(details => {
+        browser.test.notifyPass("reload");
+        browser.runtime.reload();
+      });
+      browser.test.sendMessage("ready");
+    },
+  });
 
   await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
 
@@ -273,36 +267,33 @@ add_task(async function delay_updates_complete() {
 add_task(async function delay_updates_defer() {
   await promiseStartupManager();
 
-  let extension = ExtensionTestUtils.loadExtension(
-    {
-      useAddonManager: "permanent",
-      manifest: {
-        version: "1.0",
-        applications: {
-          gecko: {
-            id: DEFER_ID,
-            update_url: `http://example.com/data/test_delay_updates_defer.json`,
-          },
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: DEFER_ID,
+          update_url: `http://example.com/data/test_delay_updates_defer.json`,
         },
       },
-      background() {
-        browser.runtime.onUpdateAvailable.addListener(details => {
-          // Upgrade will only proceed when "allow" message received.
-          browser.test.onMessage.addListener(msg => {
-            if (msg == "allow") {
-              browser.test.notifyPass("allowed");
-              browser.runtime.reload();
-            } else {
-              browser.test.fail(`wrong message: ${msg}`);
-            }
-          });
-          browser.test.sendMessage("truly ready");
-        });
-        browser.test.sendMessage("ready");
-      },
     },
-    DEFER_ID
-  );
+    background() {
+      browser.runtime.onUpdateAvailable.addListener(details => {
+        // Upgrade will only proceed when "allow" message received.
+        browser.test.onMessage.addListener(msg => {
+          if (msg == "allow") {
+            browser.test.notifyPass("allowed");
+            browser.runtime.reload();
+          } else {
+            browser.test.fail(`wrong message: ${msg}`);
+          }
+        });
+        browser.test.sendMessage("truly ready");
+      });
+      browser.test.sendMessage("ready");
+    },
+  });
 
   await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
 
@@ -516,31 +507,28 @@ add_task(async function delay_updates_staged_no_update_url() {
 add_task(async function runtime_reload() {
   await promiseStartupManager();
 
-  let extension = ExtensionTestUtils.loadExtension(
-    {
-      useAddonManager: "permanent",
-      manifest: {
-        version: "1.0",
-        applications: {
-          gecko: {
-            id: NOUPDATE_ID,
-            update_url: `http://example.com/data/test_no_update.json`,
-          },
+  let extension = ExtensionTestUtils.loadExtension({
+    useAddonManager: "permanent",
+    manifest: {
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: NOUPDATE_ID,
+          update_url: `http://example.com/data/test_no_update.json`,
         },
       },
-      background() {
-        browser.test.onMessage.addListener(msg => {
-          if (msg == "reload") {
-            browser.runtime.reload();
-          } else {
-            browser.test.fail(`wrong message: ${msg}`);
-          }
-        });
-        browser.test.sendMessage("ready");
-      },
     },
-    NOUPDATE_ID
-  );
+    background() {
+      browser.test.onMessage.addListener(msg => {
+        if (msg == "reload") {
+          browser.runtime.reload();
+        } else {
+          browser.test.fail(`wrong message: ${msg}`);
+        }
+      });
+      browser.test.sendMessage("ready");
+    },
+  });
 
   await Promise.all([extension.startup(), extension.awaitMessage("ready")]);
 
