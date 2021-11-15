@@ -11991,28 +11991,16 @@
   value: false
   mirror: always
 
-# The style of scrollbars to use. Here are the current options:
-#
-#   0: Default platform scrollbar style.
-#   1: macOS scrollbars
-#   2: GTK scrollbars
-#   3: Android scrollbars
-#   4: Windows 10 scrollbars
-#
-# Note that switching to non-default scrollbars is experimental and other
-# scrollbar-related prefs may interfere with the experience. For example,
-# setting the GTK thumb size may have no effect when using non-GTK scrollbars
-# on GTK.
-- name: widget.non-native-theme.scrollbar.style
+# The size in CSS pixels at full zoom of the minimum scrollbar width.
+- name: widget.non-native-theme.scrollbar.size
   type: uint32_t
-  value: 0
-  mirror: always
-
-# An override that allows to override the default platform size. The size in CSS
-# pixels at full zoom of the minimum scrollbar width.
-- name: widget.non-native-theme.scrollbar.size.override
-  type: uint32_t
-  value: 0
+#if defined(MOZ_WIDGET_GTK)
+  value: 12
+#elif defined(ANDROID)
+  value: 6
+#else
+  value: 17
+#endif
   mirror: always
 
 # Whether the active thumb color should always use the themed colors, even if
