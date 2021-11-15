@@ -1698,10 +1698,6 @@ void ContentParent::Init() {
 
   Unused << SendInitProfiler(ProfilerParent::CreateForProcess(OtherPid()));
 
-  // Ensure that the default set of permissions are avaliable in the content
-  // process before we try to load any URIs in it.
-  EnsurePermissionsByKey(""_ns, ""_ns);
-
   RefPtr<GeckoMediaPluginServiceParent> gmps(
       GeckoMediaPluginServiceParent::GetSingleton());
   gmps->UpdateContentProcessGMPCapabilities();
@@ -3122,6 +3118,13 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
     KillHard("SandboxInitFailed");
   }
 #endif
+
+  // Ensure that the default set of permissions are avaliable in the content
+  // process before we try to load any URIs in it.
+  //
+  // NOTE: All default permissions has to be transmitted to the child process
+  // before the blob urls in the for loop below (See Bug 1738713 comment 12).
+  EnsurePermissionsByKey(""_ns, ""_ns);
 
   {
     nsTArray<BlobURLRegistrationData> registrations;
