@@ -833,7 +833,12 @@ class nsHTMLScrollFrame : public nsContainerFrame,
 
   bool TryLayout(ScrollReflowInput* aState, ReflowOutput* aKidMetrics,
                  bool aAssumeVScroll, bool aAssumeHScroll, bool aForce);
-  bool ScrolledContentDependsOnHeight(ScrollReflowInput* aState);
+
+  // Return true if ReflowScrolledFrame is going to do something different based
+  // on the presence of a horizontal scrollbar in a horizontal writing mode or a
+  // vertical scrollbar in a vertical writing mode.
+  bool ScrolledContentDependsOnBSize(ScrollReflowInput* aState) const;
+
   void ReflowScrolledFrame(ScrollReflowInput* aState, bool aAssumeHScroll,
                            bool aAssumeVScroll, ReflowOutput* aMetrics);
   void ReflowContents(ScrollReflowInput* aState,
