@@ -543,6 +543,14 @@ richlistitem[selected] .actionsMenu:focus-visible {
   margin-inline-start: 0;
 }
 
+@media (-moz-os-version: windows-win7),
+       (-moz-os-version: windows-win8) {
+  #windows-sso,
+  #windows-sso-caption {
+    display: none;
+  }
+}
+
 /**
  * Dialog
  */
