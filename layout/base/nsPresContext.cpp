@@ -1553,7 +1553,7 @@ nsITheme* nsPresContext::EnsureTheme() {
   if (Document()->ShouldAvoidNativeTheme()) {
     BrowsingContext* bc = Document()->GetBrowsingContext();
     if (bc && bc->Top()->InRDMPane()) {
-      mTheme = do_GetAndroidNonNativeThemeDoNotUseDirectly();
+      mTheme = do_GetRDMThemeDoNotUseDirectly();
     } else {
       mTheme = do_GetBasicNativeThemeDoNotUseDirectly();
     }

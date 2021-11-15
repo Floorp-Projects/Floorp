@@ -61,10 +61,48 @@ struct MOZ_RAII AutoClipRect {
 
 }  // namespace
 
+static StaticRefPtr<nsITheme> gInstance;
+static StaticRefPtr<nsITheme> gRDMInstance;
+
+already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
+  if (MOZ_UNLIKELY(!gInstance)) {
+    UniquePtr<ScrollbarDrawing> scrollbarDrawing =
+        nsNativeBasicTheme::DetermineScrollbarStyle();
+#ifdef MOZ_WIDGET_COCOA
+    gInstance = new nsNativeBasicThemeCocoa(std::move(scrollbarDrawing));
+#else
+    gInstance = new nsNativeBasicTheme(std::move(scrollbarDrawing));
+#endif
+    ClearOnShutdown(&gInstance);
+  }
+  return do_AddRef(gInstance);
+}
+
+#ifdef ANDROID
+already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
+  // Android doesn't have a native theme.
+  return do_GetBasicNativeThemeDoNotUseDirectly();
+}
+#endif
+
+already_AddRefed<nsITheme> do_GetRDMThemeDoNotUseDirectly() {
+  if (MOZ_UNLIKELY(!gRDMInstance)) {
+    UniquePtr<ScrollbarDrawing> scrollbarDrawing =
+        nsNativeBasicTheme::DetermineScrollbarStyleSetByPrefs();
+    if (!scrollbarDrawing) {
+      scrollbarDrawing = MakeUnique<ScrollbarDrawingAndroid>();
+    }
+    gRDMInstance = new nsNativeBasicTheme(std::move(scrollbarDrawing));
+    ClearOnShutdown(&gRDMInstance);
+  }
+  return do_AddRef(gRDMInstance);
+}
+
 static constexpr nsLiteralCString kPrefs[] = {
     "widget.non-native-theme.use-theme-accent"_ns,
     "widget.non-native-theme.win.scrollbar.use-system-size"_ns,
-    "widget.non-native-theme.scrollbar.size"_ns,
+    "widget.non-native-theme.scrollbar.size.override"_ns,
+    "widget.non-native-theme.scrollbar.style"_ns,
 };
 
 void nsNativeBasicTheme::Init() {
@@ -80,9 +118,15 @@ void nsNativeBasicTheme::Shutdown() {
   }
 }
 
+/* static */
 void nsNativeBasicTheme::LookAndFeelChanged() {
   ThemeColors::RecomputeAccentColors();
-  ScrollbarDrawing::RecomputeScrollbarParams();
+  auto* basicTheme = static_cast<nsNativeBasicTheme*>(gInstance.get());
+  if (basicTheme) {
+    basicTheme->SetScrollbarDrawing(
+        nsNativeBasicTheme::DetermineScrollbarStyle());
+    basicTheme->GetScrollbarDrawing().RecomputeScrollbarParams();
+  }
 }
 
 /* static */
@@ -1306,6 +1350,44 @@ nscoord nsNativeBasicTheme::GetCheckboxRadioPrefSize() {
   return CSSPixel::ToAppUnits(kCheckboxRadioContentBoxSize);
 }
 
+/* static */
+UniquePtr<ScrollbarDrawing>
+nsNativeBasicTheme::DetermineScrollbarStyleSetByPrefs() {
+  switch (StaticPrefs::widget_non_native_theme_scrollbar_style()) {
+    case 1:
+      return MakeUnique<ScrollbarDrawingCocoa>();
+    case 2:
+      return MakeUnique<ScrollbarDrawingGTK>();
+    case 3:
+      return MakeUnique<ScrollbarDrawingAndroid>();
+    case 4:
+      return MakeUnique<ScrollbarDrawingWin>();
+    default:
+      return nullptr;
+  }
+}
+
+/* static */
+UniquePtr<ScrollbarDrawing> nsNativeBasicTheme::DetermineScrollbarStyle() {
+  // Check if a preferred scrollbar style is set via prefs.
+  if (UniquePtr<ScrollbarDrawing> scrollbarDrawing =
+          DetermineScrollbarStyleSetByPrefs()) {
+    return scrollbarDrawing;
+  }
+  // Default to native scrollbar style for each platform.
+#ifdef XP_WIN
+  return MakeUnique<ScrollbarDrawingWin>();
+#elif MOZ_WIDGET_COCOA
+  return MakeUnique<ScrollbarDrawingCocoa>();
+#elif MOZ_WIDGET_GTK
+  return MakeUnique<ScrollbarDrawingGTK>();
+#elif ANDROID
+  return MakeUnique<ScrollbarDrawingAndroid>();
+#else
+#  error "Unknown platform, need scrollbar implementation."
+#endif
+}
+
 NS_IMETHODIMP
 nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                          nsIFrame* aFrame,
@@ -1453,61 +1535,4 @@ bool nsNativeBasicTheme::ThemeNeedsComboboxDropmarker() { return true; }
 
 bool nsNativeBasicTheme::ThemeSupportsScrollbarButtons() {
   return GetScrollbarDrawing().ShouldDrawScrollbarButtons();
-}
-
-already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
-  static mozilla::StaticRefPtr<nsITheme> gInstance;
-  if (MOZ_UNLIKELY(!gInstance)) {
-    UniquePtr<ScrollbarDrawing> scrollbarDrawing = nullptr;
-    switch (StaticPrefs::widget_non_native_theme_scrollbar_style()) {
-      case 1:
-        scrollbarDrawing = MakeUnique<ScrollbarDrawingCocoa>();
-        break;
-      case 2:
-        scrollbarDrawing = MakeUnique<ScrollbarDrawingGTK>();
-        break;
-      case 3:
-        scrollbarDrawing = MakeUnique<ScrollbarDrawingAndroid>();
-        break;
-      case 4:
-        scrollbarDrawing = MakeUnique<ScrollbarDrawingWin>();
-        break;
-      default:
-#ifdef XP_WIN
-        scrollbarDrawing = MakeUnique<ScrollbarDrawingWin>();
-#elif MOZ_WIDGET_COCOA
-        scrollbarDrawing = MakeUnique<ScrollbarDrawingCocoa>();
-#elif MOZ_WIDGET_GTK
-        scrollbarDrawing = MakeUnique<ScrollbarDrawingGTK>();
-#elif ANDROID
-        scrollbarDrawing = MakeUnique<ScrollbarDrawingAndroid>();
-#endif
-        break;
-    }
-
-#ifdef MOZ_WIDGET_COCOA
-    gInstance = new nsNativeBasicThemeCocoa(std::move(scrollbarDrawing));
-#else
-    gInstance = new nsNativeBasicTheme(std::move(scrollbarDrawing));
-#endif
-
-    ClearOnShutdown(&gInstance);
-  }
-  return do_AddRef(gInstance);
-}
-
-#ifdef ANDROID
-already_AddRefed<nsITheme> do_GetNativeThemeDoNotUseDirectly() {
-  // Android doesn't have a native theme.
-  return do_GetBasicNativeThemeDoNotUseDirectly();
-}
-#endif
-
-already_AddRefed<nsITheme> do_GetAndroidNonNativeThemeDoNotUseDirectly() {
-  static mozilla::StaticRefPtr<nsITheme> gInstance;
-  if (MOZ_UNLIKELY(!gInstance)) {
-    gInstance = new nsNativeBasicTheme(MakeUnique<ScrollbarDrawingAndroid>());
-    ClearOnShutdown(&gInstance);
-  }
-  return do_AddRef(gInstance);
 }
