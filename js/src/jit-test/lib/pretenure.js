@@ -26,7 +26,7 @@ function setupPretenureTest() {
   gcparam("maxNurseryBytes", 1024 * 1024);
 
   // Limit allocation threshold so we trigger major GCs sooner.
-  gcparam("allocationThreshold", 1024 * 1024);
+  gcparam("allocationThreshold", 1 /* MB */);
 
   // Disable incremental GC so there's at most one minor GC per major GC.
   gcparam("incrementalGCEnabled", false);
