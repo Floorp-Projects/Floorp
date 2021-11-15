@@ -34,7 +34,7 @@ use crate::intern::DataStore;
 use crate::internal_types::DebugOutput;
 use crate::internal_types::{FastHashMap, RenderedDocument, ResultMsg, FrameId, FrameStamp};
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
-use crate::picture::{TileCacheLogger, PictureScratchBuffer, SliceId, TileCacheInstance, TileCacheParams};
+use crate::picture::{PictureScratchBuffer, SliceId, TileCacheInstance, TileCacheParams};
 use crate::prim_store::{PrimitiveScratchBuffer, PrimitiveInstance};
 use crate::prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData, PrimitiveStore};
 use crate::prim_store::interned::*;
@@ -436,7 +436,6 @@ impl Document {
         resource_cache: &mut ResourceCache,
         gpu_cache: &mut GpuCache,
         debug_flags: DebugFlags,
-        tile_cache_logger: &mut TileCacheLogger,
         tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
         frame_stats: Option<FullFrameStats>,
         render_reasons: RenderReasons,
@@ -461,7 +460,6 @@ impl Document {
                 &mut self.data_stores,
                 &mut self.scratch,
                 debug_flags,
-                tile_cache_logger,
                 tile_caches,
                 &mut self.spatial_tree,
                 self.dirty_rects_are_valid,
@@ -638,7 +636,6 @@ pub struct RenderBackend {
     documents: FastHashMap<DocumentId, Document>,
 
     notifier: Box<dyn RenderNotifier>,
-    tile_cache_logger: TileCacheLogger,
     sampler: Option<Box<dyn AsyncPropertySampler + Send>>,
     size_of_ops: Option<MallocSizeOfOps>,
     debug_flags: DebugFlags,
@@ -689,7 +686,6 @@ impl RenderBackend {
             default_compositor_kind : frame_config.compositor_kind,
             documents: FastHashMap::default(),
             notifier,
-            tile_cache_logger: TileCacheLogger::new(500usize),
             sampler,
             size_of_ops,
             debug_flags,
@@ -820,12 +816,6 @@ impl RenderBackend {
                 // during the scene build, apply them to the data store now.
                 // This needs to happen before we build the hit tester.
                 if let Some(updates) = txn.interner_updates.take() {
-                    #[cfg(feature = "capture")]
-                    {
-                        if self.debug_flags.contains(DebugFlags::TILE_CACHE_LOGGING_DBG) {
-                            self.tile_cache_logger.serialize_updates(&updates);
-                        }
-                    }
                     doc.data_stores.apply_updates(updates, &mut doc.profile);
                 }
 
@@ -1358,7 +1348,6 @@ impl RenderBackend {
                     &mut self.resource_cache,
                     &mut self.gpu_cache,
                     self.debug_flags,
-                    &mut self.tile_cache_logger,
                     &mut self.tile_caches,
                     frame_stats,
                     render_reasons,
@@ -1550,7 +1539,6 @@ impl RenderBackend {
                     &mut self.resource_cache,
                     &mut self.gpu_cache,
                     self.debug_flags,
-                    &mut self.tile_cache_logger,
                     &mut self.tile_caches,
                     None,
                     RenderReasons::empty(),
@@ -1627,11 +1615,6 @@ impl RenderBackend {
 
         debug!("\tresource cache");
         let (resources, deferred) = self.resource_cache.save_capture(&config.root);
-
-        if config.bits.contains(CaptureBits::TILE_CACHE) {
-            debug!("\ttile cache");
-            self.tile_cache_logger.save_capture(&config.root);
-        }
 
         info!("\tbackend");
         let backend = PlainRenderBackend {

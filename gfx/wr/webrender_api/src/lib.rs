@@ -628,8 +628,6 @@ bitflags! {
         const SMART_PROFILER        = 1 << 22;
         /// If set, dump picture cache invalidation debug to console.
         const INVALIDATION_DBG = 1 << 23;
-        /// Log tile cache to memory for later saving as part of wr-capture
-        const TILE_CACHE_LOGGING_DBG   = 1 << 24;
         /// Collect and dump profiler statistics to captures.
         const PROFILER_CAPTURE = (1 as u32) << 25; // need "as u32" until we have cbindgen#556
         /// Invalidate picture tiles every frames (useful when inspecting GPU work in external tools).

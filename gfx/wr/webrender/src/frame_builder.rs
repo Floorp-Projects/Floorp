@@ -15,7 +15,7 @@ use crate::gpu_types::TransformData;
 use crate::internal_types::{FastHashMap, PlaneSplitter, FrameId, FrameStamp};
 use crate::picture::{DirtyRegion, SliceId, TileCacheInstance};
 use crate::picture::{SurfaceInfo, SurfaceIndex, ROOT_SURFACE_INDEX, SurfaceRenderTasks, SubSliceIndex};
-use crate::picture::{BackdropKind, SubpixelMode, TileCacheLogger, RasterConfig, PictureCompositeMode};
+use crate::picture::{BackdropKind, SubpixelMode, RasterConfig, PictureCompositeMode};
 use crate::prepare::prepare_primitives;
 use crate::prim_store::{PictureIndex, PrimitiveDebugId};
 use crate::prim_store::{DeferredResolve, PrimitiveInstance};
@@ -329,7 +329,6 @@ impl FrameBuilder {
         scratch: &mut ScratchBuffer,
         debug_flags: DebugFlags,
         composite_state: &mut CompositeState,
-        tile_cache_logger: &mut TileCacheLogger,
         tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
         spatial_tree: &SpatialTree,
         profile: &mut TransactionProfile,
@@ -484,7 +483,6 @@ impl FrameBuilder {
                     &mut frame_state,
                     &frame_context,
                     &mut scratch.primitive,
-                    tile_cache_logger,
                     tile_caches,
                 )
             {
@@ -499,7 +497,6 @@ impl FrameBuilder {
                     &mut frame_state,
                     data_stores,
                     &mut scratch.primitive,
-                    tile_cache_logger,
                     tile_caches,
                     &mut scene.prim_instances,
                 );
@@ -513,7 +510,6 @@ impl FrameBuilder {
             }
         }
 
-        tile_cache_logger.advance();
         frame_state.pop_dirty_region();
         profile.end_time(profiler::FRAME_PREPARE_TIME);
         profile.set(profiler::VISIBLE_PRIMITIVES, frame_state.num_visible_primitives);
@@ -543,7 +539,6 @@ impl FrameBuilder {
         data_stores: &mut DataStores,
         scratch: &mut ScratchBuffer,
         debug_flags: DebugFlags,
-        tile_cache_logger: &mut TileCacheLogger,
         tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
         spatial_tree: &mut SpatialTree,
         dirty_rects_are_valid: bool,
@@ -594,7 +589,6 @@ impl FrameBuilder {
             scratch,
             debug_flags,
             &mut composite_state,
-            tile_cache_logger,
             tile_caches,
             spatial_tree,
             profile,

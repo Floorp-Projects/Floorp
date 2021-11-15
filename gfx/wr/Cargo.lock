@@ -1530,17 +1530,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tileview"
-version = "0.1.0"
-dependencies = [
- "euclid",
- "ron",
- "serde",
- "webrender",
- "webrender_api",
-]
-
-[[package]]
 name = "time"
 version = "0.1.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
