@@ -334,7 +334,11 @@ async function setSkipPausing(shouldSkip) {
 }
 
 async function setEventListenerBreakpoints(ids) {
-  const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport();
+  // @backward-compat { version 94 } The `event-breakpoints` trait check is no longer needed, but
+  // keep the check for target watcher support to fallback for unsupported targets (e.g webextensions)
+  const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport(
+    "event-breakpoints"
+  );
   if (!hasWatcherSupport) {
     return forEachThread(thread => thread.setActiveEventBreakpoints(ids));
   }
