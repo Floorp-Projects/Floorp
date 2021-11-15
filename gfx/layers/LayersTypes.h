@@ -170,7 +170,6 @@ enum class LayersBackend : int8_t {
   LAYERS_BASIC,
   LAYERS_OPENGL,
   LAYERS_D3D11,
-  LAYERS_CLIENT,
   LAYERS_WR,
   LAYERS_LAST
 };

@@ -308,9 +308,7 @@ mozilla::ipc::IPCResult CompositorBridgeChild::RecvDidComposite(
   for (const auto& id : aTransactionIds) {
     if (mLayerManager) {
       MOZ_ASSERT(!aId.IsValid());
-      MOZ_ASSERT(mLayerManager->GetBackendType() ==
-                     LayersBackend::LAYERS_CLIENT ||
-                 mLayerManager->GetBackendType() == LayersBackend::LAYERS_WR);
+      MOZ_ASSERT(mLayerManager->GetBackendType() == LayersBackend::LAYERS_WR);
       // Hold a reference to keep LayerManager alive. See Bug 1242668.
       RefPtr<WebRenderLayerManager> m = mLayerManager;
       m->DidComposite(id, aCompositeStart, aCompositeEnd);

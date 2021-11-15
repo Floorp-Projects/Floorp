@@ -351,7 +351,6 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel) {
         }
 #endif
       } break;
-      case LayersBackend::LAYERS_CLIENT:
       case LayersBackend::LAYERS_WR: {
         result = listener->PaintWindow(this, region);
         if (!gfxEnv::DisableForcePresent() &&
