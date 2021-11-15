@@ -4294,15 +4294,21 @@ TEST(GeckoProfiler, CPUUsage)
             // at least "small"? (Whatever that means for cycles.)
             if (testWithNoStackSampling) {
               // Note: This test is a bit hand-wavy, and may not be reliable. If
-              // intermittents happen, it may need tweaking.
-              EXPECT_GT(threadCPUDeltaZeroCount, threadCPUDeltaNonZeroCount)
-                  << "There should be more zero-CPUs than non-zero";
+              // intermittents happen, it may need tweaking (by increasing the
+              // loop count, or re-trying the whole test).
+              EXPECT_GT(threadCPUDeltaZeroCount, 0u)
+                  << "There should be some zero-CPUs due to the idle loop body";
+              EXPECT_GT(threadCPUDeltaNonZeroCount, 0u)
+                  << "There should be some non-zero due to inter-loop work";
             }
 #    else
             // Note: This test is a bit hand-wavy, and may not be reliable. If
-            // intermittents happen, it may need tweaking.
-            EXPECT_GT(threadCPUDeltaZeroCount, threadCPUDeltaNonZeroCount)
-                << "There should be more zero-CPUs than non-zero";
+            // intermittents happen, it may need tweaking (by increasing the
+            // loop count, or re-trying the whole test).
+            EXPECT_GT(threadCPUDeltaZeroCount, 0u)
+                << "There should be some zero-CPUs due to the idle loop body";
+            EXPECT_GT(threadCPUDeltaNonZeroCount, 0u)
+                << "There should be some non-zero due to inter-loop work";
 #    endif
 #  else
           // All "threadCPUDelta" data should be absent or null on unsupported
