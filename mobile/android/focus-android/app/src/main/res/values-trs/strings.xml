@@ -562,7 +562,28 @@
 
 
 
-  <!-- Text shown in prompts for GeckoView -->
+  <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s huā guendâ gārāsunt sanī da’huît gārayinat nuguan’ <a href="%2$s">si’hiaj Mozilla</a> Nī a’ngô nej nuguan’ tna’huēj rayi’î nej sun nan.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Nitāj si â’nïnj fundación Mozilla ganè’ nej rasuun nīka nī ngà ‘ngō yiko’ li, dàj rû’ si yugui nej %1$s asi da’nga’ nīka, Firefox. Ga’ue narì’t doj nuguan’ a’min rayi’î <a href="%2$s">hiūj nan</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
+    <string name="your_rights_content4"><![CDATA[‘Ngō da’nga’ natà’ guendâ %1$s nūn man ngà <a href="%2$s">nej lisênsia huā nî’nïnj ïn</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s arâj sunj nej nuguan’ narikî Disconnect,Inc. dàj rû’ nej sun huā ninïïn <a href="%2$s">GNU ‘iaj Licencia Yumàn’ v3</a>, nī nunj <a href="%3$s">hiūj nan</a>.]]></string>
+
+    <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Si yugui re\'</string>
     <string name="gv_prompt_password_hint">Da\'nga\' huìi</string>
     <string name="gv_prompt_clear">Na\'nïn\'</string>
@@ -618,6 +639,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Sa huaj ñaan</string>
 
+    <!-- Preference for studies -->
+    <string name="preference_studies">Nej ēstûdio</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Ngà gā’hue gā’nïnj man nî ngà gā’hue gāyi’ì nej man gī’hiaj man ēstûdio.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Gāhuin chrūn doj</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">Nārán riña aplikasiûn nan da’ gā’hue nātū sa nākàa riñanj</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Nādure\'</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Ngà \'hiaj sunj</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Guyun sa kïj hua nga USB/Wi-Fi</string>
 
@@ -649,6 +688,10 @@
 
     <!-- Title for the prompt to enable search suggestions -->
     <string name="enable_search_suggestion_title2">Ruhuât dīganj a\'ngô nuguan\' nikāj dugui\' ngà sa nana\'uî\' raj</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">Da’ nāhuin rā’ât ‘ngō nuguan’ rugūñu’ūnj un nī, %1$s gà’nïn sinūguàn’t gān’ānj riña motor de busqueda.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Si ga\'ue</string>

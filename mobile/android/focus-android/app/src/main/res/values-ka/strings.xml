@@ -362,7 +362,7 @@
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
-    <string name="preference_homescreen_tips">ცნობების ჩვენება საწყის გვერდზე</string>
+    <string name="preference_homescreen_tips">ცნობები საწყის გვერდზე</string>
 
     <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
     <string name="action_option_add_search_engine">საძიებოს დამატება</string>
@@ -498,7 +498,7 @@
     <!-- First run tour (Search): Title -->
     <string name="firstrun_search_title">მოიძიეთ გვერდები, თქვენებურად</string>
     <!-- First run tour (Search): Text -->
-    <string name="firstrun_search_text">რამე განსხვავებულს ეძებთ? აირჩიეთ სხვა საძიებო სისტემა ნაგულისხმევად, პარამეტრებიდან.</string>
+    <string name="firstrun_search_text">განსხვავებულად გსურთ მოიძიოთ? აირჩიეთ სასურველი საძიებო, პარამეტრებიდან.</string>
 
     <!-- First run tour (Shortcut): Title -->
     <string name="firstrun_shortcut_title">მალსახმობების დამატება მთავარ ეკრანზე</string>

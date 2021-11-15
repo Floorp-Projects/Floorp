@@ -169,9 +169,6 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">Erakukuhikwaecha</string>
 
-    <!-- Summary for the toggle to enable autocomplete for the topsites list -->
-    <string name="preference_autocomplete_topsite_summary">Étskutani karakurhintskwa kari 450 URLs énka sánteru úrakurhijkaksï.</string>
-
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">Eranharhikwaechani xanhatani</string>
 
@@ -303,6 +300,9 @@
     <string name="preference_search_add2">+ Jirinhatarantskwa kúparhatani</string>
     <string name="preference_search_remove_title">Jirinhatarantskwaechani kéntitani</string>
     <string name="preference_search_remove">Kéntitani</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Jirinhatarantskwa ma kúparhatani</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->

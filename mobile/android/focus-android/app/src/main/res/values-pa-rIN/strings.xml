@@ -634,6 +634,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">ਤਕਨੀਕੀ</string>
 
+    <!-- Preference for studies -->
+    <string name="preference_studies">ਅਧਿਐਨ</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox ਸਮੇਂ ਸਮੇਂ ਉੱਤੇ ਅਧਿਐਨ ਇੰਸਟਾਲ ਕਰ ਤੇ ਚਲਾ ਸਕਦਾ ਹੈ।</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">ਹੋਰ ਜਾਣੋ</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">ਤਬਦੀਲੀਆਂ ਲਾਗੂ ਕਰਨ ਲਈ ਐਪਲੀਕੇਸ਼ਨ ਬੰਦ ਹੋਵੇਗੀ</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">ਹਟਾਓ</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">ਸਰਗਰਮ</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">USB//Wi-Fi ਰਾਹੀਂ ਰਿਮੋਟ ਡੀਬੱਗ ਕਰਨਾ</string>
 

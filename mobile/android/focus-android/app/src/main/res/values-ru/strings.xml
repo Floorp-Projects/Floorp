@@ -641,6 +641,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Дополнительно</string>
 
+    <!-- Preference for studies -->
+    <string name="preference_studies">Исследования</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox может время от времени устанавливать и проводить исследования.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Подробнее</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">Приложение закроется, чтобы применить изменения</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Удалить</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Активно</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Удалённая отладка через USB/Wi-Fi</string>
 
@@ -720,7 +738,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Tip displayed on home view explaining how to request the desktop version of a website.
       %1$s is a placeholder for the app name. -->
     <string name="tip_request_desktop2">Хотите увидеть полную версию сайта?\n
-        Переключитесь на версию для компьютера в меню %1$</string>
+        Переключитесь на версию для компьютера в меню %1$s</string>
 
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Отключить советы на домашнем экране</string>

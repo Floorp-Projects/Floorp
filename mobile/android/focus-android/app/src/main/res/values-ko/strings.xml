@@ -636,6 +636,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">고급</string>
 
+    <!-- Preference for studies -->
+    <string name="preference_studies">연구</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox가 때때로 연구를 설치하고 실행할 수 있습니다.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">자세히 알아보기</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">변경 사항을 적용하기 위해 애플리케이션이 종료됩니다</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">삭제</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">활성화</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">USB/Wi-Fi 원격 디버깅</string>
 

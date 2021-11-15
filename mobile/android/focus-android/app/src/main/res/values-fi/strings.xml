@@ -628,6 +628,12 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Lisäasetukset</string>
 
+    <!-- Preference for studies -->
+    <string name="preference_studies">Tutkimukset</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox saattaa asentaa ja suorittaa tutkimuksia silloin tällöin.</string>
+
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">Lue lisää</string>
 

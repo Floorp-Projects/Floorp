@@ -8,26 +8,26 @@
     <!-- Label used for buttons, e.g. in dialogs -->
     <string name="action_cancel">रद्द गर्नुहोस्</string>
     <!-- Label used for buttons, e.g. in dialogs -->
-    <string name="action_ok">ठिक छ</string>
+    <string name="action_ok">ठीक छ</string>
 
     <string name="action_save">बचत गर्नुहोस्</string>
 
     <!-- This text is shown in the URL bar when it's empty -->
-    <string name="urlbar_hint">खोज्नुहोस वा ठेगाना राखनुहोस्</string>
+    <string name="urlbar_hint">खोज्नुहोस् वा ठेगाना प्रबिष्ट गर्नुहोस्</string>
 
-    <string name="teaser">स्वचालित निजी ब्राउजिङ ।\nब्राउज गर्नुहोस् । मेटाउनुहोस् । दोहोर्याउनुहोस् ।</string>
+    <string name="teaser">स्वचालित निजी ब्राउजिङ्ग।\nब्राउज गर्नुहोस् । मेटाउनुहोस् । दोहोर्याउनुहोस् ।</string>
 
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
-    <string name="feedback_erase">तपाईंको ब्राउजिङ इतिहास मेटाईयो ।</string>
+    <string name="feedback_erase">तपाईंको ब्राउजिङ्ग इतिहास मेटाइयो।</string>
 
     <!-- This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search -->
-    <string name="search_hint">%1$s खोज्नुहोस्</string>
+    <string name="search_hint">%1$s को लागि खोज्नुहोस्</string>
 
     <!-- Menu item: Share the currently visible page -->
-    <string name="menu_share">साझेदारी…</string>
+    <string name="menu_share">सेयर…</string>
 
     <!-- Menu item: Report an issue on the current site -->
-    <string name="menu_report_site_issue">साइटको समस्या दर्ता गर्नुहोस्‌</string>
+    <string name="menu_report_site_issue">साइट समस्या दर्ता गर्नुहोस्‌</string>
 
     <!-- Menu item: Switch to another browser to open the currently visible page. %1$s will be
       replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
@@ -45,26 +45,26 @@
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">नयाँ के छ</string>
-    <string name="menu_settings">सेटिङ्हरू</string>
-    <string name="menu_about">हाम्रो बारे</string>
-    <string name="menu_help">मद्दत</string>
-    <string name="menu_rights">तपाईँका अधिकारहरु</string>
+    <string name="menu_settings">सेटिङ्गहरू</string>
+    <string name="menu_about">बारेमा</string>
+    <string name="menu_help">सहयोग</string>
+    <string name="menu_rights">तपाईंका अधिकारहरु</string>
 
     <!-- Menu item: This is the label for a menu entry that shows how many trackers have been blocked
          for the currently loaded website. The number of blocked trackers is shown below this label.
          Next to this label is a switch that allows the user to temporarily enable / disable the
          blocking of trackers for the current browsing session - for example if the current website
          doesn't work correctly with blocked content. -->
-    <string name="menu_trackers_blocked_title">त्र्याकरहरु अवरुद्ध गरियो</string>
+    <string name="menu_trackers_blocked_title">ट्राकरहरु अवरुद्ध गरियो</string>
 
     <!-- This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
      See https://github.com/mozilla-mobile/focus-android/issues/2106
       %1$s will be replaced by the app name (e.g. Firefox Focus) -->
-    <string name="menu_custom_tab_branding">%1$s द्वारा संचालित</string>
+    <string name="menu_custom_tab_branding">%1$s द्वारा सञ्चालित</string>
 
     <!-- This is the title of a dialog that shows all the share targets (apps or contacts) when
          sharing an URL. -->
-    <string name="share_dialog_title">मार्फत बाड्नुहोस्</string>
+    <string name="share_dialog_title">मार्फत सेयर गर्नुहोस्</string>
 
     <!-- While a browsing session is active (in the foreground or background) we will show a notification
          so that the user doesn't forget about the website still being open. This text is shown in
@@ -77,7 +77,7 @@
 
     <!-- Notification action to erase the current browsing session AND switch to Focus (bring it
          to the foreground) -->
-    <string name="notification_action_erase_and_open">मेटाएर खोल्नुहोस्</string>
+    <string name="notification_action_erase_and_open">मेटाउनुहोस् र खोल्नुहोस्</string>
 
     <!-- On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
          This is the label for this shortcut. Android recommends a maximum length of 10 characters. -->
@@ -97,7 +97,7 @@
     <string name="preference_privacy_and_security_header">गोपनीयता र सुरक्षा</string>
 
     <!-- Preference summary for settings related to privacy and security -->
-    <string name="preference_privacy_and_security_summary">ट्रयाकिङ, कुकीहरू, डाटा विकल्पहरु</string>
+    <string name="preference_privacy_and_security_summary">ट्रयाकिङ, कुकीजहरू, डाटा विकल्पहरु</string>
 
     <!-- Preference category description for settings related to search, set default
     and autocomplete are settings a user can find and change inside the "search" settings screen -->
@@ -112,13 +112,13 @@
     <string name="preference_category_web_content">वेब सामग्री</string>
 
     <!-- Preference category: stealth settings for while switching apps -->
-    <string name="preference_category_switching_apps">अनुप्रयोगहरू बदल्ने</string>
+    <string name="preference_category_switching_apps">एपहरु बदलिँदै</string>
 
     <!-- Preference category for General Settings -->
-    <string name="preference_category_general">साधारण</string>
+    <string name="preference_category_general">सामान्य</string>
 
     <!-- Preference category for settings about sending usage data -->
-    <string name="preference_category_data_collection_use">डेटा संग्रह र प्रयोग</string>
+    <string name="preference_category_data_collection_use">डेटा सङ्कलन र प्रयोग</string>
 
     <string name="preference_category_search">खोजी गर्नुहोस्</string>
 
@@ -126,7 +126,7 @@
     <string name="preference_search_engine_default">पूर्वनिर्धारित</string>
 
     <!-- Text that is shown below a "switch" preference that is enabled. -->
-    <string name="preference_state_on">खुला</string>
+    <string name="preference_state_on">खुल्ला</string>
 
     <!-- Text that is shown below a "switch" preference that is disabled. -->
     <string name="preference_state_off">बन्द</string>
@@ -144,13 +144,13 @@
     <string name="custom_autocomplete_quick_add">अनुकूल URL थप्नुहोस्</string>
 
     <!-- Preference category for settings about cookies and site data -->
-    <string name="preference_category_cookies">कुकीहरु र साइट डेटा</string>
+    <string name="preference_category_cookies">कुकीजहरु र साइट डेटा</string>
 
     <!-- Preference category for settings about data choices -->
     <string name="preference_category_data_choices">डाटा विकल्पहरू</string>
 
     <!-- Title of the screen for removing custom autocomplete URLs. -->
-    <string name="preference_autocomplete_title_remove">+ अनुकूल URL हटाउनुहोस्</string>
+    <string name="preference_autocomplete_title_remove">अनुकूल URLs हटाउनुहोस्</string>
 
     <!-- A link to SUMO at autocomplete settings. -->
     <string name="preference_autocomplete_learn_more">थप जान्नुहोस्</string>

@@ -160,8 +160,8 @@
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">عمومی</string>
 
-    <!-- Preference summary for General Settings category; the three things users can find in this category -->
-    <string name="preference_general_summary">طے شدہ برائوزر، ٹیبس، زبان</string>
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">طے شدہ برائوزر، زبان</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">کوائف کا مجموعہ اور ان کا استعمال</string>
@@ -572,8 +572,26 @@
     <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
     <string name="preference_advanced_summary">تخلیق کار ٹول</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">ایپس میں ربط کھولیں</string>
+
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">اعلٰی</string>
+
+    <!-- Preference for studies -->
+    <string name="preference_studies">مطالعہ</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">مزید سیکھیں</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app"></string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">ہٹائیں</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">فعال</string>
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">&quot;USB//Wi-Fi کے ذریعے بعید ٹھیک کاری &quot;</string>
@@ -689,6 +707,9 @@
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="insecure_connection">کنکشن محفوظ نہیں ہے</string>
 
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">بلاک کرنے کے لیے ٹریکرز اور اسکرپٹ</string>
+
     <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
     <string name="go_back">واپس جائیں</string>
 
@@ -696,4 +717,16 @@
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">ہٹائیں</string>
 
-    </resources>
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">تھیم</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">ہلکا</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">گہرا</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">بیٹری سیور کے ذریعہ مرتب کردہ</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">آلہ کے تھیم پر عمل کریں</string>
+
+</resources>
