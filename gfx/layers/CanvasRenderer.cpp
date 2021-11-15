@@ -87,8 +87,6 @@ TextureType TexTypeForWebgl(KnowsCompositor* const knowsCompositor) {
   const auto layersBackend = knowsCompositor->GetCompositorBackendType();
 
   switch (layersBackend) {
-    case LayersBackend::LAYERS_CLIENT:
-      MOZ_CRASH("Unexpected LayersBackend::LAYERS_CLIENT");
     case LayersBackend::LAYERS_LAST:
       MOZ_CRASH("Unexpected LayersBackend::LAYERS_LAST");
 

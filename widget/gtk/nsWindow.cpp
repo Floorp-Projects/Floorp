@@ -3581,8 +3581,7 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   }
 
   // If this widget uses OMTC...
-  if (renderer->GetBackendType() == LayersBackend::LAYERS_CLIENT ||
-      renderer->GetBackendType() == LayersBackend::LAYERS_WR) {
+  if (renderer->GetBackendType() == LayersBackend::LAYERS_WR) {
     listener->PaintWindow(this, region);
 
     // Re-get the listener since the will paint notification might have
