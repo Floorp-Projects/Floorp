@@ -14,11 +14,11 @@ import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import androidx.viewpager.widget.ViewPager
 import com.google.android.material.tabs.TabLayout
+import org.mozilla.focus.GleanMetrics.Onboarding
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.firstrun.FirstrunPagerAdapter
 import org.mozilla.focus.state.AppAction
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.StatusBarUtils
 
 class FirstrunFragment : Fragment(), View.OnClickListener {
@@ -36,7 +36,7 @@ class FirstrunFragment : Fragment(), View.OnClickListener {
 
         // We will send a telemetry event whenever a new firstrun page is shown. However this page
         // listener won't fire for the initial page we are showing. So we are going to firing here.
-        TelemetryWrapper.showFirstRunPageEvent(0)
+        Onboarding.pageDisplayed.record(Onboarding.PageDisplayedExtra(0))
     }
 
     @Suppress("MagicNumber")
@@ -59,7 +59,7 @@ class FirstrunFragment : Fragment(), View.OnClickListener {
         viewPager!!.adapter = adapter
         viewPager!!.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageSelected(position: Int) {
-                TelemetryWrapper.showFirstRunPageEvent(position)
+                Onboarding.pageDisplayed.record(Onboarding.PageDisplayedExtra(0))
 
                 viewPager!!.contentDescription = adapter.getPageAccessibilityDescription(position)
             }
@@ -76,17 +76,21 @@ class FirstrunFragment : Fragment(), View.OnClickListener {
     }
 
     override fun onClick(view: View) {
+        val currentItem = viewPager!!.currentItem
         when (view.id) {
-            R.id.next -> viewPager!!.currentItem = viewPager!!.currentItem + 1
+            R.id.next -> {
+                viewPager!!.currentItem = viewPager!!.currentItem + 1
+                Onboarding.nextButtonTapped.record(Onboarding.NextButtonTappedExtra(currentItem))
+            }
 
             R.id.skip -> {
                 finishFirstrun()
-                TelemetryWrapper.skipFirstRunEvent()
+                Onboarding.skipButtonTapped.record(Onboarding.SkipButtonTappedExtra(currentItem))
             }
 
             R.id.finish -> {
                 finishFirstrun()
-                TelemetryWrapper.finishFirstRunEvent()
+                Onboarding.finishButtonTapped.record(Onboarding.FinishButtonTappedExtra(currentItem))
             }
 
             else -> throw IllegalArgumentException("Unknown view")

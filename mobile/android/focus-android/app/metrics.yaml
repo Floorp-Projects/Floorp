@@ -1348,3 +1348,69 @@ context_menu:
           open_in_new_tab, open_in_private_tab, open_image_in_new_tab,
           save_image, share_link, copy_link, copy_image_location, share_image
         type: string
+
+onboarding:
+  page_displayed:
+    type: event
+    description: A page from onboarding has been displayed.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5635
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5869
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      current_item:
+        description: The curent displayed item position.
+        type: quantity
+  skip_button_tapped:
+    type: event
+    description: The user has tapped to skip onboarding.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5635
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5869
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      current_item:
+        description: The curent displayed item position.
+        type: quantity
+  finish_button_tapped:
+    type: event
+    description: The user has tapped to finish onboarding.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5635
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5869
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      current_item:
+        description: The curent displayed item position.
+        type: quantity
+  next_button_tapped:
+    type: event
+    description: The user has tapped next onboarding.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5635
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5869
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      current_item:
+        description: The curent displayed item position.
+        type: quantity

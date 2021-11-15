@@ -91,7 +91,6 @@ object TelemetryWrapper {
         val BACK_BUTTON = "back_button"
         val BLOCKING_SWITCH = "blocking_switch"
         val BROWSER = "browser"
-        val FIRSTRUN = "firstrun"
         val AUTOCOMPLETE_DOMAIN = "autocomplete_domain"
         val SEARCH_SUGGESTION_PROMPT = "search_suggestion_prompt"
         val MAKE_DEFAULT_BROWSER_OPEN_WITH = "make_default_browser_open_with"
@@ -104,8 +103,6 @@ object TelemetryWrapper {
         val SELECTION = "selection"
         val ERASE_TO_HOME = "erase_home"
         val ERASE_TO_APP = "erase_app"
-        val SKIP = "skip"
-        val FINISH = "finish"
         val OPEN = "open"
         val URL = "url"
         val SEARCH = "search"
@@ -361,21 +358,6 @@ object TelemetryWrapper {
             Object.BLOCKING_SWITCH,
             isBlockingEnabled.toString()
         ).queue()
-    }
-
-    @JvmStatic
-    fun showFirstRunPageEvent(page: Int) {
-        TelemetryEvent.create(Category.ACTION, Method.SHOW, Object.FIRSTRUN, page.toString()).queue()
-    }
-
-    @JvmStatic
-    fun skipFirstRunEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.FIRSTRUN, Value.SKIP).queue()
-    }
-
-    @JvmStatic
-    fun finishFirstRunEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.FIRSTRUN, Value.FINISH).queue()
     }
 
     enum class AutoCompleteEventSource {
