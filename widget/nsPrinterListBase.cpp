@@ -6,12 +6,19 @@
 #include "nsPrinterListBase.h"
 #include "PrintBackgroundTask.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/gfx/Rect.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/intl/Localization.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/RefPtr.h"
 #include "xpcpublic.h"
+
+using namespace mozilla;
 
 using mozilla::ErrorResult;
 using mozilla::intl::Localization;
 using PrinterInfo = nsPrinterListBase::PrinterInfo;
+using MarginDouble = mozilla::gfx::MarginDouble;
 
 nsPrinterListBase::nsPrinterListBase() = default;
 nsPrinterListBase::~nsPrinterListBase() = default;
