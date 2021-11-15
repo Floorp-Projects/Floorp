@@ -1,6 +1,6 @@
 browser.notifications.create("cake-notification", {
   type: "basic",
   title: "Time for cake!",
-  iconUrl: "http://example.com/img.svg",
+  iconUrl: "https://example.com/img.svg",
   message: "Something something cake",
 });

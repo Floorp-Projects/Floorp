@@ -70,7 +70,7 @@ class WebExtensionTest : BaseSessionTest() {
 
     @Test
     fun installBuiltIn() {
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
         // First let's check that the color of the border is empty before loading
@@ -173,7 +173,7 @@ class WebExtensionTest : BaseSessionTest() {
 
     @Test
     fun enableDisable() {
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
         sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
@@ -219,7 +219,7 @@ class WebExtensionTest : BaseSessionTest() {
 
     @Test
     fun installWebExtension() {
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
         // First let's check that the color of the border is empty before loading
@@ -275,7 +275,7 @@ class WebExtensionTest : BaseSessionTest() {
     @Test
     @Setting.List(Setting(key = Setting.Key.USE_PRIVATE_MODE, value = "true"))
     fun runInPrivateBrowsing() {
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
         // Make sure border is empty before running the extension
@@ -477,7 +477,7 @@ class WebExtensionTest : BaseSessionTest() {
 
     @Test
     fun installDeny() {
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
         // Ensure border is empty to start.
@@ -523,7 +523,7 @@ class WebExtensionTest : BaseSessionTest() {
             override fun onShowNotification(notification: WebNotification) {
                 assertEquals(notification.title, "Time for cake!")
                 assertEquals(notification.text, "Something something cake")
-                assertEquals(notification.imageUrl, "http://example.com/img.svg")
+                assertEquals(notification.imageUrl, "https://example.com/img.svg")
                 // This should be filled out, Bug 1589693
                 assertEquals(notification.source, null)
             }
@@ -1255,7 +1255,7 @@ class WebExtensionTest : BaseSessionTest() {
 
     @Test
     fun contentMessaging() {
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
         testOnMessage(false)
     }
@@ -1324,7 +1324,7 @@ class WebExtensionTest : BaseSessionTest() {
 
     @Test
     fun contentPortMessaging() {
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
         testPortMessage(false)
     }
@@ -1402,7 +1402,7 @@ class WebExtensionTest : BaseSessionTest() {
 
     @Test
     fun contentPortDisconnect() {
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
         testPortDisconnect(background=false, refresh=false)
     }
@@ -1414,7 +1414,7 @@ class WebExtensionTest : BaseSessionTest() {
 
     @Test
     fun contentPortDisconnectAfterRefresh() {
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
         testPortDisconnect(background=false, refresh=true)
     }
@@ -1433,7 +1433,7 @@ class WebExtensionTest : BaseSessionTest() {
             assertEquals("Called from background script, expecting only content scripts",
                     sender.environmentType, WebExtension.MessageSender.ENV_TYPE_CONTENT_SCRIPT)
             assertTrue("Expecting only top level senders.", sender.isTopLevel)
-            assertEquals("Unexpected sender url", sender.url, "http://example.com/")
+            assertEquals("Unexpected sender url", sender.url, "https://example.com/")
         }
     }
 
@@ -1480,7 +1480,7 @@ class WebExtensionTest : BaseSessionTest() {
 
     @Test
     fun contentPortDisconnectFromApp() {
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
         testPortDisconnectFromApp(false)
     }
@@ -1622,13 +1622,13 @@ class WebExtensionTest : BaseSessionTest() {
             }
         })
 
-        mainSession.loadUri("http://example.com")
+        mainSession.loadUri("https://example.com")
 
         mainSession.waitUntilCalled(object : NavigationDelegate, ProgressDelegate {
             @GeckoSessionTestRule.AssertCalled(count = 1)
             override fun onLocationChange(session: GeckoSession, url: String?) {
                 assertThat("Url should load example.com first",
-                        url, equalTo("http://example.com/"))
+                        url, equalTo("https://example.com/"))
             }
 
             @GeckoSessionTestRule.AssertCalled(count = 1)
@@ -1748,7 +1748,7 @@ class WebExtensionTest : BaseSessionTest() {
                 "extensions.install.requireBuiltInCerts" to false,
                 "extensions.update.requireBuiltInCerts" to false
         ))
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
         // First let's check that the color of the border is empty before loading
@@ -1800,7 +1800,7 @@ class WebExtensionTest : BaseSessionTest() {
                 "extensions.install.requireBuiltInCerts" to false,
                 "extensions.update.requireBuiltInCerts" to false
         ))
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
         // First let's check that the color of the border is empty before loading
@@ -1866,7 +1866,7 @@ class WebExtensionTest : BaseSessionTest() {
                 "extensions.install.requireBuiltInCerts" to false,
                 "extensions.update.requireBuiltInCerts" to false
         ))
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
         // First let's check that the color of the border is empty before loading
@@ -1912,7 +1912,7 @@ class WebExtensionTest : BaseSessionTest() {
                 "extensions.install.requireBuiltInCerts" to false,
                 "extensions.update.requireBuiltInCerts" to false
         ))
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
         // First let's check that the color of the border is empty before loading
@@ -2010,7 +2010,7 @@ class WebExtensionTest : BaseSessionTest() {
                 "extensions.update.requireBuiltInCerts" to false,
                 "extensions.webextensions.warnings-as-errors" to false
         ))
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
         // First let's check that the color of the border is empty before loading
@@ -2063,7 +2063,7 @@ class WebExtensionTest : BaseSessionTest() {
                 "extensions.install.requireBuiltInCerts" to false,
                 "extensions.update.requireBuiltInCerts" to false
         ))
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
         sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
@@ -2175,7 +2175,7 @@ class WebExtensionTest : BaseSessionTest() {
                 "extensions.update.requireBuiltInCerts" to false
         ))
 
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
         sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {
@@ -2244,7 +2244,7 @@ class WebExtensionTest : BaseSessionTest() {
                 "extensions.update.requireBuiltInCerts" to false
         ))
 
-        mainSession.loadUri("example.com")
+        mainSession.loadUri("https://example.com")
         sessionRule.waitForPageStop()
 
         sessionRule.delegateDuringNextWait(object : WebExtensionController.PromptDelegate {

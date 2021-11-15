@@ -706,14 +706,14 @@ class NavigationDelegateTest : BaseSessionTest() {
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
         val redirectUri = if (sessionRule.env.isAutomation) {
-            "http://example.org/tests/junit/hello.html"
+            "https://example.org/tests/junit/hello.html"
         } else {
-            "http://jigsaw.w3.org/HTTP/300/Overview.html"
+            "https://jigsaw.w3.org/HTTP/300/Overview.html"
         }
         val uri = if (sessionRule.env.isAutomation) {
-            "http://example.org/tests/junit/simple_redirect.sjs?$redirectUri"
+            "https://example.org/tests/junit/simple_redirect.sjs?$redirectUri"
         } else {
-            "http://jigsaw.w3.org/HTTP/300/301.html"
+            "https://jigsaw.w3.org/HTTP/300/301.html"
         }
 
         sessionRule.session.loadUri(uri)
@@ -791,14 +791,14 @@ class NavigationDelegateTest : BaseSessionTest() {
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
         val redirectUri = if (sessionRule.env.isAutomation) {
-            "http://example.org/tests/junit/hello.html"
+            "https://example.org/tests/junit/hello.html"
         } else {
-            "http://jigsaw.w3.org/HTTP/300/Overview.html"
+            "https://jigsaw.w3.org/HTTP/300/Overview.html"
         }
         val uri = if (sessionRule.env.isAutomation) {
-            "http://example.org/tests/junit/simple_redirect.sjs?$redirectUri"
+            "https://example.org/tests/junit/simple_redirect.sjs?$redirectUri"
         } else {
-            "http://jigsaw.w3.org/HTTP/300/301.html"
+            "https://jigsaw.w3.org/HTTP/300/301.html"
         }
 
         sessionRule.delegateDuringNextWait(
@@ -846,7 +846,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
 
         val redirectUri = "intent://test"
-        val uri = "http://example.org/tests/junit/simple_redirect.sjs?$redirectUri"
+        val uri = "https://example.org/tests/junit/simple_redirect.sjs?$redirectUri"
 
         sessionRule.session.loadUri(uri)
         sessionRule.waitForPageStop()
