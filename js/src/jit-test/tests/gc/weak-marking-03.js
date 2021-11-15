@@ -186,6 +186,59 @@ function nukeMarking() {
 if (this.enqueueMark)
   runtest(nukeMarking);
 
+// Similar to the above, but trying to get a different failure:
+//  - start marking
+//  - find a map, add its key to ephemeronEdges
+//  - nuke the key (and all other CCWs between the key -> delegate zones)
+//  - when sweeping, we will no longer have any edges between the key
+//    and delegate zones. So they will be placed in separate sweep groups.
+//  - for this test, the delegate zone must be swept after the key zone
+//  - make sure we don't try to mark back in the key zone (due to an
+//    ephemeron edge) while sweeping the delegate zone. In a DEBUG build,
+//    this would assert.
+function nukeMarkingSweepGroups() {
+  // Create g1 before host, because that will result in the right zone
+  // ordering to trigger the bug.
+  const g1 = newGlobal({newCompartment: true});
+  const host = newGlobal({newCompartment: true});
+  host.g1 = g1;
+  host.eval(`
+  const vals = {};
+  vals.map = new WeakMap();
+  vals.key = g1.eval("Object.create(null)");
+  vals.val = Object.create(null);
+  vals.map.set(vals.key, vals.val);
+  vals.val = null;
+  gc();
+
+  // Set up the sequence of marking events.
+  enqueueMark(vals.map);
+  enqueueMark("yield");
+  // We will nuke the key's delegate here.
+  enqueueMark(vals.key);
+  enqueueMark("enter-weak-marking-mode");
+
+  // Okay, run through the GC now.
+  startgc(1);
+  while (gcstate() === "Prepare") {
+    gcslice(100000);
+  }
+  assertEq(gcstate(), "Mark", "expected to yield after marking map");
+  // We should have marked the map and then yielded back here.
+  nukeAllCCWs();
+  // Finish up the GC.
+  while (gcstate() === "Mark") {
+    gcslice(1000);
+  }
+  gcslice();
+
+  clearMarkQueue();
+  `);
+}
+
+if (this.enqueueMark)
+  runtest(nukeMarkingSweepGroups);
+
 function transplantMarking() {
   const g1 = newGlobal({newCompartment: true});
 
