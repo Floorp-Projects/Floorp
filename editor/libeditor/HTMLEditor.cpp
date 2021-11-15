@@ -3497,15 +3497,16 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::PrepareToInsertBRElement(
 
   MOZ_DIAGNOSTIC_ASSERT(aPointToInsert.IsSetAndValid());
 
-  // Unfortunately, we need to split the text node at the offset.
-  ErrorResult error;
-  nsCOMPtr<nsIContent> newLeftNode =
-      SplitNodeWithTransaction(aPointToInsert, error);
-  if (error.Failed()) {
-    NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-    return Err(error.StealNSResult());
+  {
+    // Unfortunately, we need to split the text node at the offset.
+    Result<nsCOMPtr<nsIContent>, nsresult> newLeftTextNodeOrError =
+        SplitNodeWithTransaction(aPointToInsert);
+    if (MOZ_UNLIKELY(newLeftTextNodeOrError.isErr())) {
+      NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
+      return Err(newLeftTextNodeOrError.unwrapErr());
+    }
   }
-  Unused << newLeftNode;
+
   // Insert new <br> before the right node.
   EditorDOMPoint pointInContainer(aPointToInsert.GetContainer());
   if (!pointInContainer.IsSet()) {
@@ -4190,31 +4191,30 @@ nsresult HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
   return rv;
 }
 
-already_AddRefed<nsIContent> HTMLEditor::SplitNodeWithTransaction(
-    const EditorDOMPoint& aStartOfRightNode, ErrorResult& aError) {
+Result<nsCOMPtr<nsIContent>, nsresult> HTMLEditor::SplitNodeWithTransaction(
+    const EditorDOMPoint& aStartOfRightNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  if (NS_WARN_IF(!aStartOfRightNode.IsInContentNode())) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return nullptr;
+  if (MOZ_UNLIKELY(NS_WARN_IF(!aStartOfRightNode.IsInContentNode()))) {
+    return Err(NS_ERROR_INVALID_ARG);
   }
   MOZ_ASSERT(aStartOfRightNode.IsSetAndValid());
 
-  if (NS_WARN_IF(!HTMLEditUtils::IsSplittableNode(
-          *aStartOfRightNode.ContainerAsContent()))) {
-    aError.Throw(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
-    return nullptr;
+  if (MOZ_UNLIKELY(NS_WARN_IF(!HTMLEditUtils::IsSplittableNode(
+          *aStartOfRightNode.ContainerAsContent())))) {
+    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
+  IgnoredErrorResult ignoredError;
   AutoEditSubActionNotifier startToHandleEditSubAction(
-      *this, EditSubAction::eSplitNode, nsIEditor::eNext, aError);
-  if (NS_WARN_IF(aError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    return nullptr;
+      *this, EditSubAction::eSplitNode, nsIEditor::eNext, ignoredError);
+  if (MOZ_UNLIKELY(
+          NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED)))) {
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(
-      !aError.Failed(),
+      !ignoredError.Failed(),
       "OnStartToHandleTopLevelEditSubAction() failed, but ignored");
-  aError.SuppressException();
 
   // XXX Unfortunately, storing offset of the split point in
   //     SplitNodeTransaction is necessary for now.  We should fix this
@@ -4223,8 +4223,8 @@ already_AddRefed<nsIContent> HTMLEditor::SplitNodeWithTransaction(
 
   RefPtr<SplitNodeTransaction> transaction =
       SplitNodeTransaction::Create(*this, aStartOfRightNode);
-  aError = DoTransactionInternal(transaction);
-  NS_WARNING_ASSERTION(!aError.Failed(),
+  nsresult rv = DoTransactionInternal(transaction);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "EditorBase::DoTransactionInternal() failed");
 
   nsCOMPtr<nsIContent> newLeftContent = transaction->GetNewLeftContent();
@@ -4244,11 +4244,15 @@ already_AddRefed<nsIContent> HTMLEditor::SplitNodeWithTransaction(
         SplitNodeDirection::LeftNodeIsNewOne);
   }
 
-  if (aError.Failed()) {
-    return nullptr;
+  if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
+    return Err(NS_ERROR_EDITOR_DESTROYED);
   }
 
-  return newLeftContent.forget();
+  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+    return Err(rv);
+  }
+
+  return newLeftContent;
 }
 
 SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
@@ -4300,15 +4304,15 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
          !atStartOfRightNode.GetContainerAsText()) ||
         (!atStartOfRightNode.IsStartOfContainer() &&
          !atStartOfRightNode.IsEndOfContainer())) {
-      ErrorResult error;
-      nsCOMPtr<nsIContent> newLeftNode =
-          SplitNodeWithTransaction(atStartOfRightNode, error);
-      if (error.Failed()) {
+      Result<nsCOMPtr<nsIContent>, nsresult> newLeftContentOrError =
+          SplitNodeWithTransaction(atStartOfRightNode);
+      if (MOZ_UNLIKELY(newLeftContentOrError.isErr())) {
         NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-        return SplitNodeResult(error.StealNSResult());
+        return SplitNodeResult(newLeftContentOrError.unwrapErr());
       }
 
-      lastSplitNodeResult = SplitNodeResult(newLeftNode, currentRightNode);
+      lastSplitNodeResult =
+          SplitNodeResult(newLeftContentOrError.unwrap(), currentRightNode);
       if (currentRightNode == &aMostAncestorToSplit) {
         // Actually, we split aMostAncestorToSplit.
         return lastSplitNodeResult;
@@ -4979,11 +4983,11 @@ nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
     return error.StealNSResult();
   }
 
-  ErrorResult error;
-  nsCOMPtr<nsIContent> newLeftNode = SplitNodeWithTransaction(atAnchor, error);
-  if (error.Failed()) {
+  Result<nsCOMPtr<nsIContent>, nsresult> newLeftNodeOrError =
+      SplitNodeWithTransaction(atAnchor);
+  if (MOZ_UNLIKELY(newLeftNodeOrError.isErr())) {
     NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-    return error.StealNSResult();
+    return newLeftNodeOrError.unwrapErr();
   }
 
   EditorRawDOMPoint atRightNode(atAnchor.GetContainer());
@@ -4991,6 +4995,7 @@ nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
     return NS_ERROR_FAILURE;
   }
   MOZ_ASSERT(atRightNode.IsSetAndValid());
+  ErrorResult error;
   SelectionRef().CollapseInLimiter(atRightNode, error);
   NS_WARNING_ASSERTION(!error.Failed(),
                        "Selection::CollapseInLimiter() failed");
