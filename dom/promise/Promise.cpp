@@ -866,6 +866,17 @@ void Promise::SetSettledPromiseIsHandled() {
   JS::SetSettledPromiseIsHandled(cx, promiseObj);
 }
 
+/* static */
+already_AddRefed<Promise> Promise::CreateResolvedWithUndefined(
+    nsIGlobalObject* global, ErrorResult& aRv) {
+  RefPtr<Promise> returnPromise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  returnPromise->MaybeResolveWithUndefined();
+  return returnPromise.forget();
+}
+
 }  // namespace dom
 }  // namespace mozilla
 

@@ -640,16 +640,6 @@ NS_IMPL_RELEASE_INHERITED(ReadableStreamDefaultTeeReadRequest, ReadRequest)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ReadableStreamDefaultTeeReadRequest)
 NS_INTERFACE_MAP_END_INHERITING(ReadRequest)
 
-static already_AddRefed<Promise> PromiseResolvedWithUndefined(
-    nsIGlobalObject* global, ErrorResult& aRv) {
-  RefPtr<Promise> returnPromise = Promise::Create(global, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  returnPromise->MaybeResolveWithUndefined();
-  return returnPromise.forget();
-}
-
 // Implementation of the Pull algorithm steps for ReadableStreamDefaultTee,
 // from
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaulttee
@@ -674,7 +664,8 @@ class ReadableStreamDefaultTeePullAlgorithm final
 
     // Step 12.1:
     if (mTeeState->Reading()) {
-      return PromiseResolvedWithUndefined(aController.GetParentObject(), aRv);
+      return Promise::CreateResolvedWithUndefined(aController.GetParentObject(),
+                                                  aRv);
     }
 
     // Step 12.2:
@@ -692,7 +683,8 @@ class ReadableStreamDefaultTeePullAlgorithm final
     }
 
     // Step 12.5
-    return PromiseResolvedWithUndefined(aController.GetParentObject(), aRv);
+    return Promise::CreateResolvedWithUndefined(aController.GetParentObject(),
+                                                aRv);
   }
 
  protected:
