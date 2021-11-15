@@ -174,10 +174,9 @@ class nsLineBreaker {
   nsresult Reset(bool* aTrailingBreak);
 
   /*
-   * Set word-break mode for linebreaker.  This is set by word-break property.
-   * @param aMode is LineBreaker::WordBreak::* value.
+   * Set word-break mode for line breaker. This is set by word-break property.
    */
-  void SetWordBreak(mozilla::intl::LineBreaker::WordBreak aMode) {
+  void SetWordBreak(mozilla::intl::WordBreakRule aMode) {
     // If current word is non-empty and mode is changing, flush the breaker.
     if (aMode != mWordBreak && !mCurrentWord.IsEmpty()) {
       nsresult rv = FlushCurrentWord();
@@ -187,7 +186,7 @@ class nsLineBreaker {
       // If previous mode was break-all, we should allow a break here.
       // XXX (jfkthame) css-text spec seems unclear on this, raised question in
       // https://github.com/w3c/csswg-drafts/issues/3897
-      if (mWordBreak == mozilla::intl::LineBreaker::WordBreak::BreakAll) {
+      if (mWordBreak == mozilla::intl::WordBreakRule::BreakAll) {
         mBreakHere = true;
       }
     }
@@ -272,8 +271,8 @@ class nsLineBreaker {
   // True if a break must be allowed at the current position because
   // a run of breakable whitespace ends here
   bool mBreakHere;
-  // line break mode by "word-break" style
-  mozilla::intl::LineBreaker::WordBreak mWordBreak;
+  // Break rules for letters from the "word-break" property.
+  mozilla::intl::WordBreakRule mWordBreak;
   // strictness of break rules, from line-break property
   mozilla::intl::LineBreaker::Strictness mStrictness;
   // Should the text be treated as continuing a word-in-progress (for purposes
