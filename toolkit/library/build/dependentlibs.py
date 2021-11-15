@@ -44,7 +44,7 @@ def dependentlibs_win32_objdump(lib):
 def dependentlibs_readelf(lib):
     """Returns the list of dependencies declared in the given ELF .so"""
     proc = subprocess.Popen(
-        [substs.get("TOOLCHAIN_PREFIX", "") + "readelf", "-d", lib],
+        [substs.get("READELF", "readelf"), "-d", lib],
         stdout=subprocess.PIPE,
         universal_newlines=True,
     )
