@@ -714,12 +714,12 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
             .SplitNodeDeepWithTransaction(
                 MOZ_KnownLive(*pointToInsert.GetContainerAsContent()),
                 pointToInsert, SplitAtEdges::eAllowToCreateEmptyContainer);
-    if (splitNodeResult.Failed()) {
+    if (MOZ_UNLIKELY(splitNodeResult.Failed())) {
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
       return splitNodeResult.Rv();
     }
     pointToInsert = splitNodeResult.SplitPoint();
-    if (!pointToInsert.IsSet()) {
+    if (MOZ_UNLIKELY(!pointToInsert.IsSet())) {
       NS_WARNING(
           "HTMLEditor::SplitNodeDeepWithTransaction() didn't return split "
           "point");
@@ -1033,6 +1033,9 @@ nsresult HTMLEditor::HTMLWithContextInserter::MoveCaretOutsideOfLink(
           .SplitNodeDeepWithTransaction(
               aLinkElement, aPointToPutCaret,
               SplitAtEdges::eDoNotCreateEmptyContainer);
+  if (MOZ_UNLIKELY(NS_WARN_IF(splitLinkResult.EditorDestroyed()))) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
   NS_WARNING_ASSERTION(
       splitLinkResult.Succeeded(),
       "HTMLEditor::SplitNodeDeepWithTransaction() failed, but ignored");
