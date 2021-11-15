@@ -8,6 +8,7 @@
 #define NSLINEBREAKER_H_
 
 #include "mozilla/intl/LineBreaker.h"
+#include "mozilla/intl/Segmenter.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -194,22 +195,21 @@ class nsLineBreaker {
   }
 
   /*
-   * Set line-break rule strictness mode for linebreaker.  This is set by the
+   * Set line-break rule strictness mode for line breaker. This is set by the
    * line-break property.
-   * @param aMode is LineBreaker::Strictness::* value.
    */
-  void SetStrictness(mozilla::intl::LineBreaker::Strictness aMode) {
-    if (aMode != mStrictness && !mCurrentWord.IsEmpty()) {
+  void SetStrictness(mozilla::intl::LineBreakRule aMode) {
+    if (aMode != mLineBreak && !mCurrentWord.IsEmpty()) {
       nsresult rv = FlushCurrentWord();
       if (NS_FAILED(rv)) {
         NS_WARNING("FlushCurrentWord failed, line-breaks may be wrong");
       }
       // If previous mode was anywhere, we should allow a break here.
-      if (mStrictness == mozilla::intl::LineBreaker::Strictness::Anywhere) {
+      if (mLineBreak == mozilla::intl::LineBreakRule::Anywhere) {
         mBreakHere = true;
       }
     }
-    mStrictness = aMode;
+    mLineBreak = aMode;
   }
 
   /**
@@ -273,8 +273,8 @@ class nsLineBreaker {
   bool mBreakHere;
   // Break rules for letters from the "word-break" property.
   mozilla::intl::WordBreakRule mWordBreak;
-  // strictness of break rules, from line-break property
-  mozilla::intl::LineBreaker::Strictness mStrictness;
+  // Line breaking strictness from the "line-break" property.
+  mozilla::intl::LineBreakRule mLineBreak;
   // Should the text be treated as continuing a word-in-progress (for purposes
   // of initial capitalization)? Normally this is set to false whenever we
   // start using a linebreaker, but it may be set to true if the line-breaker

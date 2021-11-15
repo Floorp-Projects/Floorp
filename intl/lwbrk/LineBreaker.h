@@ -7,18 +7,15 @@
 
 #include <cstdint>
 
-#include "mozilla/intl/Segmenter.h"
-
 #define NS_LINEBREAKER_NEED_MORE_TEXT -1
 
 namespace mozilla {
 namespace intl {
+enum class LineBreakRule : uint8_t;
 enum class WordBreakRule : uint8_t;
 
 class LineBreaker final {
  public:
-  using Strictness = LineBreakRule;
-
   // LineBreaker is a utility class with only static methods. No need to
   // instantiate it.
   LineBreaker() = delete;
@@ -40,11 +37,13 @@ class LineBreaker final {
   // aLength is the length of the aText array and also the length of the
   // aBreakBefore output array.
   static void ComputeBreakPositions(const char16_t* aText, uint32_t aLength,
-                                    WordBreakRule aWordBreak, Strictness aLevel,
+                                    WordBreakRule aWordBreak,
+                                    LineBreakRule aLevel,
                                     bool aIsChineseOrJapanese,
                                     uint8_t* aBreakBefore);
   static void ComputeBreakPositions(const uint8_t* aText, uint32_t aLength,
-                                    WordBreakRule aWordBreak, Strictness aLevel,
+                                    WordBreakRule aWordBreak,
+                                    LineBreakRule aLevel,
                                     bool aIsChineseOrJapanese,
                                     uint8_t* aBreakBefore);
 };
