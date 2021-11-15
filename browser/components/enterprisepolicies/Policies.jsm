@@ -2423,7 +2423,7 @@ function installAddonFromURL(url, extensionID, addon) {
     telemetryInfo: { source: "enterprise-policy" },
   }).then(install => {
     if (install.addon && install.addon.appDisabled) {
-      log.error(`Incompatible add-on - ${location}`);
+      log.error(`Incompatible add-on - ${install.addon.id}`);
       install.cancel();
       return;
     }
