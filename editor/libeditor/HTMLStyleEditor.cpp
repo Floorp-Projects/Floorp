@@ -458,39 +458,31 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
   }
 
   // Make the range an independent node.
-  nsCOMPtr<nsIContent> textNodeForTheRange = &aText;
+  RefPtr<Text> textNodeForTheRange = &aText;
 
   // Split at the end of the range.
   EditorDOMPoint atEnd(textNodeForTheRange, aEndOffset);
   if (!atEnd.IsEndOfContainer()) {
     // We need to split off back of text node
-    ErrorResult error;
-    textNodeForTheRange = SplitNodeWithTransaction(atEnd, error);
-    if (NS_WARN_IF(Destroyed())) {
-      error = NS_ERROR_EDITOR_DESTROYED;
+    Result<nsCOMPtr<nsIContent>, nsresult> newLeftTextNodeOrError =
+        SplitNodeWithTransaction(atEnd);
+    if (MOZ_UNLIKELY(newLeftTextNodeOrError.isErr())) {
+      NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
+      return newLeftTextNodeOrError.unwrapErr();
     }
-    if (error.Failed()) {
-      NS_WARNING_ASSERTION(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED),
-                           "HTMLEditor::SplitNodeWithTransaction() failed");
-      return error.StealNSResult();
-    }
+    textNodeForTheRange = Text::FromNodeOrNull(newLeftTextNodeOrError.unwrap());
   }
 
   // Split at the start of the range.
   EditorDOMPoint atStart(textNodeForTheRange, aStartOffset);
   if (!atStart.IsStartOfContainer()) {
     // We need to split off front of text node
-    ErrorResult error;
-    nsCOMPtr<nsIContent> newLeftNode = SplitNodeWithTransaction(atStart, error);
-    if (NS_WARN_IF(Destroyed())) {
-      error = NS_ERROR_EDITOR_DESTROYED;
+    Result<nsCOMPtr<nsIContent>, nsresult> newLeftTextNodeOrError =
+        SplitNodeWithTransaction(atStart);
+    if (MOZ_UNLIKELY(newLeftTextNodeOrError.isErr())) {
+      NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
+      return newLeftTextNodeOrError.unwrapErr();
     }
-    if (error.Failed()) {
-      NS_WARNING_ASSERTION(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED),
-                           "HTMLEditor::SplitNodeWithTransaction() failed");
-      return error.StealNSResult();
-    }
-    Unused << newLeftNode;
   }
 
   if (aAttribute) {
@@ -2381,18 +2373,19 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
   aEndOffset = std::min(aTextNode.Length(), aEndOffset);
 
   // Make the range an independent node.
-  nsCOMPtr<nsIContent> textNodeForTheRange = &aTextNode;
+  RefPtr<Text> textNodeForTheRange = &aTextNode;
 
   // Split at the end of the range.
   EditorDOMPoint atEnd(textNodeForTheRange, aEndOffset);
   if (!atEnd.IsEndOfContainer()) {
     // We need to split off back of text node
-    ErrorResult error;
-    textNodeForTheRange = SplitNodeWithTransaction(atEnd, error);
-    if (error.Failed()) {
+    Result<nsCOMPtr<nsIContent>, nsresult> newLeftTextNodeOrError =
+        SplitNodeWithTransaction(atEnd);
+    if (MOZ_UNLIKELY(newLeftTextNodeOrError.isErr())) {
       NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-      return error.StealNSResult();
+      return newLeftTextNodeOrError.unwrapErr();
     }
+    textNodeForTheRange = Text::FromNodeOrNull(newLeftTextNodeOrError.unwrap());
     MOZ_DIAGNOSTIC_ASSERT(textNodeForTheRange);
   }
 
@@ -2400,13 +2393,12 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
   EditorDOMPoint atStart(textNodeForTheRange, aStartOffset);
   if (!atStart.IsStartOfContainer()) {
     // We need to split off front of text node
-    ErrorResult error;
-    nsCOMPtr<nsIContent> newLeftNode = SplitNodeWithTransaction(atStart, error);
-    if (error.Failed()) {
+    Result<nsCOMPtr<nsIContent>, nsresult> newLeftTextNodeOrError =
+        SplitNodeWithTransaction(atStart);
+    if (MOZ_UNLIKELY(newLeftTextNodeOrError.isErr())) {
       NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-      return error.StealNSResult();
+      return newLeftTextNodeOrError.unwrapErr();
     }
-    Unused << newLeftNode;
   }
 
   // Look for siblings that are correct type of node

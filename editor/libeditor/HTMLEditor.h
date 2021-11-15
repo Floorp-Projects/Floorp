@@ -2077,11 +2077,9 @@ class HTMLEditor final : public EditorBase,
    *                            the right node, i.e., become the new node's
    *                            next sibling.  And the point will be start
    *                            of the right node.
-   * @param aError              If succeed, returns no error.  Otherwise, an
-   *                            error.
    */
-  MOZ_CAN_RUN_SCRIPT already_AddRefed<nsIContent> SplitNodeWithTransaction(
-      const EditorDOMPoint& aStartOfRightNode, ErrorResult& aResult);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<nsCOMPtr<nsIContent>, nsresult>
+  SplitNodeWithTransaction(const EditorDOMPoint& aStartOfRightNode);
 
   enum class SplitAtEdges {
     // SplitNodeDeepWithTransaction() won't split container element

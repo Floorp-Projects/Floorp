@@ -3163,16 +3163,11 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
           if (NS_WARN_IF(!atContent.GetContainerAsContent())) {
             return EditActionResult(NS_ERROR_FAILURE);
           }
-          ErrorResult error;
-          nsCOMPtr<nsIContent> newLeftNode =
-              SplitNodeWithTransaction(atContent, error);
-          if (NS_WARN_IF(Destroyed())) {
-            error.SuppressException();
-            return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-          }
-          if (error.Failed()) {
+          Result<nsCOMPtr<nsIContent>, nsresult> newLeftNodeOrError =
+              SplitNodeWithTransaction(atContent);
+          if (MOZ_UNLIKELY(newLeftNodeOrError.isErr())) {
             NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-            return EditActionResult(error.StealNSResult());
+            return EditActionResult(newLeftNodeOrError.unwrapErr());
           }
           Result<RefPtr<Element>, nsresult> maybeNewListElement =
               CreateNodeWithTransaction(
@@ -6476,7 +6471,6 @@ nsresult HTMLEditor::SplitTextNodesAtRangeEnd(
     nsTArray<RefPtr<nsRange>>& aArrayOfRanges) {
   // Split text nodes. This is necessary, since given ranges may end in text
   // nodes in case where part of a pre-formatted elements needs to be moved.
-  ErrorResult error;
   IgnoredErrorResult ignoredError;
   for (RefPtr<nsRange>& range : aArrayOfRanges) {
     EditorDOMPoint atEnd(range->EndRef());
@@ -6486,14 +6480,11 @@ nsresult HTMLEditor::SplitTextNodesAtRangeEnd(
 
     if (!atEnd.IsStartOfContainer() && !atEnd.IsEndOfContainer()) {
       // Split the text node.
-      nsCOMPtr<nsIContent> newLeftNode = SplitNodeWithTransaction(atEnd, error);
-      if (NS_WARN_IF(Destroyed())) {
-        error = NS_ERROR_EDITOR_DESTROYED;
-      }
-      if (error.Failed()) {
-        NS_WARNING_ASSERTION(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED),
-                             "HTMLEditor::SplitNodeWithTransaction() failed");
-        return error.StealNSResult();
+      Result<nsCOMPtr<nsIContent>, nsresult> newLeftNodeOrError =
+          SplitNodeWithTransaction(atEnd);
+      if (MOZ_UNLIKELY(newLeftNodeOrError.isErr())) {
+        NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
+        return newLeftNodeOrError.unwrapErr();
       }
 
       // Correct the range.
@@ -7173,18 +7164,13 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
         if (pointToSplitOrError.inspect().IsSet()) {
           pointToSplitParentDivOrP = pointToSplitOrError.unwrap();
         }
-        ErrorResult error;
-        nsCOMPtr<nsIContent> newLeftTextNode =
-            SplitNodeWithTransaction(pointToSplitParentDivOrP, error);
-        if (NS_WARN_IF(Destroyed())) {
-          error = NS_ERROR_EDITOR_DESTROYED;
+        Result<nsCOMPtr<nsIContent>, nsresult> newLeftTextNodeOrError =
+            SplitNodeWithTransaction(pointToSplitParentDivOrP);
+        if (MOZ_UNLIKELY(newLeftTextNodeOrError.isErr())) {
+          NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
+          return EditActionResult(newLeftTextNodeOrError.unwrapErr());
         }
-        if (error.Failed()) {
-          NS_WARNING_ASSERTION(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED),
-                               "HTMLEditor::SplitNodeWithTransaction() failed");
-          return EditActionResult(error.StealNSResult());
-        }
-        pointToSplitParentDivOrP.SetToEndOf(newLeftTextNode);
+        pointToSplitParentDivOrP.SetToEndOf(newLeftTextNodeOrError.unwrap());
       }
 
       // We need to put new <br> after the left node if given node was split
@@ -7368,17 +7354,13 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(
     if (!HTMLEditUtils::IsLastChild(aListItem,
                                     {WalkTreeOption::IgnoreNonEditableNode})) {
       // We need to split the list!
-      EditorDOMPoint atListItem(&aListItem);
-      ErrorResult error;
-      leftListNode = SplitNodeWithTransaction(atListItem, error);
-      if (NS_WARN_IF(Destroyed())) {
-        error = NS_ERROR_EDITOR_DESTROYED;
+      Result<nsCOMPtr<nsIContent>, nsresult> newListElementOrError =
+          SplitNodeWithTransaction(EditorDOMPoint(&aListItem));
+      if (MOZ_UNLIKELY(newListElementOrError.isErr())) {
+        NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
+        return newListElementOrError.unwrapErr();
       }
-      if (error.Failed()) {
-        NS_WARNING_ASSERTION(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED),
-                             "HTMLEditor::SplitNodeWithTransaction() failed");
-        return error.StealNSResult();
-      }
+      leftListNode = newListElementOrError.unwrap();
     }
 
     // Are we in a sublist?
@@ -8971,24 +8953,19 @@ nsresult HTMLEditor::LiftUpListItemElement(
       return NS_ERROR_FAILURE;
     }
     MOZ_ASSERT(atListItemElement.IsSetAndValid());
-    ErrorResult error;
-    nsCOMPtr<nsIContent> maybeLeftListContent =
-        SplitNodeWithTransaction(atListItemElement, error);
-    if (NS_WARN_IF(Destroyed())) {
-      error = NS_ERROR_EDITOR_DESTROYED;
+    Result<nsCOMPtr<nsIContent>, nsresult> leftListElementOrError =
+        SplitNodeWithTransaction(atListItemElement);
+    if (MOZ_UNLIKELY(leftListElementOrError.isErr())) {
+      NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
+      return leftListElementOrError.unwrapErr();
     }
-    if (error.Failed()) {
-      NS_WARNING_ASSERTION(error.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED),
-                           "HTMLEditor::SplitNodeWithTransaction() failed");
-      return error.StealNSResult();
-    }
-    if (!maybeLeftListContent->IsElement()) {
+    leftListElement = Element::FromNodeOrNull(leftListElementOrError.unwrap());
+    if (MOZ_UNLIKELY(!leftListElement)) {
       NS_WARNING(
           "HTMLEditor::SplitNodeWithTransaction() didn't return left list "
           "element");
       return NS_ERROR_FAILURE;
     }
-    leftListElement = maybeLeftListContent->AsElement();
   }
 
   // In most cases, insert the list item into the new left list node..

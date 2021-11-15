@@ -344,6 +344,27 @@ class MOZ_STACK_CLASS SplitNodeResult final {
         mRv(NS_OK) {
     MOZ_DIAGNOSTIC_ASSERT(mPreviousNode || mNextNode);
   }
+  SplitNodeResult(nsCOMPtr<nsIContent>&& aPreviousNodeOfSplitPoint,
+                  nsIContent* aNextNodeOfSplitPoint)
+      : mPreviousNode(std::move(aPreviousNodeOfSplitPoint)),
+        mNextNode(aNextNodeOfSplitPoint),
+        mRv(NS_OK) {
+    MOZ_DIAGNOSTIC_ASSERT(mPreviousNode || mNextNode);
+  }
+  SplitNodeResult(nsIContent* aPreviousNodeOfSplitPoint,
+                  nsCOMPtr<nsIContent>&& aNextNodeOfSplitPoint)
+      : mPreviousNode(aPreviousNodeOfSplitPoint),
+        mNextNode(std::move(aNextNodeOfSplitPoint)),
+        mRv(NS_OK) {
+    MOZ_DIAGNOSTIC_ASSERT(mPreviousNode || mNextNode);
+  }
+  SplitNodeResult(nsCOMPtr<nsIContent>&& aPreviousNodeOfSplitPoint,
+                  nsCOMPtr<nsIContent>&& aNextNodeOfSplitPoint)
+      : mPreviousNode(std::move(aPreviousNodeOfSplitPoint)),
+        mNextNode(std::move(aNextNodeOfSplitPoint)),
+        mRv(NS_OK) {
+    MOZ_DIAGNOSTIC_ASSERT(mPreviousNode || mNextNode);
+  }
 
   /**
    * This constructor should be used when the method didn't split any nodes
