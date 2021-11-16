@@ -148,6 +148,9 @@ const SchemaOrgPageData = {
             collectProduct(pageData, scope);
           }
           break;
+        case "schema.org/Organization":
+          pageData.siteName = getProp(scope, "name")[0];
+          break;
       }
     }
 
