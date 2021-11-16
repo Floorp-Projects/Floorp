@@ -609,6 +609,7 @@ void DOMLocalization::ReportL10nOverlaysErrors(
       } else {
         NS_WARNING("Failed to report l10n DOM Overlay errors to console.");
       }
+      printf_stderr("%s\n", NS_ConvertUTF16toUTF8(msg).get());
     }
   }
 }
@@ -623,7 +624,11 @@ void DOMLocalization::ConvertStringToL10nArgs(const nsString& aInput,
   // that.
   L10nArgsHelperDict helperDict;
   if (!helperDict.Init(u"{\"args\": "_ns + aInput + u"}"_ns)) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+    nsTArray<nsCString> errors{
+        "[dom/l10n] Failed to parse l10n-args JSON: "_ns +
+            NS_ConvertUTF16toUTF8(aInput),
+    };
+    MaybeReportErrorsToGecko(errors, aRv, GetParentObject());
     return;
   }
   for (auto& entry : helperDict.mArgs.Entries()) {

@@ -38,6 +38,10 @@ namespace intl {
 //
 // We currently differentiate between nightly/dev-edition builds or automation
 // where we report the errors, and beta/release, where we silence them.
+//
+// A side effect of the conditional model of strict vs loose error handling is
+// that we don't have a way to write integration tests for behavior we expect
+// out of production environment. See bug 1741430.
 [[maybe_unused]] static bool MaybeReportErrorsToGecko(
     const nsTArray<nsCString>& aErrors, ErrorResult& aRv,
     nsIGlobalObject* aGlobal) {
