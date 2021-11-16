@@ -8,7 +8,7 @@
 #define nsBidiPresUtils_h___
 
 #include "gfxContext.h"
-#include "mozilla/intl/Bidi.h"
+#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "nsBidiUtils.h"
 #include "nsHashKeys.h"
 #include "nsCoord.h"
@@ -30,6 +30,9 @@ struct nsSize;
 template <class T>
 class nsTHashtable;
 namespace mozilla {
+namespace intl {
+class Bidi;
+}
 class ComputedStyle;
 class LogicalMargin;
 class WritingMode;
@@ -164,7 +167,7 @@ class nsBidiPresUtils {
      *  mixed direction.
      */
     virtual void SetText(const char16_t* aText, int32_t aLength,
-                         mozilla::intl::Bidi::Direction aDirection) = 0;
+                         mozilla::intl::BidiDirection aDirection) = 0;
 
     /**
      * Returns the measured width of the text given in SetText. If SetText was
@@ -240,7 +243,7 @@ class nsBidiPresUtils {
    * @param aPosResolveCount number of items in the aPosResolve array
    */
   static nsresult RenderText(const char16_t* aText, int32_t aLength,
-                             mozilla::intl::Bidi::EmbeddingLevel aBaseLevel,
+                             mozilla::intl::BidiEmbeddingLevel aBaseLevel,
                              nsPresContext* aPresContext,
                              gfxContext& aRenderingContext,
                              DrawTarget* aTextRunConstructionDrawTarget,
@@ -254,11 +257,11 @@ class nsBidiPresUtils {
         aPosResolve, aPosResolveCount, nullptr);
   }
 
-  static nscoord MeasureTextWidth(
-      const char16_t* aText, int32_t aLength,
-      mozilla::intl::Bidi::EmbeddingLevel aBaseLevel,
-      nsPresContext* aPresContext, gfxContext& aRenderingContext,
-      nsFontMetrics& aFontMetrics) {
+  static nscoord MeasureTextWidth(const char16_t* aText, int32_t aLength,
+                                  mozilla::intl::BidiEmbeddingLevel aBaseLevel,
+                                  nsPresContext* aPresContext,
+                                  gfxContext& aRenderingContext,
+                                  nsFontMetrics& aFontMetrics) {
     nscoord length;
     nsresult rv = ProcessTextForRenderingContext(
         aText, aLength, aBaseLevel, aPresContext, aRenderingContext,
@@ -311,31 +314,31 @@ class nsBidiPresUtils {
   /**
    * Get the bidi embedding level of the given (inline) frame.
    */
-  static mozilla::intl::Bidi::EmbeddingLevel GetFrameEmbeddingLevel(
+  static mozilla::intl::BidiEmbeddingLevel GetFrameEmbeddingLevel(
       nsIFrame* aFrame);
 
   /**
    * Get the bidi base level of the given (inline) frame.
    */
-  static mozilla::intl::Bidi::EmbeddingLevel GetFrameBaseLevel(
+  static mozilla::intl::BidiEmbeddingLevel GetFrameBaseLevel(
       const nsIFrame* aFrame);
 
   /**
-   * Get a mozilla::intl::Bidi::Direction representing the direction implied by
+   * Get a mozilla::intl::BidiDirection representing the direction implied by
    * the bidi base level of the frame.
-   * @return mozilla::intl::Bidi::Direction
+   * @return mozilla::intl::BidiDirection
    */
-  static mozilla::intl::Bidi::Direction ParagraphDirection(
+  static mozilla::intl::BidiDirection ParagraphDirection(
       const nsIFrame* aFrame) {
     return GetFrameBaseLevel(aFrame).Direction();
   }
 
   /**
-   * Get a mozilla::intl::Bidi::Direction representing the direction implied by
+   * Get a mozilla::intl::BidiDirection representing the direction implied by
    * the bidi embedding level of the frame.
-   * @return mozilla::intl::Bidi::Direction
+   * @return mozilla::intl::BidiDirection
    */
-  static mozilla::intl::Bidi::Direction FrameDirection(nsIFrame* aFrame) {
+  static mozilla::intl::BidiDirection FrameDirection(nsIFrame* aFrame) {
     return GetFrameEmbeddingLevel(aFrame).Direction();
   }
 
@@ -372,7 +375,7 @@ class nsBidiPresUtils {
    * @param[out] aWidth Pointer to where the width will be stored (may be null)
    */
   static nsresult ProcessText(const char16_t* aText, size_t aLength,
-                              mozilla::intl::Bidi::EmbeddingLevel aBaseLevel,
+                              mozilla::intl::BidiEmbeddingLevel aBaseLevel,
                               nsPresContext* aPresContext,
                               BidiProcessor& aprocessor, Mode aMode,
                               nsBidiPositionResolve* aPosResolve,
@@ -384,23 +387,22 @@ class nsBidiPresUtils {
    * bidi algorithm.
    *
    * If |unicode-bidi| is set to "[-moz-]plaintext", returns
-   * EmbeddingLevel::DefaultLTR, in other words the direction is determined from
-   * the first strong character in the text according to rules P2 and P3 of the
-   * bidi algorithm, or LTR if there is no strong character.
+   * BidiEmbeddingLevel::DefaultLTR, in other words the direction is determined
+   * from the first strong character in the text according to rules P2 and P3 of
+   * the bidi algorithm, or LTR if there is no strong character.
    *
-   * Otherwise returns EmbeddingLevel::LTR or EmbeddingLevel::RTL depending on
-   * the value of |direction|
+   * Otherwise returns BidiEmbeddingLevel::LTR or BidiEmbeddingLevel::RTL
+   * depending on the value of |direction|
    */
-  static mozilla::intl::Bidi::EmbeddingLevel BidiLevelFromStyle(
+  static mozilla::intl::BidiEmbeddingLevel BidiLevelFromStyle(
       mozilla::ComputedStyle* aComputedStyle);
 
  private:
   static nsresult ProcessTextForRenderingContext(
       const char16_t* aText, int32_t aLength,
-      mozilla::intl::Bidi::EmbeddingLevel aBaseLevel,
-      nsPresContext* aPresContext, gfxContext& aRenderingContext,
-      DrawTarget* aTextRunConstructionDrawTarget, nsFontMetrics& aFontMetrics,
-      Mode aMode,
+      mozilla::intl::BidiEmbeddingLevel aBaseLevel, nsPresContext* aPresContext,
+      gfxContext& aRenderingContext, DrawTarget* aTextRunConstructionDrawTarget,
+      nsFontMetrics& aFontMetrics, Mode aMode,
       nscoord aX,                         // DRAW only
       nscoord aY,                         // DRAW only
       nsBidiPositionResolve* aPosResolve, /* may be null */

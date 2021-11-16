@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 EXPORTS.mozilla.intl = [
     "src/Bidi.h",
+    "src/BidiEmbeddingLevel.h",
     "src/Calendar.h",
     "src/Collator.h",
     "src/Currency.h",
@@ -31,6 +32,7 @@ EXPORTS.mozilla.intl = [
 
 UNIFIED_SOURCES += [
     "src/Bidi.cpp",
+    "src/BidiEmbeddingLevel.cpp",
     "src/Calendar.cpp",
     "src/Collator.cpp",
     "src/Currency.cpp",
