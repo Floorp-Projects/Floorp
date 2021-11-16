@@ -8686,14 +8686,14 @@ void nsCSSFrameConstructor::RecreateFramesForContent(
   }
 }
 
-bool nsCSSFrameConstructor::DestroyFramesFor(Element* aElement) {
-  MOZ_ASSERT(aElement && aElement->GetParentNode());
+bool nsCSSFrameConstructor::DestroyFramesFor(nsIContent* aContent) {
+  MOZ_ASSERT(aContent && aContent->GetParentNode());
 
-  nsIContent* nextSibling = aElement->IsRootOfNativeAnonymousSubtree()
+  nsIContent* nextSibling = aContent->IsRootOfNativeAnonymousSubtree()
                                 ? nullptr
-                                : aElement->GetNextSibling();
+                                : aContent->GetNextSibling();
 
-  return ContentRemoved(aElement, nextSibling, REMOVE_FOR_RECONSTRUCTION);
+  return ContentRemoved(aContent, nextSibling, REMOVE_FOR_RECONSTRUCTION);
 }
 
 //////////////////////////////////////////////////////////////////////

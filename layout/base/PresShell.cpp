@@ -2978,47 +2978,82 @@ void PresShell::SlotAssignmentWillChange(Element& aElement,
 }
 
 #ifdef DEBUG
-static void AssertNoFramesInSubtree(nsIContent* aContent) {
-  for (nsINode* node : ShadowIncludingTreeIterator(*aContent)) {
+static void AssertNoFramesOrStyleDataInDescendants(Element& aElement) {
+  for (nsINode* node : ShadowIncludingTreeIterator(aElement)) {
     nsIContent* c = nsIContent::FromNode(node);
+    if (c == &aElement) {
+      continue;
+    }
     MOZ_ASSERT(!c->GetPrimaryFrame());
+    MOZ_ASSERT(!c->IsElement() || !c->AsElement()->HasServoData());
   }
 }
 #endif
 
 void PresShell::DestroyFramesForAndRestyle(Element* aElement) {
 #ifdef DEBUG
-  auto postCondition =
-      mozilla::MakeScopeExit([&]() { AssertNoFramesInSubtree(aElement); });
+  auto postCondition = MakeScopeExit([&]() {
+    MOZ_ASSERT(!aElement->GetPrimaryFrame());
+    AssertNoFramesOrStyleDataInDescendants(*aElement);
+  });
 #endif
 
   MOZ_ASSERT(aElement);
-  if (MOZ_UNLIKELY(!mDidInitialize)) {
+  if (!aElement->HasServoData()) {
+    // Nothing to do here, the element already is out of the flat tree or is not
+    // styled.
     return;
   }
-
-  if (!aElement->GetFlattenedTreeParentNode()) {
-    // Nothing to do here, the element already is out of the frame tree.
-    return;
-  }
-
-  nsAutoScriptBlocker scriptBlocker;
 
   // Mark ourselves as not safe to flush while we're doing frame destruction.
+  nsAutoScriptBlocker scriptBlocker;
   ++mChangeNestCount;
 
   const bool didReconstruct = FrameConstructor()->DestroyFramesFor(aElement);
-
   // Clear the style data from all the flattened tree descendants, but _not_
   // from us, since otherwise we wouldn't see the reframe.
   RestyleManager::ClearServoDataFromSubtree(aElement,
                                             RestyleManager::IncludeRoot::No);
-
   auto changeHint =
       didReconstruct ? nsChangeHint(0) : nsChangeHint_ReconstructFrame;
-
   mPresContext->RestyleManager()->PostRestyleEvent(
       aElement, RestyleHint::RestyleSubtree(), changeHint);
+
+  --mChangeNestCount;
+}
+
+void PresShell::ShadowRootWillBeAttached(Element& aElement) {
+#ifdef DEBUG
+  auto postCondition = MakeScopeExit(
+      [&]() { AssertNoFramesOrStyleDataInDescendants(aElement); });
+#endif
+
+  if (!aElement.HasServoData()) {
+    // Nothing to do here, the element already is out of the flat tree or is not
+    // styled.
+    return;
+  }
+
+  if (!aElement.HasChildren()) {
+    // The element has no children, just avoid the work.
+    return;
+  }
+
+  // Mark ourselves as not safe to flush while we're doing frame destruction.
+  nsAutoScriptBlocker scriptBlocker;
+  ++mChangeNestCount;
+
+  // NOTE(emilio): We use FlattenedChildIterator intentionally here (rather than
+  // StyleChildrenIterator), since we don't want to remove ::before / ::after
+  // content.
+  FlattenedChildIterator iter(&aElement);
+  nsCSSFrameConstructor* fc = FrameConstructor();
+  for (nsIContent* c = iter.GetNextChild(); c; c = iter.GetNextChild()) {
+    fc->DestroyFramesFor(c);
+    if (c->IsElement()) {
+      RestyleManager::ClearServoDataFromSubtree(c->AsElement());
+    }
+  }
 
   --mChangeNestCount;
 }
