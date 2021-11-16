@@ -8,6 +8,7 @@
 #include <utility>
 #include "nsPaper.h"
 #include "nsIPrintSettings.h"
+#include "nsPrintSettingsService.h"
 #include "PrintBackgroundTask.h"
 #include "mozilla/dom/Promise.h"
 
@@ -37,6 +38,16 @@ class nsPrinterInfo : public nsIPrinterInfo {
     mPaperList.SetCapacity(aPrinterInfo.mPaperList.Length());
     for (const PaperInfo& info : aPrinterInfo.mPaperList) {
       mPaperList.AppendElement(MakeRefPtr<nsPaper>(aPrinter, info));
+    }
+
+    // Update the printer's default settings with the global settings.
+    nsCOMPtr<nsIPrintSettingsService> printSettingsSvc =
+        do_GetService("@mozilla.org/gfx/printsettings-service;1");
+    if (printSettingsSvc) {
+      // Passing false as the second parameter means we don't get the printer
+      // specific settings.
+      printSettingsSvc->InitPrintSettingsFromPrefs(
+          mDefaultSettings, false, nsIPrintSettings::kInitSaveAll);
     }
   }
 
