@@ -2311,7 +2311,6 @@ nsresult HttpBaseChannel::ProcessCrossOriginResourcePolicyHeader() {
   return NS_OK;
 }
 
-
 // See https://gist.github.com/annevk/6f2dd8c79c77123f39797f6bdac43f3e
 // This method runs steps 1-4 of the algorithm to compare
 // cross-origin-opener policies

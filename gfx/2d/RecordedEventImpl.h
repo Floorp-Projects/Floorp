@@ -2420,9 +2420,8 @@ RecordedFillGlyphs::RecordedFillGlyphs(S& aStream)
 
   mGlyphs = new (fallible) Glyph[mNumGlyphs];
   if (!mGlyphs) {
-     gfxCriticalNote
-         << "RecordedFillGlyphs failed to allocate glyphs of size "
-         << mNumGlyphs;
+    gfxCriticalNote << "RecordedFillGlyphs failed to allocate glyphs of size "
+                    << mNumGlyphs;
     aStream.SetIsBad();
   } else {
     aStream.read((char*)mGlyphs, sizeof(Glyph) * mNumGlyphs);

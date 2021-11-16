@@ -80,8 +80,7 @@ class ProducerView {
  public:
   using Producer = _Producer;
 
-  explicit ProducerView(Producer* aProducer)
-      : mProducer(aProducer) {}
+  explicit ProducerView(Producer* aProducer) : mProducer(aProducer) {}
 
   template <typename T>
   bool WriteFromRange(const Range<const T>& src) {
@@ -133,8 +132,7 @@ class ConsumerView {
  public:
   using Consumer = _Consumer;
 
-  explicit ConsumerView(Consumer* aConsumer)
-      : mConsumer(aConsumer) {}
+  explicit ConsumerView(Consumer* aConsumer) : mConsumer(aConsumer) {}
 
   /**
    * Read bytes from the consumer if there is enough data.  aBuffer may
@@ -223,8 +221,7 @@ struct QueueParamTraits<bool> {
   using ParamType = bool;
 
   template <typename U>
-  static auto Write(ProducerView<U>& aProducerView,
-                           const ParamType& aArg) {
+  static auto Write(ProducerView<U>& aProducerView, const ParamType& aArg) {
     uint8_t temp = aArg ? 1 : 0;
     return aProducerView.WriteParam(temp);
   }
@@ -251,8 +248,7 @@ struct EnumSerializer {
   using DataType = typename std::underlying_type<E>::type;
 
   template <typename U>
-  static auto Write(ProducerView<U>& aProducerView,
-                           const ParamType& aValue) {
+  static auto Write(ProducerView<U>& aProducerView, const ParamType& aValue) {
     MOZ_RELEASE_ASSERT(
         EnumValidator::IsLegalValue(static_cast<DataType>(aValue)));
     return aProducerView.WriteParam(DataType(aValue));
@@ -372,8 +368,7 @@ struct QueueParamTraits<nsACString> {
   using ParamType = nsACString;
 
   template <typename U>
-  static bool Write(ProducerView<U>& aProducerView,
-                           const ParamType& aArg) {
+  static bool Write(ProducerView<U>& aProducerView, const ParamType& aArg) {
     if ((!aProducerView.WriteParam(aArg.IsVoid())) || aArg.IsVoid()) {
       return false;
     }
@@ -425,8 +420,7 @@ struct QueueParamTraits<nsAString> {
   using ParamType = nsAString;
 
   template <typename U>
-  static bool Write(ProducerView<U>& aProducerView,
-                           const ParamType& aArg) {
+  static bool Write(ProducerView<U>& aProducerView, const ParamType& aArg) {
     if ((!aProducerView.WriteParam(aArg.IsVoid())) || (aArg.IsVoid())) {
       return false;
     }
@@ -503,8 +497,7 @@ struct NSArrayQueueParamTraits<nsTArray<_ElementType>, false> {
   using ParamType = nsTArray<ElementType>;
 
   template <typename U>
-  static bool Write(ProducerView<U>& aProducerView,
-                           const ParamType& aArg) {
+  static bool Write(ProducerView<U>& aProducerView, const ParamType& aArg) {
     aProducerView.WriteParam(aArg.Length());
     for (auto& elt : aArg) {
       aProducerView.WriteParam(elt);
@@ -539,8 +532,7 @@ struct NSArrayQueueParamTraits<nsTArray<_ElementType>, true> {
 
   // TODO: Are there alignment issues?
   template <typename U>
-  static bool Write(ProducerView<U>& aProducerView,
-                           const ParamType& aArg) {
+  static bool Write(ProducerView<U>& aProducerView, const ParamType& aArg) {
     size_t arrayLen = aArg.Length();
     aProducerView.WriteParam(arrayLen);
     return aProducerView.Write(&aArg[0], aArg.Length() * sizeof(ElementType));
@@ -581,8 +573,7 @@ struct ArrayQueueParamTraits<Array<_ElementType, Length>, false> {
   using ParamType = Array<ElementType, Length>;
 
   template <typename U>
-  static auto Write(ProducerView<U>& aProducerView,
-                           const ParamType& aArg) {
+  static auto Write(ProducerView<U>& aProducerView, const ParamType& aArg) {
     for (const auto& elt : aArg) {
       aProducerView.WriteParam(elt);
     }
@@ -605,8 +596,7 @@ struct ArrayQueueParamTraits<Array<_ElementType, Length>, true> {
   using ParamType = Array<ElementType, Length>;
 
   template <typename U>
-  static auto Write(ProducerView<U>& aProducerView,
-                           const ParamType& aArg) {
+  static auto Write(ProducerView<U>& aProducerView, const ParamType& aArg) {
     return aProducerView.Write(aArg.begin(), sizeof(ElementType[Length]));
   }
 
@@ -629,8 +619,7 @@ struct QueueParamTraits<Maybe<ElementType>> {
   using ParamType = Maybe<ElementType>;
 
   template <typename U>
-  static bool Write(ProducerView<U>& aProducerView,
-                           const ParamType& aArg) {
+  static bool Write(ProducerView<U>& aProducerView, const ParamType& aArg) {
     aProducerView.WriteParam(static_cast<bool>(aArg));
     if (aArg) {
       aProducerView.WriteParam(aArg.ref());
@@ -662,8 +651,7 @@ struct QueueParamTraits<std::pair<TypeA, TypeB>> {
   using ParamType = std::pair<TypeA, TypeB>;
 
   template <typename U>
-  static bool Write(ProducerView<U>& aProducerView,
-                           const ParamType& aArg) {
+  static bool Write(ProducerView<U>& aProducerView, const ParamType& aArg) {
     aProducerView.WriteParam(aArg.first());
     return aProducerView.WriteParam(aArg.second());
   }
