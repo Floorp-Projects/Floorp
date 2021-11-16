@@ -402,12 +402,14 @@ typedef enum UNumberFormatFields {
     /** @stable ICU 64 */
     UNUM_COMPACT_FIELD,
 
+    UNUM_APPROXIMATELY_SIGN_FIELD,
+
 #ifndef U_HIDE_DEPRECATED_API
     /**
      * One more than the highest normal UNumberFormatFields value.
      * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
      */
-    UNUM_FIELD_COUNT = UNUM_SIGN_FIELD + 3
+    UNUM_FIELD_COUNT = UNUM_SIGN_FIELD + 4
 #endif  /* U_HIDE_DEPRECATED_API */
 } UNumberFormatFields;
 
