@@ -13,7 +13,7 @@ const tests = [
         locales: {
             "en": [Month("4"), Literal("/"), Day("1"), Literal("/"), RelatedYear("2020")],
             "de": [Day("1"), Literal("."), Month("4"), Literal("."), Year("37")],
-            "ja": [YearName("庚子"), Literal("年"), Month("4"), Literal("月"), Day("1"), Literal("日")],
+            "ja": [YearName("庚子"), Literal("-"), Month("4"), Literal("-"), Day("1")],
             "zh": [RelatedYear("2020"), Literal("年"), Month("四月"), Day("1")],
             "ar": [RelatedYear("٢٠٢٠"), Literal("-"), Month("٠٤"), Literal("-"), Day("٠١")],
         }
@@ -27,7 +27,7 @@ const tests = [
         locales: {
             "en": [Month("4bis"), Literal("/"), Day("1"), Literal("/"), RelatedYear("2020")],
             "de": [Day("1"), Literal("."), Month("4bis"), Literal("."), Year("37")],
-            "ja": [YearName("庚子"), Literal("年"), Month("閏4"), Literal("月"), Day("1"), Literal("日")],
+            "ja": [YearName("庚子"), Literal("-"), Month("閏4"), Literal("-"), Day("1")],
             "zh": [RelatedYear("2020"), Literal("年"), Month("闰四月"), Day("1")],
             "ar": [RelatedYear("٢٠٢٠"), Literal("-"), Month("٠٤bis"), Literal("-"), Day("٠١")],
         }
@@ -133,7 +133,7 @@ const tests = [
         locales: {
             "en": [Day("24"), Literal(" "), Month("Tevet"), Literal(" "), Year("5779")],
             "he": [Day("24"), Literal(" ב"), Month("טבת"), Literal(" "), Year("5779")],
-            "fr": [Day("24"), Literal("/"), Month("4"), Literal("/"), Year("5779"), Literal(" "), Era("A. M.")],
+            "fr": [Day("24"), Literal("/"), Month("04"), Literal("/"), Year("5779"), Literal(" "), Era("A. M.")],
         }
     },
     {
