@@ -2027,7 +2027,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   return NS_OK;
 }
 
-void nsExternalAppHandler::RecordDownloadTelemetry(nsIChannel* aChannel, const char* aAction) {
+void nsExternalAppHandler::RecordDownloadTelemetry(nsIChannel* aChannel,
+                                                   const char* aAction) {
   // Telemetry for helper app dialog
 
   if (XRE_IsContentProcess()) {

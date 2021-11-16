@@ -182,7 +182,7 @@ struct TypeToRootType<Handle<T*>> {
   static constexpr uint32_t result = rootType();
 };
 template <class T>
-struct TypeToRootType<Handle<T> > {
+struct TypeToRootType<Handle<T>> {
   // Fail for Handle types that aren't specialized above.
 };
 
