@@ -988,8 +988,7 @@ nsresult nsPrintSettingsService::WritePrefDouble(const char* aPrefId,
   NS_ENSURE_ARG_POINTER(aPrefId);
 
   nsAutoCString str;
-  // We cast to a float so we only get up to 6 digits precision in the prefs.
-  str.AppendFloat((float)aVal);
+  str.AppendFloat(aVal);
   return Preferences::SetCString(aPrefId, str);
 }
 
