@@ -6003,6 +6003,7 @@ networking:
       - 'fennec'
     record_in_processes:
       - 'main'
+      - 'socket'
 
   http_transactions_captive_portal:
     bug_numbers:
@@ -6019,6 +6020,7 @@ networking:
       - 'fennec'
     record_in_processes:
       - 'main'
+      - 'socket'
 
   http_connections_captive_portal:
     bug_numbers:
@@ -6035,6 +6037,7 @@ networking:
       - 'fennec'
     record_in_processes:
       - 'main'
+      - 'socket'
 
   http3_enabled:
     bug_numbers:
