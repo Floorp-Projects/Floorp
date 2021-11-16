@@ -2089,7 +2089,7 @@
     "description": "HTTP: Requests serviced from cache (%)"
   },
   "HTTP_REQUEST_PER_CONN": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -2098,7 +2098,7 @@
     "description": "HTTP: requests per connection"
   },
   "HTTP_KBREAD_PER_CONN2": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -2468,7 +2468,7 @@
   },
   "HTTP3_UPLOAD_TIME_10M_100M": {
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "bug_numbers": [1675496, 1712441],
     "expires_in_version": "96",
@@ -2481,7 +2481,7 @@
   },
   "HTTP3_UPLOAD_TIME_GT_100M": {
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "bug_numbers": [1712441],
     "expires_in_version": "96",
@@ -2507,7 +2507,7 @@
     "description": "HTTP channel(keys: uses_https_rr_page, uses_https_rr_sub, no_https_rr_page, no_https_rr_sub): Open -> first byte of request sent (ms)"
   },
   "HTTP_PROXY_TYPE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -2944,7 +2944,7 @@
     "labels": ["success", "successMainThread", "failListener", "failListenerChain", "notRequested"]
   },
   "TLS_EARLY_DATA_NEGOTIATED": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "99",
     "kind": "enumerated",
@@ -2955,7 +2955,7 @@
     "releaseChannelCollection": "opt-out"
   },
   "TLS_EARLY_DATA_ACCEPTED": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "99",
     "kind": "boolean",
@@ -2965,7 +2965,7 @@
     "releaseChannelCollection": "opt-out"
   },
   "TLS_EARLY_DATA_BYTES_WRITTEN": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "99",
     "kind": "exponential",
@@ -3160,7 +3160,7 @@
     "alert_emails": ["necko@mozilla.com"]
   },
   "SPDY_PARALLEL_STREAMS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
@@ -3170,7 +3170,7 @@
     "description": "SPDY: Streams concurrent active per connection"
   },
   "SPDY_REQUEST_PER_CONN_3": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "expires_in_version": "never",
@@ -3181,7 +3181,7 @@
     "description": "SPDY: Streams created per connection"
   },
   "SPDY_SERVER_INITIATED_STREAMS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
@@ -3191,7 +3191,7 @@
     "description": "SPDY: Streams recevied per connection"
   },
   "SPDY_CHUNK_RECVD": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
@@ -3201,7 +3201,7 @@
     "description": "SPDY: Recvd Chunk Size (rounded to KB)"
   },
   "SPDY_SYN_SIZE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
@@ -3212,7 +3212,7 @@
     "description": "SPDY: SYN Frame Header Size"
   },
   "SPDY_SYN_RATIO": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
@@ -3222,7 +3222,7 @@
     "description": "SPDY: SYN Frame Header Ratio (lower better)"
   },
   "SPDY_SYN_REPLY_SIZE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
@@ -3233,7 +3233,7 @@
     "description": "SPDY: SYN Reply Header Size"
   },
   "SPDY_SYN_REPLY_RATIO": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
@@ -3243,7 +3243,7 @@
     "description": "SPDY: SYN Reply Header Ratio (lower better)"
   },
   "SPDY_NPN_CONNECT": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
@@ -3259,7 +3259,7 @@
     "description": "SPDY: Coalesce Succeeded"
   },
   "SPDY_KBREAD_PER_CONN2": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "expires_in_version": "never",
@@ -3271,7 +3271,7 @@
     "description": "SPDY: KB read per connection"
   },
   "SPDY_SETTINGS_MAX_STREAMS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
@@ -3281,7 +3281,7 @@
     "description": "H2: Settings Max Streams parameter"
   },
   "SPDY_SETTINGS_IW": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
@@ -3291,7 +3291,7 @@
     "description": "H2: Settings Initial Window (rounded to KB)"
   },
   "SPDY_GOAWAY_LOCAL": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
@@ -3300,7 +3300,7 @@
     "description": "H2: goaway reason client sent from rfc 7540. 31 is none sent."
   },
   "SPDY_GOAWAY_PEER": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
@@ -3309,7 +3309,7 @@
     "description": "H2: goaway reason from peer from rfc 7540. 31 is none received."
   },
   "SPDY_CONTINUED_HEADERS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "alert_emails": ["necko@mozilla.com"],
@@ -3354,7 +3354,7 @@
     "bug_numbers": [1296280]
   },
   "HPACK_PEAK_COUNT_DECOMPRESSOR": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -3365,7 +3365,7 @@
     "bug_numbers": [1296280]
   },
   "HPACK_PEAK_SIZE_DECOMPRESSOR": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -3376,7 +3376,7 @@
     "bug_numbers": [1296280]
   },
   "HPACK_ELEMENTS_EVICTED_COMPRESSOR": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -3387,7 +3387,7 @@
     "bug_numbers": [1296280]
   },
   "HPACK_BYTES_EVICTED_COMPRESSOR": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -3398,7 +3398,7 @@
     "bug_numbers": [1296280]
   },
   "HPACK_BYTES_EVICTED_RATIO_COMPRESSOR": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -3409,7 +3409,7 @@
     "bug_numbers": [1296280]
   },
   "HPACK_PEAK_COUNT_COMPRESSOR": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -3420,7 +3420,7 @@
     "bug_numbers": [1296280]
   },
   "HPACK_PEAK_SIZE_COMPRESSOR": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -3504,7 +3504,7 @@
     "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"]
   },
   "HTTP_CONNECTION_ENTRY_CACHE_HIT_1" : {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "boolean",
@@ -3674,7 +3674,7 @@
     "description": "Time to search offline cache (ms)"
   },
   "TRANSACTION_WAIT_TIME_HTTP": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "bug_numbers": [1605099],
@@ -3685,7 +3685,7 @@
     "description": "Time from submission to dispatch of HTTP transaction (ms)"
   },
   "TRANSACTION_WAIT_TIME_SPDY": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "bug_numbers": [1605099],
@@ -3696,7 +3696,7 @@
     "description": "Time from submission to dispatch of SPDY transaction (ms)"
   },
   "TRANSACTION_WAIT_TIME_HTTP3": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "bug_numbers": [1605099],
@@ -3721,7 +3721,7 @@
     "description": "Time from submission to dispatch of transaction when HTTPS RR is used (ms)"
   },
   "TRANSACTION_WAIT_TIME_HTTP2_SUP_HTTP3": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "bug_numbers": [1675500],
@@ -3756,7 +3756,7 @@
     "description": "Error code when http3 connection is closed. Look at Http3Session for more details."
   },
   "HTTP3_0RTT_STATE": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "bug_numbers": [1688850],
@@ -3767,7 +3767,7 @@
     "description": "Collect what is the outcome when 0rtt is used: (0)0RTT_NOT_USED, (1)0RTT_USED_SUCCESS, (2)0RTT_USED_REJECT, (3)0RTT_USED_CONN_ERROR, (4)0RTT_CONN_CLOSED_BY_NECKO."
   },
   "HTTP3_0RTT_STATE_DURATION": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "bug_numbers": [1688850],
@@ -3792,7 +3792,7 @@
     "bug_numbers": [1655566]
   },
   "HTTP3_TIMER_DELAYED": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
@@ -3803,7 +3803,7 @@
     "bug_numbers": [1655566]
   },
   "HTTP3_REQUEST_PER_CONN": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "expires_in_version": "never",
@@ -3814,7 +3814,7 @@
     "description": "HTTP3: Streams created per connection"
   },
   "HTTP3_BLOCKED_BY_STREAM_LIMIT_PER_CONN": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "expires_in_version": "never",
@@ -3825,7 +3825,7 @@
     "description": "HTTP3: number of times a connection is blocked by maximum allowed number of parallel streams per connection"
   },
   "HTTP3_TRANS_BLOCKED_BY_STREAM_LIMIT_PER_CONN": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "expires_in_version": "never",
@@ -3836,7 +3836,7 @@
     "description": "HTTP3: number of transactions that are blocked by maximum allowed number of parallel streams per connection"
   },
   "HTTP3_TRANS_SENDING_BLOCKED_BY_FLOW_CONTROL_PER_CONN": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "expires_in_version": "never",
@@ -3847,7 +3847,7 @@
     "description": "HTTP3: number of times streams are blocked by the flow control while sending data per connection"
   },
   "HTTP3_SENDING_BLOCKED_BY_FLOW_CONTROL_PER_TRANS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "expires_in_version": "never",
@@ -3858,7 +3858,7 @@
     "description": "HTTP3: number of times when a stream is blocked by the flow control while sendnig data."
   },
   "HTTP3_LOSS_RATIO": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "expires_in_version": "never",
@@ -3869,7 +3869,7 @@
     "description": "HTTP3: packet loss ratio (multiply by 10000)."
   },
   "HTTP3_LATE_ACK_RATIO": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "expires_in_version": "never",
@@ -3881,7 +3881,7 @@
     "description": "HTTP3: spurious retransmissions ratio (spurios_retransmission / packet sent * 10000)."
   },
   "HTTP3_LATE_ACK": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "expires_in_version": "never",
@@ -3893,7 +3893,7 @@
     "description": "HTTP3: the number of spurious retransmissions."
   },
   "HTTP3_COUNTS_PTO": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "expires_in_version": "never",
@@ -3905,7 +3905,7 @@
     "description": "HTTP3: the number of PTOs."
   },
   "HTTP3_DROP_DGRAMS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "expires_in_version": "never",
@@ -3916,7 +3916,7 @@
     "description": "HTTP3: the number of dropped datagrams."
   },
   "HTTP3_SAVED_DGRAMS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "expires_in_version": "never",
@@ -3927,7 +3927,7 @@
     "description": "HTTP3: the number of saved datagrams that are waiting for keys to be available."
   },
   "HTTP3_RECEIVED_SENT_DGRAMS": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
     "expires_in_version": "never",
@@ -4478,7 +4478,7 @@
     "description": "I want to be tracked, I do NOT want to be tracked, DNT unset"
   },
   "DNS_LOOKUP_METHOD2": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -4488,7 +4488,7 @@
     "description": "DNS Lookup Type (hit, renewal, negative-hit, literal, overflow, network-first, network-shared)"
   },
   "DNS_CLEANUP_AGE": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4497,7 +4497,7 @@
     "description": "DNS Cache Entry Age at Removal Time (minutes)"
   },
   "DNS_BY_TYPE_CLEANUP_AGE": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4509,7 +4509,7 @@
     "description": "DNS Cache Entry Age for by-type queries at Removal Time (minutes)"
   },
   "DNS_PREMATURE_EVICTION": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4521,7 +4521,7 @@
     "description": "DNS Cache Entry Age at Removal Time of non-expired entries (minutes)"
   },
   "DNS_BY_TYPE_PREMATURE_EVICTION": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4533,7 +4533,7 @@
     "description": "DNS Cache Entry Age for by-type queries at Removal Time of non-expired entries (minutes)"
   },
   "DNS_LOOKUP_TIME": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4544,7 +4544,7 @@
     "description": "Time for a successful DNS resolution (msec)"
   },
   "DNS_TRR_LOOKUP_TIME3": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4557,7 +4557,7 @@
     "description": "Time for a completed TRR resolution (msec); Keyed by TRR domain"
   },
   "DNS_TRR_PROCESSING_TIME": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4569,7 +4569,7 @@
     "description": "Time from the last received byte of the response until we have notified the consumer with a DNS record (msec)"
   },
   "DNS_TRR_HTTP_VERSION2": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "expires_in_version": "never",
     "kind": "categorical",
@@ -4581,7 +4581,7 @@
     "description": "HTTP version used by DoH endpoint"
   },
   "DNS_NATIVE_LOOKUP_TIME": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4593,7 +4593,7 @@
     "description": "Time for a completed native name resolution (msec)"
   },
   "DNS_BY_TYPE_FAILED_LOOKUP_TIME": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4605,7 +4605,7 @@
     "description": "Time for a completed by-type resolution that has a negative answer (msec)."
   },
   "DNS_BY_TYPE_SUCCEEDED_LOOKUP_TIME": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4617,7 +4617,7 @@
     "description": "Time for a completed by-type resolution that succeeded (msec)."
   },
   "DNS_NATIVE_QUEUING": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4665,7 +4665,7 @@
     "description": "When in TRR-first mode, if TRR was skipped and native failed, it lists the reason we may have skipped TRR, keyed by the provider."
   },
   "DNS_TRR_FIRST4": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"],
     "expires_in_version": "never",
@@ -4677,7 +4677,7 @@
     "description": "TRR-first mode distribution. 0=Worked, 1=fell back fine after TRR fail, 2=native worked, 3=both failed; Keyed by TRR domain"
   },
   "DNS_TRR_DISABLED3": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "boolean",
@@ -4688,7 +4688,7 @@
     "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"]
   },
   "DNS_TRR_BLACKLISTED3": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "boolean",
@@ -4698,7 +4698,7 @@
     "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"]
   },
   "DNS_TRR_NS_VERFIFIED3": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "boolean",
@@ -4708,7 +4708,7 @@
     "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"]
   },
   "DNS_TRR_REQUEST_PER_CONN": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
@@ -4719,7 +4719,7 @@
     "description": "Number of DOH requests per connection"
   },
   "DNS_TRR_SUCCESS3": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "categorical",
@@ -4731,7 +4731,7 @@
     "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"]
   },
   "DNS_LOOKUP_ALGORITHM": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "expires_in_version": "never",
@@ -4741,7 +4741,7 @@
     "description": "DNS: lookup algorithm"
   },
   "DNS_LOOKUP_DISPOSITION3": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com", "vgosu@mozilla.com"],
     "expires_in_version": "never",
@@ -4754,7 +4754,7 @@
     "description": "DNS: lookup algorithm; Keyed by TRR domain"
   },
   "DNS_RENEWAL_TIME": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4763,7 +4763,7 @@
     "description": "Time for a renewed DNS OS resolution (msec)"
   },
   "DNS_RENEWAL_TIME_FOR_TTL": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4772,7 +4772,7 @@
     "description": "Time for a DNS OS resolution (msec) used to get TTL"
   },
   "DNS_FAILED_LOOKUP_TIME": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4783,7 +4783,7 @@
     "description": "Time for an unsuccessful DNS OS resolution (msec)"
   },
   "DNS_BLACKLIST_COUNT": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -4794,7 +4794,7 @@
     "description": "The number of unusable addresses reported for each record"
   },
   "DNS_HTTPSSVC_RECORD_RECEIVING_STAGE": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -4805,7 +4805,7 @@
     "description": "Record at which stage an HTTPSSVC record is received"
   },
   "DNS_HTTPSSVC_CONNECTION_FAILED_REASON": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
@@ -4966,7 +4966,7 @@
     "description": "How long it takes from OnStartRequest to OnStopRequest for a prefetch"
   },
   "PREDICTOR_TOTAL_PRECONNECTS": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "alert_emails": ["necko@mozilla.com"],
@@ -4977,7 +4977,7 @@
     "description": "How many actual preconnects happen"
   },
   "PREDICTOR_TOTAL_PRECONNECTS_CREATED": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
@@ -4988,7 +4988,7 @@
     "description": "How many preconnects actually created a speculative socket"
   },
   "PREDICTOR_TOTAL_PRECONNECTS_USED": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
@@ -4999,7 +4999,7 @@
     "description": "How many preconnects actually created a used speculative socket"
   },
   "PREDICTOR_TOTAL_PRECONNECTS_UNUSED": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [881804],
@@ -5118,7 +5118,7 @@
     "description": "Why the predictor determined a particular resource that was marked eligible for prefetch should not be prefetched. See PrefetchIgnoreReason in Predictor.cpp for value meanings"
   },
   "HTTPCONNMGR_TOTAL_SPECULATIVE_CONN": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5127,7 +5127,7 @@
     "description": "How many speculative http connections are created"
   },
   "HTTPCONNMGR_USED_SPECULATIVE_CONN": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5136,7 +5136,7 @@
     "description": "How many speculative http connections are actually used"
   },
   "HTTPCONNMGR_UNUSED_SPECULATIVE_CONN": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5251,7 +5251,7 @@
     "bug_numbers": [1208167]
   },
   "STS_POLL_AND_EVENTS_CYCLE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5260,7 +5260,7 @@
     "description": "The duraion of a socketThread cycle, including polls and pending events. (ms)"
   },
   "STS_POLL_CYCLE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5269,7 +5269,7 @@
     "description": "The duration of poll. (ms)"
   },
   "STS_POLL_AND_EVENT_THE_LAST_CYCLE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5278,7 +5278,7 @@
     "description": "The duraion of the socketThread cycle during shutdown, including polls and pending events. (ms)"
   },
   "STS_POLL_BLOCK_TIME": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5287,7 +5287,7 @@
     "description": "Time spent blocked on poll (ms)."
   },
   "PRCONNECT_BLOCKING_TIME_NORMAL": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5296,7 +5296,7 @@
     "description": "Time spent blocked in PR_Connect when we are not shutting down and there has been niether a network nor an offline state change in the last 60s (ms)."
   },
   "PRCONNECT_BLOCKING_TIME_SHUTDOWN": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5305,7 +5305,7 @@
     "description": "Time spent blocked in PR_Connect during a shutdown (ms)."
   },
   "PRCONNECT_BLOCKING_TIME_CONNECTIVITY_CHANGE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5314,7 +5314,7 @@
     "description": "Time spent blocked in PR_Connect when there has been the connectiviy change in the last 60s (ms)."
   },
   "PRCONNECT_BLOCKING_TIME_LINK_CHANGE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5323,7 +5323,7 @@
     "description": "Time spent blocked in PR_Connect when there has been a link change in the last 60s (ms)."
   },
   "PRCONNECT_BLOCKING_TIME_OFFLINE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5332,7 +5332,7 @@
     "description": "Time spent blocked in PR_Connect when the offline state has changed in the last 60s (ms)."
   },
   "PRCONNECT_FAIL_BLOCKING_TIME_NORMAL": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "bug_numbers": [1257809],
     "alert_emails": ["ddamjanovic@mozilla.com"],
@@ -5343,7 +5343,7 @@
     "description": "Time spent blocked in a failed PR_Connect when we are not shutting down and there has been niether a network nor an offline state change in the last 60s (ms)."
   },
   "PRCONNECT_FAIL_BLOCKING_TIME_SHUTDOWN": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "bug_numbers": [1257809],
     "alert_emails": ["ddamjanovic@mozilla.com"],
@@ -5354,7 +5354,7 @@
     "description": "Time spent blocked in a failed PR_Connect during a shutdown (ms)."
   },
   "PRCONNECT_FAIL_BLOCKING_TIME_CONNECTIVITY_CHANGE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "bug_numbers": [1257809],
     "alert_emails": ["ddamjanovic@mozilla.com"],
@@ -5365,7 +5365,7 @@
     "description": "Time spent blocked in a failed PR_Connect when there has been the connectiviy change in the last 60s (ms)."
   },
   "PRCONNECT_FAIL_BLOCKING_TIME_LINK_CHANGE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "bug_numbers": [1257809],
     "alert_emails": ["ddamjanovic@mozilla.com"],
@@ -5376,7 +5376,7 @@
     "description": "Time spent blocked in a failed PR_Connect when there has been a link change in the last 60s (ms)."
   },
   "PRCONNECT_FAIL_BLOCKING_TIME_OFFLINE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "bug_numbers": [1257809],
     "alert_emails": ["ddamjanovic@mozilla.com"],
@@ -5387,7 +5387,7 @@
     "description": "Time spent blocked in a failed PR_Connect when the offline state has changed in the last 60s (ms)."
   },
   "PRCONNECTCONTINUE_BLOCKING_TIME_NORMAL": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5396,7 +5396,7 @@
     "description": "Time spent blocked in PR_ConnectContinue when we are not shutting down and there has been niether a network nor an offline state change in the last 60s (ms)."
   },
   "PRCONNECTCONTINUE_BLOCKING_TIME_SHUTDOWN": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5405,7 +5405,7 @@
     "description": "Time spent blocked in PR_ConnectContinue during a shutdown (ms)."
   },
   "PRCONNECTCONTINUE_BLOCKING_TIME_CONNECTIVITY_CHANGE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5414,7 +5414,7 @@
     "description": "Time spent blocked in PR_ConnectContinue when there has been the connectivity change in the last 60s (ms)."
   },
   "PRCONNECTCONTINUE_BLOCKING_TIME_LINK_CHANGE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5423,7 +5423,7 @@
     "description": "Time spent blocked in PR_ConnectContinue when there has been a link change in the last 60s (ms)."
   },
   "PRCONNECTCONTINUE_BLOCKING_TIME_OFFLINE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5432,7 +5432,7 @@
     "description": "Time spent blocked in PR_ConnectContinue when the offline state has changed in the last 60s (ms)."
   },
   "PRCLOSE_TCP_BLOCKING_TIME_NORMAL": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5441,7 +5441,7 @@
     "description": "Time spent blocked in PR_Close when we are not shutting down and there has been niether a network nor an offline state change in the last 60s (ms)."
   },
   "PRCLOSE_TCP_BLOCKING_TIME_SHUTDOWN": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5450,7 +5450,7 @@
     "description": "Time spent blocked in PR_Close during a shutdown (ms)."
   },
   "PRCLOSE_TCP_BLOCKING_TIME_CONNECTIVITY_CHANGE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5459,7 +5459,7 @@
     "description": "Time spent blocked in PR_Close when there has been the connectivity change in the last 60s (ms)."
   },
   "PRCLOSE_TCP_BLOCKING_TIME_LINK_CHANGE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5468,7 +5468,7 @@
     "description": "Time spent blocked in PR_Close when there has been a link change in the last 60s (ms)."
   },
   "PRCLOSE_TCP_BLOCKING_TIME_OFFLINE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5477,7 +5477,7 @@
     "description": "Time spent blocked in PR_Close when the offline state has changed in the last 60s (ms)."
   },
   "PRCLOSE_UDP_BLOCKING_TIME_NORMAL": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5486,7 +5486,7 @@
     "description": "Time spent blocked in PR_Close when we are not shutting down and there has been niether a network nor an offline state change in the last 60s (ms)."
   },
   "PRCLOSE_UDP_BLOCKING_TIME_SHUTDOWN": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5495,7 +5495,7 @@
     "description": "Time spent blocked in PR_Close during a shutdown (ms)."
   },
   "PRCLOSE_UDP_BLOCKING_TIME_CONNECTIVITY_CHANGE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5504,7 +5504,7 @@
     "description": "Time spent blocked in PR_Close when there has been the connectivity change in the last 60s (ms)."
   },
   "PRCLOSE_UDP_BLOCKING_TIME_LINK_CHANGE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5513,7 +5513,7 @@
     "description": "Time spent blocked in PR_Close when there has been a link change in the last 60s (ms)."
   },
   "PRCLOSE_UDP_BLOCKING_TIME_OFFLINE": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5539,7 +5539,7 @@
     "description": "Number of the use of navigator.connection."
   },
   "NETWORK_SESSION_AT_900FD": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "boolean",
@@ -5548,7 +5548,7 @@
     "alert_emails": ["necko@mozilla.com"]
   },
   "NETWORK_PROBE_MAXCOUNT": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "expires_in_version": "never",
     "kind": "linear",
@@ -6051,7 +6051,7 @@
     "description": "Network identification (0=None, 1=New Ipv4, 2=Same, 3=New IPv6, 4=New dual)"
   },
   "NETWORK_ID_ONLINE": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],
     "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1580130],
@@ -16483,7 +16483,7 @@
     "description": "Ratio of used and unused resources preloaded with link rel=preload tag or response header, broken down by supported resource type."
   },
   "HTTP_TRANSACTION_RESTART_REASON": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "expires_in_version": "never",
     "n_values": 50,
@@ -16493,7 +16493,7 @@
     "description": "The reason why a HTTP transaction is restarted."
   },
   "TRANSACTION_ECH_RETRY_WITH_ECH_COUNT": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
     "expires_in_version": "never",
@@ -16504,7 +16504,7 @@
     "description": "When echConfig is enabled, number of times a transaction is retried because of SSL_ERROR_ECH_RETRY_WITH_ECH"
   },
   "TRANSACTION_ECH_RETRY_WITHOUT_ECH_COUNT": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
     "expires_in_version": "never",
@@ -16515,7 +16515,7 @@
     "description": "When echConfig is enabled, number of times a transaction is retried because of SSL_ERROR_ECH_RETRY_WITHOUT_ECH"
   },
   "TRANSACTION_ECH_RETRY_ECH_FAILED_COUNT": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
     "expires_in_version": "never",
@@ -16526,7 +16526,7 @@
     "description": "When echConfig is enabled, number of times a transaction is retried because of SSL_ERROR_ECH_FAILED"
   },
   "TRANSACTION_ECH_RETRY_OTHERS_COUNT": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
     "expires_in_version": "never",
@@ -16647,7 +16647,7 @@
     ]
   },
   "ECHCONFIG_SUCCESS_RATE": {
-    "record_in_processes": ["main"],
+    "record_in_processes": ["main", "socket"],
     "products": ["firefox"],
     "expires_in_version": "never",
     "kind": "categorical",
