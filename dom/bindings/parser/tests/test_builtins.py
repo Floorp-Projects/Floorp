@@ -14,7 +14,6 @@ def WebIDLTest(parser, harness):
           attribute unsigned long u32;
           attribute long long s64;
           attribute unsigned long long u64;
-          attribute DOMTimeStamp ts;
         };
     """
     )
@@ -32,7 +31,7 @@ def WebIDLTest(parser, harness):
     harness.check(iface.parent, None, "Interface has no parent")
 
     members = iface.members
-    harness.check(len(members), 10, "Should be one production")
+    harness.check(len(members), 9, "Should be one production")
 
     names = ["b", "s8", "u8", "s16", "u16", "s32", "u32", "s64", "u64", "ts"]
     types = [
@@ -47,7 +46,7 @@ def WebIDLTest(parser, harness):
         "UnsignedLongLong",
         "UnsignedLongLong",
     ]
-    for i in range(10):
+    for i in range(9):
         attr = members[i]
         harness.ok(isinstance(attr, WebIDL.IDLAttribute), "Should be an IDLAttribute")
         harness.check(
