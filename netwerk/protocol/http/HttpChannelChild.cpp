@@ -3029,5 +3029,10 @@ void HttpChannelChild::MaybeConnectToSocketProcess() {
       []() { NS_WARNING("Failed to create SocketProcessBridgeChild"); });
 }
 
+NS_IMETHODIMP
+HttpChannelChild::SetEarlyHintObserver(nsIEarlyHintObserver* aObserver) {
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla
