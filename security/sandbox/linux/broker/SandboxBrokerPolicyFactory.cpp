@@ -320,6 +320,8 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
 
   // Read permissions
   policy->AddPath(rdonly, "/dev/urandom");
+  policy->AddPath(rdonly, "/dev/random");
+  policy->AddPath(rdonly, "/proc/sys/crypto/fips_enabled");
   policy->AddPath(rdonly, "/proc/cpuinfo");
   policy->AddPath(rdonly, "/proc/meminfo");
   policy->AddDir(rdonly, "/sys/devices/cpu");
@@ -818,6 +820,8 @@ SandboxBrokerPolicyFactory::GetSocketProcessPolicy(int aPid) {
   auto policy = MakeUnique<SandboxBroker::Policy>();
 
   policy->AddPath(rdonly, "/dev/urandom");
+  policy->AddPath(rdonly, "/dev/random");
+  policy->AddPath(rdonly, "/proc/sys/crypto/fips_enabled");
   policy->AddPath(rdonly, "/proc/cpuinfo");
   policy->AddPath(rdonly, "/proc/meminfo");
   policy->AddDir(rdonly, "/sys/devices/cpu");

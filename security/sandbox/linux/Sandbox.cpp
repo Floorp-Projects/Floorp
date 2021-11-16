@@ -655,6 +655,7 @@ void SetMediaPluginSandbox(const char* aFilePath) {
   auto files = new SandboxOpenedFiles();
   files->Add(std::move(plugin));
   files->Add("/dev/urandom", SandboxOpenedFile::Dup::YES);
+  files->Add("/dev/random", SandboxOpenedFile::Dup::YES);
   files->Add("/etc/ld.so.cache");  // Needed for NSS in clearkey.
   files->Add("/sys/devices/system/cpu/cpu0/tsc_freq_khz");
   files->Add("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq");
