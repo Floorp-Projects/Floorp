@@ -23,11 +23,11 @@
 #include "mozilla/TimeStamp.h"  // for TimeStamp
 #include "mozilla/UniquePtr.h"  // for UniquePtr, MakeUnique
 #include "mozilla/gfx/BasePoint.h"  // for BasePoint<>::(anonymous union)::(anonymous), BasePoin...
-#include "mozilla/gfx/BaseSize.h"     // for BaseSize
-#include "mozilla/gfx/Matrix.h"       // for Matrix4x4, Matrix, Matrix4x4Typed
-#include "mozilla/gfx/Point.h"        // for Point, PointTyped
-#include "mozilla/gfx/Polygon.h"      // for Polygon
-#include "mozilla/gfx/Rect.h"         // for IntRectTyped, IntRect
+#include "mozilla/gfx/BaseSize.h"  // for BaseSize
+#include "mozilla/gfx/Matrix.h"    // for Matrix4x4, Matrix, Matrix4x4Typed
+#include "mozilla/gfx/Point.h"     // for Point, PointTyped
+#include "mozilla/gfx/Polygon.h"   // for Polygon
+#include "mozilla/gfx/Rect.h"      // for IntRectTyped, IntRect
 #include "mozilla/gfx/Types.h"  // for CompositionOp, DeviceColor, SamplingFilter, SideBits
 #include "mozilla/gfx/UserData.h"  // for UserData, UserDataKey (ptr only)
 #include "mozilla/layers/AnimationInfo.h"  // for AnimationInfo
@@ -69,7 +69,7 @@ class TransformData;
 struct PropertyAnimationGroup;
 
 class Layer {
-  public:
+ public:
   enum {
     /**
      * If this is set, the caller is promising that by the end of this

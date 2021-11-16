@@ -102,7 +102,7 @@ inline void CommandLineArg<uint64_t>::Put(uint64_t aValue,
 }
 
 #if defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wunused-variable"
+#  pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
 static CommandLineArg<const char*> sParentBuildID{"-parentBuildID",

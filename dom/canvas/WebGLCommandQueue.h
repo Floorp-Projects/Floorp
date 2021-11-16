@@ -25,9 +25,7 @@ class RangeConsumerView final : public webgl::ConsumerView<RangeConsumerView> {
   auto Remaining() const { return *MaybeAs<size_t>(mSrcEnd - mSrcItr); }
 
   explicit RangeConsumerView(const Range<const uint8_t> range)
-      : ConsumerView(this),
-        mSrcItr(range.begin()),
-        mSrcEnd(range.end()) {
+      : ConsumerView(this), mSrcItr(range.begin()), mSrcEnd(range.end()) {
     (void)Remaining();  // assert size non-negative
   }
 

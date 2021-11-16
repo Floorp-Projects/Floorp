@@ -275,9 +275,9 @@ void SVGForeignObjectFrame::PaintSVG(gfxContext& aContext,
   if (aImgParams.imageFlags & imgIContainer::FLAG_HIGH_QUALITY_SCALING) {
     flags |= PaintFrameFlags::UseHighQualityScaling;
   }
-  nsLayoutUtils::PaintFrame(
-      &aContext, kid, nsRegion(kidDirtyRect), NS_RGBA(0, 0, 0, 0),
-      nsDisplayListBuilderMode::Painting, flags);
+  nsLayoutUtils::PaintFrame(&aContext, kid, nsRegion(kidDirtyRect),
+                            NS_RGBA(0, 0, 0, 0),
+                            nsDisplayListBuilderMode::Painting, flags);
 
   aContext.Restore();
 }

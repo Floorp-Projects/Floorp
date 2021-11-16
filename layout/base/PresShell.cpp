@@ -3623,8 +3623,8 @@ void PresShell::DoScrollContentIntoView() {
     // Reuse the same line iterator across calls to AccumulateFrameBounds.
     // We set it every time we detect a new block (stored in prevBlock).
     nsAutoLineIterator lines;
-    // The last line we found a continuation on in |lines|.  We assume that later
-    // continuations cannot come on earlier lines.
+    // The last line we found a continuation on in |lines|.  We assume that
+    // later continuations cannot come on earlier lines.
     int32_t curLine = 0;
     do {
       AccumulateFrameBounds(container, frame, useWholeLineHeightForInlines,

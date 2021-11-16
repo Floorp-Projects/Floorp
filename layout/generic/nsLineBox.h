@@ -1641,9 +1641,7 @@ class nsLineIterator final : public nsILineIterator {
       mIndex = 0;
     }
   }
-  ~nsLineIterator() {
-    MOZ_DIAGNOSTIC_ASSERT(!mMutationGuard.Mutated(0));
-  };
+  ~nsLineIterator() { MOZ_DIAGNOSTIC_ASSERT(!mMutationGuard.Mutated(0)); };
 
   void DisposeLineIterator() final { delete this; }
 
