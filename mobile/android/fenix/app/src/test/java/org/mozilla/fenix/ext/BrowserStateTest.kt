@@ -15,6 +15,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mozilla.fenix.home.recenttabs.RecentTab
+import org.mozilla.fenix.tabstray.browser.TabGroup
 import org.mozilla.fenix.utils.Settings
 
 class BrowserStateTest {
@@ -158,7 +159,7 @@ class BrowserStateTest {
     }
 
     @Test
-    fun `GIVEN a tab group exists WHEN recentTabs is called THEN return a tab group`() {
+    fun `GIVEN only normal tabs from a search group are open WHEN recentTabs is called THEN return only the tab group`() {
         val searchGroupTab = createTab(
             url = "https://www.mozilla.org",
             id = "1",
@@ -175,8 +176,36 @@ class BrowserStateTest {
 
         val result = browserState.asRecentTabs()
 
+        assertEquals(1, result.size)
+        assert(result[0] is RecentTab.SearchGroup)
+        assertEquals(searchGroupTab.historyMetadata?.searchTerm, (result[0] as RecentTab.SearchGroup).searchTerm)
+        assertEquals(searchGroupTab.id, (result[0] as RecentTab.SearchGroup).tabId)
+        assertEquals(searchGroupTab.content.url, (result[0] as RecentTab.SearchGroup).url)
+        assertEquals(searchGroupTab.content.thumbnail, (result[0] as RecentTab.SearchGroup).thumbnail)
+        assertEquals(2, (result[0] as RecentTab.SearchGroup).count)
+    }
+
+    @Test
+    fun `GIVEN tabs with different search terms are opened WHEN recentTabs is called THEN return the most recent tab and tab group`() {
+        val searchGroupTab = createTab(
+            url = "https://www.mozilla.org",
+            id = "1",
+            historyMetadata = HistoryMetadataKey(
+                url = "https://www.mozilla.org",
+                searchTerm = "Test",
+                referrerUrl = "https://www.mozilla.org"
+            )
+        )
+        val otherTab = createTab(url = "https://www.mozilla.org/firefox", id = "2")
+        val browserState = BrowserState(
+            tabs = listOf(searchGroupTab, otherTab, searchGroupTab),
+            selectedTabId = searchGroupTab.id
+        )
+
+        val result = browserState.asRecentTabs()
+
         assertEquals(2, result.size)
-        assertEquals(searchGroupTab, (result[0] as RecentTab.Tab).state)
+        assertEquals(otherTab, (result[0] as RecentTab.Tab).state)
         assert(result[1] is RecentTab.SearchGroup)
         assertEquals(searchGroupTab.historyMetadata?.searchTerm, (result[1] as RecentTab.SearchGroup).searchTerm)
         assertEquals(searchGroupTab.id, (result[1] as RecentTab.SearchGroup).tabId)
@@ -412,5 +441,34 @@ class BrowserStateTest {
 
         assertEquals(2, result.size)
         assertTrue(result.containsAll(listOf(normalTab1, normalTab3)))
+    }
+
+    @Test
+    fun `GIVEN tabs exist with search terms WHEN lastTabGroup is called THEN return the last accessed TabGroup`() {
+        val tab1 = createTab(url = "url1", id = "id1", searchTerms = "test1", lastAccess = 10)
+        val tab2 = createTab(url = "url2", id = "id2", searchTerms = "test1", lastAccess = 11)
+        val tab3 = createTab(url = "url3", id = "id3", searchTerms = "test3", lastAccess = 1000)
+        val tab4 = createTab(url = "url4", id = "id4", searchTerms = "test3", lastAccess = 1111)
+        val tab5 = createTab(url = "url5", id = "id5", searchTerms = "test5", lastAccess = 100)
+        val tab6 = createTab(url = "url6", id = "id6", searchTerms = "test5", lastAccess = 111)
+        val browserState = BrowserState(
+            tabs = listOf(tab1, tab2, tab3, tab4, tab5, tab6)
+        )
+        val expected = TabGroup("Test3", listOf(tab3, tab4), tab4.lastAccess)
+
+        val result = browserState.lastTabGroup
+
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun `GIVEN no tabs exist with search terms WHEN lastTabGroup is called THEN return the last accessed TabGroup`() {
+        val tab1 = createTab(url = "url1", id = "id1", lastAccess = 10)
+        val tab2 = createTab(url = "url2", id = "id2", lastAccess = 11)
+        val browserState = BrowserState(tabs = listOf(tab1, tab2))
+
+        val result = browserState.lastTabGroup
+
+        assertNull(result)
     }
 }

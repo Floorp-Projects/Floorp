@@ -30,16 +30,24 @@ val maxActiveTime = TimeUnit.DAYS.toMillis(DEFAULT_ACTIVE_DAYS)
 /**
  * Get the last opened normal tab, last tab with in progress media and last search term group, if available.
  *
- * @return A list of the last opened tab, last tab with in progress media and last search term group
- * if distinct and available or an empty list.
+ * @return A list of the last opened tab not part of the last active search group and
+ * the last active search group if these are available or an empty list.
  */
 fun BrowserState.asRecentTabs(): List<RecentTab> {
     return mutableListOf<RecentTab>().apply {
-        val lastOpenedNormalTab = lastOpenedNormalTab
+        val mostRecentTabsGroup = lastSearchGroup
+        val mostRecentTabNotInGroup = if (mostRecentTabsGroup == null) {
+            lastOpenedNormalTab
+        } else {
+            listOf(selectedNormalTab)
+                .plus(normalTabs.sortedByDescending { it.lastAccess })
+                .minus(lastTabGroup?.tabs ?: emptyList())
+                .firstOrNull()
+        }
 
-        lastOpenedNormalTab?.let { add(RecentTab.Tab(it)) }
+        mostRecentTabNotInGroup?.let { add(RecentTab.Tab(it)) }
 
-        lastSearchGroup?.let { add(it) }
+        mostRecentTabsGroup?.let { add(it) }
     }
 }
 
@@ -68,11 +76,18 @@ val BrowserState.inProgressMediaTab: TabSessionState?
         .maxByOrNull { it.lastMediaAccessState.lastMediaAccess }
 
 /**
+ * Get the most recently accessed [TabGroup].
+ * Result will be `null` if the currently open normal tabs are not part of a search group.
+ */
+val BrowserState.lastTabGroup: TabGroup?
+    get() = normalTabs.toSearchGroup().first.lastOrNull()
+
+/**
  * Get the most recent search term group.
  */
 val BrowserState.lastSearchGroup: RecentTab.SearchGroup?
     get() {
-        val tabGroup = normalTabs.toSearchGroup().first.lastOrNull() ?: return null
+        val tabGroup = lastTabGroup ?: return null
         val firstTab = tabGroup.tabs.firstOrNull() ?: return null
 
         return RecentTab.SearchGroup(
