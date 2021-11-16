@@ -367,11 +367,7 @@ function TargetMixin(parentClass) {
     // interface and requires to call `attach` request before being used and
     // `detach` during cleanup.
     get isBrowsingContext() {
-      // @backward-compat { version 94 } Fx 94 renamed typeName from browsingContextTarget to windowGlobalTarget
-      return (
-        this.typeName === "windowGlobalTarget" ||
-        this.typeName == "browsingContextTarget"
-      );
+      return this.typeName === "windowGlobalTarget";
     }
 
     get name() {
