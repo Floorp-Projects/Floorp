@@ -43,6 +43,7 @@ function confirmCookies(id) {
   document.cookie = IFRAME_COOKIE_NAMES[1] + "=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
   document.cookie = IFRAME_COOKIE_NAMES[2] + "=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
   is(document.cookie, "", "Removed all cookies");
+  SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
   SimpleTest.finish();
 }
 
@@ -50,8 +51,10 @@ addEventListener("message", function(event) {
   is(event.data, document.cookie, "Confirm the iframe 2 can communicate with iframe");
 });
 
-Promise.resolve()
-  .then(_ => createIframe(ID[0], "file_iframe_allow_scripts.html", "allow-scripts"))
+SpecialPowers.pushPrefEnv({
+  // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+  set: [["network.cookie.sameSite.laxByDefault", false]],
+}).then(_ => createIframe(ID[0], "file_iframe_allow_scripts.html", "allow-scripts"))
   .then(_ => createIframe(ID[1], "file_iframe_allow_same_origin.html", "allow-scripts allow-same-origin"))
   .then(_ => createIframe(ID[2], "about:blank", "allow-scripts allow-same-origin"))
   .then(_ => confirmCookies(ID[2]));

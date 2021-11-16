@@ -20,6 +20,13 @@ SimpleTest.waitForExplicitFinish();
 
 async function startTest()
 {
+  await SpecialPowers.pushPrefEnv({
+    'set': [
+      // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+      ['network.cookie.sameSite.laxByDefault', false],
+    ]
+  });
+
   const commands = await createCommandsForTab();
   const target = commands.targetCommand.targetFront;
   const resourceCommand = commands.resourceCommand;
@@ -126,6 +133,7 @@ async function startTest()
   });
 
   await commands.destroy();
+  SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
   SimpleTest.finish();
 }
 

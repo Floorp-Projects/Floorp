@@ -18,14 +18,23 @@ SimpleTest.waitForExplicitFinish();
 
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('file_1331680.js'));
 
-gScript.addMessageListener("cookieName", confirmCookieName);
-gScript.addMessageListener("createObserver:return", testSetCookie);
-gScript.addMessageListener("removeObserver:return", finishTest);
-gScript.sendAsyncMessage('createObserver');
+// Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+SpecialPowers.pushPrefEnv({
+  "set": [
+    ["network.cookie.sameSite.laxByDefault", false],
+  ]
+}, () => {
+  gScript.addMessageListener("cookieName", confirmCookieName);
+  gScript.addMessageListener("createObserver:return", testSetCookie);
+  gScript.addMessageListener("removeObserver:return", finishTest);
+  gScript.sendAsyncMessage('createObserver');
+});
+
 var testsNum = 0;
 
 function confirmRemoveAllCookies() {
       is(document.cookie, "", "Removed all cookies.");
+      SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
       SimpleTest.finish();
 }
 

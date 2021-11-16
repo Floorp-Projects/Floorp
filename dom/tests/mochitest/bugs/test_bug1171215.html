@@ -17,32 +17,36 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1022869
     // Initialize our cookie.
     document.cookie = "a=b";
 
-    SpecialPowers.pushPrefEnv({ set: [["network.cookie.cookieBehavior", 1]] }).then(_ => {
-      let w = window.open("window_bug1171215.html");
-      onmessage = e => {
-        if (e.data.type == "finish") {
-          w.close();
-          SimpleTest.finish();
-          return;
-        }
+    let w = window.open("window_bug1171215.html");
+    onmessage = e => {
+      if (e.data.type == "finish") {
+        w.close();
+        SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
+        SimpleTest.finish();
+        return;
+      }
 
-        if (e.data.type == "info") {
-          info(e.data.msg);
-          return;
-        }
+      if (e.data.type == "info") {
+        info(e.data.msg);
+        return;
+      }
 
-        if (e.data.type == "test") {
-          ok(e.data.test, e.data.msg);
-          return;
-        }
+      if (e.data.type == "test") {
+        ok(e.data.test, e.data.msg);
+        return;
+      }
 
-        ok(false, "Unknown message");
-      };
-    });
+      ok(false, "Unknown message");
+    };
   }
+
+  // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+  SpecialPowers.pushPrefEnv({ set: [["network.cookie.cookieBehavior", 1], ["network.cookie.sameSite.laxByDefault", false]] })
+    .then(startTest);
+
   </script>
 </head>
-<body onload="startTest()">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1022869">Mozilla Bug 1022869</a>
 </body>
 </html>
