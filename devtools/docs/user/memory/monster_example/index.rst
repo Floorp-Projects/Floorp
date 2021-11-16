@@ -56,7 +56,7 @@ You can try the site at https://mdn.github.io/performance-scenarios/js-allocs/al
   }
 
   var makeMonstersButton = document.getElementById("make-monsters");
-  makeMonstersButton.addEventListener("click", makeMonsters);</pre>
+  makeMonstersButton.addEventListener("click", makeMonsters);
 
 The page contains a button: when you push the button, the code creates some monsters. Specifically:
 
