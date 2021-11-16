@@ -2863,7 +2863,8 @@ bool WarpBuilder::build_SpreadCall(BytecodeLocation loc) {
     return transpileCall(loc, cacheIRSnapshot, &callInfo);
   }
 
-  MInstruction* call = makeSpreadCall(callInfo);
+  bool needsThisCheck = false;
+  MInstruction* call = makeSpreadCall(callInfo, needsThisCheck);
   if (!call) {
     return false;
   }
@@ -2880,7 +2881,8 @@ bool WarpBuilder::build_SpreadNew(BytecodeLocation loc) {
 
   buildCreateThis(callInfo);
 
-  MInstruction* call = makeSpreadCall(callInfo);
+  bool needsThisCheck = true;
+  MInstruction* call = makeSpreadCall(callInfo, needsThisCheck);
   if (!call) {
     return false;
   }

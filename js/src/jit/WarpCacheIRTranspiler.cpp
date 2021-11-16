@@ -4634,8 +4634,8 @@ bool WarpCacheIRTranspiler::emitCallFunction(
       return true;
     }
     case CallInfo::ArgFormat::Array: {
-      MInstruction* call =
-          makeSpreadCall(*callInfo_, flags.isSameRealm(), wrappedTarget);
+      MInstruction* call = makeSpreadCall(*callInfo_, needsThisCheck,
+                                          flags.isSameRealm(), wrappedTarget);
       if (!call) {
         return false;
       }

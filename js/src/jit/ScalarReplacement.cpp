@@ -1457,7 +1457,7 @@ void ArrayMemoryView::visitConstructArray(MConstructArray* ins) {
 
   auto addUndefined = [this]() { return undefinedVal_; };
 
-  bool needsThisCheck = true;
+  bool needsThisCheck = ins->needsThisCheck();
   bool isDOMCall = false;
   auto* call = MakeCall(alloc_, addUndefined, callInfo, needsThisCheck,
                         ins->getSingleTarget(), isDOMCall);
