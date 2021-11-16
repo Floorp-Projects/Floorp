@@ -162,7 +162,7 @@ Internet Explorer to ensure "Work Offline" is unchecked.
    :class: internal
 .. |The Visual C++ 2017 Symbols pane of the Options dialog with the Mozilla symbol server configured| image:: img/snip_20170901070042.png
    :class: internal
-.. |Image:symbol-server-windbg-menu.jpg| image:: img/=Symbol-server-windbg-menu.jpg
+.. |Image:symbol-server-windbg-menu.jpg| image:: img/symbol-server-windbg-menu.jpg
    :class: internal
 .. |The WinDbg Symbol Search Path dialog with the Mozilla symbol server configured| image:: img/snip_20170901081816.png
    :class: internal
