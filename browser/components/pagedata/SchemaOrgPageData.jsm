@@ -98,6 +98,11 @@ function collectProduct(pageData, element) {
     pageData.image = images[0];
   }
 
+  let descriptions = getProp(element, "description");
+  if (descriptions.length) {
+    pageData.description = descriptions[0];
+  }
+
   pageData.data[PageDataSchema.DATA_TYPE.PRODUCT] = {
     name: getProp(element, "name")[0],
   };
