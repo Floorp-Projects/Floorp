@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import argparse
+import subprocess
 from datetime import datetime, timedelta
 import logging
 from operator import itemgetter
@@ -394,8 +395,14 @@ class PypiBasedTool:
                 print(release)
                 # there is one, so install it. Note that install_pip_package
                 # does not work here, so just run pip directly.
-                cmd.virtualenv_manager._run_pip(
-                    ["install", "%s==%s" % (self.pypi_name, release)]
+                subprocess.check_call(
+                    [
+                        cmd.virtualenv_manager.python_path,
+                        "-m",
+                        "pip",
+                        "install",
+                        f"{self.pypi_name}=={release}",
+                    ]
                 )
                 print(
                     "%s was updated to version %s. please"

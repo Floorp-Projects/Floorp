@@ -38,6 +38,7 @@ import logging
 import os
 import re
 import stat
+import subprocess
 import sys
 import time
 
@@ -463,7 +464,15 @@ def activate_browsertime_virtualenv(command_context, *args, **kwargs):
     # installing Python deps on the fly
     for dep in ("Pillow==%s" % PILLOW_VERSION, "pyssim==%s" % PYSSIM_VERSION):
         if _need_install(command_context, dep):
-            command_context.virtualenv_manager._run_pip(["install", dep])
+            subprocess.check_call(
+                [
+                    command_context.virtualenv_manager.python_path,
+                    "-m",
+                    "pip",
+                    "install",
+                    dep,
+                ]
+            )
 
 
 def check(command_context):

@@ -151,7 +151,9 @@ def install_package(virtualenv_manager, package, ignore_failure=False):
             return True
     with silence():
         try:
-            virtualenv_manager._run_pip(["install", package])
+            subprocess.check_call(
+                [virtualenv_manager.python_path, "-m", "pip", "install", package]
+            )
             return True
         except Exception:
             if not ignore_failure:
