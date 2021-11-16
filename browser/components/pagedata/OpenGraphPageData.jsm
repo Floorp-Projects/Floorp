@@ -29,10 +29,13 @@ const OpenGraphPageData = {
     let openGraphTags = document.querySelectorAll("meta[property^='og:'");
 
     for (let tag of openGraphTags) {
-      // Stripping "og:" from the property name.
+      // Strip "og:" from the property name.
       let propertyName = tag.getAttribute("property").substring(3);
 
       switch (propertyName) {
+        case "description":
+          pageData.description = tag.getAttribute("content");
+          break;
         case "site_name":
           pageData.siteName = tag.getAttribute("content");
           break;
