@@ -11,6 +11,8 @@
 #include "mozilla/media/MediaUtils.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIWritablePropertyBag2.h"
 
 namespace mozilla {
 
@@ -128,7 +130,42 @@ MediaShutdownManager::GetName(nsAString& aName) {
 }
 
 NS_IMETHODIMP
-MediaShutdownManager::GetState(nsIPropertyBag**) { return NS_OK; }
+MediaShutdownManager::GetState(nsIPropertyBag** aBagOut) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aBagOut);
+
+  nsCOMPtr<nsIWritablePropertyBag2> propertyBag =
+      do_CreateInstance("@mozilla.org/hash-property-bag;1");
+
+  if (NS_WARN_IF(!propertyBag)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsresult rv = propertyBag->SetPropertyAsInt32(
+      u"sInitPhase"_ns, static_cast<int32_t>(sInitPhase));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  nsAutoCString decoderInfo;
+  for (const auto& key : mDecoders) {
+    // Grab the full extended type for the decoder. This can be used to help
+    // indicate problems with specific decoders by associating type -> decoder.
+    decoderInfo.Append(key->ContainerType().ExtendedType().OriginalString());
+    decoderInfo.Append(", ");
+  }
+
+  rv = propertyBag->SetPropertyAsACString(u"decoderInfo"_ns, decoderInfo);
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  propertyBag.forget(aBagOut);
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 MediaShutdownManager::BlockShutdown(nsIAsyncShutdownClient*) {
