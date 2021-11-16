@@ -43,6 +43,18 @@ static const char kEdgeTop[] = "print_edge_top";
 static const char kEdgeLeft[] = "print_edge_left";
 static const char kEdgeBottom[] = "print_edge_bottom";
 static const char kEdgeRight[] = "print_edge_right";
+
+static const char kUnwriteableMarginTopTwips[] =
+    "print_unwriteable_margin_top_twips";
+static const char kUnwriteableMarginLeftTwips[] =
+    "print_unwriteable_margin_left_twips";
+static const char kUnwriteableMarginBottomTwips[] =
+    "print_unwriteable_margin_bottom_twips";
+static const char kUnwriteableMarginRightTwips[] =
+    "print_unwriteable_margin_right_twips";
+
+// These are legacy versions of the above UnwriteableMargin prefs. The new ones,
+// which are in twips, were introduced to more accurately record the values.
 static const char kUnwriteableMarginTop[] = "print_unwriteable_margin_top";
 static const char kUnwriteableMarginLeft[] = "print_unwriteable_margin_left";
 static const char kUnwriteableMarginBottom[] =
@@ -358,15 +370,26 @@ nsresult nsPrintSettingsService::ReadPrefs(nsIPrintSettings* aPS,
 
   if (aFlags & nsIPrintSettings::kInitSaveUnwriteableMargins) {
     nsIntMargin margin;
-    ReadInchesIntToTwipsPref(GetPrefName(kUnwriteableMarginTop, aPrinterName),
-                             margin.top, kUnwriteableMarginTop);
-    ReadInchesIntToTwipsPref(GetPrefName(kUnwriteableMarginLeft, aPrinterName),
-                             margin.left, kUnwriteableMarginLeft);
-    ReadInchesIntToTwipsPref(
-        GetPrefName(kUnwriteableMarginBottom, aPrinterName), margin.bottom,
-        kUnwriteableMarginBottom);
-    ReadInchesIntToTwipsPref(GetPrefName(kUnwriteableMarginRight, aPrinterName),
-                             margin.right, kUnwriteableMarginRight);
+    bool allPrefsRead =
+        GETINTPREF(kUnwriteableMarginTopTwips, &margin.top) &&
+        GETINTPREF(kUnwriteableMarginRightTwips, &margin.right) &&
+        GETINTPREF(kUnwriteableMarginBottomTwips, &margin.bottom) &&
+        GETINTPREF(kUnwriteableMarginLeftTwips, &margin.left);
+    if (!allPrefsRead) {
+      // We failed to read the new unwritable margin twips prefs. Try to read
+      // the old ones in case they exist.
+      ReadInchesIntToTwipsPref(GetPrefName(kUnwriteableMarginTop, aPrinterName),
+                               margin.top, kUnwriteableMarginTop);
+      ReadInchesIntToTwipsPref(
+          GetPrefName(kUnwriteableMarginLeft, aPrinterName), margin.left,
+          kUnwriteableMarginLeft);
+      ReadInchesIntToTwipsPref(
+          GetPrefName(kUnwriteableMarginBottom, aPrinterName), margin.bottom,
+          kUnwriteableMarginBottom);
+      ReadInchesIntToTwipsPref(
+          GetPrefName(kUnwriteableMarginRight, aPrinterName), margin.right,
+          kUnwriteableMarginRight);
+    }
     // SetUnwriteableMarginInTwips does its own validation and drops negative
     // values individually.  We still want to block overly large values though,
     // so we do that part of MarginIsOK manually.
@@ -567,18 +590,21 @@ nsresult nsPrintSettingsService::WritePrefs(nsIPrintSettings* aPS,
 
   if (aFlags & nsIPrintSettings::kInitSaveUnwriteableMargins) {
     nsIntMargin unwriteableMargin = aPS->GetUnwriteableMarginInTwips();
-    WriteInchesIntFromTwipsPref(
-        GetPrefName(kUnwriteableMarginTop, aPrinterName),
-        unwriteableMargin.top);
-    WriteInchesIntFromTwipsPref(
-        GetPrefName(kUnwriteableMarginLeft, aPrinterName),
-        unwriteableMargin.left);
-    WriteInchesIntFromTwipsPref(
-        GetPrefName(kUnwriteableMarginBottom, aPrinterName),
+    Preferences::SetInt(GetPrefName(kUnwriteableMarginTopTwips, aPrinterName),
+                        unwriteableMargin.top);
+    Preferences::SetInt(GetPrefName(kUnwriteableMarginLeftTwips, aPrinterName),
+                        unwriteableMargin.left);
+    Preferences::SetInt(
+        GetPrefName(kUnwriteableMarginBottomTwips, aPrinterName),
         unwriteableMargin.bottom);
-    WriteInchesIntFromTwipsPref(
-        GetPrefName(kUnwriteableMarginRight, aPrinterName),
-        unwriteableMargin.right);
+    Preferences::SetInt(GetPrefName(kUnwriteableMarginRightTwips, aPrinterName),
+                        unwriteableMargin.right);
+
+    // Remove the old unwriteableMargin prefs.
+    Preferences::ClearUser(GetPrefName(kUnwriteableMarginTop, aPrinterName));
+    Preferences::ClearUser(GetPrefName(kUnwriteableMarginRight, aPrinterName));
+    Preferences::ClearUser(GetPrefName(kUnwriteableMarginBottom, aPrinterName));
+    Preferences::ClearUser(GetPrefName(kUnwriteableMarginLeft, aPrinterName));
   }
 
   // Paper size prefs are saved as a group
