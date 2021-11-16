@@ -216,7 +216,7 @@ Fluent will overlay the translation onto the source fragment preserving attribut
 :code:`class` and :code:`href` from the source and adding translations for the elements
 inside. The resulting localized content will look like this:
 
-.. code-block:: html
+.. code-block::
 
   <p data-l10n-id="update-application-info" data-l10n-args='{"version": "60.0"}'">
     You are using Firefox Version: 60.0.
