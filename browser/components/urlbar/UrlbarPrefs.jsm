@@ -739,17 +739,10 @@ class Preferences {
 
     // The online scenario disables suggestions by default so that we can prompt
     // the user to opt in to suggestions and data collection all at once.
-    // However, if the user is coming to online from a scenario where
-    // suggestions were enabled by default *and* the user has already made the
-    // choice to opt in to data (`quicksuggest.dataCollection.enabled` is true
-    // on the user branch), then go ahead and opt them in to suggestions too.
-    //
-    // The `prefHasUserValue` check isn't necessary because if the scenario is
-    // online, `quicksuggest.dataCollection.enabled` is false by default (it's
-    // also false in firefox.js), so if `quicksuggest.dataCollection.enabled` is
-    // true then it must be true on the user branch. We check it anyway to be
-    // defensive and to guard against errors if this code or pref defaults are
-    // changed in the future.
+    // However, if the user is coming to online from offline, where suggestions
+    // are enabled by default, *and* they've already made the choice to opt in
+    // to data collection (`quicksuggest.dataCollection.enabled` is true on the
+    // user branch), then go ahead and opt them in to suggestions too.
     if (
       scenario == "online" &&
       this.get("quicksuggest.dataCollection.enabled") &&
