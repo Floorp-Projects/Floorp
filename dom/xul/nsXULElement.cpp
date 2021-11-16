@@ -458,7 +458,7 @@ void nsXULElement::OpenMenu(bool aOpenFlag) {
   if (pm) {
     if (aOpenFlag) {
       // Nothing will happen if this element isn't a menu.
-      pm->ShowMenu(this, false, false);
+      pm->ShowMenu(this, false);
     } else {
       // Nothing will happen if this element isn't a menu.
       pm->HideMenu(this);
