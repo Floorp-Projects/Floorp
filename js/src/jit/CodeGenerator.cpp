@@ -5691,14 +5691,10 @@ void CodeGenerator::emitPopArguments(Register extraStackSpace) {
   masm.freeStack(extraStackSpace);
 }
 
-void CodeGenerator::emitPushArguments(LApplyArgsGeneric* apply,
-                                      Register extraStackSpace) {
-  // Holds the function nargs. Initially the number of args to the caller.
-  Register argcreg = ToRegister(apply->getArgc());
-  Register copyreg = ToRegister(apply->getTempObject());
-
+void CodeGenerator::emitPushArguments(Register argcreg,
+                                      Register extraStackSpace,
+                                      Register copyreg) {
   Label end;
-  emitAllocateSpaceForApply(argcreg, extraStackSpace);
 
   // Skip the copy of arguments if there are none.
   masm.branchTestPtr(Assembler::Zero, argcreg, argcreg, &end);
@@ -5743,6 +5739,17 @@ void CodeGenerator::emitPushArguments(LApplyArgsGeneric* apply,
 
   // Join with all arguments copied and the extra stack usage computed.
   masm.bind(&end);
+}
+
+void CodeGenerator::emitPushArguments(LApplyArgsGeneric* apply,
+                                      Register extraStackSpace) {
+  // Holds the function nargs. Initially the number of args to the caller.
+  Register argcreg = ToRegister(apply->getArgc());
+  Register copyreg = ToRegister(apply->getTempObject());
+
+  emitAllocateSpaceForApply(argcreg, extraStackSpace);
+
+  emitPushArguments(argcreg, extraStackSpace, copyreg);
 
   // Push |this|.
   masm.addPtr(Imm32(sizeof(Value)), extraStackSpace);
@@ -5859,6 +5866,25 @@ void CodeGenerator::emitPushArguments(LApplyArrayGeneric* apply,
   masm.pushValue(ToValue(apply, LApplyArrayGeneric::ThisIndex));
 }
 
+void CodeGenerator::emitPushArguments(LConstructArgsGeneric* construct,
+                                      Register extraStackSpace) {
+  MOZ_ASSERT(extraStackSpace == ToRegister(construct->getNewTarget()));
+
+  // Holds the function nargs. Initially the number of args to the caller.
+  Register argcreg = ToRegister(construct->getArgc());
+  Register copyreg = ToRegister(construct->getTempObject());
+
+  // Allocate space for the values.
+  // After this call "newTarget" has become "extraStackSpace".
+  emitAllocateSpaceForConstructAndPushNewTarget(argcreg, extraStackSpace);
+
+  emitPushArguments(argcreg, extraStackSpace, copyreg);
+
+  // Push |this|.
+  masm.addPtr(Imm32(sizeof(Value)), extraStackSpace);
+  masm.pushValue(ToValue(construct, LConstructArgsGeneric::ThisIndex));
+}
+
 void CodeGenerator::emitPushArguments(LConstructArrayGeneric* construct,
                                       Register extraStackSpace) {
   MOZ_ASSERT(extraStackSpace == ToRegister(construct->getNewTarget()));
@@ -5910,8 +5936,8 @@ void CodeGenerator::emitApplyGeneric(T* apply) {
   // emitPushArguments() and elements/argsObj must not be referenced
   // after it returns.
   //
-  // In the case of ConstructArray, also overwrite newTarget with
-  // extraStackSpace; newTarget must not be referenced after this point.
+  // In the case of ConstructArray or ConstructArgs, also overwrite newTarget
+  // with extraStackSpace; newTarget must not be referenced after this point.
   //
   // objreg is dead across this call.
   //
@@ -6114,6 +6140,16 @@ void CodeGenerator::visitApplyArrayGeneric(LApplyArrayGeneric* apply) {
   bailoutCmp32(Assembler::NotEqual, tmp, Imm32(0), snapshot);
 
   emitApplyGeneric(apply);
+}
+
+void CodeGenerator::visitConstructArgsGeneric(LConstructArgsGeneric* lir) {
+  LSnapshot* snapshot = lir->snapshot();
+  Register argcreg = ToRegister(lir->getArgc());
+
+  // Ensure that we have a reasonable number of arguments.
+  bailoutCmp32(Assembler::Above, argcreg, Imm32(JIT_ARGS_LENGTH_MAX), snapshot);
+
+  emitApplyGeneric(lir);
 }
 
 void CodeGenerator::visitConstructArrayGeneric(LConstructArrayGeneric* lir) {

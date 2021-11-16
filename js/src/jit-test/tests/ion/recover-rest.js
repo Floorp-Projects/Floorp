@@ -184,14 +184,14 @@ function spreadExtraArgsBail(...rest) {
 // Check rest array with new spread.
 function newSpread(...rest) {
   new empty(...rest);
-  assertRecoveredOnBailout(rest, false);
+  assertRecoveredOnBailout(rest, true);
   return rest.length;
 }
 
 function newSpreadBail(...rest) {
   resumeHere(rest[0]);
   new empty(...rest);
-  assertRecoveredOnBailout(rest, false);
+  assertRecoveredOnBailout(rest, true);
   return rest.length;
 }
 
