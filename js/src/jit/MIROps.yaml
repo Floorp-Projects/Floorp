@@ -1887,6 +1887,7 @@
   result_type: Object
   possibly_calls: true
   alias_set: none
+  can_recover: true
 
 - name: PostWriteBarrier
   gen_boilerplate: false
