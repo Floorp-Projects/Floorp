@@ -76,11 +76,11 @@ class MarionetteCommandsChild extends JSWindowActorChild {
       let waitForNextTick = false;
 
       const { name, data: serializedData } = msg;
-      const data = evaluate.fromJSON(
-        serializedData,
-        null,
-        this.document.defaultView
-      );
+      const data = evaluate.fromJSON({
+        obj: serializedData,
+        seenEls: null,
+        win: this.document.defaultView,
+      });
 
       switch (name) {
         case "MarionetteCommandsParent:clearElement":

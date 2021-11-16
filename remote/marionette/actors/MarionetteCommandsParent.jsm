@@ -59,7 +59,7 @@ class MarionetteCommandsParent extends JSWindowActorParent {
     if ("error" in result) {
       throw error.WebDriverError.fromJSON(result.error);
     } else {
-      return evaluate.fromJSON(result.data, elementIdCache);
+      return evaluate.fromJSON({ obj: result.data, seenEls: elementIdCache });
     }
   }
 
