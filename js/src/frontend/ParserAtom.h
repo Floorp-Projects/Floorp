@@ -568,8 +568,7 @@ class WellKnownParserAtoms {
     static_assert(std::is_same_v<CharsT, const Latin1Char*> ||
                       std::is_same_v<CharsT, const char16_t*> ||
                       std::is_same_v<CharsT, const char*> ||
-                      std::is_same_v<CharsT, char16_t*> ||
-                      std::is_same_v<CharsT, LittleEndianChars>,
+                      std::is_same_v<CharsT, char16_t*>,
                   "This assert mostly explicitly documents the calling types, "
                   "and forces that to be updated if new types show up.");
     switch (length) {

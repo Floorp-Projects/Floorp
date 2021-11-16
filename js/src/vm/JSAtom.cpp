@@ -60,10 +60,9 @@ struct js::AtomHasher::Lookup {
   union {
     const JS::Latin1Char* latin1Chars;
     const char16_t* twoByteChars;
-    LittleEndianChars littleEndianChars;
     const char* utf8Bytes;
   };
-  enum { TwoByteChar, LittleEndianTwoByte, Latin1, UTF8 } type;
+  enum { TwoByteChar, Latin1, UTF8 } type;
   size_t length;
   size_t byteLength;
   const JSAtom* atom; /* Optional. */
@@ -128,13 +127,6 @@ struct js::AtomHasher::Lookup {
       MOZ_ASSERT(mozilla::HashString(twoByteChars, length) == hash);
     }
   }
-
-  MOZ_ALWAYS_INLINE Lookup(LittleEndianChars chars, size_t length)
-      : littleEndianChars(chars),
-        type(LittleEndianTwoByte),
-        length(length),
-        atom(nullptr),
-        hash(mozilla::HashStringKnownLength(chars, length)) {}
 };
 
 inline HashNumber js::AtomHasher::hash(const Lookup& l) { return l.hash; }
@@ -149,15 +141,6 @@ MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const AtomStateEntry& entry,
     return false;
   }
 
-  auto EqualsLittleEndianChars = [&lookup](auto keyChars) {
-    for (size_t i = 0, len = lookup.length; i < len; i++) {
-      if (keyChars[i] != lookup.littleEndianChars[i]) {
-        return false;
-      }
-    }
-    return true;
-  };
-
   if (key->hasLatin1Chars()) {
     const Latin1Char* keyChars = key->latin1Chars(lookup.nogc);
     switch (lookup.type) {
@@ -165,8 +148,6 @@ MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const AtomStateEntry& entry,
         return mozilla::ArrayEqual(keyChars, lookup.latin1Chars, lookup.length);
       case Lookup::TwoByteChar:
         return EqualChars(keyChars, lookup.twoByteChars, lookup.length);
-      case Lookup::LittleEndianTwoByte:
-        return EqualsLittleEndianChars(keyChars);
       case Lookup::UTF8: {
         JS::UTF8Chars utf8(lookup.utf8Bytes, lookup.byteLength);
         return UTF8EqualsChars(utf8, keyChars);
@@ -180,8 +161,6 @@ MOZ_ALWAYS_INLINE bool js::AtomHasher::match(const AtomStateEntry& entry,
       return EqualChars(lookup.latin1Chars, keyChars, lookup.length);
     case Lookup::TwoByteChar:
       return mozilla::ArrayEqual(keyChars, lookup.twoByteChars, lookup.length);
-    case Lookup::LittleEndianTwoByte:
-      return EqualsLittleEndianChars(keyChars);
     case Lookup::UTF8: {
       JS::UTF8Chars utf8(lookup.utf8Bytes, lookup.byteLength);
       return UTF8EqualsChars(utf8, keyChars);
@@ -639,37 +618,23 @@ bool JSRuntime::initMainAtomsTables(JSContext* cx) {
   return atoms_ && atoms_->init();
 }
 
-template <typename Chars>
+template <typename CharT>
 static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
-    JSContext* cx, Chars chars, size_t length, const AtomHasher::Lookup& lookup,
-    PinningBehavior pin, const Maybe<uint32_t>& indexValue);
+    JSContext* cx, const CharT* chars, size_t length,
+    const AtomHasher::Lookup& lookup, PinningBehavior pin,
+    const Maybe<uint32_t>& indexValue);
 
-template <typename CharT, typename = std::enable_if_t<!std::is_const_v<CharT>>>
+template <typename CharT>
+static MOZ_NEVER_INLINE JSAtom* PermanentlyAtomizeAndCopyChars(
+    JSContext* cx, Maybe<AtomSet::AddPtr>& zonePtr, const CharT* chars,
+    size_t length, const Maybe<uint32_t>& indexValue,
+    const AtomHasher::Lookup& lookup);
+
+template <typename CharT>
 static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
-    JSContext* cx, CharT* chars, size_t length,
+    JSContext* cx, const CharT* chars, size_t length,
     const AtomHasher::Lookup& lookup, PinningBehavior pin,
     const Maybe<uint32_t>& indexValue) {
-  return AtomizeAndCopyCharsFromLookup(cx, const_cast<const CharT*>(chars),
-                                       length, lookup, pin, indexValue);
-}
-
-template <typename Chars>
-static MOZ_NEVER_INLINE JSAtom* PermanentlyAtomizeAndCopyChars(
-    JSContext* cx, Maybe<AtomSet::AddPtr>& zonePtr, Chars chars, size_t length,
-    const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup);
-
-template <typename CharT, typename = std::enable_if_t<!std::is_const_v<CharT>>>
-static JSAtom* PermanentlyAtomizeAndCopyChars(
-    JSContext* cx, Maybe<AtomSet::AddPtr>& zonePtr, CharT* chars, size_t length,
-    const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup) {
-  return PermanentlyAtomizeAndCopyChars(
-      cx, zonePtr, const_cast<const CharT*>(chars), length, indexValue, lookup);
-}
-
-template <typename Chars>
-static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
-    JSContext* cx, Chars chars, size_t length, const AtomHasher::Lookup& lookup,
-    PinningBehavior pin, const Maybe<uint32_t>& indexValue) {
   // Try the per-Zone cache first. If we find the atom there we can avoid the
   // atoms lock, the markAtom call, and the multiple HashSet lookups below.
   // We don't use the per-Zone cache if we want a pinned atom: handling that
@@ -734,22 +699,14 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
   return atom;
 }
 
-template <typename Chars>
+template <typename CharT>
 static MOZ_ALWAYS_INLINE JSAtom* AllocateNewAtom(
-    JSContext* cx, Chars chars, size_t length,
+    JSContext* cx, const CharT* chars, size_t length,
     const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup);
 
-template <typename CharT, typename = std::enable_if_t<!std::is_const_v<CharT>>>
-static MOZ_ALWAYS_INLINE JSAtom* AllocateNewAtom(
-    JSContext* cx, CharT* chars, size_t length,
-    const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup) {
-  return AllocateNewAtom(cx, const_cast<const CharT*>(chars), length,
-                         indexValue, lookup);
-}
-
-template <typename Chars>
+template <typename CharT>
 MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
-    JSContext* cx, Chars chars, size_t length, PinningBehavior pin,
+    JSContext* cx, const CharT* chars, size_t length, PinningBehavior pin,
     const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup) {
   Partition& part = *partitions[getPartitionIndex(lookup)];
   AutoLock lock(cx->runtime(), part.lock);
@@ -817,10 +774,11 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyChars(
                                        indexValue);
 }
 
-template <typename Chars>
+template <typename CharT>
 static MOZ_NEVER_INLINE JSAtom* PermanentlyAtomizeAndCopyChars(
-    JSContext* cx, Maybe<AtomSet::AddPtr>& zonePtr, Chars chars, size_t length,
-    const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup) {
+    JSContext* cx, Maybe<AtomSet::AddPtr>& zonePtr, const CharT* chars,
+    size_t length, const Maybe<uint32_t>& indexValue,
+    const AtomHasher::Lookup& lookup) {
   MOZ_ASSERT(!cx->permanentAtomsPopulated());
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
 
@@ -918,9 +876,9 @@ static MOZ_ALWAYS_INLINE JSLinearString* MakeLinearStringForAtomization(
   return MakeUTF8AtomHelper<JS::Latin1Char>(cx, chars, length);
 }
 
-template <typename Chars>
+template <typename CharT>
 static MOZ_ALWAYS_INLINE JSAtom* AllocateNewAtom(
-    JSContext* cx, Chars chars, size_t length,
+    JSContext* cx, const CharT* chars, size_t length,
     const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup) {
   AutoAllocInAtomsZone ac(cx);
 
