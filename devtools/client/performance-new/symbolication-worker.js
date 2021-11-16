@@ -13,7 +13,6 @@
 "use strict";
 
 importScripts(
-  "resource://gre/modules/osfile.jsm",
   "resource://devtools/client/performance-new/profiler_get_symbols.js"
 );
 
@@ -32,43 +31,9 @@ importScripts(
 /* eslint camelcase: 0*/
 const { getCompactSymbolTable, queryAPI } = wasm_bindgen;
 
-// Read parts of an open OS.File instance into the Uint8Array dataBuf.
-// This reads destBuf.byteLength bytes at offset offset.
-function readFileBytesInto(file, offset, destBuf) {
-  file.setPosition(offset);
-  // We read the file in 4MB chunks. This limits the amount of temporary
-  // memory we use while we copy the file contents into wasm memory.
-  const chunkSize = 4 * 1024 * 1024;
-  let posInDestBuf = 0;
-  let remainingBytes = destBuf.byteLength;
-  while (remainingBytes > 0) {
-    const bytes = remainingBytes > chunkSize ? chunkSize : remainingBytes;
-    const chunkData = file.read({ bytes });
-    const chunkBytes = chunkData.byteLength;
-    if (chunkBytes === 0) {
-      break;
-    }
-
-    destBuf.set(chunkData, posInDestBuf);
-    posInDestBuf += chunkBytes;
-    remainingBytes -= chunkBytes;
-  }
-}
-
 // Returns a plain object that is Structured Cloneable and has name and
 // message properties.
 function createPlainErrorObject(e) {
-  if (e instanceof OS.File.Error) {
-    // OS.File.Error has an empty message property; it constructs the error
-    // message on-demand in its toString() method. So we handle those errors
-    // specially.
-    return {
-      name: "OSFileError",
-      message: e.toString(),
-      fileName: e.fileName,
-      lineNumber: e.lineNumber,
-    };
-  }
   // Regular errors: just rewrap the object.
   const { name, message, fileName, lineNumber } = e;
   return { name, message, fileName, lineNumber };
@@ -172,20 +137,19 @@ class FileAndPathHelper {
    * @returns {FileHandle}
    */
   async readFile(path) {
-    const file = OS.File.open(path, { read: true });
-    const info = file.stat();
-    if (info.isDir) {
+    const info = await IOUtils.stat(path);
+    if (info.type === "directory") {
       throw new Error(`Path "${path}" is a directory.`);
     }
 
-    const fileSize = info.size;
+    const file = IOUtils.openFileForSyncReading(path);
 
     // Create and return a FileHandle object. The methods of this object are
     // called by wasm code (via the bindings).
     return {
-      getLength: () => fileSize,
+      getLength: () => file.size,
       readBytesInto: (dest, offset) => {
-        readFileBytesInto(file, offset, dest);
+        file.readBytesInto(dest, offset);
       },
       drop: () => {
         file.close();
