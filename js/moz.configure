@@ -1027,7 +1027,7 @@ set_define(
 # ======================================================
 system_lib_option("--with-system-icu", help="Use system ICU")
 
-system_icu = pkg_check_modules("MOZ_ICU", "icu-i18n >= 69.1", when="--with-system-icu")
+system_icu = pkg_check_modules("MOZ_ICU", "icu-i18n >= 70.1", when="--with-system-icu")
 
 set_config("MOZ_SYSTEM_ICU", True, when=system_icu)
 set_define("MOZ_SYSTEM_ICU", True, when=system_icu)
