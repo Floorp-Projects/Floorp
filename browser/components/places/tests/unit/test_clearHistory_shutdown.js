@@ -15,16 +15,6 @@ const URIS = [
   "http://c.example3.com/",
 ];
 
-const TOPIC_CONNECTION_CLOSED = "places-connection-closed";
-
-var EXPECTED_NOTIFICATIONS = [
-  "places-shutdown",
-  "places-expiration-finished",
-  "places-connection-closed",
-];
-
-const UNEXPECTED_NOTIFICATIONS = ["xpcom-shutdown"];
-
 const FTP_URL = "ftp://localhost/clearHistoryOnShutdown/";
 
 const { Sanitizer } = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
