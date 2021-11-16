@@ -160,6 +160,11 @@ gl{
             }
         }
         concentr{
+            item{
+                dnam{"unidades"}
+                one{"{0} unidade"}
+                other{"{0} unidades"}
+            }
             karat{
                 dnam{"quilates"}
                 one{"{0} quilate"}
@@ -426,6 +431,11 @@ gl{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"quilowatts/hora por cen quilómetros"}
+                one{"{0} quilowatt/hora por cen quilómetros"}
+                other{"{0} quilowatts/hora por cen quilómetros"}
+            }
             newton{
                 dnam{"newtons"}
                 one{"{0} newton"}
@@ -461,9 +471,9 @@ gl{
         }
         graphics{
             dot{
-                dnam{"puntos tipográficos"}
-                one{"{0} punto tipográfico"}
-                other{"{0} puntos tipográficos"}
+                dnam{"puntos"}
+                one{"{0} punto"}
+                other{"{0} puntos"}
             }
             dot-per-centimeter{
                 dnam{"puntos por centímetro"}
@@ -603,9 +613,9 @@ gl{
                 other{"{0} picómetros"}
             }
             point{
-                dnam{"puntos"}
-                one{"{0} punto"}
-                other{"{0} puntos"}
+                dnam{"puntos tipográficos"}
+                one{"{0} punto tipográfico"}
+                other{"{0} puntos tipográficos"}
             }
             solar-radius{
                 dnam{"raios solares"}
@@ -1040,10 +1050,30 @@ gl{
         }
     }
     unitsNarrow{
+        acceleration{
+            g-force{
+                dnam{"G"}
+            }
+        }
         angle{
             arc-minute{
+                dnam{"min"}
                 one{"{0}′"}
                 other{"{0}′"}
+            }
+            arc-second{
+                dnam{"s"}
+            }
+            radian{
+                dnam{"rad"}
+            }
+        }
+        area{
+            acre{
+                dnam{"ac"}
+            }
+            hectare{
+                dnam{"ha"}
             }
         }
         compound{
@@ -1070,10 +1100,44 @@ gl{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"ude."}
+                one{"{0} ude."}
+                other{"{0} udes."}
+            }
+            karat{
+                dnam{"kt"}
+                one{"{0} kt"}
+                other{"{0} kt"}
+            }
+            milligram-ofglucose-per-deciliter{
+                one{"{0} mg/dl"}
+                other{"{0} mg/dl"}
+            }
+            millimole-per-liter{
+                one{"{0} mmol/l"}
+                other{"{0} mmol/l"}
+            }
+            mole{
+                one{"{0} mol"}
+                other{"{0} mol"}
+            }
             percent{
                 dnam{"%"}
                 one{"{0} %"}
                 other{"{0} %"}
+            }
+            permille{
+                one{"{0} ‰"}
+                other{"{0} ‰"}
+            }
+            permillion{
+                one{"{0} ppm"}
+                other{"{0} ppm"}
+            }
+            permyriad{
+                one{"{0} ‱"}
+                other{"{0} ‱"}
             }
         }
         consumption{
@@ -1081,6 +1145,17 @@ gl{
                 dnam{"l/100 km"}
                 one{"{0} l/100 km"}
                 other{"{0} l/100 km"}
+            }
+            liter-per-kilometer{
+                dnam{"l/km"}
+                one{"{0} l/km"}
+                other{"{0} l/km"}
+            }
+            mile-per-gallon{
+                dnam{"mpg EUA"}
+            }
+            mile-per-gallon-imperial{
+                dnam{"mpg imp."}
             }
         }
         coordinate{
@@ -1095,6 +1170,7 @@ gl{
                 dnam{"día"}
                 one{"{0} d"}
                 other{"{0} d"}
+                per{"{0}/d"}
             }
             hour{
                 dnam{"h"}
@@ -1115,6 +1191,7 @@ gl{
                 dnam{"mes"}
                 one{"{0} m."}
                 other{"{0} m."}
+                per{"{0}/m."}
             }
             second{
                 dnam{"s"}
@@ -1130,6 +1207,40 @@ gl{
                 dnam{"a."}
                 one{"{0} a."}
                 other{"{0} a."}
+                per{"{0}/a."}
+            }
+        }
+        electric{
+            ohm{
+                dnam{"Ω"}
+            }
+            volt{
+                dnam{"V"}
+            }
+        }
+        energy{
+            joule{
+                dnam{"J"}
+            }
+            kilojoule{
+                dnam{"kJ"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100 km"}
+                one{"{0} kWh/100 km"}
+                other{"{0} kWh/100 km"}
+            }
+            newton{
+                dnam{"N"}
+                one{"{0} N"}
+                other{"{0} N"}
+            }
+            pound-force{
+                dnam{"lbf"}
+                one{"{0} lbf"}
+                other{"{0} lbf"}
             }
         }
         length{
@@ -1138,23 +1249,79 @@ gl{
                 one{"{0} cm"}
                 other{"{0} cm"}
             }
+            fathom{
+                dnam{"fth"}
+            }
+            foot{
+                dnam{"ft"}
+            }
+            furlong{
+                dnam{"fur"}
+            }
+            inch{
+                dnam{"in"}
+            }
             kilometer{
                 dnam{"km"}
                 one{"{0} km"}
                 other{"{0} km"}
+            }
+            light-year{
+                dnam{"a.l."}
             }
             meter{
                 dnam{"m"}
                 one{"{0} m"}
                 other{"{0} m"}
             }
+            mile{
+                dnam{"mi"}
+            }
             millimeter{
                 dnam{"mm"}
                 one{"{0} mm"}
                 other{"{0} mm"}
             }
+            parsec{
+                dnam{"pc"}
+            }
+            solar-radius{
+                dnam{"R☉"}
+            }
+            yard{
+                dnam{"yd"}
+            }
+        }
+        light{
+            candela{
+                one{"{0} cd"}
+                other{"{0} cd"}
+            }
+            lumen{
+                dnam{"lm"}
+                one{"{0} lm"}
+                other{"{0} lm"}
+            }
+            lux{
+                one{"{0} lx"}
+                other{"{0} lx"}
+            }
+            solar-luminosity{
+                dnam{"L☉"}
+                one{"{0} L☉"}
+                other{"{0} L☉"}
+            }
         }
         mass{
+            carat{
+                dnam{"ct"}
+            }
+            dalton{
+                dnam{"Da"}
+            }
+            earth-mass{
+                dnam{"M⊕"}
+            }
             gram{
                 dnam{"g"}
                 one{"{0} g"}
@@ -1165,12 +1332,30 @@ gl{
                 one{"{0} kg"}
                 other{"{0} kg"}
             }
+            pound{
+                dnam{"lb"}
+            }
+            solar-mass{
+                dnam{"M☉"}
+            }
+        }
+        power{
+            watt{
+                dnam{"W"}
+            }
         }
         speed{
             kilometer-per-hour{
                 dnam{"km/h"}
                 one{"{0} km/h"}
                 other{"{0} km/h"}
+            }
+            knot{
+                one{"{0} nó"}
+                other{"{0} nós"}
+            }
+            mile-per-hour{
+                dnam{"mi/h"}
             }
         }
         temperature{
@@ -1183,12 +1368,36 @@ gl{
                 one{"{0}°F"}
                 other{"{0}°F"}
             }
+            generic{
+                dnam{"°"}
+            }
         }
         volume{
+            acre-foot{
+                dnam{"ac ft"}
+            }
+            barrel{
+                dnam{"bbl"}
+            }
+            cup{
+                dnam{"c"}
+            }
+            cup-metric{
+                dnam{"mc"}
+            }
             liter{
                 dnam{"l"}
                 one{"{0} l"}
                 other{"{0} l"}
+            }
+            pint{
+                dnam{"pt"}
+            }
+            quart{
+                dnam{"qt"}
+            }
+            quart-imperial{
+                dnam{"cto. imp."}
             }
         }
     }
@@ -1313,6 +1522,11 @@ gl{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"ude."}
+                one{"{0} ude."}
+                other{"{0} udes."}
+            }
             karat{
                 dnam{"quilates"}
                 one{"{0} kt"}
@@ -1571,6 +1785,11 @@ gl{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100 km"}
+                one{"{0} kWh/100 km"}
+                other{"{0} kWh/100 km"}
+            }
             newton{
                 dnam{"newton"}
             }

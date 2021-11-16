@@ -160,6 +160,11 @@ ka{
             }
         }
         concentr{
+            item{
+                dnam{"ერთეული"}
+                one{"{0} ერთეული"}
+                other{"{0} ერთეული"}
+            }
             karat{
                 dnam{"კარატი"}
                 one{"{0} კარატი"}
@@ -413,6 +418,13 @@ ka{
                 dnam{"აშშ თერმი"}
                 one{"{0} აშშ თერმი"}
                 other{"{0} აშშ თერმი"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"კვტსთ/100კმ"}
+                one{"{0} კვტსთ/100კმ"}
+                other{"{0} კვტსთ/100კმ"}
             }
         }
         frequency{
@@ -1120,6 +1132,10 @@ ka{
             }
         }
         concentr{
+            item{
+                one{"{0} ერთეული"}
+                other{"{0} ერთეული"}
+            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
@@ -1180,6 +1196,12 @@ ka{
                 dnam{"წ"}
                 one{"{0} წ"}
                 other{"{0} წ"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                one{"{0} კვტსთ/100კმ"}
+                other{"{0} კვტსთ/100კმ"}
             }
         }
         length{
@@ -1471,6 +1493,11 @@ ka{
             }
         }
         concentr{
+            item{
+                dnam{"ერთეული"}
+                one{"{0} ერთეული"}
+                other{"{0} ერთეული"}
+            }
             karat{
                 dnam{"კარატი"}
                 one{"{0} კარ."}
@@ -1724,6 +1751,13 @@ ka{
                 dnam{"აშშ თერმი"}
                 one{"{0} აშშ თერმი"}
                 other{"{0} აშშ თერმი"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"კვტსთ/100კმ"}
+                one{"{0} კვტსთ/100კმ"}
+                other{"{0} კვტსთ/100კმ"}
             }
         }
         frequency{

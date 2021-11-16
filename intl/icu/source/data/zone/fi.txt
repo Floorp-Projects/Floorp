@@ -1944,6 +1944,9 @@ fi{
             lg{"Jekaterinburgin aika"}
             ls{"Jekaterinburgin normaaliaika"}
         }
+        "meta:Yukon"{
+            ls{"Yukonin aika"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"UTC{0}"}
         gmtZeroFormat{"UTC"}

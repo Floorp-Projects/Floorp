@@ -1221,7 +1221,6 @@ ast{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYN{"BYN"}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -1283,7 +1282,6 @@ ast{
         PLN{"PLN"}
         PYG{"₲"}
         RUB{"₽"}
-        RUR{"RUR"}
         RWF{"RF"}
         SBD{"$"}
         SEK{"SEK"}

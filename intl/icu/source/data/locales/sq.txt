@@ -241,6 +241,16 @@ sq{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMEEEEd",
+                "GyMMMd",
+                "GyMMMd",
+                "GGGGGyMd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -257,6 +267,7 @@ sq{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                GyMd{"d.M.y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -267,6 +278,7 @@ sq{
                 MMMMEd{"E, d MMM"}
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
+                MMdd{"dd.MM"}
                 Md{"d.M"}
                 d{"d"}
                 h{"h a"}
@@ -438,6 +450,16 @@ sq{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
+            }
             appendItems{
                 Timezone{"{0}, {1}"}
             }
@@ -457,6 +479,7 @@ sq{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                GyMd{"d.M.y GGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}

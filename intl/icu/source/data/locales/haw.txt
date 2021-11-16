@@ -53,6 +53,19 @@ haw{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                {
+                    "GGGGGyyMd",
+                    "M=romanlow",
+                }
+            }
         }
         gregorian{
             AmPmMarkers{
@@ -84,6 +97,19 @@ haw{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                {
+                    "yyMd",
+                    "M=romanlow",
+                }
             }
             appendItems{
                 Timezone{"{0} {1}"}

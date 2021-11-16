@@ -1934,6 +1934,9 @@ ms{
             lg{"Waktu Yekaterinburg"}
             ls{"Waktu Piawai Yekaterinburg"}
         }
+        "meta:Yukon"{
+            ls{"Masa Yukon"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

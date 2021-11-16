@@ -10,11 +10,44 @@ sl{
     units{
         acceleration{
             g-force{
-                dnam{"G"}
-                few{"{0} G"}
-                one{"{0} G"}
-                other{"{0} G"}
-                two{"{0} G"}
+                case{
+                    accusative{
+                        few{"{0} težne pospeške"}
+                        one{"{0} težni pospešek"}
+                        other{"{0} težnih pospeškov"}
+                        two{"{0} težna pospeška"}
+                    }
+                    dative{
+                        few{"{0} težnim pospeškom"}
+                        one{"{0} težnemu pospešku"}
+                        other{"{0} težnim pospeškom"}
+                        two{"{0} težnima pospeškoma"}
+                    }
+                    genitive{
+                        few{"{0} težnih pospeškov"}
+                        one{"{0} težnega pospeška"}
+                        other{"{0} težnih pospeškov"}
+                        two{"{0} težnih pospeškov"}
+                    }
+                    instrumental{
+                        few{"{0} težnimi pospeški"}
+                        one{"{0} težnim pospeškom"}
+                        other{"{0} težnimi pospeški"}
+                        two{"{0} težnima pospeškoma"}
+                    }
+                    locative{
+                        few{"{0} težnih pospeših"}
+                        one{"{0} težnem pospešu"}
+                        other{"{0} težnih pospeških"}
+                        two{"{0} težnih pospeških"}
+                    }
+                }
+                dnam{"težni pospešek"}
+                few{"{0} težni pospeški"}
+                gender{"masculine"}
+                one{"{0} težni pospešek"}
+                other{"{0} težnih pospeškov"}
+                two{"{0} težna pospeška"}
             }
             meter-per-square-second{
                 dnam{"meter na kvadratno sekundo"}
@@ -26,36 +59,201 @@ sl{
         }
         angle{
             arc-minute{
+                case{
+                    accusative{
+                        few{"{0} kotne minute"}
+                        one{"{0} kotno minuto"}
+                        other{"{0} kotnih minut"}
+                        two{"{0} kotni minuti"}
+                    }
+                    dative{
+                        few{"{0} kotnim minutam"}
+                        one{"{0} kotni minuti"}
+                        other{"{0} kotnim minutam"}
+                        two{"{0} kotnima minutama"}
+                    }
+                    genitive{
+                        few{"{0} kotnih minut"}
+                        one{"{0} kotne minute"}
+                        other{"{0} kotnih minut"}
+                        two{"{0} kotnih minut"}
+                    }
+                    instrumental{
+                        few{"{0} kotnimi minutami"}
+                        one{"{0} kotno minuto"}
+                        other{"{0} kotnimi minutami"}
+                        two{"{0} kotnima minutama"}
+                    }
+                    locative{
+                        few{"{0} kotnih minutah"}
+                        one{"{0} kotni minuti"}
+                        other{"{0} kotnih minutah"}
+                        two{"{0} kotnih minutah"}
+                    }
+                }
                 dnam{"kotna minuta"}
                 few{"{0} kotne minute"}
+                gender{"feminine"}
                 one{"{0} kotna minuta"}
                 other{"{0} kotnih minut"}
                 two{"{0} kotni minuti"}
             }
             arc-second{
+                case{
+                    accusative{
+                        few{"{0} kotne sekunde"}
+                        one{"{0} kotno sekundo"}
+                        other{"{0} kotnih sekund"}
+                        two{"{0} kotni sekundi"}
+                    }
+                    dative{
+                        few{"{0} kotnim sekundam"}
+                        one{"{0} kotni sekundi"}
+                        other{"{0} kotnim sekundam"}
+                        two{"{0} kotnima sekundama"}
+                    }
+                    genitive{
+                        few{"{0} kotnih sekund"}
+                        one{"{0} kotne sekunde"}
+                        other{"{0} kotnih sekund"}
+                        two{"{0} kotnih sekund"}
+                    }
+                    instrumental{
+                        few{"{0} kotnimi sekundami"}
+                        one{"{0} kotno sekundo"}
+                        other{"{0} kotnimi sekundami"}
+                        two{"{0} kotnima sekundama"}
+                    }
+                    locative{
+                        few{"{0} kotnih sekundah"}
+                        one{"{0} kotni sekundi"}
+                        other{"{0} kotnih sekundah"}
+                        two{"{0} kotnih sekundah"}
+                    }
+                }
                 dnam{"kotna sekunda"}
                 few{"{0} kotne sekunde"}
+                gender{"feminine"}
                 one{"{0} kotna sekunda"}
                 other{"{0} kotnih sekund"}
                 two{"{0} kotni sekundi"}
             }
             degree{
+                case{
+                    accusative{
+                        few{"{0} stopinje"}
+                        one{"{0} stopinjo"}
+                        other{"{0} stopinj"}
+                        two{"{0} stopinji"}
+                    }
+                    dative{
+                        few{"{0} stopinjam"}
+                        one{"{0} stopinji"}
+                        other{"{0} stopinjam"}
+                        two{"{0} stopinjama"}
+                    }
+                    genitive{
+                        few{"{0} stopinj"}
+                        one{"{0} stopinje"}
+                        other{"{0} stopinj"}
+                        two{"{0} stopinj"}
+                    }
+                    instrumental{
+                        few{"{0} stopinjami"}
+                        one{"{0} stopinjo"}
+                        other{"{0} stopinjami"}
+                        two{"{0} stopinjama"}
+                    }
+                    locative{
+                        few{"{0} stopinjah"}
+                        one{"{0} stopinji"}
+                        other{"{0} stopinjah"}
+                        two{"{0} stopinjah"}
+                    }
+                }
                 dnam{"stopinja"}
                 few{"{0} stopinje"}
+                gender{"feminine"}
                 one{"{0} stopinja"}
                 other{"{0} stopinj"}
                 two{"{0} stopinji"}
             }
             radian{
+                case{
+                    accusative{
+                        few{"{0} radiane"}
+                        one{"{0} radian"}
+                        other{"{0} radianov"}
+                        two{"{0} radiana"}
+                    }
+                    dative{
+                        few{"{0} radianom"}
+                        one{"{0} radianu"}
+                        other{"{0} radianom"}
+                        two{"{0} radianoma"}
+                    }
+                    genitive{
+                        few{"{0} radianov"}
+                        one{"{0} radiana"}
+                        other{"{0} radianov"}
+                        two{"{0} radianov"}
+                    }
+                    instrumental{
+                        few{"{0} radiani"}
+                        one{"{0} radianom"}
+                        other{"{0} radiani"}
+                        two{"{0} radianoma"}
+                    }
+                    locative{
+                        few{"{0} radianih"}
+                        one{"{0} radianu"}
+                        other{"{0} radianih"}
+                        two{"{0} radianih"}
+                    }
+                }
                 dnam{"radian"}
                 few{"{0} radiani"}
+                gender{"masculine"}
                 one{"{0} radian"}
                 other{"{0} radianov"}
                 two{"{0} radiana"}
             }
             revolution{
+                case{
+                    accusative{
+                        few{"{0} vrtljaje"}
+                        one{"{0} vrtljaj"}
+                        other{"{0} vrtljajev"}
+                        two{"{0} vrtljaja"}
+                    }
+                    dative{
+                        few{"{0} vrtljajem"}
+                        one{"{0} vrtljaju"}
+                        other{"{0} vrtljajem"}
+                        two{"{0} vrtljajema"}
+                    }
+                    genitive{
+                        few{"{0} vrtljajev"}
+                        one{"{0} vrtljaja"}
+                        other{"{0} vrtljajev"}
+                        two{"{0} vrtljajev"}
+                    }
+                    instrumental{
+                        few{"{0} vrtljaji"}
+                        one{"{0} vrtljajem"}
+                        other{"{0} vrtljaji"}
+                        two{"{0} vrtljajema"}
+                    }
+                    locative{
+                        few{"{0} vrtljajih"}
+                        one{"{0} vrtljaju"}
+                        other{"{0} vrtljajih"}
+                        two{"{0} vrtljajih"}
+                    }
+                }
                 dnam{"vrtljaj"}
                 few{"{0} vrtljaji"}
+                gender{"masculine"}
                 one{"{0} vrtljaj"}
                 other{"{0} vrtljajev"}
                 two{"{0} vrtljaja"}
@@ -70,15 +268,48 @@ sl{
                 two{"{0} akra"}
             }
             dunam{
-                dnam{"dunami"}
-                few{"{0} dunami"}
-                one{"{0} dunam"}
-                other{"{0} dunamov"}
-                two{"{0} dunama"}
+                dnam{"dunumi"}
+                few{"{0} dunumi"}
+                one{"{0} dunum"}
+                other{"{0} dunumi"}
+                two{"{0} dunuma"}
             }
             hectare{
+                case{
+                    accusative{
+                        few{"{0} hektare"}
+                        one{"{0} hektar"}
+                        other{"{0} hektarjev"}
+                        two{"{0} hektara"}
+                    }
+                    dative{
+                        few{"{0} hektarjem"}
+                        one{"{0} hektarju"}
+                        other{"{0} hektarjem"}
+                        two{"{0} hektarjema"}
+                    }
+                    genitive{
+                        few{"{0} hektarjev"}
+                        one{"{0} hektara"}
+                        other{"{0} hektarjev"}
+                        two{"{0} hektarjev"}
+                    }
+                    instrumental{
+                        few{"{0} hektari"}
+                        one{"{0} hektarjem"}
+                        other{"{0} hektari"}
+                        two{"{0} hektarjema"}
+                    }
+                    locative{
+                        few{"{0} hektarih"}
+                        one{"{0} hektarju"}
+                        other{"{0} hektarih"}
+                        two{"{0} hektarih"}
+                    }
+                }
                 dnam{"hektari"}
                 few{"{0} hektari"}
+                gender{"masculine"}
                 one{"{0} hektar"}
                 other{"{0} hektarov"}
                 two{"{0} hektara"}
@@ -171,52 +402,260 @@ sl{
             power2{
                 few{
                     _{
-                        _{"kvadratni {0}"}
+                        _{"kvadratna {0}"}
+                        accusative{"kvadratna {0}"}
+                        dative{"kvadratnim {0}"}
+                        genitive{"kvadratnih {0}"}
+                        instrumental{"kvadratnimi {0}"}
+                        locative{"kvadratnih {0}"}
+                    }
+                    feminine{
+                        _{"kvadratne {0}"}
+                        accusative{"kvadratne {0}"}
+                        dative{"kvadratnim {0}"}
+                        genitive{"kvadratnih {0}"}
+                        instrumental{"kvadratnimi {0}"}
+                        locative{"kvadratnih {0}"}
+                    }
+                    masculine{
+                        _{"kvadratna {0}"}
+                        accusative{"kvadratne {0}"}
+                        dative{"kvadratnim {0}"}
+                        genitive{"kvadratnih {0}"}
+                        instrumental{"kvadratnimi {0}"}
+                        locative{"kvadratnih {0}"}
                     }
                 }
                 one{
                     _{
-                        _{"kvadratni {0}"}
+                        _{"kvadratno {0}"}
+                        accusative{"kvadratno {0}"}
+                        dative{"kvadratnemu {0}"}
+                        genitive{"kvadratnega {0}"}
+                        instrumental{"kvadratnim {0}"}
+                        locative{"kvadratnem {0}"}
+                    }
+                    feminine{
+                        _{"kvadratna {0}"}
+                        accusative{"kvadratno {0}"}
+                        dative{"kvadratni {0}"}
+                        genitive{"kvadratne {0}"}
+                        instrumental{"kvadratno {0}"}
+                        locative{"kvadratnem {0}"}
+                    }
+                    masculine{
+                        _{"kvadratno {0}"}
+                        accusative{"kvadratnega {0}"}
+                        dative{"kvadratnemu {0}"}
+                        genitive{"kvadratnega {0}"}
+                        instrumental{"kvadratnim {0}"}
+                        locative{"kvadratnem {0}"}
                     }
                 }
                 other{
                     _{
                         _{"kvadratnih {0}"}
+                        accusative{"kvadratnih {0}"}
+                        dative{"kvadratnim {0}"}
+                        genitive{"kvadratnih {0}"}
+                        instrumental{"kvadratnimi {0}"}
+                        locative{"kvadratnih {0}"}
+                    }
+                    feminine{
+                        _{"kvadratnih {0}"}
+                        accusative{"kvadratnih {0}"}
+                        dative{"kvadratnim {0}"}
+                        genitive{"kvadratnih {0}"}
+                        instrumental{"kvadratnimi {0}"}
+                        locative{"kvadratnih {0}"}
+                    }
+                    masculine{
+                        _{"kvadratnih {0}"}
+                        accusative{"kvadratnih {0}"}
+                        dative{"kvadratnim {0}"}
+                        genitive{"kvadratnih {0}"}
+                        instrumental{"kvadratnimi {0}"}
+                        locative{"kvadratnih {0}"}
                     }
                 }
                 two{
                     _{
-                        _{"kvadratna {0}"}
+                        _{"kvadratni {0}"}
+                        accusative{"kvadratni {0}"}
+                        dative{"kvadratnima {0}"}
+                        genitive{"kvadratnih {0}"}
+                        instrumental{"kvadratnima {0}"}
+                        locative{"kvadratnih {0}"}
+                    }
+                    feminine{
+                        _{"kvadratni {0}"}
+                        accusative{"kvadratni {0}"}
+                        dative{"kvadratnima {0}"}
+                        genitive{"kvadratnih {0}"}
+                        instrumental{"kvadratnima {0}"}
+                        locative{"kvadratnih {0}"}
+                    }
+                    masculine{
+                        _{"kvadratni {0}"}
+                        accusative{"kvadratni {0}"}
+                        dative{"kvadratnima {0}"}
+                        genitive{"kvadratnih {0}"}
+                        instrumental{"kvadratnima {0}"}
+                        locative{"kvadratnih {0}"}
                     }
                 }
             }
             power3{
                 few{
                     _{
-                        _{"kubični {0}"}
+                        _{"kubična {0}"}
+                        accusative{"kubična {0}"}
+                        dative{"kubičnim {0}"}
+                        genitive{"kubičnih {0}"}
+                        instrumental{"kubičnimi {0}"}
+                        locative{"kubičnih {0}"}
+                    }
+                    feminine{
+                        _{"kubične {0}"}
+                        accusative{"kubične {0}"}
+                        dative{"kubičnim {0}"}
+                        genitive{"kubičnih {0}"}
+                        instrumental{"kubičnimi {0}"}
+                        locative{"kubičnih {0}"}
+                    }
+                    masculine{
+                        _{"kubična {0}"}
+                        accusative{"kubične {0}"}
+                        dative{"kubičnim {0}"}
+                        genitive{"kubičnih {0}"}
+                        instrumental{"kubičnimi {0}"}
+                        locative{"kubičnih {0}"}
                     }
                 }
                 one{
                     _{
-                        _{"kubični {0}"}
+                        _{"kubično {0}"}
+                        accusative{"kubično {0}"}
+                        dative{"kubičnemu {0}"}
+                        genitive{"kubičnega {0}"}
+                        instrumental{"kubičnim {0}"}
+                        locative{"kubičnem {0}"}
+                    }
+                    feminine{
+                        _{"kubična {0}"}
+                        accusative{"kubično {0}"}
+                        dative{"kubični {0}"}
+                        genitive{"kubične {0}"}
+                        instrumental{"kubično {0}"}
+                        locative{"kubični {0}"}
+                    }
+                    masculine{
+                        _{"kubično {0}"}
+                        accusative{"kubičnega {0}"}
+                        dative{"kubičnemu {0}"}
+                        genitive{"kubičnega {0}"}
+                        instrumental{"kubičnim {0}"}
+                        locative{"kubičnem {0}"}
                     }
                 }
                 other{
                     _{
                         _{"kubičnih {0}"}
+                        accusative{"kubičnih {0}"}
+                        dative{"kubičnim {0}"}
+                        genitive{"kubičnih {0}"}
+                        instrumental{"kubičnimi {0}"}
+                        locative{"kubičnih {0}"}
+                    }
+                    feminine{
+                        _{"kubičnih {0}"}
+                        accusative{"kubičnih {0}"}
+                        dative{"kubičnim {0}"}
+                        genitive{"kubičnih {0}"}
+                        instrumental{"kubičnimi {0}"}
+                        locative{"kubičnih {0}"}
+                    }
+                    masculine{
+                        _{"kubičnih {0}"}
+                        accusative{"kubičnih {0}"}
+                        dative{"kubičnim {0}"}
+                        genitive{"kubičnih {0}"}
+                        instrumental{"kubičnimi {0}"}
+                        locative{"kubičnih {0}"}
                     }
                 }
                 two{
                     _{
-                        _{"kubična {0}"}
+                        _{"kubični {0}"}
+                        accusative{"kubični {0}"}
+                        dative{"kubičnima {0}"}
+                        genitive{"kubičnih {0}"}
+                        instrumental{"kubičnima {0}"}
+                        locative{"kubičnih {0}"}
+                    }
+                    feminine{
+                        _{"kubični {0}"}
+                        accusative{"kubični {0}"}
+                        dative{"kubičnima {0}"}
+                        genitive{"kubičnih {0}"}
+                        instrumental{"kubičnima {0}"}
+                        locative{"kubičnih {0}"}
+                    }
+                    masculine{
+                        _{"kubični {0}"}
+                        accusative{"kubični {0}"}
+                        dative{"kubičnima {0}"}
+                        genitive{"kubičnih {0}"}
+                        instrumental{"kubičnima {0}"}
+                        locative{"kubičnih {0}"}
                     }
                 }
             }
         }
         concentr{
+            item{
+                dnam{"element"}
+                few{"{0} elementi"}
+                one{"{0} element"}
+                other{"{0} elementov"}
+                two{"{0} elementa"}
+            }
             karat{
+                case{
+                    accusative{
+                        few{"{0} karate"}
+                        one{"{0} karat"}
+                        other{"{0} karatov"}
+                        two{"{0} karata"}
+                    }
+                    dative{
+                        few{"{0} karatom"}
+                        one{"{0} karatu"}
+                        other{"{0} karatom"}
+                        two{"{0} karatoma"}
+                    }
+                    genitive{
+                        few{"{0} karatov"}
+                        one{"{0} karata"}
+                        other{"{0} karatov"}
+                        two{"{0} karatov"}
+                    }
+                    instrumental{
+                        few{"{0} karati"}
+                        one{"{0} karatom"}
+                        other{"{0} karati"}
+                        two{"{0} karatoma"}
+                    }
+                    locative{
+                        few{"{0} karatih"}
+                        one{"{0} karatu"}
+                        other{"{0} karatih"}
+                        two{"{0} karatih"}
+                    }
+                }
                 dnam{"karat"}
                 few{"{0} karati"}
+                gender{"masculine"}
                 one{"{0} karat"}
                 other{"{0} karatov"}
                 two{"{0} karata"}
@@ -236,36 +675,201 @@ sl{
                 two{"{0} milimola na liter"}
             }
             mole{
+                case{
+                    accusative{
+                        few{"{0} mole"}
+                        one{"{0} mol"}
+                        other{"{0} molov"}
+                        two{"{0} mola"}
+                    }
+                    dative{
+                        few{"{0} molom"}
+                        one{"{0} molu"}
+                        other{"{0} molom"}
+                        two{"{0} moloma"}
+                    }
+                    genitive{
+                        few{"{0} molov"}
+                        one{"{0} mola"}
+                        other{"{0} molov"}
+                        two{"{0} molov"}
+                    }
+                    instrumental{
+                        few{"{0} moli"}
+                        one{"{0} molom"}
+                        other{"{0} moli"}
+                        two{"{0} moloma"}
+                    }
+                    locative{
+                        few{"{0} molih"}
+                        one{"{0} molu"}
+                        other{"{0} molih"}
+                        two{"{0} molih"}
+                    }
+                }
                 dnam{"moli"}
                 few{"{0} moli"}
+                gender{"masculine"}
                 one{"{0} mol"}
                 other{"{0} molov"}
                 two{"{0} mola"}
             }
             percent{
+                case{
+                    accusative{
+                        few{"{0} odstotke"}
+                        one{"{0} odstotek"}
+                        other{"{0} odstotkov"}
+                        two{"{0} odstotka"}
+                    }
+                    dative{
+                        few{"{0} odstotkom"}
+                        one{"{0} odstotku"}
+                        other{"{0} odstotkom"}
+                        two{"{0} odstotkoma"}
+                    }
+                    genitive{
+                        few{"{0} odstotkov"}
+                        one{"{0} odstotka"}
+                        other{"{0} odstotkov"}
+                        two{"{0} odstotkov"}
+                    }
+                    instrumental{
+                        few{"{0} odstotki"}
+                        one{"{0} odstotkom"}
+                        other{"{0} odstotki"}
+                        two{"{0} odstotkoma"}
+                    }
+                    locative{
+                        few{"{0} odstotkih"}
+                        one{"{0} odstotku"}
+                        other{"{0} odstotkih"}
+                        two{"{0} odstotkih"}
+                    }
+                }
                 dnam{"odstotek"}
                 few{"{0} odstotki"}
+                gender{"masculine"}
                 one{"{0} odstotek"}
                 other{"{0} odstotkov"}
                 two{"{0} odstotka"}
             }
             permille{
+                case{
+                    accusative{
+                        few{"{0} promile"}
+                        one{"{0} promile"}
+                        other{"{0} promilov"}
+                        two{"{0} promila"}
+                    }
+                    dative{
+                        few{"{0} promilom"}
+                        one{"{0} promilu"}
+                        other{"{0} promilom"}
+                        two{"{0} promiloma"}
+                    }
+                    genitive{
+                        few{"{0} promilov"}
+                        one{"{0} promila"}
+                        other{"{0} promilov"}
+                        two{"{0} promilov"}
+                    }
+                    instrumental{
+                        few{"{0} promili"}
+                        one{"{0} promilom"}
+                        other{"{0} promili"}
+                        two{"{0} promiloma"}
+                    }
+                    locative{
+                        few{"{0} promilih"}
+                        one{"{0} promilu"}
+                        other{"{0} promilih"}
+                        two{"{0} promililih"}
+                    }
+                }
                 dnam{"promile"}
                 few{"{0} promili"}
+                gender{"masculine"}
                 one{"{0} promile"}
                 other{"{0} promilov"}
                 two{"{0} promila"}
             }
             permillion{
+                case{
+                    accusative{
+                        few{"{0} delce na milijon"}
+                        one{"{0} delec na milijon"}
+                        other{"{0} delcev na milijon"}
+                        two{"{0} delca na milijon"}
+                    }
+                    dative{
+                        few{"{0} delcem na milijon"}
+                        one{"{0} delcu na milijon"}
+                        other{"{0} delcem na milijon"}
+                        two{"{0} delcema na milijon"}
+                    }
+                    genitive{
+                        few{"{0} delcev na milijon"}
+                        one{"{0} delca na milijon"}
+                        other{"{0} delcev na milijon"}
+                        two{"{0} delcev na milijon"}
+                    }
+                    instrumental{
+                        few{"{0} delci na milijon"}
+                        one{"{0} delcem na milijon"}
+                        other{"{0} delci na milijon"}
+                        two{"{0} delcema na milijon"}
+                    }
+                    locative{
+                        few{"{0} delcih na milijon"}
+                        one{"{0} delcu na milijon"}
+                        other{"{0} delcih na milijon"}
+                        two{"{0} delcih na milijon"}
+                    }
+                }
                 dnam{"delci na milijon"}
                 few{"{0} delci na milijon"}
+                gender{"masculine"}
                 one{"{0} delec na milijon"}
                 other{"{0} delcev na milijon"}
                 two{"{0} delca na milijon"}
             }
             permyriad{
-                dnam{"desettisočine"}
+                case{
+                    accusative{
+                        few{"{0} desettisočine"}
+                        one{"{0} desettisočino"}
+                        other{"{0} desettisočin"}
+                        two{"{0} desettisočini"}
+                    }
+                    dative{
+                        few{"{0} desettisočinam"}
+                        one{"{0} desettisočini"}
+                        other{"{0} desettisočinam"}
+                        two{"{0} desettisočinama"}
+                    }
+                    genitive{
+                        few{"{0} desettisočin"}
+                        one{"{0} desettisočine"}
+                        other{"{0} desettisočin"}
+                        two{"{0} desettisočin"}
+                    }
+                    instrumental{
+                        few{"{0} desettisočinami"}
+                        one{"{0} desettisočino"}
+                        other{"{0} desettisočinami"}
+                        two{"{0} desettisočinama"}
+                    }
+                    locative{
+                        few{"{0} desettisočinah"}
+                        one{"{0} desettisočini"}
+                        other{"{0} desettisočinah"}
+                        two{"{0} desettisočinah"}
+                    }
+                }
+                dnam{"desettisočina"}
                 few{"{0} desettisočine"}
+                gender{"feminine"}
                 one{"{0} desettisočina"}
                 other{"{0} desettisočin"}
                 two{"{0} desettisočini"}
@@ -309,15 +913,81 @@ sl{
         }
         digital{
             bit{
+                case{
+                    accusative{
+                        few{"{0} bite"}
+                        one{"{0} bit"}
+                        other{"{0} bitov"}
+                        two{"{0} bita"}
+                    }
+                    dative{
+                        few{"{0} bitom"}
+                        one{"{0} bitu"}
+                        other{"{0} bitom"}
+                        two{"{0} bitoma"}
+                    }
+                    genitive{
+                        few{"{0} bitov"}
+                        one{"{0} bita"}
+                        other{"{0} bitov"}
+                        two{"{0} bitov"}
+                    }
+                    instrumental{
+                        few{"{0} biti"}
+                        one{"{0} bitom"}
+                        other{"{0} biti"}
+                        two{"{0} bitoma"}
+                    }
+                    locative{
+                        few{"{0} bitih"}
+                        one{"{0} bitu"}
+                        other{"{0} bitih"}
+                        two{"{0} bitih"}
+                    }
+                }
                 dnam{"bit"}
                 few{"{0} biti"}
+                gender{"masculine"}
                 one{"{0} bit"}
                 other{"{0} bitov"}
                 two{"{0} bita"}
             }
             byte{
+                case{
+                    accusative{
+                        few{"{0} bajte"}
+                        one{"{0} bajt"}
+                        other{"{0} bajtov"}
+                        two{"{0} bajta"}
+                    }
+                    dative{
+                        few{"{0} bajtom"}
+                        one{"{0} bajtu"}
+                        other{"{0} bajtom"}
+                        two{"{0} bajtoma"}
+                    }
+                    genitive{
+                        few{"{0} bajtov"}
+                        one{"{0} bajta"}
+                        other{"{0} bajtov"}
+                        two{"{0} bajtov"}
+                    }
+                    instrumental{
+                        few{"{0} bajti"}
+                        one{"{0} bajtom"}
+                        other{"{0} bajti"}
+                        two{"{0} bajtoma"}
+                    }
+                    locative{
+                        few{"{0} bajtih"}
+                        one{"{0} bajtu"}
+                        other{"{0} bajtih"}
+                        two{"{0} bajtih"}
+                    }
+                }
                 dnam{"bajt"}
                 few{"{0} bajti"}
+                gender{"masculine"}
                 one{"{0} bajt"}
                 other{"{0} bajtov"}
                 two{"{0} bajta"}
@@ -388,23 +1058,162 @@ sl{
         }
         duration{
             century{
+                case{
+                    accusative{
+                        few{"{0} stoletja"}
+                        one{"{0} stoletje"}
+                        other{"{0} stoletij"}
+                        two{"{0} stoletji"}
+                    }
+                    dative{
+                        few{"{0} stoletjem"}
+                        one{"{0} stoletju"}
+                        other{"{0} stoletjem"}
+                        two{"{0} stoletjema"}
+                    }
+                    genitive{
+                        few{"{0} stoletij"}
+                        one{"{0} stoletja"}
+                        other{"{0} stoletij"}
+                        two{"{0} stoletij"}
+                    }
+                    instrumental{
+                        few{"{0} stoletji"}
+                        one{"{0} stoletjem"}
+                        other{"{0} stoletji"}
+                        two{"{0} stoletjema"}
+                    }
+                    locative{
+                        few{"{0} stoletjih"}
+                        one{"{0} stoletju"}
+                        other{"{0} stoletjih"}
+                        two{"{0} stoletjih"}
+                    }
+                }
                 dnam{"stoletja"}
                 few{"{0} stoletja"}
+                gender{"neuter"}
                 one{"{0} stoletje"}
                 other{"{0} stoletij"}
                 two{"{0} stoletji"}
             }
             day{
+                case{
+                    accusative{
+                        few{"{0} dni"}
+                        one{"{0} dan"}
+                        other{"{0} dni"}
+                        two{"{0} dneva"}
+                    }
+                    dative{
+                        few{"{0} dnem"}
+                        one{"{0} dnevu"}
+                        other{"{0} dnem"}
+                        two{"{0} dnema"}
+                    }
+                    genitive{
+                        few{"{0} dni"}
+                        one{"{0} dneva"}
+                        other{"{0} dni"}
+                        two{"{0} dni"}
+                    }
+                    instrumental{
+                        few{"{0} dnevi"}
+                        one{"{0} dnevom"}
+                        other{"{0} dnevi"}
+                        two{"{0} dnema"}
+                    }
+                    locative{
+                        few{"{0} dneh"}
+                        one{"{0} dnevu"}
+                        other{"{0} dneh"}
+                        two{"{0} dneh"}
+                    }
+                }
                 dnam{"dni"}
                 few{"{0} dni"}
+                gender{"masculine"}
                 one{"{0} dan"}
                 other{"{0} dni"}
                 per{"{0} na dan"}
                 two{"{0} dneva"}
             }
+            decade{
+                case{
+                    accusative{
+                        few{"{0} dekade"}
+                        one{"{0} dekado"}
+                        other{"{0} dekad"}
+                        two{"{0} dekadi"}
+                    }
+                    dative{
+                        few{"{0} dekadam"}
+                        one{"{0} dekadi"}
+                        other{"{0} dekadam"}
+                        two{"{0} dekadama"}
+                    }
+                    genitive{
+                        few{"{0} dekad"}
+                        one{"{0} dekade"}
+                        other{"{0} dekad"}
+                        two{"{0} dekad"}
+                    }
+                    instrumental{
+                        few{"{0} dekadami"}
+                        one{"{0} dekado"}
+                        other{"{0} dekadami"}
+                        two{"{0} dekadama"}
+                    }
+                    locative{
+                        few{"{0} dekadah"}
+                        one{"{0} dekadi"}
+                        other{"{0} dekadah"}
+                        two{"{0} dekadah"}
+                    }
+                }
+                dnam{"dekade"}
+                few{"{0} dekade"}
+                gender{"feminine"}
+                one{"{0} dekada"}
+                other{"{0} dekad"}
+                two{"{0} dekadi"}
+            }
             hour{
+                case{
+                    accusative{
+                        few{"{0} ure"}
+                        one{"{0} uro"}
+                        other{"{0} ur"}
+                        two{"{0} uri"}
+                    }
+                    dative{
+                        few{"{0} uram"}
+                        one{"{0} uri"}
+                        other{"{0} uram"}
+                        two{"{0} urama"}
+                    }
+                    genitive{
+                        few{"{0} ur"}
+                        one{"{0} ure"}
+                        other{"{0} ur"}
+                        two{"{0} ur"}
+                    }
+                    instrumental{
+                        few{"{0} urami"}
+                        one{"{0} uro"}
+                        other{"{0} urami"}
+                        two{"{0} urama"}
+                    }
+                    locative{
+                        few{"{0} urah"}
+                        one{"{0} uri"}
+                        other{"{0} urah"}
+                        two{"{0} urah"}
+                    }
+                }
                 dnam{"ur"}
                 few{"{0} ure"}
+                gender{"feminine"}
                 one{"{0} ura"}
                 other{"{0} ur"}
                 per{"{0} na uro"}
@@ -425,16 +1234,82 @@ sl{
                 two{"{0} millisekundi"}
             }
             minute{
+                case{
+                    accusative{
+                        few{"{0} minute"}
+                        one{"{0} minuto"}
+                        other{"{0} minut"}
+                        two{"{0} minuti"}
+                    }
+                    dative{
+                        few{"{0} minutam"}
+                        one{"{0} minuti"}
+                        other{"{0} minutam"}
+                        two{"{0} minutama"}
+                    }
+                    genitive{
+                        few{"{0} minut"}
+                        one{"{0} minute"}
+                        other{"{0} minut"}
+                        two{"{0} minut"}
+                    }
+                    instrumental{
+                        few{"{0} minutami"}
+                        one{"{0} minuto"}
+                        other{"{0} minutami"}
+                        two{"{0} minutama"}
+                    }
+                    locative{
+                        few{"{0} minutah"}
+                        one{"{0} minuti"}
+                        other{"{0} minutah"}
+                        two{"{0} minutah"}
+                    }
+                }
                 dnam{"minut"}
                 few{"{0} minute"}
+                gender{"feminine"}
                 one{"{0} minuta"}
                 other{"{0} minut"}
                 per{"{0} na minuto"}
                 two{"{0} minuti"}
             }
             month{
-                dnam{"mesecev"}
-                few{"{0} mesecev"}
+                case{
+                    accusative{
+                        few{"{0} mesece"}
+                        one{"{0} mesec"}
+                        other{"{0} mesecev"}
+                        two{"{0} meseca"}
+                    }
+                    dative{
+                        few{"{0} mesecem"}
+                        one{"{0} mesecu"}
+                        other{"{0} mesecem"}
+                        two{"{0} mesecema"}
+                    }
+                    genitive{
+                        few{"{0} mesecev"}
+                        one{"{0} meseca"}
+                        other{"{0} mesecev"}
+                        two{"{0} mesecev"}
+                    }
+                    instrumental{
+                        few{"{0} meseci"}
+                        one{"{0} mesecem"}
+                        other{"{0} meseci"}
+                        two{"{0} mesecema"}
+                    }
+                    locative{
+                        few{"{0} mesecih"}
+                        one{"{0} mesecu"}
+                        other{"{0} mesecih"}
+                        two{"{0} mesecih"}
+                    }
+                }
+                dnam{"meseci"}
+                few{"{0} meseci"}
+                gender{"masculine"}
                 one{"{0} mesec"}
                 other{"{0} mesecev"}
                 per{"{0} na mesec"}
@@ -448,24 +1323,123 @@ sl{
                 two{"{0} nanosekundi"}
             }
             second{
+                case{
+                    accusative{
+                        few{"{0} sekunde"}
+                        one{"{0} sekundo"}
+                        other{"{0} sekund"}
+                        two{"{0} sekundi"}
+                    }
+                    dative{
+                        few{"{0} sekundam"}
+                        one{"{0} sekundi"}
+                        other{"{0} sekundam"}
+                        two{"{0} sekundama"}
+                    }
+                    genitive{
+                        few{"{0} sekund"}
+                        one{"{0} sekunde"}
+                        other{"{0} sekund"}
+                        two{"{0} sekund"}
+                    }
+                    instrumental{
+                        few{"{0} sekundami"}
+                        one{"{0} sekundo"}
+                        other{"{0} sekundami"}
+                        two{"{0} sekundama"}
+                    }
+                    locative{
+                        few{"{0} sekundah"}
+                        one{"{0} sekundi"}
+                        other{"{0} sekundah"}
+                        two{"{0} sekundah"}
+                    }
+                }
                 dnam{"sekund"}
                 few{"{0} sekunde"}
+                gender{"feminine"}
                 one{"{0} sekunda"}
                 other{"{0} sekund"}
                 per{"{0} na sekundo"}
                 two{"{0} sekundi"}
             }
             week{
-                dnam{"tednov"}
-                few{"{0} tednov"}
+                case{
+                    accusative{
+                        few{"{0} tedne"}
+                        one{"{0} teden"}
+                        other{"{0} tednov"}
+                        two{"{0} tedna"}
+                    }
+                    dative{
+                        few{"{0} tednom"}
+                        one{"{0} tednu"}
+                        other{"{0} tednom"}
+                        two{"{0} tednoma"}
+                    }
+                    genitive{
+                        few{"{0} tednov"}
+                        one{"{0} tedna"}
+                        other{"{0} tednov"}
+                        two{"{0} tednov"}
+                    }
+                    instrumental{
+                        few{"{0} tedni"}
+                        one{"{0} tednom"}
+                        other{"{0} tedni"}
+                        two{"{0} tednoma"}
+                    }
+                    locative{
+                        few{"{0} tednih"}
+                        one{"{0} tednu"}
+                        other{"{0} tednih"}
+                        two{"{0} tednih"}
+                    }
+                }
+                dnam{"tedni"}
+                few{"{0} tedni"}
+                gender{"masculine"}
                 one{"{0} teden"}
                 other{"{0} tednov"}
                 per{"{0} na teden"}
                 two{"{0} tedna"}
             }
             year{
-                dnam{"let"}
+                case{
+                    accusative{
+                        few{"{0} leta"}
+                        one{"{0} leto"}
+                        other{"{0} let"}
+                        two{"{0} leti"}
+                    }
+                    dative{
+                        few{"{0} letom"}
+                        one{"{0} letu"}
+                        other{"{0} letom"}
+                        two{"{0} letoma"}
+                    }
+                    genitive{
+                        few{"{0} let"}
+                        one{"{0} leta"}
+                        other{"{0} let"}
+                        two{"{0} let"}
+                    }
+                    instrumental{
+                        few{"{0} leti"}
+                        one{"{0} letom"}
+                        other{"{0} leti"}
+                        two{"{0} letoma"}
+                    }
+                    locative{
+                        few{"{0} letih"}
+                        one{"{0} letu"}
+                        other{"{0} letih"}
+                        two{"{0} letih"}
+                    }
+                }
+                dnam{"leta"}
                 few{"{0} let"}
+                gender{"neuter"}
                 one{"{0} leto"}
                 other{"{0} let"}
                 per{"{0} na leto"}
@@ -474,8 +1448,41 @@ sl{
         }
         electric{
             ampere{
+                case{
+                    accusative{
+                        few{"{0} ampere"}
+                        one{"{0} amper"}
+                        other{"{0} amperov"}
+                        two{"{0} ampera"}
+                    }
+                    dative{
+                        few{"{0} amperom"}
+                        one{"{0} amperu"}
+                        other{"{0} amperom"}
+                        two{"{0} amperoma"}
+                    }
+                    genitive{
+                        few{"{0} amperov"}
+                        one{"{0} ampera"}
+                        other{"{0} amperov"}
+                        two{"{0} amperov"}
+                    }
+                    instrumental{
+                        few{"{0} amperi"}
+                        one{"{0} amperom"}
+                        other{"{0} amperi"}
+                        two{"{0} amperoma"}
+                    }
+                    locative{
+                        few{"{0} amperih"}
+                        one{"{0} amperu"}
+                        other{"{0} amperih"}
+                        two{"{0} amperih"}
+                    }
+                }
                 dnam{"amperi"}
                 few{"{0} amperi"}
+                gender{"masculine"}
                 one{"{0} amper"}
                 other{"{0} amperov"}
                 two{"{0} ampera"}
@@ -488,15 +1495,81 @@ sl{
                 two{"{0} miliampera"}
             }
             ohm{
-                dnam{"ohm"}
+                case{
+                    accusative{
+                        few{"{0} ohme"}
+                        one{"{0} ohma"}
+                        other{"{0} ohmov"}
+                        two{"{0} ohma"}
+                    }
+                    dative{
+                        few{"{0} ohmom"}
+                        one{"{0} ohmu"}
+                        other{"{0} ohmom"}
+                        two{"{0} ohmoma"}
+                    }
+                    genitive{
+                        few{"{0} ohmov"}
+                        one{"{0} ohma"}
+                        other{"{0} ohmov"}
+                        two{"{0} ohmov"}
+                    }
+                    instrumental{
+                        few{"{0} ohmi"}
+                        one{"{0} ohmom"}
+                        other{"{0} ohmi"}
+                        two{"{0} ohmoma"}
+                    }
+                    locative{
+                        few{"{0} ohmih"}
+                        one{"{0} ohmu"}
+                        other{"{0} ohmih"}
+                        two{"{0} ohmih"}
+                    }
+                }
+                dnam{"ohmi"}
                 few{"{0} ohmi"}
+                gender{"masculine"}
                 one{"{0} ohm"}
                 other{"{0} ohmov"}
                 two{"{0} ohma"}
             }
             volt{
+                case{
+                    accusative{
+                        few{"{0} volte"}
+                        one{"{0} volt"}
+                        other{"{0} voltov"}
+                        two{"{0} volta"}
+                    }
+                    dative{
+                        few{"{0} voltom"}
+                        one{"{0} voltu"}
+                        other{"{0} voltom"}
+                        two{"{0} voltoma"}
+                    }
+                    genitive{
+                        few{"{0} voltov"}
+                        one{"{0} volta"}
+                        other{"{0} voltov"}
+                        two{"{0} voltov"}
+                    }
+                    instrumental{
+                        few{"{0} volti"}
+                        one{"{0} voltom"}
+                        other{"{0} volti"}
+                        two{"{0} voltoma"}
+                    }
+                    locative{
+                        few{"{0} voltih"}
+                        one{"{0} voltu"}
+                        other{"{0} voltih"}
+                        two{"{0} voltih"}
+                    }
+                }
                 dnam{"volt"}
                 few{"{0} volti"}
+                gender{"masculine"}
                 one{"{0} volt"}
                 other{"{0} voltov"}
                 two{"{0} volta"}
@@ -511,8 +1584,41 @@ sl{
                 two{"{0} britanski toplotni enoti"}
             }
             calorie{
+                case{
+                    accusative{
+                        few{"{0} kalorije"}
+                        one{"{0} kalorijo"}
+                        other{"{0} kalorij"}
+                        two{"{0} kaloriji"}
+                    }
+                    dative{
+                        few{"{0} kalorijam"}
+                        one{"{0} kaloriji"}
+                        other{"{0} kalorijam"}
+                        two{"{0} kalorijama"}
+                    }
+                    genitive{
+                        few{"{0} kalorij"}
+                        one{"{0} kalorije"}
+                        other{"{0} kalorij"}
+                        two{"{0} kalorij"}
+                    }
+                    instrumental{
+                        few{"{0} kalorijami"}
+                        one{"{0} kalorijo"}
+                        other{"{0} kalorijami"}
+                        two{"{0} kalorijama"}
+                    }
+                    locative{
+                        few{"{0} kalorijah"}
+                        one{"{0} kaloriji"}
+                        other{"{0} kalorijah"}
+                        two{"{0} kalorijah"}
+                    }
+                }
                 dnam{"kalorije"}
                 few{"{0} kalorije"}
+                gender{"feminine"}
                 one{"{0} kalorija"}
                 other{"{0} kalorij"}
                 two{"{0} kaloriji"}
@@ -532,8 +1638,41 @@ sl{
                 two{"{0} kaloriji"}
             }
             joule{
+                case{
+                    accusative{
+                        few{"{0} joule"}
+                        one{"{0} joule"}
+                        other{"{0} joulov"}
+                        two{"{0} joula"}
+                    }
+                    dative{
+                        few{"{0} joulom"}
+                        one{"{0} joulu"}
+                        other{"{0} joulom"}
+                        two{"{0} jouloma"}
+                    }
+                    genitive{
+                        few{"{0} joulov"}
+                        one{"{0} joula"}
+                        other{"{0} joulov"}
+                        two{"{0} joulov"}
+                    }
+                    instrumental{
+                        few{"{0} jouli"}
+                        one{"{0} joulom"}
+                        other{"{0} jouli"}
+                        two{"{0} jouli"}
+                    }
+                    locative{
+                        few{"{0} joulih"}
+                        one{"{0} joulu"}
+                        other{"{0} joulih"}
+                        two{"{0} joulih"}
+                    }
+                }
                 dnam{"joule"}
                 few{"{0} jouli"}
+                gender{"masculine"}
                 one{"{0} joule"}
                 other{"{0} joulov"}
                 two{"{0} joula"}
@@ -561,9 +1700,49 @@ sl{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kilovatne ure na 100 kilometrov"}
+                few{"{0} kilovatne ure na 100 kilometrov"}
+                one{"{0} kilovatna ura na 100 kilometrov"}
+                other{"{0} kilovatnih ur na 100 kilometrov"}
+                two{"{0} kilovatni uri na 100 kilometrov"}
+            }
             newton{
+                case{
+                    accusative{
+                        few{"{0} newtone"}
+                        one{"{0} newtona"}
+                        other{"{0} newtonov"}
+                        two{"{0} newtona"}
+                    }
+                    dative{
+                        few{"{0} newtonom"}
+                        one{"{0} newtonu"}
+                        other{"{0} newtonom"}
+                        two{"{0} newtonoma"}
+                    }
+                    genitive{
+                        few{"{0} newtonov"}
+                        one{"{0} newtona"}
+                        other{"{0} newtonov"}
+                        two{"{0} newtonov"}
+                    }
+                    instrumental{
+                        few{"{0} newtoni"}
+                        one{"{0} newtonom"}
+                        other{"{0} newtoni"}
+                        two{"{0} newtonoma"}
+                    }
+                    locative{
+                        few{"{0} newtonih"}
+                        one{"{0} newtonu"}
+                        other{"{0} newtonih"}
+                        two{"{0} newtonih"}
+                    }
+                }
                 dnam{"newtoni"}
                 few{"{0} newtoni"}
+                gender{"masculine"}
                 one{"{0} newton"}
                 other{"{0} newtonov"}
                 two{"{0} newtona"}
@@ -585,8 +1764,41 @@ sl{
                 two{"{0} gigahertza"}
             }
             hertz{
+                case{
+                    accusative{
+                        few{"{0} hertze"}
+                        one{"{0} hertz"}
+                        other{"{0} hertzov"}
+                        two{"{0} hertza"}
+                    }
+                    dative{
+                        few{"{0} hertzom"}
+                        one{"{0} hertzu"}
+                        other{"{0} hertzom"}
+                        two{"{0} hertzoma"}
+                    }
+                    genitive{
+                        few{"{0} hertzov"}
+                        one{"{0} hertza"}
+                        other{"{0} hertzov"}
+                        two{"{0} hertzov"}
+                    }
+                    instrumental{
+                        few{"{0} hertzi"}
+                        one{"{0} hertzom"}
+                        other{"{0} hertzi"}
+                        two{"{0} hertzoma"}
+                    }
+                    locative{
+                        few{"{0} hertzih"}
+                        one{"{0} hertzu"}
+                        other{"{0} hertzih"}
+                        two{"{0} hertzih"}
+                    }
+                }
                 dnam{"hertz"}
                 few{"{0} hertzi"}
+                gender{"masculine"}
                 one{"{0} hertz"}
                 other{"{0} hertzev"}
                 two{"{0} hertza"}
@@ -613,6 +1825,85 @@ sl{
                 one{"{0} pika"}
                 other{"{0} pik"}
                 two{"{0} piki"}
+            }
+            em{
+                case{
+                    accusative{
+                        few{"{0} eme"}
+                        one{"{0} ema"}
+                        other{"{0} emov"}
+                        two{"{0} ema"}
+                    }
+                    dative{
+                        few{"{0} emom"}
+                        one{"{0} emu"}
+                        other{"{0} emom"}
+                        two{"{0} emoma"}
+                    }
+                    genitive{
+                        few{"{0} emov"}
+                        one{"{0} ema"}
+                        other{"{0} emov"}
+                        two{"{0} emov"}
+                    }
+                    instrumental{
+                        few{"{0} emi"}
+                        one{"{0} emom"}
+                        other{"{0} emi"}
+                        two{"{0} emoma"}
+                    }
+                    locative{
+                        few{"{0} emih"}
+                        one{"{0} emu"}
+                        other{"{0} emih"}
+                        two{"{0} emih"}
+                    }
+                }
+                few{"{0} emi"}
+                gender{"masculine"}
+                one{"{0} em"}
+                other{"{0} emov"}
+                two{"{0} ema"}
+            }
+            pixel{
+                case{
+                    accusative{
+                        few{"{0} piksle"}
+                        one{"{0} piksel"}
+                        other{"{0} pikslov"}
+                        two{"{0} piksla"}
+                    }
+                    dative{
+                        few{"{0} pikslom"}
+                        one{"{0} pikslu"}
+                        other{"{0} pikslom"}
+                        two{"{0} piksloma"}
+                    }
+                    genitive{
+                        few{"{0} pikslov"}
+                        one{"{0} piksla"}
+                        other{"{0} pikslov"}
+                        two{"{0} pikslov"}
+                    }
+                    instrumental{
+                        few{"{0} piksli"}
+                        one{"{0} pikslom"}
+                        other{"{0} piksli"}
+                        two{"{0} piksloma"}
+                    }
+                    locative{
+                        few{"{0} pikslih"}
+                        one{"{0} pikslu"}
+                        other{"{0} pikslih"}
+                        two{"{0} pikslih"}
+                    }
+                }
+                dnam{"piksli"}
+                few{"{0} piksli"}
+                gender{"masculine"}
+                one{"{0} piksel"}
+                other{"{0} pikslov"}
+                two{"{0} piksla"}
             }
         }
         length{
@@ -691,8 +1982,41 @@ sl{
                 two{"{0} svetlobni leti"}
             }
             meter{
+                case{
+                    accusative{
+                        few{"{0} metre"}
+                        one{"{0} meter"}
+                        other{"{0} metrov"}
+                        two{"{0} metra"}
+                    }
+                    dative{
+                        few{"{0} metrom"}
+                        one{"{0} metru"}
+                        other{"{0} metrom"}
+                        two{"{0} metroma"}
+                    }
+                    genitive{
+                        few{"{0} metrov"}
+                        one{"{0} metra"}
+                        other{"{0} metrov"}
+                        two{"{0} metrov"}
+                    }
+                    instrumental{
+                        few{"{0} metri"}
+                        one{"{0} metrom"}
+                        other{"{0} metri"}
+                        two{"{0} metroma"}
+                    }
+                    locative{
+                        few{"{0} metrih"}
+                        one{"{0} metru"}
+                        other{"{0} metrih"}
+                        two{"{0} metrih"}
+                    }
+                }
                 dnam{"metri"}
                 few{"{0} metri"}
+                gender{"masculine"}
                 one{"{0} meter"}
                 other{"{0} metrov"}
                 per{"{0} na meter"}
@@ -713,8 +2037,41 @@ sl{
                 two{"{0} milji"}
             }
             mile-scandinavian{
+                case{
+                    accusative{
+                        few{"{0} skandinavske milje"}
+                        one{"{0} skandinavsko miljo"}
+                        other{"{0} skandinavskih milj"}
+                        two{"{0} skandinavski milji"}
+                    }
+                    dative{
+                        few{"{0} skandinavskim miljam"}
+                        one{"{0} skandinavski milji"}
+                        other{"{0} skandinavskim miljam"}
+                        two{"{0} skandinavskima miljama"}
+                    }
+                    genitive{
+                        few{"{0} skandinavskih milj"}
+                        one{"{0} skandinavske milje"}
+                        other{"{0} skandinavskih milj"}
+                        two{"{0} skandinavskih milj"}
+                    }
+                    instrumental{
+                        few{"{0} skandinavskimi miljami"}
+                        one{"{0} skandinavsko miljo"}
+                        other{"{0} skandinavskimi miljami"}
+                        two{"{0} skandinavskima miljama"}
+                    }
+                    locative{
+                        few{"{0} skandinavskih miljah"}
+                        one{"{0} skandinavski milji"}
+                        other{"{0} skandinavskih miljah"}
+                        two{"{0} skandinavskih miljah"}
+                    }
+                }
                 dnam{"skandinavska milja"}
                 few{"{0} skandinavske milje"}
+                gender{"feminine"}
                 one{"{0} skandinavska milja"}
                 other{"{0} skandinavskih milj"}
                 two{"{0} skandinavski milji"}
@@ -778,22 +2135,121 @@ sl{
         }
         light{
             candela{
+                case{
+                    accusative{
+                        few{"{0} kandele"}
+                        one{"{0} kandelo"}
+                        other{"{0} kandel"}
+                        two{"{0} kandeli"}
+                    }
+                    dative{
+                        few{"{0} kandelam"}
+                        one{"{0} kandeli"}
+                        other{"{0} kandelam"}
+                        two{"{0} kandelama"}
+                    }
+                    genitive{
+                        few{"{0} kandel"}
+                        one{"{0} kandele"}
+                        other{"{0} kandel"}
+                        two{"{0} kandel"}
+                    }
+                    instrumental{
+                        few{"{0} kandelami"}
+                        one{"{0} kandelo"}
+                        other{"{0} kandelami"}
+                        two{"{0} kandelama"}
+                    }
+                    locative{
+                        few{"{0} kandelah"}
+                        one{"{0} kandeli"}
+                        other{"{0} kandelah"}
+                        two{"{0} kandelah"}
+                    }
+                }
                 dnam{"kandela"}
                 few{"{0} kandele"}
+                gender{"feminine"}
                 one{"{0} kandela"}
                 other{"{0} kandel"}
                 two{"{0} kandeli"}
             }
             lumen{
+                case{
+                    accusative{
+                        few{"{0} lumne"}
+                        one{"{0} lumen"}
+                        other{"{0} lumnov"}
+                        two{"{0} lumna"}
+                    }
+                    dative{
+                        few{"{0} lumnom"}
+                        one{"{0} lumnu"}
+                        other{"{0} lumnom"}
+                        two{"{0} lumnoma"}
+                    }
+                    genitive{
+                        few{"{0} lumnov"}
+                        one{"{0} lumna"}
+                        other{"{0} lumnov"}
+                        two{"{0} lumnov"}
+                    }
+                    instrumental{
+                        few{"{0} lumni"}
+                        one{"{0} lumnom"}
+                        other{"{0} lumni"}
+                        two{"{0} lumnoma"}
+                    }
+                    locative{
+                        few{"{0} lumnih"}
+                        one{"{0} lumnu"}
+                        other{"{0} lumnih"}
+                        two{"{0} lumnih"}
+                    }
+                }
                 dnam{"lumen"}
                 few{"{0} lumni"}
+                gender{"masculine"}
                 one{"{0} lumen"}
                 other{"{0} lumnov"}
                 two{"{0} lumna"}
             }
             lux{
+                case{
+                    accusative{
+                        few{"{0} lukse"}
+                        one{"{0} luks"}
+                        other{"{0} luksov"}
+                        two{"{0} luksa"}
+                    }
+                    dative{
+                        few{"{0} luksom"}
+                        one{"{0} luksu"}
+                        other{"{0} luksom"}
+                        two{"{0} luksoma"}
+                    }
+                    genitive{
+                        few{"{0} luksov"}
+                        one{"{0} luksa"}
+                        other{"{0} luksov"}
+                        two{"{0} luksov"}
+                    }
+                    instrumental{
+                        few{"{0} luksi"}
+                        one{"{0} luksom"}
+                        other{"{0} luksi"}
+                        two{"{0} luksoma"}
+                    }
+                    locative{
+                        few{"{0} luksih"}
+                        one{"{0} luksu"}
+                        other{"{0} luksih"}
+                        two{"{0} luksih"}
+                    }
+                }
                 dnam{"luks"}
                 few{"{0} luksi"}
+                gender{"masculine"}
                 one{"{0} luks"}
                 other{"{0} luksov"}
                 two{"{0} luksa"}
@@ -808,8 +2264,41 @@ sl{
         }
         mass{
             carat{
+                case{
+                    accusative{
+                        few{"{0} karate"}
+                        one{"{0} karat"}
+                        other{"{0} karatov"}
+                        two{"{0} karata"}
+                    }
+                    dative{
+                        few{"{0} karatom"}
+                        one{"{0} karatu"}
+                        other{"{0} karatom"}
+                        two{"{0} karatoma"}
+                    }
+                    genitive{
+                        few{"{0} karatov"}
+                        one{"{0} karata"}
+                        other{"{0} karatov"}
+                        two{"{0} karatov"}
+                    }
+                    instrumental{
+                        few{"{0} karati"}
+                        one{"{0} karatom"}
+                        other{"{0} karati"}
+                        two{"{0} karatoma"}
+                    }
+                    locative{
+                        few{"{0} karatih"}
+                        one{"{0} karatu"}
+                        other{"{0} karatih"}
+                        two{"{0} karatih"}
+                    }
+                }
                 dnam{"karati"}
                 few{"{0} karati"}
+                gender{"masculine"}
                 one{"{0} karat"}
                 other{"{0} karatov"}
                 two{"{0} karata"}
@@ -836,24 +2325,123 @@ sl{
                 two{"{0} grana"}
             }
             gram{
+                case{
+                    accusative{
+                        few{"{0} grame"}
+                        one{"{0} gram"}
+                        other{"{0} gramov"}
+                        two{"{0} grama"}
+                    }
+                    dative{
+                        few{"{0} gramom"}
+                        one{"{0} gramu"}
+                        other{"{0} gramom"}
+                        two{"{0} gramoma"}
+                    }
+                    genitive{
+                        few{"{0} gramov"}
+                        one{"{0} grama"}
+                        other{"{0} gramov"}
+                        two{"{0} gramov"}
+                    }
+                    instrumental{
+                        few{"{0} grami"}
+                        one{"{0} gramom"}
+                        other{"{0} grami"}
+                        two{"{0} gramoma"}
+                    }
+                    locative{
+                        few{"{0} gramih"}
+                        one{"{0} gramu"}
+                        other{"{0} gramih"}
+                        two{"{0} gramih"}
+                    }
+                }
                 dnam{"grami"}
                 few{"{0} grami"}
+                gender{"masculine"}
                 one{"{0} gram"}
                 other{"{0} gramov"}
                 per{"{0} na gram"}
                 two{"{0} grama"}
             }
             kilogram{
+                case{
+                    accusative{
+                        few{"{0} kilograme"}
+                        one{"{0} kilogram"}
+                        other{"{0} kilogramov"}
+                        two{"{0} kilograma"}
+                    }
+                    dative{
+                        few{"{0} kilogramom"}
+                        one{"{0} kilogramu"}
+                        other{"{0} kilogramom"}
+                        two{"{0} kilogramoma"}
+                    }
+                    genitive{
+                        few{"{0} kilogramov"}
+                        one{"{0} kilograma"}
+                        other{"{0} kilogramov"}
+                        two{"{0} kilogramov"}
+                    }
+                    instrumental{
+                        few{"{0} kilogrami"}
+                        one{"{0} kilogramom"}
+                        other{"{0} kilogrami"}
+                        two{"{0} kilogramoma"}
+                    }
+                    locative{
+                        few{"{0} kilogramih"}
+                        one{"{0} kilogramu"}
+                        other{"{0} kilogramih"}
+                        two{"{0} kilogramih"}
+                    }
+                }
                 dnam{"kilogrami"}
                 few{"{0} kilogrami"}
+                gender{"masculine"}
                 one{"{0} kilogram"}
                 other{"{0} kilogramov"}
                 per{"{0} na kilogram"}
                 two{"{0} kilograma"}
             }
             metric-ton{
+                case{
+                    accusative{
+                        few{"{0} metrične tone"}
+                        one{"{0} metrično tono"}
+                        other{"{0} metričnih ton"}
+                        two{"{0} metrični toni"}
+                    }
+                    dative{
+                        few{"{0} metričnim tonam"}
+                        one{"{0} metrični toni"}
+                        other{"{0} metričnim tonam"}
+                        two{"{0} metričnima tonama"}
+                    }
+                    genitive{
+                        few{"{0} metričnih ton"}
+                        one{"{0} metrične tone"}
+                        other{"{0} metričnih ton"}
+                        two{"{0} metričnih ton"}
+                    }
+                    instrumental{
+                        few{"{0} metričnimi tonami"}
+                        one{"{0} metrično tono"}
+                        other{"{0} metričnimi tonami"}
+                        two{"{0} metričnima tonama"}
+                    }
+                    locative{
+                        few{"{0} metričnih tonah"}
+                        one{"{0} metrični toni"}
+                        other{"{0} metričnih tonah"}
+                        two{"{0} metričnih tonah"}
+                    }
+                }
                 dnam{"metrične tone"}
                 few{"{0} metrične tone"}
+                gender{"feminine"}
                 one{"{0} metrična tona"}
                 other{"{0} metričnih ton"}
                 two{"{0} metrični toni"}
@@ -954,8 +2542,41 @@ sl{
                 two{"{0} milivata"}
             }
             watt{
+                case{
+                    accusative{
+                        few{"{0} vate"}
+                        one{"{0} vat"}
+                        other{"{0} vatov"}
+                        two{"{0} vata"}
+                    }
+                    dative{
+                        few{"{0} vatom"}
+                        one{"{0} vatu"}
+                        other{"{0} vatom"}
+                        two{"{0} vatoma"}
+                    }
+                    genitive{
+                        few{"{0} vatov"}
+                        one{"{0} vata"}
+                        other{"{0} vatov"}
+                        two{"{0} vatov"}
+                    }
+                    instrumental{
+                        few{"{0} vati"}
+                        one{"{0} vatom"}
+                        other{"{0} vati"}
+                        two{"{0} vatoma"}
+                    }
+                    locative{
+                        few{"{0} vatih"}
+                        one{"{0} vatu"}
+                        other{"{0} vatih"}
+                        two{"{0} vatih"}
+                    }
+                }
                 dnam{"vati"}
                 few{"{0} vati"}
+                gender{"masculine"}
                 one{"{0} vat"}
                 other{"{0} vatov"}
                 two{"{0} vata"}
@@ -963,14 +2584,81 @@ sl{
         }
         pressure{
             atmosphere{
+                case{
+                    accusative{
+                        few{"{0} atmosfere"}
+                        one{"{0} atmosfero"}
+                        other{"{0} atmosfer"}
+                        two{"{0} atmosferi"}
+                    }
+                    dative{
+                        few{"{0} atmosferam"}
+                        one{"{0} atmosferi"}
+                        other{"{0} atmosferam"}
+                        two{"{0} atmosferama"}
+                    }
+                    genitive{
+                        few{"{0} atmosfer"}
+                        one{"{0} atmosfere"}
+                        other{"{0} atmosfer"}
+                        two{"{0} atmosfer"}
+                    }
+                    instrumental{
+                        few{"{0} atmosferami"}
+                        one{"{0} atmosfero"}
+                        other{"{0} atmosferami"}
+                        two{"{0} atmosferama"}
+                    }
+                    locative{
+                        few{"{0} atmosferah"}
+                        one{"{0} atmosferi"}
+                        other{"{0} atmosferah"}
+                        two{"{0} atmosferah"}
+                    }
+                }
                 dnam{"atmosfere"}
                 few{"{0} atmosfere"}
+                gender{"feminine"}
                 one{"{0} atmosfera"}
                 other{"{0} atmosfer"}
                 two{"{0} atmosferi"}
             }
             bar{
+                case{
+                    accusative{
+                        few{"{0} bare"}
+                        one{"{0} bar"}
+                        other{"{0} barov"}
+                        two{"{0} bara"}
+                    }
+                    dative{
+                        few{"{0} barom"}
+                        one{"{0} baru"}
+                        other{"{0} barom"}
+                        two{"{0} baroma"}
+                    }
+                    genitive{
+                        few{"{0} barov"}
+                        one{"{0} bara"}
+                        other{"{0} barov"}
+                        two{"{0} barov"}
+                    }
+                    instrumental{
+                        few{"{0} bari"}
+                        one{"{0} barom"}
+                        other{"{0} bari"}
+                        two{"{0} baroma"}
+                    }
+                    locative{
+                        few{"{0} barih"}
+                        one{"{0} baru"}
+                        other{"{0} barih"}
+                        two{"{0} barih"}
+                    }
+                }
+                dnam{"bari"}
                 few{"{0} bari"}
+                gender{"masculine"}
                 one{"{0} bar"}
                 other{"{0} barov"}
                 two{"{0} bara"}
@@ -1018,8 +2706,41 @@ sl{
                 two{"{0} milimetra živega srebra"}
             }
             pascal{
+                case{
+                    accusative{
+                        few{"{0} paskale"}
+                        one{"{0} paskal"}
+                        other{"{0} paskalov"}
+                        two{"{0} paskala"}
+                    }
+                    dative{
+                        few{"{0} paskalom"}
+                        one{"{0} paskalu"}
+                        other{"{0} paskalom"}
+                        two{"{0} paskaloma"}
+                    }
+                    genitive{
+                        few{"{0} paskalov"}
+                        one{"{0} paskala"}
+                        other{"{0} paskalov"}
+                        two{"{0} paskalov"}
+                    }
+                    instrumental{
+                        few{"{0} paskali"}
+                        one{"{0} paskalom"}
+                        other{"{0} paskali"}
+                        two{"{0} paskaloma"}
+                    }
+                    locative{
+                        few{"{0} paskalih"}
+                        one{"{0} paskalu"}
+                        other{"{0} paskalih"}
+                        two{"{0} paskalih"}
+                    }
+                }
                 dnam{"paskali"}
                 few{"{0} paskali"}
+                gender{"masculine"}
                 one{"{0} paskal"}
                 other{"{0} paskalov"}
                 two{"{0} paskala"}
@@ -1064,8 +2785,41 @@ sl{
         }
         temperature{
             celsius{
+                case{
+                    accusative{
+                        few{"{0} stopinje Celzija"}
+                        one{"{0} stopinjo Celzija"}
+                        other{"{0} stopinj Celzija"}
+                        two{"{0} stopinji Celzija"}
+                    }
+                    dative{
+                        few{"{0} stopinjam Celzija"}
+                        one{"{0} stopinji Celzija"}
+                        other{"{0} stopinjam Celzija"}
+                        two{"{0} stopinjama Celzija"}
+                    }
+                    genitive{
+                        few{"{0} stopinj Celzija"}
+                        one{"{0} stopinje Celzija"}
+                        other{"{0} stopinj Celzija"}
+                        two{"{0} stopinj Celzija"}
+                    }
+                    instrumental{
+                        few{"{0} stopinjami Celzija"}
+                        one{"{0} stopinjo Celzija"}
+                        other{"{0} stopinjami Celzija"}
+                        two{"{0} stopinjama Celzija"}
+                    }
+                    locative{
+                        few{"{0} stopinjah Celzija"}
+                        one{"{0} stopinji Celzija"}
+                        other{"{0} stopinjah Celzija"}
+                        two{"{0} stopinjah Celzija"}
+                    }
+                }
                 dnam{"stopinje Celzija"}
                 few{"{0} stopinje Celzija"}
+                gender{"feminine"}
                 one{"{0} stopinja Celzija"}
                 other{"{0} stopinj Celzija"}
                 two{"{0} stopinji Celzija"}
@@ -1078,15 +2832,81 @@ sl{
                 two{"{0} stopinji Farenheita"}
             }
             generic{
+                case{
+                    accusative{
+                        few{"{0} stopinje"}
+                        one{"{0} stopinjo"}
+                        other{"{0} stopinj"}
+                        two{"{0} stopinji"}
+                    }
+                    dative{
+                        few{"{0} stopinjam"}
+                        one{"{0} stopinji"}
+                        other{"{0} stopinjam"}
+                        two{"{0} stopinjama"}
+                    }
+                    genitive{
+                        few{"{0} stopinj"}
+                        one{"{0} stopinje"}
+                        other{"{0} stopinjam"}
+                        two{"{0} stopinj"}
+                    }
+                    instrumental{
+                        few{"{0} stopinjami"}
+                        one{"{0} stopinjo"}
+                        other{"{0} stopinjami"}
+                        two{"{0} stopinjama"}
+                    }
+                    locative{
+                        few{"{0} stopinjah"}
+                        one{"{0} stopinji"}
+                        other{"{0} stopinjah"}
+                        two{"{0} stopinjah"}
+                    }
+                }
                 dnam{"°"}
-                few{"{0}°"}
-                one{"{0}°"}
-                other{"{0}°"}
-                two{"{0}°"}
+                few{"{0} stopinje"}
+                gender{"feminine"}
+                one{"{0} stopinja"}
+                other{"{0} stopinj"}
+                two{"{0} stopinji"}
             }
             kelvin{
+                case{
+                    accusative{
+                        few{"{0} kelvine"}
+                        one{"{0} kelvin"}
+                        other{"{0} kelvinov"}
+                        two{"{0} kelvina"}
+                    }
+                    dative{
+                        few{"{0} kelvinom"}
+                        one{"{0} kelvinu"}
+                        other{"{0} kelvinom"}
+                        two{"{0} kelvinoma"}
+                    }
+                    genitive{
+                        few{"{0} kelvinov"}
+                        one{"{0} kelvina"}
+                        other{"{0} kelvinov"}
+                        two{"{0} kelvinov"}
+                    }
+                    instrumental{
+                        few{"{0} kelvini"}
+                        one{"{0} kelvinom"}
+                        other{"{0} kelvini"}
+                        two{"{0} kelvinoma"}
+                    }
+                    locative{
+                        few{"{0} kelvinih"}
+                        one{"{0} kelvinu"}
+                        other{"{0} kelvinih"}
+                        two{"{0} kelvinih"}
+                    }
+                }
                 dnam{"kelvini"}
                 few{"{0} kelvini"}
+                gender{"masculine"}
                 one{"{0} kelvin"}
                 other{"{0} kelvinov"}
                 two{"{0} kelvina"}
@@ -1196,8 +3016,41 @@ sl{
                 two{"{0} skodelici"}
             }
             cup-metric{
+                case{
+                    accusative{
+                        few{"{0} metrične skodelice"}
+                        one{"{0} metrično skodelico"}
+                        other{"{0} metričnih skodelic"}
+                        two{"{0} metrični skodelici"}
+                    }
+                    dative{
+                        few{"{0} metričnim skodelicam"}
+                        one{"{0} metrični skodelici"}
+                        other{"{0} metričnim skodelicam"}
+                        two{"{0} metričnima skodelicama"}
+                    }
+                    genitive{
+                        few{"{0} metrične skodelice"}
+                        one{"{0} metrične skodelice"}
+                        other{"{0} metričnih skodelic"}
+                        two{"{0} metričnih skodelic"}
+                    }
+                    instrumental{
+                        few{"{0} metričnimi skodelicami"}
+                        one{"{0} metrično skodelico"}
+                        other{"{0} metričnimi skodelicami"}
+                        two{"{0} metričnima skodelicama"}
+                    }
+                    locative{
+                        few{"{0} metričnih skodelicah"}
+                        one{"{0} metrični skodelici"}
+                        other{"{0} metričnih skodelicah"}
+                        two{"{0} metričnih skodelicah"}
+                    }
+                }
                 dnam{"metrične skodelice"}
                 few{"{0} metrične skodelice"}
+                gender{"feminine"}
                 one{"{0} metrična skodelica"}
                 other{"{0} metričnih skodelic"}
                 two{"{0} metrični skodelici"}
@@ -1282,8 +3135,41 @@ sl{
                 two{"{0} šilca"}
             }
             liter{
+                case{
+                    accusative{
+                        few{"{0} litre"}
+                        one{"{0} liter"}
+                        other{"{0} litrov"}
+                        two{"{0} litra"}
+                    }
+                    dative{
+                        few{"{0} litrom"}
+                        one{"{0} litru"}
+                        other{"{0} litrom"}
+                        two{"{0} litroma"}
+                    }
+                    genitive{
+                        few{"{0} litrov"}
+                        one{"{0} litra"}
+                        other{"{0} litrov"}
+                        two{"{0} litrov"}
+                    }
+                    instrumental{
+                        few{"{0} litri"}
+                        one{"{0} litrom"}
+                        other{"{0} litri"}
+                        two{"{0} litroma"}
+                    }
+                    locative{
+                        few{"{0} litrih"}
+                        one{"{0} litru"}
+                        other{"{0} litrih"}
+                        two{"{0} litrih"}
+                    }
+                }
                 dnam{"litri"}
                 few{"{0} litri"}
+                gender{"masculine"}
                 one{"{0} liter"}
                 other{"{0} litrov"}
                 per{"{0} na liter"}
@@ -1318,8 +3204,41 @@ sl{
                 two{"{0} pinti"}
             }
             pint-metric{
+                case{
+                    accusative{
+                        few{"{0} metrične pinte"}
+                        one{"{0} metrična pinta"}
+                        other{"{0} metričnih pint"}
+                        two{"{0} metrični pinti"}
+                    }
+                    dative{
+                        few{"{0} metričnim pintam"}
+                        one{"{0} metrični pinti"}
+                        other{"{0} metričnim pintam"}
+                        two{"{0} metričnima pintama"}
+                    }
+                    genitive{
+                        few{"{0} metričnih pint"}
+                        one{"{0} metrične pinte"}
+                        other{"{0} metričnih pint"}
+                        two{"{0} metričnih pint"}
+                    }
+                    instrumental{
+                        few{"{0} metričnimi pintami"}
+                        one{"{0} metrično pinto"}
+                        other{"{0} metričnimi pintami"}
+                        two{"{0} metričnima pintama"}
+                    }
+                    locative{
+                        few{"{0} metričnih pintah"}
+                        one{"{0} metrični pinti"}
+                        other{"{0} metričnih pintah"}
+                        two{"{0} metričnih pintah"}
+                    }
+                }
                 dnam{"metrične pinte"}
                 few{"{0} metrične pinte"}
+                gender{"feminine"}
                 one{"{0} metrična pinta"}
                 other{"{0} metričnih pint"}
                 two{"{0} metrični pinti"}
@@ -1381,11 +3300,12 @@ sl{
             }
         }
         area{
-            acre{
-                few{"{0} jut."}
-                one{"{0} jut."}
-                other{"{0} jut."}
-                two{"{0} jut."}
+            dunam{
+                dnam{"dunum"}
+                few{"{0} dunumi"}
+                one{"{0} dunum"}
+                other{"{0} dunumi"}
+                two{"{0} dunuma"}
             }
         }
         compound{
@@ -1407,6 +3327,13 @@ sl{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"element"}
+                few{"{0} elementi"}
+                one{"{0} element"}
+                other{"{0} elementov"}
+                two{"{0} elementa"}
+            }
             percent{
                 dnam{"%"}
                 few{"{0} %"}
@@ -1447,6 +3374,13 @@ sl{
                 per{"{0}/dan."}
                 two{"{0} d"}
             }
+            decade{
+                dnam{"dek."}
+                few{"{0} dek."}
+                one{"{0} dek."}
+                other{"{0} dek."}
+                two{"{0} dek."}
+            }
             hour{
                 dnam{"ur"}
                 few{"{0} h"}
@@ -1462,7 +3396,6 @@ sl{
                 two{"{0} ms"}
             }
             minute{
-                dnam{"minut"}
                 few{"{0} min"}
                 one{"{0} min"}
                 other{"{0} min"}
@@ -1497,6 +3430,20 @@ sl{
                 other{"{0} l"}
                 per{"{0}/l"}
                 two{"{0} l"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                few{"{0} ppcm"}
+                one{"{0} dpcm"}
+                other{"{0} dpcm"}
+                two{"{0} ppcm"}
+            }
+            dot-per-inch{
+                few{"{0} ppi"}
+                one{"{0} dpi"}
+                other{"{0} dpi"}
+                two{"{0} ppi"}
             }
         }
         length{
@@ -1672,12 +3619,34 @@ sl{
             }
         }
         volume{
+            cup-metric{
+                few{"{0} m. sk."}
+                one{"{0} m. sk."}
+                other{"{0} m. sk."}
+                two{"{0} m. sk."}
+            }
+            dessert-spoon{
+                few{"{0} des. žl."}
+                one{"{0} des. žl."}
+                other{"{0} des. žl."}
+                two{"{0} des. žl."}
+            }
+            dessert-spoon-imperial{
+                dnam{"imp. des. žl."}
+                few{"{0} imp. des. žl."}
+                one{"{0} imp. des. žl."}
+                other{"{0} imp. des. žl."}
+                two{"{0} imp. des. žl."}
+            }
             liter{
                 dnam{"l"}
                 few{"{0} l"}
                 one{"{0} l"}
                 other{"{0} l"}
                 two{"{0} l"}
+            }
+            pint-metric{
+                dnam{"pt"}
             }
         }
     }
@@ -1744,11 +3713,11 @@ sl{
                 two{"{0} ac"}
             }
             dunam{
-                dnam{"dunami"}
-                few{"{0} dunami"}
-                one{"{0} dunam"}
-                other{"{0} dunamov"}
-                two{"{0} dunama"}
+                dnam{"dunumi"}
+                few{"{0} dunumi"}
+                one{"{0} dunum"}
+                other{"{0} dunumi"}
+                two{"{0} dunuma"}
             }
             hectare{
                 dnam{"ha"}
@@ -1824,6 +3793,13 @@ sl{
             times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"element"}
+                few{"{0} elementi"}
+                one{"{0} element"}
+                other{"{0} elementov"}
+                two{"{0} elementa"}
+            }
             karat{
                 dnam{"kt"}
                 few{"{0} kt"}
@@ -2014,14 +3990,14 @@ sl{
                 two{"{0} d"}
             }
             decade{
-                dnam{"dec"}
-                few{"{0} dec"}
-                one{"{0} dec"}
-                other{"{0} dec"}
-                two{"{0} dec"}
+                dnam{"dek."}
+                few{"{0} dek."}
+                one{"{0} dek."}
+                other{"{0} dek."}
+                two{"{0} dek."}
             }
             hour{
-                dnam{"ur"}
+                dnam{"ure"}
                 few{"{0} h"}
                 one{"{0} h"}
                 other{"{0} h"}
@@ -2051,7 +4027,7 @@ sl{
                 two{"{0} min"}
             }
             month{
-                dnam{"mesecev"}
+                dnam{"meseci"}
                 few{"{0} m"}
                 one{"{0} m"}
                 other{"{0} m"}
@@ -2074,7 +4050,7 @@ sl{
                 two{"{0} sek."}
             }
             week{
-                dnam{"tednov"}
+                dnam{"tedni"}
                 few{"{0} t"}
                 one{"{0} t"}
                 other{"{0} t"}
@@ -2082,7 +4058,7 @@ sl{
                 two{"{0} t"}
             }
             year{
-                dnam{"let"}
+                dnam{"leta"}
                 few{"{0} l"}
                 one{"{0} l"}
                 other{"{0} l"}

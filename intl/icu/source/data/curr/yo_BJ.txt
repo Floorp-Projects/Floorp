@@ -9,7 +9,7 @@ yo_BJ{
         }
         ALL{
             "ALL",
-            "Lɛ́kɛ̀ Àlìbéníà",
+            "Lɛ́ɛ̀kì Àlìbáníà",
         }
         AMD{
             "AMD",
@@ -79,10 +79,6 @@ yo_BJ{
             "CA$",
             "Dɔ́là Kánádà",
         }
-        CHF{
-            "CHF",
-            "Faransi ti Orílɛ́ède Siwisi",
-        }
         CLP{
             "CLP",
             "Pɛ́sò Shílè",
@@ -149,7 +145,7 @@ yo_BJ{
         }
         GIP{
             "GIP",
-            "Pɔ́n-ùn Gibraltar",
+            "Pɔ́n-ùn Gibúrátà",
         }
         GNS{
             "GNS",
@@ -170,6 +166,10 @@ yo_BJ{
         HNL{
             "HNL",
             "Lɛmipírà Ɔ́ńdúrà",
+        }
+        HRK{
+            "HRK",
+            "Kúnà Kúróshíà",
         }
         HTG{
             "HTG",
@@ -277,7 +277,7 @@ yo_BJ{
         }
         NOK{
             "NOK",
-            "Kírónì Nɔ́ɔ́wè",
+            "kórónì Nɔ́wè",
         }
         NPR{
             "NPR",
@@ -516,7 +516,7 @@ yo_BJ{
             other{"àwɔn sídì Gana"}
         }
         GIP{
-            other{"àwɔn pɔ́n-ùn Gibraltar"}
+            other{"àwɔn pɔ́n-ùn Gibúrátà"}
         }
         GMD{
             other{"àwɔn dalasi Gamibia"}
@@ -534,13 +534,16 @@ yo_BJ{
             other{"àwɔn Lɛmipírà Ɔ́ńdúrà"}
         }
         HRK{
-            other{"àwɔn kúnà Croatian"}
+            other{"àwɔn kúnà Kúróshíà"}
         }
         HTG{
             other{"àwɔn gɔ́dì Àítì"}
         }
         HUF{
             other{"àwɔn fɔ́ríǹtì Hɔ̀ngérí"}
+        }
+        ISK{
+            other{"kórónɔ̀ Áílándíìkì"}
         }
         JMD{
             other{"àwɔn dɔ́là Jàmáíkà"}
@@ -556,6 +559,9 @@ yo_BJ{
         }
         LRD{
             other{"àwɔn dɔla Liberia"}
+        }
+        LSL{
+            other{"Lótì ti Lɛ̀sótò"}
         }
         LYD{
             other{"àwɔn dínà Líbíyà"}
@@ -588,7 +594,7 @@ yo_BJ{
             other{"àwɔn kɔ̀dóbà Naikarágúà"}
         }
         NOK{
-            other{"kìrónà Nɔ́ɔ́wè"}
+            other{"kórónà Nɔ́wè"}
         }
         PAB{
             other{"àwɔn bálíbóà Pànámà"}

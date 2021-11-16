@@ -13,7 +13,7 @@ yo{
         }
         ALL{
             "ALL",
-            "Lẹ́kẹ̀ Àlìbéníà",
+            "Lẹ́ẹ̀kì Àlìbáníà",
         }
         AMD{
             "AMD",
@@ -113,7 +113,7 @@ yo{
         }
         CHF{
             "CHF",
-            "Faransi ti Orílẹ́ède Siwisi",
+            "Faransí Síwíìsì",
         }
         CLP{
             "CLP",
@@ -209,7 +209,7 @@ yo{
         }
         GIP{
             "GIP",
-            "Pọ́n-ùn Gibraltar",
+            "Pọ́n-ùn Gibúrátà",
         }
         GMD{
             "GMD",
@@ -241,7 +241,7 @@ yo{
         }
         HRK{
             "HRK",
-            "Kúnà Croatian",
+            "Kúnà Kúróṣíà",
         }
         HTG{
             "HTG",
@@ -425,7 +425,7 @@ yo{
         }
         NOK{
             "NOK",
-            "Kírónì Nọ́ọ́wè",
+            "kórónì Nọ́wè",
         }
         NPR{
             "NPR",
@@ -777,7 +777,7 @@ yo{
             other{"àwọn sídì Gana"}
         }
         GIP{
-            other{"àwọn pọ́n-ùn Gibraltar"}
+            other{"àwọn pọ́n-ùn Gibúrátà"}
         }
         GMD{
             other{"àwọn dalasi Gamibia"}
@@ -795,7 +795,7 @@ yo{
             other{"àwọn Lẹmipírà Ọ́ńdúrà"}
         }
         HRK{
-            other{"àwọn kúnà Croatian"}
+            other{"àwọn kúnà Kúróṣíà"}
         }
         HTG{
             other{"àwọn gọ́dì Àítì"}
@@ -804,7 +804,7 @@ yo{
             other{"àwọn fọ́ríǹtì Họ̀ngérí"}
         }
         ISK{
-            other{"kòrónà aílandíìkì"}
+            other{"kórónọ̀ Áílándíìkì"}
         }
         JMD{
             other{"àwọn dọ́là Jàmáíkà"}
@@ -820,6 +820,9 @@ yo{
         }
         LRD{
             other{"àwọn dọla Liberia"}
+        }
+        LSL{
+            other{"Lótì ti Lẹ̀sótò"}
         }
         LYD{
             other{"àwọn dínà Líbíyà"}
@@ -858,7 +861,7 @@ yo{
             other{"àwọn kọ̀dóbà Naikarágúà"}
         }
         NOK{
-            other{"kìrónà Nọ́ọ́wè"}
+            other{"kórónà Nọ́wè"}
         }
         PAB{
             other{"àwọn bálíbóà Pànámà"}

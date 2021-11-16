@@ -160,6 +160,11 @@ te{
             times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"ఐటమ్‌లు"}
+                one{"{0} ఐటమ్"}
+                other{"{0} ఐటమ్‌లు"}
+            }
             karat{
                 dnam{"కేరట్లు"}
                 one{"{0} కేరట్"}
@@ -426,6 +431,11 @@ te{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"100 కిలోమీటర్లకు కిలోవాట్-గంట"}
+                one{"{0} 100 కిలోమీటర్లకు కిలోవాట్-గంట"}
+                other{"{0} 100 కిలోమీటర్లకు కిలోవాట్-గంటలు"}
+            }
             newton{
                 dnam{"న్యూటన్‌లు"}
                 one{"{0} న్యూటన్"}
@@ -749,7 +759,7 @@ te{
             watt{
                 dnam{"వాట్లు"}
                 one{"{0} వాట్"}
-                other{"{0} వాట్లు"}
+                other{"{0} వాట్‌లు"}
             }
         }
         pressure{
@@ -839,8 +849,8 @@ te{
             }
             generic{
                 dnam{"°"}
-                one{"{0}°"}
-                other{"{0}°"}
+                one{"{0} డిగ్రీ"}
+                other{"{0} డిగ్రీలు"}
             }
             kelvin{
                 dnam{"కెల్విన్స్"}
@@ -1054,6 +1064,10 @@ te{
                 one{"{0}″"}
                 other{"{0}″"}
             }
+            degree{
+                one{"{0}°"}
+                other{"{0}°"}
+            }
         }
         area{
             acre{
@@ -1061,6 +1075,7 @@ te{
                 other{"{0} ఎక."}
             }
             hectare{
+                dnam{"హెక్టారు"}
                 one{"{0} హె."}
                 other{"{0} హె."}
             }
@@ -1114,10 +1129,30 @@ te{
             times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"ఐటమ్"}
+                one{"{0} ఐటమ్"}
+                other{"{0}ఐటమ్"}
+            }
+            milligram-ofglucose-per-deciliter{
+                one{"{0}మిగ/డెలీ"}
+                other{"{0}మిగ/డెలీ"}
+            }
+            millimole-per-liter{
+                one{"{0}మిమో/లీ"}
+                other{"{0}మిమో/లీ"}
+            }
+            mole{
+                one{"{0} మోల్"}
+                other{"{0} మోల్"}
+            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
                 other{"{0}%"}
+            }
+            permyriad{
+                dnam{"‱"}
             }
         }
         consumption{
@@ -1126,6 +1161,14 @@ te{
                 one{"{0}లీ/100కి.మీ."}
                 other{"{0}లీ/100కి.మీ."}
             }
+            mile-per-gallon{
+                one{"{0}మై./గ్యా."}
+                other{"{0}మై./గ్యా."}
+            }
+            mile-per-gallon-imperial{
+                one{"{0}మై/గ.ఇం"}
+                other{"{0}మై/గ.ఇం"}
+            }
         }
         coordinate{
             dnam{"దిశ"}
@@ -1133,6 +1176,16 @@ te{
             north{"{0} ఉ."}
             south{"{0} ద."}
             west{"{0} ప."}
+        }
+        digital{
+            megabit{
+                one{"{0} మె.బిట్"}
+                other{"{0}మె.బి."}
+            }
+            terabit{
+                one{"{0} టె.బిట్"}
+                other{"{0}టె.బిట్లు"}
+            }
         }
         duration{
             day{
@@ -1178,6 +1231,40 @@ te{
                 dnam{"సం"}
                 one{"{0}సం"}
                 other{"{0}సం"}
+            }
+        }
+        energy{
+            therm-us{
+                one{"{0} US థెర్మ్‌"}
+                other{"{0}US థెర్మ్‌."}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"కి.వా./100కి.మీ."}
+                one{"{0}కి.వా/100కి.మీ."}
+                other{"{0}కి.వా/100కి.మీ"}
+            }
+        }
+        frequency{
+            gigahertz{
+                one{"{0} గి. హె."}
+                other{"{0} గి. హె."}
+            }
+            hertz{
+                dnam{"Hz"}
+                one{"{0}Hz"}
+                other{"{0}Hz"}
+            }
+        }
+        graphics{
+            megapixel{
+                dnam{"MP"}
+                one{"{0}MP"}
+                other{"{0} MP"}
+            }
+            pixel{
+                dnam{"px"}
             }
         }
         length{
@@ -1246,6 +1333,10 @@ te{
             }
         }
         mass{
+            grain{
+                one{"{0} ధాన్య."}
+                other{"{0} ధాన్య."}
+            }
             gram{
                 dnam{"గ్రాము"}
                 one{"{0}గ్రా"}
@@ -1275,6 +1366,10 @@ te{
                 one{"{0} స్టో"}
                 other{"{0} స్టో"}
             }
+            ton{
+                one{"{0} ట"}
+                other{"{0} ట"}
+            }
         }
         power{
             horsepower{
@@ -1286,8 +1381,9 @@ te{
                 other{"{0} కి.వా"}
             }
             watt{
-                one{"{0} వా."}
-                other{"{0} వా."}
+                dnam{"వాట్"}
+                one{"{0}W"}
+                other{"{0}W"}
             }
         }
         pressure{
@@ -1365,10 +1461,38 @@ te{
                 one{"{0} మై³"}
                 other{"{0} మై³"}
             }
+            dessert-spoon-imperial{
+                one{"{0}డె.ఇం."}
+                other{"{0}డె.ఇం."}
+            }
+            dram{
+                one{"{0}డ్రా.ఫ."}
+                other{"{0}డ్రా.ఫ."}
+            }
+            fluid-ounce-imperial{
+                one{"{0}ద.ఔ.ఇం."}
+                other{"{0}ద.ఔ.ఇం."}
+            }
+            gallon-imperial{
+                one{"{0}గ్యా. ఇం."}
+                other{"{0}గ్యా. ఇం."}
+            }
             liter{
                 dnam{"లీటరు"}
                 one{"{0}లీ"}
                 other{"{0}లీ"}
+            }
+            quart{
+                one{"{0}పావు వం."}
+                other{"{0}పావు వం."}
+            }
+            quart-imperial{
+                one{"{0}చతు.ఇం."}
+                other{"{0}చతు.ఇం."}
+            }
+            teaspoon{
+                one{"{0}టీ.స్పూ."}
+                other{"{0}టీ.స్పూ."}
             }
         }
     }
@@ -1513,6 +1637,11 @@ te{
             times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"ఐటమ్"}
+                one{"{0} ఐటమ్"}
+                other{"{0} ఐటమ్"}
+            }
             karat{
                 dnam{"కేరట్లు"}
                 one{"{0} కేర."}
@@ -1773,6 +1902,11 @@ te{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"కి.వా./100కి.మీ."}
+                one{"{0}కి.వా./100కి.మీ."}
+                other{"{0}కి.వా./100కి.మీ."}
+            }
             newton{
                 dnam{"న్యూటన్"}
             }
@@ -1785,11 +1919,6 @@ te{
                 dnam{"గిగా హెడ్జ్"}
                 one{"{0} గిగా హెడ్జ్"}
                 other{"{0} గిగా హెడ్జ్"}
-            }
-            hertz{
-                dnam{"హెర్ట్‌జ్"}
-                one{"{0} హెర్ట్‌జ్"}
-                other{"{0} హెర్ట్‌జ్"}
             }
             kilohertz{
                 dnam{"కి.హె"}
@@ -2071,9 +2200,7 @@ te{
                 other{"{0} మి.వా"}
             }
             watt{
-                dnam{"వాట్లు"}
-                one{"{0} వా."}
-                other{"{0} వా."}
+                dnam{"వాట్‌లు"}
             }
         }
         pressure{

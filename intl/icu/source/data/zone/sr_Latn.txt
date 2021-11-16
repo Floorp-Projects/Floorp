@@ -1948,6 +1948,9 @@ sr_Latn{
             lg{"Jekaterinburg vreme"}
             ls{"Jekaterinburg, standardno vreme"}
         }
+        "meta:Yukon"{
+            ls{"Jukon"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

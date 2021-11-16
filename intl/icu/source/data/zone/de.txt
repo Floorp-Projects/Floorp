@@ -1949,6 +1949,9 @@ de{
             lg{"Jekaterinburg-Zeit"}
             ls{"Jekaterinburg-Normalzeit"}
         }
+        "meta:Yukon"{
+            ls{"Yukon-Zeit"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

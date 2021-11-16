@@ -1883,6 +1883,9 @@ ne{
             lg{"येकाटेरिनबर्ग समय"}
             ls{"येकाटेरिनबर्ग मानक समय"}
         }
+        "meta:Yukon"{
+            ls{"युकोनको समय"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

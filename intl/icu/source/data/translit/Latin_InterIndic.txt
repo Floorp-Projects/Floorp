@@ -100,7 +100,7 @@ $om = \uE050; # OM
 $lm = \uE055;#  Telugu Length Mark
 $ailm=\uE056;#  AI Length Mark
 $aulm=\uE057;#  AU Length Mark
-#urdu compatibity forms
+#urdu compatibility forms
 $uka=\uE058;
 $ukha=\uE059;
 $ugha=\uE05A;
@@ -180,7 +180,7 @@ x→$ka$virama$sa;
 \u0314o\u0306→$co;
 \u0314e→$se;
 \u0314o→$so;
-# preceeded by consonants
+# preceded by consonants
 $consonants{ a\u0304→$aa;
 $consonants{ ai→$ai;
 $consonants{ au→$au;

@@ -1886,6 +1886,9 @@ kk{
             lg{"Екатеринбург уақыты"}
             ls{"Екатеринбург стандартты уақыты"}
         }
+        "meta:Yukon"{
+            ls{"Юкон уақыты"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

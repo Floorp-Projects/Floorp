@@ -238,6 +238,20 @@ gu{
             }
         }
         minimalPairs{
+            case{
+                accusative{"છોકરો {0} માટે બહાર રહ્યો."}
+                dative{"{0}ને લીપ વર્ષ માનવામાં આવે છે."}
+                genitive{"અમે {0}નું બિલ ભેગું આપ્યું."}
+                instrumental{"{0} સુધી કામ પૂરું કરવું છે."}
+                locative{"{0}માં ઉજવણી કરીશું."}
+                nominative{"અમે {0} દુકાને ગયા."}
+                vocative{"હે ભગવાન, {0}થી દુઃખાવો છે!"}
+            }
+            gender{
+                feminine{"{0}"}
+                masculine{"{0}"}
+                neuter{"{0}"}
+            }
             ordinal{
                 few{"જમણી બાજુએ {0}થો વળાંક લો."}
                 many{"જમણી બાજુએ {0}ઠો વળાંક લો."}
@@ -507,6 +521,16 @@ gu{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahhmmsszzzz",
+                "ahhmmssz",
+                "ahhmmss",
+                "ahhmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -702,6 +726,16 @@ gu{
                 "{1} એ {0} વાગ્યે",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahhmmsszzzz",
+                "ahhmmssz",
+                "ahhmmss",
+                "ahhmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
             }
             appendItems{
                 Timezone{"{0} {1}"}
@@ -900,7 +934,7 @@ gu{
                     "ઈ.સ.",
                 }
                 abbreviated%variant{
-                    "સા.યુ.પ.",
+                    "ઈ.સ.પૂર્વે",
                     "સા.યુ.",
                 }
                 narrow{

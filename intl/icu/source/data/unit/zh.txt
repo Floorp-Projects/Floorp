@@ -122,6 +122,10 @@ zh{
             times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"项"}
+                other{"{0}项"}
+            }
             karat{
                 dnam{"克拉"}
                 other{"{0}克拉"}
@@ -330,6 +334,10 @@ zh{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"千瓦时/100千米"}
+                other{"{0}千瓦时/100千米"}
+            }
             newton{
                 dnam{"牛顿"}
                 other{"{0}牛顿"}
@@ -899,6 +907,9 @@ zh{
                 dnam{"L/100km"}
                 other{"{0}L/100km"}
             }
+            mile-per-gallon-imperial{
+                other{"{0}m/gUK"}
+            }
         }
         coordinate{
             dnam{"方向"}
@@ -982,6 +993,24 @@ zh{
                 other{"{0}美制克卡"}
             }
         }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                other{"{0}kWh/100km"}
+            }
+        }
+        graphics{
+            dot{
+                dnam{"dot"}
+                other{"{0}dot"}
+            }
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                other{"{0}dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"天文单位"}
@@ -995,6 +1024,9 @@ zh{
             decimeter{
                 dnam{"分米"}
                 other{"{0}分米"}
+            }
+            earth-radius{
+                other{"{0}R⊕"}
             }
             fathom{
                 dnam{"英寻"}
@@ -1065,7 +1097,19 @@ zh{
                 other{"{0}yd"}
             }
         }
+        light{
+            candela{
+                other{"{0}cd"}
+            }
+            lumen{
+                other{"{0}lm"}
+            }
+        }
         mass{
+            grain{
+                dnam{"格令"}
+                other{"{0}格令"}
+            }
             gram{
                 dnam{"g"}
                 other{"{0}g"}
@@ -1189,6 +1233,9 @@ zh{
                 dnam{"分升"}
                 other{"{0}分升"}
             }
+            dessert-spoon-imperial{
+                dnam{"英制甜点匙"}
+            }
             fluid-ounce{
                 dnam{"液盎司"}
                 other{"{0}液盎司"}
@@ -1231,6 +1278,10 @@ zh{
             quart{
                 dnam{"夸脱"}
                 other{"{0}夸脱"}
+            }
+            quart-imperial{
+                dnam{"英制夸脱"}
+                other{"{0}英制夸脱"}
             }
             tablespoon{
                 dnam{"汤匙"}
@@ -1323,6 +1374,10 @@ zh{
             times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"项"}
+                other{"{0}项"}
+            }
             percent{
                 dnam{"%"}
                 other{"{0}%"}
@@ -1467,6 +1522,16 @@ zh{
             newton{
                 dnam{"牛"}
                 other{"{0}牛"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                other{"{0} dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+                other{"{0} dpi"}
             }
         }
         length{

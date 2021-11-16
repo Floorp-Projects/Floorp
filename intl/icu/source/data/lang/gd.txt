@@ -452,6 +452,7 @@ gd{
         rap{"Rapa Nui"}
         rar{"Cànan Rarotonga"}
         rgn{"Romagnol"}
+        rhg{"Rohingya"}
         rm{"Rumains"}
         rn{"Kirundi"}
         ro{"Romàinis"}
@@ -654,6 +655,7 @@ gd{
         Chrs{"Khwarazm"}
         Cirt{"Cirth"}
         Copt{"Coptais"}
+        Cpmn{"Mìneothais Chìopras"}
         Cprt{"Cìoprasais"}
         Cyrl{"Cirilis"}
         Cyrs{"Cirilis Seann-Slàbhais na h-Eaglaise"}
@@ -747,6 +749,7 @@ gd{
         Orya{"Oriya"}
         Osge{"Osage"}
         Osma{"Osmanya"}
+        Ougr{"Seann-Ùigiurais"}
         Palm{"Palmyrene"}
         Pauc{"Pau Cin Hau"}
         Perm{"Seann-Phermic"}
@@ -795,8 +798,11 @@ gd{
         Thai{"Tàidh"}
         Tibt{"Tibeitis"}
         Tirh{"Tirhuta"}
+        Tnsa{"Tangsa"}
+        Toto{"Toto"}
         Ugar{"Ugariticeach"}
         Vaii{"Vai"}
+        Vith{"Vithkuqi"}
         Wara{"Varang Kshiti"}
         Wcho{"Wancho"}
         Wole{"Woleai"}
@@ -963,6 +969,7 @@ gd{
             thai{"Àireamhan Tàidh"}
             tibt{"Àireamhan na Tibeitise"}
             tirh{"Àireamhan Tirhuta"}
+            tnsa{"Àireamhan Tangsa"}
             vaii{"Àireamhan Vai"}
             wara{"Àireamhan Warang Citi"}
             wcho{"Àireamhan Wancho"}
@@ -983,6 +990,7 @@ gd{
         ARANES{"Aranais"}
         AREVELA{"Airmeinis an Ear"}
         AREVMDA{"Airmeinis an Iar"}
+        ARKAIKA{"Arkaika"}
         ASANTE{"Asante"}
         AUVERN{"Auvernhat"}
         BAKU1926{"Abidil Laideann aonaichte na Turcaise"}
@@ -1044,6 +1052,7 @@ gd{
         PAHAWH3{"Pahawh Hmong na 3s ìre"}
         PAHAWH4{"Pahawh Hmong na 4mh ìre"}
         PAMAKA{"Dual-chainnt Pamaka"}
+        PEANO{"Peano"}
         PETR1708{"Litreachadh Pheadair 1708"}
         PINYIN{"Ròmanachadh Pinyin"}
         POLYTON{"Greugais phoiliotonach"}
@@ -1065,6 +1074,8 @@ gd{
         SURSILV{"Sursilvan"}
         SUTSILV{"Sutsilvan"}
         TARASK{"Litreachadh Taraškievica"}
+        TONGYONG{"Tongyong"}
+        TUNUMIIT{"Tunumiit"}
         UCCOR{"Litreachadh aonaichte"}
         UCRCOR{"Litreachadh aonaichte ’s lèirmheasaichte"}
         ULSTER{"Albais Uladh"}
@@ -1072,6 +1083,7 @@ gd{
         VAIDIKA{"Vaidika"}
         VALENCIA{"Valencià"}
         VALLADER{"Vallader"}
+        VECDRUKA{"Vecā Druka"}
         VIVARAUP{"Ogsatanais Vivaro-Ailpeach"}
         WADEGILE{"Ròmanachadh Wade-Giles"}
         XSISTEMO{"Roghainn-èiginn stannardach litreachadh na h-Esperanto le x"}

@@ -6,7 +6,7 @@
 # Generated from CLDR
 #
 
-# Tranformation from Czech to Czech in IPA transcription (cs_FONIPA).
+# Transformation from Czech to Czech in IPA transcription (cs_FONIPA).
 # The transcription is not fully phonemic since we mark allophonic variations
 # of /m/, /n/, /x/ and /ɦ/.
 #

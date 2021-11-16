@@ -108,7 +108,6 @@ root{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -172,7 +171,6 @@ root{
         PYG{"₲"}
         RON{"lei"}
         RUB{"₽"}
-        RUR{"р."}
         RWF{"RF"}
         SBD{"$"}
         SEK{"kr"}
@@ -202,7 +200,7 @@ root{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"39"}
+    Version{"40"}
     currencySpacing{
         afterCurrency{
             currencyMatch{"[[:^S:]&[:^Z:]]"}

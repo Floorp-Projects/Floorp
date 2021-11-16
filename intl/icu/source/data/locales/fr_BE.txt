@@ -19,6 +19,16 @@ fr_BE{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "Hmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyyMMd",
+            }
         }
         gregorian{
             DateTimePatterns{
@@ -35,6 +45,16 @@ fr_BE{
                 "{1} 'à' {0}",
                 "{1}, {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "Hmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMMd",
             }
         }
     }

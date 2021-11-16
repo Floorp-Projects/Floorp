@@ -10,11 +10,26 @@ uk{
     units{
         acceleration{
             g-force{
-                dnam{"сила тяжіння"}
-                few{"{0} сили тяжіння"}
-                many{"{0} сил тяжіння"}
-                one{"{0} сила тяжіння"}
-                other{"{0} сили тяжіння"}
+                case{
+                    accusative{
+                        few{"{0} g"}
+                        many{"{0} g"}
+                        one{"{0} g"}
+                        other{"{0} g"}
+                    }
+                    genitive{
+                        few{"{0} g"}
+                        many{"{0} g"}
+                        one{"{0} g"}
+                        other{"{0} g"}
+                    }
+                }
+                dnam{"прискорення вільного падіння"}
+                few{"{0} g"}
+                gender{"neuter"}
+                many{"{0} g"}
+                one{"{0} g"}
+                other{"{0} g"}
             }
             meter-per-square-second{
                 dnam{"метри на секунду у квадраті"}
@@ -26,36 +41,111 @@ uk{
         }
         angle{
             arc-minute{
-                dnam{"мінути"}
-                few{"{0} мінути"}
-                many{"{0} мінут"}
-                one{"{0} мінута"}
-                other{"{0} мінути"}
+                case{
+                    accusative{
+                        few{"{0} кутові мінути"}
+                        many{"{0} кутових мінут"}
+                        one{"{0} кутову мінуту"}
+                        other{"{0} кутової мінути"}
+                    }
+                    genitive{
+                        few{"{0} кутових мінут"}
+                        many{"{0} кутових мінут"}
+                        one{"{0} кутової мінути"}
+                        other{"{0} кутової мінути"}
+                    }
+                }
+                dnam{"кутові мінути"}
+                few{"{0} кутові мінути"}
+                gender{"feminine"}
+                many{"{0} кутових мінут"}
+                one{"{0} кутова мінута"}
+                other{"{0} кутової мінути"}
             }
             arc-second{
+                case{
+                    accusative{
+                        few{"{0} кутові секунди"}
+                        many{"{0} кутових секунд"}
+                        one{"{0} кутову секунду"}
+                        other{"{0} кутової секунди"}
+                    }
+                    genitive{
+                        few{"{0} кутових секунд"}
+                        many{"{0} кутових секунд"}
+                        one{"{0} кутової секунди"}
+                        other{"{0} кутової секунди"}
+                    }
+                }
                 dnam{"кутові секунди"}
                 few{"{0} кутові секунди"}
+                gender{"feminine"}
                 many{"{0} кутових секунд"}
                 one{"{0} кутова секунда"}
                 other{"{0} кутової секунди"}
             }
             degree{
+                case{
+                    accusative{
+                        few{"{0} градуси"}
+                        many{"{0} градусів"}
+                        one{"{0} градус"}
+                        other{"{0} градуса"}
+                    }
+                    genitive{
+                        few{"{0} градусів"}
+                        many{"{0} градусів"}
+                        one{"{0} градуса"}
+                        other{"{0} градуса"}
+                    }
+                }
                 dnam{"градуси"}
                 few{"{0} градуси"}
+                gender{"masculine"}
                 many{"{0} градусів"}
                 one{"{0} градус"}
                 other{"{0} градуса"}
             }
             radian{
+                case{
+                    accusative{
+                        few{"{0} радіани"}
+                        many{"{0} радіанів"}
+                        one{"{0} радіан"}
+                        other{"{0} радіана"}
+                    }
+                    genitive{
+                        few{"{0} радіанів"}
+                        many{"{0} радіанів"}
+                        one{"{0} радіана"}
+                        other{"{0} радіана"}
+                    }
+                }
                 dnam{"радіани"}
                 few{"{0} радіани"}
+                gender{"masculine"}
                 many{"{0} радіанів"}
                 one{"{0} радіан"}
                 other{"{0} радіана"}
             }
             revolution{
+                case{
+                    accusative{
+                        few{"{0} оберти"}
+                        many{"{0} обертів"}
+                        one{"{0} оберт"}
+                        other{"{0} оберта"}
+                    }
+                    genitive{
+                        few{"{0} обертів"}
+                        many{"{0} обертів"}
+                        one{"{0} оберта"}
+                        other{"{0} оберта"}
+                    }
+                }
                 dnam{"оберти"}
                 few{"{0} оберти"}
+                gender{"masculine"}
                 many{"{0} обертів"}
                 one{"{0} оберт"}
                 other{"{0} оберта"}
@@ -77,8 +167,23 @@ uk{
                 other{"{0} дунама"}
             }
             hectare{
+                case{
+                    accusative{
+                        few{"{0} гектари"}
+                        many{"{0} гектарів"}
+                        one{"{0} гектар"}
+                        other{"{0} гектара"}
+                    }
+                    genitive{
+                        few{"{0} гектарів"}
+                        many{"{0} гектарів"}
+                        one{"{0} гектара"}
+                        other{"{0} гектара"}
+                    }
+                }
                 dnam{"гектари"}
                 few{"{0} гектари"}
+                gender{"masculine"}
                 many{"{0} гектарів"}
                 one{"{0} гектар"}
                 other{"{0} гектара"}
@@ -172,21 +277,69 @@ uk{
                 few{
                     _{
                         _{"квадратні {0}"}
+                        accusative{"квадратні {0}"}
+                        genitive{"квадратних {0}"}
+                    }
+                    feminine{
+                        _{"квадратні {0}"}
+                        accusative{"квадратні {0}"}
+                        genitive{"квадратних {0}"}
+                    }
+                    masculine{
+                        _{"квадратні {0}"}
+                        accusative{"квадратні {0}"}
+                        genitive{"квадратних {0}"}
                     }
                 }
                 many{
                     _{
                         _{"квадратних {0}"}
+                        accusative{"квадратних {0}"}
+                        genitive{"квадратних {0}"}
+                    }
+                    feminine{
+                        _{"квадратних {0}"}
+                        accusative{"квадратних {0}"}
+                        genitive{"квадратних {0}"}
+                    }
+                    masculine{
+                        _{"квадратних {0}"}
+                        accusative{"квадратних {0}"}
+                        genitive{"квадратних {0}"}
                     }
                 }
                 one{
                     _{
                         _{"квадратний {0}"}
+                        accusative{"квадратний {0}"}
+                        genitive{"квадратного {0}"}
+                    }
+                    feminine{
+                        _{"квадратна {0}"}
+                        accusative{"квадратну {0}"}
+                        genitive{"квадратної {0}"}
+                    }
+                    masculine{
+                        _{"квадратний {0}"}
+                        accusative{"квадратний {0}"}
+                        genitive{"квадратного {0}"}
                     }
                 }
                 other{
                     _{
                         _{"квадратного {0}"}
+                        accusative{"квадратного {0}"}
+                        genitive{"квадратного {0}"}
+                    }
+                    feminine{
+                        _{"квадратної {0}"}
+                        accusative{"квадратної {0}"}
+                        genitive{"квадратної {0}"}
+                    }
+                    masculine{
+                        _{"квадратного {0}"}
+                        accusative{"квадратного {0}"}
+                        genitive{"квадратного {0}"}
                     }
                 }
             }
@@ -194,29 +347,99 @@ uk{
                 few{
                     _{
                         _{"кубічні {0}"}
+                        accusative{"кубічні {0}"}
+                        genitive{"кубічних {0}"}
+                    }
+                    feminine{
+                        _{"кубічні {0}"}
+                        accusative{"кубічні {0}"}
+                        genitive{"кубічних {0}"}
+                    }
+                    masculine{
+                        _{"кубічні {0}"}
+                        accusative{"кубічні {0}"}
+                        genitive{"кубічних {0}"}
                     }
                 }
                 many{
                     _{
                         _{"кубічних {0}"}
+                        accusative{"кубічних {0}"}
+                        genitive{"кубічних {0}"}
+                    }
+                    feminine{
+                        _{"кубічних {0}"}
+                        accusative{"кубічних {0}"}
+                        genitive{"кубічних {0}"}
+                    }
+                    masculine{
+                        _{"кубічних {0}"}
+                        accusative{"кубічних {0}"}
+                        genitive{"кубічних {0}"}
                     }
                 }
                 one{
                     _{
                         _{"кубічний {0}"}
+                        accusative{"кубічний {0}"}
+                        genitive{"кубічного {0}"}
+                    }
+                    feminine{
+                        _{"кубічна {0}"}
+                        accusative{"кубічну {0}"}
+                        genitive{"кубічної {0}"}
+                    }
+                    masculine{
+                        _{"кубічний {0}"}
+                        accusative{"кубічний {0}"}
+                        genitive{"кубічного {0}"}
                     }
                 }
                 other{
                     _{
                         _{"кубічного {0}"}
+                        accusative{"кубічного {0}"}
+                        genitive{"кубічного {0}"}
+                    }
+                    feminine{
+                        _{"кубічної {0}"}
+                        accusative{"кубічної {0}"}
+                        genitive{"кубічної {0}"}
+                    }
+                    masculine{
+                        _{"кубічного {0}"}
+                        accusative{"кубічного {0}"}
+                        genitive{"кубічного {0}"}
                     }
                 }
             }
         }
         concentr{
+            item{
+                dnam{"елементи"}
+                few{"{0} елементи"}
+                many{"{0} елементів"}
+                one{"{0} елемент"}
+                other{"{0} елемента"}
+            }
             karat{
+                case{
+                    accusative{
+                        few{"{0} карати"}
+                        many{"{0} каратів"}
+                        one{"{0} карат"}
+                        other{"{0} карата"}
+                    }
+                    genitive{
+                        few{"{0} каратів"}
+                        many{"{0} каратів"}
+                        one{"{0} карата"}
+                        other{"{0} карата"}
+                    }
+                }
                 dnam{"карати"}
                 few{"{0} карати"}
+                gender{"masculine"}
                 many{"{0} каратів"}
                 one{"{0} карат"}
                 other{"{0} карата"}
@@ -236,36 +459,111 @@ uk{
                 other{"{0} мілімоля на літр"}
             }
             mole{
+                case{
+                    accusative{
+                        few{"{0} молі"}
+                        many{"{0} молів"}
+                        one{"{0} моль"}
+                        other{"{0} моля"}
+                    }
+                    genitive{
+                        few{"{0} молів"}
+                        many{"{0} молів"}
+                        one{"{0} моля"}
+                        other{"{0} моля"}
+                    }
+                }
                 dnam{"молі"}
                 few{"{0} молі"}
+                gender{"masculine"}
                 many{"{0} молів"}
                 one{"{0} моль"}
                 other{"{0} моля"}
             }
             percent{
+                case{
+                    accusative{
+                        few{"{0} відсотки"}
+                        many{"{0} відсотків"}
+                        one{"{0} відсоток"}
+                        other{"{0} відсотка"}
+                    }
+                    genitive{
+                        few{"{0} відсотків"}
+                        many{"{0} відсотків"}
+                        one{"{0} відсотка"}
+                        other{"{0} відсотка"}
+                    }
+                }
                 dnam{"відсоток"}
                 few{"{0} відсотки"}
+                gender{"masculine"}
                 many{"{0} відсотків"}
                 one{"{0} відсоток"}
                 other{"{0} відсотка"}
             }
             permille{
+                case{
+                    accusative{
+                        few{"{0} проміле"}
+                        many{"{0} проміле"}
+                        one{"{0} проміле"}
+                        other{"{0} проміле"}
+                    }
+                    genitive{
+                        few{"{0} проміле"}
+                        many{"{0} проміле"}
+                        one{"{0} проміле"}
+                        other{"{0} проміле"}
+                    }
+                }
                 dnam{"проміле"}
                 few{"{0} проміле"}
+                gender{"masculine"}
                 many{"{0} проміле"}
                 one{"{0} проміле"}
                 other{"{0} проміле"}
             }
             permillion{
+                case{
+                    accusative{
+                        few{"{0} мільйонні долі"}
+                        many{"{0} мільйонних доль"}
+                        one{"{0} мільйонну долю"}
+                        other{"{0} мільйонної долі"}
+                    }
+                    genitive{
+                        few{"{0} мільйонних доль"}
+                        many{"{0} мільйонних доль"}
+                        one{"{0} мільйонної долі"}
+                        other{"{0} мільйонної долі"}
+                    }
+                }
                 dnam{"мільйонні долі"}
                 few{"{0} мільйонні долі"}
+                gender{"feminine"}
                 many{"{0} мільйонних доль"}
                 one{"{0} мільйонна доля"}
                 other{"{0} мільйонної долі"}
             }
             permyriad{
+                case{
+                    accusative{
+                        few{"{0} проміріади"}
+                        many{"{0} проміріад"}
+                        one{"{0} проміріаду"}
+                        other{"{0} проміріади"}
+                    }
+                    genitive{
+                        few{"{0} проміріад"}
+                        many{"{0} проміріад"}
+                        one{"{0} проміріади"}
+                        other{"{0} проміріади"}
+                    }
+                }
                 dnam{"проміріада"}
                 few{"{0} проміріади"}
+                gender{"feminine"}
                 many{"{0} проміріад"}
                 one{"{0} проміріада"}
                 other{"{0} проміріади"}
@@ -310,15 +608,45 @@ uk{
         }
         digital{
             bit{
+                case{
+                    accusative{
+                        few{"{0} біти"}
+                        many{"{0} бітів"}
+                        one{"{0} біт"}
+                        other{"{0} біта"}
+                    }
+                    genitive{
+                        few{"{0} бітів"}
+                        many{"{0} бітів"}
+                        one{"{0} біта"}
+                        other{"{0} біта"}
+                    }
+                }
                 dnam{"біти"}
                 few{"{0} біти"}
+                gender{"masculine"}
                 many{"{0} бітів"}
                 one{"{0} біт"}
                 other{"{0} біта"}
             }
             byte{
+                case{
+                    accusative{
+                        few{"{0} байти"}
+                        many{"{0} байтів"}
+                        one{"{0} байт"}
+                        other{"{0} байта"}
+                    }
+                    genitive{
+                        few{"{0} байтів"}
+                        many{"{0} байтів"}
+                        one{"{0} байта"}
+                        other{"{0} байта"}
+                    }
+                }
                 dnam{"байти"}
                 few{"{0} байти"}
+                gender{"masculine"}
                 many{"{0} байтів"}
                 one{"{0} байт"}
                 other{"{0} байта"}
@@ -389,30 +717,111 @@ uk{
         }
         duration{
             century{
+                case{
+                    accusative{
+                        few{"{0} століття"}
+                        many{"{0} століть"}
+                        one{"{0} століття"}
+                        other{"{0} століття"}
+                    }
+                    genitive{
+                        few{"{0} століть"}
+                        many{"{0} століть"}
+                        one{"{0} століття"}
+                        other{"{0} століття"}
+                    }
+                }
                 dnam{"століття"}
                 few{"{0} століття"}
+                gender{"neuter"}
                 many{"{0} століть"}
                 one{"{0} століття"}
                 other{"{0} століття"}
             }
             day{
+                case{
+                    accusative{
+                        few{"{0} дні"}
+                        many{"{0} днів"}
+                        one{"{0} день"}
+                        other{"{0} дня"}
+                    }
+                    genitive{
+                        few{"{0} днів"}
+                        many{"{0} днів"}
+                        one{"{0} дня"}
+                        other{"{0} дня"}
+                    }
+                }
                 dnam{"дні"}
                 few{"{0} дні"}
+                gender{"masculine"}
                 many{"{0} днів"}
                 one{"{0} день"}
                 other{"{0} дня"}
                 per{"{0} на день"}
             }
+            day-person{
+                case{
+                    accusative{
+                        few{"{0} дні"}
+                        many{"{0} днів"}
+                        one{"{0} день"}
+                        other{"{0} дня"}
+                    }
+                    genitive{
+                        few{"{0} днів"}
+                        many{"{0} днів"}
+                        one{"{0} дня"}
+                        other{"{0} дня"}
+                    }
+                }
+                few{"{0} дні"}
+                gender{"masculine"}
+                many{"{0} днів"}
+                one{"{0} день"}
+                other{"{0} дня"}
+            }
             decade{
+                case{
+                    accusative{
+                        few{"{0} десятиріччя"}
+                        many{"{0} десятиріч"}
+                        one{"{0} десятиріччя"}
+                        other{"{0} десятиріччя"}
+                    }
+                    genitive{
+                        few{"{0} десятиріч"}
+                        many{"{0} десятиріч"}
+                        one{"{0} десятиріччя"}
+                        other{"{0} десятиріччя"}
+                    }
+                }
                 dnam{"десятиріччя"}
                 few{"{0} десятиріччя"}
+                gender{"neuter"}
                 many{"{0} десятиріч"}
                 one{"{0} десятиріччя"}
                 other{"{0} десятиріччя"}
             }
             hour{
+                case{
+                    accusative{
+                        few{"{0} години"}
+                        many{"{0} годин"}
+                        one{"{0} годину"}
+                        other{"{0} години"}
+                    }
+                    genitive{
+                        few{"{0} годин"}
+                        many{"{0} годин"}
+                        one{"{0} години"}
+                        other{"{0} години"}
+                    }
+                }
                 dnam{"години"}
                 few{"{0} години"}
+                gender{"feminine"}
                 many{"{0} годин"}
                 one{"{0} година"}
                 other{"{0} години"}
@@ -433,16 +842,46 @@ uk{
                 other{"{0} мілісекунди"}
             }
             minute{
+                case{
+                    accusative{
+                        few{"{0} хвилини"}
+                        many{"{0} хвилин"}
+                        one{"{0} хвилину"}
+                        other{"{0} хвилини"}
+                    }
+                    genitive{
+                        few{"{0} хвилин"}
+                        many{"{0} хвилин"}
+                        one{"{0} хвилини"}
+                        other{"{0} хвилини"}
+                    }
+                }
                 dnam{"хвилини"}
                 few{"{0} хвилини"}
+                gender{"feminine"}
                 many{"{0} хвилин"}
                 one{"{0} хвилина"}
                 other{"{0} хвилини"}
                 per{"{0} на хвилину"}
             }
             month{
+                case{
+                    accusative{
+                        few{"{0} місяці"}
+                        many{"{0} місяців"}
+                        one{"{0} місяць"}
+                        other{"{0} місяця"}
+                    }
+                    genitive{
+                        few{"{0} місяців"}
+                        many{"{0} місяців"}
+                        one{"{0} місяця"}
+                        other{"{0} місяця"}
+                    }
+                }
                 dnam{"місяці"}
                 few{"{0} місяці"}
+                gender{"masculine"}
                 many{"{0} місяців"}
                 one{"{0} місяць"}
                 other{"{0} місяця"}
@@ -456,24 +895,69 @@ uk{
                 other{"{0} наносекунди"}
             }
             second{
+                case{
+                    accusative{
+                        few{"{0} секунди"}
+                        many{"{0} секунд"}
+                        one{"{0} секунду"}
+                        other{"{0} секунди"}
+                    }
+                    genitive{
+                        few{"{0} секунд"}
+                        many{"{0} секунд"}
+                        one{"{0} секунди"}
+                        other{"{0} секунди"}
+                    }
+                }
                 dnam{"секунди"}
                 few{"{0} секунди"}
+                gender{"feminine"}
                 many{"{0} секунд"}
                 one{"{0} секунда"}
                 other{"{0} секунди"}
                 per{"{0} на секунду"}
             }
             week{
+                case{
+                    accusative{
+                        few{"{0} тижні"}
+                        many{"{0} тижнів"}
+                        one{"{0} тиждень"}
+                        other{"{0} тижня"}
+                    }
+                    genitive{
+                        few{"{0} тижнів"}
+                        many{"{0} тижнів"}
+                        one{"{0} тижня"}
+                        other{"{0} тижня"}
+                    }
+                }
                 dnam{"тижні"}
                 few{"{0} тижні"}
+                gender{"masculine"}
                 many{"{0} тижнів"}
                 one{"{0} тиждень"}
                 other{"{0} тижня"}
                 per{"{0} на тиждень"}
             }
             year{
+                case{
+                    accusative{
+                        few{"{0} роки"}
+                        many{"{0} років"}
+                        one{"{0} рік"}
+                        other{"{0} року"}
+                    }
+                    genitive{
+                        few{"{0} років"}
+                        many{"{0} років"}
+                        one{"{0} року"}
+                        other{"{0} року"}
+                    }
+                }
                 dnam{"роки"}
                 few{"{0} роки"}
+                gender{"masculine"}
                 many{"{0} років"}
                 one{"{0} рік"}
                 other{"{0} року"}
@@ -482,8 +966,23 @@ uk{
         }
         electric{
             ampere{
+                case{
+                    accusative{
+                        few{"{0} ампери"}
+                        many{"{0} амперів"}
+                        one{"{0} ампер"}
+                        other{"{0} ампера"}
+                    }
+                    genitive{
+                        few{"{0} амперів"}
+                        many{"{0} амперів"}
+                        one{"{0} ампера"}
+                        other{"{0} ампера"}
+                    }
+                }
                 dnam{"ампери"}
                 few{"{0} ампери"}
+                gender{"masculine"}
                 many{"{0} амперів"}
                 one{"{0} ампер"}
                 other{"{0} ампера"}
@@ -496,15 +995,45 @@ uk{
                 other{"{0} міліампера"}
             }
             ohm{
+                case{
+                    accusative{
+                        few{"{0} оми"}
+                        many{"{0} омів"}
+                        one{"{0} ом"}
+                        other{"{0} ома"}
+                    }
+                    genitive{
+                        few{"{0} омів"}
+                        many{"{0} омів"}
+                        one{"{0} ома"}
+                        other{"{0} ома"}
+                    }
+                }
                 dnam{"оми"}
                 few{"{0} оми"}
+                gender{"masculine"}
                 many{"{0} омів"}
                 one{"{0} ом"}
                 other{"{0} ома"}
             }
             volt{
+                case{
+                    accusative{
+                        few{"{0} вольти"}
+                        many{"{0} вольтів"}
+                        one{"{0} вольт"}
+                        other{"{0} вольта"}
+                    }
+                    genitive{
+                        few{"{0} вольтів"}
+                        many{"{0} вольтів"}
+                        one{"{0} вольта"}
+                        other{"{0} вольта"}
+                    }
+                }
                 dnam{"вольти"}
                 few{"{0} вольти"}
+                gender{"masculine"}
                 many{"{0} вольтів"}
                 one{"{0} вольт"}
                 other{"{0} вольта"}
@@ -519,8 +1048,23 @@ uk{
                 other{"{0} одиниці теплової британської"}
             }
             calorie{
+                case{
+                    accusative{
+                        few{"{0} калорії"}
+                        many{"{0} калорій"}
+                        one{"{0} калорію"}
+                        other{"{0} калорії"}
+                    }
+                    genitive{
+                        few{"{0} калорій"}
+                        many{"{0} калорій"}
+                        one{"{0} калорії"}
+                        other{"{0} калорії"}
+                    }
+                }
                 dnam{"калорії"}
                 few{"{0} калорії"}
+                gender{"feminine"}
                 many{"{0} калорій"}
                 one{"{0} калорія"}
                 other{"{0} калорії"}
@@ -540,8 +1084,23 @@ uk{
                 other{"{0} кілокалорії"}
             }
             joule{
+                case{
+                    accusative{
+                        few{"{0} джоулі"}
+                        many{"{0} джоулів"}
+                        one{"{0} джоуль"}
+                        other{"{0} джоуля"}
+                    }
+                    genitive{
+                        few{"{0} джоулів"}
+                        many{"{0} джоулів"}
+                        one{"{0} джоуля"}
+                        other{"{0} джоуля"}
+                    }
+                }
                 dnam{"джоулі"}
                 few{"{0} джоулі"}
+                gender{"masculine"}
                 many{"{0} джоулів"}
                 one{"{0} джоуль"}
                 other{"{0} джоуля"}
@@ -576,9 +1135,31 @@ uk{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"кіловат-години на 100 кілометрів"}
+                few{"{0} кіловат-години на 100 кілометрів"}
+                many{"{0} кіловат-годин на 100 кілометрів"}
+                one{"{0} кіловат-година на 100 кілометрів"}
+                other{"{0} кіловат-години на 100 кілометрів"}
+            }
             newton{
+                case{
+                    accusative{
+                        few{"{0} ньютони"}
+                        many{"{0} ньютонів"}
+                        one{"{0} ньютон"}
+                        other{"{0} ньютона"}
+                    }
+                    genitive{
+                        few{"{0} ньютонів"}
+                        many{"{0} ньютонів"}
+                        one{"{0} ньютона"}
+                        other{"{0} ньютона"}
+                    }
+                }
                 dnam{"ньютони"}
                 few{"{0} ньютони"}
+                gender{"masculine"}
                 many{"{0} ньютонів"}
                 one{"{0} ньютон"}
                 other{"{0} ньютона"}
@@ -600,8 +1181,23 @@ uk{
                 other{"{0} гігагерца"}
             }
             hertz{
+                case{
+                    accusative{
+                        few{"{0} герци"}
+                        many{"{0} герців"}
+                        one{"{0} герц"}
+                        other{"{0} герца"}
+                    }
+                    genitive{
+                        few{"{0} герців"}
+                        many{"{0} герців"}
+                        one{"{0} герца"}
+                        other{"{0} герца"}
+                    }
+                }
                 dnam{"герци"}
                 few{"{0} герци"}
+                gender{"masculine"}
                 many{"{0} герців"}
                 one{"{0} герц"}
                 other{"{0} герца"}
@@ -629,12 +1225,56 @@ uk{
                 one{"{0} точка"}
                 other{"{0} точки"}
             }
+            em{
+                case{
+                    accusative{
+                        few{"{0} ем"}
+                        many{"{0} ем"}
+                        one{"{0} ем"}
+                        other{"{0} ем"}
+                    }
+                    genitive{
+                        few{"{0} ем"}
+                        many{"{0} ем"}
+                        one{"{0} ем"}
+                        other{"{0} ем"}
+                    }
+                }
+                dnam{"ем"}
+                few{"{0} ем"}
+                gender{"masculine"}
+                many{"{0} ем"}
+                one{"{0} ем"}
+                other{"{0} ем"}
+            }
             megapixel{
                 dnam{"мегапікселі"}
-                few{"{0} Мп"}
-                many{"{0} Мп"}
+                few{"{0} мегапікселі"}
+                many{"{0} мегапікселів"}
                 one{"{0} мегапіксель"}
                 other{"{0} мегапікселя"}
+            }
+            pixel{
+                case{
+                    accusative{
+                        few{"{0} пікселі"}
+                        many{"{0} пікселів"}
+                        one{"{0} піксель"}
+                        other{"{0} пікселя"}
+                    }
+                    genitive{
+                        few{"{0} пікселів"}
+                        many{"{0} пікселів"}
+                        one{"{0} пікселя"}
+                        other{"{0} пікселя"}
+                    }
+                }
+                dnam{"пікселі"}
+                few{"{0} пікселі"}
+                gender{"masculine"}
+                many{"{0} пікселів"}
+                one{"{0} піксель"}
+                other{"{0} пікселя"}
             }
         }
         length{
@@ -713,8 +1353,23 @@ uk{
                 other{"{0} світлового року"}
             }
             meter{
+                case{
+                    accusative{
+                        few{"{0} метри"}
+                        many{"{0} метрів"}
+                        one{"{0} метр"}
+                        other{"{0} метра"}
+                    }
+                    genitive{
+                        few{"{0} метрів"}
+                        many{"{0} метрів"}
+                        one{"{0} метра"}
+                        other{"{0} метра"}
+                    }
+                }
                 dnam{"метри"}
                 few{"{0} метри"}
+                gender{"masculine"}
                 many{"{0} метрів"}
                 one{"{0} метр"}
                 other{"{0} метра"}
@@ -735,8 +1390,23 @@ uk{
                 other{"{0} милі"}
             }
             mile-scandinavian{
-                dnam{"скандинавська миля"}
+                case{
+                    accusative{
+                        few{"{0} скандинавські милі"}
+                        many{"{0} скандинавських миль"}
+                        one{"{0} скандинавську милю"}
+                        other{"{0} скандинавської милі"}
+                    }
+                    genitive{
+                        few{"{0} скандинавських миль"}
+                        many{"{0} скандинавських миль"}
+                        one{"{0} скандинавської милі"}
+                        other{"{0} скандинавської милі"}
+                    }
+                }
+                dnam{"скандинавські милі"}
                 few{"{0} скандинавські милі"}
+                gender{"feminine"}
                 many{"{0} скандинавських миль"}
                 one{"{0} скандинавська миля"}
                 other{"{0} скандинавської милі"}
@@ -800,22 +1470,67 @@ uk{
         }
         light{
             candela{
+                case{
+                    accusative{
+                        few{"{0} кандели"}
+                        many{"{0} кандел"}
+                        one{"{0} канделу"}
+                        other{"{0} кандели"}
+                    }
+                    genitive{
+                        few{"{0} кандел"}
+                        many{"{0} кандел"}
+                        one{"{0} кандели"}
+                        other{"{0} кандели"}
+                    }
+                }
                 dnam{"кандела"}
                 few{"{0} кандели"}
+                gender{"feminine"}
                 many{"{0} кандел"}
                 one{"{0} кандела"}
                 other{"{0} кандели"}
             }
             lumen{
-                dnam{"люмен"}
+                case{
+                    accusative{
+                        few{"{0} люмени"}
+                        many{"{0} люменів"}
+                        one{"{0} люмен"}
+                        other{"{0} люмена"}
+                    }
+                    genitive{
+                        few{"{0} люменів"}
+                        many{"{0} люменів"}
+                        one{"{0} люмена"}
+                        other{"{0} люмена"}
+                    }
+                }
+                dnam{"люмени"}
                 few{"{0} люмени"}
+                gender{"masculine"}
                 many{"{0} люменів"}
                 one{"{0} люмен"}
                 other{"{0} люмена"}
             }
             lux{
+                case{
+                    accusative{
+                        few{"{0} люкси"}
+                        many{"{0} люксів"}
+                        one{"{0} люкс"}
+                        other{"{0} люкса"}
+                    }
+                    genitive{
+                        few{"{0} люксів"}
+                        many{"{0} люксів"}
+                        one{"{0} люкса"}
+                        other{"{0} люкса"}
+                    }
+                }
                 dnam{"люкси"}
                 few{"{0} люкси"}
+                gender{"masculine"}
                 many{"{0} люксів"}
                 one{"{0} люкс"}
                 other{"{0} люкса"}
@@ -830,8 +1545,23 @@ uk{
         }
         mass{
             carat{
+                case{
+                    accusative{
+                        few{"{0} карати"}
+                        many{"{0} каратів"}
+                        one{"{0} карат"}
+                        other{"{0} карата"}
+                    }
+                    genitive{
+                        few{"{0} каратів"}
+                        many{"{0} каратів"}
+                        one{"{0} карата"}
+                        other{"{0} карата"}
+                    }
+                }
                 dnam{"карати"}
                 few{"{0} карати"}
+                gender{"masculine"}
                 many{"{0} каратів"}
                 one{"{0} карат"}
                 other{"{0} карата"}
@@ -858,24 +1588,69 @@ uk{
                 other{"{0} грана"}
             }
             gram{
+                case{
+                    accusative{
+                        few{"{0} грами"}
+                        many{"{0} грамів"}
+                        one{"{0} грам"}
+                        other{"{0} грама"}
+                    }
+                    genitive{
+                        few{"{0} грамів"}
+                        many{"{0} грамів"}
+                        one{"{0} грама"}
+                        other{"{0} грама"}
+                    }
+                }
                 dnam{"грами"}
                 few{"{0} грами"}
+                gender{"masculine"}
                 many{"{0} грамів"}
                 one{"{0} грам"}
                 other{"{0} грама"}
                 per{"{0} на грам"}
             }
             kilogram{
+                case{
+                    accusative{
+                        few{"{0} кілограми"}
+                        many{"{0} кілограмів"}
+                        one{"{0} кілограм"}
+                        other{"{0} кілограма"}
+                    }
+                    genitive{
+                        few{"{0} кілограмів"}
+                        many{"{0} кілограмів"}
+                        one{"{0} кілограма"}
+                        other{"{0} кілограма"}
+                    }
+                }
                 dnam{"кілограми"}
                 few{"{0} кілограми"}
+                gender{"masculine"}
                 many{"{0} кілограмів"}
                 one{"{0} кілограм"}
                 other{"{0} кілограма"}
                 per{"{0} на кілограм"}
             }
             metric-ton{
+                case{
+                    accusative{
+                        few{"{0} метричні тонни"}
+                        many{"{0} метричних тонн"}
+                        one{"{0} метричну тонну"}
+                        other{"{0} метричної тонни"}
+                    }
+                    genitive{
+                        few{"{0} метричних тонн"}
+                        many{"{0} метричних тонн"}
+                        one{"{0} метричної тонни"}
+                        other{"{0} метричної тонни"}
+                    }
+                }
                 dnam{"метричні тонни"}
                 few{"{0} метричні тонни"}
+                gender{"feminine"}
                 many{"{0} метричних тонн"}
                 one{"{0} метрична тонна"}
                 other{"{0} метричної тонни"}
@@ -976,8 +1751,23 @@ uk{
                 other{"{0} мілівата"}
             }
             watt{
+                case{
+                    accusative{
+                        few{"{0} вати"}
+                        many{"{0} ватів"}
+                        one{"{0} ват"}
+                        other{"{0} вата"}
+                    }
+                    genitive{
+                        few{"{0} ватів"}
+                        many{"{0} ватів"}
+                        one{"{0} вата"}
+                        other{"{0} вата"}
+                    }
+                }
                 dnam{"вати"}
                 few{"{0} вати"}
+                gender{"masculine"}
                 many{"{0} ватів"}
                 one{"{0} ват"}
                 other{"{0} вата"}
@@ -985,15 +1775,45 @@ uk{
         }
         pressure{
             atmosphere{
+                case{
+                    accusative{
+                        few{"{0} атмосфери"}
+                        many{"{0} атмосфер"}
+                        one{"{0} атмосферу"}
+                        other{"{0} атмосфери"}
+                    }
+                    genitive{
+                        few{"{0} атмосфер"}
+                        many{"{0} атмосфер"}
+                        one{"{0} атмосфери"}
+                        other{"{0} атмосфери"}
+                    }
+                }
                 dnam{"атмосфери"}
                 few{"{0} атмосфери"}
+                gender{"feminine"}
                 many{"{0} атмосфер"}
                 one{"{0} атмосфера"}
                 other{"{0} атмосфери"}
             }
             bar{
+                case{
+                    accusative{
+                        few{"{0} бари"}
+                        many{"{0} барів"}
+                        one{"{0} бар"}
+                        other{"{0} бара"}
+                    }
+                    genitive{
+                        few{"{0} барів"}
+                        many{"{0} барів"}
+                        one{"{0} бара"}
+                        other{"{0} бара"}
+                    }
+                }
                 dnam{"бари"}
                 few{"{0} бари"}
+                gender{"masculine"}
                 many{"{0} барів"}
                 one{"{0} бар"}
                 other{"{0} бара"}
@@ -1041,8 +1861,23 @@ uk{
                 other{"{0} міліметра ртутного стовпа"}
             }
             pascal{
+                case{
+                    accusative{
+                        few{"{0} паскалі"}
+                        many{"{0} паскалів"}
+                        one{"{0} паскаль"}
+                        other{"{0} паскаля"}
+                    }
+                    genitive{
+                        few{"{0} паскалів"}
+                        many{"{0} паскалів"}
+                        one{"{0} паскаля"}
+                        other{"{0} паскаля"}
+                    }
+                }
                 dnam{"паскалі"}
                 few{"{0} паскалі"}
+                gender{"masculine"}
                 many{"{0} паскалів"}
                 one{"{0} паскаль"}
                 other{"{0} паскаля"}
@@ -1087,8 +1922,23 @@ uk{
         }
         temperature{
             celsius{
+                case{
+                    accusative{
+                        few{"{0} градуси Цельсія"}
+                        many{"{0} градусів Цельсія"}
+                        one{"{0} градус Цельсія"}
+                        other{"{0} градуса Цельсія"}
+                    }
+                    genitive{
+                        few{"{0} градусів Цельсія"}
+                        many{"{0} градусів Цельсія"}
+                        one{"{0} градуса Цельсія"}
+                        other{"{0} градуса Цельсія"}
+                    }
+                }
                 dnam{"градуси Цельсія"}
                 few{"{0} градуси Цельсія"}
+                gender{"masculine"}
                 many{"{0} градусів Цельсія"}
                 one{"{0} градус Цельсія"}
                 other{"{0} градуса Цельсія"}
@@ -1101,15 +1951,45 @@ uk{
                 other{"{0} градуса Фаренгейта"}
             }
             generic{
+                case{
+                    accusative{
+                        few{"{0}°"}
+                        many{"{0}°"}
+                        one{"{0}°"}
+                        other{"{0}°"}
+                    }
+                    genitive{
+                        few{"{0}°"}
+                        many{"{0}°"}
+                        one{"{0}°"}
+                        other{"{0}°"}
+                    }
+                }
                 dnam{"°"}
                 few{"{0}°"}
+                gender{"masculine"}
                 many{"{0}°"}
                 one{"{0}°"}
                 other{"{0}°"}
             }
             kelvin{
+                case{
+                    accusative{
+                        few{"{0} кельвіни"}
+                        many{"{0} кельвінів"}
+                        one{"{0} кельвін"}
+                        other{"{0} кельвіна"}
+                    }
+                    genitive{
+                        few{"{0} кельвінів"}
+                        many{"{0} кельвінів"}
+                        one{"{0} кельвіна"}
+                        other{"{0} кельвіна"}
+                    }
+                }
                 dnam{"кельвіни"}
                 few{"{0} кельвіни"}
+                gender{"masculine"}
                 many{"{0} кельвінів"}
                 one{"{0} кельвін"}
                 other{"{0} кельвіна"}
@@ -1219,11 +2099,26 @@ uk{
                 other{"{0} склянки"}
             }
             cup-metric{
-                dnam{"метричні склянки"}
-                few{"{0} метричні склянки"}
-                many{"{0} метричних склянок"}
-                one{"{0} метрична склянка"}
-                other{"{0} метричної склянки"}
+                case{
+                    accusative{
+                        few{"{0} метричні чашки"}
+                        many{"{0} метричних чашок"}
+                        one{"{0} метричну чашку"}
+                        other{"{0} метричної чашки"}
+                    }
+                    genitive{
+                        few{"{0} метричних чашок"}
+                        many{"{0} метричних чашок"}
+                        one{"{0} метричної чашки"}
+                        other{"{0} метричної чашки"}
+                    }
+                }
+                dnam{"метричні чашки"}
+                few{"{0} метричні чашки"}
+                gender{"feminine"}
+                many{"{0} метричних чашок"}
+                one{"{0} метрична чашка"}
+                other{"{0} метричної чашки"}
             }
             deciliter{
                 dnam{"децилітри"}
@@ -1268,11 +2163,11 @@ uk{
                 other{"{0} рідкої унції"}
             }
             fluid-ounce-imperial{
-                dnam{"імперські рідинні унції"}
-                few{"{0} імп. рідинні унції"}
-                many{"{0} імп. рідинних унцій"}
-                one{"{0} імп. рідинна унція"}
-                other{"{0} імп. рідинної унції"}
+                dnam{"англійські рідинні унції"}
+                few{"{0} англійські рідинні унції"}
+                many{"{0} англійських рідинних унцій"}
+                one{"{0} англійська рідинна унція"}
+                other{"{0} англійської рідинної унції"}
             }
             gallon{
                 dnam{"галони"}
@@ -1305,8 +2200,23 @@ uk{
                 other{"{0} мірна склянка"}
             }
             liter{
+                case{
+                    accusative{
+                        few{"{0} літри"}
+                        many{"{0} літрів"}
+                        one{"{0} літр"}
+                        other{"{0} літра"}
+                    }
+                    genitive{
+                        few{"{0} літрів"}
+                        many{"{0} літрів"}
+                        one{"{0} літра"}
+                        other{"{0} літра"}
+                    }
+                }
                 dnam{"літри"}
                 few{"{0} літри"}
+                gender{"masculine"}
                 many{"{0} літрів"}
                 one{"{0} літр"}
                 other{"{0} літра"}
@@ -1341,8 +2251,23 @@ uk{
                 other{"{0} пінти"}
             }
             pint-metric{
+                case{
+                    accusative{
+                        few{"{0} метричні пінти"}
+                        many{"{0} метричних пінт"}
+                        one{"{0} метричну пінту"}
+                        other{"{0} метричної пінти"}
+                    }
+                    genitive{
+                        few{"{0} метричних пінт"}
+                        many{"{0} метричних пінт"}
+                        one{"{0} метричної пінти"}
+                        other{"{0} метричної пінти"}
+                    }
+                }
                 dnam{"метрична пінта"}
                 few{"{0} метричні пінти"}
+                gender{"feminine"}
                 many{"{0} метричних пінт"}
                 one{"{0} метрична пінта"}
                 other{"{0} метричної пінти"}
@@ -1380,11 +2305,11 @@ uk{
     unitsNarrow{
         acceleration{
             g-force{
-                dnam{"g-сила"}
-                few{"{0} G"}
-                many{"{0} G"}
-                one{"{0} G"}
-                other{"{0} G"}
+                dnam{"g"}
+                few{"{0}g"}
+                many{"{0}g"}
+                one{"{0}g"}
+                other{"{0}g"}
             }
             meter-per-square-second{
                 dnam{"м/с²"}
@@ -1396,30 +2321,36 @@ uk{
         }
         angle{
             arc-minute{
+                dnam{"′"}
                 few{"{0}′"}
                 many{"{0}′"}
                 one{"{0}′"}
                 other{"{0}′"}
             }
             arc-second{
+                dnam{"″"}
                 few{"{0}″"}
                 many{"{0}″"}
                 one{"{0}″"}
                 other{"{0}″"}
             }
             degree{
+                dnam{"°"}
                 few{"{0}°"}
                 many{"{0}°"}
                 one{"{0}°"}
                 other{"{0}°"}
             }
+            radian{
+                dnam{"рад."}
+            }
         }
         area{
             acre{
-                few{"{0} акри"}
-                many{"{0} акрів"}
+                few{"{0} акр"}
+                many{"{0} акр"}
                 one{"{0} акр"}
-                other{"{0} акра"}
+                other{"{0} акр"}
             }
             dunam{
                 dnam{"дунам"}
@@ -1429,16 +2360,18 @@ uk{
                 other{"{0}дун."}
             }
             hectare{
-                few{"{0} га"}
-                many{"{0} га"}
-                one{"{0} га"}
-                other{"{0} га"}
+                dnam{"га"}
+                few{"{0}га"}
+                many{"{0}га"}
+                one{"{0}га"}
+                other{"{0}га"}
             }
             square-foot{
-                few{"{0} фути²"}
-                many{"{0} футів²"}
-                one{"{0} фут²"}
-                other{"{0} фута²"}
+                dnam{"фт²"}
+                few{"{0} фт²"}
+                many{"{0} фт²"}
+                one{"{0} фт²"}
+                other{"{0} фт²"}
             }
             square-kilometer{
                 few{"{0} км²"}
@@ -1453,10 +2386,11 @@ uk{
                 other{"{0} м²"}
             }
             square-mile{
-                few{"{0} милі²"}
-                many{"{0} миль²"}
-                one{"{0} миля²"}
-                other{"{0} милі²"}
+                few{"{0} мл²"}
+                many{"{0} мл²"}
+                one{"{0} мл²"}
+                other{"{0} мл²"}
+                per{"{0}/мл²"}
             }
         }
         compound{
@@ -1491,6 +2425,19 @@ uk{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"ел."}
+                few{"{0}ел."}
+                many{"{0}ел."}
+                one{"{0}ел."}
+                other{"{0}ел."}
+            }
+            karat{
+                dnam{"кар."}
+            }
+            millimole-per-liter{
+                dnam{"ммоль/л"}
+            }
             mole{
                 few{"{0}моль"}
                 many{"{0}моль"}
@@ -1504,6 +2451,16 @@ uk{
                 one{"{0}%"}
                 other{"{0}%"}
             }
+            permille{
+                dnam{"‰"}
+            }
+            permillion{
+                dnam{"м. д."}
+                few{"{0} м. д."}
+                many{"{0} м. д."}
+                one{"{0} м. д."}
+                other{"{0} м. д."}
+            }
             permyriad{
                 dnam{"‱"}
             }
@@ -1516,6 +2473,23 @@ uk{
                 one{"{0} л/100 км"}
                 other{"{0} л/100 км"}
             }
+            liter-per-kilometer{
+                dnam{"л/км"}
+            }
+            mile-per-gallon{
+                dnam{"мл/гал"}
+                few{"{0} мл/гал"}
+                many{"{0} мл/гал"}
+                one{"{0} мл/гал"}
+                other{"{0} мл/гал"}
+            }
+            mile-per-gallon-imperial{
+                dnam{"мл/англ. гал."}
+                few{"{0} мл/англ. гал."}
+                many{"{0} мл/англ. гал."}
+                one{"{0} мл/англ. гал."}
+                other{"{0} мл/англ. гал."}
+            }
         }
         coordinate{
             dnam{"напрям"}
@@ -1524,24 +2498,56 @@ uk{
             south{"{0}Пд"}
             west{"{0}Зх"}
         }
+        digital{
+            bit{
+                dnam{"б"}
+            }
+            byte{
+                dnam{"Б"}
+            }
+            gigabit{
+                dnam{"Гб"}
+            }
+            gigabyte{
+                dnam{"ГБ"}
+            }
+            kilobit{
+                dnam{"кб"}
+            }
+            kilobyte{
+                dnam{"кБ"}
+            }
+            megabit{
+                dnam{"Мб"}
+            }
+            megabyte{
+                dnam{"МБ"}
+            }
+            terabit{
+                dnam{"Тб"}
+            }
+            terabyte{
+                dnam{"ТБ"}
+            }
+        }
         duration{
             century{
-                dnam{"ст."}
-                few{"{0}ст."}
-                many{"{0}ст."}
-                one{"{0}ст."}
-                other{"{0}ст."}
+                dnam{"ст"}
+                few{"{0}ст"}
+                many{"{0}ст"}
+                one{"{0}ст"}
+                other{"{0}ст"}
             }
             day{
-                dnam{"день"}
-                few{"{0} дн."}
-                many{"{0} дн."}
-                one{"{0} дн."}
-                other{"{0} дн."}
+                dnam{"д"}
+                few{"{0}д"}
+                many{"{0}д"}
+                one{"{0}д"}
+                other{"{0}д"}
                 per{"{0}/д"}
             }
             hour{
-                dnam{"год"}
+                dnam{"г"}
                 few{"{0} год."}
                 many{"{0} год."}
                 one{"{0} год."}
@@ -1550,32 +2556,32 @@ uk{
             }
             microsecond{
                 dnam{"мкс"}
-                few{"{0} мкс"}
-                many{"{0} мкс"}
-                one{"{0} мкс"}
-                other{"{0} мкс"}
+                few{"{0}мкс"}
+                many{"{0}мкс"}
+                one{"{0}мкс"}
+                other{"{0}мкс"}
             }
             millisecond{
                 dnam{"мс"}
-                few{"{0} мс"}
-                many{"{0} мс"}
-                one{"{0} мс"}
-                other{"{0} мс"}
+                few{"{0}мс"}
+                many{"{0}мс"}
+                one{"{0}мс"}
+                other{"{0}мс"}
             }
             minute{
-                dnam{"хв"}
-                few{"{0} хв."}
-                many{"{0} хв."}
-                one{"{0} хв."}
-                other{"{0} хв."}
-                per{"{0}/хв"}
+                dnam{"х"}
+                few{"{0}х"}
+                many{"{0}х"}
+                one{"{0}х"}
+                other{"{0}х"}
+                per{"{0}/х"}
             }
             month{
-                dnam{"міс."}
-                few{"{0} міс."}
-                many{"{0} міс."}
-                one{"{0} міс."}
-                other{"{0} міс."}
+                dnam{"м"}
+                few{"{0}м"}
+                many{"{0}м"}
+                one{"{0}м"}
+                other{"{0}м"}
                 per{"{0}/м"}
             }
             nanosecond{
@@ -1587,27 +2593,35 @@ uk{
             }
             second{
                 dnam{"с"}
-                few{"{0} с"}
-                many{"{0} с"}
-                one{"{0} с"}
-                other{"{0} с"}
+                few{"{0}с"}
+                many{"{0}с"}
+                one{"{0}с"}
+                other{"{0}с"}
                 per{"{0}/с"}
             }
             week{
-                dnam{"тиж."}
-                few{"{0} тиж."}
-                many{"{0} тиж."}
-                one{"{0} тиж."}
-                other{"{0} тиж."}
+                dnam{"т"}
+                few{"{0}т"}
+                many{"{0}т"}
+                one{"{0}т"}
+                other{"{0}т"}
                 per{"{0}/т"}
             }
             year{
-                dnam{"р."}
-                few{"{0} р."}
-                many{"{0} р."}
-                one{"{0} р."}
-                other{"{0} р."}
+                dnam{"р"}
+                few{"{0}р"}
+                many{"{0}р"}
+                one{"{0}р"}
+                other{"{0}р"}
                 per{"{0}/р"}
+            }
+        }
+        electric{
+            ohm{
+                dnam{"Ом"}
+            }
+            volt{
+                dnam{"В"}
             }
         }
         energy{
@@ -1624,8 +2638,35 @@ uk{
                 one{"{0}еВ"}
                 other{"{0}еВ"}
             }
+            joule{
+                dnam{"Дж"}
+            }
+            kilojoule{
+                dnam{"кДж"}
+            }
+            kilowatt-hour{
+                dnam{"кВт⋅год"}
+                few{"{0} кВт⋅год"}
+                many{"{0} кВт⋅год"}
+                one{"{0} кВт⋅год"}
+                other{"{0} кВт⋅год"}
+            }
+            therm-us{
+                dnam{"ам. терм."}
+                few{"{0} ам. терм."}
+                many{"{0} ам. терм."}
+                one{"{0} ам. терм."}
+                other{"{0} ам. терм."}
+            }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"кВт⋅год/100 км"}
+                few{"{0}кВт⋅год/100км"}
+                many{"{0}кВт⋅год/100км"}
+                one{"{0}кВт⋅год/100км"}
+                other{"{0}кВт⋅год/100км"}
+            }
             newton{
                 dnam{"Н"}
                 few{"{0}Н"}
@@ -1639,6 +2680,56 @@ uk{
                 many{"{0}фнтс"}
                 one{"{0}фнтс"}
                 other{"{0}фнтс"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                dnam{"тчк/см"}
+                few{"{0} тчк/см"}
+                many{"{0} тчк/см"}
+                one{"{0} тчк/см"}
+                other{"{0} тчк/см"}
+            }
+            dot-per-inch{
+                dnam{"тчк/“"}
+                few{"{0} тчк/“"}
+                many{"{0} тчк/“"}
+                one{"{0} тчк/“"}
+                other{"{0} тчк/“"}
+            }
+            em{
+                dnam{"ем"}
+                few{"{0} ем"}
+                many{"{0} ем"}
+                one{"{0} ем"}
+                other{"{0} ем"}
+            }
+            megapixel{
+                few{"{0}Мп"}
+                many{"{0}Мп"}
+                one{"{0}Мп"}
+                other{"{0}Мп"}
+            }
+            pixel{
+                dnam{"п"}
+                few{"{0}п"}
+                many{"{0}п"}
+                one{"{0}п"}
+                other{"{0}п"}
+            }
+            pixel-per-centimeter{
+                dnam{"пкс/см"}
+                few{"{0} пкс/см"}
+                many{"{0} пкс/см"}
+                one{"{0} пкс/см"}
+                other{"{0} пкс/см"}
+            }
+            pixel-per-inch{
+                dnam{"пкс/“"}
+                few{"{0} пкс/“"}
+                many{"{0} пкс/“"}
+                one{"{0} пкс/“"}
+                other{"{0} пкс/“"}
             }
         }
         length{
@@ -1657,17 +2748,34 @@ uk{
                 one{"{0}дм"}
                 other{"{0}дм"}
             }
+            fathom{
+                dnam{"фтм"}
+                few{"{0} фтм"}
+                many{"{0} фтм"}
+                one{"{0} фтм"}
+                other{"{0} фтм"}
+            }
             foot{
-                few{"{0} фути"}
-                many{"{0} футів"}
-                one{"{0} фут"}
-                other{"{0} фута"}
+                dnam{"фт"}
+                few{"{0} фт"}
+                many{"{0} фт"}
+                one{"{0} фт"}
+                other{"{0} фт"}
+                per{"{0}/фт"}
+            }
+            furlong{
+                dnam{"фрл"}
+                few{"{0} фрл"}
+                many{"{0} фрл"}
+                one{"{0} фрл"}
+                other{"{0} фрл"}
             }
             inch{
-                few{"{0} дюйми"}
-                many{"{0} дюймів"}
-                one{"{0} дюйм"}
-                other{"{0} дюйма"}
+                few{"{0} дм"}
+                many{"{0} дм"}
+                one{"{0} дм"}
+                other{"{0} дм"}
+                per{"{0}/дм"}
             }
             kilometer{
                 dnam{"км"}
@@ -1685,10 +2793,10 @@ uk{
             }
             meter{
                 dnam{"м"}
-                few{"{0} м"}
-                many{"{0} м"}
-                one{"{0} м"}
-                other{"{0} м"}
+                few{"{0}м"}
+                many{"{0}м"}
+                one{"{0}м"}
+                other{"{0}м"}
                 per{"{0}/м"}
             }
             micrometer{
@@ -1699,10 +2807,11 @@ uk{
                 other{"{0}мкм"}
             }
             mile{
-                few{"{0} милі"}
-                many{"{0} миль"}
-                one{"{0} миля"}
-                other{"{0} милі"}
+                dnam{"мл"}
+                few{"{0} мл"}
+                many{"{0} мл"}
+                one{"{0} мл"}
+                other{"{0} мл"}
             }
             millimeter{
                 dnam{"мм"}
@@ -1717,6 +2826,12 @@ uk{
                 many{"{0}нм"}
                 one{"{0}нм"}
                 other{"{0}нм"}
+            }
+            nautical-mile{
+                few{"{0} м. мл"}
+                many{"{0} м. мл"}
+                one{"{0} м. мл"}
+                other{"{0} м. мл"}
             }
             parsec{
                 dnam{"парсек"}
@@ -1740,6 +2855,7 @@ uk{
                 other{"{0}пт"}
             }
             solar-radius{
+                dnam{"R☉"}
                 few{"{0}R☉"}
                 many{"{0}R☉"}
                 one{"{0}R☉"}
@@ -1753,6 +2869,9 @@ uk{
             }
         }
         light{
+            lux{
+                dnam{"лк"}
+            }
             solar-luminosity{
                 dnam{"L☉"}
                 few{"{0}L☉"}
@@ -1764,10 +2883,10 @@ uk{
         mass{
             carat{
                 dnam{"карат"}
-                few{"{0}CD"}
-                many{"{0}CD"}
-                one{"{0}CD"}
-                other{"{0}CD"}
+                few{"{0} кар."}
+                many{"{0} кар."}
+                one{"{0} кар."}
+                other{"{0} кар."}
             }
             dalton{
                 dnam{"Да"}
@@ -1783,20 +2902,27 @@ uk{
                 one{"{0}M⊕"}
                 other{"{0}M⊕"}
             }
+            grain{
+                dnam{"гр."}
+                few{"{0} гр."}
+                many{"{0} гр."}
+                one{"{0} гр."}
+                other{"{0} гр."}
+            }
             gram{
-                dnam{"грам"}
-                few{"{0} г"}
-                many{"{0} г"}
-                one{"{0} г"}
-                other{"{0} г"}
+                dnam{"г"}
+                few{"{0}г"}
+                many{"{0}г"}
+                one{"{0}г"}
+                other{"{0}г"}
                 per{"{0}/г"}
             }
             kilogram{
                 dnam{"кг"}
-                few{"{0} кг"}
-                many{"{0} кг"}
-                one{"{0} кг"}
-                other{"{0} кг"}
+                few{"{0}кг"}
+                many{"{0}кг"}
+                one{"{0}кг"}
+                other{"{0}кг"}
                 per{"{0}/кг"}
             }
             metric-ton{
@@ -1819,26 +2945,26 @@ uk{
                 other{"{0}мг"}
             }
             ounce{
-                dnam{"унц"}
-                few{"{0} унції"}
-                many{"{0} унцій"}
-                one{"{0} унція"}
-                other{"{0} унції"}
-                per{"{0}/унц"}
+                dnam{"ун."}
+                few{"{0} ун."}
+                many{"{0} ун."}
+                one{"{0} ун."}
+                other{"{0} ун."}
+                per{"{0}/ун"}
             }
             ounce-troy{
-                dnam{"тр. у"}
-                few{"{0}тр. у"}
-                many{"{0}тр. у"}
-                one{"{0}тр. у"}
-                other{"{0}тр. у"}
+                dnam{"тр. ун."}
+                few{"{0} тр. ун."}
+                many{"{0} тр. ун."}
+                one{"{0} тр. ун."}
+                other{"{0} тр. ун."}
             }
             pound{
                 dnam{"фнт"}
-                few{"{0} фунти"}
-                many{"{0} фунтів"}
-                one{"{0} фунт"}
-                other{"{0} фунта"}
+                few{"{0} фнт"}
+                many{"{0} фнт"}
+                one{"{0} фнт"}
+                other{"{0} фнт"}
                 per{"{0}/фнт"}
             }
             solar-mass{
@@ -1847,6 +2973,13 @@ uk{
                 many{"{0}M☉"}
                 one{"{0}M☉"}
                 other{"{0}M☉"}
+            }
+            stone{
+                dnam{"стн"}
+                few{"{0} стн"}
+                many{"{0} стн"}
+                one{"{0} стн"}
+                other{"{0} стн"}
             }
             ton{
                 dnam{"тонни"}
@@ -1870,6 +3003,7 @@ uk{
                 other{"{0} кВт"}
             }
             watt{
+                dnam{"Вт"}
                 few{"{0} Вт"}
                 many{"{0} Вт"}
                 one{"{0} Вт"}
@@ -1899,6 +3033,7 @@ uk{
                 other{"{0}ммрс"}
             }
             pound-force-per-square-inch{
+                dnam{"фнт/дюйм²"}
                 few{"{0}psi"}
                 many{"{0}psi"}
                 one{"{0}psi"}
@@ -1914,11 +3049,11 @@ uk{
                 other{"{0} км/год"}
             }
             knot{
-                dnam{"kn"}
-                few{"{0}kn"}
-                many{"{0}kn"}
-                one{"{0}kn"}
-                other{"{0}kn"}
+                dnam{"вуз."}
+                few{"{0} вуз."}
+                many{"{0} вуз."}
+                one{"{0} вуз."}
+                other{"{0} вуз."}
             }
             meter-per-second{
                 dnam{"м/с"}
@@ -1928,11 +3063,11 @@ uk{
                 other{"{0} м/с"}
             }
             mile-per-hour{
-                dnam{"ми/г"}
-                few{"{0} милі/год"}
-                many{"{0} миль/год"}
-                one{"{0} миля/год"}
-                other{"{0} милі/год"}
+                dnam{"мл/год"}
+                few{"{0} мл/год"}
+                many{"{0} мл/год"}
+                one{"{0} мл/год"}
+                other{"{0} мл/год"}
             }
         }
         temperature{
@@ -1944,6 +3079,7 @@ uk{
                 other{"{0}°C"}
             }
             fahrenheit{
+                dnam{"°F"}
                 few{"{0}°F"}
                 many{"{0}°F"}
                 one{"{0}°F"}
@@ -1957,6 +3093,7 @@ uk{
                 other{"{0}°"}
             }
             kelvin{
+                dnam{"К"}
                 few{"{0} К"}
                 many{"{0} К"}
                 one{"{0} К"}
@@ -1978,19 +3115,33 @@ uk{
             }
         }
         volume{
+            acre-foot{
+                dnam{"акр-фт"}
+                few{"{0} акр-фт"}
+                many{"{0} акр-фт"}
+                one{"{0} акр-фт"}
+                other{"{0} акр-фт"}
+            }
             barrel{
-                dnam{"бар."}
-                few{"{0}бар."}
-                many{"{0}бар."}
-                one{"{0}бар."}
-                other{"{0}бар."}
+                dnam{"брл"}
+                few{"{0} брл"}
+                many{"{0} брл"}
+                one{"{0} брл"}
+                other{"{0} брл"}
             }
             bushel{
-                dnam{"бушель"}
+                dnam{"буш."}
                 few{"{0}буш"}
                 many{"{0}буш"}
                 one{"{0}буш"}
                 other{"{0}буш"}
+            }
+            cubic-foot{
+                dnam{"фт³"}
+                few{"{0} фт³"}
+                many{"{0} фт³"}
+                one{"{0} фт³"}
+                other{"{0} фт³"}
             }
             cubic-kilometer{
                 few{"{0} км³"}
@@ -2004,26 +3155,104 @@ uk{
                 one{"{0} миля³"}
                 other{"{0} милі³"}
             }
+            cup{
+                dnam{"чаш."}
+                few{"{0} чаш."}
+                many{"{0} чаш."}
+                one{"{0} чаш."}
+                other{"{0} чаш."}
+            }
+            cup-metric{
+                dnam{"м. чаш."}
+                few{"{0} м. чаш."}
+                many{"{0} м. чаш."}
+                one{"{0} м. чаш."}
+                other{"{0} м. чаш."}
+            }
+            dessert-spoon-imperial{
+                dnam{"англ. дес. л."}
+                few{"{0} англ. дес. л."}
+                many{"{0} англ. дес. л."}
+                one{"{0} англ. дес. л."}
+                other{"{0} англ. дес. л."}
+            }
+            dram{
+                dnam{"рід. дрхм"}
+                few{"{0} рід. дрхм"}
+                many{"{0} рід. дрхм"}
+                one{"{0} рід. дрхм"}
+                other{"{0} рід. дрхм"}
+            }
+            drop{
+                dnam{"кр."}
+                few{"{0} кр."}
+                many{"{0} кр."}
+                one{"{0} кр."}
+                other{"{0} кр."}
+            }
             fluid-ounce-imperial{
-                dnam{"імп. рід. унц."}
-                few{"{0}ун.р.і"}
-                many{"{0}ун.р.і"}
-                one{"{0}ун.р.і"}
-                other{"{0}ун.р.і"}
+                dnam{"англ. рід. ун."}
+                few{"{0} англ. рід. ун."}
+                many{"{0} англ. рід. ун."}
+                one{"{0} англ. рід. ун."}
+                other{"{0} англ. рід. ун."}
+            }
+            gallon-imperial{
+                dnam{"англ. гал."}
+                few{"{0} англ. гал."}
+                many{"{0} англ. гал."}
+                one{"{0} англ. гал."}
+                other{"{0} англ. гал."}
+                per{"{0}/англ. гал."}
+            }
+            jigger{
+                dnam{"мір."}
+                few{"{0} мір."}
+                many{"{0} мір."}
+                one{"{0} мір."}
+                other{"{0} мір."}
             }
             liter{
-                dnam{"літр"}
-                few{"{0} л"}
-                many{"{0} л"}
-                one{"{0} л"}
-                other{"{0} л"}
+                dnam{"л"}
+                few{"{0}л"}
+                many{"{0}л"}
+                one{"{0}л"}
+                other{"{0}л"}
+            }
+            pinch{
+                dnam{"дріб."}
+                few{"{0} дріб."}
+                many{"{0} дріб."}
+                one{"{0} дріб."}
+                other{"{0} дріб."}
+            }
+            pint{
+                dnam{"пінт."}
+                few{"{0} пінт."}
+                many{"{0} пінт."}
+                one{"{0} пінт."}
+                other{"{0} пінт."}
+            }
+            pint-metric{
+                dnam{"м. пінт."}
+                few{"{0} м. пінт."}
+                many{"{0} м. пінт."}
+                one{"{0} м. пінт."}
+                other{"{0} м. пінт."}
+            }
+            quart-imperial{
+                dnam{"англ. квар."}
+                few{"{0} англ. квар."}
+                many{"{0} англ. квар."}
+                one{"{0} англ. квар."}
+                other{"{0} англ. квар."}
             }
         }
     }
     unitsShort{
         acceleration{
             g-force{
-                dnam{"сили тяжіння"}
+                dnam{"g"}
                 few{"{0} g"}
                 many{"{0} g"}
                 one{"{0} g"}
@@ -2039,11 +3268,11 @@ uk{
         }
         angle{
             arc-minute{
-                dnam{"мінути"}
-                few{"{0} мін."}
-                many{"{0} мін."}
-                one{"{0} мін."}
-                other{"{0} мін."}
+                dnam{"кут. мін."}
+                few{"{0} кут. мін."}
+                many{"{0} кут. мін."}
+                one{"{0} кут. мін."}
+                other{"{0} кут. мін."}
             }
             arc-second{
                 dnam{"кут. сек."}
@@ -2090,7 +3319,7 @@ uk{
                 other{"{0} дунама"}
             }
             hectare{
-                dnam{"гектари"}
+                dnam{"га"}
                 few{"{0} га"}
                 many{"{0} га"}
                 one{"{0} га"}
@@ -2365,7 +3594,7 @@ uk{
                 dnam{"дні"}
                 few{"{0} дн."}
                 many{"{0} дн."}
-                one{"{0} д."}
+                one{"{0} дн."}
                 other{"{0} дн."}
                 per{"{0}/дн."}
             }
@@ -2527,11 +3756,11 @@ uk{
                 other{"{0} кДж"}
             }
             kilowatt-hour{
-                dnam{"кВт год"}
-                few{"{0} кВт год"}
-                many{"{0} кВт год"}
-                one{"{0} кВт год"}
-                other{"{0} кВт год"}
+                dnam{"кВт⋅год"}
+                few{"{0} кВт⋅год"}
+                many{"{0} кВт⋅год"}
+                one{"{0} кВт⋅год"}
+                other{"{0} кВт⋅год"}
             }
             therm-us{
                 dnam{"ам. терми"}
@@ -2542,6 +3771,13 @@ uk{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"кВт⋅год/100 км"}
+                few{"{0} кВт⋅год/100 км"}
+                many{"{0} кВт⋅год/100 км"}
+                one{"{0} кВт⋅год/100 км"}
+                other{"{0} кВт⋅год/100 км"}
+            }
             newton{
                 dnam{"ньютон"}
                 few{"{0} Н"}
@@ -2610,11 +3846,11 @@ uk{
                 other{"{0} dpi"}
             }
             em{
-                dnam{"em"}
-                few{"{0} em"}
-                many{"{0} em"}
-                one{"{0} em"}
-                other{"{0} em"}
+                dnam{"ем"}
+                few{"{0} ем"}
+                many{"{0} ем"}
+                one{"{0} ем"}
+                other{"{0} ем"}
             }
             megapixel{
                 dnam{"Мп"}
@@ -2624,11 +3860,11 @@ uk{
                 other{"{0} Мп"}
             }
             pixel{
-                dnam{"px"}
-                few{"{0} px"}
-                many{"{0} px"}
-                one{"{0} px"}
-                other{"{0} px"}
+                dnam{"пкс"}
+                few{"{0} пкс"}
+                many{"{0} пкс"}
+                one{"{0} пкс"}
+                other{"{0} пкс"}
             }
             pixel-per-centimeter{
                 dnam{"ppcm"}
@@ -2670,18 +3906,18 @@ uk{
             }
             fathom{
                 dnam{"фатоми"}
-                few{"{0} фатоми"}
-                many{"{0} фатомів"}
-                one{"{0} фатом"}
-                other{"{0} фатома"}
+                few{"{0} фтм"}
+                many{"{0} фтм"}
+                one{"{0} фтм"}
+                other{"{0} фтм"}
             }
             foot{
-                dnam{"фут"}
-                few{"{0} фути"}
-                many{"{0} футів"}
-                one{"{0} фут"}
-                other{"{0} фута"}
-                per{"{0}/фут"}
+                dnam{"фт"}
+                few{"{0} фт"}
+                many{"{0} фт"}
+                one{"{0} фт"}
+                other{"{0} фт"}
+                per{"{0}/фт"}
             }
             furlong{
                 dnam{"фурлонги"}
@@ -2843,7 +4079,7 @@ uk{
                 other{"{0} грана"}
             }
             gram{
-                dnam{"грами"}
+                dnam{"г"}
                 few{"{0} г"}
                 many{"{0} г"}
                 one{"{0} г"}
@@ -2906,10 +4142,11 @@ uk{
                 dnam{"маси Сонця"}
             }
             stone{
-                few{"{0} st"}
-                many{"{0} st"}
-                one{"{0} st"}
-                other{"{0} st"}
+                dnam{"стоун"}
+                few{"{0} стн"}
+                many{"{0} стн"}
+                one{"{0} стн"}
+                other{"{0} стн"}
             }
             ton{
                 dnam{"тонни"}
@@ -3067,18 +4304,16 @@ uk{
         }
         temperature{
             celsius{
-                dnam{"град. Цельсія"}
-                few{"{0}°C"}
-                many{"{0}°C"}
-                one{"{0}°C"}
-                other{"{0}°C"}
+                few{"{0} °C"}
+                many{"{0} °C"}
+                one{"{0} °C"}
+                other{"{0} °C"}
             }
             fahrenheit{
-                dnam{"градус Фаренгейта"}
-                few{"{0}°F"}
-                many{"{0}°F"}
-                one{"{0}°F"}
-                other{"{0}°F"}
+                few{"{0} °F"}
+                many{"{0} °F"}
+                one{"{0} °F"}
+                other{"{0} °F"}
             }
             generic{
                 dnam{"°"}
@@ -3121,17 +4356,17 @@ uk{
             }
             barrel{
                 dnam{"барель"}
-                few{"{0} бр."}
-                many{"{0} бр."}
-                one{"{0} бр."}
-                other{"{0} бр."}
+                few{"{0} брл"}
+                many{"{0} брл"}
+                one{"{0} брл"}
+                other{"{0} брл"}
             }
             bushel{
                 dnam{"бушелі"}
-                few{"{0} буш"}
-                many{"{0} буш"}
-                one{"{0} буш"}
-                other{"{0} буш"}
+                few{"{0} буш."}
+                many{"{0} буш."}
+                one{"{0} буш."}
+                other{"{0} буш."}
             }
             centiliter{
                 dnam{"сл"}
@@ -3199,11 +4434,11 @@ uk{
                 other{"{0} скл."}
             }
             cup-metric{
-                dnam{"метричні скл."}
-                few{"{0} метричні скл."}
-                many{"{0} метричних скл."}
-                one{"{0} метрична скл."}
-                other{"{0} метричної скл."}
+                dnam{"метр. чашки"}
+                few{"{0} метр. чашки"}
+                many{"{0} метр. чашок"}
+                one{"{0} метр. чашка"}
+                other{"{0} метр. чашки"}
             }
             deciliter{
                 dnam{"дл"}
@@ -3241,18 +4476,18 @@ uk{
                 other{"{0} краплі"}
             }
             fluid-ounce{
-                dnam{"рід. ун."}
-                few{"{0} рід. ун."}
-                many{"{0} рід. ун."}
-                one{"{0} рід. ун."}
-                other{"{0} рід. ун."}
+                dnam{"рід. унція"}
+                few{"{0} рід. унції"}
+                many{"{0} рід. унцій"}
+                one{"{0} рід. унція"}
+                other{"{0} рід. унції"}
             }
             fluid-ounce-imperial{
-                dnam{"імперські р. унції"}
-                few{"{0} ун. р. імп"}
-                many{"{0} ун. р. імп"}
-                one{"{0} ун. р. імп"}
-                other{"{0} ун. р. імп"}
+                dnam{"англ. рід. унції"}
+                few{"{0} англ. рід. унції"}
+                many{"{0} англ. рід. унцій"}
+                one{"{0} англ. рід. унція"}
+                other{"{0} англ. рід. унції"}
             }
             gallon{
                 dnam{"гал."}
@@ -3285,7 +4520,7 @@ uk{
                 other{"{0} мірки"}
             }
             liter{
-                dnam{"літри"}
+                dnam{"л"}
                 few{"{0} л"}
                 many{"{0} л"}
                 one{"{0} л"}
@@ -3321,11 +4556,11 @@ uk{
                 other{"{0} пінти"}
             }
             pint-metric{
-                dnam{"метрична пінта"}
-                few{"{0} метричні пінти"}
-                many{"{0} метричних пінт"}
-                one{"{0} метрична пінта"}
-                other{"{0} метричної пінти"}
+                dnam{"метр. пінта"}
+                few{"{0} метр. пінти"}
+                many{"{0} метр. пінт"}
+                one{"{0} метр. пінта"}
+                other{"{0} метр. пінти"}
             }
             quart{
                 dnam{"квар."}
@@ -3342,11 +4577,11 @@ uk{
                 other{"{0} імп. квар."}
             }
             tablespoon{
-                dnam{"ст. л."}
-                few{"{0} ст. л."}
-                many{"{0} ст. л."}
-                one{"{0} ст. л."}
-                other{"{0} ст. л."}
+                dnam{"ст. ложка"}
+                few{"{0} ст. ложки"}
+                many{"{0} ст. ложок"}
+                one{"{0} ст. ложка"}
+                other{"{0} ст. ложки"}
             }
             teaspoon{
                 dnam{"ч. л."}

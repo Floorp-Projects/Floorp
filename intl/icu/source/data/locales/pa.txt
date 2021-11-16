@@ -247,6 +247,14 @@ pa{
             }
         }
         minimalPairs{
+            case{
+                nominative{"ਅਧਿਆਪਕ ਨੇ {0} ਪੜ੍ਹਾਇਆ"}
+                oblique{"ਅਧਿਆਪਕ ਨੇ {0} ਤੱਕ ਪੜ੍ਹਾਇਆ"}
+            }
+            gender{
+                feminine{"ਇਹ ਕਿੰਨੀ {0} ਦਾ ਹੈ"}
+                masculine{"ਇਹ ਕਿੰਨੇ {0} ਦਾ ਹੈ"}
+            }
             ordinal{
                 other{"ਸਜੇ ਪਾਸੇ {0} ਮੋੜ ਲਵੋ"}
             }
@@ -543,6 +551,16 @@ pa{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEdd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -559,6 +577,7 @@ pa{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM,y G"}
+                GyMd{"d/M/GGGGG y"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -712,6 +731,16 @@ pa{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -731,6 +760,7 @@ pa{
                 GyMMM{"MMM, G y"}
                 GyMMMEd{"E d MMM, G y"}
                 GyMMMd{"d MMM y"}
+                GyMd{"d/M/GGGGG y"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}

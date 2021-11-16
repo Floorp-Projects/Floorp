@@ -20,6 +20,16 @@ en_ZW{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEdd",
+                "GyMMMMdd",
+                "GyMMMdd",
+                "GGGGGyMd",
+            }
             availableFormats{
                 MMMEd{"E, dd MMM"}
                 MMMd{"dd MMM"}
@@ -45,6 +55,16 @@ en_ZW{
                 "{1} 'at' {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEdd",
+                "yMMMMdd",
+                "yMMMdd",
+                "yMd",
             }
             availableFormats{
                 MEd{"E, d/M"}

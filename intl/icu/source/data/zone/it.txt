@@ -1904,6 +1904,9 @@ it{
             lg{"Ora di Ekaterinburg"}
             ls{"Ora standard di Ekaterinburg"}
         }
+        "meta:Yukon"{
+            ls{"Ora dello Yukon"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

@@ -32,6 +32,7 @@ hsb{
         151{"wuchodna Europa"}
         154{"sewjerna Europa"}
         155{"zapadna Europa"}
+        202{"subsaharaska Afrika"}
         419{"Łaćonska Amerika"}
         AC{"Ascension"}
         AD{"Andorra"}
@@ -107,6 +108,7 @@ hsb{
         ES{"Španiska"}
         ET{"Etiopiska"}
         EU{"Europska unija"}
+        EZ{"europasmo"}
         FI{"Finska"}
         FJ{"Fidźi"}
         FK{"Falklandske kupy"}
@@ -182,6 +184,7 @@ hsb{
         MF{"St. Martin"}
         MG{"Madagaskar"}
         MH{"Marshallowe kupy"}
+        MK{"Serwjerna Makedonska"}
         ML{"Mali"}
         MM{"Myanmar"}
         MN{"Mongolska"}
@@ -285,6 +288,8 @@ hsb{
         VU{"Vanuatu"}
         WF{"Wallis a Futuna"}
         WS{"Samoa"}
+        XA{"pseudo-akcenty"}
+        XB{"pseudo-bidi"}
         XK{"Kosowo"}
         YE{"Jemen"}
         YT{"Mayotte"}

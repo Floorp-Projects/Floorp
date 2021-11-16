@@ -3,7 +3,6 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 es_MX{
     %%Parent{"es_419"}
-    AuxExemplarCharacters{"[à ă â å ä ã ā æ ç è ĕ ê ë ē ì ĭ î ï ī ò ŏ ô ö ø ō œ ù ŭ û ū ÿ]"}
     MoreInformation{"[...]"}
     NumberElements{
         latn{
@@ -101,7 +100,7 @@ es_MX{
                 "EEEE, d 'de' MMMM 'de' y G",
                 "d 'de' MMMM 'de' y G",
                 "d MMM, y G",
-                "dd/MM/yy GGGGG",
+                "d/M/y GGGGG",
                 "{1} {0}",
                 "{1}, {0}",
                 "{1}, {0}",
@@ -155,7 +154,17 @@ es_MX{
                 "{1}, {0}",
                 "{1}, {0}",
                 "{1} {0}",
-                "{1} {0}",
+                "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMMdd",
             }
             availableFormats{
                 EHm{"E HH:mm"}
@@ -163,9 +172,7 @@ es_MX{
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
                 GyMMMd{"d MMM y G"}
-                Hmsv{"HH:mm:ss v"}
                 Hmsvvvv{"HH:mm:ss (vvvv)"}
-                Hmv{"HH:mm v"}
                 MMMEd{"E d 'de' MMM"}
                 MMd{"d/MM"}
                 MMdd{"dd/MM"}

@@ -34,7 +34,7 @@ U_NAMESPACE_USE
 /**
  * Verify that fmt is a SimpleDateFormat. Invalid error if not.
  * @param fmt the UDateFormat, definitely a DateFormat, maybe something else
- * @param status error code, will be set to failure if there is a familure or the fmt is NULL.
+ * @param status error code, will be set to failure if there is a failure or the fmt is NULL.
  */
 static void verifyIsSimpleDateFormat(const UDateFormat* fmt, UErrorCode *status) {
    if(U_SUCCESS(*status) &&
@@ -704,6 +704,10 @@ udat_getSymbols(const   UDateFormat     *fmt,
         res = syms->getQuarters(count, DateFormatSymbols::FORMAT, DateFormatSymbols::ABBREVIATED);
         break;
 
+    case UDAT_NARROW_QUARTERS:
+        res = syms->getQuarters(count, DateFormatSymbols::FORMAT, DateFormatSymbols::NARROW);
+        break;
+        
     case UDAT_STANDALONE_QUARTERS:
         res = syms->getQuarters(count, DateFormatSymbols::STANDALONE, DateFormatSymbols::WIDE);
         break;
@@ -712,6 +716,10 @@ udat_getSymbols(const   UDateFormat     *fmt,
         res = syms->getQuarters(count, DateFormatSymbols::STANDALONE, DateFormatSymbols::ABBREVIATED);
         break;
 
+    case UDAT_STANDALONE_NARROW_QUARTERS:
+        res = syms->getQuarters(count, DateFormatSymbols::STANDALONE, DateFormatSymbols::NARROW);
+        break;
+        
     case UDAT_CYCLIC_YEARS_WIDE:
         res = syms->getYearNames(count, DateFormatSymbols::FORMAT, DateFormatSymbols::WIDE);
         break;
@@ -842,6 +850,10 @@ udat_countSymbols(    const    UDateFormat                *fmt,
         syms->getQuarters(count, DateFormatSymbols::FORMAT, DateFormatSymbols::ABBREVIATED);
         break;
 
+    case UDAT_NARROW_QUARTERS:
+        syms->getQuarters(count, DateFormatSymbols::FORMAT, DateFormatSymbols::NARROW);
+        break;
+        
     case UDAT_STANDALONE_QUARTERS:
         syms->getQuarters(count, DateFormatSymbols::STANDALONE, DateFormatSymbols::WIDE);
         break;
@@ -850,6 +862,10 @@ udat_countSymbols(    const    UDateFormat                *fmt,
         syms->getQuarters(count, DateFormatSymbols::STANDALONE, DateFormatSymbols::ABBREVIATED);
         break;
 
+    case UDAT_STANDALONE_NARROW_QUARTERS:
+        syms->getQuarters(count, DateFormatSymbols::STANDALONE, DateFormatSymbols::NARROW);
+        break;
+        
     case UDAT_CYCLIC_YEARS_WIDE:
         syms->getYearNames(count, DateFormatSymbols::FORMAT, DateFormatSymbols::WIDE);
         break;
@@ -1049,6 +1065,13 @@ public:
     }
 
     static void
+        setNarrowQuarter(DateFormatSymbols *syms, int32_t index,
+        const UChar *value, int32_t valueLength, UErrorCode &errorCode)
+    {
+        setSymbol(syms->fNarrowQuarters, syms->fNarrowQuartersCount, index, value, valueLength, errorCode);
+    }
+    
+    static void
         setStandaloneQuarter(DateFormatSymbols *syms, int32_t index,
         const UChar *value, int32_t valueLength, UErrorCode &errorCode)
     {
@@ -1062,6 +1085,13 @@ public:
         setSymbol(syms->fStandaloneShortQuarters, syms->fStandaloneShortQuartersCount, index, value, valueLength, errorCode);
     }
 
+    static void
+        setStandaloneNarrowQuarter(DateFormatSymbols *syms, int32_t index,
+        const UChar *value, int32_t valueLength, UErrorCode &errorCode)
+    {
+        setSymbol(syms->fStandaloneNarrowQuarters, syms->fStandaloneNarrowQuartersCount, index, value, valueLength, errorCode);
+    }
+    
     static void
         setShortYearNames(DateFormatSymbols *syms, int32_t index,
         const UChar *value, int32_t valueLength, UErrorCode &errorCode)
@@ -1179,6 +1209,10 @@ udat_setSymbols(    UDateFormat             *format,
         DateFormatSymbolsSingleSetter::setShortQuarter(syms, index, value, valueLength, *status);
         break;
 
+    case UDAT_NARROW_QUARTERS:
+        DateFormatSymbolsSingleSetter::setNarrowQuarter(syms, index, value, valueLength, *status);
+        break;
+        
     case UDAT_STANDALONE_QUARTERS:
         DateFormatSymbolsSingleSetter::setStandaloneQuarter(syms, index, value, valueLength, *status);
         break;
@@ -1187,6 +1221,10 @@ udat_setSymbols(    UDateFormat             *format,
         DateFormatSymbolsSingleSetter::setStandaloneShortQuarter(syms, index, value, valueLength, *status);
         break;
 
+    case UDAT_STANDALONE_NARROW_QUARTERS:
+        DateFormatSymbolsSingleSetter::setStandaloneNarrowQuarter(syms, index, value, valueLength, *status);
+        break;
+        
     case UDAT_CYCLIC_YEARS_ABBREVIATED:
         DateFormatSymbolsSingleSetter::setShortYearNames(syms, index, value, valueLength, *status);
         break;
@@ -1247,7 +1285,7 @@ udat_getContext(const UDateFormat* fmt, UDisplayContextType type, UErrorCode* st
 /**
  * Verify that fmt is a RelativeDateFormat. Invalid error if not.
  * @param fmt the UDateFormat, definitely a DateFormat, maybe something else
- * @param status error code, will be set to failure if there is a familure or the fmt is NULL.
+ * @param status error code, will be set to failure if there is a failure or the fmt is NULL.
  */
 static void verifyIsRelativeDateFormat(const UDateFormat* fmt, UErrorCode *status) {
    if(U_SUCCESS(*status) &&

@@ -331,6 +331,10 @@ jv{
             "LRD",
             "Dolar Liberia",
         }
+        LSL{
+            "LSL",
+            "Lesotho Loti",
+        }
         LYD{
             "LYD",
             "Dinar Libya",
@@ -885,6 +889,9 @@ jv{
         }
         LRD{
             other{"Dolar Liberia"}
+        }
+        LSL{
+            other{"Lesotho lotis"}
         }
         LYD{
             other{"Dinar Libya"}

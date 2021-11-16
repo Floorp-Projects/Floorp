@@ -609,6 +609,9 @@ ig{
             lg{"Oge Yekaterinburg"}
             ls{"Oge Izugbe Yekaterinburg"}
         }
+        "meta:Yukon"{
+            ls{"Oge Yukon"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

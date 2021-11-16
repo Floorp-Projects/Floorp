@@ -459,6 +459,7 @@ to{
         rap{"lea fakalapanui"}
         rar{"lea fakalalotonga"}
         rgn{"lea fakalomaniolo"}
+        rhg{"lea fakalouhingia"}
         rif{"lea fakalifi"}
         rm{"lea fakalaito-lomēnia"}
         rn{"lea fakaluaniti"}
@@ -639,6 +640,9 @@ to{
     Languages%short{
         en_GB{"lea fakapilitānia"}
         en_US{"lea fakapālangi-ʻAmelika"}
+    }
+    Languages%variant{
+        ckb{"lea fakakūtisi-solani"}
     }
     Scripts{
         Afak{"tohinima fakaʻafaka"}

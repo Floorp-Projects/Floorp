@@ -72,6 +72,21 @@ yo_BJ{
         "Etc:Unknown"{
             ec{"Ìlú Àìmɔ̀"}
         }
+        "meta:Africa_Western"{
+            ld{"Àkókò Ìwɔ̀-Oòrùn Ooru Afírikà"}
+            lg{"Àkókò Ìwɔ̀-Oòrùn Afírikà"}
+            ls{"Àkókò Ìwɔ̀-Oòrùn Àfɛnukò Afírikà"}
+        }
+        "meta:Alaska"{
+            ld{"Àkókò Ìyálɛ̀ta Alásíkà"}
+            lg{"Àkókò Alásíkà"}
+            ls{"Àkókò Àfɛnukò Alásíkà"}
+        }
+        "meta:Amazon"{
+            ld{"Àkókò Oru Amásɔ́nì"}
+            lg{"Àkókò Amásɔ́nì"}
+            ls{"Àkókò Afɛnukò Amásɔ́nì"}
+        }
         "meta:America_Central"{
             ld{"Akókò àárín gbùngbùn ojúmɔmɔ"}
             lg{"àkókò àárín gbùngbùn"}
@@ -97,10 +112,30 @@ yo_BJ{
             lg{"Aago Ajɛntìnà"}
             ls{"Aago àsìkò Argentina"}
         }
+        "meta:Argentina_Western"{
+            ld{"Àkókò Oru Iwɔ́-oòrùn Ajɛ́ntínà"}
+            lg{"Àkókò Iwɔ́-oòrùn Ajɛ́ntínà"}
+            ls{"Àkókò Iwɔ́-oòrùn Àfɛnukò Ajɛ́ntínà"}
+        }
         "meta:Atlantic"{
             ld{"Àkókò Ìyálɛta Àtìláńtíìkì"}
             lg{"Àkókò Àtìláńtíìkì"}
             ls{"Àkókò àsikò Àtìláńtíìkì"}
+        }
+        "meta:Azores"{
+            ld{"Àkókò Ooru Ásɔ́sì"}
+            lg{"Àkókò Ásɔ́sì"}
+            ls{"Àkókò Àfɛnukò Ásɔ́sì"}
+        }
+        "meta:Cape_Verde"{
+            ld{"Àkókò Sɔ́mà Képú Fáàdì"}
+            lg{"Àkókò Képú Fáàdì"}
+            ls{"Àkókò Àfɛnukò Képú Fáàdì"}
+        }
+        "meta:Chile"{
+            ld{"Àkókò Oru Shílè"}
+            lg{"Àkókò Shílè"}
+            ls{"Àkókò Àfɛnukò Shílè"}
         }
         "meta:China"{
             ld{"Àkókò Ojúmɔmɔ Sháínà"}
@@ -127,6 +162,11 @@ yo_BJ{
             lg{"Àkókò Ìwɔ Oòrùn Europe"}
             ls{"Àkókò àsikò Ìwɔ Oòrùn Europe"}
         }
+        "meta:Falkland"{
+            ld{"Àkókò Ooru Etíkun Fókílándì"}
+            lg{"Àkókò Fókílándì"}
+            ls{"Àkókò Àfɛnukò Etíkun Fókílándì"}
+        }
         "meta:Greenland_Eastern"{
             ld{"Àkókò ìgbà Ooru Greenland"}
             lg{"Àkókò Ìlà oorùn Greenland"}
@@ -145,6 +185,16 @@ yo_BJ{
         "meta:Indonesia_Western"{
             ls{"Àkókò Ìwɔ̀ oorùn Indonesia"}
         }
+        "meta:Irkutsk"{
+            ld{"Àkókò Sɔmà Íkúsíkì"}
+            lg{"Àkókò Íkósíkì"}
+            ls{"Àkókò Àfɛnukò Íkósíkì"}
+        }
+        "meta:Mauritius"{
+            ld{"Àkókò Ooru Máríshúshì"}
+            lg{"Àkókò Máríshúshì"}
+            ls{"Àkókò Àfɛnukò Máríshúshì"}
+        }
         "meta:Mexico_Northwest"{
             ld{"Àkókò Ojúmɔmɔ Apá Ìwɔ̀ Oorùn Mɛ́shíkò"}
             lg{"Àkókò Apá Ìwɔ̀ Oorùn Mɛ́shíkò"}
@@ -160,10 +210,37 @@ yo_BJ{
             lg{"Àkókò Newfoundland"}
             ls{"Àkókò Àfɛnukò Newfoundland"}
         }
+        "meta:Paraguay"{
+            ld{"Àkókò Ooru Párágúwè"}
+            lg{"Àkókò Párágúwè"}
+            ls{"Àkókò Àfɛnukò Párágúwè"}
+        }
+        "meta:Peru"{
+            ld{"Àkókò Ooru Pérù"}
+            lg{"Àkókò Pérù"}
+            ls{"Àkókò Àfɛnukò Pérù"}
+        }
         "meta:Pierre_Miquelon"{
             ld{"Àkókò Ojúmɔmɔ Pierre & Miquelon"}
             lg{"Àkókò Pierre & Miquelon"}
             ls{"Àkókò Àfɛnukò Pierre & Miquelon"}
+        }
+        "meta:Reunion"{
+            ls{"Àkókò Rɛ́yúníɔ́nì"}
+        }
+        "meta:Seychelles"{
+            ls{"Àkókò Sèshɛ́ɛ̀lì"}
+        }
+        "meta:South_Georgia"{
+            ls{"Àkókò Gúsù Jɔ́jíà"}
+        }
+        "meta:Uruguay"{
+            ld{"Aago Soma Uruguay"}
+            lg{"Aago Uruguay"}
+            ls{"Àkókò Àfɛnukò Úrúgúwè"}
+        }
+        "meta:Yukon"{
+            ls{"Àkókò Yúkɔ́nì"}
         }
         regionFormatDaylight{"{0} Àkókò ojúmɔmɔ"}
     }

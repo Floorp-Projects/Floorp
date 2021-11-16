@@ -209,6 +209,13 @@ te{
             }
         }
         minimalPairs{
+            case{
+                accusative{"{0} వంటకమును వండింది"}
+                dative{"పార్వతి శివుని {0} తపం చేసింది"}
+                instrumental{"{0} చేత రావణుడు సంహరింపబడ్డాడు"}
+                locative{"అన్ని దిక్కుల {0} విష్ణువు ఉన్నాడు"}
+                nominative{"{0} పాఠము చదువుతున్నాడు"}
+            }
             ordinal{
                 other{"{0}వ కుడి మలుపు తీసుకోండి."}
             }
@@ -495,6 +502,16 @@ te{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
                 Bh{"B h"}
                 Bhm{"B h:mm"}
@@ -672,6 +689,16 @@ te{
                 "{1} {0}కి",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMMdd",
             }
             appendItems{
                 Timezone{"{0} {1}"}

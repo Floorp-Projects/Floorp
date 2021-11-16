@@ -8,6 +8,7 @@ timezoneTypes:table(nofallback){
             cnckg{"cnsha"}
             cnhrb{"cnsha"}
             cnkhg{"cnurc"}
+            gaza{"gazastrp"}
             usnavajo{"usden"}
         }
     }
@@ -92,6 +93,7 @@ timezoneTypes:table(nofallback){
             "Mexico:BajaSur"{"America/Mazatlan"}
             "Mexico:General"{"America/Mexico_City"}
             "Pacific:Chuuk"{"Pacific/Truk"}
+            "Pacific:Kanton"{"Pacific/Enderbury"}
             "Pacific:Pohnpei"{"Pacific/Ponape"}
             "Pacific:Samoa"{"Pacific/Pago_Pago"}
             "Pacific:Yap"{"Pacific/Truk"}
@@ -387,7 +389,7 @@ timezoneTypes:table(nofallback){
             "Asia:Dubai"{"aedxb"}
             "Asia:Dushanbe"{"tjdyu"}
             "Asia:Famagusta"{"cyfmg"}
-            "Asia:Gaza"{"gaza"}
+            "Asia:Gaza"{"gazastrp"}
             "Asia:Hebron"{"hebron"}
             "Asia:Hong_Kong"{"hkhkg"}
             "Asia:Hovd"{"mnhvd"}

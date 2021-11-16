@@ -26,15 +26,12 @@ es_AR{
             availableFormats{
                 GyMMMEd{"E, d 'de' MMM 'de' y G"}
                 GyMMMd{"d MMM y G"}
-                Hmsv{"HH:mm:ss v"}
                 Hmsvvvv{"HH:mm:ss (vvvv)"}
-                Hmv{"HH:mm v"}
                 MEd{"E d-M"}
                 hms{"hh:mm:ss"}
                 yM{"M-y"}
                 yMEd{"E, d/M/y"}
-                yMMM{"MMM y"}
-                yMMMEd{"E, d MMM y"}
+                yMMMd{"d 'de' MMM 'de' y"}
             }
             dayNames{
                 format{

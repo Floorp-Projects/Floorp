@@ -173,16 +173,16 @@ et{
                         other{"000 mld"}
                     }
                     1000000000000{
-                        one{"0 trl"}
-                        other{"0 trl"}
+                        one{"0 trln"}
+                        other{"0 trln"}
                     }
                     10000000000000{
-                        one{"00 trl"}
-                        other{"00 trl"}
+                        one{"00 trln"}
+                        other{"00 trln"}
                     }
                     100000000000000{
-                        one{"000 trl"}
-                        other{"000 trl"}
+                        one{"000 trln"}
+                        other{"000 trln"}
                     }
                 }
             }
@@ -297,6 +297,16 @@ et{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMdd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -313,6 +323,7 @@ et{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d. MMMM y G"}
                 GyMMMd{"d. MMM y G"}
+                GyMd{"d.MM.y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"H:mm:ss"}
@@ -343,6 +354,21 @@ et{
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
+                Gy{
+                    G{"y G – y G"}
+                    y{"y–y G"}
+                }
+                GyM{
+                    G{"M.y GGGGG – M.y GGGGG"}
+                    M{"M.y–M.y GGGGG"}
+                    y{"M.y–M.y GGGGG"}
+                }
+                GyMEd{
+                    G{"E, d.MM.y GGGGG – E, d.MM.y GGGGG"}
+                    M{"E, d.MM.y – E, d.MM.y GGGGG"}
+                    d{"E, d.MM.y – E, d.MM.y GGGGG"}
+                    y{"E, d.MM.y – E, d.MM.y GGGGG"}
+                }
                 GyMMM{
                     G{"MMM y G – MMM y G"}
                     M{"MMM–MMM y G"}
@@ -359,6 +385,12 @@ et{
                     M{"d. MMM y G – d. MMM"}
                     d{"d.–d. MMM y G"}
                     y{"d. MMM y G – d. MMM y"}
+                }
+                GyMd{
+                    G{"d.MM.y GGGGG – d.MM.y GGGGG"}
+                    M{"d.MM.y–d.MM.y GGGGG"}
+                    d{"d.MM.y–d.MM.y GGGGG"}
+                    y{"d.MM.y–d.MM.y GGGGG"}
                 }
                 H{
                     H{"HH–HH"}
@@ -480,6 +512,16 @@ et{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMMdd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -499,6 +541,7 @@ et{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d. MMMM y G"}
                 GyMMMd{"d. MMM y G"}
+                GyMd{"d.MM.y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -569,13 +612,13 @@ et{
                         "L",
                     }
                     wide{
-                        "pühapäev",
-                        "esmaspäev",
-                        "teisipäev",
-                        "kolmapäev",
-                        "neljapäev",
-                        "reede",
-                        "laupäev",
+                        "Pühapäev",
+                        "Esmaspäev",
+                        "Teisipäev",
+                        "Kolmapäev",
+                        "Neljapäev",
+                        "Reede",
+                        "Laupäev",
                     }
                 }
                 stand-alone{
@@ -607,13 +650,13 @@ et{
                         "L",
                     }
                     wide{
-                        "pühapäev",
-                        "esmaspäev",
-                        "teisipäev",
-                        "kolmapäev",
-                        "neljapäev",
-                        "reede",
-                        "laupäev",
+                        "Pühapäev",
+                        "Esmaspäev",
+                        "Teisipäev",
+                        "Kolmapäev",
+                        "Neljapäev",
+                        "Reede",
+                        "Laupäev",
                     }
                 }
             }
@@ -708,6 +751,17 @@ et{
                     G{"y G – y G"}
                     y{"y–y G"}
                 }
+                GyM{
+                    G{"M.y GGGGG – M.y GGGGG"}
+                    M{"M.y–M.y GGGGG"}
+                    y{"M.y–M.y GGGGG"}
+                }
+                GyMEd{
+                    G{"E, d.MM.y GGGGG – E, d.MM.y GGGGG"}
+                    M{"E, d.MM.y – E, d.MM.y GGGGG"}
+                    d{"E, d.MM.y – E, d.MM.y GGGGG"}
+                    y{"E, d.MM.y – E, d.MM.y GGGGG"}
+                }
                 GyMMM{
                     G{"MMM y G – MMM y G"}
                     M{"MMM–MMM y G"}
@@ -724,6 +778,12 @@ et{
                     M{"d. MMM – d. MMM y G"}
                     d{"d.–d. MMM y G"}
                     y{"d. MMM y – d. MMM y G"}
+                }
+                GyMd{
+                    G{"d.MM.y GGGGG – d.MM.y GGGGG"}
+                    M{"d.MM.y–d.MM.y GGGGG"}
+                    d{"d.MM.y–d.MM.y GGGGG"}
+                    y{"d.MM.y–d.MM.y GGGGG"}
                 }
                 H{
                     H{"HH–HH"}

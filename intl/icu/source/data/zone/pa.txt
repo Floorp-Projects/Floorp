@@ -1921,6 +1921,9 @@ pa{
             lg{"ਯਕੇਤਰਿਨਬਰਗ ਵੇਲਾ"}
             ls{"ਯਕੇਤਰਿਨਬਰਗ ਮਿਆਰੀ ਵੇਲਾ"}
         }
+        "meta:Yukon"{
+            ls{"ਯੂਕੋਨ ਸਮਾਂ"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

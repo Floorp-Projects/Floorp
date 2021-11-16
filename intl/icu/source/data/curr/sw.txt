@@ -1113,6 +1113,10 @@ sw{
             one{"dola ya Liberia"}
             other{"dola za Liberia"}
         }
+        LSL{
+            one{"Loti za Lesoto"}
+            other{"Loti za Lesoto"}
+        }
         LTL{
             one{"Litas ya Lithuania"}
             other{"Litas za Lithuania"}

@@ -59,7 +59,7 @@ $inword = [[:L:][:M:]];
 # Some online texts use U+1C7C PHAARKAA instead of U+1C7B RELAA for indicating
 # long phonemes, presumably because the graphemes look similar in some fonts.
 # Since phaarkaa is used for voicing ejectives and plosives (which cannot
-# be lenghtened), we rewrite phaarkaa to relaa.
+# be lengthened), we rewrite phaarkaa to relaa.
 [ᱚᱟᱤᱩᱮᱳᱶᱢᱝᱞᱱ] [ᱹᱸᱺ]* {ᱼ} → ᱻ ;
 ::null();
 ᱚᱹᱻ → ɔː ;

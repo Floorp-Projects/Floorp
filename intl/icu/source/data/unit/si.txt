@@ -22,14 +22,14 @@ si{
         }
         angle{
             arc-minute{
-                dnam{"මිනිත්තු"}
-                one{"මිනිත්තු {0}"}
-                other{"මිනිත්තු {0}"}
+                dnam{"චාපමිනිත්තු"}
+                one{"චාපමිනිත්තු {0}"}
+                other{"චාපමිනිත්තු {0}"}
             }
             arc-second{
-                dnam{"තත්පර"}
-                one{"තත්පර {0}"}
-                other{"තත්පර {0}"}
+                dnam{"චාපතත්පර"}
+                one{"චාපතත්පර {0}"}
+                other{"චාපතත්පර {0}"}
             }
             degree{
                 dnam{"අංශක"}
@@ -160,6 +160,11 @@ si{
             }
         }
         concentr{
+            item{
+                dnam{"අයිතම"}
+                one{"{0} අයිතමයක්"}
+                other{"අයිතම {0}ක්"}
+            }
             karat{
                 dnam{"ක්‍රාත්"}
                 one{"ක්‍රාත් {0}"}
@@ -426,6 +431,11 @@ si{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"කිලෝමීටර 100 කට කිලෝවොට් පැය"}
+                one{"කිලෝමීටර 100 කට කිලෝවොට් පැය {0}"}
+                other{"කිලෝමීටර 100 කට කිලෝවොට් පැය {0}"}
+            }
             newton{
                 dnam{"නිව්ටන්"}
                 one{"{0} නිව්ටන්"}
@@ -1043,15 +1053,20 @@ si{
                 one{"{0} G"}
                 other{"{0} G"}
             }
+            meter-per-square-second{
+                dnam{"මී/තව"}
+            }
         }
         angle{
             arc-minute{
-                one{"මිනිත්තු {0}"}
-                other{"මිනිත්තු {0}"}
+                dnam{"චාපමිනිත්තු"}
+                one{"{0}′"}
+                other{"{0}′"}
             }
             arc-second{
-                one{"තත් {0}"}
-                other{"තත් {0}"}
+                dnam{"චාපතත්පර"}
+                one{"{0}″"}
+                other{"{0}″"}
             }
             degree{
                 one{"{0}°"}
@@ -1064,24 +1079,37 @@ si{
                 other{"අක්කර {0}"}
             }
             hectare{
-                one{"{0} ha"}
+                one{"හෙක් {0}"}
                 other{"{0} ha"}
             }
+            square-centimeter{
+                one{"වසෙ{0}"}
+                other{"වසෙ{0}"}
+            }
             square-foot{
-                one{"{0} ft²"}
-                other{"{0} ft²"}
+                dnam{"වඅ²"}
+                one{"{0}වඅ²"}
+                other{"{0}වඅ²"}
+            }
+            square-inch{
+                dnam{"වඅඟ²"}
+                one{"{0}වඅඟ²"}
+                other{"{0}වඅඟ²"}
+                per{"{0}/වඅඟ²"}
             }
             square-kilometer{
                 one{"{0} km²"}
                 other{"{0} km²"}
-            }
-            square-meter{
-                one{"{0} m²"}
-                other{"{0} m²"}
+                per{"{0}/ව.කී"}
             }
             square-mile{
-                one{"{0} mi²"}
-                other{"{0} mi²"}
+                dnam{"ව.සැ"}
+                one{"ව.සැ{0}"}
+                other{"ව.සැ{0}"}
+                per{"{0}/ව.සැ"}
+            }
+            square-yard{
+                dnam{"වයා"}
             }
         }
         compound{
@@ -1116,10 +1144,21 @@ si{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"අයිතමය"}
+                one{"{0} අයිතමයක්"}
+                other{"අයිතම {0}ක්"}
+            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
                 other{"{0}%"}
+            }
+            permillion{
+                dnam{"මිලිකො"}
+            }
+            permyriad{
+                dnam{"‱"}
             }
         }
         consumption{
@@ -1127,6 +1166,14 @@ si{
                 dnam{"ලී/කිමී100"}
                 one{"ලී/කිමී100 {0}"}
                 other{"ලී/කිමී100 {0}"}
+            }
+            mile-per-gallon{
+                dnam{"හැගැ"}
+            }
+            mile-per-gallon-imperial{
+                dnam{"ගැහැ එ.රා."}
+                one{"{0} ගැහැ එ.රා."}
+                other{"{0} ගැහැ එ.රා."}
             }
         }
         coordinate{
@@ -1178,6 +1225,40 @@ si{
                 other{"ව {0}"}
             }
         }
+        electric{
+            ampere{
+                dnam{"ඇ"}
+            }
+            milliampere{
+                dnam{"මිඇ"}
+            }
+        }
+        energy{
+            electronvolt{
+                dnam{"ඉවෝ"}
+            }
+            kilojoule{
+                dnam{"කිජු"}
+            }
+            therm-us{
+                dnam{"එජ තාප ඒකක"}
+                one{"එජ තාප ඒකක {0}"}
+                other{"එජ තාප ඒකක {0}"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"කිවොපැ/100කිමී"}
+                one{"{0}කිවොපැ/100කිමී"}
+                other{"{0} කිවොපැ/100කිමී"}
+            }
+            newton{
+                dnam{"නි"}
+            }
+            pound-force{
+                dnam{"බරා"}
+            }
+        }
         length{
             centimeter{
                 dnam{"සෙ.මී"}
@@ -1198,6 +1279,7 @@ si{
                 other{"කි.මී {0}"}
             }
             light-year{
+                dnam{"ආ.ව"}
                 one{"ආ.ව {0}"}
                 other{"ආ.ව {0}"}
             }
@@ -1216,8 +1298,12 @@ si{
                 other{"මිමී {0}"}
             }
             picometer{
+                dnam{"පිමී"}
                 one{"පිමී {0}"}
                 other{"පිමී {0}"}
+            }
+            solar-radius{
+                dnam{"අ☉"}
             }
             yard{
                 one{"යාර {0}"}
@@ -1225,37 +1311,42 @@ si{
             }
         }
         mass{
+            dalton{
+                dnam{"ඩෝ"}
+            }
+            earth-mass{
+                dnam{"ස්⊕"}
+            }
+            grain{
+                dnam{"ඇ"}
+                one{"ඇ {0}"}
+                other{"ඇ {0}"}
+            }
             gram{
                 dnam{"ග්‍රෑම්"}
                 one{"ග්‍රෑ. {0}"}
                 other{"ග්‍රෑ. {0}"}
+                per{"{0}/ග්‍රෑ"}
             }
             kilogram{
                 dnam{"කි.ග්‍රෑ."}
                 one{"කිග්‍රෑ{0}"}
                 other{"කිග්‍රෑ{0}"}
+                per{"{0}/කිග්‍රෑ"}
             }
             ounce{
-                one{"අවුන්ස {0}"}
-                other{"අවුන්ස {0}"}
+                dnam{"අවුස"}
+                one{"අවුස{0}"}
+                other{"අවුස{0}"}
+                per{"{0}/අවුස"}
             }
             pound{
-                one{"රා. {0}"}
-                other{"රා. {0}"}
+                dnam{"රා"}
+                one{"රා{0}"}
+                other{"රා{0}"}
             }
-        }
-        power{
-            horsepower{
-                one{"{0} hp"}
-                other{"{0} hp"}
-            }
-            kilowatt{
-                one{"{0} kW"}
-                other{"{0} kW"}
-            }
-            watt{
-                one{"{0} W"}
-                other{"{0} W"}
+            solar-mass{
+                dnam{"ස්☉"}
             }
         }
         pressure{
@@ -1264,8 +1355,9 @@ si{
                 other{"{0} hPa"}
             }
             inch-ofhg{
-                one{"රසදිය {0}\u0022"}
-                other{"රසදිය {0}\u0022"}
+                dnam{"\u0022 ර"}
+                one{"ර {0}\u0022"}
+                other{"ර {0}\u0022"}
             }
             millibar{
                 one{"මි.බා. {0}"}
@@ -1279,12 +1371,14 @@ si{
                 other{"කිමී/පැ {0}"}
             }
             meter-per-second{
+                dnam{"මී/තත්"}
                 one{"මී/තත් {0}"}
                 other{"මී/තත් {0}"}
             }
             mile-per-hour{
-                one{"පැ/සැ {0}"}
-                other{"පැ/සැ {0}"}
+                dnam{"පැ/සැ"}
+                one{"පැසැ {0}"}
+                other{"පැසැ {0}"}
             }
         }
         temperature{
@@ -1297,15 +1391,22 @@ si{
                 one{"ෆැර. {0}°"}
                 other{"ෆැර. {0}°"}
             }
+            kelvin{
+                dnam{"කෙ"}
+                one{"කෙ {0}"}
+                other{"කෙ {0}"}
+            }
         }
         volume{
+            cubic-inch{
+                dnam{"අල්³"}
+            }
             cubic-kilometer{
-                one{"{0} km³"}
+                one{"කිමී³ {0}"}
                 other{"{0} km³"}
             }
-            cubic-mile{
-                one{"{0} mi³"}
-                other{"{0} mi³"}
+            dessert-spoon-imperial{
+                dnam{"ඉම්පී. අතුරුපස හැඳි"}
             }
             liter{
                 dnam{"ලීටර්"}
@@ -1329,14 +1430,14 @@ si{
         }
         angle{
             arc-minute{
-                dnam{"මිනිත්තු"}
-                one{"මිනිත්තු {0}"}
-                other{"මිනිත්තු {0}"}
+                dnam{"චාපමිනිත්තු"}
+                one{"චාපමිනිත්තු {0}"}
+                other{"චාපමිනිත්තු {0}"}
             }
             arc-second{
-                dnam{"තත්පර"}
-                one{"තත් {0}"}
-                other{"තත් {0}"}
+                dnam{"චාපතත්පර"}
+                one{"චාපතත්පර {0}"}
+                other{"චාපතත්පර {0}"}
             }
             degree{
                 dnam{"අංශක"}
@@ -1378,8 +1479,8 @@ si{
             }
             square-foot{
                 dnam{"වර්ග අඩි"}
-                one{"{0} ft²"}
-                other{"{0} ft²"}
+                one{"වර්ග අඩි {0}"}
+                other{"වර්ග අඩි {0}"}
             }
             square-inch{
                 dnam{"වර්ග අඟල්"}
@@ -1444,6 +1545,11 @@ si{
             times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"අයිතමය"}
+                one{"{0} අයිතමයක්"}
+                other{"අයිතම {0}ක්"}
+            }
             karat{
                 dnam{"ක්‍රාත්"}
                 one{"ක්‍රාත් {0}"}
@@ -1710,6 +1816,11 @@ si{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"කිවොපැ/100කිමී"}
+                one{"{0} කිවොපැ/100කිමී"}
+                other{"{0} කිවොපැ/100කිමී"}
+            }
             newton{
                 dnam{"නිව්ටන්"}
                 one{"{0} නි"}

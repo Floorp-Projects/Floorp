@@ -578,6 +578,16 @@ br{
                 "{1}, {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGyMMdd",
+            }
             availableFormats{
                 Ed{"E d"}
                 Gy{"y G"}
@@ -730,6 +740,16 @@ br{
                 "{1} 'da' {0}",
                 "{1}, {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "rMMMMEEEEd",
+                "rMMMMd",
+                "rMMMd",
+                "rMMdd",
             }
             availableFormats{
                 Bh{"h B"}
@@ -1524,6 +1544,16 @@ br{
                 "{1}, {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGyMMdd",
+            }
             availableFormats{
                 Ed{"E d"}
                 Gy{"y G"}
@@ -1744,6 +1774,16 @@ br{
                 "{1} 'da' {0}",
                 "{1}, {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "rMMMMEEEEd",
+                "rMMMMd",
+                "rMMMd",
+                "rMMdd",
             }
             availableFormats{
                 E{"ccc"}
@@ -2622,6 +2662,16 @@ br{
                 "{1}, {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGyMMdd",
+            }
             availableFormats{
                 Ed{"E d"}
                 Gy{"y G"}
@@ -2843,6 +2893,16 @@ br{
                 "{1}, {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGyMMdd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -3047,6 +3107,16 @@ br{
                 "{1} 'da' {0}",
                 "{1}, {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yMMdd",
             }
             appendItems{
                 Timezone{"{0} {1}"}
@@ -3513,6 +3583,16 @@ br{
                 "{1}, {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGyMMdd",
+            }
             availableFormats{
                 E{"ccc"}
                 Ed{"E d"}
@@ -3970,6 +4050,16 @@ br{
                 "{1} 'da' {0}",
                 "{1}, {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGyMMdd",
             }
             availableFormats{
                 Ed{"E d"}
@@ -4816,6 +4906,16 @@ br{
                 "{1}, {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGyMMdd",
+            }
             availableFormats{
                 Ed{"E d"}
                 Gy{"y G"}
@@ -4974,6 +5074,16 @@ br{
                 "{1} 'da' {0}",
                 "{1}, {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGyMMdd",
             }
             availableFormats{
                 Ed{"E d"}

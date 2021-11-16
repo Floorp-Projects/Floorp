@@ -7,4 +7,49 @@ ti{
         hms{"h:mm:ss"}
         ms{"m:ss"}
     }
+    units{
+        duration{
+            century{
+                dnam{"ዘመናት"}
+                one{"{0} ዘመን"}
+                other{"{0} ዘመናት"}
+            }
+            decade{
+                dnam{"ዓሰርተታት ዓመታት"}
+                one{"{0} ዓሰርተ ዓመት"}
+                other{"{0} ዓሰርተታት ዓመታት"}
+            }
+            year{
+                dnam{"ዓመታት"}
+            }
+        }
+    }
+    unitsNarrow{
+        duration{
+            century{
+                dnam{"ዘመን"}
+                one{"{0} ዘመን"}
+                other{"{0} ዘመናት"}
+            }
+            decade{
+                dnam{"ዓሰርተ ዓመት"}
+                one{"{0} ዓ.ዓ."}
+                other{"{0} ዓ.ዓ."}
+            }
+        }
+    }
+    unitsShort{
+        duration{
+            century{
+                dnam{"ዘመን"}
+                one{"{0} ዘመን"}
+                other{"{0} ዘመናት"}
+            }
+            decade{
+                dnam{"ዓሰርተ ዓመት"}
+                one{"{0} ዓሰ.ዓመ."}
+                other{"{0} ዓሰ.ዓመ."}
+            }
+        }
+    }
 }

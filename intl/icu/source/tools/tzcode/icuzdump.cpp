@@ -213,7 +213,9 @@ class ZoneIterator {
 public:
     ZoneIterator(UBool bAll = false) {
         if (bAll) {
-            zenum = TimeZone::createEnumeration();
+            UErrorCode status = U_ZERO_ERROR;
+            zenum = TimeZone::createEnumeration(status);
+            // TODO: Add error case handling later.
         }
         else {
             zenum = NULL;

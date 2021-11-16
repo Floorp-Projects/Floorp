@@ -1883,6 +1883,9 @@ uz{
             lg{"Yekaterinburg vaqti"}
             ls{"Yekaterinburg standart vaqti"}
         }
+        "meta:Yukon"{
+            ls{"Yukon vaqti"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

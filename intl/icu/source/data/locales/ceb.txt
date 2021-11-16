@@ -52,6 +52,16 @@ ceb{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMd",
+            }
             availableFormats{
                 Ed{"d E"}
                 Ehm{"E h:mm a"}
@@ -60,6 +70,7 @@ ceb{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, MMM d, y G"}
                 GyMMMd{"MMM d, y G"}
+                GyMd{"M/d/y GGGGG"}
                 MEd{"E, M/d"}
                 MMMEd{"E, MMM d"}
                 Md{"M/d"}
@@ -201,6 +212,16 @@ ceb{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -217,6 +238,7 @@ ceb{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, MMM d, y G"}
                 GyMMMd{"MMM d, y G"}
+                GyMd{"M/d/y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}

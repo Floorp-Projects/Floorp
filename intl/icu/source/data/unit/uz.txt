@@ -155,6 +155,11 @@ uz{
             }
         }
         concentr{
+            item{
+                dnam{"elementlar"}
+                one{"{0} element"}
+                other{"{0} ta element"}
+            }
             karat{
                 dnam{"karat"}
                 one{"{0} karat"}
@@ -416,6 +421,11 @@ uz{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100km"}
+                one{"{0} kWh/100km"}
+                other{"{0} kWh/100km"}
+            }
             newton{
                 dnam{"nyuton"}
                 one{"{0} nyuton"}
@@ -1183,6 +1193,10 @@ uz{
             dot{
                 dnam{"piksel"}
             }
+            dot-per-centimeter{
+                one{"{0} nqt/sm"}
+                other{"{0} nuqta/sm"}
+            }
         }
         length{
             centimeter{
@@ -1228,6 +1242,22 @@ uz{
             yard{
                 one{"{0} yard"}
                 other{"{0} yard"}
+            }
+        }
+        light{
+            candela{
+                dnam{"kd"}
+                one{"{0}kd"}
+                other{"{0}kd"}
+            }
+            lumen{
+                one{"{0}lm"}
+                other{"{0}lm"}
+            }
+            solar-luminosity{
+                dnam{"L☉"}
+                one{"{0}L☉"}
+                other{"{0}L☉"}
             }
         }
         mass{
@@ -1302,6 +1332,17 @@ uz{
             fahrenheit{
                 one{"{0}°F"}
                 other{"{0}°F"}
+            }
+        }
+        torque{
+            newton-meter{
+                one{"{0}N⋅m"}
+                other{"{0}N⋅m"}
+            }
+            pound-force-foot{
+                dnam{"funt-fut"}
+                one{"{0} funt-fut"}
+                other{"{0} funt-fut"}
             }
         }
         volume{
@@ -1466,6 +1507,11 @@ uz{
             times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"element"}
+                one{"{0} element"}
+                other{"{0} ta element"}
+            }
             karat{
                 dnam{"karat"}
                 one{"{0} kt"}
@@ -1732,6 +1778,11 @@ uz{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100km"}
+                one{"{0} kWh/100km"}
+                other{"{0} kWh/100km"}
+            }
             newton{
                 dnam{"nyuton"}
                 one{"{0} N"}

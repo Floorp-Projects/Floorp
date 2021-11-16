@@ -10,6 +10,7 @@ rm{
         default{"latn"}
         latn{
             miscPatterns{
+                approximately{"≈{0}"}
                 atLeast{"≥{0}"}
                 range{"{0}–{1}"}
             }
@@ -21,6 +22,7 @@ rm{
                 scientificFormat{"#E0"}
             }
             symbols{
+                approximatelySign{"≈"}
                 decimal{"."}
                 exponential{"E"}
                 group{"’"}
@@ -36,6 +38,9 @@ rm{
             }
         }
         minimalPairs{
+            ordinal{
+                other{"Prender la {0}. a dretga."}
+            }
             plural{
                 one{"{0} di"}
                 other{"{0} dis"}
@@ -60,6 +65,16 @@ rm{
                 "{1} 'a' 'las' {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMdd",
+                "GGGGGyMMdd",
             }
             availableFormats{
                 E{"ccc"}
@@ -248,6 +263,16 @@ rm{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMdd",
+                "yyMMdd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -264,6 +289,7 @@ rm{
                 GyMMMMEd{"E, d MMMM y G"}
                 GyMMMMd{"d MMMM y G"}
                 GyMMMd{"dd-MM-y GGGGG"}
+                GyMd{"dd-MM-y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -274,6 +300,10 @@ rm{
                 MMM{"LLL"}
                 MMMEd{"E, dd-MM"}
                 MMMMEd{"E, d MMMM"}
+                MMMMW{
+                    one{"W. 'emna' MMMM"}
+                    other{"W. 'emna' MMMM"}
+                }
                 MMMMd{"d MMMM"}
                 MMMd{"dd-MM"}
                 Md{"dd-MM"}
@@ -296,6 +326,10 @@ rm{
                 yMd{"dd-MM-y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    one{"w. 'dal' Y"}
+                    other{"w. 'emna' 'dal' Y"}
+                }
             }
             dayNames{
                 format{
@@ -691,14 +725,32 @@ rm{
         minute{
             dn{"minuta"}
         }
+        minute-narrow{
+            dn{"min"}
+        }
+        minute-short{
+            dn{"min"}
+        }
         month{
             dn{"mais"}
         }
         quarter{
             dn{"quartal"}
         }
+        quarter-narrow{
+            dn{"qrtl"}
+        }
+        quarter-short{
+            dn{"qrtl"}
+        }
         second{
             dn{"secunda"}
+        }
+        second-narrow{
+            dn{"s"}
+        }
+        second-short{
+            dn{"s"}
         }
         sun-short{
             relativeTime{

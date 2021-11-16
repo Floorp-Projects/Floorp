@@ -160,6 +160,11 @@ ne{
             }
         }
         concentr{
+            item{
+                dnam{"वस्तुहरू"}
+                one{"{0} वस्तु"}
+                other{"{0} वटा वस्तुहरू"}
+            }
             karat{
                 dnam{"कराट"}
                 one{"{0}कराट"}
@@ -426,6 +431,11 @@ ne{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"किलोवाट-घण्टा प्रति १०० किलोमिटर"}
+                one{"{0} किलोवाट-घण्टा प्रति १०० किलोमिटर"}
+                other{"{0} किलोवाट घण्टा प्रति १०० किलोमिटर"}
+            }
             newton{
                 dnam{"न्युटन"}
                 one{"{0} न्युटन"}
@@ -1128,6 +1138,9 @@ ne{
             }
         }
         concentr{
+            item{
+                dnam{"वस्तु"}
+            }
             percent{
                 dnam{"प्रतिशत"}
                 one{"{0}प्रतिशत"}
@@ -1234,6 +1247,12 @@ ne{
             yard{
                 one{"{0} गज"}
                 other{"{0} गज"}
+            }
+        }
+        light{
+            solar-luminosity{
+                one{"{0}L☉"}
+                other{"{0} L☉"}
             }
         }
         mass{
@@ -1470,6 +1489,11 @@ ne{
             times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"वस्तु"}
+                one{"{0} वस्तु"}
+                other{"{0} वस्तु"}
+            }
             karat{
                 dnam{"कराट"}
                 one{"{0} kt"}
@@ -1734,6 +1758,11 @@ ne{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/१०० किमी"}
+                one{"{0} kWh/१०० किमी"}
+                other{"{0} kWh/१०० किमी"}
+            }
             newton{
                 dnam{"न्युटन"}
                 one{"{0} न्युटन"}

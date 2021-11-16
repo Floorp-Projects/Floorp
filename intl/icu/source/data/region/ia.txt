@@ -34,10 +34,12 @@ ia{
         155{"Europa occidental"}
         202{"Africa subsaharian"}
         419{"America latin"}
+        AC{"Insula del Ascension"}
         AD{"Andorra"}
         AE{"Emiratos Arabe Unite"}
         AF{"Afghanistan"}
         AG{"Antigua e Barbuda"}
+        AI{"Anguilla"}
         AL{"Albania"}
         AM{"Armenia"}
         AO{"Angola"}
@@ -46,17 +48,23 @@ ia{
         AS{"Samoa american"}
         AT{"Austria"}
         AU{"Australia"}
+        AW{"Aruba"}
         AX{"Insulas Åland"}
         AZ{"Azerbaidzhan"}
         BA{"Bosnia e Herzegovina"}
+        BB{"Barbados"}
         BD{"Bangladesh"}
         BE{"Belgica"}
         BF{"Burkina Faso"}
         BG{"Bulgaria"}
+        BH{"Bahrain"}
         BI{"Burundi"}
         BJ{"Benin"}
+        BL{"Sancte Bartholomeo"}
         BM{"Bermuda"}
+        BN{"Brunei"}
         BO{"Bolivia"}
+        BQ{"Paises Basse caribe"}
         BR{"Brasil"}
         BS{"Bahamas"}
         BT{"Bhutan"}
@@ -65,23 +73,33 @@ ia{
         BY{"Bielorussia"}
         BZ{"Belize"}
         CA{"Canada"}
+        CC{"Insulas Cocos (Keeling)"}
+        CD{"Congo - Kinshasa"}
         CF{"Republica African Central"}
-        CG{"Congo"}
+        CG{"Congo - Brazzaville"}
         CH{"Suissa"}
+        CI{"Costa de Ebore"}
         CK{"Insulas Cook"}
         CL{"Chile"}
         CM{"Camerun"}
         CN{"China"}
         CO{"Colombia"}
+        CP{"Insula Clipperton"}
         CR{"Costa Rica"}
         CU{"Cuba"}
+        CV{"Capo Verde"}
+        CW{"Curaçao"}
         CX{"Insula de Natal"}
         CY{"Cypro"}
         CZ{"Chechia"}
         DE{"Germania"}
+        DG{"Diego Garcia"}
+        DJ{"Djibuti"}
         DK{"Danmark"}
+        DM{"Dominica"}
         DO{"Republica Dominican"}
         DZ{"Algeria"}
+        EA{"Ceuta e Melilla"}
         EC{"Ecuador"}
         EE{"Estonia"}
         EG{"Egypto"}
@@ -92,11 +110,14 @@ ia{
         EU{"Union Europee"}
         EZ{"Zona euro"}
         FI{"Finlandia"}
+        FJ{"Fiji"}
+        FK{"Insulas Falkland"}
         FM{"Micronesia"}
         FO{"Insulas Feroe"}
         FR{"Francia"}
         GA{"Gabon"}
         GB{"Regno Unite"}
+        GD{"Grenada"}
         GE{"Georgia"}
         GF{"Guyana francese"}
         GG{"Guernsey"}
@@ -105,14 +126,21 @@ ia{
         GL{"Groenlandia"}
         GM{"Gambia"}
         GN{"Guinea"}
+        GP{"Guadeloupe"}
         GQ{"Guinea equatorial"}
         GR{"Grecia"}
+        GS{"Georgia del Sud e Insulas Sandwich Austral"}
         GT{"Guatemala"}
+        GU{"Guam"}
         GW{"Guinea-Bissau"}
+        GY{"Guyana"}
+        HK{"Hongkong, R.A.S. de China"}
+        HM{"Insulas Heard e McDonald"}
         HN{"Honduras"}
         HR{"Croatia"}
         HT{"Haiti"}
         HU{"Hungaria"}
+        IC{"Insulas Canari"}
         ID{"Indonesia"}
         IE{"Irlanda"}
         IL{"Israel"}
@@ -124,6 +152,7 @@ ia{
         IS{"Islanda"}
         IT{"Italia"}
         JE{"Jersey"}
+        JM{"Jamaica"}
         JO{"Jordania"}
         JP{"Japon"}
         KE{"Kenya"}
@@ -134,8 +163,10 @@ ia{
         KN{"Sancte Christophoro e Nevis"}
         KP{"Corea del Nord"}
         KR{"Corea del Sud"}
+        KW{"Kuwait"}
         KY{"Insulas de Caiman"}
         KZ{"Kazakhstan"}
+        LA{"Laos"}
         LB{"Libano"}
         LC{"Sancte Lucia"}
         LI{"Liechtenstein"}
@@ -150,14 +181,21 @@ ia{
         MC{"Monaco"}
         MD{"Moldavia"}
         ME{"Montenegro"}
+        MF{"Sancte Martino francese"}
         MG{"Madagascar"}
         MH{"Insulas Marshall"}
-        MK{"Macedonia"}
+        MK{"Macedonia del Nord"}
         ML{"Mali"}
+        MM{"Myanmar (Birmania)"}
         MN{"Mongolia"}
+        MO{"Macao, R.A.S. de China"}
         MP{"Insulas Marianna del Nord"}
+        MQ{"Martinica"}
         MR{"Mauritania"}
+        MS{"Montserrat"}
         MT{"Malta"}
+        MU{"Mauritio"}
+        MV{"Maldivas"}
         MW{"Malawi"}
         MX{"Mexico"}
         MY{"Malaysia"}
@@ -171,6 +209,8 @@ ia{
         NL{"Nederlandia"}
         NO{"Norvegia"}
         NP{"Nepal"}
+        NR{"Nauru"}
+        NU{"Niue"}
         NZ{"Nove Zelanda"}
         OM{"Oman"}
         PA{"Panama"}
@@ -181,9 +221,15 @@ ia{
         PK{"Pakistan"}
         PL{"Polonia"}
         PM{"St. Pierre e Miquelon"}
+        PN{"Insulas Pitcairn"}
+        PR{"Porto Rico"}
+        PS{"Territorios palestin"}
         PT{"Portugal"}
+        PW{"Palau"}
         PY{"Paraguay"}
+        QA{"Qatar"}
         QO{"Oceania remote"}
+        RE{"Reunion"}
         RO{"Romania"}
         RS{"Serbia"}
         RU{"Russia"}
@@ -193,6 +239,8 @@ ia{
         SC{"Seychelles"}
         SD{"Sudan"}
         SE{"Svedia"}
+        SG{"Singapur"}
+        SH{"Sancte Helena"}
         SI{"Slovenia"}
         SJ{"Svalbard e Jan Mayen"}
         SK{"Slovachia"}
@@ -202,9 +250,12 @@ ia{
         SO{"Somalia"}
         SR{"Suriname"}
         SS{"Sudan del Sud"}
+        ST{"São Tomé e Príncipe"}
         SV{"El Salvador"}
+        SX{"Sancte Martino nederlandese"}
         SY{"Syria"}
-        SZ{"Swazilandia"}
+        SZ{"Eswatini"}
+        TA{"Tristan da Cunha"}
         TC{"Insulas Turcos e Caicos"}
         TD{"Tchad"}
         TF{"Territorios meridional francese"}
@@ -223,6 +274,7 @@ ia{
         TZ{"Tanzania"}
         UA{"Ukraina"}
         UG{"Uganda"}
+        UM{"Insulas peripheric del SUA"}
         UN{"Nationes Unite"}
         US{"Statos Unite"}
         UY{"Uruguay"}
@@ -230,20 +282,35 @@ ia{
         VA{"Citate del Vaticano"}
         VC{"Sancte Vincente e le Grenadinas"}
         VE{"Venezuela"}
+        VG{"Insulas Virgine britannic"}
+        VI{"Insulas Virgine statounitese"}
+        VN{"Vietnam"}
         VU{"Vanuatu"}
+        WF{"Wallis e Futuna"}
         WS{"Samoa"}
+        XA{"Pseudo-accentos"}
+        XB{"Pseudo-bidi"}
         XK{"Kosovo"}
         YE{"Yemen"}
-        ZA{"Sudafrica"}
+        YT{"Mayotte"}
+        ZA{"Africa del Sud"}
         ZM{"Zambia"}
         ZW{"Zimbabwe"}
         ZZ{"Region incognite"}
     }
     Countries%short{
-        GB{"GB"}
+        GB{"RU"}
+        HK{"Hongkong"}
+        MO{"Macao"}
+        PS{"Palestina"}
         US{"SUA"}
     }
     Countries%variant{
+        CD{"Congo (RDC)"}
+        CG{"Congo (Republica)"}
+        CI{"Republica de Côte d’Ivoire"}
         CZ{"Republica Chec"}
+        FK{"Insulas Falkland (Malvinas)"}
+        SZ{"Swazilandia"}
     }
 }

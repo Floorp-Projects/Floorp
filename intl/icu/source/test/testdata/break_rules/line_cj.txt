@@ -6,7 +6,7 @@
 # file: line.txt
 #
 # Reference Line Break rules for intltest rbbi/RBBIMonkeyTest.
-# Rules derived from Unicode Standard Annex #14 Revision 44 for Unicode 13.0
+# Rules derived from Unicode Standard Annex #14 for Unicode 14.0.
 #
 # Note: Rule syntax and the monkey test itself are still a work in progress.
 #       They are expected to change with review and the addition of support for rule tailoring.
@@ -74,6 +74,9 @@ CP30 = [CP - [\p{ea=F}\p{ea=W}\p{ea=H}]];
 
 OP30 = [OP - [\p{ea=F}\p{ea=W}\p{ea=H}]];
 CP30 = [CP - [\p{ea=F}\p{ea=W}\p{ea=H}]];
+
+# The redundant-looking inner brackets are required for the current parser in the test code.
+ExtPictUnassigned = [[\p{Extended_Pictographic}]&[\p{Cn}]];
 
 # LB1 - Resolve AI, CB, CJ, SA, SG, and XX into other line breaking classes
 AL = [AL AI SG XX ];
@@ -195,9 +198,8 @@ LB26.1:      JL CM* (JL | JV | H2 | H3);
 LB26.2:      (JV | H2) CM* (JV | JT);
 LB26.3:      (JT | H3) CM* JT;
 
-LB27.1:      (JL | JV | JT | H2 | H3) CM* IN;
-LB27.2:      (JL | JV | JT | H2 | H3) CM* PO;
-LB27.3:      PR CM* (JL | JV | JT | H2 | H3);
+LB27.1:      (JL | JV | JT | H2 | H3) CM* PO;
+LB27.2:      PR CM* (JL | JV | JT | H2 | H3);
 
 # LB28 Do not break between Alphabetics.
 #      Unattached (leading) CM treated as AL.
@@ -214,8 +216,9 @@ LB30a.1:     RI CM* RI         ÷ [^BK CR LF NL SP ZW WJ CL CP EX IS SY GL QU BA
 LB30a.2:     RI CM* RI CM* CMS ÷ [^BK CR LF NL SP ZW WJ CL CP EX IS SY GL QU BA HY NS IN CM];
 LB30a.3:     RI CM* RI CM* [BK CR LF NL SP ZW WJ GL CL CP EX IS SY QU BA HY NS IN ZWJ]?;
 
-# LB30b Do not break between Emoji Base and Emoji Modifier
-LB30b:       EB CM* EM;
+# LB30b Do not break between Emoji Base (or potential emoji) and Emoji Modifier
+LB30b.1:       EB CM* EM;
+LB30b.2:       ExtPictUnassigned CM* EM;
 
 # LB31 Break Everywhere Else.
 #      Include combining marks

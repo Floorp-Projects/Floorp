@@ -94,6 +94,7 @@ pt_PT{
         pt_BR{"português do Brasil"}
         pt_PT{"português europeu"}
         raj{"rajastanês"}
+        rhg{"rohingya"}
         ro_MD{"moldávio"}
         se{"sami do norte"}
         sga{"irlandês antigo"}
@@ -148,7 +149,6 @@ pt_PT{
         Sylo{"siloti nagri"}
         Tale{"tai le"}
         Telu{"telugu"}
-        Zsye{"emoji"}
         Zsym{"símbolos"}
         Zxxx{"não escrito"}
     }

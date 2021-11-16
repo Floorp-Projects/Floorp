@@ -51,6 +51,7 @@ pcm{
         de_AT{"Ọ́stria Jámán"}
         de_CH{"Swítzaland Haí Jámán"}
         dje{"Zármá"}
+        doi{"Dogri"}
         dsb{"Lówá Sorbiá"}
         dua{"Duála Lángwej"}
         dyo{"Jóla-Fónyi Lángwej"}
@@ -173,6 +174,7 @@ pcm{
         nmg{"Kwasió Lángwej"}
         nn{"Nọwẹ́jiá Niúnọsk"}
         nnh{"Ngiẹ́mbọn Lángwej"}
+        no{"Nọ́wẹ́jiá Lángwej"}
         nus{"Núa"}
         ny{"Nyánja"}
         nyn{"Nyankólẹ"}
@@ -188,6 +190,7 @@ pcm{
         pt_BR{"Brazíl Pọtiugíz"}
         pt_PT{"Yúróp Pọtiugíz"}
         qu{"Kẹchuá"}
+        rhg{"Rohínjia"}
         rm{"Románsh"}
         rn{"Rúndi"}
         ro{"Romániá Lángwej"}
