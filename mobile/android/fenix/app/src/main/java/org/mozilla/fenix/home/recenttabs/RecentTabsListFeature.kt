@@ -51,7 +51,7 @@ sealed class RecentTab {
     /**
      * A search term group that was recently viewed
      *
-     * @param searchTerm The search term that was recently viewed
+     * @param searchTerm The search term that was recently viewed. Forced to start with uppercase.
      * @param tabId The id of the tab that was recently viewed
      * @param url The url that was recently viewed
      * @param thumbnail The thumbnail of the search term that was recently viewed

@@ -9,6 +9,8 @@ import mozilla.components.browser.state.state.TabSessionState
 data class TabGroup(
     /**
      * The search term used for the tab group.
+     * Not case dependant - searches with difference letter cases will be part of the same group.
+     * This property's value is then forced to start with an uppercase character.
      */
     val searchTerm: String,
 

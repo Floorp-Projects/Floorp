@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home
 
 import android.graphics.Bitmap
+import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
@@ -15,11 +16,13 @@ import mozilla.components.lib.state.Store
 import mozilla.components.service.pocket.PocketRecommendedStory
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.ext.getFilteredStories
+import org.mozilla.fenix.ext.recentSearchGroup
 import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.home.recenttabs.RecentTab
 import org.mozilla.fenix.home.pocket.POCKET_STORIES_TO_SHOW_COUNT
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
+import org.mozilla.fenix.home.recenttabs.RecentTab.SearchGroup
 
 /**
  * The [Store] for holding the [HomeFragmentState] and applying [HomeFragmentAction]s.
@@ -125,7 +128,12 @@ private fun homeFragmentStateReducer(
             tip = action.tip,
             recentBookmarks = action.recentBookmarks,
             recentTabs = action.recentTabs,
-            historyMetadata = action.historyMetadata
+            historyMetadata = if (action.historyMetadata.isNotEmpty() && action.recentTabs.isNotEmpty()) {
+                val recentSearchGroup = action.recentTabs.find { it is SearchGroup } as SearchGroup?
+                action.historyMetadata.filterOut(recentSearchGroup?.searchTerm)
+            } else {
+                action.historyMetadata
+            }
         )
         is HomeFragmentAction.CollectionExpanded -> {
             val newExpandedCollection = state.expandedCollections.toMutableSet()
@@ -148,11 +156,23 @@ private fun homeFragmentStateReducer(
             state.copy(showCollectionPlaceholder = false)
         }
         is HomeFragmentAction.RemoveSetDefaultBrowserCard -> state.copy(showSetAsDefaultBrowserCard = false)
-        is HomeFragmentAction.RecentTabsChange -> state.copy(recentTabs = action.recentTabs)
+        is HomeFragmentAction.RecentTabsChange -> {
+            val recentSearchGroup = action.recentTabs.find { it is SearchGroup } as SearchGroup?
+            state.copy(
+                recentTabs = action.recentTabs,
+                historyMetadata = state.historyMetadata.filterOut(recentSearchGroup?.searchTerm)
+            )
+        }
         is HomeFragmentAction.RecentBookmarksChange -> state.copy(recentBookmarks = action.recentBookmarks)
-        is HomeFragmentAction.HistoryMetadataChange -> state.copy(historyMetadata = action.historyMetadata)
+        is HomeFragmentAction.HistoryMetadataChange -> state.copy(
+            historyMetadata = action.historyMetadata.filterOut(state.recentSearchGroup?.searchTerm)
+        )
         is HomeFragmentAction.DisbandSearchGroupAction -> state.copy(
-            historyMetadata = state.historyMetadata.filter { it.title.lowercase() != action.searchTerm.lowercase() }
+            historyMetadata = state.historyMetadata
+                .filter {
+                    it.title.lowercase() != action.searchTerm.lowercase() &&
+                        it.title.lowercase() != state.recentSearchGroup?.searchTerm?.lowercase()
+                }
         )
         is HomeFragmentAction.SelectPocketStoriesCategory -> {
             val updatedCategoriesState = state.copy(
@@ -219,5 +239,18 @@ private fun homeFragmentStateReducer(
 
             state.copy(pocketStoriesCategories = updatedCategories)
         }
+    }
+}
+
+/**
+ * Removes a [HistoryMetadataGroup] identified by [groupTitle] if it exists in the current list.
+ *
+ * @param groupTitle [HistoryMetadataGroup.title] of the item that should be removed.
+ */
+@VisibleForTesting
+internal fun List<HistoryMetadataGroup>.filterOut(groupTitle: String?): List<HistoryMetadataGroup> {
+    return when (groupTitle != null) {
+        true -> filterNot { it.title.equals(groupTitle, true) }
+        false -> this
     }
 }

@@ -109,34 +109,58 @@ class HomeFragmentStoreTest {
 
     @Test
     fun `Test changing the recent tabs in HomeFragmentStore`() = runBlocking {
+        val historyGroup1 = HistoryMetadataGroup(title = "historyGroup1")
+        val historyGroup2 = HistoryMetadataGroup(title = "historyGroup2")
+        val historyGroup3 = HistoryMetadataGroup(title = "historyGroup3")
+        homeFragmentStore = HomeFragmentStore(
+            HomeFragmentState(
+                historyMetadata = listOf(historyGroup1, historyGroup2, historyGroup3)
+            )
+        )
         assertEquals(0, homeFragmentStore.state.recentTabs.size)
 
-        // Add 2 TabSessionState to the HomeFragmentStore.
-        val recentTabs: List<RecentTab> = listOf(mockk(), mockk())
+        // Add 2 RecentTabs to the HomeFragmentStore
+        // A new SearchGroup already shown in history should hide the HistoryGroup.
+        val recentTab1: RecentTab.Tab = mockk()
+        val recentTab2 = RecentTab.SearchGroup(historyGroup2.title, "tabId", "url", null, 2)
+        val recentTabs: List<RecentTab> = listOf(recentTab1, recentTab2)
         homeFragmentStore.dispatch(HomeFragmentAction.RecentTabsChange(recentTabs)).join()
 
         assertEquals(recentTabs, homeFragmentStore.state.recentTabs)
+        assertEquals(listOf(historyGroup1, historyGroup3), homeFragmentStore.state.historyMetadata)
     }
 
     @Test
     fun `Test changing the history metadata in HomeFragmentStore`() = runBlocking {
+        val recentGroup = RecentTab.SearchGroup("testSearchTerm", "id", "url", null, 3)
+        homeFragmentStore = HomeFragmentStore(
+            HomeFragmentState(recentTabs = listOf(recentGroup))
+        )
         assertEquals(0, homeFragmentStore.state.historyMetadata.size)
 
-        val historyMetadata: List<HistoryMetadataGroup> = listOf(mockk(), mockk())
+        val historyGroup1 = HistoryMetadataGroup(recentGroup.searchTerm.lowercase())
+        val historyGroup2 = HistoryMetadataGroup("differentTitle")
+        val historyMetadata: List<HistoryMetadataGroup> = listOf(historyGroup1, historyGroup2)
         homeFragmentStore.dispatch(HomeFragmentAction.HistoryMetadataChange(historyMetadata)).join()
 
-        assertEquals(historyMetadata, homeFragmentStore.state.historyMetadata)
+        assertEquals(listOf(historyGroup2), homeFragmentStore.state.historyMetadata)
     }
 
     @Test
     fun `Test disbanding search group in HomeFragmentStore`() = runBlocking {
+        val recentGroup = RecentTab.SearchGroup("testSearchTerm", "id", "url", null, 3)
         val g1 = HistoryMetadataGroup(title = "test One")
         val g2 = HistoryMetadataGroup(title = "test two")
-        val historyMetadata: List<HistoryMetadataGroup> = listOf(g1, g2)
-        homeFragmentStore.dispatch(HomeFragmentAction.HistoryMetadataChange(historyMetadata)).join()
-        assertEquals(historyMetadata, homeFragmentStore.state.historyMetadata)
+        val g3 = HistoryMetadataGroup(title = recentGroup.searchTerm.lowercase())
+        homeFragmentStore = HomeFragmentStore(
+            HomeFragmentState(
+                recentTabs = listOf(recentGroup),
+                historyMetadata = listOf(g1, g2, g3)
+            )
+        )
 
         homeFragmentStore.dispatch(HomeFragmentAction.DisbandSearchGroupAction("Test one")).join()
+
         assertEquals(listOf(g2), homeFragmentStore.state.historyMetadata)
     }
 
@@ -174,11 +198,15 @@ class HomeFragmentStoreTest {
             assertEquals(0, homeFragmentStore.state.historyMetadata.size)
             assertEquals(Mode.Normal, homeFragmentStore.state.mode)
 
+            val recentGroup = RecentTab.SearchGroup("testSearchTerm", "id", "url", null, 3)
             val collections: List<TabCollection> = listOf(mockk())
             val topSites: List<TopSite> = listOf(mockk(), mockk())
-            val recentTabs: List<RecentTab> = listOf(mockk(), mockk())
+            val recentTabs: List<RecentTab> = listOf(mockk(), recentGroup, mockk())
             val recentBookmarks: List<BookmarkNode> = listOf(mockk(), mockk())
-            val historyMetadata: List<HistoryMetadataGroup> = listOf(mockk(), mockk())
+            val g1 = HistoryMetadataGroup(title = "test One")
+            val g2 = HistoryMetadataGroup(title = recentGroup.searchTerm.lowercase())
+            val g3 = HistoryMetadataGroup(title = "test two")
+            val historyMetadata: List<HistoryMetadataGroup> = listOf(g1, g2, g3)
 
             homeFragmentStore.dispatch(
                 HomeFragmentAction.Change(
@@ -192,11 +220,11 @@ class HomeFragmentStoreTest {
                 )
             ).join()
 
-            assertEquals(1, homeFragmentStore.state.collections.size)
-            assertEquals(2, homeFragmentStore.state.topSites.size)
-            assertEquals(2, homeFragmentStore.state.recentTabs.size)
-            assertEquals(2, homeFragmentStore.state.recentBookmarks.size)
-            assertEquals(2, homeFragmentStore.state.historyMetadata.size)
+            assertEquals(collections, homeFragmentStore.state.collections)
+            assertEquals(topSites, homeFragmentStore.state.topSites)
+            assertEquals(recentTabs, homeFragmentStore.state.recentTabs)
+            assertEquals(recentBookmarks, homeFragmentStore.state.recentBookmarks)
+            assertEquals(listOf(g1, g3), homeFragmentStore.state.historyMetadata)
             assertEquals(Mode.Private, homeFragmentStore.state.mode)
         }
 
@@ -335,5 +363,19 @@ class HomeFragmentStoreTest {
             )
             assertSame(firstFilteredStories, homeFragmentStore.state.pocketStories)
         }
+    }
+
+    @Test
+    fun `Test filtering out search groups`() {
+        val group1 = HistoryMetadataGroup("group1")
+        val group2 = HistoryMetadataGroup("group2")
+        val group3 = HistoryMetadataGroup("group3")
+        val groups = listOf(group1, group2, group3)
+
+        assertEquals(groups, groups.filterOut(null))
+        assertEquals(groups, groups.filterOut(""))
+        assertEquals(groups, groups.filterOut(" "))
+        assertEquals(groups - group2, groups.filterOut("Group2"))
+        assertEquals(groups - group3, groups.filterOut("group3"))
     }
 }
