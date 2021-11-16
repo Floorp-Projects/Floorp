@@ -62,8 +62,12 @@ MCall* WarpBuilderShared::makeCall(CallInfo& callInfo, bool needsThisCheck,
 }
 
 MInstruction* WarpBuilderShared::makeSpreadCall(CallInfo& callInfo,
+                                                bool needsThisCheck,
                                                 bool isSameRealm,
                                                 WrappedFunction* target) {
+  MOZ_ASSERT(callInfo.argFormat() == CallInfo::ArgFormat::Array);
+  MOZ_ASSERT_IF(needsThisCheck, !target);
+
   // Load dense elements of the argument array.
   MElements* elements = MElements::New(alloc(), callInfo.arrayArg());
   current->add(elements);
@@ -74,6 +78,9 @@ MInstruction* WarpBuilderShared::makeSpreadCall(CallInfo& callInfo,
                              callInfo.thisArg(), callInfo.getNewTarget());
     if (isSameRealm) {
       construct->setNotCrossRealm();
+    }
+    if (needsThisCheck) {
+      construct->setNeedsThisCheck();
     }
     return construct;
   }
@@ -87,5 +94,6 @@ MInstruction* WarpBuilderShared::makeSpreadCall(CallInfo& callInfo,
   if (isSameRealm) {
     apply->setNotCrossRealm();
   }
+  MOZ_ASSERT(!needsThisCheck);
   return apply;
 }

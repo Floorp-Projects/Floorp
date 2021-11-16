@@ -2445,6 +2445,7 @@ class MConstructArray
   // Single target from CacheIR, or nullptr
   WrappedFunction* target_;
   bool maybeCrossRealm_ = true;
+  bool needsThisCheck_ = false;
 
   MConstructArray(WrappedFunction* target, MDefinition* fun,
                   MDefinition* elements, MDefinition* thisValue,
@@ -2466,6 +2467,9 @@ class MConstructArray
 
   bool maybeCrossRealm() const { return maybeCrossRealm_; }
   void setNotCrossRealm() { maybeCrossRealm_ = false; }
+
+  bool needsThisCheck() const { return needsThisCheck_; }
+  void setNeedsThisCheck() { needsThisCheck_ = true; }
 
   bool ignoresReturnValue() const { return false; }
   bool isConstructing() const { return true; }
