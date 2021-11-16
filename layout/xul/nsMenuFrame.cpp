@@ -613,18 +613,12 @@ nsresult nsMenuFrame::AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
 void nsMenuFrame::OpenMenu(bool aSelectFirstItem) {
   if (!mContent) return;
 
-  if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
+  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
+  if (pm) {
     pm->KillMenuTimer();
+    // This opens the menu asynchronously
+    pm->ShowMenu(mContent, aSelectFirstItem, true);
   }
-  // Open the menu asynchronously.
-  mContent->OwnerDoc()->Dispatch(
-      TaskCategory::Other,
-      NS_NewRunnableFunction(
-          "AsyncOpenMenu", [content = RefPtr{mContent.get()}, aSelectFirstItem] {
-            if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
-              pm->ShowMenu(content, aSelectFirstItem);
-            }
-          }));
 }
 
 void nsMenuFrame::CloseMenu(bool aDeselectMenu) {
