@@ -2059,3 +2059,36 @@ bool RCreateInlinedArgumentsObject::recover(JSContext* cx,
   iter.storeInstructionResult(JS::ObjectValue(*result));
   return true;
 }
+
+bool MRest::writeRecoverData(CompactBufferWriter& writer) const {
+  MOZ_ASSERT(canRecoverOnBailout());
+  writer.writeUnsigned(uint32_t(RInstruction::Recover_Rest));
+  writer.writeUnsigned(numFormals());
+  return true;
+}
+
+RRest::RRest(CompactBufferReader& reader) {
+  numFormals_ = reader.readUnsigned();
+}
+
+bool RRest::recover(JSContext* cx, SnapshotIterator& iter) const {
+  JitFrameLayout* frame = iter.frame();
+  [[maybe_unused]] CalleeToken token = frame->calleeToken();
+  [[maybe_unused]] JSFunction* callee = CalleeTokenToFunction(token);
+
+  uint32_t numActuals = iter.read().toInt32();
+  MOZ_ASSERT(numActuals == frame->numActualArgs());
+
+  uint32_t numFormals = numFormals_;
+  MOZ_ASSERT(numFormals == callee->nargs() - 1);  // -1 to exclude rest.
+
+  uint32_t length = std::max(numActuals, numFormals) - numFormals;
+  Value* src = frame->argv() + numFormals + 1;  // +1 to skip |this|.
+  JSObject* rest = jit::InitRestParameter(cx, length, src, nullptr);
+  if (!rest) {
+    return false;
+  }
+
+  iter.storeInstructionResult(ObjectValue(*rest));
+  return true;
+}
