@@ -361,8 +361,13 @@ class VirtualenvManager(VirtualenvHelper):
     def _run_pip(self, args, **kwargs):
         kwargs.setdefault("check", True)
 
+        # distutils will use the architecture of the running Python instance when building
+        # packages. However, it's possible for the Xcode Python to be a universal binary
+        # (x86_64 and arm64) without the associated macOS SDK supporting arm64, thereby
+        # causing a build failure. To avoid this, we explicitly influence the build to
+        # only target a single architecture - our current architecture.
         env = os.environ.copy()
-        env.setdefault("ARCHFLAGS", get_archflags())
+        env.setdefault("ARCHFLAGS", "-arch {}".format(platform.machine()))
 
         # It's tempting to call pip natively via pip.main(). However,
         # the current Python interpreter may not be the virtualenv python.
@@ -398,12 +403,3 @@ class VirtualenvManager(VirtualenvHelper):
         if path.startswith(local_folder):
             path = os.path.join(normalized_venv_root, path[len(local_folder) + 1 :])
         return path
-
-
-def get_archflags():
-    # distutils will use the architecture of the running Python instance when building
-    # packages. However, it's possible for the Xcode Python to be a universal binary
-    # (x86_64 and arm64) without the associated macOS SDK supporting arm64, thereby
-    # causing a build failure. To avoid this, we explicitly influence the build to only
-    # target a single architecture - our current architecture.
-    return "-arch {}".format(platform.machine())
