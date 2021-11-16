@@ -1,12 +1,12 @@
 diff --git a/intl/icu/source/data/locales/dsb.txt b/intl/icu/source/data/locales/dsb.txt
 --- a/intl/icu/source/data/locales/dsb.txt
 +++ b/intl/icu/source/data/locales/dsb.txt
-@@ -349,25 +349,29 @@ dsb{
-                 Hms{"H:mm:ss"}
-                 M{"L"}
-                 MEd{"E, d.M."}
-                 MMM{"LLL"}
-                 MMMEd{"E, d. MMM"}
+@@ -532,25 +532,29 @@ dsb{
+                     few{"'tyźeń' W MMMM"}
+                     one{"'tyźeń' W MMMM"}
+                     other{"'tyźeń' W MMMM"}
+                     two{"'tyźeń' W MMMM"}
+                 }
 -                MMMMd{"d MMMM"}
 +                MMMMd{"d. MMMM"}
                  MMMd{"d. MMM"}
@@ -30,17 +30,17 @@ diff --git a/intl/icu/source/data/locales/dsb.txt b/intl/icu/source/data/locales
                  yMd{"d.M.y"}
                  yQQQ{"QQQ y"}
                  yQQQQ{"QQQQ y"}
-             }
-             dayNames{
+                 yw{
+                     few{"'tyźeń' w 'lěta' Y"}
 diff --git a/intl/icu/source/data/locales/hsb.txt b/intl/icu/source/data/locales/hsb.txt
 --- a/intl/icu/source/data/locales/hsb.txt
 +++ b/intl/icu/source/data/locales/hsb.txt
-@@ -349,25 +349,29 @@ hsb{
-                 Hms{"H:mm:ss"}
-                 M{"L"}
-                 MEd{"E, d.M."}
-                 MMM{"LLL"}
-                 MMMEd{"E, d. MMM"}
+@@ -531,25 +531,29 @@ hsb{
+                     few{"'tydźeń' W MMMM"}
+                     one{"'tydźeń' W MMMM"}
+                     other{"'tydźeń' W MMMM"}
+                     two{"'tydźeń' W MMMM"}
+                 }
 -                MMMMd{"d MMMM"}
 +                MMMMd{"d. MMMM"}
                  MMMd{"d. MMM"}
@@ -64,5 +64,5 @@ diff --git a/intl/icu/source/data/locales/hsb.txt b/intl/icu/source/data/locales
                  yMd{"d.M.y"}
                  yQQQ{"QQQ y"}
                  yQQQQ{"QQQQ y"}
-             }
-             dayNames{
+                 yw{
+                     few{"'tydźeń' w 'lěta' Y"}
