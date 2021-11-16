@@ -988,13 +988,9 @@ static bool ToIntlMathematicalValue(JSContext* cx, MutableHandleValue value,
   // See also "intl/icu/source/i18n/decContext.h".
   constexpr int32_t maximumExponent = 999'999'999;
 
-  // When formatting a number range, ICU inserts the integer digits of the
-  // second number into the middle of the result string. This leads to calling
-  // memmove for each digit, which causes tremendous slowdowns. Therefore we
-  // additionally limit the maximum positive exponent.
-  //
-  // Filed at <https://unicode-org.atlassian.net/browse/ICU-21684>.
-  constexpr int32_t maximumPositiveExponent = 99'999;
+  // We further limit the maximum positive exponent to avoid spending multiple
+  // seconds or even minutes in ICU when formatting large numbers.
+  constexpr int32_t maximumPositiveExponent = 9'999'999;
 
   // Compute the maximum BigInt digit length from the maximum positive exponent.
   //
@@ -1003,8 +999,8 @@ static bool ToIntlMathematicalValue(JSContext* cx, MutableHandleValue value,
   //   |maximumPositiveExponent| * Log_DigitBase(10)
   // = |maximumPositiveExponent| * Log2(10) / Log2(2 ** BigInt::DigitBits)
   // = |maximumPositiveExponent| * Log2(10) / BigInt::DigitBits
-  // = 332189.4875606413... / BigInt::DigitBits
-  constexpr size_t maximumBigIntLength = 332189.4875606413 / BigInt::DigitBits;
+  // = 33219277.626945525... / BigInt::DigitBits
+  constexpr size_t maximumBigIntLength = 33219277.626945525 / BigInt::DigitBits;
 
   if (!value.isString()) {
     if (!ToNumeric(cx, value)) {
