@@ -11,6 +11,7 @@
 #include "nsIWeakReferenceUtils.h"
 #include "nsMargin.h"
 #include "nsPaper.h"
+#include "nsProxyRelease.h"
 #include "nsString.h"
 
 #define NUM_HEAD_FOOT 3
@@ -18,6 +19,8 @@
 //*****************************************************************************
 //***    nsPrintSettings
 //*****************************************************************************
+
+class nsPrintSettings;
 
 namespace mozilla {
 
@@ -28,11 +31,21 @@ namespace mozilla {
 struct PrintSettingsInitializer {
   nsString mPrinter;
   PaperInfo mPaperInfo;
+  int16_t mPaperSizeUnit = nsIPrintSettings::kPaperSizeInches;
   // If we fail to obtain printer capabilities, being given the option to print
   // in color to your monochrome printer is a lot less annoying than not being
   // given the option to print in color to your color printer.
   bool mPrintInColor = true;
   int mResolution = 0;
+  int mSheetOrientation = nsIPrintSettings::kPortraitOrientation;
+  int mNumCopies = 1;
+  int mDuplex = nsIPrintSettings::kDuplexNone;
+
+  // This is to hold a reference to a newly cloned settings object that will
+  // then be initialized by the other values in the initializer that may have
+  // been changed on a background thread.
+  nsMainThreadPtrHandle<nsPrintSettings> mPrintSettings;
+
 #ifdef XP_WIN
   CopyableTArray<uint8_t> mDevmodeWStorage;
 #endif
@@ -55,6 +68,8 @@ class nsPrintSettings : public nsIPrintSettings {
    * relevant setters are dynamically dispatched to derived classes.
    */
   virtual void InitWithInitializer(const PrintSettingsInitializer& aSettings);
+
+  PrintSettingsInitializer GetSettingsInitializer() final;
 
   nsPrintSettings& operator=(const nsPrintSettings& rhs);
 
