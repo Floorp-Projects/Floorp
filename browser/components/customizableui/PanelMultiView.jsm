@@ -838,6 +838,13 @@ var PanelMultiView = class extends AssociatedToNode {
     panelView.node.panelMultiView = this.node;
     this.openViews.push(panelView);
 
+    // Panels could contain out-pf-process <browser> elements, that need to be
+    // supported with a remote attribute on the panel in order to display properly.
+    // See bug https://bugzilla.mozilla.org/show_bug.cgi?id=1365660
+    if (panelView.node.getAttribute("remote") == "true") {
+      this._panel.setAttribute("remote", "true");
+    }
+
     let canceled = await panelView.dispatchAsyncEvent("ViewShowing");
 
     // The panel can be hidden while we are processing the ViewShowing event.
