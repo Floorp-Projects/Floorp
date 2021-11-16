@@ -542,6 +542,9 @@
 - name: ApplyArrayGeneric
   gen_boilerplate: false
 
+- name: ConstructArgsGeneric
+  gen_boilerplate: false
+
 - name: ConstructArrayGeneric
   gen_boilerplate: false
 

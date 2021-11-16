@@ -625,6 +625,30 @@ void LIRGenerator::visitApplyArray(MApplyArray* apply) {
   assignSafepoint(lir, apply);
 }
 
+void LIRGenerator::visitConstructArgs(MConstructArgs* mir) {
+  MOZ_ASSERT(mir->getFunction()->type() == MIRType::Object);
+  MOZ_ASSERT(mir->getArgc()->type() == MIRType::Int32);
+  MOZ_ASSERT(mir->getNewTarget()->type() == MIRType::Object);
+  MOZ_ASSERT(mir->getThis()->type() == MIRType::Value);
+
+  // Assert if the return value is already erased.
+  static_assert(CallTempReg2 != JSReturnReg_Type);
+  static_assert(CallTempReg2 != JSReturnReg_Data);
+
+  auto* lir = new (alloc()) LConstructArgsGeneric(
+      useFixedAtStart(mir->getFunction(), CallTempReg3),
+      useFixedAtStart(mir->getArgc(), CallTempReg0),
+      useFixedAtStart(mir->getNewTarget(), CallTempReg1),
+      useBoxFixedAtStart(mir->getThis(), CallTempReg4, CallTempReg5),
+      tempFixed(CallTempReg2));
+
+  // Bailout is needed in the case of too many values in the arguments array.
+  assignSnapshot(lir, mir->bailoutKind());
+
+  defineReturn(lir, mir);
+  assignSafepoint(lir, mir);
+}
+
 void LIRGenerator::visitConstructArray(MConstructArray* mir) {
   MOZ_ASSERT(mir->getFunction()->type() == MIRType::Object);
   MOZ_ASSERT(mir->getElements()->type() == MIRType::Elements);
