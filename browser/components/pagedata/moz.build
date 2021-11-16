@@ -18,6 +18,7 @@ EXTRA_JS_MODULES.pagedata += [
     "PageDataSchema.jsm",
     "PageDataService.jsm",
     "SchemaOrgPageData.jsm",
+    "TwitterPageData.jsm",
 ]
 
 FINAL_TARGET_FILES.actors += [
