@@ -10,8 +10,11 @@
 #include "nsPaper.h"
 #include "nsReadableUtils.h"
 #include "nsIPrintSession.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/RefPtr.h"
+
+using namespace mozilla;
 
 #define DEFAULT_MARGIN_WIDTH 0.5
 
@@ -66,13 +69,30 @@ void nsPrintSettings::InitWithInitializer(
   SetPrinterName(aSettings.mPrinter);
   SetPrintInColor(aSettings.mPrintInColor);
   SetResolution(aSettings.mResolution);
+  SetNumCopies(aSettings.mNumCopies);
+  SetDuplex(aSettings.mDuplex);
   // The paper ID used by nsPrintSettings is the non-localizable identifier
   // exposed as "id" by the paper, not the potentially localized human-friendly
   // "name", which could change, e.g. if the user changes their system locale.
   SetPaperId(aSettings.mPaperInfo.mId);
-  SetPaperWidth(aSettings.mPaperInfo.mSize.Width() * kInchesPerPoint);
-  SetPaperHeight(aSettings.mPaperInfo.mSize.Height() * kInchesPerPoint);
-  SetPaperSizeUnit(nsIPrintSettings::kPaperSizeInches);
+
+  // Set the paper sizes to match the unit.
+  SetPaperSizeUnit(aSettings.mPaperSizeUnit);
+  double sizeUnitsPerPoint =
+      aSettings.mPaperSizeUnit == kPaperSizeInches ? 1.0 / 72.0 : 25.4 / 72.0;
+  SetPaperWidth(aSettings.mPaperInfo.mSize.width * sizeUnitsPerPoint);
+  SetPaperHeight(aSettings.mPaperInfo.mSize.height * sizeUnitsPerPoint);
+
+  // If our initializer says that we're producing portrait-mode sheets of
+  // paper, then our page format must also be portrait-mode; unless we've got
+  // a pages-per-sheet value with orthogonal pages/sheets, in which case it's
+  // reversed.
+  const bool areSheetsOfPaperPortraitMode =
+      (aSettings.mSheetOrientation == kPortraitOrientation);
+  const bool arePagesPortraitMode =
+      (areSheetsOfPaperPortraitMode != HasOrthogonalSheetsAndPages());
+  SetOrientation(arePagesPortraitMode ? kPortraitOrientation
+                                      : kLandscapeOrientation);
 
   if (aSettings.mPaperInfo.mUnwriteableMargin) {
     const auto& margin = aSettings.mPaperInfo.mUnwriteableMargin.value();
@@ -774,6 +794,132 @@ nsresult nsPrintSettings::_Assign(nsIPrintSettings* aPS) {
   nsPrintSettings* ps = static_cast<nsPrintSettings*>(aPS);
   *this = *ps;
   return NS_OK;
+}
+
+nsresult nsPrintSettings::EquivalentTo(nsIPrintSettings* aPrintSettings,
+                                       bool* _retval) {
+  MOZ_ASSERT(aPrintSettings);
+  *_retval = false;
+  auto* other = static_cast<nsPrintSettings*>(aPrintSettings);
+  if (GetMarginInTwips() != aPrintSettings->GetMarginInTwips()) {
+    return NS_OK;
+  }
+  if (GetEdgeInTwips() != aPrintSettings->GetEdgeInTwips()) {
+    return NS_OK;
+  }
+  if (GetUnwriteableMarginInTwips() !=
+      aPrintSettings->GetUnwriteableMarginInTwips()) {
+    return NS_OK;
+  }
+  nsTArray<int32_t> ourPageRanges, otherPageRanges;
+  if (NS_FAILED(GetPageRanges(ourPageRanges)) ||
+      NS_FAILED(aPrintSettings->GetPageRanges(otherPageRanges)) ||
+      ourPageRanges != otherPageRanges) {
+    return NS_OK;
+  }
+  double ourScaling, otherScaling;
+  if (NS_FAILED(GetScaling(&ourScaling)) ||
+      NS_FAILED(aPrintSettings->GetScaling(&otherScaling)) ||
+      ourScaling != otherScaling) {
+    return NS_OK;
+  }
+  if (GetPrintBGColors() != aPrintSettings->GetPrintBGColors()) {
+    return NS_OK;
+  }
+  if (GetPrintBGImages() != aPrintSettings->GetPrintBGImages()) {
+    return NS_OK;
+  }
+  if (GetPrintSelectionOnly() != aPrintSettings->GetPrintSelectionOnly()) {
+    return NS_OK;
+  }
+  if (GetShrinkToFit() != aPrintSettings->GetShrinkToFit()) {
+    return NS_OK;
+  }
+  if (GetShowMarginGuides() != aPrintSettings->GetShowMarginGuides()) {
+    return NS_OK;
+  }
+  if (GetHonorPageRuleMargins() != aPrintSettings->GetHonorPageRuleMargins()) {
+    return NS_OK;
+  }
+  nsAutoString ourTitle, otherTitle;
+  if (NS_FAILED(GetTitle(ourTitle)) ||
+      NS_FAILED(aPrintSettings->GetTitle(otherTitle)) ||
+      ourTitle != otherTitle) {
+    return NS_OK;
+  }
+  nsAutoString ourUrl, otherUrl;
+  if (NS_FAILED(GetDocURL(ourUrl)) ||
+      NS_FAILED(aPrintSettings->GetDocURL(otherUrl)) || ourUrl != otherUrl) {
+    return NS_OK;
+  }
+  if (!mozilla::ArrayEqual(mHeaderStrs, other->mHeaderStrs) ||
+      !mozilla::ArrayEqual(mFooterStrs, other->mFooterStrs)) {
+    return NS_OK;
+  }
+  nsAutoString ourPaperId, otherPaperId;
+  if (NS_FAILED(GetPaperId(ourPaperId)) ||
+      NS_FAILED(aPrintSettings->GetPaperId(otherPaperId)) ||
+      ourPaperId != otherPaperId) {
+    return NS_OK;
+  }
+  double ourWidth, ourHeight, otherWidth, otherHeight;
+  if (NS_FAILED(GetEffectivePageSize(&ourWidth, &ourHeight)) ||
+      NS_FAILED(other->GetEffectivePageSize(&otherWidth, &otherHeight)) ||
+      std::abs(ourWidth - otherWidth) >= 1 ||
+      std::abs(ourHeight - otherHeight) >= 1) {
+    return NS_OK;
+  }
+  int32_t ourOrientation, otherOrientation;
+  if (NS_FAILED(GetOrientation(&ourOrientation)) ||
+      NS_FAILED(aPrintSettings->GetOrientation(&otherOrientation)) ||
+      ourOrientation != otherOrientation) {
+    return NS_OK;
+  }
+  int32_t ourResolution, otherResolution;
+  if (NS_FAILED(GetResolution(&ourResolution)) ||
+      NS_FAILED(aPrintSettings->GetResolution(&otherResolution)) ||
+      ourResolution != otherResolution) {
+    return NS_OK;
+  }
+  int32_t ourNumPagesPerSheet, otherNumPagesPerSheet;
+  if (NS_FAILED(GetNumPagesPerSheet(&ourNumPagesPerSheet)) ||
+      NS_FAILED(aPrintSettings->GetNumPagesPerSheet(&otherNumPagesPerSheet)) ||
+      ourNumPagesPerSheet != otherNumPagesPerSheet) {
+    return NS_OK;
+  }
+
+  *_retval = true;
+  return NS_OK;
+}
+
+mozilla::PrintSettingsInitializer nsPrintSettings::GetSettingsInitializer() {
+  mozilla::PrintSettingsInitializer settingsInitializer;
+  settingsInitializer.mPrinter.Assign(mPrinter);
+  settingsInitializer.mPaperInfo.mId = mPaperId;
+
+  double pointsPerSizeUnit =
+      mPaperSizeUnit == kPaperSizeInches ? 72.0 : 72.0 / 25.4;
+  settingsInitializer.mPaperInfo.mSize = {mPaperWidth * pointsPerSizeUnit,
+                                          mPaperHeight * pointsPerSizeUnit};
+
+  // Unwritable margins are stored in TWIPS here and points in PaperInfo.
+  settingsInitializer.mPaperInfo.mUnwriteableMargin =
+      Some(mozilla::gfx::MarginDouble(
+          mUnwriteableMargin.top / 20.0, mUnwriteableMargin.right / 20.0,
+          mUnwriteableMargin.bottom / 20.0, mUnwriteableMargin.left / 20.0));
+
+  settingsInitializer.mPrintInColor = mPrintInColor;
+  settingsInitializer.mResolution = mResolution;
+  settingsInitializer.mSheetOrientation = GetSheetOrientation();
+  settingsInitializer.mNumCopies = mNumCopies;
+  settingsInitializer.mDuplex = mDuplex;
+  RefPtr<nsIPrintSettings> settingsToInitialize;
+  MOZ_ALWAYS_SUCCEEDS(Clone(getter_AddRefs(settingsToInitialize)));
+  settingsInitializer.mPrintSettings =
+      new nsMainThreadPtrHolder<nsPrintSettings>(
+          "PrintSettingsInitializer::mPrintSettings",
+          settingsToInitialize.forget().downcast<nsPrintSettings>());
+  return settingsInitializer;
 }
 
 NS_IMETHODIMP
