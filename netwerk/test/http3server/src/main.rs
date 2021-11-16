@@ -202,6 +202,36 @@ impl HttpServer for Http3TestServer {
                             } else if path == "/post" {
                                 // Read all data before responding.
                                 self.posts.insert(request, 0);
+                            } else if path == "/priority_mirror" {
+                                if let Some(priority) =
+                                    headers.iter().find(|h| h.name() == "priority")
+                                {
+                                    request
+                                        .set_response(
+                                            &[
+                                                Header::new(":status", "200"),
+                                                Header::new("cache-control", "no-cache"),
+                                                Header::new("content-type", "text/plain"),
+                                                Header::new("priority-mirror", priority.value()),
+                                                Header::new(
+                                                    "content-length",
+                                                    priority.value().len().to_string(),
+                                                ),
+                                            ],
+                                            priority.value().as_bytes(),
+                                        )
+                                        .unwrap();
+                                } else {
+                                    request
+                                        .set_response(
+                                            &[
+                                                Header::new(":status", "200"),
+                                                Header::new("cache-control", "no-cache"),
+                                            ],
+                                            &[],
+                                        )
+                                        .unwrap();
+                                }
                             } else {
                                 match path.trim_matches(|p| p == '/').parse::<usize>() {
                                     Ok(v) => request
