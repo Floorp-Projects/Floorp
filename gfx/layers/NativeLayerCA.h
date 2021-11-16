@@ -435,6 +435,7 @@ class NativeLayerCA : public NativeLayer {
   bool mSurfaceIsFlipped = false;
   const bool mIsOpaque = false;
   bool mRootWindowIsFullscreen = false;
+  bool mSpecializeVideo = false;
 };
 
 }  // namespace layers
