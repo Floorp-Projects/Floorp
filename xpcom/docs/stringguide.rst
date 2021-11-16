@@ -984,7 +984,7 @@ In XPIDL, ``in`` parameters are read-only, and the C++ signatures for
 nsAString&`` for these parameters. ``out`` and ``inout`` parameters are
 defined simply as ``nsAString&`` so that the callee can write to them.
 
-.. code-block:: xpidl
+.. code-block::
 
     interface nsIFoo : nsISupports {
         attribute AString utf16String;

@@ -21,7 +21,7 @@ well as discuss some tips to make your React application faster.
 As a start let's discuss about how React renders normal plain components, that
 don't use `shouldComponentUpdate`. What we call plain components here are either:
 * classes that extend [`Component`](https://reactjs.org/docs/react-component.html)
-  ```jsx
+  ```javascript
   class Application extends React.Component {
     render() {
       return <div>{this.props.content}</div>;
@@ -32,7 +32,7 @@ don't use `shouldComponentUpdate`. What we call plain components here are either
   call these functions either Stateless Components or Functional Components.
   This is important to understand that these Stateless Components are _not_
   especially optimized in React.
-  ```jsx
+  ```javascript
   function Application(props) {
     return <div>{props.content}</div>;
   }
@@ -76,7 +76,7 @@ DOM tree. It will then render actual DOM elements to the specified container.
 
 There are several ways to trigger a rerender:
 1. We call `ReactDOM.render` again with the same component.
-  ```jsx
+  ```javascript
   ReactDOM.render(
     <Application content='Good Bye, Cruel World!'/>,
     document.getElementById('root')
@@ -478,7 +478,7 @@ common cases are:
   a bound function or an anonymous function (both classic functions or
   arrow functions) as a prop:
 
-  ```jsx
+  ```javascript
   render() {
     return <MyComponent onUpdate={() => this.update()} />;
   }
