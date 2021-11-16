@@ -102,6 +102,9 @@ static mozilla::LauncherFlags ProcessCmdLine(int& aArgc, wchar_t* aArgv[]) {
       mozilla::CheckArg(aArgc, aArgv, L"headless",
                         static_cast<const wchar_t**>(nullptr),
                         mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND ||
+      mozilla::CheckArg(aArgc, aArgv, L"remote-debugging-port",
+                        static_cast<const wchar_t**>(nullptr),
+                        mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND ||
       mozilla::EnvHasValue("MOZ_AUTOMATION") ||
       mozilla::EnvHasValue("MOZ_HEADLESS")) {
     result |= mozilla::LauncherFlags::eWaitForBrowser;
