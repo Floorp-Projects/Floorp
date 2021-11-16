@@ -5639,6 +5639,19 @@ home_screen:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-04-01"
+  home_screen_view_count:
+    type: counter
+    description: |
+      The number of times the home screen was displayed to the user.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/22146
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22377
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
   customize_home_clicked:
     type: event
     description: A user clicked on Customize home from the home screen menu.

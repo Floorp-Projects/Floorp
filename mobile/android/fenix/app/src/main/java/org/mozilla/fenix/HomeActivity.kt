@@ -230,7 +230,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         }
 
         if (!shouldStartOnHome() &&
-            shouldNavigateBrowserFragmentOnCouldStart(savedInstanceState)
+            shouldNavigateBrowserFragmentOnColdStart(savedInstanceState)
         ) {
             navigateToBrowserOnColdStart()
         } else if (FeatureFlags.showStartOnHomeSettings) {
@@ -1001,7 +1001,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     @VisibleForTesting
     internal fun getSettings(): Settings = settings()
 
-    private fun shouldNavigateBrowserFragmentOnCouldStart(savedInstanceState: Bundle?): Boolean {
+    private fun shouldNavigateBrowserFragmentOnColdStart(savedInstanceState: Bundle?): Boolean {
         return isActivityColdStarted(intent, savedInstanceState) &&
             !externalSourceIntentProcessors.any {
                 it.process(
