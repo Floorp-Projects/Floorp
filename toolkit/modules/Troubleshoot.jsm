@@ -213,6 +213,12 @@ var dataProviders = {
       safeMode: Services.appinfo.inSafeMode,
     };
 
+    if (Services.sysinfo.getProperty("name") == "Windows_NT") {
+      if (Services.sysinfo.processInfo.isWindowsSMode) {
+        data.osVersion += " S";
+      }
+    }
+
     if (AppConstants.MOZ_UPDATER) {
       data.updateChannel = ChromeUtils.import(
         "resource://gre/modules/UpdateUtils.jsm",
