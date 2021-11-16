@@ -47,7 +47,7 @@ impl PairState {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Side {
     Left,
     Right,
@@ -125,9 +125,9 @@ impl Size {
             return None;
         }
 
-        let next_ready = self.next_ready;
+        let ready = self.next_ready;
 
-        let entry = unsafe { self.pairs.get_unchecked_mut(next_ready) };
+        let entry = unsafe { self.pairs.get_unchecked_mut(ready) };
         let chunk = entry.chunk;
         let offset = entry.offset;
 
@@ -137,6 +137,7 @@ impl Size {
                 entry.state = PairState::Exhausted;
 
                 if prev == self.next_ready {
+                    // The only ready entry.
                     debug_assert_eq!(next, self.next_ready);
                     self.next_ready = self.pairs.len();
                 } else {
@@ -161,7 +162,7 @@ impl Size {
         Some(SizeBlockEntry {
             chunk,
             offset: offset + bit as u64 * size,
-            index: (next_ready << 1) | bit as usize,
+            index: (ready << 1) | bit as usize,
         })
     }
 
@@ -171,37 +172,37 @@ impl Size {
             1 => Side::Right,
             _ => unsafe { unreachable_unchecked() },
         };
-        let index = index >> 1;
+        let entry_index = index >> 1;
 
         let len = self.pairs.len();
 
-        let entry = self.pairs.get_mut(index);
+        let entry = self.pairs.get_mut(entry_index);
 
         let chunk = entry.chunk;
         let offset = entry.offset;
         let parent = entry.parent;
 
-        match (entry.state, side) {
-            (PairState::Exhausted, side) => {
+        match entry.state {
+            PairState::Exhausted => {
                 if self.next_ready == len {
                     entry.state = PairState::Ready {
                         ready: side,
-                        next: index,
-                        prev: index,
+                        next: entry_index,
+                        prev: entry_index,
                     };
-                    self.next_ready = index;
+                    self.next_ready = entry_index;
                 } else {
                     debug_assert!(self.next_ready < len);
 
                     let next = self.next_ready;
                     let next_entry = unsafe { self.pairs.get_unchecked_mut(next) };
-                    let prev = unsafe { next_entry.state.replace_prev(index) };
+                    let prev = unsafe { next_entry.state.replace_prev(entry_index) };
 
                     let prev_entry = unsafe { self.pairs.get_unchecked_mut(prev) };
-                    let prev_next = unsafe { prev_entry.state.replace_next(index) };
+                    let prev_next = unsafe { prev_entry.state.replace_next(entry_index) };
                     debug_assert_eq!(prev_next, next);
 
-                    let entry = unsafe { self.pairs.get_unchecked_mut(index) };
+                    let entry = unsafe { self.pairs.get_unchecked_mut(entry_index) };
                     entry.state = PairState::Ready {
                         ready: side,
                         next,
@@ -210,40 +211,27 @@ impl Size {
                 }
                 Release::None
             }
-            (PairState::Ready { ready: Left, .. }, Left)
-            | (PairState::Ready { ready: Right, .. }, Right) => {
+
+            PairState::Ready { ready, .. } if ready == side => {
                 panic!("Attempt to dealloate already free block")
             }
 
-            (
-                PairState::Ready {
-                    ready: Left,
-                    next,
-                    prev,
-                },
-                Side::Right,
-            )
-            | (
-                PairState::Ready {
-                    ready: Right,
-                    next,
-                    prev,
-                },
-                Side::Left,
-            ) => {
-                entry.state = PairState::Exhausted;
+            PairState::Ready { next, prev, .. } => {
+                unsafe {
+                    self.pairs.remove_unchecked(entry_index);
+                }
 
-                if prev == index {
-                    debug_assert_eq!(next, index);
+                if prev == entry_index {
+                    debug_assert_eq!(next, entry_index);
                     self.next_ready = self.pairs.len();
                 } else {
                     let prev_entry = unsafe { self.pairs.get_unchecked_mut(prev) };
                     let prev_next = unsafe { prev_entry.state.replace_next(next) };
-                    debug_assert_eq!(prev_next, index);
+                    debug_assert_eq!(prev_next, entry_index);
 
                     let next_entry = unsafe { self.pairs.get_unchecked_mut(next) };
                     let next_prev = unsafe { next_entry.state.replace_prev(prev) };
-                    debug_assert_eq!(next_prev, index);
+                    debug_assert_eq!(next_prev, entry_index);
 
                     self.next_ready = next;
                 }

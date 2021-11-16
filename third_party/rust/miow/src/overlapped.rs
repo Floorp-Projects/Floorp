@@ -3,10 +3,7 @@ use std::io;
 use std::mem;
 use std::ptr;
 
-use winapi::shared::ntdef::{
-    HANDLE,
-    NULL,
-};
+use winapi::shared::ntdef::{HANDLE, NULL};
 use winapi::um::minwinbase::*;
 use winapi::um::synchapi::*;
 
@@ -37,7 +34,7 @@ impl Overlapped {
     /// `Overlapped`.  The event is created with `bManualReset` set to `FALSE`, meaning after a
     /// single thread waits on the event, it will be reset.
     pub fn initialize_with_autoreset_event() -> io::Result<Overlapped> {
-        let event = unsafe {CreateEventW(ptr::null_mut(), 0i32, 0i32, ptr::null())};
+        let event = unsafe { CreateEventW(ptr::null_mut(), 0i32, 0i32, ptr::null()) };
         if event == NULL {
             return Err(io::Error::last_os_error());
         }
