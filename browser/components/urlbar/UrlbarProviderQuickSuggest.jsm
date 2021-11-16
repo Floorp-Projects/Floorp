@@ -26,6 +26,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["AbortController", "fetch"]);
 
+const TIMESTAMP_TEMPLATE = "%YYYYMMDDHH%";
+
 const MERINO_ENDPOINT_PARAM_QUERY = "q";
 
 const TELEMETRY_MERINO_LATENCY = "FX_URLBAR_MERINO_LATENCY_MS";
@@ -160,6 +162,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
     if (!suggestion) {
       return;
     }
+
+    this._replaceSuggestionTemplates(suggestion);
 
     let payload = {
       qsSuggestion: [suggestion.full_keyword, UrlbarUtils.HIGHLIGHT.SUGGESTED],
@@ -557,6 +561,30 @@ class ProviderQuickSuggest extends UrlbarProvider {
       (!suggestion.is_sponsored &&
         UrlbarPrefs.get("suggest.quicksuggest.nonsponsored"))
     );
+  }
+
+  /**
+   * Some suggestion properties like `url` and `click_url` include template
+   * substrings that must be replaced with real values. This method replaces
+   * templates with appropriate values in place.
+   *
+   * @param {object} suggestion
+   *   A suggestion object fetched from remote settings or Merino.
+   */
+  _replaceSuggestionTemplates(suggestion) {
+    let now = new Date();
+    let timestampParts = [
+      now.getFullYear(),
+      now.getMonth() + 1,
+      now.getDate(),
+      now.getHours(),
+    ];
+    let timestamp = timestampParts
+      .map(n => n.toString().padStart(2, "0"))
+      .join("");
+    for (let key of ["url", "click_url"]) {
+      suggestion[key] = suggestion[key]?.replace(TIMESTAMP_TEMPLATE, timestamp);
+    }
   }
 
   /**

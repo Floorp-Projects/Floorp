@@ -1006,6 +1006,49 @@ add_task(async function cancelDoesNotAbortFetch() {
   });
 });
 
+// Timestamp templates in URLs should be replaced with real timestamps.
+add_task(async function timestamps() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
+
+  // Set up the Merino response with template URLs.
+  let resp = setMerinoResponse();
+  let suggestion = resp.body.suggestions[0];
+  let timestampTemplate = "%YYYYMMDDHH%";
+  suggestion.url = `http://example.com/time-${timestampTemplate}`;
+  suggestion.click_url = `http://example.com/time-${timestampTemplate}-foo`;
+
+  // Do a search.
+  let context = createContext("test", {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  let controller = UrlbarTestUtils.newMockController({
+    input: {
+      isPrivate: context.isPrivate,
+      onFirstResult() {
+        return false;
+      },
+      window: {
+        location: {
+          href: AppConstants.BROWSER_CHROME_URL,
+        },
+      },
+    },
+  });
+  await controller.startQuery(context);
+
+  // Should be one quick suggest result.
+  Assert.equal(context.results.length, 1, "One result returned");
+  let result = context.results[0];
+
+  QuickSuggestTestUtils.assertTimestampsReplaced(result, {
+    url: suggestion.click_url,
+    sponsoredClickUrl: suggestion.click_url,
+  });
+});
+
 function makeMerinoServer(endpointPath) {
   let server = makeTestServer();
   server.registerPathHandler(endpointPath, async (req, resp) => {
@@ -1034,7 +1077,20 @@ function makeMerinoServer(endpointPath) {
   return server;
 }
 
-function setMerinoResponse(resp = { ...MERINO_RESPONSE }) {
+function deepCopy(obj) {
+  if (Array.isArray(obj)) {
+    return obj.map(item => deepCopy(item));
+  }
+  if (obj && typeof obj == "object") {
+    return Object.entries(obj).reduce((memo, [key, value]) => {
+      memo[key] = deepCopy(value);
+      return memo;
+    }, {});
+  }
+  return obj;
+}
+
+function setMerinoResponse(resp = deepCopy(MERINO_RESPONSE)) {
   if (!resp.contentType) {
     resp.contentType = "application/json";
   }

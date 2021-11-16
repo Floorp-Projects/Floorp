@@ -120,25 +120,18 @@ class Suggestions {
     if (!result) {
       return null;
     }
-    let d = new Date();
-    let pad = number => number.toString().padStart(2, "0");
-    let date =
-      `${d.getFullYear()}${pad(d.getMonth() + 1)}` +
-      `${pad(d.getDate())}${pad(d.getHours())}`;
-    let icon = await this._fetchIcon(result.icon);
     return {
       full_keyword: this.getFullKeyword(phrase, result.keywords),
       title: result.title,
-      url: result.url.replace("%YYYYMMDDHH%", date),
-      click_url: result.click_url.replace("%YYYYMMDDHH%", date),
-      // impression_url doesn't have any parameters
+      url: result.url,
+      click_url: result.click_url,
       impression_url: result.impression_url,
       block_id: result.id,
       advertiser: result.advertiser.toLocaleLowerCase(),
       is_sponsored: !NONSPONSORED_IAB_CATEGORIES.has(result.iab_category),
       score: SUGGESTION_SCORE,
       source: QUICK_SUGGEST_SOURCE.REMOTE_SETTINGS,
-      icon,
+      icon: await this._fetchIcon(result.icon),
     };
   }
 
