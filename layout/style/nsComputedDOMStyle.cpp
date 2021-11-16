@@ -517,6 +517,23 @@ static bool MustReresolveStyle(const mozilla::ComputedStyle* aStyle) {
   return aStyle->HasPseudoElementData() && !aStyle->IsPseudoElement();
 }
 
+static bool IsInFlatTree(const Element& aElement) {
+  const auto* topmost = &aElement;
+  while (true) {
+    if (topmost->HasServoData()) {
+      // If we have styled this element then we know it's in the flat tree.
+      return true;
+    }
+    const Element* parent = topmost->GetFlattenedTreeParentElement();
+    if (!parent) {
+      break;
+    }
+    topmost = parent;
+  }
+  auto* root = topmost->GetFlattenedTreeParentNode();
+  return root && root->IsDocument();
+}
+
 already_AddRefed<ComputedStyle> nsComputedDOMStyle::DoGetComputedStyleNoFlush(
     const Element* aElement, PseudoStyleType aPseudo, PresShell* aPresShell,
     StyleType aStyleType) {
@@ -542,9 +559,11 @@ already_AddRefed<ComputedStyle> nsComputedDOMStyle::DoGetComputedStyleNoFlush(
   if (!aElement->IsInComposedDoc()) {
     // Don't return styles for disconnected elements, that makes no sense. This
     // can only happen with a non-null presShell for cross-document calls.
-    //
-    // FIXME(emilio, bug 1483798): This should also not return styles for
-    // elements outside of the flat tree, not just outside of the document.
+    return nullptr;
+  }
+
+  if (!StaticPrefs::layout_css_computed_style_styles_outside_flat_tree() &&
+      !IsInFlatTree(*aElement)) {
     return nullptr;
   }
 
