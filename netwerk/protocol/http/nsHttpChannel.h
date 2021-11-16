@@ -16,6 +16,7 @@
 #include "nsIProtocolProxyCallback.h"
 #include "nsIHttpAuthenticableChannel.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
+#include "nsIEarlyHintObserver.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsIThreadRetargetableStreamListener.h"
 #include "nsWeakReference.h"
@@ -74,7 +75,8 @@ class nsHttpChannel final : public HttpBaseChannel,
                             public nsSupportsWeakReference,
                             public nsICorsPreflightCallback,
                             public nsIRaceCacheWithNetwork,
-                            public nsIRequestTailUnblockCallback {
+                            public nsIRequestTailUnblockCallback,
+                            public nsIEarlyHintObserver {
  public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIREQUESTOBSERVER
@@ -92,6 +94,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_HTTPCHANNEL_IID)
   NS_DECL_NSIRACECACHEWITHNETWORK
   NS_DECL_NSIREQUESTTAILUNBLOCKCALLBACK
+  NS_DECL_NSIEARLYHINTOBSERVER
 
   // nsIHttpAuthenticableChannel. We can't use
   // NS_DECL_NSIHTTPAUTHENTICABLECHANNEL because it duplicates cancel() and
@@ -186,6 +189,8 @@ class nsHttpChannel final : public HttpBaseChannel,
   NS_IMETHOD LogMimeTypeMismatch(const nsACString& aMessageName, bool aWarning,
                                  const nsAString& aURL,
                                  const nsAString& aContentType) override;
+
+  NS_IMETHOD SetEarlyHintObserver(nsIEarlyHintObserver* aObserver) override;
 
   void SetWarningReporter(HttpChannelSecurityWarningReporter* aReporter);
   HttpChannelSecurityWarningReporter* GetWarningReporter();
@@ -826,6 +831,8 @@ class nsHttpChannel final : public HttpBaseChannel,
 
  private:  // cache telemetry
   bool mDidReval{false};
+
+  RefPtr<nsIEarlyHintObserver> mEarlyHintObserver;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpChannel, NS_HTTPCHANNEL_IID)
