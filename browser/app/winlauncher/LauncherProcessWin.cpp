@@ -49,34 +49,6 @@ static mozilla::LauncherVoidResult PostCreationSetup(
                                                         aChildProcess);
 }
 
-/**
- * Create a new Job object and assign |aProcess| to it.  If something fails
- * in this function, we return nullptr but continue without recording
- * a launcher failure because it's not a critical problem to launch
- * the browser process.
- */
-static nsReturnRef<HANDLE> CreateJobAndAssignProcess(HANDLE aProcess) {
-  nsAutoHandle empty;
-  nsAutoHandle job(::CreateJobObjectW(nullptr, nullptr));
-
-  // Set JOB_OBJECT_LIMIT_BREAKAWAY_OK to allow the browser process
-  // to put child processes into a job on Win7, which does not support
-  // nested jobs.  See CanUseJob() in sandboxBroker.cpp.
-  JOBOBJECT_EXTENDED_LIMIT_INFORMATION jobInfo = {};
-  jobInfo.BasicLimitInformation.LimitFlags =
-      JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE | JOB_OBJECT_LIMIT_BREAKAWAY_OK;
-  if (!::SetInformationJobObject(job.get(), JobObjectExtendedLimitInformation,
-                                 &jobInfo, sizeof(jobInfo))) {
-    return empty.out();
-  }
-
-  if (!::AssignProcessToJobObject(job.get(), aProcess)) {
-    return empty.out();
-  }
-
-  return job.out();
-}
-
 #if !defined( \
     PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON)
 #  define PROCESS_CREATION_MITIGATION_POLICY_IMAGE_LOAD_PREFER_SYSTEM32_ALWAYS_ON \
@@ -128,9 +100,6 @@ static mozilla::LauncherFlags ProcessCmdLine(int& aArgc, wchar_t* aArgv[]) {
                         static_cast<const wchar_t**>(nullptr),
                         mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND ||
       mozilla::CheckArg(aArgc, aArgv, L"headless",
-                        static_cast<const wchar_t**>(nullptr),
-                        mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND ||
-      mozilla::CheckArg(aArgc, aArgv, L"remote-debugging-port",
                         static_cast<const wchar_t**>(nullptr),
                         mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND ||
       mozilla::EnvHasValue("MOZ_AUTOMATION") ||
@@ -417,11 +386,6 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
 
   nsAutoHandle process(pi.hProcess);
   nsAutoHandle mainThread(pi.hThread);
-
-  nsAutoHandle job;
-  if (flags & LauncherFlags::eWaitForBrowser) {
-    job = CreateJobAndAssignProcess(process.get());
-  }
 
   LauncherVoidResult setupResult = PostCreationSetup(
       argv[0], process.get(), mainThread.get(), isSafeMode.value());
