@@ -73,7 +73,7 @@ class DebugWrapperTraversalCallback
   DescribeGCedNode(bool aIsMarked, const char* aObjName,
                    uint64_t aCompartmentAddress) override {}
 
-  NS_IMETHOD_(void) NoteJSChild(const JS::GCCellPtr& aChild) override {
+  NS_IMETHOD_(void) NoteJSChild(JS::GCCellPtr aChild) override {
     if (aChild == mWrapper) {
       mFound = true;
     }
