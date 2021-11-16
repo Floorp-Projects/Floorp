@@ -18,6 +18,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OpenGraphPageData: "resource:///modules/pagedata/OpenGraphPageData.jsm",
   SchemaOrgPageData: "resource:///modules/pagedata/SchemaOrgPageData.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  TwitterPageData: "resource:///modules/pagedata/TwitterPageData.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
@@ -42,7 +43,7 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
  * can and then we drop anything that is invalid once all data is joined.
  */
 XPCOMUtils.defineLazyGetter(this, "DATA_COLLECTORS", function() {
-  return [SchemaOrgPageData, OpenGraphPageData];
+  return [SchemaOrgPageData, OpenGraphPageData, TwitterPageData];
 });
 
 let SCHEMAS = new Map();
