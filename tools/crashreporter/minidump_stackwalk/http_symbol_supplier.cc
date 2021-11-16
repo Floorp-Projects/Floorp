@@ -253,6 +253,7 @@ bool FetchURLToFile(HINTERNET session, const string& url, const string& file,
   }
 
   DWORD start = GetTickCount();
+  string scheme(comps.lpszScheme, comps.dwSchemeLength);
   string host(comps.lpszHostName, comps.dwHostNameLength);
   string path(comps.lpszUrlPath, comps.dwUrlPathLength);
   HINTERNET conn = InternetConnectA(session, host.c_str(), comps.nPort, nullptr,
@@ -263,8 +264,14 @@ bool FetchURLToFile(HINTERNET session, const string& url, const string& file,
     return false;
   }
 
+  DWORD flags = INTERNET_FLAG_NO_COOKIES;
+  if (strcmp(scheme.c_str(), "https") == 0) {
+    flags = flags | INTERNET_FLAG_SECURE;
+    BPLOG(INFO) << "HTTPSymbolSupplier: using HTTPS";
+  }
+
   HINTERNET req = HttpOpenRequestA(conn, "GET", path.c_str(), nullptr, nullptr,
-                                   nullptr, INTERNET_FLAG_NO_COOKIES, 0);
+                                   nullptr, flags, 0);
   if (!req) {
     BPLOG(INFO) << "HTTPSymbolSupplier: HttpSendRequest: Error: "
                 << GetLastError();
