@@ -1796,6 +1796,18 @@ bool WarpBuilder::transpileCall(BytecodeLocation loc,
   return TranspileCacheIRToMIR(this, loc, cacheIRSnapshot, {argc}, callInfo);
 }
 
+void WarpBuilder::buildCreateThis(CallInfo& callInfo) {
+  MOZ_ASSERT(callInfo.constructing());
+
+  // Inline the this-object allocation on the caller-side.
+  MDefinition* callee = callInfo.callee();
+  MDefinition* newTarget = callInfo.getNewTarget();
+  auto* createThis = MCreateThis::New(alloc(), callee, newTarget);
+  current->add(createThis);
+  callInfo.thisArg()->setImplicitlyUsedUnchecked();
+  callInfo.setThis(createThis);
+}
+
 bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
   uint32_t argc = loc.getCallArgc();
   JSOp op = loc.getOp();
@@ -1831,13 +1843,7 @@ bool WarpBuilder::buildCallOp(BytecodeLocation loc) {
 
   bool needsThisCheck = false;
   if (callInfo.constructing()) {
-    // Inline the this-object allocation on the caller-side.
-    MDefinition* callee = callInfo.callee();
-    MDefinition* newTarget = callInfo.getNewTarget();
-    MCreateThis* createThis = MCreateThis::New(alloc(), callee, newTarget);
-    current->add(createThis);
-    callInfo.thisArg()->setImplicitlyUsedUnchecked();
-    callInfo.setThis(createThis);
+    buildCreateThis(callInfo);
     needsThisCheck = true;
   }
 
@@ -2868,28 +2874,20 @@ bool WarpBuilder::build_SpreadCall(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_SpreadNew(BytecodeLocation loc) {
-  MDefinition* newTarget = current->pop();
-  MDefinition* argArr = current->pop();
-  MDefinition* thisValue = current->pop();
-  MDefinition* callee = current->pop();
+  bool constructing = true;
+  CallInfo callInfo(alloc(), constructing, loc.resultIsPopped());
+  callInfo.initForSpreadCall(current);
 
-  // Inline the constructor on the caller-side.
-  MCreateThis* createThis = MCreateThis::New(alloc(), callee, newTarget);
-  current->add(createThis);
-  thisValue->setImplicitlyUsedUnchecked();
+  buildCreateThis(callInfo);
 
-  // Load dense elements of the argument array. Note that the bytecode ensures
-  // this is an array.
-  MElements* elements = MElements::New(alloc(), argArr);
-  current->add(elements);
-
-  WrappedFunction* wrappedTarget = nullptr;
-  auto* apply = MConstructArray::New(alloc(), wrappedTarget, callee, elements,
-                                     createThis, newTarget);
-  apply->setBailoutKind(BailoutKind::TooManyArguments);
-  current->add(apply);
-  current->push(apply);
-  return resumeAfter(apply, loc);
+  MInstruction* call = makeSpreadCall(callInfo);
+  if (!call) {
+    return false;
+  }
+  call->setBailoutKind(BailoutKind::TooManyArguments);
+  current->add(call);
+  current->push(call);
+  return resumeAfter(call, loc);
 }
 
 bool WarpBuilder::build_SpreadSuperCall(BytecodeLocation loc) {
