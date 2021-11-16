@@ -712,26 +712,14 @@ async function getResponseForMessage(request, browser) {
       }
     }
     case "GET_SYMBOL_TABLE": {
-      const infoForBrowser = infoForBrowserMap.get(browser);
-      if (infoForBrowser === undefined) {
-        throw new Error("Could not find a symbolication service for this tab.");
-      }
       const { debugName, breakpadId } = request;
-      return infoForBrowser.symbolicationService.getSymbolTable(
-        debugName,
-        breakpadId
-      );
+      const symbolicationService = getSymbolicationServiceForBrowser(browser);
+      return symbolicationService.getSymbolTable(debugName, breakpadId);
     }
     case "QUERY_SYMBOLICATION_API": {
-      const infoForBrowser = infoForBrowserMap.get(browser);
-      if (infoForBrowser === undefined) {
-        throw new Error("Could not find a symbolication service for this tab.");
-      }
       const { path, requestJson } = request;
-      return infoForBrowser.symbolicationService.querySymbolicationApi(
-        path,
-        requestJson
-      );
+      const symbolicationService = getSymbolicationServiceForBrowser(browser);
+      return symbolicationService.querySymbolicationApi(path, requestJson);
     }
     default:
       console.error(
@@ -741,6 +729,36 @@ async function getResponseForMessage(request, browser) {
       const { UnhandledCaseError } = lazy.Utils();
       throw new UnhandledCaseError(request, "WebChannel request");
   }
+}
+
+/**
+ * Get the symbolicationService for the capture that opened this browser's
+ * tab, or a fallback service for browsers from tabs opened by the user.
+ *
+ * @param {MockedExports.Browser} browser
+ * @return {SymbolicationService}
+ */
+function getSymbolicationServiceForBrowser(browser) {
+  // We try to serve symbolication requests that come from tabs that we
+  // opened when a profile was captured, and for tabs that the user opened
+  // independently, for example because the user wants to load an existing
+  // profile from a file.
+  const infoForBrowser = infoForBrowserMap.get(browser);
+  if (infoForBrowser !== undefined) {
+    // We opened this tab when a profile was captured. Use the symbolication
+    // service for that capture.
+    return infoForBrowser.symbolicationService;
+  }
+
+  // For the "foreign" tabs, we provide a fallback symbolication service so that
+  // we can find symbols for any libraries that are loaded in this process. This
+  // means that symbolication will work if the existing file has been captured
+  // from the same build.
+  const { createLocalSymbolicationService } = lazy.PerfSymbolication();
+  return createLocalSymbolicationService(
+    Services.profiler.sharedLibraries,
+    getObjdirPrefValue()
+  );
 }
 
 /**
