@@ -4,8 +4,7 @@
 
 #infoContainer {
   text-align: center;
-  min-width: 500px;
-  padding: 1em;
+  padding: 1em 0;
 }
 
 a {
@@ -14,6 +13,7 @@ a {
 
 #notNowLinkContainer {
   text-align: end;
+  padding-inline-end: 1em;
 }
 
 #infoIcon {
@@ -35,7 +35,7 @@ a {
 
 #illustration {
   background: url("quicksuggestOnboarding_illustration.svg") no-repeat center;
-  min-width: 455px;
+  min-width: 538px;
   height: 219px;
   margin: 1em 0 2em;
 }
