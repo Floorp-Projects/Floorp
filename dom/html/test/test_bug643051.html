@@ -17,25 +17,38 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=643051
 <pre id="test">
 <script type="application/javascript">
 
-/** Test for Bug 643051 **/
-document.cookie = "a=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
-document.cookie = "a2=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
-document.cookie = "a3=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
+SimpleTest.waitForExplicitFinish();
 
-// single cookie, should work
-document.cookie = "a=bar";
-is(document.cookie, "a=bar", "Can't read stored cookie!");
+SpecialPowers.pushPrefEnv({
+  "set": [
+    // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+    ["network.cookie.sameSite.laxByDefault", false],
+  ]
+}, () => {
+  /** Test for Bug 643051 **/
+  document.cookie = "a=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
+  document.cookie = "a2=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
+  document.cookie = "a3=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
 
-document.cookie = "a2=bar\na3=bar";
-is(document.cookie, "a=bar; a2=bar", "Wrong cookie value");
+  // single cookie, should work
+  document.cookie = "a=bar";
+  is(document.cookie, "a=bar", "Can't read stored cookie!");
 
-document.cookie = "a2=baz; a3=bar";
-is(document.cookie, "a=bar; a2=baz", "Wrong cookie value");
+  document.cookie = "a2=bar\na3=bar";
+  is(document.cookie, "a=bar; a2=bar", "Wrong cookie value");
 
-// clear cookies again to avoid affecting other tests
-document.cookie = "a=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
-document.cookie = "a2=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
-document.cookie = "a3=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
+  document.cookie = "a2=baz; a3=bar";
+  is(document.cookie, "a=bar; a2=baz", "Wrong cookie value");
+
+  // clear cookies again to avoid affecting other tests
+  document.cookie = "a=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
+  document.cookie = "a2=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
+  document.cookie = "a3=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
+
+  SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
+  SimpleTest.finish();
+});
+
 </script>
 </pre>
 </body>
