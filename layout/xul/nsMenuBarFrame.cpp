@@ -260,9 +260,7 @@ class nsMenuBarSwitchMenu : public Runnable {
       if (mNewMenu && weakMenuBar.IsAlive()) menubar->SetStayActive(false);
     }
 
-    if (mNewMenu) {
-      pm->ShowMenu(mNewMenu, mSelectFirstItem);
-    }
+    if (mNewMenu) pm->ShowMenu(mNewMenu, mSelectFirstItem, false);
 
     return NS_OK;
   }
