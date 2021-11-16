@@ -27,6 +27,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 XPCOMUtils.defineLazyGlobalGetters(this, ["AbortController", "fetch"]);
 
 const TIMESTAMP_TEMPLATE = "%YYYYMMDDHH%";
+const TIMESTAMP_LENGTH = 10;
+const TIMESTAMP_REGEXP = /^\d{10}$/;
 
 const MERINO_ENDPOINT_PARAM_QUERY = "q";
 
@@ -169,6 +171,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
       qsSuggestion: [suggestion.full_keyword, UrlbarUtils.HIGHLIGHT.SUGGESTED],
       title: suggestion.title,
       url: suggestion.url,
+      urlTimestampIndex: suggestion.urlTimestampIndex,
       icon: suggestion.icon,
       sponsoredImpressionUrl: suggestion.impression_url,
       sponsoredClickUrl: suggestion.click_url,
@@ -390,6 +393,66 @@ class ProviderQuickSuggest extends UrlbarProvider {
   }
 
   /**
+   * Returns whether a given URL and quick suggest's URL are equivalent. URLs
+   * are equivalent if they are identical except for substrings that replaced
+   * templates in the original suggestion URL.
+   *
+   * For example, a suggestion URL from the backing suggestions source might
+   * include a timestamp template "%YYYYMMDDHH%" like this:
+   *
+   *   http://example.com/foo?bar=%YYYYMMDDHH%
+   *
+   * When a quick suggest result is created from this suggestion URL, it's
+   * created with a URL that is a copy of the suggestion URL but with the
+   * template replaced with a real timestamp value, like this:
+   *
+   *   http://example.com/foo?bar=2021111610
+   *
+   * All URLs created from this single suggestion URL are considered equivalent
+   * regardless of their real timestamp values.
+   *
+   * @param {string} url
+   * @param {UrlbarResult} result
+   * @returns {boolean}
+   *   Whether `url` is equivalent to `result.payload.url`.
+   */
+  isURLEquivalentToResultURL(url, result) {
+    // If the URLs aren't the same length, they can't be equivalent.
+    let resultURL = result.payload.url;
+    if (resultURL.length != url.length) {
+      return false;
+    }
+
+    // If the result URL doesn't have a timestamp, then do a straight string
+    // comparison.
+    let { urlTimestampIndex } = result.payload;
+    if (typeof urlTimestampIndex != "number" || urlTimestampIndex < 0) {
+      return resultURL == url;
+    }
+
+    // Compare the first parts of the strings before the timestamps.
+    if (
+      resultURL.substring(0, urlTimestampIndex) !=
+      url.substring(0, urlTimestampIndex)
+    ) {
+      return false;
+    }
+
+    // Compare the second parts of the strings after the timestamps.
+    let remainderIndex = urlTimestampIndex + TIMESTAMP_LENGTH;
+    if (resultURL.substring(remainderIndex) != url.substring(remainderIndex)) {
+      return false;
+    }
+
+    // Test the timestamp against the regexp.
+    let maybeTimestamp = url.substring(
+      urlTimestampIndex,
+      urlTimestampIndex + TIMESTAMP_LENGTH
+    );
+    return TIMESTAMP_REGEXP.test(maybeTimestamp);
+  }
+
+  /**
    * Fetches a remote settings suggestion.
    *
    * @param {UrlbarQueryContext} queryContext
@@ -583,7 +646,25 @@ class ProviderQuickSuggest extends UrlbarProvider {
       .map(n => n.toString().padStart(2, "0"))
       .join("");
     for (let key of ["url", "click_url"]) {
-      suggestion[key] = suggestion[key]?.replace(TIMESTAMP_TEMPLATE, timestamp);
+      let value = suggestion[key];
+      if (!value) {
+        continue;
+      }
+
+      let timestampIndex = value.indexOf(TIMESTAMP_TEMPLATE);
+      if (timestampIndex >= 0) {
+        if (key == "url") {
+          suggestion.urlTimestampIndex = timestampIndex;
+        }
+        // We could use replace() here but we need the timestamp index for
+        // `suggestion.urlTimestampIndex`, and since we already have that, avoid
+        // another O(n) substring search and manually replace the template with
+        // the timestamp.
+        suggestion[key] =
+          value.substring(0, timestampIndex) +
+          timestamp +
+          value.substring(timestampIndex + TIMESTAMP_TEMPLATE.length);
+      }
     }
   }
 

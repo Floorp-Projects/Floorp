@@ -16,6 +16,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarProviderQuickSuggest:
+    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
   UrlbarProviderTabToSearch:
     "resource:///modules/UrlbarProviderTabToSearch.jsm",
   UrlbarMuxer: "resource:///modules/UrlbarUtils.jsm",
@@ -583,10 +585,13 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    * @returns {boolean}
    *   True if the result can be added and false if it should be discarded.
    */
+  // TODO (Bug 1741273): Refactor this method to avoid an eslint complexity
+  // error or increase the complexity threshold.
+  // eslint-disable-next-line complexity
   _canAddResult(result, state) {
     // Never discard quick suggest results. We may want to change this logic at
     // some point, but for all current use cases, they should always be shown.
-    if (result.providerName == "UrlbarProviderQuickSuggest") {
+    if (result.providerName == UrlbarProviderQuickSuggest.name) {
       return true;
     }
 
@@ -809,6 +814,19 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       }
     }
 
+    // Discard history results that dupe the quick suggest result.
+    if (
+      state.quickSuggestResult &&
+      !result.heuristic &&
+      result.type == UrlbarUtils.RESULT_TYPE.URL &&
+      UrlbarProviderQuickSuggest.isURLEquivalentToResultURL(
+        result.payload.url,
+        state.quickSuggestResult
+      )
+    ) {
+      return false;
+    }
+
     // Heuristic results must always be the first result.  If this result is a
     // heuristic but we've already added results, discard it.  Normally this
     // should never happen because the standard result groups are set up so
@@ -886,7 +904,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         // the quick suggest: The URL is added to history and later both a
         // history result and the quick suggest may match a query.
         (topPrefixRank == prefixRank &&
-          result.providerName == "UrlbarProviderQuickSuggest")
+          result.providerName == UrlbarProviderQuickSuggest.name)
       ) {
         // strippedUrl => { prefix, title, rank, providerName }
         state.strippedUrlToTopPrefixAndTitle.set(strippedUrl, {
@@ -919,6 +937,10 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
         (!result.payload.inPrivateWindow && !result.payload.tail))
     ) {
       state.canShowTailSuggestions = false;
+    }
+
+    if (result.providerName == UrlbarProviderQuickSuggest.name) {
+      state.quickSuggestResult = result;
     }
 
     state.hasUnitConversionResult =

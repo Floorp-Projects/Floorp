@@ -23,10 +23,11 @@ const HTTP_SEARCH_STRING = "http prefix";
 const HTTPS_SEARCH_STRING = "https prefix";
 const PREFIX_SUGGESTIONS_STRIPPED_URL = "example.com/prefix-test";
 
+const TIMESTAMP_TEMPLATE = "%YYYYMMDDHH%";
+const TIMESTAMP_LENGTH = 10;
 const TIMESTAMP_SEARCH_STRING = "timestamp";
-const TIMESTAMP_SUGGESTION_URL = "http://example.com/timestamp-%YYYYMMDDHH%";
-const TIMESTAMP_SUGGESTION_CLICK_URL =
-  "http://click.reporting.test.com/timestamp-%YYYYMMDDHH%-foo";
+const TIMESTAMP_SUGGESTION_URL = `http://example.com/timestamp-${TIMESTAMP_TEMPLATE}`;
+const TIMESTAMP_SUGGESTION_CLICK_URL = `http://click.reporting.test.com/timestamp-${TIMESTAMP_TEMPLATE}-foo`;
 
 const REMOTE_SETTINGS_DATA = [
   {
@@ -827,4 +828,204 @@ add_task(async function timestamps() {
     url: TIMESTAMP_SUGGESTION_URL,
     sponsoredClickUrl: TIMESTAMP_SUGGESTION_CLICK_URL,
   });
+});
+
+// Real quick suggest URLs include a timestamp template that
+// UrlbarProviderQuickSuggest fills in when it fetches suggestions. When the
+// user picks a quick suggest, its URL with its particular timestamp is added to
+// history. If the user triggers the quick suggest again later, its new
+// timestamp may be different from the one in the user's history. In that case,
+// the two URLs should be treated as dupes and only the quick suggest should be
+// shown, not the URL from history.
+add_task(async function dedupeAgainstURL_timestamps() {
+  // Disable search suggestions.
+  UrlbarPrefs.set("suggest.searches", false);
+
+  // Add a visit that will match the query below and dupe the quick suggest.
+  let dupeURL = TIMESTAMP_SUGGESTION_URL.replace(
+    TIMESTAMP_TEMPLATE,
+    "2013051113"
+  );
+
+  // Add other visits that will match the query and almost dupe the quick
+  // suggest but not quite because they have invalid timestamps.
+  let badTimestamps = [
+    // not numeric digits
+    "x".repeat(TIMESTAMP_LENGTH),
+    // too few digits
+    "5".repeat(TIMESTAMP_LENGTH - 1),
+    // empty string, too few digits
+    "",
+  ];
+  let badTimestampURLs = badTimestamps.map(str =>
+    TIMESTAMP_SUGGESTION_URL.replace(TIMESTAMP_TEMPLATE, str)
+  );
+
+  await PlacesTestUtils.addVisits(
+    [dupeURL, ...badTimestampURLs].map(uri => ({
+      uri,
+      title: TIMESTAMP_SEARCH_STRING,
+    }))
+  );
+
+  // First, do a search with quick suggest disabled to make sure the search
+  // string matches all the other URLs.
+  info("Doing first query");
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
+  let context = createContext(TIMESTAMP_SEARCH_STRING, { isPrivate: false });
+
+  let expectedHeuristic = makeSearchResult(context, {
+    heuristic: true,
+    query: TIMESTAMP_SEARCH_STRING,
+    engineName: Services.search.defaultEngine.name,
+  });
+  let expectedDupeResult = makeVisitResult(context, {
+    uri: dupeURL,
+    title: TIMESTAMP_SEARCH_STRING,
+  });
+  let expectedBadTimestampResults = [...badTimestampURLs].reverse().map(uri =>
+    makeVisitResult(context, {
+      uri,
+      title: TIMESTAMP_SEARCH_STRING,
+    })
+  );
+
+  await check_results({
+    context,
+    matches: [
+      expectedHeuristic,
+      ...expectedBadTimestampResults,
+      expectedDupeResult,
+    ],
+  });
+
+  // Now do another search with quick suggest enabled.
+  info("Doing second query");
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+  context = createContext(TIMESTAMP_SEARCH_STRING, { isPrivate: false });
+
+  // The expected quick suggest result without the timestamp-related payload
+  // properties.
+  let expectedQuickSuggest = {
+    type: UrlbarUtils.RESULT_TYPE.URL,
+    source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+    heuristic: false,
+    payload: {
+      qsSuggestion: TIMESTAMP_SEARCH_STRING,
+      title: "Timestamp suggestion",
+      icon: null,
+      sponsoredImpressionUrl: "http://impression.reporting.test.com/timestamp",
+      sponsoredBlockId: 5,
+      sponsoredAdvertiser: "testadvertisertimestamp",
+      isSponsored: true,
+      helpUrl: UrlbarProviderQuickSuggest.helpUrl,
+      helpL10nId: "firefox-suggest-urlbar-learn-more",
+      source: "remote-settings",
+    },
+  };
+
+  let expectedResults = [
+    expectedHeuristic,
+    ...expectedBadTimestampResults,
+    expectedQuickSuggest,
+  ];
+
+  let controller = UrlbarTestUtils.newMockController({
+    input: {
+      isPrivate: false,
+      onFirstResult() {
+        return false;
+      },
+      window: {
+        location: {
+          href: AppConstants.BROWSER_CHROME_URL,
+        },
+      },
+    },
+  });
+  await controller.startQuery(context);
+  info("Actual results: " + JSON.stringify(context.results));
+
+  Assert.equal(
+    context.results.length,
+    expectedResults.length,
+    "Found the expected number of results"
+  );
+
+  function getPayload(result, keysToIgnore = []) {
+    let payload = {};
+    for (let [key, value] of Object.entries(result.payload)) {
+      if (value !== undefined && !keysToIgnore.includes(key)) {
+        payload[key] = value;
+      }
+    }
+    return payload;
+  }
+
+  // Check actual vs. expected result properties.
+  for (let i = 0; i < expectedResults.length; i++) {
+    let actual = context.results[i];
+    let expected = expectedResults[i];
+    info(
+      `Comparing results at index ${i}:` +
+        " actual=" +
+        JSON.stringify(actual) +
+        " expected=" +
+        JSON.stringify(expected)
+    );
+    Assert.equal(
+      actual.type,
+      expected.type,
+      `result.type at result index ${i}`
+    );
+    Assert.equal(
+      actual.source,
+      expected.source,
+      `result.source at result index ${i}`
+    );
+    Assert.equal(
+      actual.heuristic,
+      expected.heuristic,
+      `result.heuristic at result index ${i}`
+    );
+
+    // Check payloads except for the last result, which should be the quick
+    // suggest.
+    if (i != expectedResults.length - 1) {
+      Assert.deepEqual(
+        getPayload(context.results[i]),
+        getPayload(expectedResults[i]),
+        "Payload at index " + i
+      );
+    }
+  }
+
+  // Check the quick suggest's payload excluding the timestamp-related
+  // properties.
+  let actualQuickSuggest = context.results[context.results.length - 1];
+  let timestampKeys = [
+    "displayUrl",
+    "sponsoredClickUrl",
+    "url",
+    "urlTimestampIndex",
+  ];
+  Assert.deepEqual(
+    getPayload(actualQuickSuggest, timestampKeys),
+    getPayload(expectedQuickSuggest, timestampKeys),
+    "Quick suggest payload excluding timestamp-related keys"
+  );
+
+  // Now check the timestamps in the payload.
+  QuickSuggestTestUtils.assertTimestampsReplaced(actualQuickSuggest, {
+    url: TIMESTAMP_SUGGESTION_URL,
+    sponsoredClickUrl: TIMESTAMP_SUGGESTION_CLICK_URL,
+  });
+
+  // Clean up.
+  UrlbarPrefs.clear("suggest.quicksuggest.nonsponsored");
+  UrlbarPrefs.clear("suggest.quicksuggest.sponsored");
+  UrlbarPrefs.clear("suggest.searches");
+  await PlacesUtils.history.clear();
 });
