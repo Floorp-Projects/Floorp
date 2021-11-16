@@ -89,6 +89,8 @@ struct PreferenceSheet {
     return PrefsKindFor(aDocument) == PrefsKind::Chrome;
   }
 
+  static bool MayForceColors() { return !ContentPrefs().mUseDocumentColors; }
+
   static const Prefs& PrefsFor(const dom::Document& aDocument) {
     switch (PrefsKindFor(aDocument)) {
       case PrefsKind::Chrome:
