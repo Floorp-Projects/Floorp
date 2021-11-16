@@ -15,6 +15,34 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   JsonSchemaValidator:
     "resource://gre/modules/components-utils/JsonSchemaValidator.jsm",
+  OpenGraphPageData: "resource:///modules/pagedata/OpenGraphPageData.jsm",
+  SchemaOrgPageData: "resource:///modules/pagedata/SchemaOrgPageData.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+});
+
+XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
+  return console.createInstance({
+    prefix: "PageData",
+    maxLogLevel: Services.prefs.getBoolPref("browser.pagedata.log", false)
+      ? "Debug"
+      : "Warn",
+  });
+});
+
+/**
+ * The list of page data collectors. These should be sorted in order of
+ * specificity, if the same piece of data is provided by two collectors then the
+ * earlier wins.
+ *
+ * Collectors must provide a `collect` function which will be passed the
+ * document object and should return the PageData structure. The function may be
+ * asynchronous if needed.
+ *
+ * The data returned need not be valid, collectors should return whatever they
+ * can and then we drop anything that is invalid once all data is joined.
+ */
+XPCOMUtils.defineLazyGetter(this, "DATA_COLLECTORS", function() {
+  return [SchemaOrgPageData, OpenGraphPageData];
 });
 
 let SCHEMAS = new Map();
@@ -189,5 +217,41 @@ const PageDataSchema = {
       ...newGeneral,
       data: dataMap,
     };
+  },
+
+  /**
+   * Collects page data from a DOM document.
+   *
+   * @param {Document} document
+   *   The DOM document to collect data from
+   *
+   * @returns {Promise<PageData | null>} The data collected or null in case of
+   *   error.
+   */
+  async collectPageData(document) {
+    logConsole.debug("Starting collection", document.documentURI);
+
+    let pending = DATA_COLLECTORS.map(async collector => {
+      try {
+        return await collector.collect(document);
+      } catch (e) {
+        logConsole.error("Error collecting page data", e);
+        return null;
+      }
+    });
+
+    let pageDataList = await Promise.all(pending);
+
+    let pageData = pageDataList.reduce(PageDataSchema.coalescePageData, {
+      date: Date.now(),
+      url: document.documentURI,
+    });
+
+    try {
+      return this.validatePageData(pageData);
+    } catch (e) {
+      logConsole.error("Failed to collect valid page data", e);
+      return null;
+    }
   },
 };
