@@ -11,8 +11,6 @@
 #ifndef vm_AtomsTable_h
 #define vm_AtomsTable_h
 
-#include <type_traits>  // std::{enable_if_t,is_const_v}
-
 #include "js/GCHashTable.h"
 #include "js/TypeDecls.h"
 #include "vm/JSAtom.h"
@@ -162,21 +160,11 @@ class AtomsTable {
   ~AtomsTable();
   bool init();
 
-  template <typename Chars>
+  template <typename CharT>
   MOZ_ALWAYS_INLINE JSAtom* atomizeAndCopyChars(
-      JSContext* cx, Chars chars, size_t length, PinningBehavior pin,
+      JSContext* cx, const CharT* chars, size_t length, PinningBehavior pin,
       const mozilla::Maybe<uint32_t>& indexValue,
       const AtomHasher::Lookup& lookup);
-
-  template <typename CharT,
-            typename = std::enable_if_t<!std::is_const_v<CharT>>>
-  MOZ_ALWAYS_INLINE JSAtom* atomizeAndCopyChars(
-      JSContext* cx, CharT* chars, size_t length, PinningBehavior pin,
-      const mozilla::Maybe<uint32_t>& indexValue,
-      const AtomHasher::Lookup& lookup) {
-    return atomizeAndCopyChars(cx, const_cast<const CharT*>(chars), length, pin,
-                               indexValue, lookup);
-  }
 
   bool atomIsPinned(JSRuntime* rt, JSAtom* atom);
 

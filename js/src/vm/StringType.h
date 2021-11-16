@@ -1280,26 +1280,6 @@ MOZ_ALWAYS_INLINE JSAtom* JSLinearString::morphAtomizedStringIntoPermanentAtom(
 
 namespace js {
 
-/**
- * An indexable characters class exposing unaligned, little-endian encoded
- * char16_t data.
- */
-class LittleEndianChars {
- public:
-  explicit constexpr LittleEndianChars(const uint8_t* leTwoByte)
-      : current(leTwoByte) {}
-
-  constexpr char16_t operator[](size_t index) const {
-    size_t offset = index * sizeof(char16_t);
-    return (current[offset + 1] << 8) | current[offset];
-  }
-
-  constexpr const uint8_t* get() { return current; }
-
- private:
-  const uint8_t* current;
-};
-
 class StaticStrings {
   // NOTE: The WellKnownParserAtoms rely on these tables and may need to be
   //       update if these tables are changed.
@@ -1365,13 +1345,12 @@ class StaticStrings {
   static bool isStatic(const CharT* chars, size_t len);
 
   /* Return null if no static atom exists for the given (chars, length). */
-  template <typename Chars>
-  MOZ_ALWAYS_INLINE JSAtom* lookup(Chars chars, size_t length) {
-    static_assert(std::is_same_v<Chars, const Latin1Char*> ||
-                      std::is_same_v<Chars, const char16_t*> ||
-                      std::is_same_v<Chars, LittleEndianChars>,
-                  "for understandability, |chars| must be one of a few "
-                  "identified types");
+  template <typename CharT>
+  MOZ_ALWAYS_INLINE JSAtom* lookup(const CharT* chars, size_t length) {
+    static_assert(
+        std::is_same_v<CharT, Latin1Char> || std::is_same_v<CharT, char16_t>,
+        "for understandability, |chars| must be one of a few "
+        "identified types");
 
     switch (length) {
       case 1: {
@@ -1416,14 +1395,6 @@ class StaticStrings {
     // Collapse calls for |const char*| into |const Latin1Char char*| to avoid
     // excess instantiations.
     return lookup(reinterpret_cast<const Latin1Char*>(chars), length);
-  }
-
-  template <typename CharT,
-            typename = std::enable_if_t<!std::is_const_v<CharT>>>
-  MOZ_ALWAYS_INLINE JSAtom* lookup(CharT* chars, size_t length) {
-    // Collapse the remaining |CharT*| to |const CharT*| to avoid excess
-    // instantiations.
-    return lookup(const_cast<const CharT*>(chars), length);
   }
 
  private:
@@ -1661,13 +1632,6 @@ inline JSLinearString* NewStringCopyUTF8Z(
 JSString* NewMaybeExternalString(
     JSContext* cx, const char16_t* s, size_t n,
     const JSExternalStringCallbacks* callbacks, bool* allocatedExternal,
-    js::gc::InitialHeap heap = js::gc::DefaultHeap);
-
-/**
- * Allocate a new string consisting of |chars[0..length]| characters.
- */
-extern JSLinearString* NewStringFromLittleEndianNoGC(
-    JSContext* cx, LittleEndianChars chars, size_t length,
     js::gc::InitialHeap heap = js::gc::DefaultHeap);
 
 static_assert(sizeof(HashNumber) == 4);
