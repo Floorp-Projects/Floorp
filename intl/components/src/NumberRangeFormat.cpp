@@ -16,8 +16,6 @@
 
 namespace mozilla::intl {
 
-#ifdef MOZ_INTL_HAS_NUMBER_RANGE_FORMAT
-
 /*static*/ Result<UniquePtr<NumberRangeFormat>, ICUError>
 NumberRangeFormat::TryCreate(std::string_view aLocale,
                              const NumberRangeFormatOptions& aOptions) {
@@ -121,14 +119,6 @@ Result<std::u16string_view, ICUError> NumberRangeFormat::formatResultToParts(
     bool endIsNegative, NumberPartVector& parts) const {
   UErrorCode status = U_ZERO_ERROR;
 
-  UNumberRangeIdentityResult identity =
-      unumrf_resultGetIdentityResult(mFormattedNumberRange, &status);
-  if (U_FAILURE(status)) {
-    return Err(ToICUError(status));
-  }
-
-  bool isIdenticalNumber = identity != UNUM_IDENTITY_RESULT_NOT_EQUAL;
-
   const UFormattedValue* formattedValue =
       unumrf_resultAsValue(mFormattedNumberRange, &status);
   if (U_FAILURE(status)) {
@@ -147,18 +137,6 @@ Result<std::u16string_view, ICUError> NumberRangeFormat::formatResultToParts(
     return Err(ToICUError(status));
   }
   ScopedICUObject<UConstrainedFieldPosition, ucfpos_close> toCloseFpos(fpos);
-
-  // We're only interested in UFIELD_CATEGORY_NUMBER fields when the start and
-  // end range is identical.
-  //
-  // Constraining the category is only needed as a workaround for
-  // <https://unicode-org.atlassian.net/browse/ICU-21683>.
-  if (isIdenticalNumber) {
-    ucfpos_constrainCategory(fpos, UFIELD_CATEGORY_NUMBER, &status);
-    if (U_FAILURE(status)) {
-      return Err(ToICUError(status));
-    }
-  }
 
   Maybe<double> number = start;
   bool isNegative = startIsNegative;
@@ -233,15 +211,5 @@ Result<std::u16string_view, ICUError> NumberRangeFormat::formatResultToParts(
 
   return std::u16string_view(utf16Str, static_cast<size_t>(utf16Length));
 }
-
-#else
-
-/*static*/ Result<UniquePtr<NumberRangeFormat>, ICUError>
-NumberRangeFormat::TryCreate(std::string_view aLocale,
-                             const NumberFormatOptions& aOptions) {
-  return MakeUnique<NumberRangeFormat>();
-}
-
-#endif
 
 }  // namespace mozilla::intl

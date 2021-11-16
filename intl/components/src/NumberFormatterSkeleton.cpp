@@ -416,7 +416,6 @@ UNumberFormatter* NumberFormatterSkeleton::toFormatter(
   return nf;
 }
 
-#ifndef U_HIDE_DRAFT_API
 static UNumberRangeCollapse ToUNumberRangeCollapse(
     NumberRangeFormatOptions::RangeCollapse collapse) {
   using RangeCollapse = NumberRangeFormatOptions::RangeCollapse;
@@ -470,6 +469,5 @@ UNumberRangeFormatter* NumberFormatterSkeleton::toRangeFormatter(
   }
   return nrf;
 }
-#endif
 
 }  // namespace mozilla::intl

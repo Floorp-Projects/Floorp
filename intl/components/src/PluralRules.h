@@ -21,13 +21,6 @@
 
 namespace mozilla::intl {
 
-#ifndef U_HIDE_DRAFT_API
-// SelectRange() requires ICU draft API. And because we try to reduce direct
-// access to ICU definitions, add a separate pre-processor definition to guard
-// the access to SelectRange() instead of directly using U_HIDE_DRAFT_API.
-#  define MOZ_INTL_PLURAL_RULES_HAS_SELECT_RANGE
-#endif
-
 class PluralRules final {
  public:
   /**
@@ -71,7 +64,6 @@ class PluralRules final {
    */
   Result<PluralRules::Keyword, ICUError> Select(double aNumber) const;
 
-#ifdef MOZ_INTL_PLURAL_RULES_HAS_SELECT_RANGE
   /**
    * Returns the PluralRules keyword that corresponds to the range from |aStart|
    * to |aEnd|.
@@ -80,7 +72,6 @@ class PluralRules final {
    */
   Result<PluralRules::Keyword, ICUError> SelectRange(double aStart,
                                                      double aEnd) const;
-#endif
 
   /**
    * Returns an EnumSet with the plural-rules categories that are supported by
