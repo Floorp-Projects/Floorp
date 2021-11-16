@@ -98,10 +98,10 @@ auto ScrollbarDrawingCocoa::GetThumbRect(const Rect& aRect,
   // Compute the thumb thickness. This varies based on aParams.small,
   // aParams.overlay and aParams.rolledOver. non-overlay: 6 / 8, overlay
   // non-hovered: 5 / 7, overlay hovered: 9 / 11
-  float thickness = aParams.small ? 6.0f : 8.0f;
-  if (aParams.overlay) {
+  float thickness = aParams.isSmall ? 6.0f : 8.0f;
+  if (aParams.isOverlay) {
     thickness -= 1.0f;
-    if (aParams.rolledOver) {
+    if (aParams.isRolledOver) {
       thickness += 4.0f;
     }
   }
@@ -109,14 +109,14 @@ auto ScrollbarDrawingCocoa::GetThumbRect(const Rect& aRect,
 
   // Compute the thumb rect.
   const float outerSpacing =
-      ((aParams.overlay || aParams.small) ? 1.0f : 2.0f) * aScale;
+      ((aParams.isOverlay || aParams.isSmall) ? 1.0f : 2.0f) * aScale;
   Rect thumbRect = aRect;
   thumbRect.Deflate(1.0f * aScale);
-  if (aParams.horizontal) {
+  if (aParams.isHorizontal) {
     float bottomEdge = thumbRect.YMost() - outerSpacing;
     thumbRect.SetBoxY(bottomEdge - thickness, bottomEdge);
   } else {
-    if (aParams.rtl) {
+    if (aParams.isRtl) {
       float leftEdge = thumbRect.X() + outerSpacing;
       thumbRect.SetBoxX(leftEdge, leftEdge + thickness);
     } else {
@@ -127,18 +127,18 @@ auto ScrollbarDrawingCocoa::GetThumbRect(const Rect& aRect,
 
   // Compute the thumb fill color.
   nscolor faceColor;
-  if (aParams.custom) {
+  if (aParams.isCustom) {
     faceColor = aParams.faceColor;
   } else {
-    if (aParams.overlay) {
-      faceColor = aParams.onDarkBackground ? NS_RGBA(255, 255, 255, 128)
-                                           : NS_RGBA(0, 0, 0, 128);
-    } else if (aParams.onDarkBackground) {
-      faceColor = aParams.rolledOver ? NS_RGBA(158, 158, 158, 255)
-                                     : NS_RGBA(117, 117, 117, 255);
+    if (aParams.isOverlay) {
+      faceColor = aParams.isOnDarkBackground ? NS_RGBA(255, 255, 255, 128)
+                                             : NS_RGBA(0, 0, 0, 128);
+    } else if (aParams.isOnDarkBackground) {
+      faceColor = aParams.isRolledOver ? NS_RGBA(158, 158, 158, 255)
+                                       : NS_RGBA(117, 117, 117, 255);
     } else {
-      faceColor = aParams.rolledOver ? NS_RGBA(125, 125, 125, 255)
-                                     : NS_RGBA(194, 194, 194, 255);
+      faceColor = aParams.isRolledOver ? NS_RGBA(125, 125, 125, 255)
+                                       : NS_RGBA(194, 194, 194, 255);
     }
   }
 
@@ -147,12 +147,12 @@ auto ScrollbarDrawingCocoa::GetThumbRect(const Rect& aRect,
   float strokeWidth = 0.0f;
 
   // Overlay scrollbars have an additional stroke around the fill.
-  if (aParams.overlay) {
-    strokeOutset = (aParams.onDarkBackground ? 0.3f : 0.5f) * aScale;
-    strokeWidth = (aParams.onDarkBackground ? 0.6f : 0.8f) * aScale;
+  if (aParams.isOverlay) {
+    strokeOutset = (aParams.isOnDarkBackground ? 0.3f : 0.5f) * aScale;
+    strokeWidth = (aParams.isOnDarkBackground ? 0.6f : 0.8f) * aScale;
 
-    strokeColor = aParams.onDarkBackground ? NS_RGBA(0, 0, 0, 48)
-                                           : NS_RGBA(255, 255, 255, 48);
+    strokeColor = aParams.isOnDarkBackground ? NS_RGBA(0, 0, 0, 48)
+                                             : NS_RGBA(255, 255, 255, 48);
   }
 
   return {thumbRect, faceColor, strokeColor, strokeWidth, strokeOutset};
@@ -190,7 +190,7 @@ static ScrollbarTrackDecorationColors ComputeScrollbarTrackDecorationColors(
 bool ScrollbarDrawingCocoa::GetScrollbarTrackRects(
     const Rect& aRect, const ScrollbarParams& aParams, float aScale,
     ScrollbarTrackRects& aRects) {
-  if (aParams.overlay && !aParams.rolledOver) {
+  if (aParams.isOverlay && !aParams.isRolledOver) {
     // Non-hovered overlay scrollbars don't have a track. Draw nothing.
     return false;
   }
@@ -199,19 +199,19 @@ bool ScrollbarDrawingCocoa::GetScrollbarTrackRects(
   aScale = aScale >= 2.0f ? 2.0f : 1.0f;
 
   nscolor trackColor;
-  if (aParams.custom) {
+  if (aParams.isCustom) {
     trackColor = aParams.trackColor;
   } else {
-    if (aParams.overlay) {
-      trackColor = aParams.onDarkBackground ? NS_RGBA(201, 201, 201, 38)
-                                            : NS_RGBA(250, 250, 250, 191);
+    if (aParams.isOverlay) {
+      trackColor = aParams.isOnDarkBackground ? NS_RGBA(201, 201, 201, 38)
+                                              : NS_RGBA(250, 250, 250, 191);
     } else {
-      trackColor = aParams.onDarkBackground ? NS_RGBA(46, 46, 46, 255)
-                                            : NS_RGBA(250, 250, 250, 255);
+      trackColor = aParams.isOnDarkBackground ? NS_RGBA(46, 46, 46, 255)
+                                              : NS_RGBA(250, 250, 250, 255);
     }
   }
 
-  float thickness = aParams.horizontal ? aRect.height : aRect.width;
+  float thickness = aParams.isHorizontal ? aRect.height : aRect.width;
 
   // The scrollbar track is drawn as multiple non-overlapping segments, which
   // make up lines of different widths and with slightly different shading.
@@ -230,17 +230,17 @@ bool ScrollbarDrawingCocoa::GetScrollbarTrackRects(
   // Iterate over the segments "from inside to outside" and fill each segment.
   // For horizontal scrollbars, iterate top to bottom.
   // For vertical scrollbars, iterate left to right or right to left based on
-  // aParams.rtl.
+  // aParams.isRtl.
   auto current = aRects.begin();
   float accumulatedThickness = 0.0f;
   for (const auto& segment : segments) {
     Rect segmentRect = aRect;
     float startThickness = accumulatedThickness;
     float endThickness = startThickness + segment.thickness;
-    if (aParams.horizontal) {
+    if (aParams.isHorizontal) {
       segmentRect.SetBoxY(aRect.Y() + startThickness, aRect.Y() + endThickness);
     } else {
-      if (aParams.rtl) {
+      if (aParams.isRtl) {
         segmentRect.SetBoxX(aRect.XMost() - endThickness,
                             aRect.XMost() - startThickness);
       } else {
@@ -260,7 +260,7 @@ bool ScrollbarDrawingCocoa::GetScrollCornerRects(const Rect& aRect,
                                                  const ScrollbarParams& aParams,
                                                  float aScale,
                                                  ScrollCornerRects& aRects) {
-  if (aParams.overlay && !aParams.rolledOver) {
+  if (aParams.isOverlay && !aParams.isRolledOver) {
     // Non-hovered overlay scrollbars don't have a corner. Draw nothing.
     return false;
   }
@@ -286,11 +286,11 @@ bool ScrollbarDrawingCocoa::GetScrollCornerRects(const Rect& aRect,
   float width = aRect.width;
   float height = aRect.height;
   nscolor trackColor;
-  if (aParams.custom) {
+  if (aParams.isCustom) {
     trackColor = aParams.trackColor;
   } else {
-    trackColor = aParams.onDarkBackground ? NS_RGBA(46, 46, 46, 255)
-                                          : NS_RGBA(250, 250, 250, 255);
+    trackColor = aParams.isOnDarkBackground ? NS_RGBA(46, 46, 46, 255)
+                                            : NS_RGBA(250, 250, 250, 255);
   }
   ScrollbarTrackDecorationColors colors =
       ComputeScrollbarTrackDecorationColors(trackColor);
@@ -315,7 +315,7 @@ bool ScrollbarDrawingCocoa::GetScrollCornerRects(const Rect& aRect,
   auto current = aRects.begin();
   for (const auto& piece : pieces) {
     Rect pieceRect = piece.relativeRect + aRect.TopLeft();
-    if (aParams.rtl) {
+    if (aParams.isRtl) {
       pieceRect.x = aRect.XMost() - piece.relativeRect.XMost();
     }
     *current++ = {pieceRect, piece.color};
@@ -333,7 +333,7 @@ void ScrollbarDrawingCocoa::DoPaintScrollbarThumb(
   auto thumb = GetThumbRect(aRect.ToUnknownRect(), params, aDpiRatio.scale);
   auto thumbRect = LayoutDeviceRect::FromUnknownRect(thumb.mRect);
   LayoutDeviceCoord radius =
-      (params.horizontal ? thumbRect.Height() : thumbRect.Width()) / 2.0f;
+      (params.isHorizontal ? thumbRect.Height() : thumbRect.Width()) / 2.0f;
   ThemeDrawing::PaintRoundedRectWithRadius(
       aPaintData, thumbRect, thumbRect, sRGBColor::FromABGR(thumb.mFillColor),
       sRGBColor::White(0.0f), 0.0f, radius / aDpiRatio, aDpiRatio);
@@ -343,7 +343,8 @@ void ScrollbarDrawingCocoa::DoPaintScrollbarThumb(
 
   // Paint the stroke if needed.
   thumbRect.Inflate(thumb.mStrokeOutset + thumb.mStrokeWidth);
-  radius = (params.horizontal ? thumbRect.Height() : thumbRect.Width()) / 2.0f;
+  radius =
+      (params.isHorizontal ? thumbRect.Height() : thumbRect.Width()) / 2.0f;
   ThemeDrawing::PaintRoundedRectWithRadius(
       aPaintData, thumbRect, sRGBColor::White(0.0f),
       sRGBColor::FromABGR(thumb.mStrokeColor), thumb.mStrokeWidth,

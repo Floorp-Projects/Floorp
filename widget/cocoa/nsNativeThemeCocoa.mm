@@ -2633,13 +2633,15 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo,
     case Widget::eScrollbarThumb: {
       ScrollbarParams params = aWidgetInfo.Params<ScrollbarParams>();
       auto thumb = ScrollbarDrawingCocoa::GetThumbRect(aWidgetRect, params, aScale);
-      float cornerRadius = (params.horizontal ? thumb.mRect.Height() : thumb.mRect.Width()) / 2.0f;
+      float cornerRadius =
+          (params.isHorizontal ? thumb.mRect.Height() : thumb.mRect.Width()) / 2.0f;
       aDrawTarget.FillRoundedRect(RoundedRect(thumb.mRect, RectCornerRadii(cornerRadius)),
                                   ColorPattern(ToDeviceColor(thumb.mFillColor)));
       if (thumb.mStrokeColor) {
         auto strokeRect = thumb.mRect;
         strokeRect.Inflate(thumb.mStrokeOutset);
-        float strokeRadius = (params.horizontal ? strokeRect.Height() : strokeRect.Width()) / 2.0f;
+        float strokeRadius =
+            (params.isHorizontal ? strokeRect.Height() : strokeRect.Width()) / 2.0f;
         RefPtr<Path> path =
             MakePathForRoundedRect(aDrawTarget, strokeRect, RectCornerRadii(strokeRadius));
         aDrawTarget.Stroke(path, ColorPattern(ToDeviceColor(thumb.mStrokeColor)),
@@ -2918,7 +2920,7 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
       const ComputedStyle& style = *nsLayoutUtils::StyleForScrollbar(aFrame);
       ScrollbarParams params = GetScrollbarDrawing().ComputeScrollbarParams(
           aFrame, style, aAppearance == StyleAppearance::ScrollbartrackHorizontal);
-      if (params.overlay && !params.rolledOver) {
+      if (params.isOverlay && !params.isRolledOver) {
         // There is no scrollbar track, draw nothing and return true.
         return true;
       }
