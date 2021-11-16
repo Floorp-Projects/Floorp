@@ -219,12 +219,6 @@ class NodePicker extends EventEmitter {
   _onHovered(data) {
     this.emit("picker-node-hovered", data.node);
 
-    // @backward-compat { version 94 } The clearPickerSupport trait was added in 94 and
-    // can be removed when it hits release.
-    if (!data.node.walkerFront.traits.clearPickerSupport) {
-      return;
-    }
-
     // We're going to cleanup references for all the other walkers, so that if we hover
     // back the same node, we will receive a new `picker-node-hovered` event.
     for (const inspectorFront of this._currentInspectorFronts) {
