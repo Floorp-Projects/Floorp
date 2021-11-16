@@ -9,7 +9,7 @@
  */
 
 #include "mozilla/dom/Selection.h"
-#include "mozilla/intl/Bidi.h"
+#include "mozilla/intl/BidiEmbeddingLevel.h"
 
 #include "mozilla/AccessibleCaretEventHub.h"
 #include "mozilla/AsyncEventDispatcher.h"
@@ -386,8 +386,8 @@ Nullable<int16_t> Selection::GetCaretBidiLevel(
     aRv.Throw(NS_ERROR_NOT_INITIALIZED);
     return Nullable<int16_t>();
   }
-  mozilla::intl::Bidi::EmbeddingLevel caretBidiLevel =
-      static_cast<mozilla::intl::Bidi::EmbeddingLevel>(
+  mozilla::intl::BidiEmbeddingLevel caretBidiLevel =
+      static_cast<mozilla::intl::BidiEmbeddingLevel>(
           mFrameSelection->GetCaretBidiLevel());
   return (caretBidiLevel & BIDI_LEVEL_UNDEFINED)
              ? Nullable<int16_t>()
@@ -406,7 +406,7 @@ void Selection::SetCaretBidiLevel(const Nullable<int16_t>& aCaretBidiLevel,
     mFrameSelection->UndefineCaretBidiLevel();
   } else {
     mFrameSelection->SetCaretBidiLevelAndMaybeSchedulePaint(
-        mozilla::intl::Bidi::EmbeddingLevel(aCaretBidiLevel.Value()));
+        mozilla::intl::BidiEmbeddingLevel(aCaretBidiLevel.Value()));
   }
 }
 
@@ -1360,7 +1360,7 @@ nsIFrame* Selection::GetPrimaryOrCaretFrameForNodeOffset(nsIContent* aContent,
   CaretAssociationHint hint = mFrameSelection->GetHint();
 
   if (aVisual) {
-    mozilla::intl::Bidi::EmbeddingLevel caretBidiLevel =
+    mozilla::intl::BidiEmbeddingLevel caretBidiLevel =
         mFrameSelection->GetCaretBidiLevel();
 
     return nsCaret::GetCaretFrameForNodeOffset(
@@ -3302,10 +3302,10 @@ void Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
   // If the paragraph direction of the focused frame is right-to-left,
   // we may have to swap the direction of movement.
   if (nsIFrame* frame = GetPrimaryFrameForFocusNode(visual)) {
-    mozilla::intl::Bidi::Direction paraDir =
+    mozilla::intl::BidiDirection paraDir =
         nsBidiPresUtils::ParagraphDirection(frame);
 
-    if (paraDir == mozilla::intl::Bidi::Direction::RTL && visual) {
+    if (paraDir == mozilla::intl::BidiDirection::RTL && visual) {
       if (amount == eSelectBeginLine) {
         amount = eSelectEndLine;
         forward = !forward;
@@ -3479,9 +3479,9 @@ nsresult Selection::SelectionLanguageChange(bool aLangRTL) {
   RefPtr<nsFrameSelection> frameSelection = mFrameSelection;
 
   // if the direction of the language hasn't changed, nothing to do
-  mozilla::intl::Bidi::EmbeddingLevel kbdBidiLevel =
-      aLangRTL ? mozilla::intl::Bidi::EmbeddingLevel::RTL()
-               : mozilla::intl::Bidi::EmbeddingLevel::LTR();
+  mozilla::intl::BidiEmbeddingLevel kbdBidiLevel =
+      aLangRTL ? mozilla::intl::BidiEmbeddingLevel::RTL()
+               : mozilla::intl::BidiEmbeddingLevel::LTR();
   if (kbdBidiLevel == frameSelection->mKbdBidiLevel) {
     return NS_OK;
   }
@@ -3495,12 +3495,12 @@ nsresult Selection::SelectionLanguageChange(bool aLangRTL) {
 
   auto [frameStart, frameEnd] = focusFrame->GetOffsets();
   RefPtr<nsPresContext> context = GetPresContext();
-  mozilla::intl::Bidi::EmbeddingLevel levelBefore, levelAfter;
+  mozilla::intl::BidiEmbeddingLevel levelBefore, levelAfter;
   if (!context) {
     return NS_ERROR_FAILURE;
   }
 
-  mozilla::intl::Bidi::EmbeddingLevel level = focusFrame->GetEmbeddingLevel();
+  mozilla::intl::BidiEmbeddingLevel level = focusFrame->GetEmbeddingLevel();
   int32_t focusOffset = static_cast<int32_t>(FocusOffset());
   if ((focusOffset != frameStart) && (focusOffset != frameEnd))
     // the cursor is not at a frame boundary, so the level of both the
@@ -3531,7 +3531,7 @@ nsresult Selection::SelectionLanguageChange(bool aLangRTL) {
       frameSelection->SetCaretBidiLevelAndMaybeSchedulePaint(level);
     } else {
       frameSelection->SetCaretBidiLevelAndMaybeSchedulePaint(
-          mozilla::intl::Bidi::EmbeddingLevel(level + 1));
+          mozilla::intl::BidiEmbeddingLevel(level + 1));
     }
   } else {
     // if cursor is between characters with opposite orientations, changing the

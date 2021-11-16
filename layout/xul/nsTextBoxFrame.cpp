@@ -8,7 +8,7 @@
 
 #include "gfx2DGlue.h"
 #include "gfxUtils.h"
-#include "mozilla/intl/Bidi.h"
+#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/Preferences.h"
@@ -485,7 +485,7 @@ void nsTextBoxFrame::DrawText(gfxContext& aRenderingContext,
 
   if (mState & NS_FRAME_IS_BIDI) {
     presContext->SetBidiEnabled();
-    mozilla::intl::Bidi::EmbeddingLevel level =
+    mozilla::intl::BidiEmbeddingLevel level =
         nsBidiPresUtils::BidiLevelFromStyle(Style());
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
       // We let the RenderText function calculate the mnemonic's

@@ -4,6 +4,7 @@
 #ifndef intl_components_Bidi_h_
 #define intl_components_Bidi_h_
 
+#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/intl/ICU4CGlue.h"
 
 struct UBiDi;
@@ -31,108 +32,12 @@ class Bidi final {
   Bidi& operator=(const Bidi&) = delete;
 
   /**
-   * This enum unambiguously classifies text runs as either being left to right,
-   * or right to left.
-   */
-  enum class Direction : uint8_t {
-    // Left to right text.
-    LTR = 0,
-    // Right to left text.
-    RTL = 1,
-  };
-
-  /**
    * This enum indicates the text direction for the set paragraph. Some
    * paragraphs are unidirectional, where they only have one direction, or a
    * paragraph could use both LTR and RTL. In this case the paragraph's
    * direction would be mixed.
    */
   enum ParagraphDirection { LTR, RTL, Mixed };
-
-  /**
-   * Embedding levels are numbers that indicate how deeply the bidi text is
-   * embedded, and the direction of text on that embedding level. When switching
-   * between strongly LTR code points and strongly RTL code points the embedding
-   * level normally switches between an embedding level of 0 (LTR) and 1 (RTL).
-   * The only time the embedding level increases is if the embedding code points
-   * are used. This is the Left-to-Right Embedding (LRE) code point (U+202A), or
-   * the Right-to-Left Embedding (RLE) code point (U+202B). The minimum
-   * embedding level of text is zero, and the maximum explicit depth is 125.
-   *
-   * The most significant bit is reserved for additional meaning. It can be used
-   * to signify in certain APIs that the text should by default be LTR or RTL if
-   * no strongly directional code points are found.
-   *
-   * Bug 1736595: At the time of this writing, some places in Gecko code use a 1
-   * in the most significant bit to indicate that an embedding level has not
-   * been set. This leads to an ambiguous understanding of what the most
-   * significant bit actually means.
-   */
-  class EmbeddingLevel {
-   public:
-    explicit EmbeddingLevel(uint8_t aValue) : mValue(aValue) {}
-    explicit EmbeddingLevel(int aValue)
-        : mValue(static_cast<uint8_t>(aValue)) {}
-
-    EmbeddingLevel() = default;
-
-    // Enable the copy operators, but disable move as this is only a uint8_t.
-    EmbeddingLevel(const EmbeddingLevel& other) = default;
-    EmbeddingLevel& operator=(const EmbeddingLevel& other) = default;
-
-    /**
-     * Determine the direction of the embedding level by looking at the least
-     * significant bit. If it is 0, then it is LTR. If it is 1, then it is RTL.
-     */
-    Bidi::Direction Direction();
-
-    /**
-     * Create a left-to-right embedding level.
-     */
-    static EmbeddingLevel LTR();
-
-    /**
-     * Create an right-to-left embedding level.
-     */
-    static EmbeddingLevel RTL();
-
-    /**
-     * When passed into `SetParagraph`, the direction is determined by first
-     * strongly directional character, with the default set to left-to-right if
-     * none is found.
-     *
-     * This is encoded with the highest bit set to 1.
-     */
-    static EmbeddingLevel DefaultLTR();
-
-    /**
-     * When passed into `SetParagraph`, the direction is determined by first
-     * strongly directional character, with the default set to right-to-left if
-     * none is found.
-     *
-     * * This is encoded with the highest and lowest bits set to 1.
-     */
-    static EmbeddingLevel DefaultRTL();
-
-    bool IsDefaultLTR() const;
-    bool IsDefaultRTL() const;
-    bool IsLTR() const;
-    bool IsRTL() const;
-    bool IsSameDirection(EmbeddingLevel aOther) const;
-
-    /**
-     * Get the underlying value as a uint8_t.
-     */
-    uint8_t Value() const;
-
-    /**
-     * Implicitly convert to the underlying value.
-     */
-    operator uint8_t() const { return mValue; }
-
-   private:
-    uint8_t mValue = 0;
-  };
 
   /**
    * Set the current paragraph of text to analyze for its bidi properties. This
@@ -143,12 +48,12 @@ class Bidi final {
    * the directionality of the paragraph text.
    */
   ICUResult SetParagraph(Span<const char16_t> aParagraph,
-                         EmbeddingLevel aLevel);
+                         BidiEmbeddingLevel aLevel);
 
   /**
    * Get the embedding level for the paragraph that was set by SetParagraph.
    */
-  EmbeddingLevel GetParagraphEmbeddingLevel() const;
+  BidiEmbeddingLevel GetParagraphEmbeddingLevel() const;
 
   /**
    * Get the directionality of the paragraph text that was set by SetParagraph.
@@ -178,7 +83,7 @@ class Bidi final {
    *      the run
    */
   void GetLogicalRun(int32_t aLogicalStart, int32_t* aLogicalLimitOut,
-                     EmbeddingLevel* aLevelOut);
+                     BidiEmbeddingLevel* aLevelOut);
 
   /**
    * This is a convenience function that does not use the ICU Bidi object.
@@ -198,7 +103,7 @@ class Bidi final {
    *      The index map will result in
    *        `aIndexMap[aVisualIndex]==aLogicalIndex`.
    */
-  static void ReorderVisual(const EmbeddingLevel* aLevels, int32_t aLength,
+  static void ReorderVisual(const BidiEmbeddingLevel* aLevels, int32_t aLength,
                             int32_t* aIndexMap);
 
   /**
@@ -219,8 +124,8 @@ class Bidi final {
    * Note that in right-to-left runs, the code places modifier letters before
    * base characters and second surrogates before first ones.
    */
-  Direction GetVisualRun(int32_t aRunIndex, int32_t* aLogicalStart,
-                         int32_t* aLength);
+  BidiDirection GetVisualRun(int32_t aRunIndex, int32_t* aLogicalStart,
+                             int32_t* aLength);
 
  private:
   ICUPointer<UBiDi> mBidi = ICUPointer<UBiDi>(nullptr);
@@ -229,7 +134,7 @@ class Bidi final {
    * An array of levels that is the same length as the paragraph from
    * `Bidi::SetParagraph`.
    */
-  const EmbeddingLevel* mLevels = nullptr;
+  const BidiEmbeddingLevel* mLevels = nullptr;
 
   /**
    * The length of the paragraph from `Bidi::SetParagraph`.
