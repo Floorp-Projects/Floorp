@@ -7,11 +7,6 @@ would benefit from user-facing documentation, please use the
 
 This flag can be modified by anyone with ``EDITBUGS`` privileges.
 
-.. figure:: /public/images/sumo-flag.png
-   :alt: Image of flag in tracking section of bug
-
-   Image of flag in tracking section of bug
-
 The default value of the flag is ``---``.
 
 If the bug needs user-facing documentation, set the flag to
