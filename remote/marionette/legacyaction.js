@@ -100,10 +100,14 @@ action.Chain.prototype.dispatchActions = function(
 ) {
   this.seenEls = seenEls;
   this.container = container;
-  let commandArray = evaluate.fromJSON(args, seenEls, container.frame);
+  let commandArray = evaluate.fromJSON({
+    obj: args,
+    seenEls,
+    win: container.frame,
+  });
 
   if (touchId == null) {
-    touchId = this.nextTouchId++;
+    touchId = this.nextTSouchId++;
   }
 
   if (!container.frame.document.createTouch) {
