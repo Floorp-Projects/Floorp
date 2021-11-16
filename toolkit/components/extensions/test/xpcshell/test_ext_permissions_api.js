@@ -60,7 +60,6 @@ add_task(async function setup() {
     "management",
     "menus.overrideContext",
     "nativeMessaging",
-    "scripting",
     "search",
     "tabHide",
     "tabs",
