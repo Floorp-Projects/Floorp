@@ -651,30 +651,6 @@ static ArrayObject* AvailableCollations(JSContext* cx) {
     }
   }
 
-  // |ucol_getKeywordValues| returns the possible collations for all installed
-  // locales. The root locale is excluded in the list of installed locales, so
-  // we have to explicitly request the available collations of the root
-  // locale.
-  //
-  // https://unicode-org.atlassian.net/browse/ICU-21641
-  {
-    // Hazard analysis complains that the mozilla::Result destructor calls a
-    // GC function, which is unsound when returning an unrooted value. Work
-    // around this issue by restricting the lifetime of |keywords| to a
-    // separate block.
-    auto keywords = mozilla::intl::Collator::GetBcp47KeywordValuesForLocale("");
-    if (keywords.isErr()) {
-      intl::ReportInternalError(cx, keywords.unwrapErr());
-      return nullptr;
-    }
-
-    static constexpr auto& unsupported = UnsupportedCollationsArray;
-
-    if (!EnumerationIntoList<unsupported>(cx, keywords.unwrap(), &list)) {
-      return nullptr;
-    }
-  }
-
   return CreateArrayFromList(cx, &list);
 }
 
@@ -684,29 +660,16 @@ static ArrayObject* AvailableCollations(JSContext* cx) {
  */
 static constexpr auto UnsupportedCurrencies() {
   // "MVP" is also marked with "questionable, remove?" in ucurr.cpp, but only
-  // these two currency codes aren't supported by |Intl.DisplayNames| and
+  // this single currency code isn't supported by |Intl.DisplayNames| and
   // therefore must be excluded by |Intl.supportedValuesOf|.
   return std::array{
-      "EQE",  // https://unicode-org.atlassian.net/browse/ICU-21686
       "LSM",  // https://unicode-org.atlassian.net/browse/ICU-21687
-  };
-}
-
-/**
- * Return a list of known, missing currencies which aren't returned by
- * |Currency::GetISOCurrencies()|.
- */
-static constexpr auto MissingCurrencies() {
-  return std::array{
-      "UYW",  // https://unicode-org.atlassian.net/browse/ICU-21622
-      "VES",  // https://unicode-org.atlassian.net/browse/ICU-21685
   };
 }
 
 // Defined outside of the function to workaround bugs in GCC<9.
 // Also see <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85589>.
 static constexpr auto UnsupportedCurrenciesArray = UnsupportedCurrencies();
-static constexpr auto MissingCurrenciesArray = MissingCurrencies();
 
 /**
  * AvailableCurrencies ( )
@@ -728,19 +691,6 @@ static ArrayObject* AvailableCurrencies(JSContext* cx) {
     static constexpr auto& unsupported = UnsupportedCurrenciesArray;
 
     if (!EnumerationIntoList<unsupported>(cx, currencies.unwrap(), &list)) {
-      return nullptr;
-    }
-  }
-
-  static constexpr auto& missing = MissingCurrenciesArray;
-
-  // Add known missing values.
-  for (const char* value : missing) {
-    auto* string = NewStringCopyZ<CanGC>(cx, value);
-    if (!string) {
-      return nullptr;
-    }
-    if (!list.append(string)) {
       return nullptr;
     }
   }

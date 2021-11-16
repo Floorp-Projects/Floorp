@@ -4,6 +4,8 @@
 #include "mozilla/intl/RelativeTimeFormat.h"
 #include "mozilla/FloatingPoint.h"
 
+#include "unicode/unum.h"
+
 #include "NumberFormatFields.h"
 #include "ICU4CGlue.h"
 #include "ScopedICUObject.h"
@@ -35,18 +37,8 @@ RelativeTimeFormat::TryCreate(const char* aLocale,
   unum_setAttribute(nf, UNUM_MIN_FRACTION_DIGITS, 0);
   unum_setAttribute(nf, UNUM_MAX_FRACTION_DIGITS, 3);
   unum_setAttribute(nf, UNUM_GROUPING_USED, true);
-
-  // The undocumented magic value -2 is needed to request locale-specific data.
-  // See |icu::number::impl::Grouper::{fGrouping1, fGrouping2, fMinGrouping}|.
-  //
-  // Future ICU versions (> ICU 67) will expose it as a proper constant:
-  // https://unicode-org.atlassian.net/browse/ICU-21109
-  // https://github.com/unicode-org/icu/pull/1152
-  constexpr int32_t useLocaleData = -2;
-
-  unum_setAttribute(nf, UNUM_GROUPING_SIZE, useLocaleData);
-  unum_setAttribute(nf, UNUM_SECONDARY_GROUPING_SIZE, useLocaleData);
-  unum_setAttribute(nf, UNUM_MINIMUM_GROUPING_DIGITS, useLocaleData);
+  unum_setAttribute(nf, UNUM_MINIMUM_GROUPING_DIGITS,
+                    UNUM_MINIMUM_GROUPING_DIGITS_AUTO);
 
   UDateRelativeDateTimeFormatterStyle relDateTimeStyle;
   switch (aOptions.style) {

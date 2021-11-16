@@ -103,11 +103,9 @@ static const JSFunctionSpec numberFormat_methods[] = {
                       0),
     JS_SELF_HOSTED_FN("formatToParts", "Intl_NumberFormat_formatToParts", 1, 0),
 #ifdef NIGHTLY_BUILD
-#  ifdef MOZ_INTL_HAS_NUMBER_RANGE_FORMAT
     JS_SELF_HOSTED_FN("formatRange", "Intl_NumberFormat_formatRange", 2, 0),
     JS_SELF_HOSTED_FN("formatRangeToParts",
                       "Intl_NumberFormat_formatRangeToParts", 2, 0),
-#  endif
 #endif
     JS_FN(js_toSource_str, numberFormat_toSource, 0, 0),
     JS_FS_END,
@@ -1252,7 +1250,6 @@ bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-#ifdef MOZ_INTL_HAS_NUMBER_RANGE_FORMAT
 static JSLinearString* ToLinearString(JSContext* cx, HandleValue val) {
   // Special case to preserve negative zero.
   if (val.isDouble() && mozilla::IsNegativeZero(val.toDouble())) {
@@ -1464,10 +1461,8 @@ static bool ValidateNumberRange(JSContext* cx, MutableHandleValue start,
 
   return true;
 }
-#endif
 
 bool js::intl_FormatNumberRange(JSContext* cx, unsigned argc, Value* vp) {
-#ifdef MOZ_INTL_HAS_NUMBER_RANGE_FORMAT
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 4);
   MOZ_ASSERT(args[0].isObject());
@@ -1585,7 +1580,4 @@ bool js::intl_FormatNumberRange(JSContext* cx, unsigned argc, Value* vp) {
 
   args.rval().setString(str);
   return true;
-#else
-  MOZ_CRASH("ICU draft API not enabled");
-#endif
 }

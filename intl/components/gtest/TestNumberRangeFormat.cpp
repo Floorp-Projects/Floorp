@@ -15,7 +15,6 @@ using namespace std::literals;
 
 TEST(IntlNumberRangeFormat, Basic)
 {
-#ifdef MOZ_INTL_HAS_NUMBER_RANGE_FORMAT
   NumberRangeFormatOptions options;
   UniquePtr<NumberRangeFormat> nf =
       NumberRangeFormat::TryCreate("en-US", options).unwrap();
@@ -44,12 +43,10 @@ TEST(IntlNumberRangeFormat, Basic)
   res16 = nfAr->format(1234.56, 2999.89).unwrap().data();
   ASSERT_TRUE(res16 != nullptr);
   ASSERT_EQ(res16, u"١٬٢٣٤٫٥٦–٢٬٩٩٩٫٨٩"sv);
-#endif
 }
 
 TEST(IntlNumberRangeFormat, Currency)
 {
-#ifdef MOZ_INTL_HAS_NUMBER_RANGE_FORMAT
   NumberRangeFormatOptions options;
   options.mCurrency = Some(
       std::make_pair("MXN", NumberRangeFormatOptions::CurrencyDisplay::Symbol));
@@ -67,12 +64,10 @@ TEST(IntlNumberRangeFormat, Currency)
   res = nf->format(123456.789, 299999.89).unwrap().data();
   ASSERT_TRUE(res != nullptr);
   ASSERT_EQ(std::u16string_view(res), u"123 456,79–299 999,89 €"sv);
-#endif
 }
 
 TEST(IntlNumberRangeFormat, Unit)
 {
-#ifdef MOZ_INTL_HAS_NUMBER_RANGE_FORMAT
   NumberRangeFormatOptions options;
   options.mUnit = Some(std::make_pair(
       "meter-per-second", NumberRangeFormatOptions::UnitDisplay::Long));
@@ -82,12 +77,10 @@ TEST(IntlNumberRangeFormat, Unit)
   const char16_t* res = nf->format(12.34, 56.78).unwrap().data();
   ASSERT_TRUE(res != nullptr);
   ASSERT_EQ(std::u16string_view(res), u"12.34-56.78 metros por segundo");
-#endif
 }
 
 TEST(IntlNumberRangeFormat, FormatToParts)
 {
-#ifdef MOZ_INTL_HAS_NUMBER_RANGE_FORMAT
   NumberRangeFormatOptions options;
   UniquePtr<NumberRangeFormat> nf =
       NumberRangeFormat::TryCreate("es-ES", options).unwrap();
@@ -119,7 +112,6 @@ TEST(IntlNumberRangeFormat, FormatToParts)
             (NumberPart{NumberPartType::Decimal, NumberPartSource::End, 20}));
   ASSERT_EQ(parts[10],
             (NumberPart{NumberPartType::Fraction, NumberPartSource::End, 23}));
-#endif
 }
 
 }  // namespace intl
