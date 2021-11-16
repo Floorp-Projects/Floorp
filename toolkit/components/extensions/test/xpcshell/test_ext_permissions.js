@@ -569,6 +569,7 @@ const GRANTED_WITHOUT_USER_PROMPT = [
   "mozillaAddons",
   "networkStatus",
   "normandyAddonStudy",
+  "scripting",
   "search",
   "storage",
   "telemetry",
