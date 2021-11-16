@@ -2609,7 +2609,7 @@ class HasChildTracer final : public JS::CallbackTracer {
   RootedValue child_;
   bool found_;
 
-  void onChild(const JS::GCCellPtr& thing) override {
+  void onChild(JS::GCCellPtr thing) override {
     if (thing.asCell() == child_.toGCThing()) {
       found_ = true;
     }
