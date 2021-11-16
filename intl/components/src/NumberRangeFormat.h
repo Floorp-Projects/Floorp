@@ -225,7 +225,6 @@ class NumberRangeFormat final {
   UNumberRangeFormatter* mNumberRangeFormatter = nullptr;
   UFormattedNumberRange* mFormattedNumberRange = nullptr;
   bool mFormatForUnit = false;
-  bool mFormatWithApprox = false;
 
   Result<Ok, ICUError> initialize(std::string_view aLocale,
                                   const NumberRangeFormatOptions& aOptions);
