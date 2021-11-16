@@ -749,7 +749,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view about the changes in the new release.
     %1$s is a placeholder for the app name -->
-    <string name="tip_fresh_look">ご覧のとおり、外観が新しくなりました！\nこれと %1$s の他の変更についてお読みください。</string>
+    <string name="tip_fresh_look">ご覧のとおり、外観が新しくなりました！\n これと %1$s の他の変更についてお読みください。</string>
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
