@@ -7,7 +7,6 @@
 #ifndef nsDNSService2_h__
 #define nsDNSService2_h__
 
-#include "DNSServiceBase.h"
 #include "nsClassHashtable.h"
 #include "nsPIDNSService.h"
 #include "nsIIDNService.h"
@@ -23,11 +22,11 @@
 
 class nsAuthSSPI;
 
-class nsDNSService final : public mozilla::net::DNSServiceBase,
-                           public nsPIDNSService,
+class nsDNSService final : public nsPIDNSService,
+                           public nsIObserver,
                            public nsIMemoryReporter {
  public:
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSPIDNSSERVICE
   NS_DECL_NSIDNSSERVICE
   NS_DECL_NSIOBSERVER
@@ -52,7 +51,7 @@ class nsDNSService final : public mozilla::net::DNSServiceBase,
  private:
   ~nsDNSService() = default;
 
-  void ReadPrefs(const char* name) override;
+  nsresult ReadPrefs(const char* name);
   static already_AddRefed<nsDNSService> GetSingleton();
 
   uint16_t GetAFForLookup(const nsACString& host, uint32_t flags);
@@ -76,6 +75,8 @@ class nsDNSService final : public mozilla::net::DNSServiceBase,
                            const mozilla::OriginAttributes& aOriginAttributes,
                            nsIDNSRecord** result);
 
+  bool DNSForbiddenByActiveProxy(const nsACString& aHostname, uint32_t flags);
+
   // Locks the mutex and returns an addreffed resolver. May return null.
   already_AddRefed<nsHostResolver> GetResolverLocked();
 
@@ -92,12 +93,14 @@ class nsDNSService final : public mozilla::net::DNSServiceBase,
   nsCString mIPv4OnlyDomains;
   nsCString mForceResolve;
   bool mDisableIPv6 = false;
+  bool mDisablePrefetch = false;
   bool mBlockDotOnion = false;
   bool mNotifyResolution = false;
   bool mOfflineLocalhost = false;
   bool mForceResolveOn = false;
   nsTHashSet<nsCString> mLocalDomains;
   RefPtr<mozilla::net::TRRService> mTrrService;
+  mozilla::Atomic<bool, mozilla::Relaxed> mHasSocksProxy{false};
 
   uint32_t mResCacheEntries = 0;
   uint32_t mResCacheExpiration = 0;
