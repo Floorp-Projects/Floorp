@@ -28,10 +28,12 @@
 #  include <windows.h>
 #  include <winioctl.h>
 #  ifndef __MINGW32__
+#    include <wrl.h>
 #    include <wscapi.h>
 #  endif  // __MINGW32__
 #  include "base/scoped_handle_win.h"
 #  include "mozilla/DynamicallyLinkedFunctionPtr.h"
+#  include "mozilla/WindowsVersion.h"
 #  include "nsAppDirectoryServiceDefs.h"
 #  include "nsDirectoryServiceDefs.h"
 #  include "nsDirectoryServiceUtils.h"
@@ -82,6 +84,16 @@
 uint32_t nsSystemInfo::gUserUmask = 0;
 
 using namespace mozilla::dom;
+
+#if defined(XP_WIN)
+#  define RuntimeClass_Windows_System_Profile_WindowsIntegrityPolicy \
+    L"Windows.System.Profile.WindowsIntegrityPolicy"
+#  ifndef __MINGW32__
+using namespace Microsoft::WRL;
+using namespace Microsoft::WRL::Wrappers;
+using namespace ABI::Windows::Foundation;
+#  endif  // __MINGW32__
+#endif
 
 #if defined(XP_LINUX) && !defined(ANDROID)
 static void SimpleParseKeyValuePairs(
@@ -624,6 +636,32 @@ nsresult CollectProcessInfo(ProcessInfo& info) {
     info.isWowARM64 = (processMachine == IMAGE_FILE_MACHINE_I386 &&
                        nativeMachine == IMAGE_FILE_MACHINE_ARM64);
   }
+
+  // S Mode
+
+#  ifndef __MINGW32__
+  // WindowsIntegrityPolicy is only available on newer versions
+  // of Windows 10, so there's no point in trying to check this
+  // on earlier versions. We know GetActivationFactory crashes on
+  // Windows 7 when trying to retrieve this class, and may also
+  // crash on very old versions of Windows 10.
+  if (IsWin10Sep2018UpdateOrLater()) {
+    ComPtr<IWindowsIntegrityPolicyStatics> wip;
+    HRESULT hr = GetActivationFactory(
+        HStringReference(
+            RuntimeClass_Windows_System_Profile_WindowsIntegrityPolicy)
+            .Get(),
+        &wip);
+    if (SUCCEEDED(hr)) {
+      // info.isWindowsSMode ends up true if Windows is in S mode, otherwise
+      // false
+      // https://docs.microsoft.com/en-us/uwp/api/windows.system.profile.windowsintegritypolicy.isenabled?view=winrt-22000
+      hr = wip->get_IsEnabled(&info.isWindowsSMode);
+      NS_WARNING_ASSERTION(SUCCEEDED(hr),
+                           "WindowsIntegrityPolicy.IsEnabled failed");
+    }
+  }
+#  endif  // __MINGW32__
 
   // CPU speed
   HKEY key;
@@ -1258,6 +1296,10 @@ JSObject* GetJSObjForProcessInfo(JSContext* aCx, const ProcessInfo& info) {
 
   JS::Rooted<JS::Value> valisWowARM64(aCx, JS::BooleanValue(info.isWowARM64));
   JS_SetProperty(aCx, jsInfo, "isWowARM64", valisWowARM64);
+
+  JS::Rooted<JS::Value> valisWindowsSMode(
+      aCx, JS::BooleanValue(info.isWindowsSMode));
+  JS_SetProperty(aCx, jsInfo, "isWindowsSMode", valisWindowsSMode);
 #endif
 
   JS::Rooted<JS::Value> valCountInfo(aCx, JS::Int32Value(info.cpuCount));
