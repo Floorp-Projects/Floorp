@@ -25,7 +25,6 @@ native TimeStamp(mozilla::TimeStamp);
 
 interface nsIAsyncInputStream;
 interface nsIAsyncOutputStream;
-interface nsIEarlyHintObserver;
 interface nsIPrincipal;
 interface nsIProxyInfo;
 interface nsISecurityConsoleMessage;
@@ -456,9 +455,4 @@ interface nsIHttpChannelInternal : nsISupports
      * This attribute indicates if the HTTPS RR is used for this channel.
      */
     [must_use] readonly attribute boolean hasHTTPSRR;
-
-    /**
-     * Set Early Hint Observer.
-     */
-    [must_use] void setEarlyHintObserver(in nsIEarlyHintObserver aObserver);
 };

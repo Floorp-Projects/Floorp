@@ -176,8 +176,6 @@ nsHttpTransaction::~nsHttpTransaction() {
   // Force the callbacks and connection to be released right now
   mCallbacks = nullptr;
 
-  mEarlyHintObserver = nullptr;
-
   delete mResponseHead;
   delete mChunkedDecoder;
   ReleaseBlockingTransaction();
@@ -443,7 +441,6 @@ nsresult nsHttpTransaction::AsyncRead(nsIStreamListener* listener,
   NS_ENSURE_SUCCESS(rv, rv);
 
   transactionPump.forget(pump);
-  mEarlyHintObserver = do_QueryInterface(listener);
   return NS_OK;
 }
 
@@ -1340,8 +1337,6 @@ void nsHttpTransaction::Close(nsresult reason) {
   LOG(("nsHttpTransaction::Close [this=%p reason=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(reason)));
 
-  mEarlyHintObserver = nullptr;
-
   if (!mClosed) {
     gHttpHandler->ConnMgr()->RemoveActiveTransaction(this);
     mActivated = false;
@@ -1968,32 +1963,14 @@ nsresult nsHttpTransaction::ParseLineSegment(char* segment, uint32_t len) {
     mLineBuf.Truncate();
     // discard this response if it is a 100 continue or other 1xx status.
     uint16_t status = mResponseHead->Status();
-    if (status == 103) {
-      nsCString linkHeader;
-      DebugOnly<nsresult> rv =
-          mResponseHead->GetHeader(nsHttp::Link, linkHeader);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-      nsCOMPtr<nsIEarlyHintObserver> earlyHint = mEarlyHintObserver;
-      if (earlyHint) {
-        DebugOnly<nsresult> rv = NS_DispatchToMainThread(
-            NS_NewRunnableFunction(
-                "nsIEarlyHintObserver->EarlyHint",
-                [obs{std::move(earlyHint)}, header{std::move(linkHeader)}]() {
-                  obs->EarlyHint(header);
-                }),
-            NS_DISPATCH_NORMAL);
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
-      }
-    }
     if ((status != 101) && (status / 100 == 1)) {
-      LOG(("ignoring 1xx response except 101 and 103\n"));
+      LOG(("ignoring 1xx response\n"));
       mHaveStatusLine = false;
       mHttpResponseMatched = false;
       mConnection->SetLastTransactionExpectedNoContent(true);
       mResponseHead->Reset();
       return NS_OK;
     }
-    mEarlyHintObserver = nullptr;
     mHaveAllHeaders = true;
   }
   return NS_OK;

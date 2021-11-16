@@ -9,7 +9,6 @@
 #include "nsISupports.h"
 #include "TimingStruct.h"
 #include "nsInputStreamPump.h"
-#include "nsIEarlyHintObserver.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 
