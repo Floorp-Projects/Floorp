@@ -280,7 +280,7 @@ void BaseCompiler::boundsCheck4GBOrLargerAccess(RegPtr tls, RegI32 ptr,
   // In principle there may be non-zero bits in the upper bits of the
   // register; clear them.
 #  ifdef RABALDR_ZERO_EXTENDS
-  masm.assertCanonicalInt32(ptr);
+  masm.debugAssertCanonicalInt32(ptr);
 #  else
   MOZ_CRASH("Platform code needed here");
 #  endif

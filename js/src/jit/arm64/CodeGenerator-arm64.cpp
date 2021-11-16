@@ -2687,7 +2687,7 @@ void CodeGenerator::visitWasmExtendU32Index(LWasmExtendU32Index* lir) {
   // canonical form.
   Register output = ToRegister(lir->output());
   MOZ_ASSERT(ToRegister(lir->input()) == output);
-  masm.assertCanonicalInt32(output);
+  masm.debugAssertCanonicalInt32(output);
 }
 
 void CodeGenerator::visitWasmWrapU32Index(LWasmWrapU32Index* lir) {
@@ -2695,7 +2695,7 @@ void CodeGenerator::visitWasmWrapU32Index(LWasmWrapU32Index* lir) {
   // canonical form.
   Register output = ToRegister(lir->output());
   MOZ_ASSERT(ToRegister(lir->input()) == output);
-  masm.assertCanonicalInt32(output);
+  masm.debugAssertCanonicalInt32(output);
 }
 
 void CodeGenerator::visitCompareI64AndBranch(LCompareI64AndBranch* comp) {

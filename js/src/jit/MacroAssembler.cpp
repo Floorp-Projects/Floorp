@@ -4167,6 +4167,23 @@ void MacroAssembler::boundsCheck32PowerOfTwo(Register index, uint32_t length,
 
 //}}} check_macroassembler_style
 
+#ifdef JS_64BIT
+void MacroAssembler::debugAssertCanonicalInt32(Register r) {
+#  ifdef DEBUG
+  if (!js::jit::JitOptions.lessDebugCode) {
+#    if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64)
+    Label ok;
+    branchPtr(Assembler::BelowOrEqual, r, ImmWord(UINT32_MAX), &ok);
+    breakpoint();
+    bind(&ok);
+#    else
+    MOZ_CRASH("IMPLEMENT ME");
+#    endif
+  }
+#  endif
+}
+#endif
+
 void MacroAssembler::memoryBarrierBefore(const Synchronization& sync) {
   memoryBarrier(sync.barrierBefore);
 }
