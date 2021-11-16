@@ -464,10 +464,6 @@ const PanelUI = {
       tempPanel.setAttribute("type", "arrow");
       tempPanel.setAttribute("id", "customizationui-widget-panel");
 
-      if (viewNode.getAttribute("remote") == "true") {
-        tempPanel.setAttribute("remote", "true");
-      }
-
       tempPanel.setAttribute("class", "cui-widget-panel panel-no-padding");
       tempPanel.setAttribute("viewId", aViewId);
       if (aAnchor.getAttribute("tabspecific")) {
