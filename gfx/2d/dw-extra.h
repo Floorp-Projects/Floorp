@@ -80,11 +80,11 @@ interface DWRITE_DECLARE_INTERFACE("27F2A904-4EB8-441D-9678-0563F53E3E2F")
   STDMETHOD_(DWRITE_GLYPH_IMAGE_FORMATS, GetGlyphImageFormats)() PURE;
   STDMETHOD(GetGlyphImageFormats)
   (UINT16 glyphId, UINT32 pixelsPerEmFirst, UINT32 pixelsPerEmLast,
-   _Out_ DWRITE_GLYPH_IMAGE_FORMATS * glyphImageFormats) PURE;
+   _Out_ DWRITE_GLYPH_IMAGE_FORMATS* glyphImageFormats) PURE;
   STDMETHOD(GetGlyphImageData)
   (_In_ UINT16 glyphId, UINT32 pixelsPerEm,
    DWRITE_GLYPH_IMAGE_FORMATS glyphImageFormat,
-   _Out_ DWRITE_GLYPH_IMAGE_DATA * glyphData,
+   _Out_ DWRITE_GLYPH_IMAGE_DATA* glyphData,
    _Outptr_result_maybenull_ void** glyphDataContext) PURE;
   STDMETHOD_(void, ReleaseGlyphImageData)(void* glyphDataContext) PURE;
 };
@@ -93,34 +93,34 @@ interface DWRITE_DECLARE_INTERFACE("98EFF3A5-B667-479A-B145-E2FA5B9FDC29")
     IDWriteFontFace5 : public IDWriteFontFace4 {
   STDMETHOD_(UINT32, GetFontAxisValueCount)() PURE;
   STDMETHOD(GetFontAxisValues)
-  (_Out_writes_(fontAxisValueCount) DWRITE_FONT_AXIS_VALUE * fontAxisValues,
+  (_Out_writes_(fontAxisValueCount) DWRITE_FONT_AXIS_VALUE* fontAxisValues,
    UINT32 fontAxisValueCount) PURE;
   STDMETHOD_(BOOL, HasVariations)() PURE;
   STDMETHOD(GetFontResource)
-  (_COM_Outptr_ IDWriteFontResource * *fontResource) PURE;
-  STDMETHOD_(BOOL, Equals)(IDWriteFontFace * fontFace) PURE;
+  (_COM_Outptr_ IDWriteFontResource** fontResource) PURE;
+  STDMETHOD_(BOOL, Equals)(IDWriteFontFace* fontFace) PURE;
 };
 
 interface DWRITE_DECLARE_INTERFACE("1F803A76-6871-48E8-987F-B975551C50F2")
     IDWriteFontResource : public IUnknown {
-  STDMETHOD(GetFontFile)(_COM_Outptr_ IDWriteFontFile * *fontFile) PURE;
+  STDMETHOD(GetFontFile)(_COM_Outptr_ IDWriteFontFile** fontFile) PURE;
   STDMETHOD_(UINT32, GetFontFaceIndex)() PURE;
   STDMETHOD_(UINT32, GetFontAxisCount)() PURE;
   STDMETHOD(GetDefaultFontAxisValues)
-  (_Out_writes_(fontAxisValueCount) DWRITE_FONT_AXIS_VALUE * fontAxisValues,
+  (_Out_writes_(fontAxisValueCount) DWRITE_FONT_AXIS_VALUE* fontAxisValues,
    UINT32 fontAxisValueCount) PURE;
   STDMETHOD(GetFontAxisRanges)
-  (_Out_writes_(fontAxisRangeCount) DWRITE_FONT_AXIS_RANGE * fontAxisRanges,
+  (_Out_writes_(fontAxisRangeCount) DWRITE_FONT_AXIS_RANGE* fontAxisRanges,
    UINT32 fontAxisRangeCount) PURE;
   STDMETHOD_(DWRITE_FONT_AXIS_ATTRIBUTES, GetFontAxisAttributes)
   (UINT32 axisIndex) PURE;
   STDMETHOD(GetAxisNames)
-  (UINT32 axisIndex, _COM_Outptr_ IDWriteLocalizedStrings * *names) PURE;
+  (UINT32 axisIndex, _COM_Outptr_ IDWriteLocalizedStrings** names) PURE;
   STDMETHOD_(UINT32, GetAxisValueNameCount)(UINT32 axisIndex) PURE;
   STDMETHOD(GetAxisValueNames)
   (UINT32 axisIndex, UINT32 axisValueIndex,
-   _Out_ DWRITE_FONT_AXIS_RANGE * fontAxisRange,
-   _COM_Outptr_ IDWriteLocalizedStrings * *names) PURE;
+   _Out_ DWRITE_FONT_AXIS_RANGE* fontAxisRange,
+   _COM_Outptr_ IDWriteLocalizedStrings** names) PURE;
   STDMETHOD_(BOOL, HasVariations)() PURE;
   STDMETHOD(CreateFontFace)
   (DWRITE_FONT_SIMULATIONS fontSimulations,

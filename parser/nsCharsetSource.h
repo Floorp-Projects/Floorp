@@ -33,8 +33,8 @@ enum {
   kCharsetFromOtherComponent,
   kCharsetFromInitialUserForcedAutoDetection,
   kCharsetFromFinalUserForcedAutoDetection,
-  kCharsetFromXmlDeclarationUtf16,        // This one is overridden by
-                                          // kCharsetFromChannel
+  kCharsetFromXmlDeclarationUtf16,  // This one is overridden by
+                                    // kCharsetFromChannel
   kCharsetFromByteOrderMark,
   kCharsetFromUtf8OnlyMime,  // For JSON, WebVTT and such
   kCharsetFromBuiltIn,       // resource: URLs

@@ -422,9 +422,10 @@ void AsyncImagePipelineManager::ApplyAsyncImageForPipeline(
       float(aPipeline->mCurrentTexture->GetSize().width),
       float(aPipeline->mCurrentTexture->GetSize().height)};
   computedTransform.rotation = ToWrRotation(aPipeline->mRotation);
-  // We don't have a frame / per-frame key here, but we can use the pipeline id and
-  // the key kind to create a unique stable key.
-  computedTransform.key = wr::SpatialKey(aPipelineId.mNamespace, aPipelineId.mHandle, wr::SpatialKeyKind::APZ);
+  // We don't have a frame / per-frame key here, but we can use the pipeline id
+  // and the key kind to create a unique stable key.
+  computedTransform.key = wr::SpatialKey(
+      aPipelineId.mNamespace, aPipelineId.mHandle, wr::SpatialKeyKind::APZ);
   params.computed_transform = &computedTransform;
 
   Maybe<wr::WrSpatialId> referenceFrameId =

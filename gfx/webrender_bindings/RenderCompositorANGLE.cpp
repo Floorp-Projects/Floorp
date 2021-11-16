@@ -99,7 +99,8 @@ ID3D11Device* RenderCompositorANGLE::GetDeviceOfEGLDisplay(nsACString& aError) {
   const auto& gle = gl::GLContextEGL::Cast(gl);
   const auto& egl = gle->mEgl;
   MOZ_ASSERT(egl);
-  if (!egl || !egl->mLib->IsExtensionSupported(gl::EGLLibExtension::EXT_device_query)) {
+  if (!egl ||
+      !egl->mLib->IsExtensionSupported(gl::EGLLibExtension::EXT_device_query)) {
     aError.Assign("RcANGLE(no EXT_device_query support)"_ns);
     return nullptr;
   }

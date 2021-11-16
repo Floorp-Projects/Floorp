@@ -143,9 +143,10 @@ void HyperTextAccessibleBase::TextSubstring(int32_t aStartOffset,
 }
 
 bool HyperTextAccessibleBase::CharAt(int32_t aOffset, nsAString& aChar,
-              int32_t* aStartOffset, int32_t* aEndOffset) {
+                                     int32_t* aStartOffset,
+                                     int32_t* aEndOffset) {
   MOZ_ASSERT(!aStartOffset == !aEndOffset,
-                 "Offsets should be both defined or both undefined!");
+             "Offsets should be both defined or both undefined!");
 
   int32_t childIdx = GetChildIndexAtOffset(aOffset);
   if (childIdx == -1) {

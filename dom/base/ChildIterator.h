@@ -123,7 +123,6 @@ class FlattenedChildIterator : public ExplicitChildIterator {
   const nsIContent* Parent() const { return mOriginalContent; }
 
  protected:
-
   const nsIContent* mOriginalContent;
 
  private:
