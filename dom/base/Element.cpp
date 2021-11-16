@@ -1223,13 +1223,10 @@ already_AddRefed<ShadowRoot> Element::AttachShadowWithoutNameChecks(
   //
   // This is a minor optimization, but also works around nasty stuff like
   // bug 1397876.
-  if (HasChildren()) {
-    if (Document* doc = GetComposedDoc()) {
-      if (PresShell* presShell = doc->GetPresShell()) {
-        presShell->DestroyFramesForAndRestyle(this);
-      }
+  if (Document* doc = GetComposedDoc()) {
+    if (PresShell* presShell = doc->GetPresShell()) {
+      presShell->ShadowRootWillBeAttached(*this);
     }
-    MOZ_ASSERT(!GetPrimaryFrame());
   }
 
   /**
