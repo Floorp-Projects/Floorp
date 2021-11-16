@@ -389,7 +389,8 @@ class VendorManifest(MozbuildObject):
                 logging.ERROR,
                 "vendor",
                 {},
-                "This is a deficiency in ./mach vendor and should be reported to the "
-                + "Updatebot maintainers.",
+                "This is a deficiency in ./mach vendor . "
+                + "Please review the affected files before committing.",
             )
-            sys.exit(1)
+            # Exit with -1 to distinguish this from the Exception case of exiting with 1
+            sys.exit(-1)
