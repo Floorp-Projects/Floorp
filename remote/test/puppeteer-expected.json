@@ -150,7 +150,7 @@
     "PASS"
   ],
   "Page.click should double click the button (click.spec.ts)": [
-    "FAIL", "PASS"
+    "PASS"
   ],
   "Page.click should click a partially obscured button (click.spec.ts)": [
     "PASS"
@@ -165,13 +165,13 @@
     "PASS"
   ],
   "Page.click should click the button inside an iframe (click.spec.ts)": [
-    "FAIL", "PASS"
+    "PASS"
   ],
   "Page.click should click the button with fixed position inside an iframe (click.spec.ts)": [
     "SKIP"
   ],
   "Page.click should click the button with deviceScaleFactor set (click.spec.ts)": [
-    "FAIL", "PASS"
+    "PASS"
   ],
   "Cookie specs Page.cookies should return no cookies in pristine browser context (cookies.spec.ts)": [
     "PASS"
@@ -303,7 +303,7 @@
     "PASS"
   ],
   "ElementHandle specs ElementHandle.hover should work (elementhandle.spec.ts)": [
-    "FAIL", "PASS"
+    "PASS"
   ],
   "ElementHandle specs ElementHandle.isIntersectingViewport should work (elementhandle.spec.ts)": [
     "PASS"
@@ -942,10 +942,10 @@
     "PASS"
   ],
   "Mouse should resize the textarea (mouse.spec.ts)": [
-    "FAIL", "PASS"
+    "PASS"
   ],
   "Mouse should select the text with mouse (mouse.spec.ts)": [
-    "FAIL", "PASS"
+    "PASS"
   ],
   "Mouse should trigger hover state (mouse.spec.ts)": [
     "PASS", "FAIL"
