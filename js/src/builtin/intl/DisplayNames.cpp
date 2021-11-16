@@ -763,6 +763,10 @@ static bool IsStandaloneMonth(UDateFormatSymbolType symbolType) {
     case UDAT_ZODIAC_NAMES_WIDE:
     case UDAT_ZODIAC_NAMES_ABBREVIATED:
     case UDAT_ZODIAC_NAMES_NARROW:
+#  ifndef U_HIDE_DRAFT_API
+    case UDAT_NARROW_QUARTERS:
+    case UDAT_STANDALONE_NARROW_QUARTERS:
+#  endif
       return false;
   }
 
@@ -995,9 +999,15 @@ static JSString* GetQuarterDisplayName(JSContext* cx,
 
     case DisplayNamesStyle::Abbreviated:
     case DisplayNamesStyle::Short:
-    case DisplayNamesStyle::Narrow:
-      // CLDR "narrow" style not supported in ICU.
       symbolType = UDAT_STANDALONE_SHORT_QUARTERS;
+      break;
+
+    case DisplayNamesStyle::Narrow:
+#ifndef U_HIDE_DRAFT_API
+      symbolType = UDAT_STANDALONE_NARROW_QUARTERS;
+#else
+      symbolType = UDAT_STANDALONE_SHORT_QUARTERS;
+#endif
       break;
   }
 
