@@ -65,7 +65,6 @@ UNIFIED_SOURCES += [
     "DNSRequestChild.cpp",
     "DNSRequestParent.cpp",
     "DNSResolverInfo.cpp",
-    "DNSServiceBase.cpp",
     "DNSUtils.cpp",
     "HostRecordQueue.cpp",
     "HTTPSSVC.cpp",
