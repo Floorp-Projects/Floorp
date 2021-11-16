@@ -86,7 +86,7 @@ This tutorial was tested against Firefox 58 Beta and Nightly. It does not work i
 
 7. Press “Run” in the Scratchpad again. Now, clicking on “Click me!” causes the breakpoint hit to be logged twice—one for each ``Debugger`` instance.
 
-  Multiple ``Debugger`` instances can observe the same debuggee. Re-running the code in the Scratchpad creates a fresh ``Debugger`` instance, adds the same web page as its debuggee, and then sets a new breakpoint. When you click on the ``div`` element, both ``Debugger``s’ breakpoints are hit, and both handlers run.
+  Multiple ``Debugger`` instances can observe the same debuggee. Re-running the code in the Scratchpad creates a fresh ``Debugger`` instance, adds the same web page as its debuggee, and then sets a new breakpoint. When you click on the ``div`` element, both ``Debugger``s breakpoints are hit, and both handlers run.
 
   This shows how any number of ``Debugger``-based tools can observe a single web page simultaneously. In fact, you can use the Browser Content Toolbox’s Debugger panel to set its own breakpoint in ``report``, and it will trigger along with the first two. Keep in mind, however, that when multiple Debuggers share a debuggee, the order in which their handlers run is not specified. If more than one tool tries to influence the debuggee’s behavior, their combined behavior could be unpredictable.
 
