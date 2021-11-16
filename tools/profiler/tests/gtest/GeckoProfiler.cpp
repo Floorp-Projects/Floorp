@@ -4089,6 +4089,9 @@ TEST(GeckoProfiler, CPUUsage)
 
   std::thread idle([&]() {
     AUTO_PROFILER_REGISTER_THREAD("Idle test");
+    // Add a label to ensure that we have a non-empty stack, even if native
+    // stack-walking is not available.
+    AUTO_PROFILER_LABEL("Idle test", PROFILER);
     idleThreadState = IdleThreadState::RUNNING;
 
     while (idleThreadState == IdleThreadState::RUNNING) {
@@ -4404,6 +4407,9 @@ TEST(GeckoProfiler, AllThreads)
     Atomic<int> selectedThreadSpins{0};
     std::thread selectedThread([&]() {
       AUTO_PROFILER_REGISTER_THREAD("Selected test thread");
+      // Add a label to ensure that we have a non-empty stack, even if native
+      // stack-walking is not available.
+      AUTO_PROFILER_LABEL("Selected test thread", PROFILER);
       EXPECT_TRUE(profiler_thread_is_being_profiled(
           ThreadProfilingFeatures::CPUUtilization));
       EXPECT_TRUE(
@@ -4421,6 +4427,9 @@ TEST(GeckoProfiler, AllThreads)
     Atomic<int> unselectedThreadSpins{0};
     std::thread unselectedThread([&]() {
       AUTO_PROFILER_REGISTER_THREAD("Registered test thread");
+      // Add a label to ensure that we have a non-empty stack, even if native
+      // stack-walking is not available.
+      AUTO_PROFILER_LABEL("Registered test thread", PROFILER);
       // This thread is *not* selected for full profiling, but it may still be
       // profiled depending on the -allthreads features.
       EXPECT_EQ(profiler_thread_is_being_profiled(
