@@ -131,13 +131,6 @@ class VirtualenvManager(VirtualenvHelper):
             os.path.join(self.virtualenv_root, METADATA_FILENAME),
         )
 
-    def version_info(self):
-        return eval(
-            subprocess.check_output(
-                [self.python_path, "-c", "import sys; print(sys.version_info[:])"]
-            )
-        )
-
     @property
     def activate_path(self):
         return os.path.join(self.bin_path, "activate_this.py")
