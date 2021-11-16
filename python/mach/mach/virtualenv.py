@@ -299,37 +299,18 @@ class VirtualenvManager(VirtualenvHelper):
         with open(os.path.join(site_packages_dir, PTH_FILENAME), "a") as f:
             f.write("\n".join(pthfile_lines))
 
-        old_env_variables = {}
-        try:
-            # We ignore environment variables that may have been altered by
-            # configure or a mozconfig activated in the current shell. We trust
-            # Python is smart enough to find a proper compiler and to use the
-            # proper compiler flags. If it isn't your Python is likely broken.
-            for k in ("CC", "CXX", "CFLAGS", "CXXFLAGS", "LDFLAGS"):
-                if k not in os.environ:
-                    continue
+        pip = [self.python_path, "-m", "pip"]
+        for pypi_requirement in env_requirements.pypi_requirements:
+            subprocess.check_call(pip + ["install", str(pypi_requirement.requirement)])
 
-                old_env_variables[k] = os.environ[k]
-                del os.environ[k]
-
-            pip = [self.python_path, "-m", "pip"]
-            for pypi_requirement in env_requirements.pypi_requirements:
-                subprocess.check_call(
-                    pip + ["install", str(pypi_requirement.requirement)]
+        for requirement in env_requirements.pypi_optional_requirements:
+            try:
+                subprocess.check_call(pip + ["install", str(requirement.requirement)])
+            except subprocess.CalledProcessError:
+                print(
+                    f"Could not install {requirement.requirement.name}, so "
+                    f"{requirement.repercussion}. Continuing."
                 )
-
-            for requirement in env_requirements.pypi_optional_requirements:
-                try:
-                    subprocess.check_call(
-                        pip + ["install", str(requirement.requirement)]
-                    )
-                except subprocess.CalledProcessError:
-                    print(
-                        f"Could not install {requirement.requirement.name}, so "
-                        f"{requirement.repercussion}. Continuing."
-                    )
-        finally:
-            os.environ.update(old_env_variables)
 
         os.utime(self.activate_path, None)
         self._metadata.write()
