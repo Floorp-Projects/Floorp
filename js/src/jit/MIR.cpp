@@ -6076,6 +6076,9 @@ static bool IsBoxedObject(MDefinition* def) {
   if (def->isConstructArray()) {
     return true;
   }
+  if (def->isConstructArgs()) {
+    return true;
+  }
 
   return false;
 }

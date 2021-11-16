@@ -319,6 +319,9 @@
 - name: ApplyArray
   gen_boilerplate: false
 
+- name: ConstructArgs
+  gen_boilerplate: false
+
 - name: ConstructArray
   gen_boilerplate: false
 
