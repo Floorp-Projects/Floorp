@@ -9,7 +9,6 @@
 #include "Http3Session.h"
 #include "Http3Stream.h"
 #include "nsHttpRequestHead.h"
-#include "nsHttpTransaction.h"
 #include "nsISocketTransport.h"
 #include "nsSocketTransportService2.h"
 #include "mozilla/Telemetry.h"
@@ -22,19 +21,10 @@ namespace mozilla {
 namespace net {
 
 Http3Stream::Http3Stream(nsAHttpTransaction* httpTransaction,
-                         Http3Session* session, uint32_t aCos, uint64_t bcId)
-    : mSession(session),
-      mTransaction(httpTransaction),
-      mCurrentTopBrowsingContextId(bcId) {
+                         Http3Session* session)
+    : mSession(session), mTransaction(httpTransaction) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG3(("Http3Stream::Http3Stream [this=%p]", this));
-
-  nsHttpTransaction* trans = mTransaction->QueryHttpTransaction();
-  if (trans) {
-    mTransactionTabId = trans->TopBrowsingContextId();
-  }
-
-  SetPriority(aCos);
 }
 
 void Http3Stream::Close(nsresult aResult) {
@@ -112,31 +102,6 @@ void Http3Stream::FindRequestContentLength() {
   }
 }
 
-void Http3Stream::SetPriority(uint32_t aCos) {
-  if (aCos & nsIClassOfService::UrgentStart) {
-    // coming from an user interaction => response should be the highest
-    // priority
-    mPriorityUrgency = 1;
-  } else if (aCos & nsIClassOfService::Leader) {
-    // main html document normal priority
-    mPriorityUrgency = 2;
-  } else if (aCos & nsIClassOfService::Unblocked) {
-    mPriorityUrgency = 3;
-  } else if (aCos & nsIClassOfService::Follower) {
-    mPriorityUrgency = 4;
-  } else if (aCos & nsIClassOfService::Speculative) {
-    mPriorityUrgency = 6;
-  } else if (aCos & nsIClassOfService::Background) {
-    // background tasks can be deprioritzed to the lowest priority
-    mPriorityUrgency = 6;
-  } else if (aCos & nsIClassOfService::Tail) {
-    mPriorityUrgency = 6;
-  } else {
-    // all others get a lower priority than the main html document
-    mPriorityUrgency = 4;
-  }
-}
-
 nsresult Http3Stream::TryActivating() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("Http3Stream::TryActivating [this=%p]", this));
@@ -158,22 +123,6 @@ nsresult Http3Stream::TryActivating() {
 
   return mSession->TryActivating(method, scheme, authorityHeader, path,
                                  mFlatHttpRequestHeaders, &mStreamId, this);
-}
-
-void Http3Stream::TopBrowsingContextIdChanged(uint64_t id) {
-  MOZ_ASSERT(gHttpHandler->ActiveTabPriority());
-
-  bool previouslyFocused = (mCurrentTopBrowsingContextId == mTransactionTabId);
-  mCurrentTopBrowsingContextId = id;
-  bool nowFocused = (mCurrentTopBrowsingContextId == mTransactionTabId);
-
-  if (!StaticPrefs::network_http_http3_send_background_tabs_depriorization() ||
-      previouslyFocused == nowFocused) {
-    return;
-  }
-
-  mSession->SendPriorityUpdateFrame(mStreamId, PriorityUrgency(),
-                                    PriorityIncremental());
 }
 
 nsresult Http3Stream::OnReadSegment(const char* buf, uint32_t count,
@@ -525,28 +474,6 @@ nsresult Http3Stream::Finish0RTT(bool aRestart) {
   }
 
   return rv;
-}
-
-uint8_t Http3Stream::PriorityUrgency() {
-  if (!StaticPrefs::network_http_http3_priorization()) {
-    // send default priorization which is equivalent to sending no priorization
-    return 3;
-  }
-
-  if (StaticPrefs::network_http_http3_send_background_tabs_depriorization() &&
-      mCurrentTopBrowsingContextId != mTransactionTabId) {
-    // Low priority
-    return 6;
-  }
-  return mPriorityUrgency;
-}
-
-bool Http3Stream::PriorityIncremental() {
-  if (!StaticPrefs::network_http_http3_priorization()) {
-    // send default priorization which is equivalent to sending no priorization
-    return false;
-  }
-  return mPriorityIncremental;
 }
 
 }  // namespace net
