@@ -9,6 +9,11 @@ en_GB{
         ms{"m:ss"}
     }
     units{
+        concentr{
+            karat{
+                dnam{"carats"}
+            }
+        }
         volume{
             fluid-ounce-imperial{
                 dnam{"fluid ounces"}

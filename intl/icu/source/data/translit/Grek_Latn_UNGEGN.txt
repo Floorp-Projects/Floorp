@@ -37,7 +37,7 @@ $caron = \u030C;
 $afterLetter = [:L:] [\'$accent]* ;
 $beforeLetter = [\'$accent]* [:L:] ;
 # Fix punctuation
-# preserve orginal
+# preserve original
 \: ↔ \: $under ;
 \? ↔ \? $under ;
 \; ↔ \? ;

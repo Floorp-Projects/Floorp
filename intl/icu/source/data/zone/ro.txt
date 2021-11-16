@@ -1925,6 +1925,9 @@ ro{
             lg{"Ora din Ekaterinburg"}
             ls{"Ora standard din Ekaterinburg"}
         }
+        "meta:Yukon"{
+            ls{"Ora din Yukon"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

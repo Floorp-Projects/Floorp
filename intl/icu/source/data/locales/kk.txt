@@ -239,6 +239,16 @@ kk{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMdd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
                 Bh{"B h"}
                 Bhm{"B h:mm"}
@@ -255,6 +265,7 @@ kk{
                 GyMMM{"G y 'ж'. MMM"}
                 GyMMMEd{"G y 'ж'. d MMM, E"}
                 GyMMMd{"G y 'ж'. d MMM"}
+                GyMd{"d/M/y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -423,6 +434,16 @@ kk{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMdd",
+                "yyMMdd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -442,6 +463,7 @@ kk{
                 GyMMM{"G y 'ж'. MMM"}
                 GyMMMEd{"G y 'ж'. d MMM, E"}
                 GyMMMd{"G y 'ж'. d MMM"}
+                GyMd{"dd-MM-GGGGG y"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}

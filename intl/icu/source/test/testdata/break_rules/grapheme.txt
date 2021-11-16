@@ -33,7 +33,7 @@ T                  = [\p{Grapheme_Cluster_Break = T}];
 LV                 = [\p{Grapheme_Cluster_Break = LV}];
 LVT                = [\p{Grapheme_Cluster_Break = LVT}];
 
-# Emoji defintions
+# Emoji definitions
 
 Extended_Pict      = [:ExtPict:];
 

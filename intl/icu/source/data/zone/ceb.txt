@@ -609,6 +609,9 @@ ceb{
             lg{"Oras sa Yekaterinburg"}
             ls{"Tamdanang Oras sa Yekaterinburg"}
         }
+        "meta:Yukon"{
+            ls{"Oras sa Yukon"}
+        }
         fallbackFormat{"{1} {0}"}
         gmtFormat{"GMT {0}"}
         gmtZeroFormat{"GMT"}

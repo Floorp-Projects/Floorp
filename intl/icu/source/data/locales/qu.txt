@@ -178,6 +178,16 @@ qu{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -194,6 +204,7 @@ qu{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMMM y G"}
                 GyMMMd{"d MMM y G"}
+                GyMd{"M/d/y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -351,6 +362,16 @@ qu{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yMMdd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -370,6 +391,7 @@ qu{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM, y G"}
                 GyMMMd{"d MMM, y G"}
+                GyMd{"d/M/y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -502,45 +524,34 @@ qu{
             }
             eras{
                 abbreviated{
-                    "BCE",
+                    "a.d.",
                     "d.C.",
                 }
                 abbreviated%variant{
-                    "BCE",
-                    "CE",
+                    "ACE",
+                    "ec",
                 }
                 narrow{
-                    "BCE",
+                    "a.d.",
                     "dC",
                 }
                 wide{
-                    "BCE",
-                    "d.C.",
+                    "ñawpa cristu",
+                    "chanta cristu",
                 }
                 wide%variant{
-                    "BCE",
-                    "CE",
+                    "Ñawpa Kaqlla Era",
+                    "kaqlla era",
                 }
             }
             intervalFormats{
                 Gy{
-                    G{"y G – y G"}
                     y{"y–y G"}
                 }
                 GyM{
                     G{"MM-y GGGGG – MM-y GGGGG"}
-                    M{"MM-y – MM-y GGGGG"}
-                    y{"MM-y – MM-y GGGGG"}
-                }
-                GyMEd{
-                    G{"E, dd-MM-y GGGG – E, dd-MM-y GGGGG"}
-                    M{"E, dd-MM-y – E, dd-MM-y GGGGG"}
-                    d{"E, dd-MM-y – E, dd-MM-y GGGGG"}
-                    y{"E, dd-MM-y – E, dd-MM-y GGGGG"}
                 }
                 GyMMM{
-                    G{"MMM y G – MMM y G"}
-                    M{"MMM y – MMM y G"}
                     y{"MMM y – MMM y G"}
                 }
                 GyMMMEd{
@@ -554,12 +565,6 @@ qu{
                     M{"d, MMM – d, MMM y G"}
                     d{"d – d, MMM y G"}
                     y{"d, MMM y – d, MMM y G"}
-                }
-                GyMd{
-                    G{"dd-MM-y GGGGG – dd-MM-y GGGGG"}
-                    M{"dd-MM-y – dd-MM-y GGGGG"}
-                    d{"dd-MM-y – dd-MM-y GGGGG"}
-                    y{"dd-MM-y – dd-MM-y GGGGG"}
                 }
                 H{
                     H{"HH–HH"}

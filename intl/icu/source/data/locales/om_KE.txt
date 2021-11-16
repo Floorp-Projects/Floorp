@@ -19,6 +19,16 @@ om_KE{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMdd",
+                "yMMMdd",
+                "yyMMdd",
+            }
             dayNames{
                 stand-alone{
                     narrow{

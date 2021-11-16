@@ -351,7 +351,7 @@ vi{
         mgh{"Tiếng Makhuwa-Meetto"}
         mgo{"Tiếng Meta’"}
         mh{"Tiếng Marshall"}
-        mi{"Tiếng Maori"}
+        mi{"Tiếng Māori"}
         mic{"Tiếng Micmac"}
         min{"Tiếng Minangkabau"}
         mk{"Tiếng Macedonia"}
@@ -436,6 +436,7 @@ vi{
         raj{"Tiếng Rajasthani"}
         rap{"Tiếng Rapanui"}
         rar{"Tiếng Rarotongan"}
+        rhg{"Tiếng Rohingya"}
         rm{"Tiếng Romansh"}
         rn{"Tiếng Rundi"}
         ro{"Tiếng Romania"}

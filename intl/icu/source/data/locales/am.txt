@@ -212,6 +212,10 @@ am{
             }
         }
         minimalPairs{
+            case{
+                accusative{"ልጁ ለ {0} ቀረ"}
+                nominative{"{0} ዩኬ የሻይ ማንኪያ"}
+            }
             ordinal{
                 other{"በቀኝ በኩል ባለው በ{0}ኛው መታጠፊያ ግባ።"}
             }
@@ -239,6 +243,16 @@ am{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMdd",
             }
             availableFormats{
                 E{"ccc"}
@@ -398,6 +412,16 @@ am{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMdd",
             }
             availableFormats{
                 E{"ccc"}
@@ -670,6 +694,16 @@ am{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -686,6 +720,7 @@ am{
                 GyMMM{"G y MMM"}
                 GyMMMEd{"E MMM d፣ y G"}
                 GyMMMd{"MMM d፣ y G"}
+                GyMd{"M/d/y GGGGG"}
                 H{"H"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -846,6 +881,16 @@ am{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yMMdd",
             }
             appendItems{
                 Timezone{"{0} {1}"}

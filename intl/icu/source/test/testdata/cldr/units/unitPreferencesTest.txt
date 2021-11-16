@@ -15,7 +15,7 @@
 #	 The Output amount and Unit are repeated for mixed units. In such a case, only the smallest unit will have
 #	 both a rational and decimal amount; the others will have a single integer value, such as:
 #	   length; person-height; CA; 3429 / 12500; 0.27432; meter; 2; foot; 54 / 5; 10.8; inch
-#	 The input and output units are unit identifers; in particular, the output does not have further processing:
+#	 The input and output units are unit identifiers; in particular, the output does not have further processing:
 #		 • no localization
 #		 • no adjustment for pluralization
 #		 • no formatted with the skeleton

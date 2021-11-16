@@ -49,7 +49,7 @@ public:
     void setScope(const UnicodeString& message);
 
 protected:
-    virtual void handleFailure() const;
+    virtual void handleFailure() const override;
 
 private:
     TestLog &testClass;

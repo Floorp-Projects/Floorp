@@ -68,8 +68,7 @@ pt_PT{
         UZ{"Usbequistão"}
         VI{"Ilhas Virgens dos EUA"}
         VN{"Vietname"}
-        XA{"pseudoacentos"}
-        XB{"pseudobidirecional"}
+        XA{"Pseudoacentos"}
         YE{"Iémen"}
         YT{"Maiote"}
         ZW{"Zimbabué"}

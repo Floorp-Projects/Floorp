@@ -24,6 +24,7 @@ de_CH{
         mus{"Muskogee-Sprache"}
         nl_BE{"Flämisch"}
         prg{"Altpreussisch"}
+        rhg{"Rohingya"}
         zh_Hans{"Chinesisch (vereinfacht)"}
         zh_Hant{"Chinesisch (traditionell)"}
     }

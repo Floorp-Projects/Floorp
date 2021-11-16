@@ -49,7 +49,7 @@ ca{
         AT{"Àustria"}
         AU{"Austràlia"}
         AW{"Aruba"}
-        AX{"Illes Åland"}
+        AX{"Illes Aland"}
         AZ{"Azerbaidjan"}
         BA{"Bòsnia i Hercegovina"}
         BB{"Barbados"}
@@ -60,11 +60,11 @@ ca{
         BH{"Bahrain"}
         BI{"Burundi"}
         BJ{"Benín"}
-        BL{"Saint Barthélemy"}
+        BL{"Saint-Barthélemy"}
         BM{"Bermudes"}
         BN{"Brunei"}
         BO{"Bolívia"}
-        BQ{"Carib Neerlandès"}
+        BQ{"Antilles Neerlandeses"}
         BR{"Brasil"}
         BS{"Bahames"}
         BT{"Bhutan"}
@@ -160,7 +160,7 @@ ca{
         KH{"Cambodja"}
         KI{"Kiribati"}
         KM{"Comores"}
-        KN{"Saint Christopher i Nevis"}
+        KN{"Saint Kitts i Nevis"}
         KP{"Corea del Nord"}
         KR{"Corea del Sud"}
         KW{"Kuwait"}
@@ -240,7 +240,7 @@ ca{
         SD{"Sudan"}
         SE{"Suècia"}
         SG{"Singapur"}
-        SH{"Saint Helena"}
+        SH{"Santa Helena"}
         SI{"Eslovènia"}
         SJ{"Svalbard i Jan Mayen"}
         SK{"Eslovàquia"}
@@ -282,8 +282,8 @@ ca{
         VA{"Ciutat del Vaticà"}
         VC{"Saint Vincent i les Grenadines"}
         VE{"Veneçuela"}
-        VG{"Illes Verges Britàniques"}
-        VI{"Illes Verges Nord-americanes"}
+        VG{"Illes Verges britàniques"}
+        VI{"Illes Verges nord-americanes"}
         VN{"Vietnam"}
         VU{"Vanuatu"}
         WF{"Wallis i Futuna"}
@@ -307,8 +307,8 @@ ca{
         US{"EUA"}
     }
     Countries%variant{
-        CD{"Congo (RDC)"}
-        CG{"Congo (República del Congo)"}
+        CD{"República Democràtica del Congo"}
+        CG{"República del Congo"}
         CI{"Costa d’Ivori"}
         CZ{"República Txeca"}
         FK{"Illes Malvines (Illes Falkland)"}

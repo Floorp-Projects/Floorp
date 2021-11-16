@@ -1964,6 +1964,9 @@ vi{
             lg{"Giờ Yekaterinburg"}
             ls{"Giờ Chuẩn Yekaterinburg"}
         }
+        "meta:Yukon"{
+            ls{"Giờ Yukon"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

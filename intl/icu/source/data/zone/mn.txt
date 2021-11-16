@@ -1883,6 +1883,9 @@ mn{
             lg{"Екатеринбургийн цаг"}
             ls{"Екатеринбургийн стандарт цаг"}
         }
+        "meta:Yukon"{
+            ls{"Юкон цагийн бүс"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

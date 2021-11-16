@@ -473,6 +473,7 @@ tr{
         rap{"Rapanui dili"}
         rar{"Rarotongan"}
         rgn{"Romanyolca"}
+        rhg{"Rohingya dili"}
         rif{"Rif Berbericesi"}
         rm{"Romanşça"}
         rn{"Kirundi"}
@@ -653,7 +654,6 @@ tr{
         zh{"Çince, Mandarin"}
     }
     Languages%short{
-        az{"Azerice"}
         en_GB{"Birleşik Krallık İngilizcesi"}
         en_US{"ABD İngilizcesi"}
     }

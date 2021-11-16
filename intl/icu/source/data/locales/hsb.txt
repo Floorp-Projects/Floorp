@@ -19,6 +19,7 @@ hsb{
     NumberElements{
         latn{
             miscPatterns{
+                approximately{"≈{0}"}
                 atLeast{"{0}+"}
                 range{"{0}–{1}"}
             }
@@ -106,6 +107,80 @@ hsb{
                 }
             }
             patternsShort{
+                currencyFormat{
+                    1000{
+                        few{"0 tys'.' ¤"}
+                        one{"0 tys'.' ¤"}
+                        other{"0 tys'.' ¤"}
+                        two{"0 tys'.' ¤"}
+                    }
+                    10000{
+                        few{"00 tys'.' ¤"}
+                        one{"00 tys'.' ¤"}
+                        other{"00 tys'.' ¤"}
+                        two{"00 tys'.' ¤"}
+                    }
+                    100000{
+                        few{"000 tys'.' ¤"}
+                        one{"000 tys'.' ¤"}
+                        other{"000 tys'.' ¤"}
+                        two{"000 tys'.' ¤"}
+                    }
+                    1000000{
+                        few{"0 mio'.' ¤"}
+                        one{"0 mio'.' ¤"}
+                        other{"0 mio'.' ¤"}
+                        two{"0 mio'.' ¤"}
+                    }
+                    10000000{
+                        few{"00 mio'.' ¤"}
+                        one{"00 mio'.' ¤"}
+                        other{"00 mio'.' ¤"}
+                        two{"00 mio'.' ¤"}
+                    }
+                    100000000{
+                        few{"000 mio'.' ¤"}
+                        one{"000 mio'.' ¤"}
+                        other{"000 mio'.' ¤"}
+                        two{"000 mio'.' ¤"}
+                    }
+                    1000000000{
+                        few{"0 mrd'.' ¤"}
+                        one{"0 mrd'.' ¤"}
+                        other{"0 mrd'.' ¤"}
+                        two{"0 mrd'.' ¤"}
+                    }
+                    10000000000{
+                        few{"00 mrd'.' ¤"}
+                        one{"00 mrd'.' ¤"}
+                        other{"00 mrd'.' ¤"}
+                        two{"00 mrd'.' ¤"}
+                    }
+                    100000000000{
+                        few{"000 mrd'.' ¤"}
+                        one{"000 mrd'.' ¤"}
+                        other{"000 mrd'.' ¤"}
+                        two{"000 mrd'.' ¤"}
+                    }
+                    1000000000000{
+                        few{"0 bil'.' ¤"}
+                        one{"0 bil'.' ¤"}
+                        other{"0 bil'.' ¤"}
+                        two{"0 bil'.' ¤"}
+                    }
+                    10000000000000{
+                        few{"00 bil'.' ¤"}
+                        one{"00 bil'.' ¤"}
+                        other{"00 bil'.' ¤"}
+                        two{"00 bil'.' ¤"}
+                    }
+                    100000000000000{
+                        few{"000 bil'.' ¤"}
+                        one{"000 bil'.' ¤"}
+                        other{"000 bil'.' ¤"}
+                        two{"000 bil'.' ¤"}
+                    }
+                }
                 decimalFormat{
                     1000{
                         few{"0 tys'.'"}
@@ -182,6 +257,7 @@ hsb{
                 }
             }
             symbols{
+                approximatelySign{"≈"}
                 decimal{","}
                 exponential{"E"}
                 group{"."}
@@ -193,6 +269,17 @@ hsb{
                 plusSign{"+"}
                 superscriptingExponent{"·"}
                 timeSeparator{":"}
+            }
+        }
+        minimalPairs{
+            ordinal{
+                other{"Na {0}. křižowanišću wotbočće doprawa."}
+            }
+            plural{
+                few{"{0} dny"}
+                one{"{0} dźeń"}
+                other{"{0} dnjow"}
+                two{"{0} dnjej"}
             }
         }
         minimumGroupingDigits{"1"}
@@ -214,31 +301,107 @@ hsb{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "Hmmsszzzz",
+                "Hmmssz",
+                "Hmmss",
+                "Hmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMd",
+                "GGGGGyyMd",
+            }
             availableFormats{
+                Bh{"h 'hodź'. B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E, HH:mm"}
+                EHms{"E, HH:mm:ss"}
                 Ed{"E, d."}
+                Ehm{"E h:mm a"}
+                Ehms{"E, h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d. MMM y G"}
                 GyMMMd{"d. MMM y G"}
+                GyMd{"d.M.y GGGGG"}
+                H{"HH 'hodź'."}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
                 M{"L"}
                 MEd{"E, d.M."}
                 MMM{"LLL"}
                 MMMEd{"E, d. MMM"}
+                MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
                 Md{"d.M."}
                 d{"d"}
+                h{"h 'hodź'. a"}
+                hm{"h:mm a"}
+                hms{"h:mm:ss a"}
+                ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M.y GGGGG"}
                 yyyyMEd{"E, d.M.y GGGGG"}
                 yyyyMMM{"MMM y G"}
                 yyyyMMMEd{"E, d. MMM y G"}
+                yyyyMMMM{"LLLL y G"}
                 yyyyMMMd{"d. MMM y G"}
                 yyyyMd{"d.M.y GGGGG"}
                 yyyyQQQ{"QQQ y G"}
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
+                Bh{
+                    B{"h 'hodź'. B – h 'hodź'. B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm 'hodź'. B – h:mm 'hodź'. B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 M{
                     M{"M. – M."}
                 }
@@ -330,6 +493,16 @@ hsb{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "Hmmsszzzz",
+                "Hmmssz",
+                "Hmmss",
+                "Hmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMd",
+                "yyMd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -344,13 +517,22 @@ hsb{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d. MMM y G"}
                 GyMMMd{"d. MMM y G"}
+                GyMd{"d.M.y GGGGG"}
                 H{"H 'hodź'."}
                 Hm{"H:mm 'hodź'."}
                 Hms{"H:mm:ss"}
+                Hmsv{"H:mm:ss v"}
+                Hmv{"H:mm v"}
                 M{"L"}
                 MEd{"E, d.M."}
                 MMM{"LLL"}
                 MMMEd{"E, d. MMM"}
+                MMMMW{
+                    few{"'tydźeń' W MMMM"}
+                    one{"'tydźeń' W MMMM"}
+                    other{"'tydźeń' W MMMM"}
+                    two{"'tydźeń' W MMMM"}
+                }
                 MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
                 MMd{"d. MM"}
@@ -373,6 +555,12 @@ hsb{
                 yMd{"d.M.y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
+                yw{
+                    few{"'tydźeń' w 'lěta' Y"}
+                    one{"'tydźeń' w 'lěta' Y"}
+                    other{"'tydźeń' w 'lěta' Y"}
+                    two{"'tydźeń' w 'lěta' Y"}
+                }
             }
             dayNames{
                 format{
@@ -452,6 +640,18 @@ hsb{
                     }
                 }
             }
+            dayPeriod{
+                stand-alone{
+                    abbreviated{
+                        am{"am"}
+                        pm{"pm"}
+                    }
+                    wide{
+                        am{"dopołdnja"}
+                        pm{"popołdnju"}
+                    }
+                }
+            }
             eras{
                 abbreviated{
                     "př.Chr.n.",
@@ -471,6 +671,53 @@ hsb{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h 'hodź'. B – h 'hodź'. B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm 'hodź'. B – h:mm 'hodź'. B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 H{
                     H{"H–H 'hodź'."}
                 }
@@ -699,6 +946,94 @@ hsb{
             }
         }
     }
+    characterLabel{
+        activities{"aktiwity"}
+        african_scripts{"afriske pisma"}
+        american_scripts{"ameriske pisma"}
+        animal{"zwěrjo"}
+        animals_nature{"zwěrjo abo přiroda"}
+        arrows{"kłoki"}
+        body{"ćěło"}
+        box_drawing{"znamješka ramika"}
+        braille{"braille"}
+        building{"twarjenje"}
+        bullets_stars{"naličenje/hwěžki"}
+        consonantal_jamo{"jamo-konsonanty"}
+        currency_symbols{"symbole měnow"}
+        dash_connector{"ležaca smužka/ wjazaca smužka"}
+        digits{"městna"}
+        dingbats{"wozdoba"}
+        divination_symbols{"znamješka wěšćenja"}
+        downwards_arrows{"kłoki dele"}
+        downwards_upwards_arrows{"kłoki horje-dele"}
+        east_asian_scripts{"wuchodnoaziske pisma"}
+        emoji{"emoji"}
+        european_scripts{"europske pisma"}
+        female{"žona"}
+        flag{"chorhojčka"}
+        flags{"chorhojčki"}
+        food_drink{"jědź a napoje"}
+        format{"format"}
+        format_whitespace{"format a prózdnota"}
+        full_width_form_variant{"warianty w połnej šěrokosći"}
+        geometric_shapes{"geometriske formy"}
+        half_width_form_variant{"połšěroke warianty"}
+        han_characters{"han-znamješko"}
+        han_radicals{"han-radikala"}
+        hanja{"hanja"}
+        hanzi_simplified{"hanzi (zjednorjene)"}
+        hanzi_traditional{"hanzi (tradicionelne)"}
+        heart{"wutrobička"}
+        historic_scripts{"historiske pisma"}
+        ideographic_desc_characters{"ideografisce wopisowace znamješka"}
+        japanese_kana{"japanske kana"}
+        kanbun{"kanbun"}
+        kanji{"kanji"}
+        keycap{"tłóčatko"}
+        leftwards_arrows{"kłoki dolěwa"}
+        leftwards_rightwards_arrows{"kłoki dolěwa-doprawa"}
+        letterlike_symbols{"na pismiki podobne znamješka"}
+        limited_use{"wobmjezowane wužiwanje"}
+        male{"muž"}
+        math_symbols{"matematiske znamješko"}
+        middle_eastern_scripts{"prědnoaziske pisma"}
+        miscellaneous{"wšelake"}
+        modern_scripts{"moderne pisma"}
+        modifier{"postajenje"}
+        musical_symbols{"hudźbne znamješka"}
+        nature{"přiroda"}
+        nonspacing{"škitane znamješka"}
+        numbers{"ličby"}
+        objects{"objekty"}
+        other{"druhe"}
+        paired{"podwojene"}
+        person{"wosoba"}
+        phonetic_alphabet{"fonetiski alfabet"}
+        pictographs{"piktogramy"}
+        place{"městno"}
+        plant{"rostlina"}
+        punctuation{"interpunkcija"}
+        rightwards_arrows{"kłoki doprawa"}
+        sign_standard_symbols{"znamješko abo symbol"}
+        small_form_variant{"małe warianty"}
+        smiley{"smiley"}
+        smileys_people{"smiley abo wosoba"}
+        south_asian_scripts{"južnoaziske pisma"}
+        southeast_asian_scripts{"juhowuchodnoaziske pisma"}
+        spacing{"wotstawk"}
+        sport{"sport"}
+        symbols{"znamješko"}
+        technical_symbols{"techniske znamješko"}
+        tone_marks{"zwukowe znamješko"}
+        travel{"pućowanje"}
+        travel_places{"pućowanje a městnosće"}
+        upwards_arrows{"kłoki horje"}
+        variant_forms{"warianta"}
+        vocalic_jamo{"jamo-wokale"}
+        weather{"wjedro"}
+        western_asian_scripts{"zapadnoaziske pisma"}
+        whitespace{"prózdnota"}
+    }
     delimiters{
         alternateQuotationEnd{"‘"}
         alternateQuotationStart{"‚"}
@@ -730,6 +1065,11 @@ hsb{
         }
         day-narrow{
             dn{"d"}
+            relative{
+                "-1"{"wč."}
+                "0"{"dźe."}
+                "1"{"jut."}
+            }
             relativeTime{
                 future{
                     few{"za {0} d"}
@@ -747,6 +1087,11 @@ hsb{
         }
         day-short{
             dn{"dźeń"}
+            relative{
+                "-1"{"wčer."}
+                "0"{"dźens."}
+                "1"{"jutř."}
+            }
             relativeTime{
                 future{
                     few{"za {0} dny"}
@@ -762,8 +1107,20 @@ hsb{
                 }
             }
         }
+        dayOfYear{
+            dn{"dźeń lěta"}
+        }
+        dayOfYear-narrow{
+            dn{"dźeń l."}
+        }
+        dayOfYear-short{
+            dn{"dźeń l."}
+        }
         dayperiod{
             dn{"połojca dnja"}
+        }
+        dayperiod-narrow{
+            dn{"poł. dnja"}
         }
         era{
             dn{"doba"}
@@ -774,12 +1131,40 @@ hsb{
                 "0"{"tutón pjatk"}
                 "1"{"přichodny pjatk"}
             }
+            relativeTime{
+                future{
+                    few{"za {0} pjatki"}
+                    one{"za {0} pjatk"}
+                    other{"za {0} pjatkow"}
+                    two{"za {0} pjatkaj"}
+                }
+                past{
+                    few{"před {0} pjatkami"}
+                    one{"před {0} pjatkom"}
+                    other{"před {0} pjatkami"}
+                    two{"před {0} pjatkomaj"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"zašły pj."}
                 "0"{"tutón pj."}
                 "1"{"přichodny pj."}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} pj."}
+                    one{"za {0} pj."}
+                    other{"za {0} pj."}
+                    two{"za {0} pj."}
+                }
+                past{
+                    few{"před {0} pj."}
+                    one{"před {0} pj."}
+                    other{"před {0} pj."}
+                    two{"před {0} pj."}
+                }
             }
         }
         fri-short{
@@ -788,9 +1173,26 @@ hsb{
                 "0"{"tutón pja."}
                 "1"{"přichodny pja."}
             }
+            relativeTime{
+                future{
+                    few{"za {0} pja."}
+                    one{"za {0} pja."}
+                    other{"za {0} pja."}
+                    two{"za {0} pja."}
+                }
+                past{
+                    few{"před {0} pja."}
+                    one{"před {0} pja."}
+                    other{"před {0} pja."}
+                    two{"před {0} pja."}
+                }
+            }
         }
         hour{
             dn{"hodźina"}
+            relative{
+                "0"{"w tutej hodźinje"}
+            }
             relativeTime{
                 future{
                     few{"za {0} hodźiny"}
@@ -842,6 +1244,9 @@ hsb{
         }
         minute{
             dn{"minuta"}
+            relative{
+                "0"{"w tutej mjeńšinje"}
+            }
             relativeTime{
                 future{
                     few{"za {0} minuty"}
@@ -897,6 +1302,20 @@ hsb{
                 "0"{"tutu póndźelu"}
                 "1"{"přichodnu póndźelu"}
             }
+            relativeTime{
+                future{
+                    few{"za {0} póndźele"}
+                    one{"za {0} póndźelu"}
+                    other{"za {0} póndźelow"}
+                    two{"za {0} póndźeli"}
+                }
+                past{
+                    few{"před {0} póndźelemi"}
+                    one{"před {0} póndźelu"}
+                    other{"před {0} póndźelemi"}
+                    two{"před {0} póndźelomaj"}
+                }
+            }
         }
         mon-narrow{
             relative{
@@ -904,12 +1323,40 @@ hsb{
                 "0"{"tutu pó."}
                 "1"{"přichodnu pó."}
             }
+            relativeTime{
+                future{
+                    few{"za {0} pó."}
+                    one{"za {0} pó."}
+                    other{"za {0} pó."}
+                    two{"za {0} pó."}
+                }
+                past{
+                    few{"před {0} pó."}
+                    one{"před {0} pó."}
+                    other{"před {0} pó."}
+                    two{"před {0} pó."}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"zašłu pón."}
                 "0"{"tutu pón."}
                 "1"{"přichodnu pón."}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} pón."}
+                    one{"za {0} pón."}
+                    other{"za {0} pón."}
+                    two{"za {0} pón."}
+                }
+                past{
+                    few{"před {0} pón."}
+                    one{"před {0} pón."}
+                    other{"před {0} pón."}
+                    two{"před {0} pón."}
+                }
             }
         }
         month{
@@ -936,6 +1383,11 @@ hsb{
         }
         month-narrow{
             dn{"měs."}
+            relative{
+                "-1"{"zaš. měsac"}
+                "0"{"tu. měsac"}
+                "1"{"přich. měsac"}
+            }
             relativeTime{
                 future{
                     few{"za {0} měs."}
@@ -953,6 +1405,11 @@ hsb{
         }
         month-short{
             dn{"měs."}
+            relative{
+                "-1"{"zašł. měsac"}
+                "0"{"tut. měsac"}
+                "1"{"přichodn. měsac"}
+            }
             relativeTime{
                 future{
                     few{"za {0} měs."}
@@ -970,6 +1427,11 @@ hsb{
         }
         quarter{
             dn{"kwartal"}
+            relative{
+                "-1"{"zašły kwartal"}
+                "0"{"tutón kwartal"}
+                "1"{"přichodny kwartal"}
+            }
             relativeTime{
                 future{
                     few{"za {0} kwartale"}
@@ -1025,12 +1487,40 @@ hsb{
                 "0"{"tutu sobotu"}
                 "1"{"přichodnu sobotu"}
             }
+            relativeTime{
+                future{
+                    few{"za {0} soboty"}
+                    one{"za {0} sobotu"}
+                    other{"za {0} sobotow"}
+                    two{"za {0} soboće"}
+                }
+                past{
+                    few{"před {0} sobotami"}
+                    one{"před {0} sobotu"}
+                    other{"před {0} sobotami"}
+                    two{"před {0} sobotomaj"}
+                }
+            }
         }
         sat-narrow{
             relative{
                 "-1"{"zašłu so."}
                 "0"{"tutu so."}
                 "1"{"přichodnu so."}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} so."}
+                    one{"za {0} so."}
+                    other{"za {0} so."}
+                    two{"za {0} so."}
+                }
+                past{
+                    few{"před {0} so."}
+                    one{"před {0} so."}
+                    other{"před {0} so."}
+                    two{"před {0} so."}
+                }
             }
         }
         sat-short{
@@ -1039,9 +1529,26 @@ hsb{
                 "0"{"tutu sob."}
                 "1"{"přichodnu sob."}
             }
+            relativeTime{
+                future{
+                    few{"za {0} sob."}
+                    one{"za {0} sob."}
+                    other{"za {0} sob."}
+                    two{"za {0} sob."}
+                }
+                past{
+                    few{"před {0} sob."}
+                    one{"před {0} sob."}
+                    other{"před {0} sob."}
+                    two{"před {0} sob."}
+                }
+            }
         }
         second{
             dn{"sekunda"}
+            relative{
+                "0"{"nětko"}
+            }
             relativeTime{
                 future{
                     few{"za {0} sekundy"}
@@ -1097,12 +1604,40 @@ hsb{
                 "0"{"tutu njedźelu"}
                 "1"{"přichodnu njedźelu"}
             }
+            relativeTime{
+                future{
+                    few{"za {0} njedźele"}
+                    one{"za {0} njedźelu"}
+                    other{"za {0} njedźelow"}
+                    two{"za {0} njedźeli"}
+                }
+                past{
+                    few{"před {0} njedźelemi"}
+                    one{"před {0} njedźelu"}
+                    other{"před {0} njedźelemi"}
+                    two{"před {0} njedźelomaj"}
+                }
+            }
         }
         sun-narrow{
             relative{
                 "-1"{"zašłu nj."}
                 "0"{"tutu nj."}
                 "1"{"přichodnu nj."}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} nj."}
+                    one{"za {0} nj."}
+                    other{"za {0} nj."}
+                    two{"za {0} nj."}
+                }
+                past{
+                    few{"před {0} nj."}
+                    one{"před {0} nj."}
+                    other{"před {0} nj."}
+                    two{"před {0} nj."}
+                }
             }
         }
         sun-short{
@@ -1111,12 +1646,40 @@ hsb{
                 "0"{"tutu nje."}
                 "1"{"přichodnu nje."}
             }
+            relativeTime{
+                future{
+                    few{"za {0} nje."}
+                    one{"za {0} nje."}
+                    other{"za {0} nje."}
+                    two{"za {0} nje."}
+                }
+                past{
+                    few{"před {0} nje."}
+                    one{"před {0} nje."}
+                    other{"před {0} nje."}
+                    two{"před {0} nje."}
+                }
+            }
         }
         thu{
             relative{
                 "-1"{"zašły štwórtk"}
                 "0"{"tutón štwórtk"}
                 "1"{"přichodny štwórtk"}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} štwórtki"}
+                    one{"za {0} štwórtk"}
+                    other{"za {0} štwórtkow"}
+                    two{"za {0} štwórtkaj"}
+                }
+                past{
+                    few{"před {0} štwórtkami"}
+                    one{"před {0} štwórtkom"}
+                    other{"před {0} štwórtkami"}
+                    two{"před {0} štwórtkomaj"}
+                }
             }
         }
         thu-narrow{
@@ -1125,12 +1688,40 @@ hsb{
                 "0"{"tutón št."}
                 "1"{"přichodny št."}
             }
+            relativeTime{
+                future{
+                    few{"za {0} št."}
+                    one{"za {0} št."}
+                    other{"za {0} št."}
+                    two{"za {0} št."}
+                }
+                past{
+                    few{"před {0} št."}
+                    one{"před {0} št."}
+                    other{"před {0} št."}
+                    two{"před {0} št."}
+                }
+            }
         }
         thu-short{
             relative{
                 "-1"{"zašły štw."}
                 "0"{"tutón štw."}
                 "1"{"přichodny štw."}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} štw."}
+                    one{"za {0} štw."}
+                    other{"za {0} štw."}
+                    two{"za {0} štw."}
+                }
+                past{
+                    few{"před {0} štw."}
+                    one{"před {0} štw."}
+                    other{"před {0} štw."}
+                    two{"před {0} štw."}
+                }
             }
         }
         tue{
@@ -1139,12 +1730,40 @@ hsb{
                 "0"{"tutu wutoru"}
                 "1"{"přichodnu wutoru"}
             }
+            relativeTime{
+                future{
+                    few{"za {0} wutory"}
+                    one{"za {0} wutoru"}
+                    other{"za {0} wutorow"}
+                    two{"za {0} wutorje"}
+                }
+                past{
+                    few{"před {0} wutorami"}
+                    one{"před {0} wutoru"}
+                    other{"před {0} wutorami"}
+                    two{"před {0} wutoromaj"}
+                }
+            }
         }
         tue-narrow{
             relative{
                 "-1"{"zašłu wu."}
                 "0"{"tutu wu."}
                 "1"{"přichodnu wu."}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} wu."}
+                    one{"za {0} wu."}
+                    other{"za {0} wu."}
+                    two{"za {0} wu."}
+                }
+                past{
+                    few{"před {0} wu."}
+                    one{"před {0} wu."}
+                    other{"před {0} wu."}
+                    two{"před {0} wu."}
+                }
             }
         }
         tue-short{
@@ -1153,12 +1772,40 @@ hsb{
                 "0"{"tutu wut."}
                 "1"{"přichodnu wut."}
             }
+            relativeTime{
+                future{
+                    few{"za {0} wut."}
+                    one{"za {0} wut."}
+                    other{"za {0} wut."}
+                    two{"za {0} wut."}
+                }
+                past{
+                    few{"před {0} wut."}
+                    one{"před {0} wut."}
+                    other{"před {0} wut."}
+                    two{"před {0} wut."}
+                }
+            }
         }
         wed{
             relative{
                 "-1"{"zašłu srjedu"}
                 "0"{"tutu srjedu"}
                 "1"{"přichodnu srjedu"}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} srjedy"}
+                    one{"za {0} srjedu"}
+                    other{"za {0} srjedow"}
+                    two{"za {0} srjedźe"}
+                }
+                past{
+                    few{"před {0} srjedami"}
+                    one{"před {0} srjedu"}
+                    other{"před {0} srjedami"}
+                    two{"před {0} srjedomaj"}
+                }
             }
         }
         wed-narrow{
@@ -1167,12 +1814,40 @@ hsb{
                 "0"{"tutu sr."}
                 "1"{"přichodnu sr."}
             }
+            relativeTime{
+                future{
+                    few{"za {0} sr."}
+                    one{"za {0} sr."}
+                    other{"za {0} sr."}
+                    two{"za {0} sr."}
+                }
+                past{
+                    few{"před {0} sr."}
+                    one{"před {0} sr."}
+                    other{"před {0} sr."}
+                    two{"před {0} sr."}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"zašłu srj."}
                 "0"{"tutu srj."}
                 "1"{"přichodnu srj."}
+            }
+            relativeTime{
+                future{
+                    few{"za {0} srj."}
+                    one{"za {0} srj."}
+                    other{"za {0} srj."}
+                    two{"za {0} srj."}
+                }
+                past{
+                    few{"před {0} srj."}
+                    one{"před {0} srj."}
+                    other{"před {0} srj."}
+                    two{"před {0} srj."}
+                }
             }
         }
         week{
@@ -1182,6 +1857,7 @@ hsb{
                 "0"{"tutón tydźeń"}
                 "1"{"přichodny tydźeń"}
             }
+            relativePeriod{"tydźeń wot {0}"}
             relativeTime{
                 future{
                     few{"za {0} tydźenje"}
@@ -1199,6 +1875,12 @@ hsb{
         }
         week-narrow{
             dn{"tydź."}
+            relative{
+                "-1"{"zaš. tydźeń"}
+                "0"{"tu. tydźeń"}
+                "1"{"přich. tydźeń"}
+            }
+            relativePeriod{"tydźeń wot {0}"}
             relativeTime{
                 future{
                     few{"za {0} tydź."}
@@ -1216,6 +1898,12 @@ hsb{
         }
         week-short{
             dn{"tydź."}
+            relative{
+                "-1"{"zašł. tydźeń"}
+                "0"{"tut. tydźeń"}
+                "1"{"přichodn. tydźeń"}
+            }
+            relativePeriod{"tydźeń wot {0}"}
             relativeTime{
                 future{
                     few{"za {0} tydź."}
@@ -1231,8 +1919,29 @@ hsb{
                 }
             }
         }
+        weekOfMonth{
+            dn{"tydźeń měsaca"}
+        }
+        weekOfMonth-narrow{
+            dn{"t. měs."}
+        }
+        weekOfMonth-short{
+            dn{"tydź. měs."}
+        }
         weekday{
             dn{"dźeń tydźenja"}
+        }
+        weekday-narrow{
+            dn{"dź. tydźenja"}
+        }
+        weekdayOfMonth{
+            dn{"dźeń tydźenja w měsacu"}
+        }
+        weekdayOfMonth-narrow{
+            dn{"d. t. w měs."}
+        }
+        weekdayOfMonth-short{
+            dn{"dn. tydź. w měs."}
         }
         year{
             dn{"lěto"}
@@ -1258,6 +1967,11 @@ hsb{
         }
         year-narrow{
             dn{"l."}
+            relative{
+                "-1"{"lo."}
+                "0"{"lět."}
+                "1"{"klě."}
+            }
             relativeTime{
                 future{
                     few{"za {0} l."}
@@ -1275,6 +1989,11 @@ hsb{
         }
         year-short{
             dn{"l."}
+            relative{
+                "-1"{"lon."}
+                "0"{"lěts."}
+                "1"{"klět."}
+            }
             relativeTime{
                 future{
                     few{"za {0} l."}
@@ -1293,8 +2012,15 @@ hsb{
         zone{
             dn{"časowe pasmo"}
         }
+        zone-narrow{
+            dn{"čas. pasmo"}
+        }
     }
     listPattern{
+        or{
+            2{"{0} abo {1}"}
+            end{"{0} abo {1}"}
+        }
         standard{
             2{"{0} a {1}"}
             end{"{0} a {1}"}

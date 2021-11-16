@@ -426,6 +426,11 @@ tk{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"100 kilometrde kilowatt-sagat"}
+                one{"100 kilometrde {0} kilowatt-sagat"}
+                other{"100 kilometrde {0} kilowatt-sagat"}
+            }
             newton{
                 dnam{"nýuton"}
                 one{"{0} nýuton"}
@@ -1040,6 +1045,18 @@ tk{
         }
     }
     unitsNarrow{
+        angle{
+            arc-minute{
+                dnam{"burç min."}
+                one{"{0}′"}
+                other{"{0}′"}
+            }
+            arc-second{
+                dnam{"burç sek."}
+                one{"{0}″"}
+                other{"{0}″"}
+            }
+        }
         compound{
             1024p1{"Ki{0}"}
             1024p2{"Mi{0}"}
@@ -1064,6 +1081,10 @@ tk{
                 dnam{"l/100 km"}
                 one{"{0} l/100 km"}
                 other{"{0} l/100 km"}
+            }
+            mile-per-gallon-imperial{
+                one{"{0}m/gUK"}
+                other{"{0}m/gUK"}
             }
         }
         coordinate{
@@ -1115,6 +1136,23 @@ tk{
                 other{"{0}ý"}
             }
         }
+        energy{
+            kilowatt-hour{
+                dnam{"kWs"}
+                one{"{0}kWs"}
+                other{"{0}kWs"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWs/100km"}
+                one{"{0}kWs/100km"}
+                other{"{0}kWh/100km"}
+            }
+            pound-force{
+                dnam{"lbf"}
+            }
+        }
         length{
             centimeter{
                 dnam{"sm"}
@@ -1149,6 +1187,18 @@ tk{
                 other{"{0}kg"}
             }
         }
+        pressure{
+            inch-ofhg{
+                dnam{"″ Hg"}
+                one{"{0}″ Hg"}
+                other{"{0}″ Hg"}
+            }
+            millimeter-ofhg{
+                dnam{"mmHg"}
+                one{"{0}mmHg"}
+                other{"{0}mmHg"}
+            }
+        }
         speed{
             kilometer-per-hour{
                 dnam{"km/sag"}
@@ -1164,10 +1214,43 @@ tk{
             }
         }
         volume{
+            dessert-spoon-imperial{
+                dnam{"dsp Imp"}
+                one{"{0}dsp-Imp"}
+                other{"{0}dsp-Imp"}
+            }
+            dram{
+                dnam{"fl.dr."}
+                one{"{0}fl.dr."}
+                other{"{0}fl.dr."}
+            }
+            fluid-ounce{
+                dnam{"s.uns."}
+                one{"{0}s.uns."}
+                other{"{0}s.uns."}
+            }
+            fluid-ounce-imperial{
+                dnam{"Imp fl oz"}
+                one{"{0}fl oz Im"}
+                other{"{0}fl oz Im"}
+            }
+            gallon-imperial{
+                one{"{0}galIm"}
+                other{"{0}galIm"}
+            }
             liter{
                 dnam{"litr"}
                 one{"{0}l"}
                 other{"{0}l"}
+            }
+            pinch{
+                dnam{"pn"}
+                one{"{0}pn"}
+                other{"{0}pn"}
+            }
+            quart-imperial{
+                one{"{0} kt-Imp."}
+                other{"{0} kt-Imp."}
             }
         }
     }
@@ -1547,6 +1630,11 @@ tk{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWs/100km"}
+                one{"{0} kWs/100km"}
+                other{"{0} kWs/100km"}
+            }
             newton{
                 dnam{"nýuton"}
                 one{"{0} N"}
@@ -1899,9 +1987,9 @@ tk{
                 other{"{0} mbar"}
             }
             millimeter-ofhg{
-                dnam{"mm sim.süt."}
-                one{"{0} mm sim.süt."}
-                other{"{0} mm sim.süt."}
+                dnam{"mmHg"}
+                one{"{0} mmHg"}
+                other{"{0} mmHg"}
             }
             pound-force-per-square-inch{
                 dnam{"psi"}

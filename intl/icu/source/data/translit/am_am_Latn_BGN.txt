@@ -27,7 +27,7 @@ $ejective = ’;
 $glottal  = ’;
 $pharyngeal = ‘;
 # Use this $wordBoundary until bug 2034 is fixed in ICU:
-# http://bugs.icu-project.org/trac/ticket/2034
+# https://unicode-org.atlassian.net/browse/ICU-2034
 $wordBoundary =  [^[:L:][:M:][:N:]] ;
 ########################################################################
 # Start of Syllabic Transformations

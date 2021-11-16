@@ -212,6 +212,13 @@ hu{
             }
         }
         minimalPairs{
+            case{
+                accusative{"{0} évet"}
+                instrumental{"{0} évvel"}
+                nominative{"{0} év"}
+                terminative{"{0} évig"}
+                translative{"{0} évvé"}
+            }
             ordinal{
                 one{"Az {0}. lehetőségnél forduljon jobbra."}
                 other{"A {0}. lehetőségnél forduljon jobbra."}
@@ -239,6 +246,38 @@ hu{
             }
         }
         chinese{
+            cyclicNameSets{
+                solarTerms{
+                    format{
+                        wide{
+                            "spring begins",
+                            "esővíz",
+                            "insects awaken",
+                            "spring equinox",
+                            "bright and clear",
+                            "grain rain",
+                            "summer begins",
+                            "grain full",
+                            "grain in ear",
+                            "summer solstice",
+                            "minor heat",
+                            "major heat",
+                            "autumn begins",
+                            "end of heat",
+                            "white dew",
+                            "autumn equinox",
+                            "cold dew",
+                            "frost descends",
+                            "winter begins",
+                            "minor snow",
+                            "major snow",
+                            "winter solstice",
+                            "minor cold",
+                            "major cold",
+                        }
+                    }
+                }
+            }
             monthNames{
                 format{
                     abbreviated{
@@ -497,6 +536,16 @@ hu{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "Hmmsszzzz",
+                "Hmmssz",
+                "Hmmss",
+                "Hmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMd",
+            }
             availableFormats{
                 Bh{"B h"}
                 Bhm{"B h:mm"}
@@ -513,6 +562,7 @@ hu{
                 GyMMM{"G y. MMM"}
                 GyMMMEd{"G y. MMM d., E"}
                 GyMMMd{"G y. MMM d."}
+                GyMd{"GGGGG y/MM/dd"}
                 H{"H"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
@@ -667,6 +717,16 @@ hu{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "Hmmsszzzz",
+                "Hmmssz",
+                "Hmmss",
+                "Hmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yMMdd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -686,6 +746,7 @@ hu{
                 GyMMM{"G y. MMM"}
                 GyMMMEd{"G y. MMM d., E"}
                 GyMMMd{"G y. MMM d."}
+                GyMd{"GGGGG y. MM. dd."}
                 H{"H"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
@@ -1362,6 +1423,16 @@ hu{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "Hmmsszzzz",
+                "Hmmssz",
+                "Hmmss",
+                "Hmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMdd",
+                "GGGGGyMMdd",
             }
         }
         persian{

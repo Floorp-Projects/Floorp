@@ -464,6 +464,7 @@ et{
         rap{"rapanui"}
         rar{"rarotonga"}
         rgn{"romanja"}
+        rhg{"rohingja"}
         rif{"riifi"}
         rm{"romanši"}
         rn{"rundi"}
@@ -677,6 +678,7 @@ et{
         Chrs{"horezmi"}
         Cirt{"Cirthi"}
         Copt{"kopti"}
+        Cpmn{"Küprose minose"}
         Cprt{"Küprose silpkiri"}
         Cyrl{"kirillitsa"}
         Cyrs{"kürilliline kirikuslaavi"}
@@ -769,6 +771,7 @@ et{
         Orya{"oria"}
         Osge{"oseidži"}
         Osma{"osmani"}
+        Ougr{"vanauiguuri"}
         Palm{"Palmyra"}
         Perm{"vanapermi"}
         Phag{"phakpa"}
@@ -817,9 +820,12 @@ et{
         Thai{"tai"}
         Tibt{"tiibeti"}
         Tirh{"tirhuta"}
+        Tnsa{"tase"}
+        Toto{"toto"}
         Ugar{"ugariti"}
         Vaii{"vai"}
         Visp{"nähtava kõne"}
+        Vith{"Vithkuqi"}
         Wara{"hoo"}
         Wcho{"vantšo"}
         Wole{"voleai"}

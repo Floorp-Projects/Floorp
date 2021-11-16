@@ -1898,6 +1898,9 @@ sw{
             lg{"Saa za Yekaterinburg"}
             ls{"Saa za Wastani za Yekaterinburg"}
         }
+        "meta:Yukon"{
+            ls{"Saa za Yukon"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT {0}"}
         gmtZeroFormat{"GMT"}

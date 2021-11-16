@@ -118,6 +118,10 @@ vi{
             }
         }
         concentr{
+            item{
+                dnam{"mục"}
+                other{"{0} mục"}
+            }
             karat{
                 dnam{"karat"}
                 other{"{0} karat"}
@@ -135,8 +139,7 @@ vi{
                 other{"{0}‰"}
             }
             permyriad{
-                dnam{"phần chục nghìn"}
-                other{"{0} phần chục nghìn"}
+                other{"{0} phần vạn"}
             }
         }
         consumption{
@@ -646,7 +649,6 @@ vi{
             }
             cup{
                 dnam{"tách"}
-                other{"{0} cup"}
             }
             cup-metric{
                 dnam{"cup khối"}
@@ -772,10 +774,15 @@ vi{
             1024p7{"Zi{0}"}
             1024p8{"Yi{0}"}
         }
+        concentr{
+            permyriad{
+                dnam{"‱"}
+            }
+        }
         consumption{
             liter-per-100-kilometer{
-                dnam{"L/100km"}
-                other{"{0}L/100km"}
+                dnam{"l/100km"}
+                other{"{0} l/100km"}
             }
         }
         coordinate{
@@ -784,6 +791,15 @@ vi{
             north{"{0}B"}
             south{"{0}N"}
             west{"{0}T"}
+        }
+        digital{
+            byte{
+                dnam{"B"}
+                other{"{0} B"}
+            }
+            petabyte{
+                dnam{"PB"}
+            }
         }
         duration{
             day{
@@ -819,6 +835,27 @@ vi{
                 other{"{0} năm"}
             }
         }
+        energy{
+            electronvolt{
+                dnam{"eV"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                other{"{0}kWh/100km"}
+            }
+            newton{
+                dnam{"N"}
+            }
+            pound-force{
+                dnam{"lbf"}
+            }
+        }
+        graphics{
+            megapixel{
+                dnam{"MPMM"}
+            }
+        }
         length{
             centimeter{
                 dnam{"cm"}
@@ -851,11 +888,25 @@ vi{
             picometer{
                 other{"{0}pm"}
             }
+            solar-radius{
+                dnam{"R☉"}
+            }
             yard{
                 other{"{0}yd"}
             }
         }
+        light{
+            solar-luminosity{
+                dnam{"L☉"}
+            }
+        }
         mass{
+            dalton{
+                dnam{"Da"}
+            }
+            earth-mass{
+                dnam{"M⊕"}
+            }
             gram{
                 dnam{"g"}
                 other{"{0}g"}
@@ -868,7 +919,11 @@ vi{
                 other{"{0}oz"}
             }
             pound{
+                dnam{"lb"}
                 other{"{0}lb"}
+            }
+            solar-mass{
+                dnam{"M☉"}
             }
         }
         power{
@@ -919,9 +974,15 @@ vi{
             fluid-ounce-imperial{
                 other{"{0} fl ozIm"}
             }
+            gallon{
+                per{"{0}/gal"}
+            }
             liter{
                 dnam{"l"}
                 other{"{0}L"}
+            }
+            teaspoon{
+                dnam{"thìa cà phê"}
             }
         }
     }
@@ -972,6 +1033,10 @@ vi{
             1024p8{"Yi{0}"}
         }
         concentr{
+            item{
+                dnam{"mục"}
+                other{"{0} mục"}
+            }
             milligram-ofglucose-per-deciliter{
                 dnam{"mg/dL"}
             }
@@ -993,6 +1058,10 @@ vi{
             }
         }
         consumption{
+            liter-per-100-kilometer{
+                dnam{"l/100km"}
+                other{"{0} l/100km"}
+            }
             liter-per-kilometer{
                 dnam{"l/km"}
                 other{"{0} l/km"}
@@ -1134,6 +1203,14 @@ vi{
             dot{
                 dnam{"chấm"}
                 other{"{0} chấm"}
+            }
+            dot-per-centimeter{
+                dnam{"dpcm"}
+                other{"{0} dpcm"}
+            }
+            dot-per-inch{
+                dnam{"dpi"}
+                other{"{0} dpi"}
             }
             megapixel{
                 dnam{"megapixel"}

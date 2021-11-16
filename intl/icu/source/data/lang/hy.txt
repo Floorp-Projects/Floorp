@@ -96,6 +96,7 @@ hy{
         de_CH{"շվեյցարական վերին գերմաներեն"}
         dgr{"դոգրիբ"}
         dje{"զարմա"}
+        doi{"դոգրի"}
         dsb{"ստորին սորբերեն"}
         dua{"դուալա"}
         dv{"մալդիվերեն"}
@@ -343,6 +344,7 @@ hy{
         rap{"ռապանուի"}
         rar{"ռարոտոնգաներեն"}
         rgn{"ռոմանիոլերեն"}
+        rhg{"Ռոհինջա"}
         rif{"ռիֆերեն"}
         rm{"ռոմանշերեն"}
         rn{"ռունդի"}
@@ -630,18 +632,19 @@ hy{
     characterLabelPattern{
         all{"{0} — բոլորը"}
         category-list{"{0}․ {1}"}
-        compatibility{"{0} — համատեղելի"}
-        enclosed{"{0} — ներդրված"}
+        compatibility{"{0} — համատեղելիություն"}
+        enclosed{"{0} — փակված"}
         extended{"{0} — ընդլայնված"}
         historic{"{0} — պատմական"}
         miscellaneous{"{0} — խառը"}
         other{"{0} — այլ"}
         scripts{"Գրեր — {0}"}
         strokes{
-            one{"{0} — Գծեր"}
+            one{"{0} — Գիծ"}
             other{"{0} — Գծեր"}
         }
         subscript{"ենթատողային {0}"}
+        superscript{"վերգիր {0}"}
     }
     codePatterns{
         language{"Լեզու՝ {0}"}

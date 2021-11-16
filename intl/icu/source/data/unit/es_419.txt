@@ -104,8 +104,11 @@ es_419{
             }
             meter-per-square-second{
                 dnam{"m/s²"}
-                one{"{0}m/s²"}
-                other{"{0}m/s²"}
+            }
+        }
+        area{
+            square-meter{
+                dnam{"metros²"}
             }
         }
         duration{
@@ -115,7 +118,12 @@ es_419{
                 other{"{0}dd."}
                 per{"{0}/d."}
             }
+            minute{
+                one{"{0}m"}
+                other{"{0}m"}
+            }
             month{
+                dnam{"m."}
                 one{"{0}m."}
                 other{"{0}mm."}
                 per{"{0}/m."}
@@ -132,6 +140,25 @@ es_419{
                 other{"{0}aa."}
             }
         }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                one{"{0} kWh/100km"}
+                other{"{0} kWh/100km"}
+            }
+        }
+        graphics{
+            dot{
+                dnam{"p"}
+                one{"{0}p"}
+                other{"{0}pt"}
+            }
+            dot-per-centimeter{
+                dnam{"ppcm"}
+            }
+            megapixel{
+                dnam{"Mpx"}
+            }
+        }
         length{
             astronomical-unit{
                 dnam{"ua"}
@@ -141,6 +168,13 @@ es_419{
                 one{"{0}a. l."}
                 other{"{0}a.a. l."}
             }
+            mile-scandinavian{
+                one{"{0}mi esc."}
+                other{"{0}mi esc."}
+            }
+            nautical-mile{
+                one{"{0}nmi"}
+            }
             parsec{
                 dnam{"parsec"}
             }
@@ -148,23 +182,15 @@ es_419{
         mass{
             carat{
                 dnam{"ct"}
-                one{"{0}ct"}
-                other{"{0}ct"}
             }
             metric-ton{
                 dnam{"t"}
-                one{"{0}t"}
-                other{"{0}t"}
             }
             microgram{
                 dnam{"μg"}
-                one{"{0}μg"}
-                other{"{0}μg"}
             }
             milligram{
                 dnam{"mg"}
-                one{"{0}mg"}
-                other{"{0}mg"}
             }
             ounce-troy{
                 dnam{"ozt"}
@@ -180,13 +206,15 @@ es_419{
         speed{
             knot{
                 dnam{"kn"}
-                one{"{0}kn"}
-                other{"{0}kn"}
             }
         }
         volume{
-            cup{
-                one{"{0} tza."}
+            barrel{
+                one{"{0}bbl"}
+                other{"{0}bbl"}
+            }
+            pint{
+                dnam{"pt"}
             }
         }
     }

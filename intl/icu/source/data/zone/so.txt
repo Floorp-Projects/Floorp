@@ -1567,9 +1567,9 @@ so{
             ls{"Waqtiga Niyuu"}
         }
         "meta:Norfolk"{
-            ld{"Waqtiga Xagaaga ee Noorfek Aylaan"}
-            lg{"Waqtiga Noorfek Aylaan"}
-            ls{"Waqtiga Caadiga Ah ee Noorfek Aylaan"}
+            ld{"Waqtiga Maalinta ee Norfolk Island"}
+            lg{"Waqtiga Norfolk Island"}
+            ls{"Waqtiga Caadiga ah ee Norfolk Island"}
         }
         "meta:Noronha"{
             ld{"Waqtiga Xagaaga ee Farnaando de Nooronha"}
@@ -1749,6 +1749,9 @@ so{
             ld{"Waqtiga Xagaaga ee Yekaterinbaag"}
             lg{"Waqtiga Yekaterinbaag"}
             ls{"Waqtiga Caadiga Ah ee Yekaterinbaag"}
+        }
+        "meta:Yukon"{
+            ls{"Waqtiga Yukon"}
         }
         regionFormat{"Waqtiga {0}"}
         regionFormatDaylight{"Waqtiga Dharaarta ee {0}"}

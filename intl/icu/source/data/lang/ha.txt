@@ -51,6 +51,7 @@ ha{
         de_AT{"Jamusanci Ostiriya"}
         de_CH{"Jamusanci Suwizalan"}
         dje{"Zarma"}
+        doi{"Harshen Dogri"}
         dsb{"Sorbianci ta kasa"}
         dua{"Duala"}
         dyo{"Jola-Fonyi"}
@@ -72,6 +73,7 @@ ha{
         eu{"Basque"}
         ewo{"Ewondo"}
         fa{"Farisa"}
+        fa_AF{"Vote Farisanci na Afaganistan"}
         ff{"Fulah"}
         fi{"Yaren mutanen Finland"}
         fil{"Dan Filifin"}
@@ -171,6 +173,7 @@ ha{
         nmg{"Kwasio"}
         nn{"Norwegian Nynorsk"}
         nnh{"Ngiemboon"}
+        no{"Harhsen Norway"}
         nus{"Nuer"}
         ny{"Nyanja"}
         nyn{"Nyankole"}
@@ -186,6 +189,7 @@ ha{
         pt_BR{"Harshen Potugis na Birazil"}
         pt_PT{"Potugis Ƙasashen Turai"}
         qu{"Quechua"}
+        rhg{"Harshen Rohingya"}
         rm{"Romansh"}
         rn{"Rundi"}
         ro{"Romaniyanci"}
@@ -387,6 +391,23 @@ ha{
             thai{"Lambobin yaren Thai"}
             tibt{"Lambobin yaren Tibet"}
         }
+    }
+    characterLabelPattern{
+        all{"{0} — duk"}
+        category-list{"{0}: {1}"}
+        compatibility{"{0} — jituwa"}
+        enclosed{"{0} — a kewaye"}
+        extended{"{0} — faɗaɗaɗɗe"}
+        historic{"{0} — na tarihi"}
+        miscellaneous{"{0} — daban-daban"}
+        other{"{0} — wani dabam"}
+        scripts{"rubututtuka — {0}"}
+        strokes{
+            one{"bugu {0}"}
+            other{"bugu-bugu {0}"}
+        }
+        subscript{"rubutu ƙasa {0}"}
+        superscript{"rubutu sama {0}"}
     }
     codePatterns{
         language{"Harshe: {0}"}

@@ -94,19 +94,23 @@ qu{
             power2{
                 other{
                     _{
-                        _{"cuadrado {0}"}
+                        _{"metro cuadrado {0}"}
                     }
                 }
             }
             power3{
                 other{
                     _{
-                        _{"cubico {0}"}
+                        _{"metro cubico {0}"}
                     }
                 }
             }
         }
         concentr{
+            item{
+                dnam{"imakuna"}
+                other{"{0} imakuna"}
+            }
             permillion{
                 dnam{"partes por millon"}
                 other{"{0} partes por millon"}
@@ -173,6 +177,12 @@ qu{
                 dnam{"wata"}
                 other{"{0} wata"}
                 per{"{0} sapa wata"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kilowatt-ura sapa 100 kilometrokuna"}
+                other{"{0} kilowatt-ura sapa 100 kilometrokuna"}
             }
         }
         graphics{
@@ -551,6 +561,10 @@ qu{
             }
         }
         concentr{
+            item{
+                dnam{"ima"}
+                other{"{0} ima"}
+            }
             permillion{
                 dnam{"partes/millon"}
             }

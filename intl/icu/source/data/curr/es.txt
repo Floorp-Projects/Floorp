@@ -113,11 +113,11 @@ es{
         }
         BGN{
             "BGN",
-            "lev búlgaro",
+            "leva búlgara",
         }
         BHD{
             "BHD",
-            "dinar bahreiní",
+            "dinar bareiní",
         }
         BIF{
             "BIF",
@@ -433,7 +433,7 @@ es{
         }
         HTG{
             "HTG",
-            "gourde haitiano",
+            "gurde haitiano",
         }
         HUF{
             "HUF",
@@ -521,7 +521,7 @@ es{
         }
         KZT{
             "KZT",
-            "tenge kazako",
+            "tengue kazajo",
         }
         LAK{
             "LAK",
@@ -541,7 +541,7 @@ es{
         }
         LSL{
             "LSL",
-            "loti lesothense",
+            "loti lesotense",
         }
         LTL{
             "LTL",
@@ -1239,7 +1239,7 @@ es{
         }
         ALL{
             one{"lek"}
-            other{"lekes"}
+            other{"leks"}
         }
         AMD{
             one{"dram"}
@@ -1279,7 +1279,7 @@ es{
         }
         AZN{
             one{"manat azerbaiyano"}
-            other{"manat azerbaiyanos"}
+            other{"manats azerbaiyanos"}
         }
         BAD{
             one{"dinar bosnio"}
@@ -1314,12 +1314,12 @@ es{
             other{"leva fuertes búlgaros"}
         }
         BGN{
-            one{"lev búlgaro"}
+            one{"leva búlgara"}
             other{"levas búlgaras"}
         }
         BHD{
-            one{"dinar bahreiní"}
-            other{"dinares bahreiníes"}
+            one{"dinar bareiní"}
+            other{"dinares bareiníes"}
         }
         BIF{
             one{"franco burundés"}
@@ -1431,7 +1431,7 @@ es{
         }
         CNH{
             one{"yuan chino (extracontinental)"}
-            other{"yuan chino (extracontinental)"}
+            other{"yuanes chinos (extracontinentales)"}
         }
         CNY{
             one{"yuan"}
@@ -1614,8 +1614,8 @@ es{
             other{"kunas"}
         }
         HTG{
-            one{"gourde haitiano"}
-            other{"gourdes haitianos"}
+            one{"gurde haitiano"}
+            other{"gurdes haitianos"}
         }
         HUF{
             one{"forinto húngaro"}
@@ -1702,8 +1702,8 @@ es{
             other{"dólares de las Islas Caimán"}
         }
         KZT{
-            one{"tenge kazako"}
-            other{"tenges kazakos"}
+            one{"tengue kazajo"}
+            other{"tengues kazajos"}
         }
         LAK{
             one{"kip"}
@@ -1720,6 +1720,10 @@ es{
         LRD{
             one{"dólar liberiano"}
             other{"dólares liberianos"}
+        }
+        LSL{
+            one{"loti lesotense"}
+            other{"lotis lesotenses"}
         }
         LTL{
             one{"litas lituana"}
@@ -1763,7 +1767,7 @@ es{
         }
         MDL{
             one{"leu moldavo"}
-            other{"lei moldavos"}
+            other{"leus moldavos"}
         }
         MGA{
             one{"ariari"}
@@ -1811,7 +1815,7 @@ es{
         }
         MWK{
             one{"kuacha malauí"}
-            other{"kuachas malauís"}
+            other{"kuachas malauíes"}
         }
         MXN{
             one{"peso mexicano"}
@@ -1927,7 +1931,7 @@ es{
         }
         RON{
             one{"leu rumano"}
-            other{"lei rumanos"}
+            other{"leus rumanos"}
         }
         RSD{
             one{"dinar serbio"}
@@ -2043,7 +2047,7 @@ es{
         }
         TMT{
             one{"manat turcomano"}
-            other{"manat turcomanos"}
+            other{"manats turcomanos"}
         }
         TND{
             one{"dinar tunecino"}

@@ -208,6 +208,12 @@ ta{
             }
         }
         minimalPairs{
+            case{
+                ablative{"… என்பதிலிருந்து {0} …"}
+                accusative{"… என்பதை {0} … ஆல் பெருக்குதல்"}
+                dative{"… என்பதற்கு {0} …"}
+                nominative{"{0} ரூ. 50 மதிப்புடையது"}
+            }
             ordinal{
                 other{"{0}வது வலது திருப்பத்தை எடு."}
             }
@@ -269,6 +275,16 @@ ta{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "UMMMMEEEEd",
+                "UMMMMd",
+                "UMMMd",
+                "yMMdd",
             }
             monthNames{
                 format{
@@ -541,6 +557,16 @@ ta{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMd",
+            }
             availableFormats{
                 Bh{"B h"}
                 Bhm{"B h:mm"}
@@ -705,10 +731,20 @@ ta{
                 "d MMM, y",
                 "d/M/yy",
                 "{1}, {0}",
-                "{1} ’அன்று’ {0}",
-                "{1} ’அன்று’ {0}",
+                "{1} அன்று {0}",
+                "{1} அன்று {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
             }
             appendItems{
                 Timezone{"{0} {1}"}
@@ -2196,7 +2232,7 @@ ta{
                     other{"{0} செவ்வாய்களில்"}
                 }
                 past{
-                    one{"{0} செவ்வாய்களுக்கு முன்"}
+                    one{"செவ். முன்பு"}
                     other{"{0} செவ். முன்பு"}
                 }
             }

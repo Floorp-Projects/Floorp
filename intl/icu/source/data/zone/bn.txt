@@ -1904,6 +1904,9 @@ bn{
             lg{"ইয়েকাতেরিনবুর্গ সময়"}
             ls{"ইয়েকাতেরিনবুর্গ মানক সময়"}
         }
+        "meta:Yukon"{
+            ls{"ইউকোন সময়"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT {0}"}
         gmtZeroFormat{"GMT"}

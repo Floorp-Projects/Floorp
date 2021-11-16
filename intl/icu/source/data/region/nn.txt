@@ -52,7 +52,11 @@ nn{
         XA{"pseudospråk – aksentar"}
         XB{"pseudospråk – RTL"}
     }
+    Countries%short{
+        UN{"SN"}
+    }
     Countries%variant{
+        CI{"Elfenbeinskysten"}
         FK{"Falklandsøyane (Islas Malvinas)"}
         TL{"Aust-Timor"}
     }

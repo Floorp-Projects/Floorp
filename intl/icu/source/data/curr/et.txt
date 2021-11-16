@@ -586,7 +586,7 @@ et{
         }
         MGF{
             "MGF",
-            "Madagaskar frank",
+            "Madagaskari frank",
         }
         MKD{
             "MKD",
@@ -1718,7 +1718,7 @@ et{
             other{"Madagaskari ariarit"}
         }
         MGF{
-            one{"Madagaskar frank"}
+            one{"Madagaskari frank"}
             other{"Madagaskar franki"}
         }
         MKD{

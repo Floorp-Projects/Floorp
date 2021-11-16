@@ -41,6 +41,16 @@ su{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "Hmmsszzzz",
+                "Hmmssz",
+                "Hmmss",
+                "Hmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMd",
+            }
             intervalFormats{
                 fallback{"{0} – {1}"}
             }
@@ -61,6 +71,16 @@ su{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "Hmmsszzzz",
+                "Hmmssz",
+                "Hmmss",
+                "Hmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
+            }
             availableFormats{
                 Bhm{"h.mm B"}
                 Bhms{"h.mm.ss B"}
@@ -75,6 +95,7 @@ su{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                GyMd{"d/M/y GGGGG"}
                 Hm{"HH.mm"}
                 Hms{"HH.mm.ss"}
                 Hmsv{"HH.mm.ss v"}
@@ -277,9 +298,6 @@ su{
                 }
             }
         }
-    }
-    delimiters{
-        quotationEnd{"”"}
     }
     fields{
         day{

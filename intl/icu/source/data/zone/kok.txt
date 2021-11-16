@@ -1878,6 +1878,9 @@ kok{
             lg{"येकातेरिनबर्ग वेळ"}
             ls{"येकातेरिनबर्ग प्रमाणित वेळ"}
         }
+        "meta:Yukon"{
+            ls{"युकॉन वेळ"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

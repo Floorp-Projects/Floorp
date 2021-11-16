@@ -1898,6 +1898,9 @@ am{
             lg{"የየካተሪንበርግ ሰዓት አቆጣጠር"}
             ls{"የየካተሪንበርግ መደበኛ ሰዓት አቆጣጠር"}
         }
+        "meta:Yukon"{
+            ls{"የዩኮን ጊዜ"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"ጂ ኤም ቲ{0}"}
         gmtZeroFormat{"ጂ ኤም ቲ"}

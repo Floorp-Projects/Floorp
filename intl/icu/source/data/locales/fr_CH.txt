@@ -101,6 +101,16 @@ fr_CH{
                 "{1}, {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMMdd",
+            }
             availableFormats{
                 MEd{"E, dd.MM."}
                 MMdd{"dd.MM"}

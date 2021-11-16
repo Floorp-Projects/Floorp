@@ -1965,6 +1965,9 @@ cs{
             lg{"Jekatěrinburský čas"}
             ls{"Jekatěrinburský standardní čas"}
         }
+        "meta:Yukon"{
+            ls{"Yukonský čas"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

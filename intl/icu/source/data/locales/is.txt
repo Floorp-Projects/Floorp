@@ -211,6 +211,9 @@ is{
             }
         }
         minimalPairs{
+            case{
+                genitive{"til {0}"}
+            }
             ordinal{
                 other{"Taktu {0}. beygju til hægri."}
             }
@@ -238,6 +241,16 @@ is{
                 "{1} 'kl'. {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMd",
+                "GGGGGyMd",
             }
             availableFormats{
                 E{"ccc"}
@@ -392,6 +405,16 @@ is{
                 "{1} 'kl'. {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMd",
+                "GGGGGyMd",
             }
             availableFormats{
                 E{"ccc"}
@@ -645,6 +668,16 @@ is{
                 "{1} 'kl'. {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMd",
+                "GGGGGyMd",
             }
             availableFormats{
                 E{"ccc"}
@@ -912,6 +945,16 @@ is{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMd",
+                "GGGGGyMd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -928,6 +971,7 @@ is{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d. MMM y G"}
                 GyMMMd{"d. MMM y G"}
+                GyMd{"d/M/y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -1121,6 +1165,16 @@ is{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yMd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -1140,6 +1194,7 @@ is{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d. MMM y G"}
                 GyMMMd{"d. MMM y G"}
+                GyMd{"d/M/y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -1628,6 +1683,16 @@ is{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMd",
+                "GGGGGyMd",
+            }
             availableFormats{
                 E{"ccc"}
                 Ed{"E d."}
@@ -1884,6 +1949,16 @@ is{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMd",
+                "GGGGGyMd",
+            }
             availableFormats{
                 E{"ccc"}
                 Ed{"E d."}
@@ -2127,6 +2202,16 @@ is{
                 "{1} 'kl'. {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMd",
+                "GGGGGyMd",
             }
             availableFormats{
                 E{"ccc"}
@@ -2372,6 +2457,16 @@ is{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMd",
+                "GGGGGyMd",
+            }
             availableFormats{
                 E{"ccc"}
                 Ed{"E d."}
@@ -2514,6 +2609,16 @@ is{
                 "{1} 'kl'. {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMd",
+                "GGGGGyMd",
             }
             availableFormats{
                 E{"ccc"}
@@ -2758,6 +2863,16 @@ is{
                 "{1} 'kl'. {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMd",
+                "GGGGGyMd",
             }
             availableFormats{
                 E{"ccc"}
@@ -3024,16 +3139,6 @@ is{
                 "0"{"í dag"}
                 "1"{"á morgun"}
                 "2"{"eftir tvo daga"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} dag"}
-                    other{"+{0} daga"}
-                }
-                past{
-                    one{"-{0} degi"}
-                    other{"-{0} dögum"}
-                }
             }
         }
         day-short{
@@ -3717,17 +3822,6 @@ is{
                 "-1"{"í síðustu viku"}
                 "0"{"í þessari viku"}
                 "1"{"í næstu viku"}
-            }
-            relativePeriod{"vika {0}"}
-            relativeTime{
-                future{
-                    one{"+{0} viku"}
-                    other{"+{0} vikur"}
-                }
-                past{
-                    one{"-{0} viku"}
-                    other{"-{0} vikur"}
-                }
             }
         }
         week-short{

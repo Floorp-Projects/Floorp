@@ -70,7 +70,7 @@ const char16_t* utils::getPatternForStyle(const Locale& locale, const char* nsNa
             break;
         default:
             patternKey = "decimalFormat"; // silence compiler error
-            UPRV_UNREACHABLE;
+            UPRV_UNREACHABLE_EXIT;
     }
     LocalUResourceBundlePointer res(ures_open(nullptr, locale.getName(), &status));
     if (U_FAILURE(status)) { return u""; }
@@ -244,6 +244,18 @@ bool DecNum::isNegative() const {
 
 bool DecNum::isZero() const {
     return decNumberIsZero(fData.getAlias());
+}
+
+bool DecNum::isSpecial() const {
+    return decNumberIsSpecial(fData.getAlias());
+}
+
+bool DecNum::isInfinity() const {
+    return decNumberIsInfinite(fData.getAlias());
+}
+
+bool DecNum::isNaN() const {
+    return decNumberIsNaN(fData.getAlias());
 }
 
 void DecNum::toString(ByteSink& output, UErrorCode& status) const {

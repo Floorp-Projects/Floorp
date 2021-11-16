@@ -19,6 +19,16 @@ af_NA{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEdd",
+                "yMMMMdd",
+                "yMMMdd",
+                "yMMdd",
+            }
         }
     }
 }

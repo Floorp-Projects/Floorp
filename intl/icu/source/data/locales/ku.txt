@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ku{
-    AuxExemplarCharacters{"[á à ă â å ä ã ā æ è ĕ ë ē é ì ĭ ï ī í ñ ó ò ŏ ô ø ō œ ß ù ŭ ū ú ÿ]"}
+    AuxExemplarCharacters{"[á à ă â å ä ã ā æ è ĕ ë ē é ì ĭ ï ī í ñ ó ò ŏ ô ø ō œ ß ŭ ū ú ù ÿ]"}
     Ellipsis{
         final{"{0}…"}
         initial{"…{0}"}

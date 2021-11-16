@@ -22,8 +22,6 @@ en_AU{
         es_MX{"Mexican Spanish"}
         fr_CA{"Canadian French"}
         fr_CH{"Swiss French"}
-        frc{"frc"}
-        lou{"lou"}
         pt_BR{"Brazilian Portuguese"}
         pt_PT{"European Portuguese"}
         ro_MD{"Moldovan"}
@@ -49,5 +47,8 @@ en_AU{
             dangi{"Korean Calendar"}
             ethiopic{"Ethiopian Calendar"}
         }
+    }
+    Variants{
+        SIMPLE{"SIMPLE"}
     }
 }

@@ -12,7 +12,7 @@ $vowel = [ਅ-ਔ ਾ-\u0A4D];
 $consonant = [ਕ-ਹ];
 \uE001→\u0A01;       # SIGN CHANDRABINDU
 #rules for BINDI
-# Anusvara is equivalent to BINDI when preceeded by a vowel
+# Anusvara is equivalent to BINDI when preceded by a vowel
 $vowel{\uE002→\u0A02; # SIGN ANUSVARA (\u0A02 = SIGN BINDI)
 # else is equivalent to TIPPI
 $consonant{\uE002→\u0A70; # SIGN TIPPI

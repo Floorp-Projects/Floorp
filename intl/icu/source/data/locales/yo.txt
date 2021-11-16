@@ -103,7 +103,18 @@ yo{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "Hmmssz",
+                "Hms",
+                "Hm",
+                "GyMMEEEEd",
+                "GyMMd",
+                "GyMMd",
+                "GyMMdd",
+            }
             availableFormats{
+                GyMd{"d/M/y GGGGG"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
                 M{"L"}
@@ -158,6 +169,16 @@ yo{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "Hmmssz",
+                "Hms",
+                "Hm",
+                "yMMMEEEEd",
+                "yMMMd",
+                "yMMd",
+                "yMd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -172,6 +193,7 @@ yo{
                 GyMMM{"G y MMM"}
                 GyMMMEd{"G y MMM d, E"}
                 GyMMMd{"G y MMM d"}
+                GyMd{"d/M/y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -642,6 +664,9 @@ yo{
         }
     }
     listPattern{
+        or{
+            middle{"{0}, {1}"}
+        }
         standard{
             2{"{0}, {1}"}
             end{"{0}, {1}"}

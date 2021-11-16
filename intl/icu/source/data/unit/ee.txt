@@ -92,8 +92,8 @@ ee{
             }
             minute{
                 dnam{"aɖabaƒoƒowo"}
-                one{"aɖabaƒoƒo {0}"}
-                other{"aɖabaƒoƒo {0}"}
+                one{"a {0}"}
+                other{"a {0}"}
             }
             month{
                 dnam{"ɣletiwo"}

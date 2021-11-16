@@ -1938,6 +1938,9 @@ ta{
             lg{"யேகாடெரின்பர்க் நேரம்"}
             ls{"யேகாடெரின்பர்க் நிலையான நேரம்"}
         }
+        "meta:Yukon"{
+            ls{"யூகோன் நேரம்"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

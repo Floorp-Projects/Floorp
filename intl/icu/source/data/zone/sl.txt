@@ -1898,6 +1898,9 @@ sl{
             lg{"Jekaterinburški čas"}
             ls{"Jekaterinburški standardni čas"}
         }
+        "meta:Yukon"{
+            ls{"Jukonški čas"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

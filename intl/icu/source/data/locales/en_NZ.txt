@@ -20,6 +20,16 @@ en_NZ{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMd",
+                "GGGGGyMMd",
+            }
             availableFormats{
                 Md{"d/M"}
                 yyyyMd{"d/MM/y G"}
@@ -68,6 +78,16 @@ en_NZ{
                 "{1} 'at' {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMd",
+                "yyMMd",
             }
             availableFormats{
                 Md{"d/M"}

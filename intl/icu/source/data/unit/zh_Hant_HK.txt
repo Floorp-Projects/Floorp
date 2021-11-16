@@ -153,6 +153,11 @@ zh_Hant_HK{
                 other{"{0} 千卡"}
             }
         }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                other{"{0}每百公里千瓦小時"}
+            }
+        }
         length{
             centimeter{
                 dnam{"厘米"}
@@ -251,8 +256,8 @@ zh_Hant_HK{
                 other{"{0} 百帕斯卡"}
             }
             inch-ofhg{
-                dnam{"英吋汞柱"}
-                other{"{0} 英吋汞柱"}
+                dnam{"吋汞柱"}
+                other{"{0} 吋汞柱"}
             }
             megapascal{
                 dnam{"兆帕斯卡"}
@@ -428,6 +433,10 @@ zh_Hant_HK{
                 other{"{0}日"}
                 per{"{0} 每日"}
             }
+            decade{
+                dnam{"10年"}
+                other{"{0}0年"}
+            }
             hour{
                 other{"{0}小時"}
                 per{"{0} 每小時"}
@@ -491,6 +500,7 @@ zh_Hant_HK{
             }
             mile{
                 dnam{"哩"}
+                other{"{0}哩"}
             }
             millimeter{
                 dnam{"毫米"}
@@ -503,11 +513,18 @@ zh_Hant_HK{
                 dnam{"浬"}
             }
             point{
-                dnam{"pt"}
                 other{"{0} pt"}
             }
         }
+        light{
+            candela{
+                other{"{0}坎德拉"}
+            }
+        }
         mass{
+            grain{
+                other{"{0}格令"}
+            }
             gram{
                 per{"{0} 每克"}
             }
@@ -536,7 +553,7 @@ zh_Hant_HK{
         }
         pressure{
             inch-ofhg{
-                dnam{"英吋汞柱"}
+                dnam{"吋汞柱"}
                 other{"{0}″ Hg"}
             }
             pound-force-per-square-inch{
@@ -587,6 +604,15 @@ zh_Hant_HK{
             cup-metric{
                 other{"{0} 量杯"}
             }
+            dessert-spoon-imperial{
+                other{"{0}英制甜品匙"}
+            }
+            fluid-ounce{
+                dnam{"液安士"}
+            }
+            fluid-ounce-imperial{
+                other{"{0}英液安士"}
+            }
             gallon{
                 per{"{0} 每加侖"}
             }
@@ -607,13 +633,6 @@ zh_Hant_HK{
             }
         }
         angle{
-            arc-minute{
-                dnam{"分"}
-                other{"{0} 分"}
-            }
-            arc-second{
-                other{"{0} 秒"}
-            }
             degree{
                 dnam{"度"}
             }
@@ -672,9 +691,6 @@ zh_Hant_HK{
             millimole-per-liter{
                 dnam{"毫摩爾/公升"}
                 other{"{0} 毫摩爾/公升"}
-            }
-            permillion{
-                other{"{0} ppm"}
             }
         }
         consumption{
@@ -736,14 +752,6 @@ zh_Hant_HK{
             }
         }
         graphics{
-            dot-per-centimeter{
-                dnam{"dpcm"}
-                other{"{0} dpcm"}
-            }
-            dot-per-inch{
-                dnam{"dpi"}
-                other{"{0} dpi"}
-            }
             em{
                 dnam{"em"}
                 other{"{0} em"}
@@ -852,8 +860,8 @@ zh_Hant_HK{
         }
         pressure{
             inch-ofhg{
-                dnam{"英吋汞柱"}
-                other{"{0} 英吋汞柱"}
+                dnam{"吋汞柱"}
+                other{"{0} 吋汞柱"}
             }
             pound-force-per-square-inch{
                 dnam{"磅每平方吋"}
