@@ -4,8 +4,10 @@
 
 "use strict";
 
-const FRONTEND_BASE_URL =
-  "http://example.com/browser/devtools/client/performance-new/test/browser/fake-frontend.html";
+const FRONTEND_BASE_HOST = "http://example.com";
+const FRONTEND_BASE_PATH =
+  "/browser/devtools/client/performance-new/test/browser/fake-frontend.html";
+const FRONTEND_BASE_URL = FRONTEND_BASE_HOST + FRONTEND_BASE_PATH;
 
 add_task(async function test() {
   info(
@@ -21,7 +23,7 @@ add_task(async function test() {
     Services.profiler.GetFeatures()
   );
 
-  await setProfilerFrontendUrl(FRONTEND_BASE_URL);
+  await setProfilerFrontendUrl(FRONTEND_BASE_HOST, FRONTEND_BASE_PATH);
   await makeSureProfilerPopupIsEnabled();
 
   // First check for "firefox-platform" preset which will have no "view" query

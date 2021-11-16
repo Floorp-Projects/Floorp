@@ -9,7 +9,8 @@ add_task(async function test() {
     "Test the states of the profiler button, e.g. inactive, active, and capturing."
   );
   await setProfilerFrontendUrl(
-    "http://example.com/browser/devtools/client/performance-new/test/browser/fake-frontend.html"
+    "http://example.com",
+    "/browser/devtools/client/performance-new/test/browser/fake-frontend.html"
   );
   await makeSureProfilerPopupIsEnabled();
 
