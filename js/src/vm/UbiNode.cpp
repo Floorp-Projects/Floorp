@@ -151,7 +151,7 @@ Node::Size Concrete<void>::size(mozilla::MallocSizeOf mallocSizeof) const {
   MOZ_CRASH("null ubi::Node");
 }
 
-Node::Node(const JS::GCCellPtr& thing) {
+Node::Node(JS::GCCellPtr thing) {
   ApplyGCThingTyped(thing, [this](auto t) { this->construct(t); });
 }
 
