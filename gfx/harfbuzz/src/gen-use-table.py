@@ -1,33 +1,37 @@
 #!/usr/bin/env python3
 # flake8: noqa: F821
 
-"""usage: ./gen-use-table.py IndicSyllabicCategory.txt IndicPositionalCategory.txt UnicodeData.txt ArabicShaping.txt Blocks.txt IndicSyllabicCategory-Additional.txt IndicPositionalCategory-Additional.txt
+"""usage: ./gen-use-table.py IndicSyllabicCategory.txt IndicPositionalCategory.txt ArabicShaping.txt DerivedCoreProperties.txt UnicodeData.txt Blocks.txt Scripts.txt IndicSyllabicCategory-Additional.txt IndicPositionalCategory-Additional.txt
 
 Input files:
 * https://unicode.org/Public/UCD/latest/ucd/IndicSyllabicCategory.txt
 * https://unicode.org/Public/UCD/latest/ucd/IndicPositionalCategory.txt
-* https://unicode.org/Public/UCD/latest/ucd/UnicodeData.txt
 * https://unicode.org/Public/UCD/latest/ucd/ArabicShaping.txt
+* https://unicode.org/Public/UCD/latest/ucd/DerivedCoreProperties.txt
+* https://unicode.org/Public/UCD/latest/ucd/UnicodeData.txt
 * https://unicode.org/Public/UCD/latest/ucd/Blocks.txt
+* https://unicode.org/Public/UCD/latest/ucd/Scripts.txt
 * ms-use/IndicSyllabicCategory-Additional.txt
 * ms-use/IndicPositionalCategory-Additional.txt
 """
 
 import sys
 
-if len (sys.argv) != 8:
+if len (sys.argv) != 10:
 	sys.exit (__doc__)
 
-DISABLED_BLOCKS = [
-	'Samaritan',
-	'Thai',
+DISABLED_SCRIPTS = {
+	'Arabic',
 	'Lao',
-]
+	'Samaritan',
+	'Syriac',
+	'Thai',
+}
 
 files = [open (x, encoding='utf-8') for x in sys.argv[1:]]
 
-headers = [[f.readline () for i in range (2)] for j,f in enumerate(files) if j != 2]
-for j in range(5, 7):
+headers = [[f.readline () for i in range (2)] for j,f in enumerate(files) if j != 4]
+for j in range(7, 9):
 	for line in files[j]:
 		line = line.rstrip()
 		if not line:
@@ -38,15 +42,7 @@ headers.append (["UnicodeData.txt does not have a header."])
 data = [{} for _ in files]
 values = [{} for _ in files]
 for i, f in enumerate (files):
-	extended = False
-
 	for line in f:
-
-		# TODO: https://github.com/MicrosoftDocs/typography-issues/issues/522
-		if extended and line.startswith ('# ') and line.find (';'):
-			line = line[2:]
-		elif 'USE_Syllabic_Category' in line:
-			extended = True
 
 		j = line.find ('#')
 		if j >= 0:
@@ -63,25 +59,26 @@ for i, f in enumerate (files):
 		else:
 			end = int (uu[1], 16)
 
-		t = fields[1 if i not in [2, 3] else 2]
+		t = fields[1 if i not in [2, 4] else 2]
 
-		if i == 3:
+		if i == 2:
 			t = 'jt_' + t
-		elif i == 5 and t == 'Consonant_Final_Modifier':
+		elif i == 3 and t != 'Default_Ignorable_Code_Point':
+			continue
+		elif i == 7 and t == 'Consonant_Final_Modifier':
 			# TODO: https://github.com/MicrosoftDocs/typography-issues/issues/336
 			t = 'Syllable_Modifier'
-		elif i == 6 and t == 'NA':
+		elif i == 8 and t == 'NA':
 			t = 'Not_Applicable'
 
-		i0 = i if i < 5 else i - 5
+		i0 = i if i < 7 else i - 7
 		for u in range (start, end + 1):
 			data[i0][u] = t
 		values[i0][t] = values[i0].get (t, 0) + end - start + 1
 
-defaults = ('Other', 'Not_Applicable', 'Cn', 'jt_X', 'No_Block')
+defaults = ('Other', 'Not_Applicable', 'jt_X', '', 'Cn', 'No_Block', 'Unknown')
 
 # TODO Characters that are not in Unicode Indic files, but used in USE
-data[0][0x0640] = defaults[0]
 data[0][0x1B61] = defaults[0]
 data[0][0x1B63] = defaults[0]
 data[0][0x1B64] = defaults[0]
@@ -91,29 +88,6 @@ data[0][0x1B67] = defaults[0]
 data[0][0x1B69] = defaults[0]
 data[0][0x1B6A] = defaults[0]
 data[0][0x2060] = defaults[0]
-for u in range (0x07CA, 0x07EA + 1):
-	data[0][u] = defaults[0]
-data[0][0x07FA] = defaults[0]
-for u in range (0x0840, 0x0858 + 1):
-	data[0][u] = defaults[0]
-for u in range (0x1887, 0x18A8 + 1):
-	data[0][u] = defaults[0]
-data[0][0x18AA] = defaults[0]
-for u in range (0xA840, 0xA872 + 1):
-	data[0][u] = defaults[0]
-for u in range (0x10B80, 0x10B91 + 1):
-	data[0][u] = defaults[0]
-for u in range (0x10BA9, 0x10BAE + 1):
-	data[0][u] = defaults[0]
-data[0][0x10FB0] = defaults[0]
-for u in range (0x10FB2, 0x10FB6 + 1):
-	data[0][u] = defaults[0]
-for u in range (0x10FB8, 0x10FBF + 1):
-	data[0][u] = defaults[0]
-for u in range (0x10FC1, 0x10FC4 + 1):
-	data[0][u] = defaults[0]
-for u in range (0x10FC9, 0x10FCB + 1):
-	data[0][u] = defaults[0]
 # TODO https://github.com/harfbuzz/harfbuzz/pull/1685
 data[0][0x1B5B] = 'Consonant_Placeholder'
 data[0][0x1B5C] = 'Consonant_Placeholder'
@@ -132,12 +106,12 @@ for i,v in enumerate (defaults):
 combined = {}
 for i,d in enumerate (data):
 	for u,v in d.items ():
-		if i >= 2 and not u in combined:
-			continue
 		if not u in combined:
+			if i >= 4:
+				continue
 			combined[u] = list (defaults)
 		combined[u][i] = v
-combined = {k:v for k,v in combined.items() if v[4] not in DISABLED_BLOCKS}
+combined = {k: v for k, v in combined.items() if v[6] not in DISABLED_SCRIPTS}
 data = combined
 del combined
 
@@ -237,7 +211,7 @@ for name in property_names:
 globals().update(property_values)
 
 
-def is_BASE(U, UISC, UGC, AJT):
+def is_BASE(U, UISC, UDI, UGC, AJT):
 	return (UISC in [Number, Consonant, Consonant_Head_Letter,
 			Tone_Letter,
 			Vowel_Independent,
@@ -246,77 +220,79 @@ def is_BASE(U, UISC, UGC, AJT):
 		AJT in [jt_C, jt_D, jt_L, jt_R] and UISC != Joiner or
 		(UGC == Lo and UISC in [Avagraha, Bindu, Consonant_Final, Consonant_Medial,
 					Consonant_Subjoined, Vowel, Vowel_Dependent]))
-def is_BASE_NUM(U, UISC, UGC, AJT):
+def is_BASE_NUM(U, UISC, UDI, UGC, AJT):
 	return UISC == Brahmi_Joining_Number
-def is_BASE_OTHER(U, UISC, UGC, AJT):
+def is_BASE_OTHER(U, UISC, UDI, UGC, AJT):
 	if UISC == Consonant_Placeholder: return True
 	return U in [0x2015, 0x2022, 0x25FB, 0x25FC, 0x25FD, 0x25FE]
-def is_CONS_FINAL(U, UISC, UGC, AJT):
+def is_CGJ(U, UISC, UDI, UGC, AJT):
+	# Also includes VARIATION_SELECTOR, WJ, and ZWJ
+	return U == 0x200D or UDI and UGC in [Mc, Me, Mn]
+def is_CONS_FINAL(U, UISC, UDI, UGC, AJT):
 	return ((UISC == Consonant_Final and UGC != Lo) or
 		UISC == Consonant_Succeeding_Repha)
-def is_CONS_FINAL_MOD(U, UISC, UGC, AJT):
+def is_CONS_FINAL_MOD(U, UISC, UDI, UGC, AJT):
 	return UISC == Syllable_Modifier
-def is_CONS_MED(U, UISC, UGC, AJT):
+def is_CONS_MED(U, UISC, UDI, UGC, AJT):
 	# Consonant_Initial_Postfixed is new in Unicode 11; not in the spec.
 	return (UISC == Consonant_Medial and UGC != Lo or
 		UISC == Consonant_Initial_Postfixed)
-def is_CONS_MOD(U, UISC, UGC, AJT):
+def is_CONS_MOD(U, UISC, UDI, UGC, AJT):
 	return (UISC in [Nukta, Gemination_Mark, Consonant_Killer] and
-		not is_SYM_MOD(U, UISC, UGC, AJT))
-def is_CONS_SUB(U, UISC, UGC, AJT):
+		not is_SYM_MOD(U, UISC, UDI, UGC, AJT))
+def is_CONS_SUB(U, UISC, UDI, UGC, AJT):
 	return UISC == Consonant_Subjoined and UGC != Lo
-def is_CONS_WITH_STACKER(U, UISC, UGC, AJT):
+def is_CONS_WITH_STACKER(U, UISC, UDI, UGC, AJT):
 	return UISC == Consonant_With_Stacker
-def is_HALANT(U, UISC, UGC, AJT):
+def is_HALANT(U, UISC, UDI, UGC, AJT):
 	return (UISC in [Virama, Invisible_Stacker]
-		and not is_HALANT_OR_VOWEL_MODIFIER(U, UISC, UGC, AJT)
-		and not is_SAKOT(U, UISC, UGC, AJT))
-def is_HALANT_OR_VOWEL_MODIFIER(U, UISC, UGC, AJT):
-	# https://github.com/harfbuzz/harfbuzz/issues/1102
+		and not is_HALANT_OR_VOWEL_MODIFIER(U, UISC, UDI, UGC, AJT)
+		and not is_SAKOT(U, UISC, UDI, UGC, AJT))
+def is_HALANT_OR_VOWEL_MODIFIER(U, UISC, UDI, UGC, AJT):
+	# Split off of HALANT
 	# https://github.com/harfbuzz/harfbuzz/issues/1379
-	return U in [0x11046, 0x1134D]
-def is_HALANT_NUM(U, UISC, UGC, AJT):
+	return U == 0x1134D
+def is_HALANT_NUM(U, UISC, UDI, UGC, AJT):
 	return UISC == Number_Joiner
-def is_HIEROGLYPH(U, UISC, UGC, AJT):
+def is_HIEROGLYPH(U, UISC, UDI, UGC, AJT):
 	return UISC == Hieroglyph
-def is_HIEROGLYPH_JOINER(U, UISC, UGC, AJT):
+def is_HIEROGLYPH_JOINER(U, UISC, UDI, UGC, AJT):
 	return UISC == Hieroglyph_Joiner
-def is_HIEROGLYPH_SEGMENT_BEGIN(U, UISC, UGC, AJT):
+def is_HIEROGLYPH_SEGMENT_BEGIN(U, UISC, UDI, UGC, AJT):
 	return UISC == Hieroglyph_Segment_Begin
-def is_HIEROGLYPH_SEGMENT_END(U, UISC, UGC, AJT):
+def is_HIEROGLYPH_SEGMENT_END(U, UISC, UDI, UGC, AJT):
 	return UISC == Hieroglyph_Segment_End
-def is_ZWNJ(U, UISC, UGC, AJT):
+def is_ZWNJ(U, UISC, UDI, UGC, AJT):
 	return UISC == Non_Joiner
-def is_OTHER(U, UISC, UGC, AJT):
+def is_OTHER(U, UISC, UDI, UGC, AJT):
+	# Also includes BASE_IND, Rsv, and SYM
 	return ((UGC in [Cn, Po] or UISC in [Consonant_Dead, Joiner, Modifying_Letter, Other])
-		and not is_BASE(U, UISC, UGC, AJT)
-		and not is_BASE_OTHER(U, UISC, UGC, AJT)
-		and not is_SYM(U, UISC, UGC, AJT)
-		and not is_SYM_MOD(U, UISC, UGC, AJT)
+		and not is_BASE(U, UISC, UDI, UGC, AJT)
+		and not is_BASE_OTHER(U, UISC, UDI, UGC, AJT)
+		and not is_CGJ(U, UISC, UDI, UGC, AJT)
+		and not is_SYM_MOD(U, UISC, UDI, UGC, AJT)
 	)
-def is_REPHA(U, UISC, UGC, AJT):
+def is_REPHA(U, UISC, UDI, UGC, AJT):
 	return UISC in [Consonant_Preceding_Repha, Consonant_Prefixed]
-def is_SAKOT(U, UISC, UGC, AJT):
+def is_SAKOT(U, UISC, UDI, UGC, AJT):
+	# Split off of HALANT
 	return U == 0x1A60
-def is_SYM(U, UISC, UGC, AJT):
-	if U in [0x25CC, 0x1E14F]: return False
-	return UGC in [So, Sc] and U not in [0x0F01, 0x1B62, 0x1B68]
-def is_SYM_MOD(U, UISC, UGC, AJT):
+def is_SYM_MOD(U, UISC, UDI, UGC, AJT):
 	return U in [0x1B6B, 0x1B6C, 0x1B6D, 0x1B6E, 0x1B6F, 0x1B70, 0x1B71, 0x1B72, 0x1B73]
-def is_VOWEL(U, UISC, UGC, AJT):
+def is_VOWEL(U, UISC, UDI, UGC, AJT):
 	# https://github.com/harfbuzz/harfbuzz/issues/376
 	return (UISC == Pure_Killer or
 		(UGC != Lo and UISC in [Vowel, Vowel_Dependent] and U not in [0xAA29]))
-def is_VOWEL_MOD(U, UISC, UGC, AJT):
+def is_VOWEL_MOD(U, UISC, UDI, UGC, AJT):
 	# https://github.com/harfbuzz/harfbuzz/issues/376
 	return (UISC in [Tone_Mark, Cantillation_Mark, Register_Shifter, Visarga] or
 		(UGC != Lo and (UISC == Bindu or U in [0xAA29])))
 
-# CGJ, VS, WJ, and ZWJ are handled in find_syllables
 use_mapping = {
 	'B':	is_BASE,
 	'N':	is_BASE_NUM,
 	'GB':	is_BASE_OTHER,
+	'CGJ':	is_CGJ,
 	'F':	is_CONS_FINAL,
 	'FM':	is_CONS_FINAL_MOD,
 	'M':	is_CONS_MED,
@@ -333,7 +309,6 @@ use_mapping = {
 	'ZWNJ':	is_ZWNJ,
 	'O':	is_OTHER,
 	'R':	is_REPHA,
-	'S':	is_SYM,
 	'Sk':	is_SAKOT,
 	'SM':	is_SYM_MOD,
 	'V':	is_VOWEL,
@@ -387,7 +362,7 @@ use_positions = {
 def map_to_use(data):
 	out = {}
 	items = use_mapping.items()
-	for U,(UISC,UIPC,UGC,AJT,UBlock) in data.items():
+	for U, (UISC, UIPC, AJT, UDI, UGC, UBlock, _) in data.items():
 
 		# Resolve Indic_Syllabic_Category
 
@@ -408,8 +383,8 @@ def map_to_use(data):
 		# TODO: https://github.com/microsoft/font-tools/issues/1
 		if U == 0xA982: UISC = Consonant_Succeeding_Repha
 
-		values = [k for k,v in items if v(U,UISC,UGC,AJT)]
-		assert len(values) == 1, "%s %s %s %s %s" % (hex(U), UISC, UGC, AJT, values)
+		values = [k for k,v in items if v(U, UISC, UDI, UGC, AJT)]
+		assert len(values) == 1, "%s %s %s %s %s %s" % (hex(U), UISC, UDI, UGC, AJT, values)
 		USE = values[0]
 
 		# Resolve Indic_Positional_Category
@@ -430,12 +405,12 @@ def map_to_use(data):
 		if 0x11131 <= U <= 0x11132: UIPC = Top
 
 		assert (UIPC in [Not_Applicable, Visual_Order_Left] or U == 0x0F7F or
-			USE in use_positions), "%s %s %s %s %s %s" % (hex(U), UIPC, USE, UISC, UGC, AJT)
+			USE in use_positions), "%s %s %s %s %s %s %s" % (hex(U), UIPC, USE, UISC, UDI, UGC, AJT)
 
 		pos_mapping = use_positions.get(USE, None)
 		if pos_mapping:
 			values = [k for k,v in pos_mapping.items() if v and UIPC in v]
-			assert len(values) == 1, "%s %s %s %s %s %s %s" % (hex(U), UIPC, USE, UISC, UGC, AJT, values)
+			assert len(values) == 1, "%s %s %s %s %s %s %s %s" % (hex(U), UIPC, USE, UISC, UDI, UGC, AJT, values)
 			USE = USE + values[0]
 
 		out[U] = (USE, UBlock)
@@ -448,7 +423,7 @@ print ("/* == Start of generated table == */")
 print ("/*")
 print (" * The following table is generated by running:")
 print (" *")
-print (" *   {} IndicSyllabicCategory.txt IndicPositionalCategory.txt UnicodeData.txt ArabicShaping.txt Blocks.txt IndicSyllabicCategory-Additional.txt IndicPositionalCategory-Additional.txt".format (sys.argv[0]))
+print (" *   {} IndicSyllabicCategory.txt IndicPositionalCategory.txt ArabicShaping.txt DerivedCoreProperties.txt UnicodeData.txt Blocks.txt Scripts.txt IndicSyllabicCategory-Additional.txt IndicPositionalCategory-Additional.txt".format (sys.argv[0]))
 print (" *")
 print (" * on files with these headers:")
 print (" *")

@@ -1,3 +1,31 @@
+Overview of changes leading to 3.1.1
+Wednesday, November 8, 2021
+====================================
+- Work around GCC cast-align error/warning on some platforms. (Behdad Esfahbod)
+- Documentation improvements. (Matthias Clasen)
+
+
+Overview of changes leading to 3.1.0
+Wednesday, November 3, 2021
+====================================
+- Better offset-overflow handling in the subsetter library. (Garret Rieger)
+- Improved Unicode 14 properties in the USE shaper, and various other USE
+  shaper fixes. (David Corbett)
+- MATH and COLR v1 tables subsetting support, and various other subsetter fixes.
+  (Qunxin Liu)
+- Support for Pwo Karen / Ason Chin medial la. (Simon Cozens)
+- Apply GPOS positioning when substituting with morx table, if kerx is missing.
+  (Behdad Esfahbod)
+- Apply calt and clig features across syllable boundaries in Indic shaper.
+  (Behdad Esfahbod)
+- meson option for enabling Graphite 2 has been renamed to graphite2.
+- Build and documentation fixes.
+
+- New API:
++hb_buffer_set_not_found_glyph()
++hb_buffer_get_not_found_glyph()
+
+
 Overview of changes leading to 3.0.0
 Friday, September 17, 2021
 ====================================
