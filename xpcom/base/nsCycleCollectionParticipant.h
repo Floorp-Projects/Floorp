@@ -77,8 +77,8 @@ enum class CCReason : uint8_t {
   // Low memory situation detected.
   MEM_PRESSURE,
 
-  // IPC message to a content process to trigger a CC. The original reason is not
-  // tracked.
+  // IPC message to a content process to trigger a CC. The original reason is
+  // not tracked.
   IPC_MESSAGE,
 
   // Cycle collection on a worker. The triggering reason is not tracked.
@@ -114,8 +114,8 @@ static inline const char* CCReasonToString(CCReason aReason) {
     break;
     FOR_EACH_CCREASON(SET_REASON_STR)
 #undef SET_REASON_STR
-  default:
-    return "<unknown-reason>";
+    default:
+      return "<unknown-reason>";
   }
 }
 

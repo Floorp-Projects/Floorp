@@ -26,7 +26,7 @@
 #include "wasm/WasmBCDefs.h"
 #include "wasm/WasmBCRegDefs.h"
 #include "wasm/WasmBCStk.h"
-#include "wasm/WasmConstants.h"        // For MaxFrameSize
+#include "wasm/WasmConstants.h"  // For MaxFrameSize
 
 // The stack frame.
 //

@@ -20,8 +20,7 @@ void f(int x) {
 }
 
 void g(int x) {
-  if (x % 2)
-    f(x);
+  if (x % 2) f(x);
   h(x);
 }
 
@@ -32,9 +31,7 @@ void h(int x) {
   }
 }
 
-void leaf() {
-  asm("");
-}
+void leaf() { asm(""); }
 
 void nonrecursive_root() {
   leaf();
@@ -43,8 +40,7 @@ void nonrecursive_root() {
 }
 
 void self_recursive(int x) {
-  if (x)
-    self_recursive(x - 1);
+  if (x) self_recursive(x - 1);
 }
 
 // Set up the graph
@@ -66,44 +62,29 @@ extern void n7(int x);
 extern void n8(int x);
 extern void n9(int x);
 
-void n1(int x) {
-  n2(x);
-}
+void n1(int x) { n2(x); }
 
 void n2(int x) {
-  if (x)
-    n1(x - 1);
+  if (x) n1(x - 1);
   n3(x);
 }
 
-void n4(int x) {
-  n5(x);
-}
+void n4(int x) { n5(x); }
 
 void n5(int x) {
-  if (x)
-    n4(x - 1);
+  if (x) n4(x - 1);
   n3(x);
 }
 
-void n3(int x) {
-  n6(x);
-}
+void n3(int x) { n6(x); }
 
-void n6(int x) {
-  n7(x);
-}
+void n6(int x) { n7(x); }
 
-void n7(int x) {
-  n8(x);
-}
+void n7(int x) { n8(x); }
 
 void n8(int x) {
-  if (x)
-    n7(x - 1);
+  if (x) n7(x - 1);
   n9(x);
 }
 
-void n9(int x) {
-  asm("");
-}
+void n9(int x) { asm(""); }
