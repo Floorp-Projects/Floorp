@@ -147,6 +147,7 @@ hb_base_sources = files(
   'hb-ot-tag-table.hh',
   'hb-ot-tag.cc',
   'hb-ot-var-avar-table.hh',
+  'hb-ot-var-common.hh',
   'hb-ot-var-fvar-table.hh',
   'hb-ot-var-gvar-table.hh',
   'hb-ot-var-hvar-table.hh',
@@ -345,7 +346,7 @@ endif
 if conf.get('HAVE_GRAPHITE2', 0) == 1
   hb_sources += hb_graphite2_sources
   hb_headers += hb_graphite2_headers
-  harfbuzz_deps += [graphite2_dep]
+  harfbuzz_deps += [graphite2_dep, graphite_dep]
 endif
 
 if conf.get('HAVE_GLIB', 0) == 1
@@ -362,7 +363,6 @@ endif
 if conf.get('HAVE_DIRECTWRITE', 0) == 1
   hb_sources += hb_directwrite_sources
   hb_headers += hb_directwrite_headers
-  harfbuzz_deps += directwrite_dep
   # hb-directwrite needs a C++ linker
   libharfbuzz_link_language = 'cpp'
 endif
@@ -488,10 +488,12 @@ if get_option('tests').enabled()
     'test-repacker': ['test-repacker.cc', 'hb-static.cc'],
     'test-priority-queue': ['test-priority-queue.cc', 'hb-static.cc'],
     'test-iter': ['test-iter.cc', 'hb-static.cc'],
-    'test-meta': ['test-meta.cc', 'hb-static.cc'],
+    'test-map': ['test-map.cc', 'hb-static.cc'],
     'test-number': ['test-number.cc', 'hb-number.cc'],
     'test-ot-tag': ['hb-ot-tag.cc'],
+    'test-set': ['test-set.cc', 'hb-static.cc'],
     'test-unicode-ranges': ['test-unicode-ranges.cc'],
+    'test-vector': ['test-vector.cc', 'hb-static.cc'],
     'test-bimap': ['test-bimap.cc', 'hb-static.cc'],
   }
   foreach name, source : compiled_tests
