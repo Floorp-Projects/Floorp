@@ -7024,8 +7024,7 @@ void nsBlockFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   //    (A) the backplate feature is preffed on
   //    (B) we are not honoring the document colors
   if (StaticPrefs::browser_display_permit_backplate() &&
-      !PresContext()->PrefSheetPrefs().mUseDocumentColors &&
-      !IsComboboxControlFrame()) {
+      PresContext()->ForcingColors() && !IsComboboxControlFrame()) {
     backplateColor.emplace(GetBackplateColor(this));
   }
 
