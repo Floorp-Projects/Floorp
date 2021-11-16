@@ -2879,6 +2879,10 @@ bool WarpBuilder::build_SpreadNew(BytecodeLocation loc) {
   CallInfo callInfo(alloc(), constructing, loc.resultIsPopped());
   callInfo.initForSpreadCall(current);
 
+  if (auto* cacheIRSnapshot = getOpSnapshot<WarpCacheIR>(loc)) {
+    return transpileCall(loc, cacheIRSnapshot, &callInfo);
+  }
+
   buildCreateThis(callInfo);
 
   bool needsThisCheck = true;
