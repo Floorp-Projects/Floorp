@@ -192,22 +192,22 @@ sRGBColor ScrollbarDrawing::ComputeScrollbarThumbColor(
 ScrollbarParams ScrollbarDrawing::ComputeScrollbarParams(
     nsIFrame* aFrame, const ComputedStyle& aStyle, bool aIsHorizontal) {
   ScrollbarParams params;
-  params.overlay =
+  params.isOverlay =
       nsLookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0;
-  params.rolledOver = IsParentScrollbarRolledOver(aFrame);
-  params.small =
+  params.isRolledOver = IsParentScrollbarRolledOver(aFrame);
+  params.isSmall =
       aStyle.StyleUIReset()->mScrollbarWidth == StyleScrollbarWidth::Thin;
-  params.rtl = nsNativeTheme::IsFrameRTL(aFrame);
-  params.horizontal = aIsHorizontal;
-  params.onDarkBackground = !StaticPrefs::widget_disable_dark_scrollbar() &&
-                            nsNativeTheme::IsDarkBackground(aFrame);
+  params.isRtl = nsNativeTheme::IsFrameRTL(aFrame);
+  params.isHorizontal = aIsHorizontal;
+  params.isOnDarkBackground = !StaticPrefs::widget_disable_dark_scrollbar() &&
+                              nsNativeTheme::IsDarkBackground(aFrame);
   // Don't use custom scrollbars for overlay scrollbars since they are
   // generally good enough for use cases of custom scrollbars.
-  if (!params.overlay) {
+  if (!params.isOverlay) {
     const nsStyleUI* ui = aStyle.StyleUI();
     if (ui->HasCustomScrollbars()) {
       const auto& colors = ui->mScrollbarColor.AsColors();
-      params.custom = true;
+      params.isCustom = true;
       params.trackColor = colors.track.CalcColor(aStyle);
       params.faceColor = colors.thumb.CalcColor(aStyle);
     }
