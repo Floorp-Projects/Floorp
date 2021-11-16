@@ -5206,7 +5206,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
       // Now add inner scripts to `partialMatchVector` work list to determine if
       // they are matches. Note that out IterateScripts callback ignored them
       // already since they did not have a compiled parent at the time.
-      for (const JS::GCCellPtr& thing : script->gcthings()) {
+      for (JS::GCCellPtr thing : script->gcthings()) {
         if (!thing.is<JSObject>() || !thing.as<JSObject>().is<JSFunction>()) {
           continue;
         }
