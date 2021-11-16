@@ -10,7 +10,6 @@
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/net/PHttpTransactionChild.h"
 #include "nsHttpRequestHead.h"
-#include "nsIEarlyHintObserver.h"
 #include "nsIRequest.h"
 #include "nsIStreamListener.h"
 #include "nsIThreadRetargetableStreamListener.h"
@@ -36,8 +35,7 @@ class HttpTransactionChild final : public PHttpTransactionChild,
                                    public nsIStreamListener,
                                    public nsITransportEventSink,
                                    public nsIThrottledInputChannel,
-                                   public nsIThreadRetargetableStreamListener,
-                                   public nsIEarlyHintObserver {
+                                   public nsIThreadRetargetableStreamListener {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
@@ -45,7 +43,6 @@ class HttpTransactionChild final : public PHttpTransactionChild,
   NS_DECL_NSITRANSPORTEVENTSINK
   NS_DECL_NSITHROTTLEDINPUTCHANNEL
   NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
-  NS_DECL_NSIEARLYHINTOBSERVER
 
   explicit HttpTransactionChild();
 

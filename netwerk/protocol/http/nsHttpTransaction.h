@@ -17,7 +17,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsITimer.h"
-#include "nsIEarlyHintObserver.h"
 #include "nsTHashMap.h"
 #include "TimingStruct.h"
 #include "Http2Push.h"
@@ -551,8 +550,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   bool mEarlyDataWasAvailable = false;
   bool ShouldRestartOn0RttError(nsresult reason);
-
-  nsCOMPtr<nsIEarlyHintObserver> mEarlyHintObserver;
 };
 
 }  // namespace net

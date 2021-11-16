@@ -637,8 +637,5 @@ HttpTransactionChild::CheckListenerChain() {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HttpTransactionChild::EarlyHint(const nsACString& value) { return NS_OK; }
-
 }  // namespace net
 }  // namespace mozilla
