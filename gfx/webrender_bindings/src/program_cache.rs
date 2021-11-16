@@ -55,7 +55,7 @@ fn deserialize_program_binary(path: &Path) -> Result<Arc<ProgramBinary>, Error> 
                 ErrorKind::InvalidData,
                 "Failed to deserialize ProgramBinary",
             ))
-        }
+        },
     };
 
     Ok(Arc::new(binary))
@@ -204,10 +204,10 @@ impl WrProgramBinaryDiskCache {
             match deserialize_program_binary(&path) {
                 Ok(program) => {
                     program_cache.load_program_binary(program);
-                }
+                },
                 Err(err) => {
                     error!("shader-cache: Failed to deserialize program binary: {}", err);
-                }
+                },
             };
         } else {
             info!("shader-cache: Program binary not found in disk cache");
@@ -229,7 +229,7 @@ impl WrProgramBinaryDiskCache {
             Err(err) => {
                 info!("shader-cache: Could not read startup whitelist: {}", err);
                 Vec::new()
-            }
+            },
         };
         info!("Loaded startup shader whitelist in {:?}", start.elapsed());
 
