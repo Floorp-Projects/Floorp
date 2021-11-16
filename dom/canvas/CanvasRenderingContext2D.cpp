@@ -12,7 +12,7 @@
 
 #include "nsContentUtils.h"
 
-#include "mozilla/intl/Bidi.h"
+#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/SVGImageContext.h"
@@ -3523,11 +3523,11 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor
   using ContextState = CanvasRenderingContext2D::ContextState;
 
   virtual void SetText(const char16_t* aText, int32_t aLength,
-                       mozilla::intl::Bidi::Direction aDirection) override {
+                       mozilla::intl::BidiDirection aDirection) override {
     mFontgrp->UpdateUserFonts();  // ensure user font generation is current
     // adjust flags for current direction run
     gfx::ShapedTextFlags flags = mTextRunFlags;
-    if (aDirection == mozilla::intl::Bidi::Direction::RTL) {
+    if (aDirection == mozilla::intl::BidiDirection::RTL) {
       flags |= gfx::ShapedTextFlags::TEXT_IS_RTL;
     } else {
       flags &= ~gfx::ShapedTextFlags::TEXT_IS_RTL;
@@ -3894,8 +3894,8 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
   // bounding boxes before rendering anything
   aError = nsBidiPresUtils::ProcessText(
       textToDraw.get(), textToDraw.Length(),
-      isRTL ? mozilla::intl::Bidi::EmbeddingLevel::RTL()
-            : mozilla::intl::Bidi::EmbeddingLevel::LTR(),
+      isRTL ? mozilla::intl::BidiEmbeddingLevel::RTL()
+            : mozilla::intl::BidiEmbeddingLevel::LTR(),
       presShell->GetPresContext(), processor, nsBidiPresUtils::MODE_MEASURE,
       nullptr, 0, &totalWidthCoord, &mBidiEngine);
   if (aError.Failed()) {
@@ -4037,8 +4037,8 @@ TextMetrics* CanvasRenderingContext2D::DrawOrMeasureText(
 
   aError = nsBidiPresUtils::ProcessText(
       textToDraw.get(), textToDraw.Length(),
-      isRTL ? mozilla::intl::Bidi::EmbeddingLevel::RTL()
-            : mozilla::intl::Bidi::EmbeddingLevel::LTR(),
+      isRTL ? mozilla::intl::BidiEmbeddingLevel::RTL()
+            : mozilla::intl::BidiEmbeddingLevel::LTR(),
       presShell->GetPresContext(), processor, nsBidiPresUtils::MODE_DRAW,
       nullptr, 0, nullptr, &mBidiEngine);
 

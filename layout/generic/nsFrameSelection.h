@@ -7,7 +7,7 @@
 #ifndef nsFrameSelection_h___
 #define nsFrameSelection_h___
 
-#include "mozilla/intl/Bidi.h"
+#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
@@ -26,7 +26,7 @@
 
 class nsRange;
 
-#define BIDI_LEVEL_UNDEFINED mozilla::intl::Bidi::EmbeddingLevel(0x80)
+#define BIDI_LEVEL_UNDEFINED mozilla::intl::BidiEmbeddingLevel(0x80)
 
 //----------------------------------------------------------------------
 
@@ -173,8 +173,8 @@ struct MOZ_STACK_CLASS nsPeekOffsetStruct {
 
 struct nsPrevNextBidiLevels {
   void SetData(nsIFrame* aFrameBefore, nsIFrame* aFrameAfter,
-               mozilla::intl::Bidi::EmbeddingLevel aLevelBefore,
-               mozilla::intl::Bidi::EmbeddingLevel aLevelAfter) {
+               mozilla::intl::BidiEmbeddingLevel aLevelBefore,
+               mozilla::intl::BidiEmbeddingLevel aLevelAfter) {
     mFrameBefore = aFrameBefore;
     mFrameAfter = aFrameAfter;
     mLevelBefore = aLevelBefore;
@@ -182,8 +182,8 @@ struct nsPrevNextBidiLevels {
   }
   nsIFrame* mFrameBefore;
   nsIFrame* mFrameAfter;
-  mozilla::intl::Bidi::EmbeddingLevel mLevelBefore;
-  mozilla::intl::Bidi::EmbeddingLevel mLevelAfter;
+  mozilla::intl::BidiEmbeddingLevel mLevelBefore;
+  mozilla::intl::BidiEmbeddingLevel mLevelAfter;
 };
 
 namespace mozilla {
@@ -478,12 +478,12 @@ class nsFrameSelection final {
   CaretAssociateHint GetHint() const { return mCaret.mHint; }
 
   void SetCaretBidiLevelAndMaybeSchedulePaint(
-      mozilla::intl::Bidi::EmbeddingLevel aLevel);
+      mozilla::intl::BidiEmbeddingLevel aLevel);
 
   /**
    * GetCaretBidiLevel gets the caret bidi level.
    */
-  mozilla::intl::Bidi::EmbeddingLevel GetCaretBidiLevel() const;
+  mozilla::intl::BidiEmbeddingLevel GetCaretBidiLevel() const;
 
   /**
    * UndefineCaretBidiLevel sets the caret bidi level to "undefined".
@@ -698,7 +698,7 @@ class nsFrameSelection final {
    * @param aFrameOut will hold the frame returned
    */
   nsresult GetFrameFromLevel(nsIFrame* aFrameIn, nsDirection aDirection,
-                             mozilla::intl::Bidi::EmbeddingLevel aBidiLevel,
+                             mozilla::intl::BidiEmbeddingLevel aBidiLevel,
                              nsIFrame** aFrameOut) const;
 
   /**
@@ -1043,7 +1043,7 @@ class nsFrameSelection final {
     // Hint to tell if the selection is at the end of this line or beginning of
     // next.
     CaretAssociateHint mHint = mozilla::CARET_ASSOCIATE_BEFORE;
-    mozilla::intl::Bidi::EmbeddingLevel mBidiLevel = BIDI_LEVEL_UNDEFINED;
+    mozilla::intl::BidiEmbeddingLevel mBidiLevel = BIDI_LEVEL_UNDEFINED;
 
     bool IsVisualMovement(bool aContinueSelection,
                           CaretMovementStyle aMovementStyle) const;
@@ -1051,8 +1051,8 @@ class nsFrameSelection final {
 
   Caret mCaret;
 
-  mozilla::intl::Bidi::EmbeddingLevel mKbdBidiLevel =
-      mozilla::intl::Bidi::EmbeddingLevel::LTR();
+  mozilla::intl::BidiEmbeddingLevel mKbdBidiLevel =
+      mozilla::intl::BidiEmbeddingLevel::LTR();
 
   class DesiredCaretPos {
    public:

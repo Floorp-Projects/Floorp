@@ -25,7 +25,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/PathHelpers.h"
-#include "mozilla/intl/Bidi.h"
+#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/ResultExtensions.h"
@@ -1698,7 +1698,7 @@ WritingMode nsIFrame::WritingModeForLine(WritingMode aSelfWM,
   WritingMode writingMode = aSelfWM;
 
   if (StyleTextReset()->mUnicodeBidi & NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
-    mozilla::intl::Bidi::EmbeddingLevel frameLevel =
+    mozilla::intl::BidiEmbeddingLevel frameLevel =
         nsBidiPresUtils::GetFrameBaseLevel(aSubFrame);
     writingMode.SetDirectionFromBidiLevel(frameLevel);
   }
@@ -9106,7 +9106,7 @@ Result<bool, nsresult> nsIFrame::IsVisuallyAtLineEdge(
   }
 
   bool frameIsRTL = (nsBidiPresUtils::FrameDirection(*framePtr) ==
-                     mozilla::intl::Bidi::Direction::RTL);
+                     mozilla::intl::BidiDirection::RTL);
   if ((frameIsRTL == lineIsRTL) == (aDirection == eDirPrevious)) {
     nsIFrame::GetFirstLeaf(framePtr);
   } else {

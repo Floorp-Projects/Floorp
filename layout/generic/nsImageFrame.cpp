@@ -12,7 +12,7 @@
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxUtils.h"
-#include "mozilla/intl/Bidi.h"
+#include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Encoding.h"
@@ -1435,26 +1435,26 @@ void nsImageFrame::DisplayAltText(nsPresContext* aPresContext,
     nsresult rv = NS_ERROR_FAILURE;
 
     if (aPresContext->BidiEnabled()) {
-      mozilla::intl::Bidi::EmbeddingLevel level;
+      mozilla::intl::BidiEmbeddingLevel level;
       nscoord x, y;
 
       if (isVertical) {
         x = pt.x + maxDescent;
         if (wm.IsBidiLTR()) {
           y = aRect.y;
-          level = mozilla::intl::Bidi::EmbeddingLevel::LTR();
+          level = mozilla::intl::BidiEmbeddingLevel::LTR();
         } else {
           y = aRect.YMost() - strWidth;
-          level = mozilla::intl::Bidi::EmbeddingLevel::RTL();
+          level = mozilla::intl::BidiEmbeddingLevel::RTL();
         }
       } else {
         y = pt.y + maxAscent;
         if (wm.IsBidiLTR()) {
           x = aRect.x;
-          level = mozilla::intl::Bidi::EmbeddingLevel::LTR();
+          level = mozilla::intl::BidiEmbeddingLevel::LTR();
         } else {
           x = aRect.XMost() - strWidth;
-          level = mozilla::intl::Bidi::EmbeddingLevel::RTL();
+          level = mozilla::intl::BidiEmbeddingLevel::RTL();
         }
       }
 
