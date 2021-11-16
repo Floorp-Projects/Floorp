@@ -323,7 +323,7 @@ struct AllocSiteInput
 // in platform-specific code.  We may add architectures in the future that do
 // not follow the patterns of the few architectures we already have.
 //
-// Also see MacroAssembler::assertCanonicalInt32().
+// Also see MacroAssembler::debugAssertCanonicalInt32().
 
 // The public entrypoint for emitting assembly. Note that a MacroAssembler can
 // use cx->lifoAlloc, so take care not to interleave masm use with other
@@ -5328,7 +5328,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // See comment block "64-bit GPRs carrying 32-bit values" above.  This asserts
   // that the high bits of the register are appropriate for the architecture and
   // the value in the low bits.
-  inline void assertCanonicalInt32(Register r);
+  void debugAssertCanonicalInt32(Register r);
 #endif
 };
 

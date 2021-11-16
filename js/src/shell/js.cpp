@@ -11592,6 +11592,10 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     jit::JitOptions.traceRegExpPeephole = true;
   }
 
+  if (op.getBoolOption("less-debug-code")) {
+    jit::JitOptions.lessDebugCode = true;
+  }
+
   int32_t inliningEntryThreshold = op.getIntOption("inlining-entry-threshold");
   if (inliningEntryThreshold > 0) {
     jit::JitOptions.inliningEntryThreshold = inliningEntryThreshold;
@@ -12263,6 +12267,9 @@ int main(int argc, char** argv) {
                         "Trace regexp interpreter") ||
       !op.addBoolOption('\0', "trace-regexp-peephole",
                         "Trace regexp peephole optimization") ||
+      !op.addBoolOption('\0', "less-debug-code",
+                        "Emit less machine code for "
+                        "checking assertions under DEBUG.") ||
       !op.addBoolOption('\0', "enable-streams",
                         "Enable WHATWG Streams (default)") ||
       !op.addBoolOption('\0', "no-streams", "Disable WHATWG Streams") ||
