@@ -195,20 +195,50 @@ settings_screen:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-08-17"
-  autocomplete_domain_added:
+
+autocomplete:
+  domain_added:
     type: counter
     description: |
       A counter that indicates how many times a user has added
       a website to the autocomplete list.
     bugs:
-      - https://github.com/mozilla-mobile/focus-android/issues/5059
+      - https://github.com/mozilla-mobile/focus-android/issues/5885
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/5184
+      - https://github.com/mozilla-mobile/focus-android/pull/5886
     data_sensitivity:
       - interaction
     notification_emails:
       - android-probes@mozilla.com
-    expires: "2022-08-17"
+    expires: "2022-11-01"
+  domain_removed:
+    type: counter
+    description: |
+      A counter that indicates how many times a user has removed
+      a website from the autocomplete list.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5885
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5886
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+  list_order_changed:
+    type: counter
+    description: |
+      A counter that indicates how many times a user has reordered
+      the autocomplete list.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5885
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5886
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
 
 shortcuts:
   shortcuts_on_home_number:

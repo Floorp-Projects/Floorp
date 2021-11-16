@@ -30,12 +30,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.CustomDomains
+import org.mozilla.focus.GleanMetrics.Autocomplete
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.settings.BaseSettingsLikeFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.ViewUtils
 import java.util.Collections
 import kotlin.coroutines.CoroutineContext
@@ -244,8 +244,7 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope
 
             launch(IO) {
                 CustomDomains.save(activity!!.applicationContext, domains)
-
-                TelemetryWrapper.reorderAutocompleteDomainEvent(from, to)
+                Autocomplete.listOrderChanged.add()
             }
         }
     }

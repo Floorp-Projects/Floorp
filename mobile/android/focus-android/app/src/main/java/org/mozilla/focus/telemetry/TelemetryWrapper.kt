@@ -75,13 +75,10 @@ object TelemetryWrapper {
         val CANCEL = "cancel"
         val LONG_PRESS = "long_press"
         val CHANGE = "change"
-        val SAVE = "save"
         val OPEN = "open"
         val INSTALL = "install"
         val SHOW = "show"
         val HIDE = "hide"
-        val REMOVE = "remove"
-        val REORDER = "reorder"
     }
 
     private object Object {
@@ -91,7 +88,6 @@ object TelemetryWrapper {
         val BACK_BUTTON = "back_button"
         val BLOCKING_SWITCH = "blocking_switch"
         val BROWSER = "browser"
-        val AUTOCOMPLETE_DOMAIN = "autocomplete_domain"
         val SEARCH_SUGGESTION_PROMPT = "search_suggestion_prompt"
         val MAKE_DEFAULT_BROWSER_OPEN_WITH = "make_default_browser_open_with"
         val MAKE_DEFAULT_BROWSER_SETTINGS = "make_default_browser_settings"
@@ -362,29 +358,6 @@ object TelemetryWrapper {
 
     enum class AutoCompleteEventSource {
         SETTINGS
-    }
-
-    fun saveAutocompleteDomainEvent(eventSource: AutoCompleteEventSource) {
-        val source = when (eventSource) {
-            AutoCompleteEventSource.SETTINGS -> Value.SETTINGS
-        }
-
-        TelemetryEvent.create(Category.ACTION, Method.SAVE, Object.AUTOCOMPLETE_DOMAIN)
-            .extra(Extra.SOURCE, source)
-            .queue()
-    }
-
-    fun removeAutocompleteDomainsEvent(count: Int) {
-        TelemetryEvent.create(Category.ACTION, Method.REMOVE, Object.AUTOCOMPLETE_DOMAIN)
-            .extra(Extra.TOTAL, count.toString())
-            .queue()
-    }
-
-    fun reorderAutocompleteDomainEvent(from: Int, to: Int) {
-        TelemetryEvent.create(Category.ACTION, Method.REORDER, Object.AUTOCOMPLETE_DOMAIN)
-            .extra(Extra.FROM, from.toString())
-            .extra(Extra.TO, to.toString())
-            .queue()
     }
 
     @JvmStatic

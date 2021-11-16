@@ -16,10 +16,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.CustomDomains
+import org.mozilla.focus.GleanMetrics.Autocomplete
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.state.AppAction
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import kotlin.coroutines.CoroutineContext
 
 class AutocompleteRemoveFragment : AutocompleteListFragment(), CoroutineScope {
@@ -45,8 +45,7 @@ class AutocompleteRemoveFragment : AutocompleteListFragment(), CoroutineScope {
             launch(Main) {
                 async {
                     CustomDomains.remove(context, domains)
-
-                    TelemetryWrapper.removeAutocompleteDomainsEvent(domains.size)
+                    Autocomplete.domainRemoved.add()
                 }.await()
 
                 requireComponents.appStore.dispatch(
