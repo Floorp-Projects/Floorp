@@ -126,7 +126,7 @@ To listen to the tab navigation events you also need to attach to the tab actor 
 
 When page navigation starts the following packet is sent from the tab actor:
 
-.. code-block:: json
+.. code-block::
 
   {
     "from": tabActor,
@@ -139,7 +139,7 @@ When page navigation starts the following packet is sent from the tab actor:
 
 The ``nativeConsoleAPI`` property tells if the ``window.console`` object is native or not for the top level window object for the given tab - this is always ``true`` when navigation starts. When navigation stops the following packet is sent:
 
-.. code-block:: json
+.. code-block::
 
   {
     "from": tabActor,
@@ -170,7 +170,7 @@ The ``webConsoleClient.getCachedMessages(types, onResponse)`` method sends the f
 
 The ``getCachedMessages`` packet allows one to retrieve the cached messages from before the Web Console was open. You can only get cached messages for page errors and console API calls. The reply looks like this:
 
-.. code-block:: json
+.. code-block::
 
   {
     "messages": [ ... ],
@@ -531,7 +531,7 @@ The ``networkEventUpdate`` packet
 
 The Web Console UI needs to be kept up-to-date when changes happen, when new stuff is added. The new ``networkEventUpdate`` packet is sent for this purpose. Examples:
 
-.. code-block:: json
+.. code-block::
 
   {
     "from": "conn0.netEvent14",
@@ -604,7 +604,7 @@ To get more details about a network event you can use the following packet reque
 
 The ``getRequestHeaders`` packet:
 
-.. code-block:: json
+.. code-block::
 
   {
     "to": "conn0.netEvent15",
@@ -638,7 +638,7 @@ The ``getRequestCookies`` packet:
 
 The ``getResponseHeaders`` packet:
 
-.. code-block:: json
+.. code-block::
 
   {
     "to": "conn0.netEvent15",
@@ -676,7 +676,7 @@ The ``getResponseCookies`` packet:
 
 The ``getRequestPostData`` packet:
 
-.. code-block:: json
+.. code-block::
 
   {
     "to": "conn0.netEvent15",
