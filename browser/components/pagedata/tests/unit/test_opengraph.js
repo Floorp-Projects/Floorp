@@ -29,8 +29,6 @@ add_task(async function test_type_website() {
     `,
     {
       siteName: "Mozilla",
-      description:
-        "Mozilla is the not-for-profit behind the lightning fast Firefox browser. We put people over profit to give everyone more power online.",
       image: "https://example.com/preview-image",
       data: {},
     }
@@ -59,7 +57,6 @@ add_task(async function test_type_movie() {
     `,
     {
       image: "https://example.com/preview-code-rush",
-      description: "This is the description of the movie.",
       data: {},
     }
   );
