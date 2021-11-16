@@ -3626,7 +3626,7 @@ static bool InitHoistedFunctionDeclarations(JSContext* cx, HandleScript script,
   // The inner-functions up to `lastFun` are the hoisted function declarations
   // of the script. We must clone and bind them now.
   for (size_t i = 0; i <= lastFun; ++i) {
-    const JS::GCCellPtr& thing = script->gcthings()[i];
+    JS::GCCellPtr thing = script->gcthings()[i];
 
     // Skip the initial scopes. In practice, there is at most one variables and
     // one lexical scope.
