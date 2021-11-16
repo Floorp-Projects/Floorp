@@ -302,20 +302,19 @@ async function openPopupAndEnsureCloses(window, callback) {
 /**
  * This function overwrites the default profiler.firefox.com URL for tests. This
  * ensures that the tests do not attempt to access external URLs.
- * @param {string} url
+ * The origin needs to be on the allowlist in validateProfilerWebChannelUrl,
+ * otherwise the WebChannel won't work. ("http://example.com" is on that list.)
+ *
+ * @param {string} origin - For example: http://example.com
+ * @param {string} pathname - For example: /my/testing/frontend.html
  * @returns {Promise}
  */
-function setProfilerFrontendUrl(url) {
-  info(
-    "Setting the profiler URL to the fake frontend. Note that this doesn't currently " +
-      "support the WebChannels, so expect a few error messages about the WebChannel " +
-      "URLs not being correct."
-  );
+function setProfilerFrontendUrl(origin, pathname) {
   return SpecialPowers.pushPrefEnv({
     set: [
       // Make sure observer and testing function run in the same process
-      ["devtools.performance.recording.ui-base-url", url],
-      ["devtools.performance.recording.ui-base-url-path", ""],
+      ["devtools.performance.recording.ui-base-url", origin],
+      ["devtools.performance.recording.ui-base-url-path", pathname],
     ],
   });
 }
