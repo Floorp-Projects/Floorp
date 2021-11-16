@@ -134,6 +134,7 @@ namespace jit {
   _(BigIntAsUintN)                \
   _(CreateArgumentsObject)        \
   _(CreateInlinedArgumentsObject) \
+  _(Rest)                         \
   _(AssertRecoveredOnBailout)
 
 class RResumePoint;
@@ -914,6 +915,16 @@ class RCreateInlinedArgumentsObject final : public RInstruction {
     // +1 for the callee.
     return numActuals() + 2;
   }
+
+  [[nodiscard]] bool recover(JSContext* cx,
+                             SnapshotIterator& iter) const override;
+};
+
+class RRest final : public RInstruction {
+  uint32_t numFormals_;
+
+ public:
+  RINSTRUCTION_HEADER_NUM_OP_(Rest, 1)
 
   [[nodiscard]] bool recover(JSContext* cx,
                              SnapshotIterator& iter) const override;
