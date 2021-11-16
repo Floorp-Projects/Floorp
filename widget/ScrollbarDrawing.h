@@ -38,13 +38,13 @@ class ScrollbarDrawing {
   virtual ~ScrollbarDrawing() = default;
 
   struct ScrollbarParams {
-    bool overlay = false;
-    bool rolledOver = false;
-    bool small = false;
-    bool horizontal = false;
-    bool rtl = false;
-    bool onDarkBackground = false;
-    bool custom = false;
+    bool isOverlay = false;
+    bool isRolledOver = false;
+    bool isSmall = false;
+    bool isHorizontal = false;
+    bool isRtl = false;
+    bool isOnDarkBackground = false;
+    bool isCustom = false;
     // Two colors only used when custom is true.
     nscolor trackColor = NS_RGBA(0, 0, 0, 0);
     nscolor faceColor = NS_RGBA(0, 0, 0, 0);
