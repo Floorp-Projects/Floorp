@@ -21,8 +21,6 @@
     constructor() {
       super();
 
-      this.attachShadow({ mode: "open" });
-
       this._prevFocus = 0;
       this._fadeTimer = null;
 
@@ -59,12 +57,14 @@
     initialize() {
       // As an optimization, we don't slot contents if the panel is [hidden] in
       // connectedCallback this means we can avoid running this code at startup
-      // and only need to do it when a panel is about to be shown.
-      // We then override the `hidden` setter and `removeAttribute` and call this
+      // and only need to do it when a panel is about to be shown.  We then
+      // override the `hidden` setter and `removeAttribute` and call this
       // function if the node is about to be shown.
-      if (this.shadowRoot.firstChild) {
+      if (this.shadowRoot) {
         return;
       }
+
+      this.attachShadow({ mode: "open" });
 
       if (!this.isArrowPanel) {
         let slot = document.createElement("slot");
@@ -77,7 +77,7 @@
     }
 
     get panelContent() {
-      return this.shadowRoot.querySelector("[part=content]");
+      return this.shadowRoot?.querySelector("[part=content]");
     }
 
     get hidden() {
