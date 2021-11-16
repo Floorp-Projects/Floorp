@@ -392,6 +392,8 @@ C/C++ practices
 -  Use ``char32_t`` as the return type or argument type of a method that
    returns or takes as argument a single Unicode scalar value. (Don't
    use UTF-32 strings, though.)
+-  Prefer unsigned types for semantically-non-negative integer values.
+-  When operating on integers that could overflow, use ``CheckedInt``.
 -  Avoid the usage of ``typedef``, instead, please use ``using`` instead.
 
 .. note::
