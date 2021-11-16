@@ -363,8 +363,7 @@ fn decode_from_slice_to_nscstring_without_bom_handling(
     let mut handle = try_start_bulk_write!(Some(src.len()), dst, NS_ERROR_OUT_OF_MEMORY);
 
     if already_validated != 0 {
-        (handle.as_mut_slice())[..already_validated]
-            .copy_from_slice(&bytes[..already_validated]);
+        (handle.as_mut_slice())[..already_validated].copy_from_slice(&bytes[..already_validated]);
     }
     let mut total_read = already_validated;
     let mut total_written = already_validated;
