@@ -19,7 +19,6 @@ registerCleanupFunction(async function() {
   info("Running the cleanup code");
   MockFilePicker.cleanup();
   Services.obs.removeObserver(checkRequest, "http-on-modify-request");
-  SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
   if (gTestDir && gTestDir.exists()) {
     // On Windows, sometimes nsIFile.remove() throws, probably because we're
     // still writing to the directory we're trying to remove, despite
@@ -73,11 +72,7 @@ add_task(async function() {
   // In this test case, if the cookie is partitioned, there will be no cookie
   // nsICookieServicebeing sent to compare.
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["network.cookie.cookieBehavior", 4],
-      // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
-      ["network.cookie.sameSite.laxByDefault", false],
-    ],
+    set: [["network.cookie.cookieBehavior", 4]],
   });
 
   await BrowserTestUtils.withNewTab("about:blank", async function(browser) {

@@ -35,10 +35,6 @@ async function disableCookies() {
 }
 
 async function ensureCookieNotSet(aBrowser) {
-  // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
-  await SpecialPowers.pushPrefEnv({
-    set: [["network.cookie.sameSite.laxByDefault", false]],
-  });
   await SpecialPowers.spawn(aBrowser, [], async function() {
     content.document.cookie = "key=value";
     Assert.equal(
@@ -77,10 +73,6 @@ async function enableCookies() {
 }
 
 async function ensureCookieSet(aBrowser) {
-  // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
-  await SpecialPowers.pushPrefEnv({
-    set: [["network.cookie.sameSite.laxByDefault", false]],
-  });
   await SpecialPowers.spawn(aBrowser, [], function() {
     content.document.cookie = "key=value";
     Assert.equal(
@@ -100,6 +92,5 @@ IsolationTestTools.runTests(
 );
 
 registerCleanupFunction(() => {
-  SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
   Services.cookies.removeAll();
 });

@@ -11,14 +11,10 @@ const key = "key" + Math.random().toString();
 const re = new RegExp(key + "=([0-9.]+)");
 
 // IsolationTestTools flushes all preferences
-// hence we explicitly set the prefs we need.
-// Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
-async function setupPrefs() {
+// hence we explicitly pref off https-first mode
+async function prefOffHttpsFirstMode() {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["dom.security.https_first", false],
-      ["network.cookie.sameSite.laxByDefault", false],
-    ],
+    set: [["dom.security.https_first", false]],
   });
 }
 
@@ -43,4 +39,4 @@ registerCleanupFunction(() => {
   Services.cookies.removeAll();
 });
 
-IsolationTestTools.runTests(TEST_PAGE, doTest, null, setupPrefs);
+IsolationTestTools.runTests(TEST_PAGE, doTest, null, prefOffHttpsFirstMode);
