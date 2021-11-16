@@ -13,6 +13,10 @@
       "description": "The date the data was collected as a timestamp",
       "type": "number"
     },
+    "description": {
+      "description": "A description of the page",
+      "type": "string"
+    },
     "siteName": {
       "description": "A friendly name for the site",
       "type": "string"

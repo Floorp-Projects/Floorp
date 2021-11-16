@@ -19,6 +19,7 @@ add_task(async function pagedata() {
     url: TEST_URL1,
     date: Date.now(),
     siteName: "Mozilla",
+    description: "We build the Firefox web browser",
     data: {
       [PageDataSchema.DATA_TYPE.PRODUCT]: {
         price: {
@@ -94,6 +95,7 @@ add_task(async function pagedata() {
 
   let snap = await Snapshots.get(TEST_URL1);
   Assert.equal(snap.siteName, "Mozilla", "Should have the site name.");
+  Assert.equal(snap.description, "We build the Firefox web browser");
   Assert.equal(snap.pageData.size, 2, "Should have some page data.");
   Assert.deepEqual(
     snap.pageData.get(PageDataSchema.DATA_TYPE.PRODUCT),
@@ -103,6 +105,7 @@ add_task(async function pagedata() {
 
   await Snapshots.add({ url: TEST_URL2 });
   snap = await Snapshots.get(TEST_URL2);
+  Assert.equal(snap.description, null);
   Assert.equal(snap.pageData.size, 1, "Should have some page data.");
   Assert.deepEqual(
     snap.pageData.get(PageDataSchema.DATA_TYPE.PRODUCT),
@@ -148,12 +151,44 @@ add_task(async function pagedata() {
   await Snapshots.add({ url: TEST_URL1, userPersisted: true });
   snap = await Snapshots.get(TEST_URL1);
   Assert.equal(snap.siteName, "Mozilla", "Should have the site name.");
+  Assert.equal(snap.description, "We build the Firefox web browser");
   Assert.equal(snap.pageData.size, 2, "Should have some page data.");
   Assert.deepEqual(
     snap.pageData.get(PageDataSchema.DATA_TYPE.PRODUCT),
     { price: { value: 276, currency: "USD" } },
     "Should have the right price."
   );
+
+  await reset();
+});
+
+add_task(async function pagedata_validation() {
+  // Register some page data.
+  PageDataService.pageDataDiscovered({
+    url: TEST_URL1,
+    date: Date.now(),
+    siteName:
+      "This is a very long site name that will be truncated when saved to the database",
+    description: "long description".repeat(20),
+    data: {},
+  });
+
+  await addInteractions([
+    {
+      url: TEST_URL1,
+      totalViewTime: 40000,
+      created_at: Date.now() - 1000,
+    },
+  ]);
+
+  await Snapshots.add({ url: TEST_URL1 });
+  let snap = await Snapshots.get(TEST_URL1);
+  Assert.equal(
+    snap.siteName,
+    "This is a very long site name that will be truncat"
+  );
+  Assert.equal(snap.description, "long description".repeat(16));
+  Assert.equal(snap.pageData.size, 0, "Should have no page data.");
 
   await reset();
 });

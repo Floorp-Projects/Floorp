@@ -25,11 +25,14 @@ add_task(async function test_single_product_data() {
           <span itemprop="priceCurrency" content="GBP"></span>
 
           <span itemprop="gtin" content="13572468"></span>
+
+          <span itemprop="description">The most amazing microwave in the world</span>
         </div>
       </body>
       </html>
     `,
     {
+      description: "The most amazing microwave in the world",
       image: BASE_URL + "/bon-echo-microwave-17in.jpg",
       data: {
         [PageDataSchema.DATA_TYPE.PRODUCT]: {
