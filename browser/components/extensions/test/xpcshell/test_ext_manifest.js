@@ -112,3 +112,30 @@ add_task(async function test_action_version() {
 
   ExtensionTestUtils.failOnSchemaWarnings(true);
 });
+
+add_task(async function test_scripting_permission() {
+  ExtensionTestUtils.failOnSchemaWarnings(false);
+
+  // The "scripting" permission is only available in MV3.
+  let warnings = await testManifest({
+    manifest_version: 3,
+    permissions: ["scripting"],
+  });
+
+  Assert.deepEqual(warnings, [], "Got no warnings");
+
+  warnings = await testManifest({
+    manifest_version: 2,
+    permissions: ["scripting"],
+  });
+
+  equal(warnings.length, 1, "Got exactly one warning");
+  ok(
+    warnings[0]?.startsWith(
+      `Warning processing permissions: Error processing permissions.0: Value "scripting" must either:`
+    ),
+    `Got the expected warning message: ${warnings[0]}`
+  );
+
+  ExtensionTestUtils.failOnSchemaWarnings(true);
+});
