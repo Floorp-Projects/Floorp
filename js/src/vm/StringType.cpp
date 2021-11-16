@@ -7,9 +7,7 @@
 #include "vm/StringType-inl.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/EndianUtils.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Latin1.h"
 #include "mozilla/MathAlgorithms.h"
@@ -51,7 +49,6 @@
 using namespace js;
 
 using mozilla::ArrayEqual;
-using mozilla::AssertedCast;
 using mozilla::AsWritableChars;
 using mozilla::ConvertLatin1toUtf16;
 using mozilla::IsAsciiDigit;
@@ -1005,17 +1002,6 @@ static inline void FillChars(unsigned char* dest, const unsigned char* src,
   PodCopy(dest, src, length);
 }
 
-static inline void FillChars(char16_t* dest, LittleEndianChars src,
-                             size_t length) {
-#if MOZ_LITTLE_ENDIAN()
-  memcpy(dest, src.get(), length * sizeof(char16_t));
-#else
-  for (size_t i = 0; i < length; ++i) {
-    dest[i] = src[i];
-  }
-#endif
-}
-
 /**
  * Copy |src[0..length]| to |dest[0..length]| when copying *does* narrow, but
  * the user guarantees every runtime |src[i]| value can be stored without change
@@ -1025,13 +1011,6 @@ static inline void FillFromCompatible(unsigned char* dest, const char16_t* src,
                                       size_t length) {
   LossyConvertUtf16toLatin1(Span(src, length),
                             AsWritableChars(Span(dest, length)));
-}
-
-static inline void FillFromCompatible(unsigned char* dest,
-                                      LittleEndianChars src, size_t length) {
-  for (size_t i = 0; i < length; ++i) {
-    dest[i] = AssertedCast<unsigned char>(src[i]);
-  }
 }
 
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
@@ -1601,16 +1580,6 @@ static inline bool CanStoreCharsAsLatin1(const char16_t* s, size_t length) {
   return IsUtf16Latin1(Span(s, length));
 }
 
-static bool CanStoreCharsAsLatin1(LittleEndianChars chars, size_t length) {
-  for (size_t i = 0; i < length; i++) {
-    if (chars[i] > JSString::MAX_LATIN1_CHAR) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE JSInlineString* NewInlineStringDeflated(
     JSContext* cx, const mozilla::Range<const char16_t>& chars,
@@ -1651,35 +1620,6 @@ static JSLinearString* NewStringDeflated(JSContext* cx, const char16_t* s,
   FillFromCompatible(news.get(), s, n);
 
   return JSLinearString::new_<allowGC>(cx, std::move(news), n, heap);
-}
-
-static JSLinearString* NewStringDeflatedFromLittleEndianNoGC(
-    JSContext* cx, LittleEndianChars chars, size_t length,
-    gc::InitialHeap heap) {
-  MOZ_ASSERT(CanStoreCharsAsLatin1(chars, length));
-
-  if (JSInlineString::lengthFits<Latin1Char>(length)) {
-    Latin1Char* storage;
-    JSInlineString* str =
-        AllocateInlineString<NoGC>(cx, length, &storage, heap);
-    if (!str) {
-      return nullptr;
-    }
-
-    FillFromCompatible(storage, chars, length);
-    return str;
-  }
-
-  auto news =
-      cx->make_pod_arena_array<Latin1Char>(js::StringBufferArena, length);
-  if (!news) {
-    cx->recoverFromOutOfMemory();
-    return nullptr;
-  }
-
-  FillFromCompatible(news.get(), chars, length);
-
-  return JSLinearString::new_<NoGC>(cx, std::move(news), length, heap);
 }
 
 template <AllowGC allowGC, typename CharT>
@@ -1799,32 +1739,6 @@ template JSLinearString* NewStringCopyNDontDeflate<NoGC>(JSContext* cx,
                                                          size_t n,
                                                          gc::InitialHeap heap);
 
-static JSLinearString* NewUndeflatedStringFromLittleEndianNoGC(
-    JSContext* cx, LittleEndianChars chars, size_t length,
-    gc::InitialHeap heap) {
-  if (JSInlineString::lengthFits<char16_t>(length)) {
-    char16_t* storage;
-    JSInlineString* str =
-        AllocateInlineString<NoGC>(cx, length, &storage, heap);
-    if (!str) {
-      return nullptr;
-    }
-
-    FillChars(storage, chars, length);
-    return str;
-  }
-
-  auto news = cx->make_pod_arena_array<char16_t>(js::StringBufferArena, length);
-  if (!news) {
-    cx->recoverFromOutOfMemory();
-    return nullptr;
-  }
-
-  FillChars(news.get(), chars, length);
-
-  return JSLinearString::new_<NoGC>(cx, std::move(news), length, heap);
-}
-
 JSLinearString* NewLatin1StringZ(JSContext* cx, UniqueChars chars,
                                  gc::InitialHeap heap) {
   size_t length = strlen(chars.get());
@@ -1857,21 +1771,6 @@ template JSLinearString* NewStringCopyN<CanGC>(JSContext* cx,
 template JSLinearString* NewStringCopyN<NoGC>(JSContext* cx,
                                               const Latin1Char* s, size_t n,
                                               gc::InitialHeap heap);
-
-JSLinearString* NewStringFromLittleEndianNoGC(JSContext* cx,
-                                              LittleEndianChars chars,
-                                              size_t length,
-                                              gc::InitialHeap heap) {
-  if (JSLinearString* str = TryEmptyOrStaticString(cx, chars, length)) {
-    return str;
-  }
-
-  if (CanStoreCharsAsLatin1(chars, length)) {
-    return NewStringDeflatedFromLittleEndianNoGC(cx, chars, length, heap);
-  }
-
-  return NewUndeflatedStringFromLittleEndianNoGC(cx, chars, length, heap);
-}
 
 template <js::AllowGC allowGC>
 JSLinearString* NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8,
