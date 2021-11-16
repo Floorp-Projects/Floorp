@@ -1121,6 +1121,27 @@ void LookAndFeel::RecomputeColorSchemes() {
 
 ColorScheme LookAndFeel::ColorSchemeForStyle(
     const dom::Document& aDoc, const StyleColorSchemeFlags& aFlags) {
+  if (PreferenceSheet::MayForceColors()) {
+    auto& prefs = PreferenceSheet::PrefsFor(aDoc);
+    if (!prefs.mUseDocumentColors) {
+      // When forcing colors, we can use our preferred color-scheme. Do this
+      // only if we're using system colors, as dark preference colors are not
+      // exposed on the UI.
+      //
+      // Also, use light if we're using a high-contrast-theme on Windows, since
+      // Windows overrides the light colors with HCM colors when HCM is active.
+#ifdef XP_WIN
+      if (prefs.mUseAccessibilityTheme) {
+        return ColorScheme::Light;
+      }
+#endif
+      if (StaticPrefs::browser_display_use_system_colors()) {
+        return aDoc.PreferredColorScheme();
+      }
+      return ColorScheme::Light;
+    }
+  }
+
   StyleColorSchemeFlags style(aFlags);
   if (!style) {
     style.bits = aDoc.GetColorSchemeBits();

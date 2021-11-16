@@ -379,6 +379,12 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
   const mozilla::PreferenceSheet::Prefs& PrefSheetPrefs() const {
     return mozilla::PreferenceSheet::PrefsFor(*mDocument);
   }
+
+  bool ForcingColors() const {
+    return mozilla::PreferenceSheet::MayForceColors() &&
+           !PrefSheetPrefs().mUseDocumentColors;
+  }
+
   nscolor DefaultBackgroundColor() const;
 
   nsISupports* GetContainerWeak() const;
