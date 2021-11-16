@@ -470,6 +470,69 @@ class QSTestUtils {
   }
 
   /**
+   * Asserts that URLs in a result's payload have the timestamp template
+   * substring replaced with real timestamps.
+   *
+   * @param {UrlbarResult} result
+   * @param {object} urls
+   *   An object that contains the expected payload properties with template
+   *   substrings. For example:
+   *
+   *   {
+   *     url: "http://example.com/foo-%YYYYMMDDHH%",
+   *     sponsoredClickUrl: "http://example.com/bar-%YYYYMMDDHH%",
+   *   }
+   */
+  assertTimestampsReplaced(result, urls) {
+    let template = "%YYYYMMDDHH%";
+
+    // Parse the timestamp strings from each payload property and save them in
+    // `urls[key].timestamp`.
+    urls = { ...urls };
+    for (let [key, url] of Object.entries(urls)) {
+      let index = url.indexOf(template);
+      this.Assert.ok(
+        index >= 0,
+        `Timestamp template ${template} is in URL ${url} for key ${key}`
+      );
+      let value = result.payload[key];
+      this.Assert.ok(value, "Key is in result payload: " + key);
+      let timestamp = value.substring(index, index + template.length - 2);
+
+      // Set `urls[key]` to an object that's helpful in the logged info message
+      // below.
+      urls[key] = { url, value, timestamp };
+    }
+
+    this.info?.("Parsed timestamps: " + JSON.stringify(urls));
+
+    // Make a set of unique timestamp strings. There should only be one.
+    let { timestamp } = Object.values(urls)[0];
+    this.Assert.deepEqual(
+      [...new Set(Object.values(urls).map(o => o.timestamp))],
+      [timestamp],
+      "There's only one unique timestamp string"
+    );
+
+    // Parse the parts of the timestamp string.
+    let year = timestamp.slice(0, -6);
+    let month = timestamp.slice(-6, -4);
+    let day = timestamp.slice(-4, -2);
+    let hour = timestamp.slice(-2);
+    let date = new Date(year, month - 1, day, hour);
+
+    // The timestamp should be no more than two hours in the past. Typically it
+    // will be the same as the current hour, but since its resolution is in
+    // terms of hours and it's possible the test may have crossed over into a
+    // new hour as it was running, allow for the previous hour.
+    this.Assert.less(
+      Date.now() - 2 * 60 * 60 * 1000,
+      date.getTime(),
+      "Timestamp is within the past two hours"
+    );
+  }
+
+  /**
    * Calls a callback while enrolled in a mock Nimbus experiment. The experiment
    * is automatically unenrolled and cleaned up after the callback returns.
    *

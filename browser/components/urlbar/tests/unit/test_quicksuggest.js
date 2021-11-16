@@ -23,6 +23,11 @@ const HTTP_SEARCH_STRING = "http prefix";
 const HTTPS_SEARCH_STRING = "https prefix";
 const PREFIX_SUGGESTIONS_STRIPPED_URL = "example.com/prefix-test";
 
+const TIMESTAMP_SEARCH_STRING = "timestamp";
+const TIMESTAMP_SUGGESTION_URL = "http://example.com/timestamp-%YYYYMMDDHH%";
+const TIMESTAMP_SUGGESTION_CLICK_URL =
+  "http://click.reporting.test.com/timestamp-%YYYYMMDDHH%-foo";
+
 const REMOTE_SETTINGS_DATA = [
   {
     id: 1,
@@ -60,6 +65,15 @@ const REMOTE_SETTINGS_DATA = [
     click_url: "http://click.reporting.test.com/prefix",
     impression_url: "http://impression.reporting.test.com/prefix",
     advertiser: "TestAdvertiserPrefix",
+  },
+  {
+    id: 5,
+    url: TIMESTAMP_SUGGESTION_URL,
+    title: "Timestamp suggestion",
+    keywords: [TIMESTAMP_SEARCH_STRING],
+    click_url: TIMESTAMP_SUGGESTION_CLICK_URL,
+    impression_url: "http://impression.reporting.test.com/timestamp",
+    advertiser: "TestAdvertiserTimestamp",
   },
 ];
 
@@ -778,4 +792,39 @@ add_task(async function setupAndTeardown() {
     !UrlbarQuickSuggest._rs,
     "Settings client remains null at end of task"
   );
+});
+
+// Timestamp templates in URLs should be replaced with real timestamps.
+add_task(async function timestamps() {
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+
+  // Do a search.
+  let context = createContext(TIMESTAMP_SEARCH_STRING, {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  let controller = UrlbarTestUtils.newMockController({
+    input: {
+      isPrivate: context.isPrivate,
+      onFirstResult() {
+        return false;
+      },
+      window: {
+        location: {
+          href: AppConstants.BROWSER_CHROME_URL,
+        },
+      },
+    },
+  });
+  await controller.startQuery(context);
+
+  // Should be one quick suggest result.
+  Assert.equal(context.results.length, 1, "One result returned");
+  let result = context.results[0];
+
+  QuickSuggestTestUtils.assertTimestampsReplaced(result, {
+    url: TIMESTAMP_SUGGESTION_URL,
+    sponsoredClickUrl: TIMESTAMP_SUGGESTION_CLICK_URL,
+  });
 });
