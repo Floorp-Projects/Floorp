@@ -35,10 +35,10 @@ object Versions {
 
     const val material = "1.2.1"
 
-    const val compose_version = "1.0.4"
+    const val compose_version = "1.0.5"
 
     object AndroidX {
-        const val activityCompose = "1.3.1"
+        const val activityCompose = "1.4.0"
         const val annotation = "1.1.0"
         const val appcompat = "1.3.0"
         const val autofill = "1.1.0"
