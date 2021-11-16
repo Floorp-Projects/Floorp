@@ -2299,8 +2299,7 @@ network.dns:
     products:
       - firefox
     expiry_version: "never"
-    record_in_processes:
-      - main
+    record_in_processes: ["main", "socket"]
     extra_keys:
       trigger: >
         The reason why this confirmation was triggered.
