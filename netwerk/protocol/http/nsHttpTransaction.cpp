@@ -443,6 +443,7 @@ nsresult nsHttpTransaction::AsyncRead(nsIStreamListener* listener,
   NS_ENSURE_SUCCESS(rv, rv);
 
   transactionPump.forget(pump);
+  MutexAutoLock lock(mLock);
   mEarlyHintObserver = do_QueryInterface(listener);
   return NS_OK;
 }
@@ -1340,7 +1341,10 @@ void nsHttpTransaction::Close(nsresult reason) {
   LOG(("nsHttpTransaction::Close [this=%p reason=%" PRIx32 "]\n", this,
        static_cast<uint32_t>(reason)));
 
-  mEarlyHintObserver = nullptr;
+  {
+    MutexAutoLock lock(mLock);
+    mEarlyHintObserver = nullptr;
+  }
 
   if (!mClosed) {
     gHttpHandler->ConnMgr()->RemoveActiveTransaction(this);
@@ -1973,7 +1977,11 @@ nsresult nsHttpTransaction::ParseLineSegment(char* segment, uint32_t len) {
       DebugOnly<nsresult> rv =
           mResponseHead->GetHeader(nsHttp::Link, linkHeader);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
-      nsCOMPtr<nsIEarlyHintObserver> earlyHint = mEarlyHintObserver;
+      nsCOMPtr<nsIEarlyHintObserver> earlyHint;
+      {
+        MutexAutoLock lock(mLock);
+        earlyHint = mEarlyHintObserver;
+      }
       if (earlyHint) {
         DebugOnly<nsresult> rv = NS_DispatchToMainThread(
             NS_NewRunnableFunction(
@@ -1993,7 +2001,10 @@ nsresult nsHttpTransaction::ParseLineSegment(char* segment, uint32_t len) {
       mResponseHead->Reset();
       return NS_OK;
     }
-    mEarlyHintObserver = nullptr;
+    {
+      MutexAutoLock lock(mLock);
+      mEarlyHintObserver = nullptr;
+    }
     mHaveAllHeaders = true;
   }
   return NS_OK;
