@@ -25,13 +25,8 @@ var gen;
 function initTest() {
   SimpleTest.waitForExplicitFinish();
   // Allow all cookies, then do the actual test initialization
-  SpecialPowers.pushPrefEnv({
-    "set": [
-      ["network.cookie.cookieBehavior", 0],
-      // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
-      ["network.cookie.sameSite.laxByDefault", false],
-	]
-  }, initTestCallback);
+  SpecialPowers.pushPrefEnv({"set": [["network.cookie.cookieBehavior", 0]]},
+  																	  initTestCallback);
 }
 
 function initTestCallback() {
@@ -1481,7 +1476,6 @@ function* runTest() {
   }
 
 
-  SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
   SimpleTest.finish();
 }
 
