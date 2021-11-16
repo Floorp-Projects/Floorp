@@ -14,6 +14,8 @@ class nsPrinterWin final : public nsPrinterBase {
  public:
   NS_IMETHOD GetName(nsAString& aName) override;
   NS_IMETHOD GetSystemName(nsAString& aName) override;
+  NS_IMETHOD CopyFromWithValidation(nsIPrintSettings*, JSContext*,
+                                    Promise**) final;
   bool SupportsDuplex() const final;
   bool SupportsColor() const final;
   bool SupportsMonochrome() const final;
@@ -30,6 +32,9 @@ class nsPrinterWin final : public nsPrinterBase {
   nsPrinterWin(const mozilla::CommonPaperInfoArray* aPaperInfoArray,
                const nsAString& aName);
   ~nsPrinterWin() = default;
+
+  PrintSettingsInitializer GetValidatedSettings(
+      PrintSettingsInitializer aSettingsToValidate) const;
 
   nsTArray<uint8_t> CopyDefaultDevmodeW() const;
   nsTArray<mozilla::PaperInfo> PaperList() const;

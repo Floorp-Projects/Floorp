@@ -163,6 +163,14 @@ nsPrintSettingsWin::nsPrintSettingsWin(const nsPrintSettingsWin& aPS)
   *this = aPS;
 }
 
+/* static */
+void nsPrintSettingsWin::PaperSizeUnitFromDmPaperSize(short aPaperSize,
+                                                      int16_t& aPaperSizeUnit) {
+  if (aPaperSize > 0 && aPaperSize < int32_t(ArrayLength(kPaperSizeUnits))) {
+    aPaperSizeUnit = kPaperSizeUnits[aPaperSize];
+  }
+}
+
 void nsPrintSettingsWin::InitWithInitializer(
     const PrintSettingsInitializer& aSettings) {
   nsPrintSettings::InitWithInitializer(aSettings);
@@ -175,25 +183,6 @@ void nsPrintSettingsWin::InitWithInitializer(
   SetDevMode(const_cast<DEVMODEW*>(reinterpret_cast<const DEVMODEW*>(
       aSettings.mDevmodeWStorage.Elements())));
 
-  if (mDevMode->dmFields & DM_ORIENTATION) {
-    const bool areSheetsOfPaperPortraitMode =
-        (mDevMode->dmOrientation == DMORIENT_PORTRAIT);
-
-    // If our Windows print settings say that we're producing portrait-mode
-    // sheets of paper, then our page format must also be portrait-mode; unless
-    // we've got a pages-per-sheet value with orthogonal pages/sheets, in which
-    // case it's reversed.
-    const bool arePagesPortraitMode =
-        (areSheetsOfPaperPortraitMode != HasOrthogonalSheetsAndPages());
-
-    SetOrientation(arePagesPortraitMode ? kPortraitOrientation
-                                        : kLandscapeOrientation);
-  }
-
-  if (mDevMode->dmFields & DM_COPIES) {
-    SetNumCopies(mDevMode->dmCopies);
-  }
-
   if (mDevMode->dmFields & DM_SCALE) {
     // Since we do the scaling, grab the DEVMODE value and reset it back to 100.
     double scale = double(mDevMode->dmScale) / 100.0f;
@@ -202,48 +191,14 @@ void nsPrintSettingsWin::InitWithInitializer(
     }
     mDevMode->dmScale = 100;
   }
-
-  if (mDevMode->dmFields & DM_PAPERSIZE) {
-    nsString paperIdString;
-    paperIdString.AppendInt(mDevMode->dmPaperSize);
-    SetPaperId(paperIdString);
-    if (mDevMode->dmPaperSize > 0 &&
-        mDevMode->dmPaperSize < int32_t(ArrayLength(kPaperSizeUnits))) {
-      SetPaperSizeUnit(kPaperSizeUnits[mDevMode->dmPaperSize]);
-    }
-  }
-
-  if (mDevMode->dmFields & DM_COLOR) {
-    SetPrintInColor(mDevMode->dmColor == DMCOLOR_COLOR);
-  }
-
-  if (mDevMode->dmFields & DM_DUPLEX) {
-    switch (mDevMode->dmDuplex) {
-      default:
-        MOZ_ASSERT_UNREACHABLE("bad value for dmDuplex field");
-        [[fallthrough]];
-      case DMDUP_SIMPLEX:
-        SetDuplex(kDuplexNone);
-        break;
-      case DMDUP_VERTICAL:
-        SetDuplex(kDuplexFlipOnLongEdge);
-        break;
-      case DMDUP_HORIZONTAL:
-        SetDuplex(kDuplexFlipOnShortEdge);
-        break;
-    }
-  }
-
-  // Set the paper sizes to match the unit.
-  double pointsToSizeUnit =
-      mPaperSizeUnit == kPaperSizeInches ? 1.0 / 72.0 : 25.4 / 72.0;
-  SetPaperWidth(aSettings.mPaperInfo.mSize.width * pointsToSizeUnit);
-  SetPaperHeight(aSettings.mPaperInfo.mSize.height * pointsToSizeUnit);
 }
 
 already_AddRefed<nsIPrintSettings> CreatePlatformPrintSettings(
     const PrintSettingsInitializer& aSettings) {
-  auto settings = MakeRefPtr<nsPrintSettingsWin>();
+  RefPtr<nsPrintSettings> settings = aSettings.mPrintSettings.get();
+  if (!settings) {
+    settings = MakeRefPtr<nsPrintSettingsWin>();
+  }
   settings->InitWithInitializer(aSettings);
   return settings.forget();
 }
@@ -372,11 +327,8 @@ void nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode) {
   if (aDevMode->dmFields & DM_PAPERSIZE) {
     mPaperId.Truncate(0);
     mPaperId.AppendInt(aDevMode->dmPaperSize);
-    // If not a paper size we know about, the unit will be the last one saved.
-    if (aDevMode->dmPaperSize > 0 &&
-        aDevMode->dmPaperSize < int32_t(ArrayLength(kPaperSizeUnits))) {
-      mPaperSizeUnit = kPaperSizeUnits[aDevMode->dmPaperSize];
-    }
+    // If it is not a paper size we know about, the unit will remain unchanged.
+    PaperSizeUnitFromDmPaperSize(aDevMode->dmPaperSize, mPaperSizeUnit);
   }
 
   if (aDevMode->dmFields & DM_COLOR) {

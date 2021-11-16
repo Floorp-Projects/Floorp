@@ -142,6 +142,30 @@ nsresult nsPrinterBase::AsyncPromiseAttributeGetter(
       attributeKeys[aAttribute], aBackgroundTask, std::forward<Args>(aArgs)...);
 }
 
+NS_IMETHODIMP nsPrinterBase::CopyFromWithValidation(
+    nsIPrintSettings* aSettingsToCopyFrom, JSContext* aCx,
+    Promise** aResultPromise) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aResultPromise);
+
+  ErrorResult errorResult;
+  RefPtr<dom::Promise> promise =
+      dom::Promise::Create(xpc::CurrentNativeGlobal(aCx), errorResult);
+  if (MOZ_UNLIKELY(errorResult.Failed())) {
+    return errorResult.StealNSResult();
+  }
+
+  nsCOMPtr<nsIPrintSettings> settings;
+  MOZ_ALWAYS_SUCCEEDS(aSettingsToCopyFrom->Clone(getter_AddRefs(settings)));
+  nsString printerName;
+  MOZ_ALWAYS_SUCCEEDS(GetName(printerName));
+  MOZ_ALWAYS_SUCCEEDS(settings->SetPrinterName(printerName));
+  promise->MaybeResolve(settings);
+  promise.forget(aResultPromise);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsPrinterBase::GetSupportsDuplex(JSContext* aCx,
                                                Promise** aResultPromise) {
   return AsyncPromiseAttributeGetter(aCx, aResultPromise,

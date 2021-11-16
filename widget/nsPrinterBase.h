@@ -31,6 +31,8 @@ class nsPrinterBase : public nsIPrinter {
   using MarginDouble = mozilla::gfx::MarginDouble;
   using PrintSettingsInitializer = mozilla::PrintSettingsInitializer;
 
+  NS_IMETHOD CopyFromWithValidation(nsIPrintSettings*, JSContext*,
+                                    Promise**) override;
   NS_IMETHOD GetSupportsDuplex(JSContext*, Promise**) final;
   NS_IMETHOD GetSupportsColor(JSContext*, Promise**) final;
   NS_IMETHOD GetSupportsMonochrome(JSContext*, Promise**) final;
