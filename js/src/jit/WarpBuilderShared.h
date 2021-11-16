@@ -374,7 +374,8 @@ class WarpBuilderShared {
 
   MCall* makeCall(CallInfo& callInfo, bool needsThisCheck,
                   WrappedFunction* target = nullptr, bool isDOMCall = false);
-  MInstruction* makeSpreadCall(CallInfo& callInfo, bool isSameRealm = false,
+  MInstruction* makeSpreadCall(CallInfo& callInfo, bool needsThisCheck,
+                               bool isSameRealm = false,
                                WrappedFunction* target = nullptr);
 
  public:
