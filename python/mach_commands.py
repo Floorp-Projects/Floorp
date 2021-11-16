@@ -217,12 +217,7 @@ def run_python_tests(
     elif subsuite:
         filters.append(mpf.subsuite(subsuite))
 
-    tests = mp.active_tests(
-        filters=filters,
-        disabled=False,
-        python=command_context.virtualenv_manager.version_info()[0],
-        **mozinfo.info
-    )
+    tests = mp.active_tests(filters=filters, disabled=False, python=3, **mozinfo.info)
 
     if not tests:
         submsg = "for subsuite '{}' ".format(subsuite) if subsuite else ""
