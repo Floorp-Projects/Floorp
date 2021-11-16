@@ -6,6 +6,7 @@ from __future__ import absolute_import, unicode_literals
 
 import os
 import sys
+import warnings
 
 from recommonmark.transform import AutoStructify
 
@@ -130,6 +131,15 @@ def setup(app):
         },
         True,
     )
+
+    # Silent a warning
+    # https://github.com/readthedocs/recommonmark/issues/177
+    warnings.filterwarnings(
+        action="ignore",
+        category=UserWarning,
+        message=r".*Container node skipped.*",
+    )
+
     app.add_css_file("custom_theme.css")
     app.add_transform(AutoStructify)
     app.connect("html-page-context", install_sphinx_panels)
