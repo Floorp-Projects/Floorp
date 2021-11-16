@@ -775,7 +775,7 @@ show_search_suggestions:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/5840
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/?
+      - https://github.com/mozilla-mobile/focus-android/pull/5858
     data_sensitivity:
       - interaction
     notification_emails:
@@ -787,7 +787,7 @@ show_search_suggestions:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/5840
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/?
+      - https://github.com/mozilla-mobile/focus-android/pull/5858
     data_sensitivity:
       - interaction
     notification_emails:
@@ -799,7 +799,7 @@ show_search_suggestions:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/5840
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/?
+      - https://github.com/mozilla-mobile/focus-android/pull/5858
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1199,7 +1199,7 @@ tracking_protection_exceptions:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/5753
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/?
+      - https://github.com/mozilla-mobile/focus-android/pull/5758
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1245,7 +1245,7 @@ notifications:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/5651
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/?
+      - https://github.com/mozilla-mobile/focus-android/pull/5769
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1257,7 +1257,7 @@ notifications:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/5651
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/?
+      - https://github.com/mozilla-mobile/focus-android/pull/5769
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1273,7 +1273,7 @@ notifications:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/5651
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/?
+      - https://github.com/mozilla-mobile/focus-android/pull/5769
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1287,7 +1287,7 @@ app_shortcuts:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/5651
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/?
+      - https://github.com/mozilla-mobile/focus-android/pull/5769
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1303,7 +1303,7 @@ app_shortcuts:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/5651
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/?
+      - https://github.com/mozilla-mobile/focus-android/pull/5769
     data_sensitivity:
       - interaction
     notification_emails:
@@ -1321,7 +1321,7 @@ recent_apps:
     bugs:
       - https://github.com/mozilla-mobile/focus-android/issues/5651
     data_reviews:
-      - https://github.com/mozilla-mobile/focus-android/pull/?
+      - https://github.com/mozilla-mobile/focus-android/pull/5769
     data_sensitivity:
       - interaction
     notification_emails:
