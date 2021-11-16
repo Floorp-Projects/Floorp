@@ -4,6 +4,7 @@ import json
 import os
 import re
 import signal
+import subprocess
 import threading
 import time
 
@@ -32,7 +33,16 @@ def _install_package(virtualenv_manager, package):
         if site_packages.startswith(venv_site_lib):
             # already installed in this venv, we can skip
             return
-    virtualenv_manager._run_pip(["install", package])
+
+    subprocess.check_call(
+        [
+            virtualenv_manager.python_path,
+            "-m",
+            "pip",
+            "install",
+            package,
+        ]
+    )
 
 
 def _kill_mozproxy(pid):
