@@ -395,7 +395,6 @@ UNIFIED_SOURCES += [
     "MemoryPressureObserver.cpp",
     "opengl/CompositingRenderTargetOGL.cpp",
     "opengl/CompositorOGL.cpp",
-    "opengl/GLBlitTextureImageHelper.cpp",
     "opengl/OGLShaderProgram.cpp",
     "opengl/TextureClientOGL.cpp",
     "opengl/TextureHostOGL.cpp",
