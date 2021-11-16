@@ -783,14 +783,17 @@ void nsTextControlFrame::ReflowTextControlChild(
     auto size = desiredSize.Size(outerWM);
     // Center button in the block axis of our content box. We do this
     // computation in terms of outerWM for simplicity.
-    position = LogicalPoint(outerWM);
-    position.B(outerWM) =
+    LogicalRect buttonRect(outerWM);
+    buttonRect.BSize(outerWM) = size.BSize(outerWM);
+    buttonRect.ISize(outerWM) = size.ISize(outerWM);
+    buttonRect.BStart(outerWM) =
         bp.BStart(outerWM) +
         (aReflowInput.ComputedBSize() - size.BSize(outerWM)) / 2;
     // Align to the inline-end of the content box.
-    position.I(outerWM) =
+    buttonRect.IStart(outerWM) =
         bp.IStart(outerWM) + aReflowInput.ComputedISize() - size.ISize(outerWM);
-    position = position.ConvertTo(wm, outerWM, containerSize);
+    buttonRect = buttonRect.ConvertTo(wm, outerWM, containerSize);
+    position = buttonRect.Origin(wm);
     aButtonBoxISize = size.ISize(outerWM);
   }
 
