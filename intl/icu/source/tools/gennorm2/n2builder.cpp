@@ -829,18 +829,18 @@ Normalizer2DataBuilder::writeCSourceFile(const char *filename) {
 
     char line[100];
     sprintf(line, "static const UVersionInfo %s_formatVersion={", name);
-    usrc_writeArray(f, line, dataInfo.formatVersion, 8, 4, "};\n");
+    usrc_writeArray(f, line, dataInfo.formatVersion, 8, 4, "", "};\n");
     sprintf(line, "static const UVersionInfo %s_dataVersion={", name);
-    usrc_writeArray(f, line, dataInfo.dataVersion, 8, 4, "};\n\n");
+    usrc_writeArray(f, line, dataInfo.dataVersion, 8, 4, "", "};\n\n");
     sprintf(line, "static const int32_t %s_indexes[Normalizer2Impl::IX_COUNT]={\n", name);
-    usrc_writeArray(f, line, indexes, 32, Normalizer2Impl::IX_COUNT, "\n};\n\n");
+    usrc_writeArray(f, line, indexes, 32, Normalizer2Impl::IX_COUNT, "", "\n};\n\n");
 
-    usrc_writeUCPTrie(f, name, norm16Trie.getAlias());
+    usrc_writeUCPTrie(f, name, norm16Trie.getAlias(), UPRV_TARGET_SYNTAX_CCODE);
 
     sprintf(line, "static const uint16_t %s_extraData[%%ld]={\n", name);
-    usrc_writeArray(f, line, extraData.getBuffer(), 16, extraData.length(), "\n};\n\n");
+    usrc_writeArray(f, line, extraData.getBuffer(), 16, extraData.length(), "", "\n};\n\n");
     sprintf(line, "static const uint8_t %s_smallFCD[%%ld]={\n", name);
-    usrc_writeArray(f, line, smallFCD, 8, sizeof(smallFCD), "\n};\n\n");
+    usrc_writeArray(f, line, smallFCD, 8, sizeof(smallFCD), "", "\n};\n\n");
 
     fputs("#endif  // INCLUDED_FROM_NORMALIZER2_CPP\n", f);
     fclose(f);

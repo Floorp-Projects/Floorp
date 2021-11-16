@@ -64,6 +64,10 @@ fr_CA{
             }
         }
         concentr{
+            item{
+                one{"{0} item"}
+                other{"{0} items"}
+            }
             permille{
                 one{"{0} pour mille"}
                 other{"{0} pour mille"}
@@ -522,10 +526,17 @@ fr_CA{
         }
     }
     unitsNarrow{
-        acceleration{
-            meter-per-square-second{
-                one{"{0}m/s²"}
-                other{"{0}m/s²"}
+        angle{
+            radian{
+                one{"{0}rad"}
+                other{"{0}rad"}
+            }
+        }
+        area{
+            square-yard{
+                dnam{"vg²"}
+                one{"{0}vg²"}
+                other{"{0}vg²"}
             }
         }
         concentr{
@@ -534,21 +545,15 @@ fr_CA{
                 other{"{0} %"}
             }
         }
-        consumption{
-            liter-per-100-kilometer{
-                dnam{"L/100 km"}
-                one{"{0} L/100 km"}
-                other{"{0} L/100 km"}
-            }
-        }
         duration{
             century{
                 one{"´{0}s."}
                 other{"´{0}s."}
             }
-            microsecond{
-                one{"{0}μs"}
-                other{"{0}μs"}
+            decade{
+                dnam{"déc"}
+                one{"{0}déc"}
+                other{"{0}déc"}
             }
             minute{
                 one{"{0}m"}
@@ -560,10 +565,6 @@ fr_CA{
                 other{"{0}m"}
                 per{"{0}/m"}
             }
-            nanosecond{
-                one{"{0}ns"}
-                other{"{0}ns"}
-            }
             week{
                 dnam{"sem"}
                 one{"{0}sem"}
@@ -571,14 +572,46 @@ fr_CA{
                 per{"{0}/sem"}
             }
         }
+        energy{
+            british-thermal-unit{
+                one{"{0}BTU"}
+                other{"{0}BTU"}
+            }
+            therm-us{
+                one{"{0}therm US"}
+                other{"{0}therm US"}
+            }
+        }
+        graphics{
+            dot-per-centimeter{
+                one{"{0}ppcm"}
+                other{"{0}ppcm"}
+            }
+            dot-per-inch{
+                one{"{0}ppp"}
+                other{"{0}ppp"}
+            }
+        }
         length{
             decimeter{
                 one{"{0}dm"}
                 other{"{0}dm"}
             }
+            earth-radius{
+                one{"{0}R⊕"}
+                other{"{0}R⊕"}
+            }
+            fathom{
+                one{"{0}fm"}
+                other{"{0}fm"}
+            }
             foot{
                 one{"{0}pi"}
                 other{"{0}pi"}
+            }
+            furlong{
+                one{"{0}fur"}
+                other{"{0}fur"}
             }
             inch{
                 one{"{0}po"}
@@ -620,18 +653,6 @@ fr_CA{
             }
         }
         mass{
-            metric-ton{
-                one{"{0}t"}
-                other{"{0}t"}
-            }
-            microgram{
-                one{"{0}μg"}
-                other{"{0}μg"}
-            }
-            milligram{
-                one{"{0}mg"}
-                other{"{0}mg"}
-            }
             stone{
                 one{"{0}st"}
                 other{"{0}st"}
@@ -644,7 +665,9 @@ fr_CA{
         }
         pressure{
             inch-ofhg{
-                dnam{"inHg"}
+                dnam{"poHg"}
+                one{"{0}poHg"}
+                other{"{0}poHg"}
             }
             millimeter-ofhg{
                 one{"{0}mmHg"}
@@ -667,16 +690,93 @@ fr_CA{
                 one{"{0} °C"}
                 other{"{0} °C"}
             }
-            kelvin{
-                one{"{0}K"}
-                other{"{0}K"}
+        }
+        torque{
+            pound-force-foot{
+                dnam{"lb-pi"}
+                one{"{0}lb-pi"}
+                other{"{0}lb-pi"}
             }
         }
         volume{
-            liter{
-                dnam{"L"}
-                one{"{0}L"}
-                other{"{0}L"}
+            acre-foot{
+                dnam{"ac pi"}
+                one{"{0}ac pi"}
+                other{"{0}ac pi"}
+            }
+            cubic-yard{
+                dnam{"vg³"}
+                one{"{0}vg³"}
+                other{"{0}vg³"}
+            }
+            dessert-spoon{
+                dnam{"c. à d."}
+                one{"{0}c. à d."}
+                other{"{0}c. à d."}
+            }
+            dessert-spoon-imperial{
+                dnam{"c. à. d. imp."}
+                one{"{0}c. à. d. imp."}
+                other{"{0} c. à. d. imp."}
+            }
+            dram{
+                dnam{"dr. liq"}
+                one{"{0}dr. liq"}
+                other{"{0}dr. liq"}
+            }
+            drop{
+                dnam{"gtt."}
+                one{"{0}gtt."}
+                other{"{0}gtt."}
+            }
+            fluid-ounce{
+                dnam{"oz liq."}
+                one{"{0}oz liq."}
+                other{"{0}oz liq."}
+            }
+            fluid-ounce-imperial{
+                dnam{"oz liq imp."}
+                one{"{0}oz liq imp."}
+                other{"{0}oz liq imp."}
+            }
+            gallon-imperial{
+                dnam{"gal imp"}
+                one{"{0}/gal imp"}
+                other{"{0}/gal imp"}
+                per{"{0}/gal imp"}
+            }
+            jigger{
+                dnam{"gob. doseur"}
+                one{"{0}gob. doseur"}
+                other{"{0}gob. doseurs"}
+            }
+            pinch{
+                one{"{0}pincée"}
+                other{"{0}pincées"}
+            }
+            pint{
+                dnam{"chop"}
+                one{"{0}chop"}
+                other{"{0}chop"}
+            }
+            quart{
+                dnam{"pte"}
+                one{"{0}pte"}
+                other{"{0}pte"}
+            }
+            quart-imperial{
+                one{"{0}pte imp"}
+                other{"{0}pte imp"}
+            }
+            tablespoon{
+                dnam{"c. à s."}
+                one{"{0}c. à s."}
+                other{"{0}c. à s."}
+            }
+            teaspoon{
+                dnam{"c. à t."}
+                one{"{0}c. à t."}
+                other{"{0}c. à t."}
             }
         }
     }
@@ -738,6 +838,10 @@ fr_CA{
             }
         }
         concentr{
+            item{
+                one{"{0} item"}
+                other{"{0} items"}
+            }
             karat{
                 dnam{"carats"}
             }
@@ -751,16 +855,6 @@ fr_CA{
             }
         }
         consumption{
-            liter-per-100-kilometer{
-                dnam{"L/100 km"}
-                one{"{0} L/100 km"}
-                other{"{0} L/100 km"}
-            }
-            liter-per-kilometer{
-                dnam{"L/km"}
-                one{"{0} L/km"}
-                other{"{0} L/km"}
-            }
             mile-per-gallon{
                 one{"{0} mi/gal"}
                 other{"{0} mi/gal"}
@@ -1153,11 +1247,6 @@ fr_CA{
             }
         }
         volume{
-            centiliter{
-                dnam{"cL"}
-                one{"{0} cL"}
-                other{"{0} cL"}
-            }
             cubic-centimeter{
                 one{"{0} cm³"}
                 other{"{0} cm³"}
@@ -1186,11 +1275,6 @@ fr_CA{
                 dnam{"vg³"}
                 one{"{0} vg³"}
                 other{"{0} vg³"}
-            }
-            deciliter{
-                dnam{"dL"}
-                one{"{0} dL"}
-                other{"{0} dL"}
             }
             dessert-spoon{
                 dnam{"cuill. à d."}
@@ -1228,31 +1312,10 @@ fr_CA{
                 other{"{0} gal Imp"}
                 per{"{0}/gal Imp"}
             }
-            hectoliter{
-                dnam{"hL"}
-                one{"{0} hL"}
-                other{"{0} hL"}
-            }
             jigger{
                 dnam{"gobelet doseur"}
                 one{"{0} gobelet doseur"}
                 other{"{0} gobelets doseurs"}
-            }
-            liter{
-                dnam{"L"}
-                one{"{0} L"}
-                other{"{0} L"}
-                per{"{0}/L"}
-            }
-            megaliter{
-                dnam{"ML"}
-                one{"{0} ML"}
-                other{"{0} ML"}
-            }
-            milliliter{
-                dnam{"mL"}
-                one{"{0} mL"}
-                other{"{0} mL"}
             }
             pint{
                 dnam{"chop"}
@@ -1265,9 +1328,9 @@ fr_CA{
                 other{"{0} pte"}
             }
             quart-imperial{
-                dnam{"pte Imp"}
-                one{"{0} pte Imp"}
-                other{"{0} pte Imp"}
+                dnam{"pte imp"}
+                one{"{0} pte imp"}
+                other{"{0} pte imp"}
             }
             teaspoon{
                 dnam{"c. à t."}

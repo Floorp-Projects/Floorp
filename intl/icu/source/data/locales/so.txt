@@ -110,7 +110,7 @@ so{
             patternsLong{
                 decimalFormat{
                     1000{
-                        one{"Kun"}
+                        one{"0 kun"}
                         other{"0 Kun"}
                     }
                     10000{
@@ -537,11 +537,22 @@ so{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMd",
+            }
             availableFormats{
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, MMM d, y G"}
                 GyMMMd{"MMM d, y G"}
+                GyMd{"M/d/y GGGGG"}
                 MEd{"E, M/d"}
                 MMMEd{"E, MMM d"}
                 MMMMEd{"E, MMMM d"}
@@ -696,21 +707,33 @@ so{
                 "h:mm:ss a z",
                 "h:mm:ss a",
                 "h:mm a",
-                "EEEE, MMMM dd, y",
-                "dd MMMM y",
+                "EEEE, MMMM d, y",
+                "MMMM d, y",
                 "dd-MMM-y",
                 "dd/MM/yy",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1} 'ee' {0}",
+                "{1} 'ee' {0}",
+                "{1} 'ee' {0}",
+                "{1} 'ee' {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEdd",
+                "yMMMMdd",
+                "yMMMdd",
+                "yyMMdd",
+            }
             availableFormats{
+                EHm{"E HH:mm"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, MMM d, y G"}
                 GyMMMd{"MMM d, y G"}
+                GyMd{"M/d/y GGGGG"}
                 MEd{"E, M/d"}
                 MMMEd{"E, MMM d"}
                 MMMMEd{"E, MMMM d"}
@@ -796,7 +819,7 @@ so{
                         "Axd",
                         "Isn",
                         "Tldo",
-                        "Arbc",
+                        "Arbaco",
                         "Khms",
                         "Jmc",
                         "Sbti",
@@ -815,7 +838,11 @@ so{
             dayPeriod{
                 stand-alone{
                     abbreviated{
-                        am{"GH"}
+                        am{"AM"}
+                        pm{"GD"}
+                    }
+                    narrow{
+                        am{"AM"}
                         pm{"GD"}
                     }
                     wide{
@@ -826,12 +853,12 @@ so{
             }
             eras{
                 abbreviated{
-                    "CH",
-                    "CD",
+                    "BC",
+                    "AD",
                 }
                 abbreviated%variant{
                     "KTM",
-                    "TM",
+                    "CE",
                 }
                 narrow{
                     "B",
@@ -1057,6 +1084,12 @@ so{
                         "R3",
                         "R4",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
                     wide{
                         "Rubaca 1aad",
                         "Rubaca 2aad",
@@ -1101,9 +1134,12 @@ so{
             }
         }
         islamic{
+            availableFormats{
+                GyMd{"M/d/y GGGGG"}
+            }
             eras{
                 abbreviated{
-                    "HD",
+                    "AH",
                 }
                 narrow{
                     "AH",
@@ -1125,7 +1161,7 @@ so{
                         "Sha.",
                         "Ram.",
                         "Shaw.",
-                        "Dhuʻl-Q.",
+                        "Dul’-Qicda.",
                         "Dhuʻl-H.",
                     }
                     wide{
@@ -1354,10 +1390,10 @@ so{
             dn{"saman"}
         }
         era-narrow{
-            dn{"smn"}
+            dn{"saman"}
         }
         era-short{
-            dn{"smn"}
+            dn{"saman"}
         }
         fri{
             relative{
@@ -1918,6 +1954,8 @@ so{
         }
     }
     measurementSystemNames{
+        UK{"Boqortooyada Midawday"}
+        US{"Maraykan"}
         metric{"Metrik"}
     }
     parse{

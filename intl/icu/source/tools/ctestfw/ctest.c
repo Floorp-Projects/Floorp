@@ -126,6 +126,7 @@ int ERR_MSG =1; /* error messages will be displayed by default*/
 int QUICK = 1;  /* Skip some of the slower tests? */
 int WARN_ON_MISSING_DATA = 0; /* Reduce data errs to warnings? */
 UTraceLevel ICU_TRACE = UTRACE_OFF;  /* ICU tracing level */
+int WRITE_GOLDEN_DATA = 0; /* Overwrite golden data files? */
 size_t MINIMUM_MEMORY_SIZE_FAILURE = (size_t)-1; /* Minimum library memory allocation window that will fail. */
 size_t MAXIMUM_MEMORY_SIZE_FAILURE = (size_t)-1; /* Maximum library memory allocation window that will fail. */
 static const char *ARGV_0 = "[ALL]";
@@ -435,7 +436,7 @@ static void iterateTestsWithLevel ( const TestNode* root,
 
     INDENT_LEVEL = depth-1; /* root */
 
-    /* we want these messages to be at 0 indent. so just push the indent level breifly. */
+    /* we want these messages to be at 0 indent. so just push the indent level briefly. */
     if(mode==SHOWTESTS) {
     	log_testinfo("---%s%c\n",pathToFunction, nodeList[i]->test?' ':TEST_SEPARATOR );
     }
@@ -1069,6 +1070,9 @@ initArgs( int argc, const char* const argv[], ArgHandlerPtr argHandler, void *co
         else if (strcmp( argv[i], "-t_oc") == 0) {
             ICU_TRACE = UTRACE_OPEN_CLOSE;
         }
+        else if (strcmp( argv[i], "-G") == 0) {
+            WRITE_GOLDEN_DATA = 1;
+        }
         else if (strcmp( argv[i], "-h" )==0 || strcmp( argv[i], "--help" )==0)
         {
             help( argv[0] );
@@ -1202,6 +1206,7 @@ static void help ( const char *argv0 )
     printf("    -m n[-q] Min-Max memory size that will cause an allocation failure.\n");
     printf("        The default is the maximum value of size_t. Max is optional.\n");
     printf("    -r  Repeat tests after calling u_cleanup \n");
+    printf("    -G  Write golden data files \n");
     printf("    [/subtest]  To run a subtest \n");
     printf("    eg: to run just the utility tests type: cintltest /tsutil) \n");
 }
@@ -1221,6 +1226,8 @@ getTestOption ( int32_t testOption ) {
             return ERR_MSG;
         case ICU_TRACE_OPTION:
             return ICU_TRACE;
+        case WRITE_GOLDEN_DATA_OPTION:
+            return WRITE_GOLDEN_DATA;
         default :
             return 0;
     }
@@ -1248,6 +1255,8 @@ setTestOption ( int32_t testOption, int32_t value) {
         case ICU_TRACE_OPTION:
             ICU_TRACE = (UTraceLevel)value;
             break;
+        case WRITE_GOLDEN_DATA_OPTION:
+            WRITE_GOLDEN_DATA = value;
         default :
             break;
     }

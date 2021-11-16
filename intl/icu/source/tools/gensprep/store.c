@@ -64,7 +64,7 @@
  *
  * UTrie stringPrepTrie;                        -- size in bytes=indexes[_SPREP_INDEX_TRIE_SIZE]
  *
- * uint16_t mappingTable[];                     -- Contains the sequecence of code units that the code point maps to
+ * uint16_t mappingTable[];                     -- Contains the sequence of code units that the code point maps to
  *                                                 size in bytes = indexes[_SPREP_INDEX_MAPPING_DATA_SIZE]
  *
  * The indexes array contains the following values:
@@ -459,7 +459,7 @@ storeMapping(uint32_t codepoint, uint32_t* mapping,int32_t length,
     mappingDataCapacity += adjustedLen;
 
     if(U_FAILURE(*status)){
-        fprintf(stderr, "Failed to put entries into the hastable. Error: %s\n", u_errorName(*status));
+        fprintf(stderr, "Failed to put entries into the hash table. Error: %s\n", u_errorName(*status));
         exit(*status);
     }
 }

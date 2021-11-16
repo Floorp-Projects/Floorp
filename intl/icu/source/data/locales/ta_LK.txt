@@ -14,10 +14,20 @@ ta_LK{
                 "d MMM, y",
                 "d/M/yy",
                 "{1}, {0}",
-                "{1} ’அன்று’ {0}",
-                "{1} ’அன்று’ {0}",
+                "{1} அன்று {0}",
+                "{1} அன்று {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
             }
         }
     }

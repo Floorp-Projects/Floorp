@@ -7,8 +7,8 @@
 #
 #         Line Breaking Rules
 #         Implement default line breaking as defined by
-#         Unicode Standard Annex #14 Revision 44 for Unicode 13.0
-#         http://www.unicode.org/reports/tr14/, with the following modification:
+#         Unicode Standard Annex #14 (https://www.unicode.org/reports/tr14/)
+#         for Unicode 14.0, with the following modification:
 #
 #         Boundaries between hyphens and following letters are suppressed when
 #         there is a boundary preceding the hyphen. See rule 20.9
@@ -76,6 +76,8 @@ $ZWJ = [:LineBreak = ZWJ:];
 
 $OP30 = [$OP - [\p{ea=F}\p{ea=W}\p{ea=H}]];
 $CP30 = [$CP - [\p{ea=F}\p{ea=W}\p{ea=H}]];
+
+$ExtPictUnassigned = [\p{Extended_Pictographic} & \p{Cn}];
 
 # By LB9, a ZWJ also behaves as a CM. Including it in the definition of CM avoids having to explicitly
 #         list it in the numerous rules that use CM.
@@ -183,7 +185,7 @@ $GL $CM* .;
 
 
 
-# LB 13   Don't break before ']' or '!' or or '/', even after spaces.
+# LB 13   Don't break before ']' or '!' or '/', even after spaces.
 #
 $LB8NonBreaks $CL;
 $CAN_CM $CM*  $CL;
@@ -328,7 +330,6 @@ $JL $CM* ($JL | $JV | $H2 | $H3);
 ($JT | $H3) $CM* $JT;
 
 # LB 27  Treat korean Syllable Block the same as ID  (don't break it)
-($JL | $JV | $JT | $H2 | $H3) $CM* $IN;
 ($JL | $JV | $JT | $H2 | $H3) $CM* $PO;
 $PR $CM* ($JL | $JV | $JT | $H2 | $H3);
 
@@ -355,8 +356,9 @@ $RI $CM* $RI $CM* [$BK $CR $LF $NL $SP $ZW $WJ $CL $CP $EX $IS $SY $GL $QU $BA $
 #       because of the chain-out behavior difference. The rule must chain out only from the [set characters],
 #       not from the preceding $RI or $CM, which it would be able to do if the set were optional.
 
-# LB 30b Do not break between an Emoji Base and an Emoji Modifier
+# LB30b Do not break between an emoji base (or potential emoji) and an emoji modifier.
 $EB $CM* $EM;
+$ExtPictUnassigned $CM* $EM;
 
 # LB 31 Break everywhere else.
 #       Match a single code point if no other rule applies.

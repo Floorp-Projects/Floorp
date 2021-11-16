@@ -2,10 +2,11 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 vi{
+    AuxExemplarCharacters{"[f j w z]"}
     ExemplarCharacters{
-        "[a à ả ã á ạ ă ằ ẳ ẵ ắ ặ â ầ ẩ ẫ ấ ậ b c d đ e è ẻ ẽ é ẹ ê ề ể ễ ế ệ f g h i"
-        " ì ỉ ĩ í ị j k l m n o ò ỏ õ ó ọ ô ồ ổ ỗ ố ộ ơ ờ ở ỡ ớ ợ p q r s t u ù ủ ũ ú"
-        " ụ ư ừ ử ữ ứ ự v w x y ỳ ỷ ỹ ý ỵ z]"
+        "[a à ả ã á ạ ă ằ ẳ ẵ ắ ặ â ầ ẩ ẫ ấ ậ b c d đ e è ẻ ẽ é ẹ ê ề ể ễ ế ệ g h i ì"
+        " ỉ ĩ í ị k l m n o ò ỏ õ ó ọ ô ồ ổ ỗ ố ộ ơ ờ ở ỡ ớ ợ p q r s t u ù ủ ũ ú ụ ư"
+        " ừ ử ữ ứ ự v x y ỳ ỷ ỹ ý ỵ]"
     }
     ExemplarCharactersIndex{"[A Ă Â B C D Đ E Ê F G H I J K L M N O Ô Ơ P Q R S T U Ư V W X Y Z]"}
     ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
@@ -161,6 +162,14 @@ vi{
                 superscriptingExponent{"×"}
             }
         }
+        minimalPairs{
+            ordinal{
+                other{"Theo lối rẽ thứ {0} bên phải."}
+            }
+            plural{
+                other{"{0} ngày"}
+            }
+        }
         minimumGroupingDigits{"1"}
     }
     calendar{
@@ -179,6 +188,16 @@ vi{
                 "{1} 'lúc' {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEdd",
+                "GyMdd",
+                "GyMMdd",
+                "GGGGGyMMdd",
             }
             availableFormats{
                 M{"'tháng' L"}
@@ -208,6 +227,16 @@ vi{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "UMMMMEEEEdd",
+                "UMdd",
+                "UMMdd",
+                "yMMdd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -219,6 +248,9 @@ vi{
                 Gy{"r U"}
                 GyMMM{"r(U) MMM"}
                 GyMMMEd{"r(U) MMM d, E"}
+                GyMMMM{"r(U) MMMM"}
+                GyMMMMEd{"E, d/MMMM r(U)"}
+                GyMMMMd{"d/MMMM r(U)"}
                 GyMMMd{"r MMM d"}
                 H{"HH"}
                 Hm{"HH:mm"}
@@ -247,6 +279,8 @@ vi{
                 yyyyMMM{"r(U) MMM"}
                 yyyyMMMEd{"r(U) MMM d, E"}
                 yyyyMMMM{"r(U) MMMM"}
+                yyyyMMMMEd{"E, d/MMMM r(U)"}
+                yyyyMMMMd{"d/MMMM r(U)"}
                 yyyyMMMd{"r MMM d"}
                 yyyyMd{"r-MM-dd"}
                 yyyyQQQ{"r(U) QQQ"}
@@ -668,6 +702,16 @@ vi{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMEEEEdd",
+                "GyMdd",
+                "GyMMdd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
                 Bh{"h B"}
                 Bhm{"h:mm B"}
@@ -684,6 +728,7 @@ vi{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM, y G"}
                 GyMMMd{"d MMM, y G"}
+                GyMd{"dd/MM/y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -885,6 +930,16 @@ vi{
                 "{0}, {1}",
                 "{0}, {1}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yMMdd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -904,6 +959,7 @@ vi{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, dd/MM/y G"}
                 GyMMMd{"dd MMM, y G"}
+                GyMd{"dd/MM/y GGGGG"}
                 H{"HH"}
                 Hm{"H:mm"}
                 Hms{"HH:mm:ss"}
@@ -1520,6 +1576,16 @@ vi{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEdd",
+                "GyMdd",
+                "GyMMdd",
+                "GyMMdd",
+            }
         }
         persian{
             monthNames{
@@ -1600,6 +1666,16 @@ vi{
                 "{1} 'lúc' {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEdd",
+                "GyMdd",
+                "GyMMdd",
+                "GGGGGyMMdd",
             }
             availableFormats{
                 M{"'tháng' L"}

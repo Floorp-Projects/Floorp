@@ -468,7 +468,7 @@ hr{
             "hrvatski dinar",
         }
         HRK{
-            "HRK",
+            "kn",
             "hrvatska kuna",
         }
         HTG{
@@ -597,7 +597,7 @@ hr{
         }
         LSL{
             "LSL",
-            "lesoto loti",
+            "lesotski loti",
         }
         LTL{
             "LTL",
@@ -2055,9 +2055,9 @@ hr{
             other{"liberijskih dolara"}
         }
         LSL{
-            few{"lesoto lotija"}
-            one{"lesoto loti"}
-            other{"lesoto lotija"}
+            few{"lesotska lotija"}
+            one{"lesotski loti"}
+            other{"lesotskih lotija"}
         }
         LTL{
             few{"litavska litasa"}

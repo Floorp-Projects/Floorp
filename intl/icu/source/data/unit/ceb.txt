@@ -1305,8 +1305,8 @@ ceb{
             }
             second{
                 dnam{"mga segundo"}
-                one{"{0} ka segundo"}
-                other{"{0} ka segundo"}
+                one{"{0}segundo"}
+                other{"{0}segundo"}
                 per{"{0}/segundo"}
             }
             week{

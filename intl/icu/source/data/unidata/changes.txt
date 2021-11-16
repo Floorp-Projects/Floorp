@@ -10,42 +10,342 @@
 *
 *   created on: 2004may06
 *   created by: Markus W. Scherer
-*
+
 * change log for Unicode updates
-*
-* For each new Unicode version, during the beta period,
-* I copy the change log for the previous version to the top of this file.
-* I adjust the versions, tickets, URLs, and paths.
-* I work my way through the steps listed in the log, top to bottom,
-* adjusting the log as necessary.
-* I report problems to the UTC and/or CLDR and/or ICU.
-* Before the data is final, I "turn the crank" several more times,
-* using appropriate subsets of the steps.
+
+For an overview, see https://unicode-org.github.io/icu/processes/unicode-update
 
 ---------------------------------------------------------------------------- ***
 
 * New ISO 15924 script codes
 
-Starting with ICU 55, we do not add UScriptCode constants for new scripts any more
-until they are encoded in Unicode,
-or can be assumed to be encoded in the next Unicode version.
-Script enum constant names want to follow the Unicode script property value aliases,
-which are assigned only when the scripts are encoded.
-When we encode scripts early and guess wrong, then we have confusing enum constants
-and have sometimes added aliases.
+Normally, add new script codes as part of a Unicode update.
+See https://unicode-org.github.io/icu/processes/release/tasks/standards#update-script-code-enums
+and see the change logs below.
 
-Variant script codes like Latf and Aran that are not subject to separate encoding
-can be added at any time.
-(For example, Aran could be added as USCRIPT_ARABIC_NASTALIQ.)
+---------------------------------------------------------------------------- ***
 
-We add script codes used in CLDR or in the spoof checker.
-This includes combination/alias codes like Hanb and Jamo.
-See http://unicode.org/reports/tr35/#unicode_script_subtag_validity
-and look for "alias" on http://unicode.org/iso15924/iso15924-codes.html
+Unicode 14.0 update for ICU 70
 
-We add special Z* script codes like Zsye.
+https://www.unicode.org/versions/Unicode14.0.0/
+https://www.unicode.org/versions/beta-14.0.0.html
+https://www.unicode.org/Public/14.0.0/ucd/
+https://www.unicode.org/reports/uax-proposed-updates.html
+https://www.unicode.org/reports/tr44/tr44-27.html
 
-For new script codes see http://www.unicode.org/iso15924/codechanges.html
+https://unicode-org.atlassian.net/browse/CLDR-14801
+https://unicode-org.atlassian.net/browse/ICU-21635
+
+* Command-line environment setup
+
+export UNICODE_DATA=~/unidata/uni14/20210903
+export CLDR_SRC=~/cldr/uni/src
+export ICU_ROOT=~/icu/uni
+export ICU_SRC=$ICU_ROOT/src
+export ICUDT=icudt70b
+export ICU4C_DATA_IN=$ICU_SRC/icu4c/source/data/in
+export ICU4C_UNIDATA=$ICU_SRC/icu4c/source/data/unidata
+export LD_LIBRARY_PATH=$ICU_ROOT/dbg/icu4c/lib
+
+*** Unicode version numbers
+- makedata.mak
+- uchar.h
+- com.ibm.icu.util.VersionInfo
+- com.ibm.icu.dev.test.lang.UCharacterTest.VERSION_
+
+- Run ICU4C "configure" _after_ updating the Unicode version number in uchar.h
+    so that the makefiles see the new version number.
+  cd $ICU_ROOT/dbg/icu4c
+  ICU_DATA_BUILDTOOL_OPTS=--include_uni_core_data ../../../doconfig-clang-dbg.sh
+
+*** data files & enums & parser code
+
+* download files
+- same as for the early Unicode Tools setup and data refresh:
+  https://github.com/unicode-org/unicodetools/blob/main/docs/index.md
+  https://github.com/unicode-org/unicodetools/blob/main/docs/inputdata.md
+- mkdir -p $UNICODE_DATA
+- download Unicode files into $UNICODE_DATA
+  + subfolders: emoji, idna, security, ucd, uca
+  + inside ucd: extract Unihan.zip to "here" (.../ucd/Unihan/*.txt), delete Unihan.zip
+  + split Unihan into single-property files
+    ~/unitools/mine/src$ py/splitunihan.py $UNICODE_DATA/ucd/Unihan
+  + get GraphemeBreakTest-cldr.txt from $CLDR_SRC/common/properties/segments/GraphemeBreakTest.txt
+    or from the UCD/cldr/ output folder of the Unicode Tools:
+    Since Unicode 12/CLDR 35/ICU 64 CLDR uses modified break rules.
+  cp $CLDR_SRC/common/properties/segments/GraphemeBreakTest.txt icu4c/source/test/testdata
+    or
+  cp ~/unitools/mine/Generated/UCD/d19/cldr/GraphemeBreakTest-cldr-14.0.0d19.txt icu4c/source/test/testdata/GraphemeBreakTest.txt
+
+* for manual diffs and for Unicode Tools input data updates:
+  remove version suffixes from the file names
+    ~$ unidata/desuffixucd.py $UNICODE_DATA
+  (see https://github.com/unicode-org/unicodetools/blob/main/docs/inputdata.md)
+
+* process and/or copy files
+- $ICU_SRC/tools/unicode$ py/preparseucd.py $UNICODE_DATA $ICU_SRC
+  + This writes files (especially ppucd.txt) to the ICU4C unidata and testdata subfolders.
+  + For debugging, and tweaking how ppucd.txt is written,
+    the tool has an --only_ppucd option:
+    py/preparseucd.py $UNICODE_DATA --only_ppucd path/to/ppucd/outputfile
+
+- cp -v $UNICODE_DATA/security/confusables.txt $ICU4C_UNIDATA
+
+* new constants for new property values
+- preparseucd.py error:
+    ValueError: missing uchar.h enum constants for some property values:
+    [(u'blk', set([u'Toto', u'Tangsa', u'Cypro_Minoan', u'Arabic_Ext_B', u'Vithkuqi', u'Old_Uyghur', u'Latin_Ext_F', u'UCAS_Ext_A', u'Kana_Ext_B', u'Ethiopic_Ext_B', u'Latin_Ext_G', u'Znamenny_Music'])),
+    (u'jg', set([u'Vertical_Tail', u'Thin_Yeh'])),
+    (u'sc', set([u'Toto', u'Ougr', u'Vith', u'Tnsa', u'Cpmn']))]
+  = PropertyValueAliases.txt new property values (diff old & new .txt files)
+    ~/unidata$ diff -u uni13/20200304/ucd/PropertyValueAliases.txt uni14/20210609/ucd/PropertyValueAliases.txt | egrep '^[-+][a-zA-Z]'
+    +age; 14.0                             ; V14_0
+    +blk; Arabic_Ext_B                     ; Arabic_Extended_B
+    +blk; Cypro_Minoan                     ; Cypro_Minoan
+    +blk; Ethiopic_Ext_B                   ; Ethiopic_Extended_B
+    +blk; Kana_Ext_B                       ; Kana_Extended_B
+    +blk; Latin_Ext_F                      ; Latin_Extended_F
+    +blk; Latin_Ext_G                      ; Latin_Extended_G
+    +blk; Old_Uyghur                       ; Old_Uyghur
+    +blk; Tangsa                           ; Tangsa
+    +blk; Toto                             ; Toto
+    +blk; UCAS_Ext_A                       ; Unified_Canadian_Aboriginal_Syllabics_Extended_A
+    +blk; Vithkuqi                         ; Vithkuqi
+    +blk; Znamenny_Music                   ; Znamenny_Musical_Notation
+    +jg ; Thin_Yeh                         ; Thin_Yeh
+    +jg ; Vertical_Tail                    ; Vertical_Tail
+    +sc ; Cpmn                             ; Cypro_Minoan
+    +sc ; Ougr                             ; Old_Uyghur
+    +sc ; Tnsa                             ; Tangsa
+    +sc ; Toto                             ; Toto
+    +sc ; Vith                             ; Vithkuqi
+  -> add new blocks to uchar.h before UBLOCK_COUNT
+    use long property names for enum constants,
+    for the trailing comment get the block start code point: diff old & new Blocks.txt
+    ~/unidata$ diff -u uni13/20200304/ucd/Blocks.txt uni14/20210609/ucd/Blocks.txt | egrep '^[-+][0-9A-Z]'
+    +0870..089F; Arabic Extended-B
+    +10570..105BF; Vithkuqi
+    +10780..107BF; Latin Extended-F
+    +10F70..10FAF; Old Uyghur
+    -11700..1173F; Ahom
+    +11700..1174F; Ahom
+    +11AB0..11ABF; Unified Canadian Aboriginal Syllabics Extended-A
+    +12F90..12FFF; Cypro-Minoan
+    +16A70..16ACF; Tangsa
+    -18D00..18D8F; Tangut Supplement
+    +18D00..18D7F; Tangut Supplement
+    +1AFF0..1AFFF; Kana Extended-B
+    +1CF00..1CFCF; Znamenny Musical Notation
+    +1DF00..1DFFF; Latin Extended-G
+    +1E290..1E2BF; Toto
+    +1E7E0..1E7FF; Ethiopic Extended-B
+    (ignore blocks whose end code point changed)
+  -> add new blocks to UCharacter.UnicodeBlock IDs
+    Eclipse find     UBLOCK_([^ ]+) = ([0-9]+), (/.+)
+            replace  public static final int \1_ID = \2; \3
+  -> add new blocks to UCharacter.UnicodeBlock objects
+    Eclipse find     UBLOCK_([^ ]+) = [0-9]+, (/.+)
+            replace  public static final UnicodeBlock \1 = new UnicodeBlock("\1", \1_ID); \2
+  -> add new scripts to uscript.h & com.ibm.icu.lang.UScript
+    Eclipse find     USCRIPT_([^ ]+) *= ([0-9]+),(/.+)
+            replace  public static final int \1 = \2; \3
+  -> for new scripts: fix expectedLong names in cintltst/cucdapi.c/TestUScriptCodeAPI()
+      and in com.ibm.icu.dev.test.lang.TestUScript.java
+  -> add new joining groups to uchar.h & UCharacter.JoiningGroup
+
+* update Script metadata: SCRIPT_PROPS[] in uscript_props.cpp & UScript.ScriptMetadata
+    (not strictly necessary for NOT_ENCODED scripts)
+  $ICU_SRC/tools/unicode$ py/parsescriptmetadata.py $ICU_SRC/icu4c/source/common/unicode/uscript.h $CLDR_SRC/common/properties/scriptMetadata.txt
+
+* build ICU
+  to make sure that there are no syntax errors
+
+  $ICU_ROOT/dbg/icu4c$ echo;echo; date; make -j7 tests &> out.txt ; tail -n 30 out.txt ; date
+
+* update spoof checker UnicodeSet initializers:
+    inclusionPat & recommendedPat in i18n/uspoof.cpp
+    INCLUSION & RECOMMENDED in SpoofChecker.java
+- make sure that the Unicode Tools tree contains the latest security data files
+- go to Unicode Tools org.unicode.text.tools.RecommendedSetGenerator
+- run the tool (no special environment variables needed)
+- copy & paste from the Console output into the .cpp & .java files
+
+* Bazel build process
+
+See https://unicode-org.github.io/icu/processes/unicode-update#bazel-build-process
+for an overview and for setup instructions.
+
+Consider running `bazelisk --version` outside of the $ICU_SRC folder
+to find out the latest `bazel` version, and
+copying that version number into the $ICU_SRC/.bazeliskrc config file.
+(Revert if you find incompatibilities, or, better, update our build & config files.)
+
+* generate data files
+
+- remember to define the environment variables
+  (see the start of the section for this Unicode version)
+- cd $ICU_SRC
+- optional but not necessary:
+    bazelisk clean
+- build/bootstrap/generate new files:
+    icu4c/source/data/unidata/generate.sh
+
+* update uts46test.cpp and UTS46Test.java if there are new characters that are equivalent to
+  sequences with non-LDH ASCII (that is, their decompositions contain '=' or similar)
+- grep IdnaMappingTable.txt or uts46.txt for "disallowed_STD3_valid" on non-ASCII characters
+- Unicode 6.0..14.0: U+2260, U+226E, U+226F
+- nothing new in this Unicode version, no test file to update
+
+* run & fix ICU4C tests
+- fix Unicode Tools class Segmenter to generate correct *BreakTest.txt files
+- update CLDR GraphemeBreakTest.txt
+    cd ~/unitools/mine/Generated
+    cp UCD/d22d/cldr/GraphemeBreakTest-cldr.txt $CLDR_SRC/common/properties/segments/GraphemeBreakTest.txt
+    cp UCD/d22d/cldr/GraphemeBreakTest-cldr.html $CLDR_SRC/common/properties/segments/GraphemeBreakTest.html
+    cp $CLDR_SRC/common/properties/segments/GraphemeBreakTest.txt $ICU_SRC/icu4c/source/test/testdata
+- Andy helps with RBBI & spoof check test failures
+
+* collation: CLDR collation root, UCA DUCET
+
+- UCA DUCET goes into Mark's Unicode tools,
+  and a tool-tailored version goes into CLDR, see
+    https://github.com/unicode-org/unicodetools/blob/main/docs/uca/index.md
+
+- update source/data/unidata/FractionalUCA.txt with FractionalUCA_SHORT.txt
+    cp -v $CLDR_SRC/common/uca/FractionalUCA_SHORT.txt $ICU4C_UNIDATA/FractionalUCA.txt
+- update source/data/unidata/UCARules.txt with UCA_Rules_SHORT.txt
+    cp -v $ICU4C_UNIDATA/UCARules.txt /tmp/UCARules-old.txt
+    (note removing the underscore before "Rules")
+    cp -v $CLDR_SRC/common/uca/UCA_Rules_SHORT.txt $ICU4C_UNIDATA/UCARules.txt
+- restore TODO diffs in UCARules.txt
+    meld /tmp/UCARules-old.txt $ICU4C_UNIDATA/UCARules.txt
+- update (ICU4C)/source/test/testdata/CollationTest_*.txt
+  and (ICU4J)/main/tests/collate/src/com/ibm/icu/dev/data/CollationTest_*.txt
+  from the CLDR root files (..._CLDR_..._SHORT.txt)
+    cp -v $CLDR_SRC/common/uca/CollationTest_CLDR_NON_IGNORABLE_SHORT.txt $ICU_SRC/icu4c/source/test/testdata/CollationTest_NON_IGNORABLE_SHORT.txt
+    cp -v $CLDR_SRC/common/uca/CollationTest_CLDR_SHIFTED_SHORT.txt $ICU_SRC/icu4c/source/test/testdata/CollationTest_SHIFTED_SHORT.txt
+    cp -v $ICU_SRC/icu4c/source/test/testdata/CollationTest_*.txt $ICU_SRC/icu4j/main/tests/collate/src/com/ibm/icu/dev/data
+- if CLDR common/uca/unihan-index.txt changes, then update
+  CLDR common/collation/root.xml <collation type="private-unihan">
+  and regenerate (or update in parallel) $ICU_SRC/icu4c/source/data/coll/root.txt
+
+- generate data files, as above (generate.sh), now to pick up new collation data
+- update CollationFCD.java:
+  copy & paste the initializers of lcccIndex[] etc. from
+    ICU4C/source/i18n/collationfcd.cpp to
+    ICU4J/main/classes/collate/src/com/ibm/icu/impl/coll/CollationFCD.java
+- rebuild ICU4C (make clean, make check, as usual)
+
+* Unihan collators
+    https://github.com/unicode-org/unicodetools/blob/main/docs/unihan.md
+- run Unicode Tools GenerateUnihanCollators & GenerateUnihanCollatorFiles,
+  check CLDR diffs, copy to CLDR, test CLDR, ... as documented there
+- generate ICU zh collation data
+    instructions inspired by
+    https://github.com/unicode-org/icu/blob/main/tools/cldr/cldr-to-icu/README.txt and
+    https://github.com/unicode-org/icu/blob/main/icu4c/source/data/cldr-icu-readme.txt
+  + setup:
+    export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+        (didn't work without setting JAVA_HOME,
+         nor with the Google default of /usr/local/buildtools/java/jdk
+         [Google security limitations in the XML parser])
+    export TOOLS_ROOT=~/icu/uni/src/tools
+    export CLDR_DIR=~/cldr/uni/src
+    export CLDR_DATA_DIR=~/cldr/uni/src
+        (pointing to the "raw" data, not cldr-staging/.../production should be ok for the relevant files)
+    cd "$TOOLS_ROOT/cldr/lib"
+    ./install-cldr-jars.sh "$CLDR_DIR"
+  + generate the files we need
+    cd "$TOOLS_ROOT/cldr/cldr-to-icu"
+    ant -f build-icu-data.xml -DoutDir=/tmp/icu -DoutputTypes=coll,transforms -DlocaleIdFilter='zh.*'
+  + diff
+    cd $ICU_SRC
+    meld icu4c/source/data/coll/zh.txt /tmp/icu/coll/zh.txt
+    meld icu4c/source/data/translit/Hani_Latn.txt /tmp/icu/translit/Hani_Latn.txt
+  + copy into the source tree
+    cd $ICU_SRC
+    cp /tmp/icu/coll/zh.txt icu4c/source/data/coll/zh.txt
+    cp /tmp/icu/translit/Hani_Latn.txt icu4c/source/data/translit/Hani_Latn.txt
+- rebuild ICU4C
+
+* run & fix ICU4C tests, now with new CLDR collation root data
+- run all tests with the collation test data *_SHORT.txt or the full files
+  (the full ones have comments, useful for debugging)
+- note on intltest: if collate/UCAConformanceTest fails, then
+  utility/MultithreadTest/TestCollators will fail as well;
+  fix the conformance test before looking into the multi-thread test
+
+* update Java data files
+- refresh just the UCD/UCA-related/derived files, just to be safe
+- see (ICU4C)/source/data/icu4j-readme.txt
+- mkdir -p /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT
+- $ICU_ROOT/dbg/icu4c$ make ICU4J_ROOT=/tmp/icu4j icu4j-data-install
+    NOTE: If you get the error "No rule to make target 'out/build/icudt70l/uprops.icu'",
+    you need to reconfigure with unicore data; see the "configure" line above.
+  output:
+    ...
+    make[1]: Entering directory '/usr/local/google/home/mscherer/icu/uni/dbg/icu4c/data'
+    mkdir -p ./out/icu4j/com/ibm/icu/impl/data/icudt70b
+    mkdir -p ./out/icu4j/tzdata/com/ibm/icu/impl/data/icudt70b
+    LD_LIBRARY_PATH=../lib:../stubdata:../tools/ctestfw:$LD_LIBRARY_PATH  ../bin/icupkg ./out/tmp/icudt70l.dat ./out/icu4j/icudt70b.dat -s ./out/build/icudt70l -x '*' -tb -d ./out/icu4j/com/ibm/icu/impl/data/icudt70b
+    mv ./out/icu4j/"com/ibm/icu/impl/data/icudt70b/zoneinfo64.res" ./out/icu4j/"com/ibm/icu/impl/data/icudt70b/metaZones.res" ./out/icu4j/"com/ibm/icu/impl/data/icudt70b/timezoneTypes.res" ./out/icu4j/"com/ibm/icu/impl/data/icudt70b/windowsZones.res" "./out/icu4j/tzdata/com/ibm/icu/impl/data/icudt70b"
+    jar cf ./out/icu4j/icudata.jar -C ./out/icu4j com/ibm/icu/impl/data/icudt70b/
+    mkdir -p /tmp/icu4j/main/shared/data
+    cp ./out/icu4j/icudata.jar /tmp/icu4j/main/shared/data
+    jar cf ./out/icu4j/icutzdata.jar -C ./out/icu4j/tzdata com/ibm/icu/impl/data/icudt70b/
+    mkdir -p /tmp/icu4j/main/shared/data
+    cp ./out/icu4j/icutzdata.jar /tmp/icu4j/main/shared/data
+    make[1]: Leaving directory '/usr/local/google/home/mscherer/icu/uni/dbg/icu4c/data'
+- copy the big-endian Unicode data files to another location,
+  separate from the other data files,
+  and then refresh ICU4J
+    cd $ICU_ROOT/dbg/icu4c/data/out/icu4j
+    mkdir -p /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT/coll
+    mkdir -p /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT/brkitr
+    cp -v com/ibm/icu/impl/data/$ICUDT/confusables.cfu /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT
+    cp -v com/ibm/icu/impl/data/$ICUDT/*.icu /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT
+    rm /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT/cnvalias.icu
+    cp -v com/ibm/icu/impl/data/$ICUDT/*.nrm /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT
+    cp -v com/ibm/icu/impl/data/$ICUDT/coll/* /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT/coll
+    cp -v com/ibm/icu/impl/data/$ICUDT/brkitr/* /tmp/icu4j/com/ibm/icu/impl/data/$ICUDT/brkitr
+    jar uvf $ICU_SRC/icu4j/main/shared/data/icudata.jar -C /tmp/icu4j com/ibm/icu/impl/data/$ICUDT
+
+* When refreshing all of ICU4J data from ICU4C
+- $ICU_ROOT/dbg/icu4c$ make ICU4J_ROOT=/tmp/icu4j icu4j-data-install
+- cp /tmp/icu4j/main/shared/data/icudata.jar $ICU_SRC/icu4j/main/shared/data
+or
+- $ICU_ROOT/dbg/icu4c$ make ICU4J_ROOT=$ICU_SRC/icu4j icu4j-data-install
+
+* refresh Java test .txt files
+- copy new .txt files into ICU4J's main/tests/core/src/com/ibm/icu/dev/data/unicode
+    cd $ICU_SRC/icu4c/source/data/unidata
+    cp -v confusables.txt confusablesWholeScript.txt NormalizationCorrections.txt NormalizationTest.txt SpecialCasing.txt UnicodeData.txt $ICU_SRC/icu4j/main/tests/core/src/com/ibm/icu/dev/data/unicode
+    cd ../../test/testdata
+    cp -v BidiCharacterTest.txt BidiTest.txt IdnaTestV2.txt $ICU_SRC/icu4j/main/tests/core/src/com/ibm/icu/dev/data/unicode
+    cp -v $UNICODE_DATA/ucd/CompositionExclusions.txt $ICU_SRC/icu4j/main/tests/core/src/com/ibm/icu/dev/data/unicode
+
+* run & fix ICU4J tests
+
+*** API additions
+- send notice to icu-design about new born-@stable API (enum constants etc.)
+
+*** CLDR numbering systems
+- look for new sets of decimal digits (gc=ND & nv=4) and add to CLDR
+  for example:
+    ~/icu/mine/src$ egrep ';gc=Nd.+;nv=4' icu4c/source/data/unidata/ppucd.txt > /tmp/icu/nv4-13.txt
+    ~/icu/uni/src$ egrep ';gc=Nd.+;nv=4' icu4c/source/data/unidata/ppucd.txt > /tmp/icu/nv4-14.txt
+    ~/icu/uni/src$ diff -u /tmp/icu/nv4-13.txt /tmp/icu/nv4-14.txt
+    -->
+    +cp;16AC4;-Alpha;gc=Nd;-IDS;lb=NU;na=TANGSA DIGIT FOUR;nt=De;nv=4;SB=NU;WB=NU;-XIDS
+  Unicode 14:
+    tnsa 16AC0..16AC9 Tangsa
+    https://github.com/unicode-org/cldr/pull/1326
+
+*** merge the Unicode update branches back onto the trunk
+- do not merge the icudata.jar and testdata.jar,
+  instead rebuild them from merged & tested ICU4C
+- make sure that changes to Unicode tools are checked in:
+  https://github.com/unicode-org/unicodetools
 
 ---------------------------------------------------------------------------- ***
 
@@ -2313,7 +2613,7 @@ or
 
 ---------------------------------------------------------------------------- ***
 
-New script codes early in ICU 58: http://bugs.icu-project.org/trac/ticket/11764
+New script codes early in ICU 58: https://unicode-org.atlassian.net/browse/ICU-11764
 
 Adding
 - new scripts in Unicode 9: Adlm, Bhks, Marc, Newa, Osge
@@ -2341,7 +2641,7 @@ SRC_DATA_IN=$ICU_SRC_DIR/source/data/in
 UNIDATA=$ICU_SRC_DIR/source/data/unidata
 
 Adjust unicode/c/genprops/*builder.cpp for #ifndef/#ifdef changes in _data.h files,
-see http://bugs.icu-project.org/trac/ticket/12141
+see https://unicode-org.atlassian.net/browse/ICU-12141
 
 make install, then icutools cmake & make, then
 ~/svn.icutools/trunk/dbg/unicode/c$ make && genprops/genprops $ICU_SRC_DIR
@@ -2372,7 +2672,7 @@ Generate Java data as usual, only update pnames.icu & uprops.icu.
 
 ---------------------------------------------------------------------------- ***
 
-Emoji properties added in ICU 57: http://bugs.icu-project.org/trac/ticket/11802
+Emoji properties added in ICU 57: https://unicode-org.atlassian.net/browse/ICU-11802
 
 Edit preparseucd.py to add & parse new properties.
 They share the UCD property namespace but are not listed in PropertyAliases.txt.
@@ -3453,7 +3753,7 @@ or
 Future Unicode update
 
 Tools simplified since the Unicode 6.1 update. See
-- http://site.icu-project.org/design/props/ppucd
+- https://icu.unicode.org/design/props/ppucd
 - http://bugs.icu-project.org/trac/wiki/Markus/ReviewTicket8972
 
 * Unicode version numbers

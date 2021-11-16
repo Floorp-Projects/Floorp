@@ -280,6 +280,16 @@ uk{
             }
         }
         minimalPairs{
+            case{
+                accusative{"Знайшли {0}"}
+                genitive{"Немає {0}"}
+                nominative{"Є {0}"}
+            }
+            gender{
+                feminine{"Ця {0}"}
+                masculine{"Цей {0}"}
+                neuter{"Це {0}"}
+            }
             ordinal{
                 few{"{0}-я дивізія, {0}-є коло"}
                 other{"{0}-а дивізія, {0}-е коло"}
@@ -510,13 +520,23 @@ uk{
                 "HH:mm",
                 "EEEE, d MMMM y 'р'. G",
                 "d MMMM y 'р'. G",
-                "d MMM y G",
+                "d MMM y 'р'. G",
                 "dd.MM.yy GGGGG",
                 "{1} {0}",
                 "{1} 'о' {0}",
                 "{1} 'о' {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyyMMdd",
             }
             availableFormats{
                 Bh{"h B"}
@@ -531,9 +551,10 @@ uk{
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
-                GyMMM{"LLL y G"}
-                GyMMMEd{"E, d MMM y G"}
-                GyMMMd{"d MMM y G"}
+                GyMMM{"LLL y 'р'. G"}
+                GyMMMEd{"E, d MMM y 'р'. G"}
+                GyMMMd{"d MMM y 'р'. G"}
+                GyMd{"dd-MM-y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -554,10 +575,10 @@ uk{
                 yyyy{"y G"}
                 yyyyM{"MM.y G"}
                 yyyyMEd{"E, dd.MM.y G"}
-                yyyyMMM{"LLL y G"}
-                yyyyMMMEd{"E, d MMM y G"}
-                yyyyMMMM{"LLLL y G"}
-                yyyyMMMd{"d MMM y G"}
+                yyyyMMM{"LLL y 'р'. G"}
+                yyyyMMMEd{"E, d MMM y 'р'. G"}
+                yyyyMMMM{"LLLL y 'р'. G"}
+                yyyyMMMd{"d MMM y 'р'. G"}
                 yyyyMd{"dd.MM.y G"}
                 yyyyQQQ{"QQQ y G"}
                 yyyyQQQQ{"QQQQ y 'р'. G"}
@@ -681,22 +702,22 @@ uk{
                     y{"E, dd.MM.y – E, dd.MM.y"}
                 }
                 yMMM{
-                    M{"LLL–LLL y"}
-                    y{"LLL y – LLL y"}
+                    M{"LLL–LLL y 'р'."}
+                    y{"LLL y – LLL y 'рр'."}
                 }
                 yMMMEd{
-                    M{"E, d MMM – E, d MMM y"}
-                    d{"E, d – E, d MMM y"}
-                    y{"E, d MMM y – E, d MMM y"}
+                    M{"E, d MMM – E, d MMM y 'р'."}
+                    d{"E, d – E, d MMM y 'р'."}
+                    y{"E, d MMM y – E, d MMM y 'рр'."}
                 }
                 yMMMM{
-                    M{"LLLL – LLLL y"}
-                    y{"LLLL y – LLLL y"}
+                    M{"LLLL – LLLL y 'р'."}
+                    y{"LLLL y – LLLL y 'рр'."}
                 }
                 yMMMd{
-                    M{"d MMM – d MMM y"}
-                    d{"d–d MMM y"}
-                    y{"d MMM y – d MMM y"}
+                    M{"d MMM – d MMM y 'р'."}
+                    d{"d–d MMM y 'р'."}
+                    y{"d MMM y – d MMM y 'рр'."}
                 }
                 yMd{
                     M{"dd.MM.y – dd.MM.y"}
@@ -733,6 +754,16 @@ uk{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMMdd",
+            }
             appendItems{
                 Timezone{"{0} {1}"}
             }
@@ -749,9 +780,10 @@ uk{
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
-                GyMMM{"LLL y G"}
-                GyMMMEd{"E, d MMM y G"}
-                GyMMMd{"d MMM y G"}
+                GyMMM{"LLL y 'р'. G"}
+                GyMMMEd{"E, d MMM y 'р'. G"}
+                GyMMMd{"d MMM y 'р'. G"}
+                GyMd{"dd-MM-y GGGGG"}
                 H{"HH"}
                 Hm{"HH:mm"}
                 Hms{"HH:mm:ss"}
@@ -781,10 +813,10 @@ uk{
                 y{"y"}
                 yM{"MM.y"}
                 yMEd{"E, dd.MM.y"}
-                yMMM{"LLL y"}
-                yMMMEd{"E, d MMM y"}
-                yMMMM{"LLLL y"}
-                yMMMd{"d MMM y"}
+                yMMM{"LLL y 'р'."}
+                yMMMEd{"E, d MMM y 'р'."}
+                yMMMM{"LLLL y 'р'."}
+                yMMMd{"d MMM y 'р'."}
                 yMd{"dd.MM.y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y 'р'."}
@@ -1069,22 +1101,22 @@ uk{
                     y{"E, dd.MM.y – E, dd.MM.y"}
                 }
                 yMMM{
-                    M{"LLL–LLL y"}
-                    y{"LLL y – LLL y"}
+                    M{"LLL–LLL y 'р'."}
+                    y{"LLL y – LLL y 'рр'."}
                 }
                 yMMMEd{
-                    M{"E, d MMM – E, d MMM y"}
-                    d{"E, d – E, d MMM y"}
-                    y{"E, d MMM y – E, d MMM y"}
+                    M{"E, d MMM – E, d MMM y 'р'."}
+                    d{"E, d – E, d MMM y 'р'."}
+                    y{"E, d MMM y – E, d MMM y 'рр'."}
                 }
                 yMMMM{
-                    M{"LLLL – LLLL y"}
-                    y{"LLLL y – LLLL y"}
+                    M{"LLLL – LLLL y 'р'."}
+                    y{"LLLL y – LLLL y 'рр'."}
                 }
                 yMMMd{
-                    M{"d MMM – d MMM y"}
-                    d{"d–d MMM y"}
-                    y{"d MMM y – d MMM y"}
+                    M{"d MMM – d MMM y 'р'."}
+                    d{"d–d MMM y 'р'."}
+                    y{"d MMM y – d MMM y 'рр'."}
                 }
                 yMd{
                     M{"dd.MM.y – dd.MM.y"}
@@ -1845,7 +1877,7 @@ uk{
         place{"місце"}
         plant{"рослина"}
         punctuation{"пунктуація"}
-        rightwards_arrows{"стрілки вправо"}
+        rightwards_arrows{"стрілка вправо"}
         sign_standard_symbols{"знак чи символ"}
         small_form_variant{"малі варіанти"}
         smiley{"смайлик"}

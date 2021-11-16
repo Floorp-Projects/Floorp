@@ -166,10 +166,10 @@ ug{
         }
         chinese{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE، MMMM d، U",
                 "MMMM d، U",
                 "MMM d، U",
@@ -179,6 +179,16 @@ ug{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "UMMMMEEEEd",
+                "UMMMMd",
+                "UMMMd",
+                "yyMd",
             }
             cyclicNameSets{
                 zodiacs{
@@ -235,10 +245,10 @@ ug{
         }
         generic{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE، MMMM d، y G",
                 "MMMM d، y G",
                 "MMM d، y G",
@@ -248,6 +258,16 @@ ug{
                 "{1} {0}",
                 "{1}، {0}",
                 "{1}، {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMd",
             }
             availableFormats{
                 Ed{"d E"}
@@ -351,10 +371,10 @@ ug{
                 "ك",
             }
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "y d-MMMM، EEEE",
                 "d-MMMM، y",
                 "d-MMM، y",
@@ -364,6 +384,16 @@ ug{
                 "{1} {0}",
                 "{1}، {0}",
                 "{1}، {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yMMdd",
             }
             appendItems{
                 Timezone{"{0} {1}"}
@@ -748,10 +778,10 @@ ug{
         }
         islamic{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE، d MMMM، y G",
                 "d MMMM، y G",
                 "d MMM، y G",
@@ -761,6 +791,16 @@ ug{
                 "{1} {0}",
                 "{1}، {0}",
                 "{1}، {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMd",
             }
             availableFormats{
                 M{"L"}
@@ -811,10 +851,10 @@ ug{
         }
         japanese{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE, MMMM d، y G",
                 "MMMM d، y G",
                 "MMM d، y G",
@@ -824,6 +864,16 @@ ug{
                 "{1} {0}",
                 "{1}، {0}",
                 "{1}، {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMd",
             }
         }
         roc{

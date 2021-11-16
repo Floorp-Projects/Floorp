@@ -27,8 +27,12 @@ then
     exit 1
 fi
 
+# Short (major) version, i.e. 70
 VERS=$(echo ${DATFILE} | tr -d a-z/.)
+# Version number, i.e. 70.1
 VERSION=${VERSION-unknown}
+# Version number for files, i.e. 70_1
+VERSION_FILE=$(echo ${VERSION} | tr . _)
 
 if [[ "${VERSION}" = "unknown" ]];
 then
@@ -57,7 +61,7 @@ mkdir -p ${DISTY_DIR}/tmp
 
 for endian in $ENDIANS;
 do
-    base=icu4c-${VERSION}-data-bin-${endian}.zip
+    base=icu4c-${VERSION_FILE}-data-bin-${endian}.zip
     filename=icudt${VERS}${endian}.dat
     if [ -f ${DISTY_DIR}/${base} ];
     then
@@ -67,7 +71,7 @@ do
     rm -f ${DISTY_DIR}/tmp/${filename}
     echo ./bin/icupkg -t${endian} ${DATFILE} ${DISTY_DIR}/tmp/${filename}
     ./bin/icupkg -t${endian} ${DATFILE} ${DISTY_DIR}/tmp/${filename}
-    README=icu4c-${VERSION}-data-bin-${endian}-README.md
+    README=icu4c-${VERSION_FILE}-data-bin-${endian}-README.md
     cat >> ${DISTY_DIR}/tmp/${README} <<EOF
 # ICU Data Zip for ${VERSION}
 

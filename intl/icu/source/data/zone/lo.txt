@@ -1925,6 +1925,9 @@ lo{
             lg{"ເວລາເຢກາເຕລິນເບີກ"}
             ls{"ເວລາມາດຕະຖານເຢກາເຕລິນເບີກ"}
         }
+        "meta:Yukon"{
+            ls{"ເວລາຢູຄອນ"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

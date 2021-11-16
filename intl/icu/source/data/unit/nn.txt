@@ -57,7 +57,13 @@ nn{
             }
         }
         consumption{
+            mile-per-gallon{
+                dnam{"engelske mil per gallon"}
+                one{"{0} engelsk mil per gallon"}
+                other{"{0} engelske mil per gallon"}
+            }
             mile-per-gallon-imperial{
+                dnam{"engelske mil per britiske gallon"}
                 one{"{0} engelsk mil per britiske gallon"}
                 other{"{0} engelske mil per britiske gallon"}
             }
@@ -73,6 +79,8 @@ nn{
             }
             hour{
                 dnam{"timar"}
+                one{"{0} time"}
+                other{"{0} timar"}
             }
             microsecond{
                 dnam{"mikrosekund"}
@@ -149,6 +157,13 @@ nn{
                 other{"{0} kilowattimar"}
             }
         }
+        force{
+            pound-force{
+                dnam{"poundforce"}
+                one{"{0} poundforce"}
+                other{"{0} poundforce"}
+            }
+        }
         graphics{
             dot{
                 one{"{0} punkt"}
@@ -204,6 +219,11 @@ nn{
                 dnam{"tommar"}
                 one{"{0} tomme"}
                 other{"{0} tommar"}
+            }
+            mile{
+                dnam{"engelske mil"}
+                one{"{0} engelsk mil"}
+                other{"{0} engelske mil"}
             }
             nanometer{
                 one{"{0} nm"}
@@ -265,12 +285,6 @@ nn{
                 other{"{0} tommar kvikksølv"}
             }
         }
-        speed{
-            kilometer-per-hour{
-                one{"{0} kilometer per time"}
-                other{"{0} kilomeer per time"}
-            }
-        }
         temperature{
             generic{
                 dnam{"°"}
@@ -290,9 +304,6 @@ nn{
             }
         }
         volume{
-            bushel{
-                dnam{"bushels"}
-            }
             cubic-inch{
                 dnam{"kubikktommar"}
                 one{"{0} kubikktomme"}
@@ -347,14 +358,12 @@ nn{
         }
     }
     unitsNarrow{
-        area{
-            square-foot{
-                one{"{0} ft²"}
-                other{"{0} ft²"}
+        angle{
+            arc-minute{
+                dnam{"bogemin"}
             }
-            square-mile{
-                one{"{0} mi²"}
-                other{"{0} mi²"}
+            arc-second{
+                dnam{"bogesek"}
             }
         }
         compound{
@@ -368,6 +377,7 @@ nn{
         duration{
             hour{
                 dnam{"timar"}
+                per{"{0}/h"}
             }
             millisecond{
                 dnam{"millisekund"}
@@ -387,28 +397,33 @@ nn{
                 dnam{"vk."}
                 one{"{0}v"}
                 other{"{0}v"}
+                per{"{0}/v"}
             }
         }
         length{
-            mile{
-                one{"{0} mi"}
-                other{"{0} mi"}
+            centimeter{
+                per{"{0}/cm"}
             }
-            yard{
-                one{"{0} yd"}
-                other{"{0} yd"}
+            decimeter{
+                dnam{"dm"}
+            }
+            kilometer{
+                per{"{0}/km"}
+            }
+            meter{
+                per{"{0}/m"}
+            }
+            micrometer{
+                dnam{"μm"}
+            }
+            nanometer{
+                dnam{"nm"}
             }
         }
         pressure{
             inch-ofhg{
                 one{"{0} inHg"}
                 other{"{0} inHg"}
-            }
-        }
-        speed{
-            mile-per-hour{
-                one{"{0} mi/h"}
-                other{"{0} mi/h"}
             }
         }
         temperature{
@@ -418,12 +433,27 @@ nn{
             }
         }
         volume{
-            cubic-mile{
-                one{"{0} mi³"}
-                other{"{0} mi³"}
+            dessert-spoon{
+                dnam{"bs"}
+                one{"{0} bs"}
+                other{"{0} bs"}
+            }
+            dessert-spoon-imperial{
+                dnam{"brit. barneskei"}
+                one{"{0} imp. bs"}
+                other{"{0} imp. bs"}
+            }
+            fluid-ounce-imperial{
+                one{"{0} imp. fl oz"}
+                other{"{0} imp. fl oz"}
             }
             liter{
                 dnam{"liter"}
+            }
+            tablespoon{
+                dnam{"ms"}
+                one{"{0} ms"}
+                other{"{0} ms"}
             }
         }
     }
@@ -529,6 +559,11 @@ nn{
                 per{"{0}/v"}
             }
         }
+        force{
+            pound-force{
+                dnam{"poundforce"}
+            }
+        }
         graphics{
             dot-per-centimeter{
                 one{"{0} dpcm"}
@@ -554,8 +589,6 @@ nn{
             }
             fathom{
                 dnam{"famner"}
-                one{"{0} fmn"}
-                other{"{0} fmn"}
             }
             foot{
                 per{"{0}/ft"}
@@ -610,16 +643,10 @@ nn{
             }
         }
         volume{
-            bushel{
-                dnam{"bushels"}
-            }
             cubic-inch{
                 dnam{"tommar³"}
                 one{"{0} tomme³"}
                 other{"{0} tommar³"}
-            }
-            cubic-kilometer{
-                dnam{"kubikkilometer"}
             }
             cubic-mile{
                 dnam{"engelske mil³"}
@@ -642,7 +669,7 @@ nn{
             dessert-spoon-imperial{
                 dnam{"brit. dsskei"}
                 one{"{0} brit. dsskei"}
-                other{"{0} brit. dsskei"}
+                other{"{0} imp. bs"}
             }
             drop{
                 dnam{"drope"}

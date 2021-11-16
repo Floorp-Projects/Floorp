@@ -1934,6 +1934,9 @@ pt{
             lg{"Horário de Ecaterimburgo"}
             ls{"Horário Padrão de Ecaterimburgo"}
         }
+        "meta:Yukon"{
+            ls{"Horário do Yukon"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

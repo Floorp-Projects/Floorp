@@ -610,12 +610,15 @@ windowsZones:table(nofallback){
             MW{"Africa/Blantyre"}
             MZ{"Africa/Maputo"}
             RW{"Africa/Kigali"}
-            SS{"Africa/Juba"}
             SZ{"Africa/Mbabane"}
             ZA{"Africa/Johannesburg"}
             ZM{"Africa/Lusaka"}
             ZW{"Africa/Harare"}
             ZZ{"Etc/GMT-2"}
+        }
+        "South Sudan Standard Time"{
+            001{"Africa/Juba"}
+            SS{"Africa/Juba"}
         }
         "Sri Lanka Standard Time"{
             001{"Asia/Colombo"}

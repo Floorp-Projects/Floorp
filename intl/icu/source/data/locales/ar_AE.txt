@@ -3,7 +3,7 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ar_AE{
     NumberElements{
-        default{"arab"}
+        default{"latn"}
     }
     calendar{
         gregorian{

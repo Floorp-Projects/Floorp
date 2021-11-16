@@ -271,6 +271,9 @@ kea{
             lg{"Ora di San Pedru i Mikelon"}
             ls{"Ora Padron di San Pedru i Mikelon"}
         }
+        "meta:Yukon"{
+            ls{"Ora di Yukon"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

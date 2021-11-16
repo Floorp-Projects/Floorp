@@ -66,6 +66,16 @@ mt{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMdd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
                 E{"ccc"}
                 Ed{"d, E"}
@@ -181,6 +191,16 @@ mt{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMdd",
+                "yMMdd",
             }
             appendItems{
                 Timezone{"{0} {1}"}

@@ -13,6 +13,7 @@ sr_Latn_BA{
         bm{"bamanankan"}
         bn{"bangla"}
         de{"njemački"}
+        de_CH{"švajcarski visoki njemački"}
         en_GB{"engleski (Velika Britanija)"}
         es_ES{"španski (Evropa)"}
         fa_AF{"dari"}

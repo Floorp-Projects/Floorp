@@ -73,6 +73,9 @@
     <ClCompile Include="dictbe.cpp">
       <Filter>break iteration</Filter>
     </ClCompile>
+    <ClCompile Include="lstmbe.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
     <ClCompile Include="rbbi.cpp">
       <Filter>break iteration</Filter>
     </ClCompile>
@@ -409,6 +412,9 @@
     <ClCompile Include="characterproperties.cpp">
       <Filter>properties &amp; sets</Filter>
     </ClCompile>
+    <ClCompile Include="emojiprops.cpp">
+      <Filter>properties &amp; sets</Filter>
+    </ClCompile>
     <ClCompile Include="propname.cpp">
       <Filter>properties &amp; sets</Filter>
     </ClCompile>
@@ -651,6 +657,9 @@
     <ClInclude Include="dictbe.h">
       <Filter>break iteration</Filter>
     </ClInclude>
+    <ClInclude Include="lstmbe.h">
+      <Filter>break iteration</Filter>
+    </ClInclude>
     <ClInclude Include="rbbidata.h">
       <Filter>break iteration</Filter>
     </ClInclude>
@@ -886,6 +895,9 @@
       <Filter>properties &amp; sets</Filter>
     </ClInclude>
     <ClInclude Include="ruleiter.h">
+      <Filter>properties &amp; sets</Filter>
+    </ClInclude>
+    <ClInclude Include="emojiprops.h">
       <Filter>properties &amp; sets</Filter>
     </ClInclude>
     <ClInclude Include="ucase.h">

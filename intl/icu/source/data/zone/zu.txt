@@ -1895,6 +1895,9 @@ zu{
             lg{"Isikhathi sase-Yekaterinburg"}
             ls{"Isikhathi Esivamile sase-Yekaterinburg"}
         }
+        "meta:Yukon"{
+            ls{"Yukon Time"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

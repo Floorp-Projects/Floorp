@@ -228,7 +228,7 @@ $bulgarian { [Ъъ]  } $wordBoundary > ;
 ѣ → ye ; # CYRILLIC SMALL LETTER YAT
 #
 #
-# Alternative rule where appropriate for local pronounciation. To apply
+# Alternative rule where appropriate for local pronunciation. To apply
 # uncomment the following by removing the '#' mark at the start of the
 # line and insert before the three rule lines above.
 #

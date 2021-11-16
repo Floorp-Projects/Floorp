@@ -1877,6 +1877,9 @@ tk{
             lg{"Ýekaterinburg wagty"}
             ls{"Ýekaterinburg standart wagty"}
         }
+        "meta:Yukon"{
+            ls{"Ýukon wagty"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

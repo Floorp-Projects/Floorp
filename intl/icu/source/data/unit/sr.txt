@@ -3,15 +3,33 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sr{
     durationUnits{
-        hm{"h:mm"}
-        hms{"h:mm:ss"}
-        ms{"m:ss"}
+        hm{"h.mm"}
+        hms{"h.mm.ss"}
+        ms{"m.ss"}
     }
     units{
         acceleration{
             g-force{
+                case{
+                    accusative{
+                        few{"{0} ге сила"}
+                        one{"{0} ге силу"}
+                        other{"{0} ге сила"}
+                    }
+                    genitive{
+                        few{"{0} ге сила"}
+                        one{"{0} ге силе"}
+                        other{"{0} ге сила"}
+                    }
+                    instrumental{
+                        few{"{0} ге сила"}
+                        one{"{0} ге силом"}
+                        other{"{0} ге сила"}
+                    }
+                }
                 dnam{"ге сила"}
                 few{"{0} ге сила"}
+                gender{"feminine"}
                 one{"{0} ге сила"}
                 other{"{0} ге сила"}
             }
@@ -24,32 +42,122 @@ sr{
         }
         angle{
             arc-minute{
+                case{
+                    accusative{
+                        few{"{0} лучна минута"}
+                        one{"{0} лучни минут"}
+                        other{"{0} лучних минута"}
+                    }
+                    genitive{
+                        few{"{0} лучна минута"}
+                        one{"{0} лучног минута"}
+                        other{"{0} лучних минута"}
+                    }
+                    instrumental{
+                        few{"{0} лучна минута"}
+                        one{"{0} лучним минутом"}
+                        other{"{0} лучних минута"}
+                    }
+                }
                 dnam{"лучни минути"}
                 few{"{0} лучна минута"}
+                gender{"inanimate"}
                 one{"{0} лучни минут"}
                 other{"{0} лучних минута"}
             }
             arc-second{
+                case{
+                    accusative{
+                        few{"{0} лучне секунде"}
+                        one{"{0} лучну секунду"}
+                        other{"{0} лучних секунди"}
+                    }
+                    genitive{
+                        few{"{0} лучне секунде"}
+                        one{"{0} лучне секунде"}
+                        other{"{0} лучних секунди"}
+                    }
+                    instrumental{
+                        few{"{0} лучне секунде"}
+                        one{"{0} лучном секундом"}
+                        other{"{0} лучних секунди"}
+                    }
+                }
                 dnam{"лучне секунде"}
                 few{"{0} лучне секунде"}
+                gender{"feminine"}
                 one{"{0} лучна секунда"}
                 other{"{0} лучних секунди"}
             }
             degree{
+                case{
+                    accusative{
+                        few{"{0} степена"}
+                        one{"{0} степен"}
+                        other{"{0} степени"}
+                    }
+                    genitive{
+                        few{"{0} степена"}
+                        one{"{0} степена"}
+                        other{"{0} степени"}
+                    }
+                    instrumental{
+                        few{"{0} степена"}
+                        one{"{0} степеном"}
+                        other{"{0} степени"}
+                    }
+                }
                 dnam{"степени"}
                 few{"{0} степена"}
+                gender{"inanimate"}
                 one{"{0} степен"}
                 other{"{0} степени"}
             }
             radian{
+                case{
+                    accusative{
+                        few{"{0} радијана"}
+                        one{"{0} радијан"}
+                        other{"{0} радијана"}
+                    }
+                    genitive{
+                        few{"{0} радијана"}
+                        one{"{0} радијана"}
+                        other{"{0} радијана"}
+                    }
+                    instrumental{
+                        few{"{0} радијана"}
+                        one{"{0} радијаном"}
+                        other{"{0} радијана"}
+                    }
+                }
                 dnam{"радијани"}
                 few{"{0} радијана"}
+                gender{"inanimate"}
                 one{"{0} радијан"}
                 other{"{0} радијана"}
             }
             revolution{
+                case{
+                    accusative{
+                        few{"{0} обртаја"}
+                        one{"{0} обртај"}
+                        other{"{0} обртаја"}
+                    }
+                    genitive{
+                        few{"{0} обртаја"}
+                        one{"{0} обртаја"}
+                        other{"{0} обртаја"}
+                    }
+                    instrumental{
+                        few{"{0} обртаја"}
+                        one{"{0} обртајем"}
+                        other{"{0} обртаја"}
+                    }
+                }
                 dnam{"обртај"}
                 few{"{0} обртаја"}
+                gender{"inanimate"}
                 one{"{0} обртај"}
                 other{"{0} обртаја"}
             }
@@ -68,8 +176,26 @@ sr{
                 other{"{0} дунама"}
             }
             hectare{
+                case{
+                    accusative{
+                        few{"{0} хектара"}
+                        one{"{0} хектар"}
+                        other{"{0} хектара"}
+                    }
+                    genitive{
+                        few{"{0} хектара"}
+                        one{"{0} хектара"}
+                        other{"{0} хектара"}
+                    }
+                    instrumental{
+                        few{"{0} хектара"}
+                        one{"{0} хектаром"}
+                        other{"{0} хектара"}
+                    }
+                }
                 dnam{"хектари"}
                 few{"{0} хектара"}
+                gender{"inanimate"}
                 one{"{0} хектар"}
                 other{"{0} хектара"}
             }
@@ -155,16 +281,61 @@ sr{
                 few{
                     _{
                         _{"квадратна {0}"}
+                        accusative{"квадратна {0}"}
+                        genitive{"квадратна {0}"}
+                        instrumental{"квадратна {0}"}
+                    }
+                    feminine{
+                        _{"квадратна {0}"}
+                        accusative{"квадратна {0}"}
+                        genitive{"квадратна {0}"}
+                        instrumental{"квадратна {0}"}
+                    }
+                    inanimate{
+                        _{"квадратна {0}"}
+                        accusative{"квадратна {0}"}
+                        genitive{"квадратна {0}"}
+                        instrumental{"квадратна {0}"}
                     }
                 }
                 one{
                     _{
                         _{"квадратни {0}"}
+                        accusative{"квадратни {0}"}
+                        genitive{"квадратни {0}"}
+                        instrumental{"квадратни {0}"}
+                    }
+                    feminine{
+                        _{"квадратни {0}"}
+                        accusative{"квадратни {0}"}
+                        genitive{"квадратни {0}"}
+                        instrumental{"квадратни {0}"}
+                    }
+                    inanimate{
+                        _{"квадратни {0}"}
+                        accusative{"квадратни {0}"}
+                        genitive{"квадратни {0}"}
+                        instrumental{"квадратни {0}"}
                     }
                 }
                 other{
                     _{
                         _{"квадратних {0}"}
+                        accusative{"квадратних {0}"}
+                        genitive{"квадратних {0}"}
+                        instrumental{"квадратних {0}"}
+                    }
+                    feminine{
+                        _{"квадратних {0}"}
+                        accusative{"квадратних {0}"}
+                        genitive{"квадратних {0}"}
+                        instrumental{"квадратних {0}"}
+                    }
+                    inanimate{
+                        _{"квадратних {0}"}
+                        accusative{"квадратних {0}"}
+                        genitive{"квадратних {0}"}
+                        instrumental{"квадратних {0}"}
                     }
                 }
             }
@@ -172,25 +343,94 @@ sr{
                 few{
                     _{
                         _{"кубна {0}"}
+                        accusative{"кубна {0}"}
+                        genitive{"кубна {0}"}
+                        instrumental{"кубна {0}"}
+                    }
+                    feminine{
+                        _{"кубна {0}"}
+                        accusative{"кубна {0}"}
+                        genitive{"кубна {0}"}
+                        instrumental{"кубна {0}"}
+                    }
+                    inanimate{
+                        _{"кубна {0}"}
+                        accusative{"кубна {0}"}
+                        genitive{"кубна {0}"}
+                        instrumental{"кубна {0}"}
                     }
                 }
                 one{
                     _{
                         _{"кубни {0}"}
+                        accusative{"кубни {0}"}
+                        genitive{"кубни {0}"}
+                        instrumental{"кубни {0}"}
+                    }
+                    feminine{
+                        _{"кубни {0}"}
+                        accusative{"кубни {0}"}
+                        genitive{"кубни {0}"}
+                        instrumental{"кубни {0}"}
+                    }
+                    inanimate{
+                        _{"кубни {0}"}
+                        accusative{"кубни {0}"}
+                        genitive{"кубни {0}"}
+                        instrumental{"кубни {0}"}
                     }
                 }
                 other{
                     _{
                         _{"кубних {0}"}
+                        accusative{"кубних {0}"}
+                        genitive{"кубних {0}"}
+                        instrumental{"кубних {0}"}
+                    }
+                    feminine{
+                        _{"кубних {0}"}
+                        accusative{"кубних {0}"}
+                        genitive{"кубних {0}"}
+                        instrumental{"кубних {0}"}
+                    }
+                    inanimate{
+                        _{"кубних {0}"}
+                        accusative{"кубних {0}"}
+                        genitive{"кубних {0}"}
+                        instrumental{"кубних {0}"}
                     }
                 }
             }
-            times{"{0}⋅{1}"}
+            times{"{0}-{1}"}
         }
         concentr{
+            item{
+                dnam{"ставке"}
+                few{"{0} ставке"}
+                one{"{0} ставка"}
+                other{"{0} ставки"}
+            }
             karat{
+                case{
+                    accusative{
+                        few{"{0} карата"}
+                        one{"{0} карат"}
+                        other{"{0} карата"}
+                    }
+                    genitive{
+                        few{"{0} карата"}
+                        one{"{0} карата"}
+                        other{"{0} карата"}
+                    }
+                    instrumental{
+                        few{"{0} карата"}
+                        one{"{0} каратом"}
+                        other{"{0} карата"}
+                    }
+                }
                 dnam{"карати"}
                 few{"{0} карата"}
+                gender{"inanimate"}
                 one{"{0} карат"}
                 other{"{0} карата"}
             }
@@ -207,28 +447,123 @@ sr{
                 other{"{0} милимола по литри"}
             }
             mole{
+                case{
+                    accusative{
+                        few{"{0} мола"}
+                        one{"{0} мол"}
+                        other{"{0} мола"}
+                    }
+                    genitive{
+                        few{"{0} мола"}
+                        one{"{0} мола"}
+                        other{"{0} мола"}
+                    }
+                    instrumental{
+                        few{"{0} мола"}
+                        one{"{0} молом"}
+                        other{"{0} мола"}
+                    }
+                }
                 dnam{"моли"}
                 few{"{0} мола"}
+                gender{"inanimate"}
                 one{"{0} мол"}
                 other{"{0} мола"}
             }
             percent{
+                case{
+                    accusative{
+                        few{"{0} процената"}
+                        one{"{0} проценат"}
+                        other{"{0} процената"}
+                    }
+                    genitive{
+                        few{"{0} процената"}
+                        one{"{0} процента"}
+                        other{"{0} процената"}
+                    }
+                    instrumental{
+                        few{"{0} процената"}
+                        one{"{0} процентом"}
+                        other{"{0} процената"}
+                    }
+                }
                 dnam{"проценат"}
                 few{"{0} процената"}
+                gender{"inanimate"}
                 one{"{0} проценат"}
                 other{"{0} процената"}
             }
             permille{
+                case{
+                    accusative{
+                        few{"{0} промила"}
+                        one{"{0} промил"}
+                        other{"{0} промила"}
+                    }
+                    genitive{
+                        few{"{0} промила"}
+                        one{"{0} промила"}
+                        other{"{0} промила"}
+                    }
+                    instrumental{
+                        few{"{0} промила"}
+                        one{"{0} промилом"}
+                        other{"{0} промила"}
+                    }
+                }
                 dnam{"промил"}
                 few{"{0} промила"}
+                gender{"inanimate"}
                 one{"{0} промил"}
                 other{"{0} промила"}
             }
             permillion{
+                case{
+                    accusative{
+                        few{"{0} честице на милион"}
+                        one{"{0} честицу на милион"}
+                        other{"{0} честица на милион"}
+                    }
+                    genitive{
+                        few{"{0} честице на милион"}
+                        one{"{0} честице на милион"}
+                        other{"{0} честица на милион"}
+                    }
+                    instrumental{
+                        few{"{0} честице на милион"}
+                        one{"{0} честицом на милион"}
+                        other{"{0} честица на милион"}
+                    }
+                }
                 dnam{"честица на милион"}
                 few{"{0} честице на милион"}
+                gender{"feminine"}
                 one{"{0} честица на милион"}
                 other{"{0} честица на милион"}
+            }
+            permyriad{
+                case{
+                    accusative{
+                        few{"{0}‱"}
+                        one{"{0}‱"}
+                        other{"{0}‱"}
+                    }
+                    genitive{
+                        few{"{0}‱"}
+                        one{"{0}‱"}
+                        other{"{0}‱"}
+                    }
+                    instrumental{
+                        few{"{0}‱"}
+                        one{"{0}‱"}
+                        other{"{0}‱"}
+                    }
+                }
+                few{"{0}‱"}
+                gender{"inanimate"}
+                one{"{0}‱"}
+                other{"{0}‱"}
             }
         }
         consumption{
@@ -266,14 +601,50 @@ sr{
         }
         digital{
             bit{
+                case{
+                    accusative{
+                        few{"{0} бита"}
+                        one{"{0} бит"}
+                        other{"{0} битова"}
+                    }
+                    genitive{
+                        few{"{0} бита"}
+                        one{"{0} бита"}
+                        other{"{0} битова"}
+                    }
+                    instrumental{
+                        few{"{0} бита"}
+                        one{"{0} битом"}
+                        other{"{0} битова"}
+                    }
+                }
                 dnam{"битови"}
                 few{"{0} бита"}
+                gender{"inanimate"}
                 one{"{0} бит"}
                 other{"{0} битова"}
             }
             byte{
+                case{
+                    accusative{
+                        few{"{0} бајта"}
+                        one{"{0} бајт"}
+                        other{"{0} бајтова"}
+                    }
+                    genitive{
+                        few{"{0} бајта"}
+                        one{"{0} бајта"}
+                        other{"{0} бајтова"}
+                    }
+                    instrumental{
+                        few{"{0} бајта"}
+                        one{"{0} бајтом"}
+                        other{"{0} бајтова"}
+                    }
+                }
                 dnam{"бајтови"}
                 few{"{0} бајта"}
+                gender{"inanimate"}
                 one{"{0} бајт"}
                 other{"{0} бајтова"}
             }
@@ -334,27 +705,99 @@ sr{
         }
         duration{
             century{
+                case{
+                    accusative{
+                        few{"{0} века"}
+                        one{"{0} век"}
+                        other{"{0} векова"}
+                    }
+                    genitive{
+                        few{"{0} века"}
+                        one{"{0} века"}
+                        other{"{0} векова"}
+                    }
+                    instrumental{
+                        few{"{0} века"}
+                        one{"{0} веком"}
+                        other{"{0} векова"}
+                    }
+                }
                 dnam{"векови"}
                 few{"{0} века"}
+                gender{"inanimate"}
                 one{"{0} век"}
                 other{"{0} векова"}
             }
             day{
+                case{
+                    accusative{
+                        few{"{0} дана"}
+                        one{"{0} дан"}
+                        other{"{0} дана"}
+                    }
+                    genitive{
+                        few{"{0} дана"}
+                        one{"{0} дана"}
+                        other{"{0} дана"}
+                    }
+                    instrumental{
+                        few{"{0} дана"}
+                        one{"{0} даном"}
+                        other{"{0} дана"}
+                    }
+                }
                 dnam{"дани"}
                 few{"{0} дана"}
+                gender{"inanimate"}
                 one{"{0} дан"}
                 other{"{0} дана"}
                 per{"{0}/дневно"}
             }
             decade{
+                case{
+                    accusative{
+                        few{"{0} деценије"}
+                        one{"{0} деценију"}
+                        other{"{0} деценија"}
+                    }
+                    genitive{
+                        few{"{0} деценије"}
+                        one{"{0} деценије"}
+                        other{"{0} деценија"}
+                    }
+                    instrumental{
+                        few{"{0} деценије"}
+                        one{"{0} деценијом"}
+                        other{"{0} деценија"}
+                    }
+                }
                 dnam{"деценије"}
-                few{"{0} дец."}
+                few{"{0} деценије"}
+                gender{"feminine"}
                 one{"{0} деценија"}
                 other{"{0} деценија"}
             }
             hour{
+                case{
+                    accusative{
+                        few{"{0} сата"}
+                        one{"{0} сат"}
+                        other{"{0} сати"}
+                    }
+                    genitive{
+                        few{"{0} сата"}
+                        one{"{0} сата"}
+                        other{"{0} сати"}
+                    }
+                    instrumental{
+                        few{"{0} сата"}
+                        one{"{0} сатом"}
+                        other{"{0} сати"}
+                    }
+                }
                 dnam{"сати"}
                 few{"{0} сата"}
+                gender{"inanimate"}
                 one{"{0} сат"}
                 other{"{0} сати"}
                 per{"{0}/сат"}
@@ -372,15 +815,51 @@ sr{
                 other{"{0} милисекунди"}
             }
             minute{
+                case{
+                    accusative{
+                        few{"{0} минута"}
+                        one{"{0} минут"}
+                        other{"{0} минута"}
+                    }
+                    genitive{
+                        few{"{0} минута"}
+                        one{"{0} минута"}
+                        other{"{0} минута"}
+                    }
+                    instrumental{
+                        few{"{0} минута"}
+                        one{"{0} минутом"}
+                        other{"{0} минута"}
+                    }
+                }
                 dnam{"минути"}
                 few{"{0} минута"}
+                gender{"inanimate"}
                 one{"{0} минут"}
                 other{"{0} минута"}
                 per{"{0} у минуту"}
             }
             month{
+                case{
+                    accusative{
+                        few{"{0} месеца"}
+                        one{"{0} месец"}
+                        other{"{0} месеци"}
+                    }
+                    genitive{
+                        few{"{0} месеца"}
+                        one{"{0} месеца"}
+                        other{"{0} месеци"}
+                    }
+                    instrumental{
+                        few{"{0} месеца"}
+                        one{"{0} месецом"}
+                        other{"{0} месеци"}
+                    }
+                }
                 dnam{"месеци"}
                 few{"{0} месеца"}
+                gender{"inanimate"}
                 one{"{0} месец"}
                 other{"{0} месеци"}
                 per{"{0} месечно"}
@@ -392,22 +871,76 @@ sr{
                 other{"{0} наносекунди"}
             }
             second{
+                case{
+                    accusative{
+                        few{"{0} секунде"}
+                        one{"{0} секунду"}
+                        other{"{0} секунди"}
+                    }
+                    genitive{
+                        few{"{0} секунде"}
+                        one{"{0} секунде"}
+                        other{"{0} секунди"}
+                    }
+                    instrumental{
+                        few{"{0} секунде"}
+                        one{"{0} секундом"}
+                        other{"{0} секунди"}
+                    }
+                }
                 dnam{"секунде"}
                 few{"{0} секунде"}
+                gender{"feminine"}
                 one{"{0} секунда"}
                 other{"{0} секунди"}
                 per{"{0}/у секунди"}
             }
             week{
+                case{
+                    accusative{
+                        few{"{0} недеље"}
+                        one{"{0} недељу"}
+                        other{"{0} недеља"}
+                    }
+                    genitive{
+                        few{"{0} недеље"}
+                        one{"{0} недеље"}
+                        other{"{0} недеља"}
+                    }
+                    instrumental{
+                        few{"{0} недеље"}
+                        one{"{0} недељом"}
+                        other{"{0} недеља"}
+                    }
+                }
                 dnam{"недеље"}
                 few{"{0} недеље"}
+                gender{"feminine"}
                 one{"{0} недеља"}
                 other{"{0} недеља"}
                 per{"{0} недељно"}
             }
             year{
+                case{
+                    accusative{
+                        few{"{0} године"}
+                        one{"{0} годину"}
+                        other{"{0} година"}
+                    }
+                    genitive{
+                        few{"{0} године"}
+                        one{"{0} године"}
+                        other{"{0} година"}
+                    }
+                    instrumental{
+                        few{"{0} године"}
+                        one{"{0} годином"}
+                        other{"{0} година"}
+                    }
+                }
                 dnam{"године"}
                 few{"{0} године"}
+                gender{"feminine"}
                 one{"{0} година"}
                 other{"{0} година"}
                 per{"{0} годишње"}
@@ -415,8 +948,26 @@ sr{
         }
         electric{
             ampere{
+                case{
+                    accusative{
+                        few{"{0} ампера"}
+                        one{"{0} ампер"}
+                        other{"{0} ампера"}
+                    }
+                    genitive{
+                        few{"{0} ампера"}
+                        one{"{0} ампера"}
+                        other{"{0} ампера"}
+                    }
+                    instrumental{
+                        few{"{0} ампера"}
+                        one{"{0} ампером"}
+                        other{"{0} ампера"}
+                    }
+                }
                 dnam{"ампери"}
                 few{"{0} ампера"}
+                gender{"inanimate"}
                 one{"{0} ампер"}
                 other{"{0} ампера"}
             }
@@ -427,14 +978,50 @@ sr{
                 other{"{0} милиампера"}
             }
             ohm{
+                case{
+                    accusative{
+                        few{"{0} ома"}
+                        one{"{0} ом"}
+                        other{"{0} ома"}
+                    }
+                    genitive{
+                        few{"{0} ома"}
+                        one{"{0} ома"}
+                        other{"{0} ома"}
+                    }
+                    instrumental{
+                        few{"{0} ома"}
+                        one{"{0} омом"}
+                        other{"{0} ома"}
+                    }
+                }
                 dnam{"оми"}
                 few{"{0} ома"}
+                gender{"inanimate"}
                 one{"{0} ом"}
                 other{"{0} ома"}
             }
             volt{
+                case{
+                    accusative{
+                        few{"{0} волта"}
+                        one{"{0} волт"}
+                        other{"{0} волти"}
+                    }
+                    genitive{
+                        few{"{0} волта"}
+                        one{"{0} волта"}
+                        other{"{0} волти"}
+                    }
+                    instrumental{
+                        few{"{0} волта"}
+                        one{"{0} волтом"}
+                        other{"{0} волти"}
+                    }
+                }
                 dnam{"волти"}
                 few{"{0} волта"}
+                gender{"inanimate"}
                 one{"{0} волт"}
                 other{"{0} волти"}
             }
@@ -444,8 +1031,26 @@ sr{
                 dnam{"Британска термална јединица"}
             }
             calorie{
+                case{
+                    accusative{
+                        few{"{0} калорије"}
+                        one{"{0} калорију"}
+                        other{"{0} калорија"}
+                    }
+                    genitive{
+                        few{"{0} калорије"}
+                        one{"{0} калорије"}
+                        other{"{0} калорија"}
+                    }
+                    instrumental{
+                        few{"{0} калорије"}
+                        one{"{0} калоријом"}
+                        other{"{0} калорија"}
+                    }
+                }
                 dnam{"калорије"}
                 few{"{0} калорије"}
+                gender{"feminine"}
                 one{"{0} калорија"}
                 other{"{0} калорија"}
             }
@@ -462,8 +1067,26 @@ sr{
                 other{"{0} калорија"}
             }
             joule{
+                case{
+                    accusative{
+                        few{"{0} џула"}
+                        one{"{0} џул"}
+                        other{"{0} џула"}
+                    }
+                    genitive{
+                        few{"{0} џула"}
+                        one{"{0} џула"}
+                        other{"{0} џула"}
+                    }
+                    instrumental{
+                        few{"{0} џула"}
+                        one{"{0} џулом"}
+                        other{"{0} џула"}
+                    }
+                }
                 dnam{"џули"}
                 few{"{0} џула"}
+                gender{"inanimate"}
                 one{"{0} џул"}
                 other{"{0} џула"}
             }
@@ -494,8 +1117,26 @@ sr{
         }
         force{
             newton{
+                case{
+                    accusative{
+                        few{"{0} њутна"}
+                        one{"{0} њутн"}
+                        other{"{0} њутна"}
+                    }
+                    genitive{
+                        few{"{0} њутна"}
+                        one{"{0} њутна"}
+                        other{"{0} њутна"}
+                    }
+                    instrumental{
+                        few{"{0} њутна"}
+                        one{"{0} њутном"}
+                        other{"{0} њутна"}
+                    }
+                }
                 dnam{"њутни"}
                 few{"{0} њутна"}
+                gender{"inanimate"}
                 one{"{0} њутн"}
                 other{"{0} њутна"}
             }
@@ -514,8 +1155,26 @@ sr{
                 other{"{0} гигахерца"}
             }
             hertz{
+                case{
+                    accusative{
+                        few{"{0} херца"}
+                        one{"{0} херц"}
+                        other{"{0} херца"}
+                    }
+                    genitive{
+                        few{"{0} херца"}
+                        one{"{0} херца"}
+                        other{"{0} херца"}
+                    }
+                    instrumental{
+                        few{"{0} херца"}
+                        one{"{0} херцом"}
+                        other{"{0} херца"}
+                    }
+                }
                 dnam{"херци"}
                 few{"{0} херца"}
+                gender{"inanimate"}
                 one{"{0} херц"}
                 other{"{0} херца"}
             }
@@ -538,6 +1197,52 @@ sr{
                 few{"{0} тачке"}
                 one{"{0} тачка"}
                 other{"{0} тачака"}
+            }
+            em{
+                case{
+                    accusative{
+                        few{"{0} em"}
+                        one{"{0} em"}
+                        other{"{0} em"}
+                    }
+                    genitive{
+                        few{"{0} em"}
+                        one{"{0} em"}
+                        other{"{0} em"}
+                    }
+                    instrumental{
+                        few{"{0} em"}
+                        one{"{0} em"}
+                        other{"{0} em"}
+                    }
+                }
+                few{"{0} em"}
+                gender{"inanimate"}
+                one{"{0} em"}
+                other{"{0} em"}
+            }
+            pixel{
+                case{
+                    accusative{
+                        few{"{0} px"}
+                        one{"{0} px"}
+                        other{"{0} px"}
+                    }
+                    genitive{
+                        few{"{0} px"}
+                        one{"{0} px"}
+                        other{"{0} px"}
+                    }
+                    instrumental{
+                        few{"{0} px"}
+                        one{"{0} px"}
+                        other{"{0} px"}
+                    }
+                }
+                few{"{0} px"}
+                gender{"inanimate"}
+                one{"{0} px"}
+                other{"{0} px"}
             }
         }
         length{
@@ -606,8 +1311,26 @@ sr{
                 other{"{0} светлосних година"}
             }
             meter{
+                case{
+                    accusative{
+                        few{"{0} метра"}
+                        one{"{0} метар"}
+                        other{"{0} метара"}
+                    }
+                    genitive{
+                        few{"{0} метра"}
+                        one{"{0} метра"}
+                        other{"{0} метара"}
+                    }
+                    instrumental{
+                        few{"{0} метра"}
+                        one{"{0} метром"}
+                        other{"{0} метара"}
+                    }
+                }
                 dnam{"метри"}
                 few{"{0} метра"}
+                gender{"inanimate"}
                 one{"{0} метар"}
                 other{"{0} метара"}
                 per{"{0}/m"}
@@ -625,8 +1348,26 @@ sr{
                 other{"{0} миља"}
             }
             mile-scandinavian{
+                case{
+                    accusative{
+                        few{"{0} скандинавске миље"}
+                        one{"{0} скандинавску миљу"}
+                        other{"{0} скандинавских миља"}
+                    }
+                    genitive{
+                        few{"{0} скандинавске миље"}
+                        one{"{0} скандинавске миље"}
+                        other{"{0} скандинавских миља"}
+                    }
+                    instrumental{
+                        few{"{0} скандинавске миље"}
+                        one{"{0} скандинавском миљом"}
+                        other{"{0} скандинавских миља"}
+                    }
+                }
                 dnam{"скандинавска миља"}
                 few{"{0} скандинавске миље"}
+                gender{"feminine"}
                 one{"{0} скандинавска миља"}
                 other{"{0} скандинавских миља"}
             }
@@ -681,28 +1422,100 @@ sr{
         }
         light{
             candela{
+                case{
+                    accusative{
+                        few{"{0} канделе"}
+                        one{"{0} канделу"}
+                        other{"{0} кандела"}
+                    }
+                    genitive{
+                        few{"{0} канделе"}
+                        one{"{0} канделе"}
+                        other{"{0} кандела"}
+                    }
+                    instrumental{
+                        few{"{0} канделе"}
+                        one{"{0} канделом"}
+                        other{"{0} кандела"}
+                    }
+                }
                 dnam{"кандела"}
                 few{"{0} канделе"}
+                gender{"feminine"}
                 one{"{0} кандела"}
                 other{"{0} кандела"}
             }
             lumen{
+                case{
+                    accusative{
+                        few{"{0} лумена"}
+                        one{"{0} лумен"}
+                        other{"{0} лумена"}
+                    }
+                    genitive{
+                        few{"{0} лумена"}
+                        one{"{0} лумена"}
+                        other{"{0} лумена"}
+                    }
+                    instrumental{
+                        few{"{0} лумена"}
+                        one{"{0} луменом"}
+                        other{"{0} лумена"}
+                    }
+                }
                 dnam{"лумен"}
                 few{"{0} лумена"}
+                gender{"inanimate"}
                 one{"{0} лумен"}
                 other{"{0} лумена"}
             }
             lux{
+                case{
+                    accusative{
+                        few{"{0} лукса"}
+                        one{"{0} лукс"}
+                        other{"{0} лукса"}
+                    }
+                    genitive{
+                        few{"{0} лукса"}
+                        one{"{0} лукса"}
+                        other{"{0} лукса"}
+                    }
+                    instrumental{
+                        few{"{0} лукса"}
+                        one{"{0} луксом"}
+                        other{"{0} лукса"}
+                    }
+                }
                 dnam{"лукс"}
                 few{"{0} лукса"}
+                gender{"inanimate"}
                 one{"{0} лукс"}
                 other{"{0} лукса"}
             }
         }
         mass{
             carat{
+                case{
+                    accusative{
+                        few{"{0} карата"}
+                        one{"{0} карат"}
+                        other{"{0} карата"}
+                    }
+                    genitive{
+                        few{"{0} карата"}
+                        one{"{0} карата"}
+                        other{"{0} карата"}
+                    }
+                    instrumental{
+                        few{"{0} карата"}
+                        one{"{0} каратом"}
+                        other{"{0} карата"}
+                    }
+                }
                 dnam{"карати"}
                 few{"{0} карата"}
+                gender{"inanimate"}
                 one{"{0} карат"}
                 other{"{0} карата"}
             }
@@ -725,22 +1538,76 @@ sr{
                 other{"{0} грејна"}
             }
             gram{
+                case{
+                    accusative{
+                        few{"{0} грама"}
+                        one{"{0} грам"}
+                        other{"{0} грама"}
+                    }
+                    genitive{
+                        few{"{0} грама"}
+                        one{"{0} грама"}
+                        other{"{0} грама"}
+                    }
+                    instrumental{
+                        few{"{0} грама"}
+                        one{"{0} грамом"}
+                        other{"{0} грама"}
+                    }
+                }
                 dnam{"грами"}
                 few{"{0} грама"}
+                gender{"inanimate"}
                 one{"{0} грам"}
                 other{"{0} грама"}
                 per{"{0} по граму"}
             }
             kilogram{
+                case{
+                    accusative{
+                        few{"{0} килограма"}
+                        one{"{0} килограм"}
+                        other{"{0} килограма"}
+                    }
+                    genitive{
+                        few{"{0} килограма"}
+                        one{"{0} килограма"}
+                        other{"{0} килограма"}
+                    }
+                    instrumental{
+                        few{"{0} килограма"}
+                        one{"{0} килограмом"}
+                        other{"{0} килограма"}
+                    }
+                }
                 dnam{"килограми"}
                 few{"{0} килограма"}
+                gender{"inanimate"}
                 one{"{0} килограм"}
                 other{"{0} килограма"}
                 per{"{0} по килограму"}
             }
             metric-ton{
+                case{
+                    accusative{
+                        few{"{0} метричке тоне"}
+                        one{"{0} метричку тону"}
+                        other{"{0} метричких тона"}
+                    }
+                    genitive{
+                        few{"{0} метричке тоне"}
+                        one{"{0} метричке тоне"}
+                        other{"{0} метричких тона"}
+                    }
+                    instrumental{
+                        few{"{0} метричке тоне"}
+                        one{"{0} метричком тоном"}
+                        other{"{0} метричких тона"}
+                    }
+                }
                 dnam{"метричке тоне"}
                 few{"{0} метричке тоне"}
+                gender{"feminine"}
                 one{"{0} метричка тона"}
                 other{"{0} метричких тона"}
             }
@@ -827,22 +1694,76 @@ sr{
                 other{"{0} миливати"}
             }
             watt{
+                case{
+                    accusative{
+                        few{"{0} вата"}
+                        one{"{0} ват"}
+                        other{"{0} вати"}
+                    }
+                    genitive{
+                        few{"{0} вата"}
+                        one{"{0} вата"}
+                        other{"{0} вати"}
+                    }
+                    instrumental{
+                        few{"{0} вата"}
+                        one{"{0} ватом"}
+                        other{"{0} вати"}
+                    }
+                }
                 dnam{"вати"}
                 few{"{0} вата"}
+                gender{"inanimate"}
                 one{"{0} ват"}
                 other{"{0} вати"}
             }
         }
         pressure{
             atmosphere{
+                case{
+                    accusative{
+                        few{"{0} атмосфере"}
+                        one{"{0} атмосферу"}
+                        other{"{0} атмосфера"}
+                    }
+                    genitive{
+                        few{"{0} атмосфере"}
+                        one{"{0} атмосфере"}
+                        other{"{0} атмосфера"}
+                    }
+                    instrumental{
+                        few{"{0} атмосфере"}
+                        one{"{0} атмосфером"}
+                        other{"{0} атмосфера"}
+                    }
+                }
                 dnam{"атмосфере"}
                 few{"{0} атмосфере"}
+                gender{"feminine"}
                 one{"{0} атмосфера"}
                 other{"{0} атмосфера"}
             }
             bar{
+                case{
+                    accusative{
+                        few{"{0} бара"}
+                        one{"{0} бар"}
+                        other{"{0} бара"}
+                    }
+                    genitive{
+                        few{"{0} бара"}
+                        one{"{0} бара"}
+                        other{"{0} бара"}
+                    }
+                    instrumental{
+                        few{"{0} бара"}
+                        one{"{0} баром"}
+                        other{"{0} бара"}
+                    }
+                }
                 dnam{"бари"}
                 few{"{0} бара"}
+                gender{"inanimate"}
                 one{"{0} бар"}
                 other{"{0} бара"}
             }
@@ -883,8 +1804,26 @@ sr{
                 other{"{0} милиметара живиног стуба"}
             }
             pascal{
+                case{
+                    accusative{
+                        few{"{0} паскала"}
+                        one{"{0} паскал"}
+                        other{"{0} паскала"}
+                    }
+                    genitive{
+                        few{"{0} паскала"}
+                        one{"{0} паскала"}
+                        other{"{0} паскала"}
+                    }
+                    instrumental{
+                        few{"{0} паскала"}
+                        one{"{0} паскалом"}
+                        other{"{0} паскала"}
+                    }
+                }
                 dnam{"паскали"}
                 few{"{0} паскала"}
+                gender{"inanimate"}
                 one{"{0} паскал"}
                 other{"{0} паскала"}
             }
@@ -923,8 +1862,26 @@ sr{
         }
         temperature{
             celsius{
+                case{
+                    accusative{
+                        few{"{0} степена Целзијуса"}
+                        one{"{0} степен Целзијуса"}
+                        other{"{0} степени Целзијуса"}
+                    }
+                    genitive{
+                        few{"{0} степена Целзијуса"}
+                        one{"{0} степена Целзијуса"}
+                        other{"{0} степени Целзијуса"}
+                    }
+                    instrumental{
+                        few{"{0} степена Целзијуса"}
+                        one{"{0} степеном Целзијуса"}
+                        other{"{0} степени Целзијуса"}
+                    }
+                }
                 dnam{"степени Целзијуса"}
                 few{"{0} степена Целзијуса"}
+                gender{"inanimate"}
                 one{"{0} степен Целзијуса"}
                 other{"{0} степени Целзијуса"}
             }
@@ -935,14 +1892,50 @@ sr{
                 other{"{0} степени Фаренхајта"}
             }
             generic{
+                case{
+                    accusative{
+                        few{"{0}°"}
+                        one{"{0}°"}
+                        other{"{0}°"}
+                    }
+                    genitive{
+                        few{"{0}°"}
+                        one{"{0}°"}
+                        other{"{0}°"}
+                    }
+                    instrumental{
+                        few{"{0}°"}
+                        one{"{0}°"}
+                        other{"{0}°"}
+                    }
+                }
                 dnam{"°"}
                 few{"{0}°"}
+                gender{"inanimate"}
                 one{"{0}°"}
                 other{"{0}°"}
             }
             kelvin{
+                case{
+                    accusative{
+                        few{"{0} келвина"}
+                        one{"{0} келвин"}
+                        other{"{0} келвина"}
+                    }
+                    genitive{
+                        few{"{0} келвина"}
+                        one{"{0} келвина"}
+                        other{"{0} келвина"}
+                    }
+                    instrumental{
+                        few{"{0} келвина"}
+                        one{"{0} келвином"}
+                        other{"{0} келвина"}
+                    }
+                }
                 dnam{"келвин"}
                 few{"{0} келвина"}
+                gender{"inanimate"}
                 one{"{0} келвин"}
                 other{"{0} келвина"}
             }
@@ -1037,8 +2030,26 @@ sr{
                 other{"{0} шоља"}
             }
             cup-metric{
+                case{
+                    accusative{
+                        few{"{0} метричке шоље"}
+                        one{"{0} метричку шољу"}
+                        other{"{0} метричких шоља"}
+                    }
+                    genitive{
+                        few{"{0} метричке шоље"}
+                        one{"{0} метричке шоље"}
+                        other{"{0} метричких шоља"}
+                    }
+                    instrumental{
+                        few{"{0} метричке шоље"}
+                        one{"{0} метричком шољом"}
+                        other{"{0} метричких шоља"}
+                    }
+                }
                 dnam{"метричка шоља"}
                 few{"{0} метричке шоље"}
+                gender{"feminine"}
                 one{"{0} метричка шоља"}
                 other{"{0} метричких шоља"}
             }
@@ -1111,8 +2122,26 @@ sr{
                 other{"{0} џигера"}
             }
             liter{
+                case{
+                    accusative{
+                        few{"{0} литра"}
+                        one{"{0} литар"}
+                        other{"{0} литара"}
+                    }
+                    genitive{
+                        few{"{0} литра"}
+                        one{"{0} литра"}
+                        other{"{0} литара"}
+                    }
+                    instrumental{
+                        few{"{0} литра"}
+                        one{"{0} литром"}
+                        other{"{0} литара"}
+                    }
+                }
                 dnam{"литри"}
                 few{"{0} литра"}
+                gender{"inanimate"}
                 one{"{0} литар"}
                 other{"{0} литара"}
                 per{"{0} по литри"}
@@ -1142,8 +2171,26 @@ sr{
                 other{"{0} пинти"}
             }
             pint-metric{
+                case{
+                    accusative{
+                        few{"{0} метричке пинте"}
+                        one{"{0} метричку пинту"}
+                        other{"{0} метричких пинти"}
+                    }
+                    genitive{
+                        few{"{0} метричке пинте"}
+                        one{"{0} метричке пинте"}
+                        other{"{0} метричких пинти"}
+                    }
+                    instrumental{
+                        few{"{0} метричке пинте"}
+                        one{"{0} метричком пинтом"}
+                        other{"{0} метричких пинти"}
+                    }
+                }
                 dnam{"метричке пинте"}
                 few{"{0} метричке пинте"}
+                gender{"feminine"}
                 one{"{0} метричка пинта"}
                 other{"{0} метричких пинти"}
             }
@@ -1252,6 +2299,12 @@ sr{
             times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"ставка"}
+                few{"{0} ставке"}
+                one{"{0} ставка"}
+                other{"{0} ставки"}
+            }
             percent{
                 dnam{"%"}
                 few{"{0}%"}
@@ -1265,6 +2318,12 @@ sr{
                 few{"{0} L/100km"}
                 one{"{0} L/100km"}
                 other{"{0} L/100km"}
+            }
+            mile-per-gallon-imperial{
+                dnam{"mpg Imp"}
+                few{"{0} mpg Imp"}
+                one{"{0} mpg Imp"}
+                other{"{0} mpg Imp"}
             }
         }
         coordinate{
@@ -1338,9 +2397,10 @@ sr{
                 other{"{0} ft"}
             }
             inch{
-                few{"{0} инча"}
-                one{"{0} инч"}
-                other{"{0} инча"}
+                dnam{"in"}
+                few{"{0} in"}
+                one{"{0} in"}
+                other{"{0} in"}
             }
             kilometer{
                 dnam{"km"}
@@ -1349,9 +2409,9 @@ sr{
                 other{"{0} km"}
             }
             light-year{
-                few{"{0} сг"}
-                one{"{0} сг"}
-                other{"{0} сг"}
+                few{"{0} ly"}
+                one{"{0} ly"}
+                other{"{0} ly"}
             }
             meter{
                 dnam{"m"}
@@ -1376,9 +2436,10 @@ sr{
                 other{"{0} pm"}
             }
             yard{
-                few{"{0} јрд"}
-                one{"{0} јрд"}
-                other{"{0} јрд"}
+                dnam{"yd"}
+                few{"{0} yd"}
+                one{"{0} yd"}
+                other{"{0} yd"}
             }
         }
         mass{
@@ -1481,11 +2542,39 @@ sr{
                 one{"{0} mi³"}
                 other{"{0} mi³"}
             }
+            dessert-spoon-imperial{
+                few{"{0} dstspn Imp"}
+                one{"{0} dstspn Imp"}
+                other{"{0}dsp-Imp"}
+            }
+            fluid-ounce-imperial{
+                dnam{"Imp fl oz"}
+                few{"{0} fl oz Imp"}
+                one{"{0} fl oz Imp"}
+                other{"{0} fl oz Imp"}
+            }
+            gallon-imperial{
+                dnam{"Imp gal"}
+                few{"{0}/gal Imp"}
+                one{"{0}/gal Imp"}
+                other{"{0}/gal Imp"}
+                per{"{0}/gal Imp"}
+            }
             liter{
                 dnam{"l"}
                 few{"{0} l"}
                 one{"{0} l"}
                 other{"{0} l"}
+            }
+            pinch{
+                few{"{0} pn"}
+                one{"{0} pn"}
+                other{"{0} pn"}
+            }
+            quart-imperial{
+                few{"{0} qt Imp"}
+                one{"{0} qt Imp"}
+                other{"{0} qt Imp"}
             }
         }
     }
@@ -1625,6 +2714,12 @@ sr{
             times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"ставка"}
+                few{"{0} ставке"}
+                one{"{0} ставка"}
+                other{"{0} ставки"}
+            }
             karat{
                 dnam{"kt"}
                 few{"{0} kt"}

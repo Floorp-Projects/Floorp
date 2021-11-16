@@ -32,6 +32,7 @@ dsb{
         151{"pódzajtšna Europa"}
         154{"pódpołnocna Europa"}
         155{"pódwjacorna Europa"}
+        202{"subsaharojska Afrika"}
         419{"Łatyńska Amerika"}
         AC{"Ascension"}
         AD{"Andorra"}
@@ -107,6 +108,7 @@ dsb{
         ES{"Špańska"}
         ET{"Etiopiska"}
         EU{"Europska unija"}
+        EZ{"europasmo"}
         FI{"Finska"}
         FJ{"Fidži"}
         FK{"Falklandske kupy"}
@@ -182,6 +184,7 @@ dsb{
         MF{"St. Martin"}
         MG{"Madagaskar"}
         MH{"Marshallowe kupy"}
+        MK{"Pódpołnocna Makedańska"}
         ML{"Mali"}
         MM{"Myanmar"}
         MN{"Mongolska"}
@@ -272,6 +275,7 @@ dsb{
         UA{"Ukraina"}
         UG{"Uganda"}
         UM{"Ameriska Oceaniska"}
+        UN{"Zjadnośone narody"}
         US{"Zjadnośone staty Ameriki"}
         UY{"Uruguay"}
         UZ{"Uzbekistan"}
@@ -284,6 +288,8 @@ dsb{
         VU{"Vanuatu"}
         WF{"Wallis a Futuna"}
         WS{"Samoa"}
+        XA{"pseudo-akcenty"}
+        XB{"pseudo-bidi"}
         XK{"Kosowo"}
         YE{"Jemen"}
         YT{"Mayotte"}

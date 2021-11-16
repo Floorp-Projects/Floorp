@@ -128,7 +128,7 @@ yue{
             patternsLong{
                 decimalFormat{
                     1000{
-                        other{"0"}
+                        other{"0千"}
                     }
                     10000{
                         other{"0萬"}
@@ -168,7 +168,7 @@ yue{
             patternsShort{
                 currencyFormat{
                     1000{
-                        other{"0"}
+                        other{"¤0千"}
                     }
                     10000{
                         other{"¤0萬"}
@@ -206,7 +206,7 @@ yue{
                 }
                 decimalFormat{
                     1000{
-                        other{"0"}
+                        other{"0千"}
                     }
                     10000{
                         other{"0萬"}
@@ -287,6 +287,16 @@ yue{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyMd",
+            }
             availableFormats{
                 Ed{"d日（E）"}
                 Gy{"Gy年"}
@@ -343,6 +353,25 @@ yue{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                {
+                    "UMMMEEEEd",
+                    "d=hanidays",
+                }
+                {
+                    "UMMMd",
+                    "d=hanidays",
+                }
+                {
+                    "rMMMd",
+                    "d=hanidays",
+                }
+                "rMd",
             }
             availableFormats{
                 Ed{"d日E"}
@@ -821,6 +850,16 @@ yue{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "UMMMEEEEd",
+                "UMMMd",
+                "UMMMd",
+                "UMd",
+            }
             cyclicNameSets{
                 dayParts{
                     format{
@@ -1130,6 +1169,16 @@ yue{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyMd",
+            }
             availableFormats{
                 Bh{"Bh時"}
                 Bhm{"Bh:mm"}
@@ -1345,6 +1394,16 @@ yue{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMEEEEd",
+                "yMd",
+                "yMd",
+                "yMd",
             }
             appendItems{
                 Timezone{"{0} {1}"}
@@ -1867,6 +1926,16 @@ yue{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyMd",
+            }
             eras{
                 abbreviated{
                     "創世紀元",
@@ -2088,6 +2157,16 @@ yue{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyMd",
+            }
             availableFormats{
                 Ed{"d日（E）"}
                 Gy{"Gy年"}
@@ -2225,6 +2304,16 @@ yue{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyMd",
             }
             availableFormats{
                 Ed{"d日（E）"}
@@ -2616,6 +2705,16 @@ yue{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMEEEEd",
+                "GyMd",
+                "GyMd",
+                "GyMd",
             }
             availableFormats{
                 E{"ccc"}

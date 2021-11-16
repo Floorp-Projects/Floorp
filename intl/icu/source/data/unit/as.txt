@@ -160,6 +160,11 @@ as{
             }
         }
         concentr{
+            item{
+                dnam{"আইটেমসমূহ"}
+                one{"{0} টা আইটেম"}
+                other{"{0} টা আইটেম"}
+            }
             karat{
                 dnam{"কেৰেট"}
                 one{"{0} কেৰেট"}
@@ -426,6 +431,11 @@ as{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"প্ৰতি 100 কিলোমিটাৰত কিলোৱাট-ঘণ্টা"}
+                one{"প্ৰতি 100 কিলোমিটাৰত {0} কিলোৱাট-ঘণ্টা"}
+                other{"প্ৰতি 100 কিলোমিটাৰত {0} কিলোৱাট-ঘণ্টা"}
+            }
             newton{
                 dnam{"নিউটন"}
                 one{"{0} নিউটন"}
@@ -1020,10 +1030,20 @@ as{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"আইটেম"}
+                one{"{0} টা আইটেম"}
+                other{"{0} টা আইটেম"}
+            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
                 other{"{0}%"}
+            }
+            permillion{
+                dnam{"ppm"}
+                one{"{0}ppm"}
+                other{"{0}ppm"}
             }
         }
         consumption{
@@ -1266,6 +1286,11 @@ as{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"আইটেম"}
+                one{"{0} টা আইটেম"}
+                other{"{0} টা আইটেম"}
+            }
             karat{
                 dnam{"কেৰেট"}
                 one{"{0} কেৰেট"}
@@ -1532,6 +1557,11 @@ as{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100km"}
+                one{"{0} kWh/100km"}
+                other{"{0} kWh/100km"}
+            }
             newton{
                 dnam{"নিউটন"}
                 one{"{0} N"}

@@ -51,6 +51,16 @@ doi{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMd",
+            }
             intervalFormats{
                 fallback{"{0} – {1}"}
             }
@@ -82,6 +92,16 @@ doi{
                 "{1} गी {0}",
                 "{1}, {0}",
                 "{1}, {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
             }
             appendItems{
                 Timezone{"{0} {1}"}
@@ -536,7 +556,7 @@ doi{
             relative{
                 "-1"{"जंदा कल"}
                 "0"{"अज्ज"}
-                "1"{"औंदा कल"}
+                "1"{"औंदे कल"}
             }
         }
         day-narrow{
@@ -544,7 +564,7 @@ doi{
             relative{
                 "-1"{"जंदा कल"}
                 "0"{"अज्ज"}
-                "1"{"औंदा कल"}
+                "1"{"औंदे कल"}
             }
         }
         day-short{
@@ -552,7 +572,7 @@ doi{
             relative{
                 "-1"{"जंदा कल"}
                 "0"{"अज्ज"}
-                "1"{"औंदा कल"}
+                "1"{"औंदे कल"}
             }
         }
         dayperiod{

@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 root{
-    Version{"39"}
+    Version{"40"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -137,6 +137,10 @@ root{
             times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"item"}
+                other{"{0} item"}
+            }
             karat{
                 dnam{"kt"}
                 other{"{0} kt"}
@@ -356,6 +360,10 @@ root{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100km"}
+                other{"{0} kWh/100km"}
+            }
             newton{
                 dnam{"N"}
                 other{"{0} N"}

@@ -58,6 +58,7 @@ ia{
         bug{"buginese"}
         byn{"blin"}
         ca{"catalano"}
+        ccp{"chakma"}
         ce{"checheno"}
         ceb{"cebuano"}
         cgg{"chiga"}
@@ -83,6 +84,7 @@ ia{
         de_CH{"alte germano suisse"}
         dgr{"dogrib"}
         dje{"zarma"}
+        doi{"dogri"}
         dsb{"basse sorabo"}
         dua{"duala"}
         dv{"divehi"}
@@ -108,6 +110,7 @@ ia{
         eu{"basco"}
         ewo{"ewondo"}
         fa{"persa"}
+        fa_AF{"dari"}
         ff{"fula"}
         fi{"finnese"}
         fil{"filipino"}
@@ -143,7 +146,7 @@ ia{
         ht{"creolo haitian"}
         hu{"hungaro"}
         hup{"hupa"}
-        hy{"armeniano"}
+        hy{"armenio"}
         hz{"herero"}
         ia{"interlingua"}
         iba{"iban"}
@@ -256,6 +259,7 @@ ia{
         naq{"nama"}
         nb{"norvegiano bokmål"}
         nd{"ndebele del nord"}
+        nds{"basse germano"}
         ne{"nepalese"}
         new{"newari"}
         ng{"ndonga"}
@@ -266,6 +270,7 @@ ia{
         nmg{"kwasio"}
         nn{"norvegiano nynorsk"}
         nnh{"ngiemboon"}
+        no{"norvegiano"}
         nog{"nogai"}
         nqo{"n’ko"}
         nr{"ndebele del sud"}
@@ -294,6 +299,7 @@ ia{
         quc{"kʼicheʼ"}
         rap{"rapanui"}
         rar{"rarotongano"}
+        rhg{"rohingya"}
         rm{"romanche"}
         rn{"rundi"}
         ro{"romaniano"}
@@ -402,12 +408,24 @@ ia{
         zxx{"sin contento linguistic"}
         zza{"zaza"}
     }
+    Languages%long{
+        zh_Hans{"chinese mandarin simplificate"}
+        zh_Hant{"chinese mandarin traditional"}
+    }
+    Languages%menu{
+        yue{"chinese cantonese"}
+        zh{"chinese mandarin"}
+    }
     Languages%short{
         az{"azeri"}
+        en_GB{"anglese (GB)"}
+    }
+    Languages%variant{
+        ckb{"kurdo sorani"}
     }
     Scripts{
         Arab{"arabe"}
-        Armn{"armenian"}
+        Armn{"armenie"}
         Beng{"bengalese"}
         Bopo{"bopomofo"}
         Brai{"braille"}
@@ -443,7 +461,7 @@ ia{
         Telu{"telugu"}
         Thaa{"thaana"}
         Thai{"thailandese"}
-        Tibt{"tibetano"}
+        Tibt{"tibetan"}
         Zmth{"notation mathematic"}
         Zsye{"emoji"}
         Zsym{"symbolos"}
@@ -551,10 +569,5 @@ ia{
         language{"Lingua: {0}"}
         script{"Scriptura: {0}"}
         territory{"Region: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

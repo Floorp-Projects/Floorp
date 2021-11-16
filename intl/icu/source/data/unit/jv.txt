@@ -127,8 +127,13 @@ jv{
                     }
                 }
             }
+            times{"{0}-{1}"}
         }
         concentr{
+            item{
+                dnam{"iji"}
+                other{"{0} iji"}
+            }
             karat{
                 dnam{"karat"}
                 other{"{0} karat"}
@@ -343,6 +348,10 @@ jv{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kilowatt-jam saben 100 kilometer"}
+                other{"{0} kilowatt-jam saben 100 kilometer"}
+            }
             newton{
                 dnam{"newton"}
                 other{"{0} newton"}
@@ -825,20 +834,48 @@ jv{
         }
     }
     unitsNarrow{
+        acceleration{
+            meter-per-square-second{
+                other{"{0}m/s²"}
+            }
+        }
+        angle{
+            arc-minute{
+                other{"{0}′"}
+            }
+            arc-second{
+                other{"{0}″"}
+            }
+        }
+        area{
+            square-foot{
+                other{"{0} kaki²"}
+            }
+        }
         compound{
             10p-9{"n{0}"}
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                other{"{0} iji"}
+            }
             percent{
                 dnam{"%"}
                 other{"{0}%"}
+            }
+            permillion{
+                other{"{0}bpj"}
             }
         }
         consumption{
             liter-per-100-kilometer{
                 dnam{"L/100 km"}
                 other{"{0} L/100 km"}
+            }
+            mile-per-gallon-imperial{
+                dnam{"mpg inggris"}
+                other{"{0}m/gUK"}
             }
         }
         coordinate{
@@ -882,6 +919,16 @@ jv{
                 other{"{0} taun"}
             }
         }
+        energy{
+            therm-us{
+                other{"{0}panas AS"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                other{"{0}kWh/km"}
+            }
+        }
         length{
             centimeter{
                 dnam{"cm"}
@@ -909,6 +956,14 @@ jv{
                 dnam{"kg"}
                 other{"{0} kg"}
             }
+            metric-ton{
+                other{"{0}t"}
+            }
+        }
+        power{
+            horsepower{
+                other{"{0}dj"}
+            }
         }
         speed{
             kilometer-per-hour{
@@ -922,10 +977,51 @@ jv{
                 other{"{0}°C"}
             }
         }
+        torque{
+            pound-force-foot{
+                other{"{0}lbf⋅kaki"}
+            }
+        }
         volume{
+            centiliter{
+                other{"{0}cL"}
+            }
+            dessert-spoon{
+                other{"{0}sde"}
+            }
+            dessert-spoon-imperial{
+                other{"{0}sde-lmp"}
+            }
+            dram{
+                other{"{0}by.dr."}
+            }
+            fluid-ounce{
+                other{"{0}ons by"}
+            }
+            fluid-ounce-imperial{
+                other{"{0}oz lm by"}
+            }
+            gallon-imperial{
+                other{"{0}gallm"}
+            }
             liter{
                 dnam{"liter"}
                 other{"{0} L"}
+            }
+            pinch{
+                other{"{0}juwit"}
+            }
+            pint-metric{
+                other{"{0}mpt"}
+            }
+            quart{
+                other{"{0}sprt"}
+            }
+            quart-imperial{
+                other{"{0}spt-lmp."}
+            }
+            tablespoon{
+                other{"{0}sdm"}
             }
         }
     }
@@ -1010,6 +1106,10 @@ jv{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"iji"}
+                other{"{0} iji"}
+            }
             karat{
                 dnam{"karat"}
                 other{"{0} kt"}

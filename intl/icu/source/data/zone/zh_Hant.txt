@@ -1963,6 +1963,9 @@ zh_Hant{
             lg{"葉卡捷琳堡時間"}
             ls{"葉卡捷琳堡標準時間"}
         }
+        "meta:Yukon"{
+            ls{"育空地區時間"}
+        }
         fallbackFormat{"{1}（{0}）"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

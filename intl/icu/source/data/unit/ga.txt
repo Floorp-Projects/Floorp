@@ -157,6 +157,10 @@ ga{
         }
         compound{
             1024p1{"cibi-{0}"}
+            1024p2{"mebi{0}"}
+            1024p4{"tebi{0}"}
+            1024p7{"zebi{0}"}
+            1024p8{"yobe{0}"}
             10p-1{"deici{0}"}
             10p-12{"pici{0}"}
             10p-15{"feimti{0}"}
@@ -644,6 +648,14 @@ ga{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"cileavatuair in aghaidh 100 ciliméadar"}
+                few{"{0} kWh/100km"}
+                many{"{0} kWh/100km"}
+                one{"cileavatuair in aghaidh 100 ciliméadar"}
+                other{"{0} cileavatuair in aghaidh 100 ciliméadar"}
+                two{"{0} cileavatuair in aghaidh 100 cilliméadar"}
+            }
             newton{
                 dnam{"niútain"}
                 few{"{0} N"}

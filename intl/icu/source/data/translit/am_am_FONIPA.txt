@@ -567,7 +567,7 @@ $LABIALIZABLE_BEFORE_A = [p{pʼ}t{tʼ} {t\u0361ʃ}{t\u0361ʃʼ}{d\u0361ʒ}{d\u03
 ፦ → ' ';  # U+1366 ETHIOPIC PREFACE COLON
 ፧ → ' ';  # U+1367 ETHIOPIC QUESTION MARK
 ፨ → ' ';  # U+1368 ETHIOPIC PARAGRAPH SEPARATOR
-# Likewise, Ethiopic numberals cannot be pronounced by these rules,
+# Likewise, Ethiopic numerals cannot be pronounced by these rules,
 # so we replace them by whitespace in the output IPA notation.
 # Applications will typically pre-process text before calling
 # the am → am_FONIPA transform.

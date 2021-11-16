@@ -1898,6 +1898,9 @@ ur{
             lg{"یکاٹیرِنبرگ ٹائم"}
             ls{"یکاٹیرِنبرگ اسٹینڈرڈ ٹائم"}
         }
+        "meta:Yukon"{
+            ls{"یوکون ٹائم"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT {0}"}
         gmtZeroFormat{"GMT"}

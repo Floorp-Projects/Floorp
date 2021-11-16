@@ -5,18 +5,9 @@ es_US{
     %%Parent{"es_419"}
     units{
         compound{
-            power3{
-                one{
-                    _{
-                        _{"{0} cúbico"}
-                    }
-                }
-                other{
-                    _{
-                        _{"cúbico{0}"}
-                    }
-                }
-            }
+            10p-12{"picó{0}"}
+            10p-2{"centí{0}"}
+            10p3{"kiló{0}"}
         }
         concentr{
             milligram-ofglucose-per-deciliter{
@@ -70,17 +61,15 @@ es_US{
         }
         graphics{
             em{
-                dnam{"espacio eme"}
+                dnam{"em tipográfica"}
+                gender{"feminine"}
+                one{"{0} em"}
+                other{"{0} em"}
             }
             megapixel{
                 dnam{"megapixeles"}
                 one{"{0} megapixel"}
                 other{"{0} megapixeles"}
-            }
-            pixel{
-                dnam{"pixeles"}
-                one{"{0} pixel"}
-                other{"{0} pixeles"}
             }
             pixel-per-centimeter{
                 dnam{"pixeles por centímetro"}
@@ -94,11 +83,6 @@ es_US{
             }
         }
         length{
-            furlong{
-                dnam{"furlones"}
-                one{"{0} furlong"}
-                other{"{0} frulones"}
-            }
             nautical-mile{
                 dnam{"millas naúticas"}
                 one{"{0} milla naútica"}
@@ -153,6 +137,11 @@ es_US{
         }
     }
     unitsNarrow{
+        area{
+            hectare{
+                dnam{"hectárea"}
+            }
+        }
         duration{
             day{
                 dnam{"día"}
@@ -168,6 +157,26 @@ es_US{
                 dnam{"a"}
                 one{"{0}a"}
                 other{"{0}a"}
+            }
+        }
+        graphics{
+            dot{
+                dnam{"punto"}
+                one{"{0} p"}
+                other{"{0} p"}
+            }
+        }
+        length{
+            fathom{
+                dnam{"braza"}
+            }
+            furlong{
+                dnam{"furlong"}
+            }
+            mile-scandinavian{
+                dnam{"mil"}
+                one{"{0}mil"}
+                other{"{0}mil"}
             }
         }
         temperature{
@@ -228,25 +237,25 @@ es_US{
         }
         graphics{
             dot{
-                dnam{"pts"}
-                one{"{0} pts"}
-                other{"{0} p"}
+                dnam{"px"}
+                one{"{0} px"}
+                other{"{0} px"}
             }
         }
         length{
-            fathom{
-                dnam{"brz."}
-                one{"{0} brz."}
-                other{"{0} brz."}
-            }
             furlong{
-                dnam{"furlones"}
-                one{"{0} fur."}
-                other{"{0} fur."}
+                dnam{"furlongs"}
+                one{"{0} fur"}
+                other{"{0} fur"}
             }
             light-year{
                 one{"{0} a. l."}
                 other{"{0} a. l."}
+            }
+            mile-scandinavian{
+                dnam{"mil"}
+                one{"{0} mil"}
+                other{"{0} mil"}
             }
             nautical-mile{
                 dnam{"mn"}

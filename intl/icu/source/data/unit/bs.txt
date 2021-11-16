@@ -167,6 +167,12 @@ bs{
             }
         }
         concentr{
+            item{
+                dnam{"stavka"}
+                few{"{0} stavke"}
+                one{"{0} stavka"}
+                other{"{0} stavki"}
+            }
             karat{
                 dnam{"karati"}
                 few{"{0} karata"}
@@ -475,6 +481,12 @@ bs{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100 km"}
+                few{"{0} kWh/100 km"}
+                one{"{0} kWh/100 km"}
+                other{"{0} kWh/100 km"}
+            }
             newton{
                 dnam{"njutni"}
                 few{"{0} njutna"}
@@ -1221,6 +1233,12 @@ bs{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"stavka"}
+                few{"{0} stavke"}
+                one{"{0} stavka"}
+                other{"{0} stavki"}
+            }
             percent{
                 dnam{"%"}
                 few{"{0}%"}
@@ -1291,6 +1309,14 @@ bs{
                 few{"{0} god."}
                 one{"{0} god."}
                 other{"{0} god."}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100 km"}
+                few{"{0} kWh/100 km"}
+                one{"{0}kWh/100 km"}
+                other{"{0}kWh/100 km"}
             }
         }
         length{
@@ -1556,6 +1582,12 @@ bs{
             times{"{0}⋅{1}"}
         }
         concentr{
+            item{
+                dnam{"stavka"}
+                few{"{0} stavke"}
+                one{"{0} stavka"}
+                other{"{0} stavki"}
+            }
             karat{
                 dnam{"karati"}
                 few{"{0} kt"}
@@ -1870,6 +1902,12 @@ bs{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"kWh/100 km"}
+                few{"{0} kWh/100 km"}
+                one{"{0} kWh/100 km"}
+                other{"{0} kWh/100 km"}
+            }
             newton{
                 dnam{"N"}
                 few{"{0} N"}

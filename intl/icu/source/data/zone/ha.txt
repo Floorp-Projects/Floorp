@@ -636,6 +636,9 @@ ha{
             lg{"Lokacin Yekaterinburg"}
             ls{"Tsayayyen Lokacin Yekaterinburg"}
         }
+        "meta:Yukon"{
+            ls{"Lokacin Yukon"}
+        }
         regionFormat{"{0} Lokaci"}
         regionFormatDaylight{"{0} Lokacin Rana"}
         regionFormatStandard{"{0} Daidaitaccen Lokaci"}

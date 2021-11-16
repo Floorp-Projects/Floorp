@@ -1,6 +1,6 @@
-# NormalizationCorrections-13.0.0.txt
-# Date: 2019-09-09, 19:50:00 GMT [KW, LI]
-# © 2019 Unicode®, Inc.
+# NormalizationCorrections-14.0.0.txt
+# Date: 2021-03-16, 22:07:00 GMT [KW, LI]
+# © 2021 Unicode®, Inc.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
 #
 # Unicode Character Database

@@ -2,57 +2,242 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 en_CA{
-    %%Parent{"en_001"}
     zoneStrings{
+        "America:St_Barthelemy"{
+            ec{"Saint-Barthélemy"}
+        }
+        "America:St_Johns"{
+            ec{"Saint John’s"}
+        }
+        "America:St_Kitts"{
+            ec{"Saint Kitts"}
+        }
+        "America:St_Lucia"{
+            ec{"Saint Lucia"}
+        }
+        "America:St_Thomas"{
+            ec{"Saint Thomas"}
+        }
+        "America:St_Vincent"{
+            ec{"Saint Vincent"}
+        }
+        "Asia:Aqtau"{
+            ec{"Aktau"}
+        }
         "Asia:Rangoon"{
             ec{"Rangoon"}
         }
-        "Pacific:Honolulu"{
-            sd{"HDT"}
-            sg{"HST"}
-            ss{"HST"}
+        "Atlantic:St_Helena"{
+            ec{"Saint Helena"}
+        }
+        "meta:Afghanistan"{
+            ss{"AFT"}
         }
         "meta:Alaska"{
-            sd{"AKDT"}
-            sg{"AKT"}
-            ss{"AKST"}
+            ld{"Alaska Daylight Saving Time"}
         }
         "meta:America_Central"{
-            sd{"CDT"}
-            sg{"CT"}
-            ss{"CST"}
+            ld{"Central Daylight Saving Time"}
         }
         "meta:America_Eastern"{
-            sd{"EDT"}
-            sg{"ET"}
-            ss{"EST"}
+            ld{"Eastern Daylight Saving Time"}
         }
         "meta:America_Mountain"{
-            sd{"MDT"}
-            sg{"MT"}
-            ss{"MST"}
+            ld{"Mountain Daylight Saving Time"}
         }
         "meta:America_Pacific"{
-            sd{"PDT"}
-            sg{"PT"}
-            ss{"PST"}
+            ld{"Pacific Daylight Saving Time"}
+        }
+        "meta:Apia"{
+            ld{"Apia Daylight Saving Time"}
+        }
+        "meta:Arabian"{
+            ld{"Arabian Daylight Saving Time"}
+        }
+        "meta:Argentina"{
+            sg{"ART"}
         }
         "meta:Atlantic"{
-            sd{"ADT"}
-            sg{"AT"}
-            ss{"AST"}
+            ld{"Atlantic Daylight Saving Time"}
+        }
+        "meta:Australia_Central"{
+            ld{"Australian Central Daylight Saving Time"}
+        }
+        "meta:Australia_CentralWestern"{
+            ld{"Australian Central Western Daylight Saving Time"}
+            sd{"ACWDT"}
+            sg{"ACWT"}
+            ss{"ACWST"}
+        }
+        "meta:Australia_Eastern"{
+            ld{"Australian Eastern Daylight Saving Time"}
+            sd{"AEDT"}
+            sg{"AET"}
+            ss{"AEST"}
+        }
+        "meta:Australia_Western"{
+            ld{"Australian Western Daylight Saving Time"}
+            sd{"AWDT"}
+            ss{"AWST"}
+        }
+        "meta:Bangladesh"{
+            ss{"BST"}
+        }
+        "meta:Bhutan"{
+            ss{"BTT"}
+        }
+        "meta:Brasilia"{
+            sd{"BRST"}
+            sg{"BRT"}
+        }
+        "meta:Brunei"{
+            ss{"BNT"}
+        }
+        "meta:Chatham"{
+            ld{"Chatham Daylight Saving Time"}
+            sd{"CHADT"}
+            ss{"CHAST"}
+        }
+        "meta:China"{
+            ld{"China Daylight Saving Time"}
+        }
+        "meta:Christmas"{
+            ss{"CXT"}
+        }
+        "meta:Cocos"{
+            ss{"CCT"}
+        }
+        "meta:Colombia"{
+            sd{"COST"}
+        }
+        "meta:Cuba"{
+            ld{"Cuba Daylight Saving Time"}
+        }
+        "meta:East_Timor"{
+            ss{"TLT"}
+        }
+        "meta:Easter"{
+            sd{"EASST"}
+            ss{"EAST"}
+        }
+        "meta:Ecuador"{
+            ss{"ECT"}
+        }
+        "meta:Falkland"{
+            sd{"FKST"}
+            sg{"FKT"}
+        }
+        "meta:French_Southern"{
+            ls{"French Southern and Antarctic Time"}
+        }
+        "meta:Galapagos"{
+            ss{"GALT"}
+        }
+        "meta:Greenland_Eastern"{
+            sg{"EGT"}
+        }
+        "meta:Guyana"{
+            ss{"GYT"}
         }
         "meta:Hawaii_Aleutian"{
-            sd{"HADT"}
-            sg{"HAT"}
-            ss{"HAST"}
+            ld{"Hawaii-Aleutian Daylight Saving Time"}
+        }
+        "meta:India"{
+            ss{"IST"}
+        }
+        "meta:Indochina"{
+            ss{"ICT"}
+        }
+        "meta:Indonesia_Central"{
+            ss{"WITA"}
+        }
+        "meta:Indonesia_Eastern"{
+            ss{"WIT"}
+        }
+        "meta:Indonesia_Western"{
+            ss{"WIB"}
+        }
+        "meta:Iran"{
+            ld{"Iran Daylight Saving Time"}
+            sd{"IRDT"}
+            ss{"IRST"}
+        }
+        "meta:Israel"{
+            ld{"Israel Daylight Saving Time"}
+        }
+        "meta:Japan"{
+            ld{"Japan Daylight Saving Time"}
+        }
+        "meta:Korea"{
+            ld{"Korean Daylight Saving Time"}
+        }
+        "meta:Lord_Howe"{
+            ld{"Lord Howe Daylight Saving Time"}
+        }
+        "meta:Malaysia"{
+            ss{"MYT"}
+        }
+        "meta:Maldives"{
+            ss{"MVT"}
+        }
+        "meta:Mexico_Northwest"{
+            ld{"Northwest Mexico Daylight Saving Time"}
+        }
+        "meta:Mexico_Pacific"{
+            ld{"Mexican Pacific Daylight Saving Time"}
+        }
+        "meta:Nepal"{
+            ss{"NPT"}
+        }
+        "meta:New_Zealand"{
+            ld{"New Zealand Daylight Saving Time"}
         }
         "meta:Newfoundland"{
+            ld{"Newfoundland Daylight Saving Time"}
             sd{"NDT"}
             sg{"NT"}
             ss{"NST"}
         }
-        gmtZeroFormat{"GMT"}
+        "meta:Norfolk"{
+            ld{"Norfolk Island Daylight Saving Time"}
+        }
+        "meta:Noronha"{
+            sg{"FNT"}
+        }
+        "meta:Pakistan"{
+            ss{"PKT"}
+        }
+        "meta:Paraguay"{
+            sd{"PYST"}
+            sg{"PYT"}
+        }
+        "meta:Peru"{
+            sg{"PET"}
+        }
+        "meta:Pierre_Miquelon"{
+            ld{"Saint-Pierre-et-Miquelon Daylight Saving Time"}
+            lg{"Saint-Pierre-et-Miquelon Time"}
+            ls{"Saint-Pierre-et-Miquelon Standard Time"}
+            sd{"PMDT"}
+            sg{"PMT"}
+            ss{"PMST"}
+        }
+        "meta:Samoa"{
+            ld{"Samoa Daylight Saving Time"}
+        }
+        "meta:Taipei"{
+            ld{"Taipei Daylight Saving Time"}
+        }
+        "meta:Uruguay"{
+            sd{"UYST"}
+            ss{"UYT"}
+        }
+        "meta:Venezuela"{
+            ss{"VET"}
+        }
+        "meta:Wallis"{
+            ls{"Wallis and Futuna Time"}
+        }
         regionFormatDaylight{"{0} Daylight Saving Time"}
     }
 }

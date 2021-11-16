@@ -42,9 +42,6 @@ fr_CA{
         "Atlantic:Faeroe"{
             ec{"îles Féroé"}
         }
-        "Etc:UTC"{
-            ls{"temps universel coordonné"}
-        }
         "Europe:Dublin"{
             ld{"heure avancée irlandaise"}
         }

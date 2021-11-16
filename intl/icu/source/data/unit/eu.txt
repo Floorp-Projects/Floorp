@@ -156,6 +156,10 @@ eu{
             times{"{0}-{1}"}
         }
         concentr{
+            item{
+                one{"{0} elementu"}
+                other{"{0} elementu"}
+            }
             karat{
                 dnam{"kilateak"}
                 one{"{0} kilate"}
@@ -651,9 +655,9 @@ eu{
                 per{"{0} kilogramo bakoitzeko"}
             }
             metric-ton{
-                dnam{"tonak"}
-                one{"{0} tona"}
-                other{"{0} tona"}
+                dnam{"tona metrikoak"}
+                one{"{0} tona metriko"}
+                other{"{0} tona metriko"}
             }
             microgram{
                 dnam{"mikrogramoak"}
@@ -1093,10 +1097,19 @@ eu{
             west{"{0} M"}
         }
         duration{
+            century{
+                one{"{0}m."}
+                other{"{0}m."}
+            }
             day{
                 dnam{"egun"}
                 one{"{0} e."}
                 other{"{0} e."}
+            }
+            decade{
+                dnam{"hamark."}
+                one{"{0} hamark."}
+                other{"{0} hamark."}
             }
             hour{
                 dnam{"ordu"}
@@ -1132,6 +1145,12 @@ eu{
                 dnam{"urte"}
                 one{"{0} u."}
                 other{"{0} u."}
+            }
+        }
+        energy{
+            therm-us{
+                one{"{0} US therm"}
+                other{"{0} US therms"}
             }
         }
         length{
@@ -1181,6 +1200,10 @@ eu{
             }
         }
         mass{
+            earth-mass{
+                one{"{0} M⊕"}
+                other{"{0} M⊕"}
+            }
             gram{
                 dnam{"gramo"}
                 one{"{0} g"}
@@ -1195,9 +1218,21 @@ eu{
                 one{"{0} oz"}
                 other{"{0} oz"}
             }
+            ounce-troy{
+                one{"{0} oz t"}
+                other{"{0} oz t"}
+            }
             pound{
                 one{"{0} lb"}
                 other{"{0} lb"}
+            }
+            solar-mass{
+                one{"{0} M☉"}
+                other{"{0} M☉"}
+            }
+            ton{
+                one{"{0}tn"}
+                other{"{0}tn"}
             }
         }
         power{
@@ -1215,6 +1250,10 @@ eu{
             }
         }
         pressure{
+            atmosphere{
+                one{"{0} atm"}
+                other{"{0} atm"}
+            }
             hectopascal{
                 one{"{0} hPa"}
                 other{"{0} hPa"}
@@ -1233,6 +1272,10 @@ eu{
                 dnam{"km/h"}
                 one{"{0} km/h"}
                 other{"{0} km/h"}
+            }
+            knot{
+                one{"{0}kn"}
+                other{"{0}kn"}
             }
             meter-per-second{
                 one{"{0} m/s"}
@@ -1254,7 +1297,17 @@ eu{
                 other{"{0}°F"}
             }
         }
+        torque{
+            pound-force-foot{
+                one{"{0} lbf⋅ft"}
+                other{"{0} lbf⋅ft"}
+            }
+        }
         volume{
+            acre-foot{
+                one{"{0}ac ft"}
+                other{"{0}ac ft"}
+            }
             cubic-kilometer{
                 one{"{0} km³"}
                 other{"{0} km³"}
@@ -1263,10 +1316,50 @@ eu{
                 one{"{0} mi³"}
                 other{"{0} mi³"}
             }
+            cup{
+                one{"{0}c"}
+                other{"{0}c"}
+            }
+            cup-metric{
+                one{"{0}mc"}
+                other{"{0}mc"}
+            }
+            dessert-spoon{
+                one{"{0}dsp"}
+                other{"{0}dsp"}
+            }
+            dessert-spoon-imperial{
+                one{"{0}dsp-Imp"}
+                other{"{0}dsp-Imp"}
+            }
+            fluid-ounce{
+                one{"{0}fl oz"}
+                other{"{0}fl oz"}
+            }
+            fluid-ounce-imperial{
+                one{"{0}fl oz Im"}
+                other{"{0}fl oz Im"}
+            }
             liter{
                 dnam{"litro"}
                 one{"{0} l"}
                 other{"{0} l"}
+            }
+            pint-metric{
+                one{"{0}mpt"}
+                other{"{0}mpt"}
+            }
+            quart{
+                one{"{0}qt"}
+                other{"{0}qt"}
+            }
+            tablespoon{
+                one{"{0}tbsp"}
+                other{"{0}tbsp"}
+            }
+            teaspoon{
+                one{"{0}tsp"}
+                other{"{0}tsp"}
             }
         }
     }
@@ -1375,6 +1468,11 @@ eu{
             times{"{0}-{1}"}
         }
         concentr{
+            item{
+                dnam{"elementua"}
+                one{"{0} elementu"}
+                other{"{0} elementu"}
+            }
             karat{
                 dnam{"kt"}
                 one{"{0} kt"}
@@ -1402,8 +1500,6 @@ eu{
             }
             permillion{
                 dnam{"zati/milioi"}
-                one{"{0} ppm"}
-                other{"{0} ppm"}
             }
             permyriad{
                 one{"‱ {0}"}
@@ -1657,6 +1753,8 @@ eu{
         graphics{
             dot{
                 dnam{"puntua"}
+                one{"{0} puntu"}
+                other{"{0} ptu"}
             }
             dot-per-centimeter{
                 dnam{"dpcm"}

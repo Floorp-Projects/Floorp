@@ -160,6 +160,11 @@ mn{
             }
         }
         concentr{
+            item{
+                dnam{"зүйл"}
+                one{"{0} зүйл"}
+                other{"{0} зүйл"}
+            }
             karat{
                 dnam{"карат"}
                 one{"{0} карат"}
@@ -426,6 +431,11 @@ mn{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"киловатт-цаг 100 километрт"}
+                one{"{0} киловатт-цаг 100 километрт"}
+                other{"{0} киловатт-цаг 100 километрт"}
+            }
             newton{
                 dnam{"ньютон"}
                 one{"{0} ньютон"}
@@ -1015,8 +1025,12 @@ mn{
     unitsNarrow{
         acceleration{
             g-force{
-                one{"{0} G"}
-                other{"{0} G"}
+                dnam{"гравитацын тогтмол хүч"}
+                one{"{0} гравитацын тогтмол хүч"}
+                other{"{0} гравитацын тогтмол хүч"}
+            }
+            meter-per-square-second{
+                dnam{"м/с²"}
             }
         }
         angle{
@@ -1115,10 +1129,26 @@ mn{
             }
         }
         concentr{
+            item{
+                dnam{"зүйл"}
+                one{"{0} зүйл"}
+                other{"{0} зүйл"}
+            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
                 other{"{0}%"}
+            }
+            permille{
+                dnam{"‰"}
+            }
+            permillion{
+                dnam{"ppm"}
+                one{"{0}ppm"}
+                other{"{0}ppm"}
+            }
+            permyriad{
+                dnam{"‱"}
             }
         }
         consumption{
@@ -1126,6 +1156,14 @@ mn{
                 dnam{"л/100км"}
                 one{"{0} л/100км"}
                 other{"{0}л/100км"}
+            }
+            liter-per-kilometer{
+                dnam{"л/км"}
+            }
+            mile-per-gallon-imperial{
+                dnam{"ми/анг. гал"}
+                one{"{0} ми/анг.гал"}
+                other{"{0} ми/анг.гал"}
             }
         }
         coordinate{
@@ -1177,19 +1215,49 @@ mn{
                 other{"{0}ж"}
             }
         }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"кВт.ц/100 км"}
+                one{"{0}кВт.ц/100км"}
+                other{"{0}кВт.ц/100км"}
+            }
+            pound-force{
+                dnam{"lbf"}
+            }
+        }
+        graphics{
+            dot{
+                one{"{0}цэг"}
+                other{"{0}цэг"}
+            }
+            dot-per-inch{
+                dnam{"цэг/инч"}
+                one{"{0} цэг/инч"}
+                other{"{0} цэг/инч"}
+            }
+        }
         length{
+            astronomical-unit{
+                dnam{"au"}
+                one{"{0}au"}
+                other{"{0}au"}
+            }
             centimeter{
                 dnam{"см"}
                 one{"{0} см"}
                 other{"{0} см"}
             }
             foot{
-                one{"{0} фт"}
-                other{"{0} фт"}
+                one{"{0}′"}
+                other{"{0}′"}
+            }
+            furlong{
+                one{"{0} фурлонг"}
+                other{"{0} фурлонг"}
             }
             inch{
-                one{"{0} инч"}
-                other{"{0} инч"}
+                one{"{0}″"}
+                other{"{0}″"}
             }
             kilometer{
                 dnam{"км"}
@@ -1197,8 +1265,8 @@ mn{
                 other{"{0} км"}
             }
             light-year{
-                one{"{0} гэр/жил"}
-                other{"{0} гэр/жил"}
+                one{"{0} гэрл.жил"}
+                other{"{0} гэрл.жил"}
             }
             meter{
                 dnam{"метр"}
@@ -1209,6 +1277,10 @@ mn{
                 one{"{0} миль"}
                 other{"{0} миль"}
             }
+            mile-scandinavian{
+                one{"{0} ск.миль"}
+                other{"{0} ск.миль"}
+            }
             millimeter{
                 dnam{"мм"}
                 one{"{0} мм"}
@@ -1218,9 +1290,27 @@ mn{
                 one{"{0} пм"}
                 other{"{0} пм"}
             }
+            solar-radius{
+                dnam{"R☉"}
+            }
             yard{
                 one{"{0} ярд"}
                 other{"{0} ярд"}
+            }
+        }
+        light{
+            candela{
+                dnam{"кандел"}
+                one{"{0} кандел"}
+                other{"{0} кандел"}
+            }
+            lumen{
+                dnam{"люмен"}
+                one{"{0} люмен"}
+                other{"{0} люмен"}
+            }
+            solar-luminosity{
+                dnam{"L☉"}
             }
         }
         mass{
@@ -1239,8 +1329,8 @@ mn{
                 other{"{0} унц"}
             }
             pound{
-                one{"{0} фунт"}
-                other{"{0} фунт"}
+                one{"{0}#"}
+                other{"{0}#"}
             }
         }
         power{
@@ -1258,6 +1348,11 @@ mn{
             }
         }
         pressure{
+            atmosphere{
+                dnam{"уур амьсгал"}
+                one{"{0} уур амьсгал"}
+                other{"{0} уур амьсгал"}
+            }
             hectopascal{
                 one{"{0} гПа"}
                 other{"{0} гПа"}
@@ -1278,12 +1373,14 @@ mn{
                 other{"{0} км/ц"}
             }
             meter-per-second{
-                one{"{0} м/сек"}
-                other{"{0} м/сек"}
+                dnam{"м/с"}
+                one{"{0} м/с"}
+                other{"{0} м/с"}
             }
             mile-per-hour{
-                one{"{0} миль/цаг"}
-                other{"{0} миль/цаг"}
+                dnam{"ми/ц"}
+                one{"{0} ми/ц"}
+                other{"{0} ми/ц"}
             }
         }
         temperature{
@@ -1293,8 +1390,13 @@ mn{
                 other{"{0}°C"}
             }
             fahrenheit{
-                one{"{0}°F"}
-                other{"{0}°F"}
+                dnam{"°F"}
+                one{"{0}°"}
+                other{"{0}°"}
+            }
+            kelvin{
+                one{"{0}K"}
+                other{"{0}K"}
             }
         }
         volume{
@@ -1303,8 +1405,21 @@ mn{
                 other{"{0} км³"}
             }
             cubic-mile{
-                one{"{0} миль куб"}
-                other{"{0} миль куб"}
+                one{"{0} ми³"}
+                other{"{0} ми³"}
+            }
+            cup{
+                one{"{0} аяга"}
+                other{"{0} аяга"}
+            }
+            gallon{
+                per{"{0} гал"}
+            }
+            gallon-imperial{
+                dnam{"анг.гал"}
+                one{"{0} анг.гал"}
+                other{"{0} анг.гал"}
+                per{"{0} анг.гал"}
             }
             liter{
                 dnam{"литр"}
@@ -1466,6 +1581,11 @@ mn{
             }
         }
         concentr{
+            item{
+                dnam{"зүйл"}
+                one{"{0} зүйл"}
+                other{"{0} зүйл"}
+            }
             karat{
                 dnam{"карат"}
                 one{"{0} кар"}
@@ -1728,6 +1848,11 @@ mn{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"кВт.ц/100 км"}
+                one{"{0} кВт.ц/100 км"}
+                other{"{0} кВт.ц/100 км"}
+            }
             newton{
                 dnam{"ньютон"}
                 one{"{0} Н"}

@@ -19,9 +19,21 @@ en_001{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "rMMMMEEEEd",
+                "rMMMMd",
+                "rMMMd",
+                "rMMdd",
+            }
             availableFormats{
                 Ed{"E d"}
-                GyMMMEd{"E, d MMM r(U)"}
+                GyMMMEd{"E, d MMM r"}
+                GyMMMMEd{"E, d MMMM r(U)"}
+                GyMMMMd{"d MMMM r(U)"}
                 GyMMMd{"d MMM r"}
                 M{"LL"}
                 MEd{"E, dd/MM"}
@@ -31,10 +43,11 @@ en_001{
                 Md{"dd/MM"}
                 UMMMd{"d MMM U"}
                 UMd{"dd/MM/U"}
-                yMd{"dd/MM/r"}
                 yyyyM{"MM/r"}
                 yyyyMEd{"E, dd/MM/r"}
-                yyyyMMMEd{"E, d MMM r(U)"}
+                yyyyMMMEd{"E, d MMM r"}
+                yyyyMMMMEd{"E, d MMMM r(U)"}
+                yyyyMMMMd{"d MMMM r(U)"}
                 yyyyMMMd{"d MMM r"}
                 yyyyMd{"dd/MM/r"}
             }
@@ -97,6 +110,16 @@ en_001{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
                 EBhm{"E, h:mm B"}
                 EBhms{"E, h:mm:ss B"}
@@ -107,6 +130,7 @@ en_001{
                 Ehms{"E, h:mm:ss a"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                GyMd{"dd/MM/y GGGGG"}
                 M{"LL"}
                 MEd{"E, dd/MM"}
                 MMMEd{"E, d MMM"}
@@ -222,12 +246,23 @@ en_001{
                 "{1}, {0}",
                 "{1}, {0}",
             }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yMMdd",
+            }
             availableFormats{
                 EBhm{"E, h:mm B"}
                 EBhms{"E, h:mm:ss B"}
                 Ed{"E d"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                GyMd{"d/M/y GGGGG"}
                 MEd{"E, dd/MM"}
                 MMMEd{"E, d MMM"}
                 MMMMd{"d MMMM"}
@@ -348,6 +383,40 @@ en_001{
                     M{"dd/MM/y – dd/MM/y"}
                     d{"dd/MM/y – dd/MM/y"}
                     y{"dd/MM/y – dd/MM/y"}
+                }
+            }
+            monthNames{
+                format{
+                    abbreviated{
+                        "Jan",
+                        "Feb",
+                        "Mar",
+                        "Apr",
+                        "May",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sept",
+                        "Oct",
+                        "Nov",
+                        "Dec",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Jan",
+                        "Feb",
+                        "Mar",
+                        "Apr",
+                        "May",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sept",
+                        "Oct",
+                        "Nov",
+                        "Dec",
+                    }
                 }
             }
         }

@@ -58,12 +58,13 @@
     <target name="setup" depends="init">
         <mkdir dir="${env.CLDR_TMP_DIR}"/> <!-- make sure parent dir exists -->
         <condition property="cldrprod.exists">
-            <available file="${cldr.prod.dir}" type="dir"/>
+            <available file="${cldr.prod.dir}/common" type="dir"/>
         </condition>
     </target>
 
     <target name="cleanprod" depends="init, setup" if="cldrprod.exists">
-        <delete dir="${cldr.prod.dir}" />
+        <delete dir="${cldr.prod.dir}/common" />
+        <delete dir="${cldr.prod.dir}/keyboards" />
     </target>
     <target name="proddata" depends="init,setup" unless="cldrprod.exists">
         <echo message="Rebuilding ${cldr.prod.dir} - takes a while!"/>

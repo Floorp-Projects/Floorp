@@ -152,6 +152,11 @@ ky{
             }
         }
         concentr{
+            item{
+                dnam{"нерсе"}
+                one{"{0} нерсе"}
+                other{"{0} нерсе"}
+            }
             karat{
                 dnam{"карат"}
                 one{"{0} карат"}
@@ -417,6 +422,11 @@ ky{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"100 километрге киловатт саат"}
+                one{"{0} кВт*с/100км"}
+                other{"{0} кВт*с/100км"}
+            }
             newton{
                 dnam{"N"}
                 one{"{0} N"}
@@ -650,9 +660,9 @@ ky{
                 per{"фунтуна {0}"}
             }
             solar-mass{
-                dnam{"M☉"}
-                one{"{0} M☉"}
-                other{"{0} M☉"}
+                dnam{"күн массасы"}
+                one{"{0} күн массасы"}
+                other{"{0} күн массасы"}
             }
             ton{
                 dnam{"Америкалык тонна"}
@@ -990,14 +1000,15 @@ ky{
             square-kilometer{
                 one{"{0} км²"}
                 other{"{0} км²"}
+                per{"{0}/км²"}
             }
             square-meter{
                 one{"{0} м²"}
                 other{"{0} м²"}
             }
             square-mile{
-                one{"{0} чак²"}
-                other{"{0} чак²"}
+                one{"{0} ми²"}
+                other{"{0} ми²"}
             }
         }
         compound{
@@ -1023,6 +1034,15 @@ ky{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"нерсе"}
+                one{"{0} нерсе"}
+                other{"{0} нерсе"}
+            }
+            millimole-per-liter{
+                one{"{0}ммоль/л"}
+                other{"{0}ммоль/л"}
+            }
             percent{
                 dnam{"%"}
                 one{"{0}%"}
@@ -1034,6 +1054,10 @@ ky{
                 dnam{"100 км/л"}
                 one{"{0} л/100км"}
                 other{"{0} л/100км"}
+            }
+            mile-per-gallon-imperial{
+                one{"{0} мил/анг.гал"}
+                other{"{0}мил/англ.гал"}
             }
         }
         coordinate{
@@ -1048,6 +1072,10 @@ ky{
                 dnam{"күн"}
                 one{"{0} кн"}
                 other{"{0} кн"}
+            }
+            decade{
+                one{"{0} декада"}
+                other{"{0} декада"}
             }
             hour{
                 dnam{"саат"}
@@ -1085,6 +1113,25 @@ ky{
                 other{"{0} ж."}
             }
         }
+        energy{
+            therm-us{
+                one{"{0}термАКШ"}
+                other{"{0}термАКШ"}
+            }
+        }
+        force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"кВт*с/100км"}
+                one{"{0}кВт*с/100км"}
+                other{"{0}кВт*с/100км"}
+            }
+        }
+        graphics{
+            dot{
+                one{"{0}грф чкт"}
+                other{"{0}грф чкт"}
+            }
+        }
         length{
             centimeter{
                 dnam{"см"}
@@ -1096,8 +1143,7 @@ ky{
                 other{"{0} фут"}
             }
             inch{
-                one{"{0} д"}
-                other{"{0} д"}
+                per{"{0} дюйм"}
             }
             kilometer{
                 dnam{"км"}
@@ -1113,14 +1159,18 @@ ky{
                 one{"{0}м"}
                 other{"{0}м"}
             }
-            mile{
-                one{"{0} чак"}
-                other{"{0} чак"}
-            }
             millimeter{
                 dnam{"мм"}
                 one{"{0} мм"}
                 other{"{0} мм"}
+            }
+            nautical-mile{
+                one{"{0}nmi"}
+                other{"{0}nmi"}
+            }
+            parsec{
+                one{"{0} пс"}
+                other{"{0} пс"}
             }
             picometer{
                 one{"{0} пм"}
@@ -1132,22 +1182,31 @@ ky{
             }
         }
         mass{
+            earth-mass{
+                dnam{"M⊕"}
+            }
             gram{
                 dnam{"грамм"}
                 one{"{0} гр"}
                 other{"{0} гр"}
+                per{"{0}/гр"}
             }
             kilogram{
                 one{"{0} кг"}
                 other{"{0} кг"}
             }
             ounce{
-                one{"{0} унция"}
-                other{"{0} унция"}
+                per{"{0}/унц."}
             }
             pound{
-                one{"{0} фунт"}
-                other{"{0} фунт"}
+                one{"{0}#"}
+                other{"{0}#"}
+                per{"{0}/фунт"}
+            }
+            ton{
+                dnam{"тонна"}
+                one{"{0} тон."}
+                other{"{0} тон."}
             }
         }
         power{
@@ -1209,14 +1268,47 @@ ky{
                 one{"{0} км³"}
                 other{"{0} км³"}
             }
-            cubic-mile{
-                one{"{0} чак³"}
-                other{"{0} чак³"}
+            dessert-spoon{
+                dnam{"dsp"}
+                one{"{0}dsp"}
+                other{"{0}dsp"}
+            }
+            dessert-spoon-imperial{
+                dnam{"dsp Imp"}
+                one{"{0}dsp-Imp"}
+                other{"{0}dsp-Imp"}
+            }
+            dram{
+                one{"{0}fl.dr."}
+                other{"{0}fl.dr."}
+            }
+            fluid-ounce-imperial{
+                one{"{0}fl oz Im"}
+                other{"{0}fl oz Im"}
+            }
+            gallon-imperial{
+                one{"{0}англ.гал"}
+                other{"{0}англ.гал"}
             }
             liter{
                 dnam{"литр"}
                 one{"{0} л"}
                 other{"{0} л"}
+            }
+            pint-metric{
+                dnam{"пт"}
+            }
+            quart-imperial{
+                one{"{0}qt-Imp."}
+                other{"{0}qt-Imp."}
+            }
+            tablespoon{
+                one{"{0}чң.кш"}
+                other{"{0}чң.кш"}
+            }
+            teaspoon{
+                one{"{0}чй.кш"}
+                other{"{0}чй.кш"}
             }
         }
     }
@@ -1297,7 +1389,7 @@ ky{
                 dnam{"км²"}
                 one{"{0} км²"}
                 other{"{0} км²"}
-                per{"km²/{0}"}
+                per{"{0}/км²"}
             }
             square-meter{
                 dnam{"метр²"}
@@ -1340,6 +1432,11 @@ ky{
             per{"{0}/{1}"}
         }
         concentr{
+            item{
+                dnam{"нерсе"}
+                one{"{0} нерсе"}
+                other{"{0} нерсе"}
+            }
             karat{
                 dnam{"карат"}
                 one{"{0} кт"}
@@ -1606,6 +1703,11 @@ ky{
             }
         }
         force{
+            kilowatt-hour-per-100-kilometer{
+                dnam{"кВт*с/100км"}
+                one{"{0} кВт*с/100км"}
+                other{"{0} кВт*с/100км"}
+            }
             newton{
                 dnam{"N"}
                 one{"{0} N"}
@@ -1724,7 +1826,7 @@ ky{
             }
             parsec{
                 dnam{"парсек"}
-                one{"{0} пк"}
+                one{"{0} пс"}
                 other{"{0} пс"}
             }
             picometer{
@@ -1826,7 +1928,7 @@ ky{
                 per{"фунт/{0}"}
             }
             solar-mass{
-                dnam{"M☉"}
+                dnam{"күн массасы"}
                 one{"{0} M☉"}
                 other{"{0} M☉"}
             }

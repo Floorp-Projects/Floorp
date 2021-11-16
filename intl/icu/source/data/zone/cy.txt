@@ -1886,6 +1886,9 @@ cy{
             lg{"Amser Yekaterinburg"}
             ls{"Amser Safonol Yekaterinburg"}
         }
+        "meta:Yukon"{
+            ls{"Amser Yukon"}
+        }
         fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}

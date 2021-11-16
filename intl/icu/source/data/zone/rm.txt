@@ -314,6 +314,7 @@ rm{
         }
         "Europe:London"{
             ec{"Londra"}
+            ld{"temp da stad britannic"}
         }
         "Europe:Luxembourg"{
             ec{"Luxemburg"}

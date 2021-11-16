@@ -1943,6 +1943,9 @@ ja{
             lg{"エカテリンブルグ時間"}
             ls{"エカテリンブルグ標準時"}
         }
+        "meta:Yukon"{
+            ls{"ユーコン時間"}
+        }
         fallbackFormat{"{1}（{0}）"}
         gmtFormat{"GMT{0}"}
         gmtZeroFormat{"GMT"}
