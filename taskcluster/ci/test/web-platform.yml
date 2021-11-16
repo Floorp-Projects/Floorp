@@ -214,7 +214,6 @@ web-platform-tests-wdspec:
     mozharness:
         extra-options:
             - --test-type=wdspec
-            - --setpref=toolkit.asyncshutdown.log=true
     variants:
         - fission
         - webrender-sw
@@ -308,13 +307,11 @@ web-platform-tests-wdspec-headless:
             by-test-platform:
                 windows.*:
                     - --test-type=wdspec
-                    - --setpref=toolkit.asyncshutdown.log=true
                     - --headless
                     - --headless-width=1600
                     - --headless-height=1200
                 default:
                     - --test-type=wdspec
-                    - --setpref=toolkit.asyncshutdown.log=true
                     - --headless
     fetches:
         toolchain:
