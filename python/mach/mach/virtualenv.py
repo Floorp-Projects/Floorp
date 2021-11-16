@@ -104,7 +104,6 @@ class VirtualenvManager(VirtualenvHelper):
         virtualenvs_dir,
         virtualenv_name,
         *,
-        base_python=sys.executable,
         manifest_path=None,
     ):
         virtualenv_path = os.path.join(virtualenvs_dir, virtualenv_name)
@@ -115,7 +114,6 @@ class VirtualenvManager(VirtualenvHelper):
         # See https://bugzilla.mozilla.org/show_bug.cgi?id=1607470
         os.environ.pop("__PYVENV_LAUNCHER__", None)
         self.topsrcdir = topsrcdir
-        self._base_python = base_python
 
         # Record the Python executable that was used to create the Virtualenv
         # so we can check this against sys.executable when verifying the
@@ -127,12 +125,8 @@ class VirtualenvManager(VirtualenvHelper):
             topsrcdir, "build", f"{virtualenv_name}_virtualenv_packages.txt"
         )
 
-        hex_version = subprocess.check_output(
-            [self._base_python, "-c", "import sys; print(sys.hexversion)"]
-        )
-        hex_version = int(hex_version.rstrip())
         self._metadata = MozVirtualenvMetadata(
-            hex_version,
+            sys.hexversion,
             virtualenv_name,
             os.path.join(self.virtualenv_root, METADATA_FILENAME),
         )
@@ -244,7 +238,7 @@ class VirtualenvManager(VirtualenvHelper):
 
         result = subprocess.run(
             [
-                self._base_python,
+                sys.executable,
                 os.path.join(
                     self.topsrcdir,
                     "third_party",
