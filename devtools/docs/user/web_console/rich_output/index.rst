@@ -87,7 +87,7 @@ Once you have output in the console window, you can save it to the clipboard by 
 
 This will copy all of the output to the clipboard. Then you can paste it into a document. The output will look something like this:
 
-.. code-block:: JavaScript
+.. code-block::
 
   console.log(todoList)
   Array(4) [ {…}, {…}, {…}, {…} ]
@@ -96,7 +96,7 @@ This will copy all of the output to the clipboard. Then you can paste it into a 
 
 If you expand objects, such as arrays, you get slightly different content. For example, by expanding the array in the above list, I get the following:
 
-.. code-block:: javascript
+.. code-block::
 
   console.log(todoList)
   (4) […]

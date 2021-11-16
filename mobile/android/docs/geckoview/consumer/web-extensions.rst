@@ -123,7 +123,7 @@ Note: extension can only send messages from content scripts if
 explicitly authorized by the app by adding
 ``nativeMessagingFromContent`` in the manifest.json file, e.g.
 
-.. code:: json
+.. code::
 
      "permissions": [
        "nativeMessaging",
