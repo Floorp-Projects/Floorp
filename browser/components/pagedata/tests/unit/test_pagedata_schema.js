@@ -5,14 +5,6 @@
  * Tests schema validation.
  */
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  PageDataSchema: "resource:///modules/pagedata/PageDataSchema.jsm",
-});
-
 add_task(async function testBasic() {
   // Old data types, should not be recognised.
   Assert.equal(PageDataSchema.nameForType(1), null);
