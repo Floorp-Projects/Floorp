@@ -11,12 +11,12 @@
  */
 
 /*
- * Created on Thu Mar 12 09:57:47 2020 from UCD data files with version info:
+ * Created on Fri Oct 29 09:00:15 2021 from UCD data files with version info:
  *
 
 # Unicode Character Database
-# Date: 2020-03-06, 20:34:00 GMT [KW]
-# © 2020 Unicode®, Inc.
+# Date: 2021-09-10, 17:22:00 GMT [KW]
+# © 2021 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see https://www.unicode.org/terms_of_use.html
 #
@@ -26,17 +26,17 @@
 # UAX #44, "Unicode Character Database"
 # UTS #51, "Unicode Emoji"
 #
-# The UAXes and UTS #51 can be accessed at https://www.unicode.org/versions/Unicode13.0.0/
+# The UAXes and UTS #51 can be accessed at https://www.unicode.org/versions/Unicode14.0.0/
 
-This directory contains the final data files 
-for the Unicode Character Database, for Version 13.0.0 of the Unicode Standard.
+This directory contains the final data files
+for the Unicode Character Database, for Version 14.0.0 of the Unicode Standard.
 
 # IdentifierStatus.txt
-# Date: 2020-02-07, 22:02:47 GMT
+# Date: 2021-08-12, 01:13:34 GMT
 
 #
 # Unihan_Variants.txt
-# Date: 2020-02-18 18:27:33 GMT [JHJ]
+# Date: 2021-08-06 16:32:36 GMT [JHJ]
 
 # VerticalOrientation-17.txt
 # Date: 2016-10-20, 07:00:00 GMT [EM, KI, LI]
@@ -253,8 +253,13 @@ enum class Script : int16_t {
   DIVES_AKURU = 190,
   KHITAN_SMALL_SCRIPT = 191,
   YEZIDI = 192,
+  CYPRO_MINOAN = 193,
+  OLD_UYGHUR = 194,
+  TANGSA = 195,
+  TOTO = 196,
+  VITHKUQI = 197,
 
-  NUM_SCRIPT_CODES = 193,
+  NUM_SCRIPT_CODES = 198,
 
   INVALID = -1
 };
