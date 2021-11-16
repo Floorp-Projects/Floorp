@@ -63,7 +63,9 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
       mUseSoftwareImages(true)
 #else
       ,
-      mUseSoftwareImages(false)
+      mUseSoftwareImages(aKnowsCompositor &&
+                         aKnowsCompositor->GetWebRenderCompositorType() ==
+                             layers::WebRenderCompositor::SOFTWARE)
 #endif
       ,
       mIsFlushing(false),
