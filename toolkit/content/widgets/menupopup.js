@@ -56,8 +56,6 @@
         this.shadowRoot;
       });
 
-      this.attachShadow({ mode: "open" });
-
       this.addEventListener("DOMMenuItemActive", this);
     }
 
@@ -86,10 +84,10 @@
     }
 
     get shadowRoot() {
-      // We generate shadow DOM lazily on popupshowing event to avoid extra load
-      // on the system during browser startup.
-      if (!super.shadowRoot.firstElementChild) {
-        super.shadowRoot.appendChild(this.fragment);
+      if (!super.shadowRoot) {
+        // We generate shadow DOM lazily on popupshowing event to avoid extra
+        // load on the system during browser startup.
+        this.attachShadow({ mode: "open" }).appendChild(this.fragment);
         this.initShadowDOM();
       }
       return super.shadowRoot;
