@@ -221,3 +221,7 @@ toolkit/components/certviewer/content/package-lock.json
 
 # Ignore Rust/Cargo output from running `cargo` directly for image_builder docker image
 ^taskcluster/docker/image_builder/build-image/target
+
+# Ignore ICU4X experimentation data files.
+# See intl/ICU4X.md for more details.
+^config/external/icu4x
