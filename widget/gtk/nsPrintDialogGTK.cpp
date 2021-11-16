@@ -20,6 +20,7 @@
 #include "nsIStringBundle.h"
 #include "nsIPrintSettingsService.h"
 #include "nsPIDOMWindow.h"
+#include "nsPrintfCString.h"
 #include "nsIGIOService.h"
 #include "nsServiceManagerUtils.h"
 #include "WidgetUtils.h"
