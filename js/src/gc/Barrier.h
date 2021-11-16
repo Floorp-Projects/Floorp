@@ -15,7 +15,7 @@
 
 #include "gc/Cell.h"
 #include "gc/StoreBuffer.h"
-#include "js/ComparisonOperators.h"  // JS::detail::DefineComparisonOps
+#include "js/ComparisonOperators.h"     // JS::detail::DefineComparisonOps
 #include "js/experimental/TypedData.h"  // js::EnableIfABOVType
 #include "js/HeapAPI.h"
 #include "js/Id.h"

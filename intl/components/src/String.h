@@ -221,10 +221,9 @@ class String final {
     const unsigned MAX_DECOMP_LENGTH = 4;
     UErrorCode error = U_ZERO_ERROR;
     UChar decompUtf16[MAX_DECOMP_LENGTH];
-    int32_t len = unorm2_getRawDecomposition(normalizer,
-                                             static_cast<UChar32>(ab),
-                                             decompUtf16, MAX_DECOMP_LENGTH,
-                                             &error);
+    int32_t len =
+        unorm2_getRawDecomposition(normalizer, static_cast<UChar32>(ab),
+                                   decompUtf16, MAX_DECOMP_LENGTH, &error);
     if (U_FAILURE(error) || len < 0) {
       return 0;
     }

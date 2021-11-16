@@ -219,9 +219,7 @@ static Maybe<nscolor> GetSystemColor(LookAndFeel::ColorID aId) {
 
 class SelectionStyleProvider final {
  public:
-  static SelectionStyleProvider* GetExistingInstance() {
-    return sInstance;
-  }
+  static SelectionStyleProvider* GetExistingInstance() { return sInstance; }
 
   static SelectionStyleProvider* GetInstance() {
     if (sHasShutDown) {

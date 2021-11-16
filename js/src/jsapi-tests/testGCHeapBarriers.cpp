@@ -10,7 +10,7 @@
 
 #include "gc/Cell.h"
 #include "gc/GCRuntime.h"
-#include "js/ArrayBuffer.h"         // JS::NewArrayBuffer
+#include "js/ArrayBuffer.h"  // JS::NewArrayBuffer
 #include "js/experimental/TypedData.h"
 #include "js/PropertyAndElement.h"  // JS_DefineProperty, JS_GetProperty
 #include "js/RootingAPI.h"
@@ -26,8 +26,11 @@ static js::gc::CellColor GetColor(const JS::ArrayBufferOrView& view) {
   return view.asObjectUnbarriered()->color();
 }
 
-static MOZ_MAYBE_UNUSED bool IsInsideNursery(gc::Cell* cell) { return !cell->isTenured(); }
-static MOZ_MAYBE_UNUSED bool IsInsideNursery(const JS::ArrayBufferOrView& view) {
+static MOZ_MAYBE_UNUSED bool IsInsideNursery(gc::Cell* cell) {
+  return !cell->isTenured();
+}
+static MOZ_MAYBE_UNUSED bool IsInsideNursery(
+    const JS::ArrayBufferOrView& view) {
   return IsInsideNursery(view.asObjectUnbarriered());
 }
 

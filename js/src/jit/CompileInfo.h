@@ -16,13 +16,13 @@
 #include "jit/CompileWrappers.h"  // CompileRuntime
 #include "jit/JitFrames.h"        // MinJITStackSize
 #include "jit/shared/Assembler-shared.h"
-#include "js/TypeDecls.h"         // jsbytecode
-#include "vm/BindingKind.h"       // BindingLocation
-#include "vm/BytecodeUtil.h"      // JSOp
-#include "vm/JSAtomState.h"       // JSAtomState
-#include "vm/JSFunction.h"        // JSFunction
-#include "vm/JSScript.h"          // JSScript
-#include "vm/Scope.h"             // BindingIter
+#include "js/TypeDecls.h"     // jsbytecode
+#include "vm/BindingKind.h"   // BindingLocation
+#include "vm/BytecodeUtil.h"  // JSOp
+#include "vm/JSAtomState.h"   // JSAtomState
+#include "vm/JSFunction.h"    // JSFunction
+#include "vm/JSScript.h"      // JSScript
+#include "vm/Scope.h"         // BindingIter
 
 namespace js {
 
