@@ -463,7 +463,7 @@ The ToolDefinition object can contain following properties. Most of them are opt
   **Integer, optional.** The position of the tool's tab within the toolbox. **Default:** 99
 
 ``visibilityswitch``
-  **String, optional.** A preference name that controls the visibility of the tool. **Default: *``devtools.{id}.enabled``
+  **String, optional.** A preference name that controls the visibility of the tool. **Default: * ``devtools.{id}.enabled``
 
 ``icon``
   **String, optional.** An URL for the icon to show in the toolbox tab. If undefined the label should be defined.

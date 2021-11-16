@@ -459,8 +459,8 @@ common encodings are:
   used for interchange.
 
 In addition, there exist multiple other (legacy) encodings. The Web-relevant
-ones are defined in the `Encoding Standard
-<https://encoding.spec.whatwg.org/>`_. Conversions from these encodings to
+ones are defined in the `Encoding Standard <https://encoding.spec.whatwg.org/>`_. 
+Conversions from these encodings to
 UTF-8 and UTF-16 are provided by `mozilla::Encoding
 <https://searchfox.org/mozilla-central/source/intl/Encoding.h#109>`_.
 Additonally, on Windows the are some rare cases (e.g. drag&drop) where it's
