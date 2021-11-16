@@ -79,11 +79,6 @@
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 
-// Include expat after the other, since it defines XML_NS, which conflicts with
-// our symbol names.
-#include "expat_config.h"
-#include "expat.h"
-
 extern "C" {
 // Defined in intl/encoding_glue/src/lib.rs
 const mozilla::Encoding* xmldecl_parse(const uint8_t* buf, size_t buf_len);
@@ -503,71 +498,6 @@ void nsHtml5StreamParser::SetupDecodingFromUtf16BogoXml(
   mLastBuffer->AdvanceEnd(3);
 }
 
-void nsHtml5StreamParser::SetEncodingFromExpat(const char16_t* aEncoding) {
-  if (aEncoding) {
-    nsDependentString utf16(aEncoding);
-    nsAutoCString utf8;
-    CopyUTF16toUTF8(utf16, utf8);
-    auto encoding = PreferredForInternalEncodingDecl(utf8);
-    if (encoding) {
-      mEncoding = WrapNotNull(encoding);
-      mCharsetSource = kCharsetFromMetaTag;  // closest for XML
-      mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
-      return;
-    }
-    // else the page declared an encoding Gecko doesn't support and we'd
-    // end up defaulting to UTF-8 anyway. Might as well fall through here
-    // right away and let the encoding be set to UTF-8 which we'd default to
-    // anyway.
-  }
-  mEncoding = UTF_8_ENCODING;            // XML defaults to UTF-8 without a BOM
-  mCharsetSource = kCharsetFromMetaTag;  // means confident
-  mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
-}
-
-// A separate user data struct is used instead of passing the
-// nsHtml5StreamParser instance as user data in order to avoid including
-// expat.h in nsHtml5StreamParser.h. Doing that would cause naming conflicts.
-// Using a separate user data struct also avoids bloating nsHtml5StreamParser
-// by one pointer.
-struct UserData {
-  XML_Parser mExpat;
-  nsHtml5StreamParser* mStreamParser;
-};
-
-// Using no-namespace handler callbacks to avoid including expat.h in
-// nsHtml5StreamParser.h, since doing so would cause naming conclicts.
-static void HandleXMLDeclaration(void* aUserData, const XML_Char* aVersion,
-                                 const XML_Char* aEncoding, int aStandalone) {
-  UserData* ud = static_cast<UserData*>(aUserData);
-  ud->mStreamParser->SetEncodingFromExpat(
-      reinterpret_cast<const char16_t*>(aEncoding));
-  XML_StopParser(ud->mExpat, false);
-}
-
-static void HandleStartElement(void* aUserData, const XML_Char* aName,
-                               const XML_Char** aAtts) {
-  UserData* ud = static_cast<UserData*>(aUserData);
-  XML_StopParser(ud->mExpat, false);
-}
-
-static void HandleEndElement(void* aUserData, const XML_Char* aName) {
-  UserData* ud = static_cast<UserData*>(aUserData);
-  XML_StopParser(ud->mExpat, false);
-}
-
-static void HandleComment(void* aUserData, const XML_Char* aName) {
-  UserData* ud = static_cast<UserData*>(aUserData);
-  XML_StopParser(ud->mExpat, false);
-}
-
-static void HandleProcessingInstruction(void* aUserData,
-                                        const XML_Char* aTarget,
-                                        const XML_Char* aData) {
-  UserData* ud = static_cast<UserData*>(aUserData);
-  XML_StopParser(ud->mExpat, false);
-}
-
 void nsHtml5StreamParser::FinalizeSniffingWithDetector(
     Span<const uint8_t> aFromSegment, uint32_t aCountToSniffingLimit,
     bool aEof) {
@@ -602,63 +532,39 @@ nsresult nsHtml5StreamParser::FinalizeSniffing(Span<const uint8_t> aFromSegment,
   MOZ_ASSERT(mCharsetSource < kCharsetFromXmlDeclarationUtf16,
              "Should not finalize sniffing with strong decision already made.");
   if (mMode == VIEW_SOURCE_XML) {
-    static const XML_Memory_Handling_Suite memsuite = {
-        (void* (*)(size_t))moz_xmalloc, (void* (*)(void*, size_t))moz_xrealloc,
-        free};
-
-    static const char16_t kExpatSeparator[] = {0xFFFF, '\0'};
-
-    static const char16_t kISO88591[] = {'I', 'S', 'O', '-', '8', '8',
-                                         '5', '9', '-', '1', '\0'};
-
-    UserData ud;
-    ud.mStreamParser = this;
-
-    // If we got this far, the stream didn't have a BOM. UTF-16-encoded XML
-    // documents MUST begin with a BOM. We don't support EBCDIC and such.
-    // Thus, at this point, what we have is garbage or something encoded using
-    // a rough ASCII superset. ISO-8859-1 allows us to decode ASCII bytes
-    // without throwing errors when bytes have the most significant bit set
-    // and without triggering expat's unknown encoding code paths. This is
-    // enough to be able to use expat to parse the XML declaration in order
-    // to extract the encoding name from it.
-    ud.mExpat = XML_ParserCreate_MM(kISO88591, &memsuite, kExpatSeparator);
-    XML_SetXmlDeclHandler(ud.mExpat, HandleXMLDeclaration);
-    XML_SetElementHandler(ud.mExpat, HandleStartElement, HandleEndElement);
-    XML_SetCommentHandler(ud.mExpat, HandleComment);
-    XML_SetProcessingInstructionHandler(ud.mExpat, HandleProcessingInstruction);
-    XML_SetUserData(ud.mExpat, static_cast<void*>(&ud));
-
-    XML_Status status = XML_STATUS_OK;
-
-    // aFromSegment points to the data obtained from the current network
-    // event. mSniffingBuffer (if it exists) contains the data obtained before
-    // the current event. Thus, mSniffingLenth bytes of mSniffingBuffer
-    // followed by aCountToSniffingLimit bytes from aFromSegment are the
-    // first 1024 bytes of the file (or the file as a whole if the file is
-    // 1024 bytes long or shorter). Thus, we parse both buffers, but if the
-    // first call succeeds already, we skip parsing the second buffer.
-    if (mSniffingBuffer) {
-      status = XML_Parse(ud.mExpat,
-                         reinterpret_cast<const char*>(mSniffingBuffer.get()),
-                         mSniffingLength, false);
+    // Copypaste from the next non-XML block below.
+    // Not bothering to refactor these nicely, since this will get overwritten
+    // by the patch for https://bugzilla.mozilla.org/show_bug.cgi?id=1701828
+    // soon enough.
+    MOZ_ASSERT(mCharsetSource < kCharsetFromMetaTag);
+    const uint8_t* buf;
+    size_t bufLen;
+    MOZ_ASSERT(aFromSegment.Length() >= aCountToSniffingLimit);
+    if (mSniffingLength) {
+      // Copy data to a contiguous buffer if we already have something buffered
+      // up.
+      MOZ_ASSERT(mSniffingLength + aCountToSniffingLimit <=
+                 SNIFFING_BUFFER_SIZE);
+      memcpy(mSniffingBuffer.get() + mSniffingLength, aFromSegment.Elements(),
+             aCountToSniffingLimit);
+      mSniffingLength += aCountToSniffingLimit;
+      aFromSegment = aFromSegment.From(aCountToSniffingLimit);
+      buf = mSniffingBuffer.get();
+      bufLen = mSniffingLength;
+    } else {
+      buf = aFromSegment.Elements();
+      bufLen = aCountToSniffingLimit;
     }
-    if (status == XML_STATUS_OK && mCharsetSource < kCharsetFromMetaTag) {
-      mozilla::Unused << XML_Parse(
-          ud.mExpat, reinterpret_cast<const char*>(aFromSegment.Elements()),
-          aCountToSniffingLimit, false);
-    }
-    XML_ParserFree(ud.mExpat);
-
-    if (mCharsetSource < kCharsetFromMetaTag) {
-      // Failed to get an encoding from the XML declaration. XML defaults
-      // confidently to UTF-8 in this case.
-      // It is also possible that the document has an XML declaration that is
-      // longer than 1024 bytes, but that case is not worth worrying about.
+    const Encoding* encoding = xmldecl_parse(buf, bufLen);
+    if (encoding) {
+      mEncoding = WrapNotNull(encoding);
+    } else {
+      // XML defaults to UTF-8.
       mEncoding = UTF_8_ENCODING;
-      mCharsetSource = kCharsetFromMetaTag;  // means confident
-      mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
     }
+
+    mCharsetSource = kCharsetFromMetaTag;  // means confident
+    mTreeBuilder->SetDocumentCharset(mEncoding, mCharsetSource);
 
     return SetupDecodingAndWriteSniffingBufferAndCurrentSegment(aFromSegment);
   }
