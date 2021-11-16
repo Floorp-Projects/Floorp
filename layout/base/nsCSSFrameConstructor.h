@@ -297,7 +297,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
    *
    * Returns whether a reconstruct was posted for any ancestor.
    */
-  bool DestroyFramesFor(Element* aElement);
+  bool DestroyFramesFor(nsIContent* aContent);
 
   // Request to create a continuing frame.  This method never returns null.
   nsIFrame* CreateContinuingFrame(nsIFrame* aFrame,
