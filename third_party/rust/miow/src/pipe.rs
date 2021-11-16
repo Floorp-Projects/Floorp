@@ -1,16 +1,61 @@
-//! Named pipes
+//! Interprocess Communication pipes
+//!          
+//! A pipe is a section of shared memory that processes use for communication.
+//! The process that creates a pipe is the _pipe server_. A process that connects
+//! to a pipe is a _pipe client_. One process writes information to the pipe, then
+//! the other process reads the information from the pipe. This overview
+//! describes how to create, manage, and use pipes.
+//!
+//! There are two types of pipes: [anonymous pipes](#fn.anonymous.html) and
+//! [named pipes](#fn.named.html). Anonymous pipes require less overhead than
+//! named pipes, but offer limited services.
+//!
+//! # Anonymous pipes
+//!
+//! An anonymous pipe is an unnamed, one-way pipe that typically transfers data
+//! between a parent process and a child process. Anonymous pipes are always
+//! local; they cannot be used for communication over a network.
+//!
+//! # Named pipes
+//!
+//! A *named pipe* is a named, one-way or duplex pipe for communication between
+//! the pipe server and one or more pipe clients. All instances of a named pipe
+//! share the same pipe name, but each instance has its own buffers and handles,
+//! and provides a separate conduit for client/server communication. The use of
+//! instances enables multiple pipe clients to use the same named pipe
+//! simultaneously.
+//!
+//! Any process can access named pipes, subject to security checks, making named
+//! pipes an easy form of communication between related or unrelated processes.
+//!
+//! Any process can act as both a server and a client, making peer-to-peer
+//! communication possible. As used here, the term pipe server refers to a
+//! process that creates a named pipe, and the term pipe client refers to a
+//! process that connects to an instance of a named pipe.
+//!
+//! Named pipes can be used to provide communication between processes on the
+//! same computer or between processes on different computers across a network.
+//! If the server service is running, all named pipes are accessible remotely. If
+//! you intend to use a named pipe locally only, deny access to NT
+//! AUTHORITY\\NETWORK or switch to local RPC.
+//!
+//! # References
+//!
+//! - [win32 pipe docs](https://github.com/MicrosoftDocs/win32/blob/docs/desktop-src/ipc/pipes.md)
 
 use std::cell::RefCell;
 use std::ffi::OsStr;
-use std::fs::{OpenOptions, File};
-use std::io::prelude::*;
+use std::fs::{File, OpenOptions};
 use std::io;
+use std::io::prelude::*;
 use std::os::windows::ffi::*;
 use std::os::windows::io::*;
 use std::time::Duration;
 
-use winapi::shared::ntdef::HANDLE;
+use crate::handle::Handle;
+use crate::overlapped::Overlapped;
 use winapi::shared::minwindef::*;
+use winapi::shared::ntdef::HANDLE;
 use winapi::shared::winerror::*;
 use winapi::um::fileapi::*;
 use winapi::um::handleapi::*;
@@ -18,8 +63,6 @@ use winapi::um::ioapiset::*;
 use winapi::um::minwinbase::*;
 use winapi::um::namedpipeapi::*;
 use winapi::um::winbase::*;
-use handle::Handle;
-use overlapped::Overlapped;
 
 /// Readable half of an anonymous pipe.
 #[derive(Debug)]
@@ -54,21 +97,25 @@ pub struct NamedPipeBuilder {
 pub fn anonymous(buffer_size: u32) -> io::Result<(AnonRead, AnonWrite)> {
     let mut read = 0 as HANDLE;
     let mut write = 0 as HANDLE;
-    try!(::cvt(unsafe {
-        CreatePipe(&mut read, &mut write, 0 as *mut _, buffer_size)
-    }));
+    crate::cvt(unsafe { CreatePipe(&mut read, &mut write, 0 as *mut _, buffer_size) })?;
     Ok((AnonRead(Handle::new(read)), AnonWrite(Handle::new(write))))
 }
 
 impl Read for AnonRead {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> { self.0.read(buf) }
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.0.read(buf)
+    }
 }
 impl<'a> Read for &'a AnonRead {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> { self.0.read(buf) }
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.0.read(buf)
+    }
 }
 
 impl AsRawHandle for AnonRead {
-    fn as_raw_handle(&self) -> HANDLE { self.0.raw() }
+    fn as_raw_handle(&self) -> HANDLE {
+        self.0.raw()
+    }
 }
 impl FromRawHandle for AnonRead {
     unsafe fn from_raw_handle(handle: HANDLE) -> AnonRead {
@@ -76,20 +123,32 @@ impl FromRawHandle for AnonRead {
     }
 }
 impl IntoRawHandle for AnonRead {
-    fn into_raw_handle(self) -> HANDLE { self.0.into_raw() }
+    fn into_raw_handle(self) -> HANDLE {
+        self.0.into_raw()
+    }
 }
 
 impl Write for AnonWrite {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> { self.0.write(buf) }
-    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.0.write(buf)
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
 }
 impl<'a> Write for &'a AnonWrite {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> { self.0.write(buf) }
-    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.0.write(buf)
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
+    }
 }
 
 impl AsRawHandle for AnonWrite {
-    fn as_raw_handle(&self) -> HANDLE { self.0.raw() }
+    fn as_raw_handle(&self) -> HANDLE {
+        self.0.raw()
+    }
 }
 impl FromRawHandle for AnonWrite {
     unsafe fn from_raw_handle(handle: HANDLE) -> AnonWrite {
@@ -97,7 +156,9 @@ impl FromRawHandle for AnonWrite {
     }
 }
 impl IntoRawHandle for AnonWrite {
-    fn into_raw_handle(self) -> HANDLE { self.0.into_raw() }
+    fn into_raw_handle(self) -> HANDLE {
+        self.0.into_raw()
+    }
 }
 
 /// A convenience function to connect to a named pipe.
@@ -117,16 +178,17 @@ fn _connect(addr: &OsStr) -> io::Result<File> {
     w.write(true);
     rw.read(true).write(true);
     loop {
-        let res = rw.open(addr).or_else(|_| r.open(addr))
-                               .or_else(|_| w.open(addr));
+        let res = rw
+            .open(addr)
+            .or_else(|_| r.open(addr))
+            .or_else(|_| w.open(addr));
         match res {
             Ok(f) => return Ok(f),
-            Err(ref e) if e.raw_os_error() == Some(ERROR_PIPE_BUSY as i32)
-                => {}
+            Err(ref e) if e.raw_os_error() == Some(ERROR_PIPE_BUSY as i32) => {}
             Err(e) => return Err(e),
         }
 
-        try!(NamedPipe::wait(addr, Some(Duration::new(20, 0))));
+        NamedPipe::wait(addr, Some(Duration::new(20, 0)))?;
     }
 }
 
@@ -156,17 +218,14 @@ impl NamedPipe {
     ///
     /// If this function succeeds the process can create a `File` to connect to
     /// the named pipe.
-    pub fn wait<A: AsRef<OsStr>>(addr: A, timeout: Option<Duration>)
-                                 -> io::Result<()> {
+    pub fn wait<A: AsRef<OsStr>>(addr: A, timeout: Option<Duration>) -> io::Result<()> {
         NamedPipe::_wait(addr.as_ref(), timeout)
     }
 
     fn _wait(addr: &OsStr, timeout: Option<Duration>) -> io::Result<()> {
         let addr = addr.encode_wide().chain(Some(0)).collect::<Vec<_>>();
-        let timeout = ::dur2ms(timeout);
-        ::cvt(unsafe {
-            WaitNamedPipeW(addr.as_ptr(), timeout)
-        }).map(|_| ())
+        let timeout = crate::dur2ms(timeout);
+        crate::cvt(unsafe { WaitNamedPipeW(addr.as_ptr(), timeout) }).map(|_| ())
     }
 
     /// Connects this named pipe to a client, blocking until one becomes
@@ -176,10 +235,9 @@ impl NamedPipe {
     /// client to connect. This can be called immediately after the pipe is
     /// created, or after it has been disconnected from a previous client.
     pub fn connect(&self) -> io::Result<()> {
-        match ::cvt(unsafe { ConnectNamedPipe(self.0.raw(), 0 as *mut _) }) {
+        match crate::cvt(unsafe { ConnectNamedPipe(self.0.raw(), 0 as *mut _) }) {
             Ok(_) => Ok(()),
-            Err(ref e) if e.raw_os_error() == Some(ERROR_PIPE_CONNECTED as i32)
-                => Ok(()),
+            Err(ref e) if e.raw_os_error() == Some(ERROR_PIPE_CONNECTED as i32) => Ok(()),
             Err(e) => Err(e),
         }
     }
@@ -203,23 +261,19 @@ impl NamedPipe {
     /// To safely use this function callers must ensure that this pointer is
     /// valid until the I/O operation is completed, typically via completion
     /// ports and waiting to receive the completion notification on the port.
-    pub unsafe fn connect_overlapped(&self, overlapped: *mut OVERLAPPED)
-                                     -> io::Result<bool> {
-        match ::cvt(ConnectNamedPipe(self.0.raw(), overlapped)) {
+    pub unsafe fn connect_overlapped(&self, overlapped: *mut OVERLAPPED) -> io::Result<bool> {
+        match crate::cvt(ConnectNamedPipe(self.0.raw(), overlapped)) {
             Ok(_) => Ok(true),
-            Err(ref e) if e.raw_os_error() == Some(ERROR_PIPE_CONNECTED as i32)
-                => Ok(true),
-            Err(ref e) if e.raw_os_error() == Some(ERROR_IO_PENDING as i32)
-                => Ok(false),
+            Err(ref e) if e.raw_os_error() == Some(ERROR_PIPE_CONNECTED as i32) => Ok(true),
+            Err(ref e) if e.raw_os_error() == Some(ERROR_IO_PENDING as i32) => Ok(false),
+            Err(ref e) if e.raw_os_error() == Some(ERROR_NO_DATA as i32) => Ok(true),
             Err(e) => Err(e),
         }
     }
 
     /// Disconnects this named pipe from any connected client.
     pub fn disconnect(&self) -> io::Result<()> {
-        ::cvt(unsafe {
-            DisconnectNamedPipe(self.0.raw())
-        }).map(|_| ())
+        crate::cvt(unsafe { DisconnectNamedPipe(self.0.raw()) }).map(|_| ())
     }
 
     /// Issues an overlapped read operation to occur on this pipe.
@@ -248,10 +302,11 @@ impl NamedPipe {
     /// To safely use this function callers must ensure that the pointers are
     /// valid until the I/O operation is completed, typically via completion
     /// ports and waiting to receive the completion notification on the port.
-    pub unsafe fn read_overlapped(&self,
-                                  buf: &mut [u8],
-                                  overlapped: *mut OVERLAPPED)
-                                  -> io::Result<Option<usize>> {
+    pub unsafe fn read_overlapped(
+        &self,
+        buf: &mut [u8],
+        overlapped: *mut OVERLAPPED,
+    ) -> io::Result<Option<usize>> {
         self.0.read_overlapped(buf, overlapped)
     }
 
@@ -281,10 +336,11 @@ impl NamedPipe {
     /// To safely use this function callers must ensure that the pointers are
     /// valid until the I/O operation is completed, typically via completion
     /// ports and waiting to receive the completion notification on the port.
-    pub unsafe fn write_overlapped(&self,
-                                   buf: &[u8],
-                                   overlapped: *mut OVERLAPPED)
-                                   -> io::Result<Option<usize>> {
+    pub unsafe fn write_overlapped(
+        &self,
+        buf: &[u8],
+        overlapped: *mut OVERLAPPED,
+    ) -> io::Result<Option<usize>> {
         self.0.write_overlapped(buf, overlapped)
     }
 
@@ -305,13 +361,9 @@ impl NamedPipe {
     /// # Panics
     ///
     /// This function will panic
-    pub unsafe fn result(&self, overlapped: *mut OVERLAPPED)
-                         -> io::Result<usize> {
+    pub unsafe fn result(&self, overlapped: *mut OVERLAPPED) -> io::Result<usize> {
         let mut transferred = 0;
-        let r = GetOverlappedResult(self.0.raw(),
-                                    overlapped,
-                                    &mut transferred,
-                                    FALSE);
+        let r = GetOverlappedResult(self.0.raw(), overlapped, &mut transferred, FALSE);
         if r == 0 {
             Err(io::Error::last_os_error())
         } else {
@@ -327,7 +379,8 @@ thread_local! {
 /// Call a function with a threadlocal `Overlapped`.  The function `f` should be
 /// sure that the event is reset, either manually or by a thread being released.
 fn with_threadlocal_overlapped<F>(f: F) -> io::Result<usize>
-    where F: FnOnce(&Overlapped) -> io::Result<usize>
+where
+    F: FnOnce(&Overlapped) -> io::Result<usize>,
 {
     NAMED_PIPE_OVERLAPPED.with(|overlapped| {
         let mut mborrow = overlapped.borrow_mut();
@@ -343,7 +396,8 @@ impl Read for NamedPipe {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         // This is necessary because the pipe is opened with `FILE_FLAG_OVERLAPPED`.
         with_threadlocal_overlapped(|overlapped| unsafe {
-            self.0.read_overlapped_wait(buf, overlapped.raw() as *mut OVERLAPPED)
+            self.0
+                .read_overlapped_wait(buf, overlapped.raw() as *mut OVERLAPPED)
         })
     }
 }
@@ -351,7 +405,8 @@ impl<'a> Read for &'a NamedPipe {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         // This is necessary because the pipe is opened with `FILE_FLAG_OVERLAPPED`.
         with_threadlocal_overlapped(|overlapped| unsafe {
-            self.0.read_overlapped_wait(buf, overlapped.raw() as *mut OVERLAPPED)
+            self.0
+                .read_overlapped_wait(buf, overlapped.raw() as *mut OVERLAPPED)
         })
     }
 }
@@ -360,7 +415,8 @@ impl Write for NamedPipe {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         // This is necessary because the pipe is opened with `FILE_FLAG_OVERLAPPED`.
         with_threadlocal_overlapped(|overlapped| unsafe {
-            self.0.write_overlapped_wait(buf, overlapped.raw() as *mut OVERLAPPED)
+            self.0
+                .write_overlapped_wait(buf, overlapped.raw() as *mut OVERLAPPED)
         })
     }
     fn flush(&mut self) -> io::Result<()> {
@@ -371,16 +427,19 @@ impl<'a> Write for &'a NamedPipe {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         // This is necessary because the pipe is opened with `FILE_FLAG_OVERLAPPED`.
         with_threadlocal_overlapped(|overlapped| unsafe {
-            self.0.write_overlapped_wait(buf, overlapped.raw() as *mut OVERLAPPED)
+            self.0
+                .write_overlapped_wait(buf, overlapped.raw() as *mut OVERLAPPED)
         })
     }
     fn flush(&mut self) -> io::Result<()> {
-        ::cvt(unsafe { FlushFileBuffers(self.0.raw()) }).map(|_| ())
+        crate::cvt(unsafe { FlushFileBuffers(self.0.raw()) }).map(|_| ())
     }
 }
 
 impl AsRawHandle for NamedPipe {
-    fn as_raw_handle(&self) -> HANDLE { self.0.raw() }
+    fn as_raw_handle(&self) -> HANDLE {
+        self.0.raw()
+    }
 }
 impl FromRawHandle for NamedPipe {
     unsafe fn from_raw_handle(handle: HANDLE) -> NamedPipe {
@@ -388,7 +447,9 @@ impl FromRawHandle for NamedPipe {
     }
 }
 impl IntoRawHandle for NamedPipe {
-    fn into_raw_handle(self) -> HANDLE { self.0.into_raw() }
+    fn into_raw_handle(self) -> HANDLE {
+        self.0.into_raw()
+    }
 }
 
 fn flag(slot: &mut DWORD, on: bool, val: DWORD) {
@@ -404,8 +465,7 @@ impl NamedPipeBuilder {
     pub fn new<A: AsRef<OsStr>>(addr: A) -> NamedPipeBuilder {
         NamedPipeBuilder {
             name: addr.as_ref().encode_wide().chain(Some(0)).collect(),
-            dwOpenMode: PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE |
-                        FILE_FLAG_OVERLAPPED,
+            dwOpenMode: PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE | FILE_FLAG_OVERLAPPED,
             dwPipeMode: PIPE_TYPE_BYTE,
             nMaxInstances: PIPE_UNLIMITED_INSTANCES,
             nOutBufferSize: 65536,
@@ -478,12 +538,20 @@ impl NamedPipeBuilder {
     ///
     /// This function will call the `CreateNamedPipe` function and return the
     /// result.
-    pub unsafe fn with_security_attributes(&mut self, attrs: *mut SECURITY_ATTRIBUTES) -> io::Result<NamedPipe> {
-        let h = CreateNamedPipeW(self.name.as_ptr(),
-                                 self.dwOpenMode, self.dwPipeMode,
-                                 self.nMaxInstances, self.nOutBufferSize,
-                                 self.nInBufferSize, self.nDefaultTimeOut,
-                                 attrs);
+    pub unsafe fn with_security_attributes(
+        &mut self,
+        attrs: *mut SECURITY_ATTRIBUTES,
+    ) -> io::Result<NamedPipe> {
+        let h = CreateNamedPipeW(
+            self.name.as_ptr(),
+            self.dwOpenMode,
+            self.dwPipeMode,
+            self.nMaxInstances,
+            self.nOutBufferSize,
+            self.nInBufferSize,
+            self.nDefaultTimeOut,
+            attrs,
+        );
 
         if h == INVALID_HANDLE_VALUE {
             Err(io::Error::last_os_error())
@@ -501,14 +569,18 @@ mod tests {
     use std::thread;
     use std::time::Duration;
 
-    use rand::{thread_rng, Rng};
+    use rand::{distributions::Alphanumeric, thread_rng, Rng};
 
     use super::{anonymous, NamedPipe, NamedPipeBuilder};
-    use iocp::CompletionPort;
-    use Overlapped;
+    use crate::iocp::CompletionPort;
+    use crate::Overlapped;
 
     fn name() -> String {
-        let name = thread_rng().gen_ascii_chars().take(30).collect::<String>();
+        let name = thread_rng()
+            .sample_iter(Alphanumeric)
+            .take(30)
+            .map(char::from)
+            .collect::<String>();
         format!(r"\\.\pipe\{}", name)
     }
 

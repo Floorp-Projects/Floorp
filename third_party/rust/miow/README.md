@@ -2,7 +2,7 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/tc5lsxokjk86949l?svg=true)](https://ci.appveyor.com/project/alexcrichton/miow)
 
-[Documentation](https://docs.rs/miow/0.1/x86_64-pc-windows-msvc/miow/)
+[Documentation](https://docs.rs/miow/0.3/x86_64-pc-windows-msvc/miow/)
 
 A zero overhead Windows I/O library focusing on IOCP and other async I/O
 features.
@@ -10,7 +10,7 @@ features.
 ```toml
 # Cargo.toml
 [dependencies]
-miow = "0.3"
+miow = "0.3.6"
 ```
 
 # License
