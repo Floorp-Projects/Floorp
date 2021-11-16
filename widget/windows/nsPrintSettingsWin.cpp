@@ -344,38 +344,21 @@ void nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode) {
   int physicalWidth = ::GetDeviceCaps(aHdc, PHYSICALWIDTH);
   double physicalWidthInch = double(physicalWidth) / pixelsPerInchX;
 
-  // The length and width in DEVMODE are always in tenths of a millimeter.
-  double sizeUnitToTenthsOfAmm =
-      10L * (mPaperSizeUnit == kPaperSizeInches ? MM_PER_INCH_FLOAT : 1L);
-  if (aDevMode->dmFields & DM_PAPERLENGTH) {
-    mPaperHeight = aDevMode->dmPaperLength / sizeUnitToTenthsOfAmm;
-  } else {
-    // We need the paper height to be set, because it is used in the child for
-    // layout. If it is not set in the DEVMODE, get it from the device context.
-    // We want the normalized (in portrait orientation) paper height, so account
-    // for orientation.
-    double paperHeightInch = mOrientation == kPortraitOrientation
-                                 ? physicalHeightInch
-                                 : physicalWidthInch;
-    mPaperHeight = mPaperSizeUnit == kPaperSizeInches
-                       ? paperHeightInch
-                       : paperHeightInch * MM_PER_INCH_FLOAT;
-  }
+  // Get the paper size from the device context rather than the DEVMODE, because
+  // it is always available.
+  double paperHeightInch = mOrientation == kPortraitOrientation
+                               ? physicalHeightInch
+                               : physicalWidthInch;
+  mPaperHeight = mPaperSizeUnit == kPaperSizeInches
+                     ? paperHeightInch
+                     : paperHeightInch * MM_PER_INCH_FLOAT;
 
-  if (aDevMode->dmFields & DM_PAPERWIDTH) {
-    mPaperWidth = aDevMode->dmPaperWidth / sizeUnitToTenthsOfAmm;
-  } else {
-    // We need the paper width to be set, because it is used in the child for
-    // layout. If it is not set in the DEVMODE, get it from the device context.
-    // We want the normalized (in portrait orientation) paper width, so account
-    // for orientation.
-    double paperWidthInch = mOrientation == kPortraitOrientation
-                                ? physicalWidthInch
-                                : physicalHeightInch;
-    mPaperWidth = mPaperSizeUnit == kPaperSizeInches
-                      ? paperWidthInch
-                      : paperWidthInch * MM_PER_INCH_FLOAT;
-  }
+  double paperWidthInch = mOrientation == kPortraitOrientation
+                              ? physicalWidthInch
+                              : physicalHeightInch;
+  mPaperWidth = mPaperSizeUnit == kPaperSizeInches
+                    ? paperWidthInch
+                    : paperWidthInch * MM_PER_INCH_FLOAT;
 
   // Using LOGPIXELSY to match existing code for print scaling calculations.
   mResolution = pixelsPerInchY;
@@ -396,13 +379,13 @@ void nsPrintSettingsWin::CopyToNative(DEVMODEW* aDevMode) {
   aDevMode->dmColor = mPrintInColor ? DMCOLOR_COLOR : DMCOLOR_MONOCHROME;
 
   // The length and width in DEVMODE are always in tenths of a millimeter.
-  double sizeUnitToTenthsOfAmm =
-      10L * (mPaperSizeUnit == kPaperSizeInches ? MM_PER_INCH_FLOAT : 1L);
+  double tenthsOfAmmPerSizeUnit =
+      mPaperSizeUnit == kPaperSizeInches ? MM_PER_INCH_FLOAT * 10.0 : 10.0;
 
   // Note: small page sizes can be required here for sticker, label and slide
   // printers etc. see bug 1271900.
   if (mPaperHeight > 0) {
-    aDevMode->dmPaperLength = mPaperHeight * sizeUnitToTenthsOfAmm;
+    aDevMode->dmPaperLength = std::round(mPaperHeight * tenthsOfAmmPerSizeUnit);
     aDevMode->dmFields |= DM_PAPERLENGTH;
   } else {
     aDevMode->dmPaperLength = 0;
@@ -410,7 +393,7 @@ void nsPrintSettingsWin::CopyToNative(DEVMODEW* aDevMode) {
   }
 
   if (mPaperWidth > 0) {
-    aDevMode->dmPaperWidth = mPaperWidth * sizeUnitToTenthsOfAmm;
+    aDevMode->dmPaperWidth = std::round(mPaperWidth * tenthsOfAmmPerSizeUnit);
     aDevMode->dmFields |= DM_PAPERWIDTH;
   } else {
     aDevMode->dmPaperWidth = 0;
