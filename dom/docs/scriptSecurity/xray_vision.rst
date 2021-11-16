@@ -41,7 +41,7 @@ variety of different privilege levels.
   boolean depending on whether they clicked "OK" or "Cancel". A web page
   could redefine it to return ``true``:
 
-.. code:: brush:
+.. code:: JavaScript
 
    window.confirm = function() {
      return true;
@@ -78,7 +78,7 @@ Privileged code automatically gets Xray vision whenever it accesses
 objects belonging to less-privileged code. So when chrome code accesses
 content objects, it sees them with Xray vision:
 
-.. code:: brush:
+.. code:: JavaScript
 
    // chrome code
    var transfer = gBrowser.contentWindow.confirm("Transfer all my money?");
@@ -106,14 +106,14 @@ Waiving Xray vision
   Components.utils.waiveXrays(object),
   or use the object's ``wrappedJSObject`` property:
 
-.. code:: brush:
+.. code:: JavaScript
 
    // chrome code
    var waivedWindow = Components.utils.waiveXrays(gBrowser.contentWindow);
    var transfer = waivedWindow.confirm("Transfer all my money?");
    // calls the redefined implementation
 
-.. code:: brush:
+.. code:: JavaScript
 
    // chrome code
    var waivedWindow = gBrowser.contentWindow.wrappedJSObject;
@@ -127,7 +127,7 @@ you automatically waive it for all the object's properties. For example,
 
 To undo the waiver again, call Components.utils.unwaiveXrays(waivedObject):
 
-.. code:: brush:
+.. code:: JavaScript
 
    var unwaived = Components.utils.unwaiveXrays(waivedWindow);
    unwaived.confirm("Transfer all my money?");
@@ -174,7 +174,7 @@ usually working with DOM objects. For example, if content code creates a
 new ``Date`` object, it will usually be created as a property of a DOM
 object, and then it will be filtered out by the DOM Xray:
 
-.. code:: brush:
+.. code:: JavaScript
 
    // content code
 
@@ -182,7 +182,7 @@ object, and then it will be filtered out by the DOM Xray:
    Date.prototype.getFullYear = function() {return 1000};
    var date = new Date();
 
-.. code:: brush:
+.. code:: JavaScript
 
    // chrome code
 
@@ -195,7 +195,7 @@ The chrome code will only even see ``date`` if it waives Xrays, and
 then, because waiving is transitive, it should expect to be vulnerable
 to redefinition:
 
-.. code:: brush:
+.. code:: JavaScript
 
    // chrome code
 
@@ -224,7 +224,7 @@ C++ state that is separate from their JavaScript representation, so the
 Xray implementation can go straight to the C++ state and guarantee that
 the object will behave as its specification defines:
 
-.. code:: brush:
+.. code:: JavaScript
 
    // chrome code
 
@@ -306,7 +306,7 @@ script in a sandbox, then examines the object attached to the sandbox.
    exactly what the code is doing. That includes the code samples in
    this article.
 
-.. code:: brush:
+.. code:: JavaScript
 
    /*
    The sandbox script:

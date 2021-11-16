@@ -20,7 +20,7 @@ will be empty if no specific data was found. The key of the map is from the
 `PageDataSchema.DATA_TYPE` enumeration. The value is the JSON data which differs in structure
 depending on the data type.
 
-```json
+```
 {
   "url": <url of the page as a string>,
   "date": <epoch based timestamp>,
