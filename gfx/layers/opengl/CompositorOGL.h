@@ -54,7 +54,6 @@ class TextureSourceOGL;
 class BufferTextureHost;
 struct Effect;
 struct EffectChain;
-class GLBlitTextureImageHelper;
 
 /**
  * Interface for pools of temporary gl textures for the compositor.
@@ -211,8 +210,6 @@ class CompositorOGL final : public Compositor {
     return gfx::SurfaceFormat::R8G8B8A8;
   }
 
-  GLBlitTextureImageHelper* BlitTextureImageHelper();
-
   /**
    * The compositor provides with temporary textures for use with direct
    * textruing.
@@ -259,7 +256,6 @@ class CompositorOGL final : public Compositor {
   RefPtr<GLContext> mGLContext;
   bool mOwnsGLContext = true;
   RefPtr<SurfacePoolHandle> mSurfacePoolHandle;
-  UniquePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
   gfx::Matrix4x4 mProjMatrix;
   bool mCanRenderToDefaultFramebuffer = true;
 
