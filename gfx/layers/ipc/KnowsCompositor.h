@@ -93,6 +93,11 @@ class KnowsCompositor {
     return lock.ref().mTextureFactoryIdentifier.mParentBackend;
   }
 
+  WebRenderCompositor GetWebRenderCompositorType() const {
+    auto lock = mData.Lock();
+    return lock.ref().mTextureFactoryIdentifier.mWebRenderCompositor;
+  }
+
   bool SupportsTextureBlitting() const {
     auto lock = mData.Lock();
     return lock.ref().mTextureFactoryIdentifier.mSupportsTextureBlitting;
