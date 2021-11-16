@@ -8,8 +8,6 @@ const { UrlClassifierTestUtils } = ChromeUtils.import(
 Services.cookies.QueryInterface(Ci.nsICookieService);
 
 function restore_prefs() {
-  // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
-  Services.prefs.clearUserPref("network.cookie.sameSite.laxByDefault");
   Services.prefs.clearUserPref("network.cookie.cookieBehavior");
   Services.prefs.clearUserPref("network.cookie.lifetimePolicy");
   Services.prefs.clearUserPref(
@@ -199,8 +197,6 @@ add_task(async function test_initial_state() {
     "network.cookie.rejectForeignWithExceptions.enabled",
     false
   );
-  Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", false);
-
   await test_cookie_settings({
     cookiesEnabled: true,
     thirdPartyCookiesEnabled: true,
@@ -355,7 +351,6 @@ add_task(async function test_undefined_locked() {
     "network.cookie.rejectForeignWithExceptions.enabled",
     false
   );
-  Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", false);
   await setupPolicyEngineWithJson({
     policies: {
       Cookies: {
@@ -382,7 +377,6 @@ add_task(async function test_cookie_expire() {
     "network.cookie.rejectForeignWithExceptions.enabled",
     false
   );
-  Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", false);
   await setupPolicyEngineWithJson({
     policies: {
       Cookies: {
@@ -409,7 +403,6 @@ add_task(async function test_cookie_reject_trackers() {
     "network.cookie.rejectForeignWithExceptions.enabled",
     false
   );
-  Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", false);
   await setupPolicyEngineWithJson({
     policies: {
       Cookies: {
@@ -437,7 +430,6 @@ add_task(async function test_cookie_expire_locked() {
     "network.cookie.rejectForeignWithExceptions.enabled",
     false
   );
-  Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", false);
   await setupPolicyEngineWithJson({
     policies: {
       Cookies: {

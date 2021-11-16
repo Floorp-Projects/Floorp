@@ -7,11 +7,6 @@
 "use strict";
 
 add_task(async function() {
-  await SpecialPowers.pushPrefEnv({
-    // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
-    set: [["network.cookie.sameSite.laxByDefault", false]],
-  });
-
   const URL_IFRAME = buildURLWithContent(
     "example.net",
     `<h1>iframe</h1>` + `<script>document.cookie = "lorem=ipsum";</script>`
@@ -55,6 +50,4 @@ add_task(async function() {
   // check that the new data is shown in the table for the top-level document
   await selectTreeItem(["cookies", "https://example.com"]);
   checkCookieData("foo2", "bar2");
-
-  SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
 });
