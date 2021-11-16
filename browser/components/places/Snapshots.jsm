@@ -181,20 +181,11 @@ const Snapshots = new (class Snapshots {
           pageDataIndex++;
         }
 
-        let { siteName, description, image: previewImageUrl } = pageData;
-        let pageInfo = PlacesUtils.validateItemProperties(
-          "PageInfo",
-          PlacesUtils.PAGEINFO_VALIDATORS,
-          { siteName, description, previewImageUrl }
-        );
-
         placesBindings[`id${placesIndex}`] = placeId;
-        placesBindings[`desc${placesIndex}`] = pageInfo.description ?? null;
-        placesBindings[`site${placesIndex}`] = pageInfo.siteName ?? null;
-        placesBindings[`image${placesIndex}`] =
-          pageInfo.previewImageUrl ?? null;
+        placesBindings[`site${placesIndex}`] = pageData.siteName ?? null;
+        placesBindings[`image${placesIndex}`] = pageData.image ?? null;
         placesValues.push(
-          `(:id${placesIndex}, :desc${placesIndex}, :site${placesIndex}, :image${placesIndex})`
+          `(:id${placesIndex}, :site${placesIndex}, :image${placesIndex})`
         );
         placesIndex++;
       } else {
@@ -220,14 +211,11 @@ const Snapshots = new (class Snapshots {
         if (placesIndex) {
           await db.execute(
             `
-          WITH pd("place_id", "description", "siteName", "image") AS (
+          WITH pd("place_id", "siteName", "image") AS (
             VALUES ${placesValues.join(", ")}
           )
           UPDATE moz_places
-            SET
-              description = pd.description,
-              site_name = pd.siteName,
-              preview_image_url = pd.image
+            SET site_name = pd.siteName, preview_image_url = pd.image
             FROM pd
             WHERE moz_places.id = pd.place_id;
           `,
@@ -420,7 +408,7 @@ const Snapshots = new (class Snapshots {
       `
       SELECT h.url AS url, h.title AS title, created_at, removed_at,
              document_type, first_interaction_at, last_interaction_at,
-             user_persisted, description, site_name, preview_image_url,
+             user_persisted, site_name, preview_image_url,
              group_concat('[' || e.type || ', ' || e.data || ']') AS page_data
              FROM moz_places_metadata_snapshots s
       JOIN moz_places h ON h.id = s.place_id
@@ -478,7 +466,7 @@ const Snapshots = new (class Snapshots {
       `
       SELECT h.url AS url, h.title AS title, created_at, removed_at,
              document_type, first_interaction_at, last_interaction_at,
-             user_persisted, description, site_name, preview_image_url,
+             user_persisted, site_name, preview_image_url,
              group_concat('[' || e.type || ', ' || e.data || ']') AS page_data
       FROM moz_places_metadata_snapshots s
       JOIN moz_places h ON h.id = s.place_id
@@ -549,7 +537,6 @@ const Snapshots = new (class Snapshots {
       url: row.getResultByName("url"),
       title: row.getResultByName("title"),
       siteName: row.getResultByName("site_name"),
-      description: row.getResultByName("description"),
       image: row.getResultByName("preview_image_url"),
       createdAt: this.#toDate(row.getResultByName("created_at")),
       removedAt: this.#toDate(row.getResultByName("removed_at")),

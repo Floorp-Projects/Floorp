@@ -15,10 +15,6 @@ add_task(async function test_single_product_data() {
       <meta http-equiv="Content-Type" content="text/html;charset=utf-8"></meta>
       </head>
       <body>
-        <div itemscope itemtype="https://schema.org/Organization">
-          <span itemprop="name">Mozilla</span>
-        </div>
-
         <div itemscope itemtype="https://schema.org/Product">
           <img itemprop="image" src="bon-echo-microwave-17in.jpg" />
           <a href="microwave.html" itemprop="url">
@@ -29,15 +25,11 @@ add_task(async function test_single_product_data() {
           <span itemprop="priceCurrency" content="GBP"></span>
 
           <span itemprop="gtin" content="13572468"></span>
-
-          <span itemprop="description">The most amazing microwave in the world</span>
         </div>
       </body>
       </html>
     `,
     {
-      siteName: "Mozilla",
-      description: "The most amazing microwave in the world",
       image: BASE_URL + "/bon-echo-microwave-17in.jpg",
       data: {
         [PageDataSchema.DATA_TYPE.PRODUCT]: {
