@@ -791,6 +791,13 @@ class HomeFragment : Fragment() {
         }
 
         hideToolbar()
+
+        // Whenever a tab is selected its last access timestamp is automatically updated by A-C.
+        // However, in the case of resuming the app to the home fragment, we already have an
+        // existing selected tab, but its last access timestamp is outdated. No action is
+        // triggered to cause an automatic update on warm start (no tab selection occurs). So we
+        // update it manually here.
+        requireComponents.useCases.sessionUseCases.updateLastAccess()
     }
 
     override fun onPause() {
@@ -805,6 +812,10 @@ class HomeFragment : Fragment() {
                 )
             )
         }
+
+        // Counterpart to the update in onResume to keep the last access timestamp of the selected
+        // tab up-to-date.
+        requireComponents.useCases.sessionUseCases.updateLastAccess()
     }
 
     private fun recommendPrivateBrowsingShortcut() {
