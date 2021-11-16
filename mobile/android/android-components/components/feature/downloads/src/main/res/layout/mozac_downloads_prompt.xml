@@ -69,7 +69,7 @@
         android:paddingTop="4dp"
         android:paddingEnd="5dp"
         android:textColor="?android:attr/textColorPrimary"
-        tools:text="Firefox_Preview_v2.1.apk"
+        tools:text="@tools:sample/lorem/random"
         tools:textColor="#000000" />
 
     <Button

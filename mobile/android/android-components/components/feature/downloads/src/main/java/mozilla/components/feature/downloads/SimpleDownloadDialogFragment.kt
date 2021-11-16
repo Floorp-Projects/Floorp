@@ -15,10 +15,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import androidx.annotation.StringRes
 import androidx.annotation.StyleRes
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
+import androidx.core.view.marginBottom
+import androidx.core.view.marginStart
+import androidx.core.view.marginTop
 import mozilla.components.feature.downloads.databinding.MozacDownloadsPromptBinding
 
 /**
@@ -48,6 +52,8 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
         safeArguments.getInt(KEY_POSITIVE_BUTTON_TEXT_COLOR, DEFAULT_VALUE)
     internal val positiveButtonRadius get() =
         safeArguments.getFloat(KEY_POSITIVE_BUTTON_RADIUS, DEFAULT_VALUE.toFloat())
+    internal val fileNameEndMargin get() =
+        safeArguments.getInt(KEY_FILE_NAME_END_MARGIN, DEFAULT_VALUE)
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val sheetDialog = Dialog(requireContext())
@@ -112,6 +118,21 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
                 )
                 shape.cornerRadius = positiveButtonRadius
                 binding.downloadButton.background = shape
+            }
+
+            if (fileNameEndMargin != DEFAULT_VALUE) {
+                binding.filename.layoutParams = RelativeLayout.LayoutParams(
+                    RelativeLayout.LayoutParams.WRAP_CONTENT,
+                    RelativeLayout.LayoutParams.WRAP_CONTENT
+                ).apply {
+                    marginEnd = fileNameEndMargin
+                    marginStart = binding.filename.marginStart
+                    topMargin = binding.filename.marginTop
+                    bottomMargin = binding.filename.marginBottom
+                    addRule(RelativeLayout.BELOW, R.id.title)
+                    addRule(RelativeLayout.END_OF, R.id.icon)
+                    addRule(RelativeLayout.ALIGN_BASELINE, R.id.icon)
+                }
             }
 
             binding.filename.text = getString(KEY_FILE_NAME, "")
@@ -180,6 +201,10 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
                     positiveButtonRadius?.let {
                         putFloat(KEY_POSITIVE_BUTTON_RADIUS, it)
                     }
+
+                    fileNameEndMargin?.let {
+                        putInt(KEY_FILE_NAME_END_MARGIN, it)
+                    }
                 }
             }
 
@@ -197,6 +222,7 @@ class SimpleDownloadDialogFragment : DownloadDialogFragment() {
         private const val KEY_POSITIVE_BUTTON_BACKGROUND_COLOR = "KEY_POSITIVE_BUTTON_BACKGROUND_COLOR"
         private const val KEY_POSITIVE_BUTTON_TEXT_COLOR = "KEY_POSITIVE_BUTTON_TEXT_COLOR"
         private const val KEY_POSITIVE_BUTTON_RADIUS = "KEY_POSITIVE_BUTTON_RADIUS"
+        private const val KEY_FILE_NAME_END_MARGIN = "KEY_FILE_NAME_END_MARGIN"
         private const val KEY_DIALOG_GRAVITY = "KEY_DIALOG_GRAVITY"
         private const val KEY_DIALOG_WIDTH_MATCH_PARENT = "KEY_DIALOG_WIDTH_MATCH_PARENT"
         private const val DEFAULT_VALUE = Int.MAX_VALUE

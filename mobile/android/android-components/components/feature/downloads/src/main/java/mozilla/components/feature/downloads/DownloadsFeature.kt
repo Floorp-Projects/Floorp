@@ -384,7 +384,8 @@ class DownloadsFeature(
         val positiveButtonBackgroundColor: Int? = null,
         @ColorRes
         val positiveButtonTextColor: Int? = null,
-        val positiveButtonRadius: Float? = null
+        val positiveButtonRadius: Float? = null,
+        val fileNameEndMargin: Int? = null
     )
 
     @VisibleForTesting
