@@ -181,6 +181,10 @@ StandaloneTexture::StandaloneTexture(const IntSize& aSize,
 DrawTargetWebgl::DrawTargetWebgl() = default;
 
 DrawTargetWebgl::~DrawTargetWebgl() {
+  while (!mTextureHandles.isEmpty()) {
+    PruneTextureHandle(mTextureHandles.popLast());
+    --mNumTextureHandles;
+  }
   UnlinkSurfaceTextures();
   UnlinkGlyphCaches();
 }
@@ -403,7 +407,7 @@ bool DrawTargetWebgl::CreateShaders() {
   }
   if (!mVertexBuffer) {
     mVertexBuffer = mWebgl->CreateBuffer();
-    float rectData[8] = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
+    static const float rectData[8] = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
     mWebgl->BindVertexArray(mVertexArray.get());
     mWebgl->BindBuffer(LOCAL_GL_ARRAY_BUFFER, mVertexBuffer.get());
     mWebgl->RawBufferData(LOCAL_GL_ARRAY_BUFFER,
@@ -1475,8 +1479,11 @@ void GlyphCacheEntry::Unlink() {
   if (isInList()) {
     remove();
   }
-  mHandle->SetGlyphCacheEntry(nullptr);
-  mHandle = nullptr;
+  // The entry may not have a valid handle if rasterization failed.
+  if (mHandle) {
+    mHandle->SetGlyphCacheEntry(nullptr);
+    mHandle = nullptr;
+  }
 }
 
 GlyphCache::~GlyphCache() {
@@ -1639,6 +1646,9 @@ void DrawTargetWebgl::FillGlyphs(ScaledFont* aFont, const GlyphBuffer& aBuffer,
               // If drawing succeeded, then the text surface was uploaded to
               // a texture handle. Assign it to the glyph cache entry.
               entry->Link(handle);
+            } else {
+              // If drawing failed, remove the entry from the cache.
+              entry->Unlink();
             }
             return;
           }
