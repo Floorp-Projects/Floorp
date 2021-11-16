@@ -26,7 +26,7 @@ const tests = [
     {
         timeZone: "Asia/Shanghai", locale: "zh-Hans-CN",
         options: { timeZoneName: "long" },
-        result: "中国标准时间 下午8:00:00",
+        result: "中国标准时间 20:00:00",
     },
     {
         timeZone: { toString: () => "Australia/Melbourne" }, locale: "en-AU",
