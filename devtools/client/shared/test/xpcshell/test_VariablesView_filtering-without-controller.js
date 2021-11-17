@@ -8,9 +8,6 @@
 const { VariablesView } = ChromeUtils.import(
   "resource://devtools/client/storage/VariablesView.jsm"
 );
-const { require } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
-);
 const { globals } = require("devtools/shared/loader/builtin-modules");
 
 const DOMParser = new globals.DOMParser();

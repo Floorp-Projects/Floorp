@@ -2,9 +2,6 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
-const { require } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
-);
 
 Object.defineProperty(this, "NetworkHelper", {
   get: function() {

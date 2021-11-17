@@ -5,9 +5,6 @@
 
 // Tests the BezierCanvas API in the CubicBezierWidget module
 
-var { require } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
-);
 var {
   CubicBezier,
   BezierCanvas,
