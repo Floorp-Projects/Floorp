@@ -555,6 +555,48 @@ class TextInputDelegateTest : BaseSessionTest() {
                    "bar", equalTo(ic.getTextAfterCursor(3, 0)))
     }
 
+    @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
+    @Test fun inputConnection_selectionByArrowKey() {
+        setupContent("")
+
+        val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
+        assertText("Set initial text", ic, "")
+
+        commitText(ic, "foo", 1) // Selection at end of new text
+        assertTextAndSelectionAt("Commit foo text", ic, "foo", 3)
+
+        // backward selection test
+        var time = SystemClock.uptimeMillis()
+        var shiftKey = KeyEvent(time, time, KeyEvent.ACTION_DOWN,
+                                KeyEvent.KEYCODE_SHIFT_LEFT, 0)
+        ic.sendKeyEvent(shiftKey)
+        pressKey(ic, KeyEvent.KEYCODE_DPAD_LEFT)
+        pressKey(ic, KeyEvent.KEYCODE_DPAD_LEFT)
+        pressKey(ic, KeyEvent.KEYCODE_DPAD_LEFT)
+        ic.sendKeyEvent(KeyEvent.changeAction(shiftKey, KeyEvent.ACTION_UP))
+        // No way to get notification for selection on Java side. So sync shadow text
+        syncShadowText(ic)
+        assertSelection("Set backward select using key event", ic, 3, 0)
+
+        pressKey(ic, KeyEvent.KEYCODE_DPAD_LEFT)
+        // No way to get notification for selection on Java side. So sync shadow text
+        syncShadowText(ic)
+        assertSelectionAt("Reset selection using key event", ic, 0)
+
+        // forward selection test
+        time = SystemClock.uptimeMillis()
+        shiftKey = KeyEvent(time, time, KeyEvent.ACTION_DOWN,
+                            KeyEvent.KEYCODE_SHIFT_LEFT, 0)
+        ic.sendKeyEvent(shiftKey)
+        pressKey(ic, KeyEvent.KEYCODE_DPAD_RIGHT)
+        pressKey(ic, KeyEvent.KEYCODE_DPAD_RIGHT)
+        pressKey(ic, KeyEvent.KEYCODE_DPAD_RIGHT)
+        ic.sendKeyEvent(KeyEvent.changeAction(shiftKey, KeyEvent.ACTION_UP))
+        // No way to get notification for selection on Java side. So sync shadow text
+        syncShadowText(ic)
+        assertSelection("Set forward select using key event", ic, 0, 3)
+    }
+
     // Test sendKeyEvent
     @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
     @Test fun inputConnection_sendKeyEvent() {
