@@ -3004,20 +3004,20 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
       return EditActionResult(splitAtSelectionStartResult.Rv());
     }
     Result<RefPtr<Element>, nsresult> maybeNewListElement =
-        CreateNodeWithTransaction(aListElementTagName,
-                                  splitAtSelectionStartResult.SplitPoint());
+        CreateAndInsertElementWithTransaction(
+            aListElementTagName, splitAtSelectionStartResult.SplitPoint());
     if (maybeNewListElement.isErr()) {
-      NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+      NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
       return EditActionResult(maybeNewListElement.unwrapErr());
     }
     MOZ_ASSERT(maybeNewListElement.inspect());
 
     Result<RefPtr<Element>, nsresult> maybeNewListItemElement =
-        CreateNodeWithTransaction(
+        CreateAndInsertElementWithTransaction(
             aListItemElementTagName,
             EditorDOMPoint(maybeNewListElement.inspect(), 0));
     if (maybeNewListItemElement.isErr()) {
-      NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+      NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
       return EditActionResult(maybeNewListItemElement.unwrapErr());
     }
     MOZ_ASSERT(maybeNewListItemElement.inspect());
@@ -3164,11 +3164,12 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
             return EditActionResult(newLeftNodeOrError.unwrapErr());
           }
           Result<RefPtr<Element>, nsresult> maybeNewListElement =
-              CreateNodeWithTransaction(
+              CreateAndInsertElementWithTransaction(
                   aListElementTagName,
                   EditorDOMPoint(atContent.GetContainer()));
           if (maybeNewListElement.isErr()) {
-            NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+            NS_WARNING(
+                "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
             return EditActionResult(maybeNewListElement.unwrapErr());
           }
           MOZ_ASSERT(maybeNewListElement.inspect());
@@ -3309,10 +3310,11 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
       }
       prevListItem = nullptr;
       Result<RefPtr<Element>, nsresult> maybeNewListElement =
-          CreateNodeWithTransaction(aListElementTagName,
-                                    splitCurNodeResult.SplitPoint());
+          CreateAndInsertElementWithTransaction(
+              aListElementTagName, splitCurNodeResult.SplitPoint());
       if (maybeNewListElement.isErr()) {
-        NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+        NS_WARNING(
+            "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
         return EditActionResult(maybeNewListElement.unwrapErr());
       }
       MOZ_ASSERT(maybeNewListElement.inspect());
@@ -3634,9 +3636,10 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
       return splitNodeResult.Rv();
     }
     Result<RefPtr<Element>, nsresult> maybeNewBlockElement =
-        CreateNodeWithTransaction(blockType, splitNodeResult.SplitPoint());
+        CreateAndInsertElementWithTransaction(blockType,
+                                              splitNodeResult.SplitPoint());
     if (maybeNewBlockElement.isErr()) {
-      NS_WARNING("CreateNodeWithTransaction() failed");
+      NS_WARNING("CreateAndInsertElementWithTransaction() failed");
       return maybeNewBlockElement.unwrapErr();
     }
     MOZ_ASSERT(maybeNewBlockElement.inspect());
@@ -3840,10 +3843,10 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
       return splitNodeResult.Rv();
     }
     Result<RefPtr<Element>, nsresult> maybeNewListElement =
-        CreateNodeWithTransaction(MOZ_KnownLive(*containerName),
-                                  splitNodeResult.SplitPoint());
+        CreateAndInsertElementWithTransaction(MOZ_KnownLive(*containerName),
+                                              splitNodeResult.SplitPoint());
     if (maybeNewListElement.isErr()) {
-      NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+      NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
       return maybeNewListElement.unwrapErr();
     }
     MOZ_ASSERT(maybeNewListElement.inspect());
@@ -4005,11 +4008,12 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
       return splitNodeResult.Rv();
     }
     Result<RefPtr<Element>, nsresult> maybeNewDivElement =
-        CreateNodeWithTransaction(*nsGkAtoms::div,
-                                  splitNodeResult.SplitPoint());
+        CreateAndInsertElementWithTransaction(*nsGkAtoms::div,
+                                              splitNodeResult.SplitPoint());
     if (maybeNewDivElement.isErr()) {
       NS_WARNING(
-          "EditorBase::CreateNodeWithTransaction(nsGkAtoms::div) failed");
+          "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::div) "
+          "failed");
       return maybeNewDivElement.unwrapErr();
     }
     MOZ_ASSERT(maybeNewDivElement.inspect());
@@ -4109,11 +4113,12 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
         return splitNodeResult.Rv();
       }
       Result<RefPtr<Element>, nsresult> maybeNewDivElement =
-          CreateNodeWithTransaction(*nsGkAtoms::div,
-                                    splitNodeResult.SplitPoint());
+          CreateAndInsertElementWithTransaction(*nsGkAtoms::div,
+                                                splitNodeResult.SplitPoint());
       if (maybeNewDivElement.isErr()) {
         NS_WARNING(
-            "EditorBase::CreateNodeWithTransaction(nsGkAtoms::div) failed");
+            "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::div) "
+            "failed");
         return maybeNewDivElement.unwrapErr();
       }
       nsresult rv = ChangeMarginStart(
@@ -4225,10 +4230,10 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
       return splitNodeResult.Rv();
     }
     Result<RefPtr<Element>, nsresult> maybeNewBlockQuoteElement =
-        CreateNodeWithTransaction(*nsGkAtoms::blockquote,
-                                  splitNodeResult.SplitPoint());
+        CreateAndInsertElementWithTransaction(*nsGkAtoms::blockquote,
+                                              splitNodeResult.SplitPoint());
     if (maybeNewBlockQuoteElement.isErr()) {
-      NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+      NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
       return maybeNewBlockQuoteElement.unwrapErr();
     }
     MOZ_ASSERT(maybeNewBlockQuoteElement.inspect());
@@ -4335,10 +4340,11 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
           return splitNodeResult.Rv();
         }
         Result<RefPtr<Element>, nsresult> maybeNewListElement =
-            CreateNodeWithTransaction(MOZ_KnownLive(*containerName),
-                                      splitNodeResult.SplitPoint());
+            CreateAndInsertElementWithTransaction(MOZ_KnownLive(*containerName),
+                                                  splitNodeResult.SplitPoint());
         if (maybeNewListElement.isErr()) {
-          NS_WARNING("HTMLEditor::CreateNodeWithTransaction() failed");
+          NS_WARNING(
+              "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
           return maybeNewListElement.unwrapErr();
         }
         MOZ_ASSERT(maybeNewListElement.inspect());
@@ -4387,11 +4393,12 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
         return splitNodeResult.Rv();
       }
       Result<RefPtr<Element>, nsresult> maybeNewBlockQuoteElement =
-          CreateNodeWithTransaction(*nsGkAtoms::blockquote,
-                                    splitNodeResult.SplitPoint());
+          CreateAndInsertElementWithTransaction(*nsGkAtoms::blockquote,
+                                                splitNodeResult.SplitPoint());
       if (maybeNewBlockQuoteElement.isErr()) {
         NS_WARNING(
-            "EditorBase::CreateNodeWithTransaction(nsGkAtoms::blockquote) "
+            "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::"
+            "blockquote) "
             "failed");
         return maybeNewBlockQuoteElement.unwrapErr();
       }
@@ -5434,9 +5441,11 @@ EditActionResult HTMLEditor::AlignContentsAtSelectionWithEmptyDivElement(
   }
 
   Result<RefPtr<Element>, nsresult> maybeNewDivElement =
-      CreateNodeWithTransaction(*nsGkAtoms::div, pointToInsertDiv);
+      CreateAndInsertElementWithTransaction(*nsGkAtoms::div, pointToInsertDiv);
   if (maybeNewDivElement.isErr()) {
-    NS_WARNING("EditorBase::CreateNodeWithTransaction(nsGkAtoms::div) failed");
+    NS_WARNING(
+        "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::div) "
+        "failed");
     return EditActionResult(maybeNewDivElement.unwrapErr());
   }
   MOZ_ASSERT(maybeNewDivElement.inspect());
@@ -5615,11 +5624,12 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
         return splitNodeResult.Rv();
       }
       Result<RefPtr<Element>, nsresult> maybeNewDivElement =
-          CreateNodeWithTransaction(*nsGkAtoms::div,
-                                    splitNodeResult.SplitPoint());
+          CreateAndInsertElementWithTransaction(*nsGkAtoms::div,
+                                                splitNodeResult.SplitPoint());
       if (maybeNewDivElement.isErr()) {
         NS_WARNING(
-            "EditorBase::CreateNodeWithTransaction(nsGkAtoms::div) failed");
+            "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::div) "
+            "failed");
         return maybeNewDivElement.unwrapErr();
       }
       MOZ_ASSERT(maybeNewDivElement.inspect());
@@ -5721,10 +5731,12 @@ nsresult HTMLEditor::AlignBlockContentsWithDivElement(
   // XXX Don't insert the new `<div>` element until we set `align` attribute
   //     for avoiding running mutation event listeners.
   Result<RefPtr<Element>, nsresult> maybeNewDivElement =
-      CreateNodeWithTransaction(*nsGkAtoms::div,
-                                EditorDOMPoint(&aBlockElement, 0));
+      CreateAndInsertElementWithTransaction(*nsGkAtoms::div,
+                                            EditorDOMPoint(&aBlockElement, 0));
   if (maybeNewDivElement.isErr()) {
-    NS_WARNING("EditorBase::CreateNodeWithTransaction(nsGkAtoms::div) failed");
+    NS_WARNING(
+        "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::div) "
+        "failed");
     return maybeNewDivElement.unwrapErr();
   }
   MOZ_ASSERT(maybeNewDivElement.inspect());
@@ -6951,12 +6963,13 @@ nsresult HTMLEditor::HandleInsertParagraphInHeadingElement(
       nsStaticAtom& paraAtom = DefaultParagraphSeparatorTagName();
       // We want a wrapper element even if we separate with <br>
       Result<RefPtr<Element>, nsresult> maybeNewParagraphElement =
-          CreateNodeWithTransaction(&paraAtom == nsGkAtoms::br
-                                        ? *nsGkAtoms::p
-                                        : MOZ_KnownLive(paraAtom),
-                                    atHeader.NextPoint());
+          CreateAndInsertElementWithTransaction(&paraAtom == nsGkAtoms::br
+                                                    ? *nsGkAtoms::p
+                                                    : MOZ_KnownLive(paraAtom),
+                                                atHeader.NextPoint());
       if (maybeNewParagraphElement.isErr()) {
-        NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+        NS_WARNING(
+            "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
         return maybeNewParagraphElement.unwrapErr();
       }
       MOZ_ASSERT(maybeNewParagraphElement.inspect());
@@ -7374,12 +7387,12 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(
     nsStaticAtom& paraAtom = DefaultParagraphSeparatorTagName();
     // We want a wrapper even if we separate with <br>
     Result<RefPtr<Element>, nsresult> maybeNewParagraphElement =
-        CreateNodeWithTransaction(&paraAtom == nsGkAtoms::br
-                                      ? *nsGkAtoms::p
-                                      : MOZ_KnownLive(paraAtom),
-                                  atNextSiblingOfLeftList);
+        CreateAndInsertElementWithTransaction(&paraAtom == nsGkAtoms::br
+                                                  ? *nsGkAtoms::p
+                                                  : MOZ_KnownLive(paraAtom),
+                                              atNextSiblingOfLeftList);
     if (maybeNewParagraphElement.isErr()) {
-      NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+      NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
       return maybeNewParagraphElement.unwrapErr();
     }
     MOZ_ASSERT(maybeNewParagraphElement.inspect());
@@ -7455,11 +7468,12 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(
           EditorDOMPoint atNextListItem(list, aListItem.GetNextSibling(),
                                         AssertedCast<uint32_t>(itemOffset + 1));
           Result<RefPtr<Element>, nsresult> maybeNewListItemElement =
-              CreateNodeWithTransaction(
+              CreateAndInsertElementWithTransaction(
                   MOZ_KnownLive(*nextDefinitionListItemTagName),
                   atNextListItem);
           if (maybeNewListItemElement.isErr()) {
-            NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+            NS_WARNING(
+                "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
             return maybeNewListItemElement.unwrapErr();
           }
           MOZ_ASSERT(maybeNewListItemElement.inspect());
@@ -7596,12 +7610,12 @@ nsresult HTMLEditor::MoveNodesIntoNewBlockquoteElement(
       //     moving all nodes into it since the movement does not cause
       //     running mutation event listeners.
       Result<RefPtr<Element>, nsresult> maybeNewBlockQuoteElement =
-          CreateNodeWithTransaction(*nsGkAtoms::blockquote,
-                                    splitNodeResult.SplitPoint());
+          CreateAndInsertElementWithTransaction(*nsGkAtoms::blockquote,
+                                                splitNodeResult.SplitPoint());
       if (maybeNewBlockQuoteElement.isErr()) {
         NS_WARNING(
-            "EditorBase::CreateNodeWithTransaction(nsGkAtoms::blockquote) "
-            "failed");
+            "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::"
+            "blockquote) failed");
         return maybeNewBlockQuoteElement.unwrapErr();
       }
       MOZ_ASSERT(maybeNewBlockQuoteElement.inspect());
@@ -7861,9 +7875,10 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
       }
       EditorDOMPoint splitPoint = splitNodeResult.SplitPoint();
       Result<RefPtr<Element>, nsresult> maybeNewBlockElement =
-          CreateNodeWithTransaction(aBlockTag, splitPoint);
+          CreateAndInsertElementWithTransaction(aBlockTag, splitPoint);
       if (maybeNewBlockElement.isErr()) {
-        NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+        NS_WARNING(
+            "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
         return maybeNewBlockElement.unwrapErr();
       }
       MOZ_ASSERT(maybeNewBlockElement.inspect());
@@ -7917,9 +7932,10 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
       }
       EditorDOMPoint splitPoint = splitNodeResult.SplitPoint();
       Result<RefPtr<Element>, nsresult> maybeNewBlockElement =
-          CreateNodeWithTransaction(aBlockTag, splitPoint);
+          CreateAndInsertElementWithTransaction(aBlockTag, splitPoint);
       if (maybeNewBlockElement.isErr()) {
-        NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+        NS_WARNING(
+            "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
         return maybeNewBlockElement.unwrapErr();
       }
       MOZ_ASSERT(maybeNewBlockElement.inspect());
@@ -7981,9 +7997,10 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
         }
         EditorDOMPoint splitPoint = splitNodeResult.SplitPoint();
         Result<RefPtr<Element>, nsresult> maybeNewBlockElement =
-            CreateNodeWithTransaction(aBlockTag, splitPoint);
+            CreateAndInsertElementWithTransaction(aBlockTag, splitPoint);
         if (maybeNewBlockElement.isErr()) {
-          NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+          NS_WARNING(
+              "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
           return maybeNewBlockElement.unwrapErr();
         }
         MOZ_ASSERT(maybeNewBlockElement.inspect());
@@ -9673,11 +9690,12 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
       return splitNodeResult.Rv();
     }
     Result<RefPtr<Element>, nsresult> maybeNewDivElement =
-        CreateNodeWithTransaction(*nsGkAtoms::div,
-                                  splitNodeResult.SplitPoint());
+        CreateAndInsertElementWithTransaction(*nsGkAtoms::div,
+                                              splitNodeResult.SplitPoint());
     if (maybeNewDivElement.isErr()) {
       NS_WARNING(
-          "EditorBase::CreateNodeWithTransaction(nsGkAtoms::div) failed");
+          "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::div) "
+          "failed");
       return maybeNewDivElement.unwrapErr();
     }
     MOZ_ASSERT(maybeNewDivElement.inspect());
@@ -9758,22 +9776,24 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
         }
         if (!targetDivElement) {
           Result<RefPtr<Element>, nsresult> maybeNewDivElement =
-              CreateNodeWithTransaction(*nsGkAtoms::div,
-                                        splitNodeResult.SplitPoint());
+              CreateAndInsertElementWithTransaction(
+                  *nsGkAtoms::div, splitNodeResult.SplitPoint());
           if (maybeNewDivElement.isErr()) {
             NS_WARNING(
-                "EditorBase::CreateNodeWithTransaction(nsGkAtoms::div) failed");
+                "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::"
+                "div) failed");
             return maybeNewDivElement.unwrapErr();
           }
           MOZ_ASSERT(maybeNewDivElement.inspect());
           targetDivElement = maybeNewDivElement.unwrap();
         }
         Result<RefPtr<Element>, nsresult> maybeNewListElement =
-            CreateNodeWithTransaction(
+            CreateAndInsertElementWithTransaction(
                 MOZ_KnownLive(*ULOrOLOrDLTagName),
                 EditorDOMPoint::AtEndOf(targetDivElement));
         if (maybeNewListElement.isErr()) {
-          NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+          NS_WARNING(
+              "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
           return maybeNewListElement.unwrapErr();
         }
         MOZ_ASSERT(maybeNewListElement.inspect());
@@ -9830,11 +9850,12 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
         }
         if (!targetDivElement) {
           Result<RefPtr<Element>, nsresult> maybeNewDivElement =
-              CreateNodeWithTransaction(
+              CreateAndInsertElementWithTransaction(
                   *nsGkAtoms::div, EditorDOMPoint(atListItem.GetContainer()));
           if (maybeNewDivElement.isErr()) {
             NS_WARNING(
-                "EditorBase::CreateNodeWithTransaction(nsGkAtoms::div) failed");
+                "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::"
+                "div) failed");
             return maybeNewDivElement.unwrapErr();
           }
           MOZ_ASSERT(maybeNewDivElement.inspect());
@@ -9842,11 +9863,12 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
         }
         // XXX So, createdListElement may be set to a non-list element.
         Result<RefPtr<Element>, nsresult> maybeNewListElement =
-            CreateNodeWithTransaction(
+            CreateAndInsertElementWithTransaction(
                 MOZ_KnownLive(*containerName),
                 EditorDOMPoint::AtEndOf(targetDivElement));
         if (maybeNewListElement.isErr()) {
-          NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+          NS_WARNING(
+              "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
           return maybeNewListElement.unwrapErr();
         }
         MOZ_ASSERT(maybeNewListElement.inspect());
@@ -9892,11 +9914,12 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
         return splitNodeResult.Rv();
       }
       Result<RefPtr<Element>, nsresult> maybeNewDivElement =
-          CreateNodeWithTransaction(*nsGkAtoms::div,
-                                    splitNodeResult.SplitPoint());
+          CreateAndInsertElementWithTransaction(*nsGkAtoms::div,
+                                                splitNodeResult.SplitPoint());
       if (maybeNewDivElement.isErr()) {
         NS_WARNING(
-            "EditorBase::CreateNodeWithTransaction(nsGkAtoms::div) failed");
+            "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::div) "
+            "failed");
         return maybeNewDivElement.unwrapErr();
       }
       MOZ_ASSERT(maybeNewDivElement.inspect());

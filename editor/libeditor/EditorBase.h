@@ -1823,24 +1823,6 @@ class EditorBase : public nsIEditor,
                                     ErrorResult& aRv);
 
   /**
-   * Create an element node whose name is aTag at before aPointToInsert.  When
-   * this succeed to create an element node, this sets aPointToInsert to the
-   * new element because the relation of child and offset may be broken.
-   * If the caller needs to collapse the selection to next to the new element
-   * node, it should call |aPointToInsert.AdvanceOffset()| after calling this.
-   *
-   * @param aTag            The element name to create.
-   * @param aPointToInsert  The insertion point of new element.  If this refers
-   *                        end of the container or after, the transaction
-   *                        will append the element to the container.
-   *                        Otherwise, will insert the element before the
-   *                        child node referred by this.
-   * @return                The created new element node or an error.
-   */
-  MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
-  CreateNodeWithTransaction(nsAtom& aTag, const EditorDOMPoint& aPointToInsert);
-
-  /**
    * DeleteTextWithTransaction() removes text in the range from aTextNode.
    *
    * @param aTextNode           The text node which should be modified.

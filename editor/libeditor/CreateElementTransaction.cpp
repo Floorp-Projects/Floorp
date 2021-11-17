@@ -8,12 +8,13 @@
 #include <algorithm>
 #include <stdio.h>
 
+#include "EditorDOMPoint.h"
+#include "HTMLEditor.h"
+
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Selection.h"
 
 #include "mozilla/Casting.h"
-#include "mozilla/EditorBase.h"
-#include "mozilla/EditorDOMPoint.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ToString.h"
 
@@ -36,28 +37,28 @@ namespace mozilla {
 using namespace dom;
 
 template already_AddRefed<CreateElementTransaction>
-CreateElementTransaction::Create(EditorBase& aEditorBase, nsAtom& aTag,
+CreateElementTransaction::Create(HTMLEditor& aHTMLEditor, nsAtom& aTagName,
                                  const EditorDOMPoint& aPointToInsert);
 template already_AddRefed<CreateElementTransaction>
-CreateElementTransaction::Create(EditorBase& aEditorBase, nsAtom& aTag,
+CreateElementTransaction::Create(HTMLEditor& aHTMLEditor, nsAtom& aTagName,
                                  const EditorRawDOMPoint& aPointToInsert);
 
 template <typename PT, typename CT>
 already_AddRefed<CreateElementTransaction> CreateElementTransaction::Create(
-    EditorBase& aEditorBase, nsAtom& aTag,
+    HTMLEditor& aHTMLEditor, nsAtom& aTagName,
     const EditorDOMPointBase<PT, CT>& aPointToInsert) {
   RefPtr<CreateElementTransaction> transaction =
-      new CreateElementTransaction(aEditorBase, aTag, aPointToInsert);
+      new CreateElementTransaction(aHTMLEditor, aTagName, aPointToInsert);
   return transaction.forget();
 }
 
 template <typename PT, typename CT>
 CreateElementTransaction::CreateElementTransaction(
-    EditorBase& aEditorBase, nsAtom& aTag,
+    HTMLEditor& aHTMLEditor, nsAtom& aTagName,
     const EditorDOMPointBase<PT, CT>& aPointToInsert)
     : EditTransactionBase(),
-      mEditorBase(&aEditorBase),
-      mTag(&aTag),
+      mHTMLEditor(&aHTMLEditor),
+      mTag(&aTagName),
       mPointToInsert(aPointToInsert) {
   MOZ_ASSERT(!mPointToInsert.IsInDataNode());
   // We only need the child node at inserting new node.
@@ -76,12 +77,12 @@ std::ostream& operator<<(std::ostream& aStream,
   if (aTransaction.mNewElement) {
     aStream << " (" << *aTransaction.mNewElement << ")";
   }
-  aStream << ", mEditorBase=" << aTransaction.mEditorBase.get() << " }";
+  aStream << ", mHTMLEditor=" << aTransaction.mHTMLEditor.get() << " }";
   return aStream;
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(CreateElementTransaction,
-                                   EditTransactionBase, mEditorBase,
+                                   EditTransactionBase, mHTMLEditor,
                                    mPointToInsert, mNewElement)
 
 NS_IMPL_ADDREF_INHERITED(CreateElementTransaction, EditTransactionBase)
@@ -94,16 +95,16 @@ NS_IMETHODIMP CreateElementTransaction::DoTransaction() {
           ("%p CreateElementTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
-  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTag) ||
+  if (NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(!mTag) ||
       NS_WARN_IF(!mPointToInsert.IsSet())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  OwningNonNull<EditorBase> editorBase = *mEditorBase;
+  OwningNonNull<HTMLEditor> editorBase = *mHTMLEditor;
 
   mNewElement = editorBase->CreateHTMLContent(mTag);
   if (!mNewElement) {
-    NS_WARNING("EditorBase::CreateHTMLContent() failed");
+    NS_WARNING("HTMLEditor::CreateHTMLContent() failed");
     return NS_ERROR_FAILURE;
   }
 
@@ -111,10 +112,10 @@ NS_IMETHODIMP CreateElementTransaction::DoTransaction() {
   OwningNonNull<Element> newElement = *mNewElement;
   nsresult rv = editorBase->MarkElementDirty(newElement);
   if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
-    return EditorBase::ToGenericNSResult(rv);
+    return HTMLEditor::ToGenericNSResult(rv);
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "EditorBase::MarkElementDirty() failed, but ignored");
+                       "HTMLEditor::MarkElementDirty() failed, but ignored");
 
   // Insert the new node
   ErrorResult error;
@@ -201,7 +202,7 @@ NS_IMETHODIMP CreateElementTransaction::UndoTransaction() {
           ("%p CreateElementTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
-  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mPointToInsert.IsSet()) ||
+  if (NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(!mPointToInsert.IsSet()) ||
       NS_WARN_IF(!mNewElement)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -219,7 +220,7 @@ NS_IMETHODIMP CreateElementTransaction::RedoTransaction() {
           ("%p CreateElementTransaction::%s this=%s", this, __FUNCTION__,
            ToString(*this).c_str()));
 
-  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mPointToInsert.IsSet()) ||
+  if (NS_WARN_IF(!mHTMLEditor) || NS_WARN_IF(!mPointToInsert.IsSet()) ||
       NS_WARN_IF(!mNewElement)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
