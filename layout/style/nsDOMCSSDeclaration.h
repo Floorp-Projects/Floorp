@@ -36,16 +36,13 @@ class Element;
 }  // namespace dom
 
 struct MutationClosureData {
-  MutationClosureData() : mClosure(nullptr), mElement(nullptr), mModType(0) {}
+  MutationClosureData() = default;
 
-  // mClosure is non-null as long as the closure hasn't been called.
-  // This is needed so that it can be guaranteed that
-  // InlineStyleDeclarationWillChange is always called before
-  // SetInlineStyleDeclaration.
-  void (*mClosure)(void*);
-  mozilla::dom::Element* mElement;
+  mozilla::dom::Element* mElement = nullptr;
   Maybe<nsAttrValue> mOldValue;
-  uint8_t mModType;
+  uint8_t mModType = 0;
+  bool mWasCalled = false;
+  bool mShouldBeCalled = false;
 };
 
 }  // namespace mozilla

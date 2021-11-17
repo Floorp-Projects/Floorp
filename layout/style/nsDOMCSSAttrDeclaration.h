@@ -67,7 +67,7 @@ class nsDOMCSSAttributeDeclaration final : public nsDOMCSSDeclaration {
     if (!mIsSMILOverride) {
       aClosure->function = MutationClosureFunction;
       aClosure->data = aClosureData;
-      aClosureData->mClosure = MutationClosureFunction;
+      aClosureData->mShouldBeCalled = true;
       aClosureData->mElement = mElement;
     }
   }

@@ -75,7 +75,8 @@ nsresult nsDOMCSSAttributeDeclaration::SetCSSDeclaration(
 
   // The closure needs to have been called by now, otherwise we shouldn't be
   // getting here when the attribute hasn't changed.
-  MOZ_ASSERT_IF(aClosureData, !aClosureData->mClosure);
+  MOZ_ASSERT_IF(aClosureData && aClosureData->mShouldBeCalled,
+                aClosureData->mWasCalled);
 
   aDecl->SetDirty();
   if (mIsSMILOverride) {
@@ -217,8 +218,13 @@ void nsDOMCSSAttributeDeclaration::SetPropertyValue(
 }
 
 void nsDOMCSSAttributeDeclaration::MutationClosureFunction(void* aData) {
-  MutationClosureData* data = static_cast<MutationClosureData*>(aData);
-  // Clear mClosure pointer so that it doesn't get called again.
-  data->mClosure = nullptr;
+  auto* data = static_cast<MutationClosureData*>(aData);
+  MOZ_ASSERT(
+      data->mShouldBeCalled,
+      "Did we pass a non-null closure to the style system unnecessarily?");
+  if (data->mWasCalled) {
+    return;
+  }
+  data->mWasCalled = true;
   data->mElement->InlineStyleDeclarationWillChange(*data);
 }
