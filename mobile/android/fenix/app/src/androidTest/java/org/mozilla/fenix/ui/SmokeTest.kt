@@ -347,6 +347,8 @@ class SmokeTest {
             clickAddShortcutButton()
             clickAddAutomaticallyButton()
         }.openHomeScreenShortcut("Test Page") {
+            verifyUrl(website.url.toString())
+            verifyTabCounter("1")
         }
     }
 
