@@ -1642,10 +1642,21 @@ class AddonInstall {
         try {
           await this.promptHandler(info);
         } catch (err) {
-          logger.info(`Install of ${this.addon.id} cancelled by user`);
-          this.state = AddonManager.STATE_CANCELLED;
-          this._cleanup();
-          this._callInstallListeners("onInstallCancelled");
+          if (this.error < 0) {
+            logger.info(`Install of ${this.addon.id} failed ${this.error}`);
+            this.state = AddonManager.STATE_INSTALL_FAILED;
+            this._cleanup();
+            // In some cases onOperationCancelled is called during failures
+            // to install/uninstall/enable/disable addons.  We may need to
+            // do that here in the future.
+            this._callInstallListeners("onInstallFailed");
+            this.removeTemporaryFile();
+          } else {
+            logger.info(`Install of ${this.addon.id} cancelled by user`);
+            this.state = AddonManager.STATE_CANCELLED;
+            this._cleanup();
+            this._callInstallListeners("onInstallCancelled");
+          }
           return;
         }
       }
@@ -2648,6 +2659,14 @@ AddonInstallWrapper.prototype = {
     return AppConstants.DEBUG ? installFor(this) : undefined;
   },
 
+  get error() {
+    return installFor(this).error;
+  },
+
+  set error(err) {
+    installFor(this).error = err;
+  },
+
   get type() {
     return installFor(this).type;
   },
@@ -2732,7 +2751,6 @@ AddonInstallWrapper.prototype = {
   "releaseNotesURI",
   "file",
   "state",
-  "error",
   "progress",
   "maxProgress",
 ].forEach(function(aProp) {
