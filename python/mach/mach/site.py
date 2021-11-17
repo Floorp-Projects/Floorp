@@ -76,8 +76,6 @@ class MozSiteManager:
         topsrcdir,
         virtualenvs_dir,
         site_name,
-        *,
-        manifest_path=None,
     ):
         self.virtualenv_root = os.path.join(virtualenvs_dir, site_name)
         self._virtualenv = MozVirtualenv(topsrcdir, site_name, self.virtualenv_root)
@@ -86,10 +84,6 @@ class MozSiteManager:
         self.topsrcdir = topsrcdir
 
         self._site_name = site_name
-        self._manifest_path = manifest_path or os.path.join(
-            topsrcdir, "build", f"{site_name}_virtualenv_packages.txt"
-        )
-
         self._metadata = MozSiteMetadata(
             sys.hexversion,
             site_name,
@@ -180,11 +174,15 @@ class MozSiteManager:
 
     @functools.lru_cache(maxsize=None)
     def requirements(self):
-        if not os.path.exists(self._manifest_path):
+        manifest_path = os.path.join(
+            self.topsrcdir, "build", f"{self._site_name}_virtualenv_packages.txt"
+        )
+
+        if not os.path.exists(manifest_path):
             raise Exception(
                 f'The current command is using the "{self._site_name}" '
                 "site. However, that site is missing its associated "
-                f'requirements definition file at "{self._manifest_path}".'
+                f'requirements definition file at "{manifest_path}".'
             )
 
         thunderbird_dir = os.path.join(self.topsrcdir, "comm")
@@ -195,7 +193,7 @@ class MozSiteManager:
             self.topsrcdir,
             is_thunderbird,
             self._site_name in ("mach", "build"),
-            self._manifest_path,
+            manifest_path,
         )
 
     def build(self):
