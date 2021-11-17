@@ -12,5 +12,6 @@ There is also documentation for the `HTTP server we use for unit tests`_.
    http/lifecycle
    http/logging
    dns/dns-over-https-trr
+   submitting_networking_bugs.md
 
 .. _HTTP server we use for unit tests: http_server_for_testing.html
