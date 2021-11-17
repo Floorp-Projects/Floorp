@@ -1906,6 +1906,7 @@ package org.mozilla.geckoview {
     field public static final int ERROR_FILE_ACCESS = -4;
     field public static final int ERROR_INCORRECT_HASH = -2;
     field public static final int ERROR_INCORRECT_ID = -7;
+    field public static final int ERROR_INVALID_DOMAIN = -8;
     field public static final int ERROR_NETWORK_FAILURE = -1;
     field public static final int ERROR_POSTPONED = -101;
     field public static final int ERROR_SIGNEDSTATE_REQUIRED = -5;

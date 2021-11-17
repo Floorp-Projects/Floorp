@@ -129,7 +129,12 @@ function promiseCompleteWebInstall(
   expectPrompts = true
 ) {
   let listener;
-  return new Promise(resolve => {
+  return new Promise(_resolve => {
+    let resolve = () => {
+      install.removeListener(listener);
+      _resolve();
+    };
+
     listener = {
       onDownloadFailed: resolve,
       onDownloadCancelled: resolve,
@@ -172,9 +177,6 @@ function promiseCompleteWebInstall(
       triggeringPrincipal,
       install
     );
-  }).then(() => {
-    install.removeListener(listener);
-    return install;
   });
 }
 
@@ -191,6 +193,9 @@ async function testAddonInstall(test) {
       expectState,
       `${name} ${install.addon.id} install was completed`
     );
+    // Wait the extension startup to ensure manifest.json has been read,
+    // otherwise we get NS_ERROR_FILE_NOT_FOUND log spam.
+    await WebExtensionPolicy.getByID(install.addon.id)?.readyPromise;
     await install.addon.uninstall();
   } else {
     equal(
@@ -229,13 +234,13 @@ const TESTS = [
     name: "Install valid xpi location from invalid website",
     xpiUrl: "http://example.com/addons/origins.xpi",
     installPrincipal: PRINCIPAL_ORG,
-    expectState: AddonManager.STATE_CANCELLED,
+    expectState: AddonManager.STATE_INSTALL_FAILED,
   },
   {
     name: "Install invalid xpi location from valid website",
     xpiUrl: "http://example.org/addons/origins.xpi",
     installPrincipal: PRINCIPAL_COM,
-    expectState: AddonManager.STATE_CANCELLED,
+    expectState: AddonManager.STATE_INSTALL_FAILED,
   },
   {
     name: "Install MV3 with install_origins",
@@ -253,7 +258,7 @@ const TESTS = [
     name: "Install MV3 without install_origins",
     xpiUrl: "http://example.com/addons/v3_no_origins.xpi",
     installPrincipal: PRINCIPAL_COM,
-    expectState: AddonManager.STATE_CANCELLED,
+    expectState: AddonManager.STATE_INSTALL_FAILED,
   },
   {
     // An installing principal with install permission is
@@ -285,13 +290,13 @@ const TESTS = [
     name: "Install from site with empty install_origins",
     xpiUrl: "http://example.com/addons/empty_origins.xpi",
     installPrincipal: PRINCIPAL_COM,
-    expectState: AddonManager.STATE_CANCELLED,
+    expectState: AddonManager.STATE_INSTALL_FAILED,
   },
   {
     name: "Install from site with empty install_origins",
     xpiUrl: "http://example.com/addons/empty_origins.xpi",
     installPrincipal: PRINCIPAL_ORG,
-    expectState: AddonManager.STATE_CANCELLED,
+    expectState: AddonManager.STATE_INSTALL_FAILED,
   },
   {
     name: "Install with empty install_origins from AMO",
