@@ -262,9 +262,10 @@ class MozSiteManager:
 
         If you run a random Python script and wish to "activate" the
         site, you can simply instantiate an instance of this class
-        and call .ensure() and .activate() to make the virtualenv active.
+        and call .activate() to make the virtualenv active.
         """
 
+        self.ensure()
         activate_path = self._virtualenv.activate_path
         exec(open(activate_path).read(), dict(__file__=activate_path))
 
