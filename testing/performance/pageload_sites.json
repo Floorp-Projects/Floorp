@@ -393,14 +393,22 @@
       "test_cmds":  [
         ["navigate", "https://www.facebook.com/login"],
         ["wait.byTime", 30000],
-        ["measure.start", "https://www.facebook.com/"],
+        ["measure.start", "landing"],
+        ["navigate", "https://www.facebook.com/"],
         ["wait.byTime", 5000],
-        ["measure.start", "https://www.facebook.com/marketplace/"],
+        ["measure.stop", ""],
+        ["measure.start", "marketplace"],
+        ["navigate", "https://www.facebook.com/marketplace"],
         ["wait.byTime", 5000],
-        ["measure.start", "https://www.facebook.com/groups/discover/"],
-        ["wait.byTime", 10000],
-        ["measure.start", "https://www.facebook.com/friends"],
-        ["wait.byTime", 10000]
+        ["measure.stop", ""],
+        ["measure.start", "groups"],
+        ["navigate", "https://www.facebook.com/groups/discover/"],
+        ["wait.byTime", 5000],
+        ["measure.stop", ""],
+        ["measure.start", "friends"],
+        ["navigate", "https://www.facebook.com/friends/"],
+        ["wait.byTime", 5000],
+        ["measure.stop", ""]
       ]
     }
   ]

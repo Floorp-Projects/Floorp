@@ -219,8 +219,14 @@ class RaptorGatherer(FrameworkGatherer):
                     matcher.append(test)
 
         if len(matcher) == 0:
-            logger.critical("No url found for test {}".format(title))
-            raise Exception("No url found for test")
+            logger.critical(
+                "No tests exist for the following name "
+                "(obtained from config.yml): {}".format(title)
+            )
+            raise Exception(
+                "No tests exist for the following name "
+                "(obtained from config.yml): {}".format(title)
+            )
 
         result = f".. dropdown:: {title} ({test_description})\n"
         result += f"   :container: + anchor-id-{title}-{suite_name[0]}\n\n"

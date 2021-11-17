@@ -120,6 +120,10 @@ browsertime-responsiveness:
     <<: *tp6-defaults
     raptor-subtests:
         - cnn-nav
+        - [facebook-nav, fbnav]
+        - [reddit-billgates-ama, rdt-ama]
+        - [reddit-billgates-post-1, rdt-post-1]
+        - [reddit-billgates-post-2, rdt-post-2]
     mozharness:
         extra-options:
             by-test-platform:
