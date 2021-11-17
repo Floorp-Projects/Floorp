@@ -536,6 +536,10 @@ pref("browser.download.viewableInternally.enabledTypes", "xml,svg,webp,avif,jxl"
 // on whether there are downloads to show.
 pref("browser.download.autohideButton", true);
 
+// Controls whether to open the downloads panel every time a download begins.
+// The first download ever run in a new profile will still open the panel.
+pref("browser.download.alwaysOpenPanel", true);
+
 #ifndef XP_MACOSX
   pref("browser.helperApps.deleteTempFileOnExit", true);
 #endif

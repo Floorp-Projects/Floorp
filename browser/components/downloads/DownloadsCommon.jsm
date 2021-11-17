@@ -62,6 +62,13 @@ XPCOMUtils.defineLazyGetter(this, "DownloadsLogger", () => {
   return new ConsoleAPI(consoleOptions);
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gAlwaysOpenPanel",
+  "browser.download.alwaysOpenPanel",
+  true
+);
+
 const kDownloadsStringBundleUrl =
   "chrome://browser/locale/downloads/downloads.properties";
 
@@ -952,7 +959,8 @@ DownloadsDataCtor.prototype = {
       Services.prefs.getBoolPref(
         "browser.download.improvements_to_download_panel"
       ) &&
-      DownloadsCommon.summarizeDownloads(this.downloads).numDownloading <= 1;
+      DownloadsCommon.summarizeDownloads(this.downloads).numDownloading <= 1 &&
+      gAlwaysOpenPanel;
 
     if (
       this.panelHasShownBefore &&
