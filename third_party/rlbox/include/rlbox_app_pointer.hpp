@@ -27,17 +27,16 @@ private:
   RLBOX_SHARED_LOCK(map_mutex);
 #endif
 
-  T_PointerType get_unused_index()
+  T_PointerType get_unused_index(T_PointerType max_ptr_val)
   {
-    constexpr auto max_val = std::numeric_limits<T_PointerTypeUnsigned>::max();
-    constexpr auto min_val = std::numeric_limits<T_PointerTypeUnsigned>::min();
-    for (T_PointerTypeUnsigned i = counter; i < max_val; i++) {
+    const auto max_val = (T_PointerTypeUnsigned) max_ptr_val;
+    for (T_PointerTypeUnsigned i = counter; i <= max_val; i++) {
       if (pointer_map.find(i) == pointer_map.end()) {
         counter = i + 1;
         return (T_PointerType)i;
       }
     }
-    for (T_PointerTypeUnsigned i = min_val; i < counter; i++) {
+    for (T_PointerTypeUnsigned i = 1; i < counter; i++) {
       if (pointer_map.find(i) == pointer_map.end()) {
         counter = i + 1;
         return (T_PointerType)i;
@@ -55,12 +54,12 @@ public:
     pointer_map[0] = nullptr;
   }
 
-  T_PointerType get_app_pointer_idx(void* ptr)
+  T_PointerType get_app_pointer_idx(void* ptr, T_PointerType max_ptr_val)
   {
 #ifndef RLBOX_SINGLE_THREADED_INVOCATIONS
     RLBOX_ACQUIRE_UNIQUE_GUARD(lock, map_mutex);
 #endif
-    T_PointerType idx = get_unused_index();
+    T_PointerType idx = get_unused_index(max_ptr_val);
     T_PointerTypeUnsigned idx_int = (T_PointerTypeUnsigned)idx;
     pointer_map[idx_int] = ptr;
     return idx;
