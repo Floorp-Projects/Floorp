@@ -18,6 +18,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/v95.0.0/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/v95.0.0/.config.yml)
 
+* **concept-toolbar**
+  * 🌟️️ **Add removeNavigationAction method which removes a previously added navigation action
+
 * **support-utils**
   * 🌟️️ **Add Firefox Focus packages to known browsers list
 

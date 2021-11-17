@@ -337,6 +337,23 @@ class DisplayToolbarTest {
     }
 
     @Test
+    fun `navigation action can be removed`() {
+        val contentDescription = "to-be-removed"
+
+        val (_, displayToolbar) = createDisplayToolbar()
+
+        val action = BrowserToolbar.Button(mock(), contentDescription) {}
+        // Removing action which was never added has no effect
+        displayToolbar.removeNavigationAction(action)
+
+        displayToolbar.addNavigationAction(action)
+        assertEquals(1, displayToolbar.views.navigationActions.childCount)
+
+        displayToolbar.removeNavigationAction(action)
+        assertEquals(0, displayToolbar.views.navigationActions.childCount)
+    }
+
+    @Test
     fun `page action can be removed`() {
         val contentDescription = "to-be-removed"
 

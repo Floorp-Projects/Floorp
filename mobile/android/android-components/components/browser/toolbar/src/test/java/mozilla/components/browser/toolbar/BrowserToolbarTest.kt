@@ -385,6 +385,22 @@ class BrowserToolbarTest {
     }
 
     @Test
+    fun `remove navigation action will be forwarded to display toolbar`() {
+        val toolbar = BrowserToolbar(testContext)
+        val display: DisplayToolbar = mock()
+
+        toolbar.display = display
+
+        val action = BrowserToolbar.Button(mock(), "Hello") {
+            // Do nothing
+        }
+
+        toolbar.removeNavigationAction(action)
+
+        verify(display).removeNavigationAction(action)
+    }
+
+    @Test
     fun `remove page action will be forwarded to display toolbar`() {
         val toolbar = BrowserToolbar(testContext)
         val display: DisplayToolbar = mock()

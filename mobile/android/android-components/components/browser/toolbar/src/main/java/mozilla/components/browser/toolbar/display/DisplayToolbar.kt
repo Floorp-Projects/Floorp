@@ -641,6 +641,16 @@ class DisplayToolbar internal constructor(
     internal fun addNavigationAction(action: Toolbar.Action) {
         views.navigationActions.addAction(action)
     }
+
+    /**
+     * Removes a previously added navigation action (see [addNavigationAction]). If the provided
+     * action was never added, this method has no effect.
+     *
+     * @param action the action to remove.
+     */
+    internal fun removeNavigationAction(action: Toolbar.Action) {
+        views.navigationActions.removeAction(action)
+    }
 }
 
 /**

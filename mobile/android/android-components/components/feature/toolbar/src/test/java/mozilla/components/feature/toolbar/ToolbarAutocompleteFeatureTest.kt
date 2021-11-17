@@ -88,6 +88,10 @@ class ToolbarAutocompleteFeatureTest {
             fail()
         }
 
+        override fun removeNavigationAction(action: Toolbar.Action) {
+            fail()
+        }
+
         override fun setOnEditListener(listener: Toolbar.OnEditListener) {
             fail()
         }

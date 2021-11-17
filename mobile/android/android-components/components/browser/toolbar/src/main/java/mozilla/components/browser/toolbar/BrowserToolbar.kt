@@ -68,6 +68,7 @@ internal fun ImageView.setTintResource(@ColorRes tintColorResource: Int) {
  *  +----------------+ +----------------+
  * ```
  */
+@Suppress("TooManyFunctions")
 class BrowserToolbar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -296,6 +297,16 @@ class BrowserToolbar @JvmOverloads constructor(
      */
     override fun addNavigationAction(action: Toolbar.Action) {
         display.addNavigationAction(action)
+    }
+
+    /**
+     * Removes a previously added navigation action (see [addNavigationAction]). If the provided
+     * action was never added, this method has no effect.
+     *
+     * @param action the action to remove.
+     */
+    override fun removeNavigationAction(action: Toolbar.Action) {
+        display.removeNavigationAction(action)
     }
 
     /**
