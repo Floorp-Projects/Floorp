@@ -75,8 +75,6 @@ object TelemetryWrapper {
         val CANCEL = "cancel"
         val LONG_PRESS = "long_press"
         val CHANGE = "change"
-        val FOREGROUND = "foreground"
-        val BACKGROUND = "background"
         val SAVE = "save"
         val OPEN = "open"
         val INSTALL = "install"
@@ -89,7 +87,6 @@ object TelemetryWrapper {
     private object Object {
         val SEARCH_BAR = "search_bar"
         val SETTING = "setting"
-        val APP = "app"
         val MENU = "menu"
         val BACK_BUTTON = "back_button"
         val BLOCKING_SWITCH = "blocking_switch"
@@ -263,8 +260,6 @@ object TelemetryWrapper {
     @JvmStatic
     fun startSession() {
         TelemetryHolder.get().recordSessionStart()
-
-        TelemetryEvent.create(Category.ACTION, Method.FOREGROUND, Object.APP).queue()
     }
 
     @VisibleForTesting var histogram = IntArray(HISTOGRAM_SIZE)
@@ -294,15 +289,6 @@ object TelemetryWrapper {
     fun stopSession() {
         TelemetryHolder.get().recordSessionEnd()
 
-        val histogramEvent = TelemetryEvent.create(Category.HISTOGRAM, Method.FOREGROUND, Object.BROWSER)
-        for (bucketIndex in histogram.indices) {
-            histogramEvent.extra((bucketIndex * BUCKET_SIZE_MS).toString(), histogram[bucketIndex].toString())
-        }
-        histogramEvent.queue()
-
-        // Clear histogram array after queueing it
-        histogram = IntArray(HISTOGRAM_SIZE)
-
         TelemetryEvent.create(Category.ACTION, Method.OPEN, Object.BROWSER).extra(
             Extra.UNIQUE_DOMAINS_COUNT,
             domainMap.size.toString()
@@ -314,8 +300,6 @@ object TelemetryWrapper {
             numUri.toString()
         ).queue()
         numUri = 0
-
-        TelemetryEvent.create(Category.ACTION, Method.BACKGROUND, Object.APP).queue()
     }
 
     @JvmStatic
