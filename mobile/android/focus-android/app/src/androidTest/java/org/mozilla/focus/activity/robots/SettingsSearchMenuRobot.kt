@@ -15,6 +15,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.helpers.TestHelper.appContext
@@ -46,6 +47,14 @@ class SearchSettingsRobot {
     fun clickSearchSuggestionsSwitch() {
         searchSuggestionsSwitch.waitForExists(waitingTime)
         searchSuggestionsSwitch.click()
+    }
+
+    fun verifySearchSuggestionsEnabled(enabled: Boolean) {
+        if (enabled) {
+            assertTrue(searchSuggestionsSwitch.isChecked)
+        } else {
+            assertFalse(searchSuggestionsSwitch.isChecked)
+        }
     }
 
     fun openUrlAutocompleteSubMenu() {
