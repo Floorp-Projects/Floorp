@@ -32,6 +32,7 @@ class SettingsSubMenuHomepageRobot {
     fun clickJumpBackInButton() = jumpBackInButton().click()
     fun clickRecentBookmarksButton() = recentBookmarksButton().click()
     fun clickStartOnHomepageButton() = homepageButton().click()
+    fun clickStartOnLastTabButton() = lastTabButton().click()
 
     class Transition {
 
