@@ -367,7 +367,10 @@ bool LaunchApp(const std::wstring& cmdline, const LaunchOptions& options,
       NULL, const_cast<wchar_t*>(cmdline.c_str()), NULL, NULL, bInheritHandles,
       dwCreationFlags, new_env_ptr, NULL, &startup_info, &process_info);
   if (lpAttributeList) FreeThreadAttributeList(lpAttributeList);
-  if (!createdOK) return false;
+  if (!createdOK) {
+    DLOG(WARNING) << "CreateProcess Failed: " << GetLastError();
+    return false;
+  }
 
   gProcessLog.print("==> process %d launched child process %d (%S)\n",
                     GetCurrentProcId(), process_info.dwProcessId,

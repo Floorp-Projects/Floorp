@@ -279,7 +279,7 @@ class PosixProcessLauncher : public BaseProcessLauncher {
     int origSrcFd;
     aChannel->GetClientFileDescriptorMapping(&origSrcFd, &mChannelDstFd);
     mChannelSrcFd.reset(dup(origSrcFd));
-    if (!mChannelSrcFd) {
+    if (NS_WARN_IF(!mChannelSrcFd)) {
       return false;
     }
     aChannel->CloseClientFileDescriptor();
@@ -1206,8 +1206,8 @@ bool PosixProcessLauncher::DoSetup() {
   if (!CrashReporter::IsDummy()) {
 #  if defined(OS_LINUX) || defined(OS_BSD) || defined(OS_SOLARIS)
     int childCrashFd, childCrashRemapFd;
-    if (!CrashReporter::CreateNotificationPipeForChild(&childCrashFd,
-                                                       &childCrashRemapFd)) {
+    if (NS_WARN_IF(!CrashReporter::CreateNotificationPipeForChild(
+            &childCrashFd, &childCrashRemapFd))) {
       return false;
     }
 
@@ -1431,7 +1431,8 @@ bool WindowsProcessLauncher::DoSetup() {
         // so use sandbox level USER_RESTRICTED instead of USER_LOCKDOWN.
         auto level =
             isWidevine ? SandboxBroker::Restricted : SandboxBroker::LockDown;
-        if (!mResults.mSandboxBroker->SetSecurityLevelForGMPlugin(level)) {
+        if (NS_WARN_IF(
+                !mResults.mSandboxBroker->SetSecurityLevelForGMPlugin(level))) {
           return false;
         }
         mUseSandbox = true;
@@ -1454,7 +1455,8 @@ bool WindowsProcessLauncher::DoSetup() {
       break;
     case GeckoProcessType_RDD:
       if (!PR_GetEnv("MOZ_DISABLE_RDD_SANDBOX")) {
-        if (!mResults.mSandboxBroker->SetSecurityLevelForRDDProcess()) {
+        if (NS_WARN_IF(
+                !mResults.mSandboxBroker->SetSecurityLevelForRDDProcess())) {
           return false;
         }
         mUseSandbox = true;
@@ -1462,7 +1464,8 @@ bool WindowsProcessLauncher::DoSetup() {
       break;
     case GeckoProcessType_Socket:
       if (!PR_GetEnv("MOZ_DISABLE_SOCKET_PROCESS_SANDBOX")) {
-        if (!mResults.mSandboxBroker->SetSecurityLevelForSocketProcess()) {
+        if (NS_WARN_IF(
+                !mResults.mSandboxBroker->SetSecurityLevelForSocketProcess())) {
           return false;
         }
         mUseSandbox = true;
@@ -1690,7 +1693,7 @@ RefPtr<ProcessHandlePromise> AndroidProcessLauncher::LaunchAndroidService(
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 bool GeckoChildProcessHost::AppendMacSandboxParams(StringVector& aArgs) {
   MacSandboxInfo info;
-  if (!FillMacSandboxInfo(info)) {
+  if (NS_WARN_IF(!FillMacSandboxInfo(info))) {
     return false;
   }
   info.AppendAsParams(aArgs);
@@ -1779,7 +1782,7 @@ RefPtr<ProcessLaunchPromise> BaseProcessLauncher::Launch(
   // great.
   bool failed = false;
   aHost->InitializeChannel([&](IPC::Channel* channel) {
-    if (!channel || !SetChannel(channel)) {
+    if (NS_WARN_IF(!channel || !SetChannel(channel))) {
       failed = true;
     }
   });
