@@ -4599,11 +4599,6 @@ gViewController.defineView("list", async type => {
   let isMonochromaticTheme = addon =>
     addon.id.endsWith("-colorway@mozilla.org");
 
-  let monochromaticEnabled = Services.prefs.getBoolPref(
-    "browser.theme.colorways.enabled",
-    true
-  );
-
   let frag = document.createDocumentFragment();
   let list = document.createElement("addon-list");
   list.type = type;
@@ -4626,7 +4621,7 @@ gViewController.defineView("list", async type => {
   list.setSections(sections);
   frag.appendChild(list);
 
-  if (type == "theme" && monochromaticEnabled) {
+  if (type == "theme") {
     let monochromaticList = document.createElement("addon-list");
     monochromaticList.classList.add("monochromatic-addon-list");
     monochromaticList.type = type;
