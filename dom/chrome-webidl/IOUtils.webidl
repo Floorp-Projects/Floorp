@@ -24,7 +24,9 @@
 [ChromeOnly, Exposed=(Window, Worker)]
 namespace IOUtils {
  /**
-   * Reads up to |maxBytes| of the file at |path| according to |opts|.
+   * Reads up to |opts.maxBytes| of the file at |path| according to |opts|.
+   *
+   * NB: The maximum file size that can be read is UINT32_MAX.
    *
    * @param path An absolute file path.
    *
@@ -36,6 +38,8 @@ namespace IOUtils {
    * Reads the UTF-8 text file located at |path| and returns the decoded
    * contents as a |DOMString|.
    *
+   * NB: The maximum file size that can be read is UINT32_MAX.
+   *
    * @param path An absolute file path.
    *
    * @return Resolves with the file contents encoded as a string, otherwise
@@ -45,6 +49,8 @@ namespace IOUtils {
   /**
    * Read the UTF-8 text file located at |path| and return the contents
    * parsed as JSON into a JS value.
+   *
+   * NB: The maximum file size that can be read is UINT32_MAX.
    *
    * @param path An absolute path.
    *
