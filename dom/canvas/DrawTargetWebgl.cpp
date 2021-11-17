@@ -630,6 +630,9 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
                                RefPtr<TextureHandle>* aHandle,
                                bool aTransformed, bool aClipped,
                                bool aAccelOnly, bool aForceUpdate) {
+  if (aRect.IsEmpty()) {
+    return true;
+  }
   // Determine whether the clipping rectangle is simple enough to accelerate.
   Maybe<IntRect> intClip;
   if (!aClipped) {
@@ -1697,7 +1700,8 @@ bool DrawTargetWebgl::FlushFromSkia() {
     RefPtr<SourceSurface> skiaSnapshot = mSkia->Snapshot();
     if (skiaSnapshot) {
       SurfacePattern pattern(skiaSnapshot, ExtendMode::CLAMP);
-      DrawRect(Rect(GetRect()), pattern, DrawOptions(), Nothing(),
+      DrawRect(Rect(GetRect()), pattern,
+               DrawOptions(1.0f, CompositionOp::OP_SOURCE), Nothing(),
                &mSnapshotTexture, false, false, false, true);
     }
   }
