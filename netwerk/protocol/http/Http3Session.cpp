@@ -180,6 +180,13 @@ void Http3Session::DoSetEchConfig(const nsACString& aEchConfig) {
   }
 }
 
+nsresult Http3Session::SendPriorityUpdateFrame(uint64_t aStreamId,
+                                               uint8_t aPriorityUrgency,
+                                               bool aPriorityIncremental) {
+  return mHttp3Connection->PriorityUpdate(aStreamId, aPriorityUrgency,
+                                          aPriorityIncremental);
+}
+
 // Shutdown the http3session and close all transactions.
 void Http3Session::Shutdown() {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
@@ -734,8 +741,14 @@ bool Http3Session::AddStream(nsAHttpTransaction* aHttpTransaction,
   // reset the read timers to wash away any idle time
   mLastWriteTime = PR_IntervalNow();
 
+  uint32_t cos = 0;
+  if (trans) {
+    cos = trans->ClassOfService();
+  }
+
   LOG3(("Http3Session::AddStream %p atrans=%p.\n", this, aHttpTransaction));
-  Http3Stream* stream = new Http3Stream(aHttpTransaction, this);
+  Http3Stream* stream = new Http3Stream(aHttpTransaction, this, cos,
+                                        mCurrentTopBrowsingContextId);
   mStreamTransactionHash.InsertOrUpdate(aHttpTransaction, RefPtr{stream});
 
   if (mState == ZERORTT) {
@@ -839,8 +852,9 @@ nsresult Http3Session::TryActivating(
     }
   }
 
-  nsresult rv = mHttp3Connection->Fetch(aMethod, aScheme, aAuthorityHeader,
-                                        aPath, aHeaders, aStreamId, 3, false);
+  nsresult rv = mHttp3Connection->Fetch(
+      aMethod, aScheme, aAuthorityHeader, aPath, aHeaders, aStreamId,
+      aStream->PriorityUrgency(), aStream->PriorityIncremental());
   if (NS_FAILED(rv)) {
     LOG(("Http3Session::TryActivating returns error=0x%" PRIx32 "[stream=%p, "
          "this=%p]",
