@@ -1081,7 +1081,7 @@ ContentParent::GetNewOrUsedLaunchingBrowserProcess(
              PromiseFlatCString(aRemoteType).get()));
 
     contentParent = new ContentParent(aRemoteType);
-    if (!contentParent->BeginSubprocessLaunch(aPriority)) {
+    if (NS_WARN_IF(!contentParent->BeginSubprocessLaunch(aPriority))) {
       // Launch aborted because of shutdown. Bailout.
       contentParent->LaunchSubprocessReject();
       return nullptr;
@@ -2503,7 +2503,8 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
   AUTO_PROFILER_LABEL("ContentParent::LaunchSubprocess", OTHER);
 
   if (!ContentProcessManager::GetSingleton()) {
-    // Shutdown has begun, we shouldn't spawn any more child processes.
+    NS_WARNING(
+        "Shutdown has begun, we shouldn't spawn any more child processes");
     return false;
   }
 
@@ -2519,6 +2520,7 @@ bool ContentParent::BeginSubprocessLaunch(ProcessPriority aPriority) {
   // `LaunchSubprocessReject`/`LaunchSubprocessResolve`.
   mPrefSerializer = MakeUnique<mozilla::ipc::SharedPreferenceSerializer>();
   if (!mPrefSerializer->SerializeToSharedMemory()) {
+    NS_WARNING("SharedPreferenceSerializer::SerializeToSharedMemory failed");
     MarkAsDead();
     return false;
   }
@@ -2628,6 +2630,7 @@ bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
   // marked as DEAD, fail the process launch, and immediately begin tearing down
   // the content process.
   if (IsDead()) {
+    NS_WARNING("immediately shutting-down already-dead process");
     ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
     return false;
   }
