@@ -470,11 +470,13 @@ async function loadManifestFromWebManifest(aPackage) {
   let addon = new AddonInternal();
   addon.id = bss.id;
   addon.version = manifest.version;
+  addon.manifestVersion = manifest.manifest_version;
   addon.type = extension.type === "langpack" ? "locale" : extension.type;
   addon.loader = null;
   addon.strictCompatibility = true;
   addon.internalName = null;
   addon.updateURL = bss.update_url;
+  addon.installOrigins = manifest.install_origins;
   addon.optionsBrowserStyle = true;
   addon.optionsURL = null;
   addon.optionsType = null;
