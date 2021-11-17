@@ -111,6 +111,32 @@ class _BuiltInThemes {
   }
 
   /**
+   * @param {string} id
+   *   A theme's ID.
+   * @returns {boolean}
+   *   Returns true if the theme is expired. False otherwise.
+   * @note This looks up the id in a Map rather than accessing a property on
+   *   the addon itself. That makes calls to this function O(m) where m is the
+   *   total number of built-in themes offered now or in the past. Since we
+   *   are using a Map, calls are O(1) in the average case.
+   */
+  themeIsExpired(id) {
+    let themeInfo = this.builtInThemeMap.get(id);
+    return themeInfo?.expiry && new Date(themeInfo.expiry) < new Date();
+  }
+
+  /**
+   * @param {string} id
+   *   The theme's id.
+   * @return {boolean}
+   *   True if the theme with id `id` is both expired and retained. That is,
+   *   the user has the ability to use it after its expiry date.
+   */
+  isRetainedExpiredTheme(id) {
+    return retainedThemes.includes(id) && this.themeIsExpired(id);
+  }
+
+  /**
    * Uninstalls themes after they expire. If the expired theme is active, then
    * it is not uninstalled. Instead, it is saved so that the user can use it
    * indefinitely.

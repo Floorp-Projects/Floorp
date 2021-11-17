@@ -4,15 +4,20 @@
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
+const { BuiltInThemes } = ChromeUtils.import(
+  "resource:///modules/BuiltInThemes.jsm"
+);
 
 AddonTestUtils.initMochitest(this);
+
+const kTestThemeId = "test-colorway@mozilla.org";
 
 add_task(async function testMonochromaticList() {
   // Install test theme before loading view.
   const themeXpi = AddonTestUtils.createTempWebExtensionFile({
     manifest: {
       name: "Monochromatic Theme",
-      applications: { gecko: { id: "test-colorway@mozilla.org" } },
+      applications: { gecko: { id: kTestThemeId } },
       theme: {},
     },
   });
@@ -49,7 +54,8 @@ add_task(async function testMonochromaticList() {
     "Subheader string is correct."
   );
 
-  // Check that the test theme is in the colorways section.
+  // Check that the test theme is in the colorways section. It should be there
+  // because it hasn't yet expired.
   let card = colorwayList.querySelector(
     "addon-card[addon-id='test-colorway@mozilla.org']"
   );
@@ -61,19 +67,18 @@ add_task(async function testMonochromaticList() {
 
   // Check that the test theme is in the enabled section.
   let addon = await AddonManager.getAddonByID("test-colorway@mozilla.org");
-  let enabledSection = doc.querySelector("section[section='0']");
+  let enabledSection = getSection(doc, "enabled");
   let mutationPromise = BrowserTestUtils.waitForMutationCondition(
     enabledSection,
     { childList: true },
     () =>
       enabledSection.children.length > 1 &&
-      enabledSection.children[1].getAttribute("addon-id") ==
-        "test-colorway@mozilla.org"
+      enabledSection.children[1].getAttribute("addon-id") == kTestThemeId
   );
   await addon.enable();
   await mutationPromise;
   let enabledCard = enabledSection.querySelector(
-    "addon-card[addon-id='test-colorway@mozilla.org']"
+    `addon-card[addon-id='${kTestThemeId}']`
   );
   ok(
     enabledSection.contains(enabledCard),
@@ -103,4 +108,79 @@ add_task(async function testMonochromaticList() {
 
   await closeView(win);
   await themeAddon.uninstall(true);
+});
+
+add_task(async function testExpiredThemes() {
+  const themeXpi = AddonTestUtils.createTempWebExtensionFile({
+    manifest: {
+      name: "Monochromatic Theme",
+      applications: { gecko: { id: kTestThemeId } },
+      theme: {},
+    },
+  });
+
+  // Make the test theme appear expired.
+  let yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  yesterday = yesterday.toISOString().split("T")[0];
+  // Add the test theme to our list of built-in themes so that aboutaddons.js
+  // will think this theme is expired.
+  BuiltInThemes.builtInThemeMap.set(kTestThemeId, {
+    version: "1.0",
+    expiry: yesterday,
+    // We use the manifest from Light theme since we know it will be in-tree
+    // indefinitely.
+    path: "resource://builtin-themes/light/",
+  });
+  registerCleanupFunction(() => {
+    BuiltInThemes.builtInThemeMap.delete(kTestThemeId);
+  });
+
+  // Make the test theme appear retained.
+  const retainedThemePrefName = "browser.theme.retainedExpiredThemes";
+  Services.prefs.setStringPref(
+    retainedThemePrefName,
+    JSON.stringify([kTestThemeId])
+  );
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref(retainedThemePrefName);
+  });
+
+  const expiredAddon = await AddonManager.installTemporaryAddon(themeXpi);
+  let addon = await AddonManager.getAddonByID(kTestThemeId);
+  await addon.disable();
+
+  let win = await loadInitialView("theme");
+  let doc = win.document;
+
+  let colorwayList = doc.querySelector(".monochromatic-addon-list");
+
+  // We need branching logic here since the outcome depends on whether there
+  // are active non-test Colorway themes when the test runs.
+  if (colorwayList) {
+    let card = colorwayList.querySelector(
+      `addon-card[addon-id='${kTestThemeId}']`
+    );
+    ok(
+      !colorwayList.contains(card),
+      "Colorways section does not contain expired theme."
+    );
+  } else {
+    ok(
+      true,
+      "The Colorways section is not in the DOM because all Colorway themes are expired."
+    );
+  }
+
+  let disabledSection = getSection(doc, "disabled");
+  let card = disabledSection.querySelector(
+    `addon-card[addon-id='${kTestThemeId}']`
+  );
+  ok(
+    disabledSection.contains(card),
+    "The regular, non-Colorways 'Disabled' section contains the expired theme."
+  );
+
+  await closeView(win);
+  await expiredAddon.uninstall(true);
 });
