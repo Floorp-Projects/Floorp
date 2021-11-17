@@ -7,11 +7,13 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import enum
 import functools
 import json
 import os
 import platform
 import shutil
+import site
 import subprocess
 import sys
 
@@ -19,6 +21,10 @@ from mach.requirements import MachEnvRequirements
 
 PTH_FILENAME = "mach.pth"
 METADATA_FILENAME = "moz_virtualenv_metadata.json"
+
+
+class VirtualenvOutOfDateException(Exception):
+    pass
 
 
 class MozSiteMetadataOutOfDateError(Exception):
@@ -68,8 +74,205 @@ class MozSiteMetadata:
             )
 
 
-class MozSiteManager:
-    """Contains logic for managing the Python import scope for building the tree."""
+class SitePackagesSource(enum.Enum):
+    NONE = enum.auto()
+    SYSTEM = enum.auto()
+    VENV = enum.auto()
+
+
+class MachSiteManager:
+    """Represents the activate-able "import scope" Mach needs
+
+    Whether running independently, using the system packages, or automatically managing
+    dependencies with "pip install", this class provides an easy handle to verify
+    that the "site" is up-to-date (whether than means that system packages don't
+    collide with vendored packages, or that the on-disk virtualenv needs rebuilding).
+
+    Note that, this is a *virtual* site: an on-disk Python virtualenv
+    is only created if there will be "pip installs" into the Mach site.
+    """
+
+    def __init__(
+        self,
+        topsrcdir,
+        state_dir,
+        requirements,
+        active_metadata,
+        site_packages_source,
+    ):
+        self._topsrcdir = topsrcdir
+        self._active_metadata = active_metadata
+        self._site_packages_source = site_packages_source
+        self._requirements = requirements
+        self._virtualenv_root = os.path.join(state_dir, "_virtualenvs", "mach")
+        self._metadata = MozSiteMetadata(
+            sys.hexversion,
+            "mach",
+            self._virtualenv_root,
+        )
+
+    @classmethod
+    def from_environment(
+        cls, topsrcdir, state_dir, is_mach_create_mach_env_command=False
+    ):
+        requirements = _requirements(topsrcdir, "mach")
+        # Mach needs to operate in environments in which no pip packages are installed
+        # yet, and the system isn't guaranteed to have the packages we need. For example,
+        # "./mach bootstrap" can't have any dependencies.
+        # So, all external dependencies of Mach's must be optional.
+        assert (
+            not requirements.pypi_requirements
+        ), "Mach pip package requirements must be optional."
+
+        if not (
+            os.environ.get("MACH_USE_SYSTEM_PYTHON") or os.environ.get("MOZ_AUTOMATION")
+        ):
+            active_metadata = MozSiteMetadata.from_runtime()
+            if active_metadata and active_metadata.site_name == "mach":
+                source = SitePackagesSource.VENV
+            elif not is_mach_create_mach_env_command:
+                # We're in an environment where we normally *would* use the Mach
+                # virtualenv, but we're running a "nativecmd" such as
+                # "create-mach-environment". So, operate Mach without leaning on the
+                # on-disk virtualenv or system packages.
+                source = SitePackagesSource.NONE
+            else:
+                # This catches the case where "./mach create-mach-environment" was run:
+                # * On Mach initialization, the previous clause is hit, and Mach
+                #   operates without any extra site packages
+                # * When the actual "create-mach-environment" function runs,
+                #   MachPythonEnvironment.from_environment() runs again, and this clause
+                #   is triggered. We set the site packages source to the on-disk venv so
+                #   it gets populated.
+                source = SitePackagesSource.VENV
+        else:
+            has_pip = (
+                subprocess.run(
+                    [sys.executable, "-c", "import pip"], stderr=subprocess.DEVNULL
+                ).returncode
+                == 0
+            )
+
+            if has_pip:
+                if os.environ.get("MACH_USE_SYSTEM_PYTHON") and not os.environ.get(
+                    "MOZ_AUTOMATION"
+                ):
+                    print(
+                        "Since Mach has been requested to use the system Python "
+                        "environment, it will need to verify compatibility before "
+                        "running the current command. This may take a couple seconds.\n"
+                        "Note: you can avoid this delay by unsetting the "
+                        "MACH_USE_SYSTEM_PYTHON environment variable."
+                    )
+                source = SitePackagesSource.SYSTEM
+            else:
+                source = SitePackagesSource.NONE
+
+        return cls(
+            topsrcdir,
+            state_dir,
+            requirements,
+            MozSiteMetadata.from_runtime(),
+            source,
+        )
+
+    def up_to_date(self):
+        if self._site_packages_source == SitePackagesSource.NONE:
+            return True
+        elif self._site_packages_source == SitePackagesSource.SYSTEM:
+            pip = [sys.executable, "-m", "pip"]
+            check_result = subprocess.run(
+                pip + ["check"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            )
+            if check_result.returncode:
+                print(check_result.stdout, file=sys.stderr)
+                subprocess.check_call(pip + ["list", "-v"], stdout=sys.stderr)
+                raise Exception(
+                    'According to "pip check", the current Python '
+                    "environment has package-compatibility issues."
+                )
+
+            package_result = self._requirements.validate_environment_packages(pip)
+            if not package_result.has_all_packages:
+                print(package_result.report())
+                raise Exception(
+                    "Your system Python packages aren't compatible with the "
+                    '"Mach" virtualenv'
+                )
+            return True
+        elif self._site_packages_source == SitePackagesSource.VENV:
+            environment = self._virtualenv()
+            return _is_venv_up_to_date(
+                self._topsrcdir,
+                environment,
+                self._requirements,
+                self._metadata,
+            )
+
+    def ensure(self, *, force=False):
+        up_to_date = self.up_to_date()
+        if force or not up_to_date:
+            if sys.prefix == self._metadata.prefix:
+                # If the Mach virtualenv is already activated, then the changes caused
+                # by rebuilding the virtualenv won't take effect until the next time
+                # Mach is used, which can lead to confusing one-off errors.
+                # Instead, request that the user resolve the out-of-date situation,
+                # *then* come back and run the intended command.
+                raise VirtualenvOutOfDateException()
+            self._build()
+        return up_to_date
+
+    def activate(self):
+        self.ensure()
+        if self._site_packages_source == SitePackagesSource.SYSTEM:
+            # Add our Mach modules to the sys.path.
+            # Note that "[0:0]" is used to ensure that Mach's modules are prioritized
+            # over the system modules. Since Mach-env activation happens so early in
+            # the Mach lifecycle, we can assume that no system packages have been
+            # imported yet, and this is a safe operation to do.
+            sys.path[0:0] = self._requirements.pths_as_absolute(self._topsrcdir)
+        elif self._site_packages_source == SitePackagesSource.NONE:
+            # Since the system packages aren't used, remove them from the sys.path
+            sys.path = [
+                path
+                for path in sys.path
+                if path
+                not in set(site.getsitepackages() + [site.getusersitepackages()])
+            ]
+            sys.path[0:0] = self._requirements.pths_as_absolute(self._topsrcdir)
+        elif self._site_packages_source == SitePackagesSource.VENV:
+            if sys.prefix != self._metadata.prefix:
+                raise Exception(
+                    "In-process activation of the Mach virtualenv is "
+                    "not currently supported. Please invoke `./mach` using "
+                    "the Mach virtualenv python binary directly."
+                )
+
+            # Otherwise, if our prefix matches the Mach virtualenv, then it's already
+            # activated.
+
+    def _build(self):
+        if self._site_packages_source != SitePackagesSource.VENV:
+            # The Mach virtualenv doesn't have a physical virtualenv on-disk if it won't
+            # be "pip install"-ing. So, there's no build work to do.
+            return
+
+        environment = self._virtualenv()
+        _create_venv_with_pthfile(
+            self._topsrcdir,
+            environment,
+            self._site_packages_source,
+            self._requirements,
+            self._metadata,
+        )
+
+    def _virtualenv(self):
+        assert self._site_packages_source == SitePackagesSource.VENV
+        return MozVirtualenv(self._topsrcdir, "mach", self._metadata.prefix)
+
+
+class CommandSiteManager:
+    """Public interface for activating virtualenvs and ad-hoc-installing pip packages"""
 
     def __init__(
         self,
@@ -77,162 +280,34 @@ class MozSiteManager:
         virtualenvs_dir,
         site_name,
     ):
+        self.topsrcdir = topsrcdir
+        self._virtualenv_name = site_name
         self.virtualenv_root = os.path.join(virtualenvs_dir, site_name)
         self._virtualenv = MozVirtualenv(topsrcdir, site_name, self.virtualenv_root)
         self.bin_path = self._virtualenv.bin_path
         self.python_path = self._virtualenv.python_path
-        self.topsrcdir = topsrcdir
-
-        self._site_name = site_name
         self._metadata = MozSiteMetadata(
             sys.hexversion,
             site_name,
-            self.virtualenv_root,
+            self._virtualenv.prefix,
         )
-
-    def up_to_date(self):
-        """Returns whether the virtualenv is present and up to date."""
-
-        # check if virtualenv exists
-        if not os.path.exists(self.virtualenv_root) or not os.path.exists(
-            self._virtualenv.activate_path
-        ):
-            return False
-
-        env_requirements = self.requirements()
-
-        virtualenv_package = os.path.join(
-            self.topsrcdir,
-            "third_party",
-            "python",
-            "virtualenv",
-            "virtualenv",
-            "version.py",
-        )
-        deps = [virtualenv_package] + env_requirements.requirements_paths
-
-        # Modifications to any of the following files mean the virtualenv should be
-        # rebuilt:
-        # * This file
-        # * The `virtualenv` package
-        # * Any of our requirements manifest files
-        activate_mtime = os.path.getmtime(self._virtualenv.activate_path)
-        dep_mtime = max(os.path.getmtime(p) for p in deps)
-        if dep_mtime > activate_mtime:
-            return False
-
-        # Verify that the metadata of the virtualenv on-disk is the same as what
-        # we expect, e.g.
-        # * If the metadata file doesn't exist, then the virtualenv wasn't fully
-        #   built
-        # * If the "hex_version" doesn't match, then the system Python has changed/been
-        #   upgraded.
-        try:
-            existing_metadata = MozSiteMetadata.from_path(self._virtualenv.prefix)
-            if existing_metadata != self._metadata:
-                return False
-        except MozSiteMetadataOutOfDateError:
-            return False
-
-        if env_requirements.pth_requirements or env_requirements.vendored_requirements:
-            try:
-                with open(
-                    os.path.join(self._virtualenv.site_packages_dir(), PTH_FILENAME)
-                ) as file:
-                    current_paths = file.read().strip().split("\n")
-            except FileNotFoundError:
-                return False
-
-            if current_paths != env_requirements.pths_as_absolute(self.topsrcdir):
-                return False
-
-        return True
 
     def ensure(self):
-        """Ensure the site is present and up to date.
-
-        If the site is up to date, this does nothing. Otherwise, it
-        creates and populates a virtualenv as necessary.
-
-        This should be the main API used from this class as it is the
-        highest-level.
-        """
-        if self.up_to_date():
-            return self.virtualenv_root
-        return self.build()
-
-    @functools.lru_cache(maxsize=None)
-    def requirements(self):
-        manifest_path = os.path.join(
-            self.topsrcdir, "build", f"{self._site_name}_virtualenv_packages.txt"
-        )
-
-        if not os.path.exists(manifest_path):
-            raise Exception(
-                f'The current command is using the "{self._site_name}" '
-                "site. However, that site is missing its associated "
-                f'requirements definition file at "{manifest_path}".'
-            )
-
-        thunderbird_dir = os.path.join(self.topsrcdir, "comm")
-        is_thunderbird = os.path.exists(thunderbird_dir) and bool(
-            os.listdir(thunderbird_dir)
-        )
-        return MachEnvRequirements.from_requirements_definition(
+        """Ensure the site is present and up to date."""
+        requirements = _requirements(self.topsrcdir, self._virtualenv_name)
+        if not _is_venv_up_to_date(
             self.topsrcdir,
-            is_thunderbird,
-            self._site_name in ("mach", "build"),
-            manifest_path,
-        )
-
-    def build(self):
-        """Build a virtualenv per tree conventions.
-
-        This returns the path of the created virtualenv.
-        """
-        if os.path.exists(self.virtualenv_root):
-            shutil.rmtree(self.virtualenv_root)
-
-        subprocess.run(
-            [
-                sys.executable,
-                os.path.join(
-                    self.topsrcdir,
-                    "third_party",
-                    "python",
-                    "virtualenv",
-                    "virtualenv.py",
-                ),
-                # pip, setuptools and wheel are vendored and inserted into the virtualenv
-                # scope automatically, so "virtualenv" doesn't need to seed it.
-                "--no-seed",
-                self.virtualenv_root,
-            ],
-            check=True,
-        )
-
-        env_requirements = self.requirements()
-        site_packages_dir = self._virtualenv.site_packages_dir()
-        pthfile_lines = self.requirements().pths_as_absolute(self.topsrcdir)
-        with open(os.path.join(site_packages_dir, PTH_FILENAME), "a") as f:
-            f.write("\n".join(pthfile_lines))
-
-        for requirement in env_requirements.pypi_requirements:
-            self._virtualenv.pip_install([str(requirement.requirement)])
-
-        for requirement in env_requirements.pypi_optional_requirements:
-            try:
-                self._virtualenv.pip_install([str(requirement.requirement)])
-            except subprocess.CalledProcessError:
-                print(
-                    f"Could not install {requirement.requirement.name}, so "
-                    f"{requirement.repercussion}. Continuing."
-                )
-
-        os.utime(self._virtualenv.activate_path, None)
-        self._metadata.write()
-
-        return self.virtualenv_root
+            self._virtualenv,
+            requirements,
+            self._metadata,
+        ):
+            _create_venv_with_pthfile(
+                self.topsrcdir,
+                self._virtualenv,
+                SitePackagesSource.VENV,
+                requirements,
+                self._metadata,
+            )
 
     def activate(self):
         """Activate this site in the current Python context.
@@ -365,3 +440,134 @@ class MozVirtualenv(PythonVirtualenv):
             stderr=subprocess.STDOUT,
             check=True,
         )
+
+
+@functools.lru_cache(maxsize=None)
+def _requirements(topsrcdir, virtualenv_name):
+    manifest_path = os.path.join(
+        topsrcdir, "build", f"{virtualenv_name}_virtualenv_packages.txt"
+    )
+    if not os.path.exists(manifest_path):
+        raise Exception(
+            f'The current command is using the "{virtualenv_name}" '
+            "virtualenv. However, that virtualenv is missing its associated "
+            f'requirements definition file at "{manifest_path}".'
+        )
+
+    thunderbird_dir = os.path.join(topsrcdir, "comm")
+    is_thunderbird = os.path.exists(thunderbird_dir) and bool(
+        os.listdir(thunderbird_dir)
+    )
+    return MachEnvRequirements.from_requirements_definition(
+        topsrcdir,
+        is_thunderbird,
+        virtualenv_name in ("mach", "build"),
+        manifest_path,
+    )
+
+
+def _create_venv_with_pthfile(
+    topsrcdir,
+    target_venv,
+    site_packages_source,
+    requirements,
+    metadata,
+):
+    virtualenv_root = target_venv.prefix
+    if os.path.exists(virtualenv_root):
+        shutil.rmtree(virtualenv_root)
+
+    subprocess.check_call(
+        [
+            sys.executable,
+            os.path.join(
+                topsrcdir,
+                "third_party",
+                "python",
+                "virtualenv",
+                "virtualenv.py",
+            ),
+            # pip, setuptools and wheel are vendored and inserted into the virtualenv
+            # scope automatically, so "virtualenv" doesn't need to seed it.
+            "--no-seed",
+            virtualenv_root,
+        ]
+    )
+
+    os.utime(target_venv.activate_path, None)
+
+    site_packages_dir = target_venv.site_packages_dir()
+    pthfile_contents = "\n".join(requirements.pths_as_absolute(topsrcdir))
+    with open(os.path.join(site_packages_dir, PTH_FILENAME), "w") as f:
+        f.write(pthfile_contents)
+
+    if site_packages_source == SitePackagesSource.VENV:
+        for requirement in requirements.pypi_requirements:
+            target_venv.pip_install([str(requirement.requirement)])
+
+        for requirement in requirements.pypi_optional_requirements:
+            try:
+                target_venv.pip_install([str(requirement.requirement)])
+            except subprocess.CalledProcessError:
+                print(
+                    f"Could not install {requirement.requirement.name}, so "
+                    f"{requirement.repercussion}. Continuing."
+                )
+
+    os.utime(target_venv.activate_path, None)
+    metadata.write()
+
+
+def _is_venv_up_to_date(
+    topsrcdir,
+    target_venv,
+    requirements,
+    expected_metadata,
+):
+    if not os.path.exists(target_venv.prefix) or not os.path.exists(
+        target_venv.activate_path
+    ):
+        return False
+
+    virtualenv_package = os.path.join(
+        topsrcdir,
+        "third_party",
+        "python",
+        "virtualenv",
+        "virtualenv",
+        "version.py",
+    )
+    deps = [virtualenv_package] + requirements.requirements_paths
+
+    # Modifications to any of the following files mean the virtualenv should be
+    # rebuilt:
+    # * This file
+    # * The `virtualenv` package
+    # * Any of our requirements manifest files
+    activate_mtime = os.path.getmtime(target_venv.activate_path)
+    dep_mtime = max(os.path.getmtime(p) for p in deps)
+    if dep_mtime > activate_mtime:
+        return False
+
+    try:
+        existing_metadata = MozSiteMetadata.from_path(target_venv.prefix)
+    except MozSiteMetadataOutOfDateError:
+        # The metadata is missing required fields, so must be out-of-date.
+        return False
+
+    if existing_metadata != expected_metadata:
+        # The metadata doesn't exist or some fields have different values.
+        return False
+
+    site_packages_dir = target_venv.site_packages_dir()
+    try:
+        with open(os.path.join(site_packages_dir, PTH_FILENAME)) as file:
+            current_pthfile_contents = file.read().strip()
+    except FileNotFoundError:
+        return False
+
+    expected_pthfile_contents = "\n".join(requirements.pths_as_absolute(topsrcdir))
+    if current_pthfile_contents != expected_pthfile_contents:
+        return False
+
+    return True
