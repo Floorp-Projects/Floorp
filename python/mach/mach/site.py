@@ -83,11 +83,6 @@ class MozSiteManager:
         self._virtualenv = MozVirtualenv(topsrcdir, site_name, self.virtualenv_root)
         self.bin_path = self._virtualenv.bin_path
         self.python_path = self._virtualenv.python_path
-
-        # __PYVENV_LAUNCHER__ confuses pip, telling it to use the system
-        # python interpreter rather than the local virtual environment interpreter.
-        # See https://bugzilla.mozilla.org/show_bug.cgi?id=1607470
-        os.environ.pop("__PYVENV_LAUNCHER__", None)
         self.topsrcdir = topsrcdir
 
         self._site_name = site_name
