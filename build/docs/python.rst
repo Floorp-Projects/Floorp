@@ -73,7 +73,7 @@ to just keep them separate so there is no potential for conflicts.
 Very early in the build process, a virtualenv is created inside the
 :term:`object directory`. The virtualenv is configured such that it can
 find all the Python packages in the source tree. The code for this lives
-in :py:mod:`mach.virtualenv`.
+in :py:mod:`mach.site`.
 
 Deficiencies
 ------------

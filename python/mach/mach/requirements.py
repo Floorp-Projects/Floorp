@@ -53,18 +53,18 @@ class PypiOptionalSpecifier(PypiSpecifier):
 class MachEnvRequirements:
     """Requirements associated with a "virtualenv_packages.txt" definition
 
-    Represents the dependencies of a virtualenv. The source files consist
+    Represents the dependencies of a site. The source files consist
     of colon-delimited fields. The first field
     specifies the action. The remaining fields are arguments to that
     action. The following actions are supported:
 
     pth -- Adds the path given as argument to "mach.pth" under
-        the virtualenv site packages directory.
+        the virtualenv's site packages directory.
 
     pypi -- Fetch the package, plus dependencies, from PyPI.
 
     pypi-optional -- Attempt to install the package and dependencies from PyPI.
-        Continue using the virtualenv, even if the package could not be installed.
+        Continue using the site, even if the package could not be installed.
 
     packages.txt -- Denotes that the specified path is a child manifest. It
         will be read and processed as if its contents were concatenated
@@ -124,7 +124,7 @@ class MachEnvRequirements:
         cls,
         topsrcdir,
         is_thunderbird,
-        is_mach_or_build_virtualenv,
+        is_mach_or_build_site,
         requirements_definition,
     ):
         requirements = cls()
@@ -133,7 +133,7 @@ class MachEnvRequirements:
             requirements_definition,
             topsrcdir,
             is_thunderbird,
-            is_mach_or_build_virtualenv,
+            is_mach_or_build_site,
         )
         return requirements
 
@@ -143,7 +143,7 @@ def _parse_mach_env_requirements(
     root_requirements_path,
     topsrcdir,
     is_thunderbird,
-    is_mach_or_build_virtualenv,
+    is_mach_or_build_site,
 ):
     topsrcdir = Path(topsrcdir)
 
@@ -188,9 +188,7 @@ def _parse_mach_env_requirements(
                 raise Exception(THUNDERBIRD_PYPI_ERROR)
 
             requirements_output.pypi_requirements.append(
-                PypiSpecifier(
-                    _parse_package_specifier(params, is_mach_or_build_virtualenv)
-                )
+                PypiSpecifier(_parse_package_specifier(params, is_mach_or_build_site))
             )
         elif action == "pypi-optional":
             if is_thunderbird_packages_txt:
@@ -206,9 +204,7 @@ def _parse_mach_env_requirements(
             requirements_output.pypi_optional_requirements.append(
                 PypiOptionalSpecifier(
                     repercussion,
-                    _parse_package_specifier(
-                        raw_requirement, is_mach_or_build_virtualenv
-                    ),
+                    _parse_package_specifier(raw_requirement, is_mach_or_build_site),
                 )
             )
         elif action == "thunderbird-packages.txt":
@@ -237,14 +233,14 @@ def _parse_mach_env_requirements(
     _parse_requirements_definition_file(root_requirements_path, False)
 
 
-def _parse_package_specifier(raw_requirement, is_mach_or_build_virtualenv):
+def _parse_package_specifier(raw_requirement, is_mach_or_build_site):
     requirement = Requirement(raw_requirement)
 
-    if not is_mach_or_build_virtualenv and [
+    if not is_mach_or_build_site and [
         s for s in requirement.specifier if s.operator != "=="
     ]:
         raise Exception(
-            'All virtualenvs except for "mach" and "build" must pin pypi package '
+            'All sites except for "mach" and "build" must pin pypi package '
             f'versions in the format "package==version", found "{raw_requirement}"'
         )
     return requirement

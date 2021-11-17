@@ -1138,7 +1138,7 @@ def config_status_deps(build_env, build_project):
             os.path.join(topsrcdir, "build", "build_virtualenv_packages.txt"),
             os.path.join(topsrcdir, "build", "common_virtualenv_packages.txt"),
             os.path.join(topsrcdir, "build", "mach_virtualenv_packages.txt"),
-            os.path.join(topsrcdir, "python", "mach", "mach", "virtualenv.py"),
+            os.path.join(topsrcdir, "python", "mach", "mach", "site.py"),
             os.path.join(topsrcdir, "aclocal.m4"),
             os.path.join(topsrcdir, "old-configure.in"),
             os.path.join(topsrcdir, "js", "src", "aclocal.m4"),

@@ -13,7 +13,7 @@ from buildconfig import topsrcdir
 from mach.requirements import MachEnvRequirements
 
 
-def _resolve_command_virtualenv_names():
+def _resolve_command_site_names():
     virtualenv_names = []
     for child in (Path(topsrcdir) / "build").iterdir():
         if not child.name.endswith("_virtualenv_packages.txt"):
@@ -87,8 +87,8 @@ class PackageCache:
         return whl_path
 
 
-def test_virtualenvs_compatible(tmpdir):
-    command_virtualenv_names = _resolve_command_virtualenv_names()
+def test_sites_compatible(tmpdir):
+    command_site_names = _resolve_command_site_names()
     work_dir = Path(tmpdir)
     cache = PackageCache(work_dir)
     mach_requirements = _requirement_definition_to_pip_format("mach", cache, True)
@@ -109,8 +109,8 @@ def test_virtualenvs_compatible(tmpdir):
         ]
     )
 
-    for name in command_virtualenv_names:
-        print(f'Checking compatibility of "{name}" virtualenv')
+    for name in command_site_names:
+        print(f'Checking compatibility of "{name}" site')
         command_requirements = _requirement_definition_to_pip_format(
             name, cache, name == "build"
         )
