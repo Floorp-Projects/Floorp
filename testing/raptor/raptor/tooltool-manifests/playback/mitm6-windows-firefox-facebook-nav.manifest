@@ -1,9 +1,9 @@
 [
   {
-    "filename": "mitm6-windows-firefox-facbook-nav.zip",
-    "size": 30903320,
+    "size": 27164775,
+    "visibility": "public",
+    "digest": "ededd69afd6740712c778b969db37bfd2711664bf07e55596dce615de824d4dc19a008a9c5d9a9a62eb12252d99a00004d77f95c5aeaeb83cd4b39a753330008",
     "algorithm": "sha512",
-    "digest": "5d565ce257c61fba09f382298aa4709d5373ee0f59e96f6313a0863cd51ce07fbbfbbbe7659e358fab4a1dcd2927838fbf65427ff20e900dc921d48ee370af83",
-    "visibility": "public"
+    "filename": "mitm6-linux-firefox-facebook-nav.zip"
   }
 ]
