@@ -104,7 +104,6 @@ object TelemetryWrapper {
         val WHATS_NEW = "whats_new"
         val RESUME = "resume"
         val FULL_BROWSER = "full_browser"
-        val REPORT_ISSUE = "report_issue"
         val SETTINGS = "settings"
         val QUICK_ADD = "quick_add"
         val CLOSE_TAB = "close_tab"
@@ -343,11 +342,6 @@ object TelemetryWrapper {
 
     enum class AutoCompleteEventSource {
         SETTINGS
-    }
-
-    @JvmStatic
-    fun reportSiteIssueEvent() {
-        TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.MENU, Value.REPORT_ISSUE).queue()
     }
 
     @JvmStatic

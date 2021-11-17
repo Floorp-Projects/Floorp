@@ -5,6 +5,7 @@
 package org.mozilla.focus.telemetry
 
 import androidx.annotation.VisibleForTesting
+import mozilla.components.browser.menu.facts.BrowserMenuFacts
 import mozilla.components.feature.contextmenu.facts.ContextMenuFacts
 import mozilla.components.feature.customtabs.CustomTabsFacts
 import mozilla.components.feature.search.telemetry.ads.AdsTelemetry
@@ -14,6 +15,7 @@ import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.FactProcessor
 import mozilla.components.support.base.facts.Facts
+import org.mozilla.focus.GleanMetrics.Browser
 import org.mozilla.focus.GleanMetrics.BrowserSearch
 import org.mozilla.focus.GleanMetrics.ContextMenu
 import org.mozilla.focus.GleanMetrics.CustomTabsToolbar
@@ -52,6 +54,14 @@ object FactsProcessor {
         }
         Component.FEATURE_CONTEXTMENU to ContextMenuFacts.Items.ITEM -> {
             ContextMenu.itemTapped.record(ContextMenu.ItemTappedExtra(this.toContextMenuExtraKey()))
+        }
+
+        Component.BROWSER_MENU to BrowserMenuFacts.Items.WEB_EXTENSION_MENU_ITEM -> {
+            if (metadata?.get("id") == "webcompat-reporter@mozilla.org") {
+                Browser.reportSiteIssueCounter.add()
+            } else {
+                // other extension action was emitted
+            }
         }
 
         else -> Unit

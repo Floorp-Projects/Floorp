@@ -98,6 +98,20 @@ browser:
           The action performed by pressing back button:
           erase_to_home or erase_to_external_app.
         type: string
+  report_site_issue_counter:
+    type: counter
+    description: |
+      A counter that indicates how many times a user has tapped
+      the report site issue from browser menu
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5897
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/?
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
 
 legacy_ids:
   client_id:
