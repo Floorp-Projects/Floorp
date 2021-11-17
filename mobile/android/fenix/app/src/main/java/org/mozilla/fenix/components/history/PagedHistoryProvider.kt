@@ -50,6 +50,14 @@ class DefaultPagedHistoryProvider(
         VisitType.FRAMED_LINK,
     )
 
+    /**
+     * All types of visits that aren't redirects. This is used for fetching only redirecting visits
+     * from the store so that we can filter them out.
+     */
+    private val notRedirectTypes = VisitType.values().filterNot {
+        it == VisitType.REDIRECT_PERMANENT || it == VisitType.REDIRECT_TEMPORARY
+    }
+
     @Volatile private var historyGroups: List<History.Group>? = null
 
     @Suppress("LongMethod")
@@ -64,7 +72,7 @@ class DefaultPagedHistoryProvider(
             val history: List<History>
 
             if (showHistorySearchGroups) {
-                // We need to refetch all the history metadata if the offset resets back at 0
+                // We need to re-fetch all the history metadata if the offset resets back at 0
                 // in the case of a pull to refresh.
                 if (historyGroups == null || offset == 0L) {
                     historyGroups = historyStorage.getHistoryMetadataSince(Long.MIN_VALUE)
@@ -134,6 +142,22 @@ class DefaultPagedHistoryProvider(
             )
             .mapIndexed(transformVisitInfoToHistoryItem(offset.toInt()))
 
+        // We'll use this list to filter out redirects from metadata groups below.
+        val redirectsInThePage = if (history.isNotEmpty()) {
+            historyStorage.getDetailedVisits(
+                start = history.last().visitedAt,
+                end = history.first().visitedAt,
+                excludeTypes = notRedirectTypes
+            ).map { it.url }
+        } else {
+            // Edge-case this doesn't cover: if we only had redirects in the current page,
+            // we'd end up with an empty 'history' list since the redirects would have been
+            // filtered out above. One possible solution would be to look at redirects in all of
+            // history, but that's potentially quite expensive on large profiles, and introduces
+            // other problems (e.g. pages that were redirects a month ago may not be redirects today).
+            emptyList()
+        }
+
         // History metadata items are recorded after their associated visited info, we add an
         // additional buffer time to the most recent visit to account for a history group
         // appearing as the most recent item.
@@ -164,7 +188,7 @@ class DefaultPagedHistoryProvider(
         // url, but we don't have a use case for this currently in the history view.
         result.addAll(
             historyGroupsInOffset.map { group ->
-                group.copy(items = group.items.distinctBy { it.url })
+                group.copy(items = group.items.distinctBy { it.url }.filterNot { redirectsInThePage.contains(it.url) })
             }
         )
 

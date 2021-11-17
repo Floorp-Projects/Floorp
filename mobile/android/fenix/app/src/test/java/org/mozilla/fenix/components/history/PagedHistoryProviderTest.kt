@@ -89,6 +89,7 @@ class PagedHistoryProviderTest {
         )
 
         coEvery { storage.getVisitsPaginated(any(), any(), any()) } returns listOf(visitInfo1, visitInfo2, visitInfo3)
+        coEvery { storage.getDetailedVisits(any(), any(), any()) } returns emptyList()
         coEvery { storage.getHistoryMetadataSince(any()) } returns listOf(historyEntry1, historyEntry2, historyEntry3)
 
         var actualResults: List<History>? = null
@@ -175,6 +176,7 @@ class PagedHistoryProviderTest {
         )
 
         coEvery { storage.getVisitsPaginated(any(), any(), any()) } returns listOf(visitInfo1)
+        coEvery { storage.getDetailedVisits(any(), any(), any()) } returns emptyList()
         coEvery { storage.getHistoryMetadataSince(any()) } returns listOf(historyEntry1)
 
         var actualResults: List<History>? = null
@@ -248,6 +250,7 @@ class PagedHistoryProviderTest {
         )
 
         coEvery { storage.getVisitsPaginated(any(), any(), any()) } returns listOf(visitInfo1)
+        coEvery { storage.getDetailedVisits(any(), any(), any()) } returns emptyList()
         coEvery { storage.getHistoryMetadataSince(any()) } returns listOf(historyEntry1)
 
         var actualResults: List<History>? = null
@@ -290,6 +293,163 @@ class PagedHistoryProviderTest {
             )
         )
 
+        assertEquals(results, actualResults)
+    }
+
+    @Test
+    fun `redirects are filtered out from history metadata groups`() {
+        val provider = DefaultPagedHistoryProvider(
+            historyStorage = storage,
+            showHistorySearchGroups = true
+        )
+
+        val visitInfo1 = VisitInfo(
+            url = "http://www.mozilla.com",
+            title = "mozilla",
+            visitTime = 5,
+            visitType = VisitType.LINK,
+            previewImageUrl = null
+        )
+        val visitInfo2 = VisitInfo(
+            url = "http://www.firefox.com",
+            title = "firefox",
+            visitTime = 2,
+            visitType = VisitType.LINK,
+            previewImageUrl = null
+        )
+        val visitInfo3 = VisitInfo(
+            url = "http://www.google.com/link?url=http://www.firefox.com",
+            title = "",
+            visitTime = 1,
+            visitType = VisitType.REDIRECT_TEMPORARY,
+            previewImageUrl = null
+        )
+        val visitInfo4 = VisitInfo(
+            url = "http://mozilla.com",
+            title = "",
+            visitTime = 1,
+            visitType = VisitType.REDIRECT_PERMANENT,
+            previewImageUrl = null
+        )
+
+        val historyMetadataKey1 = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null)
+        val historyEntry1 = HistoryMetadata(
+            key = historyMetadataKey1,
+            title = "mozilla",
+            createdAt = 1,
+            updatedAt = 10,
+            totalViewTime = 10,
+            documentType = DocumentType.Regular,
+            previewImageUrl = null
+        )
+        val historyMetadataKey2 = HistoryMetadataKey("http://www.firefox.com", "mozilla", null)
+        val historyEntry2 = HistoryMetadata(
+            key = historyMetadataKey2,
+            title = "firefox",
+            createdAt = 2,
+            updatedAt = 11,
+            totalViewTime = 20,
+            documentType = DocumentType.Regular,
+            previewImageUrl = null
+        )
+        val historyMetadataKey3 = HistoryMetadataKey("http://www.google.com/link?url=http://www.firefox.com", "mozilla", null)
+        val historyEntry3 = HistoryMetadata(
+            key = historyMetadataKey3,
+            title = "",
+            createdAt = 2,
+            updatedAt = 11,
+            totalViewTime = 0,
+            documentType = DocumentType.Regular,
+            previewImageUrl = null
+        )
+        val historyMetadataKey4 = HistoryMetadataKey("http://mozilla.com", "mozilla", null)
+        val historyEntry4 = HistoryMetadata(
+            key = historyMetadataKey4,
+            title = "",
+            createdAt = 2,
+            updatedAt = 11,
+            totalViewTime = 0,
+            documentType = DocumentType.Regular,
+            previewImageUrl = null
+        )
+
+        // Normal visits.
+        coEvery {
+            storage.getVisitsPaginated(
+                any(), any(),
+                eq(
+                    listOf(
+                        VisitType.NOT_A_VISIT,
+                        VisitType.DOWNLOAD,
+                        VisitType.REDIRECT_PERMANENT,
+                        VisitType.REDIRECT_TEMPORARY,
+                        VisitType.RELOAD,
+                        VisitType.EMBED,
+                        VisitType.FRAMED_LINK,
+                    )
+                )
+            )
+        } returns listOf(visitInfo1, visitInfo2)
+        // Redirects.
+        coEvery {
+            storage.getDetailedVisits(
+                any(), any(),
+                eq(
+                    VisitType.values().filterNot {
+                        it == VisitType.REDIRECT_PERMANENT || it == VisitType.REDIRECT_TEMPORARY
+                    }
+                )
+            )
+        } returns listOf(visitInfo3, visitInfo4)
+
+        coEvery { storage.getHistoryMetadataSince(any()) } returns listOf(historyEntry1, historyEntry2, historyEntry3, historyEntry4)
+
+        var actualResults: List<History>? = null
+        provider.getHistory(10L, 5) {
+            actualResults = it
+        }
+
+        coVerify {
+            storage.getVisitsPaginated(
+                offset = 10L,
+                count = 5,
+                excludeTypes = listOf(
+                    VisitType.NOT_A_VISIT,
+                    VisitType.DOWNLOAD,
+                    VisitType.REDIRECT_PERMANENT,
+                    VisitType.REDIRECT_TEMPORARY,
+                    VisitType.RELOAD,
+                    VisitType.EMBED,
+                    VisitType.FRAMED_LINK,
+                )
+            )
+        }
+
+        val results = listOf(
+            History.Group(
+                id = historyEntry2.createdAt.toInt(),
+                title = historyEntry2.key.searchTerm!!,
+                visitedAt = historyEntry2.createdAt,
+                items = listOf(
+                    History.Metadata(
+                        id = historyEntry2.createdAt.toInt(),
+                        title = historyEntry2.title!!,
+                        url = historyEntry2.key.url,
+                        visitedAt = historyEntry2.createdAt,
+                        totalViewTime = historyEntry2.totalViewTime,
+                        historyMetadataKey = historyMetadataKey2
+                    ),
+                    History.Metadata(
+                        id = historyEntry1.createdAt.toInt(),
+                        title = historyEntry1.title!!,
+                        url = historyEntry1.key.url,
+                        visitedAt = historyEntry1.createdAt,
+                        totalViewTime = historyEntry1.totalViewTime,
+                        historyMetadataKey = historyMetadataKey1
+                    ),
+                )
+            )
+        )
         assertEquals(results, actualResults)
     }
 }
