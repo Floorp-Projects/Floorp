@@ -35,16 +35,12 @@ class HeadlessLookAndFeel : public nsXPLookAndFeel {
   virtual ~HeadlessLookAndFeel();
 
   void NativeInit() final{};
-  virtual nsresult NativeGetInt(IntID aID, int32_t& aResult) override;
-  virtual nsresult NativeGetFloat(FloatID aID, float& aResult) override;
-  virtual nsresult NativeGetColor(ColorID, ColorScheme,
-                                  nscolor& aResult) override;
-  virtual bool NativeGetFont(FontID aID, nsString& aFontName,
-                             gfxFontStyle& aFontStyle) override;
+  nsresult NativeGetInt(IntID, int32_t& aResult) override;
+  nsresult NativeGetFloat(FloatID, float& aResult) override;
+  nsresult NativeGetColor(ColorID, ColorScheme, nscolor& aResult) override;
+  bool NativeGetFont(FontID, nsString& aFontName, gfxFontStyle&) override;
 
-  virtual void RefreshImpl() override;
-  virtual char16_t GetPasswordCharacterImpl() override;
-  virtual bool GetEchoPasswordImpl() override;
+  char16_t GetPasswordCharacterImpl() override;
 };
 
 #else
