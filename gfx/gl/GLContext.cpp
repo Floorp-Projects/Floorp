@@ -44,6 +44,7 @@
 #include "mozilla/StaticPrefs_gl.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/layers/BuildConstants.h"
 #include "mozilla/layers/TextureForwarder.h"  // for LayersIPCChannel
 
 #include "OGLShaderProgram.h"  // for ShaderProgramType
@@ -673,7 +674,16 @@ bool GLContext::InitImpl() {
     }
   }
 
-  if (ShouldSpew()) {
+  const auto Once = []() {
+    static bool did = false;
+    if (did) return false;
+    did = true;
+    return true;
+  };
+
+  bool printRenderer = ShouldSpew();
+  printRenderer |= (kIsDebug && Once());
+  if (printRenderer) {
     printf_stderr("GL_VENDOR: %s\n", glVendorString);
     printf_stderr("mVendor: %s\n", vendorMatchStrings[size_t(mVendor)]);
     printf_stderr("GL_RENDERER: %s\n", glRendererString);
