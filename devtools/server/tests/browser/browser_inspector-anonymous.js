@@ -59,7 +59,7 @@ async function testNativeAnonymousStartingNode(walker) {
     [[walker.actorID]],
     async function(actorID) {
       const { require } = ChromeUtils.import(
-        "resource://devtools/shared/Loader.jsm"
+        "resource://devtools/shared/loader/Loader.jsm"
       );
       const { DevToolsServer } = require("devtools/server/devtools-server");
 

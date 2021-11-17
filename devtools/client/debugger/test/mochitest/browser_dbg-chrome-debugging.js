@@ -45,7 +45,7 @@ add_task(async function() {
 
 function initDevToolsClient() {
   const { DevToolsLoader } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
+    "resource://devtools/shared/loader/Loader.jsm"
   );
   const customLoader = new DevToolsLoader({
     invisibleToDebugger: true,

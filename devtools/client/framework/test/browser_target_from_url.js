@@ -5,7 +5,7 @@ const TEST_URI =
   "data:text/html;charset=utf-8," + "<p>browser_target-from-url.js</p>";
 
 const { DevToolsLoader } = ChromeUtils.import(
-  "resource://devtools/shared/Loader.jsm"
+  "resource://devtools/shared/loader/Loader.jsm"
 );
 const {
   descriptorFromURL,

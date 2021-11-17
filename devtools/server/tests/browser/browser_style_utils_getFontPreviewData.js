@@ -12,7 +12,7 @@ add_task(async function() {
 
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     const { require } = ChromeUtils.import(
-      "resource://devtools/shared/Loader.jsm"
+      "resource://devtools/shared/loader/Loader.jsm"
     );
     const {
       getFontPreviewData,

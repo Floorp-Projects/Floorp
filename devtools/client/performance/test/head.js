@@ -6,7 +6,7 @@
 "use strict";
 
 const { require, loader } = ChromeUtils.import(
-  "resource://devtools/shared/Loader.jsm"
+  "resource://devtools/shared/loader/Loader.jsm"
 );
 
 try {

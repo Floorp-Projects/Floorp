@@ -14,7 +14,7 @@
 function enableRuntimeClientFactoryMock(mock) {
   const {
     setMockedModule,
-  } = require("devtools/client/shared/browser-loader-mocks");
+  } = require("devtools/shared/loader/browser-loader-mocks");
   setMockedModule(
     mock,
     "devtools/client/aboutdebugging/src/modules/runtime-client-factory"
@@ -30,7 +30,7 @@ const mockRuntimeDefaultPreferences = function() {
   const {
     removeMockedModule,
     setMockedModule,
-  } = require("devtools/client/shared/browser-loader-mocks");
+  } = require("devtools/shared/loader/browser-loader-mocks");
 
   const mock = {
     setDefaultPreferencesIfNeeded: () => {},
@@ -54,7 +54,7 @@ const mockRuntimeDefaultPreferences = function() {
 function disableRuntimeClientFactoryMock() {
   const {
     removeMockedModule,
-  } = require("devtools/client/shared/browser-loader-mocks");
+  } = require("devtools/shared/loader/browser-loader-mocks");
   removeMockedModule(
     "devtools/client/aboutdebugging/src/modules/runtime-client-factory"
   );

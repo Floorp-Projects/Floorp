@@ -8,7 +8,9 @@
    closeDebugger, checkConsoleAPICalls, checkRawHeaders, runTests, nextTest, Ci, Cc,
    withActiveServiceWorker, Services, consoleAPICall, createCommandsForTab */
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require } = ChromeUtils.import(
+  "resource://devtools/shared/loader/Loader.jsm"
+);
 const { DevToolsServer } = require("devtools/server/devtools-server");
 // eslint-disable-next-line mozilla/reject-some-requires
 const { DevToolsClient } = require("devtools/client/devtools-client");

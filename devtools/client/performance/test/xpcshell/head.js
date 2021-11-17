@@ -3,7 +3,9 @@
 "use strict";
 /* exported Cc, Ci, Cu, Cr, Services, console, PLATFORM_DATA_PREF, getFrameNodePath,
    synthesizeProfileForTest */
-var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+var { require } = ChromeUtils.import(
+  "resource://devtools/shared/loader/Loader.jsm"
+);
 var Services = require("Services");
 const RecordingUtils = require("devtools/shared/performance/recording-utils");
 const PLATFORM_DATA_PREF = "devtools.performance.ui.show-platform-data";

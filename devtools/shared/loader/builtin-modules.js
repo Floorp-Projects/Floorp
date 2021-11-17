@@ -14,7 +14,7 @@
  */
 
 const { Cu, Cc, Ci } = require("chrome");
-const jsmScope = require("resource://devtools/shared/Loader.jsm");
+const jsmScope = require("resource://devtools/shared/loader/Loader.jsm");
 const { Services } = require("resource://gre/modules/Services.jsm");
 
 const systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();

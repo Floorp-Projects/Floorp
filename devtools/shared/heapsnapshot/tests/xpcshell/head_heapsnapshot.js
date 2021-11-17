@@ -11,7 +11,9 @@
 
 var CC = Components.Constructor;
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require } = ChromeUtils.import(
+  "resource://devtools/shared/loader/Loader.jsm"
+);
 const { Match } = ChromeUtils.import("resource://test/Match.jsm");
 const { Census } = ChromeUtils.import("resource://test/Census.jsm");
 const { addDebuggerToGlobal } = ChromeUtils.import(
