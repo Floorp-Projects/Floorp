@@ -896,9 +896,13 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
     // Read the file from disk.
     uint32_t totalRead = 0;
     while (totalRead != bufSize) {
+      // Read no more than INT32_MAX on each call to stream->Read, otherwise it
+      // returns an error.
+      uint32_t bytesToReadThisChunk =
+          std::min<uint32_t>(bufSize - totalRead, INT32_MAX);
       uint32_t bytesRead = 0;
       if (nsresult rv =
-              stream->Read(toRead.Elements(), bufSize - totalRead, &bytesRead);
+              stream->Read(toRead.Elements(), bytesToReadThisChunk, &bytesRead);
           NS_FAILED(rv)) {
         return Err(IOError(rv).WithMessage(
             "Encountered an unexpected error while reading file(%s)",
