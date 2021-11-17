@@ -10119,6 +10119,23 @@
   value: 12582912
   mirror: always
 
+# Enable http3 network priorization as described in
+# https://httpwg.org/http-extensions/draft-ietf-httpbis-priority.html
+- name: network.http.http3.priorization
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# Depriorizing background tabs notifies websites when switching to or from the
+# tab while still loading resources for the website. On one hand it might
+# improve performance when switching to an tab with a website using the same
+# QUIC connection. On the other hand it sends more data to the website and
+# might be a privacy concern.
+- name: network.http.http3.send_background_tabs_depriorization
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # When true, a http request will be upgraded to https when HTTPS RR is
 # available.
 - name: network.dns.upgrade_with_https_rr
