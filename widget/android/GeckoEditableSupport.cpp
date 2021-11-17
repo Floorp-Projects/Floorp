@@ -1348,10 +1348,9 @@ nsresult GeckoEditableSupport::NotifyIME(
               ToString(aNotification.mSelectionChangeData).c_str());
 
       mCachedSelection.mStartOffset =
-          aNotification.mSelectionChangeData.mOffset;
+          aNotification.mSelectionChangeData.StartOffset();
       mCachedSelection.mEndOffset =
-          aNotification.mSelectionChangeData.mString->Length() +
-          aNotification.mSelectionChangeData.mOffset;
+          aNotification.mSelectionChangeData.EndOffset();
 
       PostFlushIMEChanges();
       mIMESelectionChanged = true;
