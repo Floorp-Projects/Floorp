@@ -35,6 +35,15 @@ Contributing
    Writing efficient React code <contributing/react-performance-tips.md>
 
 
+Recurring tasks
+===============
+.. toctree::
+   :maxdepth: 1
+
+   Release tasks<release.md>
+   Performance sheriffing<performance-sheriffing.md>
+
+
 Automated tests
 ===============
 .. toctree::
