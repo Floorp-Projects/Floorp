@@ -105,12 +105,30 @@ class DefaultPagedHistoryProvider(
     }
 
     /**
-     * Returns the [History.Regular] corresponding to the given [History.Metadata] item.
-     *
-     * @param historyMetadata The [History.Metadata] to match.
-     * @return the [History.Regular] corresponding to the given [History.Metadata] item or null.
+     * Removes [group] and any corresponding history visits.
      */
-    suspend fun getMatchingHistory(historyMetadata: History.Metadata): VisitInfo? {
+    suspend fun deleteHistoryGroup(group: History.Group) {
+        for (historyMetadata in group.items) {
+            getMatchingHistory(historyMetadata)?.let {
+                historyStorage.deleteVisit(
+                    url = it.url,
+                    timestamp = it.visitTime
+                )
+            }
+        }
+
+        historyStorage.deleteHistoryMetadata(
+            searchTerm = group.title
+        )
+
+        // Force a re-fetch of the groups next time we go through #getHistory.
+        historyGroups = null
+    }
+
+    /**
+     * Returns the [History.Regular] corresponding to the given [History.Metadata] item.
+     */
+    private suspend fun getMatchingHistory(historyMetadata: History.Metadata): VisitInfo? {
         val history = historyStorage.getDetailedVisits(
             start = historyMetadata.visitedAt - BUFFER_TIME,
             end = historyMetadata.visitedAt + BUFFER_TIME,
@@ -119,13 +137,6 @@ class DefaultPagedHistoryProvider(
         return history
             .filter { it.url == historyMetadata.url }
             .minByOrNull { abs(historyMetadata.visitedAt - it.visitTime) }
-    }
-
-    /**
-     * Clears the history groups to refetch the most history metadata after any changes.
-     */
-    fun clearHistoryGroups() {
-        historyGroups = null
     }
 
     @Suppress("MagicNumber")

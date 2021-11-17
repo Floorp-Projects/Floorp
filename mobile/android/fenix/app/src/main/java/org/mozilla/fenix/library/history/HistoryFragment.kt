@@ -355,26 +355,11 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
                     for (item in items) {
                         analytics.metrics.track(Event.HistoryItemRemoved)
 
-                        if (item is History.Regular) {
-                            core.historyStorage.deleteVisit(
-                                url = item.url,
-                                timestamp = item.visitedAt
-                            )
-                        } else if (item is History.Group) {
-                            for (historyMetadata in item.items) {
-                                historyProvider.getMatchingHistory(historyMetadata)?.let {
-                                    core.historyStorage.deleteVisit(
-                                        url = it.url,
-                                        timestamp = it.visitTime
-                                    )
-                                }
-                            }
-
-                            core.historyStorage.deleteHistoryMetadata(
-                                searchTerm = item.title
-                            )
-
-                            historyProvider.clearHistoryGroups()
+                        when (item) {
+                            is History.Regular -> core.historyStorage.deleteVisit(item.url, item.visitedAt)
+                            is History.Group -> historyProvider.deleteHistoryGroup(item)
+                            // We won't encounter individual metadata entries outside of groups.
+                            is History.Metadata -> {}
                         }
                     }
                 }
