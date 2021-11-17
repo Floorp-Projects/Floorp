@@ -434,7 +434,10 @@ function _determineToolbarAndContentTheme(aDoc, aTheme) {
     return _isColorDark(aColor.r, aColor.g, aColor.b) ? 0 : 1;
   }
 
-  let toolbarColor = _cssColorToRGBA(aDoc, aTheme?.toolbarColor);
+  let toolbarColor = _cssColorToRGBA(
+    aDoc,
+    aTheme?.toolbarColor || aTheme?.accentcolor
+  );
   let contentColor = _cssColorToRGBA(aDoc, aTheme?.ntp_background);
   Services.prefs.setIntPref(
     "browser.theme.toolbar-theme",
