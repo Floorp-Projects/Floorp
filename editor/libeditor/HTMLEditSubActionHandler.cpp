@@ -7537,33 +7537,21 @@ nsresult HTMLEditor::MoveNodesIntoNewBlockquoteElement(
 
     // If no curBlock, make one
     if (!curBlock) {
-      SplitNodeResult splitNodeResult =
-          MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::blockquote,
-                                                      EditorDOMPoint(content));
-      if (splitNodeResult.Failed()) {
+      Result<RefPtr<Element>, nsresult> newBlockQuoteElementOrError =
+          InsertElementWithSplittingAncestorsWithTransaction(
+              *nsGkAtoms::blockquote, EditorDOMPoint(content));
+      if (MOZ_UNLIKELY(newBlockQuoteElementOrError.isErr())) {
         NS_WARNING(
-            "HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction(nsGkAtoms:"
-            ":blockquote) failed");
-        return splitNodeResult.Rv();
+            "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
+            "nsGkAtoms::blockquote) failed");
+        return newBlockQuoteElementOrError.unwrapErr();
       }
-      // XXX Perhaps, we should insert the new `<blockquote>` element after
-      //     moving all nodes into it since the movement does not cause
-      //     running mutation event listeners.
-      Result<RefPtr<Element>, nsresult> maybeNewBlockQuoteElement =
-          CreateAndInsertElementWithTransaction(*nsGkAtoms::blockquote,
-                                                splitNodeResult.SplitPoint());
-      if (maybeNewBlockQuoteElement.isErr()) {
-        NS_WARNING(
-            "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::"
-            "blockquote) failed");
-        return maybeNewBlockQuoteElement.unwrapErr();
-      }
-      MOZ_ASSERT(maybeNewBlockQuoteElement.inspect());
+      MOZ_ASSERT(newBlockQuoteElementOrError.inspect());
       // remember our new block for postprocessing
       // note: doesn't matter if we set mNewBlockElement multiple times.
       TopLevelEditSubActionDataRef().mNewBlockElement =
-          maybeNewBlockQuoteElement.inspect();
-      curBlock = maybeNewBlockQuoteElement.unwrap();
+          newBlockQuoteElementOrError.inspect();
+      curBlock = newBlockQuoteElementOrError.unwrap();
     }
 
     // MOZ_KnownLive because 'aArrayOfContents' is guaranteed to/ keep it alive.
