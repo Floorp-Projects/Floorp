@@ -46,7 +46,6 @@ import os
 import re
 import io
 import json
-import shutil
 import sys
 import tarfile
 import tempfile
@@ -3543,6 +3542,9 @@ def readICUDataFilterForUnits(data_filter_file):
 
 def writeSanctionedSimpleUnitIdentifiersFiles(all_units, sanctioned_units):
     js_src_builtin_intl_dir = os.path.dirname(os.path.abspath(__file__))
+    intl_components_src_dir = os.path.join(
+        js_src_builtin_intl_dir, "../../../../intl/components/src"
+    )
 
     def find_unit_type(unit):
         result = [
@@ -3579,17 +3581,33 @@ def writeSanctionedSimpleUnitIdentifiersFiles(all_units, sanctioned_units):
             "var sanctionedSimpleUnitIdentifiers = {};".format(sanctioned_units_object)
         )
 
-    sanctioned_cpp_file = os.path.join(
-        js_src_builtin_intl_dir, "MeasureUnitGenerated.h"
-    )
-    with io.open(sanctioned_cpp_file, mode="w", encoding="utf-8", newline="") as f:
-        println = partial(print, file=f)
+    measure_unit_files = [
+        (js_src_builtin_intl_dir, "js::intl", "builtin_intl_MeasureUnitGenerated_h"),
+        (
+            intl_components_src_dir,
+            "mozilla::intl",
+            "intl_components_MeasureUnitGenerated_h",
+        ),
+    ]
 
-        println(generatedFileWarning)
+    for (dir, ns, guard) in measure_unit_files:
+        sanctioned_h_file = os.path.join(dir, "MeasureUnitGenerated.h")
+        with io.open(sanctioned_h_file, mode="w", encoding="utf-8", newline="") as f:
+            println = partial(print, file=f)
 
-        println(
-            """
-struct MeasureUnit {
+            println(generatedFileWarning)
+
+            println(
+                f"""
+#ifndef {guard}
+#define {guard}
+
+namespace {ns} {{"""
+            )
+
+            println(
+                """
+struct SimpleMeasureUnit {
   const char* const type;
   const char* const name;
 };
@@ -3599,28 +3617,27 @@ struct MeasureUnit {
  *
  * The list must be kept in alphabetical order of |name|.
  */
-inline constexpr MeasureUnit simpleMeasureUnits[] = {
+inline constexpr SimpleMeasureUnit simpleMeasureUnits[] = {
     // clang-format off"""
-        )
-
-        for unit_name in sorted(sanctioned_units):
-            println('  {{"{}", "{}"}},'.format(find_unit_type(unit_name), unit_name))
-
-        println(
-            """
-    // clang-format on
-};""".lstrip(
-                "\n"
             )
-        )
 
-    shutil.copyfile(
-        sanctioned_cpp_file,
-        os.path.join(
-            js_src_builtin_intl_dir,
-            "../../../../intl/components/src/MeasureUnitGenerated.h",
-        ),
-    )
+            for unit_name in sorted(sanctioned_units):
+                println(
+                    '  {{"{}", "{}"}},'.format(find_unit_type(unit_name), unit_name)
+                )
+
+            println(
+                f"""
+    // clang-format on
+}};
+
+}}  // namespace {ns}
+
+#endif
+""".strip(
+                    "\n"
+                )
+            )
 
     writeUnitTestFiles(all_units, sanctioned_units)
 

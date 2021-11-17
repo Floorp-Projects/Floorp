@@ -781,7 +781,7 @@ static ArrayObject* AvailableTimeZones(JSContext* cx) {
 }
 
 template <size_t N>
-constexpr auto MeasurementUnitNames(const MeasureUnit (&units)[N]) {
+constexpr auto MeasurementUnitNames(const intl::SimpleMeasureUnit (&units)[N]) {
   std::array<const char*, N> array = {};
   for (size_t i = 0; i < N; ++i) {
     array[i] = units[i].name;
@@ -794,7 +794,7 @@ constexpr auto MeasurementUnitNames(const MeasureUnit (&units)[N]) {
  */
 static ArrayObject* AvailableUnits(JSContext* cx) {
   static constexpr auto simpleMeasureUnitNames =
-      MeasurementUnitNames(simpleMeasureUnits);
+      MeasurementUnitNames(intl::simpleMeasureUnits);
 
   return CreateArrayFromSortedList(cx, simpleMeasureUnitNames);
 }
