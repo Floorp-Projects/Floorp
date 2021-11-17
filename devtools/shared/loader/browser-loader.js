@@ -19,7 +19,7 @@ const { AppConstants } = devtoolsRequire(
 loader.lazyRequireGetter(
   this,
   "getMockedModule",
-  "devtools/client/shared/browser-loader-mocks",
+  "devtools/shared/loader/browser-loader-mocks",
   {}
 );
 
