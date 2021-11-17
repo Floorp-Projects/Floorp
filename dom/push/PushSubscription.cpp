@@ -181,11 +181,13 @@ class UnsubscribeRunnable final : public Runnable {
 PushSubscription::PushSubscription(nsIGlobalObject* aGlobal,
                                    const nsAString& aEndpoint,
                                    const nsAString& aScope,
+                                   Nullable<EpochTimeStamp>&& aExpirationTime,
                                    nsTArray<uint8_t>&& aRawP256dhKey,
                                    nsTArray<uint8_t>&& aAuthSecret,
                                    nsTArray<uint8_t>&& aAppServerKey)
     : mEndpoint(aEndpoint),
       mScope(aScope),
+      mExpirationTime(std::move(aExpirationTime)),
       mRawP256dhKey(std::move(aRawP256dhKey)),
       mAuthSecret(std::move(aAuthSecret)) {
   if (NS_IsMainThread()) {
@@ -252,9 +254,16 @@ already_AddRefed<PushSubscription> PushSubscription::Constructor(
     }
   }
 
+  Nullable<EpochTimeStamp> expirationTime;
+  if (aInitDict.mExpirationTime.IsNull()) {
+    expirationTime.SetNull();
+  } else {
+    expirationTime.SetValue(aInitDict.mExpirationTime.Value());
+  }
+
   RefPtr<PushSubscription> sub = new PushSubscription(
-      global, aInitDict.mEndpoint, aInitDict.mScope, std::move(rawKey),
-      std::move(authSecret), std::move(appServerKey));
+      global, aInitDict.mEndpoint, aInitDict.mScope, std::move(expirationTime),
+      std::move(rawKey), std::move(authSecret), std::move(appServerKey));
 
   return sub.forget();
 }
@@ -325,6 +334,7 @@ void PushSubscription::ToJSON(PushSubscriptionJSON& aJSON, ErrorResult& aRv) {
     aRv.Throw(rv);
     return;
   }
+  aJSON.mExpirationTime.Construct(mExpirationTime);
 }
 
 already_AddRefed<PushSubscriptionOptions> PushSubscription::Options() {
