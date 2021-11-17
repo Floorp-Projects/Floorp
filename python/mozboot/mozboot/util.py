@@ -10,7 +10,7 @@ import platform
 import subprocess
 from subprocess import CalledProcessError
 
-from mach.site import VirtualenvHelper
+from mach.site import PythonVirtualenv
 from mozfile import which
 
 
@@ -73,7 +73,7 @@ def get_mach_virtualenv_root(state_dir=None):
 
 def get_mach_virtualenv_binary(state_dir=None):
     root = get_mach_virtualenv_root(state_dir=state_dir)
-    return VirtualenvHelper(root).python_path
+    return PythonVirtualenv(root).python_path
 
 
 class JavaLocationFailedException(Exception):

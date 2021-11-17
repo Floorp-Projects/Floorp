@@ -17,8 +17,6 @@ import sys
 
 from mach.requirements import MachEnvRequirements
 
-IS_NATIVE_WIN = sys.platform == "win32" and os.sep == "\\"
-IS_CYGWIN = sys.platform == "cygwin"
 PTH_FILENAME = "mach.pth"
 METADATA_FILENAME = "moz_virtualenv_metadata.json"
 
@@ -69,33 +67,7 @@ class MozSiteMetadata:
             )
 
 
-class VirtualenvHelper(object):
-    """Contains basic logic for getting information about virtualenvs."""
-
-    def __init__(self, virtualenv_path):
-        self.virtualenv_root = virtualenv_path
-
-    @property
-    def bin_path(self):
-        # virtualenv.py provides a similar API via path_locations(). However,
-        # we have a bit of a chicken-and-egg problem and can't reliably
-        # import virtualenv. The functionality is trivial, so just implement
-        # it here.
-        if IS_CYGWIN or IS_NATIVE_WIN:
-            return os.path.join(self.virtualenv_root, "Scripts")
-
-        return os.path.join(self.virtualenv_root, "bin")
-
-    @property
-    def python_path(self):
-        binary = "python"
-        if sys.platform in ("win32", "cygwin"):
-            binary += ".exe"
-
-        return os.path.join(self.bin_path, binary)
-
-
-class MozSiteManager(VirtualenvHelper):
+class MozSiteManager:
     """Contains logic for managing the Python import scope for building the tree."""
 
     def __init__(
@@ -106,8 +78,10 @@ class MozSiteManager(VirtualenvHelper):
         *,
         manifest_path=None,
     ):
-        virtualenv_path = os.path.join(virtualenvs_dir, site_name)
-        super(MozSiteManager, self).__init__(virtualenv_path)
+        self.virtualenv_root = os.path.join(virtualenvs_dir, site_name)
+        self._virtualenv = MozVirtualenv(topsrcdir, site_name, self.virtualenv_root)
+        self.bin_path = self._virtualenv.bin_path
+        self.python_path = self._virtualenv.python_path
 
         # __PYVENV_LAUNCHER__ confuses pip, telling it to use the system
         # python interpreter rather than the local virtual environment interpreter.
@@ -131,10 +105,6 @@ class MozSiteManager(VirtualenvHelper):
             os.path.join(self.virtualenv_root, METADATA_FILENAME),
         )
 
-    @property
-    def activate_path(self):
-        return os.path.join(self.bin_path, "activate_this.py")
-
     def up_to_date(self, skip_pip_package_check=False):
         """Returns whether the virtualenv is present and up to date.
 
@@ -145,7 +115,7 @@ class MozSiteManager(VirtualenvHelper):
 
         # check if virtualenv exists
         if not os.path.exists(self.virtualenv_root) or not os.path.exists(
-            self.activate_path
+            self._virtualenv.activate_path
         ):
             return False
 
@@ -166,7 +136,7 @@ class MozSiteManager(VirtualenvHelper):
         # * This file
         # * The `virtualenv` package
         # * Any of our requirements manifest files
-        activate_mtime = os.path.getmtime(self.activate_path)
+        activate_mtime = os.path.getmtime(self._virtualenv.activate_path)
         dep_mtime = max(os.path.getmtime(p) for p in deps)
         if dep_mtime > activate_mtime:
             return False
@@ -187,7 +157,7 @@ class MozSiteManager(VirtualenvHelper):
         if env_requirements.pth_requirements or env_requirements.vendored_requirements:
             try:
                 with open(
-                    os.path.join(self._site_packages_dir(), PTH_FILENAME)
+                    os.path.join(self._virtualenv.site_packages_dir(), PTH_FILENAME)
                 ) as file:
                     current_paths = file.read().strip().split("\n")
             except FileNotFoundError:
@@ -279,25 +249,24 @@ class MozSiteManager(VirtualenvHelper):
         """
         self.create()
         env_requirements = self.requirements()
-        site_packages_dir = self._site_packages_dir()
+        site_packages_dir = self._virtualenv.site_packages_dir()
         pthfile_lines = self.requirements().pths_as_absolute(self.topsrcdir)
         with open(os.path.join(site_packages_dir, PTH_FILENAME), "a") as f:
             f.write("\n".join(pthfile_lines))
 
-        pip = [self.python_path, "-m", "pip"]
-        for pypi_requirement in env_requirements.pypi_requirements:
-            subprocess.check_call(pip + ["install", str(pypi_requirement.requirement)])
+        for requirement in env_requirements.pypi_requirements:
+            self._virtualenv.pip_install([str(requirement.requirement)])
 
         for requirement in env_requirements.pypi_optional_requirements:
             try:
-                subprocess.check_call(pip + ["install", str(requirement.requirement)])
+                self._virtualenv.pip_install([str(requirement.requirement)])
             except subprocess.CalledProcessError:
                 print(
                     f"Could not install {requirement.requirement.name}, so "
                     f"{requirement.repercussion}. Continuing."
                 )
 
-        os.utime(self.activate_path, None)
+        os.utime(self._virtualenv.activate_path, None)
         self._metadata.write()
 
         return self.virtualenv_root
@@ -310,7 +279,8 @@ class MozSiteManager(VirtualenvHelper):
         and call .ensure() and .activate() to make the virtualenv active.
         """
 
-        exec(open(self.activate_path).read(), dict(__file__=self.activate_path))
+        activate_path = self._virtualenv.activate_path
+        exec(open(activate_path).read(), dict(__file__=activate_path))
 
     def install_pip_package(self, package):
         """Install a package via pip.
@@ -330,7 +300,7 @@ class MozSiteManager(VirtualenvHelper):
             if req.satisfied_by is not None:
                 return
 
-        self._run_pip(["install", package])
+        self._virtualenv.pip_install([package])
 
     def install_pip_requirements(self, path, require_hashes=True, quiet=False):
         """Install a pip requirements.txt file.
@@ -346,7 +316,7 @@ class MozSiteManager(VirtualenvHelper):
         if not os.path.isabs(path):
             path = os.path.join(self.topsrcdir, path)
 
-        args = ["install", "--requirement", path]
+        args = ["--requirement", path]
 
         if require_hashes:
             args.append("--require-hashes")
@@ -354,9 +324,60 @@ class MozSiteManager(VirtualenvHelper):
         if quiet:
             args.append("--quiet")
 
-        self._run_pip(args)
+        self._virtualenv.pip_install(args)
 
-    def _run_pip(self, args):
+
+class PythonVirtualenv:
+    """Calculates paths of interest for general python virtual environments"""
+
+    def __init__(self, prefix):
+        is_windows = sys.platform == "cygwin" or (
+            sys.platform == "win32" and os.sep == "\\"
+        )
+
+        if is_windows:
+            self.bin_path = os.path.join(prefix, "Scripts")
+            self.python_path = os.path.join(self.bin_path, "python.exe")
+        else:
+            self.bin_path = os.path.join(prefix, "bin")
+            self.python_path = os.path.join(self.bin_path, "python")
+        self.prefix = prefix
+
+    @functools.lru_cache(maxsize=None)
+    def site_packages_dir(self):
+        # Defer "distutils" import until this function is called so that
+        # "mach bootstrap" doesn't fail due to Linux distro python-distutils
+        # package not being installed.
+        # By the time this function is called, "distutils" must be installed
+        # because it's needed by the "virtualenv" package.
+        from distutils import dist
+
+        normalized_venv_root = os.path.normpath(self.prefix)
+
+        distribution = dist.Distribution({"script_args": "--no-user-cfg"})
+        installer = distribution.get_command_obj("install")
+        installer.prefix = normalized_venv_root
+        installer.finalize_options()
+
+        # Path to virtualenv's "site-packages" directory
+        path = installer.install_purelib
+        local_folder = os.path.join(normalized_venv_root, "local")
+        # Hack around https://github.com/pypa/virtualenv/issues/2208
+        if path.startswith(local_folder):
+            path = os.path.join(normalized_venv_root, path[len(local_folder) + 1 :])
+        return path
+
+
+class MozVirtualenv(PythonVirtualenv):
+    """Interface to get useful paths and manage moz-owned virtual environments"""
+
+    def __init__(self, topsrcdir, site_name, prefix):
+        super().__init__(prefix)
+        self.activate_path = os.path.join(self.bin_path, "activate_this.py")
+        self._topsrcdir = topsrcdir
+        self._site_name = site_name
+
+    def pip_install(self, pip_install_args):
         # distutils will use the architecture of the running Python instance when building
         # packages. However, it's possible for the Xcode Python to be a universal binary
         # (x86_64 and arm64) without the associated macOS SDK supporting arm64, thereby
@@ -373,33 +394,10 @@ class MozSiteManager(VirtualenvHelper):
         # It /might/ be possible to cheat and set sys.executable to
         # self.python_path. However, this seems more risk than it's worth.
         subprocess.run(
-            [self.python_path, "-m", "pip"] + args,
-            cwd=self.topsrcdir,
+            [self.python_path, "-m", "pip", "install"] + pip_install_args,
+            cwd=self._topsrcdir,
             env=env,
             universal_newlines=True,
             stderr=subprocess.STDOUT,
             check=True,
         )
-
-    def _site_packages_dir(self):
-        # Defer "distutils" import until this function is called so that
-        # "mach bootstrap" doesn't fail due to Linux distro python-distutils
-        # package not being installed.
-        # By the time this function is called, "distutils" must be installed
-        # because it's needed by the "virtualenv" package.
-        from distutils import dist
-
-        normalized_venv_root = os.path.normpath(self.virtualenv_root)
-
-        distribution = dist.Distribution({"script_args": "--no-user-cfg"})
-        installer = distribution.get_command_obj("install")
-        installer.prefix = normalized_venv_root
-        installer.finalize_options()
-
-        # Path to virtualenv's "site-packages" directory
-        path = installer.install_purelib
-        local_folder = os.path.join(normalized_venv_root, "local")
-        # Hack around https://github.com/pypa/virtualenv/issues/2208
-        if path.startswith(local_folder):
-            path = os.path.join(normalized_venv_root, path[len(local_folder) + 1 :])
-        return path
