@@ -46,9 +46,9 @@ add_task(async function() {
 
   let [subject, data] = await TestUtils.topicObserved("keyword-search");
 
-  let engine = Services.search.defaultEngine;
-  Assert.ok(engine, "Have default search engine.");
-  Assert.equal(engine, subject, "Notification subject is engine.");
+  let engine = subject.QueryInterface(Ci.nsISupportsString).data;
+
+  Assert.equal(engine, kSearchEngineID, "Should be the search engine id");
   Assert.equal(data, "firefox", "Notification data is search term.");
 
   gBrowser.removeTab(tab);
