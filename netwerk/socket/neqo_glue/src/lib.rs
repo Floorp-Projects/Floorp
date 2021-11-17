@@ -411,6 +411,23 @@ pub extern "C" fn neqo_http3conn_fetch(
 }
 
 #[no_mangle]
+pub extern "C" fn neqo_http3conn_priority_update(
+    conn: &mut NeqoHttp3Conn,
+    stream_id: u64,
+    urgency: u8,
+    incremental: bool,
+) -> nsresult {
+    if urgency >= 8 {
+        return NS_ERROR_INVALID_ARG;
+    }
+    let priority = Priority::new(urgency, incremental);
+    match conn.conn.priority_update(stream_id, priority) {
+        Ok(_) => NS_OK,
+        Err(_) => NS_ERROR_UNEXPECTED,
+    }
+}
+
+#[no_mangle]
 pub extern "C" fn neqo_htttp3conn_send_request_body(
     conn: &mut NeqoHttp3Conn,
     stream_id: u64,
