@@ -8923,7 +8923,7 @@ var ToolbarIconColor = {
   init() {
     this._initialized = true;
 
-    Services.obs.addObserver(this, "look-and-feel-changed");
+    window.addEventListener("nativethemechange", this);
     window.addEventListener("activate", this);
     window.addEventListener("deactivate", this);
     window.addEventListener("toolbarvisibilitychange", this);
@@ -8940,24 +8940,18 @@ var ToolbarIconColor = {
   uninit() {
     this._initialized = false;
 
-    Services.obs.removeObserver(this, "look-and-feel-changed");
+    window.removeEventListener("nativethemechange", this);
     window.removeEventListener("activate", this);
     window.removeEventListener("deactivate", this);
     window.removeEventListener("toolbarvisibilitychange", this);
     window.removeEventListener("windowlwthemeupdate", this);
   },
 
-  observe(subject, topic, data) {
-    if (topic != "look-and-feel-changed") {
-      return;
-    }
-    this.inferFromText("nativethemechange");
-  },
-
   handleEvent(event) {
     switch (event.type) {
       case "activate":
       case "deactivate":
+      case "nativethemechange":
       case "windowlwthemeupdate":
         this.inferFromText(event.type);
         break;
