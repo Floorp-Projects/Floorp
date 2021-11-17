@@ -91,12 +91,12 @@ add_task(async function test_set_profiler_settings() {
     "The radio button for the preset 'custom' is checked."
   );
 
-  info("Change the preset to Firefox Platform.");
-  const radioButtonForPlatformPreset = await getNearestInputFromText(
+  info("Change the preset to Graphics.");
+  const radioButtonForGraphicsPreset = await getNearestInputFromText(
     profilerSettingsDocument,
-    "Firefox Platform"
+    "Graphics"
   );
-  radioButtonForPlatformPreset.click();
+  radioButtonForGraphicsPreset.click();
 
   const profilerDocument = await saveSettingsAndGoBack(document);
   const perfPresetsSelect = await getNearestInputFromText(
@@ -105,7 +105,7 @@ add_task(async function test_set_profiler_settings() {
   );
   is(
     perfPresetsSelect.value,
-    "firefox-platform",
+    "graphics",
     "The preset has been changed in the devtools panel UI as well."
   );
 

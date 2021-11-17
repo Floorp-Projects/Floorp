@@ -117,6 +117,8 @@ async function gInit(perfFront, pageContext, openAboutProfiling) {
   const l10n = new FluentL10n();
   await l10n.init([
     "devtools/client/perftools.ftl",
+    // For -brand-shorter-name used in some profiler preset descriptions.
+    "branding/brand.ftl",
     // Needed for the onboarding UI
     "devtools/client/toolbox-options.ftl",
     "browser/branding/brandings.ftl",
