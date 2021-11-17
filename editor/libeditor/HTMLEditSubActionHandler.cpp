@@ -5563,31 +5563,22 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
         return NS_OK;
       }
 
-      SplitNodeResult splitNodeResult =
-          MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
-                                                      atContent);
-      if (splitNodeResult.Failed()) {
+      Result<RefPtr<Element>, nsresult> newDivElementOrError =
+          InsertElementWithSplittingAncestorsWithTransaction(*nsGkAtoms::div,
+                                                             atContent);
+      if (MOZ_UNLIKELY(newDivElementOrError.isErr())) {
         NS_WARNING(
-            "HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction(nsGkAtoms:"
-            ":div) failed");
-        return splitNodeResult.Rv();
+            "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
+            "nsGkAtoms::div) failed");
+        return newDivElementOrError.unwrapErr();
       }
-      Result<RefPtr<Element>, nsresult> maybeNewDivElement =
-          CreateAndInsertElementWithTransaction(*nsGkAtoms::div,
-                                                splitNodeResult.SplitPoint());
-      if (maybeNewDivElement.isErr()) {
-        NS_WARNING(
-            "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::div) "
-            "failed");
-        return maybeNewDivElement.unwrapErr();
-      }
-      MOZ_ASSERT(maybeNewDivElement.inspect());
+      MOZ_ASSERT(newDivElementOrError.inspect());
       // Remember our new block for postprocessing
       TopLevelEditSubActionDataRef().mNewBlockElement =
-          maybeNewDivElement.inspect();
+          newDivElementOrError.inspect();
       // Set up the alignment on the div
       nsresult rv = SetBlockElementAlign(
-          MOZ_KnownLive(*maybeNewDivElement.inspect()), aAlignType,
+          MOZ_KnownLive(*newDivElementOrError.inspect()), aAlignType,
           EditTarget::OnlyDescendantsExceptTable);
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
         return NS_ERROR_EDITOR_DESTROYED;
@@ -5595,7 +5586,7 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                            "HTMLEditor::SetBlockElementAlign(EditTarget::"
                            "OnlyDescendantsExceptTable) failed, but ignored");
-      createdDivElement = maybeNewDivElement.unwrap();
+      createdDivElement = newDivElementOrError.unwrap();
     }
 
     // Tuck the node into the end of the active div
