@@ -185,17 +185,17 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * test-linux1804-64-shippable-qr/opt
             * browsertime-benchmark-chrome-jetstream2-e10s: None
             * browsertime-benchmark-chromium-jetstream2-e10s: None
-            * browsertime-benchmark-firefox-jetstream2-e10s: mozilla-central
+            * browsertime-benchmark-firefox-jetstream2-e10s: mozilla-beta, trunk
             * browsertime-benchmark-firefox-jetstream2-fis-e10s: mozilla-central
       * test-macosx1014-64-shippable-qr/opt
             * browsertime-benchmark-chrome-jetstream2-e10s: None
             * browsertime-benchmark-chromium-jetstream2-e10s: None
-            * browsertime-benchmark-firefox-jetstream2-e10s: mozilla-central
+            * browsertime-benchmark-firefox-jetstream2-e10s: trunk
             * browsertime-benchmark-firefox-jetstream2-fis-e10s: mozilla-central
       * test-macosx1015-64-shippable-qr/opt
             * browsertime-benchmark-chrome-jetstream2-e10s: None
             * browsertime-benchmark-chromium-jetstream2-e10s: None
-            * browsertime-benchmark-firefox-jetstream2-e10s: mozilla-central
+            * browsertime-benchmark-firefox-jetstream2-e10s: mozilla-beta, trunk
             * browsertime-benchmark-firefox-jetstream2-fis-e10s: mozilla-central
       * test-windows10-32-qr/opt
             * browsertime-benchmark-firefox-jetstream2-e10s: None
@@ -211,7 +211,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
       * test-windows10-64-shippable-qr/opt
             * browsertime-benchmark-chrome-jetstream2-e10s: None
             * browsertime-benchmark-chromium-jetstream2-e10s: None
-            * browsertime-benchmark-firefox-jetstream2-e10s: mozilla-central
+            * browsertime-benchmark-firefox-jetstream2-e10s: mozilla-beta, trunk
             * browsertime-benchmark-firefox-jetstream2-fis-e10s: mozilla-central
 
 
@@ -1827,13 +1827,13 @@ Browsertime tests that use a custom pageload test script. These use the pageload
             * browsertime-first-install-firefox-welcome-e10s: None
             * browsertime-first-install-firefox-welcome-fis-e10s: None
       * test-linux1804-64-shippable-qr/opt
-            * browsertime-first-install-firefox-welcome-e10s: autoland, mozilla-central
+            * browsertime-first-install-firefox-welcome-e10s: trunk
             * browsertime-first-install-firefox-welcome-fis-e10s: mozilla-central
       * test-macosx1014-64-shippable-qr/opt
-            * browsertime-first-install-firefox-welcome-e10s: autoland, mozilla-central
+            * browsertime-first-install-firefox-welcome-e10s: trunk
             * browsertime-first-install-firefox-welcome-fis-e10s: mozilla-central
       * test-macosx1015-64-shippable-qr/opt
-            * browsertime-first-install-firefox-welcome-e10s: autoland, mozilla-central
+            * browsertime-first-install-firefox-welcome-e10s: trunk
             * browsertime-first-install-firefox-welcome-fis-e10s: mozilla-central
       * test-windows10-32-qr/opt
             * browsertime-first-install-firefox-welcome-e10s: None
@@ -1845,7 +1845,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
             * browsertime-first-install-firefox-welcome-e10s: None
             * browsertime-first-install-firefox-welcome-fis-e10s: None
       * test-windows10-64-shippable-qr/opt
-            * browsertime-first-install-firefox-welcome-e10s: autoland, mozilla-central
+            * browsertime-first-install-firefox-welcome-e10s: trunk
             * browsertime-first-install-firefox-welcome-fis-e10s: mozilla-central
 
 

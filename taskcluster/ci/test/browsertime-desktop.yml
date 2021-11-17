@@ -271,15 +271,6 @@ browsertime-benchmark:
                                     windows10-64.*shippable.*: [trunk, mozilla-beta]
                                     default: []
                             default: []
-                    jetstream2:
-                        by-app:
-                            firefox:
-                                by-test-platform:
-                                    windows.*-32.*/opt: []
-                                    (linux|windows10-64|macos)(?!.*shippable).*: []
-                                    (linux|windows|macosx1015)(?!.*-qr).*: []
-                                    default: ['mozilla-central']
-                            default: []
                     unity-webgl:
                         by-app:
                             firefox:
@@ -536,9 +527,9 @@ browsertime-first-install:
             default:
                 by-test-platform:
                     (linux|windows|macos)(?!.*-qr).*: []
-                    linux.*shippable.*: [autoland, mozilla-central]
-                    macos.*shippable-qr.*: [autoland, mozilla-central]
-                    windows10-64.*shippable.*: [autoland, mozilla-central]
+                    linux.*shippable.*: [trunk]
+                    macos.*shippable-qr.*: [trunk]
+                    windows10-64.*shippable.*: [trunk]
                     default: []
     tier: 2
     treeherder-symbol: Btime(welcome)
