@@ -3825,27 +3825,24 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
       (previousEditableSibling && previousEditableSibling != *aCurList)) {
     nsAtom* containerName = aCurPoint.GetContainer()->NodeInfo()->NameAtom();
     // Create a new nested list of correct type.
-    SplitNodeResult splitNodeResult =
-        MaybeSplitAncestorsForInsertWithTransaction(
+    Result<RefPtr<Element>, nsresult> newListElementOrError =
+        InsertElementWithSplittingAncestorsWithTransaction(
             MOZ_KnownLive(*containerName), aCurPoint);
-    if (splitNodeResult.Failed()) {
+    if (MOZ_UNLIKELY(newListElementOrError.isErr())) {
       NS_WARNING(
-          "HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction() failed");
-      return splitNodeResult.Rv();
+          nsPrintfCString(
+              "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
+              "%s) failed",
+              nsAtomCString(containerName).get())
+              .get());
+      return newListElementOrError.unwrapErr();
     }
-    Result<RefPtr<Element>, nsresult> maybeNewListElement =
-        CreateAndInsertElementWithTransaction(MOZ_KnownLive(*containerName),
-                                              splitNodeResult.SplitPoint());
-    if (maybeNewListElement.isErr()) {
-      NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
-      return maybeNewListElement.unwrapErr();
-    }
-    MOZ_ASSERT(maybeNewListElement.inspect());
+    MOZ_ASSERT(newListElementOrError.inspect());
     // aCurList is now the correct thing to put aContent in
     // remember our new block for postprocessing
     TopLevelEditSubActionDataRef().mNewBlockElement =
-        maybeNewListElement.inspect();
-    *aCurList = maybeNewListElement.unwrap();
+        newListElementOrError.inspect();
+    *aCurList = newListElementOrError.unwrap();
   }
   // tuck the node into the end of the active list
   RefPtr<nsINode> container = *aCurList;
