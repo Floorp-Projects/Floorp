@@ -4756,7 +4756,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
-   * **browser cycles**: 25
+   * **browser cycles**: 10
    * **expected**: pass
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
@@ -4768,11 +4768,49 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **playback**: mitmproxy
    * **playback pageset manifest**: mitm6-windows-firefox-facebook-nav.manifest
    * **playback version**: 6.0.2
-   * **test cmds**:  ["measure.start", "landing"], ["navigate", "https://www.facebook.com/"], ["wait.byTime", 5000], ["measure.stop", ""], ["measure.start", "friends"], ["navigate", "https://www.facebook.com/friends/"], ["wait.byTime", 5000], ["measure.stop", ""], ["measure.start", "marketplace"], ["navigate", "https://www.facebook.com/marketplace"], ["wait.byTime", 5000], ["measure.stop", ""], ["measure.start", "groups"], ["navigate", "https://www.facebook.com/groups/discover/"], ["wait.byTime", 5000], ["measure.stop", ""],
+   * **test cmds**:  ["measure.start", "landing"], ["navigate", "https://www.facebook.com/"], ["wait.byTime", 5000], ["measure.stop", ""], ["measure.start", "marketplace"], ["navigate", "https://www.facebook.com/marketplace"], ["wait.byTime", 5000], ["measure.stop", ""], ["measure.start", "groups"], ["navigate", "https://www.facebook.com/groups/discover/"], ["wait.byTime", 5000], ["measure.stop", ""], ["measure.start", "friends"], ["navigate", "https://www.facebook.com/friends/"], ["wait.byTime", 5000], ["measure.stop", ""],
    * **test url**: `<https://www.facebook.com>`__
    * **type**: pageload
    * **unit**: ms
    * **use live sites**: false
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk-qr/opt
+            * browsertime-responsiveness-firefox-facebook-nav-e10s: None
+            * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-responsiveness-firefox-facebook-nav-e10s: None
+            * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-facebook-nav-e10s: None
+            * browsertime-responsiveness-chromium-facebook-nav-e10s: None
+            * browsertime-responsiveness-firefox-facebook-nav-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: mozilla-central
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-facebook-nav-e10s: None
+            * browsertime-responsiveness-chromium-facebook-nav-e10s: None
+            * browsertime-responsiveness-firefox-facebook-nav-e10s: None
+            * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-facebook-nav-e10s: None
+            * browsertime-responsiveness-chromium-facebook-nav-e10s: None
+            * browsertime-responsiveness-firefox-facebook-nav-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: mozilla-central
+      * test-windows10-32-qr/opt
+            * browsertime-responsiveness-firefox-facebook-nav-e10s: None
+            * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-responsiveness-chrome-facebook-nav-e10s: None
+            * browsertime-responsiveness-chromium-facebook-nav-e10s: None
+            * browsertime-responsiveness-firefox-facebook-nav-e10s: None
+            * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-responsiveness-firefox-facebook-nav-e10s: None
+            * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-facebook-nav-e10s: None
+            * browsertime-responsiveness-chromium-facebook-nav-e10s: None
+            * browsertime-responsiveness-firefox-facebook-nav-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: mozilla-central
 
 
 .. dropdown:: reddit-billgates-ama (Navigates from the Bill Gates AMA to the Reddit members section.)
@@ -4784,7 +4822,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
-   * **browser cycles**: 25
+   * **browser cycles**: 10
    * **expected**: pass
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
@@ -4801,10 +4839,48 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **type**: pageload
    * **unit**: ms
    * **use live sites**: false
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk-qr/opt
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-reddit-billgates-ama-e10s: None
+            * browsertime-responsiveness-chromium-reddit-billgates-ama-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: mozilla-central
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-reddit-billgates-ama-e10s: None
+            * browsertime-responsiveness-chromium-reddit-billgates-ama-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-reddit-billgates-ama-e10s: None
+            * browsertime-responsiveness-chromium-reddit-billgates-ama-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: mozilla-central
+      * test-windows10-32-qr/opt
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-responsiveness-chrome-reddit-billgates-ama-e10s: None
+            * browsertime-responsiveness-chromium-reddit-billgates-ama-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-reddit-billgates-ama-e10s: None
+            * browsertime-responsiveness-chromium-reddit-billgates-ama-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: mozilla-central
 
 
-.. dropdown:: reddit-billgates-post (Navigates the `thisisbillgates` user starting at the main user page, then to the posts, comments, hot, and top sections.)
-   :container: + anchor-id-reddit-billgates-post-i
+.. dropdown:: reddit-billgates-post-1 (Navigates the `thisisbillgates` user starting at the main user page, then to the posts, comments, hot, and top sections.)
+   :container: + anchor-id-reddit-billgates-post-1-i
 
    **Owner**: PerfTest Team
 
@@ -4812,7 +4888,7 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
    * **apps**: firefox, chrome, chromium
-   * **browser cycles**: 25
+   * **browser cycles**: 10
    * **expected**: pass
    * **gecko profile entries**: 14000000
    * **gecko profile interval**: 1
@@ -4824,11 +4900,115 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **playback**: mitmproxy
    * **playback pageset manifest**: mitm6-windows-firefox-reddit-billgates-post.manifest
    * **playback version**: 6.0.2
-   * **test cmds**:  ["measure.start", "billg"], ["navigate", "https://www.reddit.com/user/thisisbillgates/"], ["wait.byTime", 5000], ["measure.stop", ""], ["measure.start", "posts"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[2]"], ["wait.byTime", 15000], ["measure.stop", ""], ["measure.start", "comments"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[3]"], ["wait.byTime", 15000], ["measure.stop", ""], ["measure.start", "hot"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[4]/div[1]/div[1]/div[2]/a[2]"], ["wait.byTime", 15000], ["measure.stop", ""], ["measure.start", "top"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[4]/div[1]/div[1]/div[2]/a[3]"], ["wait.byTime", 15000], ["measure.stop", ""],
+   * **test cmds**:  ["measure.start", "billg"], ["navigate", "https://www.reddit.com/user/thisisbillgates/"], ["wait.byTime", 500], ["measure.stop", ""], ["measure.start", "posts"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[2]"], ["wait.byTime", 500], ["measure.stop", ""], ["measure.start", "comments"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[3]"], ["wait.byTime", 500], ["measure.stop", ""], ["wait.byTime", 500],
    * **test url**: `<https://www.reddit.com/user/thisisbillgates/>`__
    * **type**: pageload
    * **unit**: ms
    * **use live sites**: false
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk-qr/opt
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-reddit-billgates-post-1-e10s: None
+            * browsertime-responsiveness-chromium-reddit-billgates-post-1-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: mozilla-central
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-reddit-billgates-post-1-e10s: None
+            * browsertime-responsiveness-chromium-reddit-billgates-post-1-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-reddit-billgates-post-1-e10s: None
+            * browsertime-responsiveness-chromium-reddit-billgates-post-1-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: mozilla-central
+      * test-windows10-32-qr/opt
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-responsiveness-chrome-reddit-billgates-post-1-e10s: None
+            * browsertime-responsiveness-chromium-reddit-billgates-post-1-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-reddit-billgates-post-1-e10s: None
+            * browsertime-responsiveness-chromium-reddit-billgates-post-1-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: mozilla-central
+
+
+.. dropdown:: reddit-billgates-post-2 (Navigates the `thisisbillgates` user starting at the main user page, then to the posts, comments, hot, and top sections.)
+   :container: + anchor-id-reddit-billgates-post-2-i
+
+   **Owner**: PerfTest Team
+
+   * **accept zero vismet**: true
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **browser cycles**: 10
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **interactive**: true
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 90000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm6-windows-firefox-reddit-billgates-post.manifest
+   * **playback version**: 6.0.2
+   * **test cmds**:  ["measure.start", "billg"], ["navigate", "https://www.reddit.com/user/thisisbillgates/"], ["wait.byTime", 500], ["measure.stop", ""], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[2]/div/div/div/a[3]"], ["wait.byTime", 500], ["measure.start", "hot"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[4]/div[1]/div[1]/div[2]/a[2]"], ["wait.byTime", 500], ["measure.stop", ""], ["measure.start", "top"], ["click.byXpathAndWait", "/html/body/div[1]/div/div[2]/div[2]/div/div/div/div[2]/div[4]/div[1]/div[1]/div[2]/a[3]"], ["wait.byTime", 500], ["measure.stop", ""], ["wait.byTime", 500],
+   * **test url**: `<https://www.reddit.com/user/thisisbillgates/>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+   * **Test Task**:
+      * test-linux1804-64-clang-trunk-qr/opt
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: None
+      * test-linux1804-64-qr/opt
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: None
+      * test-linux1804-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-reddit-billgates-post-2-e10s: None
+            * browsertime-responsiveness-chromium-reddit-billgates-post-2-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: mozilla-central
+      * test-macosx1014-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-reddit-billgates-post-2-e10s: None
+            * browsertime-responsiveness-chromium-reddit-billgates-post-2-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: mozilla-central
+      * test-macosx1015-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-reddit-billgates-post-2-e10s: None
+            * browsertime-responsiveness-chromium-reddit-billgates-post-2-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: mozilla-central
+      * test-windows10-32-qr/opt
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: None
+      * test-windows10-32-shippable-qr/opt
+            * browsertime-responsiveness-chrome-reddit-billgates-post-2-e10s: None
+            * browsertime-responsiveness-chromium-reddit-billgates-post-2-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: None
+      * test-windows10-64-qr/opt
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: None
+      * test-windows10-64-shippable-qr/opt
+            * browsertime-responsiveness-chrome-reddit-billgates-post-2-e10s: None
+            * browsertime-responsiveness-chromium-reddit-billgates-post-2-e10s: None
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: mozilla-central
 
 
 

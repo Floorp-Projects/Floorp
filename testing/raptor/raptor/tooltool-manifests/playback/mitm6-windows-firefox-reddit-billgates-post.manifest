@@ -1,9 +1,9 @@
 [
   {
-    "filename": "mitm6-windows-firefox-reddit-billgates-post.zip",
-    "size": 6400866,
+    "size": 6426903,
+    "visibility": "public",
+    "digest": "4c79c415f5b0f2101bff014d20a176b4ec6e0d967b2658730070ccf287e25958fedde7fa8d8051156a126adb6a9249e6c3cadb95c8450bf8468ab16297307849",
     "algorithm": "sha512",
-    "digest": "2e70c78430ab8e6cef1ada7bb5638a8321bbd5c27880761311144e559b90cf3b49b98b6ce69c88ead1b9a841f8a3b0955dcb0c9f9910690b595c59b00e841b72",
-    "visibility": "public"
+    "filename": "mitm6-linux-firefox-reddit-billgates-post.zip"
   }
 ]

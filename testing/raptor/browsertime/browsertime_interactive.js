@@ -68,7 +68,6 @@ module.exports = async function(context, commands) {
   // unpack commands from python
   let cmds = input_cmds.split(";;;");
 
-  // let pages_visited = 0;
   for (let count = 0; count < page_cycles; count++) {
     context.log.info("Navigating to about:blank w/nav, count: " + count);
     await commands.navigate("about:blank");
