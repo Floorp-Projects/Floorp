@@ -25,15 +25,14 @@ class Http3Stream final : public nsAHttpSegmentReader,
   // for RefPtr
   NS_INLINE_DECL_REFCOUNTING(Http3Stream, override)
 
-  Http3Stream(nsAHttpTransaction* httpTransaction, Http3Session* session);
+  Http3Stream(nsAHttpTransaction*, Http3Session*, uint32_t, uint64_t);
 
   bool HasStreamId() const { return mStreamId != UINT64_MAX; }
   uint64_t StreamId() const { return mStreamId; }
 
   nsresult TryActivating();
 
-  // TODO priorities
-  void TopBrowsingContextIdChanged(uint64_t id){};
+  void TopBrowsingContextIdChanged(uint64_t id);
 
   [[nodiscard]] nsresult ReadSegments(nsAHttpSegmentReader*);
   [[nodiscard]] nsresult WriteSegments(nsAHttpSegmentWriter*, uint32_t,
@@ -60,12 +59,17 @@ class Http3Stream final : public nsAHttpSegmentReader,
   bool Do0RTT();
   nsresult Finish0RTT(bool aRestart);
 
+  uint8_t PriorityUrgency();
+  bool PriorityIncremental();
+
  private:
   ~Http3Stream() = default;
 
   bool GetHeadersString(const char* buf, uint32_t avail, uint32_t* countUsed);
   nsresult StartRequest();
   void FindRequestContentLength();
+
+  void SetPriority(uint32_t aCos);
 
   /**
    * SendStreamState:
@@ -134,6 +138,10 @@ class Http3Stream final : public nsAHttpSegmentReader,
   bool mResetRecv{false};
   nsTArray<uint8_t> mFlatResponseHeaders;
   uint32_t mRequestBodyLenRemaining{0};
+  uint64_t mTransactionTabId{0};
+  uint64_t mCurrentTopBrowsingContextId;
+  uint8_t mPriorityUrgency{3};  // urgency field of http priority
+  bool mPriorityIncremental{false};
 
   // For Progress Events
   uint64_t mTotalSent{0};

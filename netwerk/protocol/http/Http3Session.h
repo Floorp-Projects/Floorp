@@ -102,6 +102,9 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
 
   void DoSetEchConfig(const nsACString& aEchConfig);
 
+  nsresult SendPriorityUpdateFrame(uint64_t aStreamId, uint8_t aPriorityUrgency,
+                                   bool aPriorityIncremental);
+
  private:
   ~Http3Session();
 
