@@ -917,10 +917,15 @@ void WinWindowOcclusionTracker::WindowOcclusionCalculator::
   // Compute the LayoutDeviceIntRegion for the screen.
   int screenLeft = ::GetSystemMetrics(SM_XVIRTUALSCREEN);
   int screenTop = ::GetSystemMetrics(SM_YVIRTUALSCREEN);
-  LayoutDeviceIntRegion screenRegion = LayoutDeviceIntRect(
-      screenLeft, screenTop, GetSystemMetrics(SM_CXVIRTUALSCREEN),
-      GetSystemMetrics(SM_CYVIRTUALSCREEN));
+  int screenWidth = ::GetSystemMetrics(SM_CXVIRTUALSCREEN);
+  int screenHeight = ::GetSystemMetrics(SM_CYVIRTUALSCREEN);
+  LayoutDeviceIntRegion screenRegion =
+      LayoutDeviceIntRect(screenLeft, screenTop, screenWidth, screenHeight);
   mNumRootWindowsWithUnknownOcclusionState = 0;
+
+  CALC_LOG(LogLevel::Debug,
+           "ComputeNativeWindowOcclusionStatus() screen(%d, %d, %d, %d)",
+           screenLeft, screenTop, screenWidth, screenHeight);
 
   for (auto& [hwnd, state] : mRootWindowHwndsOcclusionState) {
     // IsIconic() checks for a minimized window. Immediately set the state of
@@ -1119,6 +1124,12 @@ bool WinWindowOcclusionTracker::WindowOcclusionCalculator::
       it->second != OcclusionState::UNKNOWN) {
     return true;
   }
+
+  CALC_LOG(LogLevel::Debug,
+           "ProcessComputeNativeWindowOcclusionStatusCallback() windowRect(%d, "
+           "%d, %d, %d) IsOccluding %d",
+           windowRect.x, windowRect.y, windowRect.width, windowRect.height,
+           windowIsOccluding);
 
   // On Win7, default theme makes root windows have complex regions by
   // default. But we can still check if their bounding rect is occluded.
