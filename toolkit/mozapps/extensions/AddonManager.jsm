@@ -3111,7 +3111,7 @@ var AddonManagerInternal = {
    *
    * @param {browser}      browser browser user is installing from
    * @param {nsIURI}       url     URI for the principal of the installing source
-   * @param {AddonInstall} install
+   * @param {AddonInstallWrapper} install
    * @param {Object}       info    information such as addon wrapper
    * @param {AddonWrapper} info.addon
    * @param {string}       source  simplified string describing source of install and is
@@ -3134,7 +3134,7 @@ var AddonManagerInternal = {
         source: install.sourceURI,
       })
     ) {
-      install.cancel();
+      install.error = AddonManager.ERROR_INVALID_DOMAIN;
       return Promise.reject();
     }
 
@@ -3804,6 +3804,8 @@ var AddonManager = {
   // Constants representing different types of errors while downloading an
   // add-on.
   // These will show up as AddonManager.ERROR_* (eg, ERROR_NETWORK_FAILURE)
+  // The _errors codes are translated to text for a panel in browser-addons.js.
+  // The text is located in browser.properties.
   _errors: new Map([
     // The download failed due to network problems.
     ["ERROR_NETWORK_FAILURE", -1],
@@ -3816,9 +3818,13 @@ var AddonManager = {
     // The add-on must be signed and isn't.
     ["ERROR_SIGNEDSTATE_REQUIRED", -5],
     // The downloaded add-on had a different type than expected.
+    // TODO Bug 1740792
     ["ERROR_UNEXPECTED_ADDON_TYPE", -6],
     // The addon did not have the expected ID
+    // TODO Bug 1740792
     ["ERROR_INCORRECT_ID", -7],
+    // The addon install_origins does not list the 3rd party domain.
+    ["ERROR_INVALID_DOMAIN", -8],
   ]),
   // The update check timed out
   ERROR_TIMEOUT: -1,
