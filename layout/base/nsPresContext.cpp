@@ -1633,6 +1633,14 @@ void nsPresContext::ThemeChangedInternal() {
   MediaFeatureValuesChanged(
       {restyleHint, changeHint, MediaFeatureChangeReason::SystemMetricsChange},
       MediaFeatureChangePropagation::All);
+
+  if (Document()->IsInChromeDocShell()) {
+    if (RefPtr<nsPIDOMWindowInner> win = Document()->GetInnerWindow()) {
+      nsContentUtils::DispatchEventOnlyToChrome(
+          Document(), win, u"nativethemechange"_ns, CanBubble::eYes,
+          Cancelable::eYes, nullptr);
+    }
+  }
 }
 
 void nsPresContext::UIResolutionChanged() {
