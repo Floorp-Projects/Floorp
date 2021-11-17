@@ -84,9 +84,10 @@ def python(
             requirements.pths_as_absolute(command_context.topsrcdir)
         )
     else:
-        command_context.virtualenv_manager.ensure()
         if not no_activate:
             command_context.virtualenv_manager.activate()
+        else:
+            command_context.virtualenv_manager.ensure()
         python_path = command_context.virtualenv_manager.python_path
         if requirements:
             command_context.virtualenv_manager.install_pip_requirements(

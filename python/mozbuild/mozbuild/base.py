@@ -871,7 +871,6 @@ class MozbuildObject(ProcessExecutionMixin):
         )
 
     def activate_virtualenv(self):
-        self.virtualenv_manager.ensure()
         self.virtualenv_manager.activate()
 
     def _set_log_level(self, verbose):
