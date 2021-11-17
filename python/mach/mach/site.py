@@ -90,11 +90,6 @@ class MozSiteManager:
         os.environ.pop("__PYVENV_LAUNCHER__", None)
         self.topsrcdir = topsrcdir
 
-        # Record the Python executable that was used to create the virtualenv
-        # so we can check this against sys.executable when verifying the
-        # integrity of the virtualenv.
-        self.exe_info_path = os.path.join(self.virtualenv_root, "python_exe.txt")
-
         self._site_name = site_name
         self._manifest_path = manifest_path or os.path.join(
             topsrcdir, "build", f"{site_name}_virtualenv_packages.txt"
