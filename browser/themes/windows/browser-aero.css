@@ -45,12 +45,12 @@
     @media not (-moz-os-version: windows-win8) {
       @media (-moz-windows-default-theme) {
         @media (-moz-windows-accent-color-in-titlebar) {
-          :root[sizemode=normal][tabsintitlebar] {
+          :root[sizemode=normal][tabsintitlebar] #navigator-toolbox {
             border-top: .5px solid -moz-accent-color;
           }
         }
 
-        :root[sizemode=normal][tabsintitlebar]:-moz-window-inactive {
+        :root[sizemode=normal][tabsintitlebar]:-moz-window-inactive #navigator-toolbox {
           border-top-color: rgb(57,57,57);
         }
 
@@ -267,7 +267,8 @@
 
   @media (-moz-os-version: windows-win8) {
     /* Artificially draw window borders that are covered by lwtheme, see bug 591930.
-     * Borders for win7 are below, win10 doesn't need them. */
+     * Borders for win7 are below, win10 only needs something like this when
+     * drawing in the titlebar (-moz-windows-accent-color-in-titlebar). */
     #main-window[sizemode="normal"] #navigator-toolbox:-moz-lwtheme {
       border-top: 1px solid @glassShadowColor@;
     }
@@ -294,7 +295,8 @@
   }
 
   /* Artificially draw window borders that are covered by lwtheme, see bug 591930.
-   * We use a different border for win8, and this is not necessary on win10+ */
+   * We use a different border for win8, and this win10+ only needs this if
+   * drawing in the titlebar (-moz-windows-accent-color-in-titlebar). */
   #main-window[sizemode="normal"] #navigator-toolbox:-moz-lwtheme {
     border-top: 1px solid @glassActiveBorderColor@;
     padding-top: 1px;
