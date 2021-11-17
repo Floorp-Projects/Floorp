@@ -4596,7 +4596,7 @@ gViewController.defineView("list", async type => {
 
   // If monochromatic themes are enabled and any are builtin to Firefox, we
   // display those themes together in a separate subsection.
-  let isMonochromaticTheme = addon =>
+  const isMonochromaticTheme = addon =>
     addon.id.endsWith("-colorway@mozilla.org");
 
   let frag = document.createDocumentFragment();
@@ -4615,13 +4615,21 @@ gViewController.defineView("list", async type => {
         !addon.hidden &&
         !addon.isActive &&
         !isPending(addon, "uninstall") &&
-        !isMonochromaticTheme(addon),
+        // For performance related details about this check see the
+        // documentation for themeIsExpired in BuiltInThemeConfig.jsm.
+        (!isMonochromaticTheme(addon) ||
+          BuiltInThemes.isRetainedExpiredTheme(addon.id)),
     },
   ];
   list.setSections(sections);
   frag.appendChild(list);
 
-  if (type == "theme") {
+  const areColorwayThemesInstalled = async () =>
+    (await AddonManager.getAllAddons()).some(
+      addon =>
+        isMonochromaticTheme(addon) && !BuiltInThemes.themeIsExpired(addon.id)
+    );
+  if (type == "theme" && (await areColorwayThemesInstalled())) {
     let monochromaticList = document.createElement("addon-list");
     monochromaticList.classList.add("monochromatic-addon-list");
     monochromaticList.type = type;
@@ -4629,7 +4637,10 @@ gViewController.defineView("list", async type => {
       {
         headingId: type + "-monochromatic-heading",
         subheadingId: type + "-monochromatic-subheading",
-        filterFn: addon => !addon.hidden && isMonochromaticTheme(addon),
+        filterFn: addon =>
+          !addon.hidden &&
+          isMonochromaticTheme(addon) &&
+          !BuiltInThemes.themeIsExpired(addon.id),
       },
     ]);
     frag.appendChild(monochromaticList);
