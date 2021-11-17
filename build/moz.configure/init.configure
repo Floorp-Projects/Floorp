@@ -218,7 +218,7 @@ shell = help_shell | shell
 @dependable
 @checking("for Python 3", callback=lambda x: "%s (%s)" % (x.path, x.str_version))
 @imports("sys")
-@imports(_from="mach.virtualenv", _import="VirtualenvHelper")
+@imports(_from="mach.site", _import="VirtualenvHelper")
 def virtualenv_python3():
     return namespace(
         # sys.executable is currently not updated for in-process activations. However,
