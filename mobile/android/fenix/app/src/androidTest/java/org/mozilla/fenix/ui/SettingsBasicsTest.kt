@@ -189,6 +189,24 @@ class SettingsBasicsTest {
 
     @SmokeTest
     @Test
+    fun jumpBackInOptionTest() {
+        val genericURL = getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+            mDevice.waitForIdle()
+        }.goToHomescreen {
+            verifyJumpBackInSectionIsDisplayed()
+        }.openThreeDotMenu {
+        }.openCustomizeHome {
+            clickJumpBackInButton()
+        }.goBack {
+            verifyJumpBackInSectionIsNotDisplayed()
+        }
+    }
+
+    @SmokeTest
+    @Test
     fun startOnHomepageTest() {
         val genericURL = getGenericAsset(mockWebServer, 1)
 

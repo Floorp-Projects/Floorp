@@ -13,11 +13,13 @@ import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.action.ViewActions
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions.actionOnItem
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withHint
@@ -115,6 +117,9 @@ class HomeScreenRobot {
     fun verifyNotExistingTopSitesList(title: String) = assertNotExistingTopSitesList(title)
     fun verifyExistingTopSitesTabs(title: String) = assertExistingTopSitesTabs(title)
     fun verifyTopSiteContextMenuItems() = assertTopSiteContextMenuItems()
+
+    fun verifyJumpBackInSectionIsDisplayed() = assertJumpBackInSectionIsDisplayed()
+    fun verifyJumpBackInSectionIsNotDisplayed() = assertJumpBackInSectionIsNotDisplayed()
 
     // Collections elements
     fun verifyCollectionIsDisplayed(title: String, collectionExists: Boolean = true) {
@@ -584,11 +589,23 @@ private fun assertShareTabsOverlay() {
     onView(withId(R.id.share_tab_url)).check(matches(isDisplayed()))
 }
 
+private fun assertJumpBackInSectionIsDisplayed() = jumpBackInSection().check(matches(isDisplayed()))
+
+private fun assertJumpBackInSectionIsNotDisplayed() = jumpBackInSection().check(doesNotExist())
+
 private fun privateBrowsingButton() = onView(withId(R.id.privateBrowsingButton))
 
 private fun saveTabsToCollectionButton() = onView(withId(R.id.add_tabs_to_collections_button))
 
 private fun tabsCounter() = onView(withId(R.id.tab_button))
+
+private fun jumpBackInSection() =
+    onView(
+        allOf(
+            withText(R.string.recent_tabs_header),
+            hasSibling(withText(R.string.recent_tabs_show_all))
+        )
+    )
 
 private fun startBrowsingButton(): UiObject {
     val startBrowsingButton = mDevice.findObject(UiSelector().resourceId("$packageName:id/finish_button"))

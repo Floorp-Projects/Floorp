@@ -29,6 +29,7 @@ class SettingsSubMenuHomepageRobot {
         assertHomepageAfterFourHoursButton()
     }
 
+    fun clickJumpBackInButton() = jumpBackInButton().click()
     fun clickStartOnHomepageButton() = homepageButton().click()
 
     class Transition {
