@@ -5,7 +5,9 @@ function scopedCuImport(path) {
   ChromeUtils.import(path, scope);
   return scope;
 }
-const { require } = scopedCuImport("resource://devtools/shared/Loader.jsm");
+const { require } = scopedCuImport(
+  "resource://devtools/shared/loader/Loader.jsm"
+);
 let { gDevTools } = require("devtools/client/framework/devtools");
 
 /**
