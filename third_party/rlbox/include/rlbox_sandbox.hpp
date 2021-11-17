@@ -970,7 +970,8 @@ public:
   template<typename T>
   app_pointer<T*, T_Sbx> get_app_pointer(T* ptr)
   {
-    auto idx = app_ptr_map.get_app_pointer_idx((void*)ptr);
+    auto max_ptr = (typename T_Sbx::T_PointerType)(get_total_memory() - 1);
+    auto idx = app_ptr_map.get_app_pointer_idx((void*)ptr, max_ptr);
     auto idx_as_ptr = this->template impl_get_unsandboxed_pointer<T>(idx);
     // Right now we simply assume that any integer can be converted to a valid
     // pointer in the sandbox This may not be true for some sandboxing mechanism
