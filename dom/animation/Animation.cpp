@@ -767,7 +767,7 @@ void Animation::CommitStyles(ErrorResult& aRv) {
 
   // Prepare the callback
   MutationClosureData closureData;
-  closureData.mClosure = nsDOMCSSAttributeDeclaration::MutationClosureFunction;
+  closureData.mShouldBeCalled = true;
   closureData.mElement = target.mElement;
   DeclarationBlockMutationClosure beforeChangeClosure = {
       nsDOMCSSAttributeDeclaration::MutationClosureFunction,
@@ -788,9 +788,11 @@ void Animation::CommitStyles(ErrorResult& aRv) {
   }
 
   if (!changed) {
+    MOZ_ASSERT(!closureData.mWasCalled);
     return;
   }
 
+  MOZ_ASSERT(closureData.mWasCalled);
   // Update inline style declaration
   target.mElement->SetInlineStyleDeclaration(*declarationBlock, closureData);
 }

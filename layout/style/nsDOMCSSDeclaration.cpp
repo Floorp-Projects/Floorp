@@ -135,8 +135,8 @@ void nsDOMCSSDeclaration::SetCssText(const nsACString& aCssText,
   // Need to special case closure calling here, since parsing css text
   // doesn't modify any existing declaration and that is why the callback isn't
   // called implicitly.
-  if (closureData.mClosure) {
-    closureData.mClosure(&closureData);
+  if (closure.function && !closureData.mWasCalled) {
+    closure.function(&closureData);
   }
 
   RefPtr<DeclarationBlock> newdecl = DeclarationBlock::FromCssText(
