@@ -146,6 +146,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollObserver.h"
+#include "nsISupportsPrimitives.h"
 #include "nsISecureBrowserUI.h"
 #include "nsISeekableStream.h"
 #include "nsISelectionDisplay.h"
@@ -203,7 +204,6 @@
 #include "nsEscape.h"
 #include "nsFocusManager.h"
 #include "nsGlobalWindow.h"
-#include "nsISearchService.h"
 #include "nsJSEnvironment.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -13231,20 +13231,19 @@ void nsDocShell::MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
   if (aProvider.IsEmpty()) {
     return;
   }
+  nsresult rv;
+  nsCOMPtr<nsISupportsString> isupportsString =
+      do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS_VOID(rv);
 
-  nsCOMPtr<nsISearchService> searchSvc =
-      do_GetService("@mozilla.org/browser/search-service;1");
-  if (searchSvc) {
-    nsCOMPtr<nsISearchEngine> searchEngine;
-    searchSvc->GetEngineByName(aProvider, getter_AddRefs(searchEngine));
-    if (searchEngine) {
-      nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
-      if (obsSvc) {
-        // Note that "keyword-search" refers to a search via the url
-        // bar, not a bookmarks keyword search.
-        obsSvc->NotifyObservers(searchEngine, "keyword-search", aKeyword.get());
-      }
-    }
+  rv = isupportsString->SetData(aProvider);
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
+  if (obsSvc) {
+    // Note that "keyword-search" refers to a search via the url
+    // bar, not a bookmarks keyword search.
+    obsSvc->NotifyObservers(isupportsString, "keyword-search", aKeyword.get());
   }
 }
 
