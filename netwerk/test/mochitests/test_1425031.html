@@ -20,10 +20,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1425031
 SimpleTest.waitForExplicitFinish();
 
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('file_1331680.js'));
-
-gScript.addMessageListener("cookieOperation", confirmCookieOperation);
-gScript.addMessageListener("createObserver:return", testSetCookie);
-gScript.sendAsyncMessage('createObserver');
 var testsNum = 0;
 var cookieString = "cookie0=test";
 
@@ -44,6 +40,7 @@ function confirmCookieOperation(op) {
       is(document.cookie, cookieString, "Confirm the cookie string is unaffected by the second addition.");
       document.cookie = "cookie0=; expires=Thu, 01-Jan-1970 00:00:01 GMT;";
       gScript.sendAsyncMessage('removeObserver');
+      SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
       SimpleTest.finish();
       break;
   }
@@ -57,6 +54,15 @@ function testSetCookie() {
   document.cookie = cookieString;
   is(document.cookie, cookieString, "Confirm cookie string.");
 }
+
+// Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+SpecialPowers.pushPrefEnv({
+  set: [["network.cookie.sameSite.laxByDefault", false]],
+}, () => {
+  gScript.addMessageListener("cookieOperation", confirmCookieOperation);
+  gScript.addMessageListener("createObserver:return", testSetCookie);
+  gScript.sendAsyncMessage('createObserver');
+});
 
 </script>
 
