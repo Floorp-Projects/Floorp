@@ -2997,8 +2997,9 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
     }
 
     Result<RefPtr<Element>, nsresult> newListElementOrError =
-        InsertElementWithSplittingAncestorsWithTransaction(aListElementTagName,
-                                                           atStartOfSelection);
+        InsertElementWithSplittingAncestorsWithTransaction(
+            aListElementTagName, atStartOfSelection,
+            BRElementNextToSplitPoint::Keep);
     if (MOZ_UNLIKELY(newListElementOrError.isErr())) {
       NS_WARNING(
           nsPrintfCString(
@@ -3301,7 +3302,7 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
       prevListItem = nullptr;
       Result<RefPtr<Element>, nsresult> newListElementOrError =
           InsertElementWithSplittingAncestorsWithTransaction(
-              aListElementTagName, atContent);
+              aListElementTagName, atContent, BRElementNextToSplitPoint::Keep);
       if (MOZ_UNLIKELY(newListElementOrError.isErr())) {
         NS_WARNING(
             nsPrintfCString(
@@ -3622,8 +3623,8 @@ nsresult HTMLEditor::FormatBlockContainerWithTransaction(nsAtom& blockType) {
     }
     // Make sure we can put a block here.
     Result<RefPtr<Element>, nsresult> newBlockElementOrError =
-        InsertElementWithSplittingAncestorsWithTransaction(blockType,
-                                                           pointToInsertBlock);
+        InsertElementWithSplittingAncestorsWithTransaction(
+            blockType, pointToInsertBlock, BRElementNextToSplitPoint::Keep);
     if (MOZ_UNLIKELY(newBlockElementOrError.isErr())) {
       NS_WARNING(
           nsPrintfCString(
@@ -3827,7 +3828,8 @@ nsresult HTMLEditor::IndentListChild(RefPtr<Element>* aCurList,
     // Create a new nested list of correct type.
     Result<RefPtr<Element>, nsresult> newListElementOrError =
         InsertElementWithSplittingAncestorsWithTransaction(
-            MOZ_KnownLive(*containerName), aCurPoint);
+            MOZ_KnownLive(*containerName), aCurPoint,
+            BRElementNextToSplitPoint::Keep);
     if (MOZ_UNLIKELY(newListElementOrError.isErr())) {
       NS_WARNING(
           nsPrintfCString(
@@ -3987,8 +3989,9 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
 
     // make sure we can put a block here
     Result<RefPtr<Element>, nsresult> newDivElementOrError =
-        InsertElementWithSplittingAncestorsWithTransaction(*nsGkAtoms::div,
-                                                           atStartOfSelection);
+        InsertElementWithSplittingAncestorsWithTransaction(
+            *nsGkAtoms::div, atStartOfSelection,
+            BRElementNextToSplitPoint::Keep);
     if (MOZ_UNLIKELY(newDivElementOrError.isErr())) {
       NS_WARNING(
           "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -4083,8 +4086,8 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
       }
 
       Result<RefPtr<Element>, nsresult> newDivElementOrError =
-          InsertElementWithSplittingAncestorsWithTransaction(*nsGkAtoms::div,
-                                                             atContent);
+          InsertElementWithSplittingAncestorsWithTransaction(
+              *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep);
       if (MOZ_UNLIKELY(newDivElementOrError.isErr())) {
         NS_WARNING(
             "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -4194,7 +4197,8 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
     // Make sure we can put a block here.
     Result<RefPtr<Element>, nsresult> newBlockQuoteElementOrError =
         InsertElementWithSplittingAncestorsWithTransaction(
-            *nsGkAtoms::blockquote, atStartOfSelection);
+            *nsGkAtoms::blockquote, atStartOfSelection,
+            BRElementNextToSplitPoint::Keep);
     if (MOZ_UNLIKELY(newBlockQuoteElementOrError.isErr())) {
       NS_WARNING(
           "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -4297,7 +4301,8 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
         // Create a new nested list of correct type.
         Result<RefPtr<Element>, nsresult> newListElementOrError =
             InsertElementWithSplittingAncestorsWithTransaction(
-                MOZ_KnownLive(*containerName), atListItem);
+                MOZ_KnownLive(*containerName), atListItem,
+                BRElementNextToSplitPoint::Keep);
         if (MOZ_UNLIKELY(newListElementOrError.isErr())) {
           NS_WARNING(nsPrintfCString("HTMLEditor::"
                                      "InsertElementWithSplittingAncestorsWithTr"
@@ -4344,7 +4349,8 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
 
       Result<RefPtr<Element>, nsresult> newBlockQuoteElementOrError =
           InsertElementWithSplittingAncestorsWithTransaction(
-              *nsGkAtoms::blockquote, atContent);
+              *nsGkAtoms::blockquote, atContent,
+              BRElementNextToSplitPoint::Keep);
       if (MOZ_UNLIKELY(newBlockQuoteElementOrError.isErr())) {
         NS_WARNING(
             "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -5345,65 +5351,23 @@ EditActionResult HTMLEditor::AlignContentsAtSelectionWithEmptyDivElement(
     return EditActionResult(NS_ERROR_FAILURE);
   }
 
-  SplitNodeResult splitNodeResult = MaybeSplitAncestorsForInsertWithTransaction(
-      *nsGkAtoms::div, atStartOfSelection);
-  if (splitNodeResult.Failed()) {
+  Result<RefPtr<Element>, nsresult> newDivElementOrError =
+      InsertElementWithSplittingAncestorsWithTransaction(
+          *nsGkAtoms::div, atStartOfSelection,
+          BRElementNextToSplitPoint::Delete);
+  if (newDivElementOrError.isErr()) {
     NS_WARNING(
-        "HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction(nsGkAtoms::"
-        "div) failed");
-    return EditActionResult(splitNodeResult.Rv());
+        "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
+        "nsGkAtoms::div, BRElementNextToSplitPoint::Delete) failed");
+    return EditActionResult(newDivElementOrError.unwrapErr());
   }
-
-  EditorDOMPoint pointToInsertDiv(splitNodeResult.SplitPoint());
-
-  // Consume a trailing br, if any.  This is to keep an alignment from
-  // creating extra lines, if possible.
-  // XXX Perhaps, we should stop handling this if there is no editing host.
-  if (Element* editingHost = GetActiveEditingHost()) {
-    if (nsCOMPtr<nsIContent> maybeBRContent = HTMLEditUtils::GetNextContent(
-            splitNodeResult.SplitPoint(),
-            {WalkTreeOption::IgnoreNonEditableNode,
-             WalkTreeOption::StopAtBlockBoundary},
-            editingHost)) {
-      if (maybeBRContent->IsHTMLElement(nsGkAtoms::br) &&
-          pointToInsertDiv.GetChild()) {
-        // Making use of html structure... if next node after where we are
-        // putting our div is not a block, then the br we found is in same block
-        // we are, so it's safe to consume it.
-        if (nsIContent* nextEditableSibling = HTMLEditUtils::GetNextSibling(
-                *pointToInsertDiv.GetChild(),
-                {WalkTreeOption::IgnoreNonEditableNode})) {
-          if (!HTMLEditUtils::IsBlockElement(*nextEditableSibling)) {
-            AutoEditorDOMPointChildInvalidator lockOffset(pointToInsertDiv);
-            nsresult rv = DeleteNodeWithTransaction(*maybeBRContent);
-            if (NS_WARN_IF(Destroyed())) {
-              return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
-            }
-            if (NS_FAILED(rv)) {
-              NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
-              return EditActionResult(rv);
-            }
-          }
-        }
-      }
-    }
-  }
-
-  Result<RefPtr<Element>, nsresult> maybeNewDivElement =
-      CreateAndInsertElementWithTransaction(*nsGkAtoms::div, pointToInsertDiv);
-  if (maybeNewDivElement.isErr()) {
-    NS_WARNING(
-        "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::div) "
-        "failed");
-    return EditActionResult(maybeNewDivElement.unwrapErr());
-  }
-  MOZ_ASSERT(maybeNewDivElement.inspect());
+  MOZ_ASSERT(newDivElementOrError.inspect());
   // Remember our new block for postprocessing
   TopLevelEditSubActionDataRef().mNewBlockElement =
-      maybeNewDivElement.inspect();
+      newDivElementOrError.inspect();
   // Set up the alignment on the div, using HTML or CSS
   nsresult rv =
-      SetBlockElementAlign(MOZ_KnownLive(*maybeNewDivElement.inspect()),
+      SetBlockElementAlign(MOZ_KnownLive(*newDivElementOrError.inspect()),
                            aAlignType, EditTarget::OnlyDescendantsExceptTable);
   if (NS_FAILED(rv)) {
     NS_WARNING(
@@ -5415,14 +5379,15 @@ EditActionResult HTMLEditor::AlignContentsAtSelectionWithEmptyDivElement(
   // deleted.
   CreateElementResult createPaddingBRResult =
       InsertPaddingBRElementForEmptyLastLineWithTransaction(
-          EditorDOMPoint(maybeNewDivElement.inspect(), 0));
+          EditorDOMPoint(newDivElementOrError.inspect(), 0));
   if (createPaddingBRResult.Failed()) {
     NS_WARNING(
         "HTMLEditor::InsertPaddingBRElementForEmptyLastLineWithTransaction() "
         "failed");
     return EditActionResult(createPaddingBRResult.Rv());
   }
-  rv = CollapseSelectionToStartOf(MOZ_KnownLive(*maybeNewDivElement.inspect()));
+  rv = CollapseSelectionToStartOf(
+      MOZ_KnownLive(*newDivElementOrError.inspect()));
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                        "HTMLEditor::CollapseSelectionToStartOf() failed");
   return EditActionHandled(rv);
@@ -5564,8 +5529,8 @@ nsresult HTMLEditor::AlignNodesAndDescendants(
       }
 
       Result<RefPtr<Element>, nsresult> newDivElementOrError =
-          InsertElementWithSplittingAncestorsWithTransaction(*nsGkAtoms::div,
-                                                             atContent);
+          InsertElementWithSplittingAncestorsWithTransaction(
+              *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep);
       if (MOZ_UNLIKELY(newDivElementOrError.isErr())) {
         NS_WARNING(
             "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -7539,7 +7504,8 @@ nsresult HTMLEditor::MoveNodesIntoNewBlockquoteElement(
     if (!curBlock) {
       Result<RefPtr<Element>, nsresult> newBlockQuoteElementOrError =
           InsertElementWithSplittingAncestorsWithTransaction(
-              *nsGkAtoms::blockquote, EditorDOMPoint(content));
+              *nsGkAtoms::blockquote, EditorDOMPoint(content),
+              BRElementNextToSplitPoint::Keep);
       if (MOZ_UNLIKELY(newBlockQuoteElementOrError.isErr())) {
         NS_WARNING(
             "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -7788,8 +7754,8 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
 
       // Make sure we can put a block here
       Result<RefPtr<Element>, nsresult> newBlockElementOrError =
-          InsertElementWithSplittingAncestorsWithTransaction(aBlockTag,
-                                                             atContent);
+          InsertElementWithSplittingAncestorsWithTransaction(
+              aBlockTag, atContent, BRElementNextToSplitPoint::Keep);
       if (MOZ_UNLIKELY(newBlockElementOrError.isErr())) {
         NS_WARNING(
             nsPrintfCString(
@@ -7828,8 +7794,8 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
       // The break is the first (or even only) node we encountered.  Create a
       // block for it.
       Result<RefPtr<Element>, nsresult> newBlockElementOrError =
-          InsertElementWithSplittingAncestorsWithTransaction(aBlockTag,
-                                                             atContent);
+          InsertElementWithSplittingAncestorsWithTransaction(
+              aBlockTag, atContent, BRElementNextToSplitPoint::Keep);
       if (MOZ_UNLIKELY(newBlockElementOrError.isErr())) {
         NS_WARNING(
             nsPrintfCString(
@@ -7876,8 +7842,8 @@ nsresult HTMLEditor::CreateOrChangeBlockContainerElement(
       // If no curBlock, make one
       if (!curBlock) {
         Result<RefPtr<Element>, nsresult> newBlockElementOrError =
-            InsertElementWithSplittingAncestorsWithTransaction(aBlockTag,
-                                                               atContent);
+            InsertElementWithSplittingAncestorsWithTransaction(
+                aBlockTag, atContent, BRElementNextToSplitPoint::Keep);
         if (MOZ_UNLIKELY(newBlockElementOrError.isErr())) {
           NS_WARNING(nsPrintfCString("HTMLEditor::"
                                      "InsertElementWithSplittingAncestorsWithTr"
@@ -7986,7 +7952,8 @@ SplitNodeResult HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction(
 
 Result<RefPtr<Element>, nsresult>
 HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction(
-    nsAtom& aTagName, const EditorDOMPoint& aPointToInsert) {
+    nsAtom& aTagName, const EditorDOMPoint& aPointToInsert,
+    BRElementNextToSplitPoint aBRElementNextToSplitPoint) {
   MOZ_ASSERT(aPointToInsert.IsSetAndValid());
 
   SplitNodeResult splitNodeResult =
@@ -8006,6 +7973,41 @@ HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction(
   }
 
   EditorDOMPoint splitPoint = splitNodeResult.SplitPoint();
+
+  if (aBRElementNextToSplitPoint == BRElementNextToSplitPoint::Delete) {
+    // Consume a trailing br, if any.  This is to keep an alignment from
+    // creating extra lines, if possible.
+    // XXX Perhaps, we should stop handling this if there is no editing host.
+    if (Element* editingHost = GetActiveEditingHost()) {
+      if (nsCOMPtr<nsIContent> maybeBRContent = HTMLEditUtils::GetNextContent(
+              splitPoint,
+              {WalkTreeOption::IgnoreNonEditableNode,
+               WalkTreeOption::StopAtBlockBoundary},
+              editingHost)) {
+        if (maybeBRContent->IsHTMLElement(nsGkAtoms::br) &&
+            splitPoint.GetChild()) {
+          // Making use of html structure... if next node after where we are
+          // putting our div is not a block, then the br we found is in same
+          // block we are, so it's safe to consume it.
+          if (nsIContent* nextEditableSibling = HTMLEditUtils::GetNextSibling(
+                  *splitPoint.GetChild(),
+                  {WalkTreeOption::IgnoreNonEditableNode})) {
+            if (!HTMLEditUtils::IsBlockElement(*nextEditableSibling)) {
+              AutoEditorDOMPointChildInvalidator lockOffset(splitPoint);
+              nsresult rv = DeleteNodeWithTransaction(*maybeBRContent);
+              if (NS_WARN_IF(Destroyed())) {
+                return Err(NS_ERROR_EDITOR_DESTROYED);
+              }
+              if (NS_FAILED(rv)) {
+                NS_WARNING("HTMLEditor::DeleteNodeWithTransaction() failed");
+                return Err(rv);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 
   Result<RefPtr<Element>, nsresult> newElementOrError =
       CreateAndInsertElementWithTransaction(aTagName, splitPoint);
@@ -9600,8 +9602,8 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
 
     // Make sure we can put a block here.
     Result<RefPtr<Element>, nsresult> newDivElementOrError =
-        InsertElementWithSplittingAncestorsWithTransaction(*nsGkAtoms::div,
-                                                           atCaret);
+        InsertElementWithSplittingAncestorsWithTransaction(
+            *nsGkAtoms::div, atCaret, BRElementNextToSplitPoint::Keep);
     if (MOZ_UNLIKELY(newDivElementOrError.isErr())) {
       NS_WARNING(
           "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
@@ -9692,7 +9694,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
           // element with splitting the ancestors.
           Result<RefPtr<Element>, nsresult> newDivElementOrError =
               InsertElementWithSplittingAncestorsWithTransaction(
-                  *nsGkAtoms::div, atContent);
+                  *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep);
           if (MOZ_UNLIKELY(newDivElementOrError.isErr())) {
             NS_WARNING(
                 "HTMLEditor::"
@@ -9772,7 +9774,7 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
           // element with splitting the ancestors.
           Result<RefPtr<Element>, nsresult> newDivElementOrError =
               InsertElementWithSplittingAncestorsWithTransaction(
-                  *nsGkAtoms::div, atContent);
+                  *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep);
           if (MOZ_UNLIKELY(newDivElementOrError.isErr())) {
             NS_WARNING(
                 "HTMLEditor::"
@@ -9827,8 +9829,8 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
       // Otherwise, create new `<div>` element to be positioned absolutely
       // and to contain all selected nodes.
       Result<RefPtr<Element>, nsresult> newDivElementOrError =
-          InsertElementWithSplittingAncestorsWithTransaction(*nsGkAtoms::div,
-                                                             atContent);
+          InsertElementWithSplittingAncestorsWithTransaction(
+              *nsGkAtoms::div, atContent, BRElementNextToSplitPoint::Keep);
       if (newDivElementOrError.isErr()) {
         NS_WARNING(
             "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("

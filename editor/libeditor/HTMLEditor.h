@@ -1513,10 +1513,16 @@ class HTMLEditor final : public EditorBase,
    *                            element at aPointToInsert.
    * @param aPointToInsert      The insertion point.  New element will be
    *                            inserted before here.
+   * @param aBRElementNextToSplitPoint
+   *                            Whether <br> element should be deleted or
+   *                            kept if and only if a <br> element follows
+   *                            split point.
    */
+  enum class BRElementNextToSplitPoint { Keep, Delete };
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
   InsertElementWithSplittingAncestorsWithTransaction(
-      nsAtom& aTagName, const EditorDOMPoint& aPointToInsert);
+      nsAtom& aTagName, const EditorDOMPoint& aPointToInsert,
+      BRElementNextToSplitPoint aBRElementNextToSplitPoint);
 
   /**
    * SplitRangeOffFromBlock() splits aBlockElement at two points, before
