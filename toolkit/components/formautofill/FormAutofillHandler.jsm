@@ -1087,10 +1087,11 @@ class FormAutofillCreditCardSection extends FormAutofillSection {
 
     // Bug 1687681: This is a short term fix to other locales having
     // different characters to represent year.
-    // For example, FR locales may use "A" instead of "Y" to represent year
+    // For example, FR locales may use "A" to represent year.
+    // For example, DE locales may use "J" to represent year.
     // This approach will not scale well and should be investigated in a follow up bug.
     let monthChars = "m";
-    let yearChars = "ya";
+    let yearChars = "yaj";
 
     let monthFirstCheck = new RegExp(
       "(?:\\b|^)((?:[" +

@@ -91,7 +91,109 @@ const FR_TESTCASES = [
   },
 ];
 
-const TESTCASES = [FR_TESTCASES];
+const DE_TESTCASES = [
+  {
+    description: "Use placeholder to adjust cc-exp format [mm / jj].",
+    document: `<form><input autocomplete="cc-number">
+               <input placeholder="mm / jj" autocomplete="cc-exp"></form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [
+      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
+        "cc-exp": "01/25",
+      }),
+    ],
+  },
+  {
+    description: "Use placeholder to adjust cc-exp format [MM / JJ].",
+    document: `<form><input autocomplete="cc-number">
+               <input placeholder="MM / JJ" autocomplete="cc-exp"></form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [
+      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
+        "cc-exp": "01/25",
+      }),
+    ],
+  },
+  {
+    description: "Use placeholder to adjust cc-exp format [mm / jjjj].",
+    document: `<form><input autocomplete="cc-number">
+                 <input placeholder="mm / jjjj" autocomplete="cc-exp"></form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [
+      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
+        "cc-exp": "01/2025",
+      }),
+    ],
+  },
+  {
+    description: "Use placeholder to adjust cc-exp format [MM / JJJJ].",
+    document: `<form><input autocomplete="cc-number">
+                 <input placeholder="MM / JJJJ" autocomplete="cc-exp"></form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [
+      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
+        "cc-exp": "01/2025",
+      }),
+    ],
+  },
+  {
+    description: "Use placeholder to adjust cc-exp format [mm - jj].",
+    document: `<form><input autocomplete="cc-number">
+               <input placeholder="mm - jj" autocomplete="cc-exp"></form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [
+      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
+        "cc-exp": "01-25",
+      }),
+    ],
+  },
+  {
+    description: "Use placeholder to adjust cc-exp format [MM - JJ].",
+    document: `<form><input autocomplete="cc-number">
+               <input placeholder="MM - JJ" autocomplete="cc-exp"></form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [
+      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
+        "cc-exp": "01-25",
+      }),
+    ],
+  },
+  {
+    description: "Use placeholder to adjust cc-exp format [mm - jjjj].",
+    document: `<form><input autocomplete="cc-number">
+                 <input placeholder="mm - jjjj" autocomplete="cc-exp"></form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [
+      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
+        "cc-exp": "01-2025",
+      }),
+    ],
+  },
+  {
+    description: "Use placeholder to adjust cc-exp format [MM - JJJJ].",
+    document: `<form><input autocomplete="cc-number">
+                 <input placeholder="MM - JJJJ" autocomplete="cc-exp"></form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [
+      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
+        "cc-exp": "01-2025",
+      }),
+    ],
+  },
+  {
+    description: "Use placeholder to adjust cc-exp format [jjjj - mm].",
+    document: `<form><input autocomplete="cc-number">
+                 <input placeholder="jjjj - mm" autocomplete="cc-exp"></form>`,
+    profileData: [Object.assign({}, DEFAULT_CREDITCARD_RECORD)],
+    expectedResult: [
+      Object.assign({}, DEFAULT_CREDITCARD_RECORD, {
+        "cc-exp": "2025-01",
+      }),
+    ],
+  },
+];
+
+const TESTCASES = [FR_TESTCASES, DE_TESTCASES];
 
 for (let localeTests of TESTCASES) {
   for (let testcase of localeTests) {
