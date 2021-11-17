@@ -47,10 +47,22 @@ class TabDescriptorFront extends DescriptorMixin(
     // (eg, regular tab toolbox) or browsing context targets (eg tab remote
     // debugging).
     this._localTab = null;
-    this._isForWebExtension = false;
+
+    // Flag to prevent the server from trying to spawn targets by the watcher actor.
+    this._disableTargetSwitching = false;
 
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
     this._handleTabEvent = this._handleTabEvent.bind(this);
+
+    // When the target is created from the server side,
+    // it is not created via TabDescriptor.getTarget.
+    // Instead, it is retrieved by the TargetCommand which
+    // will call TabDescriptor.setTarget from TargetCommand.onTargetAvailable
+    if (this.isServerTargetSwitchingEnabled()) {
+      this._targetFrontPromise = new Promise(
+        r => (this._resolveTargetFrontPromise = r)
+      );
+    }
   }
 
   form(json) {
@@ -99,16 +111,6 @@ class TabDescriptorFront extends DescriptorMixin(
     // but also ensure cleaning up the client and everything on tab closing.
     // (this flag is handled by DescriptorMixin)
     this.shouldCloseClient = true;
-
-    // When the target is created from the server side,
-    // it is not created via TabDescriptor.getTarget.
-    // Instead, it is retrieved by the TargetCommand which
-    // will call TabDescriptor.setTarget from TargetCommand.onTargetAvailable
-    if (this.isServerTargetSwitchingEnabled()) {
-      this._targetFrontPromise = new Promise(
-        r => (this._resolveTargetFrontPromise = r)
-      );
-    }
   }
 
   get isTabDescriptor() {
@@ -141,9 +143,7 @@ class TabDescriptorFront extends DescriptorMixin(
       SERVER_TARGET_SWITCHING_ENABLED_PREF,
       false
     );
-    // We explicitely disable server targets for remote tabs (i.e. about:debugging)
-    // and WebExtension codebase (see setIsForWebExtension)
-    const enabled = isEnabled && this.isLocalTab && !this._isForWebExtension;
+    const enabled = isEnabled && !this._disableTargetSwitching;
     return enabled;
   }
 
@@ -154,7 +154,19 @@ class TabDescriptorFront extends DescriptorMixin(
    * introduce target switching for all navigations and reloads
    */
   setIsForWebExtension() {
-    this._isForWebExtension = true;
+    this.disableTargetSwitching();
+  }
+
+  /**
+   * Method used by the WebExtension which still need to disable server side targets,
+   * and also a few xpcshell tests which are using legacy API and don't support watcher actor.
+   */
+  disableTargetSwitching() {
+    this._disableTargetSwitching = true;
+    // Delete these two attributes which have to be set early from the constructor,
+    // but we don't know yet if target switch should be disabled.
+    delete this._targetFrontPromise;
+    delete this._resolveTargetFrontPromise;
   }
 
   get isZombieTab() {
@@ -199,14 +211,6 @@ class TabDescriptorFront extends DescriptorMixin(
     // Note that we are also checking that _targetFront has a valid actorID
     // in getTarget, this acts as an additional security to avoid races.
     this._targetFront = null;
-
-    // about:debugging / remote debugging tabs don't support top level
-    // target-switching so we have to remove the descriptor when the target is
-    // destroyed. When about:debugging supports target switching, we can remove
-    // the !isLocalTab check. See Bug 1709267.
-    if (!this.isLocalTab) {
-      this.destroy();
-    }
   }
 
   /**

@@ -69,6 +69,14 @@ var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
       target = await targetDescriptor.getTarget();
     } else {
       const targetDescriptor = await client.mainRoot.getTab();
+      // As there is no real tab in mochitest chrome, we can use CommandsFactory
+      // and fallback to create the commands manually
+      const {
+        createCommandsDictionary,
+      } = require("devtools/shared/commands/index");
+      const commands = await createCommandsDictionary(targetDescriptor);
+      // Descriptor's getTarget will only work if the TargetCommand watches for the first top target
+      await commands.targetCommand.startListening();
       target = await targetDescriptor.getTarget();
       if (attachToWorker) {
         const workerName = "console-test-worker.js#" + new Date().getTime();

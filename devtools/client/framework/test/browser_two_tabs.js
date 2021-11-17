@@ -7,6 +7,7 @@
 
 var { DevToolsServer } = require("devtools/server/devtools-server");
 var { DevToolsClient } = require("devtools/client/devtools-client");
+const { createCommandsDictionary } = require("devtools/shared/commands/index");
 
 const TAB_URL_1 = "data:text/html;charset=utf-8,foo";
 const TAB_URL_2 = "data:text/html;charset=utf-8,bar";
@@ -23,6 +24,13 @@ add_task(async () => {
   await client.connect();
 
   const tabDescriptors = await client.mainRoot.listTabs();
+  await Promise.all(
+    tabDescriptors.map(async descriptor => {
+      const commands = await createCommandsDictionary(descriptor);
+      // Descriptor's getTarget will only work if the TargetCommand watches for the first top target
+      await commands.targetCommand.startListening();
+    })
+  );
   const tabs = await Promise.all(tabDescriptors.map(d => d.getTarget()));
   const targetFront1 = tabs.find(a => a.url === TAB_URL_1);
   const targetFront2 = tabs.find(a => a.url === TAB_URL_2);
