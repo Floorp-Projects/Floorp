@@ -1942,6 +1942,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest* request) {
   if (mForceSave) {
     alwaysAsk = false;
     action = nsIMIMEInfo::saveToDisk;
+    shouldAutomaticallyHandleInternally = false;
   }
   // Additionally, if we are asked by the OS to open a local file,
   // automatically downloading it to create a second copy of that file doesn't
