@@ -13,6 +13,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.FenixApplication
+import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
@@ -186,6 +187,7 @@ class SettingsBasicsTest {
         }
     }
 
+    @SmokeTest
     @Test
     fun startOnHomepageTest() {
         val genericURL = getGenericAsset(mockWebServer, 1)

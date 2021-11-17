@@ -38,7 +38,6 @@ import org.mozilla.fenix.helpers.TestHelper.assertExternalAppOpens
 import org.mozilla.fenix.helpers.TestHelper.createCustomTabIntent
 import org.mozilla.fenix.helpers.TestHelper.deleteDownloadFromStorage
 import org.mozilla.fenix.helpers.TestHelper.isPackageInstalled
-import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.helpers.TestHelper.returnToBrowser
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.ViewVisibilityIdlingResource
@@ -1422,26 +1421,6 @@ class SmokeTest {
             verifyTabViewOptions()
             verifyCloseTabsOptions()
             verifyMoveOldTabsToInactiveOptions()
-        }
-    }
-
-    @Test
-    fun startOnHomepageTest() {
-        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(genericURL.url) {
-            mDevice.waitForIdle()
-        }.openThreeDotMenu {
-        }.openSettings {
-        }.openHomepageSubMenu {
-            clickStartOnHomepageButton()
-        }
-
-        restartApp(activityTestRule.activityRule)
-
-        homeScreen {
-            verifyHomeScreen()
         }
     }
 }
