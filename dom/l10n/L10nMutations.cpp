@@ -113,7 +113,7 @@ void L10nMutations::L10nElementChanged(Element* aElement) {
     mPendingElementsHash.Insert(aElement);
   }
 
-  if (!mRefreshObserver) {
+  if (!mRefreshDriver) {
     StartRefreshObserver();
   }
 }
@@ -200,19 +200,17 @@ void L10nMutations::Disconnect() {
 }
 
 void L10nMutations::StartRefreshObserver() {
-  if (!mDOMLocalization || mRefreshObserver) {
+  if (!mDOMLocalization || mRefreshDriver) {
     return;
   }
 
-  if (!mRefreshDriver) {
-    nsPIDOMWindowInner* innerWindow =
-        mDOMLocalization->GetParentObject()->AsInnerWindow();
-    Document* doc = innerWindow ? innerWindow->GetExtantDoc() : nullptr;
-    if (doc) {
-      nsPresContext* ctx = doc->GetPresContext();
-      if (ctx) {
-        mRefreshDriver = ctx->RefreshDriver();
-      }
+  nsPIDOMWindowInner* innerWindow =
+      mDOMLocalization->GetParentObject()->AsInnerWindow();
+  Document* doc = innerWindow ? innerWindow->GetExtantDoc() : nullptr;
+  if (doc) {
+    nsPresContext* ctx = doc->GetPresContext();
+    if (ctx) {
+      mRefreshDriver = ctx->RefreshDriver();
     }
   }
 
@@ -223,7 +221,6 @@ void L10nMutations::StartRefreshObserver() {
   if (mRefreshDriver) {
     mRefreshDriver->AddRefreshObserver(this, FlushType::Style,
                                        "L10n mutations");
-    mRefreshObserver = true;
   } else {
     NS_WARNING("[l10n][mutations] Failed to start a refresh observer.");
   }
@@ -236,7 +233,7 @@ void L10nMutations::StopRefreshObserver() {
 
   if (mRefreshDriver) {
     mRefreshDriver->RemoveRefreshObserver(this, FlushType::Style);
-    mRefreshObserver = false;
+    mRefreshDriver = nullptr;
   }
 }
 
