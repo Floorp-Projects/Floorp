@@ -53,6 +53,8 @@ async function testDoorHanger(
         "tracking.example.com,tracking.example.org",
       ],
       ["browser.contentblocking.state-partitioning.mvp.ui.enabled", true],
+      // Bug 1617611: Fix all the tests broken by "cookies SameSite=lax by default"
+      ["network.cookie.sameSite.laxByDefault", false],
     ],
   });
 
@@ -301,6 +303,7 @@ async function preparePermissionsFromOtherSites(topPage) {
 
 async function cleanUp() {
   info("Cleaning up.");
+  SpecialPowers.clearUserPref("network.cookie.sameSite.laxByDefault");
   await new Promise(resolve => {
     Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
       resolve()
