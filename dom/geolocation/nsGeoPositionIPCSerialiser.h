@@ -97,7 +97,7 @@ struct ParamTraits<nsIDOMGeoPosition*> {
     // If it is a null object, then we are done
     if (isNull) return;
 
-    DOMTimeStamp timeStamp;
+    EpochTimeStamp timeStamp;
     aParam->GetTimestamp(&timeStamp);
     WriteParam(aMsg, timeStamp);
 
@@ -118,7 +118,7 @@ struct ParamTraits<nsIDOMGeoPosition*> {
       return true;
     }
 
-    DOMTimeStamp timeStamp;
+    EpochTimeStamp timeStamp;
     RefPtr<nsIDOMGeoPositionCoords> coords;
 
     // It's not important to us where it fails, but rather if it fails

@@ -110,14 +110,14 @@ nsGeoPositionCoords::GetSpeed(double* aSpeed) {
 
 nsGeoPosition::nsGeoPosition(double aLat, double aLong, double aAlt,
                              double aHError, double aVError, double aHeading,
-                             double aSpeed, DOMTimeStamp aTimestamp)
+                             double aSpeed, EpochTimeStamp aTimestamp)
     : mTimestamp(aTimestamp) {
   mCoords = new nsGeoPositionCoords(aLat, aLong, aAlt, aHError, aVError,
                                     aHeading, aSpeed);
 }
 
 nsGeoPosition::nsGeoPosition(nsIDOMGeoPositionCoords* aCoords,
-                             DOMTimeStamp aTimestamp)
+                             EpochTimeStamp aTimestamp)
     : mTimestamp(aTimestamp), mCoords(aCoords) {}
 
 nsGeoPosition::~nsGeoPosition() = default;
@@ -131,7 +131,7 @@ NS_IMPL_ADDREF(nsGeoPosition)
 NS_IMPL_RELEASE(nsGeoPosition)
 
 NS_IMETHODIMP
-nsGeoPosition::GetTimestamp(DOMTimeStamp* aTimestamp) {
+nsGeoPosition::GetTimestamp(EpochTimeStamp* aTimestamp) {
   *aTimestamp = mTimestamp;
   return NS_OK;
 }
