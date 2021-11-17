@@ -132,33 +132,22 @@ const presets = {
     entries: 128 * 1024 * 1024,
     interval: 1,
     features: ["screenshots", "js", "leaf", "stackwalk", "cpu", "java"],
-    threads: ["GeckoMain", "Compositor", "Renderer", "SwComposite"],
+    threads: [
+      "GeckoMain",
+      "Compositor",
+      "Renderer",
+      "SwComposite",
+      "DOM Worker",
+    ],
     duration: 0,
     l10nIds: {
       popup: {
-        label: "profiler-popup-presets-firefox-platform-label",
-        description: "profiler-popup-presets-firefox-platform-description",
+        label: "profiler-popup-presets-firefox-label",
+        description: "profiler-popup-presets-firefox-description",
       },
       devtools: {
-        label: "perftools-presets-firefox-platform-label",
-        description: "perftools-presets-firefox-platform-description",
-      },
-    },
-  },
-  "firefox-front-end": {
-    entries: 128 * 1024 * 1024,
-    interval: 1,
-    features: ["screenshots", "js", "leaf", "stackwalk", "cpu", "java"],
-    threads: ["GeckoMain", "Compositor", "Renderer", "DOM Worker"],
-    duration: 0,
-    l10nIds: {
-      popup: {
-        label: "profiler-popup-presets-firefox-front-end-label",
-        description: "profiler-popup-presets-firefox-front-end-description",
-      },
-      devtools: {
-        label: "perftools-presets-firefox-front-end-label",
-        description: "perftools-presets-firefox-front-end-description",
+        label: "perftools-presets-firefox-label",
+        description: "perftools-presets-firefox-description",
       },
     },
   },
@@ -179,12 +168,12 @@ const presets = {
     duration: 0,
     l10nIds: {
       popup: {
-        label: "profiler-popup-presets-firefox-graphics-label",
-        description: "profiler-popup-presets-firefox-graphics-description",
+        label: "profiler-popup-presets-graphics-label",
+        description: "profiler-popup-presets-graphics-description",
       },
       devtools: {
-        label: "perftools-presets-firefox-graphics-label",
-        description: "perftools-presets-firefox-graphics-description",
+        label: "perftools-presets-graphics-label",
+        description: "perftools-presets-graphics-description",
       },
     },
   },
@@ -222,11 +211,11 @@ const presets = {
     l10nIds: {
       popup: {
         label: "profiler-popup-presets-media-label",
-        description: "profiler-popup-presets-media-description",
+        description: "profiler-popup-presets-media-description2",
       },
       devtools: {
         label: "perftools-presets-media-label",
-        description: "perftools-presets-media-description",
+        description: "perftools-presets-media-description2",
       },
     },
   },

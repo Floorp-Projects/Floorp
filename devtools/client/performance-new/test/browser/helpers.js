@@ -622,6 +622,16 @@ function _adaptCustomPresetExpectationToCustomBuild(fixture) {
 }
 
 /**
+ * Get the content of the preset description.
+ * @param {Element} devtoolsDocument
+ * @returns {string}
+ */
+function getDevtoolsCustomPresetContent(devtoolsDocument) {
+  return devtoolsDocument.querySelector(".perf-presets-custom").innerText;
+}
+/* exported getDevtoolsCustomPresetContent */
+
+/**
  * This checks if the content of the preset description equals the fixture in
  * string form.
  * @param {Element} devtoolsDocument
@@ -632,7 +642,7 @@ function checkDevtoolsCustomPresetContent(devtoolsDocument, fixture) {
   fixture = fixture.replace(/^\s+/gm, "").trim();
   // This removes unavailable features from the fixture content.
   fixture = _adaptCustomPresetExpectationToCustomBuild(fixture);
-  is(devtoolsDocument.querySelector(".perf-presets-custom").innerText, fixture);
+  is(getDevtoolsCustomPresetContent(devtoolsDocument), fixture);
 }
 /* exported checkDevtoolsCustomPresetContent */
 

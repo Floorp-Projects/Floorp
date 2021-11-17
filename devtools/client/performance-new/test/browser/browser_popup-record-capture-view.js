@@ -26,10 +26,10 @@ add_task(async function test() {
   await setProfilerFrontendUrl(FRONTEND_BASE_HOST, FRONTEND_BASE_PATH);
   await makeSureProfilerPopupIsEnabled();
 
-  // First check for "firefox-platform" preset which will have no "view" query
-  // string because this is where our traditional "full" view opens up.
+  // First check for the "Media" preset which will have no "view" query
+  // string because it opens our traditional "full" view.
   await openPopupAndAssertUrlForPreset({
-    preset: "Firefox Platform",
+    preset: "Media",
     expectedUrl: FRONTEND_BASE_URL,
   });
 
