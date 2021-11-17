@@ -240,8 +240,8 @@ static void RejectJSPromise(Promise* aPromise, const IOUtils::IOError& aError) {
       aPromise->MaybeRejectWithAbortError(errMsg.refOr("Operation aborted"_ns));
       break;
     default:
-      aPromise->MaybeRejectWithUnknownError(
-          errMsg.refOr(FormatErrorMessage(aError.Code(), "Unexpected error")));
+      aPromise->MaybeRejectWithUnknownError(FormatErrorMessage(
+          aError.Code(), errMsg.refOr("Unexpected error"_ns).get()));
   }
 }
 
