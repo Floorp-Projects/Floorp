@@ -1495,7 +1495,7 @@ void nsComboboxControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     const nsStyleDisplay* disp = StyleDisplay();
     if (IsThemed(disp) &&
         pc->Theme()->ThemeWantsButtonInnerFocusRing(
-            disp->EffectiveAppearance()) &&
+            this, disp->EffectiveAppearance()) &&
         mDisplayFrame && IsVisibleForPainting()) {
       aLists.Content()->AppendNewToTop<nsDisplayComboboxFocus>(aBuilder, this);
     }

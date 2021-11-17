@@ -88,7 +88,7 @@ nsresult nsButtonFrameRenderer::DisplayButton(nsDisplayListBuilder* aBuilder,
   if (mInnerFocusStyle && mInnerFocusStyle->StyleBorder()->HasBorder() &&
       mFrame->IsThemed(disp) &&
       pc->Theme()->ThemeWantsButtonInnerFocusRing(
-          disp->EffectiveAppearance())) {
+          mFrame, disp->EffectiveAppearance())) {
     aForeground->AppendNewToTop<nsDisplayButtonForeground>(aBuilder, GetFrame(),
                                                            this);
   }
