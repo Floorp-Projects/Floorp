@@ -46,8 +46,6 @@ const char* GetLayersBackendName(LayersBackend aBackend) {
         return "webrender_software";
       }
       return "webrender";
-    case LayersBackend::LAYERS_BASIC:
-      return "basic";
     default:
       MOZ_ASSERT_UNREACHABLE("unknown layers backend");
       return "unknown";
