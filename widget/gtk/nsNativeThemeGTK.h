@@ -77,8 +77,7 @@ class nsNativeThemeGTK final : public nsNativeBasicTheme {
 
   NS_IMETHOD_(bool) WidgetIsContainer(StyleAppearance aAppearance) override;
 
-  NS_IMETHOD_(bool)
-  ThemeDrawsFocusForWidget(StyleAppearance aAppearance) override;
+  bool ThemeDrawsFocusForWidget(nsIFrame*, StyleAppearance) override;
 
   bool ThemeNeedsComboboxDropmarker() override;
   Transparency GetWidgetTransparency(nsIFrame*, StyleAppearance) override;

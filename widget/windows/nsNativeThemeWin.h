@@ -90,9 +90,9 @@ class nsNativeThemeWin : public nsNativeBasicTheme {
 
   bool WidgetIsContainer(StyleAppearance aAppearance) override;
 
-  bool ThemeDrawsFocusForWidget(StyleAppearance aAppearance) override;
+  bool ThemeDrawsFocusForWidget(nsIFrame*, StyleAppearance) override;
 
-  bool ThemeWantsButtonInnerFocusRing(StyleAppearance) override { return true; }
+  bool ThemeWantsButtonInnerFocusRing(nsIFrame*, StyleAppearance) override { return true; }
 
   bool ThemeNeedsComboboxDropmarker() override;
 

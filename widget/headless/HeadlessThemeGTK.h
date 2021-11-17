@@ -46,8 +46,7 @@ class HeadlessThemeGTK final : private nsNativeTheme, public nsITheme {
 
   NS_IMETHOD_(bool) WidgetIsContainer(StyleAppearance aAppearance) override;
 
-  NS_IMETHOD_(bool)
-  ThemeDrawsFocusForWidget(StyleAppearance aAppearance) override;
+  bool ThemeDrawsFocusForWidget(nsIFrame*, StyleAppearance) override;
 
   bool ThemeNeedsComboboxDropmarker() override;
 

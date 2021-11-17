@@ -1527,7 +1527,7 @@ bool nsNativeBasicTheme::WidgetIsContainer(StyleAppearance aAppearance) {
   }
 }
 
-bool nsNativeBasicTheme::ThemeDrawsFocusForWidget(StyleAppearance aAppearance) {
+bool nsNativeBasicTheme::ThemeDrawsFocusForWidget(nsIFrame*, StyleAppearance) {
   return true;
 }
 

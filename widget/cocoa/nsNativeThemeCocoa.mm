@@ -3527,7 +3527,7 @@ bool nsNativeThemeCocoa::WidgetIsContainer(StyleAppearance aAppearance) {
   return true;
 }
 
-bool nsNativeThemeCocoa::ThemeDrawsFocusForWidget(StyleAppearance aAppearance) {
+bool nsNativeThemeCocoa::ThemeDrawsFocusForWidget(nsIFrame*, StyleAppearance aAppearance) {
   switch (aAppearance) {
     case StyleAppearance::Textarea:
     case StyleAppearance::Textfield:
