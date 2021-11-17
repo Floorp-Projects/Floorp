@@ -37,6 +37,13 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
 // defined as escaped strings so that we build them lazily.
 // We may want to migrate this list to Remote Settings in the future.
 let HOST_BLOCKLIST = {
+  auth0: [
+    // Auth0 OAuth.
+    // XXX: Used alone this could produce false positives where an auth0 URL
+    // appears after another valid domain and TLD, but since we limit this to
+    // the auth0 hostname those occurrences will be filtered out.
+    "^https:\\/\\/.*\\.auth0\\.com\\/login",
+  ],
   baidu: [
     // Baidu SERP
     "^(https?:\\/\\/)?(www\\.)?baidu\\.com\\/s.*(\\?|&)wd=.*",
@@ -52,6 +59,13 @@ let HOST_BLOCKLIST = {
   google: [
     // Google SERP
     "^(https?:\\/\\/)?(www\\.)?google\\.(\\w|\\.){2,}\\/search.*(\\?|&)q=.*",
+    // Google OAuth
+    "^https:\\/\\/accounts\\.google\\.com\\/o\\/oauth2\\/v2\\/auth\\/identifier",
+    "^https:\\/\\/accounts\\.google\\.com\\/signin\\/oauth\\/consent",
+  ],
+  microsoftonline: [
+    // Microsoft OAuth
+    "^https:\\/\\/login\\.microsoftonline\\.com\\/common\\/oauth2\\/v2\\.0\\/authorize",
   ],
   yandex: [
     // Yandex SERP
