@@ -18,17 +18,9 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIURI.h"
 #include "nsIInputStreamPump.h"
-#include "nsIOutputStream.h"
 #include "nsIStreamListener.h"
-#include "nsIIconURI.h"
-
-#include <windows.h>
-
-class nsIFile;
 
 class nsIconChannel final : public nsIChannel, public nsIStreamListener {
-  ~nsIconChannel();
-
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUEST
@@ -40,13 +32,10 @@ class nsIconChannel final : public nsIChannel, public nsIStreamListener {
 
   nsresult Init(nsIURI* uri);
 
- protected:
-  class IconAsyncOpenTask;
-  class IconSyncOpenTask;
+ private:
+  ~nsIconChannel();
 
-  void OnAsyncError(nsresult aStatus);
-  void FinishAsyncOpen(HICON aIcon, nsresult aStatus);
-  nsresult EnsurePipeCreated(uint32_t aIconSize, bool aNonBlocking);
+  nsresult StartAsyncOpen();
 
   nsCOMPtr<nsIURI> mUrl;
   nsCOMPtr<nsIURI> mOriginalURI;
@@ -56,27 +45,8 @@ class nsIconChannel final : public nsIChannel, public nsIStreamListener {
   nsCOMPtr<nsILoadInfo> mLoadInfo;
 
   nsCOMPtr<nsIInputStreamPump> mPump;
-  nsCOMPtr<nsIInputStream> mInputStream;
-  nsCOMPtr<nsIOutputStream> mOutputStream;
   nsCOMPtr<nsIStreamListener> mListener;
-  nsCOMPtr<nsIEventTarget> mListenerTarget;
 
-  nsresult ExtractIconInfoFromUrl(nsIFile** aLocalFile,
-                                  uint32_t* aDesiredImageSize,
-                                  nsCString& aContentType,
-                                  nsCString& aFileExtension);
-  nsresult GetHIcon(bool aNonBlocking, HICON* hIcon);
-  nsresult GetHIconFromFile(bool aNonBlocking, HICON* hIcon);
-  nsresult GetHIconFromFile(nsIFile* aLocalFile, const nsAutoString& aPath,
-                            UINT aInfoFlags, HICON* hIcon);
-  [[nodiscard]] nsresult MakeInputStream(nsIInputStream** _retval,
-                                         bool aNonBlocking, HICON aIcon);
-
-  // Functions specific to Vista and above
- protected:
-  nsresult GetStockHIcon(nsIMozIconURI* aIconURI, HICON* hIcon);
-
- private:
   bool mCanceled = false;
 };
 
