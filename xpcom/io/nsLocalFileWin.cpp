@@ -252,8 +252,6 @@ static nsresult ConvertWinError(DWORD aWinErr) {
     case ERROR_PATH_NOT_FOUND:
       [[fallthrough]];  // to NS_ERROR_FILE_NOT_FOUND
     case ERROR_INVALID_DRIVE:
-      [[fallthrough]];  // to NS_ERROR_FILE_NOT_FOUND
-    case ERROR_NOT_READY:
       rv = NS_ERROR_FILE_NOT_FOUND;
       break;
     case ERROR_ACCESS_DENIED:
@@ -310,6 +308,9 @@ static nsresult ConvertWinError(DWORD aWinErr) {
       [[fallthrough]];  // to NS_ERROR_FILE_DEVICE_FAILURE
     case ERROR_IO_DEVICE:
       rv = NS_ERROR_FILE_DEVICE_FAILURE;
+      break;
+    case ERROR_NOT_READY:
+      rv = NS_ERROR_FILE_DEVICE_TEMPORARY_FAILURE;
       break;
     case ERROR_INVALID_NAME:
       rv = NS_ERROR_FILE_INVALID_PATH;
