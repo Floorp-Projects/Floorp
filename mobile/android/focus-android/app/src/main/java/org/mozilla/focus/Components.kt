@@ -102,7 +102,7 @@ class Components(
         engineOverride ?: EngineProvider.createEngine(context, engineDefaultSettings).apply {
             this@Components.settings.setupSafeBrowsing(this)
             WebCompatFeature.install(this)
-            WebCompatReporterFeature.install(this, "focus")
+            WebCompatReporterFeature.install(this, "focus-geckoview")
         }
     }
 
