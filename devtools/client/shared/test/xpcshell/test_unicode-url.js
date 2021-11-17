@@ -7,9 +7,6 @@
  * Tests utility functions contained in `unicode-url.js`
  */
 
-const { require } = ChromeUtils.import(
-  "resource://devtools/shared/loader/Loader.jsm"
-);
 const {
   getUnicodeUrl,
   getUnicodeUrlPath,
