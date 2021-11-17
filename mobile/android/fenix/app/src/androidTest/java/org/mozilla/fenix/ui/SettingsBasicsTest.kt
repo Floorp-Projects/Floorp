@@ -207,6 +207,26 @@ class SettingsBasicsTest {
 
     @SmokeTest
     @Test
+    fun recentBookmarksOptionTest() {
+        val genericURL = getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+            mDevice.waitForIdle()
+        }.openThreeDotMenu {
+        }.bookmarkPage {
+        }.goToHomescreen {
+            verifyRecentBookmarksSectionIsDisplayed()
+        }.openThreeDotMenu {
+        }.openCustomizeHome {
+            clickRecentBookmarksButton()
+        }.goBack {
+            verifyRecentBookmarksSectionIsNotDisplayed()
+        }
+    }
+
+    @SmokeTest
+    @Test
     fun startOnHomepageTest() {
         val genericURL = getGenericAsset(mockWebServer, 1)
 

@@ -120,6 +120,8 @@ class HomeScreenRobot {
 
     fun verifyJumpBackInSectionIsDisplayed() = assertJumpBackInSectionIsDisplayed()
     fun verifyJumpBackInSectionIsNotDisplayed() = assertJumpBackInSectionIsNotDisplayed()
+    fun verifyRecentBookmarksSectionIsDisplayed() = assertRecentBookmarksSectionIsDisplayed()
+    fun verifyRecentBookmarksSectionIsNotDisplayed() = assertRecentBookmarksSectionIsNotDisplayed()
 
     // Collections elements
     fun verifyCollectionIsDisplayed(title: String, collectionExists: Boolean = true) {
@@ -593,6 +595,12 @@ private fun assertJumpBackInSectionIsDisplayed() = jumpBackInSection().check(mat
 
 private fun assertJumpBackInSectionIsNotDisplayed() = jumpBackInSection().check(doesNotExist())
 
+private fun assertRecentBookmarksSectionIsDisplayed() =
+    recentBookmarksSection().check(matches(isDisplayed()))
+
+private fun assertRecentBookmarksSectionIsNotDisplayed() =
+    recentBookmarksSection().check(doesNotExist())
+
 private fun privateBrowsingButton() = onView(withId(R.id.privateBrowsingButton))
 
 private fun saveTabsToCollectionButton() = onView(withId(R.id.add_tabs_to_collections_button))
@@ -604,6 +612,14 @@ private fun jumpBackInSection() =
         allOf(
             withText(R.string.recent_tabs_header),
             hasSibling(withText(R.string.recent_tabs_show_all))
+        )
+    )
+
+private fun recentBookmarksSection() =
+    onView(
+        allOf(
+            withText(R.string.recent_bookmarks_title),
+            hasSibling(withText(R.string.recently_saved_show_all))
         )
     )
 
