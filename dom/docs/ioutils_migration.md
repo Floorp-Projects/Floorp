@@ -106,6 +106,9 @@ The following is a detailed comparison with examples of the methods and options 
 `IOUtils` provides the following methods to read data from a file. Like
 `OS.File`, they accept an `options` dictionary.
 
+Note: The maximum file size that can be read is `UINT32_MAX` bytes. Attempting
+to read a file larger will result in a `NotReadableError`.
+
 ```idl
 Promise<Uint8Array> read(DOMString path, ...);
 
