@@ -2996,40 +2996,37 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
       return EditActionCanceled();
     }
 
-    SplitNodeResult splitAtSelectionStartResult =
-        MaybeSplitAncestorsForInsertWithTransaction(aListElementTagName,
-                                                    atStartOfSelection);
-    if (splitAtSelectionStartResult.Failed()) {
+    Result<RefPtr<Element>, nsresult> newListElementOrError =
+        InsertElementWithSplittingAncestorsWithTransaction(aListElementTagName,
+                                                           atStartOfSelection);
+    if (MOZ_UNLIKELY(newListElementOrError.isErr())) {
       NS_WARNING(
-          "HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction() failed");
-      return EditActionResult(splitAtSelectionStartResult.Rv());
+          nsPrintfCString(
+              "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
+              "%s) failed",
+              nsAtomCString(&aListElementTagName).get())
+              .get());
+      return EditActionResult(newListElementOrError.unwrapErr());
     }
-    Result<RefPtr<Element>, nsresult> maybeNewListElement =
-        CreateAndInsertElementWithTransaction(
-            aListElementTagName, splitAtSelectionStartResult.SplitPoint());
-    if (maybeNewListElement.isErr()) {
-      NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
-      return EditActionResult(maybeNewListElement.unwrapErr());
-    }
-    MOZ_ASSERT(maybeNewListElement.inspect());
+    MOZ_ASSERT(newListElementOrError.inspect());
 
-    Result<RefPtr<Element>, nsresult> maybeNewListItemElement =
+    Result<RefPtr<Element>, nsresult> newListItemElementOrError =
         CreateAndInsertElementWithTransaction(
             aListItemElementTagName,
-            EditorDOMPoint(maybeNewListElement.inspect(), 0));
-    if (maybeNewListItemElement.isErr()) {
+            EditorDOMPoint(newListElementOrError.inspect(), 0));
+    if (newListElementOrError.isErr()) {
       NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
-      return EditActionResult(maybeNewListItemElement.unwrapErr());
+      return EditActionResult(newListElementOrError.unwrapErr());
     }
-    MOZ_ASSERT(maybeNewListItemElement.inspect());
+    MOZ_ASSERT(newListElementOrError.inspect());
 
     // remember our new block for postprocessing
     TopLevelEditSubActionDataRef().mNewBlockElement =
-        maybeNewListItemElement.inspect();
+        newListElementOrError.inspect();
     // Put selection in new list item and don't restore the Selection.
     restoreSelectionLater.Abort();
     nsresult rv = CollapseSelectionToStartOf(
-        MOZ_KnownLive(*maybeNewListItemElement.inspect()));
+        MOZ_KnownLive(*newListElementOrError.inspect()));
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::CollapseSelectionToStartOf() failed");
     return EditActionResult(rv);
@@ -3301,25 +3298,21 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
     // If we've not met a list element, create a list element and make it
     // current list element.
     if (!curList) {
-      SplitNodeResult splitCurNodeResult =
-          MaybeSplitAncestorsForInsertWithTransaction(aListElementTagName,
-                                                      atContent);
-      if (splitCurNodeResult.Failed()) {
-        NS_WARNING(
-            "HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction() failed");
-        return EditActionResult(splitCurNodeResult.Rv());
-      }
       prevListItem = nullptr;
-      Result<RefPtr<Element>, nsresult> maybeNewListElement =
-          CreateAndInsertElementWithTransaction(
-              aListElementTagName, splitCurNodeResult.SplitPoint());
-      if (maybeNewListElement.isErr()) {
+      Result<RefPtr<Element>, nsresult> newListElementOrError =
+          InsertElementWithSplittingAncestorsWithTransaction(
+              aListElementTagName, atContent);
+      if (MOZ_UNLIKELY(newListElementOrError.isErr())) {
         NS_WARNING(
-            "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
-        return EditActionResult(maybeNewListElement.unwrapErr());
+            nsPrintfCString(
+                "HTMLEditor::"
+                "InsertElementWithSplittingAncestorsWithTransaction(%s) failed",
+                nsAtomCString(&aListElementTagName).get())
+                .get());
+        return EditActionResult(newListElementOrError.unwrapErr());
       }
-      MOZ_ASSERT(maybeNewListElement.inspect());
-      curList = maybeNewListElement.unwrap();
+      MOZ_ASSERT(newListElementOrError.inspect());
+      curList = newListElementOrError.unwrap();
       // Set new block element of top level edit sub-action to the new list
       // element for setting selection into it.
       // XXX This must be wrong.  If we're handling nested edit action,
