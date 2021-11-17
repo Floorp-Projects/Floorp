@@ -7,7 +7,7 @@
 const EXPORTED_SYMBOLS = ["StyleEditorUI"];
 
 const { loader, require } = ChromeUtils.import(
-  "resource://devtools/shared/Loader.jsm"
+  "resource://devtools/shared/loader/Loader.jsm"
 );
 const Services = require("Services");
 const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");

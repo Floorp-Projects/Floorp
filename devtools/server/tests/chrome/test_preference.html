@@ -15,7 +15,7 @@ Bug 943251 - Test preferences actor
 "use strict";
 
 function runTests() {
-  const {require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+  const {require} = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
   const {DevToolsClient} = require("devtools/client/devtools-client");
   const {DevToolsServer} = require("devtools/server/devtools-server");
   const Services = require("Services");

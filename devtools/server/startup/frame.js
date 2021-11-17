@@ -27,7 +27,7 @@ try {
       customLoader = false;
     if (content.document.nodePrincipal.isSystemPrincipal) {
       const { DevToolsLoader } = ChromeUtils.import(
-        "resource://devtools/shared/Loader.jsm"
+        "resource://devtools/shared/loader/Loader.jsm"
       );
       loader = new DevToolsLoader({
         invisibleToDebugger: true,
@@ -35,7 +35,9 @@ try {
       customLoader = true;
     } else {
       // Otherwise, use the shared loader.
-      loader = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+      loader = ChromeUtils.import(
+        "resource://devtools/shared/loader/Loader.jsm"
+      );
     }
     const { require } = loader;
 

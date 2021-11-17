@@ -4,7 +4,7 @@
 "use strict";
 
 const { Loader, Require } = ChromeUtils.import(
-  "resource://devtools/shared/base-loader.js"
+  "resource://devtools/shared/loader/base-loader.js"
 );
 
 const loader = new Loader({

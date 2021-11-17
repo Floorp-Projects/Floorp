@@ -23,7 +23,7 @@
   } else {
     // Cu.import
     const { require } = ChromeUtils.import(
-      "resource://devtools/shared/Loader.jsm"
+      "resource://devtools/shared/loader/Loader.jsm"
     );
     this.isWorker = false;
     this.console = console;

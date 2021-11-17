@@ -6,7 +6,7 @@
 
 const ChromeUtils = require("ChromeUtils");
 const { BrowserLoader } = ChromeUtils.import(
-  "resource://devtools/client/shared/browser-loader.js"
+  "resource://devtools/shared/loader/browser-loader.js"
 );
 
 loader.lazyRequireGetter(

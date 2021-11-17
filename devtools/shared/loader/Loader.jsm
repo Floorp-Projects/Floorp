@@ -10,10 +10,10 @@
 
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 var { Loader, Require, resolveURI, unload } = ChromeUtils.import(
-  "resource://devtools/shared/base-loader.js"
+  "resource://devtools/shared/loader/base-loader.js"
 );
 var { requireRawId } = ChromeUtils.import(
-  "resource://devtools/shared/loader-plugin-raw.jsm"
+  "resource://devtools/shared/loader/loader-plugin-raw.jsm"
 );
 
 const EXPORTED_SYMBOLS = [
@@ -107,7 +107,9 @@ function DevToolsLoader({
   this.require = Require(this.loader, { id: "devtools" });
 
   // Fetch custom pseudo modules and globals
-  const { modules, globals } = this.require("devtools/shared/builtin-modules");
+  const { modules, globals } = this.require(
+    "devtools/shared/loader/builtin-modules"
+  );
 
   // Register custom pseudo modules to the current loader instance
   for (const id in modules) {
@@ -127,7 +129,7 @@ function DevToolsLoader({
 
   // Define the loader id for these two usecases:
   // * access via the JSM (this.id)
-  // let { loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+  // let { loader } = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
   // loader.id
   this.id = gNextLoaderID++;
   // * access via module's `loader` global
@@ -136,7 +138,7 @@ function DevToolsLoader({
 
   // Expose lazy helpers on `loader`
   // ie. when you use it like that from a JSM:
-  // let { loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+  // let { loader } = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");
   // loader.lazyGetter(...);
   this.lazyGetter = globals.loader.lazyGetter;
   this.lazyImporter = globals.loader.lazyImporter;

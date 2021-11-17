@@ -17,7 +17,7 @@
 function enableAdbMock(mock) {
   const {
     setMockedModule,
-  } = require("devtools/client/shared/browser-loader-mocks");
+  } = require("devtools/shared/loader/browser-loader-mocks");
   setMockedModule(mock, "devtools/client/shared/remote-debugging/adb/adb");
 }
 /* exported enableAdbMock */
@@ -28,7 +28,7 @@ function enableAdbMock(mock) {
 function disableAdbMock() {
   const {
     removeMockedModule,
-  } = require("devtools/client/shared/browser-loader-mocks");
+  } = require("devtools/shared/loader/browser-loader-mocks");
   removeMockedModule("devtools/client/shared/remote-debugging/adb/adb");
 }
 /* exported disableAdbMock */
@@ -120,7 +120,7 @@ function createAdbProcessMock() {
 function enableAdbProcessMock(mock) {
   const {
     setMockedModule,
-  } = require("devtools/client/shared/browser-loader-mocks");
+  } = require("devtools/shared/loader/browser-loader-mocks");
   setMockedModule(
     mock,
     "devtools/client/shared/remote-debugging/adb/adb-process"
@@ -131,7 +131,7 @@ function enableAdbProcessMock(mock) {
 function disableAdbProcessMock() {
   const {
     removeMockedModule,
-  } = require("devtools/client/shared/browser-loader-mocks");
+  } = require("devtools/shared/loader/browser-loader-mocks");
   removeMockedModule("devtools/client/shared/remote-debugging/adb/adb-process");
 }
 /* exported disableAdbProcessMock */

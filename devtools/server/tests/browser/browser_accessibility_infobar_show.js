@@ -15,7 +15,7 @@ add_task(async function() {
     async function(browser) {
       await SpecialPowers.spawn(browser, [], async function() {
         const { require } = ChromeUtils.import(
-          "resource://devtools/shared/Loader.jsm"
+          "resource://devtools/shared/loader/Loader.jsm"
         );
         const {
           HighlighterEnvironment,

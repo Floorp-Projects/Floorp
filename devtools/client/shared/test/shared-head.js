@@ -23,7 +23,7 @@ if (DEBUG_ALLOCATIONS) {
   // as it instantiates custom Debugger API instances and has to be running in a distinct
   // compartments from DevTools and system scopes (JSMs, XPCOM,...)
   const { DevToolsLoader } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
+    "resource://devtools/shared/loader/Loader.jsm"
   );
   const loader = new DevToolsLoader({
     invisibleToDebugger: true,
@@ -44,7 +44,7 @@ if (DEBUG_ALLOCATIONS) {
 }
 
 const { loader, require } = ChromeUtils.import(
-  "resource://devtools/shared/Loader.jsm"
+  "resource://devtools/shared/loader/Loader.jsm"
 );
 
 const { gDevTools } = require("devtools/client/framework/devtools");
@@ -148,7 +148,7 @@ function highlighterTestActorBootstrap() {
     "chrome://mochitests/content/browser/devtools/client/shared/test/highlighter-test-actor.js";
 
   const { require: _require } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
+    "resource://devtools/shared/loader/Loader.jsm"
   );
   _require(HIGHLIGHTER_TEST_ACTOR_URL);
 
@@ -1453,7 +1453,7 @@ async function registerActorInContentProcess(url, options) {
     args => {
       // eslint-disable-next-line no-shadow
       const { require } = ChromeUtils.import(
-        "resource://devtools/shared/Loader.jsm"
+        "resource://devtools/shared/loader/Loader.jsm"
       );
       const {
         ActorRegistry,

@@ -6,7 +6,9 @@
 
 "use strict";
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require } = ChromeUtils.import(
+  "resource://devtools/shared/loader/Loader.jsm"
+);
 const {
   getFormattedProtocol,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
