@@ -38,13 +38,13 @@ add_task(async function test_change_in_popup() {
           aboutProfilingDocument,
           "Web Developer"
         );
-        const platform = await getNearestInputFromText(
+        const graphics = await getNearestInputFromText(
           aboutProfilingDocument,
-          "Firefox Platform"
+          "Graphics"
         );
-        const frontEnd = await getNearestInputFromText(
+        const media = await getNearestInputFromText(
           aboutProfilingDocument,
-          "Firefox Front-End"
+          "Media"
         );
 
         // Default situation
@@ -63,12 +63,12 @@ add_task(async function test_change_in_popup() {
           "The presets default to webdev mode in the popup."
         );
 
-        // Select "firefox platform" using the popup
-        ok(!platform.checked, "The Firefox Platform preset is not checked.");
+        // Select "graphics" using the popup
+        ok(!graphics.checked, "The Graphics preset is not checked.");
 
         presetsInPopup.menupopup.openPopup();
         presetsInPopup.menupopup.activateItem(
-          await getElementByLabel(presetsInPopup, "Firefox Platform")
+          await getElementByLabel(presetsInPopup, "Graphics")
         );
 
         await TestUtils.waitForCondition(
@@ -76,41 +76,41 @@ add_task(async function test_change_in_popup() {
           "After selecting the preset in the popup, waiting until the Web Developer preset isn't selected anymore in the about:profiling interface."
         );
         await TestUtils.waitForCondition(
-          () => platform.checked,
-          "After selecting the preset in the popup, waiting until the Firefox Platform preset is checked in the about:profiling interface."
+          () => graphics.checked,
+          "After selecting the preset in the popup, waiting until the Graphics preset is checked in the about:profiling interface."
         );
         await TestUtils.waitForCondition(
-          () => presetsInDevtools.value === "firefox-platform",
-          "After selecting the preset in the popup, waiting until the preset is changed to Firefox Platform in the devtools panel too."
+          () => presetsInDevtools.value === "graphics",
+          "After selecting the preset in the popup, waiting until the preset is changed to Graphics in the devtools panel too."
         );
         await TestUtils.waitForCondition(
-          () => presetsInPopup.value === "firefox-platform",
-          "After selecting the preset in the popup, waiting until the preset is changed to Firefox Platform in the popup."
+          () => presetsInPopup.value === "graphics",
+          "After selecting the preset in the popup, waiting until the preset is changed to Graphics in the popup."
         );
 
         // Select "firefox frontend" using the popup
-        ok(!frontEnd.checked, "The Firefox front-end preset is not checked.");
+        ok(!media.checked, "The Media preset is not checked.");
 
         presetsInPopup.menupopup.openPopup();
         presetsInPopup.menupopup.activateItem(
-          await getElementByLabel(presetsInPopup, "Firefox Front-End")
+          await getElementByLabel(presetsInPopup, "Media")
         );
 
         await TestUtils.waitForCondition(
-          () => !platform.checked,
-          "After selecting the preset in the popup, waiting until the Firefox Platform preset is not checked anymore in the about:profiling interface."
+          () => !graphics.checked,
+          "After selecting the preset in the popup, waiting until the Graphics preset is not checked anymore in the about:profiling interface."
         );
         await TestUtils.waitForCondition(
-          () => frontEnd.checked,
-          "After selecting the preset in the popup, waiting until the Firefox Front-End preset is checked in the about:profiling interface."
+          () => media.checked,
+          "After selecting the preset in the popup, waiting until the Media preset is checked in the about:profiling interface."
         );
         await TestUtils.waitForCondition(
-          () => presetsInDevtools.value === "firefox-front-end",
+          () => presetsInDevtools.value === "media",
           "After selecting the preset in the popup, waiting until the preset is changed to Firefox Front-end in the devtools panel."
         );
         await TestUtils.waitForCondition(
-          () => presetsInPopup.value === "firefox-front-end",
-          "After selecting the preset in the popup, waiting until the preset is changed to Firefox Front-End in the popup."
+          () => presetsInPopup.value === "media",
+          "After selecting the preset in the popup, waiting until the preset is changed to Media in the popup."
         );
       });
     }
@@ -144,13 +144,13 @@ add_task(async function test_change_in_about_profiling() {
         aboutProfilingDocument,
         "Web Developer"
       );
-      const platform = await getNearestInputFromText(
+      const graphics = await getNearestInputFromText(
         aboutProfilingDocument,
-        "Firefox Platform"
+        "Graphics"
       );
-      const frontEnd = await getNearestInputFromText(
+      const media = await getNearestInputFromText(
         aboutProfilingDocument,
-        "Firefox Front-End"
+        "Media"
       );
       const custom = await getNearestInputFromText(
         aboutProfilingDocument,
@@ -170,26 +170,26 @@ add_task(async function test_change_in_about_profiling() {
 
       // Change the preset in about:profiling, check it changes also in the
       // devtools panel.
-      ok(!platform.checked, "The Firefox Platform preset is not checked.");
-      platform.click();
+      ok(!graphics.checked, "The Graphics preset is not checked.");
+      graphics.click();
       ok(
-        platform.checked,
-        "After clicking the input, the Firefox Platform preset is now checked in about:profiling."
+        graphics.checked,
+        "After clicking the input, the Graphics preset is now checked in about:profiling."
       );
       await TestUtils.waitForCondition(
-        () => presetsInDevtools.value === "firefox-platform",
-        "The preset was changed to Firefox Platform in the devtools panel too."
+        () => presetsInDevtools.value === "graphics",
+        "The preset was changed to Graphics in the devtools panel too."
       );
 
-      ok(!frontEnd.checked, "The Firefox front-end preset is not checked.");
-      frontEnd.click();
+      ok(!media.checked, "The Media preset is not checked.");
+      media.click();
       ok(
-        frontEnd.checked,
-        "After clicking the input, the Firefox front-end preset is now checked in about:profiling."
+        media.checked,
+        "After clicking the input, the Media preset is now checked in about:profiling."
       );
       await TestUtils.waitForCondition(
-        () => presetsInDevtools.value === "firefox-front-end",
-        "The preset was changed to Firefox Front-End in the devtools panel too."
+        () => presetsInDevtools.value === "media",
+        "The preset was changed to Media in the devtools panel too."
       );
 
       // Now let's try to change some configuration!
@@ -214,17 +214,11 @@ add_task(async function test_change_in_about_profiling() {
         "The preset was changed to Custom in the devtools panel too."
       );
 
-      checkDevtoolsCustomPresetContent(
-        devtoolsDocument,
-        `
-          Interval: 2 ms
-          Threads: GeckoMain, Compositor, Renderer, DOM Worker
-          Screenshots
-          JavaScript
-          Native Leaf Stack
-          Native Stacks
-          CPU Utilization
-        `
+      ok(
+        getDevtoolsCustomPresetContent(devtoolsDocument).includes(
+          "Interval: 2 ms"
+        ),
+        "The new interval should be in the custom preset description"
       );
 
       // Let's check some thread as well
@@ -250,34 +244,22 @@ add_task(async function test_change_in_about_profiling() {
         () => threadsLine.textContent.includes("StyleThread"),
         "Waiting that StyleThread is displayed in the devtools panel."
       );
-      checkDevtoolsCustomPresetContent(
-        devtoolsDocument,
-        `
-          Interval: 2 ms
-          Threads: GeckoMain, Compositor, Renderer, DOM Worker, StyleThread
-          Screenshots
-          JavaScript
-          Native Leaf Stack
-          Native Stacks
-          CPU Utilization
-        `
+      ok(
+        getDevtoolsCustomPresetContent(devtoolsDocument).includes(
+          "StyleThread"
+        ),
+        "The StyleThread thread should be listed in the custom preset description"
       );
       styleThreadInput.click();
       await TestUtils.waitForCondition(
         () => !threadsLine.textContent.includes("StyleThread"),
         "Waiting until the StyleThread disappears from the devtools panel."
       );
-      checkDevtoolsCustomPresetContent(
-        devtoolsDocument,
-        `
-          Interval: 2 ms
-          Threads: GeckoMain, Compositor, Renderer, DOM Worker
-          Screenshots
-          JavaScript
-          Native Leaf Stack
-          Native Stacks
-          CPU Utilization
-        `
+      ok(
+        !getDevtoolsCustomPresetContent(devtoolsDocument).includes(
+          "StyleThread"
+        ),
+        "The StyleThread thread should no longer be listed in the custom preset description"
       );
 
       info("Change the threads values using the input.");
@@ -286,35 +268,42 @@ add_task(async function test_change_in_about_profiling() {
         "Add custom threads by name"
       );
 
-      // Take care to use the same number of threads as we have already, so
-      // that we fully test the equality function.
-      const oldThreadValue = threadInput.value;
-      const newThreadValue = "GeckoMain,Compositor,StyleThread,DOM Worker";
+      function setThreadInputValue(newThreadValue) {
+        // Actually set the new value.
+        setReactFriendlyInputValue(threadInput, newThreadValue);
+        // The settings are actually changed on the blur event.
+        threadInput.dispatchEvent(new FocusEvent("blur"));
+      }
+
+      let newThreadValue = "GeckoMain,Foo";
+      setThreadInputValue(newThreadValue);
+      await TestUtils.waitForCondition(
+        () => threadsLine.textContent.includes("Foo"),
+        "Waiting for Foo to be displayed in the devtools panel."
+      );
+
+      // The code detecting changes to the thread list has a fast path
+      // to detect that the list of threads has changed if the 2 lists
+      // have different lengths. Exercise the slower code path by changing
+      // the list of threads to a list with the same number of threads.
+      info("Change the thread list again to a list of the same length");
+      newThreadValue = "GeckoMain,Dummy";
       is(
-        oldThreadValue.split(",").length,
+        threadInput.value.split(",").length,
         newThreadValue.split(",").length,
         "The new value should have the same count of threads as the old value, please double check the test code."
       );
-
-      // Actually set the new value.
-      setReactFriendlyInputValue(threadInput, newThreadValue);
-      // The settings are actually changed on the blur event.
-      threadInput.dispatchEvent(new FocusEvent("blur"));
-
-      await TestUtils.waitForCondition(
-        () => threadsLine.textContent.includes("StyleThread"),
-        "Waiting that StyleThread is displayed in the devtools panel."
-      );
+      setThreadInputValue(newThreadValue);
       checkDevtoolsCustomPresetContent(
         devtoolsDocument,
         `
           Interval: 2 ms
-          Threads: GeckoMain, Compositor, StyleThread, DOM Worker
-          Screenshots
+          Threads: GeckoMain, Dummy
           JavaScript
           Native Leaf Stack
           Native Stacks
           CPU Utilization
+          Audio Callback Tracing
         `
       );
     }
@@ -346,13 +335,13 @@ add_task(async function test_change_in_devtools_panel() {
         aboutProfilingDocument,
         "Web Developer"
       );
-      const platform = await getNearestInputFromText(
+      const graphics = await getNearestInputFromText(
         aboutProfilingDocument,
-        "Firefox Platform"
+        "Graphics"
       );
-      const frontEnd = await getNearestInputFromText(
+      const media = await getNearestInputFromText(
         aboutProfilingDocument,
-        "Firefox Front-End"
+        "Media"
       );
 
       // Default values
@@ -369,30 +358,30 @@ add_task(async function test_change_in_devtools_panel() {
       // Change the preset in devtools panel, check it changes also in
       // about:profiling.
       ok(
-        !platform.checked,
-        "The Firefox Platform preset is not checked in about:profiling."
+        !graphics.checked,
+        "The Graphics preset is not checked in about:profiling."
       );
 
-      setReactFriendlyInputValue(presetsInDevtools, "firefox-platform");
+      setReactFriendlyInputValue(presetsInDevtools, "graphics");
       await TestUtils.waitForCondition(
-        () => platform.checked,
-        "After changing the preset in the devtools panel, the Firefox Platform preset is now checked in about:profiling."
+        () => graphics.checked,
+        "After changing the preset in the devtools panel, the Graphics preset is now checked in about:profiling."
       );
       await TestUtils.waitForCondition(
-        () => presetsInDevtools.value === "firefox-platform",
-        "The preset was changed to Firefox Platform in the devtools panel too."
+        () => presetsInDevtools.value === "graphics",
+        "The preset was changed to Graphics in the devtools panel too."
       );
 
       // Change another preset now
-      ok(!frontEnd.checked, "The Firefox front-end preset is not checked.");
-      setReactFriendlyInputValue(presetsInDevtools, "firefox-front-end");
+      ok(!media.checked, "The Media preset is not checked.");
+      setReactFriendlyInputValue(presetsInDevtools, "media");
       await TestUtils.waitForCondition(
-        () => frontEnd.checked,
-        "After changing the preset in the devtools panel, the Firefox front-end preset is now checked in about:profiling."
+        () => media.checked,
+        "After changing the preset in the devtools panel, the Media preset is now checked in about:profiling."
       );
       await TestUtils.waitForCondition(
-        () => presetsInDevtools.value === "firefox-front-end",
-        "The preset was changed to Firefox Front-End in the devtools panel too."
+        () => presetsInDevtools.value === "media",
+        "The preset was changed to Media in the devtools panel too."
       );
     }
   );

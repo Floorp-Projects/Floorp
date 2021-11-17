@@ -203,19 +203,15 @@ profiler-popup-presets-web-developer-description = Recommended preset for most w
 profiler-popup-presets-web-developer-label =
   .label = Web Developer
 
-profiler-popup-presets-firefox-platform-description = Recommended preset for internal Firefox platform debugging.
-profiler-popup-presets-firefox-platform-label =
-  .label = Firefox Platform
+profiler-popup-presets-firefox-description = Recommended preset for profiling { -brand-shorter-name }.
+profiler-popup-presets-firefox-label =
+  .label = { -brand-shorter-name }
 
-profiler-popup-presets-firefox-front-end-description = Recommended preset for internal Firefox front-end debugging.
-profiler-popup-presets-firefox-front-end-label =
-  .label = Firefox Front-End
+profiler-popup-presets-graphics-description = Preset for investigating graphics bugs in { -brand-shorter-name }.
+profiler-popup-presets-graphics-label =
+  .label = Graphics
 
-profiler-popup-presets-firefox-graphics-description = Recommended preset for Firefox graphics performance investigation.
-profiler-popup-presets-firefox-graphics-label =
-  .label = Firefox Graphics
-
-profiler-popup-presets-media-description = Recommended preset for diagnosing audio and video problems.
+profiler-popup-presets-media-description2 = Preset for investigating audio and video bugs in { -brand-shorter-name }.
 profiler-popup-presets-media-label =
   .label = Media
 
