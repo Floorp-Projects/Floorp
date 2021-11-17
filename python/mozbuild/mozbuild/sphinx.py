@@ -219,5 +219,4 @@ def setup(app):
         os.path.join(app.outdir, "_venv"),
         "common",
     )
-    site.ensure()
     site.activate()
