@@ -59,7 +59,7 @@
 
         chromeScript = loadChromeScript(async () => {
           const {sendAsyncMessage} = this;
-          let {require} = ChromeUtils.import ("resource://devtools/shared/Loader.jsm");
+          let {require} = ChromeUtils.import ("resource://devtools/shared/loader/Loader.jsm");
           require("devtools/client/framework/devtools-browser");
           let {BrowserConsoleManager} = require("devtools/client/webconsole/browser-console-manager");
 
