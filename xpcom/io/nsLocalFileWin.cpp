@@ -265,12 +265,6 @@ static nsresult ConvertWinError(DWORD aWinErr) {
       rv = NS_ERROR_FILE_IS_LOCKED;
       break;
     case ERROR_NOT_ENOUGH_MEMORY:
-      [[fallthrough]];  // to NS_ERROR_OUT_OF_MEMORY
-    case ERROR_INVALID_BLOCK:
-      [[fallthrough]];  // to NS_ERROR_OUT_OF_MEMORY
-    case ERROR_INVALID_HANDLE:
-      [[fallthrough]];  // to NS_ERROR_OUT_OF_MEMORY
-    case ERROR_ARENA_TRASHED:
       rv = NS_ERROR_OUT_OF_MEMORY;
       break;
     case ERROR_DIR_NOT_EMPTY:
@@ -314,6 +308,13 @@ static nsresult ConvertWinError(DWORD aWinErr) {
       break;
     case ERROR_INVALID_NAME:
       rv = NS_ERROR_FILE_INVALID_PATH;
+      break;
+    case ERROR_INVALID_BLOCK:
+      [[fallthrough]];  // to NS_ERROR_FILE_INVALID_HANDLE
+    case ERROR_INVALID_HANDLE:
+      [[fallthrough]];  // to NS_ERROR_FILE_INVALID_HANDLE
+    case ERROR_ARENA_TRASHED:
+      rv = NS_ERROR_FILE_INVALID_HANDLE;
       break;
     case 0:
       rv = NS_OK;
