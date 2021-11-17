@@ -408,7 +408,8 @@ HeadlessThemeGTK::WidgetIsContainer(StyleAppearance aAppearance) {
   return true;
 }
 
-bool HeadlessThemeGTK::ThemeDrawsFocusForWidget(nsIFrame*, StyleAppearance aAppearance) {
+bool HeadlessThemeGTK::ThemeDrawsFocusForWidget(nsIFrame*,
+                                                StyleAppearance aAppearance) {
   if (aAppearance == StyleAppearance::Menulist ||
       aAppearance == StyleAppearance::Button ||
       aAppearance == StyleAppearance::Treeheadercell) {

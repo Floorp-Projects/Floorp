@@ -2546,7 +2546,8 @@ bool nsNativeThemeWin::WidgetIsContainer(StyleAppearance aAppearance) {
   return true;
 }
 
-bool nsNativeThemeWin::ThemeDrawsFocusForWidget(nsIFrame* aFrame, StyleAppearance aAppearance) {
+bool nsNativeThemeWin::ThemeDrawsFocusForWidget(nsIFrame* aFrame,
+                                                StyleAppearance aAppearance) {
   if (IsWidgetNonNative(aFrame, aAppearance)) {
     return nsNativeBasicTheme::ThemeDrawsFocusForWidget(aFrame, aAppearance);
   }

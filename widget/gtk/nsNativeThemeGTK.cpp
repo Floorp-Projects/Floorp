@@ -1930,7 +1930,8 @@ nsNativeThemeGTK::WidgetIsContainer(StyleAppearance aAppearance) {
   return true;
 }
 
-bool nsNativeThemeGTK::ThemeDrawsFocusForWidget(nsIFrame* aFrame, StyleAppearance aAppearance) {
+bool nsNativeThemeGTK::ThemeDrawsFocusForWidget(nsIFrame* aFrame,
+                                                StyleAppearance aAppearance) {
   if (IsWidgetNonNative(aFrame, aAppearance) != NonNative::No) {
     return nsNativeBasicTheme::ThemeDrawsFocusForWidget(aFrame, aAppearance);
   }
