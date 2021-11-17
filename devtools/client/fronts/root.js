@@ -238,6 +238,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
 
     const descriptorFront = await super.getTab(packet);
 
+    // Should be called before setLocalTab.
     // Will flag TabDescriptor used by WebExtension codebase.
     if (filter?.isWebExtension) {
       descriptorFront.setIsForWebExtension(true);
