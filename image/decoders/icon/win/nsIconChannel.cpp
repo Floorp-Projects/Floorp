@@ -7,11 +7,11 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/MozPromise.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/WindowsProcessMitigations.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/ByteBuf.h"
 
 #include "nsComponentManagerUtils.h"
@@ -522,6 +522,27 @@ static RefPtr<HIconPromise> GetIconHandleFromURLAsync(nsIMozIconURI* aUrl) {
   return promise;
 }
 
+static RefPtr<nsIconChannel::ByteBufPromise> GetIconBufferFromURLAsync(
+    nsIMozIconURI* aUrl) {
+  RefPtr<nsIconChannel::ByteBufPromise::Private> promise =
+      new nsIconChannel::ByteBufPromise::Private(__func__);
+
+  GetIconHandleFromURLAsync(aUrl)->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [promise](HICON aIcon) {
+        ByteBuf iconBuffer;
+        nsresult rv = MakeIconBuffer(aIcon, &iconBuffer);
+        if (NS_SUCCEEDED(rv)) {
+          promise->Resolve(std::move(iconBuffer), __func__);
+        } else {
+          promise->Reject(rv, __func__);
+        }
+      },
+      [promise](nsresult rv) { promise->Reject(rv, __func__); });
+
+  return promise;
+}
+
 static nsresult WriteByteBufToOutputStream(const ByteBuf& aBuffer,
                                            nsIAsyncOutputStream* aStream) {
   uint32_t written = 0;
@@ -644,6 +665,20 @@ nsIconChannel::GetURI(nsIURI** aURI) {
   return NS_OK;
 }
 
+// static
+RefPtr<nsIconChannel::ByteBufPromise> nsIconChannel::GetIconAsync(
+    nsIURI* aURI) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIMozIconURI> iconURI(do_QueryInterface(aURI, &rv));
+  if (NS_FAILED(rv)) {
+    return ByteBufPromise::CreateAndReject(rv, __func__);
+  }
+
+  return GetIconBufferFromURLAsync(iconURI);
+}
+
 NS_IMETHODIMP
 nsIconChannel::Open(nsIInputStream** aStream) {
   nsCOMPtr<nsIStreamListener> listener;
@@ -748,25 +783,50 @@ nsresult nsIconChannel::StartAsyncOpen() {
                    0 /*segmentSize*/, UINT32_MAX /*segmentCount*/);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Get the handle for the given icon URI. This may involve the decode I/O
-  // thread, as we can only call SHGetFileInfo() from that thread
-  //
-  // Once we have the handle, we create a Windows ICO buffer with it and
-  // dump the buffer into the output end of the pipe. The input end will be
-  // pumped to our attached nsIStreamListener
-  RefPtr<HIconPromise> iconPromise = GetIconHandleFromURLAsync(iconURI);
-  iconPromise->Then(
-      GetCurrentSerialEventTarget(), __func__,
-      [outputStream](HICON aIcon) {
-        ByteBuf iconBuffer;
-        nsresult rv = MakeIconBuffer(aIcon, &iconBuffer);
-        if (NS_SUCCEEDED(rv)) {
-          rv = WriteByteBufToOutputStream(iconBuffer, outputStream);
-        }
+  // If we are in content, we asynchronously request the ICO buffer from
+  // the parent process because the APIs to load icons don't work with
+  // Win32k Lockdown
+  using ContentChild = mozilla::dom::ContentChild;
+  if (auto* contentChild = ContentChild::GetSingleton()) {
+    RefPtr<ContentChild::GetSystemIconPromise> iconPromise =
+        contentChild->SendGetSystemIcon(mUrl);
+    if (!iconPromise) {
+      return NS_ERROR_UNEXPECTED;
+    }
 
-        outputStream->CloseWithStatus(rv);
-      },
-      [outputStream](nsresult rv) { outputStream->CloseWithStatus(rv); });
+    iconPromise->Then(
+        mozilla::GetCurrentSerialEventTarget(), __func__,
+        [outputStream](
+            mozilla::Tuple<nsresult, mozilla::Maybe<ByteBuf>>&& aArg) {
+          nsresult rv = mozilla::Get<0>(aArg);
+          mozilla::Maybe<ByteBuf> iconBuffer = std::move(mozilla::Get<1>(aArg));
+
+          if (NS_SUCCEEDED(rv)) {
+            MOZ_RELEASE_ASSERT(iconBuffer);
+            rv = WriteByteBufToOutputStream(*iconBuffer, outputStream);
+          }
+
+          outputStream->CloseWithStatus(rv);
+        },
+        [outputStream](mozilla::ipc::ResponseRejectReason) {
+          outputStream->CloseWithStatus(NS_ERROR_FAILURE);
+        });
+  } else {
+    // Get the handle for the given icon URI. This may involve the decode I/O
+    // thread, as we can only call SHGetFileInfo() from that thread
+    //
+    // Once we have the handle, we create a Windows ICO buffer with it and
+    // dump the buffer into the output end of the pipe. The input end will be
+    // pumped to our attached nsIStreamListener
+    GetIconBufferFromURLAsync(iconURI)->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [outputStream](ByteBuf aIconBuffer) {
+          nsresult rv =
+              WriteByteBufToOutputStream(std::move(aIconBuffer), outputStream);
+          outputStream->CloseWithStatus(rv);
+        },
+        [outputStream](nsresult rv) { outputStream->CloseWithStatus(rv); });
+  }
 
   // Use the main thread for the pumped events unless the load info
   // specifies otherwise

@@ -8,6 +8,7 @@
 #define mozilla_image_encoders_icon_win_nsIconChannel_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/MozPromise.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -20,8 +21,15 @@
 #include "nsIInputStreamPump.h"
 #include "nsIStreamListener.h"
 
+namespace mozilla::ipc {
+class ByteBuf;
+}
+
 class nsIconChannel final : public nsIChannel, public nsIStreamListener {
  public:
+  using ByteBufPromise =
+      mozilla::MozPromise<mozilla::ipc::ByteBuf, nsresult, true>;
+
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIREQUEST
   NS_DECL_NSICHANNEL
@@ -31,6 +39,10 @@ class nsIconChannel final : public nsIChannel, public nsIStreamListener {
   nsIconChannel();
 
   nsresult Init(nsIURI* uri);
+
+  /// Obtains an icon in Windows ICO format as a ByteBuf instead
+  /// of a channel. For use with IPC.
+  static RefPtr<ByteBufPromise> GetIconAsync(nsIURI* aURI);
 
  private:
   ~nsIconChannel();
