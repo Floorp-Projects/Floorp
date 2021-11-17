@@ -274,7 +274,7 @@ bool js::intl_availableMeasurementUnits(JSContext* cx, unsigned argc,
 
 static constexpr size_t MaxUnitLength() {
   size_t length = 0;
-  for (const auto& unit : simpleMeasureUnits) {
+  for (const auto& unit : intl::simpleMeasureUnits) {
     length = std::max(length, std::char_traits<char>::length(unit.name));
   }
   return length * 2 + std::char_traits<char>::length("-per-");
