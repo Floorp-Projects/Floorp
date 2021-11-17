@@ -210,6 +210,28 @@ add_task(async function test_getExperiment_featureAccess() {
   stub.restore();
 });
 
+add_task(async function test_getExperiment_featureAccess_backwardsCompat() {
+  const sandbox = sinon.createSandbox();
+  const expected = ExperimentFakes.experiment("foo", {
+    branch: {
+      slug: "treatment",
+      feature: { featureId: "cfr", value: { message: "content" } },
+    },
+  });
+  const stub = sandbox
+    .stub(ExperimentAPI._store, "getExperimentForFeature")
+    .returns(expected);
+
+  let { branch } = ExperimentAPI.getExperiment({ featureId: "cfr" });
+
+  Assert.equal(branch.slug, "treatment");
+  let feature = branch.cfr;
+  Assert.ok(feature, "Should allow to access by featureId");
+  Assert.equal(feature.value.message, "content");
+
+  stub.restore();
+});
+
 /**
  * #getRecipe
  */
@@ -278,6 +300,39 @@ add_task(async function test_getAllBranches_featureIdAccessor() {
     Assert.equal(
       branch["test-feature"].featureId,
       "test-feature",
+      "Should use the experimentBranchAccessor proxy getter"
+    );
+  });
+
+  sandbox.restore();
+});
+
+// For schema version before 1.6.2 branch.feature was accessed
+// instead of branch.features
+add_task(async function test_getAllBranches_backwardsCompat() {
+  const sandbox = sinon.createSandbox();
+  const RECIPE = ExperimentFakes.recipe("foo");
+  delete RECIPE.branches[0].features;
+  delete RECIPE.branches[1].features;
+  let feature = {
+    featureId: "backwardsCompat",
+    enabled: true,
+    value: null,
+  };
+  RECIPE.branches[0].feature = feature;
+  RECIPE.branches[1].feature = feature;
+  sandbox.stub(ExperimentAPI._remoteSettingsClient, "get").resolves([RECIPE]);
+
+  const branches = await ExperimentAPI.getAllBranches("foo");
+  Assert.deepEqual(
+    branches,
+    RECIPE.branches,
+    "should return all branches if found a recipe"
+  );
+  branches.forEach(branch => {
+    Assert.equal(
+      branch.backwardsCompat.featureId,
+      "backwardsCompat",
       "Should use the experimentBranchAccessor proxy getter"
     );
   });

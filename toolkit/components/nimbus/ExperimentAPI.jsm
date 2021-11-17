@@ -76,8 +76,11 @@ const experimentBranchAccessor = {
     // This is a useful shorthand that hides the fact that
     // even single-feature recipes are still represented
     // as an array with 1 item
-    if (!(prop in target)) {
+    if (!(prop in target) && target.features) {
       return target.features.find(f => f.featureId === prop);
+    } else if (target.feature?.featureId === prop) {
+      // Backwards compatibility for version 1.6.2 and older
+      return target.feature;
     }
 
     return target[prop];
