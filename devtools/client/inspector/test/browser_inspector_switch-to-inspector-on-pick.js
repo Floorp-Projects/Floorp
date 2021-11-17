@@ -66,7 +66,7 @@ add_task(async function() {
   await startPickerAndAssertSwitchToInspector(toolbox);
 
   info("Stopping element picker.");
-  await toolbox.nodePicker.stop();
+  await toolbox.nodePicker.stop({ canceled: true });
 
   checkResults();
 });
