@@ -257,6 +257,8 @@ static nsresult ConvertWinError(DWORD aWinErr) {
     case ERROR_ACCESS_DENIED:
       [[fallthrough]];  // to NS_ERROR_FILE_ACCESS_DENIED
     case ERROR_NOT_SAME_DEVICE:
+      [[fallthrough]];  // to NS_ERROR_FILE_ACCESS_DENIED
+    case ERROR_CANNOT_MAKE:
       rv = NS_ERROR_FILE_ACCESS_DENIED;
       break;
     case ERROR_SHARING_VIOLATION:  // CreateFile without sharing flags
@@ -283,8 +285,6 @@ static nsresult ConvertWinError(DWORD aWinErr) {
     case ERROR_FILE_EXISTS:
       [[fallthrough]];  // to NS_ERROR_FILE_ALREADY_EXISTS
     case ERROR_ALREADY_EXISTS:
-      [[fallthrough]];  // to NS_ERROR_FILE_ALREADY_EXISTS
-    case ERROR_CANNOT_MAKE:
       rv = NS_ERROR_FILE_ALREADY_EXISTS;
       break;
     case ERROR_FILENAME_EXCED_RANGE:
