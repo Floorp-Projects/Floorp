@@ -33,7 +33,7 @@ namespace net {
 
 NS_IMPL_ISUPPORTS(HttpTransactionChild, nsIRequestObserver, nsIStreamListener,
                   nsITransportEventSink, nsIThrottledInputChannel,
-                  nsIThreadRetargetableStreamListener);
+                  nsIThreadRetargetableStreamListener, nsIEarlyHintObserver);
 
 //-----------------------------------------------------------------------------
 // HttpTransactionChild <public>
@@ -638,7 +638,13 @@ HttpTransactionChild::CheckListenerChain() {
 }
 
 NS_IMETHODIMP
-HttpTransactionChild::EarlyHint(const nsACString& value) { return NS_OK; }
+HttpTransactionChild::EarlyHint(const nsACString& value) {
+  LOG(("HttpTransactionChild::EarlyHint"));
+  if (CanSend()) {
+    Unused << SendEarlyHint(PromiseFlatCString(value));
+  }
+  return NS_OK;
+}
 
 }  // namespace net
 }  // namespace mozilla

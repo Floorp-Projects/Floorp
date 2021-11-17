@@ -681,6 +681,18 @@ mozilla::ipc::IPCResult HttpTransactionParent::RecvOnH2PushStream(
   return IPC_OK();
 }  // namespace net
 
+mozilla::ipc::IPCResult HttpTransactionParent::RecvEarlyHint(
+    const nsCString& aValue) {
+  LOG(("HttpTransactionParent::RecvEarlyHint header=%s",
+       PromiseFlatCString(aValue).get()));
+  nsCOMPtr<nsIEarlyHintObserver> obs = do_QueryInterface(mChannel);
+  if (obs) {
+    Unused << obs->EarlyHint(aValue);
+  }
+
+  return IPC_OK();
+}
+
 //-----------------------------------------------------------------------------
 // HttpTransactionParent <nsIRequest>
 //-----------------------------------------------------------------------------
