@@ -157,7 +157,6 @@ RenderedFrameId RendererOGL::UpdateAndRender(
     // XXX This could cause oom in webrender since pending_texture_updates is
     // not handled. It needs to be addressed.
     return RenderedFrameId();
-    ;
   }
   // XXX set clear color if MOZ_WIDGET_ANDROID is defined.
 

@@ -41,11 +41,16 @@ UniquePtr<RenderCompositor> RenderCompositorEGL::Create(
   if ((kIsWayland || kIsX11) && !gfx::gfxVars::UseEGL()) {
     return nullptr;
   }
-  if (!RenderThread::Get()->SingletonGL()) {
-    gfxCriticalNote << "Failed to get shared GL context";
+  RefPtr<gl::GLContext> gl = RenderThread::Get()->SingletonGL(aError);
+  if (!gl) {
+    if (aError.IsEmpty()) {
+      aError.Assign("RcANGLE(no shared GL)"_ns);
+    } else {
+      aError.Append("(Create)"_ns);
+    }
     return nullptr;
   }
-  return MakeUnique<RenderCompositorEGL>(aWidget);
+  return MakeUnique<RenderCompositorEGL>(aWidget, std::move(gl));
 }
 
 EGLSurface RenderCompositorEGL::CreateEGLSurface() {
@@ -59,8 +64,10 @@ EGLSurface RenderCompositorEGL::CreateEGLSurface() {
 }
 
 RenderCompositorEGL::RenderCompositorEGL(
-    const RefPtr<widget::CompositorWidget>& aWidget)
-    : RenderCompositor(aWidget), mEGLSurface(EGL_NO_SURFACE) {
+    const RefPtr<widget::CompositorWidget>& aWidget,
+    RefPtr<gl::GLContext>&& aGL)
+    : RenderCompositor(aWidget), mGL(aGL), mEGLSurface(EGL_NO_SURFACE) {
+  MOZ_ASSERT(mGL);
   LOG("RenderCompositorEGL::RenderCompositorEGL()");
 }
 
@@ -203,10 +210,6 @@ bool RenderCompositorEGL::Resume() {
 }
 
 bool RenderCompositorEGL::IsPaused() { return mEGLSurface == EGL_NO_SURFACE; }
-
-gl::GLContext* RenderCompositorEGL::gl() const {
-  return RenderThread::Get()->SingletonGL();
-}
 
 bool RenderCompositorEGL::MakeCurrent() {
   const auto& gle = gl::GLContextEGL::Cast(gl());
