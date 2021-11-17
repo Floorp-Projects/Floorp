@@ -1503,6 +1503,22 @@ class HTMLEditor final : public EditorBase,
       nsAtom& aTag, const EditorDOMPoint& aStartOfDeepestRightNode);
 
   /**
+   * InsertElementWithSplittingAncestorsWithTransaction() is a wrapper of
+   * MaybeSplitAncestorsForInsertWithTransaction() and
+   * CreateAndInsertElementWithTransaction().  I.e., will create an element
+   * whose tag name is aTagName and split ancestors if it's necessary, then,
+   * insert it.
+   *
+   * @param aTagName            The tag name which you want to insert new
+   *                            element at aPointToInsert.
+   * @param aPointToInsert      The insertion point.  New element will be
+   *                            inserted before here.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
+  InsertElementWithSplittingAncestorsWithTransaction(
+      nsAtom& aTagName, const EditorDOMPoint& aPointToInsert);
+
+  /**
    * SplitRangeOffFromBlock() splits aBlockElement at two points, before
    * aStartOfMiddleElement and after aEndOfMiddleElement.  If they are very
    * start or very end of aBlcok, this won't create empty block.
