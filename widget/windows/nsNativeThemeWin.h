@@ -92,7 +92,9 @@ class nsNativeThemeWin : public nsNativeBasicTheme {
 
   bool ThemeDrawsFocusForWidget(nsIFrame*, StyleAppearance) override;
 
-  bool ThemeWantsButtonInnerFocusRing(nsIFrame*, StyleAppearance) override { return true; }
+  bool ThemeWantsButtonInnerFocusRing(nsIFrame*, StyleAppearance) override {
+    return true;
+  }
 
   bool ThemeNeedsComboboxDropmarker() override;
 
