@@ -1,0 +1,22 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This is the template for our Screengrabfile used in automation.
+# tools/taskcluster/generate_screengrab_config.py will read this
+# file and generate the final configuration that we use inside
+# a taskcluster task.
+
+app_package_name 'org.mozilla.focus.debug'
+use_tests_in_packages ['org.mozilla.focus.screenshots']
+
+app_apk_path('~/focus-android/focus-android/app/build/outputs/apk/focus/debug/app-focus-x86-debug.apk')
+tests_apk_path('/focus-android/focus-android/app/build/outputs/apk/androidTest/focus/debug/app-focus-debug-androidTest.apk')
+
+locales(['en-US', 'fr-FR', 'it-IT', 'de-DE', 'ja', 'ru', 'zh-CN', 'zh-TW', 'ko'])
+
+# Clear all previous screenshots locally. Technically not needed in automation.
+# But it's easier to debug this on a local device if there are no old screenshots
+# hanging around.
+clear_previous_screenshots true
+reinstall_app true
