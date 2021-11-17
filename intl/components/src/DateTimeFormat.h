@@ -316,14 +316,14 @@ class DateTimeFormat final {
   template <typename B>
   ICUResult TryFormat(double aUnixEpoch, B& aBuffer) const {
     static_assert(
-        std::is_same<typename B::CharType, unsigned char>::value ||
-            std::is_same<typename B::CharType, char>::value ||
-            std::is_same<typename B::CharType, char16_t>::value,
+        std::is_same_v<typename B::CharType, unsigned char> ||
+            std::is_same_v<typename B::CharType, char> ||
+            std::is_same_v<typename B::CharType, char16_t>,
         "The only buffer CharTypes supported by DateTimeFormat are char "
         "(for UTF-8 support) and char16_t (for UTF-16 support).");
 
-    if constexpr (std::is_same<typename B::CharType, char>::value ||
-                  std::is_same<typename B::CharType, unsigned char>::value) {
+    if constexpr (std::is_same_v<typename B::CharType, char> ||
+                  std::is_same_v<typename B::CharType, unsigned char>) {
       // The output buffer is UTF-8, but ICU uses UTF-16 internally.
 
       // Write the formatted date into the u16Buffer.
@@ -344,7 +344,7 @@ class DateTimeFormat final {
       }
       return Ok{};
     } else {
-      static_assert(std::is_same<typename B::CharType, char16_t>::value);
+      static_assert(std::is_same_v<typename B::CharType, char16_t>);
 
       // The output buffer is UTF-16. ICU can output directly into this buffer.
       return FillBufferWithICUCall(
@@ -370,7 +370,7 @@ class DateTimeFormat final {
   template <typename B>
   ICUResult TryFormatToParts(double aUnixEpoch, B& aBuffer,
                              DateTimePartVector& aParts) const {
-    static_assert(std::is_same<typename B::CharType, char16_t>::value,
+    static_assert(std::is_same_v<typename B::CharType, char16_t>,
                   "Only char16_t is supported (for UTF-16 support) now.");
 
     UErrorCode status = U_ZERO_ERROR;
