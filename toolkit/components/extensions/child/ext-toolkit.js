@@ -41,6 +41,11 @@ extensions.registerModules({
     scopes: ["addon_child", "content_child", "devtools_child"],
     paths: [["runtime"]],
   },
+  scripting: {
+    url: "chrome://extensions/content/child/ext-scripting.js",
+    scopes: ["addon_child"],
+    paths: [["scripting"]],
+  },
   storage: {
     url: "chrome://extensions/content/child/ext-storage.js",
     scopes: ["addon_child", "content_child", "devtools_child"],
