@@ -61,6 +61,15 @@
             "format": "url",
             "optional": true,
             "preprocess": "localize"
+          },
+
+          "install_origins": {
+            "type": "array",
+            "optional": true,
+            "items": {
+              "type": "string",
+              "format": "origin"
+            }
           }
         }
       },
