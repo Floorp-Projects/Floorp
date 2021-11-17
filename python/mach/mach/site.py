@@ -188,41 +188,6 @@ class MozSiteManager:
             return self.virtualenv_root
         return self.build()
 
-    def create(self):
-        """Create a new, empty virtualenv.
-
-        Receives the path to virtualenv's virtualenv.py script (which will be
-        called out to), the path to create the virtualenv in, and a handle to
-        write output to.
-        """
-        if os.path.exists(self.virtualenv_root):
-            shutil.rmtree(self.virtualenv_root)
-
-        result = subprocess.run(
-            [
-                sys.executable,
-                os.path.join(
-                    self.topsrcdir,
-                    "third_party",
-                    "python",
-                    "virtualenv",
-                    "virtualenv.py",
-                ),
-                # pip, setuptools and wheel are vendored and inserted into the virtualenv
-                # scope automatically, so "virtualenv" doesn't need to seed it.
-                "--no-seed",
-                self.virtualenv_root,
-            ],
-        )
-
-        if result.returncode:
-            raise Exception(
-                "Failed to create virtualenv: %s (virtualenv.py retcode: %s)"
-                % (self.virtualenv_root, result)
-            )
-
-        return self.virtualenv_root
-
     @functools.lru_cache(maxsize=None)
     def requirements(self):
         if not os.path.exists(self._manifest_path):
@@ -248,7 +213,27 @@ class MozSiteManager:
 
         This returns the path of the created virtualenv.
         """
-        self.create()
+        if os.path.exists(self.virtualenv_root):
+            shutil.rmtree(self.virtualenv_root)
+
+        subprocess.run(
+            [
+                sys.executable,
+                os.path.join(
+                    self.topsrcdir,
+                    "third_party",
+                    "python",
+                    "virtualenv",
+                    "virtualenv.py",
+                ),
+                # pip, setuptools and wheel are vendored and inserted into the virtualenv
+                # scope automatically, so "virtualenv" doesn't need to seed it.
+                "--no-seed",
+                self.virtualenv_root,
+            ],
+            check=True,
+        )
+
         env_requirements = self.requirements()
         site_packages_dir = self._virtualenv.site_packages_dir()
         pthfile_lines = self.requirements().pths_as_absolute(self.topsrcdir)
