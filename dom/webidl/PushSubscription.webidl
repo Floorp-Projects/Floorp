@@ -28,7 +28,6 @@ dictionary PushSubscriptionJSON
   // PushSubscriptionKeys thing is not even in the spec; "keys" is a record
   // there.
   PushSubscriptionKeys keys = {};
-  EpochTimeStamp? expirationTime;
 };
 
 dictionary PushSubscriptionInit
@@ -38,7 +37,6 @@ dictionary PushSubscriptionInit
   ArrayBuffer? p256dhKey;
   ArrayBuffer? authSecret;
   BufferSource? appServerKey;
-  EpochTimeStamp? expirationTime = null;
 };
 
 [Exposed=(Window,Worker), Pref="dom.push.enabled"]
@@ -49,7 +47,6 @@ interface PushSubscription
 
   readonly attribute USVString endpoint;
   readonly attribute PushSubscriptionOptions options;
-  readonly attribute EpochTimeStamp? expirationTime;
   [Throws]
   ArrayBuffer? getKey(PushEncryptionKeyName name);
   [Throws, UseCounter]
