@@ -177,6 +177,12 @@ var highlighterTestSpec = protocol.generateActorSpec({
         value: RetVal("string"),
       },
     },
+    getTabbingOrderHighlighterData: {
+      request: {},
+      response: {
+        value: RetVal("json"),
+      },
+    },
     setInspectorActorID: {
       request: {
         inspectorActorID: Arg(0, "string"),
@@ -423,6 +429,60 @@ var HighlighterTestActor = protocol.ActorClassWithSpec(highlighterTestSpec, {
     }, "Couldn't get a non-empty text content for the color-value element");
 
     return color;
+  },
+
+  /**
+   * Get the TabbingOrderHighlighter for the associated targetActor
+   *
+   * @returns {TabbingOrderHighlighter}
+   */
+  _getTabbingOrderHighlighter() {
+    const form = this.targetActor.form();
+    const accessibilityActor = this.conn._getOrCreateActor(
+      form.accessibilityActor
+    );
+
+    if (!accessibilityActor) {
+      return null;
+    }
+    // We use `_tabbingOrderHighlighter` since it's the cached value; `tabbingOrderHighlighter`
+    // is a getter that will create the highlighter when called (if it does not exist yet).
+    return accessibilityActor.walker?._tabbingOrderHighlighter;
+  },
+
+  /**
+   * Get a representation of the NodeTabbingOrderHighlighters created by the
+   * TabbingOrderHighlighter of a given targetActor.
+   *
+   * @returns {Array<String>} An array which will contain as many entry as they are
+   *          NodeTabbingOrderHighlighters displayed.
+   *          Each item will be of the form `nodename[#id]: index`.
+   *          For example:
+   *          [
+   *            `button#top-btn-1 : 1`,
+   *            `html : 2`,
+   *            `button#iframe-btn-1 : 3`,
+   *            `button#iframe-btn-2 : 4`,
+   *            `button#top-btn-2 : 5`,
+   *          ]
+   */
+  getTabbingOrderHighlighterData() {
+    const highlighter = this._getTabbingOrderHighlighter();
+    if (!highlighter) {
+      return [];
+    }
+
+    const nodeTabbingOrderHighlighters = [
+      ...highlighter._highlighter._highlighters.values(),
+    ].filter(h => h.getElement("root").getAttribute("hidden") !== "true");
+
+    return nodeTabbingOrderHighlighters.map(h => {
+      let nodeStr = h.currentNode.nodeName.toLowerCase();
+      if (h.currentNode.id) {
+        nodeStr = `${nodeStr}#${h.currentNode.id}`;
+      }
+      return `${nodeStr} : ${h.getElement("root").getTextContent()}`;
+    });
   },
 
   // This will be automatically called as part of the initialization of the
