@@ -65,6 +65,50 @@ static wchar_t** AllocConvertUTF8toUTF16Strings(int argc, char** argv) {
 }
 
 /**
+ * Return true if we are in a job with JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE and
+ * we can break away from it.
+ * CreateProcess fails if we try to break away from a job but it's not allowed.
+ * So if we cannot determine the result due to a failure, we assume we don't
+ * need to break away and this returns false.
+ */
+static bool NeedToBreakAwayFromJob() {
+  // If we can't determine if we are in a job, we assume we're not in a job.
+  BOOL inJob = FALSE;
+  if (!::IsProcessInJob(::GetCurrentProcess(), nullptr, &inJob)) {
+    return false;
+  }
+
+  // If there is no job, there is nothing to worry about.
+  if (!inJob) {
+    return false;
+  }
+
+  // If we can't get the job object flags, we assume no need to break away from
+  // it.
+  JOBOBJECT_EXTENDED_LIMIT_INFORMATION job_info = {};
+  if (!::QueryInformationJobObject(nullptr, JobObjectExtendedLimitInformation,
+                                   &job_info, sizeof(job_info), nullptr)) {
+    return false;
+  }
+
+  // If JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE is not set, no need to worry about
+  // the job.
+  if (!(job_info.BasicLimitInformation.LimitFlags &
+        JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE)) {
+    return false;
+  }
+
+  // If we can't break away from the current job, there is nothing we can do.
+  if (!(job_info.BasicLimitInformation.LimitFlags &
+        JOB_OBJECT_LIMIT_BREAKAWAY_OK)) {
+    return false;
+  }
+
+  // We can and need to break away from the job.
+  return true;
+}
+
+/**
  * Launch a child process with the specified arguments.
  * @note argv[0] is ignored
  * @note The form of this function that takes char **argv expects UTF-8
@@ -92,6 +136,9 @@ BOOL WinLaunchChild(const wchar_t* exePath, int argc, wchar_t** argv,
     return FALSE;
   }
 
+  DWORD creationFlags =
+      NeedToBreakAwayFromJob() ? CREATE_BREAKAWAY_FROM_JOB : 0;
+
   STARTUPINFOW si = {0};
   si.cb = sizeof(STARTUPINFOW);
   si.lpDesktop = const_cast<LPWSTR>(L"winsta0\\Default");
@@ -102,7 +149,7 @@ BOOL WinLaunchChild(const wchar_t* exePath, int argc, wchar_t** argv,
                         nullptr,  // no special security attributes
                         nullptr,  // no special thread attributes
                         FALSE,    // don't inherit filehandles
-                        0,        // creation flags
+                        creationFlags,
                         nullptr,  // inherit my environment
                         nullptr,  // use my current directory
                         &si, &pi);
@@ -118,8 +165,7 @@ BOOL WinLaunchChild(const wchar_t* exePath, int argc, wchar_t** argv,
                               nullptr,  // no special security attributes
                               nullptr,  // no special thread attributes
                               FALSE,    // don't inherit filehandles
-                              0,        // creation flags
-                              environmentBlock,
+                              creationFlags, environmentBlock,
                               nullptr,  // use my current directory
                               &si, &pi);
 
