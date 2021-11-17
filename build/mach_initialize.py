@@ -266,7 +266,7 @@ def _activate_python_environment(topsrcdir, state_dir):
         # to be affected by such installs, and since it takes ~400ms to get the list
         # of installed pip packages (a *lot* of time to wait during Mach init), we
         # skip verifying that our pip packages exist.
-        if not mach_site.up_to_date(skip_pip_package_check=True):
+        if not mach_site.up_to_date():
             print(
                 'The "mach" virtualenv is not up-to-date, please run '
                 '"./mach create-mach-environment"'
