@@ -116,7 +116,7 @@ static std::string ChooseDeviceReplacement(const std::string& str) {
     if (std::regex_search(str, m, kQuadro)) {
       if (Contains(str, "RTX")) return GEFORCE_980;
       const auto archLetter = m.str(1);
-      if (archLetter.size()) {
+      if (!archLetter.empty()) {
         switch (archLetter[0]) {
           case 'M':  // Maxwell
           case 'P':  // Pascal
