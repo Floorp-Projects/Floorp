@@ -6,7 +6,7 @@
 "use strict";
 (function() {
   const { require } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
+    "resource://devtools/shared/loader/Loader.jsm"
   );
   const { gDevTools } = require("devtools/client/framework/devtools");
   const {

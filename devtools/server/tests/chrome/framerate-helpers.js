@@ -1,6 +1,8 @@
 /* exported getTargetForSelectedTab, waitFor, plotFPS */
 "use strict";
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require } = ChromeUtils.import(
+  "resource://devtools/shared/loader/Loader.jsm"
+);
 const {
   CommandsFactory,
 } = require("devtools/shared/commands/commands-factory");

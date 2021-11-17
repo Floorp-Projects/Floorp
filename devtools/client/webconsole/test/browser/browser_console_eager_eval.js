@@ -23,7 +23,7 @@ add_task(async function() {
 async function executeNonDebuggeeSideeffect(hud) {
   await executeAndWaitForMessage(
     hud,
-    `globalThis.eagerLoader = ChromeUtils.import("resource://devtools/shared/Loader.jsm");`,
+    `globalThis.eagerLoader = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm");`,
     `DevToolsLoader`
   );
 

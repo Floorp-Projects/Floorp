@@ -50,9 +50,9 @@ In more detail:
 
 Example:
 
-* File: `/devtools/shared/Loader.jsm`
+* File: `/devtools/shared/loader/Loader.jsm`
 * Usage:
-  * `const { loader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm")`
+  * `const { loader } = ChromeUtils.import("resource://devtools/shared/loader/Loader.jsm")`
 
 Example:
 

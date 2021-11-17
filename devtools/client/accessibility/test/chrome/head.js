@@ -5,9 +5,11 @@
 
 "use strict";
 
-var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+var { require } = ChromeUtils.import(
+  "resource://devtools/shared/loader/Loader.jsm"
+);
 var { BrowserLoader } = ChromeUtils.import(
-  "resource://devtools/client/shared/browser-loader.js"
+  "resource://devtools/shared/loader/browser-loader.js"
 );
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 

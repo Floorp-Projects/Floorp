@@ -18,10 +18,10 @@ appInfo.updateAppInfo({
 });
 
 const { require, loader } = ChromeUtils.import(
-  "resource://devtools/shared/Loader.jsm"
+  "resource://devtools/shared/loader/Loader.jsm"
 );
 const { worker } = ChromeUtils.import(
-  "resource://devtools/shared/worker/loader.js"
+  "resource://devtools/shared/loader/worker-loader.js"
 );
 
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");

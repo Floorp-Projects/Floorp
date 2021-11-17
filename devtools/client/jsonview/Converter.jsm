@@ -10,7 +10,7 @@ var EXPORTED_SYMBOLS = ["Converter"];
  */
 function Converter() {
   const { require } = ChromeUtils.import(
-    "resource://devtools/shared/Loader.jsm"
+    "resource://devtools/shared/loader/Loader.jsm"
   );
   const {
     JsonViewService,

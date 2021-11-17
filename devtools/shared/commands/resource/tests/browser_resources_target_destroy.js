@@ -32,7 +32,7 @@ add_task(async function() {
     _connectionPrefix
   ) {
     const { require } = ChromeUtils.import(
-      "resource://devtools/shared/Loader.jsm"
+      "resource://devtools/shared/loader/Loader.jsm"
     );
     const {
       TargetActorRegistry,
@@ -69,7 +69,7 @@ add_task(async function() {
   );
   await ContentTask.spawn(tab.linkedBrowser, [], function() {
     const { require } = ChromeUtils.import(
-      "resource://devtools/shared/Loader.jsm"
+      "resource://devtools/shared/loader/Loader.jsm"
     );
     const {
       getResourceWatcher,

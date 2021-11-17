@@ -5,7 +5,9 @@
 
 "use strict";
 
-var { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+var { require } = ChromeUtils.import(
+  "resource://devtools/shared/loader/Loader.jsm"
+);
 const { colorUtils } = require("devtools/shared/css/color");
 const InspectorUtils = require("InspectorUtils");
 

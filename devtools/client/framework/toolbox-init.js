@@ -7,7 +7,9 @@
 
 "use strict";
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require } = ChromeUtils.import(
+  "resource://devtools/shared/loader/Loader.jsm"
+);
 
 // URL constructor doesn't support about: scheme
 const href = window.location.href.replace("about:", "http://");
@@ -40,7 +42,7 @@ const onLoad = new Promise(r => {
 async function showErrorPage(doc, errorMessage) {
   const win = doc.defaultView;
   const { BrowserLoader } = ChromeUtils.import(
-    "resource://devtools/client/shared/browser-loader.js"
+    "resource://devtools/shared/loader/browser-loader.js"
   );
   const browserRequire = BrowserLoader({
     window: win,

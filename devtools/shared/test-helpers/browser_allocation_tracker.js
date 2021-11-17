@@ -7,7 +7,7 @@
 // so that it can inspect any other module/compartment, even DevTools, chrome,
 // and this script!
 const { DevToolsLoader } = ChromeUtils.import(
-  "resource://devtools/shared/Loader.jsm"
+  "resource://devtools/shared/loader/Loader.jsm"
 );
 const loader = new DevToolsLoader({
   invisibleToDebugger: true,

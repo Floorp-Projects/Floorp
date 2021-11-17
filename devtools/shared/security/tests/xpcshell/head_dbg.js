@@ -6,7 +6,7 @@
 /* exported DevToolsClient, initTestDevToolsServer */
 
 const { loader, require } = ChromeUtils.import(
-  "resource://devtools/shared/Loader.jsm"
+  "resource://devtools/shared/loader/Loader.jsm"
 );
 const Services = require("Services");
 const xpcInspector = require("xpcInspector");

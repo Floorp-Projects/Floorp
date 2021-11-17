@@ -7,7 +7,9 @@
  * Tests utility functions contained in `source-utils.js`
  */
 
-const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+const { require } = ChromeUtils.import(
+  "resource://devtools/shared/loader/Loader.jsm"
+);
 const sourceUtils = require("devtools/client/shared/source-utils");
 
 const CHROME_URLS = [
