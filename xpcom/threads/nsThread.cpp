@@ -428,11 +428,19 @@ void nsThread::ThreadFunc(void* aArg) {
   MOZ_ASSERT(context->mTerminatingThread == self);
   nsCOMPtr<nsIRunnable> event =
       do_QueryObject(new nsThreadShutdownAckEvent(context));
+  nsresult dispatch_ack_rv;
   if (context->mIsMainThreadJoining) {
-    SchedulerGroup::Dispatch(TaskCategory::Other, event.forget());
+    dispatch_ack_rv =
+        SchedulerGroup::Dispatch(TaskCategory::Other, event.forget());
   } else {
-    context->mJoiningThread->Dispatch(event, NS_DISPATCH_NORMAL);
+    dispatch_ack_rv =
+        context->mJoiningThread->Dispatch(event, NS_DISPATCH_NORMAL);
   }
+  // We do not expect this to ever happen, but If we cannot dispatch
+  // the ack event, someone probably blocks waiting on us and will
+  // crash with a hang later anyways. The best we can do is to tell
+  // the world what happened right here.
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(dispatch_ack_rv));
 
   // Release any observer of the thread here.
   self->SetObserver(nullptr);
