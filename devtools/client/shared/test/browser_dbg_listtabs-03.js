@@ -25,15 +25,16 @@ add_task(async function test() {
   const client = new DevToolsClient(transport);
   const [type] = await client.connect();
   is(type, "browser", "Root actor should identify itself as a browser.");
-  const tab = await addTab(TAB1_URL);
+  const tab1 = await addTab(TAB1_URL);
 
-  await assertListTabs(client.mainRoot);
+  await assertListTabs(tab1, client.mainRoot);
 
-  // To run last as it will close the client and remove the tab
-  await assertGetTab(client, client.mainRoot, tab);
+  const tab2 = await addTab(TAB1_URL);
+  // To run last as it will close the client
+  await assertGetTab(client, client.mainRoot, tab2);
 });
 
-async function assertListTabs(rootFront) {
+async function assertListTabs(tab, rootFront) {
   const tabDescriptors = await rootFront.listTabs();
   is(tabDescriptors.length, 2, "Should be two tabs");
 
@@ -53,29 +54,34 @@ async function assertListTabs(rootFront) {
 
   info("Detach the tab target");
   const onTargetDestroyed = tabTarget.once("target-destroyed");
-  const onDescriptorDestroyed = tabDescriptor.once("descriptor-destroyed");
   await tabTarget.detach();
 
   info("Wait for target destruction");
   await onTargetDestroyed;
 
-  // listTabs returns non-local tabs, which we suppose are remote debugging.
-  // And because of that, the TabDescriptor self-destroy itself on target being destroyed.
-  // That's because we don't yet support top level target switching in case
-  // of remote debugging. So we prefer destroy the descriptor as well as the toolbox.
-  // Bug 1698891 should revisit that.
+  // When the target is detached and destroyed,
+  // the descriptor stays alive, because the tab is still opened.
+  // As we support top level target switching, the descriptor can be kept alive
+  // when the target is destroyed.
+  ok(
+    !tabDescriptor.isDestroyed(),
+    "The tab descriptor isn't destroyed on target detach"
+  );
+
+  info("Close the descriptor's tab");
+  const onDescriptorDestroyed = tabDescriptor.once("descriptor-destroyed");
+  await removeTab(tab);
+
   info("Wait for descriptor destruction");
   await onDescriptorDestroyed;
 
-  // Tab Descriptors returned by listTabs are not considered as local tabs
-  // and follow the lifecycle of their target. So both target and descriptor are destroyed.
   ok(
     tabTarget.isDestroyed(),
-    "The tab target should be destroyed after detach"
+    "The tab target should be destroyed after closing the tab"
   );
   ok(
     tabDescriptor.isDestroyed(),
-    "The tab descriptor should be destroyed after detach"
+    "The tab descriptor is also always destroyed after tab closing"
   );
 
   // Compared to getTab, the client should be kept alive.
@@ -122,7 +128,7 @@ async function assertGetTab(client, rootFront, tab) {
   // When the target is detached and destroyed,
   // the descriptor stays alive, because the tab is still opened.
   // And compared to listTabs, getTab's descriptor are considered local tabs.
-  // And as we support top level target switching, the descriptor can be kept alive
+  // As we support top level target switching, the descriptor can be kept alive
   // when the target is destroyed.
   ok(
     !tabDescriptor.isDestroyed(),
