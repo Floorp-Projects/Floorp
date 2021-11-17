@@ -19,6 +19,7 @@
 use std::mem;
 use std::collections::VecDeque;
 use std::sync::Arc;
+use std::time::Duration;
 use euclid::{Transform3D, point2};
 use time::precise_time_ns;
 use malloc_size_of::MallocSizeOfOps;
@@ -60,6 +61,7 @@ pub fn upload_to_texture_cache(
         cpu_copy_time: 0,
         gpu_copy_commands_time: 0,
         bytes_uploaded: 0,
+        items_uploaded: 0,
     };
 
     let upload_total_start = precise_time_ns();
@@ -131,6 +133,8 @@ pub fn upload_to_texture_cache(
                     continue;
                 }
             };
+
+            stats.items_uploaded += 1;
 
             let use_batch_upload = renderer.device.use_batched_texture_uploads() &&
                 texture.flags().contains(TextureFlags::IS_SHARED_TEXTURE_CACHE) &&
@@ -334,6 +338,12 @@ pub fn upload_to_texture_cache(
             profiler::UPLOAD_GPU_COPY_TIME,
             profiler::ns_to_ms(stats.gpu_copy_commands_time)
         );
+    }
+
+    let add_markers = profiler::thread_is_being_profiled();
+    if add_markers && stats.bytes_uploaded > 0 {
+    	let details = format!("{} bytes uploaded, {} items", stats.bytes_uploaded, stats.items_uploaded);
+    	profiler::add_text_marker(&"Texture uploads", &details, Duration::from_nanos(upload_total));
     }
 }
 
@@ -798,6 +808,7 @@ struct UploadStats {
     cpu_copy_time: u64,
     gpu_copy_commands_time: u64,
     bytes_uploaded: usize,
+    items_uploaded: usize,
 }
 
 #[derive(Debug)]
