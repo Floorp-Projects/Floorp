@@ -55,7 +55,7 @@ use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
 use crate::glyph_rasterizer::FontInstance;
 use crate::hit_test::HitTestingScene;
 use crate::intern::Interner;
-use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter, PlaneSplitter, PlaneSplitterIndex};
+use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter, PlaneSplitter, PlaneSplitterIndex, FastHashSet};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureOptions};
 use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList};
 use crate::picture_graph::PictureGraph;
@@ -459,6 +459,11 @@ pub struct SceneBuilder<'a> {
     /// array so that multiple different systems (e.g. tile-cache, visibility, property
     /// animation bindings) can store index buffers to prim instances.
     prim_instances: Vec<PrimitiveInstance>,
+
+    /// A map of pipeline ids encountered during scene build - panic early if we
+    /// encounter an iframe that is referenced twice, as that breaks assumptions
+    /// related to unique spatial node keys.
+    seen_pipeline_ids: FastHashSet<PipelineId>,
 }
 
 impl<'a> SceneBuilder<'a> {
@@ -513,6 +518,7 @@ impl<'a> SceneBuilder<'a> {
             picture_graph: PictureGraph::new(),
             plane_splitters: Vec::new(),
             prim_instances: Vec::new(),
+            seen_pipeline_ids: FastHashSet::default(),
         };
 
         builder.build_all(&root_pipeline);
@@ -574,6 +580,12 @@ impl<'a> SceneBuilder<'a> {
         dl: &BuiltDisplayList,
         pipeline_id: PipelineId,
     ) {
+        // Related to bug #1736069 - try to verify that the assert later on is being
+        // caused by a display list where a single iframe pipeline id is being referenced
+        // by >1 iframe display item. If we see any crash reports here, we know this is
+        // the root issue.
+        assert!(self.seen_pipeline_ids.insert(pipeline_id));
+
         dl.iter_spatial_tree(|item| {
             match item {
                 SpatialTreeItem::ScrollFrame(descriptor) => {
