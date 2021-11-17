@@ -244,6 +244,7 @@ let json = [
             properties: {
               hostname: { type: "string", format: "hostname", optional: true },
               url: { type: "string", format: "url", optional: true },
+              origin: { type: "string", format: "origin", optional: true },
               relativeUrl: {
                 type: "string",
                 format: "relativeUrl",
@@ -646,6 +647,7 @@ add_task(async function() {
     {
       hostname: "foo",
       imageDataOrStrictRelativeUrl: null,
+      origin: null,
       relativeUrl: null,
       strictRelativeUrl: null,
       url: null,
@@ -660,11 +662,39 @@ add_task(async function() {
     );
   }
 
+  for (let valid of [
+    "https://example.com",
+    "http://example.com",
+    "https://foo.bar.栃木.jp",
+  ]) {
+    root.testing.format({ origin: valid });
+  }
+
+  for (let invalid of [
+    "https://example.com/testing",
+    "file:/foo/bar",
+    "file:///foo/bar",
+    "",
+    " ",
+    "https://foo.bar.栃木.jp/",
+    "https://user:pass@example.com",
+    "https://*.example.com",
+    "https://example.com#test",
+    "https://example.com?test",
+  ]) {
+    Assert.throws(
+      () => root.testing.format({ origin: invalid }),
+      /Invalid origin/,
+      "should throw for invalid origin"
+    );
+  }
+
   root.testing.format({ url: "http://foo/bar", relativeUrl: "http://foo/bar" });
   wrapper.verify("call", "testing", "format", [
     {
       hostname: null,
       imageDataOrStrictRelativeUrl: null,
+      origin: null,
       relativeUrl: "http://foo/bar",
       strictRelativeUrl: null,
       url: "http://foo/bar",
@@ -679,6 +709,7 @@ add_task(async function() {
     {
       hostname: null,
       imageDataOrStrictRelativeUrl: null,
+      origin: null,
       relativeUrl: `${wrapper.url}foo.html`,
       strictRelativeUrl: `${wrapper.url}foo.html`,
       url: null,
@@ -692,6 +723,7 @@ add_task(async function() {
     {
       hostname: null,
       imageDataOrStrictRelativeUrl: "data:image/png;base64,A",
+      origin: null,
       relativeUrl: null,
       strictRelativeUrl: null,
       url: null,
@@ -705,6 +737,7 @@ add_task(async function() {
     {
       hostname: null,
       imageDataOrStrictRelativeUrl: "data:image/jpeg;base64,A",
+      origin: null,
       relativeUrl: null,
       strictRelativeUrl: null,
       url: null,
@@ -716,6 +749,7 @@ add_task(async function() {
     {
       hostname: null,
       imageDataOrStrictRelativeUrl: `${wrapper.url}foo.html`,
+      origin: null,
       relativeUrl: null,
       strictRelativeUrl: null,
       url: null,

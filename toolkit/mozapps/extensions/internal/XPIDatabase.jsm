@@ -113,6 +113,8 @@ const PROP_JSON_FIELDS = [
   "type",
   "loader",
   "updateURL",
+  "installOrigins",
+  "manifestVersion",
   "optionsURL",
   "optionsType",
   "optionsBrowserStyle",
@@ -328,6 +330,44 @@ class AddonInternal {
 
   get resolvedRootURI() {
     return XPIInternal.maybeResolveURI(Services.io.newURI(this.rootURI));
+  }
+
+  /**
+   * Validate a list of origins are contained in the installOrigins array (defined in manifest.json)
+   *
+   * @param {Object} origins A map of origins to validate using the addon installOrigins
+   *                         (keys are arbitrary strings meant to briefly describe the
+   *                         kind of source being validated, values are nsIURI).
+   * @returns {boolean}
+   */
+  validInstallOrigins(origins = {}) {
+    if (
+      !Services.prefs.getBoolPref("extensions.install_origins.enabled", true)
+    ) {
+      return true;
+    }
+
+    let { installOrigins, manifestVersion } = this;
+    if (!installOrigins) {
+      // Install origins are mandatory in MV3 and optional
+      // in MV2.  Old addons need to keep installing per the
+      // old install flow.
+      return manifestVersion < 3;
+    }
+    // An empty install_origins prevents any install from 3rd party websites.
+    if (!installOrigins.length) {
+      return false;
+    }
+
+    for (const [name, source] of Object.entries(origins)) {
+      if (!installOrigins.includes(new URL(source.spec).origin)) {
+        logger.warn(
+          `Addon ${this.id} Installation not allowed, ${name} "${source.spec}" is not included in the Addon install_origins`
+        );
+        return false;
+      }
+    }
+    return true;
   }
 
   addedToDatabase() {
@@ -781,6 +821,9 @@ class AddonInternal {
 /**
  * The AddonWrapper wraps an Addon to provide the data visible to consumers of
  * the public API.
+ *
+ * NOTE: Do not add any new logic here.  Add it to AddonInternal and expose
+ * through defineAddonWrapperProperty after this class definition.
  *
  * @param {AddonInternal} aAddon
  *        The add-on object to wrap.
@@ -1348,6 +1391,9 @@ function defineAddonWrapperProperty(name, getter) {
   "foreignInstall",
   "strictCompatibility",
   "updateURL",
+  "installOrigins",
+  "manifestVersion",
+  "validInstallOrigins",
   "dependencies",
   "signedState",
   "isCorrectlySigned",
