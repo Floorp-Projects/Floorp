@@ -228,9 +228,6 @@ InProcessWinCompositorWidget::EndBackBufferDrawing() {
 
 bool InProcessWinCompositorWidget::InitCompositor(
     layers::Compositor* aCompositor) {
-  if (aCompositor->GetBackendType() == layers::LayersBackend::LAYERS_BASIC) {
-    DeviceManagerDx::Get()->InitializeDirectDraw();
-  }
   return true;
 }
 

@@ -106,8 +106,7 @@ bool ComputeHasIntermediateBuffer(gfx::SurfaceFormat aFormat,
     return false;
   }
 
-  return aLayersBackend != LayersBackend::LAYERS_BASIC ||
-         aFormat == gfx::SurfaceFormat::UNKNOWN;
+  return aFormat == gfx::SurfaceFormat::UNKNOWN;
 }
 
 BufferTextureData* BufferTextureData::Create(

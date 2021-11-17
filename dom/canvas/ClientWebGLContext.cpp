@@ -575,7 +575,6 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
     if (options.failIfMajorPerformanceCaveat) {
       const auto backend = GetCompositorBackendType();
       bool isCompositorSlow = false;
-      isCompositorSlow |= (backend == layers::LayersBackend::LAYERS_BASIC);
       isCompositorSlow |= (backend == layers::LayersBackend::LAYERS_WR &&
                            gfx::gfxVars::UseSoftwareWebRender());
 
