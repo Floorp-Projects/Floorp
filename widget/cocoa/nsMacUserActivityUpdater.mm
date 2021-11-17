@@ -9,8 +9,6 @@
 #include "nsCocoaUtils.h"
 #include "nsIBaseWindow.h"
 
-NSString* const kBrowsingActivityType = @"com.mozilla.firefox.handoff.webpage";
-
 NS_IMPL_ISUPPORTS(nsMacUserActivityUpdater, nsIMacUserActivityUpdater)
 
 NS_IMETHODIMP
@@ -35,7 +33,7 @@ nsMacUserActivityUpdater::UpdateLocation(const nsAString& aPageUrl, const nsAStr
   }
 
   NSUserActivity* userActivity =
-      [[NSUserActivity alloc] initWithActivityType:kBrowsingActivityType];
+      [[NSUserActivity alloc] initWithActivityType:NSUserActivityTypeBrowsingWeb];
   userActivity.webpageURL = pageUrl;
   userActivity.title = pageTitle;
   cocoaWin.userActivity = userActivity;
