@@ -90,13 +90,8 @@ class MozSiteManager:
             self.virtualenv_root,
         )
 
-    def up_to_date(self, skip_pip_package_check=False):
-        """Returns whether the virtualenv is present and up to date.
-
-        Args:
-            skip_pip_package_check: Don't check that the pip state on-disk still meets
-                our requirements.
-        """
+    def up_to_date(self):
+        """Returns whether the virtualenv is present and up to date."""
 
         # check if virtualenv exists
         if not os.path.exists(self.virtualenv_root) or not os.path.exists(
@@ -149,12 +144,6 @@ class MozSiteManager:
                 return False
 
             if current_paths != env_requirements.pths_as_absolute(self.topsrcdir):
-                return False
-
-        if not skip_pip_package_check:
-            pip = [self.python_path, "-m", "pip"]
-            package_result = env_requirements.validate_environment_packages(pip)
-            if not package_result.has_all_packages:
                 return False
 
         return True
