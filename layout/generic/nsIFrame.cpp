@@ -2472,7 +2472,7 @@ void nsIFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
   if (outline.mOutlineStyle.IsAuto()) {
     auto* disp = StyleDisplay();
     if (IsThemed(disp) && PresContext()->Theme()->ThemeDrawsFocusForWidget(
-                              disp->EffectiveAppearance())) {
+                              this, disp->EffectiveAppearance())) {
       return;
     }
   }

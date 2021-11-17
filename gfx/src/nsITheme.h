@@ -237,7 +237,7 @@ class nsITheme : public nsISupports {
   /**
    * Does the nsITheme implementation draw its own focus ring for this widget?
    */
-  virtual bool ThemeDrawsFocusForWidget(StyleAppearance aWidgetType) = 0;
+  virtual bool ThemeDrawsFocusForWidget(nsIFrame*, StyleAppearance) = 0;
 
   /**
    * Whether we want an inner focus ring for buttons and such.
@@ -246,8 +246,9 @@ class nsITheme : public nsISupports {
    * is special, because it wants it even though focus also alters the border
    * color and such.
    */
-  virtual bool ThemeWantsButtonInnerFocusRing(StyleAppearance aAppearance) {
-    return !ThemeDrawsFocusForWidget(aAppearance);
+  virtual bool ThemeWantsButtonInnerFocusRing(nsIFrame* aFrame,
+                                              StyleAppearance aAppearance) {
+    return !ThemeDrawsFocusForWidget(aFrame, aAppearance);
   }
 
   /**

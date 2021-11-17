@@ -151,7 +151,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
                                                StyleAppearance) override;
   bool ThemeSupportsWidget(nsPresContext*, nsIFrame*, StyleAppearance) override;
   bool WidgetIsContainer(StyleAppearance) override;
-  bool ThemeDrawsFocusForWidget(StyleAppearance) override;
+  bool ThemeDrawsFocusForWidget(nsIFrame*, StyleAppearance) override;
   bool ThemeNeedsComboboxDropmarker() override;
   ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
                                    Overlay) override;
