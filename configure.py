@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.join(base_dir, "python", "mozbuild"))
 sys.path.insert(0, os.path.join(base_dir, "third_party", "python", "packaging"))
 sys.path.insert(0, os.path.join(base_dir, "third_party", "python", "pyparsing"))
 sys.path.insert(0, os.path.join(base_dir, "third_party", "python", "six"))
-from mach.site import MozSiteManager
+from mach.site import CommandSiteManager
 from mozbuild.configure import (
     ConfigureSandbox,
     TRACE,
@@ -232,14 +232,13 @@ def _activate_build_virtualenv():
     topobjdir = os.path.realpath(".")
     topsrcdir = os.path.realpath(os.path.dirname(__file__))
 
-    build_site = MozSiteManager(
+    build_site = CommandSiteManager(
         topsrcdir,
         os.path.join(topobjdir, "_virtualenvs"),
         "build",
     )
-    if not build_site.up_to_date():
-        print("Creating Python 3 virtualenv")
-        build_site.build()
+    if not build_site.ensure():
+        print("Created Python 3 virtualenv")
     build_site.activate()
 
 

@@ -39,7 +39,7 @@ def test_up_to_date_vendor():
         work_vendored = os.path.join(work_dir, "third_party", "python")
         shutil.copytree(existing_vendored, work_vendored)
 
-        # Copy "mach" module so that `MozSiteManager` can populate itself.
+        # Copy "mach" module so that `CommandSiteManager` can populate itself.
         # This is needed because "topsrcdir" is used in this test both for determining
         # import paths and for acting as a "work dir".
         existing_mach = os.path.join(topsrcdir, "python", "mach")

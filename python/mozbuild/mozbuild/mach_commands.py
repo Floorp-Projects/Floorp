@@ -2457,29 +2457,19 @@ def package_l10n(command_context, verbose=False, locales=[]):
 )
 def create_mach_environment(command_context, force=False):
     """Create the mach virtualenv."""
-    from mozboot.util import get_mach_virtualenv_root
-    from mach.site import MozSiteManager
+    from mozboot.util import get_state_dir
+    from mach.site import MachSiteManager
 
-    virtualenv_path = get_mach_virtualenv_root()
-    if sys.executable.startswith(virtualenv_path):
-        print(
-            "You can only create a mach environment with the system "
-            "Python. Re-run this `mach` command with the system Python.",
-            file=sys.stderr,
-        )
-        return 1
-
-    manager = MozSiteManager(
+    manager = MachSiteManager.from_environment(
         command_context.topsrcdir,
-        os.path.dirname(virtualenv_path),
-        "mach",
+        get_state_dir(),
+        is_mach_create_mach_env_command=True,
     )
 
-    if manager.up_to_date() and not force:
-        print("virtualenv at %s is already up to date." % virtualenv_path)
+    if manager.ensure(force=force):
+        print("Mach environment is already up to date.")
     else:
-        manager.build()
-    print("Mach environment created.")
+        print("Mach environment created.")
 
 
 def _prepend_debugger_args(args, debugger, debugger_args):

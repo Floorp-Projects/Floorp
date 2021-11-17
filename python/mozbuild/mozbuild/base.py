@@ -289,10 +289,10 @@ class MozbuildObject(ProcessExecutionMixin):
 
     @property
     def virtualenv_manager(self):
-        from mach.site import MozSiteManager
+        from mach.site import CommandSiteManager
 
         if self._virtualenv_manager is None:
-            self._virtualenv_manager = MozSiteManager(
+            self._virtualenv_manager = CommandSiteManager(
                 self.topsrcdir,
                 os.path.join(self.topobjdir, "_virtualenvs"),
                 self._virtualenv_name,
