@@ -28,14 +28,14 @@ class MozSiteMetadataOutOfDateError(Exception):
 class MozSiteMetadata:
     """Details about a Moz-managed python environment"""
 
-    def __init__(self, hex_version, site_name, file_path):
+    def __init__(self, hex_version, site_name, prefix):
         self.hex_version = hex_version
         self.site_name = site_name
-        self.file_path = file_path
+        self.prefix = prefix
 
     def write(self):
         raw = {"hex_version": self.hex_version, "virtualenv_name": self.site_name}
-        with open(self.file_path, "w") as file:
+        with open(os.path.join(self.prefix, METADATA_FILENAME), "w") as file:
             json.dump(raw, file)
 
     def __eq__(self, other):
@@ -47,23 +47,24 @@ class MozSiteMetadata:
 
     @classmethod
     def from_runtime(cls):
-        return cls.from_path(os.path.join(sys.prefix, METADATA_FILENAME))
+        return cls.from_path(sys.prefix)
 
     @classmethod
-    def from_path(cls, path):
+    def from_path(cls, prefix):
+        metadata_path = os.path.join(prefix, METADATA_FILENAME)
         try:
-            with open(path, "r") as file:
+            with open(metadata_path, "r") as file:
                 raw = json.load(file)
             return cls(
                 raw["hex_version"],
                 raw["virtualenv_name"],
-                path,
+                prefix,
             )
         except FileNotFoundError:
             return None
         except KeyError:
             raise MozSiteMetadataOutOfDateError(
-                f'The moz site metadata at "{path}" is out-of-date.'
+                f'The moz site metadata at "{metadata_path}" is out-of-date.'
             )
 
 
@@ -102,7 +103,7 @@ class MozSiteManager:
         self._metadata = MozSiteMetadata(
             sys.hexversion,
             site_name,
-            os.path.join(self.virtualenv_root, METADATA_FILENAME),
+            self.virtualenv_root,
         )
 
     def up_to_date(self, skip_pip_package_check=False):
@@ -148,7 +149,7 @@ class MozSiteManager:
         # * If the "hex_version" doesn't match, then the system Python has changed/been
         #   upgraded.
         try:
-            existing_metadata = MozSiteMetadata.from_path(self._metadata.file_path)
+            existing_metadata = MozSiteMetadata.from_path(self._virtualenv.prefix)
             if existing_metadata != self._metadata:
                 return False
         except MozSiteMetadataOutOfDateError:
