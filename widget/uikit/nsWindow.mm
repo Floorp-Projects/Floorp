@@ -347,12 +347,6 @@ class nsAutoRetainUIKitObject {
 
   // nsAutoRetainCocoaObject kungFuDeathGrip(self);
   bool painted = false;
-  if (mGeckoChild->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC) {
-    nsBaseWidget::AutoLayerManagerSetup setupLayerManager(mGeckoChild, targetContext,
-                                                          BufferMode::BUFFER_NONE);
-    painted = mGeckoChild->PaintWindow(region);
-  }
-
   targetContext = nullptr;
   targetSurface = nullptr;
 

@@ -91,7 +91,6 @@ TextureType TexTypeForWebgl(KnowsCompositor* const knowsCompositor) {
       MOZ_CRASH("Unexpected LayersBackend::LAYERS_LAST");
 
     case LayersBackend::LAYERS_NONE:
-    case LayersBackend::LAYERS_BASIC:
       return TextureType::Unknown;
 
     case LayersBackend::LAYERS_D3D11:

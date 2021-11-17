@@ -198,7 +198,7 @@ void FallbackRenderer::EndTransactionWithList(nsDisplayListBuilder* aBuilder,
   DrawTarget* dt = mTarget->GetDrawTarget();
 
   BackendType backend = gfxPlatform::GetPlatform()->GetContentBackendFor(
-      LayersBackend::LAYERS_BASIC);
+      LayersBackend::LAYERS_NONE);
   RefPtr<DrawTarget> dest =
       gfxPlatform::GetPlatform()->CreateDrawTargetForBackend(
           backend, dt->GetSize(), dt->GetFormat());
