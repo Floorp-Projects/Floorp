@@ -43,6 +43,8 @@ static int FuzzingInitNetworkHttp(int* argc, char*** argv) {
     httpSpec = "http://127.0.0.1/";
   }
 
+  net_EnsurePSMInit();
+
   return 0;
 }
 
