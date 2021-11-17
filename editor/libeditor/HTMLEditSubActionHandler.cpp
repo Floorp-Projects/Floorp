@@ -3986,30 +3986,21 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
     }
 
     // make sure we can put a block here
-    SplitNodeResult splitNodeResult =
-        MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
-                                                    atStartOfSelection);
-    if (splitNodeResult.Failed()) {
+    Result<RefPtr<Element>, nsresult> newDivElementOrError =
+        InsertElementWithSplittingAncestorsWithTransaction(*nsGkAtoms::div,
+                                                           atStartOfSelection);
+    if (MOZ_UNLIKELY(newDivElementOrError.isErr())) {
       NS_WARNING(
-          "HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction(nsGkAtoms::"
-          "div) failed");
-      return splitNodeResult.Rv();
+          "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
+          "nsGkAtoms::div) failed");
+      return newDivElementOrError.unwrapErr();
     }
-    Result<RefPtr<Element>, nsresult> maybeNewDivElement =
-        CreateAndInsertElementWithTransaction(*nsGkAtoms::div,
-                                              splitNodeResult.SplitPoint());
-    if (maybeNewDivElement.isErr()) {
-      NS_WARNING(
-          "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::div) "
-          "failed");
-      return maybeNewDivElement.unwrapErr();
-    }
-    MOZ_ASSERT(maybeNewDivElement.inspect());
+    MOZ_ASSERT(newDivElementOrError.inspect());
     // remember our new block for postprocessing
     TopLevelEditSubActionDataRef().mNewBlockElement =
-        maybeNewDivElement.inspect();
+        newDivElementOrError.inspect();
     nsresult rv = ChangeMarginStart(
-        MOZ_KnownLive(*maybeNewDivElement.inspect()), ChangeMargin::Increase);
+        MOZ_KnownLive(*newDivElementOrError.inspect()), ChangeMargin::Increase);
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -4035,7 +4026,7 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
     restoreSelectionLater.Abort();
     // put selection in new block
     rv = CollapseSelectionToStartOf(
-        MOZ_KnownLive(*maybeNewDivElement.inspect()));
+        MOZ_KnownLive(*newDivElementOrError.inspect()));
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::CollapseSelectionToStartOf() failed");
     return rv;
@@ -4091,26 +4082,19 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
         return NS_OK;  // cancelled
       }
 
-      SplitNodeResult splitNodeResult =
-          MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::div,
-                                                      atContent);
-      if (splitNodeResult.Failed()) {
+      Result<RefPtr<Element>, nsresult> newDivElementOrError =
+          InsertElementWithSplittingAncestorsWithTransaction(*nsGkAtoms::div,
+                                                             atContent);
+      if (MOZ_UNLIKELY(newDivElementOrError.isErr())) {
         NS_WARNING(
-            "HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction(nsGkAtoms:"
-            ":div) failed");
-        return splitNodeResult.Rv();
+            "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
+            "nsGkAtoms::div) failed");
+        return newDivElementOrError.unwrapErr();
       }
-      Result<RefPtr<Element>, nsresult> maybeNewDivElement =
-          CreateAndInsertElementWithTransaction(*nsGkAtoms::div,
-                                                splitNodeResult.SplitPoint());
-      if (maybeNewDivElement.isErr()) {
-        NS_WARNING(
-            "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::div) "
-            "failed");
-        return maybeNewDivElement.unwrapErr();
-      }
-      nsresult rv = ChangeMarginStart(
-          MOZ_KnownLive(*maybeNewDivElement.inspect()), ChangeMargin::Increase);
+      MOZ_ASSERT(newDivElementOrError.inspect());
+      nsresult rv =
+          ChangeMarginStart(MOZ_KnownLive(*newDivElementOrError.inspect()),
+                            ChangeMargin::Increase);
       if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -4119,8 +4103,8 @@ nsresult HTMLEditor::HandleCSSIndentAtSelectionInternal() {
           "HTMLEditor::ChangeMarginStart() failed, but ignored");
       // remember our new block for postprocessing
       TopLevelEditSubActionDataRef().mNewBlockElement =
-          maybeNewDivElement.inspect();
-      curQuote = maybeNewDivElement.unwrap();
+          newDivElementOrError.inspect();
+      curQuote = newDivElementOrError.unwrap();
       // curQuote is now the correct thing to put content in
     }
 
