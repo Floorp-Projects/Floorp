@@ -98,6 +98,7 @@ class GetSubscriptionResultRunnable final : public WorkerRunnable {
                                 RefPtr<PromiseWorkerProxy>&& aProxy,
                                 nsresult aStatus, const nsAString& aEndpoint,
                                 const nsAString& aScope,
+                                Nullable<EpochTimeStamp>&& aExpirationTime,
                                 nsTArray<uint8_t>&& aRawP256dhKey,
                                 nsTArray<uint8_t>&& aAuthSecret,
                                 nsTArray<uint8_t>&& aAppServerKey)
@@ -106,6 +107,7 @@ class GetSubscriptionResultRunnable final : public WorkerRunnable {
         mStatus(aStatus),
         mEndpoint(aEndpoint),
         mScope(aScope),
+        mExpirationTime(std::move(aExpirationTime)),
         mRawP256dhKey(std::move(aRawP256dhKey)),
         mAuthSecret(std::move(aAuthSecret)),
         mAppServerKey(std::move(aAppServerKey)) {}
@@ -117,8 +119,9 @@ class GetSubscriptionResultRunnable final : public WorkerRunnable {
         promise->MaybeResolve(JS::NullHandleValue);
       } else {
         RefPtr<PushSubscription> sub = new PushSubscription(
-            nullptr, mEndpoint, mScope, std::move(mRawP256dhKey),
-            std::move(mAuthSecret), std::move(mAppServerKey));
+            nullptr, mEndpoint, mScope, std::move(mExpirationTime),
+            std::move(mRawP256dhKey), std::move(mAuthSecret),
+            std::move(mAppServerKey));
         promise->MaybeResolve(sub);
       }
     } else if (NS_ERROR_GET_MODULE(mStatus) == NS_ERROR_MODULE_DOM_PUSH) {
@@ -139,6 +142,7 @@ class GetSubscriptionResultRunnable final : public WorkerRunnable {
   nsresult mStatus;
   nsString mEndpoint;
   nsString mScope;
+  Nullable<EpochTimeStamp> mExpirationTime;
   nsTArray<uint8_t> mRawP256dhKey;
   nsTArray<uint8_t> mAuthSecret;
   nsTArray<uint8_t> mAppServerKey;
@@ -173,8 +177,8 @@ class GetSubscriptionCallback final : public nsIPushSubscriptionCallback {
     WorkerPrivate* worker = mProxy->GetWorkerPrivate();
     RefPtr<GetSubscriptionResultRunnable> r = new GetSubscriptionResultRunnable(
         worker, std::move(mProxy), aStatus, endpoint, mScope,
-        std::move(rawP256dhKey), std::move(authSecret),
-        std::move(appServerKey));
+        std::move(mExpirationTime), std::move(rawP256dhKey),
+        std::move(authSecret), std::move(appServerKey));
     if (!r->Dispatch()) {
       return NS_ERROR_UNEXPECTED;
     }
@@ -193,6 +197,7 @@ class GetSubscriptionCallback final : public nsIPushSubscriptionCallback {
  private:
   RefPtr<PromiseWorkerProxy> mProxy;
   nsString mScope;
+  Nullable<EpochTimeStamp> mExpirationTime;
 };
 
 NS_IMPL_ISUPPORTS(GetSubscriptionCallback, nsIPushSubscriptionCallback)
