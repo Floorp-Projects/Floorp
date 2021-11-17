@@ -64,7 +64,6 @@ class L10nMutations final : public nsStubMutationObserver,
 
  protected:
   bool mObserving = false;
-  bool mRefreshObserver = false;
   RefPtr<nsRefreshDriver> mRefreshDriver;
   DOMLocalization* mDOMLocalization;
 
