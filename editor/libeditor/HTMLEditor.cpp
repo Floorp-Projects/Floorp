@@ -5,6 +5,7 @@
 
 #include "HTMLEditor.h"
 
+#include "CreateElementTransaction.h"  // for CreateElementTransaction
 #include "EditAction.h"
 #include "EditorBase.h"
 #include "EditorDOMPoint.h"
@@ -466,17 +467,17 @@ NS_IMETHODIMP HTMLEditor::SetDocumentCharacterSet(
 
   // Create a new meta charset tag
   Result<RefPtr<Element>, nsresult> maybeNewMetaElement =
-      CreateNodeWithTransaction(*nsGkAtoms::meta,
-                                EditorDOMPoint(primaryHeadElement, 0));
+      CreateAndInsertElementWithTransaction(
+          *nsGkAtoms::meta, EditorDOMPoint(primaryHeadElement, 0));
   if (maybeNewMetaElement.isErr()) {
     NS_WARNING(
-        "EditorBase::CreateNodeWithTransaction(nsGkAtoms::meta) failed, but "
-        "ignored");
+        "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::meta) "
+        "failed, but ignored");
     return NS_OK;
   }
   MOZ_ASSERT(maybeNewMetaElement.inspect());
 
-  // not undoable, undo should undo CreateNodeWithTransaction().
+  // not undoable, undo should undo CreateAndInsertElementWithTransaction().
   DebugOnly<nsresult> rvIgnored = NS_OK;
   rvIgnored = maybeNewMetaElement.inspect()->SetAttr(
       kNameSpaceID_None, nsGkAtoms::httpEquiv, u"Content-Type"_ns, true);
@@ -2937,6 +2938,84 @@ already_AddRefed<Element> HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
   return lastElementInRange.forget();
 }
 
+Result<RefPtr<Element>, nsresult>
+HTMLEditor::CreateAndInsertElementWithTransaction(
+    nsAtom& aTagName, const EditorDOMPoint& aPointToInsert) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_ASSERT(aPointToInsert.IsSetAndValid());
+
+  // XXX We need offset at new node for RangeUpdaterRef().  Therefore, we need
+  //     to compute the offset now but this is expensive.  So, if it's possible,
+  //     we need to redesign RangeUpdaterRef() as avoiding using indices.
+  Unused << aPointToInsert.Offset();
+
+  IgnoredErrorResult ignoredError;
+  AutoEditSubActionNotifier startToHandleEditSubAction(
+      *this, EditSubAction::eCreateNode, nsIEditor::eNext, ignoredError);
+  if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
+    return Err(NS_ERROR_EDITOR_DESTROYED);
+  }
+  NS_WARNING_ASSERTION(
+      !ignoredError.Failed(),
+      "HTMLEditor::OnStartToHandleTopLevelEditSubAction() failed, but ignored");
+
+  // TODO: This method should have a callback function which is called
+  //       immediately after creating an element but before it's inserted into
+  //       the DOM tree.  Then, caller can init the new element's attributes
+  //       and children **without** transactions (it'll reduce the number of
+  //       legacy mutation events).  Finally, we can get rid of
+  //       CreatElementTransaction since we can use InsertNodeTransaction
+  //       instead.
+
+  RefPtr<CreateElementTransaction> transaction =
+      CreateElementTransaction::Create(*this, aTagName, aPointToInsert);
+  nsresult rv = DoTransactionInternal(transaction);
+  if (NS_WARN_IF(Destroyed())) {
+    rv = NS_ERROR_EDITOR_DESTROYED;
+  } else if (transaction->GetNewElement() &&
+             transaction->GetNewElement()->GetParentNode() !=
+                 aPointToInsert.GetContainer()) {
+    NS_WARNING("The new element was not inserted into the expected node");
+    rv = NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+  }
+
+  RefPtr<Element> newElement;
+  if (NS_FAILED(rv)) {
+    NS_WARNING("EditorBase::DoTransactionInternal() failed");
+    // XXX Why do we do this even when DoTransaction() returned error?
+    DebugOnly<nsresult> rvIgnored =
+        RangeUpdaterRef().SelAdjCreateNode(aPointToInsert);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "Rangeupdater::SelAdjCreateNode() failed, but ignored");
+  } else {
+    newElement = transaction->GetNewElement();
+    MOZ_ASSERT(newElement);
+
+    // If we succeeded to create and insert new element, we need to adjust
+    // ranges in RangeUpdaterRef().  It currently requires offset of the new
+    // node.  So, let's call it with original offset.  Note that if
+    // aPointToInsert stores child node, it may not be at the offset since new
+    // element must be inserted before the old child.  Although, mutation
+    // observer can do anything, but currently, we don't check it.
+    DebugOnly<nsresult> rvIgnored =
+        RangeUpdaterRef().SelAdjCreateNode(EditorRawDOMPoint(
+            aPointToInsert.GetContainer(), aPointToInsert.Offset()));
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rvIgnored),
+        "Rangeupdater::SelAdjCreateNode() failed, but ignored");
+    if (newElement) {
+      TopLevelEditSubActionDataRef().DidCreateElement(*this, *newElement);
+    }
+  }
+
+  if (NS_FAILED(rv)) {
+    return Err(rv);
+  }
+
+  return newElement;
+}
+
 already_AddRefed<Element> HTMLEditor::CreateElementWithDefaults(
     const nsAtom& aTagName) {
   // NOTE: Despite of public method, this can be called for internal use.
@@ -3529,9 +3608,10 @@ Result<RefPtr<Element>, nsresult> HTMLEditor::InsertBRElementWithTransaction(
   MOZ_ASSERT(maybePointToInsert.inspect().IsSetAndValid());
 
   Result<RefPtr<Element>, nsresult> maybeNewBRElement =
-      CreateNodeWithTransaction(*nsGkAtoms::br, maybePointToInsert.inspect());
+      CreateAndInsertElementWithTransaction(*nsGkAtoms::br,
+                                            maybePointToInsert.inspect());
   if (maybeNewBRElement.isErr()) {
-    NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+    NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
     return maybeNewBRElement;
   }
   MOZ_ASSERT(maybeNewBRElement.inspect());
@@ -4906,9 +4986,9 @@ already_AddRefed<Element> HTMLEditor::DeleteSelectionAndCreateElement(
     return nullptr;
   }
   Result<RefPtr<Element>, nsresult> maybeNewElement =
-      CreateNodeWithTransaction(aTag, pointToInsert);
+      CreateAndInsertElementWithTransaction(aTag, pointToInsert);
   if (maybeNewElement.isErr()) {
-    NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+    NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
     return nullptr;
   }
   MOZ_ASSERT(maybeNewElement.inspect());
@@ -5589,10 +5669,11 @@ nsresult HTMLEditor::CopyLastEditableChildStylesWithTransaction(
     // element.
     if (!firstClonedElement) {
       Result<RefPtr<Element>, nsresult> maybeNewElement =
-          CreateNodeWithTransaction(MOZ_KnownLive(*tagName),
-                                    EditorDOMPoint(newBlock, 0));
+          CreateAndInsertElementWithTransaction(MOZ_KnownLive(*tagName),
+                                                EditorDOMPoint(newBlock, 0));
       if (maybeNewElement.isErr()) {
-        NS_WARNING("EditorBase::CreateNodeWithTransaction() failed");
+        NS_WARNING(
+            "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
         return maybeNewElement.unwrapErr();
       }
       firstClonedElement = lastClonedElement = maybeNewElement.unwrap();

@@ -1462,6 +1462,26 @@ class HTMLEditor final : public EditorBase,
   MaybeExtendSelectionToHardLineEdgesForBlockEditAction();
 
   /**
+   * Create an element node whose name is aTag at before aPointToInsert.  When
+   * this succeed to create an element node, this inserts the element to
+   * aPointToInsert.
+   *
+   * @param aTagName            The element name to create.
+   * @param aPointToInsert      The insertion point of new element.
+   *                            If this refers end of the container or after,
+   *                            the transaction will append the element to the
+   *                            container.
+   *                            Otherwise, will insert the element before the
+   *                            child node referred by this.
+   *                            Note that this point will be invalid once this
+   *                            method inserts the new element.
+   * @return                    The created new element node or an error.
+   */
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<RefPtr<Element>, nsresult>
+  CreateAndInsertElementWithTransaction(nsAtom& aTagName,
+                                        const EditorDOMPoint& aPointToInsert);
+
+  /**
    * MaybeSplitAncestorsForInsertWithTransaction() does nothing if container of
    * aStartOfDeepestRightNode can have an element whose tag name is aTag.
    * Otherwise, looks for an ancestor node which is or is in active editing
