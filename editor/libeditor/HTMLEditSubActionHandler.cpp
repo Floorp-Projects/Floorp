@@ -4192,26 +4192,19 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
     }
 
     // Make sure we can put a block here.
-    SplitNodeResult splitNodeResult =
-        MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::blockquote,
-                                                    atStartOfSelection);
-    if (splitNodeResult.Failed()) {
+    Result<RefPtr<Element>, nsresult> newBlockQuoteElementOrError =
+        InsertElementWithSplittingAncestorsWithTransaction(
+            *nsGkAtoms::blockquote, atStartOfSelection);
+    if (MOZ_UNLIKELY(newBlockQuoteElementOrError.isErr())) {
       NS_WARNING(
-          "HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction(nsGkAtoms::"
-          "blockquote) failed");
-      return splitNodeResult.Rv();
+          "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
+          "nsGkAtoms::blockquote) failed");
+      return newBlockQuoteElementOrError.unwrapErr();
     }
-    Result<RefPtr<Element>, nsresult> maybeNewBlockQuoteElement =
-        CreateAndInsertElementWithTransaction(*nsGkAtoms::blockquote,
-                                              splitNodeResult.SplitPoint());
-    if (maybeNewBlockQuoteElement.isErr()) {
-      NS_WARNING("HTMLEditor::CreateAndInsertElementWithTransaction() failed");
-      return maybeNewBlockQuoteElement.unwrapErr();
-    }
-    MOZ_ASSERT(maybeNewBlockQuoteElement.inspect());
+    MOZ_ASSERT(newBlockQuoteElementOrError.inspect());
     // remember our new block for postprocessing
     TopLevelEditSubActionDataRef().mNewBlockElement =
-        maybeNewBlockQuoteElement.inspect();
+        newBlockQuoteElementOrError.inspect();
     // delete anything that was in the list of nodes
     // XXX We don't need to remove the nodes from the array for performance.
     while (!arrayOfContents.IsEmpty()) {
@@ -4231,7 +4224,7 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
     // Don't restore the selection
     restoreSelectionLater.Abort();
     nsresult rv = CollapseSelectionToStartOf(
-        MOZ_KnownLive(*maybeNewBlockQuoteElement.inspect()));
+        MOZ_KnownLive(*newBlockQuoteElementOrError.inspect()));
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
                          "HTMLEditor::CollapseSelectionToStartOf() failed");
     return rv;
@@ -4302,25 +4295,19 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
         nsAtom* containerName =
             atListItem.GetContainer()->NodeInfo()->NameAtom();
         // Create a new nested list of correct type.
-        SplitNodeResult splitNodeResult =
-            MaybeSplitAncestorsForInsertWithTransaction(
+        Result<RefPtr<Element>, nsresult> newListElementOrError =
+            InsertElementWithSplittingAncestorsWithTransaction(
                 MOZ_KnownLive(*containerName), atListItem);
-        if (splitNodeResult.Failed()) {
-          NS_WARNING(
-              "HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction() "
-              "failed");
-          return splitNodeResult.Rv();
+        if (MOZ_UNLIKELY(newListElementOrError.isErr())) {
+          NS_WARNING(nsPrintfCString("HTMLEditor::"
+                                     "InsertElementWithSplittingAncestorsWithTr"
+                                     "ansaction(%s) failed",
+                                     nsAtomCString(containerName).get())
+                         .get());
+          return newListElementOrError.unwrapErr();
         }
-        Result<RefPtr<Element>, nsresult> maybeNewListElement =
-            CreateAndInsertElementWithTransaction(MOZ_KnownLive(*containerName),
-                                                  splitNodeResult.SplitPoint());
-        if (maybeNewListElement.isErr()) {
-          NS_WARNING(
-              "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
-          return maybeNewListElement.unwrapErr();
-        }
-        MOZ_ASSERT(maybeNewListElement.inspect());
-        curList = maybeNewListElement.unwrap();
+        MOZ_ASSERT(newListElementOrError.inspect());
+        curList = newListElementOrError.unwrap();
       }
 
       rv = MoveNodeToEndWithTransaction(*listItem, *curList);
@@ -4355,30 +4342,20 @@ nsresult HTMLEditor::HandleHTMLIndentAtSelectionInternal() {
         return NS_OK;  // cancelled
       }
 
-      SplitNodeResult splitNodeResult =
-          MaybeSplitAncestorsForInsertWithTransaction(*nsGkAtoms::blockquote,
-                                                      atContent);
-      if (splitNodeResult.Failed()) {
+      Result<RefPtr<Element>, nsresult> newBlockQuoteElementOrError =
+          InsertElementWithSplittingAncestorsWithTransaction(
+              *nsGkAtoms::blockquote, atContent);
+      if (MOZ_UNLIKELY(newBlockQuoteElementOrError.isErr())) {
         NS_WARNING(
-            "HTMLEditor::MaybeSplitAncestorsForInsertWithTransaction(nsGkAtoms:"
-            ":blockquote) failed");
-        return splitNodeResult.Rv();
+            "HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction("
+            "nsGkAtoms::blockquote) failed");
+        return newBlockQuoteElementOrError.unwrapErr();
       }
-      Result<RefPtr<Element>, nsresult> maybeNewBlockQuoteElement =
-          CreateAndInsertElementWithTransaction(*nsGkAtoms::blockquote,
-                                                splitNodeResult.SplitPoint());
-      if (maybeNewBlockQuoteElement.isErr()) {
-        NS_WARNING(
-            "HTMLEditor::CreateAndInsertElementWithTransaction(nsGkAtoms::"
-            "blockquote) "
-            "failed");
-        return maybeNewBlockQuoteElement.unwrapErr();
-      }
-      MOZ_ASSERT(maybeNewBlockQuoteElement.inspect());
+      MOZ_ASSERT(newBlockQuoteElementOrError.inspect());
       // remember our new block for postprocessing
       TopLevelEditSubActionDataRef().mNewBlockElement =
-          maybeNewBlockQuoteElement.inspect();
-      curQuote = maybeNewBlockQuoteElement.unwrap();
+          newBlockQuoteElementOrError.inspect();
+      curQuote = newBlockQuoteElementOrError.unwrap();
       // curQuote is now the correct thing to put curNode in
     }
 
