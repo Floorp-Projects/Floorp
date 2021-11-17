@@ -30,4 +30,10 @@
 
     <!-- Content description for close button -->
     <string name="mozac_feature_downloads_button_close">बन्द गर्नुहोस्</string>
-    </resources>
+    <!-- Title for the third party download app chooser dialog -->
+    <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">प्रयोग गरेर कार्य सम्पन्न गर्नुहोस्</string>
+    <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
+    <string name="mozac_feature_downloads_unable_to_open_third_party_app">%1$s खोल्न सकिएन</string>
+    <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
+    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">फाइलहरू डाउनलोड गर्न फाइलहरू र मिडिया अनुमति पहुँच आवश्यक छ। एण्ड्रोइड सेटिङ्गहरूमा जानुहोस्, अनुमति ट्याप गर्नुहोस्, र अनुमति ट्याप गर्नुहोस्।</string>
+</resources>
