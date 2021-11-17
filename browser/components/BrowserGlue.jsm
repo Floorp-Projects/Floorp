@@ -17,6 +17,8 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 
+Cu.importGlobalProperties(["Glean"]);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
@@ -1088,6 +1090,8 @@ BrowserGlue.prototype = {
           }
         } else if (data == "add-breaches-sync-handler") {
           this._addBreachesSyncHandler();
+        } else if (data == "new-window-restriction-telemetry") {
+          this._collectNewWindowRestrictionTelemetry();
         }
         break;
       case "initial-migration-will-import-default-bookmarks":
@@ -2710,6 +2714,12 @@ BrowserGlue.prototype = {
             "@mozilla.org/login-detection-service;1"
           ].createInstance(Ci.nsILoginDetectionService);
           loginDetection.init();
+        },
+      },
+
+      {
+        task: () => {
+          this._collectNewWindowRestrictionTelemetry();
         },
       },
 
@@ -4535,6 +4545,14 @@ BrowserGlue.prototype = {
       badge?.classList.remove("feature-callout");
       AppMenuNotifications.removeNotification("fxa-needs-authentication");
     }
+  },
+
+  _collectNewWindowRestrictionTelemetry() {
+    let restrictionPref = Services.prefs.getIntPref(
+      "browser.link.open_newwindow.restriction",
+      2
+    );
+    Glean.browserLink.openNewwindowRestriction.set(restrictionPref);
   },
 
   QueryInterface: ChromeUtils.generateQI([
