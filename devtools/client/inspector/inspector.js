@@ -1824,7 +1824,7 @@ Inspector.prototype = {
       return null;
     }
     // turn off node picker when color picker is starting
-    this.toolbox.nodePicker.stop().catch(console.error);
+    this.toolbox.nodePicker.stop({ canceled: true }).catch(console.error);
     this.telemetry.scalarSet(TELEMETRY_EYEDROPPER_OPENED, 1);
     this.eyeDropperButton.classList.add("checked");
     this.startEyeDropperListeners();
@@ -1858,7 +1858,7 @@ Inspector.prototype = {
     }
 
     // turn off node picker when add node is triggered
-    this.toolbox.nodePicker.stop();
+    this.toolbox.nodePicker.stop({ canceled: true });
 
     // turn off color picker when add node is triggered
     this.hideEyeDropper();

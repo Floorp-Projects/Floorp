@@ -36,7 +36,7 @@ add_task(async function() {
   ok(isVisible, "Inspector is highlighting after iframe nav.");
 
   info("Stopping element picker.");
-  await toolbox.nodePicker.stop();
+  await toolbox.nodePicker.stop({ canceled: true });
 });
 
 async function reloadIframe(inspector) {

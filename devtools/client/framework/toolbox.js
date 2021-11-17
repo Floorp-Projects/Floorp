@@ -324,6 +324,7 @@ function Toolbox(
   this._onTargetSelected = this._onTargetSelected.bind(this);
   this._onResourceAvailable = this._onResourceAvailable.bind(this);
   this._onResourceUpdated = this._onResourceUpdated.bind(this);
+  this._onToolSelectedStopPicker = this._onToolSelectedStopPicker.bind(this);
 
   this._throttledSetToolboxButtons = throttle(
     () => this.component.setToolboxButtons(this.toolbarButtons),
@@ -2071,7 +2072,7 @@ Toolbox.prototype = {
       if (currentPanel.cancelPicker) {
         currentPanel.cancelPicker();
       } else {
-        this.nodePicker.cancel();
+        this.nodePicker.stop({ canceled: true });
       }
       // Stop the console from toggling.
       event.stopImmediatePropagation();
@@ -2087,7 +2088,7 @@ Toolbox.prototype = {
     await this.selectTool("inspector", "inspect_dom");
     // turn off color picker when node picker is starting
     this.getPanel("inspector").hideEyeDropper();
-    this.on("select", this.nodePicker.stop);
+    this.on("select", this._onToolSelectedStopPicker);
   },
 
   _onPickerStarted: async function() {
@@ -2099,9 +2100,13 @@ Toolbox.prototype = {
       return;
     }
     this.tellRDMAboutPickerState(false, PICKER_TYPES.ELEMENT);
-    this.off("select", this.nodePicker.stop);
+    this.off("select", this._onToolSelectedStopPicker);
     this.doc.removeEventListener("keypress", this._onPickerKeypress, true);
     this.pickerButton.isChecked = false;
+  },
+
+  _onToolSelectedStopPicker: function() {
+    this.nodePicker.stop({ canceled: true });
   },
 
   /**

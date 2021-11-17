@@ -124,5 +124,5 @@ add_task(async function() {
   );
 
   info("Stop the element picker.");
-  await toolbox.nodePicker.stop();
+  await toolbox.nodePicker.stop({ canceled: true });
 });
