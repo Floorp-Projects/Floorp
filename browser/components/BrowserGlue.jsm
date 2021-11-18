@@ -1745,6 +1745,7 @@ BrowserGlue.prototype = {
   // set during onboarding when the user chooses to enable protections or not.
   _setDefaultCookieBehavior() {
     if (!Services.prefs.prefHasUserValue(PREF_DFPI_ENABLED_BY_DEFAULT)) {
+      Services.telemetry.scalarSet("privacy.dfpi_rollout_enabledByDefault", 2);
       return;
     }
     let dFPIEnabled = Services.prefs.getBoolPref(PREF_DFPI_ENABLED_BY_DEFAULT);
@@ -1755,6 +1756,11 @@ BrowserGlue.prototype = {
       dFPIEnabled
         ? Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
         : Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
+    );
+
+    Services.telemetry.scalarSet(
+      "privacy.dfpi_rollout_enabledByDefault",
+      dFPIEnabled ? 1 : 0
     );
 
     if (dFPIEnabled) {
