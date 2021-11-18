@@ -299,8 +299,6 @@ class Compositor : public TextureSourceProvider {
   virtual const char* Name() const = 0;
 #endif  // MOZ_DUMP_PAINTING
 
-  virtual LayersBackend GetBackendType() const = 0;
-
   virtual CompositorD3D11* AsCompositorD3D11() { return nullptr; }
 
   Compositor* AsCompositor() override { return this; }
