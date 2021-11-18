@@ -2461,7 +2461,7 @@ void RestReplacer::visitLoadElement(MLoadElement* ins) {
     auto* numFormals = MConstant::New(alloc(), Int32Value(formals));
     ins->block()->insertBefore(ins, numFormals);
 
-    auto* add = MAdd::New(alloc(), index, numFormals, MIRType::Int32);
+    auto* add = MAdd::New(alloc(), index, numFormals, TruncateKind::Truncate);
     ins->block()->insertBefore(ins, add);
 
     index = add;
@@ -2494,6 +2494,7 @@ void RestReplacer::visitLength(MInstruction* ins, MDefinition* elements) {
     ins->block()->insertBefore(ins, numFormals);
 
     auto* length = MSub::New(alloc(), numActuals, numFormals, MIRType::Int32);
+    length->setTruncateKind(TruncateKind::Truncate);
     ins->block()->insertBefore(ins, length);
 
     auto* zero = MConstant::New(alloc(), Int32Value(0));
