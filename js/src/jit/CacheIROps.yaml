@@ -2780,6 +2780,13 @@
     map: ObjId
     obj: ObjId
 
+- name: ArrayFromArgumentsObjectResult
+  shared: true
+  transpile: false
+  cost_estimate: 5
+  args:
+    obj: ObjId
+
 - name: CallPrintString
   shared: true
   transpile: false
