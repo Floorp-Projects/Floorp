@@ -283,6 +283,10 @@ Inspector.prototype = {
     if (this._highlighters) {
       this._highlighters.hideAllHighlighters();
     }
+    if (targetFront.isDestroyed()) {
+      return;
+    }
+
     await this.initInspectorFront(targetFront);
 
     // the target might have been destroyed when reloading quickly,
