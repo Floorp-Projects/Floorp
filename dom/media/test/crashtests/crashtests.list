@@ -149,3 +149,4 @@ load 1708790.html
 skip-if(cocoaWidget) load 1709130.html # video failed decoding on MacOS, 1709684
 skip-if(appleSilicon) load 1517199.html
 load 1734008.html
+load 1741677.html
