@@ -927,7 +927,7 @@ void Http3Session::ResetRecvd(uint64_t aStreamId, uint64_t aError) {
     // We will restart the request and the alt-svc will be removed
     // automatically.
     // Also disable http3 we want http1.1.
-    stream->Transaction()->DisableHttp3();
+    stream->Transaction()->DisableHttp3(false);
     stream->Transaction()->DisableSpdy();
     CloseStream(stream, NS_ERROR_NET_RESET);
   } else if (aError == HTTP3_APP_ERROR_REQUEST_REJECTED) {

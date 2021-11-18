@@ -119,7 +119,7 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   void DisableSpdy() override;
   void DoNotRemoveAltSvc() override { mDoNotRemoveAltSvc = true; }
-  void DisableHttp3() override;
+  void DisableHttp3(bool aAllowRetryHTTPSRR) override;
 
   nsHttpTransaction* QueryHttpTransaction() override { return this; }
 

@@ -58,6 +58,7 @@ registerCleanupFunction(async () => {
   );
   Services.prefs.clearUserPref("network.http.speculative-parallel-limit");
   Services.prefs.clearUserPref("network.dns.localDomains");
+  Services.prefs.clearUserPref("network.dns.http3_echconfig.enabled");
   if (trrServer) {
     await trrServer.stop();
   }
@@ -831,6 +832,7 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
   await trrServer.start();
   dns.clearCache(true);
   Services.prefs.setIntPref("network.trr.mode", 3);
+  Services.prefs.setBoolPref("network.dns.http3_echconfig.enabled", true);
   Services.prefs.setCharPref(
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query`
