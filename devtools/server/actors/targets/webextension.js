@@ -176,6 +176,10 @@ webExtensionTargetPrototype.destroy = function() {
     });
   }
 
+  if (this.fallbackWindow) {
+    this.fallbackWindow = null;
+  }
+
   this.addon = null;
   this.addonId = null;
 
@@ -198,12 +202,6 @@ webExtensionTargetPrototype._searchFallbackWindow = function() {
   this.fallbackWindow.document.location.href = FALLBACK_DOC_URL;
 
   return this.fallbackWindow;
-};
-
-webExtensionTargetPrototype._destroyFallbackWindow = function() {
-  if (this.fallbackWindow) {
-    this.fallbackWindow = null;
-  }
 };
 
 // Discovery an extension page to use as a default target window.
@@ -244,15 +242,6 @@ webExtensionTargetPrototype._onNewExtensionWindow = function(window) {
   if (!this.window || this.window === this.fallbackWindow) {
     this._changeTopLevelDocument(window);
   }
-};
-
-webExtensionTargetPrototype._detach = function() {
-  // Call ParentProcessTargetActor's _detach to unsubscribe new/destroyed chrome docshell
-  // listeners.
-  ParentProcessTargetActor.prototype._detach.apply(this);
-
-  // Stop watching for new extension windows.
-  this._destroyFallbackWindow();
 };
 
 /**
