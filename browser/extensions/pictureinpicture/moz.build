@@ -28,4 +28,4 @@ FINAL_TARGET_FILES.features["pictureinpicture@mozilla.org"]["lib"] += [
 ]
 
 with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "Video/Audio Controls")
+    BUG_COMPONENT = ("Toolkit", "Picture-in-Picture")
