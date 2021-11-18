@@ -16,7 +16,7 @@ origin:
   license-file: LICENSE
 
 vendoring:
-  url: https://github.com/PLSysSec/rlbox_wasm2c_sandbox.git
+  url: https://github.com/PLSysSec/rlbox_wasm2c_sandbox
   source-hosting: github
   vendor-directory: third_party/rlbox_wasm2c_sandbox
 

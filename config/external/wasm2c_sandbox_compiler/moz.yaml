@@ -16,7 +16,7 @@ origin:
   license-file: LICENSE
 
 vendoring:
-  url: https://github.com/PLSysSec/wasm2c_sandbox_compiler.git
+  url: https://github.com/PLSysSec/wasm2c_sandbox_compiler
   source-hosting: github
   vendor-directory: third_party/wasm2c
 

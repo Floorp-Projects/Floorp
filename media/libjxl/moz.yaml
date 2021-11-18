@@ -44,7 +44,7 @@ updatebot:
         frequency: 3 weeks
 
 vendoring:
-  url: https://github.com/libjxl/libjxl.git
+  url: https://github.com/libjxl/libjxl
   source-hosting: github
   vendor-directory: third_party/jpeg-xl
 
