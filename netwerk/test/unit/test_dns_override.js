@@ -7,10 +7,7 @@ const override = Cc["@mozilla.org/network/native-dns-override;1"].getService(
   Ci.nsINativeDNSResolverOverride
 );
 const defaultOriginAttributes = {};
-const threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
-  Ci.nsIThreadManager
-);
-const mainThread = threadManager.currentThread;
+const mainThread = Services.tm.currentThread;
 
 class Listener {
   constructor() {

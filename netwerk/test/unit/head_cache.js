@@ -27,10 +27,7 @@ function evict_cache_entries(where) {
 }
 
 function createURI(urispec) {
-  var ioServ = Cc["@mozilla.org/network/io-service;1"].getService(
-    Ci.nsIIOService
-  );
-  return ioServ.newURI(urispec);
+  return Services.io.newURI(urispec);
 }
 
 function getCacheStorage(where, lci) {

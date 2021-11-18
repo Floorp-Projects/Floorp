@@ -47,10 +47,7 @@ var listener2 = {
 const defaultOriginAttributes = {};
 
 function run_test() {
-  var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
-    Ci.nsIThreadManager
-  );
-  var mainThread = threadManager.currentThread;
+  var mainThread = Services.tm.currentThread;
 
   var flags = Ci.nsIDNSService.RESOLVE_BYPASS_CACHE;
 

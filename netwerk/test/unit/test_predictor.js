@@ -13,10 +13,7 @@ var running_single_process = false;
 var predictor = null;
 
 function is_child_process() {
-  return (
-    Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
-      .processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
-  );
+  return Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
 }
 
 function extract_origin(uri) {

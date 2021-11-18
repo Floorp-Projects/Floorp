@@ -1,7 +1,6 @@
 "use strict";
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const ReferrerInfo = Components.Constructor(
   "@mozilla.org/referrer-info;1",

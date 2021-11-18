@@ -20,11 +20,9 @@
 
 "use strict";
 
-var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+var ios = Services.io;
 var pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
-var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-  Ci.nsIPrefBranch
-);
+var prefs = Services.prefs;
 
 /**
  * Test nsIProtocolHandler that allows proxying, but doesn't allow HTTP

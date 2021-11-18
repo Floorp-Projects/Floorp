@@ -1,9 +1,5 @@
 "use strict";
 
-var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
-  Ci.nsIIOService
-);
-
 function run_test() {
   let testURIs = [
     // 100.64/10 prefix (RFC 6598)
@@ -15,7 +11,7 @@ function run_test() {
   ];
 
   for (let [uri, isShared] of testURIs) {
-    let nsuri = ioService.newURI(uri);
-    equal(isShared, ioService.hostnameIsSharedIPAddress(nsuri));
+    let nsuri = Services.io.newURI(uri);
+    equal(isShared, Services.io.hostnameIsSharedIPAddress(nsuri));
   }
 }

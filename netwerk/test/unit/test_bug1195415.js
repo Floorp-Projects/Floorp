@@ -3,10 +3,8 @@
 "use strict";
 
 function run_test() {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
-    Ci.nsIScriptSecurityManager
-  );
+  var ios = Services.io;
+  var ssm = Services.scriptSecurityManager;
 
   // NON-UNICODE
   var uri = ios.newURI("http://foo.com/file.txt");

@@ -5,15 +5,13 @@
 "use strict";
 
 ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let h2Port;
 let trrServer;
 
 function inChildProcess() {
-  return (
-    Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
-      .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
-  );
+  return Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
 
 const dns = Cc["@mozilla.org/network/dns-service;1"].getService(

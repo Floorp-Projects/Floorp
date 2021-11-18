@@ -2,7 +2,7 @@
 
 function run_test() {
   try {
-    var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
+    var cm = Services.cookies;
     Assert.notEqual(cm, null, "Retrieving the cookie manager failed");
 
     const time = new Date("Jan 1, 2030").getTime() / 1000;

@@ -2,9 +2,6 @@
 
 const PR_RDONLY = 0x1;
 
-var etld = Cc["@mozilla.org/network/effective-tld-service;1"].getService(
-  Ci.nsIEffectiveTLDService
-);
 var idn = Cc["@mozilla.org/network/idn-service;1"].getService(Ci.nsIIDNService);
 
 function run_test() {
@@ -57,6 +54,6 @@ function run_test() {
 
 function checkPublicSuffix(host, expectedSuffix) {
   expectedSuffix = idn.convertUTF8toACE(expectedSuffix).toLowerCase();
-  var actualSuffix = etld.getPublicSuffixFromHost(host);
+  var actualSuffix = Services.eTLD.getPublicSuffixFromHost(host);
   Assert.equal(actualSuffix, expectedSuffix);
 }

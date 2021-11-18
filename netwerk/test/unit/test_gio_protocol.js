@@ -3,10 +3,7 @@
 "use strict";
 
 function inChildProcess() {
-  return (
-    Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
-      .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
-  );
+  return Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
 
 const PR_RDONLY = 0x1; // see prio.h
@@ -21,10 +18,10 @@ const PR_RDONLY = 0x1; // see prio.h
 function setup() {
   // Allowing some protocols to get a channel
   if (!inChildProcess()) {
-    var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-      Ci.nsIPrefBranch
+    Services.prefs.setCharPref(
+      "network.gio.supported-protocols",
+      "localtest:,recent:"
     );
-    prefs.setCharPref("network.gio.supported-protocols", "localtest:,recent:");
   } else {
     do_send_remote_message("gio-allow-test-protocols");
     do_await_remote_message("gio-allow-test-protocols-done");
@@ -36,19 +33,9 @@ setup();
 registerCleanupFunction(() => {
   // Resetting the protocols to None
   if (!inChildProcess()) {
-    var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-      Ci.nsIPrefBranch
-    );
-    prefs.clearUserPref("network.gio.supported-protocols");
+    Services.prefs.clearUserPref("network.gio.supported-protocols");
   }
 });
-
-function getFile(key) {
-  var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(
-    Ci.nsIProperties
-  );
-  return dirSvc.get(key, Ci.nsIFile);
-}
 
 function new_file_input_stream(file, buffered) {
   var stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(

@@ -1,4 +1,3 @@
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { UrlClassifierTestUtils } = ChromeUtils.import(
   "resource://testing-common/UrlClassifierTestUtils.jsm"
 );

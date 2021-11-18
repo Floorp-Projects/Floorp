@@ -88,10 +88,7 @@ function run_test() {
 
   mc.fired(); // Goes to (2)
 
-  var os = Cc["@mozilla.org/observer-service;1"].getService(
-    Ci.nsIObserverService
-  );
-  os.addObserver(
+  Services.obs.addObserver(
     {
       observe(subject, topic, data) {
         // (3)
