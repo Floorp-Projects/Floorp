@@ -4937,6 +4937,7 @@ AttachDecision OptimizeSpreadCallIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
 
   TRY_ATTACH(tryAttachArray());
+  TRY_ATTACH(tryAttachArguments());
   TRY_ATTACH(tryAttachNotOptimizable());
 
   trackAttached(IRGenerator::NotAttached);
@@ -5062,6 +5063,63 @@ AttachDecision OptimizeSpreadCallIRGenerator::tryAttachArray() {
   writer.returnFromIC();
 
   trackAttached("Array");
+  return AttachDecision::Attach;
+}
+
+AttachDecision OptimizeSpreadCallIRGenerator::tryAttachArguments() {
+  // The value must be an arguments object.
+  if (!val_.isObject()) {
+    return AttachDecision::NoAction;
+  }
+  JSObject* obj = &val_.toObject();
+  if (!obj->is<ArgumentsObject>()) {
+    return AttachDecision::NoAction;
+  }
+  auto* args = &obj->as<ArgumentsObject>();
+
+  // Ensure neither elements, nor the length, nor the iterator has been
+  // overridden. Also ensure no args are forwarded to allow reading them
+  // directly from the frame.
+  if (args->hasOverriddenElement() || args->hasOverriddenLength() ||
+      args->hasOverriddenIterator() || args->anyArgIsForwarded()) {
+    return AttachDecision::NoAction;
+  }
+
+  NativeObject* arrayIteratorProto;
+  uint32_t slot;
+  JSFunction* nextFun;
+  if (!IsArrayIteratorPrototypeOptimizable(cx_, &arrayIteratorProto, &slot,
+                                           &nextFun)) {
+    return AttachDecision::NoAction;
+  }
+
+  ValOperandId valId(writer.setInputOperandId(0));
+  ObjOperandId objId = writer.guardToObject(valId);
+
+  if (args->is<MappedArgumentsObject>()) {
+    writer.guardClass(objId, GuardClassKind::MappedArguments);
+  } else {
+    MOZ_ASSERT(args->is<UnmappedArgumentsObject>());
+    writer.guardClass(objId, GuardClassKind::UnmappedArguments);
+  }
+  uint8_t flags = ArgumentsObject::ELEMENT_OVERRIDDEN_BIT |
+                  ArgumentsObject::LENGTH_OVERRIDDEN_BIT |
+                  ArgumentsObject::ITERATOR_OVERRIDDEN_BIT |
+                  ArgumentsObject::FORWARDED_ARGUMENTS_BIT;
+  writer.guardArgumentsObjectFlags(objId, flags);
+
+  ObjOperandId protoId = writer.loadObject(arrayIteratorProto);
+  ObjOperandId nextId = writer.loadObject(nextFun);
+
+  writer.guardShape(protoId, arrayIteratorProto->shape());
+
+  // Ensure that proto[slot] == nextFun.
+  writer.guardDynamicSlotIsSpecificObject(protoId, nextId, slot);
+
+  writer.arrayFromArgumentsObjectResult(objId);
+  writer.returnFromIC();
+
+  trackAttached("Arguments");
   return AttachDecision::Attach;
 }
 
