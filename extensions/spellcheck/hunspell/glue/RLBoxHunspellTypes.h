@@ -11,28 +11,10 @@
 #include "hunspell_csutil.hxx"
 
 #ifdef MOZ_WASM_SANDBOXING_HUNSPELL
-namespace rlbox {
-class rlbox_wasm2c_sandbox;
-}
-using rlbox_hunspell_sandbox_type = rlbox::rlbox_wasm2c_sandbox;
+RLBOX_DEFINE_BASE_TYPES_FOR(hunspell, wasm2c)
 #else
-using rlbox_hunspell_sandbox_type = rlbox::rlbox_noop_sandbox;
+RLBOX_DEFINE_BASE_TYPES_FOR(hunspell, noop)
 #endif
-
-using rlbox_sandbox_hunspell =
-    rlbox::rlbox_sandbox<rlbox_hunspell_sandbox_type>;
-template <typename T>
-using sandbox_callback_hunspell =
-    rlbox::sandbox_callback<T, rlbox_hunspell_sandbox_type>;
-template <typename T>
-using tainted_hunspell = rlbox::tainted<T, rlbox_hunspell_sandbox_type>;
-template <typename T>
-using tainted_opaque_hunspell =
-    rlbox::tainted_opaque<T, rlbox_hunspell_sandbox_type>;
-template <typename T>
-using tainted_volatile_hunspell =
-    rlbox::tainted_volatile<T, rlbox_hunspell_sandbox_type>;
-using rlbox::tainted_boolean_hint;
 
 #define sandbox_fields_reflection_hunspell_class_cs_info(f, g, ...) \
   f(unsigned char, ccase, FIELD_NORMAL, ##__VA_ARGS__) g()          \

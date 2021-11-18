@@ -9,23 +9,9 @@
 #include "mozilla/rlbox/rlbox_types.hpp"
 
 #ifdef MOZ_WASM_SANDBOXING_OGG
-namespace rlbox {
-class rlbox_wasm2c_sandbox;
-}
-using rlbox_ogg_sandbox_type = rlbox::rlbox_wasm2c_sandbox;
+RLBOX_DEFINE_BASE_TYPES_FOR(ogg, wasm2c)
 #else
-using rlbox_ogg_sandbox_type = rlbox::rlbox_noop_sandbox;
+RLBOX_DEFINE_BASE_TYPES_FOR(ogg, noop)
 #endif
-
-using rlbox_sandbox_ogg = rlbox::rlbox_sandbox<rlbox_ogg_sandbox_type>;
-template <typename T>
-using sandbox_callback_ogg = rlbox::sandbox_callback<T, rlbox_ogg_sandbox_type>;
-template <typename T>
-using tainted_ogg = rlbox::tainted<T, rlbox_ogg_sandbox_type>;
-template <typename T>
-using tainted_opaque_ogg = rlbox::tainted_opaque<T, rlbox_ogg_sandbox_type>;
-template <typename T>
-using tainted_volatile_ogg = rlbox::tainted_volatile<T, rlbox_ogg_sandbox_type>;
-using rlbox::tainted_boolean_hint;
 
 #endif
