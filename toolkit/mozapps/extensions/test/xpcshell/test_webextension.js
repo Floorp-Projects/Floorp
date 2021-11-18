@@ -620,3 +620,53 @@ add_task(async function test_developer_properties() {
     await addon.uninstall();
   }
 });
+
+add_task(async function test_invalid_homepage_and_developer_urls() {
+  const INVALID_URLS = [
+    "chrome://browser/content/",
+    "data:text/json,...",
+    "javascript:;",
+    "/",
+    "not-an-url",
+  ];
+  const EXPECTED_ERROR_RE = /Access denied for URL|may not load or link to|is not a valid URL/;
+
+  for (let url of INVALID_URLS) {
+    // First, we verify `homepage_url`, which has a `url` "format" defined
+    // since it exists.
+    let normalized = await ExtensionTestUtils.normalizeManifest({
+      homepage_url: url,
+    });
+    ok(
+      EXPECTED_ERROR_RE.test(normalized.error),
+      `got expected error for ${url}`
+    );
+
+    // The `developer.url` now has a "format" but it was a late addition so we
+    // are only raising a warning instead of an error.
+    ExtensionTestUtils.failOnSchemaWarnings(false);
+    normalized = await ExtensionTestUtils.normalizeManifest({
+      developer: { url },
+    });
+    ok(!normalized.error, "expected no error");
+    ok(
+      // Despites this prop being named `errors`, we are checking the warnings
+      // here.
+      EXPECTED_ERROR_RE.test(normalized.errors[0]),
+      `got expected warning for ${url}`
+    );
+    ExtensionTestUtils.failOnSchemaWarnings(true);
+  }
+});
+
+add_task(async function test_valid_homepage_and_developer_urls() {
+  let normalized = await ExtensionTestUtils.normalizeManifest({
+    developer: { url: "https://example.com" },
+  });
+  ok(!normalized.error, "expected no error");
+
+  normalized = await ExtensionTestUtils.normalizeManifest({
+    homepage_url: "https://example.com",
+  });
+  ok(!normalized.error, "expected no error");
+});

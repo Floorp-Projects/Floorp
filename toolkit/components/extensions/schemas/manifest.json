@@ -83,8 +83,10 @@
               },
               "url": {
                 "type": "string",
+                "format": "url",
                 "optional": true,
-                "preprocess": "localize"
+                "preprocess": "localize",
+                "onError": "warn"
               }
             }
           }
