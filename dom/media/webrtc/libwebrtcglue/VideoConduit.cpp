@@ -977,33 +977,42 @@ void WebrtcVideoConduit::CreateRecvStream() {
               mRecvStreamConfig.rtp.remote_ssrc);
 }
 
-void WebrtcVideoConduit::SetRemoteSSRCConfig(uint32_t ssrc, uint32_t rtxSsrc) {
+void WebrtcVideoConduit::NotifyUnsetCurrentRemoteSSRC() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  mMutex.AssertNotCurrentThreadOwns();
-  // Don't unset (and call back into) ourselves.
+  CSFLogDebug(LOGTAG, "%s (%p): Unsetting SSRC %u in other conduits",
+              __FUNCTION__, this, mRecvStreamConfig.rtp.remote_ssrc);
   mCall->UnregisterConduit(this);
-
-  CSFLogDebug(LOGTAG, "%s: SSRC %u (0x%x)", __FUNCTION__, ssrc, ssrc);
-  mCall->UnsetRemoteSSRC(ssrc);
-
-  // Remote SSRC set -- listen for unsets from other conduits.
+  mCall->UnsetRemoteSSRC(mRecvStreamConfig.rtp.remote_ssrc);
   mCall->RegisterConduit(this);
-
-  mRecvSSRC = mRecvStreamConfig.rtp.remote_ssrc = ssrc;
-  mRecvStreamConfig.rtp.rtx_ssrc = rtxSsrc;
 }
 
-void WebrtcVideoConduit::SetRemoteSSRCAndRestartAsNeeded(uint32_t ssrc,
-                                                         uint32_t rtxSsrc) {
+void WebrtcVideoConduit::SetRemoteSSRCConfig(uint32_t aSsrc,
+                                             uint32_t aRtxSsrc) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
-  mMutex.AssertNotCurrentThreadOwns();
 
-  if (mRecvStreamConfig.rtp.remote_ssrc == ssrc &&
-      mRecvStreamConfig.rtp.rtx_ssrc == rtxSsrc) {
+  CSFLogDebug(LOGTAG, "%s: SSRC %u (0x%x)", __FUNCTION__, aSsrc, aSsrc);
+
+  if (mRecvStreamConfig.rtp.remote_ssrc != aSsrc) {
+    nsCOMPtr<nsIDirectTaskDispatcher> dtd = do_QueryInterface(mCallThread);
+    MOZ_ALWAYS_SUCCEEDS(dtd->DispatchDirectTask(NewRunnableMethod(
+        "WebrtcVideoConduit::NotifyUnsetCurrentRemoteSSRC", this,
+        &WebrtcVideoConduit::NotifyUnsetCurrentRemoteSSRC)));
+  }
+
+  mRecvSSRC = mRecvStreamConfig.rtp.remote_ssrc = aSsrc;
+  mRecvStreamConfig.rtp.rtx_ssrc = aRtxSsrc;
+}
+
+void WebrtcVideoConduit::SetRemoteSSRCAndRestartAsNeeded(uint32_t aSsrc,
+                                                         uint32_t aRtxSsrc) {
+  MOZ_ASSERT(mCallThread->IsOnCurrentThread());
+
+  if (mRecvStreamConfig.rtp.remote_ssrc == aSsrc &&
+      mRecvStreamConfig.rtp.rtx_ssrc == aRtxSsrc) {
     return;
   }
 
-  SetRemoteSSRCConfig(ssrc, rtxSsrc);
+  SetRemoteSSRCConfig(aSsrc, aRtxSsrc);
 
   const bool wasReceiving = mEngineReceiving;
   const bool hadRecvStream = mRecvStream;
@@ -1066,12 +1075,12 @@ void WebrtcVideoConduit::EnsureLocalSSRC() {
   mRecvStreamConfig.rtp.local_ssrc = ssrcs[0];
 }
 
-void WebrtcVideoConduit::UnsetRemoteSSRC(uint32_t ssrc) {
+void WebrtcVideoConduit::UnsetRemoteSSRC(uint32_t aSsrc) {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
   mMutex.AssertNotCurrentThreadOwns();
 
-  if (mRecvStreamConfig.rtp.remote_ssrc != ssrc &&
-      mRecvStreamConfig.rtp.rtx_ssrc != ssrc) {
+  if (mRecvStreamConfig.rtp.remote_ssrc != aSsrc &&
+      mRecvStreamConfig.rtp.rtx_ssrc != aSsrc) {
     return;
   }
 
@@ -1079,10 +1088,12 @@ void WebrtcVideoConduit::UnsetRemoteSSRC(uint32_t ssrc) {
   uint32_t our_ssrc = 0;
   do {
     our_ssrc = GenerateRandomSSRC();
-  } while (NS_WARN_IF(our_ssrc == ssrc) ||
-           NS_WARN_IF(std::any_of(
-               ssrcs.begin(), ssrcs.end(),
-               [&](const auto& aSsrc) { return our_ssrc == aSsrc; })));
+  } while (NS_WARN_IF(our_ssrc == aSsrc) ||
+           NS_WARN_IF(std::find(ssrcs.begin(), ssrcs.end(), our_ssrc) !=
+                      ssrcs.end()));
+
+  CSFLogDebug(LOGTAG, "%s (%p): Generated remote SSRC %u", __FUNCTION__, this,
+              our_ssrc);
 
   // There is a (tiny) chance that this new random ssrc will collide with some
   // other conduit's remote ssrc, in which case that conduit will choose a new
@@ -1145,6 +1156,7 @@ MediaConduitErrorCode WebrtcVideoConduit::Init() {
 
 void WebrtcVideoConduit::InitCall() {
   MOZ_ASSERT(mCallThread->IsOnCurrentThread());
+  mCall->RegisterConduit(this);
   mSendPluginCreated = mEncoderFactory->CreatedGmpPluginEvent().Connect(
       GetMainThreadSerialEventTarget(),
       [self = detail::RawPtr(this)](uint64_t aPluginID) {
