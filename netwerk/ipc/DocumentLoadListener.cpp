@@ -809,7 +809,7 @@ auto DocumentLoadListener::OpenObject(
 
   MOZ_ASSERT(!mIsDocumentLoad);
 
-  auto sandboxFlags = GetLoadingBrowsingContext()->GetSandboxFlags();
+  auto sandboxFlags = aLoadState->TriggeringSandboxFlags();
 
   RefPtr<LoadInfo> loadInfo = CreateObjectLoadInfo(
       aLoadState, aInnerWindowId, aContentPolicyType, sandboxFlags);
