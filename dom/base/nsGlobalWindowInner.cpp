@@ -2612,33 +2612,32 @@ bool nsGlobalWindowInner::CrossOriginIsolated() const {
 
 void nsPIDOMWindowInner::AddPeerConnection() {
   MOZ_ASSERT(NS_IsMainThread());
-  mTopInnerWindow ? mTopInnerWindow->mTotalActivePeerConnections++
-                  : mTotalActivePeerConnections++;
   ++mActivePeerConnections;
   if (mActivePeerConnections == 1 && mWindowGlobalChild) {
-    mWindowGlobalChild->BlockBFCacheFor(BFCacheStatus::ACTIVE_PEER_CONNECTION);
+    mWindowGlobalChild->SendUpdateActivePeerConnectionStatus(
+        /*aIsAdded*/ true);
   }
 }
 
 void nsPIDOMWindowInner::RemovePeerConnection() {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mTopInnerWindow ? mTopInnerWindow->mTotalActivePeerConnections
-                             : mTotalActivePeerConnections);
   MOZ_ASSERT(mActivePeerConnections > 0);
-
-  mTopInnerWindow ? mTopInnerWindow->mTotalActivePeerConnections--
-                  : mTotalActivePeerConnections--;
   --mActivePeerConnections;
   if (mActivePeerConnections == 0 && mWindowGlobalChild) {
-    mWindowGlobalChild->UnblockBFCacheFor(
-        BFCacheStatus::ACTIVE_PEER_CONNECTION);
+    mWindowGlobalChild->SendUpdateActivePeerConnectionStatus(
+        /*aIsAdded*/ false);
   }
 }
 
 bool nsPIDOMWindowInner::HasActivePeerConnections() {
   MOZ_ASSERT(NS_IsMainThread());
-  return mTopInnerWindow ? mTopInnerWindow->mTotalActivePeerConnections
-                         : mTotalActivePeerConnections;
+  WindowContext* wc = GetWindowContext();
+  if (!wc) {
+    return false;
+  }
+
+  WindowContext* topWindowContext = wc->TopWindowContext();
+  return topWindowContext && topWindowContext->GetHasActivePeerConnections();
 }
 
 void nsPIDOMWindowInner::AddMediaKeysInstance(MediaKeys* aMediaKeys) {

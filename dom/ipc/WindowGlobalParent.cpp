@@ -1413,6 +1413,33 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvUpdateBFCacheStatus(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult
+WindowGlobalParent::RecvUpdateActivePeerConnectionStatus(bool aIsAdded) {
+  if (aIsAdded) {
+    RecvUpdateBFCacheStatus(BFCacheStatus::ACTIVE_PEER_CONNECTION, 0);
+  } else {
+    RecvUpdateBFCacheStatus(0, BFCacheStatus::ACTIVE_PEER_CONNECTION);
+  }
+
+  if (WindowGlobalParent* top = TopWindowContext()) {
+    CheckedUint32 newValue(top->mNumOfProcessesWithActivePeerConnections);
+    if (aIsAdded) {
+      ++newValue;
+    } else {
+      --newValue;
+    }
+    if (!newValue.isValid()) {
+      return IPC_FAIL(this,
+                      "mNumOfProcessesWithActivePeerConnections overflowed");
+    }
+
+    top->mNumOfProcessesWithActivePeerConnections = newValue.value();
+    Unused << top->SetHasActivePeerConnections(newValue.value() > 0);
+  }
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult WindowGlobalParent::RecvSetSingleChannelId(
     const Maybe<uint64_t>& aSingleChannelId) {
   mSingleChannelId = aSingleChannelId;
@@ -1690,6 +1717,13 @@ void WindowGlobalParent::AddSecurityState(uint32_t aStateFlags) {
   if (GetBrowsingContext()->GetCurrentWindowGlobal() == this) {
     GetBrowsingContext()->UpdateSecurityState();
   }
+}
+
+bool WindowGlobalParent::HasActivePeerConnections() {
+  MOZ_ASSERT(TopWindowContext() == this,
+             "mNumOfProcessesWithActivePeerConnections is set only "
+             "in the top window context");
+  return mNumOfProcessesWithActivePeerConnections > 0;
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowGlobalParent, WindowContext,
