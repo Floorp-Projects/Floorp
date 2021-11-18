@@ -234,8 +234,8 @@ webExtensionTargetPrototype._onDocShellDestroy = function(docShell) {
   this._notifyDocShellDestroy(webProgress);
 
   // If the destroyed docShell was the current docShell and the actor is
-  // currently attached, switch to the fallback window
-  if (this.attached && docShell == this.docShell) {
+  // not destroyed, switch to the fallback window
+  if (!this.isDestroyed() && docShell == this.docShell) {
     this._changeTopLevelDocument(this._searchForExtensionWindow());
   }
 };

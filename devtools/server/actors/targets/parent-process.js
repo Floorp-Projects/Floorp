@@ -124,7 +124,7 @@ Object.defineProperty(parentProcessTargetPrototype, "docShells", {
 
 parentProcessTargetPrototype.observe = function(subject, topic, data) {
   WindowGlobalTargetActor.prototype.observe.call(this, subject, topic, data);
-  if (!this.attached) {
+  if (this.isDestroyed()) {
     return;
   }
 
@@ -138,7 +138,7 @@ parentProcessTargetPrototype.observe = function(subject, topic, data) {
 };
 
 parentProcessTargetPrototype._detach = function() {
-  if (!this.attached) {
+  if (this.isDestroyed()) {
     return false;
   }
 
