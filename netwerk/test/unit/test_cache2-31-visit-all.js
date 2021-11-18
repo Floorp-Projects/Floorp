@@ -27,10 +27,10 @@ function run_test() {
           { uri: "http://b/", lci: lcis[3] },
         ]; // user Context 3
 
-        get_cache_service().asyncVisitAllStorages(
+        Services.cache2.asyncVisitAllStorages(
           // Test should store 8 entries across 4 originAttributes
           new VisitCallback(8, expectedConsumption, entries, function() {
-            get_cache_service().asyncVisitAllStorages(
+            Services.cache2.asyncVisitAllStorages(
               // Still 8 entries expected, now don't walk them
               new VisitCallback(8, expectedConsumption, null, function() {
                 finish_cache2_test();
