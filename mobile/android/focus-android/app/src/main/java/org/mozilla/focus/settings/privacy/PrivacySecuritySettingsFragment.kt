@@ -150,6 +150,10 @@ class PrivacySecuritySettingsFragment :
                     EngineSharedPreferencesListener.TrackerChanged.CONTENT.tracker,
                     settings.shouldBlockOtherTrackers()
                 )
+            resources.getString(R.string.pref_key_site_permissions) ->
+                requireComponents.appStore.dispatch(
+                    AppAction.OpenSettings(page = Screen.Settings.Page.SitePermissions)
+                )
             resources.getString(R.string.pref_key_studies) ->
                 requireComponents.appStore.dispatch(
                     AppAction.OpenSettings(page = Screen.Settings.Page.Studies)

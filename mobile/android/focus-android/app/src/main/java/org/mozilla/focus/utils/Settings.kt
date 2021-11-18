@@ -12,14 +12,19 @@ import android.view.accessibility.AccessibilityManager
 import androidx.preference.PreferenceManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsPreferences
+import org.mozilla.focus.settings.permissions.AutoplayOption
+import org.mozilla.focus.settings.permissions.getValueByPrefKey
 
 /**
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
+ * This class is designed to have a lot of (simple) functions
  */
-@Suppress("TooManyFunctions", "LargeClass") // This class is designed to have a lot of (simple) functions
+@Suppress("TooManyFunctions", "LargeClass")
 class Settings(
     private val context: Context
 ) {
@@ -180,6 +185,21 @@ class Settings(
                     resources.getString(R.string.pref_key_performance_block_images),
                     false); */
         false
+
+    private var autoplayPrefKey: String? = preferences.getString(
+        getPreferenceKey(R.string.pref_key_autoplay),
+        context.getString(R.string.pref_key_block_autoplay_audio_only)
+    )
+
+    fun updateAutoplayPrefKey(prefKey: String) {
+        preferences.edit()
+            .putString(getPreferenceKey(R.string.pref_key_autoplay), prefKey)
+            .apply()
+        context.components.sessionUseCases.reload.invoke(context.components.store.state.selectedTabId)
+        currentAutoplayOption = getValueByPrefKey(autoplayPrefKey = prefKey, context = context)
+    }
+
+    var currentAutoplayOption = getValueByPrefKey(autoplayPrefKey = autoplayPrefKey, context = context)
 
     fun shouldEnableRemoteDebugging(): Boolean =
         preferences.getBoolean(
@@ -363,6 +383,36 @@ class Settings(
             Engine.HttpsOnlyMode.ENABLED
         } else {
             Engine.HttpsOnlyMode.DISABLED
+        }
+    }
+
+    fun getSitePermissionsSettingsRules() = SitePermissionsRules(
+        notification = SitePermissionsRules.Action.BLOCKED,
+        microphone = SitePermissionsRules.Action.BLOCKED,
+        location = SitePermissionsRules.Action.BLOCKED,
+        camera = SitePermissionsRules.Action.BLOCKED,
+        autoplayAudible = getAutoplayRules().first,
+        autoplayInaudible = getAutoplayRules().second,
+        persistentStorage = SitePermissionsRules.Action.BLOCKED,
+        mediaKeySystemAccess = SitePermissionsRules.Action.BLOCKED
+    )
+
+    private fun getAutoplayRules(): Pair<SitePermissionsRules.AutoplayAction, SitePermissionsRules.AutoplayAction> {
+        return when (currentAutoplayOption) {
+            is AutoplayOption.AllowAudioVideo -> Pair(
+                SitePermissionsRules.AutoplayAction.ALLOWED,
+                SitePermissionsRules.AutoplayAction.ALLOWED
+            )
+
+            is AutoplayOption.BlockAudioVideo -> Pair(
+                SitePermissionsRules.AutoplayAction.BLOCKED,
+                SitePermissionsRules.AutoplayAction.BLOCKED
+            )
+
+            else -> Pair(
+                SitePermissionsRules.AutoplayAction.BLOCKED,
+                SitePermissionsRules.AutoplayAction.ALLOWED
+            )
         }
     }
 

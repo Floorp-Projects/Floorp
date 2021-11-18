@@ -14,6 +14,11 @@
     <string name="pref_key_privacy_block_other3" translatable="false"><xliff:g id="preference_key">pref_privacy_block_other3</xliff:g></string>
     <string name="pref_key_privacy_total_trackers_blocked_count" translatable="false"><xliff:g id="preference_key">pref_key_privacy_total_trackers_blocked_count</xliff:g></string>
     <string name="pref_key_privacy_ever_changed_etp" translatable="false"><xliff:g id="preference_key">pref_key_privacy_ever_changed_etp</xliff:g></string>
+    <string name="pref_key_site_permissions" translatable="false"><xliff:g id="preference_key">pref_key_privacy_site_permissions</xliff:g></string>
+    <string name="pref_key_autoplay" translatable="false"><xliff:g id="preference_key">pref_key_autoplay</xliff:g></string>
+    <string name="pref_key_allow_autoplay_audio_video" translatable="false"><xliff:g id="preference_key">pref_key_allow_audio_video_autoplay</xliff:g></string>
+    <string name="pref_key_block_autoplay_audio_only" translatable="false"><xliff:g id="preference_key">pref_key_block_autoplay_audio_only</xliff:g></string>
+    <string name="pref_key_block_autoplay_audio_video" translatable="false"><xliff:g id="preference_key">pref_key_block_audio_video_autoplay</xliff:g></string>
 
     <string name="pref_key_performance_block_webfonts" translatable="false"><xliff:g id="preference_key">pref_performance_block_webfonts</xliff:g></string>
     <string name="pref_key_performance_block_javascript" translatable="false"><xliff:g id="preference_key">pref_performance_block_javascript</xliff:g></string>

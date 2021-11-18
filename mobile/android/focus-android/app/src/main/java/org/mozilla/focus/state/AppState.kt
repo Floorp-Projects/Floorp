@@ -81,6 +81,8 @@ sealed class Screen {
 
             PrivacyExceptions,
             PrivacyExceptionsRemove,
+            SitePermissions,
+            Autoplay,
             Studies,
 
             SearchList,

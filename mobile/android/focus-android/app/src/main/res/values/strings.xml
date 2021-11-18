@@ -610,6 +610,24 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Advanced</string>
 
+    <!-- Preference for site permissions -->
+    <string name="preference_site_permissions">Site permissions</string>
+
+    <!-- Preference for autoplay -->
+    <string name="preference_autoplay">Autoplay</string>
+
+    <!-- Preference for allow autoplay audio and video-->
+    <string name="preference_allow_audio_video_autoplay">Allow audio and video</string>
+
+    <!-- Preference for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only">Block audio only</string>
+
+    <!-- Preference summary for block autoplay audio only-->
+    <string name="preference_block_autoplay_audio_only_summary">Recommended</string>
+
+    <!-- Preference for block autoplay audio and video-->
+    <string name="preference_block_autoplay_audio_video">Block audio and video</string>
+
     <!-- Preference for studies -->
     <string name="preference_studies">Studies</string>
 

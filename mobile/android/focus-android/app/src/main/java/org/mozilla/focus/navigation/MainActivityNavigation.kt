@@ -26,6 +26,8 @@ import org.mozilla.focus.settings.MozillaSettingsFragment
 import org.mozilla.focus.settings.RemoveSearchEnginesSettingsFragment
 import org.mozilla.focus.settings.SearchSettingsFragment
 import org.mozilla.focus.settings.SettingsFragment
+import org.mozilla.focus.settings.permissions.AutoplayFragment
+import org.mozilla.focus.settings.permissions.SitePermissionsFragment
 import org.mozilla.focus.settings.privacy.PrivacySecuritySettingsFragment
 import org.mozilla.focus.settings.privacy.studies.StudiesFragment
 import org.mozilla.focus.state.Screen
@@ -185,6 +187,8 @@ class MainActivityNavigation(
             Screen.Settings.Page.Mozilla -> MozillaSettingsFragment()
             Screen.Settings.Page.PrivacyExceptions -> ExceptionsListFragment()
             Screen.Settings.Page.PrivacyExceptionsRemove -> ExceptionsRemoveFragment()
+            Screen.Settings.Page.Autoplay -> AutoplayFragment()
+            Screen.Settings.Page.SitePermissions -> SitePermissionsFragment()
             Screen.Settings.Page.Studies -> StudiesFragment()
             Screen.Settings.Page.SearchList -> InstalledSearchEnginesSettingsFragment()
             Screen.Settings.Page.SearchRemove -> RemoveSearchEnginesSettingsFragment()

@@ -51,7 +51,7 @@
         tools:text="@tools:sample/lorem"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/title"
-        app:layout_constraintTop_toBottomOf="@id/radio_button"
+        app:layout_constraintTop_toBottomOf="@id/title"
         app:layout_constraintStart_toStartOf="@id/title" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
