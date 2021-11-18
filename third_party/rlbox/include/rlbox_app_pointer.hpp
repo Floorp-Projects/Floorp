@@ -29,7 +29,7 @@ private:
 
   T_PointerType get_unused_index(T_PointerType max_ptr_val)
   {
-    const auto max_val = (T_PointerTypeUnsigned) max_ptr_val;
+    const auto max_val = (T_PointerTypeUnsigned)max_ptr_val;
     for (T_PointerTypeUnsigned i = counter; i <= max_val; i++) {
       if (pointer_map.find(i) == pointer_map.end()) {
         counter = i + 1;

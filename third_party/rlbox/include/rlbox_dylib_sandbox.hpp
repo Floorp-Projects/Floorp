@@ -102,12 +102,11 @@ private:
   }
 
 protected:
-
-  #if defined(_WIN32)
+#if defined(_WIN32)
   using path_buf = const LPCWSTR;
-  #else
+#else
   using path_buf = const char*;
-  #endif
+#endif
 
   inline void impl_create_sandbox(path_buf path)
   {

@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <utility>
 #ifndef RLBOX_USE_CUSTOM_SHARED_LOCK
-#include <mutex>
+#  include <mutex>
 #endif
 
 #include "rlbox_stdlib_polyfill.hpp"

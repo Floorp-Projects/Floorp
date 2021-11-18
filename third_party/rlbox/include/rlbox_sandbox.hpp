@@ -200,10 +200,14 @@ private:
       tainted<T_NoRef, T_Sbx> ret = param;
       return ret.UNSAFE_sandboxed(*this);
     } else {
-      rlbox_detail_static_fail_because(detail::true_v<T_NoRef>,
-        "Only tainted types, callbacks or primitive values such as ints can be passed as parameters.\n"
-        "To make a parameter tainted, try moving the allocation into the sandbox.\n"
-        "If the parameter is a callback, try registering the callback via the register_callback API.");
+      rlbox_detail_static_fail_because(
+        detail::true_v<T_NoRef>,
+        "Only tainted types, callbacks or primitive values such as ints can be "
+        "passed as parameters.\n"
+        "To make a parameter tainted, try moving the allocation into the "
+        "sandbox.\n"
+        "If the parameter is a callback, try registering the callback via the "
+        "register_callback API.");
     }
   }
 
@@ -334,7 +338,9 @@ private:
   }
 
   template<typename... T_Args>
-  static auto impl_create_sandbox_helper(rlbox_sandbox<T_Sbx>* this_ptr, T_Args... args) {
+  static auto impl_create_sandbox_helper(rlbox_sandbox<T_Sbx>* this_ptr,
+                                         T_Args... args)
+  {
     return this_ptr->impl_create_sandbox(std::forward<T_Args>(args)...);
   }
 
@@ -384,7 +390,10 @@ public:
       "create_sandbox called when sandbox already created/is being "
       "created concurrently");
 
-    using T_Result = rlbox::detail::polyfill::invoke_result_t<decltype(impl_create_sandbox_helper<T_Args...>), decltype(this), T_Args...>;
+    using T_Result = rlbox::detail::polyfill::invoke_result_t<
+      decltype(impl_create_sandbox_helper<T_Args...>),
+      decltype(this),
+      T_Args...>;
 
     bool created = true;
     if constexpr (std::is_same_v<T_Result, void>) {
@@ -394,8 +403,7 @@ public:
     } else {
       rlbox_detail_static_fail_because(
         (!std::is_same_v<T_Result, void> && !std::is_same_v<T_Result, bool>),
-        "Expected impl_create_sandbox to return void or a boolean"
-      );
+        "Expected impl_create_sandbox to return void or a boolean");
     }
 
     if (created) {
@@ -707,7 +715,8 @@ public:
     }
 
     void* func_ptr = 0;
-    if constexpr(rlbox::detail::has_member_using_needs_internal_lookup_symbol_v<T_Sbx>) {
+    if constexpr (rlbox::detail::
+                    has_member_using_needs_internal_lookup_symbol_v<T_Sbx>) {
       func_ptr = this->impl_internal_lookup_symbol(func_name);
     } else {
       func_ptr = this->impl_lookup_symbol(func_name);
@@ -949,7 +958,8 @@ public:
   inline tainted<T*, T_Sbx> INTERNAL_get_sandbox_function_name(
     const char* func_name)
   {
-    return INTERNAL_get_sandbox_function_ptr<T>(internal_lookup_symbol(func_name));
+    return INTERNAL_get_sandbox_function_ptr<T>(
+      internal_lookup_symbol(func_name));
   }
 
   // this is an internal function invoked from macros, so it has be public

@@ -655,7 +655,8 @@ public:
    * @brief Copy a tainted string from sandbox and verify it.
    *
    * @param verifer Function used to verify the copied value.
-   * @tparam T_Func the type of the verifier either ``T_Ret(*)(unique_ptr<char[]>)`` or ``T_Ret(*)(std::string)``
+   * @tparam T_Func the type of the verifier either
+   * ``T_Ret(*)(unique_ptr<char[]>)`` or ``T_Ret(*)(std::string)``
    * @return Whatever the verifier function returns.
    */
   template<typename T_Func>
@@ -670,15 +671,19 @@ public:
     using T_VerifParam = detail::func_first_arg_t<T_Func>;
 
     auto start = impl().get_raw_value();
-    if_constexpr_named(cond1, std::is_same_v<T_VerifParam, std::unique_ptr<char[]>> || std::is_same_v<T_VerifParam, std::unique_ptr<const char[]>>) {
+    if_constexpr_named(
+      cond1,
+      std::is_same_v<T_VerifParam, std::unique_ptr<char[]>> ||
+        std::is_same_v<T_VerifParam, std::unique_ptr<const char[]>>)
+    {
       if (start == nullptr) {
         return verifier(nullptr);
       }
 
       // it is safe to run strlen on a tainted<string> as worst case, the string
-      // does not have a null and we try to copy all the memory out of the sandbox
-      // however, copy_and_verify_range ensures that we never copy memory outsider
-      // the range
+      // does not have a null and we try to copy all the memory out of the
+      // sandbox however, copy_and_verify_range ensures that we never copy
+      // memory outsider the range
       auto str_len = std::strlen(start) + 1;
       std::unique_ptr<T_CopyAndVerifyRangeEl[]> target =
         copy_and_verify_range_helper(str_len);
@@ -687,19 +692,21 @@ public:
       target[str_len - 1] = '\0';
 
       return verifier(std::move(target));
-    } else if_constexpr_named (cond2, std::is_same_v<T_VerifParam, std::string>) {
+    }
+    else if_constexpr_named(cond2, std::is_same_v<T_VerifParam, std::string>)
+    {
       if (start == nullptr) {
         std::string param = "";
         return verifier(param);
       }
 
       // it is safe to run strlen on a tainted<string> as worst case, the string
-      // does not have a null and we try to copy all the memory out of the sandbox
-      // however, copy_and_verify_range ensures that we never copy memory outsider
-      // the range
+      // does not have a null and we try to copy all the memory out of the
+      // sandbox however, copy_and_verify_range ensures that we never copy
+      // memory outsider the range
       auto str_len = std::strlen(start) + 1;
 
-      const char* checked_start = (const char*) verify_range_helper(str_len);
+      const char* checked_start = (const char*)verify_range_helper(str_len);
       if (checked_start == nullptr) {
         std::string param = "";
         return verifier(param);
@@ -707,12 +714,14 @@ public:
 
       std::string copy(checked_start, str_len - 1);
       return verifier(std::move(copy));
-    } else {
+    }
+    else
+    {
       constexpr bool unknownCase = !(cond1 || cond2);
       rlbox_detail_static_fail_because(
         unknownCase,
-        "copy_and_verify_string verifier parameter should either be unique_ptr<char[]>, unique_ptr<const char[]> or std::string"
-      );
+        "copy_and_verify_string verifier parameter should either be "
+        "unique_ptr<char[]>, unique_ptr<const char[]> or std::string");
     }
   }
 
