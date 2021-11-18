@@ -232,6 +232,9 @@ class AudioInputProcessing : public AudioDataListener {
   bool mEnded;
   // Store the unprocessed interleaved audio input data
   AudioInputSamples mPendingData;
+  // When processing is enabled, the number of packets received by this
+  // instance, to implement periodic logging.
+  uint64_t mPacketCount;
 };
 
 // MediaTrack subclass tailored for MediaEngineWebRTCMicrophoneSource.
