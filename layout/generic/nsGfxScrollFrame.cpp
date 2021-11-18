@@ -319,18 +319,24 @@ struct MOZ_STACK_CLASS ScrollReflowInput {
 
   // === Filled in by ReflowScrolledFrame ===
   OverflowAreas mContentsOverflowAreas;
+  // True if the most recent reflow of mHelper.mScrolledFrame is with the
+  // horizontal scrollbar.
   MOZ_INIT_OUTSIDE_CTOR
   bool mReflowedContentsWithHScrollbar;
+  // True if the most recent reflow of mHelper.mScrolledFrame is with the
+  // vertical scrollbar.
   MOZ_INIT_OUTSIDE_CTOR
   bool mReflowedContentsWithVScrollbar;
 
   // === Filled in when TryLayout succeeds ===
   // The size of the inside-border area
   nsSize mInsideBorderSize;
-  // Whether we decided to show the horizontal scrollbar
+  // Whether we decided to show the horizontal scrollbar in the most recent
+  // TryLayout.
   MOZ_INIT_OUTSIDE_CTOR
   bool mShowHScrollbar;
-  // Whether we decided to show the vertical scrollbar
+  // Whether we decided to show the vertical scrollbar in the most recent
+  // TryLayout.
   MOZ_INIT_OUTSIDE_CTOR
   bool mShowVScrollbar;
   // If mShow(H|V)Scrollbar is true then
