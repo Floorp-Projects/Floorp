@@ -1,5 +1,5 @@
 # Dockerfile for running fuzzing tests.
-# Used for ASAN and Coverity based static-analysis.
+# Used for ASAN.
 # Note that when running this, you need to add `--cap-add SYS_PTRACE` to the
 # docker invocation or ASAN won't work.
 # On taskcluster for ASAN use `features: ["allowPtrace"]`.
