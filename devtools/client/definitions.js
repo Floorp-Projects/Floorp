@@ -99,10 +99,13 @@ loader.lazyRequireGetter(
   true
 );
 
-const { MultiLocalizationHelper } = require("devtools/shared/l10n");
-const L10N = new MultiLocalizationHelper(
-  "devtools/client/locales/startup.properties",
-  "devtools/startup/locales/key-shortcuts.properties"
+const { LocalizationHelper } = require("devtools/shared/l10n");
+const L10N = new LocalizationHelper(
+  "devtools/client/locales/startup.properties"
+);
+const CommandKeys = new Localization(
+  ["devtools/startup/key-shortcuts.ftl"],
+  true
 );
 
 var Tools = {};
@@ -139,13 +142,14 @@ Tools.inspector = {
   label: l10n("inspector.label"),
   panelLabel: l10n("inspector.panelLabel"),
   get tooltip() {
+    const key = commandkey("devtools-commandkey-inspector");
     if (osString == "Darwin") {
-      const cmdShiftC = "Cmd+Shift+" + l10n("inspector.commandkey");
-      const cmdOptC = "Cmd+Opt+" + l10n("inspector.commandkey");
+      const cmdShiftC = "Cmd+Shift+" + key;
+      const cmdOptC = "Cmd+Opt+" + key;
       return l10n("inspector.mac.tooltip", cmdShiftC, cmdOptC);
     }
 
-    const ctrlShiftC = "Ctrl+Shift+" + l10n("inspector.commandkey");
+    const ctrlShiftC = "Ctrl+Shift+" + key;
     return l10n("inspector.tooltip2", ctrlShiftC);
   },
   inMenu: false,
@@ -179,7 +183,7 @@ Tools.webConsole = {
     return l10n(
       "ToolboxWebconsole.tooltip2",
       (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") +
-        l10n("webconsole.commandkey")
+        commandkey("devtools-commandkey-webconsole")
     );
   },
   inMenu: false,
@@ -214,7 +218,7 @@ Tools.jsdebugger = {
     return l10n(
       "ToolboxDebugger.tooltip4",
       (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") +
-        l10n("jsdebugger.commandkey2")
+        commandkey("devtools-commandkey-jsdebugger")
     );
   },
   inMenu: false,
@@ -238,7 +242,7 @@ Tools.styleEditor = {
   get tooltip() {
     return l10n(
       "ToolboxStyleEditor.tooltip3",
-      "Shift+" + functionkey(l10n("styleeditor.commandkey"))
+      "Shift+" + functionkey(commandkey("devtools-commandkey-styleeditor"))
     );
   },
   inMenu: false,
@@ -261,7 +265,7 @@ Tools.performance = {
   get tooltip() {
     return l10n(
       "performance.tooltip",
-      "Shift+" + functionkey(l10n("performance.commandkey"))
+      "Shift+" + functionkey(commandkey("devtools-commandkey-performance"))
     );
   },
   accesskey: l10n("performance.accesskey"),
@@ -345,7 +349,7 @@ Tools.netMonitor = {
     return l10n(
       "netmonitor.tooltip2",
       (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") +
-        l10n("netmonitor.commandkey")
+        commandkey("devtools-commandkey-netmonitor")
     );
   },
   inMenu: false,
@@ -372,7 +376,7 @@ Tools.storage = {
   get tooltip() {
     return l10n(
       "storage.tooltip3",
-      "Shift+" + functionkey(l10n("storage.commandkey"))
+      "Shift+" + functionkey(commandkey("devtools-commandkey-storage"))
     );
   },
   inMenu: false,
@@ -399,7 +403,7 @@ Tools.dom = {
     return l10n(
       "dom.tooltip",
       (osString == "Darwin" ? "Cmd+Opt+" : "Ctrl+Shift+") +
-        l10n("dom.commandkey")
+        commandkey("devtools-commandkey-dom")
     );
   },
   inMenu: false,
@@ -426,7 +430,8 @@ Tools.accessibility = {
   get tooltip() {
     return l10n(
       "accessibility.tooltip3",
-      "Shift+" + functionkey(l10n("accessibilityF12.commandkey"))
+      "Shift+" +
+        functionkey(commandkey("devtools-commandkey-accessibility-f12"))
     );
   },
   inMenu: false,
@@ -447,7 +452,7 @@ Tools.application = {
   icon: "chrome://devtools/skin/images/tool-application.svg",
   url: "chrome://devtools/content/application/index.html",
   label: l10n("application.label"),
-  panelLabel: l10n("application.panellabel"),
+  panelLabel: l10n("application.panelLabel"),
   tooltip: l10n("application.tooltip"),
   inMenu: false,
 
@@ -652,6 +657,15 @@ function createHighlightButton(highlighterName, id) {
 function l10n(name, ...args) {
   try {
     return args ? L10N.getFormatStr(name, ...args) : L10N.getStr(name);
+  } catch (ex) {
+    console.log("Error reading '" + name + "'");
+    throw new Error("l10n error with " + name);
+  }
+}
+
+function commandkey(name) {
+  try {
+    return CommandKeys.formatValueSync(name);
   } catch (ex) {
     console.log("Error reading '" + name + "'");
     throw new Error("l10n error with " + name);
