@@ -41,6 +41,13 @@ button:focus-visible {
   outline-offset: -3px;
 }
 
+@media (prefers-color-scheme: dark) {
+  button:focus-visible {
+    outline: 1px auto;
+    outline-offset: initial;
+  }
+}
+
 /* .......... default/hover/focused state .......... */
 
 @media (prefers-contrast) and (-moz-windows-compositor) {
