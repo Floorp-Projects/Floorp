@@ -143,6 +143,7 @@ const windowGlobalTargetPrototype = {
    *
    * `detach`:
    *  Stop document watching and cleanup everything that the target and its children actors created.
+   *  It ultimately lead to destroy the target actor.
    * `switchToFrame`:
    *  Change the targeted document of the whole actor, and its child target-scoped actors
    *  to an iframe or back to its original document.
@@ -665,7 +666,44 @@ const windowGlobalTargetPrototype = {
       this._touchSimulator = null;
     }
 
-    this._detach({ isTargetSwitching });
+    // Check for `docShell` availability, as it can be already gone during
+    // Firefox shutdown.
+    if (this.docShell) {
+      this._unwatchDocShell(this.docShell);
+
+      // If this target is being destroyed as part of a target switch, we don't need to
+      // restore the configuration (this might cause the content page to be focused again
+      // and cause issues in tets).
+      if (!isTargetSwitching) {
+        this._restoreTargetConfiguration();
+      }
+    }
+    this._unwatchDocshells();
+
+    this._destroyThreadActor();
+
+    // Shut down actors that belong to this target's pool.
+    this._styleSheetActors.clear();
+    if (this._targetScopedActorPool) {
+      this._targetScopedActorPool.destroy();
+      this._targetScopedActorPool = null;
+    }
+
+    // Make sure that no more workerListChanged notifications are sent.
+    if (this._workerDescriptorActorList !== null) {
+      this._workerDescriptorActorList.destroy();
+      this._workerDescriptorActorList = null;
+    }
+
+    if (this._workerDescriptorActorPool !== null) {
+      this._workerDescriptorActorPool.destroy();
+      this._workerDescriptorActorPool = null;
+    }
+
+    if (this._dbg) {
+      this._dbg.disable();
+      this._dbg = null;
+    }
     this.docShell = null;
     this._extraActors = null;
 
@@ -1067,76 +1105,14 @@ const windowGlobalTargetPrototype = {
     }
   },
 
-  /**
-   * Does the actual work of detaching from a window global.
-   *
-   * @params {Object} options
-   * @params {Boolean} options.isTargetSwitching: Set to true when this is called during
-   *         a target switch.
-   * @returns false if the actor wasn't attached or true of detaching succeeds.
-   */
-  _detach({ isTargetSwitching } = {}) {
-    if (this.isDestroyed()) {
-      return false;
-    }
-
-    // Check for `docShell` availability, as it can be already gone during
-    // Firefox shutdown.
-    if (this.docShell) {
-      this._unwatchDocShell(this.docShell);
-
-      // If this target is being destroyed as part of a target switch, we don't need to
-      // restore the configuration (this might cause the content page to be focused again
-      // and cause issues in tets).
-      if (!isTargetSwitching) {
-        this._restoreTargetConfiguration();
-      }
-    }
-    this._unwatchDocshells();
-
-    this._destroyThreadActor();
-
-    // Shut down actors that belong to this target's pool.
-    this._styleSheetActors.clear();
-    if (this._targetScopedActorPool) {
-      this._targetScopedActorPool.destroy();
-      this._targetScopedActorPool = null;
-    }
-
-    // Make sure that no more workerListChanged notifications are sent.
-    if (this._workerDescriptorActorList !== null) {
-      this._workerDescriptorActorList.destroy();
-      this._workerDescriptorActorList = null;
-    }
-
-    if (this._workerDescriptorActorPool !== null) {
-      this._workerDescriptorActorPool.destroy();
-      this._workerDescriptorActorPool = null;
-    }
-
-    if (this._dbg) {
-      this._dbg.disable();
-      this._dbg = null;
-    }
-
-    // When the target actor acts as a WindowGlobalTarget, the actor will be destroyed
-    // without having to send an RDP event. The parent process will receive a window-global-destroyed
-    // and report the target actor as destroyed via the Watcher actor.
-    if (this.followWindowGlobalLifeCycle) {
-      return true;
-    }
-
-    return true;
-  },
-
   // Protocol Request Handlers
 
   detach(request) {
-    if (!this._detach()) {
-      throw {
-        error: "wrongState",
-      };
-    }
+    // Destroy the actor in the next event loop in order
+    // to ensure responding to the `detach` request.
+    DevToolsUtils.executeSoon(() => {
+      this.destroy();
+    });
 
     return {};
   },
