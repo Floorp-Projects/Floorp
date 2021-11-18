@@ -338,8 +338,6 @@ const windowGlobalTargetPrototype = {
     // (This is also probably meant to disappear once EFT is the only supported codepath)
     this._docShellsObserved = false;
     DevToolsUtils.executeSoon(() => this._watchDocshells());
-
-    this._attached = true;
   },
 
   // Optional console API listener options (e.g. used by the WebExtensionActor to
@@ -350,10 +348,6 @@ const windowGlobalTargetPrototype = {
   // sources by addonID), allow all sources by default.
   _allowSource() {
     return true;
-  },
-
-  get attached() {
-    return !!this._attached;
   },
 
   /*
@@ -663,10 +657,8 @@ const windowGlobalTargetPrototype = {
     }
     // Tell the thread actor that the window global is closed, so that it may terminate
     // instead of resuming the debuggee script.
-    if (this._attached) {
-      // TODO: Bug 997119: Remove this coupling with thread actor
-      this.threadActor._parentClosed = true;
-    }
+    // TODO: Bug 997119: Remove this coupling with thread actor
+    this.threadActor._parentClosed = true;
 
     if (this._touchSimulator) {
       this._touchSimulator.stop();
@@ -806,12 +798,6 @@ const windowGlobalTargetPrototype = {
   },
 
   listWorkers(request) {
-    if (!this.attached) {
-      throw {
-        error: "wrongState",
-      };
-    }
-
     return this.ensureWorkerDescriptorActorList()
       .getList()
       .then(actors => {
@@ -882,7 +868,7 @@ const windowGlobalTargetPrototype = {
   observe(subject, topic, data) {
     // Ignore any event that comes before/after the actor is attached.
     // That typically happens during Firefox shutdown.
-    if (!this.attached) {
+    if (this.isDestroyed()) {
       return;
     }
 
@@ -1090,7 +1076,7 @@ const windowGlobalTargetPrototype = {
    * @returns false if the actor wasn't attached or true of detaching succeeds.
    */
   _detach({ isTargetSwitching } = {}) {
-    if (!this.attached) {
+    if (this.isDestroyed()) {
       return false;
     }
 
@@ -1132,8 +1118,6 @@ const windowGlobalTargetPrototype = {
       this._dbg.disable();
       this._dbg = null;
     }
-
-    this._attached = false;
 
     // When the target actor acts as a WindowGlobalTarget, the actor will be destroyed
     // without having to send an RDP event. The parent process will receive a window-global-destroyed
@@ -1428,9 +1412,9 @@ const windowGlobalTargetPrototype = {
     this._setWindow(window);
 
     DevToolsUtils.executeSoon(() => {
-      // No need to do anything more if the actor is not attached anymore
+      // No need to do anything more if the actor is destroyed.
       // e.g. the client has been closed and the actors destroyed in the meantime.
-      if (!this.attached) {
+      if (this.isDestroyed()) {
         return;
       }
 
@@ -1822,7 +1806,7 @@ DebuggerProgressListener.prototype = {
   },
 
   onWindowCreated: DevToolsUtils.makeInfallible(function(evt) {
-    if (!this._targetActor.attached) {
+    if (this._targetActor.isDestroyed()) {
       return;
     }
 
@@ -1860,7 +1844,7 @@ DebuggerProgressListener.prototype = {
   }, "DebuggerProgressListener.prototype.onWindowCreated"),
 
   onWindowHidden: DevToolsUtils.makeInfallible(function(evt) {
-    if (!this._targetActor.attached) {
+    if (this._targetActor.isDestroyed()) {
       return;
     }
 
@@ -1890,7 +1874,7 @@ DebuggerProgressListener.prototype = {
   }, "DebuggerProgressListener.prototype.onWindowHidden"),
 
   observe: DevToolsUtils.makeInfallible(function(subject, topic) {
-    if (!this._targetActor.attached) {
+    if (this._targetActor.isDestroyed()) {
       return;
     }
 
@@ -1927,7 +1911,7 @@ DebuggerProgressListener.prototype = {
     flag,
     status
   ) {
-    if (!this._targetActor.attached) {
+    if (this._targetActor.isDestroyed()) {
       return;
     }
     progress.QueryInterface(Ci.nsIDocShell);
