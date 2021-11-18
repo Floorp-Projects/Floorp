@@ -11,6 +11,8 @@ const {
   Arg,
 } = require("devtools/shared/protocol");
 
+// @backward-compat { version 96 } Fx 96 dropped the attach method on all but worker targets
+//                  This can be removed once we drop 95 support
 types.addDictType("windowGlobalTarget.attach", {
   threadActor: "number",
   javascriptEnabled: "nullable:boolean",
@@ -58,6 +60,8 @@ const windowGlobalTargetSpecPrototype = {
   typeName: "windowGlobalTarget",
 
   methods: {
+    // @backward-compat { version 96 } Fx 96 dropped the attach method on all but worker targets
+    //                  This can be removed once we drop 95 support
     attach: {
       request: {},
       response: RetVal("windowGlobalTarget.attach"),

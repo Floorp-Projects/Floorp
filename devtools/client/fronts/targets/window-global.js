@@ -29,6 +29,9 @@ class WindowGlobalTargetFront extends TargetMixin(
 
     this._onTabNavigated = this._onTabNavigated.bind(this);
     this._onFrameUpdate = this._onFrameUpdate.bind(this);
+
+    this.on("tabNavigated", this._onTabNavigated);
+    this.on("frameUpdate", this._onFrameUpdate);
   }
 
   form(json) {
@@ -109,17 +112,13 @@ class WindowGlobalTargetFront extends TargetMixin(
     this._title = title;
   }
 
+  // @backward-compat { version 96 } Fx 96 dropped the attach method on all but worker targets
+  //                  This can be removed once we drop 95 support
   async attach() {
     if (this._attach) {
       return this._attach;
     }
     this._attach = (async () => {
-      // All Browsing context inherited target emit a few event that are being
-      // translated on the target class. Listen for them before attaching as they
-      // can start firing on attach call.
-      this.on("tabNavigated", this._onTabNavigated);
-      this.on("frameUpdate", this._onFrameUpdate);
-
       const response = await super.attach();
 
       this.targetForm.threadActor = response.threadActor;
@@ -137,7 +136,7 @@ class WindowGlobalTargetFront extends TargetMixin(
     }
     this._isDetaching = true;
 
-    // Remove listeners set in attach
+    // Remove listeners set in constructor
     this.off("tabNavigated", this._onTabNavigated);
     this.off("frameUpdate", this._onFrameUpdate);
 
@@ -162,7 +161,7 @@ class WindowGlobalTargetFront extends TargetMixin(
     const promise = super.destroy();
 
     // As detach isn't necessarily called on target's destroy
-    // (it isn't for local tabs), ensure removing listeners set in attach.
+    // (it isn't for local tabs), ensure removing listeners set in constructor.
     this.off("tabNavigated", this._onTabNavigated);
     this.off("frameUpdate", this._onFrameUpdate);
 

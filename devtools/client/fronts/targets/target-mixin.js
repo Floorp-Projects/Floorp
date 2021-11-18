@@ -491,9 +491,20 @@ function TargetMixin(parentClass) {
         return;
       }
 
-      // WorkerTargetFront don't have an attach function as the related console and thread
-      // actors are created right away (from devtools/server/startup/worker.js)
-      if (this.attach) {
+      // We still need to attach workers.
+      // The current class we have is actually the WorkerDescriptorFront,
+      // which will morph into a target by fetching the underlying target's form.
+      // Ideally, worker targets would be spawn by the server, and we would no longer
+      // have the hybrid descriptor/target class which brings lots of complexity and confusion.
+      // By doing so, the "attach" would be done on the server side and would simply be
+      // part of the target actor instantiation.
+      //
+      // @backward-compat { version 96 } Fx 96 dropped the attach method on all but worker targets
+      //                  Once Fx95 support is dropped, we can remove:
+      //                  - the trait
+      //                  - "attach" methods from fronts and specs for all but worker targets
+      //                  - here, we will still have to call attach for worker targets (`if (this.attach) await this.attach()`)
+      if (this.attach && !this.getTrait("isAutoAttached")) {
         await this.attach();
       }
 
@@ -683,10 +694,6 @@ function TargetMixin(parentClass) {
     _cleanup() {
       this.threadFront = null;
       this._client = null;
-
-      // All target front subclasses set this variable in their `attach` method.
-      // None of them overload destroy, so clean this up from here.
-      this._attach = null;
 
       this._title = null;
       this._url = null;
