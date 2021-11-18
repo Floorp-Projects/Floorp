@@ -765,19 +765,56 @@ class TargetCommand extends EventEmitter {
   }
 
   /**
+   * Retrieve all the target fronts in the selected target tree (including the selected
+   * target itself).
+   *
+   * @param {Array<String>} types
+   *        The types of target to retrieve. Array of TargetCommand.TYPES
+   * @return {Promise<Array<TargetFront>>} Promise that resolves to an array of target fronts.
+   */
+  async getAllTargetsInSelectedTargetTree(types) {
+    const allTargets = this.getAllTargets(types);
+    if (this.isTopLevelTargetSelected()) {
+      return allTargets;
+    }
+
+    const targets = [this.selectedTargetFront];
+    for (const target of allTargets) {
+      const isInSelectedTree = await target.isTargetAnAncestor(
+        this.selectedTargetFront
+      );
+
+      if (isInSelectedTree) {
+        targets.push(target);
+      }
+    }
+    return targets;
+  }
+
+  /**
    * For all the target fronts of given types, retrieve all the target-scoped fronts of the given types.
    *
    * @param {Array<String>} targetTypes
    *        The types of target to iterate over. Constant of TargetCommand.TYPES.
    * @param {String} frontType
    *        The type of target-scoped front to retrieve. It can be "inspector", "console", "thread",...
+   * @param {Object} options
+   * @param {Boolean} options.onlyInSelectedTargetTree
+   *        Set to true to only get the fronts for targets who are in the "targets tree"
+   *        of the selected target.
    */
-  async getAllFronts(targetTypes, frontType) {
+  async getAllFronts(
+    targetTypes,
+    frontType,
+    { onlyInSelectedTargetTree = false } = {}
+  ) {
     if (!Array.isArray(targetTypes) || !targetTypes?.length) {
       throw new Error("getAllFronts expects a non-empty array of target types");
     }
     const promises = [];
-    const targets = this.getAllTargets(targetTypes);
+    const targets = !onlyInSelectedTargetTree
+      ? this.getAllTargets(targetTypes)
+      : await this.getAllTargetsInSelectedTargetTree(targetTypes);
     for (const target of targets) {
       // For still-attaching worker targets, the threadFront may not yet be available,
       // whereas TargetMixin.getFront will throw if the actorID isn't available in targetForm.
@@ -881,6 +918,24 @@ class TargetCommand extends EventEmitter {
    */
   selectTarget(targetFront) {
     return this._onTargetSelected(targetFront);
+  }
+
+  /**
+   * Returns true if the top-level frame is the selected one
+   *
+   * @returns {Boolean}
+   */
+  isTopLevelTargetSelected() {
+    return this.selectedTargetFront === this.targetFront;
+  }
+
+  /**
+   * Returns true if a non top-level frame is the selected one in the iframe picker.
+   *
+   * @returns {Boolean}
+   */
+  isNonTopLevelTargetSelected() {
+    return this.selectedTargetFront !== this.targetFront;
   }
 
   isTargetRegistered(targetFront) {

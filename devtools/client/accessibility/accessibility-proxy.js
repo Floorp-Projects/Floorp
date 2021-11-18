@@ -21,8 +21,10 @@ const { FILTERS } = require("devtools/client/accessibility/constants");
  * content processes.
  */
 class AccessibilityProxy {
-  constructor(commands) {
+  #panel;
+  constructor(commands, panel) {
     this.commands = commands;
+    this.#panel = panel;
 
     this._accessibilityWalkerFronts = new Set();
     this.lifecycleEvents = new Map();
@@ -55,6 +57,8 @@ class AccessibilityProxy {
     this.unhighlightAccessible = this.unhighlightAccessible.bind(this);
     this.onTargetAvailable = this.onTargetAvailable.bind(this);
     this.onTargetDestroyed = this.onTargetDestroyed.bind(this);
+    this.onTargetSelected = this.onTargetSelected.bind(this);
+    this.onResourceAvailable = this.onResourceAvailable.bind(this);
     this.onAccessibilityFrontAvailable = this.onAccessibilityFrontAvailable.bind(
       this
     );
@@ -83,7 +87,7 @@ class AccessibilityProxy {
   }
 
   get currentTarget() {
-    return this.commands.targetCommand.targetFront;
+    return this.commands.targetCommand.selectedTargetFront;
   }
 
   /**
@@ -100,12 +104,15 @@ class AccessibilityProxy {
    */
   async audit(filter, onProgress) {
     const types = filter === FILTERS.ALL ? Object.values(AUDIT_TYPE) : [filter];
-    const totalFrames = this.commands.targetCommand.getAllTargets([
-      this.commands.targetCommand.TYPES.FRAME,
-    ]).length;
+
+    const targetTypes = [this.commands.targetCommand.TYPES.FRAME];
+    const targets = await this.commands.targetCommand.getAllTargetsInSelectedTargetTree(
+      targetTypes
+    );
+
     const progress = new CombinedProgress({
       onProgress,
-      totalFrames,
+      totalFrames: targets.length,
     });
     const audits = await this.withAllAccessibilityWalkerFronts(
       async accessibleWalkerFront =>
@@ -115,6 +122,9 @@ class AccessibilityProxy {
             progress,
             accessibleWalkerFront
           ),
+          // If a frame was selected in the iframe picker, we don't want to retrieve the
+          // ancestries at it would mess with the tree structure and would make it misbehave.
+          retrieveAncestries: this.commands.targetCommand.isTopLevelTargetSelected(),
         })
     );
 
@@ -142,10 +152,16 @@ class AccessibilityProxy {
         0
       );
     } else {
-      await this.withAllAccessibilityWalkerFronts(
-        async accessibleWalkerFront => {
-          await accessibleWalkerFront.hideTabbingOrder();
-        }
+      // we don't want to use withAllAccessibilityWalkerFronts as it only acts on selected
+      // target tree, and we want to hide _all_ highlighters.
+      const accessibilityFronts = await this.commands.targetCommand.getAllFronts(
+        [this.commands.targetCommand.TYPES.FRAME],
+        "accessibility"
+      );
+      await Promise.all(
+        accessibilityFronts.map(accessibilityFront =>
+          accessibilityFront.accessibleWalkerFront.hideTabbingOrder()
+        )
       );
     }
   }
@@ -180,7 +196,13 @@ class AccessibilityProxy {
   async withAllAccessibilityFronts(taskFn) {
     const accessibilityFronts = await this.commands.targetCommand.getAllFronts(
       [this.commands.targetCommand.TYPES.FRAME],
-      "accessibility"
+      "accessibility",
+      {
+        // only get the fronts for the selected frame tree, in case a specific document
+        // is selected in the iframe picker (if not, the top-level target is considered
+        // as the selected target)
+        onlyInSelectedTargetTree: true,
+      }
     );
     const tasks = [];
     for (const accessibilityFront of accessibilityFronts) {
@@ -392,7 +414,14 @@ class AccessibilityProxy {
     await this.commands.targetCommand.watchTargets(
       [this.commands.targetCommand.TYPES.FRAME],
       this.onTargetAvailable,
-      this.onTargetDestroyed
+      this.onTargetDestroyed,
+      this.onTargetSelected
+    );
+    await this.commands.resourceCommand.watchResources(
+      [this.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+      {
+        onAvailable: this.onResourceAvailable,
+      }
     );
     this.parentAccessibilityFront = await this.commands.targetCommand.rootFront.getFront(
       "parentaccessibility"
@@ -403,7 +432,12 @@ class AccessibilityProxy {
     this.commands.targetCommand.unwatchTargets(
       [this.commands.targetCommand.TYPES.FRAME],
       this.onTargetAvailable,
-      this.onTargetDestroyed
+      this.onTargetDestroyed,
+      this.onTargetSelected
+    );
+    this.commands.resourceCommand.unwatchResources(
+      [this.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+      { onAvailable: this.onResourceAvailable }
     );
 
     this.lifecycleEvents.clear();
@@ -533,6 +567,35 @@ class AccessibilityProxy {
       this.onAccessibilityFrontAvailable,
       this.onAccessibilityFrontDestroyed
     );
+  }
+
+  async onTargetSelected({ targetFront }) {
+    await this.toggleDisplayTabbingOrder(false);
+    this.accessibilityFront = await targetFront.getFront("accessibility");
+
+    this.simulatorFront = this.accessibilityFront.simulatorFront;
+    if (this.simulatorFront) {
+      this.simulate = types => this.simulatorFront.simulate({ types });
+    } else {
+      this.simulate = null;
+    }
+
+    this.#panel.shouldRefresh = true;
+    this.#panel.refresh();
+  }
+
+  onResourceAvailable(resources) {
+    for (const resource of resources) {
+      // Only consider top level document, and ignore remote iframes top document
+      if (
+        resource.resourceType ===
+          this.commands.resourceCommand.TYPES.DOCUMENT_EVENT &&
+        resource.name === "dom-complete" &&
+        resource.targetFront.isTopLevel
+      ) {
+        this.#panel.forceRefresh();
+      }
+    }
   }
 }
 
