@@ -1133,7 +1133,9 @@ bool nsHttpTransaction::PrepareSVCBRecordsForRetry(
   for (const auto& record : records) {
     nsAutoCString name;
     record->GetName(name);
-    if (name == aFailedDomainName) {
+    // If all records are in the http3 excluded list, we'll give the previous
+    // failed record one more chance.
+    if (name == aFailedDomainName && !mAllRecordsInH3ExcludedListBefore) {
       // Skip the failed one.
       continue;
     }
@@ -2560,20 +2562,25 @@ void nsHttpTransaction::DisableSpdy() {
   }
 }
 
-void nsHttpTransaction::DisableHttp3() {
+void nsHttpTransaction::DisableHttp3(bool aAllowRetryHTTPSRR) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-
-  mCaps |= NS_HTTP_DISALLOW_HTTP3;
 
   // mOrigConnInfo is an indicator that HTTPS RR is used, so don't mess up the
   // connection info.
   // When HTTPS RR is used, PrepareConnInfoForRetry() could select other h3
   // record to connect.
   if (mOrigConnInfo) {
-    LOG(("nsHttpTransaction::DisableHttp3 this=%p mOrigConnInfo=%s", this,
-         mOrigConnInfo->HashKey().get()));
+    LOG(
+        ("nsHttpTransaction::DisableHttp3 this=%p mOrigConnInfo=%s "
+         "aAllowRetryHTTPSRR=%d",
+         this, mOrigConnInfo->HashKey().get(), aAllowRetryHTTPSRR));
+    if (!aAllowRetryHTTPSRR) {
+      mCaps |= NS_HTTP_DISALLOW_HTTP3;
+    }
     return;
   }
+
+  mCaps |= NS_HTTP_DISALLOW_HTTP3;
 
   MOZ_ASSERT(mConnInfo);
   if (mConnInfo) {
