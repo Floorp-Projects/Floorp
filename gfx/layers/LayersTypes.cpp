@@ -32,8 +32,6 @@ const char* GetLayersBackendName(LayersBackend aBackend) {
       return "none";
     case LayersBackend::LAYERS_OPENGL:
       return "opengl";
-    case LayersBackend::LAYERS_D3D11:
-      return "d3d11";
     case LayersBackend::LAYERS_WR:
       MOZ_ASSERT(gfx::gfxVars::UseWebRender());
       if (gfx::gfxVars::UseSoftwareWebRender()) {

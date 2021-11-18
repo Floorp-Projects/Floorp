@@ -93,7 +93,6 @@ TextureType TexTypeForWebgl(KnowsCompositor* const knowsCompositor) {
     case LayersBackend::LAYERS_NONE:
       return TextureType::Unknown;
 
-    case LayersBackend::LAYERS_D3D11:
     case LayersBackend::LAYERS_OPENGL:
     case LayersBackend::LAYERS_WR:
       break;
