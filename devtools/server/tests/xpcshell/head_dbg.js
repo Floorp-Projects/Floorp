@@ -165,6 +165,13 @@ function createTestGlobal(name) {
     Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
   );
   sandbox.__name = name;
+  // Expose a few mocks to better represent a Window object.
+  // These attributes will be used by DOCUMENT_EVENT resource listener.
+  sandbox.performance = { timing: {} };
+  sandbox.document = {
+    readyState: "complete",
+    defaultView: sandbox,
+  };
   return sandbox;
 }
 
