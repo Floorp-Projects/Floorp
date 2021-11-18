@@ -185,7 +185,7 @@ impl Drop for VariationFace {
     }
 }
 
-fn new_ft_face(font_key: &FontKey, lib: FT_Library, file: &FontFile, index: u32) -> Option<FT_Face> {
+fn new_ft_face(font_key: &FontKey, lib: FT_Library, file: &FontFile, index: u32) -> Result<FT_Face, FT_Error> {
     unsafe {
         let mut face: FT_Face = ptr::null_mut();
         let result = match file {
@@ -204,11 +204,11 @@ fn new_ft_face(font_key: &FontKey, lib: FT_Library, file: &FontFile, index: u32)
             ),
         };
         if succeeded(result) && !face.is_null() {
-            Some(face)
+            Ok(face)
         } else {
             warn!("WARN: webrender failed to load font");
             debug!("font={:?}, result={:?}", font_key, result);
-            None
+            Err(result)
         }
     }
 }
@@ -350,7 +350,7 @@ impl FontContext {
         if !self.faces.contains_key(font_key) {
             let len = bytes.len();
             let file = FontFile::Data(bytes);
-            if let Some(face) = new_ft_face(font_key, self.lib, &file, index) {
+            if let Ok(face) = new_ft_face(font_key, self.lib, &file, index) {
                 self.faces.insert(*font_key, FontFace { file, index, face, mm_var: ptr::null_mut() });
             } else {
                 panic!("adding raw font failed: {} bytes", len);
@@ -364,15 +364,10 @@ impl FontContext {
             let cstr = CString::new(str).unwrap();
             let file = FontFile::Pathname(cstr);
             let index = native_font_handle.index;
-            if let Some(face) = new_ft_face(font_key, self.lib, &file, index) {
-                self.faces.insert(*font_key, FontFace { file, index, face, mm_var: ptr::null_mut() });
-            } else {
-                let file = std::fs::File::open(str);
-                match file {
-                    Err(e) => panic!("adding native font failed: file={}, err={:?}", str, e),
-                    Ok(_) => panic!("adding native font failed but opened file={}", str)
-                }
-            }
+            match new_ft_face(font_key, self.lib, &file, index) {
+                Ok(face) => self.faces.insert(*font_key, FontFace { file, index, face, mm_var: ptr::null_mut() }),
+                Err(result) => panic!("adding native font failed: file={} err={:?}", str, result),
+            };
         }
     }
 
@@ -402,7 +397,7 @@ impl FontContext {
                 }
                 // Clone a new FT face and attempt to set the variation values on it.
                 // Leave unspecified values at the defaults.
-                let var_face = new_ft_face(&font.font_key, self.lib, &normal_face.file, normal_face.index)?;
+                let var_face = new_ft_face(&font.font_key, self.lib, &normal_face.file, normal_face.index).ok()?;
                 if !normal_face.mm_var.is_null() ||
                    succeeded(FT_Get_MM_Var(normal_face.face, &mut normal_face.mm_var)) {
                     let mm_var = normal_face.mm_var;
