@@ -92,7 +92,7 @@ function nextTest() {
   // We really want each test to be self-contained. Make sure cache is
   // cleared and also let all operations finish before starting a new test
   syncWithCacheIOThread(function() {
-    get_cache_service().clear();
+    Services.cache2.clear();
     syncWithCacheIOThread(runNextTest);
   });
 }
