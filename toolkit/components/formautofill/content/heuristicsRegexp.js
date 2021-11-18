@@ -54,7 +54,9 @@ var HeuristicsRegExp = {
       "cc-number": "(cc|kk)nr", // de-DE
       "cc-exp-month": "(cc|kk)month", // de-DE
       "cc-exp-year": "(cc|kk)year", // de-DE
-      "cc-type": "type",
+      // eslint-disable-next-line prettier/prettier
+      "cc-type": "type" + 
+        "|kartenmarke", // de-DE
     },
 
     //=========================================================================
