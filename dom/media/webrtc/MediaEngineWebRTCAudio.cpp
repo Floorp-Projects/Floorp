@@ -18,6 +18,8 @@
 #include "nsIDUtils.h"
 #include "transport/runnable_utils.h"
 #include "Tracing.h"
+#include "mozilla/Sprintf.h"
+#include "mozilla/Logging.h"
 
 #include "common_audio/include/audio_util.h"
 #include "modules/audio_processing/include/audio_processing.h"
@@ -755,6 +757,7 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
   mPacketizerInput->Input(aBuffer, static_cast<uint32_t>(aFrames));
 
   while (mPacketizerInput->PacketsAvailable()) {
+    mPacketCount++;
     uint32_t samplesPerPacket =
         mPacketizerInput->mPacketSize * mPacketizerInput->mChannels;
     if (mInputBuffer.Length() < samplesPerPacket) {
@@ -838,6 +841,31 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
     mAudioProcessing->ProcessStream(
         deinterleavedPacketizedInputDataChannelPointers.Elements(), inputConfig,
         outputConfig, processedOutputChannelPointers.Elements());
+
+    // If logging is enabled, dump the audio processing stats twice a second
+    if (MOZ_LOG_TEST(gMediaManagerLog, LogLevel::Debug) &&
+        !(mPacketCount % 50)) {
+      AudioProcessingStats stats = mAudioProcessing->GetStatistics();
+      char msg[1024];
+      size_t offset = 0;
+#define AddIfValue(format, member)                                       \
+  if (stats.member.has_value()) {                                        \
+    offset += SprintfBuf(msg + offset, sizeof(msg) - offset,             \
+                         #member ":" format ", ", stats.member.value()); \
+  }
+      AddIfValue("%d", output_rms_dbfs);
+      AddIfValue("%d", voice_detected);
+      AddIfValue("%lf", echo_return_loss);
+      AddIfValue("%lf", echo_return_loss_enhancement);
+      AddIfValue("%lf", divergent_filter_fraction);
+      AddIfValue("%d", delay_median_ms);
+      AddIfValue("%d", delay_standard_deviation_ms);
+      AddIfValue("%lf", residual_echo_likelihood);
+      AddIfValue("%lf", residual_echo_likelihood_recent_max);
+      AddIfValue("%d", delay_ms);
+#undef AddIfValue
+      LOG("AudioProcessing statistics: %s", msg);
+    }
 
     if (mEnded) {
       continue;
