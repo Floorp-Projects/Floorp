@@ -604,6 +604,11 @@ const windowGlobalTargetPrototype = {
         watchpoints: true,
         // Supports back and forward navigation
         navigation: true,
+        // The target actor no longer expose attach/detach methods and is now running
+        // the code which used to be run while calling attach from its constructor.
+        // The target actor is now immediately fully usable and starts inspecting the
+        // WindowGlobal immediately
+        isAutoAttached: true,
       },
     };
 
@@ -619,7 +624,7 @@ const windowGlobalTargetPrototype = {
     Object.assign(response, actors);
 
     // The thread actor is the only actor manually created by the target actor.
-    // It is not registered in targetScopedActorFactoriesand therefore needs
+    // It is not registered in targetScopedActorFactories and therefore needs
     // to be added here manually.
     if (this.threadActor) {
       Object.assign(response, {
