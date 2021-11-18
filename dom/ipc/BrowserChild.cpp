@@ -2842,7 +2842,7 @@ void BrowserChild::InitRenderingState(
   // Depending on timing, we might paint too early and fall back to basic
   // layers. CreateRemoteLayerManager will destroy us if we manage to get a
   // remote layer manager though, so that's fine.
-  MOZ_ASSERT(!mPuppetWidget->HasLayerManager() ||
+  MOZ_ASSERT(!mPuppetWidget->HasWindowRenderer() ||
              mPuppetWidget->GetWindowRenderer()->GetBackendType() ==
                  layers::LayersBackend::LAYERS_NONE);
   bool success = false;
@@ -2985,7 +2985,7 @@ void BrowserChild::MakeHidden() {
   // in that case, since doing so might accidentally put is into
   // BasicLayers mode.
   if (mPuppetWidget) {
-    if (mPuppetWidget->HasLayerManager()) {
+    if (mPuppetWidget->HasWindowRenderer()) {
       ClearCachedResources();
     }
     mPuppetWidget->Show(false);
@@ -3436,7 +3436,7 @@ ScreenIntRect BrowserChild::GetOuterRect() {
 
 void BrowserChild::PaintWhileInterruptingJS(
     const layers::LayersObserverEpoch& aEpoch) {
-  if (!IPCOpen() || !mPuppetWidget || !mPuppetWidget->HasLayerManager()) {
+  if (!IPCOpen() || !mPuppetWidget || !mPuppetWidget->HasWindowRenderer()) {
     // Don't bother doing anything now. Better to wait until we receive the
     // message on the PContent channel.
     return;
