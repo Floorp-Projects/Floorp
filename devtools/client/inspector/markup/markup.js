@@ -1442,6 +1442,7 @@ MarkupView.prototype = {
   _onResourceAvailable: async function(resources) {
     for (const resource of resources) {
       if (
+        !this.resourceCommand ||
         resource.resourceType !== this.resourceCommand.TYPES.ROOT_NODE ||
         resource.isDestroyed()
       ) {
