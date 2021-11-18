@@ -184,7 +184,7 @@ void AnimationInfo::EnumerateGenerationOnFrame(
       // in PuppetWidget::GetLayerManager queries the parent state, it results
       // the assertion in the function failure.
       if (widget->GetOwningBrowserChild() &&
-          !static_cast<widget::PuppetWidget*>(widget)->HasLayerManager()) {
+          !static_cast<widget::PuppetWidget*>(widget)->HasWindowRenderer()) {
         for (auto displayItem : LayerAnimationInfo::sDisplayItemTypes) {
           aCallback(Nothing(), displayItem);
         }
