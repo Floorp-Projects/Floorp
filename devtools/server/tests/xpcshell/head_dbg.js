@@ -346,16 +346,8 @@ var listener = {
 
 Services.console.registerListener(listener);
 
-function testGlobal(name) {
-  const sandbox = Cu.Sandbox(
-    Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
-  );
-  sandbox.__name = name;
-  return sandbox;
-}
-
 function addTestGlobal(name, server = DevToolsServer) {
-  const global = testGlobal(name);
+  const global = createTestGlobal(name);
   server.addTestGlobal(global);
   return global;
 }
