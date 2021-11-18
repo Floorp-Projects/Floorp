@@ -51,14 +51,6 @@ module.exports = function(targetType, targetActorSpec, implementation) {
       if (type == RESOURCES) {
         await this._watchTargetResources(entries);
       } else if (type == BREAKPOINTS) {
-        // Breakpoints require the target to be attached,
-        // mostly to have the thread actor instantiated
-        // (content process targets don't have attach method,
-        //  instead they instantiate their ThreadActor immediately)
-        if (typeof this.attach == "function") {
-          this.attach();
-        }
-
         const isTargetCreation =
           this.threadActor.state == THREAD_STATES.DETACHED;
         if (isTargetCreation && !this.targetType.endsWith("worker")) {
@@ -87,10 +79,6 @@ module.exports = function(targetType, targetActorSpec, implementation) {
           this.updateTargetConfiguration(options, isDocumentCreation);
         }
       } else if (type == THREAD_CONFIGURATION) {
-        if (typeof this.attach == "function") {
-          await this.attach();
-        }
-
         const threadOptions = {};
 
         for (const { key, value } of entries) {
@@ -106,14 +94,6 @@ module.exports = function(targetType, targetActorSpec, implementation) {
           await this.threadActor.reconfigure(threadOptions);
         }
       } else if (type == XHR_BREAKPOINTS) {
-        // Breakpoints require the target to be attached,
-        // mostly to have the thread actor instantiated
-        // (content process targets don't have attach method,
-        //  instead they instantiate their ThreadActor immediately)
-        if (typeof this.attach == "function") {
-          this.attach();
-        }
-
         // The thread actor has to be initialized in order to correctly
         // retrieve the stack trace when hitting an XHR
         if (
@@ -129,11 +109,6 @@ module.exports = function(targetType, targetActorSpec, implementation) {
           )
         );
       } else if (type == EVENT_BREAKPOINTS) {
-        // Same as comments for XHR breakpoints. See lines 109-112
-        if (typeof this.attach == "function") {
-          this.attach();
-        }
-
         // Same as comments for XHR breakpoints. See lines 117-118
         if (
           this.threadActor.state == THREAD_STATES.DETACHED &&
