@@ -1839,6 +1839,8 @@ nsresult nsObjectLoadingContent::OpenChannel() {
     if (cspToInherit) {
       loadState->SetCsp(cspToInherit);
     }
+    loadState->SetTriggeringSandboxFlags(sandboxFlags);
+
     // TODO(djg): This was httpChan->SetReferrerInfoWithoutClone(referrerInfo);
     // Is the ...WithoutClone(...) important?
     auto referrerInfo = MakeRefPtr<ReferrerInfo>(*doc);
