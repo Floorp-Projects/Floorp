@@ -215,15 +215,23 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
   // +------------------------------->+->| Arguments |-------->| End |
   // |                                ^  +-----------+         +-----+
   // |                                |
-  // |                                | wantSpreadIteration
-  // |                                |
-  // |                                |         +-----------------+
-  // |                                +---------| SpreadIteration |------+
-  // |                                          +-----------------+      |
-  // | [isSpread]                                                        |
-  // |   wantSpreadOperand +-------------------+ emitSpreadArgumentsTest |
-  // +-------------------->| WantSpreadOperand |-------------------------+
-  //                       +-------------------+
+  // |                                +<------------------------------------+
+  // |                                |                                     |
+  // |                                | wantSpreadIteration                 |
+  // |                                |                                     |
+  // |                                |         +-----------------+         |
+  // |                                +---------| SpreadIteration |------+  |
+  // |                                          +-----------------+      |  |
+  // | [isSpread]                                                        |  |
+  // |   wantSpreadOperand +-------------------+ emitSpreadArgumentsTest |  |
+  // +-------------------->| WantSpreadOperand |-------------------------+  |
+  // |                     +-------------------+                            |
+  // |                                                                      |
+  // |                                                                      |
+  // |                                                                      |
+  // | [isSpread]                                                           |
+  // |   prepareForSpreadArguments                                          |
+  // +----------------------------------------------------------------------+
   enum class State {
     // The initial state.
     Start,
@@ -320,6 +328,7 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
   void reset();
 
   [[nodiscard]] bool prepareForNonSpreadArguments();
+  [[nodiscard]] bool prepareForSpreadArguments();
 
   // See the usage in the comment at the top of the class.
   [[nodiscard]] bool wantSpreadOperand();

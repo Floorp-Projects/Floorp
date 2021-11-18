@@ -195,10 +195,20 @@ bool CallOrNewEmitter::wantSpreadOperand() {
   return isSingleSpread() || isPassthroughRest();
 }
 
+bool CallOrNewEmitter::prepareForSpreadArguments() {
+  MOZ_ASSERT(state_ == State::WantSpreadOperand);
+  MOZ_ASSERT(isSpread());
+  MOZ_ASSERT(!isSingleSpread() && !isPassthroughRest());
+
+  state_ = State::Arguments;
+  return true;
+}
+
 bool CallOrNewEmitter::emitSpreadArgumentsTest() {
   // Caller should check wantSpreadOperand before this.
   MOZ_ASSERT(state_ == State::WantSpreadOperand);
   MOZ_ASSERT(isSpread());
+  MOZ_ASSERT(isSingleSpread() || isPassthroughRest());
 
   if (isSingleSpread()) {
     // Emit a preparation code to optimize the spread call:
@@ -212,30 +222,34 @@ bool CallOrNewEmitter::emitSpreadArgumentsTest() {
     //              [stack] CALLEE THIS ARG0
 
     ifNotOptimizable_.emplace(bce_);
+    if (!bce_->emit1(JSOp::Dup)) {
+      //            [stack] CALLEE THIS ARG0 ARG0
+      return false;
+    }
     if (!bce_->emit1(JSOp::OptimizeSpreadCall)) {
-      //            [stack] CALLEE THIS ARRAY_OR_UNDEF
+      //            [stack] CALLEE THIS ARG0 ARRAY_OR_UNDEF
       return false;
     }
 
     if (!bce_->emit1(JSOp::Dup)) {
-      //            [stack] CALLEE THIS ARRAY_OR_UNDEF ARRAY_OR_UNDEF
+      //            [stack] CALLEE THIS ARG0 ARRAY_OR_UNDEF ARRAY_OR_UNDEF
       return false;
     }
     if (!bce_->emit1(JSOp::Undefined)) {
-      //            [stack] CALLEE THIS ARRAY_OR_UNDEF ARRAY_OR_UNDEF UNDEF
+      //            [stack] CALLEE THIS ARG0 ARRAY_OR_UNDEF ARRAY_OR_UNDEF UNDEF
       return false;
     }
     if (!bce_->emit1(JSOp::StrictEq)) {
-      //            [stack] CALLEE THIS ARRAY_OR_UNDEF EQ
+      //            [stack] CALLEE THIS ARG0 ARRAY_OR_UNDEF EQ
       return false;
     }
 
-    if (!ifNotOptimizable_->emitThen()) {
-      //            [stack] CALLEE THIS ARRAY_OR_UNDEF
+    if (!ifNotOptimizable_->emitThenElse()) {
+      //            [stack] CALLEE THIS ARG0 ARRAY_OR_UNDEF
       return false;
     }
     if (!bce_->emit1(JSOp::Pop)) {
-      //            [stack] CALLEE THIS
+      //            [stack] CALLEE THIS ARG0
       return false;
     }
   }
@@ -256,6 +270,19 @@ bool CallOrNewEmitter::emitEnd(uint32_t argc, uint32_t beginPos) {
   MOZ_ASSERT(state_ == State::Arguments);
 
   if (isSingleSpread()) {
+    if (!ifNotOptimizable_->emitElse()) {
+      //            [stack] CALLEE THIS ARG0 ARRAY_OR_UNDEF
+      return false;
+    }
+    if (!bce_->emit1(JSOp::Swap)) {
+      //            [stack] CALLEE THIS ARRAY_OR_UNDEF ARG0
+      return false;
+    }
+    if (!bce_->emit1(JSOp::Pop)) {
+      //            [stack] CALLEE THIS ARRAY_OR_UNDEF
+      return false;
+    }
+
     if (!ifNotOptimizable_->emitEnd()) {
       //            [stack] CALLEE THIS ARR
       return false;
