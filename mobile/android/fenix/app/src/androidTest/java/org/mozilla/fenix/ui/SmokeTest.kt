@@ -470,75 +470,45 @@ class SmokeTest {
 
     @Test
     // Verifies changing the default engine from the Search Shortcut menu
-    fun verifySearchEngineCanBeChangedTemporarilyUsingShortcuts() {
-        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+    fun selectSearchEnginesShortcutTest() {
+        val enginesList = listOf("DuckDuckGo", "Google", "Amazon.com", "Wikipedia", "Bing", "eBay")
 
-        homeScreen {
-        }.openSearch {
-            verifyKeyboardVisibility()
-            clickSearchEngineShortcutButton()
-            verifySearchEngineList(activityTestRule)
-            changeDefaultSearchEngine(activityTestRule, "Amazon.com")
-            verifySearchEngineIcon("Amazon.com")
-        }.goToSearchEngine {
-            mDevice.waitForIdle()
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openTabDrawer {
-        }.openNewTab {
-            clickSearchEngineShortcutButton()
-            mDevice.waitForIdle()
-            changeDefaultSearchEngine(activityTestRule, "Bing")
-            verifySearchEngineIcon("Bing")
-        }.goToSearchEngine {
-            mDevice.waitForIdle()
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openTabDrawer {
-        }.openNewTab {
-            clickSearchEngineShortcutButton()
-            mDevice.waitForIdle()
-            changeDefaultSearchEngine(activityTestRule, "DuckDuckGo")
-            verifySearchEngineIcon("DuckDuckGo")
-        }.goToSearchEngine {
-            mDevice.waitForIdle()
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openTabDrawer {
-        }.openNewTab {
-            clickSearchEngineShortcutButton()
-            changeDefaultSearchEngine(activityTestRule, "Wikipedia")
-            verifySearchEngineIcon("Wikipedia")
-        }.goToSearchEngine {
-            mDevice.waitForIdle()
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openTabDrawer {
-            // Checking whether the next search will be with default or not
-        }.openNewTab {
-        }.goToSearchEngine {
-            mDevice.waitForIdle()
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
-        }.openNavigationToolbar {
-        }.clickUrlbar {
-            verifyDefaultSearchEngine("Google")
+        for (searchEngine in enginesList) {
+            homeScreen {
+            }.openSearch {
+                verifyKeyboardVisibility()
+                clickSearchEngineShortcutButton()
+                verifySearchEngineList(activityTestRule)
+                changeDefaultSearchEngine(activityTestRule, searchEngine)
+                verifySearchEngineIcon(searchEngine)
+            }.submitQuery("mozilla ") {
+                verifyUrl(searchEngine)
+            }.goToHomescreen { }
         }
     }
 
     @Test
     // Ads a new search engine from the list of custom engines
     fun addPredefinedSearchEngineTest() {
+        val searchEngine = "Reddit"
+
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
         }.openSearchSubMenu {
             openAddSearchEngineMenu()
             verifyAddSearchEngineList()
-            addNewSearchEngine("YouTube")
-            verifyEngineListContains("YouTube")
+            addNewSearchEngine(searchEngine)
+            verifyEngineListContains(searchEngine)
         }.goBack {
         }.goBack {
         }.openSearch {
             verifyKeyboardVisibility()
             clickSearchEngineShortcutButton()
-            activityTestRule.waitForIdle()
-            verifyEnginesListShortcutContains(activityTestRule, "YouTube")
+            verifyEnginesListShortcutContains(activityTestRule, searchEngine)
+            changeDefaultSearchEngine(activityTestRule, searchEngine)
+        }.submitQuery("mozilla ") {
+            verifyUrl(searchEngine)
         }
     }
 

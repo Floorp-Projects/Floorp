@@ -386,6 +386,10 @@ private fun ComposeTestRule.assertSearchEngineList() {
     onNodeWithText("Wikipedia")
         .assertExists()
         .assertIsDisplayed()
+
+    onNodeWithText("eBay")
+        .assertExists()
+        .assertIsDisplayed()
 }
 
 @OptIn(ExperimentalTestApi::class)
