@@ -1372,6 +1372,24 @@ contentblocking:
     record_in_processes:
       - main
 
+privacy:
+  dfpi_rollout_enabledByDefault:
+    bug_numbers:
+      - 1740232
+    description: >
+      Records if a client is opted into dFPI in standard ETP mode as part of the
+      rollout experiment. 0: opted out, 1: opted in, 2: not part of the
+      experiment
+    expires: "101"
+    kind: uint
+    notification_emails:
+      - pbz@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - main
+
 datasanitization:
   network_cookie_lifetimePolicy:
     bug_numbers:
