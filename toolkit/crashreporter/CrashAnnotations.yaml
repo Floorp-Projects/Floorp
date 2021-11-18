@@ -143,6 +143,17 @@ AvailableVirtualMemory:
   type: string
   ping: true
 
+BackgroundTaskMode:
+  description: >
+    True if the app was invoked in background task mode via `--backgroundtask ...`, false otherwise.
+  type: boolean
+
+BackgroundTaskName:
+  description: >
+    If the app was invoked in background task mode via `--backgroundtask <task name>`, the string "task name".
+  type: string
+  ping: true
+
 BlockedDllList:
   description: >
     Comma-separated list of blocked DLLS, Windows-only
@@ -346,6 +357,12 @@ GraphicsStartupTest:
   description: >
     Set to 1 by the graphics driver crash guard when it's activated.
   type: boolean
+
+HeadlessMode:
+  description: >
+    True if the app was invoked in headless mode via `--headless ...` or `--backgroundtask ...`, false otherwise.
+  type: boolean
+  ping: true
 
 PHCKind:
   description: >
