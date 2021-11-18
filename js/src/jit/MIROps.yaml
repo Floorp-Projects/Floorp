@@ -463,6 +463,8 @@
 - name: ArrayFromArgumentsObject
   operands:
     argsObject: Object
+  arguments:
+    shape: Shape*
   result_type: Object
   possibly_calls: true
 
