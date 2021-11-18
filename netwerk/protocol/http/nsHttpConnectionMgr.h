@@ -73,7 +73,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
 
   // Remove a transaction from the pendingQ of it's connection entry. Returns
   // true if the transaction is removed successfully, otherwise returns false.
-  bool RemoveTransFromConnEntry(nsHttpTransaction* aTrans);
+  bool RemoveTransFromConnEntry(nsHttpTransaction* aTrans,
+                                const nsACString& aHashKey);
 
   // Directly dispatch the transaction or insert it in to the pendingQ.
   [[nodiscard]] nsresult ProcessNewTransaction(nsHttpTransaction* aTrans);
@@ -449,6 +450,8 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   // Then, it notifies selected transactions' connection of the new active tab
   // id.
   void NotifyConnectionOfBrowsingContextIdChange(uint64_t previousId);
+
+  void CheckTransInPendingQueue(nsHttpTransaction* aTrans);
 };
 
 }  // namespace net

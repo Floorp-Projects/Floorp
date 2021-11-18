@@ -216,7 +216,7 @@ void ConnectionEntry::InsertTransaction(
     bool aInsertAsFirstForTheSamePriority /* = false */) {
   mPendingQ.InsertTransaction(pendingTransInfo,
                               aInsertAsFirstForTheSamePriority);
-  pendingTransInfo->Transaction()->OnPendingQueueInserted();
+  pendingTransInfo->Transaction()->OnPendingQueueInserted(mConnInfo->HashKey());
 }
 
 nsTArray<RefPtr<PendingTransactionInfo>>*

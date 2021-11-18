@@ -90,7 +90,7 @@ class ConnectionEntry {
   HttpRetParams GetConnectionData();
   void LogConnections();
 
-  RefPtr<nsHttpConnectionInfo> mConnInfo;
+  const RefPtr<nsHttpConnectionInfo> mConnInfo;
 
   bool AvailableForDispatchNow();
 
