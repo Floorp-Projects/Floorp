@@ -38,6 +38,9 @@
 #define CKO_NSS_BUILTIN_ROOT_LIST (CKO_NSS + 4)
 #define CKO_NSS_NEWSLOT (CKO_NSS + 5)
 #define CKO_NSS_DELSLOT (CKO_NSS + 6)
+#define CKO_NSS_VALIDATION (CKO_NSS + 7)
+
+#define CKV_NSS_FIPS_140 (CKO_NSS + 1)
 
 /*
  * NSS-defined key types
@@ -98,6 +101,11 @@
 #define CKA_NSS_MOZILLA_CA_POLICY (CKA_NSS + 34)
 #define CKA_NSS_SERVER_DISTRUST_AFTER (CKA_NSS + 35)
 #define CKA_NSS_EMAIL_DISTRUST_AFTER (CKA_NSS + 36)
+
+#define CKA_NSS_VALIDATION_TYPE (CKA_NSS + 36)
+#define CKA_NSS_VALIDATION_VERSION (CKA_NSS + 37)
+#define CKA_NSS_VALIDATION_LEVEL (CKA_NSS + 38)
+#define CKA_NSS_VALIDATION_MODULE_ID (CKA_NSS + 39)
 
 /*
  * Trust attributes:
@@ -343,6 +351,9 @@ typedef struct CK_NSS_AEAD_PARAMS {
 
 #define CKR_NSS_CERTDB_FAILED (CKR_NSS + 1)
 #define CKR_NSS_KEYDB_FAILED (CKR_NSS + 2)
+
+/* NSS specific types */
+typedef CK_ULONG CK_NSS_VALIDATION_TYPE;
 
 /* Mandatory parameter for the CKM_NSS_HKDF_* key deriviation mechanisms.
    See RFC 5869.
