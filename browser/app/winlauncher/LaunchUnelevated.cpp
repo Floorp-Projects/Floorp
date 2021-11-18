@@ -123,7 +123,7 @@ namespace mozilla {
 // way to ensure that the child process runs as the original user in the active
 // session; an elevated process could be running with different credentials than
 // those of the session.
-// See https://blogs.msdn.microsoft.com/oldnewthing/20131118-00/?p=2643
+// See https://devblogs.microsoft.com/oldnewthing/20131118-00/?p=2643
 
 LauncherVoidResult LaunchUnelevated(int aArgc, wchar_t* aArgv[]) {
   // We need COM to talk to Explorer. Using ProcessRuntime so that
@@ -140,12 +140,26 @@ LauncherVoidResult LaunchUnelevated(int aArgc, wchar_t* aArgv[]) {
     return LAUNCHER_ERROR_GENERIC();
   }
 
-  _bstr_t exe(aArgv[0]);
+  _bstr_t cmd;
+
+  UniquePtr<wchar_t[]> packageFamilyName = mozilla::GetPackageFamilyName();
+  if (packageFamilyName) {
+    int cmdLen =
+        // 26 for the prefix + suffix + null terminator below
+        26 + wcslen(packageFamilyName.get());
+    wchar_t appCmd[cmdLen];
+    swprintf(appCmd, cmdLen, L"shell:appsFolder\\%s!FIREFOX",
+             packageFamilyName.get());
+    cmd = appCmd;
+  } else {
+    cmd = aArgv[0];
+  }
+
   _variant_t args(cmdLine.get());
   _variant_t operation(L"open");
   _variant_t directory;
   _variant_t showCmd(SW_SHOWNORMAL);
-  return ShellExecuteByExplorer(exe, args, operation, directory, showCmd);
+  return ShellExecuteByExplorer(cmd, args, operation, directory, showCmd);
 }
 
 LauncherResult<ElevationState> GetElevationState(
