@@ -4,8 +4,6 @@
 // Test support methods on Target, such as `hasActor` and `getTrait`.
 
 async function testTarget(client, target) {
-  await target.attach();
-
   is(
     target.hasActor("inspector"),
     true,
