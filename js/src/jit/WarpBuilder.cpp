@@ -2973,6 +2973,8 @@ bool WarpBuilder::build_Rest(BytecodeLocation loc) {
   auto* snapshot = getOpSnapshot<WarpRest>(loc);
   Shape* shape = snapshot ? snapshot->shape() : nullptr;
 
+  // NOTE: Keep this code in sync with |ArgumentsReplacer|.
+
   if (inlineCallInfo()) {
     // If we are inlining, we know the actual arguments.
     unsigned numActuals = inlineCallInfo()->argc();

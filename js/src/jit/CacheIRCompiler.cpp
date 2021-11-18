@@ -8559,7 +8559,8 @@ bool CacheIRCompiler::emitMapGetObjectResult(ObjOperandId mapId,
   return true;
 }
 
-bool CacheIRCompiler::emitArrayFromArgumentsObjectResult(ObjOperandId objId) {
+bool CacheIRCompiler::emitArrayFromArgumentsObjectResult(ObjOperandId objId,
+                                                         uint32_t shapeOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   AutoCallVM callvm(masm, this, allocator);
