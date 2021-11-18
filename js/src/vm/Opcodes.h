@@ -1697,7 +1697,7 @@
      * `undefined` instead.
      *
      * This instruction and the branch around the iterator loop are emitted
-     * only when `iterable` is a simple name, as in `f(...arr)`.
+     * only when `iterable` is the sole argument in a call, as in `f(...arr)`.
      *
      * See `js::OptimizeSpreadCall`.
      *
