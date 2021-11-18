@@ -423,17 +423,6 @@ void LIRGenerator::visitArgumentsObjectLength(MArgumentsObjectLength* ins) {
   define(lir, ins);
 }
 
-void LIRGenerator::visitArrayFromArgumentsObject(
-    MArrayFromArgumentsObject* ins) {
-  MDefinition* argsObj = ins->argsObject();
-  MOZ_ASSERT(argsObj->type() == MIRType::Object);
-
-  auto* lir =
-      new (alloc()) LArrayFromArgumentsObject(useRegisterAtStart(argsObj));
-  defineReturn(lir, ins);
-  assignSafepoint(lir, ins);
-}
-
 void LIRGenerator::visitGuardArgumentsObjectFlags(
     MGuardArgumentsObjectFlags* ins) {
   MDefinition* argsObj = ins->argsObject();
@@ -4598,7 +4587,7 @@ void LIRGenerator::visitOptimizeSpreadCallCache(MOptimizeSpreadCallCache* ins) {
   MOZ_ASSERT(value->type() == MIRType::Value);
 
   auto* lir = new (alloc()) LOptimizeSpreadCallCache(useBox(value), temp());
-  defineBox(lir, ins);
+  define(lir, ins);
   assignSafepoint(lir, ins);
 }
 

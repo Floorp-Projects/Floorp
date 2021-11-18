@@ -2780,14 +2780,6 @@
     map: ObjId
     obj: ObjId
 
-- name: ArrayFromArgumentsObjectResult
-  shared: true
-  transpile: true
-  cost_estimate: 5
-  args:
-    obj: ObjId
-    shape: ShapeField
-
 - name: CallPrintString
   shared: true
   transpile: false

@@ -64,7 +64,6 @@
 #include "vm/AsyncIteration.h"
 #include "vm/BuiltinObjectKind.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
-#include "vm/Interpreter.h"
 #include "vm/JSAtom.h"
 #include "vm/MatchPairs.h"
 #include "vm/RegExpObject.h"
@@ -749,12 +748,12 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       pushArg(ImmGCPtr(gen->outerInfo().script()));
 
       using Fn = bool (*)(JSContext*, HandleScript, IonOptimizeSpreadCallIC*,
-                          HandleValue, MutableHandleValue);
+                          HandleValue, bool*);
       callVM<Fn, IonOptimizeSpreadCallIC::update>(lir);
 
-      StoreValueTo(optimizeSpreadCallIC->output()).generate(this);
+      StoreRegisterTo(optimizeSpreadCallIC->output()).generate(this);
       restoreLiveIgnore(
-          lir, StoreValueTo(optimizeSpreadCallIC->output()).clobbered());
+          lir, StoreRegisterTo(optimizeSpreadCallIC->output()).clobbered());
 
       masm.jump(ool->rejoin());
       return;
@@ -7576,14 +7575,6 @@ void CodeGenerator::visitArgumentsObjectLength(LArgumentsObjectLength* lir) {
   bailoutFrom(&bail, lir->snapshot());
 }
 
-void CodeGenerator::visitArrayFromArgumentsObject(
-    LArrayFromArgumentsObject* lir) {
-  pushArg(ToRegister(lir->argsObject()));
-
-  using Fn = ArrayObject* (*)(JSContext*, Handle<ArgumentsObject*>);
-  callVM<Fn, js::ArrayFromArgumentsObject>(lir);
-}
-
 void CodeGenerator::visitGuardArgumentsObjectFlags(
     LGuardArgumentsObjectFlags* lir) {
   Register argsObj = ToRegister(lir->argsObject());
@@ -11474,7 +11465,7 @@ void CodeGenerator::visitOptimizeSpreadCallCache(
     LOptimizeSpreadCallCache* lir) {
   LiveRegisterSet liveRegs = lir->safepoint()->liveRegs();
   ValueOperand val = ToValue(lir, LOptimizeSpreadCallCache::ValueIndex);
-  ValueOperand output = ToOutValue(lir);
+  Register output = ToRegister(lir->output());
   Register temp = ToRegister(lir->temp0());
 
   IonOptimizeSpreadCallIC ic(liveRegs, val, output, temp);
