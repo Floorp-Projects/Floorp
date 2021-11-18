@@ -4519,8 +4519,7 @@ bool BaselineCodeGen<Handler>::emit_StrictSpreadEval() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_OptimizeSpreadCall() {
-  frame.syncStack(0);
-  masm.loadValue(frame.addressOfStackValue(-1), R0);
+  frame.popRegsAndSync(1);
 
   if (!emitNextIC()) {
     return false;
