@@ -276,6 +276,7 @@ class NativeLayerCA : public NativeLayer {
   CALayer* UnderlyingCALayer(WhichRepresentation aRepresentation);
   void ApplyChanges(WhichRepresentation aRepresentation);
   bool HasUpdate(WhichRepresentation aRepresentation);
+  bool HasUpdateAffectingLayers(WhichRepresentation aRepresentation);
   void SetBackingScale(float aBackingScale);
 
   // Invalidates the specified region in all surfaces that are tracked by this
