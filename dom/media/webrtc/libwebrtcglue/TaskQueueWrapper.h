@@ -112,7 +112,16 @@ class TaskQueueWrapper : public webrtc::TaskQueueBase {
   }
 
   const RefPtr<TaskQueue> mTaskQueue;
-  DataMutex<bool> mHasShutdown{false, "TaskQueueWrapper::mHasShutdown"};
+
+  // This is a recursive mutex because a TaskRunner holding this mutex while
+  // running its runnable may end up running other - tail dispatched - runnables
+  // too, and they'll again try to grab the mutex.
+  // The mutex must be held while running the runnable since otherwise there'd
+  // be a race between shutting down the underlying task queue and the runnable
+  // dispatching to that task queue (and we assert it succeeds in e.g.,
+  // PostTask()).
+  DataMutexBase<bool, RecursiveMutex> mHasShutdown{
+      false, "TaskQueueWrapper::mHasShutdown"};
 };
 
 template <>
