@@ -169,13 +169,7 @@ impl Parse for Image {
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Image, ParseError<'i>> {
-        Image::parse_with_cors_mode(
-            context,
-            input,
-            CorsMode::None,
-            /* allow_none = */ true,
-            /* only_url = */ false,
-        )
+        Image::parse_with_cors_mode(context, input, CorsMode::None, /* allow_none = */ true, /* only_url = */ false)
     }
 }
 
@@ -197,9 +191,7 @@ impl Image {
             return Ok(generic::Image::Url(url));
         }
 
-        if let Ok(is) =
-            input.try_parse(|input| ImageSet::parse(context, input, cors_mode, only_url))
-        {
+        if let Ok(is) = input.try_parse(|input| ImageSet::parse(context, input, cors_mode, only_url)) {
             return Ok(generic::Image::ImageSet(Box::new(is)));
         }
 
@@ -328,10 +320,7 @@ impl CrossFadeImage {
         cors_mode: CorsMode,
     ) -> Result<Self, ParseError<'i>> {
         if let Ok(image) = input.try_parse(|input| {
-            Image::parse_with_cors_mode(
-                context, input, cors_mode, /* allow_none = */ false,
-                /* only_url = */ false,
-            )
+            Image::parse_with_cors_mode(context, input, cors_mode, /* allow_none = */ false, /* only_url = */ false)
         }) {
             return Ok(Self::Image(image));
         }
@@ -371,9 +360,7 @@ impl ImageSet {
             }
         }
         let items = input.parse_nested_block(|input| {
-            input.parse_comma_separated(|input| {
-                ImageSetItem::parse(context, input, cors_mode, only_url)
-            })
+            input.parse_comma_separated(|input| ImageSetItem::parse(context, input, cors_mode, only_url))
         })?;
         Ok(Self {
             selected_index: 0,
@@ -385,7 +372,9 @@ impl ImageSet {
 impl ImageSetItem {
     fn parse_type<'i>(p: &mut Parser<'i, '_>) -> Result<crate::OwnedStr, ParseError<'i>> {
         p.expect_function_matching("type")?;
-        p.parse_nested_block(|input| Ok(input.expect_string()?.as_ref().to_owned().into()))
+        p.parse_nested_block(|input| {
+            Ok(input.expect_string()?.as_ref().to_owned().into())
+        })
     }
 
     fn parse<'i, 't>(
@@ -401,33 +390,23 @@ impl ImageSetItem {
                 cors_mode,
             )),
             Err(..) => Image::parse_with_cors_mode(
-                context, input, cors_mode, /* allow_none = */ false,
-                /* only_url = */ only_url,
+                context, input, cors_mode, /* allow_none = */ false,  /* only_url = */ only_url
             )?,
         };
 
-        let mut resolution = input
-            .try_parse(|input| Resolution::parse(context, input))
-            .ok();
+        let mut resolution = input.try_parse(|input| Resolution::parse(context, input)).ok();
         let mime_type = input.try_parse(Self::parse_type).ok();
 
         // Try to parse resolution after type().
         if mime_type.is_some() && resolution.is_none() {
-            resolution = input
-                .try_parse(|input| Resolution::parse(context, input))
-                .ok();
+            resolution = input.try_parse(|input| Resolution::parse(context, input)).ok();
         }
 
         let resolution = resolution.unwrap_or(Resolution::X(1.0));
         let has_mime_type = mime_type.is_some();
         let mime_type = mime_type.unwrap_or_default();
 
-        Ok(Self {
-            image,
-            resolution,
-            has_mime_type,
-            mime_type,
-        })
+        Ok(Self { image, resolution, has_mime_type, mime_type })
     }
 }
 
