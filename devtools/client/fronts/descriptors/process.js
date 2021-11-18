@@ -107,7 +107,6 @@ class ProcessDescriptorFront extends DescriptorMixin(
       try {
         const targetForm = await super.getTarget();
         targetFront = await this._createProcessTargetFront(targetForm);
-        await targetFront.attach();
       } catch (e) {
         // This is likely to happen if we get a lot of events which drop previous
         // processes.

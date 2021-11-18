@@ -145,7 +145,6 @@ class WebExtensionDescriptorFront extends DescriptorMixin(
       try {
         const targetForm = await super.getTarget();
         targetFront = this._createWebExtensionTarget(targetForm);
-        await targetFront.attach();
       } catch (e) {
         console.log(
           `Request to connect to WebExtensionDescriptor "${this.id}" failed: ${e}`

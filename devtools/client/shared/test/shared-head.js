@@ -875,7 +875,6 @@ async function createAndAttachTargetForTab(tab) {
   await commands.targetCommand.startListening();
 
   const target = commands.targetCommand.targetFront;
-  await target.attach();
   return target;
 }
 

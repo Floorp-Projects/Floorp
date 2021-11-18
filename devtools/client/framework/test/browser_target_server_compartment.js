@@ -106,7 +106,6 @@ async function testMainProcess() {
 
   const targetDescriptor = await client.mainRoot.getMainProcess();
   const target = await targetDescriptor.getTarget();
-  await target.attach();
 
   const threadFront = await target.attachThread();
   const { sources } = await threadFront.getSources();
