@@ -811,7 +811,6 @@ async function setupTestFromUrl(url) {
   const tabs = await listTabs(devToolsClient);
   const descriptorFront = findTab(tabs, "test");
   const targetFront = await descriptorFront.getTarget();
-  await targetFront.attach();
 
   const threadFront = await attachThread(targetFront);
 

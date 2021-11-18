@@ -158,8 +158,8 @@ exports.CommandsFactory = {
     // Hack something in order to help TargetMixinFront to distinguish the BrowserConsole
     descriptor.createdForBrowserConsole = true;
 
-    const target = await descriptor.getTarget();
-    await target.attach();
+    // Force fetching the first top level target right away.
+    await descriptor.getTarget();
 
     const commands = await createCommandsDictionary(descriptor);
     return commands;

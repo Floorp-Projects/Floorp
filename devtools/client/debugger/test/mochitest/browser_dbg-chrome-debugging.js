@@ -14,7 +14,6 @@ add_task(async function() {
 
   const descriptorFront = await client.mainRoot.getMainProcess();
   const front = await descriptorFront.getTarget();
-  await front.attach();
   const threadFront = await front.attachThread();
 
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, "about:mozilla");

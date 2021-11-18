@@ -280,7 +280,6 @@ class TabDescriptorFront extends DescriptorMixin(
       try {
         const targetForm = await super.getTarget();
         newTargetFront = this._createTabTarget(targetForm);
-        await newTargetFront.attach();
         this.setTarget(newTargetFront);
       } catch (e) {
         console.log(

@@ -755,9 +755,6 @@ class ResponsiveUI {
     // enterResponsiveMode whenever there is a target switch.
     this.tab.linkedBrowser.enterResponsiveMode();
 
-    // Attach current target to the selected browser tab.
-    await this.currentTarget.attach();
-
     // If the target follows the window global lifecycle, the configuration was already
     // restored from the server during target switch, so we can stop here.
     // This function is still called at startup to restore potential state from previous
