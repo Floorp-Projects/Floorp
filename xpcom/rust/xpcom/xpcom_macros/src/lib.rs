@@ -152,16 +152,16 @@ use syn::{
 
 macro_rules! bail {
     (@($t:expr), $s:expr) => {
-        return Err(syn::Error::new_spanned(&$t, &$s[..]));
+        return Err(syn::Error::new_spanned(&$t, &$s[..]))
     };
     (@($t:expr), $f:expr, $($e:expr),*) => {
-        return Err(syn::Error::new_spanned(&$t, &format!($f, $($e),*)[..]));
+        return Err(syn::Error::new_spanned(&$t, &format!($f, $($e),*)[..]))
     };
     ($s:expr) => {
-        return Err(syn::Error::new(Span::call_site(), &$s[..]));
+        return Err(syn::Error::new(Span::call_site(), &$s[..]))
     };
     ($f:expr, $($e:expr),*) => {
-        return Err(syn::Error::new(Span::call_site(), &format!($f, $($e),*)[..]));
+        return Err(syn::Error::new(Span::call_site(), &format!($f, $($e),*)[..]))
     };
 }
 
