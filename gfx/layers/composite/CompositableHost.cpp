@@ -29,16 +29,40 @@ namespace layers {
 class Compositor;
 
 CompositableHost::CompositableHost(const TextureInfo& aTextureInfo)
-    : mTextureInfo(aTextureInfo), mCompositorBridgeID(0) {
+    : mTextureInfo(aTextureInfo),
+      mCompositorBridgeID(0),
+      mLayer(nullptr),
+      mAttached(false),
+      mKeepAttached(false) {
   MOZ_COUNT_CTOR(CompositableHost);
 }
 
 CompositableHost::~CompositableHost() { MOZ_COUNT_DTOR(CompositableHost); }
 
 void CompositableHost::UseTextureHost(const nsTArray<TimedTexture>& aTextures) {
+  if (mTextureSourceProvider) {
+    for (auto& texture : aTextures) {
+      texture.mTexture->SetTextureSourceProvider(mTextureSourceProvider);
+    }
+  }
+}
+
+void CompositableHost::UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
+                                                 TextureHost* aTextureOnWhite) {
+  MOZ_ASSERT(aTextureOnBlack && aTextureOnWhite);
+  if (mTextureSourceProvider) {
+    aTextureOnBlack->SetTextureSourceProvider(mTextureSourceProvider);
+    aTextureOnWhite->SetTextureSourceProvider(mTextureSourceProvider);
+  }
 }
 
 void CompositableHost::RemoveTextureHost(TextureHost* aTexture) {}
+
+void CompositableHost::SetTextureSourceProvider(
+    TextureSourceProvider* aProvider) {
+  MOZ_ASSERT(aProvider);
+  mTextureSourceProvider = aProvider;
+}
 
 /* static */
 already_AddRefed<CompositableHost> CompositableHost::Create(
@@ -64,6 +88,10 @@ void CompositableHost::DumpTextureHost(std::stringstream& aStream,
     return;
   }
   aStream << gfxUtils::GetAsDataURI(dSurf).get();
+}
+
+TextureSourceProvider* CompositableHost::GetTextureSourceProvider() const {
+  return mTextureSourceProvider;
 }
 
 }  // namespace layers
