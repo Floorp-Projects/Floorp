@@ -423,6 +423,17 @@ void LIRGenerator::visitArgumentsObjectLength(MArgumentsObjectLength* ins) {
   define(lir, ins);
 }
 
+void LIRGenerator::visitArrayFromArgumentsObject(
+    MArrayFromArgumentsObject* ins) {
+  MDefinition* argsObj = ins->argsObject();
+  MOZ_ASSERT(argsObj->type() == MIRType::Object);
+
+  auto* lir =
+      new (alloc()) LArrayFromArgumentsObject(useRegisterAtStart(argsObj));
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitGuardArgumentsObjectFlags(
     MGuardArgumentsObjectFlags* ins) {
   MDefinition* argsObj = ins->argsObject();

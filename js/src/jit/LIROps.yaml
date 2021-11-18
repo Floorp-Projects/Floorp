@@ -424,6 +424,14 @@
   operands:
     argsObject: WordSized
 
+# Create an array from an arguments object.
+- name: ArrayFromArgumentsObject
+  result_type: WordSized
+  operands:
+    argsObject: WordSized
+  call_instruction: true
+  mir_op: true
+
 # Guard that the given flags are not set on the arguments object.
 - name: GuardArgumentsObjectFlags
   operands:
