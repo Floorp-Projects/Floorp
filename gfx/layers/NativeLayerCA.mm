@@ -335,6 +335,7 @@ void NativeLayerRootCA::Representation::Commit(WhichRepresentation aRepresentati
   // list of sublayers. The order is important because we need layer->UnderlyingCALayer()
   // to be non-null, and the underlying CALayer gets lazily initialized in ApplyChanges().
   for (auto layer : aSublayers) {
+    mustRebuild |= layer->HasUpdateAffectingLayers(aRepresentation);
     layer->ApplyChanges(aRepresentation);
   }
 
@@ -1192,6 +1193,11 @@ void NativeLayerCA::ApplyChanges(WhichRepresentation aRepresentation) {
 bool NativeLayerCA::HasUpdate(WhichRepresentation aRepresentation) {
   MutexAutoLock lock(mMutex);
   return GetRepresentation(aRepresentation).HasUpdate();
+}
+
+bool NativeLayerCA::HasUpdateAffectingLayers(WhichRepresentation aRepresentation) {
+  MutexAutoLock lock(mMutex);
+  return GetRepresentation(aRepresentation).mMutatedSpecializeVideo;
 }
 
 CALayer* NativeLayerCA::UnderlyingCALayer(WhichRepresentation aRepresentation) {
