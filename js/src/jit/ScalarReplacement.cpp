@@ -15,8 +15,6 @@
 #include "js/Vector.h"
 #include "vm/ArgumentsObject.h"
 
-#include "gc/ObjectKind-inl.h"
-
 namespace js {
 namespace jit {
 
@@ -961,16 +959,6 @@ static bool IsArrayEscaped(MInstruction* ins, MInstruction* newArray) {
         break;
       }
 
-      // This instruction is supported for |JSOp::OptimizeSpreadCall|.
-      case MDefinition::Opcode::Compare: {
-        bool canFold;
-        if (!def->toCompare()->tryFold(&canFold)) {
-          JitSpewDef(JitSpew_Escape, "has an unsupported compare\n", def);
-          return true;
-        }
-        break;
-      }
-
       case MDefinition::Opcode::PostWriteBarrier:
       case MDefinition::Opcode::PostWriteElementBarrier:
         break;
@@ -1050,7 +1038,6 @@ class ArrayMemoryView : public MDefinitionVisitorDefaultNoop {
   void visitGuardToClass(MGuardToClass* ins);
   void visitGuardArrayIsPacked(MGuardArrayIsPacked* ins);
   void visitUnbox(MUnbox* ins);
-  void visitCompare(MCompare* ins);
   void visitApplyArray(MApplyArray* ins);
   void visitConstructArray(MConstructArray* ins);
 };
@@ -1403,25 +1390,6 @@ void ArrayMemoryView::visitUnbox(MUnbox* ins) {
   ins->block()->discard(ins);
 }
 
-void ArrayMemoryView::visitCompare(MCompare* ins) {
-  // Skip unrelated comparisons.
-  if (ins->lhs() != arr_ && ins->rhs() != arr_) {
-    return;
-  }
-
-  bool folded;
-  MOZ_ALWAYS_TRUE(ins->tryFold(&folded));
-
-  auto* cst = MConstant::New(alloc_, BooleanValue(folded));
-  ins->block()->insertBefore(ins, cst);
-
-  // Replace the comparison with a constant.
-  ins->replaceAllUsesWith(cst);
-
-  // Remove original instruction.
-  ins->block()->discard(ins);
-}
-
 void ArrayMemoryView::visitApplyArray(MApplyArray* ins) {
   // Skip other array objects.
   MDefinition* elements = ins->getElements();
@@ -1532,7 +1500,6 @@ class ArgumentsReplacer : public MDefinitionVisitorDefaultNoop {
   void visitLoadArgumentsObjectArgHole(MLoadArgumentsObjectArgHole* ins);
   void visitArgumentsObjectLength(MArgumentsObjectLength* ins);
   void visitApplyArgsObj(MApplyArgsObj* ins);
-  void visitArrayFromArgumentsObject(MArrayFromArgumentsObject* ins);
   void visitLoadFixedSlot(MLoadFixedSlot* ins);
 
  public:
@@ -1646,7 +1613,6 @@ bool ArgumentsReplacer::escapes(MInstruction* ins, bool guardedForMapped) {
       case MDefinition::Opcode::GetArgumentsObjectArg:
       case MDefinition::Opcode::LoadArgumentsObjectArg:
       case MDefinition::Opcode::LoadArgumentsObjectArgHole:
-      case MDefinition::Opcode::ArrayFromArgumentsObject:
         break;
 
       // This instruction is a no-op used to test that scalar replacement
@@ -1994,95 +1960,6 @@ void ArgumentsReplacer::visitApplyArgsObj(MApplyArgsObj* ins) {
   ins->block()->discard(ins);
 }
 
-void ArgumentsReplacer::visitArrayFromArgumentsObject(
-    MArrayFromArgumentsObject* ins) {
-  // Skip other arguments objects.
-  if (ins->argsObject() != args_) {
-    return;
-  }
-
-  // We can only replace `arguments` because we've verified that the `arguments`
-  // object hasn't been modified in any way. This implies that the arguments
-  // stored in the stack frame haven't been changed either.
-  //
-  // The idea to replace `arguments` in spread calls `f(...arguments)` is now as
-  // follows:
-  // We replace |MArrayFromArgumentsObject| with the identical instructions we
-  // emit when building a rest-array object, cf. |WarpBuilder::build_Rest()|. In
-  // a next step, scalar replacement will then replace these new instructions
-  // themselves.
-
-  Shape* shape = ins->shape();
-  MOZ_ASSERT(shape);
-
-  MDefinition* replacement;
-  if (isInlinedArguments()) {
-    auto* actualArgs = args_->toCreateInlinedArgumentsObject();
-    uint32_t numActuals = actualArgs->numActuals();
-    MOZ_ASSERT(numActuals <= ArgumentsObject::MaxInlinedArgs);
-
-    // Contrary to |WarpBuilder::build_Rest()|, we can always create
-    // MNewArrayObject, because we're guaranteed to have a shape and all
-    // arguments can be stored into fixed elements.
-    static_assert(
-        gc::CanUseFixedElementsForArray(ArgumentsObject::MaxInlinedArgs));
-
-    gc::InitialHeap heap = gc::DefaultHeap;
-
-    // Allocate an array of the correct size.
-    auto* shapeConstant = MConstant::NewShape(alloc(), shape);
-    ins->block()->insertBefore(ins, shapeConstant);
-
-    auto* newArray =
-        MNewArrayObject::New(alloc(), shapeConstant, numActuals, heap);
-    ins->block()->insertBefore(ins, newArray);
-
-    if (numActuals) {
-      auto* elements = MElements::New(alloc(), newArray);
-      ins->block()->insertBefore(ins, elements);
-
-      MConstant* index = nullptr;
-      for (uint32_t i = 0; i < numActuals; i++) {
-        index = MConstant::New(alloc(), Int32Value(i));
-        ins->block()->insertBefore(ins, index);
-
-        MDefinition* arg = actualArgs->getArg(i);
-        auto* store = MStoreElement::New(alloc(), elements, index, arg,
-                                         /* needsHoleCheck = */ false);
-        ins->block()->insertBefore(ins, store);
-
-        auto* barrier = MPostWriteBarrier::New(alloc(), newArray, arg);
-        ins->block()->insertBefore(ins, barrier);
-      }
-
-      auto* initLength = MSetInitializedLength::New(alloc(), elements, index);
-      ins->block()->insertBefore(ins, initLength);
-    }
-
-    replacement = newArray;
-  } else {
-    // We can use |MRest| to read all arguments, because we've guaranteed that
-    // the arguments stored in the stack frame haven't changed; see the comment
-    // at the start of this method.
-
-    auto* numActuals = MArgumentsLength::New(alloc());
-    ins->block()->insertBefore(ins, numActuals);
-
-    // Set |numFormals| to zero to read all arguments, including any formals.
-    uint32_t numFormals = 0;
-
-    auto* rest = MRest::New(alloc(), numActuals, numFormals, shape);
-    ins->block()->insertBefore(ins, rest);
-
-    replacement = rest;
-  }
-
-  ins->replaceAllUsesWith(replacement);
-
-  // Remove original instruction.
-  ins->block()->discard(ins);
-}
-
 void ArgumentsReplacer::visitLoadFixedSlot(MLoadFixedSlot* ins) {
   // Skip other arguments objects.
   if (ins->object() != args_) {
@@ -2126,7 +2003,6 @@ class RestReplacer : public MDefinitionVisitorDefaultNoop {
   void visitGuardShape(MGuardShape* ins);
   void visitGuardArrayIsPacked(MGuardArrayIsPacked* ins);
   void visitUnbox(MUnbox* ins);
-  void visitCompare(MCompare* ins);
   void visitLoadElement(MLoadElement* ins);
   void visitArrayLength(MArrayLength* ins);
   void visitInitializedLength(MInitializedLength* ins);
@@ -2238,16 +2114,6 @@ bool RestReplacer::escapes(MInstruction* ins) {
         }
         if (escapes(def->toInstruction())) {
           JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
-          return true;
-        }
-        break;
-      }
-
-      // This instruction is supported for |JSOp::OptimizeSpreadCall|.
-      case MDefinition::Opcode::Compare: {
-        bool canFold;
-        if (!def->toCompare()->tryFold(&canFold)) {
-          JitSpewDef(JitSpew_Escape, "has an unsupported compare\n", def);
           return true;
         }
         break;
@@ -2425,25 +2291,6 @@ void RestReplacer::visitUnbox(MUnbox* ins) {
   ins->replaceAllUsesWith(rest_);
 
   // Remove the unbox.
-  ins->block()->discard(ins);
-}
-
-void RestReplacer::visitCompare(MCompare* ins) {
-  // Skip unrelated comparisons.
-  if (ins->lhs() != rest_ && ins->rhs() != rest_) {
-    return;
-  }
-
-  bool folded;
-  MOZ_ALWAYS_TRUE(ins->tryFold(&folded));
-
-  auto* cst = MConstant::New(alloc(), BooleanValue(folded));
-  ins->block()->insertBefore(ins, cst);
-
-  // Replace the comparison with a constant.
-  ins->replaceAllUsesWith(cst);
-
-  // Remove original instruction.
   ins->block()->discard(ins);
 }
 

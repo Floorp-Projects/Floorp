@@ -615,7 +615,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   [[nodiscard]] bool emitArrayLiteral(ListNode* array);
   [[nodiscard]] bool emitArray(ParseNode* arrayHead, uint32_t count);
-  [[nodiscard]] bool emitSpreadIntoArray(UnaryNode* elem);
 
   [[nodiscard]] bool emitInternedScopeOp(GCThingIndex index, JSOp op);
   [[nodiscard]] bool emitInternedObjectOp(GCThingIndex index, JSOp op);
@@ -913,6 +912,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool emitConditionalExpression(
       ConditionalExpression& conditional,
       ValueUsage valueUsage = ValueUsage::WantValue);
+
+  bool isOptimizableSpreadArgument(ParseNode* expr);
 
   [[nodiscard]] ParseNode* getCoordNode(ParseNode* callNode,
                                         ParseNode* calleeNode, JSOp op,

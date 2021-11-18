@@ -459,15 +459,6 @@
   # property read.
   alias_set: custom
 
-# Create an array from an arguments object.
-- name: ArrayFromArgumentsObject
-  operands:
-    argsObject: Object
-  arguments:
-    shape: Shape*
-  result_type: Object
-  possibly_calls: true
-
 # Guard that the given flags are not set on the arguments object.
 - name: GuardArgumentsObjectFlags
   operands:
@@ -1799,7 +1790,7 @@
 - name: OptimizeSpreadCallCache
   operands:
     value: Value
-  result_type: Value
+  result_type: Boolean
 
 - name: IteratorMore
   operands:

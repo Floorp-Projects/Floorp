@@ -2901,7 +2901,7 @@ bool WarpBuilder::build_SpreadSuperCall(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_OptimizeSpreadCall(BytecodeLocation loc) {
-  MDefinition* value = current->pop();
+  MDefinition* value = current->peek(-1);
   return buildIC(loc, CacheKind::OptimizeSpreadCall, {value});
 }
 
@@ -2972,8 +2972,6 @@ bool WarpBuilder::build_TableSwitch(BytecodeLocation loc) {
 bool WarpBuilder::build_Rest(BytecodeLocation loc) {
   auto* snapshot = getOpSnapshot<WarpRest>(loc);
   Shape* shape = snapshot ? snapshot->shape() : nullptr;
-
-  // NOTE: Keep this code in sync with |ArgumentsReplacer|.
 
   if (inlineCallInfo()) {
     // If we are inlining, we know the actual arguments.
@@ -3343,7 +3341,6 @@ bool WarpBuilder::buildBailoutForColdIC(BytecodeLocation loc, CacheKind kind) {
     case CacheKind::GetIntrinsic:
     case CacheKind::Call:
     case CacheKind::ToPropertyKey:
-    case CacheKind::OptimizeSpreadCall:
       resultType = MIRType::Value;
       break;
     case CacheKind::BindName:
@@ -3361,6 +3358,7 @@ bool WarpBuilder::buildBailoutForColdIC(BytecodeLocation loc, CacheKind kind) {
     case CacheKind::HasOwn:
     case CacheKind::CheckPrivateField:
     case CacheKind::InstanceOf:
+    case CacheKind::OptimizeSpreadCall:
       resultType = MIRType::Boolean;
       break;
     case CacheKind::SetProp:

@@ -394,8 +394,7 @@ JSObject* IonGetIteratorIC::update(JSContext* cx, HandleScript outerScript,
 /* static */
 bool IonOptimizeSpreadCallIC::update(JSContext* cx, HandleScript outerScript,
                                      IonOptimizeSpreadCallIC* ic,
-                                     HandleValue value,
-                                     MutableHandleValue result) {
+                                     HandleValue value, bool* result) {
   IonScript* ionScript = outerScript->ionScript();
 
   TryAttachIonStub<OptimizeSpreadCallIRGenerator>(cx, ic, ionScript, value);

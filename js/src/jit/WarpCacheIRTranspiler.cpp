@@ -1602,19 +1602,6 @@ bool WarpCacheIRTranspiler::emitLoadArgumentsObjectLengthResult(
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitArrayFromArgumentsObjectResult(
-    ObjOperandId objId, uint32_t shapeOffset) {
-  MDefinition* obj = getOperand(objId);
-  Shape* shape = shapeStubField(shapeOffset);
-  MOZ_ASSERT(shape);
-
-  auto* array = MArrayFromArgumentsObject::New(alloc(), obj, shape);
-  addEffectful(array);
-
-  pushResult(array);
-  return resumeAfter(array);
-}
-
 bool WarpCacheIRTranspiler::emitLoadFunctionLengthResult(ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 

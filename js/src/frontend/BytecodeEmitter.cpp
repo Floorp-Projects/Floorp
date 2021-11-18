@@ -5528,7 +5528,7 @@ bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
     // and enclosing "update" offsets, as we do with for-loops.
 
     if (!emitDupAt(3, 2)) {
-      //            [stack] NEXT ITER ARR I NEXT ITER
+      //            [stack] NEXT ITER ARR I NEXT
       return false;
     }
     if (!emitIteratorNext(Nothing(), IteratorKind::Sync, allowSelfHosted)) {
@@ -7809,6 +7809,16 @@ bool BytecodeEmitter::checkSelfHostedUnsafeSetReservedSlot(
 }
 #endif
 
+bool BytecodeEmitter::isOptimizableSpreadArgument(ParseNode* expr) {
+  if (expr->isKind(ParseNodeKind::Name)) {
+    return true;
+  }
+
+  return allowSelfHostedIter(expr) &&
+         isOptimizableSpreadArgument(
+             expr->as<BinaryNode>().right()->as<ListNode>().head());
+}
+
 /* A version of emitCalleeAndThis for the optional cases:
  *   * a?.()
  *   * a?.b()
@@ -8119,32 +8129,23 @@ bool BytecodeEmitter::emitArguments(ListNode* argsList, bool isCall,
         return false;
       }
     }
-  } else if (cone.wantSpreadOperand()) {
-    auto* spreadNode = &argsList->head()->as<UnaryNode>();
-    if (!emitTree(spreadNode->kid())) {
-      //            [stack] CALLEE THIS ARG0
-      return false;
-    }
-
-    if (!cone.emitSpreadArgumentsTest()) {
-      //            [stack] CALLEE THIS ARG0
-      return false;
-    }
-
-    if (cone.wantSpreadIteration()) {
-      if (!emitSpreadIntoArray(spreadNode)) {
-        //          [stack] CALLEE THIS ARR
+  } else {
+    if (cone.wantSpreadOperand()) {
+      UnaryNode* spreadNode = &argsList->head()->as<UnaryNode>();
+      if (!emitTree(spreadNode->kid())) {
+        //          [stack] CALLEE THIS ARG0
         return false;
       }
     }
-  } else {
-    if (!cone.prepareForSpreadArguments()) {
+    if (!cone.emitSpreadArgumentsTest()) {
       //            [stack] CALLEE THIS
       return false;
     }
-    if (!emitArray(argsList->head(), argc)) {
-      //            [stack] CALLEE THIS ARR
-      return false;
+    if (cone.wantSpreadIteration()) {
+      if (!emitArray(argsList->head(), argc)) {
+        //          [stack] CALLEE THIS ARR
+        return false;
+      }
     }
   }
 
@@ -8169,7 +8170,9 @@ bool BytecodeEmitter::emitOptionalCall(CallNode* callNode, OptionalEmitter& oe,
   bool isSpread = IsSpreadOp(callNode->callOp());
   JSOp op = callNode->callOp();
   uint32_t argc = argsList->count();
-  bool isOptimizableSpread = isSpread && argc == 1;
+  bool isOptimizableSpread =
+      isSpread && argc == 1 &&
+      isOptimizableSpreadArgument(argsList->head()->as<UnaryNode>().kid());
 
   CallOrNewEmitter cone(this, op,
                         isOptimizableSpread
@@ -8306,7 +8309,9 @@ bool BytecodeEmitter::emitCallOrNew(
 
   JSOp op = callNode->callOp();
   uint32_t argc = argsList->count();
-  bool isOptimizableSpread = isSpread && argc == 1;
+  bool isOptimizableSpread =
+      isSpread && argc == 1 &&
+      isOptimizableSpreadArgument(argsList->head()->as<UnaryNode>().kid());
   bool isDefaultDerivedClassConstructor =
       sc->isFunctionBox() && sc->asFunctionBox()->isDerivedClassConstructor() &&
       sc->asFunctionBox()->isSyntheticFunction();
@@ -10433,42 +10438,6 @@ bool BytecodeEmitter::emitArray(ParseNode* arrayHead, uint32_t count) {
       //            [stack] ARRAY
       return false;
     }
-  }
-  return true;
-}
-
-bool BytecodeEmitter::emitSpreadIntoArray(UnaryNode* elem) {
-  MOZ_ASSERT(elem->isKind(ParseNodeKind::Spread));
-
-  if (!updateSourceCoordNotes(elem->pn_pos.begin)) {
-    //              [stack] VALUE
-    return false;
-  }
-
-  if (!emitIterator()) {
-    //              [stack] NEXT ITER
-    return false;
-  }
-
-  if (!emitUint32Operand(JSOp::NewArray, 0)) {
-    //              [stack] NEXT ITER ARRAY
-    return false;
-  }
-
-  if (!emitNumberOp(0)) {
-    //              [stack] NEXT ITER ARRAY INDEX
-    return false;
-  }
-
-  bool allowSelfHostedIterFlag = allowSelfHostedIter(elem->kid());
-  if (!emitSpread(allowSelfHostedIterFlag)) {
-    //              [stack] ARRAY INDEX
-    return false;
-  }
-
-  if (!emit1(JSOp::Pop)) {
-    //              [stack] ARRAY
-    return false;
   }
   return true;
 }
