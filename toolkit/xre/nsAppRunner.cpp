@@ -3812,6 +3812,21 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
     }
 #endif
 
+    bool isBackgroundTaskMode = false;
+#ifdef MOZ_BACKGROUNDTASKS
+    Maybe<nsCString> backgroundTasks = BackgroundTasks::GetBackgroundTasks();
+    if (backgroundTasks.isSome()) {
+      isBackgroundTaskMode = true;
+      CrashReporter::AnnotateCrashReport(
+          CrashReporter::Annotation::BackgroundTaskName, backgroundTasks.ref());
+    }
+#endif
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::BackgroundTaskMode, isBackgroundTaskMode);
+
+    CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::HeadlessMode,
+                                       gfxPlatform::IsHeadless());
+
     CrashReporter::SetRestartArgs(gArgc, gArgv);
 
     // annotate other data (user id etc)
