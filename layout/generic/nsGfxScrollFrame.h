@@ -646,8 +646,14 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   bool mAllowScrollOriginDowngrade : 1;
   bool mHadDisplayPortAtLastFrameUpdate : 1;
+
+  // True if the most recent reflow of the scroll container frame (mOuter) has
+  // the vertical scrollbar shown.
   bool mHasVerticalScrollbar : 1;
+  // True if the most recent reflow of the scroll container frame (mOuter) has
+  // the horizontal scrollbar shown.
   bool mHasHorizontalScrollbar : 1;
+
   // If mHas(Vertical|Horizontal)Scrollbar is true then
   // mOnlyNeed(V|H)ScrollbarToScrollVVInsideLV indicates if the only reason we
   // need that scrollbar is to scroll the visual viewport inside the layout
