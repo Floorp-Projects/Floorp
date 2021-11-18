@@ -2509,6 +2509,9 @@
 - name: WasmNeg
   gen_boilerplate: false
 
+- name: WasmBinaryBitwise
+  gen_boilerplate: false
+
 - name: WasmLoadTls
   gen_boilerplate: false
 
