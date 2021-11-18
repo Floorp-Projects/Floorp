@@ -213,11 +213,25 @@ bool CallOrNewEmitter::emitSpreadArgumentsTest() {
 
     ifNotOptimizable_.emplace(bce_);
     if (!bce_->emit1(JSOp::OptimizeSpreadCall)) {
-      //            [stack] CALLEE THIS ARG0 OPTIMIZED
+      //            [stack] CALLEE THIS ARRAY_OR_UNDEF
       return false;
     }
-    if (!ifNotOptimizable_->emitThen(IfEmitter::ConditionKind::Negative)) {
-      //            [stack] CALLEE THIS ARG0
+
+    if (!bce_->emit1(JSOp::Dup)) {
+      //            [stack] CALLEE THIS ARRAY_OR_UNDEF ARRAY_OR_UNDEF
+      return false;
+    }
+    if (!bce_->emit1(JSOp::Undefined)) {
+      //            [stack] CALLEE THIS ARRAY_OR_UNDEF ARRAY_OR_UNDEF UNDEF
+      return false;
+    }
+    if (!bce_->emit1(JSOp::StrictEq)) {
+      //            [stack] CALLEE THIS ARRAY_OR_UNDEF EQ
+      return false;
+    }
+
+    if (!ifNotOptimizable_->emitThen()) {
+      //            [stack] CALLEE THIS ARRAY_OR_UNDEF
       return false;
     }
     if (!bce_->emit1(JSOp::Pop)) {

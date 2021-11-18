@@ -1692,22 +1692,21 @@
      */ \
     MACRO(SpreadCall, spread_call, NULL, 1, 3, 1, JOF_BYTE|JOF_INVOKE|JOF_SPREAD|JOF_IC) \
     /*
-     * Push true if `arr` is an array object that can be passed directly as the
-     * `args` argument to `JSOp::SpreadCall`.
+     * Push an array object that can be passed directly as the `args` argument
+     * to `JSOp::SpreadCall`. If the operation can't be optimized, push
+     * `undefined` instead.
      *
      * This instruction and the branch around the iterator loop are emitted
-     * only when `arr` is itself a rest parameter, as in `(...arr) =>
-     * f(...arr)`, a strong hint that it's a packed Array whose prototype is
-     * `Array.prototype`.
+     * only when `iterable` is a simple name, as in `f(...arr)`.
      *
      * See `js::OptimizeSpreadCall`.
      *
      *   Category: Functions
      *   Type: Calls
      *   Operands:
-     *   Stack: arr => arr, optimized
+     *   Stack: iterable => array_or_undefined
      */ \
-    MACRO(OptimizeSpreadCall, optimize_spread_call, NULL, 1, 1, 2, JOF_BYTE|JOF_IC) \
+    MACRO(OptimizeSpreadCall, optimize_spread_call, NULL, 1, 1, 1, JOF_BYTE|JOF_IC) \
     /*
      * Perform a direct eval in the current environment if `callee` is the
      * builtin `eval` function, otherwise follow same behaviour as `JSOp::Call`.

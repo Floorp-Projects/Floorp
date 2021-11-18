@@ -4587,7 +4587,7 @@ void LIRGenerator::visitOptimizeSpreadCallCache(MOptimizeSpreadCallCache* ins) {
   MOZ_ASSERT(value->type() == MIRType::Value);
 
   auto* lir = new (alloc()) LOptimizeSpreadCallCache(useBox(value), temp());
-  define(lir, ins);
+  defineBox(lir, ins);
   assignSafepoint(lir, ins);
 }
 

@@ -3327,13 +3327,11 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     CASE(OptimizeSpreadCall) {
       ReservedRooted<Value> val(&rootValue0, REGS.sp[-1]);
+      MutableHandleValue rval = REGS.stackHandleAt(-1);
 
-      bool optimized = false;
-      if (!OptimizeSpreadCall(cx, val, &optimized)) {
+      if (!OptimizeSpreadCall(cx, val, rval)) {
         goto error;
       }
-
-      PUSH_BOOLEAN(optimized);
     }
     END_CASE(OptimizeSpreadCall)
 
@@ -4993,7 +4991,8 @@ bool js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
   return true;
 }
 
-bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg, bool* optimized) {
+bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg,
+                            MutableHandleValue result) {
   // Optimize spread call by skipping spread operation when following
   // conditions are met:
   //   * the argument is an array
@@ -5003,13 +5002,13 @@ bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg, bool* optimized) {
   //   * Array.prototype[@@iterator] is not modified
   //   * %ArrayIteratorPrototype%.next is not modified
   if (!arg.isObject()) {
-    *optimized = false;
+    result.setUndefined();
     return true;
   }
 
   RootedObject obj(cx, &arg.toObject());
   if (!IsPackedArray(obj)) {
-    *optimized = false;
+    result.setUndefined();
     return true;
   }
 
@@ -5018,7 +5017,17 @@ bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg, bool* optimized) {
     return false;
   }
 
-  return stubChain->tryOptimizeArray(cx, obj.as<ArrayObject>(), optimized);
+  bool optimized;
+  if (!stubChain->tryOptimizeArray(cx, obj.as<ArrayObject>(), &optimized)) {
+    return false;
+  }
+
+  if (optimized) {
+    result.setObject(*obj);
+  } else {
+    result.setUndefined();
+  }
+  return true;
 }
 
 JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
