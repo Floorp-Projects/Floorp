@@ -1619,6 +1619,7 @@ class MOZ_RAII OptimizeSpreadCallIRGenerator : public IRGenerator {
   HandleValue val_;
 
   AttachDecision tryAttachArray();
+  AttachDecision tryAttachArguments();
   AttachDecision tryAttachNotOptimizable();
 
  public:
