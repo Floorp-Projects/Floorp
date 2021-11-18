@@ -1602,6 +1602,17 @@ bool WarpCacheIRTranspiler::emitLoadArgumentsObjectLengthResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitArrayFromArgumentsObjectResult(
+    ObjOperandId objId) {
+  MDefinition* obj = getOperand(objId);
+
+  auto* array = MArrayFromArgumentsObject::New(alloc(), obj);
+  addEffectful(array);
+
+  pushResult(array);
+  return resumeAfter(array);
+}
+
 bool WarpCacheIRTranspiler::emitLoadFunctionLengthResult(ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);
 
