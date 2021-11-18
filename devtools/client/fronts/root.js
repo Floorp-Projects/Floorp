@@ -169,12 +169,19 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
           if (processDescriptorFront.isParentProcessDescriptor) {
             return [];
           }
-          const front = await processDescriptorFront.getTarget();
-          if (!front) {
-            return [];
+          try {
+            const front = await processDescriptorFront.getTarget();
+            if (!front) {
+              return [];
+            }
+            const response = await front.listWorkers();
+            return response.workers;
+          } catch (e) {
+            if (e.message.includes("Connection closed")) {
+              return [];
+            }
+            throw e;
           }
-          const response = await front.listWorkers();
-          return response.workers;
         })
       );
 
