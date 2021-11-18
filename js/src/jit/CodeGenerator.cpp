@@ -64,6 +64,7 @@
 #include "vm/AsyncIteration.h"
 #include "vm/BuiltinObjectKind.h"
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
+#include "vm/Interpreter.h"
 #include "vm/JSAtom.h"
 #include "vm/MatchPairs.h"
 #include "vm/RegExpObject.h"
@@ -7573,6 +7574,14 @@ void CodeGenerator::visitArgumentsObjectLength(LArgumentsObjectLength* lir) {
   Label bail;
   masm.loadArgumentsObjectLength(argsObj, out, &bail);
   bailoutFrom(&bail, lir->snapshot());
+}
+
+void CodeGenerator::visitArrayFromArgumentsObject(
+    LArrayFromArgumentsObject* lir) {
+  pushArg(ToRegister(lir->argsObject()));
+
+  using Fn = ArrayObject* (*)(JSContext*, Handle<ArgumentsObject*>);
+  callVM<Fn, js::ArrayFromArgumentsObject>(lir);
 }
 
 void CodeGenerator::visitGuardArgumentsObjectFlags(
