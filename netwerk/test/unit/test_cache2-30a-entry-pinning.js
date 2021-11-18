@@ -18,7 +18,7 @@ function run_test() {
         Services.loadContextInfo.default,
         new OpenCallback(NORMAL, "a1m", "a1d", function(entry) {
           // Now clear the whole cache
-          get_cache_service().clear();
+          Services.cache2.clear();
 
           // The pinned entry should be intact
           asyncOpenCacheEntry(

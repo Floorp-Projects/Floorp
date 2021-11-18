@@ -29,7 +29,7 @@ function run_test() {
   do_get_profile();
 
   var lci = Services.loadContextInfo.default;
-  var testingInterface = get_cache_service().QueryInterface(Ci.nsICacheTesting);
+  var testingInterface = Services.cache2.QueryInterface(Ci.nsICacheTesting);
   Assert.ok(testingInterface);
 
   var mc = new MultipleCallbacks(
@@ -49,7 +49,7 @@ function run_test() {
         log_("purging");
 
         // Invokes cacheservice:purge-memory-pools when done.
-        get_cache_service().purgeFromMemory(
+        Services.cache2.purgeFromMemory(
           Ci.nsICacheStorageService.PURGE_EVERYTHING
         ); // goes to (3)
       });
@@ -103,7 +103,7 @@ function run_test() {
 
         log_("clearing");
         // Now clear everything except pinned.  Stores the "ce_*" file and schedules background eviction.
-        get_cache_service().clear();
+        Services.cache2.clear();
         log_("cleared");
 
         log_("second set of opens");

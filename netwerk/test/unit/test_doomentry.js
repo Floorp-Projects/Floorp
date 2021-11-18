@@ -9,7 +9,7 @@
 "use strict";
 
 function doom(url, callback) {
-  get_cache_service()
+  Services.cache2
     .diskCacheStorage(Services.loadContextInfo.default)
     .asyncDoomURI(createURI(url), "", {
       onCacheEntryDoomed(result) {
