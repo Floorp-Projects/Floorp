@@ -41,7 +41,6 @@
 #include "vm/FunctionFlags.h"  // js::FunctionFlags
 #include "vm/GeneratorObject.h"
 #include "vm/GetterSetter.h"
-#include "vm/Interpreter.h"
 #include "vm/Uint8Clamped.h"
 
 #include "builtin/Boolean-inl.h"
@@ -8556,22 +8555,6 @@ bool CacheIRCompiler::emitMapGetObjectResult(ObjOperandId mapId,
 
   masm.mapObjectGetNonBigInt(map, output.valueReg(), scratch1,
                              output.valueReg(), scratch2, scratch3, scratch4);
-  return true;
-}
-
-bool CacheIRCompiler::emitArrayFromArgumentsObjectResult(ObjOperandId objId,
-                                                         uint32_t shapeOffset) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
-  AutoCallVM callvm(masm, this, allocator);
-
-  Register obj = allocator.useRegister(masm, objId);
-
-  callvm.prepare();
-  masm.Push(obj);
-
-  using Fn = ArrayObject* (*)(JSContext*, Handle<ArgumentsObject*>);
-  callvm.call<Fn, js::ArrayFromArgumentsObject>();
   return true;
 }
 
