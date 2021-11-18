@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 with Files("**"):
-    BUG_COMPONENT = ("Toolkit", "Video/Audio Controls")
+    BUG_COMPONENT = ("Toolkit", "Picture-in-Picture")
 
 SPHINX_TREES["pictureinpicture"] = "docs"
 
