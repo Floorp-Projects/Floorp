@@ -225,6 +225,26 @@ function TargetMixin(parentClass) {
     }
 
     /**
+     * Returns a Promise that resolves to a boolean indicating if the provided target is
+     * an ancestor of this instance.
+     *
+     * @param {TargetFront} target: The possible ancestor target.
+     * @returns Promise<Boolean>
+     */
+    async isTargetAnAncestor(target) {
+      const parentTargetFront = await this.getParentTarget();
+      if (!parentTargetFront) {
+        return false;
+      }
+
+      if (parentTargetFront == target) {
+        return true;
+      }
+
+      return parentTargetFront.isTargetAnAncestor(target);
+    }
+
+    /**
      * Get the target for the given Browsing Context ID.
      *
      * @return {TargetMixin} the requested target.
