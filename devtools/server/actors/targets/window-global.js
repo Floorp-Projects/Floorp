@@ -141,13 +141,8 @@ const windowGlobalTargetPrototype = {
    *
    * ### Main requests:
    *
-   * `attach`/`detach` requests:
-   *  - start/stop document watching:
-   *    Starts watching for new documents and emits `tabNavigated` and
-   *    `frameUpdate` over RDP.
-   *  - retrieve the thread actor:
-   *    Instantiates a ThreadActor that can be later attached to in order to
-   *    debug JS sources in the document.
+   * `detach`:
+   *  Stop document watching and cleanup everything that the target and its children actors created.
    * `switchToFrame`:
    *  Change the targeted document of the whole actor, and its child target-scoped actors
    *  to an iframe or back to its original document.
@@ -1151,18 +1146,6 @@ const windowGlobalTargetPrototype = {
   },
 
   // Protocol Request Handlers
-
-  attach(request) {
-    if (this.isDestroyed()) {
-      throw {
-        error: "destroyed",
-      };
-    }
-
-    return {
-      threadActor: this.threadActor.actorID,
-    };
-  },
 
   detach(request) {
     if (!this._detach()) {
