@@ -36,7 +36,9 @@
 const Debugger = require("Debugger");
 
 function test_promises_run_to_completion() {
-  const g = testGlobal("test global for test_promises_run_to_completion.js");
+  const g = createTestGlobal(
+    "test global for test_promises_run_to_completion.js"
+  );
   const dbg = new Debugger(g);
   g.Assert = Assert;
   const log = [""];
