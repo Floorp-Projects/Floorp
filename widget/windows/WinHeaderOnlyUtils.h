@@ -736,6 +736,59 @@ inline LauncherResult<TOKEN_ELEVATION_TYPE> GetElevationType(
   return elevationType;
 }
 
+inline bool HasPackageIdentity() {
+  if (!IsWin8OrLater()) {
+    return false;
+  }
+
+  HMODULE kernel32Dll = ::GetModuleHandleW(L"kernel32");
+  if (!kernel32Dll) {
+    return false;
+  }
+
+  typedef LONG(WINAPI * GetCurrentPackageIdProc)(UINT32*, BYTE*);
+  GetCurrentPackageIdProc pGetCurrentPackageId =
+      (GetCurrentPackageIdProc)::GetProcAddress(kernel32Dll,
+                                                "GetCurrentPackageId");
+
+  // If there was any package identity to retrieve, we get
+  // ERROR_INSUFFICIENT_BUFFER. If there had been no package identity it
+  // would instead return APPMODEL_ERROR_NO_PACKAGE.
+  UINT32 packageNameSize = 0;
+  return pGetCurrentPackageId &&
+         (pGetCurrentPackageId(&packageNameSize, nullptr) ==
+          ERROR_INSUFFICIENT_BUFFER);
+}
+
+inline UniquePtr<wchar_t[]> GetPackageFamilyName() {
+  HMODULE kernel32Dll = ::GetModuleHandleW(L"kernel32");
+  if (!kernel32Dll) {
+    return nullptr;
+  }
+
+  typedef LONG(WINAPI * GetCurrentPackageFamilyNameProc)(UINT32*, PWSTR);
+  GetCurrentPackageFamilyNameProc pGetCurrentPackageFamilyName =
+      (GetCurrentPackageFamilyNameProc)::GetProcAddress(
+          kernel32Dll, "GetCurrentPackageFamilyName");
+  if (!pGetCurrentPackageFamilyName) {
+    return nullptr;
+  }
+
+  UINT32 packageNameSize = 0;
+  if (pGetCurrentPackageFamilyName(&packageNameSize, nullptr) !=
+      ERROR_INSUFFICIENT_BUFFER) {
+    return nullptr;
+  }
+
+  UniquePtr<wchar_t[]> packageIdentity = MakeUnique<wchar_t[]>(packageNameSize);
+  if (pGetCurrentPackageFamilyName(&packageNameSize, packageIdentity.get()) !=
+      ERROR_SUCCESS) {
+    return nullptr;
+  }
+
+  return packageIdentity;
+}
+
 }  // namespace mozilla
 
 #endif  // mozilla_WinHeaderOnlyUtils_h
