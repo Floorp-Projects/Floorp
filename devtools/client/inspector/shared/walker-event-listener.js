@@ -63,7 +63,7 @@ class WalkerEventListener {
     const inspectorFront = await targetFront.getFront("inspector");
     // In case of multiple fast navigations, the front may already be destroyed,
     // in such scenario bail out and ignore this short lived target.
-    if (inspectorFront.isDestroyed()) {
+    if (inspectorFront.isDestroyed() || !this._listenerMap) {
       return;
     }
     const { walker } = inspectorFront;
