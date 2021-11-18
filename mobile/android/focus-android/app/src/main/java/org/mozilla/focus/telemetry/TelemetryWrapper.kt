@@ -85,7 +85,6 @@ object TelemetryWrapper {
         val SEARCH_BAR = "search_bar"
         val SETTING = "setting"
         val MENU = "menu"
-        val BACK_BUTTON = "back_button"
         val BLOCKING_SWITCH = "blocking_switch"
         val BROWSER = "browser"
         val SEARCH_SUGGESTION_PROMPT = "search_suggestion_prompt"
@@ -97,8 +96,6 @@ object TelemetryWrapper {
         val DEFAULT = "default"
         val FIREFOX = "firefox"
         val SELECTION = "selection"
-        val ERASE_TO_HOME = "erase_home"
-        val ERASE_TO_APP = "erase_app"
         val OPEN = "open"
         val URL = "url"
         val SEARCH = "search"
@@ -325,18 +322,6 @@ object TelemetryWrapper {
         } else {
             searchEngine?.name ?: "<none>"
         }
-    }
-
-    @JvmStatic
-    fun eraseBackToHomeEvent() {
-        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.BACK_BUTTON, Value.ERASE_TO_HOME))
-            .queue()
-    }
-
-    @JvmStatic
-    fun eraseBackToAppEvent() {
-        withSessionCounts(TelemetryEvent.create(Category.ACTION, Method.CLICK, Object.BACK_BUTTON, Value.ERASE_TO_APP))
-            .queue()
     }
 
     @JvmStatic

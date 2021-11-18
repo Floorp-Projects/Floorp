@@ -52,6 +52,7 @@ import mozilla.components.lib.crash.Crash
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.utils.Browsers
+import org.mozilla.focus.GleanMetrics.Browser
 import org.mozilla.focus.GleanMetrics.Downloads
 import org.mozilla.focus.GleanMetrics.OpenWith
 import org.mozilla.focus.GleanMetrics.TabCount
@@ -81,7 +82,6 @@ import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.settings.privacy.ConnectionDetailsPanel
 import org.mozilla.focus.settings.privacy.TrackingProtectionPanel
 import org.mozilla.focus.state.AppAction
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.topsites.DefaultTopSitesStorage.Companion.TOP_SITES_MAX_LIMIT
 import org.mozilla.focus.topsites.DefaultTopSitesView
 import org.mozilla.focus.utils.FocusSnackbar
@@ -623,7 +623,9 @@ class BrowserFragment :
             return true
         } else {
             if (tab.source is SessionState.Source.External || tab.isCustomTab()) {
-                TelemetryWrapper.eraseBackToAppEvent()
+                Browser.backButtonPressed.record(
+                    Browser.BackButtonPressedExtra("erase_to_external_app")
+                )
 
                 // This session has been started from a VIEW intent. Go back to the previous app
                 // immediately and erase the current browsing session.
@@ -640,7 +642,9 @@ class BrowserFragment :
                 Toast.makeText(context, R.string.feedback_erase_custom_tab, Toast.LENGTH_SHORT).show()
             } else {
                 // Just go back to the home screen.
-                TelemetryWrapper.eraseBackToHomeEvent()
+                Browser.backButtonPressed.record(
+                    Browser.BackButtonPressedExtra("erase_to_home")
+                )
 
                 erase()
             }

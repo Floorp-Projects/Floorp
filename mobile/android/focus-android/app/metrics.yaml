@@ -80,6 +80,24 @@ browser:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-11-01"
+  back_button_pressed:
+    type: event
+    description: Back button has been presed on a browser tab.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5914
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5913
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      action_performed:
+        description: |
+          The action performed by pressing back button:
+          erase_to_home or erase_to_external_app.
+        type: string
 
 legacy_ids:
   client_id:
