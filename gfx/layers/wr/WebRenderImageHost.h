@@ -28,38 +28,11 @@ class WebRenderImageHost : public CompositableHost, public ImageComposite {
   explicit WebRenderImageHost(const TextureInfo& aTextureInfo);
   virtual ~WebRenderImageHost();
 
-  CompositableType GetType() override { return mTextureInfo.mCompositableType; }
-
-  void Composite(Compositor* aCompositor, LayerComposite* aLayer,
-                 EffectChain& aEffectChain, float aOpacity,
-                 const gfx::Matrix4x4& aTransform,
-                 const gfx::SamplingFilter aSamplingFilter,
-                 const gfx::IntRect& aClipRect,
-                 const nsIntRegion* aVisibleRegion = nullptr,
-                 const Maybe<gfx::Polygon>& aGeometry = Nothing()) override;
-
   void UseTextureHost(const nsTArray<TimedTexture>& aTextures) override;
-  void UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
-                                 TextureHost* aTextureOnWhite) override;
   void RemoveTextureHost(TextureHost* aTexture) override;
-
-  TextureHost* GetAsTextureHost(gfx::IntRect* aPictureRect = nullptr) override;
-
-  void Attach(Layer* aLayer, TextureSourceProvider* aProvider,
-              AttachFlags aFlags = NO_FLAGS) override;
-
-  void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
-
-  gfx::IntSize GetImageSize() override;
 
   void Dump(std::stringstream& aStream, const char* aPrefix = "",
             bool aDumpHtml = false) override;
-
-  already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
-
-  bool Lock() override;
-
-  void Unlock() override;
 
   void CleanupResources() override;
 
