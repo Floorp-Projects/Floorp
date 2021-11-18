@@ -1941,7 +1941,10 @@ impl BreakBetween {
     ///
     /// See https://drafts.csswg.org/css-break/#page-break-properties.
     #[inline]
-    pub(crate) fn parse_legacy<'i>(_: &ParserContext, input: &mut Parser<'i, '_>) -> Result<Self, ParseError<'i>> {
+    pub(crate) fn parse_legacy<'i>(
+        _: &ParserContext,
+        input: &mut Parser<'i, '_>,
+    ) -> Result<Self, ParseError<'i>> {
         let break_value = BreakBetween::parse(input)?;
         match break_value {
             BreakBetween::Always => Ok(BreakBetween::Page),
@@ -2003,7 +2006,10 @@ impl BreakWithin {
     ///
     /// See https://drafts.csswg.org/css-break/#page-break-properties.
     #[inline]
-    pub(crate) fn parse_legacy<'i>(_: &ParserContext, input: &mut Parser<'i, '_>) -> Result<Self, ParseError<'i>> {
+    pub(crate) fn parse_legacy<'i>(
+        _: &ParserContext,
+        input: &mut Parser<'i, '_>,
+    ) -> Result<Self, ParseError<'i>> {
         let break_value = BreakWithin::parse(input)?;
         match break_value {
             BreakWithin::Auto | BreakWithin::Avoid => Ok(break_value),

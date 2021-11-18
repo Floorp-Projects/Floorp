@@ -12,7 +12,7 @@ use crate::gecko_bindings::structs;
 use crate::media_queries::MediaType;
 use crate::properties::ComputedValues;
 use crate::string_cache::Atom;
-use crate::values::computed::{Length, ColorScheme};
+use crate::values::computed::{ColorScheme, Length};
 use crate::values::specified::color::SystemColor;
 use crate::values::specified::font::FONT_MEDIUM_PX;
 use crate::values::{CustomIdent, KeyframesName};
@@ -317,10 +317,12 @@ impl Device {
     }
 
     /// Computes a system color and returns it as an nscolor.
-    pub(crate) fn system_nscolor(&self, system_color: SystemColor, color_scheme: &ColorScheme) -> u32 {
-        unsafe {
-            bindings::Gecko_ComputeSystemColor(system_color, self.document(), color_scheme)
-        }
+    pub(crate) fn system_nscolor(
+        &self,
+        system_color: SystemColor,
+        color_scheme: &ColorScheme,
+    ) -> u32 {
+        unsafe { bindings::Gecko_ComputeSystemColor(system_color, self.document(), color_scheme) }
     }
 
     /// Returns the default background color.
@@ -388,14 +390,16 @@ impl Device {
     /// Returns the gtk titlebar radius in CSS pixels.
     pub fn titlebar_radius(&self) -> f32 {
         unsafe {
-            bindings::Gecko_GetLookAndFeelInt(bindings::LookAndFeel_IntID::TitlebarRadius as i32) as f32
+            bindings::Gecko_GetLookAndFeelInt(bindings::LookAndFeel_IntID::TitlebarRadius as i32)
+                as f32
         }
     }
 
     /// Returns the gtk menu radius in CSS pixels.
     pub fn menu_radius(&self) -> f32 {
         unsafe {
-            bindings::Gecko_GetLookAndFeelInt(bindings::LookAndFeel_IntID::GtkMenuRadius as i32) as f32
+            bindings::Gecko_GetLookAndFeelInt(bindings::LookAndFeel_IntID::GtkMenuRadius as i32)
+                as f32
         }
     }
 
