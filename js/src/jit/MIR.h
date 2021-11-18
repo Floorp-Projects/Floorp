@@ -8961,6 +8961,44 @@ class MWasmNeg : public MUnaryInstruction, public NoTypePolicy::Data {
   TRIVIAL_NEW_WRAPPERS
 };
 
+// Machine-level bitwise AND/OR/XOR, avoiding all JS-level complexity embodied
+// in MBinaryBitwiseInstruction.
+class MWasmBinaryBitwise : public MBinaryInstruction,
+                           public NoTypePolicy::Data {
+ public:
+  enum class SubOpcode { And, Or, Xor };
+
+ protected:
+  MWasmBinaryBitwise(MDefinition* left, MDefinition* right, MIRType type,
+                     SubOpcode subOpcode)
+      : MBinaryInstruction(classOpcode, left, right), subOpcode_(subOpcode) {
+    MOZ_ASSERT(type == MIRType::Int32 || type == MIRType::Int64);
+    setResultType(type);
+    setMovable();
+    setCommutative();
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmBinaryBitwise)
+  TRIVIAL_NEW_WRAPPERS
+
+  SubOpcode subOpcode() const { return subOpcode_; }
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+
+  bool congruentTo(const MDefinition* ins) const override {
+    return ins->isWasmBinaryBitwise() &&
+           ins->toWasmBinaryBitwise()->subOpcode() == subOpcode() &&
+           binaryCongruentTo(ins);
+  }
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+ private:
+  SubOpcode subOpcode_;
+
+  ALLOW_CLONE(MWasmBinaryBitwise)
+};
+
 class MWasmLoadTls : public MUnaryInstruction, public NoTypePolicy::Data {
   uint32_t offset_;
   AliasSet aliases_;
