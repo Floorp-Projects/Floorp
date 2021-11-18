@@ -146,9 +146,9 @@ updatebot:
 vendoring:
 
   # Repository URL to vendor from
-  # eg. https://github.com/kinetiknz/nestegg.git
+  # eg. https://github.com/kinetiknz/nestegg
   # Any repository host can be specified here, however initially we'll only
-  # support automated vendoring from selected sources initially.
+  # support automated vendoring from selected sources.
   url: source url (generally repository clone url)
 
   # Type of hosting for the upstream repository

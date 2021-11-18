@@ -13,7 +13,7 @@ from mozbuild.vendor.host_base import BaseHost
 class GitLabHost(BaseHost):
     def upstream_commit(self, revision):
         """Query the gitlab api for a git commit id and timestamp."""
-        repo_url = urllib.parse.urlparse(self.manifest["origin"]["url"])
+        repo_url = urllib.parse.urlparse(self.manifest["vendoring"]["url"])
         gitlab_api = repo_url.scheme + "://" + repo_url.netloc + "/api/v4/projects/"
         gitlab_api += repo_url.path[1:].replace("/", "%2F")
         gitlab_api += "/repository/commits"
@@ -24,5 +24,5 @@ class GitLabHost(BaseHost):
 
     def upstream_snapshot(self, revision):
         return "/".join(
-            [self.manifest["origin"]["url"], "-", "archive", revision + ".tar.gz"]
+            [self.manifest["vendoring"]["url"], "-", "archive", revision + ".tar.gz"]
         )
