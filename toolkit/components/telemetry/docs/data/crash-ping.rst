@@ -56,6 +56,7 @@ Structure:
           AvailablePhysicalMemory: <size>, // Windows-only, available physical memory in bytes
           AvailableSwapMemory: <size>, // macOS- and Linux-only, available swap space
           AvailableVirtualMemory: <size>, // Windows-only, available virtual memory in bytes
+          BackgroundTaskName: "task_name", // Optional, if the app was invoked in background task mode via `--backgroundtask task_name`
           BlockedDllList: <list>, // Windows-only, see WindowsDllBlocklist.cpp for details
           BlocklistInitFailed: "1", // Windows-only, present only if the DLL blocklist initialization failed
           CrashTime: <time>, // Seconds since the Epoch
@@ -64,6 +65,7 @@ Structure:
           EventLoopNestingLevel: <levels>, // Optional, present only if >0, indicates the nesting level of the event-loop
           ExperimentalFeatures: <features>, // Optional, a comma-separated string that specifies the enabled experimental features from about:preferences#experimental
           GPUProcessLaunchCount: <num>, // Number of times the GPU process was launched
+          HeadlessMode: "1", // Optional, "1" if the app was invoked in headless mode via `--headless ...` or `--backgroundtask ...`
           ipc_channel_error: <error string>, // Optional, contains the string processing error reason for an ipc-based content crash
           IsGarbageCollecting: "1", // Optional, if set indicates that the crash occurred while the garbage collector was running
           LowCommitSpaceEvents: <num>, // Windows-only, present only if >0, number of low commit space events detected by the available memory tracker
@@ -241,4 +243,4 @@ Version History
   and ProfilerChildShutdownPhase (`bug 1704680 <https://bugzilla.mozilla.org/show_bug.cgi?id=1704680>`_).
 - Firefox 90: Removed MemoryErrorCorrection (`bug 1710152 <https://bugzilla.mozilla.org/show_bug.cgi?id=1710152>`_)
   and added WindowsErrorReporting (`bug 1703761 <https://bugzilla.mozilla.org/show_bug.cgi?id=1703761>`_).
-  
+- Firefox 95: Added HeadlessMode and BackgroundTaskName (`bug 1697875 <https://bugzilla.mozilla.org/show_bug.cgi?id=1697875>`_)
