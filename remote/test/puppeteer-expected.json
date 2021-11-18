@@ -102,7 +102,7 @@
     "FAIL"
   ],
   "Page.click should click the button (click.spec.ts)": [
-    "PASS", "FAIL"
+    "PASS"
   ],
   "Page.click should click svg (click.spec.ts)": [
     "PASS"
