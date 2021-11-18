@@ -645,10 +645,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
 
   uint32_t mActivePeerConnections = 0;
 
-  // This is the count for active peer connections for all the windows in the
-  // subtree rooted at this window (only set on the top window).
-  uint32_t mTotalActivePeerConnections = 0;
-
   bool mIsDocumentLoaded;
   bool mIsHandlingResizeEvent;
   bool mMayHavePaintEventListener;

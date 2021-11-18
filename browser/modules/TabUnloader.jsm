@@ -81,7 +81,17 @@ let DefaultTabUnloaderMethods = {
   },
 
   usingWebRTC(tab, weight) {
-    return webrtcUI.browserHasStreams(tab.linkedBrowser) ? weight : 0;
+    const browser = tab.linkedBrowser;
+    if (!browser) {
+      return 0;
+    }
+
+    // No need to iterate browser contexts for hasActivePeerConnection
+    // because hasActivePeerConnection is set only in the top window.
+    return webrtcUI.browserHasStreams(browser) ||
+      browser.browsingContext?.topWindowContext?.hasActivePeerConnections
+      ? weight
+      : 0;
   },
 
   getMinTabCount() {
