@@ -12,12 +12,8 @@ const testURLs = [
 ];
 
 function run_test() {
-  var ioServ = Cc["@mozilla.org/network/io-service;1"].getService(
-    Ci.nsIIOService
-  );
-
   for (var i = 0; i < testURLs.length; i++) {
-    var uri = ioServ.newURI(testURLs[i][0]);
+    var uri = Services.io.newURI(testURLs[i][0]);
     Assert.equal(uri.spec, testURLs[i][1]);
   }
 }

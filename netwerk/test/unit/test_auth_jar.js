@@ -1,19 +1,14 @@
 "use strict";
 
 function createURI(s) {
-  let service = Cc["@mozilla.org/network/io-service;1"].getService(
-    Ci.nsIIOService
-  );
-  return service.newURI(s);
+  return Services.io.newURI(s);
 }
 
 function run_test() {
   // Set up a profile.
   do_get_profile();
 
-  var secMan = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
-    Ci.nsIScriptSecurityManager
-  );
+  var secMan = Services.scriptSecurityManager;
   const kURI1 = "http://example.com";
   var app = secMan.createContentPrincipal(createURI(kURI1), {});
   var appbrowser = secMan.createContentPrincipal(createURI(kURI1), {

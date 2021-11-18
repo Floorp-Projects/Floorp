@@ -132,10 +132,7 @@ function check_response_id(responses, windowId) {
 var responseQueue = [];
 function setup_http_server() {
   log("setup_http_server");
-  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-    Ci.nsIPrefBranch
-  );
-  maxConnections = prefs.getIntPref(
+  maxConnections = Services.prefs.getIntPref(
     "network.http.max-persistent-connections-per-server"
   );
   FOCUSED_WINDOW_REQUEST_COUNT = Math.floor(maxConnections * 0.5);
@@ -192,10 +189,7 @@ function processResponses() {
 function run_test() {
   // Set "network.http.active_tab_priority" to false, so we can expect to
   // receive http requests with higher priority first.
-  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-    Ci.nsIPrefBranch
-  );
-  prefs.setBoolPref("network.http.active_tab_priority", false);
+  Services.prefs.setBoolPref("network.http.active_tab_priority", false);
 
   setup_http_server();
   setup_dummyHttpRequests();

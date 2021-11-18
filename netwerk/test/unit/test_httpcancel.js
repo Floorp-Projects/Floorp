@@ -12,13 +12,10 @@
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 function inChildProcess() {
-  return (
-    Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
-      .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT
-  );
+  return Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 }
 
-var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+var ios = Services.io;
 var ReferrerInfo = Components.Constructor(
   "@mozilla.org/referrer-info;1",
   "nsIReferrerInfo",

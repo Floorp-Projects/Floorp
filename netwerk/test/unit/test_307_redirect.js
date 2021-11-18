@@ -78,10 +78,7 @@ function run_test() {
   httpserver.registerPathHandler("/content", contentHandler);
   httpserver.start(-1);
 
-  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-    Ci.nsIPrefBranch
-  );
-  prefs.setBoolPref("network.http.prompt-temp-redirect", false);
+  Services.prefs.setBoolPref("network.http.prompt-temp-redirect", false);
 
   var chan = make_channel(noRedirectURI);
   var uploadStream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(

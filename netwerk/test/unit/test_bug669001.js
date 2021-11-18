@@ -136,10 +136,7 @@ function getUA() {
 }
 
 function setUA(value) {
-  var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-    Ci.nsIPrefBranch
-  );
-  prefs.setCharPref("general.useragent.override", value);
+  Services.prefs.setCharPref("general.useragent.override", value);
 }
 
 function getDateString(yearDelta) {

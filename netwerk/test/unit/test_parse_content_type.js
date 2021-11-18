@@ -24,7 +24,7 @@ function check(aType, aCharset, aHadCharset) {
 }
 
 add_task(function test_parseResponseContentType() {
-  var netutil = Cc["@mozilla.org/network/util;1"].getService(Ci.nsINetUtil);
+  var netutil = Services.io;
 
   type = netutil.parseRequestContentType("text/html", charset, hadCharset);
   check("text/html", "", false);

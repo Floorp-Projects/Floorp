@@ -1,9 +1,7 @@
 "use strict";
 
 function run_test() {
-  var tld = Cc["@mozilla.org/network/effective-tld-service;1"].getService(
-    Ci.nsIEffectiveTLDService
-  );
+  var tld = Services.eTLD;
   Assert.equal(tld.getPublicSuffixFromHost("localhost"), "localhost");
   Assert.equal(tld.getPublicSuffixFromHost("localhost."), "localhost.");
   Assert.equal(tld.getPublicSuffixFromHost("domain.com"), "com");
@@ -95,11 +93,7 @@ function run_test() {
 
   // check normalization: output should be consistent with
   // nsIURI::GetAsciiHost(), i.e. lowercased and ASCII/ACE encoded
-  var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
-    Ci.nsIIOService
-  );
-
-  var uri = ioService.newURI("http://b\u00FCcher.co.uk");
+  var uri = Services.io.newURI("http://b\u00FCcher.co.uk");
   Assert.equal(tld.getBaseDomain(uri), "xn--bcher-kva.co.uk");
   Assert.equal(
     tld.getBaseDomainFromHost("b\u00FCcher.co.uk"),

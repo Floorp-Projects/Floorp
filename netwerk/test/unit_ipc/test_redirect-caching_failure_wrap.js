@@ -1,5 +1,3 @@
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 //
 // Run test script in content process instead of chrome (xpcshell's default)
 //

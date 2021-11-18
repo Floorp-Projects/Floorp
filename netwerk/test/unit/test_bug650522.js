@@ -7,12 +7,11 @@ add_task(async () => {
   Services.prefs.setBoolPref("network.cookie.sameSite.schemeful", false);
   Services.prefs.setBoolPref("dom.security.https_first", false);
 
-  var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
   var expiry = (Date.now() + 1000) * 1000;
 
   // Test our handling of host names with a single character at the beginning
   // followed by a dot.
-  cm.add(
+  Services.cookies.add(
     "e.com",
     "/",
     "foo",
@@ -25,7 +24,7 @@ add_task(async () => {
     Ci.nsICookie.SAMESITE_NONE,
     Ci.nsICookie.SCHEME_HTTP
   );
-  Assert.equal(cm.countCookiesFromHost("e.com"), 1);
+  Assert.equal(Services.cookies.countCookiesFromHost("e.com"), 1);
 
   CookieXPCShellUtils.createServer({ hosts: ["e.com"] });
   const cookies = await CookieXPCShellUtils.getCookieStringFromDocument(

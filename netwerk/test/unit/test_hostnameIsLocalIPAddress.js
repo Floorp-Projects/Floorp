@@ -1,9 +1,5 @@
 "use strict";
 
-var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
-  Ci.nsIIOService
-);
-
 function run_test() {
   let testURIs = [
     ["http://example.com", false],
@@ -35,7 +31,7 @@ function run_test() {
   ];
 
   for (let [uri, isLocal] of testURIs) {
-    let nsuri = ioService.newURI(uri);
-    equal(isLocal, ioService.hostnameIsLocalIPAddress(nsuri));
+    let nsuri = Services.io.newURI(uri);
+    equal(isLocal, Services.io.hostnameIsLocalIPAddress(nsuri));
   }
 }

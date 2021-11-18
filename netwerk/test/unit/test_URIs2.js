@@ -1,10 +1,6 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 "use strict";
 
-var gIoService = Cc["@mozilla.org/network/io-service;1"].getService(
-  Ci.nsIIOService
-);
-
 // Run by: cd objdir;  make -C netwerk/test/ xpcshell-tests
 // or: cd objdir; make SOLO_FILE="test_URIs2.js" -C netwerk/test/ check-one
 
@@ -574,7 +570,7 @@ function do_test_uri_basic(aTest) {
     var relURI;
 
     try {
-      relURI = gIoService.newURI(aTest.relativeURI, null, URI);
+      relURI = Services.io.newURI(aTest.relativeURI, null, URI);
     } catch (e) {
       do_info(
         "Caught error on Relative parse of " +
@@ -658,7 +654,7 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
 
   if (aTest.relativeURI) {
     try {
-      origURI = gIoService.newURI(aTest.relativeURI, null, origURI);
+      origURI = Services.io.newURI(aTest.relativeURI, null, origURI);
     } catch (e) {
       do_info(
         "Caught error on Relative parse of " +
@@ -671,7 +667,7 @@ function do_test_uri_with_hash_suffix(aTest, aSuffix) {
       return;
     }
     try {
-      testURI = gIoService.newURI(aSuffix, null, origURI);
+      testURI = Services.io.newURI(aSuffix, null, origURI);
     } catch (e) {
       do_info(
         "Caught error adding suffix to " +
@@ -865,9 +861,9 @@ function do_test_mutate_ref(aTest, aSuffix) {
 function run_test() {
   // UTF-8 check - From bug 622981
   // ASCII
-  let base = gIoService.newURI("http://example.org/xenia?");
-  let resolved = gIoService.newURI("?x", null, base);
-  let expected = gIoService.newURI("http://example.org/xenia?x");
+  let base = Services.io.newURI("http://example.org/xenia?");
+  let resolved = Services.io.newURI("?x", null, base);
+  let expected = Services.io.newURI("http://example.org/xenia?x");
   do_info(
     "Bug 662981: ACSII - comparing " + resolved.spec + " and " + expected.spec
   );
@@ -875,9 +871,9 @@ function run_test() {
 
   // UTF-8 character "è"
   // Bug 622981 was triggered by an empty query string
-  base = gIoService.newURI("http://example.org/xènia?");
-  resolved = gIoService.newURI("?x", null, base);
-  expected = gIoService.newURI("http://example.org/xènia?x");
+  base = Services.io.newURI("http://example.org/xènia?");
+  resolved = Services.io.newURI("?x", null, base);
+  expected = Services.io.newURI("http://example.org/xènia?x");
   do_info(
     "Bug 662981: UTF8 - comparing " + resolved.spec + " and " + expected.spec
   );

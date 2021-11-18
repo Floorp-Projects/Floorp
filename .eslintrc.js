@@ -249,7 +249,6 @@ module.exports = {
       rules: {
         "mozilla/no-arbitrary-setTimeout": "off",
         "mozilla/no-define-cc-etc": "off",
-        "mozilla/use-services": "off",
         "consistent-return": "off",
         "no-eval": "off",
         "no-global-assign": "off",

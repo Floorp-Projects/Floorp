@@ -4,13 +4,7 @@
 
 "use strict";
 
-var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
-  Ci.nsIIOService
-);
-
-var prefs = Cc["@mozilla.org/preferences-service;1"].getService(
-  Ci.nsIPrefBranch
-);
+var prefs = Services.prefs;
 
 function setup() {
   prefs.setBoolPref("network.dns.notifyResolution", true);
@@ -33,9 +27,7 @@ var url = "ws://dnsleak.example.com";
 
 var dnsRequestObserver = {
   register() {
-    this.obs = Cc["@mozilla.org/observer-service;1"].getService(
-      Ci.nsIObserverService
-    );
+    this.obs = Services.obs;
     this.obs.addObserver(this, "dns-resolution-request");
   },
 
@@ -74,7 +66,7 @@ add_task(async function test_dns_websocket_channel() {
     Ci.nsIWebSocketChannel
   );
 
-  var uri = ioService.newURI(url);
+  var uri = Services.io.newURI(url);
   chan.initLoadInfo(
     null, // aLoadingNode
     Services.scriptSecurityManager.createContentPrincipal(uri, {}),

@@ -19,10 +19,6 @@ const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
 const certOverrideService = Cc[
   "@mozilla.org/security/certoverride;1"
 ].getService(Ci.nsICertOverrideService);
-const threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
-  Ci.nsIThreadManager
-);
-const mainThread = threadManager.currentThread;
 
 const defaultOriginAttributes = {};
 

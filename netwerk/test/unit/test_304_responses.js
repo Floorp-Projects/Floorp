@@ -18,23 +18,11 @@ XPCOMUtils.defineLazyGetter(this, "baseURI", function() {
 const unexpected304 = "unexpected304";
 const existingCached304 = "existingCached304";
 
-function make_uri(url) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  return ios.newURI(url);
-}
-
 function make_channel(url) {
   return NetUtil.newChannel({
     uri: url,
     loadUsingSystemPrincipal: true,
   }).QueryInterface(Ci.nsIHttpChannel);
-}
-
-function clearCache() {
-  var service = Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(
-    Ci.nsICacheStorageService
-  );
-  service.clear();
 }
 
 function alwaysReturn304Handler(metadata, response) {

@@ -102,13 +102,9 @@ function run_test() {
   // We always resolve localhost as it's hardcoded without the following pref:
   Services.prefs.setBoolPref("network.proxy.allow_hijacking_localhost", true);
 
-  let ioService = Cc["@mozilla.org/network/io-service;1"].getService(
-    Ci.nsIIOService
-  );
-
   gHttpServer.start(-1);
 
-  let uri = ioService.newURI(
+  let uri = Services.io.newURI(
     "http://localhost:" + gHttpServer.identity.primaryPort
   );
   let channel = NetUtil.newChannel({ uri, loadUsingSystemPrincipal: true });

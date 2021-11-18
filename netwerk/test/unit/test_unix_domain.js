@@ -20,9 +20,6 @@ const ScriptableInputStream = CC(
   "init"
 );
 
-const IOService = Cc["@mozilla.org/network/io-service;1"].getService(
-  Ci.nsIIOService
-);
 const socketTransportService = Cc[
   "@mozilla.org/network/socket-transport-service;1"
 ].getService(Ci.nsISocketTransportService);
@@ -609,7 +606,7 @@ function test_keep_when_offline() {
     // This should not shut things down: Unix domain sockets should
     // remain open in offline mode.
     if (count == 5) {
-      IOService.offline = true;
+      Services.io.offline = true;
       log += "o";
     }
 

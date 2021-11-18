@@ -54,9 +54,8 @@ Requestor.prototype = {
 };
 
 function makeChan(url, loadingUrl) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
   var principal = Services.scriptSecurityManager.createContentPrincipal(
-    ios.newURI(loadingUrl),
+    Services.io.newURI(loadingUrl),
     {}
   );
   return NetUtil.newChannel({

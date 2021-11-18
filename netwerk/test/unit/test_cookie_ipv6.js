@@ -47,6 +47,5 @@ add_task(async function test_cookie_ipv6() {
   await new Promise(resolve => {
     chan.asyncOpen(new ChannelListener(resolve));
   });
-  var cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
-  equal(cm.cookies.length, 1);
+  equal(Services.cookies.cookies.length, 1);
 });

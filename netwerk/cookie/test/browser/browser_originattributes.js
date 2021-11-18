@@ -9,8 +9,6 @@ const COOKIE_NAMES = ["cookie0", "cookie1", "cookie2"];
 const TEST_URL =
   "http://example.com/browser/netwerk/cookie/test/browser/file_empty.html";
 
-let cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
-
 // opens `uri' in a new tab with the provided userContextId and focuses it.
 // returns the newly opened tab
 async function openTabInUserContext(uri, userContextId) {
@@ -63,7 +61,9 @@ add_task(async function test() {
   await checkCookies(expectedValues, "before removal");
 
   // remove cookies that belongs to user context id #1
-  cm.removeCookiesWithOriginAttributes(JSON.stringify({ userContextId: 1 }));
+  Services.cookies.removeCookiesWithOriginAttributes(
+    JSON.stringify({ userContextId: 1 })
+  );
 
   expectedValues[1] = undefined;
   await checkCookies(expectedValues, "after removal");
@@ -92,7 +92,7 @@ async function checkCookies(expectedValues, time) {
 
 function getCookiesFromManager(userContextId) {
   let cookies = {};
-  let allCookies = cm.getCookiesWithOriginAttributes(
+  let allCookies = Services.cookies.getCookiesWithOriginAttributes(
     JSON.stringify({ userContextId })
   );
   for (let cookie of allCookies) {

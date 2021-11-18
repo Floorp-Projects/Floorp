@@ -10,8 +10,9 @@ add_task(async () => {
   );
   Services.prefs.setBoolPref("dom.security.https_first", false);
 
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  var cookieURI = ios.newURI("http://mozilla.org/test_cookie_blacklist.js");
+  var cookieURI = Services.io.newURI(
+    "http://mozilla.org/test_cookie_blacklist.js"
+  );
   const channel = NetUtil.newChannel({
     uri: cookieURI,
     loadUsingSystemPrincipal: true,

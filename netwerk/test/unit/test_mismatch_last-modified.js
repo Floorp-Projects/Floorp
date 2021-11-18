@@ -9,8 +9,6 @@ const BinaryInputStream = Components.Constructor(
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 var httpserver = new HttpServer();
 
-var ios;
-
 // Test the handling of a cache revalidation with mismatching last-modified
 // headers. If we get such a revalidation the cache entry should be purged.
 // see bug 717350
@@ -107,7 +105,6 @@ XPCOMUtils.defineLazyGetter(this, "listener_1", function() {
 
 function run_test() {
   do_get_profile();
-  ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 
   evict_cache_entries();
 
