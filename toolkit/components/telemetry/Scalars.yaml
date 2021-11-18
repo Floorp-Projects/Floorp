@@ -1384,9 +1384,9 @@ datasanitization:
     expires: never
     kind: uint
     notification_emails:
-      - ewright@mozilla.com
+      - pbz@mozilla.com
       - seceng-telemetry@mozilla.com
-    release_channel_collection: opt-in
+    release_channel_collection: opt-out
     products:
       - 'firefox'
     record_in_processes:
