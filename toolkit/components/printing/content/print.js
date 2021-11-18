@@ -195,14 +195,11 @@ var PrintEventHandler = {
     this.topContentTitle = topWindowContext.documentTitle;
     this.topCurrentURI = topWindowContext.documentURI.spec;
 
-    let canPrintSelectionOnly =
-      this.hasSelection && this.printPreviewEl.canPrintSelectionOnly;
-    if (!canPrintSelectionOnly && !this.isArticle) {
+    if (!this.hasSelection && !this.isArticle) {
       document.getElementById("source-version-section").hidden = true;
     } else {
-      document.getElementById(
-        "source-version-selection"
-      ).hidden = !canPrintSelectionOnly;
+      document.getElementById("source-version-selection").hidden = !this
+        .hasSelection;
       document.getElementById("source-version-simplified").hidden = !this
         .isArticle;
     }
@@ -242,7 +239,7 @@ var PrintEventHandler = {
     PrintSettingsViewProxy.fallbackPaperList = fallbackPaperList;
     PrintSettingsViewProxy.defaultSystemPrinter = defaultSystemPrinter;
     PrintSettingsViewProxy._sourceVersion =
-      canPrintSelectionOnly && this.printSelectionOnly ? "selection" : "source";
+      this.hasSelection && this.printSelectionOnly ? "selection" : "source";
 
     logger.debug("availablePrinters: ", Object.keys(printersByName));
     logger.debug("defaultSystemPrinter: ", defaultSystemPrinter);
