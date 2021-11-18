@@ -7809,16 +7809,6 @@ bool BytecodeEmitter::checkSelfHostedUnsafeSetReservedSlot(
 }
 #endif
 
-bool BytecodeEmitter::isOptimizableSpreadArgument(ParseNode* expr) {
-  if (expr->isKind(ParseNodeKind::Name)) {
-    return true;
-  }
-
-  return allowSelfHostedIter(expr) &&
-         isOptimizableSpreadArgument(
-             expr->as<BinaryNode>().right()->as<ListNode>().head());
-}
-
 /* A version of emitCalleeAndThis for the optional cases:
  *   * a?.()
  *   * a?.b()
@@ -8179,9 +8169,7 @@ bool BytecodeEmitter::emitOptionalCall(CallNode* callNode, OptionalEmitter& oe,
   bool isSpread = IsSpreadOp(callNode->callOp());
   JSOp op = callNode->callOp();
   uint32_t argc = argsList->count();
-  bool isOptimizableSpread =
-      isSpread && argc == 1 &&
-      isOptimizableSpreadArgument(argsList->head()->as<UnaryNode>().kid());
+  bool isOptimizableSpread = isSpread && argc == 1;
 
   CallOrNewEmitter cone(this, op,
                         isOptimizableSpread
@@ -8318,9 +8306,7 @@ bool BytecodeEmitter::emitCallOrNew(
 
   JSOp op = callNode->callOp();
   uint32_t argc = argsList->count();
-  bool isOptimizableSpread =
-      isSpread && argc == 1 &&
-      isOptimizableSpreadArgument(argsList->head()->as<UnaryNode>().kid());
+  bool isOptimizableSpread = isSpread && argc == 1;
   bool isDefaultDerivedClassConstructor =
       sc->isFunctionBox() && sc->asFunctionBox()->isDerivedClassConstructor() &&
       sc->asFunctionBox()->isSyntheticFunction();
