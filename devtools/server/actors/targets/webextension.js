@@ -246,24 +246,6 @@ webExtensionTargetPrototype._onNewExtensionWindow = function(window) {
   }
 };
 
-webExtensionTargetPrototype._attach = function() {
-  // NOTE: we need to be sure that `this.window` can return a window before calling the
-  // ParentProcessTargetActor.onAttach, or the WindowGlobalTargetActor will not be
-  // subscribed to the child doc shell updates.
-
-  if (
-    !this.window ||
-    this.window.document.nodePrincipal.addonId !== this.addonId
-  ) {
-    // Discovery an existent extension page (or fallback window) to attach.
-    this._setWindow(this._searchForExtensionWindow());
-  }
-
-  // Call ParentProcessTargetActor's _attach to listen for any new/destroyed chrome
-  // docshell.
-  ParentProcessTargetActor.prototype._attach.apply(this);
-};
-
 webExtensionTargetPrototype._detach = function() {
   // Call ParentProcessTargetActor's _detach to unsubscribe new/destroyed chrome docshell
   // listeners.

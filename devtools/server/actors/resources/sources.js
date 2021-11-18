@@ -25,9 +25,6 @@ class SourceWatcher {
   }
 
   async watch(targetActor, { onAvailable }) {
-    // Force attaching the target in order to ensure it instantiates the ThreadActor
-    targetActor.attach();
-
     const { threadActor } = targetActor;
     this.sourcesManager = targetActor.sourcesManager;
     this.onAvailable = onAvailable;

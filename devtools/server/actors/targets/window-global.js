@@ -325,6 +325,26 @@ const windowGlobalTargetPrototype = {
     );
 
     TargetActorRegistry.registerTargetActor(this);
+
+    // Instantiate the Thread Actor immediately.
+    // This is the only one actor instantiated right away by the target actor.
+    // All the others are instantiated lazily on first request made the client,
+    // via LazyPool API.
+    this._createThreadActor();
+
+    // Start observing navigations as well as sub documents.
+    // (This is probably meant to disappear once EFT is the only supported codepath)
+    this._progressListener = new DebuggerProgressListener(this);
+
+    // Ensure notifying about the target actor first
+    // before notifying about new docshells.
+    // Otherwise we would miss these RDP event as the client hasn't
+    // yet received the target actor's form.
+    // (This is also probably meant to disappear once EFT is the only supported codepath)
+    this._docShellsObserved = false;
+    DevToolsUtils.executeSoon(() => this._watchDocshells());
+
+    this._attached = true;
   },
 
   // Optional console API listener options (e.g. used by the WebExtensionActor to
@@ -697,28 +717,6 @@ const windowGlobalTargetPrototype = {
     }
 
     return false;
-  },
-
-  /**
-   * Does the actual work of attaching to a window global.
-   */
-  _attach() {
-    if (this._attached) {
-      return;
-    }
-
-    // Create a pool for context-lifetime actors.
-    this._createThreadActor();
-
-    this._progressListener = new DebuggerProgressListener(this);
-
-    this._docShellsObserved = false;
-
-    // Ensure replying to attach() request first
-    // before notifying about new docshells.
-    DevToolsUtils.executeSoon(() => this._watchDocshells());
-
-    this._attached = true;
   },
 
   _watchDocshells() {
@@ -1160,8 +1158,6 @@ const windowGlobalTargetPrototype = {
         error: "destroyed",
       };
     }
-
-    this._attach();
 
     return {
       threadActor: this.threadActor.actorID,
