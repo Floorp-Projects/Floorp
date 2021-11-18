@@ -546,24 +546,23 @@
   margin-top: 0 !important;
 }
 
-#TabsToolbar:not([brighttext]) #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background {
-  border: 1px solid var(--tab-line-color, rgba(128,128,142,0.9));
-  box-shadow: 0 0 4px rgba(128,128,142,0.5);
+#tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background {
+  border: 1px solid var(--tab-line-color, rgba(128,128,142,0.4));
 }
 
-#TabsToolbar[brighttext] #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background:-moz-lwtheme {
-  border: 1px solid var(--tab-line-color, rgba(128,128,142,0.9));
+#TabsToolbar:not([brighttext]) #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background {
+  box-shadow: 0 0 4px rgba(128,128,142,0.5);
 }
 
 /* For themes outside of Light and Dark (which are curated by Mozilla), show a thicker border
    around the tab to help themes that are dependent on tab_line to show the selected tab. */
 :root:not([lwtheme-mozlightdark]) #TabsToolbar:not([brighttext]) #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background:-moz-lwtheme {
-  border: 1px solid var(--tab-line-color, rgba(128,128,142,0.9));
+  border: 1px solid var(--tab-line-color, var(--tabs-border-color, rgba(128,128,142,0.4)));
   box-shadow: 0 0 4px rgba(128,128,142,0.5);
 }
 
 :root:not([lwtheme-mozlightdark]) #TabsToolbar[brighttext] #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background:-moz-lwtheme {
-  border: 1px solid var(--tab-line-color, var(--tabs-border-color, rgba(128,128,142,0.9)));
+  border: 1px solid var(--tab-line-color, var(--tabs-border-color, rgba(128,128,142,0.4)));
 }
 
 .tab-background[multiselected=true],
