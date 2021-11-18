@@ -70,6 +70,23 @@
               "type": "string",
               "format": "origin"
             }
+          },
+
+          "developer": {
+            "type": "object",
+            "optional": true,
+            "properties": {
+              "name": {
+                "type": "string",
+                "optional": true,
+                "preprocess": "localize"
+              },
+              "url": {
+                "type": "string",
+                "optional": true,
+                "preprocess": "localize"
+              }
+            }
           }
         }
       },
@@ -274,23 +291,6 @@
                 }
               }
             ]
-          },
-
-          "developer": {
-            "type": "object",
-            "optional": true,
-            "properties": {
-              "name": {
-                "type": "string",
-                "optional": true,
-                "preprocess": "localize"
-              },
-              "url": {
-                "type": "string",
-                "optional": true,
-                "preprocess": "localize"
-              }
-            }
           },
 
           "hidden": {
