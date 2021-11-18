@@ -21,6 +21,7 @@ const {
 } = require("devtools/server/actors/object/utils");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const ErrorDocs = require("devtools/server/actors/errordocs");
+const Targets = require("devtools/server/actors/targets/index");
 
 loader.lazyRequireGetter(
   this,
@@ -609,6 +610,8 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
   startListeners: async function(listeners) {
     const startedListeners = [];
     const global = !this.parentActor.isRootActor ? this.global : null;
+    const isTargetActorContentProcess =
+      this.parentActor.targetType === Targets.TYPES.PROCESS;
 
     for (const event of listeners) {
       switch (event) {
@@ -767,7 +770,7 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
           break;
         case "DocumentEvents":
           // Workers don't support this message type
-          if (isWorker) {
+          if (isWorker || isTargetActorContentProcess) {
             break;
           }
           if (!this.documentEventsListener) {
