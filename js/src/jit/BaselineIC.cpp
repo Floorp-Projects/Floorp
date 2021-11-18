@@ -1889,13 +1889,7 @@ bool DoOptimizeSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
   TryAttachStub<OptimizeSpreadCallIRGenerator>("OptimizeSpreadCall", cx, frame,
                                                stub, value);
 
-  bool optimized;
-  if (!OptimizeSpreadCall(cx, value, &optimized)) {
-    return false;
-  }
-
-  res.setBoolean(optimized);
-  return true;
+  return OptimizeSpreadCall(cx, value, res);
 }
 
 bool FallbackICCodeCompiler::emit_OptimizeSpreadCall() {

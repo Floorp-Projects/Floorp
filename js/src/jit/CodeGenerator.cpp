@@ -748,12 +748,12 @@ void CodeGenerator::visitOutOfLineICFallback(OutOfLineICFallback* ool) {
       pushArg(ImmGCPtr(gen->outerInfo().script()));
 
       using Fn = bool (*)(JSContext*, HandleScript, IonOptimizeSpreadCallIC*,
-                          HandleValue, bool*);
+                          HandleValue, MutableHandleValue);
       callVM<Fn, IonOptimizeSpreadCallIC::update>(lir);
 
-      StoreRegisterTo(optimizeSpreadCallIC->output()).generate(this);
+      StoreValueTo(optimizeSpreadCallIC->output()).generate(this);
       restoreLiveIgnore(
-          lir, StoreRegisterTo(optimizeSpreadCallIC->output()).clobbered());
+          lir, StoreValueTo(optimizeSpreadCallIC->output()).clobbered());
 
       masm.jump(ool->rejoin());
       return;
@@ -11465,7 +11465,7 @@ void CodeGenerator::visitOptimizeSpreadCallCache(
     LOptimizeSpreadCallCache* lir) {
   LiveRegisterSet liveRegs = lir->safepoint()->liveRegs();
   ValueOperand val = ToValue(lir, LOptimizeSpreadCallCache::ValueIndex);
-  Register output = ToRegister(lir->output());
+  ValueOperand output = ToOutValue(lir);
   Register temp = ToRegister(lir->temp0());
 
   IonOptimizeSpreadCallIC ic(liveRegs, val, output, temp);
