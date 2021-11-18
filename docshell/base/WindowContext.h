@@ -87,6 +87,9 @@ class BrowsingContextGroup;
   /* Whether the corresponding document has `loading='lazy'`             \
    * images; It won't become false if the image becomes non-lazy */      \
   FIELD(HadLazyLoadImage, bool)                                          \
+  /* Whether any of the windows in the subtree rooted at this window has \
+   * active peer connections or not (only set on the top window). */     \
+  FIELD(HasActivePeerConnections, bool)                                  \
   /* Whether we can execute scripts in this WindowContext. Has no effect \
    * unless scripts are also allowed in the BrowsingContext. */          \
   FIELD(AllowJavascript, bool)                                           \
@@ -194,6 +197,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   bool HadLazyLoadImage() const { return GetHadLazyLoadImage(); }
 
+  bool HasActivePeerConnections();
+
   bool AllowJavascript() const { return GetAllowJavascript(); }
   bool CanExecuteScripts() const { return mCanExecuteScripts; }
 
@@ -289,6 +294,8 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_AllowJavascript>, bool aValue,
               ContentParent* aSource);
   void DidSet(FieldIndex<IDX_AllowJavascript>, bool aOldValue);
+
+  bool CanSet(FieldIndex<IDX_HasActivePeerConnections>, bool, ContentParent*);
 
   void DidSet(FieldIndex<IDX_HasReportedShadowDOMUsage>, bool aOldValue);
 
