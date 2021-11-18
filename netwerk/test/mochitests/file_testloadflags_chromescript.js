@@ -1,4 +1,5 @@
 /* eslint-env mozilla/frame-script */
+/* eslint-disable mozilla/use-services */
 
 "use strict";
 

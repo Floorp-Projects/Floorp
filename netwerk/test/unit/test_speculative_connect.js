@@ -152,9 +152,7 @@ TestFailedStreamCallback.prototype = {
  */
 function test_speculative_connect() {
   serv = new TestServer();
-  var ssm = Cc["@mozilla.org/scriptsecuritymanager;1"].getService(
-    Ci.nsIScriptSecurityManager
-  );
+  var ssm = Services.scriptSecurityManager;
   var URI = ios.newURI(
     "http://localhost:" + serv.listener.port + "/just/a/test"
   );
@@ -210,9 +208,7 @@ function test_hostnames_resolving_to_addresses(host, next) {
   // Need to get main thread pointer to ensure nsSocketTransport::AsyncWait
   // adds callback to ns*StreamReadyEvent on main thread, and doesn't
   // addref off the main thread.
-  var gThreadManager = Cc["@mozilla.org/thread-manager;1"].getService(
-    Ci.nsIThreadManager
-  );
+  var gThreadManager = Services.tm;
   var mainThread = gThreadManager.currentThread;
 
   try {
@@ -293,9 +289,7 @@ function test_proxies(proxyHost, next) {
   // Need to get main thread pointer to ensure nsSocketTransport::AsyncWait
   // adds callback to ns*StreamReadyEvent on main thread, and doesn't
   // addref off the main thread.
-  var gThreadManager = Cc["@mozilla.org/thread-manager;1"].getService(
-    Ci.nsIThreadManager
-  );
+  var gThreadManager = Services.tm;
   var mainThread = gThreadManager.currentThread;
 
   try {
@@ -356,7 +350,7 @@ function next_test() {
  * Main entry function for test execution.
  */
 function run_test() {
-  ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  ios = Services.io;
 
   Services.prefs.setIntPref("network.http.speculative-parallel-limit", 6);
   registerCleanupFunction(() => {

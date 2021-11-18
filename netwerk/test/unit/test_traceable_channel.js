@@ -81,9 +81,7 @@ function HttpResponseExaminer() {}
 
 HttpResponseExaminer.prototype = {
   register() {
-    Cc["@mozilla.org/observer-service;1"]
-      .getService(Ci.nsIObserverService)
-      .addObserver(this, "http-on-examine-response", true);
+    Services.obs.addObserver(this, "http-on-examine-response", true);
     dump("Did HttpResponseExaminer.register\n");
   },
 

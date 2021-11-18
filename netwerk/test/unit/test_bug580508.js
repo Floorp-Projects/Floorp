@@ -1,8 +1,6 @@
 "use strict";
 
-var ioService = Cc["@mozilla.org/network/io-service;1"].getService(
-  Ci.nsIIOService
-);
+var ioService = Services.io;
 var resProt = ioService
   .getProtocolHandler("resource")
   .QueryInterface(Ci.nsIResProtocolHandler);

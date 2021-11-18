@@ -1,10 +1,6 @@
 "use strict";
 
 function run_test() {
-  var tld = Cc["@mozilla.org/network/effective-tld-service;1"].getService(
-    Ci.nsIEffectiveTLDService
-  );
-
   var tests = [
     { data: "bar.foo.co.uk", result: "foo.co.uk" },
     { data: "foo.bar.foo.co.uk", result: "bar.foo.co.uk" },
@@ -19,7 +15,7 @@ function run_test() {
 
   tests.forEach(function(test) {
     try {
-      var r = tld.getNextSubDomain(test.data);
+      var r = Services.eTLD.getNextSubDomain(test.data);
       Assert.equal(r, test.result);
     } catch (e) {
       Assert.ok(test.throw);

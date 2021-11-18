@@ -24,11 +24,12 @@ var tests = [
 ];
 
 function run_test() {
-  var util = Cc["@mozilla.org/network/util;1"].getService(Ci.nsINetUtil);
-
   for (var i = 0; i < tests.length; ++i) {
     dump("Test " + i + " (" + tests[i][0] + ", " + tests[i][2] + ")\n");
-    Assert.equal(util.unescapeString(tests[i][0], tests[i][2]), tests[i][1]);
+    Assert.equal(
+      Services.io.unescapeString(tests[i][0], tests[i][2]),
+      tests[i][1]
+    );
   }
   dump(tests.length + " tests passed\n");
 }

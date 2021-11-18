@@ -61,9 +61,7 @@ function async_write_file(aContractId, aDeferOpen) {
   do_test_pending();
 
   // First, we need an output file to write to.
-  let file = Cc["@mozilla.org/file/directory_service;1"]
-    .getService(Ci.nsIProperties)
-    .get("ProfD", Ci.nsIFile);
+  let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("NetUtil-async-test-file.tmp");
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
@@ -122,9 +120,7 @@ function test_async_copy() {
     }
 
     // File input streams are not buffered, so let's create a file
-    let file = Cc["@mozilla.org/file/directory_service;1"]
-      .getService(Ci.nsIProperties)
-      .get("ProfD", Ci.nsIFile);
+    let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
     file.append("NetUtil-asyncFetch-test-file.tmp");
     file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
@@ -145,9 +141,7 @@ function test_async_copy() {
 
   // Create an output buffer holding some data
   function make_output(isBuffered) {
-    let file = Cc["@mozilla.org/file/directory_service;1"]
-      .getService(Ci.nsIProperties)
-      .get("ProfD", Ci.nsIFile);
+    let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
     file.append("NetUtil-asyncFetch-test-file.tmp");
     file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
@@ -226,12 +220,10 @@ function test_newURI_no_spec_throws() {
 }
 
 function test_newURI() {
-  let ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-
   // Check that we get the same URI back from the IO service and the utility
   // method.
   const TEST_URI = "http://mozilla.org";
-  let iosURI = ios.newURI(TEST_URI);
+  let iosURI = Services.io.newURI(TEST_URI);
   let NetUtilURI = NetUtil.newURI(TEST_URI);
   Assert.ok(iosURI.equals(NetUtilURI));
 
@@ -239,17 +231,13 @@ function test_newURI() {
 }
 
 function test_newURI_takes_nsIFile() {
-  let ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-
   // Create a test file that we can pass into NetUtil.newURI
-  let file = Cc["@mozilla.org/file/directory_service;1"]
-    .getService(Ci.nsIProperties)
-    .get("ProfD", Ci.nsIFile);
+  let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("NetUtil-test-file.tmp");
 
   // Check that we get the same URI back from the IO service and the utility
   // method.
-  let iosURI = ios.newFileURI(file);
+  let iosURI = Services.io.newFileURI(file);
   let NetUtilURI = NetUtil.newURI(file);
   Assert.ok(iosURI.equals(NetUtilURI));
 
@@ -405,9 +393,7 @@ function test_asyncFetch_with_nsIFile() {
   const TEST_DATA = "this is a test string";
 
   // First we need a file to read from.
-  let file = Cc["@mozilla.org/file/directory_service;1"]
-    .getService(Ci.nsIProperties)
-    .get("ProfD", Ci.nsIFile);
+  let file = Services.dirsvc.get("ProfD", Ci.nsIFile);
   file.append("NetUtil-asyncFetch-test-file.tmp");
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o666);
 
@@ -527,8 +513,7 @@ function test_newChannel_with_string() {
 
   // Check that we get the same URI back from channel the IO service creates and
   // the channel the utility method creates.
-  let ios = Services.io;
-  let iosChannel = ios.newChannel(
+  let iosChannel = Services.io.newChannel(
     TEST_SPEC,
     null,
     null,

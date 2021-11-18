@@ -37,7 +37,7 @@ function run_test() {
 
   h3Route = "foo.example.com:" + h3Port;
   do_get_profile();
-  prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
+  prefs = Services.prefs;
 
   prefs.setBoolPref("network.http.http3.enabled", true);
   prefs.setCharPref("network.dns.localDomains", "foo.example.com");

@@ -121,9 +121,7 @@ const testcases = [
 ];
 
 function run_test() {
-  var pbi = Cc["@mozilla.org/preferences-service;1"].getService(
-    Ci.nsIPrefBranch
-  );
+  var pbi = Services.prefs;
   var oldProfile = pbi.getCharPref(
     "network.IDN.restriction_profile",
     "moderate"

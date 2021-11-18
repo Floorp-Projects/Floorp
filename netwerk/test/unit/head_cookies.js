@@ -22,18 +22,12 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/cookieService;1",
   "nsICookieService"
 );
+// eslint-disable-next-line mozilla/use-services
 XPCOMUtils.defineLazyServiceGetter(
   Services,
   "cookiemgr",
   "@mozilla.org/cookiemanager;1",
   "nsICookieManager"
-);
-
-XPCOMUtils.defineLazyServiceGetter(
-  Services,
-  "etld",
-  "@mozilla.org/network/effective-tld-service;1",
-  "nsIEffectiveTLDService"
 );
 
 function do_check_throws(f, result, stack) {
@@ -243,7 +237,7 @@ function Cookie(
   let strippedHost = host.charAt(0) == "." ? host.slice(1) : host;
 
   try {
-    this.baseDomain = Services.etld.getBaseDomainFromHost(strippedHost);
+    this.baseDomain = Services.eTLD.getBaseDomainFromHost(strippedHost);
   } catch (e) {
     if (
       e.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS ||

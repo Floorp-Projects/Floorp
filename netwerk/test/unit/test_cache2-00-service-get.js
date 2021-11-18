@@ -3,13 +3,9 @@
 function run_test() {
   // Just check the contract ID alias works well.
   try {
-    var serviceA = Cc[
-      "@mozilla.org/netwerk/cache-storage-service;1"
-    ].getService(Ci.nsICacheStorageService);
+    var serviceA = Services.cache2;
     Assert.ok(serviceA);
-    var serviceB = Cc[
-      "@mozilla.org/network/cache-storage-service;1"
-    ].getService(Ci.nsICacheStorageService);
+    var serviceB = Services.cache2;
     Assert.ok(serviceB);
 
     Assert.equal(serviceA, serviceB);

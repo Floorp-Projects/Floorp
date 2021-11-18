@@ -87,7 +87,7 @@ function sendRequest(notification) {
 }
 
 function checkCookies(hasCookie) {
-  let cm = Cc["@mozilla.org/cookiemanager;1"].getService(Ci.nsICookieManager);
+  let cm = Services.cookies;
   Assert.equal(
     cm.cookieExists("localhost", "/beacon", "a", { privateBrowsingId: 1 }),
     hasCookie

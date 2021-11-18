@@ -8,11 +8,7 @@ const ServerSocket = CC(
   "init"
 );
 
-var obs = Cc["@mozilla.org/observer-service;1"].getService(
-  Ci.nsIObserverService
-);
-
-var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+var obs = Services.obs;
 
 // A server that waits for a connect. If a channel is suspended it should not
 // try to connect to the server until it is is resumed or not try at all if it

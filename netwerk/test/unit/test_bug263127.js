@@ -38,9 +38,7 @@ function run_test() {
     uri: "http://localhost:" + server.identity.primaryPort + "/",
     loadUsingSystemPrincipal: true,
   });
-  var targetFile = Cc["@mozilla.org/file/directory_service;1"]
-    .getService(Ci.nsIProperties)
-    .get("TmpD", Ci.nsIFile);
+  var targetFile = Services.dirsvc.get("TmpD", Ci.nsIFile);
   targetFile.append("bug" + BUGID + ".test");
   if (targetFile.exists()) {
     targetFile.remove(false);
