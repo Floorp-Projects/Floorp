@@ -616,6 +616,9 @@ bool SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
 bool OptimizeSpreadCall(JSContext* cx, HandleValue arg,
                         MutableHandleValue result);
 
+ArrayObject* ArrayFromArgumentsObject(JSContext* cx,
+                                      Handle<ArgumentsObject*> args);
+
 JSObject* NewObjectOperation(JSContext* cx, HandleScript script,
                              const jsbytecode* pc);
 

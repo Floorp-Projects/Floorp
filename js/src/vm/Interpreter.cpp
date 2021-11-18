@@ -66,6 +66,7 @@
 
 #include "builtin/Boolean-inl.h"
 #include "debugger/DebugAPI-inl.h"
+#include "vm/ArgumentsObject-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSAtom-inl.h"
@@ -4991,8 +4992,10 @@ bool js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
   return true;
 }
 
-bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg,
-                            MutableHandleValue result) {
+static bool OptimizeArraySpreadCall(JSContext* cx, HandleObject obj,
+                                    MutableHandleValue result) {
+  MOZ_ASSERT(result.isUndefined());
+
   // Optimize spread call by skipping spread operation when following
   // conditions are met:
   //   * the argument is an array
@@ -5001,14 +5004,7 @@ bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg,
   //   * the array's prototype is Array.prototype
   //   * Array.prototype[@@iterator] is not modified
   //   * %ArrayIteratorPrototype%.next is not modified
-  if (!arg.isObject()) {
-    result.setUndefined();
-    return true;
-  }
-
-  RootedObject obj(cx, &arg.toObject());
   if (!IsPackedArray(obj)) {
-    result.setUndefined();
     return true;
   }
 
@@ -5021,13 +5017,104 @@ bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg,
   if (!stubChain->tryOptimizeArray(cx, obj.as<ArrayObject>(), &optimized)) {
     return false;
   }
-
-  if (optimized) {
-    result.setObject(*obj);
-  } else {
-    result.setUndefined();
+  if (!optimized) {
+    return true;
   }
+
+  result.setObject(*obj);
   return true;
+}
+
+static bool OptimizeArgumentsSpreadCall(JSContext* cx, HandleObject obj,
+                                        MutableHandleValue result) {
+  MOZ_ASSERT(result.isUndefined());
+
+  // Optimize spread call by skipping the spread operation when the following
+  // conditions are met:
+  //   * the argument is an arguments object
+  //   * the arguments object has no deleted elements
+  //   * arguments.length is not overridden
+  //   * arguments[@@iterator] is not overridden
+  //   * %ArrayIteratorPrototype%.next is not modified
+
+  if (!obj->is<ArgumentsObject>()) {
+    return true;
+  }
+
+  Handle<ArgumentsObject*> args = obj.as<ArgumentsObject>();
+  if (args->isAnyElementDeleted() || args->hasOverriddenLength() ||
+      args->hasOverriddenIterator()) {
+    return true;
+  }
+
+  ForOfPIC::Chain* stubChain = ForOfPIC::getOrCreate(cx);
+  if (!stubChain) {
+    return false;
+  }
+
+  bool optimized;
+  if (!stubChain->tryOptimizeArrayIteratorNext(cx, &optimized)) {
+    return false;
+  }
+  if (!optimized) {
+    return true;
+  }
+
+  auto* array = ArrayFromArgumentsObject(cx, args);
+  if (!array) {
+    return false;
+  }
+
+  result.setObject(*array);
+  return true;
+}
+
+bool js::OptimizeSpreadCall(JSContext* cx, HandleValue arg,
+                            MutableHandleValue result) {
+  // This function returns |undefined| if the spread operation can't be
+  // optimized.
+  result.setUndefined();
+
+  if (!arg.isObject()) {
+    return true;
+  }
+
+  RootedObject obj(cx, &arg.toObject());
+  if (!OptimizeArraySpreadCall(cx, obj, result)) {
+    return false;
+  }
+  if (result.isObject()) {
+    return true;
+  }
+  if (!OptimizeArgumentsSpreadCall(cx, obj, result)) {
+    return false;
+  }
+  if (result.isObject()) {
+    return true;
+  }
+
+  MOZ_ASSERT(result.isUndefined());
+  return true;
+}
+
+ArrayObject* js::ArrayFromArgumentsObject(JSContext* cx,
+                                          Handle<ArgumentsObject*> args) {
+  MOZ_ASSERT(!args->hasOverriddenLength());
+  MOZ_ASSERT(!args->isAnyElementDeleted());
+
+  uint32_t length = args->initialLength();
+  auto* array = NewDenseFullyAllocatedArray(cx, length);
+  if (!array) {
+    return nullptr;
+  }
+  array->setDenseInitializedLength(length);
+
+  for (uint32_t index = 0; index < length; index++) {
+    const Value& v = args->element(index);
+    array->initDenseElement(index, v);
+  }
+
+  return array;
 }
 
 JSObject* js::NewObjectOperation(JSContext* cx, HandleScript script,
