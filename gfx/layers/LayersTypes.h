@@ -168,7 +168,6 @@ enum class WindowKind : int8_t { MAIN = 0, SECONDARY, LAST };
 enum class LayersBackend : int8_t {
   LAYERS_NONE = 0,
   LAYERS_OPENGL,
-  LAYERS_D3D11,
   LAYERS_WR,
   LAYERS_LAST
 };

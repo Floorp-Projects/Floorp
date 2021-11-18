@@ -628,8 +628,6 @@ void ImageBridgeChild::UpdateTextureFactoryIdentifier(
 
 #if defined(XP_WIN)
   RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetImageDevice();
-  needsDrop |= !!mImageDevice && mImageDevice != device &&
-               GetCompositorBackendType() == LayersBackend::LAYERS_D3D11;
   mImageDevice = device;
 #endif
 
