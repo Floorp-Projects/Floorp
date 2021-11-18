@@ -7941,7 +7941,7 @@ gboolean WindowDragMotionHandler(GtkWidget* aWidget,
   int tx = 0, ty = 0;
   // Workaround for Bug 1710344
   // Caused by Gtk issue https://gitlab.gnome.org/GNOME/gtk/-/issues/4437
-  if (GdkIsWaylandDisplay()) {
+  if (innerMostWindow->IsWaylandPopup()) {
     gdk_window_get_position(innerWindow, &tx, &ty);
   }
 
@@ -8029,7 +8029,7 @@ gboolean WindowDragDropHandler(GtkWidget* aWidget, GdkDragContext* aDragContext,
   int tx = 0, ty = 0;
   // Workaround for Bug 1710344
   // Caused by Gtk issue https://gitlab.gnome.org/GNOME/gtk/-/issues/4437
-  if (GdkIsWaylandDisplay()) {
+  if (innerMostWindow->IsWaylandPopup()) {
     gdk_window_get_position(innerWindow, &tx, &ty);
   }
 
