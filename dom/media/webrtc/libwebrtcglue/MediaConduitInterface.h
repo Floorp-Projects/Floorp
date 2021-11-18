@@ -142,7 +142,7 @@ class MediaSessionConduit {
   virtual Ssrcs GetLocalSSRCs() const = 0;
 
   virtual Maybe<Ssrc> GetRemoteSSRC() const = 0;
-  virtual void UnsetRemoteSSRC(Ssrc ssrc) = 0;
+  virtual void UnsetRemoteSSRC(Ssrc aSsrc) = 0;
 
   virtual bool HasCodecPluginID(uint64_t aPluginID) const = 0;
 
@@ -357,8 +357,6 @@ class VideoSessionConduit : public MediaSessionConduit {
   virtual void DetachRenderer() = 0;
 
   virtual void DisableSsrcChanges() = 0;
-
-  void UnsetRemoteSSRC(Ssrc ssrc) override = 0;
 
   /**
    * Function to deliver a capture video frame for encoding and transport.
