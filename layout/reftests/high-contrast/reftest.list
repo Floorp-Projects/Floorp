@@ -91,5 +91,5 @@ pref(browser.display.use_system_colors,true) pref(browser.display.document_color
 
 != system-colors.html system-colors-notref.html
 
+!= border-color-transparent.html about:blank
 == border-color-transparent.html border-color-transparent-ref.html
-!= border-color-transparent.html border-color-transparent-notref.html
