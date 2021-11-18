@@ -613,7 +613,8 @@ bool SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
                          HandleValue thisv, HandleValue callee, HandleValue arr,
                          HandleValue newTarget, MutableHandleValue res);
 
-bool OptimizeSpreadCall(JSContext* cx, HandleValue arg, bool* optimized);
+bool OptimizeSpreadCall(JSContext* cx, HandleValue arg,
+                        MutableHandleValue result);
 
 JSObject* NewObjectOperation(JSContext* cx, HandleScript script,
                              const jsbytecode* pc);

@@ -386,14 +386,13 @@ bool IonCacheIRCompiler::init() {
     }
     case CacheKind::OptimizeSpreadCall: {
       auto* ic = ic_->asOptimizeSpreadCallIC();
-      Register output = ic->output();
+      ValueOperand output = ic->output();
 
       available.add(output);
       available.add(ic->temp());
 
       liveRegs_.emplace(ic->liveRegs());
-      outputUnchecked_.emplace(
-          TypedOrValueRegister(MIRType::Boolean, AnyRegister(output)));
+      outputUnchecked_.emplace(output);
 
       MOZ_ASSERT(numInputs == 1);
       allocator.initInputLocation(0, ic->value());

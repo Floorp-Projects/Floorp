@@ -5058,7 +5058,7 @@ AttachDecision OptimizeSpreadCallIRGenerator::tryAttachArray() {
   writer.guardShape(iterProtoId, arrayIteratorProto->shape());
   writer.guardDynamicSlotIsSpecificObject(iterProtoId, nextId, iterNextSlot);
 
-  writer.loadBooleanResult(true);
+  writer.loadObjectResult(objId);
   writer.returnFromIC();
 
   trackAttached("Array");
@@ -5068,7 +5068,7 @@ AttachDecision OptimizeSpreadCallIRGenerator::tryAttachArray() {
 AttachDecision OptimizeSpreadCallIRGenerator::tryAttachNotOptimizable() {
   ValOperandId valId(writer.setInputOperandId(0));
 
-  writer.loadBooleanResult(false);
+  writer.loadUndefinedResult();
   writer.returnFromIC();
 
   trackAttached("NotOptimizable");
