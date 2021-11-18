@@ -6765,8 +6765,6 @@ void nsWindow::ReleaseGrabs(void) {
 
 GtkWidget* nsWindow::GetToplevelWidget() { return mShell; }
 
-GtkWidget* nsWindow::GetMozContainerWidget() { return GTK_WIDGET(mContainer); }
-
 GdkWindow* nsWindow::GetToplevelGdkWindow() {
   return gtk_widget_get_window(mShell);
 }
@@ -7992,12 +7990,11 @@ void WindowDragLeaveHandler(GtkWidget* aWidget) {
     return;
   }
 
-  GtkWidget* mozContainer = window->GetMozContainerWidget();
-  if (aWidget != mozContainer) {
+  if (aWidget != window->GetGtkWidget()) {
     // When the drag moves between widgets, GTK can send leave signal for
     // the old widget after the motion or drop signal for the new widget.
     // We'll send the leave event when the motion or drop event is run.
-    LOGDRAG("    Failed - mozContainer!\n");
+    LOGDRAG("    Failed - GtkWidget mismatch!\n");
     return;
   }
 

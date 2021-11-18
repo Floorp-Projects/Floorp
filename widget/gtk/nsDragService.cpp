@@ -307,8 +307,7 @@ static GtkWindow* GetGtkWindow(dom::Document* aDocument) {
   nsCOMPtr<nsIWidget> widget = vm->GetRootWidget();
   if (!widget) return nullptr;
 
-  GtkWidget* gtkWidget =
-      static_cast<nsWindow*>(widget.get())->GetMozContainerWidget();
+  GtkWidget* gtkWidget = static_cast<nsWindow*>(widget.get())->GetGtkWidget();
   if (!gtkWidget) return nullptr;
 
   GtkWidget* toplevel = nullptr;
@@ -2315,8 +2314,7 @@ gboolean nsDragService::RunScheduledTask() {
   // (The leave event is not scheduled if a drop task is still scheduled.)
   // We still reply appropriately to indicate that the drop will or didn't
   // succeeed.
-  mTargetWidget =
-      mTargetWindow ? mTargetWindow->GetMozContainerWidget() : nullptr;
+  mTargetWidget = mTargetWindow ? mTargetWindow->GetGtkWidget() : nullptr;
   LOGDRAGSERVICE(("  start drag session mTargetWindow %p mTargetWidget %p\n",
                   mTargetWindow.get(), mTargetWidget.get()));
 
