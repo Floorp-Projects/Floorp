@@ -31,9 +31,9 @@ class HistoryMetadataMiddleware(
 
     private val logger = Logger("HistoryMetadataMiddleware")
 
-    // Tracks whether a page load is in progress that was triggered directly by the app
+    // Tracks whether a load is in progress for a tab/session ID that was triggered directly by the app
     // e.g. via the toolbar as opposed to via web content.
-    private var directLoadTriggered: Boolean = false
+    private var directLoadTriggeredSet = mutableSetOf<String>()
 
     @Suppress("ComplexMethod")
     override fun invoke(
@@ -90,11 +90,13 @@ class HistoryMetadataMiddleware(
                     }
                 }
             }
-            is EngineAction.LoadUrlAction,
-            is EngineAction.OptimizedLoadUrlTriggeredAction -> {
+            is EngineAction.LoadUrlAction -> {
                 // This isn't an ideal fix as we shouldn't have to hold any state in the middleware:
                 // https://github.com/mozilla-mobile/android-components/issues/11034
-                directLoadTriggered = true
+                directLoadTriggeredSet.add(action.tabId)
+            }
+            is EngineAction.OptimizedLoadUrlTriggeredAction -> {
+                directLoadTriggeredSet.add(action.tabId)
             }
         }
 
@@ -116,7 +118,7 @@ class HistoryMetadataMiddleware(
                 }
 
                 // Once we get a history update let's reset the flag for future loads.
-                directLoadTriggered = false
+                directLoadTriggeredSet.remove(action.sessionId)
             }
             // NB: this could be called bunch of times in quick succession.
             is MediaSessionAction.UpdateMediaMetadataAction -> {
@@ -150,6 +152,7 @@ class HistoryMetadataMiddleware(
         val tabParent = tab.getParent(context.store)
         val previousUrlIndex = tab.content.history.currentIndex - 1
         val tabMetadataHasSearchTerms = !tab.historyMetadata?.searchTerm.isNullOrBlank()
+        val directLoadTriggered = directLoadTriggeredSet.contains(tab.id)
 
         // Obtain search terms and referrer url either from tab parent, from the history stack, or
         // from the tab itself.
@@ -200,7 +203,9 @@ class HistoryMetadataMiddleware(
                 tab.historyMetadata?.searchTerm to tab.historyMetadata?.referrerUrl
             }
             // In all other cases (e.g. direct load) find search terms by checking if page is a SERP
-            else -> findSearchTerms(tab, context.state.search) to null
+            else -> {
+                findSearchTerms(tab, context.state.search) to null
+            }
         }
 
         // Sanity check to make sure we don't record a metadata record referring to itself.
@@ -226,6 +231,18 @@ class HistoryMetadataMiddleware(
     }
 
     private fun findSearchTerms(tab: TabSessionState, searchState: SearchState): String? {
-        return tab.content.searchTerms.takeUnless { it.isEmpty() } ?: searchState.parseSearchTerms(tab.content.url)
+        // Only check for search terms in metadata if we're not direct loading this tab. If we are,
+        // we don't retain previous search terms.
+        // `tab.content.searchTerms` are cleared as a side-effect of performing a direct load.
+        val metadataSearchTerms: () -> String? = {
+            if (!directLoadTriggeredSet.contains(tab.id)) {
+                tab.historyMetadata?.searchTerm.takeUnless { it.isNullOrEmpty() }
+            } else {
+                null
+            }
+        }
+        return tab.content.searchTerms.takeUnless { it.isEmpty() }
+            ?: metadataSearchTerms()
+            ?: searchState.parseSearchTerms(tab.content.url)
     }
 }
