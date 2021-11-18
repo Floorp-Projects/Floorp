@@ -310,7 +310,7 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
     this._currentWindowGlobalTargets.set(actor.innerWindowId, actor);
 
     // The top-level is always the same for the browser-toolbox
-    if (!this.browserId) {
+    if (this.context.type == "all") {
       this.emit("target-available-form", actor);
       return;
     }

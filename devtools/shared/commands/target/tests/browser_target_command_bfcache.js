@@ -26,6 +26,7 @@ async function bfcacheTest() {
   await pushPref("fission.bfcacheInParent", false);
   await testTopLevelNavigations(false);
   await testIframeNavigations(false);
+  await testTopLevelNavigationsOnDocumentWithIframe(false);
 
   // bfcacheInParent only works if sessionHistoryInParent is enable
   // so only test it if both settings are enabled.
@@ -35,6 +36,7 @@ async function bfcacheTest() {
     await pushPref("fission.bfcacheInParent", true);
     await testTopLevelNavigations(true);
     await testIframeNavigations(true);
+    await testTopLevelNavigationsOnDocumentWithIframe(true);
   }
 }
 
@@ -265,6 +267,182 @@ async function testTopLevelNavigations(bfcacheInParent) {
     await targets[3].attachAndInitThread(targetCommand);
     await waitForAllTargetsToBeAttached(targetCommand);
     await onNewTargetProcessed;
+  } else {
+    info("Wait for 'dom-complete' resource");
+    await onDomComplete;
+  }
+
+  await waitForAllTargetsToBeAttached(targetCommand);
+
+  targetCommand.unwatchTargets([TYPES.FRAME], onAvailable);
+
+  BrowserTestUtils.removeTab(tab);
+
+  await commands.destroy();
+}
+
+async function testTopLevelNavigationsOnDocumentWithIframe(bfcacheInParent) {
+  info(" # Test TOP LEVEL navigations on document with iframe");
+  // Create a TargetCommand for a given test tab
+  const tab = await addTab(`https://example.com/document-builder.sjs?id=top&html=
+    <h1>Top level</h1>
+    <iframe src="${encodeURIComponent(
+      "https://example.com/document-builder.sjs?id=iframe&html=<h2>In iframe</h2>"
+    )}">
+    </iframe>`);
+  const getLocationIdParam = url =>
+    new URLSearchParams(new URL(url).search).get("id");
+
+  const commands = await CommandsFactory.forTab(tab);
+  const targetCommand = commands.targetCommand;
+  const { TYPES } = targetCommand;
+
+  await targetCommand.startListening();
+
+  // Assert that watchTargets will call the create callback for all existing frames
+  const targets = [];
+  const onAvailable = async ({ targetFront }) => {
+    is(
+      targetFront.targetType,
+      TYPES.FRAME,
+      "We are only notified about frame targets"
+    );
+    targets.push(targetFront);
+  };
+  const destroyedTargets = [];
+  const onDestroyed = async ({ targetFront }) => {
+    is(
+      targetFront.targetType,
+      TYPES.FRAME,
+      "We are only notified about frame targets"
+    );
+    destroyedTargets.push(targetFront);
+  };
+
+  await targetCommand.watchTargets([TYPES.FRAME], onAvailable, onDestroyed);
+
+  if (isEveryFrameTargetEnabled()) {
+    is(
+      targets.length,
+      2,
+      "retrieved targets for top level and iframe documents"
+    );
+    is(
+      targets[0],
+      targetCommand.targetFront,
+      "the target is the top level one"
+    );
+    is(
+      getLocationIdParam(targets[1].url),
+      "iframe",
+      "the second target is the iframe one"
+    );
+  } else {
+    is(targets.length, 1, "retrieved only the top level target");
+    is(
+      targets[0],
+      targetCommand.targetFront,
+      "the target is the top level one"
+    );
+  }
+
+  is(
+    destroyedTargets.length,
+    0,
+    "We get no destruction when calling watchTargets"
+  );
+
+  info("Navigate to a new page");
+  let targetCountBeforeNavigation = targets.length;
+  let onDomComplete = bfcacheInParent
+    ? null
+    : (await waitForNextTopLevelDomCompleteResource(commands))
+        .onDomCompleteResource;
+  const secondPageUrl = `https://example.com/document-builder.sjs?html=second`;
+  const onLoaded = BrowserTestUtils.browserLoaded(
+    gBrowser.selectedBrowser,
+    false,
+    secondPageUrl
+  );
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, secondPageUrl);
+  await onLoaded;
+
+  if (bfcacheInParent || isServerTargetSwitchingEnabled()) {
+    // When server side target switching is enabled, same-origin navigations also spawn a new top level target
+    await waitFor(
+      () => targets.length == targetCountBeforeNavigation + 1,
+      "wait for the next top level target"
+    );
+    is(
+      targets.at(-1),
+      targetCommand.targetFront,
+      "the new target is the top level one"
+    );
+
+    ok(targets[0].isDestroyed(), "the first target is destroyed");
+    if (isEveryFrameTargetEnabled()) {
+      ok(targets[1].isDestroyed(), "the second target is destroyed");
+      is(destroyedTargets.length, 2, "The two targets were destroyed");
+    } else {
+      is(destroyedTargets.length, 1, "Only one target was destroyed");
+    }
+  } else {
+    info("Wait for 'dom-complete' resource");
+    await onDomComplete;
+  }
+
+  // Go back to the first page, this should be a bfcache navigation, and,
+  // we should get a new target (or 2 if EFT is enabled)
+  targetCountBeforeNavigation = targets.length;
+  info("Go back to the first page");
+  onDomComplete = bfcacheInParent
+    ? null
+    : (await waitForNextTopLevelDomCompleteResource(commands))
+        .onDomCompleteResource;
+  gBrowser.selectedBrowser.goBack();
+
+  if (bfcacheInParent || isServerTargetSwitchingEnabled()) {
+    await waitFor(
+      () =>
+        targets.length ===
+        targetCountBeforeNavigation + (isEveryFrameTargetEnabled() ? 2 : 1),
+      "wait for the next top level target"
+    );
+
+    if (isEveryFrameTargetEnabled()) {
+      await waitFor(() => targets.at(-2).url && targets.at(-1).url);
+      is(
+        getLocationIdParam(targets.at(-2).url),
+        "top",
+        "the first new target is for the top document…"
+      );
+      is(
+        getLocationIdParam(targets.at(-1).url),
+        "iframe",
+        "…and the second one is for the iframe"
+      );
+    } else {
+      is(
+        getLocationIdParam(targets.at(-1).url),
+        "top",
+        "the new target is for the first url"
+      );
+    }
+
+    ok(
+      targets[targetCountBeforeNavigation - 1].isDestroyed(),
+      "the target for the second page is destroyed"
+    );
+    is(
+      destroyedTargets.length,
+      targetCountBeforeNavigation,
+      "We get one additional target being destroyed…"
+    );
+    is(
+      destroyedTargets.at(-1),
+      targets[targetCountBeforeNavigation - 1],
+      "…and that's the second page one"
+    );
   } else {
     info("Wait for 'dom-complete' resource");
     await onDomComplete;
