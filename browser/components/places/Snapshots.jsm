@@ -50,6 +50,18 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", function() {
   });
 });
 
+/**
+ * Snapshots are considered overlapping if interactions took place within snapshot_overlap_limit milleseconds of each other.
+ * Default to a half-hour on each end of the interactions.
+ *
+ */
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "snapshot_overlap_limit",
+  "browser.places.interactions.snapshotOverlapLimit",
+  1800000 // 1000 * 60 * 30
+);
+
 const DEFAULT_CRITERIA = [
   {
     property: "total_view_time",
@@ -100,7 +112,10 @@ XPCOMUtils.defineLazyPreferenceGetter(
  *   True if the user created or persisted the snapshot in some way.
  * @property {Map<type, data>} pageData
  *   Collection of PageData by type. See PageDataService.jsm
- */
+* @property {Number} overlappingVisitScore
+ *   Calculated score based on overlapping visits to the context url. In the range [0.0, 1.0]
+  
+*/
 
 /**
  * Handles storing and retrieving of Snapshots in the Places database.
@@ -495,6 +510,85 @@ const Snapshots = new (class Snapshots {
   }
 
   /**
+   * Queries interaction times from the database.
+   *
+   * @param {string} url
+   *   url to query the place_id of
+   * @returns {number}
+   *   place_id of the given url or -1 if not found
+   */
+  async queryPlaceIdFromUrl(url) {
+    await this.#ensureVersionUpdates();
+    let db = await PlacesUtils.promiseDBConnection();
+
+    let rows = await db.executeCached(
+      `SELECT id from moz_places p
+      WHERE p.url = :url
+      `,
+      { url }
+    );
+
+    if (!rows.length) {
+      return -1;
+    }
+
+    return rows[0].getResultByName("id");
+  }
+
+  /**
+   * Queries snapshots that were browsed within an hour of visiting the given context url
+   *
+   * @param {string} context_url
+   *   the url that we're collection snapshots whose interactions overlapped
+   * @returns {Snapshot[]}
+   *   Returns array of overlapping snapshots in order of descending last interaction time.
+   */
+  async queryOverlapping(context_url) {
+    await this.#ensureVersionUpdates();
+
+    let current_id = await this.queryPlaceIdFromUrl(context_url);
+    if (current_id == -1) {
+      logConsole.debug(`PlaceId not found for url ${context_url}`);
+      return [];
+    }
+
+    let db = await PlacesUtils.promiseDBConnection();
+
+    let rows = await db.executeCached(
+      `SELECT h.url AS url, h.title AS title, o.overlappingVisitScore, created_at, removed_at,
+      document_type, first_interaction_at, last_interaction_at,
+      user_persisted, description, site_name, preview_image_url, group_concat(e.data, ",") AS page_data
+      FROM moz_places_metadata_snapshots s JOIN moz_places h ON h.id = s.place_id JOIN (
+        SELECT place_id, 1.0 AS overlappingVisitScore
+        FROM
+          (SELECT created_at - :snapshot_overlap_limit AS page_start, updated_at + :snapshot_overlap_limit AS page_end FROM moz_places_metadata WHERE place_id = :current_id) AS current_page
+          JOIN
+          (SELECT place_id, created_at AS snapshot_start, updated_at AS snapshot_end FROM moz_places_metadata WHERE place_id != :current_id) AS suggestion
+        WHERE
+          snapshot_start BETWEEN page_start AND page_end
+          OR
+          snapshot_end BETWEEN page_start AND page_end
+          OR
+          (snapshot_start < page_start AND snapshot_end > page_end)
+        GROUP BY place_id
+      ) o ON s.place_id = o.place_id
+      LEFT JOIN moz_places_metadata_snapshots_extra e ON e.place_id = s.place_id
+      GROUP BY s.place_id
+      ORDER BY o.overlappingVisitScore DESC;`,
+      { current_id, snapshot_overlap_limit }
+    );
+
+    if (!rows.length) {
+      logConsole.debug("No overlapping snapshots");
+      return [];
+    }
+
+    return rows.map(row =>
+      this.#translateRow(row, { includeOverlappingVisitScore: true })
+    );
+  }
+
+  /**
    * Ensures that the database is migrated to the latest version. Migrations
    * should be exception-safe: don't throw an uncaught Error, or else we'll skip
    * subsequent migrations.
@@ -530,9 +624,12 @@ const Snapshots = new (class Snapshots {
    *
    * @param {object} row
    *   The database row to translate.
+   * @param {object} [options]
+   * @param {boolean} [options.includeOverlappingVisitScore]
+   *   Whether to retrieve the overlappingVisitScore field
    * @returns {Snapshot}
    */
-  #translateRow(row) {
+  #translateRow(row, { includeOverlappingVisitScore = false } = {}) {
     // Maps data type to data.
     let pageData;
     let pageDataStr = row.getResultByName("page_data");
@@ -543,6 +640,11 @@ const Snapshots = new (class Snapshots {
       } catch (e) {
         logConsole.error(e);
       }
+    }
+
+    let overlappingVisitScore = 0;
+    if (includeOverlappingVisitScore) {
+      overlappingVisitScore = row.getResultByName("overlappingVisitScore");
     }
 
     let snapshot = {
@@ -561,6 +663,7 @@ const Snapshots = new (class Snapshots {
       ),
       documentType: row.getResultByName("document_type"),
       userPersisted: !!row.getResultByName("user_persisted"),
+      overlappingVisitScore,
       pageData: pageData ?? new Map(),
     };
 
@@ -688,7 +791,8 @@ const Snapshots = new (class Snapshots {
 
           if (criteria.interactionRecency) {
             wheres.push(`created_at >= :recency${idx}`);
-            bindings[`recency${idx}`] = Date.now() - criteria.interactionCount;
+            bindings[`recency${idx}`] =
+              Date.now() - criteria.interactionRecency;
           }
 
           let where = wheres.length ? `WHERE ${wheres.join(" AND ")}` : "";
