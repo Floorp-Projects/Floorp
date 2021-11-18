@@ -2,66 +2,35 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# LOCALIZATION NOTE (toggleToolbox.commandkey):
 # Key pressed to open a toolbox with the default panel selected
-toggleToolbox.commandkey=I
-
-# LOCALIZATION NOTE (toggleToolboxF12.commandkey):
+devtools-commandkey-toggle-toolbox = I
 # Alternative key pressed to open a toolbox with the default panel selected
-toggleToolboxF12.commandkey=VK_F12
-
-# LOCALIZATION NOTE (browserToolbox.commandkey):
+devtools-commandkey-toggle-toolbox-f12 = VK_F12
 # Key pressed to open the Browser Toolbox, used for debugging Firefox itself
-browserToolbox.commandkey=I
-
-# LOCALIZATION NOTE (browserConsole.commandkey):
+devtools-commandkey-browser-toolbox = I
 # Key pressed to open the Browser Console, used for debugging Firefox itself
-browserConsole.commandkey=J
-
-# LOCALIZATION NOTE (responsiveDesignMode.commandkey):
+devtools-commandkey-browser-console = J
 # Key pressed to toggle on the Responsive Design Mode
-responsiveDesignMode.commandkey=M
-
-# LOCALIZATION NOTE (inspector.commandkey):
+devtools-commandkey-responsive-design-mode = M
 # Key pressed to open a toolbox with the inspector panel selected
-inspector.commandkey=C
-
-# LOCALIZATION NOTE (webconsole.commandkey):
+devtools-commandkey-inspector = C
 # Key pressed to open a toolbox with the web console panel selected
-webconsole.commandkey=K
-
-# LOCALIZATION NOTE (jsdebugger.commandkey2):
+devtools-commandkey-webconsole = K
 # Key pressed to open a toolbox with the debugger panel selected
-jsdebugger.commandkey2=Z
-
-# LOCALIZATION NOTE (netmonitor.commandkey):
+devtools-commandkey-jsdebugger = Z
 # Key pressed to open a toolbox with the network monitor panel selected
-netmonitor.commandkey=E
-
-# LOCALIZATION NOTE (styleeditor.commandkey):
+devtools-commandkey-netmonitor = E
 # Key pressed to open a toolbox with the style editor panel selected
-styleeditor.commandkey=VK_F7
-
-# LOCALIZATION NOTE (performance.commandkey):
+devtools-commandkey-styleeditor = VK_F7
 # Key pressed to open a toolbox with the performance panel selected
-performance.commandkey=VK_F5
-
-# LOCALIZATION NOTE (storage.commandkey):
+devtools-commandkey-performance = VK_F5
 # Key pressed to open a toolbox with the storage panel selected
-storage.commandkey=VK_F9
-
-# LOCALIZATION NOTE (dom.commandkey):
+devtools-commandkey-storage = VK_F9
 # Key pressed to open a toolbox with the DOM panel selected
-dom.commandkey=W
-
-# LOCALIZATION NOTE (accessibilityF12.commandkey):
+devtools-commandkey-dom = W
 # Key pressed to open a toolbox with the accessibility panel selected
-accessibilityF12.commandkey=VK_F12
-
-# LOCALIZATION NOTE (profilerStartStop.commandkey):
+devtools-commandkey-accessibility-f12 = VK_F12
 # Key pressed to start or stop the performance profiler
-profilerStartStop.commandkey=VK_1
-
-# LOCALIZATION NOTE (profilerCapture.commandkey):
+devtools-commandkey-profiler-start-stop = VK_1
 # Key pressed to capture a recorded performance profile
-profilerCapture.commandkey=VK_2
+devtools-commandkey-profiler-capture = VK_2
