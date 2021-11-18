@@ -1790,7 +1790,7 @@
 - name: OptimizeSpreadCallCache
   operands:
     value: Value
-  result_type: Boolean
+  result_type: Value
 
 - name: IteratorMore
   operands:

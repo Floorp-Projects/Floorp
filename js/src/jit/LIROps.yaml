@@ -2062,7 +2062,7 @@
   mir_op: true
 
 - name: OptimizeSpreadCallCache
-  result_type: WordSized
+  result_type: BoxedValue
   operands:
     value: BoxedValue
   num_temps: 1
