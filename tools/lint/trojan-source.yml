@@ -1,0 +1,19 @@
+---
+trojan-source:
+    description: Trojan Source attack - CVE-2021-42572
+    include:
+        - .
+    exclude:
+        - intl/lwbrk/rulebrk.c
+        - testing/web-platform/tests/conformance-checkers/tools/ins-del-datetime.py
+    extensions:
+        - .c
+        - .cc
+        - .cpp
+        - .h
+        - .py
+        - .rs
+    support-files:
+        - 'tools/lint/trojan-source/**'
+    type: external
+    payload: trojan-source:lint
