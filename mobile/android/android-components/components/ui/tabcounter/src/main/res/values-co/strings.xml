@@ -11,7 +11,7 @@
     <!-- Browser menu button to close tab. Closes the current session when pressed. -->
     <string name="mozac_close_tab">Chjode l’unghjetta</string>
     <!-- Menu option to duplicate the current tab -->
-    <string name="mozac_ui_tabcounter_duplicate_tab">Duplicà l’unghjetta</string>
+    <string name="mozac_ui_tabcounter_duplicate_tab">Duppià l’unghjetta</string>
     <!-- Content description of the tab counter toolbar button -->
     <string name="mozac_tab_counter_content_description">U buttone di cuntatore d’unghjetta in a barra d’attrezzi.</string>
 </resources>

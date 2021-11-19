@@ -19,7 +19,7 @@
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[      
       <ul>
-        <li>De side dy\'t jo besjen wolle kin net toand wurde, omdat de echtheid fan de ûntfongen gegevens net ferifiearre wurde kin.</li>
+        <li>De side dy’t jo besjen wolle kin net toand wurde, omdat de echtheid fan de ûntfongen gegevens net ferifiearre wurde kin.</li>
         
         <li>Nim kontakt op mei de website-eigeners om se oer dit probleem te ynformearjen.</li>
       
@@ -131,11 +131,11 @@
     <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
     <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
       
-      <p>De browser is stoppe mei te probearjen it opfrege item op te heljen. It website ferwiist de oanfraach troch op in manier dy\'t nea dien wêze sil.</p>
+      <p>De browser is stoppe mei te probearjen it opfrege item op te heljen. It website ferwiist de oanfraach troch op in manier dy’t nea dien wêze sil.</p>
       
       <ul>
         
-        <li>Hawwe jo cookies dy\'t nedich binne foar dizze website útskeakele of blokkearre?</li>
+        <li>Hawwe jo cookies dy’t nedich binne foar dizze website útskeakele of blokkearre?</li>
         
         <li>As it akseptearjen fan cookies fan dizze website it probleem net oplost is it wierskynlik in serverkonfiguraasjeprobleem en net jo apparaat.</li>
       
@@ -167,7 +167,7 @@
     <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
     <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
       
-      <p>It opfrege adres spesifisearret in poarte (byg. <q>mozilla.org:80</q> foar poarte 80 op mozilla.org) dy\'t normaal sprutsen foar <em>oare</em> doeleinen as websneupjen brûkt wurdt. De browser hat it fersyk foar jo beskerming en feilichheid annulearre.</p>
+      <p>It opfrege adres spesifisearret in poarte (byg. <q>mozilla.org:80</q> foar poarte 80 op mozilla.org) dy’t normaal sprutsen foar <em>oare</em> doeleinen as websneupjen brûkt wurdt. De browser hat it fersyk foar jo beskerming en feilichheid annulearre.</p>
     
     ]]></string>
 
@@ -210,7 +210,7 @@
     <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
     <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
       
-      <p>De side dy\'t jo besjen wolle kin net werjûn wurde, omdat der in flater yn de gegevensoerdracht detektearre is.</p>
+      <p>De side dy’t jo besjen wolle kin net werjûn wurde, omdat der in flater yn de gegevensoerdracht detektearre is.</p>
       
       <ul>
         
@@ -225,7 +225,7 @@
 
     <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
       
-      <p>De side dy\'t jo besjen wolle kin net werjûn wurde, omdat der in flater yn de gegevensoerdracht detektearre is.</p>
+      <p>De side dy’t jo besjen wolle kin net werjûn wurde, omdat der in flater yn de gegevensoerdracht detektearre is.</p>
       
       <ul>
         
@@ -240,7 +240,7 @@
 
     <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
       
-      <p>De side dy\'t jo probearje te besjen kin net werjûn wurde, omdat it gebrûk makket fan in ûnjildige of net stipe foarm fan kompresje.</p>
+      <p>De side dy’t jo probearje te besjen kin net werjûn wurde, omdat it gebrûk makket fan in ûnjildige of net stipe foarm fan kompresje.</p>
       
       <ul>
       
@@ -405,7 +405,7 @@
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
       
-      <p>De website op %1$s is rapportearre as in website dy\'t net-winske software oanbiedt en is blokkearre op basis fan jo befeiligingsfoarkarren.</p>
+      <p>De website op %1$s is rapportearre as in website dy’t net-winske software oanbiedt en is blokkearre op basis fan jo befeiligingsfoarkarren.</p>
       
     ]]></string>
 

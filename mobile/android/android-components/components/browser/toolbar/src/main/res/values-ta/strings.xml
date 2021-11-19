@@ -13,4 +13,6 @@
     <string name="mozac_browser_toolbar_content_description_site_info">தளத்தகவல்கள்</string>
     <!-- Announcement made by the screen reader when the progress bar is shown and a page is loading -->
     <string name="mozac_browser_toolbar_progress_loading">ஏற்றுகிறது</string>
+    <!-- Content description: For the autoplay toolbar icon, it is set when the auto play permission is blocking content playing.-->
+    <string name="mozac_browser_toolbar_content_description_autoplay_blocked">தன்னியக்க அமைப்பால் சில உள்ளடக்கம் தடுக்கப்பட்டுள்ளது</string>
 </resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Autofill: Title of a dialog asking the user to confirm before autofilling credentials into
+    a third-party app after the authenticity verification failed. -->
+    <string name="mozac_feature_autofill_confirmation_title">சரிபார்ப்பு தோல்வி</string>
+
+    </resources>
