@@ -464,11 +464,6 @@ bool ModuleEnvironmentObject::lookupImport(
   return importBindings().lookup(name, envOut, propOut);
 }
 
-void ModuleEnvironmentObject::fixEnclosingEnvironmentAfterRealmMerge(
-    GlobalObject& global) {
-  setEnclosingEnvironment(&global.lexicalEnvironment());
-}
-
 /* static */
 bool ModuleEnvironmentObject::lookupProperty(JSContext* cx, HandleObject obj,
                                              HandleId id,
