@@ -442,7 +442,6 @@ class JS::Realm : public JS::shadow::Realm {
 
   [[nodiscard]] bool init(JSContext* cx, JSPrincipals* principals);
   void destroy(JSFreeOp* fop);
-  void clearTables();
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               size_t* realmObject, size_t* realmTables,

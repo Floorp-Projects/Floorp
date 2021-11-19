@@ -591,12 +591,6 @@ Zone* Zone::nextZone() const {
   return listNext_;
 }
 
-void Zone::clearTables() {
-  MOZ_ASSERT(regExps().empty());
-
-  shapeZone().clearTables(runtimeFromMainThread()->defaultFreeOp());
-}
-
 void Zone::fixupAfterMovingGC() {
   ZoneAllocator::fixupAfterMovingGC();
   shapeZone().fixupPropMapShapeTableAfterMovingGC();
@@ -613,22 +607,6 @@ bool Zone::addRttValueObject(JSContext* cx, HandleObject obj) {
   }
 
   return true;
-}
-
-void Zone::deleteEmptyCompartment(JS::Compartment* comp) {
-  MOZ_ASSERT(comp->zone() == this);
-  arenas.checkEmptyArenaLists();
-
-  MOZ_ASSERT(compartments().length() == 1);
-  MOZ_ASSERT(compartments()[0] == comp);
-  MOZ_ASSERT(comp->realms().length() == 1);
-
-  Realm* realm = comp->realms()[0];
-  JSFreeOp* fop = runtimeFromMainThread()->defaultFreeOp();
-  realm->destroy(fop);
-  comp->destroy(fop);
-
-  compartments().clear();
 }
 
 void Zone::purgeAtomCache() {
