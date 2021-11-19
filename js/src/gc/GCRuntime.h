@@ -605,7 +605,6 @@ class GCRuntime {
                                   AllocKind kind);
   static TenuredCell* refillFreeListInGC(Zone* zone, AllocKind thingKind);
 
-  void setParallelAtomsAllocEnabled(bool enabled);
   void setParallelUnmarkEnabled(bool enabled);
 
   /*

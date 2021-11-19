@@ -313,21 +313,9 @@ void JSRuntime::finishAtoms() {
 }
 
 class AtomsTable::AutoLock {
-  Mutex* lock = nullptr;
-
  public:
-  MOZ_ALWAYS_INLINE explicit AutoLock(JSRuntime* rt, Mutex& aLock) {
-    if (rt->hasHelperThreadZones()) {
-      lock = &aLock;
-      lock->lock();
-    }
-  }
-
-  MOZ_ALWAYS_INLINE ~AutoLock() {
-    if (lock) {
-      lock->unlock();
-    }
-  }
+  MOZ_ALWAYS_INLINE AutoLock(JSRuntime* rt, Mutex& aLock) {}
+  MOZ_ALWAYS_INLINE ~AutoLock() {}
 };
 
 AtomsTable::Partition::Partition(uint32_t index)
@@ -1211,14 +1199,8 @@ Handle<PropertyName*> js::ClassName(JSProtoKey key, JSContext* cx) {
 
 js::AutoLockAllAtoms::AutoLockAllAtoms(JSRuntime* rt) : runtime(rt) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
-  if (runtime->hasHelperThreadZones()) {
-    runtime->atoms().lockAll();
-  }
 }
 
 js::AutoLockAllAtoms::~AutoLockAllAtoms() {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
-  if (runtime->hasHelperThreadZones()) {
-    runtime->atoms().unlockAll();
-  }
 }

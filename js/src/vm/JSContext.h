@@ -634,12 +634,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // with AutoDisableCompactingGC which uses this counter.
   js::ContextData<unsigned> compactingDisabledCount;
 
-  bool canCollectAtoms() const {
-    // TODO: We may be able to improve this by collecting if
-    // !isOffThreadParseRunning() (bug 1468422).
-    return !runtime()->hasHelperThreadZones();
-  }
-
  private:
   // Pools used for recycling name maps and vectors when parsing and
   // emitting bytecode. Purged on GC when there are no active script

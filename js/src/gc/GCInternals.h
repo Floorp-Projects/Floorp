@@ -82,9 +82,6 @@ class MOZ_RAII AutoCheckCanAccessAtomsDuringGC {
     // Ensure we're only used from within the GC.
     MOZ_ASSERT(JS::RuntimeHeapIsMajorCollecting());
 
-    // Ensure there is no off-thread parsing running.
-    MOZ_ASSERT(!rt->hasHelperThreadZones());
-
     // Set up a check to assert if we try to start an off-thread parse.
     runtime->setOffThreadParsingBlocked(true);
   }

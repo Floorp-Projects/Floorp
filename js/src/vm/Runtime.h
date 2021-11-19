@@ -572,15 +572,10 @@ struct JSRuntime {
   // protect access to the bytecode table;
   mozilla::Atomic<size_t, mozilla::SequentiallyConsistent> numParseTasks;
 
-  // Number of zones which may be operated on by helper threads.
-  mozilla::Atomic<size_t, mozilla::SequentiallyConsistent>
-      numActiveHelperThreadZones;
-
   friend class js::AutoLockScriptData;
 
  public:
   bool hasParseTasks() const { return numParseTasks > 0; }
-  bool hasHelperThreadZones() const { return numActiveHelperThreadZones > 0; }
 
   void addParseTaskRef() { numParseTasks++; }
   void decParseTaskRef() { numParseTasks--; }
