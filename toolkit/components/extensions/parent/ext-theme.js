@@ -179,15 +179,6 @@ class Theme {
       }
 
       switch (color) {
-        case "frame":
-          styles.accentcolor = cssColor;
-          break;
-        case "frame_inactive":
-          styles.accentcolorInactive = cssColor;
-          break;
-        case "tab_background_text":
-          styles.textcolor = cssColor;
-          break;
         case "toolbar":
           styles.toolbarColor = cssColor;
           break;
@@ -201,7 +192,10 @@ class Theme {
         case "icons_attention":
           styles.icon_attention_color = cssColor;
           break;
+        case "frame":
+        case "frame_inactive":
         case "tab_background_separator":
+        case "tab_background_text":
         case "tab_loading":
         case "tab_text":
         case "tab_line":

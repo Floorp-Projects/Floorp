@@ -1337,7 +1337,7 @@ ThemeColors GetTheme(ThemeMode themeId) {
       theme.tabColor = 0x42414d;
       theme.toolbarForegroundColor = 0x6a6a6d;
       theme.tabOutlineColor = 0x1c1b22;
-      // controlled by css variable --lwt-accent-color
+      // controlled by css variable --lwt-frame
       theme.tabBarColor = 0x1c1b22;
       // controlled by --toolbar-non-lwt-textcolor in browser.css
       theme.chromeContentDividerColor = 0x0c0c0d;
