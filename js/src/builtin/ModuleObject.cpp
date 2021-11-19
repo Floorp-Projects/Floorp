@@ -407,9 +407,6 @@ void IndirectBindingMap::trace(JSTracer* trc) {
 bool IndirectBindingMap::put(JSContext* cx, HandleId name,
                              HandleModuleEnvironmentObject environment,
                              HandleId targetName) {
-  // This object might have been allocated on the background parsing thread in
-  // different zone to the final module. Lazily allocate the map so we don't
-  // have to switch its zone when merging realms.
   if (!map_) {
     MOZ_ASSERT(!cx->zone()->createdForHelperThread());
     map_.emplace(cx->zone());
@@ -1016,19 +1013,6 @@ static inline bool CheckObjectPropertyFrozen(JSContext* cx,
 }
 
 #endif
-
-inline static void AssertModuleScopesMatch(ModuleObject* module) {
-  MOZ_ASSERT(module->enclosingScope()->is<GlobalScope>());
-  MOZ_ASSERT(IsGlobalLexicalEnvironment(
-      &module->initialEnvironment().enclosingEnvironment()));
-}
-
-void ModuleObject::fixEnvironmentsAfterRealmMerge() {
-  AssertModuleScopesMatch(this);
-  initialEnvironment().fixEnclosingEnvironmentAfterRealmMerge(
-      script()->global());
-  AssertModuleScopesMatch(this);
-}
 
 JSScript* ModuleObject::maybeScript() const {
   Value value = getReservedSlot(ScriptSlot);
