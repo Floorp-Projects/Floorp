@@ -13,6 +13,7 @@ fuzzy-if(Android,0-43,0-26) fuzzy-if(gtkWidget,8-14,12-32) fuzzy-if(cocoaWidget,
 # Different async zoom levels. Since the scrollthumb gets async-scaled in the
 # compositor, the border-radius ends of the scrollthumb are going to be a little
 # off, hence the fuzzy-if clauses.
+# These tests should be enabled on desktop after bug 1554795 is fixed.
 fuzzy-if(Android,0-54,0-33) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-zoom-1.html async-scrollbar-zoom-1-ref.html
 fuzzy-if(Android,0-45,0-30) skip-if(!Android) pref(apz.allow_zooming,true) == async-scrollbar-zoom-2.html async-scrollbar-zoom-2-ref.html
 
