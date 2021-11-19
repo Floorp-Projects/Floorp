@@ -322,9 +322,6 @@ class ArenaLists {
 
   MOZ_ALWAYS_INLINE TenuredCell* allocateFromFreeList(AllocKind thingKind);
 
-  /* Moves all arenas from |fromArenaLists| into |this|. */
-  void adoptArenas(ArenaLists* fromArenaLists, bool targetZoneIsCollecting);
-
   inline void checkEmptyFreeLists();
   inline void checkEmptyArenaLists();
   inline void checkEmptyFreeList(AllocKind kind);

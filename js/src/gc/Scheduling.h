@@ -784,15 +784,6 @@ class HeapSize {
       parent_->removeBytes(nbytes, wasSwept);
     }
   }
-
-  /* Pair to adoptArenas. Adopts the attendant usage statistics. */
-  void adopt(HeapSize& source) {
-    // Skip retainedBytes_: we never adopt zones that are currently being
-    // collected.
-    bytes_ += source.bytes_;
-    source.retainedBytes_ = 0;
-    source.bytes_ = 0;
-  }
 };
 
 // Heap size thresholds used to trigger GC. This is an abstract base class for

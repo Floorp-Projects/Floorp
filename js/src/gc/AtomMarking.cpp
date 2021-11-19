@@ -188,12 +188,6 @@ void AtomMarkingRuntime::markAtomValue(JSContext* cx, const Value& value) {
                                        value.isBigInt());
 }
 
-void AtomMarkingRuntime::adoptMarkedAtoms(Zone* target, Zone* source) {
-  MOZ_ASSERT(CurrentThreadCanAccessZone(source));
-  MOZ_ASSERT(CurrentThreadCanAccessZone(target));
-  target->markedAtoms().bitwiseOrWith(source->markedAtoms());
-}
-
 #ifdef DEBUG
 template <typename T>
 bool AtomMarkingRuntime::atomIsMarked(Zone* zone, T* thing) {
