@@ -124,4 +124,5 @@ pth:toolkit/components/telemetry/tests/marionette/harness
 pth:tools
 pth:tools/moztreedocs
 pth:xpcom/ds/tools
+pth:xpcom/geckoprocesstypes_generator
 pth:xpcom/idl-parser

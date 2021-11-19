@@ -15,9 +15,9 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    "!GeckoProcessTypes.h",
     "!Services.h",
     "FileLocation.h",
-    "GeckoProcessTypes.h",
     "IOInterposer.h",
     "LateWriteChecks.h",
     "Omnijar.h",
@@ -75,6 +75,11 @@ if CONFIG["OS_ARCH"] != "WINNT":
 GeneratedFile("Services.cpp", script="Services.py", entry_point="services_cpp")
 GeneratedFile("Services.h", script="Services.py", entry_point="services_h")
 GeneratedFile("services.rs", script="Services.py", entry_point="services_rs")
+GeneratedFile(
+    "GeckoProcessTypes.h",
+    script="gen_process_types.py",
+    entry_point="main",
+)
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
