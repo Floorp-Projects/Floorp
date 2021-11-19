@@ -4214,7 +4214,9 @@ void gc::MergeRealms(Realm* source, Realm* target) {
 void GCRuntime::mergeRealms(Realm* source, Realm* target) {
   // The source realm must be specifically flagged as mergable.  This
   // also implies that the realm is not visible to the debugger.
-  MOZ_ASSERT(source->creationOptions().mergeable());
+  //
+  // TODO: Remove
+  MOZ_ASSERT(false);
   MOZ_ASSERT(source->creationOptions().invisibleToDebugger());
 
   MOZ_ASSERT(!source->hasBeenEnteredIgnoringJit());
