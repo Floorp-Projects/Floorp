@@ -608,6 +608,9 @@ var AddonTestUtils = {
     let body = await fetch(manifestURI.spec);
     let manifest = await body.json();
     try {
+      if (manifest.browser_specific_settings?.gecko?.id) {
+        return manifest.browser_specific_settings.gecko.id;
+      }
       return manifest.applications.gecko.id;
     } catch (e) {
       // IDs for WebExtensions are extracted from the certificate when
