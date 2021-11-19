@@ -6,18 +6,11 @@
 #ifndef __expat_config_h__
 #define __expat_config_h__
 
-#define MOZ_UNICODE
-#include "nspr.h"
-
-#ifdef IS_LITTLE_ENDIAN
-#define BYTEORDER 1234
-#else 
-#define BYTEORDER 4321
-#endif /* IS_LITTLE_ENDIAN */
-
-#if PR_BYTES_PER_INT != 4
-#define int int32_t
-#endif /* PR_BYTES_PER_INT != 4 */
+#ifdef MOZ_IN_WASM_SANDBOX
+#   include "expat_config_rlbox.h"
+#else
+#  include "expat_config_moz.h"
+#endif
 
 /* Other Mozilla code relies on memmove already, so we assume it's available */
 #define HAVE_MEMMOVE 1
