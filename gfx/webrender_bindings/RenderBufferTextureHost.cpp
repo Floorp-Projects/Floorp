@@ -65,8 +65,8 @@ wr::WrExternalImage RenderBufferTextureHost::Lock(
         gfxCriticalNote << "DataSourceSurface is null";
         return InvalidToWrExternalImage();
       }
-      if (NS_WARN_IF(
-              !mSurface->Map(gfx::DataSourceSurface::MapType::READ, &mMap))) {
+      if (NS_WARN_IF(!mSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE,
+                                    &mMap))) {
         mSurface = nullptr;
         gfxCriticalNote << "Failed to map Surface";
         return InvalidToWrExternalImage();
@@ -89,10 +89,11 @@ wr::WrExternalImage RenderBufferTextureHost::Lock(
         return InvalidToWrExternalImage();
       }
       if (NS_WARN_IF(
-              !mYSurface->Map(gfx::DataSourceSurface::MapType::READ, &mYMap) ||
-              !mCbSurface->Map(gfx::DataSourceSurface::MapType::READ,
+              !mYSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE,
+                              &mYMap) ||
+              !mCbSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE,
                                &mCbMap) ||
-              !mCrSurface->Map(gfx::DataSourceSurface::MapType::READ,
+              !mCrSurface->Map(gfx::DataSourceSurface::MapType::READ_WRITE,
                                &mCrMap))) {
         mYSurface = mCbSurface = mCrSurface = nullptr;
         gfxCriticalNote << "Failed to map YCbCr Surface";
