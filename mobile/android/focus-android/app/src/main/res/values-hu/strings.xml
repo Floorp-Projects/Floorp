@@ -658,6 +658,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Aktív</string>
 
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">Kész</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Távoli hibakeresés USB-n/Wi-Fi-n</string>
 

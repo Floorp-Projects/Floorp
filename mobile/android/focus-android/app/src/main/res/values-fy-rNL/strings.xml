@@ -189,7 +189,7 @@
     <string name="preference_state_off">Ut</string>
 
     <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
-    <string name="preference_subitem_autocomplete">URL\'s automatysk oanfolje</string>
+    <string name="preference_subitem_autocomplete">URL’s automatysk oanfolje</string>
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">Foar topwebsites</string>
@@ -199,7 +199,7 @@
     <string name="preference_autocomplete_topsite_summary2">Skeakelje dit yn om %s automatysk mear as 450 populêre URL’s yn de adresbalke oanfolje te litten.</string>
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
-    <string name="preference_switch_autocomplete_user_list">Foar websites dy\'t jo tafoegje</string>
+    <string name="preference_switch_autocomplete_user_list">Foar websites dy’t jo tafoegje</string>
 
     <!-- Summary for the toggle to enable autocomplete for the user-defined list
      %s is a placeholder for the app name (e.g. Firefox Focus)-->
@@ -449,7 +449,7 @@
          Argument 2 is the external app name, argument 1 is our name (i.e. Firefox Focus, or Firefox Klar). -->
     <string name="external_app_prompt">Jo kinne %1$s ferlitte om dizze keppeling yn %2$s te iepenjen.</string>
     <!-- This text is the title of a dialog shown if no app could be found for a custom link protocol. -->
-    <string name="external_app_prompt_no_app_title">Fyn in app dy\'t dizze keppeling iepenje kin</string>
+    <string name="external_app_prompt_no_app_title">Fyn in app dy’t dizze keppeling iepenje kin</string>
     <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
          the app store installed on the device (usually that's Google Play). -->
     <string name="external_app_prompt_no_app">Gjin inkelde app op jo apparaat kin dizze keppeling iepenje. Jo kinne %1$s ferlitte en %2$s iepenje om in geskikte app te finen.</string>
@@ -493,7 +493,7 @@
   <!-- First run tour (Default browser): Title -->
     <string name="firstrun_defaultbrowser_title">Fergrutsje jo privacy</string>
     <!-- First run tour (Default browser): Text. -->
-    <string name="firstrun_defaultbrowser_text2">Bring priveenavigaasje nei in heger nivo. Blokkearje advertinsjes en oare ynhâld dy\'t jo op websites folgje kinne en laadtiden fan siden ferlingje.</string>
+    <string name="firstrun_defaultbrowser_text2">Bring priveenavigaasje nei in heger nivo. Blokkearje advertinsjes en oare ynhâld dy’t jo op websites folgje kinne en laadtiden fan siden ferlingje.</string>
 
     <!-- First run tour (Search): Title -->
     <string name="firstrun_search_title">Sykje op jo manier</string>
@@ -582,7 +582,7 @@
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
     %2$s will be replaced with a URL linking to the GPL
     %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
-    <string name="your_rights_content5"><![CDATA[%1$s brûkt ek blokkearlisten dy\'t troch Disconnect, Inc. levere wurde as ôfsûnderlike en ûnôfhinklike wurken ûnder de <a href="%2$s">GNU General Public License v3</a> en dy <a href="%3$s">hjir</a> beskikber binne.]]></string>
+    <string name="your_rights_content5"><![CDATA[%1$s brûkt ek blokkearlisten dy’t troch Disconnect, Inc. levere wurde as ôfsûnderlike en ûnôfhinklike wurken ûnder de <a href="%2$s">GNU General Public License v3</a> en dy <a href="%3$s">hjir</a> beskikber binne.]]></string>
 
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Brûkersnamme</string>
@@ -744,7 +744,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
      "Allowlist" is a replacement for the word whitelist. -->
-    <string name="tip_explain_allowlist3">Wolle jo Ferbettere beskerming tsjin folgjen útskeakelje foar in website dy\'t jo fertrouwe?\n
+    <string name="tip_explain_allowlist3">Wolle jo Ferbettere beskerming tsjin folgjen útskeakelje foar in website dy’t jo fertrouwe?\n
         Foegje dizze ta oan de Tastiene list yn de Ynstellingen
     </string>
 
@@ -754,7 +754,7 @@ The new line here must be kept as the second half of the string is clickable for
 
     <!-- Tip displayed on the home view about shortcuts
     %1$s is a placeholder for the app name -->
-    <string name="tip_about_shortcuts">Meitsje fluchkeppelingen foar de websites dy\'t jo it meast besykje:\n
+    <string name="tip_about_shortcuts">Meitsje fluchkeppelingen foar de websites dy’t jo it meast besykje:\n
     Selektearje yn it %1$s-menu ‘Tafoegje oan fluchkeppelingen’</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
