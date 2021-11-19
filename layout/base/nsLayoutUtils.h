@@ -2924,7 +2924,7 @@ class nsLayoutUtils {
 
   static void ComputeSystemFont(nsFont* aSystemFont,
                                 mozilla::StyleSystemFont aFontID,
-                                const nsFont* aDefaultVariableFont,
+                                const nsFont& aDefaultVariableFont,
                                 const mozilla::dom::Document* aDocument);
 
   static uint32_t ParseFontLanguageOverride(const nsAString& aLangTag);

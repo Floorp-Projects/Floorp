@@ -12,6 +12,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticPresData.h"
 
 #include "gfxContext.h"
 #include "gfxFontConstants.h"
@@ -1866,10 +1867,20 @@ gfxFontGroup::~gfxFontGroup() {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
+static StyleGenericFontFamily GetDefaultGeneric(nsAtom* aLanguage) {
+  return StaticPresData::Get()
+      ->GetFontPrefsForLang(aLanguage)
+      ->GetDefaultGeneric();
+}
+
 void gfxFontGroup::BuildFontList() {
   // initialize fonts in the font family list
   AutoTArray<FamilyAndGeneric, 10> fonts;
   gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
+
+  auto defaultLanguageGeneric = GetDefaultGeneric(mLanguage);
+
+  bool hasDefaultLanguageGeneric = false;
 
   // lookup fonts in the fontlist
   for (const StyleSingleFontFamily& name : mFamilyList.list.AsSpan()) {
@@ -1887,6 +1898,9 @@ void gfxFontGroup::BuildFontList() {
           generic != StyleGenericFontFamily::SystemUi) {
         mFallbackGeneric = generic;
       }
+      if (generic == defaultLanguageGeneric) {
+        hasDefaultLanguageGeneric = true;
+      }
       pfl->AddGenericFonts(mPresContext, generic, mLanguage, fonts);
       if (mTextPerf) {
         mTextPerf->current.genericLookups++;
@@ -1895,9 +1909,10 @@ void gfxFontGroup::BuildFontList() {
   }
 
   // if necessary, append fallback generic onto the end
-  if (mFamilyList.fallback != StyleGenericFontFamily::None &&
-      !mFamilyList.ContainsFallback()) {
-    pfl->AddGenericFonts(mPresContext, mFamilyList.fallback, mLanguage, fonts);
+  if (defaultLanguageGeneric != StyleGenericFontFamily::None &&
+      !hasDefaultLanguageGeneric && !mStyle.systemFont) {
+    pfl->AddGenericFonts(mPresContext, defaultLanguageGeneric, mLanguage,
+                         fonts);
     if (mTextPerf) {
       mTextPerf->current.genericLookups++;
     }
@@ -2534,6 +2549,7 @@ void gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
         nsAutoCString str((const char*)aString, aLength);
         nsAutoString styleString;
         nsStyleUtil::AppendFontSlantStyle(mStyle.style, styleString);
+        auto defaultLanguageGeneric = GetDefaultGeneric(mLanguage);
         MOZ_LOG(
             log, LogLevel::Warning,
             ("(%s) fontgroup: [%s] default: %s lang: %s script: %d "
@@ -2541,9 +2557,9 @@ void gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
              "TEXTRUN [%s] ENDTEXTRUN\n",
              (mStyle.systemFont ? "textrunui" : "textrun"),
              FamilyListToString(mFamilyList).get(),
-             (mFamilyList.fallback == StyleGenericFontFamily::Serif
+             (defaultLanguageGeneric == StyleGenericFontFamily::Serif
                   ? "serif"
-                  : (mFamilyList.fallback == StyleGenericFontFamily::SansSerif
+                  : (defaultLanguageGeneric == StyleGenericFontFamily::SansSerif
                          ? "sans-serif"
                          : "none")),
              lang.get(), static_cast<int>(Script::LATIN), aLength,
@@ -2578,6 +2594,7 @@ void gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
           mLanguage->ToUTF8String(lang);
           nsAutoString styleString;
           nsStyleUtil::AppendFontSlantStyle(mStyle.style, styleString);
+          auto defaultLanguageGeneric = GetDefaultGeneric(mLanguage);
           uint32_t runLen = runLimit - runStart;
           MOZ_LOG(
               log, LogLevel::Warning,
@@ -2586,9 +2603,10 @@ void gfxFontGroup::InitTextRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
                "%zu-byte TEXTRUN [%s] ENDTEXTRUN\n",
                (mStyle.systemFont ? "textrunui" : "textrun"),
                FamilyListToString(mFamilyList).get(),
-               (mFamilyList.fallback == StyleGenericFontFamily::Serif
+               (defaultLanguageGeneric == StyleGenericFontFamily::Serif
                     ? "serif"
-                    : (mFamilyList.fallback == StyleGenericFontFamily::SansSerif
+                    : (defaultLanguageGeneric ==
+                               StyleGenericFontFamily::SansSerif
                            ? "sans-serif"
                            : "none")),
                lang.get(), static_cast<int>(runScript), runLen,
@@ -3534,6 +3552,7 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
   if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Debug))) {
     nsAutoCString lang;
     mLanguage->ToUTF8String(lang);
+    auto defaultLanguageGeneric = GetDefaultGeneric(mLanguage);
 
     // collect the font matched for each range
     nsAutoCString fontMatches;
@@ -3549,7 +3568,7 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
         }
         matchTypes.AppendLiteral("prefs");
       }
-      if (r.matchType.kind & FontMatchType::Kind::kPrefsFallback) {
+      if (r.matchType.kind & FontMatchType::Kind::kSystemFallback) {
         if (!matchTypes.IsEmpty()) {
           matchTypes.AppendLiteral(",");
         }
@@ -3565,9 +3584,9 @@ void gfxFontGroup::ComputeRanges(nsTArray<TextRange>& aRanges, const T* aString,
              "%s\n",
              (mStyle.systemFont ? "textrunui" : "textrun"),
              FamilyListToString(mFamilyList).get(),
-             (mFamilyList.fallback == StyleGenericFontFamily::Serif
+             (defaultLanguageGeneric == StyleGenericFontFamily::Serif
                   ? "serif"
-                  : (mFamilyList.fallback == StyleGenericFontFamily::SansSerif
+                  : (defaultLanguageGeneric == StyleGenericFontFamily::SansSerif
                          ? "sans-serif"
                          : "none")),
              lang.get(), static_cast<int>(aRunScript), fontMatches.get()));

@@ -914,9 +914,6 @@ nsresult ContentEventHandler::GenerateFlatFontRanges(
           nsAutoCString name;
           if (fontName) {
             fontName->AppendToString(name, false);
-          } else if (fontList.fallback != StyleGenericFontFamily::None) {
-            StyleSingleFontFamily::Generic(fontList.fallback)
-                .AppendToString(name, false);
           }
           AppendUTF8toUTF16(name, fontRange->mFontName);
 

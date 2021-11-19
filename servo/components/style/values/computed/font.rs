@@ -182,6 +182,9 @@ pub struct FontFamily {
     pub families: FontFamilyList,
     /// Whether this font-family came from a specified system-font.
     pub is_system_font: bool,
+    /// Whether this is the initial font-family that might react to language
+    /// changes.
+    pub is_initial: bool,
 }
 
 macro_rules! static_font_family {
@@ -190,9 +193,9 @@ macro_rules! static_font_family {
             static ref $ident: FontFamily = FontFamily {
                 families: FontFamilyList {
                     list: crate::ArcSlice::from_iter_leaked(std::iter::once($family)),
-                    fallback: GenericFontFamily::None,
                 },
                 is_system_font: false,
+                is_initial: false,
             };
         }
     };
@@ -228,9 +231,9 @@ impl FontFamily {
                         syntax: FontFamilyNameSyntax::Identifiers,
                     },
                 ))),
-                fallback: GenericFontFamily::None,
             },
             is_system_font: true,
+            is_initial: false,
         }
     }
 
@@ -293,7 +296,7 @@ impl ToCss for FontFamily {
         let mut iter = self.families.iter();
         match iter.next() {
             Some(f) => f.to_css(dest)?,
-            None => return self.families.fallback.to_css(dest),
+            None => return Ok(()),
         }
         for family in iter {
             dest.write_str(", ")?;
@@ -542,24 +545,12 @@ impl SingleFontFamily {
 pub struct FontFamilyList {
     /// The actual list of font families specified.
     pub list: crate::ArcSlice<SingleFontFamily>,
-    /// A fallback font type (none, serif, or sans-serif, generally).
-    pub fallback: GenericFontFamily,
 }
 
 impl FontFamilyList {
     /// Return iterator of SingleFontFamily
     pub fn iter(&self) -> impl Iterator<Item = &SingleFontFamily> {
         self.list.iter()
-    }
-
-    /// Puts the fallback in the list if needed.
-    pub fn normalize(&mut self) {
-        if self.fallback == GenericFontFamily::None {
-            return;
-        }
-        let mut new_list = self.list.iter().cloned().collect::<Vec<_>>();
-        new_list.push(SingleFontFamily::Generic(self.fallback));
-        self.list = crate::ArcSlice::from_iter(new_list.into_iter());
     }
 
     /// If there's a generic font family on the list which is suitable for user
@@ -586,7 +577,7 @@ impl FontFamilyList {
     }
 
     /// Returns whether we need to prioritize user fonts.
-    pub (crate) fn needs_user_font_prioritization(&self) -> bool {
+    pub(crate) fn needs_user_font_prioritization(&self) -> bool {
         self.iter().next().map_or(true, |f| match f {
             SingleFontFamily::Generic(f) => !f.valid_for_user_font_prioritization(),
             _ => true,

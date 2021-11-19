@@ -240,6 +240,7 @@ nsStyleFont::nsStyleFont(const Document& aDocument)
       mLanguage(aDocument.GetLanguageForStyle()) {
   MOZ_COUNT_CTOR(nsStyleFont);
   MOZ_ASSERT(NS_IsMainThread());
+  mFont.family.is_initial = true;
   mFont.size = mSize;
   if (!nsContentUtils::IsChromeDoc(&aDocument)) {
     Length minimumFontSize =
