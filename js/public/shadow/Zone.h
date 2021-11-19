@@ -34,6 +34,7 @@ struct Zone {
     Compact
   };
 
+  using BarrierState = mozilla::Atomic<uint32_t, mozilla::Relaxed>;
   using AtomicGCState = mozilla::Atomic<uint32_t, mozilla::Relaxed>;
 
   enum Kind : uint8_t { NormalZone, AtomsZone, SystemZone };
@@ -41,12 +42,13 @@ struct Zone {
  protected:
   JSRuntime* const runtime_;
   JSTracer* const barrierTracer_;  // A pointer to the JSRuntime's |gcMarker|.
-  uint32_t needsIncrementalBarrier_ = 0;
+  BarrierState needsIncrementalBarrier_;
   AtomicGCState gcState_;
   const Kind kind_;
 
   Zone(JSRuntime* runtime, JSTracer* barrierTracerArg, Kind kind)
       : runtime_(runtime), barrierTracer_(barrierTracerArg), kind_(kind) {
+    MOZ_ASSERT(!needsIncrementalBarrier());
     MOZ_ASSERT(!wasGCStarted());
   }
 
