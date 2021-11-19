@@ -2652,3 +2652,13 @@ pref("svg.context-properties.content.allowed-domains", "profile.accounts.firefox
 #ifdef NIGHTLY_BUILD
   pref("extensions.translations.disabled", true);
 #endif
+
+// A set of scores for rating the relevancy of snapshots. The suffixes after the
+// last decimal are prefixed by `_score` and reference the functions called in
+// SnapshotScorer.
+pref("browser.snapshots.score.Visit", 1);
+pref("browser.snapshots.score.CurrentSession", 1);
+pref("browser.snapshots.score.InNavigation", 3);
+pref("browser.snapshots.score.IsOverlappingVisit", 3);
+pref("browser.snapshots.score.IsUserPersisted", 1);
+pref("browser.snapshots.score.IsUsedRemoved", -10);
