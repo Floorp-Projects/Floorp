@@ -3863,7 +3863,6 @@ void GCRuntime::collect(bool nonincrementalByAPI, const SliceBudget& budget,
 
   AutoTraceLog logGC(TraceLoggerForCurrentThread(), TraceLogger_GC);
   AutoStopVerifyingBarriers av(rt, IsShutdownReason(reason));
-  AutoEnqueuePendingParseTasksAfterGC aept(*this);
   AutoMaybeLeaveAtomsZone leaveAtomsZone(rt->mainContextFromOwnThread());
   AutoSetZoneSliceThresholds sliceThresholds(this);
 
@@ -3929,13 +3928,6 @@ void GCRuntime::collect(bool nonincrementalByAPI, const SliceBudget& budget,
   stats().log("GC ending in state %s", StateName(incrementalState));
 
   UnscheduleZones(this);
-}
-
-js::AutoEnqueuePendingParseTasksAfterGC::
-    ~AutoEnqueuePendingParseTasksAfterGC() {
-  if (!OffThreadParsingMustWaitForGC(gc_.rt)) {
-    EnqueuePendingParseTasksAfterGC(gc_.rt);
-  }
 }
 
 SliceBudget GCRuntime::defaultBudget(JS::GCReason reason, int64_t millis) {
