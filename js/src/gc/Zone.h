@@ -181,15 +181,6 @@ namespace JS {
 // We always guarantee that a zone has at least one live compartment by refusing
 // to delete the last compartment in a live zone.
 class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
- private:
-  enum class HelperThreadUse : uint32_t { None, Pending, Active };
-  mozilla::Atomic<HelperThreadUse, mozilla::SequentiallyConsistent>
-      helperThreadUse_;
-
-  // The helper thread context with exclusive access to this zone, if
-  // usedByHelperThread(), or nullptr when on the main thread.
-  js::UnprotectedData<JSContext*> helperThreadOwnerContext_;
-
  public:
   js::gc::ArenaLists arenas;
 
@@ -347,31 +338,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   [[nodiscard]] bool init();
 
   void destroy(JSFreeOp* fop);
-
-  bool ownedByCurrentHelperThread();
-  void setHelperThreadOwnerContext(JSContext* cx);
-
-  // Whether this zone was created for use by a helper thread.
-  bool createdForHelperThread() const {
-    return helperThreadUse_ != HelperThreadUse::None;
-  }
-  // Whether this zone is currently in use by a helper thread.
-  bool usedByHelperThread() {
-    MOZ_ASSERT_IF(isAtomsZone(), helperThreadUse_ == HelperThreadUse::None);
-    return helperThreadUse_ == HelperThreadUse::Active;
-  }
-  void setCreatedForHelperThread() {
-    MOZ_ASSERT(helperThreadUse_ == HelperThreadUse::None);
-    helperThreadUse_ = HelperThreadUse::Pending;
-  }
-  void setUsedByHelperThread() {
-    MOZ_ASSERT(helperThreadUse_ == HelperThreadUse::Pending);
-    helperThreadUse_ = HelperThreadUse::Active;
-  }
-  void clearUsedByHelperThread() {
-    MOZ_ASSERT(helperThreadUse_ != HelperThreadUse::None);
-    helperThreadUse_ = HelperThreadUse::None;
-  }
 
   [[nodiscard]] bool findSweepGroupEdges(Zone* atomsZone);
 
