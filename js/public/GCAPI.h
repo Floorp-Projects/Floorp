@@ -536,7 +536,6 @@ namespace JS {
   D(RESET, 9)                                                          \
   D(OUT_OF_NURSERY, 10)                                                \
   D(EVICT_NURSERY, 11)                                                 \
-  D(DELAYED_ATOMS_GC, 12)                                              \
   D(SHARED_MEMORY_LIMIT, 13)                                           \
   D(IDLE_TIME_COLLECTION, 14)                                          \
   D(BG_TASK_FINISHED, 15)                                              \
