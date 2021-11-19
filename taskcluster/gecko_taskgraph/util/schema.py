@@ -209,14 +209,18 @@ class Schema(voluptuous.Schema):
     in the process.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, check=True, **kwargs):
         super().__init__(*args, **kwargs)
-        if not gecko_taskgraph.fast:
+
+        self.check = check
+        if not gecko_taskgraph.fast and self.check:
             check_schema(self)
 
     def extend(self, *args, **kwargs):
         schema = super().extend(*args, **kwargs)
-        check_schema(schema)
+
+        if self.check:
+            check_schema(schema)
         # We want twice extend schema to be checked too.
         schema.__class__ = Schema
         return schema
