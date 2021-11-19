@@ -25,6 +25,9 @@ with Files("PageStyleChild.jsm"):
 with Files("PluginChild.jsm"):
     BUG_COMPONENT = ("Core", "Plug-ins")
 
+with Files("ScreenshotsComponentChild.jsm"):
+    BUG_COMPONENT = ("Firefox", "Screenshots")
+
 with Files("WebRTCChild.jsm"):
     BUG_COMPONENT = ("Firefox", "Site Permissions")
 
@@ -79,6 +82,7 @@ FINAL_TARGET_FILES.actors += [
     "RefreshBlockerParent.jsm",
     "RFPHelperChild.jsm",
     "RFPHelperParent.jsm",
+    "ScreenshotsComponentChild.jsm",
     "SearchSERPTelemetryChild.jsm",
     "SearchSERPTelemetryParent.jsm",
     "SwitchDocumentDirectionChild.jsm",
