@@ -28,10 +28,6 @@ class JS_PUBLIC_API Realm;
 
 namespace js {
 
-// Accessing the atoms zone can be dangerous because helper threads may be
-// accessing it concurrently to the main thread, so it's better to skip the
-// atoms zone when iterating over zones. If you need to iterate over the atoms
-// zone, consider using AutoLockAllAtoms.
 enum ZoneSelector { WithAtoms, SkipAtoms };
 
 // Iterate over all zones in the runtime apart from the atoms zone.

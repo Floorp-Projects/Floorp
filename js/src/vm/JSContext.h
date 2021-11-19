@@ -57,6 +57,7 @@ class DebugModeOSRVolatileJitFrameIter;
 }  // namespace jit
 
 namespace gc {
+class AutoTraceSession;
 class AutoCheckCanAccessAtomsDuringGC;
 class AutoSuppressNurseryCellAlloc;
 }  // namespace gc
@@ -1156,18 +1157,10 @@ class MOZ_RAII AutoLockScriptData {
   }
 };
 
-// A token used to prove you can safely access the atoms zone. This zone is
-// accessed by the main thread and by off-thread parsing. There are two
-// situations in which it is safe:
-//
-//  - the current thread holds all atoms table locks (off-thread parsing may be
-//    running and must also take one of these locks for access)
-//
-//  - the GC is running and is collecting the atoms zone (this cannot be started
-//    while off-thread parsing is happening)
+// TODO: Remove.
 class MOZ_STACK_CLASS AutoAccessAtomsZone {
  public:
-  MOZ_IMPLICIT AutoAccessAtomsZone(const AutoLockAllAtoms& lock) {}
+  MOZ_IMPLICIT AutoAccessAtomsZone(const gc::AutoTraceSession& lock) {}
   MOZ_IMPLICIT AutoAccessAtomsZone(
       const gc::AutoCheckCanAccessAtomsDuringGC& canAccess) {}
 };

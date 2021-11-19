@@ -312,17 +312,8 @@ void JSRuntime::finishAtoms() {
   emptyString = nullptr;
 }
 
-class AtomsTable::AutoLock {
- public:
-  MOZ_ALWAYS_INLINE AutoLock(JSRuntime* rt, Mutex& aLock) {}
-  MOZ_ALWAYS_INLINE ~AutoLock() {}
-};
-
 AtomsTable::Partition::Partition(uint32_t index)
-    : lock(
-          MutexId{mutexid::AtomsTable.name, mutexid::AtomsTable.order + index}),
-      atoms(InitialTableSize),
-      atomsAddedWhileSweeping(nullptr) {}
+    : atoms(InitialTableSize), atomsAddedWhileSweeping(nullptr) {}
 
 AtomsTable::Partition::~Partition() { MOZ_ASSERT(!atomsAddedWhileSweeping); }
 
@@ -340,30 +331,6 @@ bool AtomsTable::init() {
     }
   }
   return true;
-}
-
-void AtomsTable::lockAll() {
-  MOZ_ASSERT(!allPartitionsLocked);
-
-  for (size_t i = 0; i < PartitionCount; i++) {
-    partitions[i]->lock.lock();
-  }
-
-#ifdef DEBUG
-  allPartitionsLocked = true;
-#endif
-}
-
-void AtomsTable::unlockAll() {
-  MOZ_ASSERT(allPartitionsLocked);
-
-  for (size_t i = 0; i < PartitionCount; i++) {
-    partitions[PartitionCount - i - 1]->lock.unlock();
-  }
-
-#ifdef DEBUG
-  allPartitionsLocked = false;
-#endif
 }
 
 MOZ_ALWAYS_INLINE size_t
@@ -438,9 +405,7 @@ void js::TraceWellKnownSymbols(JSTracer* trc) {
 }
 
 void AtomsTable::traceWeak(JSTracer* trc) {
-  JSRuntime* rt = trc->runtime();
   for (size_t i = 0; i < PartitionCount; i++) {
-    AutoLock lock(rt, partitions[i]->lock);
     AtomSet& atoms = partitions[i]->atoms;
     for (AtomSet::Enum e(atoms); !e.empty(); e.popFront()) {
       JSAtom* atom = e.front().asPtrUnbarriered();
@@ -624,7 +589,7 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
     const AtomHasher::Lookup& lookup, PinningBehavior pin,
     const Maybe<uint32_t>& indexValue) {
   // Try the per-Zone cache first. If we find the atom there we can avoid the
-  // atoms lock, the markAtom call, and the multiple HashSet lookups below.
+  // markAtom call, and the multiple HashSet lookups below.
   // We don't use the per-Zone cache if we want a pinned atom: handling that
   // is more complicated and pinning atoms is relatively uncommon.
   Zone* zone = cx->zone();
@@ -661,8 +626,6 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
     return atom;
   }
 
-  // Validate the length before taking an atoms partition lock, as throwing an
-  // exception here may reenter this code.
   if (MOZ_UNLIKELY(!JSString::validateLength(cx, length))) {
     return nullptr;
   }
@@ -697,7 +660,6 @@ MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
     JSContext* cx, const CharT* chars, size_t length, PinningBehavior pin,
     const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup) {
   Partition& part = *partitions[getPartitionIndex(lookup)];
-  AutoLock lock(cx->runtime(), part.lock);
 
   AtomSet& atoms = part.atoms;
   AtomSet* atomsAddedWhileSweeping = part.atomsAddedWhileSweeping;
@@ -735,9 +697,8 @@ MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
     return nullptr;
   }
 
-  // We have held the lock since looking up p, and the operations we've done
-  // since then can't GC; therefore the atoms table has not been modified and
-  // p is still valid.
+  // The operations above can't GC; therefore the atoms table has not been
+  // modified and p is still valid.
   AtomSet* addSet =
       part.atomsAddedWhileSweeping ? part.atomsAddedWhileSweeping : &atoms;
   if (MOZ_UNLIKELY(!addSet->add(p, AtomStateEntry(atom, bool(pin))))) {
@@ -872,8 +833,8 @@ static MOZ_ALWAYS_INLINE JSAtom* AllocateNewAtom(
 
   JSLinearString* linear = MakeLinearStringForAtomization(cx, chars, length);
   if (!linear) {
-    // Grudgingly forgo last-ditch GC. The alternative would be to release
-    // the lock, manually GC here, and retry from the top.
+    // Grudgingly forgo last-ditch GC. The alternative would be to manually GC
+    // here, and retry from the top.
     ReportOutOfMemory(cx);
     return nullptr;
   }
@@ -955,7 +916,6 @@ bool AtomsTable::atomIsPinned(JSRuntime* rt, JSAtom* atom) {
   AtomHasher::Lookup lookup(atom);
 
   AtomsTable::Partition& part = *partitions[getPartitionIndex(lookup)];
-  AtomsTable::AutoLock lock(rt, part.lock);
   AtomSet::Ptr p = part.atoms.lookup(lookup);
   if (!p && part.atomsAddedWhileSweeping) {
     p = part.atomsAddedWhileSweeping->lookup(lookup);
@@ -974,7 +934,6 @@ void AtomsTable::maybePinExistingAtom(JSContext* cx, JSAtom* atom) {
   AtomHasher::Lookup lookup(atom);
 
   AtomsTable::Partition& part = *partitions[getPartitionIndex(lookup)];
-  AtomsTable::AutoLock lock(cx->runtime(), part.lock);
   AtomSet::Ptr p = part.atoms.lookup(lookup);
   if (!p && part.atomsAddedWhileSweeping) {
     p = part.atomsAddedWhileSweeping->lookup(lookup);
@@ -1195,12 +1154,4 @@ template JSAtom* js::ToAtom<NoGC>(JSContext* cx, const Value& v);
 
 Handle<PropertyName*> js::ClassName(JSProtoKey key, JSContext* cx) {
   return ClassName(key, cx->names());
-}
-
-js::AutoLockAllAtoms::AutoLockAllAtoms(JSRuntime* rt) : runtime(rt) {
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
-}
-
-js::AutoLockAllAtoms::~AutoLockAllAtoms() {
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime));
 }
