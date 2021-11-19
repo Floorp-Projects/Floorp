@@ -990,6 +990,9 @@ Winsock_LSP:
 
 XPCOMSpinEventLoopStack:
   description: >
-    If we crash while some code is spinning manually the event
-    loop, we will see the stack of nested annotations here.
+    If we crash while some code is spinning manually the event loop on
+    the main thread, we will see the stack of nested annotations here.
+    If the crashing process was killed (e.g. due to an IPC error), this
+    annotation may be out-of-date with the captured stack in the minidump,
+    see bug 1741131 for details.
   type: string
