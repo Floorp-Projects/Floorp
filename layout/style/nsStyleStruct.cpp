@@ -2198,6 +2198,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mOverflowY(StyleOverflow::Visible),
       mOverflowClipBoxBlock(StyleOverflowClipBox::PaddingBox),
       mOverflowClipBoxInline(StyleOverflowClipBox::PaddingBox),
+      mScrollbarGutter(StyleScrollbarGutter::AUTO),
       mResize(StyleResize::None),
       mOrient(StyleOrient::Inline),
       mIsolation(StyleIsolation::Auto),
@@ -2269,6 +2270,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mOverflowY(aSource.mOverflowY),
       mOverflowClipBoxBlock(aSource.mOverflowClipBoxBlock),
       mOverflowClipBoxInline(aSource.mOverflowClipBoxInline),
+      mScrollbarGutter(aSource.mScrollbarGutter),
       mResize(aSource.mResize),
       mOrient(aSource.mOrient),
       mIsolation(aSource.mIsolation),
@@ -2459,6 +2461,17 @@ nsChangeHint nsStyleDisplay::CalcDifference(
       // Here only whether we have a 'clip' changes, so just repaint and
       // update our overflow areas in that case.
       hint |= nsChangeHint_UpdateOverflow | nsChangeHint_RepaintFrame;
+    }
+  }
+
+  if (mScrollbarGutter != aNewData.mScrollbarGutter) {
+    if (IsScrollableOverflow()) {
+      // Changing scrollbar-gutter affects available inline-size of a inner
+      // scrolled frame, so we need a reflow for scrollbar change.
+      hint |= nsChangeHint_ReflowHintsForScrollbarChange;
+    } else {
+      // scrollbar-gutter only applies to the scroll containers.
+      hint |= nsChangeHint_NeutralChange;
     }
   }
 
