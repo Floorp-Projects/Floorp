@@ -6806,7 +6806,6 @@ bool Debugger::isDebuggerCrossCompartmentEdge(JSObject* obj,
 }
 
 static void CheckDebuggeeThingRealm(Realm* realm, bool invisibleOk) {
-  MOZ_ASSERT(!realm->creationOptions().mergeable());
   MOZ_ASSERT_IF(!invisibleOk, !realm->creationOptions().invisibleToDebugger());
 }
 
