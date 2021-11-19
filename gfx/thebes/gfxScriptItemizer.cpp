@@ -206,8 +206,11 @@ bool gfxScriptItemizer::Next(uint32_t& aRunStart, uint32_t& aRunLimit,
           // store for use in the event the run remains unresolved.
           mozilla::intl::ScriptExtensionVector extensions;
           auto extResult = mozilla::intl::Script::GetExtensions(ch, extensions);
-          if (extResult.isOk() && extensions.length() > 1) {
-            fallbackScript = Script(extensions[0]);
+          if (extResult.isOk()) {
+            Script ext = Script(extensions[0]);
+            if (!CanMergeWithContext(ext)) {
+              fallbackScript = ext;
+            }
           }
         }
       }
