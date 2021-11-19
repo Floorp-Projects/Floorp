@@ -123,8 +123,11 @@ class SessionData {
    *     values.
    * @param {Array<(string|number|boolean)>} values
    *     Array of session data item values.
+   * @return {Array<(string|number|boolean)>}
+   *     The subset of values actually added to the session data.
    */
   addSessionData(moduleName, category, contextDescriptor, values) {
+    const addedValues = [];
     for (const value of values) {
       const item = { moduleName, category, contextDescriptor, value };
 
@@ -132,6 +135,7 @@ class SessionData {
       if (!hasItem) {
         // This is a new data item, create it and add it to the data.
         this._data.push(item);
+        addedValues.push(value);
       } else {
         logger.warn(
           `Duplicated session data item was not added: ${JSON.stringify(item)}`
@@ -141,6 +145,8 @@ class SessionData {
 
     // Persist the sessionDataMap.
     this._persist();
+
+    return addedValues;
   }
 
   destroy() {
@@ -193,8 +199,11 @@ class SessionData {
    *     values.
    * @param {Array<(string|number|boolean)>} values
    *     Array of session data item values.
+   * @return {Array<(string|number|boolean)>}
+   *     The subset of values actually removed from the session data.
    */
   removeSessionData(moduleName, category, contextDescriptor, values) {
+    const removedValues = [];
     // Remove the provided context from the contexts Map of the provided items.
     for (const value of values) {
       const item = { moduleName, category, contextDescriptor, value };
@@ -205,6 +214,7 @@ class SessionData {
       if (itemIndex != -1) {
         // The item was found in the session data, remove it.
         this._data.splice(itemIndex, 1);
+        removedValues.push(value);
       } else {
         logger.warn(
           `Missing session data item was not removed: ${JSON.stringify(item)}`
@@ -214,6 +224,8 @@ class SessionData {
 
     // Persist the sessionDataMap.
     this._persist();
+
+    return removedValues;
   }
 
   _isSameItem(item1, item2) {
