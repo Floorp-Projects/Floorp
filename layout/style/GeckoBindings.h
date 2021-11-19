@@ -474,10 +474,10 @@ void Gecko_nsStyleFont_CopyLangFrom(nsStyleFont* aFont,
 mozilla::Length Gecko_nsStyleFont_ComputeMinSize(const nsStyleFont*,
                                                  const mozilla::dom::Document*);
 
-// Computes the default generic font for a generic family and language.
-mozilla::StyleGenericFontFamily Gecko_nsStyleFont_ComputeDefaultFontType(
-    const mozilla::dom::Document*,
-    mozilla::StyleGenericFontFamily generic_family, nsAtom* language);
+// Computes the default generic font for a language.
+mozilla::StyleGenericFontFamily
+Gecko_nsStyleFont_ComputeFallbackFontTypeForLanguage(
+    const mozilla::dom::Document*, nsAtom* language);
 
 mozilla::StyleDefaultFontSizes Gecko_GetBaseSize(nsAtom* lang);
 

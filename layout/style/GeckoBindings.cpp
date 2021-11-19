@@ -90,15 +90,15 @@ ServoTraversalStatistics ServoTraversalStatistics::sSingleton;
 
 static StaticAutoPtr<RWLock> sServoFFILock;
 
-static const nsFont* ThreadSafeGetDefaultFontHelper(
-    const Document& aDocument, nsAtom* aLanguage,
-    StyleGenericFontFamily aGenericId) {
+static const nsFont* ThreadSafeGetDefaultVariableFont(const Document& aDocument,
+                                                      nsAtom* aLanguage) {
   bool needsCache = false;
   const nsFont* retval;
 
   auto GetDefaultFont = [&](bool* aNeedsToCache) {
     auto* prefs = aDocument.GetFontPrefsForLang(aLanguage, aNeedsToCache);
-    return prefs ? prefs->GetDefaultFont(aGenericId) : nullptr;
+    return prefs ? prefs->GetDefaultFont(StyleGenericFontFamily::None)
+                 : nullptr;
   };
 
   {
@@ -978,8 +978,8 @@ void Gecko_ReleaseAtom(nsAtom* aAtom) { NS_RELEASE(aAtom); }
 void Gecko_nsFont_InitSystem(nsFont* aDest, StyleSystemFont aFontId,
                              const nsStyleFont* aFont,
                              const Document* aDocument) {
-  const nsFont* defaultVariableFont = ThreadSafeGetDefaultFontHelper(
-      *aDocument, aFont->mLanguage, StyleGenericFontFamily::None);
+  const nsFont* defaultVariableFont =
+      ThreadSafeGetDefaultVariableFont(*aDocument, aFont->mLanguage);
 
   // We have passed uninitialized memory to this function,
   // initialize it. We can't simply return an nsFont because then
@@ -994,11 +994,10 @@ void Gecko_nsFont_InitSystem(nsFont* aDest, StyleSystemFont aFontId,
 
 void Gecko_nsFont_Destroy(nsFont* aDest) { aDest->~nsFont(); }
 
-StyleGenericFontFamily Gecko_nsStyleFont_ComputeDefaultFontType(
-    const Document* aDoc, StyleGenericFontFamily aGenericId,
-    nsAtom* aLanguage) {
+StyleGenericFontFamily Gecko_nsStyleFont_ComputeFallbackFontTypeForLanguage(
+    const Document* aDoc, nsAtom* aLanguage) {
   const nsFont* defaultFont =
-      ThreadSafeGetDefaultFontHelper(*aDoc, aLanguage, aGenericId);
+      ThreadSafeGetDefaultVariableFont(*aDoc, aLanguage);
   return defaultFont->family.families.fallback;
 }
 
