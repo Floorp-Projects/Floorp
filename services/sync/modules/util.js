@@ -348,9 +348,14 @@ var Utils = {
     ).slice(0, SYNC_KEY_DECODED_LENGTH);
   },
 
-  jsonFilePath(filePath) {
-    return OS.Path.normalize(
-      OS.Path.join(OS.Constants.Path.profileDir, "weave", filePath + ".json")
+  jsonFilePath(...args) {
+    let [fileName] = args.splice(-1);
+
+    return PathUtils.join(
+      Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+      "weave",
+      ...args,
+      `${fileName}.json`
     );
   },
 
@@ -359,7 +364,6 @@ var Utils = {
    *
    * @param filePath
    *        JSON file path load from profile. Loaded file will be
-   *        <profile>/<filePath>.json. i.e. Do not specify the ".json"
    *        extension.
    * @param that
    *        Object to use for logging.
@@ -368,10 +372,15 @@ var Utils = {
    *        Promise resolved when the write has been performed.
    */
   async jsonLoad(filePath, that) {
-    let path = Utils.jsonFilePath(filePath);
+    let path;
+    if (Array.isArray(filePath)) {
+      path = Utils.jsonFilePath(...filePath);
+    } else {
+      path = Utils.jsonFilePath(filePath);
+    }
 
     if (that._log && that._log.trace) {
-      that._log.trace("Loading json from disk: " + filePath);
+      that._log.trace("Loading json from disk: " + path);
     }
 
     try {

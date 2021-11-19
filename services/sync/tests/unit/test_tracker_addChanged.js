@@ -52,6 +52,6 @@ add_task(async function test_tracker_persistence() {
   const changes = await tracker.getChangedIDs();
   Assert.equal(5, changes[id]);
 
-  let json = await Utils.jsonLoad("changes/tracker", tracker);
+  let json = await Utils.jsonLoad(["changes", "tracker"], tracker);
   Assert.equal(5, json[id]);
 });
