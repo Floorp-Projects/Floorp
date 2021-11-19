@@ -155,9 +155,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       afterWaitCallback(nullptr),
       offthreadIonCompilationEnabled_(true),
       parallelParsingEnabled_(true),
-#ifdef DEBUG
-      offThreadParsingBlocked_(false),
-#endif
       autoWritableJitCodeActive_(false),
       oomCallback(nullptr),
       debuggerMallocSizeOf(ReturnZeroSize),
@@ -186,8 +183,6 @@ JSRuntime::~JSRuntime() {
   MOZ_ASSERT(oldCount > 0);
 
   MOZ_ASSERT(wasmInstances.lock()->empty());
-
-  MOZ_ASSERT(!offThreadParsingBlocked_);
 
   MOZ_ASSERT(numRealms == 0);
   MOZ_ASSERT(numDebuggeeRealms_ == 0);

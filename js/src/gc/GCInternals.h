@@ -73,27 +73,6 @@ class MOZ_RAII AutoEmptyNursery : public AutoAssertEmptyNursery {
   explicit AutoEmptyNursery(JSContext* cx);
 };
 
-class MOZ_RAII AutoCheckCanAccessAtomsDuringGC {
-#ifdef DEBUG
-  JSRuntime* runtime;
-
- public:
-  explicit AutoCheckCanAccessAtomsDuringGC(JSRuntime* rt) : runtime(rt) {
-    // Ensure we're only used from within the GC.
-    MOZ_ASSERT(JS::RuntimeHeapIsMajorCollecting());
-
-    // Set up a check to assert if we try to start an off-thread parse.
-    runtime->setOffThreadParsingBlocked(true);
-  }
-  ~AutoCheckCanAccessAtomsDuringGC() {
-    runtime->setOffThreadParsingBlocked(false);
-  }
-#else
- public:
-  explicit AutoCheckCanAccessAtomsDuringGC(JSRuntime* rt) {}
-#endif
-};
-
 // Abstract base class for exclusive heap access for tracing or GC.
 class MOZ_RAII AutoHeapSession {
  public:
@@ -115,14 +94,6 @@ class MOZ_RAII AutoGCSession : public AutoHeapSession {
  public:
   explicit AutoGCSession(GCRuntime* gc, JS::HeapState state)
       : AutoHeapSession(gc, state) {}
-
-  AutoCheckCanAccessAtomsDuringGC& checkAtomsAccess() {
-    return maybeCheckAtomsAccess.ref();
-  }
-
-  // During a GC we can check that it's not possible for anything else to be
-  // using the atoms zone.
-  mozilla::Maybe<AutoCheckCanAccessAtomsDuringGC> maybeCheckAtomsAccess;
 };
 
 class MOZ_RAII AutoMajorGCProfilerEntry : public AutoGeckoProfilerEntry {

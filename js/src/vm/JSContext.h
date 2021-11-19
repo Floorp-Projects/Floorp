@@ -58,7 +58,7 @@ class DebugModeOSRVolatileJitFrameIter;
 
 namespace gc {
 class AutoTraceSession;
-class AutoCheckCanAccessAtomsDuringGC;
+class AutoGCSession;
 class AutoSuppressNurseryCellAlloc;
 }  // namespace gc
 
@@ -1161,8 +1161,7 @@ class MOZ_RAII AutoLockScriptData {
 class MOZ_STACK_CLASS AutoAccessAtomsZone {
  public:
   MOZ_IMPLICIT AutoAccessAtomsZone(const gc::AutoTraceSession& lock) {}
-  MOZ_IMPLICIT AutoAccessAtomsZone(
-      const gc::AutoCheckCanAccessAtomsDuringGC& canAccess) {}
+  MOZ_IMPLICIT AutoAccessAtomsZone(const gc::AutoGCSession& session) {}
 };
 
 class MOZ_RAII AutoNoteDebuggerEvaluationWithOnNativeCallHook {
