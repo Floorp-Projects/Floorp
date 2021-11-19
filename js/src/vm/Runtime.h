@@ -946,10 +946,6 @@ struct JSRuntime {
   mozilla::Atomic<bool, mozilla::SequentiallyConsistent>
       parallelParsingEnabled_;
 
-#ifdef DEBUG
-  mozilla::Atomic<bool> offThreadParsingBlocked_;
-#endif
-
   js::MainThreadData<bool> autoWritableJitCodeActive_;
 
  public:
@@ -965,16 +961,6 @@ struct JSRuntime {
     parallelParsingEnabled_ = value;
   }
   bool canUseParallelParsing() const { return parallelParsingEnabled_; }
-
-#ifdef DEBUG
-
-  bool isOffThreadParsingBlocked() const { return offThreadParsingBlocked_; }
-  void setOffThreadParsingBlocked(bool blocked) {
-    MOZ_ASSERT(offThreadParsingBlocked_ != blocked);
-    offThreadParsingBlocked_ = blocked;
-  }
-
-#endif
 
   void toggleAutoWritableJitCodeActive(bool b) {
     MOZ_ASSERT(autoWritableJitCodeActive_ != b,
