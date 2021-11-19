@@ -11,11 +11,30 @@ const { Module } = ChromeUtils.import(
 );
 
 class Command extends Module {
+  constructor(messageHandler) {
+    super(messageHandler);
+    this._testCategorySessionData = [];
+  }
   destroy() {}
 
   /**
    * Commands
    */
+
+  _applySessionData(params) {
+    if (params.category === "testCategory") {
+      this._testCategorySessionData = this._testCategorySessionData.concat(
+        params.values
+      );
+      return {
+        newData: params.values.join(", "),
+        sessionData: this._testCategorySessionData.join(", "),
+        contextId: this.messageHandler.contextId,
+      };
+    }
+
+    return {};
+  }
 
   testWindowGlobalModule() {
     return "windowglobal-value";

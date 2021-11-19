@@ -87,3 +87,36 @@ async def test_console_log_new_context(bidi_session,
     current_session.execute_script(f"console.log('text_after_refresh')")
     event_data = await on_entry_added
     assert event_data['text'] == 'text_after_refresh'
+
+
+@pytest.mark.asyncio
+async def test_console_log_subscribe_twice(bidi_session,
+                                           current_session,
+                                           wait_for_event):
+    # Subscribe to log.entryAdded twice and check that events are only received
+    # once.
+    await bidi_session.session.subscribe(events=["log.entryAdded"])
+    await bidi_session.session.subscribe(events=["log.entryAdded"])
+
+    # Track all received log.entryAdded events in the events array
+    events = []
+    async def on_event(method, data):
+        events.append(data)
+
+    remove_listener = bidi_session.add_event_listener("log.entryAdded", on_event)
+
+    on_entry_added = wait_for_event("log.entryAdded")
+    current_session.execute_script(f"console.log('text1')")
+    await on_entry_added
+    assert len(events) == 1;
+    assert events[0]['text'] == 'text1'
+
+    # Wait for another console log so that potential duplicates for the first
+    # log have time to be received.
+    on_entry_added = wait_for_event("log.entryAdded")
+    current_session.execute_script(f"console.log('text2')")
+    await on_entry_added
+    assert len(events) == 2;
+    assert events[1]['text'] == 'text2'
+
+    remove_listener()
