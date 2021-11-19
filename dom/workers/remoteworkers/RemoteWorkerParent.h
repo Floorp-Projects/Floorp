@@ -37,7 +37,7 @@ class RemoteWorkerParent final : public PRemoteWorkerParent {
   ~RemoteWorkerParent();
 
   already_AddRefed<PFetchEventOpProxyParent> AllocPFetchEventOpProxyParent(
-      const ServiceWorkerFetchEventOpArgs& aArgs);
+      const ParentToChildServiceWorkerFetchEventOpArgs& aArgs);
 
   void ActorDestroy(mozilla::ipc::IProtocol::ActorDestroyReason) override;
 

@@ -1328,7 +1328,10 @@ void FetchEventOp::AsyncLog(const nsCString& aScriptSpec, uint32_t aLineNumber,
 
 void FetchEventOp::GetRequestURL(nsAString& aOutRequestURL) {
   nsTArray<nsCString>& urls =
-      mArgs.get_ServiceWorkerFetchEventOpArgs().internalRequest().urlList();
+      mArgs.get_ParentToChildServiceWorkerFetchEventOpArgs()
+          .common()
+          .internalRequest()
+          .urlList();
   MOZ_ASSERT(!urls.IsEmpty());
 
   CopyUTF8toUTF16(urls.LastElement(), aOutRequestURL);
@@ -1402,9 +1405,9 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
     return;
   }
 
-  const ServiceWorkerFetchEventOpArgs& args =
-      mArgs.get_ServiceWorkerFetchEventOpArgs();
-  const RequestMode requestMode = args.internalRequest().requestMode();
+  const ParentToChildServiceWorkerFetchEventOpArgs& args =
+      mArgs.get_ParentToChildServiceWorkerFetchEventOpArgs();
+  const RequestMode requestMode = args.common().internalRequest().requestMode();
 
   if (response->Type() == ResponseType::Opaque &&
       requestMode != RequestMode::No_cors) {
@@ -1420,7 +1423,7 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
   }
 
   const RequestRedirect requestRedirectMode =
-      args.internalRequest().requestRedirect();
+      args.common().internalRequest().requestRedirect();
 
   if (requestRedirectMode != RequestRedirect::Manual &&
       response->Type() == ResponseType::Opaqueredirect) {
@@ -1559,8 +1562,8 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
   aWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
 
-  ServiceWorkerFetchEventOpArgs& args =
-      mArgs.get_ServiceWorkerFetchEventOpArgs();
+  ParentToChildServiceWorkerFetchEventOpArgs& args =
+      mArgs.get_ParentToChildServiceWorkerFetchEventOpArgs();
 
   /**
    * Testing: Failure injection.
@@ -1583,8 +1586,8 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
    *   NS_ERROR_INTERCEPTION_FAILED, and by returning that here we approximate
    *   that failure mode.
    */
-  if (NS_FAILED(args.testingInjectCancellation())) {
-    return args.testingInjectCancellation();
+  if (NS_FAILED(args.common().testingInjectCancellation())) {
+    return args.common().testingInjectCancellation();
   }
 
   /**
@@ -1631,8 +1634,9 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
    * now. Once we implement .targetClientId we can then start exposing
    * .clientId on non-subresource requests as well.  See bug 1487534.
    */
-  if (!args.clientId().IsEmpty() && !internalRequest->IsNavigationRequest()) {
-    fetchEventInit.mClientId = args.clientId();
+  if (!args.common().clientId().IsEmpty() &&
+      !internalRequest->IsNavigationRequest()) {
+    fetchEventInit.mClientId = args.common().clientId();
   }
 
   /*
@@ -1643,9 +1647,10 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
    * to reservedClient’s [resultingClient's] id, and to the empty string
    * otherwise." (Step 18.8)
    */
-  if (!args.resultingClientId().IsEmpty() && args.isNonSubresourceRequest() &&
+  if (!args.common().resultingClientId().IsEmpty() &&
+      args.common().isNonSubresourceRequest() &&
       internalRequest->Destination() != RequestDestination::Report) {
-    fetchEventInit.mResultingClientId = args.resultingClientId();
+    fetchEventInit.mResultingClientId = args.common().resultingClientId();
   }
 
   /**
@@ -1654,11 +1659,11 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
   RefPtr<FetchEvent> fetchEvent =
       FetchEvent::Constructor(globalObject, u"fetch"_ns, fetchEventInit);
   fetchEvent->SetTrusted(true);
-  fetchEvent->PostInit(args.workerScriptSpec(), this);
+  fetchEvent->PostInit(args.common().workerScriptSpec(), this);
   mHandled = fetchEvent->Handled();
   mPreloadResponse = fetchEvent->PreloadResponse();
 
-  if (args.preloadNavigation()) {
+  if (args.common().preloadNavigation()) {
     RefPtr<FetchEventPreloadResponsePromise> preloadResponsePromise =
         mActor->GetPreloadResponsePromise();
     MOZ_ASSERT(preloadResponsePromise);
@@ -1805,7 +1810,7 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
     case ServiceWorkerOpArgs::TServiceWorkerMessageEventOpArgs:
       op = MakeRefPtr<MessageEventOp>(std::move(aArgs), std::move(aCallback));
       break;
-    case ServiceWorkerOpArgs::TServiceWorkerFetchEventOpArgs:
+    case ServiceWorkerOpArgs::TParentToChildServiceWorkerFetchEventOpArgs:
       op = MakeRefPtr<FetchEventOp>(std::move(aArgs), std::move(aCallback));
       break;
     default:

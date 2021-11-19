@@ -74,7 +74,7 @@ parent:
   async SetServiceWorkerSkipWaitingFlag() returns (bool aOk);
 
 child:
-  async PFetchEventOpProxy(ServiceWorkerFetchEventOpArgs aArgs);
+  async PFetchEventOpProxy(ParentToChildServiceWorkerFetchEventOpArgs aArgs);
 
   async __delete__();
 

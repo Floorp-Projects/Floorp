@@ -1013,7 +1013,8 @@ IPCResult RemoteWorkerChild::RecvExecServiceWorkerOp(
     ServiceWorkerOpArgs&& aArgs, ExecServiceWorkerOpResolver&& aResolve) {
   MOZ_ASSERT(mIsServiceWorker);
   MOZ_ASSERT(
-      aArgs.type() != ServiceWorkerOpArgs::TServiceWorkerFetchEventOpArgs,
+      aArgs.type() !=
+          ServiceWorkerOpArgs::TParentToChildServiceWorkerFetchEventOpArgs,
       "FetchEvent operations should be sent via PFetchEventOp(Proxy) actors!");
 
   MaybeReportServiceWorkerShutdownProgress(aArgs);
@@ -1064,13 +1065,13 @@ RemoteWorkerChild::MaybeSendSetServiceWorkerSkipWaitingFlag() {
  */
 already_AddRefed<PFetchEventOpProxyChild>
 RemoteWorkerChild::AllocPFetchEventOpProxyChild(
-    const ServiceWorkerFetchEventOpArgs& aArgs) {
+    const ParentToChildServiceWorkerFetchEventOpArgs& aArgs) {
   return RefPtr{new FetchEventOpProxyChild()}.forget();
 }
 
 IPCResult RemoteWorkerChild::RecvPFetchEventOpProxyConstructor(
     PFetchEventOpProxyChild* aActor,
-    const ServiceWorkerFetchEventOpArgs& aArgs) {
+    const ParentToChildServiceWorkerFetchEventOpArgs& aArgs) {
   MOZ_ASSERT(aActor);
 
   (static_cast<FetchEventOpProxyChild*>(aActor))->Initialize(aArgs);

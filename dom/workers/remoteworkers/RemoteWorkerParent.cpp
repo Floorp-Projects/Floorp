@@ -70,7 +70,7 @@ void RemoteWorkerParent::Initialize(bool aAlreadyRegistered) {
 
 already_AddRefed<PFetchEventOpProxyParent>
 RemoteWorkerParent::AllocPFetchEventOpProxyParent(
-    const ServiceWorkerFetchEventOpArgs& aArgs) {
+    const ParentToChildServiceWorkerFetchEventOpArgs& aArgs) {
   MOZ_CRASH("PFetchEventOpProxyParent actors must be manually constructed!");
   return nullptr;
 }
