@@ -12,8 +12,6 @@
 %include ../shared/urlbar/dynamicResults.inc.css
 
 :root {
-  --autocomplete-popup-background: var(--arrowpanel-background);
-  --autocomplete-popup-color: var(--arrowpanel-color);
   --autocomplete-popup-highlight-background: SelectedItem;
   --autocomplete-popup-highlight-color: SelectedItemText;
 
@@ -755,8 +753,8 @@
 /* search bar popup */
 
 #PopupSearchAutoComplete {
-  --panel-background: var(--autocomplete-popup-background);
-  --panel-color: var(--autocomplete-popup-color);
+  --panel-color: var(--toolbar-field-focus-color);
+  --panel-background: var(--toolbar-field-focus-background-color);
   --panel-border-color: var(--arrowpanel-border-color);
 }
 
@@ -764,11 +762,6 @@
   /* Remove the top border since the panel is flush with the input. */
   border-top-width: 0;
   --panel-padding: var(--panel-subview-body-padding);
-}
-
-#PopupSearchAutoComplete {
-  --panel-color: var(--toolbar-field-focus-color);
-  --panel-background: var(--toolbar-field-focus-background-color);
 }
 
 #PopupSearchAutoComplete .autocomplete-richlistitem[selected] {
