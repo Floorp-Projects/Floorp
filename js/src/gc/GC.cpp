@@ -388,7 +388,6 @@ GCRuntime::GCRuntime(JSRuntime* rt)
       cleanUpEverything(false),
       grayBitsValid(false),
       majorGCTriggerReason(JS::GCReason::NO_REASON),
-      fullGCForAtomsRequested_(false),
       minorGCNumber(0),
       majorGCNumber(0),
       number(0),
@@ -1632,14 +1631,6 @@ bool GCRuntime::checkEagerAllocTrigger(const HeapSize& size,
   return true;
 }
 
-void GCRuntime::triggerFullGCForAtoms(JSContext* cx) {
-  MOZ_ASSERT(fullGCForAtomsRequested_);
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-  MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
-  fullGCForAtomsRequested_ = false;
-  MOZ_RELEASE_ASSERT(triggerGC(JS::GCReason::DELAYED_ATOMS_GC));
-}
-
 void GCRuntime::startDecommit() {
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::DECOMMIT);
 
@@ -2199,13 +2190,6 @@ bool GCRuntime::prepareZonesForCollection(JS::GCReason reason,
 
     zone->setWasCollected(shouldCollect);
   }
-
-  /*
-   * Check that we do collect the atoms zone if we triggered a GC for that
-   * purpose.
-   */
-  MOZ_ASSERT_IF(reason == JS::GCReason::DELAYED_ATOMS_GC,
-                atomsZone->isGCPreparing());
 
   /* Check that at least one zone is scheduled for collection. */
   return any;
