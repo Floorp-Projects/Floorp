@@ -15,8 +15,10 @@
 #include "harfbuzz/hb.h"
 #include "punycode.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Casting.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
+#include "mozilla/intl/Script.h"
 
 // Currently we use the non-transitional processing option -- see
 // http://unicode.org/reports/tr46/
@@ -26,7 +28,6 @@
 const bool kIDNA2008_TransitionalProcessing = false;
 
 #include "ICUUtils.h"
-#include "unicode/uscript.h"
 
 using namespace mozilla;
 using namespace mozilla::unicode;
@@ -790,18 +791,17 @@ bool nsIDNService::isLabelSafe(const nsAString& label) {
       }
       // Check for marks whose expected script doesn't match the base script.
       if (lastScript != Script::INVALID) {
-        const size_t kMaxScripts = 32;  // more than ample for current values
-                                        // of ScriptExtensions property
-        UScriptCode scripts[kMaxScripts];
-        UErrorCode errorCode = U_ZERO_ERROR;
-        int nScripts =
-            uscript_getScriptExtensions(ch, scripts, kMaxScripts, &errorCode);
-        MOZ_ASSERT(U_SUCCESS(errorCode), "uscript_getScriptExtensions failed");
-        if (U_FAILURE(errorCode)) {
+        mozilla::intl::ScriptExtensionVector scripts;
+        auto extResult = mozilla::intl::Script::GetExtensions(ch, scripts);
+        MOZ_ASSERT(extResult.isOk());
+        if (extResult.isErr()) {
           return false;
         }
+
+        int nScripts = AssertedCast<int>(scripts.length());
+
         // nScripts will always be >= 1, because even for undefined characters
-        // uscript_getScriptExtensions will return Script::INVALID.
+        // it will return Script::INVALID.
         // If the mark just has script=COMMON or INHERITED, we can't check any
         // more carefully, but if it has specific scriptExtension codes, then
         // assume those are the only valid scripts to use it with.
