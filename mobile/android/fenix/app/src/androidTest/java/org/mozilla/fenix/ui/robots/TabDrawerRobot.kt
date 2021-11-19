@@ -88,6 +88,7 @@ class TabDrawerRobot {
     fun verifyEmptyTabsTrayMenuButtons() = assertEmptyTabsTrayMenuButtons()
     fun verifySelectTabsButton() = assertSelectTabsButton()
     fun verifyTabTrayOverflowMenu(visibility: Boolean) = assertTabTrayOverflowButton(visibility)
+    fun verifyTabsTrayCounter() = assertTabsTrayCounter()
 
     fun verifyTabTrayIsOpened() = assertTabTrayDoesExist()
     fun verifyTabTrayIsClosed() = assertTabTrayDoesNotExist()
@@ -554,6 +555,9 @@ private fun assertTabTrayOverflowButton(visible: Boolean) =
     onView(withId(R.id.tab_tray_overflow))
         .check(matches(withEffectiveVisibility(visibleOrGone(visible))))
 
+private fun assertTabsTrayCounter() =
+    tabsTrayCounterBox().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+
 private fun assertEmptyTabsTrayMenuButtons() {
     threeDotMenu().click()
     tabsSettingsButton()
@@ -617,6 +621,8 @@ private fun tab(title: String) =
     )
 
 private fun tabsCounter() = onView(withId(R.id.tab_button))
+
+private fun tabsTrayCounterBox() = onView(withId(R.id.counter_box))
 
 private fun tabsSettingsButton() =
     onView(

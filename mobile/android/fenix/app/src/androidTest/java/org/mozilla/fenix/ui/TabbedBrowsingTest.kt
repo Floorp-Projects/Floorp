@@ -315,14 +315,19 @@ class TabbedBrowsingTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabDrawer {
+            verifyNormalBrowsingButtonIsSelected(true)
+            verifyPrivateBrowsingButtonIsSelected(false)
+            verifySyncedTabsButtonIsSelected(false)
+            verifyTabTrayOverflowMenu(true)
+            verifyTabsTrayCounter()
             verifyExistingTabList()
             verifyNormalBrowsingNewTabButton()
-            verifyTabTrayOverflowMenu(true)
+            verifyOpenedTabThumbnail()
             verifyExistingOpenTabs(defaultWebPage.title)
             verifyCloseTabsButton(defaultWebPage.title)
-        }.openNewTab {
-            verifySearchBarEmpty()
-            verifyKeyboardVisibility()
+        }.openTab(defaultWebPage.title) {
+            verifyUrl(defaultWebPage.url.toString())
+            verifyTabCounter("1")
         }
     }
 
