@@ -31,10 +31,20 @@ class Log extends Module {
   }
 
   /**
-   * Commands
+   * Private methods
    */
-  _subscribeEvent(params) {
-    if (params.event === "log.entryAdded") {
+  _applySessionData(params) {
+    // TODO: Bug 1741861. Move this logic to a shared module or the an abstract
+    // class.
+    if (params.category === "event") {
+      for (const event of params.values) {
+        this._subscribeEvent(event);
+      }
+    }
+  }
+
+  _subscribeEvent(event) {
+    if (event === "log.entryAdded") {
       Services.obs.addObserver(
         this._onConsoleAPILogEvent,
         "console-api-log-event"

@@ -65,3 +65,25 @@ async def test_console_log_level(bidi_session,
     assert event_data['type'] == 'console'
     assert event_data['method'] == log_method
     assert isinstance(event_data['timestamp'], int)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("new_context_method_name", ["refresh", "new_window"])
+async def test_console_log_new_context(bidi_session,
+                                       current_session,
+                                       wait_for_event,
+                                       new_context_method_name):
+    await bidi_session.session.subscribe(events=["log.entryAdded"])
+
+    on_entry_added = wait_for_event("log.entryAdded")
+    current_session.execute_script(f"console.log('text')")
+    event_data = await on_entry_added
+    assert event_data['text'] == 'text'
+
+    new_context_method = getattr(current_session, new_context_method_name)
+    new_context_method()
+
+    on_entry_added = wait_for_event("log.entryAdded")
+    current_session.execute_script(f"console.log('text_after_refresh')")
+    event_data = await on_entry_added
+    assert event_data['text'] == 'text_after_refresh'

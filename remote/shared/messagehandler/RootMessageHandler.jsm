@@ -76,6 +76,36 @@ class RootMessageHandler extends MessageHandler {
   }
 
   /**
+   * Add new session data items of a given module, category and
+   * contextDescriptor.
+   *
+   * Forwards the call to the SessionData instance owned by this
+   * RootMessageHandler and propagates the information via a command to existing
+   * MessageHandlers.
+   */
+  addSessionData(sessionData = {}) {
+    const { moduleName, category, contextDescriptor, values } = sessionData;
+    this._sessionData.addSessionData(
+      moduleName,
+      category,
+      contextDescriptor,
+      values
+    );
+    return this.handleCommand({
+      moduleName,
+      commandName: "_applySessionData",
+      params: {
+        values,
+        category,
+      },
+      destination: {
+        broadcast: true,
+        type: WindowGlobalMessageHandler.type,
+      },
+    });
+  }
+
+  /**
    * Forward the provided command to WINDOW_GLOBAL MessageHandlers via the
    * FrameTransport.
    *
