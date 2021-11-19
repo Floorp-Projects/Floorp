@@ -6,6 +6,10 @@
 
 const EXPORTED_SYMBOLS = ["command"];
 
+const { CONTEXT_DESCRIPTOR_TYPES } = ChromeUtils.import(
+  "chrome://remote/content/shared/messagehandler/MessageHandler.jsm"
+);
+
 const { Module } = ChromeUtils.import(
   "chrome://remote/content/shared/messagehandler/Module.jsm"
 );
@@ -16,6 +20,17 @@ class Command extends Module {
   /**
    * Commands
    */
+
+  testAddSessionData(params) {
+    return this.messageHandler.addSessionData({
+      moduleName: "command",
+      category: "testCategory",
+      contextDescriptor: {
+        type: CONTEXT_DESCRIPTOR_TYPES.ALL,
+      },
+      values: params.values,
+    });
+  }
 
   testRootModule() {
     return "root-value";
