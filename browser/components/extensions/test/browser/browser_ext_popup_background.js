@@ -5,51 +5,16 @@
 
 async function testPanel(browser, standAlone, initial_background) {
   let panel = getPanelForNode(browser);
-  let arrowContent = panel.panelContent;
-  let arrow = panel.shadowRoot.querySelector(".panel-arrow");
 
-  let checkArrow = (background = null) => {
+  let checkBackground = (background = null) => {
     if (background == null || !standAlone) {
-      if (standAlone) {
-        is(
-          getComputedStyle(arrow).fill,
-          "rgb(255, 255, 255)",
-          "Arrow fill should be set to #fff when no background is supplied and popup is standAlone"
-        );
-      } else {
-        let default_background = getComputedStyle(
-          document.documentElement
-        ).getPropertyValue("--arrowpanel-background");
-        // Need to apply the color to a node and get the computed value
-        // to resolve CSS named colors such as -moz-field.
-        let span = document.createElementNS(
-          "http://www.w3.org/1999/xhtml",
-          "span"
-        );
-        span.style.color = default_background;
-        span.style.display = "none";
-        document.documentElement.appendChild(span);
-        let default_background_computed = getComputedStyle(span).color;
-        span.remove();
-
-        is(
-          getComputedStyle(arrow).fill,
-          default_background_computed,
-          "Arrow fill should be the default one"
-        );
-      }
       return;
     }
 
     is(
-      getComputedStyle(arrowContent).backgroundColor,
+      getComputedStyle(panel.panelContent).backgroundColor,
       background,
-      "Arrow content should have correct background"
-    );
-    is(
-      getComputedStyle(arrow).fill,
-      background,
-      "Arrow should have correct background"
+      "Content should have correct background"
     );
   };
 
@@ -66,15 +31,14 @@ async function testPanel(browser, standAlone, initial_background) {
   await new Promise(resolve => setTimeout(resolve, 100));
 
   info("Test that initial background color is applied");
-  checkArrow(initial_background);
+  checkBackground(initial_background);
 
   info("Test that dynamically-changed background color is applied");
   await alterContent(browser, setBackground, "black");
-  checkArrow(await getBackground(browser));
+  checkBackground(await getBackground(browser));
 
   info("Test that non-opaque background color results in default styling");
   await alterContent(browser, setBackground, "rgba(1, 2, 3, .9)");
-  checkArrow(null);
 }
 
 add_task(async function testPopupBackground() {

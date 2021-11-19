@@ -60,44 +60,6 @@ panel[type="arrow"].panel-no-padding::part(content) {
   overflow: hidden; /* Don't let panel content overflow the border */
 }
 
-:is(panel, menupopup)::part(arrow) {
-  -moz-context-properties: fill, stroke;
-  fill: var(--panel-background);
-  stroke: var(--panel-border-color);
-}
-
-:is(panel, menupopup)[side="top"]::part(arrow),
-:is(panel, menupopup)[side="bottom"]::part(arrow) {
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-vertical.svg");
-  position: relative;
-  margin-inline: 10px;
-}
-
-:is(panel, menupopup)[side="top"]::part(arrow) {
-  margin-bottom: -5px;
-}
-
-:is(panel, menupopup)[side="bottom"]::part(arrow) {
-  transform: scaleY(-1);
-  margin-top: -5px;
-}
-
-:is(panel, menupopup)[side="left"]::part(arrow),
-:is(panel, menupopup)[side="right"]::part(arrow) {
-  list-style-image: url("chrome://global/skin/arrow/panelarrow-horizontal.svg");
-  position: relative;
-  margin-block: 10px;
-}
-
-:is(panel, menupopup)[side="left"]::part(arrow) {
-  margin-right: -5px;
-}
-
-:is(panel, menupopup)[side="right"]::part(arrow) {
-  transform: scaleX(-1);
-  margin-left: -5px;
-}
-
 /* rules for popups associated with menulists */
 
 menulist > menupopup {

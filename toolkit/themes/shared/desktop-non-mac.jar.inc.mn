@@ -14,7 +14,6 @@
   skin/classic/global/tabprompts.css                       (../../windows/global/tabprompts.css)
   skin/classic/global/wizard.css                           (../../windows/global/wizard.css)
 
-  skin/classic/global/arrow/panelarrow-horizontal.svg      (../../windows/global/arrow/panelarrow-horizontal.svg)
   skin/classic/global/arrow/panelarrow-vertical.svg        (../../windows/global/arrow/panelarrow-vertical.svg)
 
 * skin/classic/global/dirListing/dirListing.css            (../../windows/global/dirListing/dirListing.css)
