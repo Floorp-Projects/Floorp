@@ -6,11 +6,6 @@
    preffed on.  The bulk of the styling is here in the shared file, but
    there are overrides for each platform in their compacttheme.css files. */
 
-:root:-moz-lwtheme-brighttext {
-  /* !important to override LightweightThemeConsumer.jsm */
-  --autocomplete-popup-background: #2A2A2E !important;
-}
-
 #urlbar {
   --urlbar-box-bgcolor: var(--toolbar-field-focus-background-color);
   --urlbar-box-focus-bgcolor: var(--button-bgcolor);
