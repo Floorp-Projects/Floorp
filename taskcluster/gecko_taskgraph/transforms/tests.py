@@ -1441,6 +1441,39 @@ def split_e10s(config, tasks):
             yield task
 
 
+test_setting_description_schema = Schema(
+    {
+        "platform": {
+            Required("arch"): Any("32", "64", "aarch64", "arm7", "x86_64"),
+            Required("os"): {
+                Required("name"): Any("android", "linux", "macosx", "windows"),
+                Required("version"): str,
+                Optional("build"): str,
+            },
+            Optional("device"): str,
+            Optional("machine"): Any("ref-hw-2017"),
+        },
+        "build": {
+            Required("type"): Any("opt", "debug", "debug-isolated-process"),
+            Any(
+                "asan",
+                "ccov",
+                "clang-trunk",
+                "devedition",
+                "lite",
+                "mingwclang",
+                "shippable",
+                "tsan",
+            ): bool,
+        },
+        "runtime": {Any(*list(TEST_VARIANTS.keys()) + ["1proc"]): bool},
+    },
+    check=False,
+)
+"""Schema test settings must conform to. Validated by
+:py:func:`~test.test_mozilla_central.test_test_setting`"""
+
+
 @transforms.add
 def set_test_setting(config, tasks):
     """A test ``setting`` is the set of configuration that uniquely
