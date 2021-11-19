@@ -268,7 +268,7 @@ bool AndroidHardwareBufferTextureData::Serialize(
   }
 
   aOutDescriptor = SurfaceDescriptorAndroidHardwareBuffer(
-      ipc::FileDescriptor(readerFd.release()), mAndroidHardwareBuffer->mId,
+      ipc::FileDescriptor(std::move(readerFd)), mAndroidHardwareBuffer->mId,
       mSize, mFormat);
   return true;
 }
