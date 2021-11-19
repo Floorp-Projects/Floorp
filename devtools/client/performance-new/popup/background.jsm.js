@@ -666,6 +666,13 @@ async function getResponseForMessage(request, browser) {
       // Ensure the widget is enabled.
       Services.prefs.setBoolPref(POPUP_FEATURE_FLAG_PREF, true);
 
+      // Force the preset to be "firefox-platform" if we enable the menu button
+      // via web channel. If user goes through profiler.firefox.com to enable
+      // it, it means that either user is a platform developer or filing a bug
+      // report for performance engineers to look at.
+      const supportedFeatures = Services.profiler.GetFeatures();
+      changePreset("aboutprofiling", "firefox-platform", supportedFeatures);
+
       // Enable the profiler menu button.
       const { ProfilerMenuButton } = lazy.ProfilerMenuButton();
       ProfilerMenuButton.addToNavbar(ownerDocument);
