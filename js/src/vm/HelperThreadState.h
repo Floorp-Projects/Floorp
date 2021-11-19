@@ -508,19 +508,9 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   JS::OffThreadCompileCallback callback;
   void* callbackData;
 
-  // Holds the final scripts between the invocation of the callback and the
-  // point where FinishOffThreadScript is called, which will destroy the
-  // ParseTask.
-  //
-  // TODO: Remove.
-  GCVector<JSScript*, 1, SystemAllocPolicy> scripts;
-
   // For the multi-decode stencil case, holds onto the set of stencils produced
   // offthread
   mozilla::Vector<RefPtr<JS::Stencil>> stencils;
-
-  // Holds the ScriptSourceObjects generated for the script compilation.
-  GCVector<ScriptSourceObject*, 1, SystemAllocPolicy> sourceObjects;
 
   // The input of the compilation.
   UniquePtr<frontend::CompilationInput> stencilInput_;
