@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   try { b = await a.arrayBuffer() } catch (e) { }
   c = await self.createImageBitmap(new Blob([b]), {'premultiplyAlpha':'none'})
   ctx.createPattern(c, 'repeat-x')
+  document.documentElement.classList.remove("reftest-wait");
 })
 </script>
 </body>
