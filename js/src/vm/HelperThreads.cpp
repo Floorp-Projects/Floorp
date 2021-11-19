@@ -637,18 +637,21 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
   stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
-
-  if (stencilInput_) {
-    extensibleStencil_ = frontend::CompileGlobalScriptToExtensibleStencil(
-        cx, *stencilInput_, data, scopeKind);
+  if (!stencilInput_) {
+    return;
   }
 
-  if (extensibleStencil_) {
-    frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
-    if (!frontend::PrepareForInstantiate(cx, *stencilInput_, borrowingStencil,
-                                         gcOutput_)) {
-      extensibleStencil_ = nullptr;
-    }
+  extensibleStencil_ = frontend::CompileGlobalScriptToExtensibleStencil(
+      cx, *stencilInput_, data, scopeKind);
+
+  if (!extensibleStencil_) {
+    return;
+  }
+
+  frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
+  if (!frontend::PrepareForInstantiate(cx, *stencilInput_, borrowingStencil,
+                                       gcOutput_)) {
+    extensibleStencil_.reset();
   }
 }
 
@@ -677,11 +680,12 @@ void CompileToStencilTask<Unit>::parse(JSContext* cx) {
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
   stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
-
-  if (stencilInput_) {
-    extensibleStencil_ = frontend::CompileGlobalScriptToExtensibleStencil(
-        cx, *stencilInput_, data, scopeKind);
+  if (!stencilInput_) {
+    return;
   }
+
+  extensibleStencil_ = frontend::CompileGlobalScriptToExtensibleStencil(
+      cx, *stencilInput_, data, scopeKind);
 }
 
 bool ParseTask::instantiateStencils(JSContext* cx) {
@@ -728,18 +732,20 @@ void ModuleParseTask<Unit>::parse(JSContext* cx) {
   options.setModule();
 
   stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
-
-  if (stencilInput_) {
-    extensibleStencil_ =
-        frontend::ParseModuleToExtensibleStencil(cx, *stencilInput_, data);
+  if (!stencilInput_) {
+    return;
   }
 
-  if (extensibleStencil_) {
-    frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
-    if (!frontend::PrepareForInstantiate(cx, *stencilInput_, borrowingStencil,
-                                         gcOutput_)) {
-      extensibleStencil_ = nullptr;
-    }
+  extensibleStencil_ =
+      frontend::ParseModuleToExtensibleStencil(cx, *stencilInput_, data);
+  if (!extensibleStencil_) {
+    return;
+  }
+
+  frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
+  if (!frontend::PrepareForInstantiate(cx, *stencilInput_, borrowingStencil,
+                                       gcOutput_)) {
+    extensibleStencil_.reset();
   }
 }
 
