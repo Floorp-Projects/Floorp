@@ -160,7 +160,26 @@ var CrashManager = function(options) {
 };
 
 CrashManager.prototype = Object.freeze({
-#includesubst @OBJDIR@/GeckoProcessTypes_CrashManager_map.js
+  // A crash in the main process.
+  PROCESS_TYPE_MAIN: "main",
+
+  // A crash in a content process.
+  PROCESS_TYPE_CONTENT: "content",
+
+  // A crash in a Gecko media plugin process.
+  PROCESS_TYPE_GMPLUGIN: "gmplugin",
+
+  // A crash in the GPU process.
+  PROCESS_TYPE_GPU: "gpu",
+
+  // A crash in the VR process.
+  PROCESS_TYPE_VR: "vr",
+
+  // A crash in the RDD process.
+  PROCESS_TYPE_RDD: "rdd",
+
+  // A crash in the socket process.
+  PROCESS_TYPE_SOCKET: "socket",
 
   // A real crash.
   CRASH_TYPE_CRASH: "crash",
@@ -452,56 +471,19 @@ CrashManager.prototype = Object.freeze({
         deferred.resolve();
       }
 
+      // Send a telemetry ping for each non-main process crash
       if (
-        this.isValidProcessType(processType) && this.isPingAllowed(processType)
+        processType === this.PROCESS_TYPE_CONTENT ||
+        processType === this.PROCESS_TYPE_GPU ||
+        processType === this.PROCESS_TYPE_VR ||
+        processType === this.PROCESS_TYPE_RDD ||
+        processType === this.PROCESS_TYPE_SOCKET
       ) {
         this._sendCrashPing(id, processType, date, metadata);
       }
     })();
 
     return promise;
-  },
-
-  /**
-   * Check that the processType parameter is a valid one:
-   *  - it is a string
-   *  - it is listed in this.processTypes
-   *
-   * @param processType (string) Process type to evaluate
-   *
-   * @return boolean True or false depending whether it is a legit one
-   */
-  isValidProcessType(processType) {
-    if (typeof(processType) !== "string") {
-      return false;
-    }
-
-    for (const pt of Object.values(this.processTypes)) {
-      if (pt === processType) {
-        return true;
-      }
-    }
-
-    return false;
-  },
-
-  /**
-   * Check that processType is allowed to send a ping
-   *
-   * @param processType (string) Process type to check for
-   *
-   * @return boolean True or False depending on whether ping is allowed
-   **/
-  isPingAllowed(processType) {
-#includesubst @OBJDIR@/GeckoProcessTypes_CrashManager_pings.js
-
-    // Should not even reach this because of isValidProcessType() but just in
-    // case we try to be cautious
-    if (!(processType in processPings)) {
-      return false;
-    }
-
-    return processPings[processType];
   },
 
   /**
@@ -745,7 +727,7 @@ CrashManager.prototype = Object.freeze({
         let crashID = lines[0];
         let metadata = JSON.parse(lines[1]);
         store.addCrash(
-          this.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT],
+          this.PROCESS_TYPE_MAIN,
           this.CRASH_TYPE_CRASH,
           crashID,
           date,
@@ -756,7 +738,7 @@ CrashManager.prototype = Object.freeze({
           // If CrashPingUUID is not present then a ping was not generated
           // by the crashreporter for this crash so we need to send one from
           // here.
-          this._sendCrashPing(crashID, this.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT], date, metadata);
+          this._sendCrashPing(crashID, this.PROCESS_TYPE_MAIN, date, metadata);
         }
 
         break;
@@ -765,7 +747,7 @@ CrashManager.prototype = Object.freeze({
         if (lines.length == 3) {
           let [crashID, result, remoteID] = lines;
           store.addCrash(
-            this.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT],
+            this.PROCESS_TYPE_MAIN,
             this.CRASH_TYPE_CRASH,
             crashID,
             date
@@ -1304,7 +1286,7 @@ CrashStore.prototype = Object.freeze({
 
       if (
         count > this.HIGH_WATER_DAILY_THRESHOLD &&
-        processType != CrashManager.prototype.processTypes[Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT]
+        processType != CrashManager.prototype.PROCESS_TYPE_MAIN
       ) {
         return null;
       }
@@ -1369,12 +1351,6 @@ CrashStore.prototype = Object.freeze({
     return true;
   },
 
-  /**
-   * @param processType (string) One of the PROCESS_TYPE constants.
-   * @param crashType (string) One of the CRASH_TYPE constants.
-   *
-   * @return array of crashes
-   */
   getCrashesOfType(processType, crashType) {
     let crashes = [];
     for (let crash of this.crashes) {
