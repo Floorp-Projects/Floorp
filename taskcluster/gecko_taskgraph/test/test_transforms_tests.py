@@ -4,6 +4,8 @@
 Tests for the 'tests.py' transforms
 """
 
+import hashlib
+import json
 from functools import partial
 
 import mozunit
@@ -207,6 +209,11 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
     ),
 )
 def test_set_test_setting(run_transform, task, expected):
+    # add hash to 'expected'
+    expected["_hash"] = hashlib.sha256(
+        json.dumps(expected, sort_keys=True).encode("utf-8")
+    ).hexdigest()[:12]
+
     task = list(run_transform(test_transforms.set_test_setting, task))[0]
     assert "test-setting" in task
     assert task["test-setting"] == expected

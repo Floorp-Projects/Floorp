@@ -19,11 +19,14 @@ for example - use `all_tests.py` instead.
 
 
 import copy
+import hashlib
+import json
 import logging
 import re
 
 import jsone
 from mozbuild.schedules import INCLUSIVE_COMPONENTS
+from mozbuild.util import ReadOnlyDict
 from taskgraph.util.yaml import load_yaml
 from voluptuous import (
     Any,
@@ -1443,6 +1446,7 @@ def split_e10s(config, tasks):
 
 test_setting_description_schema = Schema(
     {
+        Required("_hash"): str,
         "platform": {
             Required("arch"): Any("32", "64", "aarch64", "arm7", "x86_64"),
             Required("os"): {
@@ -1604,7 +1608,12 @@ def set_test_setting(config, tasks):
             for variant in unittest_variant.split("+"):
                 setting["runtime"][variant] = True
 
-        task["test-setting"] = setting
+        # add a hash of the setting object for easy comparisons
+        setting["_hash"] = hashlib.sha256(
+            json.dumps(setting, sort_keys=True).encode("utf-8")
+        ).hexdigest()[:12]
+
+        task["test-setting"] = ReadOnlyDict(**setting)
         yield task
 
 
