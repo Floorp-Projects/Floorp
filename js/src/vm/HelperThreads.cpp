@@ -551,6 +551,8 @@ bool ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options) {
 
 void ParseTask::activate(JSRuntime* rt) { rt->addParseTaskRef(); }
 
+void ParseTask::deactivate(JSRuntime* rt) { rt->decParseTaskRef(); }
+
 ParseTask::~ParseTask() = default;
 
 void ParseTask::trace(JSTracer* trc) {
@@ -1799,10 +1801,6 @@ bool GlobalHelperThreadState::canStartGCParallelTask(
                               maxGCParallelThreads(lock), lock);
 }
 
-static void LeaveParseTaskZone(JSRuntime* rt, ParseTask* task) {
-  rt->decParseTaskRef();
-}
-
 ParseTask* GlobalHelperThreadState::removeFinishedParseTask(
     JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token) {
   // The token is really a ParseTask* which should be in the finished list.
@@ -2091,7 +2089,7 @@ void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
     if (task == worklist[i]) {
       MOZ_ASSERT(task->kind == kind);
       MOZ_ASSERT(task->runtimeMatches(rt));
-      LeaveParseTaskZone(rt, task);
+      task->deactivate(rt);
       HelperThreadState().remove(worklist, &i);
       return;
     }
@@ -2131,7 +2129,7 @@ void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
 void GlobalHelperThreadState::destroyParseTask(JSRuntime* rt,
                                                ParseTask* parseTask) {
   MOZ_ASSERT(!parseTask->isInList());
-  LeaveParseTaskZone(rt, parseTask);
+  parseTask->deactivate(rt);
   js_delete(parseTask);
 }
 
