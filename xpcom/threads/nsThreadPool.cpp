@@ -386,6 +386,9 @@ nsThreadPool::Shutdown() {
   nsCOMPtr<nsIThreadPoolListener> listener;
   {
     MutexAutoLock lock(mMutex);
+    if (mShutdown) {
+      return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+    }
     mShutdown = true;
     mEventsAvailable.NotifyAll();
 
@@ -437,6 +440,9 @@ nsThreadPool::ShutdownWithTimeout(int32_t aTimeoutMs) {
   nsCOMPtr<nsIThreadPoolListener> listener;
   {
     MutexAutoLock lock(mMutex);
+    if (mShutdown) {
+      return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+    }
     mShutdown = true;
     mEventsAvailable.NotifyAll();
 
