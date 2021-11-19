@@ -71,7 +71,7 @@
     <string name="private_browsing_title">Jo binne yn in priveesesje</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_placeholder_description_2">%1$s wisket jo syk- en browserskiednis sa gau as jo de tapassing ôfslute of alle priveeljepblêden slute. Hoewol dit jo net anonym makket foar websites of jo ynternetprovider, makket dit it makliker om wat jo online dogge privee te hâlden tsjinoer oaren dy\'t dit apparaat brûke.</string>
+    <string name="private_browsing_placeholder_description_2">%1$s wisket jo syk- en browserskiednis sa gau as jo de tapassing ôfslute of alle priveeljepblêden slute. Hoewol dit jo net anonym makket foar websites of jo ynternetprovider, makket dit it makliker om wat jo online dogge privee te hâlden tsjinoer oaren dy’t dit apparaat brûke.</string>
     <string name="private_browsing_common_myths">
        
        Faaks hearde myten oer priveenavigaasje
@@ -111,14 +111,14 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">Slute</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message">Ljepblêden dy\'t jo twa wiken net besjoen hawwe, wurde hjirhinne ferpleatst.</string>
+    <string name="tab_tray_inactive_onboarding_message">Ljepblêden dy’t jo twa wiken net besjoen hawwe, wurde hjirhinne ferpleatst.</string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
     <string name="tab_tray_inactive_onboarding_button_text">Utskeakelje yn ynstellingen</string>
 
     <!-- Text for title for the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_title">Automatysk slute nei in moanne?</string>
     <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
-    <string name="tab_tray_inactive_auto_close_body">Firefox kin ljepblêden dy\'t jo de ôfrûne moanne net besjoen hawwe slute.</string>
+    <string name="tab_tray_inactive_auto_close_body">Firefox kin ljepblêden dy’t jo de ôfrûne moanne net besjoen hawwe slute.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">Slute</string>
     <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
@@ -299,7 +299,7 @@
     <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_title_2">Wat is der nij yn Firefox</string>
     <!-- Onboarding home screen dialog description text. -->
-    <string name="onboarding_home_screen_description_2">It is no ienfâldiger fierder te gean wêr\'t jo bleaun wiene.</string>
+    <string name="onboarding_home_screen_description_2">It is no ienfâldiger fierder te gean wêr’t jo bleaun wiene.</string>
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_section_home_title_2">Personalisearre Firefox-startside</string>
     <!-- Onboarding home screen dialog description text for the home section. -->
@@ -314,7 +314,7 @@
     <string name="onboarding_home_screen_section_useful_history_description_2">Besjoch jo lêste sykopdrachten opnij fan jo startside en ljepblêden ôf.</string>
 
     <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
-    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Jo personalisearre Firefox-startside makket it no ienfâldiger om fierder te gean wêr\'t jo bleaun wiene. Fyn jo resinte ljepblêden, blêdwizers, en sykresultaten.</string>
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Jo personalisearre Firefox-startside makket it no ienfâldiger om fierder te gean wêr’t jo bleaun wiene. Fyn jo resinte ljepblêden, blêdwizers, en sykresultaten.</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -547,7 +547,7 @@
     <!-- Preference switch for tracking protection -->
     <string name="preferences_tracking_protection">Beskerming tsjin folgjen</string>
     <!-- Preference switch description for tracking protection -->
-    <string name="preferences_tracking_protection_description">Ynhâld en skripts dy\'t jo online folgje blokkearje</string>
+    <string name="preferences_tracking_protection_description">Ynhâld en skripts dy’t jo online folgje blokkearje</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Utsûnderingen</string>
     <!-- Preference description for tracking protection exceptions -->
@@ -743,7 +743,7 @@
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
     <string name="preferences_inactive_tabs">Alde ljepblêden nei ynaktyf ferpleatse</string>
     <!-- Title of inactive tabs preference -->
-    <string name="preferences_inactive_tabs_title">Ljepblêden dy\'t jo twa wiken net besjoen hawwe, wurde ferpleatst nei de seksje Ynaktyf.</string>
+    <string name="preferences_inactive_tabs_title">Ljepblêden dy’t jo twa wiken net besjoen hawwe, wurde ferpleatst nei de seksje Ynaktyf.</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -1098,7 +1098,7 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">Kolleksjesmenu</string>
     <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description2">Sammelje de saken dy\'t wichtich foar jo binne.\nGroepearje fergelykbere sykopdrachten, websites en ljepblêden foar snelle tagong letter.</string>
+    <string name="no_collections_description2">Sammelje de saken dy’t wichtich foar jo binne.\nGroepearje fergelykbere sykopdrachten, websites en ljepblêden foar snelle tagong letter.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">Ljepblêden selektearje</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -1264,7 +1264,7 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL kopiearre</string>
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text_1">Dit is foarbyldtekst. Hjir wurdt mei toand hoe\'t tekst werjûn wurdt, wannear\'t jo mei dizze ynstelling de ôfmjitting fergrutsje of ferlytsje.</string>
+    <string name="accessibility_text_size_sample_text_1">Dit is foarbyldtekst. Hjir wurdt mei toand hoe’t tekst werjûn wurdt, wannear’t jo mei dizze ynstelling de ôfmjitting fergrutsje of ferlytsje.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Tekst op websites grutter of lytser meitsje</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
@@ -1309,9 +1309,9 @@
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Navigaasjegegevens fuortsmite by ôfsluten</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">Smyt automatysk navigaasjegegevens fuort wannear\'t jo yn it haadmenu ‘Ofslute’ selektearje</string>
+    <string name="preference_summary_delete_browsing_data_on_quit">Smyt automatysk navigaasjegegevens fuort wannear’t jo yn it haadmenu ‘Ofslute’ selektearje</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit_2">Smyt automatysk navigaasjegegevens fuort wannear\'t jo yn it haadmenu ‘Ofslute’ selektearje</string>
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Smyt automatysk navigaasjegegevens fuort wannear’t jo yn it haadmenu ‘Ofslute’ selektearje</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Ofslute</string>
 
@@ -1388,7 +1388,7 @@
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
     <string name="onboarding_firefox_account_automatic_signin_failed">Oanmelden mislearre</string>
     <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_3">Privacy dy\'t altyd oan stiet</string>
+    <string name="onboarding_tracking_protection_header_3">Privacy dy’t altyd oan stiet</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
     <string name="onboarding_tracking_protection_description_3">Firefox soarget der automatysk foar dat bedriuwen jo net stikem folgje op ynternet.</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
@@ -1483,7 +1483,7 @@
     <!-- Title for the description of enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_title">Sneup sûnder folge te wurden</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Hâld jo gegevens foar josels. %s beskermet jo tsjin in protte fan de meast foarkommende trackers dy\'t folgje wat jo online dogge.</string>
+    <string name="preference_enhanced_tracking_protection_explanation">Hâld jo gegevens foar josels. %s beskermet jo tsjin in protte fan de meast foarkommende trackers dy’t folgje wat jo online dogge.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Mear ynfo</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1540,7 +1540,7 @@
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Cross-site-trackingcookies</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_description">Blokkearret cookies dy\'t advertinsjenetwurken en analysebedriuwen brûke om jo sneupgegevens op in protte websites te sammeljen.</string>
+    <string name="etp_cookies_description">Blokkearret cookies dy’t advertinsjenetwurken en analysebedriuwen brûke om jo sneupgegevens op in protte websites te sammeljen.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Cryptominers</string>
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
@@ -1548,12 +1548,12 @@
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Fingerprinters</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_description">Foarkomt dat unyk identifisearbere gegevens oer jo apparaat sammele wurde dy\'t brûkt wurde kinne foar folchdoeleinen.</string>
+    <string name="etp_fingerprinters_description">Foarkomt dat unyk identifisearbere gegevens oer jo apparaat sammele wurde dy’t brûkt wurde kinne foar folchdoeleinen.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Folchynhâld</string>
 
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_tracking_content_description">Foarkomt dat eksterne advertinsjes, fideo’s en oare ynhâld dy\'t folchkoade befettet laden wurde. Kin ynfloed hawwe op de funksjonaliteit fan guon websites.</string>
+    <string name="etp_tracking_content_description">Foarkomt dat eksterne advertinsjes, fideo’s en oare ynhâld dy’t folchkoade befettet laden wurde. Kin ynfloed hawwe op de funksjonaliteit fan guon websites.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
     <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">Elke kear as it skyld pears is, hat %s trackers op in website blokkearre. Tik foar mear ynfo.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
@@ -1578,7 +1578,7 @@
     <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_title">Trochliedingstrackers</string>
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_redirect_trackers_description">Wisket cookies dy\'t ynsteld binne troch trochliedingen nei bekende trackingwebsites.</string>
+    <string name="etp_redirect_trackers_description">Wisket cookies dy’t ynsteld binne troch trochliedingen nei bekende trackingwebsites.</string>
 
     <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
          as we use it on the UI to indicate which trackers have been partially unblocked.  -->
@@ -1667,7 +1667,7 @@
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Bewarre oanmeldingen</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
-    <string name="preferences_passwords_saved_logins_description_empty_text">De oanmeldingen dy\'t jo bewarje of syngronisearje mei %s wurde hjir toand.</string>
+    <string name="preferences_passwords_saved_logins_description_empty_text">De oanmeldingen dy’t jo bewarje of syngronisearje mei %s wurde hjir toand.</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">Mear ynfo oer Sync.</string>
     <!-- Preference to access list of login exceptions that we never save logins for -->
@@ -1743,7 +1743,7 @@
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Ynzoome op alle websites</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
-    <string name="preference_accessibility_force_enable_zoom_summary">Knipe en ynzoome tastean, sels op websites dy\'t dizze beweging opkeare.</string>
+    <string name="preference_accessibility_force_enable_zoom_summary">Knipe en ynzoome tastean, sels op websites dy’t dizze beweging opkeare.</string>
 
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Namme (A-Z)</string>
@@ -1870,7 +1870,7 @@
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
     <string name="migration_title">Wolkom by in folslein nij %s</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">In folslein opnij ûntwurpen browser wachtet op jo, mei ferbettere prestaasjes en funksjes dy\'t jo helpe mear online te dwaan.\n\nIn amerijke, wy wurkje %s by mei jo</string>
+    <string name="migration_description">In folslein opnij ûntwurpen browser wachtet op jo, mei ferbettere prestaasjes en funksjes dy’t jo helpe mear online te dwaan.\n\nIn amerijke, wy wurkje %s by mei jo</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
     <string name="migration_updating_app_button_text">%s bywurkje…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
@@ -2020,7 +2020,7 @@
     <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">Automatysk slute nei in moanne?</string>
     <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
-    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox kin ljepblêden dy\'t jo de ôfrûne moanne net besjoen hawwe slute.</string>
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox kin ljepblêden dy’t jo de ôfrûne moanne net besjoen hawwe slute.</string>
     <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">AUTOMATYSK SLUTE YNSKEAKELJE</string>
 
@@ -2036,7 +2036,7 @@
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
     <string name="inactive_tabs_survey_content">Wêrom hawwe jo ynaktive ljepblêden útskeakele?</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
-    <string name="inactive_tabs_survey_do_not_understand">Ik begryp net hoe\'t it wurket</string>
+    <string name="inactive_tabs_survey_do_not_understand">Ik begryp net hoe’t it wurket</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_do_it_myself">Ik wol graach sels âlde ljepblêden opromje</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
@@ -2069,9 +2069,9 @@
 
     <!-- Pocket recommended stories -->
     <!-- Header text for a section on the home screen. -->
-    <string moz:removedIn="94" name="pocket_stories_header" tools:ignore="UnusedResources">Ferhalen dy\'t ta neitinken stimme</string>
+    <string moz:removedIn="94" name="pocket_stories_header" tools:ignore="UnusedResources">Ferhalen dy’t ta neitinken stimme</string>
     <!-- Header text for a section on the home screen. -->
-    <string name="pocket_stories_header_1">Ferhalen dy\'t ta neitinken stimme</string>
+    <string name="pocket_stories_header_1">Ferhalen dy’t ta neitinken stimme</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_categories_header">Ferhalen op ûnderwerp</string>
     <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
