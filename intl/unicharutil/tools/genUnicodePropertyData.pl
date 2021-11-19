@@ -494,6 +494,13 @@ for (my $i = 0; $i < scalar @scriptCodeToName; ++$i) {
 print HEADER "\n  NUM_SCRIPT_CODES = ", scalar @scriptCodeToName, ",\n";
 print HEADER "\n  INVALID = -1\n";
 print HEADER "};\n";
+print HEADER <<__END;
+
+// mozilla::intl::ScriptExtensionVector assumes sizeof(Script) is equal to
+// sizeof(int16_t), so if the data type of Script is changed then
+// ScriptExtensionVector needs to be updated accordingly.
+static_assert(sizeof(Script) == sizeof(int16_t));
+__END
 print HEADER "} // namespace unicode\n";
 print HEADER "} // namespace mozilla\n\n";
 

@@ -26,6 +26,7 @@ EXPORTS.mozilla.intl = [
     "src/NumberRangeFormat.h",
     "src/PluralRules.h",
     "src/RelativeTimeFormat.h",
+    "src/Script.h",
     "src/String.h",
     "src/TimeZone.h",
 ]
@@ -54,6 +55,7 @@ UNIFIED_SOURCES += [
     "src/NumberRangeFormat.cpp",
     "src/PluralRules.cpp",
     "src/RelativeTimeFormat.cpp",
+    "src/Script.cpp",
     "src/String.cpp",
     "src/TimeZone.cpp",
 ]

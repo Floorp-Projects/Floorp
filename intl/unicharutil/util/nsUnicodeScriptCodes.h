@@ -11,7 +11,7 @@
  */
 
 /*
- * Created on Fri Oct 29 09:00:15 2021 from UCD data files with version info:
+ * Created on Thu Nov 18 12:50:48 2021 from UCD data files with version info:
  *
 
 # Unicode Character Database
@@ -263,6 +263,11 @@ enum class Script : int16_t {
 
   INVALID = -1
 };
+
+// mozilla::intl::ScriptExtensionVector assumes sizeof(Script) is equal to
+// sizeof(int16_t), so if the data type of Script is changed then
+// ScriptExtensionVector needs to be updated accordingly.
+static_assert(sizeof(Script) == sizeof(int16_t));
 } // namespace unicode
 } // namespace mozilla
 
