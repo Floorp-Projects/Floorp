@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<body>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  cnv = document.createElement('canvas')
+  ctx = cnv.getContext('2d')
+  try { a = await fetch('../test/image_green-16x16.png') } catch (e) { }
+  try { b = await a.arrayBuffer() } catch (e) { }
+  c = await self.createImageBitmap(new Blob([b]), {'premultiplyAlpha':'none'})
+  ctx.createPattern(c, 'repeat-x')
+})
+</script>
+</body>
+</html>

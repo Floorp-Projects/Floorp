@@ -57,3 +57,4 @@ load 1549853.html
 load 1551745.html
 load 1569648.html
 skip-if(!winWidget||!isDebugBuild) pref(layers.gpu-process.crash-also-crashes-browser,true) load 1654477.html
+load 1739454-1.html
