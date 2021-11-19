@@ -1090,7 +1090,6 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     BorrowingCompilationStencil borrowingStencil(compilationState);
 
     if (input.source->hasEncoder()) {
-      MOZ_ASSERT(!js::UseOffThreadParseGlobal());
       if (!input.source->addDelazificationToIncrementalEncoding(
               cx, borrowingStencil)) {
         return false;

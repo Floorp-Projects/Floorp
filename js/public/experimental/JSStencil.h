@@ -74,8 +74,6 @@ extern JS_PUBLIC_API already_AddRefed<Stencil> CompileModuleScriptToStencil(
 // Off-thread compilation uses the normal off-thread APIs but uses a special
 // finish method to avoid automatic instantiation. This is used for both global
 // and modules compiles.
-//
-// NOTE: CompileOptions::useOffThreadParseGlobal must be false.
 extern JS_PUBLIC_API already_AddRefed<Stencil> FinishOffThreadStencil(
     JSContext* cx, JS::OffThreadToken* token);
 
