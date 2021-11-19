@@ -18,10 +18,6 @@ struct OffThreadTask {
   OffThreadTask() : monitor(js::mutexid::ShellOffThreadState), token(nullptr) {}
 
   OffThreadToken* waitUntilDone(JSContext* cx) {
-    if (js::OffThreadParsingMustWaitForGC(cx->runtime())) {
-      js::gc::FinishGC(cx);
-    }
-
     AutoLockMonitor alm(monitor);
     while (!token) {
       alm.wait();

@@ -256,8 +256,7 @@ void JSRuntime::destroyRuntime() {
 
   if (gcInitialized) {
     /*
-     * Finish any in-progress GCs first. This ensures the parseWaitingOnGC
-     * list is empty in CancelOffThreadParses.
+     * Finish any in-progress GCs first.
      */
     JSContext* cx = mainContextFromOwnThread();
     if (JS::IsIncrementalGCInProgress(cx)) {

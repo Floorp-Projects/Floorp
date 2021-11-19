@@ -890,12 +890,6 @@ void js::WaitForOffThreadParses(JSRuntime* rt) {
 void js::CancelOffThreadParses(JSRuntime* rt) {
   AutoLockHelperThreadState lock;
 
-#ifdef DEBUG
-  for (const auto& task : HelperThreadState().parseWaitingOnGC(lock)) {
-    MOZ_ASSERT(!task->runtimeMatches(rt));
-  }
-#endif
-
   // Instead of forcibly canceling pending parse tasks, just wait for all
   // scheduled and in progress ones to complete. Otherwise the final GC may not
   // collect everything due to zones being used off thread.
@@ -926,15 +920,6 @@ void js::CancelOffThreadParses(JSRuntime* rt) {
     MOZ_ASSERT(!task->runtimeMatches(rt));
   }
 #endif
-}
-
-bool js::OffThreadParsingMustWaitForGC(JSRuntime* rt) {
-  // Off thread parsing can't occur during incremental collections on the
-  // atoms zone, to avoid triggering barriers. (Outside the atoms zone, the
-  // compilation will use a new zone that is never collected.) If an
-  // atoms-zone GC is in progress, hold off on executing the parse task until
-  // the atoms-zone GC completes (see EnqueuePendingParseTasksAfterGC).
-  return rt->activeGCInAtomsZone();
 }
 
 static bool QueueOffThreadParseTask(JSContext* cx, UniquePtr<ParseTask> task) {
@@ -1099,28 +1084,6 @@ JS::OffThreadToken* js::StartOffThreadDecodeMultiStencils(
   }
 
   return StartOffThreadParseTask(cx, std::move(task), options);
-}
-
-void js::EnqueuePendingParseTasksAfterGC(JSRuntime* rt) {
-  MOZ_ASSERT(!OffThreadParsingMustWaitForGC(rt));
-
-  AutoLockHelperThreadState lock;
-
-  GlobalHelperThreadState::ParseTaskVector& waiting =
-      HelperThreadState().parseWaitingOnGC(lock);
-  for (size_t i = 0; i < waiting.length(); i++) {
-    if (!waiting[i]->runtimeMatches(rt)) {
-      continue;
-    }
-
-    {
-      AutoEnterOOMUnsafeRegion oomUnsafe;
-      if (!HelperThreadState().submitTask(rt, std::move(waiting[i]), lock)) {
-        oomUnsafe.crash("EnqueuePendingParseTasksAfterGC");
-      }
-    }
-    HelperThreadState().remove(waiting, &i);
-  }
 }
 
 #ifdef DEBUG
@@ -1437,7 +1400,6 @@ void GlobalHelperThreadState::addSizeOfIncludingThis(
       promiseHelperTasks_.sizeOfExcludingThis(mallocSizeOf) +
       parseWorklist_.sizeOfExcludingThis(mallocSizeOf) +
       parseFinishedList_.sizeOfExcludingThis(mallocSizeOf) +
-      parseWaitingOnGC_.sizeOfExcludingThis(mallocSizeOf) +
       compressionPendingList_.sizeOfExcludingThis(mallocSizeOf) +
       compressionWorklist_.sizeOfExcludingThis(mallocSizeOf) +
       compressionFinishedList_.sizeOfExcludingThis(mallocSizeOf) +
@@ -1450,9 +1412,6 @@ void GlobalHelperThreadState::addSizeOfIncludingThis(
     htStats.parseTask += task->sizeOfIncludingThis(mallocSizeOf);
   }
   for (auto task : parseFinishedList_) {
-    htStats.parseTask += task->sizeOfIncludingThis(mallocSizeOf);
-  }
-  for (const auto& task : parseWaitingOnGC_) {
     htStats.parseTask += task->sizeOfIncludingThis(mallocSizeOf);
   }
 
@@ -2126,18 +2085,6 @@ void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
 
   ParseTask* task = static_cast<ParseTask*>(token);
 
-  // Check pending queues to see if we can simply remove the task.
-  GlobalHelperThreadState::ParseTaskVector& waitingOnGC =
-      HelperThreadState().parseWaitingOnGC(lock);
-  for (size_t i = 0; i < waitingOnGC.length(); i++) {
-    if (task == waitingOnGC[i]) {
-      MOZ_ASSERT(task->kind == kind);
-      MOZ_ASSERT(task->runtimeMatches(rt));
-      HelperThreadState().remove(waitingOnGC, &i);
-      return;
-    }
-  }
-
   GlobalHelperThreadState::ParseTaskVector& worklist =
       HelperThreadState().parseWorklist(lock);
   for (size_t i = 0; i < worklist.length(); i++) {
@@ -2428,9 +2375,6 @@ void GlobalHelperThreadState::trace(JSTracer* trc) {
     parseTask->trace(trc);
   }
   for (auto parseTask : parseFinishedList_) {
-    parseTask->trace(trc);
-  }
-  for (auto& parseTask : parseWaitingOnGC_) {
     parseTask->trace(trc);
   }
 }

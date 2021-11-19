@@ -18,10 +18,10 @@
 
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 #include "js/experimental/JSStencil.h"  // JS::CompileToStencilOffThread, JS::FinishOffThreadCompileToStencil
-#include "js/SourceText.h"  // JS::SourceText
-#include "vm/HelperThreadState.h"  // js::OffThreadParsingMustWaitForGC, js::StartOffThreadParseScript
-#include "vm/JSContext.h"  // JSContext
-#include "vm/Runtime.h"    // js::CanUseExtraThreads
+#include "js/SourceText.h"         // JS::SourceText
+#include "vm/HelperThreadState.h"  // js::StartOffThreadParseScript
+#include "vm/JSContext.h"          // JSContext
+#include "vm/Runtime.h"            // js::CanUseExtraThreads
 
 using namespace js;
 
