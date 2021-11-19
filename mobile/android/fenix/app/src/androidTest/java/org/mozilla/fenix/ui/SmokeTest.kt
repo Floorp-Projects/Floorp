@@ -1009,14 +1009,19 @@ class SmokeTest {
         }.enterURLAndEnterToBrowser(website.url) {
             mDevice.waitForIdle()
         }.openTabDrawer {
-            verifyPrivateModeSelected()
-            verifyNormalBrowsingButtonIsDisplayed()
-            verifyExistingTabList()
-            verifyExistingOpenTabs("Test_Page_1")
-            verifyCloseTabsButton("Test_Page_1")
-            verifyOpenedTabThumbnail()
+            verifyNormalBrowsingButtonIsSelected(false)
+            verifyPrivateBrowsingButtonIsSelected(true)
+            verifySyncedTabsButtonIsSelected(false)
             verifyTabTrayOverflowMenu(true)
+            verifyTabsTrayCounter()
+            verifyExistingTabList()
+            verifyExistingOpenTabs(website.title)
+            verifyCloseTabsButton(website.title)
+            verifyOpenedTabThumbnail()
             verifyPrivateBrowsingNewTabButton()
+        }.openTab(website.title) {
+            verifyUrl(website.url.toString())
+            verifyTabCounter("1")
         }
     }
 
