@@ -387,7 +387,6 @@ class GlobalHelperThreadState {
       StartEncoding startEncoding = StartEncoding::No);
   UniquePtr<frontend::CompilationStencil> finishCompileToStencilTask(
       JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token);
-  bool generateLCovSources(JSContext* cx, ParseTask* parseTask);
   bool finishMultiParseTask(JSContext* cx, ParseTaskKind kind,
                             JS::OffThreadToken* token,
                             mozilla::Vector<RefPtr<JS::Stencil>>* stencils);

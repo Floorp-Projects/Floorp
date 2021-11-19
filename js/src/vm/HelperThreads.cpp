@@ -1851,52 +1851,6 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
   return std::move(parseTask.get());
 }
 
-// Generate initial LCovSources for generated inner functions.
-bool GlobalHelperThreadState::generateLCovSources(JSContext* cx,
-                                                  ParseTask* parseTask) {
-  Rooted<GCVector<JSScript*>> workList(cx, GCVector<JSScript*>(cx));
-
-  if (!workList.appendAll(parseTask->scripts)) {
-    return false;
-  }
-
-  RootedScript elem(cx);
-  while (!workList.empty()) {
-    elem = workList.popCopy();
-
-    // Initialize LCov data for the script.
-    if (!coverage::InitScriptCoverage(cx, elem)) {
-      return false;
-    }
-
-    // Add inner-function scripts to the work-list.
-    for (JS::GCCellPtr gcThing : elem->gcthings()) {
-      if (!gcThing.is<JSObject>()) {
-        continue;
-      }
-      JSObject* obj = &gcThing.as<JSObject>();
-
-      if (!obj->is<JSFunction>()) {
-        continue;
-      }
-      JSFunction* fun = &obj->as<JSFunction>();
-
-      // Ignore asm.js functions
-      if (!fun->isInterpreted()) {
-        continue;
-      }
-
-      MOZ_ASSERT(fun->hasBytecode(),
-                 "No lazy scripts exist when collecting coverage");
-      if (!workList.append(fun->nonLazyScript())) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
-
 JSScript* GlobalHelperThreadState::finishSingleParseTask(
     JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token,
     StartEncoding startEncoding /* = StartEncoding::No */) {
