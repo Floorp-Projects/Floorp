@@ -532,9 +532,6 @@ ParseTask::ParseTask(ParseTaskKind kind, JSContext* cx,
   // Note that |cx| is the main thread context here but the parse task will
   // run with a different, helper thread, context.
   MOZ_ASSERT(!cx->isHelperThreadContext());
-
-  MOZ_ALWAYS_TRUE(scripts.reserve(scripts.capacity()));
-  MOZ_ALWAYS_TRUE(sourceObjects.reserve(sourceObjects.capacity()));
 }
 
 bool ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options) {
@@ -560,9 +557,6 @@ void ParseTask::trace(JSTracer* trc) {
     return;
   }
 
-  scripts.trace(trc);
-  sourceObjects.trace(trc);
-
   if (stencilInput_) {
     stencilInput_->trace(trc);
   }
@@ -583,9 +577,7 @@ size_t ParseTask::sizeOfExcludingThis(
   // TODO: 'errors' requires adding support to `CompileError`. They are not
   // common though.
 
-  return options.sizeOfExcludingThis(mallocSizeOf) +
-         scripts.sizeOfExcludingThis(mallocSizeOf) +
-         sourceObjects.sizeOfExcludingThis(mallocSizeOf) + stencilInputSize +
+  return options.sizeOfExcludingThis(mallocSizeOf) + stencilInputSize +
          stencilSize + extensibleStencilSize +
          gcOutput_.sizeOfExcludingThis(mallocSizeOf);
 }
@@ -709,21 +701,6 @@ bool ParseTask::instantiateStencils(JSContext* cx) {
                                            gcOutput_);
   }
 
-  // Whatever happens to the top-level script compilation (even if it fails),
-  // we must finish initializing the SSO.  This is because there may be valid
-  // inner scripts observable by the debugger which reference the partially-
-  // initialized SSO.
-  if (gcOutput_.sourceObject) {
-    sourceObjects.infallibleAppend(gcOutput_.sourceObject);
-  }
-
-  if (result) {
-    MOZ_ASSERT(gcOutput_.script);
-    MOZ_ASSERT_IF(gcOutput_.module,
-                  gcOutput_.module->script() == gcOutput_.script);
-    scripts.infallibleAppend(gcOutput_.script);
-  }
-
   return result;
 }
 
@@ -777,9 +754,6 @@ ScriptDecodeTask::ScriptDecodeTask(JSContext* cx,
 
 void ScriptDecodeTask::parse(JSContext* cx) {
   MOZ_ASSERT(cx->isHelperThreadContext());
-
-  RootedScript resultScript(cx);
-  Rooted<ScriptSourceObject*> sourceObject(cx);
 
   stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
   if (!stencilInput_) {
@@ -1826,11 +1800,6 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
   Rooted<UniquePtr<ParseTask>> parseTask(
       cx, removeFinishedParseTask(cx, kind, token));
 
-  // GC things should be allocated in finishSingleParseTask, after
-  // calling finishParseTaskCommon.
-  MOZ_ASSERT(parseTask->scripts.length() == 0);
-  MOZ_ASSERT(parseTask->sourceObjects.length() == 0);
-
   // Report out of memory errors eagerly, or errors could be malformed.
   if (parseTask->errors.outOfMemory) {
     ReportOutOfMemory(cx);
@@ -1869,8 +1838,7 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
     return nullptr;
   }
 
-  MOZ_RELEASE_ASSERT(parseTask->scripts.length() == 1);
-  script = parseTask->scripts[0];
+  script = parseTask->gcOutput_.script;
 
   // Start the incremental-XDR encoder.
   if (startEncoding == StartEncoding::Yes) {
