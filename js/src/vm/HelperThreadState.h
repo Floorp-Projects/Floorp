@@ -511,10 +511,6 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   // track which one we are associated with.
   JSRuntime* runtime = nullptr;
 
-  // The global object to use while parsing.
-  // TODO: Remove.
-  JSObject* parseGlobal;
-
   // Callback invoked off thread when the parse finishes.
   JS::OffThreadCompileCallback callback;
   void* callbackData;
