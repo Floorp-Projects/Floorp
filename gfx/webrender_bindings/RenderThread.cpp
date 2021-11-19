@@ -480,7 +480,9 @@ void RenderThread::UpdateAndRender(
     const Maybe<gfx::IntSize>& aReadbackSize,
     const Maybe<wr::ImageFormat>& aReadbackFormat,
     const Maybe<Range<uint8_t>>& aReadbackBuffer, bool* aNeedsYFlip) {
-  AUTO_PROFILER_TRACING_MARKER("Paint", "Composite", GRAPHICS);
+  std::string markerName = "Composite #" + std::to_string(AsUint64(aWindowId));
+
+  AUTO_PROFILER_TRACING_MARKER("Paint", markerName.c_str(), GRAPHICS);
   AUTO_PROFILER_LABEL("RenderThread::UpdateAndRender", GRAPHICS);
   MOZ_ASSERT(IsInRenderThread());
   MOZ_ASSERT(aRender || aReadbackBuffer.isNothing());
