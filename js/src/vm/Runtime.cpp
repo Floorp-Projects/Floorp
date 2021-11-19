@@ -156,7 +156,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       offthreadIonCompilationEnabled_(true),
       parallelParsingEnabled_(true),
 #ifdef DEBUG
-      offThreadParsesRunning_(0),
       offThreadParsingBlocked_(false),
 #endif
       autoWritableJitCodeActive_(false),
@@ -188,7 +187,6 @@ JSRuntime::~JSRuntime() {
 
   MOZ_ASSERT(wasmInstances.lock()->empty());
 
-  MOZ_ASSERT(offThreadParsesRunning_ == 0);
   MOZ_ASSERT(!offThreadParsingBlocked_);
 
   MOZ_ASSERT(numRealms == 0);
