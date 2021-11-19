@@ -352,8 +352,7 @@ inline void AtomsTable::tracePinnedAtomsInSet(JSTracer* trc, AtomSet& atoms) {
   }
 }
 
-void AtomsTable::tracePinnedAtoms(JSTracer* trc,
-                                  const AutoAccessAtomsZone& access) {
+void AtomsTable::tracePinnedAtoms(JSTracer* trc) {
   for (size_t i = 0; i < PartitionCount; i++) {
     Partition& part = *partitions[i];
     tracePinnedAtomsInSet(trc, part.atoms);
@@ -363,10 +362,10 @@ void AtomsTable::tracePinnedAtoms(JSTracer* trc,
   }
 }
 
-void js::TraceAtoms(JSTracer* trc, const AutoAccessAtomsZone& access) {
+void js::TraceAtoms(JSTracer* trc) {
   JSRuntime* rt = trc->runtime();
   if (rt->permanentAtomsPopulated()) {
-    rt->atoms().tracePinnedAtoms(trc, access);
+    rt->atoms().tracePinnedAtoms(trc);
   }
 }
 
