@@ -544,6 +544,8 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   bool init(JSContext* cx, const JS::ReadOnlyCompileOptions& options);
 
   void activate(JSRuntime* rt);
+  void deactivate(JSRuntime* rt);
+
   virtual void parse(JSContext* cx) = 0;
   bool instantiateStencils(JSContext* cx);
 
