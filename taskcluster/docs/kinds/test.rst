@@ -128,3 +128,10 @@ function.
 
 The full schema is defined in the
 :py:data:`~gecko_taskgraph.transforms.tests.test_setting_description_schema`.
+
+Setting Hash
+~~~~~~~~~~~~
+
+In addition to the three top-level objects, there is also a ``_hash`` key which
+contains a hash of the rest of the setting object. This is a convenient way for
+consumers to group or compare tasks that run under the same setting.
