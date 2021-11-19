@@ -150,9 +150,6 @@ class GlobalHelperThreadState {
   ParseTaskVector parseWorklist_;
   ParseTaskList parseFinishedList_;
 
-  // Parse tasks waiting for an atoms-zone GC to complete.
-  ParseTaskVector parseWaitingOnGC_;
-
   // Source compression worklist of tasks that we do not yet know can start.
   SourceCompressionTaskVector compressionPendingList_;
 
@@ -304,9 +301,6 @@ class GlobalHelperThreadState {
   }
   ParseTaskList& parseFinishedList(const AutoLockHelperThreadState&) {
     return parseFinishedList_;
-  }
-  ParseTaskVector& parseWaitingOnGC(const AutoLockHelperThreadState&) {
-    return parseWaitingOnGC_;
   }
 
   SourceCompressionTaskVector& compressionPendingList(
