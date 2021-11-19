@@ -530,13 +530,6 @@
   color: inherit;
 }
 
-.tabbrowser-tab[multiselected]:-moz-lwtheme,
-.tabbrowser-tab[visuallyselected=true]:-moz-lwtheme {
-  color: var(--lwt-tab-text, var(--toolbar-color));
-}
-
-/* Selected tab */
-
 .tab-background {
   border-radius: var(--tab-border-radius);
   margin-block: var(--tab-block-margin);
@@ -546,29 +539,16 @@
   margin-top: 0 !important;
 }
 
-#tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background {
-  border: 1px solid var(--tab-line-color, rgba(128,128,142,0.4));
+/* Selected tab */
+
+#tabbrowser-tabs:not([noshadowfortests]) .tab-background:is([selected], [multiselected]) {
+  box-shadow: 0 0 4px rgba(0,0,0,.6);
 }
 
-#TabsToolbar:not([brighttext]) #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background {
-  box-shadow: 0 0 4px rgba(128,128,142,0.5);
-}
-
-/* For themes outside of Light and Dark (which are curated by Mozilla), show a thicker border
-   around the tab to help themes that are dependent on tab_line to show the selected tab. */
-:root:not([lwtheme-mozlightdark]) #TabsToolbar:not([brighttext]) #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background:-moz-lwtheme {
-  border: 1px solid var(--tab-line-color, var(--tabs-border-color, rgba(128,128,142,0.4)));
-  box-shadow: 0 0 4px rgba(128,128,142,0.5);
-}
-
-:root:not([lwtheme-mozlightdark]) #TabsToolbar[brighttext] #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background:-moz-lwtheme {
-  border: 1px solid var(--tab-line-color, var(--tabs-border-color, rgba(128,128,142,0.4)));
-}
-
-.tab-background[multiselected=true],
-.tab-background[selected=true] {
+.tab-background:is([selected], [multiselected]) {
   background-color: var(--tab-selected-bgcolor, var(--toolbar-bgcolor));
   background-image: var(--toolbar-bgimage);
+  background-origin: border-box;
   background-repeat: repeat-x;
 }
 
@@ -577,12 +557,20 @@
   opacity: .9;
 }
 
+/* Selected tab with lightweight theme */
+
+.tabbrowser-tab:is([selected], [multiselected]):-moz-lwtheme {
+  color: var(--lwt-tab-text, var(--toolbar-color));
+}
+
+.tab-background:is([selected], [multiselected]):-moz-lwtheme {
+  border: 1px solid var(--lwt-tab-line-color, var(--lwt-tabs-border-color, currentColor));
+}
+
 /*
  * LightweightThemeConsumer will set the current lightweight theme's header
  * image to the lwt-header-image variable, used in each of the following rulesets.
  */
-
-/* Lightweight theme on tabs */
 #tabbrowser-tabs:not([movingtab]) > #tabbrowser-arrowscrollbox > .tabbrowser-tab > .tab-stack > .tab-background[multiselected=true]:-moz-lwtheme,
 #tabbrowser-tabs:not([movingtab]) > #tabbrowser-arrowscrollbox > .tabbrowser-tab > .tab-stack > .tab-background[selected=true]:-moz-lwtheme {
   background-attachment: scroll, scroll, fixed;
