@@ -258,7 +258,6 @@ class ArenaLists {
   enum class ConcurrentUse : uint32_t {
     None,
     BackgroundFinalize,
-    ParallelAlloc,
     ParallelUnmark
   };
 
@@ -346,7 +345,6 @@ class ArenaLists {
   void mergeFinalizedArenas(AllocKind thingKind,
                             SortedArenaList& finalizedArenas);
 
-  void setParallelAllocEnabled(bool enabled);
   void setParallelUnmarkEnabled(bool enabled);
 
   inline void mergeNewArenasInMarkPhase();

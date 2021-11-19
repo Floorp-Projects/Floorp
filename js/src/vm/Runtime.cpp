@@ -124,7 +124,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       activeThreadHasScriptDataAccess(false),
 #endif
       numParseTasks(0),
-      numActiveHelperThreadZones(0),
       numRealms(0),
       numDebuggeeRealms_(0),
       numDebuggeeRealmsObservingCoverage_(0),
@@ -293,8 +292,6 @@ void JSRuntime::destroyRuntime() {
   }
 
   AutoNoteSingleThreadedRegion anstr;
-
-  MOZ_ASSERT(!hasHelperThreadZones());
 
 #ifdef DEBUG
   {

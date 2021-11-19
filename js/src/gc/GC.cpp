@@ -1574,12 +1574,6 @@ bool GCRuntime::triggerZoneGC(Zone* zone, JS::GCReason reason, size_t used,
 #endif
 
   if (zone->isAtomsZone()) {
-    /* We can't do a zone GC of just the atoms zone. */
-    if (rt->hasHelperThreadZones()) {
-      /* We can't collect atoms while off-thread parsing is allocating. */
-      fullGCForAtomsRequested_ = true;
-      return false;
-    }
     stats().recordTrigger(used, threshold);
     MOZ_RELEASE_ASSERT(triggerGC(reason));
     return true;
@@ -1642,7 +1636,6 @@ void GCRuntime::triggerFullGCForAtoms(JSContext* cx) {
   MOZ_ASSERT(fullGCForAtomsRequested_);
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
   MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
-  MOZ_ASSERT(cx->canCollectAtoms());
   fullGCForAtomsRequested_ = false;
   MOZ_RELEASE_ASSERT(triggerGC(JS::GCReason::DELAYED_ATOMS_GC));
 }
@@ -2170,22 +2163,8 @@ static bool ShouldCollectZone(Zone* zone, JS::GCReason reason) {
     return false;
   }
 
-  // If canCollectAtoms() is false then parsing is currently happening on
-  // another thread, in which case we don't have information about which atoms
-  // are roots, so we must skip collecting atoms.
-  //
-  // Note that only affects the first slice of an incremental GC since root
-  // marking is completed before we return to the mutator.
-  //
-  // Off-thread parsing is inhibited after the start of GC which prevents
-  // races between creating atoms during parsing and sweeping atoms on the
-  // main thread.
-  //
-  // Otherwise, we always schedule a GC in the atoms zone so that atoms which
-  // the other collected zones are using are marked, and we can update the
-  // set of atoms in use by the other collected zones at the end of the GC.
   if (zone->isAtomsZone()) {
-    return TlsContext.get()->canCollectAtoms();
+    return true;
   }
 
   return zone->canCollect();
@@ -4127,14 +4106,6 @@ bool GCRuntime::gcIfRequested() {
   }
 
   if (majorGCRequested()) {
-    if (majorGCTriggerReason == JS::GCReason::DELAYED_ATOMS_GC &&
-        !rt->mainContextFromOwnThread()->canCollectAtoms()) {
-      // A GC was requested to collect the atoms zone, but it's no longer
-      // possible. Skip this collection.
-      majorGCTriggerReason = JS::GCReason::NO_REASON;
-      return false;
-    }
-
     if (!isIncrementalGCInProgress()) {
       startGC(JS::GCOptions::Normal, majorGCTriggerReason);
     } else {
