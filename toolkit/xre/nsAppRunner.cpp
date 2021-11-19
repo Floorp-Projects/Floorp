@@ -3803,6 +3803,14 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
       CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::AppInitDLLs,
                                          NS_ConvertUTF16toUTF8(appInitDLLs));
     }
+
+    nsString packageFamilyName = widget::WinUtils::GetPackageFamilyName();
+    if (StringBeginsWith(packageFamilyName, u"Mozilla."_ns) ||
+        StringBeginsWith(packageFamilyName, u"MozillaCorporation."_ns)) {
+      CrashReporter::AnnotateCrashReport(
+          CrashReporter::Annotation::WindowsPackageFamilyName,
+          NS_ConvertUTF16toUTF8(packageFamilyName));
+    }
 #endif
 
     bool isBackgroundTaskMode = false;

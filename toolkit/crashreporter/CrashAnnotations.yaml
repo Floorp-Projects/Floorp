@@ -974,6 +974,15 @@ WasmLibrarySandboxMallocFailed:
     Set to 1 if a rlbox wasm library sandbox ran out of memory, causing a
     malloc inside the sandbox to fail.
   type: boolean
+
+WindowsPackageFamilyName:
+  description: >
+    If running in a Windows package context, the package family name, per
+    https://docs.microsoft.com/en-us/windows/win32/api/appmodel/nf-appmodel-getcurrentpackagefamilyname.
+
+    The package family name is only included when it is likely to have been produced by Mozilla: it
+    starts "Mozilla." or "MozillaCorporation.".
+  type: string
   ping: true
 
 WindowsErrorReporting:
