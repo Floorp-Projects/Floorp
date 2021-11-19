@@ -3658,7 +3658,6 @@ gcstats::ZoneGCStats GCRuntime::scanZonesBeforeGC() {
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     zoneStats.zoneCount++;
     zoneStats.compartmentCount += zone->compartments().length();
-    zoneStats.collectableZoneCount++;
     if (zone->isGCScheduled()) {
       zoneStats.collectedZoneCount++;
       zoneStats.collectedCompartmentCount += zone->compartments().length();
