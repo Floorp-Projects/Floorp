@@ -39,6 +39,7 @@
 #include "mozilla/layers/RemoteCompositorSession.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsAppRunner.h"
+#include "mozilla/widget/CompositorWidget.h"
 #ifdef MOZ_WIDGET_SUPPORTS_OOP_COMPOSITING
 #  include "mozilla/widget/CompositorWidgetChild.h"
 #endif
