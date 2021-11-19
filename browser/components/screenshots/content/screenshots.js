@@ -21,8 +21,6 @@ class ScreenshotsUI extends HTMLElement {
   }
   async connectedCallback() {
     this.initialize();
-
-    await this.takeVisibleScreenshot();
   }
 
   initialize() {
