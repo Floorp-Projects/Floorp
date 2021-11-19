@@ -111,16 +111,6 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
-  // Realms used for off-thread compilation have their contents merged into a
-  // target realm when the compilation is finished. This is only allowed if
-  // this flag is set. The invisibleToDebugger flag must also be set for such
-  // realms.
-  bool mergeable() const { return mergeable_; }
-  RealmCreationOptions& setMergeable(bool flag) {
-    mergeable_ = flag;
-    return *this;
-  }
-
   // Determines whether this realm should preserve JIT code on non-shrinking
   // GCs.
   bool preserveJitCode() const { return preserveJitCode_; }
@@ -268,7 +258,6 @@ class JS_PUBLIC_API RealmCreationOptions {
   uint64_t profilerRealmID_ = 0;
   WeakRefSpecifier weakRefs_ = WeakRefSpecifier::Disabled;
   bool invisibleToDebugger_ = false;
-  bool mergeable_ = false;
   bool preserveJitCode_ = false;
   bool sharedMemoryAndAtomics_ = false;
   bool defineSharedArrayBufferConstructor_ = true;
