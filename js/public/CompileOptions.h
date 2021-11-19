@@ -148,11 +148,6 @@ class JS_PUBLIC_API TransitiveCompileOptions {
 
   bool classStaticBlocks = false;
 
-  // True if off-thread parsing should use a parse GlobalObject in order to
-  // directly allocate to the GC from a helper thread. If false, transfer the
-  // CompilationStencil back to main thread before allocating GC objects.
-  bool useOffThreadParseGlobal = true;
-
   // When decoding from XDR into a Stencil, directly reference data in the
   // buffer (where possible) instead of copying it. This is an optional
   // performance optimization, and may also reduce memory if the buffer is going

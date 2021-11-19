@@ -55,7 +55,6 @@
 #include "js/LocaleSensitive.h"
 #include "js/MemoryCallbacks.h"
 #include "js/MemoryFunctions.h"
-#include "js/OffThreadScriptCompilation.h"  // js::UseOffThreadParseGlobal
 #include "js/PropertySpec.h"
 #include "js/Proxy.h"
 #include "js/ScriptPrivate.h"
@@ -2312,7 +2311,6 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   privateClassFields = rhs.privateClassFields;
   privateClassMethods = rhs.privateClassMethods;
   classStaticBlocks = rhs.classStaticBlocks;
-  useOffThreadParseGlobal = rhs.useOffThreadParseGlobal;
   useFdlibmForSinCosTan = rhs.useFdlibmForSinCosTan;
 };
 
@@ -2397,8 +2395,6 @@ JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
   privateClassMethods = cx->options().privateClassMethods();
 
   classStaticBlocks = cx->options().classStaticBlocks();
-
-  useOffThreadParseGlobal = UseOffThreadParseGlobal();
 
   useFdlibmForSinCosTan = math_use_fdlibm_for_sin_cos_tan();
 

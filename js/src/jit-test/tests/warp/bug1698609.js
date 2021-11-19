@@ -1,4 +1,4 @@
-// |jit-test| skip-if: helperThreadCount() === 0; --off-thread-parse-global; --code-coverage
+// |jit-test| skip-if: helperThreadCount() === 0; --code-coverage
 // Note: --code-coverage is a hack here to disable lazy parsing.
 
 var src = "function foo(x) { return /abc/.test(x) }";
