@@ -95,7 +95,7 @@
 :root:-moz-lwtheme {
   --toolbar-bgcolor: rgba(255,255,255,.4);
   --toolbar-bgimage: none;
-  --toolbar-color: var(--lwt-text-color, inherit);
+  --toolbar-color: var(--lwt-text-color);
 
   color: var(--lwt-text-color);
 }
@@ -293,14 +293,14 @@ menupopup::part(drop-indicator) {
 }
 
 :root:not([lwtheme-image]) .browserContainer > findbar:-moz-lwtheme {
-  background-color: var(--lwt-accent-color);
+  background-color: var(--lwt-frame);
   background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor));
   border-top-color: var(--chrome-content-separator-color);
   color: var(--toolbar-color);
 }
 
 :root:not([lwtheme-image]) .browserContainer > findbar:-moz-lwtheme:-moz-window-inactive {
-  background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
+  background-color: var(--lwt-frame-inactive, var(--lwt-frame));
 }
 
 /* Private browsing and accessibility indicators */

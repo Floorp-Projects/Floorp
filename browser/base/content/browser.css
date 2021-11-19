@@ -57,7 +57,7 @@ body {
 @media not (-moz-os-version: windows-win7) {
   @media not (-moz-os-version: windows-win8) {
     #navigator-toolbox:-moz-lwtheme {
-      background-color: var(--lwt-accent-color);
+      background-color: var(--lwt-frame);
     }
 
     /* When a theme defines both theme_frame and additional_backgrounds, show
@@ -69,7 +69,7 @@ body {
    }
 
    #navigator-toolbox:-moz-window-inactive:-moz-lwtheme {
-     background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
+     background-color: var(--lwt-frame-inactive, var(--lwt-frame));
    }
   }
 }
@@ -77,7 +77,7 @@ body {
 @media (-moz-os-version: windows-win7),
        (-moz-os-version: windows-win8) {
   :root:-moz-lwtheme {
-    background-color: var(--lwt-accent-color);
+    background-color: var(--lwt-frame);
     background-image: var(--lwt-additional-images);
     background-repeat: var(--lwt-background-tiling);
     background-position: var(--lwt-background-alignment);
@@ -90,7 +90,7 @@ body {
   }
 
   :root:-moz-lwtheme:-moz-window-inactive {
-    background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
+    background-color: var(--lwt-frame-inactive, var(--lwt-frame));
   }
 }
 

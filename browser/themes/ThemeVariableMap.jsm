@@ -8,9 +8,9 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const ThemeVariableMap = [
   [
-    "--lwt-accent-color-inactive",
+    "--lwt-frame-inactive",
     {
-      lwtProperty: "accentcolorInactive",
+      lwtProperty: "frame_inactive",
     },
   ],
   [
