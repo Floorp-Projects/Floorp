@@ -40,27 +40,27 @@ def guess_mozinfo_from_task(task):
     Returns:
         A dict that can be used as a mozinfo replacement.
     """
+    setting = task["test-setting"]
+    arch = setting["platform"]["arch"]
+    p_os = setting["platform"]["os"]
+
     info = {
-        "asan": "asan" in task["build-attributes"]["build_platform"],
-        "bits": 32 if "32" in task["build-attributes"]["build_platform"] else 64,
-        "ccov": "ccov" in task["build-attributes"]["build_platform"],
-        "debug": task["build-attributes"]["build_type"] == "debug",
-        "e10s": task["attributes"]["e10s"],
-        "fission": "fission" in task["attributes"].get("unittest_variant", ""),
+        "asan": setting["build"].get("asan", False),
+        "bits": 32 if "32" in arch else 64,
+        "ccov": setting["build"].get("ccov", False),
+        "debug": setting["build"]["type"] in ("debug", "debug-isolated-process"),
+        "e10s": not setting["runtime"].get("1proc", False),
+        "fission": any("fission" in key for key in setting["runtime"].keys()),
         "headless": "-headless" in task["test-name"],
-        "tsan": "tsan" in task["build-attributes"]["build_platform"],
+        "tsan": setting["build"].get("tsan", False),
         "webrender": task.get("webrender", True),
     }
     for platform in ("android", "linux", "mac", "win"):
-        if platform in task["build-attributes"]["build_platform"]:
+        if p_os["name"].startswith(platform):
             info["os"] = platform
             break
     else:
-        raise ValueError(
-            "{} is not a known platform!".format(
-                task["build-attributes"]["build_platform"]
-            )
-        )
+        raise ValueError("{} is not a known platform!".format(p_os["name"]))
 
     # crashreporter is disabled for asan / tsan builds
     if info["asan"] or info["tsan"]:
@@ -71,9 +71,9 @@ def guess_mozinfo_from_task(task):
     info["appname"] = "fennec" if info["os"] == "android" else "firefox"
 
     # guess processor
-    if "aarch64" in task["build-attributes"]["build_platform"]:
+    if arch == "aarch64":
         info["processor"] = "aarch64"
-    elif info["os"] == "android" and "arm" in task["test-platform"]:
+    elif info["os"] == "android" and "arm" in arch:
         info["processor"] = "arm"
     elif info["bits"] == 32:
         info["processor"] = "x86"
@@ -92,15 +92,15 @@ def guess_mozinfo_from_task(task):
 
     # guess os_version
     os_versions = {
-        "linux1804": "18.04",
-        "macosx1015": "10.15",
-        "macosx1100": "11.00",
-        "windows7": "6.1",
-        "windows10": "10.0",
+        ("linux", "1804"): "18.04",
+        ("macosx", "1015"): "10.15",
+        ("macosx", "1100"): "11.00",
+        ("windows", "7"): "6.1",
+        ("windows", "10"): "10.0",
     }
-    for platform, version in os_versions.items():
-        if platform in task["test-platform"]:
-            info["os_version"] = version
+    for (name, old_ver), new_ver in os_versions.items():
+        if p_os["name"] == name and p_os["version"] == old_ver:
+            info["os_version"] = new_ver
             break
 
     return info
