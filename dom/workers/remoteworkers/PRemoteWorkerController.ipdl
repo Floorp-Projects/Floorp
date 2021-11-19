@@ -34,7 +34,7 @@ protocol PRemoteWorkerController {
   async SetServiceWorkerSkipWaitingFlag() returns (bool aOk);
 
  parent:
-  async PFetchEventOp(ServiceWorkerFetchEventOpArgs aArgs);
+  async PFetchEventOp(ParentToParentServiceWorkerFetchEventOpArgs aArgs);
 
   async __delete__();
 

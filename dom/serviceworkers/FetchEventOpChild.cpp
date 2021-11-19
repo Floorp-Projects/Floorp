@@ -181,7 +181,7 @@ NS_IMPL_ISUPPORTS(SynthesizeResponseWatcher, nsIInterceptedBodyCallback)
 
 /* static */ RefPtr<GenericPromise> FetchEventOpChild::SendFetchEvent(
     PRemoteWorkerControllerChild* aManager,
-    ServiceWorkerFetchEventOpArgs&& aArgs,
+    ParentToParentServiceWorkerFetchEventOpArgs&& aArgs,
     nsCOMPtr<nsIInterceptedChannel> aInterceptedChannel,
     RefPtr<ServiceWorkerRegistrationInfo> aRegistration,
     RefPtr<FetchServiceResponsePromise>&& aPreloadResponseReadyPromise,
@@ -209,7 +209,7 @@ FetchEventOpChild::~FetchEventOpChild() {
 }
 
 FetchEventOpChild::FetchEventOpChild(
-    ServiceWorkerFetchEventOpArgs&& aArgs,
+    ParentToParentServiceWorkerFetchEventOpArgs&& aArgs,
     nsCOMPtr<nsIInterceptedChannel>&& aInterceptedChannel,
     RefPtr<ServiceWorkerRegistrationInfo>&& aRegistration,
     RefPtr<FetchServiceResponsePromise>&& aPreloadResponseReadyPromise,
@@ -230,7 +230,7 @@ FetchEventOpChild::FetchEventOpChild(
             GetCurrentSerialEventTarget(), __func__,
             [this](SafeRefPtr<InternalResponse> aInternalResponse) {
               // TODO: Serialize aInternalResponse into ipcPreloadResponse.
-              IPCInternalResponse ipcPreloadResponse;
+              ParentToParentInternalResponse ipcPreloadResponse;
               if (!mWasSent) {
                 // The actor wasn't sent yet, we can still send the preload
                 // response with it.
@@ -263,7 +263,7 @@ mozilla::ipc::IPCResult FetchEventOpChild::RecvAsyncLog(
 }
 
 mozilla::ipc::IPCResult FetchEventOpChild::RecvRespondWith(
-    IPCFetchEventRespondWithResult&& aResult) {
+    ParentToParentFetchEventRespondWithResult&& aResult) {
   AssertIsOnMainThread();
 
   // Preload response is too late to be ready after we receive RespondWith, so
@@ -271,18 +271,20 @@ mozilla::ipc::IPCResult FetchEventOpChild::RecvRespondWith(
   mPreloadResponseReadyPromiseRequestHolder.DisconnectIfExists();
 
   switch (aResult.type()) {
-    case IPCFetchEventRespondWithResult::TIPCSynthesizeResponseArgs:
+    case ParentToParentFetchEventRespondWithResult::
+        TParentToParentSynthesizeResponseArgs:
       mInterceptedChannel->SetFetchHandlerStart(
-          aResult.get_IPCSynthesizeResponseArgs()
+          aResult.get_ParentToParentSynthesizeResponseArgs()
               .timeStamps()
               .fetchHandlerStart());
       mInterceptedChannel->SetFetchHandlerFinish(
-          aResult.get_IPCSynthesizeResponseArgs()
+          aResult.get_ParentToParentSynthesizeResponseArgs()
               .timeStamps()
               .fetchHandlerFinish());
-      SynthesizeResponse(std::move(aResult.get_IPCSynthesizeResponseArgs()));
+      SynthesizeResponse(
+          std::move(aResult.get_ParentToParentSynthesizeResponseArgs()));
       break;
-    case IPCFetchEventRespondWithResult::TResetInterceptionArgs:
+    case ParentToParentFetchEventRespondWithResult::TResetInterceptionArgs:
       mInterceptedChannel->SetFetchHandlerStart(
           aResult.get_ResetInterceptionArgs().timeStamps().fetchHandlerStart());
       mInterceptedChannel->SetFetchHandlerFinish(
@@ -291,7 +293,7 @@ mozilla::ipc::IPCResult FetchEventOpChild::RecvRespondWith(
               .fetchHandlerFinish());
       ResetInterception(false);
       break;
-    case IPCFetchEventRespondWithResult::TCancelInterceptionArgs:
+    case ParentToParentFetchEventRespondWithResult::TCancelInterceptionArgs:
       mInterceptedChannel->SetFetchHandlerStart(
           aResult.get_CancelInterceptionArgs()
               .timeStamps()
@@ -354,7 +356,7 @@ void FetchEventOpChild::ActorDestroy(ActorDestroyReason) {
 }
 
 nsresult FetchEventOpChild::StartSynthesizedResponse(
-    IPCSynthesizeResponseArgs&& aArgs) {
+    ParentToParentSynthesizeResponseArgs&& aArgs) {
   AssertIsOnMainThread();
   MOZ_ASSERT(mInterceptedChannel);
   MOZ_ASSERT(!mInterceptedChannelHandled);
@@ -380,7 +382,7 @@ nsresult FetchEventOpChild::StartSynthesizedResponse(
 
   nsCOMPtr<nsILoadInfo> loadInfo = underlyingChannel->LoadInfo();
   if (!CSPPermitsResponse(loadInfo, response.clonePtr(),
-                          mArgs.workerScriptSpec())) {
+                          mArgs.common().workerScriptSpec())) {
     return NS_ERROR_CONTENT_BLOCKED;
   }
 
@@ -430,7 +432,7 @@ nsresult FetchEventOpChild::StartSynthesizedResponse(
   // Propagate the URL to the content if the request mode is not "navigate".
   // Note that, we only reflect the final URL if the response.redirected is
   // false. We propagate all the URLs if the response.redirected is true.
-  const IPCInternalRequest& request = mArgs.internalRequest();
+  const IPCInternalRequest& request = mArgs.common().internalRequest();
   nsAutoCString responseURL;
   if (request.requestMode() != RequestMode::Navigate) {
     responseURL = response->GetUnfilteredURL();
@@ -463,8 +465,9 @@ nsresult FetchEventOpChild::StartSynthesizedResponse(
   }
 
   RefPtr<SynthesizeResponseWatcher> watcher = new SynthesizeResponseWatcher(
-      interceptedChannel, registration, mArgs.isNonSubresourceRequest(),
-      std::move(aArgs.closure()), NS_ConvertUTF8toUTF16(responseURL));
+      interceptedChannel, registration,
+      mArgs.common().isNonSubresourceRequest(), std::move(aArgs.closure()),
+      NS_ConvertUTF8toUTF16(responseURL));
 
   rv = mInterceptedChannel->StartSynthesizedResponse(
       body, watcher, nullptr /* TODO */, responseURL, response->IsRedirected());
@@ -481,7 +484,8 @@ nsresult FetchEventOpChild::StartSynthesizedResponse(
   return rv;
 }
 
-void FetchEventOpChild::SynthesizeResponse(IPCSynthesizeResponseArgs&& aArgs) {
+void FetchEventOpChild::SynthesizeResponse(
+    ParentToParentSynthesizeResponseArgs&& aArgs) {
   AssertIsOnMainThread();
   MOZ_ASSERT(mInterceptedChannel);
   MOZ_ASSERT(!mInterceptedChannelHandled);
@@ -527,7 +531,7 @@ void FetchEventOpChild::CancelInterception(nsresult aStatus) {
   // worker, which should be the case in non-shutdown/content-process-crash
   // situations).
   RefPtr<ServiceWorkerInfo> mActive = mRegistration->GetActive();
-  if (mActive && mArgs.isNonSubresourceRequest()) {
+  if (mActive && mArgs.common().isNonSubresourceRequest()) {
     mActive->ReportNavigationFault();
     // Additional mitigations such as unregistering the registration are handled
     // in ServiceWorkerRegistrationInfo::MaybeScheduleUpdate which will be
@@ -559,7 +563,7 @@ void FetchEventOpChild::MaybeScheduleRegistrationUpdate() const {
   MOZ_ASSERT(mRegistration);
   MOZ_ASSERT(mInterceptedChannelHandled);
 
-  if (mArgs.isNonSubresourceRequest()) {
+  if (mArgs.common().isNonSubresourceRequest()) {
     mRegistration->MaybeScheduleUpdate();
   } else {
     mRegistration->MaybeScheduleTimeCheckAndUpdate();

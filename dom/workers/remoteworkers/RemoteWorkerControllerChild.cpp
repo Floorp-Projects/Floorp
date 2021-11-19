@@ -32,7 +32,7 @@ RemoteWorkerControllerChild::RemoteWorkerControllerChild(
 }
 
 PFetchEventOpChild* RemoteWorkerControllerChild::AllocPFetchEventOpChild(
-    const ServiceWorkerFetchEventOpArgs& aArgs) {
+    const ParentToParentServiceWorkerFetchEventOpArgs& aArgs) {
   MOZ_CRASH("PFetchEventOpChild actors must be manually constructed!");
   return nullptr;
 }

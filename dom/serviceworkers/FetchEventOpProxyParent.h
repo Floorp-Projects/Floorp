@@ -16,7 +16,7 @@ namespace dom {
 
 class FetchEventOpParent;
 class PRemoteWorkerParent;
-class ServiceWorkerFetchEventOpArgs;
+class ParentToParentServiceWorkerFetchEventOpArgs;
 
 /**
  * FetchEventOpProxyParent owns a FetchEventOpParent in order to propagate
@@ -36,7 +36,7 @@ class FetchEventOpProxyParent final : public PFetchEventOpProxyParent {
   static void Create(
       PRemoteWorkerParent* aManager,
       RefPtr<ServiceWorkerFetchEventOpPromise::Private>&& aPromise,
-      const ServiceWorkerFetchEventOpArgs& aArgs,
+      const ParentToParentServiceWorkerFetchEventOpArgs& aArgs,
       RefPtr<FetchEventOpParent> aReal, nsCOMPtr<nsIInputStream> aBodyStream);
 
  private:
@@ -53,7 +53,7 @@ class FetchEventOpProxyParent final : public PFetchEventOpProxyParent {
                                        nsTArray<nsString>&& aParams);
 
   mozilla::ipc::IPCResult RecvRespondWith(
-      const IPCFetchEventRespondWithResult& aResult);
+      const ChildToParentFetchEventRespondWithResult& aResult);
 
   mozilla::ipc::IPCResult Recv__delete__(
       const ServiceWorkerFetchEventOpResult& aResult);

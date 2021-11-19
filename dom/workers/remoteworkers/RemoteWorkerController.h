@@ -151,7 +151,7 @@ class RemoteWorkerController final {
       ServiceWorkerOpArgs&& aArgs);
 
   RefPtr<ServiceWorkerFetchEventOpPromise> ExecServiceWorkerFetchEventOp(
-      const ServiceWorkerFetchEventOpArgs& aArgs,
+      const ParentToParentServiceWorkerFetchEventOpArgs& aArgs,
       RefPtr<FetchEventOpParent> aReal);
 
   RefPtr<GenericPromise> SetServiceWorkerSkipWaitingFlag() const;
@@ -295,7 +295,7 @@ class RemoteWorkerController final {
   class PendingSWFetchEventOp final : public PendingOp {
    public:
     PendingSWFetchEventOp(
-        const ServiceWorkerFetchEventOpArgs& aArgs,
+        const ParentToParentServiceWorkerFetchEventOpArgs& aArgs,
         RefPtr<ServiceWorkerFetchEventOpPromise::Private> aPromise,
         RefPtr<FetchEventOpParent>&& aReal);
 
@@ -306,7 +306,7 @@ class RemoteWorkerController final {
     void Cancel() override;
 
    private:
-    ServiceWorkerFetchEventOpArgs mArgs;
+    ParentToParentServiceWorkerFetchEventOpArgs mArgs;
     RefPtr<ServiceWorkerFetchEventOpPromise::Private> mPromise;
     RefPtr<FetchEventOpParent> mReal;
     nsCOMPtr<nsIInputStream> mBodyStream;

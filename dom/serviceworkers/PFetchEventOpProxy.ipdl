@@ -18,12 +18,12 @@ namespace dom {
                  uint32_t aColumnNumber, nsCString aMessageName,
                  nsString[] aParams);
 
-  async RespondWith(IPCFetchEventRespondWithResult aResult);
+  async RespondWith(ChildToParentFetchEventRespondWithResult aResult);
 
   async __delete__(ServiceWorkerFetchEventOpResult aResult);
 
  child:
-  async PreloadResponse(IPCInternalResponse aResponse);
+  async PreloadResponse(ParentToChildInternalResponse aResponse);
 };
 
 }  // namespace dom

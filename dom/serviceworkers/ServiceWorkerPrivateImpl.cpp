@@ -613,7 +613,7 @@ nsresult ServiceWorkerPrivateImpl::PendingPushEvent::Send() {
 ServiceWorkerPrivateImpl::PendingFetchEvent::PendingFetchEvent(
     ServiceWorkerPrivateImpl* aOwner,
     RefPtr<ServiceWorkerRegistrationInfo>&& aRegistration,
-    ServiceWorkerFetchEventOpArgs&& aArgs,
+    ParentToParentServiceWorkerFetchEventOpArgs&& aArgs,
     nsCOMPtr<nsIInterceptedChannel>&& aChannel,
     RefPtr<FetchServiceResponsePromise>&& aPreloadResponseReadyPromise)
     : PendingFunctionalEvent(aOwner, std::move(aRegistration)),
@@ -865,10 +865,12 @@ nsresult ServiceWorkerPrivateImpl::SendFetchEvent(
     //     SafeRefPtr<InternalRequest>&&, nsCOMPtr<nsIInterceptedChannel>);
   }
 
-  ServiceWorkerFetchEventOpArgs args(
-      mOuter->mInfo->ScriptSpec(), std::move(request), nsString(aClientId),
-      nsString(aResultingClientId), isNonSubresourceRequest, preloadNavigation,
-      Nothing(), mOuter->mInfo->TestingInjectCancellation());
+  ParentToParentServiceWorkerFetchEventOpArgs args(
+      ServiceWorkerFetchEventOpArgsCommon(
+          mOuter->mInfo->ScriptSpec(), request, nsString(aClientId),
+          nsString(aResultingClientId), isNonSubresourceRequest,
+          preloadNavigation, mOuter->mInfo->TestingInjectCancellation()),
+      Nothing());
 
   if (mOuter->mInfo->State() == ServiceWorkerState::Activating) {
     UniquePtr<PendingFunctionalEvent> pendingEvent =
@@ -894,7 +896,7 @@ nsresult ServiceWorkerPrivateImpl::SendFetchEvent(
 
 nsresult ServiceWorkerPrivateImpl::SendFetchEventInternal(
     RefPtr<ServiceWorkerRegistrationInfo>&& aRegistration,
-    ServiceWorkerFetchEventOpArgs&& aArgs,
+    ParentToParentServiceWorkerFetchEventOpArgs&& aArgs,
     nsCOMPtr<nsIInterceptedChannel>&& aChannel,
     RefPtr<FetchServiceResponsePromise>&& aPreloadResponseReadyPromise) {
   AssertIsOnMainThread();
@@ -907,8 +909,8 @@ nsresult ServiceWorkerPrivateImpl::SendFetchEventInternal(
   }
 
   MOZ_TRY(SpawnWorkerIfNeeded());
-  MOZ_TRY(
-      MaybeStoreStreamForBackgroundThread(aChannel, aArgs.internalRequest()));
+  MOZ_TRY(MaybeStoreStreamForBackgroundThread(
+      aChannel, aArgs.common().internalRequest()));
 
   scopeExit.release();
 
@@ -1093,7 +1095,8 @@ nsresult ServiceWorkerPrivateImpl::ExecServiceWorkerOp(
   AssertIsOnMainThread();
   MOZ_ASSERT(mOuter);
   MOZ_ASSERT(
-      aArgs.type() != ServiceWorkerOpArgs::TServiceWorkerFetchEventOpArgs,
+      aArgs.type() !=
+          ServiceWorkerOpArgs::TParentToChildServiceWorkerFetchEventOpArgs,
       "FetchEvent operations should be sent through FetchEventOp(Proxy) "
       "actors!");
   MOZ_ASSERT(aSuccessCallback);

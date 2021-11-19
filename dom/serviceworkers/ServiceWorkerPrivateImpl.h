@@ -124,7 +124,7 @@ class ServiceWorkerPrivateImpl final : public ServiceWorkerPrivate::Inner,
 
   nsresult SendFetchEventInternal(
       RefPtr<ServiceWorkerRegistrationInfo>&& aRegistration,
-      ServiceWorkerFetchEventOpArgs&& aArgs,
+      ParentToParentServiceWorkerFetchEventOpArgs&& aArgs,
       nsCOMPtr<nsIInterceptedChannel>&& aChannel,
       RefPtr<FetchServiceResponsePromise>&& aPreloadResponseReadyPromise);
 
@@ -170,7 +170,7 @@ class ServiceWorkerPrivateImpl final : public ServiceWorkerPrivate::Inner,
     PendingFetchEvent(
         ServiceWorkerPrivateImpl* aOwner,
         RefPtr<ServiceWorkerRegistrationInfo>&& aRegistration,
-        ServiceWorkerFetchEventOpArgs&& aArgs,
+        ParentToParentServiceWorkerFetchEventOpArgs&& aArgs,
         nsCOMPtr<nsIInterceptedChannel>&& aChannel,
         RefPtr<FetchServiceResponsePromise>&& aPreloadResponseReadyPromise);
 
@@ -179,7 +179,7 @@ class ServiceWorkerPrivateImpl final : public ServiceWorkerPrivate::Inner,
     ~PendingFetchEvent();
 
    private:
-    ServiceWorkerFetchEventOpArgs mArgs;
+    ParentToParentServiceWorkerFetchEventOpArgs mArgs;
     nsCOMPtr<nsIInterceptedChannel> mChannel;
     // The promise from FetchService. It indicates if the preload response is
     // ready or not. The promise's resolve/reject value should be handled in
