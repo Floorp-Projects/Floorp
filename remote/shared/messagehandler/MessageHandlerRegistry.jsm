@@ -14,6 +14,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   EventEmitter: "resource://gre/modules/EventEmitter.jsm",
 
   Log: "chrome://remote/content/shared/Log.jsm",
+  readSessionData:
+    "chrome://remote/content/shared/messagehandler/sessiondata/SessionDataReader.jsm",
   RootMessageHandler:
     "chrome://remote/content/shared/messagehandler/RootMessageHandler.jsm",
   WindowGlobalMessageHandler:
@@ -90,6 +92,30 @@ class MessageHandlerRegistry extends EventEmitter {
   }
 
   /**
+   * Create all message handlers for the current context, based on the content
+   * of the session data.
+   * This should typically be called when the context is ready to be used and
+   * to receive/send commands.
+   */
+  createAllMessageHandlers() {
+    const data = readSessionData();
+    for (const [sessionId, sessionDataItems] of data) {
+      // Create a message handler for this context for each active message
+      // handler session.
+      // TODO: In the future, to support debugging use cases we might want to
+      // only create a message handler if there is relevant data.
+      // For automation scenarios, this is less critical.
+      this._createMessageHandler(sessionId, sessionDataItems);
+    }
+  }
+
+  destroy() {
+    this._messageHandlersMap.forEach(messageHandler => {
+      messageHandler.destroy();
+    });
+  }
+
+  /**
    * Retrieve an existing MessageHandler instance matching the provided session
    * id. Returns null if no MessageHandler was found.
    *
@@ -100,12 +126,6 @@ class MessageHandlerRegistry extends EventEmitter {
    */
   getExistingMessageHandler(sessionId) {
     return this._messageHandlersMap.get(sessionId);
-  }
-
-  destroy() {
-    this._messageHandlersMap.forEach(messageHandler => {
-      messageHandler.destroy();
-    });
   }
 
   /**
@@ -164,18 +184,17 @@ class MessageHandlerRegistry extends EventEmitter {
    *
    * @param {String} sessionId
    *     ID of the session the handler will be used for.
-   * @param {String} type
-   *     MessageHandler type, one of MessageHandler.type.
-   * @param {Object=} context
-   *     The context object, which depends on the type. Can be null for ROOT
-   *     type MessageHandlers.
+   * @param {Array<SessionDataItem>=} sessionDataItems
+   *     Optional array of session data items to be applied automatically to the
+   *     MessageHandler.
    * @return {MessageHandler}
    *     A new MessageHandler instance.
    */
-  _createMessageHandler(sessionId) {
+  _createMessageHandler(sessionId, sessionDataItems) {
     const messageHandler = new this._messageHandlerClass(
       sessionId,
-      this._context
+      this._context,
+      sessionDataItems
     );
     this._messageHandlersMap.set(sessionId, messageHandler);
 

@@ -25,6 +25,9 @@ const FRAME_ACTOR_CONFIG = {
   child: {
     moduleURI:
       "chrome://remote/content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameChild.jsm",
+    events: {
+      DOMWindowCreated: {},
+    },
   },
   allFrames: true,
 };

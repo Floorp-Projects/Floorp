@@ -79,8 +79,10 @@ class MessageHandler extends EventEmitter {
    *     ID of the session the handler is used for.
    * @param {Object} context
    *     The context linked to this MessageHandler instance.
+   * @param {Array<SessionDataItem>} sessionDataItems
+   *     Initial session data items for this MessageHandler.
    */
-  constructor(sessionId, context) {
+  constructor(sessionId, context, sessionDataItems) {
     super();
 
     this._moduleCache = new ModuleCache(this);
@@ -88,6 +90,12 @@ class MessageHandler extends EventEmitter {
     this._sessionId = sessionId;
     this._context = context;
     this._contextId = this.constructor.getIdFromContext(context);
+
+    // If any session data item was provided to the constructor, apply it for
+    // this MessageHandler.
+    if (Array.isArray(sessionDataItems)) {
+      this._applyInitialSessionDataItems(sessionDataItems);
+    }
   }
 
   get contextId() {
@@ -207,6 +215,14 @@ class MessageHandler extends EventEmitter {
   toString() {
     return `[object ${this.constructor.name} ${this.name}]`;
   }
+
+  /**
+   * Apply the initial session data items provided to this MessageHandler on
+   * startup. Implementation is specific to each MessageHandler class.
+   *
+   * By default the implementation is a no-op.
+   */
+  async _applyInitialSessionDataItems(sessionDataItems) {}
 
   /**
    * Returns the module path corresponding to this MessageHandler class.
