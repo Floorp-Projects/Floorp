@@ -53,7 +53,6 @@ class IntentReceiverActivityTest {
         every { intentProcessors.privateCustomTabIntentProcessor } returns mockIntentProcessor()
         every { intentProcessors.externalAppIntentProcessors } returns emptyList()
         every { intentProcessors.fennecPageShortcutIntentProcessor } returns mockIntentProcessor()
-        every { intentProcessors.migrationIntentProcessor } returns mockIntentProcessor()
         every { intentProcessors.externalDeepLinkIntentProcessor } returns mockIntentProcessor()
 
         coEvery { intentProcessors.intentProcessor.process(any()) } returns true

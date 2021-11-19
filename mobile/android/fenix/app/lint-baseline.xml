@@ -1494,17 +1494,6 @@
     </issue>
 
     <issue
-        id="UnusedResources"
-        message="The resource `R.anim.placeholder_animation` appears to be unused"
-        errorLine1="&lt;translate"
-        errorLine2="^">
-        <location
-            file="src/main/res/anim/placeholder_animation.xml"
-            line="5"
-            column="1"/>
-    </issue>
-
-    <issue
         id="IconXmlAndPng"
         message="The following images appear both as density independent `.xml` files and as bitmap files: /Users/oracle/Projects/fenix/app/src/main/res/drawable-hdpi/ic_logo_wordmark_normal.png, /Users/rotbolt/AndroidStudioProjects/fenix/app/src/main/res/drawable-night/ic_logo_wordmark_normal.xml">
         <location

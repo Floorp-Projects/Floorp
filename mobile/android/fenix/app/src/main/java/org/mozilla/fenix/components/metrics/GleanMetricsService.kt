@@ -981,7 +981,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.InteractWithSearchURLArea -> null
         is Event.ClearedPrivateData -> null
         is Event.DismissedOnboarding -> null
-        is Event.FennecToFenixMigrated -> null
         is Event.AddonInstalled -> null
         is Event.SearchWidgetInstalled -> null
         is Event.SyncAuthFromSharedReuse, Event.SyncAuthFromSharedCopy -> null

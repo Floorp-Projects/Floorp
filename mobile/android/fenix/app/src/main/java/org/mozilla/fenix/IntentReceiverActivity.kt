@@ -100,8 +100,7 @@ class IntentReceiverActivity : Activity() {
             )
         }
 
-        return listOf(components.intentProcessors.migrationIntentProcessor) +
-            components.intentProcessors.externalAppIntentProcessors +
+        return components.intentProcessors.externalAppIntentProcessors +
             components.intentProcessors.fennecPageShortcutIntentProcessor +
             components.intentProcessors.externalDeepLinkIntentProcessor +
             modeDependentProcessors +

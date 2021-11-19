@@ -17,8 +17,6 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.digitalassetlinks.RelationChecker
-import mozilla.components.support.migration.MigrationIntentProcessor
-import mozilla.components.support.migration.state.MigrationStore
 import org.mozilla.fenix.customtabs.FennecWebAppIntentProcessor
 import org.mozilla.fenix.home.intent.FennecBookmarkShortcutsIntentProcessor
 import org.mozilla.fenix.intent.ExternalDeepLinkIntentProcessor
@@ -37,7 +35,6 @@ class IntentProcessors(
     private val searchUseCases: SearchUseCases,
     private val relationChecker: RelationChecker,
     private val customTabsStore: CustomTabsServiceStore,
-    private val migrationStore: MigrationStore,
     private val manifestStorage: ManifestStorage
 ) {
     /**
@@ -81,9 +78,5 @@ class IntentProcessors(
 
     val fennecPageShortcutIntentProcessor by lazyMonitored {
         FennecBookmarkShortcutsIntentProcessor(tabsUseCases.addTab)
-    }
-
-    val migrationIntentProcessor by lazyMonitored {
-        MigrationIntentProcessor(migrationStore)
     }
 }

@@ -1564,17 +1564,17 @@
     <string name="search_delete_search_engine_success_message">Deleted %s</string>
 
     <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">Welcome to an all-new %s</string>
+    <string name="migration_title" moz:removedIn="100" tools:ignore="UnusedResources">Welcome to an all-new %s</string>
     <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">A completely redesigned browser awaits, with improved performance and features to help you do more online.\n\nPlease wait while we update %s with your</string>
+    <string name="migration_description" moz:removedIn="100" tools:ignore="UnusedResources">A completely redesigned browser awaits, with improved performance and features to help you do more online.\n\nPlease wait while we update %s with your</string>
     <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">Updating %s…</string>
+    <string name="migration_updating_app_button_text" moz:removedIn="100" tools:ignore="UnusedResources">Updating %s…</string>
     <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">Start %s</string>
+    <string name="migration_update_app_button" moz:removedIn="100" tools:ignore="UnusedResources">Start %s</string>
     <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">Migration completed</string>
+    <string name="migration_icon_description" moz:removedIn="100" tools:ignore="UnusedResources">Migration completed</string>
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">Passwords</string>
+    <string name="migration_text_passwords" moz:removedIn="100" tools:ignore="UnusedResources">Passwords</string>
 
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">To allow it:</string>

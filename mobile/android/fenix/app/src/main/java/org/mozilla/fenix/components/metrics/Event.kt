@@ -186,7 +186,6 @@ sealed class Event {
                 }
             )
     }
-    object FennecToFenixMigrated : Event()
     object AddonsOpenInSettings : Event()
     object StudiesSettings : Event()
     object VoiceSearchTapped : Event()

@@ -234,13 +234,6 @@
         </activity>
 
         <activity
-                android:name=".migration.MigrationProgressActivity"
-                android:noHistory="true"
-                android:launchMode="singleInstance"
-                android:exported="false">
-        </activity>
-
-        <activity
             android:name=".crashes.CrashListActivity"
             android:exported="false" />
 

@@ -172,7 +172,6 @@ object Deps {
     const val mozilla_support_utils = "org.mozilla.components:support-utils:${Versions.mozilla_android_components}"
     const val mozilla_support_test = "org.mozilla.components:support-test:${Versions.mozilla_android_components}"
     const val mozilla_support_test_libstate = "org.mozilla.components:support-test-libstate:${Versions.mozilla_android_components}"
-    const val mozilla_support_migration = "org.mozilla.components:support-migration:${Versions.mozilla_android_components}"
     const val mozilla_support_locale = "org.mozilla.components:support-locale:${Versions.mozilla_android_components}"
 
     const val sentry = "io.sentry:sentry-android:${Versions.sentry}"
