@@ -2150,15 +2150,7 @@ static bool ShouldCollectZone(Zone* zone, JS::GCReason reason) {
   }
 
   // Otherwise we only collect scheduled zones.
-  if (!zone->isGCScheduled()) {
-    return false;
-  }
-
-  if (zone->isAtomsZone()) {
-    return true;
-  }
-
-  return zone->canCollect();
+  return zone->isGCScheduled();
 }
 
 bool GCRuntime::prepareZonesForCollection(JS::GCReason reason,
@@ -2181,10 +2173,9 @@ bool GCRuntime::prepareZonesForCollection(JS::GCReason reason,
     /* Set up which zones will be collected. */
     bool shouldCollect = ShouldCollectZone(zone, reason);
     if (shouldCollect) {
-      MOZ_ASSERT(zone->canCollect());
       any = true;
       zone->changeGCState(Zone::NoGC, Zone::Prepare);
-    } else if (zone->canCollect()) {
+    } else {
       *isFullOut = false;
     }
 
@@ -3348,10 +3339,6 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
 
   GCAbortReason resetReason = GCAbortReason::None;
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
-    if (!zone->canCollect()) {
-      continue;
-    }
-
     if (zone->gcHeapSize.bytes() >=
         zone->gcHeapThreshold.incrementalLimitBytes()) {
       checkZoneIsScheduled(zone, reason, "GC bytes");
@@ -3480,10 +3467,6 @@ bool GCRuntime::maybeIncreaseSliceBudgetForUrgentCollections(
 
 static void ScheduleZones(GCRuntime* gc) {
   for (ZonesIter zone(gc, WithAtoms); !zone.done(); zone.next()) {
-    if (!zone->canCollect()) {
-      continue;
-    }
-
     if (!gc->isPerZoneGCEnabled()) {
       zone->scheduleGC();
     }
@@ -3675,12 +3658,10 @@ gcstats::ZoneGCStats GCRuntime::scanZonesBeforeGC() {
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     zoneStats.zoneCount++;
     zoneStats.compartmentCount += zone->compartments().length();
-    if (zone->canCollect()) {
-      zoneStats.collectableZoneCount++;
-      if (zone->isGCScheduled()) {
-        zoneStats.collectedZoneCount++;
-        zoneStats.collectedCompartmentCount += zone->compartments().length();
-      }
+    zoneStats.collectableZoneCount++;
+    if (zone->isGCScheduled()) {
+      zoneStats.collectedZoneCount++;
+      zoneStats.collectedCompartmentCount += zone->compartments().length();
     }
   }
 
