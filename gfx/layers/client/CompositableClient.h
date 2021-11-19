@@ -53,11 +53,6 @@ class ContentClientRemoteBuffer;
  * Connect() creates the underlying IPDL actor (see CompositableChild) and the
  * corresponding CompositableHost on the other side.
  *
- * To do in-transaction texture transfer (the default), call
- * ShadowLayerForwarder::Attach(CompositableClient*, ShadowableLayer*). This
- * will let the LayerComposite on the compositor side know which
- * CompositableHost to use for compositing.
- *
  * To do async texture transfer (like async-video), the CompositableClient
  * should be created with a different CompositableForwarder (like
  * ImageBridgeChild) and attachment is done with
