@@ -645,6 +645,13 @@ let JSWINDOWACTORS = {
     enablePreference: "accessibility.blockautorefresh",
   },
 
+  ScreenshotsComponent: {
+    child: {
+      moduleURI: "resource:///actors/ScreenshotsComponentChild.jsm",
+    },
+    enablePreference: "screenshots.browser.component.enabled",
+  },
+
   SearchSERPTelemetry: {
     parent: {
       moduleURI: "resource:///actors/SearchSERPTelemetryParent.jsm",
