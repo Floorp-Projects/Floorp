@@ -1,5 +1,4 @@
 --editable ../../python/mozterm
---editable ../../xpcom/geckoprocesstypes_generator
 
 --editable ../mozbase/manifestparser
 --editable ../mozbase/mozcrash
