@@ -120,12 +120,7 @@ void CheckArenaListAccess<Helper>::check() const {
     return;
   }
 
-  JSRuntime* rt = TlsContext.get()->runtime();
   if (zone->isAtomsZone()) {
-    // We must hold the GC lock if parallel parsing is running.
-    if (rt->isOffThreadParseRunning()) {
-      rt->gc.assertCurrentThreadHasLockedGC();
-    }
     return;
   }
 

@@ -947,7 +947,6 @@ struct JSRuntime {
       parallelParsingEnabled_;
 
 #ifdef DEBUG
-  mozilla::Atomic<uint32_t> offThreadParsesRunning_;
   mozilla::Atomic<bool> offThreadParsingBlocked_;
 #endif
 
@@ -969,22 +968,9 @@ struct JSRuntime {
 
 #ifdef DEBUG
 
-  void incOffThreadParsesRunning() {
-    MOZ_ASSERT(!isOffThreadParsingBlocked());
-    offThreadParsesRunning_++;
-  }
-
-  void decOffThreadParsesRunning() {
-    MOZ_ASSERT(isOffThreadParseRunning());
-    offThreadParsesRunning_--;
-  }
-
-  bool isOffThreadParseRunning() const { return offThreadParsesRunning_; }
-
   bool isOffThreadParsingBlocked() const { return offThreadParsingBlocked_; }
   void setOffThreadParsingBlocked(bool blocked) {
     MOZ_ASSERT(offThreadParsingBlocked_ != blocked);
-    MOZ_ASSERT(!isOffThreadParseRunning());
     offThreadParsingBlocked_ = blocked;
   }
 
