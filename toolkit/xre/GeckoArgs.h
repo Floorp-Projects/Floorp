@@ -102,6 +102,7 @@ inline void CommandLineArg<uint64_t>::Put(uint64_t aValue,
 }
 
 #if defined(__GNUC__)
+#  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wunused-variable"
 #endif
 
@@ -124,6 +125,10 @@ static CommandLineArg<bool> sSafeMode{"-safeMode", "safemode"};
 
 static CommandLineArg<bool> sIsForBrowser{"-isForBrowser", "isforbrowser"};
 static CommandLineArg<bool> sNotForBrowser{"-notForBrowser", "notforbrowser"};
+
+#if defined(__GNUC__)
+#  pragma GCC diagnostic pop
+#endif
 
 }  // namespace geckoargs
 
