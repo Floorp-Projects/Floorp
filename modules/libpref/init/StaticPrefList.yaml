@@ -7771,6 +7771,13 @@
   mirror: always
   rust: true
 
+# Whether the `scrollbar-gutter` CSS property is enabled.
+- name: layout.css.scrollbar-gutter.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether frame visibility tracking is enabled globally.
 - name: layout.framevisibility.enabled
   type: bool
