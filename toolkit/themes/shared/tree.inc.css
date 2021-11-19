@@ -23,6 +23,11 @@ tree {
 
 treechildren::-moz-tree-row {
   border: 1px solid transparent;
+}
+
+treechildren::-moz-tree-row,
+treecol:not([hideheader="true"]),
+treecolpicker {
   min-height: 24px;
   height: 1.3em;
 }
