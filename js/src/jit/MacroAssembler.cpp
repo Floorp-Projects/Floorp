@@ -4011,21 +4011,6 @@ void MacroAssembler::emitPreBarrierFastPath(JSRuntime* rt, MIRType type,
 #endif
   }
 
-  // If it's a permanent atom or symbol from a parent runtime we don't
-  // need to barrier it.
-  if (type == MIRType::Value || type == MIRType::String) {
-    branchPtr(Assembler::NotEqual, Address(temp2, gc::ChunkRuntimeOffset),
-              ImmPtr(rt), noBarrier);
-  } else {
-#ifdef DEBUG
-    Label thisRuntime;
-    branchPtr(Assembler::Equal, Address(temp2, gc::ChunkRuntimeOffset),
-              ImmPtr(rt), &thisRuntime);
-    assumeUnreachable("JIT pre-barrier: unexpected runtime");
-    bind(&thisRuntime);
-#endif
-  }
-
   // Determine the bit index and store in temp1.
   //
   // bit = (addr & js::gc::ChunkMask) / js::gc::CellBytesPerMarkBit +
