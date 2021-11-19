@@ -11,5 +11,12 @@ DIRS += ['lib']
 
 EXPORTS += [
     'expat_config.h',
+    'expat_config_moz.h',
+    'expat_config_rlbox.h',
+    'rlbox_expat.h',
+    'rlbox_expat_types.h',
 ]
 
+LOCAL_INCLUDES += [
+    '!/security/rlbox',
+]
