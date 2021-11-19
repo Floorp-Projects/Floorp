@@ -452,4 +452,74 @@ class PagedHistoryProviderTest {
         )
         assertEquals(results, actualResults)
     }
+
+    @Test
+    fun `WHEN removeConsecutiveDuplicates is called THEN all consecutive duplicates must be removed`() {
+        val results = listOf(
+            History.Group(
+                id = 1,
+                title = "Group 1",
+                visitedAt = 0,
+                items = emptyList()
+            ),
+            History.Regular(
+                id = 2,
+                title = "No duplicate item",
+                url = "url",
+                visitedAt = 0
+            ),
+            History.Regular(
+                id = 3,
+                title = "Duplicate item 1",
+                url = "url",
+                visitedAt = 0
+            ),
+            History.Regular(
+                id = 4,
+                title = "Duplicate item 2",
+                url = "url",
+                visitedAt = 0
+            ),
+            History.Group(
+                id = 5,
+                title = "Group 5",
+                visitedAt = 0,
+                items = emptyList()
+            ),
+            History.Regular(
+                id = 6,
+                title = "No duplicate item",
+                url = "url",
+                visitedAt = 0
+            ),
+        ).removeConsecutiveDuplicates()
+
+        val expectedList = listOf(
+            History.Group(
+                id = 1,
+                title = "Group 1",
+                visitedAt = 0,
+                items = emptyList()
+            ),
+            History.Regular(
+                id = 2,
+                title = "No duplicate item",
+                url = "url",
+                visitedAt = 0
+            ),
+            History.Group(
+                id = 5,
+                title = "Group 5",
+                visitedAt = 0,
+                items = emptyList()
+            ),
+            History.Regular(
+                id = 6,
+                title = "No duplicate item",
+                url = "url",
+                visitedAt = 0
+            ),
+        )
+        assertEquals(expectedList, results)
+    }
 }

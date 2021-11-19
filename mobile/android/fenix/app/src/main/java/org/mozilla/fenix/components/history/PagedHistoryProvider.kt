@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.components.history
 
+import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.storage.VisitInfo
 import mozilla.components.concept.storage.VisitType
@@ -203,7 +204,8 @@ class DefaultPagedHistoryProvider(
             }
         )
 
-        return result.sortedByDescending { it.visitedAt }
+        return result.removeConsecutiveDuplicates()
+            .sortedByDescending { it.visitedAt }
     }
 
     private fun transformVisitInfoToHistoryItem(offset: Int): (id: Int, visit: VisitInfo) -> History.Regular {
@@ -219,5 +221,20 @@ class DefaultPagedHistoryProvider(
                 visitedAt = visit.visitTime
             )
         }
+    }
+}
+
+@VisibleForTesting
+internal fun List<History>.removeConsecutiveDuplicates(): List<History> {
+    var previousURL = ""
+    return filter {
+        var isNotDuplicate = true
+        previousURL = if (it is History.Regular) {
+            isNotDuplicate = it.url != previousURL
+            it.url
+        } else {
+            ""
+        }
+        isNotDuplicate
     }
 }
