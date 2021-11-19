@@ -193,7 +193,7 @@
 
     --in-content-box-background: -moz-Dialog;
     --in-content-box-background-odd: -moz-Dialog;
-    --in-content-box-border-color: ThreeDShadow;
+    --in-content-box-border-color: -moz-DialogText;
     --in-content-box-info-background: -moz-Dialog;
 
     --in-content-item-hover: SelectedItem;
@@ -222,7 +222,7 @@
     --in-content-button-text-color: ButtonText;
     --in-content-button-background-hover: SelectedItem;
     --in-content-button-background-active: SelectedItem;
-    --in-content-button-border-color: ThreeDShadow;
+    --in-content-button-border-color: var(--in-content-button-text-color);
 
     --in-content-primary-button-text-color: SelectedItemText;
     --in-content-primary-button-text-color-hover: SelectedItem;
