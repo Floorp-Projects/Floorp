@@ -22,18 +22,17 @@ struct LangGroupFontPrefs {
   LangGroupFontPrefs()
       : mLangGroup(nullptr),
         mMinimumFontSize({0}),
-        mDefaultVariableFont(),
+        mDefaultVariableFont(StyleGenericFontFamily::Serif, {0}),
         mDefaultSerifFont(StyleGenericFontFamily::Serif, {0}),
         mDefaultSansSerifFont(StyleGenericFontFamily::SansSerif, {0}),
         mDefaultMonospaceFont(StyleGenericFontFamily::Monospace, {0}),
         mDefaultCursiveFont(StyleGenericFontFamily::Cursive, {0}),
         mDefaultFantasyFont(StyleGenericFontFamily::Fantasy, {0}),
         mDefaultSystemUiFont(StyleGenericFontFamily::SystemUi, {0}) {
-    mDefaultVariableFont.family.families.fallback =
-        StyleGenericFontFamily::Serif;
-    // We create mDefaultVariableFont.family with defaultType as the
-    // fallback font, and not as part of the font list proper. This way,
-    // it can be overwritten should there be a language change.
+  }
+
+  StyleGenericFontFamily GetDefaultGeneric() const {
+    return mDefaultVariableFont.family.families.list.AsSpan()[0].AsGeneric();
   }
 
   void Reset() {

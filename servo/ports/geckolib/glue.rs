@@ -7184,18 +7184,12 @@ pub extern "C" fn Servo_FontFamily_ForSystemFont(name: &nsACString, out: &mut Fo
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_FontFamilyList_Normalize(list: &mut FontFamilyList) {
-    list.normalize()
-}
-
-#[no_mangle]
 pub extern "C" fn Servo_FontFamilyList_WithNames(
     names: &nsTArray<computed::font::SingleFontFamily>,
     out: &mut FontFamilyList,
 ) {
     *out = FontFamilyList {
         list: style_traits::arc_slice::ArcSlice::from_iter(names.iter().cloned()),
-        fallback: GenericFontFamily::None,
     };
 }
 
