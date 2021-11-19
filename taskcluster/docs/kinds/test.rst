@@ -98,3 +98,30 @@ the same keys. The last variant's configuration will be the one that gets used.
 
 .. _variants.yml: https://searchfox.org/mozilla-central/source/taskcluster/ci/test/variants.yml
 .. _json-e: https://json-e.js.org/
+
+
+Setting
+-------
+
+A test ``setting`` is the set of conditions under which a test is running.
+Aside from the chunk number, a ``setting`` uniquely distinguishes a task from
+another that is running the same set of tests. There are three types of inputs
+that make up a ``setting``:
+
+1. Platform - Bits of information that describe the underlying platform the
+   test is running on. This includes things like the operating system and
+   version, CPU architecture, etc.
+
+2. Build - Bits of information that describe the build being tested. This
+   includes things like the build type and which build attributes (like
+   ``asan``, ``ccov``, etc) are enabled.
+
+3. Runtime - Bits of information that describe the configured state of Firefox.
+   This includes things like prefs and environment variables. Note that tasks
+   should only set runtime configuration via the variants system (see
+   `Variants`_).
+
+Test ``settings`` are available in the ``task.extra.test-setting`` object in
+all test tasks. They are defined by the
+:py:func:`~gecko_taskgraph.transforms.tests.set_test_setting` transform
+function.

@@ -128,5 +128,89 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
     assert tasks[1]["attributes"]["unittest_variant"] == "foo"
 
 
+@pytest.mark.parametrize(
+    "task,expected",
+    (
+        pytest.param(
+            {
+                "attributes": {"unittest_variant": "webrender-sw+wayland"},
+                "e10s": False,
+                "test-platform": "linux1804-64-clang-trunk-qr/opt",
+            },
+            {
+                "platform": {
+                    "arch": "64",
+                    "os": {
+                        "name": "linux",
+                        "version": "1804",
+                    },
+                },
+                "build": {
+                    "type": "opt",
+                    "clang-trunk": True,
+                },
+                "runtime": {
+                    "1proc": True,
+                    "wayland": True,
+                    "webrender-sw": True,
+                },
+            },
+            id="linux",
+        ),
+        pytest.param(
+            {
+                "attributes": {},
+                "e10s": True,
+                "test-platform": "android-hw-s7-8-0-android-aarch64-shippable-qr/opt",
+            },
+            {
+                "platform": {
+                    "arch": "aarch64",
+                    "device": "s7",
+                    "os": {
+                        "name": "android",
+                        "version": "8.0",
+                    },
+                },
+                "build": {
+                    "type": "opt",
+                    "shippable": True,
+                },
+                "runtime": {},
+            },
+            id="android",
+        ),
+        pytest.param(
+            {
+                "attributes": {},
+                "e10s": True,
+                "test-platform": "windows10-64-2004-ref-hw-2017-ccov/debug",
+            },
+            {
+                "platform": {
+                    "arch": "64",
+                    "machine": "ref-hw-2017",
+                    "os": {
+                        "build": "2004",
+                        "name": "windows",
+                        "version": "10",
+                    },
+                },
+                "build": {
+                    "type": "debug",
+                    "ccov": True,
+                },
+                "runtime": {},
+            },
+            id="windows",
+        ),
+    ),
+)
+def test_set_test_setting(run_transform, task, expected):
+    task = list(run_transform(test_transforms.set_test_setting, task))[0]
+    assert "test-setting" in task
+    assert task["test-setting"] == expected
+
+
 if __name__ == "__main__":
     mozunit.main()
