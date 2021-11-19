@@ -207,7 +207,7 @@ private fun RecentSearchGroupItem(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    RecentTabSubtitle(subtitle = stringResource(R.string.recent_tabs_search_term_count, count))
+                    RecentTabSubtitle(subtitle = stringResource(R.string.recent_tabs_search_term_count_2, count))
                 }
             }
         }
