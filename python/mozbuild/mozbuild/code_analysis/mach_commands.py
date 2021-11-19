@@ -644,19 +644,19 @@ def autotest(
             clang_tools_path,
             "clang-tidy",
             "bin",
-            "clang-tidy" + config.substs.get("BIN_SUFFIX", ""),
+            "clang-tidy" + config.substs.get("HOST_BIN_SUFFIX", ""),
         )
         clang_paths._clang_format_path = mozpath.join(
             clang_tools_path,
             "clang-tidy",
             "bin",
-            "clang-format" + config.substs.get("BIN_SUFFIX", ""),
+            "clang-format" + config.substs.get("HOST_BIN_SUFFIX", ""),
         )
         clang_paths._clang_apply_replacements = mozpath.join(
             clang_tools_path,
             "clang-tidy",
             "bin",
-            "clang-apply-replacements" + config.substs.get("BIN_SUFFIX", ""),
+            "clang-apply-replacements" + config.substs.get("HOST_BIN_SUFFIX", ""),
         )
         clang_paths._run_clang_tidy_path = mozpath.join(
             clang_tools_path, "clang-tidy", "bin", "run-clang-tidy"
@@ -1499,19 +1499,19 @@ def _set_clang_tools_paths(command_context):
         clang_paths._clang_tools_path,
         "clang-tidy",
         "bin",
-        "clang-tidy" + config.substs.get("BIN_SUFFIX", ""),
+        "clang-tidy" + config.substs.get("HOST_BIN_SUFFIX", ""),
     )
     clang_paths._clang_format_path = mozpath.join(
         clang_paths._clang_tools_path,
         "clang-tidy",
         "bin",
-        "clang-format" + config.substs.get("BIN_SUFFIX", ""),
+        "clang-format" + config.substs.get("HOST_BIN_SUFFIX", ""),
     )
     clang_paths._clang_apply_replacements = mozpath.join(
         clang_paths._clang_tools_path,
         "clang-tidy",
         "bin",
-        "clang-apply-replacements" + config.substs.get("BIN_SUFFIX", ""),
+        "clang-apply-replacements" + config.substs.get("HOST_BIN_SUFFIX", ""),
     )
     clang_paths._run_clang_tidy_path = mozpath.join(
         clang_paths._clang_tools_path,
