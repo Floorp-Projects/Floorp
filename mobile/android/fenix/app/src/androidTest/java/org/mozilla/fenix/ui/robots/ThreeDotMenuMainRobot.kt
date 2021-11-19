@@ -44,8 +44,6 @@ import org.mozilla.fenix.share.ShareFragment
  */
 @Suppress("ForbiddenComment")
 class ThreeDotMenuMainRobot {
-    fun verifyTabSettingsButton() = assertTabSettingsButton()
-    fun verifyRecentlyClosedTabsButton() = assertRecentlyClosedTabsButton()
     fun verifyShareAllTabsButton() = assertShareAllTabsButton()
     fun clickShareAllTabsButton() = shareAllTabsButton().click()
     fun verifySettingsButton() = assertSettingsButton()
@@ -88,7 +86,7 @@ class ThreeDotMenuMainRobot {
     fun verifyDownloadsButton() = assertDownloadsButton()
     fun verifyShareTabsOverlay() = assertShareTabsOverlay()
     fun verifySignInToSyncButton() = assertSignInToSyncButton()
-    fun verifyNewTabButton() = assertNewTabButton()
+    fun verifyNewTabButton() = assertNormalBrowsingNewTabButton()
     fun verifyReportSiteIssueButton() = assertReportSiteIssueButton()
 
     fun verifyDesktopSiteModeEnabled(state: Boolean) {
@@ -555,26 +553,6 @@ private fun clickAddonsManagerButton() {
     addOnsButton().check(matches(isCompletelyDisplayed())).click()
 }
 
-private fun tabSettingsButton() =
-    onView(allOf(withText("Tab settings"))).inRoot(RootMatchers.isPlatformPopup())
-
-private fun assertTabSettingsButton() {
-    tabSettingsButton()
-        .check(
-            matches(isDisplayed())
-        )
-}
-
-private fun recentlyClosedTabsButton() =
-    onView(allOf(withText("Recently closed tabs"))).inRoot(RootMatchers.isPlatformPopup())
-
-private fun assertRecentlyClosedTabsButton() {
-    recentlyClosedTabsButton()
-        .check(
-            matches(isDisplayed())
-        )
-}
-
 private fun shareAllTabsButton() =
     onView(allOf(withText("Share all tabs"))).inRoot(RootMatchers.isPlatformPopup())
 
@@ -585,4 +563,4 @@ private fun assertShareAllTabsButton() {
         )
 }
 
-private fun assertNewTabButton() = onView(withText("New tab")).check(matches(isDisplayed()))
+private fun assertNormalBrowsingNewTabButton() = onView(withText("New tab")).check(matches(isDisplayed()))

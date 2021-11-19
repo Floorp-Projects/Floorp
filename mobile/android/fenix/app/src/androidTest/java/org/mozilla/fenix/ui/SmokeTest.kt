@@ -984,20 +984,16 @@ class SmokeTest {
 
     @Test
     fun emptyTabsTrayViewPrivateBrowsingTest() {
-        homeScreen {
-        }.dismissOnboarding()
-
-        homeScreen {
-        }.openTabDrawer {
+        navigationToolbar {
+        }.openTabTray {
         }.toggleToPrivateTabs() {
-            verifyPrivateModeSelected()
-            verifyNormalBrowsingButtonIsDisplayed()
-            verifyNoTabsOpened()
+            verifyNormalBrowsingButtonIsSelected(false)
+            verifyPrivateBrowsingButtonIsSelected(true)
+            verifySyncedTabsButtonIsSelected(false)
+            verifyNoOpenTabsInPrivateBrowsing()
+            verifyPrivateBrowsingNewTabButton()
             verifyTabTrayOverflowMenu(true)
-            verifyNewTabButton()
-        }.openTabsListThreeDotMenu {
-            verifyTabSettingsButton()
-            verifyRecentlyClosedTabsButton()
+            verifyEmptyTabsTrayMenuButtons()
         }
     }
 
@@ -1020,7 +1016,7 @@ class SmokeTest {
             verifyCloseTabsButton("Test_Page_1")
             verifyOpenedTabThumbnail()
             verifyTabTrayOverflowMenu(true)
-            verifyNewTabButton()
+            verifyPrivateBrowsingNewTabButton()
         }
     }
 
@@ -1128,7 +1124,7 @@ class SmokeTest {
         }.openTabCrashReporter {
         }.clickTabCrashedCloseButton {
         }.openTabDrawer {
-            verifyNoTabsOpened()
+            verifyNoOpenTabsInNormalBrowsing()
         }
     }
 

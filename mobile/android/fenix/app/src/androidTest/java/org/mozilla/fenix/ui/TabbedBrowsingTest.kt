@@ -77,7 +77,7 @@ class TabbedBrowsingTest {
             verifyExistingOpenTabs("Test_Page_1")
             closeTab()
         }.openTabDrawer {
-            verifyNoTabsOpened()
+            verifyNoOpenTabsInNormalBrowsing()
         }.openNewTab {
         }.submitQuery(defaultWebPage.url.toString()) {
             mDevice.waitForIdle()
@@ -102,7 +102,7 @@ class TabbedBrowsingTest {
             verifyExistingTabList()
             verifyPrivateModeSelected()
         }.toggleToNormalTabs {
-            verifyNoTabsOpened()
+            verifyNoOpenTabsInNormalBrowsing()
         }.toggleToPrivateTabs {
             verifyExistingTabList()
         }
@@ -275,7 +275,7 @@ class TabbedBrowsingTest {
 
         navigationToolbar {
         }.openTabTray {
-            verifyNoTabsOpened()
+            verifyNoOpenTabsInNormalBrowsing()
             // With no tabs opened the state should be STATE_COLLAPSED.
             verifyBehaviorState(BottomSheetBehavior.STATE_COLLAPSED)
             // Need to ensure the halfExpandedRatio is very small so that when in STATE_HALF_EXPANDED
@@ -301,16 +301,10 @@ class TabbedBrowsingTest {
             verifyNormalBrowsingButtonIsSelected(true)
             verifyPrivateBrowsingButtonIsSelected(false)
             verifySyncedTabsButtonIsSelected(false)
-            verifyNoTabsOpened()
-            verifyNewTabButton()
+            verifyNoOpenTabsInNormalBrowsing()
+            verifyNormalBrowsingNewTabButton()
             verifyTabTrayOverflowMenu(true)
-        }.toggleToPrivateTabs {
-            verifyNormalBrowsingButtonIsSelected(false)
-            verifyPrivateBrowsingButtonIsSelected(true)
-            verifySyncedTabsButtonIsSelected(false)
-            verifyNoTabsOpened()
-            verifyNewTabButton()
-            verifyTabTrayOverflowMenu(true)
+            verifyEmptyTabsTrayMenuButtons()
         }
     }
 
@@ -322,7 +316,7 @@ class TabbedBrowsingTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openTabDrawer {
             verifyExistingTabList()
-            verifyNewTabButton()
+            verifyNormalBrowsingNewTabButton()
             verifyTabTrayOverflowMenu(true)
             verifyExistingOpenTabs(defaultWebPage.title)
             verifyCloseTabsButton(defaultWebPage.title)

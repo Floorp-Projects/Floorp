@@ -480,7 +480,7 @@ class SettingsPrivacyTest {
         }.goBack {
         }.goBack {
         }.openTabDrawer {
-            verifyNoTabsOpened()
+            verifyNoOpenTabsInNormalBrowsing()
         }
     }
 
