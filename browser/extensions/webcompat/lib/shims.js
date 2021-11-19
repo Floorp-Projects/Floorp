@@ -35,13 +35,16 @@ let warn = async function() {
 };
 
 class Shim {
-  constructor(opts) {
+  constructor(opts, manager) {
+    this.manager = manager;
+
     const { contentScripts, matches, unblocksOnOptIn } = opts;
 
     this.branches = opts.branches;
     this.bug = opts.bug;
     this.isGoogleTrendsDFPIFix = opts.custom == "google-trends-dfpi-fix";
     this.file = opts.file;
+    this.hiddenInAboutCompat = opts.hiddenInAboutCompat;
     this.hosts = opts.hosts;
     this.id = opts.id;
     this.logos = opts.logos || [];
@@ -59,6 +62,7 @@ class Shim {
 
     this._disabledByConfig = opts.disabled;
     this._disabledGlobally = false;
+    this._disabledForSession = false;
     this._disabledByPlatform = false;
     this._disabledByReleaseBranch = false;
 
@@ -145,7 +149,7 @@ class Shim {
   }
 
   get enabled() {
-    if (this._disabledGlobally) {
+    if (this._disabledGlobally || this._disabledForSession) {
       return false;
     }
 
@@ -160,7 +164,38 @@ class Shim {
     );
   }
 
-  enable() {
+  get disabledReason() {
+    if (this._disabledGlobally) {
+      return "globalPref";
+    }
+
+    if (this._disabledForSession) {
+      return "session";
+    }
+
+    if (this._disabledPrefValue !== undefined) {
+      if (this._disabledPrefValue === true) {
+        return "pref";
+      }
+      return false;
+    }
+
+    if (this._disabledByConfig) {
+      return "config";
+    }
+
+    if (this._disabledByPlatform) {
+      return "platform";
+    }
+
+    if (this._disabledByReleaseBranch) {
+      return "releaseBranch";
+    }
+
+    return false;
+  }
+
+  onAllShimsEnabled() {
     const wasEnabled = this.enabled;
     this._disabledGlobally = false;
     if (!wasEnabled) {
@@ -168,7 +203,7 @@ class Shim {
     }
   }
 
-  disable() {
+  onAllShimsDisabled() {
     const wasEnabled = this.enabled;
     this._disabledGlobally = true;
     if (wasEnabled) {
@@ -176,7 +211,24 @@ class Shim {
     }
   }
 
+  enableForSession() {
+    const wasEnabled = this.enabled;
+    this._disabledForSession = false;
+    if (!wasEnabled) {
+      this._onEnabledStateChanged();
+    }
+  }
+
+  disableForSession() {
+    const wasEnabled = this.enabled;
+    this._disabledForSession = true;
+    if (wasEnabled) {
+      this._onEnabledStateChanged();
+    }
+  }
+
   async _onEnabledStateChanged() {
+    this.manager?.onShimStateChanged(this.id);
     if (!this.enabled) {
       await this._unregisterContentScripts();
       return this._revokeRequestsInETP();
@@ -369,6 +421,48 @@ class Shims {
     this._haveCheckedEnabledPref = this._checkEnabledPref();
   }
 
+  bindAboutCompatBroker(broker) {
+    this._aboutCompatBroker = broker;
+  }
+
+  getShimInfoForAboutCompat(shim) {
+    const { bug, disabledReason, hiddenInAboutCompat, id, name } = shim;
+    const type = "smartblock";
+    return { bug, disabledReason, hidden: hiddenInAboutCompat, id, name, type };
+  }
+
+  disableShimForSession(id) {
+    const shim = this.shims.get(id);
+    shim?.disableForSession();
+  }
+
+  enableShimForSession(id) {
+    const shim = this.shims.get(id);
+    shim?.enableForSession();
+  }
+
+  onShimStateChanged(id) {
+    if (!this._aboutCompatBroker) {
+      return;
+    }
+
+    const shim = this.shims.get(id);
+    if (!shim) {
+      return;
+    }
+
+    const shimsChanged = [this.getShimInfoForAboutCompat(shim)];
+    this._aboutCompatBroker.portsToAboutCompatTabs.broadcast({ shimsChanged });
+  }
+
+  getAvailableShims() {
+    const shims = Array.from(this.shims.values()).map(
+      this.getShimInfoForAboutCompat
+    );
+    shims.sort((a, b) => a.localeCompare(b));
+    return shims;
+  }
+
   _registerShims(shims) {
     if (this.shims) {
       throw new Error("_registerShims has already been called");
@@ -378,7 +472,7 @@ class Shims {
     for (const shimOpts of shims) {
       const { id } = shimOpts;
       if (!this.shims.has(id)) {
-        this.shims.set(shimOpts.id, new Shim(shimOpts));
+        this.shims.set(shimOpts.id, new Shim(shimOpts, this));
       }
     }
 
@@ -495,9 +589,9 @@ class Shims {
 
     for (const shim of this.shims.values()) {
       if (enabled) {
-        shim.enable();
+        shim.onAllShimsEnabled();
       } else {
-        shim.disable();
+        shim.onAllShimsDisabled();
       }
     }
   }
