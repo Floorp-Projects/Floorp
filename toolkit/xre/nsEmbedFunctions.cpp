@@ -221,9 +221,10 @@ void XRE_TermEmbedding() {
 
 const char* XRE_GeckoProcessTypeToString(GeckoProcessType aProcessType) {
   switch (aProcessType) {
-#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, xre_name, \
-                           bin_type)                                     \
-  case GeckoProcessType::GeckoProcessType_##enum_name:                   \
+#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, proc_typename, \
+                           process_bin_type, procinfo_typename,               \
+                           webidl_typename, allcaps_name)                     \
+  case GeckoProcessType::GeckoProcessType_##enum_name:                        \
     return string_name;
 #include "mozilla/GeckoProcessTypes.h"
 #undef GECKO_PROCESS_TYPE

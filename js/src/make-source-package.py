@@ -197,6 +197,8 @@ rsync_filter_list = """
 + /toolkit/crashreporter/tools/symbolstore.py
 + /toolkit/mozapps/installer/package-name.mk
 
++ /xpcom/geckoprocesstypes_generator/**
+
 # SpiderMonkey itself
 
 + /js/src/**
