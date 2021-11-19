@@ -133,8 +133,8 @@ use style::traversal::DomTraversal;
 use style::traversal_flags::{self, TraversalFlags};
 use style::use_counters::UseCounters;
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
+use style::values::computed::font::{FontFamily, FontFamilyList, GenericFontFamily};
 use style::values::computed::{self, Context, ToComputedValue};
-use style::values::computed::font::{FontFamilyList, FontFamily, GenericFontFamily};
 use style::values::distance::ComputeSquaredDistance;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
@@ -1751,7 +1751,9 @@ pub extern "C" fn Servo_StyleSet_RemoveUniqueEntriesFromAuthorStylesCache(
     document_set: &RawServoStyleSet,
 ) {
     let mut document_data = PerDocumentStyleData::from_ffi(document_set).borrow_mut();
-    document_data.stylist.remove_unique_author_data_cache_entries();
+    document_data
+        .stylist
+        .remove_unique_author_data_cache_entries();
 }
 
 #[no_mangle]
@@ -2335,11 +2337,9 @@ impl_basic_rule_funcs! { (Layer, LayerRule, RawServoLayerRule),
 #[no_mangle]
 pub extern "C" fn Servo_LayerRule_GetRules(rule: &RawServoLayerRule) -> Strong<ServoCssRules> {
     use style::stylesheets::layer_rule::LayerRuleKind;
-    read_locked_arc(rule, |rule: &LayerRule| {
-        match rule.kind {
-            LayerRuleKind::Block { ref rules, .. } => rules.clone().into_strong(),
-            LayerRuleKind::Statement { .. } => Strong::null(),
-        }
+    read_locked_arc(rule, |rule: &LayerRule| match rule.kind {
+        LayerRuleKind::Block { ref rules, .. } => rules.clone().into_strong(),
+        LayerRuleKind::Statement { .. } => Strong::null(),
     })
 }
 
@@ -3753,9 +3753,9 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForAnonymousBox(
         }
     }
 
-    let rule_node = data
-        .stylist
-        .rule_node_for_precomputed_pseudo(&guards, &pseudo, extra_declarations);
+    let rule_node =
+        data.stylist
+            .rule_node_for_precomputed_pseudo(&guards, &pseudo, extra_declarations);
 
     data.stylist
         .precomputed_values_for_pseudo_with_rule_node::<GeckoElement>(
@@ -4162,7 +4162,7 @@ pub extern "C" fn Servo_ComputedValues_EqualForCachedAnonymousContentStyle(
 #[no_mangle]
 pub extern "C" fn Servo_ComputedValues_BlockifiedDisplay(
     style: &ComputedValues,
-    is_root_element : bool,
+    is_root_element: bool,
 ) -> u16 {
     let display = style.get_box().clone_display();
     let blockified_display = display.equivalent_block_display(is_root_element);
@@ -4995,7 +4995,9 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
     use style::properties::PropertyDeclaration;
     use style::values::generics::box_::{VerticalAlign, VerticalAlignKeyword};
     use style::values::generics::font::FontStyle;
-    use style::values::specified::{BorderStyle, Clear, Display, Float, TextAlign, table::CaptionSide};
+    use style::values::specified::{
+        table::CaptionSide, BorderStyle, Clear, Display, Float, TextAlign,
+    };
 
     fn get_from_computed<T>(value: u32) -> T
     where
@@ -7184,7 +7186,10 @@ pub extern "C" fn Servo_FontFamilyList_Normalize(list: &mut FontFamilyList) {
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_FontFamilyList_WithNames(names: &nsTArray<computed::font::SingleFontFamily>, out: &mut FontFamilyList) {
+pub extern "C" fn Servo_FontFamilyList_WithNames(
+    names: &nsTArray<computed::font::SingleFontFamily>,
+    out: &mut FontFamilyList,
+) {
     *out = FontFamilyList {
         list: style_traits::arc_slice::ArcSlice::from_iter(names.iter().cloned()),
         fallback: GenericFontFamily::None,

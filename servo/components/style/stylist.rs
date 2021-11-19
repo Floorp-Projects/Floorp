@@ -12,7 +12,9 @@ use crate::font_metrics::FontMetricsProvider;
 #[cfg(feature = "gecko")]
 use crate::gecko_bindings::structs::{ServoStyleSetSizes, StyleRuleInclusion};
 use crate::invalidation::element::invalidation_map::InvalidationMap;
-use crate::invalidation::media_queries::{EffectiveMediaQueryResults, MediaListKey, ToMediaListKey};
+use crate::invalidation::media_queries::{
+    EffectiveMediaQueryResults, MediaListKey, ToMediaListKey,
+};
 use crate::invalidation::stylesheets::RuleChangeKind;
 use crate::media_queries::Device;
 use crate::properties::{self, CascadeMode, ComputedValues};
@@ -26,15 +28,18 @@ use crate::shared_lock::{Locked, SharedRwLockReadGuard, StylesheetGuards};
 use crate::stylesheet_set::{DataValidity, DocumentStylesheetSet, SheetRebuildKind};
 use crate::stylesheet_set::{DocumentStylesheetFlusher, SheetCollectionFlusher};
 use crate::stylesheets::keyframes_rule::KeyframesAnimation;
-use crate::stylesheets::layer_rule::{LayerName, LayerId, LayerOrder};
+use crate::stylesheets::layer_rule::{LayerId, LayerName, LayerOrder};
 use crate::stylesheets::viewport_rule::{self, MaybeNew, ViewportRule};
-use crate::stylesheets::{StyleRule, StylesheetInDocument, StylesheetContents};
 #[cfg(feature = "gecko")]
 use crate::stylesheets::{CounterStyleRule, FontFaceRule, FontFeatureValuesRule, PageRule};
-use crate::stylesheets::{CssRule, Origin, OriginSet, PerOrigin, PerOriginIter, EffectiveRulesIterator};
+use crate::stylesheets::{
+    CssRule, EffectiveRulesIterator, Origin, OriginSet, PerOrigin, PerOriginIter,
+};
+use crate::stylesheets::{StyleRule, StylesheetContents, StylesheetInDocument};
 use crate::thread_state::{self, ThreadState};
 use crate::{Atom, LocalName, Namespace, WeakAtom};
 use fallible::FallibleVec;
+use fxhash::FxHashMap;
 use hashglobe::FailedAllocationError;
 use malloc_size_of::MallocSizeOf;
 #[cfg(feature = "gecko")]
@@ -49,11 +54,10 @@ use selectors::NthIndexCache;
 use servo_arc::{Arc, ArcBorrow};
 use smallbitvec::SmallBitVec;
 use smallvec::SmallVec;
+use std::hash::{Hash, Hasher};
 use std::sync::Mutex;
 use std::{mem, ops};
-use std::hash::{Hash, Hasher};
 use style_traits::viewport::ViewportConstraints;
-use fxhash::FxHashMap;
 
 /// The type of the stylesheets that the stylist contains.
 #[cfg(feature = "servo")]
@@ -94,7 +98,7 @@ struct CascadeDataCacheKey {
 unsafe impl Send for CascadeDataCacheKey {}
 unsafe impl Sync for CascadeDataCacheKey {}
 
-trait CascadeDataCacheEntry : Sized {
+trait CascadeDataCacheEntry: Sized {
     /// Returns a reference to the cascade data.
     fn cascade_data(&self) -> &CascadeData;
     /// Rebuilds the cascade data for the new stylesheet collection. The
@@ -122,7 +126,9 @@ where
     Entry: CascadeDataCacheEntry,
 {
     fn new() -> Self {
-        Self { entries: Default::default() }
+        Self {
+            entries: Default::default(),
+        }
     }
 
     fn len(&self) -> usize {
@@ -166,15 +172,9 @@ where
         match self.entries.entry(key) {
             HashMapEntry::Vacant(e) => {
                 debug!("> Picking the slow path (not in the cache)");
-                new_entry = Entry::rebuild(
-                    device,
-                    quirks_mode,
-                    collection,
-                    guard,
-                    old_entry,
-                )?;
+                new_entry = Entry::rebuild(device, quirks_mode, collection, guard, old_entry)?;
                 e.insert(new_entry.clone());
-            }
+            },
             HashMapEntry::Occupied(mut e) => {
                 // Avoid reusing our old entry (this can happen if we get
                 // invalidated due to CSSOM mutations and our old stylesheet
@@ -193,15 +193,9 @@ where
                 }
 
                 debug!("> Picking the slow path due to same entry as old");
-                new_entry = Entry::rebuild(
-                    device,
-                    quirks_mode,
-                    collection,
-                    guard,
-                    old_entry,
-                )?;
+                new_entry = Entry::rebuild(device, quirks_mode, collection, guard, old_entry)?;
                 e.insert(new_entry.clone());
-            }
+            },
         }
 
         Ok(Some(new_entry))
@@ -273,7 +267,7 @@ impl CascadeDataCacheEntry for UserAgentCascadeData {
         _old: &Self,
     ) -> Result<Arc<Self>, FailedAllocationError>
     where
-        S: StylesheetInDocument + PartialEq + 'static
+        S: StylesheetInDocument + PartialEq + 'static,
     {
         // TODO: Maybe we should support incremental rebuilds, though they seem
         // uncommon and rebuild() doesn't deal with
@@ -604,13 +598,8 @@ impl Stylist {
     where
         S: StylesheetInDocument + PartialEq + 'static,
     {
-        self.author_data_cache.lookup(
-            &self.device,
-            self.quirks_mode,
-            collection,
-            guard,
-            old_data,
-        )
+        self.author_data_cache
+            .lookup(&self.device, self.quirks_mode, collection, guard, old_data)
     }
 
     /// Iterate over the extra data in origin order.
@@ -2139,7 +2128,11 @@ impl CascadeData {
     }
 
     fn compute_layer_order(&mut self) {
-        debug_assert_ne!(self.layers.len(), 0, "There should be at least the root layer!");
+        debug_assert_ne!(
+            self.layers.len(),
+            0,
+            "There should be at least the root layer!"
+        );
         if self.layers.len() == 1 {
             return; // Nothing to do
         }
@@ -2156,7 +2149,10 @@ impl CascadeData {
             order: &mut LayerOrder,
         ) {
             for child in parent.children.iter() {
-                debug_assert!(parent.id < *child, "Children are always registered after parents");
+                debug_assert!(
+                    parent.id < *child,
+                    "Children are always registered after parents"
+                );
                 let child_index = (child.0 - parent.id.0 - 1) as usize;
                 let (first, remaining) = remaining_layers.split_at_mut(child_index + 1);
                 let child = &mut first[child_index];
@@ -2345,7 +2341,10 @@ impl CascadeData {
 
                     let keyframes_rule = keyframes_rule.read_with(guard);
                     debug!("Found valid keyframes rule: {:?}", *keyframes_rule);
-                    match self.animations.try_entry(keyframes_rule.name.as_atom().clone())? {
+                    match self
+                        .animations
+                        .try_entry(keyframes_rule.name.as_atom().clone())?
+                    {
                         Entry::Vacant(e) => {
                             e.insert(KeyframesAnimation::from_keyframes(
                                 &keyframes_rule.keyframes,
@@ -2360,9 +2359,8 @@ impl CascadeData {
                             //
                             // TODO(emilio): This will need to be harder for
                             // layers.
-                            let needs_insert =
-                                 keyframes_rule.vendor_prefix.is_none() ||
-                                 e.get().vendor_prefix.is_some();
+                            let needs_insert = keyframes_rule.vendor_prefix.is_none() ||
+                                e.get().vendor_prefix.is_some();
                             if needs_insert {
                                 e.insert(KeyframesAnimation::from_keyframes(
                                     &keyframes_rule.keyframes,
@@ -2423,13 +2421,8 @@ impl CascadeData {
             }
 
             let mut effective = false;
-            let children = EffectiveRulesIterator::children(
-                rule,
-                device,
-                quirks_mode,
-                guard,
-                &mut effective,
-            );
+            let children =
+                EffectiveRulesIterator::children(rule, device, quirks_mode, guard, &mut effective);
 
             if !effective {
                 continue;
@@ -2448,7 +2441,8 @@ impl CascadeData {
                     let mut parent = layer.clone();
                     parent.0.pop();
 
-                    *data.layer_id
+                    *data
+                        .layer_id
                         .get_mut(&parent)
                         .expect("Parent layers should be registered before child layers")
                 } else {
@@ -2511,7 +2505,6 @@ impl CascadeData {
                             &mut layer_names_to_pop,
                         );
                     }
-
                 },
                 CssRule::Media(ref lock) => {
                     if rebuild_kind.should_rebuild_invalidation() {
@@ -2531,7 +2524,7 @@ impl CascadeData {
                                 &mut current_layer,
                                 &mut layer_names_to_pop,
                             );
-                        }
+                        },
                         LayerRuleKind::Statement { ref names } => {
                             for name in &**names {
                                 let mut pushed = 0;
@@ -2547,7 +2540,7 @@ impl CascadeData {
                                     current_layer.0.pop();
                                 }
                             }
-                        }
+                        },
                     }
                 },
                 // We don't care about any other rule.
@@ -2631,7 +2624,9 @@ impl CascadeData {
 
         let effective_now = stylesheet.is_effective_for_device(device, guard);
 
-        let effective_then = self.effective_media_query_results.was_effective(stylesheet.contents());
+        let effective_then = self
+            .effective_media_query_results
+            .was_effective(stylesheet.contents());
 
         if effective_now != effective_then {
             debug!(
@@ -2761,7 +2756,7 @@ impl CascadeDataCacheEntry for CascadeData {
         old: &Self,
     ) -> Result<Arc<Self>, FailedAllocationError>
     where
-        S: StylesheetInDocument + PartialEq + 'static
+        S: StylesheetInDocument + PartialEq + 'static,
     {
         debug_assert!(collection.dirty(), "We surely need to do something?");
         // If we're doing a full rebuild anyways, don't bother cloning the data.
