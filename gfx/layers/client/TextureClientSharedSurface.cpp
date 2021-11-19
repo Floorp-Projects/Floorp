@@ -84,7 +84,7 @@ bool SharedSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   }
 
   aOutDescriptor = layers::SurfaceDescriptorAndroidHardwareBuffer(
-      ipc::FileDescriptor(readerFd.release()), buffer->mId, buffer->mSize,
+      ipc::FileDescriptor(std::move(readerFd)), buffer->mId, buffer->mSize,
       buffer->mFormat);
   return true;
 #else
