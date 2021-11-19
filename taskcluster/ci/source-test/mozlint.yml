@@ -484,3 +484,20 @@ fluent-lint:
             - '**/*.ftl'
             - 'tools/lint/fluent-lint.yml'
             - 'tools/lint/fluent-lint/exclusions.yml'
+
+trojan-source:
+    description: Trojan Source attack - CVE-2021-42572
+    platform: lint/opt
+    treeherder:
+        symbol: misc(trojan-source)
+    run:
+        mach: lint -v -l trojan-source -f treeherder -f json:/builds/worker/mozlint.json *
+    when:
+        files-changed:
+            - '**/*.c'
+            - '**/*.cc'
+            - '**/*.cpp'
+            - '**/*.h'
+            - '**/*.py'
+            - '**/*.rs'
+            - 'tools/lint/trojan-source.yml'
