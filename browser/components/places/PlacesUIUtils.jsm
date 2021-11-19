@@ -1368,37 +1368,35 @@ var PlacesUIUtils = {
     let linkItems = [
       "placesContext_open:newtab",
       "placesContext_open:newwindow",
-      "placesContext_open:newprivatewindow",
       "placesContext_openSeparator",
       "placesContext_copy",
     ];
+    // Hide everything. We'll unhide the things we need.
     Array.from(menupopup.children).forEach(function(child) {
-      if (!(child.id in linkItems)) {
-        child.hidden = true;
-      }
+      child.hidden = true;
     });
     // Store triggerNode in controller for checking if commands are enabled
     this.managedBookmarksController.triggerNode = menupopup.triggerNode;
     // Container in this context means a folder.
     let isFolder = menupopup.triggerNode.hasAttribute("container");
-    let openContainerInTabs_menuitem = document.getElementById(
-      "placesContext_openContainer:tabs"
-    );
     if (isFolder) {
       // Disable the openContainerInTabs menuitem if there
       // are no children of the menu that have links.
+      let openContainerInTabs_menuitem = document.getElementById(
+        "placesContext_openContainer:tabs"
+      );
       let menuitems = menupopup.triggerNode.menupopup.children;
       let openContainerInTabs = Array.from(menuitems).some(
         menuitem => menuitem.link
       );
       openContainerInTabs_menuitem.disabled = !openContainerInTabs;
+      openContainerInTabs_menuitem.hidden = false;
     } else {
-      document.getElementById(
-        "placesContext_open:newprivatewindow"
-      ).hidden = PrivateBrowsingUtils.isWindowPrivate(window);
+      linkItems.forEach(id => (document.getElementById(id).hidden = false));
+      document.getElementById("placesContext_open:newprivatewindow").hidden =
+        PrivateBrowsingUtils.isWindowPrivate(window) ||
+        !PrivateBrowsingUtils.enabled;
     }
-    openContainerInTabs_menuitem.hidden = !isFolder;
-    linkItems.forEach(id => (document.getElementById(id).hidden = isFolder));
 
     event.target.ownerGlobal.updateCommands("places");
   },

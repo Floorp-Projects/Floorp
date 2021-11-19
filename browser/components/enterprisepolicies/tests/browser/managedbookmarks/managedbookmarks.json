@@ -1,5 +1,6 @@
 {
 	"policies": {
+		"DisablePrivateBrowsing": true,
 		"DisplayBookmarksToolbar": true,
 		"ManagedBookmarks": [{
 				"toplevel_name": "Folder 1"
