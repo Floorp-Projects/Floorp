@@ -38,9 +38,7 @@
     --input-border-color: color-mix(in srgb, currentColor 41%, transparent);
     --input-error-border-color: #E22850;
 
-    --tab-line-color: rgba(128,128,142,0.9);
     --tab-selected-bgcolor: rgb(255,255,255);
-    --tabs-border-color: transparent;
     --tab-icon-overlay-stroke: rgb(255,255,255);
     --tab-icon-overlay-fill: rgb(91,91,102);
     --toolbar-color: rgb(21,20,26);
