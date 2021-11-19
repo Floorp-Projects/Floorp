@@ -122,13 +122,7 @@ void CheckArenaListAccess<Helper>::check() const {
 
   JSRuntime* rt = TlsContext.get()->runtime();
   if (zone->isAtomsZone()) {
-    // The main thread can access the atoms arenas if it holds all the atoms
-    // table locks.
-    if (rt->currentThreadHasAtomsTableAccess()) {
-      return;
-    }
-
-    // Otherwise we must hold the GC lock if parallel parsing is running.
+    // We must hold the GC lock if parallel parsing is running.
     if (rt->isOffThreadParseRunning()) {
       rt->gc.assertCurrentThreadHasLockedGC();
     }

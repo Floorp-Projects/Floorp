@@ -19,23 +19,10 @@
  * The atoms table is a mapping from strings to JSAtoms that supports concurrent
  * access and incremental sweeping.
  *
- * The table is partitioned based on the key into multiple sub-tables. Each
- * sub-table is protected by a lock to ensure safety when accessed by helper
- * threads. Concurrent access improves performance of off-thread parsing which
- * frequently creates large numbers of atoms. Locking is only required when
- * off-thread parsing is running.
+ * The table is partitioned based on the key into multiple sub-tables.
  */
 
 namespace js {
-
-// Take all atoms table locks to allow iterating over cells in the atoms zone.
-class MOZ_RAII AutoLockAllAtoms {
-  JSRuntime* runtime;
-
- public:
-  explicit AutoLockAllAtoms(JSRuntime* rt);
-  ~AutoLockAllAtoms();
-};
 
 // This is a tagged pointer to an atom that duplicates the atom's pinned flag so
 // that we don't have to check the atom itself when marking pinned atoms (there
@@ -120,9 +107,6 @@ class AtomsTable {
     explicit Partition(uint32_t index);
     ~Partition();
 
-    // Lock that must be held to access this set.
-    Mutex lock;
-
     // The atoms in this set.
     AtomSet atoms;
 
@@ -132,13 +116,7 @@ class AtomsTable {
 
   Partition* partitions[PartitionCount];
 
-#ifdef DEBUG
-  bool allPartitionsLocked = false;
-#endif
-
  public:
-  class AutoLock;
-
   // An iterator used for sweeping atoms incrementally.
   class SweepIterator {
     AtomsTable& atoms;
@@ -180,10 +158,6 @@ class AtomsTable {
   // Sweep some atoms incrementally and return whether we finished.
   bool sweepIncrementally(SweepIterator& atomsToSweep, SliceBudget& budget);
 
-#ifdef DEBUG
-  bool mainThreadHasAllLocks() const { return allPartitionsLocked; }
-#endif
-
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
  private:
@@ -192,10 +166,6 @@ class AtomsTable {
 
   void tracePinnedAtomsInSet(JSTracer* trc, AtomSet& atoms);
   void mergeAtomsAddedWhileSweeping(Partition& partition);
-
-  friend class AutoLockAllAtoms;
-  void lockAll();
-  void unlockAll();
 };
 
 bool AtomIsPinned(JSContext* cx, JSAtom* atom);

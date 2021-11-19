@@ -590,11 +590,6 @@ struct JSRuntime {
 
     scriptDataLock.assertOwnedByCurrentThread();
   }
-
-  bool currentThreadHasAtomsTableAccess() const {
-    return js::CurrentThreadCanAccessRuntime(this) &&
-           atoms_->mainThreadHasAllLocks();
-  }
 #endif
 
   JS::HeapState heapState() const { return gc.heapState(); }

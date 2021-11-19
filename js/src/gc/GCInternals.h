@@ -130,12 +130,10 @@ class MOZ_RAII AutoMajorGCProfilerEntry : public AutoGeckoProfilerEntry {
   explicit AutoMajorGCProfilerEntry(GCRuntime* gc);
 };
 
-class MOZ_RAII AutoTraceSession : public AutoLockAllAtoms,
-                                  public AutoHeapSession {
+class MOZ_RAII AutoTraceSession : public AutoHeapSession {
  public:
   explicit AutoTraceSession(JSRuntime* rt)
-      : AutoLockAllAtoms(rt),
-        AutoHeapSession(&rt->gc, JS::HeapState::Tracing) {}
+      : AutoHeapSession(&rt->gc, JS::HeapState::Tracing) {}
 };
 
 struct MOZ_RAII AutoFinishGC {
