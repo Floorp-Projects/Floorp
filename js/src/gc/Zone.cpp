@@ -218,7 +218,6 @@ void Zone::setNeedsIncrementalBarrier(bool needs) {
 
 void Zone::changeGCState(GCState prev, GCState next) {
   MOZ_ASSERT(RuntimeHeapIsBusy());
-  MOZ_ASSERT(canCollect());
   MOZ_ASSERT(gcState() == prev);
 
   // This can be called when barriers have been temporarily disabled by
@@ -567,8 +566,6 @@ bool Zone::hasMarkedRealms() {
   }
   return false;
 }
-
-bool Zone::canCollect() { return true; }
 
 void Zone::notifyObservingDebuggers() {
   AutoAssertNoGC nogc;
