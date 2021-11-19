@@ -484,7 +484,6 @@ JSString* js::TenuringTracer::allocTenuredString(JSString* src, Zone* zone,
 
 JSObject* js::TenuringTracer::moveToTenuredSlow(JSObject* src) {
   MOZ_ASSERT(IsInsideNursery(src));
-  MOZ_ASSERT(!src->nurseryZone()->usedByHelperThread());
   MOZ_ASSERT(!src->is<PlainObject>());
 
   AllocKind dstKind = src->allocKindForTenure(nursery());
@@ -560,7 +559,6 @@ inline JSObject* js::TenuringTracer::movePlainObjectToTenured(
   // Fast path version of moveToTenuredSlow() for specialized for PlainObject.
 
   MOZ_ASSERT(IsInsideNursery(src));
-  MOZ_ASSERT(!src->nurseryZone()->usedByHelperThread());
 
   AllocKind dstKind = src->allocKindForTenure();
   auto dst = allocTenured<PlainObject>(src->nurseryZone(), dstKind);
@@ -693,7 +691,6 @@ inline void js::TenuringTracer::insertIntoStringFixupList(
 
 JSString* js::TenuringTracer::moveToTenured(JSString* src) {
   MOZ_ASSERT(IsInsideNursery(src));
-  MOZ_ASSERT(!src->nurseryZone()->usedByHelperThread());
   MOZ_ASSERT(!src->isExternal());
 
   AllocKind dstKind = src->getAllocKind();
@@ -844,7 +841,6 @@ void js::TenuringTracer::relocateDependentStringChars(
 
 JS::BigInt* js::TenuringTracer::moveToTenured(JS::BigInt* src) {
   MOZ_ASSERT(IsInsideNursery(src));
-  MOZ_ASSERT(!src->nurseryZone()->usedByHelperThread());
 
   AllocKind dstKind = src->getAllocKind();
   Zone* zone = src->nurseryZone();
