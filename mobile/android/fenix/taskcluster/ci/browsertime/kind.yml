@@ -74,7 +74,6 @@ job-defaults:
               type: directory
     run-visual-metrics: True
     chimera: True
-    web-render-only: True
     run:
         using: run-task
         checkout: false
@@ -126,7 +125,6 @@ jobs:
             - [google-search-restaurants, gsearch-r]
 
     tp6m-hv:
-        web-render-only: False
         page-load-tests:
             - google
             - [amazon-search, amazon-s]
