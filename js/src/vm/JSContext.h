@@ -57,8 +57,6 @@ class DebugModeOSRVolatileJitFrameIter;
 }  // namespace jit
 
 namespace gc {
-class AutoTraceSession;
-class AutoGCSession;
 class AutoSuppressNurseryCellAlloc;
 }  // namespace gc
 
@@ -396,9 +394,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
 
   js::AtomsTable& atoms() { return runtime_->atoms(); }
 
-  const JS::Zone* atomsZone(const js::AutoAccessAtomsZone& access) {
-    return runtime_->atomsZone(access);
-  }
+  const JS::Zone* atomsZone() { return runtime_->atomsZone(); }
 
   js::SymbolRegistry& symbolRegistry() { return runtime_->symbolRegistry(); }
 
@@ -1155,13 +1151,6 @@ class MOZ_RAII AutoLockScriptData {
 #endif
     }
   }
-};
-
-// TODO: Remove.
-class MOZ_STACK_CLASS AutoAccessAtomsZone {
- public:
-  MOZ_IMPLICIT AutoAccessAtomsZone(const gc::AutoTraceSession& lock) {}
-  MOZ_IMPLICIT AutoAccessAtomsZone(const gc::AutoGCSession& session) {}
 };
 
 class MOZ_RAII AutoNoteDebuggerEvaluationWithOnNativeCallHook {

@@ -803,10 +803,12 @@ struct JSRuntime {
     return *atoms_;
   }
 
-  const JS::Zone* atomsZone(const js::AutoAccessAtomsZone& access) const {
+  const JS::Zone* atomsZone() const {
+    MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(this));
     return gc.atomsZone;
   }
-  JS::Zone* atomsZone(const js::AutoAccessAtomsZone& access) {
+  JS::Zone* atomsZone() {
+    MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(this));
     return gc.atomsZone;
   }
   JS::Zone* unsafeAtomsZone() { return gc.atomsZone; }

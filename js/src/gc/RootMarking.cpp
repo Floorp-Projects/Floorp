@@ -235,7 +235,7 @@ void js::gc::GCRuntime::traceRuntimeForMajorGC(JSTracer* trc,
   // We only need to trace atoms when we're marking; atoms are never moved by
   // compacting GC.
   if (atomsZone->isGCMarking()) {
-    traceRuntimeAtoms(trc, session);
+    traceRuntimeAtoms(trc);
   }
 
   {
@@ -290,16 +290,15 @@ void js::gc::GCRuntime::traceRuntime(JSTracer* trc, AutoTraceSession& session) {
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_ROOTS);
 
-  traceRuntimeAtoms(trc, session);
+  traceRuntimeAtoms(trc);
   traceRuntimeCommon(trc, TraceRuntime);
 }
 
-void js::gc::GCRuntime::traceRuntimeAtoms(JSTracer* trc,
-                                          const AutoAccessAtomsZone& access) {
+void js::gc::GCRuntime::traceRuntimeAtoms(JSTracer* trc) {
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_RUNTIME_DATA);
   rt->tracePermanentThingsDuringInit(trc);
-  TraceAtoms(trc, access);
-  jit::JitRuntime::TraceAtomZoneRoots(trc, access);
+  TraceAtoms(trc);
+  jit::JitRuntime::TraceAtomZoneRoots(trc);
 }
 
 void js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc,
