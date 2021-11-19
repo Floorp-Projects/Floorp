@@ -447,8 +447,6 @@ class ModuleEnvironmentObject : public EnvironmentObject {
   bool lookupImport(jsid name, ModuleEnvironmentObject** envOut,
                     mozilla::Maybe<PropertyInfo>* propOut);
 
-  void fixEnclosingEnvironmentAfterRealmMerge(GlobalObject& global);
-
  private:
   static bool lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
                              MutableHandleObject objp, PropertyResult* propp);
