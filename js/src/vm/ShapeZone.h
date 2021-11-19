@@ -160,7 +160,6 @@ struct ShapeZone {
 
   explicit ShapeZone(Zone* zone);
 
-  void clearTables(JSFreeOp* fop);
   void purgeShapeCaches(JSFreeOp* fop);
 
   void addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf,

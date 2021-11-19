@@ -215,9 +215,6 @@ class BaseShape : public gc::TenuredCellWithNonGCPointer<const JSClass> {
 
   TaggedProto proto() const { return proto_; }
 
-  void setRealmForMergeRealms(JS::Realm* realm) { realm_ = realm; }
-  void setProtoForMergeRealms(TaggedProto proto) { proto_ = proto; }
-
   /*
    * Lookup base shapes from the zone's baseShapes table, adding if not
    * already found.

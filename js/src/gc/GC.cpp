@@ -1903,19 +1903,6 @@ void Compartment::sweepRealms(JSFreeOp* fop, bool keepAtleastOne,
   MOZ_ASSERT_IF(destroyingRuntime, realms().empty());
 }
 
-void GCRuntime::deleteEmptyZone(Zone* zone) {
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-  MOZ_ASSERT(zone->compartments().empty());
-  for (auto& i : zones()) {
-    if (i == zone) {
-      zones().erase(&i);
-      zone->destroy(rt->defaultFreeOp());
-      return;
-    }
-  }
-  MOZ_CRASH("Zone not found");
-}
-
 void GCRuntime::sweepZones(JSFreeOp* fop, bool destroyingRuntime) {
   MOZ_ASSERT_IF(destroyingRuntime, numActiveZoneIters == 0);
 
@@ -4204,115 +4191,6 @@ Realm* js::NewRealm(JSContext* cx, JSPrincipals* principals,
   return realm.release();
 }
 
-void gc::MergeRealms(Realm* source, Realm* target) {
-  JSRuntime* rt = source->runtimeFromMainThread();
-  rt->gc.mergeRealms(source, target);
-  rt->gc.maybeTriggerGCAfterAlloc(target->zone());
-  rt->gc.maybeTriggerGCAfterMalloc(target->zone());
-}
-
-void GCRuntime::mergeRealms(Realm* source, Realm* target) {
-  // The source realm must be specifically flagged as mergable.  This
-  // also implies that the realm is not visible to the debugger.
-  //
-  // TODO: Remove
-  MOZ_ASSERT(false);
-  MOZ_ASSERT(source->creationOptions().invisibleToDebugger());
-
-  MOZ_ASSERT(!source->hasBeenEnteredIgnoringJit());
-  MOZ_ASSERT(source->zone()->compartments().length() == 1);
-
-  JSContext* cx = rt->mainContextFromOwnThread();
-
-  MOZ_ASSERT(!source->zone()->wasGCStarted());
-  JS::AutoAssertNoGC nogc(cx);
-
-  AutoTraceSession session(rt);
-
-  // Cleanup tables and other state in the source realm/zone that will be
-  // meaningless after merging into the target realm/zone.
-
-  source->clearTables();
-  source->zone()->clearTables();
-  source->unsetIsDebuggee();
-
-#ifdef DEBUG
-  // Release any relocated arenas which we may be holding on to as they might
-  // be in the source zone
-  releaseHeldRelocatedArenas();
-#endif
-
-  // Fixup realm pointers in source to refer to target, and make sure
-  // type information generations are in sync.
-
-  GlobalObject* global = target->maybeGlobal();
-  MOZ_ASSERT(global);
-  AssertTargetIsNotGray(global);
-
-  for (auto baseShape = source->zone()->cellIterUnsafe<BaseShape>();
-       !baseShape.done(); baseShape.next()) {
-    baseShape->setRealmForMergeRealms(target);
-  }
-
-  // Fixup zone pointers in source's zone to refer to target's zone.
-
-  bool targetZoneIsCollecting = target->zone()->gcState() > Zone::Prepare;
-  for (auto thingKind : AllAllocKinds()) {
-    for (ArenaIter aiter(source->zone(), thingKind); !aiter.done();
-         aiter.next()) {
-      Arena* arena = aiter.get();
-      arena->zone = target->zone();
-      if (MOZ_UNLIKELY(targetZoneIsCollecting)) {
-        // If we are currently collecting the target zone then we must
-        // treat all merged things as if they were allocated during the
-        // collection.
-        for (ArenaCellIter cell(arena); !cell.done(); cell.next()) {
-          MOZ_ASSERT(!cell->isMarkedAny());
-          cell->markBlack();
-        }
-      }
-    }
-  }
-
-  // The source should be the only realm in its zone.
-  for (RealmsInZoneIter r(source->zone()); !r.done(); r.next()) {
-    MOZ_ASSERT(r.get() == source);
-  }
-
-  // Merge the allocator, stats and UIDs in source's zone into target's zone.
-  target->zone()->arenas.adoptArenas(&source->zone()->arenas,
-                                     targetZoneIsCollecting);
-  target->zone()->addTenuredAllocsSinceMinorGC(
-      source->zone()->getAndResetTenuredAllocsSinceMinorGC());
-  target->zone()->gcHeapSize.adopt(source->zone()->gcHeapSize);
-  target->zone()->adoptUniqueIds(source->zone());
-  target->zone()->adoptMallocBytes(source->zone());
-
-  // Atoms which are marked in source's zone are now marked in target's zone.
-  atomMarking.adoptMarkedAtoms(target->zone(), source->zone());
-
-  // The source Realm is a parse-only realm and should not have collected any
-  // zone-tracked metadata.
-  Zone* sourceZone = source->zone();
-  MOZ_ASSERT(!sourceZone->scriptLCovMap);
-  MOZ_ASSERT(!sourceZone->scriptCountsMap);
-  MOZ_ASSERT(!sourceZone->debugScriptMap);
-#ifdef MOZ_VTUNE
-  MOZ_ASSERT(!sourceZone->scriptVTuneIdMap);
-#endif
-#ifdef JS_CACHEIR_SPEW
-  MOZ_ASSERT(!sourceZone->scriptFinalWarmUpCountMap);
-#endif
-
-  // The source realm is now completely empty, and is the only realm in its
-  // compartment, which is the only compartment in its zone. Delete realm,
-  // compartment and zone without waiting for this to be cleaned up by a full
-  // GC.
-
-  sourceZone->deleteEmptyCompartment(source->compartment());
-  deleteEmptyZone(sourceZone);
-}
-
 void GCRuntime::runDebugGC() {
 #ifdef JS_GC_ZEAL
   if (rt->mainContextFromOwnThread()->suppressGC) {
@@ -4397,49 +4275,6 @@ void GCRuntime::setDeterministic(bool enabled) {
   deterministicOnly = enabled;
 }
 #endif
-
-void ArenaLists::adoptArenas(ArenaLists* fromArenaLists,
-                             bool targetZoneIsCollecting) {
-  // GC may be active so take the lock here so we can mutate the arena lists.
-  AutoLockGC lock(runtime());
-
-  fromArenaLists->clearFreeLists();
-
-  for (auto thingKind : AllAllocKinds()) {
-    MOZ_ASSERT(fromArenaLists->concurrentUse(thingKind) == ConcurrentUse::None);
-    ArenaList* fromList = &fromArenaLists->arenaList(thingKind);
-    ArenaList* toList = &arenaList(thingKind);
-    fromList->check();
-    toList->check();
-    Arena* next;
-    for (Arena* fromArena = fromList->head(); fromArena; fromArena = next) {
-      // Copy fromArena->next before releasing/reinserting.
-      next = fromArena->next;
-
-#ifdef DEBUG
-      MOZ_ASSERT(!fromArena->isEmpty());
-      if (targetZoneIsCollecting) {
-        fromArena->checkAllCellsMarkedBlack();
-      } else {
-        fromArena->checkNoMarkedCells();
-      }
-#endif
-
-      // If the target zone is being collected then we need to add the
-      // arenas before the cursor because the collector assumes that the
-      // cursor is always at the end of the list. This has the side-effect
-      // of preventing allocation into any non-full arenas until the end
-      // of the next GC.
-      if (targetZoneIsCollecting) {
-        toList->insertBeforeCursor(fromArena);
-      } else {
-        toList->insertAtCursor(fromArena);
-      }
-    }
-    fromList->clear();
-    toList->check();
-  }
-}
 
 #ifdef DEBUG
 

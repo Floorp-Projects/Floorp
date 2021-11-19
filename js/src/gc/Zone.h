@@ -456,8 +456,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   void notifyObservingDebuggers();
 
-  void clearTables();
-
   void addTenuredAllocsSinceMinorGC(uint32_t allocs) {
     tenuredAllocsSinceMinorGC_ += allocs;
   }
@@ -587,15 +585,8 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   // Remove any unique id associated with this Cell.
   void removeUniqueId(js::gc::Cell* cell);
 
-  // When finished parsing off-thread, transfer any UIDs we created in the
-  // off-thread zone into the target zone.
-  void adoptUniqueIds(JS::Zone* source);
-
   bool keepPropMapTables() const { return keepPropMapTables_; }
   void setKeepPropMapTables(bool b) { keepPropMapTables_ = b; }
-
-  // Delete an empty compartment after its contents have been merged.
-  void deleteEmptyCompartment(JS::Compartment* comp);
 
   void clearRootsForShutdownGC();
   void finishRoots();
