@@ -4250,19 +4250,6 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
   for (auto baseShape = source->zone()->cellIterUnsafe<BaseShape>();
        !baseShape.done(); baseShape.next()) {
     baseShape->setRealmForMergeRealms(target);
-
-    // Replace placeholder object prototypes with the correct prototype in
-    // the target realm.
-    TaggedProto proto = baseShape->proto();
-    if (proto.isObject()) {
-      JSObject* obj = proto.toObject();
-      if (GlobalObject::isOffThreadPrototypePlaceholder(obj)) {
-        JSObject* targetProto =
-            global->getPrototypeForOffThreadPlaceholder(obj);
-        MOZ_ASSERT(targetProto->isUsedAsPrototype());
-        baseShape->setProtoForMergeRealms(TaggedProto(targetProto));
-      }
-    }
   }
 
   // Fixup zone pointers in source's zone to refer to target's zone.
