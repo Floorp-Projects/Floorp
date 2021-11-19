@@ -199,16 +199,6 @@
   padding: 4px 8px;
 }
 
-#protections-popup::part(arrow) {
-  transition-property: fill;
-  transition-timing-function: var(--animation-easing-function);
-  transition-duration: var(--panelui-subview-transition-duration);
-}
-
-#protections-popup[mainviewshowing][side=top]::part(arrow) {
-  fill: #0A51BF;
-}
-
 #protections-popup-mainView-panel-header-section {
   overflow: hidden;
 }

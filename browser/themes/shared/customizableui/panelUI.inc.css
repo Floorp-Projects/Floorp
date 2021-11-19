@@ -280,12 +280,6 @@ panelview .toolbaritem-combined-buttons,
   -moz-box-align: center;
 }
 
-#confirmation-hint[hidearrow]::part(arrowbox) {
-  /* Don't display the arrow but keep the popup at the same vertical
-     offset as other arrow panels. */
-  visibility: hidden;
-}
-
 #confirmation-hint-checkmark-animation-container {
   position: relative;
   overflow: hidden;
@@ -380,8 +374,7 @@ panelview[id^=PanelUI-webext-] {
   overflow: hidden;
 }
 
-.cui-widget-panel,
-.cui-widget-panel::part(arrowcontent) {
+.cui-widget-panel {
   --arrowpanel-padding: var(--panel-subview-body-padding);
 }
 
