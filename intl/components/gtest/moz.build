@@ -19,6 +19,7 @@ UNIFIED_SOURCES += [
     "TestNumberingSystem.cpp",
     "TestPluralRules.cpp",
     "TestRelativeTimeFormat.cpp",
+    "TestScript.cpp",
     "TestString.cpp",
     "TestTimeZone.cpp",
 ]
