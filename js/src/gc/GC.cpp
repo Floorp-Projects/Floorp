@@ -1483,12 +1483,7 @@ bool GCRuntime::triggerGC(JS::GCReason reason) {
 }
 
 void GCRuntime::maybeTriggerGCAfterAlloc(Zone* zone) {
-  if (!CurrentThreadCanAccessRuntime(rt)) {
-    // Zones in use by a helper thread can't be collected.
-    MOZ_ASSERT(zone->usedByHelperThread() || zone->isAtomsZone());
-    return;
-  }
-
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
   MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
 
   TriggerResult trigger =
@@ -1526,11 +1521,9 @@ void GCRuntime::maybeTriggerGCAfterMalloc(Zone* zone) {
 bool GCRuntime::maybeTriggerGCAfterMalloc(Zone* zone, const HeapSize& heap,
                                           const HeapThreshold& threshold,
                                           JS::GCReason reason) {
+  // Ignore malloc during sweeping, for example when we resize hash tables.
   if (!CurrentThreadCanAccessRuntime(rt)) {
-    // Zones in use by a helper thread can't be collected. Also ignore malloc
-    // during sweeping, for example when we resize hash tables.
-    MOZ_ASSERT(zone->usedByHelperThread() || zone->isAtomsZone() ||
-               JS::RuntimeHeapIsBusy());
+    MOZ_ASSERT(JS::RuntimeHeapIsBusy());
     return false;
   }
 
@@ -4689,8 +4682,6 @@ JS_PUBLIC_API bool js::gc::detail::CellIsMarkedGrayIfKnown(const Cell* cell) {
   }
 
   auto tc = &cell->asTenured();
-  MOZ_ASSERT(!tc->zoneFromAnyThread()->usedByHelperThread());
-
   auto rt = tc->runtimeFromMainThread();
   if (rt->gc.isIncrementalGCInProgress() && !tc->zone()->wasGCStarted()) {
     return false;

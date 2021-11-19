@@ -408,7 +408,6 @@ bool IndirectBindingMap::put(JSContext* cx, HandleId name,
                              HandleModuleEnvironmentObject environment,
                              HandleId targetName) {
   if (!map_) {
-    MOZ_ASSERT(!cx->zone()->createdForHelperThread());
     map_.emplace(cx->zone());
   }
 

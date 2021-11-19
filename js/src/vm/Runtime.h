@@ -579,9 +579,6 @@ struct JSRuntime {
   friend class js::AutoLockScriptData;
 
  public:
-  void setUsedByHelperThread(JS::Zone* zone);
-  void clearUsedByHelperThread(JS::Zone* zone);
-
   bool hasParseTasks() const { return numParseTasks > 0; }
   bool hasHelperThreadZones() const { return numActiveHelperThreadZones > 0; }
 

@@ -141,10 +141,6 @@ void ZoneAllocPolicy::decMemory(size_t nbytes) {
 
 JS::Zone::Zone(JSRuntime* rt, Kind kind)
     : ZoneAllocator(rt, kind),
-      // Note: don't use |this| before initializing helperThreadUse_!
-      // ProtectedData checks in CheckZone::check may read this field.
-      helperThreadUse_(HelperThreadUse::None),
-      helperThreadOwnerContext_(nullptr),
       arenas(this),
       data(this, nullptr),
       tenuredBigInts(this, 0),
@@ -195,7 +191,6 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
 }
 
 Zone::~Zone() {
-  MOZ_ASSERT(helperThreadUse_ == HelperThreadUse::None);
   MOZ_ASSERT_IF(regExps_.ref(), regExps().empty());
 
   DebugAPI::deleteDebugScriptMap(debugScriptMap);
@@ -549,11 +544,7 @@ void JS::Zone::checkUniqueIdTableAfterMovingGC() {
 }
 #endif
 
-uint64_t Zone::gcNumber() {
-  // Zones in use by exclusive threads are not collected, and threads using
-  // them cannot access the main runtime's gcNumber without racing.
-  return usedByHelperThread() ? 0 : runtimeFromMainThread()->gc.gcNumber();
-}
+uint64_t Zone::gcNumber() { return runtimeFromMainThread()->gc.gcNumber(); }
 
 js::jit::JitZone* Zone::createJitZone(JSContext* cx) {
   MOZ_ASSERT(!jitZone_);
@@ -584,9 +575,7 @@ bool Zone::canCollect() {
     return !runtimeFromAnyThread()->hasHelperThreadZones();
   }
 
-  // Zones that will be or are currently used by other threads cannot be
-  // collected.
-  return !createdForHelperThread();
+  return true;
 }
 
 void Zone::notifyObservingDebuggers() {
@@ -651,17 +640,6 @@ void Zone::deleteEmptyCompartment(JS::Compartment* comp) {
   comp->destroy(fop);
 
   compartments().clear();
-}
-
-void Zone::setHelperThreadOwnerContext(JSContext* cx) {
-  MOZ_ASSERT_IF(cx, TlsContext.get() == cx);
-  helperThreadOwnerContext_ = cx;
-}
-
-bool Zone::ownedByCurrentHelperThread() {
-  MOZ_ASSERT(usedByHelperThread());
-  MOZ_ASSERT(TlsContext.get());
-  return helperThreadOwnerContext_ == TlsContext.get();
 }
 
 void Zone::purgeAtomCache() {
