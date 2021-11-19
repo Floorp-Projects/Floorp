@@ -170,34 +170,11 @@ CrashService.prototype = Object.freeze({
   QueryInterface: ChromeUtils.generateQI(["nsICrashService", "nsIObserver"]),
 
   async addCrash(processType, crashType, id) {
-    switch (processType) {
-      case Ci.nsICrashService.PROCESS_TYPE_MAIN:
-        processType = Services.crashmanager.PROCESS_TYPE_MAIN;
-        break;
-      case Ci.nsICrashService.PROCESS_TYPE_CONTENT:
-        processType = Services.crashmanager.PROCESS_TYPE_CONTENT;
-        break;
-      case Ci.nsICrashService.PROCESS_TYPE_GMPLUGIN:
-        processType = Services.crashmanager.PROCESS_TYPE_GMPLUGIN;
-        break;
-      case Ci.nsICrashService.PROCESS_TYPE_GPU:
-        processType = Services.crashmanager.PROCESS_TYPE_GPU;
-        break;
-      case Ci.nsICrashService.PROCESS_TYPE_VR:
-        processType = Services.crashmanager.PROCESS_TYPE_VR;
-        break;
-      case Ci.nsICrashService.PROCESS_TYPE_RDD:
-        processType = Services.crashmanager.PROCESS_TYPE_RDD;
-        break;
-      case Ci.nsICrashService.PROCESS_TYPE_SOCKET:
-        processType = Services.crashmanager.PROCESS_TYPE_SOCKET;
-        break;
-      case Ci.nsICrashService.PROCESS_TYPE_IPDLUNITTEST:
-        // We'll never send crash reports for this type of process.
-        return;
-      default:
-        throw new Error("Unrecognized PROCESS_TYPE: " + processType);
+    if (processType === Ci.nsIXULRuntime.PROCESS_TYPE_IPDLUNITTEST) {
+      return;
     }
+
+    processType = Services.crashmanager[processType];
 
     let allThreads = false;
 
