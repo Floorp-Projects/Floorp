@@ -16,7 +16,7 @@ async function testThemeDeterminesToolbarQuery(toolbarProp) {
       },
       theme: {
         colors: {
-          [toolbarProp]: "rgba(12, 12, 12, 1)",
+          [toolbarProp]: "#fff",
         },
       },
     },
@@ -30,7 +30,7 @@ async function testThemeDeterminesToolbarQuery(toolbarProp) {
       },
       theme: {
         colors: {
-          [toolbarProp]: "rgba(255, 255, 255, 1)",
+          [toolbarProp]: "#000",
         },
       },
     },
@@ -45,8 +45,8 @@ async function testThemeDeterminesToolbarQuery(toolbarProp) {
       },
       theme: {
         colors: {
-          [toolbarProp]: "rgba(12, 12, 12, 1)",
-          ntp_background: "rgba(255, 255, 255, 1)",
+          [toolbarProp]: "#fff",
+          ntp_text: "#000",
         },
       },
     },
@@ -61,8 +61,8 @@ async function testThemeDeterminesToolbarQuery(toolbarProp) {
       },
       theme: {
         colors: {
-          [toolbarProp]: "rgba(255, 255, 255, 1)",
-          ntp_background: "rgba(12, 12, 12, 1)",
+          [toolbarProp]: "#000",
+          ntp_text: "#fff",
         },
       },
     },
@@ -190,10 +190,10 @@ async function testThemeDeterminesToolbarQuery(toolbarProp) {
 }
 
 add_task(function test_toolbar() {
-  return testThemeDeterminesToolbarQuery("toolbar");
+  return testThemeDeterminesToolbarQuery("toolbar_text");
 });
 
-// Assert that we fall back to "frame" (accentcolor) if toolbar is not present.
+// Assert that we fall back to tab_background_text if toolbar is not set.
 add_task(function test_frame() {
-  return testThemeDeterminesToolbarQuery("frame");
+  return testThemeDeterminesToolbarQuery("tab_background_text");
 });
