@@ -431,14 +431,15 @@ function _determineToolbarAndContentTheme(aDoc, aTheme) {
     if (!aColor) {
       return 2;
     }
-    return _isColorDark(aColor.r, aColor.g, aColor.b) ? 0 : 1;
+    return _isColorDark(aColor.r, aColor.g, aColor.b) ? 1 : 0;
   }
 
+  // Fall back to black as textcolor processing does above.
   let toolbarColor = _cssColorToRGBA(
     aDoc,
-    aTheme?.toolbarColor || aTheme?.accentcolor
+    aTheme ? aTheme.toolbar_text || aTheme.textcolor || "black" : null
   );
-  let contentColor = _cssColorToRGBA(aDoc, aTheme?.ntp_background);
+  let contentColor = _cssColorToRGBA(aDoc, aTheme?.ntp_text);
   Services.prefs.setIntPref(
     "browser.theme.toolbar-theme",
     prefValue(toolbarColor)
