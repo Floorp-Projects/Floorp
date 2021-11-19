@@ -33,7 +33,7 @@ class FetchEventOpChild final : public PFetchEventOpChild {
  public:
   static RefPtr<GenericPromise> SendFetchEvent(
       PRemoteWorkerControllerChild* aManager,
-      ServiceWorkerFetchEventOpArgs&& aArgs,
+      ParentToParentServiceWorkerFetchEventOpArgs&& aArgs,
       nsCOMPtr<nsIInterceptedChannel> aInterceptedChannel,
       RefPtr<ServiceWorkerRegistrationInfo> aRegistrationInfo,
       RefPtr<FetchServiceResponsePromise>&& aPreloadResponseReadyPromise,
@@ -43,7 +43,7 @@ class FetchEventOpChild final : public PFetchEventOpChild {
 
  private:
   FetchEventOpChild(
-      ServiceWorkerFetchEventOpArgs&& aArgs,
+      ParentToParentServiceWorkerFetchEventOpArgs&& aArgs,
       nsCOMPtr<nsIInterceptedChannel>&& aInterceptedChannel,
       RefPtr<ServiceWorkerRegistrationInfo>&& aRegistrationInfo,
       RefPtr<FetchServiceResponsePromise>&& aPreloadResponseReadyPromise,
@@ -56,16 +56,17 @@ class FetchEventOpChild final : public PFetchEventOpChild {
                                        nsTArray<nsString>&& aParams);
 
   mozilla::ipc::IPCResult RecvRespondWith(
-      IPCFetchEventRespondWithResult&& aResult);
+      ParentToParentFetchEventRespondWithResult&& aResult);
 
   mozilla::ipc::IPCResult Recv__delete__(
       const ServiceWorkerFetchEventOpResult& aResult);
 
   void ActorDestroy(ActorDestroyReason) override;
 
-  nsresult StartSynthesizedResponse(IPCSynthesizeResponseArgs&& aArgs);
+  nsresult StartSynthesizedResponse(
+      ParentToParentSynthesizeResponseArgs&& aArgs);
 
-  void SynthesizeResponse(IPCSynthesizeResponseArgs&& aArgs);
+  void SynthesizeResponse(ParentToParentSynthesizeResponseArgs&& aArgs);
 
   void ResetInterception(bool aBypass);
 
@@ -73,7 +74,7 @@ class FetchEventOpChild final : public PFetchEventOpChild {
 
   void MaybeScheduleRegistrationUpdate() const;
 
-  ServiceWorkerFetchEventOpArgs mArgs;
+  ParentToParentServiceWorkerFetchEventOpArgs mArgs;
   nsCOMPtr<nsIInterceptedChannel> mInterceptedChannel;
   RefPtr<ServiceWorkerRegistrationInfo> mRegistration;
   RefPtr<KeepAliveToken> mKeepAliveToken;

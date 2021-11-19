@@ -14,14 +14,14 @@ protocol PFetchEventOp {
   manager PRemoteWorkerController;
 
  parent:
-  async PreloadResponse(IPCInternalResponse aResponse);
+  async PreloadResponse(ParentToParentInternalResponse aResponse);
 
  child:
   async AsyncLog(nsCString aScriptSpec, uint32_t aLineNumber,
                  uint32_t aColumnNumber, nsCString aMessageName,
                  nsString[] aParams);
 
-  async RespondWith(IPCFetchEventRespondWithResult aResult);
+  async RespondWith(ParentToParentFetchEventRespondWithResult aResult);
 
   async __delete__(ServiceWorkerFetchEventOpResult aResult);
 };

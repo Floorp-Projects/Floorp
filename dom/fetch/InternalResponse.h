@@ -28,8 +28,10 @@ class PrincipalInfo;
 
 namespace dom {
 
-class IPCInternalResponse;
+class ChildToParentInternalResponse;
 class InternalHeaders;
+class ParentToChildInternalResponse;
+class ParentToParentInternalResponse;
 
 class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
   friend class FetchDriver;
@@ -42,11 +44,14 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
       RequestCredentials aCredentialsMode = RequestCredentials::Omit);
 
   static SafeRefPtr<InternalResponse> FromIPC(
-      const IPCInternalResponse& aIPCResponse);
+      const ParentToChildInternalResponse& aIPCResponse);
 
-  // Note: the AutoIPCStreams must outlive the IPCInternalResponse.
+  static SafeRefPtr<InternalResponse> FromIPC(
+      const ParentToParentInternalResponse& aIPCResponse);
+
+  // Note: the AutoIPCStreams must outlive the ChildToParentInternalResponse.
   void ToIPC(
-      IPCInternalResponse* aIPCResponse,
+      ChildToParentInternalResponse* aIPCResponse,
       mozilla::ipc::PBackgroundChild* aManager,
       UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoBodyStream,
       UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoAlternativeBodyStream);
@@ -368,8 +373,8 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
   bool mCloned;
 
  public:
-  static const int64_t UNKNOWN_BODY_SIZE = -1;
-  static const int64_t UNKNOWN_PADDING_SIZE = -1;
+  static constexpr int64_t UNKNOWN_BODY_SIZE = -1;
+  static constexpr int64_t UNKNOWN_PADDING_SIZE = -1;
 
  private:
   ChannelInfo mChannelInfo;

@@ -8,6 +8,7 @@
 
 #include <utility>
 
+#include "mozilla/dom/FetchTypes.h"
 #include "mozilla/dom/ServiceWorkerOpPromise.h"
 #include "nsCOMPtr.h"
 #include "nsDebug.h"
@@ -33,8 +34,8 @@ namespace dom {
 namespace {
 
 nsresult GetIPCSynthesizeResponseArgs(
-    IPCSynthesizeResponseArgs* aIPCArgs, SynthesizeResponseArgs&& aArgs,
-    UniquePtr<AutoIPCStream>& aAutoBodyStream,
+    ChildToParentSynthesizeResponseArgs* aIPCArgs,
+    SynthesizeResponseArgs&& aArgs, UniquePtr<AutoIPCStream>& aAutoBodyStream,
     UniquePtr<AutoIPCStream>& aAutoAlternativeBodyStream) {
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
 
@@ -60,13 +61,14 @@ nsresult GetIPCSynthesizeResponseArgs(
 }  // anonymous namespace
 
 void FetchEventOpProxyChild::Initialize(
-    const ServiceWorkerFetchEventOpArgs& aArgs) {
+    const ParentToChildServiceWorkerFetchEventOpArgs& aArgs) {
   MOZ_ASSERT(RemoteWorkerService::Thread()->IsOnCurrentThread());
   MOZ_ASSERT(!mOp);
 
-  mInternalRequest = MakeSafeRefPtr<InternalRequest>(aArgs.internalRequest());
+  mInternalRequest =
+      MakeSafeRefPtr<InternalRequest>(aArgs.common().internalRequest());
 
-  if (aArgs.preloadNavigation()) {
+  if (aArgs.common().preloadNavigation()) {
     // We use synchronous task dispatch here to make sure that if the preload
     // response arrived before we dispatch the fetch event, then the JS preload
     // response promise will get resolved immediately.
@@ -124,7 +126,7 @@ void FetchEventOpProxyChild::Initialize(
                auto& result = aResult.ResolveValue();
 
                if (result.is<SynthesizeResponseArgs>()) {
-                 IPCSynthesizeResponseArgs ipcArgs;
+                 ChildToParentSynthesizeResponseArgs ipcArgs;
                  UniquePtr<AutoIPCStream> autoBodyStream =
                      MakeUnique<AutoIPCStream>();
                  UniquePtr<AutoIPCStream> autoAlternativeBodyStream =
@@ -174,7 +176,7 @@ FetchEventOpProxyChild::GetPreloadResponsePromise() {
 }
 
 mozilla::ipc::IPCResult FetchEventOpProxyChild::RecvPreloadResponse(
-    IPCInternalResponse&& aResponse) {
+    ParentToChildInternalResponse&& aResponse) {
   // Receiving this message implies that navigation preload is enabled, so
   // Initialize() should have created this promise.
   MOZ_ASSERT(mPreloadResponsePromise);

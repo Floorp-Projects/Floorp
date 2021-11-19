@@ -21,7 +21,7 @@ namespace dom {
 
 class InternalRequest;
 class InternalResponse;
-class ServiceWorkerFetchEventOpArgs;
+class ParentToChildServiceWorkerFetchEventOpArgs;
 
 class FetchEventOpProxyChild final : public PFetchEventOpProxyChild {
   friend class PFetchEventOpProxyChild;
@@ -31,7 +31,7 @@ class FetchEventOpProxyChild final : public PFetchEventOpProxyChild {
 
   FetchEventOpProxyChild() = default;
 
-  void Initialize(const ServiceWorkerFetchEventOpArgs& aArgs);
+  void Initialize(const ParentToChildServiceWorkerFetchEventOpArgs& aArgs);
 
   // Must only be called once and on a worker thread.
   SafeRefPtr<InternalRequest> ExtractInternalRequest();
@@ -41,7 +41,8 @@ class FetchEventOpProxyChild final : public PFetchEventOpProxyChild {
  private:
   ~FetchEventOpProxyChild() = default;
 
-  mozilla::ipc::IPCResult RecvPreloadResponse(IPCInternalResponse&& aResponse);
+  mozilla::ipc::IPCResult RecvPreloadResponse(
+      ParentToChildInternalResponse&& aResponse);
 
   void ActorDestroy(ActorDestroyReason) override;
 
