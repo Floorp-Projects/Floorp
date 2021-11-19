@@ -9553,7 +9553,7 @@ already_AddRefed<nsFontMetrics> nsLayoutUtils::GetMetricsFor(
 /* static */
 void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
                                       LookAndFeel::FontID aFontID,
-                                      const nsFont* aDefaultVariableFont,
+                                      const nsFont& aDefaultVariableFont,
                                       const Document* aDocument) {
   gfxFontStyle fontStyle;
   nsAutoString systemFontName;
@@ -9613,7 +9613,7 @@ void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
       //
       // This matches historical Windows behavior and other browsers.
       auto newSize =
-          aDefaultVariableFont->size.ToCSSPixels() - CSSPixel::FromPoints(2.0f);
+          aDefaultVariableFont.size.ToCSSPixels() - CSSPixel::FromPoints(2.0f);
       aSystemFont->size = Length::FromPixels(std::max(float(newSize), 0.0f));
     }
   }

@@ -90,29 +90,24 @@ ServoTraversalStatistics ServoTraversalStatistics::sSingleton;
 
 static StaticAutoPtr<RWLock> sServoFFILock;
 
-static const nsFont* ThreadSafeGetDefaultVariableFont(const Document& aDocument,
-                                                      nsAtom* aLanguage) {
+static const LangGroupFontPrefs* ThreadSafeGetLangGroupFontPrefs(
+    const Document& aDocument, nsAtom* aLanguage) {
   bool needsCache = false;
-  const nsFont* retval;
-
-  auto GetDefaultFont = [&](bool* aNeedsToCache) {
-    auto* prefs = aDocument.GetFontPrefsForLang(aLanguage, aNeedsToCache);
-    return prefs ? prefs->GetDefaultFont(StyleGenericFontFamily::None)
-                 : nullptr;
-  };
-
   {
     AutoReadLock guard(*sServoFFILock);
-    retval = GetDefaultFont(&needsCache);
+    if (auto* prefs = aDocument.GetFontPrefsForLang(aLanguage, &needsCache)) {
+      return prefs;
+    }
   }
-  if (!needsCache) {
-    return retval;
-  }
-  {
-    AutoWriteLock guard(*sServoFFILock);
-    retval = GetDefaultFont(nullptr);
-  }
-  return retval;
+  MOZ_ASSERT(needsCache);
+  AutoWriteLock guard(*sServoFFILock);
+  return aDocument.GetFontPrefsForLang(aLanguage);
+}
+
+static const nsFont& ThreadSafeGetDefaultVariableFont(const Document& aDocument,
+                                                      nsAtom* aLanguage) {
+  return ThreadSafeGetLangGroupFontPrefs(aDocument, aLanguage)
+      ->mDefaultVariableFont;
 }
 
 /*
@@ -978,14 +973,14 @@ void Gecko_ReleaseAtom(nsAtom* aAtom) { NS_RELEASE(aAtom); }
 void Gecko_nsFont_InitSystem(nsFont* aDest, StyleSystemFont aFontId,
                              const nsStyleFont* aFont,
                              const Document* aDocument) {
-  const nsFont* defaultVariableFont =
+  const nsFont& defaultVariableFont =
       ThreadSafeGetDefaultVariableFont(*aDocument, aFont->mLanguage);
 
   // We have passed uninitialized memory to this function,
   // initialize it. We can't simply return an nsFont because then
   // we need to know its size beforehand. Servo cannot initialize nsFont
   // itself, so this will do.
-  new (aDest) nsFont(*defaultVariableFont);
+  new (aDest) nsFont(defaultVariableFont);
 
   AutoWriteLock guard(*sServoFFILock);
   nsLayoutUtils::ComputeSystemFont(aDest, aFontId, defaultVariableFont,
@@ -996,9 +991,7 @@ void Gecko_nsFont_Destroy(nsFont* aDest) { aDest->~nsFont(); }
 
 StyleGenericFontFamily Gecko_nsStyleFont_ComputeFallbackFontTypeForLanguage(
     const Document* aDoc, nsAtom* aLanguage) {
-  const nsFont* defaultFont =
-      ThreadSafeGetDefaultVariableFont(*aDoc, aLanguage);
-  return defaultFont->family.families.fallback;
+  return ThreadSafeGetLangGroupFontPrefs(*aDoc, aLanguage)->GetDefaultGeneric();
 }
 
 gfxFontFeatureValueSet* Gecko_ConstructFontFeatureValueSet() {

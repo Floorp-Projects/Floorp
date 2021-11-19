@@ -674,6 +674,7 @@ impl ToComputedValue for FontFamily {
             FontFamily::Values(ref list) => computed::FontFamily {
                 families: list.clone(),
                 is_system_font: false,
+                is_initial: false,
             },
             FontFamily::System(_) => self.compute_system(context),
         }
@@ -710,7 +711,6 @@ impl Parse for FontFamily {
             input.parse_comma_separated(|input| SingleFontFamily::parse(context, input))?;
         Ok(FontFamily::Values(FontFamilyList {
             list: crate::ArcSlice::from_iter(values.into_iter()),
-            fallback: computed::GenericFontFamily::None,
         }))
     }
 }
