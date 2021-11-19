@@ -361,7 +361,7 @@ button {
 }
 
 /* Small buttons get sized to 6/12px padding (when adding the 1px border) */
-.small-button {
+button.small-button {
   padding: 5px 11px;
   min-height: 24px;
   font-size: 0.9em;
