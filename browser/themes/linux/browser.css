@@ -24,8 +24,6 @@
 
   --panel-separator-color: ThreeDShadow;
 
-  --tabs-border-color: rgba(0,0,0,.3);
-
   --chrome-content-separator-color: ThreeDShadow;
 }
 
@@ -71,7 +69,7 @@
 }
 
 #nav-bar:not([tabs-hidden="true"]) {
-  box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--tabs-border-color);
+  box-shadow: 0 calc(-1 * var(--tabs-navbar-shadow-size)) 0 var(--lwt-tabs-border-color, rgba(0,0,0,.3));
   /* This is needed for some toolbar button animations. Gross :( */
   position: relative;
 }
