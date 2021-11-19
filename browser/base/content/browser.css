@@ -153,10 +153,6 @@ panelview[mainview] > .panel-header {
   transition: height var(--panelui-subview-transition-duration);
 }
 
-:is(panel, menupopup)::part(arrow) {
-  display: none;
-}
-
 @supports -moz-bool-pref("layout.css.emulate-moz-box-with-flex") {
   #tabbrowser-tabs {
     /* Without this, the tabs container width extends beyond the window width */

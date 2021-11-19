@@ -16,7 +16,7 @@
 <![CDATA[
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-let panel, anchor, arrow;
+let panel, anchor;
 
 // A reflow observer - it just remembers the stack trace of all sync reflows
 // done by the panel.
@@ -86,12 +86,6 @@ SimpleTest.waitForExplicitFinish();
 addEventListener("load", function() {
   anchor = document.getElementById("anchor");
   panel = document.getElementById("testPanel");
-  arrow = panel.shadowRoot.querySelector(".panel-arrow");
-
-  // Cancel the arrow panel slide-in transition (bug 767133) - we are only
-  // testing reflows in the core panel implementation and not reflows that may
-  // or may not be caused by transitioning....
-  arrow.style.transition = "none";
 
   // and off we go...
   countReflows(testSimplePanel, 0).then(SimpleTest.finish);
