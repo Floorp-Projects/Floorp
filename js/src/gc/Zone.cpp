@@ -568,15 +568,7 @@ bool Zone::hasMarkedRealms() {
   return false;
 }
 
-bool Zone::canCollect() {
-  // The atoms zone cannot be collected while off-thread parsing is taking
-  // place.
-  if (isAtomsZone()) {
-    return !runtimeFromAnyThread()->hasHelperThreadZones();
-  }
-
-  return true;
-}
+bool Zone::canCollect() { return true; }
 
 void Zone::notifyObservingDebuggers() {
   AutoAssertNoGC nogc;

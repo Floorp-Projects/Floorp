@@ -633,26 +633,6 @@ void Arena::arenaAllocatedDuringGC() {
   }
 }
 
-void GCRuntime::setParallelAtomsAllocEnabled(bool enabled) {
-  // This can only be changed on the main thread otherwise we could race.
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-  MOZ_ASSERT(enabled == rt->hasHelperThreadZones());
-
-  atomsZone->arenas.setParallelAllocEnabled(enabled);
-}
-
-void ArenaLists::setParallelAllocEnabled(bool enabled) {
-  MOZ_ASSERT(zone_->isAtomsZone());
-
-  static const ConcurrentUse states[2] = {ConcurrentUse::None,
-                                          ConcurrentUse::ParallelAlloc};
-
-  for (auto kind : AllAllocKinds()) {
-    MOZ_ASSERT(concurrentUse(kind) == states[!enabled]);
-    concurrentUse(kind) = states[enabled];
-  }
-}
-
 void GCRuntime::setParallelUnmarkEnabled(bool enabled) {
   // This can only be changed on the main thread otherwise we could race.
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
