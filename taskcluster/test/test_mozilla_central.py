@@ -47,7 +47,7 @@ def test_test_setting(full_task_graph, filter_tasks):
         try:
             validate_schema(
                 test_setting_description_schema,
-                task.task["extra"]["test-setting"],
+                dict(task.task["extra"]["test-setting"]),
                 task.label,
             )
         except Exception as e:
