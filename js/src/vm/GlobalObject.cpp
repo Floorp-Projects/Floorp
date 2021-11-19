@@ -46,10 +46,9 @@
 #include "debugger/DebugAPI.h"
 #include "frontend/CompilationStencil.h"
 #include "gc/FreeOp.h"
-#include "js/friend/ErrorMessages.h"        // js::GetErrorMessage, JSMSG_*
-#include "js/friend/WindowProxy.h"          // js::ToWindowProxyIfWindow
-#include "js/OffThreadScriptCompilation.h"  // js::UseOffThreadParseGlobal
-#include "js/PropertyAndElement.h"  // JS_DefineFunctions, JS_DefineProperties
+#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/friend/WindowProxy.h"    // js::ToWindowProxyIfWindow
+#include "js/PropertyAndElement.h"    // JS_DefineFunctions, JS_DefineProperties
 #include "js/ProtoKey.h"
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
@@ -1089,41 +1088,11 @@ bool GlobalObject::addIntrinsicValue(JSContext* cx,
 
 /* static */
 bool GlobalObject::ensureModulePrototypesCreated(JSContext* cx,
-                                                 Handle<GlobalObject*> global,
-                                                 bool setUsedAsPrototype) {
-  // Note: if you arrived here because you're removing UseOffThreadParseGlobal,
-  // please also remove the setUsedAsPrototype argument and the lambda below.
-  MOZ_ASSERT_IF(!UseOffThreadParseGlobal(), !setUsedAsPrototype);
-
-  auto maybeSetUsedAsPrototype = [cx, setUsedAsPrototype](HandleObject proto) {
-    if (!setUsedAsPrototype) {
-      return true;
-    }
-    return JSObject::setIsUsedAsPrototype(cx, proto);
-  };
-
-  RootedObject proto(cx);
-  proto = getOrCreateModulePrototype(cx, global);
-  if (!proto || !maybeSetUsedAsPrototype(proto)) {
-    return false;
-  }
-
-  proto = getOrCreateImportEntryPrototype(cx, global);
-  if (!proto || !maybeSetUsedAsPrototype(proto)) {
-    return false;
-  }
-
-  proto = getOrCreateExportEntryPrototype(cx, global);
-  if (!proto || !maybeSetUsedAsPrototype(proto)) {
-    return false;
-  }
-
-  proto = getOrCreateRequestedModulePrototype(cx, global);
-  if (!proto || !maybeSetUsedAsPrototype(proto)) {
-    return false;
-  }
-
-  return true;
+                                                 Handle<GlobalObject*> global) {
+  return getOrCreateModulePrototype(cx, global) &&
+         getOrCreateImportEntryPrototype(cx, global) &&
+         getOrCreateExportEntryPrototype(cx, global) &&
+         getOrCreateRequestedModulePrototype(cx, global);
 }
 
 /* static */
