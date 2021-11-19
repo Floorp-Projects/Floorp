@@ -2866,6 +2866,7 @@ exports.CSS_PROPERTIES = {
       "shape-outside",
       "touch-action",
       "-webkit-line-clamp",
+      "scrollbar-gutter",
       "column-width",
       "column-count",
       "column-fill",
@@ -11006,6 +11007,10 @@ exports.PREFERENCES = [
   [
     "overflow-anchor",
     "layout.css.scroll-anchoring.enabled"
+  ],
+  [
+    "scrollbar-gutter",
+    "layout.css.scrollbar-gutter.enabled"
   ],
   [
     "touch-action",
