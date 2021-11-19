@@ -635,43 +635,30 @@ already_AddRefed<SourceSurface> ImageBitmap::PrepareForDrawTarget(
                mSurface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
                mSurface->GetFormat() == SurfaceFormat::A8R8G8B8);
 
-    RefPtr<DataSourceSurface> dstSurface = mSurface->GetDataSurface();
-    MOZ_ASSERT(dstSurface);
-
-    RefPtr<DataSourceSurface> srcSurface;
-    DataSourceSurface::MappedSurface srcMap;
-    DataSourceSurface::MappedSurface dstMap;
-
-    if (dstSurface->Map(DataSourceSurface::MapType::READ_WRITE, &dstMap)) {
-      srcMap = dstMap;
-    } else {
-      srcSurface = dstSurface;
-      if (!srcSurface->Map(DataSourceSurface::READ, &srcMap)) {
-        gfxCriticalError()
-            << "Failed to map source surface for premultiplying alpha.";
-        return nullptr;
-      }
-
-      dstSurface = Factory::CreateDataSourceSurface(srcSurface->GetSize(),
-                                                    srcSurface->GetFormat());
-
-      if (!dstSurface ||
-          !dstSurface->Map(DataSourceSurface::MapType::WRITE, &dstMap)) {
-        gfxCriticalError()
-            << "Failed to map destination surface for premultiplying alpha.";
-        srcSurface->Unmap();
-        return nullptr;
-      }
+    RefPtr<DataSourceSurface> srcSurface = mSurface->GetDataSurface();
+    RefPtr<DataSourceSurface> dstSurface = Factory::CreateDataSourceSurface(
+        srcSurface->GetSize(), srcSurface->GetFormat());
+    if (NS_WARN_IF(!srcSurface) || NS_WARN_IF(!dstSurface)) {
+      return nullptr;
     }
 
-    PremultiplyData(srcMap.mData, srcMap.mStride, mSurface->GetFormat(),
-                    dstMap.mData, dstMap.mStride, mSurface->GetFormat(),
+    DataSourceSurface::ScopedMap srcMap(srcSurface, DataSourceSurface::READ);
+    if (!srcMap.IsMapped()) {
+      gfxCriticalError()
+          << "Failed to map source surface for premultiplying alpha.";
+      return nullptr;
+    }
+
+    DataSourceSurface::ScopedMap dstMap(dstSurface, DataSourceSurface::WRITE);
+    if (!dstMap.IsMapped()) {
+      gfxCriticalError()
+          << "Failed to map destination surface for premultiplying alpha.";
+      return nullptr;
+    }
+
+    PremultiplyData(srcMap.GetData(), srcMap.GetStride(), mSurface->GetFormat(),
+                    dstMap.GetData(), dstMap.GetStride(), mSurface->GetFormat(),
                     dstSurface->GetSize());
-
-    dstSurface->Unmap();
-    if (srcSurface) {
-      srcSurface->Unmap();
-    }
 
     mAlphaType = gfxAlphaType::Premult;
     mSurface = dstSurface;
@@ -1761,15 +1748,10 @@ CreateImageBitmapFromBlob::OnImageReady(imgIContainer* aImgContainer,
   RefPtr<SourceSurface> croppedSurface = surface;
   RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
 
-#ifdef DEBUG
-  // the returned dataSurface image memory is write protected in debug mode
   // force a copy into unprotected memory as a side effect of
   // CropAndCopyDataSourceSurface
   bool copyRequired = mCropRect.isSome() ||
                       mOptions.mImageOrientation == ImageOrientation::FlipY;
-#else
-  bool copyRequired = mCropRect.isSome();
-#endif
 
   if (copyRequired) {
     // The blob is just decoded into a RasterImage and not optimized yet, so the
