@@ -207,7 +207,7 @@ function LegacyTracker(name, engine) {
   this._ignored = [];
   this.file = this.name;
   this._storage = new JSONFile({
-    path: Utils.jsonFilePath("changes/" + this.file),
+    path: Utils.jsonFilePath("changes", this.file),
     dataPostProcessor: json => this._dataPostProcessor(json),
     beforeSave: () => this._beforeSave(),
   });
@@ -767,13 +767,13 @@ function SyncEngine(name, service) {
   this._log.debug("Engine constructed");
 
   this._toFetchStorage = new JSONFile({
-    path: Utils.jsonFilePath("toFetch/" + this.name),
+    path: Utils.jsonFilePath("toFetch", this.name),
     dataPostProcessor: json => this._metadataPostProcessor(json),
     beforeSave: () => this._beforeSaveMetadata(),
   });
 
   this._previousFailedStorage = new JSONFile({
-    path: Utils.jsonFilePath("failed/" + this.name),
+    path: Utils.jsonFilePath("failed", this.name),
     dataPostProcessor: json => this._metadataPostProcessor(json),
     beforeSave: () => this._beforeSaveMetadata(),
   });
