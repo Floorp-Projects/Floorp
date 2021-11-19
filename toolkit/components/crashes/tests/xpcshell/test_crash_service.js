@@ -65,7 +65,7 @@ async function teardown() {
 
 async function addCrash(id, type = Ci.nsICrashService.CRASH_TYPE_CRASH) {
   let cs = Cc["@mozilla.org/crashservice;1"].getService(Ci.nsICrashService);
-  return cs.addCrash(Ci.nsICrashService.PROCESS_TYPE_CONTENT, type, id);
+  return cs.addCrash(Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT, type, id);
 }
 
 async function getCrash(crashId) {

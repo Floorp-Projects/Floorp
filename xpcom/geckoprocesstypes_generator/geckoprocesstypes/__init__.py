@@ -154,6 +154,7 @@ from collections import namedtuple
 #   procinfo-typename,
 #   webidl-typename,
 #   allcaps-name,
+#   crash-ping,
 # )
 #
 # enum-value:
@@ -191,6 +192,9 @@ from collections import namedtuple
 #
 # allcaps-name:
 #   Used as NAME for checking SYNC_ENUM in nsXULAppAPI.h
+#
+# crash-ping:
+#   Boolean reflecting if the process is allowed to send crash ping.
 
 
 GeckoProcessType = namedtuple(
@@ -204,6 +208,7 @@ GeckoProcessType = namedtuple(
         "procinfo_typename",
         "webidl_typename",
         "allcaps_name",
+        "crash_ping",
     ],
 )
 
@@ -217,6 +222,7 @@ process_types = [
         "Browser",
         "Browser",
         "DEFAULT",
+        False,
     ),
     GeckoProcessType(
         2,
@@ -227,6 +233,7 @@ process_types = [
         "Content",
         "Content",
         "CONTENT",
+        True,
     ),
     GeckoProcessType(
         3,
@@ -237,6 +244,7 @@ process_types = [
         "IPDLUnitTest",
         "IpdlUnitTest",
         "IPDLUNITTEST",
+        False,
     ),
     GeckoProcessType(
         4,
@@ -247,6 +255,7 @@ process_types = [
         "GMPlugin",
         "GmpPlugin",
         "GMPLUGIN",
+        False,
     ),
     GeckoProcessType(
         5,
@@ -257,6 +266,7 @@ process_types = [
         "GPU",
         "Gpu",
         "GPU",
+        True,
     ),
     GeckoProcessType(
         6,
@@ -267,6 +277,7 @@ process_types = [
         "VR",
         "Vr",
         "VR",
+        True,
     ),
     GeckoProcessType(
         7,
@@ -277,6 +288,7 @@ process_types = [
         "RDD",
         "Rdd",
         "RDD",
+        True,
     ),
     GeckoProcessType(
         8,
@@ -287,6 +299,7 @@ process_types = [
         "Socket",
         "Socket",
         "SOCKET",
+        True,
     ),
     GeckoProcessType(
         9,
@@ -297,6 +310,7 @@ process_types = [
         "RemoteSandboxBroker",
         "RemoteSandboxBroker",
         "REMOTESANDBOXBROKER",
+        False,
     ),
     GeckoProcessType(
         10,
@@ -307,5 +321,6 @@ process_types = [
         "ForkServer",
         "ForkServer",
         "FORKSERVER",
+        False,
     ),
 ]
