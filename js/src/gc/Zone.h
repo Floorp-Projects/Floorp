@@ -396,9 +396,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
     return lastDiscardedCodeTime_;
   }
 
-  // Whether this zone can currently be collected.
-  bool canCollect();
-
   void changeGCState(GCState prev, GCState next);
 
   bool isCollecting() const {
