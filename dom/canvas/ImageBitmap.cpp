@@ -819,6 +819,7 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateImageBitmapInternal(
 
     dataSurface = CropAndCopyDataSourceSurface(dataSurface, cropRect);
     if (NS_WARN_IF(!dataSurface)) {
+      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
       return nullptr;
     }
 
