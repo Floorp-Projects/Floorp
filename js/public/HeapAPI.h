@@ -246,7 +246,6 @@ static_assert((FirstArenaAdjustmentBits % MarkBitmapWordBits) == 0);
 constexpr size_t FirstArenaAdjustmentWords =
     FirstArenaAdjustmentBits / MarkBitmapWordBits;
 
-const size_t ChunkRuntimeOffset = offsetof(ChunkBase, runtime);
 const size_t ChunkStoreBufferOffset = offsetof(ChunkBase, storeBuffer);
 const size_t ChunkMarkBitmapOffset = offsetof(TenuredChunkBase, markBits);
 
