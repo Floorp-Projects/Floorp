@@ -1018,21 +1018,52 @@ JS_PUBLIC_API void js::gc::PerformIncrementalReadBarrier(JS::GCCellPtr thing) {
   trc->performBarrier(thing);
 }
 
-void js::gc::PerformIncrementalBarrier(TenuredCell* cell) {
-  // Internal version of previous function called for both read and pre-write
-  // barriers.
+void js::gc::PerformIncrementalReadBarrier(TenuredCell* cell) {
+  // Internal version of previous function.
 
   MOZ_ASSERT(cell);
-  MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
-
   if (cell->isMarkedBlack()) {
     return;
   }
 
+  MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
+
   Zone* zone = cell->zone();
   MOZ_ASSERT(zone->needsIncrementalBarrier());
 
-  // Skip disptaching on known tracer type.
+  // Skip dispatching on known tracer type.
+  BarrierTracer* trc = BarrierTracer::fromTracer(zone->barrierTracer());
+
+  trc->performBarrier(JS::GCCellPtr(cell, cell->getTraceKind()));
+}
+
+void js::gc::PerformIncrementalPreWriteBarrier(TenuredCell* cell) {
+  // The same as PerformIncrementalReadBarrier except for an extra check on the
+  // runtime for cells in atoms zone.
+
+  MOZ_ASSERT(cell);
+  if (cell->isMarkedBlack()) {
+    return;
+  }
+
+  Zone* zone = cell->zoneFromAnyThread();
+  MOZ_ASSERT(zone->needsIncrementalBarrier());
+
+  // Barriers can be triggered on off the main thread in two situations:
+  //  - background finalization of HeapPtrs to the atoms zone
+  //  - while we are verifying pre-barriers for a worker runtime
+  // The barrier is not required in either case.
+  bool checkThread = zone->isAtomsZone();
+  JSRuntime* runtime = cell->runtimeFromAnyThread();
+  if (checkThread && !CurrentThreadCanAccessRuntime(runtime)) {
+    MOZ_ASSERT(CurrentThreadIsGCFinalizing() ||
+               RuntimeIsVerifyingPreBarriers(runtime));
+    return;
+  }
+
+  MOZ_ASSERT(!JS::RuntimeHeapIsMajorCollecting());
+
+  // Skip dispatching on known tracer type.
   BarrierTracer* trc = BarrierTracer::fromTracer(zone->barrierTracer());
 
   trc->performBarrier(JS::GCCellPtr(cell, cell->getTraceKind()));
@@ -1050,7 +1081,7 @@ void js::gc::PerformIncrementalBarrierDuringFlattening(JSString* str) {
     return;
   }
 
-  PerformIncrementalBarrier(cell);
+  PerformIncrementalPreWriteBarrier(cell);
 }
 
 template <typename T>
