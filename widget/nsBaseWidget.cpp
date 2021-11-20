@@ -835,20 +835,11 @@ void nsBaseWidget::ConfigureAPZCTreeManager() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mAPZC);
 
-  ConfigureAPZControllerThread();
-
-  float dpi = GetDPI();
-  // On Android the main thread is not the controller thread
-  APZThreadUtils::RunOnControllerThread(
-      NewRunnableMethod<float>("layers::IAPZCTreeManager::SetDPI", mAPZC,
-                               &IAPZCTreeManager::SetDPI, dpi));
+  mAPZC->SetDPI(GetDPI());
 
   if (StaticPrefs::apz_keyboard_enabled_AtStartup()) {
     KeyboardMap map = RootWindowGlobalKeyListener::CollectKeyboardShortcuts();
-    // On Android the main thread is not the controller thread
-    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<KeyboardMap>(
-        "layers::IAPZCTreeManager::SetKeyboardMap", mAPZC,
-        &IAPZCTreeManager::SetKeyboardMap, map));
+    mAPZC->SetKeyboardMap(map);
   }
 
   RefPtr<IAPZCTreeManager> treeManager = mAPZC;  // for capture by the lambdas
@@ -856,10 +847,7 @@ void nsBaseWidget::ConfigureAPZCTreeManager() {
   ContentReceivedInputBlockCallback callback(
       [treeManager](uint64_t aInputBlockId, bool aPreventDefault) {
         MOZ_ASSERT(NS_IsMainThread());
-        APZThreadUtils::RunOnControllerThread(NewRunnableMethod<uint64_t, bool>(
-            "layers::IAPZCTreeManager::ContentReceivedInputBlock", treeManager,
-            &IAPZCTreeManager::ContentReceivedInputBlock, aInputBlockId,
-            aPreventDefault));
+        treeManager->ContentReceivedInputBlock(aInputBlockId, aPreventDefault);
       });
   mAPZEventState = new APZEventState(this, std::move(callback));
 
@@ -867,12 +855,7 @@ void nsBaseWidget::ConfigureAPZCTreeManager() {
       [treeManager](uint64_t aInputBlockId,
                     const nsTArray<TouchBehaviorFlags>& aFlags) {
         MOZ_ASSERT(NS_IsMainThread());
-        APZThreadUtils::RunOnControllerThread(
-            NewRunnableMethod<
-                uint64_t, StoreCopyPassByLRef<nsTArray<TouchBehaviorFlags>>>(
-                "layers::IAPZCTreeManager::SetAllowedTouchBehavior",
-                treeManager, &IAPZCTreeManager::SetAllowedTouchBehavior,
-                aInputBlockId, aFlags.Clone()));
+        treeManager->SetAllowedTouchBehavior(aInputBlockId, aFlags);
       };
 
   mRootContentController = CreateRootContentController();
@@ -896,11 +879,7 @@ void nsBaseWidget::ConfigureAPZControllerThread() {
 void nsBaseWidget::SetConfirmedTargetAPZC(
     uint64_t aInputBlockId,
     const nsTArray<ScrollableLayerGuid>& aTargets) const {
-  APZThreadUtils::RunOnControllerThread(
-      NewRunnableMethod<uint64_t,
-                        StoreCopyPassByRRef<nsTArray<ScrollableLayerGuid>>>(
-          "layers::IAPZCTreeManager::SetTargetAPZC", mAPZC,
-          &IAPZCTreeManager::SetTargetAPZC, aInputBlockId, aTargets.Clone()));
+  mAPZC->SetTargetAPZC(aInputBlockId, aTargets);
 }
 
 void nsBaseWidget::UpdateZoomConstraints(
@@ -1312,6 +1291,11 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight) {
   if (!mShutdownObserver) {
     return;
   }
+
+  // The controller thread must be configured before the compositor
+  // session is created, so that the input bridge runs on the right
+  // thread.
+  ConfigureAPZControllerThread();
 
   CompositorOptions options;
   RefPtr<WebRenderLayerManager> lm =
@@ -1779,12 +1763,8 @@ void nsBaseWidget::ZoomToRect(const uint32_t& aPresShellId,
     return;
   }
   LayersId layerId = mCompositorSession->RootLayerTreeId();
-  APZThreadUtils::RunOnControllerThread(
-      NewRunnableMethod<ScrollableLayerGuid, ZoomTarget, uint32_t>(
-          "layers::IAPZCTreeManager::ZoomToRect", mAPZC,
-          &IAPZCTreeManager::ZoomToRect,
-          ScrollableLayerGuid(layerId, aPresShellId, aViewId),
-          ZoomTarget{aRect}, aFlags));
+  mAPZC->ZoomToRect(ScrollableLayerGuid(layerId, aPresShellId, aViewId),
+                    ZoomTarget{aRect}, aFlags);
 }
 
 #ifdef ACCESSIBILITY
@@ -1825,10 +1805,7 @@ void nsBaseWidget::StartAsyncScrollbarDrag(
   ScrollableLayerGuid guid(layersId, aDragMetrics.mPresShellId,
                            aDragMetrics.mViewId);
 
-  APZThreadUtils::RunOnControllerThread(
-      NewRunnableMethod<ScrollableLayerGuid, AsyncDragMetrics>(
-          "layers::IAPZCTreeManager::StartScrollbarDrag", mAPZC,
-          &IAPZCTreeManager::StartScrollbarDrag, guid, aDragMetrics));
+  mAPZC->StartScrollbarDrag(guid, aDragMetrics);
 }
 
 bool nsBaseWidget::StartAsyncAutoscroll(const ScreenPoint& aAnchorLocation,

@@ -366,6 +366,16 @@ SampleTime APZCTreeManager::GetFrameTime() {
 
 void APZCTreeManager::SetAllowedTouchBehavior(
     uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aValues) {
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(
+        NewRunnableMethod<uint64_t,
+                          StoreCopyPassByLRef<nsTArray<TouchBehaviorFlags>>>(
+            "layers::APZCTreeManager::SetAllowedTouchBehavior", this,
+            &APZCTreeManager::SetAllowedTouchBehavior, aInputBlockId,
+            aValues.Clone()));
+    return;
+  }
+
   APZThreadUtils::AssertOnControllerThread();
 
   mInputQueue->SetAllowedTouchBehavior(aInputBlockId, aValues);
@@ -1014,6 +1024,14 @@ already_AddRefed<HitTestingTreeNode> APZCTreeManager::RecycleOrCreateNode(
 
 void APZCTreeManager::StartScrollbarDrag(const ScrollableLayerGuid& aGuid,
                                          const AsyncDragMetrics& aDragMetrics) {
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(
+        NewRunnableMethod<ScrollableLayerGuid, AsyncDragMetrics>(
+            "layers::APZCTreeManager::StartScrollbarDrag", this,
+            &APZCTreeManager::StartScrollbarDrag, aGuid, aDragMetrics));
+    return;
+  }
+
   APZThreadUtils::AssertOnControllerThread();
 
   RefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(aGuid);
@@ -2305,6 +2323,13 @@ void APZCTreeManager::ProcessUnhandledEvent(LayoutDeviceIntPoint* aRefPoint,
 }
 
 void APZCTreeManager::SetKeyboardMap(const KeyboardMap& aKeyboardMap) {
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<KeyboardMap>(
+        "layers::APZCTreeManager::SetKeyboardMap", this,
+        &APZCTreeManager::SetKeyboardMap, aKeyboardMap));
+    return;
+  }
+
   APZThreadUtils::AssertOnControllerThread();
 
   mKeyboardMap = aKeyboardMap;
@@ -2313,6 +2338,14 @@ void APZCTreeManager::SetKeyboardMap(const KeyboardMap& aKeyboardMap) {
 void APZCTreeManager::ZoomToRect(const ScrollableLayerGuid& aGuid,
                                  const ZoomTarget& aZoomTarget,
                                  const uint32_t aFlags) {
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(
+        NewRunnableMethod<ScrollableLayerGuid, ZoomTarget, uint32_t>(
+            "layers::APZCTreeManager::ZoomToRect", this,
+            &APZCTreeManager::ZoomToRect, aGuid, aZoomTarget, aFlags));
+    return;
+  }
+
   // We could probably move this to run on the updater thread if needed, but
   // either way we should restrict it to a single thread. For now let's use the
   // controller thread.
@@ -2326,6 +2359,14 @@ void APZCTreeManager::ZoomToRect(const ScrollableLayerGuid& aGuid,
 
 void APZCTreeManager::ContentReceivedInputBlock(uint64_t aInputBlockId,
                                                 bool aPreventDefault) {
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<uint64_t, bool>(
+        "layers::APZCTreeManager::ContentReceivedInputBlock", this,
+        &APZCTreeManager::ContentReceivedInputBlock, aInputBlockId,
+        aPreventDefault));
+    return;
+  }
+
   APZThreadUtils::AssertOnControllerThread();
 
   mInputQueue->ContentReceivedInputBlock(aInputBlockId, aPreventDefault);
@@ -2333,7 +2374,15 @@ void APZCTreeManager::ContentReceivedInputBlock(uint64_t aInputBlockId,
 
 void APZCTreeManager::SetTargetAPZC(
     uint64_t aInputBlockId, const nsTArray<ScrollableLayerGuid>& aTargets) {
-  APZThreadUtils::AssertOnControllerThread();
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(
+        NewRunnableMethod<uint64_t,
+                          StoreCopyPassByRRef<nsTArray<ScrollableLayerGuid>>>(
+            "layers::APZCTreeManager::SetTargetAPZC", this,
+            &layers::APZCTreeManager::SetTargetAPZC, aInputBlockId,
+            aTargets.Clone()));
+    return;
+  }
 
   RefPtr<AsyncPanZoomController> target = nullptr;
   if (aTargets.Length() > 0) {
@@ -2828,12 +2877,20 @@ APZCTreeManager::BuildOverscrollHandoffChain(
 }
 
 void APZCTreeManager::SetLongTapEnabled(bool aLongTapEnabled) {
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(NewRunnableMethod<bool>(
+        "layers::APZCTreeManager::SetLongTapEnabled", this,
+        &APZCTreeManager::SetLongTapEnabled, aLongTapEnabled));
+    return;
+  }
+
   APZThreadUtils::AssertOnControllerThread();
   GestureEventListener::SetLongTapEnabled(aLongTapEnabled);
 }
 
 void APZCTreeManager::AddInputBlockCallback(uint64_t aInputBlockId,
                                             InputBlockCallback&& aCallback) {
+  APZThreadUtils::AssertOnControllerThread();
   mInputQueue->AddInputBlockCallback(aInputBlockId, std::move(aCallback));
 }
 
@@ -3568,6 +3625,13 @@ void APZCTreeManager::UnlockTree() {
 }
 
 void APZCTreeManager::SetDPI(float aDpiValue) {
+  if (!APZThreadUtils::IsControllerThread()) {
+    APZThreadUtils::RunOnControllerThread(
+        NewRunnableMethod<float>("layers::APZCTreeManager::SetDPI", this,
+                                 &APZCTreeManager::SetDPI, aDpiValue));
+    return;
+  }
+
   APZThreadUtils::AssertOnControllerThread();
   mDPI = aDpiValue;
 }

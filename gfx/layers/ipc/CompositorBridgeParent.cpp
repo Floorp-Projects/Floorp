@@ -946,7 +946,7 @@ void CompositorBridgeParent::SetConfirmedTargetAPZC(
           "layers::CompositorBridgeParent::SetConfirmedTargetAPZC",
           mApzcTreeManager.get(), setTargetApzcFunc, aInputBlockId,
           std::move(aTargets));
-  mApzUpdater->RunOnControllerThread(aLayersId, task.forget());
+  mApzUpdater->RunOnUpdaterThread(aLayersId, task.forget());
 }
 
 void CompositorBridgeParent::SetFixedLayerMargins(ScreenIntCoord aTop,

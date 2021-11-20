@@ -7,6 +7,7 @@
 #ifndef mozilla_layers_APZThreadUtils_h
 #define mozilla_layers_APZThreadUtils_h
 
+#include "nsIEventTarget.h"
 #include "nsINamed.h"
 #include "nsITimer.h"
 #include "nsString.h"
@@ -46,7 +47,9 @@ class APZThreadUtils {
    * this function is called from the controller thread itself then the task is
    * run immediately without getting queued.
    */
-  static void RunOnControllerThread(RefPtr<Runnable>&& aTask);
+  static void RunOnControllerThread(
+      RefPtr<Runnable>&& aTask,
+      uint32_t flags = nsIEventTarget::DISPATCH_NORMAL);
 
   /**
    * Returns true if currently on APZ "controller thread".
