@@ -69,6 +69,7 @@
 #include "vm/MatchPairs.h"
 #include "vm/RegExpObject.h"
 #include "vm/RegExpStatics.h"
+#include "vm/StaticStrings.h"
 #include "vm/StringObject.h"
 #include "vm/StringType.h"
 #include "vm/TraceLogging.h"

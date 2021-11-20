@@ -38,6 +38,7 @@
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"
 #include "vm/GeckoProfiler.h"
+#include "vm/StaticStrings.h"
 #include "vm/ToSource.h"  // js::ValueToSource
 
 #include "gc/Marking-inl.h"

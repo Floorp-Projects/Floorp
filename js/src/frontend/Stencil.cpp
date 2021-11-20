@@ -46,8 +46,9 @@
 #include "vm/Printer.h"       // js::Fprinter
 #include "vm/RegExpObject.h"  // js::RegExpObject
 #include "vm/Scope.h"  // Scope, *Scope, ScopeKind::*, ScopeKindString, ScopeIter, ScopeKindIsCatch, BindingIter, GetScopeDataTrailingNames
-#include "vm/ScopeKind.h"     // ScopeKind
-#include "vm/SelfHosting.h"   // SetClonedSelfHostedFunctionName
+#include "vm/ScopeKind.h"    // ScopeKind
+#include "vm/SelfHosting.h"  // SetClonedSelfHostedFunctionName
+#include "vm/StaticStrings.h"
 #include "vm/StencilEnums.h"  // ImmutableScriptFlagsEnum
 #include "vm/StringType.h"    // JSAtom, js::CopyChars
 #include "vm/Xdr.h"  // XDRMode, XDRResult, XDRStencilEncoder, XDRStencilDecoder
