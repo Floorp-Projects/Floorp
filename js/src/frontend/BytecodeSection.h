@@ -207,21 +207,6 @@ class BytecodeSection {
     lastTarget_.offset = offset;
   }
 
-  // Check if the last emitted opcode is a jump target.
-  bool lastOpcodeIsJumpTarget() const {
-    return lastTarget_.offset.valid() &&
-           offset() - lastTarget_.offset ==
-               BytecodeOffsetDiff(JSOpLength_JumpTarget);
-  }
-
-  // JumpTarget should not be part of the emitted statement, as they can be
-  // aliased by multiple statements. If we included the jump target as part of
-  // the statement we might have issues where the enclosing statement might
-  // not contain all the opcodes of the enclosed statements.
-  BytecodeOffset lastNonJumpTargetOffset() const {
-    return lastOpcodeIsJumpTarget() ? lastTarget_.offset : offset();
-  }
-
   // ---- Stack ----
 
   int32_t stackDepth() const { return stackDepth_; }
