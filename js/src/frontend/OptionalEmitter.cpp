@@ -8,9 +8,7 @@
 
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/IfEmitter.h"  // IfEmitter, InternalIfEmitter, CondEmitter
-#include "frontend/SharedContext.h"
 #include "vm/Opcodes.h"
-#include "vm/StringType.h"
 
 using namespace js;
 using namespace js::frontend;

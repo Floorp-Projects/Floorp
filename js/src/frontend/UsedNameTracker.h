@@ -7,14 +7,17 @@
 #ifndef frontend_UsedNameTracker_h
 #define frontend_UsedNameTracker_h
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
+
+#include <stdint.h>
+
 #include "frontend/ParserAtom.h"                   // TaggedParserAtomIndex
 #include "frontend/TaggedParserAtomIndexHasher.h"  // TaggedParserAtomIndexHasher
 #include "frontend/Token.h"
 #include "js/AllocPolicy.h"
 #include "js/HashTable.h"
 #include "js/Vector.h"
-
-#include "vm/StringType.h"
 
 namespace js {
 namespace frontend {

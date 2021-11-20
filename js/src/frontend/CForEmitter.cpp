@@ -9,7 +9,7 @@
 #include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
 #include "frontend/EmitterScope.h"     // EmitterScope
 #include "vm/Opcodes.h"                // JSOp
-#include "vm/Scope.h"                  // ScopeKind
+#include "vm/ScopeKind.h"              // ScopeKind
 #include "vm/StencilEnums.h"           // TryNoteKind
 
 using namespace js;
