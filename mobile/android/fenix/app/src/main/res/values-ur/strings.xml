@@ -130,6 +130,12 @@
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">تمام دکھائیں</string>
 
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description">تمام حالیہ ٹیبز بٹن دکھائیں۔</string>
+    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
+        The first parameter is the count for number of sites in the group.  This number will always be more than one. -->
+    <string name="recent_tabs_search_term_count">سائٹس: %1$s</string>
+
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
@@ -625,6 +631,13 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">بند کریں</string>
 
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d سائٹ</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%dسائٹس</string>
+
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">حالیہ بند کیے گئے ٹیب</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -833,8 +846,8 @@
     <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">نئے ٹیب میں کھولیں</string>
     <!-- History overflow menu open in private tab button -->
     <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">نجی ٹیب میں کھولیں</string>
-    <!-- Text for the button to delete a single history item -->
-    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">مٹائیں</string>
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">مٹائیں</string>
 
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
@@ -1191,6 +1204,8 @@
     <string name="qr_scanner_dialog_positive">اجازت دیں</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">‏‏رد کریں</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">ویب پتہ جائز نہیں ہے</string>
     <!-- QR code scanner prompt dialog positive option when there is an error -->
     <string name="qr_scanner_dialog_invalid_ok">ٹھیک ہے</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
@@ -1614,6 +1629,8 @@
     <string name="saved_login_copy_username">صارف نام نقل کریں</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
     <string name="saved_login_clear_username">صارف نام صاف کریں</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">میزبان نام صاف کریں۔</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
     <string name="saved_login_copy_site">سائٹ کاپی کریں</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -1828,6 +1845,8 @@
     <string name="saved_login_password_required">پاس ورڈ کی درکار</string>
     <!--  The error message in add login view when username field is blank. -->
     <string name="saved_login_username_required">صارف نام درکار ہے۔</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">میزبان نام درکار ہے۔</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">آواز سے تلاش</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1895,6 +1914,8 @@
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
     <string name="inactive_tabs_survey_header_1">Firefox کو بہتر بنانے میں مدد کریں۔</string>
 
+    <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
+    <string name="inactive_tabs_survey_content">آپ نے غیر فعال ٹیبز کو غیر فعال کیوں کیا؟</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string name="inactive_tabs_survey_do_not_understand">مجھے سمجھ نہیں آتی کہ یہ کیسے کام کرتا ہے۔</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
