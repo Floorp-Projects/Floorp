@@ -2846,8 +2846,6 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     return this->sourceUnits.codeUnitPtrAt(offset);
   }
 
-  const Unit* rawLimit() const { return this->sourceUnits.limit(); }
-
   [[nodiscard]] bool identifierName(TokenStart start, const Unit* identStart,
                                     IdentifierEscapes escaping,
                                     Modifier modifier,
