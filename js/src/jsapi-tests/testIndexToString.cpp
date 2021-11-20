@@ -10,6 +10,7 @@
 #include "jsapi-tests/tests.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
+#include "vm/StaticStrings.h"
 
 #include "vm/StringType-inl.h"
 

@@ -16,6 +16,7 @@
 #include "js/HashTable.h"         // HashMap
 #include "js/Vector.h"            // Vector
 #include "vm/CommonPropertyNames.h"
+#include "vm/StaticStrings.h"
 #include "vm/StringType.h"     // CompareChars, StringEqualsAscii
 #include "vm/WellKnownAtom.h"  // WellKnownAtomId, WellKnownAtomInfo
 

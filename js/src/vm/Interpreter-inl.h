@@ -17,6 +17,7 @@
 #include "vm/BytecodeUtil.h"  // JSDVG_SEARCH_STACK
 #include "vm/Realm.h"
 #include "vm/SharedStencil.h"  // GCThingIndex
+#include "vm/StaticStrings.h"
 #include "vm/ThrowMsgKind.h"
 
 #include "vm/EnvironmentObject-inl.h"

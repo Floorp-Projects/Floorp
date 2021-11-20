@@ -28,6 +28,7 @@
 #include "js/Symbol.h"
 #include "util/Text.h"
 #include "vm/JSContext.h"
+#include "vm/StaticStrings.h"
 #include "vm/SymbolType.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 

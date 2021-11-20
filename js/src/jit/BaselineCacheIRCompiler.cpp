@@ -19,6 +19,7 @@
 #include "proxy/Proxy.h"
 #include "util/Unicode.h"
 #include "vm/JSAtom.h"
+#include "vm/StaticStrings.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"

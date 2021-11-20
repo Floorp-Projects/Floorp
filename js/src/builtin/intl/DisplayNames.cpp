@@ -61,6 +61,7 @@
 #include "vm/Runtime.h"
 #include "vm/SelfHosting.h"
 #include "vm/Stack.h"
+#include "vm/StaticStrings.h"
 #include "vm/StringType.h"
 #include "vm/WellKnownAtom.h"  // js_*_str
 
