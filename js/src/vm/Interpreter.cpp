@@ -3563,8 +3563,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(SetAliasedVar) {
       EnvironmentCoordinate ec = EnvironmentCoordinate(REGS.pc);
       EnvironmentObject& obj = REGS.fp()->aliasedEnvironment(ec);
-      SetAliasedVarOperation(cx, script, REGS.pc, obj, ec, REGS.sp[-1],
-                             CheckTDZ);
+      MOZ_ASSERT(!IsUninitializedLexical(obj.aliasedBinding(ec)));
+      obj.setAliasedBinding(ec, REGS.sp[-1]);
     }
     END_CASE(SetAliasedVar)
 
@@ -3601,8 +3601,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(InitAliasedLexical) {
       EnvironmentCoordinate ec = EnvironmentCoordinate(REGS.pc);
       EnvironmentObject& obj = REGS.fp()->aliasedEnvironment(ec);
-      SetAliasedVarOperation(cx, script, REGS.pc, obj, ec, REGS.sp[-1],
-                             DontCheckTDZ);
+      obj.setAliasedBinding(ec, REGS.sp[-1]);
     }
     END_CASE(InitAliasedLexical)
 
