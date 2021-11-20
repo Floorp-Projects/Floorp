@@ -39,8 +39,8 @@
 #include "jit/VMFunctions.h"
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "util/Memory.h"
-#include "vm/BytecodeUtil.h"
 #include "vm/FunctionFlags.h"
+#include "vm/Opcodes.h"
 #include "wasm/WasmCodegenTypes.h"
 #include "wasm/WasmFrame.h"
 

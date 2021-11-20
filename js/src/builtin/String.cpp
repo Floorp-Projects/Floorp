@@ -44,7 +44,6 @@
 #include "js/UniquePtr.h"
 #include "util/StringBuffer.h"
 #include "util/Unicode.h"
-#include "vm/BytecodeUtil.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
 #include "vm/JSAtom.h"

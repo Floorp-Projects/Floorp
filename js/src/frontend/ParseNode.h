@@ -22,7 +22,7 @@
 #include "frontend/Stencil.h"             // BigIntStencil
 #include "frontend/Token.h"
 #include "js/RootingAPI.h"
-#include "vm/BytecodeUtil.h"
+#include "vm/Opcodes.h"
 #include "vm/Scope.h"
 #include "vm/ScopeKind.h"
 #include "vm/StringType.h"

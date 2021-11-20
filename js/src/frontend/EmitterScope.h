@@ -19,7 +19,7 @@
 #include "frontend/ParserAtom.h"  // TaggedParserAtomIndex
 #include "frontend/SharedContext.h"
 #include "js/TypeDecls.h"
-#include "vm/BytecodeUtil.h"   // JSOp
+#include "vm/Opcodes.h"        // JSOp
 #include "vm/SharedStencil.h"  // GCThingIndex
 
 namespace js {
