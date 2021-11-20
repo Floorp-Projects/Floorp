@@ -232,14 +232,6 @@ inline bool SetIntrinsicOperation(JSContext* cx, JSScript* script,
   return GlobalObject::setIntrinsicValue(cx, cx->global(), name, val);
 }
 
-inline void SetAliasedVarOperation(JSContext* cx, JSScript* script,
-                                   jsbytecode* pc, EnvironmentObject& obj,
-                                   EnvironmentCoordinate ec, const Value& val,
-                                   MaybeCheckTDZ checkTDZ) {
-  MOZ_ASSERT_IF(checkTDZ, !IsUninitializedLexical(obj.aliasedBinding(ec)));
-  obj.setAliasedBinding(cx, ec, val);
-}
-
 inline bool SetNameOperation(JSContext* cx, JSScript* script, jsbytecode* pc,
                              HandleObject env, HandleValue val) {
   MOZ_ASSERT(JSOp(*pc) == JSOp::SetName || JSOp(*pc) == JSOp::StrictSetName ||
