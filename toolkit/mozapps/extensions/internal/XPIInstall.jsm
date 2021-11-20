@@ -172,7 +172,9 @@ function getFile(path, base = null) {
  */
 function flushJarCache(aJarFile) {
   Services.obs.notifyObservers(aJarFile, "flush-cache-entry");
-  Services.mm.broadcastAsyncMessage(MSG_JAR_FLUSH, aJarFile.path);
+  Services.ppmm.broadcastAsyncMessage(MSG_JAR_FLUSH, {
+    path: aJarFile.path,
+  });
 }
 
 const PREF_EM_UPDATE_BACKGROUND_URL = "extensions.update.background.url";
@@ -189,7 +191,7 @@ const TEMP_INSTALL_ID_GEN_SESSION = new Uint8Array(
   Float64Array.of(Math.random()).buffer
 );
 
-const MSG_JAR_FLUSH = "AddonJarFlush";
+const MSG_JAR_FLUSH = "Extension:FlushJarCache";
 
 /**
  * Valid IDs fit this pattern.
