@@ -11,7 +11,6 @@
 
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions, JS::InstantiateOptions
-#include "js/GCVector.h"        // JS::GCVector
 #include "js/SourceText.h"  // JS::SourceText
 #include "js/TypeDecls.h"   // JS::Handle (fwd)
 #include "js/UniquePtr.h"   // js::UniquePtr
@@ -90,9 +89,6 @@ inline bool CanLazilyParse(const JS::ReadOnlyCompileOptions& options) {
 
 void FireOnNewScript(JSContext* cx, const JS::InstantiateOptions& options,
                      JS::Handle<JSScript*> script);
-
-void FireOnNewScripts(JSContext* cx, const JS::InstantiateOptions& options,
-                      JS::Handle<JS::GCVector<JSScript*>> scripts);
 
 }  // namespace frontend
 
