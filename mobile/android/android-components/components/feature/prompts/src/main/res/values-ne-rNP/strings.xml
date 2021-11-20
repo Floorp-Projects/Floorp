@@ -4,6 +4,8 @@
     <string name="mozac_feature_prompts_ok">टीक छ</string>
     <!-- Text for confirmation for a negative action in dialog.  -->
     <string name="mozac_feature_prompts_cancel">रद्द गर्नुहोस्</string>
+    <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
+    <string name="mozac_feature_prompts_no_more_dialogs">यस पृष्ठलाई थप संवादहरू सिर्जना हुनबाट रोक्नुहोस्</string>
     <!-- Text for a positive button, when an user selects a date in date/time picker. -->
     <string name="mozac_feature_prompts_set_date">सेट गर्नुहोस्</string>
     <!-- Text for a button that clears the selected input in the date/time picker. -->
@@ -35,6 +37,9 @@
     <string name="mozac_feature_prompt_login_update_headline">यो लगइन अद्यावधिक गर्न चाहानुहुन्छ ?</string>
     <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
     <string name="mozac_feature_prompt_login_add_username_headline">सेभ गरिएको पासवर्डमा प्रयोगकर्ता नाम थप्न चाहानुहुन्छ ?</string>
+    <!-- Text for a label for the field when prompt requesting a text is shown. -->
+    <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
+    <string name="mozac_feature_prompts_content_description_input_label">अक्षर आगत क्षेत्र प्रविष्ट गर्नको लागि लेबल</string>
     <!-- Title of a color picker dialog, this text is shown above a color picker. -->
     <string name="mozac_feature_prompts_choose_a_color">एउटा रङ्ग छान्नुहोस्</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->

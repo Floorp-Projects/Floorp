@@ -10,4 +10,6 @@
     <string name="mozac_browser_menu_new_private_tab">नयाँ निजी ट्याब</string>
     <!-- Browser menu button to close tab. Closes the current session when pressed. -->
     <string name="mozac_close_tab">ट्याब बन्द गर्नुहोस्</string>
+    <!-- Menu option to duplicate the current tab -->
+    <string name="mozac_ui_tabcounter_duplicate_tab">नक्कल ट्याब</string>
     </resources>

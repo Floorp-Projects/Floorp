@@ -1,8 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+    <!-- Accessible description for decreasing the font size -->
+    <string name="mozac_feature_readerview_font_size_decrease_desc">फन्टको आकार घटाउनुहोस्</string>
+
+    <!-- Accessible description for increasing the font size -->
+    <string name="mozac_feature_readerview_font_size_increase_desc">फन्टको आकार बढाउनुहोस्</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_dark">अँध्यारो</string>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">अँध्यारो रङ्ग योजना</string>
     <!-- Color option for the background -->
     <string name="mozac_feature_readerview_light">उज्यालो</string>
-    </resources>
+    <!-- Accessible description for the color option -->
+    <string name="mozac_feature_readerview_light_color_scheme_desc">उज्यालो रङ्ग योजना</string>
+</resources>

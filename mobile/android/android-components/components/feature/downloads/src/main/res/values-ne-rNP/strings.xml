@@ -17,6 +17,15 @@
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
     <string name="mozac_feature_downloads_dialog_cancel">रद्द गर्नुहोस्</string>
 
+    <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
+    <string name="mozac_feature_downloads_file_not_supported2">%1$s ले यो फाइलको प्रकार डाउनलोड गर्न सक्दैन</string>
+
+    <!-- Message that appears when the downloaded file could not be opened-->
+    <string name="mozac_feature_downloads_could_not_open_file">यो फाइल खोल्न सकिएन</string>
+
+    <!-- Message that appears when the downloaded file is a specific type that Android doesn't support opening-->
+    <string name="mozac_feature_downloads_open_not_supported1">%1$s फाइलहरू खोल्न कुनै एप फेला परेनन्</string>
+
     <!-- Button that pauses the download when pressed -->
     <string name="mozac_feature_downloads_button_pause">रोक्नुहोस्</string>
     <!-- Button that resumes the download when pressed -->
