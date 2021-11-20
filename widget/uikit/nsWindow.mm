@@ -239,8 +239,7 @@ class nsAutoRetainUIKitObject {
 - (BOOL)isUsingMainThreadOpenGL {
   if (!mGeckoChild || ![self window]) return NO;
 
-  return mGeckoChild->GetLayerManager(nullptr)->GetBackendType() ==
-         mozilla::layers::LayersBackend::LAYERS_OPENGL;
+  return NO;
 }
 
 - (void)drawUsingOpenGL {
