@@ -71,10 +71,14 @@ void js::ZoneAllocator::updateGCStartThresholds(GCRuntime& gc,
       mallocHeapSize.retainedBytes(), gc.tunables, gc.schedulingState, lock);
 }
 
-void js::ZoneAllocator::setGCSliceThresholds(GCRuntime& gc) {
-  gcHeapThreshold.setSliceThreshold(this, gcHeapSize, gc.tunables);
-  mallocHeapThreshold.setSliceThreshold(this, mallocHeapSize, gc.tunables);
-  jitHeapThreshold.setSliceThreshold(this, jitHeapSize, gc.tunables);
+void js::ZoneAllocator::setGCSliceThresholds(GCRuntime& gc,
+                                             bool waitingOnBGTask) {
+  gcHeapThreshold.setSliceThreshold(this, gcHeapSize, gc.tunables,
+                                    waitingOnBGTask);
+  mallocHeapThreshold.setSliceThreshold(this, mallocHeapSize, gc.tunables,
+                                        waitingOnBGTask);
+  jitHeapThreshold.setSliceThreshold(this, jitHeapSize, gc.tunables,
+                                     waitingOnBGTask);
 }
 
 void js::ZoneAllocator::clearGCSliceThresholds() {

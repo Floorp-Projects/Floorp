@@ -817,7 +817,8 @@ class HeapThreshold {
   size_t incrementalBytesRemaining(const HeapSize& heapSize) const;
 
   void setSliceThreshold(ZoneAllocator* zone, const HeapSize& heapSize,
-                         const GCSchedulingTunables& tunables);
+                         const GCSchedulingTunables& tunables,
+                         bool waitingOnBGTask);
   void clearSliceThreshold() { sliceBytes_ = SIZE_MAX; }
   bool hasSliceThreshold() const { return sliceBytes_ != SIZE_MAX; }
 
