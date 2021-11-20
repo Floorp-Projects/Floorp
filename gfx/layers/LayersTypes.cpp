@@ -30,8 +30,6 @@ const char* GetLayersBackendName(LayersBackend aBackend) {
   switch (aBackend) {
     case LayersBackend::LAYERS_NONE:
       return "none";
-    case LayersBackend::LAYERS_OPENGL:
-      return "opengl";
     case LayersBackend::LAYERS_WR:
       MOZ_ASSERT(gfx::gfxVars::UseWebRender());
       if (gfx::gfxVars::UseSoftwareWebRender()) {
