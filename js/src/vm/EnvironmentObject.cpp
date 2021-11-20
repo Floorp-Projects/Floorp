@@ -195,8 +195,7 @@ CallObject* CallObject::create(JSContext* cx, AbstractFramePtr frame) {
         continue;
       }
       callobj->setAliasedBinding(
-          cx, fi,
-          frame.unaliasedFormal(fi.argumentSlot(), DONT_CHECK_ALIASING));
+          fi, frame.unaliasedFormal(fi.argumentSlot(), DONT_CHECK_ALIASING));
     }
   }
 
