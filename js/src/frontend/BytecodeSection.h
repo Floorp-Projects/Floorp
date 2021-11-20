@@ -14,33 +14,22 @@
 #include <stddef.h>  // ptrdiff_t, size_t
 #include <stdint.h>  // uint16_t, int32_t, uint32_t
 
-#include "jstypes.h"           // JS_PUBLIC_API
-#include "NamespaceImports.h"  // ValueVector
-
 #include "frontend/AbstractScopePtr.h"  // AbstractScopePtr, ScopeIndex
 #include "frontend/BytecodeOffset.h"    // BytecodeOffset
 #include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationGCOutput, CompilationAtomCache
 #include "frontend/JumpList.h"         // JumpTarget
 #include "frontend/NameCollections.h"  // AtomIndexMap, PooledMapPtr
-#include "frontend/ObjLiteral.h"       // ObjLiteralStencil
 #include "frontend/ParseNode.h"        // BigIntLiteral
 #include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex, ParserAtom
 #include "frontend/SourceNotes.h"  // SrcNote
 #include "frontend/Stencil.h"      // Stencils
-#include "gc/Rooting.h"            // JS::Rooted
-#include "js/GCVariant.h"          // GCPolicy<mozilla::Variant>
-#include "js/GCVector.h"           // GCVector
 #include "js/TypeDecls.h"          // jsbytecode, JSContext
-#include "js/Value.h"              // JS::Vector
 #include "js/Vector.h"             // Vector
 #include "vm/Opcodes.h"            // JSOpLength_JumpTarget
 #include "vm/SharedStencil.h"      // TryNote, ScopeNote, GCThingIndex
 #include "vm/StencilEnums.h"       // TryNoteKind
 
 namespace js {
-
-class Scope;
-
 namespace frontend {
 
 class FunctionBox;

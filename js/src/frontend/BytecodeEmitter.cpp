@@ -25,7 +25,6 @@
 
 #include "jstypes.h"  // JS_BIT
 
-#include "ds/Nestable.h"                         // Nestable
 #include "frontend/AbstractScopePtr.h"           // ScopeIndex
 #include "frontend/BytecodeControlStructures.h"  // NestableControl, BreakableControl, LabelControl, LoopControl, TryFinallyControl
 #include "frontend/CallOrNewEmitter.h"           // CallOrNewEmitter
@@ -59,28 +58,20 @@
 #include "frontend/TDZCheckCache.h"                // TDZCheckCache
 #include "frontend/TryEmitter.h"                   // TryEmitter
 #include "frontend/WhileEmitter.h"                 // WhileEmitter
-#include "js/CompileOptions.h"  // TransitiveCompileOptions, CompileOptions
-#include "js/friend/ErrorMessages.h"      // JSMSG_*
-#include "js/friend/StackLimits.h"        // AutoCheckRecursionLimit
-#include "util/StringBuffer.h"            // StringBuffer
-#include "vm/AsyncFunctionResolveKind.h"  // AsyncFunctionResolveKind
+#include "js/friend/ErrorMessages.h"               // JSMSG_*
+#include "js/friend/StackLimits.h"                 // AutoCheckRecursionLimit
+#include "util/StringBuffer.h"                     // StringBuffer
+#include "vm/AsyncFunctionResolveKind.h"           // AsyncFunctionResolveKind
 #include "vm/BytecodeUtil.h"  // JOF_*, IsArgOp, IsLocalOp, SET_UINT24, SET_ICINDEX, BytecodeFallsThrough, BytecodeIsJumpTarget
 #include "vm/CompletionKind.h"      // CompletionKind
 #include "vm/FunctionPrefixKind.h"  // FunctionPrefixKind
 #include "vm/GeneratorObject.h"     // AbstractGeneratorObject
-#include "vm/JSAtom.h"              // JSAtom
-#include "vm/JSContext.h"           // JSContext
-#include "vm/JSFunction.h"          // JSFunction,
-#include "vm/JSScript.h"  // JSScript, ScriptSourceObject, MemberInitializers, BaseScript
-#include "vm/Opcodes.h"        // JSOp, JSOpLength_*
-#include "vm/PropMap.h"        // SharedPropMap::MaxPropsForNonDictionary
-#include "vm/Scope.h"          // GetScopeDataTrailingNames
-#include "vm/SharedStencil.h"  // ScopeNote
-#include "vm/ThrowMsgKind.h"   // ThrowMsgKind
-#include "vm/WellKnownAtom.h"  // js_*_str
-#include "wasm/AsmJS.h"        // IsAsmJSModule
-
-#include "vm/JSObject-inl.h"  // JSObject
+#include "vm/Opcodes.h"             // JSOp, JSOpLength_*
+#include "vm/PropMap.h"             // SharedPropMap::MaxPropsForNonDictionary
+#include "vm/Scope.h"               // GetScopeDataTrailingNames
+#include "vm/SharedStencil.h"       // ScopeNote
+#include "vm/ThrowMsgKind.h"        // ThrowMsgKind
+#include "vm/WellKnownAtom.h"       // js_*_str
 
 using namespace js;
 using namespace js::frontend;

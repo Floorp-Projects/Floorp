@@ -8,7 +8,6 @@
 #define frontend_ParseNode_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Span.h"  // mozilla::Span
 
 #include <iterator>
 #include <stddef.h>
@@ -21,11 +20,9 @@
 #include "frontend/ParserAtom.h"          // TaggedParserAtomIndex
 #include "frontend/Stencil.h"             // BigIntStencil
 #include "frontend/Token.h"
-#include "js/RootingAPI.h"
 #include "vm/Opcodes.h"
 #include "vm/Scope.h"
 #include "vm/ScopeKind.h"
-#include "vm/StringType.h"
 
 // [SMDOC] ParseNode tree lifetime information
 //
@@ -45,10 +42,6 @@
 
 struct JSContext;
 
-namespace JS {
-class BigInt;
-}
-
 namespace js {
 
 class GenericPrinter;
@@ -59,7 +52,6 @@ namespace frontend {
 
 class ParserBase;
 class ParseContext;
-class ParserAtomsTable;
 struct ExtensibleCompilationStencil;
 class ParserSharedBase;
 class FullParseHandler;

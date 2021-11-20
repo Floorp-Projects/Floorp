@@ -7,13 +7,17 @@
 #ifndef frontend_BCEParserHandle_h
 #define frontend_BCEParserHandle_h
 
-#include "frontend/ErrorReporter.h"
-#include "frontend/FullParseHandler.h"
-#include "frontend/Parser.h"
-#include "frontend/ParserAtom.h"
+#include "jstypes.h"
+
+namespace JS {
+class JS_PUBLIC_API ReadOnlyCompileOptions;
+}
 
 namespace js {
 namespace frontend {
+
+class ErrorReporter;
+class FullParseHandler;
 
 struct BCEParserHandle {
   virtual ErrorReporter& errorReporter() = 0;

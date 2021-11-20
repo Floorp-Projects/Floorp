@@ -14,11 +14,9 @@
 
 #include "frontend/ElemOpEmitter.h"
 #include "frontend/IfEmitter.h"
-#include "frontend/ParserAtom.h"  // TaggedParserAtomIndex
 #include "frontend/PrivateOpEmitter.h"
 #include "frontend/PropOpEmitter.h"
 #include "frontend/ValueUsage.h"
-#include "js/TypeDecls.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/Opcodes.h"
 
@@ -26,6 +24,7 @@ namespace js {
 namespace frontend {
 
 struct BytecodeEmitter;
+class TaggedParserAtomIndex;
 
 // Class for emitting bytecode for call or new expression.
 //

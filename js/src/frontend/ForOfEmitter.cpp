@@ -8,11 +8,8 @@
 
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/EmitterScope.h"
-#include "frontend/IfEmitter.h"
 #include "frontend/ParserAtom.h"  // TaggedParserAtomIndex
-#include "frontend/SourceNotes.h"
 #include "vm/Opcodes.h"
-#include "vm/Scope.h"
 #include "vm/StencilEnums.h"  // TryNoteKind
 
 using namespace js;

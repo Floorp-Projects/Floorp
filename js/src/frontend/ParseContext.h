@@ -9,15 +9,12 @@
 
 #include "ds/Nestable.h"
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/CompilationStencil.h"
 #include "frontend/ErrorReporter.h"
-#include "frontend/ModuleSharedContext.h"
 #include "frontend/NameAnalysisTypes.h"  // DeclaredNameInfo, FunctionBoxVector
 #include "frontend/NameCollections.h"
 #include "frontend/ParserAtom.h"   // TaggedParserAtomIndex
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/SharedContext.h"
-#include "frontend/UsedNameTracker.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 #include "vm/GeneratorObject.h"  // js::AbstractGeneratorObject::FixedSlotLimit
@@ -28,6 +25,9 @@ namespace js {
 namespace frontend {
 
 class ParserBase;
+class UsedNameTracker;
+
+struct CompilationState;
 
 const char* DeclarationKindString(DeclarationKind kind);
 

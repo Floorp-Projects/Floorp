@@ -185,10 +185,8 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Casting.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MemoryChecking.h"
-#include "mozilla/PodOperations.h"
 #include "mozilla/Span.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
@@ -212,11 +210,8 @@
 #include "js/RegExpFlags.h"           // JS::RegExpFlags
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
-#include "util/Text.h"
 #include "util/Unicode.h"
 #include "vm/ErrorReporting.h"
-#include "vm/JSAtom.h"
-#include "vm/StringType.h"
 
 struct JS_PUBLIC_API JSContext;
 struct KeywordInfo;

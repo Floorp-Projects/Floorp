@@ -6,18 +6,17 @@
 
 #include "frontend/NameFunctions.h"
 
-#include "mozilla/MemoryChecking.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 
-#include "frontend/BytecodeCompiler.h"
 #include "frontend/ParseNode.h"
 #include "frontend/ParseNodeVisitor.h"
 #include "frontend/ParserAtom.h"  // ParserAtomsTable
 #include "frontend/SharedContext.h"
 #include "util/Poison.h"
 #include "util/StringBuffer.h"
-#include "vm/JSFunction.h"
+#include "vm/TraceLogging.h"
+#include "vm/TraceLoggingTypes.h"
 
 using namespace js;
 using namespace js::frontend;

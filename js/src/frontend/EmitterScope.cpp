@@ -12,8 +12,7 @@
 #include "frontend/TDZCheckCache.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "vm/EnvironmentObject.h"     // ClassBodyLexicalEnvironmentObject
-#include "vm/GlobalObject.h"
-#include "vm/WellKnownAtom.h"  // js_*_str
+#include "vm/WellKnownAtom.h"         // js_*_str
 
 using namespace js;
 using namespace js::frontend;
