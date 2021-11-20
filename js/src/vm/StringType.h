@@ -32,7 +32,6 @@
 #include "js/UniquePtr.h"
 #include "util/Text.h"
 #include "vm/Printer.h"
-#include "vm/StaticStrings.h"
 
 class JSDependentString;
 class JSExtensibleString;

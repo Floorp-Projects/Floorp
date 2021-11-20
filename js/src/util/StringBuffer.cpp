@@ -13,6 +13,8 @@
 
 #include "frontend/ParserAtom.h"  // frontend::{ParserAtomsTable, TaggedParserAtomIndex
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "vm/StaticStrings.h"
+
 #include "vm/JSObject-inl.h"
 #include "vm/StringType-inl.h"
 

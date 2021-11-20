@@ -21,6 +21,7 @@
 #include "vm/Printer.h"  // Sprinter, QuoteString
 #include "vm/Runtime.h"
 #include "vm/SelfHosting.h"  // ExtendedUnclonedSelfHostedFunctionNamePrefix
+#include "vm/StaticStrings.h"
 #include "vm/StringType.h"
 
 using namespace js;

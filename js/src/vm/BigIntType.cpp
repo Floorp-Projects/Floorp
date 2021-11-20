@@ -108,6 +108,7 @@
 #include "util/CheckedArithmetic.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
+#include "vm/StaticStrings.h"
 
 #include "gc/FreeOp-inl.h"
 #include "gc/Nursery-inl.h"

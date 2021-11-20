@@ -19,6 +19,7 @@
 #include "js/UniquePtr.h"
 #include "vm/JSContext.h"
 #include "vm/Realm.h"
+#include "vm/StaticStrings.h"
 
 #include "gc/FreeOp-inl.h"
 #include "gc/StoreBuffer-inl.h"
