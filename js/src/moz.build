@@ -437,6 +437,7 @@ UNIFIED_SOURCES += [
     "vm/SharedImmutableStringsCache.cpp",
     "vm/SourceHook.cpp",
     "vm/Stack.cpp",
+    "vm/StaticStrings.cpp",
     "vm/StencilObject.cpp",
     "vm/StringType.cpp",
     "vm/SymbolType.cpp",
