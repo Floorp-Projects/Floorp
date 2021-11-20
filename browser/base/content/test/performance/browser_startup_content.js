@@ -51,9 +51,6 @@ const known_scripts = {
   frameScripts: new Set([
     // Test related
     "chrome://mochikit/content/shutdown-leaks-collector.js",
-
-    // Extensions
-    "resource://gre/modules/addons/Content.js",
   ]),
   processScripts: new Set([
     "chrome://global/content/process-content.js",
