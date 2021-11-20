@@ -50,13 +50,7 @@ struct LayerTreeIdMapping {
 // the GPU process and the GPUChild living on the main thread of the UI process.
 sync protocol PGPU
 {
-  manages PAPZInputBridge;
-
 parent:
-  // Sent from the UI process to initialize a new APZ input bridge when a new
-  // top-level compositor is created.
-  async PAPZInputBridge(LayersId aLayersId);
-
   // Sent by the UI process to initiate core settings.
   async Init(GfxVarUpdate[] vars,
              DevicePrefs devicePrefs,
@@ -69,6 +63,8 @@ parent:
   async InitVideoBridge(Endpoint<PVideoBridgeParent> endpoint);
   async InitVRManager(Endpoint<PVRManagerParent> endpoint);
   async InitUiCompositorController(LayersId rootLayerTreeId, Endpoint<PUiCompositorControllerParent> endpoint);
+  async InitAPZInputBridge(LayersId layersId,
+                           Endpoint<PAPZInputBridgeParent> endpoint);
   async InitProfiler(Endpoint<PProfilerChild> endpoint);
   // Forward GPU process its endpoints to the VR process.
   async InitVR(Endpoint<PVRGPUChild> endpoint);

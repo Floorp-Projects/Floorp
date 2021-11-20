@@ -58,7 +58,8 @@ void APZThreadUtils::AssertOnControllerThread() {
 }
 
 /*static*/
-void APZThreadUtils::RunOnControllerThread(RefPtr<Runnable>&& aTask) {
+void APZThreadUtils::RunOnControllerThread(RefPtr<Runnable>&& aTask,
+                                           uint32_t flags) {
   RefPtr<nsISerialEventTarget> thread;
   {
     StaticMutexAutoLock lock(sControllerThreadMutex);
@@ -76,7 +77,7 @@ void APZThreadUtils::RunOnControllerThread(RefPtr<Runnable>&& aTask) {
     AUTO_PROFILE_FOLLOWING_RUNNABLE(task);
     task->Run();
   } else {
-    thread->Dispatch(task.forget());
+    thread->Dispatch(task.forget(), flags);
   }
 }
 

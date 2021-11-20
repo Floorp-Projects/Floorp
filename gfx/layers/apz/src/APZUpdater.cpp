@@ -390,10 +390,11 @@ void APZUpdater::RunOnControllerThread(LayersId aLayersId,
 
   RefPtr<Runnable> task = aTask;
 
-  RunOnUpdaterThread(aLayersId,
-                     NewRunnableFunction("APZUpdater::RunOnControllerThread",
-                                         &APZThreadUtils::RunOnControllerThread,
-                                         std::move(task)));
+  RunOnUpdaterThread(
+      aLayersId,
+      NewRunnableFunction("APZUpdater::RunOnControllerThread",
+                          &APZThreadUtils::RunOnControllerThread,
+                          std::move(task), nsIThread::DISPATCH_NORMAL));
 }
 
 bool APZUpdater::UsingWebRenderUpdaterThread() const {
