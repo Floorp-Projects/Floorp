@@ -17,6 +17,10 @@ const TEST_PATH = getRootDirectory(gTestPath).replace(
 
 const AUTOMATIC_DOWNLOAD_TOPIC = "blocked-automatic-download";
 
+var MockFilePicker = SpecialPowers.MockFilePicker;
+MockFilePicker.init(window);
+registerCleanupFunction(() => MockFilePicker.cleanup());
+
 add_task(async function setup() {
   // Create temp directory
   let time = new Date().getTime();
@@ -124,4 +128,29 @@ add_task(async function check_download_spam_permissions() {
   for (let event of events) {
     is(event[4], "spam", "download is blocked");
   }
+
+  await savelink();
 });
+
+// Check to ensure that a link saved manually is not blocked.
+async function savelink() {
+  let menu = document.getElementById("contentAreaContextMenu");
+  let popupShown = BrowserTestUtils.waitForEvent(menu, "popupshown");
+  BrowserTestUtils.synthesizeMouse(
+    "#image",
+    5,
+    5,
+    { type: "contextmenu", button: 2 },
+    gBrowser.selectedBrowser
+  );
+  await popupShown;
+
+  await new Promise(resolve => {
+    MockFilePicker.showCallback = function(fp) {
+      setTimeout(resolve, 0);
+      return Ci.nsIFilePicker.returnCancel;
+    };
+    let menuitem = menu.querySelector("#context-savelink");
+    menu.activateItem(menuitem);
+  });
+}
