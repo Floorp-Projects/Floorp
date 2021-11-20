@@ -11,17 +11,39 @@
 #include "mozilla/MemoryReporting.h"  // mozilla::MallocSizeOf
 #include "mozilla/Range.h"            // mozilla::Range
 #include "mozilla/Span.h"             // mozilla::Span
+#include "mozilla/TextUtils.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
+#include "jstypes.h"
+#include "NamespaceImports.h"
 
 #include "frontend/TypedIndex.h"  // TypedIndex
 #include "js/HashTable.h"         // HashMap
+#include "js/ProtoKey.h"          // JS_FOR_EACH_PROTOTYPE
+#include "js/Symbol.h"            // JS_FOR_EACH_WELL_KNOWN_SYMBOL
+#include "js/TypeDecls.h"         // Latin1Char
+#include "js/Utility.h"           // UniqueChars
 #include "js/Vector.h"            // Vector
+#include "util/Text.h"            // InflatedChar16Sequence
 #include "vm/CommonPropertyNames.h"
 #include "vm/StaticStrings.h"
-#include "vm/StringType.h"     // CompareChars, StringEqualsAscii
 #include "vm/WellKnownAtom.h"  // WellKnownAtomId, WellKnownAtomInfo
+
+struct JS_PUBLIC_API JSContext;
+struct JSRuntime;
+
+class JSAtom;
+class JSString;
+
+namespace mozilla {
+union Utf8Unit;
+}
 
 namespace js {
 
+class GenericPrinter;
 class LifoAlloc;
 class StringBuffer;
 
@@ -378,8 +400,6 @@ class alignas(alignof(uint32_t)) ParserAtom {
   uint32_t flags_ = 0;
 
   // End of fields.
-
-  static const uint32_t MAX_LENGTH = JSString::MAX_LENGTH;
 
   ParserAtom(uint32_t length, HashNumber hash, bool hasTwoByteChars)
       : hash_(hash),
