@@ -120,8 +120,18 @@ APZInputBridge* APZCTreeManagerChild::InputBridge() {
 
 void APZCTreeManagerChild::AddInputBlockCallback(
     uint64_t aInputBlockId, InputBlockCallback&& aCallback) {
-  MOZ_RELEASE_ASSERT(false,
-                     "Remoting of input block callbacks is not implemented");
+  if (!NS_IsMainThread()) {
+    NS_DispatchToMainThread(NewRunnableMethod<uint64_t, InputBlockCallback&&>(
+        "layers::APZCTreeManagerChild::AddInputBlockCallback", this,
+        &APZCTreeManagerChild::AddInputBlockCallback, aInputBlockId,
+        std::move(aCallback)));
+    return;
+  }
+
+  MOZ_ASSERT(NS_IsMainThread());
+  mInputBlockCallbacks.emplace(aInputBlockId, std::move(aCallback));
+
+  SendAddInputBlockCallback(aInputBlockId);
 }
 
 void APZCTreeManagerChild::AddIPDLReference() {
@@ -187,6 +197,18 @@ mozilla::ipc::IPCResult APZCTreeManagerChild::RecvCancelAutoscroll(
   MOZ_ASSERT(NS_IsMainThread());
 
   APZCCallbackHelper::CancelAutoscroll(aScrollId);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult APZCTreeManagerChild::RecvCallInputBlockCallback(
+    uint64_t aInputBlockId, const APZHandledResult& aHandledResult) {
+  auto it = mInputBlockCallbacks.find(aInputBlockId);
+  if (it != mInputBlockCallbacks.end()) {
+    it->second(aInputBlockId, aHandledResult);
+    // The callback is one-shot; discard it after calling it.
+    mInputBlockCallbacks.erase(it);
+  }
+
   return IPC_OK();
 }
 
