@@ -22,7 +22,6 @@
 #include "vm/FunctionFlags.h"          // js::FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
 #include "vm/JSContext.h"
-#include "vm/JSFunction.h"
 #include "vm/JSScript.h"  // js::FillImmutableFlagsFromCompileOptionsForTopLevel, js::FillImmutableFlagsFromCompileOptionsForFunction
 #include "vm/StencilEnums.h"  // ImmutableScriptFlagsEnum
 
@@ -144,16 +143,6 @@ void FunctionBox::initFromLazyFunction(const ScriptStencilExtra& extra,
                                        FunctionSyntaxKind kind) {
   initFromScriptStencilExtra(extra);
   initStandaloneOrLazy(scopeContext, flags, kind);
-}
-
-void FunctionBox::initFromLazyFunctionToSkip(JSFunction* fun) {
-  initFromLazyFunctionShared(fun);
-}
-
-void FunctionBox::initFromLazyFunctionShared(JSFunction* fun) {
-  BaseScript* lazy = fun->baseScript();
-  immutableFlags_ = lazy->immutableFlags();
-  extent_ = lazy->extent();
 }
 
 void FunctionBox::initFromScriptStencilExtra(const ScriptStencilExtra& extra) {
