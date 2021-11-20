@@ -8,20 +8,30 @@
 
 #include "mozilla/RefPtr.h"
 
-#include "frontend/AbstractScopePtr.h"
+#include "frontend/CompilationStencil.h"
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ModuleSharedContext.h"
+#include "frontend/ParseContext.h"
+#include "frontend/ParseNode.h"
+#include "frontend/ParserAtom.h"
+#include "frontend/ScopeIndex.h"
+#include "frontend/ScriptIndex.h"
+#include "frontend/Stencil.h"
+#include "js/CompileOptions.h"
+#include "js/Vector.h"
 #include "vm/FunctionFlags.h"          // js::FunctionFlags
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
+#include "vm/JSContext.h"
+#include "vm/JSFunction.h"
 #include "vm/JSScript.h"  // js::FillImmutableFlagsFromCompileOptionsForTopLevel, js::FillImmutableFlagsFromCompileOptionsForFunction
 #include "vm/StencilEnums.h"  // ImmutableScriptFlagsEnum
-#include "wasm/AsmJS.h"
-#include "wasm/WasmModule.h"
 
 #include "frontend/ParseContext-inl.h"
-#include "vm/EnvironmentObject-inl.h"
 
 namespace js {
+
+class ModuleBuilder;
+
 namespace frontend {
 
 SharedContext::SharedContext(JSContext* cx, Kind kind,
