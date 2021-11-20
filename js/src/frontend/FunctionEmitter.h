@@ -19,7 +19,6 @@
 #include "frontend/SharedContext.h"       // FunctionBox, TopLevelFunction
 #include "frontend/TDZCheckCache.h"       // TDZCheckCache
 #include "gc/Rooting.h"                   // JS::Rooted, JS::Handle
-#include "vm/BytecodeUtil.h"              // JSOp
 #include "vm/JSAtom.h"                    // JSAtom
 #include "vm/JSFunction.h"                // JSFunction
 #include "vm/SharedStencil.h"             // GCThingIndex

@@ -44,13 +44,13 @@
 #include "js/RootingAPI.h"                 // JS::Rooted, JS::Handle
 #include "js/TypeDecls.h"                  // jsbytecode
 #include "vm/BuiltinObjectKind.h"          // BuiltinObjectKind
-#include "vm/BytecodeUtil.h"               // JSOp
 #include "vm/CheckIsObjectKind.h"          // CheckIsObjectKind
 #include "vm/CompletionKind.h"             // CompletionKind
 #include "vm/FunctionPrefixKind.h"         // FunctionPrefixKind
 #include "vm/GeneratorResumeKind.h"        // GeneratorResumeKind
 #include "vm/JSFunction.h"                 // JSFunction
 #include "vm/JSScript.h"       // JSScript, BaseScript, MemberInitializers
+#include "vm/Opcodes.h"        // JSOp
 #include "vm/Runtime.h"        // ReportOutOfMemory
 #include "vm/SharedStencil.h"  // GCThingIndex
 #include "vm/StencilEnums.h"   // TryNoteKind
