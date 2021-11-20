@@ -471,11 +471,6 @@ class alignas(alignof(uint32_t)) ParserAtom {
   }
   void markAtomize(Atomize atomize) { flags_ |= uint32_t(atomize); }
 
-  constexpr void setHashAndLength(HashNumber hash, uint32_t length) {
-    hash_ = hash;
-    length_ = length;
-  }
-
   template <typename CharT>
   const CharT* chars() const {
     MOZ_ASSERT(sizeof(CharT) == (hasTwoByteChars() ? 2 : 1));
