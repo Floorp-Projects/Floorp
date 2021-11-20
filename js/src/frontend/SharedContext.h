@@ -28,7 +28,6 @@
 #include "vm/StencilEnums.h"
 
 struct JS_PUBLIC_API JSContext;
-class JSFunction;
 
 namespace JS {
 class ReadOnlyCompileOptions;
@@ -457,13 +456,11 @@ class FunctionBox : public SuspendableContext {
   void initFromLazyFunction(const ScriptStencilExtra& extra,
                             ScopeContext& scopeContext, FunctionFlags flags,
                             FunctionSyntaxKind kind);
-  void initFromLazyFunctionToSkip(JSFunction* fun);
   void initFromScriptStencilExtra(const ScriptStencilExtra& extra);
   void initStandalone(ScopeContext& scopeContext, FunctionFlags flags,
                       FunctionSyntaxKind kind);
 
  private:
-  void initFromLazyFunctionShared(JSFunction* fun);
   void initStandaloneOrLazy(ScopeContext& scopeContext, FunctionFlags flags,
                             FunctionSyntaxKind kind);
 
