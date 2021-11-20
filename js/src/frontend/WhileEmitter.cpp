@@ -7,7 +7,6 @@
 #include "frontend/WhileEmitter.h"
 
 #include "frontend/BytecodeEmitter.h"
-#include "frontend/SourceNotes.h"
 #include "vm/Opcodes.h"
 #include "vm/StencilEnums.h"  // TryNoteKind
 

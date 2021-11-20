@@ -10,7 +10,6 @@
 
 #include "frontend/BytecodeEmitter.h"  // BytecodeEmitter
 #include "frontend/SharedContext.h"    // StatementKind
-#include "vm/JSScript.h"               // JSTRY_CATCH, JSTRY_FINALLY
 #include "vm/Opcodes.h"                // JSOp
 
 using namespace js;

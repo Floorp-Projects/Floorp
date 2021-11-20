@@ -18,7 +18,6 @@
 #include "mozilla/Span.h"
 #include "mozilla/Variant.h"  // mozilla::Variant
 
-#include "builtin/ModuleObject.h"
 #include "ds/LifoAlloc.h"
 #include "frontend/NameAnalysisTypes.h"  // EnvironmentCoordinate
 #include "frontend/ParserAtom.h"   // ParserAtomsTable, TaggedParserAtomIndex
@@ -30,9 +29,7 @@
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 #include "js/GCVector.h"
 #include "js/HashTable.h"
-#include "js/RealmOptions.h"
 #include "js/RefCounted.h"  // AtomicRefCounted
-#include "js/SourceText.h"
 #include "js/Transcoding.h"
 #include "js/UniquePtr.h"  // js::UniquePtr
 #include "js/Vector.h"
@@ -51,6 +48,7 @@ class JSString;
 namespace js {
 
 class JSONPrinter;
+class ModuleObject;
 
 namespace frontend {
 
@@ -58,7 +56,6 @@ struct CompilationInput;
 struct CompilationStencil;
 struct CompilationGCOutput;
 class ScriptStencilIterable;
-class ParserAtomsTable;
 struct InputName;
 
 // Reference to a Scope within a CompilationStencil.

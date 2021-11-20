@@ -11,7 +11,6 @@
 #include "mozilla/Casting.h"     // mozilla::AssertedCast
 
 #include <stdint.h>  // uint8_t, uint16_t, uint32_t
-#include <type_traits>
 
 #include "frontend/ParserAtom.h"     // TrivialTaggedParserAtomIndex
 #include "js/AllocPolicy.h"          // SystemAllocPolicy

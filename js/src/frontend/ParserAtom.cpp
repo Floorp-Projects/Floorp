@@ -9,13 +9,11 @@
 #include "mozilla/TextUtils.h"  // mozilla::IsAscii
 
 #include <memory>  // std::uninitialized_fill_n
-#include <type_traits>
 
 #include "jsnum.h"  // CharsToNumber
 
 #include "frontend/BytecodeCompiler.h"  // IsIdentifier
 #include "frontend/CompilationStencil.h"
-#include "frontend/NameCollections.h"
 #include "util/StringBuffer.h"  // StringBuffer
 #include "util/Text.h"          // AsciiDigitToNumber
 #include "util/Unicode.h"
