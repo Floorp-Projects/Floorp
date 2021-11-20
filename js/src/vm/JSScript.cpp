@@ -35,6 +35,7 @@
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/CompilationStencil.h"  // frontend::CompilationStencil
+#include "frontend/ParseContext.h"
 #include "frontend/SharedContext.h"
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
 #include "frontend/StencilXdr.h"  // frontend::StencilXdr::SharedData, CanCopyDataToDisk
@@ -2916,7 +2917,12 @@ bool JSScript::fullyInitFromStencil(
     }
   }
 
-  script->initSharedData(stencil.sharedData.get(scriptIndex));
+  auto* scriptData = stencil.sharedData.get(scriptIndex);
+  MOZ_ASSERT_IF(
+      script->isGenerator() || script->isAsync(),
+      scriptData->nfixed() <= frontend::ParseContext::Scope::FixedSlotLimit);
+
+  script->initSharedData(scriptData);
 
   // NOTE: JSScript is now constructed and should be linked in.
   rollbackGuard.release();
