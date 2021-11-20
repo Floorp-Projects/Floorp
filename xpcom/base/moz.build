@@ -130,7 +130,6 @@ EXPORTS.mozilla += [
     "nsMemoryInfoDumper.h",
     "NSPRLogModulesParser.h",
     "OwningNonNull.h",
-    "RLBoxSandboxPool.h",
     "ShutdownPhase.h",
     "SizeOfState.h",
     "StaticLocalPtr.h",
@@ -197,7 +196,6 @@ UNIFIED_SOURCES += [
     "nsVersionComparator.cpp",
     "nsVersionComparatorImpl.cpp",
     "nsWeakReference.cpp",
-    "RLBoxSandboxPool.cpp",
 ]
 
 if CONFIG["OS_TARGET"] in ("Linux", "Android"):

@@ -83,7 +83,7 @@ class RLBoxSandboxPoolData {
     MOZ_COUNT_CTOR(RLBoxSandboxPoolData);
   }
 
-  RLBoxSandboxDataBase* SandboxData() const { return mSbxData.get(); };
+  const RLBoxSandboxDataBase* SandboxData() const { return mSbxData.get(); };
 
   ~RLBoxSandboxPoolData() {
     mPool->Push(std::move(mSbxData));
