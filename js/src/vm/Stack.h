@@ -84,7 +84,6 @@ class Instance;
 // InterpreterActivation) is a local var of js::Interpret.
 
 enum MaybeCheckAliasing { CHECK_ALIASING = true, DONT_CHECK_ALIASING = false };
-enum MaybeCheckTDZ { CheckTDZ = true, DontCheckTDZ = false };
 
 }  // namespace js
 
