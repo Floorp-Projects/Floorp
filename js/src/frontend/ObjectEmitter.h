@@ -19,8 +19,8 @@
 #include "frontend/ParseNode.h"       // AccessorType
 #include "frontend/ParserAtom.h"      // TaggedParserAtomIndex
 #include "frontend/TDZCheckCache.h"   // TDZCheckCache
-#include "vm/BytecodeUtil.h"          // JSOp
 #include "vm/NativeObject.h"          // PlainObject
+#include "vm/Opcodes.h"               // JSOp
 #include "vm/Scope.h"                 // LexicalScope
 
 namespace js {

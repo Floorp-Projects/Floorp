@@ -15,7 +15,6 @@
 #include "gc/AllocKind.h"              // AllocKind
 #include "js/Id.h"                     // jsid
 #include "js/Value.h"                  // UndefinedHandleValue
-#include "vm/BytecodeUtil.h"           // IsHiddenInitOp
 #include "vm/FunctionPrefixKind.h"     // FunctionPrefixKind
 #include "vm/JSContext.h"              // JSContext
 #include "vm/JSObject.h"               // TenuredObject
