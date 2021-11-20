@@ -1376,17 +1376,3 @@ void frontend::FireOnNewScript(JSContext* cx,
     DebugAPI::onNewScript(cx, script);
   }
 }
-
-void frontend::FireOnNewScripts(JSContext* cx,
-                                const JS::InstantiateOptions& options,
-                                JS::Handle<JS::GCVector<JSScript*>> scripts) {
-  if (!options.hideFromNewScriptInitial()) {
-    JS::Rooted<JSScript*> rootedScript(cx);
-    for (auto& script : scripts) {
-      MOZ_ASSERT(script->isGlobalCode());
-
-      rootedScript = script;
-      DebugAPI::onNewScript(cx, rootedScript);
-    }
-  }
-}
