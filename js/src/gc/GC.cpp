@@ -1770,6 +1770,11 @@ void GCRuntime::cancelRequestedGCAfterBackgroundTask() {
                                        JS::GCReason::NO_REASON);
 }
 
+bool GCRuntime::isWaitingOnBackgroundTask() const {
+  AutoLockHelperThreadState lock;
+  return requestSliceAfterBackgroundTask;
+}
+
 void GCRuntime::queueUnusedLifoBlocksForFree(LifoAlloc* lifo) {
   MOZ_ASSERT(JS::RuntimeHeapIsBusy());
   AutoLockHelperThreadState lock;
@@ -3736,9 +3741,10 @@ struct MOZ_RAII AutoSetZoneSliceThresholds {
 
   ~AutoSetZoneSliceThresholds() {
     // On exit, update the thresholds for all collecting zones.
+    bool waitingOnBGTask = gc->isWaitingOnBackgroundTask();
     for (ZonesIter zone(gc, WithAtoms); !zone.done(); zone.next()) {
       if (zone->wasGCStarted()) {
-        zone->setGCSliceThresholds(*gc);
+        zone->setGCSliceThresholds(*gc, waitingOnBGTask);
       } else {
         MOZ_ASSERT(!zone->gcHeapThreshold.hasSliceThreshold());
         MOZ_ASSERT(!zone->mallocHeapThreshold.hasSliceThreshold());

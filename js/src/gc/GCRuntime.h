@@ -415,6 +415,7 @@ class GCRuntime {
   void waitBackgroundAllocEnd() { allocTask.cancelAndWait(); }
   void waitBackgroundFreeEnd();
   void waitForBackgroundTasks();
+  bool isWaitingOnBackgroundTask() const;
 
   void lockGC() { lock.lock(); }
   void unlockGC() { lock.unlock(); }
