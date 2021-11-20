@@ -51,7 +51,6 @@ LOCAL_INCLUDES += [
     "/js/xpconnect/src",
     "/netwerk/base",
     "/netwerk/cookie",
-    "/parser/htmlparser",
     "/toolkit/components/sessionstore",
     "/view",
 ]

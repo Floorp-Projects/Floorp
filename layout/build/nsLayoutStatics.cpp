@@ -128,8 +128,6 @@
 #include "RestoreTabContentObserver.h"
 #include "mozilla/intl/nsComplexBreaker.h"
 
-#include "nsRLBoxExpatDriver.h"
-
 using namespace mozilla;
 using namespace mozilla::net;
 using namespace mozilla::dom;
@@ -295,8 +293,6 @@ nsresult nsLayoutStatics::Initialize() {
   RestoreTabContentObserver::Initialize();
 
   ComplexBreaker::Initialize();
-
-  RLBoxExpatSandboxPool::Initialize();
 
   return NS_OK;
 }
