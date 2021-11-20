@@ -18,8 +18,6 @@ using class mozilla::KeyboardInput from "InputData.h";
 
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 
-include protocol PGPU;
-
 namespace mozilla {
 namespace layers {
 
@@ -27,14 +25,13 @@ namespace layers {
  * This protocol is used to send input events from the UI process to the
  * GPU process for handling by APZ. There is one instance per top-level
  * compositor, or in other words, one instance per concrete APZCTreeManager
- * instance. The child side lives on the main thread in the UI process,
- * and the parent side lives on the main thread in the GPU process. If there
- * is no GPU process, then this protocol is not instantiated.
+ * instance. The child side lives on the controller thread in the UI process,
+ * ie the main thread on most platforms, but the Android UI thread on Android.
+ * The parent side lives on the main thread in the GPU process. If there is no
+ * GPU process, then this protocol is not instantiated.
  */
 [RefCounted] sync protocol PAPZInputBridge
 {
-manager PGPU;
-
 parent:
   // The following messages are used to
   // implement the ReceiveInputEvent methods
@@ -76,8 +73,6 @@ parent:
              ScrollableLayerGuid    aOutTargetGuid,
              uint64_t               aOutFocusSequenceNumber,
              LayersId               aOutLayersId);
-
-  async __delete__();
 };
 
 } // namespace gfx

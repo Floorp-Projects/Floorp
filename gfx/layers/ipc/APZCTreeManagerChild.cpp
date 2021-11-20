@@ -46,55 +46,68 @@ void APZCTreeManagerChild::Destroy() {
 }
 
 void APZCTreeManagerChild::SetKeyboardMap(const KeyboardMap& aKeyboardMap) {
+  MOZ_ASSERT(NS_IsMainThread());
   SendSetKeyboardMap(aKeyboardMap);
 }
 
 void APZCTreeManagerChild::ZoomToRect(const ScrollableLayerGuid& aGuid,
                                       const ZoomTarget& aZoomTarget,
                                       const uint32_t aFlags) {
+  MOZ_ASSERT(NS_IsMainThread());
   SendZoomToRect(aGuid, aZoomTarget, aFlags);
 }
 
 void APZCTreeManagerChild::ContentReceivedInputBlock(uint64_t aInputBlockId,
                                                      bool aPreventDefault) {
+  MOZ_ASSERT(NS_IsMainThread());
   SendContentReceivedInputBlock(aInputBlockId, aPreventDefault);
 }
 
 void APZCTreeManagerChild::SetTargetAPZC(
     uint64_t aInputBlockId, const nsTArray<ScrollableLayerGuid>& aTargets) {
+  MOZ_ASSERT(NS_IsMainThread());
   SendSetTargetAPZC(aInputBlockId, aTargets);
 }
 
 void APZCTreeManagerChild::UpdateZoomConstraints(
     const ScrollableLayerGuid& aGuid,
     const Maybe<ZoomConstraints>& aConstraints) {
+  MOZ_ASSERT(NS_IsMainThread());
   if (mIPCOpen) {
     SendUpdateZoomConstraints(aGuid, aConstraints);
   }
 }
 
-void APZCTreeManagerChild::SetDPI(float aDpiValue) { SendSetDPI(aDpiValue); }
+void APZCTreeManagerChild::SetDPI(float aDpiValue) {
+  MOZ_ASSERT(NS_IsMainThread());
+  SendSetDPI(aDpiValue);
+}
 
 void APZCTreeManagerChild::SetAllowedTouchBehavior(
     uint64_t aInputBlockId, const nsTArray<TouchBehaviorFlags>& aValues) {
+  MOZ_ASSERT(NS_IsMainThread());
   SendSetAllowedTouchBehavior(aInputBlockId, aValues);
 }
 
 void APZCTreeManagerChild::StartScrollbarDrag(
     const ScrollableLayerGuid& aGuid, const AsyncDragMetrics& aDragMetrics) {
+  MOZ_ASSERT(NS_IsMainThread());
   SendStartScrollbarDrag(aGuid, aDragMetrics);
 }
 
 bool APZCTreeManagerChild::StartAutoscroll(const ScrollableLayerGuid& aGuid,
                                            const ScreenPoint& aAnchorLocation) {
+  MOZ_ASSERT(NS_IsMainThread());
   return SendStartAutoscroll(aGuid, aAnchorLocation);
 }
 
 void APZCTreeManagerChild::StopAutoscroll(const ScrollableLayerGuid& aGuid) {
+  MOZ_ASSERT(NS_IsMainThread());
   SendStopAutoscroll(aGuid);
 }
 
 void APZCTreeManagerChild::SetLongTapEnabled(bool aTapGestureEnabled) {
+  MOZ_ASSERT(NS_IsMainThread());
   SendSetLongTapEnabled(aTapGestureEnabled);
 }
 

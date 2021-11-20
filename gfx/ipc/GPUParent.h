@@ -40,9 +40,6 @@ class GPUParent final : public PGPUParent {
             mozilla::ipc::ScopedPort aPort);
   void NotifyDeviceReset();
 
-  already_AddRefed<PAPZInputBridgeParent> AllocPAPZInputBridgeParent(
-      const LayersId& aLayersId);
-
   mozilla::ipc::IPCResult RecvInit(nsTArray<GfxVarUpdate>&& vars,
                                    const DevicePrefs& devicePrefs,
                                    nsTArray<LayerTreeIdMapping>&& mappings,
@@ -61,6 +58,9 @@ class GPUParent final : public PGPUParent {
   mozilla::ipc::IPCResult RecvInitUiCompositorController(
       const LayersId& aRootLayerTreeId,
       Endpoint<PUiCompositorControllerParent>&& aEndpoint);
+  mozilla::ipc::IPCResult RecvInitAPZInputBridge(
+      const LayersId& aRootLayerTreeId,
+      Endpoint<PAPZInputBridgeParent>&& aEndpoint);
   mozilla::ipc::IPCResult RecvInitProfiler(
       Endpoint<PProfilerChild>&& aEndpoint);
   mozilla::ipc::IPCResult RecvUpdateVar(const GfxVarUpdate& pref);

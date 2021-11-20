@@ -933,11 +933,23 @@ RefPtr<CompositorSession> GPUProcessManager::CreateRemoteSession(
     }
     apz = static_cast<APZCTreeManagerChild*>(papz);
 
-    RefPtr<APZInputBridgeChild> pinput = new APZInputBridgeChild();
-    if (!mGPUChild->SendPAPZInputBridgeConstructor(pinput, aRootLayerTreeId)) {
+    ipc::Endpoint<PAPZInputBridgeParent> parentPipe;
+    ipc::Endpoint<PAPZInputBridgeChild> childPipe;
+    nsresult rv = PAPZInputBridge::CreateEndpoints(mGPUChild->OtherPid(),
+                                                   base::GetCurrentProcId(),
+                                                   &parentPipe, &childPipe);
+    if (NS_FAILED(rv)) {
       return nullptr;
     }
-    apz->SetInputBridge(pinput);
+    mGPUChild->SendInitAPZInputBridge(aRootLayerTreeId, std::move(parentPipe));
+
+    RefPtr<APZInputBridgeChild> inputBridge =
+        APZInputBridgeChild::Create(mProcessToken, std::move(childPipe));
+    if (!inputBridge) {
+      return nullptr;
+    }
+
+    apz->SetInputBridge(inputBridge);
   }
 
   return new RemoteCompositorSession(aWidget, child, widget, apz,
