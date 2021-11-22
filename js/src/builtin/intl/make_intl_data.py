@@ -517,7 +517,7 @@ void mozilla::intl::Locale::performComplexRegionMappings() {
 
 
 def writeVariantTagMappings(println, variant_mappings, description, source, url):
-    """ Writes a function definition that maps variant subtags. """
+    """Writes a function definition that maps variant subtags."""
     println(
         """
 static const char* ToCharPointer(const char* str) {
@@ -649,7 +649,7 @@ bool mozilla::intl::Locale::performVariantMappings() {
 
 
 def writeLegacyMappingsFunction(println, legacy_mappings, description, source, url):
-    """ Writes a function definition that maps legacy language tags. """
+    """Writes a function definition that maps legacy language tags."""
     println("")
     writeMappingHeader(println, description, source, url)
     println(
@@ -915,7 +915,7 @@ bool mozilla::intl::Locale::updateLegacyMappings() {
 def writeSignLanguageMappingsFunction(
     println, legacy_mappings, description, source, url
 ):
-    """ Writes a function definition that maps legacy sign language tags. """
+    """Writes a function definition that maps legacy sign language tags."""
     println("")
     writeMappingHeader(println, description, source, url)
     println(
@@ -1623,7 +1623,7 @@ def readUnicodeExtensions(core_file):
 
 
 def writeCLDRLanguageTagData(println, data, url):
-    """ Writes the language tag data to the Intl data file. """
+    """Writes the language tag data to the Intl data file."""
 
     println(generatedFileWarning)
     println("// Version: CLDR-{}".format(data["version"]))
@@ -1851,7 +1851,7 @@ static bool IsCanonicallyCasedTransformType(mozilla::Span<const char> type) {
 
 
 def writeCLDRLanguageTagLikelySubtagsTest(println, data, url):
-    """ Writes the likely-subtags test file. """
+    """Writes the likely-subtags test file."""
 
     println(generatedFileWarning)
 
@@ -2035,7 +2035,7 @@ def readCLDRVersionFromICU():
 
 
 def updateCLDRLangTags(args):
-    """ Update the LocaleGenerated.cpp file. """
+    """Update the LanguageTagGenerated.cpp file."""
     version = args.version
     url = args.url
     out = args.out
@@ -2095,7 +2095,7 @@ def updateCLDRLangTags(args):
 
 
 def flines(filepath, encoding="utf-8"):
-    """ Open filepath and iterate over its content. """
+    """Open filepath and iterate over its content."""
     with io.open(filepath, mode="r", encoding=encoding) as f:
         for line in f:
             yield line
@@ -2103,7 +2103,7 @@ def flines(filepath, encoding="utf-8"):
 
 @total_ordering
 class Zone(object):
-    """ Time zone with optional file name. """
+    """Time zone with optional file name."""
 
     def __init__(self, name, filename=""):
         self.name = name
@@ -2126,7 +2126,7 @@ class Zone(object):
 
 
 class TzDataDir(object):
-    """ tzdata source from a directory. """
+    """tzdata source from a directory."""
 
     def __init__(self, obj):
         self.name = partial(os.path.basename, obj)
@@ -2138,7 +2138,7 @@ class TzDataDir(object):
 
 
 class TzDataFile(object):
-    """ tzdata source from a file (tar or gzipped). """
+    """tzdata source from a file (tar or gzipped)."""
 
     def __init__(self, obj):
         self.name = lambda: os.path.splitext(
@@ -2157,7 +2157,7 @@ class TzDataFile(object):
 
 
 def validateTimeZones(zones, links):
-    """ Validate the zone and link entries. """
+    """Validate the zone and link entries."""
     linkZones = set(links.keys())
     intersect = linkZones.intersection(zones)
     if intersect:
@@ -2195,7 +2195,7 @@ def listIANAFiles(tzdataDir):
 
 
 def readIANAFiles(tzdataDir, files):
-    """ Read all IANA time zone files from the given iterable. """
+    """Read all IANA time zone files from the given iterable."""
     nameSyntax = "[\w/+\-]+"
     pZone = re.compile(r"Zone\s+(?P<name>%s)\s+.*" % nameSyntax)
     pLink = re.compile(
@@ -2227,7 +2227,7 @@ def readIANAFiles(tzdataDir, files):
 
 
 def readIANATimeZones(tzdataDir, ignoreBackzone, ignoreFactory):
-    """ Read the IANA time zone information from `tzdataDir`. """
+    """Read the IANA time zone information from `tzdataDir`."""
 
     backzoneFiles = {"backzone"}
     (bkfiles, tzfiles) = partition(listIANAFiles(tzdataDir), backzoneFiles.__contains__)
@@ -2524,7 +2524,7 @@ def otherICULegacyLinks():
 
 
 def icuTzDataVersion(icuTzDir):
-    """ Read the ICU time zone version from `icuTzDir`/zoneinfo64.txt. """
+    """Read the ICU time zone version from `icuTzDir`/zoneinfo64.txt."""
 
     def searchInFile(pattern, f):
         p = re.compile(pattern)
@@ -2546,7 +2546,7 @@ def icuTzDataVersion(icuTzDir):
 
 
 def findIncorrectICUZones(ianaZones, ianaLinks, icuZones, icuLinks, ignoreBackzone):
-    """ Find incorrect ICU zone entries. """
+    """Find incorrect ICU zone entries."""
 
     def isIANATimeZone(zone):
         return zone in ianaZones or zone in ianaLinks
@@ -2588,7 +2588,7 @@ def findIncorrectICUZones(ianaZones, ianaLinks, icuZones, icuLinks, ignoreBackzo
 
 
 def findIncorrectICULinks(ianaZones, ianaLinks, icuZones, icuLinks):
-    """ Find incorrect ICU link entries. """
+    """Find incorrect ICU link entries."""
 
     def isIANATimeZone(zone):
         return zone in ianaZones or zone in ianaLinks
@@ -2651,7 +2651,7 @@ tzdataVersionComment = "// tzdata version = {0}"
 def processTimeZones(
     tzdataDir, icuDir, icuTzDir, version, ignoreBackzone, ignoreFactory, out
 ):
-    """ Read the time zone info and create a new time zone cpp file. """
+    """Read the time zone info and create a new time zone cpp file."""
     print("Processing tzdata mapping...")
     (ianaZones, ianaLinks) = readIANATimeZones(tzdataDir, ignoreBackzone, ignoreFactory)
     (icuZones, icuLinks) = readICUTimeZones(icuDir, icuTzDir, ignoreFactory)
@@ -3012,7 +3012,7 @@ def generateTzDataTests(tzdataDir, version, ignoreBackzone, ignoreFactory, testD
 
 
 def updateTzdata(topsrcdir, args):
-    """ Update the time zone cpp file. """
+    """Update the time zone cpp file."""
 
     icuDir = os.path.join(topsrcdir, "intl/icu/source")
     if not os.path.isdir(icuDir):
@@ -3142,7 +3142,7 @@ def writeCurrencyFile(published, currencies, out):
 
 
 def updateCurrency(topsrcdir, args):
-    """ Update the CurrencyDataGenerated.js file. """
+    """Update the CurrencyDataGenerated.js file."""
     import xml.etree.ElementTree as ET
     from random import randint
 
@@ -3643,7 +3643,7 @@ inline constexpr SimpleMeasureUnit simpleMeasureUnits[] = {
 
 
 def writeUnitTestFiles(all_units, sanctioned_units):
-    """ Generate test files for unit number formatters. """
+    """Generate test files for unit number formatters."""
 
     js_src_builtin_intl_dir = os.path.dirname(os.path.abspath(__file__))
     test_dir = os.path.join(

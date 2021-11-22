@@ -718,7 +718,7 @@ class SSLTunnel:
                     self.writeLocation(config, loc)
 
     def start(self):
-        """ Starts the SSL Tunnel """
+        """Starts the SSL Tunnel"""
 
         # start ssltunnel to provide https:// URLs capability
         ssltunnel = os.path.join(self.utilityPath, "ssltunnel")
@@ -737,7 +737,7 @@ class SSLTunnel:
         self.log.info("runtests.py | SSL tunnel pid: %d" % self.process.pid)
 
     def stop(self):
-        """ Stops the SSL Tunnel and cleans up """
+        """Stops the SSL Tunnel and cleans up"""
         if self.process is not None:
             self.process.kill()
         if os.path.exists(self.configFile):
@@ -994,7 +994,7 @@ class MochitestDesktop(object):
         return test_environment(**kwargs)
 
     def getFullPath(self, path):
-        " Get an absolute path relative to self.oldcwd."
+        "Get an absolute path relative to self.oldcwd."
         return os.path.normpath(os.path.join(self.oldcwd, os.path.expanduser(path)))
 
     def getLogFilePath(self, logFile):
@@ -1204,7 +1204,7 @@ class MochitestDesktop(object):
             yield (scheme, grouped_tests)
 
     def startWebSocketServer(self, options, debuggerInfo):
-        """ Launch the websocket server """
+        """Launch the websocket server"""
         self.wsserver = WebSocketServer(options, SCRIPT_DIR, self.log, debuggerInfo)
         self.wsserver.start()
 
@@ -1868,7 +1868,7 @@ toolbar#nav-bar {
         return browserEnv
 
     def killNamedProc(self, pname, orphans=True):
-        """ Kill processes matching the given command name """
+        """Kill processes matching the given command name"""
         self.log.info("Checking for %s processes..." % pname)
 
         if HAVE_PSUTIL:
@@ -2060,7 +2060,7 @@ toolbar#nav-bar {
             self.profile.merge(path, interpolation=interpolation)
 
     def buildProfile(self, options):
-        """ create the profile and add optional chrome bits and files if requested """
+        """create the profile and add optional chrome bits and files if requested"""
         # get extensions to install
         extensions = self.getExtensionsToInstall(options)
 
@@ -2202,7 +2202,7 @@ toolbar#nav-bar {
         return os.pathsep.join(gmp_paths)
 
     def cleanup(self, options, final=False):
-        """ remove temporary files and profile """
+        """remove temporary files and profile"""
         if hasattr(self, "manifest") and self.manifest is not None:
             if os.path.exists(self.manifest):
                 os.remove(self.manifest)
@@ -2854,7 +2854,7 @@ toolbar#nav-bar {
         return 0
 
     def runTests(self, options):
-        """ Prepare, configure, run tests and cleanup """
+        """Prepare, configure, run tests and cleanup"""
         self.extraPrefs = parse_preferences(options.extraPrefs)
 
         # for test manifest parsing.

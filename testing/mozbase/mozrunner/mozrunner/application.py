@@ -94,7 +94,7 @@ class RemoteContext(object):
 
     @abstractmethod
     def stop_application(self):
-        """ Run (device manager) command to stop application. """
+        """Run (device manager) command to stop application."""
         pass
 
 
