@@ -295,7 +295,6 @@ class Histogram:
         self.set_bucket_parameters(*fn(definition))
 
     def verify_attributes(self, name, definition):
-        global ALWAYS_ALLOWED_KEYS
         general_keys = ALWAYS_ALLOWED_KEYS + ["low", "high", "n_buckets"]
 
         table = {
