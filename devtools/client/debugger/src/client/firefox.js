@@ -169,6 +169,9 @@ async function onSourceAvailable(sources) {
 
 async function onBreakpointAvailable(breakpoints) {
   for (const resource of breakpoints) {
+    if (resource.targetFront.isDestroyed()) {
+      continue;
+    }
     const threadFront = await resource.targetFront.getFront("thread");
     if (resource.state == "paused") {
       const pause = await createPause(threadFront.actor, resource);
