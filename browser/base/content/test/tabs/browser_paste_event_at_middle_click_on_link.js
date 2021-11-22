@@ -34,7 +34,7 @@ add_task(async function doCheckPasteEventAtMiddleClickOnAnchorElement() {
 
   let pageURL = getRootDirectory(gTestPath).replace(
     "chrome://mochitests/content",
-    "http://example.com"
+    "https://example.com"
   );
   pageURL = `${pageURL}file_anchor_elements.html`;
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageURL);
@@ -52,7 +52,7 @@ add_task(async function doCheckPasteEventAtMiddleClickOnAnchorElement() {
   ok(true, "Clicking on usual link...");
   let newTabPromise = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    "http://example.com/#a_with_href",
+    "https://example.com/#a_with_href",
     true
   );
   await BrowserTestUtils.synthesizeMouseAtCenter(
@@ -63,7 +63,7 @@ add_task(async function doCheckPasteEventAtMiddleClickOnAnchorElement() {
   let openTabForUsualLink = await newTabPromise;
   is(
     openTabForUsualLink.linkedBrowser.currentURI.spec,
-    "http://example.com/#a_with_href",
+    "https://example.com/#a_with_href",
     "Middle click should open site to correct url at clicking on usual link"
   );
   is(
@@ -103,7 +103,7 @@ add_task(async function doCheckPasteEventAtMiddleClickOnAnchorElement() {
   ok(true, "Clicking on non-editable link in an editing host...");
   newTabPromise = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    "http://example.com/#non-editable_a_with_href",
+    "https://example.com/#non-editable_a_with_href",
     true
   );
   await BrowserTestUtils.synthesizeMouseAtCenter(
@@ -114,7 +114,7 @@ add_task(async function doCheckPasteEventAtMiddleClickOnAnchorElement() {
   let openTabForNonEditableLink = await newTabPromise;
   is(
     openTabForNonEditableLink.linkedBrowser.currentURI.spec,
-    "http://example.com/#non-editable_a_with_href",
+    "https://example.com/#non-editable_a_with_href",
     "Middle click should open site to correct url at clicking on non-editable link in an editing host."
   );
   is(
