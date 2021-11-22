@@ -2274,18 +2274,20 @@ void MacroAssembler::wasmBoundsCheck32(Condition cond, Register index,
 void MacroAssembler::wasmBoundsCheck32(Condition cond, Register index,
                                        Address boundsCheckLimit, Label* ok) {
   SecondScratchRegisterScope scratch2(*this);
-  load32(boundsCheckLimit, SecondScratchReg);
-  ma_b(index, SecondScratchReg, ok, cond);
+  load32(boundsCheckLimit, scratch2);
+  ma_b(index, scratch2, ok, cond);
 }
 
 void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
                                        Register64 boundsCheckLimit, Label* ok) {
-  MOZ_CRASH("IMPLEMENTME");
+  ma_b(index.reg, boundsCheckLimit.reg, ok, cond);
 }
 
 void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
                                        Address boundsCheckLimit, Label* ok) {
-  MOZ_CRASH("IMPLEMENTME");
+  SecondScratchRegisterScope scratch2(*this);
+  loadPtr(boundsCheckLimit, scratch2);
+  ma_b(index.reg, scratch2, ok, cond);
 }
 
 void MacroAssembler::widenInt32(Register r) {
@@ -2464,7 +2466,7 @@ void MacroAssemblerMIPS64Compat::wasmLoadI64Impl(
 
   // Maybe add the offset.
   if (offset) {
-    asMasm().addPtr(Imm32(offset), ptrScratch);
+    asMasm().addPtr(ImmWord(offset), ptrScratch);
     ptr = ptrScratch;
   }
 
@@ -2523,7 +2525,7 @@ void MacroAssemblerMIPS64Compat::wasmStoreI64Impl(
 
   // Maybe add the offset.
   if (offset) {
-    asMasm().addPtr(Imm32(offset), ptrScratch);
+    asMasm().addPtr(ImmWord(offset), ptrScratch);
     ptr = ptrScratch;
   }
 
