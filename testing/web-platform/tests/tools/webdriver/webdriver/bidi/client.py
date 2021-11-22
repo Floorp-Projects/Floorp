@@ -1,26 +1,11 @@
 import asyncio
-import json
-import logging
-import sys
 from collections import defaultdict
-from typing import Any, Awaitable, Callable, Coroutine, List, Optional, Mapping, MutableMapping
+from typing import Any, Awaitable, Callable, List, Optional, Mapping, MutableMapping
 from urllib.parse import urljoin, urlparse
-
-import websockets
 
 from . import modules
 from .error import from_error_details
-
-logger = logging.getLogger("webdriver.bidi")
-
-
-def get_running_loop() -> asyncio.AbstractEventLoop:
-    if sys.version_info >= (3, 7):
-        return asyncio.get_running_loop()
-    # Unlike the above, this will actually create an event loop
-    # if there isn't one; hopefully running tests in Python >= 3.7
-    # will allow us to catch any behaviour difference
-    return asyncio.get_event_loop()
+from .transport import get_running_loop, Transport
 
 
 class BidiSession:
@@ -219,56 +204,3 @@ class BidiSession:
         self.event_listeners[name].append(fn)
 
         return lambda: self.event_listeners[name].remove(fn)
-
-
-class Transport:
-    """Low level message handler for the WebSockets connection"""
-    def __init__(self, url: str,
-                 msg_handler: Callable[[Mapping[str, Any]], Coroutine[Any, Any, None]],
-                 loop: Optional[asyncio.AbstractEventLoop] = None):
-        self.url = url
-        self.connection: Optional[websockets.WebSocketClientProtocol] = None
-        self.msg_handler = msg_handler
-        self.send_buf: List[Mapping[str, Any]] = []
-
-        if loop is None:
-            loop = get_running_loop()
-        self.loop = loop
-
-        self.read_message_task: Optional[asyncio.Task[Any]] = None
-
-    async def start(self) -> None:
-        self.connection = await websockets.client.connect(self.url)
-        self.read_message_task = self.loop.create_task(self.read_messages())
-
-        for msg in self.send_buf:
-            await self._send(self.connection, msg)
-
-    async def send(self, data: Mapping[str, Any]) -> None:
-        if self.connection is not None:
-            await self._send(self.connection, data)
-        else:
-            self.send_buf.append(data)
-
-    @staticmethod
-    async def _send(connection: websockets.WebSocketClientProtocol, data: Mapping[str, Any]) -> None:
-        msg = json.dumps(data)
-        logger.debug("→ %s", msg)
-        await connection.send(msg)
-
-    async def handle(self, msg: str) -> None:
-        logger.debug("← %s", msg)
-        data = json.loads(msg)
-        await self.msg_handler(data)
-
-    async def end(self) -> None:
-        if self.connection:
-            await self.connection.close()
-            self.connection = None
-
-    async def read_messages(self) -> None:
-        assert self.connection is not None
-        async for msg in self.connection:
-            if not isinstance(msg, str):
-                raise ValueError("Got a binary message")
-            await self.handle(msg)
