@@ -60,8 +60,7 @@ const char* sPhaseObserverKeys[] = {
     "xpcom-shutdown-threads",           // XPCOMShutdownThreads
     nullptr,                            // XPCOMShutdownLoaders
     nullptr,                            // XPCOMShutdownFinal
-    nullptr,                            // CCPostLastCycleCollection
-    nullptr                             // PostJSShutDown
+    nullptr                             // CCPostLastCycleCollection
 };
 
 static_assert(sizeof(sPhaseObserverKeys) / sizeof(sPhaseObserverKeys[0]) ==
