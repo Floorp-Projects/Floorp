@@ -50,6 +50,16 @@ class SelectionActionDelegateChild extends GeckoViewActorChild {
       perform: _ => this._performPaste(),
     },
     {
+      id: "org.mozilla.geckoview.PASTE_AS_PLAIN_TEXT",
+      predicate: e =>
+        this._isContentHtmlEditable(e) &&
+        Services.clipboard.hasDataMatchingFlavors(
+          ["text/html"],
+          Ci.nsIClipboard.kGlobalClipboard
+        ),
+      perform: _ => this._performPasteAsPlainText(),
+    },
+    {
       id: "org.mozilla.geckoview.DELETE",
       predicate: e => !e.collapsed && e.selectionEditable,
       perform: _ => this.docShell.doCommand("cmd_delete"),
@@ -101,6 +111,11 @@ class SelectionActionDelegateChild extends GeckoViewActorChild {
     this.docShell.doCommand("cmd_paste");
   }
 
+  _performPasteAsPlainText() {
+    this.handleEvent({ type: "pagehide" });
+    this.docShell.doCommand("cmd_pasteNoFormatting");
+  }
+
   _isPasswordField(aEvent) {
     if (!aEvent.selectionEditable) {
       return false;
@@ -113,6 +128,27 @@ class SelectionActionDelegateChild extends GeckoViewActorChild {
       win.HTMLInputElement &&
       focus instanceof win.HTMLInputElement &&
       !focus.mozIsTextField(/* excludePassword */ true)
+    );
+  }
+
+  _isContentHtmlEditable(aEvent) {
+    if (!aEvent.selectionEditable) {
+      return false;
+    }
+
+    if (aEvent.target.designMode == "on") {
+      return true;
+    }
+
+    // focused element isn't <input> nor <textarea>
+    const win = aEvent.target.defaultView;
+    const focus = aEvent.target.activeElement;
+    return (
+      win &&
+      win.HTMLInputElement &&
+      win.HTMLTextAreaElement &&
+      !(focus instanceof win.HTMLInputElement) &&
+      !(focus instanceof win.HTMLTextAreaElement)
     );
   }
 

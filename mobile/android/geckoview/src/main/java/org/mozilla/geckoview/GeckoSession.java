@@ -3134,6 +3134,11 @@ public class GeckoSession {
     final String ACTION_DELETE = "org.mozilla.geckoview.DELETE";
     /** Replace the selected content with the clipboard content. Selection must be editable. */
     final String ACTION_PASTE = "org.mozilla.geckoview.PASTE";
+    /**
+     * Replace the selected content with the clipboard content as plain text. Selection must be
+     * editable.
+     */
+    final String ACTION_PASTE_AS_PLAIN_TEXT = "org.mozilla.geckoview.PASTE_AS_PLAIN_TEXT";
     /** Select the entire content of the document or editor. */
     final String ACTION_SELECT_ALL = "org.mozilla.geckoview.SELECT_ALL";
     /** Clear the current selection. Selection must not be editable. */
@@ -3287,6 +3292,16 @@ public class GeckoSession {
       }
 
       /**
+       * Replace the selected content with the clipboard content as plain text.
+       *
+       * @throws IllegalStateException If the action was not available.
+       */
+      @AnyThread
+      public void pasteAsPlainText() {
+        execute(ACTION_PASTE_AS_PLAIN_TEXT);
+      }
+
+      /**
        * Select the entire content of the document or editor.
        *
        * @throws IllegalStateException If the action was not available.
@@ -3390,6 +3405,7 @@ public class GeckoSession {
     SelectionActionDelegate.ACTION_COPY,
     SelectionActionDelegate.ACTION_DELETE,
     SelectionActionDelegate.ACTION_PASTE,
+    SelectionActionDelegate.ACTION_PASTE_AS_PLAIN_TEXT,
     SelectionActionDelegate.ACTION_SELECT_ALL,
     SelectionActionDelegate.ACTION_UNSELECT,
     SelectionActionDelegate.ACTION_COLLAPSE_TO_START,

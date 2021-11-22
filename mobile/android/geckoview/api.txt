@@ -1321,6 +1321,7 @@ package org.mozilla.geckoview {
     field public static final String ACTION_DELETE = "org.mozilla.geckoview.DELETE";
     field public static final String ACTION_HIDE = "org.mozilla.geckoview.HIDE";
     field public static final String ACTION_PASTE = "org.mozilla.geckoview.PASTE";
+    field public static final String ACTION_PASTE_AS_PLAIN_TEXT = "org.mozilla.geckoview.PASTE_AS_PLAIN_TEXT";
     field public static final String ACTION_SELECT_ALL = "org.mozilla.geckoview.SELECT_ALL";
     field public static final String ACTION_UNSELECT = "org.mozilla.geckoview.UNSELECT";
     field public static final int FLAG_IS_COLLAPSED = 1;
@@ -1343,6 +1344,7 @@ package org.mozilla.geckoview {
     method @AnyThread public void hide();
     method @AnyThread public boolean isActionAvailable(@NonNull String);
     method @AnyThread public void paste();
+    method @AnyThread public void pasteAsPlainText();
     method @AnyThread public void selectAll();
     method @AnyThread public void unselect();
     field @NonNull public final Collection<String> availableActions;
