@@ -475,17 +475,17 @@ void nsLineBreaker::UpdateCurrentWordLanguage(nsAtom* aHyphenationLanguage) {
     if (aHyphenationLanguage && !mCurrentWordLanguage) {
       Locale loc;
       auto result =
-          LocaleParser::tryParse(nsAtomCString(aHyphenationLanguage), loc);
+          LocaleParser::TryParse(nsAtomCString(aHyphenationLanguage), loc);
 
       if (result.isErr()) {
         return;
       }
-      if (loc.script().missing() && loc.addLikelySubtags().isErr()) {
+      if (loc.Script().Missing() && loc.AddLikelySubtags().isErr()) {
         return;
       }
       mScriptIsChineseOrJapanese =
-          loc.script().equalTo("Hans") || loc.script().equalTo("Hant") ||
-          loc.script().equalTo("Jpan") || loc.script().equalTo("Hrkt");
+          loc.Script().EqualTo("Hans") || loc.Script().EqualTo("Hant") ||
+          loc.Script().EqualTo("Jpan") || loc.Script().EqualTo("Hrkt");
     }
     mCurrentWordLanguage = aHyphenationLanguage;
   }
