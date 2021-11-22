@@ -238,6 +238,7 @@ void nsHttpConnection::Start0RTTSpdy(SpdyVersion spdyVersion) {
 
   mDid0RTTSpdy = true;
   mUsingSpdyVersion = spdyVersion;
+  mEverUsedSpdy = true;
   mSpdySession =
       ASpdySession::NewSpdySession(spdyVersion, mSocketTransport, true);
 
