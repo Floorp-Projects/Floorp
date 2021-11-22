@@ -50,9 +50,16 @@ def get_black_version(binary):
         )
     except subprocess.CalledProcessError as e:
         output = e.output
-
-    # Accept `black.EXE, version ...` on Windows.
-    return re.match(r"black.*, version (.*)$", output)[1]
+    try:
+        # Accept `black.EXE, version ...` on Windows.
+        # for old version of black, the output is
+        # black, version 21.4b2
+        # From black 21.11b1, the output is like
+        # black, 21.11b1 (compiled: no)
+        return re.match(r"black.*,( version)? (\S+)", output)[2]
+    except TypeError as e:
+        print("Could not parse the version '{}'".format(output))
+        print("Error: {}".format(e))
 
 
 def parse_issues(config, output, paths, *, log):
