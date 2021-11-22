@@ -1785,7 +1785,7 @@ JS_PUBLIC_API uint8_t* JS::GetArrayBufferData(JSObject* obj,
   return aobj->dataPointer();
 }
 
-static ArrayBufferObject* UnwrapArrayBuffer(
+static ArrayBufferObject* UnwrapOrReportArrayBuffer(
     JSContext* cx, JS::Handle<JSObject*> maybeArrayBuffer) {
   JSObject* obj = CheckedUnwrapStatic(maybeArrayBuffer);
   if (!obj) {
@@ -1807,7 +1807,8 @@ JS_PUBLIC_API bool JS::DetachArrayBuffer(JSContext* cx, HandleObject obj) {
   CHECK_THREAD(cx);
   cx->check(obj);
 
-  Rooted<ArrayBufferObject*> unwrappedBuffer(cx, UnwrapArrayBuffer(cx, obj));
+  Rooted<ArrayBufferObject*> unwrappedBuffer(
+      cx, UnwrapOrReportArrayBuffer(cx, obj));
   if (!unwrappedBuffer) {
     return false;
   }
@@ -1865,7 +1866,7 @@ JS_PUBLIC_API JSObject* JS::CopyArrayBuffer(JSContext* cx,
   MOZ_ASSERT(arrayBuffer != nullptr);
 
   Rooted<ArrayBufferObject*> unwrappedSource(
-      cx, UnwrapArrayBuffer(cx, arrayBuffer));
+      cx, UnwrapOrReportArrayBuffer(cx, arrayBuffer));
   if (!unwrappedSource) {
     return nullptr;
   }
@@ -1925,7 +1926,8 @@ JS_PUBLIC_API void* JS::StealArrayBufferContents(JSContext* cx,
   CHECK_THREAD(cx);
   cx->check(obj);
 
-  Rooted<ArrayBufferObject*> unwrappedBuffer(cx, UnwrapArrayBuffer(cx, obj));
+  Rooted<ArrayBufferObject*> unwrappedBuffer(
+      cx, UnwrapOrReportArrayBuffer(cx, obj));
   if (!unwrappedBuffer) {
     return nullptr;
   }
