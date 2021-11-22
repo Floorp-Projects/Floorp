@@ -133,7 +133,7 @@ TEST_F(APZCTreeManagerGenericTester, Bug1194876) {
   MultiTouchInput mti;
   mti = CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_START, mcc->Time());
   mti.mTouches.AppendElement(
-      SingleTouchData(0, ParentLayerPoint(25, 50), ScreenSize(0, 0), 0, 0));
+      SingleTouchData(0, ScreenIntPoint(25, 50), ScreenSize(0, 0), 0, 0));
   blockId = manager->ReceiveInputEvent(mti).mInputBlockId;
   manager->ContentReceivedInputBlock(blockId, false);
   targets.AppendElement(ApzcOf(layers[0])->GetGuid());
@@ -145,7 +145,7 @@ TEST_F(APZCTreeManagerGenericTester, Bug1194876) {
   // layers[1]. Again we tell it both touches landed on layers[0], but because
   // layers[1] is the RCD layer, it will end up being the multitouch target.
   mti.mTouches.AppendElement(
-      SingleTouchData(1, ParentLayerPoint(75, 50), ScreenSize(0, 0), 0, 0));
+      SingleTouchData(1, ScreenIntPoint(75, 50), ScreenSize(0, 0), 0, 0));
   blockId = manager->ReceiveInputEvent(mti).mInputBlockId;
   manager->ContentReceivedInputBlock(blockId, false);
   targets.AppendElement(ApzcOf(layers[0])->GetGuid());
@@ -174,7 +174,7 @@ TEST_F(APZCTreeManagerGenericTester, TargetChangesMidGesture_Bug1570559) {
   MultiTouchInput mti =
       CreateMultiTouchInput(MultiTouchInput::MULTITOUCH_START, mcc->Time());
   mti.mTouches.AppendElement(
-      SingleTouchData(0, ParentLayerPoint(25, 50), ScreenSize(0, 0), 0, 0));
+      SingleTouchData(0, ScreenIntPoint(25, 50), ScreenSize(0, 0), 0, 0));
   blockId = manager->ReceiveInputEvent(mti).mInputBlockId;
   manager->ContentReceivedInputBlock(blockId, /* default prevented = */ false);
   targets.AppendElement(ApzcOf(layers[1])->GetGuid());
@@ -186,7 +186,7 @@ TEST_F(APZCTreeManagerGenericTester, TargetChangesMidGesture_Bug1570559) {
   // clear the parent's gesture state. The bug is that we fail to clear the
   // child's gesture state.
   mti.mTouches.AppendElement(
-      SingleTouchData(1, ParentLayerPoint(75, 50), ScreenSize(0, 0), 0, 0));
+      SingleTouchData(1, ScreenIntPoint(75, 50), ScreenSize(0, 0), 0, 0));
   blockId = manager->ReceiveInputEvent(mti).mInputBlockId;
   manager->ContentReceivedInputBlock(blockId, /* default prevented = */ true);
   targets.AppendElement(ApzcOf(layers[1])->GetGuid());
