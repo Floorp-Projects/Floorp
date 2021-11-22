@@ -538,7 +538,7 @@ class BaseLogger(object):
             self.all_handlers = []
 
     def __del__(self):
-        """ BaseLogger class destructor; shutdown, flush and remove all handlers"""
+        """BaseLogger class destructor; shutdown, flush and remove all handlers"""
         logging.shutdown()
         self._clear_handlers()
 
@@ -657,7 +657,7 @@ class SimpleFileLogger(BaseLogger):
         self.init_message()
 
     def new_logger(self):
-        """ calls the BaseLogger.new_logger method and adds a file handler to it."""
+        """calls the BaseLogger.new_logger method and adds a file handler to it."""
 
         BaseLogger.new_logger(self)
         self.log_path = os.path.join(self.abs_log_dir, "%s.log" % self.log_name)
@@ -781,5 +781,5 @@ def numeric_log_level(level):
 
 # __main__ {{{1
 if __name__ == "__main__":
-    """ Useless comparison, due to the `pass` keyword on its body"""
+    """Useless comparison, due to the `pass` keyword on its body"""
     pass

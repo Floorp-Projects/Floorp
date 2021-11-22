@@ -13,7 +13,7 @@ import mozinfo
 
 
 class TestContext(object):
-    """ Stores context data about the test """
+    """Stores context data about the test"""
 
     attrs = [
         "hostname",
@@ -79,7 +79,7 @@ class TestContext(object):
 
 
 class TestResult(object):
-    """ Stores test result data """
+    """Stores test result data"""
 
     FAIL_RESULTS = [
         "UNEXPECTED-PASS",
@@ -215,7 +215,7 @@ class TestResult(object):
 
     @property
     def finished(self):
-        """ Boolean saying if the test is finished or not """
+        """Boolean saying if the test is finished or not"""
         return self.result is not None
 
     @property
@@ -230,7 +230,7 @@ class TestResult(object):
 
 
 class TestResultCollection(list):
-    """ Container class that stores test results """
+    """Container class that stores test results"""
 
     resultClass = TestResult
 
@@ -256,16 +256,16 @@ class TestResultCollection(list):
 
     @property
     def contexts(self):
-        """ List of unique contexts for the test results contained """
+        """List of unique contexts for the test results contained"""
         cs = [tr.context for tr in self]
         return list(set(cs))
 
     def filter(self, predicate):
-        """ Returns a generator of TestResults that satisfy a given predicate """
+        """Returns a generator of TestResults that satisfy a given predicate"""
         return (tr for tr in self if predicate(tr))
 
     def tests_with_result(self, result):
-        """ Returns a generator of TestResults with the given result """
+        """Returns a generator of TestResults with the given result"""
         msg = "Result '%s' not in possible results: %s" % (
             result,
             ", ".join(self.resultClass.COMPUTED_RESULTS),
@@ -275,7 +275,7 @@ class TestResultCollection(list):
 
     @property
     def tests(self):
-        """ Generator of all tests in the collection """
+        """Generator of all tests in the collection"""
         return (t for t in self)
 
     def add_result(
@@ -308,7 +308,7 @@ class TestResultCollection(list):
         return fails
 
     def add_unittest_result(self, result, context=None):
-        """ Adds the python unittest result provided to the collection"""
+        """Adds the python unittest result provided to the collection"""
         if hasattr(result, "time_taken"):
             self.time_taken += result.time_taken
 
