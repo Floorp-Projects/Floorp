@@ -755,6 +755,31 @@ impl SpatialTree {
         }
     }
 
+    /// Check if a given spatial node is an ancestor of another spatial node.
+    pub fn is_ancestor(
+        &self,
+        maybe_parent: SpatialNodeIndex,
+        maybe_child: SpatialNodeIndex,
+    ) -> bool {
+        // Early out if same node
+        if maybe_parent == maybe_child {
+            return false;
+        }
+
+        let mut current_node = maybe_child;
+
+        while current_node != self.root_reference_frame_index {
+            let node = self.get_node_info(current_node);
+            current_node = node.parent.expect("bug: no parent");
+
+            if current_node == maybe_parent {
+                return true;
+            }
+        }
+
+        false
+    }
+
     fn visit_node_impl_mut<F>(
         &mut self,
         index: SpatialNodeIndex,
