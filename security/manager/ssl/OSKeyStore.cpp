@@ -636,7 +636,7 @@ nsresult AbstractOSKeyStore::DoCipher(const UniquePK11SymKey& aSymKey,
 
   // Build params.
   // We need to get the IV from inBytes if we decrypt.
-  if (!encrypt && (inBytes.size() < mIVLength || inBytes.size() == 0)) {
+  if (!encrypt && (inBytes.size() < mIVLength || inBytes.empty())) {
     return NS_ERROR_INVALID_ARG;
   }
 
