@@ -5971,7 +5971,7 @@ void nsWindow::ResumeCompositorHiddenWindow() {
 
   LOG("nsWindow::ResumeCompositorHiddenWindow\n");
   if (mIsDestroyed || mCompositorState == COMPOSITOR_ENABLED) {
-    LOG("  early quit, mCompositorState = %d\n", mCompositorState);
+    LOG("  early quit\n");
     return;
   }
 
@@ -5995,11 +5995,8 @@ void nsWindow::ResumeCompositorHiddenWindow() {
 void nsWindow::PauseCompositorHiddenWindow() {
   LOG("nsWindow::PauseCompositorHiddenWindow [%p]\n", (void*)this);
 
-  // TODO: The compositor backend currently relies on the pause event to work
-  // around a Gnome specific bug. Remove again once the fix is widely available.
-  // See bug 1721298
-  if (mIsDestroyed || mCompositorState != COMPOSITOR_ENABLED) {
-    LOG("  quit early, compositor state %d", mCompositorState);
+  if (mCompositorState != COMPOSITOR_ENABLED) {
+    LOG("  quit early, compositor is disabled");
     return;
   }
 
@@ -6059,17 +6056,18 @@ void nsWindow::PauseCompositor() {
 }
 
 bool nsWindow::IsWaitingForCompositorResume() {
-  return !mIsDestroyed && mCompositorState == COMPOSITOR_PAUSED_FLICKERING;
+  return mCompositorState == COMPOSITOR_PAUSED_FLICKERING;
 }
 
 void nsWindow::ResumeCompositor() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
-  if (!IsWaitingForCompositorResume()) {
+  LOG("nsWindow::ResumeCompositor()\n");
+
+  if (mIsDestroyed || !IsWaitingForCompositorResume()) {
+    LOG("  early quit\n");
     return;
   }
-
-  LOG("nsWindow::ResumeCompositor()\n");
 
   if (mCompositorPauseTimeoutID) {
     g_source_remove(mCompositorPauseTimeoutID);
