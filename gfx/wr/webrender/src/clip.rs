@@ -2178,6 +2178,8 @@ fn add_clip_node_to_current_chain(
                 };
             }
             ClipSpaceConversion::Transform(..) => {
+                assert!(spatial_tree.is_ancestor(node.spatial_node_index, prim_spatial_node_index));
+
                 // Map the local clip rect directly into the same space as the picture
                 // surface. This will often be the same space as the clip itself, which
                 // results in a reduction in allocated clip mask size.
