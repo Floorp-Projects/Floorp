@@ -109,7 +109,7 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
   }
 
   get parentStyleSheet() {
-    const resourceCommand = this.targetFront.resourceCommand;
+    const resourceCommand = this.targetFront.commands.resourceCommand;
     if (
       resourceCommand?.hasResourceCommandSupport(
         resourceCommand.TYPES.STYLESHEET
