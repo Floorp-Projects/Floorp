@@ -37,6 +37,8 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.engagement.recent_visited_origins.expiry"
 );
 
+Cu.importGlobalProperties(["Glean"]);
+
 // The upper bound for the count of the visited unique domain names.
 const MAX_UNIQUE_VISITED_DOMAINS = 100;
 
@@ -341,6 +343,7 @@ let URICountListener = {
       TOTAL_URI_COUNT_NORMAL_AND_PRIVATE_MODE_SCALAR_NAME,
       1
     );
+    Glean.browserEngagement.uriCount.add(1);
 
     if (!shouldCountURI) {
       return;

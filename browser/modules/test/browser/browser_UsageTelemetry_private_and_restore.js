@@ -4,6 +4,9 @@ const { E10SUtils } = ChromeUtils.import(
 );
 const triggeringPrincipal_base64 = E10SUtils.SERIALIZED_SYSTEMPRINCIPAL;
 
+// Glean's here on `window`, but eslint doesn't know that. bug 1715542.
+/* global Glean:false */
+
 const MAX_CONCURRENT_TABS = "browser.engagement.max_concurrent_tab_count";
 const TAB_EVENT_COUNT = "browser.engagement.tab_open_event_count";
 const MAX_CONCURRENT_WINDOWS = "browser.engagement.max_concurrent_window_count";
@@ -80,6 +83,7 @@ add_task(async function test_privateMode() {
     1,
     "We should include URIs in private mode as part of the actual total URI count."
   );
+  is(Glean.browserEngagement.uriCount.testGetValue(), 1);
 
   // Clean up.
   await BrowserTestUtils.closeWindow(privateWin);
