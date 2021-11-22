@@ -11,7 +11,7 @@ module.exports = async function({ targetCommand, targetFront, onAvailable }) {
   // Also allow frame, but only in content toolbox, i.e. still ignore them in
   // the context of the browser toolbox as we inspect messages via the process
   // targets
-  const listenForFrames = targetCommand.descriptorFront.isLocalTab;
+  const listenForFrames = targetCommand.descriptorFront.isTabDescriptor;
 
   // Allow workers when messages aren't dispatched to the main thread.
   const listenForWorkers = !targetCommand.rootFront.traits
