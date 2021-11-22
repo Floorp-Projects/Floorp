@@ -663,30 +663,6 @@ struct ParamTraits<mozilla::layers::ZoomConstraints> {
 };
 
 template <>
-struct ParamTraits<mozilla::layers::EventRegions> {
-  typedef mozilla::layers::EventRegions paramType;
-
-  static void Write(Message* aMsg, const paramType& aParam) {
-    WriteParam(aMsg, aParam.mHitRegion);
-    WriteParam(aMsg, aParam.mDispatchToContentHitRegion);
-    WriteParam(aMsg, aParam.mNoActionRegion);
-    WriteParam(aMsg, aParam.mHorizontalPanRegion);
-    WriteParam(aMsg, aParam.mVerticalPanRegion);
-    WriteParam(aMsg, aParam.mDTCRequiresTargetConfirmation);
-  }
-
-  static bool Read(const Message* aMsg, PickleIterator* aIter,
-                   paramType* aResult) {
-    return (ReadParam(aMsg, aIter, &aResult->mHitRegion) &&
-            ReadParam(aMsg, aIter, &aResult->mDispatchToContentHitRegion) &&
-            ReadParam(aMsg, aIter, &aResult->mNoActionRegion) &&
-            ReadParam(aMsg, aIter, &aResult->mHorizontalPanRegion) &&
-            ReadParam(aMsg, aIter, &aResult->mVerticalPanRegion) &&
-            ReadParam(aMsg, aIter, &aResult->mDTCRequiresTargetConfirmation));
-  }
-};
-
-template <>
 struct ParamTraits<mozilla::layers::FocusTarget::ScrollTargets> {
   typedef mozilla::layers::FocusTarget::ScrollTargets paramType;
 
