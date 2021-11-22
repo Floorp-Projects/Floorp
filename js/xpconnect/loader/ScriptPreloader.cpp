@@ -14,7 +14,6 @@
 #include "mozilla/URLPreloader.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/IOBuffers.h"
@@ -47,7 +46,6 @@
 #define DOC_ELEM_INSERTED_TOPIC "document-element-inserted"
 #define CONTENT_DOCUMENT_LOADED_TOPIC "content-document-loaded"
 #define CACHE_WRITE_TOPIC "browser-idle-startup-tasks-finished"
-#define CLEANUP_TOPIC "xpcom-shutdown"
 #define CACHE_INVALIDATE_TOPIC "startupcache-invalidate"
 
 // The maximum time we'll wait for a child process to finish starting up before
@@ -105,25 +103,24 @@ nsresult ScriptPreloader::CollectReports(nsIHandleReportCallback* aHandleReport,
   return NS_OK;
 }
 
+StaticRefPtr<ScriptPreloader> ScriptPreloader::gScriptPreloader;
+StaticRefPtr<ScriptPreloader> ScriptPreloader::gChildScriptPreloader;
+UniquePtr<AutoMemMap> ScriptPreloader::gCacheData;
+UniquePtr<AutoMemMap> ScriptPreloader::gChildCacheData;
+
 ScriptPreloader& ScriptPreloader::GetSingleton() {
-  static UniquePtr<AutoMemMap> cacheDataSingleton;
-  static RefPtr<ScriptPreloader> singleton;
-
-  if (!singleton) {
+  if (!gScriptPreloader) {
     if (XRE_IsParentProcess()) {
-      cacheDataSingleton = MakeUnique<AutoMemMap>();
-      singleton = new ScriptPreloader(cacheDataSingleton.get());
-      singleton->mChildCache = &GetChildSingleton();
-      Unused << singleton->InitCache();
-      ClearOnShutdown(&cacheDataSingleton, ShutdownPhase::JSPostShutDown);
+      gCacheData = MakeUnique<AutoMemMap>();
+      gScriptPreloader = new ScriptPreloader(gCacheData.get());
+      gScriptPreloader->mChildCache = &GetChildSingleton();
+      Unused << gScriptPreloader->InitCache();
     } else {
-      singleton = &GetChildSingleton();
+      gScriptPreloader = &GetChildSingleton();
     }
-
-    ClearOnShutdown(&singleton);
   }
 
-  return *singleton;
+  return *gScriptPreloader;
 }
 
 // The child singleton is available in all processes, including the parent, and
@@ -150,21 +147,30 @@ ScriptPreloader& ScriptPreloader::GetSingleton() {
 //  probably use the cache data written during this session if there was no
 //  previous cache file, but I'd rather do that as a follow-up.
 ScriptPreloader& ScriptPreloader::GetChildSingleton() {
-  static UniquePtr<AutoMemMap> cacheDataSingleton;
-  static RefPtr<ScriptPreloader> singleton;
-
-  if (!singleton) {
-    cacheDataSingleton = MakeUnique<AutoMemMap>();
-    singleton = new ScriptPreloader(cacheDataSingleton.get());
+  if (!gChildScriptPreloader) {
+    gChildCacheData = MakeUnique<AutoMemMap>();
+    gChildScriptPreloader = new ScriptPreloader(gChildCacheData.get());
     if (XRE_IsParentProcess()) {
-      Unused << singleton->InitCache(u"scriptCache-child"_ns);
+      Unused << gChildScriptPreloader->InitCache(u"scriptCache-child"_ns);
     }
-
-    ClearOnShutdown(&singleton);
-    ClearOnShutdown(&cacheDataSingleton, ShutdownPhase::JSPostShutDown);
   }
 
-  return *singleton;
+  return *gChildScriptPreloader;
+}
+
+/* static */
+void ScriptPreloader::DeleteSingleton() {
+  gScriptPreloader = nullptr;
+  gChildScriptPreloader = nullptr;
+}
+
+/* static */
+void ScriptPreloader::DeleteCacheDataSingleton() {
+  MOZ_ASSERT(!gScriptPreloader);
+  MOZ_ASSERT(!gChildScriptPreloader);
+
+  gCacheData = nullptr;
+  gChildCacheData = nullptr;
 }
 
 void ScriptPreloader::InitContentChild(ContentParent& parent) {
@@ -229,9 +235,10 @@ ScriptPreloader::ScriptPreloader(AutoMemMap* cacheData)
     obs->AddObserver(this, CACHE_WRITE_TOPIC, false);
   }
 
-  obs->AddObserver(this, CLEANUP_TOPIC, false);
   obs->AddObserver(this, CACHE_INVALIDATE_TOPIC, false);
 }
+
+ScriptPreloader::~ScriptPreloader() { Cleanup(); }
 
 void ScriptPreloader::Cleanup() {
   // Wait for any pending parses to finish before clearing the mScripts
@@ -333,8 +340,6 @@ nsresult ScriptPreloader::Observe(nsISupports* subject, const char* topic,
     FinishContentStartup();
   } else if (!strcmp(topic, "timer-callback")) {
     FinishContentStartup();
-  } else if (!strcmp(topic, CLEANUP_TOPIC)) {
-    Cleanup();
   } else if (!strcmp(topic, CACHE_INVALIDATE_TOPIC)) {
     InvalidateCache();
   }
