@@ -104,10 +104,10 @@ DEBIAN_DISTROS = (
 
 ADD_GIT_CINNABAR_PATH = """
 To add git-cinnabar to the PATH, edit your shell initialization script, which
-may be called ~/.bashrc or ~/.bash_profile or ~/.profile, and add the following
+may be called {prefix}/.bash_profile or {prefix}/.profile, and add the following
 lines:
 
-    export PATH="{}:$PATH"
+    export PATH="{cinnabar_dir}:$PATH"
 
 Then restart your shell.
 """
@@ -638,7 +638,19 @@ def configure_git(git, cinnabar, root_state_dir, top_src_dir):
     cinnabar_dir = update_git_tools(git, root_state_dir)
 
     if not cinnabar:
-        print(ADD_GIT_CINNABAR_PATH.format(cinnabar_dir))
+        if "MOZILLABUILD" in os.environ:
+            # Slightly modify the path on Windows to be correct
+            # for the copy/paste into the .bash_profile
+            cinnabar_dir = "/" + cinnabar_dir
+            cinnabar_dir = cinnabar_dir.replace(":", "")
+
+            print(
+                ADD_GIT_CINNABAR_PATH.format(
+                    prefix="%USERPROFILE%", cinnabar_dir=cinnabar_dir
+                )
+            )
+        else:
+            print(ADD_GIT_CINNABAR_PATH.format(prefix="~", cinnabar_dir=cinnabar_dir))
 
 
 def _warn_if_risky_revision(path):
