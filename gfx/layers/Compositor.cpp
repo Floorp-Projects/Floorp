@@ -68,7 +68,7 @@ Compositor::Compositor(widget::CompositorWidget* aWidget)
 {
 }
 
-Compositor::~Compositor() { ReadUnlockTextures(); }
+Compositor::~Compositor() {}
 
 void Compositor::Destroy() {
   mWidget = nullptr;
@@ -77,10 +77,7 @@ void Compositor::Destroy() {
   mIsDestroyed = true;
 }
 
-void Compositor::EndFrame() {
-  ReadUnlockTextures();
-  mLastCompositionEndTime = TimeStamp::Now();
-}
+void Compositor::EndFrame() { mLastCompositionEndTime = TimeStamp::Now(); }
 
 nsTArray<TexturedVertex> TexturedTrianglesToVertexArray(
     const nsTArray<gfx::TexturedTriangle>& aTriangles) {
@@ -234,23 +231,6 @@ size_t DecomposeIntoNoRepeatRects(const gfx::Rect& aRect,
   SetRects(3, aLayerRects, aTextureRects, xmid, ymid, aRect.XMost(),
            aRect.YMost(), 0.0f, 0.0f, br.x, br.y, flipped);
   return 4;
-}
-
-void Compositor::UnlockAfterComposition(TextureHost* aTexture) {
-  TextureSourceProvider::UnlockAfterComposition(aTexture);
-
-  // If this is being called after we shutdown the compositor, we must finish
-  // read unlocking now to prevent a cycle.
-  if (IsDestroyed()) {
-    ReadUnlockTextures();
-  }
-}
-
-bool Compositor::NotifyNotUsedAfterComposition(TextureHost* aTextureHost) {
-  if (IsDestroyed() || AsBasicCompositor()) {
-    return false;
-  }
-  return TextureSourceProvider::NotifyNotUsedAfterComposition(aTextureHost);
 }
 
 already_AddRefed<RecordedFrame> Compositor::RecordFrame(

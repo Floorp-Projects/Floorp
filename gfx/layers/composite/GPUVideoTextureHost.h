@@ -21,19 +21,7 @@ class GPUVideoTextureHost : public TextureHost {
 
   void DeallocateDeviceData() override {}
 
-  virtual void SetTextureSourceProvider(
-      TextureSourceProvider* aProvider) override;
-
-  bool Lock() override;
-
-  void Unlock() override;
-
   gfx::SurfaceFormat GetFormat() const override;
-
-  void PrepareTextureSource(CompositableTextureSourceRef& aTexture) override;
-
-  bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
-  bool AcquireTextureSource(CompositableTextureSourceRef& aTexture) override;
 
   already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override {
     return nullptr;  // XXX - implement this (for MOZ_DUMP_PAINTING)
@@ -73,7 +61,6 @@ class GPUVideoTextureHost : public TextureHost {
 
   bool SupportsExternalCompositing(WebRenderBackend aBackend) override;
 
-  void UnbindTextureSource() override;
   void NotifyNotUsed() override;
 
  protected:
@@ -85,10 +72,8 @@ class GPUVideoTextureHost : public TextureHost {
   void UpdatedInternal(const nsIntRegion* Region) override;
 
   RefPtr<TextureHost> mWrappedTextureHost;
-  RefPtr<TextureSourceProvider> mPendingSourceProvider;
   bool mPendingUpdatedInternal = false;
   Maybe<nsIntRegion> mPendingIntRegion;
-  Maybe<CompositableTextureSourceRef> mPendingPrepareTextureSource;
   SurfaceDescriptorGPUVideo mDescriptor;
 };
 

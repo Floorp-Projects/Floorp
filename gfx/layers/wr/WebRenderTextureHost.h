@@ -30,15 +30,6 @@ class WebRenderTextureHost : public TextureHost {
 
   void DeallocateDeviceData() override {}
 
-  bool Lock() override;
-
-  void Unlock() override;
-
-  void PrepareTextureSource(CompositableTextureSourceRef& aTexture) override;
-  bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
-  void UnbindTextureSource() override;
-  void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
-
   gfx::SurfaceFormat GetFormat() const override;
 
   virtual void NotifyNotUsed() override;
