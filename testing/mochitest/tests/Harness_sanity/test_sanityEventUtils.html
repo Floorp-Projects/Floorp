@@ -47,7 +47,7 @@ function starttest() {
 
       if (navigator.appVersion.includes("Android")) {
         // This is the workaround for test failure on debug build.
-        await SpecialPowers.pushPrefEnv({set: [["apz.zoom-to-focused-input.enabled", false]]});
+        await SpecialPowers.pushPrefEnv({set: [["formhelper.autozoom.force-disable.test-only", true]]});
       }
 
       /* test send* functions */
