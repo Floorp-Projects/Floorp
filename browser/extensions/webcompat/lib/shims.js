@@ -459,7 +459,7 @@ class Shims {
     const shims = Array.from(this.shims.values()).map(
       this.getShimInfoForAboutCompat
     );
-    shims.sort((a, b) => a.localeCompare(b));
+    shims.sort((a, b) => a.name.localeCompare(b.name));
     return shims;
   }
 
