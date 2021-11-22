@@ -321,16 +321,16 @@ fn get_app_info() -> Result<(String, String, String), nsresult> {
 /// Resets FOG and the underlying Glean SDK, clearing stores.
 #[cfg(not(target_os = "android"))]
 #[no_mangle]
-pub extern "C" fn test_reset_fog(
+pub extern "C" fn fog_test_reset(
     data_path_override: &nsACString,
     app_id_override: &nsACString,
 ) -> nsresult {
-    test_reset_fog_internal(data_path_override, app_id_override).into()
+    fog_test_reset_internal(data_path_override, app_id_override).into()
 }
 
 // Split out into its own function so I could use `?`
 #[cfg(not(target_os = "android"))]
-fn test_reset_fog_internal(
+fn fog_test_reset_internal(
     data_path_override: &nsACString,
     app_id_override: &nsACString,
 ) -> Result<(), nsresult> {
@@ -354,7 +354,7 @@ fn test_reset_fog_internal(
 /// Does nothing on Android. Returns NS_ERROR_NOT_IMPLEMENTED.
 #[cfg(target_os = "android")]
 #[no_mangle]
-pub extern "C" fn test_reset_fog(
+pub extern "C" fn fog_test_reset(
     _data_path_override: &nsACString,
     _app_id_override: &nsACString,
 ) -> nsresult {
