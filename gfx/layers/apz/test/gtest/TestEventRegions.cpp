@@ -110,28 +110,6 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
     rootApzc = ApzcOf(root);
   }
 
-  void CreateBug1119497LayerTree() {
-    const char* treeShape = "x(xx)";
-    // LayerID               0 12
-    // 0 is the root and has an APZC
-    // 1 is behind 2 and has an APZC
-    // 2 entirely covers 1 and should take all the input events, but has no APZC
-    // so hits to 2 should go to to the root APZC
-    nsIntRegion layerVisibleRegions[] = {
-        nsIntRegion(IntRect(0, 0, 100, 100)),
-        nsIntRegion(IntRect(0, 0, 100, 100)),
-        nsIntRegion(IntRect(0, 0, 100, 100)),
-    };
-    CreateScrollData(treeShape, layerVisibleRegions);
-
-    SetScrollableFrameMetrics(layers[0], ScrollableLayerGuid::START_SCROLL_ID);
-    SetScrollableFrameMetrics(layers[1],
-                              ScrollableLayerGuid::START_SCROLL_ID + 1);
-
-    registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
-    UpdateHitTestingTree();
-  }
-
   void CreateBug1117712LayerTree() {
     const char* treeShape = "x(x(x)x)";
     // LayerID               0 1 2 3
@@ -278,17 +256,6 @@ TEST_F(APZEventRegionsTesterMock, Obscuration) {
   IAPZHitTester::HitTestResult hit =
       manager->GetTargetAPZC(ScreenPoint(50, 75));
   EXPECT_EQ(child, hit.mTargetApzc.get());
-  EXPECT_EQ(hit.mHitResult, CompositorHitTestFlags::eVisibleToHitTest);
-}
-
-TEST_F(APZEventRegionsTester, Bug1119497) {
-  CreateBug1119497LayerTree();
-
-  IAPZHitTester::HitTestResult hit =
-      manager->GetTargetAPZC(ScreenPoint(50, 50));
-  // We should hit layers[2], so |result| will be eVisibleToHitTest but there's
-  // no actual APZC on layers[2], so it will be the APZC of the root layer.
-  EXPECT_EQ(ApzcOf(layers[0]), hit.mTargetApzc.get());
   EXPECT_EQ(hit.mHitResult, CompositorHitTestFlags::eVisibleToHitTest);
 }
 
