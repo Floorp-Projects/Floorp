@@ -111,4 +111,11 @@ interface nsIFOG : nsISupports
    */
   [implicit_jscontext]
   Promise testFlushAllChildren();
+
+  /**
+   * ** Test-only Method **
+   *
+   * Reset FOG and the Glean SDK, clearing storage.
+   */
+  void testResetFOG([optional] in AUTF8String aDataPathOverride, [optional] in AUTF8String aAppIdOverride);
 };

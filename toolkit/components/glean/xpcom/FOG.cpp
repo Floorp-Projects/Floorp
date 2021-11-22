@@ -292,6 +292,12 @@ FOG::Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+FOG::TestResetFOG(const nsACString& aDataPathOverride,
+                  const nsACString& aAppIdOverride) {
+  return glean::impl::fog_test_reset(&aDataPathOverride, &aAppIdOverride);
+}
+
 NS_IMPL_ISUPPORTS(FOG, nsIFOG, nsIObserver)
 
 }  //  namespace mozilla
