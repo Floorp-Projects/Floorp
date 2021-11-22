@@ -144,6 +144,7 @@ fn fog_init_internal(
     // See https://mozilla.github.io/glean/book/user/debugging/index.html#enabling-debugging-features-through-environment-variables
     // IMPORTANT: Call this before glean::initialize until bug 1706729 is sorted.
     if env::var("MOZ_AUTOMATION").is_ok() && env::var("GLEAN_SOURCE_TAGS").is_err() {
+        log::info!("In automation, setting 'automation' source tag.");
         glean::set_source_tags(vec!["automation".to_string()]);
     }
 
