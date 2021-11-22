@@ -6804,13 +6804,13 @@ bool nsDocShell::CanSavePresentation(uint32_t aLoadType,
 }
 
 /* static */
-void nsDocShell::ReportBFCacheComboTelemetry(uint16_t aCombo) {
+void nsDocShell::ReportBFCacheComboTelemetry(uint32_t aCombo) {
   // There are 11 possible reasons to make a request fails to use BFCache
   // (see BFCacheStatus in dom/base/Document.h), and we'd like to record
   // the common combinations for reasons which make requests fail to use
   // BFCache. These combinations are generated based on some local browsings,
   // we need to adjust them when necessary.
-  enum BFCacheStatusCombo : uint16_t {
+  enum BFCacheStatusCombo : uint32_t {
     BFCACHE_SUCCESS,
     NOT_ONLY_TOPLEVEL = mozilla::dom::BFCacheStatus::NOT_ONLY_TOPLEVEL_IN_BCG,
     // If both unload and beforeunload listeners are presented, it'll be
