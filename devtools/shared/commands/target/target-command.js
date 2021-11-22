@@ -56,7 +56,7 @@ class TargetCommand extends EventEmitter {
     this.onLocalTabRemotenessChange = this.onLocalTabRemotenessChange.bind(
       this
     );
-    if (this.descriptorFront.isTabDescriptor) {
+    if (this.descriptorFront.isLocalTab) {
       this.descriptorFront.on(
         "remoteness-change",
         this.onLocalTabRemotenessChange
@@ -506,11 +506,7 @@ class TargetCommand extends EventEmitter {
   _computeTargetTypes() {
     let types = [];
 
-    // We also check for watcher support as some xpcshell tests uses legacy APIs and don't support frames.
-    if (
-      this.descriptorFront.isTabDescriptor &&
-      this.hasTargetWatcherSupport(TargetCommand.TYPES.FRAME)
-    ) {
+    if (this.descriptorFront.isLocalTab) {
       types = [TargetCommand.TYPES.FRAME];
     } else if (this.descriptorFront.isBrowserProcessDescriptor) {
       const fissionBrowserToolboxEnabled = Services.prefs.getBoolPref(
