@@ -39,7 +39,11 @@ add_task(async function test_contentscript_telemetry() {
     background,
   };
 
-  let win = window.open("http://example.com/");
+  let tab = await AppTestDelegate.openNewForegroundTab(
+    window,
+    "http://example.com",
+    true
+  );
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
 
@@ -59,7 +63,7 @@ add_task(async function test_contentscript_telemetry() {
   ok(histogramSum > 0,
      `Data recorded for first extension for histogram: ${HISTOGRAM}.`);
 
-  win.close();
+  await AppTestDelegate.removeTab(window, tab);
   await extension.unload();
 });
 </script>
