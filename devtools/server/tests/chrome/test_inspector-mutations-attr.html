@@ -55,12 +55,13 @@ function setupFrameAttrTest() {
   attrNode = frame.contentDocument.querySelector("#a");
 
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#childFrame").then(childFrame => {
-    return gWalker.children(childFrame);
+    return childFrame.walkerFront.children(childFrame);
   }).then(children => {
     const nodes = children.nodes;
     is(nodes.length, 1, "There should be only one child of the iframe");
-    is(nodes[0].nodeType, Node.DOCUMENT_NODE, "iframe child should be a document node");
-    return gWalker.querySelector(nodes[0], "#a");
+    const [iframeNode] = nodes;
+    is(iframeNode.nodeType, Node.DOCUMENT_NODE, "iframe child should be a document node");
+    return iframeNode.walkerFront.querySelector(iframeNode, "#a");
   }).then(node => {
     attrFront = node;
   }).then(runNextTest));
@@ -69,7 +70,7 @@ function setupFrameAttrTest() {
 function testAddAttribute() {
   attrNode.setAttribute("data-newattr", "newvalue");
   attrNode.setAttribute("data-newattr2", "newvalue");
-  gWalker.once("mutations", () => {
+  attrFront.walkerFront.once("mutations", () => {
     is(attrFront.attributes.length, 3, "Should have id and two new attributes.");
     is(attrFront.getAttribute("data-newattr"), "newvalue",
        "Node front should have the first new attribute");
@@ -83,7 +84,7 @@ function testChangeAttribute() {
   attrNode.setAttribute("data-newattr", "changedvalue1");
   attrNode.setAttribute("data-newattr", "changedvalue2");
   attrNode.setAttribute("data-newattr", "changedvalue3");
-  gWalker.once("mutations", mutations => {
+  attrFront.walkerFront.once("mutations", mutations => {
     is(mutations.length, 1,
        "Only one mutation is sent for multiple queued attribute changes");
     is(attrFront.attributes.length, 3, "Should have id and two new attributes.");
@@ -97,7 +98,7 @@ function testChangeAttribute() {
 
 function testRemoveAttribute() {
   attrNode.removeAttribute("data-newattr2");
-  gWalker.once("mutations", () => {
+  attrFront.walkerFront.once("mutations", () => {
     is(attrFront.attributes.length, 2, "Should have id and one remaining attribute.");
     is(attrFront.getAttribute("data-newattr"), "changedvalue3",
        "Node front should still have the first value");
@@ -131,7 +132,7 @@ function testQueuedMutations() {
   attrNode.setAttribute("data-newattr4", "4");
   attrNode.removeAttribute("data-newattr4");
 
-  gWalker.once("mutations", mutations => {
+  attrFront.walkerFront.once("mutations", mutations => {
     is(mutations.length, 4,
        "Only one mutation each is sent for multiple queued attribute changes");
     is(attrFront.attributes.length, 3,

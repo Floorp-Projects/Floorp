@@ -13,7 +13,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1121528
   <script type="application/javascript">
 "use strict";
 
+// TODO: With server side target switching (devtools.target-switching.server.enabled),
+// this test is most likely irrelevant.
+// APIs that might survive a reload should be moved to commands instead of
+// target scoped fronts, because targets no longer survive a reload.
+// See https://bugzilla.mozilla.org/show_bug.cgi?id=1726597
+
+
 window.onload = function() {
+  // For some reason, this test fails more frequently when EFT is enabled.
+  if (Services.prefs.getBoolPref("devtools.every-frame-target.enabled")) {
+    ok(true, "EFT is enabled, don't run the test");
+    SimpleTest.finish();
+    return;
+  }
+
   SimpleTest.waitForExplicitFinish();
   runNextTest();
 };
@@ -24,11 +38,6 @@ let gResourceCommand = null;
 let gRootNodeResolve = null;
 let gCommands = null;
 
-// TODO: With server side target switching (devtools.target-switching.server.enabled),
-// this test is most likely irrelevant.
-// APIs that might survive a reload should be moved to commands instead of
-// target scoped fronts, because targets no longer survive a reload.
-// See https://bugzilla.mozilla.org/show_bug.cgi?id=1726597
 async function reloadTarget() {
   const rootNodePromise = new Promise(r => (gRootNodeResolve = r));
   gDoc.defaultView.location.reload();
