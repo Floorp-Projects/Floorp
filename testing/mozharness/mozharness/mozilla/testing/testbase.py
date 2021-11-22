@@ -607,7 +607,7 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?"""
             )
 
     def install_app(self, app=None, target_dir=None, installer_path=None):
-        """ Dependent on mozinstall """
+        """Dependent on mozinstall"""
         # install the application
         cmd = [self.query_python_path("mozinstall")]
         if app:
@@ -636,7 +636,7 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?"""
         self.binary_path = self.install_app(app=self.config.get("application"))
 
     def uninstall_app(self, install_dir=None):
-        """ Dependent on mozinstall """
+        """Dependent on mozinstall"""
         # uninstall the application
         cmd = self.query_exe(
             "mozuninstall",

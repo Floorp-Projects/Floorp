@@ -54,25 +54,25 @@ class TestExpression(unittest.TestCase):
         self.assert_(not Expression("!1").evaluate(self.c))
 
     def test_equals(self):
-        """ Test for the == operator"""
+        """Test for the == operator"""
         self.assert_(Expression("FAIL == PASS").evaluate(self.c))
 
     def test_notequals(self):
-        """ Test for the != operator"""
+        """Test for the != operator"""
         self.assert_(Expression("FAIL != 1").evaluate(self.c))
 
     def test_logical_and(self):
-        """ Test for the && operator"""
+        """Test for the && operator"""
         self.assertTrue(Expression("PASS == PASS && PASS != NOTPASS").evaluate(self.c))
 
     def test_logical_or(self):
-        """ Test for the || operator"""
+        """Test for the || operator"""
         self.assertTrue(
             Expression("PASS == NOTPASS || PASS != NOTPASS").evaluate(self.c)
         )
 
     def test_logical_ops(self):
-        """ Test for the && and || operators precedence"""
+        """Test for the && and || operators precedence"""
         # Would evaluate to false if precedence was wrong
         self.assertTrue(
             Expression("PASS == PASS || PASS != NOTPASS && PASS == NOTPASS").evaluate(
@@ -81,7 +81,7 @@ class TestExpression(unittest.TestCase):
         )
 
     def test_defined(self):
-        """ Test for the defined() value"""
+        """Test for the defined() value"""
         self.assertTrue(Expression("defined(FAIL)").evaluate(self.c))
         self.assertTrue(Expression("!defined(PASS)").evaluate(self.c))
 

@@ -8,7 +8,7 @@ import json
 
 
 def json_response(func):
-    """ Translates results of 'func' into a JSON response. """
+    """Translates results of 'func' into a JSON response."""
 
     def wrap(*a, **kw):
         (code, data) = func(*a, **kw)
