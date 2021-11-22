@@ -26,13 +26,16 @@ const { SessionStore } = ChromeUtils.import(
   "resource:///modules/sessionstore/SessionStore.jsm"
 );
 
+// Glean's here on `window`, but eslint doesn't know that. bug 1715542.
+/* global Glean:false */
+
 // Reset internal URI counter in case URIs were opened by other tests.
 Services.obs.notifyObservers(null, TELEMETRY_SUBSESSION_TOPIC);
 
 /**
  * Get a snapshot of the scalars and check them against the provided values.
  */
-let checkScalars = countsObject => {
+let checkScalars = (countsObject, skipGleanCheck = false) => {
   const scalars = TelemetryTestUtils.getProcessScalars("parent");
 
   // Check the expected values. Scalars that are never set must not be reported.
@@ -90,6 +93,21 @@ let checkScalars = countsObject => {
     countsObject.totalURIsNormalAndPrivateMode,
     "The total URI count for both normal and private mode must match the expected value."
   );
+  if (!skipGleanCheck) {
+    if (countsObject.totalURIsNormalAndPrivateMode == 0) {
+      Assert.equal(
+        Glean.browserEngagement.uriCount.testGetValue(),
+        undefined,
+        "Total URI count reported in Glean must be unset."
+      );
+    } else {
+      Assert.equal(
+        countsObject.totalURIsNormalAndPrivateMode,
+        Glean.browserEngagement.uriCount.testGetValue(),
+        "The total URI count reported in Glean must be as expected."
+      );
+    }
+  }
 };
 
 add_task(async function test_tabsAndWindows() {
@@ -266,18 +284,21 @@ add_task(async function test_subsessionSplit() {
   // must not be reported.
   expectedTotalURIs = 0;
 
-  checkScalars({
-    maxTabs: 4,
-    tabOpenCount: 0,
-    maxWindows: 2,
-    windowsOpenCount: 0,
-    totalURIs: expectedTotalURIs,
-    domainCount: 0,
-    totalUnfilteredURIs: 0,
-    maxTabsPinned: 0,
-    tabPinnedCount: 0,
-    totalURIsNormalAndPrivateMode: expectedTotalURIs,
-  });
+  checkScalars(
+    {
+      maxTabs: 4,
+      tabOpenCount: 0,
+      maxWindows: 2,
+      windowsOpenCount: 0,
+      totalURIs: expectedTotalURIs,
+      domainCount: 0,
+      totalUnfilteredURIs: 0,
+      maxTabsPinned: 0,
+      tabPinnedCount: 0,
+      totalURIsNormalAndPrivateMode: expectedTotalURIs,
+    },
+    true
+  );
 
   // Remove all the extra windows and tabs.
   for (let tab of openedTabs) {

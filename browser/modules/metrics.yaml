@@ -1,0 +1,63 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+
+browser.engagement:
+  active_ticks:
+    type: counter
+    description: |
+      The number of five-second intervals ('ticks') the user was considered
+      'active'.
+
+      'active' means keyboard or mouse interaction with the application.
+      It doesn't take into account whether or not the window has focus or is in
+      the foreground, only if it is receiving these interaction events.
+
+      Migrated from Telemetry's `browser.engagement.active_ticks`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1376942  # Telemetry
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1545172  # Telemetry
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1741674
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1545172#c8
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - loines@mozilla.com
+    expires: "100"
+    send_in_pings:
+      - baseline
+      - metrics
+    no_lint:
+      - BASELINE_PING
+
+  uri_count:
+    type: counter
+    description: |
+      The number of total non-unique http(s) URIs visited, including page
+      reloads, after the session has been restored. URIs on minimized or
+      background tabs may also be counted. Private browsing uris are included.
+
+      Migrated from Telemetry's
+      `browser.engagement.total_uri_count_normal_and_private_mode`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1535169  # Telemetry
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1741674
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1535169#c14
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - loines@mozilla.com
+    expires: "100"
+    send_in_pings:
+      - baseline
+      - metrics
+    no_lint:
+      - BASELINE_PING
