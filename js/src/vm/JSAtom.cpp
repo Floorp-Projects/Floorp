@@ -207,11 +207,7 @@ bool JSRuntime::initializeAtoms(JSContext* cx) {
     wellKnownSymbols = parentRuntime->wellKnownSymbols;
 
     atoms_ = js_new<AtomsTable>();
-    if (!atoms_) {
-      return false;
-    }
-
-    return atoms_->init();
+    return bool(atoms_);
   }
 
   permanentAtomsDuringInit_ = js_new<AtomSet>(JS_PERMANENT_ATOM_SIZE);
@@ -313,33 +309,10 @@ void JSRuntime::finishAtoms() {
   emptyString = nullptr;
 }
 
-AtomsTable::Partition::Partition(uint32_t index)
+AtomsTable::AtomsTable()
     : atoms(InitialTableSize), atomsAddedWhileSweeping(nullptr) {}
 
-AtomsTable::Partition::~Partition() { MOZ_ASSERT(!atomsAddedWhileSweeping); }
-
-AtomsTable::~AtomsTable() {
-  for (size_t i = 0; i < PartitionCount; i++) {
-    js_delete(partitions[i]);
-  }
-}
-
-bool AtomsTable::init() {
-  for (size_t i = 0; i < PartitionCount; i++) {
-    partitions[i] = js_new<Partition>(i);
-    if (!partitions[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-MOZ_ALWAYS_INLINE size_t
-AtomsTable::getPartitionIndex(const AtomHasher::Lookup& lookup) {
-  size_t index = lookup.hash >> (32 - PartitionShift);
-  MOZ_ASSERT(index < PartitionCount);
-  return index;
-}
+AtomsTable::~AtomsTable() { MOZ_ASSERT(!atomsAddedWhileSweeping); }
 
 inline void AtomsTable::tracePinnedAtomsInSet(JSTracer* trc, AtomSet& atoms) {
   for (auto r = atoms.all(); !r.empty(); r.popFront()) {
@@ -354,12 +327,9 @@ inline void AtomsTable::tracePinnedAtomsInSet(JSTracer* trc, AtomSet& atoms) {
 }
 
 void AtomsTable::tracePinnedAtoms(JSTracer* trc) {
-  for (size_t i = 0; i < PartitionCount; i++) {
-    Partition& part = *partitions[i];
-    tracePinnedAtomsInSet(trc, part.atoms);
-    if (part.atomsAddedWhileSweeping) {
-      tracePinnedAtomsInSet(trc, *part.atomsAddedWhileSweeping);
-    }
+  tracePinnedAtomsInSet(trc, atoms);
+  if (atomsAddedWhileSweeping) {
+    tracePinnedAtomsInSet(trc, *atomsAddedWhileSweeping);
   }
 }
 
@@ -405,110 +375,44 @@ void js::TraceWellKnownSymbols(JSTracer* trc) {
 }
 
 void AtomsTable::traceWeak(JSTracer* trc) {
-  for (size_t i = 0; i < PartitionCount; i++) {
-    AtomSet& atoms = partitions[i]->atoms;
-    for (AtomSet::Enum e(atoms); !e.empty(); e.popFront()) {
-      JSAtom* atom = e.front().asPtrUnbarriered();
-      MOZ_DIAGNOSTIC_ASSERT(atom);
-      if (!TraceManuallyBarrieredWeakEdge(trc, &atom,
-                                          "AtomsTable::partitions::atoms")) {
-        e.removeFront();
-      } else {
-        MOZ_ASSERT(atom == e.front().asPtrUnbarriered());
-      }
+  for (AtomSet::Enum e(atoms); !e.empty(); e.popFront()) {
+    JSAtom* atom = e.front().asPtrUnbarriered();
+    MOZ_DIAGNOSTIC_ASSERT(atom);
+    if (!TraceManuallyBarrieredWeakEdge(trc, &atom, "AtomsTable::atoms")) {
+      e.removeFront();
+    } else {
+      MOZ_ASSERT(atom == e.front().asPtrUnbarriered());
     }
   }
 }
 
-AtomsTable::SweepIterator::SweepIterator(AtomsTable& atoms)
-    : atoms(atoms), partitionIndex(0) {
-  startSweepingPartition();
-  settle();
-}
-
-inline void AtomsTable::SweepIterator::startSweepingPartition() {
-  MOZ_ASSERT(atoms.partitions[partitionIndex]->atomsAddedWhileSweeping);
-  atomsIter.emplace(atoms.partitions[partitionIndex]->atoms);
-}
-
-inline void AtomsTable::SweepIterator::finishSweepingPartition() {
-  atomsIter.reset();
-  atoms.mergeAtomsAddedWhileSweeping(*atoms.partitions[partitionIndex]);
-}
-
-inline void AtomsTable::SweepIterator::settle() {
-  MOZ_ASSERT(!empty());
-
-  while (atomsIter->empty()) {
-    finishSweepingPartition();
-    partitionIndex++;
-    if (empty()) {
-      return;
-    }
-    startSweepingPartition();
-  }
-}
-
-inline bool AtomsTable::SweepIterator::empty() const {
-  return partitionIndex == PartitionCount;
-}
-
-inline AtomStateEntry AtomsTable::SweepIterator::front() const {
-  MOZ_ASSERT(!empty());
-  return atomsIter->front();
-}
-
-inline void AtomsTable::SweepIterator::removeFront() {
-  MOZ_ASSERT(!empty());
-  return atomsIter->removeFront();
-}
-
-inline void AtomsTable::SweepIterator::popFront() {
-  MOZ_ASSERT(!empty());
-  atomsIter->popFront();
-  settle();
-}
-
-bool AtomsTable::startIncrementalSweep() {
+bool AtomsTable::startIncrementalSweep(Maybe<SweepIterator>& atomsToSweepOut) {
   MOZ_ASSERT(JS::RuntimeHeapIsCollecting());
+  MOZ_ASSERT(atomsToSweepOut.isNothing());
+  MOZ_ASSERT(!atomsAddedWhileSweeping);
 
-  bool ok = true;
-  for (size_t i = 0; i < PartitionCount; i++) {
-    auto& part = *partitions[i];
-
-    auto newAtoms = js_new<AtomSet>();
-    if (!newAtoms) {
-      ok = false;
-      break;
-    }
-
-    MOZ_ASSERT(!part.atomsAddedWhileSweeping);
-    part.atomsAddedWhileSweeping = newAtoms;
+  atomsAddedWhileSweeping = js_new<AtomSet>();
+  if (!atomsAddedWhileSweeping) {
+    return false;
   }
 
-  if (!ok) {
-    for (size_t i = 0; i < PartitionCount; i++) {
-      auto& part = *partitions[i];
-      js_delete(part.atomsAddedWhileSweeping);
-      part.atomsAddedWhileSweeping = nullptr;
-    }
-  }
+  atomsToSweepOut.emplace(atoms);
 
-  return ok;
+  return true;
 }
 
-void AtomsTable::mergeAtomsAddedWhileSweeping(Partition& part) {
+void AtomsTable::mergeAtomsAddedWhileSweeping() {
   // Add atoms that were added to the secondary table while we were sweeping
   // the main table.
 
   AutoEnterOOMUnsafeRegion oomUnsafe;
 
-  auto newAtoms = part.atomsAddedWhileSweeping;
-  part.atomsAddedWhileSweeping = nullptr;
+  auto newAtoms = atomsAddedWhileSweeping;
+  atomsAddedWhileSweeping = nullptr;
 
   for (auto r = newAtoms->all(); !r.empty(); r.popFront()) {
-    if (!part.atoms.putNew(AtomHasher::Lookup(r.front().asPtrUnbarriered()),
-                           r.front())) {
+    if (!atoms.putNew(AtomHasher::Lookup(r.front().asPtrUnbarriered()),
+                      r.front())) {
       oomUnsafe.crash("Adding atom from secondary table after sweep");
     }
   }
@@ -537,19 +441,16 @@ bool AtomsTable::sweepIncrementally(SweepIterator& atomsToSweep,
     atomsToSweep.popFront();
   }
 
-  for (size_t i = 0; i < PartitionCount; i++) {
-    MOZ_ASSERT(!partitions[i]->atomsAddedWhileSweeping);
-  }
-
+  mergeAtomsAddedWhileSweeping();
   return true;
 }
 
 size_t AtomsTable::sizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
   size_t size = sizeof(AtomsTable);
-  for (size_t i = 0; i < PartitionCount; i++) {
-    size += sizeof(Partition);
-    size += partitions[i]->atoms.shallowSizeOfExcludingThis(mallocSizeOf);
+  size += atoms.shallowSizeOfExcludingThis(mallocSizeOf);
+  if (atomsAddedWhileSweeping) {
+    size += atomsAddedWhileSweeping->shallowSizeOfExcludingThis(mallocSizeOf);
   }
   return size;
 }
@@ -568,7 +469,7 @@ bool JSRuntime::initMainAtomsTables(JSContext* cx) {
   // Initialize the main atoms table.
   MOZ_ASSERT(!atoms_);
   atoms_ = js_new<AtomsTable>();
-  return atoms_ && atoms_->init();
+  return atoms_;
 }
 
 template <typename CharT>
@@ -659,10 +560,6 @@ template <typename CharT>
 MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
     JSContext* cx, const CharT* chars, size_t length, PinningBehavior pin,
     const Maybe<uint32_t>& indexValue, const AtomHasher::Lookup& lookup) {
-  Partition& part = *partitions[getPartitionIndex(lookup)];
-
-  AtomSet& atoms = part.atoms;
-  AtomSet* atomsAddedWhileSweeping = part.atomsAddedWhileSweeping;
   AtomSet::AddPtr p;
 
   if (!atomsAddedWhileSweeping) {
@@ -699,8 +596,7 @@ MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
 
   // The operations above can't GC; therefore the atoms table has not been
   // modified and p is still valid.
-  AtomSet* addSet =
-      part.atomsAddedWhileSweeping ? part.atomsAddedWhileSweeping : &atoms;
+  AtomSet* addSet = atomsAddedWhileSweeping ? atomsAddedWhileSweeping : &atoms;
   if (MOZ_UNLIKELY(!addSet->add(p, AtomStateEntry(atom, bool(pin))))) {
     ReportOutOfMemory(cx); /* SystemAllocPolicy does not report OOM. */
     return nullptr;
@@ -915,10 +811,9 @@ bool AtomsTable::atomIsPinned(JSRuntime* rt, JSAtom* atom) {
 
   AtomHasher::Lookup lookup(atom);
 
-  AtomsTable::Partition& part = *partitions[getPartitionIndex(lookup)];
-  AtomSet::Ptr p = part.atoms.lookup(lookup);
-  if (!p && part.atomsAddedWhileSweeping) {
-    p = part.atomsAddedWhileSweeping->lookup(lookup);
+  AtomSet::Ptr p = atoms.lookup(lookup);
+  if (!p && atomsAddedWhileSweeping) {
+    p = atomsAddedWhileSweeping->lookup(lookup);
   }
 
   MOZ_ASSERT(p);  // Non-permanent atoms must exist in atoms table.
@@ -933,10 +828,9 @@ void AtomsTable::maybePinExistingAtom(JSContext* cx, JSAtom* atom) {
 
   AtomHasher::Lookup lookup(atom);
 
-  AtomsTable::Partition& part = *partitions[getPartitionIndex(lookup)];
-  AtomSet::Ptr p = part.atoms.lookup(lookup);
-  if (!p && part.atomsAddedWhileSweeping) {
-    p = part.atomsAddedWhileSweeping->lookup(lookup);
+  AtomSet::Ptr p = atoms.lookup(lookup);
+  if (!p && atomsAddedWhileSweeping) {
+    p = atomsAddedWhileSweeping->lookup(lookup);
   }
 
   MOZ_ASSERT(p);  // Non-permanent atoms must exist in atoms table.
