@@ -11,6 +11,90 @@ job-defaults:
         max-run-time: 1800
     run:
         script: build-minidump-stackwalk.sh
+        toolchain-artifact: public/build/minidump_stackwalk.tar.zst
+    run-on-projects:
+        - trunk
+    fetches:
+        fetch:
+            - rust-minidump
+
+linux64-minidump-stackwalk:
+    treeherder:
+        symbol: TL(stackwalk)
+    run:
+        arguments: ['x86_64-unknown-linux-gnu']
+    fetches:
+        toolchain:
+            - linux64-binutils
+            - linux64-clang-13
+            - linux64-rust-1.56
+            - sysroot-x86_64-linux-gnu
+
+macosx64-minidump-stackwalk:
+    treeherder:
+        symbol: TM(stackwalk)
+    run:
+        arguments: ['x86_64-apple-darwin']
+    fetches:
+        toolchain:
+            - linux64-rust-macos-1.56
+            - linux64-clang-13
+            - linux64-cctools-port-clang-13
+            - macosx64-sdk-11.0
+
+macosx64-aarch64-minidump-stackwalk:
+    treeherder:
+        symbol: TM(stackwalk-arm64)
+    run:
+        arguments: ['aarch64-apple-darwin']
+    fetches:
+        toolchain:
+            - linux64-rust-macos-1.56
+            - linux64-clang-13
+            - linux64-cctools-port-clang-13
+            - macosx64-sdk-11.0
+
+win32-minidump-stackwalk:
+    treeherder:
+        symbol: TW32(stackwalk)
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+    run:
+        arguments: ['i686-pc-windows-msvc']
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        tooltool-downloads: internal
+    fetches:
+        toolchain:
+            - linux64-clang-13
+            - linux64-liblowercase
+            - linux64-rust-windows-1.56
+
+win64-minidump-stackwalk:
+    treeherder:
+        symbol: TW64(stackwalk)
+    worker:
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/vs2017-15.9.manifest"
+    run:
+        arguments: ['x86_64-pc-windows-msvc']
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        tooltool-downloads: internal
+    fetches:
+        toolchain:
+            - linux64-clang-13
+            - linux64-liblowercase
+            - linux64-rust-windows-1.56
+
+# This is a totally different thing but it used to share common code with
+# minidump-stackwalk, so it lives here for historical reasons.
+linux64-breakpad-injector:
+    description: "breakpad injector toolchain build"
+    run:
+        script: build-breakpad-injector.sh
+        toolchain-artifact: public/build/injector.tar.zst
         sparse-profile: null
         resources:
             - 'build/moz.configure'
@@ -19,59 +103,6 @@ job-defaults:
             - 'toolkit/crashreporter'
             - 'toolkit/crashreporter/google-breakpad/src/processor'
             - 'tools/crashreporter/'
-        toolchain-artifact: public/build/minidump_stackwalk.tar.zst
-    run-on-projects:
-        - trunk
-
-linux64-minidump-stackwalk:
-    treeherder:
-        symbol: TL(stackwalk)
-    fetches:
-        toolchain:
-            - linux64-clang-13
-            - linux64-binutils
-            - linux64-rust-1.53
-            - linux64-toolchain-sysroot
-
-macosx64-minidump-stackwalk:
-    treeherder:
-        symbol: TM(stackwalk)
-    run:
-        arguments: ['macosx64']
-    fetches:
-        toolchain:
-            - linux64-cctools-port-clang-13
-            - linux64-clang-13
-            - linux64-rust-macos-1.53
-            - macosx64-sdk-11.0
-
-macosx64-aarch64-minidump-stackwalk:
-    treeherder:
-        symbol: TM(stackwalk-arm64)
-    run:
-        arguments: ['macosx64-aarch64']
-    fetches:
-        toolchain:
-            - linux64-cctools-port-clang-13
-            - linux64-clang-13
-            - linux64-rust-macos-1.53
-            - macosx64-sdk-11.0
-
-win32-minidump-stackwalk:
-    treeherder:
-        symbol: TW32(stackwalk)
-    run:
-        arguments: ['mingw32']
-    fetches:
-        toolchain:
-            - linux64-clang-mingw-x86
-            - mingw32-rust-1.53
-
-linux64-breakpad-injector:
-    description: "breakpad injector toolchain build"
-    run:
-        script: build-breakpad-injector.sh
-        toolchain-artifact: public/build/injector.tar.zst
     treeherder:
         symbol: TL(injector)
     fetches:

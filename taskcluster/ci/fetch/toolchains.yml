@@ -441,6 +441,13 @@ dump-syms:
         repo: https://github.com/mozilla/dump_syms/
         revision: bf7f6bd855eb6ecb233b52bfa7b2c975b7026540
 
+rust-minidump:
+    description: rust-minidump source code (for minidump-stackwalk)
+    fetch:
+        type: git
+        repo: https://github.com/luser/rust-minidump/
+        revision: 0c90e02544797317503d1c4cff8daab0cabdea86
+
 fix-stacks:
     description: fix-stacks source code
     fetch:
