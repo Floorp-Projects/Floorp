@@ -392,12 +392,6 @@ class ResourceCommand {
    *        composed of a WindowGlobalTargetFront or ContentProcessTargetFront.
    */
   async _onTargetAvailable({ targetFront, isTargetSwitching }) {
-    // We put the resourceCommand on the targetFront so it can be retrieved in the
-    // inspector and style-rule fronts. This might be removed in the future if/when we
-    // turn the resourceCommand into a Command.
-    // ⚠️ This shouldn't be used anywhere else ⚠️
-    targetFront.resourceCommand = this;
-
     const resources = [];
     if (isTargetSwitching) {
       // WatcherActor currently only watches additional frame targets and
@@ -528,8 +522,6 @@ class ResourceCommand {
    * See _onTargetAvailable for arguments, they are the same.
    */
   _onTargetDestroyed({ targetFront }) {
-    delete targetFront.resourceCommand;
-
     // Clear the map of legacy listeners for this target.
     this._existingLegacyListeners.set(targetFront, []);
     this._offTargetFrontListeners.delete(targetFront);
