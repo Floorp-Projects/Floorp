@@ -30,21 +30,6 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
     SetScrollHandoff(layers[1], root);
     SetScrollHandoff(layers[2], root);
 
-    // Set up the event regions over a 200x200 area. The root layer has the
-    // whole 200x200 as the hit region; layers[1] has the left half and
-    // layers[2] has the bottom half. The bottom-left 100x100 area is also
-    // in the d-t-c region for both layers[1] and layers[2] (but layers[2] is
-    // on top so it gets the events by default if the main thread doesn't
-    // respond).
-    EventRegions regions(nsIntRegion(IntRect(0, 0, 200, 200)));
-    APZTestAccess::SetEventRegions(*root, regions);
-    regions.mDispatchToContentHitRegion =
-        nsIntRegion(IntRect(0, 100, 100, 100));
-    regions.mHitRegion = nsIntRegion(IntRect(0, 0, 100, 200));
-    APZTestAccess::SetEventRegions(*layers[1], regions);
-    regions.mHitRegion = nsIntRegion(IntRect(0, 100, 200, 100));
-    APZTestAccess::SetEventRegions(*layers[2], regions);
-
     registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
     UpdateHitTestingTree();
     rootApzc = ApzcOf(root);
@@ -58,13 +43,6 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
     };
     CreateScrollData(treeShape, layerVisibleRegions);
     SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID);
-
-    // Set up the event regions so that the child thebes layer is positioned far
-    // away from the scrolling container layer.
-    EventRegions regions(nsIntRegion(IntRect(0, 0, 100, 100)));
-    APZTestAccess::SetEventRegions(*root, regions);
-    regions.mHitRegion = nsIntRegion(IntRect(0, 150, 100, 100));
-    APZTestAccess::SetEventRegions(*layers[1], regions);
 
     registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
     UpdateHitTestingTree();
@@ -100,12 +78,6 @@ class APZEventRegionsTester : public APZCTreeManagerTester {
                               ScrollableLayerGuid::START_SCROLL_ID + 1,
                               CSSRect(0, 0, 100, 100));
     SetScrollHandoff(layers[3], layers[2]);
-
-    EventRegions regions(nsIntRegion(IntRect(0, 0, 10, 10)));
-    APZTestAccess::SetEventRegions(*layers[2], regions);
-    regions.mHitRegion = nsIntRegion(IntRect(0, 0, 100, 100));
-    regions.mDispatchToContentHitRegion = nsIntRegion(IntRect(0, 0, 100, 100));
-    APZTestAccess::SetEventRegions(*layers[3], regions);
 
     registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
     UpdateHitTestingTree();

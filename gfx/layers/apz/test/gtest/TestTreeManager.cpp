@@ -10,7 +10,7 @@
 
 class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
  protected:
-  void CreateSimpleDTCScrollingLayer() {
+  void CreateSimpleScrollingLayer() {
     const char* treeShape = "x";
     nsIntRegion layerVisibleRegion[] = {
         nsIntRegion(IntRect(0, 0, 200, 200)),
@@ -18,11 +18,6 @@ class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
     CreateScrollData(treeShape, layerVisibleRegion);
     SetScrollableFrameMetrics(layers[0], ScrollableLayerGuid::START_SCROLL_ID,
                               CSSRect(0, 0, 500, 500));
-
-    EventRegions regions;
-    regions.mHitRegion = nsIntRegion(IntRect(0, 0, 200, 200));
-    regions.mDispatchToContentHitRegion = regions.mHitRegion;
-    APZTestAccess::SetEventRegions(*layers[0], regions);
   }
 
   void CreateSimpleMultiLayerTree() {
@@ -51,7 +46,7 @@ class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
                               ScrollableLayerGuid::START_SCROLL_ID + 3);
   }
 
-  void CreateTwoLayerDTCTree(int32_t aRootContentLayerIndex) {
+  void CreateTwoLayerTree(int32_t aRootContentLayerIndex) {
     const char* treeShape = "x(x)";
     // LayerID               0 1
     nsIntRegion layerVisibleRegion[] = {
@@ -69,13 +64,6 @@ class APZCTreeManagerGenericTester : public APZCTreeManagerTester {
                        [](ScrollMetadata& sm, FrameMetrics& fm) {
                          fm.SetIsRootContent(true);
                        });
-
-    // Both layers are fully dispatch-to-content
-    EventRegions regions;
-    regions.mHitRegion = nsIntRegion(IntRect(0, 0, 100, 100));
-    regions.mDispatchToContentHitRegion = regions.mHitRegion;
-    APZTestAccess::SetEventRegions(*layers[0], regions);
-    APZTestAccess::SetEventRegions(*layers[1], regions);
   }
 };
 
@@ -126,7 +114,7 @@ class APZCTreeManagerGenericTesterMock : public APZCTreeManagerGenericTester {
 TEST_F(APZCTreeManagerGenericTesterMock, Bug1194876) {
   // Create a layer tree with parent and child scrollable layers, with the
   // child being the root content.
-  CreateTwoLayerDTCTree(1);
+  CreateTwoLayerTree(1);
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
   UpdateHitTestingTree();
 
@@ -176,7 +164,7 @@ TEST_F(APZCTreeManagerGenericTesterMock, Bug1194876) {
 TEST_F(APZCTreeManagerGenericTesterMock, TargetChangesMidGesture_Bug1570559) {
   // Create a layer tree with parent and child scrollable layers, with the
   // parent being the root content.
-  CreateTwoLayerDTCTree(0);
+  CreateTwoLayerTree(0);
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
   UpdateHitTestingTree();
 
@@ -225,7 +213,7 @@ TEST_F(APZCTreeManagerGenericTesterMock, TargetChangesMidGesture_Bug1570559) {
 TEST_F(APZCTreeManagerGenericTesterMock, Bug1198900) {
   // This is just a test that cancels a wheel event to make sure it doesn't
   // crash.
-  CreateSimpleDTCScrollingLayer();
+  CreateSimpleScrollingLayer();
   ScopedLayerTreeRegistration registration(LayersId{0}, mcc);
   UpdateHitTestingTree();
 

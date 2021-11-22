@@ -1783,10 +1783,6 @@ TEST_F(APZCOverscrollTesterMock, OverscrollIntoPreventDefault) {
   CreateScrollData(treeShape, layerVisibleRegions);
   SetScrollableFrameMetrics(root, ScrollableLayerGuid::START_SCROLL_ID,
                             CSSRect(0, 0, 100, 200));
-  EventRegions regions(nsIntRegion(IntRect(0, 0, 100, 100)));
-  // make top 20 pixels dispatch-to-content
-  regions.mDispatchToContentHitRegion = nsIntRegion(IntRect(0, 0, 100, 20));
-  APZTestAccess::SetEventRegions(*root, regions);
 
   registration = MakeUnique<ScopedLayerTreeRegistration>(LayersId{0}, mcc);
   UpdateHitTestingTree();
