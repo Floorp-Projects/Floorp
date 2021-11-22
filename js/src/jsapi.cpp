@@ -1763,14 +1763,9 @@ JS_PUBLIC_API void JS_GlobalObjectTraceHook(JSTracer* trc, JSObject* global) {
   GlobalObject* globalObj = &global->as<GlobalObject>();
   Realm* globalRealm = globalObj->realm();
 
-  // Off thread parsing and compilation tasks create a dummy global which is
-  // then merged back into the host realm. Since it used to be a global, it
-  // will still have this trace hook, but it does not have a meaning relative
-  // to its new realm. We can safely skip it.
-  //
-  // Similarly, if we GC when creating the global, we may not have set that
-  // global's realm's global pointer yet. In this case, the realm will not yet
-  // contain anything that needs to be traced.
+  // If we GC when creating the global, we may not have set that global's
+  // realm's global pointer yet. In this case, the realm will not yet contain
+  // anything that needs to be traced.
   if (globalRealm->unsafeUnbarrieredMaybeGlobal() != globalObj) {
     return;
   }
