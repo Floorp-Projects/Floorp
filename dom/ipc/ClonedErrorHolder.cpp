@@ -341,6 +341,9 @@ bool ClonedErrorHolder::Holder::ReadStructuredCloneInternal(
   if (!JS_ReadUint32Pair(aReader, &length, &version)) {
     return false;
   }
+  if (length % 8 != 0) {
+    return false;
+  }
 
   JSStructuredCloneData data(mStructuredCloneScope);
   while (length) {
