@@ -82,9 +82,6 @@ class WebRenderLayerScrollData final {
   void SetResolution(float aResolution) { mResolution = aResolution; }
   float GetResolution() const { return mResolution; }
 
-  EventRegions GetEventRegions() const {
-    return mEventRegions ? *mEventRegions : EventRegions();
-  }
   void SetEventRegionsOverride(const EventRegionsOverride& aOverride) {
     mEventRegionsOverride = aOverride;
   }
@@ -186,8 +183,6 @@ class WebRenderLayerScrollData final {
   ScrollMetadata& GetScrollMetadataMut(WebRenderScrollData& aOwner,
                                        size_t aIndex);
 
-  void SetEventRegions(const EventRegions& aRegions);
-
  private:
   // The number of descendants this layer has (not including the layer itself).
   // This is needed to reconstruct the depth-first layer tree traversal
@@ -226,9 +221,6 @@ class WebRenderLayerScrollData final {
   Maybe<uint64_t> mStickyPositionAnimationId;
   Maybe<uint64_t> mZoomAnimationId;
   Maybe<ViewID> mAsyncZoomContainerId;
-  // Test-only field; it's a UniquePtr so it doesn't increase the size
-  // of the structure very much in production.
-  UniquePtr<EventRegions> mEventRegions;
 };
 
 // Data needed by APZ, for the whole layer tree. One instance of this class
