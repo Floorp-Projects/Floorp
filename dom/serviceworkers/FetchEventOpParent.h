@@ -25,7 +25,7 @@ class FetchEventOpParent final : public PFetchEventOpParent {
 
   // Transition from the Pending state to the Started state. Returns the preload
   // response, if it has already arrived.
-  Maybe<ParentToChildInternalResponse> OnStart(
+  Maybe<ParentToParentInternalResponse> OnStart(
       MovingNotNull<RefPtr<FetchEventOpProxyParent>> aFetchEventOpProxyParent);
 
   // Transition from the Started state to the Finished state.
@@ -42,7 +42,7 @@ class FetchEventOpParent final : public PFetchEventOpParent {
   void ActorDestroy(ActorDestroyReason) override;
 
   struct Pending {
-    Maybe<ParentToChildInternalResponse> mPreloadResponse;
+    Maybe<ParentToParentInternalResponse> mPreloadResponse;
   };
 
   struct Started {

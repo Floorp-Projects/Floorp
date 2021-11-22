@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_InternalResponse_h
 #define mozilla_dom_InternalResponse_h
 
+#include "mozilla/dom/FetchTypes.h"
 #include "nsIInputStream.h"
 #include "nsICacheInfoChannel.h"
 #include "nsISupportsImpl.h"
@@ -17,12 +18,14 @@
 #include "mozilla/dom/ResponseBinding.h"
 #include "mozilla/dom/ChannelInfo.h"
 #include "mozilla/dom/SafeRefPtr.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace ipc {
 class AutoIPCStream;
 class PBackgroundChild;
+class PBackgroundParent;
 class PrincipalInfo;
 }  // namespace ipc
 
@@ -50,11 +53,13 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
       const ParentToParentInternalResponse& aIPCResponse);
 
   // Note: the AutoIPCStreams must outlive the ChildToParentInternalResponse.
-  void ToIPC(
+  void ToChildToParentInternalResponse(
       ChildToParentInternalResponse* aIPCResponse,
       mozilla::ipc::PBackgroundChild* aManager,
       UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoBodyStream,
       UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoAlternativeBodyStream);
+
+  ParentToParentInternalResponse ToParentToParentInternalResponse();
 
   enum CloneType {
     eCloneInputStream,
@@ -347,6 +352,11 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
   // are left uninitialized. Used for cloning and filtering.
   SafeRefPtr<InternalResponse> CreateIncompleteCopy();
 
+  template <typename T>
+  static SafeRefPtr<InternalResponse> FromIPCTemplate(const T& aIPCResponse);
+
+  InternalResponseMetadata GetMetadata();
+
   ResponseType mType;
   // A response has an associated url list (a list of zero or more fetch URLs).
   // Unless stated otherwise, it is the empty list. The current url is the last
@@ -386,6 +396,10 @@ class InternalResponse final : public AtomicSafeRefCounted<InternalResponse> {
   // with the unfiltered headers followed by wrapping it.
   SafeRefPtr<InternalResponse> mWrappedResponse;
 };
+
+ParentToChildInternalResponse ToParentToChild(
+    const ParentToParentInternalResponse& aResponse,
+    NotNull<mozilla::ipc::PBackgroundParent*> aBackgroundParent);
 
 }  // namespace dom
 }  // namespace mozilla
