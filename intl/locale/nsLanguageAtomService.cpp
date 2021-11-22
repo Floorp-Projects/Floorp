@@ -189,26 +189,26 @@ nsStaticAtom* nsLanguageAtomService::GetUncachedLanguageGroup(
     }
 
     Locale loc;
-    auto result = LocaleParser::tryParse(langStr, loc);
-    if (result.isOk() && loc.canonicalize().isOk()) {
+    auto result = LocaleParser::TryParse(langStr, loc);
+    if (result.isOk() && loc.Canonicalize().isOk()) {
       // Fill in script subtag if not present.
-      if (loc.script().missing()) {
-        if (loc.addLikelySubtags().isErr()) {
+      if (loc.Script().Missing()) {
+        if (loc.AddLikelySubtags().isErr()) {
           // Fall back to x-unicode if no match was found
           return nsGkAtoms::Unicode;
         }
       }
       // Traditional Chinese has separate prefs for Hong Kong / Taiwan;
       // check the region subtag.
-      if (loc.script().equalTo("Hant")) {
-        if (loc.region().equalTo("HK")) {
+      if (loc.Script().EqualTo("Hant")) {
+        if (loc.Region().EqualTo("HK")) {
           return nsGkAtoms::HongKongChinese;
         }
         return nsGkAtoms::Taiwanese;
       }
       // Search list of known script subtags that map to langGroup codes.
       size_t foundIndex;
-      Span<const char> scriptAsSpan = loc.script().span();
+      Span<const char> scriptAsSpan = loc.Script().Span();
       nsDependentCSubstring script(scriptAsSpan.data(), scriptAsSpan.size());
       if (BinarySearchIf(
               kScriptLangGroup, 0, ArrayLength(kScriptLangGroup),
@@ -221,19 +221,19 @@ nsStaticAtom* nsLanguageAtomService::GetUncachedLanguageGroup(
       // Script subtag was not recognized (includes "Hani"); check the language
       // subtag for CJK possibilities so that we'll prefer the appropriate font
       // rather than falling back to the browser's hardcoded preference.
-      if (loc.language().equalTo("zh")) {
-        if (loc.region().equalTo("HK")) {
+      if (loc.Language().EqualTo("zh")) {
+        if (loc.Region().EqualTo("HK")) {
           return nsGkAtoms::HongKongChinese;
         }
-        if (loc.region().equalTo("TW")) {
+        if (loc.Region().EqualTo("TW")) {
           return nsGkAtoms::Taiwanese;
         }
         return nsGkAtoms::Chinese;
       }
-      if (loc.language().equalTo("ja")) {
+      if (loc.Language().EqualTo("ja")) {
         return nsGkAtoms::Japanese;
       }
-      if (loc.language().equalTo("ko")) {
+      if (loc.Language().EqualTo("ko")) {
         return nsGkAtoms::ko;
       }
     }

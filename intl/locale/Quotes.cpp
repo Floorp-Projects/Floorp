@@ -55,32 +55,32 @@ const Quotes* QuotesForLang(const nsAtom* aLang) {
   // we can match it with region or script subtags, if present, or just the
   // primary language tag.
   Locale loc;
-  auto result = LocaleParser::tryParse(langStr, loc);
+  auto result = LocaleParser::TryParse(langStr, loc);
   if (result.isErr()) {
     return nullptr;
   }
-  if (loc.canonicalize().isErr()) {
+  if (loc.Canonicalize().isErr()) {
     return nullptr;
   }
-  if (loc.region().present()) {
+  if (loc.Region().Present()) {
     nsAutoCString langAndRegion;
-    langAndRegion.Append(loc.language().span());
+    langAndRegion.Append(loc.Language().Span());
     langAndRegion.Append('-');
-    langAndRegion.Append(loc.region().span());
+    langAndRegion.Append(loc.Region().Span());
     if ((entry = sQuotesForLang->Lookup(langAndRegion).DataPtrOrNull())) {
       return entry;
     }
   }
-  if (loc.script().present()) {
+  if (loc.Script().Present()) {
     nsAutoCString langAndScript;
-    langAndScript.Append(loc.language().span());
+    langAndScript.Append(loc.Language().Span());
     langAndScript.Append('-');
-    langAndScript.Append(loc.script().span());
+    langAndScript.Append(loc.Script().Span());
     if ((entry = sQuotesForLang->Lookup(langAndScript).DataPtrOrNull())) {
       return entry;
     }
   }
-  Span<const char> langAsSpan = loc.language().span();
+  Span<const char> langAsSpan = loc.Language().Span();
   nsAutoCString lang(langAsSpan.data(), langAsSpan.size());
   if ((entry = sQuotesForLang->Lookup(lang).DataPtrOrNull())) {
     return entry;

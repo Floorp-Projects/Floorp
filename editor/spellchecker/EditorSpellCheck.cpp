@@ -894,9 +894,9 @@ void EditorSpellCheck::SetFallbackDictionary(DictionaryFetcher* aFetcher) {
     // Required dictionary was not available. Try to get a dictionary
     // matching at least language part of dictName.
     mozilla::intl::Locale loc;
-    if (mozilla::intl::LocaleParser::tryParse(dictName, loc).isOk() &&
-        loc.canonicalize().isOk()) {
-      Span<const char> language = loc.language().span();
+    if (mozilla::intl::LocaleParser::TryParse(dictName, loc).isOk() &&
+        loc.Canonicalize().isOk()) {
+      Span<const char> language = loc.Language().Span();
       nsAutoCString langCode(language.data(), language.size());
 
       // Try dictionary.spellchecker preference, if it starts with langCode,
@@ -922,9 +922,9 @@ void EditorSpellCheck::SetFallbackDictionary(DictionaryFetcher* aFetcher) {
         if (!appLocaleStr.IsEmpty()) {
           mozilla::intl::Locale appLoc;
           auto result =
-              mozilla::intl::LocaleParser::tryParse(appLocaleStr, appLoc);
-          if (result.isOk() && loc.canonicalize().isOk() &&
-              loc.language().span() == appLoc.language().span()) {
+              mozilla::intl::LocaleParser::TryParse(appLocaleStr, appLoc);
+          if (result.isOk() && loc.Canonicalize().isOk() &&
+              loc.Language().Span() == appLoc.Language().Span()) {
             BuildDictionaryList(appLocaleStr, dictList,
                                 DICT_COMPARE_CASE_INSENSITIVE, tryDictList);
           }
@@ -937,9 +937,9 @@ void EditorSpellCheck::SetFallbackDictionary(DictionaryFetcher* aFetcher) {
         if (!sysLocaleStr.IsEmpty()) {
           mozilla::intl::Locale sysLoc;
           auto result =
-              mozilla::intl::LocaleParser::tryParse(sysLocaleStr, sysLoc);
-          if (result.isOk() && loc.canonicalize().isOk() &&
-              loc.language().span() == sysLoc.language().span()) {
+              mozilla::intl::LocaleParser::TryParse(sysLocaleStr, sysLoc);
+          if (result.isOk() && loc.Canonicalize().isOk() &&
+              loc.Language().Span() == sysLoc.Language().Span()) {
             BuildDictionaryList(sysLocaleStr, dictList,
                                 DICT_COMPARE_CASE_INSENSITIVE, tryDictList);
           }

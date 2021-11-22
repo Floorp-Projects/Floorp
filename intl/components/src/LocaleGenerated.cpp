@@ -21,10 +21,10 @@ template <size_t Length, size_t TagLength, size_t SubtagLength>
 static inline bool HasReplacement(
     const char (&subtags)[Length][TagLength],
     const mozilla::intl::LanguageTagSubtag<SubtagLength>& subtag) {
-  MOZ_ASSERT(subtag.length() == TagLength - 1,
+  MOZ_ASSERT(subtag.Length() == TagLength - 1,
              "subtag must have the same length as the list of subtags");
 
-  const char* ptr = subtag.span().data();
+  const char* ptr = subtag.Span().data();
   return std::binary_search(std::begin(subtags), std::end(subtags), ptr,
                             [](const char* a, const char* b) {
                               return memcmp(a, b, TagLength - 1) < 0;
@@ -35,10 +35,10 @@ template <size_t Length, size_t TagLength, size_t SubtagLength>
 static inline const char* SearchReplacement(
     const char (&subtags)[Length][TagLength], const char* (&aliases)[Length],
     const mozilla::intl::LanguageTagSubtag<SubtagLength>& subtag) {
-  MOZ_ASSERT(subtag.length() == TagLength - 1,
+  MOZ_ASSERT(subtag.Length() == TagLength - 1,
              "subtag must have the same length as the list of subtags");
 
-  const char* ptr = subtag.span().data();
+  const char* ptr = subtag.Span().data();
   auto p = std::lower_bound(std::begin(subtags), std::end(subtags), ptr,
                             [](const char* a, const char* b) {
                               return memcmp(a, b, TagLength - 1) < 0;
@@ -101,11 +101,11 @@ static bool IsCanonicallyCasedTransformType(mozilla::Span<const char> type) {
 // Mappings from language subtags to preferred values.
 // Derived from CLDR Supplemental Data, version 40.
 // https://unicode.org/Public/cldr/40/core.zip
-bool mozilla::intl::Locale::languageMapping(LanguageSubtag& language) {
-  MOZ_ASSERT(IsStructurallyValidLanguageTag(language.span()));
-  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language.span()));
+bool mozilla::intl::Locale::LanguageMapping(LanguageSubtag& language) {
+  MOZ_ASSERT(IsStructurallyValidLanguageTag(language.Span()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language.Span()));
 
-  if (language.length() == 2) {
+  if (language.Length() == 2) {
     static const char languages[8][3] = {
       "bh", "in", "iw", "ji", "jw", "mo", "tl", "tw",
     };
@@ -114,13 +114,13 @@ bool mozilla::intl::Locale::languageMapping(LanguageSubtag& language) {
     };
 
     if (const char* replacement = SearchReplacement(languages, aliases, language)) {
-      language.set(mozilla::MakeStringSpan(replacement));
+      language.Set(mozilla::MakeStringSpan(replacement));
       return true;
     }
     return false;
   }
 
-  if (language.length() == 3) {
+  if (language.Length() == 3) {
     static const char languages[404][4] = {
       "aam", "aar", "abk", "adp", "afr", "agp", "ais", "aju", "aka", "alb",
       "als", "amh", "ara", "arb", "arg", "arm", "asd", "asm", "aue", "ava",
@@ -209,7 +209,7 @@ bool mozilla::intl::Locale::languageMapping(LanguageSubtag& language) {
     };
 
     if (const char* replacement = SearchReplacement(languages, aliases, language)) {
-      language.set(mozilla::MakeStringSpan(replacement));
+      language.Set(mozilla::MakeStringSpan(replacement));
       return true;
     }
     return false;
@@ -221,15 +221,15 @@ bool mozilla::intl::Locale::languageMapping(LanguageSubtag& language) {
 // Language subtags with complex mappings.
 // Derived from CLDR Supplemental Data, version 40.
 // https://unicode.org/Public/cldr/40/core.zip
-bool mozilla::intl::Locale::complexLanguageMapping(const LanguageSubtag& language) {
-  MOZ_ASSERT(IsStructurallyValidLanguageTag(language.span()));
-  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language.span()));
+bool mozilla::intl::Locale::ComplexLanguageMapping(const LanguageSubtag& language) {
+  MOZ_ASSERT(IsStructurallyValidLanguageTag(language.Span()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language.Span()));
 
-  if (language.length() == 2) {
-    return language.equalTo("sh");
+  if (language.Length() == 2) {
+    return language.EqualTo("sh");
   }
 
-  if (language.length() == 3) {
+  if (language.Length() == 3) {
     static const char languages[6][4] = {
       "cnr", "drw", "hbs", "prs", "swc", "tnf",
     };
@@ -243,13 +243,13 @@ bool mozilla::intl::Locale::complexLanguageMapping(const LanguageSubtag& languag
 // Mappings from script subtags to preferred values.
 // Derived from CLDR Supplemental Data, version 40.
 // https://unicode.org/Public/cldr/40/core.zip
-bool mozilla::intl::Locale::scriptMapping(ScriptSubtag& script) {
-  MOZ_ASSERT(IsStructurallyValidScriptTag(script.span()));
-  MOZ_ASSERT(IsCanonicallyCasedScriptTag(script.span()));
+bool mozilla::intl::Locale::ScriptMapping(ScriptSubtag& script) {
+  MOZ_ASSERT(IsStructurallyValidScriptTag(script.Span()));
+  MOZ_ASSERT(IsCanonicallyCasedScriptTag(script.Span()));
 
   {
-    if (script.equalTo("Qaai")) {
-      script.set(mozilla::MakeStringSpan("Zinh"));
+    if (script.EqualTo("Qaai")) {
+      script.Set(mozilla::MakeStringSpan("Zinh"));
       return true;
     }
     return false;
@@ -259,11 +259,11 @@ bool mozilla::intl::Locale::scriptMapping(ScriptSubtag& script) {
 // Mappings from region subtags to preferred values.
 // Derived from CLDR Supplemental Data, version 40.
 // https://unicode.org/Public/cldr/40/core.zip
-bool mozilla::intl::Locale::regionMapping(RegionSubtag& region) {
-  MOZ_ASSERT(IsStructurallyValidRegionTag(region.span()));
-  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region.span()));
+bool mozilla::intl::Locale::RegionMapping(RegionSubtag& region) {
+  MOZ_ASSERT(IsStructurallyValidRegionTag(region.Span()));
+  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region.Span()));
 
-  if (region.length() == 2) {
+  if (region.Length() == 2) {
     static const char regions[23][3] = {
       "BU", "CS", "CT", "DD", "DY", "FQ", "FX", "HV", "JT", "MI",
       "NH", "NQ", "PU", "PZ", "QU", "RH", "TP", "UK", "VD", "WK",
@@ -276,7 +276,7 @@ bool mozilla::intl::Locale::regionMapping(RegionSubtag& region) {
     };
 
     if (const char* replacement = SearchReplacement(regions, aliases, region)) {
-      region.set(mozilla::MakeStringSpan(replacement));
+      region.Set(mozilla::MakeStringSpan(replacement));
       return true;
     }
     return false;
@@ -349,7 +349,7 @@ bool mozilla::intl::Locale::regionMapping(RegionSubtag& region) {
     };
 
     if (const char* replacement = SearchReplacement(regions, aliases, region)) {
-      region.set(mozilla::MakeStringSpan(replacement));
+      region.Set(mozilla::MakeStringSpan(replacement));
       return true;
     }
     return false;
@@ -359,15 +359,15 @@ bool mozilla::intl::Locale::regionMapping(RegionSubtag& region) {
 // Region subtags with complex mappings.
 // Derived from CLDR Supplemental Data, version 40.
 // https://unicode.org/Public/cldr/40/core.zip
-bool mozilla::intl::Locale::complexRegionMapping(const RegionSubtag& region) {
-  MOZ_ASSERT(IsStructurallyValidRegionTag(region.span()));
-  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region.span()));
+bool mozilla::intl::Locale::ComplexRegionMapping(const RegionSubtag& region) {
+  MOZ_ASSERT(IsStructurallyValidRegionTag(region.Span()));
+  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region.Span()));
 
-  if (region.length() == 2) {
-    return region.equalTo("AN") ||
-           region.equalTo("NT") ||
-           region.equalTo("PC") ||
-           region.equalTo("SU");
+  if (region.Length() == 2) {
+    return region.EqualTo("AN") ||
+           region.EqualTo("NT") ||
+           region.EqualTo("PC") ||
+           region.EqualTo("SU");
   }
 
   {
@@ -382,35 +382,35 @@ bool mozilla::intl::Locale::complexRegionMapping(const RegionSubtag& region) {
 // Language subtags with complex mappings.
 // Derived from CLDR Supplemental Data, version 40.
 // https://unicode.org/Public/cldr/40/core.zip
-void mozilla::intl::Locale::performComplexLanguageMappings() {
-  MOZ_ASSERT(IsStructurallyValidLanguageTag(language().span()));
-  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
+void mozilla::intl::Locale::PerformComplexLanguageMappings() {
+  MOZ_ASSERT(IsStructurallyValidLanguageTag(Language().Span()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(Language().Span()));
 
-  if (language().equalTo("cnr")) {
-    setLanguage("sr");
-    if (region().missing()) {
-      setRegion("ME");
+  if (Language().EqualTo("cnr")) {
+    SetLanguage("sr");
+    if (Region().Missing()) {
+      SetRegion("ME");
     }
   }
-  else if (language().equalTo("drw") ||
-           language().equalTo("prs") ||
-           language().equalTo("tnf")) {
-    setLanguage("fa");
-    if (region().missing()) {
-      setRegion("AF");
+  else if (Language().EqualTo("drw") ||
+           Language().EqualTo("prs") ||
+           Language().EqualTo("tnf")) {
+    SetLanguage("fa");
+    if (Region().Missing()) {
+      SetRegion("AF");
     }
   }
-  else if (language().equalTo("hbs") ||
-           language().equalTo("sh")) {
-    setLanguage("sr");
-    if (script().missing()) {
-      setScript("Latn");
+  else if (Language().EqualTo("hbs") ||
+           Language().EqualTo("sh")) {
+    SetLanguage("sr");
+    if (Script().Missing()) {
+      SetScript("Latn");
     }
   }
-  else if (language().equalTo("swc")) {
-    setLanguage("sw");
-    if (region().missing()) {
-      setRegion("CD");
+  else if (Language().EqualTo("swc")) {
+    SetLanguage("sw");
+    if (Region().Missing()) {
+      SetRegion("CD");
     }
   }
 }
@@ -418,213 +418,213 @@ void mozilla::intl::Locale::performComplexLanguageMappings() {
 // Region subtags with complex mappings.
 // Derived from CLDR Supplemental Data, version 40.
 // https://unicode.org/Public/cldr/40/core.zip
-void mozilla::intl::Locale::performComplexRegionMappings() {
-  MOZ_ASSERT(IsStructurallyValidLanguageTag(language().span()));
-  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
-  MOZ_ASSERT(IsStructurallyValidRegionTag(region().span()));
-  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region().span()));
+void mozilla::intl::Locale::PerformComplexRegionMappings() {
+  MOZ_ASSERT(IsStructurallyValidLanguageTag(Language().Span()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(Language().Span()));
+  MOZ_ASSERT(IsStructurallyValidRegionTag(Region().Span()));
+  MOZ_ASSERT(IsCanonicallyCasedRegionTag(Region().Span()));
 
-  if (region().equalTo("062")) {
-    if (language().equalTo("oui") ||
-        (language().equalTo("und") && script().equalTo("Ougr"))) {
-      setRegion("143");
+  if (Region().EqualTo("062")) {
+    if (Language().EqualTo("oui") ||
+        (Language().EqualTo("und") && Script().EqualTo("Ougr"))) {
+      SetRegion("143");
     }
     else {
-      setRegion("034");
+      SetRegion("034");
     }
   }
-  else if (region().equalTo("172")) {
-    if (language().equalTo("hy") ||
-        (language().equalTo("und") && script().equalTo("Armn"))) {
-      setRegion("AM");
+  else if (Region().EqualTo("172")) {
+    if (Language().EqualTo("hy") ||
+        (Language().EqualTo("und") && Script().EqualTo("Armn"))) {
+      SetRegion("AM");
     }
-    else if (language().equalTo("az") ||
-             language().equalTo("tkr") ||
-             language().equalTo("tly") ||
-             language().equalTo("ttt")) {
-      setRegion("AZ");
+    else if (Language().EqualTo("az") ||
+             Language().EqualTo("tkr") ||
+             Language().EqualTo("tly") ||
+             Language().EqualTo("ttt")) {
+      SetRegion("AZ");
     }
-    else if (language().equalTo("be")) {
-      setRegion("BY");
+    else if (Language().EqualTo("be")) {
+      SetRegion("BY");
     }
-    else if (language().equalTo("ab") ||
-             language().equalTo("ka") ||
-             (language().equalTo("ku") && script().equalTo("Yezi")) ||
-             language().equalTo("os") ||
-             (language().equalTo("und") && script().equalTo("Geor")) ||
-             (language().equalTo("und") && script().equalTo("Yezi")) ||
-             language().equalTo("xmf")) {
-      setRegion("GE");
+    else if (Language().EqualTo("ab") ||
+             Language().EqualTo("ka") ||
+             (Language().EqualTo("ku") && Script().EqualTo("Yezi")) ||
+             Language().EqualTo("os") ||
+             (Language().EqualTo("und") && Script().EqualTo("Geor")) ||
+             (Language().EqualTo("und") && Script().EqualTo("Yezi")) ||
+             Language().EqualTo("xmf")) {
+      SetRegion("GE");
     }
-    else if (language().equalTo("ky")) {
-      setRegion("KG");
+    else if (Language().EqualTo("ky")) {
+      SetRegion("KG");
     }
-    else if (language().equalTo("kk") ||
-             (language().equalTo("ug") && script().equalTo("Cyrl"))) {
-      setRegion("KZ");
+    else if (Language().EqualTo("kk") ||
+             (Language().EqualTo("ug") && Script().EqualTo("Cyrl"))) {
+      SetRegion("KZ");
     }
-    else if (language().equalTo("gag")) {
-      setRegion("MD");
+    else if (Language().EqualTo("gag")) {
+      SetRegion("MD");
     }
-    else if (language().equalTo("tg")) {
-      setRegion("TJ");
+    else if (Language().EqualTo("tg")) {
+      SetRegion("TJ");
     }
-    else if (language().equalTo("tk")) {
-      setRegion("TM");
+    else if (Language().EqualTo("tk")) {
+      SetRegion("TM");
     }
-    else if (language().equalTo("crh") ||
-             language().equalTo("got") ||
-             language().equalTo("ji") ||
-             language().equalTo("rue") ||
-             language().equalTo("uk") ||
-             (language().equalTo("und") && script().equalTo("Goth"))) {
-      setRegion("UA");
+    else if (Language().EqualTo("crh") ||
+             Language().EqualTo("got") ||
+             Language().EqualTo("ji") ||
+             Language().EqualTo("rue") ||
+             Language().EqualTo("uk") ||
+             (Language().EqualTo("und") && Script().EqualTo("Goth"))) {
+      SetRegion("UA");
     }
-    else if (language().equalTo("kaa") ||
-             language().equalTo("sog") ||
-             (language().equalTo("und") && script().equalTo("Chrs")) ||
-             (language().equalTo("und") && script().equalTo("Sogd")) ||
-             (language().equalTo("und") && script().equalTo("Sogo")) ||
-             language().equalTo("uz") ||
-             language().equalTo("xco")) {
-      setRegion("UZ");
+    else if (Language().EqualTo("kaa") ||
+             Language().EqualTo("sog") ||
+             (Language().EqualTo("und") && Script().EqualTo("Chrs")) ||
+             (Language().EqualTo("und") && Script().EqualTo("Sogd")) ||
+             (Language().EqualTo("und") && Script().EqualTo("Sogo")) ||
+             Language().EqualTo("uz") ||
+             Language().EqualTo("xco")) {
+      SetRegion("UZ");
     }
     else {
-      setRegion("RU");
+      SetRegion("RU");
     }
   }
-  else if (region().equalTo("200")) {
-    if (language().equalTo("sk")) {
-      setRegion("SK");
+  else if (Region().EqualTo("200")) {
+    if (Language().EqualTo("sk")) {
+      SetRegion("SK");
     }
     else {
-      setRegion("CZ");
+      SetRegion("CZ");
     }
   }
-  else if (region().equalTo("530") ||
-           region().equalTo("532") ||
-           region().equalTo("AN")) {
-    if (language().equalTo("vic")) {
-      setRegion("SX");
+  else if (Region().EqualTo("530") ||
+           Region().EqualTo("532") ||
+           Region().EqualTo("AN")) {
+    if (Language().EqualTo("vic")) {
+      SetRegion("SX");
     }
     else {
-      setRegion("CW");
+      SetRegion("CW");
     }
   }
-  else if (region().equalTo("536") ||
-           region().equalTo("NT")) {
-    if (language().equalTo("akk") ||
-        language().equalTo("ckb") ||
-        (language().equalTo("ku") && script().equalTo("Arab")) ||
-        language().equalTo("syr") ||
-        (language().equalTo("und") && script().equalTo("Syrc")) ||
-        (language().equalTo("und") && script().equalTo("Xsux"))) {
-      setRegion("IQ");
+  else if (Region().EqualTo("536") ||
+           Region().EqualTo("NT")) {
+    if (Language().EqualTo("akk") ||
+        Language().EqualTo("ckb") ||
+        (Language().EqualTo("ku") && Script().EqualTo("Arab")) ||
+        Language().EqualTo("syr") ||
+        (Language().EqualTo("und") && Script().EqualTo("Syrc")) ||
+        (Language().EqualTo("und") && Script().EqualTo("Xsux"))) {
+      SetRegion("IQ");
     }
     else {
-      setRegion("SA");
+      SetRegion("SA");
     }
   }
-  else if (region().equalTo("582") ||
-           region().equalTo("PC")) {
-    if (language().equalTo("mh")) {
-      setRegion("MH");
+  else if (Region().EqualTo("582") ||
+           Region().EqualTo("PC")) {
+    if (Language().EqualTo("mh")) {
+      SetRegion("MH");
     }
-    else if (language().equalTo("pau")) {
-      setRegion("PW");
+    else if (Language().EqualTo("pau")) {
+      SetRegion("PW");
     }
     else {
-      setRegion("FM");
+      SetRegion("FM");
     }
   }
-  else if (region().equalTo("810") ||
-           region().equalTo("SU")) {
-    if (language().equalTo("hy") ||
-        (language().equalTo("und") && script().equalTo("Armn"))) {
-      setRegion("AM");
+  else if (Region().EqualTo("810") ||
+           Region().EqualTo("SU")) {
+    if (Language().EqualTo("hy") ||
+        (Language().EqualTo("und") && Script().EqualTo("Armn"))) {
+      SetRegion("AM");
     }
-    else if (language().equalTo("az") ||
-             language().equalTo("tkr") ||
-             language().equalTo("tly") ||
-             language().equalTo("ttt")) {
-      setRegion("AZ");
+    else if (Language().EqualTo("az") ||
+             Language().EqualTo("tkr") ||
+             Language().EqualTo("tly") ||
+             Language().EqualTo("ttt")) {
+      SetRegion("AZ");
     }
-    else if (language().equalTo("be")) {
-      setRegion("BY");
+    else if (Language().EqualTo("be")) {
+      SetRegion("BY");
     }
-    else if (language().equalTo("et") ||
-             language().equalTo("vro")) {
-      setRegion("EE");
+    else if (Language().EqualTo("et") ||
+             Language().EqualTo("vro")) {
+      SetRegion("EE");
     }
-    else if (language().equalTo("ab") ||
-             language().equalTo("ka") ||
-             (language().equalTo("ku") && script().equalTo("Yezi")) ||
-             language().equalTo("os") ||
-             (language().equalTo("und") && script().equalTo("Geor")) ||
-             (language().equalTo("und") && script().equalTo("Yezi")) ||
-             language().equalTo("xmf")) {
-      setRegion("GE");
+    else if (Language().EqualTo("ab") ||
+             Language().EqualTo("ka") ||
+             (Language().EqualTo("ku") && Script().EqualTo("Yezi")) ||
+             Language().EqualTo("os") ||
+             (Language().EqualTo("und") && Script().EqualTo("Geor")) ||
+             (Language().EqualTo("und") && Script().EqualTo("Yezi")) ||
+             Language().EqualTo("xmf")) {
+      SetRegion("GE");
     }
-    else if (language().equalTo("ky")) {
-      setRegion("KG");
+    else if (Language().EqualTo("ky")) {
+      SetRegion("KG");
     }
-    else if (language().equalTo("kk") ||
-             (language().equalTo("ug") && script().equalTo("Cyrl"))) {
-      setRegion("KZ");
+    else if (Language().EqualTo("kk") ||
+             (Language().EqualTo("ug") && Script().EqualTo("Cyrl"))) {
+      SetRegion("KZ");
     }
-    else if (language().equalTo("lt") ||
-             language().equalTo("sgs")) {
-      setRegion("LT");
+    else if (Language().EqualTo("lt") ||
+             Language().EqualTo("sgs")) {
+      SetRegion("LT");
     }
-    else if (language().equalTo("ltg") ||
-             language().equalTo("lv")) {
-      setRegion("LV");
+    else if (Language().EqualTo("ltg") ||
+             Language().EqualTo("lv")) {
+      SetRegion("LV");
     }
-    else if (language().equalTo("gag")) {
-      setRegion("MD");
+    else if (Language().EqualTo("gag")) {
+      SetRegion("MD");
     }
-    else if (language().equalTo("tg")) {
-      setRegion("TJ");
+    else if (Language().EqualTo("tg")) {
+      SetRegion("TJ");
     }
-    else if (language().equalTo("tk")) {
-      setRegion("TM");
+    else if (Language().EqualTo("tk")) {
+      SetRegion("TM");
     }
-    else if (language().equalTo("crh") ||
-             language().equalTo("got") ||
-             language().equalTo("ji") ||
-             language().equalTo("rue") ||
-             language().equalTo("uk") ||
-             (language().equalTo("und") && script().equalTo("Goth"))) {
-      setRegion("UA");
+    else if (Language().EqualTo("crh") ||
+             Language().EqualTo("got") ||
+             Language().EqualTo("ji") ||
+             Language().EqualTo("rue") ||
+             Language().EqualTo("uk") ||
+             (Language().EqualTo("und") && Script().EqualTo("Goth"))) {
+      SetRegion("UA");
     }
-    else if (language().equalTo("kaa") ||
-             language().equalTo("sog") ||
-             (language().equalTo("und") && script().equalTo("Chrs")) ||
-             (language().equalTo("und") && script().equalTo("Sogd")) ||
-             (language().equalTo("und") && script().equalTo("Sogo")) ||
-             language().equalTo("uz") ||
-             language().equalTo("xco")) {
-      setRegion("UZ");
+    else if (Language().EqualTo("kaa") ||
+             Language().EqualTo("sog") ||
+             (Language().EqualTo("und") && Script().EqualTo("Chrs")) ||
+             (Language().EqualTo("und") && Script().EqualTo("Sogd")) ||
+             (Language().EqualTo("und") && Script().EqualTo("Sogo")) ||
+             Language().EqualTo("uz") ||
+             Language().EqualTo("xco")) {
+      SetRegion("UZ");
     }
     else {
-      setRegion("RU");
+      SetRegion("RU");
     }
   }
-  else if (region().equalTo("890")) {
-    if (language().equalTo("bs")) {
-      setRegion("BA");
+  else if (Region().EqualTo("890")) {
+    if (Language().EqualTo("bs")) {
+      SetRegion("BA");
     }
-    else if (language().equalTo("hr")) {
-      setRegion("HR");
+    else if (Language().EqualTo("hr")) {
+      SetRegion("HR");
     }
-    else if (language().equalTo("mk")) {
-      setRegion("MK");
+    else if (Language().EqualTo("mk")) {
+      SetRegion("MK");
     }
-    else if (language().equalTo("sl")) {
-      setRegion("SI");
+    else if (Language().EqualTo("sl")) {
+      SetRegion("SI");
     }
     else {
-      setRegion("RS");
+      SetRegion("RS");
     }
   }
 }
@@ -645,32 +645,32 @@ static bool IsLessThan(const T& a, const U& b) {
 // Mappings from variant subtags to preferred values.
 // Derived from CLDR Supplemental Data, version 40.
 // https://unicode.org/Public/cldr/40/core.zip
-bool mozilla::intl::Locale::performVariantMappings() {
+bool mozilla::intl::Locale::PerformVariantMappings() {
   // The variant subtags need to be sorted for binary search.
-  MOZ_ASSERT(std::is_sorted(variants_.begin(), variants_.end(),
-                            IsLessThan<decltype(variants_)::ElementType>));
+  MOZ_ASSERT(std::is_sorted(mVariants.begin(), mVariants.end(),
+                            IsLessThan<decltype(mVariants)::ElementType>));
 
   auto removeVariantAt = [&](size_t index) {
-    variants_.erase(variants_.begin() + index);
+    mVariants.erase(mVariants.begin() + index);
   };
 
   auto insertVariantSortedIfNotPresent = [&](const char* variant) {
     auto* p = std::lower_bound(
-        variants_.begin(), variants_.end(), variant,
-        IsLessThan<decltype(variants_)::ElementType, decltype(variant)>);
+        mVariants.begin(), mVariants.end(), variant,
+        IsLessThan<decltype(mVariants)::ElementType, decltype(variant)>);
 
     // Don't insert the replacement when already present.
-    if (p != variants_.end() && strcmp(p->get(), variant) == 0) {
+    if (p != mVariants.end() && strcmp(p->get(), variant) == 0) {
       return true;
     }
 
     // Insert the preferred variant in sort order.
     auto preferred = DuplicateStringToUniqueChars(variant);
-    return !!variants_.insert(p, std::move(preferred));
+    return !!mVariants.insert(p, std::move(preferred));
   };
 
-  for (size_t i = 0; i < variants_.length();) {
-    const char* variant = variants_[i].get();
+  for (size_t i = 0; i < mVariants.length();) {
+    const char* variant = mVariants[i].get();
     MOZ_ASSERT(IsCanonicallyCasedVariantTag(mozilla::MakeStringSpan(variant)));
 
     if (strcmp(variant, "arevela") == 0 ||
@@ -685,7 +685,7 @@ bool mozilla::intl::Locale::performVariantMappings() {
     }
     else if (strcmp(variant, "aaland") == 0) {
       removeVariantAt(i);
-      setRegion("AX");
+      SetRegion("AX");
     }
     else if (strcmp(variant, "heploc") == 0) {
       removeVariantAt(i);
@@ -709,7 +709,7 @@ bool mozilla::intl::Locale::performVariantMappings() {
 // Canonicalize legacy locale identifiers.
 // Derived from CLDR Supplemental Data, version 40.
 // https://unicode.org/Public/cldr/40/core.zip
-bool mozilla::intl::Locale::updateLegacyMappings() {
+bool mozilla::intl::Locale::UpdateLegacyMappings() {
   // We're mapping legacy tags to non-legacy form here.
   // Other tags remain unchanged.
   //
@@ -717,64 +717,64 @@ bool mozilla::intl::Locale::updateLegacyMappings() {
   // variant subtags. Therefore we can quickly exclude most tags by checking
   // these two subtags.
 
-  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(Language().Span()));
 
-  if (!language().equalTo("sgn") && variants_.length() == 0) {
+  if (!Language().EqualTo("sgn") && mVariants.length() == 0) {
     return true;
   }
 
 #ifdef DEBUG
-  for (const auto& variant : variants()) {
+  for (const auto& variant : Variants()) {
     MOZ_ASSERT(IsStructurallyValidVariantTag(variant));
     MOZ_ASSERT(IsCanonicallyCasedVariantTag(variant));
   }
 #endif
 
   // The variant subtags need to be sorted for binary search.
-  MOZ_ASSERT(std::is_sorted(variants_.begin(), variants_.end(),
-                            IsLessThan<decltype(variants_)::ElementType>));
+  MOZ_ASSERT(std::is_sorted(mVariants.begin(), mVariants.end(),
+                            IsLessThan<decltype(mVariants)::ElementType>));
 
   auto findVariant = [this](const char* variant) {
-    auto* p = std::lower_bound(variants_.begin(), variants_.end(), variant,
-                               IsLessThan<decltype(variants_)::ElementType,
+    auto* p = std::lower_bound(mVariants.begin(), mVariants.end(), variant,
+                               IsLessThan<decltype(mVariants)::ElementType,
                                           decltype(variant)>);
 
-    if (p != variants_.end() && strcmp(p->get(), variant) == 0) {
+    if (p != mVariants.end() && strcmp(p->get(), variant) == 0) {
       return p;
     }
     return static_cast<decltype(p)>(nullptr);
   };
 
   auto insertVariantSortedIfNotPresent = [&](const char* variant) {
-    auto* p = std::lower_bound(variants_.begin(), variants_.end(), variant,
-                               IsLessThan<decltype(variants_)::ElementType,
+    auto* p = std::lower_bound(mVariants.begin(), mVariants.end(), variant,
+                               IsLessThan<decltype(mVariants)::ElementType,
                                           decltype(variant)>);
 
     // Don't insert the replacement when already present.
-    if (p != variants_.end() && strcmp(p->get(), variant) == 0) {
+    if (p != mVariants.end() && strcmp(p->get(), variant) == 0) {
       return true;
     }
 
     // Insert the preferred variant in sort order.
     auto preferred = DuplicateStringToUniqueChars(variant);
-    return !!variants_.insert(p, std::move(preferred));
+    return !!mVariants.insert(p, std::move(preferred));
   };
 
   auto removeVariant = [&](auto* p) {
-    size_t index = std::distance(variants_.begin(), p);
-    variants_.erase(variants_.begin() + index);
+    size_t index = std::distance(mVariants.begin(), p);
+    mVariants.erase(mVariants.begin() + index);
   };
 
   auto removeVariants = [&](auto* p, auto* q) {
-    size_t pIndex = std::distance(variants_.begin(), p);
-    size_t qIndex = std::distance(variants_.begin(), q);
+    size_t pIndex = std::distance(mVariants.begin(), p);
+    size_t qIndex = std::distance(mVariants.begin(), q);
     MOZ_ASSERT(pIndex < qIndex, "variant subtags are sorted");
 
-    variants_.erase(variants_.begin() + qIndex);
-    variants_.erase(variants_.begin() + pIndex);
+    mVariants.erase(mVariants.begin() + qIndex);
+    mVariants.erase(mVariants.begin() + pIndex);
   };
 
-  if (variants_.length() >= 2) {
+  if (mVariants.length() >= 2) {
     if (auto* hepburn = findVariant("hepburn")) {
       if (auto* heploc = findVariant("heploc")) {
         removeVariants(hepburn, heploc);
@@ -786,78 +786,78 @@ bool mozilla::intl::Locale::updateLegacyMappings() {
     }
   }
 
-  if (language().equalTo("sgn")) {
-    if (region().present() && signLanguageMapping(language_, region())) {
-      region_.set(mozilla::MakeStringSpan(""));
+  if (Language().EqualTo("sgn")) {
+    if (Region().Present() && SignLanguageMapping(mLanguage, Region())) {
+      mRegion.Set(mozilla::MakeStringSpan(""));
     }
   }
-  else if (language().equalTo("aa") ||
-           language().equalTo("aar")) {
+  else if (Language().EqualTo("aa") ||
+           Language().EqualTo("aar")) {
     if (auto* saaho = findVariant("saaho")) {
       removeVariant(saaho);
-      setLanguage("ssy");
+      SetLanguage("ssy");
     }
   }
-  else if (language().equalTo("arm") ||
-           language().equalTo("hy") ||
-           language().equalTo("hye")) {
+  else if (Language().EqualTo("arm") ||
+           Language().EqualTo("hy") ||
+           Language().EqualTo("hye")) {
     if (auto* arevmda = findVariant("arevmda")) {
       removeVariant(arevmda);
-      setLanguage("hyw");
+      SetLanguage("hyw");
     }
   }
-  else if (language().equalTo("art")) {
+  else if (Language().EqualTo("art")) {
     if (auto* lojban = findVariant("lojban")) {
       removeVariant(lojban);
-      setLanguage("jbo");
+      SetLanguage("jbo");
     }
   }
-  else if (language().equalTo("cel")) {
+  else if (Language().EqualTo("cel")) {
     if (auto* gaulish = findVariant("gaulish")) {
       removeVariant(gaulish);
-      setLanguage("xtg");
+      SetLanguage("xtg");
     }
   }
-  else if (language().equalTo("chi") ||
-           language().equalTo("cmn") ||
-           language().equalTo("zh") ||
-           language().equalTo("zho")) {
+  else if (Language().EqualTo("chi") ||
+           Language().EqualTo("cmn") ||
+           Language().EqualTo("zh") ||
+           Language().EqualTo("zho")) {
     if (auto* guoyu = findVariant("guoyu")) {
       if (auto* hakka = findVariant("hakka")) {
         removeVariants(guoyu, hakka);
-        setLanguage("hak");
+        SetLanguage("hak");
         return true;
       }
     }
     if (auto* guoyu = findVariant("guoyu")) {
       if (auto* xiang = findVariant("xiang")) {
         removeVariants(guoyu, xiang);
-        setLanguage("hsn");
+        SetLanguage("hsn");
         return true;
       }
     }
     if (auto* guoyu = findVariant("guoyu")) {
       removeVariant(guoyu);
-      setLanguage("zh");
+      SetLanguage("zh");
     }
     else if (auto* hakka = findVariant("hakka")) {
       removeVariant(hakka);
-      setLanguage("hak");
+      SetLanguage("hak");
     }
     else if (auto* xiang = findVariant("xiang")) {
       removeVariant(xiang);
-      setLanguage("hsn");
+      SetLanguage("hsn");
     }
   }
-  else if (language().equalTo("no") ||
-           language().equalTo("nor")) {
+  else if (Language().EqualTo("no") ||
+           Language().EqualTo("nor")) {
     if (auto* bokmal = findVariant("bokmal")) {
       removeVariant(bokmal);
-      setLanguage("nb");
+      SetLanguage("nb");
     }
     else if (auto* nynorsk = findVariant("nynorsk")) {
       removeVariant(nynorsk);
-      setLanguage("nn");
+      SetLanguage("nn");
     }
   }
 
@@ -867,13 +867,13 @@ bool mozilla::intl::Locale::updateLegacyMappings() {
 // Mappings from legacy sign languages.
 // Derived from CLDR Supplemental Data, version 40.
 // https://unicode.org/Public/cldr/40/core.zip
-bool mozilla::intl::Locale::signLanguageMapping(LanguageSubtag& language,
+bool mozilla::intl::Locale::SignLanguageMapping(LanguageSubtag& language,
                                                 const RegionSubtag& region) {
-  MOZ_ASSERT(language.equalTo("sgn"));
-  MOZ_ASSERT(IsStructurallyValidRegionTag(region.span()));
-  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region.span()));
+  MOZ_ASSERT(language.EqualTo("sgn"));
+  MOZ_ASSERT(IsStructurallyValidRegionTag(region.Span()));
+  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region.Span()));
 
-  if (region.length() == 2) {
+  if (region.Length() == 2) {
     static const char regions[22][3] = {
       "BR", "CO", "DD", "DE", "DK", "ES", "FR", "FX", "GB", "GR",
       "IE", "IT", "JP", "MX", "NI", "NL", "NO", "PT", "SE", "UK",
@@ -886,7 +886,7 @@ bool mozilla::intl::Locale::signLanguageMapping(LanguageSubtag& language,
     };
 
     if (const char* replacement = SearchReplacement(regions, aliases, region)) {
-      language.set(mozilla::MakeStringSpan(replacement));
+      language.Set(mozilla::MakeStringSpan(replacement));
       return true;
     }
     return false;
@@ -905,7 +905,7 @@ bool mozilla::intl::Locale::signLanguageMapping(LanguageSubtag& language,
     };
 
     if (const char* replacement = SearchReplacement(regions, aliases, region)) {
-      language.set(mozilla::MakeStringSpan(replacement));
+      language.Set(mozilla::MakeStringSpan(replacement));
       return true;
     }
     return false;
@@ -968,7 +968,7 @@ static inline const char* SearchUnicodeReplacement(
  * Spec: https://www.unicode.org/reports/tr35/#Unicode_Locale_Extension_Data_Files
  * Spec: https://www.unicode.org/reports/tr35/#t_Extension
  */
-const char* mozilla::intl::Locale::replaceUnicodeExtensionType(
+const char* mozilla::intl::Locale::ReplaceUnicodeExtensionType(
     mozilla::Span<const char> key, mozilla::Span<const char> type) {
   MOZ_ASSERT(key.size() == UnicodeKeyLength);
   MOZ_ASSERT(IsCanonicallyCasedUnicodeKey(key));
@@ -1098,7 +1098,7 @@ static inline bool IsTransformType(mozilla::Span<const char> type, const char (&
  * Spec: https://www.unicode.org/reports/tr35/#Unicode_Locale_Extension_Data_Files
  * Spec: https://www.unicode.org/reports/tr35/#t_Extension
  */
-const char* mozilla::intl::Locale::replaceTransformExtensionType(
+const char* mozilla::intl::Locale::ReplaceTransformExtensionType(
     mozilla::Span<const char> key, mozilla::Span<const char> type) {
   MOZ_ASSERT(key.size() == TransformKeyLength);
   MOZ_ASSERT(IsCanonicallyCasedTransformKey(key));
