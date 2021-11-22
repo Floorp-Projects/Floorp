@@ -15,14 +15,11 @@
 
 #include "jstypes.h"
 
-#include "gc/Rooting.h"
 #include "jit/CacheIROpsGenerated.h"
 #include "js/GCAnnotations.h"
 #include "js/Value.h"
 
 struct JS_PUBLIC_API JSContext;
-
-class JSObject;
 
 namespace js {
 namespace jit {
@@ -505,8 +502,6 @@ enum class GuardClassKind : uint8_t {
   Set,
   Map,
 };
-
-JSObject* NewWrapperWithObjectShape(JSContext* cx, HandleNativeObject obj);
 
 }  // namespace jit
 }  // namespace js

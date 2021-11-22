@@ -1264,6 +1264,9 @@ AttachDecision GetPropIRGenerator::tryAttachCrossCompartmentWrapper(
   return AttachDecision::Attach;
 }
 
+static JSObject* NewWrapperWithObjectShape(JSContext* cx,
+                                           HandleNativeObject obj);
+
 static bool GetXrayExpandoShapeWrapper(JSContext* cx, HandleObject xray,
                                        MutableHandleObject wrapper) {
   Value v = GetProxyReservedSlot(xray, GetXrayJitInfo()->xrayHolderSlot);
@@ -9822,8 +9825,8 @@ static const JSClass shapeContainerClass = {"ShapeContainer",
 
 static const size_t SHAPE_CONTAINER_SLOT = 0;
 
-JSObject* jit::NewWrapperWithObjectShape(JSContext* cx,
-                                         HandleNativeObject obj) {
+static JSObject* NewWrapperWithObjectShape(JSContext* cx,
+                                           HandleNativeObject obj) {
   MOZ_ASSERT(cx->compartment() != obj->compartment());
 
   RootedObject wrapper(cx);
