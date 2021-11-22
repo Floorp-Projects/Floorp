@@ -2234,7 +2234,8 @@ inline void* arena_t::ArenaRunRegAlloc(arena_run_t* aRun, arena_bin_t* aBin) {
 // non-power-of-two) to kMaxQuantumNClass, the last quantum size
 // that's not a power-of-two.
 static const unsigned num_divisors =
-    (kMaxQuantumClass - 2 * kQuantum) / kQuantum;
+    std::max((kMaxQuantumClass - 2 * kQuantum) / kQuantum,
+             (kMaxQuantumWideClass - 2 * kQuantumWide) / kQuantumWide);
 
 template <unsigned q>
 static unsigned divide(size_t num, unsigned div) {
@@ -2287,16 +2288,19 @@ static inline void arena_run_reg_dalloc(arena_run_t* run, arena_bin_t* bin,
       (unsigned)((uintptr_t)ptr - (uintptr_t)run - bin->mRunFirstRegionOffset);
   if (mozilla::IsPowerOfTwo(size)) {
     regind = diff >> FloorLog2(size);
-  } else if (size < kMaxQuantumClass) {
-    // kMaxQuantumClass isn't included because it is a power-of-two and will be
-    // handled by the first case.
-    regind = divide<kQuantum>(diff, size);
   } else {
-    // size_invs isn't large enough to handle this size class, so
-    // calculate regind using actual division.  This only happens for
-    // QuantumWide size classes.
-    regind = diff / size;
-  };
+    SizeClass sc(size);
+    switch (sc.Type()) {
+      case SizeClass::Quantum:
+        regind = divide<kQuantum>(diff, size);
+        break;
+      case SizeClass::QuantumWide:
+        regind = divide<kQuantumWide>(diff, size);
+        break;
+      default:
+        regind = diff / size;
+    }
+  }
   MOZ_DIAGNOSTIC_ASSERT(diff == regind * size);
   MOZ_DIAGNOSTIC_ASSERT(regind < bin->mRunNumRegions);
 
