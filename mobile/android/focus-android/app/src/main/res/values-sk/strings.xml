@@ -659,6 +659,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Aktívne</string>
 
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">Ukončené</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Vzdialené ladenie cez USB/Wi-Fi</string>
 

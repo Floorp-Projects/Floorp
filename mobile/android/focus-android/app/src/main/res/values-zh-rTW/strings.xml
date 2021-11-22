@@ -658,6 +658,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">進行中</string>
 
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">已完成</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">透過 USB/Wi-Fi 進行遠端除錯</string>
 

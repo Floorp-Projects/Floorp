@@ -593,6 +593,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">فعال</string>
 
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">مکمل شدہ</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">&quot;USB//Wi-Fi کے ذریعے بعید ٹھیک کاری &quot;</string>
 

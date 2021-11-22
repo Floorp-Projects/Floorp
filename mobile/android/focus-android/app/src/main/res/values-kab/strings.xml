@@ -660,6 +660,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Urmid</string>
 
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">Yemmed</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Taseɣtit tanmeggagt s USB/Wi-Fii</string>
 

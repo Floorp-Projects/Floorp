@@ -659,6 +659,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Actief</string>
 
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">Voltooid</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Remote debugging via USB/wifi</string>
 
