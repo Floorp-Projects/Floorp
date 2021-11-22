@@ -5201,9 +5201,8 @@ void nsGlobalWindowOuter::StopOuter(ErrorResult& aError) {
 
 void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
   if (!AreDialogsEnabled()) {
-    // We probably want to keep throwing here; silently doing nothing is a bit
-    // weird given the typical use cases of print().
-    return aError.ThrowNotSupportedError("Dialogs not enabled for this window");
+    // Per spec, silently return. https://github.com/whatwg/html/commit/21a1de1
+    return;
   }
 
   if (!StaticPrefs::print_tab_modal_enabled() && ShouldPromptToBlockDialogs() &&
