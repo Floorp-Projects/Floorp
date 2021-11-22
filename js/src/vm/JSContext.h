@@ -186,9 +186,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   // need to take its address.
   uint32_t allocsThisZoneSinceMinorGC_;
 
-  // Free lists for parallel allocation in the atoms zone on helper threads.
-  js::ContextData<js::gc::FreeLists*> atomsZoneFreeLists_;
-
   js::ContextData<JSFreeOp> defaultFreeOp_;
 
   // Thread that the JSContext is currently running on, if in use.
@@ -256,11 +253,6 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   js::gc::FreeLists& freeLists() {
     MOZ_ASSERT(freeLists_);
     return *freeLists_;
-  }
-
-  js::gc::FreeLists& atomsZoneFreeLists() {
-    MOZ_ASSERT(atomsZoneFreeLists_);
-    return *atomsZoneFreeLists_;
   }
 
   template <typename T>
