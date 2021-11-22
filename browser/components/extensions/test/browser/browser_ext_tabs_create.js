@@ -51,22 +51,22 @@ add_task(async function test_create_options() {
 
           let tests = [
             {
-              create: { url: "https://example.com/" },
-              result: { url: "https://example.com/" },
+              create: { url: "http://example.com/" },
+              result: { url: "http://example.com/" },
             },
             {
-              create: { url: "view-source:https://example.com/" },
-              result: { url: "view-source:https://example.com/" },
+              create: { url: "view-source:http://example.com/" },
+              result: { url: "view-source:http://example.com/" },
             },
             {
               create: { url: "blank.html" },
               result: { url: browser.runtime.getURL("bg/blank.html") },
             },
             {
-              create: { url: "https://example.com/", openInReaderMode: true },
+              create: { url: "http://example.com/", openInReaderMode: true },
               result: {
                 url: `about:reader?url=${encodeURIComponent(
-                  "https://example.com/"
+                  "http://example.com/"
                 )}`,
               },
             },
