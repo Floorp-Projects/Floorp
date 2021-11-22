@@ -174,9 +174,8 @@ struct BaseRect {
   }
 
   // Returns the smallest rectangle that contains both the area of both
-  // this and aRect2.
-  // Thus, empty input rectangles are ignored.
-  // If both rectangles are empty, returns this.
+  // this and aRect. Thus, empty input rectangles are ignored.
+  // Note: if both rectangles are empty, returns aRect.
   // WARNING! This is not safe against overflow, prefer using SafeUnion instead
   // when dealing with int-based rects.
   [[nodiscard]] Sub Union(const Sub& aRect) const {
