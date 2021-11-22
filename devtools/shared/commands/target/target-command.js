@@ -954,6 +954,44 @@ class TargetCommand extends EventEmitter {
     return this._targets.has(targetFront);
   }
 
+  getParentTarget(targetFront) {
+    // Note that there is three temporary edgecases:
+    // * Until bug 1741927 is fixed and we remove non-EFT codepath entirely,
+    //   we may receive a `parentInnerWindowId` that doesn't relate to any target.
+    //   This happens when the parent document of the targetFront is a document loaded in the
+    //   same process as its parent document. In such scenario, and only when EFT is disabled,
+    //   we won't instantiate a target for the parent document of the targetFront.
+    // * `parentInnerWindowId` could be null in some case like for tabs in the MBT
+    //   we should report the top level target as parent. That's what `getParentWindowGlobalTarget` does.
+    //   Once we can stop using getParentWindowGlobalTarget for the other edgecase we will be able to
+    //   replace it with such fallback: `return this.targetFront;`.
+    //   browser_target_command_frames.js will help you get things right.
+    // @backward-compat { version 96 } Fx 96 started exposing `parentInnerWindowId`
+    // * And backward compat. This targetForm attribute is new. Once we drop 95 support,
+    //   we can simply remove this last bullet point as the other two edgecase may still be valid.
+    const { parentInnerWindowId } = targetFront.targetForm;
+    if (parentInnerWindowId) {
+      const targets = this.getAllTargets([TargetCommand.TYPES.FRAME]);
+      const parent = targets.find(
+        target => target.innerWindowId == parentInnerWindowId
+      );
+      // Until EFT is the only codepath supported (bug 1741927), we will fallback to `getParentWindowGlobalTarget`
+      // as we may not have a target if the parent is an iframe running in the same process as its parent.
+      if (parent) {
+        return parent;
+      }
+    }
+
+    // Note that all callsites which care about FRAME additional target
+    // should all have a toolbox using the watcher actor.
+    // It should be: MBT, regular tab toolbox and web extension.
+    // The others which still don't support watcher don't spawn FRAME targets:
+    // browser content toolbox and service workers.
+    return this.watcherFront.getParentWindowGlobalTarget(
+      targetFront.browsingContextID
+    );
+  }
+
   isDestroyed() {
     return this._isDestroyed;
   }

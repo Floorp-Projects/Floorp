@@ -586,6 +586,15 @@ const windowGlobalTargetPrototype = {
       ? this.devtoolsSpawnedBrowsingContextForWebExtension.currentWindowGlobal
           .innerWindowId
       : originalInnerWindowId;
+    const originalParentInnerWindowId = this._originalWindow
+      ? this._originalWindow.docShell.browsingContext.parent
+          ?.currentWindowContext.innerWindowId
+      : null;
+    const parentInnerWindowId = this
+      .devtoolsSpawnedBrowsingContextForWebExtension
+      ? this.devtoolsSpawnedBrowsingContextForWebExtension.parent
+          .currentWindowGlobal.innerWindowId
+      : originalParentInnerWindowId;
 
     const response = {
       actor: this.actorID,
@@ -593,6 +602,7 @@ const windowGlobalTargetPrototype = {
       // True for targets created by JSWindowActors, see constructor JSDoc.
       followWindowGlobalLifeCycle: this.followWindowGlobalLifeCycle,
       innerWindowId,
+      parentInnerWindowId: parentInnerWindowId,
       topInnerWindowId: this.browsingContext.topWindowContext.innerWindowId,
       isTopLevelTarget: this.isTopLevelTarget,
       ignoreSubFrames: this.ignoreSubFrames,
