@@ -615,7 +615,7 @@ void VRManager::ProcessManagerState() {
 void VRManager::ProcessManagerState_Disabled() {
   MOZ_ASSERT(mState == VRManagerState::Disabled);
 
-  if (!StaticPrefs::dom_vr_enabled()) {
+  if (!StaticPrefs::dom_vr_enabled() && !StaticPrefs::dom_vr_webxr_enabled()) {
     return;
   }
 
