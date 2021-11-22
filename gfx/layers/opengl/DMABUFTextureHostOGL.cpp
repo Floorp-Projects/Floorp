@@ -28,63 +28,6 @@ DMABUFTextureHostOGL::~DMABUFTextureHostOGL() {
   MOZ_COUNT_DTOR(DMABUFTextureHostOGL);
 }
 
-GLTextureSource* DMABUFTextureHostOGL::CreateTextureSourceForPlane(
-    size_t aPlane) {
-  if (!mSurface) {
-    return nullptr;
-  }
-
-  if (!mSurface->GetTexture(aPlane)) {
-    if (!mSurface->CreateTexture(gl(), aPlane)) {
-      return nullptr;
-    }
-  }
-
-  return new GLTextureSource(
-      mProvider, mSurface->GetTexture(aPlane), LOCAL_GL_TEXTURE_2D,
-      gfx::IntSize(mSurface->GetWidth(aPlane), mSurface->GetHeight(aPlane)),
-      // XXX: This isn't really correct (but isn't used), we should be using the
-      // format of the individual plane, not of the whole buffer.
-      mSurface->GetFormatGL());
-}
-
-bool DMABUFTextureHostOGL::Lock() {
-  if (!gl() || !gl()->MakeCurrent() || !mSurface) {
-    return false;
-  }
-
-  if (!mTextureSource) {
-    mTextureSource = CreateTextureSourceForPlane(0);
-
-    RefPtr<TextureSource> prev = mTextureSource;
-    for (int i = 1; i < mSurface->GetTextureCount(); i++) {
-      RefPtr<TextureSource> next = CreateTextureSourceForPlane(i);
-      prev->SetNextSibling(next);
-      prev = next;
-    }
-  }
-
-  mSurface->FenceWait();
-  return true;
-}
-
-void DMABUFTextureHostOGL::Unlock() {}
-
-void DMABUFTextureHostOGL::SetTextureSourceProvider(
-    TextureSourceProvider* aProvider) {
-  if (!aProvider || !aProvider->GetGLContext()) {
-    mTextureSource = nullptr;
-    mProvider = nullptr;
-    return;
-  }
-
-  mProvider = aProvider;
-
-  if (mTextureSource) {
-    mTextureSource->SetTextureSourceProvider(aProvider);
-  }
-}
-
 gfx::SurfaceFormat DMABUFTextureHostOGL::GetFormat() const {
   if (!mSurface) {
     return gfx::SurfaceFormat::UNKNOWN;
@@ -118,9 +61,7 @@ gfx::IntSize DMABUFTextureHostOGL::GetSize() const {
   return gfx::IntSize(mSurface->GetWidth(), mSurface->GetHeight());
 }
 
-gl::GLContext* DMABUFTextureHostOGL::gl() const {
-  return mProvider ? mProvider->GetGLContext() : nullptr;
-}
+gl::GLContext* DMABUFTextureHostOGL::gl() const { return nullptr; }
 
 void DMABUFTextureHostOGL::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
