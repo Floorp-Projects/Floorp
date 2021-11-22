@@ -45,7 +45,7 @@ rev = "8a576fbe79199fa8664f64285524017f74ebcc5f"
 [source."https://github.com/mozilla-spidermonkey/jsparagus"]
 git = "https://github.com/mozilla-spidermonkey/jsparagus"
 replace-with = "vendored-sources"
-rev = "ecc433935118a4ff22d33c4fe7c625a5d0bfb571"
+rev = "b0650f3f7551cac34e8facf9cfa2711c0d99d0cc"
 
 [source."https://github.com/kvark/dummy-web"]
 git = "https://github.com/kvark/dummy-web"
