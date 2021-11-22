@@ -53,8 +53,9 @@ nsresult GetIPCSynthesizeResponseArgs(
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  internalResponse->ToIPC(&aIPCArgs->internalResponse(), bgChild,
-                          aAutoBodyStream, aAutoAlternativeBodyStream);
+  internalResponse->ToChildToParentInternalResponse(
+      &aIPCArgs->internalResponse(), bgChild, aAutoBodyStream,
+      aAutoAlternativeBodyStream);
   return NS_OK;
 }
 

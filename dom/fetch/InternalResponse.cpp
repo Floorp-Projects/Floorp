@@ -8,6 +8,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/FetchStreamUtils.h"
 #include "mozilla/dom/FetchTypes.h"
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/cache/CacheTypes.h"
@@ -25,19 +26,6 @@ namespace {
 // Const variable for generate padding size
 // XXX This will be tweaked to something more meaningful in Bug 1383656.
 const uint32_t kMaxRandomNumber = 102400;
-
-nsCOMPtr<nsIInputStream> TakeStreamFromStorage(
-    const ParentToParentStream& aStream, int64_t aBodySize) {
-  const auto& uuid = aStream.uuid();
-
-  auto storageOrErr = RemoteLazyInputStreamStorage::Get();
-  MOZ_ASSERT(storageOrErr.isOk());
-  auto storage = storageOrErr.unwrap();
-  auto stream = storage->ForgetStream(uuid);
-  MOZ_ASSERT(stream);
-
-  return stream;
-}
 
 }  // namespace
 
@@ -57,7 +45,18 @@ InternalResponse::InternalResponse(uint16_t aStatus,
 /* static */ SafeRefPtr<InternalResponse> InternalResponse::FromIPC(
     const ParentToParentInternalResponse& aIPCResponse) {
   MOZ_ASSERT(XRE_IsParentProcess());
+  return FromIPCTemplate(aIPCResponse);
+}
 
+/* static */ SafeRefPtr<InternalResponse> InternalResponse::FromIPC(
+    const ParentToChildInternalResponse& aIPCResponse) {
+  MOZ_ASSERT(XRE_IsContentProcess());
+  return FromIPCTemplate(aIPCResponse);
+}
+
+template <typename T>
+/* static */ SafeRefPtr<InternalResponse> InternalResponse::FromIPCTemplate(
+    const T& aIPCResponse) {
   if (aIPCResponse.metadata().type() == ResponseType::Error) {
     return InternalResponse::NetworkError(aIPCResponse.metadata().errorCode());
   }
@@ -72,18 +71,16 @@ InternalResponse::InternalResponse(uint16_t aStatus,
 
   if (aIPCResponse.body()) {
     auto bodySize = aIPCResponse.bodySize();
-    nsCOMPtr<nsIInputStream> body =
-        TakeStreamFromStorage(*aIPCResponse.body(), bodySize);
-    response->SetBody(body, bodySize);
+    auto body = ToInputStream(*aIPCResponse.body());
+    response->SetBody(body.get(), bodySize);
   }
 
   response->SetAlternativeDataType(
       aIPCResponse.metadata().alternativeDataType());
 
   if (aIPCResponse.alternativeBody()) {
-    nsCOMPtr<nsIInputStream> alternativeBody = TakeStreamFromStorage(
-        *aIPCResponse.alternativeBody(), UNKNOWN_BODY_SIZE);
-    response->SetAlternativeBody(alternativeBody);
+    auto alternativeBody = ToInputStream(*aIPCResponse.alternativeBody());
+    response->SetAlternativeBody(alternativeBody.get());
   }
 
   response->InitChannelInfo(aIPCResponse.metadata().channelInfo());
@@ -117,20 +114,9 @@ InternalResponse::InternalResponse(uint16_t aStatus,
   return response;
 }
 
-/* static */ SafeRefPtr<InternalResponse> InternalResponse::FromIPC(
-    const ParentToChildInternalResponse& aIPCResponse) {
-  MOZ_ASSERT(XRE_IsContentProcess());
-
-  MOZ_CRASH("Not implemented yet");
-}
-
 InternalResponse::~InternalResponse() = default;
 
-void InternalResponse::ToIPC(
-    ChildToParentInternalResponse* aIPCResponse,
-    mozilla::ipc::PBackgroundChild* aManager,
-    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoBodyStream,
-    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoAlternativeBodyStream) {
+InternalResponseMetadata InternalResponse::GetMetadata() {
   nsTArray<HeadersEntry> headers;
   HeadersGuardEnum headersGuard;
   UnfilteredHeaders()->ToIPC(headers, headersGuard);
@@ -140,13 +126,19 @@ void InternalResponse::ToIPC(
 
   // Note: all the arguments are copied rather than moved, which would be more
   // efficient, because there's no move-friendly constructor generated.
-  *aIPCResponse = ChildToParentInternalResponse(
-      InternalResponseMetadata(mType, GetUnfilteredURLList(),
-                               GetUnfilteredStatus(), GetUnfilteredStatusText(),
-                               headersGuard, headers, mErrorCode,
-                               GetAlternativeDataType(),
-                               mChannelInfo.AsIPCChannelInfo(), principalInfo),
-      Nothing(), UNKNOWN_BODY_SIZE, Nothing());
+  return InternalResponseMetadata(
+      mType, GetUnfilteredURLList(), GetUnfilteredStatus(),
+      GetUnfilteredStatusText(), headersGuard, headers, mErrorCode,
+      GetAlternativeDataType(), mChannelInfo.AsIPCChannelInfo(), principalInfo);
+}
+
+void InternalResponse::ToChildToParentInternalResponse(
+    ChildToParentInternalResponse* aIPCResponse,
+    mozilla::ipc::PBackgroundChild* aManager,
+    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoBodyStream,
+    UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoAlternativeBodyStream) {
+  *aIPCResponse = ChildToParentInternalResponse(GetMetadata(), Nothing(),
+                                                UNKNOWN_BODY_SIZE, Nothing());
 
   nsCOMPtr<nsIInputStream> body;
   int64_t bodySize;
@@ -172,6 +164,29 @@ void InternalResponse::ToIPC(
         aAutoAlternativeBodyStream->Serialize(alternativeBody, aManager);
     MOZ_ASSERT(ok);
   }
+}
+
+ParentToParentInternalResponse
+InternalResponse::ToParentToParentInternalResponse() {
+  ParentToParentInternalResponse result(GetMetadata(), Nothing(),
+                                        UNKNOWN_BODY_SIZE, Nothing());
+
+  nsCOMPtr<nsIInputStream> body;
+  int64_t bodySize;
+  GetUnfilteredBody(getter_AddRefs(body), &bodySize);
+
+  if (body) {
+    result.body() = Some(ToParentToParentStream(WrapNotNull(body), bodySize));
+    result.bodySize() = bodySize;
+  }
+
+  nsCOMPtr<nsIInputStream> alternativeBody = TakeAlternativeBody();
+  if (alternativeBody) {
+    result.alternativeBody() = Some(ToParentToParentStream(
+        WrapNotNull(alternativeBody), UNKNOWN_BODY_SIZE));
+  }
+
+  return result;
 }
 
 SafeRefPtr<InternalResponse> InternalResponse::Clone(CloneType aCloneType) {
@@ -371,6 +386,25 @@ SafeRefPtr<InternalResponse> InternalResponse::CreateIncompleteCopy() {
         MakeUnique<mozilla::ipc::PrincipalInfo>(*mPrincipalInfo);
   }
   return copy;
+}
+
+ParentToChildInternalResponse ToParentToChild(
+    const ParentToParentInternalResponse& aResponse,
+    NotNull<mozilla::ipc::PBackgroundParent*> aBackgroundParent) {
+  ParentToChildInternalResponse result(aResponse.metadata(), Nothing(),
+                                       aResponse.bodySize(), Nothing());
+
+  if (aResponse.body().isSome()) {
+    result.body() = Some(ToParentToChildStream(
+        aResponse.body().ref(), aResponse.bodySize(), aBackgroundParent));
+  }
+  if (aResponse.alternativeBody().isSome()) {
+    result.alternativeBody() = Some(ToParentToChildStream(
+        aResponse.alternativeBody().ref(), InternalResponse::UNKNOWN_BODY_SIZE,
+        aBackgroundParent));
+  }
+
+  return result;
 }
 
 }  // namespace mozilla::dom
