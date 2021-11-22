@@ -126,8 +126,8 @@ def writeMappingsBinarySearch(
     println(
         """
 bool mozilla::intl::Locale::{0}({1} {2}) {{
-  MOZ_ASSERT({3}({2}.span()));
-  MOZ_ASSERT({4}({2}.span()));
+  MOZ_ASSERT({3}({2}.Span()));
+  MOZ_ASSERT({4}({2}.Span()));
 """.format(
             fn_name, type_name, name, validate_fn, validate_case_fn
         ).strip()
@@ -177,7 +177,7 @@ def writeMappingsBinarySearchBody(
         if length != tag_maxlength:
             println(
                 """
-  if ({}.length() == {}) {{
+  if ({}.Length() == {}) {{
 """.format(
                     source_name, length
                 ).rstrip(
@@ -198,7 +198,7 @@ def writeMappingsBinarySearchBody(
         subtags = sorted(subtags)
 
         def equals(subtag):
-            return """{}.equalTo("{}")""".format(source_name, subtag)
+            return """{}.EqualTo("{}")""".format(source_name, subtag)
 
         # Don't emit a binary search for short lists.
         if len(subtags) == 1:
@@ -206,7 +206,7 @@ def writeMappingsBinarySearchBody(
                 println(
                     """
     if ({}) {{
-      {}.set(mozilla::MakeStringSpan("{}"));
+      {}.Set(mozilla::MakeStringSpan("{}"));
       return true;
     }}
     return false;
@@ -232,7 +232,7 @@ def writeMappingsBinarySearchBody(
                     println(
                         """
     if ({}) {{
-      {}.set("{}");
+      {}.Set("{}");
       return true;
     }}
 """.format(
@@ -270,7 +270,7 @@ def writeMappingsBinarySearchBody(
                 println(
                     """
     if (const char* replacement = SearchReplacement({0}s, aliases, {0})) {{
-      {1}.set(mozilla::MakeStringSpan(replacement));
+      {1}.Set(mozilla::MakeStringSpan(replacement));
       return true;
     }}
     return false;
@@ -309,9 +309,9 @@ def writeComplexLanguageTagMappings(
     writeMappingHeader(println, description, source, url)
     println(
         """
-void mozilla::intl::Locale::performComplexLanguageMappings() {
-  MOZ_ASSERT(IsStructurallyValidLanguageTag(language().span()));
-  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
+void mozilla::intl::Locale::PerformComplexLanguageMappings() {
+  MOZ_ASSERT(IsStructurallyValidLanguageTag(Language().Span()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(Language().Span()));
 """.lstrip()
     )
 
@@ -338,7 +338,7 @@ void mozilla::intl::Locale::performComplexLanguageMappings() {
         first_language = False
 
         cond = (
-            'language().equalTo("{}")'.format(lang)
+            'Language().EqualTo("{}")'.format(lang)
             for lang in [deprecated_language] + language_aliases[key]
         )
         cond = (" ||\n" + " " * (2 + len(if_kind) + 2)).join(cond)
@@ -354,7 +354,7 @@ void mozilla::intl::Locale::performComplexLanguageMappings() {
 
         println(
             """
-    setLanguage("{}");""".format(
+    SetLanguage("{}");""".format(
                 language
             ).strip(
                 "\n"
@@ -364,8 +364,8 @@ void mozilla::intl::Locale::performComplexLanguageMappings() {
         if script is not None:
             println(
                 """
-    if (script().missing()) {{
-      setScript("{}");
+    if (Script().Missing()) {{
+      SetScript("{}");
     }}""".format(
                     script
                 ).strip(
@@ -375,8 +375,8 @@ void mozilla::intl::Locale::performComplexLanguageMappings() {
         if region is not None:
             println(
                 """
-    if (region().missing()) {{
-      setRegion("{}");
+    if (Region().Missing()) {{
+      SetRegion("{}");
     }}""".format(
                     region
                 ).strip(
@@ -406,11 +406,11 @@ def writeComplexRegionTagMappings(
     writeMappingHeader(println, description, source, url)
     println(
         """
-void mozilla::intl::Locale::performComplexRegionMappings() {
-  MOZ_ASSERT(IsStructurallyValidLanguageTag(language().span()));
-  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
-  MOZ_ASSERT(IsStructurallyValidRegionTag(region().span()));
-  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region().span()));
+void mozilla::intl::Locale::PerformComplexRegionMappings() {
+  MOZ_ASSERT(IsStructurallyValidLanguageTag(Language().Span()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(Language().Span()));
+  MOZ_ASSERT(IsStructurallyValidRegionTag(Region().Span()));
+  MOZ_ASSERT(IsCanonicallyCasedRegionTag(Region().Span()));
 """.lstrip()
     )
 
@@ -442,7 +442,7 @@ void mozilla::intl::Locale::performComplexRegionMappings() {
         first_region = False
 
         cond = (
-            'region().equalTo("{}")'.format(region)
+            'Region().EqualTo("{}")'.format(region)
             for region in [deprecated_region] + region_aliases[key]
         )
         cond = (" ||\n" + " " * (2 + len(if_kind) + 2)).join(cond)
@@ -473,8 +473,8 @@ void mozilla::intl::Locale::performComplexRegionMappings() {
 
             def compare_tags(language, script):
                 if script is None:
-                    return 'language().equalTo("{}")'.format(language)
-                return '(language().equalTo("{}") && script().equalTo("{}"))'.format(
+                    return 'Language().EqualTo("{}")'.format(language)
+                return '(Language().EqualTo("{}") && Script().EqualTo("{}"))'.format(
                     language, script
                 )
 
@@ -487,7 +487,7 @@ void mozilla::intl::Locale::performComplexRegionMappings() {
             println(
                 """
     {} ({}) {{
-      setRegion("{}");
+      SetRegion("{}");
     }}""".format(
                     if_kind, cond, replacement_region
                 )
@@ -498,7 +498,7 @@ void mozilla::intl::Locale::performComplexRegionMappings() {
         println(
             """
     else {{
-      setRegion("{}");
+      SetRegion("{}");
     }}
   }}""".format(
                 default
@@ -537,32 +537,32 @@ static bool IsLessThan(const T& a, const U& b) {
     writeMappingHeader(println, description, source, url)
     println(
         """
-bool mozilla::intl::Locale::performVariantMappings() {
+bool mozilla::intl::Locale::PerformVariantMappings() {
   // The variant subtags need to be sorted for binary search.
-  MOZ_ASSERT(std::is_sorted(variants_.begin(), variants_.end(),
-                            IsLessThan<decltype(variants_)::ElementType>));
+  MOZ_ASSERT(std::is_sorted(mVariants.begin(), mVariants.end(),
+                            IsLessThan<decltype(mVariants)::ElementType>));
 
   auto removeVariantAt = [&](size_t index) {
-    variants_.erase(variants_.begin() + index);
+    mVariants.erase(mVariants.begin() + index);
   };
 
   auto insertVariantSortedIfNotPresent = [&](const char* variant) {
     auto* p = std::lower_bound(
-        variants_.begin(), variants_.end(), variant,
-        IsLessThan<decltype(variants_)::ElementType, decltype(variant)>);
+        mVariants.begin(), mVariants.end(), variant,
+        IsLessThan<decltype(mVariants)::ElementType, decltype(variant)>);
 
     // Don't insert the replacement when already present.
-    if (p != variants_.end() && strcmp(p->get(), variant) == 0) {
+    if (p != mVariants.end() && strcmp(p->get(), variant) == 0) {
       return true;
     }
 
     // Insert the preferred variant in sort order.
     auto preferred = DuplicateStringToUniqueChars(variant);
-    return !!variants_.insert(p, std::move(preferred));
+    return !!mVariants.insert(p, std::move(preferred));
   };
 
-  for (size_t i = 0; i < variants_.length();) {
-    const char* variant = variants_[i].get();
+  for (size_t i = 0; i < mVariants.length();) {
+    const char* variant = mVariants[i].get();
     MOZ_ASSERT(IsCanonicallyCasedVariantTag(mozilla::MakeStringSpan(variant)));
 """.lstrip()
     )
@@ -601,7 +601,7 @@ bool mozilla::intl::Locale::performVariantMappings() {
         if type == "language":
             println(
                 f"""
-      setLanguage("{replacement}");
+      SetLanguage("{replacement}");
 """.strip(
                     "\n"
                 )
@@ -609,7 +609,7 @@ bool mozilla::intl::Locale::performVariantMappings() {
         elif type == "region":
             println(
                 f"""
-      setRegion("{replacement}");
+      SetRegion("{replacement}");
 """.strip(
                     "\n"
                 )
@@ -654,7 +654,7 @@ def writeLegacyMappingsFunction(println, legacy_mappings, description, source, u
     writeMappingHeader(println, description, source, url)
     println(
         """\
-bool mozilla::intl::Locale::updateLegacyMappings() {
+bool mozilla::intl::Locale::UpdateLegacyMappings() {
   // We're mapping legacy tags to non-legacy form here.
   // Other tags remain unchanged.
   //
@@ -662,61 +662,61 @@ bool mozilla::intl::Locale::updateLegacyMappings() {
   // variant subtags. Therefore we can quickly exclude most tags by checking
   // these two subtags.
 
-  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(language().span()));
+  MOZ_ASSERT(IsCanonicallyCasedLanguageTag(Language().Span()));
 
-  if (!language().equalTo("sgn") && variants_.length() == 0) {
+  if (!Language().EqualTo("sgn") && mVariants.length() == 0) {
     return true;
   }
 
 #ifdef DEBUG
-  for (const auto& variant : variants()) {
+  for (const auto& variant : Variants()) {
     MOZ_ASSERT(IsStructurallyValidVariantTag(variant));
     MOZ_ASSERT(IsCanonicallyCasedVariantTag(variant));
   }
 #endif
 
   // The variant subtags need to be sorted for binary search.
-  MOZ_ASSERT(std::is_sorted(variants_.begin(), variants_.end(),
-                            IsLessThan<decltype(variants_)::ElementType>));
+  MOZ_ASSERT(std::is_sorted(mVariants.begin(), mVariants.end(),
+                            IsLessThan<decltype(mVariants)::ElementType>));
 
   auto findVariant = [this](const char* variant) {
-    auto* p = std::lower_bound(variants_.begin(), variants_.end(), variant,
-                               IsLessThan<decltype(variants_)::ElementType,
+    auto* p = std::lower_bound(mVariants.begin(), mVariants.end(), variant,
+                               IsLessThan<decltype(mVariants)::ElementType,
                                           decltype(variant)>);
 
-    if (p != variants_.end() && strcmp(p->get(), variant) == 0) {
+    if (p != mVariants.end() && strcmp(p->get(), variant) == 0) {
       return p;
     }
     return static_cast<decltype(p)>(nullptr);
   };
 
   auto insertVariantSortedIfNotPresent = [&](const char* variant) {
-    auto* p = std::lower_bound(variants_.begin(), variants_.end(), variant,
-                               IsLessThan<decltype(variants_)::ElementType,
+    auto* p = std::lower_bound(mVariants.begin(), mVariants.end(), variant,
+                               IsLessThan<decltype(mVariants)::ElementType,
                                           decltype(variant)>);
 
     // Don't insert the replacement when already present.
-    if (p != variants_.end() && strcmp(p->get(), variant) == 0) {
+    if (p != mVariants.end() && strcmp(p->get(), variant) == 0) {
       return true;
     }
 
     // Insert the preferred variant in sort order.
     auto preferred = DuplicateStringToUniqueChars(variant);
-    return !!variants_.insert(p, std::move(preferred));
+    return !!mVariants.insert(p, std::move(preferred));
   };
 
   auto removeVariant = [&](auto* p) {
-    size_t index = std::distance(variants_.begin(), p);
-    variants_.erase(variants_.begin() + index);
+    size_t index = std::distance(mVariants.begin(), p);
+    mVariants.erase(mVariants.begin() + index);
   };
 
   auto removeVariants = [&](auto* p, auto* q) {
-    size_t pIndex = std::distance(variants_.begin(), p);
-    size_t qIndex = std::distance(variants_.begin(), q);
+    size_t pIndex = std::distance(mVariants.begin(), p);
+    size_t qIndex = std::distance(mVariants.begin(), q);
     MOZ_ASSERT(pIndex < qIndex, "variant subtags are sorted");
 
-    variants_.erase(variants_.begin() + qIndex);
-    variants_.erase(variants_.begin() + pIndex);
+    mVariants.erase(mVariants.begin() + qIndex);
+    mVariants.erase(mVariants.begin() + pIndex);
   };"""
     )
 
@@ -748,7 +748,7 @@ bool mozilla::intl::Locale::updateLegacyMappings() {
 
         println(
             """
-  if (variants_.length() >= 2) {
+  if (mVariants.length() >= 2) {
     if (auto* hepburn = findVariant("hepburn")) {
       if (auto* heploc = findVariant("heploc")) {
         removeVariants(hepburn, heploc);
@@ -777,9 +777,9 @@ bool mozilla::intl::Locale::updateLegacyMappings() {
 
         println(
             """
-  if (language().equalTo("sgn")) {
-    if (region().present() && signLanguageMapping(language_, region())) {
-      region_.set(mozilla::MakeStringSpan(""));
+  if (Language().EqualTo("sgn")) {
+    if (Region().Present() && SignLanguageMapping(mLanguage, Region())) {
+      mRegion.Set(mozilla::MakeStringSpan(""));
     }
   }
 """.rstrip().lstrip(
@@ -827,7 +827,7 @@ bool mozilla::intl::Locale::updateLegacyMappings() {
 
     for langs in legacy_mappings_compact.values():
         language_equal_to = (
-            f"""language().equalTo("{lang}")""" for lang in sorted(langs)
+            f"""Language().EqualTo("{lang}")""" for lang in sorted(langs)
         )
         cond = f""" ||\n{" " * len("  else if (")}""".join(language_equal_to)
 
@@ -881,7 +881,7 @@ bool mozilla::intl::Locale::updateLegacyMappings() {
                 println(
                     f"""
     {indent}removeVariant{"s" if len_variants > 1 else ""}({", ".join(sorted_variants)});
-    {indent}setLanguage("{r_language}");
+    {indent}SetLanguage("{r_language}");
     {indent}{"return true;" if not chain_if else ""}
 """.rstrip().lstrip(
                         "\n"
@@ -920,11 +920,11 @@ def writeSignLanguageMappingsFunction(
     writeMappingHeader(println, description, source, url)
     println(
         """\
-bool mozilla::intl::Locale::signLanguageMapping(LanguageSubtag& language,
+bool mozilla::intl::Locale::SignLanguageMapping(LanguageSubtag& language,
                                                 const RegionSubtag& region) {
-  MOZ_ASSERT(language.equalTo("sgn"));
-  MOZ_ASSERT(IsStructurallyValidRegionTag(region.span()));
-  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region.span()));
+  MOZ_ASSERT(language.EqualTo("sgn"));
+  MOZ_ASSERT(IsStructurallyValidRegionTag(region.Span()));
+  MOZ_ASSERT(IsCanonicallyCasedRegionTag(region.Span()));
 """.rstrip()
     )
 
@@ -1650,10 +1650,10 @@ template <size_t Length, size_t TagLength, size_t SubtagLength>
 static inline bool HasReplacement(
     const char (&subtags)[Length][TagLength],
     const mozilla::intl::LanguageTagSubtag<SubtagLength>& subtag) {
-  MOZ_ASSERT(subtag.length() == TagLength - 1,
+  MOZ_ASSERT(subtag.Length() == TagLength - 1,
              "subtag must have the same length as the list of subtags");
 
-  const char* ptr = subtag.span().data();
+  const char* ptr = subtag.Span().data();
   return std::binary_search(std::begin(subtags), std::end(subtags), ptr,
                             [](const char* a, const char* b) {
                               return memcmp(a, b, TagLength - 1) < 0;
@@ -1664,10 +1664,10 @@ template <size_t Length, size_t TagLength, size_t SubtagLength>
 static inline const char* SearchReplacement(
     const char (&subtags)[Length][TagLength], const char* (&aliases)[Length],
     const mozilla::intl::LanguageTagSubtag<SubtagLength>& subtag) {
-  MOZ_ASSERT(subtag.length() == TagLength - 1,
+  MOZ_ASSERT(subtag.Length() == TagLength - 1,
              "subtag must have the same length as the list of subtags");
 
-  const char* ptr = subtag.span().data();
+  const char* ptr = subtag.Span().data();
   auto p = std::lower_bound(std::begin(subtags), std::end(subtags), ptr,
                             [](const char* a, const char* b) {
                               return memcmp(a, b, TagLength - 1) < 0;
@@ -1751,7 +1751,7 @@ static bool IsCanonicallyCasedTransformType(mozilla::Span<const char> type) {
 
     writeMappingsBinarySearch(
         println,
-        "languageMapping",
+        "LanguageMapping",
         "LanguageSubtag&",
         "language",
         "IsStructurallyValidLanguageTag",
@@ -1764,7 +1764,7 @@ static bool IsCanonicallyCasedTransformType(mozilla::Span<const char> type) {
     )
     writeMappingsBinarySearch(
         println,
-        "complexLanguageMapping",
+        "ComplexLanguageMapping",
         "const LanguageSubtag&",
         "language",
         "IsStructurallyValidLanguageTag",
@@ -1777,7 +1777,7 @@ static bool IsCanonicallyCasedTransformType(mozilla::Span<const char> type) {
     )
     writeMappingsBinarySearch(
         println,
-        "scriptMapping",
+        "ScriptMapping",
         "ScriptSubtag&",
         "script",
         "IsStructurallyValidScriptTag",
@@ -1790,7 +1790,7 @@ static bool IsCanonicallyCasedTransformType(mozilla::Span<const char> type) {
     )
     writeMappingsBinarySearch(
         println,
-        "regionMapping",
+        "RegionMapping",
         "RegionSubtag&",
         "region",
         "IsStructurallyValidRegionTag",
@@ -1803,7 +1803,7 @@ static bool IsCanonicallyCasedTransformType(mozilla::Span<const char> type) {
     )
     writeMappingsBinarySearch(
         println,
-        "complexRegionMapping",
+        "ComplexRegionMapping",
         "const RegionSubtag&",
         "region",
         "IsStructurallyValidRegionTag",
@@ -3269,7 +3269,7 @@ static inline const char* Search{0}Replacement(
  * Spec: https://www.unicode.org/reports/tr35/#Unicode_Locale_Extension_Data_Files
  * Spec: https://www.unicode.org/reports/tr35/#t_Extension
  */
-const char* mozilla::intl::Locale::replace{0}ExtensionType(
+const char* mozilla::intl::Locale::Replace{0}ExtensionType(
     mozilla::Span<const char> key, mozilla::Span<const char> type) {{
   MOZ_ASSERT(key.size() == {0}KeyLength);
   MOZ_ASSERT(IsCanonicallyCased{0}Key(key));
