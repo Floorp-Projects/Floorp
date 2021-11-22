@@ -2459,7 +2459,7 @@ void CanonicalBrowsingContext::ShowSubframeCrashedUI(
 }
 
 static void LogBFCacheBlockingForDoc(BrowsingContext* aBrowsingContext,
-                                     uint16_t aBFCacheCombo, bool aIsSubDoc) {
+                                     uint32_t aBFCacheCombo, bool aIsSubDoc) {
   if (aIsSubDoc) {
     nsAutoCString uri("[no uri]");
     nsCOMPtr<nsIURI> currentURI =
@@ -2503,6 +2503,9 @@ static void LogBFCacheBlockingForDoc(BrowsingContext* aBrowsingContext,
   }
   if (aBFCacheCombo & BFCacheStatus::BEFOREUNLOAD_LISTENER) {
     MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug, (" * beforeunload listener"));
+  }
+  if (aBFCacheCombo & BFCacheStatus::ACTIVE_LOCK) {
+    MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug, (" * has active Web Locks"));
   }
 }
 
