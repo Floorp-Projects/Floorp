@@ -14,8 +14,10 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.RectF;
+import android.os.Build
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.filters.MediumTest
+import androidx.test.filters.SdkSuppress
 
 import org.hamcrest.Matcher
 import org.hamcrest.Matchers.*
@@ -87,6 +89,30 @@ class SelectionActionDelegateTest : BaseSessionTest() {
         }
     }
 
+    @SdkSuppress(minSdkVersion = Build.VERSION_CODES.O)
+    @Test fun request_html() {
+        if (editable) {
+            withHtmlClipboard ("text", "<bold>text</bold>") {
+                if (type != ContentType.EDITABLE_ELEMENT) {
+                    testThat(selectedContent, {}, hasShowActionRequest(
+                            FLAG_IS_EDITABLE, arrayOf(ACTION_COLLAPSE_TO_START, ACTION_COLLAPSE_TO_END,
+                                                      ACTION_COPY, ACTION_CUT, ACTION_DELETE,
+                                                      ACTION_HIDE, ACTION_PASTE,
+                                                      ACTION_PASTE_AS_PLAIN_TEXT)))
+                } else {
+                    testThat(selectedContent, {}, hasShowActionRequest(
+                            FLAG_IS_EDITABLE, arrayOf(ACTION_COLLAPSE_TO_START, ACTION_COLLAPSE_TO_END,
+                                                      ACTION_COPY, ACTION_CUT, ACTION_DELETE,
+                                                      ACTION_HIDE, ACTION_PASTE)))
+                }
+            }
+        } else {
+            testThat(selectedContent, {}, hasShowActionRequest(
+                    0, arrayOf(ACTION_COPY, ACTION_HIDE, ACTION_SELECT_ALL,
+                                           ACTION_UNSELECT)))
+        }
+    }
+
     @Test fun request_collapsed() = assumingEditable(true) {
         withClipboard ("text") {
             testThat(collapsedContent, {}, hasShowActionRequest(
@@ -118,6 +144,15 @@ class SelectionActionDelegateTest : BaseSessionTest() {
     @Test fun paste() = assumingEditable(true) {
         withClipboard("pasted") {
             testThat(selectedContent, withResponse(ACTION_PASTE), changesContentTo("pasted"))
+        }
+    }
+
+    @SdkSuppress(minSdkVersion = Build.VERSION_CODES.O)
+    @Test fun pasteAsPlainText() = assumingEditable(true) {
+        assumeThat("Paste as plain text works on content editable", type, not(equalTo(ContentType.EDITABLE_ELEMENT)));
+
+        withHtmlClipboard("pasted", "<bold>pasted</bold>") {
+            testThat(selectedContent, withResponse(ACTION_PASTE_AS_PLAIN_TEXT), changesContentTo("pasted"))
         }
     }
 
@@ -301,6 +336,22 @@ class SelectionActionDelegateTest : BaseSessionTest() {
         val oldClip = clipboard.primaryClip
         try {
             clipboard.setPrimaryClip(ClipData.newPlainText("", content))
+
+            sessionRule.addExternalDelegateUntilTestEnd(
+                    ClipboardManager.OnPrimaryClipChangedListener::class,
+                    clipboard::addPrimaryClipChangedListener,
+                    clipboard::removePrimaryClipChangedListener,
+                    ClipboardManager.OnPrimaryClipChangedListener {})
+            lambda()
+        } finally {
+            clipboard.setPrimaryClip(oldClip ?: ClipData.newPlainText("", ""))
+        }
+    }
+
+    private fun withHtmlClipboard(plainText: String = "", html: String = "", lambda: () -> Unit) {
+        val oldClip = clipboard.primaryClip
+        try {
+            clipboard.setPrimaryClip(ClipData.newHtmlText("", plainText, html))
 
             sessionRule.addExternalDelegateUntilTestEnd(
                     ClipboardManager.OnPrimaryClipChangedListener::class,

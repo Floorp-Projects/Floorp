@@ -22,10 +22,13 @@ exclude: true
   ([bug 1736433]({{bugzilla}}1736433)).
 - Added [`ERROR_INVALID_DOMAIN`][96.2] to WebExtension.InstallException.ErrorCodes.
   ([bug 1740634]({{bugzilla}}1740634)).
+- Added [`SelectionActionDelegate.Selection.pasteAsPlainText`][96.4] to paste
+  HTML content as plain text.
 
 [96.1]: {{javadoc_uri}}/Autocomplete.StorageDelegate.html#onLoginFetch--
 [96.2]: {{javadoc_uri}}/GeckoResult.html#finally_-java.lang.Runnable-
 [96.2]: {{javadoc_uri}}/WebExtension.InstallException.ErrorCodes.html#ERROR_INVALID_DOMAIN-
+[96.4]: {{javadoc_uri}}/GeckoSession.SelectionActionDelegate.Selection.html#pasteAsPlainText--
 
 ## v95
 - Added [`GeckoSession.ContentDelegate.onPointerIconChange()`][95.1] to notify
@@ -1086,4 +1089,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 542e06f5afa27cc2f7590971d6d3e2ac696af29e
+[api-version]: 59458dfdb55ae869b0e7b55535c9742f0ad0c4bd
