@@ -796,11 +796,8 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   #pageActionButton[multiple-children] ~ .urlbar-page-action {
     display: none;
   }
-
-  @media (-moz-proton) {
-    #pageActionButton[multiple-children] {
-      visibility: visible;
-    }
+  #pageActionButton[multiple-children] {
+    visibility: visible;
   }
 }
 @media (max-width: 550px) {
@@ -1240,12 +1237,10 @@ toolbarpaletteitem[dragover] {
   display: -moz-box;
 }
 
-@media (-moz-proton) {
 #customization-lwtheme-button > .box-inherit > .button-menu-dropmarker,
 #customization-uidensity-button > .box-inherit > .button-menu-dropmarker {
   display: -moz-box;
 }
-} /*** END proton ***/
 
 toolbarpaletteitem[place="palette"] {
   -moz-box-orient: vertical;
@@ -1552,10 +1547,8 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 }
 }
 
-@media (-moz-proton) {
 .dialogBox {
   border-radius: 8px;
-}
 }
 
 .dialogBox[resizable="true"] {
