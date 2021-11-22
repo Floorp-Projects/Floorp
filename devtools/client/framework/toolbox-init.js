@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* eslint-env browser */
-/* globals XPCNativeWrapper */
 
 "use strict";
 
@@ -94,17 +93,12 @@ async function initToolbox(url, host) {
   const tool = url.searchParams.get("tool");
 
   try {
-    let descriptor;
-    if (url.searchParams.has("target")) {
-      descriptor = await _createTestOnlyDescriptor(host);
-    } else {
-      descriptor = await descriptorFromURL(url);
-      const toolbox = gDevTools.getToolboxForDescriptor(descriptor);
-      if (toolbox && toolbox.isDestroying()) {
-        // If a toolbox already exists for the descriptor, wait for current
-        // toolbox destroy to be finished.
-        await toolbox.destroy();
-      }
+    const descriptor = await descriptorFromURL(url);
+    const toolbox = gDevTools.getToolboxForDescriptor(descriptor);
+    if (toolbox && toolbox.isDestroying()) {
+      // If a toolbox already exists for the descriptor, wait for current
+      // toolbox destroy to be finished.
+      await toolbox.destroy();
     }
 
     // Display an error page if we are connected to a remote target and we lose it
@@ -127,47 +121,6 @@ async function initToolbox(url, host) {
     console.error("Exception while loading the toolbox", error);
     showErrorPage(host.contentDocument, `${error}`);
   }
-}
-
-/**
- * Attach toolbox to a given browser iframe (<xul:browser> or <html:iframe
- * mozbrowser>) whose reference is set on the host iframe.
- *
- * Note that there is no real usage of it. It is only used by the test found at
- * devtools/client/framework/test/browser_toolbox_target.js.
- */
-async function _createTestOnlyDescriptor(host) {
-  const { DevToolsServer } = require("devtools/server/devtools-server");
-  const { DevToolsClient } = require("devtools/client/devtools-client");
-
-  // `iframe` is the targeted document to debug
-  let iframe = host.wrappedJSObject ? host.wrappedJSObject.target : host.target;
-  if (!iframe) {
-    throw new Error("Unable to find the targeted iframe to debug");
-  }
-
-  // Need to use a xray to have attributes and behavior expected by
-  // devtools codebase
-  iframe = XPCNativeWrapper(iframe);
-
-  // Fake a xul:tab object as we don't have one.
-  // linkedBrowser is the only one attribute being queried by client.getTab
-  const tab = { linkedBrowser: iframe };
-
-  DevToolsServer.init();
-  DevToolsServer.registerAllActors();
-  const client = new DevToolsClient(DevToolsServer.connectPipe());
-
-  await client.connect();
-  // Creates a target for a given browser iframe.
-  const descriptor = await client.mainRoot.getTab({ tab });
-
-  // XXX: Normally we don't need to fetch the target anymore, but the test
-  // listens to an early event `toolbox-ready` which will kick in before
-  // the rest of `initToolbox` can be done.
-  await descriptor.getTarget();
-
-  return descriptor;
 }
 
 // Only use this method to attach the toolbox if some query parameters are given
