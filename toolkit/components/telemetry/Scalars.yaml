@@ -7870,6 +7870,26 @@ cache:
     record_in_processes:
       - 'main'
 
+content:
+  process_max_precise:
+    bug_numbers:
+      - 1741759
+    description: >
+      The maximum number of content processes, submitted when a
+      new maximum is reached.  Replaces CONTENT_PROCESS_MAX and
+      CONTENT_PROCESS_PRECISE_MAX.
+      
+    notification_emails:
+      - kmadan@mozilla.com
+      - perf-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    expires: "98"
+    kind: uint
+
 opaque.response.blocking:
   parsing_size_kb:
     bug_numbers:
