@@ -301,6 +301,8 @@ inline void JSContext::enterAtomsZone() {
 
 inline void JSContext::setZone(js::Zone* zone,
                                JSContext::IsAtomsZone isAtomsZone) {
+  MOZ_ASSERT(!isHelperThreadContext());
+
   if (zone_) {
     zone_->addTenuredAllocsSinceMinorGC(allocsThisZoneSinceMinorGC_);
   }
@@ -308,17 +310,7 @@ inline void JSContext::setZone(js::Zone* zone,
   allocsThisZoneSinceMinorGC_ = 0;
 
   zone_ = zone;
-  if (zone == nullptr) {
-    freeLists_ = nullptr;
-    return;
-  }
-
-  if (isAtomsZone == AtomsZone && isHelperThreadContext()) {
-    MOZ_ASSERT(!zone_->wasGCStarted());
-    freeLists_ = atomsZoneFreeLists_;
-  } else {
-    freeLists_ = &zone_->arenas.freeLists();
-  }
+  freeLists_ = zone ? &zone_->arenas.freeLists() : nullptr;
 }
 
 inline void JSContext::enterRealmOf(JSObject* target) {

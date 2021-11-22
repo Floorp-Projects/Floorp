@@ -609,7 +609,6 @@ void ParseTask::runTask(AutoLockHelperThreadState& lock) {
   MOZ_ASSERT(cx->tempLifoAlloc().isEmpty());
   cx->tempLifoAlloc().freeAll();
   cx->frontendCollectionPool().purge();
-  cx->atomsZoneFreeLists().clear();
 }
 
 template <typename Unit>
