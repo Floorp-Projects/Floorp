@@ -4717,18 +4717,18 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
       * test-linux1804-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-cnn-nav-e10s: None
             * browsertime-responsiveness-chromium-cnn-nav-e10s: None
-            * browsertime-responsiveness-firefox-cnn-nav-e10s: mozilla-central
-            * browsertime-responsiveness-firefox-cnn-nav-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-cnn-nav-e10s: trunk
+            * browsertime-responsiveness-firefox-cnn-nav-fis-e10s: trunk
       * test-macosx1014-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-cnn-nav-e10s: None
             * browsertime-responsiveness-chromium-cnn-nav-e10s: None
             * browsertime-responsiveness-firefox-cnn-nav-e10s: None
-            * browsertime-responsiveness-firefox-cnn-nav-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-cnn-nav-fis-e10s: trunk
       * test-macosx1015-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-cnn-nav-e10s: None
             * browsertime-responsiveness-chromium-cnn-nav-e10s: None
-            * browsertime-responsiveness-firefox-cnn-nav-e10s: mozilla-central
-            * browsertime-responsiveness-firefox-cnn-nav-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-cnn-nav-e10s: trunk
+            * browsertime-responsiveness-firefox-cnn-nav-fis-e10s: trunk
       * test-windows10-32-qr/opt
             * browsertime-responsiveness-firefox-cnn-nav-e10s: None
             * browsertime-responsiveness-firefox-cnn-nav-fis-e10s: None
@@ -4743,8 +4743,8 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
       * test-windows10-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-cnn-nav-e10s: None
             * browsertime-responsiveness-chromium-cnn-nav-e10s: None
-            * browsertime-responsiveness-firefox-cnn-nav-e10s: mozilla-central
-            * browsertime-responsiveness-firefox-cnn-nav-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-cnn-nav-e10s: trunk
+            * browsertime-responsiveness-firefox-cnn-nav-fis-e10s: trunk
 
 
 .. dropdown:: facebook-nav (Navigates to facebook, then the sub-pages friends, marketplace, groups.)
@@ -4783,18 +4783,18 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
       * test-linux1804-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-facebook-nav-e10s: None
             * browsertime-responsiveness-chromium-facebook-nav-e10s: None
-            * browsertime-responsiveness-firefox-facebook-nav-e10s: mozilla-central
-            * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-facebook-nav-e10s: trunk
+            * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: trunk
       * test-macosx1014-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-facebook-nav-e10s: None
             * browsertime-responsiveness-chromium-facebook-nav-e10s: None
             * browsertime-responsiveness-firefox-facebook-nav-e10s: None
-            * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: trunk
       * test-macosx1015-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-facebook-nav-e10s: None
             * browsertime-responsiveness-chromium-facebook-nav-e10s: None
-            * browsertime-responsiveness-firefox-facebook-nav-e10s: mozilla-central
-            * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-facebook-nav-e10s: trunk
+            * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: trunk
       * test-windows10-32-qr/opt
             * browsertime-responsiveness-firefox-facebook-nav-e10s: None
             * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: None
@@ -4809,8 +4809,8 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
       * test-windows10-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-facebook-nav-e10s: None
             * browsertime-responsiveness-chromium-facebook-nav-e10s: None
-            * browsertime-responsiveness-firefox-facebook-nav-e10s: mozilla-central
-            * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-facebook-nav-e10s: trunk
+            * browsertime-responsiveness-firefox-facebook-nav-fis-e10s: trunk
 
 
 .. dropdown:: reddit-billgates-ama (Navigates from the Bill Gates AMA to the Reddit members section.)
@@ -4849,18 +4849,18 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
       * test-linux1804-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-reddit-billgates-ama-e10s: None
             * browsertime-responsiveness-chromium-reddit-billgates-ama-e10s: None
-            * browsertime-responsiveness-firefox-reddit-billgates-ama-e10s: mozilla-central
-            * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-e10s: trunk
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: trunk
       * test-macosx1014-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-reddit-billgates-ama-e10s: None
             * browsertime-responsiveness-chromium-reddit-billgates-ama-e10s: None
             * browsertime-responsiveness-firefox-reddit-billgates-ama-e10s: None
-            * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: trunk
       * test-macosx1015-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-reddit-billgates-ama-e10s: None
             * browsertime-responsiveness-chromium-reddit-billgates-ama-e10s: None
-            * browsertime-responsiveness-firefox-reddit-billgates-ama-e10s: mozilla-central
-            * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-e10s: trunk
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: trunk
       * test-windows10-32-qr/opt
             * browsertime-responsiveness-firefox-reddit-billgates-ama-e10s: None
             * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: None
@@ -4875,8 +4875,8 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
       * test-windows10-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-reddit-billgates-ama-e10s: None
             * browsertime-responsiveness-chromium-reddit-billgates-ama-e10s: None
-            * browsertime-responsiveness-firefox-reddit-billgates-ama-e10s: mozilla-central
-            * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-e10s: trunk
+            * browsertime-responsiveness-firefox-reddit-billgates-ama-fis-e10s: trunk
 
 
 .. dropdown:: reddit-billgates-post-1 (Navigates the `thisisbillgates` user starting at the main user page, then to the posts, comments, hot, and top sections.)
@@ -4915,18 +4915,18 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
       * test-linux1804-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-reddit-billgates-post-1-e10s: None
             * browsertime-responsiveness-chromium-reddit-billgates-post-1-e10s: None
-            * browsertime-responsiveness-firefox-reddit-billgates-post-1-e10s: mozilla-central
-            * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-e10s: trunk
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: trunk
       * test-macosx1014-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-reddit-billgates-post-1-e10s: None
             * browsertime-responsiveness-chromium-reddit-billgates-post-1-e10s: None
             * browsertime-responsiveness-firefox-reddit-billgates-post-1-e10s: None
-            * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: trunk
       * test-macosx1015-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-reddit-billgates-post-1-e10s: None
             * browsertime-responsiveness-chromium-reddit-billgates-post-1-e10s: None
-            * browsertime-responsiveness-firefox-reddit-billgates-post-1-e10s: mozilla-central
-            * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-e10s: trunk
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: trunk
       * test-windows10-32-qr/opt
             * browsertime-responsiveness-firefox-reddit-billgates-post-1-e10s: None
             * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: None
@@ -4941,8 +4941,8 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
       * test-windows10-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-reddit-billgates-post-1-e10s: None
             * browsertime-responsiveness-chromium-reddit-billgates-post-1-e10s: None
-            * browsertime-responsiveness-firefox-reddit-billgates-post-1-e10s: mozilla-central
-            * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-e10s: trunk
+            * browsertime-responsiveness-firefox-reddit-billgates-post-1-fis-e10s: trunk
 
 
 .. dropdown:: reddit-billgates-post-2 (Navigates the `thisisbillgates` user starting at the main user page, then to the posts, comments, hot, and top sections.)
@@ -4981,18 +4981,18 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
       * test-linux1804-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-reddit-billgates-post-2-e10s: None
             * browsertime-responsiveness-chromium-reddit-billgates-post-2-e10s: None
-            * browsertime-responsiveness-firefox-reddit-billgates-post-2-e10s: mozilla-central
-            * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-e10s: trunk
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: trunk
       * test-macosx1014-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-reddit-billgates-post-2-e10s: None
             * browsertime-responsiveness-chromium-reddit-billgates-post-2-e10s: None
             * browsertime-responsiveness-firefox-reddit-billgates-post-2-e10s: None
-            * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: trunk
       * test-macosx1015-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-reddit-billgates-post-2-e10s: None
             * browsertime-responsiveness-chromium-reddit-billgates-post-2-e10s: None
-            * browsertime-responsiveness-firefox-reddit-billgates-post-2-e10s: mozilla-central
-            * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-e10s: trunk
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: trunk
       * test-windows10-32-qr/opt
             * browsertime-responsiveness-firefox-reddit-billgates-post-2-e10s: None
             * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: None
@@ -5007,8 +5007,8 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
       * test-windows10-64-shippable-qr/opt
             * browsertime-responsiveness-chrome-reddit-billgates-post-2-e10s: None
             * browsertime-responsiveness-chromium-reddit-billgates-post-2-e10s: None
-            * browsertime-responsiveness-firefox-reddit-billgates-post-2-e10s: mozilla-central
-            * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: mozilla-central
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-e10s: trunk
+            * browsertime-responsiveness-firefox-reddit-billgates-post-2-fis-e10s: trunk
 
 
 

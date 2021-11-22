@@ -141,16 +141,16 @@ browsertime-responsiveness:
             fission:
                 by-test-platform:
                     windows.*-32.*: []
-                    .*shippable-qr/.*: [mozilla-central]
+                    .*shippable-qr/.*: [trunk]
                     default: []
             default:
                 by-app:
                     firefox:
                         by-test-platform:
                             .*clang.*: []
-                            linux.*shippable.*: [mozilla-central]
-                            macosx1015.*shippable.*: [mozilla-central]
-                            windows10-64.*shippable.*: [mozilla-central]
+                            linux.*shippable.*: [trunk]
+                            macosx1015.*shippable.*: [trunk]
+                            windows10-64.*shippable.*: [trunk]
                             default: []
                     default: []
     tier:
