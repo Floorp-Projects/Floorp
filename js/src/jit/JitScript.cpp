@@ -18,6 +18,7 @@
 #include "jit/JitFrames.h"
 #include "jit/JitSpewer.h"
 #include "jit/ScriptFromCalleeToken.h"
+#include "jit/TrialInlining.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/FrameIter.h"  // js::OnlyJSJitFrameIter
 #include "vm/JSScript.h"
@@ -48,6 +49,20 @@ JitScript::JitScript(JSScript* script, Offset fallbackStubsOffset,
     setIonScriptImpl(script, IonDisabledScriptPtr);
   }
 }
+
+#ifdef DEBUG
+JitScript::~JitScript() {
+  // The contents of the stub space are removed and freed separately after the
+  // next minor GC. See prepareForDestruction.
+  MOZ_ASSERT(jitScriptStubSpace_.isEmpty());
+
+  // BaselineScript and IonScript must have been destroyed at this point.
+  MOZ_ASSERT(!hasBaselineScript());
+  MOZ_ASSERT(!hasIonScript());
+}
+#else
+JitScript::~JitScript() = default;
+#endif
 
 bool JSScript::createJitScript(JSContext* cx) {
   MOZ_ASSERT(!hasJitScript());
