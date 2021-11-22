@@ -1800,14 +1800,10 @@ void GCRuntime::startSweepingAtomsTable() {
 
   // Create secondary tables to hold new atoms added while we're sweeping the
   // main tables incrementally.
-  if (!atomsTable->startIncrementalSweep()) {
+  if (!atomsTable->startIncrementalSweep(maybeAtoms)) {
     SweepingTracer trc(rt);
     atomsTable->traceWeak(&trc);
-    return;
   }
-
-  // Initialize remaining atoms to sweep.
-  maybeAtoms.emplace(*atomsTable);
 }
 
 IncrementalProgress GCRuntime::sweepAtomsTable(JSFreeOp* fop,

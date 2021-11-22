@@ -16,10 +16,8 @@
 #include "vm/JSAtom.h"
 
 /*
- * The atoms table is a mapping from strings to JSAtoms that supports concurrent
- * access and incremental sweeping.
- *
- * The table is partitioned based on the key into multiple sub-tables.
+ * The atoms table is a mapping from strings to JSAtoms that supports
+ * incremental sweeping.
  */
 
 namespace js {
@@ -95,46 +93,21 @@ class FrozenAtomSet {
 };
 
 class AtomsTable {
-  static const size_t PartitionShift = 5;
-  static const size_t PartitionCount = 1 << PartitionShift;
-
   // Use a low initial capacity for atom hash tables to avoid penalizing
   // runtimes which create a small number of atoms.
   static const size_t InitialTableSize = 16;
 
-  // A single partition, representing a subset of the atoms in the table.
-  struct Partition {
-    explicit Partition(uint32_t index);
-    ~Partition();
+  // The main atoms set.
+  AtomSet atoms;
 
-    // The atoms in this set.
-    AtomSet atoms;
-
-    // Set of atoms added while the |atoms| set is being swept.
-    AtomSet* atomsAddedWhileSweeping;
-  };
-
-  Partition* partitions[PartitionCount];
+  // Set of atoms added while the |atoms| set is being swept.
+  AtomSet* atomsAddedWhileSweeping;
 
  public:
   // An iterator used for sweeping atoms incrementally.
-  class SweepIterator {
-    AtomsTable& atoms;
-    size_t partitionIndex;
-    mozilla::Maybe<AtomSet::Enum> atomsIter;
+  using SweepIterator = AtomSet::Enum;
 
-    void settle();
-    void startSweepingPartition();
-    void finishSweepingPartition();
-
-   public:
-    explicit SweepIterator(AtomsTable& atoms);
-    bool empty() const;
-    AtomStateEntry front() const;
-    void removeFront();
-    void popFront();
-  };
-
+  AtomsTable();
   ~AtomsTable();
   bool init();
 
@@ -153,7 +126,7 @@ class AtomsTable {
   // Sweep all atoms non-incrementally.
   void traceWeak(JSTracer* trc);
 
-  bool startIncrementalSweep();
+  bool startIncrementalSweep(mozilla::Maybe<SweepIterator>& atomsToSweepOut);
 
   // Sweep some atoms incrementally and return whether we finished.
   bool sweepIncrementally(SweepIterator& atomsToSweep, SliceBudget& budget);
@@ -161,11 +134,8 @@ class AtomsTable {
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
  private:
-  // Map a key to a partition based on its hash.
-  MOZ_ALWAYS_INLINE size_t getPartitionIndex(const AtomHasher::Lookup& lookup);
-
   void tracePinnedAtomsInSet(JSTracer* trc, AtomSet& atoms);
-  void mergeAtomsAddedWhileSweeping(Partition& partition);
+  void mergeAtomsAddedWhileSweeping();
 };
 
 bool AtomIsPinned(JSContext* cx, JSAtom* atom);
