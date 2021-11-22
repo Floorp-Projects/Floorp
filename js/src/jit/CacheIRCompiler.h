@@ -10,6 +10,8 @@
 #include "mozilla/Maybe.h"
 
 #include "jit/CacheIR.h"
+#include "jit/CacheIRReader.h"
+#include "jit/CacheIRWriter.h"
 #include "jit/JitOptions.h"
 #include "jit/MacroAssembler.h"
 #include "jit/SharedICRegisters.h"
@@ -22,11 +24,14 @@ class BigInt;
 namespace js {
 
 class TypedArrayObject;
+enum class UnaryMathFunction : uint8_t;
 
 namespace jit {
 
 class BaselineCacheIRCompiler;
+class ICCacheIRStub;
 class IonCacheIRCompiler;
+class IonScript;
 
 enum class ICStubEngine : uint8_t;
 
