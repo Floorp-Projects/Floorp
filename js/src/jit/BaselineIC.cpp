@@ -13,6 +13,7 @@
 
 #include "builtin/Eval.h"
 #include "jit/BaselineCacheIRCompiler.h"
+#include "jit/CacheIRGenerator.h"
 #include "jit/CacheIRHealth.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"

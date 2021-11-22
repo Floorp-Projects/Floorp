@@ -7,16 +7,37 @@
 #ifndef jit_BaselineCacheIRCompiler_h
 #define jit_BaselineCacheIRCompiler_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
+#include "jstypes.h"
 
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
+#include "jit/CacheIROpsGenerated.h"
+#include "jit/CacheIRReader.h"
+
+struct JS_PUBLIC_API JSContext;
+
+class JSScript;
 
 namespace js {
 namespace jit {
 
-class ICCacheIRStub;
+class CacheIRWriter;
 class ICFallbackStub;
+class ICScript;
+class JitCode;
+class Label;
+class MacroAssembler;
+
+struct Address;
+struct Register;
+
+enum class TailCallVMFunctionId;
 
 enum class ICAttachResult { Attached, DuplicateStub, TooLarge, OOM };
 

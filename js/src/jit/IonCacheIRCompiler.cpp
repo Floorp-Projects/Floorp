@@ -10,6 +10,7 @@
 #include <algorithm>
 
 #include "jit/CacheIRCompiler.h"
+#include "jit/CacheIRWriter.h"
 #include "jit/IonIC.h"
 #include "jit/JitFrames.h"
 #include "jit/JitZone.h"

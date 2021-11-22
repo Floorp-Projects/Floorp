@@ -17,8 +17,11 @@
 #include "builtin/ModuleObject.h"
 #include "builtin/Object.h"
 #include "jit/BaselineIC.h"
+#include "jit/CacheIRCloner.h"
 #include "jit/CacheIRCompiler.h"
+#include "jit/CacheIRGenerator.h"
 #include "jit/CacheIRSpewer.h"
+#include "jit/CacheIRWriter.h"
 #include "jit/InlinableNatives.h"
 #include "jit/JitContext.h"
 #include "js/experimental/JitInfo.h"  // JSJitInfo

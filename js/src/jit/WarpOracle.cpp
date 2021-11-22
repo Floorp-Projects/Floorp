@@ -12,6 +12,7 @@
 
 #include "jit/CacheIR.h"
 #include "jit/CacheIRCompiler.h"
+#include "jit/CacheIRReader.h"
 #include "jit/CompileInfo.h"
 #include "jit/InlineScriptTree.h"
 #include "jit/JitRealm.h"
