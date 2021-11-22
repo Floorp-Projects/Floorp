@@ -206,28 +206,7 @@ function TargetMixin(parentClass) {
      * @return {TargetMixin} the parent target.
      */
     async getParentTarget() {
-      // We now support frames watching via watchTargets for Tab and Process descriptors.
-      const watcherFront = await this.getWatcherFront();
-      if (watcherFront) {
-        // Safety check, in theory all watcher should support frames. We should be able
-        // to remove this as part of Bug 1680280.
-        if (watcherFront.traits.frame) {
-          // Retrieve the Watcher, which manage all the targets and should already have a reference to
-          // to the parent target.
-          return watcherFront.getParentWindowGlobalTarget(
-            this.browsingContextID
-          );
-        }
-        return null;
-      }
-
-      if (this.parentFront.getParentTarget) {
-        return this.parentFront.getParentTarget();
-      }
-
-      // Other targets, like WebExtensions, don't have a Watcher yet, nor do expose `getParentTarget`.
-      // We can't fetch parent target yet for these targets.
-      return null;
+      return this.commands.targetCommand.getParentTarget(this);
     }
 
     /**

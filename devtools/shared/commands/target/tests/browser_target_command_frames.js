@@ -37,6 +37,8 @@ add_task(async function() {
   // Test what happens with about:blank documents
   await testOpeningOnAboutBlankDocument();
   await testNavigationToAboutBlankDocument();
+
+  await testNestedIframes();
 });
 
 async function testOpeningOnParentProcessDocument() {
@@ -223,6 +225,10 @@ async function testBrowserFrames() {
   // Assert that watchTargets will call the create callback for all existing frames
   const targets = [];
   const topLevelTarget = targetCommand.targetFront;
+
+  const noParentTarget = await topLevelTarget.getParentTarget();
+  is(noParentTarget, null, "The top level target has no parent target");
+
   const onAvailable = ({ targetFront }) => {
     is(
       targetFront.targetType,
@@ -266,10 +272,16 @@ async function testBrowserFrames() {
       previousTargetCount + 1,
       "Opening a tab reported a new frame"
     );
+    const newTabTarget = targets.at(-1);
+    is(newTabTarget.url, url, "This frame target is about the new tab");
+    // Internaly, the tab, which uses a <browser type='content'> element is considered detached from their owner document
+    // and so the target is having a null parentInnerWindowId. But the framework will attach all non-top-level targets
+    // as children of the top level.
+    const tabParentTarget = await newTabTarget.getParentTarget();
     is(
-      targets[targets.length - 1].url,
-      url,
-      "This frame target is about the new tab"
+      tabParentTarget,
+      targetCommand.targetFront,
+      "tab's WindowGlobal/BrowsingContext is detached and has no parent, but we report them as children of the top level target"
     );
 
     const frames3 = await targetCommand.getAllTargets([TYPES.FRAME]);
@@ -314,7 +326,7 @@ async function testBrowserFrames() {
     "Opening a new content window reported a new frame"
   );
   is(
-    targets[targets.length - 1].url,
+    targets.at(-1).url,
     popupUrl,
     "This frame target is about the new content window"
   );
@@ -431,6 +443,9 @@ async function testTabFrames(mainRoot) {
     true,
     "First target is not considered as a target switching"
   );
+  const noParentTarget = await targets[0].targetFront.getParentTarget();
+  is(noParentTarget, null, "The top level target has no parent target");
+
   if (isFissionEnabled() || isEveryFrameTargetEnabled()) {
     is(
       targets[1].targetFront.url,
@@ -446,6 +461,12 @@ async function testTabFrames(mainRoot) {
       !targets[1].isTargetSwitching,
       true,
       "Iframe target isn't a target swich"
+    );
+    const parentTarget = await targets[1].targetFront.getParentTarget();
+    is(
+      parentTarget,
+      targets[0].targetFront,
+      "The parent target for the iframe is the top level target"
     );
   }
 
@@ -567,4 +588,67 @@ async function testTabFrames(mainRoot) {
   BrowserTestUtils.removeTab(tab);
 
   await commands.destroy();
+}
+
+async function testNestedIframes() {
+  info("Test TargetCommand against nested frames");
+
+  const nestedIframeUrl = `https://example.com/document-builder.sjs?html=${encodeURIComponent(
+    "<title>second</title><h3>second level iframe</h3>"
+  )}&delay=500`;
+
+  const testUrl = `data:text/html;charset=utf-8,
+    <h1>Top-level</h1>
+    <iframe id=first-level
+      src='data:text/html;charset=utf-8,${encodeURIComponent(
+        `<title>first</title><h2>first level iframe</h2><iframe id=second-level src="${nestedIframeUrl}"></iframe>`
+      )}'
+    ></iframe>`;
+
+  // Create a TargetCommand for a given test tab
+  const tab = await addTab(testUrl);
+  const commands = await CommandsFactory.forTab(tab);
+  const targetCommand = commands.targetCommand;
+  const { TYPES } = targetCommand;
+
+  await targetCommand.startListening();
+
+  // Check that calling getAllTargets([frame]) return the same target instances
+  const frames = await targetCommand.getAllTargets([TYPES.FRAME]);
+
+  is(frames[0], targetCommand.targetFront, "First target is the top level one");
+  const topParent = await frames[0].getParentTarget();
+  is(topParent, null, "Top level target has no parent");
+
+  if (isEveryFrameTargetEnabled()) {
+    const firstIframeTarget = frames.find(target => target.title == "first");
+    ok(
+      firstIframeTarget,
+      "With EFT, got the target for the first level iframe"
+    );
+    const firstParent = await firstIframeTarget.getParentTarget();
+    is(
+      firstParent,
+      targetCommand.targetFront,
+      "With EFT, first level has top level target as parent"
+    );
+
+    const secondIframeTarget = frames.find(target => target.title == "second");
+    ok(secondIframeTarget, "Got the target for the second level iframe");
+    const secondParent = await secondIframeTarget.getParentTarget();
+    is(
+      secondParent,
+      firstIframeTarget,
+      "With EFT, second level has the first level target as parent"
+    );
+  } else if (isFissionEnabled()) {
+    const secondIframeTarget = frames.find(target => target.title == "second");
+    ok(secondIframeTarget, "Got the target for the second level iframe");
+    const secondParent = await secondIframeTarget.getParentTarget();
+    is(
+      secondParent,
+      targetCommand.targetFront,
+      "With fission, second level has top level target as parent"
+    );
+  }
 }
