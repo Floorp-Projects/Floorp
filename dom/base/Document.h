@@ -4859,6 +4859,15 @@ class Document : public nsINode,
   uint32_t mLazyLoadImageReachViewportLoaded;
 
   uint32_t mContentEditableCount;
+  /**
+   * Count of the number of active LockRequest objects, including ones from
+   * workers. Note that the value won't be updated while the document is being
+   * destroyed.
+   *
+   * TODO(krosylight): We may want to move this to window object instead, but
+   * it's not clear whether the spec relates locks to the window/agent or the
+   * document. See also https://github.com/WICG/web-locks/issues/95.
+   */
   uint32_t mLockCount = 0;
   EditingState mEditingState;
 
