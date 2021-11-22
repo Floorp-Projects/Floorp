@@ -839,7 +839,11 @@ void BaseCompiler::popStackResults(ABIResultIter& iter, StackHeight stackBase) {
     Stk& v = stk_.back();
     switch (v.kind()) {
       case Stk::ConstI32:
+#if defined(JS_CODEGEN_MIPS64)
+        fr.storeImmediatePtrToStack(v.i32val_, resultHeight, temp);
+#else
         fr.storeImmediatePtrToStack(uint32_t(v.i32val_), resultHeight, temp);
+#endif
         break;
       case Stk::ConstF32:
         fr.storeImmediateF32ToStack(v.f32val_, resultHeight, temp);

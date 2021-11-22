@@ -282,7 +282,7 @@ void BaseCompiler::boundsCheck4GBOrLargerAccess(RegPtr tls, RegI32 ptr,
 #  ifdef RABALDR_ZERO_EXTENDS
   masm.debugAssertCanonicalInt32(ptr);
 #  else
-  MOZ_CRASH("Platform code needed here");
+  masm.move32To64ZeroExtend(ptr, ptr64);
 #  endif
 
   boundsCheck4GBOrLargerAccess(tls, ptr64, ok);
@@ -293,7 +293,7 @@ void BaseCompiler::boundsCheck4GBOrLargerAccess(RegPtr tls, RegI32 ptr,
 #  ifdef RABALDR_ZERO_EXTENDS
   // The canonical value is zero-extended; we already have that.
 #  else
-  MOZ_CRASH("Platform code needed here");
+  masm.move64To32(ptr64, ptr);
 #  endif
 #else
   // No support needed, we have max 2GB heap on 32-bit
@@ -323,6 +323,18 @@ void BaseCompiler::boundsCheckBelow4GBAccess(RegPtr tls, RegI64 ptr,
   // future and they may differ on 32-bit and 64-bit.
   boundsCheck4GBOrLargerAccess(tls, ptr, ok);
 }
+
+// Make sure the ptr could be used as an index register.
+static inline void ToValidIndex(MacroAssembler& masm, RegI32 ptr) {
+#if defined(JS_CODEGEN_MIPS64)
+  // When ptr is used as an index, it will be added to a 64-bit register.
+  // So we should explicitly promote ptr to 64-bit. Since now ptr holds a
+  // unsigned 32-bit value, we zero-extend it to 64-bit here.
+  masm.move32To64ZeroExtend(ptr, Register64(ptr));
+#endif
+}
+
+static inline void ToValidIndex(MacroAssembler& masm, RegI64 ptr) {}
 
 // RegIndexType is RegI32 for Memory32 and RegI64 for Memory64.
 template <typename RegIndexType>
@@ -387,6 +399,8 @@ void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
     masm.wasmTrap(Trap::OutOfBounds, bytecodeOffset());
     masm.bind(&ok);
   }
+
+  ToValidIndex(masm, ptr);
 }
 
 template <typename RegIndexType>
