@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>A hit testing test for the scenario in bug 1257288</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    html {
+      background: radial-gradient(circle at 80px 450px, blue 5px, transparent 0) gray no-repeat;
+      height: 100%;
+    }
+
+    #scrollbox {
+      border: 1px solid black;
+      width: 400px;
+      height: 400px;
+      margin: 20px;
+      overflow: auto;
+      background-color: white;
+    }
+
+    #scrolled {
+      padding-top: 300px;
+      padding-bottom: 300px;
+    }
+
+    #clip {
+      overflow: hidden;
+      margin: 10px;
+    }
+
+    #transform {
+      background-color: red;
+      width: 200px;
+      height: 200px;
+      will-change: transform;
+      transform: rotate(45deg);
+      position: relative;
+      left: -100px;
+    }
+  </style>
+</head>
+<body>
+  <div id="scrollbox">
+    <div id="scrolled">
+      <div id="clip">
+        <div id="transform"></div>
+      </div>
+    </div>
+  </div>
+</body>
+<script type="application/javascript">
+
+async function test() {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  // Check that hit-testing on the blue circle (located at (80, 450))
+  // hits the root, not the subframe.
+  checkHitResult(hitTest({x: 80, y: 450}),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(document.scrollingElement),
+                 utils.getLayersId(),
+                 "root scroller should be hit, not subframe");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>
