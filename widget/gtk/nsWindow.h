@@ -535,7 +535,7 @@ class nsWindow final : public nsBaseWidget {
   GdkWindow* mGdkWindow;
   bool mWindowShouldStartDragging;
   PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate;
-  WindowCompositorState mCompositorState;
+  mozilla::Atomic<WindowCompositorState, mozilla::Relaxed> mCompositorState;
   // This is used in COMPOSITOR_PAUSED_FLICKERING mode only to resume compositor
   // in some reasonable time when page content is not updated.
   int mCompositorPauseTimeoutID;
