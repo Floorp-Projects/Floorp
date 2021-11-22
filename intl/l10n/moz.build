@@ -29,6 +29,7 @@ TESTING_JS_MODULES += [
 
 TEST_DIRS += [
     "rust/gtest",
+    "test/gtest",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
