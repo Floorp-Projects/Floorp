@@ -54,7 +54,11 @@ LockRequestChild::LockRequestChild(
 }
 
 void LockRequestChild::ActorDestroy(ActorDestroyReason aReason) {
-  CastedManager()->NotifyRequestDestroy();
+  if (aReason != ActorDestroyReason::AncestorDeletion) {
+    // Ping the manager if it's still alive, otherwise we don't have to as the
+    // document is being destroyed
+    CastedManager()->NotifyRequestDestroy();
+  }
 }
 
 IPCResult LockRequestChild::RecvResolve(const LockMode& aLockMode,
