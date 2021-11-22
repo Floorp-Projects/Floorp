@@ -59,7 +59,6 @@ def test(mod, path, entity=None):
             "chrome/global.dtd",
             "chrome/accessibility/AccessFu.properties",
             "chrome/dom/dom.properties",
-            "chrome/plugins.properties",
         ):
             return "error"
         return "ignore"
