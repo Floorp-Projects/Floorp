@@ -6,6 +6,9 @@
 # automatically converted to platform-specific code at build time using the
 # `glean_parser` PyPI package.
 
+# Adding a new metric? Please don't!
+# (At least not without the permission of a Telemetry Module Peer)
+
 ---
 $schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
 
