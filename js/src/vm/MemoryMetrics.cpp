@@ -631,11 +631,6 @@ static bool FindNotableScriptSources(JS::RuntimeSizes& runtime) {
 static bool CollectRuntimeStatsHelper(JSContext* cx, RuntimeStats* rtStats,
                                       ObjectPrivateVisitor* opv, bool anonymize,
                                       IterateCellCallback statsCellCallback) {
-  // Wait for any off-thread parsing to finish, as that currently allocates GC
-  // things.
-  JSRuntime* rt = cx->runtime();
-  WaitForOffThreadParses(rt);
-
   // Finish any ongoing incremental GC that may change the data we're gathering
   // and ensure that we don't do anything that could start another one.
   gc::FinishGC(cx);
@@ -644,6 +639,7 @@ static bool CollectRuntimeStatsHelper(JSContext* cx, RuntimeStats* rtStats,
   // Wait for any background tasks to finish.
   WaitForAllHelperThreads();
 
+  JSRuntime* rt = cx->runtime();
   if (!rtStats->realmStatsVector.reserve(rt->numRealms)) {
     return false;
   }
