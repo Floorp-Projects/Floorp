@@ -41,6 +41,11 @@ PromiseTestUtils.allowMatchingRejectionsGlobally(
   /Message manager disconnected/
 );
 
+// https_first automatically upgrades http to https, but the tests are not
+// designed to expect that. And it is not easy to change that because
+// nsHttpServer does not support https (bug 1742061). So disable https_first.
+Services.prefs.setBoolPref("dom.security.https_first", false);
+
 // These values may be changed in later head files and tested in check_remote
 // below.
 Services.prefs.setBoolPref("browser.tabs.remote.autostart", false);
