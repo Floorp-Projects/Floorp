@@ -13,6 +13,8 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/FetchEventOpProxyParent.h"
+#include "mozilla/dom/FetchStreamUtils.h"
+#include "mozilla/dom/InternalResponse.h"
 #include "mozilla/dom/RemoteWorkerControllerParent.h"
 #include "mozilla/dom/RemoteWorkerParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -23,9 +25,9 @@ using namespace ipc;
 
 namespace dom {
 
-Maybe<ParentToChildInternalResponse> FetchEventOpParent::OnStart(
+Maybe<ParentToParentInternalResponse> FetchEventOpParent::OnStart(
     MovingNotNull<RefPtr<FetchEventOpProxyParent>> aFetchEventOpProxyParent) {
-  Maybe<ParentToChildInternalResponse> preloadResponse =
+  Maybe<ParentToParentInternalResponse> preloadResponse =
       std::move(mState.as<Pending>().mPreloadResponse);
   mState = AsVariant(Started{std::move(aFetchEventOpProxyParent)});
   return preloadResponse;
@@ -40,17 +42,17 @@ mozilla::ipc::IPCResult FetchEventOpParent::RecvPreloadResponse(
     ParentToParentInternalResponse&& aResponse) {
   AssertIsOnBackgroundThread();
 
-  // TODO: preload response's body and alternativeBody need to be converted to
-  //       ParentToChildStream. This would be done in the following patch.
-  ParentToChildInternalResponse internalResponse;
   mState.match(
-      [&internalResponse](Pending& aPending) {
+      [&aResponse](Pending& aPending) {
         MOZ_ASSERT(aPending.mPreloadResponse.isNothing());
-        aPending.mPreloadResponse = Some(std::move(internalResponse));
+        aPending.mPreloadResponse = Some(std::move(aResponse));
       },
-      [&internalResponse](Started& aStarted) {
+      [&aResponse](Started& aStarted) {
+        auto backgroundParent = WrapNotNull(
+            WrapNotNull(aStarted.mFetchEventOpProxyParent->Manager())
+                ->Manager());
         Unused << aStarted.mFetchEventOpProxyParent->SendPreloadResponse(
-            internalResponse);
+            ToParentToChild(aResponse, backgroundParent));
       },
       [](const Finished&) {});
 

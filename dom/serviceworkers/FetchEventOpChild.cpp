@@ -229,16 +229,16 @@ FetchEventOpChild::FetchEventOpChild(
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
             [this](SafeRefPtr<InternalResponse> aInternalResponse) {
-              // TODO: Serialize aInternalResponse into ipcPreloadResponse.
-              ParentToParentInternalResponse ipcPreloadResponse;
+              auto response =
+                  aInternalResponse->ToParentToParentInternalResponse();
               if (!mWasSent) {
                 // The actor wasn't sent yet, we can still send the preload
                 // response with it.
-                mArgs.preloadResponse() = Some(ipcPreloadResponse);
+                mArgs.preloadResponse() = Some(std::move(response));
               } else {
                 // It's too late to send the preload response with the actor, we
                 // have to send it in a separate message.
-                SendPreloadResponse(ipcPreloadResponse);
+                SendPreloadResponse(response);
               }
               mPreloadResponseReadyPromiseRequestHolder.Complete();
             },

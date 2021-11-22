@@ -13,7 +13,6 @@ EXPORTS.mozilla.dom += [
     "FetchEventOpParent.h",
     "FetchEventOpProxyChild.h",
     "FetchEventOpProxyParent.h",
-    "FetchService.h",
     "NavigationPreloadManager.h",
     "ServiceWorker.h",
     "ServiceWorkerActors.h",
