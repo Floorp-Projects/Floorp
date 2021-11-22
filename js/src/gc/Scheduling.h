@@ -796,18 +796,15 @@ class HeapThreshold {
         sliceBytes_(SIZE_MAX) {}
 
   // The threshold at which to start a new incremental collection.
-  //
-  // TODO: This is currently read off-thread during parsing, but at some point
-  // we should be able to make this MainThreadData<>.
-  AtomicByteCount startBytes_;
+  MainThreadOrGCTaskData<size_t> startBytes_;
 
   // The threshold at which start a new non-incremental collection or finish an
   // ongoing collection non-incrementally.
-  size_t incrementalLimitBytes_;
+  MainThreadData<size_t> incrementalLimitBytes_;
 
   // The threshold at which to trigger a slice during an ongoing incremental
   // collection.
-  size_t sliceBytes_;
+  MainThreadData<size_t> sliceBytes_;
 
  public:
   size_t startBytes() const { return startBytes_; }
