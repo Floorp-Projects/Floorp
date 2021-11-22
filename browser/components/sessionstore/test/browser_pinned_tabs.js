@@ -3,7 +3,7 @@
 
 "use strict";
 
-const REMOTE_URL = "http://www.example.com/";
+const REMOTE_URL = "https://www.example.com/";
 const ABOUT_ROBOTS_URL = "about:robots";
 const NO_TITLE_URL = "data:text/plain,foo";
 
