@@ -249,7 +249,7 @@ TEST_F(APZEventRegionsTesterMock, HitRegionImmediateResponse) {
   check.Call("Tapped on left this time");
 }
 
-TEST_F(APZEventRegionsTester, HitRegionAccumulatesChildren) {
+TEST_F(APZEventRegionsTesterMock, HitRegionAccumulatesChildren) {
   CreateEventRegionsLayerTree2();
 
   // Tap in the area of the child layer that's not directly included in the
@@ -259,6 +259,7 @@ TEST_F(APZEventRegionsTester, HitRegionAccumulatesChildren) {
   EXPECT_CALL(*mcc,
               HandleTap(TapType::eSingleTap, _, _, rootApzc->GetGuid(), _))
       .Times(1);
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID);
   Tap(manager, ScreenIntPoint(10, 160), TimeDuration::FromMilliseconds(100));
 }
 
@@ -291,7 +292,7 @@ TEST_F(APZEventRegionsTester, Bug1119497) {
   EXPECT_EQ(hit.mHitResult, CompositorHitTestFlags::eVisibleToHitTest);
 }
 
-TEST_F(APZEventRegionsTester, Bug1117712) {
+TEST_F(APZEventRegionsTesterMock, Bug1117712) {
   CreateBug1117712LayerTree();
 
   TestAsyncPanZoomController* apzc2 = ApzcOf(layers[2]);
@@ -299,6 +300,9 @@ TEST_F(APZEventRegionsTester, Bug1117712) {
   // These touch events should hit the dispatch-to-content region of layers[3]
   // and so get queued with that APZC as the tentative target.
   uint64_t inputBlockId = 0;
+  QueueMockHitResult(ScrollableLayerGuid::START_SCROLL_ID + 1,
+                     {CompositorHitTestFlags::eVisibleToHitTest,
+                      CompositorHitTestFlags::eIrregularArea});
   Tap(manager, ScreenIntPoint(55, 5), TimeDuration::FromMilliseconds(100),
       nullptr, &inputBlockId);
   // But now we tell the APZ that really it hit layers[2], and expect the tap
