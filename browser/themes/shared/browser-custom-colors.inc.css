@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @media not (prefers-contrast) {
-  @media (-moz-proton) {
   :root:not(:-moz-lwtheme) {
     --button-primary-bgcolor: rgb(0,97,224);
     --button-primary-hover-bgcolor: rgb(2,80,187);
@@ -63,5 +62,4 @@
     --autocomplete-popup-highlight-color: rgb(21,20,26);
     --autocomplete-popup-hover-background: rgb(240,240,244);
   }
-  } /** END Proton **/
 }
