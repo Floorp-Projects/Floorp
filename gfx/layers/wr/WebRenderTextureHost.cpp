@@ -67,61 +67,6 @@ wr::ExternalImageId WebRenderTextureHost::GetExternalImageKey() {
 
 bool WebRenderTextureHost::IsValid() { return mWrappedTextureHost->IsValid(); }
 
-bool WebRenderTextureHost::Lock() {
-  MOZ_ASSERT(mWrappedTextureHost->AsBufferTextureHost());
-
-  if (mWrappedTextureHost->AsBufferTextureHost()) {
-    return mWrappedTextureHost->Lock();
-  }
-  return false;
-}
-
-void WebRenderTextureHost::Unlock() {
-  MOZ_ASSERT(mWrappedTextureHost->AsBufferTextureHost());
-
-  if (mWrappedTextureHost->AsBufferTextureHost()) {
-    mWrappedTextureHost->Unlock();
-  }
-}
-
-void WebRenderTextureHost::PrepareTextureSource(
-    CompositableTextureSourceRef& aTexture) {
-  MOZ_ASSERT(mWrappedTextureHost->AsBufferTextureHost());
-
-  if (mWrappedTextureHost->AsBufferTextureHost()) {
-    mWrappedTextureHost->PrepareTextureSource(aTexture);
-  }
-}
-
-bool WebRenderTextureHost::BindTextureSource(
-    CompositableTextureSourceRef& aTexture) {
-  MOZ_ASSERT(mWrappedTextureHost->AsBufferTextureHost());
-
-  if (mWrappedTextureHost->AsBufferTextureHost()) {
-    return mWrappedTextureHost->BindTextureSource(aTexture);
-  }
-  return false;
-}
-
-void WebRenderTextureHost::UnbindTextureSource() {
-  if (mWrappedTextureHost->AsBufferTextureHost()) {
-    mWrappedTextureHost->UnbindTextureSource();
-  }
-  // Handle read unlock
-  TextureHost::UnbindTextureSource();
-}
-
-void WebRenderTextureHost::SetTextureSourceProvider(
-    TextureSourceProvider* aProvider) {
-  // During using WebRender, only BasicCompositor could exist
-  MOZ_ASSERT(!aProvider || aProvider->AsBasicCompositor());
-  MOZ_ASSERT(mWrappedTextureHost->AsBufferTextureHost());
-
-  if (mWrappedTextureHost->AsBufferTextureHost()) {
-    mWrappedTextureHost->SetTextureSourceProvider(aProvider);
-  }
-}
-
 already_AddRefed<gfx::DataSourceSurface> WebRenderTextureHost::GetAsSurface() {
   return mWrappedTextureHost->GetAsSurface();
 }
