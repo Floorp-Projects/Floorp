@@ -4161,6 +4161,13 @@ void MacroAssembler::debugAssertCanonicalInt32(Register r) {
     branchPtr(Assembler::BelowOrEqual, r, ImmWord(UINT32_MAX), &ok);
     breakpoint();
     bind(&ok);
+#    elif defined(JS_CODEGEN_MIPS64)
+    Label ok;
+    ScratchRegisterScope scratch(asMasm());
+    move32SignExtendToPtr(r, scratch);
+    branchPtr(Assembler::Equal, r, scratch, &ok);
+    breakpoint();
+    bind(&ok);
 #    else
     MOZ_CRASH("IMPLEMENT ME");
 #    endif
