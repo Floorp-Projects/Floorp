@@ -179,12 +179,6 @@ bool HasOffThreadIonCompile(JS::Realm* realm);
 #endif
 
 /*
- * Wait for all scheduled, in progress or finished parse tasks for the runtime
- * to complete.
- */
-void WaitForOffThreadParses(JSRuntime* runtime);
-
-/*
  * Cancel all scheduled, in progress or finished parses for runtime.
  *
  * Parse tasks which have completed but for which JS::FinishOffThreadScript (or
