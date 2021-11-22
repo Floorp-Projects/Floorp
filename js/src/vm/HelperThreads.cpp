@@ -863,11 +863,6 @@ static void WaitForOffThreadParses(JSRuntime* rt,
 #endif
 }
 
-void js::WaitForOffThreadParses(JSRuntime* rt) {
-  AutoLockHelperThreadState lock;
-  WaitForOffThreadParses(rt, lock);
-}
-
 void js::CancelOffThreadParses(JSRuntime* rt) {
   AutoLockHelperThreadState lock;
 
