@@ -122,6 +122,9 @@ abstract class PlacesStorage(
             throw e
         } catch (e: PlacesException.OperationInterrupted) {
             logger.debug("Ignoring expected OperationInterrupted exception when running $operation", e)
+        } catch (e: PlacesException.UrlParseFailed) {
+            // it's not uncommon to get a mal-formed url, probably the user typing.
+            logger.debug("Ignoring invalid URL while running $operation", e)
         } catch (e: PlacesException) {
             crashReporter?.submitCaughtException(e)
             logger.warn("Ignoring PlacesException while running $operation", e)
@@ -148,6 +151,10 @@ abstract class PlacesStorage(
             throw e
         } catch (e: PlacesException.OperationInterrupted) {
             logger.debug("Ignoring expected OperationInterrupted exception when running $operation", e)
+            default
+        } catch (e: PlacesException.UrlParseFailed) {
+            // it's not uncommon to get a mal-formed url, probably the user typing.
+            logger.debug("Ignoring invalid URL while running $operation", e)
             default
         } catch (e: PlacesException) {
             crashReporter?.submitCaughtException(e)
