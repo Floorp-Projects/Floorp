@@ -20,14 +20,14 @@ exclude: true
 - Added [`GeckoResult.finally_`][96.2] to unconditionally run an action after
   the GeckoResult has been completed.
   ([bug 1736433]({{bugzilla}}1736433)).
-- Added [`ERROR_INVALID_DOMAIN`][96.2] to WebExtension.InstallException.ErrorCodes.
+- Added [`ERROR_INVALID_DOMAIN`][96.3] to WebExtension.InstallException.ErrorCodes.
   ([bug 1740634]({{bugzilla}}1740634)).
 - Added [`SelectionActionDelegate.Selection.pasteAsPlainText`][96.4] to paste
   HTML content as plain text.
 
 [96.1]: {{javadoc_uri}}/Autocomplete.StorageDelegate.html#onLoginFetch--
 [96.2]: {{javadoc_uri}}/GeckoResult.html#finally_-java.lang.Runnable-
-[96.2]: {{javadoc_uri}}/WebExtension.InstallException.ErrorCodes.html#ERROR_INVALID_DOMAIN-
+[96.3]: {{javadoc_uri}}/WebExtension.InstallException.ErrorCodes.html#ERROR_INVALID_DOMAIN-
 [96.4]: {{javadoc_uri}}/GeckoSession.SelectionActionDelegate.Selection.html#pasteAsPlainText--
 
 ## v95
