@@ -139,7 +139,7 @@ TEST(Intl_Locale_LocaleService, GetDefaultLocale)
 
   ASSERT_FALSE(locStr.IsEmpty());
   Locale loc;
-  ASSERT_TRUE(LocaleParser::tryParse(locStr, loc).isOk());
+  ASSERT_TRUE(LocaleParser::TryParse(locStr, loc).isOk());
 }
 
 TEST(Intl_Locale_LocaleService, IsAppLocaleRTL)

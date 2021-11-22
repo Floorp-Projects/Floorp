@@ -2174,19 +2174,19 @@ void gfxPlatformFontList::AppendCJKPrefLangs(eFontPrefLang aPrefLangs[],
 
     {
       Locale locale;
-      if (LocaleParser::tryParse(localeStr, locale).isOk() &&
-          locale.canonicalize().isOk()) {
-        if (locale.language().equalTo("ja")) {
+      if (LocaleParser::TryParse(localeStr, locale).isOk() &&
+          locale.Canonicalize().isOk()) {
+        if (locale.Language().EqualTo("ja")) {
           AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Japanese);
-        } else if (locale.language().equalTo("zh")) {
-          if (locale.region().equalTo("CN")) {
+        } else if (locale.Language().EqualTo("zh")) {
+          if (locale.Region().EqualTo("CN")) {
             AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseCN);
-          } else if (locale.region().equalTo("TW")) {
+          } else if (locale.Region().EqualTo("TW")) {
             AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseTW);
-          } else if (locale.region().equalTo("HK")) {
+          } else if (locale.Region().EqualTo("HK")) {
             AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseHK);
           }
-        } else if (locale.language().equalTo("ko")) {
+        } else if (locale.Language().EqualTo("ko")) {
           AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Korean);
         }
       }
@@ -2209,19 +2209,19 @@ void gfxPlatformFontList::AppendCJKPrefLangs(eFontPrefLang aPrefLangs[],
           LocaleService::kLangNegStrategyFiltering, negLocales);
       for (const auto& localeStr : negLocales) {
         Locale locale;
-        if (LocaleParser::tryParse(localeStr, locale).isOk() &&
-            locale.canonicalize().isOk()) {
-          if (locale.language().equalTo("ja")) {
+        if (LocaleParser::TryParse(localeStr, locale).isOk() &&
+            locale.Canonicalize().isOk()) {
+          if (locale.Language().EqualTo("ja")) {
             AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Japanese);
-          } else if (locale.language().equalTo("zh")) {
-            if (locale.region().equalTo("CN")) {
+          } else if (locale.Language().EqualTo("zh")) {
+            if (locale.Region().EqualTo("CN")) {
               AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseCN);
-            } else if (locale.region().equalTo("TW")) {
+            } else if (locale.Region().EqualTo("TW")) {
               AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseTW);
-            } else if (locale.region().equalTo("HK")) {
+            } else if (locale.Region().EqualTo("HK")) {
               AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_ChineseHK);
             }
-          } else if (locale.language().equalTo("ko")) {
+          } else if (locale.Language().EqualTo("ko")) {
             AppendPrefLang(tempPrefLangs, tempLen, eFontPrefLang_Korean);
           }
         }
