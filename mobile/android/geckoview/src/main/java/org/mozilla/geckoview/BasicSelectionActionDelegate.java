@@ -51,7 +51,14 @@ public class BasicSelectionActionDelegate
   protected static final String ACTION_PROCESS_TEXT = Intent.ACTION_PROCESS_TEXT;
 
   private static final String[] FLOATING_TOOLBAR_ACTIONS =
-      new String[] {ACTION_CUT, ACTION_COPY, ACTION_PASTE, ACTION_SELECT_ALL, ACTION_PROCESS_TEXT};
+      new String[] {
+        ACTION_CUT,
+        ACTION_COPY,
+        ACTION_PASTE,
+        ACTION_SELECT_ALL,
+        ACTION_PASTE_AS_PLAIN_TEXT,
+        ACTION_PROCESS_TEXT
+      };
   private static final String[] FIXED_TOOLBAR_ACTIONS =
       new String[] {ACTION_SELECT_ALL, ACTION_CUT, ACTION_COPY, ACTION_PASTE};
 
@@ -157,6 +164,10 @@ public class BasicSelectionActionDelegate
       return false;
     }
 
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O && ACTION_PASTE_AS_PLAIN_TEXT.equals(id)) {
+      return false;
+    }
+
     if (mExternalActionsEnabled && !mSelection.text.isEmpty() && ACTION_PROCESS_TEXT.equals(id)) {
       final PackageManager pm = mActivity.getPackageManager();
       return pm.resolveActivity(getProcessTextIntent(), PackageManager.MATCH_DEFAULT_ONLY) != null;
@@ -195,6 +206,12 @@ public class BasicSelectionActionDelegate
         break;
       case ACTION_PASTE:
         item.setTitle(android.R.string.paste);
+        break;
+      case ACTION_PASTE_AS_PLAIN_TEXT:
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+          throw new IllegalStateException("Unexpected version for action");
+        }
+        item.setTitle(android.R.string.paste_as_plain_text);
         break;
       case ACTION_SELECT_ALL:
         item.setTitle(android.R.string.selectAll);
