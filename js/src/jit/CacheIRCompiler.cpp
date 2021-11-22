@@ -22,6 +22,7 @@
 #include "builtin/Object.h"
 #include "gc/Allocator.h"
 #include "jit/BaselineCacheIRCompiler.h"
+#include "jit/CacheIRGenerator.h"
 #include "jit/IonCacheIRCompiler.h"
 #include "jit/JitFrames.h"
 #include "jit/JitRuntime.h"

@@ -7,8 +7,23 @@
 #ifndef jit_TrialInlining_h
 #define jit_TrialInlining_h
 
+#include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
+
+#include <stddef.h>
+#include <stdint.h>
+
+#include "jstypes.h"
+#include "NamespaceImports.h"
+
+#include "gc/Barrier.h"
 #include "jit/CacheIR.h"
 #include "jit/ICStubSpace.h"
+#include "js/RootingAPI.h"
+#include "js/TypeDecls.h"
+#include "js/UniquePtr.h"
+#include "js/Vector.h"
+#include "vm/JSScript.h"
 
 /*
  * [SMDOC] Trial Inlining
@@ -32,6 +47,15 @@
  * The same approach can be used to inline recursively.
  */
 
+class JS_PUBLIC_API JSTracer;
+struct JS_PUBLIC_API JSContext;
+
+class JSFunction;
+
+namespace JS {
+class Zone;
+}
+
 namespace js {
 
 class BytecodeLocation;
@@ -39,9 +63,11 @@ class BytecodeLocation;
 namespace jit {
 
 class BaselineFrame;
+class CacheIRWriter;
+class ICCacheIRStub;
 class ICEntry;
-class ICScript;
 class ICFallbackStub;
+class ICScript;
 
 /*
  * An InliningRoot is owned by a JitScript. In turn, it owns the set

@@ -7,6 +7,7 @@
 #include "jit/IonIC.h"
 
 #include "jit/CacheIRCompiler.h"
+#include "jit/CacheIRGenerator.h"
 #include "jit/VMFunctions.h"
 #include "util/DiagnosticAssertions.h"
 #include "vm/EqualityOperations.h"

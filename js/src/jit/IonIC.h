@@ -8,12 +8,15 @@
 #define jit_IonIC_h
 
 #include "jit/CacheIR.h"
+#include "jit/ICState.h"
 #include "jit/shared/Assembler-shared.h"
 
 namespace js {
 namespace jit {
 
 class CacheIRStubInfo;
+class CacheIRWriter;
+class IonScript;
 
 // An optimized stub attached to an IonIC.
 class IonICStub {
