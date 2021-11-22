@@ -261,9 +261,12 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), UserInteractionHan
     }
 
     private suspend fun loadBookmarkNode(guid: String): BookmarkNode? = withContext(IO) {
-        requireContext().bookmarkStorage
-            .getTree(guid, false)
-            ?.let { desktopFolders.withOptionalDesktopFolders(it) }
+        // Only runs if the fragment is attached same as [runIfFragmentIsAttached]
+        context?.let {
+            requireContext().bookmarkStorage
+                .getTree(guid, false)
+                ?.let { desktopFolders.withOptionalDesktopFolders(it) }
+        }
     }
 
     private suspend fun refreshBookmarks() {
