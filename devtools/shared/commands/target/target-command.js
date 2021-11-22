@@ -129,7 +129,6 @@ class TargetCommand extends EventEmitter {
     //                but we wait for the watcher actor to notify us about it
     //                via target-available-form avent.
     this._gotFirstTopLevelTarget = false;
-    this.commands = commands;
     this._onResourceAvailable = this._onResourceAvailable.bind(this);
   }
 
@@ -141,6 +140,11 @@ class TargetCommand extends EventEmitter {
   // Either because a target was already available as we started calling startListening
   // or if it has just been created
   async _onTargetAvailable(targetFront) {
+    // We put the `commands` on the targetFront so it can be retrieved from any front easily.
+    // Without this, protocol.js fronts won't have any easy access to it.
+    // Ideally, Fronts would all be migrated to commands and we would no longer need this hack.
+    targetFront.commands = this.commands;
+
     // If the new target is a top level target, we are target switching.
     // Target-switching is only triggered for "local-tab" browsing-context
     // targets which should always have the topLevelTarget flag initialized
@@ -326,6 +330,10 @@ class TargetCommand extends EventEmitter {
       targetFront.baseFrontClassDestroy();
 
       targetFront.destroy();
+
+      // Delete the attribute we set from _onTargetAvailable so that we avoid leaking commands
+      // if any target front is leaked.
+      delete targetFront.commands;
     }
   }
 
@@ -486,6 +494,10 @@ class TargetCommand extends EventEmitter {
     this.targetFront.setTargetType(this.getTargetType(this.targetFront));
     this.targetFront.setIsTopLevel(true);
     this._gotFirstTopLevelTarget = true;
+
+    // See _onTargetAvailable. As this target isn't going through that method
+    // we have to replicate doing that here.
+    this.targetFront.commands = this.commands;
 
     // Add the top-level target to the list of targets.
     this._targets.add(this.targetFront);

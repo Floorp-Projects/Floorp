@@ -39,6 +39,12 @@ function TargetMixin(parentClass) {
     constructor(client, targetFront, parentFront) {
       super(client, targetFront, parentFront);
 
+      // TargetCommand._onTargetAvailable will set this public attribute.
+      // This is a reference to the related `commands` object and helps all fronts
+      // easily call any command method. Without this bit of magic, Fronts wouldn't
+      // be able to interact with any commands while it is frequently useful.
+      this.commands = null;
+
       this._forceChrome = false;
 
       this.destroy = this.destroy.bind(this);
