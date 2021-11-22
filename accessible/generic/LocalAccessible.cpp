@@ -3242,8 +3242,7 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     }
   }
 
-  if (aCacheDomain & CacheDomain::DOMNodeID) {
-    MOZ_ASSERT(mContent);
+  if (aCacheDomain & CacheDomain::DOMNodeID && mContent) {
     nsAtom* id = mContent->GetID();
     if (id) {
       fields->SetAttribute(nsGkAtoms::id, id);
