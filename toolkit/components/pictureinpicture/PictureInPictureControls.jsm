@@ -18,6 +18,7 @@ this.KEYBOARD_CONTROLS = {
   MUTE_UNMUTE: 1 << 1,
   VOLUME: 1 << 2,
   SEEK: 1 << 3,
+  CLOSE: 1 << 4,
 };
 
 // These are the possible toggle positions along the right side of
