@@ -16,6 +16,7 @@ import shutil
 import site
 import subprocess
 import sys
+from pathlib import Path
 
 from mach.requirements import MachEnvRequirements
 
@@ -53,7 +54,7 @@ class MozSiteMetadata:
 
     @classmethod
     def from_runtime(cls):
-        return cls.from_path(sys.prefix)
+        return cls.from_path(os.path.normcase(sys.prefix))
 
     @classmethod
     def from_path(cls, prefix):
@@ -100,6 +101,8 @@ class MachSiteManager:
         active_metadata,
         site_packages_source,
     ):
+        topsrcdir = os.path.normcase(topsrcdir)
+        state_dir = os.path.normcase(state_dir)
         self._topsrcdir = topsrcdir
         self._active_metadata = active_metadata
         self._site_packages_source = site_packages_source
@@ -212,7 +215,7 @@ class MachSiteManager:
     def ensure(self, *, force=False):
         up_to_date = self.up_to_date()
         if force or not up_to_date:
-            if sys.prefix == self._metadata.prefix:
+            if Path(sys.prefix) == Path(self._metadata.prefix):
                 # If the Mach virtualenv is already activated, then the changes caused
                 # by rebuilding the virtualenv won't take effect until the next time
                 # Mach is used, which can lead to confusing one-off errors.
@@ -241,7 +244,7 @@ class MachSiteManager:
             ]
             sys.path[0:0] = self._requirements.pths_as_absolute(self._topsrcdir)
         elif self._site_packages_source == SitePackagesSource.VENV:
-            if sys.prefix != self._metadata.prefix:
+            if Path(sys.prefix) != Path(self._metadata.prefix):
                 raise Exception(
                     "In-process activation of the Mach virtualenv is "
                     "not currently supported. Please invoke `./mach` using "
@@ -280,9 +283,12 @@ class CommandSiteManager:
         virtualenvs_dir,
         site_name,
     ):
+        topsrcdir = os.path.normcase(topsrcdir)
         self.topsrcdir = topsrcdir
         self._virtualenv_name = site_name
-        self.virtualenv_root = os.path.join(virtualenvs_dir, site_name)
+        self.virtualenv_root = os.path.join(
+            os.path.normcase(virtualenvs_dir), site_name
+        )
         self._virtualenv = MozVirtualenv(topsrcdir, site_name, self.virtualenv_root)
         self.bin_path = self._virtualenv.bin_path
         self.python_path = self._virtualenv.python_path
@@ -329,7 +335,7 @@ class CommandSiteManager:
 
         If the package is already installed, this is a no-op.
         """
-        if sys.executable.startswith(self.bin_path):
+        if os.path.normcase(sys.executable).startswith(self.bin_path):
             # If we're already running in this interpreter, we can optimize in
             # the case that the package requirement is already satisfied.
             from pip._internal.req.constructors import install_req_from_line
