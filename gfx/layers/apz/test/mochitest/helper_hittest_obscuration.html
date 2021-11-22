@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test hit-testing on content which is revealed by async scrolling</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    #parent {
+      width: 400px;
+      height: 400px;
+      overflow: auto;
+    }
+    #child {
+      margin-top: 200px;
+      width: 100%;
+      height: 100px;
+      overflow: auto;
+    }
+    #obscurer {
+      position: absolute;
+      top: 200px;
+      width: 400px;
+      height: 200px;
+      background: blue;
+    }
+    .spacer {
+      width: 100%;
+      height: 1000px;
+      background: green;
+    }
+  </style>
+</head>
+<body>
+  <div id="parent">
+    <div id="child">
+      <div class="spacer"></div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+  <div id="obscurer"></div>
+</body>
+<script type="application/javascript">
+
+async function test() {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  // Create APZCs for parent and child scrollers.
+  let parent = document.getElementById("parent");  // otherwise parent refers to window.parent
+  utils.setDisplayPortForElement(0, 0, 400, 1000, parent, 1);
+  utils.setDisplayPortForElement(0, 0, 400, 1000, child, 1);
+  await promiseApzFlushedRepaints();
+
+  // Async-scroll the parent scroller by 100 pixels, thereby revealing
+  // the child which was previous covered by "obscurer".
+  utils.setAsyncScrollOffset(parent, 0, 100);
+  // Give WebRender a chance to sample the test async scroll offset.
+  utils.advanceTimeAndRefresh(16);
+  utils.restoreNormalRefresh();
+
+  // Check that hit-testing on the region where the child scroller's
+  // contents are now revealed, successfully hits the scroller.
+  checkHitResult(hitTest({x: 200, y: 150}),
+                 APZHitResultFlags.VISIBLE,
+                 utils.getViewId(child),
+                 utils.getLayersId(),
+                 "child scroller");
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>
