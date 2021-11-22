@@ -171,7 +171,7 @@ async function testDocumentEventResourcesWithIgnoreExistingResources() {
   info(
     "Wait for will-navigate, dom-loading, dom-interactive and dom-complete events"
   );
-  await waitUntil(() => documentEvents.length === 4);
+  await waitFor(() => documentEvents.length === 4);
   assertEvents({ commands, targetBeforeNavigation, documentEvents });
 
   await commands.destroy();
@@ -195,11 +195,11 @@ async function testIframeNavigation() {
     }
   );
   let iframeTarget;
-  if (isFissionEnabled()) {
+  if (isFissionEnabled() || isEveryFrameTargetEnabled()) {
     is(
       documentEvents.length,
       6,
-      "With fission, we get two targets and two sets of events: dom-loading, dom-interactive, dom-complete"
+      "With fission/EFT, we get two targets and two sets of events: dom-loading, dom-interactive, dom-complete"
     );
     [, iframeTarget] = await commands.targetCommand.getAllTargets([
       commands.targetCommand.TYPES.FRAME,
@@ -237,12 +237,12 @@ async function testIframeNavigation() {
   });
 
   // We are switching to a new target only when fission is enabled...
-  if (isFissionEnabled()) {
-    await waitUntil(() => documentEvents.length >= 4);
+  if (isFissionEnabled() || isEveryFrameTargetEnabled()) {
+    await waitFor(() => documentEvents.length >= 4);
     is(
       documentEvents.length,
       4,
-      "With fission, we switch to a new target and get a will-navigate followed by a new set of events: dom-loading, dom-interactive, dom-complete"
+      "With fission/EFT, we switch to a new target and get a will-navigate followed by a new set of events: dom-loading, dom-interactive, dom-complete"
     );
     const [, newIframeTarget] = await commands.targetCommand.getAllTargets([
       commands.targetCommand.TYPES.FRAME,
@@ -306,15 +306,18 @@ async function testBfCacheNavigation() {
   const targetBeforeNavigation = commands.targetCommand.targetFront;
   gBrowser.goBack();
 
-  // We are switching to a new target only when fission is enabled...
-  if (isFissionEnabled() && isBfCacheInParentEnabled()) {
+  // We are switching to a new target only when fission/EFT is enabled...
+  if (
+    (isFissionEnabled() || isEveryFrameTargetEnabled()) &&
+    isBfCacheInParentEnabled()
+  ) {
     await onSwitched;
   }
 
   info(
     "Wait for will-navigate, dom-loading, dom-interactive and dom-complete events"
   );
-  await waitUntil(() => documentEvents.length >= 4);
+  await waitFor(() => documentEvents.length >= 4);
   /* Ignore will-navigate timestamp as all other DOCUMENT_EVENTS will be set at the original load date,
      which is when we loaded from the network, and not when we loaded from bfcache */
   assertEvents({
@@ -425,14 +428,14 @@ async function testCrossOriginNavigation() {
   await onLoaded;
 
   // We are switching to a new target only when fission is enabled...
-  if (isFissionEnabled()) {
+  if (isFissionEnabled() || isEveryFrameTargetEnabled()) {
     await onSwitched;
   }
 
   info(
     "Wait for will-navigate, dom-loading, dom-interactive and dom-complete events"
   );
-  await waitUntil(() => documentEvents.length >= 4);
+  await waitFor(() => documentEvents.length >= 4);
   assertEvents({ commands, targetBeforeNavigation, documentEvents });
 
   // Wait for some time in order to let a chance to have duplicated dom-loading events

@@ -9,6 +9,11 @@ const {
 } = require("devtools/server/actors/resources/index");
 const { Ci } = require("chrome");
 const ChromeUtils = require("ChromeUtils");
+const Services = require("Services");
+const isEveryFrameTargetEnabled = Services.prefs.getBoolPref(
+  "devtools.every-frame-target.enabled",
+  false
+);
 const {
   getAllRemoteBrowsingContexts,
 } = require("devtools/server/actors/watcher/target-helpers/utils.js");
@@ -126,9 +131,11 @@ class ParentProcessDocumentEventWatcher {
     const isDocument = flag & Ci.nsIWebProgressListener.STATE_IS_DOCUMENT;
     if (isDocument && isStart) {
       const { browsingContext } = progress;
-
-      // Ignore navigation for same-process iframes
-      if (!browsingContext.currentWindowGlobal.isProcessRoot) {
+      // Ignore navigation for same-process iframes when EFT is disabled
+      if (
+        !browsingContext.currentWindowGlobal.isProcessRoot &&
+        !isEveryFrameTargetEnabled
+      ) {
         return;
       }
       // Ignore if we are still on the initial document,
