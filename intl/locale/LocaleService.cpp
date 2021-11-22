@@ -304,19 +304,19 @@ LocaleService::Observe(nsISupports* aSubject, const char* aTopic,
 bool LocaleService::LanguagesMatch(const nsACString& aRequested,
                                    const nsACString& aAvailable) {
   Locale requested;
-  auto requestedResult = LocaleParser::TryParse(aRequested, requested);
+  auto requestedResult = LocaleParser::tryParse(aRequested, requested);
   Locale available;
-  auto availableResult = LocaleParser::TryParse(aAvailable, available);
+  auto availableResult = LocaleParser::tryParse(aAvailable, available);
 
   if (requestedResult.isErr() || availableResult.isErr()) {
     return false;
   }
 
-  if (requested.Canonicalize().isErr() || available.Canonicalize().isErr()) {
+  if (requested.canonicalize().isErr() || available.canonicalize().isErr()) {
     return false;
   }
 
-  return requested.Language().Span() == available.Language().Span();
+  return requested.language().span() == available.language().span();
 }
 
 bool LocaleService::IsServer() { return mIsServer; }
@@ -540,7 +540,7 @@ LocaleService::NegotiateLanguages(const nsTArray<nsCString>& aRequested,
 
 #ifdef DEBUG
   Locale parsedLocale;
-  auto result = LocaleParser::TryParse(aDefaultLocale, parsedLocale);
+  auto result = LocaleParser::tryParse(aDefaultLocale, parsedLocale);
 
   MOZ_ASSERT(
       aDefaultLocale.IsEmpty() || result.isOk(),
