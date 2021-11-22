@@ -33,6 +33,8 @@ class LockRequestChild final : public PLockRequestChild,
       const LockRequest& aRequest,
       const Optional<OwningNonNull<AbortSignal>>& aSignal);
 
+  void MaybeSetWorkerRef();
+
   IPCResult RecvResolve(const LockMode& aLockMode, bool aIsAvailable);
   IPCResult Recv__delete__(bool aAborted);
 
