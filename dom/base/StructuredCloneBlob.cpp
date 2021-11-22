@@ -144,6 +144,9 @@ bool StructuredCloneBlob::Holder::ReadStructuredCloneInternal(
   if (!JS_ReadUint32Pair(aReader, &length, &version)) {
     return false;
   }
+  if (length % 8 != 0) {
+    return false;
+  }
 
   uint32_t blobOffset;
   uint32_t blobCount;
