@@ -13,30 +13,29 @@ namespace mozilla::intl {
 TEST(IntlLocale, LocaleSettersAndGetters)
 {
   Locale locale;
-  locale.SetLanguage("fr");
-  locale.SetRegion("CA");
-  locale.SetScript("Latn");
+  locale.setLanguage("fr");
+  locale.setRegion("CA");
+  locale.setScript("Latn");
   ASSERT_TRUE(
-      locale.SetUnicodeExtension(MakeStringSpan("u-ca-gregory")).isOk());
-  ASSERT_TRUE(locale.Language().EqualTo("fr"));
-  ASSERT_TRUE(locale.Region().EqualTo("CA"));
-  ASSERT_TRUE(locale.Script().EqualTo("Latn"));
-  ASSERT_EQ(locale.GetUnicodeExtension().value(),
-            MakeStringSpan("u-ca-gregory"));
+      locale.setUnicodeExtension(MakeStringSpan("u-ca-gregory")).isOk());
+  ASSERT_TRUE(locale.language().equalTo("fr"));
+  ASSERT_TRUE(locale.region().equalTo("CA"));
+  ASSERT_TRUE(locale.script().equalTo("Latn"));
+  ASSERT_EQ(locale.unicodeExtension().value(), MakeStringSpan("u-ca-gregory"));
 
   TestBuffer<char> buffer;
-  ASSERT_TRUE(locale.ToString(buffer).isOk());
+  ASSERT_TRUE(locale.toString(buffer).isOk());
   ASSERT_TRUE(buffer.verboseMatches("fr-Latn-CA-u-ca-gregory"));
 
   // No setters for variants or other extensions...
   Locale locale2;
-  ASSERT_TRUE(LocaleParser::TryParse(
+  ASSERT_TRUE(LocaleParser::tryParse(
                   MakeStringSpan("fr-CA-fonipa-t-es-AR-h0-hybrid"), locale2)
                   .isOk());
-  ASSERT_EQ(locale2.Variants()[0], MakeStringSpan("fonipa"));
-  ASSERT_EQ(locale2.Extensions()[0], MakeStringSpan("t-es-AR-h0-hybrid"));
-  locale2.ClearVariants();
-  ASSERT_EQ(locale2.Variants().length(), 0UL);
+  ASSERT_EQ(locale2.variants()[0], MakeStringSpan("fonipa"));
+  ASSERT_EQ(locale2.extensions()[0], MakeStringSpan("t-es-AR-h0-hybrid"));
+  locale2.clearVariants();
+  ASSERT_EQ(locale2.variants().length(), 0UL);
 }
 
 TEST(IntlLocale, LocaleParser)
@@ -53,21 +52,21 @@ TEST(IntlLocale, LocaleParser)
 
   Locale locale;
   for (const auto* tag : tags) {
-    ASSERT_TRUE(LocaleParser::TryParse(MakeStringSpan(tag), locale).isOk());
+    ASSERT_TRUE(LocaleParser::tryParse(MakeStringSpan(tag), locale).isOk());
   }
 }
 
 TEST(IntlLocale, LikelySubtags)
 {
   Locale locale;
-  ASSERT_TRUE(LocaleParser::TryParse(MakeStringSpan("zh"), locale).isOk());
-  ASSERT_TRUE(locale.AddLikelySubtags().isOk());
+  ASSERT_TRUE(LocaleParser::tryParse(MakeStringSpan("zh"), locale).isOk());
+  ASSERT_TRUE(locale.addLikelySubtags().isOk());
   TestBuffer<char> buffer;
-  ASSERT_TRUE(locale.ToString(buffer).isOk());
+  ASSERT_TRUE(locale.toString(buffer).isOk());
   ASSERT_TRUE(buffer.verboseMatches("zh-Hans-CN"));
-  ASSERT_TRUE(locale.RemoveLikelySubtags().isOk());
+  ASSERT_TRUE(locale.removeLikelySubtags().isOk());
   buffer.clear();
-  ASSERT_TRUE(locale.ToString(buffer).isOk());
+  ASSERT_TRUE(locale.toString(buffer).isOk());
   ASSERT_TRUE(buffer.verboseMatches("zh"));
 }
 
@@ -75,10 +74,10 @@ TEST(IntlLocale, Canonicalize)
 {
   Locale locale;
   ASSERT_TRUE(
-      LocaleParser::TryParse(MakeStringSpan("nob-bokmal"), locale).isOk());
-  ASSERT_TRUE(locale.Canonicalize().isOk());
+      LocaleParser::tryParse(MakeStringSpan("nob-bokmal"), locale).isOk());
+  ASSERT_TRUE(locale.canonicalize().isOk());
   TestBuffer<char> buffer;
-  ASSERT_TRUE(locale.ToString(buffer).isOk());
+  ASSERT_TRUE(locale.toString(buffer).isOk());
   ASSERT_TRUE(buffer.verboseMatches("nb"));
 }
 
