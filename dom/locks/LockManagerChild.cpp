@@ -78,6 +78,7 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(LockManagerChild, Release)
 void LockManagerChild::RequestLock(const LockRequest& aRequest,
                                    const LockOptions& aOptions) {
   auto requestActor = MakeRefPtr<LockRequestChild>(aRequest, aOptions.mSignal);
+  requestActor->MaybeSetWorkerRef();
   SendPLockRequestConstructor(
       requestActor, IPCLockRequest(nsString(aRequest.mName), aOptions.mMode,
                                    aOptions.mIfAvailable, aOptions.mSteal));

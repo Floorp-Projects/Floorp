@@ -46,6 +46,9 @@ LockRequestChild::LockRequestChild(
   if (aSignal.WasPassed()) {
     Follow(&aSignal.Value());
   }
+}
+
+void LockRequestChild::MaybeSetWorkerRef() {
   if (!NS_IsMainThread()) {
     mWorkerRef = StrongWorkerRef::Create(
         GetCurrentThreadWorkerPrivate(), "LockManager",
