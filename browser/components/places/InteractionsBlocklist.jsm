@@ -60,7 +60,7 @@ let HOST_BLOCKLIST = {
     // Google SERP
     "^(https?:\\/\\/)?(www\\.)?google\\.(\\w|\\.){2,}\\/search.*(\\?|&)q=.*",
     // Google OAuth
-    "^https:\\/\\/accounts\\.google\\.com\\/o\\/oauth2\\/v2\\/auth\\/identifier",
+    "^https:\\/\\/accounts\\.google\\.com\\/o\\/oauth2\\/v2\\/auth",
     "^https:\\/\\/accounts\\.google\\.com\\/signin\\/oauth\\/consent",
   ],
   microsoftonline: [

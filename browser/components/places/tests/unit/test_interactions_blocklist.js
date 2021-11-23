@@ -20,6 +20,7 @@ let BLOCKED_URLS = [
   "https://accounts.google.com/o/oauth2/v2/auth/identifier/foobar",
   "https://auth.mozilla.auth0.com/login/foobar",
   "https://accounts.google.com/signin/oauth/consent/foobar",
+  "https://accounts.google.com/o/oauth2/v2/auth?client_id=ZZZ",
   "https://login.microsoftonline.com/common/oauth2/v2.0/authorize/foobar",
 ];
 
