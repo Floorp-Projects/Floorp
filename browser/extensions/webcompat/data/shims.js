@@ -554,6 +554,23 @@ const AVAILABLE_SHIMS = [
     ],
     onlyIfDFPIActive: true,
   },
+  {
+    id: "Humblebundle",
+    platform: "desktop",
+    name: "Humblebundle",
+    bug: "1742553",
+    contentScripts: [
+      {
+        js: "humblebundle.js",
+        matches: [
+          "*://www.humblebundle.com/login*",
+          "*://www.humblebundle.com/signup*",
+        ],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
 ];
 
 module.exports = AVAILABLE_SHIMS;
