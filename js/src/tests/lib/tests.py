@@ -218,6 +218,9 @@ class RefTestCase(object):
         self.random = False
         # bool: True => test may run slowly
         self.slow = False
+        # bool: True => test is test262 testcase with raw flag, that turns off
+        # running shell.js files inside test262
+        self.is_test262_raw = False
 
         # Use self-hosted XDR instead of parsing the source stored in the binary.
         # str?: Path computed when generating the command
@@ -245,6 +248,12 @@ class RefTestCase(object):
         while path != "":
             assert path != "/"
             path = os.path.dirname(path)
+
+            if self.is_test262_raw and path != "":
+                # Skip running shell.js under test262 if the test has raw flag.
+                # Top-level shell.js is still necessary to define reportCompare.
+                continue
+
             shell_path = os.path.join(self.root, path, "shell.js")
             if os.path.exists(shell_path):
                 prefix.append(shell_path)

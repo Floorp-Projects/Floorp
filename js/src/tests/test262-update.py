@@ -367,6 +367,9 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     else:
         testEpilogue = ""
 
+    if raw:
+        refTestOptions.append("test262-raw")
+
     (terms, comments) = createRefTestEntry(
         refTestOptions, refTestSkip, refTestSkipIf, errorType, isModule, isAsync
     )
