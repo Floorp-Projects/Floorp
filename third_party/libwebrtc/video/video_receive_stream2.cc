@@ -220,6 +220,7 @@ VideoReceiveStream2::VideoReceiveStream2(
                                  rtp_receive_statistics_.get(),
                                  &stats_proxy_,
                                  &stats_proxy_,
+                                 &stats_proxy_,
                                  process_thread,
                                  this,     // NackSender
                                  nullptr,  // Use default KeyFrameRequestSender
