@@ -72,7 +72,7 @@ function createMockedObjects(createHandlerApp) {
     targetFileIsExecutable: false,
     saveToDisk() {},
     cancel() {},
-    launchWithApplication() {},
+    setDownloadToLaunch() {},
     setWebProgressListener() {},
     saveDestinationAvailable() {},
     contentLength: 42,

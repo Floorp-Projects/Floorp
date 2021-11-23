@@ -497,6 +497,11 @@ class nsExternalAppHandler final : public nsIStreamListener,
                         const nsString& path);
 
   /**
+   * Tell the launcher to open the local file with its configured handler.
+   */
+  nsresult LaunchLocalFile();
+
+  /**
    * Set in nsHelperDlgApp.js. This is always null after the user has chosen an
    * action.
    */
