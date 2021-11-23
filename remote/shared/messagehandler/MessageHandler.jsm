@@ -169,9 +169,14 @@ class MessageHandler extends EventEmitter {
    * @typedef {Object} CommandDestination
    * @property {String} type
    *     One of MessageHandler.type.
-   * @property {String} id
+   * @property {String=} id
    *     Unique context identifier. The format depends on the type.
    *     For WINDOW_GLOBAL destinations, this is a browsing context id.
+   *     Optional, should only be provided if `contextDescriptor` is missing.
+   * @property {ContextDescriptor=} contextDescriptor
+   *     Descriptor used to match several contexts, which will all receive the
+   *     command.
+   *     Optional, should only be provided if `id` is missing.
    */
 
   /**

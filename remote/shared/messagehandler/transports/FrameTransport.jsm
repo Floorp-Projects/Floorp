@@ -13,6 +13,8 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 
+  CONTEXT_DESCRIPTOR_TYPES:
+    "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   MessageHandlerFrameActor:
     "chrome://remote/content/shared/messagehandler/transports/js-window-actors/MessageHandlerFrameActor.jsm",
 });
@@ -46,9 +48,9 @@ class FrameTransport {
    *     being processed by WINDOW_GLOBAL MessageHandlers.
    */
   forwardCommand(command) {
-    if (command.destination.id && command.destination.broadcast) {
+    if (command.destination.id && command.destination.contextDescriptor) {
       throw new Error(
-        "Invalid command destination with both 'id' and 'broadcast' properties"
+        "Invalid command destination with both 'id' and 'contextDescriptor' properties"
       );
     }
 
@@ -63,18 +65,21 @@ class FrameTransport {
       return this._sendCommandToBrowsingContext(command, browsingContext);
     }
 
-    // ... otherwise broadcast to all registered destinations.
-    if (command.destination.broadcast) {
+    // ... otherwise broadcast to destinations matching the contextDescriptor.
+    if (command.destination.contextDescriptor) {
       return this._broadcastCommand(command);
     }
 
     throw new Error(
-      "Unrecognized command destination, missing 'id' or 'broadcast' properties"
+      "Unrecognized command destination, missing 'id' or 'contextDescriptor' properties"
     );
   }
 
   _broadcastCommand(command) {
-    const browsingContexts = this._getAllBrowsingContexts();
+    const { contextDescriptor } = command.destination;
+    const browsingContexts = this._getBrowsingContextsForDescriptor(
+      contextDescriptor
+    );
 
     return Promise.all(
       browsingContexts.map(async browsingContext => {
@@ -102,6 +107,18 @@ class FrameTransport {
 
   toString() {
     return `[object ${this.constructor.name} ${this._messageHandler.name}]`;
+  }
+
+  _getBrowsingContextsForDescriptor(contextDescriptor) {
+    const { type } = contextDescriptor;
+    if (type === CONTEXT_DESCRIPTOR_TYPES.ALL) {
+      return this._getAllBrowsingContexts();
+    }
+
+    // TODO: Handle other types of context descriptors.
+    throw new Error(
+      `Unsupported contextDescriptor type for broadcasting: ${type}`
+    );
   }
 
   _getAllBrowsingContexts() {
