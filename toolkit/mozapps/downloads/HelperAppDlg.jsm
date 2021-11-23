@@ -1066,7 +1066,7 @@ nsUnknownContentTypeDialog.prototype = {
     // taking over).
     this.mLauncher.setWebProgressListener(null);
 
-    // saveToDisk and launchWithApplication can return errors in
+    // saveToDisk and setDownloadToLaunch can return errors in
     // certain circumstances (e.g. The user clicks cancel in the
     // "Save to Disk" dialog. In those cases, we don't want to
     // update the helper application preferences in the RDF file.
@@ -1081,7 +1081,7 @@ nsUnknownContentTypeDialog.prototype = {
         );
         this._saveToDiskTimer.initWithCallback(this, 0, nsITimer.TYPE_ONE_SHOT);
       } else {
-        this.mLauncher.launchWithApplication(this.handleInternally, null);
+        this.mLauncher.setDownloadToLaunch(this.handleInternally, null);
       }
 
       // Update user pref for this mime type (if necessary). We do not
