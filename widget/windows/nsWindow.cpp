@@ -701,7 +701,11 @@ nsWindow::nsWindow(bool aIsChildWindow)
   if (!sInstanceCount) {
     // Global app registration id for Win7 and up. See
     // WinTaskbar.cpp for details.
-    mozilla::widget::WinTaskbar::RegisterAppUserModelID();
+    // MSIX packages explicitly do not support setting the appid from within
+    // the app, as it is set in the package manifest instead.
+    if (!WinUtils::HasPackageIdentity()) {
+      mozilla::widget::WinTaskbar::RegisterAppUserModelID();
+    }
     KeyboardLayout::GetInstance()->OnLayoutChange(::GetKeyboardLayout(0));
 #if defined(ACCESSIBILITY)
     mozilla::TIPMessageHandler::Initialize();
