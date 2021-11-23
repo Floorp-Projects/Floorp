@@ -36,16 +36,16 @@ XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
  * @property {String} type
  *     The type of context, one of CONTEXT_DESCRIPTOR_TYPES
  * @property {String=} id
- *     Unique id of a given context for the provided type.
- *     For CONTEXT_DESCRIPTOR_TYPES.ALL, id can be ommitted.
- *     For CONTEXT_DESCRIPTOR_TYPES.TOP_BROWSING_CONTEXT, the id should be a
- *     browserId.
+ *     Unique id of a given context for the provided type. Optional for
+ *     CONTEXT_DESCRIPTOR_TYPES.ALL, since there is only one context
  */
 
 // Enum of ContextDescriptor types.
+// TODO: At the moment we only support the type "all", but additional context
+// types will be added. See comment for the Context type definition.
+//
 const CONTEXT_DESCRIPTOR_TYPES = {
   ALL: "all",
-  TOP_BROWSING_CONTEXT: "top-browsing-context",
 };
 
 /**
@@ -169,14 +169,9 @@ class MessageHandler extends EventEmitter {
    * @typedef {Object} CommandDestination
    * @property {String} type
    *     One of MessageHandler.type.
-   * @property {String=} id
+   * @property {String} id
    *     Unique context identifier. The format depends on the type.
    *     For WINDOW_GLOBAL destinations, this is a browsing context id.
-   *     Optional, should only be provided if `contextDescriptor` is missing.
-   * @property {ContextDescriptor=} contextDescriptor
-   *     Descriptor used to match several contexts, which will all receive the
-   *     command.
-   *     Optional, should only be provided if `id` is missing.
    */
 
   /**
