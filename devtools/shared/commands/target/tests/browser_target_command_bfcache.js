@@ -72,7 +72,11 @@ async function testTopLevelNavigations(bfcacheInParent) {
     destroyedTargets.push(targetFront);
   };
 
-  await targetCommand.watchTargets([TYPES.FRAME], onAvailable, onDestroyed);
+  await targetCommand.watchTargets({
+    types: [TYPES.FRAME],
+    onAvailable,
+    onDestroyed,
+  });
   is(targets.length, 1, "retrieved only the top level target");
   is(targets[0], targetCommand.targetFront, "the target is the top level one");
   is(
@@ -274,7 +278,7 @@ async function testTopLevelNavigations(bfcacheInParent) {
 
   await waitForAllTargetsToBeAttached(targetCommand);
 
-  targetCommand.unwatchTargets([TYPES.FRAME], onAvailable);
+  targetCommand.unwatchTargets({ types: [TYPES.FRAME], onAvailable });
 
   BrowserTestUtils.removeTab(tab);
 
@@ -319,7 +323,11 @@ async function testTopLevelNavigationsOnDocumentWithIframe(bfcacheInParent) {
     destroyedTargets.push(targetFront);
   };
 
-  await targetCommand.watchTargets([TYPES.FRAME], onAvailable, onDestroyed);
+  await targetCommand.watchTargets({
+    types: [TYPES.FRAME],
+    onAvailable,
+    onDestroyed,
+  });
 
   if (isEveryFrameTargetEnabled()) {
     is(
@@ -450,7 +458,11 @@ async function testTopLevelNavigationsOnDocumentWithIframe(bfcacheInParent) {
 
   await waitForAllTargetsToBeAttached(targetCommand);
 
-  targetCommand.unwatchTargets([TYPES.FRAME], onAvailable);
+  targetCommand.unwatchTargets({
+    types: [TYPES.FRAME],
+    onAvailable,
+    onDestroyed,
+  });
 
   BrowserTestUtils.removeTab(tab);
 
@@ -479,7 +491,7 @@ async function testIframeNavigations() {
     );
     targets.push(targetFront);
   };
-  await targetCommand.watchTargets([TYPES.FRAME], onAvailable);
+  await targetCommand.watchTargets({ types: [TYPES.FRAME], onAvailable });
 
   // When fission/EFT is off, there isn't much to test for iframes as they are debugged
   // when the unique top level target
@@ -543,7 +555,7 @@ async function testIframeNavigations() {
   is(targets[4].url, secondPageUrl, "the 4th target is for the second url");
   ok(targets[3].isDestroyed(), "the third target is destroyed");
 
-  targetCommand.unwatchTargets([TYPES.FRAME], onAvailable);
+  targetCommand.unwatchTargets({ types: [TYPES.FRAME], onAvailable });
 
   await waitForAllTargetsToBeAttached(targetCommand);
 

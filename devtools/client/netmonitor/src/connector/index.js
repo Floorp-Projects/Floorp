@@ -93,10 +93,10 @@ class Connector {
       owner: this.owner,
     });
 
-    await this.commands.targetCommand.watchTargets(
-      [this.commands.targetCommand.TYPES.FRAME],
-      this.onTargetAvailable
-    );
+    await this.commands.targetCommand.watchTargets({
+      types: [this.commands.targetCommand.TYPES.FRAME],
+      onAvailable: this.onTargetAvailable,
+    });
 
     const { TYPES } = this.toolbox.resourceCommand;
     const targetResources = [
@@ -141,10 +141,10 @@ class Connector {
 
     this._destroyed = true;
 
-    this.commands.targetCommand.unwatchTargets(
-      [this.commands.targetCommand.TYPES.FRAME],
-      this.onTargetAvailable
-    );
+    this.commands.targetCommand.unwatchTargets({
+      types: [this.commands.targetCommand.TYPES.FRAME],
+      onAvailable: this.onTargetAvailable,
+    });
 
     const { TYPES } = this.toolbox.resourceCommand;
     this.toolbox.resourceCommand.unwatchResources(
