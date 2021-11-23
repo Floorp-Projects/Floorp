@@ -113,11 +113,6 @@ class KnowsCompositor {
     return lock.ref().mTextureFactoryIdentifier.mSupportsComponentAlpha;
   }
 
-  bool SupportsTextureDirectMapping() const {
-    auto lock = mData.Lock();
-    return lock.ref().mTextureFactoryIdentifier.mSupportsTextureDirectMapping;
-  }
-
   bool SupportsD3D11() const {
     auto lock = mData.Lock();
     return lock.ref().mTextureFactoryIdentifier.mParentBackend ==

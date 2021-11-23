@@ -492,7 +492,6 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier> {
     WriteParam(aMsg, aParam.mWebRenderCompositor);
     WriteParam(aMsg, aParam.mParentProcessType);
     WriteParam(aMsg, aParam.mMaxTextureSize);
-    WriteParam(aMsg, aParam.mSupportsTextureDirectMapping);
     WriteParam(aMsg, aParam.mCompositorUseANGLE);
     WriteParam(aMsg, aParam.mCompositorUseDComp);
     WriteParam(aMsg, aParam.mUseCompositorWnd);
@@ -504,20 +503,18 @@ struct ParamTraits<mozilla::layers::TextureFactoryIdentifier> {
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
-    bool result =
-        ReadParam(aMsg, aIter, &aResult->mParentBackend) &&
-        ReadParam(aMsg, aIter, &aResult->mWebRenderBackend) &&
-        ReadParam(aMsg, aIter, &aResult->mWebRenderCompositor) &&
-        ReadParam(aMsg, aIter, &aResult->mParentProcessType) &&
-        ReadParam(aMsg, aIter, &aResult->mMaxTextureSize) &&
-        ReadParam(aMsg, aIter, &aResult->mSupportsTextureDirectMapping) &&
-        ReadParam(aMsg, aIter, &aResult->mCompositorUseANGLE) &&
-        ReadParam(aMsg, aIter, &aResult->mCompositorUseDComp) &&
-        ReadParam(aMsg, aIter, &aResult->mUseCompositorWnd) &&
-        ReadParam(aMsg, aIter, &aResult->mSupportsTextureBlitting) &&
-        ReadParam(aMsg, aIter, &aResult->mSupportsPartialUploads) &&
-        ReadParam(aMsg, aIter, &aResult->mSupportsComponentAlpha) &&
-        ReadParam(aMsg, aIter, &aResult->mSyncHandle);
+    bool result = ReadParam(aMsg, aIter, &aResult->mParentBackend) &&
+                  ReadParam(aMsg, aIter, &aResult->mWebRenderBackend) &&
+                  ReadParam(aMsg, aIter, &aResult->mWebRenderCompositor) &&
+                  ReadParam(aMsg, aIter, &aResult->mParentProcessType) &&
+                  ReadParam(aMsg, aIter, &aResult->mMaxTextureSize) &&
+                  ReadParam(aMsg, aIter, &aResult->mCompositorUseANGLE) &&
+                  ReadParam(aMsg, aIter, &aResult->mCompositorUseDComp) &&
+                  ReadParam(aMsg, aIter, &aResult->mUseCompositorWnd) &&
+                  ReadParam(aMsg, aIter, &aResult->mSupportsTextureBlitting) &&
+                  ReadParam(aMsg, aIter, &aResult->mSupportsPartialUploads) &&
+                  ReadParam(aMsg, aIter, &aResult->mSupportsComponentAlpha) &&
+                  ReadParam(aMsg, aIter, &aResult->mSyncHandle);
     return result;
   }
 };

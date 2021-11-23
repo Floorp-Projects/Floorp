@@ -31,10 +31,7 @@ namespace ipc {
 
 enum {
   kGetPortsMsg = 1,
-  kWaitForTexturesMsg,
-  kUpdateTextureLocksMsg,
   kReturnIdMsg,
-  kReturnWaitForTexturesMsg,
   kReturnPortsMsg,
   kShutdownMsg,
   kCleanupMsg,
@@ -61,9 +58,6 @@ class SharedMemoryBasic final
   static void CleanupForPidWithLock(pid_t pid);
 
   static void Shutdown();
-
-  static bool SendMachMessage(pid_t pid, MachSendMessage& message,
-                              MachReceiveMessage* response);
 
   SharedMemoryBasic();
 

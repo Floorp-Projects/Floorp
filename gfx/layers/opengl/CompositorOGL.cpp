@@ -34,10 +34,7 @@
 #include "mozilla/layers/TextureHost.h"  // for TextureSource, etc
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureSourceOGL, etc
 #include "mozilla/layers/PTextureParent.h"  // for OtherPid() on PTextureParent
-#ifdef XP_DARWIN
-#  include "mozilla/layers/TextureSync.h"  // for TextureSync::etc.
-#endif
-#include "mozilla/mozalloc.h"  // for operator delete, etc
+#include "mozilla/mozalloc.h"               // for operator delete, etc
 #include "nsAppRunner.h"
 #include "nsAString.h"
 #include "nsClassHashtable.h"
@@ -185,18 +182,10 @@ CompositorOGL::CompositorOGL(widget::CompositorWidget* aWidget,
     // default framebuffer.
     mCanRenderToDefaultFramebuffer = false;
   }
-#ifdef XP_DARWIN
-  TextureSync::RegisterTextureSourceProvider(this);
-#endif
   MOZ_COUNT_CTOR(CompositorOGL);
 }
 
-CompositorOGL::~CompositorOGL() {
-#ifdef XP_DARWIN
-  TextureSync::UnregisterTextureSourceProvider(this);
-#endif
-  MOZ_COUNT_DTOR(CompositorOGL);
-}
+CompositorOGL::~CompositorOGL() { MOZ_COUNT_DTOR(CompositorOGL); }
 
 already_AddRefed<mozilla::gl::GLContext> CompositorOGL::CreateContext() {
   RefPtr<GLContext> context;
@@ -1648,21 +1637,6 @@ GLuint CompositorOGL::GetTemporaryTexture(GLenum aTarget, GLenum aUnit) {
     mTexturePool = new PerUnitTexturePoolOGL(gl());
   }
   return mTexturePool->GetTexture(aTarget, aUnit);
-}
-
-bool CompositorOGL::SupportsTextureDirectMapping() {
-  if (!StaticPrefs::gfx_allow_texture_direct_mapping_AtStartup()) {
-    return false;
-  }
-
-  if (mGLContext) {
-    mGLContext->MakeCurrent();
-    return mGLContext->IsExtensionSupported(
-               gl::GLContext::APPLE_client_storage) &&
-           mGLContext->IsExtensionSupported(gl::GLContext::APPLE_texture_range);
-  }
-
-  return false;
 }
 
 GLuint PerUnitTexturePoolOGL::GetTexture(GLenum aTarget, GLenum aTextureUnit) {
