@@ -1750,12 +1750,61 @@ class RDDSandboxPolicy final : public SandboxPolicyCommon {
       : SandboxPolicyCommon(aBroker, ShmemUsage::MAY_CREATE,
                             AllowUnsafeSocketPair::NO) {}
 
+#ifndef ANDROID
+  Maybe<ResultExpr> EvaluateIpcCall(int aCall, int aArgShift) const override {
+    // The Intel media driver uses SysV IPC (semaphores and shared
+    // memory) on newer hardware models; it always uses this fixed
+    // key, so we can restrict semget and shmget.  Unfortunately, the
+    // calls that operate on these resources take "identifiers", which
+    // are unpredictable (by us) but guessable (by an adversary).
+    static constexpr key_t kIntelKey = 'D' << 24 | 'V' << 8 | 'X' << 0;
+
+    switch (aCall) {
+      case SEMGET:
+      case SHMGET: {
+        Arg<key_t> key(0 + aArgShift);
+        return Some(If(key == kIntelKey, Allow()).Else(InvalidSyscall()));
+      }
+
+      case SEMCTL:
+      case SEMOP:
+      case SEMTIMEDOP:
+      case SHMCTL:
+      case SHMAT:
+      case SHMDT:
+        return Some(Allow());
+
+      default:
+        return SandboxPolicyCommon::EvaluateIpcCall(aCall, aArgShift);
+    }
+  }
+#endif
+
   ResultExpr EvaluateSyscall(int sysno) const override {
     switch (sysno) {
       case __NR_getrusage:
         return Allow();
 
-      // Pass through the common policy.
+      case __NR_ioctl: {
+        Arg<unsigned long> request(1);
+        auto shifted_type = request & kIoctlTypeMask;
+        static constexpr unsigned long kDrmType =
+            static_cast<unsigned long>('d') << _IOC_TYPESHIFT;
+
+        // Allow DRI for VA-API
+        return If(shifted_type == kDrmType, Allow())
+            .Else(SandboxPolicyCommon::EvaluateSyscall(sysno));
+      }
+
+        // Mesa/amdgpu
+      case __NR_kcmp:
+        return KcmpPolicyForMesa();
+
+        // We use this in our DMABuf support code.
+      case __NR_eventfd2:
+        return Allow();
+
+        // Pass through the common policy.
       default:
         return SandboxPolicyCommon::EvaluateSyscall(sysno);
     }
