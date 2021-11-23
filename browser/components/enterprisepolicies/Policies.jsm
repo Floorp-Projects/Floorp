@@ -2441,6 +2441,10 @@ function installAddonFromURL(url, extensionID, addon) {
     let listener = {
       /* eslint-disable-next-line no-shadow */
       onDownloadEnded: install => {
+        // Install failed, error will be reported elsewhere.
+        if (!install.addon) {
+          return;
+        }
         if (extensionID && install.addon.id != extensionID) {
           log.error(
             `Add-on downloaded from ${url} had unexpected id (got ${install.addon.id} expected ${extensionID})`
@@ -2448,7 +2452,7 @@ function installAddonFromURL(url, extensionID, addon) {
           install.removeListener(listener);
           install.cancel();
         }
-        if (install.addon && install.addon.appDisabled) {
+        if (install.addon.appDisabled) {
           log.error(`Incompatible add-on - ${url}`);
           install.removeListener(listener);
           install.cancel();
