@@ -4,8 +4,34 @@ This module provides an object oriented interface for pattern matching
 of files.
 """
 
+try:
+	from typing import (
+		Any,
+		AnyStr,
+		Callable,
+		Iterable,
+		Iterator,
+		Optional,
+		Text,
+		Union)
+except ImportError:
+	pass
+
+try:
+	# Python 3.6+ type hints.
+	from os import PathLike
+	from typing import Collection
+except ImportError:
+	pass
+
 from . import util
-from .compat import Collection, iterkeys, izip_longest, string_types, unicode
+from .compat import (
+	CollectionType,
+	iterkeys,
+	izip_longest,
+	string_types)
+from .pattern import Pattern
+from .util import TreeEntry
 
 
 class PathSpec(object):
@@ -15,6 +41,7 @@ class PathSpec(object):
 	"""
 
 	def __init__(self, patterns):
+		# type: (Iterable[Pattern]) -> None
 		"""
 		Initializes the :class:`PathSpec` instance.
 
@@ -22,13 +49,14 @@ class PathSpec(object):
 		yields each compiled pattern (:class:`.Pattern`).
 		"""
 
-		self.patterns = patterns if isinstance(patterns, Collection) else list(patterns)
+		self.patterns = patterns if isinstance(patterns, CollectionType) else list(patterns)
 		"""
 		*patterns* (:class:`~collections.abc.Collection` of :class:`.Pattern`)
 		contains the compiled patterns.
 		"""
 
 	def __eq__(self, other):
+		# type: (PathSpec) -> bool
 		"""
 		Tests the equality of this path-spec with *other* (:class:`PathSpec`)
 		by comparing their :attr:`~PathSpec.patterns` attributes.
@@ -46,8 +74,32 @@ class PathSpec(object):
 		"""
 		return len(self.patterns)
 
+	def __add__(self, other):
+		# type: (PathSpec) -> PathSpec
+		"""
+		Combines the :attr:`Pathspec.patterns` patterns from two
+		:class:`PathSpec` instances.
+		"""
+		if isinstance(other, PathSpec):
+			return PathSpec(self.patterns + other.patterns)
+		else:
+			return NotImplemented
+
+	def __iadd__(self, other):
+		# type: (PathSpec) -> PathSpec
+		"""
+		Adds the :attr:`Pathspec.patterns` patterns from one :class:`PathSpec`
+		instance to this instance.
+		"""
+		if isinstance(other, PathSpec):
+			self.patterns += other.patterns
+			return self
+		else:
+			return NotImplemented
+
 	@classmethod
 	def from_lines(cls, pattern_factory, lines):
+		# type: (Union[Text, Callable[[AnyStr], Pattern]], Iterable[AnyStr]) -> PathSpec
 		"""
 		Compiles the pattern lines.
 
@@ -71,10 +123,11 @@ class PathSpec(object):
 		if not util._is_iterable(lines):
 			raise TypeError("lines:{!r} is not an iterable.".format(lines))
 
-		lines = [pattern_factory(line) for line in lines if line]
-		return cls(lines)
+		patterns = [pattern_factory(line) for line in lines if line]
+		return cls(patterns)
 
 	def match_file(self, file, separators=None):
+		# type: (Union[Text, PathLike], Optional[Collection[Text]]) -> bool
 		"""
 		Matches the file to this path-spec.
 
@@ -91,6 +144,7 @@ class PathSpec(object):
 		return util.match_file(self.patterns, norm_file)
 
 	def match_entries(self, entries, separators=None):
+		# type: (Iterable[TreeEntry], Optional[Collection[Text]]) -> Iterator[TreeEntry]
 		"""
 		Matches the entries to this path-spec.
 
@@ -102,7 +156,7 @@ class PathSpec(object):
 		normalize. See :func:`~pathspec.util.normalize_file` for more
 		information.
 
-		Returns the matched entries (:class:`~collections.abc.Iterable` of
+		Returns the matched entries (:class:`~collections.abc.Iterator` of
 		:class:`~util.TreeEntry`).
 		"""
 		if not util._is_iterable(entries):
@@ -114,6 +168,7 @@ class PathSpec(object):
 			yield entry_map[path]
 
 	def match_files(self, files, separators=None):
+		# type: (Iterable[Union[Text, PathLike]], Optional[Collection[Text]]) -> Iterator[Union[Text, PathLike]]
 		"""
 		Matches the files to this path-spec.
 
@@ -126,18 +181,20 @@ class PathSpec(object):
 		normalize. See :func:`~pathspec.util.normalize_file` for more
 		information.
 
-		Returns the matched files (:class:`~collections.abc.Iterable` of
-		:class:`str`).
+		Returns the matched files (:class:`~collections.abc.Iterator` of
+		:class:`str` or :class:`pathlib.PurePath`).
 		"""
 		if not util._is_iterable(files):
 			raise TypeError("files:{!r} is not an iterable.".format(files))
 
 		file_map = util.normalize_files(files, separators=separators)
 		matched_files = util.match_files(self.patterns, iterkeys(file_map))
-		for path in matched_files:
-			yield file_map[path]
+		for norm_file in matched_files:
+			for orig_file in file_map[norm_file]:
+				yield orig_file
 
 	def match_tree_entries(self, root, on_error=None, follow_links=None):
+		# type: (Text, Optional[Callable], Optional[bool]) -> Iterator[TreeEntry]
 		"""
 		Walks the specified root path for all files and matches them to this
 		path-spec.
@@ -153,13 +210,14 @@ class PathSpec(object):
 		to walk symbolic links that resolve to directories. See
 		:func:`~pathspec.util.iter_tree_files` for more information.
 
-		Returns the matched files (:class:`~collections.abc.Iterable` of
-		:class:`str`).
+		Returns the matched files (:class:`~collections.abc.Iterator` of
+		:class:`.TreeEntry`).
 		"""
 		entries = util.iter_tree_entries(root, on_error=on_error, follow_links=follow_links)
 		return self.match_entries(entries)
 
 	def match_tree_files(self, root, on_error=None, follow_links=None):
+		# type: (Text, Optional[Callable], Optional[bool]) -> Iterator[Text]
 		"""
 		Walks the specified root path for all files and matches them to this
 		path-spec.
