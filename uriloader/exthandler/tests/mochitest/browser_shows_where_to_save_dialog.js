@@ -70,17 +70,17 @@ add_task(async function testFilesHandledInternally() {
 
   let loadingTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    TEST_PATH + "file_pdf_application_pdf.pdf"
+    TEST_PATH + "file_image_svgxml.svg"
   );
 
   await TestUtils.waitForCondition(() => {
     return (
       gBrowser.tabs.length === 3 &&
-      gBrowser?.tabs[2]?.label === "file_pdf_application_pdf.pdf"
+      gBrowser?.tabs[2]?.label.endsWith("file_image_svgxml.svg")
     );
-  }, "A new tab for the downloaded pdf wasn't open.");
+  }, "A new tab for the downloaded svg wasn't open.");
 
-  assertCorrectFile(dir);
+  assertCorrectFile(dir, "file_image_svgxml.svg");
 
   // Cleanup
   BrowserTestUtils.removeTab(loadingTab);
@@ -113,7 +113,7 @@ add_task(async function testFilesHandledBySystemDefaultApp() {
 
   await launchFileCalled;
 
-  assertCorrectFile(dir);
+  assertCorrectFile(dir, "file_pdf_application_pdf.pdf");
 
   // Cleanup
   BrowserTestUtils.removeTab(loadingTab);
@@ -177,7 +177,7 @@ add_task(async function testFilesHandledByHelperApp() {
 
   await downloadFinishedPromise;
   await launchFileCalled;
-  assertCorrectFile(dir);
+  assertCorrectFile(dir, "file_pdf_application_pdf.pdf");
 
   // Cleanup
   BrowserTestUtils.removeTab(loadingTab);
@@ -210,12 +210,12 @@ async function setupFilePickerDirectory() {
   return saveDir;
 }
 
-function assertCorrectFile(saveDir) {
+function assertCorrectFile(saveDir, filename) {
   info("Make sure additional files haven't been created.");
   let iter = saveDir.directoryEntries;
   let file = iter.nextFile;
   ok(
-    file.path.includes("file_pdf_application_pdf.pdf"),
+    file.path.includes(filename),
     "Download has correct filename"
   );
   ok(!iter.nextFile, "Only one file was created.");
