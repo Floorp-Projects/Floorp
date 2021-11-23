@@ -75,7 +75,7 @@ class SetupAction final : public SyncDBAction {
   SetupAction() : SyncDBAction(DBAction::Create) {}
 
   virtual nsresult RunSyncWithDBOnTarget(
-      const ClientMetadata& aClientMetadata, nsIFile* aDBDir,
+      const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
     MOZ_DIAGNOSTIC_ASSERT(aDBDir);
 
@@ -94,7 +94,7 @@ class SetupAction final : public SyncDBAction {
     //
     // Note, this must be done after any schema version updates to
     // ensure our DBSchema methods work correctly.
-    if (MarkerFileExists(aClientMetadata)) {
+    if (MarkerFileExists(aDirectoryMetadata)) {
       NS_WARNING("Cache not shutdown cleanly! Cleaning up stale data...");
       mozStorageTransaction trans(aConn, false,
                                   mozIStorageConnection::TRANSACTION_IMMEDIATE);
@@ -109,19 +109,19 @@ class SetupAction final : public SyncDBAction {
           const CheckedInt64& overallDeletedPaddingSize,
           Reduce(
               orphanedCacheIdList, CheckedInt64(0),
-              [aConn, &aClientMetadata, &aDBDir](
+              [aConn, &aDirectoryMetadata, &aDBDir](
                   CheckedInt64 oldValue, const Maybe<const CacheId&>& element)
                   -> Result<CheckedInt64, nsresult> {
                 QM_TRY_INSPECT(const auto& deletionInfo,
                                db::DeleteCacheId(*aConn, *element));
 
                 QM_TRY(MOZ_TO_RESULT(
-                    BodyDeleteFiles(aClientMetadata, *aDBDir,
+                    BodyDeleteFiles(aDirectoryMetadata, *aDBDir,
                                     deletionInfo.mDeletedBodyIdList)));
 
                 if (deletionInfo.mDeletedPaddingSize > 0) {
-                  DecreaseUsageForClientMetadata(
-                      aClientMetadata, deletionInfo.mDeletedPaddingSize);
+                  DecreaseUsageForDirectoryMetadata(
+                      aDirectoryMetadata, deletionInfo.mDeletedPaddingSize);
                 }
 
                 return oldValue + deletionInfo.mDeletedPaddingSize;
@@ -130,8 +130,8 @@ class SetupAction final : public SyncDBAction {
       // Clean up orphaned body objects
       QM_TRY_INSPECT(const auto& knownBodyIdList, db::GetKnownBodyIds(*aConn));
 
-      QM_TRY(MOZ_TO_RESULT(
-          BodyDeleteOrphanedFiles(aClientMetadata, *aDBDir, knownBodyIdList)));
+      QM_TRY(MOZ_TO_RESULT(BodyDeleteOrphanedFiles(aDirectoryMetadata, *aDBDir,
+                                                   knownBodyIdList)));
 
       // Commit() explicitly here, because we want to ensure the padding file
       // has the correct content.
@@ -172,11 +172,11 @@ class DeleteOrphanedBodyAction final : public Action {
       : mDeletedBodyIdList{aBodyId} {}
 
   void RunOnTarget(SafeRefPtr<Resolver> aResolver,
-                   const Maybe<ClientMetadata>& aClientMetadata,
+                   const Maybe<CacheDirectoryMetadata>& aDirectoryMetadata,
                    Data*) override {
     MOZ_DIAGNOSTIC_ASSERT(aResolver);
-    MOZ_DIAGNOSTIC_ASSERT(aClientMetadata);
-    MOZ_DIAGNOSTIC_ASSERT(aClientMetadata->mDir);
+    MOZ_DIAGNOSTIC_ASSERT(aDirectoryMetadata);
+    MOZ_DIAGNOSTIC_ASSERT(aDirectoryMetadata->mDir);
 
     // Note that since DeleteOrphanedBodyAction isn't used while the context is
     // being initialized, we don't need to check for cancellation here.
@@ -186,11 +186,11 @@ class DeleteOrphanedBodyAction final : public Action {
     };
 
     QM_TRY_INSPECT(const auto& dbDir,
-                   CloneFileAndAppend(*aClientMetadata->mDir, u"cache"_ns),
+                   CloneFileAndAppend(*aDirectoryMetadata->mDir, u"cache"_ns),
                    QM_VOID, resolve);
 
-    QM_TRY(MOZ_TO_RESULT(
-               BodyDeleteFiles(*aClientMetadata, *dbDir, mDeletedBodyIdList)),
+    QM_TRY(MOZ_TO_RESULT(BodyDeleteFiles(*aDirectoryMetadata, *dbDir,
+                                         mDeletedBodyIdList)),
            QM_VOID, resolve);
 
     aResolver->Resolve(NS_OK);
@@ -527,9 +527,9 @@ class Manager::DeleteOrphanedCacheAction final : public SyncDBAction {
         mCacheId(aCacheId) {}
 
   virtual nsresult RunSyncWithDBOnTarget(
-      const ClientMetadata& aClientMetadata, nsIFile* aDBDir,
+      const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
-    mClientMetadata.emplace(aClientMetadata);
+    mDirectoryMetadata.emplace(aDirectoryMetadata);
 
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
@@ -556,8 +556,8 @@ class Manager::DeleteOrphanedCacheAction final : public SyncDBAction {
     mManager->NoteOrphanedBodyIdList(mDeletionInfo.mDeletedBodyIdList);
 
     if (mDeletionInfo.mDeletedPaddingSize > 0) {
-      DecreaseUsageForClientMetadata(*mClientMetadata,
-                                     mDeletionInfo.mDeletedPaddingSize);
+      DecreaseUsageForDirectoryMetadata(*mDirectoryMetadata,
+                                        mDeletionInfo.mDeletedPaddingSize);
     }
 
     // ensure we release the manager on the initiating thread
@@ -568,7 +568,7 @@ class Manager::DeleteOrphanedCacheAction final : public SyncDBAction {
   SafeRefPtr<Manager> mManager;
   const CacheId mCacheId;
   DeletionInfo mDeletionInfo;
-  Maybe<ClientMetadata> mClientMetadata;
+  Maybe<CacheDirectoryMetadata> mDirectoryMetadata;
 };
 
 // ----------------------------------------------------------------------------
@@ -585,7 +585,7 @@ class Manager::CacheMatchAction final : public Manager::BaseAction {
         mFoundResponse(false) {}
 
   virtual nsresult RunSyncWithDBOnTarget(
-      const ClientMetadata& aClientMetadata, nsIFile* aDBDir,
+      const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
     MOZ_DIAGNOSTIC_ASSERT(aDBDir);
 
@@ -607,7 +607,7 @@ class Manager::CacheMatchAction final : public Manager::BaseAction {
     nsCOMPtr<nsIInputStream> stream;
     if (mArgs.openMode() == OpenMode::Eager) {
       QM_TRY_UNWRAP(stream,
-                    BodyOpen(aClientMetadata, *aDBDir, mResponse.mBodyId));
+                    BodyOpen(aDirectoryMetadata, *aDBDir, mResponse.mBodyId));
     }
 
     mStreamList->Add(mResponse.mBodyId, std::move(stream));
@@ -651,7 +651,7 @@ class Manager::CacheMatchAllAction final : public Manager::BaseAction {
         mStreamList(std::move(aStreamList)) {}
 
   virtual nsresult RunSyncWithDBOnTarget(
-      const ClientMetadata& aClientMetadata, nsIFile* aDBDir,
+      const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
     MOZ_DIAGNOSTIC_ASSERT(aDBDir);
 
@@ -668,7 +668,7 @@ class Manager::CacheMatchAllAction final : public Manager::BaseAction {
 
       nsCOMPtr<nsIInputStream> stream;
       if (mArgs.openMode() == OpenMode::Eager) {
-        QM_TRY_UNWRAP(stream, BodyOpen(aClientMetadata, *aDBDir,
+        QM_TRY_UNWRAP(stream, BodyOpen(aDirectoryMetadata, *aDBDir,
                                        mSavedResponses[i].mBodyId));
       }
 
@@ -734,10 +734,10 @@ class Manager::CachePutAllAction final : public DBAction {
  private:
   ~CachePutAllAction() = default;
 
-  virtual void RunWithDBOnTarget(SafeRefPtr<Resolver> aResolver,
-                                 const ClientMetadata& aClientMetadata,
-                                 nsIFile* aDBDir,
-                                 mozIStorageConnection* aConn) override {
+  virtual void RunWithDBOnTarget(
+      SafeRefPtr<Resolver> aResolver,
+      const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile* aDBDir,
+      mozIStorageConnection* aConn) override {
     MOZ_DIAGNOSTIC_ASSERT(aResolver);
     MOZ_DIAGNOSTIC_ASSERT(aDBDir);
     MOZ_DIAGNOSTIC_ASSERT(aConn);
@@ -757,20 +757,20 @@ class Manager::CachePutAllAction final : public DBAction {
     mResolver = std::move(aResolver);
     mDBDir = aDBDir;
     mConn = aConn;
-    mClientMetadata.emplace(aClientMetadata);
+    mDirectoryMetadata.emplace(aDirectoryMetadata);
 
     // File bodies are streamed to disk via asynchronous copying.  Start
     // this copying now.  Each copy will eventually result in a call
     // to OnAsyncCopyComplete().
-    const nsresult rv = [this, &aClientMetadata]() -> nsresult {
+    const nsresult rv = [this, &aDirectoryMetadata]() -> nsresult {
       QM_TRY(CollectEachInRange(
-          mList, [this, &aClientMetadata](auto& entry) -> nsresult {
+          mList, [this, &aDirectoryMetadata](auto& entry) -> nsresult {
             QM_TRY(MOZ_TO_RESULT(
-                StartStreamCopy(aClientMetadata, entry, RequestStream,
+                StartStreamCopy(aDirectoryMetadata, entry, RequestStream,
                                 &mExpectedAsyncCopyCompletions)));
 
             QM_TRY(MOZ_TO_RESULT(
-                StartStreamCopy(aClientMetadata, entry, ResponseStream,
+                StartStreamCopy(aDirectoryMetadata, entry, ResponseStream,
                                 &mExpectedAsyncCopyCompletions)));
 
             return NS_OK;
@@ -858,7 +858,7 @@ class Manager::CachePutAllAction final : public DBAction {
           if (e.mResponse.type() == ResponseType::Opaque) {
             // It'll generate padding if we've not set it yet.
             QM_TRY(MOZ_TO_RESULT(BodyMaybeUpdatePaddingSize(
-                *mClientMetadata, *mDBDir, e.mResponseBodyId,
+                *mDirectoryMetadata, *mDBDir, e.mResponseBodyId,
                 e.mResponse.paddingInfo(), &e.mResponse.paddingSize())));
 
             MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - e.mResponse.paddingSize() >=
@@ -915,7 +915,8 @@ class Manager::CachePutAllAction final : public DBAction {
     mManager->NoteOrphanedBodyIdList(mDeletedBodyIdList);
 
     if (mDeletedPaddingSize > 0) {
-      DecreaseUsageForClientMetadata(*mClientMetadata, mDeletedPaddingSize);
+      DecreaseUsageForDirectoryMetadata(*mDirectoryMetadata,
+                                        mDeletedPaddingSize);
     }
 
     Listener* listener = mManager->GetListener(mListenerId);
@@ -950,8 +951,9 @@ class Manager::CachePutAllAction final : public DBAction {
 
   enum StreamId { RequestStream, ResponseStream };
 
-  nsresult StartStreamCopy(const ClientMetadata& aClientMetadata, Entry& aEntry,
-                           StreamId aStreamId, uint32_t* aCopyCountOut) {
+  nsresult StartStreamCopy(const CacheDirectoryMetadata& aDirectoryMetadata,
+                           Entry& aEntry, StreamId aStreamId,
+                           uint32_t* aCopyCountOut) {
     MOZ_ASSERT(mTarget->IsOnCurrentThread());
     MOZ_DIAGNOSTIC_ASSERT(aCopyCountOut);
 
@@ -970,8 +972,8 @@ class Manager::CachePutAllAction final : public DBAction {
     }
 
     QM_TRY_INSPECT((const auto& [bodyId, copyContext]),
-                   BodyStartWriteStream(aClientMetadata, *mDBDir, *source, this,
-                                        AsyncCopyCompleteFunc));
+                   BodyStartWriteStream(aDirectoryMetadata, *mDBDir, *source,
+                                        this, AsyncCopyCompleteFunc));
 
     if (aStreamId == RequestStream) {
       aEntry.mRequestBodyId = bodyId;
@@ -1034,9 +1036,10 @@ class Manager::CachePutAllAction final : public DBAction {
 
     // Clean up any files we might have written before hitting the error.
     if (NS_FAILED(aRv)) {
-      BodyDeleteFiles(*mClientMetadata, *mDBDir, mBodyIdWrittenList);
+      BodyDeleteFiles(*mDirectoryMetadata, *mDBDir, mBodyIdWrittenList);
       if (mUpdatedPaddingSize > 0) {
-        DecreaseUsageForClientMetadata(*mClientMetadata, mUpdatedPaddingSize);
+        DecreaseUsageForDirectoryMetadata(*mDirectoryMetadata,
+                                          mUpdatedPaddingSize);
       }
     }
 
@@ -1079,7 +1082,7 @@ class Manager::CachePutAllAction final : public DBAction {
   Mutex mMutex;
   nsTArray<nsCOMPtr<nsISupports>> mCopyContextList;
 
-  Maybe<ClientMetadata> mClientMetadata;
+  Maybe<CacheDirectoryMetadata> mDirectoryMetadata;
   // Track how much pad amount has been added for new entries so that it can be
   // removed if an error occurs.
   int64_t mUpdatedPaddingSize;
@@ -1099,9 +1102,9 @@ class Manager::CacheDeleteAction final : public Manager::BaseAction {
         mSuccess(false) {}
 
   virtual nsresult RunSyncWithDBOnTarget(
-      const ClientMetadata& aClientMetadata, nsIFile* aDBDir,
+      const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
-    mClientMetadata.emplace(aClientMetadata);
+    mDirectoryMetadata.emplace(aDirectoryMetadata);
 
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
@@ -1137,8 +1140,8 @@ class Manager::CacheDeleteAction final : public Manager::BaseAction {
     mManager->NoteOrphanedBodyIdList(mDeletionInfo.mDeletedBodyIdList);
 
     if (mDeletionInfo.mDeletedPaddingSize > 0) {
-      DecreaseUsageForClientMetadata(*mClientMetadata,
-                                     mDeletionInfo.mDeletedPaddingSize);
+      DecreaseUsageForDirectoryMetadata(*mDirectoryMetadata,
+                                        mDeletionInfo.mDeletedPaddingSize);
     }
 
     aListener->OnOpComplete(std::move(aRv), CacheDeleteResult(mSuccess));
@@ -1153,7 +1156,7 @@ class Manager::CacheDeleteAction final : public Manager::BaseAction {
   const CacheDeleteArgs mArgs;
   bool mSuccess;
   DeletionInfo mDeletionInfo;
-  Maybe<ClientMetadata> mClientMetadata;
+  Maybe<CacheDirectoryMetadata> mDirectoryMetadata;
 };
 
 // ----------------------------------------------------------------------------
@@ -1169,7 +1172,7 @@ class Manager::CacheKeysAction final : public Manager::BaseAction {
         mStreamList(std::move(aStreamList)) {}
 
   virtual nsresult RunSyncWithDBOnTarget(
-      const ClientMetadata& aClientMetadata, nsIFile* aDBDir,
+      const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
     MOZ_DIAGNOSTIC_ASSERT(aDBDir);
 
@@ -1186,7 +1189,7 @@ class Manager::CacheKeysAction final : public Manager::BaseAction {
 
       nsCOMPtr<nsIInputStream> stream;
       if (mArgs.openMode() == OpenMode::Eager) {
-        QM_TRY_UNWRAP(stream, BodyOpen(aClientMetadata, *aDBDir,
+        QM_TRY_UNWRAP(stream, BodyOpen(aDirectoryMetadata, *aDBDir,
                                        mSavedRequests[i].mBodyId));
       }
 
@@ -1228,7 +1231,7 @@ class Manager::StorageMatchAction final : public Manager::BaseAction {
         mFoundResponse(false) {}
 
   virtual nsresult RunSyncWithDBOnTarget(
-      const ClientMetadata& aClientMetadata, nsIFile* aDBDir,
+      const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
     MOZ_DIAGNOSTIC_ASSERT(aDBDir);
 
@@ -1251,8 +1254,8 @@ class Manager::StorageMatchAction final : public Manager::BaseAction {
 
     nsCOMPtr<nsIInputStream> stream;
     if (mArgs.openMode() == OpenMode::Eager) {
-      QM_TRY_UNWRAP(stream,
-                    BodyOpen(aClientMetadata, *aDBDir, mSavedResponse.mBodyId));
+      QM_TRY_UNWRAP(stream, BodyOpen(aDirectoryMetadata, *aDBDir,
+                                     mSavedResponse.mBodyId));
     }
 
     mStreamList->Add(mSavedResponse.mBodyId, std::move(stream));
@@ -1291,7 +1294,7 @@ class Manager::StorageHasAction final : public Manager::BaseAction {
         mCacheFound(false) {}
 
   virtual nsresult RunSyncWithDBOnTarget(
-      const ClientMetadata& aClientMetadata, nsIFile* aDBDir,
+      const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
     QM_TRY_INSPECT(const auto& maybeCacheId,
                    db::StorageGetCacheId(*aConn, mNamespace, mArgs.key()));
@@ -1323,7 +1326,7 @@ class Manager::StorageOpenAction final : public Manager::BaseAction {
         mCacheId(INVALID_CACHE_ID) {}
 
   virtual nsresult RunSyncWithDBOnTarget(
-      const ClientMetadata& aClientMetadata, nsIFile* aDBDir,
+      const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
     // Cache does not exist, create it instead
     mozStorageTransaction trans(aConn, false,
@@ -1378,7 +1381,7 @@ class Manager::StorageDeleteAction final : public Manager::BaseAction {
         mCacheId(INVALID_CACHE_ID) {}
 
   virtual nsresult RunSyncWithDBOnTarget(
-      const ClientMetadata& aClientMetadata, nsIFile* aDBDir,
+      const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
     mozStorageTransaction trans(aConn, false,
                                 mozIStorageConnection::TRANSACTION_IMMEDIATE);
@@ -1443,7 +1446,7 @@ class Manager::StorageKeysAction final : public Manager::BaseAction {
       : BaseAction(std::move(aManager), aListenerId), mNamespace(aNamespace) {}
 
   virtual nsresult RunSyncWithDBOnTarget(
-      const ClientMetadata& aClientMetadata, nsIFile* aDBDir,
+      const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
     QM_TRY_UNWRAP(mKeys, db::StorageGetKeys(*aConn, mNamespace));
 
@@ -1473,11 +1476,11 @@ class Manager::OpenStreamAction final : public Manager::BaseAction {
         mBodyId(aBodyId) {}
 
   virtual nsresult RunSyncWithDBOnTarget(
-      const ClientMetadata& aClientMetadata, nsIFile* aDBDir,
+      const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile* aDBDir,
       mozIStorageConnection* aConn) override {
     MOZ_DIAGNOSTIC_ASSERT(aDBDir);
 
-    QM_TRY_UNWRAP(mBodyStream, BodyOpen(aClientMetadata, *aDBDir, mBodyId));
+    QM_TRY_UNWRAP(mBodyStream, BodyOpen(aDirectoryMetadata, *aDBDir, mBodyId));
 
     return NS_OK;
   }
