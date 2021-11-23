@@ -31,10 +31,7 @@ add_task(async function() {
         resolve();
       }
     };
-    targetCommand.watchTargets({
-      types: [targetCommand.TYPES.WORKER],
-      onAvailable,
-    });
+    targetCommand.watchTargets([targetCommand.TYPES.WORKER], onAvailable);
   });
 
   // The worker logs a message right when it starts, containing its location, so we can
