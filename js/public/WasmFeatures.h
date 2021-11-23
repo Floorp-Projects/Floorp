@@ -136,15 +136,15 @@
                /* flag predicate     */ WasmSimdFlag(cx),                     \
                /* shell flag         */ "relaxed-simd",                       \
                /* preference name    */ "relaxed_simd")                       \
-  EXPERIMENTAL(/* capitalized name   */ Memory64,                             \
-               /* lower case name    */ memory64,                             \
-               /* compile predicate  */ WASM_MEMORY64_ENABLED,                \
-               /* compiler predicate */ BaselineAvailable(cx) ||              \
-                  IonAvailable(cx),                                           \
-               /* flag predicate     */ !IsFuzzingIon(cx) &&                  \
-                   !IsFuzzingCranelift(cx),                                   \
-               /* shell flag         */ "memory64",                           \
-               /* preference name    */ "memory64")                           \
+  DEFAULT(/* capitalized name   */ Memory64,                                  \
+          /* lower case name    */ memory64,                                  \
+          /* compile predicate  */ WASM_MEMORY64_ENABLED,                     \
+          /* compiler predicate */ BaselineAvailable(cx) ||                   \
+              IonAvailable(cx),                                               \
+          /* flag predicate     */ !IsFuzzingIon(cx) &&                       \
+              !IsFuzzingCranelift(cx),                                        \
+          /* shell flag         */ "memory64",                                \
+          /* preference name    */ "memory64")                                \
   EXPERIMENTAL(/* capitalized name   */ MozIntGemm,                           \
                /* lower case name    */ mozIntGemm,                           \
                /* compile predicate  */ WASM_MOZ_INTGEMM_ENABLED,             \
