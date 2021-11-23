@@ -295,9 +295,8 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * aScrollPosition as possible while scrolling by an integer
    * number of layer pixels (so the operation is fast and looks clean).
    */
-  virtual void ScrollToCSSPixelsApproximate(
-      const mozilla::CSSPoint& aScrollPosition,
-      ScrollOrigin aOrigin = ScrollOrigin::NotSpecified) = 0;
+  virtual void ScrollToCSSPixelsForApz(
+      const mozilla::CSSPoint& aScrollPosition) = 0;
 
   /**
    * Returns the scroll position in integer CSS pixels, rounded to the nearest
