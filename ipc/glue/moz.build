@@ -262,6 +262,9 @@ include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
 
+if CONFIG["OS_ARCH"] == "Darwin":
+    OS_LIBS += ["bsm"]  # for audit_token_to_pid
+
 for var in ("MOZ_CHILD_PROCESS_NAME", "MOZ_CHILD_PROCESS_BUNDLE"):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
