@@ -883,8 +883,8 @@
     <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Avrir en in nov tab</string>
     <!-- History overflow menu open in private tab button -->
     <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Avrir en in tab privat</string>
-    <!-- Text for the button to delete a single history item -->
-    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">Stizzar</string>
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">Stizzar</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d tschernids</string>
@@ -1242,6 +1242,10 @@
     <string name="qr_scanner_dialog_positive">PERMETTER</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">REFUSAR</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">L\'adressa web è nunvalida.</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">OK</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Vuls ti propi stizzar %1$s?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->

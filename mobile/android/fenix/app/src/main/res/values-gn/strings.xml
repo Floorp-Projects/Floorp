@@ -904,8 +904,8 @@
     <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Embojuruja tendayke pyahúpe</string>
     <!-- History overflow menu open in private tab button -->
     <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Embojuruja tendayke ñemíme</string>
-    <!-- Text for the button to delete a single history item -->
-    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">Mboguete</string>
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">Mboguete</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d poravopyre</string>
@@ -1270,6 +1270,10 @@
     <string name="qr_scanner_dialog_positive">MONEĨ</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">MBOTOVE</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">Pe kundaharape ndoikói.</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">MONEĨ</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">¿Emboguetesépa añetehápe %1$s?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->

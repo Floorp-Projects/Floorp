@@ -698,7 +698,7 @@
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Mreža</string>
     <!-- Option for search term tab groups -->
-    <string name="tab_view_search_term_tab_groups">Pretraži grupe</string>
+    <string name="tab_view_search_term_tab_groups">Grupe pretraživanja</string>
     <!-- Summary text for search term tab groups -->
     <string name="tab_view_search_term_tab_groups_summary">Grupiraj povezane web-stranice</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
@@ -894,8 +894,8 @@
     <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Otvori u novoj kartici</string>
     <!-- History overflow menu open in private tab button -->
     <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Otvori u privatnoj kartici</string>
-    <!-- Text for the button to delete a single history item -->
-    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">Izbriši</string>
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">Izbriši</string>
 
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
@@ -1255,6 +1255,10 @@
     <string name="qr_scanner_dialog_positive">DOZVOLI</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">ZABRANI</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">Web-adresa nije ispravna.</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">U redu</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">Sigurno želiš izbrisati %1$s?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
@@ -2035,16 +2039,30 @@
     <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
     <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">UKLJUČI AUTOMATSKO ZATVARANJE</string>
 
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">Automatsko zatvaranje omogućeno</string>
+
     <!-- Inactive tabs survey -->
     <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
     <string moz:removedIn="95" name="inactive_tabs_survey_header" tools:ignore="UnusedResources">Pomozi nam da se poboljšamo</string>
 
+    <!-- Header text for the inactive tabs survey asking for feedback to improve the inactive tabs feature. -->
+    <string name="inactive_tabs_survey_header_1">Pomozi poboljšati Firefox</string>
+
     <!-- Content text for the inactive tabs survey asking the primary survey feedback question. -->
     <string name="inactive_tabs_survey_content">Zašto ste isključili neaktivne kartice?</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_do_not_understand">Ne razumijem kako radi</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_do_it_myself">Želim samostalno očistiti stare kartice</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string moz:removedIn="95" name="inactive_tabs_survey_time_too_long_option" tools:ignore="UnusedResources">Vrijeme do neaktivnosti je predugo</string>
     <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_long_option_1">Razdoblje od dva tjedna je predugo</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
     <string moz:removedIn="95" name="inactive_tabs_survey_time_too_short_option" tools:ignore="UnusedResources">Vrijeme do neaktivnosti je prekratko</string>
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_time_too_short_option_1">Razdoblje od dva tjedna je prekratko</string>
     <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
     <string name="inactive_tabs_survey_send_button">Pošalji</string>
     <!-- Content description for inactive tabs survey close button -->
