@@ -11,8 +11,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  CONTEXT_DESCRIPTOR_TYPES:
-    "chrome://remote/content/shared/messagehandler/MessageHandler.jsm",
   Module: "chrome://remote/content/shared/messagehandler/Module.jsm",
 });
 
@@ -32,7 +30,7 @@ class Log extends Module {
           moduleName: "log",
           category: "event",
           contextDescriptor: {
-            type: CONTEXT_DESCRIPTOR_TYPES.ALL,
+            type: "all",
           },
           values: ["log.entryAdded"],
         });
