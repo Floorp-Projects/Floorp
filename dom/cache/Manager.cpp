@@ -172,9 +172,11 @@ class DeleteOrphanedBodyAction final : public Action {
       : mDeletedBodyIdList{aBodyId} {}
 
   void RunOnTarget(SafeRefPtr<Resolver> aResolver,
-                   const ClientMetadata& aClientMetadata, Data*) override {
+                   const Maybe<ClientMetadata>& aClientMetadata,
+                   Data*) override {
     MOZ_DIAGNOSTIC_ASSERT(aResolver);
-    MOZ_DIAGNOSTIC_ASSERT(aClientMetadata.mDir);
+    MOZ_DIAGNOSTIC_ASSERT(aClientMetadata);
+    MOZ_DIAGNOSTIC_ASSERT(aClientMetadata->mDir);
 
     // Note that since DeleteOrphanedBodyAction isn't used while the context is
     // being initialized, we don't need to check for cancellation here.
@@ -184,11 +186,11 @@ class DeleteOrphanedBodyAction final : public Action {
     };
 
     QM_TRY_INSPECT(const auto& dbDir,
-                   CloneFileAndAppend(*aClientMetadata.mDir, u"cache"_ns),
+                   CloneFileAndAppend(*aClientMetadata->mDir, u"cache"_ns),
                    QM_VOID, resolve);
 
     QM_TRY(MOZ_TO_RESULT(
-               BodyDeleteFiles(aClientMetadata, *dbDir, mDeletedBodyIdList)),
+               BodyDeleteFiles(*aClientMetadata, *dbDir, mDeletedBodyIdList)),
            QM_VOID, resolve);
 
     aResolver->Resolve(NS_OK);
@@ -554,7 +556,7 @@ class Manager::DeleteOrphanedCacheAction final : public SyncDBAction {
     mManager->NoteOrphanedBodyIdList(mDeletionInfo.mDeletedBodyIdList);
 
     if (mDeletionInfo.mDeletedPaddingSize > 0) {
-      DecreaseUsageForClientMetadata(mClientMetadata.ref(),
+      DecreaseUsageForClientMetadata(*mClientMetadata,
                                      mDeletionInfo.mDeletedPaddingSize);
     }
 
@@ -856,7 +858,7 @@ class Manager::CachePutAllAction final : public DBAction {
           if (e.mResponse.type() == ResponseType::Opaque) {
             // It'll generate padding if we've not set it yet.
             QM_TRY(MOZ_TO_RESULT(BodyMaybeUpdatePaddingSize(
-                mClientMetadata.ref(), *mDBDir, e.mResponseBodyId,
+                *mClientMetadata, *mDBDir, e.mResponseBodyId,
                 e.mResponse.paddingInfo(), &e.mResponse.paddingSize())));
 
             MOZ_DIAGNOSTIC_ASSERT(INT64_MAX - e.mResponse.paddingSize() >=
@@ -913,8 +915,7 @@ class Manager::CachePutAllAction final : public DBAction {
     mManager->NoteOrphanedBodyIdList(mDeletedBodyIdList);
 
     if (mDeletedPaddingSize > 0) {
-      DecreaseUsageForClientMetadata(mClientMetadata.ref(),
-                                     mDeletedPaddingSize);
+      DecreaseUsageForClientMetadata(*mClientMetadata, mDeletedPaddingSize);
     }
 
     Listener* listener = mManager->GetListener(mListenerId);
@@ -1033,10 +1034,9 @@ class Manager::CachePutAllAction final : public DBAction {
 
     // Clean up any files we might have written before hitting the error.
     if (NS_FAILED(aRv)) {
-      BodyDeleteFiles(mClientMetadata.ref(), *mDBDir, mBodyIdWrittenList);
+      BodyDeleteFiles(*mClientMetadata, *mDBDir, mBodyIdWrittenList);
       if (mUpdatedPaddingSize > 0) {
-        DecreaseUsageForClientMetadata(mClientMetadata.ref(),
-                                       mUpdatedPaddingSize);
+        DecreaseUsageForClientMetadata(*mClientMetadata, mUpdatedPaddingSize);
       }
     }
 
@@ -1137,7 +1137,7 @@ class Manager::CacheDeleteAction final : public Manager::BaseAction {
     mManager->NoteOrphanedBodyIdList(mDeletionInfo.mDeletedBodyIdList);
 
     if (mDeletionInfo.mDeletedPaddingSize > 0) {
-      DecreaseUsageForClientMetadata(mClientMetadata.ref(),
+      DecreaseUsageForClientMetadata(*mClientMetadata,
                                      mDeletionInfo.mDeletedPaddingSize);
     }
 
