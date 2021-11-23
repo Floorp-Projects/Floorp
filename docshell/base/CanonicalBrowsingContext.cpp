@@ -2143,8 +2143,6 @@ void CanonicalBrowsingContext::HistoryCommitIndexAndLength(
 
   GetChildSessionHistory()->SetIndexAndLength(index, length, aChangeID);
 
-  shistory->EvictOutOfRangeContentViewers(index);
-
   Group()->EachParent([&](ContentParent* aParent) {
     Unused << aParent->SendHistoryCommitIndexAndLength(this, index, length,
                                                        aChangeID);
