@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Click a link whose event we intercept</title>
+</head>
+<body>
+
+<a id="test" href="https://example.com/">click me</a>
+
+<script>
+
+  document.getElementById("test").addEventListener("click", originalClick => {
+      const newLink = document.createElement("a");
+      newLink.setAttribute("rel", "noreferrer");
+      newLink.setAttribute("target", "_blank");
+      newLink.setAttribute("href", "https://example.org/");
+
+
+      document.body.appendChild(newLink);
+
+      const evt = document.createEvent('MouseEvent');
+      evt.initMouseEvent(
+        "click", true, true, window, 0,
+        originalClick.screenX, originalClick.screenY, originalClick.clientX, originalClick.clientY,
+        originalClick.ctrlKey, originalClick.altKey, originalClick.shiftKey, originalClick.metaKey,
+        originalClick.button, originalClick.relatedTarget
+      );
+      newLink.dispatchEvent(evt);
+
+
+      originalClick.preventDefault();
+      originalClick.stopPropagation();
+  });
+
+</script>
+</body>
+</html>
