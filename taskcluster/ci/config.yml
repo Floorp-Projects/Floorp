@@ -67,6 +67,7 @@ treeherder:
         'M-f-swr': 'Mochitests failures with software webrender enabled'
         'M-f-swr-1proc': 'Mochitests failures with software webrender enabled without e10s'
         'M-f-wayland': 'Mochitests failures with Wayland backend enabled'
+        'M-dt-no-eft-no-fis': 'DevTools Mochitests with EFT and Fission disabled'
         'MSI': 'Repack installers into MSIs'
         'MSIs': 'Signing of Repacked installers of MSIs'
         'MSIX': 'Repack into MSIX package'
