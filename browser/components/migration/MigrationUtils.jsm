@@ -78,6 +78,7 @@ XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
       "firefox",
       "edge",
       "ie",
+      "brave",
       "chrome",
       "chromium-edge",
       "chromium-edge-beta",
@@ -91,6 +92,7 @@ XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
     return [
       "firefox",
       "safari",
+      "brave",
       "chrome",
       "chromium-edge",
       "chromium-edge-beta",
@@ -99,7 +101,14 @@ XPCOMUtils.defineLazyGetter(this, "gAvailableMigratorKeys", function() {
     ];
   }
   if (AppConstants.XP_UNIX) {
-    return ["firefox", "chrome", "chrome-beta", "chrome-dev", "chromium"];
+    return [
+      "firefox",
+      "brave",
+      "chrome",
+      "chrome-beta",
+      "chrome-dev",
+      "chromium",
+    ];
   }
   return [];
 });
@@ -763,6 +772,8 @@ var MigrationUtils = Object.seal({
       Safari: "safari",
       Firefox: "firefox",
       Nightly: "firefox",
+      "Brave Web Browser": "brave", // Windows, Linux
+      Brave: "brave", // OS X
       "Google Chrome": "chrome", // Windows, Linux
       Chrome: "chrome", // OS X
       Chromium: "chromium", // Windows, OS X
@@ -1257,6 +1268,7 @@ var MigrationUtils = Object.seal({
     "360se": 9,
     "chromium-edge": 10,
     "chromium-edge-beta": 10,
+    brave: 11,
   },
   getSourceIdForTelemetry(sourceName) {
     return this._sourceNameToIdMapping[sourceName] || 0;

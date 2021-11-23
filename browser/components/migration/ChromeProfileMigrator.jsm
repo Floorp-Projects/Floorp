@@ -623,7 +623,11 @@ ChromiumProfileMigrator.prototype.classID = Components.ID(
   "{8cece922-9720-42de-b7db-7cef88cb07ca}"
 );
 
-var EXPORTED_SYMBOLS = ["ChromeProfileMigrator", "ChromiumProfileMigrator"];
+var EXPORTED_SYMBOLS = [
+  "ChromeProfileMigrator",
+  "ChromiumProfileMigrator",
+  "BraveProfileMigrator",
+];
 
 /**
  * Chrome Canary
@@ -679,6 +683,19 @@ ChromeBetaMigrator.prototype.classID = Components.ID(
 if (AppConstants.platform != "macosx") {
   EXPORTED_SYMBOLS.push("ChromeBetaMigrator");
 }
+
+function BraveProfileMigrator() {
+  this._chromeUserDataPathSuffix = "Brave";
+  this._keychainServiceName = "Brave Browser Safe Storage";
+  this._keychainAccountName = "Brave Browser";
+}
+BraveProfileMigrator.prototype = Object.create(ChromeProfileMigrator.prototype);
+BraveProfileMigrator.prototype.classDescription = "Brave Browser Migrator";
+BraveProfileMigrator.prototype.contractID =
+  "@mozilla.org/profile/migrator;1?app=browser&type=brave";
+BraveProfileMigrator.prototype.classID = Components.ID(
+  "{4071880a-69e4-4c83-88b4-6c589a62801d}"
+);
 
 function ChromiumEdgeMigrator() {
   this._chromeUserDataPathSuffix = "Edge";
