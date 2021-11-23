@@ -651,65 +651,46 @@ bool Channel::ChannelImpl::AcceptHandles(Message& msg) {
     return false;
   }
 
-  // Seek to the start of our handle payload.
-  mozilla::CheckedInt<uint32_t> handles_payload_size(num_handles);
-  handles_payload_size *= sizeof(uint32_t);
-  if (!handles_payload_size.isValid() ||
-      handles_payload_size.value() > msg.header()->payload_size) {
-    CHROMIUM_LOG(ERROR) << "invalid handle count " << num_handles
-                        << " or payload size: " << msg.header()->payload_size;
+  // Read in the payload from the footer, truncating the message.
+  nsTArray<uint32_t> payload;
+  payload.AppendElements(num_handles);
+  if (!msg.ReadFooter(payload.Elements(), num_handles * sizeof(uint32_t),
+                      /* truncate */ true)) {
+    CHROMIUM_LOG(ERROR) << "failed to read handle payload from message";
     return false;
   }
-  uint32_t handles_offset =
-      msg.header()->payload_size - handles_payload_size.value();
-
-  PickleIterator handles_start{msg};
-  if (!msg.IgnoreBytes(&handles_start, handles_offset)) {
-    CHROMIUM_LOG(ERROR) << "IgnoreBytes failed";
-    return false;
-  }
+  msg.header()->num_handles = 0;
 
   // Read in the handles themselves, transferring ownership as required.
-  nsTArray<mozilla::UniqueFileHandle> handles;
-  {
-    PickleIterator iter{handles_start};
-    for (uint32_t i = 0; i < num_handles; ++i) {
-      uint32_t handleValue;
-      if (!msg.ReadUInt32(&iter, &handleValue)) {
-        CHROMIUM_LOG(ERROR) << "failed to read handle value";
+  nsTArray<mozilla::UniqueFileHandle> handles(num_handles);
+  for (uint32_t handleValue : payload) {
+    HANDLE handle = Uint32ToHandle(handleValue);
+
+    // If we're the privileged process, the remote process will have leaked
+    // the sent handles in its local address space, and be relying on us to
+    // duplicate them, otherwise the remote privileged side will have
+    // transferred the handles to us already.
+    if (privileged_) {
+      if (other_process_ == INVALID_HANDLE_VALUE) {
+        CHROMIUM_LOG(ERROR) << "other_process_ is invalid in AcceptHandles";
         return false;
       }
-      HANDLE handle = Uint32ToHandle(handleValue);
-
-      // If we're the privileged process, the remote process will have leaked
-      // the sent handles in its local address space, and be relying on us to
-      // duplicate them, otherwise the remote privileged side will have
-      // transferred the handles to us already.
-      if (privileged_) {
-        if (other_process_ == INVALID_HANDLE_VALUE) {
-          CHROMIUM_LOG(ERROR) << "other_process_ is invalid in AcceptHandles";
-          return false;
-        }
-        if (!::DuplicateHandle(
-                other_process_, handle, GetCurrentProcess(), &handle, 0, FALSE,
-                DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE)) {
-          CHROMIUM_LOG(ERROR) << "DuplicateHandle failed for handle " << handle
-                              << " in AcceptHandles";
-          return false;
-        }
+      if (!::DuplicateHandle(other_process_, handle, GetCurrentProcess(),
+                             &handle, 0, FALSE,
+                             DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE)) {
+        CHROMIUM_LOG(ERROR) << "DuplicateHandle failed for handle " << handle
+                            << " in AcceptHandles";
+        return false;
       }
-
-      // The handle is directly owned by this process now, and can be added to
-      // our `handles` array.
-      handles.AppendElement(mozilla::UniqueFileHandle(handle));
     }
+
+    // The handle is directly owned by this process now, and can be added to
+    // our `handles` array.
+    handles.AppendElement(mozilla::UniqueFileHandle(handle));
   }
 
   // We're done with the handle footer, truncate the message at that point.
-  msg.Truncate(&handles_start);
   msg.SetAttachedFileHandles(std::move(handles));
-  msg.header()->num_handles = 0;
-  MOZ_ASSERT(msg.header()->payload_size == handles_offset);
   MOZ_ASSERT(msg.num_handles() == num_handles);
   return true;
 }
@@ -732,7 +713,7 @@ bool Channel::ChannelImpl::TransferHandles(Message& msg) {
   uint32_t handles_offset = msg.header()->payload_size;
 #endif
 
-  // Write handles from `attached_handles_` into the message payload.
+  nsTArray<uint32_t> payload(num_handles);
   for (uint32_t i = 0; i < num_handles; ++i) {
     // Release ownership of the handle. It'll be cloned when the parent process
     // transfers it with DuplicateHandle either in this process or the remote
@@ -756,14 +737,13 @@ bool Channel::ChannelImpl::TransferHandles(Message& msg) {
       }
     }
 
-    if (!msg.WriteUInt32(HandleToUint32(handle))) {
-      CHROMIUM_LOG(ERROR) << "failed to write handle value " << handle;
-      return false;
-    }
+    payload.AppendElement(HandleToUint32(handle));
   }
   msg.attached_handles_.Clear();
 
+  msg.WriteFooter(payload.Elements(), payload.Length() * sizeof(uint32_t));
   msg.header()->num_handles = num_handles;
+
   MOZ_ASSERT(msg.header()->payload_size ==
                  handles_offset + (sizeof(uint32_t) * num_handles),
              "Unexpected number of bytes written for handles footer?");
