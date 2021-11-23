@@ -96,20 +96,6 @@ describe("Personality Provider Worker Class", () => {
     sandbox.restore();
     globals.restore();
   });
-  describe("#_getFileStr", () => {
-    it("should decode file from filepath", () => {
-      globals.set(
-        "TextDecoder",
-        class {
-          decode() {
-            return "DECODED!";
-          }
-        }
-      );
-      const result = instance._getFileStr("filepath");
-      assert.equal(result, "DECODED!");
-    });
-  });
   describe("#setBaseAttachmentsURL", () => {
     it("should set baseAttachmentsURL", () => {
       instance.setBaseAttachmentsURL("url");
@@ -128,10 +114,10 @@ describe("Personality Provider Worker Class", () => {
       assert.equal(instance.interestVector, "vector");
     });
   });
-  describe("#onSync", () => {
-    it("should sync remote settings collection from onSync", () => {
-      sinon.stub(instance, "deleteAttachment").returns({});
-      sinon.stub(instance, "maybeDownloadAttachment").returns({});
+  describe("#onSync", async () => {
+    it("should sync remote settings collection from onSync", async () => {
+      sinon.stub(instance, "deleteAttachment").resolves();
+      sinon.stub(instance, "maybeDownloadAttachment").resolves();
 
       instance.onSync({
         data: {
@@ -160,22 +146,22 @@ describe("Personality Provider Worker Class", () => {
     });
   });
   describe("#maybeDownloadAttachment", () => {
-    it("should attempt _downloadAttachment three times for maybeDownloadAttachment", () => {
+    it("should attempt _downloadAttachment three times for maybeDownloadAttachment", async () => {
       let existsStub;
       let statStub;
       let attachmentStub;
-      sinon.stub(instance, "_downloadAttachment").returns();
+      sinon.stub(instance, "_downloadAttachment").resolves();
       const makeDirStub = globals.sandbox
-        .stub(global.OS.File, "makeDir")
-        .returns();
-      globals.sandbox
-        .stub(global.OS.Path, "join")
-        .callsFake((first, second) => first + second);
+        .stub(global.IOUtils, "makeDirectory")
+        .resolves();
 
-      existsStub = globals.sandbox.stub(global.OS.File, "exists").returns(true);
+      existsStub = globals.sandbox
+        .stub(global.IOUtils, "exists")
+        .resolves(true);
+
       statStub = globals.sandbox
-        .stub(global.OS.File, "stat")
-        .returns({ size: "1" });
+        .stub(global.IOUtils, "stat")
+        .resolves({ size: "1" });
 
       attachmentStub = {
         attachment: {
@@ -184,8 +170,8 @@ describe("Personality Provider Worker Class", () => {
         },
       };
 
-      instance.maybeDownloadAttachment(attachmentStub);
-      assert.calledWith(makeDirStub, "/");
+      await instance.maybeDownloadAttachment(attachmentStub);
+      assert.calledWith(makeDirStub, "personality-provider");
       assert.calledOnce(existsStub);
       assert.calledOnce(statStub);
       assert.notCalled(instance._downloadAttachment);
@@ -200,7 +186,7 @@ describe("Personality Provider Worker Class", () => {
         },
       };
 
-      instance.maybeDownloadAttachment(attachmentStub);
+      await instance.maybeDownloadAttachment(attachmentStub);
       assert.calledThrice(existsStub);
       assert.calledThrice(statStub);
       assert.calledThrice(instance._downloadAttachment);
@@ -208,12 +194,9 @@ describe("Personality Provider Worker Class", () => {
   });
   describe("#_downloadAttachment", () => {
     beforeEach(() => {
-      globals.sandbox
-        .stub(global.OS.Path, "join")
-        .callsFake((first, second) => first + second);
       globals.set("Uint8Array", class Uint8Array {});
     });
-    it("should write a file from _downloadAttachment", () => {
+    it("should write a file from _downloadAttachment", async () => {
       globals.set(
         "XMLHttpRequest",
         class {
@@ -227,19 +210,19 @@ describe("Personality Provider Worker Class", () => {
         }
       );
 
-      const writeAtomicStub = globals.sandbox
-        .stub(global.OS.File, "writeAtomic")
+      const ioutilsWriteStub = globals.sandbox
+        .stub(global.IOUtils, "write")
         .resolves();
 
-      instance._downloadAttachment({
+      await instance._downloadAttachment({
         attachment: { location: "location", filename: "filename" },
       });
 
-      const writeArgs = writeAtomicStub.firstCall.args;
-      assert.equal(writeArgs[0], "/filename");
-      assert.equal(writeArgs[2].tmpPath, "/filename.tmp");
+      const writeArgs = ioutilsWriteStub.firstCall.args;
+      assert.equal(writeArgs[0], "filename");
+      assert.equal(writeArgs[2].tmpPath, "filename.tmp");
     });
-    it("should call console.error from _downloadAttachment if not valid response", () => {
+    it("should call console.error from _downloadAttachment if not valid response", async () => {
       globals.set(
         "XMLHttpRequest",
         class {
@@ -253,70 +236,72 @@ describe("Personality Provider Worker Class", () => {
         }
       );
 
-      const writeAtomicStub = globals.sandbox
-        .stub(global.OS.File, "writeAtomic")
+      const consoleErrorStub = globals.sandbox
+        .stub(console, "error")
         .resolves();
 
-      instance._downloadAttachment({
+      await instance._downloadAttachment({
         attachment: { location: "location", filename: "filename" },
       });
 
-      assert.notCalled(writeAtomicStub);
+      assert.calledOnce(consoleErrorStub);
     });
   });
   describe("#deleteAttachment", () => {
-    it("should remove attachments when calling deleteAttachment", () => {
+    it("should remove attachments when calling deleteAttachment", async () => {
       const makeDirStub = globals.sandbox
-        .stub(global.OS.File, "makeDir")
-        .returns();
+        .stub(global.IOUtils, "makeDirectory")
+        .resolves();
       const removeStub = globals.sandbox
-        .stub(global.OS.File, "remove")
-        .returns();
-      const removeEmptyDirStub = globals.sandbox
-        .stub(global.OS.File, "removeEmptyDir")
-        .returns();
-      globals.sandbox
-        .stub(global.OS.Path, "join")
-        .callsFake((first, second) => first + second);
-      instance.deleteAttachment({ attachment: { filename: "filename" } });
+        .stub(global.IOUtils, "remove")
+        .resolves();
+      await instance.deleteAttachment({ attachment: { filename: "filename" } });
       assert.calledOnce(makeDirStub);
-      assert.calledOnce(removeStub);
-      assert.calledOnce(removeEmptyDirStub);
-      assert.calledWith(removeStub, "/filename", { ignoreAbsent: true });
+      assert.calledTwice(removeStub);
+      assert.calledWith(removeStub.firstCall, "filename", {
+        ignoreAbsent: true,
+      });
+      assert.calledWith(removeStub.secondCall, "personality-provider", {
+        ignoreAbsent: true,
+      });
     });
   });
   describe("#getAttachment", () => {
-    it("should return JSON when calling getAttachment", () => {
-      sinon.stub(instance, "maybeDownloadAttachment").returns();
-      sinon.stub(instance, "_getFileStr").returns("{}");
-      globals.sandbox
-        .stub(global.OS.Path, "join")
-        .callsFake((first, second) => first + second);
+    it("should return JSON when calling getAttachment", async () => {
+      sinon.stub(instance, "maybeDownloadAttachment").resolves();
+      const readJSONStub = globals.sandbox
+        .stub(global.IOUtils, "readJSON")
+        .resolves({});
       const record = { attachment: { filename: "filename" } };
-      let returnValue = instance.getAttachment(record);
+      let returnValue = await instance.getAttachment(record);
 
-      assert.calledOnce(instance._getFileStr);
-      assert.calledWith(instance._getFileStr, "/filename");
+      assert.calledOnce(readJSONStub);
+      assert.calledWith(readJSONStub, "filename");
       assert.calledOnce(instance.maybeDownloadAttachment);
       assert.calledWith(instance.maybeDownloadAttachment, record);
       assert.deepEqual(returnValue, {});
 
-      instance._getFileStr.restore();
-      sinon.stub(instance, "_getFileStr").returns({});
-      returnValue = instance.getAttachment(record);
+      readJSONStub.restore();
+      globals.sandbox.stub(global.IOUtils, "readJSON").throws("foo");
+      const consoleErrorStub = globals.sandbox
+        .stub(console, "error")
+        .resolves();
+      returnValue = await instance.getAttachment(record);
+
+      assert.calledOnce(consoleErrorStub);
       assert.deepEqual(returnValue, {});
     });
   });
   describe("#fetchModels", () => {
-    it("should return ok true", () => {
-      sinon.stub(instance, "getAttachment").returns();
-      const result = instance.fetchModels([{ key: 1234 }]);
+    it("should return ok true", async () => {
+      sinon.stub(instance, "getAttachment").resolves();
+      const result = await instance.fetchModels([{ key: 1234 }]);
       assert.isTrue(result.ok);
       assert.deepEqual(instance.models, [{ recordKey: 1234 }]);
     });
-    it("should return ok false", () => {
-      sinon.stub(instance, "getAttachment").returns();
-      const result = instance.fetchModels([]);
+    it("should return ok false", async () => {
+      sinon.stub(instance, "getAttachment").resolves();
+      const result = await instance.fetchModels([]);
       assert.isTrue(!result.ok);
     });
   });
