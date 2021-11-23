@@ -42,5 +42,22 @@ add_task(async function() {
   await waitForElementAttributeSet("root", "hidden", helper);
   ok(true, "The eyedropper is now hidden");
 
+  info("Check that the clipboard still contains the copied color");
+  is(SpecialPowers.getClipboardData("text/unicode"), "#ff0000");
+
+  info("Replace the clipboard content with another text");
+  SpecialPowers.clipboardCopyString("not-a-color");
+  is(SpecialPowers.getClipboardData("text/unicode"), "not-a-color");
+
+  info("Click on the page again, check the clipboard was not updated");
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "body",
+    {},
+    gBrowser.selectedBrowser
+  );
+  // Wait 500ms because nothing is observable when the test is successful.
+  await wait(500);
+  is(SpecialPowers.getClipboardData("text/unicode"), "not-a-color");
+
   finalize();
 });
