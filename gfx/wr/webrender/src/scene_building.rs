@@ -1840,9 +1840,12 @@ impl<'a> SceneBuilder<'a> {
     ) -> StackingContextInfo {
         profile_scope!("push_stacking_context");
 
-        let new_space = match self.raster_space_stack.last() {
-            Some(RasterSpace::Local(scale)) => RasterSpace::Local(*scale),
-            Some(RasterSpace::Screen) | None => requested_raster_space,
+        let new_space = match requested_raster_space {
+            RasterSpace::Local(_) => requested_raster_space,
+            RasterSpace::Screen => match self.raster_space_stack.last() {
+                Some(RasterSpace::Local(scale)) => RasterSpace::Local(*scale),
+                Some(RasterSpace::Screen) | None => requested_raster_space,
+            }
         };
         self.raster_space_stack.push(new_space);
 
