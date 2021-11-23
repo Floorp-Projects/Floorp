@@ -43,7 +43,7 @@ interface nsIExternalHelperAppService : nsISupports
                                in nsIInterfaceRequestor aContentContext,
                                in boolean aForceSave,
                                [optional] in nsIInterfaceRequestor aWindowContext);
-  
+
   /**
    * Binds an external helper application to a stream listener. The caller
    * should pump data into the returned stream listener. When the OnStopRequest
@@ -137,7 +137,7 @@ interface nsIHelperAppLauncher : nsICancelable
    * @param aNewFileLocation a preferred location choosen through the File Picker.
    * Null if going through the fast save without File Picker.
    */
-  void launchWithApplication(in boolean aHandleInternally, in nsIFile aFile);
+  void setDownloadToLaunch(in boolean aHandleInternally, in nsIFile aFile);
 
   /**
    * Callback invoked by nsIHelperAppLauncherDialog::promptForSaveToFileAsync
