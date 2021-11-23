@@ -18,7 +18,7 @@ const { FileUtils } = ChromeUtils.import(
 const dpr = "--dpr 1";
 
 add_task(async function() {
-  await pushPref("devtools.contenttoolbox.webconsole.input.context", true);
+  await pushPref("devtools.webconsole.input.context", true);
 
   const hud = await openNewTabAndConsole(TEST_URI);
 
