@@ -312,6 +312,20 @@ void AddrHostRecord::ResolveComplete() {
                          : Telemetry::TRR_SKIP_REASON_NATIVE_FAILED,
           TRRService::ProviderKey(), static_cast<uint32_t>(mTRRSkippedReason));
     }
+
+    if (IsRelevantTRRSkipReason(mTRRSkippedReason)) {
+      Telemetry::Accumulate(Telemetry::TRR_RELEVANT_SKIP_REASON_TRR_FIRST,
+                            TRRService::ProviderKey(),
+                            static_cast<uint32_t>(mTRRSkippedReason));
+
+      if (!mTRRSuccess) {
+        Telemetry::Accumulate(
+            mNativeSuccess ? Telemetry::TRR_RELEVANT_SKIP_REASON_NATIVE_SUCCESS
+                           : Telemetry::TRR_RELEVANT_SKIP_REASON_NATIVE_FAILED,
+            TRRService::ProviderKey(),
+            static_cast<uint32_t>(mTRRSkippedReason));
+      }
+    }
   }
 
   if (mEffectiveTRRMode == nsIRequest::TRR_FIRST_MODE) {
