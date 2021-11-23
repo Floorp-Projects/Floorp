@@ -327,7 +327,7 @@ static UniqueChars NumberFormatLocale(JSContext* cx, HandleObject internals) {
   }
 
   intl::FormatBuffer<char> buffer(cx);
-  if (auto result = tag.toString(buffer); result.isErr()) {
+  if (auto result = tag.ToString(buffer); result.isErr()) {
     intl::ReportInternalError(cx, result.unwrapErr());
     return nullptr;
   }
