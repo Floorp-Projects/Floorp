@@ -210,6 +210,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
     ReceiveStatistics* rtp_receive_statistics,
     RtcpPacketTypeCounterObserver* rtcp_packet_type_counter_observer,
     RtcpCnameCallback* rtcp_cname_callback,
+    VCMReceiveStatisticsCallback* vcm_receive_statistics,
     ProcessThread* process_thread,
     NackSender* nack_sender,
     KeyFrameRequestSender* keyframe_request_sender,
@@ -249,6 +250,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
                                             clock_,
                                             &rtcp_feedback_buffer_,
                                             &rtcp_feedback_buffer_)),
+      vcm_receive_statistics_(vcm_receive_statistics),
       packet_buffer_(clock_, kPacketBufferStartSize, PacketBufferMaxSize()),
       has_received_frame_(false),
       frames_decryptable_(false),
@@ -1099,7 +1101,8 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
   }
 
   if (seq_num != -1) {
-    packet_buffer_.ClearTo(seq_num);
+    uint32_t num_packets_cleared = packet_buffer_.ClearTo(seq_num);
+    vcm_receive_statistics_->OnDiscardedPackets(num_packets_cleared);
     reference_finder_->ClearTo(seq_num);
   }
 }
