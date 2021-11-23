@@ -41,6 +41,8 @@ const kTests = [
   },
 ];
 
+let systemFont;
+
 // compute expectations while the pref is not active yet.
 test(function() {
   for (const test of kTests) {
@@ -49,6 +51,11 @@ test(function() {
     assert_not_equals(content.style.fontFamily, "", `computed font ${test.computed} was invalid`);
     test.expected = getComputedStyle(content).fontFamily;
   }
+
+  content.style.font = "menu";
+  systemFont = getComputedStyle(content).fontFamily;
+  assert_not_equals(systemFont, "", `computed menu system font was invalid`);
+
   content.style.font = "";
 }, "Sanity");
 
@@ -64,6 +71,12 @@ function runTest({ specified, computed, description, expected }) {
   await SpecialPowers.pushPrefEnv({'set': [['browser.display.use_document_fonts', 0]]});
   for (const test of kTests)
     runTest(test);
+
+  test(function() {
+    content.style.font = "menu";
+    assert_equals(getComputedStyle(content).fontFamily, systemFont);
+  }, "System font should be honored");
+
   done();
 })();
 </script>
