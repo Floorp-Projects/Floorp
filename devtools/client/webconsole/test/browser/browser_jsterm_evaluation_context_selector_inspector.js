@@ -20,7 +20,7 @@ Services.scriptloader.loadSubScript(
 requestLongerTimeout(2);
 
 add_task(async function() {
-  await pushPref("devtools.contenttoolbox.webconsole.input.context", true);
+  await pushPref("devtools.webconsole.input.context", true);
 
   const hud = await openNewTabWithIframesAndConsole(TEST_URI, [
     `https://example.org/${IFRAME_PATH}?id=iframe-1`,
