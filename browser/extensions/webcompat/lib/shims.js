@@ -57,6 +57,7 @@ class Shim {
     this.needsShimHelpers = opts.needsShimHelpers;
     this.platform = opts.platform || "all";
     this.unblocksOnOptIn = unblocksOnOptIn;
+    this.requestStorageAccessForRedirect = opts.requestStorageAccessForRedirect;
 
     this._hostOptIns = new Set();
 
@@ -476,6 +477,27 @@ class Shims {
       }
     }
 
+    // Register onBeforeRequest listener which handles storage access requests
+    // on matching redirects.
+    let redirectTargetUrls = Array.from(shims.values())
+      .filter(shim => shim.requestStorageAccessForRedirect)
+      .flatMap(shim => shim.requestStorageAccessForRedirect)
+      .map(([, dstUrl]) => dstUrl);
+
+    // Unique target urls.
+    redirectTargetUrls = Array.from(new Set(redirectTargetUrls));
+
+    if (redirectTargetUrls.length) {
+      debug("Registering redirect listener for requestStorageAccess helper", {
+        redirectTargetUrls,
+      });
+      browser.webRequest.onBeforeRequest.addListener(
+        this._onRequestStorageAccessRedirect.bind(this),
+        { urls: redirectTargetUrls, types: ["main_frame"] },
+        ["blocking"]
+      );
+    }
+
     function addTypePatterns(type, patterns, set) {
       if (!set.has(type)) {
         set.set(type, { patterns: new Set() });
@@ -594,6 +616,87 @@ class Shims {
         shim.onAllShimsDisabled();
       }
     }
+  }
+
+  async _onRequestStorageAccessRedirect({
+    originUrl: srcUrl,
+    url: dstUrl,
+    tabId,
+  }) {
+    debug("Detected redirect", { srcUrl, dstUrl, tabId });
+
+    // Check if a shim needs to request storage access for this redirect. This
+    // handler is called when the *source url* matches a shims redirect pattern,
+    // but we still need to check if the *destination url* matches.
+    const matchingShims = Array.from(this.shims.values()).filter(shim => {
+      const { enabled, requestStorageAccessForRedirect } = shim;
+
+      if (!enabled || !requestStorageAccessForRedirect) {
+        return false;
+      }
+
+      return requestStorageAccessForRedirect.some(
+        ([srcPattern, dstPattern]) =>
+          browser.matchPatterns.getMatcher([srcPattern]).matches(srcUrl) &&
+          browser.matchPatterns.getMatcher([dstPattern]).matches(dstUrl)
+      );
+    });
+
+    // For each matching shim, find out if its enabled in regard to dFPI state.
+    const bugNumbers = new Set();
+    let isDFPIActive = null;
+    await Promise.all(
+      matchingShims.map(async shim => {
+        if (shim.onlyIfDFPIActive) {
+          // Only get the dFPI state for the first shim which requires it.
+          if (isDFPIActive === null) {
+            const tabIsPB = (await browser.tabs.get(tabId)).incognito;
+            isDFPIActive = await browser.trackingProtection.isDFPIActive(
+              tabIsPB
+            );
+          }
+          if (!isDFPIActive) {
+            return;
+          }
+        }
+        bugNumbers.add(shim.bug);
+      })
+    );
+
+    // If there is no shim which needs storage access for this redirect src/dst
+    // pair, resume it.
+    if (!bugNumbers.size) {
+      return;
+    }
+
+    // Inject the helper to call requestStorageAccessForOrigin on the document.
+    await browser.tabs.executeScript(tabId, {
+      file: "/lib/requestStorageAccess_helper.js",
+      runAt: "document_start",
+    });
+
+    const bugUrls = Array.from(bugNumbers)
+      .map(bugNo => `https://bugzilla.mozilla.org/show_bug.cgi?id=${bugNo}`)
+      .join(", ");
+    const warning = `Firefox calls the Storage Access API for ${dstUrl} on behalf of ${srcUrl}. See the following bugs for details: ${bugUrls}`;
+
+    // Request storage access for the origin of the destination url of the
+    // redirect.
+    const { origin: requestStorageAccessOrigin } = new URL(dstUrl);
+
+    // Wait for the requestStorageAccess request to finish before resuming the
+    // redirect.
+    const { success } = await browser.tabs.sendMessage(tabId, {
+      requestStorageAccessOrigin,
+      warning,
+    });
+    debug("requestStorageAccess callback", {
+      success,
+      requestStorageAccessOrigin,
+      srcUrl,
+      dstUrl,
+      bugNumbers,
+    });
   }
 
   async _onMessageFromShim(payload, sender, sendResponse) {

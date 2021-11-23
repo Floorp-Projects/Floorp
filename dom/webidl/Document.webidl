@@ -548,7 +548,7 @@ partial interface Document {
 // third party.
 partial interface Document {
   [Func="Document::CallerCanAccessPrivilegeSSA", Throws]
-  Promise<void> requestStorageAccessForOrigin(DOMString thirdPartyOrigin);
+  Promise<void> requestStorageAccessForOrigin(DOMString thirdPartyOrigin, optional boolean requireUserInteraction = true);
 };
 
 enum DocumentAutoplayPolicy {
