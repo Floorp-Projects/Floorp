@@ -36,16 +36,16 @@ XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
  * @property {String} type
  *     The type of context, one of CONTEXT_DESCRIPTOR_TYPES
  * @property {String=} id
- *     Unique id of a given context for the provided type. Optional for
- *     CONTEXT_DESCRIPTOR_TYPES.ALL, since there is only one context
+ *     Unique id of a given context for the provided type.
+ *     For CONTEXT_DESCRIPTOR_TYPES.ALL, id can be ommitted.
+ *     For CONTEXT_DESCRIPTOR_TYPES.TOP_BROWSING_CONTEXT, the id should be a
+ *     browserId.
  */
 
 // Enum of ContextDescriptor types.
-// TODO: At the moment we only support the type "all", but additional context
-// types will be added. See comment for the Context type definition.
-//
 const CONTEXT_DESCRIPTOR_TYPES = {
   ALL: "all",
+  TOP_BROWSING_CONTEXT: "top-browsing-context",
 };
 
 /**
