@@ -829,7 +829,7 @@ void ContentBlocking::UpdateAllowAccessOnParentProcess(
   nsAutoCString topKey;
   nsCOMPtr<nsIPrincipal> topPrincipal =
       AntiTrackingUtils::GetPrincipal(aParentContext->Top());
-  PermissionManager::GetKeyForPrincipal(topPrincipal, false, topKey);
+  PermissionManager::GetKeyForPrincipal(topPrincipal, false, true, topKey);
 
   // Propagate the storage permission to same-origin frames in the same
   // agent-cluster.
@@ -857,7 +857,7 @@ void ContentBlocking::UpdateAllowAccessOnParentProcess(
       }
 
       nsAutoCString key;
-      PermissionManager::GetKeyForPrincipal(principal, false, key);
+      PermissionManager::GetKeyForPrincipal(principal, false, true, key);
       // Make sure we only apply to frames that have the same top-level.
       if (topKey != key) {
         continue;

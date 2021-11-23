@@ -8,26 +8,6 @@ const PERMISSIONS_PAGE =
     "https://example.com"
   ) + "permissions.html";
 
-function openPermissionPopup() {
-  let promise = BrowserTestUtils.waitForEvent(
-    window,
-    "popupshown",
-    true,
-    event => event.target == gPermissionPanel._permissionPopup
-  );
-  gPermissionPanel._identityPermissionBox.click();
-  return promise;
-}
-
-function closePermissionPopup() {
-  let promise = BrowserTestUtils.waitForEvent(
-    gPermissionPanel._permissionPopup,
-    "popuphidden"
-  );
-  gPermissionPanel._permissionPopup.hidePopup();
-  return promise;
-}
-
 function testPermListHasEntries(expectEntries) {
   let permissionsList = document.getElementById(
     "permission-popup-permission-list"
