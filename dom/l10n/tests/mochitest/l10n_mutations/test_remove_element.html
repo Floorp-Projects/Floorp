@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test L10n Mutations for removing element</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="localization" href="crashreporter/aboutcrashes.ftl"/>
+  <script type="application/javascript">
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  document.addEventListener("DOMContentLoaded", function() {
+    // This element will be added to DOM and expected to be localized.
+    let elem = document.createElement("div");
+
+    // This element will be added to DOM, then immediatelly removed and
+    // expected *not* to be localized.
+    let elem2 = document.createElement("div");
+
+    // This element will be added to DOM, then immediatelly removed and
+    // and then immediatelly re-added, and expected to be localized.
+    let elem3 = document.createElement("div");
+
+    // This element will be added to DOM, then immediatelly removed and
+    // and then re-added later, and expected to be localized.
+    let elem4 = document.createElement("div");
+
+    document.l10n.setAttributes(elem, "crash-reports-title");
+    document.l10n.setAttributes(elem2, "crash-reports-title");
+    document.l10n.setAttributes(elem3, "crash-reports-title");
+    document.l10n.setAttributes(elem4, "crash-reports-title");
+
+    document.body.appendChild(elem);
+    document.body.appendChild(elem2);
+    document.body.appendChild(elem3);
+    document.body.appendChild(elem4);
+
+    is(elem.textContent.length, 0);
+    is(elem2.textContent.length, 0);
+    is(elem3.textContent.length, 0);
+    is(elem4.textContent.length, 0);
+
+    document.body.removeChild(elem2);
+    document.body.removeChild(elem3);
+    document.body.removeChild(elem4);
+
+    document.body.appendChild(elem3);
+
+    // It's really tricky to test if no change happened in result
+    // of an operation. This test will just check if the element
+    // was not localized within 100ms.
+    setTimeout(async () => {
+      is(elem.textContent.length > 0, true);
+      is(elem2.textContent.length, 0);
+      is(elem3.textContent.length > 0, true);
+      is(elem4.textContent.length, 0);
+
+      document.body.appendChild(elem4);
+      await SimpleTest.waitForCondition(() => {
+        return elem4.textContent.length > 0;
+      });
+      SimpleTest.finish();
+    }, 100);
+  });
+  </script>
+</head>
+<body>
+</body>
+</html>

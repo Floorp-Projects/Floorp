@@ -89,8 +89,6 @@ void L10nMutations::ContentInserted(nsIContent* aChild) {
   if (!mObserving) {
     return;
   }
-  ErrorResult rv;
-  Sequence<OwningNonNull<Element>> elements;
 
   if (!aChild->IsElement()) {
     return;
@@ -100,10 +98,38 @@ void L10nMutations::ContentInserted(nsIContent* aChild) {
   if (!IsInRoots(elem)) {
     return;
   }
+
+  ErrorResult rv;
+  Sequence<OwningNonNull<Element>> elements;
   DOMLocalization::GetTranslatables(*aChild, elements, rv);
 
   for (auto& elem : elements) {
     L10nElementChanged(elem);
+  }
+}
+
+void L10nMutations::ContentRemoved(nsIContent* aChild,
+                                   nsIContent* aPreviousSibling) {
+  if (!mObserving) {
+    return;
+  }
+
+  if (!aChild->IsElement()) {
+    return;
+  }
+  Element* elem = aChild->AsElement();
+
+  if (!IsInRoots(elem)) {
+    return;
+  }
+
+  ErrorResult rv;
+  Sequence<OwningNonNull<Element>> elements;
+  DOMLocalization::GetTranslatables(*aChild, elements, rv);
+
+  for (auto& elem : elements) {
+    mPendingElements.RemoveElement(elem);
+    mPendingElementsHash.EnsureRemoved(elem);
   }
 }
 
