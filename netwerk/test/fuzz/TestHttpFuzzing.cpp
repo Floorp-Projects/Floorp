@@ -32,6 +32,7 @@ namespace net {
 // initialization function so we can cover all combinations.
 static nsAutoCString httpSpec;
 static nsAutoCString proxyType;
+static size_t minSize;
 
 static int FuzzingInitNetworkHttp(int* argc, char*** argv) {
   Preferences::SetBool("network.dns.native-is-localhost", true);
@@ -50,6 +51,16 @@ static int FuzzingInitNetworkHttp(int* argc, char*** argv) {
 
 static int FuzzingInitNetworkHttp2(int* argc, char*** argv) {
   httpSpec = "https://127.0.0.1/";
+  return FuzzingInitNetworkHttp(argc, argv);
+}
+
+static int FuzzingInitNetworkHttp3(int* argc, char*** argv) {
+  Preferences::SetBool("fuzzing.necko.http3", true);
+  Preferences::SetBool("network.http.http3.enabled", true);
+  Preferences::SetCString("network.http.http3.alt-svc-mapping-for-testing",
+                          "fuzz.bad.tld;h3=:443");
+  httpSpec = "https://fuzz.bad.tld/";
+  minSize = 1200;
   return FuzzingInitNetworkHttp(argc, argv);
 }
 
@@ -82,6 +93,10 @@ static int FuzzingInitNetworkHttp2ProxyPlain(int* argc, char*** argv) {
 }
 
 static int FuzzingRunNetworkHttp(const uint8_t* data, size_t size) {
+  if (size < minSize) {
+    return 0;
+  }
+
   // Set the data to be processed
   addNetworkFuzzingBuffer(data, size);
 
@@ -262,6 +277,9 @@ MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttp, FuzzingRunNetworkHttp,
 
 MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttp2, FuzzingRunNetworkHttp,
                           NetworkHttp2);
+
+MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttp3, FuzzingRunNetworkHttp,
+                          NetworkHttp3);
 
 MOZ_FUZZING_INTERFACE_RAW(FuzzingInitNetworkHttp2ProxyHttp2,
                           FuzzingRunNetworkHttp, NetworkHttp2ProxyHttp2);
