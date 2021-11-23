@@ -37,6 +37,9 @@ class ArenaListIter {
     MOZ_ASSERT(!done());
     arena = arena->next;
   }
+
+  operator Arena*() const { return get(); }
+  Arena* operator->() const { return get(); }
 };
 
 class ArenaIter : public ChainedIterator<ArenaListIter, 3> {
