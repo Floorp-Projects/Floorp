@@ -3051,6 +3051,18 @@ var gMainPane = {
   },
 
   async displayDownloadDirPrefTask() {
+    // We're async for localization reasons, and we can get called several
+    // times in the same turn of the event loop (!) because of how the
+    // preferences bindings work... but the speed of localization
+    // shouldn't impact what gets displayed to the user in the end - the
+    // last call should always win.
+    // To accomplish this, store a unique object when we enter this function,
+    // and if by the end of the function that stored object has been
+    // overwritten, don't update the UI but leave it to the last
+    // caller to this function to do.
+    let token = {};
+    this._downloadDisplayToken = token;
+
     var folderListPref = Preferences.get("browser.download.folderList");
     var downloadFolder = document.getElementById("downloadFolder");
     var currentDirPref = Preferences.get("browser.download.dir");
@@ -3073,28 +3085,35 @@ var gMainPane = {
     }
 
     // Display a 'pretty' label or the path in the UI.
-    // note: downloadFolder.value is not read elsewhere in the code, its only purpose is to display to the user
+    let folderValue;
     if (folderIndex == 2) {
       // Force the left-to-right direction when displaying a custom path.
-      downloadFolder.value = currentDirPref.value
+      folderValue = currentDirPref.value
         ? `\u2066${currentDirPref.value.path}\u2069`
         : "";
       iconUrlSpec = fph.getURLSpecFromDir(currentDirPref.value);
     } else if (folderIndex == 1) {
       // 'Downloads'
-      [downloadFolder.value] = await document.l10n.formatValues([
+      [folderValue] = await document.l10n.formatValues([
         { id: "downloads-folder-name" },
       ]);
       iconUrlSpec = fph.getURLSpecFromDir(await this._indexToFolder(1));
     } else {
       // 'Desktop'
-      [downloadFolder.value] = await document.l10n.formatValues([
+      [folderValue] = await document.l10n.formatValues([
         { id: "desktop-folder-name" },
       ]);
       iconUrlSpec = fph.getURLSpecFromDir(
         await this._getDownloadsFolder("Desktop")
       );
     }
+    // Ensure that the last entry to this function always wins
+    // (see comment at the start of this method):
+    if (this._downloadDisplayToken != token) {
+      return;
+    }
+    // note: downloadFolder.value is not read elsewhere in the code, its only purpose is to display to the user
+    downloadFolder.value = folderValue;
     downloadFolder.style.backgroundImage =
       "url(moz-icon://" + iconUrlSpec + "?size=16)";
   },
