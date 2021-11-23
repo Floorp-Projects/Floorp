@@ -1432,19 +1432,6 @@ static void MoveChildrenTo(nsIFrame* aOldParent, nsContainerFrame* aNewParent,
   }
 }
 
-static bool ShouldCreateImageFrameForContent(const Element& aElement,
-                                             ComputedStyle& aStyle) {
-  if (aElement.IsRootOfNativeAnonymousSubtree()) {
-    return false;
-  }
-  auto& content = aStyle.StyleContent()->mContent;
-  if (!content.IsItems()) {
-    return false;
-  }
-  Span<const StyleContentItem> items = content.AsItems().AsSpan();
-  return items.Length() == 1 && items[0].IsImage();
-}
-
 //----------------------------------------------------------------------
 
 nsCSSFrameConstructor::nsCSSFrameConstructor(Document* aDocument,
@@ -5341,7 +5328,7 @@ nsCSSFrameConstructor::FindElementData(const Element& aElement,
 
   // Check for 'content: <image-url>' on the element (which makes us ignore
   // 'display' values other than 'none' or 'contents').
-  if (ShouldCreateImageFrameForContent(aElement, aStyle)) {
+  if (nsImageFrame::ShouldCreateImageFrameForContent(aElement, aStyle)) {
     static const FrameConstructionData sImgData =
         SIMPLE_FCDATA(NS_NewImageFrameForContentProperty);
     return &sImgData;
