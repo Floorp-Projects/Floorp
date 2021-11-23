@@ -409,34 +409,71 @@ impl FrameBuilder {
                 root_spatial_node_index,
             };
 
-            let mut visibility_state = FrameVisibilityState {
-                clip_chain_stack: scratch.frame.clip_chain_stack.take(),
-                surface_stack: scratch.frame.surface_stack.take(),
-                resource_cache,
-                gpu_cache,
-                clip_store: &mut scene.clip_store,
-                scratch,
-                tile_cache: None,
-                data_stores,
-                composite_state,
-            };
-
             for pic_index in scene.tile_cache_pictures.iter().rev() {
-                update_primitive_visibility(
-                    &mut scene.prim_store,
-                    *pic_index,
-                    ROOT_SURFACE_INDEX,
-                    &global_screen_world_rect,
-                    &visibility_context,
-                    &mut visibility_state,
-                    tile_caches,
-                    true,
-                    &mut scene.prim_instances,
-                );
-            }
+                let pic = &mut scene.prim_store.pictures[pic_index.0];
 
-            visibility_state.scratch.frame.clip_chain_stack = visibility_state.clip_chain_stack.take();
-            visibility_state.scratch.frame.surface_stack = visibility_state.surface_stack.take();
+                match pic.raster_config {
+                    Some(RasterConfig { surface_index, composite_mode: PictureCompositeMode::TileCache { slice_id }, .. }) => {
+                        let tile_cache = tile_caches
+                            .get_mut(&slice_id)
+                            .expect("bug: non-existent tile cache");
+
+                        let mut visibility_state = FrameVisibilityState {
+                            clip_chain_stack: scratch.frame.clip_chain_stack.take(),
+                            surface_stack: scratch.frame.surface_stack.take(),
+                            resource_cache,
+                            gpu_cache,
+                            clip_store: &mut scene.clip_store,
+                            scratch,
+                            data_stores,
+                            composite_state,
+                        };
+
+                        // If we have a tile cache for this picture, see if any of the
+                        // relative transforms have changed, which means we need to
+                        // re-map the dependencies of any child primitives.
+                        let world_culling_rect = tile_cache.pre_update(
+                            layout_rect_as_picture_rect(&pic.estimated_local_rect),
+                            surface_index,
+                            &visibility_context,
+                            &mut visibility_state,
+                        );
+
+                        // Push a new surface, supplying the list of clips that should be
+                        // ignored, since they are handled by clipping when drawing this surface.
+                        visibility_state.push_surface(
+                            surface_index,
+                            &tile_cache.shared_clips,
+                            frame_context.spatial_tree,
+                        );
+
+                        update_primitive_visibility(
+                            &mut scene.prim_store,
+                            *pic_index,
+                            ROOT_SURFACE_INDEX,
+                            &world_culling_rect,
+                            &visibility_context,
+                            &mut visibility_state,
+                            tile_cache,
+                            true,
+                            &mut scene.prim_instances,
+                        );
+
+                        // Build the dirty region(s) for this tile cache.
+                        tile_cache.post_update(
+                            &visibility_context,
+                            &mut visibility_state,
+                        );
+
+                        visibility_state.pop_surface();
+                        visibility_state.scratch.frame.clip_chain_stack = visibility_state.clip_chain_stack.take();
+                        visibility_state.scratch.frame.surface_stack = visibility_state.surface_stack.take();
+                    }
+                    _ => {
+                        panic!("bug: not a tile cache");
+                    }
+                }
+            }
 
             profile.end_time(profiler::FRAME_VISIBILITY_TIME);
         }
