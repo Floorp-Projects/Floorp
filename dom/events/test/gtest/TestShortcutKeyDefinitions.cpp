@@ -290,8 +290,8 @@ TEST(ShortcutKeyDefinitions, HTMLInputElement)
     {NS_VK_BACK, 0, MODIFIER_SHIFT | MODIFIER_ALT, u"cmd_redo", nullptr, nullptr, nullptr, nullptr},
 
     // charCode Modifiers,      Windows           macOS             Linux             Android           Emacs
-    {0, 'a',    MODIFIER_ACCEL, u"cmd_selectAll", u"cmd_selectAll", nullptr,          u"cmd_selectAll", nullptr},
-    {0, 'a',    MODIFIER_ALT,   nullptr,          nullptr,          u"cmd_selectAll", nullptr,          u"cmd_selectAll"},
+    {0, 'a',    MODIFIER_ACCEL, u"cmd_selectAll", u"cmd_selectAll", u"cmd_selectAll", u"cmd_selectAll", nullptr},
+    {0, 'a',    MODIFIER_ALT,   nullptr,          nullptr,          nullptr,          nullptr,          u"cmd_selectAll"},
     {0, 'c',    MODIFIER_ACCEL, u"cmd_copy",      u"cmd_copy",      u"cmd_copy",      u"cmd_copy",      u"cmd_copy"},
     {0, 'x',    MODIFIER_ACCEL, u"cmd_cut",       u"cmd_cut",       u"cmd_cut",       u"cmd_cut",       u"cmd_cut"},
     {0, 'v',    MODIFIER_ACCEL, u"cmd_paste",     u"cmd_paste",     u"cmd_paste",     u"cmd_paste",     u"cmd_paste"},
@@ -388,8 +388,8 @@ TEST(ShortcutKeyDefinitions, HTMLTextAreaElement)
     {NS_VK_BACK, 0, MODIFIER_SHIFT | MODIFIER_ALT, u"cmd_redo", nullptr, nullptr, nullptr, nullptr},
 
     // charCode Modifiers,      Windows           macOS             Linux             Android           Emacs
-    {0, 'a',    MODIFIER_ACCEL, u"cmd_selectAll", u"cmd_selectAll", nullptr,          u"cmd_selectAll", nullptr},
-    {0, 'a',    MODIFIER_ALT,   nullptr,          nullptr,          u"cmd_selectAll", nullptr,          u"cmd_selectAll"},
+    {0, 'a',    MODIFIER_ACCEL, u"cmd_selectAll", u"cmd_selectAll", u"cmd_selectAll", u"cmd_selectAll", nullptr},
+    {0, 'a',    MODIFIER_ALT,   nullptr,          nullptr,          nullptr,          nullptr,          u"cmd_selectAll"},
     {0, 'c',    MODIFIER_ACCEL, u"cmd_copy",      u"cmd_copy",      u"cmd_copy",      u"cmd_copy",      u"cmd_copy"},
     {0, 'x',    MODIFIER_ACCEL, u"cmd_cut",       u"cmd_cut",       u"cmd_cut",       u"cmd_cut",       u"cmd_cut"},
     {0, 'v',    MODIFIER_ACCEL, u"cmd_paste",     u"cmd_paste",     u"cmd_paste",     u"cmd_paste",     u"cmd_paste"},
@@ -490,7 +490,7 @@ TEST(ShortcutKeyDefinitions, Browser)
     {0, ' ',    MODIFIER_NONE,  u"cmd_scrollPageDown", u"cmd_scrollPageDown", u"cmd_scrollPageDown", u"cmd_scrollPageDown", u"cmd_scrollPageDown"},
     {0, ' ',    MODIFIER_SHIFT, u"cmd_scrollPageUp",   u"cmd_scrollPageUp",   u"cmd_scrollPageUp",   u"cmd_scrollPageUp",   u"cmd_scrollPageUp"},
     {0, 'a',    MODIFIER_ACCEL, u"cmd_selectAll",      u"cmd_selectAll",      u"cmd_selectAll",      u"cmd_selectAll",      u"cmd_selectAll"},
-    {0, 'a',    MODIFIER_ALT,   nullptr,               nullptr,               u"cmd_selectAll",      nullptr,               u"cmd_selectAll"},
+    {0, 'a',    MODIFIER_ALT,   nullptr,               nullptr,               nullptr,               nullptr,               u"cmd_selectAll"},
     {0, 'c',    MODIFIER_ACCEL, u"cmd_copy",           u"cmd_copy",           u"cmd_copy",           u"cmd_copy",           u"cmd_copy"},
     {0, 'x',    MODIFIER_ACCEL, u"cmd_cut",            u"cmd_cut",            u"cmd_cut",            u"cmd_cut",            u"cmd_cut"},
     {0, 'v',    MODIFIER_ACCEL, u"cmd_paste",          u"cmd_paste",          u"cmd_paste",          u"cmd_paste",          u"cmd_paste"},
@@ -579,8 +579,8 @@ TEST(ShortcutKeyDefinitions, HTMLEditor)
     // charCode Modifiers,      Windows                macOS                  Linux                  Android                Emacs
     {0, ' ',    MODIFIER_NONE,  u"cmd_scrollPageDown", u"cmd_scrollPageDown", u"cmd_scrollPageDown", u"cmd_scrollPageDown", u"cmd_scrollPageDown"},
     {0, ' ',    MODIFIER_SHIFT, u"cmd_scrollPageUp",   u"cmd_scrollPageUp",   u"cmd_scrollPageUp",   u"cmd_scrollPageUp",   u"cmd_scrollPageUp"},
-    {0, 'a',    MODIFIER_ACCEL, u"cmd_selectAll",      u"cmd_selectAll",      nullptr,               u"cmd_selectAll",      nullptr},
-    {0, 'a',    MODIFIER_ALT,   nullptr,               nullptr,               u"cmd_selectAll",      nullptr,               u"cmd_selectAll"},
+    {0, 'a',    MODIFIER_ACCEL, u"cmd_selectAll",      u"cmd_selectAll",      u"cmd_selectAll",      u"cmd_selectAll",      nullptr},
+    {0, 'a',    MODIFIER_ALT,   nullptr,               nullptr,               nullptr,               nullptr,               u"cmd_selectAll"},
     {0, 'c',    MODIFIER_ACCEL, u"cmd_copy",           u"cmd_copy",           u"cmd_copy",           u"cmd_copy",           u"cmd_copy"},
     {0, 'x',    MODIFIER_ACCEL, u"cmd_cut",            u"cmd_cut",            u"cmd_cut",            u"cmd_cut",            u"cmd_cut"},
     {0, 'v',    MODIFIER_ACCEL, u"cmd_paste",          u"cmd_paste",          u"cmd_paste",          u"cmd_paste",          u"cmd_paste"},
