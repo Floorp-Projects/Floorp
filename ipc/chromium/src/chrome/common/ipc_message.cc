@@ -43,6 +43,7 @@ Message::Message(int32_t routing_id, msgid_t type, uint32_t segment_capacity,
   header()->seqno = 0;
 #if defined(OS_MACOSX)
   header()->cookie = 0;
+  header()->num_send_rights = 0;
 #endif
   header()->event_footer_size = 0;
   if (recordWriteLatency) {
@@ -60,7 +61,12 @@ Message::Message(Message&& other)
     : UserMessage(&kUserMessageTypeInfo),
       Pickle(std::move(other)),
       attached_handles_(std::move(other.attached_handles_)),
-      attached_ports_(std::move(other.attached_ports_)) {
+      attached_ports_(std::move(other.attached_ports_))
+#if defined(OS_MACOSX)
+      ,
+      attached_send_rights_(std::move(other.attached_send_rights_))
+#endif
+{
   MOZ_COUNT_CTOR(IPC::Message);
 }
 
@@ -91,6 +97,9 @@ Message& Message::operator=(Message&& other) {
   *static_cast<Pickle*>(this) = std::move(other);
   attached_handles_ = std::move(other.attached_handles_);
   attached_ports_ = std::move(other.attached_ports_);
+#if defined(OS_MACOSX)
+  attached_send_rights_ = std::move(other.attached_send_rights_);
+#endif
   return *this;
 }
 
@@ -188,6 +197,37 @@ void Message::SetAttachedPorts(nsTArray<mozilla::ipc::ScopedPort> ports) {
   MOZ_DIAGNOSTIC_ASSERT(attached_ports_.IsEmpty());
   attached_ports_ = std::move(ports);
 }
+
+#if defined(OS_MACOSX)
+bool Message::WriteMachSendRight(mozilla::UniqueMachSendRight port) {
+  uint32_t index = attached_send_rights_.Length();
+  WriteUInt32(index);
+  if (index == MAX_DESCRIPTORS_PER_MESSAGE) {
+    return false;
+  }
+  attached_send_rights_.AppendElement(std::move(port));
+  return true;
+}
+
+bool Message::ConsumeMachSendRight(PickleIterator* iter,
+                                   mozilla::UniqueMachSendRight* port) const {
+  uint32_t index;
+  if (!ReadUInt32(iter, &index)) {
+    return false;
+  }
+  if (index >= attached_send_rights_.Length()) {
+    return false;
+  }
+  // NOTE: This mutates the underlying array, replacing the send right with a
+  // null right.
+  *port = std::exchange(attached_send_rights_[index], nullptr);
+  return true;
+}
+
+uint32_t Message::num_send_rights() const {
+  return attached_send_rights_.Length();
+}
+#endif
 
 bool Message::WillBeRoutedExternally(
     mojo::core::ports::UserMessageEvent& event) {

@@ -420,6 +420,45 @@ struct ParamTraitsIPC<mozilla::UniqueFileHandle> {
   }
 };
 
+#if defined(OS_MACOSX)
+// `UniqueMachSendRight` may be serialized over IPC channels. On the receiving
+// side, the UniqueMachSendRight is the local name of the right which was
+// transmitted.
+//
+// When sending a UniqueMachSendRight, the right must be valid at the time of
+// transmission. As transmission is asynchronous, this requires passing
+// ownership of the handle to IPC.
+//
+// A UniqueMachSendRight may only be read once. After it has been read once, it
+// will be consumed, and future reads will return an invalid right.
+template <>
+struct ParamTraitsIPC<mozilla::UniqueMachSendRight> {
+  typedef mozilla::UniqueMachSendRight param_type;
+  static void Write(Message* m, param_type&& p) {
+    const bool valid = p != nullptr;
+    WriteParam(m, valid);
+    if (valid) {
+      if (!m->WriteMachSendRight(std::move(p))) {
+        NOTREACHED() << "Too many mach send rights for one message!";
+      }
+    }
+  }
+  static bool Read(const Message* m, PickleIterator* iter, param_type* r) {
+    bool valid;
+    if (!ReadParam(m, iter, &valid)) {
+      return false;
+    }
+
+    if (!valid) {
+      *r = nullptr;
+      return true;
+    }
+
+    return m->ConsumeMachSendRight(iter, r);
+  }
+};
+#endif
+
 // Mozilla-specific types.
 
 template <class P>

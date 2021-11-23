@@ -86,9 +86,11 @@ class NodeController final : public mojo::core::ports::NodeDelegate,
 
   // Called in the broker process from GeckoChildProcessHost to introduce a new
   // child process into the network. Returns a `PortRef` which can be used to
-  // communicate with the `PortRef` returned from `InitChildProcess`. The port
-  // can immediately have messages sent to it.
-  ScopedPort InviteChildProcess(UniquePtr<IPC::Channel> aChannel);
+  // communicate with the `PortRef` returned from `InitChildProcess`, and a
+  // reference to the `NodeChannel` created for the new process. The port can
+  // immediately have messages sent to it.
+  std::tuple<ScopedPort, RefPtr<NodeChannel>> InviteChildProcess(
+      UniquePtr<IPC::Channel> aChannel);
 
   // Called as the IO thread is started in the parent process.
   static void InitBrokerProcess();
