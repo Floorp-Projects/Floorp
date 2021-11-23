@@ -31,6 +31,9 @@ function sendTestBroadcastCommand(module, command, params, rootMessageHandler) {
   const { WindowGlobalMessageHandler } = ChromeUtils.import(
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.jsm"
   );
+  const { CONTEXT_DESCRIPTOR_TYPES } = ChromeUtils.import(
+    "chrome://remote/content/shared/messagehandler/MessageHandler.jsm"
+  );
 
   info("Send a test broadcast command");
   return rootMessageHandler.handleCommand({
@@ -38,8 +41,10 @@ function sendTestBroadcastCommand(module, command, params, rootMessageHandler) {
     commandName: command,
     params,
     destination: {
+      contextDescriptor: {
+        type: CONTEXT_DESCRIPTOR_TYPES.ALL,
+      },
       type: WindowGlobalMessageHandler.type,
-      broadcast: true,
     },
   });
 }
