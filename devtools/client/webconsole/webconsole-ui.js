@@ -208,11 +208,11 @@ class WebConsoleUI {
     }
 
     // Stop listening for targets
-    this.hud.commands.targetCommand.unwatchTargets(
-      this.hud.commands.targetCommand.ALL_TYPES,
-      this._onTargetAvailable,
-      this._onTargetDestroy
-    );
+    this.hud.commands.targetCommand.unwatchTargets({
+      types: this.hud.commands.targetCommand.ALL_TYPES,
+      onAvailable: this._onTargetAvailable,
+      onDestroyed: this._onTargetDestroy,
+    });
 
     const resourceCommand = this.hud.resourceCommand;
     resourceCommand.unwatchResources(
@@ -344,11 +344,11 @@ class WebConsoleUI {
     // - workers, for similar reason. When we open a toolbox
     // for just a worker, the top level target is a worker target.
     // - processes, as we want to spawn additional proxies for them.
-    await commands.targetCommand.watchTargets(
-      commands.targetCommand.ALL_TYPES,
-      this._onTargetAvailable,
-      this._onTargetDestroy
-    );
+    await commands.targetCommand.watchTargets({
+      types: this.hud.commands.targetCommand.ALL_TYPES,
+      onAvailable: this._onTargetAvailable,
+      onDestroyed: this._onTargetDestroy,
+    });
 
     const resourceCommand = commands.resourceCommand;
     await resourceCommand.watchResources(
