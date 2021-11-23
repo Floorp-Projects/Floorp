@@ -29,26 +29,6 @@ const EMPTY_PAGE =
 const AUTOPLAY_PREF = "media.autoplay.default";
 const AUTOPLAY_PERM = "autoplay-media";
 
-function openPermissionPopup() {
-  let promise = BrowserTestUtils.waitForEvent(
-    gBrowser.ownerGlobal,
-    "popupshown",
-    true,
-    event => event.target == gPermissionPanel._permissionPopup
-  );
-  gPermissionPanel._identityPermissionBox.click();
-  return promise;
-}
-
-function closePermissionPopup() {
-  let promise = BrowserTestUtils.waitForEvent(
-    gPermissionPanel._permissionPopup,
-    "popuphidden"
-  );
-  gPermissionPanel._permissionPopup.hidePopup();
-  return promise;
-}
-
 function autoplayBlockedIcon() {
   return document.querySelector(
     "#blocked-permissions-container " +
