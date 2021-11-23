@@ -453,10 +453,15 @@ class JSStreamConsumer final : public nsIInputStreamCallback,
 
       int ret = inflate(&self->mZStream, Z_NO_FLUSH);
 
+      MOZ_DIAGNOSTIC_ASSERT(ret == Z_OK || ret == Z_STREAM_END,
+                            "corrupt optimized wasm cache file: data");
+      MOZ_DIAGNOSTIC_ASSERT(self->mZStream.avail_in == 0,
+                            "corrupt optimized wasm cache file: input");
+      MOZ_DIAGNOSTIC_ASSERT_IF(ret == Z_STREAM_END,
+                               self->mZStream.avail_out == 0);
       // Gracefully handle corruption in release.
       bool ok =
           (ret == Z_OK || ret == Z_STREAM_END) && self->mZStream.avail_in == 0;
-      MOZ_DIAGNOSTIC_ASSERT(ok, "corrupt optimized wasm cache file");
       if (!ok) {
         return NS_ERROR_UNEXPECTED;
       }
@@ -537,9 +542,12 @@ class JSStreamConsumer final : public nsIInputStreamCallback,
 
     if (rv == NS_BASE_STREAM_CLOSED) {
       if (mOptimizedEncoding) {
+        MOZ_DIAGNOSTIC_ASSERT(mZStreamInitialized,
+                              "corrupt optimized wasm cache file: no init");
+        MOZ_DIAGNOSTIC_ASSERT(mZStream.avail_out == 0,
+                              "corrupt optimized wasm cache file: incomplete");
         // Gracefully handle corruption in release.
         bool ok = mZStreamInitialized && mZStream.avail_out == 0;
-        MOZ_DIAGNOSTIC_ASSERT(ok, "corrupt optimized wasm cache file");
         if (!ok) {
           mConsumer->streamError(size_t(NS_ERROR_UNEXPECTED));
           return NS_OK;
