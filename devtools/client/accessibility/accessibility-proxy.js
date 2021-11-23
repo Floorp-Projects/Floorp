@@ -411,12 +411,12 @@ class AccessibilityProxy {
   }
 
   async initialize() {
-    await this.commands.targetCommand.watchTargets(
-      [this.commands.targetCommand.TYPES.FRAME],
-      this.onTargetAvailable,
-      this.onTargetDestroyed,
-      this.onTargetSelected
-    );
+    await this.commands.targetCommand.watchTargets({
+      types: [this.commands.targetCommand.TYPES.FRAME],
+      onAvailable: this.onTargetAvailable,
+      onSelected: this.onTargetSelected,
+      onDestroyed: this.onTargetDestroyed,
+    });
     await this.commands.resourceCommand.watchResources(
       [this.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
       {
@@ -429,12 +429,12 @@ class AccessibilityProxy {
   }
 
   destroy() {
-    this.commands.targetCommand.unwatchTargets(
-      [this.commands.targetCommand.TYPES.FRAME],
-      this.onTargetAvailable,
-      this.onTargetDestroyed,
-      this.onTargetSelected
-    );
+    this.commands.targetCommand.unwatchTargets({
+      types: [this.commands.targetCommand.TYPES.FRAME],
+      onAvailable: this.onTargetAvailable,
+      onSelected: this.onTargetSelected,
+      onDestroyed: this.onTargetDestroyed,
+    });
     this.commands.resourceCommand.unwatchResources(
       [this.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
       { onAvailable: this.onResourceAvailable }

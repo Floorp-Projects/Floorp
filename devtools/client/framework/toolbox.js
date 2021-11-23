@@ -900,12 +900,12 @@ Toolbox.prototype = {
       // and we are registering the first target listener, which means
       // Toolbox._onTargetAvailable will be called first, before any other
       // onTargetAvailable listener that might be registered on targetCommand.
-      await this.commands.targetCommand.watchTargets(
-        this.commands.targetCommand.ALL_TYPES,
-        this._onTargetAvailable,
-        this._onTargetDestroyed,
-        this._onTargetSelected
-      );
+      await this.commands.targetCommand.watchTargets({
+        types: this.commands.targetCommand.ALL_TYPES,
+        onAvailable: this._onTargetAvailable,
+        onSelected: this._onTargetSelected,
+        onDestroyed: this._onTargetDestroyed,
+      });
 
       const onResourcesWatched = this.resourceCommand.watchResources(
         [
@@ -3964,12 +3964,12 @@ Toolbox.prototype = {
     // Reset preferences set by the toolbox
     outstanding.push(this.resetPreference());
 
-    this.commands.targetCommand.unwatchTargets(
-      this.commands.targetCommand.ALL_TYPES,
-      this._onTargetAvailable,
-      this._onTargetDestroyed,
-      this._onTargetSelected
-    );
+    this.commands.targetCommand.unwatchTargets({
+      types: this.commands.targetCommand.ALL_TYPES,
+      onAvailable: this._onTargetAvailable,
+      onSelected: this._onTargetSelected,
+      onDestroyed: this._onTargetDestroyed,
+    });
     this.resourceCommand.unwatchResources(
       [
         this.resourceCommand.TYPES.CONSOLE_MESSAGE,

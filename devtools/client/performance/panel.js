@@ -50,10 +50,10 @@ PerformancePanel.prototype = {
     // the `watchTargets` function.
     // So this `await` waits for initialization with current target, happening
     // in `_onTargetAvailable`.
-    await this.commands.targetCommand.watchTargets(
-      [this.commands.targetCommand.TYPES.FRAME],
-      this._onTargetAvailable
-    );
+    await this.commands.targetCommand.watchTargets({
+      types: [this.commands.targetCommand.TYPES.FRAME],
+      onAvailable: this._onTargetAvailable,
+    });
 
     // Fire this once incase we have an in-progress recording (console profile)
     // that caused this start up, and no state change yet, so we can highlight the
@@ -88,10 +88,10 @@ PerformancePanel.prototype = {
       this._checkRecordingStatus
     );
 
-    this.commands.targetCommand.unwatchTargets(
-      [this.commands.targetCommand.TYPES.FRAME],
-      this._onTargetAvailable
-    );
+    this.commands.targetCommand.unwatchTargets({
+      types: [this.commands.targetCommand.TYPES.FRAME],
+      onAvailable: this._onTargetAvailable,
+    });
     await PerformanceController.destroy();
     await PerformanceView.destroy();
     PerformanceController.disableFrontEventListeners();
