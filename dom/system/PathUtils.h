@@ -23,6 +23,20 @@ namespace dom {
 
 class PathUtils final {
  public:
+  /**
+   * Initialize the given nsIFile with the given path.
+   *
+   * This is equivalent to calling nsIFile::InitWithPath() with the caveat that
+   * on Windows debug or during Windows CI tests, we will crash if the path
+   * contains a forward slash.
+   *
+   * @param aFile The file to initialize.
+   * @param aPath The path to initialize the file with.
+   *
+   * @return The result of calling nsIFile::InitWithPath.
+   */
+  static nsresult InitFileWithPath(nsIFile* aFile, const nsAString& aPath);
+
   static void Filename(const GlobalObject&, const nsAString& aPath,
                        nsString& aResult, ErrorResult& aErr);
 
