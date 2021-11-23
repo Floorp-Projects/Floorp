@@ -49,8 +49,8 @@ var HeuristicsRegExp = {
       "additional-name": "apellido.?materno|lastlastname",
       "cc-name":
         // eslint-disable-next-line prettier/prettier
-        "titulaire" + // fr-FR
-        "|(name auf der karte)", // de-DE
+        "accountholdername" +
+        "|titulaire", // fr-FR
       "cc-number": "(cc|kk)nr", // de-DE
       "cc-exp-month": "(cc|kk)month", // de-DE
       "cc-exp-year": "(cc|kk)year", // de-DE
