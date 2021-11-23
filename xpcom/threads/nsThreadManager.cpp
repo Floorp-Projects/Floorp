@@ -664,8 +664,15 @@ StaticMutex AutoNestedEventLoopAnnotation::sStackMutex;
 // static from SpinEventLoopUntil.h
 void AutoNestedEventLoopAnnotation::AnnotateXPCOMSpinEventLoopStack(
     const nsACString& aStack) {
-  CrashReporter::AnnotateCrashReport(
-      CrashReporter::Annotation::XPCOMSpinEventLoopStack, aStack);
+  if (aStack.Length() > 0) {
+    nsCString prefixedStack(XRE_GetProcessTypeString());
+    prefixedStack += ": "_ns + aStack;
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::XPCOMSpinEventLoopStack, prefixedStack);
+  } else {
+    CrashReporter::AnnotateCrashReport(
+        CrashReporter::Annotation::XPCOMSpinEventLoopStack, ""_ns);
+  }
 }
 
 nsresult nsThreadManager::SpinEventLoopUntilInternal(
