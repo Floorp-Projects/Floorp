@@ -3330,6 +3330,7 @@ dependencies = [
  "nserror",
  "nsstring",
  "qlog",
+ "static_prefs",
  "thin-vec",
  "winapi",
  "xpcom",

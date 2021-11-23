@@ -6059,8 +6059,20 @@ nsresult nsHttpChannel::BeginConnect() {
   gHttpHandler->MaybeAddAltSvcForTesting(mURI, mUsername, mPrivateBrowsing,
                                          mCallbacks, originAttributes);
 
-  RefPtr<nsHttpConnectionInfo> connInfo = new nsHttpConnectionInfo(
-      host, port, ""_ns, mUsername, proxyInfo, originAttributes, isHttps);
+  RefPtr<nsHttpConnectionInfo> connInfo;
+#ifdef FUZZING
+  if (StaticPrefs::fuzzing_necko_http3()) {
+    connInfo =
+        new nsHttpConnectionInfo(host, port, "h3"_ns, mUsername, proxyInfo,
+                                 originAttributes, host, port, true);
+  } else {
+#endif
+    connInfo = new nsHttpConnectionInfo(host, port, ""_ns, mUsername, proxyInfo,
+                                        originAttributes, isHttps);
+#ifdef FUZZING
+  }
+#endif
+
   bool http2Allowed = !gHttpHandler->IsHttp2Excluded(connInfo);
 
   bool http3Allowed = Http3Allowed();
