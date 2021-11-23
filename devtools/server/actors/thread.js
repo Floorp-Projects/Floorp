@@ -77,6 +77,13 @@ loader.lazyRequireGetter(
   true
 );
 
+loader.lazyRequireGetter(
+  this,
+  "isDocumentReady",
+  "devtools/server/actors/inspector/utils",
+  true
+);
+
 const PROMISE_REACTIONS = new WeakMap();
 function cacheReactionsForFrame(frame) {
   if (frame.asyncPromise) {
@@ -460,16 +467,31 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   },
 
   _canShowOverlay() {
+    const { window } = this._parent;
+
     // The CanvasFrameAnonymousContentHelper class we're using to create the paused overlay
     // need to have access to a documentElement.
-    // Accept only browsing context target which exposes such element, but ignore
-    // privileged document (top level window, special about:* pages, …).
-    return (
-      // We might have access to a non-chrome window getter that is a Sandox (e.g. in the
-      // case of ContentProcessTargetActor).
-      this._parent.window?.document?.documentElement &&
-      !this._parent.window.isChromeWindow
-    );
+    // We might have access to a non-chrome window getter that is a Sandox (e.g. in the
+    // case of ContentProcessTargetActor).
+    if (!window?.document?.documentElement) {
+      return false;
+    }
+
+    // Document#insertAnonymousContent requires an access to a CustomContentContainer, which
+    // is only available once the DOM is loaded.
+    // If that's not the case, we simply don't show the overlay. We can't wait for the
+    // DOM to be loaded _and then_ show the overlay, as this will only happen once we resume
+    // and might get the overlay in the page while we're not paused anymore.
+    if (!isDocumentReady(window.document)) {
+      return false;
+    }
+
+    // Ignore privileged document (top level window, special about:* pages, …).
+    if (window.isChromeWindow) {
+      return false;
+    }
+
+    return true;
   },
 
   async showOverlay() {
