@@ -17,6 +17,7 @@ import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.ui.robots.downloadRobot
+import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
 /**
@@ -233,6 +234,37 @@ class ContextMenusTest {
             longClickMatchingText(genericURL.content)
         }.clickShareSelectedText {
             verifyAndroidShareLayout()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun selectAndSearchTextTest() {
+        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+            longClickAndSearchText("Search", "content")
+            mDevice.waitForIdle()
+            verifyTabCounter("2")
+            verifyUrl("google")
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun privateSelectAndSearchTextTest() {
+        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.togglePrivateBrowsingMode()
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+            longClickAndSearchText("Private Search", "content")
+            mDevice.waitForIdle()
+            verifyTabCounter("2")
+            verifyUrl("google")
         }
     }
 }

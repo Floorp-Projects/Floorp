@@ -403,6 +403,37 @@ class BrowserRobot {
         }
     }
 
+    fun longClickAndSearchText(searchButton: String, expectedText: String) {
+        var currentTries = 0
+        while (currentTries++ < 3) {
+            try {
+                // Long click desired text
+                mDevice.waitForWindowUpdate(packageName, waitingTime)
+                mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
+                    .waitForExists(waitingTime)
+                mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime)
+                val link = mDevice.findObject(By.textContains(expectedText))
+                link.click(LONG_CLICK_DURATION)
+
+                // Click search from the text selection toolbar
+                mDevice.findObject(UiSelector().textContains(searchButton)).waitForExists(waitingTime)
+                val searchText = mDevice.findObject(By.textContains(searchButton))
+                searchText.click()
+
+                break
+            } catch (e: NullPointerException) {
+                println("Failed to long click desired text: ${e.localizedMessage}")
+
+                // Refresh the page in case the first long click didn't succeed
+                navigationToolbar {
+                }.openThreeDotMenu {
+                }.refreshPage {
+                    mDevice.waitForIdle()
+                }
+            }
+        }
+    }
+
     fun snackBarButtonClick() {
         val switchButton =
             mDevice.findObject(
