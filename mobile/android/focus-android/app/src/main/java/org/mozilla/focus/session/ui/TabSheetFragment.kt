@@ -14,54 +14,67 @@ import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import mozilla.components.browser.state.selector.privateTabs
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.lib.state.ext.flowScoped
 import org.mozilla.focus.GleanMetrics.TabCount
 import org.mozilla.focus.R
+import org.mozilla.focus.databinding.FragmentSessionssheetBinding
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.utils.OneShotOnPreDrawListener
+import kotlin.math.pow
+import kotlin.math.sqrt
 
-class TabSheetFragment : Fragment(), View.OnClickListener {
-
-    private lateinit var backgroundView: View
-    private lateinit var cardView: View
+class TabSheetFragment : Fragment() {
     private var isAnimating: Boolean = false
-
-    private var scope: CoroutineScope? = null
-
     private lateinit var store: BrowserStore
+    private var scope: CoroutineScope? = null
+    private lateinit var binding: FragmentSessionssheetBinding
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_sessionssheet, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = FragmentSessionssheetBinding.inflate(layoutInflater, container, false)
+        store = requireComponents.store
 
-        backgroundView = view.findViewById(R.id.background)
-        backgroundView.setOnClickListener(this)
+        binding.apply {
+            background.setOnClickListener {
+                if (isAnimating) {
+                    // Ignore touched while we are animating
+                    return@setOnClickListener
+                }
 
-        cardView = view.findViewById(R.id.card)
-        OneShotOnPreDrawListener(cardView) {
-            playAnimation(false)
-            true
+                animateAndDismiss()
+                val openedTabs = store.state.tabs.size
+                TabCount.sessionListClosed.record(TabCount.SessionListClosedExtra(openedTabs))
+            }
+
+            OneShotOnPreDrawListener(binding.card) {
+                playAnimation(false)
+                true
+            }
+
+            val sessionsAdapter = TabsAdapter(
+                tabList = store.state.privateTabs,
+                isCurrentSession = { tab -> isCurrentSession(tab) },
+                selectSession = { tab -> selectSession(tab) },
+                closeSession = { tab -> closeSession(tab) }
+            )
+
+            sessions.apply {
+                adapter = sessionsAdapter
+                layoutManager = LinearLayoutManager(context)
+                setHasFixedSize(true)
+            }
         }
 
-        store = view.context.components.store
-
-        val sessionsAdapter = TabsAdapter(this, store.state.privateTabs)
-
-        scope = store.flowScoped(owner = this) { flow ->
-            sessionsAdapter.onFlow(flow)
-        }
-
-        view.findViewById<RecyclerView>(R.id.sessions).let {
-            it.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-            it.adapter = sessionsAdapter
-        }
-
-        return view
+        return binding.root
     }
 
     override fun onDestroyView() {
@@ -73,13 +86,14 @@ class TabSheetFragment : Fragment(), View.OnClickListener {
     private fun playAnimation(reverse: Boolean): Animator {
         isAnimating = true
 
+        val cardView = binding.card
         val offset = resources.getDimensionPixelSize(R.dimen.tab_sheet_end_margin) / 2
         val cx = cardView.measuredWidth - offset
         val cy = cardView.measuredHeight - offset
 
         // The final radius is the diagonal of the card view -> sqrt(w^2 + h^2)
-        val fullRadius = Math.sqrt(
-            Math.pow(cardView.width.toDouble(), 2.0) + Math.pow(cardView.height.toDouble(), 2.0)
+        val fullRadius = sqrt(
+            cardView.width.toDouble().pow(2.0) + cardView.height.toDouble().pow(2.0)
         ).toFloat()
 
         val sheetAnimator = ViewAnimationUtils.createCircularReveal(
@@ -101,8 +115,8 @@ class TabSheetFragment : Fragment(), View.OnClickListener {
             start()
         }
 
-        backgroundView.alpha = if (reverse) 1f else 0f
-        backgroundView.animate()
+        binding.background.alpha = if (reverse) 1f else 0f
+        binding.background.animate()
             .alpha(if (reverse) 0f else 1f)
             .setDuration(ANIMATION_DURATION.toLong())
             .start()
@@ -110,7 +124,7 @@ class TabSheetFragment : Fragment(), View.OnClickListener {
         return sheetAnimator
     }
 
-    internal fun animateAndDismiss(): Animator {
+    private fun animateAndDismiss(): Animator {
         val animator = playAnimation(true)
 
         animator.addListener(object : AnimatorListenerAdapter() {
@@ -133,27 +147,34 @@ class TabSheetFragment : Fragment(), View.OnClickListener {
         return true
     }
 
-    override fun onClick(view: View) {
-        if (isAnimating) {
-            // Ignore touched while we are animating
-            return
-        }
+    private fun isCurrentSession(tab: TabSessionState): Boolean {
+        return requireComponents.store.state.selectedTabId == tab.id
+    }
 
-        when (view.id) {
-            R.id.background -> {
-                animateAndDismiss()
+    private fun selectSession(tab: TabSessionState) {
+        animateAndDismiss().addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: Animator) {
+                requireComponents.tabsUseCases.selectTab.invoke(tab.id)
 
-                val openedTabs = store.state.tabs.size
-                TabCount.sessionListClosed.record(TabCount.SessionListClosedExtra(openedTabs))
+                val openedTabs = requireComponents.store.state.tabs.size
+                TabCount.sessionListItemTapped.record(TabCount.SessionListItemTappedExtra(openedTabs))
             }
+        })
+    }
 
-            else -> throw IllegalStateException("Unhandled view in onClick()")
-        }
+    private fun closeSession(tab: TabSessionState) {
+        animateAndDismiss().addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: Animator) {
+                requireComponents.tabsUseCases.removeTab.invoke(tab.id, selectParentIfExists = false)
+
+                val openedTabs = requireComponents.store.state.tabs.size
+                TabCount.sessionListItemTapped.record(TabCount.SessionListItemTappedExtra(openedTabs))
+            }
+        })
     }
 
     companion object {
         const val FRAGMENT_TAG = "tab_sheet"
-
         private const val ANIMATION_DURATION = 200
     }
 }

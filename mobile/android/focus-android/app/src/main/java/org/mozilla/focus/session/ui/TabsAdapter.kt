@@ -6,47 +6,35 @@ package org.mozilla.focus.session.ui
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
-import mozilla.components.browser.state.selector.privateTabs
-import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
-import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
+import org.mozilla.focus.databinding.ItemSessionBinding
 
 /**
  * Adapter implementation to show a list of active tabs.
  */
 class TabsAdapter internal constructor(
-    private val fragment: TabSheetFragment,
-    private var tabs: List<TabSessionState> = emptyList()
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+    private val tabList: List<TabSessionState>,
+    private val isCurrentSession: (TabSessionState) -> Boolean,
+    private val selectSession: (TabSessionState) -> Unit,
+    private val closeSession: (TabSessionState) -> Unit,
+) : RecyclerView.Adapter<TabViewHolder>() {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val inflater = LayoutInflater.from(parent.context)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabViewHolder {
+        val binding =
+            ItemSessionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return TabViewHolder(binding)
+    }
 
-        return TabViewHolder(
-            fragment,
-            inflater.inflate(TabViewHolder.LAYOUT_ID, parent, false) as TextView
+    override fun onBindViewHolder(holder: TabViewHolder, position: Int) {
+        val currentItem = tabList[position]
+        holder.bind(
+            currentItem,
+            isCurrentSession = isCurrentSession.invoke(currentItem),
+            selectSession = selectSession,
+            closeSession = closeSession,
         )
     }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        (holder as TabViewHolder).bind(tabs[position])
-    }
-
-    override fun getItemCount(): Int {
-        return tabs.size
-    }
-
-    suspend fun onFlow(flow: Flow<BrowserState>) {
-        flow.ifAnyChanged { state -> arrayOf(state.privateTabs.size, state.selectedTabId) }
-            .collect { state -> onUpdate(state.privateTabs) }
-    }
-
-    private fun onUpdate(tabs: List<TabSessionState>) {
-        this.tabs = tabs
-        notifyDataSetChanged()
-    }
+    override fun getItemCount() = tabList.size
 }
