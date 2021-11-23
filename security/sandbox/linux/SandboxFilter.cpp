@@ -1199,7 +1199,7 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
   }
 
 #ifdef DESKTOP
-  Maybe<ResultExpr> EvaluateIpcCall(int aCall) const override {
+  Maybe<ResultExpr> EvaluateIpcCall(int aCall, int aArgShift) const override {
     switch (aCall) {
         // These are a problem: SysV IPC follows the Unix "same uid
         // policy" and can't be restricted/brokered like file access.
@@ -1219,9 +1219,9 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
         if (mAllowSysV) {
           return Some(Allow());
         }
-        return SandboxPolicyCommon::EvaluateIpcCall(aCall);
+        return SandboxPolicyCommon::EvaluateIpcCall(aCall, aArgShift);
       default:
-        return SandboxPolicyCommon::EvaluateIpcCall(aCall);
+        return SandboxPolicyCommon::EvaluateIpcCall(aCall, aArgShift);
     }
   }
 #endif
