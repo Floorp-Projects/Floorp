@@ -214,10 +214,7 @@ function assertCorrectFile(saveDir, filename) {
   info("Make sure additional files haven't been created.");
   let iter = saveDir.directoryEntries;
   let file = iter.nextFile;
-  ok(
-    file.path.includes(filename),
-    "Download has correct filename"
-  );
+  ok(file.path.includes(filename), "Download has correct filename");
   ok(!iter.nextFile, "Only one file was created.");
 }
 
