@@ -946,32 +946,36 @@ check_prog("7Z", ("7z", "7za"), allow_missing=True, when=target_is_windows)
 check_prog("UPX", ("upx",), allow_missing=True, when=target_is_windows)
 
 
-@depends(host_c_compiler, c_compiler, bindgen_config_paths)
-def llvm_objdump(host_c_compiler, c_compiler, bindgen_config_paths):
-    clang = None
-    for compiler in (host_c_compiler, c_compiler):
-        if compiler and compiler.type == "clang":
-            clang = compiler.compiler
-            break
-        elif compiler and compiler.type == "clang-cl":
-            clang = os.path.join(os.path.dirname(compiler.compiler), "clang")
-            break
+@template
+def llvm_tool(name):
+    @depends(host_c_compiler, c_compiler, bindgen_config_paths)
+    def llvm_tool(host_c_compiler, c_compiler, bindgen_config_paths):
+        clang = None
+        for compiler in (host_c_compiler, c_compiler):
+            if compiler and compiler.type == "clang":
+                clang = compiler.compiler
+                break
+            elif compiler and compiler.type == "clang-cl":
+                clang = os.path.join(os.path.dirname(compiler.compiler), "clang")
+                break
 
-    if not clang and bindgen_config_paths:
-        clang = bindgen_config_paths.clang_path
-    llvm_objdump = "llvm-objdump"
-    if clang:
-        out = check_cmd_output(
-            clang, "--print-prog-name=llvm-objdump", onerror=lambda: None
-        )
-        if out:
-            llvm_objdump = out.rstrip()
-    return (llvm_objdump,)
+        if not clang and bindgen_config_paths:
+            clang = bindgen_config_paths.clang_path
+        tool = name
+        if clang:
+            out = check_cmd_output(
+                clang, "--print-prog-name=%s" % tool, onerror=lambda: None
+            )
+            if out:
+                tool = out.rstrip()
+        return (tool,)
+
+    return llvm_tool
 
 
 llvm_objdump = check_prog(
     "LLVM_OBJDUMP",
-    llvm_objdump,
+    llvm_tool("llvm-objdump"),
     what="llvm-objdump",
     when="--enable-compile-environment",
     paths=clang_search_path,
@@ -979,6 +983,41 @@ llvm_objdump = check_prog(
 
 add_old_configure_assignment("LLVM_OBJDUMP", llvm_objdump)
 
+
+@depends(llvm_tool("llvm-readelf"), toolchain_prefix)
+def readelf(llvm_readelf, toolchain_prefix):
+    commands = [llvm_readelf[0], "readelf"]
+    for prefix in toolchain_prefix or ():
+        commands.insert(1, "%sreadelf" % prefix)
+    return tuple(commands)
+
+
+def validate_readelf(path):
+    # llvm-readelf from llvm < 8 doesn't support the GNU binutils-compatible `-d`
+    # flag. We could try running `$path -d $some_binary` but we might be cross
+    # compiling and not have a binary at hand to run that against. `$path -d` alone
+    # would fail whether the flag is supported or not. So we resort to look for the
+    # option in the `--help` output, which fortunately, s compatible between
+    # llvm-readelf and readelf.
+    retcode, stdout, stderr = get_cmd_output(path, "--help")
+    return retcode == 0 and any(l.startswith("  -d ") for l in stdout.splitlines())
+
+
+@depends("--enable-compile-environment", target, host)
+def readelf_when(compile_env, target, host):
+    return compile_env and any(
+        x.kernel not in ("Darwin", "WINNT") for x in (target, host)
+    )
+
+
+check_prog(
+    "READELF",
+    readelf,
+    what="readelf",
+    when=readelf_when,
+    paths=clang_search_path,
+    validate=validate_readelf,
+)
 
 option("--enable-dtrace", help="Build with dtrace support")
 
