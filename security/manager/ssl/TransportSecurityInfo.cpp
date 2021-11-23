@@ -195,7 +195,7 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* aStream) {
   // Re-purpose mErrorMessageCached to represent serialization version
   // If string doesn't match exact version it will be treated as older
   // serialization.
-  rv = aStream->WriteWStringZ(NS_ConvertUTF8toUTF16("6").get());
+  rv = aStream->WriteWStringZ(NS_ConvertUTF8toUTF16("7").get());
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -277,6 +277,11 @@ TransportSecurityInfo::Write(nsIObjectOutputStream* aStream) {
   }
 
   rv = aStream->WriteBoolean(mIsAcceptedEch);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = aStream->WriteStringZ(mPeerId.get());
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -724,6 +729,16 @@ TransportSecurityInfo::Read(nsIObjectInputStream* aStream) {
     }
   }
 
+  // mPeerId added in bug 1738664
+  if (serVersionParsedToInt >= 7) {
+    rv = aStream->ReadCString(mPeerId);
+    CHILD_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv),
+                            "Deserialization should not fail");
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
   return NS_OK;
 }
 
@@ -757,6 +772,7 @@ void TransportSecurityInfo::SerializeToIPC(IPC::Message* aMsg) {
   WriteParam(aMsg, static_cast<bool>(mResumed));
   WriteParam(aMsg, static_cast<bool>(mIsBuiltCertChainRootBuiltInRoot));
   WriteParam(aMsg, static_cast<bool>(mIsAcceptedEch));
+  WriteParam(aMsg, mPeerId);
 }
 
 bool TransportSecurityInfo::DeserializeFromIPC(const IPC::Message* aMsg,
@@ -787,7 +803,8 @@ bool TransportSecurityInfo::DeserializeFromIPC(const IPC::Message* aMsg,
       !ReadParam(aMsg, aIter, &mNegotiatedNPN) ||
       !ReadParamAtomicHelper(aMsg, aIter, mResumed) ||
       !ReadParamAtomicHelper(aMsg, aIter, mIsBuiltCertChainRootBuiltInRoot) ||
-      !ReadParamAtomicHelper(aMsg, aIter, mIsAcceptedEch)) {
+      !ReadParamAtomicHelper(aMsg, aIter, mIsAcceptedEch) ||
+      !ReadParam(aMsg, aIter, &mPeerId)) {
     return false;
   }
 
@@ -1230,6 +1247,12 @@ TransportSecurityInfo::GetResumed(bool* aResumed) {
 }
 
 void TransportSecurityInfo::SetResumed(bool aResumed) { mResumed = aResumed; }
+
+NS_IMETHODIMP
+TransportSecurityInfo::GetPeerId(nsACString& aResult) {
+  aResult.Assign(mPeerId);
+  return NS_OK;
+}
 
 }  // namespace psm
 }  // namespace mozilla
