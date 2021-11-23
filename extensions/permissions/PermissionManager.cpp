@@ -39,6 +39,7 @@
 #include "nsIURIMutator.h"
 #include "nsIWritablePropertyBag2.h"
 #include "nsReadLine.h"
+#include "nsTHashSet.h"
 #include "nsToolkitCompsCID.h"
 
 using namespace mozilla::dom;
@@ -46,7 +47,7 @@ using namespace mozilla::dom;
 namespace mozilla {
 
 #define PERMISSIONS_FILE_NAME "permissions.sqlite"
-#define HOSTS_SCHEMA_VERSION 11
+#define HOSTS_SCHEMA_VERSION 12
 
 // Default permissions are read from a URL - this is the preference we read
 // to find that URL. If not set, don't use any default permissions.
@@ -1359,6 +1360,84 @@ nsresult PermissionManager::TryInitDB(bool aRemoveFile,
             "1), '^') + INSTR(type, '^')) "
             "WHERE INSTR(SUBSTR(type, INSTR(type, '^') + 1), '^') AND "
             "SUBSTR(type, 0, 18) == \"storageAccessAPI^\";"));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = data->mDBConn->SetSchemaVersion(11);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+        // fall through to the next upgrade
+        [[fallthrough]];
+
+      case 11: {
+        // Migrate 3rdPartyStorage keys to a site scope
+        rv = data->mDBConn->BeginTransaction();
+        NS_ENSURE_SUCCESS(rv, rv);
+        nsCOMPtr<mozIStorageStatement> updateStmt;
+        rv = data->mDBConn->CreateStatement(
+            nsLiteralCString("UPDATE moz_perms SET origin = ?2 WHERE id = ?1"),
+            getter_AddRefs(updateStmt));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<mozIStorageStatement> deleteStmt;
+        rv = data->mDBConn->CreateStatement(
+            nsLiteralCString("DELETE FROM moz_perms WHERE id = ?1"),
+            getter_AddRefs(deleteStmt));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<mozIStorageStatement> selectStmt;
+        rv = data->mDBConn->CreateStatement(
+            nsLiteralCString("SELECT id, origin, type FROM moz_perms WHERE "
+                             " SUBSTR(type, 0, 17) == \"3rdPartyStorage^\""),
+            getter_AddRefs(selectStmt));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsTHashSet<nsCStringHashKey> deduplicationSet;
+        bool hasResult;
+        while (NS_SUCCEEDED(selectStmt->ExecuteStep(&hasResult)) && hasResult) {
+          int64_t id;
+          rv = selectStmt->GetInt64(0, &id);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          nsCString origin;
+          rv = selectStmt->GetUTF8String(1, origin);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          nsCString type;
+          rv = selectStmt->GetUTF8String(2, type);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          nsCOMPtr<nsIURI> uri;
+          rv = NS_NewURI(getter_AddRefs(uri), origin);
+          if (NS_FAILED(rv)) {
+            continue;
+          }
+          nsCString site;
+          rv = nsEffectiveTLDService::GetInstance()->GetSite(uri, site);
+          if (NS_WARN_IF(NS_FAILED(rv))) {
+            continue;
+          }
+
+          nsCString deduplicationKey =
+              nsPrintfCString("%s,%s", site.get(), type.get());
+          if (deduplicationSet.Contains(deduplicationKey)) {
+            rv = deleteStmt->BindInt64ByIndex(0, id);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            rv = deleteStmt->Execute();
+            NS_ENSURE_SUCCESS(rv, rv);
+          } else {
+            deduplicationSet.Insert(deduplicationKey);
+            rv = updateStmt->BindInt64ByIndex(0, id);
+            NS_ENSURE_SUCCESS(rv, rv);
+            rv = updateStmt->BindUTF8StringByIndex(1, site);
+            NS_ENSURE_SUCCESS(rv, rv);
+
+            rv = updateStmt->Execute();
+            NS_ENSURE_SUCCESS(rv, rv);
+          }
+        }
+        rv = data->mDBConn->CommitTransaction();
         NS_ENSURE_SUCCESS(rv, rv);
 
         rv = data->mDBConn->SetSchemaVersion(HOSTS_SCHEMA_VERSION);
