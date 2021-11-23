@@ -135,7 +135,10 @@ JumpListBuilder::JumpListBuilder()
 
   // GetAppUserModelID can only be called once we're back on the main thread.
   nsString modelId;
-  if (mozilla::widget::WinTaskbar::GetAppUserModelID(modelId)) {
+  // MSIX packages explicitly do not support setting the appid from within
+  // the app, as it is set in the package manifest instead.
+  if (mozilla::widget::WinTaskbar::GetAppUserModelID(modelId) &&
+      !mozilla::widget::WinUtils::HasPackageIdentity()) {
     jumpListMgr->SetAppID(modelId.get());
   }
 }

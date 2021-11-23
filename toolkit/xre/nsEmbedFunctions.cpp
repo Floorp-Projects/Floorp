@@ -26,6 +26,7 @@
 #  endif
 #  include "mozilla/ScopeExit.h"
 #  include "mozilla/WinDllServices.h"
+#  include "WinUtils.h"
 #endif
 
 #include "nsAppRunner.h"
@@ -541,11 +542,13 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
   MOZ_ASSERT(!*end, "invalid parent PID");
 
 #if defined(XP_WIN)
-  // On Win7+, register the application user model id passed in by
-  // parent. This insures windows created by the container properly
-  // group with the parent app on the Win7 taskbar.
+  // On Win7+, when not running as an MSIX package, register the application
+  // user model id passed in by parent. This ensures windows created by the
+  // container properly group with the parent app on the Win7 taskbar.
+  // MSIX packages explicitly do not support setting the appid from within
+  // the app, as it is set in the package manifest instead.
   const char* const appModelUserId = aArgv[--aArgc];
-  if (appModelUserId) {
+  if (appModelUserId && !mozilla::widget::WinUtils::HasPackageIdentity()) {
     // '-' implies no support
     if (*appModelUserId != '-') {
       nsString appId;
