@@ -110,7 +110,8 @@ use crate::render_task_cache::to_cache_size;
 use crate::resource_cache::{ImageRequest, ResourceCache};
 use crate::space::SpaceMapper;
 use crate::util::{clamp_to_scale_factor, MaxRect, extract_inner_rect_safe, project_rect, ScaleOffset, VecHelper};
-use std::{ops, u32, mem};
+use euclid::approxeq::ApproxEq;
+use std::{iter, ops, u32, mem};
 
 // Type definitions for interning clip nodes.
 
@@ -539,7 +540,7 @@ impl ClipNodeRange {
 enum ClipSpaceConversion {
     Local,
     ScaleOffset(ScaleOffset),
-    Transform(LayoutTransform),
+    Transform(LayoutToWorldTransform),
 }
 
 impl ClipSpaceConversion {
@@ -563,11 +564,9 @@ impl ClipSpaceConversion {
                 .accumulate(&clip_spatial_node.content_transform);
             ClipSpaceConversion::ScaleOffset(scale_offset)
         } else {
-            assert!(spatial_tree.is_ancestor(clip_spatial_node_index, prim_spatial_node_index));
-
             ClipSpaceConversion::Transform(
                 spatial_tree
-                    .get_relative_transform(prim_spatial_node_index, clip_spatial_node_index)
+                    .get_world_transform(clip_spatial_node_index)
                     .into_transform()
             )
         }
@@ -1295,10 +1294,12 @@ impl ClipStore {
         &mut self,
         local_prim_rect: LayoutRect,
         prim_to_pic_mapper: &SpaceMapper<LayoutPixel, PicturePixel>,
+        pic_to_world_mapper: &SpaceMapper<PicturePixel, WorldPixel>,
         spatial_tree: &SpatialTree,
         gpu_cache: &mut GpuCache,
         resource_cache: &mut ResourceCache,
         device_pixel_scale: DevicePixelScale,
+        world_rect: &WorldRect,
         clip_data_store: &mut ClipDataStore,
         request_resources: bool,
         is_chased: bool,
@@ -1314,6 +1315,7 @@ impl ClipStore {
 
         let local_bounding_rect = local_prim_rect.intersection(&local_clip_rect)?;
         let mut pic_clip_rect = prim_to_pic_mapper.map(&local_bounding_rect)?;
+        let world_clip_rect = pic_to_world_mapper.map(&pic_clip_rect)?;
 
         // Now, we've collected all the clip nodes that *potentially* affect this
         // primitive region, and reduced the size of the prim region as much as possible.
@@ -1340,8 +1342,9 @@ impl ClipStore {
                 ClipSpaceConversion::Transform(ref transform) => {
                     has_non_local_clips = true;
                     node.item.kind.get_clip_result_complex(
-                        &local_bounding_rect,
                         transform,
+                        &world_clip_rect,
+                        world_rect,
                     )
                 }
             };
@@ -1800,9 +1803,15 @@ impl ClipItemKind {
 
     fn get_clip_result_complex(
         &self,
-        local_prim_rect: &LayoutRect,
-        prim_to_clip_transform: &LayoutTransform,
+        transform: &LayoutToWorldTransform,
+        prim_world_rect: &WorldRect,
+        world_rect: &WorldRect,
     ) -> ClipResult {
+        let visible_rect = match prim_world_rect.intersection(world_rect) {
+            Some(rect) => rect,
+            None => return ClipResult::Reject,
+        };
+
         let (clip_rect, inner_rect, mode) = match *self {
             ClipItemKind::Rectangle { rect, mode } => {
                 (rect, Some(rect), mode)
@@ -1820,15 +1829,8 @@ impl ClipItemKind {
             }
         };
 
-        let prim_rect = match project_rect(prim_to_clip_transform, local_prim_rect, &clip_rect) {
-            Some(rect) => rect,
-            None => {
-                return ClipResult::Reject;
-            }
-        };
-
         if let Some(ref inner_clip_rect) = inner_rect {
-            if inner_clip_rect.contains_box(&prim_rect) {
+            if let Some(()) = projected_rect_contains(inner_clip_rect, transform, &visible_rect) {
                 return match mode {
                     ClipMode::Clip => ClipResult::Accept,
                     ClipMode::ClipOut => ClipResult::Reject,
@@ -1836,7 +1838,28 @@ impl ClipItemKind {
             }
         }
 
-        return ClipResult::Partial;
+        match mode {
+            ClipMode::Clip => {
+                let outer_clip_rect = match project_rect(
+                    transform,
+                    &clip_rect,
+                    &world_rect,
+                ) {
+                    Some(outer_clip_rect) => outer_clip_rect,
+                    None => return ClipResult::Partial,
+                };
+
+                match outer_clip_rect.intersection(prim_world_rect) {
+                    Some(..) => {
+                        ClipResult::Partial
+                    }
+                    None => {
+                        ClipResult::Reject
+                    }
+                }
+            }
+            ClipMode::ClipOut => ClipResult::Partial,
+        }
     }
 
     // Check how a given clip source affects a local primitive region.
@@ -2078,6 +2101,42 @@ pub fn polygon_contains_point(
     }
 }
 
+pub fn projected_rect_contains(
+    source_rect: &LayoutRect,
+    transform: &LayoutToWorldTransform,
+    target_rect: &WorldRect,
+) -> Option<()> {
+    let points = [
+        transform.transform_point2d(source_rect.top_left())?,
+        transform.transform_point2d(source_rect.top_right())?,
+        transform.transform_point2d(source_rect.bottom_right())?,
+        transform.transform_point2d(source_rect.bottom_left())?,
+    ];
+    let target_points = [
+        target_rect.top_left(),
+        target_rect.top_right(),
+        target_rect.bottom_right(),
+        target_rect.bottom_left(),
+    ];
+    // iterate the edges of the transformed polygon
+    for (a, b) in points
+        .iter()
+        .cloned()
+        .zip(points[1..].iter().cloned().chain(iter::once(points[0])))
+    {
+        // If this edge is redundant, it's a weird, case, and we shouldn't go
+        // length in trying to take the fast path (e.g. when the whole rectangle is a point).
+        // If any of edges of the target rectangle crosses the edge, it's not completely
+        // inside our transformed polygon either.
+        if a.approx_eq(&b) || target_points.iter().any(|&c| (b - a).cross(c - a) < 0.0) {
+            return None
+        }
+    }
+
+    Some(())
+}
+
+
 // Add a clip node into the list of clips to be processed
 // for the current clip chain. Returns false if the clip
 // results in the entire primitive being culled out.
@@ -2119,6 +2178,8 @@ fn add_clip_node_to_current_chain(
                 };
             }
             ClipSpaceConversion::Transform(..) => {
+                assert!(spatial_tree.is_ancestor(node.spatial_node_index, prim_spatial_node_index));
+
                 // Map the local clip rect directly into the same space as the picture
                 // surface. This will often be the same space as the clip itself, which
                 // results in a reduction in allocated clip mask size.
@@ -2161,6 +2222,25 @@ fn add_clip_node_to_current_chain(
     });
 
     true
+}
+
+#[cfg(test)]
+mod tests {
+    use super::projected_rect_contains;
+    use euclid::{Transform3D, rect};
+
+    #[test]
+    fn test_empty_projected_rect() {
+        assert_eq!(
+            None,
+            projected_rect_contains(
+                &rect(10.0, 10.0, 0.0, 0.0).to_box2d(),
+                &Transform3D::identity(),
+                &rect(20.0, 20.0, 10.0, 10.0).to_box2d(),
+            ),
+            "Empty rectangle is considered to include a non-empty!"
+        );
+    }
 }
 
 /// PolygonKeys get interned, because it's a convenient way to move the data
