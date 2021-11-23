@@ -795,7 +795,7 @@ public class GeckoAppShell {
   @WrapForJNI(calledFrom = "gecko")
   private static synchronized float getDensity() {
     if (sDensity == null) {
-      sDensity = new Float(getApplicationContext().getResources().getDisplayMetrics().density);
+      sDensity = Float.valueOf(getApplicationContext().getResources().getDisplayMetrics().density);
     }
 
     return sDensity;
