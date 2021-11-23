@@ -27,7 +27,6 @@
 #include "nsLocalFile.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
-#include "xpcpublic.h"
 
 namespace mozilla {
 namespace dom {
@@ -63,27 +62,6 @@ static void ThrowError(ErrorResult& aErr, const nsresult aResult,
       aErr.ThrowUnknownError(formattedMsg);
       break;
   }
-}
-
-static inline bool DoWindowsPathCheck() {
-#ifdef XP_WIN
-#  ifdef DEBUG
-  return true;
-#  endif  // DEBUG
-  return xpc::IsInAutomation();
-#endif  // XP_WIN
-  return false;
-}
-
-/* static inline */
-nsresult PathUtils::InitFileWithPath(nsIFile* aFile, const nsAString& aPath) {
-  if (DoWindowsPathCheck()) {
-    MOZ_RELEASE_ASSERT(!aPath.Contains(u'/'),
-                       "Windows paths cannot include forward slashes");
-  }
-
-  MOZ_ASSERT(aFile);
-  return aFile->InitWithPath(aPath);
 }
 
 StaticDataMutex<Maybe<PathUtils::DirectoryCache>> PathUtils::sDirCache{
@@ -131,7 +109,7 @@ void PathUtils::Filename(const GlobalObject&, const nsAString& aPath,
   }
 
   nsCOMPtr<nsIFile> path = new nsLocalFile();
-  if (nsresult rv = InitFileWithPath(path, aPath); NS_FAILED(rv)) {
+  if (nsresult rv = path->InitWithPath(aPath); NS_FAILED(rv)) {
     ThrowError(aErr, rv, ERROR_INITIALIZE_PATH);
     return;
   }
@@ -150,7 +128,7 @@ void PathUtils::Parent(const GlobalObject&, const nsAString& aPath,
   }
 
   nsCOMPtr<nsIFile> path = new nsLocalFile();
-  if (nsresult rv = InitFileWithPath(path, aPath); NS_FAILED(rv)) {
+  if (nsresult rv = path->InitWithPath(aPath); NS_FAILED(rv)) {
     ThrowError(aErr, rv, ERROR_INITIALIZE_PATH);
     return;
   }
@@ -179,7 +157,7 @@ void PathUtils::Join(const GlobalObject&, const Sequence<nsString>& aComponents,
   }
 
   nsCOMPtr<nsIFile> path = new nsLocalFile();
-  if (nsresult rv = InitFileWithPath(path, aComponents[0]); NS_FAILED(rv)) {
+  if (nsresult rv = path->InitWithPath(aComponents[0]); NS_FAILED(rv)) {
     ThrowError(aErr, rv, ERROR_INITIALIZE_PATH);
     return;
   }
@@ -204,7 +182,7 @@ void PathUtils::JoinRelative(const GlobalObject&, const nsAString& aBasePath,
   }
 
   nsCOMPtr<nsIFile> path = new nsLocalFile();
-  if (nsresult rv = InitFileWithPath(path, aBasePath); NS_FAILED(rv)) {
+  if (nsresult rv = path->InitWithPath(aBasePath); NS_FAILED(rv)) {
     ThrowError(aErr, rv, ERROR_INITIALIZE_PATH);
     return;
   }
@@ -225,7 +203,7 @@ void PathUtils::CreateUniquePath(const GlobalObject&, const nsAString& aPath,
   }
 
   nsCOMPtr<nsIFile> path = new nsLocalFile();
-  if (nsresult rv = InitFileWithPath(path, aPath); NS_FAILED(rv)) {
+  if (nsresult rv = path->InitWithPath(aPath); NS_FAILED(rv)) {
     ThrowError(aErr, rv, ERROR_INITIALIZE_PATH);
     return;
   }
@@ -263,7 +241,7 @@ void PathUtils::ToExtendedWindowsPath(const GlobalObject&,
   const nsAString& normalPath = pathPrefix + aPath;
 
   nsCOMPtr<nsIFile> path = new nsLocalFile();
-  if (nsresult rv = InitFileWithPath(path, isUNC ? uncPath : normalPath);
+  if (nsresult rv = path->InitWithPath(isUNC ? uncPath : normalPath);
       NS_FAILED(rv)) {
     ThrowError(aErr, rv, ERROR_INITIALIZE_PATH);
     return;
@@ -281,7 +259,7 @@ void PathUtils::Normalize(const GlobalObject&, const nsAString& aPath,
   }
 
   nsCOMPtr<nsIFile> path = new nsLocalFile();
-  if (nsresult rv = InitFileWithPath(path, aPath); NS_FAILED(rv)) {
+  if (nsresult rv = path->InitWithPath(aPath); NS_FAILED(rv)) {
     ThrowError(aErr, rv, ERROR_INITIALIZE_PATH);
     return;
   }
@@ -302,7 +280,7 @@ void PathUtils::Split(const GlobalObject&, const nsAString& aPath,
   }
 
   nsCOMPtr<nsIFile> path = new nsLocalFile();
-  if (nsresult rv = InitFileWithPath(path, aPath); NS_FAILED(rv)) {
+  if (nsresult rv = path->InitWithPath(aPath); NS_FAILED(rv)) {
     ThrowError(aErr, rv, ERROR_INITIALIZE_PATH);
     return;
   }
@@ -337,7 +315,7 @@ void PathUtils::ToFileURI(const GlobalObject&, const nsAString& aPath,
   }
 
   nsCOMPtr<nsIFile> path = new nsLocalFile();
-  if (nsresult rv = InitFileWithPath(path, aPath); NS_FAILED(rv)) {
+  if (nsresult rv = path->InitWithPath(aPath); NS_FAILED(rv)) {
     ThrowError(aErr, rv, ERROR_INITIALIZE_PATH);
     return;
   }
