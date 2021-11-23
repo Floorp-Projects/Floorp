@@ -39,8 +39,7 @@ already_AddRefed<quota::Client> CreateQuotaClient();
 
 nsresult RestorePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn);
 
-nsresult WipePaddingFile(const CacheDirectoryMetadata& aDirectoryMetadata,
-                         nsIFile* aBaseDir);
+nsresult WipePaddingFile(const QuotaInfo& aQuotaInfo, nsIFile* aBaseDir);
 
 extern const nsLiteralString kCachesSQLiteFilename;
 
