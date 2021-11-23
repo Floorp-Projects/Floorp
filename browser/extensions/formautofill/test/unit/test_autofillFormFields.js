@@ -643,6 +643,38 @@ const TESTCASES_FILL_SELECT = [
       "cc-exp-year": "2025",
     },
   },
+  {
+    description:
+      "Fill credit card information correctly when one of the card type options is 'American Express'",
+    document: `<form>
+                <select id="cc-type" autocomplete="cc-type">
+                  <option value="">Please select</option>
+                  <option value="MA">Mastercard</option>
+                  <option value="AX">American Express</option>
+                </select>
+                <input id="cc-number" autocomplete="cc-number">
+                <input id="cc-name" autocomplete="cc-name">
+                <input id="cc-exp-month" autocomplete="cc-exp-month">
+                <input id="cc-exp-year" autocomplete="cc-exp-year">
+              </form>`,
+    focusedInputId: "cc-number",
+    profileData: {
+      guid: "123",
+      "cc-number": "378282246310005",
+      "cc-type": "amex",
+      "cc-name": "test name",
+      "cc-exp-month": 8,
+      "cc-exp-year": 26,
+    },
+    expectedResult: {
+      guid: "123",
+      "cc-number": "378282246310005",
+      "cc-type": "AX",
+      "cc-name": "test name",
+      "cc-exp-month": 8,
+      "cc-exp-year": 26,
+    },
+  },
 ];
 
 function do_test(testcases, testFn) {
