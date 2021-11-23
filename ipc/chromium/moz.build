@@ -84,7 +84,7 @@ if os_macosx:
         "src/base/scoped_nsautorelease_pool.mm",
         "src/base/sys_string_conversions_mac.mm",
         "src/base/time_mac.cc",
-        "src/chrome/common/mach_ipc_mac.mm",
+        "src/chrome/common/mach_ipc_mac.cc",
         "src/chrome/common/mach_message_source_mac.cc",
     ]
     SOURCES += [
