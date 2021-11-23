@@ -56,7 +56,7 @@ sandbox::bpf_dsl::ResultExpr SandboxPolicyBase::EvaluateSyscall(
       auto call = callAndVersion & 0xFFFF;
       UniquePtr<Caser<int>> acc(new Caser<int>(Switch(call)));
       for (int i = SEMOP; i <= DIPC; ++i) {
-        auto thisCase = EvaluateIpcCall(i);
+        auto thisCase = EvaluateIpcCall(i, 1);
         // Optimize out cases that are equal to the default.
         if (thisCase) {
           acc.reset(new Caser<int>(acc->Case(i, *thisCase)));
@@ -99,7 +99,7 @@ sandbox::bpf_dsl::ResultExpr SandboxPolicyBase::EvaluateSyscall(
 #ifndef ANDROID
 #define DISPATCH_SYSVCALL(sysnum, ipcnum) \
   case sysnum:                            \
-    return EvaluateIpcCall(ipcnum).valueOr(InvalidSyscall())
+    return EvaluateIpcCall(ipcnum, 0).valueOr(InvalidSyscall())
       DISPATCH_SYSVCALL(__NR_semop,       SEMOP);
       DISPATCH_SYSVCALL(__NR_semget,      SEMGET);
       DISPATCH_SYSVCALL(__NR_semctl,      SEMCTL);
