@@ -429,6 +429,114 @@ add_task(async function test_prompt() {
   Services.cookies.removeAll();
 });
 
+// Tests that the priviledged rSA method should show a prompt when auto grants
+// are enabled, but we don't have user activation. When requiring user
+// activation, rSA should still reject.
+add_task(async function test_prompt_no_user_activation() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.storage_access.auto_grants", true],
+      [
+        "network.cookie.cookieBehavior",
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+      ],
+      [
+        "network.cookie.cookieBehavior.pbmode",
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+      ],
+    ],
+  });
+
+  for (let requireUserActivation of [false, true]) {
+    let tab = await BrowserTestUtils.openNewForegroundTab(
+      gBrowser,
+      TEST_TOP_PAGE
+    );
+    let browser = tab.linkedBrowser;
+
+    let shownPromise, hiddenPromise;
+
+    // Verify if the prompt has been shown.
+    if (!requireUserActivation) {
+      shownPromise = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popupshown"
+      );
+
+      hiddenPromise = BrowserTestUtils.waitForEvent(
+        PopupNotifications.panel,
+        "popuphidden"
+      );
+    }
+
+    // Call the privilege API.
+    let callAPIPromise = SpecialPowers.spawn(
+      browser,
+      [requireUserActivation],
+      async requireUserActivation => {
+        let isThrown = false;
+
+        try {
+          await content.document.requestStorageAccessForOrigin(
+            "https://tracking.example.org",
+            requireUserActivation
+          );
+        } catch (e) {
+          isThrown = true;
+        }
+
+        is(
+          isThrown,
+          requireUserActivation,
+          `The API ${requireUserActivation ? "shouldn't" : "should"} throw.`
+        );
+      }
+    );
+
+    if (!requireUserActivation) {
+      await shownPromise;
+
+      let notification = await TestUtils.waitForCondition(_ =>
+        PopupNotifications.getNotification("storage-access", browser)
+      );
+      ok(notification, "Should have gotten the notification");
+
+      // Click the popup button.
+      triggerMainCommand();
+
+      // Wait until the popup disappears.
+      await hiddenPromise;
+    }
+
+    // Wait until the API finishes.
+    await callAPIPromise;
+
+    await insertSubFrame(browser, TEST_3RD_PARTY_PAGE, "test");
+
+    if (!requireUserActivation) {
+      await runScriptInSubFrame(browser, "test", async _ => {
+        await hasStorageAccessInitially();
+
+        is(document.cookie, "", "Still no cookies for me");
+        document.cookie = "name=value";
+        is(document.cookie, "name=value", "Successfully set cookies.");
+      });
+    } else {
+      await runScriptInSubFrame(browser, "test", async _ => {
+        await noStorageAccessInitially();
+
+        is(document.cookie, "", "Still no cookies for me");
+        document.cookie = "name=value";
+        is(document.cookie, "", "No cookie after setting.");
+      });
+    }
+
+    BrowserTestUtils.removeTab(tab);
+    await clearStoragePermission("https://tracking.example.org");
+    Services.cookies.removeAll();
+  }
+});
+
 add_task(async function test_invalid_input() {
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
