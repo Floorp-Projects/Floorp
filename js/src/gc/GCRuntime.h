@@ -146,9 +146,6 @@ class BackgroundUnmarkTask : public GCParallelTask {
   void initZones();
   void run(AutoLockHelperThreadState& lock) override;
 
- private:
-  void unmarkZones(AutoLockGC& lock);
-
   ZoneVector zones;
 };
 

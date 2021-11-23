@@ -30,6 +30,7 @@ struct Statistics;
 namespace gc {
 
 class Arena;
+class BackgroundUnmarkTask;
 struct FinalizePhase;
 class FreeSpan;
 class TenuredCell;
@@ -380,6 +381,7 @@ class ArenaLists {
                                          AllocKind thingKind,
                                          ShouldCheckThresholds checkThresholds);
 
+  friend class BackgroundUnmarkTask;
   friend class GCRuntime;
   friend class js::Nursery;
   friend class js::TenuringTracer;
