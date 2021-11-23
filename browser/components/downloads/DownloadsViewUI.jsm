@@ -24,6 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 XPCOMUtils.defineLazyServiceGetter(
@@ -120,12 +121,32 @@ var DownloadsViewUI = {
   },
 
   /**
+   * Get source url of the download without'http' or'https' prefix.
+   */
+  getStrippedUrl(download) {
+    return UrlbarUtils.stripPrefixAndTrim(download?.source?.url, {
+      stripHttp: true,
+      stripHttps: true,
+    })[0];
+  },
+
+  /**
    * Returns the user-facing label for the given Download object. This is
    * normally the leaf name of the download target file. In case this is a very
    * old history download for which the target file is unknown, the download
    * source URI is displayed.
    */
   getDisplayName(download) {
+    if (
+      download.error?.reputationCheckVerdict ==
+      Downloads.Error.BLOCK_VERDICT_DOWNLOAD_SPAM
+    ) {
+      let l10n = {
+        id: "downloads-blocked-from-url",
+        args: { url: DownloadsViewUI.getStrippedUrl(download) },
+      };
+      return { l10n };
+    }
     return download.target.path
       ? OS.Path.basename(download.target.path)
       : download.source.url;
@@ -409,8 +430,17 @@ DownloadsViewUI.DownloadElementShell.prototype = {
    *        URL of the icon to load, generally from the "image" property.
    */
   showDisplayNameAndIcon(displayName, icon) {
-    this._downloadTarget.setAttribute("value", displayName);
-    this._downloadTarget.setAttribute("tooltiptext", displayName);
+    if (displayName.l10n) {
+      let document = this.element.ownerDocument;
+      document.l10n.setAttributes(
+        this._downloadTarget,
+        displayName.l10n.id,
+        displayName.l10n.args
+      );
+    } else {
+      this._downloadTarget.setAttribute("value", displayName);
+      this._downloadTarget.setAttribute("tooltiptext", displayName);
+    }
     this._downloadTypeIcon.setAttribute("src", icon);
   },
 
@@ -490,6 +520,10 @@ DownloadsViewUI.DownloadElementShell.prototype = {
    *        Downloads View. Type is either l10n object or string literal.
    */
   showStatusWithDetails(stateLabel, hoverStatus) {
+    if (stateLabel.l10n) {
+      this.showStatus(stateLabel, hoverStatus);
+      return;
+    }
     let [displayHost] = DownloadUtils.getURIHost(this.download.source.url);
     let [displayDate] = DownloadUtils.getReadableDates(
       new Date(this.download.endTime)
@@ -701,6 +735,9 @@ DownloadsViewUI.DownloadElementShell.prototype = {
                   this.showButton("askRemoveFileOrAllow");
                 }
                 break;
+              case Downloads.Error.BLOCK_VERDICT_DOWNLOAD_SPAM:
+                this.showButton("askRemoveFileOrAllow");
+                break;
               default:
                 // Assume Downloads.Error.BLOCK_VERDICT_MALWARE
                 this.showButton("removeFile");
@@ -773,6 +810,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
 
   /**
    * Returns [title, [details1, details2]] for blocked downloads.
+   * The title or details could be raw strings or l10n objects.
    */
   get rawBlockedTitleAndDetails() {
     let s = DownloadsCommon.strings;
@@ -797,6 +835,19 @@ DownloadsViewUI.DownloadElementShell.prototype = {
         ];
       case Downloads.Error.BLOCK_VERDICT_MALWARE:
         return [s.blockedMalware, [s.unblockTypeMalware, s.unblockTip2]];
+
+      case Downloads.Error.BLOCK_VERDICT_DOWNLOAD_SPAM:
+        let title = {
+          id: "downloads-files-not-downloaded",
+          args: {
+            num: this.download.blockedDownloadsCount,
+          },
+        };
+        let details = {
+          id: "downloads-blocked-download-detailed-info",
+          args: { url: DownloadsViewUI.getStrippedUrl(this.download) },
+        };
+        return [{ l10n: title }, [{ l10n: details }, null]];
     }
     throw new Error(
       "Unexpected reputationCheckVerdict: " +

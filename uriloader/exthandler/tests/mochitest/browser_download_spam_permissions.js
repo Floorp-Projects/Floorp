@@ -26,6 +26,7 @@ add_task(async function setup() {
   let time = new Date().getTime();
   let tempDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
   tempDir.append(time);
+  Services.prefs.setIntPref("browser.download.folderList", 2);
   Services.prefs.setComplexValue("browser.download.dir", Ci.nsIFile, tempDir);
 
   PermissionTestUtils.add(
@@ -44,6 +45,7 @@ add_task(async function setup() {
   });
 
   registerCleanupFunction(async () => {
+    Services.prefs.clearUserPref("browser.download.folderList");
     Services.prefs.clearUserPref("browser.download.dir");
     await IOUtils.remove(tempDir.path, { recursive: true });
   });
@@ -75,6 +77,8 @@ add_task(async function check_download_spam_permissions() {
     TEST_PATH + "test_spammy_page.html"
   );
   registerCleanupFunction(async () => {
+    DownloadIntegration.getDownloadSpamProtection().clearDownloadSpam(TEST_URI);
+    DownloadsPanel.hidePanel();
     await publicList.removeFinished();
     BrowserTestUtils.removeTab(newTab);
     Services.obs.removeObserver(
