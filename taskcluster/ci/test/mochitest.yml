@@ -395,9 +395,14 @@ mochitest-devtools-chrome:
         - socketprocess_networking
         - wayland
         - webrender-sw
+        - devtools-no-eft-no-fission
     run-on-projects:
         by-variant:
             a11y-checks:
+                by-test-platform:
+                    linux.*64(-shippable)?-qr/opt: ['trunk']
+                    default: []
+            devtools-no-eft-no-fission:
                 by-test-platform:
                     linux.*64(-shippable)?-qr/opt: ['trunk']
                     default: []
