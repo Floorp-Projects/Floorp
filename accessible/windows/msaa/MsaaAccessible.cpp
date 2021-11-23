@@ -681,20 +681,22 @@ static bool VisitDocAccessibleParentDescendantsAtTopLevelInContentProcess(
 already_AddRefed<IAccessible> MsaaAccessible::GetRemoteIAccessibleFor(
     const VARIANT& aVarChild) {
   a11y::RootAccessible* root = LocalAcc()->RootAccessible();
-  const nsTArray<DocAccessibleParent*>* remoteDocs =
+  const nsTArray<DocAccessibleParent*>* rawRemoteDocs =
       DocManager::TopLevelRemoteDocs();
-  if (!remoteDocs) {
+  if (!rawRemoteDocs) {
     return nullptr;
+  }
+  nsTArray<RefPtr<DocAccessibleParent>> remoteDocs(rawRemoteDocs->Length());
+  for (auto rawRemoteDoc : *rawRemoteDocs) {
+    remoteDocs.AppendElement(rawRemoteDoc);
   }
 
   RefPtr<IAccessible> result;
 
-  // We intentionally leave the call to remoteDocs->Length() inside the loop
-  // condition because it is possible for reentry to occur in the call to
-  // GetProxiedAccessibleInSubtree() such that remoteDocs->Length() is mutated.
-  for (size_t i = 0; i < remoteDocs->Length(); i++) {
-    DocAccessibleParent* topRemoteDoc = remoteDocs->ElementAt(i);
-
+  for (auto topRemoteDoc : remoteDocs) {
+    if (topRemoteDoc->IsShutdown()) {
+      continue;
+    }
     LocalAccessible* outerDoc = topRemoteDoc->OuterDocOfRemoteBrowser();
     if (!outerDoc) {
       continue;
