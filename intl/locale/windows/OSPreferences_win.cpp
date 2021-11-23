@@ -64,14 +64,14 @@ bool OSPreferences::ReadSystemLocales(nsTArray<nsCString>& aLocaleList) {
                 // language code with no region subtag, but the
                 // GlobalizationPreferences API may give us one (e.g. "ja").
                 // So if there's no hyphen in the string at this point, we use
-                // addLikelySubtags to get a suitable region code to
+                // AddLikelySubtags to get a suitable region code to
                 // go with it.
                 Locale locale;
-                auto result = LocaleParser::tryParse(loc, locale);
-                if (result.isOk() && locale.addLikelySubtags().isOk() &&
-                    locale.region().present()) {
+                auto result = LocaleParser::TryParse(loc, locale);
+                if (result.isOk() && locale.AddLikelySubtags().isOk() &&
+                    locale.Region().Present()) {
                   loc.Append('-');
-                  loc.Append(locale.region().span());
+                  loc.Append(locale.Region().Span());
                 }
               }
               aLocaleList.AppendElement(loc);
