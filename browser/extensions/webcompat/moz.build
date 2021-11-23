@@ -108,6 +108,7 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["shims"] += [
     "shims/google-publisher-tags.js",
     "shims/google-safeframe.html",
     "shims/hamropatro.js",
+    "shims/humblebundle.js",
     "shims/iaspet.js",
     "shims/kinja.js",
     "shims/live-test-shim.js",
