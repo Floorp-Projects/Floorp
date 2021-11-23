@@ -95,7 +95,7 @@ fun AwesomeBar(
 
         Suggestions(
             groups,
-            fetcher.state.value,
+            fetcher,
             colors,
             orientation,
             onSuggestionClicked,

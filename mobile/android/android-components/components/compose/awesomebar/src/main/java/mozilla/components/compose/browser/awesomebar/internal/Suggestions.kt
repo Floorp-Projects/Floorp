@@ -21,7 +21,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 @Suppress("LongParameterList")
 internal fun Suggestions(
     groups: List<AwesomeBar.SuggestionProviderGroup>,
-    suggestions: Map<AwesomeBar.SuggestionProviderGroup, List<AwesomeBar.Suggestion>>,
+    fetcher: SuggestionFetcher,
     colors: AwesomeBarColors,
     orientation: AwesomeBarOrientation,
     onSuggestionClicked: (AwesomeBar.SuggestionProviderGroup, AwesomeBar.Suggestion) -> Unit,
@@ -36,6 +36,8 @@ internal fun Suggestions(
         state = state,
         modifier = Modifier.testTag("mozac.awesomebar.suggestions")
     ) {
+        val suggestions = fetcher.state.value
+
         groups.forEach { group ->
             val groupSuggestions = suggestions[group] ?: emptyList()
 
