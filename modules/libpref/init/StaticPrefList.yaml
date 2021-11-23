@@ -9291,7 +9291,7 @@
 
 - name: network.cookie.sameSite.laxByDefault
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # lax-by-default 2 minutes tollerance for unsafe methods. The value is in seconds.
@@ -9302,12 +9302,12 @@
 
 - name: network.cookie.sameSite.noneRequiresSecure
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 - name: network.cookie.sameSite.schemeful
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 - name: network.cookie.thirdparty.sessionOnly
