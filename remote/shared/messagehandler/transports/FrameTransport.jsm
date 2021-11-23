@@ -110,9 +110,13 @@ class FrameTransport {
   }
 
   _getBrowsingContextsForDescriptor(contextDescriptor) {
-    const { type } = contextDescriptor;
+    const { id, type } = contextDescriptor;
     if (type === CONTEXT_DESCRIPTOR_TYPES.ALL) {
-      return this._getAllBrowsingContexts();
+      return this._getBrowsingContexts();
+    }
+
+    if (type === CONTEXT_DESCRIPTOR_TYPES.TOP_BROWSING_CONTEXT) {
+      return this._getBrowsingContexts({ browserId: id });
     }
 
     // TODO: Handle other types of context descriptors.
@@ -121,7 +125,19 @@ class FrameTransport {
     );
   }
 
-  _getAllBrowsingContexts() {
+  /**
+   * Get all browsing contexts, optionally matching the provided options.
+   *
+   * @param {Object} options
+   * @param {String=} options.browserId
+   *    The id of the browser to filter the browsing contexts by (optional).
+   * @return {Array<BrowsingContext>}
+   *    The browsing contexts matching the provided options or all browsing contexts
+   *    if no options are provided.
+   */
+  _getBrowsingContexts(options = {}) {
+    // extract browserId from options
+    const { browserId } = options;
     let browsingContexts = [];
     // Fetch all top level window's browsing contexts
     // Note that getWindowEnumerator works from all processes, including the content process.
@@ -147,6 +163,15 @@ class FrameTransport {
         const isInitialDocument =
           browsingContext.currentWindowGlobal.isInitialDocument;
         if (isChrome || isInitialDocument) {
+          continue;
+        }
+
+        // If a browserId was provided, skip browsing contexts which are not
+        // associated with this browserId.
+        if (
+          typeof browserId !== "undefined" &&
+          browsingContext.browserId !== browserId
+        ) {
           continue;
         }
 
