@@ -18,7 +18,7 @@ echo "running as" $(id)
 set -v
 
 mkdir -p ${NEXUS_WORK}/conf
-cp /builds/worker/checkouts/src/taskcluster/scripts/toolchain/android-gradle-dependencies/nexus.xml ${NEXUS_WORK}/conf/nexus.xml
+cp /builds/worker/checkouts/vcs/taskcluster/scripts/toolchain/android-gradle-dependencies/nexus.xml ${NEXUS_WORK}/conf/nexus.xml
 
 PATH="/usr/lib/jvm/java-8-openjdk-amd64/jre/bin/:$PATH" RUN_AS_USER=worker /opt/sonatype/nexus/bin/nexus restart
 

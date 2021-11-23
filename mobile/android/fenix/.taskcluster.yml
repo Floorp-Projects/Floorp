@@ -8,7 +8,7 @@ tasks:
     - $let:
           taskgraph:
               branch: taskgraph
-              revision: 9daff451cfbe82c5c70237a7b3dbcf4fd3238299
+              revision: d85f4e4213706ec7737c7257f681977fdf20eb60
           trustDomain: mobile
       in:
           $let:
@@ -248,9 +248,9 @@ tasks:
 
                               command:
                                   - /usr/local/bin/run-task
-                                  - '--mobile-checkout=/builds/worker/checkouts/src'
+                                  - '--mobile-checkout=/builds/worker/checkouts/vcs'
                                   - '--taskgraph-checkout=/builds/worker/checkouts/taskgraph'
-                                  - '--task-cwd=/builds/worker/checkouts/src'
+                                  - '--task-cwd=/builds/worker/checkouts/vcs'
                                   - '--'
                                   - bash
                                   - -cx
@@ -292,7 +292,7 @@ tasks:
                                       expires: {$fromNow: '1 year'}
                                   'public/docker-contexts':
                                       type: 'directory'
-                                      path: '/builds/worker/checkouts/src/docker-contexts'
+                                      path: '/builds/worker/checkouts/vcs/docker-contexts'
                                       # This needs to be at least the deadline of the
                                       # decision task + the docker-image task deadlines.
                                       # It is set to a week to allow for some time for

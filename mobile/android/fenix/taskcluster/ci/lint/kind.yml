@@ -53,7 +53,7 @@ jobs:
         worker:
             artifacts:
                 - name: public/reports
-                  path: /builds/worker/checkouts/src/build/reports
+                  path: /builds/worker/checkouts/vcs/build/reports
                   type: directory
                 - name: public/github
                   path: /builds/worker/github
@@ -75,7 +75,7 @@ jobs:
         worker:
             artifacts:
                 - name: public/reports
-                  path: /builds/worker/checkouts/src/app/build/reports
+                  path: /builds/worker/checkouts/vcs/app/build/reports
                   type: directory
                 - name: public/github
                   path: /builds/worker/github

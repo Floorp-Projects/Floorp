@@ -52,10 +52,10 @@ jobs:
         worker:
             artifacts:
                 - name: public/reports/index.html
-                  path: /builds/worker/checkouts/src/app/build/reports/tests/testDebugUnitTest/index.html
+                  path: /builds/worker/checkouts/vcs/app/build/reports/tests/testDebugUnitTest/index.html
                   type: file
                 - name: public/reports/test
-                  path: /builds/worker/checkouts/src/app/build/reports/tests
+                  path: /builds/worker/checkouts/vcs/app/build/reports/tests
                   type: directory
                 - name: public/github
                   path: /builds/worker/github
