@@ -84,11 +84,11 @@ add_task(async function testSwitchToTarget() {
     }
     destroyedTargets.push(targetFront);
   };
-  await targetCommand.watchTargets({
-    types: [TYPES.FRAME],
-    onAvailable: onFrameAvailable,
-    onDestroyed: onFrameDestroyed,
-  });
+  await targetCommand.watchTargets(
+    [TYPES.FRAME],
+    onFrameAvailable,
+    onFrameDestroyed
+  );
 
   // Save the original list of targets
   const createdTargets = [...frameTargets];

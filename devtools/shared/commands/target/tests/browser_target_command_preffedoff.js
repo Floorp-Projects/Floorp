@@ -51,15 +51,9 @@ async function testPreffedOffMainProcess() {
   const onProcessAvailable = ({ targetFront }) => {
     processTargets.push(targetFront);
   };
-  await targetCommand.watchTargets({
-    types: [TYPES.PROCESS],
-    onAvailable: onProcessAvailable,
-  });
+  await targetCommand.watchTargets([TYPES.PROCESS], onProcessAvailable);
   is(processTargets.length, 0, "We get no process when preffed-off");
-  targetCommand.unwatchTargets({
-    types: [TYPES.PROCESS],
-    onAvailable: onProcessAvailable,
-  });
+  targetCommand.unwatchTargets([TYPES.PROCESS], onProcessAvailable);
 
   const frameTargets = [];
   const onFrameAvailable = ({ targetFront }) => {
@@ -74,10 +68,7 @@ async function testPreffedOffMainProcess() {
     );
     frameTargets.push(targetFront);
   };
-  await targetCommand.watchTargets({
-    types: [TYPES.FRAME],
-    onAvailable: onFrameAvailable,
-  });
+  await targetCommand.watchTargets([TYPES.FRAME], onFrameAvailable);
   is(
     frameTargets.length,
     1,
@@ -88,10 +79,7 @@ async function testPreffedOffMainProcess() {
     mainProcess,
     "The target is the top level one via watchTargets"
   );
-  targetCommand.unwatchTargets({
-    types: [TYPES.FRAME],
-    onAvailable: onFrameAvailable,
-  });
+  targetCommand.unwatchTargets([TYPES.FRAME], onFrameAvailable);
 
   targetCommand.destroy();
 
