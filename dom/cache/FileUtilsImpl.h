@@ -15,8 +15,8 @@ namespace dom {
 namespace cache {
 
 template <typename Func>
-nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBodyDir,
-                           const Func& aHandleFileFunc,
+nsresult BodyTraverseFiles(const ClientMetadata& aClientMetadata,
+                           nsIFile& aBodyDir, const Func& aHandleFileFunc,
                            const bool aCanRemoveFiles, const bool aTrackQuota) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   {
@@ -36,7 +36,7 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBodyDir,
   FlippedOnce<true> isEmpty;
   QM_TRY(quota::CollectEachFile(
       aBodyDir,
-      [&isEmpty, &aQuotaInfo, aTrackQuota, &aHandleFileFunc,
+      [&isEmpty, &aClientMetadata, aTrackQuota, &aHandleFileFunc,
        aCanRemoveFiles](const nsCOMPtr<nsIFile>& file) -> Result<Ok, nsresult> {
         QM_TRY_INSPECT(const auto& dirEntryKind, quota::GetDirEntryKind(*file));
 
@@ -44,7 +44,7 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBodyDir,
           case quota::nsIFileKind::ExistsAsDirectory: {
             // If it's a directory somehow, try to remove it and move on
             DebugOnly<nsresult> result = RemoveNsIFileRecursively(
-                aQuotaInfo, *file, /* aTrackQuota */ false);
+                aClientMetadata, *file, /* aTrackQuota */ false);
             MOZ_ASSERT(NS_SUCCEEDED(result));
             break;
           }
@@ -58,7 +58,7 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBodyDir,
             if (StringEndsWith(leafName, ".tmp"_ns)) {
               if (aCanRemoveFiles) {
                 DebugOnly<nsresult> result =
-                    RemoveNsIFile(aQuotaInfo, *file, aTrackQuota);
+                    RemoveNsIFile(aClientMetadata, *file, aTrackQuota);
                 MOZ_ASSERT(NS_SUCCEEDED(result));
                 return Ok{};
               }
@@ -70,8 +70,8 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBodyDir,
 
               // If its not, try to remove it and move on.
               if (!maybeEndingOk) {
-                DebugOnly<nsresult> result =
-                    RemoveNsIFile(aQuotaInfo, *file, /* aTrackQuota */ false);
+                DebugOnly<nsresult> result = RemoveNsIFile(
+                    aClientMetadata, *file, /* aTrackQuota */ false);
                 MOZ_ASSERT(NS_SUCCEEDED(result));
                 return Ok{};
               }
@@ -96,8 +96,8 @@ nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBodyDir,
       }));
 
   if (isEmpty && aCanRemoveFiles) {
-    DebugOnly<nsresult> result =
-        RemoveNsIFileRecursively(aQuotaInfo, aBodyDir, /* aTrackQuota */ false);
+    DebugOnly<nsresult> result = RemoveNsIFileRecursively(
+        aClientMetadata, aBodyDir, /* aTrackQuota */ false);
     MOZ_ASSERT(NS_SUCCEEDED(result));
   }
 

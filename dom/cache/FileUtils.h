@@ -31,30 +31,32 @@ nsresult BodyCreateDir(nsIFile& aBaseDir);
 // Note that this function can only be used during the initialization of the
 // database.  We're unlikely to be able to delete the DB successfully past
 // that point due to the file being in use.
-nsresult BodyDeleteDir(const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir);
+nsresult BodyDeleteDir(const ClientMetadata& aClientMetadata,
+                       nsIFile& aBaseDir);
 
 // Returns a Result with a success value with the body id and, optionally, the
 // copy context.
 Result<std::pair<nsID, nsCOMPtr<nsISupports>>, nsresult> BodyStartWriteStream(
-    const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir, nsIInputStream& aSource,
-    void* aClosure, nsAsyncCopyCallbackFun aCallback);
+    const ClientMetadata& aClientMetadata, nsIFile& aBaseDir,
+    nsIInputStream& aSource, void* aClosure, nsAsyncCopyCallbackFun aCallback);
 
 void BodyCancelWrite(nsISupports& aCopyContext);
 
 nsresult BodyFinalizeWrite(nsIFile& aBaseDir, const nsID& aId);
 
 Result<NotNull<nsCOMPtr<nsIInputStream>>, nsresult> BodyOpen(
-    const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir, const nsID& aId);
+    const ClientMetadata& aClientMetadata, nsIFile& aBaseDir, const nsID& aId);
 
-nsresult BodyMaybeUpdatePaddingSize(const QuotaInfo& aQuotaInfo,
+nsresult BodyMaybeUpdatePaddingSize(const ClientMetadata& aClientMetadata,
                                     nsIFile& aBaseDir, const nsID& aId,
                                     uint32_t aPaddingInfo,
                                     int64_t* aPaddingSizeInOut);
 
-nsresult BodyDeleteFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir,
-                         const nsTArray<nsID>& aIdList);
+nsresult BodyDeleteFiles(const ClientMetadata& aClientMetadata,
+                         nsIFile& aBaseDir, const nsTArray<nsID>& aIdList);
 
-nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir,
+nsresult BodyDeleteOrphanedFiles(const ClientMetadata& aClientMetadata,
+                                 nsIFile& aBaseDir,
                                  const nsTArray<nsID>& aKnownBodyIdList);
 
 // If aCanRemoveFiles is true, that means we are safe to touch the files which
@@ -63,28 +65,28 @@ nsresult BodyDeleteOrphanedFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBaseDir,
 // created by other threads. Note that if the files are not expected, we should
 // be safe to remove them in any case.
 template <typename Func>
-nsresult BodyTraverseFiles(const QuotaInfo& aQuotaInfo, nsIFile& aBodyDir,
-                           const Func& aHandleFileFunc, bool aCanRemoveFiles,
-                           bool aTrackQuota = true);
+nsresult BodyTraverseFiles(const ClientMetadata& aClientMetadata,
+                           nsIFile& aBodyDir, const Func& aHandleFileFunc,
+                           bool aCanRemoveFiles, bool aTrackQuota = true);
 
-nsresult CreateMarkerFile(const QuotaInfo& aQuotaInfo);
+nsresult CreateMarkerFile(const ClientMetadata& aClientMetadata);
 
-nsresult DeleteMarkerFile(const QuotaInfo& aQuotaInfo);
+nsresult DeleteMarkerFile(const ClientMetadata& aClientMetadata);
 
-bool MarkerFileExists(const QuotaInfo& aQuotaInfo);
+bool MarkerFileExists(const ClientMetadata& aClientMetadata);
 
-nsresult RemoveNsIFileRecursively(const QuotaInfo& aQuotaInfo, nsIFile& aFile,
-                                  bool aTrackQuota = true);
+nsresult RemoveNsIFileRecursively(const ClientMetadata& aClientMetadata,
+                                  nsIFile& aFile, bool aTrackQuota = true);
 
 // Delete a file that you think exists. If the file doesn't exist, an error
 // will not be returned, but warning telemetry will be generated! So only call
 // this on files that you know exist (idempotent usage, but it's not
 // recommended).
-nsresult RemoveNsIFile(const QuotaInfo& aQuotaInfo, nsIFile& aFile,
+nsresult RemoveNsIFile(const ClientMetadata& aClientMetadata, nsIFile& aFile,
                        bool aTrackQuota = true);
 
-void DecreaseUsageForQuotaInfo(const QuotaInfo& aQuotaInfo,
-                               int64_t aUpdatingSize);
+void DecreaseUsageForClientMetadata(const ClientMetadata& aClientMetadata,
+                                    int64_t aUpdatingSize);
 
 /**
  * This function is used to check if the directory padding file is existed.

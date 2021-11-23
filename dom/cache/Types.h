@@ -29,9 +29,8 @@ static const Namespace INVALID_NAMESPACE = NUMBER_OF_NAMESPACES;
 using CacheId = int64_t;
 static const CacheId INVALID_CACHE_ID = -1;
 
-// XXX Rename to OriginMetadata.
 // XXX Consider inheritance from ClientMetadata.
-struct QuotaInfo : quota::OriginMetadata {
+struct ClientMetadata : quota::OriginMetadata {
   nsCOMPtr<nsIFile> mDir;
   int64_t mDirectoryLockId = -1;
 };

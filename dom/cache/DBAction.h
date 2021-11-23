@@ -19,7 +19,7 @@ namespace dom {
 namespace cache {
 
 Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenDBConnection(
-    const QuotaInfo& aQuotaInfo, nsIFile& aDBFile);
+    const ClientMetadata& aClientMetadata, nsIFile& aDBFile);
 
 class DBAction : public Action {
  protected:
@@ -36,15 +36,17 @@ class DBAction : public Action {
   // ref the DB connection.  The connection can only be referenced from the
   // target thread and must be released upon resolve.
   virtual void RunWithDBOnTarget(SafeRefPtr<Resolver> aResolver,
-                                 const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
+                                 const ClientMetadata& aClientMetadata,
+                                 nsIFile* aDBDir,
                                  mozIStorageConnection* aConn) = 0;
 
  private:
-  void RunOnTarget(SafeRefPtr<Resolver> aResolver, const QuotaInfo& aQuotaInfo,
+  void RunOnTarget(SafeRefPtr<Resolver> aResolver,
+                   const ClientMetadata& aClientMetadata,
                    Data* aOptionalData) override;
 
   Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenConnection(
-      const QuotaInfo& aQuotaInfo, nsIFile& aDBDir);
+      const ClientMetadata& aClientMetadata, nsIFile& aDBDir);
 
   const Mode mMode;
 };
@@ -56,13 +58,14 @@ class SyncDBAction : public DBAction {
   // Action objects are deleted through their base pointer
   virtual ~SyncDBAction();
 
-  virtual nsresult RunSyncWithDBOnTarget(const QuotaInfo& aQuotaInfo,
+  virtual nsresult RunSyncWithDBOnTarget(const ClientMetadata& aClientMetadata,
                                          nsIFile* aDBDir,
                                          mozIStorageConnection* aConn) = 0;
 
  private:
   virtual void RunWithDBOnTarget(SafeRefPtr<Resolver> aResolver,
-                                 const QuotaInfo& aQuotaInfo, nsIFile* aDBDir,
+                                 const ClientMetadata& aClientMetadata,
+                                 nsIFile* aDBDir,
                                  mozIStorageConnection* aConn) override;
 };
 
