@@ -231,28 +231,6 @@ MemoryPorts* GetMemoryPortsForPid(pid_t pid) {
   return &gMemoryCommPorts.at(pid);
 }
 
-// We just received a port representing a region of shared memory, reply to
-// the process that set it with the mach_port_t that represents it in this
-// process. That will be the Handle to be shared over normal IPC.
-//
-// WARNING: this function is called while gMutex is not held and must not
-// reference structures protected by gMutex. See the deadlock warning in
-// ShareToProcess().
-void HandleSharePortsMessage(MachReceiveMessage* rmsg, MemoryPorts* ports) {
-  mach_port_t port = rmsg->GetTranslatedPort(0);
-  uint64_t* serial = reinterpret_cast<uint64_t*>(rmsg->GetData());
-  MachSendMessage msg(kReturnIdMsg);
-  // Construct the reply message, echoing the serial, and adding the port
-  SharePortsReply replydata;
-  replydata.port = port;
-  replydata.serial = *serial;
-  msg.SetData(&replydata, sizeof(SharePortsReply));
-  kern_return_t err = ports->mSender->SendMessage(msg, kTimeout);
-  if (KERN_SUCCESS != err) {
-    LOG_ERROR("SendMessage failed 0x%x %s\n", err, mach_error_string(err));
-  }
-}
-
 // We were asked by another process to get communications ports to some process. Return
 // those ports via an IPC message.
 bool SendReturnPortsMsg(MachPortSender* sender, mach_port_t raw_ports_in_sender,
@@ -358,24 +336,6 @@ static void* PortServerThread(void* argument) {
       layers::TextureSync::DispatchCheckTexturesForUnlock();
     } else {
       switch (rmsg.GetMessageID()) {
-        case kSharePortsMsg: {
-          // Don't acquire gMutex here while calling HandleSharePortsMessage()
-          // to avoid deadlock. If gMutex is held by ShareToProcess(), we will
-          // block and create the following deadlock chain.
-          //
-          // 1) local:PortServerThread() blocked on local:gMutex held by
-          // 2) local:ShareToProcess() waiting for reply from
-          // 3) peer:PortServerThread() blocked on peer:gMutex held by
-          // 4) peer:ShareToProcess() waiting for reply from 1.
-          //
-          // It's safe to call HandleSharePortsMessage() without gMutex
-          // because HandleSharePortsMessage() only sends an outgoing message
-          // without referencing data structures protected by gMutex. The
-          // |ports| struct is deallocated on this thread in the kShutdownMsg
-          // message handling before this thread exits.
-          HandleSharePortsMessage(&rmsg, ports);
-          break;
-        }
         case kGetPortsMsg: {
           StaticMutexAutoLock smal(gMutex);
           HandleGetPortsMessage(&rmsg, ports);
@@ -512,7 +472,7 @@ SharedMemoryBasic::~SharedMemoryBasic() {
 bool SharedMemoryBasic::SetHandle(Handle aHandle, OpenRights aRights) {
   MOZ_ASSERT(mPort == MACH_PORT_NULL, "already initialized");
 
-  mPort = aHandle;
+  mPort = std::move(aHandle);
   mOpenRights = aRights;
   return true;
 }
@@ -530,9 +490,9 @@ bool SharedMemoryBasic::Create(size_t size) {
 
   memory_object_size_t memoryObjectSize = round_page(size);
 
-  kern_return_t kr =
-      mach_make_memory_entry_64(mach_task_self(), &memoryObjectSize, 0,
-                                MAP_MEM_NAMED_CREATE | VM_PROT_DEFAULT, &mPort, MACH_PORT_NULL);
+  kern_return_t kr = mach_make_memory_entry_64(mach_task_self(), &memoryObjectSize, 0,
+                                               MAP_MEM_NAMED_CREATE | VM_PROT_DEFAULT,
+                                               getter_Transfers(mPort), MACH_PORT_NULL);
   if (kr != KERN_SUCCESS || memoryObjectSize < round_page(size)) {
     LOG_ERROR("Failed to make memory entry (%zu bytes). %s (%x)\n", size, mach_error_string(kr),
               kr);
@@ -560,12 +520,12 @@ bool SharedMemoryBasic::Map(size_t size, void* fixed_address) {
   }
 
   kr = mach_vm_map(mach_task_self(), &address, round_page(size), 0,
-                   fixed_address ? VM_FLAGS_FIXED : VM_FLAGS_ANYWHERE, mPort, 0, false,
+                   fixed_address ? VM_FLAGS_FIXED : VM_FLAGS_ANYWHERE, mPort.get(), 0, false,
                    vmProtection, vmProtection, VM_INHERIT_NONE);
   if (kr != KERN_SUCCESS) {
     if (!fixed_address) {
       LOG_ERROR("Failed to map shared memory (%zu bytes) into %x, port %x. %s (%x)\n", size,
-                mach_task_self(), mPort, mach_error_string(kr), kr);
+                mach_task_self(), mach_port_t(mPort.get()), mach_error_string(kr), kr);
     }
     return false;
   }
@@ -575,7 +535,7 @@ bool SharedMemoryBasic::Map(size_t size, void* fixed_address) {
     if (kr != KERN_SUCCESS) {
       LOG_ERROR("Failed to unmap shared memory at unsuitable address "
                 "(%zu bytes) from %x, port %x. %s (%x)\n",
-                size, mach_task_self(), mPort, mach_error_string(kr), kr);
+                size, mach_task_self(), mach_port_t(mPort.get()), mach_error_string(kr), kr);
     }
     return false;
   }
@@ -597,56 +557,8 @@ void* SharedMemoryBasic::FindFreeAddressSpace(size_t size) {
 }
 
 bool SharedMemoryBasic::ShareToProcess(base::ProcessId pid, Handle* aNewHandle) {
-  if (pid == getpid()) {
-    *aNewHandle = mPort;
-    return mach_port_mod_refs(mach_task_self(), *aNewHandle, MACH_PORT_RIGHT_SEND, 1) ==
-           KERN_SUCCESS;
-  }
-  StaticMutexAutoLock smal(gMutex);
-
-  // Serially number the messages, to check whether
-  // the reply we get was meant for us.
-  static uint64_t serial = 0;
-  uint64_t my_serial = serial;
-  serial++;
-
-  MemoryPorts* ports = GetMemoryPortsForPid(pid);
-  if (!ports) {
-    LOG_ERROR("Unable to get ports for process.\n");
-    return false;
-  }
-  MachSendMessage smsg(kSharePortsMsg);
-  smsg.AddDescriptor(MachMsgPortDescriptor(mPort, MACH_MSG_TYPE_COPY_SEND));
-  smsg.SetData(&my_serial, sizeof(uint64_t));
-  kern_return_t err = ports->mSender->SendMessage(smsg, kTimeout);
-  if (err != KERN_SUCCESS) {
-    LOG_ERROR("sending port failed %s %x\n", mach_error_string(err), err);
-    return false;
-  }
-  MachReceiveMessage msg;
-  err = ports->mReceiver->WaitForMessage(&msg, kTimeout);
-  if (err != KERN_SUCCESS) {
-    LOG_ERROR("short timeout didn't get an id %s %x\n", mach_error_string(err), err);
-    err = ports->mReceiver->WaitForMessage(&msg, kLongTimeout);
-
-    if (err != KERN_SUCCESS) {
-      LOG_ERROR("long timeout didn't get an id %s %x\n", mach_error_string(err), err);
-      return false;
-    }
-  }
-  if (msg.GetDataLength() != sizeof(SharePortsReply)) {
-    LOG_ERROR("Improperly formatted reply\n");
-    return false;
-  }
-  SharePortsReply* msg_data = reinterpret_cast<SharePortsReply*>(msg.GetData());
-  mach_port_t id = msg_data->port;
-  uint64_t serial_check = msg_data->serial;
-  if (serial_check != my_serial) {
-    LOG_ERROR("Serials do not match up: %" PRIu64 " vs %" PRIu64 "", serial_check, my_serial);
-    return false;
-  }
-  *aNewHandle = id;
-  return true;
+  *aNewHandle = mozilla::RetainMachSendRight(mPort.get());
+  return *aNewHandle != nullptr;
 }
 
 void SharedMemoryBasic::Unmap() {
@@ -663,14 +575,13 @@ void SharedMemoryBasic::Unmap() {
 }
 
 void SharedMemoryBasic::CloseHandle() {
-  if (mPort != MACH_PORT_NULL) {
-    mach_port_deallocate(mach_task_self(), mPort);
-    mPort = MACH_PORT_NULL;
+  if (mPort) {
+    mPort = nullptr;
     mOpenRights = RightsReadWrite;
   }
 }
 
-bool SharedMemoryBasic::IsHandleValid(const Handle& aHandle) const { return aHandle > 0; }
+bool SharedMemoryBasic::IsHandleValid(const Handle& aHandle) const { return aHandle != nullptr; }
 
 }  // namespace ipc
 }  // namespace mozilla

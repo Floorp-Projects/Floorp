@@ -9,6 +9,7 @@
 
 #include "base/process.h"
 
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/ipc/SharedMemory.h"
 #include <mach/port.h>
 #include "chrome/common/mach_ipc_mac.h"
@@ -30,7 +31,6 @@ namespace ipc {
 
 enum {
   kGetPortsMsg = 1,
-  kSharePortsMsg,
   kWaitForTexturesMsg,
   kUpdateTextureLocksMsg,
   kReturnIdMsg,
@@ -49,7 +49,8 @@ struct MemoryPorts {
       : mSender(sender), mReceiver(receiver) {}
 };
 
-class SharedMemoryBasic final : public SharedMemoryCommon<mach_port_t> {
+class SharedMemoryBasic final
+    : public SharedMemoryCommon<mozilla::UniqueMachSendRight> {
  public:
   static void SetupMachMemory(pid_t pid, ReceivePort* listen_port,
                               MachPortSender* listen_port_ack,
@@ -98,7 +99,7 @@ class SharedMemoryBasic final : public SharedMemoryCommon<mach_port_t> {
  private:
   ~SharedMemoryBasic();
 
-  mach_port_t mPort;
+  mozilla::UniqueMachSendRight mPort;
   // Pointer to mapped region, null if unmapped.
   void* mMemory;
   // Access rights to map an existing region with.
