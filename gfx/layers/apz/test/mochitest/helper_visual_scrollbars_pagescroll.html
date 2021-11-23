@@ -11,6 +11,28 @@
 
   <script type="application/javascript">
 
+// A helper to synthesize a native mouse click on a scrollbar track,
+// and wait long enough such that subsequent ticking of the refresh
+// driver will progress any resulting scroll animation.
+// In particular, just `await promiseNativeMouseEventWithApz(...)`
+// is not enough, it waits for the synthesization messages to arrive
+// in the parent process, but the native events may still be in the
+// OS event queue. Instead, we need to wait for a synthesized event
+// to arrive at content. While we're synthesizing a "click", if the
+// target is a scrollbar the window only gets the "mousedown" and
+// "mouseup", not a "click". Waiting for the "mousedown" is not enough
+// (the "mouseup" can still be stuck in the event queue), so we wait
+// for "mouseup".
+async function promiseNativeMouseClickOnScrollbarTrack(anchor, xOffset, yOffset) {
+  await promiseNativeMouseEventWithAPZAndWaitForEvent({
+    type: "click",
+    target: anchor,
+    offsetX: xOffset,
+    offsetY: yOffset,
+    eventTypeToWait: "mouseup"
+  });
+}
+
 async function test() {
   var scroller = document.documentElement;
   var verticalScrollbarWidth = window.innerWidth - scroller.clientWidth;
@@ -40,12 +62,7 @@ async function test() {
   // Click at the bottom of the scrollbar track to trigger a page-down kind of
   // scroll. This should use "desktop zooming" scrollbar code which should
   // trigger an APZ scroll animation.
-  await promiseNativeMouseEventWithAPZ({
-    type: "click",
-    target: anchor,
-    offsetX: xoffset,
-    offsetY: yoffset,
-  });
+  await promiseNativeMouseClickOnScrollbarTrack(anchor, xoffset, yoffset);
 
   // Run 1000 frames, that should be enough to let the scroll animation start
   // and run to completion. We check that it scrolled at least half the visible
@@ -62,12 +79,7 @@ async function test() {
   // Now we do two clicks in quick succession, but with a few frames in between
   // to verify the scroll animation from the first click is active before the
   // second click happens.
-  await promiseNativeMouseEventWithAPZ({
-    type: "click",
-    target: anchor,
-    offsetX: xoffset,
-    offsetY: yoffset,
-  });
+  await promiseNativeMouseClickOnScrollbarTrack(anchor, xoffset, yoffset);
   for (let i = 0; i < 5; i++) {
     utils.advanceTimeAndRefresh(16);
   }
@@ -75,12 +87,7 @@ async function test() {
   let curPos = scroller.scrollTop;
   ok(curPos > pageScrollAmount, `Scroll offset has increased to ${curPos}`);
   ok(curPos < pageScrollAmount * 2, "Second page-scroll is not yet complete");
-  await promiseNativeMouseEventWithAPZ({
-    type: "click",
-    target: anchor,
-    offsetX: xoffset,
-    offsetY: yoffset,
-  });
+  await promiseNativeMouseClickOnScrollbarTrack(anchor, xoffset, yoffset);
 
   // Run to completion and check that we are around 3x pageScrollAmount, with
   // some allowance for fractional rounding.
