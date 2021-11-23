@@ -30,7 +30,6 @@ import org.mozilla.telemetry.TelemetryHolder
 import org.mozilla.telemetry.config.TelemetryConfiguration
 import org.mozilla.telemetry.event.TelemetryEvent
 import org.mozilla.telemetry.measurement.DefaultSearchMeasurement
-import org.mozilla.telemetry.measurement.SearchesMeasurement
 import org.mozilla.telemetry.net.TelemetryClient
 import org.mozilla.telemetry.ping.TelemetryCorePingBuilder
 import org.mozilla.telemetry.ping.TelemetryEventPingBuilder
@@ -70,7 +69,6 @@ object TelemetryWrapper {
     }
 
     private object Method {
-        val TYPE_SELECT_QUERY = "select_query"
         val CLICK = "click"
         val CANCEL = "cancel"
         val LONG_PRESS = "long_press"
@@ -82,7 +80,6 @@ object TelemetryWrapper {
     }
 
     private object Object {
-        val SEARCH_BAR = "search_bar"
         val SETTING = "setting"
         val MENU = "menu"
         val BLOCKING_SWITCH = "blocking_switch"
@@ -118,7 +115,6 @@ object TelemetryWrapper {
         val AUTOCOMPLETE = "autocomplete"
         val SOURCE = "source"
         val SUCCESS = "success"
-        val SEARCH_SUGGESTION = "search_suggestion"
         val TOTAL_URI_COUNT = "total_uri_count"
         val UNIQUE_DOMAINS_COUNT = "unique_domains_count"
     }
@@ -298,20 +294,6 @@ object TelemetryWrapper {
             .queuePing(TelemetryEventPingBuilder.TYPE)
             .queuePing(TelemetryMobileMetricsPingBuilder.TYPE)
             .scheduleUpload()
-    }
-
-    @JvmStatic
-    fun searchSelectEvent(isSearchSuggestion: Boolean) {
-        val telemetry = TelemetryHolder.get()
-
-        TelemetryEvent
-            .create(Category.ACTION, Method.TYPE_SELECT_QUERY, Object.SEARCH_BAR)
-            .extra(Extra.SEARCH_SUGGESTION, "$isSearchSuggestion")
-            .queue()
-
-        val searchEngineIdentifier = getDefaultSearchEngineIdentifierForTelemetry(telemetry.configuration.context)
-
-        telemetry.recordSearch(SearchesMeasurement.LOCATION_SUGGESTION, searchEngineIdentifier)
     }
 
     private fun getDefaultSearchEngineIdentifierForTelemetry(context: Context): String {

@@ -49,7 +49,6 @@ import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 import org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.tips.TipManager
 import org.mozilla.focus.topsites.DefaultTopSitesView
 import org.mozilla.focus.utils.AppConstants
@@ -167,12 +166,11 @@ class UrlInputFragment :
         searchSuggestionsViewModel.selectedSearchSuggestion.observe(
             viewLifecycleOwner
         ) {
-            val isSuggestion = searchSuggestionsViewModel.searchQuery.value != it
             it?.let {
                 if (searchSuggestionsViewModel.alwaysSearch) {
-                    onSearch(it, isSuggestion = false, alwaysSearch = true)
+                    onSearch(it, alwaysSearch = true)
                 } else {
-                    onSearch(it, isSuggestion)
+                    onSearch(it)
                 }
                 searchSuggestionsViewModel.clearSearchSuggestion()
             }
@@ -612,7 +610,7 @@ class UrlInputFragment :
         return Triple(isUrl, url, searchTerms)
     }
 
-    private fun onSearch(query: String, isSuggestion: Boolean = false, alwaysSearch: Boolean = false) {
+    private fun onSearch(query: String, alwaysSearch: Boolean = false) {
         if (alwaysSearch) {
             val url = SearchUtils.createSearchUrl(context, query)
             openUrl(url, query)
@@ -626,8 +624,6 @@ class UrlInputFragment :
 
             openUrl(searchUrl, searchTerms)
         }
-
-        TelemetryWrapper.searchSelectEvent(isSuggestion)
     }
 
     private fun openUrl(url: String, searchTerms: String?) {
