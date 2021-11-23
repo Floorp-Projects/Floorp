@@ -128,7 +128,7 @@ class UserInteractionType:
 
         # Checks the type for all the fields.
         wrong_type_names = [
-            "{} must be {}".format(f, ALL_FIELDS[f].__name__)
+            "{} must be {}".format(f, str(ALL_FIELDS[f]))
             for f in definition.keys()
             if not isinstance(definition[f], ALL_FIELDS[f])
         ]
@@ -164,7 +164,7 @@ class UserInteractionType:
                     ).format(
                         field,
                         self._name,
-                        LIST_FIELDS_CONTENT[field].__name__,
+                        str(LIST_FIELDS_CONTENT[field]),
                         BASE_DOC_URL,
                     )
                 ).handle_later()
