@@ -27,6 +27,7 @@ add_task(async function test_broadcasting_only_content_process() {
     "commandwindowglobalonly",
     "testBroadcast",
     {},
+    contextDescriptorAll,
     rootMessageHandler
   );
 
