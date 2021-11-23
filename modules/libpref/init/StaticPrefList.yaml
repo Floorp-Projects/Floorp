@@ -6428,7 +6428,7 @@
 #if defined(ENABLE_WASM_MEMORY64)
 -   name: javascript.options.wasm_memory64
     type: bool
-    value: false
+    value: @IS_NIGHTLY_BUILD@
     mirror: always
 #endif  // defined(ENABLE_WASM_MEMORY64)
 
