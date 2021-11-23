@@ -10,6 +10,10 @@ const { DownloadIntegration } = ChromeUtils.import(
   "resource://gre/modules/DownloadIntegration.jsm"
 );
 
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
+
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
   "https://example.com"
@@ -77,6 +81,12 @@ function checkTelemetry(desc, expectedAction, expectedType, expectedReason) {
   events = (events.parent || []).filter(
     e => e[1] == "downloads" && e[2] == "helpertype"
   );
+
+  if (expectedAction == "none") {
+    is(events.length, 0, desc + " number of events");
+    return;
+  }
+
   is(events.length, 1, desc + " number of events");
 
   let event = events[0];
@@ -754,6 +764,7 @@ add_task(
  * This test sets the action to internal. The files should open directly without asking.
  */
 add_task(async function test_check_open_with_internal_handler_noask() {
+  Services.telemetry.clearScalars();
   Services.telemetry.clearEvents();
 
   const mimeInfosToRestore = alwaysAskForHandlingTypes(
@@ -777,12 +788,21 @@ add_task(async function test_check_open_with_internal_handler_noask() {
       "file_pdf_application_pdf.pdf",
       "file_pdf_binary_octet_stream.pdf",
     ]) {
+      let openPDFDirectly =
+        improvements && file == "file_pdf_application_pdf.pdf";
       await BrowserTestUtils.withNewTab(
         { gBrowser, url: "about:blank" },
         async browser => {
-          let newTabPromise;
+          let readyPromise;
           if (improvements) {
-            newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+            if (openPDFDirectly) {
+              readyPromise = BrowserTestUtils.browserLoaded(
+                gBrowser.selectedBrowser
+              );
+            } else {
+              readyPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+            }
+
             await SpecialPowers.spawn(
               browser,
               [TEST_PATH + file],
@@ -802,7 +822,7 @@ add_task(async function test_check_open_with_internal_handler_noask() {
 
             let dialogWindow = await dialogWindowPromise;
 
-            newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+            readyPromise = BrowserTestUtils.waitForNewTab(gBrowser);
             let dialog = dialogWindow.document.querySelector(
               "#unknownContentType"
             );
@@ -810,16 +830,19 @@ add_task(async function test_check_open_with_internal_handler_noask() {
             dialog.acceptDialog();
           }
 
-          await newTabPromise;
+          await readyPromise;
 
+          let action = improvements ? "internal" : "ask";
           checkTelemetry(
             "open " + file + " internal",
-            improvements ? "internal" : "ask",
+            openPDFDirectly ? "none" : action,
             file.includes("octet") ? "octetstream" : "pdf",
             "attachment"
           );
 
-          await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+          if (!openPDFDirectly) {
+            await BrowserTestUtils.removeTab(gBrowser.selectedTab);
+          }
         }
       );
     }
