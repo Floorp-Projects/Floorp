@@ -110,6 +110,8 @@ interface nsISHEntry : nsISupports
     /** Content viewer, for fast restoration of presentation */
     [infallible] attribute nsIContentViewer contentViewer;
 
+    [infallible] readonly attribute boolean isInBFCache;
+
     /** Whether the content viewer is marked "sticky" */
     [infallible] attribute boolean sticky;
 
