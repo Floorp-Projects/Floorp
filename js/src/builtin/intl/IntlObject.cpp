@@ -274,7 +274,7 @@ bool js::intl_BestAvailableLocale(JSContext* cx, unsigned argc, Value* vp) {
         return false;
       }
 
-      parse_result = mozilla::intl::LocaleParser::tryParse(chars, tag);
+      parse_result = mozilla::intl::LocaleParser::TryParse(chars, tag);
     }
 
     if (parse_result.isErr()) {
@@ -285,10 +285,10 @@ bool js::intl_BestAvailableLocale(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    MOZ_ASSERT(!tag.unicodeExtension(),
+    MOZ_ASSERT(!tag.GetUnicodeExtension(),
                "locale must contain no Unicode extensions");
 
-    if (auto result = tag.canonicalize(); result.isErr()) {
+    if (auto result = tag.Canonicalize(); result.isErr()) {
       MOZ_ASSERT(
           result.unwrapErr() !=
           mozilla::intl::Locale::CanonicalizationError::DuplicateVariant);
@@ -297,7 +297,7 @@ bool js::intl_BestAvailableLocale(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     intl::FormatBuffer<char, intl::INITIAL_CHAR_BUFFER_SIZE> buffer(cx);
-    if (auto result = tag.toString(buffer); result.isErr()) {
+    if (auto result = tag.ToString(buffer); result.isErr()) {
       intl::ReportInternalError(cx, result.unwrapErr());
       return false;
     }
@@ -355,8 +355,8 @@ bool js::intl_supportedLocaleOrFallback(JSContext* cx, unsigned argc,
     // Tell the analysis the |tag.canonicalize()| method can't GC.
     JS::AutoSuppressGCAnalysis nogc;
 
-    canParseLocale = mozilla::intl::LocaleParser::tryParse(chars, tag).isOk() &&
-                     tag.canonicalize().isOk();
+    canParseLocale = mozilla::intl::LocaleParser::TryParse(chars, tag).isOk() &&
+                     tag.Canonicalize().isOk();
   }
 
   RootedLinearString candidate(cx);
@@ -369,10 +369,10 @@ bool js::intl_supportedLocaleOrFallback(JSContext* cx, unsigned argc,
     // The default locale must be in [[AvailableLocales]], and that list must
     // not contain any locales with Unicode extension sequences, so remove any
     // present in the candidate.
-    tag.clearUnicodeExtension();
+    tag.ClearUnicodeExtension();
 
     intl::FormatBuffer<char, intl::INITIAL_CHAR_BUFFER_SIZE> buffer(cx);
-    if (auto result = tag.toString(buffer); result.isErr()) {
+    if (auto result = tag.ToString(buffer); result.isErr()) {
       intl::ReportInternalError(cx, result.unwrapErr());
       return false;
     }

@@ -346,7 +346,7 @@ static bool TryParseBaseName(JSContext* cx, HandleLinearString languageStr,
       return false;
     }
 
-    if (LocaleParser::tryParseBaseName(chars, tag).isOk()) {
+    if (LocaleParser::TryParseBaseName(chars, tag).isOk()) {
       return true;
     }
   }
@@ -367,7 +367,7 @@ static JSString* GetLanguageDisplayName(
   // ICU always canonicalizes the input locale, but since we know that ICU's
   // canonicalization is incomplete, we need to perform our own canonicalization
   // to ensure consistent result.
-  if (auto result = tag.canonicalizeBaseName(); result.isErr()) {
+  if (auto result = tag.CanonicalizeBaseName(); result.isErr()) {
     if (result.unwrapErr() ==
         mozilla::intl::Locale::CanonicalizationError::DuplicateVariant) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
@@ -380,7 +380,7 @@ static JSString* GetLanguageDisplayName(
   }
 
   intl::FormatBuffer<char> buffer(cx);
-  if (auto result = tag.toString(buffer); result.isErr()) {
+  if (auto result = tag.ToString(buffer); result.isErr()) {
     intl::ReportInternalError(cx, result.unwrapErr());
     return nullptr;
   }
@@ -434,18 +434,18 @@ static JSString* GetScriptDisplayName(JSContext* cx,
   }
 
   mozilla::intl::Locale tag;
-  tag.setLanguage("und");
-  tag.setScript(script);
+  tag.SetLanguage("und");
+  tag.SetScript(script);
 
   // ICU always canonicalizes the input locale, but since we know that ICU's
   // canonicalization is incomplete, we need to perform our own canonicalization
   // to ensure consistent result.
-  if (tag.canonicalizeBaseName().isErr()) {
+  if (tag.CanonicalizeBaseName().isErr()) {
     intl::ReportInternalError(cx);
     return nullptr;
   }
 
-  MOZ_ASSERT(tag.script().present());
+  MOZ_ASSERT(tag.Script().Present());
 
   // |uldn_scriptDisplayName| doesn't use the stand-alone form for script
   // subtags, so we're using |uloc_getDisplayScript| instead. (This only applies
@@ -455,7 +455,7 @@ static JSString* GetScriptDisplayName(JSContext* cx,
   if (displayStyle == DisplayNamesStyle::Long) {
     // |uloc_getDisplayScript| expects a full locale identifier as its input.
     intl::FormatBuffer<char> buffer(cx);
-    if (auto result = tag.toString(buffer); result.isErr()) {
+    if (auto result = tag.ToString(buffer); result.isErr()) {
       intl::ReportInternalError(cx, result.unwrapErr());
       return nullptr;
     }
@@ -485,18 +485,18 @@ static JSString* GetScriptDisplayName(JSContext* cx,
 
     // Return the case-canonicalized input when no localized name was found.
     if (str->empty() && fallback == DisplayNamesFallback::Code) {
-      script.toTitleCase();
-      return NewStringCopy<CanGC>(cx, script.span());
+      script.ToTitleCase();
+      return NewStringCopy<CanGC>(cx, script.Span());
     }
 
     return str;
   }
 
   // Note: ICU requires the script subtag to be in canonical case.
-  const mozilla::intl::ScriptSubtag& canonicalScript = tag.script();
+  const mozilla::intl::ScriptSubtag& canonicalScript = tag.Script();
 
   char scriptChars[mozilla::intl::LanguageTagLimits::ScriptLength + 1] = {};
-  std::copy_n(canonicalScript.span().data(), canonicalScript.length(),
+  std::copy_n(canonicalScript.Span().data(), canonicalScript.Length(),
               scriptChars);
 
   ULocaleDisplayNames* ldn =
@@ -523,8 +523,8 @@ static JSString* GetScriptDisplayName(JSContext* cx,
 
   // Return the case-canonicalized input when no localized name was found.
   if (str->empty() && fallback == DisplayNamesFallback::Code) {
-    script.toTitleCase();
-    return NewStringCopy<CanGC>(cx, script.span());
+    script.ToTitleCase();
+    return NewStringCopy<CanGC>(cx, script.Span());
   }
 
   return str;
@@ -543,24 +543,24 @@ static JSString* GetRegionDisplayName(JSContext* cx,
   }
 
   mozilla::intl::Locale tag;
-  tag.setLanguage("und");
-  tag.setRegion(region);
+  tag.SetLanguage("und");
+  tag.SetRegion(region);
 
   // ICU always canonicalizes the input locale, but since we know that ICU's
   // canonicalization is incomplete, we need to perform our own canonicalization
   // to ensure consistent result.
-  if (tag.canonicalizeBaseName().isErr()) {
+  if (tag.CanonicalizeBaseName().isErr()) {
     intl::ReportInternalError(cx);
     return nullptr;
   }
 
-  MOZ_ASSERT(tag.region().present());
+  MOZ_ASSERT(tag.Region().Present());
 
   // Note: ICU requires the region subtag to be in canonical case.
-  const mozilla::intl::RegionSubtag& canonicalRegion = tag.region();
+  const mozilla::intl::RegionSubtag& canonicalRegion = tag.Region();
 
   char regionChars[mozilla::intl::LanguageTagLimits::RegionLength + 1] = {};
-  std::copy_n(canonicalRegion.span().data(), canonicalRegion.length(),
+  std::copy_n(canonicalRegion.Span().data(), canonicalRegion.Length(),
               regionChars);
 
   ULocaleDisplayNames* ldn =
@@ -587,8 +587,8 @@ static JSString* GetRegionDisplayName(JSContext* cx,
 
   // Return the case-canonicalized input when no localized name was found.
   if (str->empty() && fallback == DisplayNamesFallback::Code) {
-    region.toUpperCase();
-    return NewStringCopy<CanGC>(cx, region.span());
+    region.ToUpperCase();
+    return NewStringCopy<CanGC>(cx, region.Span());
   }
 
   return str;
@@ -666,7 +666,7 @@ static JSString* GetCalendarDisplayName(
     return nullptr;
   }
 
-  if (LocaleParser::canParseUnicodeExtensionType(
+  if (LocaleParser::CanParseUnicodeExtensionType(
           mozilla::Span(calendar.get(), calendarStr->length()))
           .isErr()) {
     ReportInvalidOptionError(cx, "calendar", calendarStr);
@@ -683,7 +683,7 @@ static JSString* GetCalendarDisplayName(
   // Search if there's a replacement for the Unicode calendar keyword.
   const char* canonicalCalendar = calendar.get();
   if (const char* replacement =
-          mozilla::intl::Locale::replaceUnicodeExtensionType(key, type)) {
+          mozilla::intl::Locale::ReplaceUnicodeExtensionType(key, type)) {
     canonicalCalendar = replacement;
   }
 
@@ -785,7 +785,7 @@ static ListObject* GetDateTimeDisplayNames(
   }
 
   mozilla::intl::Locale tag;
-  if (LocaleParser::tryParse(mozilla::MakeStringSpan(locale), tag).isErr()) {
+  if (LocaleParser::TryParse(mozilla::MakeStringSpan(locale), tag).isErr()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_INVALID_LANGUAGE_TAG, locale);
     return nullptr;
@@ -801,7 +801,7 @@ static ListObject* GetDateTimeDisplayNames(
   }
 
   intl::FormatBuffer<char> buffer(cx);
-  if (auto result = tag.toString(buffer); result.isErr()) {
+  if (auto result = tag.ToString(buffer); result.isErr()) {
     intl::ReportInternalError(cx, result.unwrapErr());
     return nullptr;
   }
