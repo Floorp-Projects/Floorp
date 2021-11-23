@@ -33,6 +33,8 @@ void ChildThread::Init() {
       channel_name_, IPC::Channel::MODE_CLIENT, nullptr);
 #if defined(OS_WIN)
   channel->StartAcceptingHandles(IPC::Channel::MODE_CLIENT);
+#elif defined(OS_MACOSX)
+  channel->StartAcceptingMachPorts(IPC::Channel::MODE_CLIENT);
 #endif
 
   initial_port_ =

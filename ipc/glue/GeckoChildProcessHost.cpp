@@ -728,6 +728,9 @@ bool GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts) {
 
 #ifdef XP_MACOSX
                   this->mChildTask = aResults.mChildTask;
+                  if (mNodeChannel) {
+                    mNodeChannel->SetMachTaskPort(this->mChildTask);
+                  }
 #endif
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
                   this->mSandboxBroker = std::move(aResults.mSandboxBroker);
@@ -826,8 +829,9 @@ void GeckoChildProcessHost::InitializeChannel(
   aChannelReady(GetChannel());
 
   if (mProcessType != GeckoProcessType_ForkServer) {
-    RefPtr<NodeController> node = NodeController::GetSingleton();
-    mInitialPort = node->InviteChildProcess(TakeChannel());
+    mNodeController = NodeController::GetSingleton();
+    std::tie(mInitialPort, mNodeChannel) =
+        mNodeController->InviteChildProcess(TakeChannel());
   }
 
   MonitorAutoLock lock(mMonitor);
