@@ -292,10 +292,20 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   size_t GetSizeIfSerialized() const override { return size(); }
   bool WillBeRoutedExternally(mojo::core::ports::UserMessageEvent&) override;
 
+  // Write the given footer bytes to the end of the current message. The
+  // footer's `data_len` will be padded to a multiple of 4 bytes.
   void WriteFooter(const void* data, uint32_t data_len);
+  // Read a footer written with `WriteFooter` from the end of the message, given
+  // a buffer and the length of the footer. If `truncate` is true, the message
+  // will be truncated, removing the footer.
   [[nodiscard]] bool ReadFooter(void* buffer, uint32_t buffer_len,
                                 bool truncate);
-  uint32_t FooterSize() const;
+
+  uint32_t event_footer_size() const { return header()->event_footer_size; }
+
+  void set_event_footer_size(uint32_t size) {
+    header()->event_footer_size = size;
+  }
 
   // Used for async messages with no parameters.
   static void Log(const Message* msg, std::wstring* l) {}
@@ -372,8 +382,8 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
     uint32_t interrupt_local_stack_depth;
     // Sequence number
     int32_t seqno;
-    // Offset of the message's footer in the payload, or -1 if invalid.
-    int32_t footer_offset;
+    // Size of the message's event footer
+    uint32_t event_footer_size;
   };
 
   Header* header() { return headerT<Header>(); }
