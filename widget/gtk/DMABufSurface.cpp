@@ -1152,7 +1152,15 @@ bool DMABufSurfaceYUV::CreateTexture(GLContext* aGLContext, int aPlane) {
   attribs.AppendElement(LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_OFFSET_EXT); \
   attribs.AppendElement((int)mOffsets[aPlane]);                           \
   attribs.AppendElement(LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_PITCH_EXT);  \
-  attribs.AppendElement((int)mStrides[aPlane]);
+  attribs.AppendElement((int)mStrides[aPlane]);                           \
+  if (mBufferModifier != DRM_FORMAT_MOD_INVALID) {                        \
+    attribs.AppendElement(                                                \
+        LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_MODIFIER_LO_EXT);            \
+    attribs.AppendElement(mBufferModifier & 0xFFFFFFFF);                  \
+    attribs.AppendElement(                                                \
+        LOCAL_EGL_DMA_BUF_PLANE##plane_idx##_MODIFIER_HI_EXT);            \
+    attribs.AppendElement(mBufferModifier >> 32);                         \
+  }
   ADD_PLANE_ATTRIBS_NV12(0);
 #undef ADD_PLANE_ATTRIBS_NV12
   attribs.AppendElement(LOCAL_EGL_NONE);
