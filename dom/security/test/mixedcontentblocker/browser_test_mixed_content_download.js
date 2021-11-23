@@ -297,8 +297,8 @@ add_task(async function test_unblock_download_visible() {
   }
 });
 
-// Test Download an insecure pdf and choose "Open with Firefox"
-add_task(async function download_open_insecure_pdf() {
+// Test Download an insecure svg and choose "Open with Firefox"
+add_task(async function download_open_insecure_SVG() {
   for (let prefVal of [true, false]) {
     await SpecialPowers.pushPrefEnv({
       set: [["browser.download.improvements_to_download_panel", prefVal]],
@@ -306,7 +306,7 @@ add_task(async function download_open_insecure_pdf() {
     await promiseFocus();
     await runTest(
       SECURE_BASE_URL,
-      "insecurePDF",
+      "insecureSVG",
       async () => {
         info("awaiting that the a download is triggered and added to the list");
         let [_, download] = await Promise.all([
@@ -321,14 +321,14 @@ add_task(async function download_open_insecure_pdf() {
         let tab = await newTabPromise;
 
         ok(
-          tab.linkedBrowser._documentURI.filePath.includes(".pdf"),
+          tab.linkedBrowser._documentURI.filePath.includes(".svg"),
           "The download target was opened"
         );
         BrowserTestUtils.removeTab(tab);
         ok(true, "The Content was opened in a new tab");
         await SpecialPowers.popPrefEnv();
       },
-      "A Blocked PDF can be opened internally"
+      "A Blocked SVG can be opened internally"
     );
   }
 });
