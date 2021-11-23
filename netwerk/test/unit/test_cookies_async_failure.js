@@ -35,6 +35,9 @@ add_task(async () => {
     true
   );
 
+  // Bug 1617611 - Fix all the tests broken by "cookies SameSite=Lax by default"
+  Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", false);
+
   // The server.
   const hosts = ["foo.com", "hither.com", "haithur.com", "bar.com"];
   for (let i = 0; i < 3000; ++i) {
@@ -68,6 +71,7 @@ add_task(async () => {
   await run_test_4();
   await run_test_5();
   Services.prefs.clearUserPref("dom.security.https_first");
+  Services.prefs.clearUserPref("network.cookie.sameSite.laxByDefault");
 });
 
 function do_get_backup_file(profile) {

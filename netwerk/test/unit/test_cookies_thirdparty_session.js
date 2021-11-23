@@ -18,6 +18,9 @@ add_task(async () => {
   );
   Services.prefs.setBoolPref("dom.security.https_first", false);
 
+  // Bug 1617611 - Fix all the tests broken by "cookies SameSite=Lax by default"
+  Services.prefs.setBoolPref("network.cookie.sameSite.laxByDefault", false);
+
   CookieXPCShellUtils.createServer({
     hosts: ["foo.com", "bar.com", "third.com"],
   });
@@ -70,4 +73,5 @@ add_task(async () => {
   Assert.equal(Services.cookies.countCookiesFromHost(uri1.host), 0);
   Assert.equal(Services.cookies.countCookiesFromHost(uri2.host), 0);
   Services.prefs.clearUserPref("dom.security.https_first");
+  Services.prefs.clearUserPref("network.cookie.sameSite.laxByDefault");
 });
