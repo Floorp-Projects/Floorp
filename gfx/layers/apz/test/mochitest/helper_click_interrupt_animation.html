@@ -40,11 +40,12 @@ async function test() {
   // Click at the bottom of the scrollbar track to trigger a page-down kind of
   // scroll. This should use "desktop zooming" scrollbar code which should
   // trigger an APZ scroll animation.
-  await promiseNativeMouseEventWithAPZ({
+  await promiseNativeMouseEventWithAPZAndWaitForEvent({
     type: "click",
     target: anchor,
     offsetX: xoffset,
     offsetY: yoffset,
+    eventTypeToWait: "mouseup"
   });
 
   // Run a few frames, that should be enough to let the scroll animation
@@ -60,7 +61,7 @@ async function test() {
 
   // Now we click on the content, which should cancel the animation. Run
   // everything to reach a stable state.
-  await promiseNativeMouseEventWithAPZ({
+  await promiseNativeMouseEventWithAPZAndWaitForEvent({
     type: "click",
     target: anchor,
     offsetX: -5,
