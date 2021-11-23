@@ -214,6 +214,7 @@ webrtc::AudioReceiveStream::Stats AudioReceiveStream::GetStats(
 
   // Get jitter buffer and total delay (alg + jitter + playout) stats.
   auto ns = channel_receive_->GetNetworkStatistics(get_and_clear_legacy_stats);
+  stats.packets_discarded = ns.packetsDiscarded;
   stats.fec_packets_received = ns.fecPacketsReceived;
   stats.fec_packets_discarded = ns.fecPacketsDiscarded;
   stats.jitter_buffer_ms = ns.currentBufferSize;

@@ -67,8 +67,34 @@ const std::pair<int, SdpAudioFormat> kReceiveCodec = {
     123,
     {"codec_name_recv", 96000, 0}};
 const NetworkStatistics kNetworkStats = {
-    123, 456, false, 789012, 3456, 123, 456, 789, 543, 123, 432, 321, 123, 101,
-    789, 12,  345,   678,    901,  0,   -1,  -1,  -1,  -1,  0,   0,   0,   0};
+    /*currentBufferSize=*/123,
+    /*preferredBufferSize=*/456,
+    /*jitterPeaksFound=*/false,
+    /*totalSamplesReceived=*/789012,
+    /*concealedSamples=*/3456,
+    /*silentConcealedSamples=*/123,
+    /*concealmentEvents=*/456,
+    /*jitterBufferDelayMs=*/789,
+    /*jitterBufferEmittedCount=*/543,
+    /*jitterBufferTargetDelayMs=*/123,
+    /*insertedSamplesForDeceleration=*/432,
+    /*removedSamplesForAcceleration=*/321,
+    /*fecPacketsReceived=*/123,
+    /*fecPacketsDiscarded=*/101,
+    /*packetsDiscarded=*/989,
+    /*currentExpandRate=*/789,
+    /*currentSpeechExpandRate=*/12,
+    /*currentPreemptiveRate=*/345,
+    /*currentAccelerateRate =*/678,
+    /*currentSecondaryDecodedRate=*/901,
+    /*currentSecondaryDiscardedRate=*/0,
+    /*meanWaitingTimeMs=*/-1,
+    /*maxWaitingTimeMs=*/-1,
+    /*packetBufferFlushes=*/0,
+    /*delayedPacketOutageSamples=*/0,
+    /*relativePacketArrivalDelayMs=*/135,
+    /*interruptionCount=*/-1,
+    /*totalInterruptionDurationMs=*/-1};
 const AudioDecodingCallStats kAudioDecodeStats = MakeAudioDecodeStatsForTest();
 
 struct ConfigHelper {
@@ -250,6 +276,13 @@ TEST(AudioReceiveStreamTest, GetStats) {
     EXPECT_EQ(static_cast<double>(kNetworkStats.jitterBufferTargetDelayMs) /
                   static_cast<double>(rtc::kNumMillisecsPerSec),
               stats.jitter_buffer_target_delay_seconds);
+    EXPECT_EQ(kNetworkStats.insertedSamplesForDeceleration,
+              stats.inserted_samples_for_deceleration);
+    EXPECT_EQ(kNetworkStats.removedSamplesForAcceleration,
+              stats.removed_samples_for_acceleration);
+    EXPECT_EQ(kNetworkStats.fecPacketsReceived, stats.fec_packets_received);
+    EXPECT_EQ(kNetworkStats.fecPacketsDiscarded, stats.fec_packets_discarded);
+    EXPECT_EQ(kNetworkStats.packetsDiscarded, stats.packets_discarded);
     EXPECT_EQ(Q14ToFloat(kNetworkStats.currentExpandRate), stats.expand_rate);
     EXPECT_EQ(Q14ToFloat(kNetworkStats.currentSpeechExpandRate),
               stats.speech_expand_rate);
@@ -261,6 +294,16 @@ TEST(AudioReceiveStreamTest, GetStats) {
               stats.accelerate_rate);
     EXPECT_EQ(Q14ToFloat(kNetworkStats.currentPreemptiveRate),
               stats.preemptive_expand_rate);
+    EXPECT_EQ(kNetworkStats.packetBufferFlushes, stats.jitter_buffer_flushes);
+    EXPECT_EQ(kNetworkStats.delayedPacketOutageSamples,
+              stats.delayed_packet_outage_samples);
+    EXPECT_EQ(static_cast<double>(kNetworkStats.relativePacketArrivalDelayMs) /
+                  static_cast<double>(rtc::kNumMillisecsPerSec),
+              stats.relative_packet_arrival_delay_seconds);
+    EXPECT_EQ(kNetworkStats.interruptionCount, stats.interruption_count);
+    EXPECT_EQ(kNetworkStats.totalInterruptionDurationMs,
+              stats.total_interruption_duration_ms);
+
     EXPECT_EQ(kAudioDecodeStats.calls_to_silence_generator,
               stats.decoding_calls_to_silence_generator);
     EXPECT_EQ(kAudioDecodeStats.calls_to_neteq, stats.decoding_calls_to_neteq);
