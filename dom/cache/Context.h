@@ -152,8 +152,6 @@ class Context final : public SafeRefCounted<Context> {
   void AddActivity(Activity& aActivity);
   void RemoveActivity(Activity& aActivity);
 
-  const ClientMetadata& GetClientMetadata() const { return mClientMetadata; }
-
   // Tell the Context that some state information has been orphaned in the
   // data store and won't be cleaned up.  The Context will leave the marker
   // in place to trigger cleanup the next times its opened.
@@ -179,7 +177,7 @@ class Context final : public SafeRefCounted<Context> {
   void Init(Maybe<Context&> aOldContext);
   void Start();
   void DispatchAction(SafeRefPtr<Action> aAction, bool aDoomData = false);
-  void OnQuotaInit(nsresult aRv, const ClientMetadata& aClientMetadata,
+  void OnQuotaInit(nsresult aRv, const Maybe<ClientMetadata>& aClientMetadata,
                    already_AddRefed<DirectoryLock> aDirectoryLock);
 
   SafeRefPtr<ThreadsafeHandle> CreateThreadsafeHandle();
@@ -193,7 +191,7 @@ class Context final : public SafeRefCounted<Context> {
   RefPtr<Data> mData;
   State mState;
   bool mOrphanedData;
-  ClientMetadata mClientMetadata;
+  Maybe<ClientMetadata> mClientMetadata;
   RefPtr<QuotaInitRunnable> mInitRunnable;
   SafeRefPtr<Action> mInitAction;
   nsTArray<PendingAction> mPendingActions;

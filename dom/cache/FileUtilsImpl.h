@@ -15,9 +15,13 @@ namespace dom {
 namespace cache {
 
 template <typename Func>
-nsresult BodyTraverseFiles(const ClientMetadata& aClientMetadata,
+nsresult BodyTraverseFiles(const Maybe<ClientMetadata>& aClientMetadata,
                            nsIFile& aBodyDir, const Func& aHandleFileFunc,
                            const bool aCanRemoveFiles, const bool aTrackQuota) {
+  // XXX This assertion proves that we can remove aTrackQuota and just check
+  // aClientMetadata.isSome()
+  MOZ_DIAGNOSTIC_ASSERT_IF(aTrackQuota, aClientMetadata);
+
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   {
     nsCOMPtr<nsIFile> parentFile;

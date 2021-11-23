@@ -56,11 +56,12 @@ DBAction::DBAction(Mode aMode) : mMode(aMode) {}
 DBAction::~DBAction() = default;
 
 void DBAction::RunOnTarget(SafeRefPtr<Resolver> aResolver,
-                           const ClientMetadata& aClientMetadata,
+                           const Maybe<ClientMetadata>& aClientMetadata,
                            Data* aOptionalData) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aResolver);
-  MOZ_DIAGNOSTIC_ASSERT(aClientMetadata.mDir);
+  MOZ_DIAGNOSTIC_ASSERT(aClientMetadata);
+  MOZ_DIAGNOSTIC_ASSERT(aClientMetadata->mDir);
 
   if (IsCanceled()) {
     aResolver->Resolve(NS_ERROR_ABORT);
@@ -72,7 +73,7 @@ void DBAction::RunOnTarget(SafeRefPtr<Resolver> aResolver,
   };
 
   QM_TRY_INSPECT(const auto& dbDir,
-                 CloneFileAndAppend(*aClientMetadata.mDir, u"cache"_ns),
+                 CloneFileAndAppend(*(aClientMetadata->mDir), u"cache"_ns),
                  QM_VOID, resolveErr);
 
   nsCOMPtr<mozIStorageConnection> conn;
@@ -84,7 +85,7 @@ void DBAction::RunOnTarget(SafeRefPtr<Resolver> aResolver,
 
   // If there is no previous Action, then we must open one.
   if (!conn) {
-    QM_TRY_UNWRAP(conn, OpenConnection(aClientMetadata, *dbDir), QM_VOID,
+    QM_TRY_UNWRAP(conn, OpenConnection(*aClientMetadata, *dbDir), QM_VOID,
                   resolveErr);
     MOZ_DIAGNOSTIC_ASSERT(conn);
 
@@ -100,7 +101,7 @@ void DBAction::RunOnTarget(SafeRefPtr<Resolver> aResolver,
     }
   }
 
-  RunWithDBOnTarget(std::move(aResolver), aClientMetadata, dbDir, conn);
+  RunWithDBOnTarget(std::move(aResolver), *aClientMetadata, dbDir, conn);
 }
 
 Result<nsCOMPtr<mozIStorageConnection>, nsresult> DBAction::OpenConnection(
