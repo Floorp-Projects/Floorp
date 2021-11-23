@@ -1095,6 +1095,8 @@ fn update_clip_task_for_brush(
         );
         clip_mask_instances.push(clip_mask_kind);
     } else {
+        let dirty_world_rect = frame_state.current_dirty_region().combined;
+
         for segment in segments {
             // Build a clip chain for the smaller segment rect. This will
             // often manage to eliminate most/all clips, and sometimes
@@ -1110,10 +1112,12 @@ fn update_clip_task_for_brush(
                 .build_clip_chain_instance(
                     segment.local_rect.translate(prim_origin.to_vector()),
                     &pic_state.map_local_to_pic,
+                    &pic_state.map_pic_to_world,
                     &frame_context.spatial_tree,
                     frame_state.gpu_cache,
                     frame_state.resource_cache,
                     device_pixel_scale,
+                    &dirty_world_rect,
                     &mut data_stores.clip,
                     false,
                     instance.is_chased(),
