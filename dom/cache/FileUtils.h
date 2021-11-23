@@ -65,9 +65,19 @@ nsresult BodyDeleteOrphanedFiles(const ClientMetadata& aClientMetadata,
 // created by other threads. Note that if the files are not expected, we should
 // be safe to remove them in any case.
 template <typename Func>
-nsresult BodyTraverseFiles(const ClientMetadata& aClientMetadata,
+nsresult BodyTraverseFiles(const Maybe<ClientMetadata>& aClientMetadata,
                            nsIFile& aBodyDir, const Func& aHandleFileFunc,
                            bool aCanRemoveFiles, bool aTrackQuota = true);
+
+// XXX Remove this method when all callers properly wrap aClientMetadata with
+// Some/Nothing
+template <typename Func>
+nsresult BodyTraverseFiles(const ClientMetadata& aClientMetadata,
+                           nsIFile& aBodyDir, const Func& aHandleFileFunc,
+                           bool aCanRemoveFiles, bool aTrackQuota = true) {
+  return BodyTraverseFiles(Some(aClientMetadata), aBodyDir, aHandleFileFunc,
+                           aCanRemoveFiles, aTrackQuota);
+}
 
 nsresult CreateMarkerFile(const ClientMetadata& aClientMetadata);
 
@@ -75,15 +85,29 @@ nsresult DeleteMarkerFile(const ClientMetadata& aClientMetadata);
 
 bool MarkerFileExists(const ClientMetadata& aClientMetadata);
 
-nsresult RemoveNsIFileRecursively(const ClientMetadata& aClientMetadata,
+nsresult RemoveNsIFileRecursively(const Maybe<ClientMetadata>& aClientMetadata,
                                   nsIFile& aFile, bool aTrackQuota = true);
+
+// XXX Remove this method when all callers properly wrap aClientMetadata with
+// Some/Nothing
+nsresult RemoveNsIFileRecursively(const ClientMetadata& aClientMetadata,
+                                  nsIFile& aFile, bool aTrackQuota = true) {
+  return RemoveNsIFileRecursively(Some(aClientMetadata), aFile, aTrackQuota);
+}
 
 // Delete a file that you think exists. If the file doesn't exist, an error
 // will not be returned, but warning telemetry will be generated! So only call
 // this on files that you know exist (idempotent usage, but it's not
 // recommended).
+nsresult RemoveNsIFile(const Maybe<ClientMetadata>& aClientMetadata,
+                       nsIFile& aFile, bool aTrackQuota = true);
+
+// XXX Remove this method when all callers properly wrap aClientMetadata with
+// Some/Nothing
 nsresult RemoveNsIFile(const ClientMetadata& aClientMetadata, nsIFile& aFile,
-                       bool aTrackQuota = true);
+                       bool aTrackQuota = true) {
+  return RemoveNsIFile(Some(aClientMetadata), aFile, aTrackQuota);
+}
 
 void DecreaseUsageForClientMetadata(const ClientMetadata& aClientMetadata,
                                     int64_t aUpdatingSize);

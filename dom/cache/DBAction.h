@@ -42,7 +42,7 @@ class DBAction : public Action {
 
  private:
   void RunOnTarget(SafeRefPtr<Resolver> aResolver,
-                   const ClientMetadata& aClientMetadata,
+                   const Maybe<ClientMetadata>& aClientMetadata,
                    Data* aOptionalData) override;
 
   Result<nsCOMPtr<mozIStorageConnection>, nsresult> OpenConnection(

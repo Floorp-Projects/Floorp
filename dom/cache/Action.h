@@ -56,7 +56,7 @@ class Action : public SafeRefCounted<Action> {
   // Note: The "target" thread is determined when the Action is scheduled on
   //       Context.  The Action should not assume any particular thread is used.
   virtual void RunOnTarget(SafeRefPtr<Resolver> aResolver,
-                           const ClientMetadata& aClientMetadata,
+                           const Maybe<ClientMetadata>& aClientMetadata,
                            Data* aOptionalData) = 0;
 
   // Called on initiating thread when the Action is canceled.  The Action is
