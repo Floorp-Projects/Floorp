@@ -657,6 +657,10 @@ NS_IMETHODIMP
 SessionHistoryEntry::SetLayoutHistoryState(
     nsILayoutHistoryState* aLayoutHistoryState) {
   SharedInfo()->mLayoutHistoryState = aLayoutHistoryState;
+  if (SharedInfo()->mLayoutHistoryState) {
+    SharedInfo()->mLayoutHistoryState->SetScrollPositionOnly(
+        !SharedInfo()->mSaveLayoutState);
+  }
   return NS_OK;
 }
 
