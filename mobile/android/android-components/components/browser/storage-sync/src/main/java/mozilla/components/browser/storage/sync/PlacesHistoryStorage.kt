@@ -277,7 +277,9 @@ open class PlacesHistoryStorage(
         weights: HistoryHighlightWeights,
         limit: Int
     ): List<HistoryHighlight> {
-        return places.reader().getHighlights(weights.into(), limit).intoHighlights()
+        return handlePlacesExceptions("getHistoryHighlights", default = emptyList()) {
+            places.reader().getHighlights(weights.into(), limit).intoHighlights()
+        }
     }
 
     override suspend fun noteHistoryMetadataObservation(
