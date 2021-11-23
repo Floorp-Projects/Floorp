@@ -113,6 +113,12 @@ XPCOMUtils.defineLazyGetter(this, "gParentalControlsService", function() {
   return null;
 });
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "DownloadSpamProtection",
+  "resource:///modules/DownloadSpamProtection.jsm"
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "gApplicationReputationService",
@@ -957,6 +963,16 @@ var DownloadIntegration = {
   _getDirectory(name) {
     return Services.dirsvc.get(name, Ci.nsIFile).path;
   },
+  /**
+   * Returns the DownloadSpamProtection instance.
+   * This is used to observe and group multiple automatic downloads.
+   */
+  getDownloadSpamProtection() {
+    if (!this._downloadSpamProtection) {
+      this._downloadSpamProtection = new DownloadSpamProtection();
+    }
+    return this._downloadSpamProtection;
+  },
 
   /**
    * Register the downloads interruption observers.
@@ -975,6 +991,12 @@ var DownloadIntegration = {
       DownloadObserver.observersAdded = true;
       for (let topic of kObserverTopics) {
         Services.obs.addObserver(DownloadObserver, topic);
+      }
+      if (AppConstants.MOZ_BUILD_APP == "browser") {
+        Services.obs.addObserver(
+          this.getDownloadSpamProtection(),
+          DownloadSpamProtection.TOPIC
+        );
       }
     }
     return Promise.resolve();
@@ -1204,6 +1226,12 @@ var DownloadObserver = {
       case "xpcom-will-shutdown":
         for (let topic of kObserverTopics) {
           Services.obs.removeObserver(this, topic);
+        }
+        if (AppConstants.MOZ_BUILD_APP == "browser") {
+          Services.obs.removeObserver(
+            DownloadIntegration.getDownloadSpamProtection(),
+            DownloadSpamProtection.TOPIC
+          );
         }
         break;
     }

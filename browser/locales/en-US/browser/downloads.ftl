@@ -169,6 +169,20 @@ downloads-history =
 downloads-details =
     .title = Download Details
 
+## Displayed when a site attempts to automatically download many files.
+## Variables:
+##   $num (number) - Number of blocked downloads.
+##   $url (string) - The url of the suspicious site, stripped of http, https and www prefix.
+
+downloads-files-not-downloaded = { $num ->
+    [one] File not downloaded.
+   *[other] {$num} files not downloaded.
+}
+downloads-blocked-from-url = Downloads blocked from { $url }.
+downloads-blocked-download-detailed-info = { $url } attempted to automatically download multiple files. The site could be broken or trying to store spam files on your device.
+
+##
+
 downloads-clear-downloads-button =
     .label = Clear Downloads
     .tooltiptext = Clears completed, canceled and failed downloads

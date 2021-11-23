@@ -2078,11 +2078,6 @@ void nsExternalAppHandler::RecordDownloadTelemetry(nsIChannel* aChannel,
 
 bool nsExternalAppHandler::IsDownloadSpam(nsIChannel* aChannel) {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-
-  if (loadInfo->GetHasValidUserGestureActivation()) {
-    return false;
-  }
-
   nsCOMPtr<nsIPermissionManager> permissionManager =
       mozilla::services::GetPermissionManager();
   nsCOMPtr<nsIPrincipal> principal = loadInfo->TriggeringPrincipal();
@@ -2123,7 +2118,8 @@ bool nsExternalAppHandler::IsDownloadSpam(nsIChannel* aChannel) {
       // End cancel
       return true;
     }
-  } else {
+  }
+  if (!loadInfo->GetHasValidUserGestureActivation()) {
     permissionManager->AddFromPrincipal(
         principal, type, nsIPermissionManager::PROMPT_ACTION,
         nsIPermissionManager::EXPIRE_NEVER, 0 /* expire time */);
