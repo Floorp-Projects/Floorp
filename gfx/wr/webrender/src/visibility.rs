@@ -398,12 +398,10 @@ pub fn update_primitive_visibility(
                     .build_clip_chain_instance(
                         local_rect,
                         &map_local_to_surface,
-                        &map_surface_to_world,
                         &frame_context.spatial_tree,
                         frame_state.gpu_cache,
                         frame_state.resource_cache,
                         surface.device_pixel_scale,
-                        &world_culling_rect,
                         &mut frame_state.data_stores.clip,
                         true,
                         prim_instance.is_chased(),
