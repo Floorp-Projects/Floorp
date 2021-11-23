@@ -533,6 +533,27 @@ const AVAILABLE_SHIMS = [
     ],
     onlyIfDFPIActive: true,
   },
+  {
+    id: "MicrosoftLogin",
+    platform: "desktop",
+    name: "Microsoft Login",
+    bug: "1638383",
+    requestStorageAccessForRedirect: [
+      ["*://web.powerva.microsoft.com/*", "*://login.microsoftonline.com/*"],
+      ["*://teams.microsoft.com/*", "*://login.microsoftonline.com/*"],
+    ],
+    contentScripts: [
+      {
+        js: "microsoftLogin.js",
+        matches: [
+          "*://web.powerva.microsoft.com/*",
+          "*://teams.microsoft.com/*",
+        ],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
 ];
 
 module.exports = AVAILABLE_SHIMS;
