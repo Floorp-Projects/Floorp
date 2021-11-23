@@ -274,6 +274,12 @@ class ArenaLists {
   /* The main list of arenas for each alloc kind. */
   ArenaListData<AllAllocKindArray<ArenaList>> arenaLists_;
 
+  /*
+   * Arenas which are currently being collected. The collector can move arenas
+   * from arenaLists_ here and back again at various points in collection.
+   */
+  ArenaListData<AllAllocKindArray<ArenaList>> collectingArenaLists_;
+
   /* For each arena kind, a list of arenas allocated during marking. */
   ArenaListData<AllAllocKindArray<ArenaList>> newArenasInMarkPhase_;
 
@@ -305,6 +311,7 @@ class ArenaLists {
   }
 
   inline Arena* getFirstArena(AllocKind thingKind) const;
+  inline Arena* getFirstCollectingArena(AllocKind thingKind) const;
   inline Arena* getFirstArenaToSweep(AllocKind thingKind) const;
   inline Arena* getFirstSweptArena(AllocKind thingKind) const;
   inline Arena* getFirstNewArenaInMarkPhase(AllocKind thingKind) const;
@@ -346,6 +353,9 @@ class ArenaLists {
 
   inline void mergeNewArenasInMarkPhase();
 
+  void moveArenasToCollectingLists();
+  void mergeArenasFromCollectingLists();
+
   void checkGCStateNotInUse();
   void checkSweepStateNotInUse();
   void checkNoArenasToUpdate();
@@ -354,6 +364,13 @@ class ArenaLists {
  private:
   ArenaList& arenaList(AllocKind i) { return arenaLists_.ref()[i]; }
   const ArenaList& arenaList(AllocKind i) const { return arenaLists_.ref()[i]; }
+
+  ArenaList& collectingArenaList(AllocKind i) {
+    return collectingArenaLists_.ref()[i];
+  }
+  const ArenaList& collectingArenaList(AllocKind i) const {
+    return collectingArenaLists_.ref()[i];
+  }
 
   ArenaList& newArenasInMarkPhase(AllocKind i) {
     return newArenasInMarkPhase_.ref()[i];

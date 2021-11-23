@@ -39,10 +39,11 @@ class ArenaListIter {
   }
 };
 
-class ArenaIter : public ChainedIterator<ArenaListIter, 4> {
+class ArenaIter : public ChainedIterator<ArenaListIter, 5> {
  public:
   ArenaIter(JS::Zone* zone, AllocKind kind)
       : ChainedIterator(zone->arenas.getFirstArena(kind),
+                        zone->arenas.getFirstCollectingArena(kind),
                         zone->arenas.getFirstArenaToSweep(kind),
                         zone->arenas.getFirstSweptArena(kind),
                         zone->arenas.getFirstNewArenaInMarkPhase(kind)) {}
