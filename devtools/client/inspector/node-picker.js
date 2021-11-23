@@ -155,10 +155,10 @@ class NodePicker extends EventEmitter {
 
     this.emit("picker-starting");
 
-    this.targetCommand.watchTargets(
-      this.targetCommand.ALL_TYPES,
-      this._onTargetAvailable
-    );
+    this.targetCommand.watchTargets({
+      types: this.targetCommand.ALL_TYPES,
+      onAvailable: this._onTargetAvailable,
+    });
 
     this.emit("picker-started");
   }
@@ -181,10 +181,10 @@ class NodePicker extends EventEmitter {
     this.isPicking = false;
     this.doFocus = false;
 
-    this.targetCommand.unwatchTargets(
-      this.targetCommand.ALL_TYPES,
-      this._onTargetAvailable
-    );
+    this.targetCommand.unwatchTargets({
+      types: this.targetCommand.ALL_TYPES,
+      onAvailable: this._onTargetAvailable,
+    });
 
     for (const inspectorFront of this._currentInspectorFronts) {
       await this._onInspectorFrontDestroyed(inspectorFront, {

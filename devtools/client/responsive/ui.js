@@ -320,10 +320,10 @@ class ResponsiveUI {
       // any resource & target anymore, the JSWindowActors will be unregistered
       // which will trigger an early destruction of the RDM target, before we
       // could finalize the cleanup.
-      this.commands.targetCommand.unwatchTargets(
-        [this.commands.targetCommand.TYPES.FRAME],
-        this.onTargetAvailable
-      );
+      this.commands.targetCommand.unwatchTargets({
+        types: [this.commands.targetCommand.TYPES.FRAME],
+        onAvailable: this.onTargetAvailable,
+      });
 
       this.resourceCommand.unwatchResources(
         [this.resourceCommand.TYPES.NETWORK_EVENT],
@@ -367,10 +367,10 @@ class ResponsiveUI {
 
     await this.commands.targetCommand.startListening();
 
-    await this.commands.targetCommand.watchTargets(
-      [this.commands.targetCommand.TYPES.FRAME],
-      this.onTargetAvailable
-    );
+    await this.commands.targetCommand.watchTargets({
+      types: [this.commands.targetCommand.TYPES.FRAME],
+      onAvailable: this.onTargetAvailable,
+    });
 
     // To support network throttling the resource command
     // needs to be watching for network resources.

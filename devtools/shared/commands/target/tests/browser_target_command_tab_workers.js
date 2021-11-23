@@ -73,7 +73,7 @@ add_task(async function() {
     targets.push(targetFront);
     info(`Handled ${targets.length} targets\n`);
   };
-  const onDestroy = async ({ targetFront }) => {
+  const onDestroyed = async ({ targetFront }) => {
     is(
       targetFront.targetType,
       TYPES.WORKER,
@@ -83,11 +83,11 @@ add_task(async function() {
     destroyedTargets.push(targetFront);
   };
 
-  await targetCommand.watchTargets(
-    [TYPES.WORKER, TYPES.SHARED_WORKER],
+  await targetCommand.watchTargets({
+    types: [TYPES.WORKER, TYPES.SHARED_WORKER],
     onAvailable,
-    onDestroy
-  );
+    onDestroyed,
+  });
 
   // XXX: This should be modified in Bug 1607778, where we plan to add support for shared workers.
   info("Check that watched targets return the same fronts as getAllTargets");
@@ -304,11 +304,11 @@ add_task(async function() {
     "second spawned remote iframe worker target was destroyed"
   );
 
-  targetCommand.unwatchTargets(
-    [TYPES.WORKER, TYPES.SHARED_WORKER],
+  targetCommand.unwatchTargets({
+    types: [TYPES.WORKER, TYPES.SHARED_WORKER],
     onAvailable,
-    onDestroy
-  );
+    onDestroyed,
+  });
   targetCommand.destroy();
 
   info("Unregister service workers so they don't appear in other tests.");

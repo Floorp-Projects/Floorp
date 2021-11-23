@@ -57,7 +57,7 @@ add_task(async function() {
     targets.push(targetFront);
     info(`Handled ${targets.length} new targets`);
   };
-  const onDestroy = async ({ targetFront }) => {
+  const onDestroyed = async ({ targetFront }) => {
     is(
       targetFront.targetType,
       TYPES.WORKER,
@@ -67,11 +67,11 @@ add_task(async function() {
     destroyedTargets.push(targetFront);
   };
 
-  await targetCommand.watchTargets(
-    [TYPES.WORKER, TYPES.SHARED_WORKER],
+  await targetCommand.watchTargets({
+    types: [TYPES.WORKER, TYPES.SHARED_WORKER],
     onAvailable,
-    onDestroy
-  );
+    onDestroyed,
+  });
 
   is(targets.length, 2, "watchTargets retrieved 2 workers…");
   const mainPageWorkerTarget = targets.find(

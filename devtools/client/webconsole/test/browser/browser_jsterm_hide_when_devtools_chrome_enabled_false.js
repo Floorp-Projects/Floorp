@@ -187,10 +187,16 @@ function waitForSourceMapWorker(hud) {
         !seenWorkerTargets.has(targetFront)
       ) {
         seenWorkerTargets.add(targetFront);
-        targetCommand.unwatchTargets([targetCommand.TYPES.WORKER], onAvailable);
+        targetCommand.unwatchTargets({
+          types: [targetCommand.TYPES.WORKER],
+          onAvailable,
+        });
         resolve();
       }
     };
-    targetCommand.watchTargets([targetCommand.TYPES.WORKER], onAvailable);
+    targetCommand.watchTargets({
+      types: [targetCommand.TYPES.WORKER],
+      onAvailable,
+    });
   });
 }

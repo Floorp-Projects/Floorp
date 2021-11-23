@@ -64,12 +64,11 @@ DomPanel.prototype = {
     // onTargetAvailable is mandatory when calling watchTargets
     this._onTargetAvailable = () => {};
     this._onTargetSelected = this._onTargetSelected.bind(this);
-    await this._commands.targetCommand.watchTargets(
-      [this._commands.targetCommand.TYPES.FRAME],
-      this._onTargetAvailable,
-      null,
-      this._onTargetSelected
-    );
+    await this._commands.targetCommand.watchTargets({
+      types: [this._commands.targetCommand.TYPES.FRAME],
+      onAvailable: this._onTargetAvailable,
+      onSelected: this._onTargetSelected,
+    });
 
     this.onResourceAvailable = this.onResourceAvailable.bind(this);
     await this._commands.resourceCommand.watchResources(
@@ -102,12 +101,11 @@ DomPanel.prototype = {
     }
     this._destroyed = true;
 
-    this._commands.targetCommand.unwatchTargets(
-      [this._commands.targetCommand.TYPES.FRAME],
-      this._onTargetAvailable,
-      null,
-      this._onTargetSelected
-    );
+    this._commands.targetCommand.unwatchTargets({
+      types: [this._commands.targetCommand.TYPES.FRAME],
+      onAvailable: this._onTargetAvailable,
+      onSelected: this._onTargetSelected,
+    });
     this._commands.resourceCommand.unwatchResources(
       [this._commands.resourceCommand.TYPES.DOCUMENT_EVENT],
       { onAvailable: this.onResourceAvailable }
