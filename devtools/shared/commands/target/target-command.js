@@ -632,26 +632,45 @@ class TargetCommand extends EventEmitter {
   /**
    * Listen for the creation and/or destruction of target fronts matching one of the provided types.
    *
-   * @param {Array<String>} types
+   * @param {Object} options
+   * @param {Array<String>} options.types
    *        The type of target to listen for. Constant of TargetCommand.TYPES.
-   * @param {Function} onAvailable
-   *        Callback fired when a target has been just created or was already available.
+   * @param {Function} options.onAvailable
+   *        Mandatory callback fired when a target has been just created or was already available.
    *        The function is called with a single object argument containing the following properties:
    *        - {TargetFront} targetFront: The target Front
    *        - {Boolean} isTargetSwitching: Is this target relates to a navigation and
    *                    this replaced a previously available target, this flag will be true
-   * @param {Function} onDestroy
-   *        Callback fired in case of target front destruction.
+   * @param {Function} options.onDestroyed
+   *        Optional callback fired in case of target front destruction.
    *        The function is called with the same arguments than onAvailable.
-   * @param {Function} onSelect.
-   *        Callback fired when a given target is selected from the iframe picker
+   * @param {Function} options.onSelected
+   *        Optional callback fired when a given target is selected from the iframe picker
    *        The function is called with a single object argument containing the following properties:
    *        - {TargetFront} targetFront: The target Front
    */
-  async watchTargets(types, onAvailable, onDestroy, onSelect) {
+  async watchTargets(options = {}) {
+    const availableOptions = [
+      "types",
+      "onAvailable",
+      "onDestroyed",
+      "onSelected",
+    ];
+    const unsupportedKeys = Object.keys(options).filter(
+      key => !availableOptions.includes(key)
+    );
+    if (unsupportedKeys.length > 0) {
+      throw new Error(
+        `TargetCommand.watchTargets does not expect the following options: ${unsupportedKeys.join(
+          ", "
+        )}`
+      );
+    }
+
+    const { types, onAvailable, onDestroyed, onSelected } = options;
     if (typeof onAvailable != "function") {
       throw new Error(
-        "TargetCommand.watchTargets expects a function as second argument"
+        "TargetCommand.watchTargets expects a function for the onAvailable option"
       );
     }
 
@@ -715,11 +734,11 @@ class TargetCommand extends EventEmitter {
 
     for (const type of types) {
       this._createListeners.on(type, onAvailable);
-      if (onDestroy) {
-        this._destroyListeners.on(type, onDestroy);
+      if (onDestroyed) {
+        this._destroyListeners.on(type, onDestroyed);
       }
-      if (onSelect) {
-        this._selectListeners.on(type, onSelect);
+      if (onSelected) {
+        this._selectListeners.on(type, onSelected);
       }
     }
 
@@ -731,10 +750,28 @@ class TargetCommand extends EventEmitter {
    * Stop listening for the creation and/or destruction of a given type of target fronts.
    * See `watchTargets()` for documentation of the arguments.
    */
-  unwatchTargets(types, onAvailable, onDestroy, onSelect) {
+  unwatchTargets(options = {}) {
+    const availableOptions = [
+      "types",
+      "onAvailable",
+      "onDestroyed",
+      "onSelected",
+    ];
+    const unsupportedKeys = Object.keys(options).filter(
+      key => !availableOptions.includes(key)
+    );
+    if (unsupportedKeys.length > 0) {
+      throw new Error(
+        `TargetCommand.unwatchTargets does not expect the following options: ${unsupportedKeys.join(
+          ", "
+        )}`
+      );
+    }
+
+    const { types, onAvailable, onDestroyed, onSelected } = options;
     if (typeof onAvailable != "function") {
       throw new Error(
-        "TargetCommand.unwatchTargets expects a function as second argument"
+        "TargetCommand.unwatchTargets expects a function for the onAvailable option"
       );
     }
 
@@ -746,11 +783,11 @@ class TargetCommand extends EventEmitter {
       }
 
       this._createListeners.off(type, onAvailable);
-      if (onDestroy) {
-        this._destroyListeners.off(type, onDestroy);
+      if (onDestroyed) {
+        this._destroyListeners.off(type, onDestroyed);
       }
-      if (onSelect) {
-        this._selectListeners.off(type, onSelect);
+      if (onSelected) {
+        this._selectListeners.off(type, onSelected);
       }
     }
     this._pendingWatchTargetInitialization.delete(onAvailable);

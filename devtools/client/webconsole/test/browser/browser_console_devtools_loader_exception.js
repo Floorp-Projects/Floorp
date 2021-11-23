@@ -71,14 +71,17 @@ add_task(async function() {
     : new Promise(resolve => {
         const onAvailable = ({ targetFront }) => {
           if (targetFront.url.includes("view-source:")) {
-            targetCommand.unwatchTargets(
-              [targetCommand.TYPES.FRAME],
-              onAvailable
-            );
+            targetCommand.unwatchTargets({
+              types: [targetCommand.TYPES.FRAME],
+              onAvailable,
+            });
             resolve();
           }
         };
-        targetCommand.watchTargets([targetCommand.TYPES.FRAME], onAvailable);
+        targetCommand.watchTargets({
+          types: [targetCommand.TYPES.FRAME],
+          onAvailable,
+        });
       });
 
   const onTabOpen = BrowserTestUtils.waitForNewTab(

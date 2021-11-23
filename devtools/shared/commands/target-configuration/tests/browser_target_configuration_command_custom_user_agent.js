@@ -114,10 +114,10 @@ add_task(async function() {
   const otherTargetCommand = otherCommands.targetCommand;
   await otherTargetCommand.startListening();
   // wait for the target to be fully attached to avoid pending connection to the server
-  await otherTargetCommand.watchTargets(
-    [otherTargetCommand.TYPES.FRAME],
-    () => {}
-  );
+  await otherTargetCommand.watchTargets({
+    types: [otherTargetCommand.TYPES.FRAME],
+    onAvailable: () => {},
+  });
 
   // Let's update the configuration with this commands instance to make sure we hit the TargetConfigurationActor
   await otherTargetConfigurationCommand.updateConfiguration({

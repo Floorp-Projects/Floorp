@@ -206,12 +206,12 @@ Inspector.prototype = {
     // iframe if it had already been initialized.
     this.setupSplitter();
 
-    await this.commands.targetCommand.watchTargets(
-      [this.commands.targetCommand.TYPES.FRAME],
-      this._onTargetAvailable,
-      this._onTargetDestroyed,
-      this._onTargetSelected
-    );
+    await this.commands.targetCommand.watchTargets({
+      types: [this.commands.targetCommand.TYPES.FRAME],
+      onAvailable: this._onTargetAvailable,
+      onSelected: this._onTargetSelected,
+      onDestroyed: this._onTargetDestroyed,
+    });
 
     await this.toolbox.resourceCommand.watchResources(
       [
@@ -1730,12 +1730,12 @@ Inspector.prototype = {
     this.searchboxShortcuts.destroy();
     this.searchboxShortcuts = null;
 
-    this.commands.targetCommand.unwatchTargets(
-      [this.commands.targetCommand.TYPES.FRAME],
-      this._onTargetAvailable,
-      this._onTargetDestroyed,
-      this._onTargetSelected
-    );
+    this.commands.targetCommand.unwatchTargets({
+      types: [this.commands.targetCommand.TYPES.FRAME],
+      onAvailable: this._onTargetAvailable,
+      onSelected: this._onTargetSelected,
+      onDestroyed: this._onTargetDestroyed,
+    });
     const { resourceCommand } = this.toolbox;
     resourceCommand.unwatchResources(
       [
