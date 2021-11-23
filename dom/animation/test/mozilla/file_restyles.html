@@ -57,6 +57,9 @@ div {
   height: 100px;
   background-color: white;
 }
+progress:not(.stop)::-moz-progress-bar {
+  animation: on-main-thread 100s;
+}
 body {
   /*
    * set overflow:hidden to avoid accidentally unthrottling animations to update
@@ -158,6 +161,26 @@ waitForAllPaints(() => {
        'CSS animations running on the main-thread should update style ' +
        'on the main thread');
     await ensureElementRemoval(div);
+  });
+
+  add_task(async function restyling_for_main_thread_animations_progress_bar_pseudo() {
+    const progress = document.createElement("progress");
+    document.body.appendChild(progress);
+
+    await waitForNextFrame();
+    await waitForNextFrame();
+
+    let markers = await observeStyling(5);
+    is(markers.length, 5,
+       'CSS animations running on the main-thread should update style ' +
+       'on the main thread on ::-moz-progress-bar');
+    progress.classList.add("stop");
+    await waitForNextFrame();
+    await waitForNextFrame();
+
+    markers = await observeStyling(5);
+    is(markers.length, 0, 'Animation is correctly removed');
+    await ensureElementRemoval(progress);
   });
 
   add_task_if_omta_enabled(async function no_restyling_for_compositor_animations() {
