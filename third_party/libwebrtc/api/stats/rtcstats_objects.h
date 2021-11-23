@@ -434,8 +434,6 @@ class RTC_EXPORT RTCInboundRTPStreamStats final : public RTCRTPStreamStats {
   // TODO(hbos): Collect and populate this value. https://bugs.webrtc.org/7065
   RTCStatsMember<double> round_trip_time;
   // TODO(hbos): Collect and populate this value. https://bugs.webrtc.org/7065
-  RTCStatsMember<uint32_t> packets_discarded;
-  // TODO(hbos): Collect and populate this value. https://bugs.webrtc.org/7065
   RTCStatsMember<uint32_t> packets_repaired;
   // TODO(hbos): Collect and populate this value. https://bugs.webrtc.org/7065
   RTCStatsMember<uint32_t> burst_packets_lost;
@@ -549,10 +547,11 @@ class RTC_EXPORT RTCRemoteInboundRtpStreamStats final : public RTCStats {
   // RTCReceivedRtpStreamStats
   RTCStatsMember<int32_t> packets_lost;
   RTCStatsMember<double> jitter;
+  RTCStatsMember<uint64_t> packets_discarded;
   // TODO(hbos): The following RTCReceivedRtpStreamStats metrics should also be
-  // implemented: packetsReceived, packetsDiscarded, packetsRepaired,
-  // burstPacketsLost, burstPacketsDiscarded, burstLossCount, burstDiscardCount,
-  // burstLossRate, burstDiscardRate, gapLossRate and gapDiscardRate.
+  // implemented: packetsReceived, packetsRepaired, burstPacketsLost,
+  // burstPacketsDiscarded, burstLossCount, burstDiscardCount, burstLossRate,
+  // burstDiscardRate, gapLossRate and gapDiscardRate.
   // RTCRemoteInboundRtpStreamStats
   RTCStatsMember<std::string> local_id;
   RTCStatsMember<double> round_trip_time;

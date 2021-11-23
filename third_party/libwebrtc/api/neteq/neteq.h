@@ -60,7 +60,7 @@ struct NetEqNetworkStatistics {
 // These metrics are never reset.
 struct NetEqLifetimeStatistics {
   // Stats below correspond to similarly-named fields in the WebRTC stats spec.
-  // https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamtrackstats
+  // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats
   uint64_t total_samples_received = 0;
   uint64_t concealed_samples = 0;
   uint64_t concealment_events = 0;

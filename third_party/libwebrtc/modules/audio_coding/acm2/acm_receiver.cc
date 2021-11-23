@@ -315,6 +315,8 @@ void AcmReceiver::GetNetworkStatistics(
       neteq_->GetOperationsAndState();
   acm_stat->packetBufferFlushes =
       neteq_operations_and_state.packet_buffer_flushes;
+  acm_stat->packetsDiscarded =
+      neteq_operations_and_state.discarded_primary_packets;
 }
 
 int AcmReceiver::LastAudioSampleRate() const {
