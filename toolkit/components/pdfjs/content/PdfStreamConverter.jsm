@@ -1236,6 +1236,13 @@ PdfStreamConverter.prototype = {
     );
     PdfJsTelemetry.onDocumentSize(aRequest.contentLength);
 
+    // The document will be loaded via the stream converter as html,
+    // but since we may have come here via a download or attachment
+    // that was opened directly, force the content disposition to be
+    // inline so that the html document will be loaded normally instead
+    // of going to the helper service.
+    aRequest.contentDisposition = Ci.nsIChannel.DISPOSITION_FORCE_INLINE;
+
     // Creating storage for PDF data
     var contentLength = aRequest.contentLength;
     this.dataListener = new PdfDataListener(contentLength);
