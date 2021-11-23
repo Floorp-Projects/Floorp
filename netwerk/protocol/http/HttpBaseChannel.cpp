@@ -658,7 +658,11 @@ HttpBaseChannel::GetContentDisposition(uint32_t* aContentDisposition) {
   // DISPOSITION_ATTACHMENT, it means this channel is created from a
   // download attribute. In this case, we should prefer the value from the
   // download attribute rather than the value in content disposition header.
-  if (mContentDispositionHint == nsIChannel::DISPOSITION_ATTACHMENT) {
+  // DISPOSITION_FORCE_INLINE is used to explicitly set inline, used by
+  // the pdf reader when loading a attachment pdf without having to
+  // download it.
+  if (mContentDispositionHint == nsIChannel::DISPOSITION_ATTACHMENT ||
+      mContentDispositionHint == nsIChannel::DISPOSITION_FORCE_INLINE) {
     *aContentDisposition = mContentDispositionHint;
     return NS_OK;
   }
