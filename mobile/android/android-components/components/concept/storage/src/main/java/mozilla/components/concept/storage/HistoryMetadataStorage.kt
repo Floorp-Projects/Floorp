@@ -184,4 +184,9 @@ interface HistoryMetadataStorage {
      * Deletes metadata records that match [searchTerm] (case insensitive).
      */
     suspend fun deleteHistoryMetadata(searchTerm: String)
+
+    /**
+     * Deletes all metadata records for the provided [url].
+     */
+    suspend fun deleteHistoryMetadataForUrl(url: String)
 }

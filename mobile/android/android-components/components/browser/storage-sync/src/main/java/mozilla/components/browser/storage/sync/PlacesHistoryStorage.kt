@@ -314,14 +314,28 @@ open class PlacesHistoryStorage(
     }
 
     override suspend fun deleteHistoryMetadata(searchTerm: String) {
+        deleteHistoryMetadata {
+            // NB: searchTerms are always lower-case in the database.
+            it.searchTerm == searchTerm.lowercase()
+        }
+    }
+
+    override suspend fun deleteHistoryMetadataForUrl(url: String) {
+        deleteHistoryMetadata {
+            it.url == url
+        }
+    }
+
+    private suspend fun deleteHistoryMetadata(
+        predicate: (mozilla.appservices.places.uniffi.HistoryMetadata) -> Boolean
+    ) {
         // Ideally, we want this to live in A-S as a simple DELETE statement.
         // As-is, this isn't an atomic operation. For how we're using these data, both lack of
         // atomicity and a performance penalty is acceptable for now.
         withContext(writeScope.coroutineContext) {
-            handlePlacesExceptions("deleteHistoryMetadataSearchGroup") {
+            handlePlacesExceptions("deleteHistoryMetadata") {
                 places.reader().getHistoryMetadataSince(Long.MIN_VALUE)
-                    // NB: searchTerms are always lower-case in the database.
-                    .filter { it.searchTerm == searchTerm.lowercase() }
+                    .filter(predicate)
                     .forEach {
                         places.writer().deleteHistoryMetadata(
                             HistoryMetadataKey(

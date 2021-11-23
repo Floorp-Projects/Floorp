@@ -1323,6 +1323,75 @@ class PlacesHistoryStorageTest {
         assertFalse(history.canAddUri("blob:https://api.mozilla.com/resource.png"))
     }
 
+    @Test
+    fun `delete history metadata by url`() = runBlocking {
+        // Able to operate against an empty db
+        history.deleteHistoryMetadataForUrl("https://mozilla.org")
+        history.deleteHistoryMetadataForUrl("")
+
+        // Observe some items.
+        with(
+            HistoryMetadataKey(
+                url = "https://firefox.com/"
+            )
+        ) {
+            history.noteHistoryMetadataObservation(
+                this,
+                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular)
+            )
+            history.noteHistoryMetadataObservation(
+                this,
+                HistoryMetadataObservation.ViewTimeObservation(20000)
+            )
+        }
+
+        with(
+            HistoryMetadataKey(
+                url = "https://mozilla.org/",
+                searchTerm = "firefox",
+                referrerUrl = "https://google.com/"
+            )
+        ) {
+            history.noteHistoryMetadataObservation(
+                this,
+                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular)
+            )
+            history.noteHistoryMetadataObservation(
+                this,
+                HistoryMetadataObservation.ViewTimeObservation(20000)
+            )
+        }
+
+        with(
+            HistoryMetadataKey(
+                url = "https://getpocket.com/"
+            )
+        ) {
+            history.noteHistoryMetadataObservation(
+                this,
+                HistoryMetadataObservation.DocumentTypeObservation(DocumentType.Regular)
+            )
+            history.noteHistoryMetadataObservation(
+                this,
+                HistoryMetadataObservation.ViewTimeObservation(20000)
+            )
+        }
+
+        assertEquals(3, history.getHistoryMetadataSince(0).count())
+
+        history.deleteHistoryMetadataForUrl("https://firefox.com/")
+        assertEquals(2, history.getHistoryMetadataSince(0).count())
+        assertEquals("https://getpocket.com/", history.getHistoryMetadataSince(0)[0].key.url)
+        assertEquals("https://mozilla.org/", history.getHistoryMetadataSince(0)[1].key.url)
+
+        history.deleteHistoryMetadataForUrl("https://mozilla.org/")
+        assertEquals(1, history.getHistoryMetadataSince(0).count())
+        assertEquals("https://getpocket.com/", history.getHistoryMetadataSince(0)[0].key.url)
+
+        history.deleteHistoryMetadataForUrl("https://getpocket.com/")
+        assertEquals(0, history.getHistoryMetadataSince(0).count())
+    }
+
     private fun assertHistoryMetadataRecord(
         expectedKey: HistoryMetadataKey,
         expectedTotalViewTime: Int,
