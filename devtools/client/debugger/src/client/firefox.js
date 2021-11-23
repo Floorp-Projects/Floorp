@@ -66,11 +66,11 @@ export async function onConnect(_commands, _resourceCommand, _actions, store) {
     targetFront.isWebExtension
   );
 
-  await targetCommand.watchTargets({
-    types: targetCommand.ALL_TYPES,
-    onAvailable: onTargetAvailable,
-    onDestroyed: onTargetDestroyed,
-  });
+  await targetCommand.watchTargets(
+    targetCommand.ALL_TYPES,
+    onTargetAvailable,
+    onTargetDestroyed
+  );
 
   // Use independant listeners for SOURCE and THREAD_STATE in order to ease
   // doing batching and notify about a set of SOURCE's in one redux action.
@@ -92,11 +92,11 @@ export async function onConnect(_commands, _resourceCommand, _actions, store) {
 }
 
 export function onDisconnect() {
-  targetCommand.unwatchTargets({
-    types: targetCommand.ALL_TYPES,
-    onAvailable: onTargetAvailable,
-    onDestroyed: onTargetDestroyed,
-  });
+  targetCommand.unwatchTargets(
+    targetCommand.ALL_TYPES,
+    onTargetAvailable,
+    onTargetDestroyed
+  );
   resourceCommand.unwatchResources([resourceCommand.TYPES.SOURCE], {
     onAvailable: onSourceAvailable,
   });

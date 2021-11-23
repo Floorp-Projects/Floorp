@@ -243,7 +243,7 @@ async function testBrowserFrames() {
     );
     targets.push(targetFront);
   };
-  await targetCommand.watchTargets({ types: [TYPES.FRAME], onAvailable });
+  await targetCommand.watchTargets([TYPES.FRAME], onAvailable);
   is(
     targets.length,
     frames.length,
@@ -358,7 +358,7 @@ async function testBrowserFrames() {
   );
   chromeWindow.close();
 
-  targetCommand.unwatchTargets({ types: [TYPES.FRAME], onAvailable });
+  targetCommand.unwatchTargets([TYPES.FRAME], onAvailable);
 
   targetCommand.destroy();
   await waitForAllTargetsToBeAttached(targetCommand);
@@ -414,11 +414,7 @@ async function testTabFrames(mainRoot) {
     );
     destroyedTargets.push({ targetFront, isTargetSwitching });
   };
-  await targetCommand.watchTargets({
-    types: [TYPES.FRAME],
-    onAvailable,
-    onDestroyed,
-  });
+  await targetCommand.watchTargets([TYPES.FRAME], onAvailable, onDestroyed);
   is(
     targets.length,
     frames.length,
@@ -585,7 +581,7 @@ async function testTabFrames(mainRoot) {
 
   await onNewTargetProcessed;
 
-  targetCommand.unwatchTargets({ types: [TYPES.FRAME], onAvailable });
+  targetCommand.unwatchTargets([TYPES.FRAME], onAvailable);
 
   targetCommand.destroy();
 

@@ -18,57 +18,56 @@ add_task(async function() {
   const onAvailable = function() {};
 
   await Assert.rejects(
-    targetCommand.watchTargets({ types: [null], onAvailable }),
+    targetCommand.watchTargets([null], onAvailable),
     /TargetCommand.watchTargets invoked with an unknown type/,
     "watchTargets should throw for null type"
   );
 
   await Assert.rejects(
-    targetCommand.watchTargets({ types: [undefined], onAvailable }),
+    targetCommand.watchTargets([undefined], onAvailable),
     /TargetCommand.watchTargets invoked with an unknown type/,
     "watchTargets should throw for undefined type"
   );
 
   await Assert.rejects(
-    targetCommand.watchTargets({ types: ["NOT_A_TARGET"], onAvailable }),
+    targetCommand.watchTargets(["NOT_A_TARGET"], onAvailable),
     /TargetCommand.watchTargets invoked with an unknown type/,
     "watchTargets should throw for unknown type"
   );
 
   await Assert.rejects(
-    targetCommand.watchTargets({
-      types: [targetCommand.TYPES.FRAME, "NOT_A_TARGET"],
-      onAvailable,
-    }),
+    targetCommand.watchTargets(
+      [targetCommand.TYPES.FRAME, "NOT_A_TARGET"],
+      onAvailable
+    ),
     /TargetCommand.watchTargets invoked with an unknown type/,
     "watchTargets should throw for unknown type mixed with a correct type"
   );
 
   Assert.throws(
-    () => targetCommand.unwatchTargets({ types: [null], onAvailable }),
+    () => targetCommand.unwatchTargets([null], onAvailable),
     /TargetCommand.unwatchTargets invoked with an unknown type/,
     "unwatchTargets should throw for null type"
   );
 
   Assert.throws(
-    () => targetCommand.unwatchTargets({ types: [undefined], onAvailable }),
+    () => targetCommand.unwatchTargets([undefined], onAvailable),
     /TargetCommand.unwatchTargets invoked with an unknown type/,
     "unwatchTargets should throw for undefined type"
   );
 
   Assert.throws(
-    () =>
-      targetCommand.unwatchTargets({ types: ["NOT_A_TARGET"], onAvailable }),
+    () => targetCommand.unwatchTargets(["NOT_A_TARGET"], onAvailable),
     /TargetCommand.unwatchTargets invoked with an unknown type/,
     "unwatchTargets should throw for unknown type"
   );
 
   Assert.throws(
     () =>
-      targetCommand.unwatchTargets({
-        types: [targetCommand.TYPES.CONSOLE_MESSAGE, "NOT_A_TARGET"],
-        onAvailable,
-      }),
+      targetCommand.unwatchTargets(
+        [targetCommand.TYPES.CONSOLE_MESSAGE, "NOT_A_TARGET"],
+        onAvailable
+      ),
     /TargetCommand.unwatchTargets invoked with an unknown type/,
     "unwatchTargets should throw for unknown type mixed with a correct type"
   );
