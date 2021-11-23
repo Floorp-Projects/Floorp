@@ -280,9 +280,6 @@ class ArenaLists {
    */
   ArenaListData<AllAllocKindArray<ArenaList>> collectingArenaLists_;
 
-  /* For each arena kind, a list of arenas allocated during marking. */
-  ArenaListData<AllAllocKindArray<ArenaList>> newArenasInMarkPhase_;
-
   /* For each arena kind, a list of arenas remaining to be swept. */
   MainThreadOrGCTaskData<AllAllocKindArray<Arena*>> arenasToSweep_;
 
@@ -314,7 +311,6 @@ class ArenaLists {
   inline Arena* getFirstCollectingArena(AllocKind thingKind) const;
   inline Arena* getFirstArenaToSweep(AllocKind thingKind) const;
   inline Arena* getFirstSweptArena(AllocKind thingKind) const;
-  inline Arena* getFirstNewArenaInMarkPhase(AllocKind thingKind) const;
   inline Arena* getArenaAfterCursor(AllocKind thingKind) const;
 
   inline bool arenaListsAreEmpty() const;
@@ -351,8 +347,6 @@ class ArenaLists {
 
   void setParallelUnmarkEnabled(bool enabled);
 
-  inline void mergeNewArenasInMarkPhase();
-
   void moveArenasToCollectingLists();
   void mergeArenasFromCollectingLists();
 
@@ -370,13 +364,6 @@ class ArenaLists {
   }
   const ArenaList& collectingArenaList(AllocKind i) const {
     return collectingArenaLists_.ref()[i];
-  }
-
-  ArenaList& newArenasInMarkPhase(AllocKind i) {
-    return newArenasInMarkPhase_.ref()[i];
-  }
-  const ArenaList& newArenasInMarkPhase(AllocKind i) const {
-    return newArenasInMarkPhase_.ref()[i];
   }
 
   ConcurrentUseState& concurrentUse(AllocKind i) {
@@ -398,8 +385,6 @@ class ArenaLists {
   TenuredCell* refillFreeListAndAllocate(FreeLists& freeLists,
                                          AllocKind thingKind,
                                          ShouldCheckThresholds checkThresholds);
-
-  void addNewArena(Arena* arena, AllocKind thingKind);
 
   friend class GCRuntime;
   friend class js::Nursery;

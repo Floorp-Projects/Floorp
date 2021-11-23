@@ -193,7 +193,6 @@ ArenaLists::ArenaLists(Zone* zone)
       freeLists_(zone),
       arenaLists_(zone),
       collectingArenaLists_(zone),
-      newArenasInMarkPhase_(zone),
       arenasToSweep_(),
       incrementalSweptArenaKind(zone, AllocKind::LIMIT),
       incrementalSweptArenas(zone),
@@ -276,7 +275,6 @@ void ArenaLists::checkGCStateNotInUse() {
 #ifdef DEBUG
   checkSweepStateNotInUse();
   for (auto i : AllAllocKinds()) {
-    MOZ_ASSERT(newArenasInMarkPhase(i).isEmpty());
     MOZ_ASSERT(collectingArenaList(i).isEmpty());
   }
 #endif
