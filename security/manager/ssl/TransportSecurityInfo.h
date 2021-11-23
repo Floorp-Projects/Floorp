@@ -137,6 +137,7 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   nsCString mNegotiatedNPN;
   Atomic<bool> mResumed;
   Atomic<bool> mIsBuiltCertChainRootBuiltInRoot;
+  nsCString mPeerId;
 
  private:
   static nsresult ReadBoolAndSetAtomicFieldHelper(nsIObjectInputStream* stream,

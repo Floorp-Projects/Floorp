@@ -58,7 +58,6 @@ class QuicSocketControl final : public CommonSocketControl {
   nsWeakPtr mHttp3Session;
   nsCOMPtr<nsIEventTarget> mSocketThread;
 
-  nsCString mPeerId;
   nsCString mEchConfig;
   nsCString mRetryEchConfig;
 };

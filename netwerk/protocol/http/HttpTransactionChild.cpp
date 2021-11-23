@@ -417,6 +417,9 @@ HttpTransactionChild::OnStartRequest(nsIRequest* aRequest) {
         !protocol.IsEmpty()) {
       mProtocolVersion.Assign(protocol);
     }
+    // Make sure peerId is generated.
+    nsAutoCString unused;
+    info->GetPeerId(unused);
     nsCOMPtr<nsISerializable> secInfoSer = do_QueryInterface(secInfoSupp);
     if (secInfoSer) {
       NS_SerializeToString(secInfoSer, serializedSecurityInfoOut);
