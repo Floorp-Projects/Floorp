@@ -556,17 +556,11 @@ TenuredCell* ArenaLists::refillFreeListAndAllocate(
     return nullptr;
   }
 
-  addNewArena(arena, thingKind);
-
-  return freeLists.setArenaAndAllocate(arena, thingKind);
-}
-
-inline void ArenaLists::addNewArena(Arena* arena, AllocKind thingKind) {
-  ArenaList& al = zone_->isGCMarking() ? newArenasInMarkPhase(thingKind)
-                                       : arenaList(thingKind);
-
+  ArenaList& al = arenaList(thingKind);
   MOZ_ASSERT(al.isCursorAtEnd());
   al.insertBeforeCursor(arena);
+
+  return freeLists.setArenaAndAllocate(arena, thingKind);
 }
 
 inline TenuredCell* FreeLists::setArenaAndAllocate(Arena* arena,

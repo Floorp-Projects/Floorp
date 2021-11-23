@@ -2518,6 +2518,7 @@ void GCRuntime::beginMarkPhase(AutoGCSession& session) {
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     // Incremental marking barriers are enabled at this point.
     zone->changeGCState(Zone::Prepare, Zone::MarkBlackOnly);
+    zone->arenas.moveArenasToCollectingLists();
   }
 
   if (rt->isBeingDestroyed()) {
@@ -2850,7 +2851,7 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
         zone->changeGCState(Zone::MarkBlackOnly, Zone::NoGC);
         zone->clearGCSliceThresholds();
         zone->arenas.unmarkPreMarkedFreeCells();
-        zone->arenas.mergeNewArenasInMarkPhase();
+        zone->arenas.mergeArenasFromCollectingLists();
       }
 
       {
