@@ -455,6 +455,13 @@ void MacroAssemblerMIPS64::ma_addPtrTestOverflow(Register rd, Register rs,
   ma_addPtrTestOverflow(rd, rs, ScratchRegister, overflow);
 }
 
+void MacroAssemblerMIPS64::ma_addPtrTestOverflow(Register rd, Register rs,
+                                                 ImmWord imm, Label* overflow) {
+  ScratchRegisterScope scratch(asMasm());
+  ma_li(scratch, imm);
+  ma_addPtrTestOverflow(rd, rs, scratch, overflow);
+}
+
 void MacroAssemblerMIPS64::ma_addPtrTestCarry(Condition cond, Register rd,
                                               Register rs, Register rt,
                                               Label* overflow) {
@@ -478,6 +485,23 @@ void MacroAssemblerMIPS64::ma_addPtrTestCarry(Condition cond, Register rd,
   } else {
     ma_li(ScratchRegister, imm);
     ma_addPtrTestCarry(cond, rd, rs, ScratchRegister, overflow);
+  }
+}
+
+void MacroAssemblerMIPS64::ma_addPtrTestCarry(Condition cond, Register rd,
+                                              Register rs, ImmWord imm,
+                                              Label* overflow) {
+  // Check for signed range because of as_daddiu
+  if (Imm16::IsInSignedRange(imm.value)) {
+    SecondScratchRegisterScope scratch2(asMasm());
+    as_daddiu(rd, rs, imm.value);
+    as_sltiu(scratch2, rd, imm.value);
+    ma_b(scratch2, scratch2, overflow,
+         cond == Assembler::CarrySet ? Assembler::NonZero : Assembler::Zero);
+  } else {
+    ScratchRegisterScope scratch(asMasm());
+    ma_li(scratch, imm);
+    ma_addPtrTestCarry(cond, rd, rs, scratch, overflow);
   }
 }
 
