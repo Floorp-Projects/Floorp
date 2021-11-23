@@ -165,19 +165,18 @@ class UrlInputFragment :
             .commit()
 
         searchSuggestionsViewModel.selectedSearchSuggestion.observe(
-            viewLifecycleOwner,
-            {
-                val isSuggestion = searchSuggestionsViewModel.searchQuery.value != it
-                it?.let {
-                    if (searchSuggestionsViewModel.alwaysSearch) {
-                        onSearch(it, isSuggestion = false, alwaysSearch = true)
-                    } else {
-                        onSearch(it, isSuggestion)
-                    }
-                    searchSuggestionsViewModel.clearSearchSuggestion()
+            viewLifecycleOwner
+        ) {
+            val isSuggestion = searchSuggestionsViewModel.searchQuery.value != it
+            it?.let {
+                if (searchSuggestionsViewModel.alwaysSearch) {
+                    onSearch(it, isSuggestion = false, alwaysSearch = true)
+                } else {
+                    onSearch(it, isSuggestion)
                 }
+                searchSuggestionsViewModel.clearSearchSuggestion()
             }
-        )
+        }
 
         searchSuggestionsViewModel.autocompleteSuggestion.observe(viewLifecycleOwner) { text ->
             if (text != null) {
