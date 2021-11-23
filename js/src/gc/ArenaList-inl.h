@@ -241,6 +241,11 @@ js::gc::Arena* js::gc::ArenaLists::getFirstArena(AllocKind thingKind) const {
   return arenaList(thingKind).head();
 }
 
+js::gc::Arena* js::gc::ArenaLists::getFirstCollectingArena(
+    AllocKind thingKind) const {
+  return collectingArenaList(thingKind).head();
+}
+
 js::gc::Arena* js::gc::ArenaLists::getFirstArenaToSweep(
     AllocKind thingKind) const {
   return arenasToSweep(thingKind);
