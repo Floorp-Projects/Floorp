@@ -62,6 +62,12 @@ class NeqoHttp3Conn final {
                                 &aHeaders, aStreamId, aUrgency, aIncremental);
   }
 
+  nsresult PriorityUpdate(uint64_t aStreamId, uint8_t aUrgency,
+                          bool aIncremental) {
+    return neqo_http3conn_priority_update(this, aStreamId, aUrgency,
+                                          aIncremental);
+  }
+
   nsresult SendRequestBody(uint64_t aStreamId, const uint8_t* aBuf,
                            uint32_t aCount, uint32_t* aCountRead) {
     return neqo_htttp3conn_send_request_body(this, aStreamId, aBuf, aCount,
