@@ -21,9 +21,6 @@
 #include "mozilla/layers/TextureHostOGL.h"     // for TextureHostOGL
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/TextureClient.h"
-#ifdef XP_DARWIN
-#  include "mozilla/layers/TextureSync.h"
-#endif
 #include "mozilla/layers/GPUVideoTextureHost.h"
 #include "mozilla/layers/WebRenderTextureHost.h"
 #include "mozilla/StaticPrefs_layers.h"
@@ -629,16 +626,7 @@ bool TextureHost::NeedsYFlip() const {
   return bool(mFlags & TextureFlags::ORIGIN_BOTTOM_LEFT);
 }
 
-void BufferTextureHost::MaybeNotifyUnlocked() {
-#ifdef XP_DARWIN
-  auto actor = GetIPDLActor();
-  if (actor) {
-    AutoTArray<uint64_t, 1> serials;
-    serials.AppendElement(TextureHost::GetTextureSerial(actor));
-    TextureSync::SetTexturesUnlocked(actor->OtherPid(), serials);
-  }
-#endif
-}
+void BufferTextureHost::MaybeNotifyUnlocked() {}
 
 gfx::SurfaceFormat BufferTextureHost::GetFormat() const { return mFormat; }
 

@@ -2735,9 +2735,9 @@ TextureFactoryIdentifier WebRenderBridgeParent::GetTextureFactoryIdentifier() {
 
   TextureFactoryIdentifier ident(
       mApi->GetBackendType(), mApi->GetCompositorType(), XRE_GetProcessType(),
-      mApi->GetMaxTextureSize(), false, mApi->GetUseANGLE(),
-      mApi->GetUseDComp(), mAsyncImageManager->UseCompositorWnd(), false, false,
-      false, mApi->GetSyncHandle());
+      mApi->GetMaxTextureSize(), mApi->GetUseANGLE(), mApi->GetUseDComp(),
+      mAsyncImageManager->UseCompositorWnd(), false, false, false,
+      mApi->GetSyncHandle());
   return ident;
 }
 

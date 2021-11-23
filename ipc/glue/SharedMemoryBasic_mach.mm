@@ -26,7 +26,6 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Printf.h"
 #include "mozilla/StaticMutex.h"
-#include "mozilla/layers/TextureSync.h"
 
 #ifdef DEBUG
 #  define LOG_ERROR(str, args...)                                  \
@@ -330,37 +329,31 @@ static void* PortServerThread(void* argument) {
       delete ports;
       return nullptr;
     }
-    if (rmsg.GetMessageID() == kWaitForTexturesMsg) {
-      layers::TextureSync::HandleWaitForTexturesMessage(&rmsg, ports);
-    } else if (rmsg.GetMessageID() == kUpdateTextureLocksMsg) {
-      layers::TextureSync::DispatchCheckTexturesForUnlock();
-    } else {
-      switch (rmsg.GetMessageID()) {
-        case kGetPortsMsg: {
-          StaticMutexAutoLock smal(gMutex);
-          HandleGetPortsMessage(&rmsg, ports);
-          break;
+    switch (rmsg.GetMessageID()) {
+      case kGetPortsMsg: {
+        StaticMutexAutoLock smal(gMutex);
+        HandleGetPortsMessage(&rmsg, ports);
+        break;
+      }
+      case kCleanupMsg: {
+        StaticMutexAutoLock smal(gMutex);
+        if (gParentPid == 0) {
+          LOG_ERROR("Cleanup message not valid for parent process");
+          continue;
         }
-        case kCleanupMsg: {
-          StaticMutexAutoLock smal(gMutex);
-          if (gParentPid == 0) {
-            LOG_ERROR("Cleanup message not valid for parent process");
-            continue;
-          }
 
-          pid_t* pid;
-          if (rmsg.GetDataLength() != sizeof(pid_t)) {
-            LOG_ERROR("Improperly formatted message\n");
-            continue;
-          }
-          pid = reinterpret_cast<pid_t*>(rmsg.GetData());
-          SharedMemoryBasic::CleanupForPid(*pid);
-          break;
+        pid_t* pid;
+        if (rmsg.GetDataLength() != sizeof(pid_t)) {
+          LOG_ERROR("Improperly formatted message\n");
+          continue;
         }
-        default: {
-          // gMutex not required
-          LOG_ERROR("Unknown message\n");
-        }
+        pid = reinterpret_cast<pid_t*>(rmsg.GetData());
+        SharedMemoryBasic::CleanupForPid(*pid);
+        break;
+      }
+      default: {
+        // gMutex not required
+        LOG_ERROR("Unknown message\n");
       }
     }
   }
@@ -376,8 +369,6 @@ void SharedMemoryBasic::SetupMachMemory(pid_t pid, ReceivePort* listen_port,
 
 void SharedMemoryBasic::Shutdown() {
   StaticMutexAutoLock smal(gMutex);
-
-  layers::TextureSync::Shutdown();
 
   for (auto& thread : gThreads) {
     MachSendMessage shutdownMsg(kShutdownMsg);
@@ -404,8 +395,6 @@ void SharedMemoryBasic::CleanupForPid(pid_t pid) {
     return;
   }
 
-  layers::TextureSync::CleanupForPid(pid);
-
   const ListeningThread& listeningThread = gThreads[pid];
   MachSendMessage shutdownMsg(kShutdownMsg);
   kern_return_t ret = listeningThread.mPorts->mReceiver->SendMessageToSelf(shutdownMsg, kTimeout);
@@ -428,37 +417,6 @@ void SharedMemoryBasic::CleanupForPid(pid_t pid) {
   delete ports.mSender;
   delete ports.mReceiver;
   gMemoryCommPorts.erase(pid);
-}
-
-bool SharedMemoryBasic::SendMachMessage(pid_t pid, MachSendMessage& message,
-                                        MachReceiveMessage* response) {
-  StaticMutexAutoLock smal(gMutex);
-  ipc::MemoryPorts* ports = GetMemoryPortsForPid(pid);
-  if (!ports) {
-    LOG_ERROR("Unable to get ports for process.\n");
-    return false;
-  }
-
-  kern_return_t err = ports->mSender->SendMessage(message, kTimeout);
-  if (err != KERN_SUCCESS) {
-    LOG_ERROR("Failed updating texture locks.\n");
-    return false;
-  }
-
-  if (response) {
-    err = ports->mReceiver->WaitForMessage(response, kTimeout);
-    if (err != KERN_SUCCESS) {
-      LOG_ERROR("short timeout didn't get an id %s %x\n", mach_error_string(err), err);
-      err = ports->mReceiver->WaitForMessage(response, kLongTimeout);
-
-      if (err != KERN_SUCCESS) {
-        LOG_ERROR("long timeout didn't get an id %s %x\n", mach_error_string(err), err);
-        return false;
-      }
-    }
-  }
-
-  return true;
 }
 
 SharedMemoryBasic::SharedMemoryBasic()

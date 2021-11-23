@@ -7,10 +7,6 @@
 #include "mozilla/layers/TextureSourceProvider.h"
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/PTextureParent.h"
-#ifdef XP_DARWIN
-#  include "mozilla/layers/TextureSync.h"
-#  include "nsClassHashtable.h"
-#endif
 
 namespace mozilla {
 namespace layers {
