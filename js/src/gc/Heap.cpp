@@ -193,7 +193,6 @@ ArenaLists::ArenaLists(Zone* zone)
       freeLists_(zone),
       arenaLists_(zone),
       collectingArenaLists_(zone),
-      arenasToSweep_(),
       incrementalSweptArenaKind(zone, AllocKind::LIMIT),
       incrementalSweptArenas(zone),
       gcCompactPropMapArenasToUpdate(zone, nullptr),
@@ -201,7 +200,6 @@ ArenaLists::ArenaLists(Zone* zone)
       savedEmptyArenas(zone, nullptr) {
   for (auto i : AllAllocKinds()) {
     concurrentUse(i) = ConcurrentUse::None;
-    arenasToSweep(i) = nullptr;
   }
 }
 
@@ -288,7 +286,6 @@ void ArenaLists::checkSweepStateNotInUse() {
   MOZ_ASSERT(!savedEmptyArenas);
   for (auto i : AllAllocKinds()) {
     MOZ_ASSERT(concurrentUse(i) == ConcurrentUse::None);
-    MOZ_ASSERT(!arenasToSweep(i));
   }
 #endif
 }
