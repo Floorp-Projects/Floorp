@@ -652,6 +652,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">ਸਰਗਰਮ</string>
 
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">ਪੂਰਾ ਹੋਇਆ</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">USB//Wi-Fi ਰਾਹੀਂ ਰਿਮੋਟ ਡੀਬੱਗ ਕਰਨਾ</string>
 
