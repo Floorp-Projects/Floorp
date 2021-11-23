@@ -141,6 +141,22 @@ js::gc::ArenaList& js::gc::ArenaList::insertListWithCursorAtEnd(
   return *this;
 }
 
+js::gc::Arena* js::gc::ArenaList::takeFirstArena() {
+  check();
+  Arena* arena = head_;
+  if (!arena) {
+    return nullptr;
+  }
+
+  head_ = arena->next;
+  if (cursorp_ == &arena->next) {
+    cursorp_ = &head_;
+  }
+
+  check();
+  return arena;
+}
+
 js::gc::SortedArenaList::SortedArenaList(size_t thingsPerArena) {
   reset(thingsPerArena);
 }
@@ -244,11 +260,6 @@ js::gc::Arena* js::gc::ArenaLists::getFirstArena(AllocKind thingKind) const {
 js::gc::Arena* js::gc::ArenaLists::getFirstCollectingArena(
     AllocKind thingKind) const {
   return collectingArenaList(thingKind).head();
-}
-
-js::gc::Arena* js::gc::ArenaLists::getFirstArenaToSweep(
-    AllocKind thingKind) const {
-  return arenasToSweep(thingKind);
 }
 
 js::gc::Arena* js::gc::ArenaLists::getFirstSweptArena(

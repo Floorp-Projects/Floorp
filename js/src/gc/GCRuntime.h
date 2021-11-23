@@ -770,10 +770,8 @@ class GCRuntime {
   void markIncomingGrayCrossCompartmentPointers();
   IncrementalProgress beginSweepingSweepGroup(JSFreeOp* fop,
                                               SliceBudget& budget);
-  void queueForForegroundSweep(Zone* zone, JSFreeOp* fop,
-                               const FinalizePhase& phase);
-  void queueForBackgroundSweep(Zone* zone, JSFreeOp* fop,
-                               const FinalizePhase& phase);
+  void initBackgroundSweep(Zone* zone, JSFreeOp* fop,
+                           const FinalizePhase& phase);
   IncrementalProgress markDuringSweeping(JSFreeOp* fop, SliceBudget& budget);
   void updateAtomsBitmap();
   void sweepCCWrappers();
@@ -805,7 +803,8 @@ class GCRuntime {
   void startBackgroundFree();
   void freeFromBackgroundThread(AutoLockHelperThreadState& lock);
   void sweepBackgroundThings(ZoneList& zones);
-  void backgroundFinalize(JSFreeOp* fop, Arena* listHead, Arena** empty);
+  void backgroundFinalize(JSFreeOp* fop, Zone* zone, AllocKind kind,
+                          Arena** empty);
   void assertBackgroundSweepingFinished();
 
   bool allCCVisibleZonesWereCollected();
