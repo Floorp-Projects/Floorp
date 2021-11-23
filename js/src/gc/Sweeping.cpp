@@ -243,8 +243,8 @@ void ArenaLists::queueForForegroundSweep(AllocKind thingKind) {
   MOZ_ASSERT(concurrentUse(thingKind) == ConcurrentUse::None);
   MOZ_ASSERT(!arenasToSweep(thingKind));
 
-  arenasToSweep(thingKind) = arenaList(thingKind).head();
-  arenaList(thingKind).clear();
+  arenasToSweep(thingKind) = collectingArenaList(thingKind).head();
+  collectingArenaList(thingKind).clear();
 }
 
 void GCRuntime::queueForBackgroundSweep(Zone* zone, JSFreeOp* fop,
@@ -259,13 +259,11 @@ void ArenaLists::queueForBackgroundSweep(AllocKind thingKind) {
   MOZ_ASSERT(IsBackgroundFinalized(thingKind));
   MOZ_ASSERT(concurrentUse(thingKind) == ConcurrentUse::None);
 
-  arenasToSweep(thingKind) = arenaList(thingKind).head();
-  arenaList(thingKind).clear();
+  arenasToSweep(thingKind) = collectingArenaList(thingKind).head();
+  collectingArenaList(thingKind).clear();
 
   if (arenasToSweep(thingKind)) {
     concurrentUse(thingKind) = ConcurrentUse::BackgroundFinalize;
-  } else {
-    arenaList(thingKind) = std::move(newArenasInMarkPhase(thingKind));
   }
 }
 
@@ -317,12 +315,11 @@ void ArenaLists::mergeFinalizedArenas(AllocKind thingKind,
                                       SortedArenaList& finalizedArenas) {
   ArenaList& arenas = arenaList(thingKind);
 
-  ArenaList allocatedDuringSweep = std::move(arenas);
+  ArenaList allocatedDuringCollection = std::move(arenas);
   arenas = finalizedArenas.toArenaList();
-  arenas.insertListWithCursorAtEnd(newArenasInMarkPhase(thingKind));
-  arenas.insertListWithCursorAtEnd(allocatedDuringSweep);
+  arenas.insertListWithCursorAtEnd(allocatedDuringCollection);
 
-  newArenasInMarkPhase(thingKind).clear();
+  collectingArenaList(thingKind).clear();
 }
 
 void ArenaLists::queueForegroundThingsForSweep() {
@@ -783,7 +780,7 @@ void GCRuntime::getNextSweepGroup() {
       MOZ_ASSERT(!zone->gcNextGraphComponent);
       zone->changeGCState(Zone::MarkBlackOnly, Zone::NoGC);
       zone->arenas.unmarkPreMarkedFreeCells();
-      zone->arenas.mergeNewArenasInMarkPhase();
+      zone->arenas.mergeArenasFromCollectingLists();
       zone->clearGCSliceThresholds();
     }
 
