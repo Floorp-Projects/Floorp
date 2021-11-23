@@ -10,6 +10,8 @@
 #include "TreeTraversal.h"  // for BreadthFirstSearch
 #include "mozilla/gfx/CompositorHitTestInfo.h"
 #include "mozilla/webrender/WebRenderAPI.h"
+#include "nsDebug.h"        // for NS_ASSERTION
+#include "nsIXULRuntime.h"  // for FissionAutostart
 
 #define APZCTM_LOG(...) \
   MOZ_LOG(APZCTreeManager::sLog, LogLevel::Debug, (__VA_ARGS__))
@@ -53,6 +55,8 @@ IAPZHitTester::HitTestResult WRHitTester::GetAPZCAtPoint(
         GetTargetNode(guid, &ScrollableLayerGuid::EqualsIgnoringPresShell);
     if (!node) {
       APZCTM_LOG("no corresponding node found, falling back to root.\n");
+
+#ifdef DEBUG
       // We can enter here during normal codepaths for cases where the
       // nsDisplayCompositorHitTestInfo item emitted a scrollId of
       // NULL_SCROLL_ID to the webrender display list. The semantics of that
@@ -63,7 +67,18 @@ IAPZHitTester::HitTestResult WRHitTester::GetAPZCAtPoint(
       // the APZ tree and updating the WR scene/hit-test information, resulting
       // in WR giving us a hit result for a scene that is not active in APZ.
       // Such a scenario would need debugging and fixing.
-      MOZ_ASSERT(result.mScrollId == ScrollableLayerGuid::NULL_SCROLL_ID);
+      // In non-Fission mode, make this assertion non-fatal because there is
+      // a known issue related to inactive scroll frames that can cause this
+      // to fire (see bug 1634763), which is fixed in Fission mode and not
+      // worth fixing in non-Fission mode.
+      if (FissionAutostart()) {
+        MOZ_ASSERT(result.mScrollId == ScrollableLayerGuid::NULL_SCROLL_ID);
+      } else {
+        NS_ASSERTION(
+            result.mScrollId == ScrollableLayerGuid::NULL_SCROLL_ID,
+            "Inconsistency between WebRender display list and APZ scroll data");
+      }
+#endif
       node = FindRootNodeForLayersId(result.mLayersId);
       if (!node) {
         // Should never happen, but handle gracefully in release builds just
