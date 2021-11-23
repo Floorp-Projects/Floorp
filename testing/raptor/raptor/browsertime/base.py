@@ -215,18 +215,6 @@ class Browsertime(Perftest):
             # Wait a bit longer when we run live site tests
             page_cycle_delay = "5000"
 
-            # Prevent live sites from autoplaying media
-            self.profile.set_preferences(
-                {
-                    "media.autoplay.default": 5,
-                    "media.autoplay.ask-permission": True,
-                    "media.autoplay.blocking_policy": 1,
-                    "media.autoplay.block-webaudio": True,
-                    "media.allowed-to-play.enabled": False,
-                    "media.block-autoplay-until-in-foreground": True,
-                }
-            )
-
         # All the configurations in the browsertime_options variable initialization
         # and the secondary_url are priority 3, since none overlap they are grouped together
         browsertime_options = [
