@@ -598,8 +598,6 @@ class GCRuntime {
                                   AllocKind kind);
   static TenuredCell* refillFreeListInGC(Zone* zone, AllocKind thingKind);
 
-  void setParallelUnmarkEnabled(bool enabled);
-
   /*
    * Concurrent sweep infrastructure.
    */

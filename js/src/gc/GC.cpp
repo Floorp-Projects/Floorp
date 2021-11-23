@@ -2304,7 +2304,6 @@ bool GCRuntime::beginPreparePhase(JS::GCReason reason, AutoGCSession& session) {
    * can be slow. This happens concurrently with the mutator and GC proper does
    * not start until this is complete.
    */
-  setParallelUnmarkEnabled(true);
   unmarkTask.initZones();
   unmarkTask.start();
 
@@ -2363,7 +2362,6 @@ void BackgroundUnmarkTask::run(AutoLockHelperThreadState& helperTheadLock) {
 
 void GCRuntime::endPreparePhase(JS::GCReason reason) {
   MOZ_ASSERT(unmarkTask.isIdle());
-  setParallelUnmarkEnabled(false);
 
   for (GCZonesIter zone(this); !zone.done(); zone.next()) {
     /*
@@ -2827,7 +2825,6 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
 
     case State::Prepare:
       unmarkTask.cancelAndWait();
-      setParallelUnmarkEnabled(false);
 
       for (GCZonesIter zone(this); !zone.done(); zone.next()) {
         zone->changeGCState(Zone::Prepare, Zone::NoGC);

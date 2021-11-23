@@ -258,11 +258,7 @@ class FreeLists {
 };
 
 class ArenaLists {
-  enum class ConcurrentUse : uint32_t {
-    None,
-    BackgroundFinalize,
-    ParallelUnmark
-  };
+  enum class ConcurrentUse : uint32_t { None, BackgroundFinalize };
 
   using ConcurrentUseState =
       mozilla::Atomic<ConcurrentUse, mozilla::SequentiallyConsistent>;
@@ -343,8 +339,6 @@ class ArenaLists {
 
   void mergeFinalizedArenas(AllocKind thingKind,
                             SortedArenaList& finalizedArenas);
-
-  void setParallelUnmarkEnabled(bool enabled);
 
   void moveArenasToCollectingLists();
   void mergeArenasFromCollectingLists();

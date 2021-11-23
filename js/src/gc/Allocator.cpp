@@ -598,25 +598,6 @@ void Arena::arenaAllocatedDuringGC() {
   }
 }
 
-void GCRuntime::setParallelUnmarkEnabled(bool enabled) {
-  // This can only be changed on the main thread otherwise we could race.
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
-  MOZ_ASSERT(JS::RuntimeHeapIsMajorCollecting());
-  for (GCZonesIter zone(this); !zone.done(); zone.next()) {
-    zone->arenas.setParallelUnmarkEnabled(enabled);
-  }
-}
-
-void ArenaLists::setParallelUnmarkEnabled(bool enabled) {
-  static const ConcurrentUse states[2] = {ConcurrentUse::None,
-                                          ConcurrentUse::ParallelUnmark};
-
-  for (auto kind : AllAllocKinds()) {
-    MOZ_ASSERT(concurrentUse(kind) == states[!enabled]);
-    concurrentUse(kind) = states[enabled];
-  }
-}
-
 // ///////////  TenuredChunk -> Arena Allocator  ///////////////////////////////
 
 bool GCRuntime::wantBackgroundAllocation(const AutoLockGC& lock) const {
