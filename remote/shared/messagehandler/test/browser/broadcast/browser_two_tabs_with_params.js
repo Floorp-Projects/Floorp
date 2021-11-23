@@ -25,6 +25,7 @@ add_task(async function test_broadcasting_two_tabs_with_params_command() {
     {
       value: "some-value",
     },
+    contextDescriptorAll,
     rootMessageHandler
   );
   ok(
