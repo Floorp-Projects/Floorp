@@ -124,10 +124,10 @@ add_task(async function() {
     );
     targets.push(targetFront);
   };
-  await targetCommand.watchTargets(
-    [TYPES.WORKER, TYPES.SHARED_WORKER, TYPES.SERVICE_WORKER],
-    onAvailable
-  );
+  await targetCommand.watchTargets({
+    types: [TYPES.WORKER, TYPES.SHARED_WORKER, TYPES.SERVICE_WORKER],
+    onAvailable,
+  });
   is(
     targets.length,
     workers.length + sharedWorkers.length + serviceWorkers.length,
@@ -147,10 +147,10 @@ add_task(async function() {
     );
   }
 
-  targetCommand.unwatchTargets(
-    [TYPES.WORKER, TYPES.SHARED_WORKER, TYPES.SERVICE_WORKER],
-    onAvailable
-  );
+  targetCommand.unwatchTargets({
+    types: [TYPES.WORKER, TYPES.SHARED_WORKER, TYPES.SERVICE_WORKER],
+    onAvailable,
+  });
 
   // Create a new worker and see if the worker target is reported
   const onWorkerCreated = new Promise(resolve => {
@@ -158,10 +158,16 @@ add_task(async function() {
       if (targets.includes(targetFront)) {
         return;
       }
-      targetCommand.unwatchTargets([TYPES.WORKER], onAvailable2);
+      targetCommand.unwatchTargets({
+        types: [TYPES.WORKER],
+        onAvailable: onAvailable2,
+      });
       resolve(targetFront);
     };
-    targetCommand.watchTargets([TYPES.WORKER], onAvailable2);
+    targetCommand.watchTargets({
+      types: [TYPES.WORKER],
+      onAvailable: onAvailable2,
+    });
   });
   // eslint-disable-next-line no-unused-vars
   const worker2 = new Worker(CHROME_WORKER_URL + "#second");
@@ -191,11 +197,19 @@ add_task(async function() {
   const onWorkerDestroyed = new Promise(resolve => {
     const emptyFn = () => {};
     const onDestroyed = ({ targetFront }) => {
-      targetCommand.unwatchTargets([TYPES.WORKER], emptyFn, onDestroyed);
+      targetCommand.unwatchTargets({
+        types: [TYPES.WORKER],
+        onAvailable: emptyFn,
+        onDestroyed,
+      });
       resolve(targetFront);
     };
 
-    targetCommand.watchTargets([TYPES.WORKER], emptyFn, onDestroyed);
+    targetCommand.watchTargets({
+      types: [TYPES.WORKER],
+      onAvailable: emptyFn,
+      onDestroyed,
+    });
   });
   worker2.terminate();
   const workerTargetFront = await onWorkerDestroyed;

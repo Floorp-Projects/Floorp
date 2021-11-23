@@ -36,7 +36,11 @@ add_task(async function() {
   const onDestroyed = ({ targetFront }) => {
     destroyedTargets.push(targetFront);
   };
-  await targetCommand.watchTargets([TYPES.FRAME], onAvailable, onDestroyed);
+  await targetCommand.watchTargets({
+    types: [TYPES.FRAME],
+    onAvailable,
+    onDestroyed,
+  });
 
   await waitFor(() => targets.length === 3);
   ok(
@@ -92,7 +96,11 @@ add_task(async function() {
     }
   }
 
-  targetCommand.unwatchTargets([TYPES.FRAME], onAvailable, onDestroyed);
+  targetCommand.unwatchTargets({
+    types: [TYPES.FRAME],
+    onAvailable,
+    onDestroyed,
+  });
   targetCommand.destroy();
   BrowserTestUtils.removeTab(tab);
   await commands.destroy();
