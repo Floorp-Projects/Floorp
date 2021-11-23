@@ -15,6 +15,7 @@ import androidx.annotation.UiThread;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -809,10 +810,7 @@ public class WebExtension {
 
     @Override
     public int hashCode() {
-      int result = 17;
-      result = 31 * result + (webExtensionId != null ? webExtensionId.hashCode() : 0);
-      result = 31 * result + (nativeApp != null ? nativeApp.hashCode() : 0);
-      return result;
+      return Arrays.hashCode(new Object[] {webExtensionId, nativeApp});
     }
   }
 

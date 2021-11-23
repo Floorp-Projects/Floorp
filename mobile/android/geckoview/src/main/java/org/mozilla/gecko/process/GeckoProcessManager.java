@@ -13,6 +13,7 @@ import androidx.collection.ArrayMap;
 import androidx.collection.ArraySet;
 import androidx.collection.SimpleArrayMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import org.mozilla.gecko.GeckoAppShell;
@@ -107,7 +108,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     @Override
     public int hashCode() {
-      return 31 * mType.hashCode() + mPid;
+      return Arrays.hashCode(new Object[] {mType, mPid});
     }
   }
 

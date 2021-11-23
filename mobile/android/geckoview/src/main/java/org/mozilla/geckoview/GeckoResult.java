@@ -351,11 +351,7 @@ public class GeckoResult<T> {
 
   @Override
   public synchronized int hashCode() {
-    int result = 17;
-    result = 31 * result + (mComplete ? 1 : 0);
-    result = 31 * result + (mValue != null ? mValue.hashCode() : 0);
-    result = 31 * result + (mError != null ? mError.hashCode() : 0);
-    return result;
+    return Arrays.hashCode(new Object[] {mComplete, mValue, mError});
   }
 
   // This can go away once we can rely on java.util.Objects.equals() (API 19)
