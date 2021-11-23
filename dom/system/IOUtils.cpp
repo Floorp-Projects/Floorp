@@ -32,7 +32,6 @@
 #include "mozilla/Utf8.h"
 #include "mozilla/dom/IOUtilsBinding.h"
 #include "mozilla/dom/Promise.h"
-#include "PathUtils.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsFileStreams.h"
@@ -57,15 +56,14 @@
 #  include "nsSystemInfo.h"
 #endif
 
-#define REJECT_IF_INIT_PATH_FAILED(_file, _path, _promise)            \
-  do {                                                                \
-    if (nsresult _rv = PathUtils::InitFileWithPath((_file), (_path)); \
-        NS_FAILED(_rv)) {                                             \
-      (_promise)->MaybeRejectWithOperationError(                      \
-          FormatErrorMessage(_rv, "Could not parse path (%s)",        \
-                             NS_ConvertUTF16toUTF8(_path).get()));    \
-      return (_promise).forget();                                     \
-    }                                                                 \
+#define REJECT_IF_INIT_PATH_FAILED(_file, _path, _promise)               \
+  do {                                                                   \
+    if (nsresult _rv = (_file)->InitWithPath((_path)); NS_FAILED(_rv)) { \
+      (_promise)->MaybeRejectWithOperationError(                         \
+          FormatErrorMessage(_rv, "Could not parse path (%s)",           \
+                             NS_ConvertUTF16toUTF8(_path).get()));       \
+      return (_promise).forget();                                        \
+    }                                                                    \
   } while (0)
 
 static constexpr auto SHUTDOWN_ERROR =
@@ -321,7 +319,7 @@ RefPtr<SyncReadFile> IOUtils::OpenFileForSyncReading(GlobalObject& aGlobal,
   MOZ_RELEASE_ASSERT(!NS_IsMainThread());
 
   nsCOMPtr<nsIFile> file = new nsLocalFile();
-  if (nsresult rv = PathUtils::InitFileWithPath(file, aPath); NS_FAILED(rv)) {
+  if (nsresult rv = file->InitWithPath(aPath); NS_FAILED(rv)) {
     aRv.ThrowOperationError(FormatErrorMessage(
         rv, "Could not parse path (%s)", NS_ConvertUTF16toUTF8(aPath).get()));
     return nullptr;
@@ -1877,8 +1875,8 @@ IOUtils::InternalWriteOpts::FromBinding(const WriteOptions& aOptions) {
 
   if (aOptions.mBackupFile.WasPassed()) {
     opts.mBackupFile = new nsLocalFile();
-    if (nsresult rv = PathUtils::InitFileWithPath(opts.mBackupFile,
-                                                  aOptions.mBackupFile.Value());
+    if (nsresult rv =
+            opts.mBackupFile->InitWithPath(aOptions.mBackupFile.Value());
         NS_FAILED(rv)) {
       return Err(IOUtils::IOError(rv).WithMessage(
           "Could not parse path of backupFile (%s)",
@@ -1888,8 +1886,7 @@ IOUtils::InternalWriteOpts::FromBinding(const WriteOptions& aOptions) {
 
   if (aOptions.mTmpPath.WasPassed()) {
     opts.mTmpFile = new nsLocalFile();
-    if (nsresult rv = PathUtils::InitFileWithPath(opts.mTmpFile,
-                                                  aOptions.mTmpPath.Value());
+    if (nsresult rv = opts.mTmpFile->InitWithPath(aOptions.mTmpPath.Value());
         NS_FAILED(rv)) {
       return Err(IOUtils::IOError(rv).WithMessage(
           "Could not parse path of temp file (%s)",
