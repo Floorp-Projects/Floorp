@@ -336,7 +336,7 @@ await OS.File.remove(path, { ignoreAbsent: true });
 await IOUtils.remove(path);
 ```
 
-##### Remove a directory
+##### Remove a directory and all its contents
 
 **`OS.File`**
 ```js
@@ -352,11 +352,12 @@ await IOUtils.remove(path, { recursive: true });
 
 **`OS.File`**
 ```js
-await OS.File.removeEmptyDir(path, { ignoreAbsent: true });
+await OS.File.removeEmptyDir(path); // Will throw an exception if `path` is not empty.
 ```
+
 **`IOUtils`**
 ```js
-await IOUtils.remove(path, { recursive: true });
+await IOUtils.remove(path); // Will throw an exception if `path` is not empty.
 ```
 
 ### Make a directory
