@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script>
+    window.addEventListener("pageshow", ({ persisted }) => {
+      let bc = new BroadcastChannel("bug1741132");
+      bc.addEventListener("message", ({ data: { cmd, arg } }) => {
+        switch (cmd) {
+          case "load":
+            bc.close();
+            document.location = arg;
+            break;
+          case "go":
+            history.go(arg);
+            break;
+          case "close":
+            window.close();
+            break;
+        }
+      });
+      bc.postMessage(persisted);
+    });
+  </script>
+</head>
+<body>
+</body>
+</html>
