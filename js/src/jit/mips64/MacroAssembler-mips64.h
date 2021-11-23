@@ -122,9 +122,13 @@ class MacroAssemblerMIPS64 : public MacroAssemblerMIPSShared {
                              Label* overflow);
   void ma_addPtrTestOverflow(Register rd, Register rs, Imm32 imm,
                              Label* overflow);
+  void ma_addPtrTestOverflow(Register rd, Register rs, ImmWord imm,
+                             Label* overflow);
   void ma_addPtrTestCarry(Condition cond, Register rd, Register rs, Register rt,
                           Label* overflow);
   void ma_addPtrTestCarry(Condition cond, Register rd, Register rs, Imm32 imm,
+                          Label* overflow);
+  void ma_addPtrTestCarry(Condition cond, Register rd, Register rs, ImmWord imm,
                           Label* overflow);
   // subtract
   void ma_dsubu(Register rd, Register rs, Imm32 imm);
