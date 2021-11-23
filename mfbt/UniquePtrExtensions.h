@@ -12,11 +12,15 @@
 #include <type_traits>
 
 #include "mozilla/Attributes.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/fallible.h"
 #include "mozilla/UniquePtr.h"
 
 #ifdef XP_WIN
 #  include <cstdint>
+#endif
+#ifdef XP_MACOSX
+#  include <mach/mach.h>
 #endif
 
 namespace mozilla {
@@ -153,6 +157,50 @@ struct FileHandleDeleter {
   MFBT_API void operator()(FileHandleHelper aHelper);
 };
 
+#ifdef XP_MACOSX
+struct MachPortHelper {
+  MOZ_IMPLICIT MachPortHelper(mach_port_t aPort) : mPort(aPort) {}
+
+  MOZ_IMPLICIT constexpr MachPortHelper(std::nullptr_t)
+      : mPort(MACH_PORT_NULL) {}
+
+  bool operator!=(std::nullptr_t) const { return mPort != MACH_PORT_NULL; }
+
+  operator const mach_port_t&() const { return mPort; }
+  operator mach_port_t&() { return mPort; }
+
+ private:
+  mach_port_t mPort;
+};
+
+struct MachSendRightDeleter {
+  using pointer = MachPortHelper;
+  MFBT_API void operator()(MachPortHelper aHelper) {
+    DebugOnly<kern_return_t> kr =
+        mach_port_deallocate(mach_task_self(), aHelper);
+    MOZ_ASSERT(kr == KERN_SUCCESS, "failed to deallocate mach send right");
+  }
+};
+
+struct MachReceiveRightDeleter {
+  using pointer = MachPortHelper;
+  MFBT_API void operator()(MachPortHelper aHelper) {
+    DebugOnly<kern_return_t> kr = mach_port_mod_refs(
+        mach_task_self(), aHelper, MACH_PORT_RIGHT_RECEIVE, -1);
+    MOZ_ASSERT(kr == KERN_SUCCESS, "failed to release mach receive right");
+  }
+};
+
+struct MachPortSetDeleter {
+  using pointer = MachPortHelper;
+  MFBT_API void operator()(MachPortHelper aHelper) {
+    DebugOnly<kern_return_t> kr = mach_port_mod_refs(
+        mach_task_self(), aHelper, MACH_PORT_RIGHT_PORT_SET, -1);
+    MOZ_ASSERT(kr == KERN_SUCCESS, "failed to release mach port set");
+  }
+};
+#endif
+
 }  // namespace detail
 
 template <typename T>
@@ -162,6 +210,28 @@ using UniqueFreePtr = UniquePtr<T, detail::FreePolicy<T>>;
 // objects: a file descriptor on Unix or a handle on Windows.
 using UniqueFileHandle =
     UniquePtr<detail::FileHandleType, detail::FileHandleDeleter>;
+
+#ifdef XP_MACOSX
+// A RAII class for a Mach port that names a send right.
+using UniqueMachSendRight =
+    UniquePtr<mach_port_t, detail::MachSendRightDeleter>;
+// A RAII class for a Mach port that names a receive right.
+using UniqueMachReceiveRight =
+    UniquePtr<mach_port_t, detail::MachReceiveRightDeleter>;
+// A RAII class for a Mach port set.
+using UniqueMachPortSet = UniquePtr<mach_port_t, detail::MachPortSetDeleter>;
+
+// Increases the user reference count for MACH_PORT_RIGHT_SEND by 1 and returns
+// a new UniqueMachSendRight to manage the additional right.
+inline UniqueMachSendRight RetainMachSendRight(mach_port_t aPort) {
+  kern_return_t kr =
+      mach_port_mod_refs(mach_task_self(), aPort, MACH_PORT_RIGHT_SEND, 1);
+  if (kr == KERN_SUCCESS) {
+    return UniqueMachSendRight(aPort);
+  }
+  return nullptr;
+}
+#endif
 
 // Helper for passing a UniquePtr to an old-style function that uses raw
 // pointers for out params. Example usage:
