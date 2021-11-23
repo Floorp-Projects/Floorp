@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: pathspec
-Version: 0.8.0
+Version: 0.9.0
 Summary: Utility library for gitignore style pattern matching of file paths.
 Home-page: https://github.com/cpburnz/python-path-specification
 Author: Caleb P. Burns
@@ -19,11 +19,14 @@ Classifier: Programming Language :: Python :: 3.5
 Classifier: Programming Language :: Python :: 3.6
 Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: Implementation :: CPython
 Classifier: Programming Language :: Python :: Implementation :: PyPy
 Classifier: Topic :: Software Development :: Libraries :: Python Modules
 Classifier: Topic :: Utilities
-Requires-Python: >=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*
+Requires-Python: !=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7
+Description-Content-Type: text/x-rst
+
 
 *pathspec*: Path Specification
 ==============================
@@ -178,8 +181,31 @@ Other Languages
 
 .. _`Ruby gem`: https://github.com/highb/pathspec-ruby
 
+
 Change History
 ==============
+
+0.9.0 (2021-07-17)
+------------------
+
+- `Issue #44`_/`Issue #50`_: Raise `GitWildMatchPatternError` for invalid git patterns.
+- `Issue #45`_: Fix for duplicate leading double-asterisk, and edge cases.
+- `Issue #46`_: Fix matching absolute paths.
+- API change: `util.normalize_files()` now returns a `Dict[str, List[pathlike]]` instead of a `Dict[str, pathlike]`.
+- Added type hinting.
+
+.. _`Issue #44`: https://github.com/cpburnz/python-path-specification/issues/44
+.. _`Issue #45`: https://github.com/cpburnz/python-path-specification/pull/45
+.. _`Issue #46`: https://github.com/cpburnz/python-path-specification/issues/46
+.. _`Issue #50`: https://github.com/cpburnz/python-path-specification/pull/50
+
+
+0.8.1 (2020-11-07)
+------------------
+
+- `Issue #43`_: Add support for addition operator.
+
+.. _`Issue #43`: https://github.com/cpburnz/python-path-specification/pull/43
 
 
 0.8.0 (2020-04-09)
@@ -187,12 +213,14 @@ Change History
 
 - `Issue #30`_: Expose what patterns matched paths. Added `util.detailed_match_files()`.
 - `Issue #31`_: `match_tree()` doesn't return symlinks.
+- `Issue #34`_: Support `pathlib.Path`\ s.
 - Add `PathSpec.match_tree_entries` and `util.iter_tree_entries()` to support directories and symlinks.
 - API change: `match_tree()` has been renamed to `match_tree_files()`. The old name `match_tree()` is still available as an alias.
 - API change: `match_tree_files()` now returns symlinks. This is a bug fix but it will change the returned results.
 
 .. _`Issue #30`: https://github.com/cpburnz/python-path-specification/issues/30
 .. _`Issue #31`: https://github.com/cpburnz/python-path-specification/issues/31
+.. _`Issue #34`: https://github.com/cpburnz/python-path-specification/issues/34
 
 
 0.7.0 (2019-12-27)
@@ -379,4 +407,5 @@ Change History
 ------------------
 
 - Initial release.
+
 
