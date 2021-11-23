@@ -1273,6 +1273,7 @@ DownloadsIndicatorDataCtor.prototype = {
           break;
         case Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED: // fall-through
         case Downloads.Error.BLOCK_VERDICT_INSECURE:
+        case Downloads.Error.BLOCK_VERDICT_DOWNLOAD_SPAM:
           // Existing higher level attention indication trumps ATTENTION_WARNING.
           if (this._attention != DownloadsCommon.ATTENTION_SEVERE) {
             this.attention = DownloadsCommon.ATTENTION_WARNING;

@@ -13,6 +13,7 @@ JAR_MANIFESTS += ["jar.mn"]
 
 EXTRA_JS_MODULES += [
     "DownloadsCommon.jsm",
+    "DownloadSpamProtection.jsm",
     "DownloadsTaskbar.jsm",
     "DownloadsViewableInternally.jsm",
     "DownloadsViewUI.jsm",
