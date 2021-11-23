@@ -10,7 +10,7 @@
   "use strict";
   SimpleTest.waitForExplicitFinish();
 
-  document.addEventListener("DOMContentLoaded", function() {
+  document.addEventListener("DOMContentLoaded", async function() {
     // This element will be added to DOM and expected to be localized.
     let elem = document.createElement("div");
 
@@ -47,21 +47,19 @@
 
     document.body.appendChild(elem3);
 
-    // It's really tricky to test if no change happened in result
-    // of an operation. This test will just check if the element
-    // was not localized within 100ms.
-    setTimeout(async () => {
-      is(elem.textContent.length > 0, true);
-      is(elem2.textContent.length, 0);
-      is(elem3.textContent.length > 0, true);
-      is(elem4.textContent.length, 0);
+    // 1. `elem` should be localized since it is in DOM.
+    await SimpleTest.waitForCondition(() => elem.textContent.length > 0);
+    // 2. `elem2` was removed before l10n frame, so it should remain not localized.
+    is(elem2.textContent.length, 0);
+    // 3. `elem3` was added/removed/re-added so it should become localized.
+    await SimpleTest.waitForCondition(() => elem3.textContent.length > 0);
+    // 4. `elem4` was not re-added, so it shouldn't be localized.
+    is(elem4.textContent.length, 0);
 
-      document.body.appendChild(elem4);
-      await SimpleTest.waitForCondition(() => {
-        return elem4.textContent.length > 0;
-      });
-      SimpleTest.finish();
-    }, 100);
+    document.body.appendChild(elem4);
+    // 5. Now we re-added `elem4` to DOM so it should get localized.
+    await SimpleTest.waitForCondition(() => elem4.textContent.length > 0);
+    SimpleTest.finish();
   });
   </script>
 </head>
