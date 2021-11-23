@@ -55,54 +55,57 @@
 // categories according to size class.  Assuming runtime defaults, the size
 // classes in each category are as follows (for x86, x86_64 and Apple Silicon):
 //
-//   |===============================================================|
-//   | Category | Subcategory    |     x86 |  x86_64 | Apple Silicon |
-//   |---------------------------+---------+---------+---------------+
-//   | Word size                 |  32 bit |  64 bit |        64 bit |
-//   | Page size                 |    4 Kb |    4 Kb |         16 Kb |
-//   |===============================================================|
-//   | Small    | Tiny           |     4/- |       - |             - |
-//   |          |                |       8 |     8/- |             8 |
-//   |          |----------------+---------|---------|---------------|
-//   |          | Quantum-spaced |      16 |      16 |            16 |
-//   |          |                |      32 |      32 |            32 |
-//   |          |                |      48 |      48 |            48 |
-//   |          |                |     ... |     ... |           ... |
-//   |          |                |     480 |     480 |           480 |
-//   |          |                |     496 |     496 |           496 |
-//   |          |----------------+---------|---------|---------------|
-//   |          | Quantum-wide-  |     512 |     512 |           512 |
-//   |          | spaced         |     768 |     768 |           768 |
-//   |          |                |     ... |     ... |           ... |
-//   |          |                |    3584 |    3584 |          3584 |
-//   |          |                |    3840 |    3840 |          3840 |
-//   |          |----------------+---------|---------|---------------|
-//   |          | Sub-page       |       - |       - |          4096 |
-//   |          |                |       - |       - |          8 kB |
-//   |===============================================================|
-//   | Large                     |    4 kB |    4 kB |             - |
-//   |                           |    8 kB |    8 kB |             - |
-//   |                           |   12 kB |   12 kB |             - |
-//   |                           |   16 kB |   16 kB |         16 kB |
-//   |                           |     ... |     ... |             - |
-//   |                           |   32 kB |   32 kB |         32 kB |
-//   |                           |     ... |     ... |           ... |
-//   |                           | 1008 kB | 1008 kB |       1008 kB |
-//   |                           | 1012 kB | 1012 kB |             - |
-//   |                           | 1016 kB | 1012 kB |             - |
-//   |                           | 1020 kB | 1020 kB |             - |
-//   |===============================================================|
-//   | Huge                      |    1 MB |    1 MB |          1 MB |
-//   |                           |    2 MB |    2 MB |          2 MB |
-//   |                           |    3 MB |    3 MB |          3 MB |
-//   |                           |     ... |     ... |           ... |
-//   |===============================================================|
+//   |======================================================================|
+//   | Category | Subcategory    |     x86 |  x86_64 | Mac x86_64 | Mac ARM |
+//   |---------------------------+---------+---------+------------+---------|
+//   | Word size                 |  32 bit |  64 bit |     64 bit |  64 bit |
+//   | Page size                 |    4 Kb |    4 Kb |       4 Kb |   16 Kb |
+//   |======================================================================|
+//   | Small    | Tiny           |    4/-w |      -w |          - |       - |
+//   |          |                |       8 |    8/-w |          8 |       8 |
+//   |          |----------------+---------|---------|------------|---------|
+//   |          | Quantum-spaced |      16 |      16 |         16 |      16 |
+//   |          |                |      32 |      32 |         32 |      32 |
+//   |          |                |      48 |      48 |         48 |      48 |
+//   |          |                |     ... |     ... |        ... |     ... |
+//   |          |                |     480 |     480 |        480 |     480 |
+//   |          |                |     496 |     496 |        496 |     496 |
+//   |          |----------------+---------|---------|------------|---------|
+//   |          | Quantum-wide-  |     512 |     512 |          - |       - |
+//   |          | spaced         |     768 |     768 |          - |       - |
+//   |          |                |     ... |     ... |          - |       - |
+//   |          |                |    3584 |    3584 |          - |       - |
+//   |          |                |    3840 |    3840 |          - |       - |
+//   |          |----------------+---------|---------|------------|---------|
+//   |          | Sub-page       |       - |       - |        512 |     512 |
+//   |          |                |       - |       - |       1024 |    1024 |
+//   |          |                |       - |       - |       2048 |    2048 |
+//   |          |                |       - |       - |            |    4096 |
+//   |          |                |       - |       - |            |    8 kB |
+//   |============================================================|=========|
+//   | Large                     |    4 kB |    4 kB |       4 kB |       - |
+//   |                           |    8 kB |    8 kB |       8 kB |       - |
+//   |                           |   12 kB |   12 kB |      12 kB |       - |
+//   |                           |   16 kB |   16 kB |      16 kB |   16 kB |
+//   |                           |     ... |     ... |        ... |       - |
+//   |                           |   32 kB |   32 kB |      32 kB |   32 kB |
+//   |                           |     ... |     ... |        ... |     ... |
+//   |                           | 1008 kB | 1008 kB |    1008 kB | 1008 kB |
+//   |                           | 1012 kB | 1012 kB |    1012 kB |       - |
+//   |                           | 1016 kB | 1016 kB |    1016 kB |       - |
+//   |                           | 1020 kB | 1020 kB |    1020 kB |       - |
+//   |======================================================================|
+//   | Huge                      |    1 MB |    1 MB |       1 MB |    1 MB |
+//   |                           |    2 MB |    2 MB |       2 MB |    2 MB |
+//   |                           |    3 MB |    3 MB |       3 MB |    3 MB |
+//   |                           |     ... |     ... |        ... |     ... |
+//   |======================================================================|
 //
 // Legend:
-//   n:   Size class exists for this platform.
-//   n/-: This size class doesn't exist on Windows (see kMinTinyClass).
-//   -:   This size class doesn't exist for this platform.
-//   ...: Size classes follow a pattern here.
+//   n:    Size class exists for this platform.
+//   n/-w: This size class doesn't exist on Windows (see kMinTinyClass).
+//   -:    This size class doesn't exist for this platform.
+//   ...:  Size classes follow a pattern here.
 //
 // NOTE: Due to Mozilla bug 691003, we cannot reserve less than one word for an
 // allocation on Linux or Mac.  So on 32-bit *nix, the smallest bucket size is
@@ -416,7 +419,11 @@ static const size_t kMaxTinyClass = 8;
 // them.
 static const size_t kMinQuantumClass = kMaxTinyClass * 2;
 static const size_t kMinQuantumWideClass = 512;
+#ifdef XP_MACOSX
+static const size_t kMinSubPageClass = 512;
+#else
 static const size_t kMinSubPageClass = 4_KiB;
+#endif
 
 // Amount (quantum) separating quantum-spaced size classes.
 static const size_t kQuantum = 16;
@@ -446,11 +453,12 @@ static_assert(mozilla::IsPowerOfTwo(kMinSubPageClass),
 static const size_t kNumTinyClasses =
     LOG2(kMaxTinyClass) - LOG2(kMinTinyClass) + 1;
 
-// Number of quantum-spaced classes.
+// Number of quantum-spaced classes.  We add kQuantum(Max) before subtracting to
+// avoid underflow when a class is empty (Max<Min).
 static const size_t kNumQuantumClasses =
-    (kMaxQuantumClass - kMinQuantumClass) / kQuantum + 1;
+    (kMaxQuantumClass + kQuantum - kMinQuantumClass) / kQuantum;
 static const size_t kNumQuantumWideClasses =
-    (kMaxQuantumWideClass - kMinQuantumWideClass) / kQuantumWide + 1;
+    (kMaxQuantumWideClass + kQuantumWide - kMinQuantumWideClass) / kQuantumWide;
 
 // Size and alignment of memory chunks that are allocated by the OS's virtual
 // memory system.
@@ -551,7 +559,8 @@ GLOBAL_ASSERT(1ULL << gPageSize2Pow == gPageSize,
               "Page size is not a power of two");
 GLOBAL_ASSERT(kQuantum >= sizeof(void*));
 GLOBAL_ASSERT(kQuantum <= kQuantumWide);
-GLOBAL_ASSERT(kQuantumWide <= (kMinSubPageClass - kMaxQuantumClass));
+GLOBAL_ASSERT(!kNumQuantumWideClasses ||
+              kQuantumWide <= (kMinSubPageClass - kMaxQuantumClass));
 
 GLOBAL_ASSERT(kQuantumWide <= kMaxQuantumClass);
 
@@ -2253,7 +2262,6 @@ struct FastDivide {
       mozilla::IsPowerOfTwo(Max) ? Max - Q : Max;
   // +1 because this range is inclusive.
   static const unsigned num_divisors = (max_divisor - min_divisor) / Q + 1;
-  static_assert(max_divisor > min_divisor);
 
   static const unsigned inv_shift = 21;
 
@@ -2274,7 +2282,11 @@ struct FastDivide {
       inv(28), inv(29), inv(30), inv(31)
     };
     // clang-format on
-    static_assert(num_divisors <= sizeof(size_invs) / sizeof(unsigned),
+
+    // If the divisor is valid (min is below max) then the size_invs array must
+    // be large enough.
+    static_assert(!(min_divisor < max_divisor) ||
+                      num_divisors <= sizeof(size_invs) / sizeof(unsigned),
                   "num_divisors does not match array size");
 
     MOZ_ASSERT(div >= min_divisor);
