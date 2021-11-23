@@ -522,7 +522,7 @@ class MochitestArguments(ArgumentContainer):
             {
                 "action": "store_true",
                 "default": False,
-                "help": "Start the browser JS debugger before running the test. Implies --no-autorun.",  # NOQA: E501
+                "help": "Start the browser JS debugger before running the test.",
             },
         ],
         [
