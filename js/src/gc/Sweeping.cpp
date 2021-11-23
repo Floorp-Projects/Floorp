@@ -370,7 +370,8 @@ void GCRuntime::assertBackgroundSweepingFinished() {
 
   for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next()) {
     for (auto kind : AllAllocKinds()) {
-      MOZ_ASSERT_IF(state() != State::Mark && state() != State::Sweep,
+      MOZ_ASSERT_IF(state() != State::Prepare && state() != State::Mark &&
+                        state() != State::Sweep,
                     zone->arenas.collectingArenaList(kind).isEmpty());
       MOZ_ASSERT(zone->arenas.doneBackgroundFinalize(kind));
     }
