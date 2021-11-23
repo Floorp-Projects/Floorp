@@ -975,7 +975,7 @@ this.FormAutofillUtils = {
         for (let option of options) {
           if (
             [option.text, option.label, option.value].some(
-              s => s.trim().toLowerCase() == network
+              s => CreditCard.getNetworkFromName(s) == network
             )
           ) {
             return option;
