@@ -24,6 +24,7 @@ add_task(async function test_broadcasting_two_windows_command() {
     "commandwindowglobalonly",
     "testBroadcast",
     {},
+    contextDescriptorAll,
     rootMessageHandler
   );
 
