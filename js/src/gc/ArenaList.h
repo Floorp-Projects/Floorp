@@ -148,6 +148,8 @@ class ArenaList {
   // |this| and clears |other|.
   inline ArenaList& insertListWithCursorAtEnd(ArenaList& other);
 
+  inline Arena* takeFirstArena();
+
   Arena* removeRemainingArenas(Arena** arenap);
   Arena** pickArenasToRelocate(size_t& arenaTotalOut, size_t& relocTotalOut);
   Arena* relocateArenas(Arena* toRelocate, Arena* relocated,
@@ -278,10 +280,7 @@ class ArenaLists {
    * Arenas which are currently being collected. The collector can move arenas
    * from arenaLists_ here and back again at various points in collection.
    */
-  ArenaListData<AllAllocKindArray<ArenaList>> collectingArenaLists_;
-
-  /* For each arena kind, a list of arenas remaining to be swept. */
-  MainThreadOrGCTaskData<AllAllocKindArray<Arena*>> arenasToSweep_;
+  ZoneOrGCTaskData<AllAllocKindArray<ArenaList>> collectingArenaLists_;
 
   /* During incremental sweeping, a list of the arenas already swept. */
   ZoneOrGCTaskData<AllocKind> incrementalSweptArenaKind;
@@ -309,7 +308,6 @@ class ArenaLists {
 
   inline Arena* getFirstArena(AllocKind thingKind) const;
   inline Arena* getFirstCollectingArena(AllocKind thingKind) const;
-  inline Arena* getFirstArenaToSweep(AllocKind thingKind) const;
   inline Arena* getFirstSweptArena(AllocKind thingKind) const;
   inline Arena* getArenaAfterCursor(AllocKind thingKind) const;
 
@@ -373,14 +371,10 @@ class ArenaLists {
     return concurrentUseState_.ref()[i];
   }
 
-  Arena*& arenasToSweep(AllocKind i) { return arenasToSweep_.ref()[i]; }
-  Arena* arenasToSweep(AllocKind i) const { return arenasToSweep_.ref()[i]; }
-
   inline JSRuntime* runtime();
   inline JSRuntime* runtimeFromAnyThread();
 
-  void queueForForegroundSweep(AllocKind thingKind);
-  void queueForBackgroundSweep(AllocKind thingKind);
+  void initBackgroundSweep(AllocKind thingKind);
 
   TenuredCell* refillFreeListAndAllocate(FreeLists& freeLists,
                                          AllocKind thingKind,

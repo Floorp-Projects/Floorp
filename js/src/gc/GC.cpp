@@ -2153,7 +2153,7 @@ bool GCRuntime::prepareZonesForCollection(JS::GCReason reason,
     MOZ_ASSERT(!zone->isCollecting());
     MOZ_ASSERT_IF(!zone->isAtomsZone(), !zone->compartments().empty());
     for (auto i : AllAllocKinds()) {
-      MOZ_ASSERT(!zone->arenas.arenasToSweep(i));
+      MOZ_ASSERT(zone->arenas.collectingArenaList(i).isEmpty());
     }
   }
 #endif
