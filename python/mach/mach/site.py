@@ -54,7 +54,7 @@ class MozSiteMetadata:
 
     @classmethod
     def from_runtime(cls):
-        return cls.from_path(os.path.normcase(sys.prefix))
+        return cls.from_path(sys.prefix)
 
     @classmethod
     def from_path(cls, prefix):
@@ -101,8 +101,6 @@ class MachSiteManager:
         active_metadata,
         site_packages_source,
     ):
-        topsrcdir = os.path.normcase(topsrcdir)
-        state_dir = os.path.normcase(state_dir)
         self._topsrcdir = topsrcdir
         self._active_metadata = active_metadata
         self._site_packages_source = site_packages_source
@@ -283,12 +281,9 @@ class CommandSiteManager:
         virtualenvs_dir,
         site_name,
     ):
-        topsrcdir = os.path.normcase(topsrcdir)
         self.topsrcdir = topsrcdir
         self._virtualenv_name = site_name
-        self.virtualenv_root = os.path.join(
-            os.path.normcase(virtualenvs_dir), site_name
-        )
+        self.virtualenv_root = os.path.join(virtualenvs_dir, site_name)
         self._virtualenv = MozVirtualenv(topsrcdir, site_name, self.virtualenv_root)
         self.bin_path = self._virtualenv.bin_path
         self.python_path = self._virtualenv.python_path
@@ -335,7 +330,7 @@ class CommandSiteManager:
 
         If the package is already installed, this is a no-op.
         """
-        if os.path.normcase(sys.executable).startswith(self.bin_path):
+        if os.path.normcase(sys.executable).startswith(os.path.normcase(self.bin_path)):
             # If we're already running in this interpreter, we can optimize in
             # the case that the package requirement is already satisfied.
             from pip._internal.req.constructors import install_req_from_line
