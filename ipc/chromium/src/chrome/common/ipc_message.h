@@ -350,6 +350,27 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   // IPC. Must only be called when there are no ports on this IPC::Message.
   void SetAttachedPorts(nsTArray<mozilla::ipc::ScopedPort> ports);
 
+#if defined(OS_MACOSX)
+  bool WriteMachSendRight(mozilla::UniqueMachSendRight port);
+
+  // WARNING: This method is marked as `const` so it can be called when
+  // deserializing the message, but will mutate it, consuming the send rights.
+  bool ConsumeMachSendRight(PickleIterator* iter,
+                            mozilla::UniqueMachSendRight* port) const;
+
+  uint32_t num_send_rights() const;
+#endif
+
+  uint32_t num_relayed_attachments() const {
+#if defined(OS_WIN)
+    return num_handles();
+#elif defined(OS_MACOSX)
+    return num_send_rights();
+#else
+    return 0;
+#endif
+  }
+
   friend class Channel;
   friend class MessageReplyDeserializer;
   friend class SyncMessage;
@@ -369,6 +390,8 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
     uint32_t num_handles;  // the number of handles included with this message
 #if defined(OS_MACOSX)
     uint32_t cookie;  // cookie to ACK that the descriptors have been read.
+    uint32_t num_send_rights;  // the number of mach send rights included with
+                               // this message
 #endif
     union {
       // For Interrupt messages, a guess at what the *other* side's stack depth
@@ -400,6 +423,14 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   // Mutable, as this array can be mutated during `ConsumePort` when
   // deserializing a message.
   mutable nsTArray<mozilla::ipc::ScopedPort> attached_ports_;
+
+#if defined(OS_MACOSX)
+  // The set of mach send rights which are attached to this message.
+  //
+  // Mutable, as this array can be mutated during `ConsumeMachSendRight` when
+  // deserializing a message.
+  mutable nsTArray<mozilla::UniqueMachSendRight> attached_send_rights_;
+#endif
 
   mozilla::TimeStamp create_time_;
 };
