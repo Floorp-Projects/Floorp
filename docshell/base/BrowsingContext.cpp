@@ -2910,21 +2910,12 @@ void BrowsingContext::DidSet(FieldIndex<IDX_IsInBFCache>) {
     nsDocShell::Cast(mDocShell)->MaybeDisconnectChildListenersOnPageHide();
   }
 
-  if (isInBFCache) {
-    PreOrderWalk([&](BrowsingContext* aContext) {
-      nsCOMPtr<nsIDocShell> shell = aContext->GetDocShell();
-      if (shell) {
-        nsDocShell::Cast(shell)->FirePageHideShowNonRecursive(false);
-      }
-    });
-  } else {
-    PostOrderWalk([&](BrowsingContext* aContext) {
-      nsCOMPtr<nsIDocShell> shell = aContext->GetDocShell();
-      if (shell) {
-        nsDocShell::Cast(shell)->FirePageHideShowNonRecursive(true);
-      }
-    });
-  }
+  PreOrderWalk([&](BrowsingContext* aContext) {
+    nsCOMPtr<nsIDocShell> shell = aContext->GetDocShell();
+    if (shell) {
+      nsDocShell::Cast(shell)->FirePageHideShowNonRecursive(!isInBFCache);
+    }
+  });
 
   if (isInBFCache) {
     PreOrderWalk([&](BrowsingContext* aContext) {
