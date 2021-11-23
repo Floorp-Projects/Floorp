@@ -28,10 +28,14 @@ object EngineMiddleware {
     /**
      * Creates a list of [Middleware] to be installed on a [BrowserStore] in order to support all
      * [EngineAction]s.
+     *
+     * @param trimMemoryAutomatically Whether a middleware should listen to LowMemoryAction and
+     * automatically trim memory by suspending tabs.
      */
     fun create(
         engine: Engine,
-        scope: CoroutineScope = MainScope()
+        scope: CoroutineScope = MainScope(),
+        trimMemoryAutomatically: Boolean = true
     ): List<Middleware<BrowserState, BrowserAction>> {
         return listOf(
             EngineDelegateMiddleware(scope),
@@ -43,8 +47,11 @@ object EngineMiddleware {
             TabsRemovedMiddleware(scope),
             SuspendMiddleware(scope),
             WebExtensionMiddleware(),
-            TrimMemoryMiddleware(),
             CrashMiddleware()
-        )
+        ) + if (trimMemoryAutomatically) {
+            listOf(TrimMemoryMiddleware())
+        } else {
+            emptyList()
+        }
     }
 }
