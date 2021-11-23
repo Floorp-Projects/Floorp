@@ -232,7 +232,7 @@ function run_test() {
 
   // The schema should be upgraded to 11, and a 'modificationTime' column should
   // exist with all records having a value of 0.
-  Assert.equal(connection.schemaVersion, 11);
+  Assert.equal(connection.schemaVersion, 12);
 
   let select = connection.createStatement(
     "SELECT modificationTime FROM moz_perms"
