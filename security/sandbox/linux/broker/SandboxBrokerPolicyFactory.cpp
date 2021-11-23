@@ -809,6 +809,14 @@ SandboxBrokerPolicyFactory::GetRDDPolicy(int aPid) {
     }
   }
 
+  // VA-API needs DRI and GPU detection
+  policy->AddDir(rdwr, "/dev/dri");
+  AddMesaSysfsPaths(policy.get());
+
+  // FFmpeg and GPU drivers may need general-case library loading
+  AddLdconfigPaths(policy.get());
+  AddLdLibraryEnvPaths(policy.get());
+
   if (policy->IsEmpty()) {
     policy = nullptr;
   }
