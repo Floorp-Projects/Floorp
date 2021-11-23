@@ -485,7 +485,7 @@ struct VoiceReceiverInfo : public MediaReceiverInfo {
   int delay_estimate_ms = 0;
   int audio_level = 0;
   // Stats below correspond to similarly-named fields in the WebRTC stats spec.
-  // https://w3c.github.io/webrtc-stats/#dom-rtcmediastreamtrackstats
+  // https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats
   double total_output_energy = 0.0;
   uint64_t total_samples_received = 0;
   double total_output_duration = 0.0;
@@ -499,6 +499,9 @@ struct VoiceReceiverInfo : public MediaReceiverInfo {
   uint64_t removed_samples_for_acceleration = 0;
   uint64_t fec_packets_received = 0;
   uint64_t fec_packets_discarded = 0;
+  // Stats below correspond to similarly-named fields in the WebRTC stats spec.
+  // https://w3c.github.io/webrtc-stats/#dom-rtcreceivedrtpstreamstats
+  uint64_t packets_discarded = 0;
   // Stats below DO NOT correspond directly to anything in the WebRTC stats
   // fraction of synthesized audio inserted through expansion.
   float expand_rate = 0.0f;
