@@ -23,7 +23,6 @@ add_task(async function test_broadcasting_two_tabs_command() {
     "commandwindowglobalonly",
     "testBroadcast",
     {},
-    contextDescriptorAll,
     rootMessageHandler
   );
 
