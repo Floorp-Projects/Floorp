@@ -261,9 +261,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  void ScrollToCSSPixelsApproximate(
-      const mozilla::CSSPoint& aScrollPosition,
-      ScrollOrigin aOrigin = ScrollOrigin::NotSpecified);
+  void ScrollToCSSPixelsForApz(const mozilla::CSSPoint& aScrollPosition);
 
   CSSIntPoint GetScrollPositionCSSPixels();
   /**
@@ -1015,10 +1013,8 @@ class nsHTMLScrollFrame : public nsContainerFrame,
                          ScrollMode aMode = ScrollMode::Instant) final {
     mHelper.ScrollToCSSPixels(aScrollPosition, aMode);
   }
-  void ScrollToCSSPixelsApproximate(
-      const mozilla::CSSPoint& aScrollPosition,
-      ScrollOrigin aOrigin = ScrollOrigin::NotSpecified) final {
-    mHelper.ScrollToCSSPixelsApproximate(aScrollPosition, aOrigin);
+  void ScrollToCSSPixelsForApz(const mozilla::CSSPoint& aScrollPosition) final {
+    mHelper.ScrollToCSSPixelsForApz(aScrollPosition);
   }
   /**
    * @note This method might destroy the frame, pres shell and other objects.
@@ -1494,10 +1490,8 @@ class nsXULScrollFrame final : public nsBoxFrame,
                          ScrollMode aMode = ScrollMode::Instant) final {
     mHelper.ScrollToCSSPixels(aScrollPosition, aMode);
   }
-  void ScrollToCSSPixelsApproximate(
-      const mozilla::CSSPoint& aScrollPosition,
-      ScrollOrigin aOrigin = ScrollOrigin::NotSpecified) final {
-    mHelper.ScrollToCSSPixelsApproximate(aScrollPosition, aOrigin);
+  void ScrollToCSSPixelsForApz(const mozilla::CSSPoint& aScrollPosition) final {
+    mHelper.ScrollToCSSPixelsForApz(aScrollPosition);
   }
   CSSIntPoint GetScrollPositionCSSPixels() final {
     return mHelper.GetScrollPositionCSSPixels();
