@@ -14,6 +14,8 @@
 #include <psapi.h>
 #include <tlhelp32.h>
 
+#define PR_USEC_PER_NSEC 1000L
+
 typedef HRESULT(WINAPI* GETTHREADDESCRIPTION)(HANDLE hThread,
                                               PWSTR* threadDescription);
 
@@ -105,6 +107,8 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
           return;
         }
 
+        int frequencyInMHz = GetCycleTimeFrequency();
+
         // ---- Copying data on processes (minus threads).
 
         for (const auto& request : requests) {
@@ -121,12 +125,26 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
             // Ignore process, it may have died.
             continue;
           }
-          FILETIME createTime, exitTime, kernelTime, userTime;
-          if (!GetProcessTimes(handle.get(), &createTime, &exitTime,
-                               &kernelTime, &userTime)) {
+
+          uint64_t cpuCycleTime;
+          if (!QueryProcessCycleTime(handle.get(), &cpuCycleTime)) {
             // Ignore process, it may have died.
             continue;
           }
+
+          uint64_t cpuTime;
+          if (frequencyInMHz) {
+            cpuTime = cpuCycleTime * PR_USEC_PER_NSEC / frequencyInMHz;
+          } else {
+            FILETIME createTime, exitTime, kernelTime, userTime;
+            if (!GetProcessTimes(handle.get(), &createTime, &exitTime,
+                                 &kernelTime, &userTime)) {
+              // Ignore process, it may have died.
+              continue;
+            }
+            cpuTime = ToNanoSeconds(kernelTime) + ToNanoSeconds(userTime);
+          }
+
           PROCESS_MEMORY_COUNTERS_EX memoryCounters;
           if (!GetProcessMemoryInfo(handle.get(),
                                     (PPROCESS_MEMORY_COUNTERS)&memoryCounters,
@@ -148,9 +166,8 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
           info.origin = request.origin;
           info.windows = std::move(request.windowInfo);
           info.filename.Assign(filename);
-          info.cpuTime = ToNanoSeconds(kernelTime) + ToNanoSeconds(userTime);
-          QueryProcessCycleTime(handle.get(), &info.cpuCycleCount);
-
+          info.cpuTime = cpuTime;
+          info.cpuCycleCount = cpuCycleTime;
           info.memory = memoryCounters.PrivateUsage;
 
           if (!gathered.put(request.pid, std::move(info))) {
@@ -210,14 +227,18 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
 
           // Attempt to get thread times.
           // If we fail, continue without this piece of information.
-          FILETIME createTime, exitTime, kernelTime, userTime;
-          if (GetThreadTimes(hThread.get(), &createTime, &exitTime, &kernelTime,
-                             &userTime)) {
+          if (QueryThreadCycleTime(hThread.get(), &threadInfo->cpuCycleCount) &&
+              frequencyInMHz) {
             threadInfo->cpuTime =
-                ToNanoSeconds(kernelTime) + ToNanoSeconds(userTime);
+                threadInfo->cpuCycleCount * PR_USEC_PER_NSEC / frequencyInMHz;
+          } else {
+            FILETIME createTime, exitTime, kernelTime, userTime;
+            if (GetThreadTimes(hThread.get(), &createTime, &exitTime,
+                               &kernelTime, &userTime)) {
+              threadInfo->cpuTime =
+                  ToNanoSeconds(kernelTime) + ToNanoSeconds(userTime);
+            }
           }
-
-          QueryThreadCycleTime(hThread.get(), &threadInfo->cpuCycleCount);
 
           // Attempt to get thread name.
           // If we fail, continue without this piece of information.
