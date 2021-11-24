@@ -6087,10 +6087,6 @@ bool nsDisplayTransform::ComputePerspectiveMatrix(const nsIFrame* aFrame,
     return false;
   }
 
-  /* Find our containing block, which is the element that provides the
-   * value for perspective we need to use
-   */
-
   // TODO: Is it possible that the perspectiveFrame's bounds haven't been set
   // correctly yet (similar to the aBoundsOverride case for
   // GetResultingTransformMatrix)?
@@ -6108,7 +6104,7 @@ bool nsDisplayTransform::ComputePerspectiveMatrix(const nsIFrame* aFrame,
 
   MOZ_ASSERT(perspectiveDisplay->mChildPerspective.IsLength());
   float perspective =
-      perspectiveDisplay->mChildPerspective.length._0.ToCSSPixels();
+      perspectiveDisplay->mChildPerspective.AsLength().ToCSSPixels();
   perspective = std::max(1.0f, perspective);
   if (perspective < std::numeric_limits<Float>::epsilon()) {
     return true;
