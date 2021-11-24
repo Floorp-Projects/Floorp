@@ -36,8 +36,7 @@ void CrossProcessMutex::Unlock() {
       "aborted by now!");
 }
 
-CrossProcessMutexHandle CrossProcessMutex::ShareToProcess(
-    base::ProcessId aTargetPid) {
+CrossProcessMutexHandle CrossProcessMutex::CloneHandle() {
   MOZ_CRASH(
       "Cross-process mutices not allowed on this platform - woah! We should've "
       "aborted by now!");

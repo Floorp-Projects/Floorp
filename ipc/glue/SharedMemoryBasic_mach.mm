@@ -137,9 +137,8 @@ void* SharedMemoryBasic::FindFreeAddressSpace(size_t size) {
   return toPointer(address);
 }
 
-bool SharedMemoryBasic::ShareToProcess(base::ProcessId pid, Handle* aNewHandle) {
-  *aNewHandle = mozilla::RetainMachSendRight(mPort.get());
-  return *aNewHandle != nullptr;
+auto SharedMemoryBasic::CloneHandle() -> Handle {
+  return mozilla::RetainMachSendRight(mPort.get());
 }
 
 void SharedMemoryBasic::Unmap() {

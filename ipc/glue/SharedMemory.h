@@ -57,8 +57,7 @@ class SharedMemory {
 
   virtual SharedMemoryType Type() const = 0;
 
-  virtual bool ShareHandle(base::ProcessId aProcessId,
-                           IPC::Message* aMessage) = 0;
+  virtual bool WriteHandle(IPC::Message* aMessage) = 0;
   virtual bool ReadHandle(const IPC::Message* aMessage,
                           PickleIterator* aIter) = 0;
 
@@ -119,14 +118,13 @@ class SharedMemoryCommon : public SharedMemory {
  public:
   typedef HandleImpl Handle;
 
-  virtual bool ShareToProcess(base::ProcessId aProcessId, Handle* aHandle) = 0;
+  virtual Handle CloneHandle() = 0;
   virtual bool IsHandleValid(const Handle& aHandle) const = 0;
   virtual bool SetHandle(Handle aHandle, OpenRights aRights) = 0;
 
-  virtual bool ShareHandle(base::ProcessId aProcessId,
-                           IPC::Message* aMessage) override {
-    Handle handle;
-    if (!ShareToProcess(aProcessId, &handle)) {
+  virtual bool WriteHandle(IPC::Message* aMessage) override {
+    Handle handle = CloneHandle();
+    if (!handle) {
       return false;
     }
     IPC::WriteParam(aMessage, std::move(handle));

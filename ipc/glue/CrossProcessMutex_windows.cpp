@@ -53,8 +53,7 @@ void CrossProcessMutex::Unlock() {
   ::ReleaseMutex(mMutex);
 }
 
-CrossProcessMutexHandle CrossProcessMutex::ShareToProcess(
-    base::ProcessId aTargetPid) {
+CrossProcessMutexHandle CrossProcessMutex::CloneHandle() {
   HANDLE newHandle;
   if (!::DuplicateHandle(GetCurrentProcess(), mMutex, GetCurrentProcess(),
                          &newHandle, 0, false, DUPLICATE_SAME_ACCESS)) {

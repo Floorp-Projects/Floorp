@@ -65,8 +65,7 @@ void CrossProcessSemaphore::Signal() {
   ::ReleaseSemaphore(mSemaphore, 1, nullptr);
 }
 
-CrossProcessSemaphoreHandle CrossProcessSemaphore::ShareToProcess(
-    base::ProcessId aTargetPid) {
+CrossProcessSemaphoreHandle CrossProcessSemaphore::CloneHandle() {
   HANDLE newHandle;
   bool succeeded =
       ::DuplicateHandle(GetCurrentProcess(), mSemaphore, GetCurrentProcess(),

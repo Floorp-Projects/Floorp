@@ -200,8 +200,7 @@ class SourceSurfaceSharedData : public DataSourceSurface {
    *   NS_ERROR_NOT_AVAILABLE -- handle was closed, need to reallocate.
    *   NS_ERROR_FAILURE -- failed to create a handle to share.
    */
-  nsresult ShareToProcess(base::ProcessId aPid,
-                          SharedMemoryBasic::Handle& aHandle);
+  nsresult CloneHandle(SharedMemoryBasic::Handle& aHandle);
 
   /**
    * Indicates the buffer is not expected to be shared with any more processes.
@@ -225,7 +224,7 @@ class SourceSurfaceSharedData : public DataSourceSurface {
 
   /**
    * Allocate a new shared memory buffer so that we can get a new handle for
-   * sharing to new processes. ShareToProcess must have failed with
+   * sharing to new processes. CloneHandle must have failed with
    * NS_ERROR_NOT_AVAILABLE in order for this to be safe to call. Returns true
    * if the operation succeeds. If it fails, there is no state change.
    */

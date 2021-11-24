@@ -48,8 +48,7 @@ void CrossProcessSemaphore::Signal() {
       "should've aborted by now!");
 }
 
-CrossProcessSemaphoreHandle CrossProcessSemaphore::ShareToProcess(
-    base::ProcessId aTargetPid) {
+CrossProcessSemaphoreHandle CrossProcessSemaphore::CloneHandle() {
   MOZ_CRASH(
       "Cross-process semaphores not allowed on this platform - woah! We "
       "should've aborted by now!");

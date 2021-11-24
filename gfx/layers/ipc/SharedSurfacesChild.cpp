@@ -207,8 +207,7 @@ nsresult SharedSurfacesChild::ShareInternal(SourceSurfaceSharedData* aSurface,
   // If we live in the same process, then it is a simple matter of directly
   // asking the parent instance to store a pointer to the same data, no need
   // to map the data into our memory space twice.
-  auto pid = manager->OtherPid();
-  if (pid == base::GetCurrentProcId()) {
+  if (manager->SameProcess()) {
     SharedSurfacesParent::AddSameProcess(data->Id(), aSurface);
     data->MarkShared();
     *aUserData = data;
@@ -219,7 +218,7 @@ nsresult SharedSurfacesChild::ShareInternal(SourceSurfaceSharedData* aSurface,
   // be available -- it will only be available if it is either not yet finalized
   // and/or if it has been finalized but never used for drawing in process.
   ipc::SharedMemoryBasic::Handle handle = ipc::SharedMemoryBasic::NULLHandle();
-  nsresult rv = aSurface->ShareToProcess(pid, handle);
+  nsresult rv = aSurface->CloneHandle(handle);
   if (rv == NS_ERROR_NOT_AVAILABLE) {
     // It is at least as expensive to copy the image to the GPU process if we
     // have already closed the handle necessary to share, but if we reallocate
@@ -229,7 +228,7 @@ nsresult SharedSurfacesChild::ShareInternal(SourceSurfaceSharedData* aSurface,
     }
 
     // Reattempt the sharing of the handle to the GPU process.
-    rv = aSurface->ShareToProcess(pid, handle);
+    rv = aSurface->CloneHandle(handle);
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {

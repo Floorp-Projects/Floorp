@@ -58,6 +58,11 @@ class CompositorManagerChild : public PCompositorManagerChild {
     return mCanSend;
   }
 
+  bool SameProcess() const {
+    MOZ_ASSERT(NS_IsMainThread());
+    return mSameProcess;
+  }
+
   uint32_t GetNextResourceId() {
     MOZ_ASSERT(NS_IsMainThread());
     return ++mResourceId;
@@ -107,6 +112,7 @@ class CompositorManagerChild : public PCompositorManagerChild {
   uint32_t mNamespace;
   uint32_t mResourceId;
   bool mCanSend;
+  bool mSameProcess;
 };
 
 }  // namespace layers

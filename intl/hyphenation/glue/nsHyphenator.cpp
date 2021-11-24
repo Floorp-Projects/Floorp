@@ -487,9 +487,8 @@ void nsHyphenator::HyphenateWord(const nsAString& aString, uint32_t aStart,
   }
 }
 
-void nsHyphenator::ShareToProcess(base::ProcessId aPid,
-                                  base::SharedMemoryHandle* aOutHandle,
-                                  uint32_t* aOutSize) {
+void nsHyphenator::CloneHandle(base::SharedMemoryHandle* aOutHandle,
+                               uint32_t* aOutSize) {
   // If the resource is invalid, or if we fail to share it to the child
   // process, we'll just bail out and continue without hyphenation; no need
   // for this to be a fatal error.

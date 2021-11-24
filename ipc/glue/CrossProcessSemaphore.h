@@ -85,13 +85,13 @@ class CrossProcessSemaphore {
   void Signal();
 
   /**
-   * ShareToProcess
+   * CloneHandle
    * This function is called to generate a serializable structure that can
    * be sent to the specified process and opened on the other side.
    *
    * @returns A handle that can be shared to another process
    */
-  CrossProcessSemaphoreHandle ShareToProcess(base::ProcessId aTargetPid);
+  CrossProcessSemaphoreHandle CloneHandle();
 
   void CloseHandle();
 
