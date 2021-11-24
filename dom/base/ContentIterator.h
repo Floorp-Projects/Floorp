@@ -51,9 +51,9 @@ class ContentIteratorBase {
   virtual void Next();
   virtual void Prev();
 
-  virtual nsINode* GetCurrentNode();
+  nsINode* GetCurrentNode() const { return mCurNode; }
 
-  virtual bool IsDone();
+  bool IsDone() const { return !mCurNode; }
 
   virtual nsresult PositionAt(nsINode* aCurNode);
 
@@ -101,8 +101,6 @@ class ContentIteratorBase {
   nsCOMPtr<nsINode> mLast;
   // See <https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor>.
   nsCOMPtr<nsINode> mClosestCommonInclusiveAncestor;
-
-  bool mIsDone;
 
   const Order mOrder;
 
@@ -185,14 +183,14 @@ class ContentSubtreeIterator final : public ContentIteratorBase {
   virtual nsresult Init(const RawRangeBoundary& aStartBoundary,
                         const RawRangeBoundary& aEndBoundary) override;
 
-  virtual void Next() override;
-  virtual void Prev() override;
+  void Next() override;
+  void Prev() override;
   // Must override these because we don't do PositionAt
-  virtual void First() override;
+  void First() override;
   // Must override these because we don't do PositionAt
-  virtual void Last() override;
+  void Last() override;
 
-  virtual nsresult PositionAt(nsINode* aCurNode) override;
+  nsresult PositionAt(nsINode* aCurNode) override;
 
   friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
                                           ContentSubtreeIterator&, const char*,
