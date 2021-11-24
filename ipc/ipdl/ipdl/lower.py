@@ -1300,15 +1300,6 @@ class Protocol(ipdl.ast.Protocol):
     def deallocManageeMethod(self):
         return ExprVar("DeallocManagee")
 
-    def otherPidMethod(self):
-        return ExprVar("OtherPid")
-
-    def callOtherPid(self, actorThis=None):
-        fn = self.otherPidMethod()
-        if actorThis is not None:
-            fn = ExprSelect(actorThis, "->", fn.name)
-        return ExprCall(fn)
-
     def getChannelMethod(self):
         return ExprVar("GetIPCChannel")
 
@@ -1778,9 +1769,10 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         self.hdrfile.addthing(_putInNamespaces(ns, p.namespaces))
         ns.addstmt(Whitespace.NL)
 
-        edecl, edefn = _splitFuncDeclDefn(self.genEndpointFunc())
-        ns.addstmts([edecl, Whitespace.NL])
-        self.funcDefns.append(edefn)
+        for func in self.genEndpointFuncs():
+            edecl, edefn = _splitFuncDeclDefn(func)
+            ns.addstmts([edecl, Whitespace.NL])
+            self.funcDefns.append(edefn)
 
         # spit out message type enum and classes
         msgenum = msgenums(self.protocol)
@@ -1814,38 +1806,45 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
         ns.addstmts([Whitespace.NL, Whitespace.NL])
 
     # Generate code for PFoo::CreateEndpoints.
-    def genEndpointFunc(self):
+    def genEndpointFuncs(self):
         p = self.protocol.decl.type
         tparent = _cxxBareType(ActorType(p), "Parent", fq=True)
         tchild = _cxxBareType(ActorType(p), "Child", fq=True)
 
-        openfunc = MethodDefn(
-            MethodDecl(
-                "CreateEndpoints",
-                params=[
+        def mkOverload(includepids):
+            params = []
+            if includepids:
+                params = [
                     Decl(Type("base::ProcessId"), "aParentDestPid"),
                     Decl(Type("base::ProcessId"), "aChildDestPid"),
-                    Decl(
-                        Type("mozilla::ipc::Endpoint<" + tparent.name + ">", ptr=True),
-                        "aParent",
-                    ),
-                    Decl(
-                        Type("mozilla::ipc::Endpoint<" + tchild.name + ">", ptr=True),
-                        "aChild",
-                    ),
-                ],
-                ret=Type.NSRESULT,
+                ]
+            params += [
+                Decl(
+                    Type("mozilla::ipc::Endpoint<" + tparent.name + ">", ptr=True),
+                    "aParent",
+                ),
+                Decl(
+                    Type("mozilla::ipc::Endpoint<" + tchild.name + ">", ptr=True),
+                    "aChild",
+                ),
+            ]
+            openfunc = MethodDefn(
+                MethodDecl("CreateEndpoints", params=params, ret=Type.NSRESULT)
             )
-        )
-        openfunc.addcode(
-            """
-            return mozilla::ipc::CreateEndpoints(
-                mozilla::ipc::PrivateIPDLInterface(),
-                aParentDestPid, aChildDestPid,
-                aParent, aChild);
-            """
-        )
-        return openfunc
+            openfunc.addcode(
+                """
+                return mozilla::ipc::CreateEndpoints(
+                    mozilla::ipc::PrivateIPDLInterface(),
+                    $,{args});
+                """,
+                args=[ExprVar(d.name) for d in params],
+            )
+            return openfunc
+
+        funcs = [mkOverload(True)]
+        if not p.hasOtherPid():
+            funcs.append(mkOverload(False))
+        return funcs
 
 
 # --------------------------------------------------
@@ -3878,6 +3877,20 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             )
 
         self.cls.addstmt(Label.PUBLIC)
+        if ptype.hasOtherPid():
+            otherpidmeth = MethodDefn(
+                MethodDecl("OtherPid", ret=Type("::base::ProcessId"), const=True)
+            )
+            otherpidmeth.addcode(
+                """
+                ::base::ProcessId pid =
+                    ::mozilla::ipc::IProtocol::ToplevelProtocol()->OtherPidMaybeInvalid();
+                MOZ_RELEASE_ASSERT(pid != ::base::kInvalidProcessId);
+                return pid;
+                """
+            )
+            self.cls.addstmts([otherpidmeth, Whitespace.NL])
+
         if not ptype.isToplevel():
             if 1 == len(p.managers):
                 # manager() const
@@ -5599,14 +5612,14 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             if (mozilla::ipc::LoggingEnabledFor(${actorname})) {
                 mozilla::ipc::LogMessageForProtocol(
                     ${actorname},
-                    ${otherpid},
+                    ${actor}->ToplevelProtocol()->OtherPidMaybeInvalid(),
                     ${pfx},
                     ${msgptr}->type(),
                     mozilla::ipc::MessageDirection::${direction});
             }
             """,
             actorname=ExprLiteral.String(actorname),
-            otherpid=self.protocol.callOtherPid(actor),
+            actor=actor or ExprVar.THIS,
             pfx=ExprLiteral.String(pfx),
             msgptr=msgptr,
             direction="eReceiving" if receiving else "eSending",

@@ -855,7 +855,8 @@ void GeckoChildProcessHost::Join() {
 }
 
 void GeckoChildProcessHost::SetAlreadyDead() {
-  if (mChildProcessHandle && mChildProcessHandle != kInvalidProcessHandle) {
+  if (mChildProcessHandle &&
+      mChildProcessHandle != base::kInvalidProcessHandle) {
     base::CloseProcessHandle(mChildProcessHandle);
   }
 

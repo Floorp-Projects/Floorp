@@ -103,29 +103,14 @@ namespace ipc {
 class ProtocolFuzzerHelper;
 #endif
 
-#ifdef XP_WIN
-const base::ProcessHandle kInvalidProcessHandle = INVALID_HANDLE_VALUE;
-
-// In theory, on Windows, this is a valid process ID, but in practice they are
-// currently divisible by four. Process IDs share the kernel handle allocation
-// code and they are guaranteed to be divisible by four.
-// As this could change for process IDs we shouldn't generally rely on this
-// property, however even if that were to change, it seems safe to rely on this
-// particular value never being used.
-const base::ProcessId kInvalidProcessId = kuint32max;
-#else
-const base::ProcessHandle kInvalidProcessHandle = -1;
-const base::ProcessId kInvalidProcessId = -1;
-#endif
-
 // Scoped base::ProcessHandle to ensure base::CloseProcessHandle is called.
 struct ScopedProcessHandleTraits {
   typedef base::ProcessHandle type;
 
-  static type empty() { return kInvalidProcessHandle; }
+  static type empty() { return base::kInvalidProcessHandle; }
 
   static void release(type aProcessHandle) {
-    if (aProcessHandle && aProcessHandle != kInvalidProcessHandle) {
+    if (aProcessHandle && aProcessHandle != base::kInvalidProcessHandle) {
       base::CloseProcessHandle(aProcessHandle);
     }
   }
@@ -204,6 +189,7 @@ class IProtocol : public HasResultCodes {
         mToplevel(nullptr) {}
 
   IToplevelProtocol* ToplevelProtocol() { return mToplevel; }
+  const IToplevelProtocol* ToplevelProtocol() const { return mToplevel; }
 
   // The following methods either directly forward to the toplevel protocol, or
   // almost directly do.
@@ -239,8 +225,6 @@ class IProtocol : public HasResultCodes {
 
   nsISerialEventTarget* GetActorEventTarget();
   already_AddRefed<nsISerialEventTarget> GetActorEventTarget(IProtocol* aActor);
-
-  ProcessId OtherPid() const;
 
   // Actor lifecycle and other properties.
   ProtocolId GetProtocolId() const { return mProtocolId; }
@@ -448,7 +432,6 @@ class IToplevelProtocol : public IProtocol {
   nsISerialEventTarget* GetActorEventTarget();
   already_AddRefed<nsISerialEventTarget> GetActorEventTarget(IProtocol* aActor);
 
-  ProcessId OtherPid() const;
   void SetOtherProcessId(base::ProcessId aOtherPid);
 
   virtual void OnChannelClose() = 0;

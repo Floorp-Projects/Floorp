@@ -352,7 +352,7 @@ class MessageType(IPDLType):
 
 
 class ProtocolType(IPDLType):
-    def __init__(self, qname, nested, sendSemantics, refcounted):
+    def __init__(self, qname, nested, sendSemantics, refcounted, needsotherpid):
         self.qname = qname
         self.nestedRange = (NOT_NESTED, nested)
         self.sendSemantics = sendSemantics
@@ -360,12 +360,16 @@ class ProtocolType(IPDLType):
         self.manages = []
         self.hasDelete = False
         self.refcounted = refcounted
+        self.needsotherpid = needsotherpid
 
     def isProtocol(self):
         return True
 
     def isRefcounted(self):
         return self.refcounted
+
+    def hasOtherPid(self):
+        return all(top.needsotherpid for top in self.toplevels())
 
     def name(self):
         return self.qname.baseid
@@ -909,6 +913,15 @@ class GatherDecls(TcheckVisitor):
 
             p = tu.protocol
 
+            self.checkAttributes(
+                p.attributes,
+                {
+                    "RefCounted": None,
+                    "NestedUpTo": ("not", "inside_sync", "inside_cpow"),
+                    "NeedsOtherPid": None,
+                },
+            )
+
             # FIXME/cjones: it's a little weird and counterintuitive
             # to put both the namespace and non-namespaced name in the
             # global scope.  try to figure out something better; maybe
@@ -919,7 +932,11 @@ class GatherDecls(TcheckVisitor):
             p.decl = self.declare(
                 loc=p.loc,
                 type=ProtocolType(
-                    qname, p.nestedUpTo(), p.sendSemantics, "RefCounted" in p.attributes
+                    qname,
+                    p.nestedUpTo(),
+                    p.sendSemantics,
+                    "RefCounted" in p.attributes,
+                    "NeedsOtherPid" in p.attributes,
                 ),
                 shortname=p.name,
                 fullname=None if 0 == len(qname.quals) else fullname,
@@ -1176,14 +1193,6 @@ class GatherDecls(TcheckVisitor):
         if not (p.managers or p.messageDecls or p.managesStmts):
             self.error(p.loc, "top-level protocol `%s' cannot be empty", p.name)
 
-        self.checkAttributes(
-            p.attributes,
-            {
-                "RefCounted": None,
-                "NestedUpTo": ("not", "inside_sync", "inside_cpow"),
-            },
-        )
-
         setattr(self, "currentProtocolDecl", p.decl)
         for msg in p.messageDecls:
             msg.accept(self)
@@ -1197,6 +1206,9 @@ class GatherDecls(TcheckVisitor):
                 _DELETE_MSG,
                 p.name,
             )
+
+        if not p.decl.type.isToplevel() and p.decl.type.needsotherpid:
+            self.error(p.loc, "[NeedsOtherPid] only applies to toplevel protocols")
 
         # FIXME/cjones declare all the little C++ thingies that will
         # be generated.  they're not relevant to IPDL itself, but
