@@ -37,8 +37,7 @@ Endpoint<PProfilerChild> ProfilerParent::CreateForProcess(
   Endpoint<PProfilerChild> child;
 #ifdef MOZ_GECKO_PROFILER
   Endpoint<PProfilerParent> parent;
-  nsresult rv = PProfiler::CreateEndpoints(base::GetCurrentProcId(), aOtherPid,
-                                           &parent, &child);
+  nsresult rv = PProfiler::CreateEndpoints(&parent, &child);
 
   if (NS_FAILED(rv)) {
     MOZ_CRASH("Failed to create top level actor for PProfiler!");

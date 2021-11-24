@@ -61,9 +61,8 @@ void InitializeSandboxTestingActors(
   MOZ_ASSERT(aActor, "Should have provided an IPC actor");
   Endpoint<PSandboxTestingParent> sandboxTestingParentEnd;
   Endpoint<PSandboxTestingChild> sandboxTestingChildEnd;
-  nsresult rv = PSandboxTesting::CreateEndpoints(
-      base::GetCurrentProcId(), aActor->OtherPid(), &sandboxTestingParentEnd,
-      &sandboxTestingChildEnd);
+  nsresult rv = PSandboxTesting::CreateEndpoints(&sandboxTestingParentEnd,
+                                                 &sandboxTestingChildEnd);
   if (NS_FAILED(rv)) {
     aProcessPromise->Reject(NS_ERROR_FAILURE, __func__);
     return;
