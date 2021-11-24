@@ -7,6 +7,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import ast
 import enum
 import functools
 import json
@@ -147,14 +148,8 @@ class MachSiteManager:
                 #   it gets populated.
                 source = SitePackagesSource.VENV
         else:
-            has_pip = (
-                subprocess.run(
-                    [sys.executable, "-c", "import pip"], stderr=subprocess.DEVNULL
-                ).returncode
-                == 0
-            )
-
-            if has_pip:
+            external_python = ExternalPythonSite(sys.executable)
+            if external_python.has_pip():
                 if os.environ.get("MACH_USE_SYSTEM_PYTHON") and not os.environ.get(
                     "MOZ_AUTOMATION"
                 ):
@@ -181,25 +176,9 @@ class MachSiteManager:
         if self._site_packages_source == SitePackagesSource.NONE:
             return True
         elif self._site_packages_source == SitePackagesSource.SYSTEM:
-            pip = [sys.executable, "-m", "pip"]
-            check_result = subprocess.run(
-                pip + ["check"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-            )
-            if check_result.returncode:
-                print(check_result.stdout, file=sys.stderr)
-                subprocess.check_call(pip + ["list", "-v"], stdout=sys.stderr)
-                raise Exception(
-                    'According to "pip check", the current Python '
-                    "environment has package-compatibility issues."
-                )
-
-            package_result = self._requirements.validate_environment_packages(pip)
-            if not package_result.has_all_packages:
-                print(package_result.report())
-                raise Exception(
-                    "Your system Python packages aren't compatible with the "
-                    '"Mach" virtualenv'
-                )
+            _assert_pip_check()
+            external_python = ExternalPythonSite(sys.executable)
+            external_python.validate_mach_packages(self._requirements)
             return True
         elif self._site_packages_source == SitePackagesSource.VENV:
             environment = self._virtualenv()
@@ -238,7 +217,7 @@ class MachSiteManager:
                 path
                 for path in sys.path
                 if path
-                not in set(site.getsitepackages() + [site.getusersitepackages()])
+                not in ExternalPythonSite(sys.executable).all_site_packages_dirs()
             ]
             sys.path[0:0] = self._requirements.pths_as_absolute(self._topsrcdir)
         elif self._site_packages_source == SitePackagesSource.VENV:
@@ -269,7 +248,7 @@ class MachSiteManager:
 
     def _virtualenv(self):
         assert self._site_packages_source == SitePackagesSource.VENV
-        return MozVirtualenv(self._topsrcdir, "mach", self._metadata.prefix)
+        return PythonVirtualenv(self._metadata.prefix)
 
 
 class CommandSiteManager:
@@ -284,7 +263,7 @@ class CommandSiteManager:
         self.topsrcdir = topsrcdir
         self._virtualenv_name = site_name
         self.virtualenv_root = os.path.join(virtualenvs_dir, site_name)
-        self._virtualenv = MozVirtualenv(topsrcdir, site_name, self.virtualenv_root)
+        self._virtualenv = PythonVirtualenv(self.virtualenv_root)
         self.bin_path = self._virtualenv.bin_path
         self.python_path = self._virtualenv.python_path
         self._metadata = MozSiteMetadata(
@@ -381,6 +360,7 @@ class PythonVirtualenv:
         else:
             self.bin_path = os.path.join(prefix, "bin")
             self.python_path = os.path.join(self.bin_path, "python")
+        self.activate_path = os.path.join(self.bin_path, "activate_this.py")
         self.prefix = prefix
 
     @functools.lru_cache(maxsize=None)
@@ -407,16 +387,6 @@ class PythonVirtualenv:
             path = os.path.join(normalized_venv_root, path[len(local_folder) + 1 :])
         return path
 
-
-class MozVirtualenv(PythonVirtualenv):
-    """Interface to get useful paths and manage moz-owned virtual environments"""
-
-    def __init__(self, topsrcdir, site_name, prefix):
-        super().__init__(prefix)
-        self.activate_path = os.path.join(self.bin_path, "activate_this.py")
-        self._topsrcdir = topsrcdir
-        self._site_name = site_name
-
     def pip_install(self, pip_install_args):
         # distutils will use the architecture of the running Python instance when building
         # packages. However, it's possible for the Xcode Python to be a universal binary
@@ -435,12 +405,98 @@ class MozVirtualenv(PythonVirtualenv):
         # self.python_path. However, this seems more risk than it's worth.
         subprocess.run(
             [self.python_path, "-m", "pip", "install"] + pip_install_args,
-            cwd=self._topsrcdir,
             env=env,
             universal_newlines=True,
             stderr=subprocess.STDOUT,
             check=True,
         )
+
+
+class ExternalSitePackageValidationResult:
+    def __init__(self):
+        self._package_discrepancies = []
+        self.has_all_packages = True
+
+    def add_discrepancy(self, requirement, found):
+        self._package_discrepancies.append((requirement, found))
+        self.has_all_packages = False
+
+    def report(self):
+        lines = []
+        for requirement, found in self._package_discrepancies:
+            if found:
+                error = f'Installed with unexpected version "{found}"'
+            else:
+                error = "Not installed"
+            lines.append(f"{requirement}: {error}")
+        return "\n".join(lines)
+
+
+class ExternalPythonSite:
+    """Represents the Python site that is executing Mach
+
+    The external Python site could be a virtualenv (created by venv or virtualenv) or
+    the system Python itself, so we can't make any significant assumptions on its
+    structure.
+    """
+
+    def __init__(self, python_executable):
+        self._prefix = os.path.dirname(os.path.dirname(python_executable))
+        self.python_path = python_executable
+
+    @functools.lru_cache(maxsize=None)
+    def all_site_packages_dirs(self):
+        if self._prefix == sys.prefix:
+            # We're currently running within the external Python site, so we can safely
+            # ask for the the site packages without needing to run a subprocess.
+            return [site.getusersitepackages()] + site.getsitepackages()
+        else:
+            paths_string = subprocess.check_output(
+                [
+                    self.python_path,
+                    "-c",
+                    "import site; print([site.getusersitepackages()] "
+                    "+ site.getsitepackages())",
+                ],
+                universal_newlines=True,
+            )
+            return ast.literal_eval(paths_string)
+
+    @functools.lru_cache(maxsize=None)
+    def has_pip(self):
+        return (
+            subprocess.run(
+                [self.python_path, "-c", "import pip"], stderr=subprocess.DEVNULL
+            ).returncode
+            == 0
+        )
+
+    def validate_mach_packages(self, requirements):
+        system_packages = self._resolve_installed_packages()
+        result = ExternalSitePackageValidationResult()
+        for pkg in requirements.pypi_optional_requirements:
+            installed_version = system_packages.get(pkg.requirement.name)
+            if installed_version and not pkg.requirement.specifier.contains(
+                installed_version
+            ):
+                result.add_discrepancy(pkg.requirement, installed_version)
+
+        if not result.has_all_packages:
+            print(result.report())
+            raise Exception(
+                "Your system Python packages aren't compatible with the "
+                '"Mach" virtualenv'
+            )
+
+    @functools.lru_cache(maxsize=None)
+    def _resolve_installed_packages(self):
+        pip_json = subprocess.check_output(
+            [self.python_path, "-m", "pip", "list", "--format", "json"],
+            universal_newlines=True,
+        )
+
+        installed_packages = json.loads(pip_json)
+        return {package["name"]: package["version"] for package in installed_packages}
 
 
 @functools.lru_cache(maxsize=None)
@@ -465,6 +521,21 @@ def _requirements(topsrcdir, virtualenv_name):
         virtualenv_name in ("mach", "build"),
         manifest_path,
     )
+
+
+def _assert_pip_check():
+    """Check that the current site's packages are compatible with each other"""
+    pip = [sys.executable, "-m", "pip"]
+    check_result = subprocess.run(
+        pip + ["check"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    )
+    if check_result.returncode:
+        print(check_result.stdout, file=sys.stderr)
+        subprocess.check_call(pip + ["list", "-v"], stdout=sys.stderr)
+        raise Exception(
+            'According to "pip check", the current Python site '
+            f'(associated with "{sys.executable}") has package-compatibility issues.'
+        )
 
 
 def _create_venv_with_pthfile(

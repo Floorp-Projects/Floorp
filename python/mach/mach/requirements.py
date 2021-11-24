@@ -1,10 +1,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-import json
 import os
 from pathlib import Path
-import subprocess
 
 from packaging.requirements import Requirement
 
@@ -12,26 +10,6 @@ from packaging.requirements import Requirement
 THUNDERBIRD_PYPI_ERROR = """
 Thunderbird requirements definitions cannot include PyPI packages.
 """.strip()
-
-
-class EnvironmentPackageValidationResult:
-    def __init__(self):
-        self._package_discrepancies = []
-        self.has_all_packages = True
-
-    def add_discrepancy(self, requirement, found):
-        self._package_discrepancies.append((requirement, found))
-        self.has_all_packages = False
-
-    def report(self):
-        lines = []
-        for requirement, found in self._package_discrepancies:
-            if found:
-                error = f'Installed with unexpected version "{found}"'
-            else:
-                error = "Not installed"
-            lines.append(f"{requirement}: {error}")
-        return "\n".join(lines)
 
 
 class PthSpecifier:
@@ -89,35 +67,6 @@ class MachEnvRequirements:
                 for pth in (self.pth_requirements + self.vendored_requirements)
             ]
         )
-
-    def validate_environment_packages(self, pip_command):
-        result = EnvironmentPackageValidationResult()
-        if not self.pypi_requirements and not self.pypi_optional_requirements:
-            return result
-
-        pip_json = subprocess.check_output(
-            pip_command + ["list", "--format", "json"], universal_newlines=True
-        )
-
-        installed_packages = json.loads(pip_json)
-        installed_packages = {
-            package["name"]: package["version"] for package in installed_packages
-        }
-        for pkg in self.pypi_requirements:
-            installed_version = installed_packages.get(pkg.requirement.name)
-            if not installed_version or not pkg.requirement.specifier.contains(
-                installed_version
-            ):
-                result.add_discrepancy(pkg.requirement, installed_version)
-
-        for pkg in self.pypi_optional_requirements:
-            installed_version = installed_packages.get(pkg.requirement.name)
-            if installed_version and not pkg.requirement.specifier.contains(
-                installed_version
-            ):
-                result.add_discrepancy(pkg.requirement, installed_version)
-
-        return result
 
     @classmethod
     def from_requirements_definition(
