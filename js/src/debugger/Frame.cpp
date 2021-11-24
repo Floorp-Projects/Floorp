@@ -31,7 +31,6 @@
 #include "debugger/Object.h"               // for DebuggerObject
 #include "debugger/Script.h"               // for DebuggerScript
 #include "frontend/BytecodeCompilation.h"  // for CompileEvalScript
-#include "frontend/SharedContext.h"        // for GlobalScharedContext
 #include "gc/Barrier.h"                    // for HeapPtr
 #include "gc/FreeOp.h"                     // for JSFreeOp
 #include "gc/GC.h"                         // for MemoryUse

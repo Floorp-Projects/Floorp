@@ -7,15 +7,18 @@
 #ifndef util_StringBuffer_h
 #define util_StringBuffer_h
 
-#include "mozilla/DebugOnly.h"
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/Utf8.h"
 
-#include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex
 #include "js/Vector.h"
-#include "vm/JSContext.h"
+#include "vm/StringType.h"
 
 namespace js {
+
+namespace frontend {
+class ParserAtomsTable;
+class TaggedParserAtomIndex;
+}  // namespace frontend
 
 class StringBufferAllocPolicy {
   TempAllocPolicy impl_;

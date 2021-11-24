@@ -32,7 +32,6 @@
 #include "builtin/Symbol.h"
 #include "builtin/WeakSetObject.h"
 #include "ds/IdValuePair.h"  // js::IdValuePair
-#include "frontend/BytecodeCompiler.h"
 #include "gc/Policy.h"
 #include "js/CallAndConstruct.h"  // JS::IsCallable, JS::IsConstructor
 #include "js/CharacterEncoding.h"

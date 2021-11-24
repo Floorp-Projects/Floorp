@@ -14,10 +14,8 @@
 
 #include "builtin/ModuleObject.h"
 #include "frontend/CompilationStencil.h"  // ScopeStencilRef, CompilationStencil, CompilationState, CompilationAtomCache
-#include "frontend/Parser.h"  // Copy*ScopeData
 #include "frontend/ParserAtom.h"  // frontend::ParserAtomsTable, frontend::ParserAtom
 #include "frontend/ScriptIndex.h"  // ScriptIndex
-#include "frontend/SharedContext.h"
 #include "frontend/Stencil.h"
 #include "gc/Allocator.h"
 #include "gc/MaybeRooted.h"

@@ -8,6 +8,7 @@
 
 #include "jspubtd.h"
 
+#include "frontend/ParserAtom.h"
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 
