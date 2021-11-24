@@ -6,6 +6,7 @@
 
 #include "mozilla/ProcInfo.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/SSE.h"
 #include "nsMemoryReporterManager.h"
 #include "nsNetCID.h"
 #include "nsWindowsHelpers.h"
@@ -18,14 +19,61 @@ typedef HRESULT(WINAPI* GETTHREADDESCRIPTION)(HANDLE hThread,
 
 namespace mozilla {
 
-uint64_t ToNanoSeconds(const FILETIME& aFileTime) {
+static uint64_t ToNanoSeconds(const FILETIME& aFileTime) {
   // FILETIME values are 100-nanoseconds units, converting
   ULARGE_INTEGER usec = {{aFileTime.dwLowDateTime, aFileTime.dwHighDateTime}};
   return usec.QuadPart * 100;
 }
 
+/* Get the CPU frequency to use to convert cycle time values to actual time.
+ * @returns the TSC frequency in MHz, or 0 if converting cycle time values
+ * should not be attempted. */
+static int GetCycleTimeFrequency() {
+  static int result = -1;
+  if (result != -1) {
+    return result;
+  }
+
+  result = 0;
+
+  // Having a constant TSC is required to convert cycle time to actual time.
+  if (!mozilla::has_constant_tsc()) {
+    return result;
+  }
+
+  // Now get the nominal CPU frequency.
+  HKEY key;
+  static const WCHAR keyName[] =
+      L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0";
+
+  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, keyName, 0, KEY_QUERY_VALUE, &key) ==
+      ERROR_SUCCESS) {
+    DWORD data, len;
+    len = sizeof(data);
+
+    if (RegQueryValueEx(key, L"~Mhz", 0, 0, reinterpret_cast<LPBYTE>(&data),
+                        &len) == ERROR_SUCCESS) {
+      result = static_cast<int>(data);
+    }
+  }
+
+  return result;
+}
+
 nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult) {
   FILETIME createTime, exitTime, kernelTime, userTime;
+  int frequencyInMHz = GetCycleTimeFrequency();
+  if (frequencyInMHz) {
+    uint64_t cpuCycleCount;
+    if (!QueryProcessCycleTime(::GetCurrentProcess(), &cpuCycleCount)) {
+      return NS_ERROR_FAILURE;
+    }
+    constexpr int HZ_PER_MHZ = 1000000;
+    *aResult =
+        cpuCycleCount / (frequencyInMHz * (HZ_PER_MHZ / PR_MSEC_PER_SEC));
+    return NS_OK;
+  }
+
   if (!GetProcessTimes(::GetCurrentProcess(), &createTime, &exitTime,
                        &kernelTime, &userTime)) {
     return NS_ERROR_FAILURE;

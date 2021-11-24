@@ -179,6 +179,8 @@ bool avx2_enabled = has_avx() && has_cpuid_bits(7u, ebx, (1u << 5));
 bool aes_enabled = has_cpuid_bits(1u, ecx, (1u << 25));
 #  endif
 
+bool has_constant_tsc = has_cpuid_bits(0x80000007u, edx, (1u << 8));
+
 #endif
 
 }  // namespace sse_private
