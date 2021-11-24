@@ -77,13 +77,13 @@ class StatReader {
       case 13:
         // Amount of time that this process has been scheduled
         // in user mode, measured in clock ticks
-        aInfo.cpuUser = GetCPUTime(aToken, &rv);
+        aInfo.cpuTime += GetCPUTime(aToken, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
         break;
       case 14:
         // Amount of time that this process has been scheduled
         // in kernel mode, measured in clock ticks
-        aInfo.cpuKernel = GetCPUTime(aToken, &rv);
+        aInfo.cpuTime += GetCPUTime(aToken, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
         break;
     }
@@ -175,8 +175,7 @@ class ThreadInfoReader final : public StatReader {
 
     aInfo.tid = mTid;
     // Copying over the data we got from StatReader::ParseProc()
-    aInfo.cpuKernel = info.cpuKernel;
-    aInfo.cpuUser = info.cpuUser;
+    aInfo.cpuTime = info.cpuTime;
     aInfo.name.Assign(info.filename);
     return NS_OK;
   }
@@ -193,7 +192,7 @@ nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult) {
     return rv;
   }
 
-  *aResult = (info.cpuKernel + info.cpuUser) / PR_NSEC_PER_MSEC;
+  *aResult = info.cpuTime / PR_NSEC_PER_MSEC;
   return NS_OK;
 }
 

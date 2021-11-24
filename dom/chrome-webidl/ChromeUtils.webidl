@@ -634,8 +634,7 @@ dictionary ThreadInfoDictionary {
   long long tid = 0;
   DOMString name = "";
   unsigned long long cpuCycleCount = 0;
-  unsigned long long cpuUser = 0;
-  unsigned long long cpuKernel = 0;
+  unsigned long long cpuTime = 0;
 };
 
 dictionary WindowInfoDictionary {
@@ -681,11 +680,8 @@ dictionary ChildProcInfoDictionary {
   // On Windows this will return the Commit Size.
   unsigned long long memory = 0;
 
-  // Time spent by the process in user mode, in ns.
-  unsigned long long cpuUser = 0;
-
-  // Time spent by the process in kernel mode, in ns.
-  unsigned long long cpuKernel = 0;
+  // Total CPU time spent by the process, in ns.
+  unsigned long long cpuTime = 0;
 
   // Total CPU cycles used by this process.
   // On Windows where the resolution of CPU timings is 16ms, this can
@@ -729,11 +725,8 @@ dictionary ParentProcInfoDictionary {
   // On Windows this will return the Commit Size.
   unsigned long long memory = 0;
 
-  // Time spent by the process in user mode, in ns.
-  unsigned long long cpuUser = 0;
-
-  // Time spent by the process in kernel mode, in ns.
-  unsigned long long cpuKernel = 0;
+  // Total CPU time spent by the process, in ns.
+  unsigned long long cpuTime = 0;
 
   // Total CPU cycles used by this process.
   // On Windows where the resolution of CPU timings is 16ms, this can

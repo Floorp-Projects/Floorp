@@ -148,8 +148,7 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
           info.origin = request.origin;
           info.windows = std::move(request.windowInfo);
           info.filename.Assign(filename);
-          info.cpuKernel = ToNanoSeconds(kernelTime);
-          info.cpuUser = ToNanoSeconds(userTime);
+          info.cpuTime = ToNanoSeconds(kernelTime) + ToNanoSeconds(userTime);
           QueryProcessCycleTime(handle.get(), &info.cpuCycleCount);
 
           info.memory = memoryCounters.PrivateUsage;
@@ -214,8 +213,8 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
           FILETIME createTime, exitTime, kernelTime, userTime;
           if (GetThreadTimes(hThread.get(), &createTime, &exitTime, &kernelTime,
                              &userTime)) {
-            threadInfo->cpuKernel = ToNanoSeconds(kernelTime);
-            threadInfo->cpuUser = ToNanoSeconds(userTime);
+            threadInfo->cpuTime =
+                ToNanoSeconds(kernelTime) + ToNanoSeconds(userTime);
           }
 
           QueryThreadCycleTime(hThread.get(), &threadInfo->cpuCycleCount);

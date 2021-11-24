@@ -73,8 +73,7 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
 
       // copying all the info to the ProcInfo struct
       info.filename.AssignASCII(proc.pbi_name);
-      info.cpuUser = pti.pti_total_user;
-      info.cpuKernel = pti.pti_total_system;
+      info.cpuTime = pti.pti_total_user + pti.pti_total_system;
 
       mach_port_t selectedTask;
       // If we did not get a task from a child process, we use mach_task_self()
@@ -148,8 +147,7 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
           holder->Reject(NS_ERROR_OUT_OF_MEMORY, __func__);
           return;
         }
-        thread->cpuUser = threadInfoData.pth_user_time;
-        thread->cpuKernel = threadInfoData.pth_system_time;
+        thread->cpuTime = threadInfoData.pth_user_time + threadInfoData.pth_system_time;
         thread->name.AssignASCII(threadInfoData.pth_name);
         thread->tid = identifierInfo.thread_id;
       }
