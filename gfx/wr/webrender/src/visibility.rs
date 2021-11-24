@@ -62,7 +62,11 @@ impl<'a> FrameVisibilityState<'a> {
         spatial_tree: &SpatialTree,
     ) {
         self.surface_stack.push(surface_index);
-        self.clip_chain_stack.push_surface(shared_clips, spatial_tree);
+        self.clip_chain_stack.push_surface(
+            shared_clips,
+            spatial_tree,
+            &self.data_stores.clip,
+        );
     }
 
     pub fn pop_surface(&mut self) {
