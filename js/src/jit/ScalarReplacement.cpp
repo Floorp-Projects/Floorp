@@ -1530,6 +1530,7 @@ class ArgumentsReplacer : public MDefinitionVisitorDefaultNoop {
   void visitGetArgumentsObjectArg(MGetArgumentsObjectArg* ins);
   void visitLoadArgumentsObjectArg(MLoadArgumentsObjectArg* ins);
   void visitLoadArgumentsObjectArgHole(MLoadArgumentsObjectArgHole* ins);
+  void visitInArgumentsObjectArg(MInArgumentsObjectArg* ins);
   void visitArgumentsObjectLength(MArgumentsObjectLength* ins);
   void visitApplyArgsObj(MApplyArgsObj* ins);
   void visitArrayFromArgumentsObject(MArrayFromArgumentsObject* ins);
@@ -1646,6 +1647,7 @@ bool ArgumentsReplacer::escapes(MInstruction* ins, bool guardedForMapped) {
       case MDefinition::Opcode::GetArgumentsObjectArg:
       case MDefinition::Opcode::LoadArgumentsObjectArg:
       case MDefinition::Opcode::LoadArgumentsObjectArgHole:
+      case MDefinition::Opcode::InArgumentsObjectArg:
       case MDefinition::Opcode::ArrayFromArgumentsObject:
         break;
 
@@ -1912,6 +1914,37 @@ void ArgumentsReplacer::visitLoadArgumentsObjectArgHole(
   loadArg->setBailoutKind(ins->bailoutKind());
   ins->block()->insertBefore(ins, loadArg);
   ins->replaceAllUsesWith(loadArg);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void ArgumentsReplacer::visitInArgumentsObjectArg(MInArgumentsObjectArg* ins) {
+  // Skip other arguments objects.
+  if (ins->argsObject() != args_) {
+    return;
+  }
+
+  MDefinition* index = ins->index();
+
+  // Ensure the index is non-negative.
+  auto* guardedIndex = MGuardInt32IsNonNegative::New(alloc(), index);
+  guardedIndex->setBailoutKind(ins->bailoutKind());
+  ins->block()->insertBefore(ins, guardedIndex);
+
+  MInstruction* length;
+  if (isInlinedArguments()) {
+    uint32_t argc = args_->toCreateInlinedArgumentsObject()->numActuals();
+    length = MConstant::New(alloc(), Int32Value(argc));
+  } else {
+    length = MArgumentsLength::New(alloc());
+  }
+  ins->block()->insertBefore(ins, length);
+
+  auto* compare = MCompare::New(alloc(), guardedIndex, length, JSOp::Lt,
+                                MCompare::Compare_Int32);
+  ins->block()->insertBefore(ins, compare);
+  ins->replaceAllUsesWith(compare);
 
   // Remove original instruction.
   ins->block()->discard(ins);

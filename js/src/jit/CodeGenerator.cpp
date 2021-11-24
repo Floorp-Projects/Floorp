@@ -7568,6 +7568,17 @@ void CodeGenerator::visitLoadArgumentsObjectArgHole(
   bailoutFrom(&bail, lir->snapshot());
 }
 
+void CodeGenerator::visitInArgumentsObjectArg(LInArgumentsObjectArg* lir) {
+  Register temp = ToRegister(lir->temp0());
+  Register argsObj = ToRegister(lir->argsObject());
+  Register index = ToRegister(lir->index());
+  Register out = ToRegister(lir->output());
+
+  Label bail;
+  masm.loadArgumentsObjectElementExists(argsObj, index, out, temp, &bail);
+  bailoutFrom(&bail, lir->snapshot());
+}
+
 void CodeGenerator::visitArgumentsObjectLength(LArgumentsObjectLength* lir) {
   Register argsObj = ToRegister(lir->argsObject());
   Register out = ToRegister(lir->output());

@@ -418,6 +418,14 @@
     index: WordSized
   num_temps: 1
 
+# Return true if the element exists in the arguments object.
+- name: InArgumentsObjectArg
+  result_type: WordSized
+  operands:
+    argsObject: WordSized
+    index: WordSized
+  num_temps: 1
+
 # Return |arguments.length| unless it has been overridden.
 - name: ArgumentsObjectLength
   result_type: WordSized

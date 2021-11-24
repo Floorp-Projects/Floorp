@@ -1804,6 +1804,14 @@
     obj: ObjId
     index: Int32Id
 
+- name: LoadArgumentsObjectArgExistsResult
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  args:
+    obj: ObjId
+    index: Int32Id
+
 - name: LoadArgumentsObjectLengthResult
   shared: true
   transpile: true

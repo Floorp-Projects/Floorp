@@ -414,6 +414,19 @@ void LIRGenerator::visitLoadArgumentsObjectArgHole(
   defineBox(lir, ins);
 }
 
+void LIRGenerator::visitInArgumentsObjectArg(MInArgumentsObjectArg* ins) {
+  MDefinition* argsObj = ins->argsObject();
+  MOZ_ASSERT(argsObj->type() == MIRType::Object);
+
+  MDefinition* index = ins->index();
+  MOZ_ASSERT(index->type() == MIRType::Int32);
+
+  auto* lir = new (alloc())
+      LInArgumentsObjectArg(useRegister(argsObj), useRegister(index), temp());
+  assignSnapshot(lir, ins->bailoutKind());
+  define(lir, ins);
+}
+
 void LIRGenerator::visitArgumentsObjectLength(MArgumentsObjectLength* ins) {
   MDefinition* argsObj = ins->argsObject();
   MOZ_ASSERT(argsObj->type() == MIRType::Object);
