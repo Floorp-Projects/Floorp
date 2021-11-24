@@ -1924,7 +1924,7 @@ EditorDOMPoint HTMLEditor::InsertNodeIntoProperAncestorWithTransaction(
       NS_WARNING("HTMLEditor::SplitNodeDeepWithTransaction() failed");
       return EditorDOMPoint();  // TODO: Should return error with `Result`
     }
-    pointToInsert = splitNodeResult.SplitPoint();
+    pointToInsert = splitNodeResult.AtSplitPoint<EditorDOMPoint>();
     MOZ_ASSERT(pointToInsert.IsSet());
   }
 
@@ -4392,7 +4392,8 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
       }
 
       lastSplitNodeResult =
-          SplitNodeResult(newLeftContentOrError.unwrap(), currentRightNode);
+          SplitNodeResult(newLeftContentOrError.unwrap(), currentRightNode,
+                          SplitNodeDirection::LeftNodeIsNewOne);
       if (currentRightNode == &aMostAncestorToSplit) {
         // Actually, we split aMostAncestorToSplit.
         return lastSplitNodeResult;
@@ -4404,7 +4405,8 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
     // If the split point is end of the node and it is a text node or we're not
     // allowed to create empty container node, try to split its parent after it.
     else if (!atStartOfRightNode.IsStartOfContainer()) {
-      lastSplitNodeResult = SplitNodeResult(currentRightNode, nullptr);
+      lastSplitNodeResult = SplitNodeResult(
+          currentRightNode, nullptr, SplitNodeDirection::LeftNodeIsNewOne);
       if (currentRightNode == &aMostAncestorToSplit) {
         return lastSplitNodeResult;
       }
@@ -4418,7 +4420,8 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
     // If the split point is start of the node and it is a text node or we're
     // not allowed to create empty container node, try to split its parent.
     else {
-      lastSplitNodeResult = SplitNodeResult(nullptr, currentRightNode);
+      lastSplitNodeResult = SplitNodeResult(
+          nullptr, currentRightNode, SplitNodeDirection::LeftNodeIsNewOne);
       if (currentRightNode == &aMostAncestorToSplit) {
         return lastSplitNodeResult;
       }
