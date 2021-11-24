@@ -307,13 +307,6 @@ void TransactionBuilder::SetDocumentView(
   wr_transaction_set_document_view(mTxn, &wrDocRect);
 }
 
-void TransactionBuilder::UpdateScrollPosition(
-    const wr::WrPipelineId& aPipelineId,
-    const layers::ScrollableLayerGuid::ViewID& aScrollId,
-    const wr::LayoutPoint& aScrollPosition) {
-  wr_transaction_scroll_layer(mTxn, aPipelineId, aScrollId, aScrollPosition);
-}
-
 TransactionWrapper::TransactionWrapper(Transaction* aTxn) : mTxn(aTxn) {}
 
 void TransactionWrapper::AppendDynamicProperties(

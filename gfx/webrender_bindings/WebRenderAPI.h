@@ -127,11 +127,6 @@ class TransactionBuilder final {
 
   void SetDocumentView(const LayoutDeviceIntRect& aDocRect);
 
-  void UpdateScrollPosition(
-      const wr::WrPipelineId& aPipelineId,
-      const layers::ScrollableLayerGuid::ViewID& aScrollId,
-      const wr::LayoutPoint& aScrollPosition);
-
   bool IsEmpty() const;
 
   bool IsResourceUpdatesEmpty() const;
