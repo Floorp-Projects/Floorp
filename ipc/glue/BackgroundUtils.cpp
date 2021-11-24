@@ -72,6 +72,10 @@ Result<nsCOMPtr<nsIPrincipal>, nsresult> PrincipalInfoToPrincipal(
         return Err(rv);
       }
 
+      if (!uri->SchemeIs(NS_NULLPRINCIPAL_SCHEME)) {
+        return Err(NS_ERROR_ILLEGAL_VALUE);
+      }
+
       principal = NullPrincipal::Create(info.attrs(), uri);
       return principal;
     }
