@@ -78,12 +78,20 @@ class CollectionRobot {
                 .check(doesNotExist())
     }
 
-    fun verifyCollectionTabUrl() {
-        onView(withId(R.id.caption)).check(matches(isDisplayed()))
+    fun verifyCollectionTabUrl(visible: Boolean) {
+        onView(withId(R.id.caption))
+            .check(
+                if (visible) matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))
+                else doesNotExist()
+            )
     }
 
-    fun verifyCollectionTabLogo() {
-        onView(withId(R.id.favicon)).check(matches(isDisplayed()))
+    fun verifyCollectionTabLogo(visible: Boolean) {
+        onView(withId(R.id.favicon))
+            .check(
+                if (visible) matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))
+                else doesNotExist()
+            )
     }
 
     fun verifyShareCollectionButtonIsVisible(visible: Boolean) {
