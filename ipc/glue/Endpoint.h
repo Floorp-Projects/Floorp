@@ -53,10 +53,7 @@ struct PrivateIPDLInterface {};
  * Endpoint<PFooParent> parentEp;
  * Endpoint<PFooChild> childEp;
  * nsresult rv;
- * rv = PFoo::CreateEndpoints(parentPid, childPid, &parentEp, &childEp);
- *
- * You're required to pass in parentPid and childPid, which are the pids of the
- * processes in which the parent and child endpoints will be used.
+ * rv = PFoo::CreateEndpoints(&parentEp, &childEp);
  *
  * Endpoints can be passed in IPDL messages or sent to other threads using
  * PostTask. Once an Endpoint has arrived at its destination process and thread,
@@ -68,6 +65,10 @@ struct PrivateIPDLInterface {};
  *
  * (See Bind below for an explanation of processActor.) Once the actor is bound
  * to the endpoint, it can send and receive messages.
+ *
+ * If creating endpoints for a [NeedsOtherPid] actor, you're required to also
+ * pass in parentPid and childPid, which are the pids of the processes in which
+ * the parent and child endpoints will be used.
  */
 template <class PFooSide>
 class Endpoint {
