@@ -1090,6 +1090,7 @@ static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
 
 ColorScheme LookAndFeel::sChromeColorScheme;
 ColorScheme LookAndFeel::sContentColorScheme;
+bool LookAndFeel::sColorSchemeInitialized;
 
 auto LookAndFeel::ColorSchemeSettingForChrome() -> ChromeColorSchemeSetting {
   switch (StaticPrefs::browser_theme_toolbar_theme()) {
@@ -1103,6 +1104,8 @@ auto LookAndFeel::ColorSchemeSettingForChrome() -> ChromeColorSchemeSetting {
 }
 
 void LookAndFeel::RecomputeColorSchemes() {
+  sColorSchemeInitialized = true;
+
   sChromeColorScheme = [] {
     switch (ColorSchemeSettingForChrome()) {
       case ChromeColorSchemeSetting::Light:
