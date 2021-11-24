@@ -78,7 +78,7 @@ export async function onConnect(_commands, _resourceCommand, _actions, store) {
     onAvailable: onSourceAvailable,
   });
   await resourceCommand.watchResources([resourceCommand.TYPES.THREAD_STATE], {
-    onAvailable: onBreakpointAvailable,
+    onAvailable: onThreadStateAvailable,
   });
 
   await resourceCommand.watchResources([resourceCommand.TYPES.ERROR_MESSAGE], {
@@ -101,7 +101,7 @@ export function onDisconnect() {
     onAvailable: onSourceAvailable,
   });
   resourceCommand.unwatchResources([resourceCommand.TYPES.THREAD_STATE], {
-    onAvailable: onBreakpointAvailable,
+    onAvailable: onThreadStateAvailable,
   });
   resourceCommand.unwatchResources([resourceCommand.TYPES.ERROR_MESSAGE], {
     onAvailable: actions.addExceptionFromResources,
@@ -167,8 +167,8 @@ async function onSourceAvailable(sources) {
   await actions.newGeneratedSources(frontendSources);
 }
 
-async function onBreakpointAvailable(breakpoints) {
-  for (const resource of breakpoints) {
+async function onThreadStateAvailable(resources) {
+  for (const resource of resources) {
     if (resource.targetFront.isDestroyed()) {
       continue;
     }
