@@ -19,7 +19,7 @@ add_task(async function setup() {
 
 async function getCpuTimeFromProcInfo() {
   const NS_PER_MS = 1000000;
-  let cpuTimeForProcess = p => (p.cpuUser + p.cpuKernel) / NS_PER_MS;
+  let cpuTimeForProcess = p => p.cpuTime / NS_PER_MS;
   let procInfo = await ChromeUtils.requestProcInfo();
   return (
     cpuTimeForProcess(procInfo) +
