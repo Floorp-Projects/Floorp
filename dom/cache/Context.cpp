@@ -32,7 +32,8 @@ class NullAction final : public Action {
   NullAction() = default;
 
   virtual void RunOnTarget(mozilla::SafeRefPtr<Resolver> aResolver,
-                           const ClientMetadata&, Data*) override {
+                           const mozilla::Maybe<ClientMetadata>&,
+                           Data*) override {
     // Resolve success immediately.  This Action does no actual work.
     MOZ_DIAGNOSTIC_ASSERT(aResolver);
     aResolver->Resolve(NS_OK);
@@ -215,7 +216,7 @@ class Context::QuotaInitRunnable final : public nsIRunnable,
   SafeRefPtr<Action> mInitAction;
   nsCOMPtr<nsIEventTarget> mInitiatingEventTarget;
   nsresult mResult;
-  ClientMetadata mClientMetadata;
+  Maybe<ClientMetadata> mClientMetadata;
   RefPtr<DirectoryLock> mDirectoryLock;
   State mState;
   Atomic<bool> mCanceled;
@@ -233,7 +234,7 @@ void Context::QuotaInitRunnable::OpenDirectory() {
 
   RefPtr<DirectoryLock> directoryLock =
       QuotaManager::Get()->CreateDirectoryLock(
-          PERSISTENCE_TYPE_DEFAULT, mClientMetadata, quota::Client::DOMCACHE,
+          PERSISTENCE_TYPE_DEFAULT, *mClientMetadata, quota::Client::DOMCACHE,
           /* aExclusive */ false);
 
   // DirectoryLock::Acquire() will hold a reference to us as a listener. We will
@@ -252,7 +253,7 @@ void Context::QuotaInitRunnable::DirectoryLockAcquired(DirectoryLock* aLock) {
   mDirectoryLock = aLock;
 
   MOZ_DIAGNOSTIC_ASSERT(mDirectoryLock->Id() >= 0);
-  mClientMetadata.mDirectoryLockId = mDirectoryLock->Id();
+  mClientMetadata->mDirectoryLockId = mDirectoryLock->Id();
 
   if (mCanceled) {
     Complete(NS_ERROR_ABORT);
@@ -352,8 +353,7 @@ Context::QuotaInitRunnable::Run() {
         QM_TRY_UNWRAP(auto principalMetadata,
                       QuotaManager::GetInfoFromPrincipal(principal));
 
-        static_cast<quota::OriginMetadata&>(mClientMetadata) = {
-            std::move(principalMetadata), PERSISTENCE_TYPE_DEFAULT};
+        mClientMetadata.emplace(std::move(principalMetadata));
 
         mState = STATE_CREATE_QUOTA_MANAGER;
 
@@ -416,10 +416,10 @@ Context::QuotaInitRunnable::Run() {
         QM_TRY(
             MOZ_TO_RESULT(quotaManager->EnsureTemporaryStorageIsInitialized()));
 
-        QM_TRY_UNWRAP(mClientMetadata.mDir,
+        QM_TRY_UNWRAP(mClientMetadata->mDir,
                       quotaManager
                           ->EnsureTemporaryOriginIsInitialized(
-                              PERSISTENCE_TYPE_DEFAULT, mClientMetadata)
+                              PERSISTENCE_TYPE_DEFAULT, *mClientMetadata)
                           .map([](const auto& res) { return res.first; }));
 
         mState = STATE_RUN_ON_TARGET;
@@ -453,7 +453,7 @@ Context::QuotaInitRunnable::Run() {
       // the marker file.  If it wasn't opened successfully, then no need to
       // create a marker file anyway.
       if (NS_SUCCEEDED(resolver->Result())) {
-        MOZ_ALWAYS_SUCCEEDS(CreateMarkerFile(mClientMetadata));
+        MOZ_ALWAYS_SUCCEEDS(CreateMarkerFile(*mClientMetadata));
       }
 
       break;
@@ -493,7 +493,7 @@ class Context::ActionRunnable final : public nsIRunnable,
  public:
   ActionRunnable(SafeRefPtr<Context> aContext, Data* aData,
                  nsISerialEventTarget* aTarget, SafeRefPtr<Action> aAction,
-                 const ClientMetadata& aClientMetadata)
+                 const Maybe<ClientMetadata>& aClientMetadata)
       : mContext(std::move(aContext)),
         mData(aData),
         mTarget(aTarget),
@@ -587,7 +587,7 @@ class Context::ActionRunnable final : public nsIRunnable,
   RefPtr<Data> mData;
   nsCOMPtr<nsISerialEventTarget> mTarget;
   SafeRefPtr<Action> mAction;
-  const ClientMetadata mClientMetadata;
+  const Maybe<ClientMetadata> mClientMetadata;
   nsCOMPtr<nsIEventTarget> mInitiatingThread;
   State mState;
   nsresult mResult;
@@ -921,8 +921,8 @@ Context::~Context() {
   // Note, this may set the mOrphanedData flag.
   mManager->RemoveContext(*this);
 
-  if (mClientMetadata.mDir && !mOrphanedData) {
-    MOZ_ALWAYS_SUCCEEDS(DeleteMarkerFile(mClientMetadata));
+  if (mClientMetadata && mClientMetadata->mDir && !mOrphanedData) {
+    MOZ_ALWAYS_SUCCEEDS(DeleteMarkerFile(*mClientMetadata));
   }
 
   if (mNextContext) {
@@ -994,14 +994,17 @@ void Context::DispatchAction(SafeRefPtr<Action> aAction, bool aDoomData) {
   AddActivity(*runnable);
 }
 
-void Context::OnQuotaInit(nsresult aRv, const ClientMetadata& aClientMetadata,
+void Context::OnQuotaInit(nsresult aRv,
+                          const Maybe<ClientMetadata>& aClientMetadata,
                           already_AddRefed<DirectoryLock> aDirectoryLock) {
   NS_ASSERT_OWNINGTHREAD(Context);
 
   MOZ_DIAGNOSTIC_ASSERT(mInitRunnable);
   mInitRunnable = nullptr;
 
-  mClientMetadata = aClientMetadata;
+  if (aClientMetadata) {
+    mClientMetadata.emplace(*aClientMetadata);
+  }
 
   // Always save the directory lock to ensure QuotaManager does not shutdown
   // before the Context has gone away.

@@ -29,10 +29,22 @@ static const Namespace INVALID_NAMESPACE = NUMBER_OF_NAMESPACES;
 using CacheId = int64_t;
 static const CacheId INVALID_CACHE_ID = -1;
 
-// XXX Consider inheritance from ClientMetadata.
-struct ClientMetadata : quota::OriginMetadata {
+struct ClientMetadata : quota::ClientMetadata {
   nsCOMPtr<nsIFile> mDir;
   int64_t mDirectoryLockId = -1;
+
+  explicit ClientMetadata(quota::PrincipalMetadata aPrincipalMetadata)
+      : quota::ClientMetadata(
+            quota::OriginMetadata{std::move(aPrincipalMetadata),
+                                  quota::PERSISTENCE_TYPE_DEFAULT},
+            quota::Client::Type::DOMCACHE) {}
+
+  explicit ClientMetadata(quota::OriginMetadata aOriginMetadata)
+      : quota::ClientMetadata(std::move(aOriginMetadata),
+                              quota::Client::Type::DOMCACHE) {
+    MOZ_DIAGNOSTIC_ASSERT(aOriginMetadata.mPersistenceType ==
+                          quota::PERSISTENCE_TYPE_DEFAULT);
+  }
 };
 
 struct DeletionInfo {
