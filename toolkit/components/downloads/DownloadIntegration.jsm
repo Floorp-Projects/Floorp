@@ -648,9 +648,12 @@ var DownloadIntegration = {
       let isTemporaryDownload =
         aDownload.launchWhenSucceeded &&
         (aDownload.source.isPrivate ||
-          Services.prefs.getBoolPref(
+          (Services.prefs.getBoolPref(
             "browser.helperApps.deleteTempFileOnExit"
-          ));
+          ) &&
+            !Services.prefs.getBoolPref(
+              "browser.download.improvements_to_download_panel"
+            )));
       // Permanently downloaded files are made accessible by other users on
       // this system, while temporary downloads are marked as read-only.
       let unixMode;
