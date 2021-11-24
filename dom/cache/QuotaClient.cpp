@@ -64,8 +64,8 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
 
         if (dirEntryKind != nsIFileKind::ExistsAsDirectory) {
           if (dirEntryKind == nsIFileKind::ExistsAsFile) {
-            const DebugOnly<nsresult> result = RemoveNsIFile(
-                ClientMetadata{}, *bodyDir, /* aTrackQuota */ false);
+            const DebugOnly<nsresult> result =
+                RemoveNsIFile(Nothing(), *bodyDir, /* aTrackQuota */ false);
             // Try to remove the unexpected files, and keep moving on even if it
             // fails because it might be created by virus or the operation
             // system
@@ -108,8 +108,7 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
         // warning in the reports is not desired).
         QM_TRY(QM_OR_ELSE_LOG_VERBOSE_IF(
             // Expression.
-            MOZ_TO_RESULT(BodyTraverseFiles(ClientMetadata{}, *bodyDir,
-                                            getUsage,
+            MOZ_TO_RESULT(BodyTraverseFiles(Nothing(), *bodyDir, getUsage,
                                             /* aCanRemoveFiles */ true,
                                             /* aTrackQuota */ false)),
             // Predicate.
@@ -123,8 +122,7 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
 
 Result<int64_t, nsresult> GetPaddingSizeFromDB(
     nsIFile& aDir, nsIFile& aDBFile, const OriginMetadata& aOriginMetadata) {
-  ClientMetadata clientMetadata;
-  static_cast<OriginMetadata&>(clientMetadata) = aOriginMetadata;
+  ClientMetadata clientMetadata(aOriginMetadata);
   // clientMetadata.mDirectoryLockId must be -1 (which is default for new
   // ClientMetadata) because this method should only be called from
   // QuotaClient::InitOrigin when the temporary storage hasn't been initialized
@@ -217,9 +215,8 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
           QM_TRY_INSPECT(const auto& morgueDir,
                          CloneFileAndAppend(*dir, kMorgueDirectoryFilename));
 
-          ClientMetadata dummy;
           QM_TRY(MOZ_TO_RESULT(mozilla::dom::cache::RemoveNsIFileRecursively(
-              dummy, *morgueDir,
+              Nothing(), *morgueDir,
               /* aTrackQuota */ false)));
 
           return nsCOMPtr<nsIFile>{nullptr};
