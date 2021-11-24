@@ -114,6 +114,5 @@ docker run \
 
 `total-chunks` and `this-chunk` refer to the number of lines in `update-verify.cfg`
 ```
-./mach create-mach-environment
 ./tools/update-verify/scripts/chunked-verify.sh --total-chunks=228 --this-chunk=4
 ```

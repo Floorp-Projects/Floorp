@@ -242,21 +242,7 @@ class MachSiteManager:
             external_python = ExternalPythonSite(sys.executable)
 
         if not _system_python_env_variable_present():
-            # We can detect that this is for initializing a native command by:
-            # * Checking if we're not using the Mach virtualenv's python, yet the
-            #   "use system python" environment variable isn't set.
-            # * We're still in the "initialization" phase because there's no "current"
-            #   MozEnvironment active yet (so, when the `./mach create-mach-environment`
-            #   command's function runs, this check will be Falsy).
-            # If true, then don't use any "site-packages" sources.
-            is_for_initializing_native_cmd = (
-                not active_metadata or active_metadata.site_name != "mach"
-            ) and not MozSiteMetadata.current
-            source = (
-                SitePackagesSource.NONE
-                if is_for_initializing_native_cmd
-                else SitePackagesSource.VENV
-            )
+            source = SitePackagesSource.VENV
         elif not external_python.has_pip():
             source = SitePackagesSource.NONE
         else:
