@@ -271,6 +271,40 @@ autocomplete:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-11-01"
+  top_sites_setting_changed:
+    type: event
+    description: |
+      Autocomplete setting for top sites has changed.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5885
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5940
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      is_enabled:
+        description: The new setting true for ON, false for OFF
+        type: boolean
+  favorite_sites_setting_changed:
+    type: event
+    description: |
+      Autocomplete setting for favorite sites has changed.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5885
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5940
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      is_enabled:
+        description: The new setting true for ON, false for OFF
+        type: boolean
 
 shortcuts:
   shortcuts_on_home_number:
