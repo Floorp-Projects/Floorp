@@ -11,6 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   <label value="Mozilla Bug 549682"/>
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
+  /* global messageManager, sendAsyncMessage */
   var didRunAsync = false;
   var didRunLocal = false;
 
@@ -46,7 +47,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
   }
   cpm.addMessageListener("childprocessmessage", cpmASL);
   ppm.broadcastAsyncMessage("childprocessmessage", "");
-  
+
   function checkPMMMessages() {
     ok(asyncPPML, "should have handled async message");
     ok(syncPPML, "should have handled sync message");
@@ -151,7 +152,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=549682
     cfmm.sendSyncMessage("syncContinueTest", {});
     localmm.removeMessageListener("syncContinueTest", syncContinueTestFn);
     ok(didGetSyncMessage, "Should have got sync message!");
-    
+
     localmm.addMessageListener("lasync", localL);
     localmm.loadFrameScript("data:,sendAsyncMessage('lasync', { data: 2345 })", false);
 

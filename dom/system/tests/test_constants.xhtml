@@ -21,7 +21,6 @@ function test_xul() {
     lib = ctypes.open(OS.Constants.Path.libxul);
     lib.declare("DumpJSStack", ctypes.default_abi, ctypes.void_t);
   } catch (x) {
-    success = false;
     ok(false, "Could not open libxul " + x);
   }
   if (lib) {
