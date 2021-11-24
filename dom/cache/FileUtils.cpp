@@ -496,8 +496,12 @@ bool MarkerFileExists(const ClientMetadata& aClientMetadata) {
   QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(marker, Exists), false);
 }
 
-nsresult RemoveNsIFileRecursively(const ClientMetadata& aClientMetadata,
+nsresult RemoveNsIFileRecursively(const Maybe<ClientMetadata>& aClientMetadata,
                                   nsIFile& aFile, const bool aTrackQuota) {
+  // XXX This assertion proves that we can remove aTrackQuota and just check
+  // aClientMetadata
+  MOZ_DIAGNOSTIC_ASSERT_IF(aTrackQuota, aClientMetadata);
+
   QM_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(aFile));
 
   switch (dirEntryKind) {
@@ -531,8 +535,12 @@ nsresult RemoveNsIFileRecursively(const ClientMetadata& aClientMetadata,
   return NS_OK;
 }
 
-nsresult RemoveNsIFile(const ClientMetadata& aClientMetadata, nsIFile& aFile,
-                       const bool aTrackQuota) {
+nsresult RemoveNsIFile(const Maybe<ClientMetadata>& aClientMetadata,
+                       nsIFile& aFile, const bool aTrackQuota) {
+  // XXX This assertion proves that we can remove aTrackQuota and just check
+  // aClientMetadata
+  MOZ_DIAGNOSTIC_ASSERT_IF(aTrackQuota, aClientMetadata);
+
   int64_t fileSize = 0;
   if (aTrackQuota) {
     QM_TRY_INSPECT(
@@ -562,7 +570,7 @@ nsresult RemoveNsIFile(const ClientMetadata& aClientMetadata, nsIFile& aFile,
 
   if (fileSize > 0) {
     MOZ_ASSERT(aTrackQuota);
-    DecreaseUsageForClientMetadata(aClientMetadata, fileSize);
+    DecreaseUsageForClientMetadata(*aClientMetadata, fileSize);
   }
 
   return NS_OK;
