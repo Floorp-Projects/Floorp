@@ -72,7 +72,7 @@ nsDownloader::OnStopRequest(nsIRequest* request, nsresult status) {
     mSink = nullptr;
   }
 
-  mObserver->OnDownloadComplete(this, request, nullptr, status, mLocation);
+  mObserver->OnDownloadComplete(this, request, status, mLocation);
   mObserver = nullptr;
 
   return NS_OK;

@@ -1202,8 +1202,8 @@ AsyncFaviconDataReady::AsyncFaviconDataReady(
 
 NS_IMETHODIMP
 myDownloadObserver::OnDownloadComplete(nsIDownloader* downloader,
-                                       nsIRequest* request, nsISupports* ctxt,
-                                       nsresult status, nsIFile* result) {
+                                       nsIRequest* request, nsresult status,
+                                       nsIFile* result) {
   return NS_OK;
 }
 

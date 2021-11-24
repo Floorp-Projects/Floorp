@@ -100,7 +100,7 @@ nsIndexedToHTML::GetConvertedType(const nsACString& aFromType,
 NS_IMETHODIMP
 nsIndexedToHTML::OnStartRequest(nsIRequest* request) {
   nsCString buffer;
-  nsresult rv = DoOnStartRequest(request, nullptr, buffer);
+  nsresult rv = DoOnStartRequest(request, buffer);
   if (NS_FAILED(rv)) {
     request->Cancel(rv);
   }
@@ -115,12 +115,11 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request) {
 
   // Push our buffer to the listener.
 
-  rv = SendToListener(request, nullptr, buffer);
+  rv = SendToListener(request, buffer);
   return rv;
 }
 
 nsresult nsIndexedToHTML::DoOnStartRequest(nsIRequest* request,
-                                           nsISupports* aContext,
                                            nsCString& aBuffer) {
   nsresult rv;
 
@@ -595,7 +594,7 @@ nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsresult aStatus) {
     nsCString buffer;
     buffer.AssignLiteral("</tbody></table></body></html>\n");
 
-    aStatus = SendToListener(request, nullptr, buffer);
+    aStatus = SendToListener(request, buffer);
   }
 
   mParser->OnStopRequest(request, aStatus);
@@ -605,7 +604,6 @@ nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsresult aStatus) {
 }
 
 nsresult nsIndexedToHTML::SendToListener(nsIRequest* aRequest,
-                                         nsISupports* aContext,
                                          const nsACString& aBuffer) {
   nsCOMPtr<nsIInputStream> inputData;
   nsresult rv = NS_NewCStringInputStream(getter_AddRefs(inputData), aBuffer);
@@ -638,8 +636,7 @@ static nsresult FormatTime(const nsDateFormatSelector aDateFormatSelector,
 }
 
 NS_IMETHODIMP
-nsIndexedToHTML::OnIndexAvailable(nsIRequest* aRequest, nsISupports* aCtxt,
-                                  nsIDirIndex* aIndex) {
+nsIndexedToHTML::OnIndexAvailable(nsIRequest* aRequest, nsIDirIndex* aIndex) {
   nsresult rv;
   if (!aIndex) return NS_ERROR_NULL_POINTER;
 
@@ -794,12 +791,11 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest* aRequest, nsISupports* aCtxt,
 
   pushBuffer.AppendLiteral("</td>\n</tr>");
 
-  return SendToListener(aRequest, aCtxt, pushBuffer);
+  return SendToListener(aRequest, pushBuffer);
 }
 
 NS_IMETHODIMP
 nsIndexedToHTML::OnInformationAvailable(nsIRequest* aRequest,
-                                        nsISupports* aCtxt,
                                         const nsAString& aInfo) {
   nsAutoCString pushBuffer;
   nsAutoCString escapedUtf8;
@@ -811,7 +807,7 @@ nsIndexedToHTML::OnInformationAvailable(nsIRequest* aRequest,
   pushBuffer.AppendLiteral(
       "</td>\n <td></td>\n <td></td>\n <td></td>\n</tr>\n");
 
-  return SendToListener(aRequest, aCtxt, pushBuffer);
+  return SendToListener(aRequest, pushBuffer);
 }
 
 void nsIndexedToHTML::FormatSizeString(int64_t inSize,

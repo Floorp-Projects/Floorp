@@ -245,7 +245,6 @@ class Image : public imgIContainer {
    * until OnImageDataAvailable is called.
    */
   virtual nsresult OnImageDataAvailable(nsIRequest* aRequest,
-                                        nsISupports* aContext,
                                         nsIInputStream* aInStr,
                                         uint64_t aSourceOffset,
                                         uint32_t aCount) = 0;
@@ -254,12 +253,10 @@ class Image : public imgIContainer {
    * Called from OnStopRequest when the image's underlying request completes.
    *
    * @param aRequest  The completed request.
-   * @param aContext  Context from Necko's OnStopRequest.
    * @param aStatus   A success or failure code.
    * @param aLastPart Whether this is the final part of the underlying request.
    */
-  virtual nsresult OnImageDataComplete(nsIRequest* aRequest,
-                                       nsISupports* aContext, nsresult aStatus,
+  virtual nsresult OnImageDataComplete(nsIRequest* aRequest, nsresult aStatus,
                                        bool aLastPart) = 0;
 
   /**

@@ -8,7 +8,7 @@ const BUGID = "263127";
 var listener = {
   QueryInterface: ChromeUtils.generateQI(["nsIDownloadObserver"]),
 
-  onDownloadComplete(downloader, request, ctxt, status, file) {
+  onDownloadComplete(downloader, request, status, file) {
     do_test_pending();
     server.stop(do_test_finished);
 

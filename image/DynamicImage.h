@@ -43,12 +43,10 @@ class DynamicImage : public Image {
 #endif
 
   virtual nsresult OnImageDataAvailable(nsIRequest* aRequest,
-                                        nsISupports* aContext,
                                         nsIInputStream* aInStr,
                                         uint64_t aSourceOffset,
                                         uint32_t aCount) override;
-  virtual nsresult OnImageDataComplete(nsIRequest* aRequest,
-                                       nsISupports* aContext, nsresult aStatus,
+  virtual nsresult OnImageDataComplete(nsIRequest* aRequest, nsresult aStatus,
                                        bool aLastPart) override;
 
   virtual void OnSurfaceDiscarded(const SurfaceKey& aSurfaceKey) override;

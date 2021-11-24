@@ -121,7 +121,7 @@ NS_IMETHODIMP nsDeflateConverter::OnDataAvailable(nsIRequest* aRequest,
 
     while (mZstream.avail_out == 0) {
       // buffer is full, push the data out to the listener
-      rv = PushAvailableData(aRequest, nullptr);
+      rv = PushAvailableData(aRequest);
       NS_ENSURE_SUCCESS(rv, rv);
       zerr = deflate(&mZstream, Z_NO_FLUSH);
     }
@@ -145,7 +145,7 @@ NS_IMETHODIMP nsDeflateConverter::OnStopRequest(nsIRequest* aRequest,
   int zerr;
   do {
     zerr = deflate(&mZstream, Z_FINISH);
-    rv = PushAvailableData(aRequest, nullptr);
+    rv = PushAvailableData(aRequest);
     NS_ENSURE_SUCCESS(rv, rv);
   } while (zerr == Z_OK);
 
@@ -154,8 +154,7 @@ NS_IMETHODIMP nsDeflateConverter::OnStopRequest(nsIRequest* aRequest,
   return mListener->OnStopRequest(aRequest, aStatusCode);
 }
 
-nsresult nsDeflateConverter::PushAvailableData(nsIRequest* aRequest,
-                                               nsISupports* aContext) {
+nsresult nsDeflateConverter::PushAvailableData(nsIRequest* aRequest) {
   uint32_t bytesToWrite = sizeof(mWriteBuffer) - mZstream.avail_out;
   // We don't need to do anything if there isn't any data
   if (bytesToWrite == 0) return NS_OK;
