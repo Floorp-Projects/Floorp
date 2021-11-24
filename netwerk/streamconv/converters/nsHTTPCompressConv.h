@@ -85,9 +85,8 @@ class nsHTTPCompressConv : public nsIStreamConverter,
                                 const char* dataIn, uint32_t, uint32_t avail,
                                 uint32_t* countRead);
 
-  nsresult do_OnDataAvailable(nsIRequest* request, nsISupports* aContext,
-                              uint64_t aSourceOffset, const char* buffer,
-                              uint32_t aCount);
+  nsresult do_OnDataAvailable(nsIRequest* request, uint64_t aSourceOffset,
+                              const char* buffer, uint32_t aCount);
 
   bool mCheckHeaderDone{false};
   Atomic<bool> mStreamEnded{false};

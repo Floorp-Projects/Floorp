@@ -236,16 +236,14 @@ class HttpChannelChild final : public PHttpChannelChild,
   int32_t mUnreportBytesRead = 0;
 
   void DoOnConsoleReport(nsTArray<ConsoleReportCollected>&& aConsoleReports);
-  void DoOnStartRequest(nsIRequest* aRequest, nsISupports* aContext);
+  void DoOnStartRequest(nsIRequest* aRequest);
   void DoOnStatus(nsIRequest* aRequest, nsresult status);
   void DoOnProgress(nsIRequest* aRequest, int64_t progress,
                     int64_t progressMax);
-  void DoOnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
-                         nsIInputStream* aStream, uint64_t offset,
-                         uint32_t count);
+  void DoOnDataAvailable(nsIRequest* aRequest, nsIInputStream* aStream,
+                         uint64_t offset, uint32_t count);
   void DoPreOnStopRequest(nsresult aStatus);
-  void DoOnStopRequest(nsIRequest* aRequest, nsresult aChannelStatus,
-                       nsISupports* aContext);
+  void DoOnStopRequest(nsIRequest* aRequest, nsresult aChannelStatus);
   void ContinueOnStopRequest();
 
   // Try send DeletingChannel message to parent side. Dispatch an async task to

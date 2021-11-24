@@ -51,7 +51,6 @@ uint32_t DynamicImage::GetAnimationConsumers() { return 0; }
 #endif
 
 nsresult DynamicImage::OnImageDataAvailable(nsIRequest* aRequest,
-                                            nsISupports* aContext,
                                             nsIInputStream* aInStr,
                                             uint64_t aSourceOffset,
                                             uint32_t aCount) {
@@ -59,7 +58,6 @@ nsresult DynamicImage::OnImageDataAvailable(nsIRequest* aRequest,
 }
 
 nsresult DynamicImage::OnImageDataComplete(nsIRequest* aRequest,
-                                           nsISupports* aContext,
                                            nsresult aStatus, bool aLastPart) {
   return NS_OK;
 }

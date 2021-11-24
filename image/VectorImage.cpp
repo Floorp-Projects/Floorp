@@ -379,7 +379,6 @@ void VectorImage::CollectSizeOfSurfaces(
 }
 
 nsresult VectorImage::OnImageDataComplete(nsIRequest* aRequest,
-                                          nsISupports* aContext,
                                           nsresult aStatus, bool aLastPart) {
   // Call our internal OnStopRequest method, which only talks to our embedded
   // SVG document. This won't have any effect on our ProgressTracker.
@@ -405,7 +404,6 @@ nsresult VectorImage::OnImageDataComplete(nsIRequest* aRequest,
 }
 
 nsresult VectorImage::OnImageDataAvailable(nsIRequest* aRequest,
-                                           nsISupports* aContext,
                                            nsIInputStream* aInStr,
                                            uint64_t aSourceOffset,
                                            uint32_t aCount) {

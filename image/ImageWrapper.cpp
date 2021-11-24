@@ -59,19 +59,16 @@ uint32_t ImageWrapper::GetAnimationConsumers() {
 #endif
 
 nsresult ImageWrapper::OnImageDataAvailable(nsIRequest* aRequest,
-                                            nsISupports* aContext,
                                             nsIInputStream* aInStr,
                                             uint64_t aSourceOffset,
                                             uint32_t aCount) {
-  return mInnerImage->OnImageDataAvailable(aRequest, aContext, aInStr,
-                                           aSourceOffset, aCount);
+  return mInnerImage->OnImageDataAvailable(aRequest, aInStr, aSourceOffset,
+                                           aCount);
 }
 
 nsresult ImageWrapper::OnImageDataComplete(nsIRequest* aRequest,
-                                           nsISupports* aContext,
                                            nsresult aStatus, bool aLastPart) {
-  return mInnerImage->OnImageDataComplete(aRequest, aContext, aStatus,
-                                          aLastPart);
+  return mInnerImage->OnImageDataComplete(aRequest, aStatus, aLastPart);
 }
 
 void ImageWrapper::OnSurfaceDiscarded(const SurfaceKey& aSurfaceKey) {
