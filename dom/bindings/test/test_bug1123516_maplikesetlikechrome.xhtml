@@ -18,6 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123516
   <!-- test code goes here -->
   <script type="application/javascript">
    <![CDATA[
+     /* global TestInterfaceSetlikeNode */
 
      /** Test for Bug 1123516 **/
      function doTest() {
@@ -42,7 +43,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1123516
               "Cross-compartment unwrapping/comparison has works");
            // TODO: Should throw until iterators are handled by Xrays, Bug 1023984
            try {
-             var e = TestInterfaceSetlikeNode.prototype.keys.call(setlike);
+             TestInterfaceSetlikeNode.prototype.keys.call(setlike);
              ok(false, "Calling iterators via xrays should fail");
              /* eslint-disable-next-line no-shadow */
            } catch(e) {
