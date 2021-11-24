@@ -11,9 +11,11 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -271,6 +273,31 @@ class CollectionTest {
         // verify the browser layout is visible
         browserScreen {
             verifyMenuButton()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun undoDeleteCollectionTest() {
+        val webPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(webPage.url) {
+        }.openTabDrawer {
+            createCollection(webPage.title, firstCollectionName)
+            snackBarButtonClick("VIEW")
+        }
+
+        homeScreen {
+        }.expandCollection(firstCollectionName) {
+            clickCollectionThreeDotButton()
+            selectDeleteCollection()
+        }
+
+        homeScreen {
+            verifySnackBarText("Collection deleted")
+            clickUndoCollectionDeletion("UNDO")
+            verifyCollectionIsDisplayed(firstCollectionName, true)
         }
     }
 }

@@ -151,10 +151,13 @@ class HomeScreenRobot {
         mDevice.waitNotNull(findObject(By.text(expectedText)), waitingTime)
     }
 
-    fun snackBarButtonClick(expectedText: String) {
-        onView(allOf(withId(R.id.snackbar_btn), withText(expectedText))).check(
-            matches(withEffectiveVisibility(Visibility.VISIBLE))
-        ).perform(click())
+    fun clickUndoCollectionDeletion(expectedText: String) {
+        onView(
+            allOf(
+                withId(R.id.snackbar_btn),
+                withText(expectedText)
+            )
+        ).click()
     }
 
     class Transition {
