@@ -249,7 +249,12 @@ add_task(async function test_unix_permissions() {
           await promiseDownloadStopped(download);
         }
 
-        let isTemporary = launchWhenSucceeded && (autoDelete || isPrivate);
+        let prefEnabled = Services.prefs.getBoolPref(
+          "browser.download.improvements_to_download_panel"
+        );
+
+        let isTemporary =
+          launchWhenSucceeded && (isPrivate || (autoDelete && !prefEnabled));
         let stat = await IOUtils.stat(download.target.path);
         if (Services.appinfo.OS == "WINNT") {
           // On Windows
