@@ -56,23 +56,15 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
       info.type = request.processType;
       info.origin = std::move(request.origin);
       info.windows = std::move(request.windowInfo);
-      struct proc_bsdinfo proc;
-      if ((unsigned long)proc_pidinfo(request.pid, PROC_PIDTBSDINFO, 0, &proc,
-                                      PROC_PIDTBSDINFO_SIZE) < PROC_PIDTBSDINFO_SIZE) {
-        // Can't read data for this proc.
-        // Probably either a sandboxing issue or a race condition, e.g.
-        // the process has been just been killed. Regardless, skip process.
-        continue;
-      }
 
       struct proc_taskinfo pti;
       if ((unsigned long)proc_pidinfo(request.pid, PROC_PIDTASKINFO, 0, &pti,
                                       PROC_PIDTASKINFO_SIZE) < PROC_PIDTASKINFO_SIZE) {
+        // Can't read data for this process.
+        // Probably either a sandboxing issue or a race condition, e.g.
+        // the process has been just been killed. Regardless, skip process.
         continue;
       }
-
-      // copying all the info to the ProcInfo struct
-      info.filename.AssignASCII(proc.pbi_name);
       info.cpuTime = pti.pti_total_user + pti.pti_total_system;
 
       mach_port_t selectedTask;
