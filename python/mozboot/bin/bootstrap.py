@@ -81,6 +81,10 @@ def validate_clone_dest(dest):
         return dest
     else:
         print("ERROR! Destination directory %s exists but is nonempty." % dest)
+        print(
+            "To re-bootstrap the existing checkout, go into '%s' and run './mach bootstrap'."
+            % dest
+        )
         return None
 
 
@@ -334,12 +338,28 @@ def main(args):
     )
 
     options, leftover = parser.parse_args(args)
-
     try:
         srcdir = clone(options.vcs, options.no_interactive)
         if not srcdir:
             return 1
         print("Clone complete.")
+        print(
+            "If you need to run the tooling bootstrapping again, "
+            "then consider running './mach bootstrap' instead."
+        )
+        if not options.no_interactive:
+            remove_bootstrap_file = input(
+                "Unless you are going to have more local copies of Firefox source code, "
+                "this 'bootstrap.py' file is no longer needed and can be deleted. "
+                "Clean up the bootstrap.py file? (Y/n)"
+            )
+            if not remove_bootstrap_file:
+                remove_bootstrap_file = "y"
+        if options.no_interactive or remove_bootstrap_file == "y":
+            try:
+                os.remove(sys.argv[0])
+            except FileNotFoundError:
+                print("File could not be found !")
         return bootstrap(
             srcdir,
             options.application_choice,
