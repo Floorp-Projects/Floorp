@@ -26,7 +26,6 @@
 #include "jstypes.h"
 
 #include "frontend/ScriptIndex.h"  // ScriptIndex
-#include "frontend/SourceNotes.h"  // SrcNote
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
 #include "js/CompileOptions.h"
@@ -79,6 +78,7 @@ class ModuleObject;
 class RegExpObject;
 class SourceCompressionTask;
 class Shape;
+class SrcNote;
 class DebugScript;
 
 namespace frontend {

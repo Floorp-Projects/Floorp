@@ -12,8 +12,6 @@
 
 #include "builtin/MapObject.h"
 #include "debugger/DebugAPI.h"
-#include "frontend/BytecodeCompiler.h"
-#include "frontend/Parser.h"
 #include "gc/ClearEdgesTracer.h"
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
