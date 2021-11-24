@@ -30,7 +30,7 @@ static bool has_cpuid_bits(unsigned int level, CPUIDRegister reg,
                            unsigned int bits) {
   unsigned int regs[4];
   unsigned int eax, ebx, ecx, edx;
-  unsigned max = __get_cpuid_max(0, NULL);
+  unsigned max = __get_cpuid_max(level & 0x80000000u, nullptr);
   if (level > max) return false;
   __cpuid_count(level, 0, eax, ebx, ecx, edx);
   regs[0] = eax;
