@@ -116,7 +116,7 @@ class CacheQuotaClient final : public quota::Client {
   nsresult RestorePaddingFileInternal(nsIFile* aBaseDir,
                                       mozIStorageConnection* aConn);
 
-  nsresult WipePaddingFileInternal(const QuotaInfo& aQuotaInfo,
+  nsresult WipePaddingFileInternal(const ClientMetadata& aClientMetadata,
                                    nsIFile* aBaseDir);
 
  private:
