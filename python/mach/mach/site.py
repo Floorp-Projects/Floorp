@@ -19,6 +19,7 @@ import subprocess
 import sys
 from pathlib import Path
 import tempfile
+from contextlib import contextmanager
 from typing import Optional
 
 from mach.requirements import (
@@ -143,6 +144,33 @@ class MozSiteMetadata:
             return None
         except KeyError:
             raise out_of_date_exception
+
+    @contextmanager
+    def update_current_site(self, executable):
+        """Updates necessary global state when a site is activated
+
+        Due to needing to fetch some state before the actual activation happens, this
+        is represented as a context manager and should be used as follows:
+
+        with metadata.update_current_site(executable):
+            # Perform the actual implementation of changing the site, whether that is
+            # by exec-ing "activate_this.py" in a virtualenv, modifying the sys.path
+            # directly, or some other means
+            ...
+        """
+
+        try:
+            import pkg_resources
+        except ModuleNotFoundError:
+            pkg_resources = None
+
+        yield
+        MozSiteMetadata.current = self
+        sys.executable = executable
+
+        if pkg_resources:
+            # Rebuild the working_set based on the new sys.path.
+            pkg_resources._initialize_master_working_set()
 
 
 class MachSiteManager:
@@ -283,26 +311,19 @@ class MachSiteManager:
         assert not MozSiteMetadata.current
 
         self.ensure()
-        if self._site_packages_source == SitePackagesSource.SYSTEM:
-            # Add our Mach modules to the sys.path.
-            # Note that "[0:0]" is used to ensure that Mach's modules are prioritized
-            # over the system modules. Since Mach-env activation happens so early in
-            # the Mach lifecycle, we can assume that no system packages have been
-            # imported yet, and this is a safe operation to do.
-            sys.path[0:0] = self._requirements.pths_as_absolute(self._topsrcdir)
-        elif self._site_packages_source == SitePackagesSource.NONE:
-            # Since the system packages aren't used, remove them from the sys.path
-            sys.path = [
-                path
-                for path in sys.path
-                if path
-                not in ExternalPythonSite(sys.executable).all_site_packages_dirs()
-            ]
-            sys.path[0:0] = self._requirements.pths_as_absolute(self._topsrcdir)
-        elif self._site_packages_source == SitePackagesSource.VENV:
-            # Don't activate Mach virtualenv if this Python process was already started
-            # from the Mach virtualenv.
-            if Path(sys.prefix) != Path(self._metadata.prefix):
+        with self._metadata.update_current_site(
+            self._virtualenv().python_path
+            if self._site_packages_source == SitePackagesSource.VENV
+            else sys.executable,
+        ):
+            if self._site_packages_source == SitePackagesSource.SYSTEM:
+                # Add our Mach modules to the sys.path.
+                # Note that "[0:0]" is used to ensure that Mach's modules are prioritized
+                # over the system modules. Since Mach-env activation happens so early in
+                # the Mach lifecycle, we can assume that no system packages have been
+                # imported yet, and this is a safe operation to do.
+                sys.path[0:0] = self._requirements.pths_as_absolute(self._topsrcdir)
+            elif self._site_packages_source == SitePackagesSource.NONE:
                 # Since the system packages aren't used, remove them from the sys.path
                 sys.path = [
                     path
@@ -310,15 +331,27 @@ class MachSiteManager:
                     if path
                     not in ExternalPythonSite(sys.executable).all_site_packages_dirs()
                 ]
+                sys.path[0:0] = self._requirements.pths_as_absolute(self._topsrcdir)
+            elif self._site_packages_source == SitePackagesSource.VENV:
+                # Don't activate Mach virtualenv if this Python process was already
+                # started from the Mach virtualenv.
+                if Path(sys.prefix) != Path(self._metadata.prefix):
+                    # Since the system packages aren't used, remove them from the sys.path
+                    sys.path = [
+                        path
+                        for path in sys.path
+                        if path
+                        not in ExternalPythonSite(
+                            sys.executable
+                        ).all_site_packages_dirs()
+                    ]
 
-                # Activate the Mach virtualenv in the current Python context. This
-                # automatically adds the virtualenv's "site-packages" to our scope, in
-                # addition to our first-party/vendored modules since they're specified
-                # in the "mach.pth" file.
-                activate_path = self._virtualenv().activate_path
-                exec(open(activate_path).read(), dict(__file__=activate_path))
-
-        MozSiteMetadata.current = self._metadata
+                    # Activate the Mach virtualenv in the current Python context. This
+                    # automatically adds the virtualenv's "site-packages" to our scope, in
+                    # addition to our first-party/vendored modules since they're specified
+                    # in the "mach.pth" file.
+                    activate_path = self._virtualenv().activate_path
+                    exec(open(activate_path).read(), dict(__file__=activate_path))
 
     def _build(self):
         if self._site_packages_source != SitePackagesSource.VENV:
@@ -485,9 +518,10 @@ class CommandSiteManager:
         """
 
         self.ensure()
-        activate_path = self._virtualenv.activate_path
-        exec(open(activate_path).read(), dict(__file__=activate_path))
-        MozSiteMetadata.current = self._metadata
+
+        with self._metadata.update_current_site(self._virtualenv.python_path):
+            activate_path = self._virtualenv.activate_path
+            exec(open(activate_path).read(), dict(__file__=activate_path))
 
     def install_pip_package(self, package):
         """Install a package via pip.
