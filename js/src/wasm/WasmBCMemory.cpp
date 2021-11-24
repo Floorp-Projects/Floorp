@@ -334,7 +334,9 @@ static inline void ToValidIndex(MacroAssembler& masm, RegI32 ptr) {
 #endif
 }
 
+#if defined(ENABLE_WASM_MEMORY64)
 static inline void ToValidIndex(MacroAssembler& masm, RegI64 ptr) {}
+#endif
 
 // RegIndexType is RegI32 for Memory32 and RegI64 for Memory64.
 template <typename RegIndexType>
