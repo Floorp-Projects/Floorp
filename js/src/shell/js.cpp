@@ -600,7 +600,8 @@ bool shell::enableWasmOptimizing = false;
 #define WASM_DEFAULT_FEATURE(NAME, ...) bool shell::enableWasm##NAME = true;
 #define WASM_EXPERIMENTAL_FEATURE(NAME, ...) \
   bool shell::enableWasm##NAME = false;
-JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_EXPERIMENTAL_FEATURE);
+JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_DEFAULT_FEATURE,
+                     WASM_EXPERIMENTAL_FEATURE);
 #undef WASM_DEFAULT_FEATURE
 #undef WASM_EXPERIMENTAL_FEATURE
 
@@ -11256,7 +11257,8 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #define WASM_EXPERIMENTAL_FEATURE(NAME, LOWER_NAME, COMPILE_PRED,       \
                                   COMPILER_PRED, FLAG_PRED, SHELL, ...) \
   enableWasm##NAME = op.getBoolOption("wasm-" SHELL);
-  JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_EXPERIMENTAL_FEATURE);
+  JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_DEFAULT_FEATURE,
+                       WASM_EXPERIMENTAL_FEATURE);
 #undef WASM_DEFAULT_FEATURE
 #undef WASM_EXPERIMENTAL_FEATURE
 
@@ -11303,7 +11305,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #endif
 
 #define WASM_FEATURE(NAME, ...) .setWasm##NAME(enableWasm##NAME)
-          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE
 
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
@@ -11703,7 +11705,7 @@ static void SetWorkerContextOptions(JSContext* cx) {
       .setWasmIon(enableWasmOptimizing)
 #endif
 #define WASM_FEATURE(NAME, ...) .setWasm##NAME(enableWasm##NAME)
-          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE
 
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
@@ -12215,12 +12217,20 @@ int main(int argc, char** argv) {
 #define WASM_DEFAULT_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, \
                              FLAG_PRED, SHELL, ...)                         \
   !op.addBoolOption('\0', "no-wasm-" SHELL, "Disable wasm " SHELL "feature.") ||
+#define WASM_TENTATIVE_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, \
+                               FLAG_PRED, SHELL, ...)                         \
+  !op.addBoolOption('\0', "no-wasm-" SHELL,                                   \
+                    "Disable wasm " SHELL "feature.") ||                      \
+      !op.addBoolOption('\0', "wasm-" SHELL, "No-op.") ||
 #define WASM_EXPERIMENTAL_FEATURE(NAME, LOWER_NAME, COMPILE_PRED,       \
                                   COMPILER_PRED, FLAG_PRED, SHELL, ...) \
   !op.addBoolOption('\0', "wasm-" SHELL,                                \
-                    "Enable experimental wasm " SHELL "feature.") ||
-      JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_EXPERIMENTAL_FEATURE)
+                    "Enable experimental wasm " SHELL "feature.") ||    \
+      !op.addBoolOption('\0', "no-wasm-" SHELL, "No-op.") ||
+      JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_TENTATIVE_FEATURE,
+                           WASM_EXPERIMENTAL_FEATURE)
 #undef WASM_DEFAULT_FEATURE
+#undef WASM_TENTATIVE_FEATURE
 #undef WASM_EXPERIMENTAL_FEATURE
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
           !op.addBoolOption('\0', "wasm-simd-wormhole",
@@ -12884,7 +12894,8 @@ int main(int argc, char** argv) {
 #  define WASM_EXPERIMENTAL_FEATURE(NAME, LOWER_NAME, COMPILE_PRED,       \
                                     COMPILER_PRED, FLAG_PRED, SHELL, ...) \
     "--wasm-" SHELL,
-      JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_EXPERIMENTAL_FEATURE)
+      JS_FOR_WASM_FEATURES(WASM_DEFAULT_FEATURE, WASM_DEFAULT_FEATURE,
+                           WASM_EXPERIMENTAL_FEATURE)
 #  undef WASM_DEFAULT_FEATURE
 #  undef WASM_EXPERIMENTAL_FEATURE
       // Feature selection options

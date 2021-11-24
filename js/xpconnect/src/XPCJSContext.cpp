@@ -939,7 +939,7 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
 #define WASM_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, FLAG_PRED, \
                      SHELL, PREF)                                              \
   bool useWasm##NAME = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_" PREF);
-  JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+  JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE
 
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
@@ -1031,7 +1031,7 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
 #endif
       .setWasmBaseline(useWasmBaseline)
 #define WASM_FEATURE(NAME, ...) .setWasm##NAME(useWasm##NAME)
-          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
       .setWasmSimdWormhole(useWasmSimdWormhole)
