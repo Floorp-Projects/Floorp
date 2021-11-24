@@ -709,7 +709,7 @@ already_AddRefed<Promise> IOUtils::Copy(GlobalObject& aGlobal,
 }
 
 /* static */
-already_AddRefed<Promise> IOUtils::SetModificationTime(
+already_AddRefed<Promise> IOUtils::Touch(
     GlobalObject& aGlobal, const nsAString& aPath,
     const Optional<int64_t>& aModification) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
@@ -728,7 +728,7 @@ already_AddRefed<Promise> IOUtils::SetModificationTime(
     }
     DispatchAndResolve<int64_t>(state.ref()->mEventQueue, promise,
                                 [file = std::move(file), newTime]() {
-                                  return SetModificationTimeSync(file, newTime);
+                                  return TouchSync(file, newTime);
                                 });
   } else {
     RejectShuttingDown(promise);
@@ -1417,7 +1417,7 @@ Result<IOUtils::InternalFileInfo, IOUtils::IOError> IOUtils::StatSync(
 }
 
 /* static */
-Result<int64_t, IOUtils::IOError> IOUtils::SetModificationTimeSync(
+Result<int64_t, IOUtils::IOError> IOUtils::TouchSync(
     nsIFile* aFile, const Maybe<int64_t>& aNewModTime) {
   MOZ_ASSERT(!NS_IsMainThread());
 
