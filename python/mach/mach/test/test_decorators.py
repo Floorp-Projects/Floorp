@@ -5,10 +5,13 @@
 from __future__ import absolute_import, unicode_literals
 
 import os
+from unittest import mock
 
 import pytest
 from unittest.mock import Mock
 
+from mach.requirements import MachEnvRequirements
+from mach.site import CommandSiteManager, SitePackagesSource, MozSiteMetadata
 from mozunit import main
 
 import mach.registrar
@@ -91,10 +94,26 @@ def test_register_command_sets_up_class_at_runtime(registrar):
         )
         inner_function("bar")
 
-    registrar.dispatch("cmd_foo", context)
-    inner_function.assert_called_with("foo")
-    registrar.dispatch("cmd_bar", context)
-    inner_function.assert_called_with("bar")
+    def from_environment_patch(topsrcdir, state_dir, virtualenv_name, dir):
+        return CommandSiteManager(
+            "",
+            "",
+            virtualenv_name,
+            virtualenv_name,
+            MozSiteMetadata(
+                0, "mach", SitePackagesSource.VENV, SitePackagesSource.VENV, "", ""
+            ),
+            SitePackagesSource.VENV,
+            MachEnvRequirements(),
+        )
+
+    with mock.patch.object(
+        CommandSiteManager, "from_environment", from_environment_patch
+    ):
+        registrar.dispatch("cmd_foo", context)
+        inner_function.assert_called_with("foo")
+        registrar.dispatch("cmd_bar", context)
+        inner_function.assert_called_with("bar")
 
 
 def test_cannot_create_command_nonexisting_category(registrar):

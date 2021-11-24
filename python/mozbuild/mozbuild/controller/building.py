@@ -23,13 +23,14 @@ from collections import (
 )
 from textwrap import TextWrapper
 
+from mach.site import CommandSiteManager
+
 try:
     import psutil
 except Exception:
     psutil = None
 
 from mach.mixin.logging import LoggingMixin
-from mozboot.util import get_mach_virtualenv_binary
 import mozfile
 from mozsystemmonitor.resourcemonitor import SystemResourceMonitor
 from mozterm.widgets import Footer
@@ -1508,15 +1509,15 @@ class BuildDriver(MozbuildObject):
                 if eq == "=":
                     append_env[k] = v
 
-        if six.PY3:
-            python = sys.executable
-        else:
-            # Try to get the mach virtualenv Python if we can.
-            python = get_mach_virtualenv_binary()
-            if not os.path.exists(python):
-                python = "python3"
+        build_site = CommandSiteManager.from_environment(
+            self.topsrcdir,
+            self.statedir,
+            "build",
+            os.path.join(self.topobjdir, "_virtualenvs"),
+        )
+        build_site.ensure()
 
-        command = [python, os.path.join(self.topsrcdir, "configure.py")]
+        command = [build_site.python_path, os.path.join(self.topsrcdir, "configure.py")]
         if options:
             command.extend(options)
 

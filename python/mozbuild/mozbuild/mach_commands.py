@@ -2463,7 +2463,6 @@ def create_mach_environment(command_context, force=False):
     manager = MachSiteManager.from_environment(
         command_context.topsrcdir,
         get_state_dir(),
-        is_mach_create_mach_env_command=True,
     )
 
     if manager.ensure(force=force):

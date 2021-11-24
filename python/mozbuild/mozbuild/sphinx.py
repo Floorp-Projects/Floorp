@@ -198,6 +198,7 @@ class MozbuildSymbols(Directive):
 
 def setup(app):
     from mach.site import CommandSiteManager
+    from mozboot.util import get_state_dir
     from moztreedocs import manager
 
     app.add_directive("mozbuildsymbols", MozbuildSymbols)
@@ -214,9 +215,10 @@ def setup(app):
     # We need to adjust sys.path in order for Python API docs to get generated
     # properly. We leverage the in-tree virtualenv for this.
     topsrcdir = manager.topsrcdir
-    site = CommandSiteManager(
+    site = CommandSiteManager.from_environment(
         topsrcdir,
-        os.path.join(app.outdir, "_venv"),
+        get_state_dir(),
         "common",
+        os.path.join(app.outdir, "_venv"),
     )
     site.activate()
