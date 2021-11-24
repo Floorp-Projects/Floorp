@@ -31,7 +31,6 @@ LOCAL_INCLUDES += [
     "/media/libyuv/libyuv/include/",
     "/third_party/libwebrtc/",
     "/third_party/libwebrtc/third_party/abseil-cpp/",
-    "/third_party/pipewire/",
     "/tools/profiler/public"
 ]
 
@@ -78,6 +77,10 @@ if CONFIG["OS_TARGET"] == "Darwin":
     DEFINES["__STDC_CONSTANT_MACROS"] = True
     DEFINES["__STDC_FORMAT_MACROS"] = True
 
+    LOCAL_INCLUDES += [
+        "/third_party/pipewire/"
+    ]
+
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/modules/desktop_capture/mac/desktop_configuration_monitor.cc",
         "/third_party/libwebrtc/modules/desktop_capture/mac/full_screen_mac_application_handler.cc",
@@ -94,6 +97,7 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["USE_X11"] = "1"
     DEFINES["WEBRTC_LINUX"] = True
     DEFINES["WEBRTC_POSIX"] = True
+    DEFINES["WEBRTC_USE_PIPEWIRE"] = True
     DEFINES["WEBRTC_USE_X11"] = True
     DEFINES["_FILE_OFFSET_BITS"] = "64"
     DEFINES["_GNU_SOURCE"] = True
@@ -101,6 +105,11 @@ if CONFIG["OS_TARGET"] == "Linux":
     DEFINES["_LARGEFILE_SOURCE"] = True
     DEFINES["__STDC_CONSTANT_MACROS"] = True
     DEFINES["__STDC_FORMAT_MACROS"] = True
+
+    LOCAL_INCLUDES += [
+        "/third_party/pipewire/",
+        "/third_party/pipewire/"
+    ]
 
     OS_LIBS += [
         "dl",
@@ -162,6 +171,10 @@ if CONFIG["OS_TARGET"] == "WINNT":
     DEFINES["_WIN32_WINNT"] = "0x0A00"
     DEFINES["_WINDOWS"] = True
     DEFINES["__STD_C"] = True
+
+    LOCAL_INCLUDES += [
+        "/third_party/pipewire/"
+    ]
 
     OS_LIBS += [
         "crypt32",
