@@ -329,6 +329,9 @@ option {
   display: block;
   float: none !important;
   position: static !important;
+  /* This makes sure that it is a containing block for positioned descendants. */
+  will-change: filter !important;
+
   min-block-size: 1em;
   padding-block: 2px;
   /*
