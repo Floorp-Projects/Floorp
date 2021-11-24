@@ -78,7 +78,7 @@ fun AccessTokenInfo.into(): mozilla.components.concept.sync.AccessTokenInfo {
  * @throws IllegalStateException if [AccessTokenInfo] didn't have key information.
  */
 fun mozilla.components.concept.sync.AccessTokenInfo.asSyncAuthInfo(tokenServerUrl: String): SyncAuthInfo {
-    val keyInfo = this.key ?: throw IllegalStateException("missing OAuthScopedKey")
+    val keyInfo = this.key ?: throw AccessTokenUnexpectedlyWithoutKey()
 
     return SyncAuthInfo(
         kid = keyInfo.kid,

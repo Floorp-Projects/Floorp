@@ -56,9 +56,22 @@ sealed class AccountManagerException(message: String) : Exception(message) {
     class AuthRecoveryCircuitBreakerException(operation: String) : AccountManagerException(
         "Auth recovery circuit breaker triggered by: $operation"
     )
+
+    /**
+     * Unexpectedly encountered an access token without a key.
+     * @param operation An operation which triggered this state.
+     */
+    class MissingKeyFromSyncScopedAccessToken(operation: String) : AccountManagerException(
+        "Encountered an access token without a key: $operation"
+    )
 }
 
 /**
  * FxaException wrapper easily identifying it as the result of a failed operation of sending tabs.
  */
 class SendCommandException(fxaException: FxaException) : Exception(fxaException)
+
+/**
+ * Thrown if we saw a keyed access token without a key (e.g. obtained for SCOPE_SYNC).
+ */
+internal class AccessTokenUnexpectedlyWithoutKey : Exception()

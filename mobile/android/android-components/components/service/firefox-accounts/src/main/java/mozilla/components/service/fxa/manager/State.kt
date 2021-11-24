@@ -34,6 +34,7 @@ internal sealed class Event {
                 return "${this.javaClass.simpleName} - $operation"
             }
         }
+        object AccessTokenKeyError : Account()
 
         data class MigrateFromAccount(val account: ShareableAccount, val reuseSessionToken: Boolean) : Account() {
             override fun toString(): String {
@@ -92,6 +93,7 @@ internal fun State.next(event: Event): State? = when (this) {
         }
         AccountState.Authenticated -> when (event) {
             is Event.Account.AuthenticationError -> State.Active(ProgressState.RecoveringFromAuthProblem)
+            is Event.Account.AccessTokenKeyError -> State.Idle(AccountState.AuthenticationProblem)
             is Event.Account.Logout -> State.Active(ProgressState.LoggingOut)
             else -> null
         }

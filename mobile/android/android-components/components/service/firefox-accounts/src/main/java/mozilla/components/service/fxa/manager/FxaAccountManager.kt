@@ -24,6 +24,7 @@ import mozilla.components.concept.sync.InFlightMigrationState
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.concept.sync.ServiceResult
+import mozilla.components.service.fxa.AccessTokenUnexpectedlyWithoutKey
 import mozilla.components.service.fxa.AccountManagerException
 import mozilla.components.service.fxa.AccountOnDisk
 import mozilla.components.service.fxa.AccountStorage
@@ -294,7 +295,16 @@ open class FxaAccountManager(
                 // All good, request a sync.
                 AccountState.Authenticated -> {
                     // Make sure auth cache is populated before we try to sync.
-                    maybeUpdateSyncAuthInfoCache()
+                    try {
+                        maybeUpdateSyncAuthInfoCache()
+                    } catch (e: AccessTokenUnexpectedlyWithoutKey) {
+                        crashReporter?.submitCaughtException(
+                            AccountManagerException.MissingKeyFromSyncScopedAccessToken("syncNow")
+                        )
+                        processQueue(Event.Account.AccessTokenKeyError)
+                        // No point in trying to sync now.
+                        return@withContext
+                    }
 
                     // Access to syncManager is guarded by `this`.
                     synchronized(this@FxaAccountManager) {
@@ -608,8 +618,11 @@ open class FxaAccountManager(
                         // - network errors are encountered. 'CompletedAuthentication' event will be processed,
                         // moving the state machine into an 'Authenticated' state. Next time user requests
                         // a sync, methods that failed will be re-ran, giving them a chance to succeed.
-                        authenticationSideEffects()
-                        Event.Progress.CompletedAuthentication(authType)
+                        if (authenticationSideEffects("CompletingAuthentication:accountRestored")) {
+                            Event.Progress.CompletedAuthentication(authType)
+                        } else {
+                            Event.Progress.FailedToCompleteAuthRestore
+                        }
                     }
                     ServiceResult.AuthError -> {
                         Event.Account.AuthenticationError("finalizeDevice")
@@ -634,8 +647,11 @@ open class FxaAccountManager(
                     Event.Progress.FailedToCompleteAuth
                 } else {
                     via.authData.declinedEngines?.let { persistDeclinedEngines(it) }
-                    authenticationSideEffects()
-                    Event.Progress.CompletedAuthentication(via.authData.authType)
+                    if (authenticationSideEffects("CompletingAuthentication:AuthData")) {
+                        Event.Progress.CompletedAuthentication(via.authData.authType)
+                    } else {
+                        Event.Progress.FailedToCompleteAuth
+                    }
                 }
             }
             is Event.Progress.Migrated -> {
@@ -645,8 +661,11 @@ open class FxaAccountManager(
                 }
                 when (withRetries(logger, MAX_NETWORK_RETRIES) { finalizeDevice(authType) }) {
                     is Result.Success -> {
-                        authenticationSideEffects()
-                        Event.Progress.CompletedAuthentication(authType)
+                        if (authenticationSideEffects("CompletingAuthentication:Migrated")) {
+                            Event.Progress.CompletedAuthentication(authType)
+                        } else {
+                            Event.Progress.FailedToCompleteAuth
+                        }
                     }
                     Result.Failure -> {
                         resetAccount()
@@ -849,9 +868,25 @@ open class FxaAccountManager(
         authType, deviceConfig
     )
 
-    private suspend fun authenticationSideEffects() {
+    /**
+     * Populates caches necessary for the sync worker (sync auth info and FxA device).
+     * @return 'true' on success, 'false' on failure, indicating that sync won't work.
+     */
+    private suspend fun authenticationSideEffects(operation: String): Boolean {
         // Make sure our SyncAuthInfo cache is hot, background sync worker needs it to function.
-        maybeUpdateSyncAuthInfoCache()
+        try {
+            maybeUpdateSyncAuthInfoCache()
+        } catch (e: AccessTokenUnexpectedlyWithoutKey) {
+            crashReporter?.submitCaughtException(
+                AccountManagerException.MissingKeyFromSyncScopedAccessToken(operation)
+            )
+            // Since we don't know what's causing a missing key for the SCOPE_SYNC access tokens, we
+            // do not attempt to recover here. If this is a persistent state for an account, a recovery
+            // will just enter into a loop that our circuit breaker logic is unlikely to catch, due
+            // to recovery attempts likely being made on startup.
+            // See https://github.com/mozilla-mobile/android-components/issues/8527
+            return false
+        }
 
         // Sync workers also need to know about the current FxA device.
         FxaDeviceSettingsCache(context).setToCache(
@@ -861,6 +896,7 @@ open class FxaAccountManager(
                 type = deviceConfig.type.intoSyncType()
             )
         )
+        return true
     }
 
     /**

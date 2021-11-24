@@ -26,6 +26,7 @@ class StateKtTest {
                 }
                 AccountState.Authenticated -> when (event) {
                     is Event.Account.AuthenticationError -> State.Active(ProgressState.RecoveringFromAuthProblem)
+                    Event.Account.AccessTokenKeyError -> State.Idle(AccountState.AuthenticationProblem)
                     Event.Account.Logout -> State.Active(ProgressState.LoggingOut)
                     else -> null
                 }
@@ -82,6 +83,7 @@ class StateKtTest {
             "BeginEmailFlow" -> Event.Account.BeginEmailFlow
             "CancelAuth" -> Event.Progress.CancelAuth
             "AuthenticationError" -> Event.Account.AuthenticationError("fxa op")
+            "AccessTokenKeyError" -> Event.Account.AccessTokenKeyError
             "MigrateFromAccount" -> Event.Account.MigrateFromAccount(mock(), true)
             "RetryMigration" -> Event.Account.RetryMigration
             "Logout" -> Event.Account.Logout
