@@ -446,7 +446,6 @@ module.exports = {
         "dom/base/test/chrome/test_bug884693.xhtml",
         "dom/base/test/chrome/test_document-element-inserted.xhtml",
         "dom/base/test/chrome/test_domparsing.xhtml",
-        "dom/base/test/chrome/test_fileconstructor.xhtml",
         "dom/base/test/chrome/title_window.xhtml",
         "dom/base/test/chrome/window_nsITextInputProcessor.xhtml",
         "dom/base/test/chrome/window_swapFrameLoaders.xhtml",
