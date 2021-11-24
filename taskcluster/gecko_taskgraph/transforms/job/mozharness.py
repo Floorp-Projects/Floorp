@@ -300,7 +300,6 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     mh_command += [
         f"{gecko_path}/mach",
         "python",
-        "--no-activate",
         "{}/testing/{}".format(gecko_path, run.pop("script")),
     ]
 
