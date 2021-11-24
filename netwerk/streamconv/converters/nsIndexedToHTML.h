@@ -37,11 +37,9 @@ class nsIndexedToHTML : public nsIStreamConverter, public nsIDirIndexListener {
 
  protected:
   void FormatSizeString(int64_t inSize, nsCString& outSizeString);
-  nsresult SendToListener(nsIRequest* aRequest, nsISupports* aContext,
-                          const nsACString& aBuffer);
+  nsresult SendToListener(nsIRequest* aRequest, const nsACString& aBuffer);
   // Helper to properly implement OnStartRequest
-  nsresult DoOnStartRequest(nsIRequest* request, nsISupports* aContext,
-                            nsCString& aBuffer);
+  nsresult DoOnStartRequest(nsIRequest* request, nsCString& aBuffer);
 
  protected:
   nsCOMPtr<nsIDirIndexParser> mParser;

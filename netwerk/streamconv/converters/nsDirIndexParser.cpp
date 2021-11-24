@@ -150,7 +150,7 @@ NS_IMETHODIMP
 nsDirIndexParser::OnStopRequest(nsIRequest* aRequest, nsresult aStatusCode) {
   // Finish up
   if (mBuf.Length() > (uint32_t)mLineStart) {
-    ProcessData(aRequest, nullptr);
+    ProcessData(aRequest);
   }
 
   return NS_OK;
@@ -367,11 +367,10 @@ nsDirIndexParser::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aStream,
   //       work on other strings.
   mBuf.SetLength(len + count);
 
-  return ProcessData(aRequest, nullptr);
+  return ProcessData(aRequest);
 }
 
-nsresult nsDirIndexParser::ProcessData(nsIRequest* aRequest,
-                                       nsISupports* aCtxt) {
+nsresult nsDirIndexParser::ProcessData(nsIRequest* aRequest) {
   if (!mListener) return NS_ERROR_FAILURE;
 
   int32_t numItems = 0;
@@ -401,7 +400,7 @@ nsresult nsDirIndexParser::ProcessData(nsIRequest* aRequest,
 
             char* value = ((char*)buf) + 4;
             nsUnescape(value);
-            mListener->OnInformationAvailable(aRequest, aCtxt,
+            mListener->OnInformationAvailable(aRequest,
                                               NS_ConvertUTF8toUTF16(value));
 
           } else if (buf[2] == '2' && buf[3] == ':') {
@@ -419,7 +418,7 @@ nsresult nsDirIndexParser::ProcessData(nsIRequest* aRequest,
             nsCOMPtr<nsIDirIndex> idx = new nsDirIndex();
 
             ParseData(idx, ((char*)buf) + 4, lineLen - 4);
-            mListener->OnIndexAvailable(aRequest, aCtxt, idx);
+            mListener->OnIndexAvailable(aRequest, idx);
           }
         }
       } else if (buf[0] == '3') {

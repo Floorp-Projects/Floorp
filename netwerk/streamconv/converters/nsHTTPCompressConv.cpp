@@ -244,8 +244,7 @@ nsresult nsHTTPCompressConv::BrotliHandler(nsIInputStream* stream,
     }
     if (outSize > 0) {
       nsresult rv = self->do_OnDataAvailable(
-          self->mBrotli->mRequest, self->mBrotli->mContext,
-          self->mBrotli->mSourceOffset,
+          self->mBrotli->mRequest, self->mBrotli->mSourceOffset,
           reinterpret_cast<const char*>(outBuffer.get()), outSize);
       LOG(("nsHttpCompressConv %p BrotliHandler ODA rv=%" PRIx32, self,
            static_cast<uint32_t>(rv)));
@@ -361,8 +360,8 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request, nsIInputStream* iStr,
 
           if (code == Z_STREAM_END) {
             if (bytesWritten) {
-              rv = do_OnDataAvailable(request, nullptr, aSourceOffset,
-                                      (char*)mOutBuffer, bytesWritten);
+              rv = do_OnDataAvailable(request, aSourceOffset, (char*)mOutBuffer,
+                                      bytesWritten);
               if (NS_FAILED(rv)) {
                 return rv;
               }
@@ -374,16 +373,16 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request, nsIInputStream* iStr,
           }
           if (code == Z_OK) {
             if (bytesWritten) {
-              rv = do_OnDataAvailable(request, nullptr, aSourceOffset,
-                                      (char*)mOutBuffer, bytesWritten);
+              rv = do_OnDataAvailable(request, aSourceOffset, (char*)mOutBuffer,
+                                      bytesWritten);
               if (NS_FAILED(rv)) {
                 return rv;
               }
             }
           } else if (code == Z_BUF_ERROR) {
             if (bytesWritten) {
-              rv = do_OnDataAvailable(request, nullptr, aSourceOffset,
-                                      (char*)mOutBuffer, bytesWritten);
+              rv = do_OnDataAvailable(request, aSourceOffset, (char*)mOutBuffer,
+                                      bytesWritten);
               if (NS_FAILED(rv)) {
                 return rv;
               }
@@ -444,8 +443,8 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request, nsIInputStream* iStr,
 
           if (code == Z_STREAM_END) {
             if (bytesWritten) {
-              rv = do_OnDataAvailable(request, nullptr, aSourceOffset,
-                                      (char*)mOutBuffer, bytesWritten);
+              rv = do_OnDataAvailable(request, aSourceOffset, (char*)mOutBuffer,
+                                      bytesWritten);
               if (NS_FAILED(rv)) {
                 return rv;
               }
@@ -457,16 +456,16 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request, nsIInputStream* iStr,
           }
           if (code == Z_OK) {
             if (bytesWritten) {
-              rv = do_OnDataAvailable(request, nullptr, aSourceOffset,
-                                      (char*)mOutBuffer, bytesWritten);
+              rv = do_OnDataAvailable(request, aSourceOffset, (char*)mOutBuffer,
+                                      bytesWritten);
               if (NS_FAILED(rv)) {
                 return rv;
               }
             }
           } else if (code == Z_BUF_ERROR) {
             if (bytesWritten) {
-              rv = do_OnDataAvailable(request, nullptr, aSourceOffset,
-                                      (char*)mOutBuffer, bytesWritten);
+              rv = do_OnDataAvailable(request, aSourceOffset, (char*)mOutBuffer,
+                                      bytesWritten);
               if (NS_FAILED(rv)) {
                 return rv;
               }
@@ -523,7 +522,6 @@ nsHTTPCompressConv::Convert(nsIInputStream* aFromStream, const char* aFromType,
 }
 
 nsresult nsHTTPCompressConv::do_OnDataAvailable(nsIRequest* request,
-                                                nsISupports* context,
                                                 uint64_t offset,
                                                 const char* buffer,
                                                 uint32_t count) {

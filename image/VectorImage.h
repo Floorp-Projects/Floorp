@@ -45,12 +45,10 @@ class VectorImage final : public ImageResource, public nsIStreamListener {
                                      MallocSizeOf aMallocSizeOf) const override;
 
   virtual nsresult OnImageDataAvailable(nsIRequest* aRequest,
-                                        nsISupports* aContext,
                                         nsIInputStream* aInStr,
                                         uint64_t aSourceOffset,
                                         uint32_t aCount) override;
-  virtual nsresult OnImageDataComplete(nsIRequest* aRequest,
-                                       nsISupports* aContext, nsresult aResult,
+  virtual nsresult OnImageDataComplete(nsIRequest* aRequest, nsresult aResult,
                                        bool aLastPart) override;
 
   virtual void OnSurfaceDiscarded(const SurfaceKey& aSurfaceKey) override;

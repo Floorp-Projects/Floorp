@@ -152,7 +152,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest* request) {
     return NS_OK;
   }
 
-  rv = DispatchContent(request, nullptr);
+  rv = DispatchContent(request);
 
   LOG(("  After dispatch, m_targetStreamListener: 0x%p, rv: 0x%08" PRIX32,
        m_targetStreamListener.get(), static_cast<uint32_t>(rv)));
@@ -224,8 +224,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest* request,
   return NS_OK;
 }
 
-nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request,
-                                             nsISupports* aCtxt) {
+nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request) {
   LOG(("[0x%p] nsDocumentOpenInfo::DispatchContent for type '%s'", this,
        mContentType.get()));
 

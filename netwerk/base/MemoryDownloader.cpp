@@ -32,8 +32,7 @@ MemoryDownloader::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   data.swap(mData);
   RefPtr<IObserver> observer;
   observer.swap(mObserver);
-  observer->OnDownloadComplete(this, aRequest, nullptr, aStatus,
-                               std::move(data));
+  observer->OnDownloadComplete(this, aRequest, aStatus, std::move(data));
   return NS_OK;
 }
 
