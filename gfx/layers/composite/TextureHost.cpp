@@ -364,6 +364,13 @@ void TextureHost::Finalize() {
   }
 }
 
+void TextureHost::UnbindTextureSource() {
+  if (mReadLocked) {
+    ReadUnlock();
+    MaybeNotifyUnlocked();
+  }
+}
+
 void TextureHost::RecycleTexture(TextureFlags aFlags) {
   MOZ_ASSERT(GetFlags() & TextureFlags::RECYCLE);
   MOZ_ASSERT(aFlags & TextureFlags::RECYCLE);
@@ -627,6 +634,14 @@ bool TextureHost::NeedsYFlip() const {
 }
 
 void BufferTextureHost::MaybeNotifyUnlocked() {}
+
+void BufferTextureHost::UnbindTextureSource() {
+  // This texture is not used by any layer anymore.
+  // If the texture has an intermediate buffer we don't care either because
+  // texture uploads are also performed synchronously for BufferTextureHost.
+  ReadUnlock();
+  MaybeNotifyUnlocked();
+}
 
 gfx::SurfaceFormat BufferTextureHost::GetFormat() const { return mFormat; }
 

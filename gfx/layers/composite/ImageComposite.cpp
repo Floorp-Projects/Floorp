@@ -166,6 +166,7 @@ const ImageComposite::TimedImage* ImageComposite::ChooseImage() {
 void ImageComposite::RemoveImagesWithTextureHost(TextureHost* aTexture) {
   for (int32_t i = mImages.Length() - 1; i >= 0; --i) {
     if (mImages[i].mTextureHost == aTexture) {
+      aTexture->UnbindTextureSource();
       mImages.RemoveElementAt(i);
     }
   }

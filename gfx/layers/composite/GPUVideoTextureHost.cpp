@@ -219,6 +219,14 @@ bool GPUVideoTextureHost::SupportsExternalCompositing(
   return EnsureWrappedTextureHost()->SupportsExternalCompositing(aBackend);
 }
 
+void GPUVideoTextureHost::UnbindTextureSource() {
+  if (EnsureWrappedTextureHost()) {
+    EnsureWrappedTextureHost()->UnbindTextureSource();
+  }
+  // Handle read unlock
+  TextureHost::UnbindTextureSource();
+}
+
 void GPUVideoTextureHost::NotifyNotUsed() {
   if (EnsureWrappedTextureHost()) {
     EnsureWrappedTextureHost()->NotifyNotUsed();
