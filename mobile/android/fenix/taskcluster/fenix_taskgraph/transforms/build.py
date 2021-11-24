@@ -75,6 +75,20 @@ def build_gradle_command(config, tasks):
         yield task
 
 @transforms.add
+def track_apk_size(config, tasks):
+    for task in tasks:
+        gradle_build_type = task["run"]["gradle-build-type"]
+        variant_config = get_variant(gradle_build_type)
+
+        should_track_apk_size = task["run"].pop("track-apk-size", False)
+        if should_track_apk_size:
+            task["run"]["gradlew"].append(
+                "apkSize{}".format(variant_config["name"].capitalize())
+            )
+
+        yield task
+
+@transforms.add
 def extra_gradle_options(config, tasks):
     for task in tasks:
         for extra in task["run"].pop("gradle-extra-options", []):

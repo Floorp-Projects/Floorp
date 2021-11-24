@@ -1,3 +1,5 @@
+import org.mozilla.fenix.gradle.tasks.ApkSizeTask
+
 plugins {
     id "com.jetbrains.python.envs" version "0.0.26"
     id "com.google.protobuf" version "0.8.17"
@@ -799,5 +801,13 @@ ext.updateExtensionVersion = { task, extDir ->
         def values = ['version': AndroidComponents.VERSION + "." + new Date().format('MMddHHmmss')]
         inputs.properties(values)
         expand(values)
+    }
+}
+
+android.applicationVariants.all { variant ->
+    tasks.register("apkSize${variant.name.capitalize()}", ApkSizeTask) {
+        variantName = variant.name
+        apks = variant.outputs.collect { output -> output.outputFile.name }
+        dependsOn "package${variant.name.capitalize()}"
     }
 }

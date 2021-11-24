@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// If you ever need to force a toolchain rebuild (taskcluster) then edit the following comment.
+// FORCE REBUILD 2021-11-24
+
 object Versions {
     const val kotlin = "1.5.31"
     const val coroutines = "1.5.2"

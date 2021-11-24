@@ -51,6 +51,7 @@ jobs:
         run-on-tasks-for: [github-pull-request, github-push]
         run:
             gradle-build-type: debug
+            track-apk-size: true
         treeherder:
             symbol: debug(B)
 
@@ -157,6 +158,7 @@ jobs:
         include-shippable-secrets: true
         run:
             gradle-build-type: nightly
+            track-apk-size: true
         run-on-tasks-for: []
         treeherder:
             symbol: nightly(B)
@@ -169,6 +171,7 @@ jobs:
         filter-incomplete-translations: true
         run:
             gradle-build-type: beta
+            track-apk-size: true
         treeherder:
             symbol: beta(B)
 
@@ -195,6 +198,7 @@ jobs:
         filter-incomplete-translations: true
         run:
             gradle-build-type: release
+            track-apk-size: true
         treeherder:
             symbol: release(B)
 
