@@ -2,7 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 add_task(async function thumbnails_bg_redirect() {
-  let finalURL = "http://example.com/redirected";
+  let finalURL = "https://example.com/redirected";
   let originalURL = bgTestPageURL({ redirect: finalURL });
 
   ok(

@@ -10,7 +10,7 @@ add_task(async function thumbnails_bg_captureIfMissing() {
 
   Services.obs.addObserver(observe, "page-thumbnail:create");
 
-  let url = "http://example.com/";
+  let url = "https://example.com/";
   let file = thumbnailFile(url);
   ok(!file.exists(), "Thumbnail file should not already exist.");
 

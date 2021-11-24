@@ -3,11 +3,11 @@
 
 add_task(async function thumbnails_bg_queueing() {
   let urls = [
-    "http://www.example.com/0",
-    "http://www.example.com/1",
+    "https://www.example.com/0",
+    "https://www.example.com/1",
     // an item that will timeout to ensure timeouts work and we resume.
     bgTestPageURL({ wait: 2002 }),
-    "http://www.example.com/2",
+    "https://www.example.com/2",
   ];
   dontExpireThumbnailURLs(urls);
 
