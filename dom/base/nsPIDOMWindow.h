@@ -608,6 +608,13 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
 
   bool HasStorageAccessPermissionGranted();
 
+  uint32_t UpdateLockCount(bool aIncrement) {
+    MOZ_ASSERT_IF(!aIncrement, mLockCount > 0);
+    mLockCount += aIncrement ? 1 : -1;
+    return mLockCount;
+  };
+  bool HasActiveLocks() { return mLockCount > 0; }
+
  protected:
   void CreatePerformanceObjectIfNeeded();
 
@@ -722,6 +729,12 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   RefPtr<mozilla::dom::WindowGlobalChild> mWindowGlobalChild;
 
   bool mWasSuspendedByGroup;
+
+  /**
+   * Count of the number of active LockRequest objects, including ones from
+   * workers.
+   */
+  uint32_t mLockCount = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIDOMWindowInner, NS_PIDOMWINDOWINNER_IID)
