@@ -671,9 +671,6 @@ dictionary ChildProcInfoDictionary {
   // The cross-process descriptor for this process.
   long long pid = 0;
 
-  // Process filename (without the path name).
-  DOMString filename = "";
-
   // The best end-user measure for "memory used" that we can obtain without
   // triggering expensive computations. The value is in bytes.
   // On Mac and Linux this matches the values shown by the system monitors.
@@ -715,9 +712,6 @@ dictionary ParentProcInfoDictionary {
 
   // The cross-process descriptor for this process.
   long long pid = 0;
-
-  // Process filename (without the path name).
-  DOMString filename = "";
 
   // The best end-user measure for "memory used" that we can obtain without
   // triggering expensive computations. The value is in bytes.
