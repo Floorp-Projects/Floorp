@@ -495,14 +495,15 @@ EditActionResult WhiteSpaceVisibilityKeeper::
       }
 
       if (splitResult.Handled()) {
-        if (splitResult.GetNextNode()) {
-          atPreviousContent.Set(splitResult.GetNextNode());
+        if (nsIContent* nextContentAtSplitPoint =
+                splitResult.GetNextContent()) {
+          atPreviousContent.Set(nextContentAtSplitPoint);
           if (!atPreviousContent.IsSet()) {
             NS_WARNING("Next node of split point was orphaned");
             return EditActionResult(NS_ERROR_NULL_POINTER);
           }
         } else {
-          atPreviousContent = splitResult.SplitPoint();
+          atPreviousContent = splitResult.AtSplitPoint<EditorDOMPoint>();
           if (!atPreviousContent.IsSet()) {
             NS_WARNING("Split node was orphaned");
             return EditActionResult(NS_ERROR_NULL_POINTER);
