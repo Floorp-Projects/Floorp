@@ -355,8 +355,6 @@ already_AddRefed<nsISerialEventTarget> IProtocol::GetActorEventTarget(
   return mToplevel->GetActorEventTarget(aActor);
 }
 
-ProcessId IProtocol::OtherPid() const { return mToplevel->OtherPid(); }
-
 void IProtocol::SetId(int32_t aId) {
   MOZ_ASSERT(mId == aId || mLinkStatus == LinkStatus::Inactive);
   mId = aId;
@@ -600,17 +598,11 @@ void IProtocol::DestroySubtree(ActorDestroyReason aWhy) {
 IToplevelProtocol::IToplevelProtocol(const char* aName, ProtocolId aProtoId,
                                      Side aSide)
     : IProtocol(aProtoId, aSide),
-      mOtherPid(mozilla::ipc::kInvalidProcessId),
+      mOtherPid(base::kInvalidProcessId),
       mLastLocalId(0),
       mEventTargetMutex("ProtocolEventTargetMutex"),
       mChannel(aName, this) {
   mToplevel = this;
-}
-
-base::ProcessId IToplevelProtocol::OtherPid() const {
-  base::ProcessId pid = OtherPidMaybeInvalid();
-  MOZ_RELEASE_ASSERT(pid != kInvalidProcessId);
-  return pid;
 }
 
 void IToplevelProtocol::SetOtherProcessId(base::ProcessId aOtherPid) {

@@ -37,7 +37,7 @@ struct ImageCompositeNotificationInfo {
 };
 
 struct AsyncCompositableRef {
-  AsyncCompositableRef() : mProcessId(mozilla::ipc::kInvalidProcessId) {}
+  AsyncCompositableRef() : mProcessId(base::kInvalidProcessId) {}
   AsyncCompositableRef(base::ProcessId aProcessId,
                        const CompositableHandle& aHandle)
       : mProcessId(aProcessId), mHandle(aHandle) {}

@@ -16,7 +16,8 @@ namespace layers {
 /**
  * PCanvas is the IPDL for recorded Canvas drawing.
  */
-[RefCounted] async protocol PCanvas {
+[RefCounted, NeedsOtherPid]
+async protocol PCanvas {
 parent:
   /**
    * Initialize a CanvasTranslator for a particular TextureType, which

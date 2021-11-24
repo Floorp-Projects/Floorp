@@ -12,6 +12,7 @@ using mozilla::dom::NativeThreadId from "mozilla/dom/NativeThreadId.h";
 namespace mozilla {
 namespace gmp {
 
+[NeedsOtherPid]
 intr protocol PGMP
 {
   manages PGMPTimer;
