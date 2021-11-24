@@ -112,7 +112,7 @@ static inline bool WasmThreadsFlag(JSContext* cx) {
   static inline bool Wasm##NAME##Flag(JSContext* cx) {                         \
     return (COMPILE_PRED) && (FLAG_PRED) && cx->options().wasm##NAME();        \
   }
-JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE);
+JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE);
 #undef WASM_FEATURE
 
 static inline bool WasmDebuggerActive(JSContext* cx) {
@@ -338,7 +338,7 @@ bool wasm::AnyCompilerAvailable(JSContext* cx) {
   bool wasm::NAME##Available(JSContext* cx) {                                  \
     return Wasm##NAME##Flag(cx) && (COMPILER_PRED);                            \
   }
-JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
+JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE
 
 bool wasm::IsSimdPrivilegedContext(JSContext* cx) {
