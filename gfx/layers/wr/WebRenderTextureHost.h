@@ -30,6 +30,8 @@ class WebRenderTextureHost : public TextureHost {
 
   void DeallocateDeviceData() override {}
 
+  void UnbindTextureSource() override;
+
   gfx::SurfaceFormat GetFormat() const override;
 
   virtual void NotifyNotUsed() override;

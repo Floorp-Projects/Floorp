@@ -443,6 +443,11 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
     return gfx::ColorRange::LIMITED;
   }
 
+  /**
+   * Called when another TextureHost will take over.
+   */
+  virtual void UnbindTextureSource();
+
   virtual bool IsValid() { return true; }
 
   /**
@@ -573,6 +578,7 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
     --mCompositableCount;
     MOZ_ASSERT(mCompositableCount >= 0);
     if (mCompositableCount == 0) {
+      UnbindTextureSource();
       // Send mFwdTransactionId to client side if necessary.
       NotifyNotUsed();
     }
@@ -759,6 +765,8 @@ class BufferTextureHost : public TextureHost {
   virtual uint8_t* GetBuffer() = 0;
 
   virtual size_t GetBufferSize() = 0;
+
+  void UnbindTextureSource() override;
 
   void DeallocateDeviceData() override;
 

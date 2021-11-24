@@ -61,6 +61,8 @@ class GPUVideoTextureHost : public TextureHost {
 
   bool SupportsExternalCompositing(WebRenderBackend aBackend) override;
 
+  void UnbindTextureSource() override;
+
   void NotifyNotUsed() override;
 
  protected:
