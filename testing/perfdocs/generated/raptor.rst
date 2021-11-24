@@ -2123,6 +2123,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **playback**: mitmproxy
    * **playback pageset manifest**: mitm6-linux-firefox-cnn.manifest
    * **playback version**: 6.0.2
+   * **preferences**: {"media.autoplay.default": 5, "media.autoplay.ask-permission": true, "media.autoplay.blocking_policy": 1, "media.autoplay.block-webaudio": true, "media.allowed-to-play.enabled": false, "media.block-autoplay-until-in-foreground": true}
    * **secondary url**: `<https://www.cnn.com/weather>`__
    * **test url**: `<https://www.cnn.com/2021/03/22/weather/climate-change-warm-waters-lake-michigan/index.html>`__
    * **type**: pageload
