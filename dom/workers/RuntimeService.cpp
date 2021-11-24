@@ -282,7 +282,7 @@ void LoadContextOptions(const char* aPrefName, void* /* aClosure */) {
 #define WASM_FEATURE(NAME, LOWER_NAME, COMPILE_PRED, COMPILER_PRED, FLAG_PRED, \
                      SHELL, PREF)                                              \
   .setWasm##NAME(GetWorkerPref<bool>("wasm_" PREF ""_ns))
-          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE)
+          JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 #undef WASM_FEATURE
 #ifdef ENABLE_WASM_SIMD_WORMHOLE
 #  ifdef EARLY_BETA_OR_EARLIER
