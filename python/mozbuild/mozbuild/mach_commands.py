@@ -2444,33 +2444,6 @@ def package_l10n(command_context, verbose=False, locales=[]):
     return 0
 
 
-@Command(
-    "create-mach-environment",
-    category="devenv",
-    description="Create the `mach` virtualenv.",
-)
-@CommandArgument(
-    "-f",
-    "--force",
-    action="store_true",
-    help=("Force re-creating the virtualenv even if it is already up-to-date."),
-)
-def create_mach_environment(command_context, force=False):
-    """Create the mach virtualenv."""
-    from mozboot.util import get_state_dir
-    from mach.site import MachSiteManager
-
-    manager = MachSiteManager.from_environment(
-        command_context.topsrcdir,
-        get_state_dir(),
-    )
-
-    if manager.ensure(force=force):
-        print("Mach environment is already up to date.")
-    else:
-        print("Mach environment created.")
-
-
 def _prepend_debugger_args(args, debugger, debugger_args):
     """
     Given an array with program arguments, prepend arguments to run it under a
