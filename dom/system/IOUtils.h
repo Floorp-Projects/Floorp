@@ -108,7 +108,7 @@ class IOUtils final {
                                         const nsAString& aDestPath,
                                         const CopyOptions& aOptions);
 
-  static already_AddRefed<Promise> Touch(
+  static already_AddRefed<Promise> SetModificationTime(
       GlobalObject& aGlobal, const nsAString& aPath,
       const Optional<int64_t>& aModification);
 
@@ -328,8 +328,8 @@ class IOUtils final {
    *
    * @return Timestamp of the file if the operation was successful, or an error.
    */
-  static Result<int64_t, IOError> TouchSync(nsIFile* aFile,
-                                            const Maybe<int64_t>& aNewModTime);
+  static Result<int64_t, IOError> SetModificationTimeSync(
+      nsIFile* aFile, const Maybe<int64_t>& aNewModTime);
 
   /**
    * Returns the immediate children of the directory at |aFile|, if any.
