@@ -113,8 +113,6 @@ struct ProcInfo {
   ProcType type;
   // Origin, if any
   nsCString origin;
-  // Process filename (without the path name).
-  nsString filename;
   // Memory size in bytes.
   uint64_t memory = 0;
   // CPU time in ns.
@@ -218,7 +216,6 @@ template <typename T>
 nsresult CopySysProcInfoToDOM(const ProcInfo& source, T* dest) {
   // Copy system info.
   dest->mPid = source.pid;
-  dest->mFilename.Assign(source.filename);
   dest->mMemory = source.memory;
   dest->mCpuTime = source.cpuTime;
   dest->mCpuCycleCount = source.cpuCycleCount;

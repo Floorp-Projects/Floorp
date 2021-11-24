@@ -257,7 +257,6 @@ var State = {
     let result = {
       pid: cur.pid,
       childID: cur.childID,
-      filename: cur.filename,
       totalRamSize: cur.memory,
       deltaRamSize: null,
       totalCpu: cur.cpuTime,
@@ -772,7 +771,7 @@ var View = {
     row.win = data;
     row.className = "window";
 
-    // Column: filename
+    // Column: name
     let nameCell = row.firstChild;
     let tab = tabFinder.get(data.outerWindowId);
     let fluentName;
@@ -848,7 +847,7 @@ var View = {
     row.thread = data;
     row.className = "thread";
 
-    // Column: filename
+    // Column: name
     let nameCell = row.firstChild;
     this._fillCell(nameCell, {
       fluentName: "about-processes-thread-name-and-id",

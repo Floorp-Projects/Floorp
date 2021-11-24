@@ -43,7 +43,7 @@ class StatReader {
     nsAutoString fileContent;
     nsresult rv = ReadFile(fileContent);
     NS_ENSURE_SUCCESS(rv, rv);
-    // We first extract the filename
+    // We first extract the file or thread name
     int32_t startPos = fileContent.RFindChar('(');
     if (startPos == -1) {
       return NS_ERROR_FAILURE;
@@ -53,7 +53,7 @@ class StatReader {
       return NS_ERROR_FAILURE;
     }
     int32_t len = endPos - (startPos + 1);
-    aInfo.filename.Assign(Substring(fileContent, startPos + 1, len));
+    mName.Assign(Substring(fileContent, startPos + 1, len));
 
     // now we can use the tokenizer for the rest of the file
     nsWhitespaceTokenizer tokenizer(Substring(fileContent, endPos + 2));
@@ -120,7 +120,7 @@ class StatReader {
   base::ProcessId mPid;
   int32_t mMaxIndex;
   nsCString mFilepath;
-  ProcInfo mProcInfo;
+  nsString mName;
 
  private:
   // Reads the stat file and puts its content in a nsString.
@@ -176,7 +176,7 @@ class ThreadInfoReader final : public StatReader {
     aInfo.tid = mTid;
     // Copying over the data we got from StatReader::ParseProc()
     aInfo.cpuTime = info.cpuTime;
-    aInfo.name.Assign(info.filename);
+    aInfo.name.Assign(mName);
     return NS_OK;
   }
 
