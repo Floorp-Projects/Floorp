@@ -1640,22 +1640,19 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
       // Disallowed by content policy
       return NS_ERROR_CONTENT_BLOCKED;
     }
-  }
 
-  // If the HTTPS-Only mode is enabled, we need to upgrade the websocket
-  // connection from ws:// to wss:// and mark it as secure.
-  if (!mIsServerSide && !mSecure && originDoc &&
-      !nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(
-          originDoc->GetDocumentURI())) {
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri), mURI);
-    NS_ENSURE_SUCCESS(rv, rv);
+    // If the HTTPS-Only mode is enabled, we need to upgrade the websocket
+    // connection from ws:// to wss:// and mark it as secure.
+    if (!mSecure && originDoc &&
+        !nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(
+            originDoc->GetDocumentURI())) {
+      nsCOMPtr<nsIURI> uri;
+      nsresult rv = NS_NewURI(getter_AddRefs(uri), mURI);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIChannel> channel = originDoc->GetChannel();
-    if (channel) {
-      nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
-
-      if (nsHTTPSOnlyUtils::ShouldUpgradeWebSocket(uri, loadInfo)) {
+      // secCheckLoadInfo is only used for the triggering principal, so this
+      // is okay.
+      if (nsHTTPSOnlyUtils::ShouldUpgradeWebSocket(uri, secCheckLoadInfo)) {
         mURI.ReplaceSubstring("ws://", "wss://");
         if (NS_WARN_IF(mURI.Find("wss://") != 0)) {
           return NS_OK;

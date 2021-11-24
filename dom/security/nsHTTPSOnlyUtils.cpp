@@ -220,6 +220,12 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeWebSocket(nsIURI* aURI,
     return false;
   }
 
+  // All subresources of an exempt triggering principal are also exempt.
+  if (!aLoadInfo->TriggeringPrincipal()->IsSystemPrincipal() &&
+      TestIfPrincipalIsExempt(aLoadInfo->TriggeringPrincipal())) {
+    return false;
+  }
+
   // We can upgrade the request - let's log it to the console
   // Appending an 's' to the scheme for the logging. (ws -> wss)
   nsAutoCString scheme;
