@@ -7,7 +7,6 @@
 #ifndef vm_GeneratorObject_h
 #define vm_GeneratorObject_h
 
-#include "frontend/ParserAtom.h"  // frontend::TaggedParserAtomIndex
 #include "js/Class.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ArrayObject.h"
@@ -18,6 +17,10 @@
 #include "vm/Stack.h"
 
 namespace js {
+
+namespace frontend {
+class TaggedParserAtomIndex;
+}
 
 extern const JSClass GeneratorFunctionClass;
 

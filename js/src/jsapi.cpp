@@ -33,9 +33,7 @@
 #include "builtin/JSON.h"
 #include "builtin/Promise.h"
 #include "builtin/Symbol.h"
-#include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScriptToStencil, frontend::InstantiateStencils
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/CompilationStencil.h"  // frontend::CompilationStencil, frontend::CompilationGCOutput
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"
 #include "gc/PublicIterators.h"

@@ -26,7 +26,6 @@
 
 #include "builtin/Boolean.h"
 #include "frontend/BytecodeCompiler.h"
-#include "frontend/ParserAtom.h"
 #include "gc/MaybeRooted.h"
 #include "gc/Nursery.h"
 #include "js/CharacterEncoding.h"

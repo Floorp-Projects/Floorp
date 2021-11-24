@@ -26,7 +26,6 @@
 #ifdef JS_HAS_INTL_API
 #  include "builtin/intl/SharedIntlData.h"
 #endif
-#include "frontend/NameCollections.h"
 #include "frontend/ScriptIndex.h"
 #include "gc/GCRuntime.h"
 #include "gc/Tracer.h"

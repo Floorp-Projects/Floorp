@@ -34,11 +34,11 @@
 #include "js/UbiNode.h"      // ubi::*
 #include "js/UniquePtr.h"    // UniquePtr
 #include "util/Poison.h"  // AlwaysPoison, JS_SCOPE_DATA_TRAILING_NAMES_PATTERN, MemCheckKind
-#include "vm/JSFunction.h"    // JSFunction
-#include "vm/ScopeKind.h"     // ScopeKind
-#include "vm/Shape.h"         // Shape
-#include "vm/Xdr.h"           // XDRResult, XDRState
-#include "wasm/WasmJS.h"      // WasmInstanceObject
+#include "vm/JSFunction.h"  // JSFunction
+#include "vm/ScopeKind.h"   // ScopeKind
+#include "vm/Shape.h"       // Shape
+#include "vm/Xdr.h"         // XDRResult, XDRState
+#include "wasm/WasmJS.h"    // WasmInstanceObject
 
 class JSAtom;
 class JSFreeOp;
@@ -57,10 +57,8 @@ class GenericPrinter;
 
 namespace frontend {
 struct CompilationAtomCache;
-struct CompilationStencilMerger;
 class ScopeStencil;
 struct ScopeStencilRef;
-class ParserAtom;
 }  // namespace frontend
 
 template <typename NameT>

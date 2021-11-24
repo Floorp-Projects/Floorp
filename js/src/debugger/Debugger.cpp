@@ -39,8 +39,6 @@
 #include "debugger/Script.h"              // for DebuggerScript
 #include "debugger/Source.h"              // for DebuggerSource
 #include "frontend/CompilationStencil.h"  // for CompilationStencil
-#include "frontend/NameAnalysisTypes.h"   // for ParseGoal, ParseGoal::Script
-#include "frontend/ParseContext.h"        // for UsedNameTracker
 #include "frontend/Parser.h"              // for Parser
 #include "gc/FreeOp.h"                    // for JSFreeOp
 #include "gc/GC.h"                        // for IterateScripts

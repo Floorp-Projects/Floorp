@@ -52,9 +52,6 @@
 #include "builtin/Promise.h"
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/TestingUtility.h"  // js::ParseCompileOptions
-#ifdef DEBUG
-#  include "frontend/TokenStream.h"
-#endif
 #include "frontend/BytecodeCompilation.h"  // frontend::CanLazilyParse,
 // frontend::CompileGlobalScriptToExtensibleStencil,
 // frontend::DelazifyCanonicalScriptedFunction

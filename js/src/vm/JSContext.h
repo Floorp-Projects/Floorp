@@ -15,6 +15,7 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "ds/TraceableFifo.h"
+#include "frontend/NameCollections.h"
 #include "gc/Memory.h"
 #include "irregexp/RegExpTypes.h"
 #include "js/CharacterEncoding.h"
