@@ -146,12 +146,14 @@ void CrossProcessSemaphore::Signal() {
   sem_post(mSemaphore);
 }
 
-CrossProcessSemaphoreHandle CrossProcessSemaphore::ShareToProcess(
-    base::ProcessId aTargetPid) {
+CrossProcessSemaphoreHandle CrossProcessSemaphore::CloneHandle() {
   CrossProcessSemaphoreHandle result = ipc::SharedMemoryBasic::NULLHandle();
 
-  if (mSharedBuffer && !mSharedBuffer->ShareToProcess(aTargetPid, &result)) {
-    MOZ_CRASH();
+  if (mSharedBuffer) {
+    result = mSharedBuffer->CloneHandle();
+    if (!result) {
+      MOZ_CRASH();
+    }
   }
 
   return result;

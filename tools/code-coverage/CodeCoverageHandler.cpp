@@ -153,6 +153,6 @@ CodeCoverageHandler* CodeCoverageHandler::Get() {
 
 CrossProcessMutex* CodeCoverageHandler::GetMutex() { return &mGcovLock; }
 
-CrossProcessMutexHandle CodeCoverageHandler::GetMutexHandle(int aProcId) {
-  return mGcovLock.ShareToProcess(aProcId);
+CrossProcessMutexHandle CodeCoverageHandler::GetMutexHandle() {
+  return mGcovLock.CloneHandle();
 }
