@@ -466,24 +466,23 @@ nsresult HTMLEditor::SetInlinePropertyOnTextNode(
   EditorDOMPoint atEnd(textNodeForTheRange, aEndOffset);
   if (!atEnd.IsEndOfContainer()) {
     // We need to split off back of text node
-    Result<nsCOMPtr<nsIContent>, nsresult> newLeftTextNodeOrError =
-        SplitNodeWithTransaction(atEnd);
-    if (MOZ_UNLIKELY(newLeftTextNodeOrError.isErr())) {
+    SplitNodeResult splitAtEndResult = SplitNodeWithTransaction(atEnd);
+    if (MOZ_UNLIKELY(splitAtEndResult.Failed())) {
       NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-      return newLeftTextNodeOrError.unwrapErr();
+      return splitAtEndResult.Rv();
     }
-    textNodeForTheRange = Text::FromNodeOrNull(newLeftTextNodeOrError.unwrap());
+    textNodeForTheRange =
+        Text::FromNodeOrNull(splitAtEndResult.GetPreviousContent());
   }
 
   // Split at the start of the range.
   EditorDOMPoint atStart(textNodeForTheRange, aStartOffset);
   if (!atStart.IsStartOfContainer()) {
     // We need to split off front of text node
-    Result<nsCOMPtr<nsIContent>, nsresult> newLeftTextNodeOrError =
-        SplitNodeWithTransaction(atStart);
-    if (MOZ_UNLIKELY(newLeftTextNodeOrError.isErr())) {
+    SplitNodeResult splitAtStartResult = SplitNodeWithTransaction(atStart);
+    if (MOZ_UNLIKELY(splitAtStartResult.Failed())) {
       NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-      return newLeftTextNodeOrError.unwrapErr();
+      return splitAtStartResult.Rv();
     }
   }
 
@@ -2389,13 +2388,13 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
   EditorDOMPoint atEnd(textNodeForTheRange, aEndOffset);
   if (!atEnd.IsEndOfContainer()) {
     // We need to split off back of text node
-    Result<nsCOMPtr<nsIContent>, nsresult> newLeftTextNodeOrError =
-        SplitNodeWithTransaction(atEnd);
-    if (MOZ_UNLIKELY(newLeftTextNodeOrError.isErr())) {
+    SplitNodeResult splitAtEndResult = SplitNodeWithTransaction(atEnd);
+    if (MOZ_UNLIKELY(splitAtEndResult.Failed())) {
       NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-      return newLeftTextNodeOrError.unwrapErr();
+      return splitAtEndResult.Rv();
     }
-    textNodeForTheRange = Text::FromNodeOrNull(newLeftTextNodeOrError.unwrap());
+    textNodeForTheRange =
+        Text::FromNodeOrNull(splitAtEndResult.GetPreviousContent());
     MOZ_DIAGNOSTIC_ASSERT(textNodeForTheRange);
   }
 
@@ -2403,11 +2402,10 @@ nsresult HTMLEditor::RelativeFontChangeOnTextNode(FontSize aDir,
   EditorDOMPoint atStart(textNodeForTheRange, aStartOffset);
   if (!atStart.IsStartOfContainer()) {
     // We need to split off front of text node
-    Result<nsCOMPtr<nsIContent>, nsresult> newLeftTextNodeOrError =
-        SplitNodeWithTransaction(atStart);
-    if (MOZ_UNLIKELY(newLeftTextNodeOrError.isErr())) {
+    SplitNodeResult splitAtStartResult = SplitNodeWithTransaction(atStart);
+    if (MOZ_UNLIKELY(splitAtStartResult.Failed())) {
       NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-      return newLeftTextNodeOrError.unwrapErr();
+      return splitAtStartResult.Rv();
     }
   }
 
