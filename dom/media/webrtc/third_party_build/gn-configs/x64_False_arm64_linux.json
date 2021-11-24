@@ -28154,6 +28154,7 @@
             ],
             "defines": [
                 "MULTI_MONITOR_SCREENSHARE",
+                "WEBRTC_USE_PIPEWIRE",
                 "USE_UDEV",
                 "USE_AURA=1",
                 "USE_GLIB=1",
@@ -28206,6 +28207,7 @@
                 "/third_party/libwebrtc/third_party/pipewire/",
                 "/media/libyuv/",
                 "/media/libyuv/libyuv/include/",
+                "/third_party/pipewire/",
                 "/third_party/pipewire/",
                 "//",
                 "//third_party/abseil-cpp/"
