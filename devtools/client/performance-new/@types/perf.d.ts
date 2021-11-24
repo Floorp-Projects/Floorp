@@ -421,6 +421,7 @@ export interface ScaleFunctions {
   fromFractionToValue: NumberScaler;
   fromValueToFraction: NumberScaler;
   fromFractionToSingleDigitValue: NumberScaler;
+  steps: number;
 }
 
 /**
