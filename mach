@@ -16,7 +16,6 @@
 nativecmds="
     bootstrap
     create-mach-environment
-    install-moz-phab
 "
 
 run_py() {
