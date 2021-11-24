@@ -1592,6 +1592,18 @@ bool WarpCacheIRTranspiler::emitLoadArgumentsObjectArgHoleResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitLoadArgumentsObjectArgExistsResult(
+    ObjOperandId objId, Int32OperandId indexId) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* index = getOperand(indexId);
+
+  auto* ins = MInArgumentsObjectArg::New(alloc(), obj, index);
+  add(ins);
+
+  pushResult(ins);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitLoadArgumentsObjectLengthResult(
     ObjOperandId objId) {
   MDefinition* obj = getOperand(objId);

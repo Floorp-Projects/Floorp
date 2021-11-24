@@ -355,6 +355,9 @@ class MOZ_RAII HasPropIRGenerator : public IRGenerator {
                                      ValOperandId keyId);
   AttachDecision tryAttachSparse(HandleObject obj, ObjOperandId objId,
                                  Int32OperandId indexId);
+  AttachDecision tryAttachArgumentsObjectArg(HandleObject obj,
+                                             ObjOperandId objId,
+                                             Int32OperandId indexId);
   AttachDecision tryAttachNamedProp(HandleObject obj, ObjOperandId objId,
                                     HandleId key, ValOperandId keyId);
   AttachDecision tryAttachMegamorphic(ObjOperandId objId, ValOperandId keyId);
