@@ -50,9 +50,10 @@ ProfilerScreenshots::ProfilerScreenshots()
 ProfilerScreenshots::~ProfilerScreenshots() {
   if (mWindowIdentifier) {
     profiler_add_marker("CompositorScreenshotWindowDestroyed",
-                        geckoprofiler::category::GRAPHICS, {},
-                        ScreenshotMarker{}, /* aScreenshotDataURL */ "",
-                        mozilla::gfx::IntSize{}, mWindowIdentifier);
+                        geckoprofiler::category::GRAPHICS,
+                        MarkerThreadId::MainThread(), ScreenshotMarker{},
+                        /* aScreenshotDataURL */ "", mozilla::gfx::IntSize{},
+                        mWindowIdentifier);
   }
 }
 
@@ -86,32 +87,29 @@ void ProfilerScreenshots::SubmitScreenshot(
       "ProfilerScreenshots::SubmitScreenshot",
       [self = RefPtr<ProfilerScreenshots>{this},
        backingSurface = std::move(backingSurface),
-       sourceThread = profiler_current_thread_id(),
        windowIdentifier = mWindowIdentifier, originalSize = aOriginalSize,
        scaledSize = aScaledSize, timeStamp = aTimeStamp]() {
         // Create a new surface that wraps backingSurface's data but has the
         // correct size.
-        if (profiler_thread_is_being_profiled_for_markers(sourceThread)) {
-          DataSourceSurface::ScopedMap scopedMap(backingSurface,
-                                                 DataSourceSurface::READ);
-          RefPtr<DataSourceSurface> surf =
-              Factory::CreateWrappingDataSourceSurface(
-                  scopedMap.GetData(), scopedMap.GetStride(), scaledSize,
-                  SurfaceFormat::B8G8R8A8);
+        DataSourceSurface::ScopedMap scopedMap(backingSurface,
+                                               DataSourceSurface::READ);
+        RefPtr<DataSourceSurface> surf =
+            Factory::CreateWrappingDataSourceSurface(
+                scopedMap.GetData(), scopedMap.GetStride(), scaledSize,
+                SurfaceFormat::B8G8R8A8);
 
-          // Encode surf to a JPEG data URL.
-          nsCString dataURL;
-          nsresult rv = gfxUtils::EncodeSourceSurface(
-              surf, ImageType::JPEG, u"quality=85"_ns, gfxUtils::eDataURIEncode,
-              nullptr, &dataURL);
-          if (NS_SUCCEEDED(rv)) {
-            // Add a marker with the data URL.
-            profiler_add_marker(
-                "CompositorScreenshot", geckoprofiler::category::GRAPHICS,
-                {MarkerThreadId(sourceThread),
-                 MarkerTiming::InstantAt(timeStamp)},
-                ScreenshotMarker{}, dataURL, originalSize, windowIdentifier);
-          }
+        // Encode surf to a JPEG data URL.
+        nsCString dataURL;
+        nsresult rv = gfxUtils::EncodeSourceSurface(
+            surf, ImageType::JPEG, u"quality=85"_ns, gfxUtils::eDataURIEncode,
+            nullptr, &dataURL);
+        if (NS_SUCCEEDED(rv)) {
+          // Add a marker with the data URL.
+          profiler_add_marker(
+              "CompositorScreenshot", geckoprofiler::category::GRAPHICS,
+              {MarkerThreadId::MainThread(),
+               MarkerTiming::InstantAt(timeStamp)},
+              ScreenshotMarker{}, dataURL, originalSize, windowIdentifier);
         }
 
         // Return backingSurface back to the surface pool.
