@@ -580,12 +580,6 @@ impl<'a> SceneBuilder<'a> {
         dl: &BuiltDisplayList,
         pipeline_id: PipelineId,
     ) {
-        // Related to bug #1736069 - try to verify that the assert later on is being
-        // caused by a display list where a single iframe pipeline id is being referenced
-        // by >1 iframe display item. If we see any crash reports here, we know this is
-        // the root issue.
-        assert!(self.seen_pipeline_ids.insert(pipeline_id));
-
         dl.iter_spatial_tree(|item| {
             match item {
                 SpatialTreeItem::ScrollFrame(descriptor) => {
@@ -637,6 +631,13 @@ impl<'a> SceneBuilder<'a> {
         let root_clip_id = ClipId::root(root_pipeline.pipeline_id);
         self.clip_store.register_clip_template(root_clip_id, root_clip_id, &[]);
         self.clip_store.push_clip_root(Some(root_clip_id), false);
+
+        // Related to bug #1736069 - try to verify that the assert later on is being
+        // caused by a display list where a single iframe pipeline id is being referenced
+        // by >1 iframe display item. If we see any crash reports here, we know this is
+        // the root issue.
+        assert!(self.seen_pipeline_ids.insert(root_pipeline.pipeline_id));
+
         self.push_root(
             root_pipeline.pipeline_id,
             &root_pipeline.viewport_size,
@@ -930,6 +931,12 @@ impl<'a> SceneBuilder<'a> {
             &info.bounds,
             spatial_node_index,
         );
+
+        // Related to bug #1736069 - try to verify that the assert later on is being
+        // caused by a display list where a single iframe pipeline id is being referenced
+        // by >1 iframe display item. If we see any crash reports here, we know this is
+        // the root issue.
+        assert!(self.seen_pipeline_ids.insert(iframe_pipeline_id));
 
         let spatial_node_index = self.push_reference_frame(
             SpatialId::root_reference_frame(iframe_pipeline_id),
