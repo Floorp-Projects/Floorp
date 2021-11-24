@@ -33,7 +33,6 @@
 #include "mozilla/TimeStamp.h"       // for mozilla::TimeStamp
 #include "mozilla/UniquePtr.h"       // for UniquePtr
 #include "nsCOMPtr.h"                // for already_AddRefed
-#include "nsTArray.h"
 
 namespace mozilla {
 class MultiTouchInput;
@@ -510,7 +509,6 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
 
  private:
   mutable DataMutex<Maybe<TimeStamp>> mTestSampleTime;
-  CopyableTArray<MatrixMessage> mLastMessages;
 
  public:
   /* Some helper functions to find an APZC given some identifying input. These
