@@ -139,7 +139,7 @@ struct ImageDescriptor : public wr::WrImageDescriptor {
 
   ImageDescriptor(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat,
                   bool aPreferCompositorSurface = false) {
-    format = wr::SurfaceFormatToImageFormat(aFormat).value();
+    format = wr::SurfaceFormatToImageFormat(aFormat).valueOr((ImageFormat)0);
     width = aSize.width;
     height = aSize.height;
     stride = 0;
@@ -151,7 +151,7 @@ struct ImageDescriptor : public wr::WrImageDescriptor {
   ImageDescriptor(const gfx::IntSize& aSize, uint32_t aByteStride,
                   gfx::SurfaceFormat aFormat,
                   bool aPreferCompositorSurface = false) {
-    format = wr::SurfaceFormatToImageFormat(aFormat).value();
+    format = wr::SurfaceFormatToImageFormat(aFormat).valueOr((ImageFormat)0);
     width = aSize.width;
     height = aSize.height;
     stride = aByteStride;
@@ -163,7 +163,7 @@ struct ImageDescriptor : public wr::WrImageDescriptor {
   ImageDescriptor(const gfx::IntSize& aSize, uint32_t aByteStride,
                   gfx::SurfaceFormat aFormat, OpacityType aOpacity,
                   bool aPreferCompositorSurface = false) {
-    format = wr::SurfaceFormatToImageFormat(aFormat).value();
+    format = wr::SurfaceFormatToImageFormat(aFormat).valueOr((ImageFormat)0);
     width = aSize.width;
     height = aSize.height;
     stride = aByteStride;
