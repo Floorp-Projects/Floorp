@@ -72,9 +72,8 @@ class C {
 }`;
 assertErrorMessage(() => Function(source), SyntaxError, /./);
 
-// TODO
-// source = `#outside;`;
-// assertErrorMessage(() => eval(source), SyntaxError);
+source = `#outside;`;
+assertErrorMessage(() => eval(source), SyntaxError, /./);
 
 source = `class C {
     x = super();

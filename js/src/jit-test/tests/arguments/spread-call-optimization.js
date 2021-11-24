@@ -92,7 +92,7 @@ function testBasic() {
     assertEq(defaultIndex(1, 100, 200, 300), 100);
   }
 }
-//testBasic();
+testBasic();
 
 function testOverriddenIterator() {
   function g(x) {

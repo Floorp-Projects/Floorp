@@ -16,11 +16,10 @@ source = `var y = {
 }`;
 assertErrorMessage(() => eval(source), SyntaxError, /./);
 
-// Temporarily disabled due to the same reason above.
-// source = `var y = {
-//     #x
-// }`;
-// assertThrowsInstanceOf(() => eval(source), SyntaxError);
+source = `var y = {
+    #x
+}`;
+assertThrowsInstanceOf(() => eval(source), SyntaxError);
 
 source = `var y = {
     x = 2;
