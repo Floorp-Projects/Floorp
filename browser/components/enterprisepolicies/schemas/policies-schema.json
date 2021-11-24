@@ -217,7 +217,18 @@
 
         "Locked": {
           "type": "boolean"
+        },
+
+        "Behavior": {
+          "type": "string",
+          "enum": ["accept", "reject-foreign", "reject", "limit-foreign", "reject-tracker", "reject-tracker-and-partition-foreign"]
+        },
+
+        "BehaviorPrivateBrowsing": {
+          "type": "string",
+          "enum": ["accept", "reject-foreign", "reject", "limit-foreign", "reject-tracker", "reject-tracker-and-partition-foreign"]
         }
+
       }
     },
 
