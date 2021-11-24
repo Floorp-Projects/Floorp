@@ -516,7 +516,7 @@ fn add_clips(
         clip_nodes.alloc().init(
             HitTestClipNode::new(
                 clip.key.into(),
-                clip.clip.spatial_node_index,
+                clip.key.spatial_node_index,
                 interners,
             )
         );

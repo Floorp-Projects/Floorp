@@ -1105,6 +1105,7 @@ fn update_clip_task_for_brush(
                 &instance.vis.clip_chain,
                 prim_spatial_node_index,
                 &frame_context.spatial_tree,
+                &data_stores.clip,
             );
 
             let segment_clip_chain = frame_state

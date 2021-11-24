@@ -3066,13 +3066,15 @@ impl TileCacheInstance {
         let clip_instances = &clip_store
             .clip_node_instances[prim_clip_chain.clips_range.to_range()];
         for clip_instance in clip_instances {
+            let clip = &data_stores.clip[clip_instance.handle];
+
             prim_info.clips.push(clip_instance.handle.uid());
 
             // If the clip has the same spatial node, the relative transform
             // will always be the same, so there's no need to depend on it.
-            if clip_instance.spatial_node_index != self.spatial_node_index
-                && !prim_info.spatial_nodes.contains(&clip_instance.spatial_node_index) {
-                prim_info.spatial_nodes.push(clip_instance.spatial_node_index);
+            if clip.item.spatial_node_index != self.spatial_node_index
+                && !prim_info.spatial_nodes.contains(&clip.item.spatial_node_index) {
+                prim_info.spatial_nodes.push(clip.item.spatial_node_index);
             }
         }
 
