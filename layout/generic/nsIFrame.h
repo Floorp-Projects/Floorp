@@ -1991,8 +1991,7 @@ class nsIFrame : public nsQueryFrame {
     return IsPreserve3DLeaf(StyleDisplay(), aEffectSet);
   }
 
-  bool HasPerspective(const nsStyleDisplay* aStyleDisplay) const;
-  bool HasPerspective() const { return HasPerspective(StyleDisplay()); }
+  bool HasPerspective() const;
 
   bool ChildrenHavePerspective(const nsStyleDisplay* aStyleDisplay) const;
   bool ChildrenHavePerspective() const {
