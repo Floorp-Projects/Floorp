@@ -6,9 +6,9 @@ package org.mozilla.focus.settings
 
 import android.content.SharedPreferences
 import android.os.Bundle
+import org.mozilla.focus.GleanMetrics.AdvancedSettings
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
-import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class AdvancedSettingsFragment :
     BaseSettingsFragment(),
@@ -32,10 +32,20 @@ class AdvancedSettingsFragment :
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
-        TelemetryWrapper.settingsEvent(key, sharedPreferences.all[key].toString())
-        if (key == getString(R.string.pref_key_remote_debugging)) {
-            requireComponents.engine.settings.remoteDebuggingEnabled =
-                sharedPreferences.getBoolean(key, false)
+        when (key) {
+            getString(R.string.pref_key_remote_debugging) -> {
+                requireComponents.engine.settings.remoteDebuggingEnabled =
+                    sharedPreferences.getBoolean(key, false)
+
+                AdvancedSettings.remoteDebugSettingChanged.record(
+                    AdvancedSettings.RemoteDebugSettingChangedExtra(sharedPreferences.all[key] as Boolean)
+                )
+            }
+
+            getString(R.string.pref_key_open_links_in_external_app) ->
+                AdvancedSettings.openLinksSettingChanged.record(
+                    AdvancedSettings.OpenLinksSettingChangedExtra(sharedPreferences.all[key] as Boolean)
+                )
         }
     }
 
