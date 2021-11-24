@@ -75,7 +75,7 @@ const DirectoryPicker = createFactory(
   require("devtools/client/performance-new/components/DirectoryPicker")
 );
 const {
-  makeExponentialScale,
+  makeLinear10Scale,
   makePowerOf2Scale,
   formatFileSize,
   featureDescriptions,
@@ -186,7 +186,7 @@ class Settings extends PureComponent {
       temporaryThreadText: null,
     };
 
-    this._intervalExponentialScale = makeExponentialScale(0.01, 100);
+    this._intervalExponentialScale = makeLinear10Scale(0.01, 100);
     this._entriesExponentialScale = makePowerOf2Scale(
       128 * 1024,
       256 * 1024 * 1024
