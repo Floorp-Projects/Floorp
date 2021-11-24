@@ -26,6 +26,7 @@ namespace layers {
  * frames directly to the compositor thread/process without relying on the main thread
  * which might be too busy dealing with content script.
  */
+[NeedsOtherPid]
 sync protocol PImageBridge
 {
   manages PTexture;

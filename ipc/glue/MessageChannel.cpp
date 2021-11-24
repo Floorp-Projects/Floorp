@@ -2659,7 +2659,8 @@ void MessageChannel::AddProfilerMarker(const IPC::Message& aMessage,
     // And if one of the profiler mutexes is locked on this thread, don't record
     // markers, because we don't want to expose profiler IPCs due to the
     // profiler itself, and also to avoid possible re-entrancy issues.
-    if (pid != kInvalidProcessId && !profiler_is_locked_on_current_thread()) {
+    if (pid != base::kInvalidProcessId &&
+        !profiler_is_locked_on_current_thread()) {
       // The current timestamp must be given to the `IPCMarker` payload.
       [[maybe_unused]] const TimeStamp now = TimeStamp::Now();
       PROFILER_MARKER("IPC", IPC, MarkerTiming::InstantAt(now), IPCMarker, now,
