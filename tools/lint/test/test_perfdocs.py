@@ -53,7 +53,6 @@ module.exports = {
 };
 """
 
-
 SAMPLE_CONFIG = """
 name: mozperftest
 manifest: None
@@ -64,7 +63,6 @@ suites:
         tests:
             Example: ""
 """
-
 
 DYNAMIC_SAMPLE_CONFIG = """
 name: {}
@@ -80,7 +78,6 @@ suites:
         tests:
             Example: "Performance test Example from another_suite."
 """
-
 
 SAMPLE_INI = """
 [Example]
@@ -484,6 +481,12 @@ def test_perfdocs_framework_gatherers(logger, structured_logger, perfdocs_sample
         if framework == "talos":
             for suite, suitetests in fg.get_test_list().items():
                 assert suite == "Talos Tests"
+                assert suitetests
+            continue
+
+        if framework == "awsy":
+            for suite, suitetests in fg.get_test_list().items():
+                assert suite == "Awsy tests"
                 assert suitetests
             continue
 
