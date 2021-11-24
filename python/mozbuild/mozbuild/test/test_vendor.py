@@ -28,7 +28,7 @@ def test_up_to_date_vendor():
             # Since VendorPython thinks "work_dir" is the topsrcdir,
             # it will use its associated virtualenv and package configuration.
             # Add `pip-tools` and its dependencies.
-            file.write("vendored:third_party/python/Click\n")
+            file.write("vendored:third_party/python/click\n")
             file.write("vendored:third_party/python/pip\n")
             file.write("vendored:third_party/python/pip_tools\n")
             file.write("vendored:third_party/python/setuptools\n")

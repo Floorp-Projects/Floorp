@@ -20,7 +20,7 @@ jsmin==2.1.0
 json-e==2.7.0
 mozilla-version==0.3.4
 packaging==21.0
-pathspec==0.8
+pathspec==0.9.0
 pip==21.2.4
 pip-tools==5.5.0
 ply==3.10
