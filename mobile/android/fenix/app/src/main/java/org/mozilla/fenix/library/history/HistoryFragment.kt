@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.action.HistoryMetadataAction
 import mozilla.components.browser.state.action.RecentlyClosedAction
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.ShareData
@@ -357,7 +358,13 @@ class HistoryFragment : LibraryPageFragment<History>(), UserInteractionHandler {
 
                         when (item) {
                             is History.Regular -> core.historyStorage.deleteVisit(item.url, item.visitedAt)
-                            is History.Group -> historyProvider.deleteHistoryGroup(item)
+                            is History.Group -> {
+                                // NB: If we have non-search groups, this logic needs to be updated.
+                                historyProvider.deleteMetadataSearchGroup(item)
+                                core.store.dispatch(
+                                    HistoryMetadataAction.DisbandSearchGroupAction(searchTerm = item.title)
+                                )
+                            }
                             // We won't encounter individual metadata entries outside of groups.
                             is History.Metadata -> {}
                         }

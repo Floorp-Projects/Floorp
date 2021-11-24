@@ -108,7 +108,7 @@ class DefaultPagedHistoryProvider(
     /**
      * Removes [group] and any corresponding history visits.
      */
-    suspend fun deleteHistoryGroup(group: History.Group) {
+    suspend fun deleteMetadataSearchGroup(group: History.Group) {
         for (historyMetadata in group.items) {
             getMatchingHistory(historyMetadata)?.let {
                 historyStorage.deleteVisit(
