@@ -81,7 +81,7 @@ add_task(async function run_tests() {
       async action() {
         let stat = await IOUtils.stat(xpiPath);
         let newLastModTime = stat.lastModified + 60 * 1000;
-        await IOUtils.touch(xpiPath, newLastModTime);
+        await IOUtils.setModificationTime(xpiPath, newLastModTime);
       },
     },
   ];
