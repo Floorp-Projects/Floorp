@@ -3156,16 +3156,17 @@ EditActionResult HTMLEditor::ChangeSelectedHardLinesToList(
           if (NS_WARN_IF(!atContent.GetContainerAsContent())) {
             return EditActionResult(NS_ERROR_FAILURE);
           }
-          Result<nsCOMPtr<nsIContent>, nsresult> newLeftNodeOrError =
+          SplitNodeResult splitListItemParentResult =
               SplitNodeWithTransaction(atContent);
-          if (MOZ_UNLIKELY(newLeftNodeOrError.isErr())) {
+          if (MOZ_UNLIKELY(splitListItemParentResult.Failed())) {
             NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-            return EditActionResult(newLeftNodeOrError.unwrapErr());
+            return EditActionResult(splitListItemParentResult.Rv());
           }
+          MOZ_ASSERT(splitListItemParentResult.DidSplit());
           Result<RefPtr<Element>, nsresult> maybeNewListElement =
               CreateAndInsertElementWithTransaction(
                   aListElementTagName,
-                  EditorDOMPoint(atContent.GetContainer()));
+                  splitListItemParentResult.AtNextContent<EditorDOMPoint>());
           if (maybeNewListElement.isErr()) {
             NS_WARNING(
                 "HTMLEditor::CreateAndInsertElementWithTransaction() failed");
@@ -6385,18 +6386,18 @@ nsresult HTMLEditor::SplitTextNodesAtRangeEnd(
 
     if (!atEnd.IsStartOfContainer() && !atEnd.IsEndOfContainer()) {
       // Split the text node.
-      Result<nsCOMPtr<nsIContent>, nsresult> newLeftNodeOrError =
-          SplitNodeWithTransaction(atEnd);
-      if (MOZ_UNLIKELY(newLeftNodeOrError.isErr())) {
+      SplitNodeResult splitAtEndResult = SplitNodeWithTransaction(atEnd);
+      if (MOZ_UNLIKELY(splitAtEndResult.Failed())) {
         NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-        return newLeftNodeOrError.unwrapErr();
+        return splitAtEndResult.Rv();
       }
 
       // Correct the range.
       // The new end parent becomes the parent node of the text.
-      EditorRawDOMPoint atContainerOfSplitNode(atEnd.GetContainer());
       MOZ_ASSERT(!range->IsInSelection());
-      range->SetEnd(atContainerOfSplitNode, ignoredError);
+      range->SetEnd(splitAtEndResult.AtNextContent<EditorRawDOMPoint>()
+                        .ToRawRangeBoundary(),
+                    ignoredError);
       NS_WARNING_ASSERTION(!ignoredError.Failed(),
                            "nsRange::SetEnd() failed, but ignored");
       ignoredError.SuppressException();
@@ -7063,13 +7064,14 @@ EditActionResult HTMLEditor::HandleInsertParagraphInParagraph(
         if (pointToSplitOrError.inspect().IsSet()) {
           pointToSplitParentDivOrP = pointToSplitOrError.unwrap();
         }
-        Result<nsCOMPtr<nsIContent>, nsresult> newLeftTextNodeOrError =
+        SplitNodeResult splitParentDivOrPResult =
             SplitNodeWithTransaction(pointToSplitParentDivOrP);
-        if (MOZ_UNLIKELY(newLeftTextNodeOrError.isErr())) {
+        if (MOZ_UNLIKELY(splitParentDivOrPResult.Failed())) {
           NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-          return EditActionResult(newLeftTextNodeOrError.unwrapErr());
+          return EditActionResult(splitParentDivOrPResult.Rv());
         }
-        pointToSplitParentDivOrP.SetToEndOf(newLeftTextNodeOrError.unwrap());
+        pointToSplitParentDivOrP.SetToEndOf(
+            splitParentDivOrPResult.GetPreviousContent());
       }
 
       // We need to put new <br> after the left node if given node was split
@@ -7256,13 +7258,13 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(
     if (!HTMLEditUtils::IsLastChild(aListItem,
                                     {WalkTreeOption::IgnoreNonEditableNode})) {
       // We need to split the list!
-      Result<nsCOMPtr<nsIContent>, nsresult> newListElementOrError =
+      SplitNodeResult splitListItemParentResult =
           SplitNodeWithTransaction(EditorDOMPoint(&aListItem));
-      if (MOZ_UNLIKELY(newListElementOrError.isErr())) {
+      if (MOZ_UNLIKELY(splitListItemParentResult.Failed())) {
         NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-        return newListElementOrError.unwrapErr();
+        return splitListItemParentResult.Rv();
       }
-      leftListNode = newListElementOrError.unwrap();
+      leftListNode = splitListItemParentResult.GetPreviousContent();
     }
 
     // Are we in a sublist?
@@ -8871,13 +8873,14 @@ nsresult HTMLEditor::LiftUpListItemElement(
       return NS_ERROR_FAILURE;
     }
     MOZ_ASSERT(atListItemElement.IsSetAndValid());
-    Result<nsCOMPtr<nsIContent>, nsresult> leftListElementOrError =
+    SplitNodeResult splitListItemParentResult =
         SplitNodeWithTransaction(atListItemElement);
-    if (MOZ_UNLIKELY(leftListElementOrError.isErr())) {
+    if (MOZ_UNLIKELY(splitListItemParentResult.Failed())) {
       NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-      return leftListElementOrError.unwrapErr();
+      return splitListItemParentResult.Rv();
     }
-    leftListElement = Element::FromNodeOrNull(leftListElementOrError.unwrap());
+    leftListElement =
+        Element::FromNodeOrNull(splitListItemParentResult.GetPreviousContent());
     if (MOZ_UNLIKELY(!leftListElement)) {
       NS_WARNING(
           "HTMLEditor::SplitNodeWithTransaction() didn't return left list "

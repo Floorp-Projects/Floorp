@@ -2120,7 +2120,7 @@ class HTMLEditor final : public EditorBase,
    *                            next sibling.  And the point will be start
    *                            of the right node.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT Result<nsCOMPtr<nsIContent>, nsresult>
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT SplitNodeResult
   SplitNodeWithTransaction(const EditorDOMPoint& aStartOfRightNode);
 
   enum class SplitAtEdges {
