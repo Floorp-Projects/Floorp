@@ -520,7 +520,7 @@ nsWindow::nsWindow()
 }
 
 nsWindow::~nsWindow() {
-  LOG("nsWindow::~nsWindow() [%p]\n", (void*)this);
+  LOG("nsWindow::~nsWindow()");
 
   delete[] mTransparencyBitmap;
   mTransparencyBitmap = nullptr;
@@ -1882,9 +1882,9 @@ static void NativeMoveResizeCallback(GdkWindow* window,
                                      const GdkRectangle* final_rect,
                                      gboolean flipped_x, gboolean flipped_y,
                                      void* aWindow) {
-  LOG_POPUP("NativeMoveResizeCallback [%p] flipped_x %d flipped_y %d\n",
+  LOG_POPUP("[%p] NativeMoveResizeCallback flipped_x %d flipped_y %d\n",
             aWindow, flipped_x, flipped_y);
-  LOG_POPUP("  new position [%d, %d] -> [%d x %d]", final_rect->x,
+  LOG_POPUP("[%p]   new position [%d, %d] -> [%d x %d]", aWindow, final_rect->x,
             final_rect->y, final_rect->width, final_rect->height);
   nsWindow* wnd = get_window_for_gdk_window(window);
 
@@ -2893,7 +2893,7 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
 
   // If this is the widget that already has focus, return.
   if (gFocusWindow == this) {
-    LOG("  already have focus [%p]\n", (void*)this);
+    LOG("  already have focus");
     return;
   }
 
@@ -2904,7 +2904,7 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
     mIMContext->OnFocusWindow(this);
   }
 
-  LOG("  widget now has focus in SetFocus() [%p]\n", (void*)this);
+  LOG("  widget now has focus in SetFocus()");
 }
 
 LayoutDeviceIntRect nsWindow::GetScreenBounds() {
@@ -3275,7 +3275,7 @@ LayoutDeviceIntPoint nsWindow::WidgetToScreenOffset() {
 }
 
 void nsWindow::CaptureMouse(bool aCapture) {
-  LOG("nsWindow::CaptureMouse() [%p]\n", (void*)this);
+  LOG("nsWindow::CaptureMouse()");
 
   if (mIsDestroyed) {
     return;
@@ -3321,7 +3321,7 @@ void nsWindow::CaptureRollupEvents(nsIRollupListener* aListener,
 }
 
 nsresult nsWindow::GetAttention(int32_t aCycleCount) {
-  LOG("nsWindow::GetAttention [%p]\n", (void*)this);
+  LOG("nsWindow::GetAttention");
 
   GtkWidget* top_window = GetToplevelWidget();
   GtkWidget* top_focused_window =
@@ -3827,7 +3827,7 @@ gboolean nsWindow::OnConfigureEvent(GtkWidget* aWidget,
 }
 
 void nsWindow::OnMap() {
-  LOG("nsWindow::OnMap [%p]\n", (void*)this);
+  LOG("nsWindow::OnMap");
   // Gtk mapped out widget to screen. Configure underlying GdkWindow properly
   // as our rendering target.
   // This call means we have X11 (or Wayland) window we can render to by GL
@@ -3841,7 +3841,7 @@ void nsWindow::OnUnrealize() {
   // their references back to their container widget while the GdkWindow
   // hierarchy is still available.
   // This call means we *don't* have X11 (or Wayland) window we can render to.
-  LOG("nsWindow::OnUnrealize [%p] GdkWindow %p\n", (void*)this, mGdkWindow);
+  LOG("nsWindow::OnUnrealize GdkWindow %p", mGdkWindow);
   mIsMapped = false;
   ReleaseGdkWindow();
 }
@@ -3926,7 +3926,7 @@ void nsWindow::OnEnterNotifyEvent(GdkEventCrossing* aEvent) {
   event.mRefPoint = GdkEventCoordsToDevicePixels(aEvent->x, aEvent->y);
   event.AssignEventTime(GetWidgetEventTime(aEvent->time));
 
-  LOG("OnEnterNotify: %p\n", (void*)this);
+  LOG("OnEnterNotify");
 
   DispatchInputEvent(&event);
 }
@@ -3967,7 +3967,7 @@ void nsWindow::OnLeaveNotifyEvent(GdkEventCrossing* aEvent) {
                              ? WidgetMouseEvent::ePlatformTopLevel
                              : WidgetMouseEvent::ePlatformChild);
 
-  LOG("OnLeaveNotify: %p\n", (void*)this);
+  LOG("OnLeaveNotify");
 
   DispatchInputEvent(&event);
 }
@@ -4139,8 +4139,7 @@ void nsWindow::DispatchMissedButtonReleases(GdkEventCrossing* aGdkEvent) {
           buttonType = MouseButton::eSecondary;
       }
 
-      LOG("Synthesized button %u release on %p\n", guint(buttonType + 1),
-          (void*)this);
+      LOG("Synthesized button %u release", guint(buttonType + 1));
 
       // Dispatch a synthesized button up event to tell Gecko about the
       // change in state.  This event is marked as synthesized so that
@@ -4381,7 +4380,7 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton* aEvent) {
 }
 
 void nsWindow::OnContainerFocusInEvent(GdkEventFocus* aEvent) {
-  LOG("OnContainerFocusInEvent [%p]\n", (void*)this);
+  LOG("OnContainerFocusInEvent");
 
   // Unset the urgency hint, if possible
   GtkWidget* top_window = GetToplevelWidget();
@@ -4392,7 +4391,7 @@ void nsWindow::OnContainerFocusInEvent(GdkEventFocus* aEvent) {
   // Return if being called within SetFocus because the focus manager
   // already knows that the window is active.
   if (gBlockActivateEvent) {
-    LOG("activated notification is blocked [%p]\n", (void*)this);
+    LOG("activated notification is blocked");
     return;
   }
 
@@ -4410,11 +4409,11 @@ void nsWindow::OnContainerFocusInEvent(GdkEventFocus* aEvent) {
     gFocusWindow = this;
   }
 
-  LOG("Events sent from focus in event [%p]\n", (void*)this);
+  LOG("Events sent from focus in event");
 }
 
 void nsWindow::OnContainerFocusOutEvent(GdkEventFocus* aEvent) {
-  LOG("OnContainerFocusOutEvent [%p]\n", (void*)this);
+  LOG("OnContainerFocusOutEvent");
 
   if (mWindowType == eWindowType_toplevel ||
       mWindowType == eWindowType_dialog) {
@@ -4456,7 +4455,7 @@ void nsWindow::OnContainerFocusOutEvent(GdkEventFocus* aEvent) {
     UpdateMozWindowActive();
   }
 
-  LOG("Done with container focus out [%p]\n", (void*)this);
+  LOG("Done with container focus out");
 }
 
 bool nsWindow::DispatchCommandEvent(nsAtom* aCommand) {
@@ -4519,7 +4518,7 @@ mozilla::CurrentX11TimeGetter* nsWindow::GetCurrentTimeGetter() {
 }
 
 gboolean nsWindow::OnKeyPressEvent(GdkEventKey* aEvent) {
-  LOG("OnKeyPressEvent [%p]\n", (void*)this);
+  LOG("OnKeyPressEvent");
 
   RefPtr<nsWindow> self(this);
   KeymapWrapper::HandleKeyPressEvent(self, aEvent);
@@ -4527,7 +4526,7 @@ gboolean nsWindow::OnKeyPressEvent(GdkEventKey* aEvent) {
 }
 
 gboolean nsWindow::OnKeyReleaseEvent(GdkEventKey* aEvent) {
-  LOG("OnKeyReleaseEvent [%p]\n", (void*)this);
+  LOG("OnKeyReleaseEvent");
 
   RefPtr<nsWindow> self(this);
   if (NS_WARN_IF(!KeymapWrapper::HandleKeyReleaseEvent(self, aEvent))) {
@@ -5490,7 +5489,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
     SetDefaultIcon();
     gtk_window_set_type_hint(GTK_WINDOW(mShell), GDK_WINDOW_TYPE_HINT_DIALOG);
-    LOG("nsWindow::Create(): dialog [%p]\n", this);
+    LOG("nsWindow::Create(): dialog");
     if (parentnsWindow) {
       gtk_window_set_transient_for(GTK_WINDOW(mShell),
                                    GTK_WINDOW(parentnsWindow->GetGtkWidget()));
@@ -5501,7 +5500,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     mGtkWindowRoleName = "Popup";
     mPopupHint = aInitData->mPopupHint;
 
-    LOG("nsWindow::Create() Popup [%p]\n", this);
+    LOG("nsWindow::Create() Popup");
 
     if (mNoAutoHide) {
       // ... but the window manager does not decorate this window,
@@ -5535,7 +5534,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     if (aInitData->mIsDragPopup) {
       gtk_window_set_type_hint(GTK_WINDOW(mShell), GDK_WINDOW_TYPE_HINT_DND);
       mIsDragPopup = true;
-      LOG("nsWindow::Create() Drag popup [%p]\n", this);
+      LOG("nsWindow::Create() Drag popup\n");
     } else if (GdkIsX11Display()) {
       // Set the window hints on X11 only. Wayland popups are configured
       // at WaylandPopupNeedsTrackInHierarchy().
@@ -5552,10 +5551,10 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
           break;
       }
       gtk_window_set_type_hint(GTK_WINDOW(mShell), gtkTypeHint);
-      LOG("nsWindow::Create() popup type %s\n", GetPopupTypeName().get());
+      LOG("nsWindow::Create() popup type %s", GetPopupTypeName().get());
     }
     if (parentnsWindow) {
-      LOG("    set parent window [%p] %s\n", parentnsWindow,
+      LOG("    set parent window [%p] %s", parentnsWindow,
           parentnsWindow->mGtkWindowRoleName.get());
       GtkWindow* parentWidget = GTK_WINDOW(parentnsWindow->GetGtkWidget());
       gtk_window_set_transient_for(GTK_WINDOW(mShell), parentWidget);
@@ -5808,8 +5807,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   g_signal_connect(eventWidget, "touch-event", G_CALLBACK(touch_event_cb),
                    nullptr);
 
-  LOG("nsWindow [%p] type %d %s\n", (void*)this, mWindowType,
-      mIsPIPWindow ? "PIP window" : "");
+  LOG("nsWindow type %d %s\n", mWindowType, mIsPIPWindow ? "PIP window" : "");
   LOG("\tmShell %p mContainer %p mGdkWindow %p XID 0x%lx\n", mShell, mContainer,
       mGdkWindow,
       (GdkIsX11Display() && mGdkWindow) ? gdk_x11_window_get_xid(mGdkWindow)
@@ -5984,7 +5982,7 @@ void nsWindow::ResumeCompositorHiddenWindow() {
 // pause the compositor and destroy EGLSurface & resume the compositor
 // and re-create EGLSurface on next expose event.
 void nsWindow::PauseCompositorHiddenWindow() {
-  LOG("nsWindow::PauseCompositorHiddenWindow [%p]\n", (void*)this);
+  LOG("nsWindow::PauseCompositorHiddenWindow");
 
   if (mCompositorState != COMPOSITOR_ENABLED) {
     LOG("  quit early, compositor is disabled");
@@ -6030,7 +6028,7 @@ void nsWindow::PauseCompositor() {
     return;
   }
 
-  LOG("nsWindow::PauseCompositor() [%p]\n", (void*)this);
+  LOG("nsWindow::PauseCompositor()");
 
   if (mCompositorPauseTimeoutID) {
     g_source_remove(mCompositorPauseTimeoutID);
@@ -6093,7 +6091,7 @@ void nsWindow::WaylandStartVsync() {
     return;
   }
 
-  LOG("nsWindow::WaylandStartVsync() [%p]\n", (void*)this);
+  LOG("nsWindow::WaylandStartVsync()");
 
   if (!mWaylandVsyncSource) {
     mWaylandVsyncSource = new WaylandVsyncSource();
@@ -6119,7 +6117,7 @@ void nsWindow::WaylandStartVsync() {
 void nsWindow::WaylandStopVsync() {
 #ifdef MOZ_WAYLAND
   if (mWaylandVsyncSource) {
-    LOG("nsWindow::WaylandStopVsync() [%p]\n", (void*)this);
+    LOG("nsWindow::WaylandStopVsync()");
     // The widget is going to be hidden, so clear the surface of our
     // vsync source.
     WaylandVsyncSource::WaylandDisplay& display =
@@ -6219,7 +6217,7 @@ void nsWindow::NativeShow(bool aAction) {
 }
 
 void nsWindow::SetHasMappedToplevel(bool aState) {
-  LOG("nsWindow::SetHasMappedToplevel() [%p] state %d\n", (void*)this, aState);
+  LOG("nsWindow::SetHasMappedToplevel() state %d", aState);
 
   // Even when aState == mHasMappedToplevel (as when this method is called
   // from Show()), child windows need to have their state checked, so don't
@@ -8948,7 +8946,7 @@ void nsWindow::GetCompositorWidgetInitData(
     mozilla::widget::CompositorWidgetInitData* aInitData) {
   nsCString displayName;
 
-  LOG("nsWindow::GetCompositorWidgetInitData [%p]\n", (void*)this);
+  LOG("nsWindow::GetCompositorWidgetInitData");
 #ifdef MOZ_X11
   if (GdkIsX11Display() && !mGdkWindow) {
     LOG("  create mGdkWindow/mXWindow\n");
@@ -9261,11 +9259,11 @@ void nsWindow::LockAspectRatio(bool aShouldLock) {
                    (float)decHeight;
 
     mAspectRatio = width / height;
-    LOG("nsWindow::LockAspectRatio() width %f height %f aspect %f\n", width,
+    LOG("nsWindow::LockAspectRatio() width %f height %f aspect %f", width,
         height, mAspectRatio);
   } else {
     mAspectRatio = 0.0;
-    LOG("nsWindow::LockAspectRatio() [%p] removed aspect ratio\n", (void*)this);
+    LOG("nsWindow::LockAspectRatio() removed aspect ratio");
   }
 
   ApplySizeConstraints();
