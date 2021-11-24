@@ -1595,7 +1595,6 @@ impl<'a> SceneBuilder<'a> {
     fn build_clip_chain(
         &mut self,
         clip_items: Vec<ClipItemKey>,
-        spatial_node_index: SpatialNodeIndex,
         parent_clip_chain_id: ClipChainId,
     ) -> ClipChainId {
         if clip_items.is_empty() {
@@ -1611,12 +1610,12 @@ impl<'a> SceneBuilder<'a> {
                     .intern(&item, || {
                         ClipInternData {
                             clip_node_kind: item.kind.node_kind(),
+                            spatial_node_index: item.spatial_node_index,
                         }
                     });
 
                 clip_chain_id = self.clip_store.add_clip_chain_node(
                     handle,
-                    spatial_node_index,
                     clip_chain_id,
                 );
             }
@@ -1741,7 +1740,6 @@ impl<'a> SceneBuilder<'a> {
         if prim.is_visible() {
             let clip_chain_id = self.build_clip_chain(
                 clip_items,
-                spatial_node_index,
                 clip_chain_id,
             );
             self.add_prim_to_draw_list(
@@ -2445,6 +2443,7 @@ impl<'a> SceneBuilder<'a> {
 
         let item = ClipItemKey {
             kind: ClipItemKeyKind::image_mask(image_mask, snapped_mask_rect, polygon_handle),
+            spatial_node_index,
         };
 
         let handle = self
@@ -2453,12 +2452,13 @@ impl<'a> SceneBuilder<'a> {
             .intern(&item, || {
                 ClipInternData {
                     clip_node_kind: ClipNodeKind::Complex,
+                    spatial_node_index,
                 }
             });
 
         let instance = SceneClipInstance {
             key: item,
-            clip: ClipInstance::new(handle, spatial_node_index),
+            clip: ClipInstance::new(handle),
         };
 
         self.clip_store.register_clip_template(
@@ -2484,6 +2484,7 @@ impl<'a> SceneBuilder<'a> {
 
         let item = ClipItemKey {
             kind: ClipItemKeyKind::rectangle(snapped_clip_rect, ClipMode::Clip),
+            spatial_node_index,
         };
         let handle = self
             .interners
@@ -2491,12 +2492,13 @@ impl<'a> SceneBuilder<'a> {
             .intern(&item, || {
                 ClipInternData {
                     clip_node_kind: ClipNodeKind::Rectangle,
+                    spatial_node_index,
                 }
             });
 
         let instance = SceneClipInstance {
             key: item,
-            clip: ClipInstance::new(handle, spatial_node_index),
+            clip: ClipInstance::new(handle),
         };
 
         self.clip_store.register_clip_template(
@@ -2524,6 +2526,7 @@ impl<'a> SceneBuilder<'a> {
                 clip.radii,
                 clip.mode,
             ),
+            spatial_node_index,
         };
 
         let handle = self
@@ -2532,12 +2535,13 @@ impl<'a> SceneBuilder<'a> {
             .intern(&item, || {
                 ClipInternData {
                     clip_node_kind: ClipNodeKind::Complex,
+                    spatial_node_index,
                 }
             });
 
         let instance = SceneClipInstance {
             key: item,
-            clip: ClipInstance::new(handle, spatial_node_index),
+            clip: ClipInstance::new(handle),
         };
 
         self.clip_store.register_clip_template(
