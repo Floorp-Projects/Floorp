@@ -29,9 +29,6 @@ class EngineSharedPreferencesListener(
             context.getString(R.string.pref_key_performance_block_javascript) ->
                 updateJavaScriptSetting(newValue as Boolean)
 
-            context.getString(R.string.pref_key_remote_debugging) ->
-                updateRemoteDebugging(newValue as Boolean)
-
             context.getString(R.string.pref_key_performance_block_webfonts) ->
                 updateWebFontsBlocking(newValue as Boolean)
         }
@@ -74,11 +71,6 @@ class EngineSharedPreferencesListener(
         components.engineDefaultSettings.javascriptEnabled = !newValue
         components.engine.settings.javascriptEnabled = !newValue
         components.sessionUseCases.reload()
-    }
-
-    private fun updateRemoteDebugging(newValue: Boolean) {
-        context.components.engine.settings.remoteDebuggingEnabled = newValue
-        context.components.sessionUseCases.reload()
     }
 
     private fun updateWebFontsBlocking(newValue: Boolean) {
