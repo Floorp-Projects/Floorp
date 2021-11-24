@@ -41,8 +41,12 @@ class MozSiteMetadata:
         self.site_name = site_name
         self.prefix = prefix
 
-    def write(self):
-        raw = {"hex_version": self.hex_version, "virtualenv_name": self.site_name}
+    def write(self, is_finalized):
+        raw = {
+            "hex_version": self.hex_version,
+            "virtualenv_name": self.site_name,
+            "is_finalized": is_finalized,
+        }
         with open(os.path.join(self.prefix, METADATA_FILENAME), "w") as file:
             json.dump(raw, file)
 
@@ -60,9 +64,16 @@ class MozSiteMetadata:
     @classmethod
     def from_path(cls, prefix):
         metadata_path = os.path.join(prefix, METADATA_FILENAME)
+        out_of_date_exception = MozSiteMetadataOutOfDateError(
+            f'The virtualenv at "{prefix}" is out-of-date.'
+        )
         try:
             with open(metadata_path, "r") as file:
                 raw = json.load(file)
+
+            if not raw.get("is_finalized", False):
+                raise out_of_date_exception
+
             return cls(
                 raw["hex_version"],
                 raw["virtualenv_name"],
@@ -71,9 +82,7 @@ class MozSiteMetadata:
         except FileNotFoundError:
             return None
         except KeyError:
-            raise MozSiteMetadataOutOfDateError(
-                f'The moz site metadata at "{metadata_path}" is out-of-date.'
-            )
+            raise out_of_date_exception
 
 
 class SitePackagesSource(enum.Enum):
@@ -557,6 +566,9 @@ def _create_venv_with_pthfile(
     if os.path.exists(virtualenv_root):
         shutil.rmtree(virtualenv_root)
 
+    os.makedirs(virtualenv_root)
+    metadata.write(is_finalized=False)
+
     subprocess.check_call(
         [
             sys.executable,
@@ -595,7 +607,7 @@ def _create_venv_with_pthfile(
                 )
 
     os.utime(target_venv.activate_path, None)
-    metadata.write()
+    metadata.write(is_finalized=True)
 
 
 def _is_venv_up_to_date(
