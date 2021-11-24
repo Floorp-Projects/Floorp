@@ -2,7 +2,7 @@ add_task(async function() {
   // Add a permission for example.com, start a new content process, and make
   // sure that the permission has been sent down.
   let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "http://example.com"
+    "https://example.com"
   );
   Services.perms.addFromPrincipal(
     principal,
@@ -12,7 +12,7 @@ add_task(async function() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    "view-source:http://example.com",
+    "view-source:https://example.com",
     /* waitForLoad */ true,
     /* waitForStateStop */ false,
     /* forceNewProcess */ true
