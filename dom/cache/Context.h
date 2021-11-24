@@ -177,7 +177,8 @@ class Context final : public SafeRefCounted<Context> {
   void Init(Maybe<Context&> aOldContext);
   void Start();
   void DispatchAction(SafeRefPtr<Action> aAction, bool aDoomData = false);
-  void OnQuotaInit(nsresult aRv, const Maybe<ClientMetadata>& aClientMetadata,
+  void OnQuotaInit(nsresult aRv,
+                   const Maybe<CacheDirectoryMetadata>& aDirectoryMetadata,
                    already_AddRefed<DirectoryLock> aDirectoryLock);
 
   SafeRefPtr<ThreadsafeHandle> CreateThreadsafeHandle();
@@ -191,7 +192,7 @@ class Context final : public SafeRefCounted<Context> {
   RefPtr<Data> mData;
   State mState;
   bool mOrphanedData;
-  Maybe<ClientMetadata> mClientMetadata;
+  Maybe<CacheDirectoryMetadata> mDirectoryMetadata;
   RefPtr<QuotaInitRunnable> mInitRunnable;
   SafeRefPtr<Action> mInitAction;
   nsTArray<PendingAction> mPendingActions;
