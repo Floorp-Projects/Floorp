@@ -28,7 +28,7 @@ fuzzy-if(Android,0-54,0-22) fuzzy-if(!Android,0-128,0-137) pref(apz.allow_zoomin
 fuzzy-if(Android,0-54,0-27) fuzzy-if(!Android,0-128,0-137) pref(apz.allow_zooming,true) == root-scrollbar-zoomed-in-async-scroll.html root-scrollbar-zoomed-in-ref.html
 fuzzy-if(Android,0-54,0-25) fuzzy-if(!Android,0-128,0-137) pref(apz.allow_zooming,true) pref(apz.allow_zooming_out,true) == root-scrollbar-zoomed-out-async-scroll.html root-scrollbar-zoomed-out-ref.html
 fuzzy-if(Android,0-51,0-50) fuzzy-if(!Android,0-128,0-137) pref(apz.allow_zooming,true) == subframe-scrollbar-zoomed-in-async-scroll.html subframe-scrollbar-zoomed-in-async-scroll-ref.html
-fuzzy-if(Android,0-28,0-23) fuzzy-if(!Android,0-65,0-28) pref(apz.allow_zooming,true) pref(apz.allow_zooming_out,true) == subframe-scrollbar-zoomed-out-async-scroll.html subframe-scrollbar-zoomed-out-async-scroll-ref.html
+fuzzy-if(Android,0-28,0-23) fuzzy-if(!Android,0-68,0-30) pref(apz.allow_zooming,true) pref(apz.allow_zooming_out,true) == subframe-scrollbar-zoomed-out-async-scroll.html subframe-scrollbar-zoomed-out-async-scroll-ref.html
 
 # Meta-viewport tag support
 skip-if(!Android) pref(apz.allow_zooming,true) == initial-scale-1.html initial-scale-1-ref.html
