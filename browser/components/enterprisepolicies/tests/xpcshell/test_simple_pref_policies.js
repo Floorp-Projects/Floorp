@@ -817,6 +817,90 @@ const POLICIES_TESTS = [
       "network.http.windows-sso.enabled": true,
     },
   },
+
+  {
+    policies: {
+      Cookies: {
+        Behavior: "accept",
+        BehaviorPrivateBrowsing: "reject-foreign",
+        Locked: true,
+      },
+    },
+    lockedPrefs: {
+      "network.cookie.cookieBehavior": 0,
+      "network.cookie.cookieBehavior.pbmode": 1,
+    },
+  },
+
+  {
+    policies: {
+      Cookies: {
+        Behavior: "reject-foreign",
+        BehaviorPrivateBrowsing: "reject",
+        Locked: true,
+      },
+    },
+    lockedPrefs: {
+      "network.cookie.cookieBehavior": 1,
+      "network.cookie.cookieBehavior.pbmode": 2,
+    },
+  },
+
+  {
+    policies: {
+      Cookies: {
+        Behavior: "reject",
+        BehaviorPrivateBrowsing: "limit-foreign",
+        Locked: true,
+      },
+    },
+    lockedPrefs: {
+      "network.cookie.cookieBehavior": 2,
+      "network.cookie.cookieBehavior.pbmode": 3,
+    },
+  },
+
+  {
+    policies: {
+      Cookies: {
+        Behavior: "limit-foreign",
+        BehaviorPrivateBrowsing: "reject-tracker",
+        Locked: true,
+      },
+    },
+    lockedPrefs: {
+      "network.cookie.cookieBehavior": 3,
+      "network.cookie.cookieBehavior.pbmode": 4,
+    },
+  },
+
+  {
+    policies: {
+      Cookies: {
+        Behavior: "reject-tracker",
+        BehaviorPrivateBrowsing: "reject-tracker-and-partition-foreign",
+        Locked: true,
+      },
+    },
+    lockedPrefs: {
+      "network.cookie.cookieBehavior": 4,
+      "network.cookie.cookieBehavior.pbmode": 5,
+    },
+  },
+
+  {
+    policies: {
+      Cookies: {
+        Behavior: "reject-tracker-and-partition-foreign",
+        BehaviorPrivateBrowsing: "accept",
+        Locked: true,
+      },
+    },
+    lockedPrefs: {
+      "network.cookie.cookieBehavior": 5,
+      "network.cookie.cookieBehavior.pbmode": 0,
+    },
+  },
 ];
 
 add_task(async function test_policy_simple_prefs() {
