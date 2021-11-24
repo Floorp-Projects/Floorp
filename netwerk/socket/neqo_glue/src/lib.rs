@@ -29,7 +29,7 @@ use std::ptr;
 use std::rc::Rc;
 use std::slice;
 use std::str;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use thin_vec::ThinVec;
 #[cfg(windows)]
 use winapi::shared::ws2def::{AF_INET, AF_INET6};
@@ -122,24 +122,16 @@ impl NeqoHttp3Conn {
             _ => return Err(NS_ERROR_INVALID_ARG),
         };
 
-        let mut params = ConnectionParameters::default()
-            .quic_version(quic_version)
-            .cc_algorithm(CongestionControlAlgorithm::Cubic)
-            .max_data(max_data)
-            .max_stream_data(StreamType::BiDi, false, max_stream_data);
-
-        // Set a short timeout when fuzzing.
-        #[cfg(feature = "fuzzing")]
-        if static_prefs::pref!("fuzzing.necko.http3") {
-            params = params.idle_timeout(Duration::from_millis(10));
-        }
-
         let mut conn = match Http3Client::new(
             origin_conv,
             Rc::new(RefCell::new(RandomConnectionIdGenerator::new(3))),
             local,
             remote,
-            params,
+            ConnectionParameters::default()
+                .quic_version(quic_version)
+                .cc_algorithm(CongestionControlAlgorithm::Cubic)
+                .max_data(max_data)
+                .max_stream_data(StreamType::BiDi, false, max_stream_data),
             &http3_settings,
             Instant::now(),
         ) {
