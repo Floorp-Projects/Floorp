@@ -203,7 +203,7 @@ add_task(async function test_change_in_about_profiling() {
       );
       setReactFriendlyInputValue(
         intervalInput,
-        Number(intervalInput.value) + 8
+        Number(intervalInput.value) + 1
       );
       ok(
         custom.checked,
