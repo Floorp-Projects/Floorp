@@ -75,6 +75,9 @@ class Settings(
             context.getString(R.string.preference_privacy_should_block_cookies_third_party_only_option) ->
                 EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_ONLY_FIRST_PARTY
 
+            context.getString(R.string.preference_privacy_should_block_cookies_cross_site_option) ->
+                EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS
+
             else -> EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL
         }
 

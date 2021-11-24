@@ -7,6 +7,7 @@
         <item>@string/preference_privacy_should_block_cookies_yes_option2</item>
         <item>@string/preference_privacy_should_block_cookies_third_party_only_option</item>
         <item>@string/preference_privacy_should_block_cookies_third_party_tracker_cookies_option</item>
+        <item>@string/preference_privacy_should_block_cookies_cross_site_option</item>
         <item>@string/preference_privacy_should_block_cookies_no_option2</item>
     </string-array>
 </resources>
