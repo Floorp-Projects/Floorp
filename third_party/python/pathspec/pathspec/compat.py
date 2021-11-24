@@ -36,6 +36,3 @@ try:
 except ImportError:
 	# Python 2.7 - 3.5.
 	from collections import Container as Collection
-
-CollectionType = Collection
-IterableType = Iterable

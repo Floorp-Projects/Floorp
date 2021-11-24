@@ -1,11 +1,13 @@
 Metadata-Version: 2.1
-Name: click
-Version: 7.1.2
+Name: Click
+Version: 7.0
 Summary: Composable command line interface toolkit
 Home-page: https://palletsprojects.com/p/click/
-Maintainer: Pallets
+Author: Armin Ronacher
+Author-email: armin.ronacher@active-4.com
+Maintainer: Pallets Team
 Maintainer-email: contact@palletsprojects.com
-License: BSD-3-Clause
+License: BSD
 Project-URL: Documentation, https://click.palletsprojects.com/
 Project-URL: Code, https://github.com/pallets/click
 Project-URL: Issue tracker, https://github.com/pallets/click/issues
@@ -16,8 +18,13 @@ Classifier: License :: OSI Approved :: BSD License
 Classifier: Operating System :: OS Independent
 Classifier: Programming Language :: Python
 Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.7
 Classifier: Programming Language :: Python :: 3
-Requires-Python: >=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*
+Classifier: Programming Language :: Python :: 3.4
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Requires-Python: >=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*
 
 \$ click\_
 ==========
@@ -45,7 +52,9 @@ Install and update using `pip`_:
 
 .. code-block:: text
 
-    $ pip install -U click
+    $ pip install click
+
+Click supports Python 3.4 and newer, Python 2.7, and PyPy.
 
 .. _pip: https://pip.pypa.io/en/stable/quickstart/
 
@@ -53,20 +62,25 @@ Install and update using `pip`_:
 A Simple Example
 ----------------
 
+What does it look like? Here is an example of a simple Click program:
+
 .. code-block:: python
 
     import click
 
     @click.command()
     @click.option("--count", default=1, help="Number of greetings.")
-    @click.option("--name", prompt="Your name", help="The person to greet.")
+    @click.option("--name", prompt="Your name",
+                  help="The person to greet.")
     def hello(count, name):
         """Simple program that greets NAME for a total of COUNT times."""
         for _ in range(count):
-            click.echo(f"Hello, {name}!")
+            click.echo("Hello, %s!" % name)
 
     if __name__ == '__main__':
         hello()
+
+And what it looks like when run:
 
 .. code-block:: text
 
@@ -91,12 +105,17 @@ donate today`_.
 Links
 -----
 
--   Website: https://palletsprojects.com/p/click/
--   Documentation: https://click.palletsprojects.com/
--   Releases: https://pypi.org/project/click/
--   Code: https://github.com/pallets/click
--   Issue tracker: https://github.com/pallets/click/issues
--   Test status: https://dev.azure.com/pallets/click/_build
--   Official chat: https://discord.gg/t6rrQZH
+*   Website: https://palletsprojects.com/p/click/
+*   Documentation: https://click.palletsprojects.com/
+*   License: `BSD <https://github.com/pallets/click/blob/master/LICENSE.rst>`_
+*   Releases: https://pypi.org/project/click/
+*   Code: https://github.com/pallets/click
+*   Issue tracker: https://github.com/pallets/click/issues
+*   Test status:
+
+    *   Linux, Mac: https://travis-ci.org/pallets/click
+    *   Windows: https://ci.appveyor.com/project/pallets/click
+
+*   Test coverage: https://codecov.io/gh/pallets/click
 
 

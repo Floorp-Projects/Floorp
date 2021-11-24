@@ -115,9 +115,7 @@ else:
 __all__ = [
     # Super-special typing primitives.
     'ClassVar',
-    'Concatenate',
     'Final',
-    'ParamSpec',
     'Type',
 
     # ABCs (from collections.abc).
@@ -136,7 +134,6 @@ __all__ = [
     'Counter',
     'Deque',
     'DefaultDict',
-    'OrderedDict'
     'TypedDict',
 
     # Structural checks, a.k.a. protocols.
@@ -149,8 +146,6 @@ __all__ = [
     'NewType',
     'overload',
     'Text',
-    'TypeAlias',
-    'TypeGuard',
     'TYPE_CHECKING',
 ]
 
@@ -943,34 +938,6 @@ else:
             return _generic_new(collections.defaultdict, cls, *args, **kwds)
 
 
-if hasattr(typing, 'OrderedDict'):
-    OrderedDict = typing.OrderedDict
-elif (3, 7, 0) <= sys.version_info[:3] < (3, 7, 2):
-    OrderedDict = typing._alias(collections.OrderedDict, (KT, VT))
-elif _geqv_defined:
-    class OrderedDict(collections.OrderedDict, typing.MutableMapping[KT, VT],
-                      metaclass=_ExtensionsGenericMeta,
-                      extra=collections.OrderedDict):
-
-        __slots__ = ()
-
-        def __new__(cls, *args, **kwds):
-            if _geqv(cls, OrderedDict):
-                return collections.OrderedDict(*args, **kwds)
-            return _generic_new(collections.OrderedDict, cls, *args, **kwds)
-else:
-    class OrderedDict(collections.OrderedDict, typing.MutableMapping[KT, VT],
-                      metaclass=_ExtensionsGenericMeta,
-                      extra=collections.OrderedDict):
-
-        __slots__ = ()
-
-        def __new__(cls, *args, **kwds):
-            if cls._gorg is OrderedDict:
-                return collections.OrderedDict(*args, **kwds)
-            return _generic_new(collections.OrderedDict, cls, *args, **kwds)
-
-
 if hasattr(typing, 'Counter'):
     Counter = typing.Counter
 elif (3, 5, 0) <= sys.version_info[:3] <= (3, 5, 1):
@@ -1152,11 +1119,6 @@ def _is_callable_members_only(cls):
 if hasattr(typing, 'Protocol'):
     Protocol = typing.Protocol
 elif HAVE_PROTOCOLS and not PEP_560:
-
-    def _no_init(self, *args, **kwargs):
-        if type(self)._is_protocol:
-            raise TypeError('Protocols cannot be instantiated')
-
     class _ProtocolMeta(GenericMeta):
         """Internal metaclass for Protocol.
 
@@ -1247,6 +1209,9 @@ elif HAVE_PROTOCOLS and not PEP_560:
                         raise TypeError('Protocols can only inherit from other'
                                         ' protocols, got %r' % base)
 
+                def _no_init(self, *args, **kwargs):
+                    if type(self)._is_protocol:
+                        raise TypeError('Protocols cannot be instantiated')
                 cls.__init__ = _no_init
 
             def _proto_hook(other):
@@ -1400,10 +1365,6 @@ elif HAVE_PROTOCOLS and not PEP_560:
 
 elif PEP_560:
     from typing import _type_check, _GenericAlias, _collect_type_vars  # noqa
-
-    def _no_init(self, *args, **kwargs):
-        if type(self)._is_protocol:
-            raise TypeError('Protocols cannot be instantiated')
 
     class _ProtocolMeta(abc.ABCMeta):
         # This metaclass is a bit unfortunate and exists only because of the lack
@@ -1581,6 +1542,10 @@ elif PEP_560:
                         isinstance(base, _ProtocolMeta) and base._is_protocol):
                     raise TypeError('Protocols can only inherit from other'
                                     ' protocols, got %r' % base)
+
+            def _no_init(self, *args, **kwargs):
+                if type(self)._is_protocol:
+                    raise TypeError('Protocols cannot be instantiated')
             cls.__init__ = _no_init
 
 
@@ -1619,11 +1584,9 @@ elif HAVE_PROTOCOLS:
             pass
 
 
-if sys.version_info >= (3, 9, 2):
+if sys.version_info[:2] >= (3, 9):
     # The standard library TypedDict in Python 3.8 does not store runtime information
     # about which (if any) keys are optional.  See https://bugs.python.org/issue38834
-    # The standard library TypedDict in Python 3.9.0/1 does not honour the "total"
-    # keyword with old-style TypedDict().  See https://bugs.python.org/issue42059
     TypedDict = typing.TypedDict
 else:
     def _check_fails(cls, other):
@@ -1680,24 +1643,19 @@ else:
             raise TypeError("TypedDict takes either a dict or keyword arguments,"
                             " but not both")
 
-        ns = {'__annotations__': dict(fields)}
+        ns = {'__annotations__': dict(fields), '__total__': total}
         try:
             # Setting correct module is necessary to make typed dict classes pickleable.
             ns['__module__'] = sys._getframe(1).f_globals.get('__name__', '__main__')
         except (AttributeError, ValueError):
             pass
 
-        return _TypedDictMeta(typename, (), ns, total=total)
+        return _TypedDictMeta(typename, (), ns)
 
     _typeddict_new.__text_signature__ = ('($cls, _typename, _fields=None,'
                                          ' /, *, total=True, **kwargs)')
 
     class _TypedDictMeta(type):
-        def __init__(cls, name, bases, ns, total=True):
-            # In Python 3.4 and 3.5 the __init__ method also needs to support the keyword arguments.
-            # See https://www.python.org/dev/peps/pep-0487/#implementation-details
-            super(_TypedDictMeta, cls).__init__(name, bases, ns)
-
         def __new__(cls, name, bases, ns, total=True):
             # Create new typed dict class object.
             # This method is called directly when TypedDict is subclassed,
@@ -2066,23 +2024,11 @@ elif HAVE_ANNOTATED:
 
 # Python 3.8 has get_origin() and get_args() but those implementations aren't
 # Annotated-aware, so we can't use those, only Python 3.9 versions will do.
-# Similarly, Python 3.9's implementation doesn't support ParamSpecArgs and
-# ParamSpecKwargs.
-if sys.version_info[:2] >= (3, 10):
+if sys.version_info[:2] >= (3, 9):
     get_origin = typing.get_origin
     get_args = typing.get_args
 elif PEP_560:
-    from typing import _GenericAlias
-    try:
-        # 3.9+
-        from typing import _BaseGenericAlias
-    except ImportError:
-        _BaseGenericAlias = _GenericAlias
-    try:
-        # 3.9+
-        from typing import GenericAlias
-    except ImportError:
-        GenericAlias = _GenericAlias
+    from typing import _GenericAlias  # noqa
 
     def get_origin(tp):
         """Get the unsubscripted version of a type.
@@ -2097,12 +2043,10 @@ elif PEP_560:
             get_origin(Generic[T]) is Generic
             get_origin(Union[T, int]) is Union
             get_origin(List[Tuple[T, T]][int]) == list
-            get_origin(P.args) is P
         """
         if isinstance(tp, _AnnotatedAlias):
             return Annotated
-        if isinstance(tp, (_GenericAlias, GenericAlias, _BaseGenericAlias,
-                           ParamSpecArgs, ParamSpecKwargs)):
+        if isinstance(tp, _GenericAlias):
             return tp.__origin__
         if tp is Generic:
             return Generic
@@ -2121,9 +2065,7 @@ elif PEP_560:
         """
         if isinstance(tp, _AnnotatedAlias):
             return (tp.__origin__,) + tp.__metadata__
-        if isinstance(tp, (_GenericAlias, GenericAlias)):
-            if getattr(tp, "_special", False):
-                return ()
+        if isinstance(tp, _GenericAlias):
             res = tp.__args__
             if get_origin(tp) is collections.abc.Callable and res[0] is not Ellipsis:
                 res = (list(res[:-1]), res[-1])
@@ -2224,582 +2166,3 @@ else:
         It's invalid when used anywhere except as in the example above.
         """
         __slots__ = ()
-
-
-# Python 3.10+ has PEP 612
-if hasattr(typing, 'ParamSpecArgs'):
-    ParamSpecArgs = typing.ParamSpecArgs
-    ParamSpecKwargs = typing.ParamSpecKwargs
-else:
-    class _Immutable:
-        """Mixin to indicate that object should not be copied."""
-        __slots__ = ()
-
-        def __copy__(self):
-            return self
-
-        def __deepcopy__(self, memo):
-            return self
-
-    class ParamSpecArgs(_Immutable):
-        """The args for a ParamSpec object.
-
-        Given a ParamSpec object P, P.args is an instance of ParamSpecArgs.
-
-        ParamSpecArgs objects have a reference back to their ParamSpec:
-
-        P.args.__origin__ is P
-
-        This type is meant for runtime introspection and has no special meaning to
-        static type checkers.
-        """
-        def __init__(self, origin):
-            self.__origin__ = origin
-
-        def __repr__(self):
-            return "{}.args".format(self.__origin__.__name__)
-
-    class ParamSpecKwargs(_Immutable):
-        """The kwargs for a ParamSpec object.
-
-        Given a ParamSpec object P, P.kwargs is an instance of ParamSpecKwargs.
-
-        ParamSpecKwargs objects have a reference back to their ParamSpec:
-
-        P.kwargs.__origin__ is P
-
-        This type is meant for runtime introspection and has no special meaning to
-        static type checkers.
-        """
-        def __init__(self, origin):
-            self.__origin__ = origin
-
-        def __repr__(self):
-            return "{}.kwargs".format(self.__origin__.__name__)
-
-if hasattr(typing, 'ParamSpec'):
-    ParamSpec = typing.ParamSpec
-else:
-
-    # Inherits from list as a workaround for Callable checks in Python < 3.9.2.
-    class ParamSpec(list):
-        """Parameter specification variable.
-
-        Usage::
-
-           P = ParamSpec('P')
-
-        Parameter specification variables exist primarily for the benefit of static
-        type checkers.  They are used to forward the parameter types of one
-        callable to another callable, a pattern commonly found in higher order
-        functions and decorators.  They are only valid when used in ``Concatenate``,
-        or s the first argument to ``Callable``. In Python 3.10 and higher,
-        they are also supported in user-defined Generics at runtime.
-        See class Generic for more information on generic types.  An
-        example for annotating a decorator::
-
-           T = TypeVar('T')
-           P = ParamSpec('P')
-
-           def add_logging(f: Callable[P, T]) -> Callable[P, T]:
-               '''A type-safe decorator to add logging to a function.'''
-               def inner(*args: P.args, **kwargs: P.kwargs) -> T:
-                   logging.info(f'{f.__name__} was called')
-                   return f(*args, **kwargs)
-               return inner
-
-           @add_logging
-           def add_two(x: float, y: float) -> float:
-               '''Add two numbers together.'''
-               return x + y
-
-        Parameter specification variables defined with covariant=True or
-        contravariant=True can be used to declare covariant or contravariant
-        generic types.  These keyword arguments are valid, but their actual semantics
-        are yet to be decided.  See PEP 612 for details.
-
-        Parameter specification variables can be introspected. e.g.:
-
-           P.__name__ == 'T'
-           P.__bound__ == None
-           P.__covariant__ == False
-           P.__contravariant__ == False
-
-        Note that only parameter specification variables defined in global scope can
-        be pickled.
-        """
-
-        @property
-        def args(self):
-            return ParamSpecArgs(self)
-
-        @property
-        def kwargs(self):
-            return ParamSpecKwargs(self)
-
-        def __init__(self, name, *, bound=None, covariant=False, contravariant=False):
-            super().__init__([self])
-            self.__name__ = name
-            self.__covariant__ = bool(covariant)
-            self.__contravariant__ = bool(contravariant)
-            if bound:
-                self.__bound__ = typing._type_check(bound, 'Bound must be a type.')
-            else:
-                self.__bound__ = None
-
-            # for pickling:
-            try:
-                def_mod = sys._getframe(1).f_globals.get('__name__', '__main__')
-            except (AttributeError, ValueError):
-                def_mod = None
-            if def_mod != 'typing_extensions':
-                self.__module__ = def_mod
-
-        def __repr__(self):
-            if self.__covariant__:
-                prefix = '+'
-            elif self.__contravariant__:
-                prefix = '-'
-            else:
-                prefix = '~'
-            return prefix + self.__name__
-
-        def __hash__(self):
-            return object.__hash__(self)
-
-        def __eq__(self, other):
-            return self is other
-
-        def __reduce__(self):
-            return self.__name__
-
-        # Hack to get typing._type_check to pass.
-        def __call__(self, *args, **kwargs):
-            pass
-
-        # Note: Can't fake ParamSpec as a TypeVar to get it to work
-        # with Generics. ParamSpec isn't an instance of TypeVar in 3.10.
-        # So encouraging code like isinstance(ParamSpec('P'), TypeVar))
-        # will lead to breakage in 3.10.
-        # This also means no accurate __parameters__ for GenericAliases.
-
-# Inherits from list as a workaround for Callable checks in Python < 3.9.2.
-class _ConcatenateGenericAlias(list):
-    def __init__(self, origin, args):
-        super().__init__(args)
-        self.__origin__ = origin
-        self.__args__ = args
-
-    def __repr__(self):
-        _type_repr = typing._type_repr
-        return '{origin}[{args}]' \
-               .format(origin=_type_repr(self.__origin__),
-                       args=', '.join(_type_repr(arg) for arg in self.__args__))
-
-    def __hash__(self):
-        return hash((self.__origin__, self.__args__))
-
-@_tp_cache
-def _concatenate_getitem(self, parameters):
-    if parameters == ():
-        raise TypeError("Cannot take a Concatenate of no types.")
-    if not isinstance(parameters, tuple):
-        parameters = (parameters,)
-    if not isinstance(parameters[-1], ParamSpec):
-        raise TypeError("The last parameter to Concatenate should be a "
-                        "ParamSpec variable.")
-    msg = "Concatenate[arg, ...]: each arg must be a type."
-    parameters = tuple(typing._type_check(p, msg) for p in parameters)
-    return _ConcatenateGenericAlias(self, parameters)
-
-
-if hasattr(typing, 'Concatenate'):
-    Concatenate = typing.Concatenate
-    _ConcatenateGenericAlias = typing._ConcatenateGenericAlias # noqa
-elif sys.version_info[:2] >= (3, 9):
-    @_TypeAliasForm
-    def Concatenate(self, parameters):
-        """Used in conjunction with ``ParamSpec`` and ``Callable`` to represent a
-        higher order function which adds, removes or transforms parameters of a
-        callable.
-
-        For example::
-
-           Callable[Concatenate[int, P], int]
-
-        See PEP 612 for detailed information.
-        """
-        return _concatenate_getitem(self, parameters)
-
-elif sys.version_info[:2] >= (3, 7):
-    class _ConcatenateForm(typing._SpecialForm, _root=True):
-        def __repr__(self):
-            return 'typing_extensions.' + self._name
-
-        def __getitem__(self, parameters):
-            return _concatenate_getitem(self, parameters)
-
-    Concatenate = _ConcatenateForm('Concatenate',
-        doc="""Used in conjunction with ``ParamSpec`` and ``Callable`` to represent a
-        higher order function which adds, removes or transforms parameters of a
-        callable.
-
-        For example::
-
-           Callable[Concatenate[int, P], int]
-
-        See PEP 612 for detailed information.
-        """)
-
-elif hasattr(typing, '_FinalTypingBase'):
-    class _ConcatenateAliasMeta(typing.TypingMeta):
-        """Metaclass for Concatenate."""
-
-        def __repr__(self):
-            return 'typing_extensions.Concatenate'
-
-    class _ConcatenateAliasBase(typing._FinalTypingBase,
-                                metaclass=_ConcatenateAliasMeta,
-                                _root=True):
-        """Used in conjunction with ``ParamSpec`` and ``Callable`` to represent a
-        higher order function which adds, removes or transforms parameters of a
-        callable.
-
-        For example::
-
-           Callable[Concatenate[int, P], int]
-
-        See PEP 612 for detailed information.
-        """
-        __slots__ = ()
-
-        def __instancecheck__(self, obj):
-            raise TypeError("Concatenate cannot be used with isinstance().")
-
-        def __subclasscheck__(self, cls):
-            raise TypeError("Concatenate cannot be used with issubclass().")
-
-        def __repr__(self):
-            return 'typing_extensions.Concatenate'
-
-        def __getitem__(self, parameters):
-            return _concatenate_getitem(self, parameters)
-
-    Concatenate = _ConcatenateAliasBase(_root=True)
-# For 3.5.0 - 3.5.2
-else:
-    class _ConcatenateAliasMeta(typing.TypingMeta):
-        """Metaclass for Concatenate."""
-
-        def __instancecheck__(self, obj):
-            raise TypeError("TypeAlias cannot be used with isinstance().")
-
-        def __subclasscheck__(self, cls):
-            raise TypeError("TypeAlias cannot be used with issubclass().")
-
-        def __call__(self, *args, **kwargs):
-            raise TypeError("Cannot instantiate TypeAlias")
-
-        def __getitem__(self, parameters):
-            return _concatenate_getitem(self, parameters)
-
-    class Concatenate(metaclass=_ConcatenateAliasMeta, _root=True):
-        """Used in conjunction with ``ParamSpec`` and ``Callable`` to represent a
-        higher order function which adds, removes or transforms parameters of a
-        callable.
-
-        For example::
-
-           Callable[Concatenate[int, P], int]
-
-        See PEP 612 for detailed information.
-        """
-        __slots__ = ()
-
-if hasattr(typing, 'TypeGuard'):
-    TypeGuard = typing.TypeGuard
-elif sys.version_info[:2] >= (3, 9):
-    class _TypeGuardForm(typing._SpecialForm, _root=True):
-        def __repr__(self):
-            return 'typing_extensions.' + self._name
-
-    @_TypeGuardForm
-    def TypeGuard(self, parameters):
-        """Special typing form used to annotate the return type of a user-defined
-        type guard function.  ``TypeGuard`` only accepts a single type argument.
-        At runtime, functions marked this way should return a boolean.
-
-        ``TypeGuard`` aims to benefit *type narrowing* -- a technique used by static
-        type checkers to determine a more precise type of an expression within a
-        program's code flow.  Usually type narrowing is done by analyzing
-        conditional code flow and applying the narrowing to a block of code.  The
-        conditional expression here is sometimes referred to as a "type guard".
-
-        Sometimes it would be convenient to use a user-defined boolean function
-        as a type guard.  Such a function should use ``TypeGuard[...]`` as its
-        return type to alert static type checkers to this intention.
-
-        Using  ``-> TypeGuard`` tells the static type checker that for a given
-        function:
-
-        1. The return value is a boolean.
-        2. If the return value is ``True``, the type of its argument
-        is the type inside ``TypeGuard``.
-
-        For example::
-
-            def is_str(val: Union[str, float]):
-                # "isinstance" type guard
-                if isinstance(val, str):
-                    # Type of ``val`` is narrowed to ``str``
-                    ...
-                else:
-                    # Else, type of ``val`` is narrowed to ``float``.
-                    ...
-
-        Strict type narrowing is not enforced -- ``TypeB`` need not be a narrower
-        form of ``TypeA`` (it can even be a wider form) and this may lead to
-        type-unsafe results.  The main reason is to allow for things like
-        narrowing ``List[object]`` to ``List[str]`` even though the latter is not
-        a subtype of the former, since ``List`` is invariant.  The responsibility of
-        writing type-safe type guards is left to the user.
-
-        ``TypeGuard`` also works with type variables.  For more information, see
-        PEP 647 (User-Defined Type Guards).
-        """
-        item = typing._type_check(parameters, '{} accepts only single type.'.format(self))
-        return _GenericAlias(self, (item,))
-
-elif sys.version_info[:2] >= (3, 7):
-    class _TypeGuardForm(typing._SpecialForm, _root=True):
-
-        def __repr__(self):
-            return 'typing_extensions.' + self._name
-
-        def __getitem__(self, parameters):
-            item = typing._type_check(parameters,
-                                      '{} accepts only a single type'.format(self._name))
-            return _GenericAlias(self, (item,))
-
-    TypeGuard = _TypeGuardForm(
-            'TypeGuard',
-            doc="""Special typing form used to annotate the return type of a user-defined
-        type guard function.  ``TypeGuard`` only accepts a single type argument.
-        At runtime, functions marked this way should return a boolean.
-
-        ``TypeGuard`` aims to benefit *type narrowing* -- a technique used by static
-        type checkers to determine a more precise type of an expression within a
-        program's code flow.  Usually type narrowing is done by analyzing
-        conditional code flow and applying the narrowing to a block of code.  The
-        conditional expression here is sometimes referred to as a "type guard".
-
-        Sometimes it would be convenient to use a user-defined boolean function
-        as a type guard.  Such a function should use ``TypeGuard[...]`` as its
-        return type to alert static type checkers to this intention.
-
-        Using  ``-> TypeGuard`` tells the static type checker that for a given
-        function:
-
-        1. The return value is a boolean.
-        2. If the return value is ``True``, the type of its argument
-        is the type inside ``TypeGuard``.
-
-        For example::
-
-            def is_str(val: Union[str, float]):
-                # "isinstance" type guard
-                if isinstance(val, str):
-                    # Type of ``val`` is narrowed to ``str``
-                    ...
-                else:
-                    # Else, type of ``val`` is narrowed to ``float``.
-                    ...
-
-        Strict type narrowing is not enforced -- ``TypeB`` need not be a narrower
-        form of ``TypeA`` (it can even be a wider form) and this may lead to
-        type-unsafe results.  The main reason is to allow for things like
-        narrowing ``List[object]`` to ``List[str]`` even though the latter is not
-        a subtype of the former, since ``List`` is invariant.  The responsibility of
-        writing type-safe type guards is left to the user.
-
-        ``TypeGuard`` also works with type variables.  For more information, see
-        PEP 647 (User-Defined Type Guards).
-        """)
-elif hasattr(typing, '_FinalTypingBase'):
-    class _TypeGuard(typing._FinalTypingBase, _root=True):
-        """Special typing form used to annotate the return type of a user-defined
-        type guard function.  ``TypeGuard`` only accepts a single type argument.
-        At runtime, functions marked this way should return a boolean.
-
-        ``TypeGuard`` aims to benefit *type narrowing* -- a technique used by static
-        type checkers to determine a more precise type of an expression within a
-        program's code flow.  Usually type narrowing is done by analyzing
-        conditional code flow and applying the narrowing to a block of code.  The
-        conditional expression here is sometimes referred to as a "type guard".
-
-        Sometimes it would be convenient to use a user-defined boolean function
-        as a type guard.  Such a function should use ``TypeGuard[...]`` as its
-        return type to alert static type checkers to this intention.
-
-        Using  ``-> TypeGuard`` tells the static type checker that for a given
-        function:
-
-        1. The return value is a boolean.
-        2. If the return value is ``True``, the type of its argument
-        is the type inside ``TypeGuard``.
-
-        For example::
-
-            def is_str(val: Union[str, float]):
-                # "isinstance" type guard
-                if isinstance(val, str):
-                    # Type of ``val`` is narrowed to ``str``
-                    ...
-                else:
-                    # Else, type of ``val`` is narrowed to ``float``.
-                    ...
-
-        Strict type narrowing is not enforced -- ``TypeB`` need not be a narrower
-        form of ``TypeA`` (it can even be a wider form) and this may lead to
-        type-unsafe results.  The main reason is to allow for things like
-        narrowing ``List[object]`` to ``List[str]`` even though the latter is not
-        a subtype of the former, since ``List`` is invariant.  The responsibility of
-        writing type-safe type guards is left to the user.
-
-        ``TypeGuard`` also works with type variables.  For more information, see
-        PEP 647 (User-Defined Type Guards).
-        """
-
-        __slots__ = ('__type__',)
-
-        def __init__(self, tp=None, **kwds):
-            self.__type__ = tp
-
-        def __getitem__(self, item):
-            cls = type(self)
-            if self.__type__ is None:
-                return cls(typing._type_check(item,
-                           '{} accepts only a single type.'.format(cls.__name__[1:])),
-                           _root=True)
-            raise TypeError('{} cannot be further subscripted'
-                            .format(cls.__name__[1:]))
-
-        def _eval_type(self, globalns, localns):
-            new_tp = typing._eval_type(self.__type__, globalns, localns)
-            if new_tp == self.__type__:
-                return self
-            return type(self)(new_tp, _root=True)
-
-        def __repr__(self):
-            r = super().__repr__()
-            if self.__type__ is not None:
-                r += '[{}]'.format(typing._type_repr(self.__type__))
-            return r
-
-        def __hash__(self):
-            return hash((type(self).__name__, self.__type__))
-
-        def __eq__(self, other):
-            if not isinstance(other, _TypeGuard):
-                return NotImplemented
-            if self.__type__ is not None:
-                return self.__type__ == other.__type__
-            return self is other
-
-    TypeGuard = _TypeGuard(_root=True)
-else:
-    class _TypeGuardMeta(typing.TypingMeta):
-        """Metaclass for TypeGuard"""
-
-        def __new__(cls, name, bases, namespace, tp=None, _root=False):
-            self = super().__new__(cls, name, bases, namespace, _root=_root)
-            if tp is not None:
-                self.__type__ = tp
-            return self
-
-        def __instancecheck__(self, obj):
-            raise TypeError("TypeGuard cannot be used with isinstance().")
-
-        def __subclasscheck__(self, cls):
-            raise TypeError("TypeGuard cannot be used with issubclass().")
-
-        def __getitem__(self, item):
-            cls = type(self)
-            if self.__type__ is not None:
-                raise TypeError('{} cannot be further subscripted'
-                                .format(cls.__name__[1:]))
-
-            param = typing._type_check(
-                item,
-                '{} accepts only single type.'.format(cls.__name__[1:]))
-            return cls(self.__name__, self.__bases__,
-                       dict(self.__dict__), tp=param, _root=True)
-
-        def _eval_type(self, globalns, localns):
-            new_tp = typing._eval_type(self.__type__, globalns, localns)
-            if new_tp == self.__type__:
-                return self
-            return type(self)(self.__name__, self.__bases__,
-                              dict(self.__dict__), tp=self.__type__,
-                              _root=True)
-
-        def __repr__(self):
-            r = super().__repr__()
-            if self.__type__ is not None:
-                r += '[{}]'.format(typing._type_repr(self.__type__))
-            return r
-
-        def __hash__(self):
-            return hash((type(self).__name__, self.__type__))
-
-        def __eq__(self, other):
-            if not hasattr(other, "__type__"):
-                return NotImplemented
-            if self.__type__ is not None:
-                return self.__type__ == other.__type__
-            return self is other
-
-    class TypeGuard(typing.Final, metaclass=_TypeGuardMeta, _root=True):
-        """Special typing form used to annotate the return type of a user-defined
-        type guard function.  ``TypeGuard`` only accepts a single type argument.
-        At runtime, functions marked this way should return a boolean.
-
-        ``TypeGuard`` aims to benefit *type narrowing* -- a technique used by static
-        type checkers to determine a more precise type of an expression within a
-        program's code flow.  Usually type narrowing is done by analyzing
-        conditional code flow and applying the narrowing to a block of code.  The
-        conditional expression here is sometimes referred to as a "type guard".
-
-        Sometimes it would be convenient to use a user-defined boolean function
-        as a type guard.  Such a function should use ``TypeGuard[...]`` as its
-        return type to alert static type checkers to this intention.
-
-        Using  ``-> TypeGuard`` tells the static type checker that for a given
-        function:
-
-        1. The return value is a boolean.
-        2. If the return value is ``True``, the type of its argument
-        is the type inside ``TypeGuard``.
-
-        For example::
-
-            def is_str(val: Union[str, float]):
-                # "isinstance" type guard
-                if isinstance(val, str):
-                    # Type of ``val`` is narrowed to ``str``
-                    ...
-                else:
-                    # Else, type of ``val`` is narrowed to ``float``.
-                    ...
-
-        Strict type narrowing is not enforced -- ``TypeB`` need not be a narrower
-        form of ``TypeA`` (it can even be a wider form) and this may lead to
-        type-unsafe results.  The main reason is to allow for things like
-        narrowing ``List[object]`` to ``List[str]`` even though the latter is not
-        a subtype of the former, since ``List`` is invariant.  The responsibility of
-        writing type-safe type guards is left to the user.
-
-        ``TypeGuard`` also works with type variables.  For more information, see
-        PEP 647 (User-Defined Type Guards).
-        """
-        __type__ = None
