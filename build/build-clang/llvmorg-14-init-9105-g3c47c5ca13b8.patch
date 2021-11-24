@@ -1,0 +1,38 @@
+From 3c47c5ca13b8a502de3272e8105548715947b7a8 Mon Sep 17 00:00:00 2001
+From: Ilya Yanok <ilya.yanok@gmail.com>
+Date: Tue, 9 Nov 2021 21:35:43 +0100
+Subject: [PATCH] [RegAllocFast] Fix nondeterminism in debuginfo generation
+
+Changes from commit 1db137b1859692ae33228c530d4df9f2431b2151
+added iteration over hash map that can result in non-deterministic
+order. Fix that by using a SmallMapVector to preserve the order.
+
+Differential Revision: https://reviews.llvm.org/D113468
+---
+ llvm/lib/CodeGen/RegAllocFast.cpp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/llvm/lib/CodeGen/RegAllocFast.cpp b/llvm/lib/CodeGen/RegAllocFast.cpp
+index 707161d5a8b0..68920e2e50df 100644
+--- a/llvm/lib/CodeGen/RegAllocFast.cpp
++++ b/llvm/lib/CodeGen/RegAllocFast.cpp
+@@ -15,6 +15,7 @@
+ #include "llvm/ADT/ArrayRef.h"
+ #include "llvm/ADT/DenseMap.h"
+ #include "llvm/ADT/IndexedMap.h"
++#include "llvm/ADT/MapVector.h"
+ #include "llvm/ADT/SmallSet.h"
+ #include "llvm/ADT/SmallVector.h"
+ #include "llvm/ADT/SparseSet.h"
+@@ -432,7 +433,7 @@ void RegAllocFast::spill(MachineBasicBlock::iterator Before, Register VirtReg,
+   // every definition of it, meaning we can switch all the DBG_VALUEs over
+   // to just reference the stack slot.
+   SmallVectorImpl<MachineOperand *> &LRIDbgOperands = LiveDbgValueMap[VirtReg];
+-  SmallDenseMap<MachineInstr *, SmallVector<const MachineOperand *>>
++  SmallMapVector<MachineInstr *, SmallVector<const MachineOperand *>, 2>
+       SpilledOperandsMap;
+   for (MachineOperand *MO : LRIDbgOperands)
+     SpilledOperandsMap[MO->getParent()].push_back(MO);
+-- 
+2.33.0
+
