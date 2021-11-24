@@ -1164,8 +1164,7 @@ PProcessHangMonitorParent* ProcessHangMonitor::AddProcess(
   Endpoint<PProcessHangMonitorParent> parent;
   Endpoint<PProcessHangMonitorChild> child;
   nsresult rv;
-  rv = PProcessHangMonitor::CreateEndpoints(
-      base::GetCurrentProcId(), aContentParent->OtherPid(), &parent, &child);
+  rv = PProcessHangMonitor::CreateEndpoints(&parent, &child);
   if (NS_FAILED(rv)) {
     MOZ_ASSERT(false, "PProcessHangMonitor::CreateEndpoints failed");
     return nullptr;

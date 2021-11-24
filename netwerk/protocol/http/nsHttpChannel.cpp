@@ -1591,8 +1591,7 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     if (mustRunStreamFilterInParent) {
       mozilla::ipc::Endpoint<extensions::PStreamFilterParent> parent;
       mozilla::ipc::Endpoint<extensions::PStreamFilterChild> child;
-      nsresult rv = extensions::PStreamFilter::CreateEndpoints(
-          base::GetCurrentProcId(), request.mChildProcessId, &parent, &child);
+      nsresult rv = extensions::PStreamFilter::CreateEndpoints(&parent, &child);
       if (NS_FAILED(rv)) {
         request.mPromise->Reject(false, __func__);
       } else {
@@ -6403,8 +6402,7 @@ auto nsHttpChannel::AttachStreamFilter(base::ProcessId aChildProcessId)
 
   mozilla::ipc::Endpoint<extensions::PStreamFilterParent> parent;
   mozilla::ipc::Endpoint<extensions::PStreamFilterChild> child;
-  nsresult rv = extensions::PStreamFilter::CreateEndpoints(
-      ProcessId(), aChildProcessId, &parent, &child);
+  nsresult rv = extensions::PStreamFilter::CreateEndpoints(&parent, &child);
   if (NS_FAILED(rv)) {
     return ChildEndpointPromise::CreateAndReject(false, __func__);
   }
