@@ -21,7 +21,6 @@ import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
-import androidx.test.espresso.matcher.ViewMatchers.withResourceName
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
@@ -37,7 +36,6 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
-import org.mozilla.fenix.share.ShareFragment
 
 /**
  * Implementation of Robot Pattern for the three dot (main) menu.
@@ -45,7 +43,6 @@ import org.mozilla.fenix.share.ShareFragment
 @Suppress("ForbiddenComment")
 class ThreeDotMenuMainRobot {
     fun verifyShareAllTabsButton() = assertShareAllTabsButton()
-    fun clickShareAllTabsButton() = shareAllTabsButton().click()
     fun verifySettingsButton() = assertSettingsButton()
     fun verifyCustomizeHomeButton() = assertCustomizeHomeButton()
     fun verifyAddOnsButton() = assertAddOnsButton()
@@ -66,19 +63,11 @@ class ThreeDotMenuMainRobot {
         onView(withId(R.id.mozac_browser_menu_menuView)).perform(swipeUp())
     }
 
-    fun clickShareButton() {
-        shareButton().click()
-        mDevice.waitNotNull(Until.findObject(By.text("ALL ACTIONS")), waitingTime)
-    }
-
     fun verifyShareTabButton() = assertShareTabButton()
     fun verifySaveCollection() = assertSaveCollectionButton()
     fun verifySelectTabs() = assertSelectTabsButton()
 
     fun verifyFindInPageButton() = assertFindInPageButton()
-    fun verifyShareScrim() = assertShareScrim()
-    fun verifySendToDeviceTitle() = assertSendToDeviceTitle()
-    fun verifyShareALinkTitle() = assertShareALinkTitle()
     fun verifyWhatsNewButton() = assertWhatsNewButton()
     fun verifyAddToTopSitesButton() = assertAddToTopSitesButton()
     fun verifyAddToMobileHome() = assertAddToMobileHome()
@@ -186,13 +175,6 @@ class ThreeDotMenuMainRobot {
             return BrowserRobot.Transition()
         }
 
-        fun sharePage(interact: LibrarySubMenusMultipleSelectionToolbarRobot.() -> Unit): LibrarySubMenusMultipleSelectionToolbarRobot.Transition {
-            shareButton().click()
-
-            LibrarySubMenusMultipleSelectionToolbarRobot().interact()
-            return LibrarySubMenusMultipleSelectionToolbarRobot.Transition()
-        }
-
         fun openHelp(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.waitNotNull(Until.findObject(By.text("Help")), waitingTime)
             helpButton().click()
@@ -233,6 +215,14 @@ class ThreeDotMenuMainRobot {
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
+        }
+
+        fun clickShareButton(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
+            shareButton().click()
+            mDevice.waitNotNull(Until.findObject(By.text("ALL ACTIONS")), waitingTime)
+
+            ShareOverlayRobot().interact()
+            return ShareOverlayRobot.Transition()
         }
 
         fun close(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
@@ -364,6 +354,13 @@ class ThreeDotMenuMainRobot {
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
+
+        fun clickShareAllTabsButton(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
+            shareAllTabsButton().click()
+
+            ShareOverlayRobot().interact()
+            return ShareOverlayRobot.Transition()
+        }
     }
 }
 private fun threeDotMenuRecyclerView() =
@@ -453,22 +450,6 @@ private fun assertReportSiteIssueButton() = reportSiteIssueButton().check(matche
 private fun findInPageButton() = onView(allOf(withText("Find in page")))
 
 private fun assertFindInPageButton() = findInPageButton()
-
-private fun shareScrim() = onView(withResourceName("closeSharingScrim"))
-
-private fun assertShareScrim() =
-    shareScrim().check(matches(ViewMatchers.withAlpha(ShareFragment.SHOW_PAGE_ALPHA)))
-
-private fun SendToDeviceTitle() =
-    onView(allOf(withText("SEND TO DEVICE"), withResourceName("accountHeaderText")))
-
-private fun assertSendToDeviceTitle() = SendToDeviceTitle()
-    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-private fun shareALinkTitle() =
-    onView(allOf(withText("ALL ACTIONS"), withResourceName("apps_link_header")))
-
-private fun assertShareALinkTitle() = shareALinkTitle()
 
 private fun whatsNewButton() = onView(
     allOf(

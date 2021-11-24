@@ -222,4 +222,17 @@ class ContextMenusTest {
             verifyNoLinkImageContextMenuItems(imageResource.url)
         }
     }
+
+    @SmokeTest
+    @Test
+    fun shareSelectedTextTest() {
+        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericURL.url) {
+            longClickMatchingText(genericURL.content)
+        }.clickShareSelectedText {
+            verifyAndroidShareLayout()
+        }
+    }
 }

@@ -136,8 +136,6 @@ class HomeScreenRobot {
 
     fun verifyCollectionIcon() = onView(withId(R.id.collection_icon)).check(matches(isDisplayed()))
 
-    fun verifyShareTabsOverlay() = assertShareTabsOverlay()
-
     fun togglePrivateBrowsingModeOnOff() {
         onView(ViewMatchers.withResourceName("privateBrowsingButton"))
             .perform(click())
@@ -582,13 +580,6 @@ private fun assertTopSiteContextMenuItems() {
         findObject(By.text("Remove")),
         waitingTime
     )
-}
-
-private fun assertShareTabsOverlay() {
-    onView(withId(R.id.shared_site_list)).check(matches(isDisplayed()))
-    onView(withId(R.id.share_tab_title)).check(matches(isDisplayed()))
-    onView(withId(R.id.share_tab_favicon)).check(matches(isDisplayed()))
-    onView(withId(R.id.share_tab_url)).check(matches(isDisplayed()))
 }
 
 private fun assertJumpBackInSectionIsDisplayed() = jumpBackInSection().check(matches(isDisplayed()))

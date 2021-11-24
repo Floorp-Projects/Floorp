@@ -612,6 +612,14 @@ class BrowserRobot {
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
         }
+
+        fun clickShareSelectedText(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
+            val shareTextButton = org.mozilla.fenix.ui.robots.mDevice.findObject(By.textContains("Share"))
+            shareTextButton.click()
+
+            ShareOverlayRobot().interact()
+            return ShareOverlayRobot.Transition()
+        }
     }
 }
 

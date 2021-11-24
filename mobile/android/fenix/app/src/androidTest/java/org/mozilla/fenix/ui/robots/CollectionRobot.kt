@@ -94,8 +94,6 @@ class CollectionRobot {
             )
     }
 
-    fun clickShareCollectionButton() = onView(withId(R.id.collection_share_button)).click()
-
     fun verifyCollectionMenuIsVisible(visible: Boolean) {
         collectionThreeDotButton()
             .check(
@@ -239,6 +237,13 @@ class CollectionRobot {
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
+        }
+
+        fun clickShareCollectionButton(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
+            shareCollectionButton().click()
+
+            ShareOverlayRobot().interact()
+            return ShareOverlayRobot.Transition()
         }
     }
 }

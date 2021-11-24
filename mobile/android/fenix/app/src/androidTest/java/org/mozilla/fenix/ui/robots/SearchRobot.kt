@@ -214,7 +214,7 @@ class SearchRobot {
 
         fun submitQuery(query: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             sessionLoadedIdlingResource = SessionLoadedIdlingResource()
-            mDevice.waitForIdle()
+            searchWrapper().waitForExists(waitingTime)
             browserToolbarEditView().setText(query)
             mDevice.pressEnter()
 
