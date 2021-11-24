@@ -446,6 +446,15 @@
   congruent_to: if_operands_equal
   alias_set: custom
 
+- name: InArgumentsObjectArg
+  operands:
+    argsObject: Object
+    index: Int32
+  result_type: Boolean
+  guard: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+
 # Load |arguments.length|. Bails out if the length has been overriden.
 - name: ArgumentsObjectLength
   operands:

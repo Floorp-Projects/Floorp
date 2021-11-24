@@ -3488,6 +3488,26 @@ bool CacheIRCompiler::emitLoadArgumentsObjectArgHoleResult(
   return true;
 }
 
+bool CacheIRCompiler::emitLoadArgumentsObjectArgExistsResult(
+    ObjOperandId objId, Int32OperandId indexId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  Register obj = allocator.useRegister(masm, objId);
+  Register index = allocator.useRegister(masm, indexId);
+  AutoScratchRegister scratch1(allocator, masm);
+  AutoScratchRegisterMaybeOutput scratch2(allocator, masm, output);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.loadArgumentsObjectElementExists(obj, index, scratch2, scratch1,
+                                        failure->label());
+  EmitStoreResult(masm, scratch2, JSVAL_TYPE_BOOLEAN, output);
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadDenseElementResult(ObjOperandId objId,
                                                  Int32OperandId indexId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);

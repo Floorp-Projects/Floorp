@@ -4429,6 +4429,23 @@ void MacroAssembler::loadArgumentsObjectElementHole(Register obj,
   bind(&done);
 }
 
+void MacroAssembler::loadArgumentsObjectElementExists(
+    Register obj, Register index, Register output, Register temp, Label* fail) {
+  // Ensure the index is non-negative.
+  branch32(Assembler::LessThan, index, Imm32(0), fail);
+
+  // Get initial length value.
+  unboxInt32(Address(obj, ArgumentsObject::getInitialLengthSlotOffset()), temp);
+
+  // Ensure no overridden or deleted elements.
+  branchTest32(Assembler::NonZero, temp,
+               Imm32(ArgumentsObject::ELEMENT_OVERRIDDEN_BIT), fail);
+
+  // Compare index against the length.
+  rshift32(Imm32(ArgumentsObject::PACKED_BITS_COUNT), temp);
+  cmp32Set(Assembler::LessThan, index, temp, output);
+}
+
 void MacroAssembler::loadArgumentsObjectLength(Register obj, Register output,
                                                Label* fail) {
   // Get initial length value.

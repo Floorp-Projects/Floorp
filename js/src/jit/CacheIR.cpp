@@ -3226,6 +3226,45 @@ AttachDecision HasPropIRGenerator::tryAttachSparse(HandleObject obj,
   return AttachDecision::Attach;
 }
 
+AttachDecision HasPropIRGenerator::tryAttachArgumentsObjectArg(
+    HandleObject obj, ObjOperandId objId, Int32OperandId indexId) {
+  bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
+  OwnProperty ownProp = hasOwn ? OwnProperty::Yes : OwnProperty::No;
+
+  if (!obj->is<ArgumentsObject>()) {
+    return AttachDecision::NoAction;
+  }
+  auto* args = &obj->as<ArgumentsObject>();
+
+  // No elements must have been overridden or deleted.
+  if (args->hasOverriddenElement()) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!CanAttachDenseElementHole(args, ownProp, AllowIndexedReceiver::Yes,
+                                 AllowExtraReceiverProperties::Yes)) {
+    return AttachDecision::NoAction;
+  }
+
+  if (args->is<MappedArgumentsObject>()) {
+    writer.guardClass(objId, GuardClassKind::MappedArguments);
+  } else {
+    MOZ_ASSERT(args->is<UnmappedArgumentsObject>());
+    writer.guardClass(objId, GuardClassKind::UnmappedArguments);
+  }
+
+  if (!hasOwn) {
+    GeneratePrototypeHoleGuards(writer, args, objId,
+                                /* alwaysGuardFirstProto = */ true);
+  }
+
+  writer.loadArgumentsObjectArgExistsResult(objId, indexId);
+  writer.returnFromIC();
+
+  trackAttached("ArgumentsObjectArg");
+  return AttachDecision::Attach;
+}
+
 AttachDecision HasPropIRGenerator::tryAttachNamedProp(HandleObject obj,
                                                       ObjOperandId objId,
                                                       HandleId key,
@@ -3417,6 +3456,7 @@ AttachDecision HasPropIRGenerator::tryAttachStub() {
     TRY_ATTACH(tryAttachDense(obj, objId, index, indexId));
     TRY_ATTACH(tryAttachDenseHole(obj, objId, index, indexId));
     TRY_ATTACH(tryAttachSparse(obj, objId, indexId));
+    TRY_ATTACH(tryAttachArgumentsObjectArg(obj, objId, indexId));
 
     trackAttached(IRGenerator::NotAttached);
     return AttachDecision::NoAction;
