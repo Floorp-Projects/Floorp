@@ -1817,9 +1817,8 @@ bool nsIFrame::In3DContextAndBackfaceIsHidden() const {
   return BackfaceIsHidden() && Combines3DTransformWithAncestors();
 }
 
-bool nsIFrame::HasPerspective(const nsStyleDisplay* aStyleDisplay) const {
-  MOZ_ASSERT(aStyleDisplay == StyleDisplay());
-  if (!IsTransformed()) {
+bool nsIFrame::HasPerspective() const {
+  if (!IsCSSTransformed()) {
     return false;
   }
   nsIFrame* parent = GetClosestFlattenedTreeAncestorPrimaryFrame();
@@ -3133,7 +3132,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
       !SVGUtils::CanOptimizeOpacity(this);
 
   const bool isTransformed = IsTransformed();
-  const bool hasPerspective = isTransformed && HasPerspective(disp);
+  const bool hasPerspective = isTransformed && HasPerspective();
   const bool extend3DContext =
       Extend3DContext(disp, effects, effectSetForOpacity);
   const bool combines3DTransformWithAncestors =
