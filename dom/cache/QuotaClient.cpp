@@ -122,15 +122,15 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
 
 Result<int64_t, nsresult> GetPaddingSizeFromDB(
     nsIFile& aDir, nsIFile& aDBFile, const OriginMetadata& aOriginMetadata) {
-  ClientMetadata clientMetadata(aOriginMetadata);
-  // clientMetadata.mDirectoryLockId must be -1 (which is default for new
-  // ClientMetadata) because this method should only be called from
+  CacheDirectoryMetadata directoryMetadata(aOriginMetadata);
+  // directoryMetadata.mDirectoryLockId must be -1 (which is default for new
+  // CacheDirectoryMetadata) because this method should only be called from
   // QuotaClient::InitOrigin when the temporary storage hasn't been initialized
   // yet. At that time, the in-memory objects (e.g. OriginInfo) are only being
   // created so it doesn't make sense to tunnel quota information to
   // TelemetryVFS to get corresponding QuotaObject instance for the SQLite
   // file).
-  MOZ_DIAGNOSTIC_ASSERT(clientMetadata.mDirectoryLockId == -1);
+  MOZ_DIAGNOSTIC_ASSERT(directoryMetadata.mDirectoryLockId == -1);
 
 #ifdef DEBUG
   {
@@ -139,7 +139,8 @@ Result<int64_t, nsresult> GetPaddingSizeFromDB(
   }
 #endif
 
-  QM_TRY_INSPECT(const auto& conn, OpenDBConnection(clientMetadata, aDBFile));
+  QM_TRY_INSPECT(const auto& conn,
+                 OpenDBConnection(directoryMetadata, aDBFile));
 
   // Make sure that the database has the latest schema before we try to read
   // from it. We have to do this because GetPaddingSizeFromDB is called
@@ -434,7 +435,7 @@ nsresult CacheQuotaClient::RestorePaddingFileInternal(
 }
 
 nsresult CacheQuotaClient::WipePaddingFileInternal(
-    const ClientMetadata& aClientMetadata, nsIFile* aBaseDir) {
+    const CacheDirectoryMetadata& aDirectoryMetadata, nsIFile* aBaseDir) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
 
@@ -467,7 +468,7 @@ nsresult CacheQuotaClient::WipePaddingFileInternal(
       }()));
 
   if (paddingSize > 0) {
-    DecreaseUsageForClientMetadata(aClientMetadata, paddingSize);
+    DecreaseUsageForDirectoryMetadata(aDirectoryMetadata, paddingSize);
   }
 
   QM_TRY(MOZ_TO_RESULT(
@@ -516,7 +517,7 @@ nsresult RestorePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn) {
 }
 
 // static
-nsresult WipePaddingFile(const ClientMetadata& aClientMetadata,
+nsresult WipePaddingFile(const CacheDirectoryMetadata& aDirectoryMetadata,
                          nsIFile* aBaseDir) {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_DIAGNOSTIC_ASSERT(aBaseDir);
@@ -525,7 +526,7 @@ nsresult WipePaddingFile(const ClientMetadata& aClientMetadata,
   MOZ_DIAGNOSTIC_ASSERT(cacheQuotaClient);
 
   QM_TRY(MOZ_TO_RESULT(
-      cacheQuotaClient->WipePaddingFileInternal(aClientMetadata, aBaseDir)));
+      cacheQuotaClient->WipePaddingFileInternal(aDirectoryMetadata, aBaseDir)));
 
   return NS_OK;
 }
