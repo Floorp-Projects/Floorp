@@ -71,8 +71,7 @@ class GlobalStyleSheetCache final : public nsIObserver,
   // Obtain a shared memory handle for the shared UA sheets to pass into a
   // content process.  Called by ContentParent::InitInternal shortly after
   // a content process has been created.
-  bool ShareToProcess(base::ProcessId aProcessId,
-                      base::SharedMemoryHandle* aHandle);
+  base::SharedMemoryHandle CloneHandle();
 
   // Returns the address of the shared memory segment that holds the shared UA
   // sheets.

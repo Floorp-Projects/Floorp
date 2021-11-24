@@ -59,8 +59,7 @@ class SharedMemoryBasic final
 
   virtual bool IsHandleValid(const Handle& aHandle) const override;
 
-  virtual bool ShareToProcess(base::ProcessId aProcessId,
-                              Handle* aNewHandle) override;
+  virtual Handle CloneHandle() override;
 
  private:
   ~SharedMemoryBasic();

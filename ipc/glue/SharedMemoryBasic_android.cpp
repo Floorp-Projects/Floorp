@@ -97,18 +97,16 @@ void* SharedMemoryBasic::FindFreeAddressSpace(size_t size) {
   return memory != (void*)-1 ? memory : NULL;
 }
 
-bool SharedMemoryBasic::ShareToProcess(base::ProcessId /*unused*/,
-                                       Handle* aNewHandle) {
+auto SharedMemoryBasic::CloneHandle() -> Handle {
   MOZ_ASSERT(mShmFd >= 0, "Should have been Create()d by now");
 
   int shmfdDup = dup(mShmFd);
   if (-1 == shmfdDup) {
-    LogError("ShmemAndroid::ShareToProcess()");
-    return false;
+    LogError("ShmemAndroid::CloneHandle()");
+    return nullptr;
   }
 
-  *aNewHandle = mozilla::UniqueFileHandle(shmfdDup);
-  return true;
+  return mozilla::UniqueFileHandle(shmfdDup);
 }
 
 void SharedMemoryBasic::Unmap() {

@@ -37,7 +37,8 @@ bool CanvasEventRingBuffer::InitWriter(
     return false;
   }
 
-  if (NS_WARN_IF(!mSharedMemory->ShareToProcess(aOtherPid, aReadHandle))) {
+  *aReadHandle = mSharedMemory->CloneHandle();
+  if (NS_WARN_IF(!*aReadHandle)) {
     return false;
   }
 
@@ -64,14 +65,14 @@ bool CanvasEventRingBuffer::InitWriter(
 
   mReaderSemaphore.reset(
       CrossProcessSemaphore::Create("SharedMemoryStreamParent", 0));
-  *aReaderSem = mReaderSemaphore->ShareToProcess(aOtherPid);
+  *aReaderSem = mReaderSemaphore->CloneHandle();
   mReaderSemaphore->CloseHandle();
   if (!IsHandleValid(*aReaderSem)) {
     return false;
   }
   mWriterSemaphore.reset(
       CrossProcessSemaphore::Create("SharedMemoryStreamChild", 0));
-  *aWriterSem = mWriterSemaphore->ShareToProcess(aOtherPid);
+  *aWriterSem = mWriterSemaphore->CloneHandle();
   mWriterSemaphore->CloseHandle();
   if (!IsHandleValid(*aWriterSem)) {
     return false;

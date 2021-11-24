@@ -55,8 +55,7 @@ class SharedMemoryBasic final
     return aHandle != nullptr;
   }
 
-  virtual bool ShareToProcess(base::ProcessId aProcessId,
-                              Handle* aNewHandle) override;
+  virtual Handle CloneHandle() override;
 
  private:
   ~SharedMemoryBasic();

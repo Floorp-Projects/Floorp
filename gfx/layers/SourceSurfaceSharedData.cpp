@@ -195,8 +195,8 @@ uint8_t* SourceSurfaceSharedData::GetDataInternal() const {
   return static_cast<uint8_t*>(mBuf->memory());
 }
 
-nsresult SourceSurfaceSharedData::ShareToProcess(
-    base::ProcessId aPid, SharedMemoryBasic::Handle& aHandle) {
+nsresult SourceSurfaceSharedData::CloneHandle(
+    SharedMemoryBasic::Handle& aHandle) {
   MutexAutoLock lock(mMutex);
   MOZ_ASSERT(mHandleCount > 0);
 
@@ -204,8 +204,8 @@ nsresult SourceSurfaceSharedData::ShareToProcess(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  bool shared = mBuf->ShareToProcess(aPid, &aHandle);
-  if (MOZ_UNLIKELY(!shared)) {
+  aHandle = mBuf->CloneHandle();
+  if (MOZ_UNLIKELY(!aHandle)) {
     return NS_ERROR_FAILURE;
   }
 

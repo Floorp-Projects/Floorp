@@ -71,11 +71,7 @@ class SharedMemoryBasic final
     return base::SharedMemory::IsHandleValid(aHandle);
   }
 
-  virtual bool ShareToProcess(base::ProcessId aProcessId,
-                              Handle* new_handle) override {
-    *new_handle = mSharedMemory.CloneHandle();
-    return base::SharedMemory::IsHandleValid(*new_handle);
-  }
+  virtual Handle CloneHandle() override { return mSharedMemory.CloneHandle(); }
 
   static void* FindFreeAddressSpace(size_t size) {
     return base::SharedMemory::FindFreeAddressSpace(size);
