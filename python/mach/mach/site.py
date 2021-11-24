@@ -221,15 +221,23 @@ class MachSiteManager:
             ]
             sys.path[0:0] = self._requirements.pths_as_absolute(self._topsrcdir)
         elif self._site_packages_source == SitePackagesSource.VENV:
+            # Don't activate Mach virtualenv if this Python process was already started
+            # from the Mach virtualenv.
             if Path(sys.prefix) != Path(self._metadata.prefix):
-                raise Exception(
-                    "In-process activation of the Mach virtualenv is "
-                    "not currently supported. Please invoke `./mach` using "
-                    "the Mach virtualenv python binary directly."
-                )
+                # Since the system packages aren't used, remove them from the sys.path
+                sys.path = [
+                    path
+                    for path in sys.path
+                    if path
+                    not in ExternalPythonSite(sys.executable).all_site_packages_dirs()
+                ]
 
-            # Otherwise, if our prefix matches the Mach virtualenv, then it's already
-            # activated.
+                # Activate the Mach virtualenv in the current Python context. This
+                # automatically adds the virtualenv's "site-packages" to our scope, in
+                # addition to our first-party/vendored modules since they're specified
+                # in the "mach.pth" file.
+                activate_path = self._virtualenv().activate_path
+                exec(open(activate_path).read(), dict(__file__=activate_path))
 
     def _build(self):
         if self._site_packages_source != SitePackagesSource.VENV:
