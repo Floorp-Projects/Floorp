@@ -15,6 +15,11 @@ NS_IMETHODIMP
 nsMacUserActivityUpdater::UpdateLocation(const nsAString& aPageUrl, const nsAString& aPageTitle,
                                          nsIBaseWindow* aWindow) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+  if (gfxPlatform::IsHeadless()) {
+    // In headless mode, Handoff will fail since there is no Cocoa window.
+    return NS_OK;
+  }
+
   BaseWindow* cocoaWin = nsMacUserActivityUpdater::GetCocoaWindow(aWindow);
   if (!cocoaWin) {
     return NS_ERROR_FAILURE;
