@@ -173,16 +173,15 @@ var State = {
     let result = {
       tid: cur.tid,
       name: cur.name || `(${cur.tid})`,
-      // Total amount of CPU used, in ns (user + kernel).
-      totalCpu: cur.cpuUser + cur.cpuKernel,
+      // Total amount of CPU used, in ns.
+      totalCpu: cur.cpuTime,
       slopeCpu: null,
       active: null,
     };
     if (!deltaT) {
       return result;
     }
-    result.slopeCpu =
-      (result.totalCpu - (prev ? prev.cpuUser + prev.cpuKernel : 0)) / deltaT;
+    result.slopeCpu = (result.totalCpu - (prev ? prev.cpuTime : 0)) / deltaT;
     result.active =
       !!result.slopeCpu || cur.cpuCycleCount > (prev ? prev.cpuCycleCount : 0);
     return result;
@@ -261,7 +260,7 @@ var State = {
       filename: cur.filename,
       totalRamSize: cur.memory,
       deltaRamSize: null,
-      totalCpu: cur.cpuUser + cur.cpuKernel,
+      totalCpu: cur.cpuTime,
       slopeCpu: null,
       active: null,
       type: cur.type,
@@ -304,8 +303,7 @@ var State = {
       );
     }
     result.deltaRamSize = cur.memory - prev.memory;
-    result.slopeCpu =
-      (cur.cpuUser + cur.cpuKernel - prev.cpuUser - prev.cpuKernel) / deltaT;
+    result.slopeCpu = (cur.cpuTime - prev.cpuTime) / deltaT;
     result.active = !!result.slopeCpu || cur.cpuCycleCount > prev.cpuCycleCount;
     result.threads = threads;
     return result;
