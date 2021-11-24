@@ -2797,6 +2797,8 @@ nsresult Http2Session::ReadSegmentsAgain(nsAHttpSegmentReader* reader,
     if (mAttemptingEarlyData) {
       // We can still try to send our preamble as early-data
       *countRead = mOutputQueueUsed - mOutputQueueSent;
+      LOG(("Http2Session %p nothing to send because of 0RTT failed", this));
+      Unused << ResumeRecv();
     }
     return *countRead ? NS_OK : NS_BASE_STREAM_WOULD_BLOCK;
   }
