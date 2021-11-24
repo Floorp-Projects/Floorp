@@ -118,22 +118,6 @@ class AbstractBindingName<JSAtom> {
       : bits_(uintptr_t(name) | (closedOver ? ClosedOverFlag : 0x0) |
               (isTopLevelFunction ? TopLevelFunctionFlag : 0x0)) {}
 
- private:
-  // For fromXDR.
-  AbstractBindingName(NameT* name, uint8_t flags)
-      : bits_(uintptr_t(name) | flags) {
-    static_assert(FlagMask < alignof(NameT),
-                  "Flags should fit into unused low bits of atom repr");
-    MOZ_ASSERT((flags & FlagMask) == flags);
-  }
-
- public:
-  static AbstractBindingName<NameT> fromXDR(NameT* name, uint8_t flags) {
-    return AbstractBindingName<NameT>(name, flags);
-  }
-
-  uint8_t flagsForXDR() const { return static_cast<uint8_t>(bits_ & FlagMask); }
-
   NamePointerT name() const {
     return reinterpret_cast<NameT*>(bits_ & ~FlagMask);
   }
