@@ -1468,12 +1468,6 @@ class Document : public nsINode,
   void ChangeContentEditableCount(Element*, int32_t aChange);
   void DeferredContentEditableCountChange(Element*);
 
-  uint32_t UpdateLockCount(bool aIncrement) {
-    MOZ_ASSERT_IF(!aIncrement, mLockCount > 0);
-    mLockCount += aIncrement ? 1 : -1;
-    return mLockCount;
-  };
-
   enum class EditingState : int8_t {
     eTearingDown = -2,
     eSettingUp = -1,
@@ -4860,16 +4854,6 @@ class Document : public nsINode,
   uint32_t mLazyLoadImageReachViewportLoaded;
 
   uint32_t mContentEditableCount;
-  /**
-   * Count of the number of active LockRequest objects, including ones from
-   * workers. Note that the value won't be updated while the document is being
-   * destroyed.
-   *
-   * TODO(krosylight): We may want to move this to window object instead, but
-   * it's not clear whether the spec relates locks to the window/agent or the
-   * document. See also https://github.com/WICG/web-locks/issues/95.
-   */
-  uint32_t mLockCount = 0;
   EditingState mEditingState;
 
   // Compatibility mode

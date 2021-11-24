@@ -21,15 +21,11 @@ void LockManagerChild::NotifyBFCacheOnMainThread(nsPIDOMWindowInner* aInner,
   if (!aInner) {
     return;
   }
-  Document* doc = aInner->GetExtantDoc();
-  if (!doc) {
-    return;
-  }
   if (aCreated) {
     aInner->RemoveFromBFCacheSync();
   }
 
-  uint32_t count = doc->UpdateLockCount(aCreated);
+  uint32_t count = aInner->UpdateLockCount(aCreated);
   if (WindowGlobalChild* child = aInner->GetWindowGlobalChild()) {
     if (aCreated && count == 1) {
       // The first lock is active.
