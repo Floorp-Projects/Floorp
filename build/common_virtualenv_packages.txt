@@ -62,7 +62,7 @@ vendored:third_party/python/blessings
 vendored:third_party/python/cbor2
 vendored:third_party/python/certifi
 vendored:third_party/python/chardet
-vendored:third_party/python/Click
+vendored:third_party/python/click
 vendored:third_party/python/colorama
 vendored:third_party/python/compare_locales
 vendored:third_party/python/cookies
