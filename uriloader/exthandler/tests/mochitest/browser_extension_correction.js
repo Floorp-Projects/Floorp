@@ -63,7 +63,7 @@ async function checkDownloadWithExtensionState(
 
   // PDF should load using the internal viewer without downloading it.
   let waitForLoad;
-  if (type == "application/pdf") {
+  if (!shouldExpectDialog && type == "application/pdf") {
     waitForLoad = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   }
 
@@ -101,7 +101,7 @@ async function checkDownloadWithExtensionState(
     dialog.acceptDialog();
   }
 
-  if (type == "application/pdf") {
+  if (!shouldExpectDialog && type == "application/pdf") {
     is(
       gURLBar.inputField.value,
       "data:application/pdf,hello",
