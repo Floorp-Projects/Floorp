@@ -2758,8 +2758,8 @@ void nsWindow::UpdateDarkModeToolbar() {
   if (!IsWin10OrLater()) {
     return;
   }
-  BOOL dark =
-      LookAndFeel::ColorSchemeForChrome() == LookAndFeel::ColorScheme::Dark;
+  LookAndFeel::EnsureColorSchemesInitialized();
+  BOOL dark = LookAndFeel::ColorSchemeForChrome() == ColorScheme::Dark;
   DwmSetWindowAttribute(mWnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, &dark,
                         sizeof dark);
   DwmSetWindowAttribute(mWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark,
