@@ -3578,11 +3578,11 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::PrepareToInsertBRElement(
 
   {
     // Unfortunately, we need to split the text node at the offset.
-    Result<nsCOMPtr<nsIContent>, nsresult> newLeftTextNodeOrError =
+    SplitNodeResult splitTextNodeResult =
         SplitNodeWithTransaction(aPointToInsert);
-    if (MOZ_UNLIKELY(newLeftTextNodeOrError.isErr())) {
+    if (MOZ_UNLIKELY(splitTextNodeResult.Failed())) {
       NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-      return Err(newLeftTextNodeOrError.unwrapErr());
+      return Err(splitTextNodeResult.Rv());
     }
   }
 
@@ -4271,18 +4271,18 @@ nsresult HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
   return rv;
 }
 
-Result<nsCOMPtr<nsIContent>, nsresult> HTMLEditor::SplitNodeWithTransaction(
+SplitNodeResult HTMLEditor::SplitNodeWithTransaction(
     const EditorDOMPoint& aStartOfRightNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (MOZ_UNLIKELY(NS_WARN_IF(!aStartOfRightNode.IsInContentNode()))) {
-    return Err(NS_ERROR_INVALID_ARG);
+    return SplitNodeResult(NS_ERROR_INVALID_ARG);
   }
   MOZ_ASSERT(aStartOfRightNode.IsSetAndValid());
 
   if (MOZ_UNLIKELY(NS_WARN_IF(!HTMLEditUtils::IsSplittableNode(
           *aStartOfRightNode.ContainerAsContent())))) {
-    return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    return SplitNodeResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
   IgnoredErrorResult ignoredError;
@@ -4290,7 +4290,7 @@ Result<nsCOMPtr<nsIContent>, nsresult> HTMLEditor::SplitNodeWithTransaction(
       *this, EditSubAction::eSplitNode, nsIEditor::eNext, ignoredError);
   if (MOZ_UNLIKELY(
           NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED)))) {
-    return Err(NS_ERROR_EDITOR_DESTROYED);
+    return SplitNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
   NS_WARNING_ASSERTION(
       !ignoredError.Failed(),
@@ -4325,14 +4325,18 @@ Result<nsCOMPtr<nsIContent>, nsresult> HTMLEditor::SplitNodeWithTransaction(
   }
 
   if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
-    return Err(NS_ERROR_EDITOR_DESTROYED);
+    return SplitNodeResult(NS_ERROR_EDITOR_DESTROYED);
   }
 
   if (MOZ_UNLIKELY(NS_FAILED(rv))) {
-    return Err(rv);
+    return SplitNodeResult(rv);
   }
 
-  return newLeftContent;
+  MOZ_ASSERT(newLeftContent);
+  MOZ_ASSERT(aStartOfRightNode.GetContainerAsContent());
+  return SplitNodeResult(std::move(newLeftContent),
+                         aStartOfRightNode.ContainerAsContent(),
+                         SplitNodeDirection::LeftNodeIsNewOne);
 }
 
 SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
@@ -4384,23 +4388,20 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
          !atStartOfRightNode.GetContainerAsText()) ||
         (!atStartOfRightNode.IsStartOfContainer() &&
          !atStartOfRightNode.IsEndOfContainer())) {
-      Result<nsCOMPtr<nsIContent>, nsresult> newLeftContentOrError =
-          SplitNodeWithTransaction(atStartOfRightNode);
-      if (MOZ_UNLIKELY(newLeftContentOrError.isErr())) {
+      lastSplitNodeResult = SplitNodeWithTransaction(atStartOfRightNode);
+      if (MOZ_UNLIKELY(lastSplitNodeResult.Failed())) {
         NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-        return SplitNodeResult(newLeftContentOrError.unwrapErr());
+        return lastSplitNodeResult;
       }
 
-      lastSplitNodeResult =
-          SplitNodeResult(newLeftContentOrError.unwrap(), currentRightNode,
-                          SplitNodeDirection::LeftNodeIsNewOne);
+      MOZ_ASSERT(lastSplitNodeResult.GetOriginalContent() == currentRightNode);
       if (currentRightNode == &aMostAncestorToSplit) {
         // Actually, we split aMostAncestorToSplit.
         return lastSplitNodeResult;
       }
 
       // Then, try to split its parent before current node.
-      atStartOfRightNode.Set(currentRightNode);
+      atStartOfRightNode.Set(lastSplitNodeResult.GetNextContent());
     }
     // If the split point is end of the node and it is a text node or we're not
     // allowed to create empty container node, try to split its parent after it.
@@ -5066,20 +5067,20 @@ nsresult HTMLEditor::DeleteSelectionAndPrepareToCreateNode() {
     return error.StealNSResult();
   }
 
-  Result<nsCOMPtr<nsIContent>, nsresult> newLeftNodeOrError =
-      SplitNodeWithTransaction(atAnchor);
-  if (MOZ_UNLIKELY(newLeftNodeOrError.isErr())) {
+  SplitNodeResult splitAtAnchorResult = SplitNodeWithTransaction(atAnchor);
+  if (MOZ_UNLIKELY(splitAtAnchorResult.Failed())) {
     NS_WARNING("HTMLEditor::SplitNodeWithTransaction() failed");
-    return newLeftNodeOrError.unwrapErr();
+    return splitAtAnchorResult.Rv();
   }
 
-  EditorRawDOMPoint atRightNode(atAnchor.GetContainer());
-  if (NS_WARN_IF(!atRightNode.IsSet())) {
+  const EditorRawDOMPoint& atRightContent =
+      splitAtAnchorResult.AtNextContent<EditorRawDOMPoint>();
+  if (MOZ_UNLIKELY(NS_WARN_IF(!atRightContent.IsSet()))) {
     return NS_ERROR_FAILURE;
   }
-  MOZ_ASSERT(atRightNode.IsSetAndValid());
+  MOZ_ASSERT(atRightContent.IsSetAndValid());
   ErrorResult error;
-  SelectionRef().CollapseInLimiter(atRightNode, error);
+  SelectionRef().CollapseInLimiter(atRightContent.ToRawRangeBoundary(), error);
   NS_WARNING_ASSERTION(!error.Failed(),
                        "Selection::CollapseInLimiter() failed");
   return error.StealNSResult();
