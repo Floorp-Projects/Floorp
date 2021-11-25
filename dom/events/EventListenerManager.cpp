@@ -110,6 +110,7 @@ EventListenerManagerBase::EventListenerManagerBase()
       mMayHaveKeyEventListener(false),
       mMayHaveInputOrCompositionEventListener(false),
       mMayHaveSelectionChangeEventListener(false),
+      mMayHaveFormSelectEventListener(false),
       mClearingListeners(false),
       mIsMainThreadELM(NS_IsMainThread()),
       mHasNonPrivilegedClickListeners(false),
@@ -370,11 +371,15 @@ void EventListenerManager::AddEventListenerInternal(
     if (!aFlags.mInSystemGroup) {
       mMayHaveInputOrCompositionEventListener = true;
     }
-  } else if (aEventMessage == eSelectionChange ||
-             aEventMessage == eFormSelect) {
+  } else if (aEventMessage == eSelectionChange) {
     mMayHaveSelectionChangeEventListener = true;
     if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
       window->SetHasSelectionChangeEventListeners();
+    }
+  } else if (aEventMessage == eFormSelect) {
+    mMayHaveFormSelectEventListener = true;
+    if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+      window->SetHasFormSelectEventListeners();
     }
   } else if (aTypeAtom == nsGkAtoms::onstart) {
     if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
