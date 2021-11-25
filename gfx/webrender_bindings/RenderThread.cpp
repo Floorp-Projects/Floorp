@@ -263,6 +263,9 @@ void RenderThread::RemoveRenderer(wr::WindowId aWindowId) {
   mRenderers.erase(aWindowId);
 
   if (mRenderers.empty()) {
+    if (mHandlingDeviceReset) {
+      ClearSingletonGL();
+    }
     mHandlingDeviceReset = false;
     mHandlingWebRenderError = false;
   }
@@ -867,6 +870,7 @@ void RenderThread::HandleDeviceReset(const char* aWhere, GLenum aReason) {
     // All RenderCompositors will be destroyed by the GPUProcessManager in
     // either OnRemoteProcessDeviceReset via the GPUChild, or
     // OnInProcessDeviceReset here directly.
+    // On Windows, device will be re-created before sessions re-creation.
     gfxCriticalNote << "GFX: RenderThread detected a device reset in "
                     << aWhere;
     if (XRE_IsGPUProcess()) {
