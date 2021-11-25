@@ -84,6 +84,7 @@ nsresult nsAboutCache::Channel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
       "<head>\n"
       "  <title>Network Cache Storage Information</title>\n"
       "  <meta charset=\"utf-8\">\n"
+      "  <meta name=\"color-scheme\" content=\"light dark\">\n"
       "  <meta http-equiv=\"Content-Security-Policy\" content=\"default-src "
       "chrome:; object-src 'none'\"/>\n"
       "  <link rel=\"stylesheet\" "
