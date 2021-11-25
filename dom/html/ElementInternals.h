@@ -51,6 +51,8 @@ class ElementInternals final : public nsIFormControl,
   mozilla::dom::HTMLFormElement* GetForm(ErrorResult& aRv) const;
   bool GetWillValidate(ErrorResult& aRv) const;
   ValidityState* GetValidity(ErrorResult& aRv);
+  void GetValidationMessage(nsAString& aValidationMessage,
+                            ErrorResult& aRv) const;
   already_AddRefed<nsINodeList> GetLabels(ErrorResult& aRv) const;
 
   // nsIFormControl
@@ -98,6 +100,9 @@ class ElementInternals final : public nsIFormControl,
   // TODO: Bug 1734841 - Figure out how to support form restoration or
   //       autocomplete for form-associated custom element
   Nullable<OwningFileOrUSVStringOrFormData> mState;
+
+  // https://html.spec.whatwg.org/#face-validation-message
+  nsString mValidationMessage;
 };
 
 }  // namespace dom

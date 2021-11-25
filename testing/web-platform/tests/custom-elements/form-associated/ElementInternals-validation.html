@@ -96,6 +96,11 @@ test(() => {
 }, "validity should throw NotSupportedError if the target element is not a form-associated custom element");
 
 test(() => {
+  const element = new NotFormAssociatedElement();
+  assert_throws_dom('NotSupportedError', () => element.i.validationMessage);
+}, "validationMessage should throw NotSupportedError if the target element is not a form-associated custom element");
+
+test(() => {
   const control = document.createElement('my-control');
   const validity = control.i.validity;
   assert_false(validity.valueMissing, 'default valueMissing');
