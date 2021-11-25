@@ -23,6 +23,7 @@ import io.mockk.verify
 import io.mockk.verifyOrder
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.feature.tabs.TabsUseCases
@@ -111,6 +112,8 @@ class BookmarkControllerTest {
     @Test
     fun `handleBookmarkTapped should load the bookmark in a new tab`() {
         var invokePendingDeletionInvoked = false
+        val flags = EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.ALLOW_JAVASCRIPT_URL)
+
         createController(
             invokePendingDeletion = {
                 invokePendingDeletionInvoked = true
@@ -119,7 +122,12 @@ class BookmarkControllerTest {
 
         assertTrue(invokePendingDeletionInvoked)
         verify {
-            homeActivity.openToBrowserAndLoad(item.url!!, true, BrowserDirection.FromBookmarks)
+            homeActivity.openToBrowserAndLoad(
+                item.url!!,
+                true,
+                BrowserDirection.FromBookmarks,
+                flags = flags
+            )
         }
     }
 
@@ -269,6 +277,9 @@ class BookmarkControllerTest {
     @Test
     fun `handleBookmarkTapped should open the bookmark`() {
         var invokePendingDeletionInvoked = false
+        val flags =
+            EngineSession.LoadUrlFlags.select(EngineSession.LoadUrlFlags.ALLOW_JAVASCRIPT_URL)
+
         createController(
             invokePendingDeletion = {
                 invokePendingDeletionInvoked = true
@@ -277,7 +288,12 @@ class BookmarkControllerTest {
 
         assertTrue(invokePendingDeletionInvoked)
         verify {
-            homeActivity.openToBrowserAndLoad(item.url!!, true, BrowserDirection.FromBookmarks)
+            homeActivity.openToBrowserAndLoad(
+                item.url!!,
+                true,
+                BrowserDirection.FromBookmarks,
+                flags = flags
+            )
         }
     }
 

@@ -8,6 +8,8 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import androidx.navigation.NavController
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.ALLOW_JAVASCRIPT_URL
 import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
@@ -47,7 +49,8 @@ class DefaultRecentBookmarksController(
         activity.openToBrowserAndLoad(
             searchTermOrURL = bookmark.url!!,
             newTab = true,
-            from = BrowserDirection.FromHome
+            from = BrowserDirection.FromHome,
+            flags = EngineSession.LoadUrlFlags.select(ALLOW_JAVASCRIPT_URL)
         )
         activity.components.core.metrics.track(Event.BookmarkClicked)
     }

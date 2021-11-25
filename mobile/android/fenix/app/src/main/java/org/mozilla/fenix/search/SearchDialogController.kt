@@ -14,6 +14,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.navigation.NavController
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
@@ -36,7 +37,7 @@ interface SearchController {
     fun handleUrlCommitted(url: String, fromHomeScreen: Boolean = false)
     fun handleEditingCancelled()
     fun handleTextChanged(text: String)
-    fun handleUrlTapped(url: String)
+    fun handleUrlTapped(url: String, flags: LoadUrlFlags = LoadUrlFlags.none())
     fun handleSearchTermsTapped(searchTerms: String)
     fun handleSearchShortcutEngineSelected(searchEngine: SearchEngine)
     fun handleClickSearchEngineSettings()
@@ -145,13 +146,14 @@ class SearchDialogController(
         )
     }
 
-    override fun handleUrlTapped(url: String) {
+    override fun handleUrlTapped(url: String, flags: LoadUrlFlags) {
         clearToolbarFocus()
 
         activity.openToBrowserAndLoad(
             searchTermOrURL = url,
             newTab = fragmentStore.state.tabId == null,
-            from = BrowserDirection.FromSearchDialog
+            from = BrowserDirection.FromSearchDialog,
+            flags = flags
         )
 
         metrics.track(Event.EnteredUrl(false))

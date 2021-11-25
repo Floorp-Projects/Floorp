@@ -61,7 +61,7 @@ class AwesomeBarView(
             flags: EngineSession.LoadUrlFlags,
             additionalHeaders: Map<String, String>?
         ) {
-            interactor.onUrlTapped(url)
+            interactor.onUrlTapped(url, flags)
         }
     }
 
