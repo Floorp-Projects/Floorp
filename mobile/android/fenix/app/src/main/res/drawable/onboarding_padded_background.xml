@@ -2,7 +2,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="@color/onboarding_padded_background_color">
+    android:color="#1F000000">
     <item
         android:bottom="6dp"
         android:top="6dp">

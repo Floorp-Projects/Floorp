@@ -507,7 +507,7 @@
         <item name="android:padding">16dp</item>
     </style>
 
-    <style name="OnboardingCardDark" parent="OnboardingCardLightWithPadding">
+    <style name="OnboardingCardDark" parent="OnboardingCardLightWithPadding" tools:ignore="UnusedResources">
         <item name="android:background">@drawable/onboarding_card_background_dark</item>
         <item name="android:elevation">0dp</item>
     </style>

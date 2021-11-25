@@ -9,7 +9,6 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
-import mozilla.components.service.fxa.sharing.ShareableAccount
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.ext.components
@@ -37,8 +36,6 @@ sealed class Mode {
 sealed class OnboardingState {
     // Signed out, without an option to auto-login using a shared FxA account.
     object SignedOutNoAutoSignIn : OnboardingState()
-    // Signed out, with an option to auto-login into a shared FxA account.
-    data class SignedOutCanAutoSignIn(val withAccount: ShareableAccount) : OnboardingState()
     // Signed in.
     object SignedIn : OnboardingState()
 }
@@ -60,9 +57,6 @@ class CurrentMode(
             Mode.Onboarding(OnboardingState.SignedIn)
         } else {
             Mode.Onboarding(OnboardingState.SignedOutNoAutoSignIn)
-            // The following other state is effectively disabled - #6521
-            // Code still exists in app for when it will be used again - #15694
-            // Mode.Onboarding(OnboardingState.SignedOutCanAutoSignIn(accountManager.shareableAccounts(context)[0]))
         }
     }
 

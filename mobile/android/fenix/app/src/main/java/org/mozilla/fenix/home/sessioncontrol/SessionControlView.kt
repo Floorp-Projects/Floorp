@@ -133,11 +133,6 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
                     AdapterItem.OnboardingManualSignIn
                 )
             }
-            is OnboardingState.SignedOutCanAutoSignIn -> {
-                listOf(
-                    AdapterItem.OnboardingAutomaticSignIn(onboardingState)
-                )
-            }
             OnboardingState.SignedIn -> listOf()
         }
     )

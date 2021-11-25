@@ -23,7 +23,6 @@ import org.mozilla.fenix.historymetadata.view.HistoryMetadataGroupViewHolder
 import org.mozilla.fenix.historymetadata.view.HistoryMetadataHeaderViewHolder
 import org.mozilla.fenix.home.HomeFragmentStore
 import org.mozilla.fenix.home.TopPlaceholderViewHolder
-import org.mozilla.fenix.home.OnboardingState
 import org.mozilla.fenix.home.pocket.PocketStoriesViewHolder
 import org.mozilla.fenix.home.recentbookmarks.view.RecentBookmarksHeaderViewHolder
 import org.mozilla.fenix.home.recentbookmarks.view.RecentBookmarksViewHolder
@@ -36,7 +35,6 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.NoCollectionsMessageVie
 import org.mozilla.fenix.home.sessioncontrol.viewholders.PrivateBrowsingDescriptionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabInCollectionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.ExperimentDefaultBrowserCardViewHolder
-import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingAutomaticSignInViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingFinishViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding.OnboardingManualSignInViewHolder
@@ -144,9 +142,6 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
     }
 
     object OnboardingManualSignIn : AdapterItem(OnboardingManualSignInViewHolder.LAYOUT_ID)
-    data class OnboardingAutomaticSignIn(
-        val state: OnboardingState.SignedOutCanAutoSignIn
-    ) : AdapterItem(OnboardingAutomaticSignInViewHolder.LAYOUT_ID)
 
     object ExperimentDefaultBrowserCard : AdapterItem(ExperimentDefaultBrowserCardViewHolder.LAYOUT_ID)
 
@@ -263,9 +258,6 @@ class SessionControlAdapter(
             )
             OnboardingHeaderViewHolder.LAYOUT_ID -> OnboardingHeaderViewHolder(view)
             OnboardingSectionHeaderViewHolder.LAYOUT_ID -> OnboardingSectionHeaderViewHolder(view)
-            OnboardingAutomaticSignInViewHolder.LAYOUT_ID -> OnboardingAutomaticSignInViewHolder(
-                view
-            )
             OnboardingManualSignInViewHolder.LAYOUT_ID -> OnboardingManualSignInViewHolder(view)
             OnboardingThemePickerViewHolder.LAYOUT_ID -> OnboardingThemePickerViewHolder(view)
             OnboardingTrackingProtectionViewHolder.LAYOUT_ID -> OnboardingTrackingProtectionViewHolder(
@@ -354,9 +346,6 @@ class SessionControlAdapter(
                 (item as AdapterItem.OnboardingSectionHeader).labelBuilder
             )
             is OnboardingManualSignInViewHolder -> holder.bind()
-            is OnboardingAutomaticSignInViewHolder -> holder.bind(
-                (item as AdapterItem.OnboardingAutomaticSignIn).state.withAccount
-            )
             is HistoryMetadataGroupViewHolder,
             is RecentBookmarksViewHolder,
             is RecentTabViewHolder,

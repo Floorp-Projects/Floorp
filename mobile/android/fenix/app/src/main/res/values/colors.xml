@@ -206,12 +206,6 @@
     <color name="mozac_feature_readerview_text_color">@color/primary_text_light_theme</color>
     <color name="mozac_feature_readerview_selected">@color/accent_high_contrast_dark_theme</color>
 
-    <!-- Onboarding colors -->
-    <color name="onboarding_padded_background_color">#1F000000</color>
-    <color name="onboarding_card_primary_text_dark">@color/photonWhite</color>
-    <color name="onboarding_card_button_background_dark">@color/photonLightGrey10</color>
-    <color name="onboarding_card_button_text_dark">@color/photonInk20</color>
-
     <!-- Share UI -->
     <color name="default_share_background">#E3E2E3</color>
     <color name="device_type_desktop_background">#F091C3</color>

@@ -83,20 +83,6 @@ class ModeTest {
         assertEquals(Mode.Onboarding(OnboardingState.SignedOutNoAutoSignIn), currentMode.getCurrentMode())
     }
 
-    // Temporarily disabled. See #6521
-    // @Test
-    // fun `get current onboarding mode when can auto sign in`() {
-    //     val shareableAccount: ShareableAccount = mockk()
-    //     every { onboarding.userHasBeenOnboarded() } returns false
-    //     every { accountManager.authenticatedAccount() } returns null
-    //     every { accountManager.shareableAccounts(context) } returns listOf(shareableAccount)
-    //
-    //     assertEquals(
-    //         Mode.Onboarding(OnboardingState.SignedOutCanAutoSignIn(shareableAccount)),
-    //         currentMode.getCurrentMode()
-    //     )
-    // }
-
     @Test
     fun `emit mode change`() {
         every { onboarding.userHasBeenOnboarded() } returns true
