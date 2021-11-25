@@ -104,7 +104,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aColorScheme,
       nscolor accent =
           Color(ColorID::MozAccentColor, aColorScheme, UseStandins::No);
       aColor =
-          NS_RGBA(NS_GET_R(accent), NS_GET_G(accent), NS_GET_B(accent), 153);
+          NS_RGBA(NS_GET_R(accent), NS_GET_G(accent), NS_GET_B(accent), 78);
       return NS_OK;
     }
     case ColorID::Highlighttext:
