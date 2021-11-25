@@ -22,6 +22,7 @@ import mozilla.components.browser.engine.gecko.prompt.GeckoPromptDelegate
 import mozilla.components.browser.engine.gecko.window.GeckoWindowRequest
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags.Companion.ALLOW_JAVASCRIPT_URL
 import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.concept.engine.Settings
@@ -57,7 +58,6 @@ import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoSession.NavigationDelegate
-import org.mozilla.geckoview.GeckoSession.PermissionDelegate
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission
 import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.WebRequestError
@@ -154,7 +154,7 @@ class GeckoEngineSession(
         additionalHeaders: Map<String, String>?
     ) {
         val scheme = Uri.parse(url).normalizeScheme().scheme
-        if (BLOCKED_SCHEMES.contains(scheme)) {
+        if (BLOCKED_SCHEMES.contains(scheme) && !shouldLoadJSSchemes(scheme, flags)) {
             logger.error("URL scheme not allowed. Aborting load.")
             return
         }
@@ -165,7 +165,7 @@ class GeckoEngineSession(
 
         val loader = GeckoSession.Loader()
             .uri(url)
-            .flags(flags.value)
+            .flags(flags.getGeckoFlags())
 
         if (additionalHeaders != null) {
             loader.additionalHeaders(additionalHeaders)
@@ -179,6 +179,11 @@ class GeckoEngineSession(
         geckoSession.load(loader)
         Fact(Component.BROWSER_ENGINE_GECKO, Action.IMPLEMENTATION_DETAIL, "GeckoSession.load").collect()
     }
+
+    private fun shouldLoadJSSchemes(
+        scheme: String?,
+        flags: LoadUrlFlags
+    ) = scheme?.startsWith(JS_SCHEME) == true && flags.contains(ALLOW_JAVASCRIPT_URL)
 
     /**
      * See [EngineSession.loadData]
@@ -206,7 +211,7 @@ class GeckoEngineSession(
             // successfully loaded a page. Calling reload now would just reload
             // about:blank. To prevent that we trigger the initial load again.
             loadUrl(it.url, it.parent, it.flags, it.additionalHeaders)
-        } ?: geckoSession.reload(flags.value)
+        } ?: geckoSession.reload(flags.getGeckoFlags())
     }
 
     /**
@@ -1105,7 +1110,8 @@ class GeckoEngineSession(
         internal const val PROGRESS_STOP = 100
         internal const val MOZ_NULL_PRINCIPAL = "moz-nullprincipal:"
         internal const val ABOUT_BLANK = "about:blank"
-        internal val BLOCKED_SCHEMES = listOf("content", "file", "resource") // See 1684761 and 1684947
+        internal const val JS_SCHEME = "javascript"
+        internal val BLOCKED_SCHEMES = listOf("content", "file", "resource", JS_SCHEME) // See 1684761 and 1684947
 
         /**
          * Provides an ErrorType corresponding to the error code provided.
@@ -1142,4 +1148,14 @@ class GeckoEngineSession(
                 else -> ErrorType.UNKNOWN
             }
     }
+}
+
+/**
+ * Provides all gecko flags ignoring flags that only exists on AC.
+ **/
+@VisibleForTesting
+internal fun EngineSession.LoadUrlFlags.getGeckoFlags(): Int = if (contains(ALLOW_JAVASCRIPT_URL)) {
+    value - ALLOW_JAVASCRIPT_URL
+} else {
+    value
 }

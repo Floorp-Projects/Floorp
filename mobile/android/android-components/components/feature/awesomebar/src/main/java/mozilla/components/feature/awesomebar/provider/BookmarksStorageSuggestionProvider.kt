@@ -9,6 +9,7 @@ import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.engine.EngineSession.LoadUrlFlags
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.feature.awesomebar.facts.emitBookmarkSuggestionClickedFact
@@ -72,7 +73,8 @@ class BookmarksStorageSuggestionProvider(
                 description = result.url,
                 editSuggestion = result.url,
                 onSuggestionClicked = {
-                    loadUrlUseCase.invoke(result.url!!)
+                    val flags = LoadUrlFlags.select(LoadUrlFlags.ALLOW_JAVASCRIPT_URL)
+                    loadUrlUseCase.invoke(result.url!!, flags = flags)
                     emitBookmarkSuggestionClickedFact()
                 }
             )
