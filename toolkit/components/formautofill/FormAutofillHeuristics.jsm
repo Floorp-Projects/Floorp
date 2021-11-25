@@ -1179,14 +1179,15 @@ this.FormAutofillHeuristics = {
    *
    * @param {HTMLElement} element
    * @param {Array<string>} regexps
-   *        The regex key names that correspond to pattern in the rule list.
+   *        The regex key names that correspond to pattern in the rule list. It will
+   *        be matched against the element string converted to lower case.
    * @returns {?string} The first matched field name
    */
   _findMatchedFieldName(element, regexps) {
     const getElementStrings = this._getElementStrings(element);
     for (let regexp of regexps) {
       for (let string of getElementStrings) {
-        if (this.RULES[regexp].test(string)) {
+        if (this.RULES[regexp].test(string.toLowerCase())) {
           return regexp;
         }
       }
