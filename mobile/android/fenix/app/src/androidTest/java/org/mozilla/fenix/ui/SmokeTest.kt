@@ -681,30 +681,6 @@ class SmokeTest {
     }
 
     @Test
-    // This test verifies the Recently Closed Tabs List and items
-    fun verifyRecentlyClosedTabsListTest() {
-        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        homeScreen {
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(website.url) {
-            mDevice.waitForIdle()
-        }.openTabDrawer {
-            closeTab()
-        }.openTabDrawer {
-        }.openRecentlyClosedTabs {
-            waitForListToExist()
-            recentlyClosedTabsListIdlingResource =
-                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.recently_closed_list), 1)
-            IdlingRegistry.getInstance().register(recentlyClosedTabsListIdlingResource!!)
-            verifyRecentlyClosedTabsMenuView()
-            IdlingRegistry.getInstance().unregister(recentlyClosedTabsListIdlingResource!!)
-            verifyRecentlyClosedTabsPageTitle("Test_Page_1")
-            verifyRecentlyClosedTabsUrl(website.url)
-        }
-    }
-
-    @Test
     // Verifies the Open in a new tab option from the Recently Closed Tabs overflow menu
     fun openRecentlyClosedTabsInNewTabTest() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)

@@ -38,6 +38,7 @@ class HistoryTest {
     /* ktlint-disable no-blank-line-before-rbrace */ // This imposes unreadable grouping.
     private lateinit var mockWebServer: MockWebServer
     private var historyListIdlingResource: RecyclerViewIdlingResource? = null
+    private var recentlyClosedTabsListIdlingResource: RecyclerViewIdlingResource? = null
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
@@ -66,6 +67,10 @@ class HistoryTest {
 
         if (historyListIdlingResource != null) {
             IdlingRegistry.getInstance().unregister(historyListIdlingResource!!)
+        }
+
+        if (recentlyClosedTabsListIdlingResource != null) {
+            IdlingRegistry.getInstance().unregister(recentlyClosedTabsListIdlingResource!!)
         }
     }
 
@@ -281,6 +286,30 @@ class HistoryTest {
             verifyShareTabFavicon()
             verifyShareTabTitle()
             verifyShareTabUrl()
+        }
+    }
+
+    @Test
+    // This test verifies the Recently Closed Tabs List and items
+    fun verifyRecentlyClosedTabsListTest() {
+        val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(website.url) {
+            mDevice.waitForIdle()
+        }.openTabDrawer {
+            closeTab()
+        }.openTabDrawer {
+        }.openRecentlyClosedTabs {
+            waitForListToExist()
+            recentlyClosedTabsListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.recently_closed_list), 1)
+            IdlingRegistry.getInstance().register(recentlyClosedTabsListIdlingResource!!)
+            verifyRecentlyClosedTabsMenuView()
+            IdlingRegistry.getInstance().unregister(recentlyClosedTabsListIdlingResource!!)
+            verifyRecentlyClosedTabsPageTitle("Test_Page_1")
+            verifyRecentlyClosedTabsUrl(website.url)
         }
     }
 }
