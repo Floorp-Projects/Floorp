@@ -72,6 +72,20 @@
 
       await cleanup(emptyDir);
     });
+
+    add_task(async function iterate_ignore_missing_dir() {
+      info("Try to get the children of a missing file with ignoreAbsent");
+
+      const tmpDir = await PathUtils.getTempDir();
+      const notExists = PathUtils.join(tmpDir, "does_not_exist_dir.tmp.d");
+
+      is(
+        (await IOUtils.getChildren(notExists, { ignoreAbsent: true })).length,
+        0,
+        "IOUtils::getChildren returns an empty array when called with ignoreAbsent on a missing file"
+      );
+      ok(!await fileExists(notExists), `Expected ${notExists} not to exist`);
+    });
   </script>
 </head>
 
