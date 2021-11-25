@@ -430,6 +430,14 @@ void nsWindow::NotifyOcclusionState(mozilla::widget::OcclusionState aState) {
           ("nsWindow::NotifyOcclusionState() mIsFullyOccluded %d mSizeMode %d",
            mIsFullyOccluded, mSizeMode));
 
+  wr::DebugFlags flags{0};
+  flags.bits = gfx::gfxVars::WebRenderDebugFlags();
+  bool debugEnabled = bool(flags & wr::DebugFlags::WINDOW_VISIBILITY_DBG);
+  if (debugEnabled && mCompositorWidgetDelegate) {
+    mCompositorWidgetDelegate->NotifyVisibilityUpdated(mSizeMode,
+                                                       mIsFullyOccluded);
+  }
+
   if (mWidgetListener) {
     mWidgetListener->OcclusionStateChanged(mIsFullyOccluded);
   }
@@ -442,6 +450,14 @@ void nsWindow::MaybeEnableWindowOcclusion(bool aEnable) {
     // Enable window occlusion.
     if (enabled && NeedsToTrackWindowOcclusionState()) {
       WinWindowOcclusionTracker::Get()->Enable(this, mWnd);
+
+      wr::DebugFlags flags{0};
+      flags.bits = gfx::gfxVars::WebRenderDebugFlags();
+      bool debugEnabled = bool(flags & wr::DebugFlags::WINDOW_VISIBILITY_DBG);
+      if (debugEnabled && mCompositorWidgetDelegate) {
+        mCompositorWidgetDelegate->NotifyVisibilityUpdated(mSizeMode,
+                                                           mIsFullyOccluded);
+      }
     }
     return;
   }
@@ -455,6 +471,14 @@ void nsWindow::MaybeEnableWindowOcclusion(bool aEnable) {
 
   WinWindowOcclusionTracker::Get()->Disable(this, mWnd);
   NotifyOcclusionState(OcclusionState::VISIBLE);
+
+  wr::DebugFlags flags{0};
+  flags.bits = gfx::gfxVars::WebRenderDebugFlags();
+  bool debugEnabled = bool(flags & wr::DebugFlags::WINDOW_VISIBILITY_DBG);
+  if (debugEnabled && mCompositorWidgetDelegate) {
+    mCompositorWidgetDelegate->NotifyVisibilityUpdated(mSizeMode,
+                                                       mIsFullyOccluded);
+  }
 }
 
 // This override of CreateCompositor is to add support for sending the IPC

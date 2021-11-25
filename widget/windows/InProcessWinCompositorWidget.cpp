@@ -277,6 +277,22 @@ void InProcessWinCompositorWidget::UpdateTransparency(
   }
 }
 
+void InProcessWinCompositorWidget::NotifyVisibilityUpdated(
+    nsSizeMode aSizeMode, bool aIsFullyOccluded) {
+  mSizeMode = aSizeMode;
+  mIsFullyOccluded = aIsFullyOccluded;
+}
+
+nsSizeMode InProcessWinCompositorWidget::GetWindowSizeMode() const {
+  nsSizeMode sizeMode = mSizeMode;
+  return sizeMode;
+}
+
+bool InProcessWinCompositorWidget::GetWindowIsFullyOccluded() const {
+  bool isFullyOccluded = mIsFullyOccluded;
+  return isFullyOccluded;
+}
+
 bool InProcessWinCompositorWidget::HasGlass() const {
   MOZ_ASSERT(layers::CompositorThreadHolder::IsInCompositorThread() ||
              wr::RenderThread::IsInRenderThread());

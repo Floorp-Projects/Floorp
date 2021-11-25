@@ -6,11 +6,13 @@
 
 include protocol PCompositorBridge;
 
+include "mozilla/dom/TabMessageUtils.h";
 include "mozilla/widget/WidgetMessageUtils.h";
 
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 using mozilla::WindowsHandle from "mozilla/ipc/IPCTypes.h";
 using nsTransparencyMode from "nsIWidget.h";
+using nsSizeMode from "nsIWidget.h";
 
 namespace mozilla {
 namespace widget {
@@ -31,6 +33,7 @@ parent:
   sync EnterPresentLock();
   sync LeavePresentLock();
   async UpdateTransparency(nsTransparencyMode aMode);
+  async NotifyVisibilityUpdated(nsSizeMode aSizeMode, bool aIsFullyOccluded);
   sync ClearTransparentWindow();
   async __delete__();
 
