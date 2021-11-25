@@ -697,7 +697,7 @@ Maybe<nscolor> nsXPLookAndFeel::GenericDarkColor(ColorID aID) {
       color = NS_RGB(91, 91, 102);
       break;
     case ColorID::Highlight:
-      color = NS_RGBA(0, 221, 255, 153);
+      color = NS_RGBA(0, 221, 255, 78);
       break;
     case ColorID::Highlighttext:
       color = NS_SAME_AS_FOREGROUND_COLOR;
