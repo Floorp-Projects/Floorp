@@ -1230,9 +1230,12 @@ var DownloadObserver = {
         for (let topic of kObserverTopics) {
           Services.obs.removeObserver(this, topic);
         }
-        if (AppConstants.MOZ_BUILD_APP == "browser") {
+        if (
+          AppConstants.MOZ_BUILD_APP == "browser" &&
+          this._downloadSpamProtection
+        ) {
           Services.obs.removeObserver(
-            DownloadIntegration.getDownloadSpamProtection(),
+            this._downloadSpamProtection,
             DownloadSpamProtection.TOPIC
           );
         }
