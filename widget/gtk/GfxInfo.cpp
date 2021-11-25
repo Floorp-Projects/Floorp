@@ -770,7 +770,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         DriverVendor::NonMesaAll, DeviceFamily::NvidiaAll,
         nsIGfxInfo::FEATURE_WEBRENDER,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
-        V(470, 0, 0, 0), "FEATURE_FAILURE_WEBRENDER_BUG_1635186", "470.0.0");
+        V(470, 82, 0, 0), "FEATURE_FAILURE_WEBRENDER_BUG_1635186", "470.82.0");
 
     ////////////////////////////////////
     // FEATURE_WEBRENDER - ALLOWLIST
@@ -838,7 +838,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
         DesktopEnvironment::All, WindowProtocol::All, DriverVendor::NonMesaAll,
         DeviceFamily::NvidiaAll, nsIGfxInfo::FEATURE_X11_EGL,
         nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION, DRIVER_LESS_THAN,
-        V(470, 0, 0, 0), "FEATURE_ROLLOUT_X11_EGL_NVIDIA_BINARY", "470.0.0");
+        V(470, 82, 0, 0), "FEATURE_ROLLOUT_X11_EGL_NVIDIA_BINARY", "470.82.0");
 
     // Disable on all AMD devices not using Mesa.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
