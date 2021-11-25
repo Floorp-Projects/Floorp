@@ -129,3 +129,13 @@ webgl-ipc:
         mozharness:
             extra-options:
                 - "--setpref=webgl.out-of-process=true"
+
+devtools-no-eft-no-fission:
+    description: "{description} with DevTools EFT disabled and Fission disabled"
+    contact: nchevobbe
+    suffix: "dt-no-eft-no-fis"
+    merge:
+        mozharness:
+            extra-options:
+                - "--setpref=devtools.every-frame-target.enabled=false"
+                - "--setpref=fission.autostart=false"
