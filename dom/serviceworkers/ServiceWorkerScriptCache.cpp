@@ -667,7 +667,17 @@ nsresult CompareNetwork::Initialize(nsIPrincipal* aPrincipal,
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
       mozilla::net::CookieJarSettings::Create(aPrincipal);
 
-  net::CookieJarSettings::Cast(cookieJarSettings)->SetPartitionKey(uri);
+  // Populate the partitionKey by using the given prinicpal. The ServiceWorkers
+  // are using the foreign partitioned principal, so we can get the partitionKey
+  // from it and the partitionKey will only exist if it's in the third-party
+  // context. In first-party context, we can still use the uri to set the
+  // partitionKey.
+  if (!aPrincipal->OriginAttributesRef().mPartitionKey.IsEmpty()) {
+    net::CookieJarSettings::Cast(cookieJarSettings)
+        ->SetPartitionKey(aPrincipal->OriginAttributesRef().mPartitionKey);
+  } else {
+    net::CookieJarSettings::Cast(cookieJarSettings)->SetPartitionKey(uri);
+  }
 
   // Note that because there is no "serviceworker" RequestContext type, we can
   // use the TYPE_INTERNAL_SCRIPT content policy types when loading a service
