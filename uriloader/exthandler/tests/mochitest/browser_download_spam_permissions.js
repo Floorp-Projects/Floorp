@@ -88,7 +88,7 @@ add_task(async function check_download_spam_permissions() {
   });
 
   let download = await downloadFinishedPromise;
-  await TestUtils.waitForCondition(
+  TestUtils.waitForCondition(
     () => gBrowser.tabs.length == INITIAL_TABS_COUNT + 1
   );
   is(
@@ -109,8 +109,7 @@ add_task(async function check_download_spam_permissions() {
     "An other file should be blocked"
   );
 
-  info("Will wait for blockedDownloadsCount to be >= 99");
-  await TestUtils.waitForCondition(() => blockedDownloadsCount >= 99);
+  TestUtils.waitForCondition(() => blockedDownloadsCount >= 99);
   is(blockedDownloadsCount, 99, "Browser should block 99 downloads");
   is(
     blockedDownloadsURI,

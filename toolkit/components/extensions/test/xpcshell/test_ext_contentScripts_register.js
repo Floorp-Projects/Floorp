@@ -476,9 +476,7 @@ add_task(async function test_contentscripts_register_js() {
   let completePromise = new Promise(resolve => {
     extension.onMessage("script-run-complete", () => {
       completeCount++;
-      if (completeCount == 2) {
-        resolve();
-      }
+      resolve();
     });
   });
 
