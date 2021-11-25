@@ -1293,7 +1293,7 @@ void CanonicalBrowsingContext::GoBack(
 
   // Stop any known network loads if necessary.
   if (mCurrentLoad) {
-    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
+    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD);
   }
 
   if (nsDocShell* docShell = nsDocShell::Cast(GetDocShell())) {
@@ -1319,7 +1319,7 @@ void CanonicalBrowsingContext::GoForward(
 
   // Stop any known network loads if necessary.
   if (mCurrentLoad) {
-    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
+    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD);
   }
 
   if (auto* docShell = nsDocShell::Cast(GetDocShell())) {
@@ -1345,7 +1345,7 @@ void CanonicalBrowsingContext::GoToIndex(
 
   // Stop any known network loads if necessary.
   if (mCurrentLoad) {
-    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
+    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD);
   }
 
   if (auto* docShell = nsDocShell::Cast(GetDocShell())) {
@@ -1369,7 +1369,7 @@ void CanonicalBrowsingContext::Reload(uint32_t aReloadFlags) {
 
   // Stop any known network loads if necessary.
   if (mCurrentLoad) {
-    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
+    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD);
   }
 
   if (auto* docShell = nsDocShell::Cast(GetDocShell())) {
@@ -2084,7 +2084,7 @@ bool CanonicalBrowsingContext::StartDocumentLoad(
   // that we need to cancel any existing ones.
   if (StaticPrefs::browser_tabs_documentchannel_parent_controlled() &&
       mozilla::SessionHistoryInParent() && mCurrentLoad) {
-    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
+    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD);
   }
   mCurrentLoad = aLoad;
 
