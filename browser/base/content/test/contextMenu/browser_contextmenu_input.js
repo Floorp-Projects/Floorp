@@ -104,7 +104,10 @@ add_task(async function test_text_input_disabled() {
 
 add_task(async function test_password_input() {
   await SpecialPowers.pushPrefEnv({
-    set: [["signon.generation.enabled", false]],
+    set: [
+      ["signon.generation.enabled", false],
+      ["layout.forms.input-type-show-password-button.enabled", true],
+    ],
   });
   todo(
     false,
@@ -133,6 +136,8 @@ add_task(async function test_password_input() {
       "context-delete",
       false,
       "context-selectall",
+      null,
+      "context-toggle-show-password",
       null,
     ],
     {

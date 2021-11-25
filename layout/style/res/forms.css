@@ -960,7 +960,8 @@ input[type=number] > div > div > div:hover {
   background-color: lightblue;
 }
 
-input[type=search]::-moz-search-clear-button {
+input::-moz-search-clear-button,
+input::-moz-text-control-show-password-button {
   display: block;
   cursor: default;
   width: 1em;
@@ -968,11 +969,25 @@ input[type=search]::-moz-search-clear-button {
   max-height: 100%;
   max-width: 100%;
   margin-inline-start: 1px;
-  align-self: center;
   background-image: url("resource://gre-resources/searchfield-cancel.svg");
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
+}
+
+input::-moz-text-control-show-password-button {
+  background-image: url("resource://gre-resources/password.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+input:-moz-revealed::-moz-text-control-show-password-button {
+  background-image: url("resource://gre-resources/password-hide.svg");
+}
+
+input:-moz-value-empty::-moz-text-control-show-password-button,
+input:-moz-value-empty::-moz-search-clear-button {
+  visibility: hidden;
 }
 
 input:is([type=date], [type=time], [type=datetime-local]) {

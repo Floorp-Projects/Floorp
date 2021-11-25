@@ -45,6 +45,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "nsFrameSelection.h"
 
 #define DEFAULT_COLUMN_WIDTH 20
@@ -180,6 +181,7 @@ void nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
   aPostDestroyData.AddAnonymousContent(mRootNode.forget());
   aPostDestroyData.AddAnonymousContent(mPlaceholderDiv.forget());
   aPostDestroyData.AddAnonymousContent(mPreviewDiv.forget());
+  aPostDestroyData.AddAnonymousContent(mShowPasswordButton.forget());
 
   nsContainerFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
@@ -444,6 +446,18 @@ nsresult nsTextControlFrame::CreateAnonymousContent(
   // background on the placeholder doesn't obscure the caret.
   aElements.AppendElement(mRootNode);
 
+  if (StaticPrefs::layout_forms_input_type_show_password_button_enabled() &&
+      IsPasswordTextControl()) {
+    mShowPasswordButton =
+        MakeAnonElement(PseudoStyleType::mozTextControlShowPasswordButton,
+                        nullptr, nsGkAtoms::button);
+    mShowPasswordButton->SetAttr(kNameSpaceID_None, nsGkAtoms::aria_hidden,
+                                 u"true"_ns, false);
+    mShowPasswordButton->SetAttr(kNameSpaceID_None, nsGkAtoms::tabindex,
+                                 u"-1"_ns, false);
+    aElements.AppendElement(mShowPasswordButton);
+  }
+
   rv = UpdateValueDisplay(false);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -567,6 +581,10 @@ void nsTextControlFrame::AppendAnonymousContentTo(
     aElements.AppendElement(mPreviewDiv);
   }
 
+  if (mShowPasswordButton) {
+    aElements.AppendElement(mShowPasswordButton);
+  }
+
   aElements.AppendElement(mRootNode);
 }
 
@@ -653,7 +671,8 @@ Maybe<nscoord> nsTextControlFrame::ComputeBaseline(
 static bool IsButtonBox(const nsIFrame* aFrame) {
   auto pseudoType = aFrame->Style()->GetPseudoType();
   return pseudoType == PseudoStyleType::mozNumberSpinBox ||
-         pseudoType == PseudoStyleType::mozSearchClearButton;
+         pseudoType == PseudoStyleType::mozSearchClearButton ||
+         pseudoType == PseudoStyleType::mozTextControlShowPasswordButton;
 }
 
 void nsTextControlFrame::Reflow(nsPresContext* aPresContext,
@@ -1229,7 +1248,6 @@ nsresult nsTextControlFrame::UpdateValueDisplay(bool aNotify,
     if (IsPasswordTextControl()) {
       textNode->MarkAsMaybeMasked();
     }
-
     mRootNode->AppendChildTo(textNode, aNotify, IgnoreErrors());
     textContent = textNode;
   } else {

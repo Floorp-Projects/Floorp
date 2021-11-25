@@ -277,6 +277,10 @@ class EventStates {
 #define NS_EVENT_STATE_DEVTOOLS_HIGHLIGHTED NS_DEFINE_EVENT_STATE_MACRO(45)
 // Devtools style inspector stuff.
 #define NS_EVENT_STATE_STYLEEDITOR_TRANSITIONING NS_DEFINE_EVENT_STATE_MACRO(46)
+// Element is an input with empty value (regardless of placeholder)
+#define NS_EVENT_STATE_VALUE_EMPTY NS_DEFINE_EVENT_STATE_MACRO(47)
+// Element is a password input which is revealed by the user.
+#define NS_EVENT_STATE_REVEALED NS_DEFINE_EVENT_STATE_MACRO(48)
 /**
  * NOTE: do not go over 63 without updating EventStates::InternalType!
  */
@@ -312,7 +316,7 @@ class EventStates {
    NS_EVENT_STATE_FOCUS_WITHIN | NS_EVENT_STATE_FULLSCREEN |                   \
    NS_EVENT_STATE_HOVER | NS_EVENT_STATE_URLTARGET |                           \
    NS_EVENT_STATE_MODAL_DIALOG | NS_EVENT_STATE_MOZINERT |                     \
-   NS_EVENT_STATE_TOPMOST_MODAL_DIALOG)
+   NS_EVENT_STATE_TOPMOST_MODAL_DIALOG | NS_EVENT_STATE_REVEALED)
 
 #define INTRINSIC_STATES (~EXTERNALLY_MANAGED_STATES)
 

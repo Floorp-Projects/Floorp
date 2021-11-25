@@ -1771,7 +1771,7 @@ fuzzy(0-1,0-5) == 956513-1.svg 956513-1-ref.svg
 fuzzy(0-1,0-80) == 961887-1.html 961887-1-ref.html
 == 961887-2.html 961887-2-ref.html
 == 961887-3.html 961887-3-ref.html
-fuzzy-if(appleSilicon,0-1,0-2) pref(layout.css.overflow-clip-box.enabled,true) == 966992-1.html 966992-1-ref.html
+fuzzy-if(appleSilicon,0-1,0-2) pref(layout.css.overflow-clip-box.enabled,true) pref(layout.forms.input-type-show-password-button.enabled,false) == 966992-1.html 966992-1-ref.html
 == 966510-1.html 966510-1-ref.html
 == 966510-2.html 966510-2-ref.html
 fuzzy(0-1,0-123) == 978911-1.svg 978911-1-ref.svg

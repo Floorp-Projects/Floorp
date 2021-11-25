@@ -532,6 +532,12 @@ static nsChangeHint ChangeForContentStateChange(const Element& aElement,
     changeHint |= nsChangeHint_RepaintFrame;
   }
 
+  // This changes the applicable text-transform in the editor root.
+  if (aStateMask.HasState(NS_EVENT_STATE_REVEALED)) {
+    // This is the same change hint as tweaking text-transform.
+    changeHint |= NS_STYLE_HINT_REFLOW;
+  }
+
   return changeHint;
 }
 

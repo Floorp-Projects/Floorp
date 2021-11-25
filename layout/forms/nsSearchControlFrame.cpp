@@ -61,12 +61,13 @@ nsresult nsSearchControlFrame::CreateAnonymousContent(
 
   nsTextControlFrame::CreateAnonymousContent(aElements);
 
+  // FIXME: We could use nsTextControlFrame making the show password buttton
+  // code a bit more generic, or rename this frame and use it for password
+  // inputs.
+  //
   // Create the ::-moz-search-clear-button pseudo-element:
   mClearButton = MakeAnonElement(PseudoStyleType::mozSearchClearButton, nullptr,
                                  nsGkAtoms::button);
-
-  // Update clear button visibility based on value
-  UpdateClearButtonState();
 
   aElements.AppendElement(mClearButton);
 
@@ -78,23 +79,5 @@ void nsSearchControlFrame::AppendAnonymousContentTo(
   nsTextControlFrame::AppendAnonymousContentTo(aElements, aFilter);
   if (mClearButton) {
     aElements.AppendElement(mClearButton);
-  }
-}
-
-void nsSearchControlFrame::UpdateClearButtonState() {
-  if (!mClearButton) {
-    return;
-  }
-
-  auto* content = HTMLInputElement::FromNode(mContent);
-
-  nsGenericHTMLElement* element = nsGenericHTMLElement::FromNode(mClearButton);
-  nsCOMPtr<nsICSSDeclaration> declaration = element->Style();
-  if (content->IsValueEmpty()) {
-    declaration->SetProperty("visibility"_ns, "hidden"_ns, ""_ns,
-                             IgnoreErrors());
-  } else {
-    nsAutoCString dummy;
-    declaration->RemoveProperty("visibility"_ns, dummy, IgnoreErrors());
   }
 }
