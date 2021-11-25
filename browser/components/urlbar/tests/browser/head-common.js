@@ -30,15 +30,6 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIClipboardHelper"
 );
 
-XPCOMUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
-  const { QuickSuggestTestUtils: module } = ChromeUtils.import(
-    "resource://testing-common/QuickSuggestTestUtils.jsm"
-  );
-  module.init(this);
-  registerCleanupFunction(() => module.uninit());
-  return module;
-});
-
 XPCOMUtils.defineLazyGetter(this, "UrlbarTestUtils", () => {
   const { UrlbarTestUtils: module } = ChromeUtils.import(
     "resource://testing-common/UrlbarTestUtils.jsm"
