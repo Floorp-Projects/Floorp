@@ -4622,6 +4622,12 @@
     type: RelaxedAtomicBool
     value: false
     mirror: always
+
+-   name: fuzzing.necko.http3
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+    rust: true
 #endif
 
 #---------------------------------------------------------------------------
