@@ -737,8 +737,9 @@ already_AddRefed<Promise> IOUtils::SetModificationTime(
 }
 
 /* static */
-already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
-                                               const nsAString& aPath) {
+already_AddRefed<Promise> IOUtils::GetChildren(
+    GlobalObject& aGlobal, const nsAString& aPath,
+    const GetChildrenOptions& aOptions) {
   MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
   RefPtr<Promise> promise = CreateJSPromise(aGlobal);
   if (!promise) {
@@ -751,7 +752,9 @@ already_AddRefed<Promise> IOUtils::GetChildren(GlobalObject& aGlobal,
 
     DispatchAndResolve<nsTArray<nsString>>(
         state.ref()->mEventQueue, promise,
-        [file = std::move(file)]() { return GetChildrenSync(file); });
+        [file = std::move(file), ignoreAbsent = aOptions.mIgnoreAbsent]() {
+          return GetChildrenSync(file, ignoreAbsent);
+        });
   } else {
     RejectShuttingDown(promise);
   }
@@ -1465,11 +1468,15 @@ Result<int64_t, IOUtils::IOError> IOUtils::SetModificationTimeSync(
 
 /* static */
 Result<nsTArray<nsString>, IOUtils::IOError> IOUtils::GetChildrenSync(
-    nsIFile* aFile) {
+    nsIFile* aFile, bool aIgnoreAbsent) {
   MOZ_ASSERT(!NS_IsMainThread());
 
+  nsTArray<nsString> children;
   nsCOMPtr<nsIDirectoryEnumerator> iter;
   nsresult rv = aFile->GetDirectoryEntries(getter_AddRefs(iter));
+  if (aIgnoreAbsent && IsFileNotFound(rv)) {
+    return children;
+  }
   if (NS_FAILED(rv)) {
     IOError err(rv);
     if (IsFileNotFound(rv)) {
@@ -1484,7 +1491,6 @@ Result<nsTArray<nsString>, IOUtils::IOError> IOUtils::GetChildrenSync(
     }
     return Err(err);
   }
-  nsTArray<nsString> children;
 
   bool hasMoreElements = false;
   MOZ_TRY(iter->HasMoreElements(&hasMoreElements));
