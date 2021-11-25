@@ -29,13 +29,30 @@ struct LSRequestPrepareDatastoreParams
 {
   LSRequestCommonParams commonParams;
   nsID? clientId;
+  PrincipalInfo? clientPrincipalInfo;
 };
 
+/**
+ * In order to validate the principal with the client, we need to provide an
+ * additional principalInfo for the client. The client is using the foreign
+ * principal, see StoragePrincipalHelper.h for details, which is different from
+ * the principalInfo. So, we need to pass the principalInfo from the client So
+ * that we can verify it with the given client Id.
+ *
+ * Note that the storagePrincipalInfo is used to access the right cookie jar
+ * according to the Storage Access. This is passed in order to access the
+ * correct local storage. Essentially, the storage principal and the client
+ * principal are using the PartitionKey in their OriginAttributes. But, the
+ * existence of the PartitionKey between them is depending on different
+ * conditions. Namely, the storage principal depends on the Storage Access but
+ * the client principal depends on whether it's in a third party.
+ */
 struct LSRequestPrepareObserverParams
 {
   PrincipalInfo principalInfo;
   PrincipalInfo storagePrincipalInfo;
   nsID? clientId;
+  PrincipalInfo? clientPrincipalInfo;
 };
 
 union LSRequestParams
