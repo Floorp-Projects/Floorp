@@ -1030,12 +1030,12 @@ class WorkerJSContextStats final : public JS::RuntimeStats {
       : JS::RuntimeStats(JsWorkerMallocSizeOf), mRtPath(aRtPath) {}
 
   ~WorkerJSContextStats() {
-    for (size_t i = 0; i != zoneStatsVector.length(); i++) {
-      delete static_cast<xpc::ZoneStatsExtras*>(zoneStatsVector[i].extra);
+    for (JS::ZoneStats& stats : zoneStatsVector) {
+      delete static_cast<xpc::ZoneStatsExtras*>(stats.extra);
     }
 
-    for (size_t i = 0; i != realmStatsVector.length(); i++) {
-      delete static_cast<xpc::RealmStatsExtras*>(realmStatsVector[i].extra);
+    for (JS::RealmStats& stats : realmStatsVector) {
+      delete static_cast<xpc::RealmStatsExtras*>(stats.extra);
     }
   }
 
