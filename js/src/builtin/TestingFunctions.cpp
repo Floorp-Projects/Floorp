@@ -6986,7 +6986,7 @@ static bool SetDefaultLocale(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-#if defined(FUZZING) && defined(__AFL_COMPILER)
+#ifdef AFLFUZZ
 static bool AflLoop(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -8556,7 +8556,7 @@ JS_FOR_WASM_FEATURES(WASM_FEATURE, WASM_FEATURE, WASM_FEATURE)
 "  Set this compartment's RNG state.\n"),
 #endif
 
-#if defined(FUZZING) && defined(__AFL_COMPILER)
+#ifdef AFLFUZZ
     JS_FN_HELP("aflloop", AflLoop, 1, 0,
 "aflloop(max_cnt)",
 "  Call the __AFL_LOOP() runtime function (see AFL docs)\n"),
