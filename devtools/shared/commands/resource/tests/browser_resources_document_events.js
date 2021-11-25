@@ -181,9 +181,9 @@ async function testIframeNavigation() {
   info("Test iframe navigations for DOCUMENT_EVENT");
 
   const tab = await addTab(
-    'http://example.com/document-builder.sjs?html=<iframe src="http://example.net/document-builder.sjs?html=net"></iframe>'
+    'https://example.com/document-builder.sjs?html=<iframe src="https://example.net/document-builder.sjs?html=net"></iframe>'
   );
-  const secondPageUrl = "http://example.org/document-builder.sjs?html=org";
+  const secondPageUrl = "https://example.org/document-builder.sjs?html=org";
 
   const { commands } = await initResourceCommand(tab);
 
@@ -402,7 +402,7 @@ async function testBfCacheNavigation() {
 async function testCrossOriginNavigation() {
   info("Test cross origin navigations for DOCUMENT_EVENT");
 
-  const tab = await addTab("http://example.com/document-builder.sjs?html=com");
+  const tab = await addTab("https://example.com/document-builder.sjs?html=com");
 
   const { commands } = await initResourceCommand(tab);
 
@@ -421,7 +421,7 @@ async function testCrossOriginNavigation() {
   info("Navigate to another process");
   const onSwitched = commands.targetCommand.once("switched-target");
   const netUrl =
-    "http://example.net/document-builder.sjs?html=<head><title>titleNet</title></head>net";
+    "https://example.net/document-builder.sjs?html=<head><title>titleNet</title></head>net";
   const onLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   const targetBeforeNavigation = commands.targetCommand.targetFront;
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, netUrl);
