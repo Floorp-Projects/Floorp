@@ -198,6 +198,20 @@ nsresult HTMLElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       aNameSpaceID, aName, aValue, aOldValue, aMaybeScriptedPrincipal, aNotify);
 }
 
+EventStates HTMLElement::IntrinsicState() const {
+  EventStates state = nsGenericHTMLFormElement::IntrinsicState();
+  if (ElementInternals* internals = GetElementInternals()) {
+    if (internals->IsCandidateForConstraintValidation()) {
+      if (internals->IsValid()) {
+        state |= NS_EVENT_STATE_VALID | NS_EVENT_STATE_MOZ_UI_VALID;
+      } else {
+        state |= NS_EVENT_STATE_INVALID | NS_EVENT_STATE_MOZ_UI_INVALID;
+      }
+    }
+  }
+  return state;
+}
+
 void HTMLElement::SetFormInternal(HTMLFormElement* aForm, bool aBindToTree) {
   ElementInternals* internals = GetElementInternals();
   MOZ_ASSERT(internals);

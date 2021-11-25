@@ -167,6 +167,7 @@ void ElementInternals::SetValidity(
   SetValidityState(VALIDITY_STATE_STEP_MISMATCH, aFlags.mStepMismatch);
   SetValidityState(VALIDITY_STATE_BAD_INPUT, aFlags.mBadInput);
   SetValidityState(VALIDITY_STATE_CUSTOM_ERROR, aFlags.mCustomError);
+  mTarget->UpdateState(true);
 
   /**
    * 5. Set element's validation message to the empty string if message is not
