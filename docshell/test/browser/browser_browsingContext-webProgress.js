@@ -154,7 +154,7 @@ add_task(async function() {
     is(request.URI.spec, secondLocation);
   }
 
-  const onBackLocationChanged = waitForNextLocationChange(webProgress, true);
+  const onBackLocationChanged = waitForNextLocationChange(webProgress);
   const onBackDocumentStart = waitForNextDocumentStart(webProgress);
   browser.goBack();
 
@@ -190,7 +190,7 @@ add_task(async function() {
   BrowserTestUtils.removeTab(tab);
 });
 
-function waitForNextLocationChange(webProgress, onlyTopLevel = false) {
+function waitForNextLocationChange(webProgress) {
   return new Promise(resolve => {
     const wpl = {
       QueryInterface: ChromeUtils.generateQI([
@@ -198,10 +198,6 @@ function waitForNextLocationChange(webProgress, onlyTopLevel = false) {
         "nsISupportsWeakReference",
       ]),
       onLocationChange(progress, request, location, flags) {
-        if (onlyTopLevel && progress.browsingContext.parent) {
-          // Ignore non-toplevel.
-          return;
-        }
         webProgress.removeProgressListener(wpl, Ci.nsIWebProgress.NOTIFY_ALL);
         resolve({
           browsingContext: progress.browsingContext,
