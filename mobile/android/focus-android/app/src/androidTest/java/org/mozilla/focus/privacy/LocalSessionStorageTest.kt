@@ -4,11 +4,11 @@
 package org.mozilla.focus.privacy
 
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
+import java.io.IOException
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,13 +16,11 @@ import org.mozilla.focus.activity.robots.searchScreen
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule
 import org.mozilla.focus.helpers.TestHelper.readTestAsset
 import org.mozilla.focus.testAnnotations.SmokeTest
-import java.io.IOException
 
 /**
  * Make sure that session storage values are kept and written but removed at the end of a session.
  */
 @RunWith(AndroidJUnit4ClassRunner::class)
-@Ignore("Refactoring is required because of erase and tabs counter relocation")
 class LocalSessionStorageTest {
     private lateinit var webServer: MockWebServer
 

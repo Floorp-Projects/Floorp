@@ -3,11 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.activity
 
+import androidx.test.espresso.Espresso.pressBack
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
+import java.io.IOException
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -20,7 +21,6 @@ import org.mozilla.focus.helpers.TestHelper.exitToBrowser
 import org.mozilla.focus.helpers.TestHelper.exitToTop
 import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
 import org.mozilla.focus.testAnnotations.SmokeTest
-import java.io.IOException
 
 @RunWith(AndroidJUnit4ClassRunner::class)
 class EnhancedTrackingProtectionSettingsTest {
@@ -65,7 +65,6 @@ class EnhancedTrackingProtectionSettingsTest {
 
     @SmokeTest
     @Test
-    @Ignore("Fail cause: erase and tabs counter relocation")
     fun blockAdTrackersTest() {
         webServer.enqueue(createMockResponseFromAsset("plain_test.html"))
         webServer.enqueue(createMockResponseFromAsset("etpPages/adsTrackers.html"))
@@ -76,7 +75,8 @@ class EnhancedTrackingProtectionSettingsTest {
         }.loadPage(genericPage) {
             // loading a generic page to allow GV to fully load on first run
             verifyPageContent("focus test page")
-        }.clearBrowsingData { }
+            pressBack()
+        }
         searchScreen {
         }.loadPage(trackingPage) {
             verifyTrackingProtectionAlert("ads trackers blocked")
@@ -85,7 +85,6 @@ class EnhancedTrackingProtectionSettingsTest {
 
     @SmokeTest
     @Test
-    @Ignore("Fail cause: erase and tabs counter relocation")
     fun allowAdTrackersTest() {
         webServer.enqueue(createMockResponseFromAsset("plain_test.html"))
         webServer.enqueue(createMockResponseFromAsset("etpPages/adsTrackers.html"))
@@ -104,7 +103,8 @@ class EnhancedTrackingProtectionSettingsTest {
         }.loadPage(genericPage) {
             // loading a generic page to allow GV to fully load on first run
             verifyPageContent("focus test page")
-        }.clearBrowsingData { }
+            pressBack()
+        }
         searchScreen {
         }.loadPage(trackingPage) {
             verifyPageContent("ads trackers not blocked")
@@ -113,7 +113,6 @@ class EnhancedTrackingProtectionSettingsTest {
 
     @SmokeTest
     @Test
-    @Ignore("Fail cause: erase and tabs counter relocation")
     fun blockAnalyticsTrackersTest() {
         webServer.enqueue(createMockResponseFromAsset("plain_test.html"))
         webServer.enqueue(createMockResponseFromAsset("etpPages/analyticsTrackers.html"))
@@ -124,7 +123,8 @@ class EnhancedTrackingProtectionSettingsTest {
         }.loadPage(genericPage) {
             // loading a generic page to allow GV to fully load on first run
             verifyPageContent("focus test page")
-        }.clearBrowsingData { }
+            pressBack()
+        }
         searchScreen {
         }.loadPage(trackingPage) {
             verifyTrackingProtectionAlert("analytics trackers blocked")
@@ -133,7 +133,6 @@ class EnhancedTrackingProtectionSettingsTest {
 
     @SmokeTest
     @Test
-    @Ignore("Fail cause: erase and tabs counter relocation")
     fun allowAnalyticsTrackersTest() {
         webServer.enqueue(createMockResponseFromAsset("plain_test.html"))
         webServer.enqueue(createMockResponseFromAsset("etpPages/analyticsTrackers.html"))
@@ -152,7 +151,8 @@ class EnhancedTrackingProtectionSettingsTest {
         }.loadPage(genericPage) {
             // loading a generic page to allow GV to fully load on first run
             verifyPageContent("focus test page")
-        }.clearBrowsingData { }
+            pressBack()
+        }
         searchScreen {
         }.loadPage(trackingPage) {
             verifyPageContent("analytics trackers not blocked")
@@ -161,7 +161,6 @@ class EnhancedTrackingProtectionSettingsTest {
 
     @SmokeTest
     @Test
-    @Ignore("Fail cause: erase and tabs counter relocation")
     fun blockSocialTrackersTest() {
         webServer.enqueue(createMockResponseFromAsset("plain_test.html"))
         webServer.enqueue(createMockResponseFromAsset("etpPages/socialTrackers.html"))
@@ -172,7 +171,8 @@ class EnhancedTrackingProtectionSettingsTest {
         }.loadPage(genericPage) {
             // loading a generic page to allow GV to fully load on first run
             verifyPageContent("focus test page")
-        }.clearBrowsingData { }
+            pressBack()
+        }
         searchScreen {
         }.loadPage(trackingPage) {
             verifyTrackingProtectionAlert("social trackers blocked")
@@ -181,7 +181,6 @@ class EnhancedTrackingProtectionSettingsTest {
 
     @SmokeTest
     @Test
-    @Ignore("Fail cause: erase and tabs counter relocation")
     fun allowSocialTrackersTest() {
         webServer.enqueue(createMockResponseFromAsset("plain_test.html"))
         webServer.enqueue(createMockResponseFromAsset("etpPages/socialTrackers.html"))
@@ -200,7 +199,8 @@ class EnhancedTrackingProtectionSettingsTest {
         }.loadPage(genericPage) {
             // loading a generic page to allow GV to fully load on first run
             verifyPageContent("focus test page")
-        }.clearBrowsingData { }
+            pressBack()
+        }
         searchScreen {
         }.loadPage(trackingPage) {
             verifyPageContent("social trackers not blocked")
@@ -209,7 +209,6 @@ class EnhancedTrackingProtectionSettingsTest {
 
     @SmokeTest
     @Test
-    @Ignore("Fail cause: erase and tabs counter relocation")
     fun allowOtherContentTrackersTest() {
         webServer.enqueue(createMockResponseFromAsset("plain_test.html"))
         webServer.enqueue(createMockResponseFromAsset("etpPages/otherTrackers.html"))
@@ -220,7 +219,8 @@ class EnhancedTrackingProtectionSettingsTest {
         }.loadPage(genericPage) {
             // loading a generic page to allow GV to fully load on first run
             verifyPageContent("focus test page")
-        }.clearBrowsingData { }
+            pressBack()
+        }
         searchScreen {
         }.loadPage(trackingPage) {
             verifyPageContent("other content trackers not blocked")
@@ -229,7 +229,6 @@ class EnhancedTrackingProtectionSettingsTest {
 
     @SmokeTest
     @Test
-    @Ignore("Fail cause: erase and tabs counter relocation")
     fun blockOtherContentTrackersTest() {
         webServer.enqueue(createMockResponseFromAsset("plain_test.html"))
         webServer.enqueue(createMockResponseFromAsset("etpPages/otherTrackers.html"))
@@ -248,7 +247,8 @@ class EnhancedTrackingProtectionSettingsTest {
         }.loadPage(genericPage) {
             // loading a generic page to allow GV to fully load on first run
             verifyPageContent("focus test page")
-        }.clearBrowsingData { }
+            pressBack()
+        }
         searchScreen {
         }.loadPage(trackingPage) {
             verifyTrackingProtectionAlert("other content trackers blocked")

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.activity
 
-import org.junit.Ignore
+import androidx.test.espresso.Espresso.pressBack
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.focus.activity.robots.browserScreen
@@ -24,7 +24,6 @@ class SearchTest {
 
     @SmokeTest
     @Test
-    @Ignore("Refactoring is required because of erase and tabs counter relocation")
     fun changeSearchEngineTest() {
 
         for (searchEngine in enginesList) {
@@ -45,7 +44,8 @@ class SearchTest {
 
             browserScreen {
                 verifyPageURL(searchEngine)
-            }.clearBrowsingData { }
+                pressBack()
+            }
         }
     }
 
