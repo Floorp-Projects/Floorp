@@ -1138,6 +1138,10 @@ void CanonicalBrowsingContext::CanonicalDiscard() {
     mTabMediaController = nullptr;
   }
 
+  if (mCurrentLoad) {
+    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
+  }
+
   if (mWebProgress) {
     RefPtr<BrowsingContextWebProgress> progress = mWebProgress;
     progress->ContextDiscarded();
