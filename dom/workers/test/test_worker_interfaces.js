@@ -205,9 +205,9 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "ImageData", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "Lock", nightly: true },
+  "Lock",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "LockManager", nightly: true },
+  "LockManager",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "MessageChannel", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -354,7 +354,7 @@ function createInterfaceMap(data, ...interfaceGroups) {
   function addInterfaces(interfaces) {
     for (var entry of interfaces) {
       if (typeof entry === "string") {
-        interfaceMap[entry] = !isInsecureContext;
+        interfaceMap[entry] = !data.isInsecureContext;
       } else {
         ok(!("pref" in entry), "Bogus pref annotation for " + entry.name);
         interfaceMap[entry.name] = !entryDisabled(entry, data);
