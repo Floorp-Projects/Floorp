@@ -565,11 +565,16 @@ var HeuristicsRegExp = {
     let rules = [];
     this.RULE_SETS.forEach(set => {
       if (set[name]) {
-        rules.push(`(${set[name]})`.normalize("NFKC"));
+        // Add the rule.
+        // We make the regex lower case so that we can match it against the
+        // lower-cased field name and get a rough equivalent of a case-insensitive
+        // match. This avoids a performance cliff with the "iu" flag on regular
+        // expressions.
+        rules.push(`(${set[name].toLowerCase()})`.normalize("NFKC"));
       }
     });
 
-    const value = new RegExp(rules.join("|"), "iu");
+    const value = new RegExp(rules.join("|"), "u");
     Object.defineProperty(this.RULES, name, { get: undefined });
     Object.defineProperty(this.RULES, name, { value });
     return value;
