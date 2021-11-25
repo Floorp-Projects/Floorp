@@ -293,7 +293,7 @@ add_task(async function test_normal_background_tab() {
   let originalTab = gBrowser.selectedTab;
 
   await BrowserTestUtils.withNewTab(
-    "http://example.com/browser/dom/ipc/tests/file_cross_frame.html",
+    "https://example.com/browser/dom/ipc/tests/file_cross_frame.html",
     async browser => {
       let tab = gBrowser.getTabForBrowser(browser);
       await assertPriorityChangeOnBackground({
@@ -321,7 +321,7 @@ add_task(async function test_normal_background_tab() {
 add_task(async function test_iframe_navigate() {
   // The URI we're going to navigate the iframe to.
   let iframeURI2 =
-    "http://mochi.test:8888/browser/dom/ipc/tests/file_dummy.html";
+    "https://test1.example.org/browser/dom/ipc/tests/file_dummy.html";
 
   // Load this as a top level tab so that when we later load it as an iframe we
   // won't be creating a new process, so that we're testing the "load a new page"
@@ -341,7 +341,7 @@ add_task(async function test_iframe_navigate() {
   );
 
   await BrowserTestUtils.withNewTab(
-    "http://example.com/browser/dom/ipc/tests/file_cross_frame.html",
+    "https://example.com/browser/dom/ipc/tests/file_cross_frame.html",
     async browser => {
       Assert.equal(
         gTabPriorityWatcher.currentPriority(newIFrameTabChildID),
@@ -429,7 +429,7 @@ add_task(async function test_cross_group_navigate() {
   );
 
   await BrowserTestUtils.withNewTab(
-    "http://example.org/browser/dom/ipc/tests/file_cross_frame.html",
+    "https://example.org/browser/dom/ipc/tests/file_cross_frame.html",
     async browser => {
       Assert.equal(
         gTabPriorityWatcher.currentPriority(backgroundTabChildID),
@@ -483,12 +483,12 @@ add_task(async function test_cross_group_navigate() {
 add_task(async function test_video_background_tab() {
   let originalTab = gBrowser.selectedTab;
 
-  await BrowserTestUtils.withNewTab("http://example.com", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     // Let's load up a video in the tab, but mute it, so that this tab should
     // reach PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE.
     await SpecialPowers.spawn(browser, [], async () => {
       let video = content.document.createElement("video");
-      video.src = "http://mochi.test:8888/browser/dom/ipc/tests/short.mp4";
+      video.src = "https://test1.example.org/browser/dom/ipc/tests/short.mp4";
       video.muted = true;
       content.document.body.appendChild(video);
       // We'll loop the video to avoid it ending before the test is done.
@@ -547,12 +547,12 @@ add_task(async function test_video_background_tab() {
 add_task(async function test_audio_background_tab() {
   let originalTab = gBrowser.selectedTab;
 
-  await BrowserTestUtils.withNewTab("http://example.com", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     // Let's load up some audio in the tab, but mute it, so that this tab should
     // reach PROCESS_PRIORITY_BACKGROUND.
     await SpecialPowers.spawn(browser, [], async () => {
       let audio = content.document.createElement("audio");
-      audio.src = "http://mochi.test:8888/browser/dom/ipc/tests/owl.mp3";
+      audio.src = "https://test1.example.org/browser/dom/ipc/tests/owl.mp3";
       audio.muted = true;
       content.document.body.appendChild(audio);
       // We'll loop the audio to avoid it ending before the test is done.
@@ -622,7 +622,7 @@ add_task(async function test_audio_background_tab() {
 add_task(async function test_web_audio_background_tab() {
   let originalTab = gBrowser.selectedTab;
 
-  await BrowserTestUtils.withNewTab("http://example.com", async browser => {
+  await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     // Let's synthesize a basic square wave as WebAudio.
     await SpecialPowers.spawn(browser, [], async () => {
       let audioCtx = new content.AudioContext();
@@ -687,7 +687,7 @@ add_task(async function test_web_audio_background_tab() {
  * a bfcached session history entry.
  */
 add_task(async function test_audio_background_tab() {
-  let page1 = "http://example.com";
+  let page1 = "https://example.com";
   let page2 = page1 + "/?2";
 
   await BrowserTestUtils.withNewTab(page1, async browser => {
