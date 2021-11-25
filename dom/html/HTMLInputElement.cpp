@@ -3031,6 +3031,10 @@ void HTMLInputElement::Select() {
 void HTMLInputElement::DispatchSelectEvent(nsPresContext* aPresContext) {
   // If already handling select event, don't dispatch a second.
   if (!mHandlingSelectEvent) {
+    // FYI: If you want to skip dispatching eFormSelect event and if there are
+    //      no event listeners, you can refer
+    //      nsPIDOMWindow::HasFormSelectEventListeners(), but be careful about
+    //      some C++ event handlers, e.g., EventTarget::PostHandleEvent().
     WidgetEvent event(true, eFormSelect);
 
     mHandlingSelectEvent = true;

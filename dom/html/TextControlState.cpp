@@ -859,9 +859,13 @@ void TextInputListener::OnSelectionChange(Selection& aSelection,
   // Mozilla: If we have non-empty selection we will fire a new event for each
   //          keypress (or mouseup) if the selection changed. Mozilla will also
   //          create the event each time select all is called, even if
-  //          everything was previously selected, becase technically select all
+  //          everything was previously selected, because technically select all
   //          will first collapse and then extend. Mozilla will never create an
   //          event if the selection collapses to nothing.
+  // FYI: If you want to skip dispatching eFormSelect event and if there are no
+  //      event listeners, you can refer
+  //      nsPIDOMWindow::HasFormSelectEventListeners(), but be careful about
+  //      some C++ event handlers, e.g., HTMLTextAreaElement::PostHandleEvent().
   bool collapsed = aSelection.IsCollapsed();
   if (!collapsed && (aReason & (nsISelectionListener::MOUSEUP_REASON |
                                 nsISelectionListener::KEYPRESS_REASON |
