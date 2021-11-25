@@ -33,10 +33,12 @@ async function aDownloadLaunchedWithAppIsSavedInFolder(downloadDir) {
   let downloadFinishedPromise = promiseDownloadFinished(publicList);
   let initialTabsCount = gBrowser.tabs.length;
 
-  let loadingTab = await BrowserTestUtils.openNewForegroundTab(
+  let loadingTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
-    TEST_PATH + "file_image_svgxml.svg"
-  );
+    opening: TEST_PATH + "file_image_svgxml.svg",
+    waitForLoad: false,
+    waitForStateStop: true,
+  });
 
   let download = await downloadFinishedPromise;
   await BrowserTestUtils.waitForCondition(
