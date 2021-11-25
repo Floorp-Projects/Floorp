@@ -1215,6 +1215,13 @@ if (gIsWindows) {
       "boolean",
       "hasWinPackageId must be a boolean."
     );
+    // This is only sent for Mozilla produced MSIX packages
+    Assert.ok(
+      !("winPackageFamilyName" in data.system) ||
+        data.system.winPackageFamilyName === null ||
+        typeof data.system.winPackageFamilyName === "string",
+      "winPackageFamilyName must be a string if non null"
+    );
     // These should be numbers if they are not null
     for (let f of [
       "count",
