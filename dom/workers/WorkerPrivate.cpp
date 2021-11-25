@@ -651,7 +651,7 @@ class DebuggerImmediateRunnable : public WorkerRunnable {
 };
 
 void PeriodicGCTimerCallback(nsITimer* aTimer, void* aClosure) {
-  auto workerPrivate = static_cast<WorkerPrivate*>(aClosure);
+  auto* workerPrivate = static_cast<WorkerPrivate*>(aClosure);
   MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
   workerPrivate->GarbageCollectInternal(workerPrivate->GetJSContext(),
@@ -660,7 +660,7 @@ void PeriodicGCTimerCallback(nsITimer* aTimer, void* aClosure) {
 }
 
 void IdleGCTimerCallback(nsITimer* aTimer, void* aClosure) {
-  auto workerPrivate = static_cast<WorkerPrivate*>(aClosure);
+  auto* workerPrivate = static_cast<WorkerPrivate*>(aClosure);
   MOZ_DIAGNOSTIC_ASSERT(workerPrivate);
   workerPrivate->AssertIsOnWorkerThread();
   workerPrivate->GarbageCollectInternal(workerPrivate->GetJSContext(),
@@ -3140,7 +3140,7 @@ namespace {
  * runnable queues as part of this cleanup.
  */
 uint32_t GetEffectiveEventLoopRecursionDepth() {
-  auto ccjs = CycleCollectedJSContext::Get();
+  auto* ccjs = CycleCollectedJSContext::Get();
   if (ccjs) {
     return ccjs->RecursionDepth();
   }
@@ -3975,7 +3975,7 @@ already_AddRefed<nsIEventTarget> WorkerPrivate::CreateNewSyncLoop(
     }
   }
 
-  auto queue = static_cast<ThreadEventQueue*>(mThread->EventQueue());
+  auto* queue = static_cast<ThreadEventQueue*>(mThread->EventQueue());
   nsCOMPtr<nsISerialEventTarget> realEventTarget = queue->PushEventQueue();
   MOZ_ASSERT(realEventTarget);
 
@@ -4098,7 +4098,7 @@ bool WorkerPrivate::DestroySyncLoop(uint32_t aLoopIndex) {
 
   bool result = loopInfo->mResult;
 
-  auto queue = static_cast<ThreadEventQueue*>(mThread->EventQueue());
+  auto* queue = static_cast<ThreadEventQueue*>(mThread->EventQueue());
   queue->PopEventQueue(nestedEventTarget);
 
   // Are we making a 1 -> 0 transition here?
