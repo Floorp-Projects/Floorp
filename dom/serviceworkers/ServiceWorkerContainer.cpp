@@ -25,6 +25,7 @@
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StorageAccess.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/dom/ClientIPCTypes.h"
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"
 #include "mozilla/dom/MessageEvent.h"
@@ -610,13 +611,17 @@ void ServiceWorkerContainer::GetScopeForUrl(const nsAString& aUrl,
     return;
   }
 
-  nsCOMPtr<Document> doc = window->GetExtantDoc();
-  if (NS_WARN_IF(!doc)) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  nsCOMPtr<nsIPrincipal> principal;
+  nsresult rv = StoragePrincipalHelper::GetPrincipal(
+      window, StoragePrincipalHelper::eForeignPartitionedPrincipal,
+      getter_AddRefs(principal));
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
     return;
   }
 
-  aRv = swm->GetScopeForUrl(doc->NodePrincipal(), aUrl, aScope);
+  aRv = swm->GetScopeForUrl(principal, aUrl, aScope);
 }
 
 nsIGlobalObject* ServiceWorkerContainer::GetGlobalIfValid(
