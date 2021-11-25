@@ -2749,9 +2749,11 @@ FunctionEntry = class FunctionEntry extends CallEntry {
         "returns",
         "permissions",
         "allowAmbiguousOptionalArguments",
+        "allowCrossOriginArguments",
       ]),
       schema.unsupported || false,
       schema.allowAmbiguousOptionalArguments || false,
+      schema.allowCrossOriginArguments || false,
       returns,
       schema.permissions || null
     );
@@ -2764,6 +2766,7 @@ FunctionEntry = class FunctionEntry extends CallEntry {
     type,
     unsupported,
     allowAmbiguousOptionalArguments,
+    allowCrossOriginArguments,
     returns,
     permissions
   ) {
@@ -2771,6 +2774,7 @@ FunctionEntry = class FunctionEntry extends CallEntry {
     this.unsupported = unsupported;
     this.returns = returns;
     this.permissions = permissions;
+    this.allowCrossOriginArguments = allowCrossOriginArguments;
 
     this.isAsync = type.isAsync;
     this.hasAsyncCallback = type.hasAsyncCallback;
@@ -2863,7 +2867,11 @@ FunctionEntry = class FunctionEntry extends CallEntry {
     }
 
     return {
-      descriptor: { value: Cu.exportFunction(stub, context.cloneScope) },
+      descriptor: {
+        value: Cu.exportFunction(stub, context.cloneScope, {
+          allowCrossOriginArguments: this.allowCrossOriginArguments,
+        }),
+      },
       revoke() {
         apiImpl.revoke();
         apiImpl = null;

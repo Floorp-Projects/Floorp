@@ -2004,3 +2004,73 @@ add_task(async function testBooleanEnum() {
     "should throw because enum of the type restricts parameter to true"
   );
 });
+
+let xoriginJson = [
+  {
+    namespace: "xorigin",
+    types: [],
+    functions: [
+      {
+        name: "foo",
+        type: "function",
+        parameters: [
+          {
+            name: "arg",
+            type: "any",
+          },
+        ],
+      },
+      {
+        name: "crossFoo",
+        type: "function",
+        allowCrossOriginArguments: true,
+        parameters: [
+          {
+            name: "arg",
+            type: "any",
+          },
+        ],
+      },
+    ],
+  },
+];
+
+add_task(async function testCrossOriginArguments() {
+  let url = "data:," + JSON.stringify(xoriginJson);
+  Schemas._rootSchema = null;
+  await Schemas.load(url);
+
+  let sandbox = new Cu.Sandbox("http://test.com");
+
+  let testingApiObj = {
+    foo(arg) {
+      sandbox.result = JSON.stringify(arg);
+    },
+    crossFoo(arg) {
+      sandbox.xResult = JSON.stringify(arg);
+    },
+  };
+
+  let localWrapper = {
+    manifestVersion: 2,
+    cloneScope: sandbox,
+    shouldInject(ns) {
+      return true;
+    },
+    getImplementation(ns, name) {
+      return new LocalAPIImplementation(testingApiObj, name, null);
+    },
+  };
+
+  let root = {};
+  Schemas.inject(root, localWrapper);
+
+  Assert.throws(
+    () => root.xorigin.foo({ key: 13 }),
+    /Permission denied to pass object/
+  );
+  equal(sandbox.result, undefined, "Foo can't read cross origin object.");
+
+  root.xorigin.crossFoo({ answer: 42 });
+  equal(sandbox.xResult, '{"answer":42}', "Can read cross origin object.");
+});
