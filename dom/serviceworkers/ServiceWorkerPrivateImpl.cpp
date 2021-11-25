@@ -160,7 +160,18 @@ nsresult ServiceWorkerPrivateImpl::Initialize() {
       net::CookieJarSettings::Create(principal);
   MOZ_ASSERT(cookieJarSettings);
 
-  net::CookieJarSettings::Cast(cookieJarSettings)->SetPartitionKey(uri);
+  // We can populate the partitionKey from the originAttribute of the principal
+  // if it has partitionKey set. It's because ServiceWorker is using the foreign
+  // partitioned principal and it implies that it's a third-party service
+  // worker. So, the cookieJarSettings can directly use the partitionKey from
+  // it. For first-party case, we can populate the partitionKey from the
+  // principal URI.
+  if (!principal->OriginAttributesRef().mPartitionKey.IsEmpty()) {
+    net::CookieJarSettings::Cast(cookieJarSettings)
+        ->SetPartitionKey(principal->OriginAttributesRef().mPartitionKey);
+  } else {
+    net::CookieJarSettings::Cast(cookieJarSettings)->SetPartitionKey(uri);
+  }
 
   net::CookieJarSettingsArgs cjsData;
   net::CookieJarSettings::Cast(cookieJarSettings)->Serialize(cjsData);

@@ -49,6 +49,7 @@
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/Services.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -1671,16 +1672,31 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
 
   info.mPrincipal = mInfo->Principal();
   info.mLoadingPrincipal = info.mPrincipal;
-  // PartitionedPrincipal for ServiceWorkers is equal to mPrincipal because, at
-  // the moment, ServiceWorkers are not exposed in partitioned contexts.
-  info.mPartitionedPrincipal = info.mPrincipal;
+
   info.mCookieJarSettings =
       mozilla::net::CookieJarSettings::Create(info.mPrincipal);
 
   MOZ_ASSERT(info.mCookieJarSettings);
 
-  net::CookieJarSettings::Cast(info.mCookieJarSettings)
-      ->SetPartitionKey(info.mResolvedScriptURI);
+  // We can get the partitionKey from the principal of the ServiceWorker because
+  // it's a foreign partitioned principal. In other words, the principal will
+  // have the partitionKey if it's in a third-party context. Otherwise, we can
+  // set the partitionKey via the script URI because it's in the first-party
+  // context.
+  if (!info.mPrincipal->OriginAttributesRef().mPartitionKey.IsEmpty()) {
+    net::CookieJarSettings::Cast(info.mCookieJarSettings)
+        ->SetPartitionKey(info.mPrincipal->OriginAttributesRef().mPartitionKey);
+  } else {
+    net::CookieJarSettings::Cast(info.mCookieJarSettings)
+        ->SetPartitionKey(info.mResolvedScriptURI);
+  }
+
+  nsCOMPtr<nsIPrincipal> partitionedPrincipal;
+  StoragePrincipalHelper::CreatePartitionedPrincipalForServiceWorker(
+      info.mPrincipal, info.mCookieJarSettings,
+      getter_AddRefs(partitionedPrincipal));
+
+  info.mPartitionedPrincipal = partitionedPrincipal;
 
   info.mStorageAccess =
       StorageAllowedForServiceWorker(info.mPrincipal, info.mCookieJarSettings);
