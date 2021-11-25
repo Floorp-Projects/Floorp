@@ -402,7 +402,6 @@ impl FrameBuilder {
                 global_device_pixel_scale,
                 spatial_tree,
                 global_screen_world_rect,
-                surfaces: &mut surfaces,
                 debug_flags,
                 scene_properties,
                 config: scene.config,
@@ -457,6 +456,7 @@ impl FrameBuilder {
                             tile_cache,
                             true,
                             &mut scene.prim_instances,
+                            &mut surfaces,
                         );
 
                         // Build the dirty region(s) for this tile cache.
