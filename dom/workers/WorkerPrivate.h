@@ -1017,6 +1017,15 @@ class WorkerPrivate final : public RelativeTimeline {
 
   ~WorkerPrivate();
 
+  struct AgentClusterIdAndCoop {
+    nsID mId;
+    nsILoadInfo::CrossOriginOpenerPolicy mCoop;
+  };
+
+  static AgentClusterIdAndCoop ComputeAgentClusterIdAndCoop(
+      WorkerPrivate* aParent, WorkerKind aWorkerKind,
+      WorkerLoadInfo* aLoadInfo);
+
   bool MayContinueRunning() {
     AssertIsOnWorkerThread();
 
