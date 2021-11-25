@@ -113,8 +113,6 @@ DocumentChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   args.cacheKey() = mCacheKey;
   args.channelId() = mChannelId;
   args.asyncOpenTime() = TimeStamp::Now();
-  args.parentInitiatedNavigationEpoch() =
-      loadingContext->GetParentInitiatedNavigationEpoch();
 
   Maybe<IPCClientInfo> ipcClientInfo;
   if (mInitialClientInfo.isSome()) {

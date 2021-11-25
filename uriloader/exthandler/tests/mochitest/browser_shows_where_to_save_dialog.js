@@ -51,12 +51,10 @@ add_task(async function aDownloadLaunchedWithAppPromptsForFolder() {
     };
   });
 
-  let loadingTab = await BrowserTestUtils.openNewForegroundTab({
+  let loadingTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    opening: TEST_PATH + "file_txt_attachment_test.txt",
-    waitForLoad: false,
-    waitForStateStop: true,
-  });
+    TEST_PATH + "file_txt_attachment_test.txt"
+  );
 
   await filePickerShown;
 
@@ -70,12 +68,10 @@ add_task(async function testFilesHandledInternally() {
 
   ensureMIMEState({ preferredAction: handleInternally });
 
-  let loadingTab = await BrowserTestUtils.openNewForegroundTab({
+  let loadingTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    opening: TEST_PATH + "file_image_svgxml.svg",
-    waitForLoad: false,
-    waitForStateStop: true,
-  });
+    TEST_PATH + "file_image_svgxml.svg"
+  );
 
   await TestUtils.waitForCondition(() => {
     return (
@@ -110,12 +106,10 @@ add_task(async function testFilesHandledBySystemDefaultApp() {
     };
   });
 
-  let loadingTab = await BrowserTestUtils.openNewForegroundTab({
+  let loadingTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    opening: TEST_PATH + "file_pdf_application_pdf.pdf",
-    waitForLoad: false,
-    waitForStateStop: true,
-  });
+    TEST_PATH + "file_pdf_application_pdf.pdf"
+  );
 
   await launchFileCalled;
 
@@ -176,12 +170,10 @@ add_task(async function testFilesHandledByHelperApp() {
     };
   });
 
-  let loadingTab = await BrowserTestUtils.openNewForegroundTab({
+  let loadingTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    opening: TEST_PATH + "file_pdf_application_pdf.pdf",
-    waitForLoad: false,
-    waitForStateStop: true,
-  });
+    TEST_PATH + "file_pdf_application_pdf.pdf"
+  );
 
   await downloadFinishedPromise;
   await launchFileCalled;

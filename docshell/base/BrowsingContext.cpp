@@ -3173,11 +3173,6 @@ auto BrowsingContext::CanSet(FieldIndex<IDX_CurrentInnerWindowId>,
   return CanSetResult::Allow;
 }
 
-bool BrowsingContext::CanSet(FieldIndex<IDX_ParentInitiatedNavigationEpoch>,
-                             const uint64_t& aValue, ContentParent* aSource) {
-  return XRE_IsParentProcess() && !aSource;
-}
-
 void BrowsingContext::DidSet(FieldIndex<IDX_CurrentInnerWindowId>) {
   RefPtr<WindowContext> prevWindowContext = mCurrentWindowContext.forget();
   mCurrentWindowContext = WindowContext::GetById(GetCurrentInnerWindowId());
