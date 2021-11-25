@@ -7,7 +7,6 @@ package org.mozilla.fenix.ui.robots
 import android.net.Uri
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
@@ -44,8 +43,9 @@ class RecentlyClosedTabsRobot {
     fun clickDeleteRecentlyClosedTabs() = recentlyClosedTabsDeleteButton().click()
 
     class Transition {
-        fun clickOpenInNewTab(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
-            recentlyClosedTabsPageTitle().click()
+        fun clickRecentlyClosedItem(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            recentlyClosedTabsPageTitle(title).click()
+            mDevice.waitForIdle()
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
@@ -65,16 +65,16 @@ private fun assertRecentlyClosedTabsMenuView() {
         )
 }
 
-private fun assertEmptyRecentlyClosedTabsList() =
+private fun assertEmptyRecentlyClosedTabsList() {
+    mDevice.waitForIdle()
+
     onView(
         allOf(
             withId(R.id.recently_closed_empty_view),
-            withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)
+            withText(R.string.recently_closed_empty_message)
         )
-    )
-        .check(
-            matches(withText("No recently closed tabs here"))
-        )
+    ).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+}
 
 private fun assertPageUrl(expectedUrl: Uri) = onView(
     allOf(
@@ -88,21 +88,16 @@ private fun assertPageUrl(expectedUrl: Uri) = onView(
         matches(withText(Matchers.containsString(expectedUrl.toString())))
     )
 
-private fun recentlyClosedTabsPageTitle() = onView(
+private fun recentlyClosedTabsPageTitle(title: String) = onView(
     allOf(
         withId(R.id.title),
-        withText("Test_Page_1")
+        withText(title)
     )
 )
 
 private fun assertRecentlyClosedTabsPageTitle(title: String) {
-    recentlyClosedTabsPageTitle()
-        .check(
-            matches(withEffectiveVisibility(Visibility.VISIBLE))
-        )
-        .check(
-            matches(withText(title))
-        )
+    recentlyClosedTabsPageTitle(title)
+        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
 private fun recentlyClosedTabsDeleteButton() =

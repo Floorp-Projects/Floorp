@@ -681,8 +681,8 @@ class SmokeTest {
     }
 
     @Test
-    // Verifies the Open in a new tab option from the Recently Closed Tabs overflow menu
-    fun openRecentlyClosedTabsInNewTabTest() {
+    // Verifies that a recently closed item is properly opened
+    fun openRecentlyClosedItemTest() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         homeScreen {
@@ -699,15 +699,13 @@ class SmokeTest {
             IdlingRegistry.getInstance().register(recentlyClosedTabsListIdlingResource!!)
             verifyRecentlyClosedTabsMenuView()
             IdlingRegistry.getInstance().unregister(recentlyClosedTabsListIdlingResource!!)
-        }.clickOpenInNewTab {
+        }.clickRecentlyClosedItem("Test_Page_1") {
             verifyUrl(website.url.toString())
-        }.openTabDrawer {
-            verifyNormalModeSelected()
         }
     }
 
     @Test
-    // Verifies the delete button from the Recently Closed Tabs
+    // Verifies that tapping the "x" button removes a recently closed item from the list
     fun deleteRecentlyClosedTabsItemTest() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
