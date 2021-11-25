@@ -110,7 +110,14 @@ typedef mozilla::layout::TextDrawTarget TextDrawTarget;
 static bool NeedsToMaskPassword(nsTextFrame* aFrame) {
   MOZ_ASSERT(aFrame);
   MOZ_ASSERT(aFrame->GetContent());
-  return aFrame->GetContent()->HasFlag(NS_MAYBE_MASKED);
+  if (!aFrame->GetContent()->HasFlag(NS_MAYBE_MASKED)) {
+    return false;
+  }
+  nsIFrame* frame =
+      nsLayoutUtils::GetClosestFrameOfType(aFrame, LayoutFrameType::TextInput);
+  MOZ_ASSERT(frame, "How do we have a masked text node without a text input?");
+  return !frame || !frame->GetContent()->AsElement()->State().HasState(
+                       NS_EVENT_STATE_REVEALED);
 }
 
 struct TabWidth {

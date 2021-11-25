@@ -182,6 +182,10 @@ partial interface HTMLInputElement {
   // This function will return null if @autocomplete is not defined for the
   // current @type
   AutocompleteInfo? getAutocompleteInfo();
+
+  [ChromeOnly]
+  // The show/hide password state for a type=password control.
+  attribute boolean showPassword;
 };
 
 interface mixin MozEditableElement {

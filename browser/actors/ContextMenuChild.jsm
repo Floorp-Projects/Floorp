@@ -160,6 +160,12 @@ class ContextMenuChild extends JSWindowActorChild {
         break;
       }
 
+      case "ContextMenu:ToggleShowPassword": {
+        let target = ContentDOMReference.resolve(message.data.targetIdentifier);
+        target.showPassword = !target.showPassword;
+        break;
+      }
+
       case "ContextMenu:ReloadImage": {
         let image = ContentDOMReference.resolve(message.data.targetIdentifier);
 
@@ -857,6 +863,7 @@ class ContextMenuChild extends JSWindowActorChild {
     context.onMozExtLink = false;
     context.onNumeric = false;
     context.onPassword = false;
+    context.passwordRevealed = false;
     context.onSaveableLink = false;
     context.onSpellcheckable = false;
     context.onTextInput = false;
@@ -1059,6 +1066,8 @@ class ContextMenuChild extends JSWindowActorChild {
       context.onNumeric = (editFlags & SpellCheckHelper.NUMERIC) !== 0;
       context.onEditable = (editFlags & SpellCheckHelper.EDITABLE) !== 0;
       context.onPassword = (editFlags & SpellCheckHelper.PASSWORD) !== 0;
+      context.passwordRevealed =
+        context.onPassword && context.target.showPassword;
       context.onSpellcheckable =
         (editFlags & SpellCheckHelper.SPELLCHECKABLE) !== 0;
 
