@@ -358,6 +358,7 @@ events:
     description: |
       An event that indicates that the user
       has accessed recently closed tabs list.
+      Deprecated in favor of "recently_closed_tabs.opened"
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/15366
       - https://github.com/mozilla-mobile/fenix/issues/19923
@@ -3123,6 +3124,165 @@ history:
     notification_emails:
       - android-probes@mozilla.com
     expires: "2022-11-01"
+
+recently_closed_tabs:
+  opened:
+    type: event
+    description: |
+      User opened the "Recently closed tabs" screen.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21009
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22588#issuecomment-1024352995
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-01-31"
+  closed:
+    type: event
+    description: |
+      User closed the "Recently closed tabs" screen.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21009
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22588#issuecomment-1024352995
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-01-31"
+  show_full_history:
+    type: event
+    description: |
+      User tapped "Show full history" to see all history.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21009
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22588#issuecomment-1024352995
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-01-31"
+  open_tab:
+    type: event
+    description: |
+      User tapped on a tab item to be opened.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21009
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22588#issuecomment-1024352995
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-01-31"
+  delete_tab:
+    type: event
+    description: |
+      User tapped the delete button of a tab item.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21009
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22588#issuecomment-1024352995
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-01-31"
+  menu_close:
+    type: event
+    description: |
+      User tapped the close button - "X" to return to the previous screen.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21009
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22588#issuecomment-1024352995
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-01-31"
+  menu_share:
+    type: event
+    description: |
+      User tapped the share menu option for multi selected tabs.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21009
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22588#issuecomment-1024352995
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-01-31"
+  menu_delete:
+    type: event
+    description: |
+      User tapped the delete menu option for multi selected tabs.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21009
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22588#issuecomment-1024352995
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-01-31"
+  menu_open_in_normal_tab:
+    type: event
+    description: |
+      User tapped the "Open in new tab" menu option for multi selected tabs.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21009
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22588#issuecomment-1024352995
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-01-31"
+  menu_open_in_private_tab:
+    type: event
+    description: |
+      User tapped the "Open in private tab" menu option for multi selected tabs.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21009
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22588#issuecomment-1024352995
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-01-31"
+  enter_multiselect:
+    type: event
+    description: |
+      User tapped on a tab item to enter multi select mode.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21009
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22588#issuecomment-1024352995
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-01-31"
+  exit_multiselect:
+    type: event
+    description: |
+      User pressed back or tapped the last selected tab item to exit
+      multiselect.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/21009
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/22588#issuecomment-1024352995
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2023-01-31"
 
 reader_mode:
   available:

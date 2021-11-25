@@ -90,6 +90,18 @@ sealed class Event {
     object HistorySearchTermGroupOpenTab : Event()
     object HistorySearchTermGroupRemoveTab : Event()
     object HistorySearchTermGroupRemoveAll : Event()
+    object RecentlyClosedTabsOpened : Event()
+    object RecentlyClosedTabsClosed : Event()
+    object RecentlyClosedTabsShowFullHistory : Event()
+    object RecentlyClosedTabsOpenTab : Event()
+    object RecentlyClosedTabsDeleteTab : Event()
+    object RecentlyClosedTabsMenuClose : Event()
+    object RecentlyClosedTabsMenuShare : Event()
+    object RecentlyClosedTabsMenuDelete : Event()
+    object RecentlyClosedTabsMenuOpenInNormalTab : Event()
+    object RecentlyClosedTabsMenuOpenInPrivateTab : Event()
+    object RecentlyClosedTabsEnterMultiselect : Event()
+    object RecentlyClosedTabsExitMultiselect : Event()
     object ReaderModeAvailable : Event()
     object ReaderModeOpened : Event()
     object ReaderModeClosed : Event()
@@ -235,7 +247,7 @@ sealed class Event {
 
     object SyncedTabOpened : Event()
 
-    object RecentlyClosedTabsOpened : Event()
+    object RecentlyClosedTabsOpenedOld : Event()
     object HaveOpenTabs : Event()
     object HaveNoOpenTabs : Event()
 

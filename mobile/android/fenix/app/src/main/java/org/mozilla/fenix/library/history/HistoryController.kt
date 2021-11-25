@@ -101,6 +101,6 @@ class DefaultHistoryController(
             HistoryFragmentDirections.actionGlobalRecentlyClosed(),
             NavOptions.Builder().setPopUpTo(R.id.recentlyClosedFragment, true).build()
         )
-        metrics.track(Event.RecentlyClosedTabsOpened)
+        metrics.track(Event.RecentlyClosedTabsOpenedOld)
     }
 }

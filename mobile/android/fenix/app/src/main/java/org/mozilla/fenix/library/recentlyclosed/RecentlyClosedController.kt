@@ -15,6 +15,8 @@ import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.components.metrics.MetricController
 
 @Suppress("TooManyFunctions")
 interface RecentlyClosedController {
@@ -37,6 +39,7 @@ class DefaultRecentlyClosedController(
     private val recentlyClosedStore: RecentlyClosedFragmentStore,
     private val tabsUseCases: TabsUseCases,
     private val activity: HomeActivity,
+    private val metrics: MetricController,
     private val openToBrowser: (item: RecoverableTab, mode: BrowsingMode?) -> Unit
 ) : RecentlyClosedController {
     override fun handleOpen(tab: RecoverableTab, mode: BrowsingMode?) {
@@ -44,28 +47,44 @@ class DefaultRecentlyClosedController(
     }
 
     override fun handleOpen(tabs: Set<RecoverableTab>, mode: BrowsingMode?) {
+        if (mode == BrowsingMode.Normal) {
+            metrics.track(Event.RecentlyClosedTabsMenuOpenInNormalTab)
+        } else if (mode == BrowsingMode.Private) {
+            metrics.track(Event.RecentlyClosedTabsMenuOpenInPrivateTab)
+        }
         recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.DeselectAll)
         tabs.forEach { tab -> handleOpen(tab, mode) }
     }
 
     override fun handleSelect(tab: RecoverableTab) {
+        if (recentlyClosedStore.state.selectedTabs.isEmpty()) {
+            metrics.track(Event.RecentlyClosedTabsEnterMultiselect)
+        }
         recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.Select(tab))
     }
 
     override fun handleDeselect(tab: RecoverableTab) {
+        if (recentlyClosedStore.state.selectedTabs.size == 1) {
+            metrics.track(Event.RecentlyClosedTabsExitMultiselect)
+        }
         recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.Deselect(tab))
     }
 
     override fun handleDelete(tab: RecoverableTab) {
+        metrics.track(Event.RecentlyClosedTabsDeleteTab)
         browserStore.dispatch(RecentlyClosedAction.RemoveClosedTabAction(tab))
     }
 
     override fun handleDelete(tabs: Set<RecoverableTab>) {
+        metrics.track(Event.RecentlyClosedTabsMenuDelete)
         recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.DeselectAll)
-        tabs.forEach { tab -> handleDelete(tab) }
+        tabs.forEach { tab ->
+            browserStore.dispatch(RecentlyClosedAction.RemoveClosedTabAction(tab))
+        }
     }
 
     override fun handleNavigateToHistory() {
+        metrics.track(Event.RecentlyClosedTabsShowFullHistory)
         navController.navigate(
             RecentlyClosedFragmentDirections.actionGlobalHistoryFragment(),
             NavOptions.Builder().setPopUpTo(R.id.historyFragment, true).build()
@@ -73,6 +92,7 @@ class DefaultRecentlyClosedController(
     }
 
     override fun handleShare(tabs: Set<RecoverableTab>) {
+        metrics.track(Event.RecentlyClosedTabsMenuShare)
         val shareData = tabs.map { ShareData(url = it.url, title = it.title) }
         navController.navigate(
             RecentlyClosedFragmentDirections.actionGlobalShareFragment(
@@ -82,6 +102,8 @@ class DefaultRecentlyClosedController(
     }
 
     override fun handleRestore(item: RecoverableTab) {
+        metrics.track(Event.RecentlyClosedTabsOpenTab)
+
         tabsUseCases.restore(item)
 
         browserStore.dispatch(
@@ -95,9 +117,11 @@ class DefaultRecentlyClosedController(
 
     override fun handleBackPressed(): Boolean {
         return if (recentlyClosedStore.state.selectedTabs.isNotEmpty()) {
+            metrics.track(Event.RecentlyClosedTabsExitMultiselect)
             recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.DeselectAll)
             true
         } else {
+            metrics.track(Event.RecentlyClosedTabsClosed)
             false
         }
     }

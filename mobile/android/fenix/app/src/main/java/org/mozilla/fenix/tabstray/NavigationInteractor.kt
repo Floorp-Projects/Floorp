@@ -142,7 +142,7 @@ class DefaultNavigationInteractor(
         navController.navigate(
             TabsTrayFragmentDirections.actionGlobalRecentlyClosed()
         )
-        metrics.track(Event.RecentlyClosedTabsOpened)
+        metrics.track(Event.RecentlyClosedTabsOpenedOld)
     }
 
     override fun onShareTabs(tabs: Collection<TabSessionState>) {
