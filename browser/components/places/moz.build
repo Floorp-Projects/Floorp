@@ -22,7 +22,6 @@ EXTRA_JS_MODULES += [
     "InteractionsBlocklist.jsm",
     "PlacesUIUtils.jsm",
     "Snapshots.jsm",
-    "SnapshotScorer.jsm",
     "SnapshotSelector.jsm",
 ]
 
