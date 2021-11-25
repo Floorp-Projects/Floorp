@@ -3982,7 +3982,7 @@
 # Whether the Web Locks API is enabled
 - name: dom.weblocks.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether the WebMIDI API is enabled
