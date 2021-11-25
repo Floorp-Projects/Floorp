@@ -161,7 +161,9 @@ namespace IOUtils {
   /**
    * Updates the |modification| time for the file at |path|.
    *
-   * @param path         An absolute file path identifying the file to touch.
+   * @param path         An absolute file path identifying the file whose
+   *                     modification time is to be set. This file must exist
+   *                     and will not be created.
    * @param modification An optional modification time for the file expressed in
    *                     milliseconds since the Unix epoch
    *                     (1970-01-01T00:00:00Z). The current system time is used
@@ -171,7 +173,7 @@ namespace IOUtils {
    *         milliseconds since the Unix epoch, otherwise rejects with a
    *         DOMException.
    */
-  Promise<long long> touch(DOMString path, optional long long modification);
+  Promise<long long> setModificationTime(DOMString path, optional long long modification);
   /**
    * Retrieves a (possibly empty) list of immediate children of the directory at
    * |path|. If the file at |path| is not a directory, this method resolves with
