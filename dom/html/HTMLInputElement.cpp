@@ -6426,10 +6426,10 @@ Decimal HTMLInputElement::GetStep() const {
   return step * GetStepScaleFactor();
 }
 
-// nsIConstraintValidation
+// ConstraintValidation
 
 void HTMLInputElement::SetCustomValidity(const nsAString& aError) {
-  nsIConstraintValidation::SetCustomValidity(aError);
+  ConstraintValidation::SetCustomValidity(aError);
 
   UpdateState(true);
 }

@@ -8,9 +8,9 @@
 #define mozilla_dom_HTMLObjectElement_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/ConstraintValidation.h"
 #include "nsGenericHTMLElement.h"
 #include "nsObjectLoadingContent.h"
-#include "nsIConstraintValidation.h"
 
 namespace mozilla {
 namespace dom {
@@ -22,7 +22,7 @@ class WindowProxyHolder;
 
 class HTMLObjectElement final : public nsGenericHTMLFormControlElement,
                                 public nsObjectLoadingContent,
-                                public nsIConstraintValidation {
+                                public ConstraintValidation {
  public:
   explicit HTMLObjectElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -107,8 +107,8 @@ class HTMLObjectElement final : public nsGenericHTMLFormControlElement,
 
   Nullable<WindowProxyHolder> GetContentWindow(nsIPrincipal& aSubjectPrincipal);
 
-  using nsIConstraintValidation::GetValidationMessage;
-  using nsIConstraintValidation::SetCustomValidity;
+  using ConstraintValidation::GetValidationMessage;
+  using ConstraintValidation::SetCustomValidity;
   void GetAlign(DOMString& aValue) { GetHTMLAttr(nsGkAtoms::align, aValue); }
   void SetAlign(const nsAString& aValue, ErrorResult& aRv) {
     SetHTMLAttr(nsGkAtoms::align, aValue, aRv);
