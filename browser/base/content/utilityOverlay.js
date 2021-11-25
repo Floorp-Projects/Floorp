@@ -14,6 +14,7 @@ var { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
+  BrowserUtils: "resource://gre/modules/BrowserUtils.jsm",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.jsm",
@@ -161,93 +162,14 @@ function openUILink(
   openUILinkIn(url, where, params);
 }
 
-// Utility function to check command events for potential middle-click events
-// from checkForMiddleClick and unwrap them.
+// This is here for historical reasons. bug 1742889 covers cleaning this up.
 function getRootEvent(aEvent) {
-  // Part of the fix for Bug 1523813.
-  // Middle-click events arrive here wrapped in different numbers (1-2) of
-  // command events, depending on the button originally clicked.
-  if (!aEvent) {
-    return aEvent;
-  }
-  let tempEvent = aEvent;
-  while (tempEvent.sourceEvent) {
-    if (tempEvent.sourceEvent.button == 1) {
-      aEvent = tempEvent.sourceEvent;
-      break;
-    }
-    tempEvent = tempEvent.sourceEvent;
-  }
-  return aEvent;
+  return BrowserUtils.getRootEvent(aEvent);
 }
 
-/**
- * whereToOpenLink() looks at an event to decide where to open a link.
- *
- * The event may be a mouse event (click, double-click, middle-click) or keypress event (enter).
- *
- * On Windows, the modifiers are:
- * Ctrl        new tab, selected
- * Shift       new window
- * Ctrl+Shift  new tab, in background
- * Alt         save
- *
- * Middle-clicking is the same as Ctrl+clicking (it opens a new tab).
- *
- * Exceptions:
- * - Alt is ignored for menu items selected using the keyboard so you don't accidentally save stuff.
- *    (Currently, the Alt isn't sent here at all for menu items, but that will change in bug 126189.)
- * - Alt is hard to use in context menus, because pressing Alt closes the menu.
- * - Alt can't be used on the bookmarks toolbar because Alt is used for "treat this as something draggable".
- * - The button is ignored for the middle-click-paste-URL feature, since it's always a middle-click.
- *
- * @param e {Event|Object} Event or JSON Object
- * @param ignoreButton {Boolean}
- * @param ignoreAlt {Boolean}
- * @returns {"current" | "tabshifted" | "tab" | "save" | "window"}
- */
+// This is here for historical reasons. bug 1742889 covers cleaning this up.
 function whereToOpenLink(e, ignoreButton, ignoreAlt) {
-  // This method must treat a null event like a left click without modifier keys (i.e.
-  // e = { shiftKey:false, ctrlKey:false, metaKey:false, altKey:false, button:0 })
-  // for compatibility purposes.
-  if (!e) {
-    return "current";
-  }
-
-  e = getRootEvent(e);
-
-  var shift = e.shiftKey;
-  var ctrl = e.ctrlKey;
-  var meta = e.metaKey;
-  var alt = e.altKey && !ignoreAlt;
-
-  // ignoreButton allows "middle-click paste" to use function without always opening in a new window.
-  let middle = !ignoreButton && e.button == 1;
-  let middleUsesTabs = Services.prefs.getBoolPref(
-    "browser.tabs.opentabfor.middleclick",
-    true
-  );
-  let middleUsesNewWindow = Services.prefs.getBoolPref(
-    "middlemouse.openNewWindow",
-    false
-  );
-
-  // Don't do anything special with right-mouse clicks.  They're probably clicks on context menu items.
-
-  var metaKey = AppConstants.platform == "macosx" ? meta : ctrl;
-  if (metaKey || (middle && middleUsesTabs)) {
-    return shift ? "tabshifted" : "tab";
-  }
-
-  if (alt && Services.prefs.getBoolPref("browser.altClickSave", false)) {
-    return "save";
-  }
-
-  if (shift || (middle && !middleUsesTabs && middleUsesNewWindow)) {
-    return "window";
-  }
-
-  return "current";
+  return BrowserUtils.whereToOpenLink(e, ignoreButton, ignoreAlt);
 }
 
 /* openTrustedLinkIn will attempt to open the given URI using the SystemPrincipal
