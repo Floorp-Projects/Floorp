@@ -205,9 +205,9 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "ImageData", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  "Lock",
+  { name: "Lock", nightly: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  "LockManager",
+  { name: "LockManager", nightly: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "MessageChannel", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
