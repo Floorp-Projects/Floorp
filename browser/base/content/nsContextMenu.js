@@ -133,6 +133,7 @@ class nsContextMenu {
         onEditable: this.onEditable,
         onSpellcheckable: this.onSpellcheckable,
         onPassword: this.onPassword,
+        passwordRevealed: this.passwordRevealed,
         srcUrl: this.originalMediaURL,
         frameUrl: this.contentData ? this.contentData.docLocation : undefined,
         pageUrl: this.browser ? this.browser.currentURI.spec : undefined,
@@ -223,6 +224,7 @@ class nsContextMenu {
     this.onMozExtLink = context.onMozExtLink;
     this.onNumeric = context.onNumeric;
     this.onPassword = context.onPassword;
+    this.passwordRevealed = context.passwordRevealed;
     this.onSaveableLink = context.onSaveableLink;
     this.onSpellcheckable = context.onSpellcheckable;
     this.onTextInput = context.onTextInput;
@@ -339,6 +341,7 @@ class nsContextMenu {
     this.initPasswordManagerItems();
     this.initViewSourceItems();
     this.initScreenshotItem();
+    this.initPasswordControlItems();
 
     this.showHideSeparators(aXulMenu);
     if (!aXulMenu.showHideSeparators) {
@@ -1152,6 +1155,26 @@ class nsContextMenu {
 
     this.showItem("context-sep-screenshots", shouldShow);
     this.showItem("context-take-screenshot", shouldShow);
+  }
+
+  initPasswordControlItems() {
+    let shouldShow = this.onPassword && SHOW_PASSWORD_ENABLED;
+    if (shouldShow) {
+      let checked = this.passwordRevealed;
+      let showPasswordMenuItem = document.getElementById(
+        "context-toggle-show-password"
+      );
+      if (checked) {
+        showPasswordMenuItem.setAttribute("checked", "true");
+      } else {
+        showPasswordMenuItem.removeAttribute("checked");
+      }
+    }
+    this.showItem("context-toggle-show-password", shouldShow);
+  }
+
+  toggleShowPassword() {
+    this.actor.toggleShowPassword(this.targetIdentifier);
   }
 
   openPasswordManager() {
@@ -2239,5 +2262,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "SCREENSHOT_BROWSER_COMPONENT",
   "screenshots.browser.component.enabled",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "SHOW_PASSWORD_ENABLED",
+  "layout.forms.input-type-show-password-button.enabled",
   false
 );

@@ -449,3 +449,7 @@ main-context-menu-eme-learn-more =
 main-context-menu-open-link-in-container-tab =
     .label = Open Link in New { $containerName } Tab
     .accesskey = T
+
+main-context-menu-toggle-show-password =
+    .label = Show Password
+    .accesskey = d

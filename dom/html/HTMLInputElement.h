@@ -233,6 +233,8 @@ class HTMLInputElement final : public TextControlElement,
   MOZ_CAN_RUN_SCRIPT nsresult
   SetValueFromSetRangeText(const nsAString& aValue) override;
   bool HasCachedSelection() override;
+  void SetShowPassword(bool aValue);
+  bool ShowPassword() const;
 
   /**
    * TextEditorValueEquals() is designed for internal use so that aValue
@@ -929,11 +931,6 @@ class HTMLInputElement final : public TextControlElement,
   // A getter for callers that know we're not dealing with a file input, so they
   // don't have to think about the caller type.
   void GetNonFileValueInternal(nsAString& aValue) const;
-
-  /**
-   * Returns whether the current placeholder value should be shown.
-   */
-  bool ShouldShowPlaceholder() const;
 
   void ClearFiles(bool aSetValueChanged);
 

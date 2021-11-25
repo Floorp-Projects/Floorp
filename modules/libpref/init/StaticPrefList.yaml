@@ -7580,6 +7580,12 @@
   value: false
   mirror: always
 
+# Enables the Show Password button inside a <input type=password>.
+- name: layout.forms.input-type-show-password-button.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Pref to control browser frame rate, in Hz. A value <= 0 means choose
 # automatically based on knowledge of the platform (or 60Hz if no platform-
 # specific information is available).
