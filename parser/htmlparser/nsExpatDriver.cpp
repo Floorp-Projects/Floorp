@@ -1631,11 +1631,7 @@ void nsExpatDriver::MaybeStopParser(nsresult aState) {
     // with false as the last argument). If the parser should be blocked or
     // interrupted we need to pause Expat (by calling XML_StopParser with
     // true as the last argument).
-
-    // Note that due to Bug 1742913, we need to explicitly cast the parameter to
-    // an int so that the value is correctly zero extended.
-    int resumable = BlockedOrInterrupted();
-    RLBOX_EXPAT_MCALL(MOZ_XML_StopParser, resumable);
+    RLBOX_EXPAT_MCALL(MOZ_XML_StopParser, BlockedOrInterrupted());
   } else if (NS_SUCCEEDED(mInternalState)) {
     // Only clobber mInternalState with the success code if we didn't block or
     // interrupt before.
