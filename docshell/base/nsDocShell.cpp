@@ -2456,8 +2456,14 @@ void nsDocShell::MaybeCreateInitialClientSource(nsIPrincipal* aPrincipal) {
     return;
   }
 
+  // We cannot get inherited foreign partitioned principal here. Instead, we
+  // directly check which principal we want to inherit for the service worker.
   nsIPrincipal* principal =
-      aPrincipal ? aPrincipal : GetInheritedPrincipal(false);
+      aPrincipal
+          ? aPrincipal
+          : GetInheritedPrincipal(
+                false, StoragePrincipalHelper::
+                           ShouldUsePartitionPrincipalForServiceWorker(this));
 
   // Sometimes there is no principal available when we are called from
   // CreateAboutBlankContentViewer.  For example, sometimes the principal
@@ -6625,7 +6631,14 @@ nsresult nsDocShell::CreateAboutBlankContentViewer(
       partitionedPrincipal = aPartitionedPrincipal;
     }
 
-    MaybeCreateInitialClientSource(principal);
+    // We cannot get the foreign partitioned prinicpal for the initial
+    // about:blank page. So, we change to check if we need to use the
+    // partitioned principal for the service worker here.
+    MaybeCreateInitialClientSource(
+        StoragePrincipalHelper::ShouldUsePartitionPrincipalForServiceWorker(
+            this)
+            ? partitionedPrincipal
+            : principal);
 
     // generate (about:blank) document to load
     blankDoc = nsContentDLF::CreateBlankDocument(mLoadGroup, principal,
