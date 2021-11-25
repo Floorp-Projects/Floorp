@@ -12,6 +12,7 @@
 #include "mozilla/dom/HTMLElement.h"
 #include "mozilla/dom/HTMLFieldSetElement.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/dom/ValidityState.h"
 #include "nsContentUtils.h"
 #include "nsGenericHTMLElement.h"
 
@@ -132,6 +133,16 @@ bool ElementInternals::GetWillValidate(ErrorResult& aRv) const {
     return false;
   }
   return WillValidate();
+}
+
+// https://html.spec.whatwg.org/#dom-elementinternals-validity
+ValidityState* ElementInternals::GetValidity(ErrorResult& aRv) {
+  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+    aRv.ThrowNotSupportedError(
+        "Target element is not a form-associated custom element");
+    return nullptr;
+  }
+  return Validity();
 }
 
 // https://html.spec.whatwg.org/#dom-elementinternals-labels
