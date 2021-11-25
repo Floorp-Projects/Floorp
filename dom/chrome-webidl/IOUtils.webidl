@@ -176,8 +176,7 @@ namespace IOUtils {
   Promise<long long> setModificationTime(DOMString path, optional long long modification);
   /**
    * Retrieves a (possibly empty) list of immediate children of the directory at
-   * |path|. If the file at |path| is not a directory, this method resolves with
-   * an empty list.
+   * |path|.
    *
    * @param path An absolute file path.
    *
@@ -185,7 +184,7 @@ namespace IOUtils {
    *         children of the directory at |path|, otherwise rejects with a
    *         DOMException.
    */
-  Promise<sequence<DOMString>> getChildren(DOMString path);
+  Promise<sequence<DOMString>> getChildren(DOMString path, optional GetChildrenOptions options = {});
   /**
    * Set the permissions of the file at |path|.
    *
@@ -411,6 +410,16 @@ dictionary CopyOptions {
    * If true, copy the source recursively.
    */
   boolean recursive = false;
+};
+
+/**
+ * Options to be passed to the |IOUtils.getChildren| method.
+ */
+dictionary GetChildrenOptions {
+  /**
+   * If true, no error will be reported if the target file is missing.
+   */
+  boolean ignoreAbsent = false;
 };
 
 /**
