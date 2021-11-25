@@ -1380,7 +1380,7 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
 
           result = FuzzXPCRuntimeStart(&jsapi, &argc, &argv,
                                        aShellData->fuzzerDriver);
-#  elif __AFL_COMPILER
+#  elif AFLFUZZ
           MOZ_CRASH("AFL is unsupported for XPC runtime fuzzing integration");
 #  endif
         } else {

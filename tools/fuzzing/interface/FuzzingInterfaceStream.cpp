@@ -21,7 +21,7 @@
 
 namespace mozilla {
 
-#ifdef __AFL_COMPILER
+#ifdef AFLFUZZ
 
 void afl_interface_stream(const char* testFile,
                           FuzzingTestFuncStream testFunc) {
