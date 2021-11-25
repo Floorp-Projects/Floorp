@@ -39,7 +39,7 @@ add_task(async () => {
   await Snapshots.add({ url: TEST_URL2 });
   await Snapshots.add({ url: TEST_URL3 });
 
-  let selector = new SnapshotSelector(5);
+  let selector = new SnapshotSelector({ count: 5 });
 
   let snapshotPromise = selector.once("snapshots-updated");
   selector.setUrl(TEST_URL4);
