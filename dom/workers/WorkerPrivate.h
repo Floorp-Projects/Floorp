@@ -1300,7 +1300,7 @@ class WorkerPrivate final : public RelativeTimeline {
     uint32_t mDebuggerEventLoopLevel;
 
     uint32_t mErrorHandlerRecursionCount;
-    uint32_t mNextTimeoutId;
+    int32_t mNextTimeoutId;
 
     // Tracks the current setTimeout/setInterval nesting level.
     // When there isn't a TimeoutHandler on the stack, this will be 0.
