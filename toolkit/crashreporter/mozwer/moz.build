@@ -6,6 +6,14 @@ USE_LIBS += [
     "mozwer_s",
 ]
 
+# Version string comparison is generally wrong, but by the time it would
+# actually matter, either bug 1489995 would be fixed, or the build would
+# require version >= 1.57.
+if CONFIG["RUSTC_VERSION"] and CONFIG["RUSTC_VERSION"] >= "1.57.0":
+    OS_LIBS += [
+        "bcrypt",
+    ]
+
 DEFFILE = "mozwer.def"
 USE_STATIC_LIBS = True
 
