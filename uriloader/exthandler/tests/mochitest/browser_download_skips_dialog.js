@@ -24,10 +24,12 @@ add_task(async function skipDialogAndDownloadFile() {
 
   let initialTabsCount = gBrowser.tabs.length;
 
-  let loadingTab = await BrowserTestUtils.openNewForegroundTab(
+  let loadingTab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
-    TEST_PATH + "file_image_svgxml.svg"
-  );
+    opening: TEST_PATH + "file_image_svgxml.svg",
+    waitForLoad: false,
+    waitForStateStop: true,
+  });
 
   // We just open the file to be downloaded... and wait for it to be downloaded!
   // We see no dialogs to be accepted in the process.
