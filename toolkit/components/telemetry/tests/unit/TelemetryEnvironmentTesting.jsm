@@ -500,6 +500,13 @@ var TelemetryEnvironmentTesting = {
             "boolean",
             "hasWinPackageId must be available on Windows and have the correct type."
           );
+          // This is only sent for Mozilla produced MSIX packages
+          Assert.ok(
+            !("winPackageFamilyName" in data.system) ||
+              data.system.winPackageFamilyName === null ||
+              typeof data.system.winPackageFamilyName === "string",
+            "winPackageFamilyName must be a string if non null"
+          );
           Assert.ok(
             "virtualMaxMB" in data.system,
             "virtualMaxMB must be available."

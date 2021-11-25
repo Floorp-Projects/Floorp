@@ -119,6 +119,7 @@ Structure:
         isWow64: <bool>, // windows-only
         isWowARM64: <bool>, // windows-only
         hasWinPackageId: <bool>, // windows-only
+        winPackageFamilyName: <string>, // windows-only
         cpu: {
             count: <number>,  // desktop only, e.g. 8, or null on failure - logical cpus
             cores: <number>, // desktop only, e.g., 4, or null on failure - physical cores
