@@ -1687,6 +1687,12 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
 
   info.mOriginAttributes = mInfo->GetOriginAttributes();
 
+  // We don't have a good way to know if a service worker is regsitered under a
+  // third-party context. The only information we can rely on is if the service
+  // worker is running under a partitioned principal.
+  info.mIsThirdPartyContextToTopWindow =
+      !mInfo->Principal()->OriginAttributesRef().mPartitionKey.IsEmpty();
+
   // Verify that we don't have any CSP on pristine client.
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   nsCOMPtr<nsIContentSecurityPolicy> csp;
