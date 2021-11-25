@@ -411,6 +411,43 @@ menuitem.bookmark-item {
     -moz-default-appearance: -moz-window-button-close;
   }
 
+  /* When using lightweight themes, use our own buttons since native ones might
+   * assume a native background in order to be visible. */
+  .titlebar-button:-moz-lwtheme {
+    appearance: none;
+    border-radius: 100%;
+  }
+  .titlebar-button > .toolbarbutton-icon:-moz-lwtheme {
+    padding: 6px;
+    -moz-context-properties: stroke;
+    stroke: currentColor;
+  }
+  .titlebar-min:-moz-lwtheme {
+    list-style-image: url(chrome://browser/skin/window-controls/minimize.svg);
+  }
+  .titlebar-max:-moz-lwtheme {
+    list-style-image: url(chrome://browser/skin/window-controls/maximize.svg);
+  }
+  .titlebar-restore:-moz-lwtheme {
+    list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
+  }
+  .titlebar-close:-moz-lwtheme {
+    list-style-image: url(chrome://browser/skin/window-controls/close.svg);
+  }
+  .titlebar-button:-moz-lwtheme:hover {
+    background-color: color-mix(in srgb, currentColor 12%, transparent);
+  }
+  .titlebar-button:-moz-lwtheme:hover:active {
+    background-color: color-mix(in srgb, currentColor 20%, transparent);
+  }
+  .titlebar-close:-moz-lwtheme:hover {
+    background-color: #d70022;
+    color: white;
+  }
+  .titlebar-close:-moz-lwtheme:hover:active {
+    background-color: #ff0039;
+  }
+
   @media not (-moz-gtk-csd-minimize-button) {
     .titlebar-min {
       display: none;
