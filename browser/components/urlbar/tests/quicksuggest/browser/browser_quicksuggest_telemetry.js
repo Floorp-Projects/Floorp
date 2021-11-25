@@ -15,9 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
 });
 
-const TEST_SJS =
-  "http://mochi.test:8888/browser/browser/components/urlbar/tests/browser/quicksuggest.sjs";
-const TEST_URL = TEST_SJS + "?q=frabbits";
+const TEST_URL = "http://example.com/quicksuggest?q=frabbits";
 const TEST_SEARCH_STRING = "frab";
 const TEST_DATA = [
   {

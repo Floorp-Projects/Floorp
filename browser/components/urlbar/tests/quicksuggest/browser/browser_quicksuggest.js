@@ -11,8 +11,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarQuickSuggest: "resource:///modules/UrlbarQuickSuggest.jsm",
 });
 
-const TEST_URL =
-  "http://mochi.test:8888/browser/browser/components/urlbar/tests/browser/quicksuggest.sjs";
+const TEST_URL = "http://example.com/quicksuggest";
 
 const TEST_DATA = [
   {
