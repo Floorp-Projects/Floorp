@@ -10,14 +10,7 @@ const TEST_URL2 = "https://example.com/2";
 const TEST_URL3 = "https://example.com/3";
 const TEST_URL4 = "https://example.com/4";
 
-let selector;
-let currentSessionUrls = new Set();
-
-function getCurrentSessionUrls() {
-  return currentSessionUrls;
-}
-
-add_task(async function test_setup() {
+add_task(async function test_enable_overlapping() {
   const ONE_MINUTE = 1000 * 60;
   const ONE_HOUR = ONE_MINUTE * 60;
 
@@ -37,17 +30,11 @@ add_task(async function test_setup() {
     { url: TEST_URL4, created_at: now - ONE_HOUR, updated_at: now - ONE_HOUR },
   ]);
 
-  selector = new SnapshotSelector({
-    count: 5,
-    filterAdult: false,
-    selectOverlappingVisits: true,
-    getCurrentSessionUrls,
-  });
-});
-
-add_task(async function test_enable_overlapping() {
-  // Allow all snapshots regardless of their score.
-  Services.prefs.setIntPref("browser.places.snapshots.threshold", -10);
+  let selector = new SnapshotSelector(
+    5 /* count */,
+    false /* filter adult */,
+    true /* selectOverlappingVisits */
+  );
 
   let snapshotPromise = selector.once("snapshots-updated");
   selector.rebuild();
@@ -65,26 +52,5 @@ add_task(async function test_enable_overlapping() {
   snapshots = await snapshotPromise;
 
   // Only snapshots with overlaping interactions should be selected
-  await assertSnapshotList(snapshots, [{ url: TEST_URL2 }]);
-});
-
-add_task(async function test_overlapping_with_scoring() {
-  // Reset the threshold, the snapshot should be lower than the required score.
-  Services.prefs.clearUserPref("browser.places.snapshots.threshold");
-
-  let snapshotPromise = selector.once("snapshots-updated");
-  selector.rebuild();
-  let snapshots = await snapshotPromise;
-
-  await assertSnapshotList(snapshots, []);
-
-  // Boost the score of the expected snapshot by adding it to the current url
-  // set.
-  currentSessionUrls.add(TEST_URL2);
-
-  snapshotPromise = selector.once("snapshots-updated");
-  selector.rebuild();
-  snapshots = await snapshotPromise;
-
   await assertSnapshotList(snapshots, [{ url: TEST_URL2 }]);
 });
