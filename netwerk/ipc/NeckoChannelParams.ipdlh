@@ -440,6 +440,7 @@ struct DocumentChannelCreationArgs {
   nsDOMNavigationTiming? timing;
   IPCClientInfo? initialClientInfo;
   DocumentChannelElementCreationArgs elementCreationArgs;
+  uint64_t parentInitiatedNavigationEpoch;
 };
 
 struct RedirectToRealChannelArgs {
