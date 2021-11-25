@@ -13,7 +13,7 @@ use std::thread;
 use crate::{
     api::units::*, api::ColorDepth, api::ColorF, api::ExternalImageId, api::ImageRendering, api::YuvRangedColorSpace,
     Compositor, CompositorCapabilities, CompositorSurfaceTransform, NativeSurfaceId, NativeSurfaceInfo, NativeTileId,
-    profiler, MappableCompositor, SWGLCompositeSurfaceInfo,
+    profiler, MappableCompositor, SWGLCompositeSurfaceInfo, WindowVisibility,
 };
 
 pub struct SwTile {
@@ -1499,5 +1499,9 @@ impl Compositor for SwCompositor {
 
     fn get_capabilities(&self) -> CompositorCapabilities {
         self.compositor.get_capabilities()
+    }
+
+    fn get_window_visibility(&self) -> WindowVisibility {
+        self.compositor.get_window_visibility()
     }
 }

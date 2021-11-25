@@ -153,6 +153,8 @@ class RenderCompositor {
   // compositor might require.
   virtual void GetCompositorCapabilities(CompositorCapabilities* aCaps);
 
+  virtual void GetWindowVisibility(WindowVisibility* aVisibility);
+
   // Interface for partial present
   virtual bool UsePartialPresent() { return false; }
   virtual bool RequestFullRender() { return false; }

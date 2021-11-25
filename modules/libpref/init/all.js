@@ -660,6 +660,7 @@ pref("gfx.webrender.debug.obscure-images", false);
 pref("gfx.webrender.debug.glyph-flashing", false);
 pref("gfx.webrender.debug.capture-profiler", false);
 pref("gfx.webrender.debug.profiler-ui", "Default");
+pref("gfx.webrender.debug.window-visibility", false);
 
 pref("gfx.webrender.multithreading", true);
 #ifdef XP_WIN

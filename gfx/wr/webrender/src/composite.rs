@@ -973,6 +973,32 @@ impl Default for CompositorCapabilities {
     }
 }
 
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub enum WindowSizeMode {
+    Normal,
+    Minimized,
+    Maximized,
+    Fullscreen,
+    Invalid,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Debug)]
+pub struct WindowVisibility {
+    pub size_mode: WindowSizeMode,
+    pub is_fully_occluded: bool,
+}
+
+impl Default for WindowVisibility {
+    fn default() -> Self {
+        WindowVisibility {
+            size_mode: WindowSizeMode::Normal,
+            is_fully_occluded: false,
+        }
+    }
+}
+
 /// The transform type to apply to Compositor surfaces.
 // TODO: Should transform from CompositorSurfacePixel instead, but this requires a cleanup of the
 // Compositor API to use CompositorSurface-space geometry instead of Device-space where necessary
@@ -1120,6 +1146,8 @@ pub trait Compositor {
     /// specify what features a compositor supports, depending on the
     /// underlying platform
     fn get_capabilities(&self) -> CompositorCapabilities;
+
+    fn get_window_visibility(&self) -> WindowVisibility;
 }
 
 /// Information about the underlying data buffer of a mapped tile.

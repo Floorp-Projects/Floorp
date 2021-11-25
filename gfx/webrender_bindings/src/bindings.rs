@@ -42,7 +42,7 @@ use webrender::{
     MappedTileInfo, NativeSurfaceId, NativeSurfaceInfo, NativeTileId, PartialPresentCompositor, PipelineInfo,
     ProfilerHooks, RecordedFrameHandle, Renderer, RendererOptions, RendererStats, SWGLCompositeSurfaceInfo,
     SceneBuilderHooks, ShaderPrecacheFlags, Shaders, SharedShaders, TextureCacheConfig, UploadMethod,
-    ONE_TIME_USAGE_HINT,
+    ONE_TIME_USAGE_HINT, WindowVisibility,
 };
 use wr_malloc_size_of::MallocSizeOfOps;
 
@@ -1258,6 +1258,7 @@ extern "C" {
     fn wr_compositor_enable_native_compositor(compositor: *mut c_void, enable: bool);
     fn wr_compositor_deinit(compositor: *mut c_void);
     fn wr_compositor_get_capabilities(compositor: *mut c_void, caps: *mut CompositorCapabilities);
+    fn wr_compositor_get_window_visibility(compositor: *mut c_void, caps: *mut WindowVisibility);
     fn wr_compositor_map_tile(
         compositor: *mut c_void,
         id: NativeTileId,
@@ -1405,6 +1406,14 @@ impl Compositor for WrCompositor {
             let mut caps: CompositorCapabilities = Default::default();
             wr_compositor_get_capabilities(self.0, &mut caps);
             caps
+        }
+    }
+
+    fn get_window_visibility(&self) -> WindowVisibility {
+        unsafe {
+            let mut visibility: WindowVisibility = Default::default();
+            wr_compositor_get_window_visibility(self.0, &mut visibility);
+            visibility
         }
     }
 }
