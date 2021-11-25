@@ -2234,7 +2234,11 @@ pref("devtools.target-switching.server.enabled", true);
 
 // Setting this preference to true will result in DevTools creating a target for each frame
 // (i.e. not only for top-level document and remote frames).
+#if defined(NIGHTLY_BUILD)
+pref("devtools.every-frame-target.enabled", true);
+#else
 pref("devtools.every-frame-target.enabled", false);
+#endif
 
 // Toolbox Button preferences
 pref("devtools.command-button-pick.enabled", true);
