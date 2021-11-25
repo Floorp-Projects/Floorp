@@ -2584,6 +2584,21 @@ option(
 )
 
 
+option(
+    "--enable-snapshot-fuzzing",
+    help="Enable experimental snapshot fuzzing support",
+)
+
+
+imply_option("--enable-fuzzing", True, when="--enable-snapshot-fuzzing")
+
+
+@depends("--enable-snapshot-fuzzing")
+def enable_snapshot_fuzzing(value):
+    if value:
+        return True
+
+
 @depends("--enable-fuzzing")
 def enable_fuzzing(value):
     if value:
@@ -2596,9 +2611,15 @@ def enable_js_fuzzilli(value):
         return True
 
 
+@depends(enable_fuzzing, enable_snapshot_fuzzing)
+def check_aflfuzzer(fuzzing, snapshot_fuzzing):
+    if fuzzing and not snapshot_fuzzing:
+        return True
+
+
 @depends(
     try_compile(
-        body="__AFL_COMPILER;", check_msg="for AFL compiler", when="--enable-fuzzing"
+        body="__AFL_COMPILER;", check_msg="for AFL compiler", when=check_aflfuzzer
     )
 )
 def enable_aflfuzzer(afl):
@@ -2606,9 +2627,15 @@ def enable_aflfuzzer(afl):
         return True
 
 
-@depends(enable_fuzzing, enable_aflfuzzer, c_compiler, target)
-def enable_libfuzzer(fuzzing, afl, c_compiler, target):
-    if fuzzing and not afl and c_compiler.type == "clang" and target.os != "Android":
+@depends(enable_fuzzing, enable_aflfuzzer, enable_snapshot_fuzzing, c_compiler, target)
+def enable_libfuzzer(fuzzing, afl, snapshot_fuzzing, c_compiler, target):
+    if (
+        fuzzing
+        and not afl
+        and not snapshot_fuzzing
+        and c_compiler.type == "clang"
+        and target.os != "Android"
+    ):
         return True
 
 
@@ -2625,12 +2652,18 @@ set_config("LIBFUZZER", enable_libfuzzer)
 set_define("LIBFUZZER", enable_libfuzzer)
 add_old_configure_assignment("LIBFUZZER", enable_libfuzzer)
 
+set_config("AFLFUZZ", enable_aflfuzzer)
+set_define("AFLFUZZ", enable_aflfuzzer)
+
 set_config("FUZZING_INTERFACES", enable_fuzzing_interfaces)
 set_define("FUZZING_INTERFACES", enable_fuzzing_interfaces)
 add_old_configure_assignment("FUZZING_INTERFACES", enable_fuzzing_interfaces)
 
 set_config("FUZZING_JS_FUZZILLI", enable_js_fuzzilli)
 set_define("FUZZING_JS_FUZZILLI", enable_js_fuzzilli)
+
+set_config("FUZZING_SNAPSHOT", enable_snapshot_fuzzing)
+set_define("FUZZING_SNAPSHOT", enable_snapshot_fuzzing)
 
 
 @depends(
