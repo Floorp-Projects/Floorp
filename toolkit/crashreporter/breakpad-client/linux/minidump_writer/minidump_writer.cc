@@ -644,10 +644,12 @@ class MinidumpWriter {
                               identifier->end());
     } else {
       // Note: ElfFileIdentifierForMapping() can manipulate the |mapping.name|.
-      dumper_->ElfFileIdentifierForMapping(mapping,
-                                           member,
-                                           mapping_id,
-                                           identifier_bytes);
+      if (!dumper_->ElfFileIdentifierForMapping(mapping,
+                                                member,
+                                                mapping_id,
+                                                identifier_bytes)) {
+        identifier_bytes.clear();
+      }
     }
 
     if (!identifier_bytes.empty()) {

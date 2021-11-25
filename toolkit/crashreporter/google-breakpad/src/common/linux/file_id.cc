@@ -120,8 +120,6 @@ static bool FindElfBuildIDNote(const void* elf_mapped_base,
 // a simple hash by XORing the first page worth of bytes into |identifier|.
 static bool HashElfTextSection(const void* elf_mapped_base,
                                wasteful_vector<uint8_t>& identifier) {
-  identifier.resize(kMDGUIDSize);
-
   void* text_section;
   size_t text_size;
   if (!FindElfSection(elf_mapped_base, ".text", SHT_PROGBITS,
@@ -132,6 +130,7 @@ static bool HashElfTextSection(const void* elf_mapped_base,
 
   // Only provide |kMDGUIDSize| bytes to keep identifiers produced by this
   // function backwards-compatible.
+  identifier.resize(kMDGUIDSize);
   my_memset(&identifier[0], 0, kMDGUIDSize);
   const uint8_t* ptr = reinterpret_cast<const uint8_t*>(text_section);
   const uint8_t* ptr_end = ptr + std::min(text_size, static_cast<size_t>(4096));
