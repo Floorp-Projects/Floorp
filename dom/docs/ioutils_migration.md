@@ -394,7 +394,7 @@ await IOUtils.makeDirectory(srcPath, destPath);
 `IOUtils` provides the following method to update a file's modification time.
 
 ```idl
-Promise<void> touch(DOMString path, optional long long modification);
+Promise<void> setModificationTime(DOMString path, optional long long modification);
 ```
 
 #### Example
@@ -406,7 +406,7 @@ await OS.File.setDates(path, new Date(), new Date());
 
 **`IOUtils`**
 ```js
-await IOUtils.touch(path, new Date().valueOf());
+await IOUtils.setModificationTime(path, new Date().valueOf());
 ```
 
 ### Get file metadata

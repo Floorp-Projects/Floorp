@@ -41,7 +41,7 @@ function countPingTypes(pings) {
 
 function setPingLastModified(id, timestamp) {
   const path = OS.Path.join(TelemetryStorage.pingDirectoryPath, id);
-  return IOUtils.touch(path, timestamp);
+  return IOUtils.setModificationTime(path, timestamp);
 }
 
 // Mock out the send timer activity.

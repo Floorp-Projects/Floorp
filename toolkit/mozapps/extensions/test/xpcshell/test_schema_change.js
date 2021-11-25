@@ -81,7 +81,7 @@ add_task(async function run_tests() {
       async action() {
         let stat = await IOUtils.stat(xpiPath);
         let newLastModTime = stat.lastModified + 60 * 1000;
-        await IOUtils.touch(xpiPath, newLastModTime);
+        await IOUtils.setModificationTime(xpiPath, newLastModTime);
       },
     },
   ];
@@ -107,7 +107,7 @@ add_task(async function run_tests() {
 
     // Make sure the timestamp of the extension is unchanged, so it is not
     // re-scanned for that reason.
-    await IOUtils.touch(xpiPath, fileInfo.lastModified);
+    await IOUtils.setModificationTime(xpiPath, fileInfo.lastModified);
 
     await test.action();
 
