@@ -1003,19 +1003,17 @@ impl SpatialTree {
         CoordinateSpaceMapping::Transform(transform)
     }
 
-    pub fn is_relative_transform_complex(
+    /// Returns true if both supplied spatial nodes are in the same coordinate system
+    /// (implies the relative transform produce axis-aligned rects).
+    pub fn is_matching_coord_system(
         &self,
-        child_index: SpatialNodeIndex,
-        parent_index: SpatialNodeIndex,
+        index0: SpatialNodeIndex,
+        index1: SpatialNodeIndex,
     ) -> bool {
-        if child_index == parent_index {
-            return false;
-        }
+        let node0 = self.get_spatial_node(index0);
+        let node1 = self.get_spatial_node(index1);
 
-        let child = self.get_spatial_node(child_index);
-        let parent = self.get_spatial_node(parent_index);
-
-        child.coordinate_system_id != parent.coordinate_system_id
+        node0.coordinate_system_id == node1.coordinate_system_id
     }
 
     fn get_world_transform_impl(
