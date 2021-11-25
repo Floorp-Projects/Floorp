@@ -110,7 +110,7 @@ class MozillaSupportPagesTest {
             exitToTop()
         }
         homeScreen {
-            verifyHomeScreenTipIsDisplayed(false)
+            verifyTipsCarouselIsDisplayed(false)
         }
     }
 }
