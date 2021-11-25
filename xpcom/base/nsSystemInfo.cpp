@@ -983,6 +983,12 @@ nsresult nsSystemInfo::Init() {
     return rv;
   }
 
+  rv = SetPropertyAsAString(u"winPackageFamilyName"_ns,
+                            widget::WinUtils::GetPackageFamilyName());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
 #  ifndef __MINGW32__
   nsAutoString avInfo, antiSpyInfo, firewallInfo;
   if (NS_SUCCEEDED(
