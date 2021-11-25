@@ -17,8 +17,7 @@ transforms:
 
 job-template:
     description: "Desktop Startup Visual Metrics"
-    run-on-projects:
-        - mozilla-central
+    run-on-projects: []
     worker-type: performance-hardware/gecko-t-fxrecorder
     worker:
         implementation: generic-worker
