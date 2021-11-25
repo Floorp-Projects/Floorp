@@ -424,9 +424,16 @@ const CurlUtils = {
    */
   escapeStringWin: function(str) {
     /*
-       Replace dollar sign because of commands (e.g $(cmd.exe)) in
-       powershell when using double quotes.
-       Useful details http://www.rlmueller.net/PowerShellEscape.htm
+       Replace the backtick character ` with `` in order to escape it.
+       The backtick character is an escape character in PowerShell and
+       can, among other things, be used to disable the effect of some
+       of the other escapes created below.
+       Also see http://www.rlmueller.net/PowerShellEscape.htm for
+       useful details.
+
+       Replace dollar sign because of commands in powershell when using
+       double quotes. e.g $(calc.exe) Also see
+       http://www.rlmueller.net/PowerShellEscape.htm for details.
 
        Replace quote by double quote (but not by \") because it is
        recognized by both cmd.exe and MS Crt arguments parser.
@@ -450,9 +457,10 @@ const CurlUtils = {
     return (
       '"' +
       str
-        .replace(/\$/g, "`$")
-        .replace(/"/g, '""')
-        .replace(/%/g, '"%"')
+        .replaceAll("`", "``")
+        .replaceAll("$", "`$")
+        .replaceAll('"', '""')
+        .replaceAll("%", '"%"')
         .replace(/\\/g, "\\\\")
         .replace(/[\r\n]{1,2}/g, '"^$&$&"') +
       '"'
