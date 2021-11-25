@@ -21,7 +21,11 @@ function removeOverrides(config) {
   return config;
 }
 
-const xpcshellTestPaths = ["**/test*/unit*/**/", "**/test*/xpcshell/**/"];
+const xpcshellTestPaths = [
+  "**/test*/unit*/**/",
+  "**/test*/*/unit*/",
+  "**/test*/xpcshell/**/",
+];
 
 const browserTestPaths = ["**/test*/**/browser*/"];
 
