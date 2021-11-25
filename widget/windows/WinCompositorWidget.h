@@ -34,6 +34,10 @@ class PlatformCompositorWidgetDelegate : public CompositorWidgetDelegate {
   virtual void UpdateTransparency(nsTransparencyMode aMode) = 0;
   virtual void ClearTransparentWindow() = 0;
 
+  // Deliver visibility info
+  virtual void NotifyVisibilityUpdated(nsSizeMode aSizeMode,
+                                       bool aIsFullyOccluded) = 0;
+
   // CompositorWidgetDelegate Overrides
 
   PlatformCompositorWidgetDelegate* AsPlatformSpecificDelegate() override {
@@ -74,6 +78,9 @@ class WinCompositorWidget : public CompositorWidget {
   FxROutputHandler* GetFxrOutputHandler() const { return mFxrHandler.get(); }
 
   virtual bool HasGlass() const = 0;
+
+  virtual nsSizeMode GetWindowSizeMode() const = 0;
+  virtual bool GetWindowIsFullyOccluded() const = 0;
 
   virtual void UpdateCompositorWnd(const HWND aCompositorWnd,
                                    const HWND aParentWnd) = 0;

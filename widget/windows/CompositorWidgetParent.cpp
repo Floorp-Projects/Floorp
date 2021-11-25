@@ -36,6 +36,8 @@ CompositorWidgetParent::CompositorWidgetParent(
           aInitData.get_WinCompositorWidgetInitData().hWnd())),
       mTransparencyMode(
           aInitData.get_WinCompositorWidgetInitData().transparencyMode()),
+      mSizeMode(nsSizeMode_Normal),
+      mIsFullyOccluded(false),
       mRemoteBackbufferClient() {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_GPU);
   MOZ_ASSERT(mWnd && ::IsWindow(mWnd));
@@ -148,6 +150,25 @@ mozilla::ipc::IPCResult CompositorWidgetParent::RecvUpdateTransparency(
   mTransparencyMode = aMode;
 
   return IPC_OK();
+}
+
+mozilla::ipc::IPCResult CompositorWidgetParent::RecvNotifyVisibilityUpdated(
+    const nsSizeMode& aSizeMode, const bool& aIsFullyOccluded) {
+  mSizeMode = aSizeMode;
+  mIsFullyOccluded = aIsFullyOccluded;
+  return IPC_OK();
+}
+
+nsSizeMode CompositorWidgetParent::CompositorWidgetParent::GetWindowSizeMode()
+    const {
+  nsSizeMode sizeMode = mSizeMode;
+  return sizeMode;
+}
+
+bool CompositorWidgetParent::CompositorWidgetParent::GetWindowIsFullyOccluded()
+    const {
+  bool isFullyOccluded = mIsFullyOccluded;
+  return isFullyOccluded;
 }
 
 mozilla::ipc::IPCResult CompositorWidgetParent::RecvClearTransparentWindow() {

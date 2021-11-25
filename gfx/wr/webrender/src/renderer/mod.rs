@@ -1789,7 +1789,8 @@ impl Renderer {
             DebugFlags::GPU_CACHE_DBG |
             DebugFlags::PICTURE_CACHING_DBG |
             DebugFlags::PRIMITIVE_DBG |
-            DebugFlags::ZOOM_DBG
+            DebugFlags::ZOOM_DBG |
+            DebugFlags::WINDOW_VISIBILITY_DBG
         );
 
         // Update the debug overlay surface, if we are running in native compositor mode.
@@ -2039,6 +2040,7 @@ impl Renderer {
                 self.draw_gpu_cache_debug(device_size);
                 self.draw_zoom_debug(device_size);
                 self.draw_epoch_debug();
+                self.draw_window_visibility_debug();
                 draw_target
             })
         });
@@ -5245,6 +5247,39 @@ impl Renderer {
             ColorU::new(25, 25, 25, 200),
             ColorU::new(51, 51, 51, 200),
         );
+    }
+
+    fn draw_window_visibility_debug(&mut self) {
+        if !self.debug_flags.contains(DebugFlags::WINDOW_VISIBILITY_DBG) {
+            return;
+        }
+
+        let debug_renderer = match self.debug.get_mut(&mut self.device) {
+            Some(render) => render,
+            None => return,
+        };
+
+        let x: f32 = 30.0;
+        let y: f32 = 40.0;
+
+        if let CompositorConfig::Native { ref mut compositor, .. } = self.compositor_config {
+            let visibility = compositor.get_window_visibility();
+            let color = if visibility.is_fully_occluded {
+                ColorU::new(255, 0, 0, 255)
+
+            } else {
+                ColorU::new(0, 0, 255, 255)
+            };
+
+            debug_renderer.add_text(
+                x, y,
+                &format!("{:?}", visibility),
+                color,
+                None,
+            );
+        }
+
+
     }
 
     fn draw_gpu_cache_debug(&mut self, device_size: DeviceIntSize) {
