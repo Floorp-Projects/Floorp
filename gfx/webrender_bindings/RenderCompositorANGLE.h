@@ -36,7 +36,8 @@ class RenderCompositorANGLE : public RenderCompositor {
       const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError);
 
   explicit RenderCompositorANGLE(
-      const RefPtr<widget::CompositorWidget>& aWidget);
+      const RefPtr<widget::CompositorWidget>& aWidget,
+      RefPtr<gl::GLContext>&& aGL);
   virtual ~RenderCompositorANGLE();
   bool Initialize(nsACString& aError);
 
@@ -49,9 +50,7 @@ class RenderCompositorANGLE : public RenderCompositor {
   bool Resume() override;
   void Update() override;
 
-  gl::GLContext* gl() const override {
-    return RenderThread::Get()->SingletonGL();
-  }
+  gl::GLContext* gl() const override { return mGL; }
 
   bool MakeCurrent() override;
 
@@ -124,10 +123,11 @@ class RenderCompositorANGLE : public RenderCompositor {
   void CreateSwapChainForDCompIfPossible(IDXGIFactory2* aDXGIFactory2);
   RefPtr<IDXGISwapChain1> CreateSwapChainForDComp(bool aUseTripleBuffering,
                                                   bool aUseAlpha);
-  bool ShutdownEGLLibraryIfNecessary(nsACString& aError);
   RefPtr<ID3D11Query> GetD3D11Query();
   void ReleaseNativeCompositorResources();
   HWND GetCompositorHwnd();
+
+  RefPtr<gl::GLContext> mGL;
 
   EGLConfig mEGLConfig;
   EGLSurface mEGLSurface;
