@@ -35,6 +35,11 @@ const TEST_CASES = [
     testQueryString: "paramToKeep=123",
     strippedQueryString: "paramToKeep=123",
   },
+  // Test to make sure we don't encode the unstripped parameters.
+  {
+    testQueryString: "paramToStrip1=123&paramToKeep=?$!%",
+    strippedQueryString: "paramToKeep=?$!%",
+  },
 ];
 
 function observeChannel(uri, expected) {
