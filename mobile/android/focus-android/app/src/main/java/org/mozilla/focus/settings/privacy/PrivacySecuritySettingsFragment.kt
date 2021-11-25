@@ -10,6 +10,7 @@ import android.os.Bundle
 import androidx.preference.Preference
 import androidx.preference.SwitchPreferenceCompat
 import mozilla.components.service.glean.private.NoExtras
+import org.mozilla.focus.GleanMetrics.PrivacySettings
 import org.mozilla.focus.GleanMetrics.TrackingProtectionExceptions
 import org.mozilla.focus.R
 import org.mozilla.focus.biometrics.Biometrics
@@ -19,7 +20,6 @@ import org.mozilla.focus.ext.settings
 import org.mozilla.focus.settings.BaseSettingsFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
-import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.widget.CookiesPreference
 
 class PrivacySecuritySettingsFragment :
@@ -78,8 +78,28 @@ class PrivacySecuritySettingsFragment :
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences, key: String) {
-        TelemetryWrapper.settingsEvent(key, sharedPreferences.all[key].toString())
+        recordTelemetry(key, sharedPreferences.all[key] as Boolean)
         updateStealthToggleAvailability()
+    }
+
+    private fun recordTelemetry(key: String, newValue: Boolean) {
+        when (key) {
+            getString(R.string.pref_key_telemetry) -> PrivacySettings.telemetrySettingChanged.record(
+                PrivacySettings.TelemetrySettingChangedExtra(newValue)
+            )
+            getString(R.string.pref_key_safe_browsing) -> PrivacySettings.safeBrowsingSettingChanged.record(
+                PrivacySettings.SafeBrowsingSettingChangedExtra(newValue)
+            )
+            getString(R.string.pref_key_biometric) -> PrivacySettings.unlockSettingChanged.record(
+                PrivacySettings.UnlockSettingChangedExtra(newValue)
+            )
+            getString(R.string.pref_key_secure) -> PrivacySettings.stealthSettingChanged.record(
+                PrivacySettings.StealthSettingChangedExtra(newValue)
+            )
+            else -> {
+                // Telemetry for the change is recorded elsewhere.
+            }
+        }
     }
 
     private fun updateBiometricsToggleAvailability() {

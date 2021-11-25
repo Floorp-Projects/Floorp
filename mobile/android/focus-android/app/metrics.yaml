@@ -1609,3 +1609,72 @@ advanced_settings:
       is_enabled:
         description: The new setting true for ON, false for OFF
         type: boolean
+privacy_settings:
+  telemetry_setting_changed:
+    type: event
+    description: |
+      Telemetry setting has changed.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5653
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5940
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      is_enabled:
+        description: The new setting true for ON, false for OFF
+        type: boolean
+  safe_browsing_setting_changed:
+    type: event
+    description: |
+      Safe browsing setting has changed.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5653
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5940
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      is_enabled:
+        description: The new setting true for ON, false for OFF
+        type: boolean
+  unlock_setting_changed:
+    type: event
+    description: |
+      Biometric unlock setting has changed.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5653
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5940
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      is_enabled:
+        description: The new setting true for ON, false for OFF
+        type: boolean
+  stealth_setting_changed:
+    type: event
+    description: |
+      Stealth setting has changed.
+    bugs:
+      - https://github.com/mozilla-mobile/focus-android/issues/5653
+    data_reviews:
+      - https://github.com/mozilla-mobile/focus-android/pull/5940
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: "2022-11-01"
+    extra_keys:
+      is_enabled:
+        description: The new setting true for ON, false for OFF
+        type: boolean
