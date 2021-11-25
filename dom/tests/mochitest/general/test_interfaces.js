@@ -669,9 +669,9 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Location", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "Lock", nightly: true },
+  "Lock",
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "LockManager", nightly: true },
+  "LockManager",
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "MathMLElement", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
