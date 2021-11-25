@@ -142,19 +142,7 @@ class FileAndPathHelper {
       throw new Error(`Path "${path}" is a directory.`);
     }
 
-    const file = IOUtils.openFileForSyncReading(path);
-
-    // Create and return a FileHandle object. The methods of this object are
-    // called by wasm code (via the bindings).
-    return {
-      getLength: () => file.size,
-      readBytesInto: (dest, offset) => {
-        file.readBytesInto(dest, offset);
-      },
-      drop: () => {
-        file.close();
-      },
-    };
+    return IOUtils.openFileForSyncReading(path);
   }
 }
 
