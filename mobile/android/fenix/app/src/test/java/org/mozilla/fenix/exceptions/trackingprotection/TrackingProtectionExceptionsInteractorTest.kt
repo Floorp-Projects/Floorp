@@ -61,7 +61,7 @@ class TrackingProtectionExceptionsInteractorTest {
                 onResult(results)
             }
 
-            override fun removeAll(activeSessions: List<EngineSession>?) {
+            override fun removeAll(activeSessions: List<EngineSession>?, onRemove: () -> Unit) {
                 removedAll = true
             }
 
