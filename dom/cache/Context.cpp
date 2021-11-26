@@ -139,8 +139,6 @@ class Context::QuotaInitRunnable final : public nsIRunnable,
     mInitAction->CancelOnInitiatingThread();
   }
 
-  void OpenDirectory();
-
   // OpenDirectoryListener methods
   virtual void DirectoryLockAcquired(DirectoryLock* aLock) override;
 
@@ -180,7 +178,6 @@ class Context::QuotaInitRunnable final : public nsIRunnable,
     STATE_INIT,
     STATE_GET_INFO,
     STATE_CREATE_QUOTA_MANAGER,
-    STATE_OPEN_DIRECTORY,
     STATE_WAIT_FOR_DIRECTORY_LOCK,
     STATE_ENSURE_ORIGIN_INITIALIZED,
     STATE_RUN_ON_TARGET,
@@ -225,25 +222,6 @@ class Context::QuotaInitRunnable final : public nsIRunnable,
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 };
-
-void Context::QuotaInitRunnable::OpenDirectory() {
-  NS_ASSERT_OWNINGTHREAD(QuotaInitRunnable);
-  MOZ_DIAGNOSTIC_ASSERT(mState == STATE_CREATE_QUOTA_MANAGER ||
-                        mState == STATE_OPEN_DIRECTORY);
-  MOZ_DIAGNOSTIC_ASSERT(QuotaManager::Get());
-
-  RefPtr<DirectoryLock> directoryLock =
-      QuotaManager::Get()->CreateDirectoryLock(PERSISTENCE_TYPE_DEFAULT,
-                                               *mDirectoryMetadata,
-                                               quota::Client::DOMCACHE,
-                                               /* aExclusive */ false);
-
-  // DirectoryLock::Acquire() will hold a reference to us as a listener. We will
-  // then get DirectoryLockAcquired() on the owning thread when it is safe to
-  // access our storage directory.
-  mState = STATE_WAIT_FOR_DIRECTORY_LOCK;
-  directoryLock->Acquire(this);
-}
 
 void Context::QuotaInitRunnable::DirectoryLockAcquired(DirectoryLock* aLock) {
   NS_ASSERT_OWNINGTHREAD(QuotaInitRunnable);
@@ -298,11 +276,6 @@ NS_IMPL_ISUPPORTS(mozilla::dom::cache::Context::QuotaInitRunnable, nsIRunnable);
 //            |                             |
 // +----------v-----------+                 |
 // |  CreateQuotaManager  |  Resolve(error) |
-// |    (Orig Thread)     +-----------------+
-// +----------+-----------+                 |
-//            |                             |
-// +----------v-----------+                 |
-// |    OpenDirectory     |  Resolve(error) |
 // |    (Orig Thread)     +-----------------+
 // +----------+-----------+                 |
 //            |                             |
@@ -379,25 +352,24 @@ Context::QuotaInitRunnable::Run() {
         break;
       }
 
-      if (QuotaManager::Get()) {
-        OpenDirectory();
-        return NS_OK;
-      }
+      QM_TRY(QuotaManager::EnsureCreated(), QM_PROPAGATE,
+             [&resolver](const auto rv) { resolver->Resolve(rv); });
 
-      mState = STATE_OPEN_DIRECTORY;
-      QuotaManager::GetOrCreate(this);
-      break;
-    }
-    // ----------------------------------
-    case STATE_OPEN_DIRECTORY: {
-      NS_ASSERT_OWNINGTHREAD(QuotaInitRunnable);
+      MOZ_DIAGNOSTIC_ASSERT(QuotaManager::Get());
 
-      if (NS_WARN_IF(!QuotaManager::Get())) {
-        resolver->Resolve(NS_ERROR_FAILURE);
-        break;
-      }
+      // Open directory
+      RefPtr<DirectoryLock> directoryLock =
+          QuotaManager::Get()->CreateDirectoryLock(PERSISTENCE_TYPE_DEFAULT,
+                                                   *mDirectoryMetadata,
+                                                   quota::Client::DOMCACHE,
+                                                   /* aExclusive */ false);
 
-      OpenDirectory();
+      // DirectoryLock::Acquire() will hold a reference to us as a listener. We
+      // will then get DirectoryLockAcquired() on the owning thread when it is
+      // safe to access our storage directory.
+      mState = STATE_WAIT_FOR_DIRECTORY_LOCK;
+      directoryLock->Acquire(this);
+
       break;
     }
     // ----------------------------------
