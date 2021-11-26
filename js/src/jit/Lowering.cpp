@@ -1335,6 +1335,12 @@ void LIRGenerator::visitBitNot(MBitNot* ins) {
     return;
   }
 
+  if (ins->type() == MIRType::Int64) {
+    MOZ_ASSERT(input->type() == MIRType::Int64);
+    lowerForALUInt64(new (alloc()) LBitNotI64(), ins, input);
+    return;
+  }
+
   MOZ_CRASH("Unhandled integer specialization");
 }
 

@@ -137,6 +137,8 @@ testBinary32('rem_u', 41, 8, 1);
 testBinary32('and', 42, 6, 2);
 testBinary32('or', 42, 6, 46);
 testBinary32('xor', 42, 2, 40);
+testBinary32('xor', -1, 1739168047, -1739168048);
+testBinary32('xor', -1739168043, -1, 1739168042);
 testBinary32('shl', 40, 0, 40);
 testBinary32('shl', 40, 2, 160);
 testBinary32('shr_s', -40, 0, -40);
@@ -232,6 +234,8 @@ testBinary64('or', "0x8765432112345678", "0xffff0000ffff0000", "0xffff4321ffff56
 
 testBinary64('xor', 42, 2, 40);
 testBinary64('xor', "0x8765432112345678", "0xffff0000ffff0000", "0x789a4321edcb5678");
+testBinary64('xor', "0xffffffffffffffff", "0x2c73173d985666d0", "0xd38ce8c267a9992f");
+testBinary64('xor', "0xe8f3437fe059746a", "0xffffffffffffffff", "0x170cbc801fa68b95");
 
 testBinary64('shl', 0xff00ff, 28, "0x0ff00ff0000000");
 testBinary64('shl', 0xff00ff, 30, "0x3fc03fc0000000");
