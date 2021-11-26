@@ -111,6 +111,7 @@
   --card-shadow-hover: var(--card-shadow), 0 0 0 5px var(--card-outline-color);
 
   accent-color: var(--in-content-accent-color);
+  color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
