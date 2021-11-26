@@ -2154,6 +2154,16 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
     return true;
   }
 
+#ifdef ENABLE_CHANGE_ARRAY_BY_COPY
+  if (key == JSProto_Array && !cx->options().changeArrayByCopy() &&
+      (id == NameToId(cx->names().withAt) ||
+       id == NameToId(cx->names().withReversed) ||
+       id == NameToId(cx->names().withSorted) ||
+       id == NameToId(cx->names().withSpliced))) {
+    return true;
+  }
+#endif
+
   return false;
 }
 
