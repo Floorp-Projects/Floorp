@@ -88,6 +88,7 @@ import org.mozilla.focus.topsites.DefaultTopSitesView
 import org.mozilla.focus.utils.CfrUtils
 import org.mozilla.focus.utils.FocusSnackbar
 import org.mozilla.focus.utils.FocusSnackbarDelegate
+import org.mozilla.focus.utils.IntentUtils
 import org.mozilla.focus.utils.StatusBarUtils
 import java.net.URLEncoder
 
@@ -680,8 +681,13 @@ class BrowserFragment :
         }
 
         TelemetryWrapper.shareEvent()
-
-        startActivity(Intent.createChooser(shareIntent, getString(R.string.share_dialog_title)))
+        startActivity(
+            IntentUtils.getIntentChooser(
+                context = requireContext(),
+                intent = shareIntent,
+                chooserTitle = getString(R.string.share_dialog_title)
+            )
+        )
     }
 
     private fun openInBrowser() {
