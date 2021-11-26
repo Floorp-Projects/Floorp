@@ -7,6 +7,7 @@ package org.mozilla.focus.topsites
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -109,6 +110,8 @@ private fun TopSiteItem(
         Column(
             modifier = Modifier
                 .combinedClickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
                     onClick = { onTopSiteClick(topSite) },
                     onLongClick = { menuExpanded = true }
                 )
