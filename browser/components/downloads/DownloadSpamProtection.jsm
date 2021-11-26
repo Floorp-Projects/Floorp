@@ -30,8 +30,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  * downloads UI with this information.
  */
 class DownloadSpamProtection {
-  static TOPIC = "blocked-automatic-download";
-
   constructor() {
     /**
      * Tracks URLs we have detected download spam for.
@@ -47,13 +45,9 @@ class DownloadSpamProtection {
     return this.list;
   }
 
-  async observe(aSubject, aTopic, URL) {
-    if (aTopic != DownloadSpamProtection.TOPIC) {
-      return;
-    }
-
-    if (this._blockedURLToDownloadSpam.has(URL)) {
-      let downloadSpam = this._blockedURLToDownloadSpam.get(URL);
+  update(url) {
+    if (this._blockedURLToDownloadSpam.has(url)) {
+      let downloadSpam = this._blockedURLToDownloadSpam.get(url);
       this.spamList.remove(downloadSpam);
       downloadSpam.blockedDownloadsCount += 1;
       this.spamList.add(downloadSpam);
@@ -61,9 +55,9 @@ class DownloadSpamProtection {
       return;
     }
 
-    let downloadSpam = new DownloadSpam(URL);
+    let downloadSpam = new DownloadSpam(url);
     this.spamList.add(downloadSpam);
-    this._blockedURLToDownloadSpam.set(URL, downloadSpam);
+    this._blockedURLToDownloadSpam.set(url, downloadSpam);
     let hasActiveDownloads = DownloadsCommon.summarizeDownloads(
       this._indicator._activeDownloads()
     ).numDownloading;
