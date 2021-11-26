@@ -408,6 +408,27 @@ void EventListenerManager::AddEventListenerInternal(
           window->SetHasFormSelectEventListeners();
         }
         break;
+      case eMarqueeStart:
+        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+          if (Document* doc = window->GetExtantDoc()) {
+            doc->SetUseCounter(eUseCounter_custom_onstart);
+          }
+        }
+        break;
+      case eMarqueeBounce:
+        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+          if (Document* doc = window->GetExtantDoc()) {
+            doc->SetUseCounter(eUseCounter_custom_onbounce);
+          }
+        }
+        break;
+      case eMarqueeFinish:
+        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+          if (Document* doc = window->GetExtantDoc()) {
+            doc->SetUseCounter(eUseCounter_custom_onfinish);
+          }
+        }
+        break;
       default:
         // XXX Use NS_ASSERTION here to print resolvedEventMessage since
         //     MOZ_ASSERT can take only string literal, not pointer to
@@ -520,25 +541,19 @@ void EventListenerManager::AddEventListenerInternal(
                      nsPrintfCString("resolvedEventMessage=%s",
                                      ToChar(resolvedEventMessage))
                          .get());
-        if (aTypeAtom == nsGkAtoms::onstart) {
-          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-            if (Document* doc = window->GetExtantDoc()) {
-              doc->SetUseCounter(eUseCounter_custom_onstart);
-            }
-          }
-        } else if (aTypeAtom == nsGkAtoms::onbounce) {
-          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-            if (Document* doc = window->GetExtantDoc()) {
-              doc->SetUseCounter(eUseCounter_custom_onbounce);
-            }
-          }
-        } else if (aTypeAtom == nsGkAtoms::onfinish) {
-          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-            if (Document* doc = window->GetExtantDoc()) {
-              doc->SetUseCounter(eUseCounter_custom_onfinish);
-            }
-          }
-        } else if (aTypeAtom == nsGkAtoms::onbeforeinput) {
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::onstart,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::onbounce,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::onfinish,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        if (aTypeAtom == nsGkAtoms::onbeforeinput) {
           if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
             window->SetHasBeforeInputEventListenersForTelemetry();
           }
