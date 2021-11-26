@@ -15,6 +15,7 @@
 #include "nsWrapperCache.h"
 
 class nsINodeList;
+class nsGenericHTMLElement;
 
 namespace mozilla {
 
@@ -49,6 +50,10 @@ class ElementInternals final : public nsIFormControl,
                     const Optional<Nullable<FileOrUSVStringOrFormData>>& aState,
                     ErrorResult& aRv);
   mozilla::dom::HTMLFormElement* GetForm(ErrorResult& aRv) const;
+  void SetValidity(const ValidityStateFlags& aFlags,
+                   const Optional<nsAString>& aMessage,
+                   const Optional<NonNull<nsGenericHTMLElement>>& aAnchor,
+                   ErrorResult& aRv);
   bool GetWillValidate(ErrorResult& aRv) const;
   ValidityState* GetValidity(ErrorResult& aRv);
   void GetValidationMessage(nsAString& aValidationMessage,
