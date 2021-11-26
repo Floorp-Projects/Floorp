@@ -386,4 +386,44 @@ const FeatureManifest = {
       },
     },
   },
+  cfr: {
+    description: "Doorhanger message template for Messaging System",
+    hasExposure: true,
+    exposureDescription:
+      "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched.",
+    isEarlyStartup: false,
+    schema:
+      "browser/components/newtab/content-src/asrouter/templates/CFR/templates/ExtensionDoorhanger.schema.json",
+    variables: {},
+  },
+  "moments-page": {
+    description: "Message with URL data for Messaging System",
+    hasExposure: true,
+    exposureDescription:
+      "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched.",
+    isEarlyStartup: false,
+    schema:
+      "browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/UpdateAction.schema.json",
+    variables: {},
+  },
+  infobar: {
+    description: "Message template for Messaging System",
+    hasExposure: true,
+    exposureDescription:
+      "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched.",
+    isEarlyStartup: false,
+    schema:
+      "browser/components/newtab/content-src/asrouter/templates/CFR/templates/InfoBar.schema.json",
+    variables: {},
+  },
+  spotlight: {
+    description: "Modal message template for Messaging System",
+    hasExposure: true,
+    exposureDescription:
+      "Exposure is sent if the message is about to be shown after trigger and targeting conditions on the message matched.",
+    isEarlyStartup: false,
+    schema:
+      "browser/components/newtab/content-src/asrouter/templates/OnboardingMessage/Spotlight.schema.json",
+    variables: {},
+  },
 };

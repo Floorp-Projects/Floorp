@@ -21,6 +21,10 @@
           "type": "boolean",
           "description": "If the feature values should be cached in prefs for fast early startup."
         },
+        "schema": {
+          "type": "string",
+          "description": "For features with large number of variables we instead point to a JSONSchema file instead of specifying them in the variables field"
+        },
         "variables": {
           "additionalProperties": false,
           "type": "object",
@@ -30,12 +34,7 @@
               "properties": {
                 "type": {
                   "type": "string",
-                  "enum": [
-                    "json",
-                    "boolean",
-                    "int",
-                    "string"
-                  ]
+                  "enum": ["json", "boolean", "int", "string"]
                 },
                 "fallbackPref": {
                   "type": "string"
@@ -48,19 +47,13 @@
                   "description": "Explain how this value is being used"
                 }
               },
-              "required": [
-                "type",
-                "description"
-              ],
+              "required": ["type", "description"],
               "additionalProperties": false
             }
           }
         }
       },
-      "required": [
-        "description",
-        "hasExposure"
-      ],
+      "required": ["description", "hasExposure"],
       "if": {
         "properties": {
           "hasExposure": {
@@ -69,9 +62,7 @@
         }
       },
       "then": {
-        "required": [
-          "exposureDescription"
-        ]
+        "required": ["exposureDescription"]
       }
     }
   }

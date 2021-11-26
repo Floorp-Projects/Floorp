@@ -213,6 +213,7 @@ const MESSAGES = () => [
   {
     id: "SPOTLIGHT_MESSAGE_93",
     template: "spotlight",
+    groups: ["panel-test-provider"],
     content: {
       template: "logo-and-content",
       logoImageURL: "chrome://browser/content/logos/vpn-promo-logo.svg",
@@ -250,9 +251,11 @@ const MESSAGES = () => [
       },
     },
     frequency: { lifetime: 3 },
+    trigger: { id: "defaultBrowserCheck" },
   },
   {
     id: "TCP_SPOTLIGHT_MESSAGE_95",
+    groups: ["panel-test-provider"],
     template: "spotlight",
     content: {
       template: "logo-and-content",
@@ -300,6 +303,7 @@ const MESSAGES = () => [
       },
     },
     frequency: { lifetime: 3 },
+    trigger: { id: "defaultBrowserCheck" },
   },
 ];
 

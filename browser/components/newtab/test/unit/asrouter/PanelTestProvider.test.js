@@ -18,7 +18,7 @@ describe("PanelTestProvider", () => {
       ({ template }) => template === "update_action"
     );
     for (let message of updateMessages) {
-      assert.jsonSchema(message.content, update_schema);
+      assert.jsonSchema(message, update_schema);
     }
   });
   it("should be a valid message", () => {
@@ -36,7 +36,7 @@ describe("PanelTestProvider", () => {
       ({ template }) => template === "spotlight"
     );
     for (let message of spotlightMessages) {
-      assert.jsonSchema(message.content, spotlight_schema);
+      assert.jsonSchema(message, spotlight_schema);
     }
   });
 });

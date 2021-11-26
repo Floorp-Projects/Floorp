@@ -129,6 +129,7 @@ const getCFRExperiment = async () => {
   recipe.branches[0].features[0].value = MESSAGE_CONTENT;
   recipe.branches[1].features[0].featureId = "cfr";
   recipe.branches[1].features[0].value = MESSAGE_CONTENT;
+  recipe.featureIds = ["cfr"];
   await ExperimentTestUtils.validateExperiment(recipe);
   return recipe;
 };
@@ -170,7 +171,7 @@ async function setup(experiment) {
       ["app.shield.optoutstudies.enabled", true],
       [
         "browser.newtabpage.activity-stream.asrouter.providers.messaging-experiments",
-        `{"id":"messaging-experiments","enabled":true,"type":"remote-experiments","messageGroups":["cfr","whats-new-panel","moments-page","snippets"],"updateCycleInMs":0}`,
+        `{"id":"messaging-experiments","enabled":true,"type":"remote-experiments","messageGroups":["cfr","spotlight","infobar","aboutwelcome"],"updateCycleInMs":0}`,
       ],
     ],
   });
@@ -244,6 +245,8 @@ add_task(async function test_loading_experimentsAPI_legacy() {
 });
 
 add_task(async function test_exposure_ping() {
+  // Reset this check to allow sending multiple exposure pings in tests
+  NimbusFeatures.cfr._didSendExposureEvent = false;
   let experiment = await getCFRExperiment();
   await setup(experiment);
   Services.telemetry.clearScalars();
@@ -287,6 +290,8 @@ add_task(async function test_exposure_ping() {
 });
 
 add_task(async function test_exposure_ping_legacy() {
+  // Reset this check to allow sending multiple exposure pings in tests
+  NimbusFeatures.cfr._didSendExposureEvent = false;
   let experiment = await getLegacyCFRExperiment();
   await setup(experiment);
   Services.telemetry.clearScalars();
