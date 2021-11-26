@@ -277,202 +277,252 @@ void EventListenerManager::AddEventListenerInternal(
     mMayHaveCapturingListeners = true;
   }
 
-  switch (aEventMessage) {
-    case eAfterPaint:
-      mMayHavePaintEventListener = true;
-      if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-        window->SetHasPaintEventListeners();
+  // Events which are not supported in the running environment is mapped to
+  // eUnidentifiedEvent.  Then, we need to consider the proper event message
+  // with comparing the atom.
+  {
+    EventMessage resolvedEventMessage = aEventMessage;
+    if (resolvedEventMessage == eUnidentifiedEvent && aTypeAtom->IsStatic()) {
+      // TouchEvents are registered only when
+      // nsContentUtils::InitializeTouchEventTable() is called.
+      if (aTypeAtom == nsGkAtoms::ontouchstart) {
+        resolvedEventMessage = eTouchStart;
+      } else if (aTypeAtom == nsGkAtoms::ontouchend) {
+        resolvedEventMessage = eTouchEnd;
+      } else if (aTypeAtom == nsGkAtoms::ontouchmove) {
+        resolvedEventMessage = eTouchMove;
+      } else if (aTypeAtom == nsGkAtoms::ontouchcancel) {
+        resolvedEventMessage = eTouchCancel;
       }
-      break;
-    case eLegacySubtreeModified:
-    case eLegacyNodeInserted:
-    case eLegacyNodeRemoved:
-    case eLegacyNodeRemovedFromDocument:
-    case eLegacyNodeInsertedIntoDocument:
-    case eLegacyAttrModified:
-    case eLegacyCharacterDataModified:
-      // For mutation listeners, we need to update the global bit on the DOM
-      // window. Otherwise we won't actually fire the mutation event.
-      mMayHaveMutationListeners = true;
-      // Go from our target to the nearest enclosing DOM window.
-      if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-        if (Document* doc = window->GetExtantDoc()) {
-          doc->WarnOnceAbout(DeprecatedOperations::eMutationEvent);
+    }
+
+    switch (resolvedEventMessage) {
+      case eAfterPaint:
+        mMayHavePaintEventListener = true;
+        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+          window->SetHasPaintEventListeners();
         }
-        // If aEventMessage is eLegacySubtreeModified, we need to listen all
-        // mutations. nsContentUtils::HasMutationListeners relies on this.
-        window->SetMutationListeners(
-            (aEventMessage == eLegacySubtreeModified)
-                ? kAllMutationBits
-                : MutationBitForEventType(aEventMessage));
-      }
-      break;
-    case ePointerEnter:
-    case ePointerLeave:
-      mMayHavePointerEnterLeaveEventListener = true;
-      if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-        NS_WARNING_ASSERTION(
-            !nsContentUtils::IsChromeDoc(window->GetExtantDoc()),
-            "Please do not use pointerenter/leave events in chrome. "
-            "They are slower than pointerover/out!");
-        window->SetHasPointerEnterLeaveEventListeners();
-      }
-      break;
-    case eGamepadButtonDown:
-    case eGamepadButtonUp:
-    case eGamepadAxisMove:
-    case eGamepadConnected:
-    case eGamepadDisconnected:
-      if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-        window->SetHasGamepadEventListener();
-      }
-      break;
-    case eDeviceOrientation:
-    case eAbsoluteDeviceOrientation:
-    case eUserProximity:
-    case eDeviceLight:
-    case eDeviceMotion:
+        break;
+      case eLegacySubtreeModified:
+      case eLegacyNodeInserted:
+      case eLegacyNodeRemoved:
+      case eLegacyNodeRemovedFromDocument:
+      case eLegacyNodeInsertedIntoDocument:
+      case eLegacyAttrModified:
+      case eLegacyCharacterDataModified:
+        // For mutation listeners, we need to update the global bit on the DOM
+        // window. Otherwise we won't actually fire the mutation event.
+        mMayHaveMutationListeners = true;
+        // Go from our target to the nearest enclosing DOM window.
+        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+          if (Document* doc = window->GetExtantDoc()) {
+            doc->WarnOnceAbout(DeprecatedOperations::eMutationEvent);
+          }
+          // If resolvedEventMessage is eLegacySubtreeModified, we need to
+          // listen all mutations. nsContentUtils::HasMutationListeners relies
+          // on this.
+          window->SetMutationListeners(
+              (resolvedEventMessage == eLegacySubtreeModified)
+                  ? kAllMutationBits
+                  : MutationBitForEventType(resolvedEventMessage));
+        }
+        break;
+      case ePointerEnter:
+      case ePointerLeave:
+        mMayHavePointerEnterLeaveEventListener = true;
+        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+          NS_WARNING_ASSERTION(
+              !nsContentUtils::IsChromeDoc(window->GetExtantDoc()),
+              "Please do not use pointerenter/leave events in chrome. "
+              "They are slower than pointerover/out!");
+          window->SetHasPointerEnterLeaveEventListeners();
+        }
+        break;
+      case eGamepadButtonDown:
+      case eGamepadButtonUp:
+      case eGamepadAxisMove:
+      case eGamepadConnected:
+      case eGamepadDisconnected:
+        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+          window->SetHasGamepadEventListener();
+        }
+        break;
+      case eDeviceOrientation:
+      case eAbsoluteDeviceOrientation:
+      case eUserProximity:
+      case eDeviceLight:
+      case eDeviceMotion:
 #if defined(MOZ_WIDGET_ANDROID)
-    case eOrientationChange:
+      case eOrientationChange:
 #endif  // #if defined(MOZ_WIDGET_ANDROID)
-      EnableDevice(aEventMessage);
-      break;
-    default:
-      // XXX Use NS_ASSERTION here to print aEventMessage since MOZ_ASSERT
-      //     can take only string literal, not pointer to characters.
-      NS_ASSERTION(aEventMessage < eLegacyMutationEventFirst ||
-                       aEventMessage > eLegacyMutationEventLast,
-                   nsPrintfCString("You added new mutation event, but it's not "
-                                   "handled above, aEventMessage=%s",
-                                   ToChar(aEventMessage))
-                       .get());
-      NS_ASSERTION(
-          aTypeAtom != nsGkAtoms::onpointerenter,
-          nsPrintfCString("aEventMessage=%s", ToChar(aEventMessage)).get());
-      NS_ASSERTION(
-          aTypeAtom != nsGkAtoms::onpointerleave,
-          nsPrintfCString("aEventMessage=%s", ToChar(aEventMessage)).get());
-      NS_ASSERTION(aEventMessage < eGamepadEventFirst ||
-                       aEventMessage > eGamepadEventLast,
-                   nsPrintfCString("You added new gamepad event, but it's not "
-                                   "handled above, aEventMessage=%s",
-                                   ToChar(aEventMessage))
-                       .get());
-      NS_ASSERTION(
-          aTypeAtom != nsGkAtoms::ondeviceorientation,
-          nsPrintfCString("aEventMessage=%s", ToChar(aEventMessage)).get());
-      NS_ASSERTION(
-          aTypeAtom != nsGkAtoms::onabsolutedeviceorientation,
-          nsPrintfCString("aEventMessage=%s", ToChar(aEventMessage)).get());
-      NS_ASSERTION(
-          aTypeAtom != nsGkAtoms::onuserproximity,
-          nsPrintfCString("aEventMessage=%s", ToChar(aEventMessage)).get());
-      NS_ASSERTION(
-          aTypeAtom != nsGkAtoms::ondevicelight,
-          nsPrintfCString("aEventMessage=%s", ToChar(aEventMessage)).get());
-      NS_ASSERTION(
-          aTypeAtom != nsGkAtoms::ondevicemotion,
-          nsPrintfCString("aEventMessage=%s", ToChar(aEventMessage)).get());
-#if defined(MOZ_WIDGET_ANDROID)
-      NS_ASSERTION(
-          aTypeAtom != nsGkAtoms::onorientationchange,
-          nsPrintfCString("aEventMessage=%s", ToChar(aEventMessage)).get());
-#endif  // #if defined(MOZ_WIDGET_ANDROID)
-      if (aTypeAtom == nsGkAtoms::ontouchstart ||
-          aTypeAtom == nsGkAtoms::ontouchend ||
-          aTypeAtom == nsGkAtoms::ontouchmove ||
-          aTypeAtom == nsGkAtoms::ontouchcancel) {
+        EnableDevice(resolvedEventMessage);
+        break;
+      case eTouchStart:
+      case eTouchEnd:
+      case eTouchMove:
+      case eTouchCancel:
         mMayHaveTouchEventListener = true;
-        nsPIDOMWindowInner* window = GetInnerWindowForTarget();
         // we don't want touchevent listeners added by scrollbars to flip this
         // flag so we ignore listeners created with system event flag
-        if (window && !aFlags.mInSystemGroup) {
-          window->SetHasTouchEventListeners();
+        if (!aFlags.mInSystemGroup) {
+          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+            window->SetHasTouchEventListeners();
+          }
         }
-      } else if (aTypeAtom == nsGkAtoms::onmouseenter ||
-                 aTypeAtom == nsGkAtoms::onmouseleave) {
-        mMayHaveMouseEnterLeaveEventListener = true;
-        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+        break;
+      default:
+        // XXX Use NS_ASSERTION here to print resolvedEventMessage since
+        //     MOZ_ASSERT can take only string literal, not pointer to
+        //     characters.
+        NS_ASSERTION(
+            resolvedEventMessage < eLegacyMutationEventFirst ||
+                resolvedEventMessage > eLegacyMutationEventLast,
+            nsPrintfCString("You added new mutation event, but it's not "
+                            "handled above, resolvedEventMessage=%s",
+                            ToChar(resolvedEventMessage))
+                .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::onpointerenter,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::onpointerleave,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(
+            resolvedEventMessage < eGamepadEventFirst ||
+                resolvedEventMessage > eGamepadEventLast,
+            nsPrintfCString("You added new gamepad event, but it's not "
+                            "handled above, resolvedEventMessage=%s",
+                            ToChar(resolvedEventMessage))
+                .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::ondeviceorientation,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::onabsolutedeviceorientation,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::onuserproximity,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::ondevicelight,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::ondevicemotion,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+#if defined(MOZ_WIDGET_ANDROID)
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::onorientationchange,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+#endif  // #if defined(MOZ_WIDGET_ANDROID)
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::ontouchstart,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::ontouchend,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::ontouchmove,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::ontouchcancel,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        if (aTypeAtom == nsGkAtoms::onmouseenter ||
+            aTypeAtom == nsGkAtoms::onmouseleave) {
+          mMayHaveMouseEnterLeaveEventListener = true;
+          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
 #ifdef DEBUG
-          nsCOMPtr<Document> d = window->GetExtantDoc();
-          NS_WARNING_ASSERTION(
-              !nsContentUtils::IsChromeDoc(d),
-              "Please do not use mouseenter/leave events in chrome. "
-              "They are slower than mouseover/out!");
+            nsCOMPtr<Document> d = window->GetExtantDoc();
+            NS_WARNING_ASSERTION(
+                !nsContentUtils::IsChromeDoc(d),
+                "Please do not use mouseenter/leave events in chrome. "
+                "They are slower than mouseover/out!");
 #endif
-          window->SetHasMouseEnterLeaveEventListeners();
-        }
-      } else if (aTypeAtom == nsGkAtoms::onkeydown ||
-                 aTypeAtom == nsGkAtoms::onkeypress ||
-                 aTypeAtom == nsGkAtoms::onkeyup) {
-        if (!aFlags.mInSystemGroup) {
-          mMayHaveKeyEventListener = true;
-        }
-      } else if (aTypeAtom == nsGkAtoms::oncompositionend ||
-                 aTypeAtom == nsGkAtoms::oncompositionstart ||
-                 aTypeAtom == nsGkAtoms::oncompositionupdate ||
-                 aTypeAtom == nsGkAtoms::oninput) {
-        if (!aFlags.mInSystemGroup) {
-          mMayHaveInputOrCompositionEventListener = true;
-        }
-      } else if (aEventMessage == eSelectionChange) {
-        mMayHaveSelectionChangeEventListener = true;
-        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-          window->SetHasSelectionChangeEventListeners();
-        }
-      } else if (aEventMessage == eFormSelect) {
-        mMayHaveFormSelectEventListener = true;
-        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-          window->SetHasFormSelectEventListeners();
-        }
-      } else if (aTypeAtom == nsGkAtoms::onstart) {
-        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-          if (Document* doc = window->GetExtantDoc()) {
-            doc->SetUseCounter(eUseCounter_custom_onstart);
+            window->SetHasMouseEnterLeaveEventListeners();
+          }
+        } else if (aTypeAtom == nsGkAtoms::onkeydown ||
+                   aTypeAtom == nsGkAtoms::onkeypress ||
+                   aTypeAtom == nsGkAtoms::onkeyup) {
+          if (!aFlags.mInSystemGroup) {
+            mMayHaveKeyEventListener = true;
+          }
+        } else if (aTypeAtom == nsGkAtoms::oncompositionend ||
+                   aTypeAtom == nsGkAtoms::oncompositionstart ||
+                   aTypeAtom == nsGkAtoms::oncompositionupdate ||
+                   aTypeAtom == nsGkAtoms::oninput) {
+          if (!aFlags.mInSystemGroup) {
+            mMayHaveInputOrCompositionEventListener = true;
+          }
+        } else if (resolvedEventMessage == eSelectionChange) {
+          mMayHaveSelectionChangeEventListener = true;
+          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+            window->SetHasSelectionChangeEventListeners();
+          }
+        } else if (resolvedEventMessage == eFormSelect) {
+          mMayHaveFormSelectEventListener = true;
+          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+            window->SetHasFormSelectEventListeners();
+          }
+        } else if (aTypeAtom == nsGkAtoms::onstart) {
+          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+            if (Document* doc = window->GetExtantDoc()) {
+              doc->SetUseCounter(eUseCounter_custom_onstart);
+            }
+          }
+        } else if (aTypeAtom == nsGkAtoms::onbounce) {
+          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+            if (Document* doc = window->GetExtantDoc()) {
+              doc->SetUseCounter(eUseCounter_custom_onbounce);
+            }
+          }
+        } else if (aTypeAtom == nsGkAtoms::onfinish) {
+          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+            if (Document* doc = window->GetExtantDoc()) {
+              doc->SetUseCounter(eUseCounter_custom_onfinish);
+            }
+          }
+        } else if (aTypeAtom == nsGkAtoms::onbeforeinput) {
+          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+            window->SetHasBeforeInputEventListenersForTelemetry();
+          }
+        } else if (aTypeAtom == nsGkAtoms::onoverflow) {
+          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+            if (Document* doc = window->GetExtantDoc()) {
+              doc->SetUseCounter(eUseCounter_custom_onoverflow);
+            }
+          }
+        } else if (aTypeAtom == nsGkAtoms::onunderflow) {
+          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+            if (Document* doc = window->GetExtantDoc()) {
+              doc->SetUseCounter(eUseCounter_custom_onunderflow);
+            }
+          }
+        } else if (aTypeAtom == nsGkAtoms::onDOMMouseScroll) {
+          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+            if (Document* doc = window->GetExtantDoc()) {
+              doc->SetUseCounter(eUseCounter_custom_ondommousescroll);
+            }
+          }
+        } else if (aTypeAtom == nsGkAtoms::onMozMousePixelScroll) {
+          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+            if (Document* doc = window->GetExtantDoc()) {
+              doc->SetUseCounter(eUseCounter_custom_onmozmousepixelscroll);
+            }
           }
         }
-      } else if (aTypeAtom == nsGkAtoms::onbounce) {
-        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-          if (Document* doc = window->GetExtantDoc()) {
-            doc->SetUseCounter(eUseCounter_custom_onbounce);
-          }
-        }
-      } else if (aTypeAtom == nsGkAtoms::onfinish) {
-        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-          if (Document* doc = window->GetExtantDoc()) {
-            doc->SetUseCounter(eUseCounter_custom_onfinish);
-          }
-        }
-      } else if (aTypeAtom == nsGkAtoms::onbeforeinput) {
-        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-          window->SetHasBeforeInputEventListenersForTelemetry();
-        }
-      } else if (aTypeAtom == nsGkAtoms::onoverflow) {
-        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-          if (Document* doc = window->GetExtantDoc()) {
-            doc->SetUseCounter(eUseCounter_custom_onoverflow);
-          }
-        }
-      } else if (aTypeAtom == nsGkAtoms::onunderflow) {
-        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-          if (Document* doc = window->GetExtantDoc()) {
-            doc->SetUseCounter(eUseCounter_custom_onunderflow);
-          }
-        }
-      } else if (aTypeAtom == nsGkAtoms::onDOMMouseScroll) {
-        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-          if (Document* doc = window->GetExtantDoc()) {
-            doc->SetUseCounter(eUseCounter_custom_ondommousescroll);
-          }
-        }
-      } else if (aTypeAtom == nsGkAtoms::onMozMousePixelScroll) {
-        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-          if (Document* doc = window->GetExtantDoc()) {
-            doc->SetUseCounter(eUseCounter_custom_onmozmousepixelscroll);
-          }
-        }
-      }
-      break;
+        break;
+    }
   }
 
   if (IsApzAwareListener(listener)) {
