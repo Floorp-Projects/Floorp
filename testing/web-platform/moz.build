@@ -722,6 +722,9 @@ with Files("tests/webgl/**"):
 with Files("tests/webmessaging/**"):
     BUG_COMPONENT = ("Core", "DOM: Core & HTML")
 
+with Files("tests/web-locks/**"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
 with Files("tests/web-nfc/**"):
     BUG_COMPONENT = ("Core", "DOM: Device Interfaces")
 
