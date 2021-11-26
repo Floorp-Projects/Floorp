@@ -79,7 +79,7 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
     // Listen to the current target front.
     this.target = this.targetCommand.targetFront;
 
-    if (this.targetCommand.descriptorFront.isLocalTab) {
+    if (this.targetCommand.descriptorFront.isTabDescriptor) {
       this.#currentTargetURL = new URL(this.targetCommand.targetFront.url);
     }
 
@@ -90,7 +90,7 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
     // registrations.
     await this._onRegistrationListChanged();
 
-    if (this.targetCommand.descriptorFront.isLocalTab) {
+    if (this.targetCommand.descriptorFront.isTabDescriptor) {
       await this.commands.resourceCommand.watchResources(
         [this.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
         {
@@ -107,7 +107,7 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
   unlisten(...args) {
     this._workersListener.removeListener(this._onRegistrationListChanged);
 
-    if (this.targetCommand.descriptorFront.isLocalTab) {
+    if (this.targetCommand.descriptorFront.isTabDescriptor) {
       this.commands.resourceCommand.unwatchResources(
         [this.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
         {
@@ -121,7 +121,7 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
 
   // Override from LegacyWorkersWatcher.
   async _onProcessAvailable({ targetFront }) {
-    if (this.targetCommand.descriptorFront.isLocalTab) {
+    if (this.targetCommand.descriptorFront.isTabDescriptor) {
       // XXX: This has been ported straight from the current debugger
       // implementation. Since pauseMatchingServiceWorkers expects an origin
       // to filter matching workers, it only makes sense when we are debugging
@@ -298,8 +298,8 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
       return true;
     }
 
-    if (!this.targetCommand.descriptorFront.isLocalTab) {
-      // No support for service worker targets outside of main process & local
+    if (!this.targetCommand.descriptorFront.isTabDescriptor) {
+      // No support for service worker targets outside of main process &
       // tab debugging.
       return false;
     }
