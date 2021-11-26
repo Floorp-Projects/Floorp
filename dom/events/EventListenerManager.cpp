@@ -381,6 +381,13 @@ void EventListenerManager::AddEventListenerInternal(
           window->SetHasMouseEnterLeaveEventListeners();
         }
         break;
+      case eKeyDown:
+      case eKeyPress:
+      case eKeyUp:
+        if (!aFlags.mInSystemGroup) {
+          mMayHaveKeyEventListener = true;
+        }
+        break;
       default:
         // XXX Use NS_ASSERTION here to print resolvedEventMessage since
         //     MOZ_ASSERT can take only string literal, not pointer to
@@ -457,16 +464,22 @@ void EventListenerManager::AddEventListenerInternal(
                      nsPrintfCString("resolvedEventMessage=%s",
                                      ToChar(resolvedEventMessage))
                          .get());
-        if (aTypeAtom == nsGkAtoms::onkeydown ||
-            aTypeAtom == nsGkAtoms::onkeypress ||
-            aTypeAtom == nsGkAtoms::onkeyup) {
-          if (!aFlags.mInSystemGroup) {
-            mMayHaveKeyEventListener = true;
-          }
-        } else if (aTypeAtom == nsGkAtoms::oncompositionend ||
-                   aTypeAtom == nsGkAtoms::oncompositionstart ||
-                   aTypeAtom == nsGkAtoms::oncompositionupdate ||
-                   aTypeAtom == nsGkAtoms::oninput) {
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::onkeydown,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::onkeypress,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::onkeyup,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        if (aTypeAtom == nsGkAtoms::oncompositionend ||
+            aTypeAtom == nsGkAtoms::oncompositionstart ||
+            aTypeAtom == nsGkAtoms::oncompositionupdate ||
+            aTypeAtom == nsGkAtoms::oninput) {
           if (!aFlags.mInSystemGroup) {
             mMayHaveInputOrCompositionEventListener = true;
           }
