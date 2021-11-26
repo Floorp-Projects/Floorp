@@ -1208,6 +1208,7 @@ using GCPtrId = GCPtr<jsid>;
 using ImmutablePropertyNamePtr = ImmutableTenuredPtr<PropertyName*>;
 using ImmutableSymbolPtr = ImmutableTenuredPtr<JS::Symbol*>;
 
+using WeakHeapPtrAtom = WeakHeapPtr<JSAtom*>;
 using WeakHeapPtrDebugEnvironmentProxy = WeakHeapPtr<DebugEnvironmentProxy*>;
 using WeakHeapPtrGlobalObject = WeakHeapPtr<GlobalObject*>;
 using WeakHeapPtrObject = WeakHeapPtr<JSObject*>;
