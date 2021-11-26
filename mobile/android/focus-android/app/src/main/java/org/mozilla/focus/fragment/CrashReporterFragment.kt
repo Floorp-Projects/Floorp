@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_crash_reporter.*
 import mozilla.components.service.glean.private.NoExtras
@@ -25,6 +26,9 @@ class CrashReporterFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        view.findViewById<View>(R.id.background).background =
+            AppCompatResources.getDrawable(requireContext(), R.drawable.ic_error_session_crashed)
 
         CrashReporter.displayed.record(NoExtras())
 
