@@ -443,7 +443,10 @@ class AsyncPanZoomController {
   /**
    * Returns whether this APZC is currently autoscrolling.
    */
-  bool IsAutoscroll() const { return mState == AUTOSCROLL; }
+  bool IsAutoscroll() const {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    return mState == AUTOSCROLL;
+  }
 
   /**
    * Returns the identifier of the touch in the last touch event processed by
