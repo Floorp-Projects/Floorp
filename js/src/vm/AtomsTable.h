@@ -13,6 +13,7 @@
 
 #include "js/GCHashTable.h"
 #include "js/TypeDecls.h"
+#include "js/Vector.h"
 #include "vm/JSAtom.h"
 
 /*
@@ -103,6 +104,9 @@ class AtomsTable {
   // Set of atoms added while the |atoms| set is being swept.
   AtomSet* atomsAddedWhileSweeping;
 
+  // List of pinned atoms that are traced in every GC.
+  Vector<JSAtom*, 0, SystemAllocPolicy> pinnedAtoms;
+
  public:
   // An iterator used for sweeping atoms incrementally.
   using SweepIterator = AtomSet::Enum;
@@ -119,7 +123,7 @@ class AtomsTable {
 
   bool atomIsPinned(JSRuntime* rt, JSAtom* atom);
 
-  void maybePinExistingAtom(JSContext* cx, JSAtom* atom);
+  bool maybePinExistingAtom(JSContext* cx, JSAtom* atom);
 
   void tracePinnedAtoms(JSTracer* trc);
 
@@ -134,7 +138,6 @@ class AtomsTable {
   size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
  private:
-  void tracePinnedAtomsInSet(JSTracer* trc, AtomSet& atoms);
   void mergeAtomsAddedWhileSweeping();
 };
 
