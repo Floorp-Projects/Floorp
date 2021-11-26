@@ -208,14 +208,14 @@ class MachSiteManager:
         self._external_python = external_python
         self._site_packages_source = site_packages_source
         self._requirements = requirements
-        self._virtualenv_root = os.path.join(state_dir, "_virtualenvs", "mach")
+        self._virtualenv_root = _mach_virtualenv_root(state_dir) if state_dir else None
         self._metadata = MozSiteMetadata(
             sys.hexversion,
             "mach",
             site_packages_source,
             site_packages_source,
             external_python,
-            _mach_virtualenv_root(state_dir),
+            self._virtualenv_root,
         )
 
     @classmethod
