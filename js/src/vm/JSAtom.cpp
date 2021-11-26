@@ -314,22 +314,9 @@ AtomsTable::AtomsTable()
 
 AtomsTable::~AtomsTable() { MOZ_ASSERT(!atomsAddedWhileSweeping); }
 
-inline void AtomsTable::tracePinnedAtomsInSet(JSTracer* trc, AtomSet& atoms) {
-  for (auto r = atoms.all(); !r.empty(); r.popFront()) {
-    const AtomStateEntry& entry = r.front();
-    MOZ_DIAGNOSTIC_ASSERT(entry.asPtrUnbarriered());
-    if (entry.isPinned()) {
-      JSAtom* atom = entry.asPtrUnbarriered();
-      TraceRoot(trc, &atom, "interned_atom");
-      MOZ_ASSERT(entry.asPtrUnbarriered() == atom);
-    }
-  }
-}
-
 void AtomsTable::tracePinnedAtoms(JSTracer* trc) {
-  tracePinnedAtomsInSet(trc, atoms);
-  if (atomsAddedWhileSweeping) {
-    tracePinnedAtomsInSet(trc, *atomsAddedWhileSweeping);
+  for (JSAtom* atom : pinnedAtoms) {
+    TraceRoot(trc, &atom, "pinned atom");
   }
 }
 
@@ -452,6 +439,7 @@ size_t AtomsTable::sizeOfIncludingThis(
   if (atomsAddedWhileSweeping) {
     size += atomsAddedWhileSweeping->shallowSizeOfExcludingThis(mallocSizeOf);
   }
+  size += pinnedAtoms.sizeOfExcludingThis(mallocSizeOf);
   return size;
 }
 
@@ -584,6 +572,9 @@ MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
   if (p) {
     JSAtom* atom = p->asPtr(cx);
     if (pin && !p->isPinned()) {
+      if (!pinnedAtoms.append(atom)) {
+        return nullptr;
+      }
       p->setPinned(true);
     }
     return atom;
@@ -597,9 +588,16 @@ MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
   // The operations above can't GC; therefore the atoms table has not been
   // modified and p is still valid.
   AtomSet* addSet = atomsAddedWhileSweeping ? atomsAddedWhileSweeping : &atoms;
-  if (MOZ_UNLIKELY(!addSet->add(p, AtomStateEntry(atom, bool(pin))))) {
+  if (MOZ_UNLIKELY(!addSet->add(p, AtomStateEntry(atom, false)))) {
     ReportOutOfMemory(cx); /* SystemAllocPolicy does not report OOM. */
     return nullptr;
+  }
+
+  if (pin) {
+    if (!pinnedAtoms.append(atom)) {
+      return nullptr;
+    }
+    p->setPinned(true);
   }
 
   return atom;
@@ -758,7 +756,9 @@ JSAtom* js::AtomizeString(JSContext* cx, JSString* str,
     JSAtom& atom = str->asAtom();
     /* N.B. static atoms are effectively always interned. */
     if (pin == PinAtom && !atom.isPermanentAtom()) {
-      cx->runtime()->atoms().maybePinExistingAtom(cx, &atom);
+      if (!cx->runtime()->atoms().maybePinExistingAtom(cx, &atom)) {
+        return nullptr;
+      }
     }
 
     return &atom;
@@ -822,7 +822,7 @@ bool AtomsTable::atomIsPinned(JSRuntime* rt, JSAtom* atom) {
   return p->isPinned();
 }
 
-void AtomsTable::maybePinExistingAtom(JSContext* cx, JSAtom* atom) {
+bool AtomsTable::maybePinExistingAtom(JSContext* cx, JSAtom* atom) {
   MOZ_ASSERT(atom);
   MOZ_ASSERT(!atom->isPermanentAtom());
 
@@ -836,7 +836,12 @@ void AtomsTable::maybePinExistingAtom(JSContext* cx, JSAtom* atom) {
   MOZ_ASSERT(p);  // Non-permanent atoms must exist in atoms table.
   MOZ_ASSERT(p->asPtrUnbarriered() == atom);
 
+  if (!pinnedAtoms.append(atom)) {
+    return false;
+  }
+
   p->setPinned(true);
+  return true;
 }
 
 JSAtom* js::Atomize(JSContext* cx, const char* bytes, size_t length,
