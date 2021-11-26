@@ -854,7 +854,7 @@ static int32_t MemoryInit(Instance* instance, I dstOffset, uint32_t srcOffset,
   return 0;
 }
 
-void* Instance::createIndirectStub(Tier tier, uint32_t funcIndex) {
+void* Instance::ensureAndGetIndirectStub(Tier tier, uint32_t funcIndex) {
   const CodeTier& codeTier = code(tier);
   auto stubs = codeTier.lazyStubs().lock();
 
@@ -1164,26 +1164,29 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
                                       uint32_t tableIndex) {
   MOZ_ASSERT(SASigTableGet.failureMode == FailureMode::FailOnInvalidRef);
 
+  JSContext* cx = TlsContext.get();
   const Table& table = *instance->tables()[tableIndex];
+
   if (index >= table.length()) {
-    JS_ReportErrorNumberASCII(TlsContext.get(), GetErrorMessage, nullptr,
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_WASM_TABLE_OUT_OF_BOUNDS);
     return AnyRef::invalid().forCompiledCode();
   }
 
-  if (table.repr() == TableRepr::Ref) {
-    return table.getAnyRef(index).forCompiledCode();
+  switch (table.repr()) {
+    case TableRepr::Ref:
+      return table.getAnyRef(index).forCompiledCode();
+    case TableRepr::Func: {
+      MOZ_RELEASE_ASSERT(!table.isAsmJS());
+      RootedFunction fun(cx);
+      if (!table.getFuncRef(cx, index, &fun)) {
+        return AnyRef::invalid().forCompiledCode();
+      }
+      return FuncRef::fromJSFunction(fun).forCompiledCode();
+    }
   }
 
-  MOZ_RELEASE_ASSERT(!table.isAsmJS());
-
-  JSContext* cx = TlsContext.get();
-  RootedFunction fun(cx);
-  if (!table.getFuncRef(cx, index, &fun)) {
-    return AnyRef::invalid().forCompiledCode();
-  }
-
-  return FuncRef::fromJSFunction(fun).forCompiledCode();
+  MOZ_CRASH("Should not happen");
 }
 
 /* static */ uint32_t Instance::tableGrow(Instance* instance, void* initValue,
@@ -1191,41 +1194,43 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
   MOZ_ASSERT(SASigTableGrow.failureMode == FailureMode::Infallible);
 
   JSContext* cx = TlsContext.get();
-  RootedAnyRef ref(cx, AnyRef::fromCompiledCode(initValue));
   Table& table = *instance->tables()[tableIndex];
 
-  if (table.isFunction()) {
-    RootedFuncRef functionForFill(cx, FuncRef::fromAnyRefUnchecked(ref));
+  switch (table.repr()) {
+    case TableRepr::Ref: {
+      uint32_t oldSize = table.grow(delta);
+      if (oldSize != uint32_t(-1) && initValue != nullptr) {
+        table.fillAnyRef(oldSize, delta, AnyRef::fromCompiledCode(initValue));
+      }
+      return oldSize;
+    }
+    case TableRepr::Func: {
+      RootedFuncRef functionForFill(cx, FuncRef::fromCompiledCode(initValue));
+      const Tier tier = instance->code().bestTier();
 
-    const Tier tier = instance->code().bestTier();
-    // Call ensureIndirectStub first so as to be able to signal OOM before the
-    // table is grown; we don't want a grown table that then can't be
-    // initialized because a stub can't be created for the function.
-    //
-    // Be sure to use the same tier for creating the stub and filling the
-    // table, or the later call to fillFuncRef may want to create a new stub
-    // for the better tier and may OOM anyway, and it must not.
-    if (!instance->ensureIndirectStub(cx, functionForFill.address(), tier,
-                                      table.isImportedOrExported())) {
-      return -1;
+      // Call ensureIndirectStub first so as to be able to signal OOM before the
+      // table is grown; we don't want a grown table that then can't be
+      // initialized because a stub can't be created for the function.
+      //
+      // Be sure to use the same tier for creating the stub and filling the
+      // table, or the later call to fillFuncRef may want to create a new stub
+      // for the better tier and may OOM anyway, and it must not.
+      if (!instance->ensureIndirectStub(cx, functionForFill.address(), tier,
+                                        table.isImportedOrExported())) {
+        return -1;
+      }
+
+      uint32_t oldSize = table.grow(delta);
+      if (oldSize != uint32_t(-1) && initValue != nullptr) {
+        MOZ_RELEASE_ASSERT(!table.isAsmJS());
+        MOZ_ALWAYS_TRUE(
+            table.fillFuncRef(Some(tier), oldSize, delta, functionForFill, cx));
+      }
+      return oldSize;
     }
-    uint32_t oldSize = table.grow(delta);
-    if (oldSize != uint32_t(-1) && initValue != nullptr) {
-      MOZ_RELEASE_ASSERT(!table.isAsmJS());
-      MOZ_ALWAYS_TRUE(
-          table.fillFuncRef(Some(tier), oldSize, delta, functionForFill, cx));
-    }
-    return oldSize;
   }
 
-  MOZ_ASSERT(!table.isFunction());
-  uint32_t oldSize = table.grow(delta);
-
-  if (oldSize != uint32_t(-1) && initValue != nullptr) {
-    table.fillAnyRef(oldSize, delta, ref);
-  }
-
-  return oldSize;
+  MOZ_CRASH("Should not happen");
 }
 
 /* static */ int32_t Instance::tableSet(Instance* instance, uint32_t index,
