@@ -6,9 +6,6 @@
 const { MessageHandlerRegistry } = ChromeUtils.import(
   "chrome://remote/content/shared/messagehandler/MessageHandlerRegistry.jsm"
 );
-const { CONTEXT_DESCRIPTOR_TYPES } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/MessageHandler.jsm"
-);
 const { RootMessageHandler } = ChromeUtils.import(
   "chrome://remote/content/shared/messagehandler/RootMessageHandler.jsm"
 );
@@ -24,7 +21,6 @@ add_task(async function test_sessionData() {
   await loadURL(tab1.linkedBrowser, TEST_PAGE);
 
   const sessionId = "sessionData-test";
-  const contextDescriptorAll = { type: CONTEXT_DESCRIPTOR_TYPES.ALL };
 
   const rootMessageHandlerRegistry = new MessageHandlerRegistry(
     RootMessageHandler.type

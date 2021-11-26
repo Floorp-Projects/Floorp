@@ -28,9 +28,7 @@ class WindowGlobalMessageHandler extends MessageHandler {
   constructor() {
     super(...arguments);
 
-    // Bug 1743083: Temporarily delay caching of the inner window id until
-    // the session data is no longer applied before super() returns.
-    this._innerWindowId;
+    this._innerWindowId = this._context.window.windowGlobalChild.innerWindowId;
   }
 
   /**
@@ -66,20 +64,14 @@ class WindowGlobalMessageHandler extends MessageHandler {
   }
 
   get innerWindowId() {
-    if (this._innerWindowId === undefined) {
-      this._innerWindowId = this._context.window.windowGlobalChild.innerWindowId;
-    }
-
     return this._innerWindowId;
   }
 
-  forwardCommand(command) {
-    throw new Error(
-      `Cannot forward commands from a "WINDOW_GLOBAL" MessageHandler`
-    );
-  }
+  async applyInitialSessionDataItems(sessionDataItems) {
+    if (!Array.isArray(sessionDataItems)) {
+      return;
+    }
 
-  async _applyInitialSessionDataItems(sessionDataItems) {
     for (const sessionDataItem of sessionDataItems) {
       const {
         moduleName,
@@ -105,6 +97,12 @@ class WindowGlobalMessageHandler extends MessageHandler {
         });
       }
     }
+  }
+
+  forwardCommand(command) {
+    throw new Error(
+      `Cannot forward commands from a "WINDOW_GLOBAL" MessageHandler`
+    );
   }
 
   _isRelevantContext(contextDescriptor) {
