@@ -426,30 +426,25 @@ size_t GetGtkHeaderBarButtonLayout(Span<ButtonLayout> aButtonLayout,
 
   nsDependentCSubstring layout(decorationLayout, strlen(decorationLayout));
 
-  bool right = false;
   size_t activeButtons = 0;
   for (const auto& part : layout.Split(':')) {
     for (const auto& button : part.Split(',')) {
       if (button.EqualsLiteral("close")) {
-        aButtonLayout[activeButtons++] = {MOZ_GTK_HEADER_BAR_BUTTON_CLOSE,
-                                          right};
+        aButtonLayout[activeButtons++] = {MOZ_GTK_HEADER_BAR_BUTTON_CLOSE};
       } else if (button.EqualsLiteral("minimize")) {
-        aButtonLayout[activeButtons++] = {MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE,
-                                          right};
+        aButtonLayout[activeButtons++] = {MOZ_GTK_HEADER_BAR_BUTTON_MINIMIZE};
       } else if (button.EqualsLiteral("maximize")) {
-        aButtonLayout[activeButtons++] = {MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE,
-                                          right};
+        aButtonLayout[activeButtons++] = {MOZ_GTK_HEADER_BAR_BUTTON_MAXIMIZE};
       }
       if (activeButtons == aButtonLayout.Length()) {
         return activeButtons;
       }
     }
-    right = true;
   }
   return activeButtons;
 }
 
-static void EnsureToolbarMetrics(void) {
+static void EnsureToolbarMetrics() {
   if (!sToolbarMetrics.initialized) {
     // Make sure we have clean cache after theme reset, etc.
     memset(&sToolbarMetrics, 0, sizeof(sToolbarMetrics));
@@ -457,7 +452,7 @@ static void EnsureToolbarMetrics(void) {
     // Calculate titlebar button visibility and positions.
     ButtonLayout aButtonLayout[TOOLBAR_BUTTONS];
     size_t activeButtonNums =
-        GetGtkHeaderBarButtonLayout(mozilla::Span(aButtonLayout), nullptr);
+        GetGtkHeaderBarButtonLayout(Span(aButtonLayout), nullptr);
 
     for (size_t i = 0; i < activeButtonNums; i++) {
       int buttonIndex =
