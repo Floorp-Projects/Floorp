@@ -53,7 +53,7 @@ pub enum BasicParseErrorKind<'i> {
     QualifiedRuleInvalid,
 }
 
-/// The funamental parsing errors that can be triggered by built-in parsing routines.
+/// The fundamental parsing errors that can be triggered by built-in parsing routines.
 #[derive(Clone, Debug, PartialEq)]
 pub struct BasicParseError<'i> {
     /// Details of this error
@@ -644,7 +644,7 @@ impl<'i: 't, 't> Parser<'i, 't> {
     ///
     /// Successful results are accumulated in a vector.
     ///
-    /// This method retuns `Err(())` the first time that a closure call does,
+    /// This method returns `Err(())` the first time that a closure call does,
     /// or if a closure call leaves some input before the next comma or the end of the input.
     #[inline]
     pub fn parse_comma_separated<F, T, E>(
