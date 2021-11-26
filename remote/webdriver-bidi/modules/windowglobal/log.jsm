@@ -54,12 +54,9 @@ class Log extends Module {
   }
 
   _onConsoleAPILogEvent(message) {
-    const browsingContext = BrowsingContext.get(this.messageHandler.contextId);
-    const innerWindowId =
-      browsingContext.window.windowGlobalChild?.innerWindowId;
-
     const messageObject = message.wrappedJSObject;
-    if (innerWindowId !== messageObject.innerID) {
+
+    if (messageObject.innerID !== this.messageHandler.innerWindowId) {
       // If the message doesn't match the innerWindowId of the current context
       // ignore it.
       return;
