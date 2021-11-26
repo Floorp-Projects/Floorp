@@ -79,6 +79,7 @@ const CFR_MESSAGES = [
   {
     id: "FACEBOOK_CONTAINER_3",
     template: "cfr_doorhanger",
+    groups: ["cfr-message-provider"],
     content: {
       layout: "addon_recommendation",
       category: "cfrAddons",
@@ -148,6 +149,7 @@ const CFR_MESSAGES = [
   },
   {
     id: "GOOGLE_TRANSLATE_3",
+    groups: ["cfr-message-provider"],
     template: "cfr_doorhanger",
     content: {
       layout: "addon_recommendation",
@@ -219,6 +221,7 @@ const CFR_MESSAGES = [
   },
   {
     id: "YOUTUBE_ENHANCE_3",
+    groups: ["cfr-message-provider"],
     template: "cfr_doorhanger",
     content: {
       layout: "addon_recommendation",
@@ -290,6 +293,7 @@ const CFR_MESSAGES = [
   },
   {
     id: "WIKIPEDIA_CONTEXT_MENU_SEARCH_3",
+    groups: ["cfr-message-provider"],
     template: "cfr_doorhanger",
     exclude: true,
     content: {
@@ -365,6 +369,7 @@ const CFR_MESSAGES = [
   },
   {
     id: "REDDIT_ENHANCEMENT_3",
+    groups: ["cfr-message-provider"],
     template: "cfr_doorhanger",
     exclude: true,
     content: {
@@ -437,6 +442,7 @@ const CFR_MESSAGES = [
   },
   {
     id: "DOH_ROLLOUT_CONFIRMATION",
+    groups: ["cfr-message-provider"],
     targeting: `
       "doh-rollout.enabled"|preferenceValue &&
       !"doh-rollout.disable-heuristics"|preferenceValue &&
@@ -485,6 +491,7 @@ const CFR_MESSAGES = [
   },
   {
     id: "SAVE_LOGIN",
+    groups: ["cfr-message-provider"],
     frequency: {
       lifetime: 3,
     },
@@ -556,6 +563,7 @@ const CFR_MESSAGES = [
   },
   {
     id: "UPDATE_LOGIN",
+    groups: ["cfr-message-provider"],
     frequency: {
       lifetime: 3,
     },
@@ -627,6 +635,7 @@ const CFR_MESSAGES = [
   },
   {
     id: "MILESTONE_MESSAGE",
+    groups: ["cfr-message-provider"],
     template: "milestone_message",
     content: {
       layout: "short_message",
@@ -663,6 +672,7 @@ const CFR_MESSAGES = [
   },
   {
     id: "HEARTBEAT_TACTIC_2",
+    groups: ["cfr-message-provider"],
     template: "cfr_urlbar_chiclet",
     content: {
       layout: "chiclet_open_url",
@@ -686,6 +696,7 @@ const CFR_MESSAGES = [
   },
   {
     id: "HOMEPAGE_REMEDIATION_82",
+    groups: ["cfr-message-provider"],
     frequency: {
       lifetime: 3,
     },
@@ -767,6 +778,7 @@ const CFR_MESSAGES = [
   },
   {
     id: "INFOBAR_ACTION_86",
+    groups: ["cfr-message-provider"],
     targeting: "false",
     template: "infobar",
     content: {
@@ -787,6 +799,7 @@ const CFR_MESSAGES = [
   },
   {
     id: "PREF_OBSERVER_MESSAGE_94",
+    groups: ["cfr-message-provider"],
     targeting: "true",
     template: "infobar",
     content: {

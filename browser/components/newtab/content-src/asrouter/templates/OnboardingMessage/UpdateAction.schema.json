@@ -4,33 +4,75 @@
   "version": "1.0.0",
   "type": "object",
   "properties": {
-    "action": {
+    "id": {
+      "type": "string",
+      "description": "Message identifier"
+    },
+    "groups": {
+      "description": "Array of preferences used to control `enabled` status of the group. If any is `false` the group is disabled.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "Preference name"
+      }
+    },
+    "content": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string"
-        },
-        "data": {
+        "action": {
           "type": "object",
           "properties": {
-            "url": {
-              "type": "string",
-              "description": "URL data to be used as argument to the action"
+            "id": {
+              "type": "string"
             },
-            "expireDelta": {
-              "type": "number",
-              "description": "Expiration timestamp to be used as argument to the action"
-            }
-          }
+            "data": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "description": "URL data to be used as argument to the action"
+                },
+                "expireDelta": {
+                  "type": "number",
+                  "description": "Expiration timestamp to be used as argument to the action"
+                }
+              }
+            },
+            "description": "Additional data provided as argument when executing the action"
+          },
+          "additionalProperties": false,
+          "description": "Optional action to take in addition to showing the notification"
         },
-        "description": "Additional data provided as argument when executing the action"
+        "additionalProperties": false,
+        "required": ["id", "action"]
       },
       "additionalProperties": false,
-      "description": "Optional action to take in addition to showing the notification"
+      "required": ["action"]
     },
-    "additionalProperties": false,
-    "required": ["id", "action"]
-  },
-  "additionalProperties": false,
-  "required": ["action"]
+    "targeting": {
+      "type": "string",
+      "description": "A JEXL expression representing targeting information"
+    },
+    "template": {
+      "type": "string"
+    },
+    "trigger": {
+      "type": "object",
+      "description": "An action to trigger potentially showing the message",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "A string identifying the trigger action"
+        },
+        "params": {
+          "type": "array",
+          "description": "An optional array of string parameters for the trigger action",
+          "items": {
+            "anyOf": [{ "type": "integer" }, { "type": "string" }]
+          }
+        }
+      },
+      "required": ["id"]
+    }
+  }
 }

@@ -88,6 +88,18 @@ const ExperimentTestUtils = {
       )
     ).NimbusExperiment;
 
+    // Ensure that the `featureIds` field is properly set
+    const { branches } = experiment;
+    branches.forEach(branch => {
+      branch.features.map(({ featureId }) => {
+        if (!experiment.featureIds.includes(featureId)) {
+          throw new Error(
+            `Branch(${branch.slug}) contains feature(${featureId}) but that's not declared in recipe(${experiment.slug}).featureIds`
+          );
+        }
+      });
+    });
+
     return this._validator(
       schema,
       experiment,

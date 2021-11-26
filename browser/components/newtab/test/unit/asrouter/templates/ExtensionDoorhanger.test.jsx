@@ -83,16 +83,26 @@ const L10N_CONTENT = {
 };
 
 describe("ExtensionDoorhanger", () => {
-  it("should validate DEFAULT_CONTENT", () => {
-    assert.jsonSchema(DEFAULT_CONTENT, CFRDoorhangerSchema);
+  it("should validate DEFAULT_CONTENT", async () => {
+    const messages = await CFRMessageProvider.getMessages();
+    let doorhangerMessage = messages.find(m => m.id === "FACEBOOK_CONTAINER_3");
+    assert.ok(doorhangerMessage, "Message found");
+    assert.jsonSchema(
+      { ...doorhangerMessage, content: DEFAULT_CONTENT },
+      CFRDoorhangerSchema
+    );
   });
-  it("should validate L10N_CONTENT", () => {
-    assert.jsonSchema(L10N_CONTENT, CFRDoorhangerSchema);
+  it("should validate L10N_CONTENT", async () => {
+    const messages = await CFRMessageProvider.getMessages();
+    let doorhangerMessage = messages.find(m => m.id === "FACEBOOK_CONTAINER_3");
+    assert.ok(doorhangerMessage, "Message found");
+    assert.jsonSchema(
+      { ...doorhangerMessage, content: L10N_CONTENT },
+      CFRDoorhangerSchema
+    );
   });
   it("should validate all messages from CFRMessageProvider", async () => {
     const messages = await CFRMessageProvider.getMessages();
-    messages.forEach(msg =>
-      assert.jsonSchema(msg.content, SCHEMAS[msg.template])
-    );
+    messages.forEach(msg => assert.jsonSchema(msg, SCHEMAS[msg.template]));
   });
 });
