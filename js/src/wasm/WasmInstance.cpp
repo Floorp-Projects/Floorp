@@ -854,6 +854,27 @@ static int32_t MemoryInit(Instance* instance, I dstOffset, uint32_t srcOffset,
   return 0;
 }
 
+void* Instance::createIndirectStub(Tier tier, uint32_t funcIndex) {
+  const CodeTier& codeTier = code(tier);
+  auto stubs = codeTier.lazyStubs().lock();
+
+  void* stub_entry = stubs->lookupIndirectStub(funcIndex, tlsData());
+  if (stub_entry) {
+    return stub_entry;
+  }
+
+  VectorOfIndirectStubTarget targets;
+  void* entry = checkedCallEntry(funcIndex, tier);
+  if (!targets.append(IndirectStubTarget{funcIndex, entry, tlsData()}) ||
+      !stubs->createManyIndirectStubs(targets, codeTier)) {
+    return nullptr;
+  }
+
+  stub_entry = stubs->lookupIndirectStub(funcIndex, tlsData());
+  MOZ_ASSERT(stub_entry);
+  return stub_entry;
+}
+
 bool Instance::createManyIndirectStubs(
     const VectorOfIndirectStubTarget& targets, const Tier tier) {
   if (targets.empty()) {
@@ -1998,6 +2019,25 @@ uintptr_t Instance::traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
   }
 
   return scanStart + numMappedBytes - 1;
+}
+
+Instance* Instance::getOriginalInstanceAndFunction(Tier tier, uint32_t funcIdx,
+                                                   JSFunction** fun) {
+  const MetadataTier& metadataTier = metadata(tier);
+  const FuncImportVector& funcImports = metadataTier.funcImports;
+
+  if (IsImportedFunction(funcIdx, metadataTier)) {
+    FuncImportTls& import = funcImportTls(funcImports[funcIdx]);
+    *fun = import.fun;
+    if (IsJSExportedFunction(*fun)) {
+      return this;
+    }
+    WasmInstanceObject* calleeInstanceObj =
+        ExportedFunctionToInstanceObject(*fun);
+    return &calleeInstanceObj->instance();
+  }
+
+  return this;
 }
 
 WasmMemoryObject* Instance::memory() const { return memory_; }
