@@ -419,27 +419,54 @@ function _setProperty(elem, active, variableName, value) {
 }
 
 function _determineToolbarAndContentTheme(aDoc, aTheme) {
-  function prefValue(aColor) {
-    if (!aColor) {
-      return 2;
+  function prefValue(aColor, aIsForeground = false) {
+    if (typeof aColor != "object") {
+      aColor = _cssColorToRGBA(aDoc, aColor);
     }
-    return _isColorDark(aColor.r, aColor.g, aColor.b) ? 1 : 0;
+    return _isColorDark(aColor.r, aColor.g, aColor.b) == aIsForeground ? 1 : 0;
   }
 
-  // Fall back to black as textcolor processing does above.
-  let toolbarColor = _cssColorToRGBA(
-    aDoc,
-    aTheme ? aTheme.toolbar_text || aTheme.textcolor || "black" : null
-  );
-  let contentColor = _cssColorToRGBA(aDoc, aTheme?.ntp_text);
-  Services.prefs.setIntPref(
-    "browser.theme.toolbar-theme",
-    prefValue(toolbarColor)
-  );
-  Services.prefs.setIntPref(
-    "browser.theme.content-theme",
-    prefValue(contentColor)
-  );
+  let toolbarTheme = (function() {
+    if (!aTheme) {
+      return 2;
+    }
+    // We prefer looking at toolbar background first (if it's opaque) because
+    // some text colors can be dark enough for our heuristics, but still
+    // contrast well enough with a dark background, see bug 1743010.
+    if (aTheme.toolbarColor) {
+      let color = _cssColorToRGBA(aDoc, aTheme.toolbarColor);
+      if (color.a == 1) {
+        return prefValue(color);
+      }
+    }
+    if (aTheme.toolbar_text) {
+      return prefValue(aTheme.toolbar_text, /* aIsForeground = */ true);
+    }
+    // It'd seem sensible to try looking at the "frame" background (accentcolor),
+    // but we don't because some themes that use background images leave it to
+    // black, see bug 1741931.
+    //
+    // Fall back to black as per the textcolor processing above.
+    return prefValue(aTheme.textcolor || "black", /* aIsForeground = */ true);
+  })();
+
+  let contentTheme = (function() {
+    if (!aTheme) {
+      return 2;
+    }
+    if (aTheme.ntp_background) {
+      // We don't care about transparency here as ntp background can't have
+      // transparency (alpha channel is dropped).
+      return prefValue(aTheme.ntp_background);
+    }
+    if (aTheme.ntp_text) {
+      return prefValue(aTheme.ntp_text, /* aIsForeground = */ true);
+    }
+    return 2;
+  })();
+
+  Services.prefs.setIntPref("browser.theme.toolbar-theme", toolbarTheme);
+  Services.prefs.setIntPref("browser.theme.content-theme", contentTheme);
 }
 
 function _setProperties(root, active, themeData) {
