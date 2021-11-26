@@ -13,8 +13,9 @@ const { XPCOMUtils } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  Log: "chrome://remote/content/shared/Log.jsm",
   Services: "resource://gre/modules/Services.jsm",
+
+  Log: "chrome://remote/content/shared/Log.jsm",
   WebSocketTransport: "chrome://remote/content/server/WebSocketTransport.jsm",
 });
 

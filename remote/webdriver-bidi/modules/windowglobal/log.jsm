@@ -13,20 +13,31 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 
+  ConsoleListener:
+    "chrome://remote/content/shared/listeners/ConsoleListener.jsm",
   Module: "chrome://remote/content/shared/messagehandler/Module.jsm",
   serialize: "chrome://remote/content/webdriver-bidi/RemoteValue.jsm",
 });
 
 class Log extends Module {
+  #consoleMessageListener;
+
   constructor(messageHandler) {
     super(messageHandler);
 
-    this._onConsoleAPILogEvent = this._onConsoleAPILogEvent.bind(this);
+    // Create the console listener and listen on error messages.
+    this.#consoleMessageListener = new ConsoleListener(
+      this.messageHandler.innerWindowId
+    );
+    this.#consoleMessageListener.on("error", this.#onJavaScriptError);
   }
 
   destroy() {
+    this.#consoleMessageListener.off("error", this.#onJavaScriptError);
+    this.#consoleMessageListener.destroy();
+
     Services.obs.removeObserver(
-      this._onConsoleAPILogEvent,
+      this.#onConsoleAPILogEvent,
       "console-api-log-event"
     );
   }
@@ -34,6 +45,7 @@ class Log extends Module {
   /**
    * Private methods
    */
+
   _applySessionData(params) {
     // TODO: Bug 1741861. Move this logic to a shared module or the an abstract
     // class.
@@ -46,14 +58,16 @@ class Log extends Module {
 
   _subscribeEvent(event) {
     if (event === "log.entryAdded") {
+      this.#consoleMessageListener.startListening();
+
       Services.obs.addObserver(
-        this._onConsoleAPILogEvent,
+        this.#onConsoleAPILogEvent,
         "console-api-log-event"
       );
     }
   }
 
-  _onConsoleAPILogEvent(message) {
+  #onConsoleAPILogEvent = message => {
     const messageObject = message.wrappedJSObject;
 
     if (messageObject.innerID !== this.messageHandler.innerWindowId) {
@@ -98,13 +112,13 @@ class Log extends Module {
 
     // 10. Build the ConsoleLogEntry
     const entry = {
+      type: "console",
       level,
       text,
       timestamp,
       method,
       realm: null,
       args: serializedArgs,
-      type: "console",
     };
 
     // TODO: steps 11. to 15. Those steps relate to:
@@ -116,7 +130,22 @@ class Log extends Module {
     //   to those events.
 
     this.messageHandler.emitMessageHandlerEvent("log.entryAdded", entry);
-  }
+  };
+
+  #onJavaScriptError = (eventName, data = {}) => {
+    const { level, message, timestamp } = data;
+
+    const entry = {
+      type: "javascript",
+      level,
+      text: message,
+      timestamp,
+      // TODO: Bug 1731553
+      stackTrace: undefined,
+    };
+
+    this.messageHandler.emitMessageHandlerEvent("log.entryAdded", entry);
+  };
 
   _getLogEntryLevelFromConsoleMethod(method) {
     switch (method) {
