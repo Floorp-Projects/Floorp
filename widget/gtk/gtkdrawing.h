@@ -356,7 +356,6 @@ enum WidgetNodeType : int {
  * right side of the tab bar */
 struct ButtonLayout {
   WidgetNodeType mType;
-  bool mAtRight;
 };
 
 /*** General library functions ***/
