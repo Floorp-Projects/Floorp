@@ -103,9 +103,6 @@ Devedition    https://archive.mozilla.org/pub/devedition/candidates/89.0b15-cand
 Nightly       https://archive.mozilla.org/pub/firefox/nightly/2021/05/2021-05-21-09-57-54-mozilla-central/firefox-90.0a1.en-US.win64.zip
 ==========    ==========================================================================================================================
 
-Or package a local developer build with ``mach package``, and look for
-it in ``$TOPOBJDIR/dist/firefox-...``.
-
 Repackage using commands like:
 
 ::
@@ -116,6 +113,16 @@ Repackage using commands like:
       --arch=x86_64 \
       --verbose
 
+Or package a local developer build directly with ``mach repackage msix``:
+
+::
+
+    $ ./mach repackage msix
+
+This command will do its best to guess your channel and other necessary
+information. You can override these with options like ``--channel``
+(see the ``--help`` text for all supported options).
+
 Paths to tools can be set via environment variables. In order, searched
 first to searched last:
 
@@ -123,6 +130,20 @@ first to searched last:
 2. searching on ``PATH``
 3. searching under ``WINDOWSSDKDIR``
 4. searching under ``C:/Program Files (x86)/Windows Kits/10``
+
+If you are cross compiling from Linux or macOS you will need a
+compiled version of `Mozilla's fork of Microsoft's msix-packaging
+<https://github.com/mozilla/msix-packaging/tree/johnmcpms/signing>`__
+tools.
+
+Linux users can obtain a prebuilt version with:
+
+::
+
+    $ ./mach artifact toolchain --from-build linux64-msix-packaging
+
+After `bug 1743036 <https://bugzilla.mozilla.org/show_bug.cgi?id=1743036>`__
+is fixed, macOS and Windows users will have a similar option.
 
 Signing locally
 ~~~~~~~~~~~~~~~
@@ -138,6 +159,28 @@ adding ``--sign`` to ``mach repackage msix``, or with commands like:
 
 Or sign them yourself following `Microsoft's self-signed certificate
 instructions <https://docs.microsoft.com/en-us/windows/msix/package/create-certificate-package-signing#create-a-self-signed-certificate>`__.
+
+Signing Certificates
+^^^^^^^^^^^^^^^^^^^^
+
+Mach will create the necessary signing keys and certificates for you
+and re-use them for subsequent signings. Before your locally signed
+builds can be installed you will need to install the correct
+certificate to the Windows Root Store. This can be done with a command
+like:
+
+::
+
+    $ powershell -c 'Import-Certificate -FilePath mycert.cer -Cert Cert:\LocalMachine\Root\'
+
+The exact command to run will be shown if you run ``./mach repackage``
+with ``--verbose``.
+
+You _may_ choose to sign in a different manner, with a key and certificate
+you create yourself, but Windows requires that the Subject of the certificate
+match the Publisher found in the MSIX's AppxManifest.xml. If you choose
+to go this route, ensure that you pass ``--publisher`` to
+``./mach repackage msix`` to set that correctly.
 
 For developers
 ~~~~~~~~~~~~~~
