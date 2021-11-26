@@ -19,12 +19,17 @@ base_dir = os.path.abspath(os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(base_dir, "python", "mach"))
 sys.path.insert(0, os.path.join(base_dir, "python", "mozboot"))
 sys.path.insert(0, os.path.join(base_dir, "python", "mozbuild"))
-sys.path.insert(0, os.path.join(base_dir, "testing", "mozbase", "mozfile"))
 sys.path.insert(0, os.path.join(base_dir, "third_party", "python", "packaging"))
 sys.path.insert(0, os.path.join(base_dir, "third_party", "python", "pyparsing"))
 sys.path.insert(0, os.path.join(base_dir, "third_party", "python", "six"))
-from mach.site import CommandSiteManager, MachSiteManager, MozSiteMetadata
-from mozboot.util import get_state_dir
+from mach.site import (
+    CommandSiteManager,
+    ExternalPythonSite,
+    MachSiteManager,
+    MozSiteMetadata,
+    SitePackagesSource,
+)
+from mach.requirements import MachEnvRequirements
 from mozbuild.configure import (
     ConfigureSandbox,
     TRACE,
@@ -251,13 +256,18 @@ def _activate_build_virtualenv():
 
     topobjdir = os.path.realpath(".")
     topsrcdir = os.path.realpath(os.path.dirname(__file__))
-    state_dir = get_state_dir()
 
-    mach_site = MachSiteManager.from_environment(topsrcdir, state_dir)
+    mach_site = MachSiteManager(
+        topsrcdir,
+        None,
+        MachEnvRequirements(),
+        ExternalPythonSite(sys.executable),
+        SitePackagesSource.NONE,
+    )
     mach_site.activate()
     build_site = CommandSiteManager.from_environment(
         topsrcdir,
-        state_dir,
+        None,
         "build",
         os.path.join(topobjdir, "_virtualenvs"),
     )
