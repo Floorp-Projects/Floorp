@@ -14,6 +14,8 @@ class Command extends Module {
   constructor(messageHandler) {
     super(messageHandler);
     this._testCategorySessionData = [];
+
+    this._createdByMessageHandlerConstructor = this._isCreatedByMessageHandlerConstructor();
   }
   destroy() {}
 
@@ -52,6 +54,21 @@ class Command extends Module {
 
   testForwardToWindowGlobal() {
     return "forward-to-windowglobal-value";
+  }
+
+  testIsCreatedByMessageHandlerConstructor() {
+    return this._createdByMessageHandlerConstructor;
+  }
+
+  _isCreatedByMessageHandlerConstructor() {
+    let caller = Components.stack.caller;
+    while (caller) {
+      if (caller.name === this.messageHandler.constructor.name) {
+        return true;
+      }
+      caller = caller.caller;
+    }
+    return false;
   }
 }
 

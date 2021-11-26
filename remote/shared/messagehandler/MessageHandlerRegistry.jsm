@@ -193,9 +193,11 @@ class MessageHandlerRegistry extends EventEmitter {
   _createMessageHandler(sessionId, sessionDataItems) {
     const messageHandler = new this._messageHandlerClass(
       sessionId,
-      this._context,
-      sessionDataItems
+      this._context
     );
+
+    messageHandler.applyInitialSessionDataItems(sessionDataItems);
+
     this._messageHandlersMap.set(sessionId, messageHandler);
 
     logger.trace(
