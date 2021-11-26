@@ -145,6 +145,17 @@ ValidityState* ElementInternals::GetValidity(ErrorResult& aRv) {
   return Validity();
 }
 
+// https://html.spec.whatwg.org/#dom-elementinternals-validationmessage
+void ElementInternals::GetValidationMessage(nsAString& aValidationMessage,
+                                            ErrorResult& aRv) const {
+  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+    aRv.ThrowNotSupportedError(
+        "Target element is not a form-associated custom element");
+    return;
+  }
+  aValidationMessage = mValidationMessage;
+}
+
 // https://html.spec.whatwg.org/#dom-elementinternals-labels
 already_AddRefed<nsINodeList> ElementInternals::GetLabels(
     ErrorResult& aRv) const {
