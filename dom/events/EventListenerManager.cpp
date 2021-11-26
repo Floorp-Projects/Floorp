@@ -396,6 +396,11 @@ void EventListenerManager::AddEventListenerInternal(
           mMayHaveInputOrCompositionEventListener = true;
         }
         break;
+      case eEditorBeforeInput:
+        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+          window->SetHasBeforeInputEventListenersForTelemetry();
+        }
+        break;
       case eSelectionChange:
         mMayHaveSelectionChangeEventListener = true;
         if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
@@ -533,6 +538,10 @@ void EventListenerManager::AddEventListenerInternal(
                      nsPrintfCString("resolvedEventMessage=%s",
                                      ToChar(resolvedEventMessage))
                          .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::onbeforeinput,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
         NS_ASSERTION(aTypeAtom != nsGkAtoms::onselectionchange,
                      nsPrintfCString("resolvedEventMessage=%s",
                                      ToChar(resolvedEventMessage))
@@ -553,11 +562,7 @@ void EventListenerManager::AddEventListenerInternal(
                      nsPrintfCString("resolvedEventMessage=%s",
                                      ToChar(resolvedEventMessage))
                          .get());
-        if (aTypeAtom == nsGkAtoms::onbeforeinput) {
-          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-            window->SetHasBeforeInputEventListenersForTelemetry();
-          }
-        } else if (aTypeAtom == nsGkAtoms::onoverflow) {
+        if (aTypeAtom == nsGkAtoms::onoverflow) {
           if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
             if (Document* doc = window->GetExtantDoc()) {
               doc->SetUseCounter(eUseCounter_custom_onoverflow);
