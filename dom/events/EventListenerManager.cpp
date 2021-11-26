@@ -370,6 +370,17 @@ void EventListenerManager::AddEventListenerInternal(
           }
         }
         break;
+      case eMouseEnter:
+      case eMouseLeave:
+        mMayHaveMouseEnterLeaveEventListener = true;
+        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+          NS_WARNING_ASSERTION(
+              !nsContentUtils::IsChromeDoc(window->GetExtantDoc()),
+              "Please do not use mouseenter/leave events in chrome. "
+              "They are slower than mouseover/out!");
+          window->SetHasMouseEnterLeaveEventListeners();
+        }
+        break;
       default:
         // XXX Use NS_ASSERTION here to print resolvedEventMessage since
         //     MOZ_ASSERT can take only string literal, not pointer to
@@ -438,22 +449,17 @@ void EventListenerManager::AddEventListenerInternal(
                      nsPrintfCString("resolvedEventMessage=%s",
                                      ToChar(resolvedEventMessage))
                          .get());
-        if (aTypeAtom == nsGkAtoms::onmouseenter ||
-            aTypeAtom == nsGkAtoms::onmouseleave) {
-          mMayHaveMouseEnterLeaveEventListener = true;
-          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-#ifdef DEBUG
-            nsCOMPtr<Document> d = window->GetExtantDoc();
-            NS_WARNING_ASSERTION(
-                !nsContentUtils::IsChromeDoc(d),
-                "Please do not use mouseenter/leave events in chrome. "
-                "They are slower than mouseover/out!");
-#endif
-            window->SetHasMouseEnterLeaveEventListeners();
-          }
-        } else if (aTypeAtom == nsGkAtoms::onkeydown ||
-                   aTypeAtom == nsGkAtoms::onkeypress ||
-                   aTypeAtom == nsGkAtoms::onkeyup) {
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::onmouseenter,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::onmouseleave,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        if (aTypeAtom == nsGkAtoms::onkeydown ||
+            aTypeAtom == nsGkAtoms::onkeypress ||
+            aTypeAtom == nsGkAtoms::onkeyup) {
           if (!aFlags.mInSystemGroup) {
             mMayHaveKeyEventListener = true;
           }
