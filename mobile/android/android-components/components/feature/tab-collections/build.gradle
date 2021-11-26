@@ -74,6 +74,7 @@ dependencies {
     testImplementation Dependencies.kotlin_coroutines
 
     androidTestImplementation project(':support-android-test')
+    androidTestImplementation project(':support-test-fakes')
 
     androidTestImplementation Dependencies.androidx_room_testing
     androidTestImplementation Dependencies.androidx_arch_core_testing

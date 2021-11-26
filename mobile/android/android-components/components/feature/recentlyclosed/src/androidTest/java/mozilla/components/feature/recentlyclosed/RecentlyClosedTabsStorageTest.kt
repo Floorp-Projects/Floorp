@@ -5,9 +5,6 @@
 package mozilla.components.feature.recentlyclosed
 
 import android.content.Context
-import android.util.AttributeSet
-import android.util.JsonReader
-import android.util.JsonWriter
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -17,18 +14,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.browser.state.state.recover.RecoverableTab
-import mozilla.components.concept.base.profiler.Profiler
-import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.engine.EngineSessionState
-import mozilla.components.concept.engine.EngineView
-import mozilla.components.concept.engine.Settings
-import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.feature.recentlyclosed.db.RecentlyClosedTabEntity
 import mozilla.components.feature.recentlyclosed.db.RecentlyClosedTabsDatabase
 import mozilla.components.support.ktx.java.io.truncateDirectory
-import org.json.JSONObject
+import mozilla.components.support.test.fakes.engine.FakeEngine
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
@@ -229,42 +219,5 @@ class RecentlyClosedTabsStorageTest {
         Assert.assertEquals(secondClosedTab.url, newTabs[0].url)
         Assert.assertEquals(secondClosedTab.title, newTabs[0].title)
         Assert.assertEquals(secondClosedTab.lastAccess, newTabs[0].lastAccess)
-    }
-
-    class FakeEngine : Engine {
-        override val version: EngineVersion
-            get() = throw NotImplementedError("Not needed for test")
-
-        override fun createView(context: Context, attrs: AttributeSet?): EngineView =
-            throw UnsupportedOperationException()
-
-        override fun createSession(private: Boolean, contextId: String?): EngineSession =
-            throw UnsupportedOperationException()
-
-        override fun createSessionState(json: JSONObject) = FakeEngineSessionState()
-
-        override fun createSessionStateFrom(reader: JsonReader): EngineSessionState {
-            reader.beginObject()
-            reader.endObject()
-            return FakeEngineSessionState()
-        }
-
-        override fun name(): String =
-            throw UnsupportedOperationException()
-
-        override fun speculativeConnect(url: String) =
-            throw UnsupportedOperationException()
-
-        override val profiler: Profiler?
-            get() = throw NotImplementedError("Not needed for test")
-
-        override val settings: Settings = DefaultSettings()
-    }
-
-    class FakeEngineSessionState : EngineSessionState {
-        override fun writeTo(writer: JsonWriter) {
-            writer.beginObject()
-            writer.endObject()
-        }
     }
 }

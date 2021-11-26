@@ -105,6 +105,7 @@ treeherder:
         support-rustlog: support-rustlog
         support-sync-telemetry: support-sync-telemetry
         support-test-appservices: support-test-appservices
+        support-test-fakes: support-test-fakes
         support-test-libstate: support-test-libstate
         support-test: support-test
         support-utils: support-utils

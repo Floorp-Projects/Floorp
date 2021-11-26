@@ -40,6 +40,7 @@ dependencies {
     implementation Dependencies.androidx_swiperefreshlayout
 
     testImplementation project(':support-test')
+    testImplementation project(':support-test-fakes')
     testImplementation project(':support-test-libstate')
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit

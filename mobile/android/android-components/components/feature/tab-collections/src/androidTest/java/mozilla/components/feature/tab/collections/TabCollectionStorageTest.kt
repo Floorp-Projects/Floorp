@@ -5,9 +5,6 @@
 package mozilla.components.feature.tab.collections
 
 import android.content.Context
-import android.util.AttributeSet
-import android.util.JsonReader
-import android.util.JsonWriter
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.paging.PagedList
 import androidx.room.Room
@@ -17,18 +14,10 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.state.recover.RecoverableTab
-import mozilla.components.concept.base.profiler.Profiler
-import mozilla.components.concept.engine.DefaultSettings
-import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.engine.EngineSessionState
-import mozilla.components.concept.engine.EngineView
-import mozilla.components.concept.engine.Settings
-import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.feature.tab.collections.db.TabCollectionDatabase
 import mozilla.components.feature.tab.collections.db.TabEntity
 import mozilla.components.support.ktx.java.io.truncateDirectory
-import org.json.JSONObject
+import mozilla.components.support.test.fakes.engine.FakeEngine
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -456,6 +445,7 @@ class TabCollectionStorageTest {
     }
 }
 
+/*
 class FakeEngine : Engine {
     override val version: EngineVersion
         get() = throw NotImplementedError("Not needed for test")
@@ -492,6 +482,7 @@ class FakeEngineSessionState : EngineSessionState {
         writer.endObject()
     }
 }
+ */
 
 private fun matches(state: TabSessionState, tab: RecoverableTab) {
     assertEquals(state.content.url, tab.url)
