@@ -149,9 +149,11 @@ test32('(i32.xor (i32.const 0xffffffff) (get_local 1))',
         8b c1   mov %ecx, %eax
         f7 d0   not %eax`,
        1234,5678, -5679);
-// Currently not folded: XOR64 with first arg all ones, because there's
-// no way to represent the result in MIR: MBitNot is hardwired to Int32.
-// See bug 1741392.
+test64('(i64.xor (i64.const 0xffffffffffffffff) (get_local 1))',
+       `48 8b ..   mov %r.., %rcx
+        48 8b c1   mov %rcx, %rax
+        48 f7 d0   not %rax`,
+       1234n,5678n, -5679n);
 
 // {AND,OR,XOR}{32,64} identities: second arg is all ones
 
@@ -176,7 +178,11 @@ test32('(i32.xor (get_local 0) (i32.const 0xffffffff))',
        `8b c1   mov %ecx, %eax
         f7 d0   not %eax`,
        1234,5678, -1235, {no_prefix: true});
-// Currently not folded: XOR64 with second arg all ones, same reason as above
+test64('(i64.xor (get_local 0) (i64.const 0xffffffffffffffff))',
+     // 48 8b cf   mov %rdi, %rcx  -- ditto
+       `48 8b c1   mov %rcx, %rax
+        48 f7 d0   not %rax`,
+       1234n,5678n, -1235n, {no_prefix: true});
 
 // {AND,OR,XOR}{32,64} identities: both args the same
 
