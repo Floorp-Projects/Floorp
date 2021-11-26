@@ -318,6 +318,15 @@ void EventListenerManager::AddEventListenerInternal(
         window->SetHasPointerEnterLeaveEventListeners();
       }
       break;
+    case eGamepadButtonDown:
+    case eGamepadButtonUp:
+    case eGamepadAxisMove:
+    case eGamepadConnected:
+    case eGamepadDisconnected:
+      if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+        window->SetHasGamepadEventListener();
+      }
+      break;
     default:
       // XXX Use NS_ASSERTION here to print aEventMessage since MOZ_ASSERT
       //     can take only string literal, not pointer to characters.
@@ -333,6 +342,12 @@ void EventListenerManager::AddEventListenerInternal(
       NS_ASSERTION(
           aTypeAtom != nsGkAtoms::onpointerleave,
           nsPrintfCString("aEventMessage=%s", ToChar(aEventMessage)).get());
+      NS_ASSERTION(aEventMessage < eGamepadEventFirst ||
+                       aEventMessage > eGamepadEventLast,
+                   nsPrintfCString("You added new gamepad event, but it's not "
+                                   "handled above, aEventMessage=%s",
+                                   ToChar(aEventMessage))
+                       .get());
       if (aTypeAtom == nsGkAtoms::ondeviceorientation) {
         EnableDevice(eDeviceOrientation);
       } else if (aTypeAtom == nsGkAtoms::onabsolutedeviceorientation) {
@@ -370,11 +385,6 @@ void EventListenerManager::AddEventListenerInternal(
               "They are slower than mouseover/out!");
 #endif
           window->SetHasMouseEnterLeaveEventListeners();
-        }
-      } else if (aEventMessage >= eGamepadEventFirst &&
-                 aEventMessage <= eGamepadEventLast) {
-        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-          window->SetHasGamepadEventListener();
         }
       } else if (aTypeAtom == nsGkAtoms::onkeydown ||
                  aTypeAtom == nsGkAtoms::onkeypress ||
