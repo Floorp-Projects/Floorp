@@ -87,6 +87,12 @@ async function createTargetForFakeTab(title) {
 
   const tabs = await listTabs(client);
   const tabDescriptor = findTab(tabs, title);
+
+  // These xpcshell tests use mocked actors (xpcshell-test/testactors)
+  // which still don't support watcher actor.
+  // Because of that we still can't enable server side targets and target swiching.
+  tabDescriptor.disableTargetSwitching();
+
   return tabDescriptor.getTarget();
 }
 
@@ -378,6 +384,12 @@ async function getTestTab(client, title) {
  */
 async function attachTestTab(client, title) {
   const descriptorFront = await getTestTab(client, title);
+
+  // These xpcshell tests use mocked actors (xpcshell-test/testactors)
+  // which still don't support watcher actor.
+  // Because of that we still can't enable server side targets and target swiching.
+  descriptorFront.disableTargetSwitching();
+
   const commands = await createCommandsDictionary(descriptorFront);
   await commands.targetCommand.startListening();
   return commands;
@@ -810,6 +822,12 @@ async function setupTestFromUrl(url) {
 
   const tabs = await listTabs(devToolsClient);
   const descriptorFront = findTab(tabs, "test");
+
+  // These xpcshell tests use mocked actors (xpcshell-test/testactors)
+  // which still don't support watcher actor.
+  // Because of that we still can't enable server side targets and target swiching.
+  descriptorFront.disableTargetSwitching();
+
   const targetFront = await descriptorFront.getTarget();
 
   const threadFront = await attachThread(targetFront);
