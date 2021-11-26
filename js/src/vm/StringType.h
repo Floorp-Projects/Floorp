@@ -303,7 +303,6 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   static const uint32_t EXTERNAL_FLAGS = LINEAR_BIT | js::Bit(8);
 
   static const uint32_t FAT_INLINE_MASK = INLINE_CHARS_BIT | js::Bit(7);
-  static const uint32_t PERMANENT_ATOM_MASK = ATOM_BIT | js::Bit(8);
 
   /* Initial flags for various types of strings. */
   static const uint32_t INIT_THIN_INLINE_FLAGS = LINEAR_BIT | INLINE_CHARS_BIT;
@@ -340,6 +339,10 @@ class JSString : public js::gc::CellWithLengthAndFlags {
   static const uint32_t FLATTEN_FINISH_NODE = js::Bit(15);
   static const uint32_t FLATTEN_MASK =
       FLATTEN_VISIT_RIGHT | FLATTEN_FINISH_NODE;
+
+  static const uint32_t PINNED_ATOM_BIT = js::Bit(15);
+  static const uint32_t PERMANENT_ATOM_MASK =
+      ATOM_BIT | PINNED_ATOM_BIT | js::Bit(8);
 
   static const uint32_t MAX_LENGTH = JS::MaxStringLength;
 
@@ -1191,6 +1194,13 @@ class JSAtom : public JSLinearString {
     MOZ_ASSERT(JSString::isAtom());
     setFlagBit(ATOM_IS_INDEX_BIT);
     maybeInitializeIndexValue(index, /* allowAtom = */ true);
+  }
+
+  MOZ_ALWAYS_INLINE bool isPinned() const { return flags() & PINNED_ATOM_BIT; }
+
+  void setPinned() {
+    MOZ_ASSERT(!isPinned());
+    setFlagBit(PINNED_ATOM_BIT);
   }
 
   inline js::HashNumber hash() const;

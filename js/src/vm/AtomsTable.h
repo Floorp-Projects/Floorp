@@ -29,29 +29,14 @@ namespace js {
 class AtomStateEntry {
   uintptr_t bits;
 
-  static const uintptr_t NO_TAG_MASK = uintptr_t(-1) - 1;
-
  public:
   AtomStateEntry() : bits(0) {}
   AtomStateEntry(const AtomStateEntry& other) = default;
-  AtomStateEntry(JSAtom* ptr, bool tagged)
-      : bits(uintptr_t(ptr) | uintptr_t(tagged)) {
-    MOZ_ASSERT((uintptr_t(ptr) & 0x1) == 0);
-  }
-
-  bool isPinned() const { return bits & 0x1; }
-
-  /*
-   * Non-branching code sequence. Note that the const_cast is safe because
-   * the hash function doesn't consider the tag to be a portion of the key.
-   */
-  void setPinned(bool pinned) const {
-    const_cast<AtomStateEntry*>(this)->bits |= uintptr_t(pinned);
-  }
+  explicit AtomStateEntry(JSAtom* ptr) : bits(uintptr_t(ptr)) {}
 
   JSAtom* asPtrUnbarriered() const {
     MOZ_ASSERT(bits);
-    return reinterpret_cast<JSAtom*>(bits & NO_TAG_MASK);
+    return reinterpret_cast<JSAtom*>(bits);
   }
 
   JSAtom* asPtr(JSContext* cx) const;
@@ -120,8 +105,6 @@ class AtomsTable {
       JSContext* cx, const CharT* chars, size_t length, PinningBehavior pin,
       const mozilla::Maybe<uint32_t>& indexValue,
       const AtomHasher::Lookup& lookup);
-
-  bool atomIsPinned(JSRuntime* rt, JSAtom* atom);
 
   bool maybePinExistingAtom(JSContext* cx, JSAtom* atom);
 

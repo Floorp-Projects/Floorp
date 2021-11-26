@@ -420,7 +420,7 @@ bool AtomsTable::sweepIncrementally(SweepIterator& atomsToSweep,
     JSAtom* atom = entry.asPtrUnbarriered();
     MOZ_DIAGNOSTIC_ASSERT(atom);
     if (IsAboutToBeFinalizedUnbarriered(atom)) {
-      MOZ_ASSERT(!entry.isPinned());
+      MOZ_ASSERT(!atom->isPinned());
       atomsToSweep.removeFront();
     } else {
       MOZ_ASSERT(atom == entry.asPtrUnbarriered());
@@ -506,8 +506,8 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
   AtomSet::Ptr pp = cx->permanentAtoms().readonlyThreadsafeLookup(lookup);
   if (pp) {
     JSAtom* atom = pp->asPtr(cx);
-    if (zonePtr && MOZ_UNLIKELY(!zone->atomCache().add(
-                       *zonePtr, AtomStateEntry(atom, false)))) {
+    if (zonePtr &&
+        MOZ_UNLIKELY(!zone->atomCache().add(*zonePtr, AtomStateEntry(atom)))) {
       ReportOutOfMemory(cx);
       return nullptr;
     }
@@ -530,8 +530,8 @@ static MOZ_ALWAYS_INLINE JSAtom* AtomizeAndCopyCharsFromLookup(
     return nullptr;
   }
 
-  if (zonePtr && MOZ_UNLIKELY(!zone->atomCache().add(
-                     *zonePtr, AtomStateEntry(atom, false)))) {
+  if (zonePtr &&
+      MOZ_UNLIKELY(!zone->atomCache().add(*zonePtr, AtomStateEntry(atom)))) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
@@ -571,11 +571,11 @@ MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
 
   if (p) {
     JSAtom* atom = p->asPtr(cx);
-    if (pin && !p->isPinned()) {
+    if (pin && !atom->isPinned()) {
       if (!pinnedAtoms.append(atom)) {
         return nullptr;
       }
-      p->setPinned(true);
+      atom->setPinned();
     }
     return atom;
   }
@@ -588,7 +588,7 @@ MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
   // The operations above can't GC; therefore the atoms table has not been
   // modified and p is still valid.
   AtomSet* addSet = atomsAddedWhileSweeping ? atomsAddedWhileSweeping : &atoms;
-  if (MOZ_UNLIKELY(!addSet->add(p, AtomStateEntry(atom, false)))) {
+  if (MOZ_UNLIKELY(!addSet->add(p, AtomStateEntry(atom)))) {
     ReportOutOfMemory(cx); /* SystemAllocPolicy does not report OOM. */
     return nullptr;
   }
@@ -597,7 +597,7 @@ MOZ_ALWAYS_INLINE JSAtom* AtomsTable::atomizeAndCopyChars(
     if (!pinnedAtoms.append(atom)) {
       return nullptr;
     }
-    p->setPinned(true);
+    atom->setPinned();
   }
 
   return atom;
@@ -642,13 +642,13 @@ static MOZ_NEVER_INLINE JSAtom* PermanentlyAtomizeAndCopyChars(
   // We are single threaded at this point, and the operations we've done since
   // then can't GC; therefore the atoms table has not been modified and p is
   // still valid.
-  if (!atoms.add(p, AtomStateEntry(atom, true))) {
+  if (!atoms.add(p, AtomStateEntry(atom))) {
     ReportOutOfMemory(cx); /* SystemAllocPolicy does not report OOM. */
     return nullptr;
   }
 
   if (zonePtr && MOZ_UNLIKELY(!cx->zone()->atomCache().add(
-                     *zonePtr, AtomStateEntry(atom, false)))) {
+                     *zonePtr, AtomStateEntry(atom)))) {
     ReportOutOfMemory(cx);
     return nullptr;
   }
@@ -797,50 +797,21 @@ JSAtom* js::AtomizeString(JSContext* cx, JSString* str,
   return atom;
 }
 
-bool js::AtomIsPinned(JSContext* cx, JSAtom* atom) {
-  JSRuntime* rt = cx->runtime();
-  return rt->atoms().atomIsPinned(rt, atom);
-}
-
-bool AtomsTable::atomIsPinned(JSRuntime* rt, JSAtom* atom) {
-  MOZ_ASSERT(atom);
-
-  if (atom->isPermanentAtom()) {
-    return true;
-  }
-
-  AtomHasher::Lookup lookup(atom);
-
-  AtomSet::Ptr p = atoms.lookup(lookup);
-  if (!p && atomsAddedWhileSweeping) {
-    p = atomsAddedWhileSweeping->lookup(lookup);
-  }
-
-  MOZ_ASSERT(p);  // Non-permanent atoms must exist in atoms table.
-  MOZ_ASSERT(p->asPtrUnbarriered() == atom);
-
-  return p->isPinned();
-}
+bool js::AtomIsPinned(JSContext* cx, JSAtom* atom) { return atom->isPinned(); }
 
 bool AtomsTable::maybePinExistingAtom(JSContext* cx, JSAtom* atom) {
   MOZ_ASSERT(atom);
   MOZ_ASSERT(!atom->isPermanentAtom());
 
-  AtomHasher::Lookup lookup(atom);
-
-  AtomSet::Ptr p = atoms.lookup(lookup);
-  if (!p && atomsAddedWhileSweeping) {
-    p = atomsAddedWhileSweeping->lookup(lookup);
+  if (atom->isPinned()) {
+    return true;
   }
-
-  MOZ_ASSERT(p);  // Non-permanent atoms must exist in atoms table.
-  MOZ_ASSERT(p->asPtrUnbarriered() == atom);
 
   if (!pinnedAtoms.append(atom)) {
     return false;
   }
 
-  p->setPinned(true);
+  atom->setPinned();
   return true;
 }
 
