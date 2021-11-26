@@ -402,6 +402,12 @@ void EventListenerManager::AddEventListenerInternal(
           window->SetHasSelectionChangeEventListeners();
         }
         break;
+      case eFormSelect:
+        mMayHaveFormSelectEventListener = true;
+        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+          window->SetHasFormSelectEventListeners();
+        }
+        break;
       default:
         // XXX Use NS_ASSERTION here to print resolvedEventMessage since
         //     MOZ_ASSERT can take only string literal, not pointer to
@@ -510,12 +516,11 @@ void EventListenerManager::AddEventListenerInternal(
                      nsPrintfCString("resolvedEventMessage=%s",
                                      ToChar(resolvedEventMessage))
                          .get());
-        if (resolvedEventMessage == eFormSelect) {
-          mMayHaveFormSelectEventListener = true;
-          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-            window->SetHasFormSelectEventListeners();
-          }
-        } else if (aTypeAtom == nsGkAtoms::onstart) {
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::onselect,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        if (aTypeAtom == nsGkAtoms::onstart) {
           if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
             if (Document* doc = window->GetExtantDoc()) {
               doc->SetUseCounter(eUseCounter_custom_onstart);
