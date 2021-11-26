@@ -7156,14 +7156,17 @@ MOZ_CAN_RUN_SCRIPT static void WaylandDragWorkaround(GdkEventButton* aEvent) {
 
 static bool is_mouse_in_window(GdkWindow* aWindow, gdouble aMouseX,
                                gdouble aMouseY) {
+  GdkWindow* window = aWindow;
+  if (!window) {
+    return false;
+  }
+
   gint x = 0;
   gint y = 0;
   gint w, h;
 
   gint offsetX = 0;
   gint offsetY = 0;
-
-  GdkWindow* window = aWindow;
 
   while (window) {
     gint tmpX = 0;
