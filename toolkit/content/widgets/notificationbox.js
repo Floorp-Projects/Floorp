@@ -419,7 +419,7 @@
       this.persistence = 0;
       this.priority = 0;
       this.timeout = 0;
-      this.telemetry = [];
+      this.telemetry = null;
       this._shown = false;
     }
 
@@ -593,7 +593,7 @@
         this.persistence = 0;
         this.priority = 0;
         this.timeout = 0;
-        this.telemetry = [];
+        this.telemetry = null;
         this._shown = false;
       }
 
