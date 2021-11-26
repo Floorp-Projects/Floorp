@@ -1,5 +1,7 @@
 import pytest
 
+from . import assert_console_entry
+
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("data,remote_value", [
@@ -43,16 +45,12 @@ async def test_primitive_types(bidi_session,
     current_session.execute_script(command.format(data))
 
     event_data = await on_entry_added
-
-    args = event_data["args"]
-    assert len(args) == 2
+    args = [
+        {"type": "string", "value": "foo"},
+        {"type": remote_value["type"]},
+    ]
+    if "value" in remote_value:
+        args[1].update({"value": remote_value["value"]})
 
     # First arg is always the first argument as provided to console.log()
-    assert args[0]["type"] == "string"
-    assert args[0]["value"] == "foo"
-
-    assert args[1]["type"] == remote_value["type"]
-    if "value" in remote_value:
-        assert args[1]["value"] == remote_value["value"]
-    else:
-        assert "value" not in args[1]
+    assert_console_entry(event_data, args=args)
