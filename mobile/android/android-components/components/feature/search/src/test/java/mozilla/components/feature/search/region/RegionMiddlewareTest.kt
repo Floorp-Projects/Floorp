@@ -12,8 +12,8 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.service.location.LocationService
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.fakes.FakeClock
-import mozilla.components.support.test.fakes.FakeContext
-import mozilla.components.support.test.fakes.FakeSharedPreferences
+import mozilla.components.support.test.fakes.android.FakeContext
+import mozilla.components.support.test.fakes.android.FakeSharedPreferences
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import org.junit.After
 import org.junit.Assert.assertEquals

@@ -20,7 +20,7 @@ import mozilla.components.feature.search.ext.createSearchEngine
 import mozilla.components.feature.search.storage.CustomSearchEngineStorage
 import mozilla.components.feature.search.storage.SearchMetadataStorage
 import mozilla.components.support.test.ext.joinBlocking
-import mozilla.components.support.test.fakes.FakeSharedPreferences
+import mozilla.components.support.test.fakes.android.FakeSharedPreferences
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext

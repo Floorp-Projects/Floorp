@@ -26,7 +26,7 @@ import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.ktx.R
 import mozilla.components.support.test.argumentCaptor
-import mozilla.components.support.test.fakes.FakeContext
+import mozilla.components.support.test.fakes.android.FakeContext
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever

@@ -7,8 +7,8 @@ package mozilla.components.feature.search.region
 import kotlinx.coroutines.runBlocking
 import mozilla.components.service.location.LocationService
 import mozilla.components.support.test.fakes.FakeClock
-import mozilla.components.support.test.fakes.FakeContext
-import mozilla.components.support.test.fakes.FakeSharedPreferences
+import mozilla.components.support.test.fakes.android.FakeContext
+import mozilla.components.support.test.fakes.android.FakeSharedPreferences
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

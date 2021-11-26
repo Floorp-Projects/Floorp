@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.support.test.fakes
+package mozilla.components.support.test.fakes.android
 
 import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
@@ -41,6 +41,7 @@ import java.io.InputStream
  *
  * The current implementation just throws for most access.
  */
+@Suppress("LargeClass", "TooManyFunctions")
 open class FakeContext(
     private val sharedPreferences: SharedPreferences = FakeSharedPreferences()
 ) : Context() {
@@ -60,7 +61,8 @@ open class FakeContext(
     override fun getSharedPreferences(name: String?, mode: Int): SharedPreferences {
         return sharedPreferences
     }
-    override fun moveSharedPreferencesFrom(sourceContext: Context?, name: String?): Boolean = throw NotImplementedError()
+    override fun moveSharedPreferencesFrom(sourceContext: Context?, name: String?): Boolean =
+        throw NotImplementedError()
     override fun deleteSharedPreferences(name: String?): Boolean = throw NotImplementedError()
     override fun openFileInput(name: String?): FileInputStream = throw NotImplementedError()
     override fun openFileOutput(name: String?, mode: Int): FileOutputStream = throw NotImplementedError()
@@ -91,7 +93,8 @@ open class FakeContext(
         factory: SQLiteDatabase.CursorFactory?,
         errorHandler: DatabaseErrorHandler?
     ): SQLiteDatabase = throw NotImplementedError()
-    override fun moveDatabaseFrom(sourceContext: Context?, name: String?): Boolean = throw NotImplementedError()
+    override fun moveDatabaseFrom(sourceContext: Context?, name: String?): Boolean =
+        throw NotImplementedError()
     override fun deleteDatabase(name: String?): Boolean = throw NotImplementedError()
     override fun getDatabasePath(name: String?): File = throw NotImplementedError()
     override fun databaseList(): Array<String> = throw NotImplementedError()
@@ -105,7 +108,8 @@ open class FakeContext(
     override fun startActivity(intent: Intent?) = throw NotImplementedError()
     override fun startActivity(intent: Intent?, options: Bundle?) = throw NotImplementedError()
     override fun startActivities(intents: Array<out Intent>?) = throw NotImplementedError()
-    override fun startActivities(intents: Array<out Intent>?, options: Bundle?) = throw NotImplementedError()
+    override fun startActivities(intents: Array<out Intent>?, options: Bundle?) =
+        throw NotImplementedError()
     override fun startIntentSender(
         intent: IntentSender?,
         fillInIntent: Intent?,
@@ -123,7 +127,8 @@ open class FakeContext(
     ) = throw NotImplementedError()
     override fun sendBroadcast(intent: Intent?) = throw NotImplementedError()
     override fun sendBroadcast(intent: Intent?, receiverPermission: String?) = throw NotImplementedError()
-    override fun sendOrderedBroadcast(intent: Intent?, receiverPermission: String?) = throw NotImplementedError()
+    override fun sendOrderedBroadcast(intent: Intent?, receiverPermission: String?) =
+        throw NotImplementedError()
     override fun sendOrderedBroadcast(
         intent: Intent,
         receiverPermission: String?,
@@ -168,7 +173,8 @@ open class FakeContext(
     @SuppressLint("MissingPermission")
     override fun removeStickyBroadcast(intent: Intent?) = throw NotImplementedError()
     @SuppressLint("MissingPermission")
-    override fun sendStickyBroadcastAsUser(intent: Intent?, user: UserHandle?) = throw NotImplementedError()
+    override fun sendStickyBroadcastAsUser(intent: Intent?, user: UserHandle?) =
+        throw NotImplementedError()
     @SuppressLint("MissingPermission")
     override fun sendStickyOrderedBroadcastAsUser(
         intent: Intent?,
@@ -181,8 +187,10 @@ open class FakeContext(
     ) = throw NotImplementedError()
 
     @SuppressLint("MissingPermission")
-    override fun removeStickyBroadcastAsUser(intent: Intent?, user: UserHandle?) = throw NotImplementedError()
-    override fun registerReceiver(receiver: BroadcastReceiver?, filter: IntentFilter?): Intent? = throw NotImplementedError()
+    override fun removeStickyBroadcastAsUser(intent: Intent?, user: UserHandle?) =
+        throw NotImplementedError()
+    override fun registerReceiver(receiver: BroadcastReceiver?, filter: IntentFilter?): Intent? =
+        throw NotImplementedError()
     override fun registerReceiver(
         receiver: BroadcastReceiver?,
         filter: IntentFilter?,
@@ -205,7 +213,8 @@ open class FakeContext(
     override fun startService(service: Intent?): ComponentName? = throw NotImplementedError()
     override fun startForegroundService(service: Intent?): ComponentName? = throw NotImplementedError()
     override fun stopService(service: Intent?): Boolean = throw NotImplementedError()
-    override fun bindService(service: Intent?, conn: ServiceConnection, flags: Int): Boolean = throw NotImplementedError()
+    override fun bindService(service: Intent?, conn: ServiceConnection, flags: Int): Boolean =
+        throw NotImplementedError()
     override fun unbindService(conn: ServiceConnection) = throw NotImplementedError()
     override fun startInstrumentation(
         className: ComponentName,
@@ -218,7 +227,8 @@ open class FakeContext(
     override fun checkCallingPermission(permission: String): Int = throw NotImplementedError()
     override fun checkCallingOrSelfPermission(permission: String): Int = throw NotImplementedError()
     override fun checkSelfPermission(permission: String): Int = throw NotImplementedError()
-    override fun enforcePermission(permission: String, pid: Int, uid: Int, message: String?) = throw NotImplementedError()
+    override fun enforcePermission(permission: String, pid: Int, uid: Int, message: String?) =
+        throw NotImplementedError()
     override fun enforceCallingPermission(permission: String, message: String?) = throw NotImplementedError()
     override fun enforceCallingOrSelfPermission(permission: String, message: String?) = throw NotImplementedError()
     override fun grantUriPermission(toPackage: String?, uri: Uri?, modeFlags: Int) = throw NotImplementedError()
@@ -252,7 +262,8 @@ open class FakeContext(
         message: String?
     ) = throw NotImplementedError()
     override fun enforceCallingUriPermission(uri: Uri?, modeFlags: Int, message: String?) = throw NotImplementedError()
-    override fun enforceCallingOrSelfUriPermission(uri: Uri?, modeFlags: Int, message: String?) = throw NotImplementedError()
+    override fun enforceCallingOrSelfUriPermission(uri: Uri?, modeFlags: Int, message: String?) =
+        throw NotImplementedError()
     override fun createPackageContext(packageName: String?, flags: Int): Context = throw NotImplementedError()
     override fun createContextForSplit(splitName: String?): Context = throw NotImplementedError()
     override fun createConfigurationContext(overrideConfiguration: Configuration): Context = throw NotImplementedError()

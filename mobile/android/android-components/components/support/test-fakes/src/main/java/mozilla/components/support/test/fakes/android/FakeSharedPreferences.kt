@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.support.test.fakes
+package mozilla.components.support.test.fakes.android
 
 import android.content.SharedPreferences
 
@@ -16,15 +16,20 @@ class FakeSharedPreferences(
 ) : SharedPreferences {
     override fun getAll(): Map<String, *> = values
     override fun getString(key: String, defValue: String?): String? = values[key]?.toString() ?: defValue
-    override fun getStringSet(key: String, defValues: MutableSet<String>?): Set<String>? = values[key] as? Set<String> ?: defValues
+    override fun getStringSet(key: String, defValues: MutableSet<String>?): Set<String>? =
+        values[key] as? Set<String> ?: defValues
     override fun getInt(key: String, defValue: Int): Int = values[key] as? Int ?: defValue
     override fun getLong(key: String, defValue: Long): Long = values[key] as? Long ?: defValue
     override fun getFloat(key: String, defValue: Float): Float = values[key] as? Float ?: defValue
     override fun getBoolean(key: String, defValue: Boolean): Boolean = values[key] as? Boolean ?: defValue
     override fun contains(key: String): Boolean = values.containsKey(key)
     override fun edit(): SharedPreferences.Editor = FakeEditor(this)
-    override fun registerOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) = throw NotImplementedError()
-    override fun unregisterOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) = throw NotImplementedError()
+    override fun registerOnSharedPreferenceChangeListener(
+        listener: SharedPreferences.OnSharedPreferenceChangeListener
+    ) = throw NotImplementedError()
+    override fun unregisterOnSharedPreferenceChangeListener(
+        listener: SharedPreferences.OnSharedPreferenceChangeListener
+    ) = throw NotImplementedError()
 }
 
 internal class FakeEditor(
