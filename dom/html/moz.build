@@ -48,7 +48,6 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.dom += [
-    "ConstraintValidation.h",
     "ElementInternals.h",
     "HTMLAllCollection.h",
     "HTMLAnchorElement.h",
@@ -132,7 +131,6 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
-    "ConstraintValidation.cpp",
     "ElementInternals.cpp",
     "HTMLAllCollection.cpp",
     "HTMLAnchorElement.cpp",

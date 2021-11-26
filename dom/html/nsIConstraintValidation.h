@@ -8,10 +8,14 @@
 #define nsIConstraintValidition_h___
 
 #include "nsISupports.h"
+#include "nsString.h"
 
-namespace mozilla::dom {
+namespace mozilla {
+class ErrorResult;
+namespace dom {
 class ValidityState;
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #define NS_ICONSTRAINTVALIDATION_IID                 \
   {                                                  \
@@ -43,6 +47,9 @@ class nsIConstraintValidation : public nsISupports {
     return !mBarredFromConstraintValidation;
   }
 
+  void GetValidationMessage(nsAString& aValidationMessage,
+                            mozilla::ErrorResult& aError);
+
   enum ValidityStateType {
     VALIDITY_STATE_VALUE_MISSING = 0x1 << 0,
     VALIDITY_STATE_TYPE_MISMATCH = 0x1 << 1,
@@ -69,6 +76,7 @@ class nsIConstraintValidation : public nsISupports {
   nsIConstraintValidation();
 
   nsresult CheckValidity(bool* aValidity);
+  void SetCustomValidity(const nsAString& aError);
 
   bool GetValidityState(ValidityStateType aState) const {
     return mValidityBitField & aState;
@@ -76,6 +84,12 @@ class nsIConstraintValidation : public nsISupports {
 
   void SetBarredFromConstraintValidation(bool aBarred);
 
+  virtual nsresult GetValidationMessage(nsAString& aValidationMessage,
+                                        ValidityStateType aType) {
+    return NS_OK;
+  }
+
+ protected:
   /**
    * A pointer to the ValidityState object.
    */
@@ -92,6 +106,11 @@ class nsIConstraintValidation : public nsISupports {
    * Keeps track whether the element is barred from constraint validation.
    */
   bool mBarredFromConstraintValidation;
+
+  /**
+   * The string representing the custom error.
+   */
+  nsString mCustomValidity;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIConstraintValidation,
