@@ -24,12 +24,12 @@
 #include "mozilla/dom/ButtonInputTypes.h"
 #include "mozilla/dom/DateTimeInputTypes.h"
 #include "mozilla/dom/ColorInputType.h"
-#include "mozilla/dom/ConstraintValidation.h"
 #include "mozilla/dom/FileInputType.h"
 #include "mozilla/dom/HiddenInputType.h"
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
 #include "nsCOMPtr.h"
+#include "nsIConstraintValidation.h"
 #include "nsIFilePicker.h"
 #include "nsIContentPrefService2.h"
 #include "nsContentUtils.h"
@@ -109,15 +109,15 @@ class UploadLastDir final : public nsIObserver, public nsSupportsWeakReference {
 
 class HTMLInputElement final : public TextControlElement,
                                public nsImageLoadingContent,
-                               public ConstraintValidation {
+                               public nsIConstraintValidation {
   friend class AfterSetFilesOrDirectoriesCallback;
   friend class DispatchChangeEventCallback;
   friend class InputType;
 
  public:
-  using ConstraintValidation::GetValidationMessage;
   using nsGenericHTMLFormControlElementWithState::GetForm;
   using nsGenericHTMLFormControlElementWithState::GetFormAction;
+  using nsIConstraintValidation::GetValidationMessage;
   using ValueSetterOption = TextControlState::ValueSetterOption;
   using ValueSetterOptions = TextControlState::ValueSetterOptions;
 
