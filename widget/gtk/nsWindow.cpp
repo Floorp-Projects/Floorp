@@ -1696,20 +1696,39 @@ bool nsWindow::WaylandPopupNeedsTrackInHierarchy() {
     return false;
   }
 
-  if (mPopupTrackInHierarchyConfigured) {
-    return mPopupTrackInHierarchy;
-  }
-
+  // Don't track popups without frame
   nsMenuPopupFrame* popupFrame = GetMenuPopupFrame(GetFrame());
   if (!popupFrame) {
     return false;
   }
-  mPopupTrackInHierarchyConfigured = true;
 
-  // We have nsMenuPopupFrame so we can configure the popup now.
-  mPopupTrackInHierarchy = !WaylandPopupIsPermanent();
+  // Popup state can be changed, see Bug 1728952.
+  bool permanentStateMatches =
+      mPopupTrackInHierarchy == !WaylandPopupIsPermanent();
+
+  // Popup permanent state (noautohide attribute) can change during popup life.
+  if (mPopupTrackInHierarchyConfigured && permanentStateMatches) {
+    return mPopupTrackInHierarchy;
+  }
+
   mPopupAnchored = WaylandPopupIsAnchored();
   mPopupContextMenu = WaylandPopupIsContextMenu();
+
+  LOG("nsWindow::WaylandPopupNeedsTrackInHierarchy tracked %d anchored %d\n",
+      mPopupTrackInHierarchy, mPopupAnchored);
+
+  // Permanent state changed and popup is mapped.
+  // We need to switch popup type but that's done when popup is mapped
+  // by Gtk so we need to unmap the popup here.
+  // It will be mapped again by gtk_widget_show().
+  if (!permanentStateMatches && mIsMapped) {
+    LOG("  permanent state change from %d to %d, unmapping",
+        mPopupTrackInHierarchy, !WaylandPopupIsPermanent());
+    gtk_widget_unmap(mShell);
+  }
+
+  mPopupTrackInHierarchy = !WaylandPopupIsPermanent();
+  LOG("  tracked in hierarchy %d\n", mPopupTrackInHierarchy);
 
   // See gdkwindow-wayland.c and
   // should_map_as_popup()/should_map_as_subsurface()
@@ -1719,24 +1738,27 @@ bool nsWindow::WaylandPopupNeedsTrackInHierarchy() {
       // GDK_WINDOW_TYPE_HINT_POPUP_MENU is mapped as xdg_popup by default.
       // We use this type for all menu popups.
       gtkTypeHint = GDK_WINDOW_TYPE_HINT_POPUP_MENU;
+      LOG("  popup type Menu");
       break;
     case ePopupTypeTooltip:
       gtkTypeHint = GDK_WINDOW_TYPE_HINT_TOOLTIP;
+      LOG("  popup type Tooltip");
       break;
     default:  // popup panel type
       // GDK_WINDOW_TYPE_HINT_UTILITY is mapped as wl_subsurface
       // by default. It's used for panels attached to toplevel
       // window.
       gtkTypeHint = GDK_WINDOW_TYPE_HINT_UTILITY;
+      LOG("  popup type Utility");
       break;
   }
 
   if (!mPopupTrackInHierarchy) {
     gtkTypeHint = GDK_WINDOW_TYPE_HINT_UTILITY;
   }
-  LOG("nsWindow::WaylandPopupNeedsTrackInHierarchy tracked %d anchored %d\n",
-      mPopupTrackInHierarchy, mPopupAnchored);
   gtk_window_set_type_hint(GTK_WINDOW(mShell), gtkTypeHint);
+
+  mPopupTrackInHierarchyConfigured = true;
   return mPopupTrackInHierarchy;
 }
 
@@ -5399,6 +5421,10 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
   mAlwaysOnTop = aInitData && aInitData->mAlwaysOnTop;
   mIsPIPWindow = aInitData && aInitData->mPIPWindow;
+  // mNoAutoHide seems to be always false here.
+  // The mNoAutoHide state is set later on nsMenuPopupFrame level
+  // and can be changed so we use WaylandPopupIsPermanent() to get
+  // recent popup config (Bug 1728952).
   mNoAutoHide = aInitData && aInitData->mNoAutoHide;
   mMouseTransparent = aInitData && aInitData->mMouseTransparent;
 
