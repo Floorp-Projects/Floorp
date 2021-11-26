@@ -4208,6 +4208,14 @@
 # Prefs starting with "editor"
 #---------------------------------------------------------------------------
 
+# Use CreateElementTransaction or not.  This is available only in a couple of
+# release cycles to make it possible to cancel stopping using
+# CreateElementTransaction.
+- name: editor.create_element_transaction.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Allow or disallow to delete `<hr>` element when caret is at start of
 # following line of the element.  If false, Backspace from start of following
 # line of an `<hr>` element causes moving caret to immediatly after the `<hr>`

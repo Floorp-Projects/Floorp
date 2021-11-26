@@ -12,6 +12,7 @@
 #include "EditorUtils.h"
 #include "HTMLEditorEventListener.h"
 #include "HTMLEditUtils.h"
+#include "InsertNodeTransaction.h"
 #include "JoinNodeTransaction.h"
 #include "ReplaceTextTransaction.h"
 #include "SplitNodeTransaction.h"
@@ -2967,20 +2968,49 @@ HTMLEditor::CreateAndInsertElementWithTransaction(
   //       CreatElementTransaction since we can use InsertNodeTransaction
   //       instead.
 
-  RefPtr<CreateElementTransaction> transaction =
-      CreateElementTransaction::Create(*this, aTagName, aPointToInsert);
-  nsresult rv = DoTransactionInternal(transaction);
-  if (NS_WARN_IF(Destroyed())) {
+  RefPtr<Element> newElement;
+  nsresult rv;
+  if (StaticPrefs::editor_create_element_transaction_enabled()) {
+    RefPtr<CreateElementTransaction> transaction =
+        CreateElementTransaction::Create(*this, aTagName, aPointToInsert);
+    rv = DoTransactionInternal(transaction);
+    if (MOZ_LIKELY(NS_SUCCEEDED(rv))) {
+      newElement = transaction->GetNewElement();
+      MOZ_ASSERT(newElement);
+    }
+  } else {
+    newElement = CreateHTMLContent(&aTagName);
+    NS_WARNING_ASSERTION(newElement, "EditorBase::CreateHTMLContent() failed");
+    if (MOZ_LIKELY(newElement)) {
+      rv = MarkElementDirty(*newElement);
+      if (MOZ_UNLIKELY(rv == NS_ERROR_EDITOR_DESTROYED)) {
+        NS_WARNING(
+            "EditorBase::MarkElementDirty() caused destroying the editor");
+        rv = NS_ERROR_EDITOR_DESTROYED;
+      } else {
+        NS_WARNING_ASSERTION(
+            NS_SUCCEEDED(rv),
+            "EditorBase::MarkElementDirty() failed, but ignored");
+        RefPtr<InsertNodeTransaction> transaction =
+            InsertNodeTransaction::Create(*this, *newElement, aPointToInsert);
+        rv = DoTransactionInternal(transaction);
+      }
+      if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+        newElement = nullptr;
+      }
+    } else {
+      rv = NS_ERROR_FAILURE;
+    }
+  }
+  if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
     rv = NS_ERROR_EDITOR_DESTROYED;
-  } else if (transaction->GetNewElement() &&
-             transaction->GetNewElement()->GetParentNode() !=
-                 aPointToInsert.GetContainer()) {
+  } else if (MOZ_UNLIKELY(newElement && newElement->GetParentNode() !=
+                                            aPointToInsert.GetContainer())) {
     NS_WARNING("The new element was not inserted into the expected node");
     rv = NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
   }
 
-  RefPtr<Element> newElement;
-  if (NS_FAILED(rv)) {
+  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
     NS_WARNING("EditorBase::DoTransactionInternal() failed");
     // XXX Why do we do this even when DoTransaction() returned error?
     DebugOnly<nsresult> rvIgnored =
@@ -2989,9 +3019,6 @@ HTMLEditor::CreateAndInsertElementWithTransaction(
         NS_SUCCEEDED(rvIgnored),
         "Rangeupdater::SelAdjCreateNode() failed, but ignored");
   } else {
-    newElement = transaction->GetNewElement();
-    MOZ_ASSERT(newElement);
-
     // If we succeeded to create and insert new element, we need to adjust
     // ranges in RangeUpdaterRef().  It currently requires offset of the new
     // node.  So, let's call it with original offset.  Note that if
