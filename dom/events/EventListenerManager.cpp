@@ -434,6 +434,20 @@ void EventListenerManager::AddEventListenerInternal(
           }
         }
         break;
+      case eScrollPortOverflow:
+        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+          if (Document* doc = window->GetExtantDoc()) {
+            doc->SetUseCounter(eUseCounter_custom_onoverflow);
+          }
+        }
+        break;
+      case eScrollPortUnderflow:
+        if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+          if (Document* doc = window->GetExtantDoc()) {
+            doc->SetUseCounter(eUseCounter_custom_onunderflow);
+          }
+        }
+        break;
       default:
         // XXX Use NS_ASSERTION here to print resolvedEventMessage since
         //     MOZ_ASSERT can take only string literal, not pointer to
@@ -562,19 +576,15 @@ void EventListenerManager::AddEventListenerInternal(
                      nsPrintfCString("resolvedEventMessage=%s",
                                      ToChar(resolvedEventMessage))
                          .get());
-        if (aTypeAtom == nsGkAtoms::onoverflow) {
-          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-            if (Document* doc = window->GetExtantDoc()) {
-              doc->SetUseCounter(eUseCounter_custom_onoverflow);
-            }
-          }
-        } else if (aTypeAtom == nsGkAtoms::onunderflow) {
-          if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
-            if (Document* doc = window->GetExtantDoc()) {
-              doc->SetUseCounter(eUseCounter_custom_onunderflow);
-            }
-          }
-        } else if (aTypeAtom == nsGkAtoms::onDOMMouseScroll) {
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::onoverflow,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::onunderflow,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        if (aTypeAtom == nsGkAtoms::onDOMMouseScroll) {
           if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
             if (Document* doc = window->GetExtantDoc()) {
               doc->SetUseCounter(eUseCounter_custom_ondommousescroll);
