@@ -307,6 +307,17 @@ void EventListenerManager::AddEventListenerInternal(
                 : MutationBitForEventType(aEventMessage));
       }
       break;
+    case ePointerEnter:
+    case ePointerLeave:
+      mMayHavePointerEnterLeaveEventListener = true;
+      if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
+        NS_WARNING_ASSERTION(
+            !nsContentUtils::IsChromeDoc(window->GetExtantDoc()),
+            "Please do not use pointerenter/leave events in chrome. "
+            "They are slower than pointerover/out!");
+        window->SetHasPointerEnterLeaveEventListeners();
+      }
+      break;
     default:
       // XXX Use NS_ASSERTION here to print aEventMessage since MOZ_ASSERT
       //     can take only string literal, not pointer to characters.
@@ -316,6 +327,12 @@ void EventListenerManager::AddEventListenerInternal(
                                    "handled above, aEventMessage=%s",
                                    ToChar(aEventMessage))
                        .get());
+      NS_ASSERTION(
+          aTypeAtom != nsGkAtoms::onpointerenter,
+          nsPrintfCString("aEventMessage=%s", ToChar(aEventMessage)).get());
+      NS_ASSERTION(
+          aTypeAtom != nsGkAtoms::onpointerleave,
+          nsPrintfCString("aEventMessage=%s", ToChar(aEventMessage)).get());
       if (aTypeAtom == nsGkAtoms::ondeviceorientation) {
         EnableDevice(eDeviceOrientation);
       } else if (aTypeAtom == nsGkAtoms::onabsolutedeviceorientation) {
@@ -340,23 +357,6 @@ void EventListenerManager::AddEventListenerInternal(
         // flag so we ignore listeners created with system event flag
         if (window && !aFlags.mInSystemGroup) {
           window->SetHasTouchEventListeners();
-        }
-      } else if (aEventMessage >= ePointerEventFirst &&
-                 aEventMessage <= ePointerEventLast) {
-        nsPIDOMWindowInner* window = GetInnerWindowForTarget();
-        if (aTypeAtom == nsGkAtoms::onpointerenter ||
-            aTypeAtom == nsGkAtoms::onpointerleave) {
-          mMayHavePointerEnterLeaveEventListener = true;
-          if (window) {
-#ifdef DEBUG
-            nsCOMPtr<Document> d = window->GetExtantDoc();
-            NS_WARNING_ASSERTION(
-                !nsContentUtils::IsChromeDoc(d),
-                "Please do not use pointerenter/leave events in chrome. "
-                "They are slower than pointerover/out!");
-#endif
-            window->SetHasPointerEnterLeaveEventListeners();
-          }
         }
       } else if (aTypeAtom == nsGkAtoms::onmouseenter ||
                  aTypeAtom == nsGkAtoms::onmouseleave) {
