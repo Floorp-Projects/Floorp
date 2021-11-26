@@ -15,7 +15,7 @@ use std::mem::MaybeUninit;
 /// ```rust
 /// #[macro_use] extern crate cssparser;
 ///
-/// # fn main() {}  // Make doctest not wrap everythig in its own main
+/// # fn main() {}  // Make doctest not wrap everything in its own main
 /// # fn dummy(function_name: &String) { let _ =
 /// match_ignore_ascii_case! { &function_name,
 ///     "rgb" => parse_rgb(..),
@@ -138,7 +138,7 @@ macro_rules! _cssparser_internal_to_lowercase {
 
 /// Implementation detail of match_ignore_ascii_case! and ascii_case_insensitive_phf_map! macros.
 ///
-/// **This function is not part of the public API. It can change or be removed between any verisons.**
+/// **This function is not part of the public API. It can change or be removed between any versions.**
 ///
 /// If `input` is larger than buffer, return `None`.
 /// Otherwise, return `input` ASCII-lowercased, using `buffer` as temporary space if necessary.
