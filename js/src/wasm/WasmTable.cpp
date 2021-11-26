@@ -38,6 +38,7 @@ Table::Table(JSContext* cx, const TableDesc& desc,
       functions_(std::move(functions)),
       elemType_(desc.elemType),
       isAsmJS_(desc.isAsmJS),
+      importedOrExported(desc.importedOrExported),
       length_(desc.initialLength),
       maximum_(desc.maximumLength) {
   MOZ_ASSERT(repr() == TableRepr::Func);
@@ -50,6 +51,7 @@ Table::Table(JSContext* cx, const TableDesc& desc,
       objects_(std::move(objects)),
       elemType_(desc.elemType),
       isAsmJS_(desc.isAsmJS),
+      importedOrExported(desc.importedOrExported),
       length_(desc.initialLength),
       maximum_(desc.maximumLength) {
   MOZ_ASSERT(repr() == TableRepr::Ref);
@@ -180,7 +182,7 @@ void Table::setFuncRef(uint32_t index, void* code, const Instance* instance) {
   }
 }
 
-void Table::fillFuncRef(uint32_t index, uint32_t fillCount, FuncRef ref,
+bool Table::fillFuncRef(uint32_t index, uint32_t fillCount, FuncRef ref,
                         JSContext* cx) {
   MOZ_ASSERT(isFunction());
 
@@ -188,7 +190,7 @@ void Table::fillFuncRef(uint32_t index, uint32_t fillCount, FuncRef ref,
     for (uint32_t i = index, end = index + fillCount; i != end; i++) {
       setNull(i);
     }
-    return;
+    return true;
   }
 
   RootedFunction fun(cx, ref.asJSFunction());
@@ -213,6 +215,8 @@ void Table::fillFuncRef(uint32_t index, uint32_t fillCount, FuncRef ref,
   for (uint32_t i = index, end = index + fillCount; i != end; i++) {
     setFuncRef(i, code, &instance);
   }
+
+  return true;
 }
 
 AnyRef Table::getAnyRef(uint32_t index) const {

@@ -1359,7 +1359,7 @@ CodeOffset BaseCompiler::callIndirect(uint32_t funcTypeIndex,
 
   loadI32(indexVal, RegI32(WasmTableCallIndexReg));
 
-  CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Dynamic);
+  CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Indirect);
   CalleeDesc callee = CalleeDesc::wasmTable(table, funcTypeId);
   return masm.wasmCallIndirect(desc, callee, NeedsBoundsCheck(true));
 }
@@ -1368,7 +1368,7 @@ CodeOffset BaseCompiler::callIndirect(uint32_t funcTypeIndex,
 
 CodeOffset BaseCompiler::callImport(unsigned globalDataOffset,
                                     const FunctionCall& call) {
-  CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Dynamic);
+  CallSiteDesc desc(call.lineOrBytecode, CallSiteDesc::Import);
   CalleeDesc callee = CalleeDesc::import(globalDataOffset);
   return masm.wasmCallImport(desc, callee);
 }

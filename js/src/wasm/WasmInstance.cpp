@@ -121,6 +121,16 @@ TableTls& Instance::tableTls(const TableDesc& td) const {
   return *(TableTls*)(globalData() + td.globalDataOffset);
 }
 
+static bool IsImportedFunction(const uint32_t functionIndex,
+                               const MetadataTier& metadataTier) {
+  return functionIndex < metadataTier.funcImports.length();
+}
+
+// TODO: This could usefully be used in WasmValidate.cpp too.
+static bool IsNullFunction(const uint32_t functionIndex) {
+  return functionIndex == NullFuncIndex;
+}
+
 // TODO(1626251): Consolidate definitions into Iterable.h
 static bool IterableToArray(JSContext* cx, HandleValue iterable,
                             MutableHandle<ArrayObject*> array) {
@@ -846,7 +856,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   uint8_t* codeBaseTier = codeBase(tier);
   for (uint32_t i = 0; i < len; i++) {
     uint32_t funcIndex = elemFuncIndices[srcOffset + i];
-    if (funcIndex == NullFuncIndex) {
+    if (IsNullFunction(funcIndex)) {
       table.setNull(dstOffset + i);
     } else if (!table.isFunction()) {
       // Note, fnref must be rooted if we do anything more than just store it.
@@ -856,7 +866,7 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
       }
       table.fillAnyRef(dstOffset + i, 1, AnyRef::fromCompiledCode(fnref));
     } else {
-      if (funcIndex < funcImports.length()) {
+      if (IsImportedFunction(funcIndex, metadataTier)) {
         FuncImportTls& import = funcImportTls(funcImports[funcIndex]);
         JSFunction* fun = import.fun;
         if (IsWasmExportedFunction(fun)) {
@@ -959,7 +969,11 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
       break;
     case TableRepr::Func:
       MOZ_RELEASE_ASSERT(!table.isAsmJS());
-      table.fillFuncRef(start, len, FuncRef::fromCompiledCode(value), cx);
+      if (!table.fillFuncRef(start, len, FuncRef::fromCompiledCode(value),
+                             cx)) {
+        ReportOutOfMemory(cx);
+        return -1;
+      }
       break;
   }
 
@@ -1008,8 +1022,9 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
         break;
       case TableRepr::Func:
         MOZ_RELEASE_ASSERT(!table.isAsmJS());
-        table.fillFuncRef(oldSize, delta, FuncRef::fromAnyRefUnchecked(ref),
-                          TlsContext.get());
+        MOZ_ALWAYS_TRUE(table.fillFuncRef(oldSize, delta,
+                                          FuncRef::fromAnyRefUnchecked(ref),
+                                          TlsContext.get()));
         break;
     }
   }
@@ -1034,8 +1049,11 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
       break;
     case TableRepr::Func:
       MOZ_RELEASE_ASSERT(!table.isAsmJS());
-      table.fillFuncRef(index, 1, FuncRef::fromCompiledCode(value),
-                        TlsContext.get());
+      if (!table.fillFuncRef(index, 1, FuncRef::fromCompiledCode(value),
+                             TlsContext.get())) {
+        ReportOutOfMemory(TlsContext.get());
+        return -1;
+      }
       break;
   }
 
@@ -1905,7 +1923,7 @@ static bool EnsureEntryStubs(const Instance& instance, uint32_t funcIndex,
   tier = instance.code().bestTier();
   const CodeTier& codeTier = instance.code(tier);
   if (tier == prevTier) {
-    if (!stubs->createOne(funcExportIndex, codeTier)) {
+    if (!stubs->createOneEntryStub(funcExportIndex, codeTier)) {
       return false;
     }
 
@@ -1919,9 +1937,9 @@ static bool EnsureEntryStubs(const Instance& instance, uint32_t funcIndex,
 
   // If it didn't have a stub in the first tier, background compilation
   // shouldn't have made one in the second tier.
-  MOZ_ASSERT(!stubs2->hasStub(fe.funcIndex()));
+  MOZ_ASSERT(!stubs2->hasEntryStub(fe.funcIndex()));
 
-  if (!stubs2->createOne(funcExportIndex, codeTier)) {
+  if (!stubs2->createOneEntryStub(funcExportIndex, codeTier)) {
     return false;
   }
 
