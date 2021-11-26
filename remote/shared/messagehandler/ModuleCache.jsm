@@ -156,9 +156,13 @@ class ModuleCache {
     let module = null;
     if (ModuleClass) {
       module = new ModuleClass(this.messageHandler);
-      logger.trace(`Module ${moduleName} created for ${destination.type}`);
+      logger.trace(
+        `Module ${moduleFolder}/${moduleName}.jsm found for ${destination.type}`
+      );
     } else {
-      logger.trace(`No module ${moduleName} found for ${destination.type}`);
+      logger.trace(
+        `Module ${moduleFolder}/${moduleName}.jsm not found for ${destination.type}`
+      );
     }
 
     this._modules.set(key, module);
