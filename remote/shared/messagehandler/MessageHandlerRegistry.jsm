@@ -221,7 +221,7 @@ class MessageHandlerRegistry extends EventEmitter {
     this._messageHandlersMap.delete(messageHandler.sessionId);
 
     logger.trace(
-      `Unregistered MessageHandler ${messageHandler.type} for session ${messageHandler.sessionId}`
+      `Unregistered MessageHandler ${messageHandler.constructor.type} for session ${messageHandler.sessionId}`
     );
   }
 
