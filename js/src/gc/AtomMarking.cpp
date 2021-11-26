@@ -207,8 +207,7 @@ bool AtomMarkingRuntime::atomIsMarked(Zone* zone, T* thing) {
   }
 
   if constexpr (std::is_same_v<T, JSAtom>) {
-    JSRuntime* rt = zone->runtimeFromAnyThread();
-    if (rt->atoms().atomIsPinned(rt, thing)) {
+    if (thing->isPinned()) {
       return true;
     }
   }
