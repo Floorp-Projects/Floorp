@@ -77,7 +77,7 @@ add_task(async function check_download_spam_permissions() {
     TEST_PATH + "test_spammy_page.html"
   );
   registerCleanupFunction(async () => {
-    DownloadIntegration.getDownloadSpamProtection().clearDownloadSpam(TEST_URI);
+    DownloadIntegration.downloadSpamProtection.clearDownloadSpam(TEST_URI);
     DownloadsPanel.hidePanel();
     await publicList.removeFinished();
     BrowserTestUtils.removeTab(newTab);

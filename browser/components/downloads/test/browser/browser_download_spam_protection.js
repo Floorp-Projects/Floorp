@@ -54,34 +54,27 @@ add_task(async function setup() {
 });
 
 add_task(async function check_download_spam_ui() {
-  let spamProtection = DownloadIntegration.getDownloadSpamProtection();
-  let oldFunction = spamProtection.observe.bind(spamProtection);
-  let blockedDownloads = PromiseUtils.defer();
-  let counter = 0;
-  let newFunction = async (aSubject, aTopic, URL) => {
-    await oldFunction(aSubject, aTopic, URL);
-    counter++;
-    if (counter == 99) {
-      blockedDownloads.resolve();
+  await task_resetState();
+
+  registerCleanupFunction(async () => {
+    BrowserWindowTracker.getTopWindow().DownloadsPanel.hidePanel();
+    DownloadIntegration.downloadSpamProtection.clearDownloadSpam(TEST_URI);
+    let publicList = await Downloads.getList(Downloads.PUBLIC);
+    await publicList.removeFinished();
+    BrowserTestUtils.removeTab(newTab);
+  });
+  let observedBlockedDownloads = 0;
+  let gotAllBlockedDownloads = TestUtils.topicObserved(
+    "blocked-automatic-download",
+    () => {
+      return ++observedBlockedDownloads >= 99;
     }
-  };
-  spamProtection.observe = newFunction;
+  );
 
   let newTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     TEST_PATH + "test_spammy_page.html"
   );
-
-  registerCleanupFunction(async () => {
-    spamProtection.observe = oldFunction;
-
-    BrowserWindowTracker.getTopWindow().DownloadsPanel.hidePanel();
-    DownloadIntegration.getDownloadSpamProtection().clearDownloadSpam(TEST_URI);
-    let publicList = await Downloads.getList(Downloads.PUBLIC);
-    await publicList.removeFinished();
-
-    BrowserTestUtils.removeTab(newTab);
-  });
 
   await BrowserTestUtils.synthesizeMouseAtCenter(
     "body",
@@ -89,8 +82,10 @@ add_task(async function check_download_spam_ui() {
     newTab.linkedBrowser
   );
 
-  await blockedDownloads.promise;
+  info("Waiting on all blocked downloads.");
+  await gotAllBlockedDownloads;
 
+  let spamProtection = DownloadIntegration.downloadSpamProtection;
   let spamList = spamProtection.spamList;
   is(
     spamList._downloads[0].blockedDownloadsCount,

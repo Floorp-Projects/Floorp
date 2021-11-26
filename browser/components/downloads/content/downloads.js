@@ -139,6 +139,20 @@ var DownloadsPanel = {
     DownloadsCommon.log(
       "Attempting to initialize DownloadsPanel for a window."
     );
+
+    // Allow the download spam protection module to notify DownloadsView
+    // if it's been created.
+    if (
+      DownloadIntegration.downloadSpamProtection &&
+      !DownloadIntegration.downloadSpamProtection.spamList._views.has(
+        DownloadsView
+      )
+    ) {
+      DownloadIntegration.downloadSpamProtection.spamList.addView(
+        DownloadsView
+      );
+    }
+
     if (this._state != this.kStateUninitialized) {
       DownloadsCommon.log("DownloadsPanel is already initialized.");
       return;
@@ -160,10 +174,6 @@ var DownloadsPanel = {
     DownloadsCommon.getData(window).addView(DownloadsView);
     DownloadsCommon.getSummary(window, DownloadsView.kItemCountLimit).addView(
       DownloadsSummary
-    );
-
-    DownloadIntegration.getDownloadSpamProtection().spamList.addView(
-      DownloadsView
     );
 
     DownloadsCommon.log(
@@ -200,9 +210,13 @@ var DownloadsPanel = {
       DownloadsView.kItemCountLimit
     ).removeView(DownloadsSummary);
     this._unattachEventListeners();
-    DownloadIntegration.getDownloadSpamProtection().spamList.removeView(
-      DownloadsView
-    );
+
+    if (DownloadIntegration.downloadSpamProtection) {
+      DownloadIntegration.downloadSpamProtection.spamList.removeView(
+        DownloadsView
+      );
+    }
+
     this._state = this.kStateUninitialized;
 
     DownloadsSummary.active = false;
