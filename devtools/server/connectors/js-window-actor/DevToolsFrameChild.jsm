@@ -325,7 +325,22 @@ class DevToolsFrameChild extends JSWindowActorChild {
       forwardingPrefix,
       isTopLevelTarget
     );
-    targetActor.createdFromJsWindowActor = true;
+    const form = targetActor.form();
+    // Ensure unregistering and destroying the related DevToolsServerConnection+Transport
+    // on both content and parent process JSWindowActors.
+    targetActor.once("destroyed", () => {
+      // This will destroy the content process one
+      this._destroyTargetActor(watcherActorID);
+      // And this will destroy the parent process one
+      this.sendAsyncMessage("DevToolsFrameChild:destroy", {
+        actors: [
+          {
+            watcherActorID,
+            form,
+          },
+        ],
+      });
+    });
     this._connections.set(watcherActorID, {
       connection,
       actor: targetActor,
@@ -762,6 +777,13 @@ class DevToolsFrameChild extends JSWindowActorChild {
         "devtools/server/devtools-server"
       );
       DevToolsServer.off("connectionchange", this._onConnectionChange);
+
+      // The connections closed just before may emit "connectionchange"
+      // only on following events loops. So that we may avoid destroying the DevToolsServer
+      // when all connections are closed.
+      // So, force checking for the number of connections right away.
+      // browser_debugger_server.js used to track this edgecase.
+      this._onConnectionChange();
     }
     if (this.useCustomLoader) {
       this.loader.destroy();
