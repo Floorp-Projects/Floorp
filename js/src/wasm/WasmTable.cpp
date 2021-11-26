@@ -156,11 +156,33 @@ bool Table::getFuncRef(JSContext* cx, uint32_t index,
   }
 
   Instance& instance = *elem.tls->instance;
-  const CodeRange& codeRange = *instance.code().lookupFuncRange(elem.code);
+  const CodeRange* codeRange =
+      instance.code().lookupIndirectStubRange(elem.code);
+  if (!codeRange) {
+    codeRange = instance.code().lookupFuncRange(elem.code);
+  }
+  MOZ_ASSERT(codeRange);
 
-  RootedWasmInstanceObject instanceObj(cx, instance.object());
-  return instanceObj->getExportedFunction(cx, instanceObj,
-                                          codeRange.funcIndex(), fun);
+  // If the element is a wasm function imported from another
+  // instance then to preserve the === function identity required by
+  // the JS embedding spec, we must set the element to the
+  // imported function's underlying CodeRange.funcCheckedCallEntry and
+  // Instance so that future Table.get()s produce the same
+  // function object as was imported.
+  const Tier callerTier = instance.code().bestTier();
+  JSFunction* callee = nullptr;
+  Instance* calleeInstance = instance.getOriginalInstanceAndFunction(
+      callerTier, codeRange->funcIndex(), &callee);
+  RootedWasmInstanceObject calleeInstanceObj(cx, calleeInstance->object());
+  uint32_t calleeFunctionIndex = codeRange->funcIndex();
+  if (callee && (calleeInstance != &instance)) {
+    const Tier calleeTier = calleeInstance->code().bestTier();
+    calleeFunctionIndex =
+        calleeInstanceObj->getExportedFunctionCodeRange(callee, calleeTier)
+            .funcIndex();
+  }
+  return WasmInstanceObject::getExportedFunction(cx, calleeInstanceObj,
+                                                 calleeFunctionIndex, fun);
 }
 
 void Table::setFuncRef(uint32_t index, void* code, const Instance* instance) {
@@ -182,8 +204,8 @@ void Table::setFuncRef(uint32_t index, void* code, const Instance* instance) {
   }
 }
 
-bool Table::fillFuncRef(uint32_t index, uint32_t fillCount, FuncRef ref,
-                        JSContext* cx) {
+bool Table::fillFuncRef(Maybe<Tier> maybeTier, uint32_t index,
+                        uint32_t fillCount, FuncRef ref, JSContext* cx) {
   MOZ_ASSERT(isFunction());
 
   if (ref.isNull()) {
@@ -207,11 +229,12 @@ bool Table::fillFuncRef(uint32_t index, uint32_t fillCount, FuncRef ref,
 #endif
 
   Instance& instance = instanceObj->instance();
-  Tier tier = instance.code().bestTier();
-  const MetadataTier& metadata = instance.metadata(tier);
-  const CodeRange& codeRange =
-      metadata.codeRange(metadata.lookupFuncExport(funcIndex));
-  void* code = instance.codeBase(tier) + codeRange.funcCheckedCallEntry();
+  Tier tier = maybeTier ? maybeTier.value() : instance.code().bestTier();
+  void* code = instance.createIndirectStub(tier, funcIndex);
+  if (!code) {
+    return false;
+  }
+
   for (uint32_t i = index, end = index + fillCount; i != end; i++) {
     setFuncRef(i, code, &instance);
   }
