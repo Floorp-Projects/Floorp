@@ -10,14 +10,6 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-var { CONTEXT_DESCRIPTOR_TYPES } = ChromeUtils.import(
-  "chrome://remote/content/shared/messagehandler/MessageHandler.jsm"
-);
-
-var contextDescriptorAll = {
-  type: CONTEXT_DESCRIPTOR_TYPES.ALL,
-};
-
 /**
  * Broadcast the provided method to WindowGlobal contexts on a MessageHandler
  * network.
