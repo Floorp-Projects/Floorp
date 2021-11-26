@@ -76,7 +76,7 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(
     nsIConstraintValidation)
 
 void HTMLButtonElement::SetCustomValidity(const nsAString& aError) {
-  ConstraintValidation::SetCustomValidity(aError);
+  nsIConstraintValidation::SetCustomValidity(aError);
 
   UpdateState(true);
 }

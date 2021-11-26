@@ -8,8 +8,8 @@
 #define mozilla_dom_HTMLButtonElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/ConstraintValidation.h"
 #include "nsGenericHTMLElement.h"
+#include "nsIConstraintValidation.h"
 
 namespace mozilla {
 class EventChainPostVisitor;
@@ -18,9 +18,9 @@ namespace dom {
 class FormData;
 
 class HTMLButtonElement final : public nsGenericHTMLFormControlElementWithState,
-                                public ConstraintValidation {
+                                public nsIConstraintValidation {
  public:
-  using ConstraintValidation::GetValidationMessage;
+  using nsIConstraintValidation::GetValidationMessage;
 
   explicit HTMLButtonElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
