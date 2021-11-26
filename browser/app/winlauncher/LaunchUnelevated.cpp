@@ -145,10 +145,10 @@ LauncherVoidResult LaunchUnelevated(int aArgc, wchar_t* aArgv[]) {
   UniquePtr<wchar_t[]> packageFamilyName = mozilla::GetPackageFamilyName();
   if (packageFamilyName) {
     int cmdLen =
-        // 26 for the prefix + suffix + null terminator below
-        26 + wcslen(packageFamilyName.get());
+        // 22 for the prefix + suffix + null terminator below
+        22 + wcslen(packageFamilyName.get());
     wchar_t appCmd[cmdLen];
-    swprintf(appCmd, cmdLen, L"shell:appsFolder\\%s!FIREFOX",
+    swprintf(appCmd, cmdLen, L"shell:appsFolder\\%s!App",
              packageFamilyName.get());
     cmd = appCmd;
   } else {
