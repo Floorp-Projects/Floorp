@@ -201,9 +201,13 @@ class WebDriverSession {
   destroy() {
     allowAllCerts.disable();
 
-    // Close all open connections
+    // Close all open connections which unregister themselves.
     this._connections.forEach(connection => connection.close());
-    this._connections.clear();
+    if (this._connections.size > 0) {
+      logger.warn(
+        `Failed to close ${this._connections.size} WebSocket connections`
+      );
+    }
 
     // Destroy the dedicated MessageHandler instance if we created one.
     if (this._messageHandler) {
@@ -275,6 +279,19 @@ class WebDriverSession {
 
   get unhandledPromptBehavior() {
     return this.capabilities.get("unhandledPromptBehavior");
+  }
+
+  /**
+   * Remove the specified WebDriver BiDi connection.
+   *
+   * @param {WebDriverBiDiConnection} connection
+   */
+  removeConnection(connection) {
+    if (this._connections.has(connection)) {
+      this._connections.delete(connection);
+    } else {
+      logger.warn("Trying to remove a connection that doesn't exist.");
+    }
   }
 
   toString() {
