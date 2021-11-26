@@ -658,6 +658,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">მოქმედი</string>
 
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">დასრულებული</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">დაშორებული გამართვა USB/WiFi-ით</string>
 
