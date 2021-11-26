@@ -10,10 +10,10 @@
 menupopup,
 panel {
   min-width: 1px;
-  --panel-padding: max(env(-moz-gtk-menu-radius) - 1px, 0px) 0;
+  --panel-padding: max(env(-moz-gtk-csd-menu-radius) - 1px, 0px) 0;
   --panel-color: MenuText;
   --panel-background: Menu;
-  --panel-border-radius: env(-moz-gtk-menu-radius);
+  --panel-border-radius: env(-moz-gtk-csd-menu-radius);
   --panel-border-color: ThreeDShadow;
   --panel-width: initial;
   /* To account for the box-shadow below */

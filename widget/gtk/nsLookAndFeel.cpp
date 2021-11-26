@@ -1293,9 +1293,6 @@ void nsLookAndFeel::EnsureInit() {
 
     if (pos) {
       *pos = i;
-      if (layout.mAtRight) {
-        *pos += TOOLBAR_BUTTONS;
-      }
     }
   }
 
