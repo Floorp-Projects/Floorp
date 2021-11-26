@@ -142,17 +142,18 @@ async function testRemoteTab() {
   await BrowserTestUtils.loadURI(browser, SECOND_TEST_URL);
   await onLoaded;
 
-  if (isFissionEnabled()) {
-    info("With fission, cross process switching destroy everything");
-    ok(targetFront.isDestroyed(), "Top level target is destroyed");
-    ok(commands.descriptorFront.isDestroyed(), "Descriptor is also destroyed");
-  } else {
-    is(
-      targetCommand.targetFront,
-      targetFront,
-      "Without fission, the top target stays the same"
-    );
-  }
+  info("Wait for the new target");
+  await waitFor(() => targetCommand.targetFront != targetFront);
+  isnot(
+    targetCommand.targetFront,
+    targetFront,
+    "The top level target changes on navigation"
+  );
+  ok(
+    !targetCommand.targetFront.isDestroyed(),
+    "The new target isn't destroyed"
+  );
+  ok(targetFront.isDestroyed(), "While the previous target is destroyed");
 
   targetCommand.destroy();
 
