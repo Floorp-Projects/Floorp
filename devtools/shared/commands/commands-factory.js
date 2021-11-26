@@ -79,9 +79,17 @@ exports.CommandsFactory = {
    *  2) beyond this test, this isn't used to connect to remote tab just yet.
    * Bug 1700909 should start using this from toolbox-init/descriptor-from-url
    * and will finaly be used to connect to remote tabs.
+
+   * @param {Object} options
+   * @param {Number} options.outerWindowID: Mandatory attribute, to identify which tab we should
+   *        create commands for.
+   * @param {DevToolsClient} options.client: An optional DevToolsClient. If none is passed,
+   *        a new one will be created.
    */
-  async forRemoteTabInTest({ outerWindowID }) {
-    const client = await createLocalClient();
+  async forRemoteTabInTest({ outerWindowID, client }) {
+    if (!client) {
+      client = await createLocalClient();
+    }
 
     const descriptor = await client.mainRoot.getTab({ outerWindowID });
     const commands = await createCommandsDictionary(descriptor);

@@ -663,13 +663,19 @@ const windowGlobalTargetPrototype = {
    *         a target switch.
    */
   destroy({ isTargetSwitching = false } = {}) {
-    if (this.isDestroyed()) {
+    // Avoid reentrancy. We will destroy the Transport when emitting "destroyed",
+    // which will force destroying all actors.
+    if (this.destroying) {
       return;
     }
+    this.destroying = true;
+
     // Tell the thread actor that the window global is closed, so that it may terminate
     // instead of resuming the debuggee script.
     // TODO: Bug 997119: Remove this coupling with thread actor
-    this.threadActor._parentClosed = true;
+    if (this.threadActor) {
+      this.threadActor._parentClosed = true;
+    }
 
     if (this._touchSimulator) {
       this._touchSimulator.stop();
@@ -721,6 +727,10 @@ const windowGlobalTargetPrototype = {
       this._onConsoleApiProfilerEvent,
       "console-api-profiler"
     );
+
+    // Emit a last event before calling Actor.destroy
+    // which will destroy the EventEmitter API
+    this.emit("destroyed");
 
     Actor.prototype.destroy.call(this);
     TargetActorRegistry.unregisterTargetActor(this);
@@ -787,7 +797,7 @@ const windowGlobalTargetPrototype = {
     if (this._docShellsObserved) {
       Services.obs.removeObserver(this, "webnavigation-create");
       Services.obs.removeObserver(this, "webnavigation-destroy");
-      this._docShellsObserved = true;
+      this._docShellsObserved = false;
     }
   },
 
@@ -1106,8 +1116,10 @@ const windowGlobalTargetPrototype = {
    * The content window is no longer being debugged after this call.
    */
   _destroyThreadActor() {
-    this.threadActor.destroy();
-    this.threadActor = null;
+    if (this.threadActor) {
+      this.threadActor.destroy();
+      this.threadActor = null;
+    }
 
     if (this._sourcesManager) {
       this._sourcesManager.destroy();
