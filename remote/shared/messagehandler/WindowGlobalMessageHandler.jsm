@@ -25,6 +25,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  * MessageHandler network.
  */
 class WindowGlobalMessageHandler extends MessageHandler {
+  constructor() {
+    super(...arguments);
+
+    // Bug 1743083: Temporarily delay caching of the inner window id until
+    // the session data is no longer applied before super() returns.
+    this._innerWindowId;
+  }
+
   /**
    * Returns the WindowGlobalMessageHandler module path.
    *
@@ -55,6 +63,14 @@ class WindowGlobalMessageHandler extends MessageHandler {
    */
   static getIdFromContext(context) {
     return context.id;
+  }
+
+  get innerWindowId() {
+    if (this._innerWindowId === undefined) {
+      this._innerWindowId = this._context.window.windowGlobalChild.innerWindowId;
+    }
+
+    return this._innerWindowId;
   }
 
   forwardCommand(command) {
