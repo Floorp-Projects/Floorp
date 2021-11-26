@@ -341,6 +341,7 @@ def bootstrap_path(path, **kwargs):
                 "Updating" if exists else "Installing",
                 os.path.join(toolchains_base_dir, path_parts[0]),
             )
+            os.makedirs(toolchains_base_dir, exist_ok=True)
             subprocess.run(
                 [
                     shell,
