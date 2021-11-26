@@ -3827,6 +3827,9 @@ class MToString : public MUnaryInstruction, public ToStringPolicy::Data {
 class MBitNot : public MUnaryInstruction, public BitwisePolicy::Data {
   explicit MBitNot(MDefinition* input) : MUnaryInstruction(classOpcode, input) {
     setResultType(MIRType::Int32);
+    if (input->type() == MIRType::Int64) {
+      setResultType(MIRType::Int64);
+    }
     setMovable();
   }
 

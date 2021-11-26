@@ -972,6 +972,12 @@ void CodeGenerator::visitBitNotI(LBitNotI* ins) {
   masm.Mvn(toWRegister(output), toWOperand(input));
 }
 
+void CodeGenerator::visitBitNotI64(LBitNotI64* ins) {
+  Register input = ToRegister(ins->input());
+  Register output = ToRegister(ins->output());
+  masm.Mvn(vixl::Register(output, 64), vixl::Register(input, 64));
+}
+
 void CodeGenerator::visitBitOpI(LBitOpI* ins) {
   const ARMRegister lhs = toWRegister(ins->getOperand(0));
   const Operand rhs = toWOperand(ins->getOperand(1));

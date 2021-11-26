@@ -870,6 +870,14 @@ void CodeGenerator::visitCtzI64(LCtzI64* lir) {
   masm.ctz64(input, output.reg);
 }
 
+void CodeGenerator::visitBitNotI64(LBitNotI64* ins) {
+  const LAllocation* input = ins->getOperand(0);
+  MOZ_ASSERT(!input->isConstant());
+  Register inputR = ToRegister(input);
+  MOZ_ASSERT(inputR == ToRegister(ins->output()));
+  masm.notq(inputR);
+}
+
 void CodeGenerator::visitTestI64AndBranch(LTestI64AndBranch* lir) {
   Register input = ToRegister(lir->input());
   masm.testq(input, input);

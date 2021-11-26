@@ -3028,6 +3028,13 @@ void CodeGenerator::visitCtzI64(LCtzI64* lir) {
   masm.move32(Imm32(0), output.high);
 }
 
+void CodeGenerator::visitBitNotI64(LBitNotI64* lir) {
+  Register64 input = ToRegister64(lir->getInt64Operand(0));
+  MOZ_ASSERT(input == ToOutRegister64(lir));
+  masm.ma_mvn(input.high, input.high);
+  masm.ma_mvn(input.low, input.low);
+}
+
 void CodeGenerator::visitTestI64AndBranch(LTestI64AndBranch* lir) {
   Register64 input = ToRegister64(lir->getInt64Operand(0));
 

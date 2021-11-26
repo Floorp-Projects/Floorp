@@ -4767,9 +4767,7 @@ MDefinition* MWasmBinaryBitwise::foldsTo(TempAllocator& alloc) {
     }
   }
 
-  // Left arg is ones.  Unfortunately the xor64 case can't be folded, since
-  // MBitNot is hardwired to Int32, so there's no way to represent the result.
-  // See bug 1741392.
+  // Left arg is ones
   if (IsIntegralConstantOnes(argL)) {
     switch (subOpcode()) {
       case SubOpcode::And:
@@ -4777,9 +4775,7 @@ MDefinition* MWasmBinaryBitwise::foldsTo(TempAllocator& alloc) {
       case SubOpcode::Or:
         return OnesOfType(alloc, type());
       case SubOpcode::Xor:
-        return type() == MIRType::Int32
-                   ? static_cast<MDefinition*>(MBitNot::New(alloc, argR))
-                   : this;
+        return MBitNot::New(alloc, argR);
       default:
         MOZ_CRASH();
     }
@@ -4793,9 +4789,7 @@ MDefinition* MWasmBinaryBitwise::foldsTo(TempAllocator& alloc) {
       case SubOpcode::Or:
         return OnesOfType(alloc, type());
       case SubOpcode::Xor:
-        return type() == MIRType::Int32
-                   ? static_cast<MDefinition*>(MBitNot::New(alloc, argL))
-                   : this;
+        return MBitNot::New(alloc, argL);
       default:
         MOZ_CRASH();
     }

@@ -756,6 +756,9 @@
 - name: BitNotI
   gen_boilerplate: false
 
+- name: BitNotI64
+  gen_boilerplate: false
+
 - name: BitOpI
   gen_boilerplate: false
 
