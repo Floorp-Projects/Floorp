@@ -388,6 +388,14 @@ void EventListenerManager::AddEventListenerInternal(
           mMayHaveKeyEventListener = true;
         }
         break;
+      case eCompositionEnd:
+      case eCompositionStart:
+      case eCompositionUpdate:
+      case eEditorInput:
+        if (!aFlags.mInSystemGroup) {
+          mMayHaveInputOrCompositionEventListener = true;
+        }
+        break;
       default:
         // XXX Use NS_ASSERTION here to print resolvedEventMessage since
         //     MOZ_ASSERT can take only string literal, not pointer to
@@ -476,14 +484,23 @@ void EventListenerManager::AddEventListenerInternal(
                      nsPrintfCString("resolvedEventMessage=%s",
                                      ToChar(resolvedEventMessage))
                          .get());
-        if (aTypeAtom == nsGkAtoms::oncompositionend ||
-            aTypeAtom == nsGkAtoms::oncompositionstart ||
-            aTypeAtom == nsGkAtoms::oncompositionupdate ||
-            aTypeAtom == nsGkAtoms::oninput) {
-          if (!aFlags.mInSystemGroup) {
-            mMayHaveInputOrCompositionEventListener = true;
-          }
-        } else if (resolvedEventMessage == eSelectionChange) {
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::oncompositionend,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::oncompositionstart,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::oncompositionupdate,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        NS_ASSERTION(aTypeAtom != nsGkAtoms::oninput,
+                     nsPrintfCString("resolvedEventMessage=%s",
+                                     ToChar(resolvedEventMessage))
+                         .get());
+        if (aEventMessage == eSelectionChange) {
           mMayHaveSelectionChangeEventListener = true;
           if (nsPIDOMWindowInner* window = GetInnerWindowForTarget()) {
             window->SetHasSelectionChangeEventListeners();
