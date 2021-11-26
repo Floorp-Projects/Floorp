@@ -91,6 +91,7 @@ class ContextTest {
 
     @Test
     fun `GIVEN context WHEN getting metrics controller THEN send back metrics`() {
+        every { testContext.components.analytics } returns mockk(relaxed = true)
         val expectedMetricsValue = ApplicationProvider.getApplicationContext<FenixApplication>().components.analytics.metrics
         assertEquals(expectedMetricsValue, testContext.metrics)
     }

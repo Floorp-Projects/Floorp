@@ -190,6 +190,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
         toolbarView = ToolbarView(
             requireContext(),
+            requireContext().settings(),
             interactor,
             historyStorageProvider(),
             isPrivate,

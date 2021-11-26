@@ -12,6 +12,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -20,6 +21,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.databinding.CollectionTabListRowBinding
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.Tab
 
@@ -59,6 +61,7 @@ class CollectionCreationTabListAdapterTest {
 
     @Test
     fun `creates and binds viewholder`() {
+        every { testContext.components.core.icons } returns BrowserIcons(testContext, mockk(relaxed = true))
         adapter.updateData(
             tabs = listOf(mozillaTab),
             selectedTabs = emptySet(),
@@ -87,6 +90,7 @@ class CollectionCreationTabListAdapterTest {
 
     @Test
     fun `creates and binds viewholder for selected tab`() {
+        every { testContext.components.core.icons } returns BrowserIcons(testContext, mockk(relaxed = true))
         every { interactor.addTabToSelection(mozillaTab) } just Runs
 
         adapter.updateData(

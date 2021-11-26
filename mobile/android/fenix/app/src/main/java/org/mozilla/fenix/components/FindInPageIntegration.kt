@@ -17,7 +17,6 @@ import mozilla.components.feature.findinpage.FindInPageFeature
 import mozilla.components.feature.findinpage.view.FindInPageView
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.fenix.components.FindInPageIntegration.ToolbarInfo
-import org.mozilla.fenix.utils.Mockable
 
 /**
  * BrowserFragment delegate to handle all layout updates needed to show or hide the find in page bar.
@@ -28,7 +27,6 @@ import org.mozilla.fenix.utils.Mockable
  * to suit the find in page bar.
  * @param toolbarInfo [ToolbarInfo] used to configure the [BrowserToolbar] while the find in page bar is shown.
  */
-@Mockable
 class FindInPageIntegration(
     private val store: BrowserStore,
     private val sessionId: String? = null,

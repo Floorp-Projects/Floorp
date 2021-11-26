@@ -20,6 +20,8 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.browser.state.store.BrowserStore
+import org.mozilla.fenix.ext.components
 
 @RunWith(FenixRobolectricTestRunner::class)
 class BrowserTabsAdapterTest {
@@ -30,6 +32,7 @@ class BrowserTabsAdapterTest {
 
     @Test
     fun `WHEN bind with payloads is called THEN update the holder`() {
+        every { testContext.components.core.thumbnailStorage } returns mockk()
         val adapter = BrowserTabsAdapter(context, interactor, store, "Test")
         val holder = mockk<AbstractBrowserTabViewHolder>(relaxed = true)
 
@@ -51,6 +54,10 @@ class BrowserTabsAdapterTest {
 
     @Test
     fun `WHEN the selection holder is set THEN update the selected tab`() {
+        every { testContext.components.core.thumbnailStorage } returns mockk()
+        every { testContext.components.core.store } returns BrowserStore()
+        every { testContext.components.analytics } returns mockk(relaxed = true)
+        every { testContext.components.settings } returns mockk(relaxed = true)
         val adapter = BrowserTabsAdapter(context, interactor, store, "Test")
         val binding = TabTrayItemBinding.inflate(LayoutInflater.from(testContext))
         val holder = spyk(

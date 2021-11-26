@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.LayoutInflater
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.support.test.robolectric.testContext
@@ -12,6 +13,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.databinding.OnboardingFinishBinding
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.sessioncontrol.OnboardingInteractor
 
@@ -29,6 +31,7 @@ class OnboardingFinishViewHolderTest {
 
     @Test
     fun `call interactor on click`() {
+        every { testContext.components.analytics } returns mockk(relaxed = true)
         OnboardingFinishViewHolder(binding.root, interactor)
 
         binding.finishButton.performClick()

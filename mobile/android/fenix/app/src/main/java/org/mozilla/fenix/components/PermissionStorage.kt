@@ -12,10 +12,8 @@ import kotlinx.coroutines.withContext
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissionsStorage
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.utils.Mockable
 import kotlin.coroutines.CoroutineContext
 
-@Mockable
 class PermissionStorage(
     private val context: Context,
     @VisibleForTesting internal val dispatcher: CoroutineContext = Dispatchers.IO,

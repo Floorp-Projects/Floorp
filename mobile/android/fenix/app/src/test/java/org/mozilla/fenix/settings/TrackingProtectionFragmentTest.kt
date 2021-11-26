@@ -5,10 +5,13 @@
 package org.mozilla.fenix.settings
 
 import androidx.fragment.app.FragmentActivity
+import io.mockk.every
+import io.mockk.mockk
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.Robolectric
@@ -18,9 +21,11 @@ class TrackingProtectionFragmentTest {
 
     @Test
     fun `UI component should match settings defaults`() {
+        val settings = Settings(testContext)
+        every { testContext.components.analytics } returns mockk(relaxed = true)
+        every { testContext.components.settings } returns settings
         val settingsFragment = TrackingProtectionFragment()
         val activity = Robolectric.buildActivity(FragmentActivity::class.java).create().get()
-        val settings = Settings(testContext)
 
         activity.supportFragmentManager.beginTransaction()
             .add(settingsFragment, "settingsFragment")

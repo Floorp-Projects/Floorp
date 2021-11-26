@@ -28,6 +28,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.search.SearchEngineSource
 import org.mozilla.fenix.search.SearchFragmentState
+import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
 class ToolbarViewTest {
@@ -154,6 +155,7 @@ class ToolbarViewTest {
 
     private fun buildToolbarView(isPrivate: Boolean) = ToolbarView(
         context,
+        Settings(context),
         interactor,
         historyStorage = null,
         isPrivate = isPrivate,

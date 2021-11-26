@@ -12,12 +12,14 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.databinding.CollectionsListItemBinding
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -51,6 +53,7 @@ class SaveCollectionListAdapterTest {
 
     @Test
     fun `creates and binds viewholder`() {
+        every { testContext.components.publicSuffixList } returns PublicSuffixList(testContext)
         val collection = mockk<TabCollection> {
             every { id } returns 0L
             every { title } returns "Collection"

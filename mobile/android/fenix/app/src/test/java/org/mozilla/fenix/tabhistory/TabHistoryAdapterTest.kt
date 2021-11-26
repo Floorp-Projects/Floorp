@@ -8,9 +8,12 @@ import android.content.Context
 import android.widget.FrameLayout
 import androidx.appcompat.view.ContextThemeWrapper
 import io.mockk.MockKAnnotations
-import io.mockk.impl.annotations.MockK
-import io.mockk.spyk
+import io.mockk.every
 import io.mockk.verify
+import io.mockk.spyk
+import io.mockk.mockk
+import io.mockk.impl.annotations.MockK
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -18,6 +21,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -52,6 +56,7 @@ class TabHistoryAdapterTest {
 
     @Test
     fun `creates and binds view holder`() {
+        every { testContext.components.core.icons } returns BrowserIcons(testContext, mockk(relaxed = true))
         adapter.submitList(listOf(selectedItem, unselectedItem))
 
         val holder = spyk(adapter.createViewHolder(parent, 0))

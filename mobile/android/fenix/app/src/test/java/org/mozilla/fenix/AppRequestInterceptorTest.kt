@@ -22,6 +22,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.AppRequestInterceptor.Companion.HIGH_RISK_ERROR_PAGES
 import org.mozilla.fenix.AppRequestInterceptor.Companion.LOW_AND_MEDIUM_RISK_ERROR_PAGES
+import org.mozilla.fenix.components.Services
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.isOnline
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
@@ -64,6 +66,7 @@ class AppRequestInterceptorTest {
 
     @Test
     fun `GIVEN request to install add-on WHEN on a different domain THEN no add-on installation is started`() {
+        every { testContext.components.services } returns Services(testContext, mockk(relaxed = true))
         val result = interceptor.onLoadRequest(
             engineSession = mockk(),
             uri = "https://addons.mozilla.org/android/downloads/file/12345678/test.xpi",
@@ -81,6 +84,7 @@ class AppRequestInterceptorTest {
 
     @Test
     fun `GIVEN invalid request to install add-on WHEN on same domain and triggered by user THEN no add-on installation is started`() {
+        every { testContext.components.services } returns Services(testContext, mockk(relaxed = true))
         val result = interceptor.onLoadRequest(
             engineSession = mockk(),
             uri = "https://addons.mozilla.org/android/downloads/file/12345678/test.invalid",
@@ -98,6 +102,7 @@ class AppRequestInterceptorTest {
 
     @Test
     fun `GIVEN request to install add-on WHEN not triggered by user THEN no add-on installation is started`() {
+        every { testContext.components.services } returns Services(testContext, mockk(relaxed = true))
         val result = interceptor.onLoadRequest(
             engineSession = mockk(),
             uri = "https://addons.mozilla.org/android/downloads/file/12345678/test.xpi",
@@ -115,6 +120,7 @@ class AppRequestInterceptorTest {
 
     @Test
     fun `GIVEN any request WHEN on same domain and triggered by user THEN no add-on installation is started`() {
+        every { testContext.components.services } returns Services(testContext, mockk(relaxed = true))
         val result = interceptor.onLoadRequest(
             engineSession = mockk(),
             uri = "https://blog.mozilla.org/blog/2020/10/20/mozilla-reaction-to-u-s-v-google/",
@@ -132,6 +138,7 @@ class AppRequestInterceptorTest {
 
     @Test
     fun `onErrorRequest results in correct error page for low risk level error`() {
+        every { testContext.components.analytics } returns mockk(relaxed = true)
         setOf(
             ErrorType.UNKNOWN,
             ErrorType.ERROR_NET_INTERRUPT,
@@ -165,6 +172,7 @@ class AppRequestInterceptorTest {
 
     @Test
     fun `onErrorRequest results in correct error page for medium risk level error`() {
+        every { testContext.components.analytics } returns mockk(relaxed = true)
         setOf(
             ErrorType.ERROR_SECURITY_BAD_CERT,
             ErrorType.ERROR_SECURITY_SSL,
@@ -182,6 +190,7 @@ class AppRequestInterceptorTest {
 
     @Test
     fun `onErrorRequest results in correct error page for high risk level error`() {
+        every { testContext.components.analytics } returns mockk(relaxed = true)
         setOf(
             ErrorType.ERROR_SAFEBROWSING_HARMFUL_URI,
             ErrorType.ERROR_SAFEBROWSING_MALWARE_URI,

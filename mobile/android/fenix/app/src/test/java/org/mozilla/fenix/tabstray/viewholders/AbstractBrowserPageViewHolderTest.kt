@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.TextView
+import io.mockk.every
 import io.mockk.mockk
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -16,6 +17,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TabsTrayStore
@@ -29,6 +31,10 @@ class AbstractBrowserPageViewHolderTest {
     val browserStore = BrowserStore()
     val interactor = mockk<TabsTrayInteractor>(relaxed = true)
     val browserTrayInteractor = mockk<BrowserTrayInteractor>(relaxed = true)
+    init {
+        every { testContext.components.core.thumbnailStorage } returns mockk()
+        every { testContext.components.settings } returns mockk(relaxed = true)
+    }
     val adapter = BrowserTabsAdapter(testContext, browserTrayInteractor, tabsTrayStore, "Test")
 
     @Test

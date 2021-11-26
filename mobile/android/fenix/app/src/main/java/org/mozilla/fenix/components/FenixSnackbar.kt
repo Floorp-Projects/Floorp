@@ -22,9 +22,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.FenixSnackbarBinding
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.settings
-import org.mozilla.fenix.utils.Mockable
 
-@Mockable
 class FenixSnackbar private constructor(
     parent: ViewGroup,
     private val binding: FenixSnackbarBinding,

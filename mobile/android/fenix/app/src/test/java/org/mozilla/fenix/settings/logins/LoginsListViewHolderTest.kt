@@ -5,14 +5,17 @@
 package org.mozilla.fenix.settings.logins
 
 import android.view.LayoutInflater
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.databinding.LoginsItemBinding
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.settings.logins.interactor.SavedLoginsInteractor
 import org.mozilla.fenix.settings.logins.view.LoginsListViewHolder
@@ -35,6 +38,7 @@ class LoginsListViewHolderTest {
     fun setup() {
         binding = LoginsItemBinding.inflate(LayoutInflater.from(testContext))
         interactor = mockk(relaxed = true)
+        every { testContext.components.core.icons } returns BrowserIcons(testContext, mockk(relaxed = true))
     }
 
     @Test

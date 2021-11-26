@@ -12,11 +12,13 @@ import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
+import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -103,6 +105,7 @@ class SyncedTabsAdapterTest {
 
     @Test
     fun `adapter can create and bind viewholders for SyncedDeviceTabs`() {
+        every { testContext.components.publicSuffixList } returns PublicSuffixList(testContext)
         val parent = FrameLayout(testContext)
         adapter.updateData(listOf(oneTabDevice))
 

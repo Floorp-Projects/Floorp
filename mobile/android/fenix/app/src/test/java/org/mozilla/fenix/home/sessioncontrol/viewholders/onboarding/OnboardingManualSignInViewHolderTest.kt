@@ -21,6 +21,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.OnboardingManualSigninBinding
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.HomeFragmentDirections
 
@@ -59,6 +60,7 @@ class OnboardingManualSignInViewHolderTest {
 
     @Test
     fun `navigate on click`() {
+        every { testContext.components.analytics } returns mockk(relaxed = true)
         OnboardingManualSignInViewHolder(binding.root)
         binding.fxaSignInButton.performClick()
 

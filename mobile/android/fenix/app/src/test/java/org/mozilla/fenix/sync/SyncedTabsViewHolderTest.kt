@@ -17,6 +17,7 @@ import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.concept.sync.Device
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.syncedtabs.view.SyncedTabsView
+import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -25,6 +26,7 @@ import org.junit.runner.RunWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.SyncTabsListItemBinding
 import org.mozilla.fenix.databinding.ViewSyncedTabsGroupBinding
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -80,6 +82,7 @@ class SyncedTabsViewHolderTest {
 
     @Test
     fun `TabViewHolder binds active tab`() {
+        every { testContext.components.publicSuffixList } returns PublicSuffixList(testContext)
         tabViewHolder.bind(SyncedTabsAdapter.AdapterItem.Tab(tab), mockk())
 
         assertEquals("Firefox", syncTabsListItemBinding.syncedTabItemTitle.text)
@@ -88,6 +91,7 @@ class SyncedTabsViewHolderTest {
 
     @Test
     fun `TabViewHolder calls interactor on click`() {
+        every { testContext.components.publicSuffixList } returns PublicSuffixList(testContext)
         val interactor = mockk<SyncedTabsView.Listener>(relaxed = true)
         tabViewHolder.bind(SyncedTabsAdapter.AdapterItem.Tab(tab), interactor)
 

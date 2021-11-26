@@ -25,13 +25,11 @@ import mozilla.components.feature.top.sites.TopSitesUseCases
 import mozilla.components.support.locale.LocaleUseCases
 import org.mozilla.fenix.components.bookmarks.BookmarksUseCase
 import org.mozilla.fenix.perf.lazyMonitored
-import org.mozilla.fenix.utils.Mockable
 
 /**
  * Component group for all use cases. Use cases are provided by feature
  * modules and can be triggered by UI interactions.
  */
-@Mockable
 @Suppress("LongParameterList")
 class UseCases(
     private val context: Context,

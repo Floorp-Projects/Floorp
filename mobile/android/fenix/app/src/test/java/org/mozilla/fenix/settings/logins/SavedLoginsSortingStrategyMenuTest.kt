@@ -12,6 +12,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.concept.menu.candidate.HighPriorityHighlightEffect
+import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -68,13 +69,15 @@ class SavedLoginsSortingStrategyMenuTest {
 
     @Test
     fun `candidates call interactor on click`() {
+        val publicSuffixList = PublicSuffixList(testContext)
+        every { testContext.components.publicSuffixList } returns publicSuffixList
         val (name, lastUsed) = menu.menuItems(Item.AlphabeticallySort)
         every { interactor.onSortingStrategyChanged(any()) } just Runs
 
         name.onClick()
         verify {
             interactor.onSortingStrategyChanged(
-                SortingStrategy.Alphabetically(context.components.publicSuffixList)
+                SortingStrategy.Alphabetically(publicSuffixList)
             )
         }
 

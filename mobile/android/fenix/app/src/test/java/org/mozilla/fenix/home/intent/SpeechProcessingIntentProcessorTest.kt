@@ -15,13 +15,16 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SearchState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.search.ext.createSearchEngine
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.components.metrics.MetricController
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.helpers.perf.TestStrictModeManager
 import org.mozilla.fenix.widget.VoiceSearchActivity.Companion.SPEECH_PROCESSING
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -84,6 +87,7 @@ class SpeechProcessingIntentProcessorTest {
 
     @Test
     fun `reads the speech processing extra`() {
+        every { testContext.components.strictMode } returns TestStrictModeManager()
         val intent = Intent().apply {
             putExtra(HomeActivity.OPEN_TO_BROWSER_AND_LOAD, true)
             putExtra(SPEECH_PROCESSING, "hello world")

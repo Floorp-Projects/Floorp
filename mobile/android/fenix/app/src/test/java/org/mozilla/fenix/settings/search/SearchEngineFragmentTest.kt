@@ -18,8 +18,9 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.utils.Settings
 import org.mozilla.gecko.search.SearchWidgetProvider
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -27,12 +28,16 @@ class SearchEngineFragmentTest {
     @Test
     fun `GIVEN pref_key_show_voice_search setting WHEN it is modified THEN the value is persisted and widgets updated`() {
         try {
-            mockkObject(SearchWidgetProvider.Companion)
-
+            val settings = mockk<Settings>(relaxed = true)
+            every { settings.preferences }
+            every { testContext.components.settings } returns settings
             val preferences: SharedPreferences = mockk()
             val preferencesEditor: SharedPreferences.Editor = mockk(relaxed = true)
-            every { testContext.settings().preferences } returns preferences
+            every { settings.preferences } returns preferences
             every { preferences.edit() } returns preferencesEditor
+
+            mockkObject(SearchWidgetProvider.Companion)
+
             val fragment = spyk(SearchEngineFragment()) {
                 every { context } returns testContext
                 every { isAdded } returns true

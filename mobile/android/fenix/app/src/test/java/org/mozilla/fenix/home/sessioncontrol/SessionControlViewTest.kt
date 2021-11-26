@@ -17,6 +17,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.HomeFragmentState
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
@@ -89,6 +90,7 @@ class SessionControlViewTest {
 
     @Test
     fun `GIVENs updates WHEN sections recentTabs, recentBookmarks, historyMetadata or pocketArticles are available THEN show the dialog`() {
+        every { testContext.components.settings } returns mockk(relaxed = true)
         val interactor = mockk<SessionControlInteractor>(relaxed = true)
         val view = RecyclerView(testContext)
         val controller = SessionControlView(
@@ -110,6 +112,7 @@ class SessionControlViewTest {
 
     @Test
     fun `GIVENs updates WHEN sections recentTabs, recentBookmarks, historyMetadata or pocketArticles are NOT available THEN DO NOT show the dialog`() {
+        every { testContext.components.settings } returns mockk(relaxed = true)
         val interactor = mockk<SessionControlInteractor>(relaxed = true)
         val view = RecyclerView(testContext)
         val controller = SessionControlView(

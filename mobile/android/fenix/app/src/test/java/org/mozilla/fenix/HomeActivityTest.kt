@@ -30,6 +30,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.helpers.perf.TestStrictModeManager
 import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -60,6 +61,7 @@ class HomeActivityTest {
 
     @Test
     fun `getModeFromIntentOrLastKnown returns mode from settings when intent does not set`() {
+        every { testContext.settings() } returns Settings(testContext)
         every { activity.applicationContext } returns testContext
         testContext.settings().lastKnownMode = BrowsingMode.Private
 
@@ -68,6 +70,7 @@ class HomeActivityTest {
 
     @Test
     fun `getModeFromIntentOrLastKnown returns mode from intent when set`() {
+        every { testContext.settings() } returns Settings(testContext)
         testContext.settings().lastKnownMode = BrowsingMode.Normal
 
         val intent = Intent()
@@ -139,6 +142,7 @@ class HomeActivityTest {
 
     @Test
     fun `GIVEN the user has been away for a long time WHEN the user opens the app THEN do start on home`() {
+        every { testContext.components.strictMode } returns TestStrictModeManager()
         val settings: Settings = mockk()
         val startingIntent = Intent().apply {
             action = Intent.ACTION_MAIN
@@ -153,6 +157,7 @@ class HomeActivityTest {
 
     @Test
     fun `GIVEN the user has been away for a long time WHEN opening a link THEN do not start on home`() {
+        every { testContext.components.strictMode } returns TestStrictModeManager()
         val settings: Settings = mockk()
         val startingIntent = Intent().apply {
             action = Intent.ACTION_VIEW

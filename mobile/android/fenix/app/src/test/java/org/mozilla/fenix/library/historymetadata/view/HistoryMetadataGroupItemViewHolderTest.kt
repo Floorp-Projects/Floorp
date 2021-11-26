@@ -5,7 +5,9 @@ package org.mozilla.fenix.library.historymetadata.view
 
 import android.view.LayoutInflater
 import androidx.navigation.Navigation
+import io.mockk.every
 import io.mockk.mockk
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -13,6 +15,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.databinding.HistoryMetadataGroupListItemBinding
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.library.history.History
 import org.mozilla.fenix.library.historymetadata.interactor.HistoryMetadataGroupInteractor
@@ -44,6 +47,7 @@ class HistoryMetadataGroupItemViewHolderTest {
 
     @Test
     fun `GIVEN a history metadata item on bind THEN set the title and url text`() {
+        every { testContext.components.core.icons } returns BrowserIcons(testContext, mockk(relaxed = true))
         HistoryMetadataGroupItemViewHolder(binding.root, interactor, selectionHolder).bind(item)
 
         assertEquals(item.title, binding.historyLayout.titleView.text)

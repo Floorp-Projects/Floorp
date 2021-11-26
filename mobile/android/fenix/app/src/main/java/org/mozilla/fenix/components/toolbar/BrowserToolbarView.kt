@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.components.toolbar
 
+import android.content.Context
 import android.graphics.Color
 import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
@@ -28,22 +29,21 @@ import org.mozilla.fenix.customtabs.CustomTabToolbarIntegration
 import org.mozilla.fenix.customtabs.CustomTabToolbarMenu
 import org.mozilla.fenix.ext.bookmarkStorage
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.ThemeManager
+import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.utils.ToolbarPopupWindow
 import java.lang.ref.WeakReference
 import mozilla.components.browser.toolbar.behavior.ToolbarPosition as MozacToolbarPosition
 
 @SuppressWarnings("LargeClass")
 class BrowserToolbarView(
-    private val container: ViewGroup,
-    private val toolbarPosition: ToolbarPosition,
+    context: Context,
+    container: ViewGroup,
+    private val settings: Settings,
     private val interactor: BrowserToolbarInteractor,
     private val customTabSession: CustomTabSessionState?,
     private val lifecycleOwner: LifecycleOwner
 ) {
-
-    private val settings = container.context.settings()
 
     @LayoutRes
     private val toolbarLayout = when (settings.toolbarPosition) {
@@ -51,7 +51,7 @@ class BrowserToolbarView(
         ToolbarPosition.TOP -> R.layout.component_browser_top_toolbar
     }
 
-    private val layout = LayoutInflater.from(container.context)
+    private val layout = LayoutInflater.from(context)
         .inflate(toolbarLayout, container, true)
 
     @VisibleForTesting
@@ -78,7 +78,7 @@ class BrowserToolbarView(
             true
         }
 
-        with(container.context) {
+        with(context) {
             val isPinningSupported = components.useCases.webAppUseCases.isPinningSupported()
 
             view.apply {
@@ -94,22 +94,22 @@ class BrowserToolbarView(
                     false
                 }
 
-                display.progressGravity = when (toolbarPosition) {
+                display.progressGravity = when (settings.toolbarPosition) {
                     ToolbarPosition.BOTTOM -> DisplayToolbar.Gravity.TOP
                     ToolbarPosition.TOP -> DisplayToolbar.Gravity.BOTTOM
                 }
 
                 val primaryTextColor = ContextCompat.getColor(
-                    container.context,
-                    ThemeManager.resolveAttribute(R.attr.primaryText, container.context)
+                    context,
+                    ThemeManager.resolveAttribute(R.attr.primaryText, context)
                 )
                 val secondaryTextColor = ContextCompat.getColor(
-                    container.context,
-                    ThemeManager.resolveAttribute(R.attr.secondaryText, container.context)
+                    context,
+                    ThemeManager.resolveAttribute(R.attr.secondaryText, context)
                 )
                 val separatorColor = ContextCompat.getColor(
-                    container.context,
-                    ThemeManager.resolveAttribute(R.attr.toolbarDivider, container.context)
+                    context,
+                    ThemeManager.resolveAttribute(R.attr.toolbarDivider, context)
                 )
 
                 display.urlFormatter = { url -> URLStringUtils.toDisplayUrl(url) }
@@ -137,7 +137,7 @@ class BrowserToolbarView(
                     context = this,
                     store = components.core.store,
                     sessionId = customTabSession?.id,
-                    shouldReverseItems = toolbarPosition == ToolbarPosition.TOP,
+                    shouldReverseItems = settings.toolbarPosition == ToolbarPosition.TOP,
                     onItemTapped = {
                         it.performHapticIfNeeded(view)
                         interactor.onBrowserToolbarMenuItemTapped(it)

@@ -4,8 +4,10 @@
 
 package org.mozilla.fenix.settings.logins
 
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verifyAll
+import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
@@ -40,6 +42,7 @@ class SavedLoginsInteractorTest {
 
     @Test
     fun `GIVEN a change in sorting strategy, WHEN the interactor is called for it, THEN it should just delegate the controller`() {
+        every { testContext.components.publicSuffixList } returns PublicSuffixList(testContext)
         val sortingStrategy = SortingStrategy.Alphabetically(testContext.components.publicSuffixList)
 
         interactor.onSortingStrategyChanged(sortingStrategy)

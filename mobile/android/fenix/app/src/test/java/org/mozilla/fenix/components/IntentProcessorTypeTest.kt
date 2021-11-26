@@ -13,6 +13,7 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.HomeActivity
@@ -22,6 +23,10 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
 class IntentProcessorTypeTest {
+    @Before
+    fun setup() {
+        every { testContext.components.intentProcessors } returns mockk(relaxed = true)
+    }
 
     @Test
     fun `should open intent with flag launched from history`() {
@@ -72,6 +77,7 @@ class IntentProcessorTypeTest {
 
     @Test
     fun `get type for private custom tab intent processor`() {
+        every { testContext.components.intentProcessors } returns mockk(relaxed = true)
         val processor = testContext.components.intentProcessors.privateCustomTabIntentProcessor
         val type = testContext.components.intentProcessors.getType(processor)
 

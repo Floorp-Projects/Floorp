@@ -9,6 +9,7 @@ import android.widget.FrameLayout
 import androidx.appcompat.view.ContextThemeWrapper
 import io.mockk.every
 import io.mockk.mockk
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -21,6 +22,7 @@ import org.mozilla.fenix.exceptions.ExceptionsAdapter
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsDeleteButtonViewHolder
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsHeaderViewHolder
 import org.mozilla.fenix.exceptions.viewholders.ExceptionsListItemViewHolder
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -39,6 +41,7 @@ class LoginExceptionsAdapterTest {
 
     @Test
     fun `creates correct view holder type`() {
+        every { testContext.components.core.icons } returns BrowserIcons(testContext, mockk(relaxed = true))
         val parent = FrameLayout(context)
         adapter.updateData(listOf(mockk(), mockk()))
         assertEquals(4, adapter.itemCount)

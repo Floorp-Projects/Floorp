@@ -122,6 +122,7 @@ class DefaultQuickSettingsControllerTest {
 
     @Test
     fun `handlePermissionsShown should delegate to an injected parameter`() {
+        every { testContext.components.core.engine } returns mockk(relaxed = true)
         var displayPermissionsInvoked = false
         createController(
             displayPermissions = {
@@ -172,6 +173,7 @@ class DefaultQuickSettingsControllerTest {
 
     @Test
     fun `handlePermissionToggled blocked by user should navigate to site permission manager`() {
+        every { testContext.components.core.engine } returns mockk(relaxed = true)
         val websitePermission = mockk<WebsitePermission>()
         val invalidSitePermissionsController = DefaultQuickSettingsController(
             context = context,
@@ -265,6 +267,7 @@ class DefaultQuickSettingsControllerTest {
 
     @Test
     fun `handleAndroidPermissionRequest should request from the injected callback`() {
+        every { testContext.components.core.engine } returns mockk(relaxed = true)
         val testPermissions = arrayOf("TestPermission")
 
         var requestRuntimePermissionsInvoked = false

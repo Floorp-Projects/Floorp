@@ -5,12 +5,15 @@
 package org.mozilla.fenix.tabstray.browser
 
 import android.view.LayoutInflater
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.HeaderHolder
@@ -19,6 +22,7 @@ import org.mozilla.fenix.tabstray.browser.InactiveTabViewHolder.HeaderHolder
 class InactiveTabViewHolderTest {
     @Test
     fun `HeaderHolder - WHEN clicked THEN notify the interactor`() {
+        every { testContext.components.appStore } returns AppStore()
         val view = LayoutInflater.from(testContext).inflate(HeaderHolder.LAYOUT_ID, null)
         val interactor: InactiveTabsInteractor = mockk(relaxed = true)
         val tabsTrayInteractor: TabsTrayInteractor = mockk(relaxed = true)

@@ -6,6 +6,7 @@ package org.mozilla.fenix.tabstray.browser
 
 import android.view.LayoutInflater
 import android.view.View
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.browser.state.state.TabSessionState
@@ -21,6 +22,8 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.lib.publicsuffixlist.PublicSuffixList
+import org.mozilla.fenix.ext.components
 
 @RunWith(FenixRobolectricTestRunner::class)
 class AbstractBrowserTabViewHolderTest {
@@ -30,6 +33,7 @@ class AbstractBrowserTabViewHolderTest {
 
     @Test
     fun `WHEN itemView is clicked THEN interactor invokes open`() {
+        every { testContext.components.publicSuffixList } returns PublicSuffixList(testContext)
         val view = LayoutInflater.from(testContext).inflate(R.layout.tab_tray_item, null)
         val holder = TestTabTrayViewHolder(
             view,
@@ -50,6 +54,7 @@ class AbstractBrowserTabViewHolderTest {
 
     @Test
     fun `WHEN itemView is clicked with a selection holder THEN the select holder is invoked`() {
+        every { testContext.components.publicSuffixList } returns PublicSuffixList(testContext)
         val view = LayoutInflater.from(testContext).inflate(R.layout.tab_tray_item, null)
         val selectionHolder = TestSelectionHolder(emptySet())
         val holder = TestTabTrayViewHolder(

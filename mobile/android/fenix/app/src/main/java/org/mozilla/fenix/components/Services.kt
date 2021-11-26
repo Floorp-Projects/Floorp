@@ -16,12 +16,10 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.settings.SupportUtils
-import org.mozilla.fenix.utils.Mockable
 
 /**
  * Component group which encapsulates foreground-friendly services.
  */
-@Mockable
 class Services(
     private val context: Context,
     private val accountManager: FxaAccountManager

@@ -19,8 +19,8 @@ import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.content.res.resolveAttribute
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.SearchFragmentState
+import org.mozilla.fenix.utils.Settings
 
 /**
  * Interface for the Toolbar Interactor. This interface is implemented by objects that want
@@ -53,6 +53,7 @@ interface ToolbarInteractor {
 @Suppress("LongParameterList")
 class ToolbarView(
     private val context: Context,
+    settings: Settings,
     private val interactor: ToolbarInteractor,
     private val historyStorage: HistoryStorage?,
     private val isPrivate: Boolean,
@@ -115,7 +116,7 @@ class ToolbarView(
 
         val engineForSpeculativeConnects = if (!isPrivate) engine else null
 
-        if (context.settings().shouldAutocompleteInAwesomebar) {
+        if (settings.shouldAutocompleteInAwesomebar) {
             ToolbarAutocompleteFeature(
                 view,
                 engineForSpeculativeConnects

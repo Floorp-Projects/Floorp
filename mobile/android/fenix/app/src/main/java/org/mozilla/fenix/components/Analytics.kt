@@ -26,7 +26,6 @@ import org.mozilla.fenix.experiments.NimbusFeatures
 import org.mozilla.fenix.experiments.createNimbus
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.lazyMonitored
-import org.mozilla.fenix.utils.Mockable
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_BUILDID
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_VENDOR
 import org.mozilla.geckoview.BuildConfig.MOZ_APP_VERSION
@@ -35,7 +34,6 @@ import org.mozilla.geckoview.BuildConfig.MOZ_UPDATE_CHANNEL
 /**
  * Component group for all functionality related to analytics e.g. crash reporting and telemetry.
  */
-@Mockable
 class Analytics(
     private val context: Context
 ) {

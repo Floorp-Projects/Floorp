@@ -6,6 +6,7 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.LayoutInflater
 import io.mockk.every
+import io.mockk.mockk
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -26,9 +27,10 @@ class OnboardingToolbarPositionPickerViewHolderTest {
 
     @Before
     fun setup() {
-        val components = testContext.components
         binding = OnboardingToolbarPositionPickerBinding.inflate(LayoutInflater.from(testContext))
-        settings = components.settings
+        settings = mockk(relaxed = true)
+        every { testContext.components.settings } returns settings
+        every { testContext.components.analytics } returns mockk(relaxed = true)
     }
 
     @Test

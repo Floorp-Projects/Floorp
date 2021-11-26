@@ -9,6 +9,8 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.FrameLayout
+import io.mockk.every
+import io.mockk.mockk
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -16,6 +18,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import java.io.File
 
@@ -34,6 +37,7 @@ class PerformanceInflaterTest {
     fun setup() {
         InflationCounter.inflationCount.set(0)
 
+        every { testContext.components.core.engine.profiler } returns mockk(relaxed = true)
         perfInflater = MockInflater(LayoutInflater.from(testContext), testContext)
     }
 

@@ -21,7 +21,6 @@ import mozilla.components.support.ktx.android.os.resetAfter
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.utils.ManufacturerCodes
-import org.mozilla.fenix.utils.Mockable
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
 
@@ -33,8 +32,7 @@ private val mainLooper = Looper.getMainLooper()
 /**
  * Manages strict mode settings for the application.
  */
-@Mockable
-class StrictModeManager(
+open class StrictModeManager(
     config: Config,
 
     // Ideally, we'd pass in a more specific value but there is a circular dependency: StrictMode
@@ -112,7 +110,7 @@ class StrictModeManager(
      *
      * @return the value returned by [functionBlock].
      */
-    fun <R> resetAfter(policy: StrictMode.ThreadPolicy, functionBlock: () -> R): R {
+    open fun <R> resetAfter(policy: StrictMode.ThreadPolicy, functionBlock: () -> R): R {
         fun instrumentedFunctionBlock(): R {
             val startProfilerTime = components.core.engine.profiler?.getProfilerTime()
 

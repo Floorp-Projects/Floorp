@@ -7,6 +7,7 @@ package org.mozilla.fenix.trackingprotection
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.view.isVisible
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.support.test.robolectric.testContext
@@ -17,6 +18,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.CROSS_SITE_TRACKING_COOKIES
 import org.mozilla.fenix.trackingprotection.TrackingProtectionCategory.SOCIAL_MEDIA_TRACKERS
@@ -99,6 +101,7 @@ class TrackingProtectionPanelViewTest {
 
     @Test
     fun testSocialMediaTrackerClick() {
+        every { testContext.components.analytics } returns mockk(relaxed = true)
         view.binding.socialMediaTrackers.performClick()
         verify { interactor.openDetails(SOCIAL_MEDIA_TRACKERS, categoryBlocked = true) }
 
@@ -108,6 +111,7 @@ class TrackingProtectionPanelViewTest {
 
     @Test
     fun testCrossSiteTrackerClick() {
+        every { testContext.components.analytics } returns mockk(relaxed = true)
         view.binding.crossSiteTracking.performClick()
         verify { interactor.openDetails(CROSS_SITE_TRACKING_COOKIES, categoryBlocked = true) }
 

@@ -16,7 +16,6 @@ import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.test.runBlockingTest
 import mozilla.components.feature.intent.processing.IntentProcessor
-import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -28,6 +27,7 @@ import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.helpers.perf.TestStrictModeManager
 import org.mozilla.fenix.shortcut.NewTabShortcutIntentProcessor
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.Robolectric
@@ -201,10 +201,7 @@ class IntentReceiverActivityTest {
         every { activity.settings() } returns settings
         every { activity.components.analytics } returns mockk(relaxed = true)
         every { activity.components.intentProcessors } returns intentProcessors
-
-        // For some reason, activity.components doesn't return application.components, which is the
-        // globally defined TestComponents, so we redirect it.
-        every { activity.components.strictMode } returns testContext.components.strictMode
+        every { activity.components.strictMode } returns TestStrictModeManager()
     }
 
     private inline fun <reified T : IntentProcessor> mockIntentProcessor(): T {

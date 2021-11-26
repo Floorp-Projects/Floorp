@@ -4,11 +4,14 @@
 
 package org.mozilla.fenix.tabstray.browser
 
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.tabstray.TabsTrayStore
 
@@ -17,6 +20,7 @@ class AbstractBrowserTrayListTest {
 
     @Test
     fun `WHEN recyclerview detaches from window THEN notify adapter`() {
+        every { testContext.components.core.store } returns BrowserStore()
         val trayList = PrivateBrowserTrayList(testContext)
         val adapter = mockk<BrowserTabsAdapter>(relaxed = true)
 

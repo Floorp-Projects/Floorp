@@ -83,7 +83,6 @@ import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.advanced.getSelectedLocale
 import org.mozilla.fenix.telemetry.TelemetryMiddleware
-import org.mozilla.fenix.utils.Mockable
 import org.mozilla.fenix.utils.getUndoDelay
 import org.mozilla.geckoview.GeckoRuntime
 import java.util.concurrent.TimeUnit
@@ -91,7 +90,6 @@ import java.util.concurrent.TimeUnit
 /**
  * Component group for all core browser functionality.
  */
-@Mockable
 @Suppress("LargeClass")
 class Core(
     private val context: Context,

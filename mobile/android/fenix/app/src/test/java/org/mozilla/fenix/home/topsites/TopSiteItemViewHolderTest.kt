@@ -5,8 +5,10 @@
 package org.mozilla.fenix.home.topsites
 
 import android.view.LayoutInflater
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertNotNull
@@ -15,6 +17,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.databinding.TopSiteItemBinding
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 
@@ -35,6 +38,7 @@ class TopSiteItemViewHolderTest {
     fun setup() {
         binding = TopSiteItemBinding.inflate(LayoutInflater.from(testContext))
         interactor = mockk(relaxed = true)
+        every { testContext.components.core.icons } returns BrowserIcons(testContext, mockk(relaxed = true))
     }
 
     @Test
@@ -47,6 +51,7 @@ class TopSiteItemViewHolderTest {
 
     @Test
     fun `calls interactor on long click`() {
+        every { testContext.components.analytics } returns mockk(relaxed = true)
         TopSiteItemViewHolder(binding.root, interactor).bind(pocket)
 
         binding.topSiteItem.performLongClick()

@@ -45,14 +45,12 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.sync.SyncedTabsIntegration
-import org.mozilla.fenix.utils.Mockable
 import org.mozilla.fenix.utils.Settings
 
 /**
  * Component group for background services. These are the components that need to be accessed from within a
  * background worker.
  */
-@Mockable
 @Suppress("LongParameterList")
 class BackgroundServices(
     private val context: Context,
