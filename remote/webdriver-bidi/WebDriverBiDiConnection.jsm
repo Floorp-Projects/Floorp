@@ -38,18 +38,33 @@ class WebDriverBiDiConnection extends WebSocketConnection {
   }
 
   /**
-   * Register a new Session to forward the messages to.
+   * Register a new WebDriver Session to forward the messages to.
    *
    * @param {Session} session
    *     The WebDriverSession to register.
    */
   registerSession(session) {
     if (this.session) {
-      throw new error.UnknownError("A session has already been set");
+      throw new error.UnknownError("A WebDriver session has already been set");
     }
 
     this.session = session;
     logger.debug(`Connection ${this.id} attached to session ${session.id}`);
+  }
+
+  /**
+   * Unregister the already set WebDriver session.
+   *
+   * @param {Session} session
+   *     The WebDriverSession to register.
+   */
+  unregisterSession() {
+    if (!this.session) {
+      return;
+    }
+
+    this.session.removeConnection(this);
+    this.session = null;
   }
 
   /**
@@ -117,6 +132,8 @@ class WebDriverBiDiConnection extends WebSocketConnection {
    * Called by the `transport` when the connection is closed.
    */
   onClosed() {
+    this.unregisterSession();
+
     super.onClosed();
   }
 
