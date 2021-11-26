@@ -112,18 +112,18 @@ jobs:
     timeout-minutes: 60
     strategy:
       matrix:
-        api-level: [30]
+        api-level: [28]
         target: [google_apis]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Run subset of UI Tests
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@v2.21.0
         with:
           api-level: ${{ matrix.api-level }}
           target: ${{ matrix.target }}
           arch: x86_64
-          profile: pixel_3
+          profile: pixel_2
           script:
             "JAVA_HOME=$JAVA_HOME_11_X64 && ./gradlew connectedFocusDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=\
             org.mozilla.focus.activity.ThreeDotMainMenuTest#browserMenuItemsTest"
