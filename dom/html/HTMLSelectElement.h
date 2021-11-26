@@ -7,8 +7,8 @@
 #define mozilla_dom_HTMLSelectElement_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/ConstraintValidation.h"
 #include "nsGenericHTMLElement.h"
-#include "nsIConstraintValidation.h"
 
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/UnionTypes.h"
@@ -74,7 +74,7 @@ class MOZ_STACK_CLASS SafeOptionListMutation {
  * Implementation of &lt;select&gt;
  */
 class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
-                                public nsIConstraintValidation {
+                                public ConstraintValidation {
  public:
   /**
    *  IS_SELECTED   whether to set the option(s) to true or false
@@ -98,7 +98,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
     NO_RESELECT = 1 << 4
   };
 
-  using nsIConstraintValidation::GetValidationMessage;
+  using ConstraintValidation::GetValidationMessage;
 
   explicit HTMLSelectElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -298,7 +298,7 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
 
   HTMLOptionsCollection* GetOptions() { return mOptions; }
 
-  // nsIConstraintValidation
+  // ConstraintValidation
   nsresult GetValidationMessage(nsAString& aValidationMessage,
                                 ValidityStateType aType) override;
 

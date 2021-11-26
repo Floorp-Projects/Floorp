@@ -8,9 +8,9 @@
 #define mozilla_dom_HTMLOutputElement_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/ConstraintValidation.h"
 #include "nsGenericHTMLElement.h"
 #include "nsStubMutationObserver.h"
-#include "nsIConstraintValidation.h"
 
 namespace mozilla {
 namespace dom {
@@ -19,9 +19,9 @@ class FormData;
 
 class HTMLOutputElement final : public nsGenericHTMLFormControlElement,
                                 public nsStubMutationObserver,
-                                public nsIConstraintValidation {
+                                public ConstraintValidation {
  public:
-  using nsIConstraintValidation::GetValidationMessage;
+  using ConstraintValidation::GetValidationMessage;
 
   explicit HTMLOutputElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
