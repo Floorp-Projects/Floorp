@@ -26,6 +26,7 @@ class HTMLElement;
 class HTMLFieldSetElement;
 class HTMLFormElement;
 class ShadowRoot;
+class ValidityState;
 
 class ElementInternals final : public nsIFormControl,
                                public nsIConstraintValidation,
@@ -49,6 +50,7 @@ class ElementInternals final : public nsIFormControl,
                     ErrorResult& aRv);
   mozilla::dom::HTMLFormElement* GetForm(ErrorResult& aRv) const;
   bool GetWillValidate(ErrorResult& aRv) const;
+  ValidityState* GetValidity(ErrorResult& aRv);
   already_AddRefed<nsINodeList> GetLabels(ErrorResult& aRv) const;
 
   // nsIFormControl

@@ -12,13 +12,14 @@
 #include "mozilla/dom/HTMLElement.h"
 #include "mozilla/dom/HTMLFieldSetElement.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/dom/ValidityState.h"
 #include "nsContentUtils.h"
 #include "nsGenericHTMLElement.h"
 
 namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ElementInternals, mSubmissionValue,
-                                      mState)
+                                      mState, mValidity)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ElementInternals)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ElementInternals)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ElementInternals)
@@ -132,6 +133,16 @@ bool ElementInternals::GetWillValidate(ErrorResult& aRv) const {
     return false;
   }
   return WillValidate();
+}
+
+// https://html.spec.whatwg.org/#dom-elementinternals-validity
+ValidityState* ElementInternals::GetValidity(ErrorResult& aRv) {
+  if (!mTarget || !mTarget->IsFormAssociatedElement()) {
+    aRv.ThrowNotSupportedError(
+        "Target element is not a form-associated custom element");
+    return nullptr;
+  }
+  return Validity();
 }
 
 // https://html.spec.whatwg.org/#dom-elementinternals-labels
