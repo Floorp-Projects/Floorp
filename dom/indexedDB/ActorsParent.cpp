@@ -3098,10 +3098,16 @@ class FactoryOp
     // if permission is granted.
     PermissionRetry,
 
-    // Ensuring quota manager is created and opening directory on the
-    // PBackground thread. Next step is either SendingResults if quota manager
-    // is not available or DirectoryOpenPending if quota manager is available.
+    // Opening directory or initializing quota manager on the PBackground
+    // thread. Next step is either DirectoryOpenPending if quota manager is
+    // already initialized or QuotaManagerPending if quota manager needs to be
+    // initialized.
     FinishOpen,
+
+    // Waiting for quota manager initialization to complete on the PBackground
+    // thread. Next step is either SendingResults if initialization failed or
+    // DirectoryOpenPending if initialization succeeded.
+    QuotaManagerPending,
 
     // Waiting for directory open allowed on the PBackground thread. The next
     // step is either SendingResults if directory lock failed to acquire, or
@@ -3282,6 +3288,10 @@ class FactoryOp
       ContentParent* aContentParent, const nsACString& aPermissionString);
 
   nsresult FinishOpen();
+
+  nsresult QuotaManagerOpen();
+
+  nsresult OpenDirectory();
 
   // Test whether this FactoryOp needs to wait for the given op.
   bool MustWaitFor(const FactoryOp& aExistingOp);
@@ -15261,6 +15271,10 @@ void FactoryOp::StringifyState(nsACString& aResult) const {
       aResult.AppendLiteral("FinishOpen");
       return;
 
+    case State::QuotaManagerPending:
+      aResult.AppendLiteral("QuotaManagerPending");
+      return;
+
     case State::DirectoryOpenPending:
       aResult.AppendLiteral("DirectoryOpenPending");
       return;
@@ -15762,8 +15776,6 @@ nsresult FactoryOp::FinishOpen() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mState == State::FinishOpen);
   MOZ_ASSERT(!mContentParent);
-  MOZ_ASSERT(!mOriginMetadata.mOrigin.IsEmpty());
-  MOZ_ASSERT(!mDirectoryLock);
 
   if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
       IsActorDestroyed()) {
@@ -15771,7 +15783,37 @@ nsresult FactoryOp::FinishOpen() {
     return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
   }
 
-  QM_TRY(QuotaManager::EnsureCreated());
+  if (QuotaManager::Get()) {
+    QM_TRY(MOZ_TO_RESULT(OpenDirectory()));
+
+    return NS_OK;
+  }
+
+  mState = State::QuotaManagerPending;
+  QuotaManager::GetOrCreate(this);
+
+  return NS_OK;
+}
+
+nsresult FactoryOp::QuotaManagerOpen() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::QuotaManagerPending);
+
+  QM_TRY(OkIf(QuotaManager::Get()), NS_ERROR_FAILURE);
+
+  QM_TRY(MOZ_TO_RESULT(OpenDirectory()));
+
+  return NS_OK;
+}
+
+nsresult FactoryOp::OpenDirectory() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::FinishOpen ||
+             mState == State::QuotaManagerPending);
+  MOZ_ASSERT(!mOriginMetadata.mOrigin.IsEmpty());
+  MOZ_ASSERT(!mDirectoryLock);
+  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
+  MOZ_ASSERT(QuotaManager::Get());
 
   const PersistenceType persistenceType =
       mCommonParams.metadata().persistenceType();
@@ -15799,7 +15841,6 @@ nsresult FactoryOp::FinishOpen() {
         QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsString, dbFile, GetPath));
       }()));
 
-  // Open directory
   RefPtr<DirectoryLock> directoryLock = quotaManager->CreateDirectoryLock(
       persistenceType, mOriginMetadata, Client::IDB,
       /* aExclusive */ false);
@@ -15863,6 +15904,10 @@ FactoryOp::Run() {
 
     case State::FinishOpen:
       QM_TRY(MOZ_TO_RESULT(FinishOpen()), NS_OK, handleError);
+      break;
+
+    case State::QuotaManagerPending:
+      QM_TRY(MOZ_TO_RESULT(QuotaManagerOpen()), NS_OK, handleError);
       break;
 
     case State::DatabaseOpenPending:
