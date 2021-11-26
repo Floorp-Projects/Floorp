@@ -904,10 +904,10 @@ def default_wasm_memory64(is_nightly, cranelift, simulator, target):
     if cranelift:
         return
 
-    if target.cpu == "mips32" or target.cpu == "mips64":
+    if target.cpu == "mips32":
         return
 
-    if simulator and (simulator[0] == "mips32" or simulator[0] == "mips64"):
+    if simulator and simulator[0] == "mips32":
         return
 
     if is_nightly:
@@ -929,11 +929,11 @@ def wasm_memory64(value, cranelift, simulator, target):
     if cranelift:
         die("Memory64 is incompatible with Cranelift")
 
-    if target.cpu == "mips32" or target.cpu == "mips64":
-        die("Memory64 is incompatible with MIPS target")
+    if target.cpu == "mips32":
+        die("Memory64 is incompatible with MIPS32 target")
 
-    if simulator and (simulator[0] == "mips32" or simulator[0] == "mips64"):
-        die("Memory64 is incompatible with MIPS simulator")
+    if simulator and simulator[0] == "mips32":
+        die("Memory64 is incompatible with MIPS32 simulator")
 
     return True
 

@@ -2084,7 +2084,15 @@ void CodeGenerator::visitWasmAddOffset(LWasmAddOffset* lir) {
 }
 
 void CodeGenerator::visitWasmAddOffset64(LWasmAddOffset64* lir) {
-  MOZ_CRASH("NYI");
+  MWasmAddOffset* mir = lir->mir();
+  Register64 base = ToRegister64(lir->base());
+  Register64 out = ToOutRegister64(lir);
+
+  Label ok;
+  masm.ma_addPtrTestCarry(Assembler::CarryClear, out.reg, base.reg,
+                          ImmWord(mir->offset()), &ok);
+  masm.wasmTrap(wasm::Trap::OutOfBounds, mir->bytecodeOffset());
+  masm.bind(&ok);
 }
 
 void CodeGenerator::visitAtomicTypedArrayElementBinop(
