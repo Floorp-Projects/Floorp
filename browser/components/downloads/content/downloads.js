@@ -162,11 +162,9 @@ var DownloadsPanel = {
       DownloadsSummary
     );
 
-    if (DownloadIntegration.downloadSpamProtection) {
-      DownloadIntegration.downloadSpamProtection.spamList.addView(
-        DownloadsView
-      );
-    }
+    DownloadIntegration.getDownloadSpamProtection().spamList.addView(
+      DownloadsView
+    );
 
     DownloadsCommon.log(
       "DownloadsView attached - the panel for this window",
@@ -202,13 +200,9 @@ var DownloadsPanel = {
       DownloadsView.kItemCountLimit
     ).removeView(DownloadsSummary);
     this._unattachEventListeners();
-
-    if (DownloadIntegration.downloadSpamProtection) {
-      DownloadIntegration.downloadSpamProtection.spamList.removeView(
-        DownloadsView
-      );
-    }
-
+    DownloadIntegration.getDownloadSpamProtection().spamList.removeView(
+      DownloadsView
+    );
     this._state = this.kStateUninitialized;
 
     DownloadsSummary.active = false;
