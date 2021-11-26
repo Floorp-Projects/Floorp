@@ -55,7 +55,6 @@ class HTMLElement final : public nsGenericHTMLFormElement {
                         const nsAttrValue* aValue, const nsAttrValue* aOldValue,
                         nsIPrincipal* aMaybeScriptedPrincipal,
                         bool aNotify) override;
-  EventStates IntrinsicState() const override;
 
   // nsGenericHTMLFormElement
   void SetFormInternal(HTMLFormElement* aForm, bool aBindToTree) override;

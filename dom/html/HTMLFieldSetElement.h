@@ -8,9 +8,9 @@
 #define mozilla_dom_HTMLFieldSetElement_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/ConstraintValidation.h"
-#include "mozilla/dom/ValidityState.h"
 #include "nsGenericHTMLElement.h"
+#include "nsIConstraintValidation.h"
+#include "mozilla/dom/ValidityState.h"
 
 namespace mozilla {
 class ErrorResult;
@@ -19,10 +19,10 @@ namespace dom {
 class FormData;
 
 class HTMLFieldSetElement final : public nsGenericHTMLFormControlElement,
-                                  public ConstraintValidation {
+                                  public nsIConstraintValidation {
  public:
-  using ConstraintValidation::GetValidationMessage;
-  using ConstraintValidation::SetCustomValidity;
+  using nsIConstraintValidation::GetValidationMessage;
+  using nsIConstraintValidation::SetCustomValidity;
 
   explicit HTMLFieldSetElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
