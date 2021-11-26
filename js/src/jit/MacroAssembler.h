@@ -270,6 +270,11 @@ constexpr uint32_t WasmCallerTLSOffsetBeforeCall =
 constexpr uint32_t WasmCalleeTLSOffsetBeforeCall =
     wasm::FrameWithTls::calleeTLSOffset() + ShadowStackSpace;
 
+constexpr uint32_t WasmCallerTLSOffsetAfterCall =
+    WasmCallerTLSOffsetBeforeCall + SizeOfReturnAddressAfterCall;
+constexpr uint32_t WasmCalleeTLSOffsetAfterCall =
+    WasmCalleeTLSOffsetBeforeCall + SizeOfReturnAddressAfterCall;
+
 // Allocation sites may be passed to GC thing allocation methods either via a
 // register (for baseline compilation) or an enum indicating one of the
 // catch-all allocation sites (for optimized compilation).

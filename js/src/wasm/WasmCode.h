@@ -557,23 +557,24 @@ class LazyStubTier {
   LazyFuncExportVector exports_;
   size_t lastStubSegmentIndex_;
 
-  bool createMany(const Uint32Vector& funcExportIndices,
-                  const CodeTier& codeTier, bool flushAllThreadsIcaches,
-                  size_t* stubSegmentIndex);
+  bool createManyEntryStubs(const Uint32Vector& funcExportIndices,
+                            const CodeTier& codeTier,
+                            bool flushAllThreadsIcaches,
+                            size_t* stubSegmentIndex);
 
  public:
   LazyStubTier() : lastStubSegmentIndex_(0) {}
 
-  bool empty() const { return stubSegments_.empty(); }
-  bool hasStub(uint32_t funcIndex) const;
-
-  // Returns a pointer to the raw interpreter entry of a given function which
-  // stubs have been lazily generated.
-  void* lookupInterpEntry(uint32_t funcIndex) const;
-
   // Creates one lazy stub for the exported function, for which the jit entry
   // will be set to the lazily-generated one.
-  bool createOne(uint32_t funcExportIndex, const CodeTier& codeTier);
+  bool createOneEntryStub(uint32_t funcExportIndex, const CodeTier& codeTier);
+
+  bool entryStubsEmpty() const { return stubSegments_.empty(); }
+  bool hasEntryStub(uint32_t funcIndex) const;
+
+  // Returns a pointer to the raw interpreter entry of a given function for
+  // which stubs have been lazily generated.
+  void* lookupInterpEntry(uint32_t funcIndex) const;
 
   // Create one lazy stub for all the functions in funcExportIndices, putting
   // them in a single stub. Jit entries won't be used until
