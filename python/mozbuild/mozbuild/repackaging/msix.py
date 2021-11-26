@@ -610,7 +610,7 @@ def repackage_msix(
 
     locales = ["en-US"] + list(sorted(locales))
     resource_language_list = "\n".join(
-        f'    <Resource Language="{locale}" />' for locale in sorted(locales)
+        f'    <Resource Language="{locale}" />' for locale in locales
     )
 
     defines = {
