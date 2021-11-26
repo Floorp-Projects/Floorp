@@ -106,8 +106,7 @@ class QuotaManager final : public BackgroundThreadObject {
 
   static Result<MovingNotNull<RefPtr<QuotaManager>>, nsresult> GetOrCreate();
 
-  // TODO: Remove this overload once all clients use the synchronous GetOrCreate
-  static void GetOrCreate(nsIRunnable* aCallback);
+  static Result<Ok, nsresult> EnsureCreated();
 
   // Returns a non-owning reference.
   static QuotaManager* Get();
