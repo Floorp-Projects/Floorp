@@ -159,7 +159,7 @@ NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED(
 NS_IMPL_ELEMENT_CLONE(HTMLSelectElement)
 
 void HTMLSelectElement::SetCustomValidity(const nsAString& aError) {
-  ConstraintValidation::SetCustomValidity(aError);
+  nsIConstraintValidation::SetCustomValidity(aError);
 
   UpdateState(true);
 }
@@ -1507,8 +1507,8 @@ nsresult HTMLSelectElement::GetValidationMessage(nsAString& aValidationMessage,
       return rv;
     }
     default: {
-      return ConstraintValidation::GetValidationMessage(aValidationMessage,
-                                                        aType);
+      return nsIConstraintValidation::GetValidationMessage(aValidationMessage,
+                                                           aType);
     }
   }
 }

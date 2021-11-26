@@ -928,7 +928,7 @@ bool HTMLTextAreaElement::IsValueEmpty() const {
 }
 
 void HTMLTextAreaElement::SetCustomValidity(const nsAString& aError) {
-  ConstraintValidation::SetCustomValidity(aError);
+  nsIConstraintValidation::SetCustomValidity(aError);
 
   UpdateState(true);
 }
@@ -1039,8 +1039,8 @@ nsresult HTMLTextAreaElement::GetValidationMessage(
       aValidationMessage = message;
     } break;
     default:
-      rv =
-          ConstraintValidation::GetValidationMessage(aValidationMessage, aType);
+      rv = nsIConstraintValidation::GetValidationMessage(aValidationMessage,
+                                                         aType);
   }
 
   return rv;
