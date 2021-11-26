@@ -23,36 +23,17 @@
 
 namespace js {
 
-// This is a tagged pointer to an atom that duplicates the atom's pinned flag so
-// that we don't have to check the atom itself when marking pinned atoms (there
-// can be a great many atoms). See bug 1445196.
-class AtomStateEntry {
-  uintptr_t bits;
-
- public:
-  AtomStateEntry() : bits(0) {}
-  AtomStateEntry(const AtomStateEntry& other) = default;
-  explicit AtomStateEntry(JSAtom* ptr) : bits(uintptr_t(ptr)) {}
-
-  JSAtom* asPtrUnbarriered() const {
-    MOZ_ASSERT(bits);
-    return reinterpret_cast<JSAtom*>(bits);
-  }
-
-  JSAtom* asPtr(JSContext* cx) const;
-};
-
 struct AtomHasher {
   struct Lookup;
   static inline HashNumber hash(const Lookup& l);
-  static MOZ_ALWAYS_INLINE bool match(const AtomStateEntry& entry,
+  static MOZ_ALWAYS_INLINE bool match(const WeakHeapPtrAtom& entry,
                                       const Lookup& lookup);
-  static void rekey(AtomStateEntry& k, const AtomStateEntry& newKey) {
+  static void rekey(WeakHeapPtrAtom& k, const WeakHeapPtrAtom& newKey) {
     k = newKey;
   }
 };
 
-using AtomSet = JS::GCHashSet<AtomStateEntry, AtomHasher, SystemAllocPolicy>;
+using AtomSet = JS::GCHashSet<WeakHeapPtrAtom, AtomHasher, SystemAllocPolicy>;
 
 // This class is a wrapper for AtomSet that is used to ensure the AtomSet is
 // not modified. It should only expose read-only methods from AtomSet.
