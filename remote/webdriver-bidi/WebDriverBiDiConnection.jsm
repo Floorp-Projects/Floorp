@@ -60,7 +60,7 @@ class WebDriverBiDiConnection extends WebSocketConnection {
    */
   send(data) {
     const payload = JSON.stringify(data, null, Log.verbose ? "\t" : null);
-    logger.trace(truncate`${this.constructor.name} ${this.id} <- ${payload}`);
+    logger.debug(truncate`${this.constructor.name} ${this.id} <- ${payload}`);
 
     super.send(data);
   }
@@ -131,7 +131,7 @@ class WebDriverBiDiConnection extends WebSocketConnection {
    */
   async onPacket(packet) {
     const payload = JSON.stringify(packet, null, Log.verbose ? "\t" : null);
-    logger.trace(truncate`${this.constructor.name} ${this.id} -> ${payload}`);
+    logger.debug(truncate`${this.constructor.name} ${this.id} -> ${payload}`);
 
     const { id, method, params } = packet;
 
