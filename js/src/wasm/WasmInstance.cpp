@@ -844,6 +844,14 @@ static int32_t MemoryInit(Instance* instance, I dstOffset, uint32_t srcOffset,
   return 0;
 }
 
+void* Instance::getIndirectStub(uint32_t funcIndex, TlsData* targetTlsData,
+                                const Tier tier) const {
+  MOZ_ASSERT(funcIndex != NullFuncIndex);
+
+  auto stubs = code(tier).lazyStubs().lock();
+  return stubs->lookupIndirectStub(funcIndex, targetTlsData);
+}
+
 bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
                          uint32_t dstOffset, uint32_t srcOffset, uint32_t len) {
   Table& table = *tables_[tableIndex];
