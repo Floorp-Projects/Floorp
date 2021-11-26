@@ -179,6 +179,7 @@ void CreateElementTransaction::InsertNewNode(ErrorResult& aError) {
   // We still know a child, but the child is different element's child,
   // we should just return error.
   if (NS_WARN_IF(mPointToInsert.GetChild() &&
+                 mPointToInsert.GetChild()->IsInComposedDoc() &&
                  mPointToInsert.GetContainer() !=
                      mPointToInsert.GetChild()->GetParentNode())) {
     // XXX Is NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE better? Since it won't
