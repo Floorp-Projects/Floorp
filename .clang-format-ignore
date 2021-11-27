@@ -96,7 +96,9 @@ gfx/angle/.*
 gfx/cairo/.*
 gfx/graphite2/.*
 gfx/harfbuzz/.*
-gfx/ots/.*
+gfx/ots/src/.*
+gfx/ots/include/.*
+gfx/ots/tests/.*
 gfx/qcms/.*
 gfx/sfntly/.*
 gfx/skia/.*
@@ -167,7 +169,8 @@ modules/fdlibm/.*
 modules/freetype2/.*
 modules/libbz2/.*
 modules/pdfium/.*
-modules/woff2/.*
+modules/woff2/include/.*
+modules/woff2/src/.*
 modules/xz-embedded/.*
 modules/zlib/.*
 mozglue/misc/decimal/.*
