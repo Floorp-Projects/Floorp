@@ -8,7 +8,6 @@
 #include "SharedSurfacesParent.h"
 #include "CompositorManagerChild.h"
 #include "mozilla/gfx/gfxVars.h"
-#include "mozilla/image/SourceSurfaceBlobImage.h"
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/SourceSurfaceSharedData.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
@@ -395,17 +394,7 @@ nsresult SharedSurfacesChild::ShareBlob(ImageContainer* aContainer,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  auto* blobSurface =
-      static_cast<image::SourceSurfaceBlobImage*>(surface.get());
-
-  Maybe<wr::BlobImageKey> key =
-      blobSurface->UpdateKey(aManager->LayerManager(), aResources);
-  if (!key) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aKey = key.value();
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 /* static */
