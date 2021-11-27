@@ -1,0 +1,29 @@
+diff --git a/modules/woff2/src/woff2_dec.cc b/modules/woff2/src/woff2_dec.cc
+--- a/modules/woff2/src/woff2_dec.cc
++++ b/modules/woff2/src/woff2_dec.cc
+@@ -19,7 +19,6 @@
+ #include <memory>
+ #include <utility>
+ 
+-#include <brotli/decode.h>
+ #include "./buffer.h"
+ #include "./port.h"
+ #include "./round.h"
+@@ -28,6 +27,8 @@
+ #include "./variable_length.h"
+ #include "./woff2_common.h"
+ 
++#include "../RLBoxWOFF2Sandbox.h"
++
+ namespace woff2 {
+ 
+ namespace {
+@@ -758,7 +759,7 @@ bool ReconstructTransformedHmtx(const uint8_t* transformed_buf,
+ bool Woff2Uncompress(uint8_t* dst_buf, size_t dst_size,
+   const uint8_t* src_buf, size_t src_size) {
+   size_t uncompressed_size = dst_size;
+-  BrotliDecoderResult result = BrotliDecoderDecompress(
++  BrotliDecoderResult result = RLBoxBrotliDecoderDecompress(
+       src_size, src_buf, &uncompressed_size, dst_buf);
+   if (PREDICT_FALSE(result != BROTLI_DECODER_RESULT_SUCCESS ||
+                     uncompressed_size != dst_size)) {
