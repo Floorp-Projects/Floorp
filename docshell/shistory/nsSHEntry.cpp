@@ -997,6 +997,12 @@ nsSHEntry::GetContentViewer(nsIContentViewer** aResult) {
 }
 
 NS_IMETHODIMP
+nsSHEntry::GetIsInBFCache(bool* aResult) {
+  *aResult = !!GetState()->mContentViewer;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSHEntry::Clone(nsISHEntry** aResult) {
   nsCOMPtr<nsISHEntry> entry = new nsSHEntry(*this);
   entry.forget(aResult);
