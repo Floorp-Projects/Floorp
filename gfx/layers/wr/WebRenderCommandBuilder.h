@@ -21,6 +21,10 @@
 
 namespace mozilla {
 
+namespace image {
+class WebRenderImageProvider;
+}
+
 namespace layers {
 
 class ImageClient;
@@ -65,8 +69,8 @@ class WebRenderCommandBuilder final {
       mozilla::wr::ImageRendering aRendering, const StackingContextHelper& aSc,
       gfx::IntSize& aSize, const Maybe<LayoutDeviceRect>& aAsyncImageBounds);
 
-  Maybe<wr::BlobImageKey> CreateBlobImageKey(
-      nsDisplayItem* aItem, ImageContainer* aContainer,
+  Maybe<wr::ImageKey> CreateImageProviderKey(
+      nsDisplayItem* aItem, image::WebRenderImageProvider* aProvider,
       mozilla::wr::IpcResourceUpdateQueue& aResources);
 
   WebRenderUserDataRefTable* GetWebRenderUserDataTable() {
@@ -79,11 +83,12 @@ class WebRenderCommandBuilder final {
                  const StackingContextHelper& aSc,
                  const LayoutDeviceRect& aRect, const LayoutDeviceRect& aClip);
 
-  bool PushBlobImage(nsDisplayItem* aItem, ImageContainer* aContainer,
-                     mozilla::wr::DisplayListBuilder& aBuilder,
-                     mozilla::wr::IpcResourceUpdateQueue& aResources,
-                     const LayoutDeviceRect& aRect,
-                     const LayoutDeviceRect& aClip);
+  bool PushImageProvider(nsDisplayItem* aItem,
+                         image::WebRenderImageProvider* aProvider,
+                         mozilla::wr::DisplayListBuilder& aBuilder,
+                         mozilla::wr::IpcResourceUpdateQueue& aResources,
+                         const LayoutDeviceRect& aRect,
+                         const LayoutDeviceRect& aClip);
 
   Maybe<wr::ImageMask> BuildWrMaskImage(
       nsDisplayMasksAndClipPaths* aMaskItem, wr::DisplayListBuilder& aBuilder,
