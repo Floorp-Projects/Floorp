@@ -882,8 +882,8 @@
     <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Opne i ny fane</string>
     <!-- History overflow menu open in private tab button -->
     <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Opne i privat fane</string>
-    <!-- Text for the button to delete a single history item -->
-    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">Slett</string>
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">Slett</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d valde</string>
@@ -1258,7 +1258,7 @@
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL kopiert</string>
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text_1">Dette er eksempeltekst. Han er her for å vise korleis tekst vil visast når du aukear eller reduserer storleiken med denne innstillinga.</string>
+    <string name="accessibility_text_size_sample_text_1">Dette er eksempeltekst. Han er her for å vise korleis tekst vil visast når du aukar eller reduserer storleiken med denne innstillinga.</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">Gjer tekst på nettstadar større eller mindre</string>
     <!-- Title for Accessibility Text Size Scaling Preference -->
