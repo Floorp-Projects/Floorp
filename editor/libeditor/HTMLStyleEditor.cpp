@@ -615,10 +615,11 @@ nsresult HTMLEditor::SetInlinePropertyOnNodeImpl(nsIContent& aContent,
       if (!canMoveIntoNextSibling.inspect()) {
         return NS_OK;
       }
-      rv = JoinNodesWithTransaction(*previousSibling, *nextSibling);
-      NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+      JoinNodesResult joinNodesResult =
+          JoinNodesWithTransaction(*previousSibling, *nextSibling);
+      NS_WARNING_ASSERTION(joinNodesResult.Succeeded(),
                            "HTMLEditor::JoinNodesWithTransaction() failed");
-      return rv;
+      return joinNodesResult.Rv();
     }
   }
 

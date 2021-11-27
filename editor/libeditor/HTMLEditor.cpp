@@ -4159,29 +4159,32 @@ nsresult HTMLEditor::CollapseAdjacentTextNodes(nsRange& aInRange) {
       textNodes);
 
   // now that I have a list of text nodes, collapse adjacent text nodes
-  // NOTE: assumption that JoinNodes keeps the righthand node
-  while (textNodes.Length() > 1) {
-    // we assume a textNodes entry can't be nullptr
-    Text* leftTextNode = textNodes[0];
-    Text* rightTextNode = textNodes[1];
-    NS_ASSERTION(leftTextNode && rightTextNode,
-                 "left or rightTextNode null in CollapseAdjacentTextNodes");
+  while (textNodes.Length() > 1u) {
+    OwningNonNull<Text>& leftTextNode = textNodes[0u];
+    OwningNonNull<Text>& rightTextNode = textNodes[1u];
 
-    // get the prev sibling of the right node, and see if its leftTextNode
-    nsIContent* previousSiblingOfRightTextNode =
-        rightTextNode->GetPreviousSibling();
-    if (previousSiblingOfRightTextNode &&
-        previousSiblingOfRightTextNode == leftTextNode) {
-      nsresult rv = JoinNodesWithTransaction(MOZ_KnownLive(*leftTextNode),
-                                             MOZ_KnownLive(*rightTextNode));
-      if (NS_FAILED(rv)) {
-        NS_WARNING("HTMLEditor::JoinNodesWithTransaction() failed");
-        return rv;
-      }
+    // If the text nodes are not direct siblings, we shouldn't join them, and
+    // we don't need to handle the left one anymore.
+    if (rightTextNode->GetPreviousSibling() != leftTextNode) {
+      textNodes.RemoveElementAt(0u);
+      continue;
     }
 
-    // remove the leftmost text node from the list
-    textNodes.RemoveElementAt(0);
+    JoinNodesResult result = JoinNodesWithTransaction(
+        MOZ_KnownLive(*leftTextNode), MOZ_KnownLive(*rightTextNode));
+    if (MOZ_UNLIKELY(result.Failed())) {
+      NS_WARNING("HTMLEditor::JoinNodesWithTransaction() failed");
+      return result.Rv();
+    }
+    if (MOZ_LIKELY(result.RemovedContent() == leftTextNode)) {
+      textNodes.RemoveElementAt(0u);
+    } else if (MOZ_LIKELY(result.RemovedContent() == rightTextNode)) {
+      textNodes.RemoveElementAt(1u);
+    } else {
+      MOZ_ASSERT_UNREACHABLE(
+          "HTMLEditor::JoinNodesWithTransaction() removed unexpected node");
+      return NS_ERROR_UNEXPECTED;
+    }
   }
 
   return NS_OK;
@@ -4675,8 +4678,8 @@ void HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   }
 }
 
-nsresult HTMLEditor::JoinNodesWithTransaction(nsIContent& aLeftContent,
-                                              nsIContent& aRightContent) {
+JoinNodesResult HTMLEditor::JoinNodesWithTransaction(
+    nsIContent& aLeftContent, nsIContent& aRightContent) {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(&aLeftContent != &aRightContent);
   MOZ_ASSERT(aLeftContent.GetParentNode());
@@ -4687,7 +4690,7 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsIContent& aLeftContent,
   AutoEditSubActionNotifier startToHandleEditSubAction(
       *this, EditSubAction::eJoinNodes, nsIEditor::ePrevious, ignoredError);
   if (NS_WARN_IF(ignoredError.ErrorCodeIs(NS_ERROR_EDITOR_DESTROYED))) {
-    return ignoredError.StealNSResult();
+    return JoinNodesResult(ignoredError.StealNSResult());
   }
   NS_WARNING_ASSERTION(
       !ignoredError.Failed(),
@@ -4697,7 +4700,7 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsIContent& aLeftContent,
   // Find the offset between the nodes to be joined.
   EditorDOMPoint atRightContent(&aRightContent);
   if (MOZ_UNLIKELY(NS_WARN_IF(!atRightContent.IsSet()))) {
-    return NS_ERROR_FAILURE;
+    return JoinNodesResult(NS_ERROR_FAILURE);
   }
   Unused << atRightContent.Offset();  // Compute the offset first.
 
@@ -4708,7 +4711,7 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsIContent& aLeftContent,
       JoinNodeTransaction::MaybeCreate(*this, aLeftContent, aRightContent);
   if (MOZ_UNLIKELY(!transaction)) {
     NS_WARNING("JoinNodeTransaction::MaybeCreate() failed");
-    return NS_ERROR_FAILURE;
+    return JoinNodesResult(NS_ERROR_FAILURE);
   }
 
   nsresult rv;
@@ -4727,7 +4730,7 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsIContent& aLeftContent,
   // responsibility for the remaning things.
   if (MOZ_UNLIKELY(NS_WARN_IF(aRightContent.GetParentNode() !=
                               atRightContent.GetContainer()))) {
-    return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
+    return JoinNodesResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
   // Be aware, the joined point should be created for each call because
@@ -4765,7 +4768,16 @@ nsresult HTMLEditor::JoinNodesWithTransaction(nsIContent& aLeftContent,
     }
   }
 
-  return MOZ_UNLIKELY(NS_WARN_IF(Destroyed())) ? NS_ERROR_EDITOR_DESTROYED : rv;
+  if (MOZ_UNLIKELY(NS_WARN_IF(Destroyed()))) {
+    return JoinNodesResult(NS_ERROR_EDITOR_DESTROYED);
+  }
+  if (MOZ_UNLIKELY(NS_FAILED(rv))) {
+    return JoinNodesResult(rv);
+  }
+  return JoinNodesResult(
+      EditorDOMPoint(&aRightContent,
+                     std::min(oldLeftNodeLen, aRightContent.Length())),
+      aLeftContent, JoinNodesDirection::LeftNodeIntoRightNode);
 }
 
 nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
