@@ -19,7 +19,6 @@ UNIFIED_SOURCES += [
 include("/ipc/chromium/chromium-config.mozbuild")
 
 LOCAL_INCLUDES += [
-    "!/security/rlbox",
     "../base",
     "../forms",
     "../generic",
