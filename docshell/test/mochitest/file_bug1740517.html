@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script>
+    window.addEventListener("pageshow", ({ persisted }) => {
+      let bc = new BroadcastChannel("bug1740517");
+      bc.addEventListener("message", ({ data }) => {
+        switch (data) {
+          case "enter_data":
+            document.getElementById("formElement").value = "test";
+            break;
+          case "navigate":
+            bc.close();
+            document.location = "file_bug1740517.html?1";
+            break;
+          case "back":
+            bc.close();
+            history.back();
+            break;
+          case "close":
+            bc.close();
+            window.close();
+            break;
+        }
+      });
+      bc.postMessage({ persisted, formData: document.getElementById("formElement").value });
+    });
+  </script>
+</head>
+<body>
+  <input id="formElement" type="text" value="initial">
+</body>
+</html>
