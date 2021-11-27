@@ -325,7 +325,7 @@ class Chrome(BrowserSetup):
     def setup_kwargs(self, kwargs):
         browser_channel = kwargs["browser_channel"]
         if kwargs["binary"] is None:
-            binary = self.browser.find_binary(channel=browser_channel)
+            binary = self.browser.find_binary(venv_path=self.venv.path, channel=browser_channel)
             if binary:
                 kwargs["binary"] = binary
             else:
