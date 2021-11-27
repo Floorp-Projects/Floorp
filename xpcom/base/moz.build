@@ -131,7 +131,6 @@ EXPORTS.mozilla += [
     "NSPRLogModulesParser.h",
     "OwningNonNull.h",
     "RLBoxSandboxPool.h",
-    "RLBoxUtils.h",
     "ShutdownPhase.h",
     "SizeOfState.h",
     "StaticLocalPtr.h",

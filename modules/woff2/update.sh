@@ -22,6 +22,3 @@ echo "###"
 echo "### Updated woff2 to $COMMIT."
 echo "### Remember to verify and commit the changes to source control!"
 echo "###"
-
-echo "Applying woff2-rlbox.patch..."
-patch -p3 < woff2-rlbox.patch
