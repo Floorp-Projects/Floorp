@@ -653,6 +653,16 @@ RasterImage::GetImageContainerAtSize(WindowRenderer* aRenderer,
                                aOutContainer);
 }
 
+NS_IMETHODIMP_(ImgDrawResult)
+RasterImage::GetImageProvider(WindowRenderer* aRenderer,
+                              const gfx::IntSize& aSize,
+                              const Maybe<SVGImageContext>& aSVGContext,
+                              const Maybe<ImageIntRegion>& aRegion,
+                              uint32_t aFlags,
+                              WebRenderImageProvider** aProvider) {
+  return ImgDrawResult::NOT_SUPPORTED;
+}
+
 size_t RasterImage::SizeOfSourceWithComputedFallback(
     SizeOfState& aState) const {
   return mSourceBuffer->SizeOfIncludingThisWithComputedFallback(
