@@ -452,6 +452,81 @@ class MOZ_STACK_CLASS SplitNodeResult final {
 };
 
 /*****************************************************************************
+ * JoinNodesResult is a simple class for HTMLEditor::JoinNodesWithTransaction().
+ * This makes the callers' code easier to read.
+ *****************************************************************************/
+class MOZ_STACK_CLASS JoinNodesResult final {
+ public:
+  bool Succeeded() const { return NS_SUCCEEDED(mRv); }
+  bool Failed() const { return NS_FAILED(mRv); }
+  nsresult Rv() const { return mRv; }
+  bool Handled() const { return Succeeded(); }
+  bool EditorDestroyed() const { return mRv == NS_ERROR_EDITOR_DESTROYED; }
+
+  MOZ_KNOWN_LIVE nsIContent* ExistingContent() const {
+    MOZ_ASSERT(Succeeded());
+    return mJoinedPoint.ContainerAsContent();
+  }
+  template <typename EditorDOMPointType>
+  EditorDOMPointType AtExistingContent() const {
+    MOZ_ASSERT(Succeeded());
+    return EditorDOMPointType(mJoinedPoint.ContainerAsContent());
+  }
+
+  MOZ_KNOWN_LIVE nsIContent* RemovedContent() const {
+    MOZ_ASSERT(Succeeded());
+    return mRemovedContent;
+  }
+  template <typename EditorDOMPointType>
+  EditorDOMPointType AtRemovedContent() const {
+    MOZ_ASSERT(Succeeded());
+    if (mRemovedContent) {
+      return EditorDOMPointType(mRemovedContent);
+    }
+    return EditorDOMPointType();
+  }
+
+  template <typename EditorDOMPointType>
+  EditorDOMPointType AtJoinedPoint() const {
+    MOZ_ASSERT(Succeeded());
+    return mJoinedPoint;
+  }
+
+  JoinNodesResult() = delete;
+
+  /**
+   * This constructor shouldn't be used by anybody except methods which
+   * use this as result when it succeeds.
+   *
+   * @param aJoinedPoint        First child of right node or first character.
+   * @param aRemovedContent     The node which was removed from the parent.
+   * @param aDirection          The join direction which the HTML editor tried
+   *                            to join the nodes with.
+   */
+  JoinNodesResult(const EditorDOMPoint& aJoinedPoint,
+                  nsIContent& aRemovedContent, JoinNodesDirection aDirection)
+      : mJoinedPoint(aJoinedPoint),
+        mRemovedContent(&aRemovedContent),
+        mRv(NS_OK) {
+    MOZ_DIAGNOSTIC_ASSERT(aJoinedPoint.IsInContentNode());
+  }
+
+  /**
+   * This constructor shouldn't be used by anybody except methods which
+   * use this as error result when it fails.
+   */
+  explicit JoinNodesResult(nsresult aRv) : mRv(aRv) {
+    MOZ_DIAGNOSTIC_ASSERT(NS_FAILED(mRv));
+  }
+
+ private:
+  EditorDOMPoint mJoinedPoint;
+  nsCOMPtr<nsIContent> mRemovedContent;
+
+  nsresult mRv;
+};
+
+/*****************************************************************************
  * SplitRangeOffFromNodeResult class is a simple class for methods which split a
  * node at 2 points for making part of the node split off from the node.
  *****************************************************************************/

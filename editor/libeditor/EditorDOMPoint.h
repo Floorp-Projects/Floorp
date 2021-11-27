@@ -294,6 +294,18 @@ class EditorDOMPointBase final {
   }
 
   /**
+   * GetCurrentChildAtOffset() returns current child at mOffset.
+   * I.e., mOffset needs to be fixed before calling this.
+   */
+  nsIContent* GetCurrentChildAtOffset() const {
+    MOZ_ASSERT(mOffset.isSome());
+    if (mOffset.isNothing()) {
+      return GetChild();
+    }
+    return mParent ? mParent->GetChildAt_Deprecated(*mOffset) : nullptr;
+  }
+
+  /**
    * GetChildOrContainerIfDataNode() returns the child content node,
    * or container content node if the container is a data node.
    */
