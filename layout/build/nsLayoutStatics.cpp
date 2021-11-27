@@ -129,6 +129,7 @@
 #include "mozilla/intl/nsComplexBreaker.h"
 
 #include "nsRLBoxExpatDriver.h"
+#include "RLBoxWOFF2Types.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -297,6 +298,8 @@ nsresult nsLayoutStatics::Initialize() {
   ComplexBreaker::Initialize();
 
   RLBoxExpatSandboxPool::Initialize();
+
+  RLBoxWOFF2SandboxPool::Initalize();
 
   return NS_OK;
 }
