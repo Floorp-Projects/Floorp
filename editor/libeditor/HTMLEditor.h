@@ -1821,7 +1821,7 @@ class HTMLEditor final : public EditorBase,
    * @param aRightContent  The node which will be new container of the content
    *                       of aLeftContent.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT JoinNodesResult
   JoinNodesWithTransaction(nsIContent& aLeftContent, nsIContent& aRightContent);
 
   /**

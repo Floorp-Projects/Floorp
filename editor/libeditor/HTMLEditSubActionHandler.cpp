@@ -13,6 +13,7 @@
 #include "EditAction.h"
 #include "EditorDOMPoint.h"
 #include "EditorUtils.h"
+#include "HTMLEditHelpers.h"
 #include "HTMLEditUtils.h"
 #include "TypeInState.h"  // for SpecifiedStyle
 #include "WSRunObject.h"
@@ -8063,55 +8064,57 @@ nsresult HTMLEditor::JoinNearestEditableNodesWithTransaction(
     }
   }
 
-  EditorDOMPoint ret(&aNodeRight, aNodeLeft.Length());
-
   // Separate join rules for differing blocks
   if (HTMLEditUtils::IsAnyListElement(&aNodeLeft) || aNodeLeft.IsText()) {
     // For lists, merge shallow (wouldn't want to combine list items)
-    nsresult rv = JoinNodesWithTransaction(aNodeLeft, aNodeRight);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "HTMLEditor::JoinNodesWithTransaction failed");
-    if (NS_SUCCEEDED(rv)) {
-      // XXX `ret` may point invalid point if mutation event listener changed
-      //     the previous siblings...
-      *aNewFirstChildOfRightNode = std::move(ret);
+    JoinNodesResult joinNodesResult =
+        JoinNodesWithTransaction(aNodeLeft, aNodeRight);
+    if (MOZ_UNLIKELY(joinNodesResult.Failed())) {
+      NS_WARNING("HTMLEditor::JoinNodesWithTransaction failed");
+      return joinNodesResult.Rv();
     }
-    return rv;
+    *aNewFirstChildOfRightNode =
+        joinNodesResult.AtJoinedPoint<EditorDOMPoint>();
+    return joinNodesResult.Rv();
   }
 
   // Remember the last left child, and first right child
-  nsCOMPtr<nsIContent> lastLeft = HTMLEditUtils::GetLastChild(
-      aNodeLeft, {WalkTreeOption::IgnoreNonEditableNode});
-  if (NS_WARN_IF(!lastLeft)) {
+  nsCOMPtr<nsIContent> lastEditableChildOfLeftContent =
+      HTMLEditUtils::GetLastChild(aNodeLeft,
+                                  {WalkTreeOption::IgnoreNonEditableNode});
+  if (MOZ_UNLIKELY(NS_WARN_IF(!lastEditableChildOfLeftContent))) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIContent> firstRight = HTMLEditUtils::GetFirstChild(
-      aNodeRight, {WalkTreeOption::IgnoreNonEditableNode});
-  if (NS_WARN_IF(!firstRight)) {
+  nsCOMPtr<nsIContent> firstEditableChildOfRightContent =
+      HTMLEditUtils::GetFirstChild(aNodeRight,
+                                   {WalkTreeOption::IgnoreNonEditableNode});
+  if (NS_WARN_IF(!firstEditableChildOfRightContent)) {
     return NS_ERROR_FAILURE;
   }
 
   // For list items, divs, etc., merge smart
-  nsresult rv = JoinNodesWithTransaction(aNodeLeft, aNodeRight);
-  if (NS_FAILED(rv)) {
+  JoinNodesResult joinNodesResult =
+      JoinNodesWithTransaction(aNodeLeft, aNodeRight);
+  if (MOZ_UNLIKELY(joinNodesResult.Failed())) {
     NS_WARNING("HTMLEditor::JoinNodesWithTransaction() failed");
-    return rv;
+    return joinNodesResult.Rv();
   }
 
-  if ((lastLeft->IsText() || lastLeft->IsElement()) &&
-      HTMLEditUtils::CanContentsBeJoined(*lastLeft, *firstRight,
+  if ((lastEditableChildOfLeftContent->IsText() ||
+       lastEditableChildOfLeftContent->IsElement()) &&
+      HTMLEditUtils::CanContentsBeJoined(*lastEditableChildOfLeftContent,
+                                         *firstEditableChildOfRightContent,
                                          StyleDifference::CompareIfElements)) {
     nsresult rv = JoinNearestEditableNodesWithTransaction(
-        *lastLeft, *firstRight, aNewFirstChildOfRightNode);
+        *lastEditableChildOfLeftContent, *firstEditableChildOfRightContent,
+        aNewFirstChildOfRightNode);
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "HTMLEditor::JoinNearestEditableNodesWithTransaction() failed");
     return rv;
   }
-  // XXX `ret` may point invalid point if mutation event listener changed
-  //     the previous siblings...
-  *aNewFirstChildOfRightNode = std::move(ret);
+  *aNewFirstChildOfRightNode = joinNodesResult.AtJoinedPoint<EditorDOMPoint>();
   return NS_OK;
 }
 
