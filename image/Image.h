@@ -22,6 +22,7 @@
 #include "nsStringFwd.h"
 #include "ProgressTracker.h"
 #include "SurfaceCache.h"
+#include "WebRenderImageProvider.h"
 
 class imgRequest;
 class nsIRequest;
@@ -325,6 +326,8 @@ class ImageResource : public Image {
   void CollectSizeOfSurfaces(nsTArray<SurfaceMemoryCounter>& aCounters,
                              MallocSizeOf aMallocSizeOf) const override;
 
+  ImageProviderId GetImageProviderId() const { return mProviderId; }
+
  protected:
   explicit ImageResource(nsIURI* aURI);
   ~ImageResource();
@@ -501,6 +504,7 @@ class ImageResource : public Image {
   AutoTArray<ImageContainerEntry, 1> mImageContainers;
   layers::ImageContainer::ProducerID mImageProducerID;
   layers::ImageContainer::FrameID mLastFrameID;
+  ImageProviderId mProviderId;
 };
 
 }  // namespace image
