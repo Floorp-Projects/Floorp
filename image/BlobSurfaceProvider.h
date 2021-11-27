@@ -12,6 +12,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "ImageRegion.h"
+#include "ISurfaceProvider.h"
 
 #include <vector>
 
@@ -70,45 +71,56 @@ namespace image {
 class SVGDocumentWrapper;
 
 /**
- * This class is used to wrap blob recordings stored in ImageContainers, used
- * by SVG images. Unlike rasterized images stored in SourceSurfaceSharedData,
- * each SourceSurfaceBlobImage can only be used by one WebRenderLayerManager
- * because the recording is tied to a particular instance.
+ * An ISurfaceProvider that manages blob recordings of SVG images. Unlike the
+ * rasterized ISurfaceProviders, it only provides a recording which may be
+ * replayed in the compositor process by WebRender. It may be invalidated
+ * directly in order to reuse the resource ids and underlying buffers when the
+ * SVG image has changed (e.g. it is animated).
  */
-class SourceSurfaceBlobImage final : public gfx::SourceSurface {
+class BlobSurfaceProvider final : public ISurfaceProvider {
  public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceBlobImage, override)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BlobSurfaceProvider, override)
 
-  SourceSurfaceBlobImage(SVGDocumentWrapper* aSVGDocumentWrapper,
-                         const Maybe<SVGImageContext>& aSVGContext,
-                         const Maybe<ImageIntRegion>& aRegion,
-                         const gfx::IntSize& aSize, uint32_t aWhichFrame,
-                         uint32_t aImageFlags);
+  BlobSurfaceProvider(ImageKey aImageKey, const SurfaceKey& aSurfaceKey,
+                      SVGDocumentWrapper* aSVGDocumentWrapper,
+                      uint32_t aImageFlags);
 
-  Maybe<wr::BlobImageKey> UpdateKey(layers::WebRenderLayerManager* aManager,
-                                    wr::IpcResourceUpdateQueue& aResources);
+  bool IsFinished() const override { return true; }
 
-  void MarkDirty();
-
-  gfx::SurfaceType GetType() const override {
-    return gfx::SurfaceType::BLOB_IMAGE;
-  }
-  gfx::IntSize GetSize() const override { return mSize; }
-  gfx::SurfaceFormat GetFormat() const override {
-    return gfx::SurfaceFormat::OS_RGBA;
-  }
-  already_AddRefed<gfx::DataSourceSurface> GetDataSurface() override {
-    return nullptr;
+  size_t LogicalSizeInBytes() const override {
+    const gfx::IntSize& size = GetSurfaceKey().Size();
+    return size.width * size.height * sizeof(uint32_t);
   }
 
-  void SizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
-                           SizeOfInfo& aInfo) const override {
-    aInfo.AddType(gfx::SurfaceType::BLOB_IMAGE);
-    aInfo.mHeapBytes += mKeys.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  nsresult UpdateKey(layers::RenderRootStateManager* aManager,
+                     wr::IpcResourceUpdateQueue& aResources,
+                     wr::ImageKey& aKey) override;
+
+  void InvalidateRecording() override;
+
+  void AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
+                              const AddSizeOfCb& aCallback) override {
+    AddSizeOfCbData metadata;
+    metadata.mFinished = true;
+    metadata.mHeapBytes += mKeys.ShallowSizeOfExcludingThis(aMallocSizeOf);
+
+    gfx::SourceSurface::SizeOfInfo info;
+    info.AddType(gfx::SurfaceType::BLOB_IMAGE);
+    metadata.Accumulate(info);
+
+    aCallback(metadata);
   }
+
+ protected:
+  DrawableFrameRef DrawableRef(size_t aFrame) override {
+    MOZ_ASSERT_UNREACHABLE("BlobSurfaceProvider::DrawableRef not supported!");
+    return DrawableFrameRef();
+  }
+  bool IsLocked() const override { return true; }
+  void SetLocked(bool) override {}
 
  private:
-  ~SourceSurfaceBlobImage() override;
+  ~BlobSurfaceProvider() override;
 
   Maybe<BlobImageKeyData> RecordDrawing(layers::WebRenderLayerManager* aManager,
                                         wr::IpcResourceUpdateQueue& aResources,
@@ -119,10 +131,6 @@ class SourceSurfaceBlobImage final : public gfx::SourceSurface {
   AutoTArray<BlobImageKeyData, 1> mKeys;
 
   RefPtr<image::SVGDocumentWrapper> mSVGDocumentWrapper;
-  Maybe<SVGImageContext> mSVGContext;
-  Maybe<ImageIntRegion> mRegion;
-  gfx::IntSize mSize;
-  uint32_t mWhichFrame;
   uint32_t mImageFlags;
 };
 
