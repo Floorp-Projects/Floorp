@@ -49,6 +49,29 @@ async function createCredential(set_payment_extension=true) {
   return navigator.credentials.create({publicKey});
 }
 
+// Creates a SPC credential in an iframe for the WPT 'alt' domain. Returns a
+// promise that resolves with the created credential id.
+//
+// Assumes that a virtual authenticator has already been created.
+async function createCredentialForAltDomain() {
+  const frame = document.createElement('iframe');
+  frame.allow = 'payment';
+  frame.src = 'https://{{hosts[alt][]}}:{{ports[https][0]}}' +
+      '/secure-payment-confirmation/resources/iframe-enroll.html';
+
+  return new Promise(resolve => {
+      window.addEventListener('message', function handler(evt) {
+        if (evt.source === frame.contentWindow) {
+          document.body.removeChild(frame);
+          window.removeEventListener('message', handler);
+
+          resolve(evt.data);
+        }
+      });
+      document.body.appendChild(frame);
+  });
+}
+
 function arrayBufferToString(buffer) {
   return String.fromCharCode(...new Uint8Array(buffer));
 }
