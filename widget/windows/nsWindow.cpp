@@ -6716,6 +6716,12 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp) {
     if (mSizeMode == nsSizeMode_Minimized) return;
   }
 
+  // Notify visibility change when window is activated.
+  if (!(wp->flags & SWP_NOACTIVATE) && NeedsToTrackWindowOcclusionState()) {
+    WinWindowOcclusionTracker::Get()->OnWindowVisibilityChanged(
+        this, mSizeMode != nsSizeMode_Minimized);
+  }
+
   // Handle window position changes
   if (!(wp->flags & SWP_NOMOVE)) {
     mBounds.MoveTo(wp->x, wp->y);
