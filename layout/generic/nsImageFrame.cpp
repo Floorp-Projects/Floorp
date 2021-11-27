@@ -26,6 +26,7 @@
 #include "mozilla/dom/HTMLAreaElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/ResponsiveImageSelector.h"
+#include "mozilla/image/WebRenderImageProvider.h"
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/MouseEvents.h"
@@ -1016,9 +1017,8 @@ void nsImageFrame::InvalidateSelf(const nsIntRect* aLayerInvalidRect,
   // Check if WebRender has interacted with this frame. If it has
   // we need to let it know that things have changed.
   const auto type = DisplayItemType::TYPE_IMAGE;
-  const auto producerId =
-      mImage ? mImage->GetProducerId() : kContainerProducerID_Invalid;
-  if (WebRenderUserData::ProcessInvalidateForImage(this, type, producerId)) {
+  const auto providerId = mImage ? mImage->GetProviderId() : 0;
+  if (WebRenderUserData::ProcessInvalidateForImage(this, type, providerId)) {
     return;
   }
 
@@ -1861,13 +1861,13 @@ ImgDrawResult nsImageFrame::DisplayAltFeedbackWithoutLayer(
           nsLayoutUtils::ComputeImageContainerDrawingParameters(
               imgCon, this, destRect, destRect, aSc, aFlags, svgContext,
               region);
-      RefPtr<ImageContainer> container;
-      result = imgCon->GetImageContainerAtSize(
-          aManager->LayerManager(), decodeSize, svgContext, region, aFlags,
-          getter_AddRefs(container));
-      if (container) {
-        bool wrResult = aManager->CommandBuilder().PushImage(
-            aItem, container, aBuilder, aResources, aSc, destRect, bounds);
+      RefPtr<image::WebRenderImageProvider> provider;
+      result = imgCon->GetImageProvider(aManager->LayerManager(), decodeSize,
+                                        svgContext, region, aFlags,
+                                        getter_AddRefs(provider));
+      if (provider) {
+        bool wrResult = aManager->CommandBuilder().PushImageProvider(
+            aItem, provider, aBuilder, aResources, destRect, bounds);
         result &= wrResult ? ImgDrawResult::SUCCESS : ImgDrawResult::NOT_READY;
       } else {
         // We don't use &= here because we want the result to be NOT_READY so
@@ -2116,10 +2116,10 @@ bool nsDisplayImage::CreateWebRenderCommands(
   IntSize decodeSize = nsLayoutUtils::ComputeImageContainerDrawingParameters(
       mImage, mFrame, destRect, destRect, aSc, flags, svgContext, region);
 
-  RefPtr<layers::ImageContainer> container;
-  ImgDrawResult drawResult = mImage->GetImageContainerAtSize(
-      aManager->LayerManager(), decodeSize, svgContext, region, flags,
-      getter_AddRefs(container));
+  RefPtr<image::WebRenderImageProvider> provider;
+  ImgDrawResult drawResult =
+      mImage->GetImageProvider(aManager->LayerManager(), decodeSize, svgContext,
+                               region, flags, getter_AddRefs(provider));
 
   // While we got a container, it may not contain a fully decoded surface. If
   // that is the case, and we have an image we were previously displaying which
@@ -2141,13 +2141,13 @@ bool nsDisplayImage::CreateWebRenderCommands(
           prevFlags &= ~imgIContainer::FLAG_RECORD_BLOB;
         }
 
-        RefPtr<ImageContainer> prevContainer;
-        ImgDrawResult newDrawResult = mPrevImage->GetImageContainerAtSize(
+        RefPtr<image::WebRenderImageProvider> prevProvider;
+        ImgDrawResult newDrawResult = mPrevImage->GetImageProvider(
             aManager->LayerManager(), decodeSize, svgContext, region, prevFlags,
-            getter_AddRefs(prevContainer));
-        if (prevContainer && newDrawResult == ImgDrawResult::SUCCESS) {
+            getter_AddRefs(prevProvider));
+        if (prevProvider && newDrawResult == ImgDrawResult::SUCCESS) {
           drawResult = newDrawResult;
-          container = std::move(prevContainer);
+          provider = std::move(prevProvider);
           flags = prevFlags;
           break;
         }
@@ -2174,14 +2174,9 @@ bool nsDisplayImage::CreateWebRenderCommands(
   // If the image container is empty, we don't want to fallback. Any other
   // failure will be due to resource constraints and fallback is unlikely to
   // help us. Hence we can ignore the return value from PushImage.
-  if (container) {
-    if (flags & imgIContainer::FLAG_RECORD_BLOB) {
-      aManager->CommandBuilder().PushBlobImage(this, container, aBuilder,
-                                               aResources, destRect, destRect);
-    } else {
-      aManager->CommandBuilder().PushImage(this, container, aBuilder,
-                                           aResources, aSc, destRect, destRect);
-    }
+  if (provider) {
+    aManager->CommandBuilder().PushImageProvider(
+        this, provider, aBuilder, aResources, destRect, destRect);
   }
 
   nsDisplayItemGenericImageGeometry::UpdateDrawResult(this, drawResult);
