@@ -668,7 +668,54 @@ RasterImage::GetImageProvider(WindowRenderer* aRenderer,
                               const Maybe<ImageIntRegion>& aRegion,
                               uint32_t aFlags,
                               WebRenderImageProvider** aProvider) {
-  return ImgDrawResult::NOT_SUPPORTED;
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRenderer);
+
+  if (mError) {
+    return ImgDrawResult::BAD_IMAGE;
+  }
+
+  if (!LoadHasSize()) {
+    return ImgDrawResult::NOT_READY;
+  }
+
+  if (aSize.IsEmpty()) {
+    return ImgDrawResult::BAD_ARGS;
+  }
+
+  // We check the minimum size because while we support downscaling, we do not
+  // support upscaling. If aRequestedSize > mSize, we will never give a larger
+  // surface than mSize. If mSize > aRequestedSize, and mSize > maxTextureSize,
+  // we still want to use image containers if aRequestedSize <= maxTextureSize.
+  int32_t maxTextureSize = aRenderer->GetMaxTextureSize();
+  if (min(mSize.width, aSize.width) > maxTextureSize ||
+      min(mSize.height, aSize.height) > maxTextureSize) {
+    return ImgDrawResult::NOT_SUPPORTED;
+  }
+
+  AutoProfilerImagePaintMarker PROFILER_RAII(this);
+#ifdef DEBUG
+  NotifyDrawingObservers();
+#endif
+
+  // Get the frame. If it's not there, it's probably the caller's fault for
+  // not waiting for the data to be loaded from the network or not passing
+  // FLAG_SYNC_DECODE.
+  LookupResult result = LookupFrame(OrientedIntSize::FromUnknownSize(aSize),
+                                    aFlags, PlaybackType::eAnimated,
+                                    /* aMarkUsed = */ true);
+  if (!result) {
+    // The OS threw this frame away and we couldn't redecode it.
+    return ImgDrawResult::NOT_READY;
+  }
+
+  if (!result.Surface()->IsFinished()) {
+    result.Surface().TakeProvider(aProvider);
+    return ImgDrawResult::INCOMPLETE;
+  }
+
+  result.Surface().TakeProvider(aProvider);
+  return ImgDrawResult::SUCCESS;
 }
 
 size_t RasterImage::SizeOfSourceWithComputedFallback(
