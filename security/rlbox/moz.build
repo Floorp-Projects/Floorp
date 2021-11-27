@@ -75,3 +75,8 @@ if CONFIG["MOZ_WASM_SANDBOXING_EXPAT"]:
     for k, v in expat_defines:
         WASM_DEFINES[k] = v
     LOCAL_INCLUDES += ["/parser/expat/lib/"]
+
+if CONFIG["MOZ_WASM_SANDBOXING_WOFF2"]:
+    include("/modules/woff2/sources.mozbuild")
+    WASM_SOURCES += ["/modules/woff2/" + s for s in woff2_sources]
+    LOCAL_INCLUDES += ["/modules/woff2/include"]

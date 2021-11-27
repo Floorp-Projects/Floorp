@@ -36,3 +36,6 @@ patch -p3 < ots-visibility.patch
 
 echo "Applying ots-lz4.patch..."
 patch -p3 < ots-lz4.patch
+
+echo "Applying ots-rlbox.patch..."
+patch -p3 < ots-rlbox.patch
