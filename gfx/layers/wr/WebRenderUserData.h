@@ -172,8 +172,6 @@ class WebRenderImageData : public WebRenderUserData {
 
   bool IsAsync() { return mPipelineId.isSome(); }
 
-  bool UsingSharedSurface(ContainerProducerID aProducerId) const;
-
   void ClearImageKey();
 
  protected:
@@ -182,11 +180,6 @@ class WebRenderImageData : public WebRenderUserData {
   RefPtr<ImageClient> mImageClient;
   Maybe<wr::PipelineId> mPipelineId;
   RefPtr<ImageContainer> mContainer;
-  // The key can be owned by a shared surface that is used by several elements.
-  // when this is the case the shared surface is responsible for managing the
-  // destruction of the key.
-  // TODO: we surely can come up with a simpler/safer way to model this.
-  bool mOwnsKey;
 };
 
 /// Holds some data used to share ImageLib results with the parent process.

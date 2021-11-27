@@ -60,26 +60,6 @@ FrozenImage::IsImageContainerAvailable(WindowRenderer* aRenderer,
 }
 
 NS_IMETHODIMP_(ImgDrawResult)
-FrozenImage::GetImageContainerAtSize(WindowRenderer* aRenderer,
-                                     const gfx::IntSize& aSize,
-                                     const Maybe<SVGImageContext>& aSVGContext,
-                                     const Maybe<ImageIntRegion>& aRegion,
-                                     uint32_t aFlags,
-                                     layers::ImageContainer** aOutContainer) {
-  if (IsNonAnimated()) {
-    return InnerImage()->GetImageContainerAtSize(
-        aRenderer, aSize, aSVGContext, aRegion, aFlags, aOutContainer);
-  }
-
-  // XXX(seth): GetImageContainer does not currently support anything but the
-  // current frame. We work around this by always returning null, but if it ever
-  // turns out that FrozenImage is widely used on codepaths that can actually
-  // benefit from GetImageContainer, it would be a good idea to fix that method
-  // for performance reasons.
-  return ImgDrawResult::NOT_SUPPORTED;
-}
-
-NS_IMETHODIMP_(ImgDrawResult)
 FrozenImage::GetImageProvider(WindowRenderer* aRenderer,
                               const gfx::IntSize& aSize,
                               const Maybe<SVGImageContext>& aSVGContext,
