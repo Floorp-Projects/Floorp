@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script>
+    window.addEventListener("pageshow", ({ persisted }) => {
+      let bc = new BroadcastChannel("bug1740516_1");
+      bc.addEventListener("message", ({ data }) => {
+        bc.close();
+        switch (data) {
+          case "block_bfcache_and_navigate":
+            window.blockBFCache = new RTCPeerConnection();
+            // Fall through
+          case "navigate":
+            document.location = "file_bug1740516_2.html";
+            break;
+          case "close":
+            window.close();
+            break;
+        }
+      });
+      bc.postMessage(persisted);
+    });
+  </script>
+</head>
+<body>
+  <iframe src="file_bug1740516_1_inner.html"></iframe>
+</body>
+</html>
