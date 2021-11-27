@@ -6,11 +6,13 @@
 #include "DecodedSurfaceProvider.h"
 
 #include "mozilla/StaticPrefs_image.h"
+#include "mozilla/layers/SharedSurfacesChild.h"
 #include "nsProxyRelease.h"
 
 #include "Decoder.h"
 
 using namespace mozilla::gfx;
+using namespace mozilla::layers;
 
 namespace mozilla {
 namespace image {
@@ -203,6 +205,29 @@ void DecodedSurfaceProvider::FinishDecoding() {
 bool DecodedSurfaceProvider::ShouldPreferSyncRun() const {
   return mDecoder->ShouldSyncDecode(
       StaticPrefs::image_mem_decode_bytes_at_a_time_AtStartup());
+}
+
+nsresult DecodedSurfaceProvider::UpdateKey(
+    layers::RenderRootStateManager* aManager,
+    wr::IpcResourceUpdateQueue& aResources, wr::ImageKey& aKey) {
+  MOZ_ASSERT(mSurface);
+  RefPtr<SourceSurface> surface = mSurface->GetSourceSurface();
+  if (!surface) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return SharedSurfacesChild::Share(surface, aManager, aResources, aKey);
+}
+
+nsresult SimpleSurfaceProvider::UpdateKey(
+    layers::RenderRootStateManager* aManager,
+    wr::IpcResourceUpdateQueue& aResources, wr::ImageKey& aKey) {
+  RefPtr<SourceSurface> surface = mSurface->GetSourceSurface();
+  if (!surface) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return SharedSurfacesChild::Share(surface, aManager, aResources, aKey);
 }
 
 }  // namespace image
