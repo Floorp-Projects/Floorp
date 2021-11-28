@@ -138,10 +138,6 @@ int32_t WebRenderTextureHost::GetRGBStride() {
   return ImageDataSerializer::ComputeRGBStride(format, GetSize().width);
 }
 
-bool WebRenderTextureHost::HasIntermediateBuffer() const {
-  return mWrappedTextureHost->HasIntermediateBuffer();
-}
-
 bool WebRenderTextureHost::NeedsDeferredDeletion() const {
   return mWrappedTextureHost->NeedsDeferredDeletion();
 }

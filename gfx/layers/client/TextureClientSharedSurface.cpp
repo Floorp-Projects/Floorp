@@ -43,7 +43,6 @@ void SharedSurfaceTextureData::Deallocate(LayersIPCChannel*) {}
 void SharedSurfaceTextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.size = mSize;
   aInfo.format = mFormat;
-  aInfo.hasIntermediateBuffer = false;
   aInfo.hasSynchronization = false;
   aInfo.supportsMoz2D = false;
   aInfo.canExposeMappedData = false;

@@ -553,19 +553,10 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   virtual const char* Name() { return "TextureHost"; }
 
   /**
-   * Indicates whether the TextureHost implementation is backed by an
-   * in-memory buffer. The consequence of this is that locking the
-   * TextureHost does not contend with locking the texture on the client side.
-   */
-  virtual bool HasIntermediateBuffer() const { return false; }
-
-  /**
    * Returns true if the TextureHost can be released before the rendering is
    * completed, otherwise returns false.
    */
-  virtual bool NeedsDeferredDeletion() const {
-    return !HasIntermediateBuffer();
-  }
+  virtual bool NeedsDeferredDeletion() const { return true; }
 
   void AddCompositableRef() {
     ++mCompositableCount;
@@ -789,8 +780,6 @@ class BufferTextureHost : public TextureHost {
 
   already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
 
-  bool HasIntermediateBuffer() const override { return mHasIntermediateBuffer; }
-
   bool NeedsDeferredDeletion() const override {
     return TextureHost::NeedsDeferredDeletion() || UseExternalTextures();
   }
@@ -834,7 +823,6 @@ class BufferTextureHost : public TextureHost {
   uint32_t mUpdateSerial;
   bool mLocked;
   bool mNeedsFullUpdate;
-  bool mHasIntermediateBuffer;
   bool mUseExternalTextures;
 
   class DataTextureSourceYCbCrBasic;

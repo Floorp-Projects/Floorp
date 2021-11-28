@@ -249,7 +249,7 @@ already_AddRefed<Texture> Device::InitSwapChain(
   }
   *aCanvasSize = size;
 
-  const layers::RGBDescriptor rgbDesc(size, aFormat, false);
+  const layers::RGBDescriptor rgbDesc(size, aFormat);
   // buffer count doesn't matter much, will be created on demand
   const size_t maxBufferCount = 10;
   mBridge->DeviceCreateSwapChain(mId, rgbDesc, maxBufferCount,
