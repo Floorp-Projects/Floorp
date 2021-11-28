@@ -2112,7 +2112,6 @@ def wasm_sandboxing_libraries():
         "ogg",
         "hunspell",
         "expat",
-        "woff2",
     )
 
 
