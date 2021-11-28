@@ -32,6 +32,12 @@ Form History test: form field autocomplete
     <button type="submit">Submit</button>
   </form>
 
+  <!-- yet another normal, basic form, with 2 history entries -->
+  <form id="form5" onsubmit="return false;">
+    <input list="suggest" type="text" name="field3">
+    <button type="submit">Submit</button>
+  </form>
+
   <datalist id="suggest">
     <option value="Google" label="PASS1">FAIL</option>
     <option value="Reddit">PASS2</option>
@@ -52,6 +58,8 @@ function setupFormHistory(aCallback) {
     { op: "remove" },
     { op: "add", fieldname: "field1", value: "historyvalue" },
     { op: "add", fieldname: "field2", value: "othervalue" },
+    { op: "add", fieldname: "field3", value: "history1" },
+    { op: "add", fieldname: "field3", value: "history2" },
   ], aCallback);
 }
 
@@ -517,9 +525,53 @@ async function runTest() {
       await SpecialPowers.pushPrefEnv({
         clear: [["dom.input_event.allow_to_cancel_set_user_input"]],
       });
-      SimpleTest.finish();
+
+      testNum = 499;
+      input = $_(5, "field3");
+      checkForm("");
+      expectPopup();
+      restoreForm();
+      synthesizeKey("KEY_ArrowDown");
       break;
     }
+
+    case 500:
+      checkMenuEntries(["history1", "history2", "PASS1", "PASS2", "final"],
+                       testNum);
+
+      // Delete the third entry, that is the 1st entry of datalist.
+      // This has no effect.
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_ArrowDown");
+      synthesizeKey("KEY_Delete", {shiftKey: true});
+
+      // Delete the second entry, that is the 2nd entry of history.
+      synthesizeKey("KEY_ArrowUp");
+      synthesizeKey("KEY_Delete", {shiftKey: true});
+      waitForMenuChange(4);
+      break;
+
+    case 501:
+      checkMenuEntries(["history1", "PASS1", "PASS2", "final"], testNum);
+
+      // Delete the second entry, that is the 1st entry of datalist.
+      // This has no effect.
+      synthesizeKey("KEY_Delete", {shiftKey: true});
+
+      // Delete the first entry, that is the 1nd entry of history.
+      synthesizeKey("KEY_ArrowUp");
+      synthesizeKey("KEY_Delete", {shiftKey: true});
+      waitForMenuChange(3);
+      break;
+
+    case 502:
+      checkMenuEntries(["PASS1", "PASS2", "final"], testNum);
+      synthesizeKey("KEY_Enter");
+      checkForm("Google");
+
+      SimpleTest.finish();
+      break;
 
     default:
       ok(false, "Unexpected invocation of test #" + testNum);

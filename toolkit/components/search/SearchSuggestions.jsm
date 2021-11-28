@@ -100,6 +100,7 @@ SuggestAutoComplete.prototype = {
           // in the unescaping of the results for display which it uses for
           // urls.
           comment: result,
+          removable: true,
         })),
         formHistoryResult
       );
