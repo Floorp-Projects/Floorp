@@ -124,7 +124,7 @@ bool CanvasContext::UpdateWebRenderLocalCanvasData(
 }
 
 wr::ImageDescriptor CanvasContext::MakeImageDescriptor() const {
-  const layers::RGBDescriptor rgbDesc(mGfxSize, mGfxFormat, false);
+  const layers::RGBDescriptor rgbDesc(mGfxSize, mGfxFormat);
   const auto targetStride = layers::ImageDataSerializer::GetRGBStride(rgbDesc);
   const bool preferCompositorSurface = true;
   return wr::ImageDescriptor(mGfxSize, targetStride, mGfxFormat,

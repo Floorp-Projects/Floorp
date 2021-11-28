@@ -525,8 +525,7 @@ nsresult PlanarYCbCrImage::BuildSurfaceDescriptorBuffer(
   aSdBuffer.desc() = YCbCrDescriptor(
       pdata->GetPictureRect(), pdata->mYSize, pdata->mYStride, pdata->mCbCrSize,
       pdata->mCbCrStride, yOffset, cbOffset, crOffset, pdata->mStereoMode,
-      pdata->mColorDepth, pdata->mYUVColorSpace, pdata->mColorRange,
-      /*hasIntermediateBuffer*/ false);
+      pdata->mColorDepth, pdata->mYUVColorSpace, pdata->mColorRange);
 
   CopyPlane(buffer + yOffset, pdata->mYChannel, pdata->mYSize, pdata->mYStride,
             pdata->mYSkip);

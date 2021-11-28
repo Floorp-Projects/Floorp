@@ -261,7 +261,7 @@ mozilla::ipc::IPCResult RemoteDecoderManagerParent::RecvReadback(
   dt->CopySurface(source, IntRect(0, 0, size.width, size.height), IntPoint());
   dt->Flush();
 
-  *aResult = SurfaceDescriptorBuffer(RGBDescriptor(size, format, true),
+  *aResult = SurfaceDescriptorBuffer(RGBDescriptor(size, format),
                                      MemoryOrShmem(std::move(buffer)));
   return IPC_OK();
 }

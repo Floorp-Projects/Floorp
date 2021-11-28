@@ -126,14 +126,6 @@ gfx::SurfaceFormat GPUVideoTextureHost::GetFormat() const {
   return mWrappedTextureHost->GetFormat();
 }
 
-bool GPUVideoTextureHost::HasIntermediateBuffer() const {
-  MOZ_ASSERT(mWrappedTextureHost, "Image isn't valid yet");
-  if (!mWrappedTextureHost) {
-    return false;
-  }
-  return mWrappedTextureHost->HasIntermediateBuffer();
-}
-
 void GPUVideoTextureHost::UpdatedInternal(const nsIntRegion* Region) {
   if (!EnsureWrappedTextureHost()) {
     mPendingUpdatedInternal = true;

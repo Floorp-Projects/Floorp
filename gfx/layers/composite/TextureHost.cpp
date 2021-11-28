@@ -454,14 +454,12 @@ BufferTextureHost::BufferTextureHost(const BufferDescriptor& aDesc,
       const YCbCrDescriptor& ycbcr = mDescriptor.get_YCbCrDescriptor();
       mSize = ycbcr.display().Size();
       mFormat = gfx::SurfaceFormat::YUV;
-      mHasIntermediateBuffer = ycbcr.hasIntermediateBuffer();
       break;
     }
     case BufferDescriptor::TRGBDescriptor: {
       const RGBDescriptor& rgb = mDescriptor.get_RGBDescriptor();
       mSize = rgb.size();
       mFormat = rgb.format();
-      mHasIntermediateBuffer = rgb.hasIntermediateBuffer();
       break;
     }
     default:

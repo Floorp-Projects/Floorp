@@ -172,15 +172,9 @@ PersistentBufferProviderShared::PersistentBufferProviderShared(
     }
   }
 
-  // If we are using webrender and our textures don't have an intermediate
-  // buffer, then we have to hold onto the textures for longer to make sure that
-  // the GPU has finished using them. So, we need to allow more TextureClients
-  // to be created.
-  if (!aTexture->HasIntermediateBuffer() && gfxVars::UseWebRender()) {
+  // XXX KnowsCompositor could be used for mMaxAllowedTextures
+  if (gfxVars::UseWebRenderTripleBufferingWin()) {
     ++mMaxAllowedTextures;
-    if (gfxVars::UseWebRenderTripleBufferingWin()) {
-      ++mMaxAllowedTextures;
-    }
   }
 
   MOZ_COUNT_CTOR(PersistentBufferProviderShared);
