@@ -57,6 +57,7 @@ InputListAutoComplete.prototype = {
         label,
         value: item.value,
         comment: "",
+        removable: false,
       });
     }
 
