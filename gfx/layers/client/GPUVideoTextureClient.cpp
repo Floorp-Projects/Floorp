@@ -31,7 +31,6 @@ void GPUVideoTextureData::FillInfo(TextureData::Info& aInfo) const {
   // layers::Image doesn't expose a format, so it's hard
   // to figure out in VideoDecoderParent.
   aInfo.format = SurfaceFormat::B8G8R8X8;
-  aInfo.hasIntermediateBuffer = false;
   aInfo.hasSynchronization = false;
   aInfo.supportsMoz2D = false;
   aInfo.canExposeMappedData = false;

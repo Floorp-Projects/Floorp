@@ -99,11 +99,6 @@ class ShmemTextureData : public BufferTextureData {
   mozilla::ipc::Shmem mShmem;
 };
 
-bool ComputeHasIntermediateBuffer(gfx::SurfaceFormat aFormat,
-                                  LayersBackend aLayersBackend) {
-  return aFormat == gfx::SurfaceFormat::UNKNOWN;
-}
-
 BufferTextureData* BufferTextureData::Create(
     gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
     gfx::BackendType aMoz2DBackend, LayersBackend aLayersBackend,
@@ -162,16 +157,9 @@ BufferTextureData* BufferTextureData::CreateForYCbCr(
                                            aCbCrSize.height, yOffset, cbOffset,
                                            crOffset);
 
-  bool hasIntermediateBuffer =
-      aAllocator
-          ? ComputeHasIntermediateBuffer(gfx::SurfaceFormat::YUV,
-                                         aAllocator->GetCompositorBackendType())
-          : true;
-
-  YCbCrDescriptor descriptor =
-      YCbCrDescriptor(aDisplay, aYSize, aYStride, aCbCrSize, aCbCrStride,
-                      yOffset, cbOffset, crOffset, aStereoMode, aColorDepth,
-                      aYUVColorSpace, aColorRange, hasIntermediateBuffer);
+  YCbCrDescriptor descriptor = YCbCrDescriptor(
+      aDisplay, aYSize, aYStride, aCbCrSize, aCbCrStride, yOffset, cbOffset,
+      crOffset, aStereoMode, aColorDepth, aYUVColorSpace, aColorRange);
 
   return CreateInternal(
       aAllocator ? aAllocator->GetTextureForwarder() : nullptr, descriptor,
@@ -183,14 +171,6 @@ void BufferTextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.format = GetFormat();
   aInfo.hasSynchronization = false;
   aInfo.canExposeMappedData = true;
-
-  if (mDescriptor.type() == BufferDescriptor::TYCbCrDescriptor) {
-    aInfo.hasIntermediateBuffer =
-        mDescriptor.get_YCbCrDescriptor().hasIntermediateBuffer();
-  } else {
-    aInfo.hasIntermediateBuffer =
-        mDescriptor.get_RGBDescriptor().hasIntermediateBuffer();
-  }
 
   switch (aInfo.format) {
     case gfx::SurfaceFormat::YUV:
@@ -450,13 +430,9 @@ MemoryTextureData* MemoryTextureData::Create(gfx::IntSize aSize,
     return nullptr;
   }
 
-  bool hasIntermediateBuffer =
-      ComputeHasIntermediateBuffer(aFormat, aLayersBackend);
-
   GfxMemoryImageReporter::DidAlloc(buf);
 
-  BufferDescriptor descriptor =
-      RGBDescriptor(aSize, aFormat, hasIntermediateBuffer);
+  BufferDescriptor descriptor = RGBDescriptor(aSize, aFormat);
 
   return new MemoryTextureData(descriptor, aMoz2DBackend, buf, bufSize);
 }
@@ -524,11 +500,7 @@ ShmemTextureData* ShmemTextureData::Create(gfx::IntSize aSize,
     return nullptr;
   }
 
-  bool hasIntermediateBuffer =
-      ComputeHasIntermediateBuffer(aFormat, aLayersBackend);
-
-  BufferDescriptor descriptor =
-      RGBDescriptor(aSize, aFormat, hasIntermediateBuffer);
+  BufferDescriptor descriptor = RGBDescriptor(aSize, aFormat);
 
   return new ShmemTextureData(descriptor, aMoz2DBackend, shm);
 }

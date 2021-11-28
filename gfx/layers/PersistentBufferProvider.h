@@ -196,8 +196,7 @@ class PersistentBufferProviderShared : public PersistentBufferProvider,
   // a separate permanent back buffer and copy into the shared back buffer when
   // the DrawTarget is returned, before making it the new front buffer.
   RefPtr<TextureClient> mPermanentBackBuffer;
-  // We may need two extra textures if webrender is enabled.
-  static const size_t kMaxTexturesAllowed = 4;
+  static const size_t kMaxTexturesAllowed = 5;
   Vector<RefPtr<TextureClient>, kMaxTexturesAllowed + 2> mTextures;
   // Offset of the texture in mTextures that the canvas uses.
   Maybe<uint32_t> mBack;

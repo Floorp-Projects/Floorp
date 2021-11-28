@@ -39,8 +39,6 @@ class GPUVideoTextureHost : public TextureHost {
   const char* Name() override { return "GPUVideoTextureHost"; }
 #endif
 
-  bool HasIntermediateBuffer() const override;
-
   void CreateRenderTexture(
       const wr::ExternalImageId& aExternalImageId) override;
 

@@ -64,7 +64,6 @@ AndroidSurfaceTextureData::~AndroidSurfaceTextureData() {}
 void AndroidSurfaceTextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.size = mSize;
   aInfo.format = gfx::SurfaceFormat::UNKNOWN;
-  aInfo.hasIntermediateBuffer = false;
   aInfo.hasSynchronization = false;
   aInfo.supportsMoz2D = false;
   aInfo.canExposeMappedData = false;
@@ -147,7 +146,6 @@ AndroidNativeWindowTextureData::AndroidNativeWindowTextureData(
 void AndroidNativeWindowTextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.size = mSize;
   aInfo.format = mFormat;
-  aInfo.hasIntermediateBuffer = false;
   aInfo.hasSynchronization = false;
   aInfo.supportsMoz2D = true;
   aInfo.canExposeMappedData = false;
@@ -237,7 +235,6 @@ void AndroidHardwareBufferTextureData::FillInfo(
     TextureData::Info& aInfo) const {
   aInfo.size = mSize;
   aInfo.format = mFormat;
-  aInfo.hasIntermediateBuffer = false;
   aInfo.hasSynchronization = true;
   aInfo.supportsMoz2D = true;
   aInfo.canExposeMappedData = false;
