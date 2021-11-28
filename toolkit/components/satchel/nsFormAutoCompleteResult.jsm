@@ -155,6 +155,16 @@ FormAutoCompleteResult.prototype = {
   },
 
   /**
+   * Returns true if the value at the given index is removable
+   * @param   {number}  index  the index of the result to remove
+   * @returns {boolean}        True if the value is removable
+   */
+  isRemovableAt(index) {
+    this._checkIndexBounds(index);
+    return this._items[index].removable;
+  },
+
+  /**
    * Removes a result from the resultset
    * @param {number}  index    the index of the result to remove
    */

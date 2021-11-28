@@ -81,6 +81,11 @@ interface nsIAutoCompleteResult : nsISupports
   AString getFinalCompleteValueAt(in long index);
 
   /**
+   * True if the value at the given index is removable.
+   */
+  bool isRemovableAt(in long rowIndex);
+
+  /**
    * Remove the value at the given index from the autocomplete results.
    */
   void removeValueAt(in long rowIndex);

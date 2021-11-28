@@ -678,6 +678,14 @@ nsAutoCompleteController::HandleDelete(bool* _retval) {
   nsIAutoCompleteResult* result = mResults.SafeObjectAt(searchIndex);
   NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
 
+  bool removable;
+  nsresult rv = result->IsRemovableAt(matchIndex, &removable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!removable) {
+    return NS_OK;
+  }
+
   nsAutoString search;
   input->GetSearchParam(search);
 

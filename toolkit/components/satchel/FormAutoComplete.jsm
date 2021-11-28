@@ -417,6 +417,7 @@ FormAutoComplete.prototype = {
               value: oldItems[i].value,
               label: oldItems[i].label,
               comment: "",
+              removable: oldItems[i].removable,
             });
           }
         }
@@ -458,6 +459,7 @@ FormAutoComplete.prototype = {
           // from their values).
           label: "",
           comment: "",
+          removable: true,
         }));
 
         datalistItems[0].comment = "separator";
@@ -515,6 +517,7 @@ FormAutoComplete.prototype = {
       value: entry.text,
       label: entry.text,
       comment: "",
+      removable: true,
     }));
 
     // now put the history results above the datalist suggestions
@@ -690,6 +693,10 @@ FormAutoCompleteResult.prototype = {
 
   getFinalCompleteValueAt(index) {
     return this.getValueAt(index);
+  },
+
+  isRemovableAt(index) {
+    return true;
   },
 
   removeValueAt(index) {
