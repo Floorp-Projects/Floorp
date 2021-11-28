@@ -1039,9 +1039,6 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
     // Not yet run.
     State_Initial,
 
-    // Running quota manager initialization on the owning thread.
-    State_CreatingQuotaManager,
-
     // Running on the owning thread in the listener for OpenDirectory.
     State_DirectoryOpenPending,
 
@@ -1105,9 +1102,6 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
   void AdvanceState() {
     switch (mState) {
       case State_Initial:
-        mState = State_CreatingQuotaManager;
-        return;
-      case State_CreatingQuotaManager:
         mState = State_DirectoryOpenPending;
         return;
       case State_DirectoryOpenPending:
@@ -1141,8 +1135,6 @@ class OriginOperationBase : public BackgroundThreadObject, public Runnable {
   nsresult Init();
 
   nsresult FinishInit();
-
-  nsresult QuotaManagerOpen();
 
   nsresult DirectoryWork();
 };
@@ -1259,8 +1251,6 @@ class Quota final : public PQuotaParent {
 
  private:
   ~Quota();
-
-  void StartIdleMaintenance();
 
   bool VerifyRequestParams(const UsageRequestParams& aParams) const;
 
@@ -3367,12 +3357,10 @@ QuotaManager::GetOrCreate() {
   return WrapMovingNotNullUnchecked(std::move(instance));
 }
 
-void QuotaManager::GetOrCreate(nsIRunnable* aCallback) {
+Result<Ok, nsresult> QuotaManager::EnsureCreated() {
   AssertIsOnBackgroundThread();
 
-  Unused << GetOrCreate();
-
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToCurrentThread(aCallback));
+  QM_TRY_RETURN(GetOrCreate().map([](const auto& res) { return Ok{}; }))
 }
 
 // static
@@ -7697,11 +7685,6 @@ OriginOperationBase::Run() {
       break;
     }
 
-    case State_CreatingQuotaManager: {
-      rv = QuotaManagerOpen();
-      break;
-    }
-
     case State_DirectoryOpenPending: {
       rv = DirectoryOpen();
       break;
@@ -7765,23 +7748,8 @@ nsresult OriginOperationBase::Init() {
     return NS_ERROR_ABORT;
   }
 
-  AdvanceState();
-
-  if (mNeedsQuotaManagerInit && !QuotaManager::Get()) {
-    QuotaManager::GetOrCreate(this);
-  } else {
-    Open();
-  }
-
-  return NS_OK;
-}
-
-nsresult OriginOperationBase::QuotaManagerOpen() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State_CreatingQuotaManager);
-
-  if (NS_WARN_IF(!QuotaManager::Get())) {
-    return NS_ERROR_FAILURE;
+  if (mNeedsQuotaManagerInit) {
+    QM_TRY(QuotaManager::EnsureCreated());
   }
 
   Open();
@@ -7871,7 +7839,7 @@ RefPtr<DirectoryLock> NormalOriginOperationBase::CreateDirectoryLock() {
 
 void NormalOriginOperationBase::Open() {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(GetState() == State_CreatingQuotaManager);
+  MOZ_ASSERT(GetState() == State_Initial);
   MOZ_ASSERT(QuotaManager::Get());
 
   AdvanceState();
@@ -8054,16 +8022,6 @@ Quota::Quota()
 }
 
 Quota::~Quota() { MOZ_ASSERT(mActorDestroyed); }
-
-void Quota::StartIdleMaintenance() {
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!QuotaManager::IsShuttingDown());
-
-  QuotaManager* const quotaManager = QuotaManager::Get();
-  QM_TRY(OkIf(quotaManager), QM_VOID);
-
-  quotaManager->StartIdleMaintenance();
-}
 
 bool Quota::VerifyRequestParams(const UsageRequestParams& aParams) const {
   AssertIsOnBackgroundThread();
@@ -8466,15 +8424,10 @@ mozilla::ipc::IPCResult Quota::RecvStartIdleMaintenance() {
     return IPC_OK();
   }
 
-  QuotaManager* quotaManager = QuotaManager::Get();
-  if (!quotaManager) {
-    nsCOMPtr<nsIRunnable> callback =
-        NewRunnableMethod("dom::quota::Quota::StartIdleMaintenance", this,
-                          &Quota::StartIdleMaintenance);
+  QM_TRY(QuotaManager::EnsureCreated(), IPC_OK());
 
-    QuotaManager::GetOrCreate(callback);
-    return IPC_OK();
-  }
+  QuotaManager* quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
 
   quotaManager->StartIdleMaintenance();
 

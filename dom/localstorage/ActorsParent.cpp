@@ -2129,18 +2129,12 @@ class PrepareDatastoreOp
     // the PBackground thread. Next step is PreparationPending.
     CheckClosingDatastore,
 
-    // Opening directory or initializing quota manager on the PBackground
-    // thread. Next step is either DirectoryOpenPending if quota manager is
-    // already initialized or QuotaManagerPending if quota manager needs to be
-    // initialized.
+    // Ensuring quota manager is created and opening directory on the
+    // PBackground thread. Next step is either SendingResults if quota manager
+    // is not available or DirectoryOpenPending if quota manager is available.
     // If a datastore already exists for given origin then the next state is
     // SendingReadyMessage.
     PreparationPending,
-
-    // Waiting for quota manager initialization to complete on the PBackground
-    // thread. Next step is either SendingReadyMessage if initialization failed
-    // or DirectoryOpenPending if initialization succeeded.
-    QuotaManagerPending,
 
     // Waiting for directory open allowed on the PBackground thread. The next
     // step is either SendingReadyMessage if directory lock failed to acquire,
@@ -2246,10 +2240,6 @@ class PrepareDatastoreOp
   nsresult BeginDatastorePreparationInternal();
 
   nsresult BeginDatastorePreparation();
-
-  nsresult QuotaManagerOpen();
-
-  nsresult OpenDirectory();
 
   void SendToIOThread();
 
@@ -6437,10 +6427,6 @@ void PrepareDatastoreOp::StringifyNestedState(nsACString& aResult) const {
       aResult.AppendLiteral("PreparationPending");
       return;
 
-    case NestedState::QuotaManagerPending:
-      aResult.AppendLiteral("QuotaManagerPending");
-      return;
-
     case NestedState::DirectoryOpenPending:
       aResult.AppendLiteral("DirectoryOpenPending");
       return;
@@ -6704,6 +6690,8 @@ nsresult PrepareDatastoreOp::BeginDatastorePreparationInternal() {
   MOZ_ASSERT(mNestedState == NestedState::PreparationPending);
   MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
   MOZ_ASSERT(MayProceed());
+  MOZ_ASSERT(OriginIsKnown());
+  MOZ_ASSERT(!mDirectoryLock);
 
   if ((mDatastore = GetDatastore(Origin()))) {
     MOZ_ASSERT(!mDatastore->IsClosed());
@@ -6715,49 +6703,9 @@ nsresult PrepareDatastoreOp::BeginDatastorePreparationInternal() {
     return NS_OK;
   }
 
-  if (QuotaManager::Get()) {
-    nsresult rv = OpenDirectory();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
+  QM_TRY(QuotaManager::EnsureCreated());
 
-    return NS_OK;
-  }
-
-  mNestedState = NestedState::QuotaManagerPending;
-  QuotaManager::GetOrCreate(this);
-
-  return NS_OK;
-}
-
-nsresult PrepareDatastoreOp::QuotaManagerOpen() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Nesting);
-  MOZ_ASSERT(mNestedState == NestedState::QuotaManagerPending);
-
-  if (NS_WARN_IF(QuotaClient::IsShuttingDownOnBackgroundThread()) ||
-      !MayProceed()) {
-    return NS_ERROR_ABORT;
-  }
-
-  QM_TRY(OkIf(QuotaManager::Get()), NS_ERROR_FAILURE);
-
-  QM_TRY(MOZ_TO_RESULT(OpenDirectory()));
-
-  return NS_OK;
-}
-
-nsresult PrepareDatastoreOp::OpenDirectory() {
-  AssertIsOnOwningThread();
-  MOZ_ASSERT(mState == State::Nesting);
-  MOZ_ASSERT(mNestedState == NestedState::PreparationPending ||
-             mNestedState == NestedState::QuotaManagerPending);
-  MOZ_ASSERT(OriginIsKnown());
-  MOZ_ASSERT(!mDirectoryLock);
-  MOZ_ASSERT(!QuotaClient::IsShuttingDownOnBackgroundThread());
-  MOZ_ASSERT(MayProceed());
-  MOZ_ASSERT(QuotaManager::Get());
-
+  // Open directory
   mPendingDirectoryLock = QuotaManager::Get()->CreateDirectoryLock(
       PERSISTENCE_TYPE_DEFAULT, mOriginMetadata,
       mozilla::dom::quota::Client::LS,
@@ -7262,10 +7210,6 @@ nsresult PrepareDatastoreOp::NestedRun() {
 
     case NestedState::PreparationPending:
       rv = BeginDatastorePreparation();
-      break;
-
-    case NestedState::QuotaManagerPending:
-      rv = QuotaManagerOpen();
       break;
 
     case NestedState::DatabaseWorkOpen:
