@@ -24,7 +24,7 @@ import urllib
 
 from six.moves import shlex_quote
 
-from mozboot.util import get_state_dir
+from mach.util import get_state_dir
 from mozbuild.util import ensureParentDir
 from mozfile import which
 from mozpack.copier import FileCopier

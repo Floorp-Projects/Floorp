@@ -10,7 +10,7 @@ from os.path import expanduser
 from threading import Thread
 
 import sentry_sdk
-from mozboot.util import get_state_dir
+from mach.util import get_state_dir
 from mach.telemetry import is_telemetry_enabled
 from mozversioncontrol import (
     get_repository_object,

@@ -436,7 +436,7 @@ def create_parser_fission_regressions():
 
 def create_parser_testpaths():
     import argparse
-    from mozboot.util import get_state_dir
+    from mach.util import get_state_dir
 
     parser = argparse.ArgumentParser()
     parser.add_argument(

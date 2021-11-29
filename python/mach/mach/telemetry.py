@@ -17,7 +17,8 @@ import six.moves.urllib.parse as urllib_parse
 
 from mach.config import ConfigSettings
 from mach.telemetry_interface import NoopTelemetry, GleanTelemetry
-from mozboot.util import get_state_dir, get_mach_virtualenv_binary
+from mach.util import get_state_dir
+from mozboot.util import get_mach_virtualenv_binary
 from mozbuild.base import MozbuildObject, BuildEnvironmentNotFoundException
 from mozbuild.settings import TelemetrySettings
 from mozbuild.telemetry import filter_args

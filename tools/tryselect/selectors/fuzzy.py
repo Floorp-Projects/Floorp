@@ -12,7 +12,7 @@ from distutils.spawn import find_executable
 from distutils.version import StrictVersion
 
 from mozbuild.base import MozbuildObject
-from mozboot.util import get_state_dir
+from mach.util import get_state_dir
 from mozterm import Terminal
 
 from ..cli import BaseTryParser
@@ -348,7 +348,9 @@ def run(
     all_tasks = sorted(tg.tasks.keys())
 
     # graph_Cache created by generate_tasks, recreate the path to that file.
-    cache_dir = os.path.join(get_state_dir(srcdir=True), "cache", "taskgraph")
+    cache_dir = os.path.join(
+        get_state_dir(specific_to_topsrcdir=True), "cache", "taskgraph"
+    )
     if full:
         graph_cache = os.path.join(cache_dir, "full_task_graph")
         dep_cache = os.path.join(cache_dir, "full_task_dependencies")

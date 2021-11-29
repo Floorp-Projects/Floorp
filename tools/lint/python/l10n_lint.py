@@ -5,7 +5,7 @@
 from datetime import datetime, timedelta
 import os
 
-from mozboot import util as mb_util
+from mach import util as mach_util
 from mozlint import result, pathutils
 from mozpack import path as mozpath
 import mozversioncontrol.repoupdate
@@ -23,7 +23,7 @@ PULL_AFTER = timedelta(days=2)
 
 
 def lint(paths, lintconfig, **lintargs):
-    l10n_base = mb_util.get_state_dir()
+    l10n_base = mach_util.get_state_dir()
     root = lintargs["root"]
     exclude = lintconfig.get("exclude")
     extensions = lintconfig.get("extensions")
@@ -81,7 +81,7 @@ def lint(paths, lintconfig, **lintargs):
 
 
 def gecko_strings_setup(**lint_args):
-    gs = mozpath.join(mb_util.get_state_dir(), LOCALE)
+    gs = mozpath.join(mach_util.get_state_dir(), LOCALE)
     marker = mozpath.join(gs, ".hg", "l10n_pull_marker")
     try:
         last_pull = datetime.fromtimestamp(os.stat(marker).st_mtime)
