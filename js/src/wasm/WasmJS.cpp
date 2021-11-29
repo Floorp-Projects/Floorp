@@ -69,6 +69,20 @@
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"
 
+/*
+ * [SMDOC] WebAssembly code rules (evolving)
+ *
+ * TlsContext.get() is only to be invoked from functions that have been invoked
+ *   _directly_ by generated code as cold(!) Builtin calls, from code that is
+ *   only used by signal handlers, or from helper functions that have been
+ *   called _directly_ from a simulator.  All other code shall pass in a
+ *   JSContext* to functions that need it, or an Instance* or TlsData* since the
+ *   context is available through them.
+ *
+ *   Code that uses TlsContext.get() shall annotate each such call with the
+ *   reason why the call is OK.
+ */
+
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
