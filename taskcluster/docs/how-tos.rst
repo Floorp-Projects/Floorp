@@ -86,7 +86,7 @@ platform.  For example:
             default: 8
 
 The full set of available properties is in
-``taskcluster/gecko_taskgraph/transforms/tests.py``.  Some other
+``taskcluster/gecko_taskgraph/transforms/test/__init__.py``.  Some other
 commonly-modified properties are ``max-run-time`` (useful if tests are being
 killed for exceeding maxRunTime) and ``treeherder-symbol``.
 
@@ -104,7 +104,7 @@ for that suite, and which kind it fits into (consult :doc:`kinds`).
 Add a new stanza to ``taskcluster/ci/<kind>/tests.yml``, copying from the other
 stanzas in that file.  The meanings should be clear, but authoritative
 documentation is in
-``taskcluster/gecko_taskgraph/transforms/tests.py`` should you need
+``taskcluster/gecko_taskgraph/transforms/test/__init__.py`` should you need
 it.  The stanza name is the name by which the test will be referenced in try
 syntax.
 

@@ -11,7 +11,7 @@ from functools import partial
 import mozunit
 import pytest
 
-from gecko_taskgraph.transforms import tests as test_transforms
+from gecko_taskgraph.transforms import test as test_transforms
 
 
 @pytest.fixture

@@ -12,7 +12,7 @@ from voluptuous import (
 )
 
 from gecko_taskgraph.transforms.base import TransformSequence
-from gecko_taskgraph.transforms.tests import test_description_schema
+from gecko_taskgraph.transforms.test import test_description_schema
 from gecko_taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by, Schema
 from gecko_taskgraph.util.treeherder import split_symbol, join_symbol
 
