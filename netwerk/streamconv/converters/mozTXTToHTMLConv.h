@@ -248,8 +248,8 @@ class mozTXTToHTMLConv : public mozITXTToHTMLConv {
     @param glyphTextLen (out): see GlyphHit
   */
   bool SmilyHit(const char16_t* aInString, int32_t aLength, bool col0,
-                const char* tagTXT, const char* imageName, nsString& outputHTML,
-                int32_t& glyphTextLen);
+                const char* tagTXT, const nsString& imageName,
+                nsString& outputHTML, int32_t& glyphTextLen);
 
   /**
     Checks, if we can replace some chars at the start of line with prettier HTML
