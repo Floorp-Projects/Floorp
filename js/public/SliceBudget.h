@@ -54,7 +54,7 @@ class JS_PUBLIC_API SliceBudget {
 
   SliceBudget() : budget(UnlimitedBudget()), counter(UnlimitedCounter) {}
 
-  bool checkOverBudget();
+  [[nodiscard]] bool isOverBudgetSlow();
 
  public:
   // Use to create an unlimited budget.
@@ -86,7 +86,25 @@ class JS_PUBLIC_API SliceBudget {
     }
   }
 
-  bool isOverBudget() { return counter <= 0 && checkOverBudget(); }
+  [[nodiscard]] bool isOverBudget() {
+    return counter <= 0 && isOverBudgetSlow();
+  }
+
+  void resetOverBudget() {
+    if (isTimeBudget()) {
+      counter = stepsPerTimeCheck;
+    } else if (isWorkBudget()) {
+      counter = workBudget();
+    }
+  }
+
+  [[nodiscard]] bool checkAndResetOverBudget() {
+    if (isOverBudget()) {
+      resetOverBudget();
+      return true;
+    }
+    return false;
+  }
 
   bool isWorkBudget() const { return budget.is<WorkBudget>(); }
   bool isTimeBudget() const { return budget.is<TimeBudget>(); }
@@ -99,6 +117,8 @@ class JS_PUBLIC_API SliceBudget {
     return budget.as<TimeBudget>().deadline;
   }
 
+  // Fill in the provided buffer with a string description of the budget, not
+  // including its current state of progress.
   int describe(char* buffer, size_t maxlen) const;
 };
 
