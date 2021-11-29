@@ -8,19 +8,21 @@
 #include <cassert>
 #include "RLBoxWOFF2Sandbox.h"
 
-bool RLBoxConvertWOFF2ToTTF(const uint8_t* aData, size_t aLength,
-                            size_t aDecompressedSize, size_t* aResultSize,
-                            void** aResultOwningStr, uint8_t** aResultData) {
+bool RLBoxConvertWOFF2ToTTF(const char* aData, unsigned long aLength,
+                            unsigned long aDecompressedSize,
+                            unsigned long* aResultSize, void** aResultOwningStr,
+                            char** aResultData) {
   std::unique_ptr<std::string> buf =
       std::make_unique<std::string>(aDecompressedSize, 0);
   woff2::WOFF2StringOut out(buf.get());
-  if (!woff2::ConvertWOFF2ToTTF(aData, aLength, &out)) {
+  if (!woff2::ConvertWOFF2ToTTF(reinterpret_cast<const uint8_t*>(aData),
+                                aLength, &out)) {
     return false;
   }
   *aResultSize = out.Size();
   // Return the string and its underlying C string. We need both to make sure we
   // can free the string (which we do with RLBoxDeleteWOFF2String).
-  *aResultData = reinterpret_cast<uint8_t*>(buf->data());
+  *aResultData = buf->data();
   *aResultOwningStr = static_cast<void*>(buf.release());
   return true;
 }
@@ -30,8 +32,10 @@ void RLBoxDeleteWOFF2String(void** aStr) {
   delete buf;
 }
 
-size_t RLBoxComputeWOFF2FinalSize(const uint8_t* aData, size_t aLength) {
-  return woff2::ComputeWOFF2FinalSize(aData, aLength);
+unsigned long RLBoxComputeWOFF2FinalSize(const char* aData,
+                                         unsigned long aLength) {
+  return woff2::ComputeWOFF2FinalSize(reinterpret_cast<const uint8_t*>(aData),
+                                      aLength);
 }
 
 BrotliDecompressCallback* sRLBoxBrotliDecompressCallback = nullptr;
