@@ -54,15 +54,22 @@ function setModeAndURIForODoH(mode, path) {
   Services.prefs.setCharPref("network.trr.odoh.target_path", `${path}`);
 }
 
-function setModeAndURI(mode, path) {
+function setModeAndURI(mode, path, domain) {
   if (runningODoHTests) {
     setModeAndURIForODoH(mode, path);
   } else {
     Services.prefs.setIntPref("network.trr.mode", mode);
-    Services.prefs.setCharPref(
-      "network.trr.uri",
-      `https://${TRR_Domain}:${h2Port}/${path}`
-    );
+    if (domain) {
+      Services.prefs.setCharPref(
+        "network.trr.uri",
+        `https://${domain}:${h2Port}/${path}`
+      );
+    } else {
+      Services.prefs.setCharPref(
+        "network.trr.uri",
+        `https://${TRR_Domain}:${h2Port}/${path}`
+      );
+    }
   }
 }
 
