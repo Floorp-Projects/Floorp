@@ -1,4 +1,3 @@
-thunderbird-packages.txt:comm/build/virtualenv_packages.txt
 pth:build
 pth:config
 pth:config/mozunit
