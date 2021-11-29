@@ -165,7 +165,7 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   RefPtr<mozilla::EditorSpellCheck> mPendingSpellCheck;
 
   int32_t mNumWordsInSpellSelection;
-  int32_t mMaxNumWordsInSpellSelection;
+  const int32_t mMaxNumWordsInSpellSelection;
 
   // we need to keep track of the current text position in the document
   // so we can spell check the old word when the user clicks around the

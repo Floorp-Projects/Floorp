@@ -4299,6 +4299,12 @@
   value: false
   mirror: once
 
+# Maximum number of misspelled words in a text.
+- name: extensions.spellcheck.inline.max-misspellings
+  type: int32_t
+  value: 500
+  mirror: always
+
 # Whether the extensions can register a service worker on its own.
 # NOTE: WebExtensions Framework ability to register a background service worker
 # is not controlled by this pref, only the extension code ability to use
