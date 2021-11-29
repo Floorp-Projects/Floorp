@@ -3947,7 +3947,7 @@ CodeOffset MacroAssembler::wasmCallIndirect(const wasm::CallSiteDesc& desc,
   loadPtr(Address(scratch, offsetof(wasm::FunctionTableElem, code)), scratch);
 
   Label nonNull;
-  branchTest32(Assembler::NonZero, scratch, scratch, &nonNull);
+  branchTestPtr(Assembler::NonZero, scratch, scratch, &nonNull);
   wasmTrap(wasm::Trap::IndirectCallToNull, trapOffset);
   bind(&nonNull);
 
