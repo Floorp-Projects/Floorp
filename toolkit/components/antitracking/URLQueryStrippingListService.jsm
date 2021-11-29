@@ -4,6 +4,9 @@
 
 "use strict";
 
+const { ComponentUtils } = ChromeUtils.import(
+  "resource://gre/modules/ComponentUtils.jsm"
+);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -27,6 +30,9 @@ class URLQueryStrippingListService {
     this.QueryInterface = ChromeUtils.generateQI([
       "nsIURLQueryStrippingListService",
     ]);
+    this._xpcom_factory = ComponentUtils.generateSingletonFactory(
+      URLQueryStrippingListService
+    );
     this.observers = new Set();
     this.prefStripList = [];
     this.prefAllowList = [];
