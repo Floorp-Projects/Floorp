@@ -75,9 +75,10 @@ void PlatformUIThread::Stop() {
 
   PostMessage(hwnd_, WM_CLOSE, 0, 0);
 
-  hwnd_ = NULL;
-
   PlatformThread::Stop();
+
+  // do this after stop to make sure in-progress operations are finished.
+  hwnd_ = NULL;
 }
 
 void PlatformUIThread::Run() {
