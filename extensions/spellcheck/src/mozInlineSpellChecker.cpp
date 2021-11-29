@@ -44,6 +44,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/RangeUtils.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/KeyboardEvent.h"
@@ -93,8 +94,6 @@ using namespace mozilla::ipc;
 
 static mozilla::LazyLogModule sInlineSpellCheckerLog("InlineSpellChecker");
 
-static const char kMaxSpellCheckSelectionSize[] =
-    "extensions.spellcheck.inline.max-misspellings";
 static const PRTime kMaxSpellCheckTimeInUsec =
     INLINESPELL_CHECK_TIMEOUT * PR_USEC_PER_MSEC;
 
@@ -564,18 +563,14 @@ mozInlineSpellChecker::SpellCheckingState
 
 mozInlineSpellChecker::mozInlineSpellChecker()
     : mNumWordsInSpellSelection(0),
-      mMaxNumWordsInSpellSelection(250),
+      mMaxNumWordsInSpellSelection(
+          StaticPrefs::extensions_spellcheck_inline_max_misspellings()),
       mNumPendingSpellChecks(0),
       mNumPendingUpdateCurrentDictionary(0),
       mDisabledAsyncToken(0),
       mNeedsCheckAfterNavigation(false),
       mFullSpellCheckScheduled(false),
-      mIsListeningToEditSubActions(false) {
-  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
-  if (prefs)
-    prefs->GetIntPref(kMaxSpellCheckSelectionSize,
-                      &mMaxNumWordsInSpellSelection);
-}
+      mIsListeningToEditSubActions(false) {}
 
 mozInlineSpellChecker::~mozInlineSpellChecker() {}
 
