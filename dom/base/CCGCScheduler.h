@@ -109,6 +109,8 @@ struct CCRunnerStep {
 
 class CCGCScheduler {
  public:
+  CCGCScheduler() : mInterruptRequested(false) {}
+
   static bool CCRunnerFired(TimeStamp aDeadline);
 
   // Parameter setting
@@ -150,6 +152,11 @@ class CCGCScheduler {
   void KillGCRunner();
   void KillCCRunner();
   void KillAllTimersAndRunners();
+
+  js::SliceBudget CreateGCSliceBudget(JS::GCReason aReason, int64_t aMillis) {
+    return js::SliceBudget(mozilla::TimeDuration::FromMilliseconds(aMillis),
+                           &mInterruptRequested);
+  }
 
   /*
    * aDelay is the delay before the first time the idle task runner runs.
@@ -434,6 +441,10 @@ class CCGCScheduler {
 
   // The parent process is ready for us to do a major GC.
   bool mReadyForMajorGC = false;
+
+  // Set when the IdleTaskRunner requests the current task be interrupted.
+  // Cleared when the GC slice budget has detected the interrupt request.
+  mozilla::Atomic<bool> mInterruptRequested;
 
   // When a shrinking GC has been requested but we back-out, if this is true
   // we run a non-shrinking GC.
