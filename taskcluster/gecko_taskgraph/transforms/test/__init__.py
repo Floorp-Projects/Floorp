@@ -311,11 +311,7 @@ test_description_schema = Schema(
         Optional("expires-after"): str,
         # The different configurations that should be run against this task, defined
         # in the TEST_VARIANTS object.
-        Optional("variants"): Any(list(TEST_VARIANTS)),
-        # Internal config set by 'split_variants' transform. Do not use.
-        # TODO This is needed as variants get split before schema validation.
-        # We should handle variants in a new file to avoid this.
-        Optional("variant-suffix"): str,
+        Optional("variants"): [str],
         # Whether to run this task with e10s.  If false, run
         # without e10s; if true, run with e10s; if 'both', run one task with and
         # one task without e10s.  E10s tasks have "-e10s" appended to the test name
@@ -362,7 +358,7 @@ test_description_schema = Schema(
         ),
         # seconds of runtime after which the task will be killed.  Like 'chunks',
         # this can be keyed by test pltaform.
-        Required("max-run-time"): optionally_keyed_by("test-platform", int),
+        Required("max-run-time"): optionally_keyed_by("test-platform", "subtest", int),
         # the exit status code that indicates the task should be retried
         Optional("retry-exit-status"): [int],
         # Whether to perform a gecko checkout.
@@ -435,7 +431,7 @@ test_description_schema = Schema(
         Required("test-platform"): str,
         # limit the test-platforms (as defined in test-platforms.yml)
         # that the test will run on
-        Optional("limit-platforms"): optionally_keyed_by("app", [str]),
+        Optional("limit-platforms"): optionally_keyed_by("app", "subtest", [str]),
         # the name of the test (the key in tests.yml)
         Required("test-name"): str,
         # the product name, defaults to firefox
@@ -466,6 +462,7 @@ test_description_schema = Schema(
         # target.dmg (Mac), target.apk (Android), target.tar.bz2 (Linux),
         # or target.zip (Windows).
         Optional("target"): optionally_keyed_by(
+            "app",
             "test-platform",
             Any(
                 str,
@@ -473,8 +470,9 @@ test_description_schema = Schema(
                 {Required("index"): str, Required("name"): str},
             ),
         ),
-        # A list of artifacts to install from 'fetch' tasks.
-        Optional("fetches"): {str: optionally_keyed_by("test-platform", [str])},
+        # A list of artifacts to install from 'fetch' tasks. Validation deferred
+        # to 'job' transforms.
+        Optional("fetches"): object,
         # Opt-in to Python 3 support
         Optional("python-3"): bool,
         # Raptor / browsertime specific keys, defer validation to 'raptor.py'
@@ -567,6 +565,9 @@ def set_defaults(config, tasks):
         task["mozharness"].setdefault("set-moz-node-path", False)
         task["mozharness"].setdefault("chunked", False)
         yield task
+
+
+transforms.add_validate(test_description_schema)
 
 
 variant_description_schema = Schema(
@@ -675,9 +676,6 @@ def limit_platforms(config, tasks):
         limited_platforms = {key: key for key in task["limit-platforms"]}
         if keymatch(limited_platforms, task["test-platform"]):
             yield task
-
-
-transforms.add_validate(test_description_schema)
 
 
 @transforms.add
