@@ -15,15 +15,6 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-function createTemporarySaveDirectory() {
-  var saveDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
-  saveDir.append("testsavedir");
-  if (!saveDir.exists()) {
-    saveDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
-  }
-  return saveDir;
-}
-
 function createPromiseForTransferComplete(expectedFileName, destFile) {
   return new Promise(resolve => {
     MockFilePicker.showCallback = fp => {
