@@ -23,6 +23,7 @@ import hashlib
 import json
 import logging
 import re
+from importlib import import_module
 
 import jsone
 from mozbuild.schedules import INCLUSIVE_COMPONENTS
@@ -654,16 +655,21 @@ def resolve_keys(config, tasks):
 
 
 @transforms.add
-def setup_raptor(config, tasks):
-    """Add options that are specific to raptor jobs (identified by suite=raptor)"""
-    from gecko_taskgraph.transforms.test.raptor import transforms as raptor_transforms
+def run_sibling_transforms(config, tasks):
+    """Runs other transform files next to this module."""
+    # List of modules to load transforms from in order.
+    transform_modules = (("raptor", lambda t: t["suite"] == "raptor"),)
 
     for task in tasks:
-        if task["suite"] != "raptor":
-            yield task
-            continue
+        xforms = TransformSequence()
+        for name, filterfn in transform_modules:
+            if filterfn and not filterfn(task):
+                continue
 
-        yield from raptor_transforms(config, [task])
+            mod = import_module(f"gecko_taskgraph.transforms.test.{name}")
+            xforms.add(mod.transforms)
+
+        yield from xforms(config, [task])
 
 
 @transforms.add
