@@ -38,7 +38,7 @@ def install_moz_phab(command_context, force=False):
         sys.exit(1)
 
     active_metadata = MozSiteMetadata.from_runtime()
-    external_python = active_metadata.external_python
+    external_python = active_metadata.external_python.python_path
     is_external_python_virtualenv = (
         subprocess.check_output(
             [
