@@ -773,7 +773,7 @@ class PromptFeature private constructor(
                 )
             }
 
-            else -> throw InvalidParameterException("Not valid prompt request type")
+            else -> throw InvalidParameterException("Not valid prompt request type $promptRequest")
         }
 
         dialog.feature = this
