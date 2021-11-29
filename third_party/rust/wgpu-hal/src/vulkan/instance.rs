@@ -1,7 +1,7 @@
 use std::{
     cmp,
     ffi::{c_void, CStr, CString},
-    mem, slice,
+    slice,
     sync::Arc,
     thread,
 };
@@ -108,7 +108,11 @@ unsafe extern "system" fn debug_utils_messenger_callback(
 
 impl super::Swapchain {
     unsafe fn release_resources(self, device: &ash::Device) -> Self {
-        let _ = device.device_wait_idle();
+        profiling::scope!("Swapchain::release_resources");
+        {
+            profiling::scope!("vkDeviceWaitIdle");
+            let _ = device.device_wait_idle();
+        };
         device.destroy_fence(self.fence, None);
         self
     }
@@ -117,7 +121,6 @@ impl super::Swapchain {
 impl super::Instance {
     pub fn required_extensions(
         entry: &ash::Entry,
-        driver_api_version: u32,
         flags: crate::InstanceFlags,
     ) -> Result<Vec<&'static CStr>, crate::InstanceError> {
         let instance_extensions = entry
@@ -157,11 +160,6 @@ impl super::Instance {
 
         extensions.push(vk::KhrGetPhysicalDeviceProperties2Fn::name());
 
-        // VK_KHR_storage_buffer_storage_class required for `Naga` on Vulkan 1.0 devices
-        if driver_api_version == vk::API_VERSION_1_0 {
-            extensions.push(vk::KhrStorageBufferStorageClassFn::name());
-        }
-
         // Only keep available extensions.
         extensions.retain(|&ext| {
             if instance_extensions
@@ -186,18 +184,11 @@ impl super::Instance {
     pub unsafe fn from_raw(
         entry: ash::Entry,
         raw_instance: ash::Instance,
-        driver_api_version: u32,
         extensions: Vec<&'static CStr>,
         flags: crate::InstanceFlags,
+        has_nv_optimus: bool,
         drop_guard: Option<super::DropGuard>,
     ) -> Result<Self, crate::InstanceError> {
-        if driver_api_version == vk::API_VERSION_1_0
-            && !extensions.contains(&vk::KhrStorageBufferStorageClassFn::name())
-        {
-            log::warn!("Required VK_KHR_storage_buffer_storage_class extension is not supported");
-            return Err(crate::InstanceError);
-        }
-
         let debug_utils = if extensions.contains(&ext::DebugUtils::name()) {
             let extension = ext::DebugUtils::new(&entry, &raw_instance);
             let vk_info = vk::DebugUtilsMessengerCreateInfoEXT::builder()
@@ -216,16 +207,15 @@ impl super::Instance {
             None
         };
 
-        let get_physical_device_properties = extensions
-            .iter()
-            .find(|&&ext| ext == vk::KhrGetPhysicalDeviceProperties2Fn::name())
-            .map(|_| {
-                vk::KhrGetPhysicalDeviceProperties2Fn::load(|name| {
-                    mem::transmute(
-                        entry.get_instance_proc_addr(raw_instance.handle(), name.as_ptr()),
-                    )
-                })
-            });
+        let get_physical_device_properties =
+            if extensions.contains(&khr::GetPhysicalDeviceProperties2::name()) {
+                Some(khr::GetPhysicalDeviceProperties2::new(
+                    &entry,
+                    &raw_instance,
+                ))
+            } else {
+                None
+            };
 
         Ok(Self {
             shared: Arc::new(super::InstanceShared {
@@ -235,6 +225,7 @@ impl super::Instance {
                 debug_utils,
                 get_physical_device_properties,
                 entry,
+                has_nv_optimus,
             }),
             extensions,
         })
@@ -467,12 +458,17 @@ impl crate::Instance<super::Api> for super::Instance {
                 })
             });
 
-        let extensions = Self::required_extensions(&entry, driver_api_version, desc.flags)?;
+        let extensions = Self::required_extensions(&entry, desc.flags)?;
 
         let instance_layers = entry.enumerate_instance_layer_properties().map_err(|e| {
             log::info!("enumerate_instance_layer_properties: {:?}", e);
             crate::InstanceError
         })?;
+
+        let nv_optimus_layer = CStr::from_bytes_with_nul(b"VK_LAYER_NV_optimus\0").unwrap();
+        let has_nv_optimus = instance_layers
+            .iter()
+            .any(|inst_layer| CStr::from_ptr(inst_layer.layer_name.as_ptr()) == nv_optimus_layer);
 
         // Check requested layers against the available layers
         let layers = {
@@ -521,9 +517,9 @@ impl crate::Instance<super::Api> for super::Instance {
         Self::from_raw(
             entry,
             vk_instance,
-            driver_api_version,
             extensions,
             desc.flags,
+            has_nv_optimus,
             Some(Box::new(())), // `Some` signals that wgpu-hal is in charge of destroying vk_instance
         )
     }
@@ -594,6 +590,8 @@ impl crate::Instance<super::Api> for super::Instance {
     }
 
     unsafe fn enumerate_adapters(&self) -> Vec<crate::ExposedAdapter<super::Api>> {
+        use crate::auxil::db;
+
         let raw_devices = match self.shared.raw.enumerate_physical_devices() {
             Ok(devices) => devices,
             Err(err) => {
@@ -607,23 +605,23 @@ impl crate::Instance<super::Api> for super::Instance {
             .flat_map(|device| self.expose_adapter(device))
             .collect::<Vec<_>>();
 
-        // detect if it's an Intel + NVidia configuration
-        if cfg!(target_os = "linux") {
-            use crate::auxil::db;
-            let has_nvidia_dgpu = exposed_adapters.iter().any(|exposed| {
-                exposed.info.device_type == wgt::DeviceType::DiscreteGpu
-                    && exposed.info.vendor == db::nvidia::VENDOR as usize
-            });
-            if has_nvidia_dgpu {
-                for exposed in exposed_adapters.iter_mut() {
-                    if exposed.info.device_type == wgt::DeviceType::IntegratedGpu
-                        && exposed.info.vendor == db::intel::VENDOR as usize
-                    {
-                        // See https://gitlab.freedesktop.org/mesa/mesa/-/issues/4688
-                        log::warn!("Disabling presentation on '{}' (id {:?}) because of an Nvidia dGPU (on Linux)",
-                            exposed.info.name, exposed.adapter.raw);
-                        exposed.adapter.private_caps.can_present = false;
-                    }
+        // Detect if it's an Intel + NVidia configuration with Optimus
+        let has_nvidia_dgpu = exposed_adapters.iter().any(|exposed| {
+            exposed.info.device_type == wgt::DeviceType::DiscreteGpu
+                && exposed.info.vendor == db::nvidia::VENDOR as usize
+        });
+        if cfg!(target_os = "linux") && has_nvidia_dgpu && self.shared.has_nv_optimus {
+            for exposed in exposed_adapters.iter_mut() {
+                if exposed.info.device_type == wgt::DeviceType::IntegratedGpu
+                    && exposed.info.vendor == db::intel::VENDOR as usize
+                {
+                    // See https://gitlab.freedesktop.org/mesa/mesa/-/issues/4688
+                    log::warn!(
+                        "Disabling presentation on '{}' (id {:?}) because of NV Optimus (on Linux)",
+                        exposed.info.name,
+                        exposed.adapter.raw
+                    );
+                    exposed.adapter.private_caps.can_present = false;
                 }
             }
         }

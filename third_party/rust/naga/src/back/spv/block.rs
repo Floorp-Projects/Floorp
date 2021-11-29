@@ -20,6 +20,87 @@ fn get_dimension(type_inner: &crate::TypeInner) -> Dimension {
 }
 
 impl Writer {
+    // Flip Y coordinate to adjust for coordinate space difference
+    // between SPIR-V and our IR.
+    // The `position_id` argument is a pointer to a `vecN<f32>`,
+    // whose `y` component we will negate.
+    fn write_epilogue_position_y_flip(
+        &mut self,
+        position_id: Word,
+        body: &mut Vec<Instruction>,
+    ) -> Result<(), Error> {
+        let float_ptr_type_id = self.get_type_id(LookupType::Local(LocalType::Value {
+            vector_size: None,
+            kind: crate::ScalarKind::Float,
+            width: 4,
+            pointer_class: Some(spirv::StorageClass::Output),
+        }));
+        let index_y_id = self.get_index_constant(1);
+        let access_id = self.id_gen.next();
+        body.push(Instruction::access_chain(
+            float_ptr_type_id,
+            access_id,
+            position_id,
+            &[index_y_id],
+        ));
+
+        let float_type_id = self.get_type_id(LookupType::Local(LocalType::Value {
+            vector_size: None,
+            kind: crate::ScalarKind::Float,
+            width: 4,
+            pointer_class: None,
+        }));
+        let load_id = self.id_gen.next();
+        body.push(Instruction::load(float_type_id, load_id, access_id, None));
+
+        let neg_id = self.id_gen.next();
+        body.push(Instruction::unary(
+            spirv::Op::FNegate,
+            float_type_id,
+            neg_id,
+            load_id,
+        ));
+
+        body.push(Instruction::store(access_id, neg_id, None));
+        Ok(())
+    }
+
+    // Clamp fragment depth between 0 and 1.
+    fn write_epilogue_frag_depth_clamp(
+        &mut self,
+        frag_depth_id: Word,
+        body: &mut Vec<Instruction>,
+    ) -> Result<(), Error> {
+        let float_type_id = self.get_type_id(LookupType::Local(LocalType::Value {
+            vector_size: None,
+            kind: crate::ScalarKind::Float,
+            width: 4,
+            pointer_class: None,
+        }));
+        let value0_id = self.get_constant_scalar(crate::ScalarValue::Float(0.0), 4);
+        let value1_id = self.get_constant_scalar(crate::ScalarValue::Float(1.0), 4);
+
+        let original_id = self.id_gen.next();
+        body.push(Instruction::load(
+            float_type_id,
+            original_id,
+            frag_depth_id,
+            None,
+        ));
+
+        let clamp_id = self.id_gen.next();
+        body.push(Instruction::ext_inst(
+            self.gl450_ext_inst_id,
+            spirv::GLOp::FClamp,
+            float_type_id,
+            clamp_id,
+            &[original_id, value0_id, value1_id],
+        ));
+
+        body.push(Instruction::store(frag_depth_id, clamp_id, None));
+        Ok(())
+    }
+
     fn write_entry_point_return(
         &mut self,
         value_id: Word,
@@ -44,43 +125,18 @@ impl Writer {
 
             body.push(Instruction::store(res_member.id, member_value_id, None));
 
-            // Flip Y coordinate to adjust for coordinate space difference
-            // between SPIR-V and our IR.
-            if self.flags.contains(WriterFlags::ADJUST_COORDINATE_SPACE)
-                && res_member.built_in == Some(crate::BuiltIn::Position)
-            {
-                let access_id = self.id_gen.next();
-                let float_ptr_type_id = self.get_type_id(LookupType::Local(LocalType::Value {
-                    vector_size: None,
-                    kind: crate::ScalarKind::Float,
-                    width: 4,
-                    pointer_class: Some(spirv::StorageClass::Output),
-                }));
-                let index_y_id = self.get_index_constant(1);
-                body.push(Instruction::access_chain(
-                    float_ptr_type_id,
-                    access_id,
-                    res_member.id,
-                    &[index_y_id],
-                ));
-
-                let load_id = self.id_gen.next();
-                let float_type_id = self.get_type_id(LookupType::Local(LocalType::Value {
-                    vector_size: None,
-                    kind: crate::ScalarKind::Float,
-                    width: 4,
-                    pointer_class: None,
-                }));
-                body.push(Instruction::load(float_type_id, load_id, access_id, None));
-
-                let neg_id = self.id_gen.next();
-                body.push(Instruction::unary(
-                    spirv::Op::FNegate,
-                    float_type_id,
-                    neg_id,
-                    load_id,
-                ));
-                body.push(Instruction::store(access_id, neg_id, None));
+            match res_member.built_in {
+                Some(crate::BuiltIn::Position)
+                    if self.flags.contains(WriterFlags::ADJUST_COORDINATE_SPACE) =>
+                {
+                    self.write_epilogue_position_y_flip(res_member.id, body)?;
+                }
+                Some(crate::BuiltIn::FragDepth)
+                    if self.flags.contains(WriterFlags::CLAMP_FRAG_DEPTH) =>
+                {
+                    self.write_epilogue_frag_depth_clamp(res_member.id, body)?;
+                }
+                _ => {}
             }
         }
         Ok(())
@@ -176,14 +232,12 @@ impl<'w> BlockContext<'w> {
             crate::Expression::Constant(handle) => self.writer.constant_ids[handle.index()],
             crate::Expression::Splat { size, value } => {
                 let value_id = self.cached[value];
-                self.temp_list.clear();
-                self.temp_list.resize(size as usize, value_id);
-
+                let components = [value_id; 4];
                 let id = self.gen_id();
                 block.body.push(Instruction::composite_construct(
                     result_type_id,
                     id,
-                    &self.temp_list,
+                    &components[..size as usize],
                 ));
                 id
             }
@@ -292,6 +346,10 @@ impl<'w> BlockContext<'w> {
                         (Dimension::Matrix, Dimension::Scalar { .. }) => {
                             spirv::Op::MatrixTimesScalar
                         }
+                        (Dimension::Scalar, Dimension::Matrix { .. }) => {
+                            preserve_order = false;
+                            spirv::Op::MatrixTimesScalar
+                        }
                         (Dimension::Matrix, Dimension::Vector) => spirv::Op::MatrixTimesVector,
                         (Dimension::Matrix, Dimension::Matrix) => spirv::Op::MatrixTimesMatrix,
                         (Dimension::Vector, Dimension::Vector)
@@ -302,7 +360,6 @@ impl<'w> BlockContext<'w> {
                         }
                         (Dimension::Vector, Dimension::Vector)
                         | (Dimension::Scalar, Dimension::Scalar) => spirv::Op::IMul,
-                        other => unimplemented!("Mul {:?}", other),
                     },
                     crate::BinaryOperator::Divide => match left_ty_inner.scalar_kind() {
                         Some(crate::ScalarKind::Sint) => spirv::Op::SDiv,
@@ -383,6 +440,7 @@ impl<'w> BlockContext<'w> {
                 arg,
                 arg1,
                 arg2,
+                arg3,
             } => {
                 use crate::MathFunction as Mf;
                 enum MathOp {
@@ -398,6 +456,10 @@ impl<'w> BlockContext<'w> {
                     None => 0,
                 };
                 let arg2_id = match arg2 {
+                    Some(handle) => self.cached[handle],
+                    None => 0,
+                };
+                let arg3_id = match arg3 {
                     Some(handle) => self.cached[handle],
                     None => 0,
                 };
@@ -550,6 +612,40 @@ impl<'w> BlockContext<'w> {
                         log::error!("unimplemented math function {:?}", fun);
                         return Err(Error::FeatureNotImplemented("math function"));
                     }
+                    Mf::ExtractBits => {
+                        let op = match arg_scalar_kind {
+                            Some(crate::ScalarKind::Uint) => spirv::Op::BitFieldUExtract,
+                            Some(crate::ScalarKind::Sint) => spirv::Op::BitFieldSExtract,
+                            other => unimplemented!("Unexpected sign({:?})", other),
+                        };
+                        MathOp::Custom(Instruction::ternary(
+                            op,
+                            result_type_id,
+                            id,
+                            arg0_id,
+                            arg1_id,
+                            arg2_id,
+                        ))
+                    }
+                    Mf::InsertBits => MathOp::Custom(Instruction::quaternary(
+                        spirv::Op::BitFieldInsert,
+                        result_type_id,
+                        id,
+                        arg0_id,
+                        arg1_id,
+                        arg2_id,
+                        arg3_id,
+                    )),
+                    Mf::Pack4x8unorm => MathOp::Ext(spirv::GLOp::PackUnorm4x8),
+                    Mf::Pack4x8snorm => MathOp::Ext(spirv::GLOp::PackSnorm4x8),
+                    Mf::Pack2x16float => MathOp::Ext(spirv::GLOp::PackHalf2x16),
+                    Mf::Pack2x16unorm => MathOp::Ext(spirv::GLOp::PackSnorm2x16),
+                    Mf::Pack2x16snorm => MathOp::Ext(spirv::GLOp::PackSnorm2x16),
+                    Mf::Unpack4x8unorm => MathOp::Ext(spirv::GLOp::UnpackUnorm4x8),
+                    Mf::Unpack4x8snorm => MathOp::Ext(spirv::GLOp::UnpackSnorm4x8),
+                    Mf::Unpack2x16float => MathOp::Ext(spirv::GLOp::UnpackHalf2x16),
+                    Mf::Unpack2x16unorm => MathOp::Ext(spirv::GLOp::UnpackSnorm2x16),
+                    Mf::Unpack2x16snorm => MathOp::Ext(spirv::GLOp::UnpackSnorm2x16),
                 };
 
                 block.body.push(match math_op {
@@ -558,7 +654,7 @@ impl<'w> BlockContext<'w> {
                         op,
                         result_type_id,
                         id,
-                        &[arg0_id, arg1_id, arg2_id][..fun.argument_count()],
+                        &[arg0_id, arg1_id, arg2_id, arg3_id][..fun.argument_count()],
                     ),
                     MathOp::Custom(inst) => inst,
                 });
@@ -631,25 +727,26 @@ impl<'w> BlockContext<'w> {
                 use crate::ScalarKind as Sk;
 
                 let expr_id = self.cached[expr];
-                let (src_kind, src_width) =
+                let (src_kind, src_size, src_width) =
                     match *self.fun_info[expr].ty.inner_with(&self.ir_module.types) {
-                        crate::TypeInner::Scalar { kind, width }
-                        | crate::TypeInner::Vector {
-                            kind,
-                            width,
-                            size: _,
-                        } => (kind, width),
-                        crate::TypeInner::Matrix { width, .. } => (crate::ScalarKind::Float, width),
+                        crate::TypeInner::Scalar { kind, width } => (kind, None, width),
+                        crate::TypeInner::Vector { kind, width, size } => (kind, Some(size), width),
                         ref other => {
                             log::error!("As source {:?}", other);
                             return Err(Error::Validation("Unexpected Expression::As source"));
                         }
                     };
 
-                let id = self.gen_id();
+                enum Cast {
+                    Unary(spirv::Op),
+                    Binary(spirv::Op, Word),
+                    Ternary(spirv::Op, Word, Word),
+                }
 
-                let instruction = match (src_kind, kind, convert) {
-                    (_, Sk::Bool, Some(_)) if src_kind != Sk::Bool => {
+                let cast = match (src_kind, kind, convert) {
+                    (_, _, None) | (Sk::Bool, Sk::Bool, Some(_)) => Cast::Unary(spirv::Op::Bitcast),
+                    // casting to a bool - generate `OpXxxNotEqual`
+                    (_, Sk::Bool, Some(_)) => {
                         let (op, value) = match src_kind {
                             Sk::Sint => (spirv::Op::INotEqual, crate::ScalarValue::Sint(0)),
                             Sk::Uint => (spirv::Op::INotEqual, crate::ScalarValue::Uint(0)),
@@ -658,34 +755,102 @@ impl<'w> BlockContext<'w> {
                             }
                             Sk::Bool => unreachable!(),
                         };
-                        let zero_id = self.writer.get_constant_scalar(value, 4);
+                        let zero_scalar_id = self.writer.get_constant_scalar(value, src_width);
+                        let zero_id = match src_size {
+                            Some(size) => {
+                                let vector_type_id =
+                                    self.get_type_id(LookupType::Local(LocalType::Value {
+                                        vector_size: Some(size),
+                                        kind: src_kind,
+                                        width: src_width,
+                                        pointer_class: None,
+                                    }));
+                                let components = [zero_scalar_id; 4];
 
-                        Instruction::binary(op, result_type_id, id, expr_id, zero_id)
-                    }
-                    _ => {
-                        let op = match (src_kind, kind, convert) {
-                            (_, _, None) => spirv::Op::Bitcast,
-                            (Sk::Float, Sk::Uint, Some(_)) => spirv::Op::ConvertFToU,
-                            (Sk::Float, Sk::Sint, Some(_)) => spirv::Op::ConvertFToS,
-                            (Sk::Float, Sk::Float, Some(dst_width)) if src_width != dst_width => {
-                                spirv::Op::FConvert
+                                let zero_id = self.gen_id();
+                                block.body.push(Instruction::composite_construct(
+                                    vector_type_id,
+                                    zero_id,
+                                    &components[..size as usize],
+                                ));
+                                zero_id
                             }
-                            (Sk::Sint, Sk::Float, Some(_)) => spirv::Op::ConvertSToF,
-                            (Sk::Sint, Sk::Sint, Some(dst_width)) if src_width != dst_width => {
-                                spirv::Op::SConvert
-                            }
-                            (Sk::Uint, Sk::Float, Some(_)) => spirv::Op::ConvertUToF,
-                            (Sk::Uint, Sk::Uint, Some(dst_width)) if src_width != dst_width => {
-                                spirv::Op::UConvert
-                            }
-                            // We assume it's either an identity cast, or int-uint.
-                            _ => spirv::Op::Bitcast,
+                            None => zero_scalar_id,
                         };
 
-                        Instruction::unary(op, result_type_id, id, expr_id)
+                        Cast::Binary(op, zero_id)
                     }
+                    // casting from a bool - generate `OpSelect`
+                    (Sk::Bool, _, Some(dst_width)) => {
+                        let (val0, val1) = match kind {
+                            Sk::Sint => (crate::ScalarValue::Sint(0), crate::ScalarValue::Sint(1)),
+                            Sk::Uint => (crate::ScalarValue::Uint(0), crate::ScalarValue::Uint(1)),
+                            Sk::Float => (
+                                crate::ScalarValue::Float(0.0),
+                                crate::ScalarValue::Float(1.0),
+                            ),
+                            Sk::Bool => unreachable!(),
+                        };
+                        let scalar0_id = self.writer.get_constant_scalar(val0, dst_width);
+                        let scalar1_id = self.writer.get_constant_scalar(val1, dst_width);
+                        let (accept_id, reject_id) = match src_size {
+                            Some(size) => {
+                                let vector_type_id =
+                                    self.get_type_id(LookupType::Local(LocalType::Value {
+                                        vector_size: Some(size),
+                                        kind,
+                                        width: dst_width,
+                                        pointer_class: None,
+                                    }));
+                                let components0 = [scalar0_id; 4];
+                                let components1 = [scalar1_id; 4];
+
+                                let vec0_id = self.gen_id();
+                                block.body.push(Instruction::composite_construct(
+                                    vector_type_id,
+                                    vec0_id,
+                                    &components0[..size as usize],
+                                ));
+                                let vec1_id = self.gen_id();
+                                block.body.push(Instruction::composite_construct(
+                                    vector_type_id,
+                                    vec1_id,
+                                    &components1[..size as usize],
+                                ));
+                                (vec1_id, vec0_id)
+                            }
+                            None => (scalar1_id, scalar0_id),
+                        };
+
+                        Cast::Ternary(spirv::Op::Select, accept_id, reject_id)
+                    }
+                    (Sk::Float, Sk::Uint, Some(_)) => Cast::Unary(spirv::Op::ConvertFToU),
+                    (Sk::Float, Sk::Sint, Some(_)) => Cast::Unary(spirv::Op::ConvertFToS),
+                    (Sk::Float, Sk::Float, Some(dst_width)) if src_width != dst_width => {
+                        Cast::Unary(spirv::Op::FConvert)
+                    }
+                    (Sk::Sint, Sk::Float, Some(_)) => Cast::Unary(spirv::Op::ConvertSToF),
+                    (Sk::Sint, Sk::Sint, Some(dst_width)) if src_width != dst_width => {
+                        Cast::Unary(spirv::Op::SConvert)
+                    }
+                    (Sk::Uint, Sk::Float, Some(_)) => Cast::Unary(spirv::Op::ConvertUToF),
+                    (Sk::Uint, Sk::Uint, Some(dst_width)) if src_width != dst_width => {
+                        Cast::Unary(spirv::Op::UConvert)
+                    }
+                    // We assume it's either an identity cast, or int-uint.
+                    _ => Cast::Unary(spirv::Op::Bitcast),
                 };
 
+                let id = self.gen_id();
+                let instruction = match cast {
+                    Cast::Unary(op) => Instruction::unary(op, result_type_id, id, expr_id),
+                    Cast::Binary(op, operand) => {
+                        Instruction::binary(op, result_type_id, id, expr_id, operand)
+                    }
+                    Cast::Ternary(op, op1, op2) => {
+                        Instruction::ternary(op, result_type_id, id, expr_id, op1, op2)
+                    }
+                };
                 block.body.push(instruction);
                 id
             }
@@ -989,7 +1154,6 @@ impl<'w> BlockContext<'w> {
                 crate::Statement::Switch {
                     selector,
                     ref cases,
-                    ref default,
                 } => {
                     let selector_id = self.cached[selector];
 
@@ -1000,13 +1164,30 @@ impl<'w> BlockContext<'w> {
                     ));
 
                     let default_id = self.gen_id();
-                    let raw_cases = cases
-                        .iter()
-                        .map(|c| super::instructions::Case {
-                            value: c.value as Word,
-                            label_id: self.gen_id(),
-                        })
-                        .collect::<Vec<_>>();
+
+                    let mut reached_default = false;
+                    let mut raw_cases = Vec::with_capacity(cases.len());
+                    let mut case_ids = Vec::with_capacity(cases.len());
+                    for case in cases.iter() {
+                        match case.value {
+                            crate::SwitchValue::Integer(value) => {
+                                let label_id = self.gen_id();
+                                // No cases should be added after the default case is encountered
+                                // since the default case catches all
+                                if !reached_default {
+                                    raw_cases.push(super::instructions::Case {
+                                        value: value as Word,
+                                        label_id,
+                                    });
+                                }
+                                case_ids.push(label_id);
+                            }
+                            crate::SwitchValue::Default => {
+                                case_ids.push(default_id);
+                                reached_default = true;
+                            }
+                        }
+                    }
 
                     self.function.consume(
                         block,
@@ -1018,24 +1199,25 @@ impl<'w> BlockContext<'w> {
                         ..loop_context
                     };
 
-                    for (i, (case, raw_case)) in cases.iter().zip(raw_cases.iter()).enumerate() {
+                    for (i, (case, label_id)) in cases.iter().zip(case_ids.iter()).enumerate() {
                         let case_finish_id = if case.fall_through {
-                            match raw_cases.get(i + 1) {
-                                Some(rc) => rc.label_id,
-                                None => default_id,
-                            }
+                            case_ids[i + 1]
                         } else {
                             merge_id
                         };
                         self.write_block(
-                            raw_case.label_id,
+                            *label_id,
                             &case.body,
                             Some(case_finish_id),
                             inner_context,
                         )?;
                     }
 
-                    self.write_block(default_id, default, Some(merge_id), inner_context)?;
+                    // If no default was encountered write a empty block to satisfy the presence of
+                    // a block the default label
+                    if !reached_default {
+                        self.write_block(default_id, &[], Some(merge_id), inner_context)?;
+                    }
 
                     block = Block::new(merge_id);
                 }
