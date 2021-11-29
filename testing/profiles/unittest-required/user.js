@@ -64,6 +64,9 @@ user_pref("browser.ui.layout.tablet", 0); // force tablet UI off
 // Ensure UITour won't hit the network
 user_pref("browser.uitour.pinnedTabUrl", "http://{server}/uitour-dummy/pinnedTab");
 user_pref("browser.uitour.url", "http://{server}/uitour-dummy/tour");
+// Turn off Merino suggestions in the location bar so as not to trigger network
+// connections.
+user_pref("browser.urlbar.merino.endpointURL", "");
 user_pref("browser.urlbar.speculativeConnect.enabled", false);
 // Turn off search suggestions in the location bar so as not to trigger network
 // connections.
