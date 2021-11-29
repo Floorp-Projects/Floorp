@@ -65,6 +65,18 @@ if (!gFissionBrowser) {
   );
 }
 
+if (AppConstants.NIGHTLY_BUILD) {
+  // URL Query Stripping. This will only be loaded if the URL Query Stripping
+  // is enabled by default during the startup. This currently only happens in
+  // Nightly channel.
+  //
+  // Bug 1743418 will try to remove this from content startup script.
+
+  known_scripts.modules.add(
+    "resource://gre/modules/URLQueryStrippingListService.jsm"
+  );
+}
+
 // Items on this list *might* load when creating the process, as opposed to
 // items in the main list, which we expect will always load.
 const intermittently_loaded_scripts = {
