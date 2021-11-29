@@ -22,17 +22,17 @@ use std::mem;
 /// A struct that keeps lists of resources that are no longer needed by the user.
 #[derive(Debug, Default)]
 pub(super) struct SuspectedResources {
-    pub(crate) buffers: Vec<id::Valid<id::BufferId>>,
-    pub(crate) textures: Vec<id::Valid<id::TextureId>>,
-    pub(crate) texture_views: Vec<id::Valid<id::TextureViewId>>,
-    pub(crate) samplers: Vec<id::Valid<id::SamplerId>>,
-    pub(crate) bind_groups: Vec<id::Valid<id::BindGroupId>>,
-    pub(crate) compute_pipelines: Vec<id::Valid<id::ComputePipelineId>>,
-    pub(crate) render_pipelines: Vec<id::Valid<id::RenderPipelineId>>,
-    pub(crate) bind_group_layouts: Vec<id::Valid<id::BindGroupLayoutId>>,
-    pub(crate) pipeline_layouts: Vec<Stored<id::PipelineLayoutId>>,
-    pub(crate) render_bundles: Vec<id::Valid<id::RenderBundleId>>,
-    pub(crate) query_sets: Vec<id::Valid<id::QuerySetId>>,
+    pub(super) buffers: Vec<id::Valid<id::BufferId>>,
+    pub(super) textures: Vec<id::Valid<id::TextureId>>,
+    pub(super) texture_views: Vec<id::Valid<id::TextureViewId>>,
+    pub(super) samplers: Vec<id::Valid<id::SamplerId>>,
+    pub(super) bind_groups: Vec<id::Valid<id::BindGroupId>>,
+    pub(super) compute_pipelines: Vec<id::Valid<id::ComputePipelineId>>,
+    pub(super) render_pipelines: Vec<id::Valid<id::RenderPipelineId>>,
+    pub(super) bind_group_layouts: Vec<id::Valid<id::BindGroupLayoutId>>,
+    pub(super) pipeline_layouts: Vec<Stored<id::PipelineLayoutId>>,
+    pub(super) render_bundles: Vec<id::Valid<id::RenderBundleId>>,
+    pub(super) query_sets: Vec<id::Valid<id::QuerySetId>>,
 }
 
 impl SuspectedResources {
@@ -86,9 +86,7 @@ impl SuspectedResources {
 struct NonReferencedResources<A: hal::Api> {
     buffers: Vec<A::Buffer>,
     textures: Vec<A::Texture>,
-    // Note: we keep the associated ID here in order to be able to check
-    // at any point what resources are used in a submission.
-    texture_views: Vec<(id::Valid<id::TextureViewId>, A::TextureView)>,
+    texture_views: Vec<A::TextureView>,
     samplers: Vec<A::Sampler>,
     bind_groups: Vec<A::BindGroup>,
     compute_pipes: Vec<A::ComputePipeline>,
@@ -128,35 +126,65 @@ impl<A: hal::Api> NonReferencedResources<A> {
     }
 
     unsafe fn clean(&mut self, device: &A::Device) {
-        for raw in self.buffers.drain(..) {
-            device.destroy_buffer(raw);
+        if !self.buffers.is_empty() {
+            profiling::scope!("destroy_buffers");
+            for raw in self.buffers.drain(..) {
+                device.destroy_buffer(raw);
+            }
         }
-        for raw in self.textures.drain(..) {
-            device.destroy_texture(raw);
+        if !self.textures.is_empty() {
+            profiling::scope!("destroy_textures");
+            for raw in self.textures.drain(..) {
+                device.destroy_texture(raw);
+            }
         }
-        for (_, raw) in self.texture_views.drain(..) {
-            device.destroy_texture_view(raw);
+        if !self.texture_views.is_empty() {
+            profiling::scope!("destroy_texture_views");
+            for raw in self.texture_views.drain(..) {
+                device.destroy_texture_view(raw);
+            }
         }
-        for raw in self.samplers.drain(..) {
-            device.destroy_sampler(raw);
+        if !self.samplers.is_empty() {
+            profiling::scope!("destroy_samplers");
+            for raw in self.samplers.drain(..) {
+                device.destroy_sampler(raw);
+            }
         }
-        for raw in self.bind_groups.drain(..) {
-            device.destroy_bind_group(raw);
+        if !self.bind_groups.is_empty() {
+            profiling::scope!("destroy_bind_groups");
+            for raw in self.bind_groups.drain(..) {
+                device.destroy_bind_group(raw);
+            }
         }
-        for raw in self.compute_pipes.drain(..) {
-            device.destroy_compute_pipeline(raw);
+        if !self.compute_pipes.is_empty() {
+            profiling::scope!("destroy_compute_pipelines");
+            for raw in self.compute_pipes.drain(..) {
+                device.destroy_compute_pipeline(raw);
+            }
         }
-        for raw in self.render_pipes.drain(..) {
-            device.destroy_render_pipeline(raw);
+        if !self.render_pipes.is_empty() {
+            profiling::scope!("destroy_render_pipelines");
+            for raw in self.render_pipes.drain(..) {
+                device.destroy_render_pipeline(raw);
+            }
         }
-        for raw in self.bind_group_layouts.drain(..) {
-            device.destroy_bind_group_layout(raw);
+        if !self.bind_group_layouts.is_empty() {
+            profiling::scope!("destroy_bind_group_layouts");
+            for raw in self.bind_group_layouts.drain(..) {
+                device.destroy_bind_group_layout(raw);
+            }
         }
-        for raw in self.pipeline_layouts.drain(..) {
-            device.destroy_pipeline_layout(raw);
+        if !self.pipeline_layouts.is_empty() {
+            profiling::scope!("destroy_pipeline_layouts");
+            for raw in self.pipeline_layouts.drain(..) {
+                device.destroy_pipeline_layout(raw);
+            }
         }
-        for raw in self.query_sets.drain(..) {
-            device.destroy_query_set(raw);
+        if !self.query_sets.is_empty() {
+            profiling::scope!("destroy_query_sets");
+            for raw in self.query_sets.drain(..) {
+                device.destroy_query_set(raw);
+            }
         }
     }
 }
@@ -290,7 +318,7 @@ impl<A: hal::Api> LifetimeTracker<A> {
     }
 
     pub fn cleanup(&mut self, device: &A::Device) {
-        profiling::scope!("cleanup");
+        profiling::scope!("cleanup", "LifetimeTracker");
         unsafe {
             self.free_resources.clean(device);
         }
@@ -367,6 +395,10 @@ impl<A: HalApi> LifetimeTracker<A> {
                     if let Some(res) = hub.bind_groups.unregister_locked(id.0, &mut *guard) {
                         self.suspected_resources.add_trackers(&res.used);
 
+                        self.suspected_resources
+                            .bind_group_layouts
+                            .push(res.layout_id);
+
                         let submit_index = res.life_guard.life_count();
                         self.active
                             .iter_mut()
@@ -399,7 +431,7 @@ impl<A: HalApi> LifetimeTracker<A> {
                             .find(|a| a.index == submit_index)
                             .map_or(&mut self.free_resources, |a| &mut a.last_resources)
                             .texture_views
-                            .push((id, res.raw));
+                            .push(res.raw);
                     }
                 }
             }

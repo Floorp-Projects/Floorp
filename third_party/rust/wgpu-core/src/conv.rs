@@ -71,10 +71,6 @@ pub fn map_texture_usage(
         usage.contains(wgt::TextureUsages::COPY_SRC),
     );
     u.set(
-        hal::TextureUses::COPY_DST,
-        usage.contains(wgt::TextureUsages::COPY_DST),
-    );
-    u.set(
         hal::TextureUses::RESOURCE,
         usage.contains(wgt::TextureUsages::TEXTURE_BINDING),
     );
@@ -151,4 +147,13 @@ pub fn check_texture_dimension_size(
     }
 
     Ok(())
+}
+
+pub fn bind_group_layout_flags(features: wgt::Features) -> hal::BindGroupLayoutFlags {
+    let mut flags = hal::BindGroupLayoutFlags::empty();
+    flags.set(
+        hal::BindGroupLayoutFlags::PARTIALLY_BOUND,
+        features.contains(wgt::Features::PARTIALLY_BOUND_BINDING_ARRAY),
+    );
+    flags
 }

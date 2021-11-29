@@ -268,6 +268,10 @@ already_AddRefed<Texture> Device::InitSwapChain(
   return CreateTexture(desc);
 }
 
+bool Device::CheckNewWarning(const nsACString& aMessage) {
+  return mKnownWarnings.EnsureInserted(aMessage);
+}
+
 void Device::Destroy() {
   // TODO
 }

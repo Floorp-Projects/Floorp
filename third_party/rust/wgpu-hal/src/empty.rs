@@ -74,7 +74,11 @@ impl crate::Surface<Api> for Context {
 }
 
 impl crate::Adapter<Api> for Context {
-    unsafe fn open(&self, features: wgt::Features) -> DeviceResult<crate::OpenDevice<Api>> {
+    unsafe fn open(
+        &self,
+        features: wgt::Features,
+        _limits: &wgt::Limits,
+    ) -> DeviceResult<crate::OpenDevice<Api>> {
         Err(crate::DeviceError::Lost)
     }
     unsafe fn texture_format_capabilities(
@@ -250,13 +254,6 @@ impl crate::CommandEncoder<Api> for Encoder {
     }
 
     unsafe fn clear_buffer(&mut self, buffer: &Resource, range: crate::MemoryRange) {}
-
-    unsafe fn clear_texture(
-        &mut self,
-        texture: &Resource,
-        subresource_range: &wgt::ImageSubresourceRange,
-    ) {
-    }
 
     unsafe fn copy_buffer_to_buffer<T>(&mut self, src: &Resource, dst: &Resource, regions: T) {}
 

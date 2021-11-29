@@ -1,6 +1,6 @@
 use std::fmt;
 
-use super::{builtins::MacroCall, context::ExprPos, SourceMetadata};
+use super::{builtins::MacroCall, context::ExprPos, Span};
 use crate::{
     BinaryOperator, Binding, Constant, Expression, Function, GlobalVariable, Handle, Interpolation,
     Sampling, StorageAccess, StorageClass, Type, UnaryOperator,
@@ -9,7 +9,7 @@ use crate::{
 #[derive(Debug, Clone, Copy)]
 pub enum GlobalLookupKind {
     Variable(Handle<GlobalVariable>),
-    Constant(Handle<Constant>),
+    Constant(Handle<Constant>, Handle<Type>),
     BlockSelect(Handle<GlobalVariable>, u32),
 }
 
@@ -82,13 +82,14 @@ pub struct VariableReference {
     pub expr: Handle<Expression>,
     pub load: bool,
     pub mutable: bool,
+    pub constant: Option<(Handle<Constant>, Handle<Type>)>,
     pub entry_arg: Option<usize>,
 }
 
 #[derive(Debug, Clone)]
 pub struct HirExpr {
     pub kind: HirExprKind,
-    pub meta: SourceMetadata,
+    pub meta: Span,
 }
 
 #[derive(Debug, Clone)]
@@ -122,9 +123,13 @@ pub enum HirExprKind {
         tgt: Handle<HirExpr>,
         value: Handle<HirExpr>,
     },
-    IncDec {
-        increment: bool,
+    /// A prefix/postfix operator like `++`
+    PrePostfix {
+        /// The operation to be performed
+        op: BinaryOperator,
+        /// Whether this is a postfix or a prefix
         postfix: bool,
+        /// The target expression
         expr: Handle<HirExpr>,
     },
 }

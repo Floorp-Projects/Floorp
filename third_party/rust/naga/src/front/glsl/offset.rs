@@ -11,9 +11,9 @@
 use super::{
     ast::StructLayout,
     error::{Error, ErrorKind},
-    SourceMetadata,
+    Span,
 };
-use crate::{front::align_up, Arena, Constant, Handle, Type, TypeInner};
+use crate::{front::align_up, Arena, Constant, Handle, Type, TypeInner, UniqueArena};
 
 /// Struct with information needed for defining a struct member.
 ///
@@ -37,9 +37,9 @@ pub struct TypeAlignSpan {
 /// change the stride and as such need to have a different type.
 pub fn calculate_offset(
     mut ty: Handle<Type>,
-    meta: SourceMetadata,
+    meta: Span,
     layout: StructLayout,
-    types: &mut Arena<Type>,
+    types: &mut UniqueArena<Type>,
     constants: &Arena<Constant>,
     errors: &mut Vec<Error>,
 ) -> TypeAlignSpan {
@@ -84,8 +84,8 @@ pub fn calculate_offset(
                 crate::ArraySize::Dynamic => stride,
             };
 
-            let ty_span = types.get_span(ty).clone();
-            ty = types.fetch_or_append(
+            let ty_span = types.get_span(ty);
+            ty = types.insert(
                 Type {
                     name,
                     inner: TypeInner::Array {
@@ -144,8 +144,8 @@ pub fn calculate_offset(
 
             span = align_up(span, align);
 
-            let ty_span = types.get_span(ty).clone();
-            ty = types.fetch_or_append(
+            let ty_span = types.get_span(ty);
+            ty = types.insert(
                 Type {
                     name,
                     inner: TypeInner::Struct {
