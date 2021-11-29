@@ -1786,7 +1786,7 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other">ᱮᱴᱟᱜ-ᱟᱜ</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">ᱭᱩᱛᱩᱢ</string>
+    <string name="search_add_custom_engine_name_hint">ᱧᱩᱛᱩᱢ</string>
 
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">ᱵᱮᱵᱷᱟᱨ ᱞᱟᱹᱜᱤᱫ ᱥᱴᱨᱭᱸᱜ ᱥᱮᱸᱫᱽᱨᱟᱭ ᱢᱮ</string>
