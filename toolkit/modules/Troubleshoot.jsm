@@ -24,11 +24,11 @@ const { FeatureGate } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["DOMParser"]);
 
-// We use a preferences whitelist to make sure we only show preferences that
+// We use a list of prefs for display to make sure we only show prefs that
 // are useful for support and won't compromise the user's privacy.  Note that
 // entries are *prefixes*: for example, "accessibility." applies to all prefs
 // under the "accessibility.*" branch.
-const PREFS_WHITELIST = [
+const PREFS_FOR_DISPLAY = [
   "accessibility.",
   "apz.",
   "browser.cache.",
@@ -108,9 +108,11 @@ const PREFS_WHITELIST = [
   "widget.wayland",
 ];
 
-// The blacklist, unlike the whitelist, is a list of regular expressions.
-const PREFS_BLACKLIST = [
+// The list of prefs we don't display, unlike the list of prefs for display,
+// is a list of regular expressions.
+const PREF_REGEXES_NOT_TO_DISPLAY = [
   /^browser[.]fixup[.]domainwhitelist[.]/,
+  /^dom[.]push[.]userAgentID/,
   /^media[.]webrtc[.]debug[.]aec_log_dir/,
   /^media[.]webrtc[.]debug[.]log_file/,
   /^print[.].*print_to_filename$/,
@@ -142,12 +144,15 @@ function getPref(name) {
   return PREFS_GETTERS[type](Services.prefs, name);
 }
 
-// Return the preferences filtered by PREFS_BLACKLIST and whitelist lists
+// Return the preferences filtered by PREF_REGEXES_NOT_TO_DISPLAY and PREFS_FOR_DISPLAY
 // and also by the custom 'filter'-ing function.
-function getPrefList(filter, whitelist = PREFS_WHITELIST) {
-  return whitelist.reduce(function(prefs, branch) {
+function getPrefList(filter, allowlist = PREFS_FOR_DISPLAY) {
+  return allowlist.reduce(function(prefs, branch) {
     Services.prefs.getChildList(branch).forEach(function(name) {
-      if (filter(name) && !PREFS_BLACKLIST.some(re => re.test(name))) {
+      if (
+        filter(name) &&
+        !PREF_REGEXES_NOT_TO_DISPLAY.some(re => re.test(name))
+      ) {
         prefs[name] = getPref(name);
       }
     });
