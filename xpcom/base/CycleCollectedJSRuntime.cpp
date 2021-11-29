@@ -1464,7 +1464,6 @@ bool CycleCollectedJSRuntime::TraceJSHolders(JSTracer* aTracer,
     aBudget.step();
   }
 
-  aBudget.resetOverBudget();
   return aIter.Done();
 }
 
