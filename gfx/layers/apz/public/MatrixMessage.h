@@ -38,6 +38,16 @@ class MatrixMessage {
 
   inline const LayersId& GetLayersId() const { return mLayersId; }
 
+  bool operator==(const MatrixMessage& aOther) const {
+    return aOther.mMatrix == mMatrix &&
+           aOther.mTopLevelViewportVisibleRectInBrowserCoords ==
+               mTopLevelViewportVisibleRectInBrowserCoords &&
+           aOther.mLayersId == mLayersId;
+  }
+
+  bool operator!=(const MatrixMessage& aOther) const {
+    return !(*this == aOther);
+  }
   // Fields are public for IPC. Don't access directly
   // elsewhere.
   // Transform matrix to convert this layer to screen coordinate.

@@ -3528,6 +3528,7 @@ void APZCTreeManager::SendSubtreeTransformsToChromeMainThread(
   }
   nsTArray<MatrixMessage> messages;
   bool underAncestor = (aAncestor == nullptr);
+  bool shouldNotify = false;
   {
     RecursiveMutexAutoLock lock(mTreeLock);
     if (!mRootNode) {
@@ -3570,8 +3571,14 @@ void APZCTreeManager::SendSubtreeTransformsToChromeMainThread(
             underAncestor = false;
           }
         });
+    if (messages != mLastMessages) {
+      mLastMessages = messages;
+      shouldNotify = true;
+    }
   }
-  controller->NotifyLayerTransforms(std::move(messages));
+  if (shouldNotify) {
+    controller->NotifyLayerTransforms(std::move(messages));
+  }
 }
 
 void APZCTreeManager::SetFixedLayerMargins(ScreenIntCoord aTop,
