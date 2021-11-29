@@ -105,6 +105,7 @@ GeneratedFile(
 # need to include etld_data.inc
 LOCAL_INCLUDES += [
     "/netwerk/base",
+    "/netwerk/ipc",
     "/netwerk/protocol/http",
 ]
 

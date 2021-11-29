@@ -306,6 +306,24 @@ nsresult TRR::SendHTTPRequest() {
   rv = internalChannel->SetIsTRRServiceChannel(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  if (UseDefaultServer() && StaticPrefs::network_trr_async_connInfo()) {
+    RefPtr<nsHttpConnectionInfo> trrConnInfo =
+        TRRService::Get()->TRRConnectionInfo();
+    if (trrConnInfo) {
+      nsAutoCString host;
+      dnsURI->GetHost(host);
+      if (host.Equals(trrConnInfo->GetOrigin())) {
+        internalChannel->SetConnectionInfo(trrConnInfo);
+        LOG(("TRR::SendHTTPRequest use conn info:%s\n",
+             trrConnInfo->HashKey().get()));
+      } else {
+        MOZ_DIAGNOSTIC_ASSERT(false);
+      }
+    } else {
+      TRRService::Get()->InitTRRConnectionInfo();
+    }
+  }
+
   if (useGet) {
     rv = httpChannel->SetRequestMethod("GET"_ns);
     NS_ENSURE_SUCCESS(rv, rv);

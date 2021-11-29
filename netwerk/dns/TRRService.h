@@ -33,8 +33,9 @@ class TRRService : public TRRServiceBase,
                    public nsSupportsWeakReference,
                    public AHostResolver {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIOBSERVER
+  NS_DECL_NSIPROXYCONFIGCHANGEDCALLBACK
 
   TRRService();
   static TRRService* Get();
@@ -46,7 +47,7 @@ class TRRService : public TRRServiceBase,
   uint32_t ConfirmationState() { return mConfirmation.State(); }
 
   bool DisableIPv6() { return mDisableIPv6; }
-  nsresult GetURI(nsACString& result);
+  void GetURI(nsACString& result) override;
   nsresult GetCredentials(nsCString& result);
   uint32_t GetRequestTimeout();
 
@@ -77,6 +78,8 @@ class TRRService : public TRRServiceBase,
   // Returns a reference to a static string identifying the current DoH server
   // If the DoH server is not one of the built-in ones it will return "(other)"
   static const nsCString& ProviderKey();
+
+  void InitTRRConnectionInfo() override;
 
  private:
   virtual ~TRRService();

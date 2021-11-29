@@ -220,7 +220,9 @@ nsresult TRRServiceChannel::MaybeResolveProxyAndBeginConnect() {
   // at this point. The only time we know mProxyInfo already is if we're
   // proxying a non-http protocol like ftp. We don't need to discover proxy
   // settings if we are never going to make a network connection.
-  if (!mProxyInfo &&
+  // If mConnectionInfo is already supplied, we don't need to do proxy
+  // resolution again.
+  if (!mProxyInfo && !mConnectionInfo &&
       !(mLoadFlags & (nsICachingChannel::LOAD_ONLY_FROM_CACHE |
                       nsICachingChannel::LOAD_NO_NETWORK_IO)) &&
       NS_SUCCEEDED(ResolveProxy())) {
@@ -409,7 +411,6 @@ nsresult TRRServiceChannel::BeginConnect() {
     Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC_OE, !isHttps);
   } else if (mConnectionInfo) {
     LOG(("TRRServiceChannel %p Using channel supplied connection info", this));
-    Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC, false);
   } else {
     LOG(("TRRServiceChannel %p Using default connection info", this));
 

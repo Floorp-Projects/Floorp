@@ -13,6 +13,7 @@ template<class T> class nsCOMArray;
 namespace mozilla {
 class TimeStamp;
 namespace net {
+class nsHttpConnectionInfo;
 class WebSocketConnectionBase;
 }
 }
@@ -461,4 +462,9 @@ interface nsIHttpChannelInternal : nsISupports
      * Set Early Hint Observer.
      */
     [must_use] void setEarlyHintObserver(in nsIEarlyHintObserver aObserver);
+
+%{ C++
+    virtual void SetConnectionInfo(mozilla::net::nsHttpConnectionInfo* aInfo) {}
+%}
+
 };
