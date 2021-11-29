@@ -101,7 +101,6 @@ static bool WrapWithWebRenderTextureHost(ISurfaceAllocator* aDeallocator,
                                          LayersBackend aBackend,
                                          TextureFlags aFlags) {
   if ((aFlags & TextureFlags::SNAPSHOT) ||
-      (aBackend != LayersBackend::LAYERS_WR) ||
       (!aDeallocator->UsesImageBridge() &&
        !aDeallocator->AsCompositorBridgeParentBase())) {
     return false;
