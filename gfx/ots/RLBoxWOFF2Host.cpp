@@ -122,7 +122,8 @@ bool RLBoxProcessWOFF2(ots::FontFile* aHeader, ots::OTSStream* aOutput,
 
   // Transfer aData into the sandbox.
 
-  auto data = TransferBufferToWOFF2<uint8_t>(sandbox, aData, aLength);
+  auto data = TransferBufferToWOFF2<char>(
+      sandbox, reinterpret_cast<const char*>(aData), aLength);
   NS_ENSURE_TRUE(*data, false);
 
   // Validator for the decompression size.
@@ -148,7 +149,7 @@ bool RLBoxProcessWOFF2(ots::FontFile* aHeader, ots::OTSStream* aOutput,
 
   // Get the (estimated) decompression size and validate it.
 
-  size_t decompressedSize =
+  unsigned long decompressedSize =
       sandbox
           ->invoke_sandbox_function(RLBoxComputeWOFF2FinalSize, *data, aLength)
           .copy_and_verify(sizeValidator);
@@ -159,8 +160,8 @@ bool RLBoxProcessWOFF2(ots::FontFile* aHeader, ots::OTSStream* aOutput,
 
   // Perform the actual conversion to TTF.
 
-  auto sizep = WOFF2Alloc<size_t>(sandbox);
-  auto bufp = WOFF2Alloc<uint8_t*>(sandbox);
+  auto sizep = WOFF2Alloc<unsigned long>(sandbox);
+  auto bufp = WOFF2Alloc<char*>(sandbox);
   auto bufOwnerString =
       WOFF2Alloc<void*>(sandbox);  // pointer to string that owns the bufer
 
@@ -183,16 +184,16 @@ bool RLBoxProcessWOFF2(ots::FontFile* aHeader, ots::OTSStream* aOutput,
   // We need to validate the size again. RLBoxConvertWOFF2ToTTF works even if
   // the computed size (with RLBoxComputeWOFF2FinalSize) is wrong, so we can't
   // trust the decompressedSize to be the same as size sizep.
-  size_t size = (*sizep.get()).copy_and_verify(sizeValidator);
+  unsigned long size = (*sizep.get()).copy_and_verify(sizeValidator);
 
   if (NS_WARN_IF(!validateOK)) {
     return false;
   }
 
-  const uint8_t* decompressed =
+  const uint8_t* decompressed = reinterpret_cast<const uint8_t*>(
       (*bufp.get())
           .unverified_safe_pointer_because(
-              size, "Only care that the buffer is within sandbox boundary.");
+              size, "Only care that the buffer is within sandbox boundary."));
 
   // Since ProcessTT* memcpy from the buffer, make sure it's not null.
   NS_ENSURE_TRUE(decompressed, false);

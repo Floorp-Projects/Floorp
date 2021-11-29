@@ -11,18 +11,19 @@
 
 extern "C" {
 
+// Because RLBox doesn't (yet) cleanly support {size,uint8}_t types on Windows,
+// we're using unsigned long instead of size_t and char instead of uint8_t.
+
 // Since RLBox doesn't support C++ APIs, we expose C wrappers for the WOFF2.
-size_t RLBoxComputeWOFF2FinalSize(const uint8_t* aData, size_t aLength);
-bool RLBoxConvertWOFF2ToTTF(const uint8_t* aData, size_t aLength,
-                            size_t aDecompressedSize, size_t* aResultSize,
-                            void** aResultOwningStr, uint8_t** aResultData);
+unsigned long RLBoxComputeWOFF2FinalSize(const char* aData,
+                                         unsigned long aLength);
+bool RLBoxConvertWOFF2ToTTF(const char* aData, unsigned long aLength,
+                            unsigned long aDecompressedSize,
+                            unsigned long* aResultSize, void** aResultOwningStr,
+                            char** aResultData);
 // RLBoxDeleteWOFF2String is used to delete the C++ string allocated by
 // RLBoxConvertWOFF2ToTTF.
 void RLBoxDeleteWOFF2String(void** aStr);
-
-// Type of brotli decoder function. Because RLBox doesn't (yet) cleanly support
-// {size,uint8}_t types for callbacks, we're using unsigned long instead of
-// size_t and char instead of uint8_t.
 
 typedef BrotliDecoderResult(BrotliDecompressCallback)(
     unsigned long aEncodedSize, const char* aEncodedBuffer,
