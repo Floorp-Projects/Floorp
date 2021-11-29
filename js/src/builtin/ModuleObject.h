@@ -354,7 +354,6 @@ class ModuleObject : public NativeObject {
   static PromiseObject* createTopLevelCapability(JSContext* cx,
                                                  HandleModuleObject module);
   bool isAsync() const;
-  void setAsync(bool isAsync);
   bool isAsyncEvaluating() const;
   void setAsyncEvaluatingFalse();
   void setEvaluationError(HandleValue newValue);
