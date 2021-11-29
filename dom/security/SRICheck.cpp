@@ -74,7 +74,7 @@ static nsresult IsEligible(nsIChannel* aChannel,
     SRILOG(("SRICheck::IsEligible, same-origin"));
     return NS_OK;
   }
-  SRILOG(("SRICheck::IsEligible, NOT same origin"));
+  SRILOG(("SRICheck::IsEligible, NOT same-origin"));
 
   NS_ConvertUTF8toUTF16 requestSpecUTF16(requestSpec);
   nsTArray<nsString> params;
