@@ -1036,6 +1036,15 @@ static void DiscardOldItems(nsIFrame* aFrame) {
 }
 
 void nsIFrame::RemoveDisplayItemDataForDeletion() {
+  nsAutoString name;
+#ifdef DEBUG_FRAME_DUMP
+  if (DL_LOG_TEST(LogLevel::Debug)) {
+    GetFrameName(name);
+  }
+#endif
+  DL_LOGD("Removing display item data for frame %p (%s)", this,
+          NS_ConvertUTF16toUTF8(name).get());
+
   // Destroying a WebRenderUserDataTable can cause destruction of other objects
   // which can remove frame properties in their destructor. If we delete a frame
   // property it runs the destructor of the stored object in the middle of
@@ -1125,6 +1134,15 @@ void nsIFrame::MarkNeedsDisplayItemRebuild() {
   if (!nsLayoutUtils::DisplayRootHasRetainedDisplayListBuilder(this)) {
     return;
   }
+
+  nsAutoString name;
+#ifdef DEBUG_FRAME_DUMP
+  if (DL_LOG_TEST(LogLevel::Debug)) {
+    GetFrameName(name);
+  }
+#endif
+  DL_LOGD("RDL - Rebuilding display items for frame %p (%s)", this,
+          NS_ConvertUTF16toUTF8(name).get());
 
   nsIFrame* rootFrame = PresShell()->GetRootFrame();
   MOZ_ASSERT(rootFrame);
@@ -3085,6 +3103,16 @@ struct ContainerTracker {
 void nsIFrame::BuildDisplayListForStackingContext(
     nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
     bool* aCreatedContainerItem) {
+  if (aBuilder->IsForContent()) {
+    DL_LOGV("BuildDisplayListForStackingContext (%p) <", this);
+  }
+
+  ScopeExit e([this, aBuilder]() {
+    if (aBuilder->IsForContent()) {
+      DL_LOGV("> BuildDisplayListForStackingContext (%p)", this);
+    }
+  });
+
   AutoCheckBuilder check(aBuilder);
   if (HasAnyStateBits(NS_FRAME_TOO_DEEP_IN_FRAME_TREE)) return;
 
@@ -3940,6 +3968,7 @@ void nsIFrame::BuildDisplayListForSimpleChild(nsDisplayListBuilder* aBuilder,
   const nsRect dirty = aBuilder->GetDirtyRect() - offset;
 
   if (!DescendIntoChild(aBuilder, aChild, visible, dirty)) {
+    DL_LOGV("Skipped frame %p", aChild);
     return;
   }
 
@@ -3996,6 +4025,14 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
                                         const nsDisplayListSet& aLists,
                                         DisplayChildFlags aFlags) {
   AutoCheckBuilder check(aBuilder);
+  if (aBuilder->IsForContent()) {
+    DL_LOGV("BuildDisplayListForChild (%p) <", aChild);
+  }
+  ScopeExit e([aChild, aBuilder]() {
+    if (aBuilder->IsForContent()) {
+      DL_LOGV("> BuildDisplayListForChild (%p)", aChild);
+    }
+  });
 
   if (ShouldSkipFrame(aBuilder, aChild)) {
     return;
@@ -4115,6 +4152,7 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
                "Should have dealt with placeholders already");
 
   if (!DescendIntoChild(aBuilder, child, visible, dirty)) {
+    DL_LOGV("Skipped frame %p", child);
     return;
   }
 
