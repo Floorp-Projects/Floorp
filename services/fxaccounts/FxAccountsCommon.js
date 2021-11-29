@@ -291,6 +291,7 @@ exports.FXA_PWDMGR_PLAINTEXT_FIELDS = new Set([
   "profile",
   "device",
   "profileCache",
+  "encryptedSendTabKeys",
 ]);
 
 // Fields we store in secure storage if it exists.

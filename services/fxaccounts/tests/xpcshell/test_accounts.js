@@ -864,6 +864,8 @@ add_task(async function test_getKeyForScope_invalid_token() {
   };
 
   await fxa.setSignedInUser(yusuf);
+  let user = await fxa._internal.getUserAccountData();
+  Assert.notEqual(user.encryptedSendTabKeys, null);
 
   try {
     await fxa.keys.getKeyForScope(SCOPE_OLD_SYNC);
@@ -873,9 +875,12 @@ add_task(async function test_getKeyForScope_invalid_token() {
     Assert.equal(err.errno, ERRNO_INVALID_AUTH_TOKEN);
   }
 
-  let user = await fxa._internal.getUserAccountData();
+  user = await fxa._internal.getUserAccountData();
   Assert.equal(user.email, yusuf.email);
   Assert.equal(user.keyFetchToken, null);
+  // We verify that encryptedSendTabKeys are also wiped
+  // when a user's credentials are wiped
+  Assert.equal(user.encryptedSendTabKeys, null);
   await fxa._internal.abortExistingFlow();
 });
 
@@ -1630,6 +1635,7 @@ function getTestUser(name) {
     keyFetchToken: name + "'s keyfetch token",
     unwrapBKey: expandHex("44"),
     verified: false,
+    encryptedSendTabKeys: name + "'s encrypted Send tab keys",
   };
 }
 
