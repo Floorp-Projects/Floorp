@@ -388,6 +388,11 @@ GPUProcessManager::CreateUiCompositorController(nsBaseWidget* aWidget,
     mGPUChild->SendInitUiCompositorController(aId, std::move(parentPipe));
     result = UiCompositorControllerChild::CreateForGPUProcess(
         mProcessToken, std::move(childPipe));
+
+    if (result) {
+      result->SetCompositorSurfaceManager(
+          mProcess->GetCompositorSurfaceManager());
+    }
   }
   if (result) {
     result->SetBaseWidget(aWidget);

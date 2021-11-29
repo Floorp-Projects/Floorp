@@ -321,6 +321,12 @@ elif CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk" and CONFIG["MOZ_X11"]:
         "gtk/PlatformWidgetTypes.ipdlh",
         "headless/HeadlessWidgetTypes.ipdlh",
     ]
+elif toolkit == "android":
+    IPDL_SOURCES = [
+        "android/PCompositorWidget.ipdl",
+        "android/PlatformWidgetTypes.ipdlh",
+        "headless/HeadlessWidgetTypes.ipdlh",
+    ]
 else:
     IPDL_SOURCES = [
         "generic/PCompositorWidget.ipdl",

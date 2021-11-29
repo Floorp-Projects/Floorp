@@ -39,6 +39,7 @@ class GeckoEditableSupport;
 class GeckoViewSupport;
 class LayerViewSupport;
 class NPZCSupport;
+class PlatformCompositorWidgetDelegate;
 }  // namespace widget
 
 namespace ipc {
@@ -70,6 +71,9 @@ class nsWindow final : public nsBaseWidget {
       bool aIsTopLevel);
 
  private:
+  // Unique ID given to each widget, used to map Surfaces to widgets
+  // in the CompositorSurfaceManager.
+  int32_t mWidgetId;
   uint32_t mScreenId;
 
  private:
@@ -204,6 +208,11 @@ class nsWindow final : public nsBaseWidget {
   nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
                                      nsIObserver* aObserver) override;
 
+  void SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) override;
+
+  virtual void GetCompositorWidgetInitData(
+      mozilla::widget::CompositorWidgetInitData* aInitData) override;
+
   mozilla::layers::CompositorBridgeChild* GetCompositorBridgeChild() const;
 
   void SetContentDocumentDisplayed(bool aDisplayed);
@@ -267,6 +276,8 @@ class nsWindow final : public nsBaseWidget {
   mozilla::layers::LayersId GetRootLayerId() const;
   RefPtr<mozilla::layers::UiCompositorControllerChild>
   GetUiCompositorControllerChild();
+
+  mozilla::widget::PlatformCompositorWidgetDelegate* mCompositorWidgetDelegate;
 
   friend class mozilla::widget::GeckoViewSupport;
   friend class mozilla::widget::LayerViewSupport;

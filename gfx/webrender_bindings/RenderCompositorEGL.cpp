@@ -154,24 +154,14 @@ bool RenderCompositorEGL::Resume() {
     DestroyEGLSurface();
 
 #ifdef MOZ_WIDGET_ANDROID
-    // Query the new surface size as this may have changed. We cannot use
-    // mWidget->GetClientSize() due to a race condition between
-    // nsWindow::Resize() being called and the frame being rendered after the
-    // surface is resized.
-    EGLNativeWindowType window = mWidget->AsAndroid()->GetEGLNativeWindow();
-    JNIEnv* const env = jni::GetEnvForThread();
-    ANativeWindow* const nativeWindow =
-        ANativeWindow_fromSurface(env, reinterpret_cast<jobject>(window));
-    const int32_t width = ANativeWindow_getWidth(nativeWindow);
-    const int32_t height = ANativeWindow_getHeight(nativeWindow);
-
+    auto size = GetBufferSize();
     GLint maxTextureSize = 0;
     gl()->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, (GLint*)&maxTextureSize);
 
     // When window size is too big, hardware buffer allocation could fail.
-    if (maxTextureSize < width || maxTextureSize < height) {
-      gfxCriticalNote << "Too big ANativeWindow size(" << width << ", "
-                      << height << ") MaxTextureSize " << maxTextureSize;
+    if (maxTextureSize < size.width || maxTextureSize < size.height) {
+      gfxCriticalNote << "Too big ANativeWindow size(" << size.width << ", "
+                      << size.height << ") MaxTextureSize " << maxTextureSize;
       return false;
     }
 
@@ -181,9 +171,6 @@ bool RenderCompositorEGL::Resume() {
       return false;
     }
     gl::GLContextEGL::Cast(gl())->SetEGLSurfaceOverride(mEGLSurface);
-
-    mEGLSurfaceSize = LayoutDeviceIntSize(width, height);
-    ANativeWindow_release(nativeWindow);
 #endif  // MOZ_WIDGET_ANDROID
   } else if (kIsWayland || kIsX11) {
     // Destroy EGLSurface if it exists and create a new one. We will set the
@@ -249,11 +236,7 @@ ipc::FileDescriptor RenderCompositorEGL::GetAndResetReleaseFence() {
 }
 
 LayoutDeviceIntSize RenderCompositorEGL::GetBufferSize() {
-#ifdef MOZ_WIDGET_ANDROID
-  return mEGLSurfaceSize;
-#else
   return mWidget->GetClientSize();
-#endif
 }
 
 bool RenderCompositorEGL::UsePartialPresent() {

@@ -21,6 +21,7 @@ import org.mozilla.gecko.GeckoThread.FileDescriptors;
 import org.mozilla.gecko.GeckoThread.ParcelFileDescriptors;
 import org.mozilla.gecko.IGeckoEditableChild;
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.gfx.ICompositorSurfaceManager;
 import org.mozilla.gecko.util.ThreadUtils;
 
 public class GeckoServiceChildProcess extends Service {
@@ -61,101 +62,114 @@ public class GeckoServiceChildProcess extends Service {
     GeckoThread.launch(); // Preload Gecko.
   }
 
-  private final Binder mBinder =
-      new IChildProcess.Stub() {
-        @Override
-        public int getPid() {
-          return Process.myPid();
+  protected static class ChildProcessBinder extends IChildProcess.Stub {
+    @Override
+    public int getPid() {
+      return Process.myPid();
+    }
+
+    @Override
+    public int start(
+        final IProcessManager procMan,
+        final String mainProcessId,
+        final String[] args,
+        final Bundle extras,
+        final int flags,
+        final String userSerialNumber,
+        final String crashHandlerService,
+        final ParcelFileDescriptor prefsPfd,
+        final ParcelFileDescriptor prefMapPfd,
+        final ParcelFileDescriptor ipcPfd,
+        final ParcelFileDescriptor crashReporterPfd,
+        final ParcelFileDescriptor crashAnnotationPfd) {
+
+      final ParcelFileDescriptors pfds =
+          ParcelFileDescriptors.builder()
+              .prefs(prefsPfd)
+              .prefMap(prefMapPfd)
+              .ipc(ipcPfd)
+              .crashReporter(crashReporterPfd)
+              .crashAnnotation(crashAnnotationPfd)
+              .build();
+
+      synchronized (GeckoServiceChildProcess.class) {
+        if (sOwnerProcessId != null && !sOwnerProcessId.equals(mainProcessId)) {
+          Log.w(
+              LOGTAG,
+              "This process belongs to a different GeckoRuntime owner: "
+                  + sOwnerProcessId
+                  + " process: "
+                  + mainProcessId);
+          // We need to close the File Descriptors here otherwise we will leak them causing a
+          // shutdown hang.
+          pfds.close();
+          return IChildProcess.STARTED_BUSY;
         }
+        if (sProcessManager != null) {
+          Log.e(LOGTAG, "Child process already started");
+          pfds.close();
+          return IChildProcess.STARTED_FAIL;
+        }
+        sProcessManager = procMan;
+        sOwnerProcessId = mainProcessId;
+      }
 
-        @Override
-        public int start(
-            final IProcessManager procMan,
-            final String mainProcessId,
-            final String[] args,
-            final Bundle extras,
-            final int flags,
-            final String userSerialNumber,
-            final String crashHandlerService,
-            final ParcelFileDescriptor prefsPfd,
-            final ParcelFileDescriptor prefMapPfd,
-            final ParcelFileDescriptor ipcPfd,
-            final ParcelFileDescriptor crashReporterPfd,
-            final ParcelFileDescriptor crashAnnotationPfd) {
+      final FileDescriptors fds = pfds.detach();
+      ThreadUtils.runOnUiThread(
+          new Runnable() {
+            @Override
+            public void run() {
+              if (crashHandlerService != null) {
+                try {
+                  @SuppressWarnings("unchecked")
+                  final Class<? extends Service> crashHandler =
+                      (Class<? extends Service>) Class.forName(crashHandlerService);
 
-          final ParcelFileDescriptors pfds =
-              ParcelFileDescriptors.builder()
-                  .prefs(prefsPfd)
-                  .prefMap(prefMapPfd)
-                  .ipc(ipcPfd)
-                  .crashReporter(crashReporterPfd)
-                  .crashAnnotation(crashAnnotationPfd)
-                  .build();
-
-          synchronized (GeckoServiceChildProcess.class) {
-            if (sOwnerProcessId != null && !sOwnerProcessId.equals(mainProcessId)) {
-              Log.w(
-                  LOGTAG,
-                  "This process belongs to a different GeckoRuntime owner: "
-                      + sOwnerProcessId
-                      + " process: "
-                      + mainProcessId);
-              // We need to close the File Descriptors here otherwise we will leak them causing a
-              // shutdown hang.
-              pfds.close();
-              return IChildProcess.STARTED_BUSY;
-            }
-            if (sProcessManager != null) {
-              Log.e(LOGTAG, "Child process already started");
-              pfds.close();
-              return IChildProcess.STARTED_FAIL;
-            }
-            sProcessManager = procMan;
-            sOwnerProcessId = mainProcessId;
-          }
-
-          final FileDescriptors fds = pfds.detach();
-          ThreadUtils.runOnUiThread(
-              new Runnable() {
-                @Override
-                public void run() {
-                  if (crashHandlerService != null) {
-                    try {
-                      @SuppressWarnings("unchecked")
-                      final Class<? extends Service> crashHandler =
-                          (Class<? extends Service>) Class.forName(crashHandlerService);
-
-                      // Native crashes are reported through pipes, so we don't have to
-                      // do anything special for that.
-                      GeckoAppShell.setCrashHandlerService(crashHandler);
-                      GeckoAppShell.ensureCrashHandling(crashHandler);
-                    } catch (final ClassNotFoundException e) {
-                      Log.w(LOGTAG, "Couldn't find crash handler service " + crashHandlerService);
-                    }
-                  }
-
-                  final GeckoThread.InitInfo info =
-                      GeckoThread.InitInfo.builder()
-                          .args(args)
-                          .extras(extras)
-                          .flags(flags)
-                          .userSerialNumber(userSerialNumber)
-                          .fds(fds)
-                          .build();
-
-                  if (GeckoThread.init(info)) {
-                    GeckoThread.launch();
-                  }
+                  // Native crashes are reported through pipes, so we don't have to
+                  // do anything special for that.
+                  GeckoAppShell.setCrashHandlerService(crashHandler);
+                  GeckoAppShell.ensureCrashHandling(crashHandler);
+                } catch (final ClassNotFoundException e) {
+                  Log.w(LOGTAG, "Couldn't find crash handler service " + crashHandlerService);
                 }
-              });
-          return IChildProcess.STARTED_OK;
-        }
+              }
 
-        @Override
-        public void crash() {
-          GeckoThread.crash();
-        }
-      };
+              final GeckoThread.InitInfo info =
+                  GeckoThread.InitInfo.builder()
+                      .args(args)
+                      .extras(extras)
+                      .flags(flags)
+                      .userSerialNumber(userSerialNumber)
+                      .fds(fds)
+                      .build();
+
+              if (GeckoThread.init(info)) {
+                GeckoThread.launch();
+              }
+            }
+          });
+      return IChildProcess.STARTED_OK;
+    }
+
+    @Override
+    public void crash() {
+      GeckoThread.crash();
+    }
+
+    @Override
+    public ICompositorSurfaceManager getCompositorSurfaceManager() {
+      Log.e(
+          LOGTAG, "Invalid call to IChildProcess.getCompositorSurfaceManager for non-GPU process");
+      throw new AssertionError(
+          "Invalid call to IChildProcess.getCompositorSurfaceManager for non-GPU process.");
+    }
+  }
+
+  protected Binder createBinder() {
+    return new ChildProcessBinder();
+  }
+
+  private final Binder mBinder = createBinder();
 
   @Override
   public void onDestroy() {
