@@ -4,17 +4,14 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import hashlib
 import os
 import platform
 import subprocess
 from subprocess import CalledProcessError
 
 from mach.site import PythonVirtualenv
+from mach.util import get_state_dir
 from mozfile import which
-
-
-here = os.path.join(os.path.dirname(__file__))
 
 
 MINIMUM_RUST_VERSION = "1.53.0"
@@ -26,53 +23,14 @@ def get_tools_dir(srcdir=False):
     return get_state_dir(srcdir)
 
 
-def get_state_dir(srcdir=False):
-    """Obtain path to a directory to hold state.
-
-    Args:
-        srcdir (bool): If True, return a state dir specific to the current
-            srcdir instead of the global state dir (default: False)
-
-    Returns:
-        A path to the state dir (str)
-    """
-    state_dir = os.environ.get("MOZBUILD_STATE_PATH", os.path.expanduser("~/.mozbuild"))
-    if not srcdir:
-        return state_dir
-
-    # This function can be called without the build virutualenv, and in that
-    # case srcdir is supposed to be False. Import mozbuild here to avoid
-    # breaking that usage.
-    from mozbuild.base import MozbuildObject
-
-    srcdir = os.path.abspath(MozbuildObject.from_environment(cwd=here).topsrcdir)
-    # Shortening to 12 characters makes these directories a bit more manageable
-    # in a terminal and is more than good enough for this purpose.
-    srcdir_hash = hashlib.sha256(srcdir.encode("utf-8")).hexdigest()[:12]
-
-    state_dir = os.path.join(
-        state_dir, "srcdirs", "{}-{}".format(os.path.basename(srcdir), srcdir_hash)
+def get_mach_virtualenv_root():
+    return os.path.join(
+        get_state_dir(specific_to_topsrcdir=True), "_virtualenvs", "mach"
     )
 
-    if not os.path.isdir(state_dir):
-        # We create the srcdir here rather than 'mach_initialize.py' so direct
-        # consumers of this function don't create the directory inconsistently.
-        print("Creating local state directory: %s" % state_dir)
-        os.makedirs(state_dir, mode=0o770)
-        # Save the topsrcdir that this state dir corresponds to so we can clean
-        # it up in the event its srcdir was deleted.
-        with open(os.path.join(state_dir, "topsrcdir.txt"), "w") as fh:
-            fh.write(srcdir)
 
-    return state_dir
-
-
-def get_mach_virtualenv_root(state_dir=None):
-    return os.path.join(state_dir or get_state_dir(), "_virtualenvs", "mach")
-
-
-def get_mach_virtualenv_binary(state_dir=None):
-    root = get_mach_virtualenv_root(state_dir=state_dir)
+def get_mach_virtualenv_binary():
+    root = get_mach_virtualenv_root()
     return PythonVirtualenv(root).python_path
 
 

@@ -401,7 +401,7 @@ class BaseBootstrapper(object):
             raise ValueError(
                 "Need a state directory (e.g. ~/.mozbuild) to download " "artifacts"
             )
-        python_location = get_mach_virtualenv_binary(state_dir=self.state_dir)
+        python_location = get_mach_virtualenv_binary()
         if not os.path.exists(python_location):
             raise ValueError("python not found at %s" % python_location)
 
