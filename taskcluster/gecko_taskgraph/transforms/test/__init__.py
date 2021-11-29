@@ -477,10 +477,11 @@ test_description_schema = Schema(
         Optional("fetches"): {str: optionally_keyed_by("test-platform", [str])},
         # Opt-in to Python 3 support
         Optional("python-3"): bool,
-        # Raptor / browsertime specific keys that need to be here to support
-        # using `by-key` after `by-variant`. Ideally these keys should not exist
-        # in the tests.py schema and instead we'd split variants before the raptor
-        # transforms need them. See bug 1700774.
+        # Raptor / browsertime specific keys, defer validation to 'raptor.py'
+        # transform.
+        Optional("raptor"): object,
+        # Raptor / browsertime specific keys that need to be here since 'raptor' schema
+        # is evluated *before* test_description_schema
         Optional("app"): str,
         Optional("subtest"): str,
         # Define if a given task supports artifact builds or not, see bug 1695325.
