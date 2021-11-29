@@ -629,8 +629,7 @@ def split_variants(config, tasks):
 
                 # If any variant in a composite fails this check we skip it.
                 if "when" in variant:
-                    context = {"task": task, "mobile": get_mobile_project(task)}
-                    if not jsone.render(variant["when"], context):
+                    if not jsone.render(variant["when"], {"task": task}):
                         break
 
                 taskv = apply_variant(variant, taskv)

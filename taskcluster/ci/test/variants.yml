@@ -14,7 +14,7 @@ aab:
     description: "{description} with aab test_runner"
     contact: agi
     when: &gv_e10s_filter
-        $eval: 'mobile == "geckoview" && task.e10s in [true, "both"]'
+        $eval: '"android" in task["test-platform"] && task.e10s in [true, "both"]'
     suffix: "aab"
     replace:
         target: "geckoview-test_runner.aab"
