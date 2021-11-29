@@ -8,7 +8,7 @@ from pathlib import Path
 import json
 
 from mozterm import Terminal
-from mozboot.util import get_state_dir
+from mach.util import get_state_dir
 from distutils.spawn import find_executable
 
 

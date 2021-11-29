@@ -184,8 +184,8 @@ def main(argv=sys.argv[1:]):
     from mozbuild.mozconfig import MozconfigLoader
     from mozbuild.base import MachCommandBase, MozbuildObject
     from mozperftest import PerftestArgumentParser
-    from mozboot.util import get_state_dir
     from mach.logging import LoggingManager
+    from mach.util import get_state_dir
 
     mozconfig = SRC_ROOT / "browser" / "config" / "mozconfig"
     if mozconfig.exists():

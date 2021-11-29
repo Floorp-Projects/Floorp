@@ -167,18 +167,6 @@ install a recent enough Python 3.
 
 
 def _activate_python_environment(topsrcdir, state_dir):
-    # We need the "mach" module to access the logic to activate the top-level
-    # Mach site. Since that depends on "packaging" (and, transitively,
-    # "pyparsing"), we add those to the path too.
-    sys.path[0:0] = [
-        os.path.join(topsrcdir, module)
-        for module in (
-            os.path.join("python", "mach"),
-            os.path.join("third_party", "python", "packaging"),
-            os.path.join("third_party", "python", "pyparsing"),
-        )
-    ]
-
     from mach.site import MachSiteManager
 
     mach_environment = MachSiteManager.from_environment(
@@ -212,13 +200,25 @@ def initialize(topsrcdir):
     if os.path.exists(deleted_dir):
         shutil.rmtree(deleted_dir, ignore_errors=True)
 
+    # We need the "mach" module to access the logic to parse virtualenv
+    # requirements. Since that depends on "packaging" (and, transitively,
+    # "pyparsing"), we add those to the path too.
+    sys.path[0:0] = [
+        os.path.join(topsrcdir, module)
+        for module in (
+            os.path.join("python", "mach"),
+            os.path.join("third_party", "python", "packaging"),
+            os.path.join("third_party", "python", "pyparsing"),
+        )
+    ]
+
+    from mach.util import setenv, get_state_dir
+
     state_dir = _create_state_dir()
-    _activate_python_environment(topsrcdir, state_dir)
+    _activate_python_environment(topsrcdir, get_state_dir(True, topsrcdir=topsrcdir))
 
     import mach.base
     import mach.main
-    from mach.util import setenv
-    from mozboot.util import get_state_dir
 
     # Set a reasonable limit to the number of open files.
     #
@@ -322,7 +322,7 @@ def initialize(topsrcdir):
             return state_dir
 
         if key == "local_state_dir":
-            return get_state_dir(srcdir=True)
+            return get_state_dir(specific_to_topsrcdir=True)
 
         if key == "topdir":
             return topsrcdir

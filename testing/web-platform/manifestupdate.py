@@ -12,7 +12,7 @@ import sys
 
 from six.moves import configparser
 
-from mozboot.util import get_state_dir
+from mach.util import get_state_dir
 
 from mozlog.structured import commandline
 

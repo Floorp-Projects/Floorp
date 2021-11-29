@@ -14,7 +14,7 @@ import subprocess
 import time
 from distutils.version import LooseVersion
 from mozfile import which
-from mach.util import UserError
+from mach.util import get_state_dir, UserError
 from mach.telemetry import initialize_telemetry_setting
 
 from mozboot.base import MODERN_RUST_VERSION
@@ -31,7 +31,6 @@ from mozboot.void import VoidBootstrapper
 from mozboot.windows import WindowsBootstrapper
 from mozboot.mozillabuild import MozillaBuildBootstrapper
 from mozboot.mozconfig import find_mozconfig, MozconfigBuilder
-from mozboot.util import get_state_dir
 
 # Use distro package to retrieve linux platform information
 import distro

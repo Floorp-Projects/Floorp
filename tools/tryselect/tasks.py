@@ -9,7 +9,7 @@ import re
 import sys
 from collections import defaultdict
 
-from mozboot.util import get_state_dir
+from mach.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozpack.files import FileFinder
 from moztest.resolve import TestResolver, TestManifestLoader, get_suite_definition
@@ -85,7 +85,9 @@ def generate_tasks(params=None, full=False, disable_target_task_filter=False):
     gecko_taskgraph.fast = True
     generator = TaskGraphGenerator(root_dir=root, parameters=params)
 
-    cache_dir = os.path.join(get_state_dir(srcdir=True), "cache", "taskgraph")
+    cache_dir = os.path.join(
+        get_state_dir(specific_to_topsrcdir=True), "cache", "taskgraph"
+    )
     key = cache_key(attr, generator.parameters, disable_target_task_filter)
     cache = os.path.join(cache_dir, key)
 

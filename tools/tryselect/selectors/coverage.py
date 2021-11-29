@@ -15,7 +15,7 @@ import requests
 import datetime
 
 
-from mozboot.util import get_state_dir
+from mach.util import get_state_dir
 from mozbuild.base import MozbuildObject
 from mozpack.files import FileFinder
 from moztest.resolve import TestResolver

@@ -18,7 +18,7 @@ import sys
 
 import mozfile
 from mach.decorators import Command
-from mozboot.util import get_state_dir
+from mach.util import get_state_dir
 from mozbuild.base import (
     MozbuildObject,
     BinaryNotFoundException,
