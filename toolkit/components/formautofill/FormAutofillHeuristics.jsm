@@ -51,6 +51,16 @@ const MULTI_FIELD_NAMES = [
 ];
 
 /**
+ * To help us classify sections that can appear only N times in a row.
+ * For example, the only time multiple cc-number fields are valid is when
+ * there are four of these fields in a row.
+ * Otherwise, multiple cc-number fields should be in separate sections.
+ */
+const MULTI_N_FIELD_NAMES = {
+  "cc-number": 4,
+};
+
+/**
  * A scanner for traversing all elements in a form and retrieving the field
  * detail with FormAutofillHeuristics.getInfo function. It also provides a
  * cursor (parsingIndex) to indicate which element is waiting for parsing.
@@ -143,58 +153,42 @@ class FieldScanner {
       fieldDetails: [fieldDetail],
     });
   }
-
-  _classifyMultipleCCNumberFields() {
-    if (this._sections.length != 4) {
-      return;
-    }
-    let firstDetails = this._sections[0].fieldDetails;
-    // Ensure that there is only one cc-number field and it is last in this subsection
-    if (
-      firstDetails.findIndex(detail => detail.fieldName == "cc-number") !=
-      firstDetails.length - 1
-    ) {
-      return;
-    }
-    let secondDetails = this._sections[1].fieldDetails;
-    // Ensure that the second cc-number field is only element of this subsection
-    if (
-      !(secondDetails.length == 1 && secondDetails[0].fieldName == "cc-number")
-    ) {
-      return;
-    }
-
-    let thirdDetails = this._sections[2].fieldDetails;
-    // Ensure that the third cc-number field is only element of this subsection
-    if (
-      !(thirdDetails.length == 1 && thirdDetails[0].fieldName == "cc-number")
-    ) {
-      return;
-    }
-
-    let fourthDetails = this._sections[3].fieldDetails;
-    // Ensure that there is only one cc-number field and it is first element of 4th subsection
-    let foundCCNumber = false;
-    for (let [index, detail] of fourthDetails.entries()) {
-      if (detail.fieldName == "cc-number") {
-        if (index == 0) {
-          foundCCNumber = true;
-        } else {
-          return;
-        }
+  /**
+   * Merges the next N fields if the currentType is in the list of MULTI_N_FIELD_NAMES
+   *
+   * @param {number} mergeNextNFields How many of the next N fields to merge into the current section
+   * @param {string} currentType Type of the current field detail
+   * @param {Array<Object>} fieldDetails List of current field details
+   * @param {number} i Index to keep track of the fieldDetails list
+   * @param {boolean} createNewSection Determines if a new section should be created
+   * @returns {[number, boolean]} mergeNextNFields and creatNewSection for use in _classifySections
+   * @memberof FieldScanner
+   */
+  _mergeNextNFields(
+    mergeNextNFields,
+    currentType,
+    fieldDetails,
+    i,
+    createNewSection
+  ) {
+    if (mergeNextNFields) {
+      mergeNextNFields--;
+    } else {
+      // We use -2 here because we have already seen two consecutive fields,
+      // the previous one and the current one.
+      // This ensures we don't accidentally add a field we've already seen.
+      let nextN = MULTI_N_FIELD_NAMES[currentType] - 2;
+      let array = fieldDetails.slice(i + 1, i + 1 + nextN);
+      if (
+        array.length == nextN &&
+        array.every(detail => detail.fieldName == currentType)
+      ) {
+        mergeNextNFields = nextN;
+      } else {
+        createNewSection = true;
       }
     }
-    if (!foundCCNumber) {
-      return;
-    }
-    // Collect the other subsections into the first subsection
-    // and then remove the other subsections from the list
-    this._sections[0].fieldDetails = firstDetails.concat(
-      secondDetails,
-      thirdDetails,
-      fourthDetails
-    );
-    this._sections.splice(1);
+    return { mergeNextNFields, createNewSection };
   }
   _classifySections() {
     let fieldDetails = this._sections[0].fieldDetails;
@@ -202,27 +196,54 @@ class FieldScanner {
     let seenTypes = new Set();
     let previousType;
     let sectionCount = 0;
-    for (let fieldDetail of fieldDetails) {
-      if (!fieldDetail.fieldName) {
+    let mergeNextNFields = 0;
+
+    for (let i = 0; i < fieldDetails.length; i++) {
+      let currentType = fieldDetails[i].fieldName;
+      if (!currentType) {
         continue;
       }
 
-      if (
-        seenTypes.has(fieldDetail.fieldName) &&
-        (previousType != fieldDetail.fieldName ||
-          !MULTI_FIELD_NAMES.includes(fieldDetail.fieldName))
-      ) {
+      let createNewSection = false;
+      if (seenTypes.has(currentType)) {
+        if (previousType != currentType) {
+          // If we have seen this field before and it is different from
+          // the previous one, always create a new section.
+          createNewSection = true;
+        } else if (MULTI_FIELD_NAMES.includes(currentType)) {
+          // For fields that can appear multiple times in a row
+          // within one section, don't create a new section
+        } else if (currentType in MULTI_N_FIELD_NAMES) {
+          // This is the heuristic to handle special cases where we can have multiple
+          // fields in one section, but only if the field has appeared N times in a row.
+          // For example, websites can use 4 consecutive 4-digit `cc-number` fields
+          // instead of one 16-digit `cc-number` field.
+          ({ mergeNextNFields, createNewSection } = this._mergeNextNFields(
+            mergeNextNFields,
+            currentType,
+            fieldDetails,
+            i,
+            createNewSection
+          ));
+        } else {
+          // Fields that should not appear multiple times in one section.
+          createNewSection = true;
+        }
+      }
+
+      if (createNewSection) {
+        mergeNextNFields = 0;
         seenTypes.clear();
         sectionCount++;
       }
-      previousType = fieldDetail.fieldName;
-      seenTypes.add(fieldDetail.fieldName);
+
+      previousType = currentType;
+      seenTypes.add(currentType);
       this._pushToSection(
         DEFAULT_SECTION_NAME + "-" + sectionCount,
-        fieldDetail
+        fieldDetails[i]
       );
     }
-    this._classifyMultipleCCNumberFields();
   }
 
   /**

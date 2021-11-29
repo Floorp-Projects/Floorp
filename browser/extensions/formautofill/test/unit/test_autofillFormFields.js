@@ -414,6 +414,55 @@ const TESTCASES = [
       "cc-exp-year": "25",
     },
   },
+  {
+    description:
+      "Fill credit card number fields in a form with multiple valid credit card sections",
+    document: `<form>
+                <input id="cc-type1">
+                <input id="cc-number1" maxlength="4">
+                <input id="cc-number2" maxlength="4">
+                <input id="cc-number3" maxlength="4">
+                <input id="cc-number4" maxlength="4">
+                <input id="cc-exp-month1">
+                <input id="cc-exp-year1">
+                <input id="cc-type2">
+                <input id="cc-number5" maxlength="4">
+                <input id="cc-number6" maxlength="4">
+                <input id="cc-number7" maxlength="4">
+                <input id="cc-number8" maxlength="4">
+                <input id="cc-exp-month2">
+                <input id="cc-exp-year2">
+                <input>
+                <input>
+                <input>
+              </form>
+                `,
+    focusedInputId: "cc-number1",
+    profileData: {
+      guid: "123",
+      "cc-type": "mastercard",
+      "cc-number": "371449635398431",
+      "cc-exp-month": 6,
+      "cc-exp-year": 25,
+    },
+    expectedResult: {
+      guid: "123",
+      "cc-type1": "mastercard",
+      "cc-number1": "3714",
+      "cc-number2": "4963",
+      "cc-number3": "5398",
+      "cc-number4": "431",
+      "cc-exp-month1": "6",
+      "cc-exp-year1": "25",
+      "cc-type2": "",
+      "cc-number-5": "",
+      "cc-number-6": "",
+      "cc-number-7": "",
+      "cc-number-8": "",
+      "cc-exp-month2": "",
+      "cc-exp-year2": "",
+    },
+  },
 ];
 
 const TESTCASES_INPUT_UNCHANGED = [
