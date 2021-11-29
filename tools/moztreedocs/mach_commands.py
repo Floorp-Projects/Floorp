@@ -90,6 +90,9 @@ BASE_LINK = "http://gecko-docs.mozilla.org-l1.s3-website.us-west-2.amazonaws.com
     help="Distribute the build over N processes in parallel.",
 )
 @CommandArgument("--write-url", default=None, help="Write S3 Upload URL to text file")
+@CommandArgument(
+    "--linkcheck", action="store_true", help="Check if the links are still valid"
+)
 @CommandArgument("--verbose", action="store_true", help="Run Sphinx in verbose mode")
 def build_docs(
     command_context,
@@ -103,6 +106,7 @@ def build_docs(
     upload=False,
     jobs=None,
     write_url=None,
+    linkcheck=None,
     verbose=None,
 ):
 
@@ -151,6 +155,10 @@ def build_docs(
             "failed to generate documentation:\n"
             "%s: could not find docs at this location" % path
         )
+
+    if linkcheck:
+        # We want to verify if the links are valid or not
+        fmt = "linkcheck"
 
     result = _run_sphinx(docdir, savedir, fmt=fmt, jobs=jobs, verbose=verbose)
     if result != 0:
