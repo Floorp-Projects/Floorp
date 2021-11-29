@@ -351,7 +351,6 @@ TextureHost::~TextureHost() {
     // be destroyed by now. But we will hit assertions if we don't ReadUnlock
     // before destroying the lock itself.
     ReadUnlock();
-    MaybeNotifyUnlocked();
   }
 }
 
@@ -367,7 +366,6 @@ void TextureHost::Finalize() {
 void TextureHost::UnbindTextureSource() {
   if (mReadLocked) {
     ReadUnlock();
-    MaybeNotifyUnlocked();
   }
 }
 
@@ -631,14 +629,11 @@ bool TextureHost::NeedsYFlip() const {
   return bool(mFlags & TextureFlags::ORIGIN_BOTTOM_LEFT);
 }
 
-void BufferTextureHost::MaybeNotifyUnlocked() {}
-
 void BufferTextureHost::UnbindTextureSource() {
   // This texture is not used by any layer anymore.
   // If the texture has an intermediate buffer we don't care either because
   // texture uploads are also performed synchronously for BufferTextureHost.
   ReadUnlock();
-  MaybeNotifyUnlocked();
 }
 
 gfx::SurfaceFormat BufferTextureHost::GetFormat() const { return mFormat; }
@@ -825,7 +820,6 @@ void TextureParent::Destroy() {
     // ReadUnlock here to make sure the ReadLock's shmem does not outlive the
     // protocol that created it.
     mTextureHost->ReadUnlock();
-    mTextureHost->MaybeNotifyUnlocked();
   }
 
   if (mTextureHost->GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
