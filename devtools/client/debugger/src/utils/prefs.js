@@ -72,6 +72,7 @@ if (isNode()) {
   pref("devtools.debugger.features.inline-preview", true);
   pref("devtools.debugger.features.overlay-step-buttons", true);
   pref("devtools.debugger.features.frame-step", true);
+  pref("devtools.debugger.features.blackbox-lines", false);
   pref("devtools.editor.tabsize", 2);
 }
 
@@ -153,6 +154,7 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   inlinePreview: ["Bool", "inline-preview"],
   windowlessServiceWorkers: ["Bool", "windowless-service-workers"],
   frameStep: ["Bool", "frame-step"],
+  blackboxLines: ["Bool", "blackbox-lines"],
 });
 
 // Import the asyncStore already spawned by the TargetMixin class
