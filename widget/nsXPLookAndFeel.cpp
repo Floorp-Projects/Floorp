@@ -1127,19 +1127,6 @@ ColorScheme LookAndFeel::ColorSchemeForStyle(
   if (nsContentUtils::IsChromeDoc(&aDoc)) {
     return aDoc.PreferredColorScheme();
   }
-  // As an special-case, use the system color-scheme if allow-gtk-dark-theme is
-  // set.
-  //
-  // TODO(emilio): Once we ship the color-scheme property and meta tag I think
-  // this can go. The use case for this is sidebars and such (bug 1721359),
-  // which will be able to just use <meta name=color-scheme value="light dark">
-  // to state that they support light and dark color schemes (taking the
-  // PreferredColorScheme codepath above).
-#ifdef MOZ_WIDGET_GTK
-  if (StaticPrefs::widget_content_allow_gtk_dark_theme()) {
-    return SystemColorScheme();
-  }
-#endif
   // Default content to light.
   return ColorScheme::Light;
 }
