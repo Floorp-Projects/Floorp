@@ -655,9 +655,9 @@ bool mozTXTToHTMLConv::StructPhraseHit(
 
 bool mozTXTToHTMLConv::SmilyHit(const char16_t* aInString, int32_t aLength,
                                 bool col0, const char* tagTXT,
-                                const char* imageName, nsString& outputHTML,
+                                const nsString& imageName, nsString& outputHTML,
                                 int32_t& glyphTextLen) {
-  if (!aInString || !tagTXT || !imageName) return false;
+  if (!aInString || !tagTXT || imageName.IsEmpty()) return false;
 
   int32_t tagLen = strlen(tagTXT);
 
@@ -681,13 +681,7 @@ bool mozTXTToHTMLConv::SmilyHit(const char16_t* aInString, int32_t aLength,
       outputHTML.Append(char16_t(' '));
     }
 
-    outputHTML.AppendLiteral("<span class=\"");  // <span class="
-    outputHTML.AppendASCII(imageName);           // e.g. smiley-frown
-    outputHTML.AppendLiteral("\" title=\"");     // " title="
-    outputHTML.AppendASCII(tagTXT);              // smiley tooltip
-    outputHTML.AppendLiteral("\"><span>");       // "><span>
-    outputHTML.AppendASCII(tagTXT);              // original text
-    outputHTML.AppendLiteral("</span></span>");  // </span></span>
+    outputHTML.Append(imageName);  // emoji unicode
     glyphTextLen = (col0 ? 0 : 1) + tagLen;
     return true;
   }
@@ -732,87 +726,87 @@ bool mozTXTToHTMLConv::GlyphHit(const char16_t* aInString, int32_t aInLength,
       bArg = false;
     }
     if (bTestSmilie && (SmilyHit(aInString, aInLength, bArg, ":-)",
-                                 "moz-smiley-s1",  // smile
+                                 u"😄"_ns,  // smile, U+1F604
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ":)",
-                                 "moz-smiley-s1",  // smile
+                                 u"😄"_ns,  // smile, U+1F604
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ":-D",
-                                 "moz-smiley-s5",  // laughing
+                                 u"😂"_ns,  // laughing, U+1F602
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ":-(",
-                                 "moz-smiley-s2",  // frown
+                                 u"🙁"_ns,  // frown, U+1F641
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ":(",
-                                 "moz-smiley-s2",  // frown
+                                 u"🙁"_ns,  // frown, U+1F641
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ":-[",
-                                 "moz-smiley-s6",  // embarassed
+                                 u"😅"_ns,  // embarassed, U+1F605
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ";-)",
-                                 "moz-smiley-s3",  // wink
+                                 u"😉"_ns,  // wink, U+1F609
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, col0, ";)",
-                                 "moz-smiley-s3",  // wink
+                                 u"😉"_ns,  // wink, U+1F609
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ":-\\",
-                                 "moz-smiley-s7",  // undecided
+                                 u"😕"_ns,  // undecided, U+1F615
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ":-P",
-                                 "moz-smiley-s4",  // tongue
+                                 u"😛"_ns,  // tongue, U+1F61B
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ";-P",
-                                 "moz-smiley-s4",  // tongue
+                                 u"😜"_ns,  // winking face with tongue, U+1F61C
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, "=-O",
-                                 "moz-smiley-s8",  // surprise
+                                 u"😮"_ns,  // surprise, U+1F62E
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ":-*",
-                                 "moz-smiley-s9",  // kiss
+                                 u"😘"_ns,  // kiss, U+1F618
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ">:o",
-                                 "moz-smiley-s10",  // yell
+                                 u"😄"_ns,  // yell, U+1F620
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ">:-o",
-                                 "moz-smiley-s10",  // yell
+                                 u"😠"_ns,  // yell, U+1F620
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, "8-)",
-                                 "moz-smiley-s11",  // cool
+                                 u"😎"_ns,  // cool, U+1F60E
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ":-$",
-                                 "moz-smiley-s12",  // money
+                                 u"🤑"_ns,  // money, U+1F911
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ":-!",
-                                 "moz-smiley-s13",  // foot
+                                 u"😬"_ns,  // foot, U+1F62C
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, "O:-)",
-                                 "moz-smiley-s14",  // innocent
+                                 u"😇"_ns,  // innocent, U+1F607
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ":'(",
-                                 "moz-smiley-s15",  // cry
+                                 u"😭"_ns,  // cry, U+1F62D
                                  outputHTML, glyphTextLen) ||
 
                         SmilyHit(aInString, aInLength, bArg, ":-X",
-                                 "moz-smiley-s16",  // sealed
+                                 u"😷"_ns,  // sealed, U+1F637
                                  outputHTML, glyphTextLen))) {
       aOutputString.Append(outputHTML);
       return true;
