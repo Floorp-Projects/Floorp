@@ -44,15 +44,6 @@ and compound expressions refer to their sub-expressions via `Handle<Expression>`
 values. (When examining the serialized form of a `Module`, note that the first
 element of an `Arena` has an index of 1, not 0.)
 
-A [`UniqueArena`] is just like an `Arena`, except that it stores only a single
-instance of each value. The value type must implement `Eq` and `Hash`. Like an
-`Arena`, inserting a value into a `UniqueArena` returns a `Handle` which can be
-used to efficiently access the value, without a hash lookup. Inserting a value
-multiple times returns the same `Handle`.
-
-If the `span` feature is enabled, both `Arena` and `UniqueArena` can associate a
-source code span with each element.
-
 ## Function Calls
 
 Naga's representation of function calls is unusual. Most languages treat
@@ -96,13 +87,9 @@ Naga's rules for when `Expression`s are evaluated are as follows:
         a pointer. Such global variables hold opaque types like shaders or
         images, and cannot be assigned to.
 
--   A [`CallResult`] expression that is the `result` of a [`Statement::Call`],
-    representing the call's return value, is evaluated when the `Call` statement
-    is executed.
-
--   Similarly, an [`AtomicResult`] expression that is the `result` of an
-    [`Atomic`] statement, representing the result of the atomic operation, is
-    evaluated when the `Atomic` statement is executed.
+-   A [`Call`](Expression::CallResult) expression that is the `result` of a
+    [`Statement::Call`], representing the call's return value, is evaluated when
+    the `Call` statement is executed.
 
 -   All other expressions are evaluated when the (unique) [`Statement::Emit`]
     statement that covers them is executed. The [`Expression::needs_pre_emit`]
@@ -155,17 +142,15 @@ An expression's scope is defined as follows:
     subsequent expressions in that `Emit`, the subsequent statements in the `Block`
     to which that `Emit` belongs (if any) and their sub-statements (if any).
 
--   The `result` expression of a [`Call`] or [`Atomic`] statement has a scope
-    covering the subsequent statements in the `Block` in which the statement
-    occurs (if any) and their sub-statements (if any).
+-   If a [`Call`] statement has a `result` expression, then that expression's
+    scope covers the subsequent statements in the `Block` to which that `Call`
+    belongs (if any) and their sub-statements (if any).
 
 For example, this implies that an expression evaluated by some statement in a
 nested `Block` is not available in the `Block`'s parents. Such a value would
 need to be stored in a local variable to be carried upwards in the statement
 tree.
 
-[`AtomicResult`]: Expression::AtomicResult
-[`CallResult`]: Expression::CallResult
 [`Constant`]: Expression::Constant
 [`Derivative`]: Expression::Derivative
 [`FunctionArgument`]: Expression::FunctionArgument
@@ -175,7 +160,6 @@ tree.
 [`Load`]: Expression::Load
 [`LocalVariable`]: Expression::LocalVariable
 
-[`Atomic`]: Statement::Atomic
 [`Call`]: Statement::Call
 [`Emit`]: Statement::Emit
 [`Store`]: Statement::Store
@@ -193,7 +177,6 @@ tree.
     clippy::unneeded_field_pattern,
     clippy::match_like_matches_macro,
     clippy::manual_strip,
-    clippy::if_same_then_else,
     clippy::unknown_clippy_lints,
 )]
 #![warn(
@@ -213,9 +196,14 @@ pub mod proc;
 mod span;
 pub mod valid;
 
-pub use crate::arena::{Arena, Handle, Range, UniqueArena};
+pub use crate::arena::{Arena, Handle, Range};
 
-pub use crate::span::{Span, SpanContext, WithSpan};
+use std::{
+    collections::{HashMap, HashSet},
+    hash::BuildHasherDefault,
+};
+
+pub use crate::span::Span;
 #[cfg(feature = "deserialize")]
 use serde::Deserialize;
 #[cfg(feature = "serialize")]
@@ -225,9 +213,9 @@ use serde::Serialize;
 pub const BOOL_WIDTH: Bytes = 1;
 
 /// Hash map that is faster but not resilient to DoS attacks.
-pub type FastHashMap<K, T> = rustc_hash::FxHashMap<K, T>;
+pub type FastHashMap<K, T> = HashMap<K, T, BuildHasherDefault<fxhash::FxHasher>>;
 /// Hash set that is faster but not resilient to DoS attacks.
-pub type FastHashSet<K> = rustc_hash::FxHashSet<K>;
+pub type FastHashSet<K> = HashSet<K, BuildHasherDefault<fxhash::FxHasher>>;
 
 /// Map of expressions that have associated variable names
 pub(crate) type NamedExpressions = FastHashMap<Handle<Expression>, String>;
@@ -312,7 +300,6 @@ pub enum StorageClass {
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum BuiltIn {
     Position,
-    ViewIndex,
     // vertex
     BaseInstance,
     BaseVertex,
@@ -417,7 +404,7 @@ pub enum Sampling {
 
 /// Member of a user-defined structure.
 // Clone is used only for error reporting and is not intended for end users
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub struct StructMember {
@@ -536,7 +523,7 @@ pub enum ImageClass {
 }
 
 /// A data type declared in the module.
-#[derive(Debug, Eq, Hash, PartialEq)]
+#[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub struct Type {
@@ -547,7 +534,7 @@ pub struct Type {
 }
 
 /// Enum with additional information, depending on the kind of type.
-#[derive(Debug, Eq, Hash, PartialEq)]
+#[derive(Debug, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum TypeInner {
@@ -569,10 +556,6 @@ pub enum TypeInner {
     Atomic { kind: ScalarKind, width: Bytes },
     /// Pointer to another type.
     ///
-    /// Pointers to scalars and vectors should be treated as equivalent to
-    /// [`ValuePointer`] types. Use the [`TypeInner::equivalent`] method to
-    /// compare types in a way that treats pointers correctly.
-    ///
     /// ## Pointers to non-`SIZED` types
     ///
     /// The `base` type of a pointer may be a non-[`SIZED`] type like a
@@ -590,26 +573,13 @@ pub enum TypeInner {
     /// [`DATA`]: valid::TypeFlags::DATA
     /// [`Array`]: TypeInner::Array
     /// [`Struct`]: TypeInner::Struct
-    /// [`ValuePointer`]: TypeInner::ValuePointer
     /// [`GlobalVariable`]: Expression::GlobalVariable
     /// [`AccessIndex`]: Expression::AccessIndex
     Pointer {
         base: Handle<Type>,
         class: StorageClass,
     },
-
-    /// Pointer to a scalar or vector.
-    ///
-    /// A `ValuePointer` type is equivalent to a `Pointer` whose `base` is a
-    /// `Scalar` or `Vector` type. This is for use in [`TypeResolution::Value`]
-    /// variants; see the documentation for [`TypeResolution`] for details.
-    ///
-    /// Use the [`TypeInner::equivalent`] method to compare types that could be
-    /// pointers, to ensure that `Pointer` and `ValuePointer` types are
-    /// recognized as equivalent.
-    ///
-    /// [`TypeResolution`]: proc::TypeResolution
-    /// [`TypeResolution::Value`]: proc::TypeResolution::Value
+    /// Pointer to a value.
     ValuePointer {
         size: Option<VectorSize>,
         kind: ScalarKind,
@@ -720,29 +690,13 @@ pub enum ConstantInner {
 }
 
 /// Describes how an input/output variable is to be bound.
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Clone, Debug, PartialEq)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub enum Binding {
     /// Built-in shader variable.
     BuiltIn(BuiltIn),
-
     /// Indexed location.
-    ///
-    /// Values passed from the [`Vertex`] stage to the [`Fragment`] stage must
-    /// have their `interpolation` defaulted (i.e. not `None`) by the front end
-    /// as appropriate for that language.
-    ///
-    /// For other stages, we permit interpolations even though they're ignored.
-    /// When a front end is parsing a struct type, it usually doesn't know what
-    /// stages will be using it for IO, so it's easiest if it can apply the
-    /// defaults to anything with a `Location` binding, just in case.
-    ///
-    /// For anything other than floating-point scalars and vectors, the
-    /// interpolation must be `Flat`.
-    ///
-    /// [`Vertex`]: crate::ShaderStage::Vertex
-    /// [`Fragment`]: crate::ShaderStage::Fragment
     Location {
         location: u32,
         interpolation: Option<Interpolation>,
@@ -809,7 +763,6 @@ pub enum BinaryOperator {
     Subtract,
     Multiply,
     Divide,
-    /// Equivalent of the WGSL's `%` operator or SPIR-V's `OpFRem`
     Modulo,
     Equal,
     NotEqual,
@@ -931,20 +884,6 @@ pub enum MathFunction {
     // bits
     CountOneBits,
     ReverseBits,
-    ExtractBits,
-    InsertBits,
-    // data packing
-    Pack4x8snorm,
-    Pack4x8unorm,
-    Pack2x16snorm,
-    Pack2x16unorm,
-    Pack2x16float,
-    // data unpacking
-    Unpack4x8snorm,
-    Unpack4x8unorm,
-    Unpack2x16snorm,
-    Unpack2x16unorm,
-    Unpack2x16float,
 }
 
 /// Sampling modifier to control the level of detail.
@@ -1030,12 +969,17 @@ pub enum Expression {
     /// Indexing a [`Vector`] or [`Array`] produces a value of its element type.
     /// Indexing a [`Matrix`] produces a [`Vector`].
     ///
-    /// Indexing a [`Pointer`] to any of the above produces a pointer to the
-    /// element/component type, in the same [`class`]. In the case of [`Array`],
-    /// the result is an actual [`Pointer`], but for vectors and matrices, there
-    /// may not be any type in the arena representing the component's type, so
-    /// those produce [`ValuePointer`] types equivalent to the appropriate
-    /// [`Pointer`].
+    /// Indexing a [`Pointer`] to an [`Array`] produces a [`Pointer`] to its
+    /// `base` type, taking on the `Pointer`'s storage class.
+    ///
+    /// Indexing a [`Pointer`] to a [`Vector`] produces a [`ValuePointer`] whose
+    /// size is `None`, taking on the [`Vector`]'s scalar kind and width and the
+    /// [`Pointer`]'s storage class.
+    ///
+    /// Indexing a [`Pointer`] to a [`Matrix`] produces a [`ValuePointer`] for a
+    /// column of the matrix: its size is the matrix's height, its `kind` is
+    /// [`Float`], and it inherits the [`Matrix`]'s width and the [`Pointer`]'s
+    /// storage class.
     ///
     /// ## Dynamic indexing restrictions
     ///
@@ -1060,7 +1004,6 @@ pub enum Expression {
     /// [`Matrix`]: TypeInner::Matrix
     /// [`Array`]: TypeInner::Array
     /// [`Pointer`]: TypeInner::Pointer
-    /// [`class`]: TypeInner::Pointer::class
     /// [`ValuePointer`]: TypeInner::ValuePointer
     /// [`Float`]: ScalarKind::Float
     Access {
@@ -1266,7 +1209,6 @@ pub enum Expression {
         arg: Handle<Expression>,
         arg1: Option<Handle<Expression>>,
         arg2: Option<Handle<Expression>>,
-        arg3: Option<Handle<Expression>>,
     },
     /// Cast a simple type to another kind.
     As {
@@ -1296,16 +1238,6 @@ pub enum Expression {
 
 pub use block::Block;
 
-/// The value of the switch case
-// Clone is used only for error reporting and is not intended for end users
-#[derive(Clone, Debug)]
-#[cfg_attr(feature = "serialize", derive(Serialize))]
-#[cfg_attr(feature = "deserialize", derive(Deserialize))]
-pub enum SwitchValue {
-    Integer(i32),
-    Default,
-}
-
 /// A case for a switch statement.
 // Clone is used only for error reporting and is not intended for end users
 #[derive(Clone, Debug)]
@@ -1313,8 +1245,8 @@ pub enum SwitchValue {
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub struct SwitchCase {
     /// Value, upon which the case is considered true.
-    pub value: SwitchValue,
-    /// Body of the case.
+    pub value: i32,
+    /// Body of the cae.
     pub body: Block,
     /// If true, the control flow continues to the next case in the list,
     /// or default.
@@ -1346,6 +1278,7 @@ pub enum Statement {
     Switch {
         selector: Handle<Expression>, //int
         cases: Vec<SwitchCase>,
+        default: Block,
     },
 
     /// Executes a block repeatedly.
@@ -1449,9 +1382,7 @@ pub enum Statement {
         fun: AtomicFunction,
         /// Value to use in the function.
         value: Handle<Expression>,
-        /// [`AtomicResult`] expression representing this function's result.
-        ///
-        /// [`AtomicResult`]: crate::Expression::AtomicResult
+        /// Emitted expression as a result.
         result: Handle<Expression>,
     },
     /// Calls a function.
@@ -1505,9 +1436,6 @@ pub struct Function {
     /// Local variables defined and used in the function.
     pub local_variables: Arena<LocalVariable>,
     /// Expressions used inside this function.
-    ///
-    /// An `Expression` must occur before all other `Expression`s that use its
-    /// value.
     pub expressions: Arena<Expression>,
     /// Map of expressions that have associated variable names
     pub named_expressions: NamedExpressions,
@@ -1560,8 +1488,6 @@ pub struct Function {
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub struct EntryPoint {
     /// Name of this entry point, visible externally.
-    ///
-    /// Entry point names for a given `stage` must be distinct within a module.
     pub name: String,
     /// Shader stage.
     pub stage: ShaderStage,
@@ -1589,15 +1515,12 @@ pub struct EntryPoint {
 #[cfg_attr(feature = "deserialize", derive(Deserialize))]
 pub struct Module {
     /// Storage for the types defined in this module.
-    pub types: UniqueArena<Type>,
+    pub types: Arena<Type>,
     /// Storage for the constants defined in this module.
     pub constants: Arena<Constant>,
     /// Storage for the global variables defined in this module.
     pub global_variables: Arena<GlobalVariable>,
     /// Storage for the functions defined in this module.
-    ///
-    /// Each function must appear in this arena strictly before all its callers.
-    /// Recursion is not supported.
     pub functions: Arena<Function>,
     /// Entry points.
     pub entry_points: Vec<EntryPoint>,

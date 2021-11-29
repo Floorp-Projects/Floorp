@@ -1,9 +1,8 @@
 use super::Command as C;
 use arrayvec::ArrayVec;
 use glow::HasContext;
-use std::{mem, slice, sync::Arc};
+use std::{mem, ops::Range, slice, sync::Arc};
 
-#[cfg(not(target_arch = "wasm32"))]
 const DEBUG_ID: u32 = 0;
 
 const CUBEMAP_FACES: [u32; 6] = [
@@ -15,14 +14,13 @@ const CUBEMAP_FACES: [u32; 6] = [
     glow::TEXTURE_CUBE_MAP_NEGATIVE_Z,
 ];
 
-#[cfg(not(target_arch = "wasm32"))]
-fn extract_marker<'a>(data: &'a [u8], range: &std::ops::Range<u32>) -> &'a str {
+fn extract_marker<'a>(data: &'a [u8], range: &Range<u32>) -> &'a str {
     std::str::from_utf8(&data[range.start as usize..range.end as usize]).unwrap()
 }
 
-fn is_layered_target(target: super::BindTarget) -> bool {
+fn is_3d_target(target: super::BindTarget) -> bool {
     match target {
-        glow::TEXTURE_2D_ARRAY | glow::TEXTURE_3D | glow::TEXTURE_CUBE_MAP_ARRAY => true,
+        glow::TEXTURE_2D_ARRAY | glow::TEXTURE_3D => true,
         _ => false,
     }
 }
@@ -51,7 +49,6 @@ impl super::Queue {
             .map(|i| glow::COLOR_ATTACHMENT0 + i)
             .collect::<ArrayVec<_, { crate::MAX_COLOR_TARGETS }>>();
         gl.draw_buffers(&indices);
-        #[cfg(not(target_arch = "wasm32"))]
         for draw_buffer in 0..self.draw_buffer_count as u32 {
             gl.disable_draw_buffer(glow::BLEND, draw_buffer);
         }
@@ -66,7 +63,7 @@ impl super::Queue {
         gl.disable(glow::BLEND);
         gl.disable(glow::CULL_FACE);
         gl.disable(glow::POLYGON_OFFSET_FILL);
-        if self.features.contains(wgt::Features::DEPTH_CLIP_CONTROL) {
+        if self.features.contains(wgt::Features::DEPTH_CLAMPING) {
             gl.disable(glow::DEPTH_CLAMP);
         }
     }
@@ -83,21 +80,13 @@ impl super::Queue {
                 gl.framebuffer_renderbuffer(fbo_target, attachment, glow::RENDERBUFFER, Some(raw));
             }
             super::TextureInner::Texture { raw, target } => {
-                if is_layered_target(target) {
+                if is_3d_target(target) {
                     gl.framebuffer_texture_layer(
                         fbo_target,
                         attachment,
                         Some(raw),
                         view.mip_levels.start as i32,
                         view.array_layers.start as i32,
-                    );
-                } else if target == glow::TEXTURE_CUBE_MAP {
-                    gl.framebuffer_texture_2d(
-                        fbo_target,
-                        attachment,
-                        CUBEMAP_FACES[view.array_layers.start as usize],
-                        Some(raw),
-                        view.mip_levels.start as i32,
                     );
                 } else {
                     gl.framebuffer_texture_2d(
@@ -116,7 +105,7 @@ impl super::Queue {
         &mut self,
         gl: &glow::Context,
         command: &C,
-        #[cfg_attr(target_arch = "wasm32", allow(unused))] data_bytes: &[u8],
+        data_bytes: &[u8],
         queries: &[glow::Query],
     ) {
         match *command {
@@ -198,99 +187,60 @@ impl super::Queue {
                 indirect_buf,
                 indirect_offset,
             } => {
-                gl.bind_buffer(glow::DISPATCH_INDIRECT_BUFFER, Some(indirect_buf));
+                gl.bind_buffer(glow::DRAW_INDIRECT_BUFFER, Some(indirect_buf));
                 gl.dispatch_compute_indirect(indirect_offset as i32);
             }
             C::ClearBuffer {
-                ref dst,
+                dst,
                 dst_target,
                 ref range,
-            } => match dst.raw {
-                Some(buffer) => {
-                    gl.bind_buffer(glow::COPY_READ_BUFFER, Some(self.zero_buffer));
-                    gl.bind_buffer(dst_target, Some(buffer));
-                    let mut dst_offset = range.start;
-                    while dst_offset < range.end {
-                        let size = (range.end - dst_offset).min(super::ZERO_BUFFER_SIZE as u64);
-                        gl.copy_buffer_sub_data(
-                            glow::COPY_READ_BUFFER,
-                            dst_target,
-                            0,
-                            dst_offset as i32,
-                            size as i32,
-                        );
-                        dst_offset += size;
-                    }
+            } => {
+                gl.bind_buffer(glow::COPY_READ_BUFFER, Some(self.zero_buffer));
+                gl.bind_buffer(dst_target, Some(dst));
+                let mut dst_offset = range.start;
+                while dst_offset < range.end {
+                    let size = (range.end - dst_offset).min(super::ZERO_BUFFER_SIZE as u64);
+                    gl.copy_buffer_sub_data(
+                        glow::COPY_READ_BUFFER,
+                        dst_target,
+                        0,
+                        dst_offset as i32,
+                        size as i32,
+                    );
+                    dst_offset += size;
                 }
-                None => {
-                    dst.data.as_ref().unwrap().lock().unwrap().as_mut_slice()
-                        [range.start as usize..range.end as usize]
-                        .fill(0);
-                }
-            },
+            }
+            C::ClearTexture {
+                dst: _,
+                dst_target: _,
+                subresource_range: _,
+            } => {
+                // Should EXT_clear_texture when possible.
+                // https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_clear_texture.txt
+                // But support is not very widespread. Need to fallback to do zero_buffer copies
+
+                // TODO: Need to invoke calls into CopyBufferToTexture using zero_buffer.
+                // To do that determine how many rows zero_buffer can fill and then chunk the texture up
+                // (do *not* repeat the exact logic of CopyBufferToTexture, it's way too much!)
+                //unimplemented!("texture clearing for GLES is not implemented yet");
+            }
             C::CopyBufferToBuffer {
-                ref src,
+                src,
                 src_target,
-                ref dst,
+                dst,
                 dst_target,
                 copy,
             } => {
-                let copy_src_target = glow::COPY_READ_BUFFER;
-                let is_index_buffer_only_element_dst = !self
-                    .shared
-                    .private_caps
-                    .contains(super::PrivateCapabilities::INDEX_BUFFER_ROLE_CHANGE)
-                    && dst_target == glow::ELEMENT_ARRAY_BUFFER
-                    || src_target == glow::ELEMENT_ARRAY_BUFFER;
+                gl.bind_buffer(src_target, Some(src));
+                gl.bind_buffer(dst_target, Some(dst));
 
-                // WebGL not allowed to copy data from other targets to element buffer and can't copy element data to other buffers
-                let copy_dst_target = if is_index_buffer_only_element_dst {
-                    glow::ELEMENT_ARRAY_BUFFER
-                } else {
-                    glow::COPY_WRITE_BUFFER
-                };
-                let size = copy.size.get() as usize;
-                match (src.raw, dst.raw) {
-                    (Some(ref src), Some(ref dst)) => {
-                        gl.bind_buffer(copy_src_target, Some(*src));
-                        gl.bind_buffer(copy_dst_target, Some(*dst));
-                        gl.copy_buffer_sub_data(
-                            copy_src_target,
-                            copy_dst_target,
-                            copy.src_offset as _,
-                            copy.dst_offset as _,
-                            copy.size.get() as _,
-                        );
-                    }
-                    (Some(src), None) => {
-                        let mut data = dst.data.as_ref().unwrap().lock().unwrap();
-                        let dst_data = &mut data.as_mut_slice()
-                            [copy.dst_offset as usize..copy.dst_offset as usize + size];
-
-                        gl.bind_buffer(copy_src_target, Some(src));
-                        gl.get_buffer_sub_data(copy_src_target, copy.src_offset as i32, dst_data);
-                    }
-                    (None, Some(dst)) => {
-                        let data = src.data.as_ref().unwrap().lock().unwrap();
-                        let src_data = &data.as_slice()
-                            [copy.src_offset as usize..copy.src_offset as usize + size];
-                        gl.bind_buffer(copy_dst_target, Some(dst));
-                        gl.buffer_sub_data_u8_slice(
-                            copy_dst_target,
-                            copy.dst_offset as i32,
-                            src_data,
-                        );
-                    }
-                    (None, None) => {
-                        todo!()
-                    }
-                }
-                gl.bind_buffer(copy_src_target, None);
-                if is_index_buffer_only_element_dst {
-                    gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, self.current_index_buffer);
-                } else {
-                    gl.bind_buffer(copy_dst_target, None);
-                }
+                gl.copy_buffer_sub_data(
+                    src_target,
+                    dst_target,
+                    copy.src_offset as i32,
+                    copy.dst_offset as i32,
+                    copy.size.get() as i32,
+                );
             }
             C::CopyTextureToTexture {
                 src,
@@ -299,10 +249,10 @@ impl super::Queue {
                 dst_target,
                 ref copy,
             } => {
+                //TODO: cubemaps
                 //TODO: handle 3D copies
-                //TODO: handle cubemap copies
                 gl.bind_framebuffer(glow::READ_FRAMEBUFFER, Some(self.copy_fbo));
-                if is_layered_target(src_target) {
+                if is_3d_target(src_target) {
                     //TODO: handle GLES without framebuffer_texture_3d
                     gl.framebuffer_texture_layer(
                         glow::READ_FRAMEBUFFER,
@@ -322,7 +272,7 @@ impl super::Queue {
                 }
 
                 gl.bind_texture(dst_target, Some(dst));
-                if is_layered_target(dst_target) {
+                if is_3d_target(dst_target) {
                     gl.copy_tex_sub_image_3d(
                         dst_target,
                         copy.dst_base.mip_level as i32,
@@ -348,7 +298,7 @@ impl super::Queue {
                 }
             }
             C::CopyBufferToTexture {
-                ref src,
+                src,
                 src_target: _,
                 dst,
                 dst_target,
@@ -357,6 +307,7 @@ impl super::Queue {
             } => {
                 let format_info = dst_format.describe();
                 let format_desc = self.shared.describe_texture_format(dst_format);
+
                 let row_texels = copy.buffer_layout.bytes_per_row.map_or(0, |bpr| {
                     format_info.block_dimensions.0 as u32 * bpr.get()
                         / format_info.block_size as u32
@@ -365,26 +316,14 @@ impl super::Queue {
                     .buffer_layout
                     .rows_per_image
                     .map_or(0, |rpi| format_info.block_dimensions.1 as u32 * rpi.get());
-
-                gl.bind_texture(dst_target, Some(dst));
                 gl.pixel_store_i32(glow::UNPACK_ROW_LENGTH, row_texels as i32);
                 gl.pixel_store_i32(glow::UNPACK_IMAGE_HEIGHT, column_texels as i32);
-                let mut unbind_unpack_buffer = false;
+                gl.bind_buffer(glow::PIXEL_UNPACK_BUFFER, Some(src));
+                gl.bind_texture(dst_target, Some(dst));
+
                 if format_info.block_dimensions == (1, 1) {
-                    let buffer_data;
-                    let unpack_data = match src.raw {
-                        Some(buffer) => {
-                            gl.bind_buffer(glow::PIXEL_UNPACK_BUFFER, Some(buffer));
-                            unbind_unpack_buffer = true;
-                            glow::PixelUnpackData::BufferOffset(copy.buffer_layout.offset as u32)
-                        }
-                        None => {
-                            buffer_data = src.data.as_ref().unwrap().lock().unwrap();
-                            let src_data =
-                                &buffer_data.as_slice()[copy.buffer_layout.offset as usize..];
-                            glow::PixelUnpackData::Slice(src_data)
-                        }
-                    };
+                    let unpack_data =
+                        glow::PixelUnpackData::BufferOffset(copy.buffer_layout.offset as u32);
                     match dst_target {
                         glow::TEXTURE_3D | glow::TEXTURE_2D_ARRAY => {
                             gl.tex_sub_image_3d(
@@ -415,6 +354,7 @@ impl super::Queue {
                             );
                         }
                         glow::TEXTURE_CUBE_MAP => {
+                            let offset = copy.buffer_layout.offset as u32;
                             gl.tex_sub_image_2d(
                                 CUBEMAP_FACES[copy.texture_base.array_layer as usize],
                                 copy.texture_base.mip_level as i32,
@@ -424,7 +364,7 @@ impl super::Queue {
                                 copy.size.height as i32,
                                 format_desc.external,
                                 format_desc.data_type,
-                                unpack_data,
+                                glow::PixelUnpackData::BufferOffset(offset),
                             );
                         }
                         glow::TEXTURE_CUBE_MAP_ARRAY => {
@@ -450,23 +390,9 @@ impl super::Queue {
                         copy.buffer_layout.rows_per_image.map_or(1, |rpi| rpi.get())
                             * copy.buffer_layout.bytes_per_row.map_or(1, |bpr| bpr.get());
                     let offset = copy.buffer_layout.offset as u32;
-
-                    let buffer_data;
-                    let unpack_data = match src.raw {
-                        Some(buffer) => {
-                            gl.bind_buffer(glow::PIXEL_UNPACK_BUFFER, Some(buffer));
-                            unbind_unpack_buffer = true;
-                            glow::CompressedPixelUnpackData::BufferRange(
-                                offset..offset + bytes_per_image,
-                            )
-                        }
-                        None => {
-                            buffer_data = src.data.as_ref().unwrap().lock().unwrap();
-                            let src_data = &buffer_data.as_slice()
-                                [(offset as usize)..(offset + bytes_per_image) as usize];
-                            glow::CompressedPixelUnpackData::Slice(src_data)
-                        }
-                    };
+                    let unpack_data = glow::CompressedPixelUnpackData::BufferRange(
+                        offset..offset + bytes_per_image,
+                    );
                     match dst_target {
                         glow::TEXTURE_3D | glow::TEXTURE_2D_ARRAY => {
                             gl.compressed_tex_sub_image_3d(
@@ -503,7 +429,9 @@ impl super::Queue {
                                 copy.size.width as i32,
                                 copy.size.height as i32,
                                 format_desc.internal,
-                                unpack_data,
+                                glow::CompressedPixelUnpackData::BufferRange(
+                                    offset..offset + bytes_per_image,
+                                ),
                             );
                         }
                         glow::TEXTURE_CUBE_MAP_ARRAY => {
@@ -524,15 +452,12 @@ impl super::Queue {
                         _ => unreachable!(),
                     }
                 }
-                if unbind_unpack_buffer {
-                    gl.bind_buffer(glow::PIXEL_UNPACK_BUFFER, None);
-                }
             }
             C::CopyTextureToBuffer {
                 src,
                 src_target,
                 src_format,
-                ref dst,
+                dst,
                 dst_target: _,
                 ref copy,
             } => {
@@ -554,10 +479,11 @@ impl super::Queue {
                     .map_or(copy.size.width, |bpr| {
                         bpr.get() / format_info.block_size as u32
                     });
+                gl.pixel_store_i32(glow::PACK_ROW_LENGTH, row_texels as i32);
+                gl.bind_buffer(glow::PIXEL_PACK_BUFFER, Some(dst));
 
                 gl.bind_framebuffer(glow::READ_FRAMEBUFFER, Some(self.copy_fbo));
-                //TODO: handle cubemap copies
-                if is_layered_target(src_target) {
+                if is_3d_target(src_target) {
                     //TODO: handle GLES without framebuffer_texture_3d
                     gl.framebuffer_texture_layer(
                         glow::READ_FRAMEBUFFER,
@@ -575,20 +501,6 @@ impl super::Queue {
                         copy.texture_base.mip_level as i32,
                     );
                 }
-                let mut buffer_data;
-                let unpack_data = match dst.raw {
-                    Some(buffer) => {
-                        gl.pixel_store_i32(glow::PACK_ROW_LENGTH, row_texels as i32);
-                        gl.bind_buffer(glow::PIXEL_PACK_BUFFER, Some(buffer));
-                        glow::PixelPackData::BufferOffset(copy.buffer_layout.offset as u32)
-                    }
-                    None => {
-                        buffer_data = dst.data.as_ref().unwrap().lock().unwrap();
-                        let dst_data =
-                            &mut buffer_data.as_mut_slice()[copy.buffer_layout.offset as usize..];
-                        glow::PixelPackData::Slice(dst_data)
-                    }
-                };
                 gl.read_pixels(
                     copy.texture_base.origin.x as i32,
                     copy.texture_base.origin.y as i32,
@@ -596,12 +508,11 @@ impl super::Queue {
                     copy.size.height as i32,
                     format_desc.external,
                     format_desc.data_type,
-                    unpack_data,
+                    glow::PixelPackData::BufferOffset(copy.buffer_layout.offset as u32),
                 );
             }
             C::SetIndexBuffer(buffer) => {
                 gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(buffer));
-                self.current_index_buffer = Some(buffer);
             }
             C::BeginQuery(query, target) => {
                 gl.begin_query(target, query);
@@ -611,7 +522,7 @@ impl super::Queue {
             }
             C::CopyQueryResults {
                 ref query_range,
-                ref dst,
+                dst,
                 dst_target,
                 dst_offset,
             } => {
@@ -624,17 +535,8 @@ impl super::Queue {
                     self.temp_query_results.as_ptr() as *const u8,
                     self.temp_query_results.len() * mem::size_of::<u64>(),
                 );
-                match dst.raw {
-                    Some(buffer) => {
-                        gl.bind_buffer(dst_target, Some(buffer));
-                        gl.buffer_sub_data_u8_slice(dst_target, dst_offset as i32, query_data);
-                    }
-                    None => {
-                        let data = &mut dst.data.as_ref().unwrap().lock().unwrap();
-                        let len = query_data.len().min(data.len());
-                        data[..len].copy_from_slice(&query_data[..len]);
-                    }
-                }
+                gl.bind_buffer(dst_target, Some(dst));
+                gl.buffer_sub_data_u8_slice(dst_target, dst_offset as i32, query_data);
             }
             C::ResetFramebuffer => {
                 gl.bind_framebuffer(glow::DRAW_FRAMEBUFFER, Some(self.draw_fbo));
@@ -701,15 +603,8 @@ impl super::Queue {
                     .map(|i| glow::COLOR_ATTACHMENT0 + i)
                     .collect::<ArrayVec<_, { crate::MAX_COLOR_TARGETS }>>();
                 gl.draw_buffers(&indices);
-
-                if self
-                    .shared
-                    .private_caps
-                    .contains(super::PrivateCapabilities::CAN_DISABLE_DRAW_BUFFER)
-                {
-                    for draw_buffer in 0..count as u32 {
-                        gl.disable_draw_buffer(glow::BLEND, draw_buffer);
-                    }
+                for draw_buffer in 0..count as u32 {
+                    gl.disable_draw_buffer(glow::BLEND, draw_buffer);
                 }
             }
             C::ClearColorF {
@@ -925,9 +820,8 @@ impl super::Queue {
                 } else {
                     gl.disable(glow::CULL_FACE);
                 }
-                if self.features.contains(wgt::Features::DEPTH_CLIP_CONTROL) {
-                    //Note: this is a bit tricky, since we are controlling the clip, not the clamp.
-                    if state.unclipped_depth {
+                if self.features.contains(wgt::Features::DEPTH_CLAMPING) {
+                    if state.clamp_depth {
                         gl.enable(glow::DEPTH_CLAMP);
                     } else {
                         gl.disable(glow::DEPTH_CLAMP);
@@ -969,11 +863,7 @@ impl super::Queue {
                             gl.blend_equation_draw_buffer(index, blend.color.equation);
                             gl.blend_func_draw_buffer(index, blend.color.src, blend.color.dst);
                         }
-                    } else if self
-                        .shared
-                        .private_caps
-                        .contains(super::PrivateCapabilities::CAN_DISABLE_DRAW_BUFFER)
-                    {
+                    } else {
                         gl.disable_draw_buffer(index, glow::BLEND);
                     }
                 } else {
@@ -1033,7 +923,6 @@ impl super::Queue {
                     binding.format,
                 );
             }
-            #[cfg(not(target_arch = "wasm32"))]
             C::InsertDebugMarker(ref range) => {
                 let marker = extract_marker(data_bytes, range);
                 gl.debug_message_insert(
@@ -1044,17 +933,11 @@ impl super::Queue {
                     marker,
                 );
             }
-            #[cfg(target_arch = "wasm32")]
-            C::InsertDebugMarker(_) => (),
-            #[cfg_attr(target_arch = "wasm32", allow(unused))]
             C::PushDebugGroup(ref range) => {
-                #[cfg(not(target_arch = "wasm32"))]
                 let marker = extract_marker(data_bytes, range);
-                #[cfg(not(target_arch = "wasm32"))]
                 gl.push_debug_group(glow::DEBUG_SOURCE_APPLICATION, DEBUG_ID, marker);
             }
             C::PopDebugGroup => {
-                #[cfg(not(target_arch = "wasm32"))]
                 gl.pop_debug_group();
             }
         }
@@ -1071,16 +954,12 @@ impl crate::Queue<super::Api> for super::Queue {
         let gl = &shared.context.lock();
         self.reset_state(gl);
         for cmd_buf in command_buffers.iter() {
-            #[cfg(not(target_arch = "wasm32"))]
             if let Some(ref label) = cmd_buf.label {
                 gl.push_debug_group(glow::DEBUG_SOURCE_APPLICATION, DEBUG_ID, label);
             }
-
             for command in cmd_buf.commands.iter() {
                 self.process(gl, command, &cmd_buf.data_bytes, &cmd_buf.queries);
             }
-
-            #[cfg(not(target_arch = "wasm32"))]
             if cmd_buf.label.is_some() {
                 gl.pop_debug_group();
             }
@@ -1102,12 +981,7 @@ impl crate::Queue<super::Api> for super::Queue {
         surface: &mut super::Surface,
         texture: super::Texture,
     ) -> Result<(), crate::SurfaceError> {
-        #[cfg(not(target_arch = "wasm32"))]
         let gl = &self.shared.context.get_without_egl_lock();
-
-        #[cfg(target_arch = "wasm32")]
-        let gl = &self.shared.context.glow_context;
-
         surface.present(texture, gl)
     }
 
@@ -1115,9 +989,3 @@ impl crate::Queue<super::Api> for super::Queue {
         1.0
     }
 }
-
-// SAFE: WASM doesn't have threads
-#[cfg(target_arch = "wasm32")]
-unsafe impl Sync for super::Queue {}
-#[cfg(target_arch = "wasm32")]
-unsafe impl Send for super::Queue {}

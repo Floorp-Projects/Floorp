@@ -27,7 +27,6 @@ pub(crate) fn new_render_bundle_encoder_descriptor<'a>(
             }
         }),
         sample_count: context.sample_count,
-        multiview: context.multiview,
     }
 }
 
@@ -60,7 +59,6 @@ pub enum Action<'a> {
         parent_id: id::SurfaceId,
     },
     Present(id::SurfaceId),
-    DiscardSurfaceTexture(id::SurfaceId),
     CreateBindGroupLayout(
         id::BindGroupLayoutId,
         crate::binding_model::BindGroupLayoutDescriptor<'a>,
@@ -148,7 +146,7 @@ pub enum Command {
         dst: crate::command::ImageCopyTexture,
         size: wgt::Extent3d,
     },
-    FillBuffer {
+    ClearBuffer {
         dst: id::BufferId,
         offset: wgt::BufferAddress,
         size: Option<wgt::BufferSize>,

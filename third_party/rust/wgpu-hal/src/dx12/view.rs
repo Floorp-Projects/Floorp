@@ -122,11 +122,7 @@ impl ViewDescriptor {
                     MostDetailedMip: self.mip_level_base,
                     MipLevels: self.mip_level_count,
                     First2DArrayFace: self.array_layer_base,
-                    NumCubes: if self.array_layer_count == !0 {
-                        !0
-                    } else {
-                        self.array_layer_count / 6
-                    },
+                    NumCubes: self.array_layer_count / 6,
                     ResourceMinLODClamp: 0.0,
                 }
             }

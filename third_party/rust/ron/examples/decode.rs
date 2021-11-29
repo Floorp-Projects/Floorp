@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use ron::de::from_str;
 use serde::Deserialize;
 use std::collections::HashMap;

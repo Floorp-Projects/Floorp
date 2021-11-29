@@ -41,17 +41,14 @@ impl GeneralHeap {
         ty: native::DescriptorHeapType,
         total_handles: u64,
     ) -> Result<Self, crate::DeviceError> {
-        let raw = {
-            profiling::scope!("ID3D12Device::CreateDescriptorHeap");
-            device
-                .create_descriptor_heap(
-                    total_handles as u32,
-                    ty,
-                    native::DescriptorHeapFlags::SHADER_VISIBLE,
-                    0,
-                )
-                .into_device_result("Descriptor heap creation")?
-        };
+        let raw = device
+            .create_descriptor_heap(
+                total_handles as u32,
+                ty,
+                native::DescriptorHeapFlags::SHADER_VISIBLE,
+                0,
+            )
+            .into_device_result("Descriptor heap creation")?;
 
         Ok(Self {
             raw,

@@ -7,7 +7,6 @@ Figures out the following properties:
 !*/
 
 use super::{CallError, ExpressionError, FunctionError, ModuleInfo, ShaderStages, ValidationFlags};
-use crate::span::{AddSpan as _, WithSpan};
 use crate::{
     arena::{Arena, Handle},
     proc::{ResolveContext, TypeResolution},
@@ -191,7 +190,6 @@ struct Sampling {
 #[cfg_attr(feature = "deserialize", derive(serde::Deserialize))]
 pub struct FunctionInfo {
     /// Validation flags.
-    #[allow(dead_code)]
     flags: ValidationFlags,
     /// Set of shader stages where calling this function is valid.
     pub available_stages: ShaderStages,
@@ -308,7 +306,7 @@ impl FunctionInfo {
         info: &Self,
         arguments: &[Handle<crate::Expression>],
         expression_arena: &Arena<crate::Expression>,
-    ) -> Result<FunctionUniformity, WithSpan<FunctionError>> {
+    ) -> Result<FunctionUniformity, FunctionError> {
         for key in info.sampling_set.iter() {
             self.sampling_set.insert(key.clone());
         }
@@ -319,10 +317,7 @@ impl FunctionInfo {
                     let handle = arguments[i as usize];
                     expression_arena[handle]
                         .to_global_or_argument()
-                        .map_err(|error| {
-                            FunctionError::Expression { handle, error }
-                                .with_span_handle(handle, expression_arena)
-                        })?
+                        .map_err(|error| FunctionError::Expression { handle, error })?
                 }
             };
 
@@ -332,10 +327,7 @@ impl FunctionInfo {
                     let handle = arguments[i as usize];
                     expression_arena[handle]
                         .to_global_or_argument()
-                        .map_err(|error| {
-                            FunctionError::Expression { handle, error }
-                                .with_span_handle(handle, expression_arena)
-                        })?
+                        .map_err(|error| FunctionError::Expression { handle, error })?
                 }
             };
 
@@ -615,29 +607,27 @@ impl FunctionInfo {
     #[allow(clippy::or_fun_call)]
     fn process_block(
         &mut self,
-        statements: &crate::Block,
+        statements: &[crate::Statement],
         other_functions: &[FunctionInfo],
         mut disruptor: Option<UniformityDisruptor>,
         expression_arena: &Arena<crate::Expression>,
-    ) -> Result<FunctionUniformity, WithSpan<FunctionError>> {
+    ) -> Result<FunctionUniformity, FunctionError> {
         use crate::Statement as S;
 
         let mut combined_uniformity = FunctionUniformity::new();
-        for (statement, &span) in statements.span_iter() {
+        for statement in statements {
             let uniformity = match *statement {
                 S::Emit(ref range) => {
                     let mut requirements = UniformityRequirements::empty();
                     for expr in range.clone() {
                         let req = self.expressions[expr.index()].uniformity.requirements;
-                        #[cfg(feature = "validate")]
                         if self
                             .flags
                             .contains(super::ValidationFlags::CONTROL_FLOW_UNIFORMITY)
                             && !req.is_empty()
                         {
                             if let Some(cause) = disruptor {
-                                return Err(FunctionError::NonUniformControlFlow(req, expr, cause)
-                                    .with_span_handle(expr, expression_arena));
+                                return Err(FunctionError::NonUniformControlFlow(req, expr, cause));
                             }
                         }
                         requirements |= req;
@@ -694,6 +684,7 @@ impl FunctionInfo {
                 S::Switch {
                     selector,
                     ref cases,
+                    ref default,
                 } => {
                     let selector_nur = self.add_ref(selector);
                     let branch_disruptor =
@@ -714,7 +705,14 @@ impl FunctionInfo {
                         };
                         uniformity = uniformity | case_uniformity;
                     }
-                    uniformity
+                    // using the disruptor inherited from the last fall-through chain
+                    let default_exit = self.process_block(
+                        default,
+                        other_functions,
+                        case_disruptor,
+                        expression_arena,
+                    )?;
+                    uniformity | default_exit
                 }
                 S::Loop {
                     ref body,
@@ -776,8 +774,7 @@ impl FunctionInfo {
                         FunctionError::InvalidCall {
                             function,
                             error: CallError::ForwardDeclaredFunction,
-                        }
-                        .with_span_static(span, "forward call"),
+                        },
                     )?;
                     //Note: the result is validated by the Validator, not here
                     self.process_call(info, arguments, expression_arena)?
@@ -812,7 +809,7 @@ impl ModuleInfo {
         fun: &crate::Function,
         module: &crate::Module,
         flags: ValidationFlags,
-    ) -> Result<FunctionInfo, WithSpan<FunctionError>> {
+    ) -> Result<FunctionInfo, FunctionError> {
         let mut info = FunctionInfo {
             flags,
             available_stages: ShaderStages::all(),
@@ -840,8 +837,7 @@ impl ModuleInfo {
                 &self.functions,
                 &resolve_context,
             ) {
-                return Err(FunctionError::Expression { handle, error }
-                    .with_span_handle(handle, &fun.expressions));
+                return Err(FunctionError::Expression { handle, error });
             }
         }
 
@@ -858,7 +854,6 @@ impl ModuleInfo {
 }
 
 #[test]
-#[cfg(feature = "validate")]
 fn uniform_control_flow() {
     use crate::{Expression as E, Statement as S};
 
@@ -874,8 +869,8 @@ fn uniform_control_flow() {
         },
         Default::default(),
     );
-    let mut type_arena = crate::UniqueArena::new();
-    let ty = type_arena.insert(
+    let mut type_arena = Arena::new();
+    let ty = type_arena.append(
         crate::Type {
             name: None,
             inner: crate::TypeInner::Vector {
@@ -981,12 +976,7 @@ fn uniform_control_flow() {
         .into(),
     };
     assert_eq!(
-        info.process_block(
-            &vec![stmt_emit1, stmt_if_uniform].into(),
-            &[],
-            None,
-            &expressions
-        ),
+        info.process_block(&[stmt_emit1, stmt_if_uniform], &[], None, &expressions),
         Ok(FunctionUniformity {
             result: Uniformity {
                 non_uniform_result: None,
@@ -1012,18 +1002,12 @@ fn uniform_control_flow() {
         reject: crate::Block::new(),
     };
     assert_eq!(
-        info.process_block(
-            &vec![stmt_emit2, stmt_if_non_uniform].into(),
-            &[],
-            None,
-            &expressions
-        ),
+        info.process_block(&[stmt_emit2, stmt_if_non_uniform], &[], None, &expressions),
         Err(FunctionError::NonUniformControlFlow(
             UniformityRequirements::DERIVATIVE,
             derivative_expr,
             UniformityDisruptor::Expression(non_uniform_global_expr)
-        )
-        .with_span()),
+        )),
     );
     assert_eq!(info[derivative_expr].ref_count, 1);
     assert_eq!(info[non_uniform_global], GlobalUse::READ);
@@ -1034,7 +1018,7 @@ fn uniform_control_flow() {
     };
     assert_eq!(
         info.process_block(
-            &vec![stmt_emit3, stmt_return_non_uniform].into(),
+            &[stmt_emit3, stmt_return_non_uniform],
             &[],
             Some(UniformityDisruptor::Return),
             &expressions
@@ -1061,7 +1045,7 @@ fn uniform_control_flow() {
     let stmt_kill = S::Kill;
     assert_eq!(
         info.process_block(
-            &vec![stmt_emit4, stmt_assign, stmt_kill, stmt_return_pointer].into(),
+            &[stmt_emit4, stmt_assign, stmt_kill, stmt_return_pointer],
             &[],
             Some(UniformityDisruptor::Discard),
             &expressions
