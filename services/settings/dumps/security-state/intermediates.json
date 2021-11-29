@@ -1,6 +1,276 @@
 {
   "data": [
     {
+      "schema": 1638025204792,
+      "derHash": "8Hu73gdvm0DFfMS+/t6Xyh9Tua4UfwNdKEy/U/NDL7g=",
+      "subject": "CN=CFCA OV OCA,O=China Financial Certification Authority,C=CN",
+      "subjectDN": "MFUxCzAJBgNVBAYTAkNOMTAwLgYDVQQKDCdDaGluYSBGaW5hbmNpYWwgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxFDASBgNVBAMMC0NGQ0EgT1YgT0NB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "bc37658d1568750ae385b92be54ede64df31899d30f67211fd1e015c9dc7803b",
+        "size": 1963,
+        "filename": "uc0FPx73f1ObHGmGZOcevy371Uo9asVjdabpiS0lKgQ=.pem",
+        "location": "security-state-staging/intermediates/8a832b56-3f0a-4b5f-8966-8a1da5242863.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "uc0FPx73f1ObHGmGZOcevy371Uo9asVjdabpiS0lKgQ=",
+      "crlite_enrolled": false,
+      "id": "b2b776e5-2b2f-4c8e-819d-026b8d3855d2",
+      "last_modified": 1638176394669
+    },
+    {
+      "schema": 1638022415101,
+      "derHash": "k6B4mNibLMoWa6bx+KFBOM5Dgo5JG4MZJryCR9ORzHI=",
+      "subject": "CN=Starfield Secure Certificate Authority - G2,OU=http://certs.starfieldtech.com/repository/,O=Starfield Technologies\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
+      "subjectDN": "MIHGMQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTElMCMGA1UEChMcU3RhcmZpZWxkIFRlY2hub2xvZ2llcywgSW5jLjEzMDEGA1UECxMqaHR0cDovL2NlcnRzLnN0YXJmaWVsZHRlY2guY29tL3JlcG9zaXRvcnkvMTQwMgYDVQQDEytTdGFyZmllbGQgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
+      "whitelist": false,
+      "attachment": {
+        "hash": "4283da4ef9b6b21e475fb4a88aff9532a5c74e35282cb5459a20ee419646571c",
+        "size": 1792,
+        "filename": "8kGWrpQHhmc0jwLo43RYo6bmqtHgsNxhARjM5yFCe_w=.pem",
+        "location": "security-state-staging/intermediates/f0b4b8ab-658e-452d-a259-15b15f68060a.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "8kGWrpQHhmc0jwLo43RYo6bmqtHgsNxhARjM5yFCe/w=",
+      "crlite_enrolled": true,
+      "id": "eda1d6cc-95f3-4925-b185-1972acc69e5a",
+      "last_modified": 1638025203723
+    },
+    {
+      "schema": 1638000791272,
+      "derHash": "lzpBJ2/9AeAnoqrUnjTDeEbT6Xb/amILZxLjODIEGqY=",
+      "subject": "CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
+      "subjectDN": "MIG0MQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTEaMBgGA1UEChMRR29EYWRkeS5jb20sIEluYy4xLTArBgNVBAsTJGh0dHA6Ly9jZXJ0cy5nb2RhZGR5LmNvbS9yZXBvc2l0b3J5LzEzMDEGA1UEAxMqR28gRGFkZHkgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a111efc20329e87b541cfc3e7f526fc54bb24624fddf210f4347b9fadfb1ab6b",
+        "size": 1727,
+        "filename": "8Rw90Ej3Ttt8RRkrg-WYDS9n7IS03bk5bjP_UXPtaY8=.pem",
+        "location": "security-state-staging/intermediates/a2a04dfe-6201-4d0a-b8cf-80d2975bfb51.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "8Rw90Ej3Ttt8RRkrg+WYDS9n7IS03bk5bjP/UXPtaY8=",
+      "crlite_enrolled": true,
+      "id": "549c92e2-3738-4c8c-ae37-407e4e6158ce",
+      "last_modified": 1638003652877
+    },
+    {
+      "schema": 1637769495501,
+      "derHash": "8Up9JCetCgG01/152NUHctJSbiUkJfignDA3/fpjX1o=",
+      "subject": "CN=ZoTrus OV SSL CA,O=ZoTrus Technology Limited,C=CN",
+      "subjectDN": "MEwxCzAJBgNVBAYTAkNOMSIwIAYDVQQKExlab1RydXMgVGVjaG5vbG9neSBMaW1pdGVkMRkwFwYDVQQDExBab1RydXMgT1YgU1NMIENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "3d34f0ccb6454d57fa6d545acd6c231900b5c908c93777fe407d6363d4c87fb0",
+        "size": 2251,
+        "filename": "mic4JfOko8h5lsSjNABtsJRu4_nBErCNRFyxtEJc7SA=.pem",
+        "location": "security-state-staging/intermediates/18b9a297-9f9d-465d-a63a-b2e6ad2da805.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "mic4JfOko8h5lsSjNABtsJRu4/nBErCNRFyxtEJc7SA=",
+      "crlite_enrolled": true,
+      "id": "c5018a05-ac0d-419c-883c-606fbf703668",
+      "last_modified": 1637917121230
+    },
+    {
+      "schema": 1637765420708,
+      "derHash": "F7TgrQSCo9An9YvfyKm9Vfdcq8jfBZpAVqFsyN7lM+8=",
+      "subject": "CN=University of Macedonia CA R1,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
+      "subjectDN": "MHsxCzAJBgNVBAYTAkdSMUQwQgYDVQQKEztIZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2ggSW5zdGl0dXRpb25zIENlcnQuIEF1dGhvcml0eTEmMCQGA1UEAxMdVW5pdmVyc2l0eSBvZiBNYWNlZG9uaWEgQ0EgUjE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c153ed5ab8ba6db8df23a7640e7da30387b8d49e9c76ac5a7087e71e346c1522",
+        "size": 2519,
+        "filename": "Q3wUDE_KGR_qsDlo3z3iA92yNVJJgXo3pVbkHKiMh-g=.pem",
+        "location": "security-state-staging/intermediates/c67c13bf-d12d-4e53-8827-0bb25e395b9f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Q3wUDE/KGR/qsDlo3z3iA92yNVJJgXo3pVbkHKiMh+g=",
+      "crlite_enrolled": false,
+      "id": "49042737-15ea-4a2c-b256-318ca9c6a653",
+      "last_modified": 1637765959136
+    },
+    {
+      "schema": 1637765612816,
+      "derHash": "F7TgrQSCo9An9YvfyKm9Vfdcq8jfBZpAVqFsyN7lM+8=",
+      "subject": "CN=University of Macedonia CA R1,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
+      "subjectDN": "MHsxCzAJBgNVBAYTAkdSMUQwQgYDVQQKEztIZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2ggSW5zdGl0dXRpb25zIENlcnQuIEF1dGhvcml0eTEmMCQGA1UEAxMdVW5pdmVyc2l0eSBvZiBNYWNlZG9uaWEgQ0EgUjE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c153ed5ab8ba6db8df23a7640e7da30387b8d49e9c76ac5a7087e71e346c1522",
+        "size": 2519,
+        "filename": "Q3wUDE_KGR_qsDlo3z3iA92yNVJJgXo3pVbkHKiMh-g=.pem",
+        "location": "security-state-staging/intermediates/58ae3d50-d6eb-4b02-9565-29f915ef549e.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Q3wUDE/KGR/qsDlo3z3iA92yNVJJgXo3pVbkHKiMh+g=",
+      "crlite_enrolled": false,
+      "id": "0f430c08-80c5-4146-9d7b-847ab31f7778",
+      "last_modified": 1637765959127
+    },
+    {
+      "schema": 1637676978189,
+      "derHash": "Yjq+xvhacCisoQ9b3F2BtWtjFN8odD/8yE7KMvNa6EY=",
+      "subject": "CN=MuaSSL.com TLS Issuing ECC CA R1,O=Hao Quang Viet Software Company Limited,C=VN",
+      "subjectDN": "MGoxCzAJBgNVBAYTAlZOMTAwLgYDVQQKDCdIYW8gUXVhbmcgVmlldCBTb2Z0d2FyZSBDb21wYW55IExpbWl0ZWQxKTAnBgNVBAMMIE11YVNTTC5jb20gVExTIElzc3VpbmcgRUNDIENBIFIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "ac2e894346704c3fc08ad98c62eede51d5e6ccffc991c94df6e3c14d59acda62",
+        "size": 1894,
+        "filename": "aWadCp7kMcffucdctgN2uR7OBZm-XJI09tOLxjLbhv8=.pem",
+        "location": "security-state-staging/intermediates/ce4f4276-506a-4b31-852e-fc3724469a82.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "aWadCp7kMcffucdctgN2uR7OBZm+XJI09tOLxjLbhv8=",
+      "crlite_enrolled": false,
+      "id": "375b4322-da36-43eb-b0f8-3e034e77e486",
+      "last_modified": 1637679524866
+    },
+    {
+      "schema": 1637676979360,
+      "derHash": "OPWMr2UMzU9gJ9HJImgokaFl/vSR/B0zP+ipyFFYbUg=",
+      "subject": "CN=MuaSSL.com EV TLS Issuing RSA CA R1,O=Hao Quang Viet Software Company Limited,C=VN",
+      "subjectDN": "MG0xCzAJBgNVBAYTAlZOMTAwLgYDVQQKDCdIYW8gUXVhbmcgVmlldCBTb2Z0d2FyZSBDb21wYW55IExpbWl0ZWQxLDAqBgNVBAMMI011YVNTTC5jb20gRVYgVExTIElzc3VpbmcgUlNBIENBIFIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "1268f09ff0fbaa823641ed09fcffa9375ff709984ae1760df81690f6d93e599a",
+        "size": 2540,
+        "filename": "13AbTAPgSo4ZEXl_1d53tBhdk_1OZp42oZ8Uo8f-0gs=.pem",
+        "location": "security-state-staging/intermediates/865dda55-844a-4582-a11b-5b6e5990260f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "13AbTAPgSo4ZEXl/1d53tBhdk/1OZp42oZ8Uo8f+0gs=",
+      "crlite_enrolled": false,
+      "id": "a654fabe-9ac1-4467-9d3a-bdafdd9b0b8a",
+      "last_modified": 1637679524859
+    },
+    {
+      "schema": 1637633470008,
+      "derHash": "UpmYc6PRKkVx25oWBXap2VGtTkp9oxxcEGE4BekiQyU=",
+      "subject": "CN=MuaSSL.com TLS Issuing RSA CA R1,O=Hao Quang Viet Software Company Limited,C=VN",
+      "subjectDN": "MGoxCzAJBgNVBAYTAlZOMTAwLgYDVQQKDCdIYW8gUXVhbmcgVmlldCBTb2Z0d2FyZSBDb21wYW55IExpbWl0ZWQxKTAnBgNVBAMMIE11YVNTTC5jb20gVExTIElzc3VpbmcgUlNBIENBIFIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "0532c96a8ccdfe2c93144af785a8ea878c890e17d29b1902af77265bcdb4950c",
+        "size": 2475,
+        "filename": "665w_NZsPO7TEXwGSRnHz5bGQ3teDolKrTBrXhjcHcw=.pem",
+        "location": "security-state-staging/intermediates/16bcd296-9145-412a-834b-d94e1d8f285c.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "665w/NZsPO7TEXwGSRnHz5bGQ3teDolKrTBrXhjcHcw=",
+      "crlite_enrolled": false,
+      "id": "5396a2c3-5e2b-4b6e-8e64-73b58dfe5c7f",
+      "last_modified": 1637636417266
+    },
+    {
+      "schema": 1637633471153,
+      "derHash": "eF/TI2TEV+KutDU6qVgI83GqiQbhHEDhPDOKaz7nO+E=",
+      "subject": "CN=MuaSSL.com EV TLS Issuing ECC CA R1,O=Hao Quang Viet Software Company Limited,C=VN",
+      "subjectDN": "MG0xCzAJBgNVBAYTAlZOMTAwLgYDVQQKDCdIYW8gUXVhbmcgVmlldCBTb2Z0d2FyZSBDb21wYW55IExpbWl0ZWQxLDAqBgNVBAMMI011YVNTTC5jb20gRVYgVExTIElzc3VpbmcgRUNDIENBIFIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "fbb1f42effaa30ae80b8f308b7ae5cbc690e9716c62b786556d20cf07f59de5f",
+        "size": 1955,
+        "filename": "KsymRI2FihoZ5c5m000bkzpYqk9OfXKMBPz7WEodqEg=.pem",
+        "location": "security-state-staging/intermediates/ff93576f-dc09-4207-bd4c-2f8333621852.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "KsymRI2FihoZ5c5m000bkzpYqk9OfXKMBPz7WEodqEg=",
+      "crlite_enrolled": false,
+      "id": "bbb4fdaf-43cc-4c28-abd4-5a28a8db2864",
+      "last_modified": 1637636417259
+    },
+    {
+      "schema": 1637635862331,
+      "derHash": "UpmYc6PRKkVx25oWBXap2VGtTkp9oxxcEGE4BekiQyU=",
+      "subject": "CN=MuaSSL.com TLS Issuing RSA CA R1,O=Hao Quang Viet Software Company Limited,C=VN",
+      "subjectDN": "MGoxCzAJBgNVBAYTAlZOMTAwLgYDVQQKDCdIYW8gUXVhbmcgVmlldCBTb2Z0d2FyZSBDb21wYW55IExpbWl0ZWQxKTAnBgNVBAMMIE11YVNTTC5jb20gVExTIElzc3VpbmcgUlNBIENBIFIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "0532c96a8ccdfe2c93144af785a8ea878c890e17d29b1902af77265bcdb4950c",
+        "size": 2475,
+        "filename": "665w_NZsPO7TEXwGSRnHz5bGQ3teDolKrTBrXhjcHcw=.pem",
+        "location": "security-state-staging/intermediates/2732f8f6-790e-4305-85a5-0b80e0167674.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "665w/NZsPO7TEXwGSRnHz5bGQ3teDolKrTBrXhjcHcw=",
+      "crlite_enrolled": false,
+      "id": "96382960-f466-4b1e-978c-efbc31fa4596",
+      "last_modified": 1637636417253
+    },
+    {
+      "schema": 1637635863576,
+      "derHash": "eF/TI2TEV+KutDU6qVgI83GqiQbhHEDhPDOKaz7nO+E=",
+      "subject": "CN=MuaSSL.com EV TLS Issuing ECC CA R1,O=Hao Quang Viet Software Company Limited,C=VN",
+      "subjectDN": "MG0xCzAJBgNVBAYTAlZOMTAwLgYDVQQKDCdIYW8gUXVhbmcgVmlldCBTb2Z0d2FyZSBDb21wYW55IExpbWl0ZWQxLDAqBgNVBAMMI011YVNTTC5jb20gRVYgVExTIElzc3VpbmcgRUNDIENBIFIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "fbb1f42effaa30ae80b8f308b7ae5cbc690e9716c62b786556d20cf07f59de5f",
+        "size": 1955,
+        "filename": "KsymRI2FihoZ5c5m000bkzpYqk9OfXKMBPz7WEodqEg=.pem",
+        "location": "security-state-staging/intermediates/54a21cc9-4c30-4b6b-abaf-19625388cd14.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "KsymRI2FihoZ5c5m000bkzpYqk9OfXKMBPz7WEodqEg=",
+      "crlite_enrolled": false,
+      "id": "97428867-31bd-42a5-9eea-4f58820285bb",
+      "last_modified": 1637636417247
+    },
+    {
+      "schema": 1637593069231,
+      "derHash": "sKbvA1DnxMYFa+6nr50thgue0QITe5cp08IyFtGVVGo=",
+      "subject": "CN=Advanced Class 3 e-Szigno CA 2009,O=Microsec Ltd.,L=Budapest,C=HU",
+      "subjectDN": "MIGFMQswCQYDVQQGEwJIVTERMA8GA1UEBwwIQnVkYXBlc3QxFjAUBgNVBAoMDU1pY3Jvc2VjIEx0ZC4xKjAoBgNVBAMMIUFkdmFuY2VkIENsYXNzIDMgZS1Temlnbm8gQ0EgMjAwOTEfMB0GCSqGSIb3DQEJARYQaW5mb0BlLXN6aWduby5odQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "0ed62164b86f37c69eb2018a4a79db046f2eae11bfb1c748569dff5da6e94178",
+        "size": 1768,
+        "filename": "VGt-HUDy6qey1Up5ZYyfXaLC_1Yy9l4AvJsHFIQXC5g=.pem",
+        "location": "security-state-staging/intermediates/912a52c5-97ea-4353-806f-dbf6b9c95e81.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "VGt+HUDy6qey1Up5ZYyfXaLC/1Yy9l4AvJsHFIQXC5g=",
+      "crlite_enrolled": false,
+      "id": "1d065829-106f-4cf5-a7ce-33874e651514",
+      "last_modified": 1637614674594
+    },
+    {
+      "schema": 1637571537940,
+      "derHash": "d9bCr1p7hvY9mRjIdTN3nyrwjTXPoU2kk4yAP1PeGKE=",
+      "subject": "CN=SwissSign Personal Gold CA 2014 - G22,O=SwissSign AG,C=CH",
+      "subjectDN": "MFQxCzAJBgNVBAYTAkNIMRUwEwYDVQQKEwxTd2lzc1NpZ24gQUcxLjAsBgNVBAMTJVN3aXNzU2lnbiBQZXJzb25hbCBHb2xkIENBIDIwMTQgLSBHMjI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "37ef04fb6f6156e237c6f04ae3b383028744a07d5a6a4197c49d3411c82108f0",
+        "size": 2389,
+        "filename": "l5kY-a2-qCNGMn7LXb_lGEENF-dZOLccQOZBKr40wVE=.pem",
+        "location": "security-state-staging/intermediates/6a316d67-95bd-4ab5-aef3-82bd300391d7.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "l5kY+a2+qCNGMn7LXb/lGEENF+dZOLccQOZBKr40wVE=",
+      "crlite_enrolled": false,
+      "id": "26a70827-d9ed-46cc-8952-77eb4121605e",
+      "last_modified": 1637593068149
+    },
+    {
+      "schema": 1637590211288,
+      "derHash": "ThpWTHGgQoiXDlPAN9HPwlwfm+/FJ2zzvVAe4mLwQgI=",
+      "subject": "CN=GlobalSign Atlas R3 OV TLS CA H2 2021,O=GlobalSign nv-sa,C=BE",
+      "subjectDN": "MFgxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS4wLAYDVQQDEyVHbG9iYWxTaWduIEF0bGFzIFIzIE9WIFRMUyBDQSBIMiAyMDIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "d499679a13f287b719305ece5b064b2730137bf3006a9913e7ab121e378f3262",
+        "size": 1715,
+        "filename": "D2Dxjr_K2WrUouIXuBMldR6ucBSdBjfQI6boJU6R6i8=.pem",
+        "location": "security-state-staging/intermediates/fae57392-fd90-4733-a1bb-c543b9e8ff29.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "D2Dxjr/K2WrUouIXuBMldR6ucBSdBjfQI6boJU6R6i8=",
+      "crlite_enrolled": true,
+      "id": "105b6627-b2cd-462b-8da2-204dc969ac8c",
+      "last_modified": 1637593068134
+    },
+    {
       "schema": 1637569170634,
       "derHash": "cQLZcsJOnKaNDm+f9TxfZYzZuGSfKOrY28M2wt9QSBE=",
       "subject": "CN=CertCloud RSA OV TLS CA,O=CertCloud Pte. Ltd.,C=SG",
@@ -8047,24 +8317,6 @@
       "last_modified": 1632167888751
     },
     {
-      "schema": 1632149856271,
-      "derHash": "k6B4mNibLMoWa6bx+KFBOM5Dgo5JG4MZJryCR9ORzHI=",
-      "subject": "CN=Starfield Secure Certificate Authority - G2,OU=http://certs.starfieldtech.com/repository/,O=Starfield Technologies\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
-      "subjectDN": "MIHGMQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTElMCMGA1UEChMcU3RhcmZpZWxkIFRlY2hub2xvZ2llcywgSW5jLjEzMDEGA1UECxMqaHR0cDovL2NlcnRzLnN0YXJmaWVsZHRlY2guY29tL3JlcG9zaXRvcnkvMTQwMgYDVQQDEytTdGFyZmllbGQgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "4283da4ef9b6b21e475fb4a88aff9532a5c74e35282cb5459a20ee419646571c",
-        "size": 1792,
-        "filename": "8kGWrpQHhmc0jwLo43RYo6bmqtHgsNxhARjM5yFCe_w=.pem",
-        "location": "security-state-staging/intermediates/f0b4b8ab-658e-452d-a259-15b15f68060a.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "8kGWrpQHhmc0jwLo43RYo6bmqtHgsNxhARjM5yFCe/w=",
-      "crlite_enrolled": true,
-      "id": "eda1d6cc-95f3-4925-b185-1972acc69e5a",
-      "last_modified": 1632167888728
-    },
-    {
       "schema": 1631908274830,
       "derHash": "DlXQmFSCu7fEkOuhR8WgIaLCogidOor1fQHt1UDKWkU=",
       "subject": "CN=SwissSign RSA TLS DV ICA 2021 - 1,O=SwissSign AG,C=CH",
@@ -8225,24 +8477,6 @@
       "crlite_enrolled": false,
       "id": "91d09b08-504f-4a5f-88f7-6c58778026f2",
       "last_modified": 1631843845693
-    },
-    {
-      "schema": 1631843453964,
-      "derHash": "8Up9JCetCgG01/152NUHctJSbiUkJfignDA3/fpjX1o=",
-      "subject": "CN=ZoTrus OV SSL CA,O=ZoTrus Technology Limited,C=CN",
-      "subjectDN": "MEwxCzAJBgNVBAYTAkNOMSIwIAYDVQQKExlab1RydXMgVGVjaG5vbG9neSBMaW1pdGVkMRkwFwYDVQQDExBab1RydXMgT1YgU1NMIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "3d34f0ccb6454d57fa6d545acd6c231900b5c908c93777fe407d6363d4c87fb0",
-        "size": 2251,
-        "filename": "mic4JfOko8h5lsSjNABtsJRu4_nBErCNRFyxtEJc7SA=.pem",
-        "location": "security-state-staging/intermediates/18b9a297-9f9d-465d-a63a-b2e6ad2da805.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "mic4JfOko8h5lsSjNABtsJRu4/nBErCNRFyxtEJc7SA=",
-      "crlite_enrolled": false,
-      "id": "c5018a05-ac0d-419c-883c-606fbf703668",
-      "last_modified": 1631843845672
     },
     {
       "schema": 1631843455899,
@@ -8927,24 +9161,6 @@
       "crlite_enrolled": false,
       "id": "9cb658c6-3e52-4a94-b178-1d2ab7a03ad7",
       "last_modified": 1627246645036
-    },
-    {
-      "schema": 1626987442498,
-      "derHash": "lzpBJ2/9AeAnoqrUnjTDeEbT6Xb/amILZxLjODIEGqY=",
-      "subject": "CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
-      "subjectDN": "MIG0MQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTEaMBgGA1UEChMRR29EYWRkeS5jb20sIEluYy4xLTArBgNVBAsTJGh0dHA6Ly9jZXJ0cy5nb2RhZGR5LmNvbS9yZXBvc2l0b3J5LzEzMDEGA1UEAxMqR28gRGFkZHkgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a111efc20329e87b541cfc3e7f526fc54bb24624fddf210f4347b9fadfb1ab6b",
-        "size": 1727,
-        "filename": "8Rw90Ej3Ttt8RRkrg-WYDS9n7IS03bk5bjP_UXPtaY8=.pem",
-        "location": "security-state-staging/intermediates/a2a04dfe-6201-4d0a-b8cf-80d2975bfb51.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "8Rw90Ej3Ttt8RRkrg+WYDS9n7IS03bk5bjP/UXPtaY8=",
-      "crlite_enrolled": true,
-      "id": "549c92e2-3738-4c8c-ae37-407e4e6158ce",
-      "last_modified": 1627009045803
     },
     {
       "schema": 1626986989722,
@@ -9827,24 +10043,6 @@
       "crlite_enrolled": true,
       "id": "911255a8-a1cd-4edd-8e7e-f67154d601a8",
       "last_modified": 1623963448315
-    },
-    {
-      "schema": 1623916919617,
-      "derHash": "ThpWTHGgQoiXDlPAN9HPwlwfm+/FJ2zzvVAe4mLwQgI=",
-      "subject": "CN=GlobalSign Atlas R3 OV TLS CA H2 2021,O=GlobalSign nv-sa,C=BE",
-      "subjectDN": "MFgxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMS4wLAYDVQQDEyVHbG9iYWxTaWduIEF0bGFzIFIzIE9WIFRMUyBDQSBIMiAyMDIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "d499679a13f287b719305ece5b064b2730137bf3006a9913e7ab121e378f3262",
-        "size": 1715,
-        "filename": "D2Dxjr_K2WrUouIXuBMldR6ucBSdBjfQI6boJU6R6i8=.pem",
-        "location": "security-state-staging/intermediates/fae57392-fd90-4733-a1bb-c543b9e8ff29.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "D2Dxjr/K2WrUouIXuBMldR6ucBSdBjfQI6boJU6R6i8=",
-      "crlite_enrolled": false,
-      "id": "105b6627-b2cd-462b-8da2-204dc969ac8c",
-      "last_modified": 1623920278133
     },
     {
       "schema": 1623916921256,
@@ -15283,24 +15481,6 @@
       "last_modified": 1613660249965
     },
     {
-      "schema": 1613659860858,
-      "derHash": "F7TgrQSCo9An9YvfyKm9Vfdcq8jfBZpAVqFsyN7lM+8=",
-      "subject": "CN=University of Macedonia CA R1,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
-      "subjectDN": "MHsxCzAJBgNVBAYTAkdSMUQwQgYDVQQKEztIZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2ggSW5zdGl0dXRpb25zIENlcnQuIEF1dGhvcml0eTEmMCQGA1UEAxMdVW5pdmVyc2l0eSBvZiBNYWNlZG9uaWEgQ0EgUjE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c153ed5ab8ba6db8df23a7640e7da30387b8d49e9c76ac5a7087e71e346c1522",
-        "size": 2519,
-        "filename": "Q3wUDE_KGR_qsDlo3z3iA92yNVJJgXo3pVbkHKiMh-g=.pem",
-        "location": "security-state-staging/intermediates/58ae3d50-d6eb-4b02-9565-29f915ef549e.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Q3wUDE/KGR/qsDlo3z3iA92yNVJJgXo3pVbkHKiMh+g=",
-      "crlite_enrolled": true,
-      "id": "0f430c08-80c5-4146-9d7b-847ab31f7778",
-      "last_modified": 1613660249922
-    },
-    {
       "schema": 1613659862334,
       "derHash": "iExR1kO+ESbnLzsbcji6V+AmjB1sSiKs3WJJwXWKU7Y=",
       "subject": "CN=International Hellenic University CA R1,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
@@ -15983,24 +16163,6 @@
       "crlite_enrolled": false,
       "id": "097d85a7-8fc3-475f-8d79-1400d351af7e",
       "last_modified": 1613656686605
-    },
-    {
-      "schema": 1613656242812,
-      "derHash": "F7TgrQSCo9An9YvfyKm9Vfdcq8jfBZpAVqFsyN7lM+8=",
-      "subject": "CN=University of Macedonia CA R1,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
-      "subjectDN": "MHsxCzAJBgNVBAYTAkdSMUQwQgYDVQQKEztIZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2ggSW5zdGl0dXRpb25zIENlcnQuIEF1dGhvcml0eTEmMCQGA1UEAxMdVW5pdmVyc2l0eSBvZiBNYWNlZG9uaWEgQ0EgUjE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c153ed5ab8ba6db8df23a7640e7da30387b8d49e9c76ac5a7087e71e346c1522",
-        "size": 2519,
-        "filename": "Q3wUDE_KGR_qsDlo3z3iA92yNVJJgXo3pVbkHKiMh-g=.pem",
-        "location": "security-state-staging/intermediates/c67c13bf-d12d-4e53-8827-0bb25e395b9f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Q3wUDE/KGR/qsDlo3z3iA92yNVJJgXo3pVbkHKiMh+g=",
-      "crlite_enrolled": true,
-      "id": "49042737-15ea-4a2c-b256-318ca9c6a653",
-      "last_modified": 1613656686595
     },
     {
       "schema": 1613656244277,
@@ -30295,24 +30457,6 @@
       "last_modified": 1576536534240
     },
     {
-      "schema": 1576536056853,
-      "derHash": "sKbvA1DnxMYFa+6nr50thgue0QITe5cp08IyFtGVVGo=",
-      "subject": "CN=Advanced Class 3 e-Szigno CA 2009,O=Microsec Ltd.,L=Budapest,C=HU",
-      "subjectDN": "MIGFMQswCQYDVQQGEwJIVTERMA8GA1UEBwwIQnVkYXBlc3QxFjAUBgNVBAoMDU1pY3Jvc2VjIEx0ZC4xKjAoBgNVBAMMIUFkdmFuY2VkIENsYXNzIDMgZS1Temlnbm8gQ0EgMjAwOTEfMB0GCSqGSIb3DQEJARYQaW5mb0BlLXN6aWduby5odQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "0ed62164b86f37c69eb2018a4a79db046f2eae11bfb1c748569dff5da6e94178",
-        "size": 1768,
-        "filename": "VGt-HUDy6qey1Up5ZYyfXaLC_1Yy9l4AvJsHFIQXC5g=.pem",
-        "location": "security-state-staging/intermediates/912a52c5-97ea-4353-806f-dbf6b9c95e81.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "VGt+HUDy6qey1Up5ZYyfXaLC/1Yy9l4AvJsHFIQXC5g=",
-      "crlite_enrolled": true,
-      "id": "1d065829-106f-4cf5-a7ce-33874e651514",
-      "last_modified": 1576536534237
-    },
-    {
       "schema": 1576536055441,
       "derHash": "ZlZv7dYNs64QkQ8qiXB89RWQkgM6cadc2GhR1zWRlBE=",
       "subject": "CN=AffirmTrust Premium Extended Validation CA,OU=http://www.affirmtrust.com/resources,O=AffirmTrust,C=US",
@@ -38825,24 +38969,6 @@
       "crlite_enrolled": true,
       "id": "53f85a16-b4c6-49b5-b7ae-79f9a96b81be",
       "last_modified": 1562108431124
-    },
-    {
-      "schema": 1562108429620,
-      "derHash": "d9bCr1p7hvY9mRjIdTN3nyrwjTXPoU2kk4yAP1PeGKE=",
-      "subject": "CN=SwissSign Personal Gold CA 2014 - G22,O=SwissSign AG,C=CH",
-      "subjectDN": "MFQxCzAJBgNVBAYTAkNIMRUwEwYDVQQKEwxTd2lzc1NpZ24gQUcxLjAsBgNVBAMTJVN3aXNzU2lnbiBQZXJzb25hbCBHb2xkIENBIDIwMTQgLSBHMjI=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "37ef04fb6f6156e237c6f04ae3b383028744a07d5a6a4197c49d3411c82108f0",
-        "size": 2389,
-        "filename": "l5kY-a2-qCNGMn7LXb_lGEENF-dZOLccQOZBKr40wVE=.pem",
-        "location": "security-state-staging/intermediates/6a316d67-95bd-4ab5-aef3-82bd300391d7.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "l5kY+a2+qCNGMn7LXb/lGEENF+dZOLccQOZBKr40wVE=",
-      "crlite_enrolled": true,
-      "id": "26a70827-d9ed-46cc-8952-77eb4121605e",
-      "last_modified": 1562108430373
     },
     {
       "schema": 1562108428868,
@@ -52325,24 +52451,6 @@
       "crlite_enrolled": true,
       "id": "9bae286e-930a-4285-8a27-54c6509f3077",
       "last_modified": 1562023844984
-    },
-    {
-      "schema": 1562023843492,
-      "derHash": "8Hu73gdvm0DFfMS+/t6Xyh9Tua4UfwNdKEy/U/NDL7g=",
-      "subject": "CN=CFCA OV OCA,O=China Financial Certification Authority,C=CN",
-      "subjectDN": "MFUxCzAJBgNVBAYTAkNOMTAwLgYDVQQKDCdDaGluYSBGaW5hbmNpYWwgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxFDASBgNVBAMMC0NGQ0EgT1YgT0NB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "bc37658d1568750ae385b92be54ede64df31899d30f67211fd1e015c9dc7803b",
-        "size": 1963,
-        "filename": "uc0FPx73f1ObHGmGZOcevy371Uo9asVjdabpiS0lKgQ=.pem",
-        "location": "security-state-staging/intermediates/8a832b56-3f0a-4b5f-8966-8a1da5242863.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "uc0FPx73f1ObHGmGZOcevy371Uo9asVjdabpiS0lKgQ=",
-      "crlite_enrolled": true,
-      "id": "b2b776e5-2b2f-4c8e-819d-026b8d3855d2",
-      "last_modified": 1562023844242
     },
     {
       "schema": 1562023842017,
