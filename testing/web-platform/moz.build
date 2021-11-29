@@ -685,7 +685,6 @@ with Files("tests/uievents/**"):
 
 with Files("tests/upgrade-insecure-requests/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
-
 with Files("tests/url/**"):
     BUG_COMPONENT = ("Core", "DOM: Networking")
 
