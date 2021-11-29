@@ -1710,7 +1710,6 @@ nsWindow::nsWindow()
       mParent(nullptr),
       mDynamicToolbarMaxHeight(0),
       mIsFullScreen(false),
-      mIsDisablingWebRender(false),
       mCompositorWidgetDelegate(nullptr) {}
 
 nsWindow::~nsWindow() {
@@ -2167,17 +2166,11 @@ nsresult nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen*) {
 }
 
 mozilla::WindowRenderer* nsWindow::GetWindowRenderer() {
-  if (mWindowRenderer) {
-    return mWindowRenderer;
-  }
-
-  if (mIsDisablingWebRender) {
+  if (!mWindowRenderer) {
     CreateLayerManager();
-    mIsDisablingWebRender = false;
-    return mWindowRenderer;
   }
 
-  return nullptr;
+  return mWindowRenderer;
 }
 
 void nsWindow::CreateLayerManager() {
@@ -2198,6 +2191,19 @@ void nsWindow::CreateLayerManager() {
     LayoutDeviceIntRect rect = GetBounds();
     CreateCompositor(rect.Width(), rect.Height());
     if (mWindowRenderer) {
+      auto lvs(mLayerViewSupport.Access());
+      if (lvs) {
+        GetUiCompositorControllerChild()->OnCompositorSurfaceChanged(
+            mWidgetId, lvs->GetSurface());
+
+        if (!lvs->CompositorPaused()) {
+          CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
+          if (remoteRenderer) {
+            remoteRenderer->SendResumeAsync();
+          }
+        }
+      }
+
       return;
     }
 
@@ -2211,8 +2217,9 @@ void nsWindow::CreateLayerManager() {
   }
 }
 
-void nsWindow::NotifyDisablingWebRender() {
-  mIsDisablingWebRender = true;
+void nsWindow::NotifyCompositorSessionLost(
+    mozilla::layers::CompositorSession* aSession) {
+  nsBaseWidget::NotifyCompositorSessionLost(aSession);
   RedrawAll();
 }
 
