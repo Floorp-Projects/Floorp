@@ -26,7 +26,8 @@ class TRRServiceChild : public PTRRServiceChild,
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  explicit TRRServiceChild() = default;
+  TRRServiceChild();
+  static TRRServiceChild* GetSingleton();
 
   void Init(const bool& aCaptiveIsPassed, const bool& aParentalControlEnabled,
             nsTArray<nsCString>&& aDNSSuffixList);
@@ -38,9 +39,11 @@ class TRRServiceChild : public PTRRServiceChild,
       const bool& aEnabled);
   mozilla::ipc::IPCResult RecvClearDNSCache(const bool& aTrrToo);
   mozilla::ipc::IPCResult RecvSetDetectedTrrURI(const nsCString& aURI);
+  mozilla::ipc::IPCResult RecvSetDefaultTRRConnectionInfo(
+      Maybe<HttpConnectionInfoCloneArgs>&& aArgs);
 
  private:
-  virtual ~TRRServiceChild() = default;
+  virtual ~TRRServiceChild();
 };
 
 }  // namespace net

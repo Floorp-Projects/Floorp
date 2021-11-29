@@ -6,6 +6,7 @@
 
 include protocol PSocketProcess;
 
+include NeckoChannelParams;
 include PSMIPCTypes;
 
 namespace mozilla {
@@ -17,6 +18,7 @@ namespace net {
 
 parent:
   async NotifyNetworkConnectivityServiceObservers(nsCString aTopic);
+  async InitTRRConnectionInfo();
 
 child:
   async __delete__();
@@ -24,6 +26,7 @@ child:
   async UpdateParentalControlEnabled(bool aEnabled);
   async ClearDNSCache(bool aTrrToo);
   async SetDetectedTrrURI(nsCString aURI);
+  async SetDefaultTRRConnectionInfo(HttpConnectionInfoCloneArgs? aConnInfoArgs);
 };
 
 } //namespace net

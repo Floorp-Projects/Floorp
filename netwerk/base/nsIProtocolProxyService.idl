@@ -15,6 +15,18 @@ interface nsIChannel;
 interface nsIURI;
 interface nsISerialEventTarget;
 
+[scriptable, uuid(77984234-aad5-47fc-a412-03398c2134a5)]
+interface nsIProxyConfigChangedCallback : nsISupports
+{
+   /**
+     * Called when one of the following conditions are changed.
+     * 1. System proxy settings changed.
+     * 2. A proxy filter is registered or unregistered.
+     * 3. Proxy related prefs changed.
+     */
+  void onProxyConfigChanged();
+};
+
 /**
  * nsIProtocolProxyService provides methods to access information about
  * various network proxies.
@@ -273,6 +285,28 @@ interface nsIProtocolProxyService : nsISupports
      *        The nsIProtocolProxyChannelFilter instance to be unregistered.
      */
     void unregisterChannelFilter(in nsIProtocolProxyChannelFilter aFilter);
+
+    /**
+     * This method is used to register a nsIProxyConfigChangedCallback.
+     *
+     * @param aCallback
+     *        The aCallback instance to be registered.
+     */
+    void addProxyConfigCallback(in nsIProxyConfigChangedCallback aCallback);
+
+    /**
+     * This method is used to unregister a nsIProxyConfigChangedCallback.
+     *
+     * @param aCallback
+     *        The aCallback instance to be unregistered.
+     */
+    void removeProxyConfigCallback(in nsIProxyConfigChangedCallback aCallback);
+
+
+    /**
+     * This method is used internal only. Called when proxy config is changed.
+     */
+    void notifyProxyConfigChangedInternal();
 
      /**
       * These values correspond to the possible integer values for the

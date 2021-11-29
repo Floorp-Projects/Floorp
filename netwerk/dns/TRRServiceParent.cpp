@@ -11,6 +11,7 @@
 #include "mozilla/psm/PSMIPCTypes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
+#include "nsHttpConnectionInfo.h"
 #include "nsICaptivePortalService.h"
 #include "nsIParentalControlsService.h"
 #include "nsINetworkLinkService.h"
@@ -18,6 +19,8 @@
 #include "nsIOService.h"
 #include "nsNetCID.h"
 #include "TRRService.h"
+
+#include "DNSLogging.h"
 
 namespace mozilla {
 namespace net {
@@ -28,7 +31,10 @@ static const char* gTRRUriCallbackPrefs[] = {
     kRolloutModePref,   nullptr,
 };
 
-NS_IMPL_ISUPPORTS(TRRServiceParent, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS_INHERITED(TRRServiceParent, TRRServiceBase, nsIObserver,
+                            nsISupportsWeakReference)
+
+TRRServiceParent::~TRRServiceParent() = default;
 
 void TRRServiceParent::Init() {
   MOZ_ASSERT(gIOService);
@@ -107,6 +113,7 @@ bool TRRServiceParent::MaybeSetPrivateURI(const nsACString& aURI) {
   }
 
   mPrivateURI = newURI;
+  AsyncCreateTRRConnectionInfo(mPrivateURI);
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -127,7 +134,12 @@ void TRRServiceParent::SetDetectedTrrURI(const nsACString& aURI) {
       });
 }
 
-void TRRServiceParent::GetTrrURI(nsACString& aURI) { aURI = mPrivateURI; }
+void TRRServiceParent::GetURI(nsACString& aURI) {
+  // We don't need a lock here, since mPrivateURI is only touched on main
+  // thread.
+  MOZ_ASSERT(NS_IsMainThread());
+  aURI = mPrivateURI;
+}
 
 void TRRServiceParent::UpdateParentalControlEnabled() {
   bool enabled = TRRService::GetParentalControlEnabledInternal();
@@ -158,6 +170,36 @@ void TRRServiceParent::prefsChanged(const char* aName) {
 void TRRServiceParent::ActorDestroy(ActorDestroyReason why) {
   Preferences::UnregisterPrefixCallbacks(TRRServiceParent::PrefsChanged,
                                          gTRRUriCallbackPrefs, this);
+}
+
+NS_IMETHODIMP TRRServiceParent::OnProxyConfigChanged() {
+  LOG(("TRRServiceParent::OnProxyConfigChanged"));
+
+  AsyncCreateTRRConnectionInfo(mPrivateURI);
+  return NS_OK;
+}
+
+void TRRServiceParent::SetDefaultTRRConnectionInfo(
+    nsHttpConnectionInfo* aConnInfo) {
+  TRRServiceBase::SetDefaultTRRConnectionInfo(aConnInfo);
+
+  if (!CanSend()) {
+    return;
+  }
+
+  if (!aConnInfo) {
+    Unused << SendSetDefaultTRRConnectionInfo(Nothing());
+    return;
+  }
+
+  HttpConnectionInfoCloneArgs infoArgs;
+  nsHttpConnectionInfo::SerializeHttpConnectionInfo(aConnInfo, infoArgs);
+  Unused << SendSetDefaultTRRConnectionInfo(Some(infoArgs));
+}
+
+mozilla::ipc::IPCResult TRRServiceParent::RecvInitTRRConnectionInfo() {
+  InitTRRConnectionInfo();
+  return IPC_OK();
 }
 
 }  // namespace net
