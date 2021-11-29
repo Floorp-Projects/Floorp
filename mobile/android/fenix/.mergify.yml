@@ -1,3 +1,7 @@
+queue_rules:
+  - name: default
+    conditions:
+      - status-success=pr-complete
 pull_request_rules:
   - name: Resolve conflict
     conditions:
@@ -14,9 +18,10 @@ pull_request_rules:
       review:
         type: APPROVE
         message: MickeyMoz 💪
-      merge:
+      queue:
         method: rebase
-        strict: smart
+        name: default
+        rebase_fallback: none
   - name: L10N - Auto Merge
     conditions:
       - author=mozilla-l10n-automation-bot
@@ -26,9 +31,10 @@ pull_request_rules:
       review:
         type: APPROVE
         message: LGTM 😎
-      merge:
+      queue:
         method: rebase
-        strict: smart
+        name: default
+        rebase_fallback: none
   - name: Release automation (Old)
     conditions:
       - base~=releases[_/].*
@@ -51,9 +57,10 @@ pull_request_rules:
       review:
         type: APPROVE
         message: 🚢
-      merge:
+      queue:
         method: rebase
-        strict: smart
+        name: default
+        rebase_fallback: none
       delete_head_branch:
         force: false
   - name: Release automation (New)
@@ -80,9 +87,10 @@ pull_request_rules:
       review:
         type: APPROVE
         message: 🚢
-      merge:
+      queue:
         method: rebase
-        strict: smart
+        name: default
+        rebase_fallback: none
       delete_head_branch:
         force: false
   - name: Needs landing - Rebase
@@ -94,9 +102,10 @@ pull_request_rules:
       - label!=pr:work-in-progress
       - label!=pr:do-not-land
     actions:
-      merge:
+      queue:
         method: rebase
-        strict: smart
+        name: default
+        rebase_fallback: none
   - name: Needs landing - Squash
     conditions:
       - check-success=pr-complete
@@ -106,6 +115,7 @@ pull_request_rules:
       - label!=pr:work-in-progress
       - label!=pr:do-not-land
     actions:
-      merge:
+      queue:
         method: squash
-        strict: smart
+        name: default
+        rebase_fallback: none
