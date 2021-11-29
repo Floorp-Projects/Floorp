@@ -2513,8 +2513,8 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
           switch (results[0].refTypeKind()) {
             case RefType::Extern:
               masm.call(SymbolicAddress::BoxValue_Anyref);
-              masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg,
-                                throwLabel);
+              masm.branchTestPtr(Assembler::Zero, ReturnReg, ReturnReg,
+                                 throwLabel);
               break;
             case RefType::Func:
             case RefType::Eq:
