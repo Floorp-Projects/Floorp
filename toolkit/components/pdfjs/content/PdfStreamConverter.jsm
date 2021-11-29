@@ -356,8 +356,16 @@ class ChromeActions {
     var blobUri = NetUtil.newURI(blobUrl);
 
     // If the download was triggered from the ctrl/cmd+s or "Save Page As"
-    // launch the "Save As" dialog.
-    if (data.sourceEventType == "save") {
+    // or the download button, launch the "Save As" dialog.
+    const saveOnDownload = getBoolPref(
+      "browser.download.improvements_to_download_panel",
+      false
+    );
+
+    if (
+      data.sourceEventType == "save" ||
+      (saveOnDownload && data.sourceEventType == "download")
+    ) {
       let actor = getActor(this.domWindow);
       actor.sendAsyncMessage("PDFJS:Parent:saveURL", {
         blobUrl,

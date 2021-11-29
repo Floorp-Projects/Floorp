@@ -74,3 +74,32 @@ function changeMimeHandler(preferredAction, alwaysAskBeforeHandling) {
 
   return oldAction;
 }
+
+function createTemporarySaveDirectory() {
+  var saveDir = Services.dirsvc.get("TmpD", Ci.nsIFile);
+  saveDir.append("testsavedir");
+  if (!saveDir.exists()) {
+    saveDir.create(Ci.nsIFile.DIRECTORY_TYPE, 0o755);
+  }
+  return saveDir;
+}
+
+async function cleanupDownloads(listId = Downloads.PUBLIC) {
+  info("cleaning up downloads");
+  let downloadList = await Downloads.getList(listId);
+  for (let download of await downloadList.getAll()) {
+    await download.finalize(true);
+    try {
+      if (Services.appinfo.OS === "WINNT") {
+        // We need to make the file writable to delete it on Windows.
+        await IOUtils.setPermissions(download.target.path, 0o600);
+      }
+      await IOUtils.remove(download.target.path);
+    } catch (error) {
+      info("The file " + download.target.path + " is not removed, " + error);
+    }
+
+    await downloadList.remove(download);
+    await download.finalize();
+  }
+}
