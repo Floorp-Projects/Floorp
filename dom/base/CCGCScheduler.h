@@ -61,9 +61,6 @@ static const TimeDuration kMaxCCLockedoutTime = TimeDuration::FromSeconds(30);
 // Trigger a CC if the purple buffer exceeds this size when we check it.
 static const uint32_t kCCPurpleLimit = 200;
 
-// How many cycle collected nodes to traverse between time checks.
-static const int64_t kNumCCNodesBetweenTimeChecks = 1000;
-
 // Actions performed by the GCRunner state machine.
 enum class GCRunnerAction {
   WaitToMajorGC,  // We want to start a new major GC
