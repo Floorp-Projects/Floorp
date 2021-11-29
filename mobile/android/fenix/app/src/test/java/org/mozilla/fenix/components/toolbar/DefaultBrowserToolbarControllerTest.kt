@@ -356,6 +356,7 @@ class DefaultBrowserToolbarControllerTest {
         homeViewModel = homeViewModel,
         customTabSessionId = customTabSessionId,
         readerModeController = readerModeController,
+        browserAnimator = browserAnimator,
         onTabCounterClicked = {
             tabCounterClicked = true
         },

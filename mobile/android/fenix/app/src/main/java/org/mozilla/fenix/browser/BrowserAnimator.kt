@@ -42,8 +42,14 @@ class BrowserAnimator(
     }
 
     /**
-     * Makes the swipeRefresh background a screenshot of the engineView in its current state.
-     * This allows us to "animate" the engineView.
+     * Captures a screenshot of the current web page and sets the bitmap
+     * as a background of the engine view's parent (the swipeRefresh view).
+     *
+     * This is a workaround to prevent the home screen from flashing behind
+     * the browser fragment when navigating away. We've also found this to
+     * make transitions from the browser fragment to the home fragment
+     * smoother. So, in addition, we are currently also using it as a
+     * workaround to prevent flashes during those navigations.
      */
     fun captureEngineViewAndDrawStatically(onComplete: () -> Unit) {
         unwrappedEngineView?.asView()?.context.let {

@@ -320,6 +320,7 @@ abstract class BaseBrowserFragment :
             engineView = binding.engineView,
             homeViewModel = homeViewModel,
             customTabSessionId = customTabSessionId,
+            browserAnimator = browserAnimator,
             onTabCounterClicked = {
                 thumbnailsFeature.get()?.requestScreenshot()
                 findNavController().nav(
