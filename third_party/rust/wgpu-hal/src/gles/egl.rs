@@ -131,10 +131,21 @@ fn test_wayland_display() -> Option<libloading::Library> {
     Some(library)
 }
 
+#[derive(Clone, Copy, Debug)]
+enum SrgbFrameBufferKind {
+    /// No support for SRGB surface
+    None,
+    /// Using EGL 1.5's support for colorspaces
+    Core,
+    /// Using EGL_KHR_gl_colorspace
+    Khr,
+}
+
 /// Choose GLES framebuffer configuration.
 fn choose_config(
     egl: &egl::DynamicInstance<egl::EGL1_4>,
     display: egl::Display,
+    srgb_kind: SrgbFrameBufferKind,
 ) -> Result<(egl::Config, bool), crate::InstanceError> {
     //TODO: EGL_SLOW_CONFIG
     let tiers = [
@@ -147,7 +158,7 @@ fn choose_config(
         ("native-render", &[egl::NATIVE_RENDERABLE, egl::TRUE as _]),
     ];
 
-    let mut attributes = Vec::with_capacity(7);
+    let mut attributes = Vec::with_capacity(9);
     for tier_max in (0..tiers.len()).rev() {
         let name = tiers[tier_max].0;
         log::info!("\tTrying {}", name);
@@ -156,11 +167,27 @@ fn choose_config(
         for &(_, tier_attr) in tiers[..=tier_max].iter() {
             attributes.extend_from_slice(tier_attr);
         }
+        // make sure the Alpha is enough to support sRGB
+        match srgb_kind {
+            SrgbFrameBufferKind::None => {}
+            _ => {
+                attributes.push(egl::ALPHA_SIZE);
+                attributes.push(8);
+            }
+        }
         attributes.push(egl::NONE);
 
         match egl.choose_first_config(display, &attributes) {
             Ok(Some(config)) => {
-                return Ok((config, tier_max >= 1));
+                if tier_max == 1 {
+                    log::warn!(
+                        "EGL says it can present to the window but not natively. {}.",
+                        "This has been confirmed to malfunction on Intel+NV laptops",
+                    );
+                }
+                // Android emulator can't natively present either.
+                let tier_threshold = if cfg!(target_os = "android") { 1 } else { 2 };
+                return Ok((config, tier_max >= tier_threshold));
             }
             Ok(None) => {
                 log::warn!("No config found!");
@@ -220,23 +247,13 @@ fn gl_debug_message_callback(source: u32, gltype: u32, id: u32, severity: u32, m
     }
 }
 
-#[derive(Debug)]
-enum SrgbFrameBufferKind {
-    /// No support for SRGB surface
-    None,
-    /// Using EGL 1.5's support for colorspaces
-    Core,
-    /// Using EGL_KHR_gl_colorspace
-    Khr,
-}
-
 /// A wrapper around a [`glow::Context`] and the required EGL context that uses locking to guarantee
 /// exclusive access when shared with multiple threads.
 pub struct AdapterContext {
     glow_context: Mutex<glow::Context>,
     egl: Arc<egl::DynamicInstance<egl::EGL1_4>>,
     egl_display: egl::Display,
-    egl_context: egl::Context,
+    pub(super) egl_context: egl::Context,
     egl_pbuffer: Option<egl::Surface>,
 }
 
@@ -317,6 +334,7 @@ impl AdapterContext {
 #[derive(Debug)]
 struct Inner {
     egl: Arc<egl::DynamicInstance<egl::EGL1_4>>,
+    #[allow(unused)]
     version: (i32, i32),
     supports_native_window: bool,
     display: egl::Display,
@@ -348,22 +366,34 @@ impl Inner {
             display_extensions.split_whitespace().collect::<Vec<_>>()
         );
 
+        let srgb_kind = if version >= (1, 5) {
+            log::info!("\tEGL surface: +srgb");
+            SrgbFrameBufferKind::Core
+        } else if display_extensions.contains("EGL_KHR_gl_colorspace") {
+            log::info!("\tEGL surface: +srgb khr");
+            SrgbFrameBufferKind::Khr
+        } else {
+            log::warn!("\tEGL surface: -srgb");
+            SrgbFrameBufferKind::None
+        };
+
         if log::max_level() >= log::LevelFilter::Trace {
             log::trace!("Configurations:");
             let config_count = egl.get_config_count(display).unwrap();
             let mut configurations = Vec::with_capacity(config_count);
             egl.get_configs(display, &mut configurations).unwrap();
             for &config in configurations.iter() {
-                log::trace!("\tCONFORMANT=0x{:X}, RENDERABLE=0x{:X}, NATIVE_RENDERABLE=0x{:X}, SURFACE_TYPE=0x{:X}",
+                log::trace!("\tCONFORMANT=0x{:X}, RENDERABLE=0x{:X}, NATIVE_RENDERABLE=0x{:X}, SURFACE_TYPE=0x{:X}, ALPHA_SIZE={}",
                     egl.get_config_attrib(display, config, egl::CONFORMANT).unwrap(),
                     egl.get_config_attrib(display, config, egl::RENDERABLE_TYPE).unwrap(),
                     egl.get_config_attrib(display, config, egl::NATIVE_RENDERABLE).unwrap(),
                     egl.get_config_attrib(display, config, egl::SURFACE_TYPE).unwrap(),
+                    egl.get_config_attrib(display, config, egl::ALPHA_SIZE).unwrap(),
                 );
             }
         }
 
-        let (config, supports_native_window) = choose_config(&egl, display)?;
+        let (config, supports_native_window) = choose_config(&egl, display, srgb_kind)?;
         egl.bind_api(egl::OPENGL_ES_API).unwrap();
 
         let needs_robustness = true;
@@ -430,17 +460,6 @@ impl Inner {
                         crate::InstanceError
                     })?
             };
-
-        let srgb_kind = if version >= (1, 5) {
-            log::info!("\tEGL surface: +srgb");
-            SrgbFrameBufferKind::Core
-        } else if display_extensions.contains("EGL_KHR_gl_colorspace") {
-            log::info!("\tEGL surface: +srgb khr");
-            SrgbFrameBufferKind::Khr
-        } else {
-            log::warn!("\tEGL surface: -srgb");
-            SrgbFrameBufferKind::None
-        };
 
         Ok(Self {
             egl,
@@ -637,11 +656,6 @@ impl crate::Instance<super::Api> for Instance {
             }
         };
 
-        let enable_srgb = match inner.srgb_kind {
-            SrgbFrameBufferKind::Core | SrgbFrameBufferKind::Khr => true,
-            SrgbFrameBufferKind::None => false,
-        };
-
         inner
             .egl
             .make_current(inner.display, None, None, None)
@@ -657,7 +671,7 @@ impl crate::Instance<super::Api> for Instance {
             pbuffer: inner.pbuffer,
             raw_window_handle,
             swapchain: None,
-            enable_srgb,
+            srgb_kind: inner.srgb_kind,
         })
     }
     unsafe fn destroy_surface(&self, _surface: Surface) {}
@@ -721,6 +735,7 @@ pub struct Swapchain {
     extent: wgt::Extent3d,
     format: wgt::TextureFormat,
     format_desc: super::TextureFormatDesc,
+    #[allow(unused)]
     sample_type: wgt::TextureSampleType,
 }
 
@@ -731,11 +746,12 @@ pub struct Surface {
     config: egl::Config,
     display: egl::Display,
     context: egl::Context,
+    #[allow(unused)]
     pbuffer: Option<egl::Surface>,
     pub(super) presentable: bool,
     raw_window_handle: RawWindowHandle,
     swapchain: Option<Swapchain>,
-    pub(super) enable_srgb: bool,
+    srgb_kind: SrgbFrameBufferKind,
 }
 
 unsafe impl Send for Surface {}
@@ -813,6 +829,13 @@ impl Surface {
             None => None,
         }
     }
+
+    pub fn supports_srgb(&self) -> bool {
+        match self.srgb_kind {
+            SrgbFrameBufferKind::None => false,
+            _ => true,
+        }
+    }
 }
 
 impl crate::Surface<super::Api> for Surface {
@@ -870,58 +893,55 @@ impl crate::Surface<super::Api> for Surface {
                     _ => unreachable!(),
                 };
 
-                let raw = if let Some(egl) = self.egl.upcast::<egl::EGL1_5>() {
-                    let attributes = [
-                        egl::RENDER_BUFFER as usize,
-                        if cfg!(target_os = "android") {
-                            egl::BACK_BUFFER as usize
-                        } else {
-                            egl::SINGLE_BUFFER as usize
-                        },
-                        // Always enable sRGB in EGL 1.5
-                        egl::GL_COLORSPACE as usize,
-                        egl::GL_COLORSPACE_SRGB as usize,
-                        egl::ATTRIB_NONE,
-                    ];
+                let mut attributes = vec![
+                    egl::RENDER_BUFFER,
+                    if cfg!(target_os = "android") {
+                        egl::BACK_BUFFER
+                    } else {
+                        egl::SINGLE_BUFFER
+                    },
+                ];
+                match self.srgb_kind {
+                    SrgbFrameBufferKind::None => {}
+                    SrgbFrameBufferKind::Core => {
+                        attributes.push(egl::GL_COLORSPACE);
+                        attributes.push(egl::GL_COLORSPACE_SRGB);
+                    }
+                    SrgbFrameBufferKind::Khr => {
+                        attributes.push(EGL_GL_COLORSPACE_KHR as i32);
+                        attributes.push(EGL_GL_COLORSPACE_SRGB_KHR as i32);
+                    }
+                }
+                attributes.push(egl::ATTRIB_NONE as i32);
 
+                // Careful, we can still be in 1.4 version even if `upcast` succeeds
+                let raw_result = if let Some(egl) = self.egl.upcast::<egl::EGL1_5>() {
+                    let attributes_usize = attributes
+                        .into_iter()
+                        .map(|v| v as usize)
+                        .collect::<Vec<_>>();
                     egl.create_platform_window_surface(
                         self.display,
                         self.config,
                         native_window_ptr,
-                        &attributes,
+                        &attributes_usize,
                     )
-                    .map_err(|e| {
-                        log::warn!("Error in create_platform_window_surface: {:?}", e);
-                        crate::SurfaceError::Lost
-                    })
                 } else {
-                    let mut attributes = vec![
-                        egl::RENDER_BUFFER,
-                        if cfg!(target_os = "android") {
-                            egl::BACK_BUFFER
-                        } else {
-                            egl::SINGLE_BUFFER
-                        },
-                    ];
-                    if self.enable_srgb {
-                        attributes.push(EGL_GL_COLORSPACE_KHR as i32);
-                        attributes.push(EGL_GL_COLORSPACE_SRGB_KHR as i32);
-                    }
-                    attributes.push(egl::ATTRIB_NONE as i32);
-                    self.egl
-                        .create_window_surface(
-                            self.display,
-                            self.config,
-                            native_window_ptr,
-                            Some(&attributes),
-                        )
-                        .map_err(|e| {
-                            log::warn!("Error in create_platform_window_surface: {:?}", e);
-                            crate::SurfaceError::Lost
-                        })
-                }?;
+                    self.egl.create_window_surface(
+                        self.display,
+                        self.config,
+                        native_window_ptr,
+                        Some(&attributes),
+                    )
+                };
 
-                (raw, wl_window)
+                match raw_result {
+                    Ok(raw) => (raw, wl_window),
+                    Err(e) => {
+                        log::warn!("Error in create_platform_window_surface: {:?}", e);
+                        return Err(crate::SurfaceError::Lost);
+                    }
+                }
             }
         };
 

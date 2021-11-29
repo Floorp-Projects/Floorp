@@ -1,13 +1,14 @@
 //! Module processing functionality.
 
 mod index;
-mod interpolator;
 mod layouter;
 mod namer;
 mod terminator;
 mod typifier;
 
-pub use index::IndexableLength;
+use std::cmp::PartialEq;
+
+pub use index::{BoundsCheckPolicies, BoundsCheckPolicy, IndexableLength};
 pub use layouter::{Alignment, InvalidBaseType, Layouter, TypeLayout};
 pub use namer::{EntryPointIndex, NameKey, Namer};
 pub use terminator::ensure_block_returns;
@@ -130,6 +131,72 @@ impl super::TypeInner {
             Self::Image { .. } | Self::Sampler { .. } => 0,
         }
     }
+
+    /// Return the canoncal form of `self`, or `None` if it's already in
+    /// canonical form.
+    ///
+    /// Certain types have multiple representations in `TypeInner`. This
+    /// function converts all forms of equivalent types to a single
+    /// representative of their class, so that simply applying `Eq` to the
+    /// result indicates whether the types are equivalent, as far as Naga IR is
+    /// concerned.
+    pub fn canonical_form(
+        &self,
+        types: &crate::UniqueArena<crate::Type>,
+    ) -> Option<crate::TypeInner> {
+        use crate::TypeInner as Ti;
+        match *self {
+            Ti::Pointer { base, class } => match types[base].inner {
+                Ti::Scalar { kind, width } => Some(Ti::ValuePointer {
+                    size: None,
+                    kind,
+                    width,
+                    class,
+                }),
+                Ti::Vector { size, kind, width } => Some(Ti::ValuePointer {
+                    size: Some(size),
+                    kind,
+                    width,
+                    class,
+                }),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
+    /// Compare `self` and `rhs` as types.
+    ///
+    /// This is mostly the same as `<TypeInner as Eq>::eq`, but it treats
+    /// `ValuePointer` and `Pointer` types as equivalent.
+    ///
+    /// When you know that one side of the comparison is never a pointer, it's
+    /// fine to not bother with canonicalization, and just compare `TypeInner`
+    /// values with `==`.
+    pub fn equivalent(
+        &self,
+        rhs: &crate::TypeInner,
+        types: &crate::UniqueArena<crate::Type>,
+    ) -> bool {
+        let left = self.canonical_form(types);
+        let right = rhs.canonical_form(types);
+        left.as_ref().unwrap_or(self) == right.as_ref().unwrap_or(rhs)
+    }
+}
+
+impl super::StorageClass {
+    pub fn access(self) -> crate::StorageAccess {
+        use crate::StorageAccess as Sa;
+        match self {
+            crate::StorageClass::Function
+            | crate::StorageClass::Private
+            | crate::StorageClass::WorkGroup => Sa::LOAD | Sa::STORE,
+            crate::StorageClass::Uniform => Sa::LOAD,
+            crate::StorageClass::Storage { access } => access,
+            crate::StorageClass::Handle => Sa::LOAD,
+            crate::StorageClass::PushConstant => Sa::LOAD,
+        }
+    }
 }
 
 impl super::MathFunction {
@@ -193,6 +260,20 @@ impl super::MathFunction {
             // bits
             Self::CountOneBits => 1,
             Self::ReverseBits => 1,
+            Self::ExtractBits => 3,
+            Self::InsertBits => 4,
+            // data packing
+            Self::Pack4x8snorm => 1,
+            Self::Pack4x8unorm => 1,
+            Self::Pack2x16snorm => 1,
+            Self::Pack2x16unorm => 1,
+            Self::Pack2x16float => 1,
+            // data unpacking
+            Self::Unpack4x8snorm => 1,
+            Self::Unpack4x8unorm => 1,
+            Self::Unpack2x16snorm => 1,
+            Self::Unpack2x16unorm => 1,
+            Self::Unpack2x16float => 1,
         }
     }
 }

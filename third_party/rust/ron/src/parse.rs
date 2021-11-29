@@ -1,3 +1,5 @@
+#![allow(clippy::identity_op)]
+
 use std::{
     char::from_u32 as char_from_u32,
     fmt::{Display, Formatter, Result as FmtResult},
@@ -232,7 +234,7 @@ impl<'a> Bytes<'a> {
         // Instead, this code checks if a f64 fits inside an f32.
         #[allow(clippy::float_cmp)]
         fn any_float(f: f64) -> Result<AnyNum> {
-            if f == f as f32 as f64 {
+            if f == f64::from(f as f32) {
                 Ok(AnyNum::F32(f as f32))
             } else {
                 Ok(AnyNum::F64(f))
@@ -250,19 +252,19 @@ impl<'a> Bytes<'a> {
 
             any_float(f)
         } else {
-            let max_u8 = std::u8::MAX as u128;
-            let max_u16 = std::u16::MAX as u128;
-            let max_u32 = std::u32::MAX as u128;
-            let max_u64 = std::u64::MAX as u128;
+            let max_u8 = u128::from(std::u8::MAX);
+            let max_u16 = u128::from(std::u16::MAX);
+            let max_u32 = u128::from(std::u32::MAX);
+            let max_u64 = u128::from(std::u64::MAX);
 
-            let min_i8 = std::i8::MIN as i128;
-            let max_i8 = std::i8::MAX as i128;
-            let min_i16 = std::i16::MIN as i128;
-            let max_i16 = std::i16::MAX as i128;
-            let min_i32 = std::i32::MIN as i128;
-            let max_i32 = std::i32::MAX as i128;
-            let min_i64 = std::i64::MIN as i128;
-            let max_i64 = std::i64::MAX as i128;
+            let min_i8 = i128::from(std::i8::MIN);
+            let max_i8 = i128::from(std::i8::MAX);
+            let min_i16 = i128::from(std::i16::MIN);
+            let max_i16 = i128::from(std::i16::MAX);
+            let min_i32 = i128::from(std::i32::MIN);
+            let max_i32 = i128::from(std::i32::MAX);
+            let min_i64 = i128::from(std::i64::MIN);
+            let max_i64 = i128::from(std::i64::MAX);
 
             if is_signed {
                 match self.signed_integer::<i128>() {
@@ -599,7 +601,7 @@ impl<'a> Bytes<'a> {
     }
 
     pub fn skip_ws(&mut self) -> Result<()> {
-        while self.peek().map_or(false, |c| is_whitespace_char(c)) {
+        while self.peek().map_or(false, is_whitespace_char) {
             let _ = self.advance_single();
         }
 
@@ -788,7 +790,7 @@ impl<'a> Bytes<'a> {
 
                     let byte = self.decode_hex(byte)?;
                     bytes <<= 4;
-                    bytes |= byte as u32;
+                    bytes |= u32::from(byte);
 
                     num_digits += 1;
                 }
