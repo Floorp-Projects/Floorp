@@ -3,6 +3,32 @@
     {
       "stash": {
         "blocked": [
+          "@easy-tabs:1.1.5",
+          "@easy-tabs:1.2.2",
+          "@easy-tabs:1.1.1",
+          "@easy-tabs:1.1.4",
+          "@easy-tabs:1.1.9",
+          "@easy-tabs:1.2.0",
+          "@easy-tabs:1.2.1",
+          "@easy-tabs:1.1.2",
+          "@speed-dial-fast1:1.1.1",
+          "@easy-tabs:1.2.3",
+          "@easy-tabs:1.1.8",
+          "@easy-tabs:1.1.7",
+          "@easy-tabs:1.1.3",
+          "@easy-tabs:1.1.6"
+        ],
+        "unblocked": []
+      },
+      "schema": 1637692674312,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1637865308773,
+      "id": "9787185c-a27c-4389-b6fc-fd1b51eceab8",
+      "last_modified": 1637865474270
+    },
+    {
+      "stash": {
+        "blocked": [
           "SimilarDomain@ext:1.0",
           "Security_Test@ext:1.0",
           "pavel.sherbakov@gmail.com:68.7.3",

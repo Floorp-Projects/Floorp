@@ -1,6 +1,78 @@
 {
   "data": [
     {
+      "schema": 1638025204792,
+      "derHash": "8Hu73gdvm0DFfMS+/t6Xyh9Tua4UfwNdKEy/U/NDL7g=",
+      "subject": "CN=CFCA OV OCA,O=China Financial Certification Authority,C=CN",
+      "subjectDN": "MFUxCzAJBgNVBAYTAkNOMTAwLgYDVQQKDCdDaGluYSBGaW5hbmNpYWwgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxFDASBgNVBAMMC0NGQ0EgT1YgT0NB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "bc37658d1568750ae385b92be54ede64df31899d30f67211fd1e015c9dc7803b",
+        "size": 1963,
+        "filename": "uc0FPx73f1ObHGmGZOcevy371Uo9asVjdabpiS0lKgQ=.pem",
+        "location": "security-state-staging/intermediates/8a832b56-3f0a-4b5f-8966-8a1da5242863.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "uc0FPx73f1ObHGmGZOcevy371Uo9asVjdabpiS0lKgQ=",
+      "crlite_enrolled": false,
+      "id": "b2b776e5-2b2f-4c8e-819d-026b8d3855d2",
+      "last_modified": 1638176394669
+    },
+    {
+      "schema": 1638022415101,
+      "derHash": "k6B4mNibLMoWa6bx+KFBOM5Dgo5JG4MZJryCR9ORzHI=",
+      "subject": "CN=Starfield Secure Certificate Authority - G2,OU=http://certs.starfieldtech.com/repository/,O=Starfield Technologies\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
+      "subjectDN": "MIHGMQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTElMCMGA1UEChMcU3RhcmZpZWxkIFRlY2hub2xvZ2llcywgSW5jLjEzMDEGA1UECxMqaHR0cDovL2NlcnRzLnN0YXJmaWVsZHRlY2guY29tL3JlcG9zaXRvcnkvMTQwMgYDVQQDEytTdGFyZmllbGQgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
+      "whitelist": false,
+      "attachment": {
+        "hash": "4283da4ef9b6b21e475fb4a88aff9532a5c74e35282cb5459a20ee419646571c",
+        "size": 1792,
+        "filename": "8kGWrpQHhmc0jwLo43RYo6bmqtHgsNxhARjM5yFCe_w=.pem",
+        "location": "security-state-staging/intermediates/f0b4b8ab-658e-452d-a259-15b15f68060a.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "8kGWrpQHhmc0jwLo43RYo6bmqtHgsNxhARjM5yFCe/w=",
+      "crlite_enrolled": true,
+      "id": "eda1d6cc-95f3-4925-b185-1972acc69e5a",
+      "last_modified": 1638025203723
+    },
+    {
+      "schema": 1638000791272,
+      "derHash": "lzpBJ2/9AeAnoqrUnjTDeEbT6Xb/amILZxLjODIEGqY=",
+      "subject": "CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
+      "subjectDN": "MIG0MQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTEaMBgGA1UEChMRR29EYWRkeS5jb20sIEluYy4xLTArBgNVBAsTJGh0dHA6Ly9jZXJ0cy5nb2RhZGR5LmNvbS9yZXBvc2l0b3J5LzEzMDEGA1UEAxMqR28gRGFkZHkgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
+      "whitelist": false,
+      "attachment": {
+        "hash": "a111efc20329e87b541cfc3e7f526fc54bb24624fddf210f4347b9fadfb1ab6b",
+        "size": 1727,
+        "filename": "8Rw90Ej3Ttt8RRkrg-WYDS9n7IS03bk5bjP_UXPtaY8=.pem",
+        "location": "security-state-staging/intermediates/a2a04dfe-6201-4d0a-b8cf-80d2975bfb51.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "8Rw90Ej3Ttt8RRkrg+WYDS9n7IS03bk5bjP/UXPtaY8=",
+      "crlite_enrolled": true,
+      "id": "549c92e2-3738-4c8c-ae37-407e4e6158ce",
+      "last_modified": 1638003652877
+    },
+    {
+      "schema": 1637769495501,
+      "derHash": "8Up9JCetCgG01/152NUHctJSbiUkJfignDA3/fpjX1o=",
+      "subject": "CN=ZoTrus OV SSL CA,O=ZoTrus Technology Limited,C=CN",
+      "subjectDN": "MEwxCzAJBgNVBAYTAkNOMSIwIAYDVQQKExlab1RydXMgVGVjaG5vbG9neSBMaW1pdGVkMRkwFwYDVQQDExBab1RydXMgT1YgU1NMIENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "3d34f0ccb6454d57fa6d545acd6c231900b5c908c93777fe407d6363d4c87fb0",
+        "size": 2251,
+        "filename": "mic4JfOko8h5lsSjNABtsJRu4_nBErCNRFyxtEJc7SA=.pem",
+        "location": "security-state-staging/intermediates/18b9a297-9f9d-465d-a63a-b2e6ad2da805.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "mic4JfOko8h5lsSjNABtsJRu4/nBErCNRFyxtEJc7SA=",
+      "crlite_enrolled": true,
+      "id": "c5018a05-ac0d-419c-883c-606fbf703668",
+      "last_modified": 1637917121230
+    },
+    {
       "schema": 1637765420708,
       "derHash": "F7TgrQSCo9An9YvfyKm9Vfdcq8jfBZpAVqFsyN7lM+8=",
       "subject": "CN=University of Macedonia CA R1,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
@@ -8245,24 +8317,6 @@
       "last_modified": 1632167888751
     },
     {
-      "schema": 1632149856271,
-      "derHash": "k6B4mNibLMoWa6bx+KFBOM5Dgo5JG4MZJryCR9ORzHI=",
-      "subject": "CN=Starfield Secure Certificate Authority - G2,OU=http://certs.starfieldtech.com/repository/,O=Starfield Technologies\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
-      "subjectDN": "MIHGMQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTElMCMGA1UEChMcU3RhcmZpZWxkIFRlY2hub2xvZ2llcywgSW5jLjEzMDEGA1UECxMqaHR0cDovL2NlcnRzLnN0YXJmaWVsZHRlY2guY29tL3JlcG9zaXRvcnkvMTQwMgYDVQQDEytTdGFyZmllbGQgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "4283da4ef9b6b21e475fb4a88aff9532a5c74e35282cb5459a20ee419646571c",
-        "size": 1792,
-        "filename": "8kGWrpQHhmc0jwLo43RYo6bmqtHgsNxhARjM5yFCe_w=.pem",
-        "location": "security-state-staging/intermediates/f0b4b8ab-658e-452d-a259-15b15f68060a.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "8kGWrpQHhmc0jwLo43RYo6bmqtHgsNxhARjM5yFCe/w=",
-      "crlite_enrolled": true,
-      "id": "eda1d6cc-95f3-4925-b185-1972acc69e5a",
-      "last_modified": 1632167888728
-    },
-    {
       "schema": 1631908274830,
       "derHash": "DlXQmFSCu7fEkOuhR8WgIaLCogidOor1fQHt1UDKWkU=",
       "subject": "CN=SwissSign RSA TLS DV ICA 2021 - 1,O=SwissSign AG,C=CH",
@@ -8423,24 +8477,6 @@
       "crlite_enrolled": false,
       "id": "91d09b08-504f-4a5f-88f7-6c58778026f2",
       "last_modified": 1631843845693
-    },
-    {
-      "schema": 1631843453964,
-      "derHash": "8Up9JCetCgG01/152NUHctJSbiUkJfignDA3/fpjX1o=",
-      "subject": "CN=ZoTrus OV SSL CA,O=ZoTrus Technology Limited,C=CN",
-      "subjectDN": "MEwxCzAJBgNVBAYTAkNOMSIwIAYDVQQKExlab1RydXMgVGVjaG5vbG9neSBMaW1pdGVkMRkwFwYDVQQDExBab1RydXMgT1YgU1NMIENB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "3d34f0ccb6454d57fa6d545acd6c231900b5c908c93777fe407d6363d4c87fb0",
-        "size": 2251,
-        "filename": "mic4JfOko8h5lsSjNABtsJRu4_nBErCNRFyxtEJc7SA=.pem",
-        "location": "security-state-staging/intermediates/18b9a297-9f9d-465d-a63a-b2e6ad2da805.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "mic4JfOko8h5lsSjNABtsJRu4/nBErCNRFyxtEJc7SA=",
-      "crlite_enrolled": false,
-      "id": "c5018a05-ac0d-419c-883c-606fbf703668",
-      "last_modified": 1631843845672
     },
     {
       "schema": 1631843455899,
@@ -9125,24 +9161,6 @@
       "crlite_enrolled": false,
       "id": "9cb658c6-3e52-4a94-b178-1d2ab7a03ad7",
       "last_modified": 1627246645036
-    },
-    {
-      "schema": 1626987442498,
-      "derHash": "lzpBJ2/9AeAnoqrUnjTDeEbT6Xb/amILZxLjODIEGqY=",
-      "subject": "CN=Go Daddy Secure Certificate Authority - G2,OU=http://certs.godaddy.com/repository/,O=GoDaddy.com\\, Inc.,L=Scottsdale,ST=Arizona,C=US",
-      "subjectDN": "MIG0MQswCQYDVQQGEwJVUzEQMA4GA1UECBMHQXJpem9uYTETMBEGA1UEBxMKU2NvdHRzZGFsZTEaMBgGA1UEChMRR29EYWRkeS5jb20sIEluYy4xLTArBgNVBAsTJGh0dHA6Ly9jZXJ0cy5nb2RhZGR5LmNvbS9yZXBvc2l0b3J5LzEzMDEGA1UEAxMqR28gRGFkZHkgU2VjdXJlIENlcnRpZmljYXRlIEF1dGhvcml0eSAtIEcy",
-      "whitelist": false,
-      "attachment": {
-        "hash": "a111efc20329e87b541cfc3e7f526fc54bb24624fddf210f4347b9fadfb1ab6b",
-        "size": 1727,
-        "filename": "8Rw90Ej3Ttt8RRkrg-WYDS9n7IS03bk5bjP_UXPtaY8=.pem",
-        "location": "security-state-staging/intermediates/a2a04dfe-6201-4d0a-b8cf-80d2975bfb51.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "8Rw90Ej3Ttt8RRkrg+WYDS9n7IS03bk5bjP/UXPtaY8=",
-      "crlite_enrolled": true,
-      "id": "549c92e2-3738-4c8c-ae37-407e4e6158ce",
-      "last_modified": 1627009045803
     },
     {
       "schema": 1626986989722,
@@ -52433,24 +52451,6 @@
       "crlite_enrolled": true,
       "id": "9bae286e-930a-4285-8a27-54c6509f3077",
       "last_modified": 1562023844984
-    },
-    {
-      "schema": 1562023843492,
-      "derHash": "8Hu73gdvm0DFfMS+/t6Xyh9Tua4UfwNdKEy/U/NDL7g=",
-      "subject": "CN=CFCA OV OCA,O=China Financial Certification Authority,C=CN",
-      "subjectDN": "MFUxCzAJBgNVBAYTAkNOMTAwLgYDVQQKDCdDaGluYSBGaW5hbmNpYWwgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkxFDASBgNVBAMMC0NGQ0EgT1YgT0NB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "bc37658d1568750ae385b92be54ede64df31899d30f67211fd1e015c9dc7803b",
-        "size": 1963,
-        "filename": "uc0FPx73f1ObHGmGZOcevy371Uo9asVjdabpiS0lKgQ=.pem",
-        "location": "security-state-staging/intermediates/8a832b56-3f0a-4b5f-8966-8a1da5242863.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "uc0FPx73f1ObHGmGZOcevy371Uo9asVjdabpiS0lKgQ=",
-      "crlite_enrolled": true,
-      "id": "b2b776e5-2b2f-4c8e-819d-026b8d3855d2",
-      "last_modified": 1562023844242
     },
     {
       "schema": 1562023842017,
