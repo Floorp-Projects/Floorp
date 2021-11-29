@@ -85,3 +85,4 @@ pref("devtools.debugger.features.log-points", true);
 pref("devtools.debugger.features.overlay", true);
 pref("devtools.debugger.features.inline-preview", true);
 pref("devtools.debugger.features.frame-step", true);
+pref("devtools.debugger.features.blackbox-lines", false);
