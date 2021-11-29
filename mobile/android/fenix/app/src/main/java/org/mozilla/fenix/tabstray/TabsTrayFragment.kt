@@ -40,6 +40,7 @@ import org.mozilla.fenix.databinding.FragmentTabTrayDialogBinding
 import org.mozilla.fenix.databinding.TabsTrayTabCounter2Binding
 import org.mozilla.fenix.databinding.TabstrayMultiselectItemsBinding
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeScreenViewModel
@@ -128,6 +129,11 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 initialState = TabsTrayState(
                     mode = initialMode,
                     focusGroupTabId = args.focusGroupTabId
+                ),
+                middlewares = listOf(
+                    TabsTrayMiddleware(
+                        metrics = requireContext().metrics
+                    )
                 )
             )
         }
@@ -230,7 +236,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
             feature = TabsFeature(
                 tabsTray = TabSorter(
                     requireContext().settings(),
-                    requireContext().components.analytics.metrics,
                     tabsTrayStore
                 ),
                 store = requireContext().components.core.store,

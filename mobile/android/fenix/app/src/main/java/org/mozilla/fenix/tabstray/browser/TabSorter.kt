@@ -7,8 +7,6 @@ package org.mozilla.fenix.tabstray.browser
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.tabstray.TabsTray
 import mozilla.components.feature.tabs.tabstray.TabsFeature
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.maxActiveTime
 import org.mozilla.fenix.ext.toSearchGroup
 import org.mozilla.fenix.tabstray.TabsTrayAction
@@ -23,10 +21,8 @@ import org.mozilla.fenix.utils.Settings
  */
 class TabSorter(
     private val settings: Settings,
-    private val metrics: MetricController,
     private val tabsTrayStore: TabsTrayStore? = null
 ) : TabsTray {
-    private var shouldReportMetrics: Boolean = true
     private val groupsSet = mutableSetOf<String>()
 
     override fun updateTabs(tabs: List<TabSessionState>, selectedTabId: String?) {
@@ -52,23 +48,6 @@ class TabSorter(
         // Normal tabs.
         val totalNormalTabs = (normalTabs + remainderTabs)
         tabsTrayStore?.dispatch(TabsTrayAction.UpdateNormalTabs(totalNormalTabs))
-
-        // TODO move this to a middleware in the TabsTrayStore.
-        if (shouldReportMetrics) {
-            shouldReportMetrics = false
-
-            metrics.track(Event.InactiveTabsCountUpdate(inactiveTabs.size))
-
-            if (settings.inactiveTabsAreEnabled) {
-                metrics.track(Event.TabsTrayHasInactiveTabs(inactiveTabs.size))
-            }
-
-            if (groups.isNotEmpty()) {
-                val averageTabsPerGroup = groups.map { it.tabs.size }.average()
-                metrics.track(Event.AverageTabsPerSearchTermGroup(averageTabsPerGroup))
-            }
-            metrics.track(Event.SearchTermGroupCount(groups.size))
-        }
     }
 }
 

@@ -904,6 +904,9 @@ private val Event.wrapper: EventWrapper<*>?
             { SearchTerms.averageTabsPerGroup.record(it) },
             { SearchTerms.averageTabsPerGroupKeys.valueOf(it) }
         )
+        is Event.SearchTermGroupSizeDistribution -> EventWrapper<NoExtraKeys>(
+            { SearchTerms.groupSizeDistribution.accumulateSamples(this.groupSizes.toLongArray()) },
+        )
         is Event.JumpBackInGroupTapped -> EventWrapper<NoExtraKeys>(
             { SearchTerms.jumpBackInGroupTapped.record(it) }
         )
