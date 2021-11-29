@@ -117,11 +117,11 @@ NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
                          "EditorBase::MarkElementDirty() failed, but ignored");
   }
 
-  // Insert the new node
-  htmlEditor->DoSplitNode(startOfRightContent, newLeftContent, error);
-  if (error.Failed()) {
+  SplitNodeResult splitNodeResult =
+      htmlEditor->DoSplitNode(startOfRightContent, newLeftContent);
+  if (splitNodeResult.Failed()) {
     NS_WARNING("HTMLEditor::DoSplitNode() failed");
-    return error.StealNSResult();
+    return splitNodeResult.Rv();
   }
 
   if (!htmlEditor->AllowsTransactionsToChangeSelection()) {
@@ -132,12 +132,9 @@ NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
       !htmlEditor->Destroyed(),
       "The editor has gone but SplitNodeTransaction keeps trying to modify "
       "Selection");
-  RefPtr<Selection> selection = htmlEditor->GetSelection();
-  if (NS_WARN_IF(!selection)) {
-    return NS_ERROR_FAILURE;
-  }
-  EditorRawDOMPoint atEndOfLeftNode(EditorRawDOMPoint::AtEndOf(newLeftContent));
-  selection->CollapseInLimiter(atEndOfLeftNode, error);
+  MOZ_DIAGNOSTIC_ASSERT(splitNodeResult.GetNewContent());
+  htmlEditor->CollapseSelectionTo(
+      EditorRawDOMPoint::AtEndOf(*splitNodeResult.GetNewContent()), error);
   NS_WARNING_ASSERTION(!error.Failed(),
                        "Selection::CollapseInLimiter() failed");
   return error.StealNSResult();
