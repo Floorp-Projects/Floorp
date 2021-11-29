@@ -30,6 +30,7 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EnumSet.h"
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/MotionPathUtils.h"
 #include "mozilla/RefPtr.h"
@@ -107,6 +108,13 @@ enum class DisplayListArenaObjectId {
 #undef DISPLAY_LIST_ARENA_OBJECT
   COUNT
 };
+
+extern LazyLogModule sDisplayListLog;
+#define DL_LOG(lvl, ...) MOZ_LOG(sDisplayListLog, lvl, (__VA_ARGS__))
+#define DL_LOGI(...) DL_LOG(LogLevel::Info, __VA_ARGS__)
+#define DL_LOGD(...) DL_LOG(LogLevel::Debug, __VA_ARGS__)
+#define DL_LOGV(...) DL_LOG(LogLevel::Verbose, __VA_ARGS__)
+#define DL_LOG_TEST(lvl) MOZ_LOG_TEST(sDisplayListLog, lvl)
 
 /*
  * An nsIFrame can have many different visual parts. For example an image frame
@@ -369,6 +377,8 @@ class nsDisplayListBuilder {
   bool IsForGenerateGlyphMask() const {
     return mMode == nsDisplayListBuilderMode::GenerateGlyph;
   }
+
+  bool IsForContent() const { return mIsForContent; }
 
   bool BuildCompositorHitTestInfo() const {
     return mBuildCompositorHitTestInfo;
@@ -1874,6 +1884,8 @@ class nsDisplayListBuilder {
 
   Maybe<float> mVisibleThreshold;
   gfx::CompositorHitTestInfo mCompositorHitTestInfo;
+
+  bool mIsForContent;
 };
 
 class nsDisplayItem;
@@ -1985,6 +1997,11 @@ MOZ_ALWAYS_INLINE T* MakeDisplayItemWithIndex(nsDisplayListBuilder* aBuilder,
              "Container items must have container display item flag set.");
 #endif
 
+  if (aBuilder->IsForPainting() && aBuilder->IsForContent()) {
+    DL_LOGV("Created display item %p (%s) (frame: %p)", item, item->Name(),
+            aFrame);
+  }
+
   return item;
 }
 
@@ -2060,6 +2077,9 @@ class nsDisplayItem : public nsDisplayItemLink {
    */
   virtual void Destroy(nsDisplayListBuilder* aBuilder) {
     const DisplayItemType type = GetType();
+    if (aBuilder->IsForPainting() && aBuilder->IsForContent()) {
+      DL_LOGV("Destroying display item %p (%s)", this, Name());
+    }
     this->~nsDisplayItem();
     aBuilder->Destroy(type, this);
   }
