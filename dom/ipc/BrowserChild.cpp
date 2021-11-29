@@ -3242,6 +3242,10 @@ void BrowserChild::ReinitRendering() {
 
   nsCOMPtr<Document> doc(GetTopLevelDocument());
   doc->NotifyLayerManagerRecreated();
+
+  if (mRenderLayers) {
+    SchedulePaint();
+  }
 }
 
 void BrowserChild::ReinitRenderingForDeviceReset() {
