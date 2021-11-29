@@ -1167,7 +1167,8 @@ void WinWindowOcclusionTracker::WindowOcclusionCalculator::
   }
 
   CALC_LOG(LogLevel::Debug,
-           "WindowOcclusionCalculator::ProcessEventHookCallback()");
+           "WindowOcclusionCalculator::ProcessEventHookCallback() aEvent 0x%x",
+           aEvent);
 
   // We generally ignore events for popup windows, except for when the taskbar
   // is hidden or Windows Taskbar, in which case we recalculate occlusion.
