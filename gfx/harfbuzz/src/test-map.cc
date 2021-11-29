@@ -98,5 +98,15 @@ main (int argc, char **argv)
     assert (v2.get_population () == 2);
   }
 
+  /* Test class key / value types. */
+  {
+    hb_hashmap_t<hb_bytes_t, int, std::nullptr_t, int, nullptr, 0> m1;
+    hb_hashmap_t<int, hb_bytes_t, int, std::nullptr_t, 0, nullptr> m2;
+    hb_hashmap_t<hb_bytes_t, hb_bytes_t, std::nullptr_t, std::nullptr_t, nullptr, nullptr> m3;
+    assert (m1.get_population () == 0);
+    assert (m2.get_population () == 0);
+    assert (m3.get_population () == 0);
+  }
+
   return 0;
 }

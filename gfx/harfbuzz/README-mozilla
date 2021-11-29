@@ -1,7 +1,7 @@
 This directory contains the HarfBuzz source from the upstream repo:
 https://github.com/harfbuzz/harfbuzz
 
-Current version: 3.1.1 [commit cd5c6cd0419ac5e4de975d6c476fb760bf06d2ce]
+Current version: 3.1.2 [commit 8aed5c21a31eece6a9f3cd775fda8facb6c28b9b]
 
 !!!Please Note!!!
 Because LLVM added in D100581 support for -Wunused-but-set-parameter and -Wunused-but-set-variable
