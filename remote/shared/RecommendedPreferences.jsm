@@ -142,6 +142,10 @@ const COMMON_PREFERENCES = new Map([
   // Should be set in profile.
   ["browser.uitour.enabled", false],
 
+  // Turn off Merino suggestions in the location bar so as not to trigger
+  // network connections.
+  ["browser.urlbar.merino.endpointURL", ""],
+
   // Turn off search suggestions in the location bar so as not to trigger
   // network connections.
   ["browser.urlbar.suggest.searches", false],
