@@ -2,7 +2,6 @@ import asyncio
 import json
 import logging
 import sys
-from collections import defaultdict
 from typing import Any, Callable, Coroutine, List, Optional, Mapping
 
 import websockets
@@ -49,7 +48,10 @@ class Transport:
             self.send_buf.append(data)
 
     @staticmethod
-    async def _send(connection: websockets.WebSocketClientProtocol, data: Mapping[str, Any]) -> None:
+    async def _send(
+        connection: websockets.WebSocketClientProtocol,
+        data: Mapping[str, Any]
+    ) -> None:
         msg = json.dumps(data)
         logger.debug("→ %s", msg)
         await connection.send(msg)
