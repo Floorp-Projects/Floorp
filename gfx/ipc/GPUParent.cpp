@@ -78,6 +78,9 @@
 
 #  include "skia/include/ports/SkTypeface_cairo.h"
 #endif
+#ifdef ANDROID
+#  include "skia/include/ports/SkTypeface_cairo.h"
+#endif
 #include "ChildProfilerController.h"
 #include "nsAppRunner.h"
 
@@ -307,12 +310,27 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
     MOZ_ASSERT(library);
     Factory::SetFTLibrary(library);
 
+    // true to match gfxPlatform::FontHintingEnabled(). We must hardcode
+    // this value because we do not have a gfxPlatform instance.
     SkInitCairoFT(true);
   }
 
   // Ensure that GfxInfo::Init is called on the main thread.
   nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
   Unused << gfxInfo;
+#endif
+
+#ifdef ANDROID
+  // Ensure we have an FT library for font instantiation.
+  // This would normally be set by gfxPlatform::Init().
+  // Since we bypass that, we must do it here instead.
+  FT_Library library = Factory::NewFTLibrary();
+  MOZ_ASSERT(library);
+  Factory::SetFTLibrary(library);
+
+  // false to match gfxAndroidPlatform::FontHintingEnabled(). We must
+  // hardcode this value because we do not have a gfxPlatform instance.
+  SkInitCairoFT(false);
 #endif
 
   // Make sure to do this *after* we update gfxVars above.
