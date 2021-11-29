@@ -1118,8 +1118,14 @@ static bool WasmGlobalFromArrayBuffer(JSContext* cx, unsigned argc, Value* vp) {
   // Create the global object
   RootedObject proto(
       cx, GlobalObject::getOrCreatePrototype(cx, JSProto_WasmGlobal));
+  if (!proto) {
+    return false;
+  }
   RootedWasmGlobalObject result(
       cx, WasmGlobalObject::create(cx, val, false, proto));
+  if (!result) {
+    return false;
+  }
 
   args.rval().setObject(*result.get());
   return true;
