@@ -24,6 +24,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Encoding.h"  // for Encoding
 #include "mozilla/EventStates.h"
+#include "mozilla/IntegerRange.h"  // for IntegerRange
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/mozInlineSpellChecker.h"
 #include "mozilla/Preferences.h"
@@ -4466,17 +4467,12 @@ SplitNodeResult HTMLEditor::SplitNodeDeepWithTransaction(
   // Not reached because while (true) loop never breaks.
 }
 
-void HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
-                             nsIContent& aNewLeftNode, ErrorResult& aError) {
-  if (NS_WARN_IF(aError.Failed())) {
-    return;
-  }
-
+SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
+                                        nsIContent& aNewLeftNode) {
   // XXX Perhaps, aStartOfRightNode may be invalid if this is a redo
   //     operation after modifying DOM node with JS.
-  if (NS_WARN_IF(!aStartOfRightNode.IsSet())) {
-    aError.Throw(NS_ERROR_INVALID_ARG);
-    return;
+  if (MOZ_UNLIKELY(NS_WARN_IF(!aStartOfRightNode.IsInContentNode()))) {
+    return SplitNodeResult(NS_ERROR_INVALID_ARG);
   }
   MOZ_ASSERT(aStartOfRightNode.IsSetAndValid());
 
@@ -4485,18 +4481,17 @@ void HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   for (SelectionType selectionType : kPresentSelectionTypes) {
     SavedRange range;
     range.mSelection = GetSelection(selectionType);
-    if (NS_WARN_IF(!range.mSelection &&
-                   selectionType == SelectionType::eNormal)) {
-      aError.Throw(NS_ERROR_FAILURE);
-      return;
+    if (MOZ_UNLIKELY(NS_WARN_IF(!range.mSelection &&
+                                selectionType == SelectionType::eNormal))) {
+      return SplitNodeResult(NS_ERROR_FAILURE);
     }
     if (!range.mSelection) {
       // For non-normal selections, skip over the non-existing ones.
       continue;
     }
 
-    for (uint32_t j = 0; j < range.mSelection->RangeCount(); ++j) {
-      RefPtr<const nsRange> r = range.mSelection->GetRangeAt(j);
+    for (uint32_t j : IntegerRange(range.mSelection->RangeCount())) {
+      const nsRange* r = range.mSelection->GetRangeAt(j);
       MOZ_ASSERT(r->IsPositioned());
       // XXX Looks like that SavedRange should have mStart and mEnd which
       //     are RangeBoundary.  Then, we can avoid to compute offset here.
@@ -4510,17 +4505,20 @@ void HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   }
 
   nsCOMPtr<nsINode> parent = aStartOfRightNode.GetContainerParent();
-  if (NS_WARN_IF(!parent)) {
-    aError.Throw(NS_ERROR_FAILURE);
-    return;
+  if (MOZ_UNLIKELY(NS_WARN_IF(!parent))) {
+    return SplitNodeResult(NS_ERROR_FAILURE);
   }
 
   // Fix the child before mutation observer may touch the DOM tree.
   nsIContent* firstChildOfRightNode = aStartOfRightNode.GetChild();
-  parent->InsertBefore(aNewLeftNode, aStartOfRightNode.GetContainer(), aError);
-  if (aError.Failed()) {
+  ErrorResult error;
+  parent->InsertBefore(aNewLeftNode, aStartOfRightNode.GetContainer(), error);
+  // InsertBefore() may call MightThrowJSException() even if there is no
+  // error. We don't need the flag here.
+  error.WouldReportJSException();
+  if (MOZ_UNLIKELY(error.Failed())) {
     NS_WARNING("nsINode::InsertBefore() failed");
-    return;
+    return SplitNodeResult(error.StealNSResult());
   }
 
   // At this point, the existing right node has all the children.  Move all
@@ -4556,30 +4554,34 @@ void HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
       // Otherwise it's an interior node, so shuffle around the children. Go
       // through list backwards so deletes don't interfere with the iteration.
       if (!firstChildOfRightNode) {
+        // XXX Why do we ignore an error while moving nodes from the right node
+        //     to the left node?
+        IgnoredErrorResult ignoredError;
         MoveAllChildren(*aStartOfRightNode.GetContainer(),
-                        EditorRawDOMPoint(&aNewLeftNode, 0), aError);
-        NS_WARNING_ASSERTION(!aError.Failed(),
-                             "HTMLEditor::MoveAllChildren() failed");
+                        EditorRawDOMPoint(&aNewLeftNode, 0), ignoredError);
+        NS_WARNING_ASSERTION(
+            !ignoredError.Failed(),
+            "HTMLEditor::MoveAllChildren() failed, but ignored");
       } else if (NS_WARN_IF(aStartOfRightNode.GetContainer() !=
                             firstChildOfRightNode->GetParentNode())) {
         // firstChildOfRightNode has been moved by mutation observer.
         // In this case, we what should we do?  Use offset?  But we cannot
         // check if the offset is still expected.
       } else {
+        // XXX Why do we ignore an error while moving nodes from the right node
+        //     to the left node?
+        IgnoredErrorResult ignoredError;
         MovePreviousSiblings(*firstChildOfRightNode,
-                             EditorRawDOMPoint(&aNewLeftNode, 0), aError);
-        NS_WARNING_ASSERTION(!aError.Failed(),
-                             "HTMLEditor::MovePreviousSiblings() failed");
+                             EditorRawDOMPoint(&aNewLeftNode, 0), ignoredError);
+        NS_WARNING_ASSERTION(
+            !ignoredError.Failed(),
+            "HTMLEditor::MovePreviousSiblings() failed, but ignored");
       }
     }
   }
 
-  // XXX Why do we ignore an error while moving nodes from the right node to
-  //     the left node?
-  NS_WARNING_ASSERTION(!aError.Failed(), "The previous error is ignored");
-  aError.SuppressException();
-
   // Handle selection
+  // TODO: Stop doing this, this shouldn't be necessary to update selection.
   if (RefPtr<PresShell> presShell = GetPresShell()) {
     presShell->FlushPendingNotifications(FlushType::Frames);
   }
@@ -4596,10 +4598,10 @@ void HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
 
     // If we have not seen the selection yet, clear all of its ranges.
     if (range.mSelection != previousSelection) {
-      MOZ_KnownLive(range.mSelection)->RemoveAllRanges(aError);
-      if (aError.Failed()) {
+      MOZ_KnownLive(range.mSelection)->RemoveAllRanges(error);
+      if (MOZ_UNLIKELY(error.Failed())) {
         NS_WARNING("Selection::RemoveAllRanges() failed");
-        return;
+        return SplitNodeResult(error.StealNSResult());
       }
       previousSelection = range.mSelection;
     }
@@ -4641,20 +4643,20 @@ void HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
 
     RefPtr<nsRange> newRange =
         nsRange::Create(range.mStartContainer, range.mStartOffset,
-                        range.mEndContainer, range.mEndOffset, aError);
-    if (aError.Failed()) {
+                        range.mEndContainer, range.mEndOffset, error);
+    if (MOZ_UNLIKELY(error.Failed())) {
       NS_WARNING("nsRange::Create() failed");
-      return;
+      return SplitNodeResult(error.StealNSResult());
     }
     // The `MOZ_KnownLive` annotation is only necessary because of a bug
     // (https://bugzilla.mozilla.org/show_bug.cgi?id=1622253) in the
     // static analyzer.
     MOZ_KnownLive(range.mSelection)
-        ->AddRangeAndSelectFramesAndNotifyListeners(*newRange, aError);
-    if (aError.Failed()) {
+        ->AddRangeAndSelectFramesAndNotifyListeners(*newRange, error);
+    if (MOZ_UNLIKELY(error.Failed())) {
       NS_WARNING(
           "Selection::AddRangeAndSelectFramesAndNotifyListeners() failed");
-      return;
+      return SplitNodeResult(error.StealNSResult());
     }
   }
 
@@ -4670,12 +4672,17 @@ void HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
   // XXX We cannot check all descendants in the right node and the new left
   //     node for performance reason.  I think that if caller needs to access
   //     some of the descendants, they should check by themselves.
-  if (NS_WARN_IF(parent != aStartOfRightNode.GetContainer()->GetParentNode()) ||
-      NS_WARN_IF(parent != aNewLeftNode.GetParentNode()) ||
-      NS_WARN_IF(aNewLeftNode.GetNextSibling() !=
-                 aStartOfRightNode.GetContainer())) {
-    aError.Throw(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+  if (MOZ_UNLIKELY(
+          NS_WARN_IF(parent !=
+                     aStartOfRightNode.GetContainer()->GetParentNode()) ||
+          NS_WARN_IF(parent != aNewLeftNode.GetParentNode()) ||
+          NS_WARN_IF(aNewLeftNode.GetNextSibling() !=
+                     aStartOfRightNode.GetContainer()))) {
+    return SplitNodeResult(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
+
+  return SplitNodeResult(&aNewLeftNode, aStartOfRightNode.ContainerAsContent(),
+                         SplitNodeDirection::LeftNodeIsNewOne);
 }
 
 JoinNodesResult HTMLEditor::JoinNodesWithTransaction(
