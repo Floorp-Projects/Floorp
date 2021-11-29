@@ -59,7 +59,7 @@ class ParallelWorker : public GCParallelTask {
     for (;;) {
       size_t steps = func_(gc, item_);
       budget_.step(std::max(steps, size_t(1)));
-      if (budget_.checkAndResetOverBudget()) {
+      if (budget_.isOverBudget()) {
         break;
       }
 

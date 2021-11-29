@@ -94,7 +94,7 @@ IncrementalProgress GCRuntime::compactPhase(JS::GCReason reason,
       zone->changeGCState(Zone::Compact, Zone::Finished);
     }
 
-    if (sliceBudget.checkAndResetOverBudget()) {
+    if (sliceBudget.isOverBudget()) {
       break;
     }
   }
