@@ -2621,12 +2621,8 @@ IncrementalProgress GCRuntime::markUntilBudgetExhausted(
     return NotFinished;
   }
 
-  if (marker.markUntilBudgetExhausted(sliceBudget, reportTime)) {
-    return Finished;
-  }
-
-  sliceBudget.resetOverBudget();
-  return NotFinished;
+  return marker.markUntilBudgetExhausted(sliceBudget, reportTime) ? Finished
+                                                                  : NotFinished;
 }
 
 void GCRuntime::drainMarkStack() {
