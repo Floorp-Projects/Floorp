@@ -53,14 +53,6 @@ class nsConsoleService final : public nsIConsoleService, public nsIObserver {
     mDeliveringMessage = false;
   }
 
-  // This is a variant of LogMessage which allows the caller to determine
-  // if the message should be output to an OS-specific log. This is used on
-  // B2G to control whether the message is logged to the android log or not.
-
-  enum OutputMode { SuppressLog, OutputToLog };
-  virtual nsresult LogMessageWithMode(nsIConsoleMessage* aMessage,
-                                      OutputMode aOutputMode);
-
   typedef nsInterfaceHashtable<nsISupportsHashKey, nsIConsoleListener>
       ListenerHash;
   void CollectCurrentListeners(nsCOMArray<nsIConsoleListener>& aListeners);
