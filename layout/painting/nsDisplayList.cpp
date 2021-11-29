@@ -119,6 +119,8 @@ using namespace layout;
 using namespace layers;
 using namespace image;
 
+LazyLogModule sDisplayListLog("displaylist");
+
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 void AssertUniqueItem(nsDisplayItem* aItem) {
   for (nsDisplayItem* i : aItem->Frame()->DisplayItems()) {
@@ -691,6 +693,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
   static_assert(
       static_cast<uint32_t>(DisplayItemType::TYPE_MAX) < (1 << TYPE_BITS),
       "Check TYPE_MAX should not overflow");
+  mIsForContent = XRE_IsContentProcess();
 }
 
 static PresShell* GetFocusedPresShell() {
@@ -2142,6 +2145,20 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
   PresShell* presShell = presContext->PresShell();
   Document* document = presShell->GetDocument();
 
+  ScopeExit g([&]() {
+    // For layers-free mode, we check the invalidation state bits in the
+    // EndTransaction. So we clear the invalidation state bits after
+    // EndTransaction.
+    if (widgetTransaction ||
+        // SVG-as-an-image docs don't paint as part of the retained layer tree,
+        // but they still need the invalidation state bits cleared in order for
+        // invalidation for CSS/SMIL animation to work properly.
+        (document && document->IsBeingUsedAsImage())) {
+      DL_LOGD("Clearing invalidation state bits");
+      frame->ClearInvalidationStateBits();
+    }
+  });
+
   if (!renderer) {
     if (!aCtx) {
       NS_WARNING("Nowhere to paint into");
@@ -2149,10 +2166,6 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
     }
     bool prevIsCompositingCheap = aBuilder->SetIsCompositingCheap(false);
     Paint(aBuilder, aCtx, presContext->AppUnitsPerDevPixel());
-
-    if (document && document->IsBeingUsedAsImage()) {
-      frame->ClearInvalidationStateBits();
-    }
 
     aBuilder->SetIsCompositingCheap(prevIsCompositingCheap);
     return;
@@ -2197,17 +2210,6 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
                                             aDisplayListBuildTime.valueOr(0.0));
     }
 
-    // For layers-free mode, we check the invalidation state bits in the
-    // EndTransaction. So we clear the invalidation state bits after
-    // EndTransaction.
-    if (widgetTransaction ||
-        // SVG-as-an-image docs don't paint as part of the retained layer tree,
-        // but they still need the invalidation state bits cleared in order for
-        // invalidation for CSS/SMIL animation to work properly.
-        (document && document->IsBeingUsedAsImage())) {
-      frame->ClearInvalidationStateBits();
-    }
-
     aBuilder->SetIsCompositingCheap(prevIsCompositingCheap);
     if (document && widgetTransaction) {
       TriggerPendingAnimations(*document,
@@ -2236,14 +2238,6 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder, gfxContext* aCtx,
   fallback->EndTransactionWithList(aBuilder, this,
                                    presContext->AppUnitsPerDevPixel(),
                                    WindowRenderer::END_DEFAULT);
-
-  if (widgetTransaction ||
-      // SVG-as-an-image docs don't paint as part of the retained layer tree,
-      // but they still need the invalidation state bits cleared in order for
-      // invalidation for CSS/SMIL animation to work properly.
-      (document && document->IsBeingUsedAsImage())) {
-    frame->ClearInvalidationStateBits();
-  }
 
   aBuilder->SetIsCompositingCheap(temp);
 
