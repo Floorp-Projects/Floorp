@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <algorithm>
+#include <atomic>
 #include <android/log.h>
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
@@ -16,6 +17,7 @@
 #include "AndroidGraphics.h"
 #include "AndroidBridge.h"
 #include "AndroidBridgeUtilities.h"
+#include "AndroidCompositorWidget.h"
 #include "AndroidContentController.h"
 #include "AndroidUiThread.h"
 #include "AndroidView.h"
@@ -131,6 +133,10 @@ static const int32_t INPUT_RESULT_IGNORED =
     java::PanZoomController::INPUT_RESULT_IGNORED;
 
 static const nsCString::size_type MAX_TOPLEVEL_DATA_URI_LEN = 2 * 1024 * 1024;
+
+// Unique ID given to each widget, to identify it for the
+// CompositorSurfaceManager.
+static std::atomic<int32_t> sWidgetId{0};
 
 namespace {
 template <class Instance, class Impl>
@@ -887,7 +893,7 @@ class LayerViewSupport final
   WindowPtr mWindow;
   GeckoSession::Compositor::WeakRef mCompositor;
   Atomic<bool, ReleaseAcquire> mCompositorPaused;
-  jni::Object::GlobalRef mSurface;
+  java::sdk::Surface::GlobalRef mSurface;
 
   struct CaptureRequest {
     explicit CaptureRequest() : mResult(nullptr) {}
@@ -996,7 +1002,7 @@ class LayerViewSupport final
 
   bool CompositorPaused() const { return mCompositorPaused; }
 
-  jni::Object::Param GetSurface() { return mSurface; }
+  java::sdk::Surface::Param GetSurface() { return mSurface; }
 
  private:
   already_AddRefed<UiCompositorControllerChild>
@@ -1144,10 +1150,18 @@ class LayerViewSupport final
       int32_t aWidth, int32_t aHeight, jni::Object::Param aSurface) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
 
-    mSurface = aSurface;
+    mSurface = java::sdk::Surface::GlobalRef::From(aSurface);
 
     if (RefPtr<UiCompositorControllerChild> child =
             GetUiCompositorControllerChild()) {
+      if (auto window = mWindow.Access()) {
+        nsWindow* gkWindow = window->GetNsWindow();
+        if (gkWindow) {
+          // Send new Surface to GPU process, if one exists.
+          child->OnCompositorSurfaceChanged(gkWindow->mWidgetId, mSurface);
+        }
+      }
+
       child->ResumeAndResize(aX, aY, aWidth, aHeight);
     }
 
@@ -1690,12 +1704,14 @@ void nsWindow::DumpWindows(const nsTArray<nsWindow*>& wins, int indent) {
 }
 
 nsWindow::nsWindow()
-    : mScreenId(0),  // Use 0 (primary screen) as the default value.
+    : mWidgetId(++sWidgetId),
+      mScreenId(0),  // Use 0 (primary screen) as the default value.
       mIsVisible(false),
       mParent(nullptr),
       mDynamicToolbarMaxHeight(0),
       mIsFullScreen(false),
-      mIsDisablingWebRender(false) {}
+      mIsDisablingWebRender(false),
+      mCompositorWidgetDelegate(nullptr) {}
 
 nsWindow::~nsWindow() {
   gTopLevelWindows.RemoveElement(this);
@@ -2546,6 +2562,22 @@ nsresult nsWindow::SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
   return SynthesizeNativeMouseEvent(
       aPoint, NativeMouseMessage::Move, MouseButton::eNotPressed,
       nsIWidget::Modifiers::NO_MODIFIERS, aObserver);
+}
+
+void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
+  if (delegate) {
+    mCompositorWidgetDelegate = delegate->AsPlatformSpecificDelegate();
+    MOZ_ASSERT(mCompositorWidgetDelegate,
+               "nsWindow::SetCompositorWidgetDelegate called with a "
+               "non-PlatformCompositorWidgetDelegate");
+  } else {
+    mCompositorWidgetDelegate = nullptr;
+  }
+}
+
+void nsWindow::GetCompositorWidgetInitData(
+    mozilla::widget::CompositorWidgetInitData* aInitData) {
+  *aInitData = mozilla::widget::AndroidCompositorWidgetInitData(mWidgetId);
 }
 
 bool nsWindow::WidgetPaintsBackground() {
