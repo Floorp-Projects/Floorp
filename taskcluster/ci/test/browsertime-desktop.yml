@@ -39,7 +39,6 @@ job-defaults:
 
 browsertime-tp6:
     <<: &tp6-defaults
-        apps: [firefox, chrome, chromium]
         description: Raptor (browsertime) tp6 page-load tests
         limit-platforms:
             by-app:
@@ -61,7 +60,6 @@ browsertime-tp6:
                         - --chimera
                         - --browsertime
                         - --conditioned-profile=settled
-        raptor-test: tp6
         variants: [fission]
         run-on-projects:
             by-variant:
@@ -81,33 +79,36 @@ browsertime-tp6:
                                 windows10-64.*shippable.*: [trunk, mozilla-beta]
                                 default: []
                         default: []
-        run-visual-metrics: true
         treeherder-symbol: Btime(tp6)
-    raptor-subtests:
-        - buzzfeed
-        - ebay
-        - espn
-        - expedia
-        - [facebook, fb]
-        - [google-docs, gdocs]
-        - [google-docs-canvas, gcanvas]
-        - [google-mail, gmail]
-        - [google-search, gsearch]
-        - imdb
-        - imgur
-        - linkedin
-        - microsoft
-        - netflix
-        - nytimes
-        - office
-        - outlook
-        - paypal
-        - pinterest
-        - reddit
-        - tumblr
-        - twitch
-        - wikia
-        - youtube
+    raptor:
+        apps: [firefox, chrome, chromium]
+        test: tp6
+        run-visual-metrics: true
+        subtests:
+            - buzzfeed
+            - ebay
+            - espn
+            - expedia
+            - [facebook, fb]
+            - [google-docs, gdocs]
+            - [google-docs-canvas, gcanvas]
+            - [google-mail, gmail]
+            - [google-search, gsearch]
+            - imdb
+            - imgur
+            - linkedin
+            - microsoft
+            - netflix
+            - nytimes
+            - office
+            - outlook
+            - paypal
+            - pinterest
+            - reddit
+            - tumblr
+            - twitch
+            - wikia
+            - youtube
     tier:
         by-variant:
             fission: 2
@@ -118,12 +119,16 @@ browsertime-tp6:
 
 browsertime-responsiveness:
     <<: *tp6-defaults
-    raptor-subtests:
-        - cnn-nav
-        - [facebook-nav, fbnav]
-        - [reddit-billgates-ama, rdt-ama]
-        - [reddit-billgates-post-1, rdt-post-1]
-        - [reddit-billgates-post-2, rdt-post-2]
+    raptor:
+        apps: [firefox, chrome, chromium]
+        test: tp6
+        run-visual-metrics: true
+        subtests:
+            - cnn-nav
+            - [facebook-nav, fbnav]
+            - [reddit-billgates-ama, rdt-ama]
+            - [reddit-billgates-post-1, rdt-post-1]
+            - [reddit-billgates-post-2, rdt-post-2]
     mozharness:
         extra-options:
             by-test-platform:
@@ -160,16 +165,20 @@ browsertime-responsiveness:
 
 browsertime-tp6-essential:
     <<: *tp6-defaults
-    raptor-subtests:
-        - amazon
-        - [bing-search, bing]
-        - cnn
-        - fandom
-        - [google-slides, gslides]
-        - instagram
-        - twitter
-        - wikipedia
-        - yahoo-mail
+    raptor:
+        apps: [firefox, chrome, chromium]
+        test: tp6
+        run-visual-metrics: true
+        subtests:
+            - amazon
+            - [bing-search, bing]
+            - cnn
+            - fandom
+            - [google-slides, gslides]
+            - instagram
+            - twitter
+            - wikipedia
+            - yahoo-mail
     run-on-projects:
         by-app:
             firefox:
@@ -191,18 +200,19 @@ browsertime-tp6-essential:
 
 browsertime-benchmark:
     description: Raptor (browsertime) Benchmark tests
-    raptor-subtests:
-        - ares6
-        - [assorted-dom, dom]
-        - [jetstream2, js2]
-        - [motionmark-animometer, mm-a]
-        - [motionmark-htmlsuite, mm-h]
-        - [speedometer, sp]
-        - [stylebench, sb]
-        - [sunspider, ss]
-        - [unity-webgl, ugl]
-        - [webaudio, wa]
-    apps: [firefox, chrome, chromium]
+    raptor:
+        apps: [firefox, chrome, chromium]
+        subtests:
+            - ares6
+            - [assorted-dom, dom]
+            - [jetstream2, js2]
+            - [motionmark-animometer, mm-a]
+            - [motionmark-htmlsuite, mm-h]
+            - [speedometer, sp]
+            - [stylebench, sb]
+            - [sunspider, ss]
+            - [unity-webgl, ugl]
+            - [webaudio, wa]
     treeherder-symbol: Btime()
     tier:
         by-variant:
@@ -310,19 +320,20 @@ browsertime-benchmark:
 
 browsertime-benchmark-wasm:
     description: Raptor (browsertime) WASM benchmarks
-    raptor-subtests:
-        by-app:
-            firefox:
-                - [wasm-godot, godot]
-                - [wasm-godot-baseline, godot-b]
-                - [wasm-godot-optimizing, godot-i]
-                - [wasm-misc, wm]
-                - [wasm-misc-baseline, wm-b]
-                - [wasm-misc-optimizing, wm-i]
-            default:
-                - [wasm-misc, wm]
-                - [wasm-godot, godot]
-    apps: [firefox, chrome, chromium]
+    raptor:
+        apps: [firefox, chrome, chromium]
+        subtests:
+            by-app:
+                firefox:
+                    - [wasm-godot, godot]
+                    - [wasm-godot-baseline, godot-b]
+                    - [wasm-godot-optimizing, godot-i]
+                    - [wasm-misc, wm]
+                    - [wasm-misc-baseline, wm-b]
+                    - [wasm-misc-optimizing, wm-i]
+                default:
+                    - [wasm-misc, wm]
+                    - [wasm-godot, godot]
     treeherder-symbol: Btime()
     tier: 2
     variants: [fission]
@@ -357,17 +368,18 @@ browsertime-benchmark-wasm:
 
 browsertime-youtube-playback:
     description: Browsertime YouTube Playback on Firefox
-    raptor-subtests:
-        by-app:
-            firefox:
-                - [youtube-playback-av1-sfr, ytp-av1-sfr]
-                - [youtube-playback-h264-sfr, ytp-h264-sfr]
-                - [youtube-playback-hfr, ytp-hfr]
-                - [youtube-playback-vp9-sfr, ytp-vp9-sfr]
-                - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
-                - [youtube-playback-widevine-h264-sfr, ytp-widevine-h264-sfr]
-                - [youtube-playback-widevine-vp9-sfr, ytp-widevine-vp9-sfr]
-    apps: [firefox]
+    raptor:
+        apps: [firefox]
+        subtests:
+            by-app:
+                firefox:
+                    - [youtube-playback-av1-sfr, ytp-av1-sfr]
+                    - [youtube-playback-h264-sfr, ytp-h264-sfr]
+                    - [youtube-playback-hfr, ytp-hfr]
+                    - [youtube-playback-vp9-sfr, ytp-vp9-sfr]
+                    - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
+                    - [youtube-playback-widevine-h264-sfr, ytp-widevine-h264-sfr]
+                    - [youtube-playback-widevine-vp9-sfr, ytp-widevine-vp9-sfr]
     treeherder-symbol: Btime()
     variants: [fission]
     run-on-projects:
@@ -405,48 +417,55 @@ browsertime-tp6-live:
             - --browser-cycles=15
             - --chimera
             - --live-sites
-    raptor-subtests:
-        - amazon
-        - [bing-search, bing]
-        - ebay
-        - [facebook, fb]
-        - fandom
-        - [google-docs, gdocs]
-        - [google-mail, gmail]
-        - [google-search, gsearch]
-        - [google-slides, gslides]
-        - imdb
-        - imgur
-        - instagram
-        - linkedin
-        - microsoft
-        - netflix
-        # - office (site loads blank page if not signed in)
-        - outlook
-        - paypal
-        - pinterest
-        - reddit
-        - tumblr
-        - twitch
-        - twitter
-        - wikipedia
-        - yahoo-mail
-        - youtube
+    raptor:
+        apps: [firefox, chrome, chromium]
+        test: tp6
+        run-visual-metrics: true
+        subtests:
+            - amazon
+            - [bing-search, bing]
+            - ebay
+            - [facebook, fb]
+            - fandom
+            - [google-docs, gdocs]
+            - [google-mail, gmail]
+            - [google-search, gsearch]
+            - [google-slides, gslides]
+            - imdb
+            - imgur
+            - instagram
+            - linkedin
+            - microsoft
+            - netflix
+            # - office (site loads blank page if not signed in)
+            - outlook
+            - paypal
+            - pinterest
+            - reddit
+            - tumblr
+            - twitch
+            - twitter
+            - wikipedia
+            - yahoo-mail
+            - youtube
     run-on-projects: []
     tier: 3
     treeherder-symbol: Btime-live(tp6)
 
 browsertime-tp6-live-sheriffed:
     <<: *tp6-defaults
-    apps: [firefox]
+    raptor:
+        apps: [firefox]
+        test: tp6
+        run-visual-metrics: true
+        subtests:
+            - cnn
     description: Raptor (browsertime) tp6 on live-sites
     mozharness:
         extra-options:
             - --browser-cycles=5
             - --chimera
             - --live-sites
-    raptor-subtests:
-        - cnn
     run-on-projects:
         by-variant:
             fission: []
@@ -462,13 +481,16 @@ browsertime-tp6-live-sheriffed:
 
 browsertime-tp6-profiling:
     <<: *tp6-defaults
-    apps: [firefox]
+    raptor:
+        apps: [firefox]
+        test: tp6
+        run-visual-metrics: true
+        subtests: [amazon]
     description: Raptor (browsertime) tp6 page-load tests with Gecko Profiling
     mozharness:
         extra-options:
             - --chimera
             - --gecko-profile
-    raptor-subtests: [amazon]
     run-on-projects:
         by-variant:
             fission: []
@@ -484,14 +506,15 @@ browsertime-tp6-profiling:
     treeherder-symbol: Btime-Prof(tp6)
 
 browsertime-custom:
-    apps: [firefox]
+    raptor:
+        apps: [firefox]
+        run-visual-metrics: true
+        subtests: [[process-switch, ps]]
     description: Raptor (browsertime) custom pageload tests
-    run-visual-metrics: true
     max-run-time: 2700
     mozharness:
         extra-options:
             - --chimera
-    raptor-subtests: [[process-switch, ps]]
     variants: [fission]
     run-on-projects:
         by-variant:
@@ -508,14 +531,15 @@ browsertime-custom:
     treeherder-symbol: Btime(ps)
 
 browsertime-first-install:
-    apps: [firefox]
+    raptor:
+        apps: [firefox]
+        run-visual-metrics: true
+        subtests: [welcome]
     description: Raptor (browsertime) custom pageload tests
-    run-visual-metrics: true
     max-run-time: 2700
     mozharness:
         extra-options:
             - --chimera
-    raptor-subtests: [welcome]
     variants: [fission]
     run-on-projects:
         by-variant:
