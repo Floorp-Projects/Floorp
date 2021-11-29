@@ -15,6 +15,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.view.View
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.Espresso.onView
@@ -22,8 +23,13 @@ import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.longClick
 import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.intent.Intents
+import androidx.test.espresso.intent.Intents.intended
 import androidx.test.espresso.intent.matcher.IntentMatchers
+import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
+import androidx.test.espresso.matcher.ViewMatchers.hasSibling
+import androidx.test.espresso.matcher.ViewMatchers.withChild
 import androidx.test.espresso.matcher.ViewMatchers.withId
+import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
@@ -32,17 +38,19 @@ import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
-import java.io.File
 import kotlinx.coroutines.runBlocking
 import mozilla.components.support.ktx.android.content.appName
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.Matcher
 import org.junit.Assert
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.idlingresource.NetworkConnectionIdlingResource
+import org.mozilla.fenix.ui.robots.BrowserRobot
 import org.mozilla.fenix.ui.robots.mDevice
+import java.io.File
 
 object TestHelper {
 
@@ -209,6 +217,14 @@ object TestHelper {
         }
     }
 
+    fun assertNativeAppOpens(appPackageName: String, url: String) {
+        if (isPackageInstalled(appPackageName)) {
+            intended(toPackage(appPackageName))
+        } else {
+            BrowserRobot().verifyUrl(url)
+        }
+    }
+
     fun returnToBrowser() {
         val urlBar =
             mDevice.findObject(UiSelector().resourceId("$packageName:id/mozac_browser_toolbar_url_view"))
@@ -222,5 +238,15 @@ object TestHelper {
     fun UiDevice.waitForObjects(obj: UiObject, waitingTime: Long = TestAssetHelper.waitingTime) {
         this.waitForIdle()
         Assert.assertNotNull(obj.waitForExists(waitingTime))
+    }
+
+    fun hasCousin(matcher: Matcher<View>): Matcher<View> {
+        return withParent(
+            hasSibling(
+                withChild(
+                    matcher
+                )
+            )
+        )
     }
 }

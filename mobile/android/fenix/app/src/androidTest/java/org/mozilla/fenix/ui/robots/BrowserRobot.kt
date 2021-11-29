@@ -306,6 +306,15 @@ class BrowserRobot {
         }.bookmarkPage { }
     }
 
+    fun clickLinkMatchingText(expectedText: String) {
+        mDevice.findObject(UiSelector().resourceId("$packageName:id/engineView"))
+            .waitForExists(waitingTime)
+        mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime)
+
+        val element = mDevice.findObject(UiSelector().textContains(expectedText))
+        element.click()
+    }
+
     fun longClickMatchingText(expectedText: String) {
         try {
             mDevice.waitForWindowUpdate(packageName, waitingTime)

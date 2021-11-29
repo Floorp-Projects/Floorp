@@ -18,8 +18,11 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.toPackage
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import androidx.test.espresso.matcher.ViewMatchers.hasDescendant
+import androidx.test.espresso.matcher.ViewMatchers.isChecked
 import androidx.test.espresso.matcher.ViewMatchers.isCompletelyDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.ViewMatchers.isNotChecked
+import androidx.test.espresso.matcher.ViewMatchers.withClassName
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
@@ -32,15 +35,17 @@ import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
+import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.endsWith
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_PLAY_SERVICES
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.appName
+import org.mozilla.fenix.helpers.TestHelper.hasCousin
 import org.mozilla.fenix.helpers.TestHelper.isPackageInstalled
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
-import org.mozilla.fenix.helpers.assertIsEnabled
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.ui.robots.SettingsRobot.Companion.DEFAULT_APPS_SETTINGS_ACTION
 
@@ -81,7 +86,8 @@ class SettingsRobot {
     fun verifyNotificationsButton() = assertNotificationsButton()
     fun verifyDataCollectionButton() = assertDataCollectionButton()
     fun verifyOpenLinksInAppsButton() = assertOpenLinksInAppsButton()
-    fun verifyOpenLinksInAppsSwitchDefault() = assertOpenLinksInAppsValue()
+    fun verifyOpenLinksInAppsSwitchState(enabled: Boolean) = assertOpenLinksInAppsSwitchState(enabled)
+    fun clickOpenLinksInAppsSwitch() = openLinksInAppsButton().click()
     fun verifySettingsView() = assertSettingsView()
     fun verifySettingsToolbar() = assertSettingsToolbar()
 
@@ -439,7 +445,7 @@ private fun assertDataCollectionButton() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun openLinksInAppsButton() = onView(withText("Open links in apps"))
+private fun openLinksInAppsButton() = onView(withText(R.string.preferences_open_links_in_apps))
 
 private fun assertOpenLinksInAppsButton() {
     scrollToElementByText("Open links in apps")
@@ -447,9 +453,33 @@ private fun assertOpenLinksInAppsButton() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertOpenLinksInAppsValue() {
+fun assertOpenLinksInAppsSwitchState(enabled: Boolean) {
     scrollToElementByText("Open links in apps")
-    openLinksInAppsButton().assertIsEnabled(isEnabled = true)
+    if (enabled) {
+        openLinksInAppsButton()
+            .check(
+                matches(
+                    hasCousin(
+                        allOf(
+                            withClassName(endsWith("Switch")),
+                            isChecked()
+                        )
+                    )
+                )
+            )
+    } else {
+        openLinksInAppsButton()
+            .check(
+                matches(
+                    hasCousin(
+                        allOf(
+                            withClassName(endsWith("Switch")),
+                            isNotChecked()
+                        )
+                    )
+                )
+            )
+    }
 }
 
 // DEVELOPER TOOLS SECTION

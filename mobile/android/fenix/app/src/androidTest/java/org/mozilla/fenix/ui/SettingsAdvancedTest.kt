@@ -7,13 +7,19 @@ package org.mozilla.fenix.ui
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.Rule
-import org.junit.Before
 import org.junit.After
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_PLAY_SERVICES
+import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.fenix.ui.robots.homeScreen
+import org.mozilla.fenix.ui.robots.navigationToolbar
 
 /**
  *  Tests for verifying the advanced section in Settings
@@ -25,6 +31,7 @@ class SettingsAdvancedTest {
 
     private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     private lateinit var mockWebServer: MockWebServer
+    private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule
     val activityIntentTestRule = HomeActivityIntentTestRule()
@@ -35,11 +42,14 @@ class SettingsAdvancedTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
+        featureSettingsHelper.setPocketEnabled(false)
     }
 
     @After
     fun tearDown() {
         mockWebServer.shutdown()
+
+        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @Test
@@ -53,9 +63,32 @@ class SettingsAdvancedTest {
             verifyAdvancedHeading()
             verifyAddons()
             verifyOpenLinksInAppsButton()
-            verifyOpenLinksInAppsSwitchDefault()
+            verifyOpenLinksInAppsSwitchState(false)
             verifyRemoteDebug()
             verifyLeakCanaryButton()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun openLinkInAppTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 3)
+        val playStoreUrl = "play.google.com/store/apps/details?id=org.mozilla.fenix"
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+            verifyOpenLinksInAppsSwitchState(false)
+            clickOpenLinksInAppsSwitch()
+            verifyOpenLinksInAppsSwitchState(true)
+        }.goBack {}
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            mDevice.waitForIdle()
+            clickLinkMatchingText("Mozilla Playstore link")
+            mDevice.waitForIdle()
+            assertNativeAppOpens(GOOGLE_PLAY_SERVICES, playStoreUrl)
         }
     }
 }
