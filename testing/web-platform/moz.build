@@ -773,4 +773,3 @@ with Files("tests/worklets/**"):
 
 with Files("tests/x-frame-options/**"):
     BUG_COMPONENT = ("Core", "DOM: Security")
-
