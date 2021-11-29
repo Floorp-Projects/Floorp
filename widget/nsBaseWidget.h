@@ -219,7 +219,7 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
   //
   // A reference to the session object is held until this function has
   // returned.
-  void NotifyCompositorSessionLost(
+  virtual void NotifyCompositorSessionLost(
       mozilla::layers::CompositorSession* aSession);
 
   already_AddRefed<mozilla::CompositorVsyncDispatcher>

@@ -127,8 +127,6 @@ class nsWindow final : public nsBaseWidget {
 
   void PassExternalResponse(mozilla::java::WebResponse::Param aResponse);
 
-  void NotifyDisablingWebRender();
-
   void ShowDynamicToolbar();
 
   void DetachNatives();
@@ -183,6 +181,9 @@ class nsWindow final : public nsBaseWidget {
   virtual InputContext GetInputContext() override;
 
   WindowRenderer* GetWindowRenderer() override;
+
+  void NotifyCompositorSessionLost(
+      mozilla::layers::CompositorSession* aSession) override;
 
   virtual bool NeedsPaint() override;
 
@@ -261,7 +262,6 @@ class nsWindow final : public nsBaseWidget {
   mozilla::ScreenIntMargin mSafeAreaInsets;
 
   bool mIsFullScreen;
-  bool mIsDisablingWebRender;
 
   bool UseExternalCompositingSurface() const override { return true; }
 

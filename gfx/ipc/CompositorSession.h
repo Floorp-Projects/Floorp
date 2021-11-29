@@ -80,8 +80,6 @@ class CompositorSession {
   RefPtr<UiCompositorControllerChild> GetUiCompositorControllerChild() {
     return mUiCompositorControllerChild;
   }
-
-  void NotifyDisablingWebRender();
 #endif  // defined(MOZ_WIDGET_ANDROID)
  protected:
   CompositorSession(nsBaseWidget* aWidget, CompositorWidgetDelegate* aDelegate,

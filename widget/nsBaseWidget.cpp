@@ -1230,9 +1230,11 @@ already_AddRefed<WebRenderLayerManager> nsBaseWidget::CreateCompositorSession(
     options.SetUseWebGPU(StaticPrefs::dom_webgpu_enabled());
 
 #ifdef MOZ_WIDGET_ANDROID
-    if (!GetNativeData(NS_JAVA_SURFACE)) {
-      options.SetInitiallyPaused(true);
-    }
+    // Unconditionally set the compositor as initially paused, as we have not
+    // yet had a chance to send the compositor surface to the GPU process. We
+    // will do so shortly once we have returned to nsWindow::CreateLayerManager,
+    // where we will also resume the compositor if required.
+    options.SetInitiallyPaused(true);
 #else
     options.SetInitiallyPaused(CompositorInitiallyPaused());
 #endif
