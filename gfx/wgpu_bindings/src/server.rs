@@ -448,8 +448,8 @@ impl GlobalExt for Global {
                     error_buf.init(err);
                 }
             }
-            CommandEncoderAction::ClearBuffer { dst, offset, size } => {
-                if let Err(err) = self.command_encoder_clear_buffer::<A>(self_id, dst, offset, size)
+            CommandEncoderAction::FillBuffer { dst, offset, size } => {
+                if let Err(err) = self.command_encoder_fill_buffer::<A>(self_id, dst, offset, size)
                 {
                     error_buf.init(err);
                 }

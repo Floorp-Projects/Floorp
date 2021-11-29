@@ -1,12 +1,14 @@
 #[cfg(feature = "trace")]
 use crate::device::trace::Action;
 use crate::{
+    align_to,
     command::{
         extract_texture_selector, validate_linear_texture_data, validate_texture_copy_range,
         CommandBuffer, CopySide, ImageCopyTexture, TransferError,
     },
     conv,
     device::{DeviceError, WaitIdleError},
+    get_lowest_common_denom,
     hub::{Global, GlobalIdentityHandlerFactory, HalApi, Token},
     id,
     resource::{BufferAccessError, BufferMapState, TextureInner},
@@ -269,7 +271,11 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         }
 
         let stage = device.prepare_stage(data_size)?;
-        unsafe { stage.write(&device.raw, 0, data) }.map_err(DeviceError::from)?;
+        unsafe {
+            profiling::scope!("copy");
+            stage.write(&device.raw, 0, data)
+        }
+        .map_err(DeviceError::from)?;
 
         let mut trackers = device.trackers.lock();
         let (dst, transition) = trackers
@@ -327,7 +333,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
 
             let dst = buffer_guard.get_mut(buffer_id).unwrap();
             dst.initialization_status
-                .clear(buffer_offset..(buffer_offset + data_size));
+                .drain(buffer_offset..(buffer_offset + data_size));
         }
 
         Ok(())
@@ -371,7 +377,9 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         let (selector, dst_base, texture_format) =
             extract_texture_selector(destination, size, &*texture_guard)?;
         let format_desc = texture_format.describe();
-        let (_, bytes_per_array_layer) = validate_linear_texture_data(
+        //Note: `_source_bytes_per_array_layer` is ignored since we have a staging copy,
+        // and it can have a different value.
+        let (_, _source_bytes_per_array_layer) = validate_linear_texture_data(
             data_layout,
             texture_format,
             data.len() as wgt::BufferAddress,
@@ -420,10 +428,6 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                 hal::TextureUses::COPY_DST,
             )
             .unwrap();
-        let dst_raw = dst
-            .inner
-            .as_raw()
-            .ok_or(TransferError::InvalidTexture(destination.texture))?;
 
         if !dst.desc.usage.contains(wgt::TextureUsages::COPY_DST) {
             return Err(
@@ -443,8 +447,8 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         let mapping = unsafe { device.raw.map_buffer(&stage.buffer, 0..stage_size) }
             .map_err(DeviceError::from)?;
         unsafe {
-            profiling::scope!("copy");
             if stage_bytes_per_row == bytes_per_row {
+                profiling::scope!("copy aligned");
                 // Fast path if the data is already being aligned optimally.
                 ptr::copy_nonoverlapping(
                     data.as_ptr().offset(data_layout.offset as isize),
@@ -452,6 +456,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                     stage_size as usize,
                 );
             } else {
+                profiling::scope!("copy chunked");
                 // Copy row by row into the optimal alignment.
                 let copy_bytes_per_row = stage_bytes_per_row.min(bytes_per_row) as usize;
                 for layer in 0..size.depth_or_array_layers {
@@ -488,7 +493,9 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
             texture_base.array_layer += rel_array_layer;
             hal::BufferTextureCopy {
                 buffer_layout: wgt::ImageDataLayout {
-                    offset: rel_array_layer as u64 * bytes_per_array_layer,
+                    offset: rel_array_layer as u64
+                        * block_rows_per_image as u64
+                        * stage_bytes_per_row as u64,
                     bytes_per_row: NonZeroU32::new(stage_bytes_per_row),
                     rows_per_image: NonZeroU32::new(block_rows_per_image),
                 },
@@ -503,9 +510,63 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
 
         let encoder = device.pending_writes.activate();
         unsafe {
-            encoder.transition_buffers(iter::once(barrier));
             encoder.transition_textures(transition.map(|pending| pending.into_hal(dst)));
-            encoder.copy_buffer_to_texture(&stage.buffer, dst_raw, regions);
+            encoder.transition_buffers(iter::once(barrier));
+        }
+
+        // If the copy does not fully cover the layers, we need to initialize to zero *first* as we don't keep track of partial texture layer inits.
+        // Strictly speaking we only need to clear the areas of a layer untouched, but this would get increasingly messy.
+
+        let init_layer_range =
+            destination.origin.z..destination.origin.z + size.depth_or_array_layers;
+        if dst.initialization_status.mips[destination.mip_level as usize]
+            .check(init_layer_range.clone())
+            .is_some()
+        {
+            // For clear we need write access to the texture!
+            drop(texture_guard);
+            let (mut texture_guard, _) = hub.textures.write(&mut token);
+            let dst = texture_guard.get_mut(destination.texture).unwrap();
+            let dst_raw = dst
+                .inner
+                .as_raw()
+                .ok_or(TransferError::InvalidTexture(destination.texture))?;
+
+            let layers_to_initialize = dst.initialization_status.mips
+                [destination.mip_level as usize]
+                .drain(init_layer_range);
+
+            let mut zero_buffer_copy_regions = Vec::new();
+            if size.width != dst.desc.size.width || size.height != dst.desc.size.height {
+                for layer in layers_to_initialize {
+                    crate::command::collect_zero_buffer_copies_for_clear_texture(
+                        &dst.desc,
+                        device.alignments.buffer_copy_pitch.get() as u32,
+                        destination.mip_level..(destination.mip_level + 1),
+                        layer,
+                        &mut zero_buffer_copy_regions,
+                    );
+                }
+            }
+            unsafe {
+                if !zero_buffer_copy_regions.is_empty() {
+                    encoder.copy_buffer_to_texture(
+                        &device.zero_buffer,
+                        dst_raw,
+                        zero_buffer_copy_regions.into_iter(),
+                    );
+                }
+                encoder.copy_buffer_to_texture(&stage.buffer, dst_raw, regions);
+            }
+        } else {
+            let dst_raw = dst
+                .inner
+                .as_raw()
+                .ok_or(TransferError::InvalidTexture(destination.texture))?;
+
+            unsafe {
+                encoder.copy_buffer_to_texture(&stage.buffer, dst_raw, regions);
+            }
         }
 
         device.pending_writes.consume(stage);
@@ -723,6 +784,9 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                         baked
                             .initialize_buffer_memory(&mut *trackers, &mut *buffer_guard)
                             .map_err(|err| QueueSubmitError::DestroyedBuffer(err.0))?;
+                        baked
+                            .initialize_texture_memory(&mut *trackers, &mut *texture_guard, device)
+                            .map_err(|err| QueueSubmitError::DestroyedTexture(err.0))?;
                         //Note: stateless trackers are not merged:
                         // device already knows these resources exist.
                         CommandBuffer::insert_barriers(
@@ -868,48 +932,4 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         }
         Ok(())
     }
-}
-
-fn get_lowest_common_denom(a: u32, b: u32) -> u32 {
-    let gcd = if a >= b {
-        get_greatest_common_divisor(a, b)
-    } else {
-        get_greatest_common_divisor(b, a)
-    };
-    a * b / gcd
-}
-
-fn get_greatest_common_divisor(mut a: u32, mut b: u32) -> u32 {
-    assert!(a >= b);
-    loop {
-        let c = a % b;
-        if c == 0 {
-            return b;
-        } else {
-            a = b;
-            b = c;
-        }
-    }
-}
-
-fn align_to(value: u32, alignment: u32) -> u32 {
-    match value % alignment {
-        0 => value,
-        other => value - other + alignment,
-    }
-}
-
-#[test]
-fn test_lcd() {
-    assert_eq!(get_lowest_common_denom(2, 2), 2);
-    assert_eq!(get_lowest_common_denom(2, 3), 6);
-    assert_eq!(get_lowest_common_denom(6, 4), 12);
-}
-
-#[test]
-fn test_gcd() {
-    assert_eq!(get_greatest_common_divisor(5, 1), 1);
-    assert_eq!(get_greatest_common_divisor(4, 2), 2);
-    assert_eq!(get_greatest_common_divisor(6, 4), 2);
-    assert_eq!(get_greatest_common_divisor(7, 7), 7);
 }

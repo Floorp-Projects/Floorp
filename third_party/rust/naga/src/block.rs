@@ -23,7 +23,9 @@ impl Block {
 
     pub fn from_vec(body: Vec<Statement>) -> Self {
         #[cfg(feature = "span")]
-        let span_info = std::iter::repeat(Span::Unknown).take(body.len()).collect();
+        let span_info = std::iter::repeat(Span::default())
+            .take(body.len())
+            .collect();
         Self {
             body,
             #[cfg(feature = "span")]
@@ -58,6 +60,12 @@ impl Block {
         self.body.extend(other.body);
     }
 
+    pub fn append(&mut self, other: &mut Self) {
+        #[cfg(feature = "span")]
+        self.span_info.append(&mut other.span_info);
+        self.body.append(&mut other.body);
+    }
+
     pub fn cull<R: RangeBounds<usize> + Clone>(&mut self, range: R) {
         #[cfg(feature = "span")]
         self.span_info.drain(range.clone());
@@ -69,6 +77,14 @@ impl Block {
         self.span_info
             .splice(range.clone(), other.span_info.into_iter());
         self.body.splice(range, other.body.into_iter());
+    }
+    pub fn span_iter(&self) -> impl Iterator<Item = (&Statement, &Span)> {
+        #[cfg(feature = "span")]
+        let span_iter = self.span_info.iter();
+        #[cfg(not(feature = "span"))]
+        let span_iter = std::iter::repeat_with(|| &Span::UNDEFINED);
+
+        self.body.iter().zip(span_iter)
     }
 
     pub fn span_iter_mut(&mut self) -> impl Iterator<Item = (&mut Statement, Option<&mut Span>)> {

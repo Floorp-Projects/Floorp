@@ -194,38 +194,6 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
         );
     }
 
-    unsafe fn clear_texture(
-        &mut self,
-        texture: &super::Texture,
-        subresource_range: &wgt::ImageSubresourceRange,
-    ) {
-        self.device.raw.cmd_clear_color_image(
-            self.active,
-            texture.raw,
-            DST_IMAGE_LAYOUT,
-            &vk::ClearColorValue {
-                float32: [0.0, 0.0, 0.0, 0.0],
-            },
-            &[conv::map_subresource_range(
-                subresource_range,
-                texture.aspects,
-            )],
-        );
-
-        // The Vulkan api could easily support depth/stencil formats for clearing as well.
-        // But in other APIs this is more challenging which is why clear_texture excludes support for these formats.
-        // self.device.raw.cmd_clear_depth_stencil_image(
-        //     self.active,
-        //     texture.raw,
-        //     DST_IMAGE_LAYOUT,
-        //     &vk::ClearDepthStencilValue {
-        //         depth: 0.0,
-        //         stencil: 0,
-        //     },
-        //     &[range],
-        // );
-    }
-
     unsafe fn copy_buffer_to_buffer<T>(
         &mut self,
         src: &super::Buffer,
@@ -411,6 +379,15 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
                 vk_image_views.push(at.view.raw);
                 fb_key.attachments.push(at.view.attachment.clone());
             }
+
+            // Assert this attachment is valid for the detected multiview, as a sanity check
+            // The driver crash for this is really bad on AMD, so the check is worth it
+            if let Some(multiview) = desc.multiview {
+                assert_eq!(cat.target.view.layers, multiview);
+                if let Some(ref resolve_target) = cat.resolve_target {
+                    assert_eq!(resolve_target.view.layers, multiview);
+                }
+            }
         }
         if let Some(ref ds) = desc.depth_stencil_attachment {
             vk_clear_values.push(vk::ClearValue {
@@ -425,8 +402,15 @@ impl crate::CommandEncoder<super::Api> for super::CommandEncoder {
                 stencil_ops: ds.stencil_ops,
             });
             fb_key.attachments.push(ds.target.view.attachment.clone());
+
+            // Assert this attachment is valid for the detected multiview, as a sanity check
+            // The driver crash for this is really bad on AMD, so the check is worth it
+            if let Some(multiview) = desc.multiview {
+                assert_eq!(ds.target.view.layers, multiview);
+            }
         }
         rp_key.sample_count = fb_key.sample_count;
+        rp_key.multiview = desc.multiview;
 
         let render_area = vk::Rect2D {
             offset: vk::Offset2D { x: 0, y: 0 },

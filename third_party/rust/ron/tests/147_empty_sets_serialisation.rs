@@ -42,8 +42,8 @@ fn empty_sets_arrays() {
     };
 
     let pretty = ron::ser::PrettyConfig::new()
-        .with_enumerate_arrays(true)
-        .with_new_line("\n".to_string());
+        .enumerate_arrays(true)
+        .new_line("\n".to_string());
     let serial = ron::ser::to_string_pretty(&value, pretty).unwrap();
 
     println!("Serialized: {}", serial);
