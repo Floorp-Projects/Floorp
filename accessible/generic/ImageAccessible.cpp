@@ -75,7 +75,8 @@ uint64_t ImageAccessible::NativeState() const {
   if (!(mImageRequestStatus & imgIRequest::STATUS_SIZE_AVAILABLE)) {
     nsIFrame* frame = GetFrame();
     MOZ_ASSERT(!frame || frame->AccessibleType() == eImageType ||
-               frame->AccessibleType() == a11y::eHTMLImageMapType);
+               frame->AccessibleType() == a11y::eHTMLImageMapType ||
+               frame->IsImageBoxFrame());
     if (frame && !(frame->GetStateBits() & IMAGE_SIZECONSTRAINED)) {
       // The size of this image hasn't been constrained and we haven't loaded
       // enough of the image to know its size yet. This means it currently
