@@ -40,6 +40,10 @@ BEGIN_TEST(testSliceBudgetWork) {
 
   budget.step(5000);
   CHECK(budget.isOverBudget());
+  CHECK(budget.isOverBudget());
+
+  budget.resetOverBudget();
+  CHECK(!budget.isOverBudget());
 
   return true;
 }
@@ -67,8 +71,13 @@ END_TEST(testSliceBudgetTime)
 
 BEGIN_TEST(testSliceBudgetTimeZero) {
   SliceBudget budget = SliceBudget(TimeBudget(0));
+  CHECK(!budget.isOverBudget());
   budget.step(1000);
   CHECK(budget.isOverBudget());
+  CHECK(budget.isOverBudget());
+
+  budget.resetOverBudget();
+  CHECK(!budget.isOverBudget());
 
   return true;
 }

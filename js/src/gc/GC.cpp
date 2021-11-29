@@ -1423,7 +1423,7 @@ int SliceBudget::describe(char* buffer, size_t maxlen) const {
   }
 }
 
-bool SliceBudget::checkOverBudget() {
+bool SliceBudget::isOverBudgetSlow() {
   MOZ_ASSERT(counter <= 0);
   MOZ_ASSERT(!isUnlimited());
 
@@ -1435,7 +1435,6 @@ bool SliceBudget::checkOverBudget() {
     return true;
   }
 
-  counter = stepsPerTimeCheck;
   return false;
 }
 
@@ -2622,8 +2621,12 @@ IncrementalProgress GCRuntime::markUntilBudgetExhausted(
     return NotFinished;
   }
 
-  return marker.markUntilBudgetExhausted(sliceBudget, reportTime) ? Finished
-                                                                  : NotFinished;
+  if (marker.markUntilBudgetExhausted(sliceBudget, reportTime)) {
+    return Finished;
+  }
+
+  sliceBudget.resetOverBudget();
+  return NotFinished;
 }
 
 void GCRuntime::drainMarkStack() {

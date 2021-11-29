@@ -2060,6 +2060,8 @@ MOZ_NEVER_INLINE bool CCGraphBuilder::BuildGraph(SliceBudget& aBudget) {
     aBudget.step(mNoteChildCount + 1);
   }
 
+  aBudget.resetOverBudget();
+
   if (!mCurrNode->IsDone()) {
     return false;
   }
@@ -2423,7 +2425,7 @@ class SnowWhiteKiller : public TraceCallbacks {
  public:
   bool Visit(nsPurpleBuffer& aBuffer, nsPurpleBufferEntry* aEntry) {
     if (mBudget) {
-      if (mBudget->isOverBudget()) {
+      if (mBudget->checkAndResetOverBudget()) {
         return false;
       }
       mBudget->step();
@@ -2527,7 +2529,7 @@ class RemoveSkippableVisitor : public SnowWhiteKiller {
   }
 
   bool Visit(nsPurpleBuffer& aBuffer, nsPurpleBufferEntry* aEntry) {
-    if (mBudget.isOverBudget()) {
+    if (mBudget.checkAndResetOverBudget()) {
       return false;
     }
 
@@ -3441,6 +3443,8 @@ bool nsCycleCollector::Collect(CCReason aReason, ccIsManual aIsManual,
       continueSlice = !aBudget.isOverBudget();
     }
   } while (continueSlice);
+
+  aBudget.resetOverBudget();
 
   // Clear mActivelyCollecting here to ensure that a recursive call to
   // Collect() does something.

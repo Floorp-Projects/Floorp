@@ -200,7 +200,7 @@ static inline bool FinalizeTypedArenas(JSFreeOp* fop, ArenaList& src,
     }
 
     budget.step(thingsPerArena);
-    if (budget.isOverBudget()) {
+    if (budget.checkAndResetOverBudget()) {
       return false;
     }
   }
@@ -1760,7 +1760,7 @@ static bool SweepArenaList(JSFreeOp* fop, Arena** arenasToSweep,
 
     AllocKind kind = MapTypeToAllocKind<T>::kind;
     sliceBudget.step(Arena::thingsPerArena(kind));
-    if (sliceBudget.isOverBudget()) {
+    if (sliceBudget.checkAndResetOverBudget()) {
       return false;
     }
   }
