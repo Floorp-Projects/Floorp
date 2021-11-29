@@ -5,14 +5,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AndroidCompositorWidget.h"
+
+#include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsWindow.h"
 
 namespace mozilla {
 namespace widget {
 
 AndroidCompositorWidget::AndroidCompositorWidget(
-    const layers::CompositorOptions& aOptions, nsBaseWidget* aWidget)
-    : InProcessCompositorWidget(aOptions, aWidget),
+    const AndroidCompositorWidgetInitData& aInitData,
+    const layers::CompositorOptions& aOptions)
+    : CompositorWidget(aOptions),
+      mWidgetId(aInitData.widgetId()),
       mNativeWindow(nullptr),
       mFormat(WINDOW_FORMAT_RGBA_8888) {}
 
@@ -69,20 +73,24 @@ void AndroidCompositorWidget::EndRemoteDrawingInRegion(
   ANativeWindow_unlockAndPost(mNativeWindow);
 }
 
+void AndroidCompositorWidget::OnResumeComposition() {
+  OnCompositorSurfaceChanged();
+}
+
 EGLNativeWindowType AndroidCompositorWidget::GetEGLNativeWindow() {
-  return (EGLNativeWindowType)mWidget->GetNativeData(NS_JAVA_SURFACE);
+  return (EGLNativeWindowType)mSurface.Get();
 }
 
-EGLNativeWindowType AndroidCompositorWidget::GetPresentationEGLSurface() {
-  return (EGLNativeWindowType)mWidget->GetNativeData(NS_PRESENTATION_SURFACE);
-}
+LayoutDeviceIntSize AndroidCompositorWidget::GetClientSize() {
+  JNIEnv* const env = jni::GetEnvForThread();
+  ANativeWindow* const nativeWindow =
+      ANativeWindow_fromSurface(env, reinterpret_cast<jobject>(mSurface.Get()));
+  const int32_t width = ANativeWindow_getWidth(nativeWindow);
+  const int32_t height = ANativeWindow_getHeight(nativeWindow);
 
-void AndroidCompositorWidget::SetPresentationEGLSurface(EGLSurface aVal) {
-  mWidget->SetNativeData(NS_PRESENTATION_SURFACE, (uintptr_t)aVal);
-}
+  ANativeWindow_release(nativeWindow);
 
-ANativeWindow* AndroidCompositorWidget::GetPresentationANativeWindow() {
-  return (ANativeWindow*)mWidget->GetNativeData(NS_PRESENTATION_WINDOW);
+  return LayoutDeviceIntSize(width, height);
 }
 
 }  // namespace widget

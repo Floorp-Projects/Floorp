@@ -25,6 +25,7 @@ import org.mozilla.gecko.IGeckoEditableChild;
 import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.TelemetryUtils;
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.gfx.CompositorSurfaceManager;
 import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.process.ServiceAllocator.PriorityLevel;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -61,6 +62,14 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
   public void getEditableParent(
       final IGeckoEditableChild child, final long contentId, final long tabId) {
     nativeGetEditableParent(child, contentId, tabId);
+  }
+
+  @WrapForJNI
+  public static CompositorSurfaceManager getCompositorSurfaceManager() {
+    final Selector selector = new Selector(GeckoProcessType.GPU);
+    final GpuProcessConnection conn =
+        (GpuProcessConnection) INSTANCE.mConnections.getExistingConnection(selector);
+    return conn.getCompositorSurfaceManager();
   }
 
   /** Gecko uses this class to uniquely identify a process managed by GeckoProcessManager. */
@@ -210,6 +219,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
       final IChildProcess child = IChildProcess.Stub.asInterface(service);
       try {
         mPid = child.getPid();
+        onBinderConnected(child);
       } catch (final DeadObjectException e) {
         unbindService();
 
@@ -233,6 +243,10 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         mPendingBind = null;
       }
     }
+
+    // Subclasses of ChildConnection can override this method to make any IChildProcess calls
+    // specific to their process type immediately after connection.
+    protected void onBinderConnected(@NonNull final IChildProcess child) throws RemoteException {}
 
     @Override
     protected void onReleaseResources() {
@@ -261,6 +275,23 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     protected void onAppBackground() {
       setPriorityLevel(PriorityLevel.BACKGROUND);
+    }
+  }
+
+  private static final class GpuProcessConnection extends NonContentConnection {
+    private CompositorSurfaceManager mCompositorSurfaceManager;
+
+    public GpuProcessConnection(@NonNull final ServiceAllocator allocator) {
+      super(allocator, GeckoProcessType.GPU);
+    }
+
+    @Override
+    protected void onBinderConnected(@NonNull final IChildProcess child) throws RemoteException {
+      mCompositorSurfaceManager = new CompositorSurfaceManager(child.getCompositorSurfaceManager());
+    }
+
+    public CompositorSurfaceManager getCompositorSurfaceManager() {
+      return mCompositorSurfaceManager;
     }
   }
 
@@ -554,6 +585,8 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
       if (connection == null) {
         if (type == GeckoProcessType.SOCKET) {
           connection = new SocketProcessConnection(mServiceAllocator);
+        } else if (type == GeckoProcessType.GPU) {
+          connection = new GpuProcessConnection(mServiceAllocator);
         } else {
           connection = new NonContentConnection(mServiceAllocator, type);
         }

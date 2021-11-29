@@ -65,6 +65,13 @@
                 android:process=":socket">
         </service>
         <service
+                android:name="org.mozilla.gecko.process.GeckoChildProcessServices$gpu"
+                android:enabled="true"
+                android:exported="false"
+                android:isolatedProcess="false"
+                android:process=":gpu">
+        </service>
+        <service
                 android:name="org.mozilla.gecko.gfx.SurfaceAllocatorService"
                 android:enabled="true"
                 android:exported="false"
