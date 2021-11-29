@@ -2511,8 +2511,6 @@ void HTMLInputElement::AfterSetFilesOrDirectories(bool aSetValueChanged) {
   // Grab the full path here for any chrome callers who access our .value via a
   // CPOW. This path won't be called from a CPOW meaning the potential sync IPC
   // call under GetMozFullPath won't be rejected for not being urgent.
-  // XXX Protected by the ifndef because the blob code doesn't allow us to send
-  // this message in b2g.
   if (mFileData->mFilesOrDirectories.IsEmpty()) {
     mFileData->mFirstFilePath.Truncate();
   } else {
