@@ -164,6 +164,10 @@ void UiCompositorControllerChild::Destroy() {
     return;
   }
 
+  // Clear the process token so that we don't notify the GPUProcessManager
+  // about an abnormal shutdown, thereby tearing down the GPU process.
+  mProcessToken = 0;
+
   if (mWidget) {
     // Dispatch mWidget to main thread to prevent it from being destructed by
     // the ui thread.
