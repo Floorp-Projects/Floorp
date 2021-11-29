@@ -5,11 +5,11 @@ use super::{
     error::{Error, ErrorKind},
     lex::{Lexer, LexerResultKind},
     token::{Directive, DirectiveKind},
-    token::{Token, TokenValue},
+    token::{SourceMetadata, Token, TokenValue},
     variables::{GlobalOrConstant, VarDeclaration},
     Parser, Result,
 };
-use crate::{arena::Handle, Block, Constant, ConstantInner, Expression, ScalarValue, Span, Type};
+use crate::{arena::Handle, Block, Constant, ConstantInner, Expression, ScalarValue, Type};
 use core::convert::TryFrom;
 use pp_rs::token::{PreprocessorError, Token as PPToken, TokenValue as PPTokenValue};
 use std::iter::Peekable;
@@ -21,18 +21,18 @@ mod types;
 
 pub struct ParsingContext<'source> {
     lexer: Peekable<Lexer<'source>>,
-    last_meta: Span,
+    last_meta: SourceMetadata,
 }
 
 impl<'source> ParsingContext<'source> {
     pub fn new(lexer: Lexer<'source>) -> Self {
         ParsingContext {
             lexer: lexer.peekable(),
-            last_meta: Span::default(),
+            last_meta: SourceMetadata::none(),
         }
     }
 
-    pub fn expect_ident(&mut self, parser: &mut Parser) -> Result<(String, Span)> {
+    pub fn expect_ident(&mut self, parser: &mut Parser) -> Result<(String, SourceMetadata)> {
         let token = self.bump(parser)?;
 
         match token.value {
@@ -153,14 +153,14 @@ impl<'source> ParsingContext<'source> {
             Some(handle) => parser.add_entry_point(handle, body, ctx.expressions),
             None => parser.errors.push(Error {
                 kind: ErrorKind::SemanticError("Missing entry point".into()),
-                meta: Span::default(),
+                meta: SourceMetadata::none(),
             }),
         }
 
         Ok(())
     }
 
-    fn parse_uint_constant(&mut self, parser: &mut Parser) -> Result<(u32, Span)> {
+    fn parse_uint_constant(&mut self, parser: &mut Parser) -> Result<(u32, SourceMetadata)> {
         let (value, meta) = self.parse_constant_expression(parser)?;
 
         let int = match parser.module.constants[value].inner {
@@ -192,7 +192,7 @@ impl<'source> ParsingContext<'source> {
     fn parse_constant_expression(
         &mut self,
         parser: &mut Parser,
-    ) -> Result<(Handle<Constant>, Span)> {
+    ) -> Result<(Handle<Constant>, SourceMetadata)> {
         let mut block = Block::new();
 
         let mut ctx = Context::new(parser, &mut block);
@@ -206,7 +206,7 @@ impl<'source> ParsingContext<'source> {
 }
 
 impl Parser {
-    fn handle_directive(&mut self, directive: Directive, meta: Span) {
+    fn handle_directive(&mut self, directive: Directive, meta: SourceMetadata) {
         let mut tokens = directive.tokens.into_iter();
 
         match directive.kind {
@@ -367,7 +367,7 @@ impl Parser {
 }
 
 pub struct DeclarationContext<'ctx> {
-    qualifiers: Vec<(TypeQualifier, Span)>,
+    qualifiers: Vec<(TypeQualifier, SourceMetadata)>,
     external: bool,
 
     ctx: &'ctx mut Context,
@@ -381,7 +381,7 @@ impl<'ctx> DeclarationContext<'ctx> {
         ty: Handle<Type>,
         name: String,
         init: Option<Handle<Constant>>,
-        meta: Span,
+        meta: SourceMetadata,
     ) -> Result<Handle<Expression>> {
         let decl = VarDeclaration {
             qualifiers: &self.qualifiers,

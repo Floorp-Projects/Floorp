@@ -5,13 +5,13 @@ use super::{
     },
     error::{Error, ErrorKind},
     types::{scalar_components, type_power},
-    Parser, Result,
+    Parser, Result, SourceMetadata,
 };
 use crate::{
     front::{Emitter, Typifier},
     Arena, BinaryOperator, Block, Constant, Expression, FastHashMap, FunctionArgument, Handle,
-    LocalVariable, RelationalFunction, ScalarKind, ScalarValue, Span, Statement, StorageClass,
-    Type, TypeInner, VectorSize,
+    LocalVariable, RelationalFunction, ScalarKind, ScalarValue, Statement, StorageClass, Type,
+    TypeInner, VectorSize,
 };
 use std::{convert::TryFrom, ops::Index};
 
@@ -24,18 +24,15 @@ pub enum ExprPos {
     Rhs,
     /// The expression is an array being indexed, needed to allow constant
     /// arrays to be dinamically indexed
-    ArrayBase {
-        /// The index is a constant
-        constant_index: bool,
-    },
+    ArrayBase,
 }
 
 impl ExprPos {
     /// Returns an lhs position if the current position is lhs otherwise ArrayBase
-    fn maybe_array_base(&self, constant_index: bool) -> Self {
+    fn maybe_array_base(&self) -> Self {
         match *self {
             ExprPos::Lhs => *self,
-            _ => ExprPos::ArrayBase { constant_index },
+            _ => ExprPos::ArrayBase,
         }
     }
 }
@@ -102,57 +99,51 @@ impl Context {
         body: &mut Block,
     ) {
         self.emit_flush(body);
-        let (expr, load, constant) = match kind {
+        let (expr, load) = match kind {
             GlobalLookupKind::Variable(v) => {
-                let span = parser.module.global_variables.get_span(v);
+                let span = parser.module.global_variables.get_span(v).clone();
                 let res = (
                     self.expressions.append(Expression::GlobalVariable(v), span),
                     parser.module.global_variables[v].class != StorageClass::Handle,
-                    None,
                 );
                 self.emit_start();
 
                 res
             }
             GlobalLookupKind::BlockSelect(handle, index) => {
-                let span = parser.module.global_variables.get_span(handle);
+                let span = parser.module.global_variables.get_span(handle).clone();
                 let base = self
                     .expressions
-                    .append(Expression::GlobalVariable(handle), span);
+                    .append(Expression::GlobalVariable(handle), span.clone());
                 self.emit_start();
                 let expr = self
                     .expressions
                     .append(Expression::AccessIndex { base, index }, span);
 
-                (
-                    expr,
-                    {
-                        let ty = parser.module.global_variables[handle].ty;
+                (expr, {
+                    let ty = parser.module.global_variables[handle].ty;
 
-                        match parser.module.types[ty].inner {
-                            TypeInner::Struct { ref members, .. } => {
-                                if let TypeInner::Array {
-                                    size: crate::ArraySize::Dynamic,
-                                    ..
-                                } = parser.module.types[members[index as usize].ty].inner
-                                {
-                                    false
-                                } else {
-                                    true
-                                }
+                    match parser.module.types[ty].inner {
+                        TypeInner::Struct { ref members, .. } => {
+                            if let TypeInner::Array {
+                                size: crate::ArraySize::Dynamic,
+                                ..
+                            } = parser.module.types[members[index as usize].ty].inner
+                            {
+                                false
+                            } else {
+                                true
                             }
-                            _ => true,
                         }
-                    },
-                    None,
-                )
+                        _ => true,
+                    }
+                })
             }
-            GlobalLookupKind::Constant(v, ty) => {
-                let span = parser.module.constants.get_span(v);
+            GlobalLookupKind::Constant(v) => {
+                let span = parser.module.constants.get_span(v).clone();
                 let res = (
                     self.expressions.append(Expression::Constant(v), span),
                     false,
-                    Some((v, ty)),
                 );
                 self.emit_start();
                 res
@@ -163,7 +154,6 @@ impl Context {
             expr,
             load,
             mutable,
-            constant,
             entry_arg,
         };
 
@@ -181,14 +171,14 @@ impl Context {
     pub fn add_expression(
         &mut self,
         expr: Expression,
-        meta: Span,
+        meta: SourceMetadata,
         body: &mut Block,
     ) -> Handle<Expression> {
         let needs_pre_emit = expr.needs_pre_emit();
         if needs_pre_emit {
             self.emit_flush(body);
         }
-        let handle = self.expressions.append(expr, meta);
+        let handle = self.expressions.append(expr, meta.as_span());
         if needs_pre_emit {
             self.emit_start();
         }
@@ -226,7 +216,6 @@ impl Context {
                     expr,
                     load: true,
                     mutable,
-                    constant: None,
                     entry_arg: None,
                 },
             );
@@ -238,7 +227,7 @@ impl Context {
         &mut self,
         parser: &mut Parser,
         body: &mut Block,
-        name_meta: Option<(String, Span)>,
+        name_meta: Option<(String, SourceMetadata)>,
         ty: Handle<Type>,
         qualifier: ParameterQualifier,
     ) {
@@ -256,8 +245,8 @@ impl Context {
         };
 
         if qualifier.is_lhs() {
-            let span = parser.module.types.get_span(arg.ty);
-            arg.ty = parser.module.types.insert(
+            let span = parser.module.types.get_span(arg.ty).clone();
+            arg.ty = parser.module.types.fetch_or_append(
                 Type {
                     name: None,
                     inner: TypeInner::Pointer {
@@ -288,7 +277,7 @@ impl Context {
                         ty,
                         init: None,
                     },
-                    meta,
+                    meta.as_span(),
                 );
                 let local_expr = self.add_expression(Expression::LocalVariable(handle), meta, body);
 
@@ -300,7 +289,7 @@ impl Context {
                         pointer: local_expr,
                         value: expr,
                     },
-                    meta,
+                    meta.as_span(),
                 );
 
                 if let Some(current) = self.scopes.last_mut() {
@@ -310,7 +299,6 @@ impl Context {
                             expr: local_expr,
                             load: true,
                             mutable,
-                            constant: None,
                             entry_arg: None,
                         },
                     );
@@ -322,7 +310,6 @@ impl Context {
                         expr,
                         load,
                         mutable,
-                        constant: None,
                         entry_arg: None,
                     },
                 );
@@ -360,7 +347,7 @@ impl Context {
         expr: Handle<HirExpr>,
         pos: ExprPos,
         body: &mut Block,
-    ) -> Result<(Option<Handle<Expression>>, Span)> {
+    ) -> Result<(Option<Handle<Expression>>, SourceMetadata)> {
         let res = self.lower_inner(&stmt, parser, expr, pos, body);
 
         stmt.hir_exprs.clear();
@@ -381,7 +368,7 @@ impl Context {
         expr: Handle<HirExpr>,
         pos: ExprPos,
         body: &mut Block,
-    ) -> Result<(Handle<Expression>, Span)> {
+    ) -> Result<(Handle<Expression>, SourceMetadata)> {
         let res = self.lower_expect_inner(&stmt, parser, expr, pos, body);
 
         stmt.hir_exprs.clear();
@@ -402,7 +389,7 @@ impl Context {
         expr: Handle<HirExpr>,
         pos: ExprPos,
         body: &mut Block,
-    ) -> Result<(Handle<Expression>, Span)> {
+    ) -> Result<(Handle<Expression>, SourceMetadata)> {
         let (maybe_expr, meta) = self.lower_inner(stmt, parser, expr, pos, body)?;
 
         let expr = match maybe_expr {
@@ -426,31 +413,20 @@ impl Context {
         expr: Handle<HirExpr>,
         pos: ExprPos,
         body: &mut Block,
-    ) -> Result<(Option<Handle<Expression>>, Span)> {
+    ) -> Result<(Option<Handle<Expression>>, SourceMetadata)> {
         let HirExpr { ref kind, meta } = stmt.hir_exprs[expr];
 
         let handle = match *kind {
             HirExprKind::Access { base, index } => {
+                let base = self
+                    .lower_expect_inner(stmt, parser, base, pos.maybe_array_base(), body)?
+                    .0;
                 let (index, index_meta) =
                     self.lower_expect_inner(stmt, parser, index, ExprPos::Rhs, body)?;
-                let maybe_constant_index = match pos {
-                    // Don't try to generate `AccessIndex` if in a LHS position, since it
-                    // wouldn't produce a pointer.
-                    ExprPos::Lhs => None,
-                    _ => parser.solve_constant(self, index, index_meta).ok(),
-                };
 
-                let base = self
-                    .lower_expect_inner(
-                        stmt,
-                        parser,
-                        base,
-                        pos.maybe_array_base(maybe_constant_index.is_some()),
-                        body,
-                    )?
-                    .0;
-
-                let pointer = maybe_constant_index
+                let pointer = parser
+                    .solve_constant(self, index, index_meta)
+                    .ok()
                     .and_then(|constant| {
                         Some(self.add_expression(
                             Expression::AccessIndex {
@@ -492,10 +468,10 @@ impl Context {
 
                 parser.field_selection(self, ExprPos::Lhs == pos, body, base, field, meta)?
             }
-            HirExprKind::Constant(constant) if pos != ExprPos::Lhs => {
+            HirExprKind::Constant(constant) if pos == ExprPos::Rhs => {
                 self.add_expression(Expression::Constant(constant), meta, body)
             }
-            HirExprKind::Binary { left, op, right } if pos != ExprPos::Lhs => {
+            HirExprKind::Binary { left, op, right } if pos == ExprPos::Rhs => {
                 let (mut left, left_meta) =
                     self.lower_expect_inner(stmt, parser, left, pos, body)?;
                 let (mut right, right_meta) =
@@ -528,7 +504,7 @@ impl Context {
 
                             let argument = self
                                 .expressions
-                                .append(Expression::Binary { op, left, right }, meta);
+                                .append(Expression::Binary { op, left, right }, meta.as_span());
 
                             self.add_expression(
                                 Expression::Relational { fun, argument },
@@ -544,9 +520,6 @@ impl Context {
                         BinaryOperator::Add
                         | BinaryOperator::Subtract
                         | BinaryOperator::Divide
-                        | BinaryOperator::And
-                        | BinaryOperator::ExclusiveOr
-                        | BinaryOperator::InclusiveOr
                         | BinaryOperator::ShiftLeft
                         | BinaryOperator::ShiftRight => {
                             let scalar_vector = self.add_expression(
@@ -570,12 +543,7 @@ impl Context {
                         }
                     },
                     (&TypeInner::Scalar { .. }, &TypeInner::Vector { size, .. }) => match op {
-                        BinaryOperator::Add
-                        | BinaryOperator::Subtract
-                        | BinaryOperator::Divide
-                        | BinaryOperator::And
-                        | BinaryOperator::ExclusiveOr
-                        | BinaryOperator::InclusiveOr => {
+                        BinaryOperator::Add | BinaryOperator::Subtract | BinaryOperator::Divide => {
                             let scalar_vector = self.add_expression(
                                 Expression::Splat { size, value: left },
                                 meta,
@@ -599,14 +567,14 @@ impl Context {
                     _ => self.add_expression(Expression::Binary { left, op, right }, meta, body),
                 }
             }
-            HirExprKind::Unary { op, expr } if pos != ExprPos::Lhs => {
+            HirExprKind::Unary { op, expr } if pos == ExprPos::Rhs => {
                 let expr = self.lower_expect_inner(stmt, parser, expr, pos, body)?.0;
 
                 self.add_expression(Expression::Unary { op, expr }, meta, body)
             }
-            HirExprKind::Variable(ref var) => match pos {
-                ExprPos::Lhs => {
-                    if !var.mutable {
+            HirExprKind::Variable(ref var) => {
+                if pos != ExprPos::Rhs {
+                    if !var.mutable && ExprPos::Lhs == pos {
                         parser.errors.push(Error {
                             kind: ErrorKind::SemanticError(
                                 "Variable cannot be used in LHS position".into(),
@@ -616,30 +584,12 @@ impl Context {
                     }
 
                     var.expr
-                }
-                ExprPos::ArrayBase {
-                    constant_index: false,
-                } => {
-                    if let Some((constant, ty)) = var.constant {
-                        let local = self.locals.append(
-                            LocalVariable {
-                                name: None,
-                                ty,
-                                init: Some(constant),
-                            },
-                            Span::default(),
-                        );
-
-                        self.add_expression(Expression::LocalVariable(local), Span::default(), body)
-                    } else {
-                        var.expr
-                    }
-                }
-                _ if var.load => {
+                } else if var.load {
                     self.add_expression(Expression::Load { pointer: var.expr }, meta, body)
+                } else {
+                    var.expr
                 }
-                _ => var.expr,
-            },
+            }
             HirExprKind::Call(ref call) if pos != ExprPos::Lhs => {
                 let maybe_expr = parser.function_or_constructor_call(
                     self,
@@ -739,120 +689,114 @@ impl Context {
                                 pointer: dst,
                                 value: src,
                             },
-                            meta,
+                            meta.as_span(),
                         );
                     }
                 } else {
                     self.emit_flush(body);
                     self.emit_start();
 
-                    body.push(Statement::Store { pointer, value }, meta);
+                    body.push(Statement::Store { pointer, value }, meta.as_span());
                 }
 
                 value
             }
-            HirExprKind::PrePostfix { op, postfix, expr } if ExprPos::Lhs != pos => {
+            HirExprKind::IncDec {
+                increment,
+                postfix,
+                expr,
+            } => {
+                let op = match increment {
+                    true => BinaryOperator::Add,
+                    false => BinaryOperator::Subtract,
+                };
+
                 let pointer = self
                     .lower_expect_inner(stmt, parser, expr, ExprPos::Lhs, body)?
                     .0;
                 let left = self.add_expression(Expression::Load { pointer }, meta, body);
 
-                let make_constant_inner = |kind, width| {
-                    let value = match kind {
-                        ScalarKind::Sint => crate::ScalarValue::Sint(1),
-                        ScalarKind::Uint => crate::ScalarValue::Uint(1),
-                        ScalarKind::Float => crate::ScalarValue::Float(1.0),
-                        ScalarKind::Bool => return None,
-                    };
-
-                    Some(crate::ConstantInner::Scalar { width, value })
-                };
-                let res = match *parser.resolve_type(self, left, meta)? {
-                    TypeInner::Scalar { kind, width } => {
-                        let ty = TypeInner::Scalar { kind, width };
-                        make_constant_inner(kind, width).map(|i| (ty, i, None, None))
-                    }
-                    TypeInner::Vector { size, kind, width } => {
-                        let ty = TypeInner::Vector { size, kind, width };
-                        make_constant_inner(kind, width).map(|i| (ty, i, Some(size), None))
-                    }
-                    TypeInner::Matrix {
-                        columns,
-                        rows,
-                        width,
-                    } => {
-                        let ty = TypeInner::Matrix {
-                            columns,
-                            rows,
-                            width,
-                        };
-                        make_constant_inner(ScalarKind::Float, width)
-                            .map(|i| (ty, i, Some(rows), Some(columns)))
-                    }
-                    _ => None,
-                };
-                let (ty_inner, inner, rows, columns) = match res {
-                    Some(res) => res,
-                    None => {
+                let uint = match parser.resolve_type(self, left, meta)?.scalar_kind() {
+                    Some(ScalarKind::Sint) => false,
+                    Some(ScalarKind::Uint) => true,
+                    _ => {
                         parser.errors.push(Error {
                             kind: ErrorKind::SemanticError(
-                                "Increment/decrement only works on scalar/vector/matrix".into(),
+                                "Increment/decrement operations must operate in integers".into(),
                             ),
                             meta,
                         });
-                        return Ok((Some(left), meta));
+                        true
                     }
                 };
 
-                let constant_1 = parser.module.constants.append(
+                let one = parser.module.constants.append(
                     Constant {
                         name: None,
                         specialization: None,
-                        inner,
+                        inner: crate::ConstantInner::Scalar {
+                            width: 4,
+                            value: match uint {
+                                true => crate::ScalarValue::Uint(1),
+                                false => crate::ScalarValue::Sint(1),
+                            },
+                        },
                     },
                     Default::default(),
                 );
-                let mut right = self.add_expression(Expression::Constant(constant_1), meta, body);
-
-                // Glsl allows pre/postfixes operations on vectors and matrices, so if the
-                // target is either of them change the right side of the addition to be splatted
-                // to the same size as the target, furthermore if the target is a matrix
-                // use a composed matrix using the splatted value.
-                if let Some(size) = rows {
-                    right =
-                        self.add_expression(Expression::Splat { size, value: right }, meta, body);
-
-                    if let Some(cols) = columns {
-                        let ty = parser.module.types.insert(
-                            Type {
-                                name: None,
-                                inner: ty_inner,
-                            },
-                            meta,
-                        );
-
-                        right = self.add_expression(
-                            Expression::Compose {
-                                ty,
-                                components: std::iter::repeat(right).take(cols as usize).collect(),
-                            },
-                            meta,
-                            body,
-                        );
-                    }
-                }
+                let right = self.add_expression(Expression::Constant(one), meta, body);
 
                 let value = self.add_expression(Expression::Binary { op, left, right }, meta, body);
 
-                self.emit_flush(body);
-                self.emit_start();
-
-                body.push(Statement::Store { pointer, value }, meta);
-
                 if postfix {
-                    left
+                    let local = self.locals.append(
+                        LocalVariable {
+                            name: None,
+                            ty: parser.module.types.fetch_or_append(
+                                Type {
+                                    name: None,
+                                    inner: TypeInner::Scalar {
+                                        kind: match uint {
+                                            true => ScalarKind::Uint,
+                                            false => ScalarKind::Sint,
+                                        },
+                                        width: 4,
+                                    },
+                                },
+                                meta.as_span(),
+                            ),
+                            init: None,
+                        },
+                        meta.as_span(),
+                    );
+
+                    let expr = self.add_expression(Expression::LocalVariable(local), meta, body);
+                    let load = self.add_expression(Expression::Load { pointer: expr }, meta, body);
+
+                    self.emit_flush(body);
+                    self.emit_start();
+
+                    body.push(
+                        Statement::Store {
+                            pointer: expr,
+                            value: left,
+                        },
+                        meta.as_span(),
+                    );
+
+                    self.emit_flush(body);
+                    self.emit_start();
+
+                    body.push(Statement::Store { pointer, value }, meta.as_span());
+
+                    load
                 } else {
-                    value
+                    self.emit_flush(body);
+                    self.emit_start();
+
+                    body.push(Statement::Store { pointer, value }, meta.as_span());
+
+                    left
                 }
             }
             _ => {
@@ -873,7 +817,7 @@ impl Context {
         &mut self,
         parser: &mut Parser,
         expr: Handle<Expression>,
-        meta: Span,
+        meta: SourceMetadata,
     ) -> Result<Option<(ScalarKind, crate::Bytes)>> {
         let ty = parser.resolve_type(self, expr, meta)?;
         Ok(scalar_components(ty))
@@ -883,37 +827,18 @@ impl Context {
         &mut self,
         parser: &mut Parser,
         expr: Handle<Expression>,
-        meta: Span,
+        meta: SourceMetadata,
     ) -> Result<Option<u32>> {
         Ok(self
             .expr_scalar_components(parser, expr, meta)?
             .and_then(|(kind, width)| type_power(kind, width)))
     }
 
-    pub fn conversion(
-        &mut self,
-        expr: &mut Handle<Expression>,
-        meta: Span,
-        kind: ScalarKind,
-        width: crate::Bytes,
-    ) -> Result<()> {
-        *expr = self.expressions.append(
-            Expression::As {
-                expr: *expr,
-                kind,
-                convert: Some(width),
-            },
-            meta,
-        );
-
-        Ok(())
-    }
-
     pub fn implicit_conversion(
         &mut self,
         parser: &mut Parser,
         expr: &mut Handle<Expression>,
-        meta: Span,
+        meta: SourceMetadata,
         kind: ScalarKind,
         width: crate::Bytes,
     ) -> Result<()> {
@@ -922,7 +847,14 @@ impl Context {
             self.expr_power(parser, *expr, meta)?,
         ) {
             if tgt_power > expr_power {
-                self.conversion(expr, meta, kind, width)?;
+                *expr = self.expressions.append(
+                    Expression::As {
+                        expr: *expr,
+                        kind,
+                        convert: Some(width),
+                    },
+                    meta.as_span(),
+                )
             }
         }
 
@@ -933,9 +865,9 @@ impl Context {
         &mut self,
         parser: &mut Parser,
         left: &mut Handle<Expression>,
-        left_meta: Span,
+        left_meta: SourceMetadata,
         right: &mut Handle<Expression>,
-        right_meta: Span,
+        right_meta: SourceMetadata,
     ) -> Result<()> {
         let left_components = self.expr_scalar_components(parser, *left, left_meta)?;
         let right_components = self.expr_scalar_components(parser, *right, right_meta)?;
@@ -950,11 +882,25 @@ impl Context {
         ) {
             match left_power.cmp(&right_power) {
                 std::cmp::Ordering::Less => {
-                    self.conversion(left, left_meta, right_kind, right_width)?;
+                    *left = self.expressions.append(
+                        Expression::As {
+                            expr: *left,
+                            kind: right_kind,
+                            convert: Some(right_width),
+                        },
+                        left_meta.as_span(),
+                    )
                 }
                 std::cmp::Ordering::Equal => {}
                 std::cmp::Ordering::Greater => {
-                    self.conversion(right, right_meta, left_kind, left_width)?;
+                    *right = self.expressions.append(
+                        Expression::As {
+                            expr: *right,
+                            kind: left_kind,
+                            convert: Some(left_width),
+                        },
+                        right_meta.as_span(),
+                    )
                 }
             }
         }
@@ -966,7 +912,7 @@ impl Context {
         &mut self,
         parser: &mut Parser,
         expr: &mut Handle<Expression>,
-        meta: Span,
+        meta: SourceMetadata,
         vector_size: Option<VectorSize>,
     ) -> Result<()> {
         let expr_type = parser.resolve_type(self, *expr, meta)?;
@@ -974,7 +920,7 @@ impl Context {
         if let (&TypeInner::Scalar { .. }, Some(size)) = (expr_type, vector_size) {
             *expr = self
                 .expressions
-                .append(Expression::Splat { size, value: *expr }, meta)
+                .append(Expression::Splat { size, value: *expr }, meta.as_span())
         }
 
         Ok(())
@@ -984,7 +930,7 @@ impl Context {
         &mut self,
         size: VectorSize,
         vector: Handle<Expression>,
-        meta: Span,
+        meta: SourceMetadata,
         body: &mut Block,
     ) -> Handle<Expression> {
         self.add_expression(

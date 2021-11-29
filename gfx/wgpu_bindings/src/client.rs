@@ -134,7 +134,7 @@ pub struct PrimitiveState<'a> {
     front_face: wgt::FrontFace,
     cull_mode: Option<&'a wgt::Face>,
     polygon_mode: wgt::PolygonMode,
-    unclipped_depth: bool,
+    clamp_depth: bool,
 }
 
 impl PrimitiveState<'_> {
@@ -145,7 +145,7 @@ impl PrimitiveState<'_> {
             front_face: self.front_face.clone(),
             cull_mode: self.cull_mode.cloned(),
             polygon_mode: self.polygon_mode,
-            unclipped_depth: self.unclipped_depth,
+            clamp_depth: self.clamp_depth,
             conservative: false,
         }
     }
@@ -628,7 +628,6 @@ pub extern "C" fn wgpu_device_create_render_bundle_encoder(
                 stencil_read_only: false,
             }),
         sample_count: desc.sample_count,
-        multiview: None,
     };
     match wgc::command::RenderBundleEncoder::new(&descriptor, device_id, None) {
         Ok(encoder) => Box::into_raw(Box::new(encoder)),
@@ -778,15 +777,10 @@ pub unsafe extern "C" fn wgpu_client_create_bind_group_layout(
                     has_dynamic_offset: entry.has_dynamic_offset,
                     min_binding_size: entry.min_binding_size,
                 },
-                RawBindingType::Sampler => wgt::BindingType::Sampler(
-                    if entry.sampler_compare {
-                        wgt::SamplerBindingType::Comparison
-                    } else if entry.sampler_filter {
-                        wgt::SamplerBindingType::Filtering
-                    } else {
-                        wgt::SamplerBindingType::NonFiltering
-                    }
-                ),
+                RawBindingType::Sampler => wgt::BindingType::Sampler {
+                    comparison: entry.sampler_compare,
+                    filtering: entry.sampler_filter,
+                },
                 RawBindingType::SampledTexture => wgt::BindingType::Texture {
                     //TODO: the spec has a bug here
                     view_dimension: *entry
@@ -921,7 +915,6 @@ pub unsafe extern "C" fn wgpu_client_create_shader_module(
         std::str::from_utf8_unchecked(std::slice::from_raw_parts(desc.code, desc.code_length));
     let desc = wgc::pipeline::ShaderModuleDescriptor {
         label: cow_label(&desc.label),
-        shader_bound_checks: wgt::ShaderBoundChecks::new(),
     };
 
     let action = DeviceAction::CreateShaderModule(id, desc, Cow::Borrowed(code));
@@ -986,7 +979,6 @@ pub unsafe extern "C" fn wgpu_client_create_render_pipeline(
         primitive: desc.primitive.to_wgpu(),
         depth_stencil: desc.depth_stencil.cloned(),
         multisample: desc.multisample.clone(),
-        multiview: None,
     };
 
     let implicit = match desc.layout {

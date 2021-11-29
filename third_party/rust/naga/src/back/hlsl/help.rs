@@ -244,7 +244,7 @@ impl<'a, W: Write> super::Writer<'a, W> {
             ImageDimension as IDim,
         };
 
-        const ARGUMENT_VARIABLE_NAME: &str = "tex";
+        const ARGUMENT_VARIABLE_NAME: &str = "texture";
         const RETURN_VARIABLE_NAME: &str = "ret";
         const MIP_LEVEL_PARAM: &str = "mip_level";
 

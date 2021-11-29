@@ -10,7 +10,7 @@ use crate::{
         token::{Token, TokenValue},
         types::scalar_components,
         variables::{GlobalOrConstant, VarDeclaration},
-        Error, ErrorKind, Parser, Span,
+        Error, ErrorKind, Parser, SourceMetadata,
     },
     Block, Expression, FunctionResult, Handle, ScalarKind, Statement, StorageClass, StructMember,
     Type, TypeInner,
@@ -54,7 +54,7 @@ impl<'source> ParsingContext<'source> {
         ty: Handle<Type>,
         ctx: &mut Context,
         body: &mut Block,
-    ) -> Result<(Handle<Expression>, Span)> {
+    ) -> Result<(Handle<Expression>, SourceMetadata)> {
         // initializer:
         //     assignment_expression
         //     LEFT_BRACE initializer_list RIGHT_BRACE
@@ -76,12 +76,12 @@ impl<'source> ParsingContext<'source> {
                         if let Some(Token { meta: end_meta, .. }) =
                             self.bump_if(parser, TokenValue::RightBrace)
                         {
-                            meta.subsume(end_meta);
+                            meta = meta.union(&end_meta);
                             break;
                         }
                     }
                     TokenValue::RightBrace => {
-                        meta.subsume(token.meta);
+                        meta = meta.union(&token.meta);
                         break;
                     }
                     _ => {
@@ -190,7 +190,7 @@ impl<'source> ParsingContext<'source> {
                             .implicit_conversion(parser, &mut expr, init_meta, kind, width)?;
                     }
 
-                    meta.subsume(init_meta);
+                    meta = meta.union(&init_meta);
 
                     Ok((expr, init_meta))
                 })
@@ -206,7 +206,8 @@ impl<'source> ParsingContext<'source> {
 
             if let Some((value, _)) = init.filter(|_| maybe_constant.is_none()) {
                 ctx.flush_expressions();
-                ctx.body.push(Statement::Store { pointer, value }, meta);
+                ctx.body
+                    .push(Statement::Store { pointer, value }, meta.as_span());
             }
 
             let token = self.bump(parser)?;
@@ -235,7 +236,7 @@ impl<'source> ParsingContext<'source> {
         ctx: &mut Context,
         body: &mut Block,
         external: bool,
-    ) -> Result<Option<Span>> {
+    ) -> Result<Option<SourceMetadata>> {
         //declaration:
         //    function_prototype  SEMICOLON
         //
@@ -271,7 +272,7 @@ impl<'source> ParsingContext<'source> {
                             self.parse_function_args(parser, &mut context, &mut body)?;
 
                             let end_meta = self.expect(parser, TokenValue::RightParen)?.meta;
-                            meta.subsume(end_meta);
+                            meta = meta.union(&end_meta);
 
                             let token = self.bump(parser)?;
                             return match token.value {
@@ -378,7 +379,7 @@ impl<'source> ParsingContext<'source> {
                     TokenValue::Semicolon => {
                         let mut meta_all = token.meta;
                         for &(ref qualifier, meta) in qualifiers.iter() {
-                            meta_all.subsume(meta);
+                            meta_all = meta_all.union(&meta);
                             match *qualifier {
                                 TypeQualifier::WorkGroupSize(i, value) => {
                                     parser.meta.workgroup_size[i] = value
@@ -470,10 +471,10 @@ impl<'source> ParsingContext<'source> {
         parser: &mut Parser,
         ctx: &mut Context,
         body: &mut Block,
-        qualifiers: &[(TypeQualifier, Span)],
+        qualifiers: &[(TypeQualifier, SourceMetadata)],
         ty_name: String,
-        meta: Span,
-    ) -> Result<Span> {
+        meta: SourceMetadata,
+    ) -> Result<SourceMetadata> {
         let mut storage = None;
         let mut layout = None;
 
@@ -497,7 +498,7 @@ impl<'source> ParsingContext<'source> {
         let span = self.parse_struct_declaration_list(parser, &mut members, layout)?;
         self.expect(parser, TokenValue::RightBrace)?;
 
-        let mut ty = parser.module.types.insert(
+        let mut ty = parser.module.types.append(
             Type {
                 name: Some(ty_name),
                 inner: TypeInner::Struct {
@@ -543,14 +544,15 @@ impl<'source> ParsingContext<'source> {
             },
         )?;
 
-        for (i, k, ty) in members.into_iter().enumerate().filter_map(|(i, m)| {
-            let ty = m.ty;
-            m.name.map(|s| (i as u32, s, ty))
-        }) {
+        for (i, k) in members
+            .into_iter()
+            .enumerate()
+            .filter_map(|(i, m)| m.name.map(|s| (i as u32, s)))
+        {
             let lookup = GlobalLookup {
                 kind: match global {
                     GlobalOrConstant::Global(handle) => GlobalLookupKind::BlockSelect(handle, i),
-                    GlobalOrConstant::Constant(handle) => GlobalLookupKind::Constant(handle, ty),
+                    GlobalOrConstant::Constant(handle) => GlobalLookupKind::Constant(handle),
                 },
                 entry_arg: None,
                 mutable: true,
@@ -579,7 +581,7 @@ impl<'source> ParsingContext<'source> {
             let (ty, mut meta) = self.parse_type_non_void(parser)?;
             let (name, end_meta) = self.expect_ident(parser)?;
 
-            meta.subsume(end_meta);
+            meta = meta.union(&end_meta);
 
             let array_specifier = self.parse_array_specifier(parser)?;
             let ty = parser.maybe_array(ty, meta, array_specifier);

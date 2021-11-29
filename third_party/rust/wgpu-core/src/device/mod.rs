@@ -3,10 +3,7 @@ use crate::{
     device::life::WaitIdleError,
     hub::{Global, GlobalIdentityHandlerFactory, HalApi, Hub, Input, InvalidId, Storage, Token},
     id,
-    init_tracker::{
-        BufferInitTracker, BufferInitTrackerAction, MemoryInitKind, TextureInitRange,
-        TextureInitTracker, TextureInitTrackerAction,
-    },
+    init_tracker::{BufferInitTracker, BufferInitTrackerAction, MemoryInitKind},
     instance, pipeline, present, resource,
     track::{BufferState, TextureSelector, TextureState, TrackerSet, UsageConflict},
     validation::{self, check_buffer_usage, check_texture_usage},
@@ -22,7 +19,7 @@ use smallvec::SmallVec;
 use thiserror::Error;
 use wgt::{BufferAddress, TextureFormat, TextureViewDimension};
 
-use std::{borrow::Cow, iter, marker::PhantomData, mem, num::NonZeroU32, ops::Range, ptr};
+use std::{borrow::Cow, iter, marker::PhantomData, mem, ops::Range, ptr};
 
 mod life;
 pub mod queue;
@@ -30,9 +27,6 @@ pub mod queue;
 pub mod trace;
 
 pub const SHADER_STAGE_COUNT: usize = 3;
-// Should be large enough for the largest possible texture row. This value is enough for a 16k texture with float4 format.
-pub(crate) const ZERO_BUFFER_SIZE: BufferAddress = 512 << 10;
-
 const CLEANUP_WAIT_MS: u32 = 5000;
 
 const IMPLICIT_FAILURE: &str = "failed implicit";
@@ -72,7 +66,6 @@ impl<T> AttachmentData<T> {
 pub(crate) struct RenderPassContext {
     pub attachments: AttachmentData<TextureFormat>,
     pub sample_count: u32,
-    pub multiview: Option<NonZeroU32>,
 }
 #[derive(Clone, Debug, Error)]
 pub enum RenderPassCompatibilityError {
@@ -85,8 +78,6 @@ pub enum RenderPassCompatibilityError {
     IncompatibleDepthStencilAttachment(Option<TextureFormat>, Option<TextureFormat>),
     #[error("Incompatible sample count: {0:?} != {1:?}")]
     IncompatibleSampleCount(u32, u32),
-    #[error("Incompatible multiview: {0:?} != {1:?}")]
-    IncompatibleMultiview(Option<NonZeroU32>, Option<NonZeroU32>),
 }
 
 impl RenderPassContext {
@@ -113,12 +104,6 @@ impl RenderPassContext {
             return Err(RenderPassCompatibilityError::IncompatibleSampleCount(
                 self.sample_count,
                 other.sample_count,
-            ));
-        }
-        if self.multiview != other.multiview {
-            return Err(RenderPassCompatibilityError::IncompatibleMultiview(
-                self.multiview,
-                other.multiview,
             ));
         }
         Ok(())
@@ -175,8 +160,6 @@ fn map_buffer<A: hal::Api>(
         _ => None,
     };
 
-    assert_eq!(offset % wgt::COPY_BUFFER_ALIGNMENT, 0);
-    assert_eq!(size % wgt::COPY_BUFFER_ALIGNMENT, 0);
     // Zero out uninitialized parts of the mapping. (Spec dictates all resources behave as if they were initialized with zero)
     //
     // If this is a read mapping, ideally we would use a `clear_buffer` command before reading the data from GPU (i.e. `invalidate_range`).
@@ -247,7 +230,7 @@ impl<A: hal::Api> CommandAllocator<A> {
 /// Structure describing a logical device. Some members are internally mutable,
 /// stored behind mutexes.
 /// TODO: establish clear order of locking for these:
-/// `mem_allocator`, `desc_allocator`, `life_tracker`, `trackers`,
+/// `mem_allocator`, `desc_allocator`, `life_tracke`, `trackers`,
 /// `render_passes`, `pending_writes`, `trace`.
 ///
 /// Currently, the rules are:
@@ -258,7 +241,6 @@ pub struct Device<A: hal::Api> {
     pub(crate) raw: A::Device,
     pub(crate) adapter_id: Stored<id::AdapterId>,
     pub(crate) queue: A::Queue,
-    pub(crate) zero_buffer: A::Buffer,
     //pub(crate) cmd_allocator: command::CommandAllocator<A>,
     //mem_allocator: Mutex<alloc::MemoryAllocator<A>>,
     //desc_allocator: Mutex<descriptor::DescriptorAllocator<A>>,
@@ -287,8 +269,6 @@ pub struct Device<A: hal::Api> {
 pub enum CreateDeviceError {
     #[error("not enough memory left")]
     OutOfMemory,
-    #[error("failed to create internal buffer for initializing textures")]
-    FailedToCreateZeroBuffer(#[from] DeviceError),
 }
 
 impl<A: hal::Api> Device<A> {
@@ -335,43 +315,12 @@ impl<A: HalApi> Device<A> {
         let pending_encoder = com_alloc
             .acquire_encoder(&open.device, &open.queue)
             .map_err(|_| CreateDeviceError::OutOfMemory)?;
-        let mut pending_writes = queue::PendingWrites::<A>::new(pending_encoder);
-
-        // Create zeroed buffer used for texture clears.
-        let zero_buffer = unsafe {
-            open.device
-                .create_buffer(&hal::BufferDescriptor {
-                    label: Some("wgpu zero init buffer"),
-                    size: ZERO_BUFFER_SIZE,
-                    usage: hal::BufferUses::COPY_SRC | hal::BufferUses::COPY_DST,
-                    memory_flags: hal::MemoryFlags::empty(),
-                })
-                .map_err(DeviceError::from)?
-        };
-        pending_writes.activate();
-        unsafe {
-            pending_writes
-                .command_encoder
-                .transition_buffers(iter::once(hal::BufferBarrier {
-                    buffer: &zero_buffer,
-                    usage: hal::BufferUses::empty()..hal::BufferUses::COPY_DST,
-                }));
-            pending_writes
-                .command_encoder
-                .clear_buffer(&zero_buffer, 0..ZERO_BUFFER_SIZE);
-            pending_writes
-                .command_encoder
-                .transition_buffers(iter::once(hal::BufferBarrier {
-                    buffer: &zero_buffer,
-                    usage: hal::BufferUses::COPY_DST..hal::BufferUses::COPY_SRC,
-                }));
-        }
+        let pending_writes = queue::PendingWrites::new(pending_encoder);
 
         Ok(Self {
             raw: open.device,
             adapter_id,
             queue: open.queue,
-            zero_buffer,
             life_guard: LifeGuard::new("<device>"),
             command_allocator: Mutex::new(com_alloc),
             active_submission_index: 0,
@@ -462,13 +411,13 @@ impl<A: HalApi> Device<A> {
         &'this mut self,
         hub: &Hub<A, G>,
         trackers: &TrackerSet,
-        token: &mut Token<'token, Self>,
+        mut token: &mut Token<'token, Self>,
     ) {
         self.temp_suspected.clear();
         // As the tracker is cleared/dropped, we need to consider all the resources
         // that it references for destruction in the next GC pass.
         {
-            let (bind_group_guard, mut token) = hub.bind_groups.read(token);
+            let (bind_group_guard, mut token) = hub.bind_groups.read(&mut token);
             let (compute_pipe_guard, mut token) = hub.compute_pipelines.read(&mut token);
             let (render_pipe_guard, mut token) = hub.render_pipelines.read(&mut token);
             let (query_set_guard, mut token) = hub.query_sets.read(&mut token);
@@ -519,7 +468,7 @@ impl<A: HalApi> Device<A> {
             }
         }
 
-        self.lock_life(token)
+        self.lock_life(&mut token)
             .suspected_resources
             .extend(&self.temp_suspected);
 
@@ -561,19 +510,13 @@ impl<A: HalApi> Device<A> {
         } else {
             desc.size
         };
-        let clear_remainder = actual_size % wgt::COPY_BUFFER_ALIGNMENT;
-        let aligned_size = if clear_remainder != 0 {
-            actual_size + wgt::COPY_BUFFER_ALIGNMENT - clear_remainder
-        } else {
-            actual_size
-        };
 
         let mut memory_flags = hal::MemoryFlags::empty();
         memory_flags.set(hal::MemoryFlags::TRANSIENT, transient);
 
         let hal_desc = hal::BufferDescriptor {
             label: desc.label.borrow_option(),
-            size: aligned_size,
+            size: actual_size,
             usage,
             memory_flags,
         };
@@ -598,56 +541,12 @@ impl<A: HalApi> Device<A> {
         &self,
         hal_texture: A::Texture,
         self_id: id::DeviceId,
-        desc: &resource::TextureDescriptor,
-        format_features: wgt::TextureFormatFeatures,
-    ) -> resource::Texture<A> {
-        debug_assert_eq!(self_id.backend(), A::VARIANT);
-
-        let hal_usage = conv::map_texture_usage(desc.usage, desc.format.into());
-
-        resource::Texture {
-            inner: resource::TextureInner::Native {
-                raw: Some(hal_texture),
-            },
-            device_id: Stored {
-                value: id::Valid(self_id),
-                ref_count: self.life_guard.add_ref(),
-            },
-            desc: desc.map_label(|_| ()),
-            hal_usage,
-            format_features,
-            initialization_status: TextureInitTracker::new(
-                desc.mip_level_count,
-                desc.size.depth_or_array_layers,
-            ),
-            full_range: TextureSelector {
-                levels: 0..desc.mip_level_count,
-                layers: 0..desc.array_layer_count(),
-            },
-            life_guard: LifeGuard::new(desc.label.borrow_or_default()),
-        }
-    }
-
-    fn create_texture(
-        &self,
-        self_id: id::DeviceId,
         adapter: &crate::instance::Adapter<A>,
         desc: &resource::TextureDescriptor,
     ) -> Result<resource::Texture<A>, resource::CreateTextureError> {
-        // Enforce COPY_DST, otherwise we wouldn't be able to initialize the texture.
-        let hal_usage =
-            conv::map_texture_usage(desc.usage, desc.format.into()) | hal::TextureUses::COPY_DST;
+        debug_assert_eq!(self_id.backend(), A::VARIANT);
 
-        let hal_desc = hal::TextureDescriptor {
-            label: desc.label.borrow_option(),
-            size: desc.size,
-            mip_level_count: desc.mip_level_count,
-            sample_count: desc.sample_count,
-            dimension: desc.dimension,
-            format: desc.format,
-            usage: hal_usage,
-            memory_flags: hal::MemoryFlags::empty(),
-        };
+        let hal_usage = conv::map_texture_usage(desc.usage, desc.format.into());
 
         let format_features = self
             .describe_format_features(adapter, desc.format)
@@ -690,15 +589,49 @@ impl<A: HalApi> Device<A> {
             return Err(resource::CreateTextureError::InvalidMipLevelCount(mips));
         }
 
+        Ok(resource::Texture {
+            inner: resource::TextureInner::Native {
+                raw: Some(hal_texture),
+            },
+            device_id: Stored {
+                value: id::Valid(self_id),
+                ref_count: self.life_guard.add_ref(),
+            },
+            desc: desc.map_label(|_| ()),
+            hal_usage,
+            format_features,
+            full_range: TextureSelector {
+                levels: 0..desc.mip_level_count,
+                layers: 0..desc.array_layer_count(),
+            },
+            life_guard: LifeGuard::new(desc.label.borrow_or_default()),
+        })
+    }
+
+    fn create_texture(
+        &self,
+        self_id: id::DeviceId,
+        adapter: &crate::instance::Adapter<A>,
+        desc: &resource::TextureDescriptor,
+    ) -> Result<resource::Texture<A>, resource::CreateTextureError> {
+        let hal_usage = conv::map_texture_usage(desc.usage, desc.format.into());
+        let hal_desc = hal::TextureDescriptor {
+            label: desc.label.borrow_option(),
+            size: desc.size,
+            mip_level_count: desc.mip_level_count,
+            sample_count: desc.sample_count,
+            dimension: desc.dimension,
+            format: desc.format,
+            usage: hal_usage,
+            memory_flags: hal::MemoryFlags::empty(),
+        };
         let raw = unsafe {
             self.raw
                 .create_texture(&hal_desc)
                 .map_err(DeviceError::from)?
         };
 
-        let mut texture = self.create_texture_from_hal(raw, self_id, desc, format_features);
-        texture.hal_usage = hal_usage;
-        Ok(texture)
+        self.create_texture_from_hal(raw, self_id, adapter, desc)
     }
 
     fn create_texture_view(
@@ -876,7 +809,6 @@ impl<A: HalApi> Device<A> {
                 value: id::Valid(texture_id),
                 ref_count: texture.life_guard.add_ref(),
             },
-            device_id: texture.device_id.clone(),
             desc: resource::HalTextureViewDescriptor {
                 format: hal_desc.format,
                 dimension: hal_desc.dimension,
@@ -976,19 +908,25 @@ impl<A: HalApi> Device<A> {
         desc: &pipeline::ShaderModuleDescriptor<'a>,
         source: pipeline::ShaderModuleSource<'a>,
     ) -> Result<pipeline::ShaderModule<A>, pipeline::CreateShaderModuleError> {
-        let (module, source) = match source {
+        let module = match source {
             pipeline::ShaderModuleSource::Wgsl(code) => {
                 profiling::scope!("naga::wgsl::parse_str");
-                let module = naga::front::wgsl::parse_str(&code).map_err(|inner| {
-                    pipeline::CreateShaderModuleError::Parsing(pipeline::ShaderError {
-                        source: code.to_string(),
-                        label: desc.label.as_ref().map(|l| l.to_string()),
-                        inner,
-                    })
-                })?;
-                (module, code.into_owned())
+                // TODO: refactor the corresponding Naga error to be owned, and then
+                // display it instead of unwrapping
+                match naga::front::wgsl::parse_str(&code) {
+                    Ok(module) => module,
+                    Err(err) => {
+                        log::error!("Failed to parse WGSL code for {:?}: {}", desc.label, err);
+                        return Err(pipeline::CreateShaderModuleError::Parsing(
+                            pipeline::NagaParseError {
+                                shader_source: code.to_string(),
+                                error: err,
+                            },
+                        ));
+                    }
+                }
             }
-            pipeline::ShaderModuleSource::Naga(module) => (module, String::new()),
+            pipeline::ShaderModuleSource::Naga(module) => module,
         };
 
         use naga::valid::Capabilities as Caps;
@@ -1009,21 +947,12 @@ impl<A: HalApi> Device<A> {
                 .contains(wgt::Features::SHADER_PRIMITIVE_INDEX),
         );
         let info = naga::valid::Validator::new(naga::valid::ValidationFlags::all(), caps)
-            .validate(&module)
-            .map_err(|inner| {
-                pipeline::CreateShaderModuleError::Validation(pipeline::ShaderError {
-                    source,
-                    label: desc.label.as_ref().map(|l| l.to_string()),
-                    inner,
-                })
-            })?;
-        let interface =
-            validation::Interface::new(&module, &info, self.features, self.limits.clone());
+            .validate(&module)?;
+        let interface = validation::Interface::new(&module, &info, self.features);
         let hal_shader = hal::ShaderInput::Naga(hal::NagaShader { module, info });
 
         let hal_desc = hal::ShaderModuleDescriptor {
             label: desc.label.borrow_option(),
-            runtime_checks: desc.shader_bound_checks.runtime_checks(),
         };
         let raw = match unsafe { self.raw.create_shader_module(&hal_desc, hal_shader) } {
             Ok(raw) => raw,
@@ -1062,7 +991,6 @@ impl<A: HalApi> Device<A> {
         self.require_features(wgt::Features::SPIRV_SHADER_PASSTHROUGH)?;
         let hal_desc = hal::ShaderModuleDescriptor {
             label: desc.label.borrow_option(),
-            runtime_checks: desc.shader_bound_checks.runtime_checks(),
         };
         let hal_shader = hal::ShaderInput::SpirV(source);
         let raw = match unsafe { self.raw.create_shader_module(&hal_desc, hal_shader) } {
@@ -1117,44 +1045,6 @@ impl<A: HalApi> Device<A> {
             .collect()
     }
 
-    /// Generate information about late-validated buffer bindings for pipelines.
-    //TODO: should this be combined with `get_introspection_bind_group_layouts` in some way?
-    fn make_late_sized_buffer_groups<'a>(
-        shader_binding_sizes: &FastHashMap<naga::ResourceBinding, wgt::BufferSize>,
-        layout: &binding_model::PipelineLayout<A>,
-        bgl_guard: &'a Storage<binding_model::BindGroupLayout<A>, id::BindGroupLayoutId>,
-    ) -> ArrayVec<pipeline::LateSizedBufferGroup, { hal::MAX_BIND_GROUPS }> {
-        // Given the shader-required binding sizes and the pipeline layout,
-        // return the filtered list of them in the layout order,
-        // removing those with given `min_binding_size`.
-        layout
-            .bind_group_layout_ids
-            .iter()
-            .enumerate()
-            .map(|(group_index, &bgl_id)| pipeline::LateSizedBufferGroup {
-                shader_sizes: bgl_guard[bgl_id]
-                    .entries
-                    .values()
-                    .filter_map(|entry| match entry.ty {
-                        wgt::BindingType::Buffer {
-                            min_binding_size: None,
-                            ..
-                        } => {
-                            let rb = naga::ResourceBinding {
-                                group: group_index as u32,
-                                binding: entry.binding,
-                            };
-                            let shader_size =
-                                shader_binding_sizes.get(&rb).map_or(0, |nz| nz.get());
-                            Some(shader_size)
-                        }
-                        _ => None,
-                    })
-                    .collect(),
-            })
-            .collect()
-    }
-
     fn create_bind_group_layout(
         &self,
         self_id: id::DeviceId,
@@ -1202,10 +1092,7 @@ impl<A: HalApi> Device<A> {
                         false => WritableStorage::Yes,
                     },
                 ),
-                Bt::Sampler { .. } => (
-                    Some(wgt::Features::TEXTURE_BINDING_ARRAY),
-                    WritableStorage::No,
-                ),
+                Bt::Sampler { .. } => (None, WritableStorage::No),
                 Bt::Texture { .. } => (
                     Some(wgt::Features::TEXTURE_BINDING_ARRAY),
                     WritableStorage::No,
@@ -1287,13 +1174,10 @@ impl<A: HalApi> Device<A> {
                 })?;
         }
 
-        let bgl_flags = conv::bind_group_layout_flags(self.features);
-
         let mut hal_bindings = entry_map.values().cloned().collect::<Vec<_>>();
         hal_bindings.sort_by_key(|b| b.binding);
         let hal_desc = hal::BindGroupLayoutDescriptor {
             label,
-            flags: bgl_flags,
             entries: &hal_bindings,
         };
         let raw = unsafe {
@@ -1337,7 +1221,6 @@ impl<A: HalApi> Device<A> {
         decl: &wgt::BindGroupLayoutEntry,
         used_buffer_ranges: &mut Vec<BufferInitTrackerAction>,
         dynamic_binding_info: &mut Vec<binding_model::BindGroupDynamicBindingData>,
-        late_buffer_binding_sizes: &mut Vec<wgt::BufferSize>,
         used: &mut TrackerSet,
         storage: &'a Storage<resource::Buffer<A>, id::BufferId>,
         limits: &wgt::Limits,
@@ -1435,16 +1318,13 @@ impl<A: HalApi> Device<A> {
                     min: min_size,
                 });
             }
-        } else {
-            let late_size =
-                wgt::BufferSize::new(bind_size).ok_or(Error::BindingZeroSize(bb.buffer_id))?;
-            late_buffer_binding_sizes.push(late_size);
+        } else if bind_size == 0 {
+            return Err(Error::BindingZeroSize(bb.buffer_id));
         }
 
-        assert_eq!(bb.offset % wgt::COPY_BUFFER_ALIGNMENT, 0);
         used_buffer_ranges.extend(buffer.initialization_status.create_action(
             bb.buffer_id,
-            bb.offset..bb.offset + bind_size,
+            bb.offset..(bb.offset + bind_size),
             MemoryInitKind::NeedsInitializedMemory,
         ));
 
@@ -1453,43 +1333,6 @@ impl<A: HalApi> Device<A> {
             offset: bb.offset,
             size: bb.size,
         })
-    }
-
-    fn create_texture_binding(
-        view: &resource::TextureView<A>,
-        texture_guard: &parking_lot::lock_api::RwLockReadGuard<
-            parking_lot::RawRwLock,
-            Storage<resource::Texture<A>, id::Id<resource::Texture<hal::api::Empty>>>,
-        >,
-        internal_use: hal::TextureUses,
-        pub_usage: wgt::TextureUsages,
-        used: &mut TrackerSet,
-        used_texture_ranges: &mut Vec<TextureInitTrackerAction>,
-    ) -> Result<(), binding_model::CreateBindGroupError> {
-        // Careful here: the texture may no longer have its own ref count,
-        // if it was deleted by the user.
-        let parent_id = view.parent_id.value;
-        let texture = &texture_guard[parent_id];
-        used.textures
-            .change_extend(
-                parent_id,
-                &view.parent_id.ref_count,
-                view.selector.clone(),
-                internal_use,
-            )
-            .map_err(UsageConflict::from)?;
-        check_texture_usage(texture.desc.usage, pub_usage)?;
-
-        used_texture_ranges.push(TextureInitTrackerAction {
-            id: parent_id.0,
-            range: TextureInitRange {
-                mip_range: view.desc.range.mip_range(&texture.desc),
-                layer_range: view.desc.range.layer_range(&texture.desc),
-            },
-            kind: MemoryInitKind::NeedsInitializedMemory,
-        });
-
-        Ok(())
     }
 
     fn create_bind_group<G: GlobalIdentityHandlerFactory>(
@@ -1514,7 +1357,6 @@ impl<A: HalApi> Device<A> {
         // TODO: arrayvec/smallvec
         // Record binding info for dynamic offset validation
         let mut dynamic_binding_info = Vec::new();
-        let mut late_buffer_binding_sizes = Vec::new();
         // fill out the descriptors
         let mut used = TrackerSet::new(A::VARIANT);
 
@@ -1524,7 +1366,6 @@ impl<A: HalApi> Device<A> {
         let (sampler_guard, _) = hub.samplers.read(&mut token);
 
         let mut used_buffer_ranges = Vec::new();
-        let mut used_texture_ranges = Vec::new();
         let mut hal_entries = Vec::with_capacity(desc.entries.len());
         let mut hal_buffers = Vec::new();
         let mut hal_samplers = Vec::new();
@@ -1536,7 +1377,7 @@ impl<A: HalApi> Device<A> {
                 .entries
                 .get(&binding)
                 .ok_or(Error::MissingBindingDeclaration(binding))?;
-            let (res_index, count) = match entry.resource {
+            let res_index = match entry.resource {
                 Br::Buffer(ref bb) => {
                     let bb = Self::create_buffer_binding(
                         bb,
@@ -1544,7 +1385,6 @@ impl<A: HalApi> Device<A> {
                         decl,
                         &mut used_buffer_ranges,
                         &mut dynamic_binding_info,
-                        &mut late_buffer_binding_sizes,
                         &mut used,
                         &*buffer_guard,
                         &self.limits,
@@ -1552,11 +1392,21 @@ impl<A: HalApi> Device<A> {
 
                     let res_index = hal_buffers.len();
                     hal_buffers.push(bb);
-                    (res_index, 1)
+                    res_index
                 }
                 Br::BufferArray(ref bindings_array) => {
-                    let num_bindings = bindings_array.len();
-                    Self::check_array_binding(self.features, decl.count, num_bindings)?;
+                    if let Some(count) = decl.count {
+                        let count = count.get() as usize;
+                        let num_bindings = bindings_array.len();
+                        if count != num_bindings {
+                            return Err(Error::BindingArrayLengthMismatch {
+                                actual: num_bindings,
+                                expected: count,
+                            });
+                        }
+                    } else {
+                        return Err(Error::SingleBindingExpected);
+                    }
 
                     let res_index = hal_buffers.len();
                     for bb in bindings_array.iter() {
@@ -1566,51 +1416,45 @@ impl<A: HalApi> Device<A> {
                             decl,
                             &mut used_buffer_ranges,
                             &mut dynamic_binding_info,
-                            &mut late_buffer_binding_sizes,
                             &mut used,
                             &*buffer_guard,
                             &self.limits,
                         )?;
                         hal_buffers.push(bb);
                     }
-                    (res_index, num_bindings)
+                    res_index
                 }
                 Br::Sampler(id) => {
                     match decl.ty {
-                        wgt::BindingType::Sampler(ty) => {
+                        wgt::BindingType::Sampler {
+                            filtering,
+                            comparison,
+                        } => {
                             let sampler = used
                                 .samplers
                                 .use_extend(&*sampler_guard, id, (), ())
                                 .map_err(|_| Error::InvalidSampler(id))?;
 
-                            // Allowed sampler values for filtering and comparison
-                            let (allowed_filtering, allowed_comparison) = match ty {
-                                wgt::SamplerBindingType::Filtering => (None, false),
-                                wgt::SamplerBindingType::NonFiltering => (Some(false), false),
-                                wgt::SamplerBindingType::Comparison => (None, true),
-                            };
-
-                            if let Some(allowed_filtering) = allowed_filtering {
-                                if allowed_filtering != sampler.filtering {
-                                    return Err(Error::WrongSamplerFiltering {
-                                        binding,
-                                        layout_flt: allowed_filtering,
-                                        sampler_flt: sampler.filtering,
-                                    });
-                                }
-                            }
-
-                            if allowed_comparison != sampler.comparison {
+                            // Check the actual sampler to also (not) be a comparison sampler
+                            if sampler.comparison != comparison {
                                 return Err(Error::WrongSamplerComparison {
                                     binding,
-                                    layout_cmp: allowed_comparison,
+                                    layout_cmp: comparison,
                                     sampler_cmp: sampler.comparison,
+                                });
+                            }
+                            // Check the actual sampler to be non-filtering, if required
+                            if sampler.filtering && !filtering {
+                                return Err(Error::WrongSamplerFiltering {
+                                    binding,
+                                    layout_flt: filtering,
+                                    sampler_flt: sampler.filtering,
                                 });
                             }
 
                             let res_index = hal_samplers.len();
                             hal_samplers.push(&sampler.raw);
-                            (res_index, 1)
+                            res_index
                         }
                         _ => {
                             return Err(Error::WrongBindingType {
@@ -1620,21 +1464,6 @@ impl<A: HalApi> Device<A> {
                             })
                         }
                     }
-                }
-                Br::SamplerArray(ref bindings_array) => {
-                    let num_bindings = bindings_array.len();
-                    Self::check_array_binding(self.features, decl.count, num_bindings)?;
-
-                    let res_index = hal_samplers.len();
-                    for &id in bindings_array.iter() {
-                        let sampler = used
-                            .samplers
-                            .use_extend(&*sampler_guard, id, (), ())
-                            .map_err(|_| Error::InvalidSampler(id))?;
-                        hal_samplers.push(&sampler.raw);
-                    }
-
-                    (res_index, num_bindings)
                 }
                 Br::TextureView(id) => {
                     let view = used
@@ -1647,24 +1476,40 @@ impl<A: HalApi> Device<A> {
                         view,
                         "SampledTexture, ReadonlyStorageTexture or WriteonlyStorageTexture",
                     )?;
-                    Self::create_texture_binding(
-                        view,
-                        &texture_guard,
-                        internal_use,
-                        pub_usage,
-                        &mut used,
-                        &mut used_texture_ranges,
-                    )?;
+
+                    // Careful here: the texture may no longer have its own ref count,
+                    // if it was deleted by the user.
+                    used.textures
+                        .change_extend(
+                            view.parent_id.value,
+                            &view.parent_id.ref_count,
+                            view.selector.clone(),
+                            internal_use,
+                        )
+                        .map_err(UsageConflict::from)?;
+                    let texture = &texture_guard[view.parent_id.value];
+                    check_texture_usage(texture.desc.usage, pub_usage)?;
+
                     let res_index = hal_textures.len();
                     hal_textures.push(hal::TextureBinding {
                         view: &view.raw,
                         usage: internal_use,
                     });
-                    (res_index, 1)
+                    res_index
                 }
                 Br::TextureViewArray(ref bindings_array) => {
-                    let num_bindings = bindings_array.len();
-                    Self::check_array_binding(self.features, decl.count, num_bindings)?;
+                    if let Some(count) = decl.count {
+                        let count = count.get() as usize;
+                        let num_bindings = bindings_array.len();
+                        if count != num_bindings {
+                            return Err(Error::BindingArrayLengthMismatch {
+                                actual: num_bindings,
+                                expected: count,
+                            });
+                        }
+                    } else {
+                        return Err(Error::SingleBindingExpected);
+                    }
 
                     let res_index = hal_textures.len();
                     for &id in bindings_array.iter() {
@@ -1672,31 +1517,37 @@ impl<A: HalApi> Device<A> {
                             .views
                             .use_extend(&*texture_view_guard, id, (), ())
                             .map_err(|_| Error::InvalidTextureView(id))?;
-                        let (pub_usage, internal_use) =
-                            Self::texture_use_parameters(binding, decl, view,
-                                                         "SampledTextureArray, ReadonlyStorageTextureArray or WriteonlyStorageTextureArray")?;
-                        Self::create_texture_binding(
-                            view,
-                            &texture_guard,
-                            internal_use,
-                            pub_usage,
-                            &mut used,
-                            &mut used_texture_ranges,
+                        let (pub_usage, internal_use) = Self::texture_use_parameters(
+                            binding, decl, view,
+                            "SampledTextureArray, ReadonlyStorageTextureArray or WriteonlyStorageTextureArray"
                         )?;
+
+                        // Careful here: the texture may no longer have its own ref count,
+                        // if it was deleted by the user.
+                        used.textures
+                            .change_extend(
+                                view.parent_id.value,
+                                &view.parent_id.ref_count,
+                                view.selector.clone(),
+                                internal_use,
+                            )
+                            .map_err(UsageConflict::from)?;
+                        let texture = &texture_guard[view.parent_id.value];
+                        check_texture_usage(texture.desc.usage, pub_usage)?;
+
                         hal_textures.push(hal::TextureBinding {
                             view: &view.raw,
                             usage: internal_use,
                         });
                     }
 
-                    (res_index, num_bindings)
+                    res_index
                 }
             };
 
             hal_entries.push(hal::BindGroupEntry {
                 binding,
                 resource_index: res_index as u32,
-                count: count as u32,
             });
         }
 
@@ -1721,9 +1572,6 @@ impl<A: HalApi> Device<A> {
                 .map_err(DeviceError::from)?
         };
 
-        // manually add a dependency on BGL
-        layout.multi_ref_count.inc();
-
         Ok(binding_model::BindGroup {
             raw,
             device_id: Stored {
@@ -1734,43 +1582,8 @@ impl<A: HalApi> Device<A> {
             life_guard: LifeGuard::new(desc.label.borrow_or_default()),
             used,
             used_buffer_ranges,
-            used_texture_ranges,
             dynamic_binding_info,
-            late_buffer_binding_sizes,
         })
-    }
-
-    fn check_array_binding(
-        features: wgt::Features,
-        count: Option<NonZeroU32>,
-        num_bindings: usize,
-    ) -> Result<(), super::binding_model::CreateBindGroupError> {
-        use super::binding_model::CreateBindGroupError as Error;
-
-        if let Some(count) = count {
-            let count = count.get() as usize;
-            if count < num_bindings {
-                return Err(Error::BindingArrayPartialLengthMismatch {
-                    actual: num_bindings,
-                    expected: count,
-                });
-            }
-            if count != num_bindings
-                && !features.contains(wgt::Features::PARTIALLY_BOUND_BINDING_ARRAY)
-            {
-                return Err(Error::BindingArrayLengthMismatch {
-                    actual: num_bindings,
-                    expected: count,
-                });
-            }
-            if num_bindings == 0 {
-                return Err(Error::BindingArrayZeroLength);
-            }
-        } else {
-            return Err(Error::SingleBindingExpected);
-        };
-
-        Ok(())
     }
 
     fn texture_use_parameters(
@@ -1994,7 +1807,6 @@ impl<A: HalApi> Device<A> {
                 .bind_group_layouts
                 .iter()
                 .map(|&id| {
-                    // manually add a dependency to BGL
                     bgl_guard.get(id).unwrap().multi_ref_count.inc();
                     id::Valid(id)
                 })
@@ -2077,7 +1889,6 @@ impl<A: HalApi> Device<A> {
 
         let mut derived_group_layouts =
             ArrayVec::<binding_model::BindEntryMap, { hal::MAX_BIND_GROUPS }>::new();
-        let mut shader_binding_sizes = FastHashMap::default();
 
         let io = validation::StageIo::default();
         let (shader_module_guard, _) = hub.shader_modules.read(&mut token);
@@ -2106,7 +1917,6 @@ impl<A: HalApi> Device<A> {
                 let _ = interface.check_stage(
                     provided_layouts.as_ref().map(|p| p.as_slice()),
                     &mut derived_group_layouts,
-                    &mut shader_binding_sizes,
                     &desc.stage.entry_point,
                     flag,
                     io,
@@ -2127,9 +1937,6 @@ impl<A: HalApi> Device<A> {
         let layout = pipeline_layout_guard
             .get(pipeline_layout_id)
             .map_err(|_| pipeline::CreateComputePipelineError::InvalidLayout)?;
-
-        let late_sized_buffer_groups =
-            Device::make_late_sized_buffer_groups(&shader_binding_sizes, layout, &*bgl_guard);
 
         let pipeline_desc = hal::ComputePipelineDescriptor {
             label: desc.label.borrow_option(),
@@ -2165,7 +1972,6 @@ impl<A: HalApi> Device<A> {
                 value: id::Valid(self_id),
                 ref_count: self.life_guard.add_ref(),
             },
-            late_sized_buffer_groups,
             life_guard: LifeGuard::new(desc.label.borrow_or_default()),
         };
         Ok(pipeline)
@@ -2195,7 +2001,6 @@ impl<A: HalApi> Device<A> {
 
         let mut derived_group_layouts =
             ArrayVec::<binding_model::BindEntryMap, { hal::MAX_BIND_GROUPS }>::new();
-        let mut shader_binding_sizes = FastHashMap::default();
 
         let color_targets = desc
             .fragment
@@ -2295,16 +2100,8 @@ impl<A: HalApi> Device<A> {
             );
         }
 
-        if desc.primitive.strip_index_format.is_none() && desc.primitive.topology.is_strip() {
-            return Err(
-                pipeline::CreateRenderPipelineError::NoStripIndexFormatForStripTopology {
-                    topology: desc.primitive.topology,
-                },
-            );
-        }
-
-        if desc.primitive.unclipped_depth {
-            self.require_features(wgt::Features::DEPTH_CLIP_CONTROL)?;
+        if desc.primitive.clamp_depth {
+            self.require_features(wgt::Features::DEPTH_CLAMPING)?;
         }
 
         if desc.primitive.polygon_mode == wgt::PolygonMode::Line {
@@ -2419,7 +2216,6 @@ impl<A: HalApi> Device<A> {
                     .check_stage(
                         provided_layouts.as_ref().map(|p| p.as_slice()),
                         &mut derived_group_layouts,
-                        &mut shader_binding_sizes,
                         &stage.entry_point,
                         flag,
                         io,
@@ -2465,7 +2261,6 @@ impl<A: HalApi> Device<A> {
                             .check_stage(
                                 provided_layouts.as_ref().map(|p| p.as_slice()),
                                 &mut derived_group_layouts,
-                                &mut shader_binding_sizes,
                                 &fragment.stage.entry_point,
                                 flag,
                                 io,
@@ -2535,14 +2330,6 @@ impl<A: HalApi> Device<A> {
             .get(pipeline_layout_id)
             .map_err(|_| pipeline::CreateRenderPipelineError::InvalidLayout)?;
 
-        // Multiview is only supported if the feature is enabled
-        if desc.multiview.is_some() {
-            self.require_features(wgt::Features::MULTIVIEW)?;
-        }
-
-        let late_sized_buffer_groups =
-            Device::make_late_sized_buffer_groups(&shader_binding_sizes, layout, &*bgl_guard);
-
         let pipeline_desc = hal::RenderPipelineDescriptor {
             label: desc.label.borrow_option(),
             layout: &layout.raw,
@@ -2553,7 +2340,6 @@ impl<A: HalApi> Device<A> {
             multisample: desc.multisample,
             fragment_stage,
             color_targets,
-            multiview: desc.multiview,
         };
         let raw =
             unsafe { self.raw.create_render_pipeline(&pipeline_desc) }.map_err(
@@ -2580,7 +2366,6 @@ impl<A: HalApi> Device<A> {
                 depth_stencil: depth_stencil_state.as_ref().map(|state| state.format),
             },
             sample_count: samples,
-            multiview: desc.multiview,
         };
 
         let mut flags = pipeline::PipelineFlags::empty();
@@ -2614,7 +2399,6 @@ impl<A: HalApi> Device<A> {
             flags,
             strip_index_format: desc.primitive.strip_index_format,
             vertex_strides,
-            late_sized_buffer_groups,
             life_guard: LifeGuard::new(desc.label.borrow_or_default()),
         };
         Ok(pipeline)
@@ -2746,7 +2530,6 @@ impl<A: hal::Api> Device<A> {
         self.pending_writes.dispose(&self.raw);
         self.command_allocator.into_inner().dispose(&self.raw);
         unsafe {
-            self.raw.destroy_buffer(self.zero_buffer);
             self.raw.destroy_fence(self.fence);
             self.raw.exit(self.queue);
         }
@@ -2845,7 +2628,6 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         surface_id: id::SurfaceId,
         adapter_id: id::AdapterId,
     ) -> Result<TextureFormat, instance::GetSurfacePreferredFormatError> {
-        profiling::scope!("surface_get_preferred_format");
         let hub = A::hub(self);
         let mut token = Token::root();
 
@@ -2988,12 +2770,11 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                     }
                 };
 
-                assert_eq!(buffer.size % wgt::COPY_BUFFER_ALIGNMENT, 0);
                 // Zero initialize memory and then mark both staging and buffer as initialized
                 // (it's guaranteed that this is the case by the time the buffer is usable)
                 unsafe { ptr::write_bytes(mapping.ptr.as_ptr(), 0, buffer.size as usize) };
-                buffer.initialization_status.drain(0..buffer.size);
-                stage.initialization_status.drain(0..buffer.size);
+                buffer.initialization_status.clear(0..buffer.size);
+                stage.initialization_status.clear(0..buffer.size);
 
                 buffer.map_state = resource::BufferMapState::Init {
                     ptr: mapping.ptr,
@@ -3296,7 +3077,6 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
     ///
     /// - `hal_texture` must be created from `device_id` corresponding raw handle.
     /// - `hal_texture` must be created respecting `desc`
-    /// - `hal_texture` must be initialized
     pub unsafe fn create_texture_from_hal<A: HalApi>(
         &self,
         hal_texture: A::Texture,
@@ -3327,23 +3107,11 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
             }
 
             let adapter = &adapter_guard[device.adapter_id.value];
-
-            let format_features = match device
-                .describe_format_features(adapter, desc.format)
-                .map_err(|error| resource::CreateTextureError::MissingFeatures(desc.format, error))
-            {
-                Ok(features) => features,
-                Err(error) => break error,
-            };
-
-            let mut texture =
-                device.create_texture_from_hal(hal_texture, device_id, desc, format_features);
-            if desc.usage.contains(wgt::TextureUsages::COPY_DST) {
-                texture.hal_usage |= hal::TextureUses::COPY_DST;
-            }
-
-            texture.initialization_status = TextureInitTracker::new(desc.mip_level_count, 0);
-
+            let texture =
+                match device.create_texture_from_hal(hal_texture, device_id, adapter, desc) {
+                    Ok(texture) => texture,
+                    Err(error) => break error,
+                };
             let num_levels = texture.full_range.levels.end;
             let num_layers = texture.full_range.layers.end;
             let ref_count = texture.life_guard.add_ref();
@@ -3526,13 +3294,15 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         let mut token = Token::root();
 
         let (last_submit_index, device_id) = {
+            let (texture_guard, mut token) = hub.textures.read(&mut token);
             let (mut texture_view_guard, _) = hub.texture_views.write(&mut token);
 
             match texture_view_guard.get_mut(texture_view_id) {
                 Ok(view) => {
                     let _ref_count = view.life_guard.ref_count.take();
                     let last_submit_index = view.life_guard.life_count();
-                    (last_submit_index, view.device_id.value)
+                    let device_id = texture_guard[view.parent_id.value].device_id.value;
+                    (last_submit_index, device_id)
                 }
                 Err(InvalidId) => {
                     hub.texture_views
@@ -4567,7 +4337,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         use present::ConfigureSurfaceError as E;
         profiling::scope!("surface_configure");
 
-        fn validate_surface_configuration(
+        fn validate_surface_configuraiton(
             config: &mut hal::SurfaceConfiguration,
             caps: &hal::SurfaceCapabilities,
         ) -> Result<(), E> {
@@ -4657,7 +4427,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                 usage: conv::map_texture_usage(config.usage, hal::FormatAspects::COLOR),
             };
 
-            if let Err(error) = validate_surface_configuration(&mut hal_config, &caps) {
+            if let Err(error) = validate_surface_configuraiton(&mut hal_config, &caps) {
                 break error;
             }
 
@@ -4778,10 +4548,6 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         {
             self.poll_devices::<hal::api::Dx11>(force_wait, &mut closures)?;
         }
-        #[cfg(gl)]
-        {
-            self.poll_devices::<hal::api::Gles>(force_wait, &mut closures)?;
-        }
 
         unsafe {
             closures.fire();
@@ -4872,7 +4638,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                     resource::BufferMapState::Waiting(resource::BufferPendingMapping {
                         range,
                         op,
-                        _parent_ref_count: buffer.life_guard.add_ref(),
+                        parent_ref_count: buffer.life_guard.add_ref(),
                     })
                 }
             };

@@ -1434,6 +1434,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "fixedbitset"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "398ea4fabe40b9b0d885340a2a991a44c8a645624075ad966d21f88688e2b69e"
+
+[[package]]
 name = "flate2"
 version = "1.0.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2368,7 +2374,6 @@ checksum = "824845a0bf897a9042383849b02c1bc219c2383772efcd5c6f9766fa4b81aef3"
 dependencies = [
  "autocfg",
  "hashbrown",
- "serde",
 ]
 
 [[package]]
@@ -3225,17 +3230,17 @@ checksum = "a2983372caf4480544083767bf2d27defafe32af49ab4df3a0b7fc90793a3664"
 
 [[package]]
 name = "naga"
-version = "0.7.1"
-source = "git+https://github.com/gfx-rs/naga?rev=29571cc#29571cc4cfbb28558948b1b31ad764f55b69f37b"
+version = "0.6.0"
+source = "git+https://github.com/gfx-rs/naga?rev=e226cf3#e226cf3f1d67d0bf91587e392879f0aee109ec42"
 dependencies = [
  "bit-set",
  "bitflags",
  "codespan-reporting",
+ "fxhash",
  "hexf-parse",
- "indexmap",
  "log",
  "num-traits",
- "rustc-hash",
+ "petgraph",
  "serde",
  "spirv",
  "thiserror",
@@ -3654,6 +3659,16 @@ name = "percent-encoding"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d4fd5641d01c8f18a23da7b6fe29298ff4b55afcccdf78973b24cf3175fee32e"
+
+[[package]]
+name = "petgraph"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4a13a2fa9d0b63e5f22328828741e523766fff0ee9e779316902290dff3f824f"
+dependencies = [
+ "fixedbitset",
+ "indexmap",
+]
 
 [[package]]
 name = "phf"
@@ -4185,17 +4200,6 @@ name = "ron"
 version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "45005aa836116903a49cf3461474da697cfe66221762c6e95871092009ec86d6"
-dependencies = [
- "base64 0.13.0",
- "bitflags",
- "serde",
-]
-
-[[package]]
-name = "ron"
-version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b861ecaade43ac97886a512b360d01d66be9f41f3c61088b42cedf92e03d678"
 dependencies = [
  "base64 0.13.0",
  "bitflags",
@@ -5583,7 +5587,7 @@ dependencies = [
  "objc",
  "plane-split",
  "rayon",
- "ron 0.6.5",
+ "ron",
  "serde",
  "smallvec",
  "svg_fmt",
@@ -5666,20 +5670,19 @@ dependencies = [
 
 [[package]]
 name = "wgpu-core"
-version = "0.11.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=5f6c067#5f6c06781534dc5ecd54e1a1cf89ece98b46f49f"
+version = "0.10.0"
+source = "git+https://github.com/gfx-rs/wgpu?rev=37288a6#37288a657f022ce508f3b1c92eb6cdbe20f4cca9"
 dependencies = [
  "arrayvec 0.7.1",
  "bitflags",
  "cfg_aliases",
- "codespan-reporting",
  "copyless",
  "fxhash",
  "log",
  "naga",
  "parking_lot",
  "profiling",
- "ron 0.7.0",
+ "ron",
  "serde",
  "smallvec",
  "thiserror",
@@ -5689,8 +5692,8 @@ dependencies = [
 
 [[package]]
 name = "wgpu-hal"
-version = "0.11.2"
-source = "git+https://github.com/gfx-rs/wgpu?rev=5f6c067#5f6c06781534dc5ecd54e1a1cf89ece98b46f49f"
+version = "0.10.1"
+source = "git+https://github.com/gfx-rs/wgpu?rev=37288a6#37288a657f022ce508f3b1c92eb6cdbe20f4cca9"
 dependencies = [
  "arrayvec 0.7.1",
  "ash",
@@ -5705,7 +5708,6 @@ dependencies = [
  "gpu-alloc",
  "gpu-descriptor",
  "inplace_it",
- "js-sys",
  "khronos-egl",
  "libloading 0.7.0",
  "log",
@@ -5713,21 +5715,18 @@ dependencies = [
  "naga",
  "objc",
  "parking_lot",
- "profiling",
  "range-alloc",
  "raw-window-handle",
  "renderdoc-sys",
  "thiserror",
- "wasm-bindgen",
- "web-sys",
  "wgpu-types",
  "winapi",
 ]
 
 [[package]]
 name = "wgpu-types"
-version = "0.11.0"
-source = "git+https://github.com/gfx-rs/wgpu?rev=5f6c067#5f6c06781534dc5ecd54e1a1cf89ece98b46f49f"
+version = "0.10.0"
+source = "git+https://github.com/gfx-rs/wgpu?rev=37288a6#37288a657f022ce508f3b1c92eb6cdbe20f4cca9"
 dependencies = [
  "bitflags",
  "bitflags_serde_shim",

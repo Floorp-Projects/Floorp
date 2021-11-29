@@ -1,9 +1,9 @@
 use super::{
     ast::Precision,
-    token::{Directive, DirectiveKind, Token, TokenValue},
+    token::{Directive, DirectiveKind, SourceMetadata, Token, TokenValue},
     types::parse_type,
 };
-use crate::{FastHashMap, Span, StorageAccess};
+use crate::{FastHashMap, StorageAccess};
 use pp_rs::{
     pp::Preprocessor,
     token::{PreprocessorError, Punct, TokenValue as PPTokenValue},
@@ -13,7 +13,7 @@ use pp_rs::{
 #[cfg_attr(test, derive(PartialEq))]
 pub struct LexerResult {
     pub kind: LexerResultKind,
-    pub meta: Span,
+    pub meta: SourceMetadata,
 }
 
 #[derive(Debug)]
@@ -202,10 +202,9 @@ mod tests {
     use pp_rs::token::{Integer, Location, Token as PPToken, TokenValue as PPTokenValue};
 
     use super::{
-        super::token::{Directive, DirectiveKind, Token, TokenValue},
+        super::token::{Directive, DirectiveKind, SourceMetadata, Token, TokenValue},
         Lexer, LexerResult, LexerResultKind,
     };
-    use crate::Span;
 
     #[test]
     fn lex_tokens() {
@@ -232,7 +231,7 @@ mod tests {
                         location
                     }]
                 }),
-                meta: Span::new(1, 8)
+                meta: SourceMetadata { start: 1, end: 8 }
             }
         );
         assert_eq!(
@@ -240,9 +239,9 @@ mod tests {
             LexerResult {
                 kind: LexerResultKind::Token(Token {
                     value: TokenValue::Void,
-                    meta: Span::new(13, 17)
+                    meta: SourceMetadata { start: 13, end: 17 }
                 }),
-                meta: Span::new(13, 17)
+                meta: SourceMetadata { start: 13, end: 17 }
             }
         );
         assert_eq!(
@@ -250,9 +249,9 @@ mod tests {
             LexerResult {
                 kind: LexerResultKind::Token(Token {
                     value: TokenValue::Identifier("main".into()),
-                    meta: Span::new(18, 22)
+                    meta: SourceMetadata { start: 18, end: 22 }
                 }),
-                meta: Span::new(18, 22)
+                meta: SourceMetadata { start: 18, end: 22 }
             }
         );
         assert_eq!(
@@ -260,9 +259,9 @@ mod tests {
             LexerResult {
                 kind: LexerResultKind::Token(Token {
                     value: TokenValue::LeftParen,
-                    meta: Span::new(23, 24)
+                    meta: SourceMetadata { start: 23, end: 24 }
                 }),
-                meta: Span::new(23, 24)
+                meta: SourceMetadata { start: 23, end: 24 }
             }
         );
         assert_eq!(
@@ -270,9 +269,9 @@ mod tests {
             LexerResult {
                 kind: LexerResultKind::Token(Token {
                     value: TokenValue::RightParen,
-                    meta: Span::new(24, 25)
+                    meta: SourceMetadata { start: 24, end: 25 }
                 }),
-                meta: Span::new(24, 25)
+                meta: SourceMetadata { start: 24, end: 25 }
             }
         );
         assert_eq!(
@@ -280,9 +279,9 @@ mod tests {
             LexerResult {
                 kind: LexerResultKind::Token(Token {
                     value: TokenValue::LeftBrace,
-                    meta: Span::new(26, 27)
+                    meta: SourceMetadata { start: 26, end: 27 }
                 }),
-                meta: Span::new(26, 27)
+                meta: SourceMetadata { start: 26, end: 27 }
             }
         );
         assert_eq!(
@@ -290,9 +289,9 @@ mod tests {
             LexerResult {
                 kind: LexerResultKind::Token(Token {
                     value: TokenValue::RightBrace,
-                    meta: Span::new(27, 28)
+                    meta: SourceMetadata { start: 27, end: 28 }
                 }),
-                meta: Span::new(27, 28)
+                meta: SourceMetadata { start: 27, end: 28 }
             }
         );
         assert_eq!(lex.next(), None);

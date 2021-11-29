@@ -1,14 +1,7 @@
 use super::conv;
 use crate::auxil::map_naga_stage;
 use glow::HasContext;
-use std::{
-    convert::TryInto,
-    iter, ptr,
-    sync::{Arc, Mutex},
-};
-
-#[cfg(not(target_arch = "wasm32"))]
-use std::mem;
+use std::{convert::TryInto, iter, mem, ptr, sync::Arc};
 
 type ShaderStage<'a> = (
     naga::ShaderStage,
@@ -88,7 +81,7 @@ impl super::Device {
         gl: &glow::Context,
         shader: &str,
         naga_stage: naga::ShaderStage,
-        #[cfg_attr(target_arch = "wasm32", allow(unused))] label: Option<&str>,
+        label: Option<&str>,
     ) -> Result<glow::Shader, crate::PipelineError> {
         let target = match naga_stage {
             naga::ShaderStage::Vertex => glow::VERTEX_SHADER,
@@ -97,7 +90,6 @@ impl super::Device {
         };
 
         let raw = gl.create_shader(target).unwrap();
-        #[cfg(not(target_arch = "wasm32"))]
         if gl.supports_debug() {
             //TODO: remove all transmutes from `object_label`
             // https://github.com/grovesNL/glow/issues/186
@@ -178,10 +170,9 @@ impl super::Device {
         gl: &glow::Context,
         shaders: I,
         layout: &super::PipelineLayout,
-        #[cfg_attr(target_arch = "wasm32", allow(unused))] label: Option<&str>,
+        label: crate::Label,
     ) -> Result<super::PipelineInner, crate::PipelineError> {
         let program = gl.create_program().unwrap();
-        #[cfg(not(target_arch = "wasm32"))]
         if let Some(label) = label {
             if gl.supports_debug() {
                 gl.object_label(glow::PROGRAM, mem::transmute(program), Some(label));
@@ -318,31 +309,6 @@ impl crate::Device<super::Api> for super::Device {
         &self,
         desc: &crate::BufferDescriptor,
     ) -> Result<super::Buffer, crate::DeviceError> {
-        let target = if desc.usage.contains(crate::BufferUses::INDEX) {
-            glow::ELEMENT_ARRAY_BUFFER
-        } else {
-            glow::ARRAY_BUFFER
-        };
-
-        let emulate_map = self
-            .shared
-            .workarounds
-            .contains(super::Workarounds::EMULATE_BUFFER_MAP)
-            || !self
-                .shared
-                .private_caps
-                .contains(super::PrivateCapabilities::BUFFER_ALLOCATION);
-
-        if emulate_map && desc.usage.intersects(crate::BufferUses::MAP_WRITE) {
-            return Ok(super::Buffer {
-                raw: None,
-                target,
-                size: desc.size,
-                map_flags: 0,
-                data: Some(Arc::new(Mutex::new(vec![0; desc.size as usize]))),
-            });
-        }
-
         let gl = &self.shared.context.lock();
 
         let target = if desc.usage.contains(crate::BufferUses::INDEX) {
@@ -357,8 +323,14 @@ impl crate::Device<super::Api> for super::Device {
         let is_coherent = desc
             .memory_flags
             .contains(crate::MemoryFlags::PREFER_COHERENT);
-
         let mut map_flags = 0;
+
+        if is_host_visible {
+            map_flags |= glow::MAP_PERSISTENT_BIT;
+            if is_coherent {
+                map_flags |= glow::MAP_COHERENT_BIT;
+            }
+        }
         if desc.usage.contains(crate::BufferUses::MAP_READ) {
             map_flags |= glow::MAP_READ_BIT;
         }
@@ -366,39 +338,13 @@ impl crate::Device<super::Api> for super::Device {
             map_flags |= glow::MAP_WRITE_BIT;
         }
 
-        let raw = Some(gl.create_buffer().unwrap());
-        gl.bind_buffer(target, raw);
+        let raw = gl.create_buffer().unwrap();
+        gl.bind_buffer(target, Some(raw));
         let raw_size = desc
             .size
             .try_into()
             .map_err(|_| crate::DeviceError::OutOfMemory)?;
-
-        if self
-            .shared
-            .private_caps
-            .contains(super::PrivateCapabilities::BUFFER_ALLOCATION)
-        {
-            if is_host_visible {
-                map_flags |= glow::MAP_PERSISTENT_BIT;
-                if is_coherent {
-                    map_flags |= glow::MAP_COHERENT_BIT;
-                }
-            }
-            gl.buffer_storage(target, raw_size, None, map_flags);
-        } else {
-            assert!(!is_coherent);
-            let usage = if is_host_visible {
-                if desc.usage.contains(crate::BufferUses::MAP_READ) {
-                    glow::STREAM_READ
-                } else {
-                    glow::DYNAMIC_DRAW
-                }
-            } else {
-                glow::STATIC_DRAW
-            };
-            gl.buffer_data_size(target, raw_size, usage);
-        }
-
+        gl.buffer_storage(target, raw_size, None, map_flags);
         gl.bind_buffer(target, None);
 
         if !is_coherent && desc.usage.contains(crate::BufferUses::MAP_WRITE) {
@@ -406,32 +352,22 @@ impl crate::Device<super::Api> for super::Device {
         }
         //TODO: do we need `glow::MAP_UNSYNCHRONIZED_BIT`?
 
-        #[cfg(not(target_arch = "wasm32"))]
         if let Some(label) = desc.label {
             if gl.supports_debug() {
                 gl.object_label(glow::BUFFER, mem::transmute(raw), Some(label));
             }
         }
 
-        let data = if emulate_map && desc.usage.contains(crate::BufferUses::MAP_READ) {
-            Some(Arc::new(Mutex::new(vec![0; desc.size as usize])))
-        } else {
-            None
-        };
-
         Ok(super::Buffer {
             raw,
             target,
             size: desc.size,
             map_flags,
-            data,
         })
     }
     unsafe fn destroy_buffer(&self, buffer: super::Buffer) {
-        if let Some(raw) = buffer.raw {
-            let gl = &self.shared.context.lock();
-            gl.delete_buffer(raw);
-        }
+        let gl = &self.shared.context.lock();
+        gl.delete_buffer(buffer.raw);
     }
 
     unsafe fn map_buffer(
@@ -439,67 +375,43 @@ impl crate::Device<super::Api> for super::Device {
         buffer: &super::Buffer,
         range: crate::MemoryRange,
     ) -> Result<crate::BufferMapping, crate::DeviceError> {
+        let gl = &self.shared.context.lock();
+
         let is_coherent = buffer.map_flags & glow::MAP_COHERENT_BIT != 0;
-        let ptr = match buffer.raw {
-            None => {
-                let mut vec = buffer.data.as_ref().unwrap().lock().unwrap();
-                let slice = &mut vec.as_mut_slice()[range.start as usize..range.end as usize];
-                slice.as_mut_ptr()
-            }
-            Some(raw) => {
-                let gl = &self.shared.context.lock();
-                gl.bind_buffer(buffer.target, Some(raw));
-                let ptr = if let Some(ref map_read_allocation) = buffer.data {
-                    let mut guard = map_read_allocation.lock().unwrap();
-                    let slice = guard.as_mut_slice();
-                    gl.get_buffer_sub_data(buffer.target, 0, slice);
-                    slice.as_mut_ptr()
-                } else {
-                    gl.map_buffer_range(
-                        buffer.target,
-                        range.start as i32,
-                        (range.end - range.start) as i32,
-                        buffer.map_flags,
-                    )
-                };
-                gl.bind_buffer(buffer.target, None);
-                ptr
-            }
-        };
+
+        gl.bind_buffer(buffer.target, Some(buffer.raw));
+        let ptr = gl.map_buffer_range(
+            buffer.target,
+            range.start as i32,
+            (range.end - range.start) as i32,
+            buffer.map_flags,
+        );
+        gl.bind_buffer(buffer.target, None);
+
         Ok(crate::BufferMapping {
             ptr: ptr::NonNull::new(ptr).ok_or(crate::DeviceError::Lost)?,
             is_coherent,
         })
     }
     unsafe fn unmap_buffer(&self, buffer: &super::Buffer) -> Result<(), crate::DeviceError> {
-        if let Some(raw) = buffer.raw {
-            if !self
-                .shared
-                .workarounds
-                .contains(super::Workarounds::EMULATE_BUFFER_MAP)
-            {
-                let gl = &self.shared.context.lock();
-                gl.bind_buffer(buffer.target, Some(raw));
-                gl.unmap_buffer(buffer.target);
-                gl.bind_buffer(buffer.target, None);
-            }
-        }
+        let gl = &self.shared.context.lock();
+        gl.bind_buffer(buffer.target, Some(buffer.raw));
+        gl.unmap_buffer(buffer.target);
+        gl.bind_buffer(buffer.target, None);
         Ok(())
     }
     unsafe fn flush_mapped_ranges<I>(&self, buffer: &super::Buffer, ranges: I)
     where
         I: Iterator<Item = crate::MemoryRange>,
     {
-        if let Some(raw) = buffer.raw {
-            let gl = &self.shared.context.lock();
-            gl.bind_buffer(buffer.target, Some(raw));
-            for range in ranges {
-                gl.flush_mapped_buffer_range(
-                    buffer.target,
-                    range.start as i32,
-                    (range.end - range.start) as i32,
-                );
-            }
+        let gl = &self.shared.context.lock();
+        gl.bind_buffer(buffer.target, Some(buffer.raw));
+        for range in ranges {
+            gl.flush_mapped_buffer_range(
+                buffer.target,
+                range.start as i32,
+                (range.end - range.start) as i32,
+            );
         }
     }
     unsafe fn invalidate_mapped_ranges<I>(&self, _buffer: &super::Buffer, _ranges: I) {
@@ -546,7 +458,6 @@ impl crate::Device<super::Api> for super::Device {
                 );
             }
 
-            #[cfg(not(target_arch = "wasm32"))]
             if let Some(label) = desc.label {
                 if gl.supports_debug() {
                     gl.object_label(glow::RENDERBUFFER, mem::transmute(raw), Some(label));
@@ -626,7 +537,6 @@ impl crate::Device<super::Api> for super::Device {
                 }
             };
 
-            #[cfg(not(target_arch = "wasm32"))]
             if let Some(label) = desc.label {
                 if gl.supports_debug() {
                     gl.object_label(glow::TEXTURE, mem::transmute(raw), Some(label));
@@ -762,7 +672,6 @@ impl crate::Device<super::Api> for super::Device {
             );
         }
 
-        #[cfg(not(target_arch = "wasm32"))]
         if let Some(label) = desc.label {
             if gl.supports_debug() {
                 gl.object_label(glow::SAMPLER, mem::transmute(raw), Some(label));
@@ -883,7 +792,7 @@ impl crate::Device<super::Api> for super::Device {
                 wgt::BindingType::Buffer { .. } => {
                     let bb = &desc.buffers[entry.resource_index as usize];
                     super::RawBinding::Buffer {
-                        raw: bb.buffer.raw.unwrap(),
+                        raw: bb.buffer.raw,
                         offset: bb.offset as i32,
                         size: match bb.size {
                             Some(s) => s.get() as i32,
@@ -1050,11 +959,11 @@ impl crate::Device<super::Api> for super::Device {
         gl.delete_program(pipeline.inner.program);
     }
 
-    #[cfg_attr(target_arch = "wasm32", allow(unused))]
     unsafe fn create_query_set(
         &self,
         desc: &wgt::QuerySetDescriptor<crate::Label>,
     ) -> Result<super::QuerySet, crate::DeviceError> {
+        use std::fmt::Write;
         let gl = &self.shared.context.lock();
         let mut temp_string = String::new();
 
@@ -1063,10 +972,7 @@ impl crate::Device<super::Api> for super::Device {
             let query = gl
                 .create_query()
                 .map_err(|_| crate::DeviceError::OutOfMemory)?;
-            #[cfg(not(target_arch = "wasm32"))]
             if gl.supports_debug() {
-                use std::fmt::Write;
-
                 if let Some(label) = desc.label {
                     temp_string.clear();
                     let _ = write!(temp_string, "{}[{}]", label, i);
@@ -1106,7 +1012,6 @@ impl crate::Device<super::Api> for super::Device {
         &self,
         fence: &super::Fence,
     ) -> Result<crate::FenceValue, crate::DeviceError> {
-        #[cfg_attr(target_arch = "wasm32", allow(clippy::needless_borrow))]
         Ok(fence.get_latest(&self.shared.context.lock()))
     }
     unsafe fn wait(
@@ -1117,23 +1022,13 @@ impl crate::Device<super::Api> for super::Device {
     ) -> Result<bool, crate::DeviceError> {
         if fence.last_completed < wait_value {
             let gl = &self.shared.context.lock();
-            let timeout_ns = if cfg!(target_arch = "wasm32") {
-                0
-            } else {
-                (timeout_ms as u64 * 1_000_000).min(!0u32 as u64)
-            };
+            let timeout_ns = (timeout_ms as u64 * 1_000_000).min(!0u32 as u64);
             let &(_, sync) = fence
                 .pending
                 .iter()
                 .find(|&&(value, _)| value >= wait_value)
                 .unwrap();
             match gl.client_wait_sync(sync, glow::SYNC_FLUSH_COMMANDS_BIT, timeout_ns as i32) {
-                // for some reason firefox returns WAIT_FAILED, to investigate
-                #[cfg(target_arch = "wasm32")]
-                glow::WAIT_FAILED => {
-                    log::warn!("wait failed!");
-                    Ok(false)
-                }
                 glow::TIMEOUT_EXPIRED => Ok(false),
                 glow::CONDITION_SATISFIED | glow::ALREADY_SIGNALED => Ok(true),
                 _ => Err(crate::DeviceError::Lost),
@@ -1146,8 +1041,9 @@ impl crate::Device<super::Api> for super::Device {
     unsafe fn start_capture(&self) -> bool {
         #[cfg(feature = "renderdoc")]
         {
+            //Note: it doesn't look like the device pointer is used by RD
             self.render_doc
-                .start_frame_capture(self.shared.context.egl_context.as_ptr(), ptr::null_mut())
+                .start_frame_capture(ptr::null_mut(), ptr::null_mut())
         }
         #[cfg(not(feature = "renderdoc"))]
         false
@@ -1158,9 +1054,3 @@ impl crate::Device<super::Api> for super::Device {
             .end_frame_capture(ptr::null_mut(), ptr::null_mut())
     }
 }
-
-// SAFE: WASM doesn't have threads
-#[cfg(target_arch = "wasm32")]
-unsafe impl Sync for super::Device {}
-#[cfg(target_arch = "wasm32")]
-unsafe impl Send for super::Device {}
