@@ -4,6 +4,8 @@ use parking_lot::Mutex;
 
 use std::{sync::Arc, thread};
 
+const MAX_COMMAND_BUFFERS: u64 = 2048;
+
 unsafe impl Send for super::Adapter {}
 unsafe impl Sync for super::Adapter {}
 
@@ -17,8 +19,13 @@ impl crate::Adapter<super::Api> for super::Adapter {
     unsafe fn open(
         &self,
         features: wgt::Features,
+        _limits: &wgt::Limits,
     ) -> Result<crate::OpenDevice<super::Api>, crate::DeviceError> {
-        let queue = self.shared.device.lock().new_command_queue();
+        let queue = self
+            .shared
+            .device
+            .lock()
+            .new_command_queue_with_max_command_buffer_count(MAX_COMMAND_BUFFERS);
         Ok(crate::OpenDevice {
             device: super::Device {
                 shared: Arc::clone(&self.shared),
@@ -210,14 +217,16 @@ impl crate::Adapter<super::Api> for super::Adapter {
                     Tfc::empty()
                 }
             }
-            Tf::Etc2RgbUnorm
-            | Tf::Etc2RgbUnormSrgb
-            | Tf::Etc2RgbA1Unorm
-            | Tf::Etc2RgbA1UnormSrgb
-            | Tf::EacRUnorm
-            | Tf::EacRSnorm
-            | Tf::EacRgUnorm
-            | Tf::EacRgSnorm => {
+            Tf::Etc2Rgb8Unorm
+            | Tf::Etc2Rgb8UnormSrgb
+            | Tf::Etc2Rgb8A1Unorm
+            | Tf::Etc2Rgb8A1UnormSrgb
+            | Tf::Etc2Rgba8Unorm
+            | Tf::Etc2Rgba8UnormSrgb
+            | Tf::EacR11Unorm
+            | Tf::EacR11Snorm
+            | Tf::EacRg11Unorm
+            | Tf::EacRg11Snorm => {
                 if pc.format_eac_etc {
                     Tfc::SAMPLED_LINEAR
                 } else {
@@ -573,7 +582,8 @@ impl super::PrivateCapabilities {
             } else {
                 MTLLanguageVersion::V1_0
             },
-            exposed_queues: 1,
+            // macOS 10.11 doesn't support read-write resources
+            fragment_rw_storage: !os_is_mac || Self::version_at_least(major, minor, 10, 12),
             read_write_texture_tier: if os_is_mac {
                 if Self::version_at_least(major, minor, 10, 13) {
                     device.read_write_texture_support()
@@ -851,7 +861,8 @@ impl super::PrivateCapabilities {
                 Self::version_at_least(major, minor, 11, 0)
             },
             //Depth clipping is supported on all macOS GPU families and iOS family 4 and later
-            supports_depth_clamping: device.supports_feature_set(MTLFeatureSet::iOS_GPUFamily4_v1)
+            supports_depth_clip_control: device
+                .supports_feature_set(MTLFeatureSet::iOS_GPUFamily4_v1)
                 || os_is_mac,
         }
     }
@@ -861,13 +872,14 @@ impl super::PrivateCapabilities {
 
         let mut features = F::empty()
             | F::TEXTURE_COMPRESSION_BC
+            | F::INDIRECT_FIRST_INSTANCE
             | F::MAPPABLE_PRIMARY_BUFFERS
             | F::VERTEX_WRITABLE_STORAGE
             | F::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
             | F::POLYGON_MODE_LINE
             | F::CLEAR_COMMANDS;
 
-        features.set(F::DEPTH_CLAMPING, self.supports_depth_clamping);
+        features.set(F::DEPTH_CLIP_CONTROL, self.supports_depth_clip_control);
 
         features.set(
             F::TEXTURE_BINDING_ARRAY
@@ -894,6 +906,10 @@ impl super::PrivateCapabilities {
 
     pub fn capabilities(&self) -> crate::Capabilities {
         let mut downlevel = wgt::DownlevelCapabilities::default();
+        downlevel.flags.set(
+            wgt::DownlevelFlags::FRAGMENT_WRITABLE_STORAGE,
+            self.fragment_rw_storage,
+        );
         downlevel.flags.set(
             wgt::DownlevelFlags::CUBE_ARRAY_TEXTURES,
             self.texture_cube_array,
@@ -932,6 +948,11 @@ impl super::PrivateCapabilities {
                 max_push_constant_size: 0x1000,
                 min_uniform_buffer_offset_alignment: self.buffer_alignment as u32,
                 min_storage_buffer_offset_alignment: self.buffer_alignment as u32,
+                //TODO: double-check how these match Metal feature set tables
+                max_compute_workgroup_size_x: 256,
+                max_compute_workgroup_size_y: 256,
+                max_compute_workgroup_size_z: 64,
+                max_compute_workgroups_per_dimension: 0xFFFF,
             },
             alignments: crate::Alignments {
                 buffer_copy_offset: wgt::BufferSize::new(self.buffer_alignment).unwrap(),
@@ -1011,14 +1032,16 @@ impl super::PrivateCapabilities {
             Tf::Bc6hRgbUfloat => BC6H_RGBUfloat,
             Tf::Bc7RgbaUnorm => BC7_RGBAUnorm,
             Tf::Bc7RgbaUnormSrgb => BC7_RGBAUnorm_sRGB,
-            Tf::Etc2RgbUnorm => ETC2_RGB8,
-            Tf::Etc2RgbUnormSrgb => ETC2_RGB8_sRGB,
-            Tf::Etc2RgbA1Unorm => ETC2_RGB8A1,
-            Tf::Etc2RgbA1UnormSrgb => ETC2_RGB8A1_sRGB,
-            Tf::EacRUnorm => EAC_R11Unorm,
-            Tf::EacRSnorm => EAC_R11Snorm,
-            Tf::EacRgUnorm => EAC_RG11Unorm,
-            Tf::EacRgSnorm => EAC_RG11Snorm,
+            Tf::Etc2Rgb8Unorm => ETC2_RGB8,
+            Tf::Etc2Rgb8UnormSrgb => ETC2_RGB8_sRGB,
+            Tf::Etc2Rgb8A1Unorm => ETC2_RGB8A1,
+            Tf::Etc2Rgb8A1UnormSrgb => ETC2_RGB8A1_sRGB,
+            Tf::Etc2Rgba8Unorm => EAC_RGBA8,
+            Tf::Etc2Rgba8UnormSrgb => EAC_RGBA8_sRGB,
+            Tf::EacR11Unorm => EAC_R11Unorm,
+            Tf::EacR11Snorm => EAC_R11Snorm,
+            Tf::EacRg11Unorm => EAC_RG11Unorm,
+            Tf::EacRg11Snorm => EAC_RG11Snorm,
             Tf::Astc4x4RgbaUnorm => ASTC_4x4_LDR,
             Tf::Astc4x4RgbaUnormSrgb => ASTC_4x4_sRGB,
             Tf::Astc5x4RgbaUnorm => ASTC_5x4_LDR,

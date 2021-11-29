@@ -1,7 +1,8 @@
 use crate::{arena::Handle, FastHashMap, FastHashSet};
-use std::collections::hash_map::Entry;
+use std::borrow::Cow;
 
 pub type EntryPointIndex = u16;
+const SEPARATOR: char = '_';
 
 #[derive(Debug, Eq, Hash, PartialEq)]
 pub enum NameKey {
@@ -21,93 +22,115 @@ pub enum NameKey {
 /// that may need identifiers in a textual backend.
 #[derive(Default)]
 pub struct Namer {
-    unique: FastHashMap<(String, u32), u32>,
+    /// The last numeric suffix used for each base name. Zero means "no suffix".
+    unique: FastHashMap<String, u32>,
     keywords: FastHashSet<String>,
-    /// Currently active namespace.
-    namespace_index: u32,
     reserved_prefixes: Vec<String>,
 }
 
 impl Namer {
-    fn sanitize(&self, string: &str) -> String {
-        let mut base = string
-            .chars()
-            .skip_while(|c| c.is_numeric())
-            .filter(|&c| c.is_ascii_alphanumeric() || c == '_')
-            .collect::<String>();
-        // close the name by '_' if the re is a number, so that
-        // we can have our own number!
-        match base.chars().next_back() {
-            Some(c) if !c.is_numeric() => {}
-            _ => base.push('_'),
+    /// Return a form of `string` suitable for use as the base of an identifier.
+    ///
+    /// - Drop leading digits.
+    /// - Retain only alphanumeric and `_` characters.
+    /// - Avoid prefixes in [`Namer::reserved_prefixes`].
+    ///
+    /// The return value is a valid identifier prefix in all of Naga's output languages,
+    /// and it never ends with a `SEPARATOR` character.
+    /// It is used as a key into the unique table.
+    fn sanitize<'s>(&self, string: &'s str) -> Cow<'s, str> {
+        let string = string
+            .trim_start_matches(|c: char| c.is_numeric())
+            .trim_end_matches(SEPARATOR);
+
+        let base = if !string.is_empty()
+            && string
+                .chars()
+                .all(|c: char| c.is_ascii_alphanumeric() || c == '_')
+        {
+            Cow::Borrowed(string)
+        } else {
+            let mut filtered = string
+                .chars()
+                .filter(|&c| c.is_ascii_alphanumeric() || c == '_')
+                .collect::<String>();
+            let stripped_len = filtered.trim_end_matches(SEPARATOR).len();
+            filtered.truncate(stripped_len);
+            if filtered.is_empty() {
+                filtered.push_str("unnamed");
+            }
+            Cow::Owned(filtered)
         };
 
         for prefix in &self.reserved_prefixes {
             if base.starts_with(prefix) {
-                return format!("gen_{}", base);
+                return format!("gen_{}", base).into();
             }
         }
 
         base
     }
 
-    /// Helper function that return unique name without cache update.
-    /// This function should be used **after** [`Namer`](crate::proc::Namer) initialization by [`reset`](Self::reset()) function.
-    pub fn call_unique(&mut self, string: &str) -> String {
-        let base = self.sanitize(string);
-        match self.unique.entry((base, self.namespace_index)) {
-            Entry::Occupied(mut e) => {
-                *e.get_mut() += 1;
-                format!("{}{}", e.key().0, e.get())
-            }
-            Entry::Vacant(e) => {
-                let name = &e.key().0;
-                if self.keywords.contains(&e.key().0) {
-                    let name = format!("{}1", name);
-                    e.insert(1);
-                    name
-                } else {
-                    name.to_string()
-                }
-            }
-        }
-    }
-
+    /// Return a new identifier based on `label_raw`.
+    ///
+    /// The result:
+    /// - is a valid identifier even if `label_raw` is not
+    /// - conflicts with no keywords listed in `Namer::keywords`, and
+    /// - is different from any identifier previously constructed by this
+    ///   `Namer`.
+    ///
+    /// Guarantee uniqueness by applying a numeric suffix when necessary. If `label_raw`
+    /// itself ends with digits, separate them from the suffix with an underscore.
     pub fn call(&mut self, label_raw: &str) -> String {
+        use std::fmt::Write as _; // for write!-ing to Strings
+
         let base = self.sanitize(label_raw);
-        match self.unique.entry((base, self.namespace_index)) {
-            Entry::Occupied(mut e) => {
-                *e.get_mut() += 1;
-                format!("{}{}", e.key().0, e.get())
+        debug_assert!(!base.is_empty() && !base.ends_with(SEPARATOR));
+
+        // This would seem to be a natural place to use `HashMap::entry`. However, `entry`
+        // requires an owned key, and we'd like to avoid heap-allocating strings we're
+        // just going to throw away. The approach below double-hashes only when we create
+        // a new entry, in which case the heap allocation of the owned key was more
+        // expensive anyway.
+        match self.unique.get_mut(base.as_ref()) {
+            Some(count) => {
+                *count += 1;
+                // Add the suffix. This may fit in base's existing allocation.
+                let mut suffixed = base.into_owned();
+                write!(&mut suffixed, "{}{}", SEPARATOR, *count).unwrap();
+                suffixed
             }
-            Entry::Vacant(e) => {
-                let name = &e.key().0;
-                if self.keywords.contains(&e.key().0) {
-                    let name = format!("{}1", name);
-                    e.insert(1);
-                    name
-                } else {
-                    let name = name.to_string();
-                    e.insert(0);
-                    name
+            None => {
+                let mut suffixed = base.to_string();
+                if base.ends_with(char::is_numeric) || self.keywords.contains(base.as_ref()) {
+                    suffixed.push(SEPARATOR);
                 }
+                debug_assert!(!self.keywords.contains(&suffixed));
+                // `self.unique` wants to own its keys. This allocates only if we haven't
+                // already done so earlier.
+                self.unique.insert(base.into_owned(), 0);
+                suffixed
             }
         }
     }
 
-    fn call_or(&mut self, label: &Option<String>, fallback: &str) -> String {
+    pub fn call_or(&mut self, label: &Option<String>, fallback: &str) -> String {
         self.call(match *label {
             Some(ref name) => name,
             None => fallback,
         })
     }
 
-    fn namespace(&mut self, f: impl FnOnce(&mut Self)) {
-        self.namespace_index += 1;
-        f(self);
-        let current_ns = self.namespace_index;
-        self.unique.retain(|&(_, ns), _| ns != current_ns);
-        self.namespace_index -= 1;
+    /// Enter a local namespace for things like structs.
+    ///
+    /// Struct member names only need to be unique amongst themselves, not
+    /// globally. This function temporarily establishes a fresh, empty naming
+    /// context for the duration of the call to `body`.
+    fn namespace(&mut self, capacity: usize, body: impl FnOnce(&mut Self)) {
+        let fresh = FastHashMap::with_capacity_and_hasher(capacity, Default::default());
+        let outer = std::mem::replace(&mut self.unique, fresh);
+        body(self);
+        self.unique = outer;
     }
 
     pub fn reset(
@@ -133,7 +156,7 @@ impl Namer {
 
             if let crate::TypeInner::Struct { ref members, .. } = ty.inner {
                 // struct members have their own namespace, because access is always prefixed
-                self.namespace(|namer| {
+                self.namespace(members.len(), |namer| {
                     for (index, member) in members.iter().enumerate() {
                         let name = namer.call_or(&member.name, "member");
                         output.insert(NameKey::StructMember(ty_handle, index as u32), name);
@@ -227,4 +250,12 @@ impl Namer {
             output.insert(NameKey::Constant(handle), name);
         }
     }
+}
+
+#[test]
+fn test() {
+    let mut namer = Namer::default();
+    assert_eq!(namer.call("x"), "x");
+    assert_eq!(namer.call("x"), "x_1");
+    assert_eq!(namer.call("x1"), "x1_");
 }
