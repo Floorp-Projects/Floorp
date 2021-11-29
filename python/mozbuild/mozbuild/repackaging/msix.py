@@ -700,7 +700,7 @@ def repackage_msix(
     return output
 
 
-def _sign_msix_win(output, force, log, verbose, vendor, publisher, friendly_name):
+def _sign_msix_win(output, force, log, verbose):
     powershell_exe = find_sdk_tool("powershell.exe", log=log)
     if not powershell_exe:
         raise ValueError("powershell is required; " "set POWERSHELL or PATH")
