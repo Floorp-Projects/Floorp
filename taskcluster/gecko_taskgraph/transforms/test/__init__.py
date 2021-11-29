@@ -654,7 +654,7 @@ def resolve_keys(config, tasks):
 @transforms.add
 def setup_raptor(config, tasks):
     """Add options that are specific to raptor jobs (identified by suite=raptor)"""
-    from gecko_taskgraph.transforms.raptor import transforms as raptor_transforms
+    from gecko_taskgraph.transforms.test.raptor import transforms as raptor_transforms
 
     for task in tasks:
         if task["suite"] != "raptor":

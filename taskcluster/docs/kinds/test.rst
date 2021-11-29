@@ -48,7 +48,7 @@ See this file for an up to date list of active variants and the pref(s) they
 set.
 
 Each variant must conform to the
-:py:data:`~gecko_taskgraph.transforms.tests.variant_description_schema`:
+:py:data:`~gecko_taskgraph.transforms.test.variant_description_schema`:
 
 * **description** (required) - A description explaining what the variant is for
 * **suffix** (required) - A suffix to apply to the task label and treeherder symbol
@@ -123,11 +123,11 @@ that make up a ``setting``:
 
 Test ``settings`` are available in the ``task.extra.test-setting`` object in
 all test tasks. They are defined by the
-:py:func:`~gecko_taskgraph.transforms.tests.set_test_setting` transform
+:py:func:`~gecko_taskgraph.transforms.test.set_test_setting` transform
 function.
 
 The full schema is defined in the
-:py:data:`~gecko_taskgraph.transforms.tests.test_setting_description_schema`.
+:py:data:`~gecko_taskgraph.transforms.test.test_setting_description_schema`.
 
 Setting Hash
 ~~~~~~~~~~~~
