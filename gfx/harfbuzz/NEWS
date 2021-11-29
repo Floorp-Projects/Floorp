@@ -1,3 +1,12 @@
+Overview of changes leading to 3.1.2
+Friday, November 26, 2021
+====================================
+- hb-shape / hb-view: revert treating text on the commandline as single
+  paragraph (was introduced in 3.0.0); add new --single-par to do that.
+  (Behdad Esfahbod)
+- Subsetter bug fixes. (Garret Rieger, Qunxin Liu, Behdad Esfahbod)
+
+
 Overview of changes leading to 3.1.1
 Wednesday, November 8, 2021
 ====================================
