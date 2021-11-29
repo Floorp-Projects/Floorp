@@ -1184,6 +1184,7 @@ def enable_code_coverage(config, tasks):
                 task.setdefault("fetches", {})
                 task["fetches"].setdefault("fetch", [])
                 task["fetches"].setdefault("toolchain", [])
+                task["fetches"].setdefault("build", [])
 
             if "linux" in task["build-platform"]:
                 task["fetches"]["toolchain"].append("linux64-grcov")
@@ -1191,6 +1192,8 @@ def enable_code_coverage(config, tasks):
                 task["fetches"]["fetch"].append("grcov-osx-x86_64")
             elif "win" in task["build-platform"]:
                 task["fetches"]["toolchain"].append("win64-grcov")
+
+            task["fetches"]["build"].append({"artifact": "target.mozinfo.json"})
 
             if "talos" in task["test-name"]:
                 task["max-run-time"] = 7200
