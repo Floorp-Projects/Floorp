@@ -1,13 +1,9 @@
 use crate::{
-    binding_model::{
-        BindError, BindGroup, LateMinBufferBindingSizeMismatch, PushConstantUploadError,
-    },
+    binding_model::{BindError, BindGroup, PushConstantUploadError},
     command::{
-        bind::Binder,
-        end_pipeline_statistics_query,
-        memory_init::{fixup_discarded_surfaces, SurfacesInDiscardState},
-        BasePass, BasePassRef, CommandBuffer, CommandEncoderError, CommandEncoderStatus,
-        MapPassErr, PassErrorScope, QueryUseError, StateChange,
+        bind::Binder, end_pipeline_statistics_query, BasePass, BasePassRef, CommandBuffer,
+        CommandEncoderError, CommandEncoderStatus, MapPassErr, PassErrorScope, QueryUseError,
+        StateChange,
     },
     device::MissingDownlevelFlags,
     error::{ErrorFormatter, PrettyError},
@@ -123,12 +119,6 @@ pub enum DispatchError {
         //expected: BindGroupLayoutId,
         //provided: Option<(BindGroupLayoutId, BindGroupId)>,
     },
-    #[error(
-        "each current dispatch group size dimension ({current:?}) must be less or equal to {limit}"
-    )]
-    InvalidGroupSize { current: [u32; 3], limit: u32 },
-    #[error(transparent)]
-    BindingSizeTooSmall(#[from] LateMinBufferBindingSizeMismatch),
 }
 
 /// Error encountered when performing a compute pass.
@@ -229,6 +219,7 @@ struct State {
 
 impl State {
     fn is_ready(&self) -> Result<(), DispatchError> {
+        //TODO: vertex buffers
         let bind_mask = self.binder.invalid_mask();
         if bind_mask != 0 {
             //let (expected, provided) = self.binder.entries[index as usize].info();
@@ -239,8 +230,6 @@ impl State {
         if self.pipeline.is_unset() {
             return Err(DispatchError::MissingPipeline);
         }
-        self.binder.check_late_buffer_bindings()?;
-
         Ok(())
     }
 
@@ -292,7 +281,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         base: BasePassRef<ComputeCommand>,
     ) -> Result<(), ComputePassError> {
         profiling::scope!("run_compute_pass", "CommandEncoder");
-        let init_scope = PassErrorScope::Pass(encoder_id);
+        let scope = PassErrorScope::Pass(encoder_id);
 
         let hub = A::hub(self);
         let mut token = Token::root();
@@ -300,8 +289,8 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         let (device_guard, mut token) = hub.devices.read(&mut token);
 
         let (mut cmd_buf_guard, mut token) = hub.command_buffers.write(&mut token);
-        let cmd_buf = CommandBuffer::get_encoder_mut(&mut *cmd_buf_guard, encoder_id)
-            .map_pass_err(init_scope)?;
+        let cmd_buf =
+            CommandBuffer::get_encoder_mut(&mut *cmd_buf_guard, encoder_id).map_pass_err(scope)?;
         // will be reset to true if recording is done without errors
         cmd_buf.status = CommandEncoderStatus::Error;
         let raw = cmd_buf.encoder.open();
@@ -338,9 +327,6 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         unsafe {
             raw.begin_compute_pass(&hal_desc);
         }
-
-        // Immediate texture inits required because of prior discards. Need to be inserted before texture reads.
-        let mut pending_discard_init_fixups = SurfacesInDiscardState::new();
 
         for command in base.commands {
             match *command {
@@ -385,15 +371,6 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                             },
                         ),
                     );
-
-                    for action in bind_group.used_texture_ranges.iter() {
-                        pending_discard_init_fixups.extend(
-                            cmd_buf
-                                .texture_memory_actions
-                                .register_init_action(action, &texture_guard),
-                        );
-                    }
-
                     let pipeline_layout_id = state.binder.pipeline_layout_id;
                     let entries = state.binder.assign_group(
                         index as usize,
@@ -442,7 +419,6 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                         let (start_index, entries) = state.binder.change_pipeline_layout(
                             &*pipeline_layout_guard,
                             pipeline.layout_id.value,
-                            &pipeline.late_sized_buffer_groups,
                         );
                         if !entries.is_empty() {
                             for (i, e) in entries.iter().enumerate() {
@@ -527,14 +503,6 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                         pipeline: state.pipeline.last_state,
                     };
 
-                    fixup_discarded_surfaces(
-                        pending_discard_init_fixups.drain(..),
-                        raw,
-                        &texture_guard,
-                        &mut cmd_buf.trackers.textures,
-                        device,
-                    );
-
                     state.is_ready().map_pass_err(scope)?;
                     state
                         .flush_states(
@@ -545,22 +513,6 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                             &*texture_guard,
                         )
                         .map_pass_err(scope)?;
-
-                    let groups_size_limit = cmd_buf.limits.max_compute_workgroups_per_dimension;
-
-                    if groups[0] > groups_size_limit
-                        || groups[1] > groups_size_limit
-                        || groups[2] > groups_size_limit
-                    {
-                        return Err(ComputePassErrorInner::Dispatch(
-                            DispatchError::InvalidGroupSize {
-                                current: groups,
-                                limit: groups_size_limit,
-                            },
-                        ))
-                        .map_pass_err(scope);
-                    }
-
                     unsafe {
                         raw.dispatch(groups);
                     }
@@ -717,16 +669,6 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
             raw.end_compute_pass();
         }
         cmd_buf.status = CommandEncoderStatus::Recording;
-
-        // There can be entries left in pending_discard_init_fixups if a bind group was set, but not used (i.e. no Dispatch occurred)
-        // However, we already altered the discard/init_action state on this cmd_buf, so we need to apply the promised changes.
-        fixup_discarded_surfaces(
-            pending_discard_init_fixups.into_iter(),
-            raw,
-            &texture_guard,
-            &mut cmd_buf.trackers.textures,
-            device,
-        );
 
         Ok(())
     }

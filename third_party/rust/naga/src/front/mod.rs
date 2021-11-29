@@ -1,7 +1,5 @@
 //! Parsers which load shaders into memory.
 
-mod interpolator;
-
 #[cfg(feature = "glsl-in")]
 pub mod glsl;
 #[cfg(feature = "spv-in")]
@@ -10,7 +8,7 @@ pub mod spv;
 pub mod wgsl;
 
 use crate::{
-    arena::{Arena, Handle, UniqueArena},
+    arena::{Arena, Handle},
     proc::{ResolveContext, ResolveError, TypeResolution},
 };
 use std::ops;
@@ -38,7 +36,7 @@ impl Emitter {
         let start_len = self.start_len.take().unwrap();
         if start_len != arena.len() {
             #[allow(unused_mut)]
-            let mut span = crate::span::Span::default();
+            let mut span = crate::span::Span::Unknown;
             let range = arena.range_from(start_len);
             #[cfg(feature = "span")]
             for handle in range.clone() {
@@ -81,7 +79,7 @@ impl Typifier {
     pub fn get<'a>(
         &'a self,
         expr_handle: Handle<crate::Expression>,
-        types: &'a UniqueArena<crate::Type>,
+        types: &'a Arena<crate::Type>,
     ) -> &'a crate::TypeInner {
         self.resolutions[expr_handle.index()].inner_with(types)
     }

@@ -8,9 +8,9 @@
 
 pub use ast::{Precision, Profile};
 pub use error::{Error, ErrorKind, ExpectedToken};
-pub use token::TokenValue;
+pub use token::{SourceMetadata, TokenValue};
 
-use crate::{FastHashMap, FastHashSet, Handle, Module, ShaderStage, Span, Type};
+use crate::{FastHashMap, FastHashSet, Handle, Module, ShaderStage, Type};
 use ast::{EntryArg, FunctionDeclaration, GlobalLookup};
 use parser::ParsingContext;
 

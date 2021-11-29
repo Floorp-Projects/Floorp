@@ -102,11 +102,8 @@ impl<A: hal::Api> Example<A> {
             );
             (exposed.adapter, exposed.capabilities)
         };
-        let hal::OpenDevice { device, mut queue } = unsafe {
-            adapter
-                .open(wgt::Features::empty(), &wgt::Limits::default())
-                .unwrap()
-        };
+        let hal::OpenDevice { device, mut queue } =
+            unsafe { adapter.open(wgt::Features::empty()).unwrap() };
 
         let window_size: (u32, u32) = window.inner_size().into();
         let surface_config = hal::SurfaceConfiguration {
@@ -140,10 +137,7 @@ impl<A: hal::Api> Example<A> {
             .unwrap();
             hal::NagaShader { module, info }
         };
-        let shader_desc = hal::ShaderModuleDescriptor {
-            label: None,
-            runtime_checks: false,
-        };
+        let shader_desc = hal::ShaderModuleDescriptor { label: None };
         let shader = unsafe {
             device
                 .create_shader_module(&shader_desc, hal::ShaderInput::Naga(naga_shader))
@@ -152,7 +146,6 @@ impl<A: hal::Api> Example<A> {
 
         let global_bgl_desc = hal::BindGroupLayoutDescriptor {
             label: None,
-            flags: hal::BindGroupLayoutFlags::empty(),
             entries: &[
                 wgt::BindGroupLayoutEntry {
                     binding: 0,
@@ -177,7 +170,10 @@ impl<A: hal::Api> Example<A> {
                 wgt::BindGroupLayoutEntry {
                     binding: 2,
                     visibility: wgt::ShaderStages::FRAGMENT,
-                    ty: wgt::BindingType::Sampler(wgt::SamplerBindingType::Filtering),
+                    ty: wgt::BindingType::Sampler {
+                        filtering: true,
+                        comparison: false,
+                    },
                     count: None,
                 },
             ],
@@ -187,8 +183,6 @@ impl<A: hal::Api> Example<A> {
             unsafe { device.create_bind_group_layout(&global_bgl_desc).unwrap() };
 
         let local_bgl_desc = hal::BindGroupLayoutDescriptor {
-            label: None,
-            flags: hal::BindGroupLayoutFlags::empty(),
             entries: &[wgt::BindGroupLayoutEntry {
                 binding: 0,
                 visibility: wgt::ShaderStages::VERTEX,
@@ -199,6 +193,7 @@ impl<A: hal::Api> Example<A> {
                 },
                 count: None,
             }],
+            label: None,
         };
         let local_group_layout =
             unsafe { device.create_bind_group_layout(&local_bgl_desc).unwrap() };
@@ -238,7 +233,6 @@ impl<A: hal::Api> Example<A> {
                 blend: Some(wgt::BlendState::ALPHA_BLENDING),
                 write_mask: wgt::ColorWrites::default(),
             }],
-            multiview: None,
         };
         let pipeline = unsafe { device.create_render_pipeline(&pipeline_desc).unwrap() };
 
@@ -423,17 +417,14 @@ impl<A: hal::Api> Example<A> {
                     hal::BindGroupEntry {
                         binding: 0,
                         resource_index: 0,
-                        count: 1,
                     },
                     hal::BindGroupEntry {
                         binding: 1,
                         resource_index: 0,
-                        count: 1,
                     },
                     hal::BindGroupEntry {
                         binding: 2,
                         resource_index: 0,
-                        count: 1,
                     },
                 ],
             };
@@ -455,7 +446,6 @@ impl<A: hal::Api> Example<A> {
                 entries: &[hal::BindGroupEntry {
                     binding: 0,
                     resource_index: 0,
-                    count: 1,
                 }],
             };
             unsafe { device.create_bind_group(&local_group_desc).unwrap() }
@@ -665,7 +655,6 @@ impl<A: hal::Api> Example<A> {
                 },
             }],
             depth_stencil_attachment: None,
-            multiview: None,
         };
         unsafe {
             ctx.encoder.begin_render_pass(&pass_desc);

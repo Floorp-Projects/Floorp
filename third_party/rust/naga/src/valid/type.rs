@@ -1,6 +1,6 @@
 use super::Capabilities;
 use crate::{
-    arena::{Arena, Handle, UniqueArena},
+    arena::{Arena, Handle},
     proc::Alignment,
 };
 
@@ -89,8 +89,6 @@ pub enum TypeError {
     InvalidArrayBaseType(Handle<crate::Type>),
     #[error("The constant {0:?} can not be used for an array size")]
     InvalidArraySizeConstant(Handle<crate::Constant>),
-    #[error("The constant {0:?} is specialized, and cannot be used as an array size")]
-    UnsupportedSpecializedArrayLength(Handle<crate::Constant>),
     #[error("Array type {0:?} must have a length of one or more")]
     NonPositiveArrayLength(Handle<crate::Constant>),
     #[error("Array stride {stride} is smaller than the base element size {base_size}")]
@@ -189,7 +187,7 @@ impl super::Validator {
     pub(super) fn validate_type(
         &self,
         handle: Handle<crate::Type>,
-        types: &UniqueArena<crate::Type>,
+        types: &Arena<crate::Type>,
         constants: &Arena<crate::Constant>,
     ) -> Result<TypeInfo, TypeError> {
         use crate::TypeInner as Ti;
@@ -353,19 +351,6 @@ impl super::Validator {
                     crate::ArraySize::Constant(const_handle) => {
                         let length_is_positive = match constants.try_get(const_handle) {
                             Some(&crate::Constant {
-                                specialization: Some(_),
-                                ..
-                            }) => {
-                                // Many of our back ends don't seem to support
-                                // specializable array lengths. If you want to try to make
-                                // this work, be sure to address all uses of
-                                // `Constant::to_array_length`, which ignores
-                                // specialization.
-                                return Err(TypeError::UnsupportedSpecializedArrayLength(
-                                    const_handle,
-                                ));
-                            }
-                            Some(&crate::Constant {
                                 inner:
                                     crate::ConstantInner::Scalar {
                                         width: _,
@@ -488,13 +473,9 @@ impl super::Validator {
                         handle,
                     );
 
-                    // The last field may be an unsized array.
+                    // only the last field can be unsized
                     if !base_info.flags.contains(TypeFlags::SIZED) {
-                        let is_array = match types[member.ty].inner {
-                            crate::TypeInner::Array { .. } => true,
-                            _ => false,
-                        };
-                        if !is_array || i + 1 != members.len() {
+                        if i + 1 != members.len() {
                             let name = member.name.clone().unwrap_or_default();
                             return Err(TypeError::InvalidDynamicArray(name, member.ty));
                         }

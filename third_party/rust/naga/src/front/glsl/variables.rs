@@ -2,7 +2,7 @@ use super::{
     ast::*,
     context::Context,
     error::{Error, ErrorKind},
-    Parser, Result, Span,
+    Parser, Result, SourceMetadata,
 };
 use crate::{
     Binding, Block, BuiltIn, Constant, Expression, GlobalVariable, Handle, Interpolation,
@@ -24,11 +24,11 @@ macro_rules! qualifier_arm {
 }
 
 pub struct VarDeclaration<'a> {
-    pub qualifiers: &'a [(TypeQualifier, Span)],
+    pub qualifiers: &'a [(TypeQualifier, SourceMetadata)],
     pub ty: Handle<Type>,
     pub name: Option<String>,
     pub init: Option<Handle<Constant>>,
-    pub meta: Span,
+    pub meta: SourceMetadata,
 }
 
 /// Information about a builtin used in [`add_builtin`](Parser::add_builtin)
@@ -56,14 +56,14 @@ impl Parser {
         body: &mut Block,
         name: &str,
         data: BuiltInData,
-        meta: Span,
+        meta: SourceMetadata,
     ) -> Option<VariableReference> {
-        let ty = self.module.types.insert(
+        let ty = self.module.types.fetch_or_append(
             Type {
                 name: None,
                 inner: data.inner,
             },
-            meta,
+            meta.as_span(),
         );
 
         let handle = self.module.global_variables.append(
@@ -74,7 +74,7 @@ impl Parser {
                 ty,
                 init: None,
             },
-            meta,
+            meta.as_span(),
         );
 
         let idx = self.entry_args.len();
@@ -101,7 +101,6 @@ impl Parser {
                 expr,
                 load: true,
                 mutable: data.mutable,
-                constant: None,
                 entry_arg: Some(idx),
             },
         );
@@ -114,7 +113,7 @@ impl Parser {
         ctx: &mut Context,
         body: &mut Block,
         name: &str,
-        meta: Span,
+        meta: SourceMetadata,
     ) -> Option<VariableReference> {
         if let Some(local_var) = ctx.lookup_local_var(name) {
             return Some(local_var);
@@ -188,7 +187,7 @@ impl Parser {
                 storage: StorageQualifier::Output,
             },
             "gl_ClipDistance" | "gl_CullDistance" => {
-                let base = self.module.types.insert(
+                let base = self.module.types.fetch_or_append(
                     Type {
                         name: None,
                         inner: TypeInner::Scalar {
@@ -196,7 +195,7 @@ impl Parser {
                             width: 4,
                         },
                     },
-                    meta,
+                    meta.as_span(),
                 );
 
                 BuiltInData {
@@ -248,7 +247,7 @@ impl Parser {
         body: &mut Block,
         expression: Handle<Expression>,
         name: &str,
-        meta: Span,
+        meta: SourceMetadata,
     ) -> Result<Handle<Expression>> {
         let (ty, is_pointer) = match *self.resolve_type(ctx, expression, meta)? {
             TypeInner::Pointer { base, .. } => (&self.module.types[base].inner, true),
@@ -562,7 +561,7 @@ impl Parser {
                     ty,
                     init,
                 },
-                meta,
+                meta.as_span(),
             );
 
             let idx = self.entry_args.len();
@@ -596,7 +595,7 @@ impl Parser {
             })?;
             if let Some(name) = name {
                 let lookup = GlobalLookup {
-                    kind: GlobalLookupKind::Constant(init, ty),
+                    kind: GlobalLookupKind::Constant(init),
                     entry_arg: None,
                     mutable: false,
                 };
@@ -633,7 +632,7 @@ impl Parser {
                 ty,
                 init,
             },
-            meta,
+            meta.as_span(),
         );
 
         if let Some(name) = name {
@@ -711,7 +710,7 @@ impl Parser {
                 ty,
                 init,
             },
-            meta,
+            meta.as_span(),
         );
         let expr = ctx.add_expression(Expression::LocalVariable(handle), meta, body);
 

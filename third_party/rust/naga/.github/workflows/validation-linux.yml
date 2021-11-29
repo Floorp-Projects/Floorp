@@ -6,7 +6,6 @@ on:
     - 'tests/out/glsl/*.glsl'
     - 'tests/out/dot/*.dot'
     - 'tests/out/wgsl/*.wgsl'
-    - 'src/front/wgsl/*'
 
 jobs:
   validate-linux:

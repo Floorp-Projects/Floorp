@@ -1,4 +1,6 @@
-use super::{constants::ConstantSolver, context::Context, Error, ErrorKind, Parser, Result, Span};
+use super::{
+    constants::ConstantSolver, context::Context, Error, ErrorKind, Parser, Result, SourceMetadata,
+};
 use crate::{
     proc::ResolveContext, ArraySize, Bytes, Constant, Expression, Handle, ImageClass,
     ImageDimension, ScalarKind, Type, TypeInner, VectorSize,
@@ -129,14 +131,14 @@ pub fn parse_type(type_name: &str) -> Option<Type> {
 
                 let (dim, arrayed, class) = match size {
                     "1D" => (ImageDimension::D1, false, sampled(false)),
-                    "1DArray" => (ImageDimension::D1, true, sampled(false)),
+                    "1DArray" => (ImageDimension::D1, false, sampled(false)),
                     "2D" => (ImageDimension::D2, false, sampled(false)),
-                    "2DArray" => (ImageDimension::D2, true, sampled(false)),
-                    "2DMS" => (ImageDimension::D2, false, sampled(true)),
+                    "2DArray" => (ImageDimension::D2, false, sampled(false)),
+                    "2DMS" => (ImageDimension::D2, true, sampled(true)),
                     "2DMSArray" => (ImageDimension::D2, true, sampled(true)),
                     "3D" => (ImageDimension::D3, false, sampled(false)),
                     "Cube" => (ImageDimension::Cube, false, sampled(false)),
-                    "CubeArray" => (ImageDimension::Cube, true, sampled(false)),
+                    "CubeArray" => (ImageDimension::D2, false, sampled(false)),
                     _ => return None,
                 };
 
@@ -182,7 +184,7 @@ impl Parser {
         &self,
         ctx: &mut Context,
         handle: Handle<Expression>,
-        meta: Span,
+        meta: SourceMetadata,
     ) -> Result<()> {
         let resolve_ctx = ResolveContext {
             constants: &self.module.constants,
@@ -205,7 +207,7 @@ impl Parser {
         &'b self,
         ctx: &'b mut Context,
         handle: Handle<Expression>,
-        meta: Span,
+        meta: SourceMetadata,
     ) -> Result<&'b TypeInner> {
         self.typifier_grow(ctx, handle, meta)?;
         Ok(ctx.typifier.get(handle, &self.module.types))
@@ -216,7 +218,7 @@ impl Parser {
         &'b self,
         ctx: &'b mut Context,
         handle: Handle<Expression>,
-        meta: Span,
+        meta: SourceMetadata,
     ) -> Result<()> {
         let resolve_ctx = ResolveContext {
             constants: &self.module.constants,
@@ -239,10 +241,10 @@ impl Parser {
         &mut self,
         ctx: &Context,
         root: Handle<Expression>,
-        meta: Span,
+        meta: SourceMetadata,
     ) -> Result<Handle<Constant>> {
         let mut solver = ConstantSolver {
-            types: &mut self.module.types,
+            types: &self.module.types,
             expressions: &ctx.expressions,
             constants: &mut self.module.constants,
         };
@@ -256,13 +258,12 @@ impl Parser {
     pub(crate) fn maybe_array(
         &mut self,
         base: Handle<Type>,
-        mut meta: Span,
-        array_specifier: Option<(ArraySize, Span)>,
+        meta: SourceMetadata,
+        array_specifier: Option<(ArraySize, SourceMetadata)>,
     ) -> Handle<Type> {
         array_specifier
             .map(|(size, size_meta)| {
-                meta.subsume(size_meta);
-                self.module.types.insert(
+                self.module.types.fetch_or_append(
                     Type {
                         name: None,
                         inner: TypeInner::Array {
@@ -271,7 +272,7 @@ impl Parser {
                             stride: self.module.types[base].inner.span(&self.module.constants),
                         },
                     },
-                    meta,
+                    meta.union(&size_meta).as_span(),
                 )
             })
             .unwrap_or(base)
