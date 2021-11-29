@@ -8650,10 +8650,6 @@ void nsHttpChannel::SetCouldBeSynthesized() {
   StoreResponseCouldBeSynthesized(true);
 }
 
-void nsHttpChannel::SetConnectionInfo(nsHttpConnectionInfo* aCI) {
-  mConnectionInfo = aCI ? aCI->Clone() : nullptr;
-}
-
 NS_IMETHODIMP
 nsHttpChannel::OnPreflightSucceeded() {
   MOZ_ASSERT(LoadRequireCORSPreflight(), "Why did a preflight happen?");

@@ -7,6 +7,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsComponentManagerUtils.h"
 #include "nsDirectoryServiceUtils.h"
+#include "nsHttpConnectionInfo.h"
 #include "nsICaptivePortalService.h"
 #include "nsIFile.h"
 #include "nsIParentalControlsService.h"
@@ -24,6 +25,7 @@
 #include "mozilla/TelemetryComms.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/net/rust_helper.h"
+#include "mozilla/net/TRRServiceChild.h"
 // Put DNSLogging.h at the end to avoid LOG being overwritten by other headers.
 #include "DNSLogging.h"
 
@@ -60,7 +62,8 @@ constexpr nsLiteralCString kTRRDomains[] = {
 // static
 const nsCString& TRRService::ProviderKey() { return kTRRDomains[sDomainIndex]; }
 
-NS_IMPL_ISUPPORTS(TRRService, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS_INHERITED(TRRService, TRRServiceBase, nsIObserver,
+                            nsISupportsWeakReference)
 
 NS_IMPL_ADDREF_USING_AGGREGATOR(TRRService::ConfirmationContext, OwningObject())
 NS_IMPL_RELEASE_USING_AGGREGATOR(TRRService::ConfirmationContext,
@@ -336,6 +339,8 @@ bool TRRService::MaybeSetPrivateURI(const nsACString& aURI) {
 
     mPrivateURI = newURI;
 
+    AsyncCreateTRRConnectionInfo(mPrivateURI);
+
     // The URI has changed. We should trigger a new confirmation immediately.
     // We must do this here because the URI could also change because of
     // steering.
@@ -507,10 +512,9 @@ void TRRService::ReadEtcHostsFile() {
       NS_DISPATCH_EVENT_MAY_BLOCK);
 }
 
-nsresult TRRService::GetURI(nsACString& result) {
+void TRRService::GetURI(nsACString& result) {
   MutexAutoLock lock(mLock);
   result = mPrivateURI;
-  return NS_OK;
 }
 
 nsresult TRRService::GetCredentials(nsCString& result) {
@@ -1305,6 +1309,32 @@ AHostResolver::LookupStatus TRRService::CompleteLookupByType(
     nsHostRecord*, nsresult, mozilla::net::TypeRecordResultType& aResult,
     uint32_t aTtl, bool aPb) {
   return LOOKUP_OK;
+}
+
+NS_IMETHODIMP TRRService::OnProxyConfigChanged() {
+  LOG(("TRRService::OnProxyConfigChanged"));
+
+  nsAutoCString uri;
+  GetURI(uri);
+  AsyncCreateTRRConnectionInfo(uri);
+
+  return NS_OK;
+}
+
+void TRRService::InitTRRConnectionInfo() {
+  if (XRE_IsParentProcess()) {
+    TRRServiceBase::InitTRRConnectionInfo();
+    return;
+  }
+
+  MOZ_ASSERT(XRE_IsSocketProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+
+  TRRServiceChild* child = TRRServiceChild::GetSingleton();
+  if (child && child->CanSend()) {
+    LOG(("TRRService::SendInitTRRConnectionInfo"));
+    Unused << child->SendInitTRRConnectionInfo();
+  }
 }
 
 }  // namespace net

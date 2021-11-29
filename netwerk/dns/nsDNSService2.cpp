@@ -1368,7 +1368,7 @@ nsDNSService::SetDetectedTrrURI(const nsACString& aURI) {
 NS_IMETHODIMP
 nsDNSService::GetCurrentTrrURI(nsACString& aURI) {
   if (mTrrService) {
-    return mTrrService->GetURI(aURI);
+    mTrrService->GetURI(aURI);
   }
   return NS_OK;
 }

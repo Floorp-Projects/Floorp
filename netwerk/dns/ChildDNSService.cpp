@@ -132,6 +132,9 @@ nsresult ChildDNSService::AsyncResolveInternal(
   RefPtr<DNSRequestActor> dnsReq;
   if (resolveDNSInSocketProcess) {
     dnsReq = new DNSRequestParent(sender);
+    if (!mTRRServiceParent->TRRConnectionInfoInited()) {
+      mTRRServiceParent->InitTRRConnectionInfo();
+    }
   } else {
     dnsReq = new DNSRequestChild(sender);
   }
@@ -303,7 +306,7 @@ ChildDNSService::GetCurrentTrrURI(nsACString& aURI) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  mTRRServiceParent->GetTrrURI(aURI);
+  mTRRServiceParent->GetURI(aURI);
   return NS_OK;
 }
 
