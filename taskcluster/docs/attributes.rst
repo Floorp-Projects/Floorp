@@ -144,7 +144,7 @@ unittest_variant
 
 The configuration variant the test suite is running with. If set, this usually
 means the tests are running with a special pref enabled. These are defined in
-``taskgraph.transforms.tests.TEST_VARIANTS``.
+``taskgraph.transforms.test.TEST_VARIANTS``.
 
 talos_try_name
 ==============

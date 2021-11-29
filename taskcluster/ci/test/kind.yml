@@ -12,14 +12,14 @@ kind-dependencies:
     - toolchain
 
 transforms:
-    - gecko_taskgraph.transforms.tests:transforms
+    - gecko_taskgraph.transforms.test:transforms
     - gecko_taskgraph.transforms.job:transforms
     - gecko_taskgraph.transforms.task:transforms
 
 # Each stanza in a file pointed to by 'jobs-from' describes a particular test
 # suite or sub-suite. These are processed through the transformations described
 # above to produce a bunch of tasks. See the schema in
-# `taskcluster/gecko_taskgraph/transforms/tests.py` for a description of the fields
+# `taskcluster/gecko_taskgraph/transforms/test/__init__.py` for a description of the fields
 # used in these files.
 
 # Adding a new test type or running tests on a new platform? Be sure to review
