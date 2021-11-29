@@ -179,10 +179,13 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeRequest(nsIURI* aURI,
   NS_ConvertUTF8toUTF16 reportSpec(aURI->GetSpecOrDefault());
   NS_ConvertUTF8toUTF16 reportScheme(scheme);
 
+  bool isSpeculative = aLoadInfo->GetExternalContentPolicyType() ==
+                       ExtContentPolicy::TYPE_SPECULATIVE;
   AutoTArray<nsString, 2> params = {reportSpec, reportScheme};
-  nsHTTPSOnlyUtils::LogLocalizedString("HTTPSOnlyUpgradeRequest", params,
-                                       nsIScriptError::warningFlag, aLoadInfo,
-                                       aURI);
+  nsHTTPSOnlyUtils::LogLocalizedString(
+      isSpeculative ? "HTTPSOnlyUpgradeSpeculativeConnection"
+                    : "HTTPSOnlyUpgradeRequest",
+      params, nsIScriptError::warningFlag, aLoadInfo, aURI);
 
   // If the status was not determined before, we now indicate that the request
   // will get upgraded, but no event-listener has been registered yet.
@@ -360,9 +363,10 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeHttpsFirstRequest(nsIURI* aURI,
     return false;
   }
 
-  // 2. HTTPS-First only upgrades top-level loads
-  if (aLoadInfo->GetExternalContentPolicyType() !=
-      ExtContentPolicy::TYPE_DOCUMENT) {
+  // 2. HTTPS-First only upgrades top-level loads (and speculative connections)
+  ExtContentPolicyType contentType = aLoadInfo->GetExternalContentPolicyType();
+  if (contentType != ExtContentPolicy::TYPE_DOCUMENT &&
+      contentType != ExtContentPolicy::TYPE_SPECULATIVE) {
     return false;
   }
 
@@ -420,10 +424,12 @@ bool nsHTTPSOnlyUtils::ShouldUpgradeHttpsFirstRequest(nsIURI* aURI,
   NS_ConvertUTF8toUTF16 reportSpec(aURI->GetSpecOrDefault());
   NS_ConvertUTF8toUTF16 reportScheme(scheme);
 
+  bool isSpeculative = contentType == ExtContentPolicy::TYPE_SPECULATIVE;
   AutoTArray<nsString, 2> params = {reportSpec, reportScheme};
-  nsHTTPSOnlyUtils::LogLocalizedString("HTTPSOnlyUpgradeRequest", params,
-                                       nsIScriptError::warningFlag, aLoadInfo,
-                                       aURI, true);
+  nsHTTPSOnlyUtils::LogLocalizedString(
+      isSpeculative ? "HTTPSOnlyUpgradeSpeculativeConnection"
+                    : "HTTPSOnlyUpgradeRequest",
+      params, nsIScriptError::warningFlag, aLoadInfo, aURI, true);
 
   // Set flag so we know that we upgraded the request
   httpsOnlyStatus |= nsILoadInfo::HTTPS_ONLY_UPGRADED_HTTPS_FIRST;
