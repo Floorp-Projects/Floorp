@@ -479,3 +479,123 @@ class TRRServer {
     );
   }
 }
+
+// Implements a basic HTTP2 proxy server
+class TRRProxyCode {
+  static async startServer(endServerPort) {
+    const fs = require("fs");
+    const options = {
+      key: fs.readFileSync(__dirname + "/http2-cert.key"),
+      cert: fs.readFileSync(__dirname + "/http2-cert.pem"),
+    };
+
+    const http2 = require("http2");
+    global.proxy = http2.createSecureServer(options);
+    this.setupProxy();
+    global.endServerPort = endServerPort;
+
+    await global.proxy.listen(0);
+
+    let serverPort = global.proxy.address().port;
+    return serverPort;
+  }
+
+  static closeProxy() {
+    global.proxy.closeSockets();
+    return new Promise(resolve => {
+      global.proxy.close(resolve);
+    });
+  }
+
+  static proxySessionCount() {
+    if (!global.proxy) {
+      return 0;
+    }
+    return global.proxy.proxy_session_count;
+  }
+
+  static setupProxy() {
+    if (!global.proxy) {
+      throw new Error("proxy is null");
+    }
+    global.proxy.proxy_session_count = 0;
+    global.proxy.on("session", () => {
+      ++global.proxy.proxy_session_count;
+    });
+
+    // We need to track active connections so we can forcefully close keep-alive
+    // connections when shutting down the proxy.
+    global.proxy.socketIndex = 0;
+    global.proxy.socketMap = {};
+    global.proxy.on("connection", function(socket) {
+      let index = global.proxy.socketIndex++;
+      global.proxy.socketMap[index] = socket;
+      socket.on("close", function() {
+        delete global.proxy.socketMap[index];
+      });
+    });
+    global.proxy.closeSockets = function() {
+      for (let i in global.proxy.socketMap) {
+        global.proxy.socketMap[i].destroy();
+      }
+    };
+
+    global.proxy.on("stream", (stream, headers) => {
+      if (headers[":method"] !== "CONNECT") {
+        // Only accept CONNECT requests
+        stream.respond({ ":status": 405 });
+        stream.end();
+        return;
+      }
+
+      const net = require("net");
+      const socket = net.connect(global.endServerPort, "127.0.0.1", () => {
+        try {
+          stream.respond({ ":status": 200 });
+          socket.pipe(stream);
+          stream.pipe(socket);
+        } catch (exception) {
+          console.log(exception);
+          stream.close();
+        }
+      });
+      socket.on("error", error => {
+        throw `Unxpected error when conneting the HTTP/2 server from the HTTP/2 proxy during CONNECT handling: '${error}'`;
+      });
+    });
+  }
+}
+
+class TRRProxy {
+  // Starts the proxy
+  async start(port) {
+    info("TRRProxy start!");
+    this.processId = await NodeServer.fork();
+    info("processid=" + this.processId);
+    await this.execute(TRRProxyCode);
+    this.port = await this.execute(`TRRProxyCode.startServer(${port})`);
+    Assert.notEqual(this.port, null);
+    this.initial_session_count = 0;
+  }
+
+  // Executes a command in the context of the node server
+  async execute(command) {
+    return NodeServer.execute(this.processId, command);
+  }
+
+  // Stops the server
+  async stop() {
+    if (this.processId) {
+      await NodeServer.execute(this.processId, `TRRProxyCode.closeProxy()`);
+      await NodeServer.kill(this.processId);
+    }
+  }
+
+  async proxy_session_counter() {
+    let data = await NodeServer.execute(
+      this.processId,
+      `TRRProxyCode.proxySessionCount()`
+    );
+    return parseInt(data) - this.initial_session_count;
+  }
+}
