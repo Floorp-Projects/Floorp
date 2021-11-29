@@ -805,6 +805,7 @@ class SmokeTest {
         }.submitQuery(secondWebPage.url.toString()) {
             mDevice.waitForIdle()
         }.goToHomescreen {
+            swipeToBottom()
         }.clickSaveTabsToCollectionButton {
             longClickTab(firstWebPage.title)
             selectTab(secondWebPage.title)

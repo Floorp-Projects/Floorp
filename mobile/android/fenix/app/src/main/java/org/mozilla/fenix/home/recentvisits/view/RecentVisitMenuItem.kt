@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.historymetadata.view
+package org.mozilla.fenix.home.recentvisits.view
 
-import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 
 /**
  * A menu item in the recent visit dropdown menu.
@@ -14,5 +14,5 @@ import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
  */
 data class RecentVisitMenuItem(
     val title: String,
-    val onClick: (HistoryMetadataGroup) -> Unit
+    val onClick: (RecentlyVisitedItem) -> Unit
 )

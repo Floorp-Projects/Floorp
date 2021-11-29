@@ -2641,12 +2641,12 @@ history:
   recent_searches_tapped:
     type: event
     description: |
-      User has tapped on a recent searches card in home.
+      User has tapped on an item in the "Recently visited" section on home.
     extra_keys:
       page_number:
         description: |
-          The page number in the homescreen carousel that the recent searches
-          card was on.
+          The page number in the homescreen carousel that the recently visited
+          item was on.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/22172
     data_reviews:
@@ -5980,7 +5980,7 @@ recent_searches:
     type: event
     description: |
       A user has deleted a search term group from the
-      "Recent searches" section on the homescreen using
+      "Recently visited" section on the homescreen using
       the long-press menu "Remove" option. This removes
       the item from the homescreen, but does not delete
       the item from history.

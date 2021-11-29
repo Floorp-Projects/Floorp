@@ -74,9 +74,9 @@ import org.mozilla.fenix.downloads.DownloadService
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.gecko.GeckoProvider
-import org.mozilla.fenix.historymetadata.DefaultHistoryMetadataService
-import org.mozilla.fenix.historymetadata.HistoryMetadataMiddleware
-import org.mozilla.fenix.historymetadata.HistoryMetadataService
+import org.mozilla.fenix.home.recentvisits.DefaultHistoryMetadataService
+import org.mozilla.fenix.home.recentvisits.HistoryMetadataMiddleware
+import org.mozilla.fenix.home.recentvisits.HistoryMetadataService
 import org.mozilla.fenix.media.MediaSessionService
 import org.mozilla.fenix.perf.StrictModeManager
 import org.mozilla.fenix.perf.lazyMonitored

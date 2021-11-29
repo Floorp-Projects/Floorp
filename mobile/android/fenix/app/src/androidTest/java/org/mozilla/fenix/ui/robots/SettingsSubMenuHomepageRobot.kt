@@ -55,7 +55,7 @@ private fun recentBookmarksButton() =
     onView(allOf(withText(R.string.customize_toggle_recent_bookmarks)))
 
 private fun recentSearchesButton() =
-    onView(allOf(withText(R.string.customize_toggle_recent_searches)))
+    onView(allOf(withText(R.string.customize_toggle_recently_visited)))
 
 private fun pocketButton() =
     onView(allOf(withText(R.string.customize_toggle_pocket)))

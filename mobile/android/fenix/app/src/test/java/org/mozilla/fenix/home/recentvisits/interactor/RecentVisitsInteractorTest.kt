@@ -2,72 +2,49 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.historymetadata.interactor
+package org.mozilla.fenix.home.recentvisits.interactor
 
-import androidx.navigation.NavController
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import mozilla.components.concept.storage.DocumentType
 import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.HistoryMetadataKey
-import mozilla.components.support.test.rule.MainCoroutineRule
-import org.junit.After
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.R
-import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
-import org.mozilla.fenix.historymetadata.controller.HistoryMetadataController
+import org.mozilla.fenix.home.pocket.PocketStoriesController
 import org.mozilla.fenix.home.recentbookmarks.controller.RecentBookmarksController
 import org.mozilla.fenix.home.recenttabs.controller.RecentTabController
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
+import org.mozilla.fenix.home.recentvisits.controller.RecentVisitsController
 import org.mozilla.fenix.home.sessioncontrol.DefaultSessionControlController
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
-import org.mozilla.fenix.home.pocket.PocketStoriesController
 
-@OptIn(ExperimentalCoroutinesApi::class)
-class HistoryMetadataInteractorTest {
-    private val testDispatcher = TestCoroutineDispatcher()
-
-    @get:Rule
-    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
-
-    private val navController = mockk<NavController>(relaxed = true)
+class RecentVisitsInteractorTest {
     private val defaultSessionControlController: DefaultSessionControlController =
         mockk(relaxed = true)
     private val recentTabController: RecentTabController = mockk(relaxed = true)
     private val recentBookmarksController: RecentBookmarksController = mockk(relaxed = true)
     private val pocketStoriesController: PocketStoriesController = mockk(relaxed = true)
-    private val historyMetadataController: HistoryMetadataController = mockk(relaxed = true)
+    private val recentVisitsController: RecentVisitsController = mockk(relaxed = true)
 
     private lateinit var interactor: SessionControlInteractor
 
     @Before
     fun setup() {
-        every { navController.currentDestination } returns mockk {
-            every { id } returns R.id.homeFragment
-        }
-
         interactor = SessionControlInteractor(
             defaultSessionControlController,
             recentTabController,
             recentBookmarksController,
-            historyMetadataController,
+            recentVisitsController,
             pocketStoriesController
         )
     }
 
-    @After
-    fun cleanUp() {
-        testDispatcher.cleanupTestCoroutines()
-    }
-
     @Test
-    fun onHistoryMetadataGroupClicked() {
+    fun handleRecentHistoryGroupClicked() {
         val historyGroup =
-            HistoryMetadataGroup(
+            RecentHistoryGroup(
                 title = "mozilla",
                 historyMetadata = listOf(
                     HistoryMetadata(
@@ -82,20 +59,20 @@ class HistoryMetadataInteractorTest {
                 )
             )
 
-        interactor.onHistoryMetadataGroupClicked(historyGroup)
+        interactor.onRecentHistoryGroupClicked(historyGroup)
         verify {
-            historyMetadataController.handleHistoryMetadataGroupClicked(historyGroup)
+            recentVisitsController.handleRecentHistoryGroupClicked(historyGroup)
         }
     }
 
     @Test
-    fun onHistoryMetadataShowAllClicked() {
-        interactor.onHistoryMetadataShowAllClicked()
-        verify { historyMetadataController.handleHistoryShowAllClicked() }
+    fun handleHistoryShowAllClicked() {
+        interactor.onHistoryShowAllClicked()
+        verify { recentVisitsController.handleHistoryShowAllClicked() }
     }
 
     @Test
-    fun onRemoveItem() {
+    fun onRemoveRecentHistoryGroup() {
         val historyMetadataKey = HistoryMetadataKey(
             "http://www.mozilla.com",
             "mozilla",
@@ -103,7 +80,7 @@ class HistoryMetadataInteractorTest {
         )
 
         val historyGroup =
-            HistoryMetadataGroup(
+            RecentHistoryGroup(
                 title = "mozilla",
                 historyMetadata = listOf(
                     HistoryMetadata(
@@ -118,10 +95,26 @@ class HistoryMetadataInteractorTest {
                 )
             )
 
-        interactor.onRemoveGroup(historyGroup.title)
+        interactor.onRemoveRecentHistoryGroup(historyGroup.title)
 
         verify {
-            historyMetadataController.handleRemoveGroup(historyGroup.title)
+            recentVisitsController.handleRemoveRecentHistoryGroup(historyGroup.title)
         }
+    }
+
+    @Test
+    fun onRecentHistoryHighlightClicked() {
+        val historyHighlight: RecentHistoryHighlight = mockk()
+
+        interactor.onRecentHistoryHighlightClicked(historyHighlight)
+
+        verify { recentVisitsController.handleRecentHistoryHighlightClicked(historyHighlight) }
+    }
+
+    @Test
+    fun onRemoveRecentHistoryHighlight() {
+        interactor.onRemoveRecentHistoryHighlight("url")
+
+        verify { recentVisitsController.handleRemoveRecentHistoryHighlight("url") }
     }
 }

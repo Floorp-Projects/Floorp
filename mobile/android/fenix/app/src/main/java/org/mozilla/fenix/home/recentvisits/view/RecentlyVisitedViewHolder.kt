@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.historymetadata.view
+package org.mozilla.fenix.home.recentvisits.view
 
 import android.view.View
 import androidx.compose.ui.platform.ComposeView
@@ -12,23 +12,26 @@ import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.historymetadata.interactor.HistoryMetadataInteractor
 import org.mozilla.fenix.home.HomeFragmentStore
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
+import org.mozilla.fenix.home.recentvisits.interactor.RecentVisitsInteractor
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.view.ViewHolder
 
 /**
- * View holder for a history metadata group item.
+ * View holder for [RecentlyVisitedItem]s.
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
- * @param store [HomeFragmentStore] containing the list of history metadata groups to be displayed.
- * @property interactor [HistoryMetadataInteractor] which will have delegated to all user interactions.
+ * @param store [HomeFragmentStore] containing the list of [RecentlyVisitedItem] to be displayed.
+ * @property interactor [RecentVisitsInteractor] which will have delegated to all user interactions.
  * @property metrics [MetricController] that handles telemetry events.
  */
-class HistoryMetadataGroupViewHolder(
+class RecentlyVisitedViewHolder(
     val composeView: ComposeView,
     private val store: HomeFragmentStore,
-    private val interactor: HistoryMetadataInteractor,
+    private val interactor: RecentVisitsInteractor,
     private val metrics: MetricController
 ) : ViewHolder(composeView) {
 
@@ -40,7 +43,7 @@ class HistoryMetadataGroupViewHolder(
             ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
         )
         composeView.setContent {
-            val recentVisits = store.observeAsComposableState { state -> state.historyMetadata }
+            val recentVisits = store.observeAsComposableState { state -> state.recentHistory }
 
             FirefoxTheme {
                 RecentlyVisited(
@@ -48,14 +51,24 @@ class HistoryMetadataGroupViewHolder(
                     menuItems = listOfNotNull(
                         RecentVisitMenuItem(
                             title = stringResource(R.string.recently_visited_menu_item_remove),
-                            onClick = { group ->
-                                interactor.onRemoveGroup(group.title)
+                            onClick = { visit ->
+                                when (visit) {
+                                    is RecentHistoryGroup -> interactor.onRemoveRecentHistoryGroup(visit.title)
+                                    is RecentHistoryHighlight -> interactor.onRemoveRecentHistoryHighlight(visit.url)
+                                }
                             }
                         )
                     ),
-                    onRecentVisitClick = { historyMetadataGroup, pageNumber ->
-                        metrics.track(Event.HistoryRecentSearchesTapped(pageNumber.toString()))
-                        interactor.onHistoryMetadataGroupClicked(historyMetadataGroup)
+                    onRecentVisitClick = { recentlyVisitedItem, pageNumber ->
+                        when (recentlyVisitedItem) {
+                            is RecentHistoryHighlight -> {
+                                interactor.onRecentHistoryHighlightClicked(recentlyVisitedItem)
+                            }
+                            is RecentHistoryGroup -> {
+                                metrics.track(Event.HistoryRecentSearchesTapped(pageNumber.toString()))
+                                interactor.onRecentHistoryGroupClicked(recentlyVisitedItem)
+                            }
+                        }
                     }
                 )
             }

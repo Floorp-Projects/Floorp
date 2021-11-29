@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.historymetadata.controller
+package org.mozilla.fenix.home.recentvisits.controller
 
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
@@ -11,7 +11,9 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import io.mockk.verifyOrder
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.browser.state.action.HistoryMetadataAction
@@ -20,6 +22,7 @@ import mozilla.components.concept.storage.DocumentType
 import mozilla.components.concept.storage.HistoryMetadata
 import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.concept.storage.HistoryMetadataStorage
+import mozilla.components.feature.tabs.TabsUseCases.SelectOrAddUseCase
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Before
@@ -28,19 +31,22 @@ import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
-import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.home.HomeFragmentAction
+import org.mozilla.fenix.home.HomeFragmentAction.RemoveRecentHistoryHighlight
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.home.HomeFragmentStore
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class HistoryMetadataControllerTest {
+class RecentVisitsControllerTest {
 
     private val testDispatcher = TestCoroutineDispatcher()
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
+    private val selectOrAddTabUseCase: SelectOrAddUseCase = mockk(relaxed = true)
     private val navController = mockk<NavController>(relaxed = true)
     private val metrics: MetricController = mockk(relaxed = true)
 
@@ -49,7 +55,7 @@ class HistoryMetadataControllerTest {
     private lateinit var store: BrowserStore
     private val scope = TestCoroutineScope()
 
-    private lateinit var controller: DefaultHistoryMetadataController
+    private lateinit var controller: DefaultRecentVisitsController
 
     @Before
     fun setup() {
@@ -61,9 +67,10 @@ class HistoryMetadataControllerTest {
         store = mockk(relaxed = true)
 
         controller = spyk(
-            DefaultHistoryMetadataController(
+            DefaultRecentVisitsController(
                 homeStore = homeFragmentStore,
                 store = store,
+                selectOrAddTabUseCase = selectOrAddTabUseCase,
                 navController = navController,
                 scope = scope,
                 storage = storage,
@@ -90,7 +97,7 @@ class HistoryMetadataControllerTest {
     }
 
     @Test
-    fun handleToggleHistoryMetadataGroupClicked() {
+    fun handleRecentHistoryGroupClicked() {
         val historyEntry = HistoryMetadata(
             key = HistoryMetadataKey("http://www.mozilla.com", "mozilla", null),
             title = "mozilla",
@@ -100,12 +107,12 @@ class HistoryMetadataControllerTest {
             documentType = DocumentType.Regular,
             previewImageUrl = null
         )
-        val historyGroup = HistoryMetadataGroup(
+        val historyGroup = RecentHistoryGroup(
             title = "mozilla",
             historyMetadata = listOf(historyEntry)
         )
 
-        controller.handleHistoryMetadataGroupClicked(historyGroup)
+        controller.handleRecentHistoryGroupClicked(historyGroup)
 
         verify {
             navController.navigate(
@@ -115,14 +122,14 @@ class HistoryMetadataControllerTest {
     }
 
     @Test
-    fun handleItemRemoved() {
+    fun handleRemoveGroup() {
         val historyMetadataKey = HistoryMetadataKey(
             "http://www.mozilla.com",
             "mozilla",
             null
         )
 
-        val historyGroup = HistoryMetadataGroup(
+        val historyGroup = RecentHistoryGroup(
             title = "mozilla",
             historyMetadata = listOf(
                 HistoryMetadata(
@@ -137,7 +144,7 @@ class HistoryMetadataControllerTest {
             )
         )
 
-        controller.handleRemoveGroup(historyGroup.title)
+        controller.handleRemoveRecentHistoryGroup(historyGroup.title)
 
         testDispatcher.advanceUntilIdle()
         verify {
@@ -148,6 +155,31 @@ class HistoryMetadataControllerTest {
 
         coVerify {
             storage.deleteHistoryMetadata(historyGroup.title)
+        }
+    }
+
+    @Test
+    fun handleRecentHistoryHighlightClicked() {
+        val historyHighlight = RecentHistoryHighlight("title", "url")
+
+        controller.handleRecentHistoryHighlightClicked(historyHighlight)
+
+        verifyOrder {
+            selectOrAddTabUseCase.invoke(historyHighlight.url)
+            navController.navigate(R.id.browserFragment)
+        }
+    }
+
+    @Test
+    fun handleRemoveRecentHistoryHighlight() {
+        val highlightUrl = "highlightUrl"
+        controller.handleRemoveRecentHistoryHighlight(highlightUrl)
+
+        verify {
+            homeFragmentStore.dispatch(RemoveRecentHistoryHighlight(highlightUrl))
+            scope.launch {
+                storage.deleteHistoryMetadataForUrl(highlightUrl)
+            }
         }
     }
 }

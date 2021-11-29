@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.historymetadata
+package org.mozilla.fenix.home.recentvisits
 
 import io.mockk.Called
 import io.mockk.every
@@ -11,10 +11,10 @@ import io.mockk.slot
 import io.mockk.verify
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
+import mozilla.components.browser.state.action.HistoryMetadataAction
 import mozilla.components.browser.state.action.MediaSessionAction
 import mozilla.components.browser.state.action.SearchAction
 import mozilla.components.browser.state.action.TabListAction
-import mozilla.components.browser.state.action.HistoryMetadataAction
 import mozilla.components.browser.state.engine.EngineMiddleware
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.findTab

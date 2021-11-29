@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.historymetadata.view
+package org.mozilla.fenix.home.recentvisits.view
 
 // TODO: Needs testImplementation 'androidx.compose.ui:ui-test-junit4:1.0.0-beta04'
 @Suppress("ForbiddenComment")
-class HistoryMetadataViewHolderTest {
+class RecentBookmarksViewHolderTest {
     /*
     @get:Rule
     val composeTestRule = ComposeTestRule()
@@ -14,7 +14,7 @@ class HistoryMetadataViewHolderTest {
     @Test
     fun `WHEN a group is removed via long press menu THEN interactor is called`() {
 
-            val historyGroup = HistoryMetadataGroup(
+            val historyGroup = RecentVisitsItems(
                 title = "mozilla",
                 historyMetadata = listOf(
                     HistoryMetadata(

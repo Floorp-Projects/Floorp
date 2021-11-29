@@ -21,7 +21,7 @@
 
     <androidx.preference.SwitchPreference
         android:key="@string/pref_key_history_metadata_feature"
-        android:title="@string/customize_toggle_recent_searches"
+        android:title="@string/customize_toggle_recently_visited"
         app:isPreferenceVisible="false" />
 
     <androidx.preference.SwitchPreference

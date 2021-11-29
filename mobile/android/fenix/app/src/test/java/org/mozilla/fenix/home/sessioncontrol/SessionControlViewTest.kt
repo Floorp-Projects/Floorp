@@ -18,10 +18,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
-import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.home.HomeFragmentState
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recenttabs.RecentTab
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
 import org.mozilla.fenix.utils.Settings
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -53,12 +53,12 @@ class SessionControlViewTest {
 
     @Test
     fun `GIVEN historyMetadata WHEN calling shouldShowHomeOnboardingDialog THEN show the dialog `() {
-        val historyMetadata = listOf(HistoryMetadataGroup("title", emptyList()))
+        val historyMetadata = listOf(RecentHistoryGroup("title", emptyList()))
         val settings: Settings = mockk()
 
         every { settings.hasShownHomeOnboardingDialog } returns false
 
-        val state = HomeFragmentState(historyMetadata = historyMetadata)
+        val state = HomeFragmentState(recentHistory = historyMetadata)
 
         assertTrue(state.shouldShowHomeOnboardingDialog(settings))
     }
@@ -135,7 +135,7 @@ class SessionControlViewTest {
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf(RecentBookmark())
         val recentTabs = emptyList<RecentTab.Tab>()
-        val historyMetadata = emptyList<HistoryMetadataGroup>()
+        val historyMetadata = emptyList<RecentHistoryGroup>()
         val pocketArticles = emptyList<PocketRecommendedStory>()
 
         val results = normalModeAdapterItems(
@@ -164,7 +164,7 @@ class SessionControlViewTest {
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf<RecentBookmark>()
         val recentTabs = listOf<RecentTab.Tab>(mockk())
-        val historyMetadata = emptyList<HistoryMetadataGroup>()
+        val historyMetadata = emptyList<RecentHistoryGroup>()
         val pocketArticles = emptyList<PocketRecommendedStory>()
 
         val results = normalModeAdapterItems(
@@ -193,7 +193,7 @@ class SessionControlViewTest {
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf<RecentBookmark>()
         val recentTabs = emptyList<RecentTab.Tab>()
-        val historyMetadata = listOf(HistoryMetadataGroup("title", emptyList()))
+        val historyMetadata = listOf(RecentHistoryGroup("title", emptyList()))
         val pocketArticles = emptyList<PocketRecommendedStory>()
 
         val results = normalModeAdapterItems(
@@ -210,8 +210,8 @@ class SessionControlViewTest {
         )
 
         assertTrue(results[0] is AdapterItem.TopPlaceholderItem)
-        assertTrue(results[1] is AdapterItem.HistoryMetadataHeader)
-        assertTrue(results[2] is AdapterItem.HistoryMetadataGroup)
+        assertTrue(results[1] is AdapterItem.RecentVisitsHeader)
+        assertTrue(results[2] is AdapterItem.RecentVisitsItems)
         assertTrue(results[3] is AdapterItem.CustomizeHomeButton)
     }
 
@@ -222,7 +222,7 @@ class SessionControlViewTest {
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf<RecentBookmark>()
         val recentTabs = emptyList<RecentTab.Tab>()
-        val historyMetadata = emptyList<HistoryMetadataGroup>()
+        val historyMetadata = emptyList<RecentHistoryGroup>()
         val pocketArticles = listOf(PocketRecommendedStory("", "", "", "", "", 1, 1))
 
         val results = normalModeAdapterItems(
@@ -250,7 +250,7 @@ class SessionControlViewTest {
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf<RecentBookmark>()
         val recentTabs = emptyList<RecentTab.Tab>()
-        val historyMetadata = emptyList<HistoryMetadataGroup>()
+        val historyMetadata = emptyList<RecentHistoryGroup>()
         val pocketArticles = emptyList<PocketRecommendedStory>()
 
         val results = normalModeAdapterItems(
@@ -279,7 +279,7 @@ class SessionControlViewTest {
         val expandedCollections = emptySet<Long>()
         val recentBookmarks = listOf<RecentBookmark>(mockk())
         val recentTabs = listOf<RecentTab.Tab>(mockk())
-        val historyMetadata = listOf<HistoryMetadataGroup>(mockk())
+        val historyMetadata = listOf<RecentHistoryGroup>(mockk())
         val pocketArticles = listOf<PocketRecommendedStory>(mockk())
 
         val results = normalModeAdapterItems(

@@ -24,12 +24,14 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getFilteredStories
-import org.mozilla.fenix.historymetadata.HistoryMetadataGroup
 import org.mozilla.fenix.home.pocket.POCKET_STORIES_TO_SHOW_COUNT
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesCategory
 import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 import org.mozilla.fenix.home.recentbookmarks.RecentBookmark
 import org.mozilla.fenix.home.recenttabs.RecentTab
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
+import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryHighlight
 import org.mozilla.fenix.onboarding.FenixOnboarding
 
 class HomeFragmentStoreTest {
@@ -109,12 +111,13 @@ class HomeFragmentStoreTest {
 
     @Test
     fun `Test changing the recent tabs in HomeFragmentStore`() = runBlocking {
-        val historyGroup1 = HistoryMetadataGroup(title = "historyGroup1")
-        val historyGroup2 = HistoryMetadataGroup(title = "historyGroup2")
-        val historyGroup3 = HistoryMetadataGroup(title = "historyGroup3")
+        val group1 = RecentHistoryGroup(title = "title1")
+        val group2 = RecentHistoryGroup(title = "title2")
+        val group3 = RecentHistoryGroup(title = "title3")
+        val highlight = RecentHistoryHighlight(title = group2.title, "")
         homeFragmentStore = HomeFragmentStore(
             HomeFragmentState(
-                historyMetadata = listOf(historyGroup1, historyGroup2, historyGroup3)
+                recentHistory = listOf(group1, group2, group3, highlight)
             )
         )
         assertEquals(0, homeFragmentStore.state.recentTabs.size)
@@ -122,46 +125,60 @@ class HomeFragmentStoreTest {
         // Add 2 RecentTabs to the HomeFragmentStore
         // A new SearchGroup already shown in history should hide the HistoryGroup.
         val recentTab1: RecentTab.Tab = mockk()
-        val recentTab2 = RecentTab.SearchGroup(historyGroup2.title, "tabId", "url", null, 2)
+        val recentTab2 = RecentTab.SearchGroup(group2.title, "tabId", "url", null, 2)
         val recentTabs: List<RecentTab> = listOf(recentTab1, recentTab2)
         homeFragmentStore.dispatch(HomeFragmentAction.RecentTabsChange(recentTabs)).join()
 
         assertEquals(recentTabs, homeFragmentStore.state.recentTabs)
-        assertEquals(listOf(historyGroup1, historyGroup3), homeFragmentStore.state.historyMetadata)
+        assertEquals(listOf(group1, group3, highlight), homeFragmentStore.state.recentHistory)
     }
 
     @Test
     fun `Test changing the history metadata in HomeFragmentStore`() = runBlocking {
-        val recentGroup = RecentTab.SearchGroup("testSearchTerm", "id", "url", null, 3)
-        homeFragmentStore = HomeFragmentStore(
-            HomeFragmentState(recentTabs = listOf(recentGroup))
+        assertEquals(0, homeFragmentStore.state.recentHistory.size)
+
+        val historyMetadata: List<RecentHistoryGroup> = listOf(mockk(), mockk())
+        homeFragmentStore.dispatch(HomeFragmentAction.RecentHistoryChange(historyMetadata)).join()
+
+        assertEquals(historyMetadata, homeFragmentStore.state.recentHistory)
+    }
+
+    @Test
+    fun `Test removing a history highlight from HomeFragmentStore`() = runBlocking {
+        val g1 = RecentHistoryGroup(title = "group One")
+        val g2 = RecentHistoryGroup(title = "grup two")
+        val h1 = RecentHistoryHighlight(title = "highlight One", url = "url1")
+        val h2 = RecentHistoryHighlight(title = "highlight two", url = "url2")
+        val recentHistoryState = HomeFragmentState(
+            recentHistory = listOf(g1, g2, h1, h2)
         )
-        assertEquals(0, homeFragmentStore.state.historyMetadata.size)
+        homeFragmentStore = HomeFragmentStore(recentHistoryState)
 
-        val historyGroup1 = HistoryMetadataGroup(recentGroup.searchTerm.lowercase())
-        val historyGroup2 = HistoryMetadataGroup("differentTitle")
-        val historyMetadata: List<HistoryMetadataGroup> = listOf(historyGroup1, historyGroup2)
-        homeFragmentStore.dispatch(HomeFragmentAction.HistoryMetadataChange(historyMetadata)).join()
+        homeFragmentStore.dispatch(HomeFragmentAction.RemoveRecentHistoryHighlight("invalid")).join()
+        assertEquals(recentHistoryState, homeFragmentStore.state)
 
-        assertEquals(listOf(historyGroup2), homeFragmentStore.state.historyMetadata)
+        homeFragmentStore.dispatch(HomeFragmentAction.RemoveRecentHistoryHighlight(h1.title)).join()
+        assertEquals(recentHistoryState, homeFragmentStore.state)
+
+        homeFragmentStore.dispatch(HomeFragmentAction.RemoveRecentHistoryHighlight(h1.url)).join()
+        assertEquals(
+            recentHistoryState.copy(recentHistory = listOf(g1, g2, h2)),
+            homeFragmentStore.state
+        )
     }
 
     @Test
     fun `Test disbanding search group in HomeFragmentStore`() = runBlocking {
-        val recentGroup = RecentTab.SearchGroup("testSearchTerm", "id", "url", null, 3)
-        val g1 = HistoryMetadataGroup(title = "test One")
-        val g2 = HistoryMetadataGroup(title = "test two")
-        val g3 = HistoryMetadataGroup(title = recentGroup.searchTerm.lowercase())
-        homeFragmentStore = HomeFragmentStore(
-            HomeFragmentState(
-                recentTabs = listOf(recentGroup),
-                historyMetadata = listOf(g1, g2, g3)
-            )
-        )
+        val g1 = RecentHistoryGroup(title = "test One")
+        val g2 = RecentHistoryGroup(title = "test two")
+        val h1 = RecentHistoryHighlight(title = "highlight One", url = "url1")
+        val h2 = RecentHistoryHighlight(title = "highlight two", url = "url2")
+        val recentHistory: List<RecentlyVisitedItem> = listOf(g1, g2, h1, h2)
+        homeFragmentStore.dispatch(HomeFragmentAction.RecentHistoryChange(recentHistory)).join()
+        assertEquals(recentHistory, homeFragmentStore.state.recentHistory)
 
         homeFragmentStore.dispatch(HomeFragmentAction.DisbandSearchGroupAction("Test one")).join()
-
-        assertEquals(listOf(g2), homeFragmentStore.state.historyMetadata)
+        assertEquals(listOf(g2, h1, h2), homeFragmentStore.state.recentHistory)
     }
 
     @Test
@@ -195,7 +212,7 @@ class HomeFragmentStoreTest {
             assertEquals(0, homeFragmentStore.state.topSites.size)
             assertEquals(0, homeFragmentStore.state.recentTabs.size)
             assertEquals(0, homeFragmentStore.state.recentBookmarks.size)
-            assertEquals(0, homeFragmentStore.state.historyMetadata.size)
+            assertEquals(0, homeFragmentStore.state.recentHistory.size)
             assertEquals(Mode.Normal, homeFragmentStore.state.mode)
 
             val recentGroup = RecentTab.SearchGroup("testSearchTerm", "id", "url", null, 3)
@@ -203,10 +220,11 @@ class HomeFragmentStoreTest {
             val topSites: List<TopSite> = listOf(mockk(), mockk())
             val recentTabs: List<RecentTab> = listOf(mockk(), recentGroup, mockk())
             val recentBookmarks: List<RecentBookmark> = listOf(mockk(), mockk())
-            val g1 = HistoryMetadataGroup(title = "test One")
-            val g2 = HistoryMetadataGroup(title = recentGroup.searchTerm.lowercase())
-            val g3 = HistoryMetadataGroup(title = "test two")
-            val historyMetadata: List<HistoryMetadataGroup> = listOf(g1, g2, g3)
+            val group1 = RecentHistoryGroup(title = "test One")
+            val group2 = RecentHistoryGroup(title = recentGroup.searchTerm.lowercase())
+            val group3 = RecentHistoryGroup(title = "test two")
+            val highlight = RecentHistoryHighlight(group2.title, "")
+            val recentHistory: List<RecentlyVisitedItem> = listOf(group1, group2, group3, highlight)
 
             homeFragmentStore.dispatch(
                 HomeFragmentAction.Change(
@@ -216,7 +234,7 @@ class HomeFragmentStoreTest {
                     showCollectionPlaceholder = true,
                     recentTabs = recentTabs,
                     recentBookmarks = recentBookmarks,
-                    historyMetadata = historyMetadata
+                    recentHistory = recentHistory
                 )
             ).join()
 
@@ -224,7 +242,7 @@ class HomeFragmentStoreTest {
             assertEquals(topSites, homeFragmentStore.state.topSites)
             assertEquals(recentTabs, homeFragmentStore.state.recentTabs)
             assertEquals(recentBookmarks, homeFragmentStore.state.recentBookmarks)
-            assertEquals(listOf(g1, g3), homeFragmentStore.state.historyMetadata)
+            assertEquals(listOf(group1, group3, highlight), homeFragmentStore.state.recentHistory)
             assertEquals(Mode.Private, homeFragmentStore.state.mode)
         }
 
@@ -367,15 +385,18 @@ class HomeFragmentStoreTest {
 
     @Test
     fun `Test filtering out search groups`() {
-        val group1 = HistoryMetadataGroup("group1")
-        val group2 = HistoryMetadataGroup("group2")
-        val group3 = HistoryMetadataGroup("group3")
-        val groups = listOf(group1, group2, group3)
+        val group1 = RecentHistoryGroup("title1")
+        val group2 = RecentHistoryGroup("title2")
+        val group3 = RecentHistoryGroup("title3")
+        val highLight1 = RecentHistoryHighlight("title1", "")
+        val highLight2 = RecentHistoryHighlight("title2", "")
+        val highLight3 = RecentHistoryHighlight("title3", "")
+        val recentHistory = listOf(group1, highLight1, group2, highLight2, group3, highLight3)
 
-        assertEquals(groups, groups.filterOut(null))
-        assertEquals(groups, groups.filterOut(""))
-        assertEquals(groups, groups.filterOut(" "))
-        assertEquals(groups - group2, groups.filterOut("Group2"))
-        assertEquals(groups - group3, groups.filterOut("group3"))
+        assertEquals(recentHistory, recentHistory.filterOut(null))
+        assertEquals(recentHistory, recentHistory.filterOut(""))
+        assertEquals(recentHistory, recentHistory.filterOut(" "))
+        assertEquals(recentHistory - group2, recentHistory.filterOut("Title2"))
+        assertEquals(recentHistory - group3, recentHistory.filterOut("title3"))
     }
 }
