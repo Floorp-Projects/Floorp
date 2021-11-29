@@ -8,6 +8,7 @@
 #define js_SliceBudget_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Variant.h"
 
@@ -44,31 +45,55 @@ struct UnlimitedBudget {};
  * operations.
  */
 class JS_PUBLIC_API SliceBudget {
+ public:
+  using InterruptRequestFlag = mozilla::Atomic<bool>;
+
+ private:
   static const intptr_t UnlimitedCounter = INTPTR_MAX;
-  static const intptr_t DefaultStepsPerTimeCheck = 1000;
+
+  // Most calls to isOverBudget will only check the counter value. Every N
+  // steps, do a more "expensive" check -- look at the current time and/or
+  // check the atomic interrupt flag.
+  static constexpr intptr_t StepsPerExpensiveCheck = 1000;
+
+  // Configuration
 
   mozilla::Variant<TimeBudget, WorkBudget, UnlimitedBudget> budget;
-  int64_t stepsPerTimeCheck = DefaultStepsPerTimeCheck;
 
-  int64_t counter;
+  // External flag to request the current slice to be interrupted
+  // (and return isOverBudget() early.) Applies only to time-based budgets.
+  InterruptRequestFlag* interruptRequested = nullptr;
 
-  SliceBudget() : budget(UnlimitedBudget()), counter(UnlimitedCounter) {}
+  // How many steps to count before checking the time and possibly the interrupt
+  // flag.
+  int64_t counter = StepsPerExpensiveCheck;
+
+  // This SliceBudget is considered interrupted from the time isOverBudget()
+  // finds the interrupt flag set, to the next time resetOverBudget() (or
+  // checkAndResetOverBudget()) is called.
+  bool interrupted = false;
+
+  explicit SliceBudget(InterruptRequestFlag* irqPtr)
+      : budget(UnlimitedBudget()),
+        interruptRequested(irqPtr),
+        counter(irqPtr ? StepsPerExpensiveCheck : UnlimitedCounter) {}
 
   [[nodiscard]] bool isOverBudgetSlow();
 
  public:
   // Use to create an unlimited budget.
-  static SliceBudget unlimited() { return SliceBudget(); }
+  static SliceBudget unlimited() { return SliceBudget(nullptr); }
 
   // Instantiate as SliceBudget(TimeBudget(n)).
   explicit SliceBudget(TimeBudget time,
-                       int64_t stepsPerTimeCheck = DefaultStepsPerTimeCheck);
+                       InterruptRequestFlag* interrupt = nullptr);
+
+  explicit SliceBudget(mozilla::TimeDuration duration,
+                       InterruptRequestFlag* interrupt = nullptr)
+      : SliceBudget(TimeBudget(duration.ToMilliseconds()), interrupt) {}
 
   // Instantiate as SliceBudget(WorkBudget(n)).
   explicit SliceBudget(WorkBudget work);
-
-  explicit SliceBudget(mozilla::TimeDuration time)
-      : SliceBudget(TimeBudget(time.ToMilliseconds())) {}
 
   // Register having performed the given number of steps (counted against a
   // work budget, or progress towards the next time or callback check).
@@ -91,8 +116,9 @@ class JS_PUBLIC_API SliceBudget {
   }
 
   void resetOverBudget() {
+    interrupted = false;
     if (isTimeBudget()) {
-      counter = stepsPerTimeCheck;
+      counter = StepsPerExpensiveCheck;
     } else if (isWorkBudget()) {
       counter = workBudget();
     }
