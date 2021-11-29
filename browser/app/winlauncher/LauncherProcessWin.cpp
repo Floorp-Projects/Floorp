@@ -199,15 +199,6 @@ static mozilla::Maybe<bool> RunAsLauncherProcess(
 #else
 static mozilla::Maybe<bool> RunAsLauncherProcess(int& argc, wchar_t** argv) {
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
-  // return fast when we're a child process.
-  // (The remainder of this function has some side effects that are
-  // undesirable for content processes)
-  if (mozilla::CheckArg(argc, argv, L"contentproc",
-                        static_cast<const wchar_t**>(nullptr),
-                        mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND) {
-    return mozilla::Some(false);
-  }
-
   bool runAsLauncher = DoLauncherProcessChecks(argc, argv);
 
 #if defined(MOZ_LAUNCHER_PROCESS)
@@ -260,6 +251,16 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
                static_cast<const wchar_t**>(nullptr),
                mozilla::CheckArgFlag::RemoveArg) == ARG_FOUND) {
     SetLauncherErrorForceEventLog();
+  }
+
+  // return fast when we're a child process.
+  // (The remainder of this function has some side effects that are
+  // undesirable for content processes)
+  if (mozilla::CheckArg(argc, argv, L"contentproc",
+                        static_cast<const wchar_t**>(nullptr),
+                        mozilla::CheckArgFlag::None) == mozilla::ARG_FOUND) {
+    // A child process should not instantiate LauncherRegistryInfo.
+    return Nothing();
   }
 
 #if defined(MOZ_LAUNCHER_PROCESS)
