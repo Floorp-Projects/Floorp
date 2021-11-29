@@ -585,6 +585,9 @@ class DesktopInstance(GeckoInstance):
         "browser.toolbars.bookmarks.visibility": "never",
         # Disable the UI tour
         "browser.uitour.enabled": False,
+        # Turn off Merino suggestions in the location bar so as not to trigger network
+        # connections.
+        "browser.urlbar.merino.endpointURL": "",
         # Turn off search suggestions in the location bar so as not to trigger network
         # connections.
         "browser.urlbar.suggest.searches": False,

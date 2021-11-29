@@ -497,10 +497,15 @@ class ProviderQuickSuggest extends UrlbarProvider {
   async _fetchMerinoSuggestions(queryContext, searchString) {
     let instance = this.queryInstance;
 
-    // Get the URL.
+    // Get the endpoint URL. It's empty by default when running tests so they
+    // don't hit the network.
+    let endpointString = UrlbarPrefs.get("merino.endpointURL");
+    if (!endpointString) {
+      return null;
+    }
     let url;
     try {
-      url = new URL(UrlbarPrefs.get("merino.endpointURL"));
+      url = new URL(endpointString);
     } catch (error) {
       this.logger.error("Could not make Merino endpoint URL: " + error);
       return null;
