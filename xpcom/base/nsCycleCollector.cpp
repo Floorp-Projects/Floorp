@@ -2060,8 +2060,6 @@ MOZ_NEVER_INLINE bool CCGraphBuilder::BuildGraph(SliceBudget& aBudget) {
     aBudget.step(mNoteChildCount + 1);
   }
 
-  aBudget.resetOverBudget();
-
   if (!mCurrNode->IsDone()) {
     return false;
   }
@@ -2425,7 +2423,7 @@ class SnowWhiteKiller : public TraceCallbacks {
  public:
   bool Visit(nsPurpleBuffer& aBuffer, nsPurpleBufferEntry* aEntry) {
     if (mBudget) {
-      if (mBudget->checkAndResetOverBudget()) {
+      if (mBudget->isOverBudget()) {
         return false;
       }
       mBudget->step();
@@ -2529,7 +2527,7 @@ class RemoveSkippableVisitor : public SnowWhiteKiller {
   }
 
   bool Visit(nsPurpleBuffer& aBuffer, nsPurpleBufferEntry* aEntry) {
-    if (mBudget.checkAndResetOverBudget()) {
+    if (mBudget.isOverBudget()) {
       return false;
     }
 
@@ -3444,8 +3442,6 @@ bool nsCycleCollector::Collect(CCReason aReason, ccIsManual aIsManual,
     }
   } while (continueSlice);
 
-  aBudget.resetOverBudget();
-
   // Clear mActivelyCollecting here to ensure that a recursive call to
   // Collect() does something.
   mActivelyCollecting = false;
@@ -3455,6 +3451,7 @@ bool nsCycleCollector::Collect(CCReason aReason, ccIsManual aIsManual,
     // Somebody has forced a CC, so after having finished out the current CC,
     // run the CC again using the new listener.
     MOZ_ASSERT(IsIdle());
+    aBudget.resetOverBudget();
     if (Collect(aReason, ccIsManual::CCIsManual, aBudget, aManualListener)) {
       collectedAny = true;
     }
