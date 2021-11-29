@@ -14,4 +14,9 @@
         b: 'z',
     ),
     tuple: (3, 7),
+    vec: [
+        (a: "Nested 1", b: 'x'),
+        (a: "Nested 2", b: 'y'),
+        (a: "Nested 3", b: 'z'),
+    ],
 )

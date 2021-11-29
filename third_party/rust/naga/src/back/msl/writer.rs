@@ -14,6 +14,9 @@ use std::{
 type BackendResult = Result<(), Error>;
 
 const NAMESPACE: &str = "metal";
+// The name of the array member of the Metal struct types we generate to
+// represent Naga `Array` types. See the comments in `Writer::write_type_defs`
+// for details.
 const WRAPPED_ARRAY_FIELD: &str = "inner";
 // This is a hack: we need to pass a pointer to an atomic,
 // but generally the backend isn't putting "&" in front of every pointer.
@@ -22,7 +25,7 @@ const ATOMIC_REFERENCE: &str = "&";
 
 struct TypeContext<'a> {
     handle: Handle<crate::Type>,
-    arena: &'a crate::Arena<crate::Type>,
+    arena: &'a crate::UniqueArena<crate::Type>,
     names: &'a FastHashMap<NameKey, String>,
     access: crate::StorageAccess,
     first_time: bool,
@@ -162,7 +165,13 @@ impl<'a> Display for TypeContext<'a> {
                         } else if self.access.contains(crate::StorageAccess::LOAD) {
                             "read"
                         } else {
-                            unreachable!("module is not valid")
+                            log::warn!(
+                                "Storage access for {:?} (name '{}'): {:?}",
+                                self.handle,
+                                ty.name.as_deref().unwrap_or_default(),
+                                self.access
+                            );
+                            unreachable!("module is not valid");
                         };
                         ("texture", "", format.into(), access)
                     }
@@ -298,7 +307,6 @@ pub struct Writer<W> {
     names: FastHashMap<NameKey, String>,
     named_expressions: crate::NamedExpressions,
     namer: proc::Namer,
-    runtime_sized_buffers: FastHashMap<Handle<crate::GlobalVariable>, usize>,
     #[cfg(test)]
     put_expression_stack_pointers: FastHashSet<*const ()>,
     #[cfg(test)]
@@ -354,7 +362,7 @@ fn should_pack_struct_member(
     }
 }
 
-fn needs_array_length(ty: Handle<crate::Type>, arena: &crate::Arena<crate::Type>) -> bool {
+fn needs_array_length(ty: Handle<crate::Type>, arena: &crate::UniqueArena<crate::Type>) -> bool {
     if let crate::TypeInner::Struct { ref members, .. } = arena[ty].inner {
         if let Some(member) = members.last() {
             if let crate::TypeInner::Array {
@@ -464,7 +472,6 @@ impl<W: Write> Writer<W> {
             names: FastHashMap::default(),
             named_expressions: crate::NamedExpressions::default(),
             namer: proc::Namer::default(),
-            runtime_sized_buffers: FastHashMap::default(),
             #[cfg(test)]
             put_expression_stack_pointers: Default::default(),
             #[cfg(test)]
@@ -698,11 +705,10 @@ impl<W: Write> Writer<W> {
                     _ => return Err(Error::Validation),
                 };
 
-                let buffer_idx = self.runtime_sized_buffers[&handle];
                 write!(
                     self.out,
                     "(1 + (_buffer_sizes.size{idx} - {offset} - {span}) / {stride})",
-                    idx = buffer_idx,
+                    idx = handle.index(),
                     offset = offset,
                     span = span,
                     stride = stride,
@@ -1107,6 +1113,7 @@ impl<W: Write> Writer<W> {
                 arg,
                 arg1,
                 arg2,
+                arg3,
             } => {
                 use crate::MathFunction as Mf;
 
@@ -1175,6 +1182,20 @@ impl<W: Write> Writer<W> {
                     // bits
                     Mf::CountOneBits => "popcount",
                     Mf::ReverseBits => "reverse_bits",
+                    Mf::ExtractBits => "extract_bits",
+                    Mf::InsertBits => "insert_bits",
+                    // data packing
+                    Mf::Pack4x8snorm => "pack_float_to_unorm4x8",
+                    Mf::Pack4x8unorm => "pack_float_to_snorm4x8",
+                    Mf::Pack2x16snorm => "pack_float_to_unorm2x16",
+                    Mf::Pack2x16unorm => "pack_float_to_snorm2x16",
+                    Mf::Pack2x16float => "",
+                    // data unpacking
+                    Mf::Unpack4x8snorm => "unpack_snorm4x8_to_float",
+                    Mf::Unpack4x8unorm => "unpack_unorm4x8_to_float",
+                    Mf::Unpack2x16snorm => "unpack_snorm2x16_to_float",
+                    Mf::Unpack2x16unorm => "unpack_unorm2x16_to_float",
+                    Mf::Unpack2x16float => "",
                 };
 
                 if fun == Mf::Distance && scalar_argument {
@@ -1183,9 +1204,20 @@ impl<W: Write> Writer<W> {
                     write!(self.out, " - ")?;
                     self.put_expression(arg1.unwrap(), context, false)?;
                     write!(self.out, ")")?;
+                } else if fun == Mf::Unpack2x16float {
+                    write!(self.out, "float2(as_type<half2>(")?;
+                    self.put_expression(arg, context, false)?;
+                    write!(self.out, "))")?;
+                } else if fun == Mf::Pack2x16float {
+                    write!(self.out, "as_type<uint>(half2(")?;
+                    self.put_expression(arg, context, false)?;
+                    write!(self.out, "))")?;
                 } else {
                     write!(self.out, "{}::{}", NAMESPACE, fun_name)?;
-                    self.put_call_parameters(iter::once(arg).chain(arg1).chain(arg2), context)?;
+                    self.put_call_parameters(
+                        iter::once(arg).chain(arg1).chain(arg2).chain(arg3),
+                        context,
+                    )?;
                 }
             }
             crate::Expression::As {
@@ -1194,22 +1226,37 @@ impl<W: Write> Writer<W> {
                 convert,
             } => {
                 let scalar = scalar_kind_string(kind);
-                let (size, width) = match *context.resolve_type(expr) {
-                    crate::TypeInner::Scalar { width, .. } => ("", width),
-                    crate::TypeInner::Vector { size, width, .. } => {
-                        (back::vector_size_str(size), width)
-                    }
+                let (src_kind, src_width) = match *context.resolve_type(expr) {
+                    crate::TypeInner::Scalar { kind, width }
+                    | crate::TypeInner::Vector { kind, width, .. } => (kind, width),
                     _ => return Err(Error::Validation),
                 };
+                let is_bool_cast =
+                    kind == crate::ScalarKind::Bool || src_kind == crate::ScalarKind::Bool;
                 let op = match convert {
-                    Some(w) if w == width => "static_cast",
+                    Some(w) if w == src_width || is_bool_cast => "static_cast",
                     Some(8) if kind == crate::ScalarKind::Float => {
                         return Err(Error::CapabilityNotSupported(valid::Capabilities::FLOAT64))
                     }
                     Some(_) => return Err(Error::Validation),
                     None => "as_type",
                 };
-                write!(self.out, "{}<{}{}>(", op, scalar, size)?;
+                write!(self.out, "{}<", op)?;
+                match *context.resolve_type(expr) {
+                    crate::TypeInner::Vector { size, .. } => {
+                        write!(
+                            self.out,
+                            "{}::{}{}",
+                            NAMESPACE,
+                            scalar,
+                            back::vector_size_str(size)
+                        )?;
+                    }
+                    _ => {
+                        write!(self.out, "{}", scalar)?;
+                    }
+                }
+                write!(self.out, ">(")?;
                 self.put_expression(expr, context, true)?;
                 write!(self.out, ")")?;
             }
@@ -1342,7 +1389,7 @@ impl<W: Write> Writer<W> {
                 )?;
             }
             TypeResolution::Value(ref other) => {
-                log::error!("Type {:?} isn't a known local", other);
+                log::warn!("Type {:?} isn't a known local", other); //TEMP!
                 return Err(Error::FeatureNotImplemented("weird local type".to_string()));
             }
         }
@@ -1370,18 +1417,25 @@ impl<W: Write> Writer<W> {
             match *statement {
                 crate::Statement::Emit(ref range) => {
                     for handle in range.clone() {
-                        let expr_name = if let Some(name) =
+                        let info = &context.expression.info[handle];
+                        let ptr_class = info
+                            .ty
+                            .inner_with(&context.expression.module.types)
+                            .pointer_class();
+                        let expr_name = if ptr_class.is_some() {
+                            None // don't bake pointer expressions (just yet)
+                        } else if let Some(name) =
                             context.expression.function.named_expressions.get(&handle)
                         {
                             // Front end provides names for all variables at the start of writing.
                             // But we write them to step by step. We need to recache them
                             // Otherwise, we could accidentally write variable name instead of full expression.
                             // Also, we use sanitized names! It defense backend from generating variable with name from reserved keywords.
-                            Some(self.namer.call_unique(name))
+                            Some(self.namer.call(name))
                         } else {
                             let min_ref_count =
                                 context.expression.function.expressions[handle].bake_ref_count();
-                            if min_ref_count <= context.expression.info[handle].ref_count {
+                            if min_ref_count <= info.ref_count {
                                 Some(format!("{}{}", back::BAKE_PREFIX, handle.index()))
                             } else {
                                 None
@@ -1422,23 +1476,35 @@ impl<W: Write> Writer<W> {
                 crate::Statement::Switch {
                     selector,
                     ref cases,
-                    ref default,
                 } => {
                     write!(self.out, "{}switch(", level)?;
                     self.put_expression(selector, &context.expression, true)?;
+                    let type_postfix = match *context.expression.resolve_type(selector) {
+                        crate::TypeInner::Scalar {
+                            kind: crate::ScalarKind::Uint,
+                            ..
+                        } => "u",
+                        _ => "",
+                    };
                     writeln!(self.out, ") {{")?;
                     let lcase = level.next();
                     for case in cases.iter() {
-                        writeln!(self.out, "{}case {}: {{", lcase, case.value)?;
+                        match case.value {
+                            crate::SwitchValue::Integer(value) => {
+                                writeln!(self.out, "{}case {}{}: {{", lcase, value, type_postfix)?;
+                            }
+                            crate::SwitchValue::Default => {
+                                writeln!(self.out, "{}default: {{", lcase)?;
+                            }
+                        }
                         self.put_block(lcase.next(), &case.body, context)?;
-                        if !case.fall_through {
+                        if !case.fall_through
+                            && case.body.last().map_or(true, |s| !s.is_terminator())
+                        {
                             writeln!(self.out, "{}break;", lcase.next())?;
                         }
                         writeln!(self.out, "{}}}", lcase)?;
                     }
-                    writeln!(self.out, "{}default: {{", lcase)?;
-                    self.put_block(lcase.next(), default, context)?;
-                    writeln!(self.out, "{}}}", lcase)?;
                     writeln!(self.out, "{}}}", level)?;
                 }
                 crate::Statement::Loop {
@@ -1697,7 +1763,6 @@ impl<W: Write> Writer<W> {
         self.names.clear();
         self.namer
             .reset(module, super::keywords::RESERVED, &[], &mut self.names);
-        self.runtime_sized_buffers.clear();
         self.struct_member_pads.clear();
 
         writeln!(
@@ -1714,7 +1779,6 @@ impl<W: Write> Writer<W> {
             for (handle, var) in module.global_variables.iter() {
                 if needs_array_length(var.ty, &module.types) {
                     let idx = handle.index();
-                    self.runtime_sized_buffers.insert(handle, idx);
                     indices.push(idx);
                 }
             }
@@ -1744,6 +1808,19 @@ impl<W: Write> Writer<W> {
             }
             let name = &self.names[&NameKey::Type(handle)];
             match ty.inner {
+                // Naga IR can pass around arrays by value, but Metal, following
+                // C++, performs an array-to-pointer conversion (C++ [conv.array])
+                // on expressions of array type, so assigning the array by value
+                // isn't possible. However, Metal *does* assign structs by
+                // value. So in our Metal output, we wrap all array types in
+                // synthetic struct types:
+                //
+                //     struct type1 {
+                //         float inner[10]
+                //     };
+                //
+                // Then we carefully include `.inner` (`WRAPPED_ARRAY_FIELD`) in
+                // any expression that actually wants access to the array.
                 crate::TypeInner::Array {
                     base,
                     size,
@@ -2618,8 +2695,8 @@ fn test_stack_size() {
         }
         let stack_size = addresses.end - addresses.start;
         // check the size (in debug only)
-        // last observed macOS value: 18304
-        if !(15000..=20000).contains(&stack_size) {
+        // last observed macOS value: 20528 (CI)
+        if !(15000..=25000).contains(&stack_size) {
             panic!("`put_expression` stack size {} has changed!", stack_size);
         }
     }

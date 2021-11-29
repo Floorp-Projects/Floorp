@@ -63,15 +63,16 @@ impl StatementGraph {
                 S::Switch {
                     selector,
                     ref cases,
-                    ref default,
                 } => {
                     self.dependencies.push((id, selector, "selector"));
                     for case in cases {
                         let case_id = self.add(&case.body);
-                        self.flow.push((id, case_id, "case"));
+                        let label = match case.value {
+                            crate::SwitchValue::Integer(_) => "case",
+                            crate::SwitchValue::Default => "default",
+                        };
+                        self.flow.push((id, case_id, label));
                     }
-                    let default_id = self.add(default);
-                    self.flow.push((id, default_id, "default"));
                     "Switch"
                 }
                 S::Loop {
@@ -322,6 +323,7 @@ fn write_fun(
                 arg,
                 arg1,
                 arg2,
+                arg3,
             } => {
                 edges.insert("arg", arg);
                 if let Some(expr) = arg1 {
@@ -329,6 +331,9 @@ fn write_fun(
                 }
                 if let Some(expr) = arg2 {
                     edges.insert("arg2", expr);
+                }
+                if let Some(expr) = arg3 {
+                    edges.insert("arg3", expr);
                 }
                 (format!("{:?}", fun).into(), 7)
             }

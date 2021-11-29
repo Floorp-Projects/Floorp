@@ -368,7 +368,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
         }
 
         Ok(EntryPointBinding {
-            arg_name: self.namer.call_unique(struct_name.to_lowercase().as_str()),
+            arg_name: self.namer.call(struct_name.to_lowercase().as_str()),
             ty_name: struct_name,
             members,
         })
@@ -391,14 +391,10 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
             match module.types[arg.ty].inner {
                 TypeInner::Struct { ref members, .. } => {
                     for member in members.iter() {
-                        let member_name = if let Some(ref name) = member.name {
-                            name
-                        } else {
-                            "member"
-                        };
+                        let name = self.namer.call_or(&member.name, "member");
                         let index = fake_members.len() as u32;
                         fake_members.push(EpStructMember {
-                            name: self.namer.call(member_name),
+                            name,
                             ty: member.ty,
                             binding: member.binding.clone(),
                             index,
@@ -406,11 +402,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                     }
                 }
                 _ => {
-                    let member_name = if let Some(ref name) = arg.name {
-                        self.namer.call_unique(name)
-                    } else {
-                        self.namer.call("member")
-                    };
+                    let member_name = self.namer.call_or(&arg.name, "member");
                     let index = fake_members.len() as u32;
                     fake_members.push(EpStructMember {
                         name: member_name,
@@ -448,11 +440,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
         };
 
         for member in members.iter() {
-            let member_name = if let Some(ref name) = member.name {
-                self.namer.call_unique(name)
-            } else {
-                self.namer.call("member")
-            };
+            let member_name = self.namer.call_or(&member.name, "member");
             let index = fake_members.len() as u32;
             fake_members.push(EpStructMember {
                 name: member_name,
@@ -1057,15 +1045,22 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
         match *stmt {
             Statement::Emit(ref range) => {
                 for handle in range.clone() {
-                    let expr_name = if let Some(name) = func_ctx.named_expressions.get(&handle) {
+                    let info = &func_ctx.info[handle];
+                    let ptr_class = info.ty.inner_with(&module.types).pointer_class();
+                    let expr_name = if ptr_class.is_some() {
+                        // HLSL can't save a pointer-valued expression in a variable,
+                        // but we shouldn't ever need to: they should never be named expressions,
+                        // and none of the expression types flagged by bake_ref_count can be pointer-valued.
+                        None
+                    } else if let Some(name) = func_ctx.named_expressions.get(&handle) {
                         // Front end provides names for all variables at the start of writing.
                         // But we write them to step by step. We need to recache them
                         // Otherwise, we could accidentally write variable name instead of full expression.
                         // Also, we use sanitized names! It defense backend from generating variable with name from reserved keywords.
-                        Some(self.namer.call_unique(name))
+                        Some(self.namer.call(name))
                     } else {
                         let min_ref_count = func_ctx.expressions[handle].bake_ref_count();
-                        if min_ref_count <= func_ctx.info[handle].ref_count {
+                        if min_ref_count <= info.ref_count {
                             Some(format!("_expr{}", handle.index()))
                         } else {
                             None
@@ -1152,7 +1147,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                     };
                     let final_name = match ep_output {
                         Some(ep_output) => {
-                            let final_name = self.namer.call_unique(&variable_name);
+                            let final_name = self.namer.call(&variable_name);
                             write!(
                                 self.out,
                                 "{}const {} {} = {{ ",
@@ -1363,20 +1358,35 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
             Statement::Switch {
                 selector,
                 ref cases,
-                ref default,
             } => {
                 // Start the switch
                 write!(self.out, "{}", level)?;
                 write!(self.out, "switch(")?;
                 self.write_expr(module, selector, func_ctx)?;
                 writeln!(self.out, ") {{")?;
+                let type_postfix = match *func_ctx.info[selector].ty.inner_with(&module.types) {
+                    crate::TypeInner::Scalar {
+                        kind: crate::ScalarKind::Uint,
+                        ..
+                    } => "u",
+                    _ => "",
+                };
 
                 // Write all cases
                 let indent_level_1 = level.next();
                 let indent_level_2 = indent_level_1.next();
 
                 for case in cases {
-                    writeln!(self.out, "{}case {}: {{", indent_level_1, case.value)?;
+                    match case.value {
+                        crate::SwitchValue::Integer(value) => writeln!(
+                            self.out,
+                            "{}case {}{}: {{",
+                            indent_level_1, value, type_postfix
+                        )?,
+                        crate::SwitchValue::Default => {
+                            writeln!(self.out, "{}default: {{", indent_level_1)?
+                        }
+                    }
 
                     if case.fall_through {
                         // Generate each fallthrough case statement in a new block. This is done to
@@ -1395,20 +1405,8 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
 
                     if case.fall_through {
                         writeln!(self.out, "{}}}", indent_level_2)?;
-                    } else {
+                    } else if case.body.last().map_or(true, |s| !s.is_terminator()) {
                         writeln!(self.out, "{}break;", indent_level_2)?;
-                    }
-
-                    writeln!(self.out, "{}}}", indent_level_1)?;
-                }
-
-                // Only write the default block if the block isn't empty
-                // Writing default without a block is valid but it's more readable this way
-                if !default.is_empty() {
-                    writeln!(self.out, "{}default: {{", indent_level_1)?;
-
-                    for sta in default {
-                        self.write_stmt(module, sta, func_ctx, indent_level_2)?;
                     }
 
                     writeln!(self.out, "{}}}", indent_level_1)?;
@@ -1780,20 +1778,15 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 write!(self.out, "{}", op_str)?;
                 self.write_expr(module, expr, func_ctx)?;
             }
-            Expression::As { expr, kind, .. } => {
+            Expression::As {
+                expr,
+                kind,
+                convert,
+            } => {
                 let inner = func_ctx.info[expr].ty.inner_with(&module.types);
-                match *inner {
-                    TypeInner::Vector { size, width, .. } => {
-                        write!(
-                            self.out,
-                            "{}{}",
-                            kind.to_hlsl_str(width)?,
-                            back::vector_size_str(size),
-                        )?;
-                    }
-                    TypeInner::Scalar { width, .. } => {
-                        write!(self.out, "{}", kind.to_hlsl_str(width)?)?
-                    }
+                let (size_str, src_width) = match *inner {
+                    TypeInner::Vector { size, width, .. } => (back::vector_size_str(size), width),
+                    TypeInner::Scalar { width, .. } => ("", width),
                     _ => {
                         return Err(Error::Unimplemented(format!(
                             "write_expr expression::as {:?}",
@@ -1801,7 +1794,8 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                         )));
                     }
                 };
-                write!(self.out, "(")?;
+                let kind_str = kind.to_hlsl_str(convert.unwrap_or(src_width))?;
+                write!(self.out, "{}{}(", kind_str, size_str,)?;
                 self.write_expr(module, expr, func_ctx)?;
                 write!(self.out, ")")?;
             }
@@ -1810,6 +1804,7 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                 arg,
                 arg1,
                 arg2,
+                arg3,
             } => {
                 use crate::MathFunction as Mf;
 
@@ -1909,6 +1904,10 @@ impl<'a, W: fmt::Write> super::Writer<'a, W> {
                             self.write_expr(module, arg, func_ctx)?;
                         }
                         if let Some(arg) = arg2 {
+                            write!(self.out, ", ")?;
+                            self.write_expr(module, arg, func_ctx)?;
+                        }
+                        if let Some(arg) = arg3 {
                             write!(self.out, ", ")?;
                             self.write_expr(module, arg, func_ctx)?;
                         }

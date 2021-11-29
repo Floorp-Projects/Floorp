@@ -45,19 +45,24 @@ impl super::Adapter {
         instance_flags: crate::InstanceFlags,
     ) -> Option<crate::ExposedAdapter<super::Api>> {
         // Create the device so that we can get the capabilities.
-        let device = match library.create_device(adapter, native::FeatureLevel::L11_0) {
-            Ok(pair) => match pair.into_result() {
-                Ok(device) => device,
+        let device = {
+            profiling::scope!("ID3D12Device::create_device");
+            match library.create_device(adapter, native::FeatureLevel::L11_0) {
+                Ok(pair) => match pair.into_result() {
+                    Ok(device) => device,
+                    Err(err) => {
+                        log::warn!("Device creation failed: {}", err);
+                        return None;
+                    }
+                },
                 Err(err) => {
-                    log::warn!("Device creation failed: {}", err);
+                    log::warn!("Device creation function is not found: {:?}", err);
                     return None;
                 }
-            },
-            Err(err) => {
-                log::warn!("Device creation function is not found: {:?}", err);
-                return None;
             }
         };
+
+        profiling::scope!("feature queries");
 
         // We have found a possible adapter.
         // Acquire the device information.
@@ -164,7 +169,8 @@ impl super::Adapter {
         };
 
         let mut features = wgt::Features::empty()
-            | wgt::Features::DEPTH_CLAMPING
+            | wgt::Features::DEPTH_CLIP_CONTROL
+            | wgt::Features::INDIRECT_FIRST_INSTANCE
             | wgt::Features::MAPPABLE_PRIMARY_BUFFERS
             //TODO: Naga part
             //| wgt::Features::TEXTURE_BINDING_ARRAY
@@ -240,7 +246,13 @@ impl super::Adapter {
                     max_push_constant_size: 0,
                     min_uniform_buffer_offset_alignment:
                         d3d12::D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT,
-                    min_storage_buffer_offset_alignment: 4, // TODO?
+                    min_storage_buffer_offset_alignment: 4,
+                    max_compute_workgroup_size_x: d3d12::D3D12_CS_THREAD_GROUP_MAX_X,
+                    max_compute_workgroup_size_y: d3d12::D3D12_CS_THREAD_GROUP_MAX_Y,
+                    max_compute_workgroup_size_z: d3d12::D3D12_CS_THREAD_GROUP_MAX_Z,
+                    max_compute_workgroups_per_dimension:
+                        d3d12::D3D12_CS_DISPATCH_MAX_THREAD_GROUPS_PER_DIMENSION,
+                    // TODO?
                 },
                 alignments: crate::Alignments {
                     buffer_copy_offset: wgt::BufferSize::new(
@@ -262,16 +274,19 @@ impl crate::Adapter<super::Api> for super::Adapter {
     unsafe fn open(
         &self,
         features: wgt::Features,
+        _limits: &wgt::Limits,
     ) -> Result<crate::OpenDevice<super::Api>, crate::DeviceError> {
-        let queue = self
-            .device
-            .create_command_queue(
-                native::CmdListType::Direct,
-                native::Priority::Normal,
-                native::CommandQueueFlags::empty(),
-                0,
-            )
-            .into_device_result("Queue creation")?;
+        let queue = {
+            profiling::scope!("ID3D12Device::CreateCommandQueue");
+            self.device
+                .create_command_queue(
+                    native::CmdListType::Direct,
+                    native::Priority::Normal,
+                    native::CommandQueueFlags::empty(),
+                    0,
+                )
+                .into_device_result("Queue creation")?
+        };
 
         let device = super::Device::new(
             self.device,
