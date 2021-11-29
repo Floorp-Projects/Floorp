@@ -15,7 +15,10 @@
 
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({
-    set: [["privacy.userContext.enabled", true]],
+    set: [
+      ["privacy.userContext.enabled", true],
+      ["dom.security.https_first", false],
+    ],
   });
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
