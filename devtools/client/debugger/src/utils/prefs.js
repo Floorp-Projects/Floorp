@@ -66,7 +66,6 @@ if (isNode()) {
   pref("devtools.debugger.features.map-expression-bindings", true);
   pref("devtools.debugger.features.map-await-expression", true);
   pref("devtools.debugger.features.xhr-breakpoints", true);
-  pref("devtools.debugger.features.original-blackbox", true);
   pref("devtools.debugger.features.event-listeners-breakpoints", true);
   pref("devtools.debugger.features.dom-mutation-breakpoints", true);
   pref("devtools.debugger.features.log-points", true);
@@ -146,7 +145,6 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   mapAwaitExpression: ["Bool", "map-await-expression"],
   componentPane: ["Bool", "component-pane"],
   xhrBreakpoints: ["Bool", "xhr-breakpoints"],
-  originalBlackbox: ["Bool", "original-blackbox"],
   eventListenersBreakpoints: ["Bool", "event-listeners-breakpoints"],
   domMutationBreakpoints: ["Bool", "dom-mutation-breakpoints"],
   logPoints: ["Bool", "log-points"],

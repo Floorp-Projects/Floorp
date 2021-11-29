@@ -9,7 +9,6 @@
 
 import { isOriginalId, originalToGeneratedId } from "devtools-source-map";
 import { recordEvent } from "../../utils/telemetry";
-import { features } from "../../utils/prefs";
 import { getSourceActorsForSource } from "../../selectors";
 
 import { PROMISE } from "../utils/middleware/promise";
@@ -24,7 +23,7 @@ async function blackboxActors(state, client, sourceId, isBlackBoxed, range) {
 async function getSourceId(source, sourceMaps) {
   let sourceId = source.id,
     range;
-  if (features.originalBlackbox && isOriginalId(source.id)) {
+  if (isOriginalId(source.id)) {
     range = await sourceMaps.getFileGeneratedRange(source.id);
     sourceId = originalToGeneratedId(source.id);
   }
