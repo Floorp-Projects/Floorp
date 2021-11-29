@@ -2027,8 +2027,6 @@ void ContentParent::ActorDestroy(ActorDestroyReason why) {
 
   RecvRemoveGeolocationListener();
 
-  mConsoleService = nullptr;
-
   // Destroy our JSProcessActors, and reject any pending queries.
   JSActorDidDestroy();
 
@@ -4652,32 +4650,16 @@ ContentParent::HandleEvent(GeolocationPositionError* positionError) {
   return NS_OK;
 }
 
-nsConsoleService* ContentParent::GetConsoleService() {
-  if (mConsoleService) {
-    return mConsoleService.get();
-  }
-
-  // XXXkhuey everything about this is terrible.
-  // Get the ConsoleService by CID rather than ContractID, so that we
-  // can cast the returned pointer to an nsConsoleService (rather than
-  // just an nsIConsoleService). This allows us to call the non-idl function
-  // nsConsoleService::LogMessageWithMode.
-  NS_DEFINE_CID(consoleServiceCID, NS_CONSOLESERVICE_CID);
-  nsCOMPtr<nsIConsoleService> consoleService(do_GetService(consoleServiceCID));
-  mConsoleService = static_cast<nsConsoleService*>(consoleService.get());
-  return mConsoleService.get();
-}
-
 mozilla::ipc::IPCResult ContentParent::RecvConsoleMessage(
     const nsString& aMessage) {
-  RefPtr<nsConsoleService> consoleService = GetConsoleService();
-  if (!consoleService) {
-    return IPC_OK();
+  nsresult rv;
+  nsCOMPtr<nsIConsoleService> consoleService =
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    RefPtr<nsConsoleMessage> msg(new nsConsoleMessage(aMessage.get()));
+    msg->SetIsForwardedFromContentProcess(true);
+    consoleService->LogMessageWithMode(msg, nsIConsoleService::SuppressLog);
   }
-
-  RefPtr<nsConsoleMessage> msg(new nsConsoleMessage(aMessage.get()));
-  msg->SetIsForwardedFromContentProcess(true);
-  consoleService->LogMessageWithMode(msg, nsConsoleService::SuppressLog);
   return IPC_OK();
 }
 
@@ -4730,8 +4712,10 @@ mozilla::ipc::IPCResult ContentParent::RecvScriptErrorInternal(
     const uint32_t& aColNumber, const uint32_t& aFlags,
     const nsCString& aCategory, const bool& aFromPrivateWindow,
     const bool& aFromChromeContext, const ClonedMessageData* aStack) {
-  RefPtr<nsConsoleService> consoleService = GetConsoleService();
-  if (!consoleService) {
+  nsresult rv;
+  nsCOMPtr<nsIConsoleService> consoleService =
+      do_GetService(NS_CONSOLESERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) {
     return IPC_OK();
   }
 
@@ -4765,14 +4749,14 @@ mozilla::ipc::IPCResult ContentParent::RecvScriptErrorInternal(
     msg = new nsScriptError();
   }
 
-  nsresult rv = msg->Init(aMessage, aSourceName, aSourceLine, aLineNumber,
-                          aColNumber, aFlags, aCategory.get(),
-                          aFromPrivateWindow, aFromChromeContext);
+  rv = msg->Init(aMessage, aSourceName, aSourceLine, aLineNumber, aColNumber,
+                 aFlags, aCategory.get(), aFromPrivateWindow,
+                 aFromChromeContext);
   if (NS_FAILED(rv)) return IPC_OK();
 
   msg->SetIsForwardedFromContentProcess(true);
 
-  consoleService->LogMessageWithMode(msg, nsConsoleService::SuppressLog);
+  consoleService->LogMessageWithMode(msg, nsIConsoleService::SuppressLog);
   return IPC_OK();
 }
 
