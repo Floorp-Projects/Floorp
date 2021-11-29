@@ -1,5 +1,4 @@
-from collections import defaultdict
-from typing import Any, Awaitable, Callable, Coroutine, List, Optional, Mapping, MutableMapping
+from typing import Any, List, Optional, Mapping, MutableMapping
 
 from ._module import BidiModule, command
 

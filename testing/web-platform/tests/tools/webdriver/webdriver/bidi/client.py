@@ -81,7 +81,10 @@ class BidiSession:
 
         self.command_id = 0
         self.pending_commands: MutableMapping[int, "asyncio.Future[Any]"] = {}
-        self.event_listeners: MutableMapping[Optional[str], List[Callable[[str, Mapping[str, Any]], Any]]] = defaultdict(list)
+        self.event_listeners: MutableMapping[
+            Optional[str],
+            List[Callable[[str, Mapping[str, Any]], Any]]
+        ] = defaultdict(list)
 
         # Modules.
         # For each module, have a property representing that module
@@ -128,11 +131,16 @@ class BidiSession:
         self.transport = Transport(self.websocket_url, self.on_message, loop=loop)
 
         if self.session_id is None:
-            self.session_id, self.capabilities = await self.session.new(self.requested_capabilities)
+            self.session_id, self.capabilities = await self.session.new(
+                self.requested_capabilities)
 
         await self.transport.start()
 
-    async def send_command(self, method: str, params: Mapping[str, Any]) -> Awaitable[Mapping[str, Any]]:
+    async def send_command(
+        self,
+        method: str,
+        params: Mapping[str, Any]
+    ) -> Awaitable[Mapping[str, Any]]:
         """Send a command to the remote server"""
         # this isn't threadsafe
         self.command_id += 1
@@ -177,7 +185,7 @@ class BidiSession:
             if not listeners:
                 listeners = self.event_listeners.get(None, [])
             for listener in listeners:
-                await listener(method, data["params"])
+                await listener(method, params)
         else:
             raise ValueError(f"Unexpected message: {data!r}")
 
@@ -187,10 +195,11 @@ class BidiSession:
         await self.transport.end()
         self.transport = None
 
-    def add_event_listener(self,
-                           name: Optional[str],
-                           fn: Callable[[str, Mapping[str, Any]],
-                           Awaitable[Any]]) -> Callable[[], None]:
+    def add_event_listener(
+        self,
+        name: Optional[str],
+        fn: Callable[[str, Mapping[str, Any]], Awaitable[Any]]
+    ) -> Callable[[], None]:
         """Add a listener for the event with a given name.
 
         If name is None, the listener is called for all messages that are not otherwise
