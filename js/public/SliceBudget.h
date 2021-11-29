@@ -98,14 +98,6 @@ class JS_PUBLIC_API SliceBudget {
     }
   }
 
-  [[nodiscard]] bool checkAndResetOverBudget() {
-    if (isOverBudget()) {
-      resetOverBudget();
-      return true;
-    }
-    return false;
-  }
-
   bool isWorkBudget() const { return budget.is<WorkBudget>(); }
   bool isTimeBudget() const { return budget.is<TimeBudget>(); }
   bool isUnlimited() const { return budget.is<UnlimitedBudget>(); }
