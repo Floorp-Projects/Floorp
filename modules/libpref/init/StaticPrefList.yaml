@@ -9830,6 +9830,7 @@
   value: "https://mozilla.cloudflare-dns.com/dns-query"
   mirror: never
 
+# If true, don't fallback to native DNS upon network errors.
 - name: network.trr.strict_native_fallback
   type: RelaxedAtomicBool
   value: false
