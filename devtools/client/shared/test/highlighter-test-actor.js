@@ -183,6 +183,12 @@ var highlighterTestSpec = protocol.generateActorSpec({
         value: RetVal("json"),
       },
     },
+    setInspectorActorID: {
+      request: {
+        inspectorActorID: Arg(0, "string"),
+      },
+      response: {},
+    },
   },
 });
 
@@ -355,14 +361,7 @@ var HighlighterTestActor = protocol.ActorClassWithSpec(highlighterTestSpec, {
     }
 
     const root = pauseOverlay.getElement("root");
-    const toolbar = pauseOverlay.getElement("toolbar");
-
-    return (
-      root.getAttribute("hidden") !== "true" &&
-      root.getAttribute("overlay") == "true" &&
-      toolbar.getAttribute("hidden") !== "true" &&
-      !!toolbar.getTextContent()
-    );
+    return root.getAttribute("hidden") !== "true";
   },
 
   /**
@@ -388,8 +387,12 @@ var HighlighterTestActor = protocol.ActorClassWithSpec(highlighterTestSpec, {
    * @returns {EyeDropper}
    */
   _getEyeDropper() {
-    const form = this.targetActor.form();
-    const inspectorActor = this.conn._getOrCreateActor(form.inspectorActor);
+    if (!this._inspectorActorID) {
+      console.error(
+        "_inspectorActorID is not set, make sure setInspectorActorID was called"
+      );
+    }
+    const inspectorActor = this.conn.getActor(this._inspectorActorID);
     return inspectorActor?._eyeDropper;
   },
 
@@ -481,6 +484,12 @@ var HighlighterTestActor = protocol.ActorClassWithSpec(highlighterTestSpec, {
       return `${nodeStr} : ${h.getElement("root").getTextContent()}`;
     });
   },
+
+  // This will be automatically called as part of the initialization of the
+  // HighlighterTestActor.
+  setInspectorActorID(inspectorActorID) {
+    this._inspectorActorID = inspectorActorID;
+  },
 });
 exports.HighlighterTestActor = HighlighterTestActor;
 
@@ -493,6 +502,11 @@ class HighlighterTestFront extends protocol.FrontClassWithSpec(
     // The currently active highlighter is obtained by calling a custom getter
     // provided manually after requesting TestFront. See `getHighlighterTestFront(toolbox)`
     this._highlighter = null;
+  }
+
+  async initialize() {
+    const inspectorFront = await this.targetFront.getFront("inspector");
+    await this.setInspectorActorID(inspectorFront.actorID);
   }
 
   /**
