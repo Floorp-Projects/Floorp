@@ -54,12 +54,23 @@ class MainAsCurrent : public TaskQueueWrapper {
   MainAsCurrent()
       : TaskQueueWrapper(MakeRefPtr<TaskQueue>(
             do_AddRef(GetMainThreadEventTarget()), "MainAsCurrentTaskQueue")),
-        mSetter(this) {}
-  void Delete() override {
-    MOZ_RELEASE_ASSERT(!NS_IsMainThread(),
-                       "Releasing a main-thread-TaskQueue on main might hang");
-    TaskQueueWrapper::Delete();
+        mSetter(this) {
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
   }
+
+  void Delete() override {
+    MOZ_RELEASE_ASSERT(NS_IsMainThread());
+    // We release the MainAsCurrent TaskQueue wrapper off-main since it sits on
+    // top of main. It blocks the current thread during shutdown through
+    // TaskQueue::AwaitIdle, which will hang unless it's already idle.
+    // NS_DISPATCH_SYNC will still process other main thread tasks, allowing the
+    // task queue to process events and shut down.
+    NS_DispatchBackgroundTask(
+        NS_NewRunnableFunction("MainAsCurrent off-main deleter",
+                               [this] { TaskQueueWrapper::Delete(); }),
+        NS_DISPATCH_SYNC);
+  }
+
   ~MainAsCurrent() = default;
 
  private:
@@ -468,14 +479,6 @@ class MediaPipelineTest : public ::testing::Test {
   ~MediaPipelineTest() {
     p1_.Shutdown();
     p2_.Shutdown();
-    // We release the MainAsCurrent TaskQueue wrapper off-main since it sits on
-    // top of main. It blocks the current thread during shutdown through
-    // TaskQueue::AwaitIdle, which will hang unless it's already idle.
-    NS_DispatchBackgroundTask(
-        NS_NewRunnableFunction(
-            "MainAsCurrent off-main deleter",
-            [tq = std::move(main_task_queue_)]() mutable { tq = nullptr; }),
-        NS_DISPATCH_SYNC);
   }
 
   static void SetUpTestCase() {
@@ -584,7 +587,7 @@ class MediaPipelineTest : public ::testing::Test {
   }
 
  protected:
-  // main_task_queue has this type to make sure it goes through Delete() when
+  // main_task_queue_ has this type to make sure it goes through Delete() when
   // we're destroyed.
   UniquePtr<TaskQueueWrapper> main_task_queue_;
   const RefPtr<SharedWebrtcState> shared_state_;
