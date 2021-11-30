@@ -137,6 +137,9 @@ perftools-presets-graphics-description = Preset for investigating graphics bugs 
 perftools-presets-media-label = Media
 perftools-presets-media-description2 = Preset for investigating audio and video bugs in { -brand-shorter-name }.
 
+perftools-presets-networking-label = Networking
+perftools-presets-networking-description = Preset for investigating networking bugs in { -brand-shorter-name }.
+
 perftools-presets-custom-label = Custom
 
 ##
