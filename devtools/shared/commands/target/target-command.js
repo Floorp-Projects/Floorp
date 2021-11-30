@@ -1028,6 +1028,14 @@ class TargetCommand extends EventEmitter {
     // It should be: MBT, regular tab toolbox and web extension.
     // The others which still don't support watcher don't spawn FRAME targets:
     // browser content toolbox and service workers.
+
+    // @backward-compat { version 96 } WebExtension targets only support the
+    // watcher starting with version 96. This if block can be fully removed when
+    // version 96 hits the release channel (cf. comment above).
+    if (!this.watcherFront) {
+      return null;
+    }
+
     return this.watcherFront.getParentWindowGlobalTarget(
       targetFront.browsingContextID
     );
