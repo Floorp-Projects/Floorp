@@ -929,11 +929,6 @@ pref("view_source.editor.args", "");
 // whether or not to draw images while dragging
 pref("nglayout.enable_drag_images", true);
 
-// enable/disable paint flashing --- useful for debugging
-// the first one applies to everything, the second one only to chrome
-pref("nglayout.debug.paint_flashing", false);
-pref("nglayout.debug.paint_flashing_chrome", false);
-
 // URI fixup prefs
 pref("browser.fixup.alternate.enabled", true);
 pref("browser.fixup.alternate.prefix", "www.");

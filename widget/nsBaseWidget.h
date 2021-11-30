@@ -720,7 +720,6 @@ class nsBaseWidget : public nsIWidget, public nsSupportsWeakReference {
  protected:
   static nsAutoString debug_GuiEventToString(
       mozilla::WidgetGUIEvent* aGuiEvent);
-  static bool debug_WantPaintFlashing();
 
   static void debug_DumpInvalidate(FILE* aFileOut, nsIWidget* aWidget,
                                    const LayoutDeviceIntRect* aRect,
