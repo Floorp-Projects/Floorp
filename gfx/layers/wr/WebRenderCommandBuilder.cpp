@@ -2058,22 +2058,12 @@ static void PaintItemByDrawTarget(nsDisplayItem* aItem, gfx::DrawTarget* aDT,
       break;
   }
 
-  if (aItem->GetType() != DisplayItemType::TYPE_MASK) {
+  if (aHighlight && aItem->GetType() != DisplayItemType::TYPE_MASK) {
     // Apply highlight fills, if the appropriate prefs are set.
     // We don't do this for masks because we'd be filling the A8 mask surface,
     // which isn't very useful.
-    if (aHighlight) {
-      aDT->SetTransform(gfx::Matrix());
-      aDT->FillRect(Rect(visibleRect), gfx::ColorPattern(aHighlight.value()));
-    }
-    if (aItem->Frame()->PresContext()->GetPaintFlashing()) {
-      aDT->SetTransform(gfx::Matrix());
-      float r = float(rand()) / float(RAND_MAX);
-      float g = float(rand()) / float(RAND_MAX);
-      float b = float(rand()) / float(RAND_MAX);
-      aDT->FillRect(Rect(visibleRect),
-                    gfx::ColorPattern(gfx::DeviceColor(r, g, b, 0.5)));
-    }
+    aDT->SetTransform(gfx::Matrix());
+    aDT->FillRect(Rect(visibleRect), gfx::ColorPattern(aHighlight.value()));
   }
 }
 

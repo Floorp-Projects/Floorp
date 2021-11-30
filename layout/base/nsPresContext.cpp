@@ -276,8 +276,6 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mFontFeatureValuesDirty(true),
       mSuppressResizeReflow(false),
       mIsVisual(false),
-      mPaintFlashing(false),
-      mPaintFlashingInitialized(false),
       mHasWarnedAboutPositionedTableParts(false),
       mHasWarnedAboutTooLargeDashedOrDottedRadius(false),
       mQuirkSheetAdded(false),
@@ -331,8 +329,6 @@ static const char* gExactCallbackPrefs[] = {
     "intl.accept_languages",
     "layout.css.devPixelsPerPx",
     "layout.css.dpi",
-    "nglayout.debug.paint_flashing_chrome",
-    "nglayout.debug.paint_flashing",
     "privacy.resistFingerprinting",
     "privacy.trackingprotection.enabled",
     nullptr,
@@ -665,12 +661,6 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
     if (UsesExChUnits()) {
       restyleHint |= RestyleHint::RecascadeSubtree();
     }
-  }
-
-  if (prefName.EqualsLiteral("nglayout.debug.paint_flashing") ||
-      prefName.EqualsLiteral("nglayout.debug.paint_flashing_chrome")) {
-    mPaintFlashingInitialized = false;
-    return;
   }
 
   // We will end up calling InvalidatePreferenceSheets one from each pres
@@ -2655,18 +2645,6 @@ void nsPresContext::NotifyDOMContentFlushed() {
       timing->NotifyDOMContentFlushedForRootContentDocument();
     }
   }
-}
-
-bool nsPresContext::GetPaintFlashing() const {
-  if (!mPaintFlashingInitialized) {
-    bool pref = Preferences::GetBool("nglayout.debug.paint_flashing");
-    if (!pref && IsChrome()) {
-      pref = Preferences::GetBool("nglayout.debug.paint_flashing_chrome");
-    }
-    mPaintFlashing = pref;
-    mPaintFlashingInitialized = true;
-  }
-  return mPaintFlashing;
 }
 
 nscoord nsPresContext::GfxUnitsToAppUnits(gfxFloat aGfxUnits) const {

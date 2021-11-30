@@ -1909,11 +1909,6 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   boolean isNodeDisabledForEvents(in Node aNode);
 
-  /**
-   * Setting paintFlashing to true will flash newly painted area.
-   */
-  attribute boolean paintFlashing;
-
   /*
    * Returns the value of a given property animated on the compositor thread.
    * If the property is NOT currently being animated on the compositor thread,

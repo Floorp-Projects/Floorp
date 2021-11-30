@@ -2948,9 +2948,7 @@ static PrefPair debug_PrefValues[] = {
     {"nglayout.debug.event_dumping", false},
     {"nglayout.debug.invalidate_dumping", false},
     {"nglayout.debug.motion_event_dumping", false},
-    {"nglayout.debug.paint_dumping", false},
-    {"nglayout.debug.paint_flashing", false},
-    {"nglayout.debug.paint_flashing_chrome", false}};
+    {"nglayout.debug.paint_dumping", false}};
 
 //////////////////////////////////////////////////////////////
 bool nsBaseWidget::debug_GetCachedBoolPref(const char* aPrefName) {
@@ -3030,11 +3028,6 @@ static int32_t _GetPrintCount() {
   static int32_t sCount = 0;
 
   return ++sCount;
-}
-//////////////////////////////////////////////////////////////
-/* static */
-bool nsBaseWidget::debug_WantPaintFlashing() {
-  return debug_GetCachedBoolPref("nglayout.debug.paint_flashing");
 }
 //////////////////////////////////////////////////////////////
 /* static */

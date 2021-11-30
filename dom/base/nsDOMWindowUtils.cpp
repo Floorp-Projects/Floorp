@@ -3870,33 +3870,6 @@ nsDOMWindowUtils::IsNodeDisabledForEvents(nsINode* aNode, bool* aRetVal) {
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::SetPaintFlashing(bool aPaintFlashing) {
-  nsPresContext* presContext = GetPresContext();
-  if (presContext) {
-    presContext->SetPaintFlashing(aPaintFlashing);
-    // Clear paint flashing colors
-    PresShell* presShell = GetPresShell();
-    if (!aPaintFlashing && presShell) {
-      nsIFrame* rootFrame = presShell->GetRootFrame();
-      if (rootFrame) {
-        rootFrame->InvalidateFrameSubtree();
-      }
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWindowUtils::GetPaintFlashing(bool* aRetVal) {
-  *aRetVal = false;
-  nsPresContext* presContext = GetPresContext();
-  if (presContext) {
-    *aRetVal = presContext->GetPaintFlashing();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::DispatchEventToChromeOnly(EventTarget* aTarget, Event* aEvent,
                                             bool* aRetVal) {
   *aRetVal = false;
