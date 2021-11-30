@@ -1148,9 +1148,6 @@ struct CompilationStencil {
     return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);
   }
 
-  // Steal ExtensibleCompilationStencil content.
-  [[nodiscard]] bool steal(JSContext* cx, ExtensibleCompilationStencil&& other);
-
   bool isModule() const;
 
 #ifdef DEBUG
