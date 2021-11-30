@@ -240,9 +240,6 @@ class ImageBridgeChild final : public PImageBridgeChild,
    */
   void UseTextures(CompositableClient* aCompositable,
                    const nsTArray<TimedTextureClient>& aTextures) override;
-  void UseComponentAlphaTextures(CompositableClient* aCompositable,
-                                 TextureClient* aClientOnBlack,
-                                 TextureClient* aClientOnWhite) override;
 
   void ReleaseCompositable(const CompositableHandle& aHandle) override;
 
@@ -268,12 +265,6 @@ class ImageBridgeChild final : public PImageBridgeChild,
 
   void RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                      TextureClient* aTexture) override;
-
-  void UpdateTextureRegion(CompositableClient* aCompositable,
-                           const ThebesBufferData& aThebesBufferData,
-                           const nsIntRegion& aUpdatedRegion) override {
-    MOZ_CRASH("should not be called");
-  }
 
   // ISurfaceAllocator
 

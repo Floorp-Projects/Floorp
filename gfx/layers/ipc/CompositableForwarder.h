@@ -52,14 +52,6 @@ class CompositableForwarder : public KnowsCompositor {
   virtual void Connect(CompositableClient* aCompositable,
                        ImageContainer* aImageContainer = nullptr) = 0;
 
-  /**
-   * Communicate to the compositor that aRegion in the texture identified by
-   * aCompositable and aIdentifier has been updated to aThebesBuffer.
-   */
-  virtual void UpdateTextureRegion(CompositableClient* aCompositable,
-                                   const ThebesBufferData& aThebesBufferData,
-                                   const nsIntRegion& aUpdatedRegion) = 0;
-
   virtual void ReleaseCompositable(const CompositableHandle& aHandle) = 0;
   virtual bool DestroyInTransaction(PTextureChild* aTexture) = 0;
 
@@ -90,9 +82,6 @@ class CompositableForwarder : public KnowsCompositor {
    */
   virtual void UseTextures(CompositableClient* aCompositable,
                            const nsTArray<TimedTextureClient>& aTextures) = 0;
-  virtual void UseComponentAlphaTextures(CompositableClient* aCompositable,
-                                         TextureClient* aClientOnBlack,
-                                         TextureClient* aClientOnWhite) = 0;
 
   virtual void UpdateFwdTransactionId() = 0;
   virtual uint64_t GetFwdTransactionId() = 0;
@@ -100,8 +89,6 @@ class CompositableForwarder : public KnowsCompositor {
   virtual bool InForwarderThread() = 0;
 
   void AssertInForwarderThread() { MOZ_ASSERT(InForwarderThread()); }
-
-  static uint32_t GetMaxFileDescriptorsPerMessage();
 
  protected:
   nsTArray<RefPtr<TextureClient>> mTexturesToRemove;
