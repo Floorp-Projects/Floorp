@@ -565,12 +565,6 @@ this.cookies = class extends ExtensionAPI {
 
           let allowed = ["url", "name"];
           for (let { cookie, storeId } of query(details, allowed, context)) {
-            if (
-              isPrivateCookieStoreId(details.storeId) &&
-              !context.privateBrowsingAllowed
-            ) {
-              return Promise.reject({ message: "Unknown storeId" });
-            }
             Services.cookies.remove(
               cookie.host,
               cookie.name,
