@@ -8130,31 +8130,37 @@ static Element* GetCustomContentContainer(PresShell* aPresShell) {
   return aPresShell->GetCanvasFrame()->GetCustomContentContainer();
 }
 
+static void InsertAnonContentIntoCanvas(AnonymousContent& aAnonContent,
+                                        PresShell* aPresShell) {
+  Element* container = GetCustomContentContainer(aPresShell);
+  if (!container) {
+    return;
+  }
+
+  IgnoredErrorResult rv;
+  container->AppendChildTo(&aAnonContent.ContentNode(), true, rv);
+  if (rv.Failed()) {
+    return;
+  }
+
+  aPresShell->GetCanvasFrame()->ShowCustomContentContainer();
+}
+
 already_AddRefed<AnonymousContent> Document::InsertAnonymousContent(
-    Element& aElement, bool aForce, ErrorResult& aRv) {
+    Element& aElement, ErrorResult& aRv) {
+  nsAutoScriptBlocker scriptBlocker;
+
   // Clone the node to avoid returning a direct reference.
   nsCOMPtr<nsINode> clone = aElement.CloneNode(true, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  PresShell* shell = GetPresShell();
-  if (aForce && !GetCustomContentContainer(shell)) {
-    FlushPendingNotifications(FlushType::Layout);
-    shell = GetPresShell();
-  }
-
-  nsAutoScriptBlocker scriptBlocker;
-
   auto anonContent =
       MakeRefPtr<AnonymousContent>(clone.forget().downcast<Element>());
-
   mAnonymousContents.AppendElement(anonContent);
 
-  if (Element* container = GetCustomContentContainer(shell)) {
-    container->AppendChildTo(&anonContent->ContentNode(), true, IgnoreErrors());
-    shell->GetCanvasFrame()->ShowCustomContentContainer();
-  }
+  InsertAnonContentIntoCanvas(*anonContent, GetPresShell());
 
   return anonContent.forget();
 }
