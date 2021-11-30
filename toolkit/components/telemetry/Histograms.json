@@ -11353,16 +11353,6 @@
     "description": "Number of times the DevTools DOM Inspector has been opened.",
     "releaseChannelCollection": "opt-out"
   },
-  "DEVTOOLS_PAINTFLASHING_OPENED_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org"],
-    "expires_in_version": "never",
-    "kind": "count",
-    "bug_numbers": [1247985],
-    "description": "Number of times the DevTools Paint Flashing has been opened via the toolbox button.",
-    "releaseChannelCollection": "opt-out"
-  },
   "DEVTOOLS_RESPONSIVE_OPENED_COUNT": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
@@ -11732,18 +11722,6 @@
     "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
     "releaseChannelCollection": "opt-out",
     "description": "How long has the DOM inspector been active (seconds)"
-  },
-  "DEVTOOLS_PAINTFLASHING_TIME_ACTIVE_SECONDS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 10000000,
-    "n_buckets": 100,
-    "bug_numbers": [1446496],
-    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "jryans@mozilla.com"],
-    "releaseChannelCollection": "opt-out",
-    "description": "How long has paint flashing been active (seconds)"
   },
   "DEVTOOLS_RESPONSIVE_TIME_ACTIVE_SECONDS": {
     "record_in_processes": ["main", "content"],

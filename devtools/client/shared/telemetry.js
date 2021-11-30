@@ -749,7 +749,6 @@ function getChartsFromToolId(id) {
     case "MEMORY":
     case "NETMONITOR":
     case "OPTIONS":
-    case "PAINTFLASHING":
     case "RESPONSIVE":
     case "STORAGE":
     case "STYLEEDITOR":

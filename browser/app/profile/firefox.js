@@ -2250,7 +2250,6 @@ pref("devtools.every-frame-target.enabled", false);
 pref("devtools.command-button-pick.enabled", true);
 pref("devtools.command-button-frames.enabled", true);
 pref("devtools.command-button-splitconsole.enabled", true);
-pref("devtools.command-button-paintflashing.enabled", false);
 pref("devtools.command-button-responsive.enabled", true);
 pref("devtools.command-button-screenshot.enabled", false);
 pref("devtools.command-button-rulers.enabled", false);

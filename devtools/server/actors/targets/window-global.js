@@ -1325,12 +1325,6 @@ const windowGlobalTargetPrototype = {
       // propagated through the window global tree via the platform.
       return;
     }
-    if (
-      typeof options.paintFlashing !== "undefined" &&
-      options.PaintFlashing !== this._getPaintFlashing()
-    ) {
-      this._setPaintFlashingEnabled(options.paintFlashing);
-    }
     if (typeof options.restoreFocus == "boolean") {
       this._restoreFocus = options.restoreFocus;
     }
@@ -1362,31 +1356,9 @@ const windowGlobalTargetPrototype = {
    * state when closing the toolbox.
    */
   _restoreTargetConfiguration() {
-    this._setPaintFlashingEnabled(false);
-
     if (this._restoreFocus && this.browsingContext?.isActive) {
       this.window.focus();
     }
-  },
-
-  /**
-   * Disable or enable the paint flashing on the target.
-   */
-  _setPaintFlashingEnabled(enabled) {
-    const windowUtils = this.window.windowUtils;
-    windowUtils.paintFlashing = enabled;
-  },
-
-  /**
-   * Return paint flashing status.
-   */
-  _getPaintFlashing() {
-    if (!this.docShell) {
-      // The window global is already closed.
-      return null;
-    }
-
-    return this.window.windowUtils.paintFlashing;
   },
 
   _changeTopLevelDocument(window) {
