@@ -889,6 +889,11 @@ bool TRRService::IsTemporarilyBlocked(const nsACString& aHost,
                                       bool aPrivateBrowsing,
                                       bool aParentsToo)  // false if domain
 {
+  if (!StaticPrefs::network_trr_temp_blocklist()) {
+    LOG(("TRRService::IsTemporarilyBlocked temp blocklist disabled by pref"));
+    return false;
+  }
+
   if (mMode == nsIDNSService::MODE_TRRONLY) {
     return false;  // might as well try
   }
@@ -970,6 +975,11 @@ bool TRRService::IsExcludedFromTRR_unlocked(const nsACString& aHost) {
 void TRRService::AddToBlocklist(const nsACString& aHost,
                                 const nsACString& aOriginSuffix,
                                 bool privateBrowsing, bool aParentsToo) {
+  if (!StaticPrefs::network_trr_temp_blocklist()) {
+    LOG(("TRRService::AddToBlocklist temp blocklist disabled by pref"));
+    return;
+  }
+
   LOG(("TRR blocklist %s\n", nsCString(aHost).get()));
   nsAutoCString hashkey(aHost + aOriginSuffix);
 
