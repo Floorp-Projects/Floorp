@@ -254,6 +254,11 @@ toolchain-alias
 An alias that can be used instead of the real toolchain job name in fetch
 stanzas for jobs.
 
+toolchain-env
+=============
+Extra environment variables that will be set on the worker when fetching this
+toolchain.
+
 always_target
 =============
 

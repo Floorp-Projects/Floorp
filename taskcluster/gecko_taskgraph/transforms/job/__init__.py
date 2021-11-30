@@ -214,6 +214,7 @@ def get_attribute(dict, key, attributes, attribute_name):
 @transforms.add
 def use_fetches(config, jobs):
     artifact_names = {}
+    extra_env = {}
     aliases = {}
 
     if config.kind in ("toolchain", "fetch"):
@@ -222,6 +223,7 @@ def use_fetches(config, jobs):
             run = job.get("run", {})
             label = job["label"]
             get_attribute(artifact_names, label, run, "toolchain-artifact")
+            get_attribute(extra_env, label, run, "toolchain-env")
             value = run.get(f"{config.kind}-alias")
             if not value:
                 value = []
@@ -238,6 +240,7 @@ def use_fetches(config, jobs):
                 task.attributes,
                 f"{task.kind}-artifact",
             )
+            get_attribute(extra_env, task.label, task.attributes, f"{task.kind}-env")
             value = task.attributes.get(f"{task.kind}-alias")
             if not value:
                 value = []
@@ -259,6 +262,7 @@ def use_fetches(config, jobs):
         name = job.get("name", job.get("label"))
         dependencies = job.setdefault("dependencies", {})
         worker = job.setdefault("worker", {})
+        env = worker.setdefault("env", {})
         prefix = get_artifact_prefix(job)
         has_sccache = False
         for kind, artifacts in fetches.items():
@@ -272,6 +276,8 @@ def use_fetches(config, jobs):
                                 kind=config.kind, name=name, fetch=fetch_name
                             )
                         )
+                    if label in extra_env:
+                        env.update(extra_env[label])
 
                     path = artifact_names[label]
 
@@ -365,7 +371,6 @@ def use_fetches(config, jobs):
                 )
             artifacts[artifact] = task
 
-        env = worker.setdefault("env", {})
         env["MOZ_FETCHES"] = {
             "task-reference": json.dumps(
                 sorted(job_fetches, key=lambda x: sorted(x.items())), sort_keys=True
