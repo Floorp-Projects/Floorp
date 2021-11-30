@@ -800,7 +800,11 @@ void xpc::SetPrefableRealmOptions(JS::RealmOptions& options) {
           StaticPrefs::javascript_options_writable_streams())
       .setPropertyErrorMessageFixEnabled(sPropertyErrorMessageFixEnabled)
       .setWeakRefsEnabled(GetWeakRefsEnabled())
-      .setIteratorHelpersEnabled(sIteratorHelpersEnabled);
+      .setIteratorHelpersEnabled(sIteratorHelpersEnabled)
+#ifdef ENABLE_NEW_SET_METHODS
+      .setNewSetMethodsEnabled(enableNewSetMethods)
+#endif
+      ;
 }
 
 // Mirrored value of javascript.options.self_hosted.use_shared_memory.
@@ -942,6 +946,11 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
 #ifdef NIGHTLY_BUILD
   sIteratorHelpersEnabled =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.iterator_helpers");
+#endif
+
+#ifdef ENABLE_NEW_SET_METHODS
+  bool enableNewSetMethods =
+      Preferences::GetBool(JS_OPTIONS_DOT_STR "experimental.new_set_methods");
 #endif
 
 #ifdef JS_GC_ZEAL

@@ -138,6 +138,9 @@ extern bool enableErgonomicBrandChecks;
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 extern bool enableChangeArrayByCopy;
 #endif
+#ifdef ENABLE_NEW_SET_METHODS
+extern bool enableNewSetMethods;
+#endif
 extern bool enableClassStaticBlocks;
 #ifdef JS_GC_ZEAL
 extern uint32_t gZealBits;

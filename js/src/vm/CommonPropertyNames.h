@@ -121,6 +121,7 @@
   MACRO_(defineSetter, defineSetter, "__defineSetter__")                       \
   MACRO_(delete, delete_, "delete")                                            \
   MACRO_(deleteProperty, deleteProperty, "deleteProperty")                     \
+  MACRO_(difference, difference, "difference")                                 \
   MACRO_(displayURL, displayURL, "displayURL")                                 \
   MACRO2(do, do_, "do")                                                        \
   MACRO_(domNode, domNode, "domNode")                                          \
@@ -243,6 +244,7 @@
   MACRO_(index, index, "index")                                                \
   MACRO_(indices, indices, "indices")                                          \
   MACRO_(infinity, infinity, "infinity")                                       \
+  MACRO_(intersection, intersection, "intersection")                           \
   MACRO_(Infinity, Infinity, "Infinity")                                       \
   MACRO_(initial, initial, "initial")                                          \
   MACRO_(InitializeCollator, InitializeCollator, "InitializeCollator")         \
@@ -271,12 +273,15 @@
          "InterpretGeneratorResume")                                           \
   MACRO_(InvalidDate, InvalidDate, "Invalid Date")                             \
   MACRO_(isBreakpoint, isBreakpoint, "isBreakpoint")                           \
+  MACRO_(isDisjointFrom, isDisjointFrom, "isDisjointFrom")                     \
   MACRO_(isEntryPoint, isEntryPoint, "isEntryPoint")                           \
   MACRO_(isExtensible, isExtensible, "isExtensible")                           \
   MACRO_(isFinite, isFinite, "isFinite")                                       \
   MACRO_(isNaN, isNaN, "isNaN")                                                \
   MACRO_(isPrototypeOf, isPrototypeOf, "isPrototypeOf")                        \
   MACRO_(isStepStart, isStepStart, "isStepStart")                              \
+  MACRO_(isSubsetOf, isSubsetOf, "isSubsetOf")                                 \
+  MACRO_(isSupersetOf, isSupersetOf, "isSupersetOf")                           \
   MACRO_(IterableToList, IterableToList, "IterableToList")                     \
   MACRO_(iterate, iterate, "iterate")                                          \
   MACRO_(join, join, "join")                                                   \
@@ -457,6 +462,7 @@
   MACRO_(style, style, "style")                                                \
   MACRO_(super, super, "super")                                                \
   MACRO_(switch, switch_, "switch")                                            \
+  MACRO_(symmetricDifference, symmetricDifference, "symmetricDifference")      \
   MACRO_(Symbol_iterator_fun, Symbol_iterator_fun, "[Symbol.iterator]")        \
   MACRO_(target, target, "target")                                             \
   MACRO_(test, test, "test")                                                   \
@@ -497,6 +503,7 @@
   MACRO_(uneval, uneval, "uneval")                                             \
   MACRO_(unicode, unicode, "unicode")                                          \
   MACRO_(uninitialized, uninitialized, "uninitialized")                        \
+  MACRO_(union, union_, "union")                                               \
   MACRO_(unit, unit, "unit")                                                   \
   MACRO_(unitDisplay, unitDisplay, "unitDisplay")                              \
   MACRO_(unknown, unknown, "unknown")                                          \

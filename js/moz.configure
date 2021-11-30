@@ -1148,3 +1148,25 @@ def enable_change_array_by_copy(value):
 
 set_config("ENABLE_CHANGE_ARRAY_BY_COPY", enable_change_array_by_copy)
 set_define("ENABLE_CHANGE_ARRAY_BY_COPY", enable_change_array_by_copy)
+
+# Enable New Set methods
+# ===================================================
+def use_new_set_methods():
+    return False
+
+
+option(
+    "--enable-new-set-methods",
+    default=use_new_set_methods(),
+    help="{Enable|Disable} New Set methods pref/command-line option (disabled by default)",
+)
+
+
+@depends("--enable-new-set-methods")
+def enable_new_set_methods(value):
+    if value:
+        return True
+
+
+set_config("ENABLE_NEW_SET_METHODS", enable_new_set_methods)
+set_define("ENABLE_NEW_SET_METHODS", enable_new_set_methods)
