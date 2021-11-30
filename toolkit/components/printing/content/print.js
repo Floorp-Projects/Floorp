@@ -1397,6 +1397,7 @@ var PrintSettingsViewProxy = {
         for (let [settingName, presetValue] of Object.entries(marginPresets)) {
           target[settingName] = presetValue;
         }
+        target.honorPageRuleMargins = value == "default";
         break;
 
       case "paperId": {
