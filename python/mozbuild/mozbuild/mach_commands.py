@@ -2211,8 +2211,8 @@ def repackage_msix(
     }
 
     if not input:
-        if os.path.exists(command_context.get("bindir")):
-            input = command_context["bindir"]
+        if os.path.exists(command_context.bindir):
+            input = command_context.bindir
         else:
             command_context.log(
                 logging.ERROR,
