@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script>
+    window.addEventListener("pageshow", () => {
+      let bc = new BroadcastChannel("bug1743353");
+      bc.addEventListener("message", ({ data: cmd }) => {
+        switch (cmd) {
+          case "load":
+            bc.close();
+            document.location += "?1";
+            break;
+          case "back":
+            window.blockBFCache = new RTCPeerConnection();
+            window.addEventListener("pagehide", () => {
+              bc.postMessage("pagehide");
+            });
+            window.addEventListener("unload", () => {
+              bc.postMessage("unload");
+              bc.close();
+            });
+            history.back();
+            break;
+          case "close":
+            bc.close();
+            window.close();
+            break;
+        }
+      });
+      bc.postMessage("pageshow");
+    });
+  </script>
+</head>
+<body>
+</body>
+</html>
