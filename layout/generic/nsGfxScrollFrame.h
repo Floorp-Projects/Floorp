@@ -421,8 +421,9 @@ class ScrollFrameHelper : public nsIReflowCallback {
       bool aHasResizer, mozilla::layers::ScrollDirection aDirection);
   // returns true if a resizer should be visible
   bool HasResizer() { return mResizerBox; }
-  void LayoutScrollbars(nsBoxLayoutState& aState, const nsRect& aContentArea,
-                        const nsRect& aOldScrollArea);
+  void LayoutScrollbars(nsBoxLayoutState& aState,
+                        const nsRect& aInsideBorderArea,
+                        const nsRect& aOldScrollPort);
 
   void MarkScrollbarsDirtyForReflow() const;
   void InvalidateVerticalScrollbar() const;

@@ -1378,9 +1378,9 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
       ScrollFrameHelper::SetScrollbarVisibility(mHelper.mVScrollbarBox,
                                                 state.mShowVScrollbar);
       // place and reflow scrollbars
-      nsRect insideBorderArea =
-          nsRect(nsPoint(state.mComputedBorder.left, state.mComputedBorder.top),
-                 layoutSize);
+      const nsRect insideBorderArea(
+          nsPoint(state.mComputedBorder.left, state.mComputedBorder.top),
+          layoutSize);
       mHelper.LayoutScrollbars(state.mBoxState, insideBorderArea,
                                oldScrollPort);
     } else {
@@ -6731,8 +6731,8 @@ static void AdjustOverlappingScrollbars(nsRect& aVRect, nsRect& aHRect) {
 }
 
 void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
-                                         const nsRect& aContentArea,
-                                         const nsRect& aOldScrollArea) {
+                                         const nsRect& aInsideBorderArea,
+                                         const nsRect& aOldScrollPort) {
   NS_ASSERTION(!mSuppressScrollbarUpdate, "This should have been suppressed");
 
   bool hasResizer = HasResizer();
@@ -6754,8 +6754,8 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
     if (overlayScrollBarsOnRoot) {
       vRect.height = compositionSize.height;
     }
-    vRect.width = aContentArea.width - mScrollPort.width;
-    vRect.x = scrollbarOnLeft ? aContentArea.x
+    vRect.width = aInsideBorderArea.width - mScrollPort.width;
+    vRect.x = scrollbarOnLeft ? aInsideBorderArea.x
                               : mScrollPort.x + compositionSize.width;
     if (mHasVerticalScrollbar) {
       nsMargin margin;
@@ -6796,7 +6796,7 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
     if (overlayScrollBarsOnRoot) {
       hRect.width = compositionSize.width;
     }
-    hRect.height = aContentArea.height - mScrollPort.height;
+    hRect.height = aInsideBorderArea.height - mScrollPort.height;
     hRect.y = mScrollPort.y + compositionSize.height;
     if (mHasHorizontalScrollbar) {
       nsMargin margin;
@@ -6827,23 +6827,23 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
                "Must be a box frame!");
 
     nsRect r(0, 0, 0, 0);
-    if (aContentArea.x != mScrollPort.x || scrollbarOnLeft) {
+    if (aInsideBorderArea.x != mScrollPort.x || scrollbarOnLeft) {
       // scrollbar (if any) on left
-      r.x = aContentArea.x;
-      r.width = mScrollPort.x - aContentArea.x;
+      r.x = aInsideBorderArea.x;
+      r.width = mScrollPort.x - aInsideBorderArea.x;
       NS_ASSERTION(r.width >= 0, "Scroll area should be inside client rect");
     } else {
       // scrollbar (if any) on right
-      r.width = aContentArea.XMost() - mScrollPort.XMost();
-      r.x = aContentArea.XMost() - r.width;
+      r.width = aInsideBorderArea.XMost() - mScrollPort.XMost();
+      r.x = aInsideBorderArea.XMost() - r.width;
       NS_ASSERTION(r.width >= 0, "Scroll area should be inside client rect");
     }
-    if (aContentArea.y != mScrollPort.y) {
+    if (aInsideBorderArea.y != mScrollPort.y) {
       NS_ERROR("top scrollbars not supported");
     } else {
       // scrollbar (if any) on bottom
-      r.height = aContentArea.YMost() - mScrollPort.YMost();
-      r.y = aContentArea.YMost() - r.height;
+      r.height = aInsideBorderArea.YMost() - mScrollPort.YMost();
+      r.y = aInsideBorderArea.YMost() - r.height;
       NS_ASSERTION(r.height >= 0, "Scroll area should be inside client rect");
     }
 
@@ -6876,15 +6876,15 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
       nscoord vScrollbarWidth = pc->DevPixelsToAppUnits(sizes.mVertical);
       r.width =
           std::max(std::max(r.width, vScrollbarWidth), resizerMinSize.width);
-      if (aContentArea.x == mScrollPort.x && !scrollbarOnLeft) {
-        r.x = aContentArea.XMost() - r.width;
+      if (aInsideBorderArea.x == mScrollPort.x && !scrollbarOnLeft) {
+        r.x = aInsideBorderArea.XMost() - r.width;
       }
 
       nscoord hScrollbarHeight = pc->DevPixelsToAppUnits(sizes.mHorizontal);
       r.height =
           std::max(std::max(r.height, hScrollbarHeight), resizerMinSize.height);
-      if (aContentArea.y == mScrollPort.y) {
-        r.y = aContentArea.YMost() - r.height;
+      if (aInsideBorderArea.y == mScrollPort.y) {
+        r.y = aInsideBorderArea.YMost() - r.height;
       }
 
       nsBoxFrame::LayoutChildAt(aState, mResizerBox, r);
@@ -6923,7 +6923,7 @@ void ScrollFrameHelper::LayoutScrollbars(nsBoxLayoutState& aState,
   // if the client area changed size because of an incremental
   // reflow of a descendant.  (If the outer frame is dirty, the fixed
   // children will be re-laid out anyway)
-  if (aOldScrollArea.Size() != mScrollPort.Size() &&
+  if (aOldScrollPort.Size() != mScrollPort.Size() &&
       !mOuter->HasAnyStateBits(NS_FRAME_IS_DIRTY) && mIsRoot) {
     mMayHaveDirtyFixedChildren = true;
   }
