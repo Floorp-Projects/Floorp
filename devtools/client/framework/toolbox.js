@@ -318,7 +318,6 @@ function Toolbox(
   this._pingTelemetrySelectTool = this._pingTelemetrySelectTool.bind(this);
   this.toggleSplitConsole = this.toggleSplitConsole.bind(this);
   this.toggleOptions = this.toggleOptions.bind(this);
-  this.togglePaintFlashing = this.togglePaintFlashing.bind(this);
   this._onTargetAvailable = this._onTargetAvailable.bind(this);
   this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
   this._onTargetSelected = this._onTargetSelected.bind(this);
@@ -331,8 +330,6 @@ function Toolbox(
     500,
     this
   );
-
-  this.isPaintFlashing = false;
 
   if (!selectedTool) {
     selectedTool = Services.prefs.getCharPref(this._prefs.LAST_TOOL);
@@ -2254,30 +2251,10 @@ Toolbox.prototype = {
       inspectorFront &&
       (inspectorFront.hasHighlighter("RulersHighlighter") ||
         inspectorFront.hasHighlighter("MeasuringToolHighlighter"));
-    if (hasHighlighters || this.isPaintFlashing) {
-      if (this.isPaintFlashing) {
-        this.togglePaintFlashing();
-      }
-      if (hasHighlighters) {
-        inspectorFront.destroyHighlighters();
-      }
+    if (hasHighlighters) {
+      inspectorFront.destroyHighlighters();
       this.component.setToolboxButtons(this.toolbarButtons);
     }
-  },
-
-  /**
-   * Set paintflashing to enabled or disabled for this toolbox's tab.
-   */
-  togglePaintFlashing: function() {
-    if (this.isPaintFlashing) {
-      this.telemetry.toolOpened("paintflashing", this.sessionId, this);
-    } else {
-      this.telemetry.toolClosed("paintflashing", this.sessionId, this);
-    }
-    this.isPaintFlashing = !this.isPaintFlashing;
-    return this.commands.targetConfigurationCommand.updateConfiguration({
-      paintFlashing: this.isPaintFlashing,
-    });
   },
 
   /**

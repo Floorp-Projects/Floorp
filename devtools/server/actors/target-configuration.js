@@ -31,8 +31,6 @@ const SUPPORTED_OPTIONS = {
   javascriptEnabled: true,
   // Force a custom device pixel ratio (used in RDM). Set to null to restore origin ratio.
   overrideDPPX: true,
-  // Enable paint flashing mode.
-  paintFlashing: true,
   // Enable print simulation mode.
   printSimulationEnabled: true,
   // Override navigator.maxTouchPoints (used in RDM and doesn't apply if RDM isn't enabled)

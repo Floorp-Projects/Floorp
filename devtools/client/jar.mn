@@ -175,7 +175,6 @@ devtools.jar:
     skin/chart.css (themes/chart.css)
     skin/widgets.css (themes/widgets.css)
     skin/rules.css (themes/rules.css)
-    skin/images/command-paintflashing.svg (themes/images/command-paintflashing.svg)
     skin/images/command-screenshot.svg (themes/images/command-screenshot.svg)
     skin/images/command-responsivemode.svg (themes/images/command-responsivemode.svg)
     skin/images/command-pick.svg (themes/images/command-pick.svg)

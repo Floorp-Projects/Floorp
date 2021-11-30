@@ -50,7 +50,6 @@ types.addDictType("windowGlobalTarget.reload", {
 types.addDictType("windowGlobalTarget.reconfigure", {
   cacheDisabled: "nullable:boolean",
   colorSchemeSimulation: "nullable:string",
-  paintFlashing: "nullable:boolean",
   printSimulationEnabled: "nullable:boolean",
   restoreFocus: "nullable:boolean",
   serviceWorkersTestingEnabled: "nullable:boolean",
