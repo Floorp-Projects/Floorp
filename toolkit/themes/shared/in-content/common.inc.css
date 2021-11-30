@@ -119,7 +119,6 @@
   :root {
     /* Keep these in sync with:
      *
-     *  * plaintext.css
      *  * nsXPLookAndFeel::GenericDarkColor
      *  * The default value of browser.display.foreground_color.dark and
      *    browser.display.background_color.dark
