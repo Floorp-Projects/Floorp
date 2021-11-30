@@ -28,6 +28,7 @@
 #endif
 #include "mozilla/dom/QMResult.h"
 #include "mozilla/dom/quota/FirstInitializationAttemptsImpl.h"
+#include "mozilla/dom/quota/RemoveParen.h"
 #include "mozilla/dom/quota/ScopedLogExtraInfo.h"
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "nsCOMPtr.h"
@@ -52,14 +53,6 @@ class NotNull;
 // the final macro is required).
 // See https://lifecs.likai.org/2016/07/c-preprocessor-hygienic-macros.html
 #define MOZ_UNIQUE_VAR(base) MOZ_CONCAT(base, __COUNTER__)
-
-// See
-// https://stackoverflow.com/questions/24481810/how-to-remove-the-enclosing-parentheses-with-macro
-#define MOZ_REMOVE_PAREN(X) MOZ_REMOVE_PAREN_HELPER2(MOZ_REMOVE_PAREN_HELPER X)
-#define MOZ_REMOVE_PAREN_HELPER(...) MOZ_REMOVE_PAREN_HELPER __VA_ARGS__
-#define MOZ_REMOVE_PAREN_HELPER2(...) MOZ_REMOVE_PAREN_HELPER3(__VA_ARGS__)
-#define MOZ_REMOVE_PAREN_HELPER3(...) MOZ_REMOVE_PAREN_HELPER4_##__VA_ARGS__
-#define MOZ_REMOVE_PAREN_HELPER4_MOZ_REMOVE_PAREN_HELPER
 
 // See https://florianjw.de/en/passing_overloaded_functions.html
 // TODO: Add a test for this macro.
@@ -1049,20 +1042,6 @@ template <typename V = mozilla::Ok>
 auto ErrToDefaultOk(const nsresult aValue) -> Result<V, nsresult> {
   return V{};
 }
-
-// TODO: Maybe move this to mfbt/ResultExtensions.h
-template <typename R, typename Func, typename... Args>
-Result<R, nsresult> ToResultGet(const Func& aFunc, Args&&... aArgs) {
-  nsresult rv;
-  R res = aFunc(std::forward<Args>(aArgs)..., &rv);
-  if (NS_FAILED(rv)) {
-    return Err(rv);
-  }
-  return res;
-}
-
-#define MOZ_TO_RESULT_GET_TYPED(resultType, ...) \
-  ::mozilla::ToResultGet<MOZ_REMOVE_PAREN(resultType)>(__VA_ARGS__)
 
 // Like Rust's collect with a step function, not a generic iterator/range.
 //

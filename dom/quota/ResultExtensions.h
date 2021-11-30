@@ -12,6 +12,7 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/dom/QMResult.h"
 #include "mozilla/dom/quota/Config.h"
+#include "mozilla/dom/quota/RemoveParen.h"
 
 #ifdef QM_ERROR_STACKS_ENABLED
 #  include "mozilla/ResultVariant.h"
@@ -85,6 +86,17 @@ inline Result<V, E> ToResultTransform(Result<V, E2>&& aValue) {
       [](auto&& err) { return ResultTypeTraits<E>::From(err); });
 }
 
+// TODO: Maybe move this to mfbt/ResultExtensions.h
+template <typename R, typename Func, typename... Args>
+Result<R, nsresult> ToResultGet(const Func& aFunc, Args&&... aArgs) {
+  nsresult rv;
+  R res = aFunc(std::forward<Args>(aArgs)..., &rv);
+  if (NS_FAILED(rv)) {
+    return Err(rv);
+  }
+  return res;
+}
+
 }  // namespace mozilla
 
 // TODO: Maybe move this to mfbt/ResultExtensions.h
@@ -93,6 +105,9 @@ inline Result<V, E> ToResultTransform(Result<V, E2>&& aValue) {
 #define QM_TO_RESULT(expr) ToResult<QMResult>(expr)
 
 #define QM_TO_RESULT_TRANSFORM(value) ToResultTransform<QMResult>(value)
+
+#define MOZ_TO_RESULT_GET_TYPED(resultType, ...) \
+  ::mozilla::ToResultGet<MOZ_REMOVE_PAREN(resultType)>(__VA_ARGS__)
 
 #define QM_TO_RESULT_INVOKE(obj, methodname, ...)                        \
   ::mozilla::ToResultInvoke<QMResult>(                                   \
