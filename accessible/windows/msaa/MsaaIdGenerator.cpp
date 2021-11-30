@@ -104,7 +104,30 @@ bool MsaaIdGenerator::ReleaseID(uint32_t aID) {
     return false;
   }
   if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    mIDSet->ReleaseID(~aID);
+    // Releasing an id means it can be reused. Reusing ids too quickly can
+    // cause problems for clients which process events asynchronously.
+    // Therefore, we release ids after a short delay. This doesn't seem to be
+    // necessary when the cache is disabled, perhaps because the COM runtime
+    // holds references to our objects for longer.
+    const uint32_t kReleaseDelay = 1000;
+    mIDsToRelease.AppendElement(aID);
+    if (mReleaseIDTimer) {
+      mReleaseIDTimer->SetDelay(kReleaseDelay);
+    } else {
+      NS_NewTimerWithCallback(
+          getter_AddRefs(mReleaseIDTimer),
+          // MsaaIdGenerator's destructor cancels mReleaseIDTimer, so capturing
+          // this here is safe.
+          [this](nsITimer* aTimer) {
+            for (auto id : mIDsToRelease) {
+              mIDSet->ReleaseID(~id);
+            }
+            mIDsToRelease.Clear();
+            mReleaseIDTimer = nullptr;
+          },
+          kReleaseDelay, nsITimer::TYPE_ONE_SHOT,
+          "a11y::MsaaIdGenerator::ReleaseIDDelayed");
+    }
     return true;
   }
   detail::MsaaIDCracker cracked(aID);
