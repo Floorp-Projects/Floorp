@@ -12,6 +12,21 @@
 using namespace mozilla;
 using namespace mozilla::dom::quota;
 
+namespace {
+class TestClass {
+ public:
+  static constexpr int kTestValue = 42;
+
+  nsresult NonOverloadedNoInputComplex(std::pair<int, int>* aOut) {
+    *aOut = std::pair{kTestValue, kTestValue};
+    return NS_OK;
+  }
+  nsresult NonOverloadedNoInputFailsComplex(std::pair<int, int>* aOut) {
+    return NS_ERROR_FAILURE;
+  }
+};
+}  // namespace
+
 class DOM_Quota_ResultExtensions_ToResult : public DOM_Quota_Test {};
 class DOM_Quota_ResultExtensions_GenericErrorResult : public DOM_Quota_Test {};
 
@@ -237,4 +252,65 @@ TEST(DOM_Quota_ResultExtensions_ToResultGet, Lambda_WithInput_Err_Macro_Typed)
 
   EXPECT_TRUE(res.isErr());
   EXPECT_EQ(res.unwrapErr(), NS_ERROR_FAILURE);
+}
+
+TEST(DOM_Quota_ResultExtensions_ToResultInvoke, Lambda_NoInput_Complex)
+{
+  TestClass foo;
+
+  // success
+  {
+    auto valOrErr =
+        ToResultInvoke<std::pair<int, int>>([&foo](std::pair<int, int>* out) {
+          return foo.NonOverloadedNoInputComplex(out);
+        });
+    static_assert(std::is_same_v<decltype(valOrErr),
+                                 Result<std::pair<int, int>, nsresult>>);
+    ASSERT_TRUE(valOrErr.isOk());
+    ASSERT_EQ((std::pair{TestClass::kTestValue, TestClass::kTestValue}),
+              valOrErr.unwrap());
+  }
+
+  // failure
+  {
+    auto valOrErr =
+        ToResultInvoke<std::pair<int, int>>([&foo](std::pair<int, int>* out) {
+          return foo.NonOverloadedNoInputFailsComplex(out);
+        });
+    static_assert(std::is_same_v<decltype(valOrErr),
+                                 Result<std::pair<int, int>, nsresult>>);
+    ASSERT_TRUE(valOrErr.isErr());
+    ASSERT_EQ(NS_ERROR_FAILURE, valOrErr.unwrapErr());
+  }
+}
+
+TEST(DOM_Quota_ResultExtensions_ToResultInvoke,
+     Lambda_NoInput_Complex_Macro_Typed)
+{
+  TestClass foo;
+
+  // success
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE_TYPED(
+        (std::pair<int, int>), [&foo](std::pair<int, int>* out) {
+          return foo.NonOverloadedNoInputComplex(out);
+        });
+    static_assert(std::is_same_v<decltype(valOrErr),
+                                 Result<std::pair<int, int>, nsresult>>);
+    ASSERT_TRUE(valOrErr.isOk());
+    ASSERT_EQ((std::pair{TestClass::kTestValue, TestClass::kTestValue}),
+              valOrErr.unwrap());
+  }
+
+  // failure
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE_TYPED(
+        (std::pair<int, int>), [&foo](std::pair<int, int>* out) {
+          return foo.NonOverloadedNoInputFailsComplex(out);
+        });
+    static_assert(std::is_same_v<decltype(valOrErr),
+                                 Result<std::pair<int, int>, nsresult>>);
+    ASSERT_TRUE(valOrErr.isErr());
+    ASSERT_EQ(NS_ERROR_FAILURE, valOrErr.unwrapErr());
+  }
 }
