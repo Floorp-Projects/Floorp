@@ -10944,6 +10944,12 @@
   value: true
   mirror: always
 
+# Partition the service workers unconditionally when dFPI is enabled.
+- name: privacy.partition.serviceWorkers
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # The global switch to control the URL query sting stripping which strips query
 # parameters from loading URIs to prevent bounce (redirect) tracking.
 - name: privacy.query_stripping.enabled
