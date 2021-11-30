@@ -1174,6 +1174,12 @@
   value: 2000
   mirror: always
 
+# Max size of push/replaceState data parameter
+- name: browser.history.maxStateObjectSize
+  type: int32_t
+  value: 16777216
+  mirror: always
+
 #ifdef XP_WIN
   # Notify TabUnloader or send the memory pressure if the memory resource
   # notification is signaled AND the available commit space is lower than
