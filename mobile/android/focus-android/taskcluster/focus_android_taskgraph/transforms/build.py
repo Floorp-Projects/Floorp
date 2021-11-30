@@ -32,9 +32,8 @@ def add_shippable_secrets(config, tasks):
         dummy_secrets = task["run"].setdefault("dummy-secrets", [])
 
         if task.pop("include-shippable-secrets", False) and config.params["level"] == "3":
-            build_type = task["attributes"]["build-type"]
             gradle_build_type = task["run"]["gradle-build-type"]
-            secret_index = f'project/mobile/focus-android/{build_type}'
+            secret_index = f'project/mobile/focus-android/{gradle_build_type}'
             secrets.extend([{
                 "key": key,
                 "name": secret_index,
