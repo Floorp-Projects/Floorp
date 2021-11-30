@@ -361,11 +361,17 @@ ScrollReflowInput::ScrollReflowInput(nsHTMLScrollFrame* aFrame,
   mHScrollbar = ShouldShowScrollbar(styles.mHorizontal);
   mVScrollbar = ShouldShowScrollbar(styles.mVertical);
 
-  if (!aFrame->GetScrollbarBox(false)) {
+  if (nsIFrame* hScrollbarBox = aFrame->GetScrollbarBox(false)) {
+    nsScrollbarFrame* scrollbar = do_QueryFrame(hScrollbarBox);
+    scrollbar->SetScrollbarMediatorContent(mReflowInput.mFrame->GetContent());
+  } else {
     mHScrollbar = ShowScrollbar::Never;
     mHScrollbarAllowedForScrollingVVInsideLV = false;
   }
-  if (!aFrame->GetScrollbarBox(true)) {
+  if (nsIFrame* vScrollbarBox = aFrame->GetScrollbarBox(true)) {
+    nsScrollbarFrame* scrollbar = do_QueryFrame(vScrollbarBox);
+    scrollbar->SetScrollbarMediatorContent(mReflowInput.mFrame->GetContent());
+  } else {
     mVScrollbar = ShowScrollbar::Never;
     mVScrollbarAllowedForScrollingVVInsideLV = false;
   }
@@ -503,8 +509,6 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput& aState,
   if (mHelper.mVScrollbarBox) {
     GetScrollbarMetrics(aState.mBoxState, mHelper.mVScrollbarBox,
                         &vScrollbarMinSize, &vScrollbarPrefSize);
-    nsScrollbarFrame* scrollbar = do_QueryFrame(mHelper.mVScrollbarBox);
-    scrollbar->SetScrollbarMediatorContent(mContent);
   }
   nscoord vScrollbarDesiredWidth =
       aAssumeVScroll ? vScrollbarPrefSize.width : 0;
@@ -514,8 +518,6 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput& aState,
   if (mHelper.mHScrollbarBox) {
     GetScrollbarMetrics(aState.mBoxState, mHelper.mHScrollbarBox,
                         &hScrollbarMinSize, &hScrollbarPrefSize);
-    nsScrollbarFrame* scrollbar = do_QueryFrame(mHelper.mHScrollbarBox);
-    scrollbar->SetScrollbarMediatorContent(mContent);
   }
 
   nscoord hScrollbarDesiredHeight =
