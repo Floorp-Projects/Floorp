@@ -58,7 +58,6 @@ void WebRenderImageHost::UseTextureHost(
     img.mFrameID = t.mFrameID;
     img.mProducerID = t.mProducerID;
     img.mTextureHost->SetCropRect(img.mPictureRect);
-    img.mTextureHost->Updated();
   }
 
   SetImages(std::move(newImages));

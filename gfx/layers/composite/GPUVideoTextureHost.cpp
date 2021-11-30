@@ -75,12 +75,6 @@ TextureHost* GPUVideoTextureHost::EnsureWrappedTextureHost() {
                                                    texture.forget());
   }
 
-  if (mPendingUpdatedInternal) {
-    mWrappedTextureHost->UpdatedInternal(mPendingIntRegion.ptrOr(nullptr));
-    mPendingIntRegion.reset();
-    mPendingUpdatedInternal = false;
-  }
-
   return mWrappedTextureHost;
 }
 
@@ -124,19 +118,6 @@ gfx::SurfaceFormat GPUVideoTextureHost::GetFormat() const {
     return gfx::SurfaceFormat::UNKNOWN;
   }
   return mWrappedTextureHost->GetFormat();
-}
-
-void GPUVideoTextureHost::UpdatedInternal(const nsIntRegion* Region) {
-  if (!EnsureWrappedTextureHost()) {
-    mPendingUpdatedInternal = true;
-    if (Region) {
-      mPendingIntRegion = Some(*Region);
-    } else {
-      mPendingIntRegion.reset();
-    }
-    return;
-  }
-  EnsureWrappedTextureHost()->UpdatedInternal(Region);
 }
 
 void GPUVideoTextureHost::CreateRenderTexture(

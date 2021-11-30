@@ -432,19 +432,12 @@ void TextureHost::EnsureRenderTexture(
   CreateRenderTexture(mExternalImageId.ref());
 }
 
-void TextureHost::Updated(const nsIntRegion* aRegion) {
-  UpdatedInternal(aRegion);
-}
-
 TextureSource::TextureSource() : mCompositableCount(0) {}
 
 TextureSource::~TextureSource() = default;
 BufferTextureHost::BufferTextureHost(const BufferDescriptor& aDesc,
                                      TextureFlags aFlags)
-    : TextureHost(aFlags),
-      mUpdateSerial(1),
-      mLocked(false),
-      mNeedsFullUpdate(false) {
+    : TextureHost(aFlags), mLocked(false) {
   mDescriptor = aDesc;
   switch (mDescriptor.type()) {
     case BufferDescriptor::TYCbCrDescriptor: {
@@ -464,12 +457,6 @@ BufferTextureHost::BufferTextureHost(const BufferDescriptor& aDesc,
                          << (int)mDescriptor.type();
       MOZ_CRASH("GFX: Bad descriptor");
   }
-  if (aFlags & TextureFlags::COMPONENT_ALPHA) {
-    // One texture of a component alpha texture pair will start out all white.
-    // This hack allows us to easily make sure that white will be uploaded.
-    // See bug 1138934
-    mNeedsFullUpdate = true;
-  }
 
 #ifdef XP_MACOSX
   const int kMinSize = 1024;
@@ -484,22 +471,6 @@ BufferTextureHost::BufferTextureHost(const BufferDescriptor& aDesc,
 }
 
 BufferTextureHost::~BufferTextureHost() = default;
-
-void BufferTextureHost::UpdatedInternal(const nsIntRegion* aRegion) {
-  ++mUpdateSerial;
-  // If the last frame wasn't uploaded yet, and we -don't- have a partial
-  // update, we still need to update the full surface.
-  if (aRegion && !mNeedsFullUpdate) {
-    mMaybeUpdatedRegion.OrWith(*aRegion);
-  } else {
-    mNeedsFullUpdate = true;
-  }
-  if (GetFlags() & TextureFlags::IMMEDIATE_UPLOAD) {
-    DebugOnly<bool> result =
-        MaybeUpload(!mNeedsFullUpdate ? &mMaybeUpdatedRegion : nullptr);
-    NS_WARNING_ASSERTION(result, "Failed to upload a texture");
-  }
-}
 
 void BufferTextureHost::DeallocateDeviceData() {}
 
@@ -660,17 +631,6 @@ gfx::ColorRange BufferTextureHost::GetColorRange() const {
   }
   return TextureHost::GetColorRange();
 }
-
-bool BufferTextureHost::UploadIfNeeded() {
-  return MaybeUpload(!mNeedsFullUpdate ? &mMaybeUpdatedRegion : nullptr);
-}
-
-bool BufferTextureHost::MaybeUpload(nsIntRegion* aRegion) {
-  MOZ_ASSERT(!aRegion);
-  return false;
-}
-
-bool BufferTextureHost::Upload(nsIntRegion* aRegion) { return false; }
 
 already_AddRefed<gfx::DataSourceSurface> BufferTextureHost::GetAsSurface() {
   RefPtr<gfx::DataSourceSurface> result;
