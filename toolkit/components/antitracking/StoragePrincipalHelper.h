@@ -222,7 +222,8 @@ namespace mozilla {
 
 namespace dom {
 class Document;
-}
+class WorkerPrivate;
+}  // namespace dom
 
 namespace ipc {
 class PrincipalInfo;
@@ -300,6 +301,9 @@ class StoragePrincipalHelper final {
   // foreign partitioned principal, e.g. creating the inital about:blank page.
   static bool ShouldUsePartitionPrincipalForServiceWorker(
       nsIDocShell* aDocShell);
+
+  static bool ShouldUsePartitionPrincipalForServiceWorker(
+      dom::WorkerPrivate* aWorkerPrivate);
 
   /**
    * Extract the right OriginAttributes from the channel's triggering
