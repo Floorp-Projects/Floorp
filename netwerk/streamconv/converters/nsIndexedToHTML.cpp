@@ -5,8 +5,8 @@
 
 #include "nsIndexedToHTML.h"
 
+#include "DateTimeFormat.h"
 #include "mozilla/Encoding.h"
-#include "mozilla/intl/AppDateTimeFormat.h"
 #include "mozilla/intl/LocaleService.h"
 #include "nsNetUtil.h"
 #include "netCore.h"
@@ -617,24 +617,22 @@ nsIndexedToHTML::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aInput,
   return mParser->OnDataAvailable(aRequest, aInput, aOffset, aCount);
 }
 
-static nsresult FormatTime(const mozilla::intl::DateTimeFormat::Style& aStyle,
+static nsresult FormatTime(const nsDateFormatSelector aDateFormatSelector,
+                           const nsTimeFormatSelector aTimeFormatSelector,
                            const PRTime aPrTime, nsAString& aStringOut) {
-  mozilla::intl::DateTimeFormat::StyleBag styleBag;
-  styleBag.date = Some(aStyle);
-
   // FormatPRExplodedTime will use GMT based formatted string (e.g. GMT+1)
   // instead of local time zone name (e.g. CEST).
   // To avoid this case when ResistFingerprinting is disabled, use
   // |FormatPRTime| to show exact time zone name.
   if (!nsContentUtils::ShouldResistFingerprinting()) {
-    return mozilla::intl::AppDateTimeFormat::Format(styleBag, aPrTime,
-                                                    aStringOut);
+    return mozilla::DateTimeFormat::FormatPRTime(
+        aDateFormatSelector, aTimeFormatSelector, aPrTime, aStringOut);
   }
 
   PRExplodedTime prExplodedTime;
   PR_ExplodeTime(aPrTime, PR_GMTParameters, &prExplodedTime);
-  return mozilla::intl::AppDateTimeFormat::Format(styleBag, &prExplodedTime,
-                                                  aStringOut);
+  return mozilla::DateTimeFormat::FormatPRExplodedTime(
+      aDateFormatSelector, aTimeFormatSelector, &prExplodedTime, aStringOut);
 }
 
 NS_IMETHODIMP
@@ -783,10 +781,10 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest* aRequest, nsIDirIndex* aIndex) {
     pushBuffer.AppendInt(static_cast<int64_t>(t));
     pushBuffer.AppendLiteral("\">");
     nsAutoString formatted;
-    FormatTime(mozilla::intl::DateTimeFormat::Style::Short, t, formatted);
+    FormatTime(kDateFormatShort, kTimeFormatNone, t, formatted);
     AppendNonAsciiToNCR(formatted, pushBuffer);
     pushBuffer.AppendLiteral("</td>\n <td>");
-    FormatTime(mozilla::intl::DateTimeFormat::Style::Long, t, formatted);
+    FormatTime(kDateFormatNone, kTimeFormatLong, t, formatted);
     // use NCR to show date in any doc charset
     AppendNonAsciiToNCR(formatted, pushBuffer);
   }

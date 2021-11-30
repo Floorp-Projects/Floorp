@@ -5,10 +5,9 @@
 #ifndef X509CertValidity_h
 #define X509CertValidity_h
 
-#include "mozilla/intl/AppDateTimeFormat.h"
+#include "DateTimeFormat.h"
 #include "mozpkix/Input.h"
 #include "nsIX509CertValidity.h"
-#include "prtime.h"
 
 class X509CertValidity : public nsIX509CertValidity {
  public:
@@ -24,10 +23,9 @@ class X509CertValidity : public nsIX509CertValidity {
   virtual ~X509CertValidity() = default;
 
  private:
-  nsresult FormatTime(
-      const PRTime& aTime, PRTimeParamFn aParamFn,
-      const mozilla::Maybe<mozilla::intl::DateTimeFormat::Style> aTimeStyle,
-      nsAString& aFormattedTimeDate);
+  nsresult FormatTime(const PRTime& aTime, PRTimeParamFn aParamFn,
+                      const mozilla::nsTimeFormatSelector aTimeFormatSelector,
+                      nsAString& aFormattedTimeDate);
 
   PRTime mNotBefore;
   PRTime mNotAfter;

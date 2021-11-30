@@ -18,7 +18,7 @@
 #include "nsFaviconService.h"
 #include "nsPlacesMacros.h"
 #include "nsPlacesTriggers.h"
-#include "mozilla/intl/AppDateTimeFormat.h"
+#include "DateTimeFormat.h"
 #include "History.h"
 #include "Helpers.h"
 #include "NotifyRankingChanged.h"
@@ -3080,11 +3080,9 @@ void nsNavHistory::GetStringFromName(const char* aName, nsACString& aResult) {
 void nsNavHistory::GetMonthName(const PRExplodedTime& aTime,
                                 nsACString& aResult) {
   nsAutoString month;
-
-  mozilla::intl::DateTimeFormat::ComponentsBag components;
-  components.month = Some(mozilla::intl::DateTimeFormat::Month::Long);
-  nsresult rv =
-      mozilla::intl::AppDateTimeFormat::Format(components, &aTime, month);
+  nsresult rv = mozilla::DateTimeFormat::GetCalendarSymbol(
+      mozilla::DateTimeFormat::Field::Month,
+      mozilla::DateTimeFormat::Style::Wide, &aTime, month);
   if (NS_FAILED(rv)) {
     aResult = nsPrintfCString("[%d]", aTime.tm_month + 1);
     return;
@@ -3096,11 +3094,8 @@ void nsNavHistory::GetMonthName(const PRExplodedTime& aTime,
 void nsNavHistory::GetMonthYear(const PRExplodedTime& aTime,
                                 nsACString& aResult) {
   nsAutoString monthYear;
-  mozilla::intl::DateTimeFormat::ComponentsBag components;
-  components.month = Some(mozilla::intl::DateTimeFormat::Month::Long);
-  components.year = Some(mozilla::intl::DateTimeFormat::Numeric::Numeric);
-  nsresult rv =
-      mozilla::intl::AppDateTimeFormat::Format(components, &aTime, monthYear);
+  nsresult rv = mozilla::DateTimeFormat::FormatDateTime(
+      &aTime, DateTimeFormat::Skeleton::yyyyMMMM, monthYear);
   if (NS_FAILED(rv)) {
     aResult = nsPrintfCString("[%d-%d]", aTime.tm_month + 1, aTime.tm_year);
     return;
