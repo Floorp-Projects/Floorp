@@ -314,8 +314,9 @@ nsresult ReadCompressedIndexDataValuesFromSource(
   MOZ_ASSERT(aOutIndexValues);
   MOZ_ASSERT(aOutIndexValues->IsEmpty());
 
-  QM_TRY_INSPECT(const int32_t& columnType,
-                 MOZ_TO_RESULT_INVOKE(aSource, GetTypeOfIndex, aColumnIndex));
+  QM_TRY_INSPECT(
+      const int32_t& columnType,
+      MOZ_TO_RESULT_INVOKE_MEMBER(aSource, GetTypeOfIndex, aColumnIndex));
 
   switch (columnType) {
     case mozIStorageStatement::VALUE_TYPE_NULL:
@@ -455,23 +456,25 @@ GetStructuredCloneReadInfoFromSource(T* aSource, uint32_t aDataIndex,
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(aSource);
 
-  QM_TRY_INSPECT(const int32_t& columnType,
-                 MOZ_TO_RESULT_INVOKE(aSource, GetTypeOfIndex, aDataIndex));
+  QM_TRY_INSPECT(
+      const int32_t& columnType,
+      MOZ_TO_RESULT_INVOKE_MEMBER(aSource, GetTypeOfIndex, aDataIndex));
 
-  QM_TRY_INSPECT(const bool& isNull,
-                 MOZ_TO_RESULT_INVOKE(aSource, GetIsNull, aFileIdsIndex));
+  QM_TRY_INSPECT(const bool& isNull, MOZ_TO_RESULT_INVOKE_MEMBER(
+                                         aSource, GetIsNull, aFileIdsIndex));
 
   QM_TRY_INSPECT(const nsString& fileIds, ([aSource, aFileIdsIndex, isNull] {
                    return isNull ? Result<nsString, nsresult>{VoidString()}
-                                 : MOZ_TO_RESULT_INVOKE_TYPED(nsString, aSource,
-                                                              GetString,
-                                                              aFileIdsIndex);
+                                 : MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+                                       nsString, aSource, GetString,
+                                       aFileIdsIndex);
                  }()));
 
   switch (columnType) {
     case mozIStorageStatement::VALUE_TYPE_INTEGER: {
-      QM_TRY_INSPECT(const int64_t& intData,
-                     MOZ_TO_RESULT_INVOKE(aSource, GetInt64, aDataIndex));
+      QM_TRY_INSPECT(
+          const int64_t& intData,
+          MOZ_TO_RESULT_INVOKE_MEMBER(aSource, GetInt64, aDataIndex));
 
       uint64_t uintData;
       memcpy(&uintData, &intData, sizeof(uint64_t));

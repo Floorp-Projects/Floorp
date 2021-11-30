@@ -161,12 +161,11 @@ auto ToResultInvokeSelector(const Func& aFunc, Args&&... aArgs)
  *    auto existsOrErr = ToResultInvoke<bool>(std::mem_fn(&nsIFile::Exists),
  *                                            *file);
  *
- * but it is more convenient to use the member function overload, which
- * has the additional benefit of enabling the deduction of the success result
- * type:
+ * but it is more convenient to use the member function version, which has the
+ * additional benefit of enabling the deduction of the success result type:
  *
  *    nsCOMPtr<nsIFile> file = ...;
- *    auto existsOrErr = ToResultInvoke(*file, &nsIFile::Exists);
+ *    auto existsOrErr = ToResultInvokeMember(*file, &nsIFile::Exists);
  */
 template <typename R, typename E = nsresult, typename Func, typename... Args>
 Result<R, E> ToResultInvoke(const Func& aFunc, Args&&... aArgs) {
@@ -211,7 +210,7 @@ auto ToResultInvokeMemberInternal(T& aObj, const Func& aFunc, Args&&... aArgs) {
   }
 }
 
-// For use in MOZ_TO_RESULT_INVOKE.
+// For use in MOZ_TO_RESULT_INVOKE_MEMBER/MOZ_TO_RESULT_INVOKE_MEMBER_TYPED.
 template <typename T>
 auto DerefHelper(const T&) -> T&;
 
@@ -230,7 +229,8 @@ using DerefedType =
 template <typename E = nsresult, typename T, typename U, typename... XArgs,
           typename... Args,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>>
-auto ToResultInvoke(T& aObj, nsresult (U::*aFunc)(XArgs...), Args&&... aArgs) {
+auto ToResultInvokeMember(T& aObj, nsresult (U::*aFunc)(XArgs...),
+                          Args&&... aArgs) {
   return detail::ToResultInvokeMemberInternal<E,
                                               detail::select_last_t<XArgs...>>(
       aObj, aFunc, std::forward<Args>(aArgs)...);
@@ -239,8 +239,8 @@ auto ToResultInvoke(T& aObj, nsresult (U::*aFunc)(XArgs...), Args&&... aArgs) {
 template <typename E = nsresult, typename T, typename U, typename... XArgs,
           typename... Args,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>>
-auto ToResultInvoke(const T& aObj, nsresult (U::*aFunc)(XArgs...) const,
-                    Args&&... aArgs) {
+auto ToResultInvokeMember(const T& aObj, nsresult (U::*aFunc)(XArgs...) const,
+                          Args&&... aArgs) {
   return detail::ToResultInvokeMemberInternal<E,
                                               detail::select_last_t<XArgs...>>(
       aObj, aFunc, std::forward<Args>(aArgs)...);
@@ -248,42 +248,44 @@ auto ToResultInvoke(const T& aObj, nsresult (U::*aFunc)(XArgs...) const,
 
 template <typename E = nsresult, typename T, typename U, typename... XArgs,
           typename... Args>
-auto ToResultInvoke(T* const aObj, nsresult (U::*aFunc)(XArgs...),
-                    Args&&... aArgs) {
-  return ToResultInvoke<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
+auto ToResultInvokeMember(T* const aObj, nsresult (U::*aFunc)(XArgs...),
+                          Args&&... aArgs) {
+  return ToResultInvokeMember<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
 template <typename E = nsresult, typename T, typename U, typename... XArgs,
           typename... Args>
-auto ToResultInvoke(const T* const aObj, nsresult (U::*aFunc)(XArgs...) const,
-                    Args&&... aArgs) {
-  return ToResultInvoke<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
+auto ToResultInvokeMember(const T* const aObj,
+                          nsresult (U::*aFunc)(XArgs...) const,
+                          Args&&... aArgs) {
+  return ToResultInvokeMember<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
 template <typename E = nsresult, template <class> class SmartPtr, typename T,
           typename U, typename... XArgs, typename... Args,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>,
           typename = decltype(*std::declval<const SmartPtr<T>>())>
-auto ToResultInvoke(const SmartPtr<T>& aObj, nsresult (U::*aFunc)(XArgs...),
-                    Args&&... aArgs) {
-  return ToResultInvoke<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
+auto ToResultInvokeMember(const SmartPtr<T>& aObj,
+                          nsresult (U::*aFunc)(XArgs...), Args&&... aArgs) {
+  return ToResultInvokeMember<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
 template <typename E = nsresult, template <class> class SmartPtr, typename T,
           typename U, typename... XArgs, typename... Args,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>,
           typename = decltype(*std::declval<const SmartPtr<T>>())>
-auto ToResultInvoke(const SmartPtr<const T>& aObj,
-                    nsresult (U::*aFunc)(XArgs...) const, Args&&... aArgs) {
-  return ToResultInvoke<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
+auto ToResultInvokeMember(const SmartPtr<const T>& aObj,
+                          nsresult (U::*aFunc)(XArgs...) const,
+                          Args&&... aArgs) {
+  return ToResultInvokeMember<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
 #if defined(XP_WIN) && !defined(_WIN64)
 template <typename E = nsresult, typename T, typename U, typename... XArgs,
           typename... Args,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>>
-auto ToResultInvoke(T& aObj, nsresult (__stdcall U::*aFunc)(XArgs...),
-                    Args&&... aArgs) {
+auto ToResultInvokeMember(T& aObj, nsresult (__stdcall U::*aFunc)(XArgs...),
+                          Args&&... aArgs) {
   return detail::ToResultInvokeMemberInternal<E,
                                               detail::select_last_t<XArgs...>>(
       aObj, aFunc, std::forward<Args>(aArgs)...);
@@ -292,9 +294,9 @@ auto ToResultInvoke(T& aObj, nsresult (__stdcall U::*aFunc)(XArgs...),
 template <typename E = nsresult, typename T, typename U, typename... XArgs,
           typename... Args,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>>
-auto ToResultInvoke(const T& aObj,
-                    nsresult (__stdcall U::*aFunc)(XArgs...) const,
-                    Args&&... aArgs) {
+auto ToResultInvokeMember(const T& aObj,
+                          nsresult (__stdcall U::*aFunc)(XArgs...) const,
+                          Args&&... aArgs) {
   return detail::ToResultInvokeMemberInternal<E,
                                               detail::select_last_t<XArgs...>>(
       aObj, aFunc, std::forward<Args>(aArgs)...);
@@ -302,62 +304,65 @@ auto ToResultInvoke(const T& aObj,
 
 template <typename E = nsresult, typename T, typename U, typename... XArgs,
           typename... Args>
-auto ToResultInvoke(T* const aObj, nsresult (__stdcall U::*aFunc)(XArgs...),
-                    Args&&... aArgs) {
-  return ToResultInvoke<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
+auto ToResultInvokeMember(T* const aObj,
+                          nsresult (__stdcall U::*aFunc)(XArgs...),
+                          Args&&... aArgs) {
+  return ToResultInvokeMember<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
 template <typename E = nsresult, typename T, typename U, typename... XArgs,
           typename... Args>
-auto ToResultInvoke(const T* const aObj,
-                    nsresult (__stdcall U::*aFunc)(XArgs...) const,
-                    Args&&... aArgs) {
-  return ToResultInvoke<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
+auto ToResultInvokeMember(const T* const aObj,
+                          nsresult (__stdcall U::*aFunc)(XArgs...) const,
+                          Args&&... aArgs) {
+  return ToResultInvokeMember<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
 template <typename E = nsresult, template <class> class SmartPtr, typename T,
           typename U, typename... XArgs, typename... Args,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>,
           typename = decltype(*std::declval<const SmartPtr<T>>())>
-auto ToResultInvoke(const SmartPtr<T>& aObj,
-                    nsresult (__stdcall U::*aFunc)(XArgs...), Args&&... aArgs) {
-  return ToResultInvoke<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
+auto ToResultInvokeMember(const SmartPtr<T>& aObj,
+                          nsresult (__stdcall U::*aFunc)(XArgs...),
+                          Args&&... aArgs) {
+  return ToResultInvokeMember<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 
 template <typename E = nsresult, template <class> class SmartPtr, typename T,
           typename U, typename... XArgs, typename... Args,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>,
           typename = decltype(*std::declval<const SmartPtr<T>>())>
-auto ToResultInvoke(const SmartPtr<const T>& aObj,
-                    nsresult (__stdcall U::*aFunc)(XArgs...) const,
-                    Args&&... aArgs) {
-  return ToResultInvoke<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
+auto ToResultInvokeMember(const SmartPtr<const T>& aObj,
+                          nsresult (__stdcall U::*aFunc)(XArgs...) const,
+                          Args&&... aArgs) {
+  return ToResultInvokeMember<E>(*aObj, aFunc, std::forward<Args>(aArgs)...);
 }
 #endif
 
-// Macro version of ToResultInvoke for member functions. The macro has the
-// advantage of not requiring spelling out the member function's declarator type
-// name, at the expense of having a non-standard syntax. It can be used like
-// this:
+// Macro version of ToResultInvokeMember for member functions. The macro has
+// the advantage of not requiring spelling out the member function's declarator
+// type name, at the expense of having a non-standard syntax. It can be used
+// like this:
 //
 //     nsCOMPtr<nsIFile> file;
-//     auto existsOrErr = MOZ_TO_RESULT_INVOKE(file, Exists);
-#define MOZ_TO_RESULT_INVOKE(obj, methodname, ...)                       \
-  ::mozilla::ToResultInvoke(                                             \
+//     auto existsOrErr = MOZ_TO_RESULT_INVOKE_MEMBER(file, Exists);
+#define MOZ_TO_RESULT_INVOKE_MEMBER(obj, methodname, ...)                \
+  ::mozilla::ToResultInvokeMember(                                       \
       (obj), &::mozilla::detail::DerefedType<decltype(obj)>::methodname, \
       ##__VA_ARGS__)
 
-// Macro version of ToResultInvoke for member functions, where the result type
-// does not match the output parameter type. The macro has the advantage of not
-// requiring spelling out the member function's declarator type name, at the
-// expense of having a non-standard syntax. It can be used like this:
+// Macro version of ToResultInvokeMember for member functions, where the result
+// type does not match the output parameter type. The macro has the advantage
+// of not requiring spelling out the member function's declarator type name, at
+// the expense of having a non-standard syntax. It can be used like this:
 //
 //     nsCOMPtr<nsIFile> file;
-//     auto existsOrErr = MOZ_TO_RESULT_INVOKE(nsCOMPtr<nsIFile>, file, Clone);
-#define MOZ_TO_RESULT_INVOKE_TYPED(resultType, obj, methodname, ...)   \
-  ::mozilla::ToResultInvoke<resultType>(                               \
-      ::std::mem_fn(                                                   \
-          &::mozilla::detail::DerefedType<decltype(obj)>::methodname), \
+//     auto existsOrErr =
+//         MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsCOMPtr<nsIFile>, file, Clone);
+#define MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(resultType, obj, methodname, ...) \
+  ::mozilla::ToResultInvoke<resultType>(                                    \
+      ::std::mem_fn(                                                        \
+          &::mozilla::detail::DerefedType<decltype(obj)>::methodname),      \
       (obj), ##__VA_ARGS__)
 
 }  // namespace mozilla

@@ -33,18 +33,18 @@ nsresult AutoDatabaseAttacher::Attach() {
 #ifdef DEBUG
   {
     QM_TRY_INSPECT(const bool& exists,
-                   MOZ_TO_RESULT_INVOKE(mDatabaseFile, Exists));
+                   MOZ_TO_RESULT_INVOKE_MEMBER(mDatabaseFile, Exists));
 
     MOZ_ASSERT(exists);
   }
 #endif
 
-  QM_TRY_INSPECT(const auto& path,
-                 MOZ_TO_RESULT_INVOKE_TYPED(nsString, mDatabaseFile, GetPath));
+  QM_TRY_INSPECT(const auto& path, MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+                                       nsString, mDatabaseFile, GetPath));
 
   QM_TRY_INSPECT(
       const auto& stmt,
-      MOZ_TO_RESULT_INVOKE_TYPED(
+      MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
           nsCOMPtr<mozIStorageStatement>, mConnection, CreateStatement,
           "ATTACH DATABASE :path AS "_ns + mSchemaName + ";"_ns));
 

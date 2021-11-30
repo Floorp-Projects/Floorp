@@ -25,7 +25,8 @@ Result<Ok, nsresult> DatabaseFileManager::TraverseFiles(
     UnknownDirEntryOp&& aUnknownDirEntryOp) {
   quota::AssertIsOnIOThread();
 
-  QM_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(aDirectory, Exists));
+  QM_TRY_INSPECT(const bool& exists,
+                 MOZ_TO_RESULT_INVOKE_MEMBER(aDirectory, Exists));
 
   if (!exists) {
     return Ok{};
@@ -41,7 +42,7 @@ Result<Ok, nsresult> DatabaseFileManager::TraverseFiles(
           case quota::nsIFileKind::ExistsAsDirectory: {
             QM_TRY_INSPECT(
                 const auto& leafName,
-                MOZ_TO_RESULT_INVOKE_TYPED(nsString, file, GetLeafName));
+                MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsString, file, GetLeafName));
 
             if (leafName.Equals(kJournalDirectoryName)) {
               QM_TRY(std::forward<KnownDirEntryOp>(aKnownDirEntryOp)(
@@ -61,7 +62,7 @@ Result<Ok, nsresult> DatabaseFileManager::TraverseFiles(
           case quota::nsIFileKind::ExistsAsFile: {
             QM_TRY_INSPECT(
                 const auto& leafName,
-                MOZ_TO_RESULT_INVOKE_TYPED(nsString, file, GetLeafName));
+                MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsString, file, GetLeafName));
 
             nsresult rv;
             leafName.ToInteger64(&rv);
