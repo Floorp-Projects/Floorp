@@ -177,7 +177,17 @@ class Database {
         this.identifier
       );
     }
-    return entry ? entry.value : null;
+    if (!entry) {
+      return null;
+    }
+    // Some distributions where released with a modified dump that did not
+    // contain timestamps for last_modified. Work around this here, and return
+    // the timestamp as zero, so that the entries should get updated.
+    if (isNaN(entry.value)) {
+      console.warn(`Local timestamp is NaN for ${this.identifier}`);
+      return 0;
+    }
+    return entry.value;
   }
 
   async getMetadata() {

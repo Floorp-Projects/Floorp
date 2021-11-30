@@ -117,6 +117,20 @@ add_task(async function test_load_dump_after_non_empty_import() {
 });
 add_task(clear_state);
 
+add_task(async function test_load_dump_after_import_from_broken_distro() {
+  // Dump is updated regularly, verify that the dump matches our expectations
+  // before running the test.
+  ok(DUMP_LAST_MODIFIED > 1234, "Assuming dump to be newer than dummy 1234");
+
+  // No last_modified time.
+  await importData([{ id: "dummy" }]);
+
+  const after = await client.get({ loadDumpIfNewer: true });
+  equal(after.length, DUMP_RECORDS.length, "Imported dump");
+  equal(await client.getLastModified(), DUMP_LAST_MODIFIED, "dump's timestamp");
+});
+add_task(clear_state);
+
 add_task(async function test_skip_dump_if_same_last_modified() {
   await importData([{ last_modified: DUMP_LAST_MODIFIED, id: "dummy" }]);
 
