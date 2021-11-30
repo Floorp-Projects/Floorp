@@ -57,7 +57,11 @@ public final class Clipboard {
         return data.toString();
       }
       if (UNICODE_MIME.equals(mimeType)) {
-        return clip.getItemAt(0).coerceToText(context).toString();
+        try {
+          return clip.getItemAt(0).coerceToText(context).toString();
+        } catch (final SecurityException e) {
+          Log.e(LOGTAG, "Couldn't get clip data from clipboard", e);
+        }
       }
     }
     return null;
