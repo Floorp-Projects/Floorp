@@ -179,7 +179,7 @@ class AboutLoginsParent extends JSWindowActorParent {
       case "AboutLogins:GetHelp": {
         const SUPPORT_URL =
           Services.urlFormatter.formatURLPref("app.support.baseURL") +
-          "firefox-lockwise";
+          "password-manager-remember-delete-edit-logins";
         ownerGlobal.openWebLinkIn(SUPPORT_URL, "tab", {
           relatedToCurrent: true,
         });
