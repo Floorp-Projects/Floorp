@@ -485,3 +485,79 @@ PartitionedStorageHelper.runTest(
     ["privacy.partition.serviceWorkers", true],
   ]
 );
+
+// Bug1743236 - Verify the content process won't crash if we create a dedicated
+// worker in a service worker controlled third-party page with Storage Access.
+PartitionedStorageHelper.runTest(
+  "ServiceWorkers - Create Dedicated Worker",
+  async (win3rdParty, win1stParty, allowed) => {
+    // We only do this test when the storage access is granted.
+    if (!allowed) {
+      return;
+    }
+
+    // Register service worker for the first-party window.
+    if (!win1stParty.sw) {
+      win1stParty.sw = await registerServiceWorker(
+        win1stParty,
+        "serviceWorker.js"
+      );
+    }
+
+    // Register service worker for the third-party window.
+    if (!win3rdParty.sw) {
+      win3rdParty.sw = await registerServiceWorker(
+        win3rdParty,
+        "serviceWorker.js"
+      );
+    }
+
+    // Create a dedicated worker in first-party window.
+    let firstPartyWorker = new win1stParty.Worker("dedicatedWorker.js");
+
+    // Post a message to the dedicated worker and wait until the message circles
+    // back.
+    await new Promise(resolve => {
+      firstPartyWorker.addEventListener("message", msg => {
+        if (msg.data == "1stParty") {
+          resolve();
+        }
+      });
+
+      firstPartyWorker.postMessage("1stParty");
+    });
+
+    // Create a dedicated worker in third-party window.
+    let thirdPartyWorker = new win3rdParty.Worker("dedicatedWorker.js");
+
+    // Post a message to the dedicated worker and wait until the message circles
+    // back.
+    await new Promise(resolve => {
+      thirdPartyWorker.addEventListener("message", msg => {
+        if (msg.data == "3rdParty") {
+          resolve();
+        }
+      });
+
+      thirdPartyWorker.postMessage("3rdParty");
+    });
+
+    firstPartyWorker.terminate();
+    thirdPartyWorker.terminate();
+  },
+
+  async _ => {
+    await new Promise(resolve => {
+      Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_ALL, value =>
+        resolve()
+      );
+    });
+  },
+
+  [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.ipc.processCount", 1],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+  ]
+);
