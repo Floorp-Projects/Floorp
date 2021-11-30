@@ -26,6 +26,8 @@ void LockManagerChild::NotifyBFCacheOnMainThread(nsPIDOMWindowInner* aInner,
   }
 
   uint32_t count = aInner->UpdateLockCount(aCreated);
+  // It's okay for WindowGlobalChild to not exist, as it should mean it already
+  // is destroyed and can't enter bfcache anyway.
   if (WindowGlobalChild* child = aInner->GetWindowGlobalChild()) {
     if (aCreated && count == 1) {
       // The first lock is active.
@@ -34,9 +36,6 @@ void LockManagerChild::NotifyBFCacheOnMainThread(nsPIDOMWindowInner* aInner,
       child->UnblockBFCacheFor(BFCacheStatus::ACTIVE_LOCK);
     }
   }
-  // window actor is dead, so we should be just
-  // destroying things
-  MOZ_ASSERT_IF(!aInner->GetWindowGlobalChild(), !aCreated);
 }
 
 class BFCacheNotifyLockRunnable final : public WorkerProxyToMainThreadRunnable {
