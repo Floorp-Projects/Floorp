@@ -348,7 +348,7 @@ async function test_strict_native_fallback() {
   setModeAndURI(2, "doh?responseIP=2.2.2.2&corruptedAnswer=true");
   await new TRRDNSListener("bar.example.com", "127.0.0.1"); // Should fallback
 
-  Services.prefs.setBoolPref("network.trr.strict_native_fallback", false);
+  Services.prefs.clearUserPref("network.trr.strict_native_fallback");
   Services.prefs.clearUserPref("network.trr.request_timeout_ms");
   Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
 }
@@ -359,18 +359,6 @@ async function test_no_answers_fallback() {
   setModeAndURI(2, "doh?responseIP=none"); // TRR-first
 
   await new TRRDNSListener("confirm.example.com", "127.0.0.1");
-
-  info("Now in strict mode - no fallback");
-  Services.prefs.setBoolPref("network.trr.strict_native_fallback", true);
-  dns.clearCache(true);
-  let { inStatus } = await new TRRDNSListener("confirm.example.com", {
-    expectedSuccess: false,
-  });
-  Assert.ok(
-    !Components.isSuccessCode(inStatus),
-    `${inStatus} should be an error code`
-  );
-  Services.prefs.setBoolPref("network.trr.strict_native_fallback", false);
 }
 
 async function test_404_fallback() {
@@ -379,18 +367,6 @@ async function test_404_fallback() {
   setModeAndURI(2, "404"); // TRR-first
 
   await new TRRDNSListener("test404.example.com", "127.0.0.1");
-
-  info("Now in strict mode - no fallback");
-  Services.prefs.setBoolPref("network.trr.strict_native_fallback", true);
-  dns.clearCache(true);
-  let { inStatus } = await new TRRDNSListener("test404.example.com", {
-    expectedSuccess: false,
-  });
-  Assert.ok(
-    !Components.isSuccessCode(inStatus),
-    `${inStatus} should be an error code`
-  );
-  Services.prefs.setBoolPref("network.trr.strict_native_fallback", false);
 }
 
 async function test_mode_1_and_4() {
@@ -483,53 +459,37 @@ async function test_mode_2() {
   Services.prefs.setCharPref("network.trr.builtin-excluded-domains", "");
 
   await new TRRDNSListener("bar.example.com", "192.192.192.192");
-
-  info("Now in strict mode");
-  Services.prefs.setBoolPref("network.trr.strict_native_fallback", true);
-  dns.clearCache(true);
-  await new TRRDNSListener("bar.example.com", "192.192.192.192");
-  Services.prefs.setBoolPref("network.trr.strict_native_fallback", false);
 }
 
 async function test_excluded_domains() {
   info("Checking that Do53 is used for names in excluded-domains list");
-  for (let strictMode of [true, false]) {
-    info("Strict mode: " + strictMode);
-    Services.prefs.setBoolPref(
-      "network.trr.strict_native_fallback",
-      strictMode
-    );
-    dns.clearCache(true);
-    setModeAndURI(2, "doh?responseIP=192.192.192.192");
-    Services.prefs.setCharPref(
-      "network.trr.excluded-domains",
-      "bar.example.com"
-    );
+  dns.clearCache(true);
+  setModeAndURI(2, "doh?responseIP=192.192.192.192");
+  Services.prefs.setCharPref("network.trr.excluded-domains", "bar.example.com");
 
-    await new TRRDNSListener("bar.example.com", "127.0.0.1"); // Do53 result
+  await new TRRDNSListener("bar.example.com", "127.0.0.1"); // Do53 result
 
-    dns.clearCache(true);
-    Services.prefs.setCharPref("network.trr.excluded-domains", "example.com");
+  dns.clearCache(true);
+  Services.prefs.setCharPref("network.trr.excluded-domains", "example.com");
 
-    await new TRRDNSListener("bar.example.com", "127.0.0.1");
+  await new TRRDNSListener("bar.example.com", "127.0.0.1");
 
-    dns.clearCache(true);
-    Services.prefs.setCharPref(
-      "network.trr.excluded-domains",
-      "foo.test.com, bar.example.com"
-    );
-    await new TRRDNSListener("bar.example.com", "127.0.0.1");
+  dns.clearCache(true);
+  Services.prefs.setCharPref(
+    "network.trr.excluded-domains",
+    "foo.test.com, bar.example.com"
+  );
+  await new TRRDNSListener("bar.example.com", "127.0.0.1");
 
-    dns.clearCache(true);
-    Services.prefs.setCharPref(
-      "network.trr.excluded-domains",
-      "bar.example.com, foo.test.com"
-    );
+  dns.clearCache(true);
+  Services.prefs.setCharPref(
+    "network.trr.excluded-domains",
+    "bar.example.com, foo.test.com"
+  );
 
-    await new TRRDNSListener("bar.example.com", "127.0.0.1");
+  await new TRRDNSListener("bar.example.com", "127.0.0.1");
 
-    Services.prefs.clearUserPref("network.trr.excluded-domains");
-  }
+  Services.prefs.clearUserPref("network.trr.excluded-domains");
 }
 
 function topicObserved(topic) {
@@ -549,51 +509,44 @@ function topicObserved(topic) {
 
 async function test_captiveportal_canonicalURL() {
   info("Check that captivedetect.canonicalURL is resolved via native DNS");
-  for (let strictMode of [true, false]) {
-    info("Strict mode: " + strictMode);
-    Services.prefs.setBoolPref(
-      "network.trr.strict_native_fallback",
-      strictMode
-    );
-    dns.clearCache(true);
-    setModeAndURI(2, "doh?responseIP=2.2.2.2");
+  dns.clearCache(true);
+  setModeAndURI(2, "doh?responseIP=2.2.2.2");
 
-    const cpServer = new HttpServer();
-    cpServer.registerPathHandler("/cp", function handleRawData(
-      request,
-      response
-    ) {
-      response.setHeader("Content-Type", "text/plain", false);
-      response.setHeader("Cache-Control", "no-cache", false);
-      response.bodyOutputStream.write("data", 4);
-    });
-    cpServer.start(-1);
-    cpServer.identity.setPrimary(
-      "http",
-      "detectportal.firefox.com",
-      cpServer.identity.primaryPort
-    );
-    let cpPromise = topicObserved("captive-portal-login");
+  const cpServer = new HttpServer();
+  cpServer.registerPathHandler("/cp", function handleRawData(
+    request,
+    response
+  ) {
+    response.setHeader("Content-Type", "text/plain", false);
+    response.setHeader("Cache-Control", "no-cache", false);
+    response.bodyOutputStream.write("data", 4);
+  });
+  cpServer.start(-1);
+  cpServer.identity.setPrimary(
+    "http",
+    "detectportal.firefox.com",
+    cpServer.identity.primaryPort
+  );
+  let cpPromise = topicObserved("captive-portal-login");
 
-    Services.prefs.setCharPref(
-      "captivedetect.canonicalURL",
-      `http://detectportal.firefox.com:${cpServer.identity.primaryPort}/cp`
-    );
-    Services.prefs.setBoolPref("network.captive-portal-service.testMode", true);
-    Services.prefs.setBoolPref("network.captive-portal-service.enabled", true);
+  Services.prefs.setCharPref(
+    "captivedetect.canonicalURL",
+    `http://detectportal.firefox.com:${cpServer.identity.primaryPort}/cp`
+  );
+  Services.prefs.setBoolPref("network.captive-portal-service.testMode", true);
+  Services.prefs.setBoolPref("network.captive-portal-service.enabled", true);
 
-    // The captive portal has to have used native DNS, otherwise creating
-    // a socket to a non-local IP would trigger a crash.
-    await cpPromise;
-    // Simply resolving the captive portal domain should still use TRR
-    await new TRRDNSListener("detectportal.firefox.com", "2.2.2.2");
+  // The captive portal has to have used native DNS, otherwise creating
+  // a socket to a non-local IP would trigger a crash.
+  await cpPromise;
+  // Simply resolving the captive portal domain should still use TRR
+  await new TRRDNSListener("detectportal.firefox.com", "2.2.2.2");
 
-    Services.prefs.clearUserPref("network.captive-portal-service.enabled");
-    Services.prefs.clearUserPref("network.captive-portal-service.testMode");
-    Services.prefs.clearUserPref("captivedetect.canonicalURL");
+  Services.prefs.clearUserPref("network.captive-portal-service.enabled");
+  Services.prefs.clearUserPref("network.captive-portal-service.testMode");
+  Services.prefs.clearUserPref("captivedetect.canonicalURL");
 
-    await new Promise(resolve => cpServer.stop(resolve));
-  }
+  await new Promise(resolve => cpServer.stop(resolve));
 }
 
 async function test_parentalcontrols() {
@@ -603,50 +556,34 @@ async function test_parentalcontrols() {
   await SetParentalControlEnabled(true);
   await new TRRDNSListener("www.example.com", "127.0.0.1");
   await SetParentalControlEnabled(false);
-
-  info("Now in strict mode");
-  Services.prefs.setBoolPref("network.trr.strict_native_fallback", true);
-  dns.clearCache(true);
-  setModeAndURI(2, "doh?responseIP=2.2.2.2");
-  await SetParentalControlEnabled(true);
-  await new TRRDNSListener("www.example.com", "127.0.0.1");
-  await SetParentalControlEnabled(false);
-  Services.prefs.setBoolPref("network.trr.strict_native_fallback", false);
 }
 
 async function test_builtin_excluded_domains() {
   info("Verifying Do53 is used for domains in builtin-excluded-domians list");
-  for (let strictMode of [true, false]) {
-    info("Strict mode: " + strictMode);
-    Services.prefs.setBoolPref(
-      "network.trr.strict_native_fallback",
-      strictMode
-    );
-    dns.clearCache(true);
-    setModeAndURI(2, "doh?responseIP=2.2.2.2");
+  dns.clearCache(true);
+  setModeAndURI(2, "doh?responseIP=2.2.2.2");
 
-    Services.prefs.setCharPref("network.trr.excluded-domains", "");
-    Services.prefs.setCharPref(
-      "network.trr.builtin-excluded-domains",
-      "bar.example.com"
-    );
-    await new TRRDNSListener("bar.example.com", "127.0.0.1");
+  Services.prefs.setCharPref("network.trr.excluded-domains", "");
+  Services.prefs.setCharPref(
+    "network.trr.builtin-excluded-domains",
+    "bar.example.com"
+  );
+  await new TRRDNSListener("bar.example.com", "127.0.0.1");
 
-    dns.clearCache(true);
-    Services.prefs.setCharPref(
-      "network.trr.builtin-excluded-domains",
-      "example.com"
-    );
-    await new TRRDNSListener("bar.example.com", "127.0.0.1");
+  dns.clearCache(true);
+  Services.prefs.setCharPref(
+    "network.trr.builtin-excluded-domains",
+    "example.com"
+  );
+  await new TRRDNSListener("bar.example.com", "127.0.0.1");
 
-    dns.clearCache(true);
-    Services.prefs.setCharPref(
-      "network.trr.builtin-excluded-domains",
-      "foo.test.com, bar.example.com"
-    );
-    await new TRRDNSListener("bar.example.com", "127.0.0.1");
-    await new TRRDNSListener("foo.test.com", "127.0.0.1");
-  }
+  dns.clearCache(true);
+  Services.prefs.setCharPref(
+    "network.trr.builtin-excluded-domains",
+    "foo.test.com, bar.example.com"
+  );
+  await new TRRDNSListener("bar.example.com", "127.0.0.1");
+  await new TRRDNSListener("foo.test.com", "127.0.0.1");
 }
 
 async function test_excluded_domains_mode3() {
@@ -871,20 +808,14 @@ async function test_fetch_time() {
   await new TRRDNSListener("bar_time1.example.com", "127.0.0.1", true, 0);
 
   // check an excluded domain. It should fall back to regular DNS. The TRR timing should be 0.
+  dns.clearCache(true);
   Services.prefs.setCharPref(
     "network.trr.excluded-domains",
     "bar_time2.example.com"
   );
-  for (let strictMode of [true, false]) {
-    info("Strict mode: " + strictMode);
-    Services.prefs.setBoolPref(
-      "network.trr.strict_native_fallback",
-      strictMode
-    );
-    dns.clearCache(true);
-    setModeAndURI(2, "doh?responseIP=2.2.2.2&delayIPv4=20");
-    await new TRRDNSListener("bar_time2.example.com", "127.0.0.1", true, 0);
-  }
+  setModeAndURI(2, "doh?responseIP=2.2.2.2&delayIPv4=20");
+
+  await new TRRDNSListener("bar_time2.example.com", "127.0.0.1", true, 0);
 
   Services.prefs.setCharPref("network.trr.excluded-domains", "");
 
@@ -932,16 +863,6 @@ async function test_ipv6_trr_fallback() {
   setModeAndURI(2, "doh?responseIP=none");
   await new TRRDNSListener("ipv6.host.com", "1:1::2");
 
-  info("In strict mode, the lookup should fail when both reqs fail.");
-  dns.clearCache(true);
-  Services.prefs.setBoolPref("network.trr.strict_native_fallback", true);
-  setModeAndURI(2, "doh?responseIP=none");
-  let { inStatus: inStatus2 } = await new TRRDNSListener("ipv6.host.com", {
-    expectedSuccess: false,
-  });
-  equal(inStatus2, Cr.NS_ERROR_UNKNOWN_HOST);
-  Services.prefs.setBoolPref("network.trr.strict_native_fallback", false);
-
   override.clearOverrides();
 }
 
@@ -967,16 +888,6 @@ async function test_ipv4_trr_fallback() {
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=none");
   await new TRRDNSListener("ipv4.host.com", "3.4.5.6");
-
-  // No fallback with strict mode.
-  dns.clearCache(true);
-  Services.prefs.setBoolPref("network.trr.strict_native_fallback", true);
-  setModeAndURI(2, "doh?responseIP=none");
-  let { inStatus: inStatus2 } = await new TRRDNSListener("ipv4.host.com", {
-    expectedSuccess: false,
-  });
-  equal(inStatus2, Cr.NS_ERROR_UNKNOWN_HOST);
-  Services.prefs.setBoolPref("network.trr.strict_native_fallback", false);
 
   override.clearOverrides();
 }
@@ -1021,168 +932,6 @@ async function test_no_retry_without_doh() {
     );
   }
 
-  for (let strictMode of [true, false]) {
-    info("Strict mode: " + strictMode);
-    Services.prefs.setBoolPref(
-      "network.trr.strict_native_fallback",
-      strictMode
-    );
-    await test(`http://unknown.ipv4.stuff:666/path`, "0.0.0.0");
-    await test(`http://unknown.ipv6.stuff:666/path`, "::");
-  }
-}
-
-async function test_connection_reuse_and_cycling() {
-  dns.clearCache(true);
-  Services.prefs.setIntPref("network.trr.request_timeout_ms", 500);
-  Services.prefs.setIntPref("network.trr.request_timeout_mode_trronly_ms", 500);
-
-  setModeAndURI(2, `doh?responseIP=9.8.7.6`);
-  Services.prefs.setBoolPref("network.trr.strict_native_fallback", true);
-  Services.prefs.setCharPref("network.trr.confirmationNS", "example.com");
-  await TestUtils.waitForCondition(
-    // 2 => CONFIRM_OK
-    () => dns.currentTrrConfirmationState == 2,
-    `Timed out waiting for confirmation success. Currently ${dns.currentTrrConfirmationState}`,
-    1,
-    5000
-  );
-
-  // Setting conncycle=true in the URI. Server will start logging reqs.
-  // We will do a specific sequence of lookups, then fetch the log from
-  // the server and check that it matches what we'd expect.
-  setModeAndURI(2, `doh?responseIP=9.8.7.6&conncycle=true`);
-  await TestUtils.waitForCondition(
-    // 2 => CONFIRM_OK
-    () => dns.currentTrrConfirmationState == 2,
-    `Timed out waiting for confirmation success. Currently ${dns.currentTrrConfirmationState}`,
-    1,
-    5000
-  );
-  // Confirmation upon uri-change will have created one req.
-
-  // Two reqs for each bar1 and bar2 - A + AAAA.
-  await new TRRDNSListener("bar1.example.org.", "9.8.7.6");
-  await new TRRDNSListener("bar2.example.org.", "9.8.7.6");
-  // Total so far: (1) + 2 + 2 = 5
-
-  // Two reqs that fail, one Confirmation req, two retried reqs that succeed.
-  await new TRRDNSListener("newconn.example.org.", "9.8.7.6");
-  await TestUtils.waitForCondition(
-    // 2 => CONFIRM_OK
-    () => dns.currentTrrConfirmationState == 2,
-    `Timed out waiting for confirmation success. Currently ${dns.currentTrrConfirmationState}`,
-    1,
-    5000
-  );
-  // Total so far: (5) + 2 + 1 + 2 = 10
-
-  // Two reqs for each bar3 and bar4 .
-  await new TRRDNSListener("bar3.example.org.", "9.8.7.6");
-  await new TRRDNSListener("bar4.example.org.", "9.8.7.6");
-  // Total so far: (10) + 2 + 2 = 14.
-
-  // Two reqs that fail, one Confirmation req, two retried reqs that succeed.
-  await new TRRDNSListener("newconn2.example.org.", "9.8.7.6");
-  await TestUtils.waitForCondition(
-    // 2 => CONFIRM_OK
-    () => dns.currentTrrConfirmationState == 2,
-    `Timed out waiting for confirmation success. Currently ${dns.currentTrrConfirmationState}`,
-    1,
-    5000
-  );
-  // Total so far: (14) + 2 + 1 + 2 = 19
-
-  // Two reqs for each bar5 and bar6 .
-  await new TRRDNSListener("bar5.example.org.", "9.8.7.6");
-  await new TRRDNSListener("bar6.example.org.", "9.8.7.6");
-  // Total so far: (19) + 2 + 2 = 23
-
-  let chan = makeChan(
-    `https://foo.example.com:${h2Port}/get-doh-req-port-log`,
-    Ci.nsIRequest.TRR_DISABLED_MODE
-  );
-  let dohReqPortLog = await new Promise(resolve =>
-    chan.asyncOpen(
-      new ChannelListener((stuff, buffer) => {
-        resolve(JSON.parse(buffer));
-      })
-    )
-  );
-
-  // Since the actual ports seen will vary at runtime, we use placeholders
-  // instead in our expected output definition. For example, if two entries
-  // both have "port1", it means they both should have the same port in the
-  // server's log.
-  // For reqs that fail and trigger a Confirmation + retry, the retried reqs
-  // might not re-use the new connection created for Confirmation due to a
-  // race, so we have an extra alternate expected port for them. This lets
-  // us test that they use *a* new port even if it's not *the* new port.
-  // Subsequent lookups are not affected, they will use the same conn as
-  // the Confirmation req.
-  let expectedLogTemplate = [
-    ["example.com", "port1"],
-    ["bar1.example.org", "port1"],
-    ["bar1.example.org", "port1"],
-    ["bar2.example.org", "port1"],
-    ["bar2.example.org", "port1"],
-    ["newconn.example.org", "port1"],
-    ["newconn.example.org", "port1"],
-    ["example.com", "port2"],
-    ["newconn.example.org", "port2"],
-    ["newconn.example.org", "port2"],
-    ["bar3.example.org", "port2"],
-    ["bar3.example.org", "port2"],
-    ["bar4.example.org", "port2"],
-    ["bar4.example.org", "port2"],
-    ["newconn2.example.org", "port2"],
-    ["newconn2.example.org", "port2"],
-    ["example.com", "port3"],
-    ["newconn2.example.org", "port3"],
-    ["newconn2.example.org", "port3"],
-    ["bar5.example.org", "port3"],
-    ["bar5.example.org", "port3"],
-    ["bar6.example.org", "port3"],
-    ["bar6.example.org", "port3"],
-  ];
-
-  if (expectedLogTemplate.length != dohReqPortLog.length) {
-    // This shouldn't happen, and if it does, we'll fail the assertion
-    // below. But first dump the whole server-side log to help with
-    // debugging should we see a failure. Most likely cause would be
-    // that another consumer of TRR happened to make a request while
-    // the test was running and polluted the log.
-    info(dohReqPortLog);
-  }
-
-  equal(
-    expectedLogTemplate.length,
-    dohReqPortLog.length,
-    "Correct number of req log entries"
-  );
-
-  let seenPorts = new Set();
-  // This is essentially a symbol table - as we iterate through the log
-  // we will assign the actual seen port numbers to the placeholders.
-  let seenPortsByExpectedPort = new Map();
-
-  for (let i = 0; i < expectedLogTemplate.length; i++) {
-    let expectedName = expectedLogTemplate[i][0];
-    let expectedPort = expectedLogTemplate[i][1];
-    let seenName = dohReqPortLog[i][0];
-    let seenPort = dohReqPortLog[i][1];
-    info(`Checking log entry. Name: ${seenName}, Port: ${seenPort}`);
-    equal(expectedName, seenName, "Name matches for entry " + i);
-    if (!seenPortsByExpectedPort.has(expectedPort)) {
-      ok(!seenPorts.has(seenPort), "Port should not have been previously used");
-      seenPorts.add(seenPort);
-      seenPortsByExpectedPort.set(expectedPort, seenPort);
-    } else {
-      equal(
-        seenPort,
-        seenPortsByExpectedPort.get(expectedPort),
-        "Connection was reused as expected"
-      );
-    }
-  }
+  await test(`http://unknown.ipv4.stuff:666/path`, "0.0.0.0");
+  await test(`http://unknown.ipv6.stuff:666/path`, "::");
 }
