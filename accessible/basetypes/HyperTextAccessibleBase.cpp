@@ -233,27 +233,37 @@ void HyperTextAccessibleBase::TextAtOffset(int32_t aOffset,
 
   switch (aBoundaryType) {
     case nsIAccessibleText::BOUNDARY_CHAR:
-      // XXX Add handling for caret at end of wrapped line.
+      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
+        TextLeafPoint caret = TextLeafPoint::GetCaret(Acc());
+        if (caret.IsCaretAtEndOfLine()) {
+          // The caret is at the end of the line. Return no character.
+          *aStartOffset = *aEndOffset = static_cast<int32_t>(adjustedOffset);
+          return;
+        }
+      }
       CharAt(adjustedOffset, aText, aStartOffset, aEndOffset);
       break;
     case nsIAccessibleText::BOUNDARY_WORD_START:
     case nsIAccessibleText::BOUNDARY_LINE_START:
-      TextLeafPoint origStart =
-          ToTextLeafPoint(static_cast<int32_t>(adjustedOffset));
-      TextLeafPoint end;
-      Accessible* childAcc = GetChildAtOffset(adjustedOffset);
-      if (childAcc && childAcc->IsHyperText()) {
-        // We're searching for boundaries enclosing an embedded object.
-        // An embedded object might contain several boundaries itself.
-        // Thus, we must ensure we search for the end boundary from the last
-        // text in the subtree, not just the first.
-        // For example, if the embedded object is a link and it contains two
-        // words, but the second word expands beyond the link, we want to
-        // include the part of the second word which is outside of the link.
-        end = ToTextLeafPoint(static_cast<int32_t>(adjustedOffset),
-                              /* aDescendToEnd */ true);
+      TextLeafPoint origStart, end;
+      if (aOffset == nsIAccessibleText::TEXT_OFFSET_CARET) {
+        origStart = end = TextLeafPoint::GetCaret(Acc());
       } else {
-        end = origStart;
+        origStart = ToTextLeafPoint(static_cast<int32_t>(adjustedOffset));
+        Accessible* childAcc = GetChildAtOffset(adjustedOffset);
+        if (childAcc && childAcc->IsHyperText()) {
+          // We're searching for boundaries enclosing an embedded object.
+          // An embedded object might contain several boundaries itself.
+          // Thus, we must ensure we search for the end boundary from the last
+          // text in the subtree, not just the first.
+          // For example, if the embedded object is a link and it contains two
+          // words, but the second word expands beyond the link, we want to
+          // include the part of the second word which is outside of the link.
+          end = ToTextLeafPoint(static_cast<int32_t>(adjustedOffset),
+                                /* aDescendToEnd */ true);
+        } else {
+          end = origStart;
+        }
       }
       TextLeafPoint start = origStart.FindBoundary(aBoundaryType, eDirPrevious,
                                                    /* aIncludeOrigin */ true);
