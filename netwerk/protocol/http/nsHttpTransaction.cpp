@@ -1985,23 +1985,23 @@ nsresult nsHttpTransaction::ParseLineSegment(char* segment, uint32_t len) {
     uint16_t status = mResponseHead->Status();
     if (status == 103) {
       nsCString linkHeader;
-      DebugOnly<nsresult> rv =
-          mResponseHead->GetHeader(nsHttp::Link, linkHeader);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-      nsCOMPtr<nsIEarlyHintObserver> earlyHint;
-      {
-        MutexAutoLock lock(mLock);
-        earlyHint = mEarlyHintObserver;
-      }
-      if (earlyHint) {
-        DebugOnly<nsresult> rv = NS_DispatchToMainThread(
-            NS_NewRunnableFunction(
-                "nsIEarlyHintObserver->EarlyHint",
-                [obs{std::move(earlyHint)}, header{std::move(linkHeader)}]() {
-                  obs->EarlyHint(header);
-                }),
-            NS_DISPATCH_NORMAL);
-        MOZ_ASSERT(NS_SUCCEEDED(rv));
+      nsresult rv = mResponseHead->GetHeader(nsHttp::Link, linkHeader);
+      if (NS_SUCCEEDED(rv) && !linkHeader.IsEmpty()) {
+        nsCOMPtr<nsIEarlyHintObserver> earlyHint;
+        {
+          MutexAutoLock lock(mLock);
+          earlyHint = mEarlyHintObserver;
+        }
+        if (earlyHint) {
+          DebugOnly<nsresult> rv = NS_DispatchToMainThread(
+              NS_NewRunnableFunction(
+                  "nsIEarlyHintObserver->EarlyHint",
+                  [obs{std::move(earlyHint)}, header{std::move(linkHeader)}]() {
+                    obs->EarlyHint(header);
+                  }),
+              NS_DISPATCH_NORMAL);
+          MOZ_ASSERT(NS_SUCCEEDED(rv));
+        }
       }
     }
     if ((status != 101) && (status / 100 == 1)) {
