@@ -12,6 +12,7 @@
 #include "mozilla/dom/ClientsBinding.h"
 #include "mozilla/dom/ServiceWorkerDescriptor.h"
 #include "mozilla/ipc/BackgroundUtils.h"
+#include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "nsContentUtils.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -111,7 +112,9 @@ class ClientChannelHelper : public nsIInterfaceRequestor,
             nsCOMPtr<nsIPrincipal> foreignPartitionedPrincipal;
             rv = StoragePrincipalHelper::GetPrincipal(
                 aNewChannel,
-                StoragePrincipalHelper::eForeignPartitionedPrincipal,
+                StaticPrefs::privacy_partition_serviceWorkers()
+                    ? StoragePrincipalHelper::eForeignPartitionedPrincipal
+                    : StoragePrincipalHelper::eRegularPrincipal,
                 getter_AddRefs(foreignPartitionedPrincipal));
             NS_ENSURE_SUCCESS(rv, rv);
             reservedClient.reset();
@@ -132,7 +135,10 @@ class ClientChannelHelper : public nsIInterfaceRequestor,
     else {
       nsCOMPtr<nsIPrincipal> foreignPartitionedPrincipal;
       rv = StoragePrincipalHelper::GetPrincipal(
-          aNewChannel, StoragePrincipalHelper::eForeignPartitionedPrincipal,
+          aNewChannel,
+          StaticPrefs::privacy_partition_serviceWorkers()
+              ? StoragePrincipalHelper::eForeignPartitionedPrincipal
+              : StoragePrincipalHelper::eRegularPrincipal,
           getter_AddRefs(foreignPartitionedPrincipal));
       NS_ENSURE_SUCCESS(rv, rv);
 
@@ -298,7 +304,10 @@ nsresult AddClientChannelHelperInternal(nsIChannel* aChannel,
 
   nsCOMPtr<nsIPrincipal> channelForeignPartitionedPrincipal;
   nsresult rv = StoragePrincipalHelper::GetPrincipal(
-      aChannel, StoragePrincipalHelper::eForeignPartitionedPrincipal,
+      aChannel,
+      StaticPrefs::privacy_partition_serviceWorkers()
+          ? StoragePrincipalHelper::eForeignPartitionedPrincipal
+          : StoragePrincipalHelper::eRegularPrincipal,
       getter_AddRefs(channelForeignPartitionedPrincipal));
   NS_ENSURE_SUCCESS(rv, rv);
 

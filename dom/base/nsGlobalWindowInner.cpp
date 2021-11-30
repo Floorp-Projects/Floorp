@@ -81,6 +81,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/TaskCategory.h"
@@ -1866,8 +1867,12 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
   }
 
   nsCOMPtr<nsIPrincipal> foreignPartitionedPrincipal;
+
   nsresult rv = StoragePrincipalHelper::GetPrincipal(
-      this, StoragePrincipalHelper::eForeignPartitionedPrincipal,
+      this,
+      StaticPrefs::privacy_partition_serviceWorkers()
+          ? StoragePrincipalHelper::eForeignPartitionedPrincipal
+          : StoragePrincipalHelper::eRegularPrincipal,
       getter_AddRefs(foreignPartitionedPrincipal));
   NS_ENSURE_SUCCESS(rv, rv);
 

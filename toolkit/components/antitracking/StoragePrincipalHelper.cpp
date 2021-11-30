@@ -9,6 +9,7 @@
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ContentBlocking.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StorageAccess.h"
 #include "nsContentUtils.h"
 #include "nsIDocShell.h"
@@ -361,6 +362,12 @@ nsresult StoragePrincipalHelper::GetPrincipal(nsPIDOMWindowInner* aWindow,
 bool StoragePrincipalHelper::ShouldUsePartitionPrincipalForServiceWorker(
     nsIDocShell* aDocShell) {
   MOZ_ASSERT(aDocShell);
+
+  // We don't use the partitioned principal for service workers if it's
+  // disabled.
+  if (!StaticPrefs::privacy_partition_serviceWorkers()) {
+    return false;
+  }
 
   RefPtr<Document> document = aDocShell->GetExtantDocument();
 
