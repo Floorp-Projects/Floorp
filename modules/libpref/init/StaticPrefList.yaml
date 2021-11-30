@@ -9830,19 +9830,9 @@
   value: "https://mozilla.cloudflare-dns.com/dns-query"
   mirror: never
 
-# If true, don't fallback to native DNS upon network errors.
 - name: network.trr.strict_native_fallback
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
-  mirror: always
-
-# If false, the temporary blocklisting feature is disabled.
-# This is useful for tests to prevent bleeding extra reqs
-# between tasks, since we may attempt to look up the
-# parent domain in the background when blocklisting a host.
-- name: network.trr.temp_blocklist
-  type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 # Single TRR request timeout, in milliseconds
@@ -9891,6 +9881,14 @@
 - name: network.trr.fetch_off_main_thread
   type: RelaxedAtomicBool
   value: true
+  mirror: always
+
+# If this pref is false, a task will be dispatched to remove the file from the
+# disk and the pref will be set to true.
+# It can probably be removed after a few releases.
+- name: network.trr.blocklist_cleanup_done
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
 
 # If we should wait for captive portal confirmation before enabling TRR

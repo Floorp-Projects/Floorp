@@ -186,7 +186,6 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
   nsIRequest::TRRMode mEffectiveTRRMode = nsIRequest::TRR_DEFAULT_MODE;
 
   TRRSkippedReason mTRRSkippedReason = TRRSkippedReason::TRR_UNSET;
-  TRRSkippedReason mFirstTRRSkippedReason = TRRSkippedReason::TRR_UNSET;
   TRRSkippedReason mTRRAFailReason = TRRSkippedReason::TRR_UNSET;
   TRRSkippedReason mTRRAAAAFailReason = TRRSkippedReason::TRR_UNSET;
 
@@ -194,10 +193,6 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
 
   // counter of outstanding resolving calls
   mozilla::Atomic<int32_t> mResolving{0};
-
-  // Number of times we've attempted TRR. Reset when we refresh.
-  // TRR is attempted at most twice - first attempt and retry.
-  mozilla::Atomic<int32_t> mTrrAttempts{0};
 
   // True if this record is a cache of a failed lookup.  Negative cache
   // entries are valid just like any other (though never for more than 60
@@ -272,7 +267,6 @@ class AddrHostRecord final : public nsHostRecord {
   bool RemoveOrRefresh(bool aTrrToo);  // Mark records currently being resolved
                                        // as needed to resolve again.
 
-  void NotifyRetryingTrr();
   void ResolveComplete();
 
   static DnsPriority GetPriority(uint16_t aFlags);
