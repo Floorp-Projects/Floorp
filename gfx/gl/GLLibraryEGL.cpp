@@ -696,7 +696,7 @@ EglDisplay::EglDisplay(const PrivateUseOnly&, GLLibraryEGL& lib,
     // fails to render anything when a real surface is provided later on. We
     // only have the EGL vendor available here, so just avoid using this
     // extension on all Mali devices.
-    if (strcmp(vendor, "ARM") == 0) {
+    if (vendor && (strcmp(vendor, "ARM") == 0)) {
       MarkExtensionUnsupported(EGLExtension::KHR_surfaceless_context);
     }
   }
