@@ -2346,7 +2346,7 @@ add_old_configure_assignment("LINKER_LDFLAGS", linker_ldflags)
 # `select_linker` is never invoked.  Hard-code around it.
 @depends(select_linker, target, c_compiler)
 def gcc_use_gnu_ld(select_linker, target, c_compiler):
-    if select_linker is not None:
+    if select_linker is not None and target.kernel != "Darwin":
         return select_linker.KIND in ("bfd", "gold", "lld")
     if target.kernel == "WINNT" and c_compiler.type == "clang":
         return True
