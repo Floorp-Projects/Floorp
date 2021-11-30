@@ -79,6 +79,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "/browser/app/winlauncher",
     ]
     DELAYLOAD_DLLS += [
+        "advapi32.dll",
         "oleaut32.dll",
         "ole32.dll",
         "rpcrt4.dll",
