@@ -176,10 +176,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
     case ColorID::MozMacDefaultbuttontext:
       color = NS_RGB(0xFF, 0xFF, 0xFF);
       break;
-    case ColorID::Buttontext:
-    case ColorID::MozButtonhovertext:
-      color = GetColorFromNSColor(NSColor.controlTextColor);
-      break;
     case ColorID::MozButtonactivetext:
       // Pre-macOS 12, pressed buttons were filled with the highlight color and the text was white.
       // Starting with macOS 12, pressed (non-default) buttons are filled with medium gray and the
@@ -219,13 +215,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       break;
     case ColorID::Buttonshadow:
       color = NS_RGB(0xDC, 0xDC, 0xDC);
-      break;
-    case ColorID::Graytext:
-      color = GetColorFromNSColor(NSColor.disabledControlTextColor);
-      break;
-    case ColorID::Inactiveborder:
-    case ColorID::Inactivecaption:
-      color = GetColorFromNSColor(NSColor.controlBackgroundColor);
       break;
     case ColorID::Inactivecaptiontext:
       color = NS_RGB(0x45, 0x45, 0x45);
@@ -267,15 +256,15 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
     }
     case ColorID::Field:
     case ColorID::MozCombobox:
+    case ColorID::Inactiveborder:
+    case ColorID::Inactivecaption:
+    case ColorID::MozDialog:
       color = GetColorFromNSColor(NSColor.controlBackgroundColor);
       break;
     case ColorID::Fieldtext:
     case ColorID::MozComboboxtext:
-      color = GetColorFromNSColor(NSColor.controlTextColor);
-      break;
-    case ColorID::MozDialog:
-      color = GetColorFromNSColor(NSColor.controlBackgroundColor);
-      break;
+    case ColorID::Buttontext:
+    case ColorID::MozButtonhovertext:
     case ColorID::MozDialogtext:
     case ColorID::MozCellhighlighttext:
     case ColorID::MozColheadertext:
@@ -308,6 +297,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
       color = GetColorFromNSColor(NSColor.selectedMenuItemTextColor);
       break;
     case ColorID::MozMacDisabledtoolbartext:
+    case ColorID::Graytext:
       color = GetColorFromNSColor(NSColor.disabledControlTextColor);
       break;
     case ColorID::MozMacMenuselect:
