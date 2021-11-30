@@ -729,7 +729,11 @@ OutgoingResponse.prototype.writeHead = function writeHead(statusCode, reasonPhra
   headers[':status'] = this.statusCode = statusCode;
 
   this.stream.headers(headers);
-  this.headersSent = true;
+  if (statusCode >= 200) {
+    this.headersSent = true;
+  } else {
+    this._headers = {};
+  }
 };
 
 OutgoingResponse.prototype._implicitHeaders = function _implicitHeaders() {

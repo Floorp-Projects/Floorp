@@ -1768,6 +1768,20 @@ function handleRequest(req, res) {
     res.writeHead(307);
     res.end("");
     return;
+  } else if (u.pathname === "/103_response") {
+    let link_val = req.headers["link-to-set"];
+    if (link_val) {
+      res.setHeader("link", link_val);
+    }
+    res.setHeader("something", "something");
+    res.writeHead(103);
+
+    res.setHeader("Content-Type", "text/plain");
+    res.setHeader("Content-Length", "12");
+    res.writeHead(200);
+    res.write("data reached");
+    res.end();
+    return;
   }
 
   // response headers with invalid characters in the name
