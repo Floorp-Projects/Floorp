@@ -3703,8 +3703,9 @@ nsresult QuotaManager::Init() {
       GetPathForStorage(*baseDir, nsLiteralString(DEFAULT_DIRECTORY_NAME)));
 
   QM_TRY_UNWRAP(do_Init(mIOThread),
-                ToResultInvoke<nsCOMPtr<nsIThread>>(
-                    MOZ_SELECT_OVERLOAD(NS_NewNamedThread), "QuotaManager IO"));
+                MOZ_TO_RESULT_INVOKE_TYPED(
+                    nsCOMPtr<nsIThread>, MOZ_SELECT_OVERLOAD(NS_NewNamedThread),
+                    "QuotaManager IO"));
 
   // Make a timer here to avoid potential failures later. We don't actually
   // initialize the timer until shutdown.

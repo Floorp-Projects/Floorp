@@ -635,8 +635,9 @@ nsresult ReadCompressedIndexDataValues(
 template <typename T>
 Result<IndexDataValuesAutoArray, nsresult> ReadCompressedIndexDataValues(
     T& aValues, uint32_t aColumnIndex) {
-  return ToResultInvoke<IndexDataValuesAutoArray>(
-      &ReadCompressedIndexDataValuesFromSource<T>, aValues, aColumnIndex);
+  return MOZ_TO_RESULT_INVOKE_TYPED(IndexDataValuesAutoArray,
+                                    &ReadCompressedIndexDataValuesFromSource<T>,
+                                    aValues, aColumnIndex);
 }
 
 template Result<IndexDataValuesAutoArray, nsresult>

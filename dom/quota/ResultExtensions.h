@@ -109,6 +109,9 @@ Result<R, nsresult> ToResultGet(const Func& aFunc, Args&&... aArgs) {
 #define MOZ_TO_RESULT_GET_TYPED(resultType, ...) \
   ::mozilla::ToResultGet<MOZ_REMOVE_PAREN(resultType)>(__VA_ARGS__)
 
+#define MOZ_TO_RESULT_INVOKE_TYPED(resultType, ...) \
+  ::mozilla::ToResultInvoke<MOZ_REMOVE_PAREN(resultType)>(__VA_ARGS__)
+
 #define QM_TO_RESULT_INVOKE_MEMBER(obj, methodname, ...)                 \
   ::mozilla::ToResultInvokeMember<QMResult>(                             \
       (obj), &::mozilla::detail::DerefedType<decltype(obj)>::methodname, \
