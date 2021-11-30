@@ -78,7 +78,7 @@ At the end you will be presented with a regression range that includes the commi
 If you're seeing a performance issue (site is very slow to load, etc) you should consider submitting a performance profile.
 
 - Activate the profiler at: [https://profiler.firefox.com/](https://profiler.firefox.com/)
-- Use the `Firefox platform` preset and click `Start Recording`.
+- Use the `Networking` preset and click `Start Recording`.
 
 ## Crashes
 
