@@ -9566,7 +9566,7 @@
 
 - name: network.predictor.enable-prefetch
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 - name: network.predictor.page-degradation.day
