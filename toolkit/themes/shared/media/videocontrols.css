@@ -621,6 +621,8 @@
   text-align: unset;
   top: calc(70% - 40px);
   opacity: 0;
+  padding-inline: 0;
+  margin-right: 8px;
   transition: opacity 200ms;
   --pip-icon-size: 24px;
   --pip-icon-width-with-margins: calc(2 * var(--pip-toggle-margin) + var(--pip-icon-size));
