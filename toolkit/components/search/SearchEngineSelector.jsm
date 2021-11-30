@@ -140,7 +140,10 @@ class SearchEngineSelector {
     let result = [];
     let failed = false;
     try {
-      result = await this._remoteConfig.get({ order: "id" });
+      result = await this._remoteConfig.get({
+        order: "id",
+        loadDumpIfNewer: true,
+      });
     } catch (ex) {
       logConsole.error(ex);
       failed = true;
