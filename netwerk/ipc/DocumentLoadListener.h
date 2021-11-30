@@ -576,6 +576,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
 
   Maybe<nsCString> mOriginalUriString;
 
+  // Parent-initiated loads do not support redirects to real channels.
   bool mSupportsRedirectToRealChannel = true;
 
   Maybe<nsCString> mRemoteTypeOverride;
