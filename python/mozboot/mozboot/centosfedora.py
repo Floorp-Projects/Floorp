@@ -36,9 +36,7 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
             "gcc-c++",
         ]
 
-        self.mobile_android_packages = [
-            "java-1.8.0-openjdk-devel",
-        ]
+        self.mobile_android_packages = []
 
         if self.distro in ("centos", "rocky"):
             self.group_packages += ["Development Tools"]
@@ -90,7 +88,6 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
         # Install Android specific packages.
         self.dnf_install(*self.mobile_android_packages)
 
-        self.ensure_java(mozconfig_builder)
         super().install_mobile_android_packages(
             mozconfig_builder, artifact_mode=artifact_mode
         )
