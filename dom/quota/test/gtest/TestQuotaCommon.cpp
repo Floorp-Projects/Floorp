@@ -25,6 +25,7 @@
 #include "mozilla/ResultVariant.h"
 #include "mozilla/Unused.h"
 #include "mozilla/fallible.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsCOMPtr.h"
 #include "nsLiteralString.h"
 #include "nsString.h"
