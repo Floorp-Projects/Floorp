@@ -4098,6 +4098,13 @@ TEST(GeckoProfiler, CPUUsage)
       // Sleep for multiple profiler intervals, so the profiler should have
       // samples with zero CPU utilization.
       PR_Sleep(PR_MillisecondsToInterval(PROFILER_DEFAULT_INTERVAL * 10));
+
+      // Do a busy wait for more than 1ms, to ensure that there are non-zero CPU
+      // utilization periods.
+      const TimeStamp target =
+          TimeStamp::Now() + TimeDuration::FromMilliseconds(2);
+      while (TimeStamp::Now() < target) {
+      }
     }
   });
 
