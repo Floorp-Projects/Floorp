@@ -196,6 +196,8 @@ void nsFrameLoaderOwner::ChangeRemotenessCommon(
   }
 
   ChangeFrameLoaderCommon(owner, retainPaint);
+
+  UpdateFocusAndMouseEnterStateAfterFrameLoaderChange(owner);
 }
 
 void nsFrameLoaderOwner::ChangeFrameLoaderCommon(Element* aOwner,
@@ -206,21 +208,6 @@ void nsFrameLoaderOwner::ChangeFrameLoaderCommon(Element* aOwner,
     auto retain = aRetainPaint ? nsSubDocumentFrame::RetainPaintData::Yes
                                : nsSubDocumentFrame::RetainPaintData::No;
     ourFrame->ResetFrameLoader(retain);
-  }
-
-  // If the element is focused, or the current mouse over target then
-  // we need to update that state for the new BrowserParent too.
-  if (nsFocusManager* fm = nsFocusManager::GetFocusManager()) {
-    if (fm->GetFocusedElement() == aOwner) {
-      fm->ActivateRemoteFrameIfNeeded(*aOwner,
-                                      nsFocusManager::GenerateFocusActionId());
-    }
-  }
-
-  if (aOwner->GetPrimaryFrame()) {
-    EventStateManager* eventManager =
-        aOwner->GetPrimaryFrame()->PresContext()->EventStateManager();
-    eventManager->RecomputeMouseEnterStateForRemoteFrame(*aOwner);
   }
 
   if (aOwner->IsXULElement()) {
@@ -238,6 +225,29 @@ void nsFrameLoaderOwner::ChangeFrameLoaderCommon(Element* aOwner,
   mFrameLoader->PropagateIsUnderHiddenEmbedderElement(
       !aOwner->GetPrimaryFrame() ||
       !aOwner->GetPrimaryFrame()->StyleVisibility()->IsVisible());
+}
+
+void nsFrameLoaderOwner::UpdateFocusAndMouseEnterStateAfterFrameLoaderChange() {
+  RefPtr<Element> owner = do_QueryObject(this);
+  UpdateFocusAndMouseEnterStateAfterFrameLoaderChange(owner);
+}
+
+void nsFrameLoaderOwner::UpdateFocusAndMouseEnterStateAfterFrameLoaderChange(
+    Element* aOwner) {
+  // If the element is focused, or the current mouse over target then
+  // we need to update that state for the new BrowserParent too.
+  if (nsFocusManager* fm = nsFocusManager::GetFocusManager()) {
+    if (fm->GetFocusedElement() == aOwner) {
+      fm->ActivateRemoteFrameIfNeeded(*aOwner,
+                                      nsFocusManager::GenerateFocusActionId());
+    }
+  }
+
+  if (aOwner->GetPrimaryFrame()) {
+    EventStateManager* eventManager =
+        aOwner->GetPrimaryFrame()->PresContext()->EventStateManager();
+    eventManager->RecomputeMouseEnterStateForRemoteFrame(*aOwner);
+  }
 }
 
 void nsFrameLoaderOwner::ChangeRemoteness(
@@ -338,9 +348,11 @@ void nsFrameLoaderOwner::SubframeCrashed() {
                          /* group */ nullptr, frameLoaderInit, IgnoreErrors());
 }
 
-void nsFrameLoaderOwner::ReplaceFrameLoader(nsFrameLoader* aNewFrameLoader) {
+void nsFrameLoaderOwner::RestoreFrameLoaderFromBFCache(
+    nsFrameLoader* aNewFrameLoader) {
   MOZ_LOG(gSHIPBFCacheLog, LogLevel::Debug,
-          ("nsFrameLoaderOwner::ReplaceFrameLoader: Replace frameloader"));
+          ("nsFrameLoaderOwner::RestoreFrameLoaderFromBFCache: Replace "
+           "frameloader"));
 
   mFrameLoader = aNewFrameLoader;
 

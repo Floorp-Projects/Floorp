@@ -1268,12 +1268,12 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
       shistory->UpdateIndex();
     }
     loadingBC->HistoryCommitIndexAndLength();
-    Unused << loadingBC->SetIsInBFCache(false);
+
     // ResetSHEntryHasUserInteractionCache(); ?
     // browser.navigation.requireUserInteraction is still
     // disabled everywhere.
 
-    frameLoaderOwner->ReplaceFrameLoader(aFrameLoader);
+    frameLoaderOwner->RestoreFrameLoaderFromBFCache(aFrameLoader);
 
     // The old page can't be stored in the bfcache,
     // destroy the nsFrameLoader.
@@ -1284,6 +1284,13 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
       aBrowsingContext->SetActiveSessionHistoryEntry(currentSHEntry);
       currentFrameLoader->Destroy();
     }
+
+    Unused << loadingBC->SetIsInBFCache(false);
+
+    // We need to call this after we've restored the page from BFCache (see
+    // SetIsInBFCache(false) above), so that the page is not frozen anymore and
+    // the right focus events are fired.
+    frameLoaderOwner->UpdateFocusAndMouseEnterStateAfterFrameLoaderChange();
 
     return;
   }
