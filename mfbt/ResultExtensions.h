@@ -13,6 +13,7 @@
 #include "mozilla/Assertions.h"
 #include "nscore.h"
 #include "prtypes.h"
+#include "mozilla/dom/quota/RemoveParen.h"
 
 namespace mozilla {
 
@@ -360,7 +361,7 @@ auto ToResultInvokeMember(const SmartPtr<const T>& aObj,
 //     auto existsOrErr =
 //         MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsCOMPtr<nsIFile>, file, Clone);
 #define MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(resultType, obj, methodname, ...) \
-  ::mozilla::ToResultInvoke<resultType>(                                    \
+  ::mozilla::ToResultInvoke<MOZ_REMOVE_PAREN(resultType)>(                  \
       ::std::mem_fn(                                                        \
           &::mozilla::detail::DerefedType<decltype(obj)>::methodname),      \
       (obj), ##__VA_ARGS__)

@@ -38,6 +38,14 @@ class TestClass {
   }
   nsresult NonOverloadedNoInputFailsRef(int& aOut) { return NS_ERROR_FAILURE; }
 
+  nsresult NonOverloadedNoInputComplex(std::pair<int, int>* aOut) {
+    *aOut = std::pair{kTestValue, kTestValue};
+    return NS_OK;
+  }
+  nsresult NonOverloadedNoInputFailsComplex(std::pair<int, int>* aOut) {
+    return NS_ERROR_FAILURE;
+  }
+
   nsresult NonOverloadedWithInput(int aIn, int* aOut) {
     *aOut = aIn;
     return NS_OK;
@@ -233,6 +241,32 @@ TEST(ResultExtensions_ToResultInvokeMember, NoInput_Ref)
   }
 }
 
+TEST(ResultExtensions_ToResultInvokeMember, NoInput_Complex)
+{
+  TestClass foo;
+
+  // success
+  {
+    auto valOrErr =
+        ToResultInvokeMember(foo, &TestClass::NonOverloadedNoInputComplex);
+    static_assert(std::is_same_v<decltype(valOrErr),
+                                 Result<std::pair<int, int>, nsresult>>);
+    ASSERT_TRUE(valOrErr.isOk());
+    ASSERT_EQ((std::pair{TestClass::kTestValue, TestClass::kTestValue}),
+              valOrErr.unwrap());
+  }
+
+  // failure
+  {
+    auto valOrErr =
+        ToResultInvokeMember(foo, &TestClass::NonOverloadedNoInputFailsComplex);
+    static_assert(std::is_same_v<decltype(valOrErr),
+                                 Result<std::pair<int, int>, nsresult>>);
+    ASSERT_TRUE(valOrErr.isErr());
+    ASSERT_EQ(NS_ERROR_FAILURE, valOrErr.unwrapErr());
+  }
+}
+
 TEST(ResultExtensions_ToResultInvokeMember, WithInput)
 {
   TestClass foo;
@@ -343,6 +377,33 @@ TEST(ResultExtensions_ToResultInvokeMember, NoInput_Ref_Macro)
   }
 }
 
+TEST(ResultExtensions_ToResultInvokeMember, NoInput_Complex_Macro)
+{
+  TestClass foo;
+
+  // success
+  {
+    auto valOrErr =
+        MOZ_TO_RESULT_INVOKE_MEMBER(foo, NonOverloadedNoInputComplex);
+    static_assert(std::is_same_v<decltype(valOrErr),
+                                 Result<std::pair<int, int>, nsresult>>);
+    ASSERT_TRUE(valOrErr.isOk());
+    ASSERT_EQ((std::pair{TestClass::kTestValue, TestClass::kTestValue}),
+              valOrErr.unwrap());
+  }
+
+  // failure
+  {
+    auto valOrErr =
+        MOZ_TO_RESULT_INVOKE_MEMBER(foo, NonOverloadedNoInputFailsComplex);
+
+    static_assert(std::is_same_v<decltype(valOrErr),
+                                 Result<std::pair<int, int>, nsresult>>);
+    ASSERT_TRUE(valOrErr.isErr());
+    ASSERT_EQ(NS_ERROR_FAILURE, valOrErr.unwrapErr());
+  }
+}
+
 TEST(ResultExtensions_ToResultInvokeMember, WithInput_Macro)
 {
   TestClass foo;
@@ -383,6 +444,32 @@ TEST(ResultExtensions_ToResultInvokeMember, NoOutput_Macro)
     auto valOrErr = MOZ_TO_RESULT_INVOKE_MEMBER(foo, NonOverloadedNoOutputFails,
                                                 -TestClass::kTestValue);
     static_assert(std::is_same_v<decltype(valOrErr), Result<Ok, nsresult>>);
+    ASSERT_TRUE(valOrErr.isErr());
+    ASSERT_EQ(NS_ERROR_FAILURE, valOrErr.unwrapErr());
+  }
+}
+
+TEST(ResultExtensions_ToResultInvokeMember, NoInput_Complex_Macro_Typed)
+{
+  TestClass foo;
+
+  // success
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+        (std::pair<int, int>), foo, NonOverloadedNoInputComplex);
+    static_assert(std::is_same_v<decltype(valOrErr),
+                                 Result<std::pair<int, int>, nsresult>>);
+    ASSERT_TRUE(valOrErr.isOk());
+    ASSERT_EQ((std::pair{TestClass::kTestValue, TestClass::kTestValue}),
+              valOrErr.unwrap());
+  }
+
+  // failure
+  {
+    auto valOrErr = MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+        (std::pair<int, int>), foo, NonOverloadedNoInputFailsComplex);
+    static_assert(std::is_same_v<decltype(valOrErr),
+                                 Result<std::pair<int, int>, nsresult>>);
     ASSERT_TRUE(valOrErr.isErr());
     ASSERT_EQ(NS_ERROR_FAILURE, valOrErr.unwrapErr());
   }
