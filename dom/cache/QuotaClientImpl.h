@@ -8,9 +8,9 @@
 #define mozilla_dom_cache_QuotaClientImpl_h
 
 #include "mozilla/dom/QMResult.h"
-#include "mozilla/dom/QMResultInlines.h"
 #include "mozilla/dom/cache/QuotaClient.h"
 #include "mozilla/dom/cache/FileUtils.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 
 namespace mozilla {
 namespace dom {

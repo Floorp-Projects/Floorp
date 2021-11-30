@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/FlippedOnce.h"
 #include "mozilla/dom/cache/FileUtils.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 
 namespace mozilla {
 namespace dom {

@@ -5,7 +5,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/quota/StorageHelpers.h"
+
 #include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 
 namespace mozilla::dom::quota {
 
