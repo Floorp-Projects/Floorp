@@ -11,24 +11,28 @@
 #include "mozilla/intl/LocaleService.h"
 #include "OSPreferences.h"
 #include "mozIOSPreferences.h"
+#ifdef DEBUG
+#  include "nsThreadManager.h"
+#endif
 
 namespace mozilla::intl {
 
-nsCString* AppDateTimeFormat::mLocale = nullptr;
-nsTHashMap<nsCStringHashKey, DateTimeFormat*>* AppDateTimeFormat::mFormatCache;
+nsCString* AppDateTimeFormat::sLocale = nullptr;
+nsTHashMap<nsCStringHashKey, DateTimeFormat*>* AppDateTimeFormat::sFormatCache;
 
 static const int32_t DATETIME_FORMAT_INITIAL_LEN = 127;
 
 /*static*/
 nsresult AppDateTimeFormat::Initialize() {
-  if (mLocale) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (sLocale) {
     return NS_OK;
   }
 
-  mLocale = new nsCString();
+  sLocale = new nsCString();
   AutoTArray<nsCString, 10> regionalPrefsLocales;
   LocaleService::GetInstance()->GetRegionalPrefsLocales(regionalPrefsLocales);
-  mLocale->Assign(regionalPrefsLocales[0]);
+  sLocale->Assign(regionalPrefsLocales[0]);
 
   return NS_OK;
 }
@@ -72,12 +76,12 @@ nsresult AppDateTimeFormat::Format(const DateTimeFormat::ComponentsBag& aBag,
   nsAutoString timeZoneID;
   BuildTimeZoneString(aExplodedTime->tm_params, timeZoneID);
 
-  auto genResult = DateTimePatternGenerator::TryCreate(mLocale->get());
+  auto genResult = DateTimePatternGenerator::TryCreate(sLocale->get());
   NS_ENSURE_TRUE(genResult.isOk(), NS_ERROR_FAILURE);
   auto dateTimePatternGenerator = genResult.unwrap();
 
   auto result = DateTimeFormat::TryCreateFromComponents(
-      *mLocale, aBag, dateTimePatternGenerator.get(), Some(timeZoneID));
+      *sLocale, aBag, dateTimePatternGenerator.get(), Some(timeZoneID));
   NS_ENSURE_TRUE(result.isOk(), NS_ERROR_FAILURE);
   auto dateTimeFormat = result.unwrap().release();
 
@@ -143,17 +147,17 @@ nsresult AppDateTimeFormat::Format(const DateTimeFormat::StyleBag& aStyle,
     key.AppendInt(aTimeParameters->tp_dst_offset);
   }
 
-  if (mFormatCache && mFormatCache->Count() == kMaxCachedFormats) {
+  if (sFormatCache && sFormatCache->Count() == kMaxCachedFormats) {
     // Don't allow a pathological page to extend the cache unreasonably.
     NS_WARNING("flushing DateTimeFormat cache");
     DeleteCache();
   }
-  if (!mFormatCache) {
-    mFormatCache =
+  if (!sFormatCache) {
+    sFormatCache =
         new nsTHashMap<nsCStringHashKey, DateTimeFormat*>(kMaxCachedFormats);
   }
 
-  DateTimeFormat*& dateTimeFormat = mFormatCache->LookupOrInsert(key);
+  DateTimeFormat*& dateTimeFormat = sFormatCache->LookupOrInsert(key);
 
   if (!dateTimeFormat) {
     // We didn't have a cached formatter for this key, so create one.
@@ -187,7 +191,7 @@ nsresult AppDateTimeFormat::Format(const DateTimeFormat::StyleBag& aStyle,
 
     nsAutoCString str;
     rv = OSPreferences::GetInstance()->GetDateTimePattern(
-        dateFormatStyle, timeFormatStyle, nsDependentCString(mLocale->get()),
+        dateFormatStyle, timeFormatStyle, nsDependentCString(sLocale->get()),
         str);
     NS_ENSURE_SUCCESS(rv, rv);
     nsAutoString pattern = NS_ConvertUTF8toUTF16(str);
@@ -200,7 +204,7 @@ nsresult AppDateTimeFormat::Format(const DateTimeFormat::StyleBag& aStyle,
           Some(Span<const char16_t>(timeZoneID.Data(), timeZoneID.Length()));
     }
 
-    auto result = DateTimeFormat::TryCreateFromPattern(*mLocale, pattern,
+    auto result = DateTimeFormat::TryCreateFromPattern(*sLocale, pattern,
                                                        timeZoneOverride);
     NS_ENSURE_TRUE(result.isOk(), NS_ERROR_FAILURE);
     dateTimeFormat = result.unwrap().release();
@@ -233,19 +237,21 @@ void AppDateTimeFormat::BuildTimeZoneString(
 
 /*static*/
 void AppDateTimeFormat::DeleteCache() {
-  if (mFormatCache) {
-    for (const auto& dateTimeFormat : mFormatCache->Values()) {
+  MOZ_ASSERT(NS_IsMainThread());
+  if (sFormatCache) {
+    for (const auto& dateTimeFormat : sFormatCache->Values()) {
       delete dateTimeFormat;
     }
-    delete mFormatCache;
-    mFormatCache = nullptr;
+    delete sFormatCache;
+    sFormatCache = nullptr;
   }
 }
 
 /*static*/
 void AppDateTimeFormat::Shutdown() {
+  MOZ_ASSERT(NS_IsMainThread());
   DeleteCache();
-  delete mLocale;
+  delete sLocale;
 }
 
 }  // namespace mozilla::intl
