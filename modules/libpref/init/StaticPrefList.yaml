@@ -9884,14 +9884,6 @@
   value: true
   mirror: always
 
-# If this pref is false, a task will be dispatched to remove the file from the
-# disk and the pref will be set to true.
-# It can probably be removed after a few releases.
-- name: network.trr.blocklist_cleanup_done
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # If we should wait for captive portal confirmation before enabling TRR
 - name: network.trr.wait-for-portal
   type: RelaxedAtomicBool
