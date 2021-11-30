@@ -35,7 +35,7 @@ from mozboot.mozconfig import find_mozconfig, MozconfigBuilder
 # Use distro package to retrieve linux platform information
 import distro
 
-ARTIFACT_MODE_NOTE = """
+APPLICATION_CHOICE = """
 Note on Artifact Mode:
 
 Artifact builds download prebuilt C++ components rather than building
@@ -45,9 +45,7 @@ Artifact builds are recommended for people working on Firefox or
 Firefox for Android frontends, or the GeckoView Java API. They are unsuitable
 for those working on C++ code. For more information see:
 https://firefox-source-docs.mozilla.org/contributing/build/artifact_builds.html.
-""".lstrip()
 
-APPLICATION_CHOICE = """
 Please choose the version of Firefox you want to build:
 %s
 Your choice:
@@ -260,19 +258,6 @@ class Bootstrapper(object):
     def bootstrap(self, settings):
         if self.choice is None:
             applications = APPLICATIONS
-            if isinstance(self.instance, OSXBootstrapperLight):
-                applications = {
-                    key: value
-                    for key, value in applications.items()
-                    if "mobile_android" not in value
-                }
-                print(
-                    "Note: M1 Macs don't support Android builds, so "
-                    "they have been removed from the list of options below"
-                )
-            else:
-                print(ARTIFACT_MODE_NOTE)
-
             # Like ['1. Firefox for Desktop', '2. Firefox for Android Artifact Mode', ...].
             labels = [
                 "%s. %s" % (i, name) for i, name in enumerate(applications.keys(), 1)
