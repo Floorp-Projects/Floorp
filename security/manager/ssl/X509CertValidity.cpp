@@ -89,35 +89,32 @@ X509CertValidity::GetNotBefore(PRTime* aNotBefore) {
 
 nsresult X509CertValidity::FormatTime(
     const PRTime& aTimeDate, PRTimeParamFn aParamFn,
-    const Maybe<intl::DateTimeFormat::Style> aTimeStyle,
+    const nsTimeFormatSelector aTimeFormatSelector,
     nsAString& aFormattedTimeDate) {
   if (!mTimesInitialized) return NS_ERROR_FAILURE;
 
   PRExplodedTime explodedTime;
   PR_ExplodeTime(const_cast<PRTime&>(aTimeDate), aParamFn, &explodedTime);
-  intl::DateTimeFormat::StyleBag style;
-  style.time = aTimeStyle;
-  return intl::AppDateTimeFormat::Format(style, &explodedTime,
-                                         aFormattedTimeDate);
+  return mozilla::DateTimeFormat::FormatPRExplodedTime(
+      kDateFormatLong, aTimeFormatSelector, &explodedTime, aFormattedTimeDate);
 }
 
 NS_IMETHODIMP
 X509CertValidity::GetNotBeforeLocalTime(nsAString& aNotBeforeLocalTime) {
-  return FormatTime(mNotBefore, PR_LocalTimeParameters,
-                    Some(intl::DateTimeFormat::Style::Long),
+  return FormatTime(mNotBefore, PR_LocalTimeParameters, kTimeFormatLong,
                     aNotBeforeLocalTime);
 }
 
 NS_IMETHODIMP
 X509CertValidity::GetNotBeforeLocalDay(nsAString& aNotBeforeLocalDay) {
-  return FormatTime(mNotBefore, PR_LocalTimeParameters, Nothing(),
+  return FormatTime(mNotBefore, PR_LocalTimeParameters, kTimeFormatNone,
                     aNotBeforeLocalDay);
 }
 
 NS_IMETHODIMP
 X509CertValidity::GetNotBeforeGMT(nsAString& aNotBeforeGMT) {
-  return FormatTime(mNotBefore, PR_GMTParameters,
-                    Some(intl::DateTimeFormat::Style::Long), aNotBeforeGMT);
+  return FormatTime(mNotBefore, PR_GMTParameters, kTimeFormatLong,
+                    aNotBeforeGMT);
 }
 
 NS_IMETHODIMP
@@ -134,19 +131,17 @@ X509CertValidity::GetNotAfter(PRTime* aNotAfter) {
 
 NS_IMETHODIMP
 X509CertValidity::GetNotAfterLocalTime(nsAString& aNotAfterLocaltime) {
-  return FormatTime(mNotAfter, PR_LocalTimeParameters,
-                    Some(intl::DateTimeFormat::Style::Long),
+  return FormatTime(mNotAfter, PR_LocalTimeParameters, kTimeFormatLong,
                     aNotAfterLocaltime);
 }
 
 NS_IMETHODIMP
 X509CertValidity::GetNotAfterLocalDay(nsAString& aNotAfterLocalDay) {
-  return FormatTime(mNotAfter, PR_LocalTimeParameters, Nothing(),
+  return FormatTime(mNotAfter, PR_LocalTimeParameters, kTimeFormatNone,
                     aNotAfterLocalDay);
 }
 
 NS_IMETHODIMP
 X509CertValidity::GetNotAfterGMT(nsAString& aNotAfterGMT) {
-  return FormatTime(mNotAfter, PR_GMTParameters,
-                    Some(intl::DateTimeFormat::Style::Long), aNotAfterGMT);
+  return FormatTime(mNotAfter, PR_GMTParameters, kTimeFormatLong, aNotAfterGMT);
 }

@@ -6,6 +6,7 @@
 
 #include <algorithm>
 
+#include "DateTimeFormat.h"
 #include "ScopedNSSTypes.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
