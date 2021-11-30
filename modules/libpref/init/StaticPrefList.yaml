@@ -6275,6 +6275,14 @@
   value: false
   mirror: always
 
+#if defined(ENABLE_NEW_SET_METHODS)
+  # Experimental support for New Set methods
+- name: javascript.options.experimental.enable_new_set_methods
+  type: bool
+  value: false
+  mirror: always
+#endif
+
   # Experimental support for Top-level Await in JavaScript.
 -   name: javascript.options.experimental.top_level_await
     type: bool

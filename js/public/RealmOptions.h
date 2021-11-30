@@ -232,6 +232,14 @@ class JS_PUBLIC_API RealmCreationOptions {
     return *this;
   }
 
+#ifdef ENABLE_NEW_SET_METHODS
+  bool getNewSetMethodsEnabled() const { return newSetMethods_; }
+  RealmCreationOptions& setNewSetMethodsEnabled(bool flag) {
+    newSetMethods_ = flag;
+    return *this;
+  }
+#endif
+
   // This flag doesn't affect JS engine behavior.  It is used by Gecko to
   // mark whether content windows and workers are "Secure Context"s. See
   // https://w3c.github.io/webappsec-secure-contexts/
@@ -270,6 +278,9 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool toSource_ = false;
   bool propertyErrorMessageFix_ = false;
   bool iteratorHelpers_ = false;
+#ifdef ENABLE_NEW_SET_METHODS
+  bool newSetMethods_ = false;
+#endif
   bool secureContext_ = false;
 };
 

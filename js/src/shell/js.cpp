@@ -628,6 +628,9 @@ bool shell::enableErgonomicBrandChecks = true;
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
 bool shell::enableChangeArrayByCopy = false;
 #endif
+#ifdef ENABLE_NEW_SET_METHODS
+bool shell::enableNewSetMethods = true;
+#endif
 bool shell::enableClassStaticBlocks = true;
 #ifdef JS_GC_ZEAL
 uint32_t shell::gZealBits = 0;
@@ -4316,7 +4319,11 @@ static void SetStandardRealmOptions(JS::RealmOptions& options) {
                               : JS::WeakRefSpecifier::Disabled)
       .setToSourceEnabled(enableToSource)
       .setPropertyErrorMessageFixEnabled(enablePropertyErrorMessageFix)
-      .setIteratorHelpersEnabled(enableIteratorHelpers);
+      .setIteratorHelpersEnabled(enableIteratorHelpers)
+#ifdef ENABLE_NEW_SET_METHODS
+      .setNewSetMethodsEnabled(enableNewSetMethods)
+#endif
+      ;
 }
 
 [[nodiscard]] static bool CheckRealmOptions(JSContext* cx,
@@ -11288,6 +11295,9 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   enableChangeArrayByCopy = op.getBoolOption("enable-change-array-by-copy");
 #endif
+#ifdef ENABLE_NEW_SET_METHODS
+  enableNewSetMethods = op.getBoolOption("enable-new-set-methods");
+#endif
   enableClassStaticBlocks = !op.getBoolOption("disable-class-static-blocks");
   useFdlibmForSinCosTan = op.getBoolOption("use-fdlibm-for-sin-cos-tan");
 
@@ -12294,6 +12304,15 @@ int main(int argc, char** argv) {
 #else
       !op.addBoolOption('\0', "enable-change-array-by-copy", "no-op") ||
       !op.addBoolOption('\0', "disable-change-array-by-copy", "no-op") ||
+#endif
+#ifdef ENABLE_NEW_SET_METHODS
+      !op.addBoolOption('\0', "enable-new-set-methods",
+                        "Enable New Set methods") ||
+      !op.addBoolOption('\0', "disable-new-set-methods",
+                        "Disable New Set methods") ||
+#else
+      !op.addBoolOption('\0', "enable-new-set-methods", "no-op") ||
+      !op.addBoolOption('\0', "disable-new-set-methods", "no-op") ||
 #endif
       !op.addBoolOption('\0', "enable-top-level-await",
                         "Enable top-level await") ||

@@ -261,6 +261,8 @@ class SetObject : public NativeObject {
   // interfaces, etc.)
   static SetObject* create(JSContext* cx, HandleObject proto = nullptr);
   static uint32_t size(JSContext* cx, HandleObject obj);
+  [[nodiscard]] static bool add(JSContext* cx, unsigned argc, Value* vp);
+  [[nodiscard]] static bool has(JSContext* cx, unsigned argc, Value* vp);
   [[nodiscard]] static bool has(JSContext* cx, HandleObject obj,
                                 HandleValue key, bool* rval);
   [[nodiscard]] static bool clear(JSContext* cx, HandleObject obj);
@@ -310,9 +312,7 @@ class SetObject : public NativeObject {
   [[nodiscard]] static bool size_impl(JSContext* cx, const CallArgs& args);
   [[nodiscard]] static bool size(JSContext* cx, unsigned argc, Value* vp);
   [[nodiscard]] static bool has_impl(JSContext* cx, const CallArgs& args);
-  [[nodiscard]] static bool has(JSContext* cx, unsigned argc, Value* vp);
   [[nodiscard]] static bool add_impl(JSContext* cx, const CallArgs& args);
-  [[nodiscard]] static bool add(JSContext* cx, unsigned argc, Value* vp);
   [[nodiscard]] static bool delete_impl(JSContext* cx, const CallArgs& args);
   [[nodiscard]] static bool delete_(JSContext* cx, unsigned argc, Value* vp);
   [[nodiscard]] static bool values_impl(JSContext* cx, const CallArgs& args);
