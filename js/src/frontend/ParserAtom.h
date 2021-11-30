@@ -51,7 +51,6 @@ namespace frontend {
 
 struct CompilationAtomCache;
 struct CompilationStencil;
-class BorrowingCompilationStencil;
 
 template <typename CharT>
 class SpecificParserAtomLookup;
@@ -619,7 +618,7 @@ bool InstantiateMarkedAtoms(JSContext* cx, const ParserAtomSpan& entries,
  * associated with a given compile session.
  */
 class ParserAtomsTable {
-  friend class BorrowingCompilationStencil;
+  friend struct CompilationStencil;
 
  private:
   const WellKnownParserAtoms& wellKnownTable_;
