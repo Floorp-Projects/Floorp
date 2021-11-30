@@ -82,7 +82,7 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
           Unused << leafName;
 
           QM_TRY_INSPECT(const int64_t& fileSize,
-                         MOZ_TO_RESULT_INVOKE(bodyFile, GetFileSize));
+                         MOZ_TO_RESULT_INVOKE_MEMBER(bodyFile, GetFileSize));
           MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
           // FIXME: Separate file usage and database usage in OriginInfo so that
           // the workaround for treating body file size as database usage can be
@@ -134,7 +134,8 @@ Result<int64_t, nsresult> GetPaddingSizeFromDB(
 
 #ifdef DEBUG
   {
-    QM_TRY_INSPECT(const bool& exists, MOZ_TO_RESULT_INVOKE(aDBFile, Exists));
+    QM_TRY_INSPECT(const bool& exists,
+                   MOZ_TO_RESULT_INVOKE_MEMBER(aDBFile, Exists));
     MOZ_ASSERT(exists);
   }
 #endif
@@ -260,9 +261,9 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
           *dir, aCanceled,
           [&aCanceled](
               const nsCOMPtr<nsIFile>& file) -> Result<UsageInfo, nsresult> {
-            QM_TRY_INSPECT(
-                const auto& leafName,
-                MOZ_TO_RESULT_INVOKE_TYPED(nsAutoString, file, GetLeafName));
+            QM_TRY_INSPECT(const auto& leafName,
+                           MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsAutoString, file,
+                                                             GetLeafName));
 
             QM_TRY_INSPECT(const auto& dirEntryKind, GetDirEntryKind(*file));
 
@@ -287,8 +288,9 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
 
                 if (leafName.Equals(kCachesSQLiteFilename) ||
                     leafName.EqualsLiteral("caches.sqlite-wal")) {
-                  QM_TRY_INSPECT(const int64_t& fileSize,
-                                 MOZ_TO_RESULT_INVOKE(file, GetFileSize));
+                  QM_TRY_INSPECT(
+                      const int64_t& fileSize,
+                      MOZ_TO_RESULT_INVOKE_MEMBER(file, GetFileSize));
                   MOZ_DIAGNOSTIC_ASSERT(fileSize >= 0);
 
                   return UsageInfo{DatabaseUsageType(Some(fileSize))};
