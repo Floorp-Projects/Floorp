@@ -26,13 +26,8 @@ class GmpPluginNotifier : public GmpPluginNotifierInterface {
             new MediaEventForwarder<uint64_t>(mOwningThread)) {}
 
   ~GmpPluginNotifier() {
-    mOwningThread->Dispatch(NS_NewRunnableFunction(
-        "~GmpPluginNotifier",
-        [createdEvent = std::move(mCreatedGmpPluginEvent),
-         releasedEvent = std::move(mReleasedGmpPluginEvent)]() mutable {
-          createdEvent->DisconnectAll();
-          releasedEvent->DisconnectAll();
-        }));
+    mCreatedGmpPluginEvent->DisconnectAll();
+    mReleasedGmpPluginEvent->DisconnectAll();
   }
 
   MediaEventSource<uint64_t>& CreatedGmpPluginEvent() override {
@@ -47,8 +42,8 @@ class GmpPluginNotifier : public GmpPluginNotifierInterface {
 
  protected:
   const nsCOMPtr<nsISerialEventTarget> mOwningThread;
-  RefPtr<MediaEventForwarder<uint64_t> > mCreatedGmpPluginEvent;
-  RefPtr<MediaEventForwarder<uint64_t> > mReleasedGmpPluginEvent;
+  RefPtr<MediaEventForwarder<uint64_t>> mCreatedGmpPluginEvent;
+  RefPtr<MediaEventForwarder<uint64_t>> mReleasedGmpPluginEvent;
 };
 
 class WebrtcVideoDecoderFactory : public GmpPluginNotifier,
