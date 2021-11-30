@@ -47,6 +47,10 @@ AVD_MANIFEST_ARM64 = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "android-avds/arm64.json")
 )
 
+JAVA_VERSION_MAJOR = "8"
+JAVA_VERSION_MINOR = "u312"
+JAVA_VERSION_PATCH = "b07"
+
 ANDROID_NDK_EXISTS = """
 Looks like you have the correct version of the Android NDK installed at:
 %s
@@ -651,8 +655,13 @@ def ensure_android_packages(
         args.append("--channel=3")
     args.extend(packages)
 
+    # sdkmanager needs JAVA_HOME
+    java_bin_path = ensure_java(os_name, os_arch)
+    env = os.environ.copy()
+    env["JAVA_HOME"] = os.path.dirname(java_bin_path)
+
     if not no_interactive:
-        subprocess.check_call(args)
+        subprocess.check_call(args, env=env)
         return
 
     # Flush outputs before running sdkmanager.
@@ -661,7 +670,7 @@ def ensure_android_packages(
     # Emulate yes.  For a discussion of passing input to check_output,
     # see https://stackoverflow.com/q/10103551.
     yes = "\n".join(["y"] * 100).encode("UTF-8")
-    proc = subprocess.Popen(args, stdin=subprocess.PIPE)
+    proc = subprocess.Popen(args, stdin=subprocess.PIPE, env=env)
     proc.communicate(yes)
 
     retcode = proc.poll()
@@ -810,6 +819,79 @@ def main(argv):
     print("\n" + suggestion)
 
     return 0
+
+
+def ensure_java(os_name, os_arch):
+    mozbuild_path, _, _, _, _ = get_paths(os_name)
+
+    if os_name == "macosx":
+        os_tag = "mac"
+    else:
+        os_tag = os_name
+
+    # One we migrate to Java 17 we will be able to use native arm64 binaries
+    arch = "x64"
+
+    java_path = java_bin_path(os_name, mozbuild_path)
+    if not java_path:
+        raise NotImplementedError(f"Could not bootstrap java for {os_name}.")
+
+    if not os.path.exists(java_path):
+        # e.g. https://github.com/adoptium/temurin8-binaries/releases/
+        #      download/jdk8u312-b07/OpenJDK8U-jdk_x64_linux_hotspot_8u312b07.tar.gz
+        java_url = (
+            "https://github.com/adoptium/temurin{major}-binaries/releases/"
+            "download/jdk{major}{minor}-{patch}/"
+            "OpenJDK{major}U-jdk_{arch}_{os}_hotspot_{major}{minor}{patch}.tar.gz"
+        ).format(
+            major=JAVA_VERSION_MAJOR,
+            minor=JAVA_VERSION_MINOR,
+            patch=JAVA_VERSION_PATCH,
+            os=os_tag,
+            arch=arch,
+        )
+        install_mobile_android_sdk_or_ndk(java_url, os.path.join(mozbuild_path, "jdk"))
+    return java_path
+
+
+def java_bin_path(os_name, toolchain_path):
+    jdk_folder = "jdk{major}{minor}-{patch}".format(
+        major=JAVA_VERSION_MAJOR, minor=JAVA_VERSION_MINOR, patch=JAVA_VERSION_PATCH
+    )
+
+    java_path = os.path.join(toolchain_path, "jdk", jdk_folder)
+
+    if os_name == "macosx":
+        return os.path.join(java_path, "Contents", "Home", "bin")
+    elif os_name == "linux":
+        return os.path.join(java_path, "bin")
+    elif os_name == "windows":
+        return os.path.join(java_path, "bin")
+    else:
+        return None
+
+
+def locate_java_bin_path(host_kernel, toolchain_path):
+    if host_kernel == "WINNT":
+        os_name = "windows"
+    elif host_kernel == "Darwin":
+        os_name = "macosx"
+    elif host_kernel == "Linux":
+        os_name = "linux"
+    else:
+        # Default to Linux
+        os_name = "linux"
+    path = java_bin_path(os_name, toolchain_path)
+    if not os.path.isdir(path):
+        raise JavaLocationFailedException(
+            "Could not locate Java at {}, please run "
+            "./mach bootstrap --no-system-changes".format(path)
+        )
+    return path
+
+
+class JavaLocationFailedException(Exception):
+    pass
 
 
 if __name__ == "__main__":

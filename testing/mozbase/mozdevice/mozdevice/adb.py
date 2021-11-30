@@ -3890,7 +3890,7 @@ class ADBDevice(ADBCommand):
                         % (permission, app_name, e)
                     )
 
-    def install_app_bundle(self, bundletool, bundle_path, timeout=None):
+    def install_app_bundle(self, bundletool, bundle_path, java_home=None, timeout=None):
         """Installs an app bundle (AAB) on the device.
 
         :param str bundletool: Path to the bundletool jar
@@ -3901,16 +3901,20 @@ class ADBDevice(ADBCommand):
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
+        :param str java_home: Path to the JDK location. Will default to
+            $JAVA_HOME when not specififed.
         :raises: :exc:`ADBTimeoutError`
                  :exc:`ADBError`
         """
         device_serial = self._device_serial or os.environ.get("ANDROID_SERIAL")
+        java_home = java_home or os.environ.get("JAVA_HOME")
         with tempfile.TemporaryDirectory() as temporaryDirectory:
             # bundletool doesn't come with a debug-key so we need to provide
             # one ourselves.
             keystore_path = os.path.join(temporaryDirectory, "debug.keystore")
+            keytool_path = os.path.join(java_home, "bin", "keytool")
             key_gen = [
-                "keytool",
+                keytool_path,
                 "-genkey",
                 "-v",
                 "-keystore",
@@ -3935,8 +3939,9 @@ class ADBDevice(ADBCommand):
                 raise ADBTimeoutError("ADBDevice: unable to generate key")
 
             apks_path = "{}/tmp.apks".format(temporaryDirectory)
+            java_path = os.path.join(java_home, "bin", "java")
             build_apks = [
-                "java",
+                java_path,
                 "-jar",
                 bundletool,
                 "build-apks",
@@ -3957,7 +3962,7 @@ class ADBDevice(ADBCommand):
             except subprocess.TimeoutExpired:
                 raise ADBTimeoutError("ADBDevice: unable to generate apks")
             install_apks = [
-                "java",
+                java_path,
                 "-jar",
                 bundletool,
                 "install-apks",

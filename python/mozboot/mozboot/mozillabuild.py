@@ -150,19 +150,18 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
     def install_browser_artifact_mode_packages(self, mozconfig_builder):
         pass
 
-    def install_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
-        java_bin_dir = self.ensure_java(mozconfig_builder)
-        from mach.util import setenv
-
-        setenv("PATH", "{}{}{}".format(java_bin_dir, os.pathsep, os.environ["PATH"]))
-
-        from mozboot import android
-
+    def _os_arch(self):
         os_arch = platform.machine()
         if os_arch == "AMD64":
             # On Windows, x86_64 is reported as AMD64 but we use x86_64
             # everywhere else, so let's normalized it here.
-            os_arch = "x86_64"
+            return "x86_64"
+        return os_arch
+
+    def install_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
+        from mozboot import android
+
+        os_arch = self._os_arch()
         android.ensure_android(
             "windows",
             os_arch,
@@ -189,6 +188,7 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
     def ensure_mobile_android_packages(self, state_dir, checkout_root):
         from mozboot import android
 
+        android.ensure_java("windows", self._os_arch())
         self.install_toolchain_artifact(
             state_dir, checkout_root, android.WINDOWS_X86_64_ANDROID_AVD
         )

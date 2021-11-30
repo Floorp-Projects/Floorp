@@ -229,7 +229,10 @@ def install_app_bundle(command_context, bundle):
     bundletool = mozpath.join(command_context._mach_context.state_dir, "bundletool.jar")
     device = ADBDeviceFactory(verbose=True)
     bundle_path = mozpath.join(command_context.topobjdir, bundle)
-    device.install_app_bundle(bundletool, bundle_path, timeout=120)
+    java_home = java_home = os.path.dirname(
+        os.path.dirname(command_context.substs["JAVA"])
+    )
+    device.install_app_bundle(bundletool, bundle_path, java_home, timeout=120)
 
 
 @SubCommand("android", "install-geckoview_example", """Install geckoview_example """)
