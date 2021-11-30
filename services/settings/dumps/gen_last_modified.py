@@ -58,15 +58,26 @@ def main(output):
 
     remotesettings_dumps = {}
 
-    # For simplicity, let's hardcode the path of the first and (so far) only
-    # RemoteSettings dump whose last_modified date is looked up (bug 1717068),
-    # i.e. blocklists/addons-bloomfilters.
+    # For simplicity, let's hardcode the path of the RemoteSettings dumps whose
+    # last_modified date is looked up.
     # TODO bug 1719560: Replace hardcoded values with something more generic.
     if buildconfig.substs["MOZ_BUILD_APP"] != "mobile/android":
         # Until bug 1639050 is resolved, the dump isn't packaged with Android.
         remotesettings_dumps["blocklists/addons-bloomfilters"] = mozpath.join(
             buildconfig.topsrcdir,
             "services/settings/dumps/blocklists/addons-bloomfilters.json",
+        )
+    if buildconfig.substs["MOZ_BUILD_APP"] == "browser":
+        # This is only packaged with browser.
+        remotesettings_dumps["main/search-config"] = mozpath.join(
+            buildconfig.topsrcdir,
+            "services/settings/dumps/main/search-config.json",
+        )
+    if buildconfig.substs["MOZ_BUILD_APP"] == "comm/mail":
+        # This is only packaged with Thunderbird.
+        remotesettings_dumps["main/search-config"] = mozpath.join(
+            buildconfig.topsrcdir,
+            "comm/mail/app/settings/dumps/thunderbird/search-config.json",
         )
 
     output_dict = {}
