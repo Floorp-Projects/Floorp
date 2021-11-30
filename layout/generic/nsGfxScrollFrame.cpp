@@ -303,6 +303,8 @@ static ShowScrollbar ShouldShowScrollbar(StyleOverflow aOverflow) {
 }
 
 struct MOZ_STACK_CLASS ScrollReflowInput {
+  // === Filled in by the constructor. Members in this section shouldn't change
+  // their values after the constructor. ===
   const ReflowInput& mReflowInput;
   nsBoxLayoutState mBoxState;
   ShowScrollbar mHScrollbar;
@@ -321,24 +323,20 @@ struct MOZ_STACK_CLASS ScrollReflowInput {
   OverflowAreas mContentsOverflowAreas;
   // True if the most recent reflow of mHelper.mScrolledFrame is with the
   // horizontal scrollbar.
-  MOZ_INIT_OUTSIDE_CTOR
-  bool mReflowedContentsWithHScrollbar;
+  bool mReflowedContentsWithHScrollbar = false;
   // True if the most recent reflow of mHelper.mScrolledFrame is with the
   // vertical scrollbar.
-  MOZ_INIT_OUTSIDE_CTOR
-  bool mReflowedContentsWithVScrollbar;
+  bool mReflowedContentsWithVScrollbar = false;
 
   // === Filled in when TryLayout succeeds ===
   // The size of the inside-border area
   nsSize mInsideBorderSize;
   // Whether we decided to show the horizontal scrollbar in the most recent
   // TryLayout.
-  MOZ_INIT_OUTSIDE_CTOR
-  bool mShowHScrollbar;
+  bool mShowHScrollbar = false;
   // Whether we decided to show the vertical scrollbar in the most recent
   // TryLayout.
-  MOZ_INIT_OUTSIDE_CTOR
-  bool mShowVScrollbar;
+  bool mShowVScrollbar = false;
   // If mShow(H|V)Scrollbar is true then
   // mOnlyNeed(V|H)ScrollbarToScrollVVInsideLV indicates if the only reason we
   // need that scrollbar is to scroll the visual viewport inside the layout
@@ -347,17 +345,47 @@ struct MOZ_STACK_CLASS ScrollReflowInput {
   bool mOnlyNeedHScrollbarToScrollVVInsideLV = false;
   bool mOnlyNeedVScrollbarToScrollVVInsideLV = false;
 
-  ScrollReflowInput(nsIScrollableFrame* aFrame, const ReflowInput& aReflowInput)
-      : mReflowInput(aReflowInput),
-        // mBoxState is just used for scrollbars so we don't need to
-        // worry about the reflow depth here
-        mBoxState(aReflowInput.mFrame->PresContext(),
-                  aReflowInput.mRenderingContext) {
-    ScrollStyles styles = aFrame->GetScrollStyles();
-    mHScrollbar = ShouldShowScrollbar(styles.mHorizontal);
-    mVScrollbar = ShouldShowScrollbar(styles.mVertical);
-  }
+  ScrollReflowInput(nsHTMLScrollFrame* aFrame, const ReflowInput& aReflowInput);
 };
+
+ScrollReflowInput::ScrollReflowInput(nsHTMLScrollFrame* aFrame,
+                                     const ReflowInput& aReflowInput)
+    : mReflowInput(aReflowInput),
+      // mBoxState is just used for scrollbars so we don't need to
+      // worry about the reflow depth here
+      mBoxState(aReflowInput.mFrame->PresContext(),
+                aReflowInput.mRenderingContext),
+      mComputedBorder(aReflowInput.ComputedPhysicalBorderPadding() -
+                      aReflowInput.ComputedPhysicalPadding()) {
+  ScrollStyles styles = aFrame->GetScrollStyles();
+  mHScrollbar = ShouldShowScrollbar(styles.mHorizontal);
+  mVScrollbar = ShouldShowScrollbar(styles.mVertical);
+
+  if (!aFrame->GetScrollbarBox(false)) {
+    mHScrollbar = ShowScrollbar::Never;
+    mHScrollbarAllowedForScrollingVVInsideLV = false;
+  }
+  if (!aFrame->GetScrollbarBox(true)) {
+    mVScrollbar = ShowScrollbar::Never;
+    mVScrollbarAllowedForScrollingVVInsideLV = false;
+  }
+
+  const auto* scrollbarStyle =
+      nsLayoutUtils::StyleForScrollbar(mReflowInput.mFrame);
+  // Hide the scrollbar when the scrollbar-width is set to none.
+  //
+  // Note: In some cases this is unnecessary, because scrollbar-width:none
+  // makes us suppress scrollbars in CreateAnonymousContent. But if this frame
+  // initially had a non-'none' scrollbar-width and dynamically changed to
+  // 'none', then we'll need to handle it here.
+  if (scrollbarStyle->StyleUIReset()->mScrollbarWidth ==
+      StyleScrollbarWidth::None) {
+    mHScrollbar = ShowScrollbar::Never;
+    mHScrollbarAllowedForScrollingVVInsideLV = false;
+    mVScrollbar = ShowScrollbar::Never;
+    mVScrollbarAllowedForScrollingVVInsideLV = false;
+  }
+}
 
 }  // namespace mozilla
 
@@ -1278,16 +1306,6 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
   mHelper.HandleScrollbarStyleSwitching();
 
   ScrollReflowInput state(this, aReflowInput);
-  // sanity check: ensure that if we have no scrollbar, we treat it
-  // as hidden.
-  if (!mHelper.mVScrollbarBox) {
-    state.mVScrollbarAllowedForScrollingVVInsideLV = false;
-    state.mVScrollbar = ShowScrollbar::Never;
-  }
-  if (!mHelper.mHScrollbarBox) {
-    state.mHScrollbarAllowedForScrollingVVInsideLV = false;
-    state.mHScrollbar = ShowScrollbar::Never;
-  }
 
   //------------ Handle Incremental Reflow -----------------
   bool reflowHScrollbar = true;
@@ -1308,28 +1326,10 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
     reflowScrollCorner = false;
   }
 
-  const auto* scrollbarStyle = nsLayoutUtils::StyleForScrollbar(this);
-  // Hide the scrollbar when the scrollbar-width is set to none.
-  //
-  // Note: In some cases this is unnecessary, because scrollbar-width:none makes
-  // us suppress scrollbars in CreateAnonymousContent. But if this frame
-  // initially had a non-'none' scrollbar-width and dynamically changed to
-  // 'none', then we'll need to handle it here.
-  if (scrollbarStyle->StyleUIReset()->mScrollbarWidth ==
-      StyleScrollbarWidth::None) {
-    state.mVScrollbarAllowedForScrollingVVInsideLV = false;
-    state.mHScrollbarAllowedForScrollingVVInsideLV = false;
-    state.mVScrollbar = ShowScrollbar::Never;
-    state.mHScrollbar = ShowScrollbar::Never;
-  }
-
   nsRect oldScrollAreaBounds = mHelper.mScrollPort;
   nsRect oldScrolledAreaBounds =
       mHelper.mScrolledFrame->ScrollableOverflowRectRelativeToParent();
   nsPoint oldScrollPosition = mHelper.GetScrollPosition();
-
-  state.mComputedBorder = aReflowInput.ComputedPhysicalBorderPadding() -
-                          aReflowInput.ComputedPhysicalPadding();
 
   ReflowContents(&state, aDesiredSize);
 
