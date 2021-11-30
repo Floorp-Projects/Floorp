@@ -51,7 +51,7 @@
 #endif
 #include "builtin/Promise.h"
 #include "builtin/SelfHostingDefines.h"
-#include "builtin/TestingUtility.h"  // js::ParseCompileOptions
+#include "builtin/TestingUtility.h"        // js::ParseCompileOptions
 #include "frontend/BytecodeCompilation.h"  // frontend::CanLazilyParse,
 // frontend::CompileGlobalScriptToExtensibleStencil,
 // frontend::DelazifyCanonicalScriptedFunction
@@ -6143,11 +6143,8 @@ static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
   }
 
   UniquePtr<CompilationStencil> result =
-      cx->make_unique<CompilationStencil>(input.get().source);
+      cx->make_unique<CompilationStencil>(merger.takeResult());
   if (!result) {
-    return false;
-  }
-  if (!result->steal(cx, std::move(merger.getResult()))) {
     return false;
   }
 
