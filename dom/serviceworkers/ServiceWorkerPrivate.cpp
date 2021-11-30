@@ -53,6 +53,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/Unused.h"
 #include "nsIReferrerInfo.h"
 
@@ -1691,12 +1692,18 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
         ->SetPartitionKey(info.mResolvedScriptURI);
   }
 
-  nsCOMPtr<nsIPrincipal> partitionedPrincipal;
-  StoragePrincipalHelper::CreatePartitionedPrincipalForServiceWorker(
-      info.mPrincipal, info.mCookieJarSettings,
-      getter_AddRefs(partitionedPrincipal));
+  if (StaticPrefs::privacy_partition_serviceWorkers()) {
+    nsCOMPtr<nsIPrincipal> partitionedPrincipal;
+    StoragePrincipalHelper::CreatePartitionedPrincipalForServiceWorker(
+        info.mPrincipal, info.mCookieJarSettings,
+        getter_AddRefs(partitionedPrincipal));
 
-  info.mPartitionedPrincipal = partitionedPrincipal;
+    info.mPartitionedPrincipal = partitionedPrincipal;
+  } else {
+    // The partitioned principal will be the same as the mPrincipal if
+    // partitioned service worker is disabled.
+    info.mPartitionedPrincipal = info.mPrincipal;
+  }
 
   info.mStorageAccess =
       StorageAllowedForServiceWorker(info.mPrincipal, info.mCookieJarSettings);

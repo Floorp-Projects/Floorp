@@ -8,6 +8,7 @@
 
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "nsCOMPtr.h"
@@ -66,7 +67,10 @@ ServiceWorkerInterceptController::ShouldPrepareForIntercept(
 
   nsCOMPtr<nsIPrincipal> principal;
   nsresult rv = StoragePrincipalHelper::GetPrincipal(
-      aChannel, StoragePrincipalHelper::eForeignPartitionedPrincipal,
+      aChannel,
+      StaticPrefs::privacy_partition_serviceWorkers()
+          ? StoragePrincipalHelper::eForeignPartitionedPrincipal
+          : StoragePrincipalHelper::eRegularPrincipal,
       getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
