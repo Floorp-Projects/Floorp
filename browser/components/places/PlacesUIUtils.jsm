@@ -1671,17 +1671,22 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.bookmarks.defaultLocation",
   "", // Avoid eagerly loading PlacesUtils.
   null,
-  prefValue => {
+  async prefValue => {
     if (!prefValue) {
       return PlacesUtils.bookmarks.toolbarGuid;
     }
     if (["toolbar", "menu", "unfiled"].includes(prefValue)) {
       return PlacesUtils.bookmarks[prefValue + "Guid"];
     }
-    return PlacesUtils.bookmarks
-      .fetch({ guid: prefValue })
-      .then(bm => bm.guid)
-      .catch(() => PlacesUtils.bookmarks.toolbarGuid);
+
+    try {
+      return await PlacesUtils.bookmarks
+        .fetch({ guid: prefValue })
+        .then(bm => bm.guid);
+    } catch (ex) {
+      // The guid may have an invalid format.
+      return PlacesUtils.bookmarks.toolbarGuid;
+    }
   }
 );
 
