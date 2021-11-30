@@ -224,6 +224,7 @@ const presets = {
     interval: 1,
     features: ["screenshots", "js", "leaf", "stackwalk", "cpu", "java"],
     threads: [
+      "Cache2 I/O",
       "Compositor",
       "DNS Resolver",
       "DOM Worker",
