@@ -14,15 +14,14 @@ already_AddRefed<IdleTaskRunner> IdleTaskRunner::Create(
     const CallbackType& aCallback, const char* aRunnableName,
     TimeDuration aStartDelay, TimeDuration aMaxDelay,
     TimeDuration aMinimumUsefulBudget, bool aRepeating,
-    const MayStopProcessingCallbackType& aMayStopProcessing,
-    const RequestInterruptCallbackType& aRequestInterrupt) {
+    const MayStopProcessingCallbackType& aMayStopProcessing) {
   if (aMayStopProcessing && aMayStopProcessing()) {
     return nullptr;
   }
 
-  RefPtr<IdleTaskRunner> runner = new IdleTaskRunner(
-      aCallback, aRunnableName, aStartDelay, aMaxDelay, aMinimumUsefulBudget,
-      aRepeating, aMayStopProcessing, aRequestInterrupt);
+  RefPtr<IdleTaskRunner> runner =
+      new IdleTaskRunner(aCallback, aRunnableName, aStartDelay, aMaxDelay,
+                         aMinimumUsefulBudget, aRepeating, aMayStopProcessing);
   runner->Schedule(false);  // Initial scheduling shouldn't use idle dispatch.
   return runner.forget();
 }
@@ -30,9 +29,7 @@ already_AddRefed<IdleTaskRunner> IdleTaskRunner::Create(
 class IdleTaskRunnerTask : public Task {
  public:
   explicit IdleTaskRunnerTask(IdleTaskRunner* aRunner)
-      : Task(true, EventQueuePriority::Idle),
-        mRunner(aRunner),
-        mRequestInterrupt(aRunner->mRequestInterrupt) {
+      : Task(true, EventQueuePriority::Idle), mRunner(aRunner) {
     SetManager(TaskController::Get()->GetIdleTaskManager());
   }
 
@@ -64,26 +61,15 @@ class IdleTaskRunnerTask : public Task {
     return true;
   }
 
-  void RequestInterrupt(uint32_t aInterruptPriority) override {
-    if (mRequestInterrupt) {
-      mRequestInterrupt(aInterruptPriority);
-    }
-  }
-
  private:
   IdleTaskRunner* mRunner;
-
-  // Copied here and invoked even if there is no mRunner currently, to avoid
-  // race conditions checking mRunner when an interrupt is requested.
-  IdleTaskRunner::RequestInterruptCallbackType mRequestInterrupt;
 };
 
 IdleTaskRunner::IdleTaskRunner(
     const CallbackType& aCallback, const char* aRunnableName,
     TimeDuration aStartDelay, TimeDuration aMaxDelay,
     TimeDuration aMinimumUsefulBudget, bool aRepeating,
-    const MayStopProcessingCallbackType& aMayStopProcessing,
-    const RequestInterruptCallbackType& aRequestInterrupt)
+    const MayStopProcessingCallbackType& aMayStopProcessing)
     : mCallback(aCallback),
       mStartTime(TimeStamp::Now() + aStartDelay),
       mMaxDelay(aMaxDelay),
@@ -91,7 +77,6 @@ IdleTaskRunner::IdleTaskRunner(
       mRepeating(aRepeating),
       mTimerActive(false),
       mMayStopProcessing(aMayStopProcessing),
-      mRequestInterrupt(aRequestInterrupt),
       mName(aRunnableName) {}
 
 void IdleTaskRunner::Run() {
