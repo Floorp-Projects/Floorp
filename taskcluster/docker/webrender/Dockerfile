@@ -5,10 +5,6 @@ VOLUME /builds/worker/checkouts
 VOLUME /builds/worker/workspace
 VOLUME /builds/worker/tooltool-cache
 
-# %include taskcluster/docker/recipes/prepare_openjdk.sh
-COPY topsrcdir/taskcluster/docker/recipes/prepare_openjdk.sh /tmp/prepare_openjdk.sh
-RUN /tmp/prepare_openjdk.sh && rm /tmp/prepare_openjdk.sh
-
 # %include gfx/wr/ci-scripts/docker-image/setup.sh
 ADD topsrcdir/gfx/wr/ci-scripts/docker-image/setup.sh /tmp/wr-setup.sh
 RUN /bin/bash /tmp/wr-setup.sh && rm /tmp/wr-setup.sh

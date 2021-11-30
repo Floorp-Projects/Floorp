@@ -16,10 +16,19 @@ aab:
     when: &gv_e10s_filter
         $eval: '"android" in task["test-platform"] && task.e10s in [true, "both"]'
     suffix: "aab"
+    # Need to add jdk but there isn't a good way to do that
+    # so we just replace the toolchain list
+    merge:
+        fetches:
+            toolchain:
+                - android-system-image-x86_64-linux
+                - android-avd-x86_64-linux
+                - android-emulator-linux
+                - linux64-minidump-stackwalk
+                - linux64-fix-stacks
+                - linux64-jdk
     replace:
         target: "geckoview-test_runner.aab"
-        docker-image:
-            in-tree: "android-test"
 
 geckoview-e10s-single:
     description: "{description} with single-process e10s"

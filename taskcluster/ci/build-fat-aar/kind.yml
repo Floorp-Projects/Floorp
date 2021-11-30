@@ -78,6 +78,7 @@ job-defaults:
             - android-ndk-linux
             - android-sdk-linux
             - linux64-clang
+            - linux64-jdk
             - linux64-rust-android
             - linux64-rust-size
             - linux64-cbindgen

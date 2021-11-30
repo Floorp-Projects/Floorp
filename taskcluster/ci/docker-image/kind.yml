@@ -168,9 +168,6 @@ jobs:
     android-build:
         symbol: I(agb)
         parent: debian11-base
-    android-test:
-        symbol: I(agt)
-        parent: ubuntu1804-test
     fetch:
         symbol: I(fetch)
         parent: debian11-raw

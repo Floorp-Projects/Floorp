@@ -41,15 +41,5 @@ RUN apt-get update && \
 # %include taskcluster/docker/recipes/xvfb.sh
 COPY topsrcdir/taskcluster/docker/recipes/xvfb.sh /builds/worker/scripts/xvfb.sh
 
-# %include taskcluster/docker/recipes/prepare_openjdk.sh
-COPY topsrcdir/taskcluster/docker/recipes/prepare_openjdk.sh /tmp/prepare_openjdk.sh
-RUN /tmp/prepare_openjdk.sh && rm /tmp/prepare_openjdk.sh
-
-# Observe missing --no-install-recommends, in order to install glib2.0/gconf/etc.
-RUN apt-get install \
-      libgconf-2-4 \
-      libgnome2-0 \
-      openjdk-8-jdk-headless
-
 # Back to the workdir, matching desktop-build.
 WORKDIR /builds/worker
