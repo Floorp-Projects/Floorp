@@ -278,7 +278,7 @@ bool nsClipboard::FilterImportedFlavors(int32_t aWhichClipboard,
   GdkAtom* targets = mContext->GetTargets(aWhichClipboard, &targetNums);
   if (!targets) {
     LOGCLIP("    X11: no targes at clipboard (null), quit.\n");
-    return false;
+    return true;
   }
 
   for (int i = 0; i < targetNums; i++) {
@@ -345,7 +345,7 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
     return rv;
   }
 #ifdef MOZ_LOGGING
-  LOGCLIP("Flavors which can be imported:\n");
+  LOGCLIP("    Flavors which can be imported:");
   for (uint32_t i = 0; i < flavors.Length(); i++) {
     LOGCLIP("    %s\n", flavors[i].get());
   }
@@ -353,10 +353,10 @@ nsClipboard::GetData(nsITransferable* aTransferable, int32_t aWhichClipboard) {
 
   // Filter out MIME types on X11 to prevent unwanted conversions,
   // see Bug 1611407
-  if (widget::GdkIsX11Display()) {
-    if (!FilterImportedFlavors(aWhichClipboard, flavors)) {
-      return NS_OK;
-    }
+  if (widget::GdkIsX11Display() &&
+      !FilterImportedFlavors(aWhichClipboard, flavors)) {
+    LOGCLIP("    Missing suitable clipboard data, quit.");
+    return NS_OK;
   }
 
   for (uint32_t i = 0; i < flavors.Length(); i++) {
