@@ -42,9 +42,12 @@ if CONFIG["OS_TARGET"] == "WINNT":
     # For the same reason, we delayload these other DLLs to avoid eager
     # dependencies on user32.dll.
     DELAYLOAD_DLLS += [
+        "advapi32.dll",
+        "dbghelp.dll",
         "oleaut32.dll",
         "ole32.dll",
         "user32.dll",
+        "version.dll",
         "winmm.dll",
     ]
 
