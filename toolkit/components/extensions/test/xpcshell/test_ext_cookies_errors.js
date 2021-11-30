@@ -91,7 +91,7 @@ add_task(async function test_error_messages() {
     // TODO bug 1743616: Fix implementation and this test.
     const kErrorInvalidContainer = navigator.userAgent.includes("Android")
       ? /Permission denied to set cookie/
-      : "Illegal storeId: firefox-container-99";
+      : `Invalid cookie store id: "firefox-container-99"`;
 
     // Invalid storeId.
     await browser.test.assertRejects(
@@ -102,7 +102,7 @@ add_task(async function test_error_messages() {
 
     await browser.test.assertRejects(
       set({ storeId: "0" }),
-      "Unknown storeId",
+      `Invalid cookie store id: "0"`,
       "cookies.set with invalid storeId (format not recognized)"
     );
 
