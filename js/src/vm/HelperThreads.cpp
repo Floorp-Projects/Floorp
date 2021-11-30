@@ -1881,12 +1881,8 @@ GlobalHelperThreadState::finishCompileToStencilTask(JSContext* cx,
   MOZ_ASSERT(parseTask->extensibleStencil_.get());
 
   auto stencil = cx->make_unique<frontend::CompilationStencil>(
-      parseTask->stencilInput_->source);
+      std::move(parseTask->extensibleStencil_));
   if (!stencil) {
-    return nullptr;
-  }
-
-  if (!stencil->steal(cx, std::move(*parseTask->extensibleStencil_))) {
     return nullptr;
   }
 
@@ -1985,12 +1981,8 @@ frontend::CompilationStencil* GlobalHelperThreadState::finishStencilParseTask(
 
   UniquePtr<frontend::CompilationStencil> stencil =
       cx->make_unique<frontend::CompilationStencil>(
-          parseTask->stencilInput_->source);
+          std::move(parseTask->extensibleStencil_));
   if (!stencil) {
-    return nullptr;
-  }
-
-  if (!stencil->steal(cx, std::move(*parseTask->extensibleStencil_))) {
     return nullptr;
   }
 
