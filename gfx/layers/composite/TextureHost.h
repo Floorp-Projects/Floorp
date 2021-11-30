@@ -451,17 +451,6 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   virtual bool IsValid() { return true; }
 
   /**
-   * Is called before compositing if the shared data has changed since last
-   * composition.
-   * This method should be overload in cases like when we need to do a texture
-   * upload for example.
-   *
-   * @param aRegion The region that has been changed, if nil, it means that the
-   * entire surface should be updated.
-   */
-  void Updated(const nsIntRegion* aRegion = nullptr);
-
-  /**
    * Should be overridden in order to deallocate the data that is associated
    * with the rendering backend, such as GL textures.
    */
@@ -702,8 +691,6 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
 
   void RecycleTexture(TextureFlags aFlags);
 
-  virtual void UpdatedInternal(const nsIntRegion* Region) {}
-
   /**
    * Called when mCompositableCount becomes from 0 to 1.
    */
@@ -806,20 +793,12 @@ class BufferTextureHost : public TextureHost {
 
  protected:
   bool UseExternalTextures() const { return mUseExternalTextures; }
-  bool Upload(nsIntRegion* aRegion = nullptr);
-  bool UploadIfNeeded();
-  bool MaybeUpload(nsIntRegion* aRegion);
-
-  void UpdatedInternal(const nsIntRegion* aRegion = nullptr) override;
 
   BufferDescriptor mDescriptor;
   RefPtr<Compositor> mCompositor;
-  nsIntRegion mMaybeUpdatedRegion;
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
-  uint32_t mUpdateSerial;
   bool mLocked;
-  bool mNeedsFullUpdate;
   bool mUseExternalTextures;
 
   class DataTextureSourceYCbCrBasic;

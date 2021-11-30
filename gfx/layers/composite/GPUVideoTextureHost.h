@@ -69,11 +69,7 @@ class GPUVideoTextureHost : public TextureHost {
 
   TextureHost* EnsureWrappedTextureHost();
 
-  void UpdatedInternal(const nsIntRegion* Region) override;
-
   RefPtr<TextureHost> mWrappedTextureHost;
-  bool mPendingUpdatedInternal = false;
-  Maybe<nsIntRegion> mPendingIntRegion;
   SurfaceDescriptorGPUVideo mDescriptor;
 };
 
