@@ -195,7 +195,7 @@ struct select_last<> {
 
 template <typename E, typename RArg, typename T, typename Func,
           typename... Args>
-auto ToResultInvokeMemberFunction(T& aObj, const Func& aFunc, Args&&... aArgs) {
+auto ToResultInvokeMemberInternal(T& aObj, const Func& aFunc, Args&&... aArgs) {
   if constexpr (std::is_pointer_v<RArg> ||
                 (std::is_lvalue_reference_v<RArg> &&
                  !std::is_const_v<std::remove_reference_t<RArg>>)) {
@@ -231,7 +231,7 @@ template <typename E = nsresult, typename T, typename U, typename... XArgs,
           typename... Args,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>>
 auto ToResultInvoke(T& aObj, nsresult (U::*aFunc)(XArgs...), Args&&... aArgs) {
-  return detail::ToResultInvokeMemberFunction<E,
+  return detail::ToResultInvokeMemberInternal<E,
                                               detail::select_last_t<XArgs...>>(
       aObj, aFunc, std::forward<Args>(aArgs)...);
 }
@@ -241,7 +241,7 @@ template <typename E = nsresult, typename T, typename U, typename... XArgs,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>>
 auto ToResultInvoke(const T& aObj, nsresult (U::*aFunc)(XArgs...) const,
                     Args&&... aArgs) {
-  return detail::ToResultInvokeMemberFunction<E,
+  return detail::ToResultInvokeMemberInternal<E,
                                               detail::select_last_t<XArgs...>>(
       aObj, aFunc, std::forward<Args>(aArgs)...);
 }
@@ -284,7 +284,7 @@ template <typename E = nsresult, typename T, typename U, typename... XArgs,
           typename = std::enable_if_t<std::is_base_of_v<U, T>>>
 auto ToResultInvoke(T& aObj, nsresult (__stdcall U::*aFunc)(XArgs...),
                     Args&&... aArgs) {
-  return detail::ToResultInvokeMemberFunction<E,
+  return detail::ToResultInvokeMemberInternal<E,
                                               detail::select_last_t<XArgs...>>(
       aObj, aFunc, std::forward<Args>(aArgs)...);
 }
@@ -295,7 +295,7 @@ template <typename E = nsresult, typename T, typename U, typename... XArgs,
 auto ToResultInvoke(const T& aObj,
                     nsresult (__stdcall U::*aFunc)(XArgs...) const,
                     Args&&... aArgs) {
-  return detail::ToResultInvokeMemberFunction<E,
+  return detail::ToResultInvokeMemberInternal<E,
                                               detail::select_last_t<XArgs...>>(
       aObj, aFunc, std::forward<Args>(aArgs)...);
 }
