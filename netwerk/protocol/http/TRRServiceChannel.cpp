@@ -26,6 +26,7 @@
 #include "TRRLoadInfo.h"
 #include "ReferrerInfo.h"
 #include "TRR.h"
+#include "TRRService.h"
 
 namespace mozilla {
 namespace net {
@@ -454,22 +455,6 @@ nsresult TRRServiceChannel::BeginConnect() {
     }
   }
 
-  // Force-Reload should reset the persistent connection pool for this host
-  if (mLoadFlags & LOAD_FRESH_CONNECTION) {
-    // just the initial document resets the whole pool
-    if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
-      gHttpHandler->AltServiceCache()->ClearAltServiceMappings();
-      rv = gHttpHandler->ConnMgr()->DoShiftReloadConnectionCleanupWithConnInfo(
-          mConnectionInfo);
-      if (NS_FAILED(rv)) {
-        LOG((
-            "TRRServiceChannel::BeginConnect "
-            "DoShiftReloadConnectionCleanupWithConnInfo failed: %08x [this=%p]",
-            static_cast<uint32_t>(rv), this));
-      }
-    }
-  }
-
   if (mCanceled) {
     return mStatus;
   }
@@ -510,6 +495,15 @@ nsresult TRRServiceChannel::ContinueOnBeforeConnect() {
   mConnectionInfo->SetTRRMode(nsIRequest::GetTRRMode());
   mConnectionInfo->SetIPv4Disabled(mCaps & NS_HTTP_DISABLE_IPV4);
   mConnectionInfo->SetIPv6Disabled(mCaps & NS_HTTP_DISABLE_IPV6);
+
+  if (mLoadFlags & LOAD_FRESH_CONNECTION) {
+    nsresult rv =
+        gHttpHandler->ConnMgr()->DoSingleConnectionCleanup(mConnectionInfo);
+    LOG(
+        ("TRRServiceChannel::BeginConnect "
+         "DoSingleConnectionCleanup succeeded=%d %08x [this=%p]",
+         NS_SUCCEEDED(rv), static_cast<uint32_t>(rv), this));
+  }
 
   return Connect();
 }

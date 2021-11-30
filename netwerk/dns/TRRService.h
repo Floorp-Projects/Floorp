@@ -50,6 +50,7 @@ class TRRService : public TRRServiceBase,
   void GetURI(nsACString& result) override;
   nsresult GetCredentials(nsCString& result);
   uint32_t GetRequestTimeout();
+  void StrictModeConfirm();
 
   LookupStatus CompleteLookup(nsHostRecord*, nsresult, mozilla::net::AddrInfo*,
                               bool pb, const nsACString& aOriginSuffix,
@@ -147,6 +148,7 @@ class TRRService : public TRRServiceBase,
     PrefChange,
     Retry,
     FailedLookups,
+    StrictMode,
     URIChange,
     CaptivePortalConnectivity,
     NetworkUp,
@@ -154,7 +156,7 @@ class TRRService : public TRRServiceBase,
     ConfirmFail,
   };
 
-  //                                 (FailedLookups/URIChange/NetworkUp)
+  //                            (FailedLookups/StrictMode/URIChange/NetworkUp)
   //                                    +-------------------------+
   // +-----------+                      |                         |
   // |   (Init)  |               +------v---------+             +-+--+
