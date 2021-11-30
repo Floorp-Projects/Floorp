@@ -240,6 +240,11 @@ class HyperTextAccessible : public AccessibleWrap,
   mozilla::LayoutDeviceIntRect GetCaretRect(nsIWidget** aWidget);
 
   /**
+   * Return true if caret is at end of line.
+   */
+  bool IsCaretAtEndOfLine() const;
+
+  /**
    * Return selected regions count within the accessible.
    */
   int32_t SelectionCount();
@@ -348,11 +353,6 @@ class HyperTextAccessible : public AccessibleWrap,
    * Adjust an offset the caret stays at to get a text by line boundary.
    */
   uint32_t AdjustCaretOffset(uint32_t aOffset) const;
-
-  /**
-   * Return true if caret is at end of line.
-   */
-  bool IsCaretAtEndOfLine() const;
 
   /**
    * Return true if the given offset points to terminal empty line if any.
