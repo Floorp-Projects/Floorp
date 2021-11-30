@@ -6,7 +6,6 @@
 
 #include "TransportSecurityInfo.h"
 
-#include "DateTimeFormat.h"
 #include "PSMRunnable.h"
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/Casting.h"
