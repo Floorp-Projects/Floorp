@@ -154,11 +154,13 @@ add_task(async function testPresetMargins() {
 
         ok(customMargins.hidden, "Custom margins are hidden");
         is(marginSelect.value, "default", "Default margins set");
+        helper.assertSettingsMatch({ honorPageRuleMargins: true });
 
         changeDefaultToCustom(helper);
 
         is(marginSelect.value, "custom", "Custom margins are now set");
         ok(!customMargins.hidden, "Custom margins are present");
+
         // Check that values are initialized to correct values
         is(
           helper.get("custom-margin-top").value,
@@ -1029,5 +1031,31 @@ add_task(async function testCustomMarginUnits() {
 
     await SpecialPowers.popPrefEnv();
     await helper.closeDialog();
+  });
+});
+
+add_task(async function testHonorPageRuleMargins() {
+  await PrintHelper.withTestPage(async helper => {
+    await helper.startPrint();
+    await helper.openMoreSettings();
+    let marginsPicker = helper.get("margins-picker");
+
+    is(marginsPicker.value, "default", "Started with default margins");
+    helper.assertSettingsMatch({ honorPageRuleMargins: true });
+
+    await helper.waitForSettingsEvent(() => changeDefaultToCustom(helper));
+
+    is(marginsPicker.value, "custom", "Changed to custom margins");
+    helper.assertSettingsMatch({ honorPageRuleMargins: false });
+
+    await helper.waitForSettingsEvent(() => changeCustomToNone(helper));
+
+    is(marginsPicker.value, "none", "Changed to no margins");
+    helper.assertSettingsMatch({ honorPageRuleMargins: false });
+
+    await helper.waitForSettingsEvent(() => changeCustomToDefault(helper));
+
+    is(marginsPicker.value, "default", "Back to default margins");
+    helper.assertSettingsMatch({ honorPageRuleMargins: true });
   });
 });
