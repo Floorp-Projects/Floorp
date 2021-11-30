@@ -739,6 +739,10 @@ class WorkerPrivate final : public RelativeTimeline {
     return *mLoadInfo.mPrincipalInfo;
   }
 
+  const mozilla::ipc::PrincipalInfo& GetPartitionedPrincipalInfo() const {
+    return *mLoadInfo.mPartitionedPrincipalInfo;
+  }
+
   uint32_t GetPrincipalHashValue() const {
     return mLoadInfo.mPrincipalHashValue;
   }
