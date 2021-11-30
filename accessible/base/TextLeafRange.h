@@ -35,6 +35,16 @@ class TextLeafPoint final {
    */
   TextLeafPoint() : mAcc(nullptr), mOffset(0) {}
 
+  /**
+   * Construct a TextLeafPoint representing the caret.
+   * The actual offset used for the caret differs depending on whether the
+   * caret is at the end of a line and the query being made. Thus, mOffset on
+   * the returned TextLeafPoint is not a valid offset.
+   */
+  static TextLeafPoint GetCaret(Accessible* aAcc) {
+    return TextLeafPoint(aAcc, nsIAccessibleText::TEXT_OFFSET_CARET);
+  }
+
   Accessible* mAcc;
   int32_t mOffset;
 
@@ -53,6 +63,21 @@ class TextLeafPoint final {
    * evaluates to false.
    */
   explicit operator bool() const { return !!mAcc; }
+
+  bool IsCaret() const {
+    return mOffset == nsIAccessibleText::TEXT_OFFSET_CARET;
+  }
+
+  bool IsCaretAtEndOfLine() const;
+
+  /**
+   * Get a TextLeafPoint at the actual caret offset.
+   * This should only be called on a TextLeafPoint created with GetCaret.
+   * If aAdjustAtEndOfLine is true, the point will be adjusted if the caret is
+   * at the end of a line so that word and line boundaries can be calculated
+   * correctly.
+   */
+  TextLeafPoint ActualizeCaret(bool aAdjustAtEndOfLine = true) const;
 
   /**
    * Find a boundary (word start, line start, etc.) in a specific direction.

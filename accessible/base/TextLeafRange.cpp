@@ -102,6 +102,15 @@ static Accessible* DocumentFor(Accessible* aAcc) {
   return aAcc->AsRemote()->Document();
 }
 
+static HyperTextAccessible* HyperTextFor(LocalAccessible* aAcc) {
+  for (LocalAccessible* acc = aAcc; acc; acc = acc->LocalParent()) {
+    if (HyperTextAccessible* ht = acc->AsHyperText()) {
+      return ht;
+    }
+  }
+  return nullptr;
+}
+
 static Accessible* NextLeaf(Accessible* aOrigin) {
   Accessible* doc = DocumentFor(aOrigin);
   Pivot pivot(doc);
@@ -348,7 +357,7 @@ static bool IsAcceptableWordStart(Accessible* aAcc, const nsAutoString& aText,
 /*** TextLeafPoint ***/
 
 TextLeafPoint::TextLeafPoint(Accessible* aAcc, int32_t aOffset) {
-  if (aAcc->HasChildren()) {
+  if (aOffset != nsIAccessibleText::TEXT_OFFSET_CARET && aAcc->HasChildren()) {
     // Find a leaf. This might not necessarily be a TextLeafAccessible; it
     // could be an empty container.
     for (Accessible* acc = aAcc->FirstChild(); acc; acc = acc->FirstChild()) {
@@ -663,10 +672,64 @@ TextLeafPoint TextLeafPoint::FindNextWordStartSameAcc(
   return TextLeafPoint(mAcc, wordStart);
 }
 
+bool TextLeafPoint::IsCaretAtEndOfLine() const {
+  MOZ_ASSERT(IsCaret());
+  if (LocalAccessible* acc = mAcc->AsLocal()) {
+    HyperTextAccessible* ht = HyperTextFor(acc);
+    if (!ht) {
+      return false;
+    }
+    // Use HyperTextAccessible::IsCaretAtEndOfLine. Eventually, we'll want to
+    // move that code into TextLeafPoint, but existing code depends on it living
+    // in HyperTextAccessible (including caret events).
+    return ht->IsCaretAtEndOfLine();
+  }
+  // XXX Support RemoteAccessible.
+  return false;
+}
+
+TextLeafPoint TextLeafPoint::ActualizeCaret(bool aAdjustAtEndOfLine) const {
+  MOZ_ASSERT(IsCaret());
+  HyperTextAccessibleBase* ht;
+  int32_t htOffset;
+  if (LocalAccessible* acc = mAcc->AsLocal()) {
+    // Use HyperTextAccessible::CaretOffset. Eventually, we'll want to move
+    // that code into TextLeafPoint, but existing code depends on it living in
+    // HyperTextAccessible (including caret events).
+    ht = HyperTextFor(acc);
+    if (!ht) {
+      return TextLeafPoint();
+    }
+    htOffset = ht->CaretOffset();
+    if (htOffset == -1) {
+      return TextLeafPoint();
+    }
+  } else {
+    // XXX Support RemoteAccessible.
+    return TextLeafPoint();
+  }
+  if (aAdjustAtEndOfLine && htOffset > 0 && IsCaretAtEndOfLine()) {
+    // It is the same character offset when the caret is visually at the very
+    // end of a line or the start of a new line (soft line break). Getting text
+    // at the line should provide the line with the visual caret. Otherwise,
+    // screen readers will announce the wrong line as the user presses up or
+    // down arrow and land at the end of a line.
+    --htOffset;
+  }
+  return ht->ToTextLeafPoint(htOffset);
+}
+
 TextLeafPoint TextLeafPoint::FindBoundary(AccessibleTextBoundary aBoundaryType,
                                           nsDirection aDirection,
                                           bool aIncludeOrigin) const {
-  // XXX Add handling for caret at end of wrapped line.
+  if (IsCaret()) {
+    if (aBoundaryType == nsIAccessibleText::BOUNDARY_CHAR) {
+      // The caret is at the end of the line. Return no character.
+      return ActualizeCaret(/* aAdjustAtEndOfLine */ false);
+    }
+    return ActualizeCaret().FindBoundary(aBoundaryType, aDirection,
+                                         aIncludeOrigin);
+  }
   if (aBoundaryType == nsIAccessibleText::BOUNDARY_LINE_START &&
       aIncludeOrigin && aDirection == eDirPrevious && IsEmptyLastLine()) {
     // If we're at an empty line at the end of an Accessible,  we don't want to
@@ -784,6 +847,10 @@ already_AddRefed<AccAttributes> TextLeafPoint::GetTextAttributes(
 TextLeafPoint TextLeafPoint::FindTextAttrsStart(
     nsDirection aDirection, bool aIncludeOrigin,
     const AccAttributes* aOriginAttrs, bool aIncludeDefaults) const {
+  if (IsCaret()) {
+    return ActualizeCaret().FindTextAttrsStart(aDirection, aIncludeOrigin,
+                                               aOriginAttrs, aIncludeDefaults);
+  }
   // XXX Add support for spelling errors.
   RefPtr<const AccAttributes> lastAttrs;
   const bool isRemote = mAcc->IsRemote();
