@@ -1320,7 +1320,7 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
     reflowScrollCorner = false;
   }
 
-  nsRect oldScrollAreaBounds = mHelper.mScrollPort;
+  const nsRect oldScrollPort = mHelper.mScrollPort;
   nsRect oldScrolledAreaBounds =
       mHelper.mScrolledFrame->ScrollableOverflowRectRelativeToParent();
   nsPoint oldScrollPosition = mHelper.GetScrollPosition();
@@ -1360,7 +1360,7 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
   bool didHaveVScrollbar = mHelper.mHasVerticalScrollbar;
   mHelper.mHasHorizontalScrollbar = state.mShowHScrollbar;
   mHelper.mHasVerticalScrollbar = state.mShowVScrollbar;
-  nsRect newScrollAreaBounds = mHelper.mScrollPort;
+  const nsRect newScrollPort = mHelper.mScrollPort;
   nsRect newScrolledAreaBounds =
       mHelper.mScrolledFrame->ScrollableOverflowRectRelativeToParent();
   if (mHelper.mSkippedScrollbarLayout || reflowHScrollbar || reflowVScrollbar ||
@@ -1369,7 +1369,7 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
       didHaveVScrollbar != state.mShowVScrollbar ||
       didOnlyHScrollbar != mHelper.mOnlyNeedHScrollbarToScrollVVInsideLV ||
       didOnlyVScrollbar != mHelper.mOnlyNeedVScrollbarToScrollVVInsideLV ||
-      !oldScrollAreaBounds.IsEqualEdges(newScrollAreaBounds) ||
+      !oldScrollPort.IsEqualEdges(newScrollPort) ||
       !oldScrolledAreaBounds.IsEqualEdges(newScrolledAreaBounds)) {
     if (!mHelper.mSuppressScrollbarUpdate) {
       mHelper.mSkippedScrollbarLayout = false;
@@ -1382,7 +1382,7 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
           nsRect(nsPoint(state.mComputedBorder.left, state.mComputedBorder.top),
                  layoutSize);
       mHelper.LayoutScrollbars(state.mBoxState, insideBorderArea,
-                               oldScrollAreaBounds);
+                               oldScrollPort);
     } else {
       mHelper.mSkippedScrollbarLayout = true;
     }
@@ -1396,7 +1396,7 @@ void nsHTMLScrollFrame::Reflow(nsPresContext* aPresContext,
       // visual viewport is updated to account for that before we read the
       // visual viewport size.
       manager->UpdateVisualViewportSizeForPotentialScrollbarChange();
-    } else if ((oldScrollAreaBounds.Size() != newScrollAreaBounds.Size()) &&
+    } else if ((oldScrollPort.Size() != newScrollPort.Size()) &&
                !HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
       // We want to make sure to send a visual viewport resize event if the
       // scrollport changed sizes for root scroll frames. The
@@ -6059,7 +6059,7 @@ nsresult nsXULScrollFrame::XULLayout(nsBoxLayoutState& aState) {
   nsRect clientRect(0, 0, 0, 0);
   GetXULClientRect(clientRect);
 
-  nsRect oldScrollAreaBounds = mHelper.mScrollPort;
+  nsRect oldScrollPort = mHelper.mScrollPort;
   nsPoint oldScrollPosition = mHelper.GetLogicalScrollPosition();
 
   // the scroll area size starts off as big as our content area
@@ -6239,7 +6239,7 @@ nsresult nsXULScrollFrame::XULLayout(nsBoxLayoutState& aState) {
   }
 
   if (!mHelper.mSuppressScrollbarUpdate) {
-    mHelper.LayoutScrollbars(aState, clientRect, oldScrollAreaBounds);
+    mHelper.LayoutScrollbars(aState, clientRect, oldScrollPort);
   }
   if (!mHelper.mPostedReflowCallback) {
     // Make sure we'll try scrolling to restored position
