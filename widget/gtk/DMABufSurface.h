@@ -288,8 +288,6 @@ class DMABufSurfaceYUV : public DMABufSurface {
   }
   mozilla::gfx::YUVColorSpace GetYUVColorSpace() { return mColorSpace; }
 
-  bool IsFullRange() { return true; }
-
   DMABufSurfaceYUV();
 
   bool UpdateYUVData(void** aPixelData, int* aLineSizes);
