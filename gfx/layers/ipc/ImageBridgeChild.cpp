@@ -133,12 +133,6 @@ void ImageBridgeChild::UseTextures(
                                             OpUseTexture(textures)));
 }
 
-void ImageBridgeChild::UseComponentAlphaTextures(
-    CompositableClient* aCompositable, TextureClient* aTextureOnBlack,
-    TextureClient* aTextureOnWhite) {
-  MOZ_CRASH("should not be called");
-}
-
 void ImageBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(
     TextureClient* aClient) {
   if (!aClient) {

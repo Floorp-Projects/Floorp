@@ -18,13 +18,6 @@ NS_IMPL_ISUPPORTS(GfxMemoryImageReporter, nsIMemoryReporter)
 
 mozilla::Atomic<ptrdiff_t> GfxMemoryImageReporter::sAmount(0);
 
-/* static */
-uint32_t CompositableForwarder::GetMaxFileDescriptorsPerMessage() {
-  static const uint32_t kMaxFileDescriptors =
-      IPC::Message::MAX_DESCRIPTORS_PER_MESSAGE;
-  return kMaxFileDescriptors;
-}
-
 mozilla::ipc::SharedMemory::SharedMemoryType OptimalShmemType() {
   return ipc::SharedMemory::SharedMemoryType::TYPE_BASIC;
 }
