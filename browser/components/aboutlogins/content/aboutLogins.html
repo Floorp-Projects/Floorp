@@ -30,19 +30,18 @@
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
     <link rel="stylesheet" href="chrome://browser/content/aboutlogins/aboutLogins.css">
     <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
-    <link rel="icon" href="chrome://branding/content/icon32.png">
+    <link rel="icon" href="chrome://browser/content/aboutlogins/icons/favicon.svg">
   </head>
   <body>
+    <header>
+      <img id="branding-logo" src="chrome://branding/content/aboutlogins.svg" alt=""/>
+      <login-filter></login-filter>
+      <fxaccounts-button hidden></fxaccounts-button>
+      <menu-button></menu-button>
+    </header>
     <login-list></login-list>
-    <section>
-      <header>
-        <login-filter></login-filter>
-        <fxaccounts-button hidden></fxaccounts-button>
-        <menu-button></menu-button>
-      </header>
-      <login-item></login-item>
-      <login-intro></login-intro>
-    </section>
+    <login-item></login-item>
+    <login-intro></login-intro>
     <confirmation-dialog hidden></confirmation-dialog>
     <remove-logins-dialog hidden></remove-logins-dialog>
     <import-summary-dialog hidden></import-summary-dialog>
@@ -244,11 +243,11 @@
         <ul>
           <li data-l10n-id="login-intro-instructions-fxa"></li>
           <li data-l10n-id="login-intro-instructions-fxa-settings"></li>
-          <li data-l10n-id="login-intro-instructions-fxa-passwords-help">
-            <a data-l10n-name="passwords-help-link" class="intro-help-link" target="_blank" rel="noreferrer"></a>
+          <li data-l10n-id="login-intro-instructions-fxa-help">
+            <a data-l10n-name="help-link" class="intro-help-link" target="_blank" rel="noreferrer"></a>
           </li>
         </ul>
-        <p class="description intro-import-text no-file-import" hidden data-l10n-id="about-logins-intro-browser-only-import">
+        <p class="description intro-import-text no-file-import" hidden data-l10n-id="about-logins-intro-import">
           <a data-l10n-name="import-link" href="#"></a>
         </p>
         <p class="description intro-import-text file-import" hidden data-l10n-id="about-logins-intro-import2">
