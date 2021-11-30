@@ -1663,6 +1663,9 @@ struct CompilationStencilMerger {
       JSContext* cx, const CompilationStencil& delazification);
 
   ExtensibleCompilationStencil& getResult() const { return *initial_; }
+  UniquePtr<ExtensibleCompilationStencil> takeResult() {
+    return std::move(initial_);
+  }
 };
 
 const ScopeStencil& ScopeStencilRef::scope() const {

@@ -230,13 +230,9 @@ template <typename Unit>
         output.as<UniquePtr<ExtensibleCompilationStencil>>() =
             std::move(extensibleStencil);
       } else if (output.is<UniquePtr<CompilationStencil>>()) {
-        auto stencil =
-            cx->make_unique<frontend::CompilationStencil>(input.source);
+        auto stencil = cx->make_unique<frontend::CompilationStencil>(
+            std::move(extensibleStencil));
         if (!stencil) {
-          return false;
-        }
-
-        if (!stencil->steal(cx, std::move(*extensibleStencil))) {
           return false;
         }
 
@@ -292,12 +288,13 @@ template <typename Unit>
     AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
-    auto stencil = cx->make_unique<CompilationStencil>(input.source);
-    if (!stencil) {
-      return false;
-    }
+    auto extensibleStencil =
+        cx->make_unique<frontend::ExtensibleCompilationStencil>(
+            std::move(compiler.stencil()));
 
-    if (!stencil->steal(cx, std::move(compiler.stencil()))) {
+    auto stencil =
+        cx->make_unique<CompilationStencil>(std::move(extensibleStencil));
+    if (!stencil) {
       return false;
     }
 
@@ -893,12 +890,13 @@ template <typename Unit>
     AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
-    auto stencil = cx->make_unique<CompilationStencil>(input.source);
-    if (!stencil) {
-      return false;
-    }
+    auto extensibleStencil =
+        cx->make_unique<frontend::ExtensibleCompilationStencil>(
+            std::move(compiler.stencil()));
 
-    if (!stencil->steal(cx, std::move(compiler.stencil()))) {
+    auto stencil =
+        cx->make_unique<CompilationStencil>(std::move(extensibleStencil));
+    if (!stencil) {
       return false;
     }
 
@@ -1060,12 +1058,13 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
-    auto stencil = cx->make_unique<CompilationStencil>(input.source);
-    if (!stencil) {
-      return false;
-    }
+    auto extensibleStencil =
+        cx->make_unique<frontend::ExtensibleCompilationStencil>(
+            std::move(compilationState));
 
-    if (!stencil->steal(cx, std::move(compilationState))) {
+    auto stencil =
+        cx->make_unique<CompilationStencil>(std::move(extensibleStencil));
+    if (!stencil) {
       return false;
     }
 
