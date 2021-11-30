@@ -1409,7 +1409,9 @@ template <typename StepFunc>
 Result<Ok, nsresult> CollectWhileHasResult(mozIStorageStatement& aStmt,
                                            StepFunc&& aStepFunc) {
   return CollectWhile(
-      [&aStmt] { QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(aStmt, ExecuteStep)); },
+      [&aStmt] {
+        QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER(aStmt, ExecuteStep));
+      },
       [&aStmt, &aStepFunc] { return aStepFunc(aStmt); });
 }
 
@@ -1443,9 +1445,9 @@ template <typename Cancel, typename Body>
 Result<mozilla::Ok, nsresult> CollectEachFile(nsIFile& aDirectory,
                                               const Cancel& aCancel,
                                               const Body& aBody) {
-  QM_TRY_INSPECT(const auto& entries,
-                 MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIDirectoryEnumerator>,
-                                            aDirectory, GetDirectoryEntries));
+  QM_TRY_INSPECT(const auto& entries, MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+                                          nsCOMPtr<nsIDirectoryEnumerator>,
+                                          aDirectory, GetDirectoryEntries));
 
   return CollectEach(
       [&entries, &aCancel]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
@@ -1453,8 +1455,8 @@ Result<mozilla::Ok, nsresult> CollectEachFile(nsIFile& aDirectory,
           return nsCOMPtr<nsIFile>{};
         }
 
-        QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
-                                                 GetNextFile));
+        QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsCOMPtr<nsIFile>,
+                                                        entries, GetNextFile));
       },
       aBody);
 }
@@ -1478,9 +1480,9 @@ template <typename T, typename Body>
 auto ReduceEachFileAtomicCancelable(nsIFile& aDirectory,
                                     const Atomic<bool>& aCanceled, T aInit,
                                     const Body& aBody) -> Result<T, nsresult> {
-  QM_TRY_INSPECT(const auto& entries,
-                 MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIDirectoryEnumerator>,
-                                            aDirectory, GetDirectoryEntries));
+  QM_TRY_INSPECT(const auto& entries, MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(
+                                          nsCOMPtr<nsIDirectoryEnumerator>,
+                                          aDirectory, GetDirectoryEntries));
 
   return ReduceEach(
       [&entries, &aCanceled]() -> Result<nsCOMPtr<nsIFile>, nsresult> {
@@ -1488,8 +1490,8 @@ auto ReduceEachFileAtomicCancelable(nsIFile& aDirectory,
           return nsCOMPtr<nsIFile>{};
         }
 
-        QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<nsIFile>, entries,
-                                                 GetNextFile));
+        QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsCOMPtr<nsIFile>,
+                                                        entries, GetNextFile));
       },
       std::move(aInit), aBody);
 }

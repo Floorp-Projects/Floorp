@@ -110,7 +110,7 @@ nsresult UpgradeSchemaFrom4To5(mozIStorageConnection& aConnection) {
     mozStorageStatementScoper scoper(stmt);
 
     QM_TRY_INSPECT(const bool& hasResults,
-                   MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+                   MOZ_TO_RESULT_INVOKE_MEMBER(stmt, ExecuteStep));
 
     if (NS_WARN_IF(!hasResults)) {
       return NS_ERROR_FAILURE;
@@ -2310,7 +2310,7 @@ nsresult UpgradeSchemaFrom19_0To20_0(nsIFile* aFMDirectory,
     mozStorageStatementScoper scoper(stmt);
 
     QM_TRY_INSPECT(const bool& hasResult,
-                   MOZ_TO_RESULT_INVOKE(stmt, ExecuteStep));
+                   MOZ_TO_RESULT_INVOKE_MEMBER(stmt, ExecuteStep));
 
     if (NS_WARN_IF(!hasResult)) {
       MOZ_ASSERT(false, "This should never be possible!");
@@ -3008,7 +3008,7 @@ Result<bool, nsresult> MaybeUpgradeSchema(mozIStorageConnection& aConnection,
     }
 
     QM_TRY_UNWRAP(schemaVersion,
-                  MOZ_TO_RESULT_INVOKE(aConnection, GetSchemaVersion));
+                  MOZ_TO_RESULT_INVOKE_MEMBER(aConnection, GetSchemaVersion));
   }
 
   MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);

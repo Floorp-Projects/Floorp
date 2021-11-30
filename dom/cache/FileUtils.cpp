@@ -145,7 +145,7 @@ Result<std::pair<nsID, nsCOMPtr<nsISupports>>, nsresult> BodyStartWriteStream(
 
   {
     QM_TRY_INSPECT(const bool& exists,
-                   MOZ_TO_RESULT_INVOKE(*finalFile, Exists));
+                   MOZ_TO_RESULT_INVOKE_MEMBER(*finalFile, Exists));
 
     QM_TRY(OkIf(!exists), Err(NS_ERROR_FILE_ALREADY_EXISTS));
   }
@@ -495,7 +495,7 @@ bool MarkerFileExists(const CacheDirectoryMetadata& aDirectoryMetadata) {
   QM_TRY_INSPECT(const auto& marker, GetMarkerFileHandle(aDirectoryMetadata),
                  false);
 
-  QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(marker, Exists), false);
+  QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER(marker, Exists), false);
 }
 
 nsresult RemoveNsIFileRecursively(
@@ -550,7 +550,7 @@ nsresult RemoveNsIFile(const Maybe<CacheDirectoryMetadata>& aDirectoryMetadata,
         const auto& maybeFileSize,
         QM_OR_ELSE_WARN_IF(
             // Expression.
-            MOZ_TO_RESULT_INVOKE(aFile, GetFileSize).map(Some<int64_t>),
+            MOZ_TO_RESULT_INVOKE_MEMBER(aFile, GetFileSize).map(Some<int64_t>),
             // Predicate.
             IsFileNotFoundError,
             // Fallback.
@@ -601,7 +601,7 @@ bool DirectoryPaddingFileExists(nsIFile& aBaseDir,
                                        : nsLiteralString(PADDING_FILE_NAME)),
       false);
 
-  QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE(file, Exists), false);
+  QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER(file, Exists), false);
 }
 
 Result<int64_t, nsresult> DirectoryPaddingGet(nsIFile& aBaseDir) {
@@ -620,10 +620,8 @@ Result<int64_t, nsresult> DirectoryPaddingGet(nsIFile& aBaseDir) {
   const nsCOMPtr<nsIObjectInputStream> objectStream =
       NS_NewObjectInputStream(bufferedStream);
 
-  QM_TRY_RETURN(
-      MOZ_TO_RESULT_INVOKE(objectStream, Read64).map([](const uint64_t val) {
-        return int64_t(val);
-      }));
+  QM_TRY_RETURN(MOZ_TO_RESULT_INVOKE_MEMBER(objectStream, Read64)
+                    .map([](const uint64_t val) { return int64_t(val); }));
 }
 
 nsresult DirectoryPaddingInit(nsIFile& aBaseDir) {

@@ -210,8 +210,9 @@ class CachingDatabaseConnection::LazyStatement final {
 
     QM_TRY(std::forward<BindFunctor>(aBindFunctor)(*borrowedStatement));
 
-    QM_TRY_INSPECT(const bool& hasResult,
-                   MOZ_TO_RESULT_INVOKE(&*borrowedStatement, ExecuteStep));
+    QM_TRY_INSPECT(
+        const bool& hasResult,
+        MOZ_TO_RESULT_INVOKE_MEMBER(&*borrowedStatement, ExecuteStep));
 
     return hasResult ? Some(std::move(borrowedStatement)) : Nothing{};
   }
