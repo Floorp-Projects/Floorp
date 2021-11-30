@@ -9,6 +9,7 @@
 #include <algorithm>
 
 #include "nsCOMPtr.h"
+#include "nsICookieJarSettings.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsINamed.h"
@@ -2210,16 +2211,26 @@ bool ServiceWorkerManager::IsAvailable(nsIPrincipal* aPrincipal, nsIURI* aURI,
   //    correspoinding ClinetInfo
   // 2. Maybe schedule a soft update
   if (!registration->GetActive()->HandlesFetch()) {
-    // Checkin if the channel is not storage allowed first.
-    if (StorageAllowedForChannel(aChannel) != StorageAccess::eAllow) {
-      return false;
+    // Checkin if the channel is not allowed for the service worker.
+    auto storageAccess = StorageAllowedForChannel(aChannel);
+    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+
+    if (storageAccess != StorageAccess::eAllow) {
+      if (!StaticPrefs::privacy_partition_serviceWorkers()) {
+        return false;
+      }
+
+      nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+      loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+
+      if (!StoragePartitioningEnabled(storageAccess, cookieJarSettings)) {
+        return false;
+      }
     }
 
     // ServiceWorkerInterceptController::ShouldPrepareForIntercept() handles the
     // subresource cases. Must be non-subresource case here.
     MOZ_ASSERT(nsContentUtils::IsNonSubresourceRequest(aChannel));
-
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
 
     Maybe<ClientInfo> clientInfo = loadInfo->GetReservedClientInfo();
     if (clientInfo.isNothing()) {
