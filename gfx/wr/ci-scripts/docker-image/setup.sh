@@ -27,7 +27,6 @@ apt-get install -y \
     libx11-dev \
     llvm-dev \
     ninja-build \
-    openjdk-8-jdk \
     pkg-config \
     python \
     python-mako \

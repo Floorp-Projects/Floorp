@@ -44,6 +44,7 @@ android-geckoview-docs/opt:
         toolchain:
             - android-gradle-dependencies
             - android-sdk-linux
+            - linux64-jdk
             - linux64-node
     optimization:
         skip-unless-changed:
