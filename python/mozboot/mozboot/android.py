@@ -734,6 +734,12 @@ def main(argv):
         help="If true, install only the Android SDK (and not the Android NDK).",
     )
     parser.add_option(
+        "--jdk-only",
+        dest="jdk_only",
+        action="store_true",
+        help="If true, install only the Java JDK.",
+    )
+    parser.add_option(
         "--ndk-only",
         dest="ndk_only",
         action="store_true",
@@ -797,6 +803,11 @@ def main(argv):
         )
 
     os_arch = platform.machine()
+
+    if options.jdk_only:
+        ensure_java(os_name, os_arch)
+        return 0
+
     ensure_android(
         os_name,
         os_arch,
