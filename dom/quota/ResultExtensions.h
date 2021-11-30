@@ -79,12 +79,20 @@ inline Result<Ok, E> ToResult(QMResult&& aValue) {
 }
 #endif
 
+template <typename E = nsresult, typename V, typename E2>
+inline Result<V, E> ToResultTransform(Result<V, E2>&& aValue) {
+  return std::forward<Result<V, E2>>(aValue).mapErr(
+      [](auto&& err) { return ResultTypeTraits<E>::From(err); });
+}
+
 }  // namespace mozilla
 
 // TODO: Maybe move this to mfbt/ResultExtensions.h
 #define MOZ_TO_RESULT(expr) ToResult(expr)
 
 #define QM_TO_RESULT(expr) ToResult<QMResult>(expr)
+
+#define QM_TO_RESULT_TRANSFORM(value) ToResultTransform<QMResult>(value)
 
 #define QM_TO_RESULT_INVOKE(obj, methodname, ...)                        \
   ::mozilla::ToResultInvoke<QMResult>(                                   \
