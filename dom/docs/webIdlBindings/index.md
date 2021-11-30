@@ -91,7 +91,7 @@ interface, you need to do the following:
    [`ToSupports`](https://searchfox.org/mozilla-central/search?q=ToSupports&path=&case=true&regexp=false)
    method that can produce an `nsISupports` from it. (This allows the
    return value to be implicitly converted to a
-   [ParentObject](https://searchfox.org/mozilla-central/search?q=ParentObject&path=&case=true&regexp=false)
+   [`ParentObject`](https://searchfox.org/mozilla-central/search?q=ParentObject&path=&case=true&regexp=false)
    instance by the compiler via one of that class's non-explicit
    constructors.)
    If many instances of `MyInterface` are expected to be created
@@ -155,7 +155,7 @@ instead add `'wrapperCache': False` to your descriptor. You will
 need to flag the functions that return your object as
 [`[NewObject]`](https://webidl.spec.whatwg.org/#NewObject) in
 the Web IDL. If your object is not refcounted then the return value of
-functions that return it should return an nsAutoPtr.
+functions that return it should return a UniquePtr.
 
 </div>
 
@@ -599,8 +599,8 @@ single method for every IDL method/getter/setter.
 
 The signatures of the methods correspond to the signatures for throwing
 IDL methods/getters/setters with an additional trailing
-"`mozilla::dom::CallbackObject::ExceptionHandling`
-`aExceptionHandling`" argument, defaulting to `eReportExceptions`.
+`mozilla::dom::CallbackObject::ExceptionHandling aExceptionHandling`
+argument, defaulting to `eReportExceptions`.
 If `aReportExceptions` is set to `eReportExceptions`, the methods
 will report JS exceptions before returning. If `aReportExceptions` is
 set to `eRethrowExceptions`, JS exceptions will be stashed in the
@@ -941,8 +941,8 @@ otherwise a reference is passed in.
 The object exposes two `Call` methods, which both invoke the
 underlying JS callable. The first `Call` method has the same signature
 as a throwing method declared just like the callback function, with an
-additional trailing "`mozilla::dom::CallbackObject::ExceptionHandling`
-`aExceptionHandling`" argument, defaulting to `eReportExceptions`,
+additional trailing `mozilla::dom::CallbackObject::ExceptionHandling aExceptionHandling`
+argument, defaulting to `eReportExceptions`,
 and calling it will invoke the callable with `undefined` as the
 `this` value. The second `Call` method allows passing in an explicit
 `this` value as the first argument. This second call method is a
@@ -1541,7 +1541,7 @@ will need to test true for the interface or interface member to be
 exposed.
 
 Binding code will include the headers necessary for a `[Func]`, unless
-the interface is using a non-deafault heder file.  If a non-default
+the interface is using a non-default header file.  If a non-default
 header file is used, that header file needs to do any header inclusions
 necessary for `[Func]` annotations.
 
@@ -1697,7 +1697,7 @@ code should call the `ClearCachedFooValue` method in the namespace of
 the relevant binding, where `foo` is the name of the attribute. This
 will immediately call the C++ getter and cache the value it returns, so
 it needs a `JSContext` to work on. This extended attribute can only be
-used in on attributes whose getters are [`[Pure]`](#pure) or
+used on attributes whose getters are [`[Pure]`](#pure) or
 [`[Constant]`](#constant) and which are not
 [`[Throws]`](#throws-getterthrows-setterthrows) or [`[GetterThrows]`](#throws-getterthrows-setterthrows).
 
@@ -1834,8 +1834,8 @@ details specific to Gecko:
 -  System principals are considered secure.
 -  An extension poking at non-secured DOM objects will see APIs marked
    with `[SecureContext]`.
--  XPConnect sandboxes doesn't see `[SecureContext]` APIs, but this
-   may change in {{bug(1273687)}}.
+-  XPConnect sandboxes don't see `[SecureContext]` APIs, except if
+   they're created with `isSecureContext: true`.
 
 ### `[NeedsSubjectPrincipal]`, `[GetterNeedsSubjectPrincipal]`, `[SetterNeedsSubjectPrincipal]`
 
@@ -1862,7 +1862,7 @@ attributes.
 Used to flag a method or an attribute that needs to know the caller
 type, in the `mozilla::dom::CallerType` sense.  This can be safely
 used for APIs exposed in workers; there it will indicate whether the
-worker involved is a `ChromeWorker` or not.  At the momen the only
+worker involved is a `ChromeWorker` or not.  At the moment the only
 possible caller types are `System` (representing system-principal
 callers) and `NonSystem`.
 
@@ -1884,8 +1884,8 @@ be used to get the value when it's not null.
 
 `Nullable<T>` has a `SetNull()` setter that sets it as representing
 null and two setters that can be used to set it to a value:
-`"void SetValue(T)"` (for setting it to a given value) and
-`"T& SetValue()"` for directly modifying the underlying `T&`.
+`void SetValue(T)` (for setting it to a given value) and
+`T& SetValue()` for directly modifying the underlying `T&`.
 
 ### `Optional<T>`
 
