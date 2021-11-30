@@ -276,6 +276,8 @@ bool nsClipboard::FilterImportedFlavors(int32_t aWhichClipboard,
 
   int targetNums;
   GdkAtom* targets = mContext->GetTargets(aWhichClipboard, &targetNums);
+  auto releaseTargets = MakeScopeExit([&] { g_free(targets); });
+
   if (!targets) {
     LOGCLIP("    X11: no targes at clipboard (null), quit.\n");
     return true;
@@ -553,6 +555,8 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
 
   int targetNums;
   GdkAtom* targets = mContext->GetTargets(aWhichClipboard, &targetNums);
+  auto releaseTargets = MakeScopeExit([&] { g_free(targets); });
+
   if (!targets) {
     LOGCLIP("    no targes at clipboard (null)\n");
     return NS_OK;
@@ -619,7 +623,6 @@ nsClipboard::HasDataMatchingFlavors(const nsTArray<nsCString>& aFlavorList,
   }
 #endif
 
-  g_free(targets);
   return NS_OK;
 }
 
