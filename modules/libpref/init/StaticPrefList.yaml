@@ -12313,7 +12313,7 @@
 
 - name: widget.windows.window_occlusion_tracking.enabled
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: @EARLY_BETA_OR_EARLIER@
   mirror: always
 
 - name: widget.windows.window_occlusion_tracking_display_state.enabled
