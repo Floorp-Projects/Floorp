@@ -541,11 +541,10 @@ class JSStreamConsumer final : public nsIInputStreamCallback,
 
     if (rv == NS_BASE_STREAM_CLOSED) {
       if (mOptimizedEncoding) {
-        MOZ_DIAGNOSTIC_ASSERT(mZStreamInitialized,
-                              "corrupt optimized wasm cache file: no init");
-        MOZ_DIAGNOSTIC_ASSERT(mZStream.avail_out == 0,
-                              "corrupt optimized wasm cache file: incomplete");
-        // Gracefully handle corruption in release.
+        // Gracefully handle corruption of compressed data stream in release.
+        // From on investigations in bug 1738987, the incomplete data cases
+        // mostly happen during shutdown. Some corruptions in the cache entry
+        // can still happen and will be handled in the WriteSegment above.
         bool ok = mZStreamInitialized && mZStream.avail_out == 0;
         if (!ok) {
           mConsumer->streamError(size_t(NS_ERROR_UNEXPECTED));
