@@ -395,7 +395,7 @@ the dimensions of the window without risking a synchronous reflow.
 Returns the window's scroll offsets without taking the chance of causing
 a sync reflow.
 
-### Writing tests to ensure you don’t add more unintentional reflow 
+### Writing tests to ensure you don’t add more unintentional reflow
 
 The interface
 [nsIReflowObserver](https://dxr.mozilla.org/mozilla-central/source/docshell/base/nsIReflowObserver.idl)
@@ -409,7 +409,7 @@ while those actions occur.
 You should add tests like this for your feature if you happen to be
 touching the DOM.
 
-## Detecting over-painting with paint flashing 
+## Detecting over-painting
 
 Painting is, in general, cheaper than both style calculation and layout
 calculation; still, the more you can avoid, the better. Generally
@@ -417,61 +417,17 @@ speaking, the larger an area that needs to be repainted, the longer it
 takes. Similarly, the more things that need to be repainted, the longer
 it takes.
 
-Our graphics team has added a handy feature to help you detect when and
-where paints are occurring. This feature is called “paint flashing,” and
-it can be activated for both web content and the browser chrome. Paint
-flashing tints each region being painted with a randomly selected color
-so that it’s more easy to see what on the screen is being painted.
+If a profile says a lot of time is spent in painting or display-list building,
+and you're unsure why, consider talking to our always helpful graphics team in
+the [gfx room](https://chat.mozilla.org/#/room/%23gfx:mozilla.org) on
+[Matrix](https://wiki.mozilla.org/Matrix), and they can probably advise you.
 
--  You can activate paint flashing for browser chrome by setting
-   *nglayout.debug.paint_flashing_chrome* to *true*.
+Note that a significant number of the graphics team members are in the US
+Eastern Time zone (UTC-5 or UTC-4 during Daylight Saving Time), so let that
+information guide your timing when you ask questions in the
+[gfx room](https://chat.mozilla.org/#/room/%23gfx:mozilla.org).
 
--  You can activate paint flashing for web content by setting
-   *nglayout.debug.paint_flashing* to *true*.
-
-After enabling these, exercise your function and see what’s painting.
-See a lot of flashing / colors? That means a lot of painting is going
-on. The worst case is called **over-painting**. This is when you draw
-multiple times over the same space. Unless transparency is involved, all
-but the last painting will be overwritten, becoming unnecessary. If you
-can find ways to avoid doing this, you can save substantial time.
-
-Keep in mind that painting occurs on the main thread. Remember, too,
-that the goal is to have as little happen on the main thread as
-possible. That means that finding and removing (when possible)
-over-painting is a good place to start reducing your burden on the main
-thread, which will in turn improve performance.
-
-Perhaps you’re animating something that requires a repaint? For example,
-transitioning the *background-color* of a DOM node from red to blue
-will result in a repaint for every frame of the animation, and paint
-flashing will reveal that. Consider using a different animation that can
-be accelerated by the GPU. These GPU-accelerated animations occur off of
-the main thread, and have a much higher probability of running at 60 FPS
-(see the section below called [Use the compositor for animations](#use-the-compositor-for-animations)
-for further details).
-
-Perhaps you’re touching some DOM nodes in such a way that unexpected
-repaints are occurring in an area that don’t need it. Best to
-investigate and try to remove those as best you can. Sometimes, our
-graphics layer invalidates regions in ways that might not be clear to
-you, and a section outside of the thing that just repainted will also
-repaint. Sometimes this can be addressed by ensuring that the thing
-changing is on its own layer (though this comes at a memory cost). You
-can put something on its own layer by setting its *z-index*, or by
-setting the *will-change* on the node, though this should be used
-sparingly.
-
-If you’re unsure why something is repainting, consider talking to our
-always helpful graphics team in the [gfx room](https://chat.mozilla.org/#/room/%23gfx:mozilla.org) on
-[Matrix](https://wiki.mozilla.org/Matrix), and they can probably
-advise you. Note that a significant number of the graphics team members
-are in the US Eastern Time zone (UTC-5 or UTC-4 during Daylight Saving
-Time), so let that information guide your timing when you ask questions
-in the [gfx room](https://chat.mozilla.org/#/room/%23gfx:mozilla.org)
-.
-
-## Adding nodes using DocumentFragments 
+## Adding nodes using DocumentFragments
 
 Sometimes you need to add several DOM nodes as part of an existing DOM
 tree. For example, when using XUL *\<xul:menupopup\>s*, you often have
