@@ -605,10 +605,19 @@ class BrowserRobot {
         }
 
         fun goToHomescreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
+            assertTrue(
+                mDevice.findObject(UiSelector().description("Home screen"))
+                    .waitForExists(waitingTime)
+            )
+
             onView(withContentDescription("Home screen"))
                 .check(matches(isDisplayed()))
                 .click()
-            mDevice.waitForIdle()
+
+            assertTrue(
+                mDevice.findObject(UiSelector().resourceId("$packageName:id/homeLayout"))
+                    .waitForExists(waitingTime)
+            )
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()
