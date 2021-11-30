@@ -1339,7 +1339,7 @@ class Document : public nsINode,
   nsresult GetSrcdocData(nsAString& aSrcdocData);
 
   already_AddRefed<AnonymousContent> InsertAnonymousContent(
-      Element& aElement, ErrorResult& aError);
+      Element& aElement, bool aForce, ErrorResult& aError);
   void RemoveAnonymousContent(AnonymousContent& aContent, ErrorResult& aError);
   /**
    * If aNode is a descendant of anonymous content inserted by
