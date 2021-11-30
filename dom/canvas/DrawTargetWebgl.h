@@ -92,6 +92,7 @@ class DrawTargetWebgl : public DrawTarget {
   size_t mTotalTextureMemory = 0;
   RefPtr<TextureHandle> mSnapshotTexture;
   CompositionOp mLastCompositionOp = CompositionOp::OP_SOURCE;
+  uint32_t mMaxTextureSize = 0;
 
  public:
   DrawTargetWebgl();
@@ -101,6 +102,8 @@ class DrawTargetWebgl : public DrawTarget {
                                                   SurfaceFormat aFormat);
 
   bool Init(const IntSize& aSize, SurfaceFormat aFormat);
+
+  bool IsValid() const override;
 
   DrawTargetType GetType() const override {
     return DrawTargetType::HARDWARE_RASTER;

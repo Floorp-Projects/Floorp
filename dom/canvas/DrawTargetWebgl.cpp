@@ -236,8 +236,9 @@ bool DrawTargetWebgl::Init(const IntSize& size, const SurfaceFormat format) {
     return false;
   }
 
-  if (size_t(std::max(size.width, size.height)) >
-      mWebgl->Limits().maxTex2dSize) {
+  // Cache the max texture size in case the WebGL context is lost.
+  mMaxTextureSize = mWebgl->Limits().maxTex2dSize;
+  if (size_t(std::max(size.width, size.height)) > mMaxTextureSize) {
     mWebgl = nullptr;
     return false;
   }
@@ -254,6 +255,11 @@ bool DrawTargetWebgl::Init(const IntSize& size, const SurfaceFormat format) {
   mSize = size;
   mFormat = format;
   return true;
+}
+
+// Signal to CanvasRenderingContext2D when the WebGL context is lost.
+bool DrawTargetWebgl::IsValid() const {
+  return mWebgl && !mWebgl->IsContextLost();
 }
 
 already_AddRefed<DrawTargetWebgl> DrawTargetWebgl::Create(
@@ -307,6 +313,10 @@ already_AddRefed<DrawTargetWebgl> DrawTargetWebgl::Create(
 void* DrawTargetWebgl::GetNativeSurface(NativeSurfaceType aType) {
   switch (aType) {
     case NativeSurfaceType::WEBGL_CONTEXT:
+      // If the context is lost, then don't attempt to access it.
+      if (mWebgl->IsContextLost()) {
+        return nullptr;
+      }
       if (!mWebglValid) {
         FlushFromSkia();
       }
@@ -326,6 +336,12 @@ already_AddRefed<SourceSurface> DrawTargetWebgl::Snapshot() {
   RefPtr<SourceSurface> snapshot = mSnapshot;
   if (snapshot) {
     return snapshot.forget();
+  }
+
+  // If there's no valid Skia and the WebGL context is lost, there is nothing to
+  // snapshot.
+  if (mWebgl->IsContextLost()) {
+    return nullptr;
   }
 
   // If no snapshot, then allocate one, map it, and read from the WebGL context
@@ -591,7 +607,7 @@ bool DrawTargetWebgl::SupportsPattern(const Pattern& aPattern) {
         // limit.
         int32_t maxSize = int32_t(
             std::min(StaticPrefs::gfx_canvas_accelerated_max_surface_size(),
-                     mWebgl->Limits().maxTex2dSize));
+                     mMaxTextureSize));
         // Check if either of the surface dimensions or the sampling rect,
         // if supplied, exceed the maximum.
         if (std::max(size.width, size.height) > maxSize &&
@@ -655,7 +671,7 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
   // Check if the drawing options, the pattern, and the clip rectangle support
   // acceleration. If not, fall back to using the Skia target.
   if (!SupportsDrawOptions(aOptions) || !SupportsPattern(aPattern) ||
-      !intClip) {
+      !intClip || mWebgl->IsContextLost()) {
     // If only accelerated drawing was requested, bail out.
     if (aAccelOnly) {
       return false;
@@ -883,7 +899,7 @@ bool DrawTargetWebgl::DrawRect(const Rect& aRect, const Pattern& aPattern,
         // The requested page size for shared textures.
         int32_t pageSize = int32_t(
             std::min(StaticPrefs::gfx_canvas_accelerated_shared_page_size(),
-                     mWebgl->Limits().maxTex2dSize));
+                     mMaxTextureSize));
         if (!aForceUpdate &&
             std::max(texSize.width, texSize.height) <= pageSize / 2) {
           // Ensure that the surface size won't change via forced update and
@@ -1671,7 +1687,7 @@ void DrawTargetWebgl::ReadIntoSkia() {
   if (mSkiaValid) {
     return;
   }
-  if (mWebglValid) {
+  if (mWebglValid && !mWebgl->IsContextLost()) {
     uint8_t* data = nullptr;
     IntSize size;
     int32_t stride;
@@ -1692,6 +1708,11 @@ void DrawTargetWebgl::ReadIntoSkia() {
 
 // Attempts to draw the contents of the Skia target into the WebGL context.
 bool DrawTargetWebgl::FlushFromSkia() {
+  // If the WebGL context has been lost, then mark it as invalid and fail.
+  if (mWebgl->IsContextLost()) {
+    mWebglValid = false;
+    return false;
+  }
   if (mWebglValid) {
     return true;
   }
