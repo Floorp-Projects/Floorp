@@ -27,6 +27,13 @@ class GeckoChildProcessHost;
  */
 nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult);
 
+/**
+ * Return the number of milliseconds of GPU time used since process start.
+ *
+ * @return NS_OK on success.
+ */
+nsresult GetGpuTimeSinceProcessStartInMs(uint64_t* aResult);
+
 // Process types. When updating this enum, please make sure to update
 // WebIDLProcType, ChromeUtils::RequestProcInfo and ProcTypeToWebIDL to
 // mirror the changes.

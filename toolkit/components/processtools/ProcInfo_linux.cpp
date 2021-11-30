@@ -196,6 +196,10 @@ nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult) {
   return NS_OK;
 }
 
+nsresult GetGpuTimeSinceProcessStartInMs(uint64_t* aResult) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
   auto holder = MakeUnique<MozPromiseHolder<ProcInfoPromise>>();
   RefPtr<ProcInfoPromise> promise = holder->Ensure(__func__);
