@@ -84,49 +84,33 @@ add_task(async function test_error_messages() {
       "cookies.getAll cannot read private cookies without permission"
     );
 
-    // Invalid storeId (non-existent container).
+    // Invalid storeId.
     await browser.test.assertRejects(
       set({ storeId: "firefox-container-99" }),
-      "Illegal storeId: firefox-container-99",
+      `Invalid cookie store id: "firefox-container-99"`,
       "cookies.set with invalid storeId (non-existent container)"
     );
-    browser.test.assertEq(
-      null,
-      await remove({ storeId: "firefox-container-99" }),
-      "cookies.remove with invalid storeId (non-existent container)"
-    );
-    browser.test.assertEq(
-      null,
-      await get({ storeId: "firefox-container-99" }),
-      "cookies.remove with invalid storeId (non-existent container)"
-    );
-    browser.test.assertEq(
-      "[]",
-      JSON.stringify(await getAll({ storeId: "firefox-container-99" })),
-      "cookies.remove with invalid storeId (non-existent container)"
-    );
 
-    // Invalid storeId (format not recognized).
     await browser.test.assertRejects(
       set({ storeId: "0" }),
-      "Unknown storeId",
+      `Invalid cookie store id: "0"`,
       "cookies.set with invalid storeId (format not recognized)"
     );
-    browser.test.assertEq(
-      null,
-      await remove({ storeId: "0" }),
-      "cookies.remove with invalid storeId (format not recognized)"
-    );
-    browser.test.assertEq(
-      null,
-      await get({ storeId: "0" }),
-      "cookies.remove with invalid storeId (format not recognized)"
-    );
-    browser.test.assertEq(
-      "[]",
-      JSON.stringify(await getAll({ storeId: "0" })),
-      "cookies.remove with invalid storeId (format not recognized)"
-    );
+
+    for (let method of [remove, get, getAll]) {
+      let resultWithInvalidStoreId = method == getAll ? [] : null;
+      browser.test.assertEq(
+        JSON.stringify(await method({ storeId: "firefox-container-99" })),
+        JSON.stringify(resultWithInvalidStoreId),
+        `cookies.${method.name} with invalid storeId (non-existent container)`
+      );
+
+      browser.test.assertEq(
+        JSON.stringify(await method({ storeId: "0" })),
+        JSON.stringify(resultWithInvalidStoreId),
+        `cookies.${method.name} with invalid storeId (format not recognized)`
+      );
+    }
 
     browser.test.sendMessage("test_done");
   }
