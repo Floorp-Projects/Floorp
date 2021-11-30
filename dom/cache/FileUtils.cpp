@@ -8,10 +8,10 @@
 
 #include "DBSchema.h"
 #include "mozilla/dom/InternalResponse.h"
-#include "mozilla/dom/QMResultInlines.h"
 #include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/QuotaObject.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/SnappyCompressOutputStream.h"
 #include "mozilla/Unused.h"

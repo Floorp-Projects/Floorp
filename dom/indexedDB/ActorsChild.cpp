@@ -38,6 +38,7 @@
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/Encoding.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ProfilerLabels.h"

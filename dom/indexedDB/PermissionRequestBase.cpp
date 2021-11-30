@@ -12,6 +12,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "nsIObserverService.h"
 #include "nsIPrincipal.h"
 #include "nsXULAppAPI.h"

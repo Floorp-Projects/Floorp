@@ -7,15 +7,13 @@
 #ifndef DOM_QUOTA_QMRESULTINLINES_H_
 #define DOM_QUOTA_QMRESULTINLINES_H_
 
-#ifndef DOM_QUOTA_QMRESULT_H_
-#  error Must include QMResult.h first
-#endif
-
+#include "nsError.h"
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
+#include "mozilla/dom/QMResult.h"
+#include "mozilla/dom/quota/Config.h"
 
 #ifdef QM_ERROR_STACKS_ENABLED
-#  include "nsError.h"
 #  include "mozilla/ResultVariant.h"
 #endif
 
@@ -82,5 +80,21 @@ inline Result<Ok, E> ToResult(QMResult&& aValue) {
 #endif
 
 }  // namespace mozilla
+
+// TODO: Maybe move this to mfbt/ResultExtensions.h
+#define MOZ_TO_RESULT(expr) ToResult(expr)
+
+#define QM_TO_RESULT(expr) ToResult<QMResult>(expr)
+
+#define QM_TO_RESULT_INVOKE(obj, methodname, ...)                        \
+  ::mozilla::ToResultInvoke<QMResult>(                                   \
+      (obj), &::mozilla::detail::DerefedType<decltype(obj)>::methodname, \
+      ##__VA_ARGS__)
+
+#define QM_TO_RESULT_INVOKE_TYPED(resultType, obj, methodname, ...)    \
+  (::mozilla::ToResultInvoke<resultType, QMResult>(                    \
+      ::std::mem_fn(                                                   \
+          &::mozilla::detail::DerefedType<decltype(obj)>::methodname), \
+      (obj), ##__VA_ARGS__))
 
 #endif

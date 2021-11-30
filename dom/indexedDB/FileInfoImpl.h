@@ -10,8 +10,8 @@
 #include "FileInfo.h"
 
 #include "mozilla/dom/QMResult.h"
-#include "mozilla/dom/QMResultInlines.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/Mutex.h"
 #include "nsIFile.h"
 

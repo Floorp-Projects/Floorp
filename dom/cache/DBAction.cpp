@@ -11,6 +11,7 @@
 #include "mozilla/dom/cache/FileUtils.h"
 #include "mozilla/dom/cache/QuotaClient.h"
 #include "mozilla/dom/quota/PersistenceType.h"
+#include "mozilla/dom/quota/ResultExtensions.h"
 #include "mozilla/net/nsFileProtocolHandler.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageService.h"
