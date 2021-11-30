@@ -7,6 +7,7 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/ErrorResult.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/BrowserParent.h"
@@ -2523,6 +2524,12 @@ bool CanonicalBrowsingContext::AllowedInBFCache(
   }
 
   if (IsInProcess()) {
+    return false;
+  }
+
+  nsAutoCString remoteType;
+  GetCurrentRemoteType(remoteType, IgnoredErrorResult());
+  if (remoteType == LARGE_ALLOCATION_REMOTE_TYPE) {
     return false;
   }
 
