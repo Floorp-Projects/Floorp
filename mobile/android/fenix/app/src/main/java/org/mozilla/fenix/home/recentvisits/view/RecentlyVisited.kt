@@ -25,8 +25,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
@@ -47,6 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.EagerFlingBehavior
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem
 import org.mozilla.fenix.home.recentvisits.RecentlyVisitedItem.RecentHistoryGroup
@@ -59,10 +62,8 @@ private const val VISITS_PER_COLUMN = 3
 /**
  * A list of recently visited items.
  *
- * @param recentVisits List of [RecentHistoryGroup] to display.
- * @param menuItems List of [RecentVisitMenuItem] for [RecentHistoryGroup]s.
- * Currently [RecentHistoryHighlight]s do not support a menu -
- * https://mozilla-hub.atlassian.net/browse/FXMUX-187
+ * @param recentVisits List of [RecentlyVisitedItem] to display.
+ * @param menuItems List of [RecentVisitMenuItem] shown long clicking a [RecentlyVisitedItem].
  * @param onRecentVisitClick Invoked when the user clicks on a recent visit.
  */
 @Composable
@@ -77,9 +78,14 @@ fun RecentlyVisited(
         backgroundColor = FirefoxTheme.colors.layer2,
         elevation = 6.dp
     ) {
+        val listState = rememberLazyListState()
+        val flingBehavior = EagerFlingBehavior(lazyRowState = listState)
+
         LazyRow(
+            state = listState,
             contentPadding = PaddingValues(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(32.dp)
+            horizontalArrangement = Arrangement.spacedBy(32.dp),
+            flingBehavior = flingBehavior
         ) {
             val itemsList = recentVisits.chunked(VISITS_PER_COLUMN)
 
@@ -92,6 +98,7 @@ fun RecentlyVisited(
                             is RecentHistoryHighlight -> RecentlyVisitedHistoryHighlight(
                                 recentVisit = recentVisit,
                                 menuItems = menuItems,
+                                clickableEnabled = listState.atLeastHalfVisibleItems.contains(pageIndex),
                                 showDividerLine = index < items.size - 1,
                                 onRecentVisitClick = {
                                     onRecentVisitClick(it, pageIndex + 1)
@@ -100,6 +107,7 @@ fun RecentlyVisited(
                             is RecentHistoryGroup -> RecentlyVisitedHistoryGroup(
                                 recentVisit = recentVisit,
                                 menuItems = menuItems,
+                                clickableEnabled = listState.atLeastHalfVisibleItems.contains(pageIndex),
                                 showDividerLine = index < items.size - 1,
                                 onRecentVisitClick = {
                                     onRecentVisitClick(it, pageIndex + 1)
@@ -118,6 +126,7 @@ fun RecentlyVisited(
  *
  * @param recentVisit The [RecentHistoryGroup] to display.
  * @param menuItems List of [RecentVisitMenuItem] to display in a recent visit dropdown menu.
+ * @param clickableEnabled Whether click actions should be invoked or not.
  * @param showDividerLine Whether to show a divider line at the bottom.
  * @param onRecentVisitClick Invoked when the user clicks on a recent visit.
  */
@@ -126,6 +135,7 @@ fun RecentlyVisited(
 private fun RecentlyVisitedHistoryGroup(
     recentVisit: RecentHistoryGroup,
     menuItems: List<RecentVisitMenuItem>,
+    clickableEnabled: Boolean,
     showDividerLine: Boolean,
     onRecentVisitClick: (RecentHistoryGroup) -> Unit = { _ -> },
 ) {
@@ -134,6 +144,7 @@ private fun RecentlyVisitedHistoryGroup(
     Row(
         modifier = Modifier
             .combinedClickable(
+                enabled = clickableEnabled,
                 onClick = { onRecentVisitClick(recentVisit) },
                 onLongClick = { isMenuExpanded = true }
             )
@@ -153,13 +164,18 @@ private fun RecentlyVisitedHistoryGroup(
         ) {
             RecentlyVisitedTitle(
                 text = recentVisit.title,
-                modifier = Modifier.padding(top = 7.dp, bottom = 2.dp)
+                modifier = Modifier
+                    .padding(top = 7.dp, bottom = 2.dp)
+                    .weight(1f)
             )
 
-            RecentlyVisitedCaption(recentVisit.historyMetadata.size)
+            RecentlyVisitedCaption(
+                count = recentVisit.historyMetadata.size,
+                modifier = Modifier.weight(1f)
+            )
 
             if (showDividerLine) {
-                RecentlyVisitedDivider(modifier = Modifier.padding(top = 9.dp))
+                RecentlyVisitedDivider()
             }
         }
 
@@ -177,6 +193,7 @@ private fun RecentlyVisitedHistoryGroup(
  *
  * @param recentVisit The [RecentHistoryHighlight] to display.
  * @param menuItems List of [RecentVisitMenuItem] to display in a recent visit dropdown menu.
+ * @param clickableEnabled Whether click actions should be invoked or not.
  * @param showDividerLine Whether to show a divider line at the bottom.
  * @param onRecentVisitClick Invoked when the user clicks on a recent visit.
  */
@@ -185,6 +202,7 @@ private fun RecentlyVisitedHistoryGroup(
 private fun RecentlyVisitedHistoryHighlight(
     recentVisit: RecentHistoryHighlight,
     menuItems: List<RecentVisitMenuItem>,
+    clickableEnabled: Boolean,
     showDividerLine: Boolean,
     onRecentVisitClick: (RecentHistoryHighlight) -> Unit = { _ -> },
 ) {
@@ -193,6 +211,7 @@ private fun RecentlyVisitedHistoryHighlight(
     Row(
         modifier = Modifier
             .combinedClickable(
+                enabled = clickableEnabled,
                 onClick = { onRecentVisitClick(recentVisit) },
                 onLongClick = { isMenuExpanded = true }
             )
@@ -248,9 +267,13 @@ private fun RecentlyVisitedTitle(
  * The caption text for a recent visit.
  *
  * @param count Number of recently visited items to display in the caption.
+ * @param modifier [Modifier] allowing to perfectly place this.
  */
 @Composable
-private fun RecentlyVisitedCaption(count: Int) {
+private fun RecentlyVisitedCaption(
+    count: Int,
+    modifier: Modifier
+) {
     val stringId = if (count == 1) {
         R.string.history_search_group_site
     } else {
@@ -259,6 +282,7 @@ private fun RecentlyVisitedCaption(count: Int) {
 
     Text(
         text = String.format(LocalContext.current.getString(stringId), count),
+        modifier = modifier,
         color = when (isSystemInDarkTheme()) {
             true -> FirefoxTheme.colors.textPrimary
             false -> FirefoxTheme.colors.textSecondary
@@ -341,7 +365,18 @@ private fun RecentlyVisitedDivider(
     )
 }
 
-@ExperimentalFoundationApi
+/**
+ * Get the indexes in list of all items which have more than half showing.
+ */
+private val LazyListState.atLeastHalfVisibleItems
+    get() = layoutInfo
+        .visibleItemsInfo
+        .filter {
+            val startEdge = maxOf(0, layoutInfo.viewportStartOffset - it.offset)
+            val endEdge = maxOf(0, it.offset + it.size - layoutInfo.viewportEndOffset)
+            return@filter startEdge + endEdge < it.size / 2
+        }.map { it.index }
+
 @Composable
 @Preview
 private fun RecentlyVisitedPreview() {
