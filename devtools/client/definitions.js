@@ -505,17 +505,6 @@ exports.defaultThemes = [Tools.darkTheme, Tools.lightTheme];
 // (By default, supported target is only local tab)
 exports.ToolboxButtons = [
   {
-    id: "command-button-paintflashing",
-    description: l10n("toolbox.buttons.paintflashing"),
-    isTargetSupported: target => target.isLocalTab,
-    onClick(event, toolbox) {
-      toolbox.togglePaintFlashing();
-    },
-    isChecked(toolbox) {
-      return toolbox.isPaintFlashing;
-    },
-  },
-  {
     id: "command-button-experimental-prefs",
     description: "DevTools Experimental preferences",
     isTargetSupported: target => !AppConstants.MOZILLA_OFFICIAL,
