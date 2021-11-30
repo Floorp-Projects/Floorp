@@ -2164,6 +2164,20 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
   }
 #endif
 
+#ifdef ENABLE_NEW_SET_METHODS
+  if (key == JSProto_Set &&
+      !cx->realm()->creationOptions().getNewSetMethodsEnabled() &&
+      (id == NameToId(cx->names().union_) ||
+       id == NameToId(cx->names().difference) ||
+       id == NameToId(cx->names().intersection) ||
+       id == NameToId(cx->names().isSubsetOf) ||
+       id == NameToId(cx->names().isSupersetOf) ||
+       id == NameToId(cx->names().isDisjointFrom) ||
+       id == NameToId(cx->names().symmetricDifference))) {
+    return true;
+  }
+#endif
+
   return false;
 }
 

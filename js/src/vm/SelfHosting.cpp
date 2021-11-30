@@ -2456,6 +2456,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     ReflectGetPrototypeOf),
     JS_FN("std_Reflect_isExtensible", Reflect_isExtensible, 1, 0),
     JS_FN("std_Reflect_ownKeys", Reflect_ownKeys, 1, 0),
+    JS_FN("std_Set_add", SetObject::add, 1, 0),
+    JS_FN("std_Set_has", SetObject::has, 1, 0),
     JS_FN("std_Set_values", SetObject::values, 0, 0),
     JS_INLINABLE_FN("std_String_charCodeAt", str_charCodeAt, 1, 0,
                     StringCharCodeAt),
