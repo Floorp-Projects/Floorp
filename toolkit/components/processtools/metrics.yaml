@@ -26,3 +26,19 @@ power:
     notification_emails:
       - florian@mozilla.com
     expires: never
+
+  total_gpu_time_ms:
+    type: counter
+    description: >
+      Total GPU time used by all processes in ms.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1743176
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1743176
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - florian@mozilla.com
+    expires: never
+    no_lint:
+      - COMMON_PREFIX

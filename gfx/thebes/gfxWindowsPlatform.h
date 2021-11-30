@@ -6,12 +6,6 @@
 #ifndef GFX_WINDOWS_PLATFORM_H
 #define GFX_WINDOWS_PLATFORM_H
 
-/**
- * XXX to get CAIRO_HAS_DWRITE_FONT
- * and cairo_win32_scaled_font_select_font
- */
-#include "cairo-win32.h"
-
 #include "gfxCrashReporterUtils.h"
 #include "gfxFontUtils.h"
 #include "gfxWindowsSurface.h"
@@ -177,6 +171,8 @@ class gfxWindowsPlatform final : public gfxPlatform {
   }
 
  public:
+  static nsresult GetGpuTimeSinceProcessStartInMs(uint64_t* aResult);
+
   bool DwmCompositionEnabled();
 
   mozilla::layers::ReadbackManagerD3D11* GetReadbackManager();
