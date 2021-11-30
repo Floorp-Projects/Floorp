@@ -3451,7 +3451,6 @@ bool nsCycleCollector::Collect(CCReason aReason, ccIsManual aIsManual,
     // Somebody has forced a CC, so after having finished out the current CC,
     // run the CC again using the new listener.
     MOZ_ASSERT(IsIdle());
-    aBudget.resetOverBudget();
     if (Collect(aReason, ccIsManual::CCIsManual, aBudget, aManualListener)) {
       collectedAny = true;
     }
