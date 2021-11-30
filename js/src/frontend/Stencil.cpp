@@ -1829,6 +1829,85 @@ static void FunctionsFromExistingLazy(CompilationInput& input,
   }
 }
 
+void CompilationStencil::borrowFromExtensibleCompilationStencil(
+    ExtensibleCompilationStencil& extensibleStencil) {
+  canLazilyParse = extensibleStencil.canLazilyParse;
+  functionKey = extensibleStencil.functionKey;
+
+  // Borrow the vector content as span.
+  scriptData = extensibleStencil.scriptData;
+  scriptExtra = extensibleStencil.scriptExtra;
+
+  gcThingData = extensibleStencil.gcThingData;
+
+  scopeData = extensibleStencil.scopeData;
+  scopeNames = extensibleStencil.scopeNames;
+
+  regExpData = extensibleStencil.regExpData;
+  bigIntData = extensibleStencil.bigIntData;
+  objLiteralData = extensibleStencil.objLiteralData;
+
+  // Borrow the parser atoms as span.
+  parserAtomData = extensibleStencil.parserAtoms.entries_;
+
+  // Borrow container.
+  sharedData.setBorrow(&extensibleStencil.sharedData);
+
+  // Share ref-counted data.
+  source = extensibleStencil.source;
+  asmJS = extensibleStencil.asmJS;
+  moduleMetadata = extensibleStencil.moduleMetadata;
+}
+
+#ifdef DEBUG
+template <typename SpanT, typename VecT>
+void AssertBorrowingSpan(const SpanT& span, const VecT& vec) {
+  MOZ_ASSERT(span.size() == vec.length());
+  MOZ_ASSERT(span.data() == vec.begin());
+}
+
+void CompilationStencil::assertBorrowingFromExtensibleCompilationStencil(
+    const ExtensibleCompilationStencil& extensibleStencil) const {
+  MOZ_ASSERT(canLazilyParse == extensibleStencil.canLazilyParse);
+  MOZ_ASSERT(functionKey == extensibleStencil.functionKey);
+
+  AssertBorrowingSpan(scriptData, extensibleStencil.scriptData);
+  AssertBorrowingSpan(scriptExtra, extensibleStencil.scriptExtra);
+
+  AssertBorrowingSpan(gcThingData, extensibleStencil.gcThingData);
+
+  AssertBorrowingSpan(scopeData, extensibleStencil.scopeData);
+  AssertBorrowingSpan(scopeNames, extensibleStencil.scopeNames);
+
+  AssertBorrowingSpan(regExpData, extensibleStencil.regExpData);
+  AssertBorrowingSpan(bigIntData, extensibleStencil.bigIntData);
+  AssertBorrowingSpan(objLiteralData, extensibleStencil.objLiteralData);
+
+  AssertBorrowingSpan(parserAtomData, extensibleStencil.parserAtoms.entries_);
+
+  MOZ_ASSERT(sharedData.isBorrow());
+  MOZ_ASSERT(sharedData.asBorrow() == &extensibleStencil.sharedData);
+
+  MOZ_ASSERT(source == extensibleStencil.source);
+  MOZ_ASSERT(asmJS == extensibleStencil.asmJS);
+  MOZ_ASSERT(moduleMetadata == extensibleStencil.moduleMetadata);
+}
+#endif
+
+CompilationStencil::CompilationStencil(
+    UniquePtr<ExtensibleCompilationStencil>&& extensibleStencil)
+    : alloc(LifoAllocChunkSize) {
+  ownedBorrowStencil = std::move(extensibleStencil);
+
+  hasExternalDependency = false;
+
+  borrowFromExtensibleCompilationStencil(*ownedBorrowStencil);
+
+#ifdef DEBUG
+  assertNoExternalDependency();
+#endif
+}
+
 /* static */
 bool CompilationStencil::instantiateStencils(JSContext* cx,
                                              CompilationInput& input,
@@ -2210,32 +2289,7 @@ BorrowingCompilationStencil::BorrowingCompilationStencil(
     : CompilationStencil(extensibleStencil.source) {
   hasExternalDependency = true;
 
-  canLazilyParse = extensibleStencil.canLazilyParse;
-  functionKey = extensibleStencil.functionKey;
-
-  // Borrow the vector content as span.
-  scriptData = extensibleStencil.scriptData;
-  scriptExtra = extensibleStencil.scriptExtra;
-
-  gcThingData = extensibleStencil.gcThingData;
-
-  scopeData = extensibleStencil.scopeData;
-  scopeNames = extensibleStencil.scopeNames;
-
-  regExpData = extensibleStencil.regExpData;
-  bigIntData = extensibleStencil.bigIntData;
-  objLiteralData = extensibleStencil.objLiteralData;
-
-  // Borrow the parser atoms as span.
-  parserAtomData = extensibleStencil.parserAtoms.entries_;
-
-  // Borrow container.
-  sharedData.setBorrow(&extensibleStencil.sharedData);
-
-  // Share ref-counted data.
-  source = extensibleStencil.source;
-  asmJS = extensibleStencil.asmJS;
-  moduleMetadata = extensibleStencil.moduleMetadata;
+  borrowFromExtensibleCompilationStencil(extensibleStencil);
 }
 
 SharedDataContainer::~SharedDataContainer() {
@@ -2422,6 +2476,13 @@ bool SharedDataContainer::addExtraWithoutShare(
 
 #ifdef DEBUG
 void CompilationStencil::assertNoExternalDependency() const {
+  if (ownedBorrowStencil) {
+    ownedBorrowStencil->assertNoExternalDependency();
+
+    assertBorrowingFromExtensibleCompilationStencil(*ownedBorrowStencil);
+    return;
+  }
+
   MOZ_ASSERT_IF(!scriptData.empty(), alloc.contains(scriptData.data()));
   MOZ_ASSERT_IF(!scriptExtra.empty(), alloc.contains(scriptExtra.data()));
 
