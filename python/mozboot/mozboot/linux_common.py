@@ -157,6 +157,7 @@ class MobileAndroidBootstrapper(object):
     def ensure_mobile_android_packages(self, state_dir, checkout_root):
         from mozboot import android
 
+        android.ensure_java("linux", platform.machine())
         self.install_toolchain_artifact(
             state_dir, checkout_root, android.LINUX_X86_64_ANDROID_AVD
         )

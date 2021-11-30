@@ -14,7 +14,6 @@ from distutils.version import LooseVersion
 from mozboot import rust
 from mozboot.util import (
     get_mach_virtualenv_binary,
-    locate_java_bin_path,
     MINIMUM_RUST_VERSION,
 )
 from mozfile import which
@@ -858,24 +857,3 @@ class BaseBootstrapper(object):
         if h.hexdigest() != hexhash:
             os.remove(dest)
             raise ValueError("Hash of downloaded file does not match expected hash")
-
-    def ensure_java(self, mozconfig_builder):
-        """Verify the presence of java.
-
-        Finds a valid Java (throwing an error if not possible) and encodes it to the mozconfig.
-        """
-
-        bin_dir = locate_java_bin_path()
-        mozconfig_builder.append(
-            """
-        # Use the same Java binary that was specified in bootstrap. This way, if the default system
-        # Java is different than what Firefox needs, users should just need to override it (with
-        # $JAVA_HOME) when running bootstrap, rather than when interacting with the build.
-        ac_add_options --with-java-bin-path={}
-        """.format(
-                bin_dir
-            )
-        )
-
-        print("Your version of Java ({}) is 1.8.".format(bin_dir))
-        return bin_dir

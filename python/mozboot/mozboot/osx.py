@@ -155,14 +155,6 @@ class OSXBootstrapper(BaseBootstrapper):
         pass
 
     def install_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
-        # Multi-part process:
-        # 1. System packages.
-        # 2. Android SDK. Android NDK only if we are not in artifact mode. Android packages.
-
-        # 1. System packages.
-        casks = ["adoptopenjdk8"]
-        self._ensure_homebrew_casks(casks)
-
         os_arch = platform.machine()
         if os_arch != "x86_64" and os_arch != "arm64":
             raise Exception(
@@ -170,10 +162,6 @@ class OSXBootstrapper(BaseBootstrapper):
                 "GeckoView/Firefox for Android."
             )
 
-        # 2. Android pieces.
-        java_path = self.ensure_java(mozconfig_builder)
-        # Prefer our validated java binary by putting it on the path first.
-        os.environ["PATH"] = "{}{}{}".format(java_path, os.pathsep, os.environ["PATH"])
         from mozboot import android
 
         android.ensure_android(
@@ -202,6 +190,7 @@ class OSXBootstrapper(BaseBootstrapper):
     def ensure_mobile_android_packages(self, state_dir, checkout_root):
         from mozboot import android
 
+        android.ensure_java("macosx", platform.machine())
         self.install_toolchain_artifact(
             state_dir, checkout_root, android.MACOS_X86_64_ANDROID_AVD
         )
