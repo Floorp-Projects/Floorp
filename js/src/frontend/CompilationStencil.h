@@ -997,8 +997,14 @@ struct CompilationStencil {
   // See: JS::StencilAddRef/Release
   mutable mozilla::Atomic<uintptr_t> refCount{0};
 
+ private:
+  // On-heap ExtensibleCompilationStencil that this CompilationStencil owns,
+  // and this CompilationStencil borrows each data from.
+  UniquePtr<ExtensibleCompilationStencil> ownedBorrowStencil;
+
+ public:
   // Set to true if any pointer/span contains external data instead of
-  // LifoAlloc or owned memory.
+  // LifoAlloc or owned ExtensibleCompilationStencil.
   bool hasExternalDependency = false;
 
   // Value of CanLazilyParse(CompilationInput) on compilation.
@@ -1067,6 +1073,21 @@ struct CompilationStencil {
   explicit CompilationStencil(ScriptSource* source)
       : alloc(LifoAllocChunkSize), source(source) {}
 
+  // Take the ownership of on-heap ExtensibleCompilationStencil and
+  // borrow from it.
+  explicit CompilationStencil(
+      UniquePtr<ExtensibleCompilationStencil>&& extensibleStencil);
+
+ protected:
+  void borrowFromExtensibleCompilationStencil(
+      ExtensibleCompilationStencil& extensibleStencil);
+
+#ifdef DEBUG
+  void assertBorrowingFromExtensibleCompilationStencil(
+      const ExtensibleCompilationStencil& extensibleStencil) const;
+#endif
+
+ public:
   static FunctionKey toFunctionKey(const SourceExtent& extent) {
     // In eval("x=>1"), the arrow function will have a sourceStart of 0 which
     // conflicts with the NullFunctionKey, so shift all keys by 1 instead.
@@ -1358,6 +1379,10 @@ class MOZ_STACK_CLASS BorrowingCompilationStencil : public CompilationStencil {
 // LifoAlloc) and RefPtrs since we are not the unique owner.
 inline size_t CompilationStencil::sizeOfExcludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
+  if (ownedBorrowStencil) {
+    return ownedBorrowStencil->sizeOfIncludingThis(mallocSizeOf);
+  }
+
   size_t moduleMetadataSize =
       moduleMetadata ? moduleMetadata->sizeOfIncludingThis(mallocSizeOf) : 0;
   size_t asmJSSize = asmJS ? asmJS->sizeOfIncludingThis(mallocSizeOf) : 0;
