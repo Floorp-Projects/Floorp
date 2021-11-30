@@ -32,6 +32,15 @@
 struct UFormattedValue;
 namespace mozilla::intl {
 
+static inline const char* IcuLocale(const char* aLocale) {
+  // Return the empty string if the input is exactly equal to the string "und".
+  const char* locale = aLocale;
+  if (!std::strcmp(locale, "und")) {
+    locale = "";  // ICU root locale
+  }
+  return locale;
+}
+
 static inline const char* AssertNullTerminatedString(Span<const char> aSpan) {
   // Intentionally check one past the last character, because we expect that the
   // NUL character isn't part of the string.
@@ -52,26 +61,6 @@ static inline const char* AssertNullTerminatedString(std::string_view aView) {
   MOZ_ASSERT(std::strlen(aView.data()) == aView.size());
 
   return aView.data();
-}
-
-/**
- * Map the "und" locale to an empty string, which the ICU uses internally.
- */
-static inline const char* IcuLocale(const char* aLocale) {
-  // Return the empty string if the input is exactly equal to the string "und".
-  const char* locale = aLocale;
-  if (!std::strcmp(locale, "und")) {
-    locale = "";  // ICU root locale
-  }
-  return locale;
-}
-
-/**
- * Ensure a locale is null-terminated, and map the "und" locale to an empty
- * string, which the ICU uses internally.
- */
-static inline const char* IcuLocale(Span<const char> aLocale) {
-  return IcuLocale(AssertNullTerminatedString(aLocale));
 }
 
 using ICUResult = Result<Ok, ICUError>;
@@ -232,7 +221,7 @@ class nsTArrayToBufferAdapter {
    * Ensures the buffer has enough space to accommodate |size| elements.
    */
   [[nodiscard]] bool reserve(size_t size) {
-    // Use fallible behavior here.
+    // Use faillible behavior here.
     return mArray.SetCapacity(size, fallible);
   }
 
@@ -290,9 +279,8 @@ static ICUResult FillBufferWithICUCall(AutoTArray<CharType, N>& array,
 #endif
 
 /**
- * Fill a UTF-8 or a UTF-16 buffer with a UTF-16 span. ICU4C mostly uses UTF-16
- * internally, but different consumers may have different situations with their
- * buffers.
+ * ICU4C works with UTF-16 strings, but consumers of mozilla::intl may require
+ * UTF-8 strings.
  */
 template <typename Buffer>
 [[nodiscard]] bool FillBuffer(Span<const char16_t> utf16Span,
@@ -333,73 +321,24 @@ template <typename Buffer>
 }
 
 /**
- * Fill a UTF-8 or a UTF-16 buffer with a UTF-8 span. ICU4C mostly uses UTF-16
- * internally, but different consumers may have different situations with their
- * buffers.
- */
-template <typename Buffer>
-[[nodiscard]] bool FillBuffer(Span<const char> utf8Span, Buffer& targetBuffer) {
-  static_assert(std::is_same_v<typename Buffer::CharType, char> ||
-                std::is_same_v<typename Buffer::CharType, unsigned char> ||
-                std::is_same_v<typename Buffer::CharType, char16_t>);
-
-  if constexpr (std::is_same_v<typename Buffer::CharType, char> ||
-                std::is_same_v<typename Buffer::CharType, unsigned char>) {
-    size_t amount = utf8Span.Length();
-    if (!targetBuffer.reserve(amount)) {
-      return false;
-    }
-    for (size_t i = 0; i < amount; i++) {
-      targetBuffer.data()[i] =
-          // Static cast in case of a mismatch between `unsigned char` and
-          // `char`
-          static_cast<typename Buffer::CharType>(utf8Span[i]);
-    }
-    targetBuffer.written(amount);
-  }
-  if constexpr (std::is_same_v<typename Buffer::CharType, char16_t>) {
-    if (!targetBuffer.reserve(utf8Span.Length() + 1)) {
-      return false;
-    }
-
-    size_t amount = ConvertUtf8toUtf16(
-        utf8Span, Span(targetBuffer.data(), targetBuffer.capacity()));
-
-    targetBuffer.written(amount);
-  }
-
-  return true;
-}
-
-/**
  * It is convenient for callers to be able to pass in UTF-8 strings to the API.
  * This function can be used to convert that to a stack-allocated UTF-16
- * mozilla::Vector that can then be passed into ICU calls. The string will be
- * null terminated.
+ * mozilla::Vector that can then be passed into ICU calls.
  */
 template <size_t StackSize>
 [[nodiscard]] static bool FillUTF16Vector(
     Span<const char> utf8Span,
     mozilla::Vector<char16_t, StackSize>& utf16TargetVec) {
   // Per ConvertUtf8toUtf16: The length of aDest must be at least one greater
-  // than the length of aSource. This additional length will be used for null
-  // termination.
+  // than the length of aSource
   if (!utf16TargetVec.reserve(utf8Span.Length() + 1)) {
     return false;
   }
-
   // ConvertUtf8toUtf16 fills the buffer with the data, but the length of the
-  // vector is unchanged.
-  size_t length = ConvertUtf8toUtf16(
-      utf8Span, Span(utf16TargetVec.begin(), utf16TargetVec.capacity()));
-
-  // Assert that the last element is free for writing a null terminator.
-  MOZ_ASSERT(length < utf16TargetVec.capacity());
-  utf16TargetVec.begin()[length] = '\0';
-
-  // The call to resizeUninitialized notifies the vector of how much was written
-  // exclusive of the null terminated character.
-  return utf16TargetVec.resizeUninitialized(length);
+  // vector is unchanged. The call to resizeUninitialized notifies the vector of
+  // how much was written.
+  return utf16TargetVec.resizeUninitialized(ConvertUtf8toUtf16(
+      utf8Span, Span(utf16TargetVec.begin(), utf16TargetVec.capacity())));
 }
 
 /**
