@@ -54,6 +54,7 @@ EXPORTS.mozilla.dom.quota += [
     "QuotaManagerImpl.h",
     "QuotaManagerService.h",
     "QuotaObject.h",
+    "RemoveParen.h",
     "ResultExtensions.h",
     "ScopedLogExtraInfo.h",
     "SerializationHelpers.h",
