@@ -24,6 +24,7 @@
 #include "mozilla/LoadInfo.h"
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/StaticPrefs_extensions.h"
+#include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/dom/ClientIPCTypes.h"
@@ -613,7 +614,10 @@ void ServiceWorkerContainer::GetScopeForUrl(const nsAString& aUrl,
 
   nsCOMPtr<nsIPrincipal> principal;
   nsresult rv = StoragePrincipalHelper::GetPrincipal(
-      window, StoragePrincipalHelper::eForeignPartitionedPrincipal,
+      window,
+      StaticPrefs::privacy_partition_serviceWorkers()
+          ? StoragePrincipalHelper::eForeignPartitionedPrincipal
+          : StoragePrincipalHelper::eRegularPrincipal,
       getter_AddRefs(principal));
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
