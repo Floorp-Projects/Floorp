@@ -85,6 +85,7 @@ class nsExternalHelperAppService : public nsIExternalHelperAppService,
                                     nsIHandlerInfo** aHandlerInfo) override;
 
   NS_IMETHOD LoadURI(nsIURI* aURI, nsIPrincipal* aTriggeringPrincipal,
+                     nsIPrincipal* aRedirectPrincipal,
                      mozilla::dom::BrowsingContext* aBrowsingContext,
                      bool aWasTriggeredExternally) override;
   NS_IMETHOD SetProtocolHandlerDefaults(nsIHandlerInfo* aHandlerInfo,

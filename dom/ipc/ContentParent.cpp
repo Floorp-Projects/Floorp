@@ -4448,6 +4448,7 @@ mozilla::ipc::IPCResult ContentParent::RecvAccumulateMixedContentHSTS(
 
 mozilla::ipc::IPCResult ContentParent::RecvLoadURIExternal(
     nsIURI* uri, nsIPrincipal* aTriggeringPrincipal,
+    nsIPrincipal* aRedirectPrincipal,
     const MaybeDiscarded<BrowsingContext>& aContext,
     bool aWasExternallyTriggered) {
   if (aContext.IsDiscarded()) {
@@ -4465,7 +4466,7 @@ mozilla::ipc::IPCResult ContentParent::RecvLoadURIExternal(
   }
 
   BrowsingContext* bc = aContext.get();
-  extProtService->LoadURI(uri, aTriggeringPrincipal, bc,
+  extProtService->LoadURI(uri, aTriggeringPrincipal, aRedirectPrincipal, bc,
                           aWasExternallyTriggered);
   return IPC_OK();
 }
