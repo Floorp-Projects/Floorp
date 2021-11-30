@@ -186,6 +186,7 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
   nsIRequest::TRRMode mEffectiveTRRMode = nsIRequest::TRR_DEFAULT_MODE;
 
   TRRSkippedReason mTRRSkippedReason = TRRSkippedReason::TRR_UNSET;
+  TRRSkippedReason mFirstTRRSkippedReason = TRRSkippedReason::TRR_UNSET;
   TRRSkippedReason mTRRAFailReason = TRRSkippedReason::TRR_UNSET;
   TRRSkippedReason mTRRAAAAFailReason = TRRSkippedReason::TRR_UNSET;
 
@@ -271,6 +272,7 @@ class AddrHostRecord final : public nsHostRecord {
   bool RemoveOrRefresh(bool aTrrToo);  // Mark records currently being resolved
                                        // as needed to resolve again.
 
+  void NotifyRetryingTrr();
   void ResolveComplete();
 
   static DnsPriority GetPriority(uint16_t aFlags);
