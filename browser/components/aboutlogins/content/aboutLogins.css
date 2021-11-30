@@ -10,15 +10,8 @@ body {
 body {
   --sidebar-width: 320px;
   display: grid;
-  /* In a narrow window, the header may be too wide
-     for a reduced size grid and expand outside of the grid.
-     A minimum width is needed on the flexible column to
-     give it a definite size so it will also expand outside
-     of the grid if necessary, to match the header. */
-  grid-template-columns: var(--sidebar-width) minmax(min-content, 1fr);
-  grid-template-rows: 75px 1fr;
-  grid-template-areas: "header header"
-                       "logins login";
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-areas: "logins main";
 }
 
 @media (max-width: 830px) {
@@ -29,10 +22,11 @@ body {
 
 header {
   display: flex;
-  grid-area: header;
   align-items: center;
   background-color: var(--in-content-page-background);
   border-bottom: 1px solid var(--in-content-border-color);
+  padding-block: 9px;
+  padding-inline-start: 16px;
   padding-inline-end: 23px;
 }
 
@@ -64,23 +58,16 @@ login-item[data-editing="true"] + login-intro,
   display: none;
 }
 
-login-intro,
-login-item {
-  grid-area: login;
+
+.heading-wrapper {
+  display: flex;
+  justify-content: center;
+  width: var(--sidebar-width);
+  font-weight: 600;
 }
 
-#branding-logo {
-  flex-basis: var(--sidebar-width);
-  flex-shrink: 0;
-  height: 32px;
-  -moz-context-properties: fill;
-  fill: #20123a;
-}
-
-@media (prefers-color-scheme: dark) {
-  #branding-logo {
-    fill: #fff;
-  }
+body > section {
+  grid-area: main;
 }
 
 :root:not(.official-branding) #branding-logo {
@@ -93,7 +80,7 @@ login-item {
 
 .master-password-auth-required > body > header,
 .master-password-auth-required > body > login-list,
-.master-password-auth-required > body > login-intro {
+.master-password-auth-required > body > section {
   filter: blur(2px)
 }
 

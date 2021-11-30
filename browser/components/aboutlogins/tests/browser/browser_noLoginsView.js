@@ -62,7 +62,7 @@ add_task(async function test_no_logins_class() {
       ok(
         loginIntro.shadowRoot
           .querySelector("a.intro-help-link")
-          .href.includes("lockwise"),
+          .href.includes("password-manager-remember-delete-edit-logins"),
         "Check support href populated"
       );
 

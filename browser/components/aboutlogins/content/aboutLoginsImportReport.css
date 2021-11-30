@@ -9,8 +9,10 @@
   grid-column: logins/login;
 }
 
-#branding-logo {
+.import-report-heading {
+  font-weight: 600;
   margin-block: auto;
+  margin-inline-start: 48px;
 }
 
 .summary {
