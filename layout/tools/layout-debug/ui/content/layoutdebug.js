@@ -23,7 +23,6 @@ const { Preferences } = ChromeUtils.import(
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const FEATURES = {
-  paintFlashing: "nglayout.debug.paint_flashing",
   paintDumping: "nglayout.debug.paint_dumping",
   invalidateDumping: "nglayout.debug.invalidate_dumping",
   eventDumping: "nglayout.debug.event_dumping",
@@ -403,7 +402,6 @@ function checkPersistentMenu(item) {
 
 function checkPersistentMenus() {
   // Restore the toggles that are stored in prefs.
-  checkPersistentMenu("paintFlashing");
   checkPersistentMenu("paintDumping");
   checkPersistentMenu("invalidateDumping");
   checkPersistentMenu("eventDumping");

@@ -19,8 +19,6 @@
 <!ENTITY ldb.visualDebugging.accesskey "V">
 <!ENTITY ldb.visualEventDebugging.label "Visual Event Debugging">
 <!ENTITY ldb.visualEventDebugging.accesskey "E">
-<!ENTITY ldb.paintFlashing.label "Paint Flashing">
-<!ENTITY ldb.paintFlashing.accesskey "F">
 <!ENTITY ldb.paintDumping.label "Paint Dumping">
 <!ENTITY ldb.paintDumping.accesskey "P">
 <!ENTITY ldb.invalidateDumping.label "Invalidate Dumping">
