@@ -540,14 +540,14 @@ class MediaEventForwarder : public MediaEventSource<Es...> {
   template <typename T>
   using ArgType = typename detail::EventTypeTraits<T>::ArgType;
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaEventForwarder);
-
   explicit MediaEventForwarder(nsCOMPtr<nsISerialEventTarget> aEventTarget)
       : mEventTarget(std::move(aEventTarget)) {}
 
   MediaEventForwarder(MediaEventForwarder&& aOther)
       : mEventTarget(aOther.mEventTarget),
         mListeners(std::move(aOther.mListeners)) {}
+
+  ~MediaEventForwarder() { MOZ_ASSERT(mListeners.IsEmpty()); }
 
   MediaEventForwarder& operator=(MediaEventForwarder&& aOther) {
     MOZ_RELEASE_ASSERT(mEventTarget == aOther.mEventTarget);
@@ -556,10 +556,11 @@ class MediaEventForwarder : public MediaEventSource<Es...> {
   }
 
   void Forward(MediaEventSource<Es...>& aSource) {
-    mListeners.AppendElement(aSource.Connect(
-        mEventTarget,
-        [self = RefPtr<MediaEventForwarder>(this)](ArgType<Es>&&... aEvents) {
-          self->NotifyInternal(std::forward<ArgType<Es>...>(aEvents)...);
+    // Forwarding a rawptr `this` here is fine, since DisconnectAll disconnect
+    // all mListeners synchronously and prevents this handler from running.
+    mListeners.AppendElement(
+        aSource.Connect(mEventTarget, [this](ArgType<Es>&&... aEvents) {
+          this->NotifyInternal(std::forward<ArgType<Es>...>(aEvents)...);
         }));
   }
 
@@ -571,8 +572,6 @@ class MediaEventForwarder : public MediaEventSource<Es...> {
   }
 
  private:
-  ~MediaEventForwarder() { MOZ_ASSERT(mListeners.IsEmpty()); }
-
   const nsCOMPtr<nsISerialEventTarget> mEventTarget;
   nsTArray<MediaEventListener> mListeners;
 };

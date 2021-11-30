@@ -20,30 +20,28 @@ class GmpPluginNotifier : public GmpPluginNotifierInterface {
  public:
   explicit GmpPluginNotifier(nsCOMPtr<nsISerialEventTarget> aOwningThread)
       : mOwningThread(std::move(aOwningThread)),
-        mCreatedGmpPluginEvent(
-            new MediaEventForwarder<uint64_t>(mOwningThread)),
-        mReleasedGmpPluginEvent(
-            new MediaEventForwarder<uint64_t>(mOwningThread)) {}
+        mCreatedGmpPluginEvent(mOwningThread),
+        mReleasedGmpPluginEvent(mOwningThread) {}
 
   ~GmpPluginNotifier() {
-    mCreatedGmpPluginEvent->DisconnectAll();
-    mReleasedGmpPluginEvent->DisconnectAll();
+    mCreatedGmpPluginEvent.DisconnectAll();
+    mReleasedGmpPluginEvent.DisconnectAll();
   }
 
   MediaEventSource<uint64_t>& CreatedGmpPluginEvent() override {
     MOZ_ASSERT(mOwningThread->IsOnCurrentThread());
-    return *mCreatedGmpPluginEvent;
+    return mCreatedGmpPluginEvent;
   }
 
   MediaEventSource<uint64_t>& ReleasedGmpPluginEvent() override {
     MOZ_ASSERT(mOwningThread->IsOnCurrentThread());
-    return *mReleasedGmpPluginEvent;
+    return mReleasedGmpPluginEvent;
   }
 
  protected:
   const nsCOMPtr<nsISerialEventTarget> mOwningThread;
-  RefPtr<MediaEventForwarder<uint64_t>> mCreatedGmpPluginEvent;
-  RefPtr<MediaEventForwarder<uint64_t>> mReleasedGmpPluginEvent;
+  MediaEventForwarder<uint64_t> mCreatedGmpPluginEvent;
+  MediaEventForwarder<uint64_t> mReleasedGmpPluginEvent;
 };
 
 class WebrtcVideoDecoderFactory : public GmpPluginNotifier,
