@@ -28,6 +28,13 @@ add_task(async function testNoLoginsLockwiseCardUI() {
       return ContentTaskUtils.is_visible(lockwiseCard);
     }, "Lockwise card for user with no logins is visible.");
 
+    const lockwiseTitle = content.document.querySelector("#lockwise-title");
+    is(
+      lockwiseTitle.textContent,
+      "Never forget a password again",
+      "Correct lockwise title is shown"
+    );
+
     const lockwiseHowItWorks = content.document.querySelector(
       "#lockwise-how-it-works"
     );
@@ -36,14 +43,14 @@ add_task(async function testNoLoginsLockwiseCardUI() {
       "How it works link is hidden"
     );
 
-    const lockwiseHeaderContent = content.document.querySelector(
+    const lockwiseHeaderString = content.document.querySelector(
       "#lockwise-header-content span"
-    );
-    await content.document.l10n.translateElements([lockwiseHeaderContent]);
-    is(
-      lockwiseHeaderContent.dataset.l10nId,
-      "passwords-header-content",
-      "lockwiseHeaderContent contents should match l10n-id attribute set on the element"
+    ).textContent;
+    ok(
+      lockwiseHeaderString.includes(
+        "Firefox Lockwise securely stores your passwords in your browser"
+      ),
+      "Correct lockwise header string is shown"
     );
 
     const lockwiseScannedWrapper = content.document.querySelector(
@@ -103,15 +110,14 @@ add_task(async function testLockwiseCardUIWithLogins() {
     }, "Lockwise card for user with logins is visible");
 
     const lockwiseTitle = content.document.querySelector("#lockwise-title");
-    await content.document.l10n.translateElements([lockwiseTitle]);
     await ContentTaskUtils.waitForCondition(
-      () => lockwiseTitle.textContent == "Manage your passwords",
+      () => lockwiseTitle.textContent == "Password Management",
       "Waiting for Fluent to provide the title translation"
     );
     is(
       lockwiseTitle.textContent,
-      "Manage your passwords",
-      "Correct passwords title is shown"
+      "Password Management",
+      "Correct lockwise title is shown"
     );
 
     const lockwiseHowItWorks = content.document.querySelector(
@@ -122,14 +128,14 @@ add_task(async function testLockwiseCardUIWithLogins() {
       "How it works link is visible"
     );
 
-    const lockwiseHeaderContent = content.document.querySelector(
+    const lockwiseHeaderString = content.document.querySelector(
       "#lockwise-header-content span"
-    );
-    await content.document.l10n.translateElements([lockwiseHeaderContent]);
-    is(
-      lockwiseHeaderContent.dataset.l10nId,
-      "lockwise-header-content-logged-in",
-      "lockwiseHeaderContent contents should match l10n-id attribute set on the element"
+    ).textContent;
+    ok(
+      lockwiseHeaderString.includes(
+        "Securely store and sync your passwords to all your devices"
+      ),
+      "Correct lockwise header string is shown"
     );
 
     const lockwiseScannedWrapper = content.document.querySelector(
