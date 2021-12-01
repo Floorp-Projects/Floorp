@@ -246,12 +246,16 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
         setupConstraints(view)
 
-        // When displayed above browser, dismisses dialog on clicking scrim area
-        if (findNavController().previousBackStackEntry?.destination?.id == R.id.browserFragment) {
-            binding.searchWrapper.setOnClickListener {
-                it.hideKeyboard()
-                dismissAllowingStateLoss()
+        // When displayed above browser or home screen, dismisses keyboard when touching scrim area
+        when (findNavController().previousBackStackEntry?.destination?.id) {
+            R.id.browserFragment, R.id.homeFragment -> {
+                binding.searchWrapper.setOnTouchListener { _, _ ->
+                    binding.searchWrapper.hideKeyboard()
+                    toolbarView.view.clearFocus()
+                    false
+                }
             }
+            else -> {}
         }
 
         binding.searchEnginesShortcutButton.setOnClickListener {

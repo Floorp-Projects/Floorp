@@ -877,20 +877,6 @@ class HomeFragment : Fragment() {
     }
 
     private fun navigateToSearch() {
-        // Dismisses the search dialog when the home content is scrolled
-        val recyclerView = sessionControlView!!.view
-        val listener = object : RecyclerView.OnScrollListener() {
-            override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                super.onScrollStateChanged(recyclerView, newState)
-                if (newState == RecyclerView.SCROLL_STATE_DRAGGING || newState == RecyclerView.SCROLL_STATE_SETTLING) {
-                    findNavController().navigateUp()
-                    recyclerView.removeOnScrollListener(this)
-                }
-            }
-        }
-
-        recyclerView.addOnScrollListener(listener)
-
         val directions =
             HomeFragmentDirections.actionGlobalSearchDialog(
                 sessionId = null
