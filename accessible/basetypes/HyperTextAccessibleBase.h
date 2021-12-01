@@ -78,7 +78,7 @@ class HyperTextAccessibleBase {
   /**
    * Get caret offset, if no caret then -1.
    */
-  virtual int32_t CaretOffset() const = 0;
+  virtual int32_t CaretOffset() const;
 
   /**
    * Transform magic offset into text offset.

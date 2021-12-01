@@ -684,8 +684,7 @@ bool TextLeafPoint::IsCaretAtEndOfLine() const {
     // in HyperTextAccessible (including caret events).
     return ht->IsCaretAtEndOfLine();
   }
-  // XXX Support RemoteAccessible.
-  return false;
+  return mAcc->AsRemote()->Document()->IsCaretAtEndOfLine();
 }
 
 TextLeafPoint TextLeafPoint::ActualizeCaret(bool aAdjustAtEndOfLine) const {
@@ -705,8 +704,12 @@ TextLeafPoint TextLeafPoint::ActualizeCaret(bool aAdjustAtEndOfLine) const {
       return TextLeafPoint();
     }
   } else {
-    // XXX Support RemoteAccessible.
-    return TextLeafPoint();
+    // Ideally, we'd cache the caret as a leaf, but our events are based on
+    // HyperText for now.
+    std::tie(ht, htOffset) = mAcc->AsRemote()->Document()->GetCaret();
+    if (!ht) {
+      return TextLeafPoint();
+    }
   }
   if (aAdjustAtEndOfLine && htOffset > 0 && IsCaretAtEndOfLine()) {
     // It is the same character offset when the caret is visually at the very
