@@ -181,5 +181,9 @@ RefPtr<GenericPromise> FlushAndUseFOGData() {
   return ret;
 }
 
+void TestTriggerGPUMetrics() {
+  gfx::GPUProcessManager::Get()->TestTriggerMetrics();
+}
+
 }  // namespace glean
 }  // namespace mozilla
