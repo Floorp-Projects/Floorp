@@ -65,6 +65,9 @@ void SetPrefableContextOptions(JS::ContextOptions& options, T load) {
       .setChangeArrayByCopy(
           load(PREF_NAMES("experimental.enable_change_array_by_copy")))
 #endif
+#ifdef NIGHTLY_BUILD
+      .setImportAssertions(load(PREF_NAMES("experimental.import_assertions")))
+#endif
       .setErgnomicBrandChecks(
           load(PREF_NAMES("experimental.ergonomic_brand_checks")));
 }

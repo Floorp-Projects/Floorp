@@ -395,6 +395,7 @@ MSG_DEF(JSMSG_BAD_OPTIONAL_TEMPLATE,   0, JSEXN_SYNTAXERR, "tagged template cann
 MSG_DEF(JSMSG_ESCAPED_KEYWORD,         0, JSEXN_SYNTAXERR, "keywords must be written literally, without embedded escapes")
 MSG_DEF(JSMSG_PRIVATE_FIELDS_NOT_SUPPORTED, 0, JSEXN_SYNTAXERR, "private fields are not currently supported")
 MSG_DEF(JSMSG_CLASS_STATIC_NOT_SUPPORTED, 0, JSEXN_SYNTAXERR, "class static blocks are not currently supported")
+MSG_DEF(JSMSG_IMPORT_ASSERTIONS_NOT_SUPPORTED, 0, JSEXN_SYNTAXERR, "import assertions are not currently supported")
 MSG_DEF(JSMSG_ILLEGAL_PRIVATE_FIELD,   0, JSEXN_SYNTAXERR, "private fields aren't valid in this context")
 MSG_DEF(JSMSG_ILLEGAL_PRIVATE_NAME,    0, JSEXN_SYNTAXERR, "private names aren't valid in this context")
 MSG_DEF(JSMSG_PRIVATE_FIELD_DOUBLE,    0, JSEXN_TYPEERR, "Initializing an object twice is an error with private fields")

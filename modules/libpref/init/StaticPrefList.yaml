@@ -6262,6 +6262,14 @@
     value: true
     mirror: always
 
+#ifdef NIGHTLY_BUILD
+  # Experimental support for Import Assertions in JavaScript.
+-   name: javascript.options.experimental.import_assertions
+    type: bool
+    value: false
+    mirror: always
+#endif  // NIGHTLY_BUILD
+
   # Support for Private Fields in JavaScript.
 - name: javascript.options.experimental.private_fields
   type: bool
