@@ -20,6 +20,9 @@ namespace mozilla::intl {
  * Get a DateTimeFormat for use in Gecko. This specialized DateTimeFormat
  * respects the user's OS and app preferences, and provides caching of the
  * underlying mozilla::intl resources.
+ *
+ * This class is not thread-safe as it lazily initializes a cache without
+ * any type of multi-threaded protections.
  */
 class AppDateTimeFormat {
  public:
@@ -72,8 +75,8 @@ class AppDateTimeFormat {
   static void BuildTimeZoneString(const PRTimeParameters& aTimeParameters,
                                   nsAString& aStringOut);
 
-  static nsCString* mLocale;
-  static nsTHashMap<nsCStringHashKey, UniquePtr<DateTimeFormat>>* mFormatCache;
+  static nsCString* sLocale;
+  static nsTHashMap<nsCStringHashKey, UniquePtr<DateTimeFormat>>* sFormatCache;
 };
 
 }  // namespace mozilla::intl
