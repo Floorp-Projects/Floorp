@@ -1037,6 +1037,20 @@ static LoadedScript* GetLoadedScriptOrNull(
   return script;
 }
 
+bool HostGetSupportedImportAssertions(JSContext* aCx,
+                                      JS::ImportAssertionVector& aValues) {
+  MOZ_ASSERT(aValues.empty());
+
+  if (!aValues.reserve(1)) {
+    JS_ReportOutOfMemory(aCx);
+    return false;
+  }
+
+  aValues.infallibleAppend(JS::ImportAssertion::Type);
+
+  return true;
+}
+
 // 8.1.3.8.1 HostResolveImportedModule(referencingModule, moduleRequest)
 JSObject* HostResolveImportedModule(JSContext* aCx,
                                     JS::Handle<JS::Value> aReferencingPrivate,
@@ -1284,6 +1298,7 @@ void ScriptLoader::EnsureModuleHooksInitialized() {
   JS::SetModuleMetadataHook(rt, HostPopulateImportMeta);
   JS::SetScriptPrivateReferenceHooks(rt, HostAddRefTopLevelScript,
                                      HostReleaseTopLevelScript);
+  JS::SetSupportedAssertionsHook(rt, HostGetSupportedImportAssertions);
 
   Preferences::RegisterCallbackAndCall(DynamicImportPrefChangedCallback,
                                        "javascript.options.dynamicImport",

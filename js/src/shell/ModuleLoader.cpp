@@ -60,6 +60,8 @@ bool ModuleLoader::init(JSContext* cx, HandleString loadPath) {
   JS::SetModuleResolveHook(rt, ModuleLoader::ResolveImportedModule);
   JS::SetModuleMetadataHook(rt, ModuleLoader::GetImportMetaProperties);
   JS::SetModuleDynamicImportHook(rt, ModuleLoader::ImportModuleDynamically);
+  JS::SetSupportedAssertionsHook(rt,
+                                 ModuleLoader::GetSupportedImportAssertions);
 
   return true;
 }
@@ -89,6 +91,21 @@ bool ModuleLoader::ImportModuleDynamically(JSContext* cx,
   ShellContext* scx = GetShellContext(cx);
   return scx->moduleLoader->dynamicImport(cx, referencingPrivate, moduleRequest,
                                           promise);
+}
+
+// static
+bool ModuleLoader::GetSupportedImportAssertions(
+    JSContext* cx, JS::ImportAssertionVector& values) {
+  MOZ_ASSERT(values.empty());
+
+  if (!values.reserve(1)) {
+    ReportOutOfMemory(cx);
+    return false;
+  }
+
+  values.infallibleAppend(JS::ImportAssertion::Type);
+
+  return true;
 }
 
 bool ModuleLoader::loadRootModule(JSContext* cx, HandleString path) {
