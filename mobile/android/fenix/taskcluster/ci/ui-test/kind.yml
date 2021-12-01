@@ -67,7 +67,7 @@ job-defaults:
                     "elements": [
                         {
                             "type": "mrkdwn",
-                            "text": ":testops-notify: created by <https://mana.mozilla.org/wiki/x/P_znBW|Mobile Test Engineering>"
+                            "text": ":testops-notify: created by <https://mana.mozilla.org/wiki/x/P_zNBw|Mobile Test Engineering>"
                         }
                     ]
                   }
