@@ -569,13 +569,39 @@ template <XDRMode mode>
 }
 
 template <XDRMode mode>
+/* static */ XDRResult StencilXDR::codeModuleEntry(
+    XDRState<mode>* xdr, StencilModuleEntry& stencil) {
+  MOZ_TRY(xdr->codeUint32(stencil.specifier.rawDataRef()));
+  MOZ_TRY(xdr->codeUint32(stencil.localName.rawDataRef()));
+  MOZ_TRY(xdr->codeUint32(stencil.importName.rawDataRef()));
+  MOZ_TRY(xdr->codeUint32(stencil.exportName.rawDataRef()));
+  MOZ_TRY(xdr->codeUint32(&stencil.lineno));
+  MOZ_TRY(xdr->codeUint32(&stencil.column));
+  MOZ_TRY(XDRVectorContent(xdr, stencil.assertions));
+
+  return Ok();
+}
+
+template <XDRMode mode>
+/* static */ XDRResult StencilXDR::codeModuleEntryVector(
+    XDRState<mode>* xdr, StencilModuleMetadata::EntryVector& vector) {
+  MOZ_TRY(XDRVectorInitialized(xdr, vector));
+
+  for (auto& entry : vector) {
+    MOZ_TRY(codeModuleEntry<mode>(xdr, entry));
+  }
+
+  return Ok();
+}
+
+template <XDRMode mode>
 /* static */ XDRResult StencilXDR::codeModuleMetadata(
     XDRState<mode>* xdr, StencilModuleMetadata& stencil) {
-  MOZ_TRY(XDRVectorContent(xdr, stencil.requestedModules));
-  MOZ_TRY(XDRVectorContent(xdr, stencil.importEntries));
-  MOZ_TRY(XDRVectorContent(xdr, stencil.localExportEntries));
-  MOZ_TRY(XDRVectorContent(xdr, stencil.indirectExportEntries));
-  MOZ_TRY(XDRVectorContent(xdr, stencil.starExportEntries));
+  MOZ_TRY(codeModuleEntryVector(xdr, stencil.requestedModules));
+  MOZ_TRY(codeModuleEntryVector(xdr, stencil.importEntries));
+  MOZ_TRY(codeModuleEntryVector(xdr, stencil.localExportEntries));
+  MOZ_TRY(codeModuleEntryVector(xdr, stencil.indirectExportEntries));
+  MOZ_TRY(codeModuleEntryVector(xdr, stencil.starExportEntries));
   MOZ_TRY(XDRVectorContent(xdr, stencil.functionDecls));
 
   uint8_t isAsync = 0;
