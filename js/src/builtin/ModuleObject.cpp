@@ -328,6 +328,7 @@ RequestedModuleObject* RequestedModuleObject::create(JSContext* cx,
     JSCLASS_HAS_RESERVED_SLOTS(ModuleRequestObject::SlotCount)};
 
 DEFINE_GETTER_FUNCTIONS(ModuleRequestObject, specifier, SpecifierSlot)
+DEFINE_GETTER_FUNCTIONS(ModuleRequestObject, assertions, AssertionSlot)
 
 DEFINE_ATOM_OR_NULL_ACCESSOR_METHOD(ModuleRequestObject, specifier)
 
@@ -340,7 +341,8 @@ bool ModuleRequestObject::isInstance(HandleValue value) {
 bool GlobalObject::initModuleRequestProto(JSContext* cx,
                                           Handle<GlobalObject*> global) {
   static const JSPropertySpec protoAccessors[] = {
-      JS_PSG("specifier", ModuleRequestObject_specifierGetter, 0), JS_PS_END};
+      JS_PSG("specifier", ModuleRequestObject_specifierGetter, 0),
+      JS_PSG("assertions", ModuleRequestObject_assertionsGetter, 0), JS_PS_END};
 
   RootedObject proto(
       cx, GlobalObject::createBlankPrototype<PlainObject>(cx, global));
@@ -357,8 +359,8 @@ bool GlobalObject::initModuleRequestProto(JSContext* cx,
 }
 
 /* static */
-ModuleRequestObject* ModuleRequestObject::create(JSContext* cx,
-                                                 HandleAtom specifier) {
+ModuleRequestObject* ModuleRequestObject::create(
+    JSContext* cx, HandleAtom specifier, HandleArrayObject maybeAssertions) {
   RootedObject proto(
       cx, GlobalObject::getOrCreateModuleRequestPrototype(cx, cx->global()));
   if (!proto) {
@@ -372,6 +374,7 @@ ModuleRequestObject* ModuleRequestObject::create(JSContext* cx,
   }
 
   self->initReservedSlot(SpecifierSlot, StringOrNullValue(specifier));
+  self->initReservedSlot(AssertionSlot, ObjectOrNullValue(maybeAssertions));
   return self;
 }
 
@@ -1537,7 +1540,7 @@ static ArrayObject* ModuleBuilderInitArray(
       MOZ_ASSERT(!exportName);
     }
 
-    moduleRequest = ModuleRequestObject::create(cx, specifier);
+    moduleRequest = ModuleRequestObject::create(cx, specifier, nullptr);
     if (!moduleRequest) {
       return nullptr;
     }
@@ -2294,8 +2297,8 @@ JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
     return promise;
   }
 
-  RootedObject moduleRequest(cx,
-                             ModuleRequestObject::create(cx, specifierAtom));
+  RootedObject moduleRequest(
+      cx, ModuleRequestObject::create(cx, specifierAtom, nullptr));
   if (!moduleRequest) {
     if (!RejectPromiseWithPendingError(cx, promise)) {
       return nullptr;
@@ -2368,7 +2371,8 @@ static bool OnResolvedDynamicModule(JSContext* cx, unsigned argc, Value* vp) {
   auto releasePrivate = mozilla::MakeScopeExit(
       [&] { cx->runtime()->releaseScriptPrivate(referencingPrivate); });
 
-  RootedObject moduleRequest(cx, ModuleRequestObject::create(cx, specifier));
+  RootedObject moduleRequest(
+      cx, ModuleRequestObject::create(cx, specifier, nullptr));
   if (!moduleRequest) {
     return RejectPromiseWithPendingError(cx, promise);
   }
