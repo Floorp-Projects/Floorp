@@ -617,10 +617,20 @@ class FullParseHandler {
     return new_<NullaryNode>(ParseNodeKind::EmptyStmt, pos);
   }
 
-  BinaryNodeType newImportDeclaration(Node importSpecSet, Node moduleSpec,
+  BinaryNodeType newImportAssertion(Node keyNode, Node valueNode) {
+    return newBinary(ParseNodeKind::ImportAssertion, keyNode, valueNode);
+  }
+
+  BinaryNodeType newModuleRequest(Node moduleSpec, Node importAssertionList,
+                                  const TokenPos& pos) {
+    return new_<BinaryNode>(ParseNodeKind::ImportModuleRequest, pos, moduleSpec,
+                            importAssertionList);
+  }
+
+  BinaryNodeType newImportDeclaration(Node importSpecSet, Node moduleRequest,
                                       const TokenPos& pos) {
     return new_<BinaryNode>(ParseNodeKind::ImportDecl, pos, importSpecSet,
-                            moduleSpec);
+                            moduleRequest);
   }
 
   BinaryNodeType newImportSpec(Node importNameNode, Node bindingName) {
@@ -636,9 +646,9 @@ class FullParseHandler {
   }
 
   BinaryNodeType newExportFromDeclaration(uint32_t begin, Node exportSpecSet,
-                                          Node moduleSpec) {
+                                          Node moduleRequest) {
     BinaryNode* decl = new_<BinaryNode>(ParseNodeKind::ExportFromStmt,
-                                        exportSpecSet, moduleSpec);
+                                        exportSpecSet, moduleRequest);
     if (!decl) {
       return nullptr;
     }

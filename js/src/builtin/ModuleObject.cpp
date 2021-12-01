@@ -1508,6 +1508,10 @@ static ArrayObject* ModuleBuilderInitArray(
   RootedAtom exportName(cx);
   RootedObject req(cx);
   RootedObject moduleRequest(cx);
+  RootedArrayObject assertionArray(cx);
+  RootedPlainObject assertionObject(cx);
+  RootedId assertionKey(cx);
+  RootedValue assertionValue(cx);
 
   for (uint32_t i = 0; i < vector.length(); ++i) {
     const frontend::StencilModuleEntry& entry = vector[i];
@@ -1540,7 +1544,39 @@ static ArrayObject* ModuleBuilderInitArray(
       MOZ_ASSERT(!exportName);
     }
 
-    moduleRequest = ModuleRequestObject::create(cx, specifier, nullptr);
+    uint32_t numberOfAssertions = entry.assertions.length();
+    if (numberOfAssertions > 0) {
+      assertionArray = NewDenseFullyAllocatedArray(cx, numberOfAssertions);
+      if (!assertionArray) {
+        return nullptr;
+      }
+      assertionArray->ensureDenseInitializedLength(0, numberOfAssertions);
+
+      for (uint32_t j = 0; j < numberOfAssertions; ++j) {
+        assertionObject = NewPlainObject(cx);
+        if (!assertionObject) {
+          return nullptr;
+        }
+
+        JSAtom* jsatom =
+            atomCache.getExistingAtomAt(cx, entry.assertions[j].key);
+        MOZ_ASSERT(jsatom);
+        assertionKey = AtomToId(jsatom);
+
+        jsatom = atomCache.getExistingAtomAt(cx, entry.assertions[j].value);
+        MOZ_ASSERT(jsatom);
+        assertionValue = StringValue(jsatom);
+
+        if (!DefineDataProperty(cx, assertionObject, assertionKey,
+                                assertionValue, JSPROP_ENUMERATE)) {
+          return nullptr;
+        }
+
+        assertionArray->initDenseElement(j, ObjectValue(*assertionObject));
+      }
+    }
+
+    moduleRequest = ModuleRequestObject::create(cx, specifier, assertionArray);
     if (!moduleRequest) {
       return nullptr;
     }
@@ -1642,6 +1678,68 @@ bool frontend::StencilModuleMetadata::initModule(
   return true;
 }
 
+static bool CallSupportedAssertionsHook(JSContext* cx,
+                                        JS::ImportAssertionVector& values) {
+  JS::SupportedAssertionsHook hook = cx->runtime()->supportedAssertionsHook;
+  if (!hook) {
+    return true;
+  }
+
+  return hook(cx, values);
+}
+
+bool ModuleBuilder::isAssertionSupported(JS::ImportAssertion supportedAssertion,
+                                         frontend::TaggedParserAtomIndex key) {
+  if (!key.isWellKnownAtomId()) {
+    return false;
+  }
+
+  bool result = false;
+
+  switch (supportedAssertion) {
+    case JS::ImportAssertion::Type:
+      result = key.toWellKnownAtomId() == WellKnownAtomId::type;
+      break;
+  }
+
+  return result;
+}
+
+bool ModuleBuilder::processAssertions(frontend::StencilModuleEntry& entry,
+                                      frontend::ListNode* assertionList) {
+  using namespace js::frontend;
+
+  JS::ImportAssertionVector supportedAssertions;
+
+  bool succeeded = CallSupportedAssertionsHook(cx_, supportedAssertions);
+  if (!succeeded) {
+    return false;
+  }
+
+  for (ParseNode* assertionItem : assertionList->contents()) {
+    BinaryNode* assertion = &assertionItem->as<BinaryNode>();
+    MOZ_ASSERT(assertion->isKind(ParseNodeKind::ImportAssertion));
+
+    auto key = assertion->left()->as<NameNode>().atom();
+    auto value = assertion->right()->as<NameNode>().atom();
+
+    for (JS::ImportAssertion assertion : supportedAssertions) {
+      if (isAssertionSupported(assertion, key)) {
+        markUsedByStencil(key);
+        markUsedByStencil(value);
+
+        StencilModuleAssertion assertionStencil(key, value);
+        if (!entry.assertions.append(assertionStencil)) {
+          js::ReportOutOfMemory(cx_);
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
+}
+
 bool ModuleBuilder::processImport(frontend::BinaryNode* importNode) {
   using namespace js::frontend;
 
@@ -1650,11 +1748,17 @@ bool ModuleBuilder::processImport(frontend::BinaryNode* importNode) {
   auto* specList = &importNode->left()->as<ListNode>();
   MOZ_ASSERT(specList->isKind(ParseNodeKind::ImportSpecList));
 
-  auto* moduleSpec = &importNode->right()->as<NameNode>();
+  auto* moduleRequest = &importNode->right()->as<BinaryNode>();
+  MOZ_ASSERT(moduleRequest->isKind(ParseNodeKind::ImportModuleRequest));
+
+  auto* moduleSpec = &moduleRequest->left()->as<NameNode>();
   MOZ_ASSERT(moduleSpec->isKind(ParseNodeKind::StringExpr));
 
+  auto* assertionList = &moduleRequest->right()->as<ListNode>();
+  MOZ_ASSERT(assertionList->isKind(ParseNodeKind::ImportAssertionList));
+
   auto module = moduleSpec->atom();
-  if (!maybeAppendRequestedModule(module, moduleSpec)) {
+  if (!maybeAppendRequestedModule(module, moduleSpec, assertionList)) {
     return false;
   }
 
@@ -1692,6 +1796,11 @@ bool ModuleBuilder::processImport(frontend::BinaryNode* importNode) {
       entry = StencilModuleEntry::importNamespaceEntry(module, localName, line,
                                                        column);
     }
+
+    if (!processAssertions(entry, assertionList)) {
+      return false;
+    }
+
     if (!importEntries_.put(localName, entry)) {
       return false;
     }
@@ -1882,12 +1991,18 @@ bool ModuleBuilder::processExportFrom(frontend::BinaryNode* exportNode) {
   auto* specList = &exportNode->left()->as<ListNode>();
   MOZ_ASSERT(specList->isKind(ParseNodeKind::ExportSpecList));
 
-  auto* moduleSpec = &exportNode->right()->as<NameNode>();
+  auto* moduleRequest = &exportNode->right()->as<BinaryNode>();
+  MOZ_ASSERT(moduleRequest->isKind(ParseNodeKind::ImportModuleRequest));
+
+  auto* moduleSpec = &moduleRequest->left()->as<NameNode>();
   MOZ_ASSERT(moduleSpec->isKind(ParseNodeKind::StringExpr));
+
+  auto* assertionList = &moduleRequest->right()->as<ListNode>();
+  MOZ_ASSERT(assertionList->isKind(ParseNodeKind::ImportAssertionList));
 
   auto module = moduleSpec->atom();
 
-  if (!maybeAppendRequestedModule(module, moduleSpec)) {
+  if (!maybeAppendRequestedModule(module, moduleSpec, assertionList)) {
     return false;
   }
 
@@ -1979,7 +2094,8 @@ bool ModuleBuilder::appendExportEntry(
 }
 
 bool ModuleBuilder::maybeAppendRequestedModule(
-    frontend::TaggedParserAtomIndex specifier, frontend::ParseNode* node) {
+    frontend::TaggedParserAtomIndex specifier, frontend::ParseNode* node,
+    frontend::ListNode* assertionList) {
   if (requestedModuleSpecifiers_.has(specifier)) {
     return true;
   }
@@ -1991,6 +2107,11 @@ bool ModuleBuilder::maybeAppendRequestedModule(
   markUsedByStencil(specifier);
   auto entry =
       frontend::StencilModuleEntry::moduleRequest(specifier, line, column);
+
+  if (!processAssertions(entry, assertionList)) {
+    return false;
+  }
+
   if (!requestedModules_.append(entry)) {
     js::ReportOutOfMemory(cx_);
     return false;
