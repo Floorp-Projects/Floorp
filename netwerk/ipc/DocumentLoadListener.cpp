@@ -532,9 +532,6 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
   loadingContext->GetOriginAttributes(attrs);
 
   mLoadIdentifier = aLoadState->GetLoadIdentifier();
-  // See description of  mFileName in nsDocShellLoadState.h
-  mIsDownload = !aLoadState->FileName().IsVoid();
-  mIsLoadingJSURI = net::SchemeIsJavascript(aLoadState->URI());
 
   // Check for infinite recursive object or iframe loads
   if (aLoadState->OriginalFrameSrc() || !mIsDocumentLoad) {
@@ -760,22 +757,6 @@ auto DocumentLoadListener::Open(nsDocShellLoadState* aLoadState,
     MOZ_RELEASE_ASSERT(mParentWindowContext->GetBrowsingContext() ==
                            GetLoadingBrowsingContext(),
                        "mismatched parent window context?");
-  }
-
-  // For content-initiated loads, this flag is set in nsDocShell::LoadURI.
-  // For parent-initiated loads, we have to set it here.
-  // Below comment is copied from nsDocShell::LoadURI -
-  // If we have a system triggering principal, we can assume that this load was
-  // triggered by some UI in the browser chrome, such as the URL bar or
-  // bookmark bar. This should count as a user interaction for the current sh
-  // entry, so that the user may navigate back to the current entry, from the
-  // entry that is going to be added as part of this load.
-  if (!mSupportsRedirectToRealChannel && aLoadState->TriggeringPrincipal() &&
-      aLoadState->TriggeringPrincipal()->IsSystemPrincipal()) {
-    WindowContext* topWc = loadingContext->GetTopWindowContext();
-    if (topWc && !topWc->IsDiscarded()) {
-      MOZ_ALWAYS_SUCCEEDS(topWc->SetSHEntryHasUserInteraction(true));
-    }
   }
 
   *aRv = NS_OK;
@@ -2252,6 +2233,10 @@ DocumentLoadListener::OnStartRequest(nsIRequest* aRequest) {
       mDoingProcessSwitch = true;
 
       DisconnectListeners(NS_BINDING_ABORTED, NS_BINDING_ABORTED, true);
+
+      // XXX(anny) This is currently a dead code path because parent-controlled
+      // DC pref is off. When we enable the pref, we might get extra STATE_START
+      // progress events
 
       // Notify the docshell that it should load using the newly connected
       // channel
