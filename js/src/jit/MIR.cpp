@@ -3156,6 +3156,9 @@ void MBinaryInstruction::replaceWithUnsignedOperands() {
 }
 
 MDefinition* MBitNot::foldsTo(TempAllocator& alloc) {
+  if (type() == MIRType::Int64) {
+    return this;
+  }
   MOZ_ASSERT(type() == MIRType::Int32);
 
   MDefinition* input = getOperand(0);
