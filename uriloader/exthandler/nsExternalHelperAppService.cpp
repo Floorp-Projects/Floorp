@@ -1061,13 +1061,15 @@ nsresult nsExternalHelperAppService::EscapeURI(nsIURI* aURI, nsIURI** aResult) {
 NS_IMETHODIMP
 nsExternalHelperAppService::LoadURI(nsIURI* aURI,
                                     nsIPrincipal* aTriggeringPrincipal,
+                                    nsIPrincipal* aRedirectPrincipal,
                                     BrowsingContext* aBrowsingContext,
                                     bool aTriggeredExternally) {
   NS_ENSURE_ARG_POINTER(aURI);
 
   if (XRE_IsContentProcess()) {
     mozilla::dom::ContentChild::GetSingleton()->SendLoadURIExternal(
-        aURI, aTriggeringPrincipal, aBrowsingContext, aTriggeredExternally);
+        aURI, aTriggeringPrincipal, aRedirectPrincipal, aBrowsingContext,
+        aTriggeredExternally);
     return NS_OK;
   }
 
@@ -1159,8 +1161,10 @@ nsExternalHelperAppService::LoadURI(nsIURI* aURI,
       do_CreateInstance("@mozilla.org/content-dispatch-chooser;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return chooser->HandleURI(handler, escapedURI, aTriggeringPrincipal,
-                            aBrowsingContext, aTriggeredExternally);
+  return chooser->HandleURI(
+      handler, escapedURI,
+      aRedirectPrincipal ? aRedirectPrincipal : aTriggeringPrincipal,
+      aBrowsingContext, aTriggeredExternally);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
