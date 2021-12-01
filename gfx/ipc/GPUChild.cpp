@@ -12,6 +12,7 @@
 #include "gfxConfig.h"
 #include "gfxPlatform.h"
 #include "mozilla/Components.h"
+#include "mozilla/FOGIPC.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryIPC.h"
@@ -313,6 +314,11 @@ mozilla::ipc::IPCResult GPUChild::RecvUpdateMediaCodecsSupported(
     const PDMFactory::MediaCodecsSupported& aSupported) {
   dom::ContentParent::BroadcastMediaCodecsSupportedUpdate(
       RemoteDecodeIn::GpuProcess, aSupported);
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult GPUChild::RecvFOGData(ByteBuf&& aBuf) {
+  glean::FOGData(std::move(aBuf));
   return IPC_OK();
 }
 
