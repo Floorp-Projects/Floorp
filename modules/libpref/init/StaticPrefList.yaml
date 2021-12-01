@@ -1235,10 +1235,15 @@
 #
 # Returns whether the toolbar is dark (0), light (1), or system (2).
 #
-# Default to "system", the theming code sets it appropriately.
+# Default to "light" on macOS / Windows, and "system" elsewhere. The theming
+# code sets it appropriately.
 - name: browser.theme.toolbar-theme
   type: RelaxedAtomicUint32
+#if defined(XP_WIN) || defined(XP_MACOSX)
+  value: 1
+#else
   value: 2
+#endif
   mirror: always
 
 # Communicates the preferred content theme color to platform (for e.g.,
