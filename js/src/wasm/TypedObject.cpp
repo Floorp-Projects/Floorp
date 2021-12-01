@@ -177,7 +177,7 @@ uint8_t* TypedObject::typedMem() const {
 }
 
 template <typename V>
-void TypedObject::visitReferences(JSContext* cx, V& visitor) {
+void TypedObject::visitReferences(V& visitor) {
   RttValue& rtt = rttValue();
   const auto& typeDef = rtt.typeDef();
   uint8_t* base = typedMem();
@@ -369,9 +369,8 @@ void OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
     return;
   }
 
-  JSContext* cx = trc->runtime()->mainContextFromOwnThread();
   MemoryTracingVisitor visitor(trc);
-  typedObj.visitReferences(cx, visitor);
+  typedObj.visitReferences(visitor);
 }
 
 /* static */
@@ -665,9 +664,8 @@ void InlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
 
   TraceEdge(trc, &typedObj.rttValue_, "InlineTypedObject_rttvalue");
 
-  JSContext* cx = trc->runtime()->mainContextFromOwnThread();
   MemoryTracingVisitor visitor(trc);
-  typedObj.visitReferences(cx, visitor);
+  typedObj.visitReferences(visitor);
 }
 
 /* static */
