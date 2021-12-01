@@ -85,6 +85,9 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   [[nodiscard]] nsresult CloseIdleConnection(nsHttpConnection*);
   [[nodiscard]] nsresult RemoveIdleConnection(nsHttpConnection*);
 
+  // Close a single connection and prevent it from being reused.
+  [[nodiscard]] nsresult DoSingleConnectionCleanup(nsHttpConnectionInfo*);
+
   // The connection manager needs to know when a normal HTTP connection has been
   // upgraded to SPDY because the dispatch and idle semantics are a little
   // bit different.
@@ -317,6 +320,7 @@ class nsHttpConnectionMgr final : public HttpConnectionMgrShell,
   void OnMsgCompleteUpgrade(int32_t, ARefBase*);
   void OnMsgUpdateParam(int32_t, ARefBase*);
   void OnMsgDoShiftReloadConnectionCleanup(int32_t, ARefBase*);
+  void OnMsgDoSingleConnectionCleanup(int32_t, ARefBase*);
   void OnMsgProcessFeedback(int32_t, ARefBase*);
   void OnMsgProcessAllSpdyPendingQ(int32_t, ARefBase*);
   void OnMsgUpdateRequestTokenBucket(int32_t, ARefBase*);

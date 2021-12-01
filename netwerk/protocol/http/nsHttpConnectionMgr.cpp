@@ -399,6 +399,16 @@ nsresult nsHttpConnectionMgr::DoShiftReloadConnectionCleanupWithConnInfo(
                    ci);
 }
 
+nsresult nsHttpConnectionMgr::DoSingleConnectionCleanup(
+    nsHttpConnectionInfo* aCI) {
+  if (!aCI) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  RefPtr<nsHttpConnectionInfo> ci = aCI->Clone();
+  return PostEvent(&nsHttpConnectionMgr::OnMsgDoSingleConnectionCleanup, 0, ci);
+}
+
 class SpeculativeConnectArgs : public ARefBase {
  public:
   SpeculativeConnectArgs() = default;
@@ -2260,6 +2270,25 @@ void nsHttpConnectionMgr::OnMsgDoShiftReloadConnectionCleanup(int32_t,
   }
 
   if (ci) ResetIPFamilyPreference(ci);
+}
+
+void nsHttpConnectionMgr::OnMsgDoSingleConnectionCleanup(int32_t,
+                                                         ARefBase* param) {
+  LOG(("nsHttpConnectionMgr::OnMsgDoSingleConnectionCleanup\n"));
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+
+  nsHttpConnectionInfo* ci = static_cast<nsHttpConnectionInfo*>(param);
+
+  if (!ci) {
+    return;
+  }
+
+  ConnectionEntry* entry = mCT.GetWeak(ci->HashKey());
+  if (entry) {
+    entry->ClosePersistentConnections();
+  }
+
+  ResetIPFamilyPreference(ci);
 }
 
 void nsHttpConnectionMgr::OnMsgReclaimConnection(HttpConnectionBase* conn) {
