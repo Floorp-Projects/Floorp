@@ -38,6 +38,13 @@ TESTING_JS_MODULES += [
     "test/NimbusTestUtils.jsm",
 ]
 
+GeneratedFile(
+    "FeatureManifest.js",
+    script="generate/generate_feature_manifest.py",
+    entry_point="generate_feature_manifest",
+    inputs=["./FeatureManifest.yaml"],
+)
+
 FINAL_LIBRARY = "xul"
 
 JAR_MANIFESTS += ["jar.mn"]
