@@ -93,11 +93,13 @@ already_AddRefed<Promise> MediaDevices::GetUserMedia(
       }
     }
   }
+  bool haveFake = aConstraints.mFake.WasPassed() && aConstraints.mFake.Value();
   const OwningBooleanOrMediaTrackConstraints& audio = aConstraints.mAudio;
   bool isMicrophone =
-      audio.IsBoolean()
-          ? audio.GetAsBoolean()
-          : !audio.GetAsMediaTrackConstraints().mMediaSource.WasPassed();
+      !haveFake &&
+      (audio.IsBoolean()
+           ? audio.GetAsBoolean()
+           : !audio.GetAsMediaTrackConstraints().mMediaSource.WasPassed());
   RefPtr<MediaDevices> self(this);
   MediaManager::Get()
       ->GetUserMedia(owner, aConstraints, aCallerType)
