@@ -1,40 +1,67 @@
-===============
-Remote Protocol
-===============
+================
+Remote Protocols
+================
 
-The Firefox **remote protocol** is a low-level debugging interface
-you can use to inspect the state and control execution of documents
-running in web content, instrument the browser in interesting ways,
-simulate user interaction for automation purposes, and for subscribing
-to updates in the browser such as network- or console logs.
+Firefox supports several remote protocols, which allow to inspect and control
+the browser, usually for automation purposes:
 
-It complements the existing Firefox Developer Tools :ref:`Remote Debugging
-Protocol <Remote Debugging Protocol>` (RDP) by implementing a subset of the
-`Chrome DevTools Protocol`_ (CDP).
+* :ref:`marionette-header`
 
-.. _Chrome DevTools Protocol: https://chromedevtools.github.io/devtools-protocol/
+* :ref:`remote-protocol-cdp-header`
 
-.. toctree::
-  :maxdepth: 1
-
-  Usage.md
-  Prefs.md
+* :ref:`webdriver-bidi-header`
 
 
-Internals
-=========
+Common documentation
+====================
+
+The following documentation pages apply to all remote protocols
 
 .. toctree::
   :maxdepth: 1
 
   Building.md
   Debugging.md
-  Testing.md
-  Architecture.md
   Prefs.md
+  Testing.md
   CodeStyle.md
-  PuppeteerVendor.md
   Security.md
+
+
+.. _marionette-header:
+
+Marionette
+==========
+
+Marionette is used both by internal tools and testing solutions, but also by
+geckodriver to implement the `WebDriver (HTTP) specification`_. The documentation
+for Marionette can be found under `testing/marionette`_.
+
+.. _WebDriver (HTTP) specification: https://w3c.github.io/webdriver/
+.. _testing/marionette: ../testing/marionette/index.html
+
+
+.. _remote-protocol-cdp-header:
+
+Remote Protocol (CDP)
+=====================
+
+Firefox implements a subset of the `Chrome DevTools Protocol`_ (CDP) in order to
+support third party automation tools such as `puppeteer`. The documentation for
+the remote protocol (CDP) implement can be found at `remote/cdp`_.
+
+.. _Chrome DevTools Protocol: https://chromedevtools.github.io/devtools-protocol/
+.. _remote/cdp: cdp/index.html
+
+
+.. _webdriver-bidi-header:
+
+WebDriver BiDi
+==============
+
+`The WebDriver BiDi specification <https://w3c.github.io/webdriver-bidi>`_
+extends WebDriver HTTP to add bidirectional communication. Dedicated
+documentation will be added as the Firefox implementation makes progress.
 
 
 Bugs
