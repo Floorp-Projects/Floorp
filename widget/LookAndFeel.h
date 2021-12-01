@@ -238,6 +238,9 @@ class LookAndFeel {
     ContextMenuOffsetVertical,
     ContextMenuOffsetHorizontal,
 
+    /* A boolean value that tells us whether we're running on Wayland */
+    GTKWayland,
+
     /*
      * A boolean value indicating whether client-side decorations are
      * supported by the user's GTK version.

@@ -163,6 +163,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   bool mPrefersReducedMotion = false;
   bool mInitialized = false;
   bool mSystemThemeOverridden = false;
+  // We need to have this because NativeGet* can be called off-main-thread.
+  bool mIsWayland = false;
   int32_t mCSDMaximizeButtonPosition = 0;
   int32_t mCSDMinimizeButtonPosition = 0;
   int32_t mCSDCloseButtonPosition = 0;

@@ -797,6 +797,10 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::GTKCSDAvailable:
       aResult = sCSDAvailable;
       break;
+    case IntID::GTKWayland:
+      EnsureInit();
+      aResult = mIsWayland;
+      break;
     case IntID::GTKCSDMaximizeButton:
       EnsureInit();
       aResult = mCSDMaximizeButton;
@@ -1225,6 +1229,7 @@ void nsLookAndFeel::EnsureInit() {
 
   // gtk does non threadsafe refcounting
   MOZ_ASSERT(NS_IsMainThread());
+  mIsWayland = widget::GdkIsWaylandDisplay();
 
   gboolean enableAnimations = false;
   g_object_get(settings, "gtk-enable-animations", &enableAnimations, nullptr);
