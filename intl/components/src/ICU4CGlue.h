@@ -32,15 +32,6 @@
 struct UFormattedValue;
 namespace mozilla::intl {
 
-static inline const char* IcuLocale(const char* aLocale) {
-  // Return the empty string if the input is exactly equal to the string "und".
-  const char* locale = aLocale;
-  if (!std::strcmp(locale, "und")) {
-    locale = "";  // ICU root locale
-  }
-  return locale;
-}
-
 static inline const char* AssertNullTerminatedString(Span<const char> aSpan) {
   // Intentionally check one past the last character, because we expect that the
   // NUL character isn't part of the string.
@@ -61,6 +52,26 @@ static inline const char* AssertNullTerminatedString(std::string_view aView) {
   MOZ_ASSERT(std::strlen(aView.data()) == aView.size());
 
   return aView.data();
+}
+
+/**
+ * Map the "und" locale to an empty string, which the ICU uses internally.
+ */
+static inline const char* IcuLocale(const char* aLocale) {
+  // Return the empty string if the input is exactly equal to the string "und".
+  const char* locale = aLocale;
+  if (!std::strcmp(locale, "und")) {
+    locale = "";  // ICU root locale
+  }
+  return locale;
+}
+
+/**
+ * Ensure a locale is null-terminated, and map the "und" locale to an empty
+ * string, which the ICU uses internally.
+ */
+static inline const char* IcuLocale(Span<const char> aLocale) {
+  return IcuLocale(AssertNullTerminatedString(aLocale));
 }
 
 using ICUResult = Result<Ok, ICUError>;

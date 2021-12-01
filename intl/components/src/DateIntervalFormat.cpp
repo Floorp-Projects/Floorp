@@ -54,10 +54,10 @@ Result<UniquePtr<DateIntervalFormat>, ICUError> DateIntervalFormat::TryCreate(
     Span<const char> aLocale, Span<const char16_t> aSkeleton,
     Span<const char16_t> aTimeZone) {
   UErrorCode status = U_ZERO_ERROR;
-  UDateIntervalFormat* dif = udtitvfmt_open(
-      IcuLocale(AssertNullTerminatedString(aLocale)), aSkeleton.data(),
-      AssertedCast<int32_t>(aSkeleton.size()), aTimeZone.data(),
-      AssertedCast<int32_t>(aTimeZone.size()), &status);
+  UDateIntervalFormat* dif =
+      udtitvfmt_open(IcuLocale(aLocale), aSkeleton.data(),
+                     AssertedCast<int32_t>(aSkeleton.size()), aTimeZone.data(),
+                     AssertedCast<int32_t>(aTimeZone.size()), &status);
   if (U_FAILURE(status)) {
     return Err(ToICUError(status));
   }
