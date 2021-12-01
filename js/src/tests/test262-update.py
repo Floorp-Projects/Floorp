@@ -27,7 +27,6 @@ UNSUPPORTED_FEATURES = set(
         "Intl.Locale-info",
         "Atomics.waitAsync",
         "legacy-regexp",
-        "import-assertions",
         "json-modules",
         "resizable-arraybuffer",
         "Temporal",
@@ -42,7 +41,9 @@ FEATURE_CHECK_NEEDED = {
     "WeakRef": "!this.hasOwnProperty('WeakRef')",
 }
 RELEASE_OR_BETA = set([])
-SHELL_OPTIONS = {}
+SHELL_OPTIONS = {
+    "import-assertions": "--enable-import-assertions",
+}
 
 
 @contextlib.contextmanager
