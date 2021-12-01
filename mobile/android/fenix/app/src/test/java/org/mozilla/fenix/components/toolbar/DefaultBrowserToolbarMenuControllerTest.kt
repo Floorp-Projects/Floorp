@@ -118,8 +118,8 @@ class DefaultBrowserToolbarMenuControllerTest {
         }
         every { settings.topSitesMaxLimit } returns 16
 
-        val onComplete = slot<() -> Unit>()
-        every { browserAnimator.captureEngineViewAndDrawStatically(capture(onComplete)) } answers { onComplete.captured.invoke() }
+        val onComplete = slot<(Boolean) -> Unit>()
+        every { browserAnimator.captureEngineViewAndDrawStatically(any(), capture(onComplete)) } answers { onComplete.captured.invoke(true) }
 
         selectedTab = createTab("https://www.mozilla.org", id = "1")
         browserStore = BrowserStore(

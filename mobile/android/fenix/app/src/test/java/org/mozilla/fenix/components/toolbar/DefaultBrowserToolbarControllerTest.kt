@@ -103,9 +103,9 @@ class DefaultBrowserToolbarControllerTest {
         }
 
         every {
-            browserAnimator.captureEngineViewAndDrawStatically(any())
+            browserAnimator.captureEngineViewAndDrawStatically(any(), any())
         } answers {
-            firstArg<() -> Unit>()()
+            secondArg<(Boolean) -> Unit>()(true)
         }
 
         tabCounterClicked = false

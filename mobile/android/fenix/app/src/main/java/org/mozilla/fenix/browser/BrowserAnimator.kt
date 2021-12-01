@@ -12,6 +12,7 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.navigation.NavOptions
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.EngineView
 import org.mozilla.fenix.R
@@ -50,16 +51,25 @@ class BrowserAnimator(
      * make transitions from the browser fragment to the home fragment
      * smoother. So, in addition, we are currently also using it as a
      * workaround to prevent flashes during those navigations.
+     *
+     * @param timeoutInMs timeout in milliseconds after which the operation
+     * should be cancelled.
+     * @param onComplete callback invoked when operation is completed or
+     * cancelled, see [timeoutInMs]. The boolean passed to the lambda
+     * indicates whether or not the operation was successful i.e., true,
+     * if the bitmap was successfully set as a background, otherwise false.
      */
-    fun captureEngineViewAndDrawStatically(onComplete: () -> Unit) {
+    fun captureEngineViewAndDrawStatically(timeoutInMs: Long = 250L, onComplete: (Boolean) -> Unit) {
         unwrappedEngineView?.asView()?.context.let {
             viewLifecycleScope.get()?.launch {
+                var cancelled = false
+                var completed = false
                 // isAdded check is necessary because of a bug in viewLifecycleOwner. See AC#3828
                 if (!fragment.isAdded()) {
                     return@launch
                 }
                 unwrappedEngineView?.captureThumbnail { bitmap ->
-                    if (!fragment.isAdded()) {
+                    if (!fragment.isAdded() || cancelled) {
                         return@captureThumbnail
                     }
 
@@ -70,8 +80,13 @@ class BrowserAnimator(
                     }
 
                     unwrappedEngineView?.asView()?.visibility = View.GONE
-
-                    onComplete()
+                    completed = true
+                    onComplete(bitmap != null)
+                }
+                delay(timeoutInMs)
+                if (!completed) {
+                    cancelled = true
+                    onComplete(false)
                 }
             }
         }
