@@ -112,6 +112,12 @@ class MarionetteCommandsParent extends JSWindowActorParent {
     });
   }
 
+  async getShadowRoot(webEl) {
+    return this.sendQuery("MarionetteCommandsParent:getShadowRoot", {
+      elem: webEl,
+    });
+  }
+
   async getActiveElement() {
     return this.sendQuery("MarionetteCommandsParent:getActiveElement");
   }
