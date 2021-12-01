@@ -180,3 +180,388 @@ addAccessibleTask(
     remoteIframe: isCacheEnabled,
   }
 );
+
+/**
+ * Test caret retrieval.
+ */
+addAccessibleTask(
+  `
+<textarea id="textarea" style="scrollbar-width: none;" cols="6">ab cd e</textarea>
+<textarea id="empty"></textarea>
+  `,
+  async function(browser, docAcc) {
+    const textarea = findAccessibleChildByID(docAcc, "textarea", [
+      nsIAccessibleText,
+    ]);
+    let caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    textarea.takeFocus();
+    let evt = await caretMoved;
+    is(textarea.caretOffset, 0, "Initial caret offset is 0");
+    evt.QueryInterface(nsIAccessibleCaretMoveEvent);
+    ok(!evt.isAtEndOfLine, "Caret is not at end of line");
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_CHAR,
+      "a",
+      0,
+      1,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_WORD_START,
+      "ab ",
+      0,
+      3,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_LINE_START,
+      "ab cd ",
+      0,
+      6,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+
+    caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    EventUtils.synthesizeKey("KEY_ArrowRight");
+    evt = await caretMoved;
+    is(textarea.caretOffset, 1, "Caret offset is 1 after ArrowRight");
+    evt.QueryInterface(nsIAccessibleCaretMoveEvent);
+    ok(!evt.isAtEndOfLine, "Caret is not at end of line");
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_CHAR,
+      "b",
+      1,
+      2,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_WORD_START,
+      "ab ",
+      0,
+      3,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_LINE_START,
+      "ab cd ",
+      0,
+      6,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+
+    caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    EventUtils.synthesizeKey("KEY_ArrowRight");
+    evt = await caretMoved;
+    is(textarea.caretOffset, 2, "Caret offset is 2 after ArrowRight");
+    evt.QueryInterface(nsIAccessibleCaretMoveEvent);
+    ok(!evt.isAtEndOfLine, "Caret is not at end of line");
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_CHAR,
+      " ",
+      2,
+      3,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_WORD_START,
+      "ab ",
+      0,
+      3,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_LINE_START,
+      "ab cd ",
+      0,
+      6,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+
+    caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    EventUtils.synthesizeKey("KEY_ArrowRight");
+    evt = await caretMoved;
+    is(textarea.caretOffset, 3, "Caret offset is 3 after ArrowRight");
+    evt.QueryInterface(nsIAccessibleCaretMoveEvent);
+    ok(!evt.isAtEndOfLine, "Caret is not at end of line");
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_CHAR,
+      "c",
+      3,
+      4,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_WORD_START,
+      "cd ",
+      3,
+      6,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_LINE_START,
+      "ab cd ",
+      0,
+      6,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+
+    caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    EventUtils.synthesizeKey("KEY_ArrowRight");
+    evt = await caretMoved;
+    is(textarea.caretOffset, 4, "Caret offset is 4 after ArrowRight");
+    evt.QueryInterface(nsIAccessibleCaretMoveEvent);
+    ok(!evt.isAtEndOfLine, "Caret is not at end of line");
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_CHAR,
+      "d",
+      4,
+      5,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_WORD_START,
+      "cd ",
+      3,
+      6,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_LINE_START,
+      "ab cd ",
+      0,
+      6,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+
+    caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    EventUtils.synthesizeKey("KEY_ArrowRight");
+    evt = await caretMoved;
+    is(textarea.caretOffset, 5, "Caret offset is 5 after ArrowRight");
+    evt.QueryInterface(nsIAccessibleCaretMoveEvent);
+    ok(!evt.isAtEndOfLine, "Caret is not at end of line");
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_CHAR,
+      " ",
+      5,
+      6,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_WORD_START,
+      "cd ",
+      3,
+      6,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_LINE_START,
+      "ab cd ",
+      0,
+      6,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+
+    caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    EventUtils.synthesizeKey("KEY_ArrowRight");
+    evt = await caretMoved;
+    is(textarea.caretOffset, 6, "Caret offset is 6 after ArrowRight");
+    evt.QueryInterface(nsIAccessibleCaretMoveEvent);
+    ok(evt.isAtEndOfLine, "Caret is at end of line");
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_CHAR,
+      "",
+      6,
+      6,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_WORD_START,
+      "cd ",
+      3,
+      6,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_LINE_START,
+      "ab cd ",
+      0,
+      6,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+
+    caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    EventUtils.synthesizeKey("KEY_ArrowRight");
+    evt = await caretMoved;
+    is(textarea.caretOffset, 6, "Caret offset remains 6 after ArrowRight");
+    evt.QueryInterface(nsIAccessibleCaretMoveEvent);
+    ok(!evt.isAtEndOfLine, "Caret is not at end of line");
+    // Caret is at start of second line.
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_CHAR,
+      "e",
+      6,
+      7,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_WORD_START,
+      "e",
+      6,
+      7,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_LINE_START,
+      "e",
+      6,
+      7,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+
+    caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, textarea);
+    EventUtils.synthesizeKey("KEY_ArrowRight");
+    evt = await caretMoved;
+    is(textarea.caretOffset, 7, "Caret offset is 7 after ArrowRight");
+    evt.QueryInterface(nsIAccessibleCaretMoveEvent);
+    ok(evt.isAtEndOfLine, "Caret is at end of line");
+    // Caret is at end of textarea.
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_CHAR,
+      "",
+      7,
+      7,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_WORD_START,
+      "e",
+      6,
+      7,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+    testTextAtOffset(
+      kCaretOffset,
+      BOUNDARY_LINE_START,
+      "e",
+      6,
+      7,
+      textarea,
+      kOk,
+      kOk,
+      kOk
+    );
+
+    const empty = findAccessibleChildByID(docAcc, "empty", [nsIAccessibleText]);
+    caretMoved = waitForEvent(EVENT_TEXT_CARET_MOVED, empty);
+    empty.takeFocus();
+    evt = await caretMoved;
+    is(empty.caretOffset, 0, "Caret offset in empty textarea is 0");
+    evt.QueryInterface(nsIAccessibleCaretMoveEvent);
+    ok(!evt.isAtEndOfLine, "Caret is not at end of line");
+  },
+  { chrome: true, topLevel: true, iframe: true, remoteIframe: true }
+);
