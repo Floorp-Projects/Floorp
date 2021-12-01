@@ -54,15 +54,15 @@ NS_IMPL_ADDREF_INHERITED(MIDIAccess, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MIDIAccess, DOMEventTargetHelper)
 
 MIDIAccess::MIDIAccess(nsPIDOMWindowInner* aWindow, bool aSysexEnabled,
-                       Promise* aPromise)
+                       Promise* aAccessPromise)
     : DOMEventTargetHelper(aWindow),
       mInputMap(new MIDIInputMap(aWindow)),
       mOutputMap(new MIDIOutputMap(aWindow)),
       mSysexEnabled(aSysexEnabled),
-      mAccessPromise(aPromise),
+      mAccessPromise(aAccessPromise),
       mHasShutdown(false) {
   MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(aPromise);
+  MOZ_ASSERT(aAccessPromise);
 }
 
 MIDIAccess::~MIDIAccess() { Shutdown(); }
@@ -190,7 +190,7 @@ void MIDIAccess::MaybeCreateMIDIPort(const MIDIPortInfo& aInfo,
 // received, that will be handled by the MIDIPort object itself, and it will
 // request removal from MIDIAccess's maps.
 void MIDIAccess::Notify(const MIDIPortList& aEvent) {
-  for (auto& port : aEvent.ports()) {
+  for (const auto& port : aEvent.ports()) {
     // Something went very wrong. Warn and return.
     ErrorResult rv;
     MaybeCreateMIDIPort(port, rv);

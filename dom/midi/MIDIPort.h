@@ -16,8 +16,7 @@
 
 struct JSContext;
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 
 class Promise;
 class MIDIPortInfo;
@@ -91,7 +90,6 @@ class MIDIPort : public DOMEventTargetHelper,
   RefPtr<Promise> mClosingPromise;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MIDIPort_h
