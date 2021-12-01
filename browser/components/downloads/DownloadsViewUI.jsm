@@ -255,13 +255,25 @@ var DownloadsViewUI = {
       ".downloadAlwaysOpenSimilarFilesMenuItem"
     );
 
-    // In HelperAppDlg.jsm, we determine whether or not an "always open..." checkbox
-    // should appear in the unknownContentType window. Here, we use similar checks to
-    // determine if we should show the "always open similar files" context menu item.
+    /**
+     * In HelperAppDlg.jsm, we determine whether or not an "always open..." checkbox
+     * should appear in the unknownContentType window. Here, we use similar checks to
+     * determine if we should show the "always open similar files" context menu item.
+     *
+     * Note that we also read the content type using mimeInfo to detect better and available
+     * mime types, given a file extension. Some sites default to "application/octet-stream",
+     * further limiting what file types can be added to about:preferences, even for file types
+     * that are in fact capable of being handled with a default application.
+     *
+     * There are also cases where download.contentType is undefined (ex. when opening
+     * the context menu on a previously downloaded item via download history).
+     * Using mimeInfo ensures that content type exists and prevents intermittence.
+     */
     let shouldNotRememberChoice =
-      download.contentType === "application/octet-stream" ||
-      download.contentType === "application/x-msdownload" ||
-      (download.contentType === "text/plain" &&
+      !mimeInfo?.type ||
+      mimeInfo.type === "application/octet-stream" ||
+      mimeInfo.type === "application/x-msdownload" ||
+      (mimeInfo.type === "text/plain" &&
         gReputationService.isBinary(download.target.path));
 
     if (improvementsOn && !canViewInternally) {
