@@ -58,9 +58,6 @@ add_gcc_warning("-Wpointer-arith")
 # catch modifying constructor parameter that shadows member variable
 check_and_add_gcc_warning("-Wshadow-field-in-constructor-modified")
 
-# catches lambda variables shadowing function variables.
-check_and_add_gcc_warning("-Wshadow-uncaptured-local", cxx_compiler)
-
 # catches comparing signed/unsigned ints
 add_gcc_warning("-Wsign-compare")
 
