@@ -32,9 +32,6 @@ if CONFIG["OS_TARGET"] == "WINNT":
         "TestNamedPipeService.cpp",
     ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-shadow"]
-
 # skip the test on windows10-aarch64
 if not (CONFIG["OS_TARGET"] == "WINNT" and CONFIG["CPU_ARCH"] == "aarch64"):
     UNIFIED_SOURCES += [

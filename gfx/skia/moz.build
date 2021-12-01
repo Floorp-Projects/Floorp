@@ -471,7 +471,6 @@ if CONFIG['MOZ_TREE_FREETYPE']:
 CXXFLAGS += [
     '-Wno-deprecated-declarations',
     '-Wno-overloaded-virtual',
-    '-Wno-shadow',
     '-Wno-sign-compare',
     '-Wno-unreachable-code',
     '-Wno-unused-function',

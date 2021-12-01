@@ -110,6 +110,3 @@ LOCAL_INCLUDES += [
 ]
 
 USE_LIBS += ["icu"]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

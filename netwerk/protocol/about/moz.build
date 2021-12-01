@@ -30,6 +30,3 @@ LOCAL_INCLUDES += [
     "/netwerk/base",
     "/netwerk/cache2",
 ]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

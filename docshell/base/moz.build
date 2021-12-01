@@ -124,7 +124,4 @@ LOCAL_INCLUDES += [
     "/tools/profiler",
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
-
 EXTRA_JS_MODULES += ["URIFixup.jsm"]

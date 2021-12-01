@@ -9,6 +9,3 @@ SOURCES += [
 ]
 
 FINAL_LIBRARY = "xul"
-
-if CONFIG["CC_TYPE"] == "clang":
-    CXXFLAGS += ["-Wno-error=shadow"]

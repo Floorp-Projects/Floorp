@@ -30,4 +30,4 @@ LOCAL_INCLUDES += [
 ]
 
 if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
-    CXXFLAGS += ['-Wno-shadow', '-Wno-error=stack-protector']
+    CXXFLAGS += ['-Wno-error=stack-protector']

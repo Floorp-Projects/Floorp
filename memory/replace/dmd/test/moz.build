@@ -24,6 +24,3 @@ DisableStlWrapping()
 XPCSHELL_TESTS_MANIFESTS += [
     "xpcshell.ini",
 ]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

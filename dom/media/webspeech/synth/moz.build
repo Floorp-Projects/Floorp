@@ -63,6 +63,3 @@ FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
     "ipc",
 ]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

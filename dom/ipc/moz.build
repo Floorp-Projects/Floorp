@@ -246,9 +246,6 @@ XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.ini"]
 
 CXXFLAGS += CONFIG["TK_CFLAGS"]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
-
 if CONFIG["FUZZING"] and CONFIG["FUZZING_INTERFACES"]:
     TEST_DIRS += ["fuzztest"]
 

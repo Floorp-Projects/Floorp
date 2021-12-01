@@ -278,9 +278,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "gtk":
 DEFINES["TOPOBJDIR"] = TOPOBJDIR
 FINAL_TARGET_PP_FILES += ["platform.ini"]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
-
 if CONFIG["MOZ_IPDL_TESTS"]:
     DEFINES["MOZ_IPDL_TESTS"] = True
 

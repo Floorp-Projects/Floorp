@@ -18,7 +18,4 @@ LOCAL_INCLUDES += [
     "/dom/media/gmp",
 ]
 
-if CONFIG["CC_TYPE"] == "clang":
-    CXXFLAGS += ["-Wno-error=shadow"]
-
 include("/ipc/chromium/chromium-config.mozbuild")
