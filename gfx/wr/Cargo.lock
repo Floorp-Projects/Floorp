@@ -343,9 +343,9 @@ dependencies = [
 
 [[package]]
 name = "core-graphics"
-version = "0.22.0"
+version = "0.22.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6082396a349fa49674ba1bda4077332a18bf150e8fa75745ece07085e29a113"
+checksum = "2581bbab3b8ffc6fcbd550bf46c355135d16e9ff2a6ea032ad6b9bf1d7efe4fb"
 dependencies = [
  "bitflags",
  "core-foundation 0.9.2",
@@ -368,12 +368,12 @@ dependencies = [
 
 [[package]]
 name = "core-text"
-version = "19.0.0"
+version = "19.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04dfae50af11e72657fe7174cddb1ecddc5398037f7f6f39533ad69207c9a4e2"
+checksum = "99d74ada66e07c1cefa18f8abfba765b486f250de2e4a999e5727fc0dd4b4a25"
 dependencies = [
  "core-foundation 0.9.2",
- "core-graphics 0.22.0",
+ "core-graphics 0.22.3",
  "foreign-types",
  "libc",
 ]
@@ -1664,13 +1664,12 @@ dependencies = [
  "build-parallel",
  "byteorder",
  "core-foundation 0.9.2",
- "core-graphics 0.22.0",
+ "core-graphics 0.22.3",
  "core-text",
  "derive_more",
  "dwrote",
  "etagere",
  "euclid",
- "foreign-types",
  "freetype",
  "fxhash",
  "gleam 0.13.1",
@@ -1721,7 +1720,7 @@ dependencies = [
  "bitflags",
  "byteorder",
  "core-foundation 0.9.2",
- "core-graphics 0.22.0",
+ "core-graphics 0.22.3",
  "crossbeam-channel",
  "derive_more",
  "euclid",
@@ -1823,7 +1822,7 @@ dependencies = [
  "chrono",
  "clap",
  "core-foundation 0.9.2",
- "core-graphics 0.22.0",
+ "core-graphics 0.22.3",
  "crossbeam",
  "dwrote",
  "env_logger",
