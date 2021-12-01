@@ -173,6 +173,7 @@ a re-build.
 
 [XPCOM]: https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM
 [strict mode]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode
+[Mozilla eslint rules]: https://searchfox.org/mozilla-central/source/.eslintrc.js
 [our own specialisations]: https://searchfox.org/mozilla-central/source/remote/marionette/.eslintrc.js
 [linter]: #linting
 [copying header]: https://www.mozilla.org/en-US/MPL/headers/
@@ -207,18 +208,8 @@ These include public functions—or command implementations—on
 the `GeckoDriver` class, as well as all exported symbols from
 other modules.  Documentation for non-exported symbols is not required.
 
-The API documentation can be regenerated to [remote/marionette/doc/internals]
-so:
-
-The API documentation uses [jsdoc] and is generated to <https://firefox-source-docs.mozilla.org/testing/marionette/internals> on Taskcluster.  You may also build the documentation locally:
-
-	% ./mach doc
-
-[Mozilla eslint rules]: https://searchfox.org/mozilla-central/source/.eslintrc.js
 [remote/marionette/doc]: https://searchfox.org/mozilla-central/source/remote/marionette/doc
-[remote/marionette/doc/internals]: https://searchfox.org/mozilla-central/source/remote/marionette/doc/internals
 [testing/geckodriver/doc]: https://searchfox.org/mozilla-central/source/testing/geckodriver/doc
-[jsdoc]: http://usejsdoc.org/
 
 
 Linting
