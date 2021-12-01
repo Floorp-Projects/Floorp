@@ -300,7 +300,8 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCaretMoveEvent(
 #if defined(XP_WIN)
     const LayoutDeviceIntRect& aCaretRect,
 #endif  // defined (XP_WIN)
-    const int32_t& aOffset, const bool& aIsSelectionCollapsed) {
+    const int32_t& aOffset, const bool& aIsSelectionCollapsed,
+    const bool& aIsAtEndOfLine) {
   if (mShutdown) {
     return IPC_OK();
   }
@@ -310,6 +311,10 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCaretMoveEvent(
     NS_ERROR("unknown caret move event target!");
     return IPC_OK();
   }
+
+  mCaretId = aID;
+  mCaretOffset = aOffset;
+  mIsCaretAtEndOfLine = aIsAtEndOfLine;
 
 #if defined(XP_WIN)
   ProxyCaretMoveEvent(proxy, aCaretRect);
@@ -326,8 +331,9 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvCaretMoveEvent(
   nsINode* node = nullptr;
   bool fromUser = true;  // XXX fix me
   uint32_t type = nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED;
-  RefPtr<xpcAccCaretMoveEvent> event = new xpcAccCaretMoveEvent(
-      type, xpcAcc, doc, node, fromUser, aOffset, aIsSelectionCollapsed);
+  RefPtr<xpcAccCaretMoveEvent> event =
+      new xpcAccCaretMoveEvent(type, xpcAcc, doc, node, fromUser, aOffset,
+                               aIsSelectionCollapsed, aIsAtEndOfLine);
   nsCoreUtils::DispatchAccEvent(std::move(event));
 
   return IPC_OK();
