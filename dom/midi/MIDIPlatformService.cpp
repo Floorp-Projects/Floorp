@@ -8,6 +8,7 @@
 #include "MIDIMessageQueue.h"
 #include "TestMIDIPlatformService.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/StaticPrefs_midi.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/MIDIManagerParent.h"
@@ -178,12 +179,9 @@ MIDIPlatformService* MIDIPlatformService::Get() {
   MOZ_ASSERT(XRE_IsParentProcess());
   ::mozilla::ipc::AssertIsOnBackgroundThread();
   if (!IsRunning()) {
-    ErrorResult rv;
     // Uncomment once we have an actual platform library to test.
     //
-    // bool useTestService = false;
-    // rv = Preferences::GetRootBranch()->GetBoolPref("midi.testing",
-    // &useTestService);
+    // if (StaticPrefs::midi_testing()) {
     gMIDIPlatformService = new TestMIDIPlatformService();
     gMIDIPlatformService->Init();
   }
