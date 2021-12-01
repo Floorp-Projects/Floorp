@@ -19,14 +19,20 @@ disallowed = set(
 )
 
 
-def getfiletext(filename):
+def getfiletext(config, filename):
     # Make a text string from a file, attempting to decode from latin1 if necessary.
     # Other non-utf-8 locales are not supported at the moment.
     with open(filename, "rb") as infile:
         try:
             return infile.read().decode("utf-8")
         except Exception as e:
-            print("%s: %s" % (filename, e))
+            res = {
+                "path": filename,
+                "message": "Could not open file as utf-8 - maybe an encoding error: %s"
+                % e,
+                "level": "error",
+            }
+            results.append(result.from_config(config, **res))
             return None
 
     return None
@@ -46,7 +52,7 @@ def analyze_text(filename, text, disallowed):
 def lint(paths, config, **lintargs):
     files = list(expand_exclusions(paths, config, lintargs["root"]))
     for f in files:
-        text = getfiletext(f)
+        text = getfiletext(config, f)
         if text:
             (subset, line) = analyze_text(f, text, disallowed)
             if subset:
