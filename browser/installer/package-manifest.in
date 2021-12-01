@@ -372,8 +372,6 @@ bin/libfreebl_64int_3.so
 #endif
 #endif
 
-@BINPATH@/@DLL_PREFIX@ipcclientcerts@DLL_SUFFIX@
-
 ; For process sandboxing
 #if defined(MOZ_SANDBOX)
 #if defined(XP_LINUX)
