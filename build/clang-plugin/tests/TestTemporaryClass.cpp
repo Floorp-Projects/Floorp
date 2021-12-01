@@ -27,9 +27,9 @@ void gobbleanyref(const T&) { }
 void misuseNonTemporaryClass(int len) {
   // All of these should error.
   Temporary invalid; // expected-error {{variable of type 'Temporary' is only valid as a temporary}} expected-note {{value incorrectly allocated in an automatic variable}}
-  Temporary alsoInvalid[2]; // expected-error {{variable of type 'Temporary [2]' is only valid as a temporary}} expected-note {{value incorrectly allocated in an automatic variable}} expected-note {{'Temporary [2]' is a temporary type because it is an array of temporary type 'Temporary'}}
+  Temporary alsoInvalid[2]; // expected-error-re {{variable of type 'Temporary{{ ?}}[2]' is only valid as a temporary}} expected-note {{value incorrectly allocated in an automatic variable}} expected-note-re {{'Temporary{{ ?}}[2]' is a temporary type because it is an array of temporary type 'Temporary'}}
   static Temporary invalidStatic; // expected-error {{variable of type 'Temporary' is only valid as a temporary}} expected-note {{value incorrectly allocated in a global variable}}
-  static Temporary alsoInvalidStatic[2]; // expected-error {{variable of type 'Temporary [2]' is only valid as a temporary}} expected-note {{value incorrectly allocated in a global variable}} expected-note {{'Temporary [2]' is a temporary type because it is an array of temporary type 'Temporary'}}
+  static Temporary alsoInvalidStatic[2]; // expected-error-re {{variable of type 'Temporary{{ ?}}[2]' is only valid as a temporary}} expected-note {{value incorrectly allocated in a global variable}} expected-note-re {{'Temporary{{ ?}}[2]' is a temporary type because it is an array of temporary type 'Temporary'}}
 
   gobble(&invalid);
   gobble(&invalidStatic);

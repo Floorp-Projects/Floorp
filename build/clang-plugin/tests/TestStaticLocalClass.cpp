@@ -16,7 +16,7 @@ void gobble(void *) { }
 
 void misuseStaticLocalClass(int len) {
   StaticLocal notValid; // expected-error {{variable of type 'StaticLocal' is only valid as a static local}} expected-note {{value incorrectly allocated in an automatic variable}}
-  StaticLocal alsoNotValid[2]; // expected-error {{variable of type 'StaticLocal [2]' is only valid as a static local}} expected-note {{'StaticLocal [2]' is a static-local type because it is an array of static-local type 'StaticLocal'}} expected-note {{value incorrectly allocated in an automatic variable}}
+  StaticLocal alsoNotValid[2]; // expected-error-re {{variable of type 'StaticLocal{{ ?}}[2]' is only valid as a static local}} expected-note-re {{'StaticLocal{{ ?}}[2]' is a static-local type because it is an array of static-local type 'StaticLocal'}} expected-note {{value incorrectly allocated in an automatic variable}}
   static StaticLocal valid;
   static StaticLocal alsoValid[2];
 
