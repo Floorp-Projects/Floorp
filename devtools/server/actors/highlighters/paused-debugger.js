@@ -30,8 +30,7 @@ function PausedDebuggerOverlay(highlighterEnv, options = {}) {
 
   this.markup = new CanvasFrameAnonymousContentHelper(
     highlighterEnv,
-    this._buildMarkup.bind(this),
-    { waitForDocumentToLoad: false }
+    this._buildMarkup.bind(this)
   );
   this.isReady = this.markup.initialize();
 }
