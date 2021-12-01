@@ -206,13 +206,24 @@ struct ComputedStyleMap {
 
   struct Entry {
     // Create a pointer-to-member-function type.
-    typedef already_AddRefed<CSSValue> (nsComputedDOMStyle::*ComputeMethod)();
+    using ComputeMethod = already_AddRefed<CSSValue> (nsComputedDOMStyle::*)();
 
     nsCSSPropertyID mProperty;
-    ComputeMethod mGetter;
+
+    // Whether the property can ever be exposed in getComputedStyle(). For
+    // example, @page descriptors implemented as CSS properties or other
+    // internal properties, would have this flag set to `false`.
+    bool mCanBeExposed = false;
+
+    ComputeMethod mGetter = nullptr;
+
+    bool IsEnumerable() const {
+      return IsEnabled() && !nsCSSProps::IsShorthand(mProperty);
+    }
 
     bool IsEnabled() const {
-      if (!nsCSSProps::IsEnabled(mProperty, CSSEnabledState::ForAllContent)) {
+      if (!mCanBeExposed ||
+          !nsCSSProps::IsEnabled(mProperty, CSSEnabledState::ForAllContent)) {
         return false;
       }
       if (nsCSSProps::IsShorthand(mProperty) &&
@@ -234,7 +245,7 @@ struct ComputedStyleMap {
    */
   uint32_t Length() {
     Update();
-    return mExposedPropertyCount;
+    return mEnumerablePropertyCount;
   }
 
   /**
@@ -253,21 +264,23 @@ struct ComputedStyleMap {
    * or is currently disabled.
    */
   const Entry* FindEntryForProperty(nsCSSPropertyID aPropID) {
-    Update();
-    for (uint32_t i = 0; i < mExposedPropertyCount; i++) {
-      const Entry* entry = &kEntries[EntryIndex(i)];
-      if (entry->mProperty == aPropID) {
-        return entry;
-      }
+    if (size_t(aPropID) >= ArrayLength(kEntryIndices)) {
+      MOZ_ASSERT(aPropID == eCSSProperty_UNKNOWN);
+      return nullptr;
     }
-    return nullptr;
+    MOZ_ASSERT(kEntryIndices[aPropID] < ArrayLength(kEntries));
+    const auto& entry = kEntries[kEntryIndices[aPropID]];
+    if (!entry.IsEnabled()) {
+      return nullptr;
+    }
+    return &entry;
   }
 
   /**
    * Records that mIndexMap needs updating, due to prefs changing that could
    * affect the set of properties exposed on an nsComputedDOMStyle.
    */
-  void MarkDirty() { mExposedPropertyCount = 0; }
+  void MarkDirty() { mEnumerablePropertyCount = 0; }
 
   // The member variables are public so that we can use an initializer in
   // nsComputedDOMStyle::GetComputedStyleMap.  Use the member functions
@@ -279,7 +292,7 @@ struct ComputedStyleMap {
    * prefs are disabled.  A value of 0 indicates that it and mIndexMap are out
    * of date.
    */
-  uint32_t mExposedPropertyCount;
+  uint32_t mEnumerablePropertyCount = 0;
 
   /**
    * A map of indexes on the nsComputedDOMStyle object to indexes into kEntries.
@@ -288,13 +301,13 @@ struct ComputedStyleMap {
 
  private:
   /**
-   * Returns whether mExposedPropertyCount and mIndexMap are out of date.
+   * Returns whether mEnumerablePropertyCount and mIndexMap are out of date.
    */
-  bool IsDirty() { return mExposedPropertyCount == 0; }
+  bool IsDirty() { return mEnumerablePropertyCount == 0; }
 
   /**
-   * Updates mExposedPropertyCount and mIndexMap to take into account properties
-   * whose prefs are currently disabled.
+   * Updates mEnumerablePropertyCount and mIndexMap to take into account
+   * properties whose prefs are currently disabled.
    */
   void Update();
 
@@ -302,13 +315,15 @@ struct ComputedStyleMap {
    * Maps an nsComputedDOMStyle indexed getter index to an index into kEntries.
    */
   uint32_t EntryIndex(uint32_t aIndex) const {
-    MOZ_ASSERT(aIndex < mExposedPropertyCount);
+    MOZ_ASSERT(aIndex < mEnumerablePropertyCount);
     return mIndexMap[aIndex];
   }
 };
 
 constexpr ComputedStyleMap::Entry
     ComputedStyleMap::kEntries[ArrayLength(kEntries)];
+
+constexpr size_t ComputedStyleMap::kEntryIndices[ArrayLength(kEntries)];
 
 void ComputedStyleMap::Update() {
   if (!IsDirty()) {
@@ -317,11 +332,11 @@ void ComputedStyleMap::Update() {
 
   uint32_t index = 0;
   for (uint32_t i = 0; i < ArrayLength(kEntries); i++) {
-    if (kEntries[i].IsEnabled()) {
+    if (kEntries[i].IsEnumerable()) {
       mIndexMap[index++] = i;
     }
   }
-  mExposedPropertyCount = index;
+  mEnumerablePropertyCount = index;
 }
 
 nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
