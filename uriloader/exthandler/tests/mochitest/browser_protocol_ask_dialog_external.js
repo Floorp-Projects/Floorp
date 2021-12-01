@@ -9,7 +9,7 @@ let gHandlerService = Cc["@mozilla.org/uriloader/handler-service;1"].getService(
 
 const TEST_PATH = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
-  "http://example.com"
+  "https://example.com"
 );
 
 /**
@@ -176,15 +176,23 @@ add_task(async function test_web_app_doesnt_ask() {
 });
 
 add_task(async function external_https_redirect_doesnt_ask() {
+  Services.perms.addFromPrincipal(
+    Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+      "https://example.com"
+    ),
+    "open-protocol-handler^local-app-test",
+    Services.perms.ALLOW_ACTION
+  );
   // Listen for a dialog open and fail the test if it does:
   let dialogOpenListener = () => ok(false, "Shouldn't have opened a dialog!");
   document.documentElement.addEventListener("dialogopen", dialogOpenListener);
-  registerCleanupFunction(() =>
+  registerCleanupFunction(() => {
     document.documentElement.removeEventListener(
       "dialogopen",
       dialogOpenListener
-    )
-  );
+    );
+    Services.perms.removeAll();
+  });
 
   let initialTab = gBrowser.selectedTab;
 
