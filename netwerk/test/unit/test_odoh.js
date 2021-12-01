@@ -261,5 +261,3 @@ add_task(test_ipv6_trr_fallback);
 add_task(test_ipv4_trr_fallback);
 
 add_task(test_no_retry_without_doh);
-
-add_task(test_connection_reuse_and_cycling).skip(); // Bug 1742743
