@@ -464,6 +464,9 @@ class SyntaxParseHandler {
   BinaryNodeType newCallImport(NullaryNodeType importHolder, Node singleArg) {
     return NodeGeneric;
   }
+  BinaryNodeType newCallImportSpec(Node specifierArg, Node optionalArg) {
+    return NodeGeneric;
+  }
 
   BinaryNodeType newSetThis(Node thisName, Node value) { return value; }
 

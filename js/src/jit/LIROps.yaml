@@ -1424,6 +1424,7 @@
   result_type: WordSized
   operands:
     specifier: BoxedValue
+    options: BoxedValue
   call_instruction: true
   mir_op: true
 

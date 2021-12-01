@@ -2971,8 +2971,8 @@ void LIRGenerator::visitModuleMetadata(MModuleMetadata* ins) {
 }
 
 void LIRGenerator::visitDynamicImport(MDynamicImport* ins) {
-  LDynamicImport* lir =
-      new (alloc()) LDynamicImport(useBoxAtStart(ins->specifier()));
+  LDynamicImport* lir = new (alloc()) LDynamicImport(
+      useBoxAtStart(ins->specifier()), useBoxAtStart(ins->options()));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }

@@ -2370,8 +2370,137 @@ bool ModuleObject::topLevelCapabilityReject(JSContext* cx,
   return AsyncFunctionThrown(cx, promise, error);
 }
 
+// https://tc39.es/proposal-import-assertions/#sec-evaluate-import-call
+// NOTE: The caller needs to handle the promise.
+static bool EvaluateDynamicImportOptions(
+    JSContext* cx, HandleValue optionsArg,
+    MutableHandleArrayObject assertionArrayArg) {
+  // Step 10. If options is not undefined, then.
+  if (optionsArg.isUndefined()) {
+    return true;
+  }
+
+  // Step 10.a. If Type(options) is not Object,
+  if (!optionsArg.isObject()) {
+    JS_ReportErrorNumberASCII(
+        cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE, "import",
+        "object or undefined", InformalValueTypeName(optionsArg));
+    return false;
+  }
+
+  RootedObject assertWrapperObject(cx, &optionsArg.toObject());
+  RootedValue assertValue(cx);
+
+  // Step 10.b. Let assertionsObj be Get(options, "assert").
+  RootedId assertId(cx, NameToId(cx->names().assert_));
+  if (!GetProperty(cx, assertWrapperObject, assertWrapperObject, assertId,
+                   &assertValue)) {
+    return false;
+  }
+
+  // Step 10.d. If assertionsObj is not undefined.
+  if (assertValue.isUndefined()) {
+    return true;
+  }
+
+  // Step 10.d.i. If Type(assertionsObj) is not Object.
+  if (!assertValue.isObject()) {
+    JS_ReportErrorNumberASCII(
+        cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE, "import",
+        "object or undefined", InformalValueTypeName(assertValue));
+    return false;
+  }
+
+  // Step 10.d.i. Let keys be EnumerableOwnPropertyNames(assertionsObj, key).
+  RootedObject assertObject(cx, &assertValue.toObject());
+  RootedIdVector assertions(cx);
+  if (!GetPropertyKeys(cx, assertObject, JSITER_OWNONLY, &assertions)) {
+    return false;
+  }
+
+  uint32_t numberOfAssertions = assertions.length();
+  if (numberOfAssertions == 0) {
+    return true;
+  }
+
+  // Step 9 (reordered). Let assertions be a new empty List.
+  RootedArrayObject assertionArray(
+      cx, NewDenseFullyAllocatedArray(cx, numberOfAssertions));
+  if (!assertionArray) {
+    return false;
+  }
+  assertionArray->ensureDenseInitializedLength(0, numberOfAssertions);
+
+  // Step 10.d.iv. Let supportedAssertions be
+  // !HostGetSupportedImportAssertions().
+  JS::ImportAssertionVector supportedAssertions;
+  bool succeeded = CallSupportedAssertionsHook(cx, supportedAssertions);
+  if (!succeeded) {
+    return false;
+  }
+
+  size_t numberOfValidAssertions = 0;
+
+  // Step 10.d.v. For each String key of keys,
+  RootedId key(cx);
+  for (size_t i = 0; i < numberOfAssertions; i++) {
+    key = assertions[i];
+
+    // Step 10.d.v.1. Let value be Get(assertionsObj, key).
+    RootedValue value(cx);
+    if (!GetProperty(cx, assertObject, assertObject, key, &value)) {
+      return false;
+    }
+
+    // Step 10.d.v.3. If Type(value) is not String, then.
+    if (!value.isString()) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_NOT_EXPECTED_TYPE, "import", "string",
+                                InformalValueTypeName(value));
+      return false;
+    }
+
+    // Step 10.d.v.4. If supportedAssertions contains key, then Append {
+    // [[Key]]: key, [[Value]]: value } to assertions.
+    for (JS::ImportAssertion assertion : supportedAssertions) {
+      bool supported = false;
+      switch (assertion) {
+        case JS::ImportAssertion::Type: {
+          supported = key.toAtom() == cx->names().type;
+        } break;
+      }
+
+      if (supported) {
+        RootedPlainObject assertionObj(cx, NewPlainObject(cx));
+        if (!assertionObj) {
+          return false;
+        }
+
+        if (!DefineDataProperty(cx, assertionObj, key, value,
+                                JSPROP_ENUMERATE)) {
+          return false;
+        }
+
+        assertionArray->initDenseElement(numberOfValidAssertions,
+                                         ObjectValue(*assertionObj));
+        ++numberOfValidAssertions;
+      }
+    }
+  }
+
+  if (numberOfValidAssertions == 0) {
+    return true;
+  }
+
+  assertionArray->setLength(numberOfValidAssertions);
+  assertionArrayArg.set(assertionArray);
+
+  return true;
+}
+
 JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
-                                       HandleValue specifierArg) {
+                                       HandleValue specifierArg,
+                                       HandleValue optionsArg) {
   RootedObject promiseConstructor(cx, JS::GetPromiseConstructor(cx));
   if (!promiseConstructor) {
     return nullptr;
@@ -2418,8 +2547,16 @@ JSObject* js::StartDynamicModuleImport(JSContext* cx, HandleScript script,
     return promise;
   }
 
+  RootedArrayObject assertionArray(cx);
+  if (!EvaluateDynamicImportOptions(cx, optionsArg, &assertionArray)) {
+    if (!RejectPromiseWithPendingError(cx, promise)) {
+      return nullptr;
+    }
+    return promise;
+  }
+
   RootedObject moduleRequest(
-      cx, ModuleRequestObject::create(cx, specifierAtom, nullptr));
+      cx, ModuleRequestObject::create(cx, specifierAtom, assertionArray));
   if (!moduleRequest) {
     if (!RejectPromiseWithPendingError(cx, promise)) {
       return nullptr;

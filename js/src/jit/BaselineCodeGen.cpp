@@ -6389,14 +6389,15 @@ bool BaselineInterpreterCodeGen::emit_ImportMeta() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_DynamicImport() {
-  // Put specifier value in R0.
-  frame.popRegsAndSync(1);
+  // Put specifier into R0 and object value into R1
+  frame.popRegsAndSync(2);
 
   prepareVMCall();
+  pushArg(R1);
   pushArg(R0);
   pushScriptArg();
 
-  using Fn = JSObject* (*)(JSContext*, HandleScript, HandleValue);
+  using Fn = JSObject* (*)(JSContext*, HandleScript, HandleValue, HandleValue);
   if (!callVM<Fn, js::StartDynamicModuleImport>()) {
     return false;
   }
