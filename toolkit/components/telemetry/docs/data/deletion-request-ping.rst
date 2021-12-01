@@ -40,6 +40,22 @@ The following is a list of expected behaviours for the ``deletion-request`` ping
 - Telemetry will try to send the ping even if upload is disabled.
 - Telemetry may persist this ping if it can't be immediately sent, and may try to resend it later.
 
+Analysis Gotchas
+----------------
+It is `known <https://bugzilla.mozilla.org/show_bug.cgi?id=1741252>`_ that,
+on a release week, "deletion-request" pings from the previous release version will spike in volume.
+
+There is a strong geo component to these spikes (China and Russia mostly).
+The pings behave like they're coming from real Firefox instances (one per ``client_id``).
+However, we've received no "main" pings from these clients from the previous 28 days
+(per ``clients_last_seen``) which makes them rather unusual.
+
+We suspect this is some sort of automation or pseudo-automation.
+
+Including these pings in our self-service deletion processes doesn't make them any slower,
+and ingesting them isn't breaking the bank, so at time of writing we're inclined to take a
+"document and then ignore" approach.
+
 Version History
 ---------------
 
