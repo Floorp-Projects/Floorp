@@ -32,6 +32,20 @@ using js::AssertHeapIsIdle;
 using js::ModuleObject;
 using js::RequestedModuleObject;
 
+JS_PUBLIC_API JS::SupportedAssertionsHook JS::GetSupportedAssertionsHook(
+    JSRuntime* rt) {
+  AssertHeapIsIdle();
+
+  return rt->supportedAssertionsHook;
+}
+
+JS_PUBLIC_API void JS::SetSupportedAssertionsHook(
+    JSRuntime* rt, SupportedAssertionsHook func) {
+  AssertHeapIsIdle();
+
+  rt->supportedAssertionsHook = func;
+}
+
 JS_PUBLIC_API JS::ModuleResolveHook JS::GetModuleResolveHook(JSRuntime* rt) {
   AssertHeapIsIdle();
 
