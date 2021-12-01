@@ -497,6 +497,8 @@ nsresult TRRServiceChannel::ContinueOnBeforeConnect() {
   mConnectionInfo->SetIPv6Disabled(mCaps & NS_HTTP_DISABLE_IPV6);
 
   if (mLoadFlags & LOAD_FRESH_CONNECTION) {
+    Telemetry::ScalarAdd(
+        Telemetry::ScalarID::NETWORKING_TRR_CONNECTION_CYCLE_COUNT, 1);
     nsresult rv =
         gHttpHandler->ConnMgr()->DoSingleConnectionCleanup(mConnectionInfo);
     LOG(
