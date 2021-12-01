@@ -7,8 +7,7 @@
 #include "nsTArray.h"
 #include "mozilla/TimeStamp.h"
 
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 class MIDIMessage;
 
 /**
@@ -25,5 +24,4 @@ uint32_t ParseMessages(const nsTArray<uint8_t>& aByteBuffer,
 // Returns true if a message is a sysex message.
 bool IsSysexMessage(const MIDIMessage& a);
 }  // namespace MIDIUtils
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom

@@ -114,6 +114,7 @@
 #include "nsILoadContext.h"
 #include "nsISHEntry.h"
 #include "nsISHistory.h"
+#include "nsIScreenManager.h"
 #include "nsIScriptError.h"
 #include "nsISecureBrowserUI.h"
 #include "nsIURI.h"
