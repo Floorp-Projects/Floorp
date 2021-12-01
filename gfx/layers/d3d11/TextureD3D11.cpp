@@ -9,7 +9,6 @@
 #include "CompositorD3D11.h"
 #include "Effects.h"
 #include "MainThreadUtils.h"
-#include "ReadbackManagerD3D11.h"
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
 #include "gfxWindowsPlatform.h"
