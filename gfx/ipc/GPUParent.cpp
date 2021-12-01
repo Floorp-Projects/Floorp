@@ -25,6 +25,7 @@
 #include "gfxPlatform.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Components.h"
+#include "mozilla/FOGIPC.h"
 #include "mozilla/HangDetails.h"
 #include "mozilla/PerfStats.h"
 #include "mozilla/Preferences.h"
@@ -617,11 +618,21 @@ mozilla::ipc::IPCResult GPUParent::RecvCollectPerfStatsJSON(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult GPUParent::RecvFlushFOGData(
+    FlushFOGDataResolver&& aResolver) {
+  glean::FlushFOGData(std::move(aResolver));
+  return IPC_OK();
+}
+
 void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (AbnormalShutdown == aWhy) {
     NS_WARNING("Shutting down GPU process early due to a crash!");
     ProcessChild::QuickExit();
   }
+
+  // Send the last bits of Glean data over to the main process.
+  glean::FlushFOGData(
+      [](ByteBuf&& aBuf) { glean::SendFOGData(std::move(aBuf)); });
 
 #ifndef NS_FREE_PERMANENT_DATA
 #  ifdef XP_WIN
