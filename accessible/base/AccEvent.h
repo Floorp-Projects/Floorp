@@ -341,12 +341,13 @@ class AccReorderEvent : public AccTreeMutationEvent {
 class AccCaretMoveEvent : public AccEvent {
  public:
   AccCaretMoveEvent(LocalAccessible* aAccessible, int32_t aCaretOffset,
-                    bool aIsSelectionCollapsed,
+                    bool aIsSelectionCollapsed, bool aIsAtEndOfLine,
                     EIsFromUserInput aIsFromUserInput = eAutoDetect)
       : AccEvent(::nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED, aAccessible,
                  aIsFromUserInput),
         mCaretOffset(aCaretOffset),
-        mIsSelectionCollapsed(aIsSelectionCollapsed) {}
+        mIsSelectionCollapsed(aIsSelectionCollapsed),
+        mIsAtEndOfLine(aIsAtEndOfLine) {}
   virtual ~AccCaretMoveEvent() {}
 
   // AccEvent
@@ -359,11 +360,13 @@ class AccCaretMoveEvent : public AccEvent {
   int32_t GetCaretOffset() const { return mCaretOffset; }
 
   bool IsSelectionCollapsed() const { return mIsSelectionCollapsed; }
+  bool IsAtEndOfLine() { return mIsAtEndOfLine; }
 
  private:
   int32_t mCaretOffset;
 
   bool mIsSelectionCollapsed;
+  bool mIsAtEndOfLine;
 };
 
 /**
