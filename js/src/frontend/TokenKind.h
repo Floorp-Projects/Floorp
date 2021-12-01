@@ -124,6 +124,7 @@
   /* contextual keywords */                                            \
   MACRO(As, "'as'")                                                    \
   RANGE(ContextualKeywordFirst, As)                                    \
+  MACRO(Assert, "'assert'")                                            \
   MACRO(Async, "'async'")                                              \
   MACRO(Await, "'await'")                                              \
   MACRO(Each, "'each'")                                                \

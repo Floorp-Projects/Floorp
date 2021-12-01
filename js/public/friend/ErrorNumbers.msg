@@ -400,6 +400,11 @@ MSG_DEF(JSMSG_ILLEGAL_PRIVATE_FIELD,   0, JSEXN_SYNTAXERR, "private fields aren'
 MSG_DEF(JSMSG_ILLEGAL_PRIVATE_NAME,    0, JSEXN_SYNTAXERR, "private names aren't valid in this context")
 MSG_DEF(JSMSG_PRIVATE_FIELD_DOUBLE,    0, JSEXN_TYPEERR, "Initializing an object twice is an error with private fields")
 MSG_DEF(JSMSG_PRIVATE_BRAND_DOUBLE,    0, JSEXN_TYPEERR, "Initializing an object twice is an error with private methods")
+MSG_DEF(JSMSG_CURLY_AFTER_ASSERT,      0, JSEXN_SYNTAXERR, "missing '{' after assert")
+MSG_DEF(JSMSG_DUPLICATE_ASSERT_KEY,    1, JSEXN_SYNTAXERR, "duplicate assert key '{0}'")
+MSG_DEF(JSMSG_COLON_AFTER_ASSERT_KEY,  0, JSEXN_SYNTAXERR, "missing : after assert key")
+MSG_DEF(JSMSG_ASSERT_STRING_LITERAL,   0, JSEXN_SYNTAXERR, "expected string literal")
+MSG_DEF(JSMSG_ASSERT_KEY_EXPECTED,     0, JSEXN_SYNTAXERR, "expected assertion key")
 
 // UTF-8 source text encoding errors
 MSG_DEF(JSMSG_BAD_LEADING_UTF8_UNIT,   1, JSEXN_SYNTAXERR, "{0} byte doesn't begin a valid UTF-8 code point")
