@@ -15,6 +15,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 const ERRORS = new Set([
+  "DetachedShadowRootError",
   "ElementClickInterceptedError",
   "ElementNotAccessibleError",
   "ElementNotInteractableError",
@@ -29,6 +30,7 @@ const ERRORS = new Set([
   "NoSuchAlertError",
   "NoSuchElementError",
   "NoSuchFrameError",
+  "NoSuchShadowRootError",
   "NoSuchWindowError",
   "ScriptTimeoutError",
   "SessionNotCreatedError",
@@ -396,6 +398,26 @@ class NoSuchElementError extends WebDriverError {
 }
 
 /**
+ * A shadow root was not attached to the element.
+ */
+class NoSuchShadowRootError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "no such shadow root";
+  }
+}
+
+/**
+ * A shadow root is no longer attached to the document
+ */
+class DetachedShadowRootError extends WebDriverError {
+  constructor(message) {
+    super(message);
+    this.status = "detached shadow root";
+  }
+}
+
+/**
  * A command to switch to a frame could not be satisfied because
  * the frame could not be found.
  */
@@ -502,6 +524,7 @@ class UnsupportedOperationError extends WebDriverError {
 }
 
 const STATUSES = new Map([
+  ["detached shadow root", DetachedShadowRootError],
   ["element click intercepted", ElementClickInterceptedError],
   ["element not accessible", ElementNotAccessibleError],
   ["element not interactable", ElementNotInteractableError],
@@ -516,6 +539,7 @@ const STATUSES = new Map([
   ["no such alert", NoSuchAlertError],
   ["no such element", NoSuchElementError],
   ["no such frame", NoSuchFrameError],
+  ["no such shadow root", NoSuchShadowRootError],
   ["no such window", NoSuchWindowError],
   ["script timeout", ScriptTimeoutError],
   ["session not created", SessionNotCreatedError],
