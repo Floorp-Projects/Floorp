@@ -97,6 +97,10 @@ class GPUParent final : public PGPUParent {
       Endpoint<PSandboxTestingChild>&& aEndpoint);
 #endif
 
+  mozilla::ipc::IPCResult RecvFlushFOGData(FlushFOGDataResolver&& aResolver);
+
+  mozilla::ipc::IPCResult RecvTestTriggerMetrics();
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:

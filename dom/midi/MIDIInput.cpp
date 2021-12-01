@@ -24,7 +24,7 @@ MIDIInput* MIDIInput::Create(nsPIDOMWindowInner* aWindow,
                              const bool aSysexEnabled) {
   MOZ_ASSERT(static_cast<MIDIPortType>(aPortInfo.type()) ==
              MIDIPortType::Input);
-  auto port = new MIDIInput(aWindow, aMIDIAccessParent);
+  auto* port = new MIDIInput(aWindow, aMIDIAccessParent);
   if (!port->Initialize(aPortInfo, aSysexEnabled)) {
     return nullptr;
   }
@@ -42,7 +42,7 @@ void MIDIInput::Receive(const nsTArray<MIDIMessage>& aMsgs) {
     NS_WARNING("No document available to send MIDIMessageEvent to!");
     return;
   }
-  for (auto& msg : aMsgs) {
+  for (const auto& msg : aMsgs) {
     RefPtr<MIDIMessageEvent> event(
         MIDIMessageEvent::Constructor(this, msg.timestamp(), msg.data()));
     DispatchTrustedEvent(event);

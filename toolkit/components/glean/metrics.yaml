@@ -97,3 +97,21 @@ fog.ipc:
       - chutten@mozilla.com
       - glean-team@mozilla.com
     expires: never
+
+  flush_failures:
+    type: counter
+    description: |
+      The number of times we failed to flush all non-parent-process data,
+      throwing even partial results into the trash.
+      If this number is high, we might consider writing custom `MozPromise`-
+      handling code instead of using `MozPromise::All`.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1729026
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1729026
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - chutten@mozilla.com
+      - glean-team@mozilla.com
+    expires: never

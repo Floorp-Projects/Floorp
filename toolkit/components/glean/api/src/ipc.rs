@@ -97,6 +97,9 @@ fn register_process_shutdown(process_type: u32) {
                 FOG_RegisterContentChildShutdown();
             };
         }
+        nsIXULRuntime::PROCESS_TYPE_GPU => {
+            // GPU process shutdown is handled in GPUParent::ActorDestroy.
+        }
         _ => {
             // We don't yet support other process types.
             log::error!("Process type {} tried to use FOG, but isn't supported! (Process type constants are in nsIXULRuntime.rs)", process_type);

@@ -1329,7 +1329,6 @@ bool nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
                                         StyleAppearance aAppearance,
                                         LayoutDeviceIntMargin* aResult) {
   switch (aAppearance) {
-    case StyleAppearance::ButtonFocus:
     case StyleAppearance::Toolbarbutton:
     case StyleAppearance::Tooltip:
     case StyleAppearance::MozWindowButtonBox:
@@ -1819,7 +1818,6 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
       [[fallthrough]];
 
     case StyleAppearance::Button:
-    case StyleAppearance::ButtonFocus:
     case StyleAppearance::Radio:
     case StyleAppearance::Checkbox:
     case StyleAppearance::Toolbox:  // N/A
