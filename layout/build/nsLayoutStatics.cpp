@@ -9,7 +9,7 @@
 #include "nsLayoutStatics.h"
 #include "nscore.h"
 
-#include "DateTimeFormat.h"
+#include "mozilla/intl/AppDateTimeFormat.h"
 #include "MediaManager.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "nsAttrValue.h"
@@ -391,7 +391,7 @@ void nsLayoutStatics::Shutdown() {
   nsHyphenationManager::Shutdown();
   nsDOMMutationObserver::Shutdown();
 
-  DateTimeFormat::Shutdown();
+  mozilla::intl::AppDateTimeFormat::Shutdown();
 
   ContentParent::ShutDown();
 
