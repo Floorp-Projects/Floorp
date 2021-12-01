@@ -3756,9 +3756,6 @@ pref("browser.region.update.enabled", true);
 // Enable/Disable the device storage API for content
 pref("device.storage.enabled", false);
 
-// Push/Pop/Replace State prefs
-pref("browser.history.maxStateObjectSize", 2097152);
-
 pref("browser.meta_refresh_when_inactive.disabled", false);
 
 // XPInstall prefs
