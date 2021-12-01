@@ -31,6 +31,19 @@ nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult) {
   return NS_OK;
 }
 
+nsresult GetGpuTimeSinceProcessStartInMs(uint64_t* aResult) {
+  task_power_info_v2_data_t task_power_info;
+  mach_msg_type_number_t count = TASK_POWER_INFO_V2_COUNT;
+  kern_return_t kr =
+      task_info(mach_task_self(), TASK_POWER_INFO_V2, (task_info_t)&task_power_info, &count);
+  if (kr != KERN_SUCCESS) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aResult = task_power_info.gpu_energy.task_gpu_utilisation / PR_NSEC_PER_MSEC;
+  return NS_OK;
+}
+
 RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
   auto holder = MakeUnique<MozPromiseHolder<ProcInfoPromise>>();
   RefPtr<ProcInfoPromise> promise = holder->Ensure(__func__);

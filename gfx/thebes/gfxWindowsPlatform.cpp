@@ -313,6 +313,69 @@ void gfxWindowsPlatform::InitMemoryReportersForGPUProcess() {
   RegisterStrongMemoryReporter(new D3DSharedTexturesReporter());
 }
 
+/* static */
+nsresult gfxWindowsPlatform::GetGpuTimeSinceProcessStartInMs(
+    uint64_t* aResult) {
+  RefPtr<ID3D11Device> d3d11Device;
+  if (!(d3d11Device = mozilla::gfx::Factory::GetDirect3D11Device())) {
+    // If we don't have a D3DDevice, we likely didn't use any GPU time.
+    *aResult = 0;
+    return NS_OK;
+  }
+
+  nsModuleHandle module(LoadLibrary(L"gdi32.dll"));
+  if (!module) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  PFND3DKMTQS queryD3DKMTStatistics =
+      (PFND3DKMTQS)GetProcAddress(module, "D3DKMTQueryStatistics");
+  if (!queryD3DKMTStatistics) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  RefPtr<IDXGIDevice> dxgiDevice;
+  if (d3d11Device->QueryInterface(__uuidof(IDXGIDevice),
+                                  getter_AddRefs(dxgiDevice)) != S_OK) {
+    return NS_ERROR_FAILURE;
+  }
+
+  IDXGIAdapter* DXGIAdapter;
+  if (dxgiDevice->GetAdapter(&DXGIAdapter) != S_OK) {
+    return NS_ERROR_FAILURE;
+  }
+
+  DXGI_ADAPTER_DESC adapterDesc;
+  DXGIAdapter->GetDesc(&adapterDesc);
+  DXGIAdapter->Release();
+
+  D3DKMTQS queryStatistics;
+  memset(&queryStatistics, 0, sizeof(D3DKMTQS));
+  queryStatistics.Type = D3DKMTQS_ADAPTER;
+  queryStatistics.AdapterLuid = adapterDesc.AdapterLuid;
+  if (!NT_SUCCESS(queryD3DKMTStatistics(&queryStatistics))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  uint64_t result = 0;
+  ULONG nodeCount = queryStatistics.QueryResult.AdapterInfo.NodeCount;
+  for (ULONG i = 0; i < nodeCount; ++i) {
+    memset(&queryStatistics, 0, sizeof(D3DKMTQS));
+    queryStatistics.Type = D3DKMTQS_PROCESS_NODE;
+    queryStatistics.AdapterLuid = adapterDesc.AdapterLuid;
+    queryStatistics.hProcess = GetCurrentProcess();
+    queryStatistics.QueryProcessNode.NodeId = i;
+    if (NT_SUCCESS(queryD3DKMTStatistics(&queryStatistics))) {
+      result += queryStatistics.QueryResult.ProcessNodeInformation.RunningTime
+                    .QuadPart *
+                100 / PR_NSEC_PER_MSEC;
+    }
+  }
+
+  *aResult = result;
+  return NS_OK;
+}
+
 static void UpdateANGLEConfig() {
   if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
     gfxConfig::Disable(Feature::D3D11_HW_ANGLE, FeatureStatus::Disabled,
