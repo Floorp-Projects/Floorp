@@ -139,6 +139,9 @@ class FunctionBox;
   F(ImportSpecList, ListNode)                                    \
   F(ImportSpec, BinaryNode)                                      \
   F(ImportNamespaceSpec, UnaryNode)                              \
+  F(ImportAssertionList, ListNode)                               \
+  F(ImportAssertion, BinaryNode)                                 \
+  F(ImportModuleRequest, BinaryNode)                             \
   F(ExportStmt, UnaryNode)                                       \
   F(ExportFromStmt, BinaryNode)                                  \
   F(ExportDefaultStmt, BinaryNode)                               \

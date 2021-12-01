@@ -39,6 +39,7 @@
   MACRO_(ArrayType, ArrayType, "ArrayType")                                    \
   MACRO_(ArrayValues, ArrayValues, "$ArrayValues")                             \
   MACRO2(as, as, "as")                                                         \
+  MACRO_(assert, assert_, "assert")                                            \
   MACRO_(Async, Async, "Async")                                                \
   MACRO_(async, async, "async")                                                \
   MACRO_(AsyncFromSyncIterator, AsyncFromSyncIterator,                         \

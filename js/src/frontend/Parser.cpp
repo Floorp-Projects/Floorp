@@ -44,6 +44,7 @@
 #include "frontend/TokenStream.h"
 #include "irregexp/RegExpAPI.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
+#include "js/HashTable.h"
 #include "js/RegExpFlags.h"           // JS::RegExpFlags
 #include "util/StringBuffer.h"        // StringBuffer
 #include "vm/BytecodeUtil.h"
@@ -4986,6 +4987,103 @@ GeneralParser<ParseHandler, Unit>::moduleExportName() {
 }
 
 template <class ParseHandler, typename Unit>
+bool GeneralParser<ParseHandler, Unit>::assertClause(
+    ListNodeType assertionsSet) {
+  MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Assert));
+
+  if (!options().importAssertions) {
+    error(JSMSG_IMPORT_ASSERTIONS_NOT_SUPPORTED);
+    return false;
+  }
+
+  if (!abortIfSyntaxParser()) {
+    return false;
+  }
+
+  if (!mustMatchToken(TokenKind::LeftCurly, JSMSG_CURLY_AFTER_ASSERT)) {
+    return false;
+  }
+
+  // Handle the form |... assert {}|
+  TokenKind token;
+  if (!tokenStream.getToken(&token)) {
+    return false;
+  }
+  if (token == TokenKind::RightCurly) {
+    return true;
+  }
+
+  js::HashSet<TaggedParserAtomIndex, TaggedParserAtomIndexHasher,
+              js::SystemAllocPolicy>
+      usedAssertionKeys;
+
+  for (;;) {
+    TaggedParserAtomIndex keyName;
+    if (TokenKindIsPossibleIdentifierName(token)) {
+      keyName = anyChars.currentName();
+    } else if (token == TokenKind::String) {
+      keyName = anyChars.currentToken().atom();
+    } else {
+      error(JSMSG_ASSERT_KEY_EXPECTED);
+      return false;
+    }
+
+    auto p = usedAssertionKeys.lookupForAdd(keyName);
+    if (p) {
+      UniqueChars str = this->parserAtoms().toPrintableString(cx_, keyName);
+      if (!str) {
+        return false;
+      }
+      error(JSMSG_DUPLICATE_ASSERT_KEY, str.get());
+      return false;
+    }
+    if (!usedAssertionKeys.add(p, keyName)) {
+      ReportOutOfMemory(cx_);
+      return false;
+    }
+
+    NameNodeType keyNode = newName(keyName);
+    if (!keyNode) {
+      return false;
+    }
+
+    if (!mustMatchToken(TokenKind::Colon, JSMSG_COLON_AFTER_ASSERT_KEY)) {
+      return false;
+    }
+    if (!mustMatchToken(TokenKind::String, JSMSG_ASSERT_STRING_LITERAL)) {
+      return false;
+    }
+
+    NameNodeType valueNode = stringLiteral();
+    if (!valueNode) {
+      return false;
+    }
+
+    BinaryNodeType importAssertionNode =
+        handler_.newImportAssertion(keyNode, valueNode);
+    if (!importAssertionNode) {
+      return false;
+    }
+
+    handler_.addList(assertionsSet, importAssertionNode);
+
+    if (!tokenStream.getToken(&token)) {
+      return false;
+    }
+    if (token == TokenKind::Comma) {
+      if (!tokenStream.getToken(&token)) {
+        return false;
+      }
+    }
+    if (token == TokenKind::RightCurly) {
+      break;
+    }
+  }
+
+  return true;
+}
+
+template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::namedImports(
     ListNodeType importSpecSet) {
   if (!abortIfSyntaxParser()) {
@@ -5253,12 +5351,37 @@ GeneralParser<ParseHandler, Unit>::importDeclaration() {
     return null();
   }
 
-  if (!matchOrInsertSemicolon()) {
+  if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
+    return null();
+  }
+
+  ListNodeType importAssertionList =
+      handler_.newList(ParseNodeKind::ImportAssertionList, pos());
+  if (!importAssertionList) {
+    return null();
+  }
+
+  if (tt == TokenKind::Assert) {
+    tokenStream.consumeKnownToken(TokenKind::Assert,
+                                  TokenStream::SlashIsRegExp);
+
+    if (!assertClause(importAssertionList)) {
+      return null();
+    }
+  }
+
+  if (!matchOrInsertSemicolon(TokenStream::SlashIsRegExp)) {
+    return null();
+  }
+
+  BinaryNodeType moduleRequest = handler_.newModuleRequest(
+      moduleSpec, importAssertionList, TokenPos(begin, pos().end));
+  if (!moduleRequest) {
     return null();
   }
 
   BinaryNodeType node = handler_.newImportDeclaration(
-      importSpecSet, moduleSpec, TokenPos(begin, pos().end));
+      importSpecSet, moduleRequest, TokenPos(begin, pos().end));
   if (!node || !processImport(node)) {
     return null();
   }
@@ -5582,12 +5705,32 @@ GeneralParser<ParseHandler, Unit>::exportFrom(uint32_t begin, Node specList) {
     return null();
   }
 
-  if (!matchOrInsertSemicolon()) {
+  TokenKind tt;
+  if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
+    return null();
+  }
+  uint32_t moduleSpecPos = pos().begin;
+
+  ListNodeType importAssertionList =
+      handler_.newList(ParseNodeKind::ImportAssertionList, pos());
+  if (tt == TokenKind::Assert) {
+    tokenStream.consumeKnownToken(TokenKind::Assert,
+                                  TokenStream::SlashIsRegExp);
+
+    if (!assertClause(importAssertionList)) {
+      return null();
+    }
+  }
+
+  if (!matchOrInsertSemicolon(TokenStream::SlashIsRegExp)) {
     return null();
   }
 
+  BinaryNodeType moduleRequest = handler_.newModuleRequest(
+      moduleSpec, importAssertionList, TokenPos(moduleSpecPos, pos().end));
+
   BinaryNodeType node =
-      handler_.newExportFromDeclaration(begin, specList, moduleSpec);
+      handler_.newExportFromDeclaration(begin, specList, moduleRequest);
   if (!node) {
     return null();
   }

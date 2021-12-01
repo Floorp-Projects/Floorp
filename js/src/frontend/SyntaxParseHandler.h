@@ -420,7 +420,14 @@ class SyntaxParseHandler {
     return NodeEmptyStatement;
   }
 
-  BinaryNodeType newImportDeclaration(Node importSpecSet, Node moduleSpec,
+  BinaryNodeType newImportAssertion(Node keyNode, Node valueNode) {
+    return NodeGeneric;
+  }
+  BinaryNodeType newModuleRequest(Node moduleSpec, Node importAssertionList,
+                                  const TokenPos& pos) {
+    return NodeGeneric;
+  }
+  BinaryNodeType newImportDeclaration(Node importSpecSet, Node moduleRequest,
                                       const TokenPos& pos) {
     return NodeGeneric;
   }
@@ -434,7 +441,7 @@ class SyntaxParseHandler {
     return NodeGeneric;
   }
   BinaryNodeType newExportFromDeclaration(uint32_t begin, Node exportSpecSet,
-                                          Node moduleSpec) {
+                                          Node moduleRequest) {
     return NodeGeneric;
   }
   BinaryNodeType newExportDefaultDeclaration(Node kid, Node maybeBinding,
