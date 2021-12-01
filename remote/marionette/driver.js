@@ -1466,6 +1466,42 @@ GeckoDriver.prototype.findElements = async function(cmd) {
 };
 
 /**
+ * Return the shadow root of an element in the document.
+ *
+ * @param {id}
+ *     A web element id reference.
+ * @return {ShadowRoot}
+ *     ShadowRoot of the element.
+ *
+ * @throws {InvalidArgumentError}
+ *     If element <var>id</var> is not a string.
+ * @throws {NoSuchElementError}
+ *     If element represented by reference <var>id</var> is unknown.
+ * @throws {NoSuchShadowRoot}
+ *     Element does not have a shadow root attached.
+ * @throws {NoSuchWindowError}
+ *     Browsing context has been discarded.
+ * @throws {UnexpectedAlertOpenError}
+ *     A modal dialog is open, blocking this operation.
+ * @throws {UnsupportedOperationError}
+ *     Not available in chrome current context.
+ */
+GeckoDriver.prototype.getShadowRoot = async function(cmd) {
+  // Bug 1743541: Add support for chrome scope.
+  assert.content(this.context);
+  assert.open(this.getBrowsingContext());
+  await this._handleUserPrompts();
+
+  let id = assert.string(
+    cmd.parameters.id,
+    pprint`Expected "id" to be a string, got ${cmd.parameters.id}`
+  );
+  let webEl = WebElement.fromUUID(id, this.context);
+
+  return this.getActor().getShadowRoot(webEl);
+};
+
+/**
  * Return the active element in the document.
  *
  * @return {WebElement}
@@ -3015,6 +3051,7 @@ GeckoDriver.prototype.commands = {
   "WebDriver:GetElementTagName": GeckoDriver.prototype.getElementTagName,
   "WebDriver:GetElementText": GeckoDriver.prototype.getElementText,
   "WebDriver:GetPageSource": GeckoDriver.prototype.getPageSource,
+  "WebDriver:GetShadowRoot": GeckoDriver.prototype.getShadowRoot,
   "WebDriver:GetTimeouts": GeckoDriver.prototype.getTimeouts,
   "WebDriver:GetTitle": GeckoDriver.prototype.getTitle,
   "WebDriver:GetWindowHandle": GeckoDriver.prototype.getWindowHandle,

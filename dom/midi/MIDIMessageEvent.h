@@ -19,8 +19,7 @@
 #include "nsTArray.h"
 
 struct JSContext;
-namespace mozilla {
-namespace dom {
+namespace mozilla::dom {
 struct MIDIMessageEventInit;
 
 /**
@@ -58,7 +57,6 @@ class MIDIMessageEvent final : public Event {
   nsTArray<uint8_t> mRawData;
 };
 
-}  // namespace dom
-}  // namespace mozilla
+}  // namespace mozilla::dom
 
 #endif  // mozilla_dom_MIDIMessageEvent_h

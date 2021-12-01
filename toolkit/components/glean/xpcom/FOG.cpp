@@ -298,6 +298,12 @@ FOG::TestResetFOG(const nsACString& aDataPathOverride,
   return glean::impl::fog_test_reset(&aDataPathOverride, &aAppIdOverride);
 }
 
+NS_IMETHODIMP
+FOG::TestTriggerGPUMetrics() {
+  glean::TestTriggerGPUMetrics();
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS(FOG, nsIFOG, nsIObserver)
 
 }  //  namespace mozilla

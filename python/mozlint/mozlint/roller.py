@@ -60,6 +60,11 @@ def _run_worker(config, paths, **lintargs):
     ):
         lintargs["show_warnings"] = True
 
+    # Override ignore thirdparty
+    # Only deactivating include_thirdparty is set on a linter.yml in use
+    if config.get("include_thirdparty", False):
+        lintargs["include_thirdparty"] = True
+
     func = supported_types[config["type"]]
     start_time = time.time()
     try:

@@ -191,7 +191,6 @@ def run_tests(command_context, **kwargs):
 
 def _run_tests(command_context, **kwargs):
     from pathlib import Path
-    from mozperftest.runner import _setup_path
     from mozperftest.utils import (
         install_package,
         ON_TRY,
@@ -203,8 +202,6 @@ def _run_tests(command_context, **kwargs):
     skip_linters = kwargs.get("skip_linters", False)
     verbose = kwargs.get("verbose", False)
 
-    # include in sys.path all deps
-    _setup_path()
     try:
         import coverage  # noqa
     except ImportError:

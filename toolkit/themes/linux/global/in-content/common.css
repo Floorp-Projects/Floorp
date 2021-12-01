@@ -19,7 +19,6 @@ xul|tab[visuallyselected] {
 
 /* Overriding appearance also avoids incorrect selection background color with
    light text. */
-xul|button > xul|*.button-box,
 xul|menulist::part(label-box),
 xul|*.radio-label-box,
 xul|*.checkbox-label-box {

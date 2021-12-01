@@ -12,7 +12,9 @@ To run all the things, here's the tl;dr:
 && ./mach rusttests && ./mach gtest FOG*
 && python3 ./mach python-test toolkit/components/glean/tests/pytest
 && ./mach test toolkit/components/glean/tests/xpcshell
-&& ./mach telemetry-tests-client toolkit/components/telemetry/tests/marionette/tests/client/test_fog* --gecko-log "-"`
+&& ./mach telemetry-tests-client toolkit/components/telemetry/tests/marionette/tests/client/test_fog* --gecko-log "-"
+&& ./mach test toolkit/components/glean/tests/browser
+`
 
 ## Logging
 
@@ -161,6 +163,21 @@ or the test runner will not be able to find it.
 
 To run FOG's JS tests, run:
 `./mach test toolkit/components/glean/tests/xpcshell`
+
+## Non-content-process multiprocess (Browser Chrome Mochitests with Treeherder symbol `M(bcN)` for some number `N`)
+
+To test e.g. the GPU process support you need a full Firefox browser:
+xpcshell doesn't have the flexibility.
+To test that and have access to privileged JS (i.e. `Glean` and `FOG` APIs),
+we use browser-chrome-flavoured mochitests you can find in
+[`browser/`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/tests/browser).
+
+If you need to add a new test file, remember to add it to the
+[`browser.ini`](https://hg.mozilla.org/mozilla-central/file/tip/toolkit/components/glean/tests/browser/browser.ini)
+manifest, or the test runner will not be able to find it.
+
+To run FOG's browser chrome tests, run:
+`./mach test toolkit/components/glean/tests/browser`
 
 ## Integration (Marionette, borrowing `telemetry-tests-client` Treeherder symbol `tt(c)`)
 

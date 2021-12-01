@@ -22,6 +22,7 @@ include protocol PRemoteDecoderManager;
 include protocol PSandboxTesting;
 #endif
 
+include "mozilla/ipc/ByteBufUtils.h";
 include "mozilla/layers/LayersMessageUtils.h";
 
 using base::ProcessId from "base/process.h";
@@ -112,6 +113,15 @@ parent:
   async InitSandboxTesting(Endpoint<PSandboxTestingChild> aEndpoint);
 #endif
 
+  // Tells the gpu process to flush any pending telemetry.
+  // Used in tests and ping assembly. Buffer contains bincoded Rust structs.
+  // https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/ipc.html
+  async FlushFOGData() returns (ByteBuf buf);
+
+  // Test-only method.
+  // Asks the gpu process to trigger test-only instrumentation.
+  async TestTriggerMetrics();
+
 child:
   // Sent when the GPU process has initialized devices. This occurs once, after
   // Init().
@@ -158,6 +168,11 @@ child:
   // Update the cached list of codec supported following a check in the
   // GPU parent.
   async UpdateMediaCodecsSupported(MediaCodecsSupported aSupported);
+
+  // Sent from time-to-time to limit the amount of telemetry vulnerable to loss
+  // Buffer contains bincoded Rust structs.
+  // https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/ipc.html
+  async FOGData(ByteBuf buf);
 };
 
 } // namespace gfx

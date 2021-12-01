@@ -192,6 +192,13 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   // Returns the process host
   GPUProcessHost* Process() { return mProcess; }
 
+  /*
+   * ** Test-only Method **
+   *
+   * Trigger GPU-process test metric instrumentation.
+   */
+  void TestTriggerMetrics();
+
  private:
   // Called from our xpcom-shutdown observer.
   void OnXPCOMShutdown();
