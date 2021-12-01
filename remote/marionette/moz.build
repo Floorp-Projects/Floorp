@@ -8,8 +8,3 @@ XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 
 with Files("**"):
     BUG_COMPONENT = ("Testing", "Marionette")
-
-SPHINX_TREES["/testing/marionette"] = "doc"
-
-with Files("doc/**"):
-    SCHEDULES.exclusive = ["docs"]

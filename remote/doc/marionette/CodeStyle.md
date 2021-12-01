@@ -191,7 +191,7 @@ TODO
 Documentation
 -------------
 
-We keep our documentation in-tree under [remote/marionette/doc]
+We keep our documentation in-tree under [remote/doc/marionette]
 and [testing/geckodriver/doc].  Updates and minor changes to
 documentation should ideally not be scrutinised to the same degree
 as code changes to encourage frequent updates so that the documentation
@@ -208,7 +208,7 @@ These include public functions—or command implementations—on
 the `GeckoDriver` class, as well as all exported symbols from
 other modules.  Documentation for non-exported symbols is not required.
 
-[remote/marionette/doc]: https://searchfox.org/mozilla-central/source/remote/marionette/doc
+[remote/doc/marionette]: https://searchfox.org/mozilla-central/source/remote/marionette/doc
 [testing/geckodriver/doc]: https://searchfox.org/mozilla-central/source/testing/geckodriver/doc
 
 
