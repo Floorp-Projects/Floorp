@@ -1517,8 +1517,9 @@ bool WarpBuilder::build_DebugCheckSelfHosted(BytecodeLocation loc) {
 }
 
 bool WarpBuilder::build_DynamicImport(BytecodeLocation loc) {
+  MDefinition* options = current->pop();
   MDefinition* specifier = current->pop();
-  MDynamicImport* ins = MDynamicImport::New(alloc(), specifier);
+  MDynamicImport* ins = MDynamicImport::New(alloc(), specifier, options);
   current->add(ins);
   current->push(ins);
   return resumeAfter(ins, loc);

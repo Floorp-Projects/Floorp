@@ -172,6 +172,7 @@ restart:
     case ParseNodeKind::ExportStmt:
     case ParseNodeKind::ExportBatchSpecStmt:
     case ParseNodeKind::CallImportExpr:
+    case ParseNodeKind::CallImportSpec:
     case ParseNodeKind::ImportAssertionList:
     case ParseNodeKind::ImportAssertion:
     case ParseNodeKind::ImportModuleRequest:

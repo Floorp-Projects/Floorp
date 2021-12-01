@@ -692,6 +692,11 @@ class FullParseHandler {
                             singleArg);
   }
 
+  BinaryNodeType newCallImportSpec(Node specifierArg, Node optionalArg) {
+    return new_<BinaryNode>(ParseNodeKind::CallImportSpec, specifierArg,
+                            optionalArg);
+  }
+
   UnaryNodeType newExprStatement(Node expr, uint32_t end) {
     MOZ_ASSERT(expr->pn_pos.end <= end);
     return new_<UnaryNode>(ParseNodeKind::ExpressionStmt,

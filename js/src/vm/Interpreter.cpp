@@ -4335,10 +4335,14 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(ImportMeta)
 
     CASE(DynamicImport) {
+      ReservedRooted<Value> options(&rootValue0, REGS.sp[-1]);
+      REGS.sp--;
+
       ReservedRooted<Value> specifier(&rootValue1);
       POP_COPY_TO(specifier);
 
-      JSObject* promise = StartDynamicModuleImport(cx, script, specifier);
+      JSObject* promise =
+          StartDynamicModuleImport(cx, script, specifier, options);
       if (!promise) goto error;
 
       PUSH_OBJECT(*promise);
