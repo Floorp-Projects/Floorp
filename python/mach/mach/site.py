@@ -188,7 +188,7 @@ class MachSiteManager:
     def __init__(
         self,
         topsrcdir: str,
-        state_dir: str,
+        state_dir: Optional[str],
         requirements: MachEnvRequirements,
         external_python: "ExternalPythonSite",
         site_packages_source: SitePackagesSource,
@@ -226,7 +226,7 @@ class MachSiteManager:
             state_dir: The path to the state_dir, generally ~/.mozbuild
         """
 
-        requirements = _requirements(topsrcdir, "mach")
+        requirements = resolve_requirements(topsrcdir, "mach")
         # Mach needs to operate in environments in which no pip packages are installed
         # yet, and the system isn't guaranteed to have the packages we need. For example,
         # "./mach bootstrap" can't have any dependencies.
@@ -449,7 +449,7 @@ class CommandSiteManager:
             active_metadata
         ), "A Mach-managed site must be active before doing work with command sites"
 
-        requirements = _requirements(topsrcdir, site_name)
+        requirements = resolve_requirements(topsrcdir, site_name)
         if not _system_python_env_variable_present() or site_name != "build":
             source = SitePackagesSource.VENV
         elif not active_metadata.external_python.has_pip():
@@ -580,7 +580,9 @@ class CommandSiteManager:
         """
 
         # Prioritize Mach's vendored and first-party modules first.
-        lines = _requirements(self._topsrcdir, "mach").pths_as_absolute(self._topsrcdir)
+        lines = resolve_requirements(self._topsrcdir, "mach").pths_as_absolute(
+            self._topsrcdir
+        )
         mach_site_packages_source = self._mach_site_packages_source
         if mach_site_packages_source == SitePackagesSource.SYSTEM:
             # When Mach is using the system environment, add it next.
@@ -810,7 +812,7 @@ class ExternalPythonSite:
 
 
 @functools.lru_cache(maxsize=None)
-def _requirements(topsrcdir, virtualenv_name):
+def resolve_requirements(topsrcdir, virtualenv_name):
     manifest_path = os.path.join(
         topsrcdir, "build", f"{virtualenv_name}_virtualenv_packages.txt"
     )
