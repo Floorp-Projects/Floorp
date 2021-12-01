@@ -102,7 +102,9 @@ def trigger_action(action_name, decision_task_id, task_id=None, input={}):
         actions_json, action_name, decision_task_id, task_id
     )
     kind = action["kind"]
-    if kind == "hook":
+    if create.testing:
+        logger.info(f"Skipped triggering action for {kind} as testing is enabled")
+    elif kind == "hook":
         hook_payload = jsone.render(action["hookPayload"], context)
         trigger_hook(action["hookGroupId"], action["hookId"], hook_payload)
     else:
