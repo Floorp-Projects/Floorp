@@ -10,6 +10,8 @@ const EXPORTED_SYMBOLS = [
   "_ExperimentFeature",
 ];
 
+// Note: Feature manifest has moved to toolkit/components/nimbus/FeatureManifest.js
+
 function isBooleanValueDefined(value) {
   return typeof value === "boolean";
 }
