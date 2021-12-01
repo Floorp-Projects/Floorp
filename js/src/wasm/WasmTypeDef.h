@@ -65,7 +65,7 @@ class FuncType {
   // V128 types are excluded per spec but are guarded against separately.
   bool temporarilyUnsupportedReftypeForEntry() const {
     for (ValType arg : args()) {
-      if (arg.isReference() && (!arg.isExternRef() || !arg.isNullable())) {
+      if (arg.isRefType() && (!arg.isExternRef() || !arg.isNullable())) {
         return true;
       }
     }
@@ -82,7 +82,7 @@ class FuncType {
   // Unexposable types must be guarded against separately.
   bool temporarilyUnsupportedReftypeForExit() const {
     for (ValType result : results()) {
-      if (result.isReference() &&
+      if (result.isRefType() &&
           (!result.isExternRef() || !result.isNullable())) {
         return true;
       }
@@ -629,7 +629,7 @@ class TypeContext : public AtomicRefCounted<TypeContext> {
     }
 
     // A reference may be equal to another reference
-    if (first.isReference() && second.isReference()) {
+    if (first.isRefType() && second.isRefType()) {
       return isRefEquivalent(first.refType(), second.refType(), cache);
     }
 
@@ -681,7 +681,7 @@ class TypeContext : public AtomicRefCounted<TypeContext> {
     }
 
     // A reference may be a subtype of another reference
-    if (subType.isReference() && superType.isReference()) {
+    if (subType.isRefType() && superType.isRefType()) {
       return isRefSubtypeOf(subType.refType(), superType.refType(), cache);
     }
 

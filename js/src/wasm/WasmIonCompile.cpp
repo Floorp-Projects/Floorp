@@ -1888,7 +1888,7 @@ class FunctionCompiler {
         const ABIResult& result = iter.cur();
         if (result.onStack()) {
           MOZ_ASSERT(iter.remaining() > 1);
-          if (result.type().isReference()) {
+          if (result.type().isRefRepr()) {
             auto* loc = MWasmDerivedPointer::New(alloc(), stackResultPointer_,
                                                  result.stackOffset());
             curBlock_->add(loc);

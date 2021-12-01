@@ -321,7 +321,7 @@ class LitVal {
   explicit LitVal(V128 v128) : type_(ValType::V128) { cell_.v128_ = v128; }
 
   explicit LitVal(ValType type, AnyRef any) : type_(type) {
-    MOZ_ASSERT(type.isReference() || type.isRtt());
+    MOZ_ASSERT(type.isRefRepr());
     MOZ_ASSERT(any.isNull(),
                "use Val for non-nullptr ref types to get tracing");
     cell_.ref_ = any;
@@ -350,7 +350,7 @@ class LitVal {
     return cell_.f64_;
   }
   AnyRef ref() const {
-    MOZ_ASSERT(type_.isReference() || type_.isRtt());
+    MOZ_ASSERT(type_.isRefRepr());
     return cell_.ref_;
   }
   const V128& v128() const {
@@ -373,7 +373,7 @@ class MOZ_NON_PARAM Val : public LitVal {
   explicit Val(double f64) : LitVal(f64) {}
   explicit Val(V128 v128) : LitVal(v128) {}
   explicit Val(ValType type, AnyRef val) : LitVal(type, AnyRef::null()) {
-    MOZ_ASSERT(type.isReference() || type.isRtt());
+    MOZ_ASSERT(type.isRefRepr());
     cell_.ref_ = val;
   }
   explicit Val(ValType type, FuncRef val) : LitVal(type, AnyRef::null()) {
@@ -409,8 +409,7 @@ class MOZ_NON_PARAM Val : public LitVal {
   bool operator!=(const Val& rhs) const { return !(*this == rhs); }
 
   bool isJSObject() const {
-    return type_.isValid() && (type_.isReference() || type_.isRtt()) &&
-           !cell_.ref_.isNull();
+    return type_.isValid() && type_.isRefRepr() && !cell_.ref_.isNull();
   }
 
   JSObject* asJSObject() const {

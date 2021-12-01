@@ -872,7 +872,7 @@ inline bool OpIter<Policy>::popWithRefType(Value* value, StackType* type) {
     return false;
   }
 
-  if (type->isBottom() || type->valType().isReference()) {
+  if (type->isBottom() || type->valType().isRefType()) {
     return true;
   }
 
