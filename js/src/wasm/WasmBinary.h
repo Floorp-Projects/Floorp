@@ -874,7 +874,7 @@ inline bool Decoder::readRefType(uint32_t numTypes, const FeatureArgs& features,
   if (!readValType(numTypes, features, &valType)) {
     return false;
   }
-  if (!valType.isReference()) {
+  if (!valType.isRefType()) {
     return fail("bad type");
   }
   *type = valType.refType();
@@ -886,7 +886,7 @@ inline bool Decoder::readRefType(const TypeContext& types,
   if (!readValType(types, features, &valType)) {
     return false;
   }
-  if (!valType.isReference()) {
+  if (!valType.isRefType()) {
     return fail("bad type");
   }
   *type = valType.refType();

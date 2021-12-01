@@ -1937,7 +1937,7 @@ void Instance::tracePrivate(JSTracer* trc) {
 
   for (const GlobalDesc& global : code().metadata().globals) {
     // Indirect reference globals get traced by the owning WebAssembly.Global.
-    if (!global.type().isReference() || global.isConstant() ||
+    if (!global.type().isRefRepr() || global.isConstant() ||
         global.isIndirect()) {
       continue;
     }
@@ -2308,7 +2308,7 @@ class MOZ_RAII ReturnToJSResultCollector {
     void trace(JSTracer* trc) final {
       for (ABIResultIter iter(collector_.type_); !iter.done(); iter.next()) {
         const ABIResult& result = iter.cur();
-        if (result.onStack() && result.type().isReference()) {
+        if (result.onStack() && result.type().isRefRepr()) {
           char* loc = collector_.stackResultsArea_.get() + result.stackOffset();
           JSObject** refLoc = reinterpret_cast<JSObject**>(loc);
           TraceNullableRoot(trc, refLoc, "StackResultsRooter::trace");
@@ -2329,7 +2329,7 @@ class MOZ_RAII ReturnToJSResultCollector {
     ABIResultIter iter(type_);
     for (; !iter.done(); iter.next()) {
       const ABIResult& result = iter.cur();
-      if (result.onStack() && result.type().isReference()) {
+      if (result.onStack() && result.type().isRefRepr()) {
         needRooter = true;
       }
     }
@@ -2425,28 +2425,15 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
                                              level)) {
       return false;
     }
-    if (type.isReference()) {
+    if (type.isRefRepr()) {
+      // Ensure we don't have a temporarily unsupported Ref type in callExport
+      MOZ_RELEASE_ASSERT(!type.isTypeIndex());
       void* ptr = *reinterpret_cast<void**>(rawArgLoc);
       // Store in rooted array until no more GC is possible.
-      switch (type.refTypeKind()) {
-        case RefType::Func: {
-          RootedFunction ref(cx, FuncRef::fromCompiledCode(ptr).asJSFunction());
-          if (!refs.emplaceBack(ref)) {
-            return false;
-          }
-          break;
-        }
-        case RefType::Extern:
-        case RefType::Eq: {
-          RootedAnyRef ref(cx, AnyRef::fromCompiledCode(ptr));
-          ASSERT_ANYREF_IS_JSOBJECT;
-          if (!refs.emplaceBack(ref.get().asJSObject())) {
-            return false;
-          }
-          break;
-        }
-        case RefType::TypeIndex:
-          MOZ_CRASH("temporarily unsupported Ref type in callExport");
+      RootedAnyRef ref(cx, AnyRef::fromCompiledCode(ptr));
+      ASSERT_ANYREF_IS_JSOBJECT;
+      if (!refs.emplaceBack(ref.get().asJSObject())) {
+        return false;
       }
       DebugCodegen(DebugChannel::Function, "/(#%d)", int(refs.length() - 1));
     }
@@ -2462,7 +2449,7 @@ bool Instance::callExport(JSContext* cx, uint32_t funcIndex, CallArgs args,
       }
       size_t naturalIdx = argTypes.naturalIndex(i);
       ValType type = funcType->arg(naturalIdx);
-      if (type.isReference()) {
+      if (type.isRefRepr()) {
         void** rawArgLoc = (void**)&exportArgs[i];
         *rawArgLoc = refs[nextRef++];
         DebugCodegen(DebugChannel::Function, " ref(#%d) := %p ",
