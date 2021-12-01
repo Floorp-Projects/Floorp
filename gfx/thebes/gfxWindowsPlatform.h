@@ -41,9 +41,6 @@ class DrawTarget;
 class FeatureState;
 class DeviceManagerDx;
 }  // namespace gfx
-namespace layers {
-class ReadbackManagerD3D11;
-}
 }  // namespace mozilla
 struct IDirect3DDevice9;
 struct ID3D11Device;
@@ -175,8 +172,6 @@ class gfxWindowsPlatform final : public gfxPlatform {
 
   bool DwmCompositionEnabled();
 
-  mozilla::layers::ReadbackManagerD3D11* GetReadbackManager();
-
   static bool IsOptimus();
 
   bool SupportsApzWheelInput() const override { return true; }
@@ -243,7 +238,6 @@ class gfxWindowsPlatform final : public gfxPlatform {
 
   void RecordStartupTelemetry();
 
-  RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
   bool mInitializedDevices = false;
 
   mozilla::Atomic<DwmCompositionStatus, mozilla::ReleaseAcquire>

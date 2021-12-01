@@ -99,26 +99,6 @@ enum TextureAllocationFlags {
   ALLOC_UPDATE_FROM_SURFACE = 1 << 7,
 };
 
-/**
- * This class may be used to asynchronously receive an update when the content
- * drawn to this texture client is available for reading in CPU memory. This
- * can only be used on texture clients that support draw target creation.
- */
-class TextureReadbackSink {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureReadbackSink)
- public:
-  /**
-   * Callback function to implement in order to receive a DataSourceSurface
-   * containing the data read back from the texture client. This will always
-   * be called on the main thread, and this may not hold on to the
-   * DataSourceSurface beyond the execution of this function.
-   */
-  virtual void ProcessReadback(gfx::DataSourceSurface* aSourceSurface) = 0;
-
- protected:
-  virtual ~TextureReadbackSink() = default;
-};
-
 enum class BackendSelector { Content, Canvas };
 
 /// Temporary object providing direct access to a Texture's memory.
@@ -297,8 +277,6 @@ class TextureData {
   virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) {
     return false;
   };
-
-  virtual bool ReadBack(TextureReadbackSink* aReadbackSink) { return false; }
 
   virtual void SyncWithObject(RefPtr<SyncObjectClient> aSyncObject){};
 
@@ -603,15 +581,6 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
     mWasteTracker.Update(aWasteArea, BytesPerPixel(GetFormat()));
   }
 
-  /**
-   * This sets the readback sink that this texture is to use. This will
-   * receive the data for this texture as soon as it becomes available after
-   * texture unlock.
-   */
-  virtual void SetReadbackSink(TextureReadbackSink* aReadbackSink) {
-    mReadbackSink = aReadbackSink;
-  }
-
   void SyncWithObject(RefPtr<SyncObjectClient> aSyncObject) {
     mData->SyncWithObject(aSyncObject);
   }
@@ -749,8 +718,6 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
 
   // Used when TextureClient is recycled with TextureFlags::RECYCLE flag.
   bool mAddedToCompositableClient;
-
-  RefPtr<TextureReadbackSink> mReadbackSink;
 
   uint64_t mFwdTransactionId;
 
