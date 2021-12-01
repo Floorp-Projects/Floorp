@@ -1618,6 +1618,7 @@
 
       aTab.setAttribute("label", aLabel);
       aTab.setAttribute("labeldirection", isRTL ? "rtl" : "ltr");
+      aTab.toggleAttribute("labelendaligned", isRTL != (document.dir == "rtl"));
 
       // Dispatch TabAttrModified event unless we're setting the label
       // before the TabOpen event was dispatched.
