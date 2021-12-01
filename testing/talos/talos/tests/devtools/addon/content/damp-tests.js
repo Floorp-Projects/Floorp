@@ -120,12 +120,13 @@ module.exports = [
     description:
       "Measure open/close toolbox on style editor panel against complicated document",
   },
-  {
-    name: "complicated.netmonitor",
-    path: "netmonitor/complicated.js",
-    description:
-      "Measure open/close toolbox on network monitor panel against complicated document",
-  },
+  // Bug 1693975 - disable test due to frequent failures
+  //  {
+  //    name: "complicated.netmonitor",
+  //    path: "netmonitor/complicated.js",
+  //    description:
+  //      "Measure open/close toolbox on network monitor panel against complicated document",
+  //  },
   // Run all tests against a document specific to each tool
   {
     name: "custom.webconsole",
