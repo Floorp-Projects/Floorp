@@ -70,9 +70,6 @@ static mozilla::LazyLogModule sPBContext("PBContext");
 // Global count of canonical browsing contexts with the private attribute set
 static uint32_t gNumberOfPrivateContexts = 0;
 
-// Current parent process epoch for parent initiated navigations
-static uint64_t gParentInitiatedNavigationEpoch = 0;
-
 static void IncreasePrivateCount() {
   gNumberOfPrivateContexts++;
   MOZ_LOG(sPBContext, mozilla::LogLevel::Debug,
@@ -1139,10 +1136,6 @@ void CanonicalBrowsingContext::CanonicalDiscard() {
     mTabMediaController = nullptr;
   }
 
-  if (mCurrentLoad) {
-    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
-  }
-
   if (mWebProgress) {
     RefPtr<BrowsingContextWebProgress> progress = mWebProgress;
     progress->ContextDiscarded();
@@ -1298,7 +1291,7 @@ void CanonicalBrowsingContext::GoBack(
 
   // Stop any known network loads if necessary.
   if (mCurrentLoad) {
-    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD);
+    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
   }
 
   if (nsDocShell* docShell = nsDocShell::Cast(GetDocShell())) {
@@ -1324,7 +1317,7 @@ void CanonicalBrowsingContext::GoForward(
 
   // Stop any known network loads if necessary.
   if (mCurrentLoad) {
-    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD);
+    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
   }
 
   if (auto* docShell = nsDocShell::Cast(GetDocShell())) {
@@ -1350,7 +1343,7 @@ void CanonicalBrowsingContext::GoToIndex(
 
   // Stop any known network loads if necessary.
   if (mCurrentLoad) {
-    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD);
+    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
   }
 
   if (auto* docShell = nsDocShell::Cast(GetDocShell())) {
@@ -1374,7 +1367,7 @@ void CanonicalBrowsingContext::Reload(uint32_t aReloadFlags) {
 
   // Stop any known network loads if necessary.
   if (mCurrentLoad) {
-    mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD);
+    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
   }
 
   if (auto* docShell = nsDocShell::Cast(GetDocShell())) {
@@ -2038,8 +2031,7 @@ bool CanonicalBrowsingContext::LoadInParent(nsDocShellLoadState* aLoadState,
   // We currently only support starting loads directly from the
   // CanonicalBrowsingContext for top-level BCs.
   if (!IsTopContent() || !GetContentParent() ||
-      !StaticPrefs::browser_tabs_documentchannel_parent_controlled() ||
-      !mozilla::SessionHistoryInParent()) {
+      !StaticPrefs::browser_tabs_documentchannel_parent_controlled()) {
     return false;
   }
 
@@ -2048,10 +2040,6 @@ bool CanonicalBrowsingContext::LoadInParent(nsDocShellLoadState* aLoadState,
     return false;
   }
 
-  MOZ_ASSERT(!net::SchemeIsJavascript(aLoadState->URI()));
-
-  MOZ_ALWAYS_SUCCEEDS(
-      SetParentInitiatedNavigationEpoch(++gParentInitiatedNavigationEpoch));
   // Note: If successful, this will recurse into StartDocumentLoad and
   // set mCurrentLoad to the DocumentLoadListener instance created.
   // Ideally in the future we will only start loads from here, and we can
@@ -2067,8 +2055,7 @@ bool CanonicalBrowsingContext::AttemptSpeculativeLoadInParent(
   // We currently only support starting loads directly from the
   // CanonicalBrowsingContext for top-level BCs.
   if (!IsTopContent() || !GetContentParent() ||
-      (StaticPrefs::browser_tabs_documentchannel_parent_controlled() &&
-       mozilla::SessionHistoryInParent())) {
+      StaticPrefs::browser_tabs_documentchannel_parent_controlled()) {
     return false;
   }
 
@@ -2088,14 +2075,8 @@ bool CanonicalBrowsingContext::StartDocumentLoad(
   // If we're controlling loads from the parent, then starting a new load means
   // that we need to cancel any existing ones.
   if (StaticPrefs::browser_tabs_documentchannel_parent_controlled() &&
-      mozilla::SessionHistoryInParent() && mCurrentLoad) {
-    // Make sure we are not loading a javascript URI.
-    MOZ_ASSERT(!aLoad->IsLoadingJSURI());
-
-    // If we want to do a download, don't cancel the current navigation.
-    if (!aLoad->IsDownload()) {
-      mCurrentLoad->Cancel(NS_BINDING_CANCELLED_OLD_LOAD);
-    }
+      mCurrentLoad) {
+    mCurrentLoad->Cancel(NS_BINDING_ABORTED);
   }
   mCurrentLoad = aLoad;
 

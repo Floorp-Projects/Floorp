@@ -193,11 +193,12 @@ async function testSearchEngine(engineDetails) {
       await test.preTest(tab);
     }
 
-    let googleUrl =
-      "https://www.google.com/search?client=" + test.code + "&q=foo";
     let promises = [
-      BrowserTestUtils.waitForDocLoadAndStopIt(googleUrl, tab),
-      BrowserTestUtils.browserStopped(tab.linkedBrowser, googleUrl, true),
+      BrowserTestUtils.waitForDocLoadAndStopIt(
+        "https://www.google.com/search?client=" + test.code + "&q=foo",
+        tab
+      ),
+      BrowserTestUtils.browserStopped(tab.linkedBrowser, null, true),
     ];
 
     await test.run(tab);

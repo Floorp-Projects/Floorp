@@ -167,12 +167,10 @@ add_task(async function test_broken_saved_handlerinfo_and_useless_mimetypes() {
   handlerSvc.store(bogusType);
   let tabToClean = null;
   let task = function() {
-    return BrowserTestUtils.openNewForegroundTab({
+    return BrowserTestUtils.openNewForegroundTab(
       gBrowser,
-      opening: TEST_PATH + "file_as.exe?foo=bar",
-      waitForLoad: false,
-      waitForStateStop: true,
-    }).then(tab => {
+      TEST_PATH + "file_as.exe?foo=bar"
+    ).then(tab => {
       return (tabToClean = tab);
     });
   };

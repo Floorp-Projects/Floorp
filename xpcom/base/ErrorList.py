@@ -939,11 +939,6 @@ with modules["URILOADER"]:
     # successfully setup.
     errors["NS_REFRESHURI_HEADER_FOUND"] = SUCCESS(2)
 
-    # When browser.tabs.documentchannel.parent-controlled pref and SHIP
-    # are enabled and a load gets cancelled due to another one
-    # starting, the error is NS_BINDING_CANCELLED_OLD_LOAD.
-    errors["NS_BINDING_CANCELLED_OLD_LOAD"] = FAILURE(39)
-
 
 # =======================================================================
 # 25: NS_ERROR_MODULE_CONTENT
