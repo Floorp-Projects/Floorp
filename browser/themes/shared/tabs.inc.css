@@ -453,13 +453,13 @@
 }
 
 /* The following rulesets allow showing more of the tab title */
-.tabbrowser-tab:not(:hover) > .tab-stack > .tab-content > .tab-close-button {
+.tabbrowser-tab:not([labelendaligned],:hover) > .tab-stack > .tab-content > .tab-close-button {
   padding-inline-start: 0;
   width: 17px;
 }
 
-.tabbrowser-tab[visuallyselected=true]:hover,
-#tabbrowser-tabs:not([closebuttons=activetab]) > #tabbrowser-arrowscrollbox > .tabbrowser-tab:not([visuallyselected=true]):hover {
+.tabbrowser-tab[visuallyselected=true]:not([labelendaligned]):hover,
+#tabbrowser-tabs:not([closebuttons=activetab]) > #tabbrowser-arrowscrollbox > .tabbrowser-tab:not([visuallyselected=true],[labelendaligned]):hover {
   --tab-label-mask-size: 1em;
 }
 
