@@ -173,8 +173,8 @@ async function testSearchEngine(engineDetails) {
       async preTest(tab) {
         let browser = tab.linkedBrowser;
         BrowserTestUtils.loadURI(browser, "about:newtab");
-
         await BrowserTestUtils.browserLoaded(browser, false, "about:newtab");
+
         await promiseContentSearchReady(browser);
       },
       async run(tab) {
@@ -199,7 +199,7 @@ async function testSearchEngine(engineDetails) {
 
     let promises = [
       BrowserTestUtils.waitForDocLoadAndStopIt(test.searchURL, tab),
-      BrowserTestUtils.browserStopped(tab.linkedBrowser, test.searchURL, true),
+      BrowserTestUtils.browserStopped(tab.linkedBrowser, null, true),
     ];
 
     await test.run(tab);
