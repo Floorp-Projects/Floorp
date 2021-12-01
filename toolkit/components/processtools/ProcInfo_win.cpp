@@ -7,6 +7,7 @@
 #include "mozilla/ProcInfo.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/SSE.h"
+#include "gfxWindowsPlatform.h"
 #include "nsMemoryReporterManager.h"
 #include "nsNetCID.h"
 #include "nsWindowsHelpers.h"
@@ -83,6 +84,10 @@ nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult) {
   *aResult =
       (ToNanoSeconds(kernelTime) + ToNanoSeconds(userTime)) / PR_NSEC_PER_MSEC;
   return NS_OK;
+}
+
+nsresult GetGpuTimeSinceProcessStartInMs(uint64_t* aResult) {
+  return gfxWindowsPlatform::GetGpuTimeSinceProcessStartInMs(aResult);
 }
 
 RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {

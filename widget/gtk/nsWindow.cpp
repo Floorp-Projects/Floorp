@@ -9033,8 +9033,8 @@ static void relative_pointer_handle_relative_motion(
   WidgetMouseEvent event(true, eMouseMove, window, WidgetMouseEvent::eReal);
 
   event.mRefPoint = window->GetNativePointerLockCenter();
-  event.mRefPoint.x += wl_fixed_to_double(dx_unaccel_w);
-  event.mRefPoint.y += wl_fixed_to_double(dy_unaccel_w);
+  event.mRefPoint.x += wl_fixed_to_int(dx_w);
+  event.mRefPoint.y += wl_fixed_to_int(dy_w);
 
   event.AssignEventTime(window->GetWidgetEventTime(time_lo));
   window->DispatchInputEvent(&event);
