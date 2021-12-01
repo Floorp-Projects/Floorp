@@ -160,11 +160,13 @@ vec4 texelFetchR16(S sampler, ivec2 P) {
   return vec4(fetchOffsetsR16(sampler, offset), 0.0f, 0.0f, 1.0f);
 }
 
-template <typename S>
-SI vec4 fetchOffsetsFloat(S sampler, I32 offset) {
-  return pixel_float_to_vec4(
-      *(Float*)&sampler->buf[offset.x], *(Float*)&sampler->buf[offset.y],
-      *(Float*)&sampler->buf[offset.z], *(Float*)&sampler->buf[offset.w]);
+SI vec4 fetchOffsetsFloat(const uint32_t* buf, I32 offset) {
+  return pixel_float_to_vec4(*(Float*)&buf[offset.x], *(Float*)&buf[offset.y],
+                             *(Float*)&buf[offset.z], *(Float*)&buf[offset.w]);
+}
+
+SI vec4 fetchOffsetsFloat(samplerCommon* sampler, I32 offset) {
+  return fetchOffsetsFloat(sampler->buf, offset);
 }
 
 vec4 texelFetchFloat(sampler2D sampler, ivec2 P) {
@@ -307,11 +309,13 @@ vec4 texelFetch(sampler2DRect sampler, ivec2 P) {
   }
 }
 
-template <typename S>
-SI ivec4 fetchOffsetsInt(S sampler, I32 offset) {
-  return pixel_int_to_ivec4(
-      *(I32*)&sampler->buf[offset.x], *(I32*)&sampler->buf[offset.y],
-      *(I32*)&sampler->buf[offset.z], *(I32*)&sampler->buf[offset.w]);
+SI ivec4 fetchOffsetsInt(const uint32_t* buf, I32 offset) {
+  return pixel_int_to_ivec4(*(I32*)&buf[offset.x], *(I32*)&buf[offset.y],
+                            *(I32*)&buf[offset.z], *(I32*)&buf[offset.w]);
+}
+
+SI ivec4 fetchOffsetsInt(samplerCommon* sampler, I32 offset) {
+  return fetchOffsetsInt(sampler->buf, offset);
 }
 
 ivec4 texelFetch(isampler2D sampler, ivec2 P, int lod) {
@@ -329,43 +333,70 @@ ivec4_scalar texelFetch(isampler2D sampler, ivec2_scalar P, int lod) {
   return *(ivec4_scalar*)&sampler->buf[P.x * 4 + P.y * sampler->stride];
 }
 
-SI vec4_scalar* texelFetchPtr(sampler2D sampler, ivec2_scalar P, int min_x,
-                              int max_x, int min_y, int max_y) {
-  P.x = min(max(P.x, -min_x), int(sampler->width) - 1 - max_x);
-  P.y = min(max(P.y, -min_y), int(sampler->height) - 1 - max_y);
-  assert(sampler->format == TextureFormat::RGBA32F);
-  return (vec4_scalar*)&sampler->buf[P.x * 4 + P.y * sampler->stride];
-}
+constexpr int MAX_TEXEL_OFFSET = 8;
 
-SI ivec4_scalar* texelFetchPtr(isampler2D sampler, ivec2_scalar P, int min_x,
-                               int max_x, int min_y, int max_y) {
-  P.x = min(max(P.x, -min_x), int(sampler->width) - 1 - max_x);
-  P.y = min(max(P.y, -min_y), int(sampler->height) - 1 - max_y);
-  assert(sampler->format == TextureFormat::RGBA32I);
-  return (ivec4_scalar*)&sampler->buf[P.x * 4 + P.y * sampler->stride];
-}
+// Fill texelFetchOffset outside the valid texture bounds with zeroes. The
+// stride will be set to 0 so that only one row of zeroes is needed.
+static const uint32_t
+    zeroFetchBuf[MAX_TEXEL_OFFSET * sizeof(Float) / sizeof(uint32_t)] = {0};
+
+struct FetchScalar {
+  const uint32_t* buf;
+  uint32_t stride;
+};
 
 template <typename S>
-SI I32 texelFetchPtr(S sampler, ivec2 P, int min_x, int max_x, int min_y,
-                     int max_y) {
-  P.x = clampCoord(P.x, int(sampler->width) - max_x, -min_x);
-  P.y = clampCoord(P.y, int(sampler->height) - max_y, -min_y);
-  return P.x * 4 + P.y * sampler->stride;
+SI FetchScalar texelFetchPtr(S sampler, ivec2_scalar P, int min_x, int max_x,
+                             int min_y, int max_y) {
+  assert(max_x < MAX_TEXEL_OFFSET);
+  if (P.x < -min_x || P.x >= int(sampler->width) - max_x || P.y < -min_y ||
+      P.y >= int(sampler->height) - max_y) {
+    return FetchScalar{zeroFetchBuf, 0};
+  }
+  return FetchScalar{&sampler->buf[P.x * 4 + P.y * sampler->stride],
+                     sampler->stride};
 }
 
-template <typename S, typename P>
-SI P texelFetchUnchecked(S sampler, P* ptr, int x, int y = 0) {
-  return ptr[x + y * (sampler->stride >> 2)];
-}
-
-SI vec4 texelFetchUnchecked(sampler2D sampler, I32 offset, int x, int y = 0) {
+SI vec4_scalar texelFetchUnchecked(sampler2D sampler, FetchScalar ptr, int x,
+                                   int y = 0) {
   assert(sampler->format == TextureFormat::RGBA32F);
-  return fetchOffsetsFloat(sampler, offset + (x * 4 + y * sampler->stride));
+  return *(vec4_scalar*)&ptr.buf[x * 4 + y * ptr.stride];
 }
 
-SI ivec4 texelFetchUnchecked(isampler2D sampler, I32 offset, int x, int y = 0) {
+SI ivec4_scalar texelFetchUnchecked(isampler2D sampler, FetchScalar ptr, int x,
+                                    int y = 0) {
   assert(sampler->format == TextureFormat::RGBA32I);
-  return fetchOffsetsInt(sampler, offset + (x * 4 + y * sampler->stride));
+  return *(ivec4_scalar*)&ptr.buf[x * 4 + y * ptr.stride];
+}
+
+struct FetchVector {
+  const uint32_t* buf;
+  I32 offset;
+  uint32_t stride;
+};
+
+template <typename S>
+SI FetchVector texelFetchPtr(S sampler, ivec2 P, int min_x, int max_x,
+                             int min_y, int max_y) {
+  assert(max_x < MAX_TEXEL_OFFSET);
+  if (test_any(P.x < -min_x || P.x >= int(sampler->width) - max_x ||
+               P.y < -min_y || P.y >= int(sampler->height) - max_y)) {
+    return FetchVector{zeroFetchBuf, I32(0), 0};
+  }
+  return FetchVector{sampler->buf, P.x * 4 + P.y * sampler->stride,
+                     sampler->stride};
+}
+
+SI vec4 texelFetchUnchecked(sampler2D sampler, FetchVector ptr, int x,
+                            int y = 0) {
+  assert(sampler->format == TextureFormat::RGBA32F);
+  return fetchOffsetsFloat(&ptr.buf[x * 4 + y * ptr.stride], ptr.offset);
+}
+
+SI ivec4 texelFetchUnchecked(isampler2D sampler, FetchVector ptr, int x,
+                             int y = 0) {
+  assert(sampler->format == TextureFormat::RGBA32I);
+  return fetchOffsetsInt(&ptr.buf[x * 4 + y * ptr.stride], ptr.offset);
 }
 
 #define texelFetchOffset(sampler, P, lod, offset) \
