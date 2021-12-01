@@ -36,9 +36,11 @@ toolkit.jar:
    content/global/aboutUrlClassifier.js
    content/global/aboutUrlClassifier.xhtml
    content/global/aboutUrlClassifier.css
+#ifndef ANDROID
    content/global/plugins.html
    content/global/plugins.css
    content/global/plugins.js
+#endif
 *   content/global/buildconfig.html
    content/global/buildconfig.css
    content/global/contentAreaUtils.js
