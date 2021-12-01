@@ -217,11 +217,6 @@ class nsHostResolver : public nsISupports, public AHostResolver {
                           uint32_t defaultGracePeriod);
   virtual ~nsHostResolver();
 
-  bool MaybeRetryTRRLookup(
-      AddrHostRecord* aAddrRec, nsresult aFirstAttemptStatus,
-      mozilla::net::TRRSkippedReason aFirstAttemptSkipReason,
-      const mozilla::MutexAutoLock& aLock);
-
   LookupStatus CompleteLookupLocked(nsHostRecord*, nsresult,
                                     mozilla::net::AddrInfo*, bool pb,
                                     const nsACString& aOriginsuffix,

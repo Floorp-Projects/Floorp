@@ -234,9 +234,6 @@ var didRst = false;
 var rstConnection = null;
 var illegalheader_conn = null;
 
-var gDoHPortsLog = [];
-var gDoHNewConnLog = {};
-
 // eslint-disable-next-line complexity
 function handleRequest(req, res) {
   // We do this first to ensure nothing goes wonky in our tests that don't want
@@ -513,22 +510,14 @@ function handleRequest(req, res) {
         zlib.gzip(buffer, function(err, result) {
           resp.setHeader("Content-Encoding", "gzip");
           resp.setHeader("Content-Length", result.length);
-          try {
-            resp.writeHead(200);
-            resp.end(result);
-          } catch (e) {
-            // connection was closed by the time we started writing.
-          }
+          resp.writeHead(200);
+          res.end(result);
         });
       } else {
         resp.setHeader("Content-Length", buffer.length);
-        try {
-          resp.writeHead(200);
-          resp.write(buffer);
-          resp.end("");
-        } catch (e) {
-          // connection was closed by the time we started writing.
-        }
+        resp.writeHead(200);
+        resp.write(buffer);
+        resp.end("");
       }
     }
 
@@ -894,13 +883,6 @@ function handleRequest(req, res) {
       emitResponse(res, payload);
     });
     return;
-  } else if (u.pathname == "/get-doh-req-port-log") {
-    let rContent = JSON.stringify(gDoHPortsLog);
-    res.setHeader("Content-Type", "text/plain");
-    res.setHeader("Content-Length", rContent.length);
-    res.writeHead(400);
-    res.end(rContent);
-    return;
   } else if (u.pathname == "/doh") {
     let responseIP = u.query.responseIP;
     if (!responseIP) {
@@ -980,8 +962,8 @@ function handleRequest(req, res) {
 
     let payload = Buffer.from("");
 
-    function emitResponse(response, requestPayload, decodedPacket, delay) {
-      let packet = decodedPacket || dnsPacket.decode(requestPayload);
+    function emitResponse(response, requestPayload) {
+      let packet = dnsPacket.decode(requestPayload);
       let answer = createDNSAnswer(
         response,
         packet,
@@ -994,7 +976,7 @@ function handleRequest(req, res) {
       writeDNSResponse(
         response,
         answer,
-        delay || getDelayFromPacket(packet, responseType(packet, responseIP)),
+        getDelayFromPacket(packet, responseType(packet, responseIP)),
         "application/dns-message"
       );
     }
@@ -1011,30 +993,7 @@ function handleRequest(req, res) {
     req.on("end", function finishedData() {
       // parload is empty when we send redirect response.
       if (payload.length) {
-        let packet = dnsPacket.decode(payload);
-        let delay;
-        if (u.query.conncycle) {
-          let name = packet.questions[0].name;
-          if (name.startsWith("newconn")) {
-            // If we haven't seen a req for this newconn name before,
-            // or if we've seen one for the same name on the same port,
-            // synthesize a timeout.
-            if (
-              !gDoHNewConnLog[name] ||
-              gDoHNewConnLog[name] == req.remotePort
-            ) {
-              delay = 1000;
-            }
-            if (!gDoHNewConnLog[name]) {
-              gDoHNewConnLog[name] = req.remotePort;
-            }
-          }
-          gDoHPortsLog.push([packet.questions[0].name, req.remotePort]);
-        } else {
-          gDoHPortsLog = [];
-          gDoHNewConnLog = {};
-        }
-        emitResponse(res, payload, packet, delay);
+        emitResponse(res, payload);
       }
     });
     return;
