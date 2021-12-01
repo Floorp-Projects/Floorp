@@ -1767,6 +1767,9 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
         if (!rttValue) {
           return false;
         }
+        // We do not need to use a barrier here because RttValue is always
+        // tenured
+        MOZ_ASSERT(rttValue.get()->isTenured());
         *((GCPtrObject*)addressOfTypeId(typeDef.id)) = rttValue;
         hasGcTypes_ = true;
       }
