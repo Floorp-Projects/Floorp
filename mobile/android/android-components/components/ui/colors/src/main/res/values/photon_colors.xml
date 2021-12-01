@@ -30,7 +30,7 @@
 	<!--
 		Magenta
 		Firefox Magenta is one of our primary colors. We currently have no common usage for it.
-		
+
 		In the future, Magenta should be redefined into Pink wherever possible.
 	-->
 	<color name="photonMagenta50">#ffff1ad9</color>
@@ -38,7 +38,7 @@
 	<color name="photonMagenta70">#ffb5007f</color>
 	<color name="photonMagenta80">#ff7d004f</color>
 	<color name="photonMagenta90">#ff440027</color>
-	
+
 	<!-- Pink -->
 	<color name="photonPink05">#ffffdef0</color>
 	<color name="photonPink10">#ffffb4db</color>
@@ -46,7 +46,7 @@
 	<color name="photonPink30">#ffff6bba</color>
 	<color name="photonPink40">#ffff4aa2</color>
 	<color name="photonPink50">#ffff298a</color>
-	<color name="photonPink60">#ffe31587</color>
+	<color name="photonPink60">#ffe21587</color>
 	<color name="photonPink70">#ffc60084</color>
 	<color name="photonPink80">#ff7f145b</color>
 	<color name="photonPink90">#ff50134b</color>
@@ -190,7 +190,7 @@
 
 	<!-- White -->
 	<color name="photonWhite">#ffffff</color>
-	
+
 	<!-- Black -->
 	<color name="photonBlack">#000000</color>
 </resources>

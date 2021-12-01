@@ -94,7 +94,7 @@ object PhotonColors {
     val Pink30 = Color(0xFFFF6BBA)
     val Pink40 = Color(0xFFFF4AA2)
     val Pink50 = Color(0xFFFF298A)
-    val Pink60 = Color(0xFFE31587)
+    val Pink60 = Color(0xFFE21587)
     val Pink70 = Color(0xFFC60084)
     val Pink80 = Color(0xFF7F145B)
     val Pink90 = Color(0xff50134b)
