@@ -219,34 +219,6 @@ const presets = {
       },
     },
   },
-  networking: {
-    entries: 128 * 1024 * 1024,
-    interval: 1,
-    features: ["screenshots", "js", "leaf", "stackwalk", "cpu", "java"],
-    threads: [
-      "Cache2 I/O",
-      "Compositor",
-      "DNS Resolver",
-      "DOM Worker",
-      "GeckoMain",
-      "Renderer",
-      "Socket Thread",
-      "StreamTrans",
-      "SwComposite",
-      "TRR Background",
-    ],
-    duration: 0,
-    l10nIds: {
-      popup: {
-        label: "profiler-popup-presets-networking-label",
-        description: "profiler-popup-presets-networking-description",
-      },
-      devtools: {
-        label: "perftools-presets-networking-label",
-        description: "perftools-presets-networking-description",
-      },
-    },
-  },
 };
 
 /**
