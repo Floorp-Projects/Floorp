@@ -164,15 +164,9 @@ nsresult nsExtProtocolChannel::OpenURL() {
       goto finish;
     }
 
-    RefPtr<nsIPrincipal> triggeringPrincipal = mLoadInfo->TriggeringPrincipal();
-    RefPtr<nsIPrincipal> redirectPrincipal;
-    if (!mLoadInfo->RedirectChain().IsEmpty()) {
-      mLoadInfo->RedirectChain().LastElement()->GetPrincipal(
-          getter_AddRefs(redirectPrincipal));
-    }
-    rv =
-        extProtService->LoadURI(mUrl, triggeringPrincipal, redirectPrincipal,
-                                ctx, mLoadInfo->GetLoadTriggeredFromExternal());
+    RefPtr<nsIPrincipal> principal = mLoadInfo->TriggeringPrincipal();
+    rv = extProtService->LoadURI(mUrl, principal, ctx,
+                                 mLoadInfo->GetLoadTriggeredFromExternal());
 
     if (NS_SUCCEEDED(rv) && mListener) {
       mStatus = NS_ERROR_NO_CONTENT;

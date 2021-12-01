@@ -1076,7 +1076,6 @@ parent:
 
     async LoadURIExternal(nsIURI uri,
                           nsIPrincipal triggeringPrincipal,
-                          nsIPrincipal redirectPrincipal,
                           MaybeDiscardedBrowsingContext browsingContext,
                           bool wasExternallyTriggered);
     async ExtProtocolChannelConnectParent(uint64_t registrarId);
