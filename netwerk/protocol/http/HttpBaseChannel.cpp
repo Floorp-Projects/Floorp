@@ -500,7 +500,8 @@ HttpBaseChannel::SetDocshellUserAgentOverride() {
     return NS_OK;
   }
 
-  const nsString& customUserAgent = bc->GetUserAgentOverride();
+  nsAutoString customUserAgent;
+  bc->GetCustomUserAgent(customUserAgent);
   if (customUserAgent.IsEmpty() || customUserAgent.IsVoid()) {
     return NS_OK;
   }
