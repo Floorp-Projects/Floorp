@@ -21,7 +21,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTime)
   PRExplodedTime prExplodedTime;
   PR_ExplodeTime(prTime, PR_GMTParameters, &prExplodedTime);
 
-  AppDateTimeFormat::mLocale = new nsCString("en-US");
+  AppDateTimeFormat::sLocale = new nsCString("en-US");
   AppDateTimeFormat::DeleteCache();
   StyleBag style = ToStyleBag(Some(Style::Long), Some(Style::Long));
 
@@ -99,7 +99,7 @@ TEST(AppDateTimeFormat, DateFormatSelectors)
   PRExplodedTime prExplodedTime;
   PR_ExplodeTime(prTime, PR_GMTParameters, &prExplodedTime);
 
-  AppDateTimeFormat::mLocale = new nsCString("en-US");
+  AppDateTimeFormat::sLocale = new nsCString("en-US");
   AppDateTimeFormat::DeleteCache();
 
   nsAutoString formattedTime;
@@ -150,7 +150,7 @@ TEST(AppDateTimeFormat, FormatPRExplodedTimeForeign)
   PRExplodedTime prExplodedTime;
   PR_ExplodeTime(prTime, PR_GMTParameters, &prExplodedTime);
 
-  AppDateTimeFormat::mLocale = new nsCString("de-DE");
+  AppDateTimeFormat::sLocale = new nsCString("de-DE");
   AppDateTimeFormat::DeleteCache();
   StyleBag style = ToStyleBag(Some(Style::Long), Some(Style::Long));
 
@@ -230,7 +230,7 @@ TEST(AppDateTimeFormat, DateFormatSelectorsForeign)
   PRExplodedTime prExplodedTime;
   PR_ExplodeTime(prTime, PR_GMTParameters, &prExplodedTime);
 
-  AppDateTimeFormat::mLocale = new nsCString("de-DE");
+  AppDateTimeFormat::sLocale = new nsCString("de-DE");
   AppDateTimeFormat::DeleteCache();
 
   nsAutoString formattedTime;
