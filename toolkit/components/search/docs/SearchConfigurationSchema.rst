@@ -128,6 +128,10 @@ only override otherwise included engines. ``"override"`` will only work for
 sections which apply to distributions or experiments. The experiment case was
 added in Firefox 81.
 
+Starting with Firefox 96, ``"override"`` sections may include ``included`` and
+``excluded`` information which will be applied accordingly. If they are not
+supplied, then the override section will be applied to everywhere.
+
 Example:
 
 .. code-block:: js
