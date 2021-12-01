@@ -329,15 +329,50 @@ menuitem.bookmark-item {
   border-radius: inherit;
 }
 
-/* We draw to titlebar when Gkt+ CSD is available */
+/**
+ * Titlebar drawing:
+ *
+ * We draw to titlebar when Gkt+ CSD is available. This is mostly
+ * straight-forward, but getting the window corners to look perfect is a bit
+ * tricky, as there are different variables to take into account.
+ *
+ * GTK windows have both a window radius (exposed via the
+ * `-moz-gtk-csd-titlebar-radius`) environment variable, and a window shadow
+ * (which we can't read back from GTK). Note that the native drawing does draw
+ * the shadow already.
+ *
+ * So there are multiple configurations to consider:
+ *
+ *  * Whether we're using Wayland vs. X11
+ *  * Whether we're using a lightweight theme or not.
+ *
+ * Consider the simple case (default system theme). We render the titlebar
+ * using `-moz-default-appearance: -moz-window-titlebar;`, then don't draw
+ * anything else. Success! Almost. On Wayland, the compositor takes care of
+ * drawing the titlebar border and shadow as well, so we need to clip it to not
+ * draw a darker shadow on the corners. That's what the -moz-gtk-wayland block
+ * below does.
+ *
+ * Now consider lightweight themes: We need to render the native titlebar
+ * behind the "theme" titlebar in order to render the native shadow on X11. But
+ * we can't just use the #navigator-toolbox as that's where the lightweight
+ * theme background goes, so we need to use the #navigator-toolbox-background.
+ * We still have to apply the corner radii to #navigator-toolbox of course, so
+ * the lightweight theme background doesn't overflow the titlebar radius.
+ *
+ * In a Wayland-only world, the setup could be much simpler: We could apply the
+ * titlebar appearance to #navigator-toolbox, and just apply the border radius
+ * on the <body> or #navigator-toolbox-background to clip the extra shadow when
+ * using the system theme. For the lightweight theme, we could use
+ * appearance: none and the titlebar radius on the toolbox. In X11 however, we
+ * do need the native titlebar behind at all times.
+ */
 @media (-moz-gtk-csd-available) {
-  :root[tabsintitlebar][sizemode="normal"]:not(:-moz-lwtheme) {
+  :root[tabsintitlebar][sizemode="normal"] {
     background-color: transparent;
   }
 
   :root[tabsintitlebar] #titlebar {
-    appearance: auto;
-    -moz-default-appearance: -moz-window-titlebar-maximized;
     color: CaptionText;
   }
 
@@ -349,16 +384,27 @@ menuitem.bookmark-item {
     color: inherit;
   }
 
-  :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #titlebar {
+  :root[tabsintitlebar] #navigator-toolbox-background {
     appearance: auto;
+    -moz-default-appearance: -moz-window-titlebar-maximized;
+  }
+
+  :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #navigator-toolbox-background {
     -moz-default-appearance: -moz-window-titlebar;
   }
-  :root[tabsintitlebar]:not([inDOMFullscreen]) #titlebar:-moz-lwtheme {
-    visibility: hidden;
+
+  :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) #navigator-toolbox:-moz-lwtheme {
+    border-top-left-radius: env(-moz-gtk-csd-titlebar-radius);
+    border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
   }
-  :root[tabsintitlebar]:not([inDOMFullscreen]) #toolbar-menubar:-moz-lwtheme,
-  :root[tabsintitlebar]:not([inDOMFullscreen]) #TabsToolbar:-moz-lwtheme {
-    visibility: visible;
+
+  /* On Wayland the compositor draws the titlebar border and shadow as well, so
+   * trim it by setting the radius on an ancestor of the toolbox-background */
+  @media (-moz-gtk-wayland) {
+    :root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) > body {
+      border-top-left-radius: env(-moz-gtk-csd-titlebar-radius);
+      border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
+    }
   }
 
   /* When temporarily showing the menu bar, make it at least as tall as the tab
@@ -372,8 +418,7 @@ menuitem.bookmark-item {
 
   /* Make #TabsToolbar transparent as we style underlying #titlebar with
    * -moz-window-titlebar (Gtk+ theme). */
-  :root[tabsintitlebar][sizemode="normal"]:not([inFullscreen]) #TabsToolbar,
-  :root[tabsintitlebar][sizemode="maximized"] #TabsToolbar,
+  :root[tabsintitlebar] #TabsToolbar,
   :root[tabsintitlebar] #toolbar-menubar {
     appearance: none;
     color: inherit;
