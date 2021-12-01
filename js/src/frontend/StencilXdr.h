@@ -77,6 +77,14 @@ class StencilXDR {
                                       ParserAtomSpan& parserAtomData);
 
   template <XDRMode mode>
+  static XDRResult codeModuleEntry(XDRState<mode>* xdr,
+                                   StencilModuleEntry& stencil);
+
+  template <XDRMode mode>
+  static XDRResult codeModuleEntryVector(
+      XDRState<mode>* xdr, StencilModuleMetadata::EntryVector& vector);
+
+  template <XDRMode mode>
   static XDRResult codeModuleMetadata(XDRState<mode>* xdr,
                                       StencilModuleMetadata& stencil);
 
