@@ -26,3 +26,16 @@ TEST_F(DecodeCertsTest, EmptyCertPackage) {
                          sizeof(emptyCertPackage)));
   EXPECT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
+
+TEST_F(DecodeCertsTest, EmptySignedData) {
+  // This represents a PKCS#7 ContentInfo of contentType
+  // 1.2.840.113549.1.7.2 (signedData) with missing content.
+  unsigned char emptySignedData[] = {0x30, 0x80, 0x06, 0x09, 0x2a, 0x86,
+                                     0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07,
+                                     0x02, 0x00, 0x00, 0x05, 0x00};
+
+  EXPECT_EQ(nullptr,
+            CERT_DecodeCertFromPackage(reinterpret_cast<char*>(emptySignedData),
+                                       sizeof(emptySignedData)));
+  EXPECT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+}
