@@ -39,7 +39,7 @@ void MIDIPlatformService::CheckAndReceive(const nsAString& aPortId,
     }
     if (!port->SysexEnabled()) {
       nsTArray<MIDIMessage> msgs;
-      for (auto& msg : aMsgs) {
+      for (const auto& msg : aMsgs) {
         if (!MIDIUtils::IsSysexMessage(msg)) {
           msgs.AppendElement(msg);
         }
@@ -224,7 +224,7 @@ void MIDIPlatformService::UpdateStatus(
     const nsAString& aPortId, const MIDIPortDeviceState& aDeviceState,
     const MIDIPortConnectionState& aConnectionState) {
   ::mozilla::ipc::AssertIsOnBackgroundThread();
-  for (auto port : mPorts) {
+  for (const auto& port : mPorts) {
     if (port->MIDIPortInterface::Id() == aPortId) {
       port->SendUpdateStatus(aDeviceState, aConnectionState);
     }
