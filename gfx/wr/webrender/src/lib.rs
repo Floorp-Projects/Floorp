@@ -71,8 +71,6 @@ extern crate tracy_rs;
 extern crate derive_more;
 extern crate malloc_size_of;
 extern crate svg_fmt;
-#[cfg(target_os = "macos")]
-extern crate foreign_types;
 
 #[macro_use]
 mod profiler;
