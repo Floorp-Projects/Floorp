@@ -58,6 +58,3 @@ RESOURCE_FILES += [
     "res/table-remove-row-hover.gif",
     "res/table-remove-row.gif",
 ]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

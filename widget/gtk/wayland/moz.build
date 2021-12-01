@@ -37,5 +37,3 @@ FINAL_LIBRARY = "xul"
 
 CFLAGS += CONFIG["TK_CFLAGS"]
 CXXFLAGS += CONFIG["TK_CFLAGS"]
-
-CXXFLAGS += ["-Wno-error=shadow"]

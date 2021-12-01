@@ -103,6 +103,3 @@ MOCHITEST_CHROME_MANIFESTS += [
 XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.ini"]
 
 BROWSER_CHROME_MANIFESTS += ["test/browser.ini"]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]

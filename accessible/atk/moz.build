@@ -63,6 +63,5 @@ if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     # gobject headers. See bug 1243331 comment 3.
     CXXFLAGS += [
         "-Wno-error=unused-function",
-        "-Wno-error=shadow",
         "-Wno-unused-local-typedefs",
     ]

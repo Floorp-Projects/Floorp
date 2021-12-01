@@ -64,7 +64,4 @@ LOCAL_INCLUDES += [
     "/netwerk/base",
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
-
 include("/tools/fuzzing/libfuzzer-config.mozbuild")

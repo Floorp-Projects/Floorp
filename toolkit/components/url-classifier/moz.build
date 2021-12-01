@@ -82,9 +82,8 @@ LOCAL_INCLUDES += [
 
 CXXFLAGS += CONFIG["SQLITE_CFLAGS"]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
-    # Suppress warnings in third-party code.
+# Suppress warnings in third-party code.
+if CONFIG["CC_TYPE"] == "gcc":
     CXXFLAGS += [
         "-Wno-maybe-uninitialized",
     ]

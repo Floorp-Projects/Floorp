@@ -197,9 +197,6 @@ SOURCES += [
 if CONFIG["CC_TYPE"] == "clang":
     SOURCES["Factory.cpp"].flags += ["-Wno-implicit-fallthrough"]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
-
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     EXPORTS.mozilla.gfx += [
         "QuartzSupport.h",

@@ -37,9 +37,6 @@ LOCAL_INCLUDES += [
     "/xpcom/build",
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
-
 DEFINES["XPCOM_GLUE"] = True
 
 USE_LIBS += [

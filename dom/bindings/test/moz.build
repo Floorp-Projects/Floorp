@@ -54,9 +54,6 @@ LOCAL_INCLUDES += [
 
 include("/ipc/chromium/chromium-config.mozbuild")
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
-
 if CONFIG["MOZ_DEBUG"]:
     XPIDL_SOURCES += [
         "mozITestInterfaceJS.idl",

@@ -17,7 +17,6 @@ if CONFIG['CC_TYPE'] == 'clang-cl':
 elif CONFIG['CC_TYPE'] in ('clang', 'gcc'):
     CXXFLAGS += [
         '-Wno-unused-local-typedefs',
-        '-Wno-shadow',
         '-Wno-deprecated-declarations',
         '-Wno-bool-compare',
         '-Wno-unused-but-set-variable',
