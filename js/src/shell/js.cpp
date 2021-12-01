@@ -5669,7 +5669,8 @@ static bool RegisterModule(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject moduleRequest(cx, ModuleRequestObject::create(cx, specifier));
+  RootedObject moduleRequest(
+      cx, ModuleRequestObject::create(cx, specifier, nullptr));
   if (!moduleRequest) {
     return false;
   }

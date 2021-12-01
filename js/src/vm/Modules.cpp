@@ -194,7 +194,7 @@ JS_PUBLIC_API JSObject* JS::CreateModuleRequest(
     return nullptr;
   }
 
-  return js::ModuleRequestObject::create(cx, specifierAtom);
+  return js::ModuleRequestObject::create(cx, specifierAtom, nullptr);
 }
 
 JS_PUBLIC_API JSString* JS::GetModuleRequestSpecifier(

@@ -55,12 +55,12 @@ using HandleModuleEnvironmentObject = Handle<ModuleEnvironmentObject*>;
 
 class ModuleRequestObject : public NativeObject {
  public:
-  enum { SpecifierSlot = 0, SlotCount };
+  enum { SpecifierSlot = 0, AssertionSlot, SlotCount };
 
   static const JSClass class_;
   static bool isInstance(HandleValue value);
-  [[nodiscard]] static ModuleRequestObject* create(JSContext* cx,
-                                                   HandleAtom specifier);
+  [[nodiscard]] static ModuleRequestObject* create(
+      JSContext* cx, HandleAtom specifier, HandleArrayObject maybeAssertions);
 
   JSAtom* specifier() const;
 };
