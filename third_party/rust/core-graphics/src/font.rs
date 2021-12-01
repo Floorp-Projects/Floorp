@@ -7,7 +7,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use core_foundation::base::{CFRelease, CFRetain, CFTypeID, TCFType};
+use core_foundation::base::{CFRelease, CFRetain, CFType, CFTypeID, TCFType};
 use core_foundation::array::{CFArray, CFArrayRef};
 use core_foundation::data::{CFData, CFDataRef};
 use core_foundation::number::CFNumber;
@@ -122,6 +122,24 @@ impl CGFont {
             None
         }
     }
+
+    pub fn copy_variations(&self) -> Option<CFDictionary<CFString, CFNumber>> {
+        let variations = unsafe { CGFontCopyVariations(self.as_ptr()) };
+        if !variations.is_null() {
+            Some(unsafe { TCFType::wrap_under_create_rule(variations) })
+        } else {
+            None
+        }
+    }
+
+    pub fn copy_variation_axes(&self) -> Option<CFArray<CFDictionary<CFString, CFType>>> {
+        let axes = unsafe { CGFontCopyVariationAxes(self.as_ptr()) };
+        if !axes.is_null() {
+            Some(unsafe { TCFType::wrap_under_create_rule(axes) })
+        } else {
+            None
+        }
+    }
 }
 
 #[link(name = "CoreGraphics", kind = "framework")]
@@ -153,4 +171,6 @@ extern {
 
     fn CGFontCopyTableTags(font: ::sys::CGFontRef) -> CFArrayRef;
     fn CGFontCopyTableForTag(font: ::sys::CGFontRef, tag: u32) -> CFDataRef;
+    fn CGFontCopyVariations(font: ::sys::CGFontRef) -> CFDictionaryRef;
+    fn CGFontCopyVariationAxes(font: ::sys::CGFontRef) -> CFArrayRef;
 }
