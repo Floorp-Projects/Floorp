@@ -559,5 +559,6 @@ PartitionedStorageHelper.runTest(
     ["dom.ipc.processCount", 1],
     ["dom.serviceWorkers.enabled", true],
     ["dom.serviceWorkers.testing.enabled", true],
+    ["privacy.partition.serviceWorkers", true],
   ]
 );
