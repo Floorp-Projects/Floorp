@@ -666,13 +666,6 @@ void TextureClient::Unlock() {
     if (!(mOpenMode & OpenMode::OPEN_ASYNC)) {
       if (mOpenMode & OpenMode::OPEN_WRITE) {
         mBorrowedDrawTarget->Flush();
-        if (mReadbackSink && !mData->ReadBack(mReadbackSink)) {
-          // Fallback implementation for reading back, because mData does not
-          // have a backend-specific implementation and returned false.
-          RefPtr<SourceSurface> snapshot = mBorrowedDrawTarget->Snapshot();
-          RefPtr<DataSourceSurface> dataSurf = snapshot->GetDataSurface();
-          mReadbackSink->ProcessReadback(dataSurf);
-        }
       }
 
       mBorrowedDrawTarget->DetachAllSnapshots();
