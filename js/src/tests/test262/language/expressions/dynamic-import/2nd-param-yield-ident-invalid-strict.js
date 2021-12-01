@@ -1,4 +1,4 @@
-// |reftest| skip error:SyntaxError -- import-assertions is not supported
+// |reftest| shell-option(--enable-import-assertions) skip-if(!xulRuntime.shell) error:SyntaxError -- requires shell-options
 'use strict';
 // Copyright (C) 2021 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
