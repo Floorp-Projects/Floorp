@@ -114,7 +114,7 @@ private fun RecentTabItem(
             .height(112.dp)
             .clickable { onRecentTabClick(tab.state.id) },
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = FirefoxTheme.colors.surface,
+        backgroundColor = FirefoxTheme.colors.layer2,
         elevation = 6.dp
     ) {
         Row(
@@ -175,7 +175,7 @@ private fun RecentSearchGroupItem(
             .height(112.dp)
             .clickable { onSearchGroupClicked(tabId) },
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = FirefoxTheme.colors.surface,
+        backgroundColor = FirefoxTheme.colors.layer2,
         elevation = 6.dp
     ) {
         Row(
@@ -202,7 +202,10 @@ private fun RecentSearchGroupItem(
                         painter = painterResource(id = R.drawable.ic_all_tabs),
                         modifier = Modifier.size(18.dp),
                         contentDescription = null,
-                        tint = FirefoxTheme.colors.textSecondary
+                        tint = when (isSystemInDarkTheme()) {
+                            true -> FirefoxTheme.colors.textPrimary
+                            false -> FirefoxTheme.colors.textSecondary
+                        }
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -376,7 +379,10 @@ private fun RecentTabTitle(title: String) {
 private fun RecentTabSubtitle(subtitle: String) {
     Text(
         text = subtitle.getRepresentativeSnippet(),
-        color = FirefoxTheme.colors.textSecondary,
+        color = when (isSystemInDarkTheme()) {
+            true -> FirefoxTheme.colors.textPrimary
+            false -> FirefoxTheme.colors.textSecondary
+        },
         fontSize = 12.sp,
         overflow = TextOverflow.Ellipsis,
         maxLines = 1

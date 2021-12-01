@@ -5,6 +5,7 @@
 package org.mozilla.fenix.compose
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +33,10 @@ fun TabSubtitle(
         text = text,
         style = TextStyle(fontSize = 12.sp),
         overflow = TextOverflow.Ellipsis,
-        color = FirefoxTheme.colors.textSecondary
+        color = when (isSystemInDarkTheme()) {
+            true -> FirefoxTheme.colors.textPrimary
+            false -> FirefoxTheme.colors.textSecondary
+        }
     )
 }
 
@@ -40,7 +44,7 @@ fun TabSubtitle(
 @Preview
 private fun TabSubtitlePreview() {
     FirefoxTheme {
-        Box(Modifier.background(FirefoxTheme.colors.surface)) {
+        Box(Modifier.background(FirefoxTheme.colors.layer2)) {
             TabSubtitle(
                 "Awesome tab subtitle",
             )

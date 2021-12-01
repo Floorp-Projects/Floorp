@@ -41,50 +41,355 @@ object FirefoxTheme {
 }
 
 private val darkColorPalette = FirefoxColors(
-    surface = PhotonColors.DarkGrey50,
+    layer1 = PhotonColors.DarkGrey80,
+    layer2 = PhotonColors.DarkGrey50,
+    layer3 = PhotonColors.DarkGrey60,
+    layerAccent = PhotonColors.Violet40,
+    layerNonOpaque = PhotonColors.Violet40A12,
+    scrim = PhotonColors.DarkGrey05A45,
+    scrimAccentStart = PhotonColors.DarkGrey90,
+    scrimAccentEnd = PhotonColors.DarkGrey30,
+    gradientStart = PhotonColors.Violet40,
+    gradientEnd = PhotonColors.Violet70,
+    actionPrimary = PhotonColors.Violet60,
+    actionSecondary = PhotonColors.DarkGrey50,
+    actionTertiary = PhotonColors.LightGrey40,
+    actionDisabled = PhotonColors.DarkGrey05,
+    control = PhotonColors.DarkGrey05,
+    controlDark = PhotonColors.Violet40A30,
+    controlActive = PhotonColors.LightGrey90,
     textPrimary = PhotonColors.LightGrey05,
-    textSecondary = PhotonColors.LightGrey05,
-    dividerLine = PhotonColors.DarkGrey05
+    textSecondary = PhotonColors.LightGrey40,
+    textDisabled = PhotonColors.LightGrey05A40,
+    textWarning = PhotonColors.Red40,
+    textLink = PhotonColors.Violet40,
+    textAccent = PhotonColors.Violet40,
+    textInverted = PhotonColors.White,
+    iconPrimary = PhotonColors.LightGrey05,
+    iconSecondary = PhotonColors.LightGrey40,
+    iconDisabled = PhotonColors.LightGrey70,
+    iconInverted = PhotonColors.White,
+    iconNotice = PhotonColors.Blue30,
+    iconButton = PhotonColors.LightGrey05,
+    iconWarning = PhotonColors.Red40,
+    iconAccentViolet = PhotonColors.Violet20,
+    iconAccentBlue = PhotonColors.Blue20,
+    iconAccentPink = PhotonColors.Pink20,
+    iconAccentGreen = PhotonColors.Green20,
+    iconAccentYellow = PhotonColors.Yellow20,
+    borderDefault = PhotonColors.LightGrey05,
+    borderSelected = PhotonColors.Violet40,
+    borderDisabled = PhotonColors.LightGrey70,
+    borderWarning = PhotonColors.Red40,
+    borderDivider = PhotonColors.DarkGrey05
 )
 
 private val lightColorPalette = FirefoxColors(
-    surface = PhotonColors.White,
+    layer1 = PhotonColors.LightGrey20,
+    layer2 = PhotonColors.White,
+    layer3 = PhotonColors.LightGrey10,
+    layerAccent = PhotonColors.Violet90,
+    layerNonOpaque = PhotonColors.Violet90A20,
+    scrim = PhotonColors.DarkGrey05A45,
+    scrimAccentStart = PhotonColors.DarkGrey90,
+    scrimAccentEnd = PhotonColors.DarkGrey30,
+    gradientStart = PhotonColors.Violet40,
+    gradientEnd = PhotonColors.Violet70,
+    actionPrimary = PhotonColors.Violet90,
+    actionSecondary = PhotonColors.LightGrey40,
+    actionTertiary = PhotonColors.DarkGrey05,
+    actionDisabled = PhotonColors.LightGrey50,
+    control = PhotonColors.LightGrey30,
+    controlDark = PhotonColors.Violet40A30,
+    controlActive = PhotonColors.LightGrey50,
     textPrimary = PhotonColors.DarkGrey90,
     textSecondary = PhotonColors.DarkGrey05,
-    dividerLine = PhotonColors.LightGrey30
+    textDisabled = PhotonColors.DarkGrey90A40,
+    textWarning = PhotonColors.Red80,
+    textLink = PhotonColors.Violet70,
+    textAccent = PhotonColors.Violet90,
+    textInverted = PhotonColors.White,
+    iconPrimary = PhotonColors.DarkGrey90,
+    iconSecondary = PhotonColors.DarkGrey05,
+    iconDisabled = PhotonColors.LightGrey70,
+    iconInverted = PhotonColors.White,
+    iconNotice = PhotonColors.Blue30,
+    iconButton = PhotonColors.Violet90,
+    iconWarning = PhotonColors.Red80,
+    iconAccentViolet = PhotonColors.Violet60,
+    iconAccentBlue = PhotonColors.Blue60,
+    iconAccentPink = PhotonColors.Pink60,
+    iconAccentGreen = PhotonColors.Green60,
+    iconAccentYellow = PhotonColors.Yellow60,
+    borderDefault = PhotonColors.DarkGrey90,
+    borderSelected = PhotonColors.Violet90,
+    borderDisabled = PhotonColors.LightGrey70,
+    borderWarning = PhotonColors.Red80,
+    borderDivider = PhotonColors.LightGrey40,
 )
 
 /**
  * A custom Color Palette for Mozilla Firefox for Android (Fenix).
  */
+@Suppress("LargeClass", "LongParameterList")
 @Stable
 class FirefoxColors(
-    surface: Color,
+    layer1: Color,
+    layer2: Color,
+    layer3: Color,
+    layerAccent: Color,
+    layerNonOpaque: Color,
+    scrim: Color,
+    scrimAccentStart: Color,
+    scrimAccentEnd: Color,
+    gradientStart: Color,
+    gradientEnd: Color,
+    actionPrimary: Color,
+    actionSecondary: Color,
+    actionTertiary: Color,
+    actionDisabled: Color,
+    control: Color,
+    controlDark: Color,
+    controlActive: Color,
     textPrimary: Color,
     textSecondary: Color,
-    dividerLine: Color
+    textDisabled: Color,
+    textWarning: Color,
+    textLink: Color,
+    textAccent: Color,
+    textInverted: Color,
+    iconPrimary: Color,
+    iconSecondary: Color,
+    iconDisabled: Color,
+    iconInverted: Color,
+    iconNotice: Color,
+    iconButton: Color,
+    iconWarning: Color,
+    iconAccentViolet: Color,
+    iconAccentBlue: Color,
+    iconAccentPink: Color,
+    iconAccentGreen: Color,
+    iconAccentYellow: Color,
+    borderDefault: Color,
+    borderSelected: Color,
+    borderDisabled: Color,
+    borderWarning: Color,
+    borderDivider: Color
 ) {
-    var surface by mutableStateOf(surface)
+    // Layers
+
+    // Default Screen, Search, Frontlayer background
+    var layer1 by mutableStateOf(layer1)
         private set
+    // Card background, Menu background
+    var layer2 by mutableStateOf(layer2)
+        private set
+    // App Bar Top, App Bar Bottom, Toolbar background, Frontlayer header
+    var layer3 by mutableStateOf(layer3)
+        private set
+    // Frontlayer header (edit), Header (edit)
+    var layerAccent by mutableStateOf(layerAccent)
+        private set
+    // Selected tab
+    var layerNonOpaque by mutableStateOf(layerNonOpaque)
+        private set
+    var scrim by mutableStateOf(scrim)
+        private set
+    var scrimAccentStart by mutableStateOf(scrimAccentStart)
+        private set
+    var scrimAccentEnd by mutableStateOf(scrimAccentEnd)
+        private set
+    // Tooltip
+    var gradientStart by mutableStateOf(gradientStart)
+        private set
+    // Tooltip
+    var gradientEnd by mutableStateOf(gradientEnd)
+        private set
+
+    // Actions
+
+    // Primary button, Snackbar, Floating action button, Controls
+    var actionPrimary by mutableStateOf(actionPrimary)
+        private set
+    // Secondary button, Pill button
+    var actionSecondary by mutableStateOf(actionSecondary)
+        private set
+    // Checkbox enabled, Radio enabled
+    var actionTertiary by mutableStateOf(actionTertiary)
+        private set
+    // Checkbox disabled, Radio disabled
+    var actionDisabled by mutableStateOf(actionDisabled)
+        private set
+    // Switch background OFF, Indicator OFF
+    var control by mutableStateOf(control)
+        private set
+    // Switch background ON
+    var controlDark by mutableStateOf(controlDark)
+        private set
+    // Indicator active
+    var controlActive by mutableStateOf(controlActive)
+        private set
+
+    // Text
+
+    // Primary text
     var textPrimary by mutableStateOf(textPrimary)
         private set
+    // Secondary text
     var textSecondary by mutableStateOf(textSecondary)
         private set
-    var dividerLine by mutableStateOf(dividerLine)
+    // Disabled text
+    var textDisabled by mutableStateOf(textDisabled)
+        private set
+    // Warning text
+    var textWarning by mutableStateOf(textWarning)
+        private set
+    // Text link
+    var textLink by mutableStateOf(textLink)
+        private set
+    // Small heading
+    var textAccent by mutableStateOf(textAccent)
+        private set
+    // Text/Icon inverted (on color)
+    var textInverted by mutableStateOf(textInverted)
+        private set
+
+    // Icon
+
+    // Primary icon
+    var iconPrimary by mutableStateOf(iconPrimary)
+        private set
+    // Secondary icon
+    var iconSecondary by mutableStateOf(iconSecondary)
+        private set
+    // Disabled icon
+    var iconDisabled by mutableStateOf(iconDisabled)
+        private set
+    // Icon inverted (on color)
+    var iconInverted by mutableStateOf(iconInverted)
+        private set
+    // New
+    var iconNotice by mutableStateOf(iconNotice)
+        private set
+    // Icon button
+    var iconButton by mutableStateOf(iconButton)
+        private set
+    var iconWarning by mutableStateOf(iconWarning)
+        private set
+    var iconAccentViolet by mutableStateOf(iconAccentViolet)
+        private set
+    var iconAccentBlue by mutableStateOf(iconAccentBlue)
+        private set
+    var iconAccentPink by mutableStateOf(iconAccentPink)
+        private set
+    var iconAccentGreen by mutableStateOf(iconAccentGreen)
+        private set
+    var iconAccentYellow by mutableStateOf(iconAccentYellow)
+        private set
+
+    // Border
+
+    // Form parts
+    var borderDefault by mutableStateOf(borderDefault)
+        private set
+    // Selected tab
+    var borderSelected by mutableStateOf(borderSelected)
+        private set
+    // Form parts
+    var borderDisabled by mutableStateOf(borderDisabled)
+        private set
+    // Form parts
+    var borderWarning by mutableStateOf(borderWarning)
+        private set
+    var borderDivider by mutableStateOf(borderDivider)
         private set
 
     fun update(other: FirefoxColors) {
-        surface = other.surface
+        layer1 = other.layer1
+        layer2 = other.layer2
+        layer3 = other.layer3
+        layerAccent = other.layerAccent
+        layerNonOpaque = other.layerNonOpaque
+        scrim = other.scrim
+        scrimAccentStart = other.scrimAccentStart
+        scrimAccentEnd = other.scrimAccentEnd
+        gradientStart = other.gradientStart
+        gradientEnd = other.gradientEnd
+        actionPrimary = other.actionPrimary
+        actionSecondary = other.actionSecondary
+        actionTertiary = other.actionTertiary
+        actionDisabled = other.actionDisabled
+        control = other.control
+        controlDark = other.controlDark
+        controlActive = other.controlActive
         textPrimary = other.textPrimary
         textSecondary = other.textSecondary
-        dividerLine = other.dividerLine
+        textDisabled = other.textDisabled
+        textWarning = other.textWarning
+        textLink = other.textLink
+        textAccent = other.textAccent
+        textInverted = other.textInverted
+        iconPrimary = other.iconPrimary
+        iconSecondary = other.iconSecondary
+        iconDisabled = other.iconDisabled
+        iconInverted = other.iconInverted
+        iconNotice = other.iconNotice
+        iconButton = other.iconButton
+        iconWarning = other.iconWarning
+        iconAccentViolet = other.iconAccentViolet
+        iconAccentBlue = other.iconAccentBlue
+        iconAccentPink = other.iconAccentPink
+        iconAccentGreen = other.iconAccentGreen
+        iconAccentYellow = other.iconAccentYellow
+        borderDefault = other.borderDefault
+        borderSelected = other.borderSelected
+        borderDisabled = other.borderDisabled
+        borderWarning = other.borderWarning
+        borderDivider = other.borderDivider
     }
 
     fun copy(): FirefoxColors = FirefoxColors(
-        surface = surface,
+        layer1 = layer1,
+        layer2 = layer2,
+        layer3 = layer3,
+        layerAccent = layerAccent,
+        layerNonOpaque = layerNonOpaque,
+        scrim = scrim,
+        scrimAccentStart = scrimAccentStart,
+        scrimAccentEnd = scrimAccentEnd,
+        gradientStart = gradientStart,
+        gradientEnd = gradientEnd,
+        actionPrimary = actionPrimary,
+        actionSecondary = actionSecondary,
+        actionTertiary = actionTertiary,
+        actionDisabled = actionDisabled,
+        control = control,
+        controlDark = controlDark,
+        controlActive = controlActive,
         textPrimary = textPrimary,
         textSecondary = textSecondary,
-        dividerLine = dividerLine
+        textDisabled = textDisabled,
+        textWarning = textWarning,
+        textLink = textLink,
+        textAccent = textAccent,
+        textInverted = textInverted,
+        iconPrimary = iconPrimary,
+        iconSecondary = iconSecondary,
+        iconDisabled = iconDisabled,
+        iconInverted = iconInverted,
+        iconNotice = iconNotice,
+        iconButton = iconButton,
+        iconWarning = iconWarning,
+        iconAccentViolet = iconAccentViolet,
+        iconAccentBlue = iconAccentBlue,
+        iconAccentPink = iconAccentPink,
+        iconAccentGreen = iconAccentGreen,
+        iconAccentYellow = iconAccentYellow,
+        borderDefault = borderDefault,
+        borderSelected = borderSelected,
+        borderDisabled = borderDisabled,
+        borderWarning = borderWarning,
+        borderDivider = borderDivider
     )
 }
 

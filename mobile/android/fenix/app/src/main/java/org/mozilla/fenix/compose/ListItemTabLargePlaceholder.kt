@@ -49,7 +49,7 @@ fun ListItemTabLargePlaceholder(
             .size(328.dp, 116.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = FirefoxTheme.colors.surface,
+        backgroundColor = FirefoxTheme.colors.layer2,
         elevation = 6.dp,
     ) {
         Column(

@@ -85,7 +85,7 @@ fun TabSubtitleWithInterdot(
 @Preview
 private fun TabSubtitleWithInterdotPreview() {
     FirefoxTheme {
-        Box(Modifier.background(FirefoxTheme.colors.surface)) {
+        Box(Modifier.background(FirefoxTheme.colors.layer2)) {
             TabSubtitleWithInterdot(
                 firstText = "firstText",
                 secondText = "secondText",

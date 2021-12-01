@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -73,7 +74,7 @@ fun RecentlyVisited(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = FirefoxTheme.colors.surface,
+        backgroundColor = FirefoxTheme.colors.layer2,
         elevation = 6.dp
     ) {
         LazyRow(
@@ -258,7 +259,10 @@ private fun RecentlyVisitedCaption(count: Int) {
 
     Text(
         text = String.format(LocalContext.current.getString(stringId), count),
-        color = FirefoxTheme.colors.textSecondary,
+        color = when (isSystemInDarkTheme()) {
+            true -> FirefoxTheme.colors.textPrimary
+            false -> FirefoxTheme.colors.textSecondary
+        },
         fontSize = 12.sp,
         overflow = TextOverflow.Ellipsis,
         maxLines = 1
@@ -286,7 +290,7 @@ private fun RecentlyVisitedMenu(
         expanded = showMenu,
         onDismissRequest = { onDismissRequest() },
         modifier = Modifier
-            .background(color = FirefoxTheme.colors.surface)
+            .background(color = FirefoxTheme.colors.layer2)
             .height(52.dp)
             .scrollable(
                 state = ScrollState(0),
@@ -332,7 +336,7 @@ private fun RecentlyVisitedDivider(
 ) {
     Divider(
         modifier = modifier,
-        color = FirefoxTheme.colors.dividerLine,
+        color = FirefoxTheme.colors.borderDivider,
         thickness = 0.5.dp
     )
 }

@@ -43,7 +43,7 @@ fun TabTitle(
 @Preview
 private fun TabTitlePreview() {
     FirefoxTheme {
-        Box(Modifier.background(FirefoxTheme.colors.surface)) {
+        Box(Modifier.background(FirefoxTheme.colors.layer2)) {
             TabTitle(
                 "Awesome tab title",
                 2

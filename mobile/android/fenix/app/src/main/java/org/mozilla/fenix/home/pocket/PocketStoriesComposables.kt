@@ -243,7 +243,7 @@ fun PoweredByPocketHeader(
 @Preview
 private fun PocketStoriesComposablesPreview() {
     FirefoxTheme {
-        Box(Modifier.background(FirefoxTheme.colors.surface)) {
+        Box(Modifier.background(FirefoxTheme.colors.layer2)) {
             Column {
                 PocketStories(
                     stories = getFakePocketStories(8),

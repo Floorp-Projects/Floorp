@@ -110,7 +110,7 @@ private fun ListItemTabSurface(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(8.dp),
-        backgroundColor = FirefoxTheme.colors.surface,
+        backgroundColor = FirefoxTheme.colors.layer2,
         elevation = 6.dp
     ) {
         Row(

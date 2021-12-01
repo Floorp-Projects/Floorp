@@ -121,7 +121,7 @@ fun StaggeredHorizontalGrid(
 @Preview
 private fun StaggeredHorizontalGridPreview() {
     FirefoxTheme {
-        Box(Modifier.background(FirefoxTheme.colors.surface)) {
+        Box(Modifier.background(FirefoxTheme.colors.layer2)) {
             StaggeredHorizontalGrid(
                 horizontalItemsSpacing = 8.dp,
                 arrangement = Arrangement.Center

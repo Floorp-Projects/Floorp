@@ -87,7 +87,7 @@ private fun SelectableChipLightThemePreview() {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(FirefoxTheme.colors.surface),
+                .background(FirefoxTheme.colors.layer2),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             SelectableChip("Chirp", false) { }
