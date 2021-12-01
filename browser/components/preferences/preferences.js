@@ -17,21 +17,75 @@
 
 "use strict";
 
+var { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AMTelemetry",
-  "resource://gre/modules/AddonManager.jsm"
+var { Downloads } = ChromeUtils.import("resource://gre/modules/Downloads.jsm");
+var { Integration } = ChromeUtils.import(
+  "resource://gre/modules/Integration.jsm"
 );
-ChromeUtils.defineModuleGetter(
+/* global DownloadIntegration */
+Integration.downloads.defineModuleGetter(
   this,
-  "formAutofillParent",
-  "resource://formautofill/FormAutofillParent.jsm"
+  "DownloadIntegration",
+  "resource://gre/modules/DownloadIntegration.jsm"
 );
 
+var { PrivateBrowsingUtils } = ChromeUtils.import(
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
+
+var { Weave } = ChromeUtils.import("resource://services-sync/main.js");
+var { FxAccounts, fxAccounts } = ChromeUtils.import(
+  "resource://gre/modules/FxAccounts.jsm"
+);
+
+XPCOMUtils.defineLazyServiceGetters(this, {
+  gApplicationUpdateService: [
+    "@mozilla.org/updates/update-service;1",
+    "nsIApplicationUpdateService",
+  ],
+
+  listManager: [
+    "@mozilla.org/url-classifier/listmanager;1",
+    "nsIUrlListManager",
+  ],
+  gHandlerService: [
+    "@mozilla.org/uriloader/handler-service;1",
+    "nsIHandlerService",
+  ],
+  gMIMEService: ["@mozilla.org/mime;1", "nsIMIMEService"],
+});
+
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AMTelemetry: "resource://gre/modules/AddonManager.jsm",
+  CloudStorage: "resource://gre/modules/CloudStorage.jsm",
+  ContextualIdentityService:
+    "resource://gre/modules/ContextualIdentityService.jsm",
+  DownloadUtils: "resource://gre/modules/DownloadUtils.jsm",
+  ExtensionPreferencesManager:
+    "resource://gre/modules/ExtensionPreferencesManager.jsm",
+  ExtensionSettingsStore: "resource://gre/modules/ExtensionSettingsStore.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  formAutofillParent: "resource://formautofill/FormAutofillParent.jsm",
+  FeatureGate: "resource://featuregates/FeatureGate.jsm",
+  HomePage: "resource:///modules/HomePage.jsm",
+  LoginHelper: "resource://gre/modules/LoginHelper.jsm",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.jsm",
+  OSKeyStore: "resource://gre/modules/OSKeyStore.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  SelectionChangedMenulist: "resource:///modules/SelectionChangedMenulist.jsm",
+  ShortcutUtils: "resource://gre/modules/ShortcutUtils.jsm",
+  SiteDataManager: "resource:///modules/SiteDataManager.jsm",
+  TransientPrefs: "resource:///modules/TransientPrefs.jsm",
+  UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
+  UIState: "resource://services-sync/UIState.jsm",
+  UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  UrlbarProviderQuickSuggest:
+    "resource:///modules/UrlbarProviderQuickSuggest.jsm",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "gSubDialog", function() {
