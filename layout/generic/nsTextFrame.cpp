@@ -10255,8 +10255,7 @@ void nsTextFrame::ToCString(nsCString& aBuf,
     return;
   }
   uint32_t fragOffset = AssertedCast<uint32_t>(GetContentOffset());
-  const uint32_t n = fragOffset + contentLength;
-  while (fragOffset < n) {
+  while (fragOffset < AssertedCast<uint32_t>(*aTotalContentLength)) {
     char16_t ch = frag->CharAt(fragOffset++);
     if (ch == '\r') {
       aBuf.AppendLiteral("\\r");
