@@ -43,7 +43,7 @@ private fun basicMatch(query: String, urls: Sequence<String>): String? {
         var urlSansProtocol = url?.host
         urlSansProtocol += url?.port?.orEmpty() + url?.path
         urlSansProtocol?.let {
-            if (it.startsWith(query)) {
+            if (it.startsWith(query) || it.noCommonSubdomains().startsWith(query)) {
                 return rawUrl
             }
         }

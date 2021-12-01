@@ -21,6 +21,7 @@ class DomainMatcherTest {
             "http://www.mozilla.org", "http://Firefox.com",
             "https://mobile.twitter.com", "https://m.youtube.com",
             "https://en.Wikipedia.org/Wiki/Mozilla",
+            "https://www.github.com/mozilla-mobile/fenix",
             "http://192.168.254.254:8000", "http://192.168.254.254:8000/admin",
             "http://иННая.локаль", // TODO add more test data for non-english locales
             "about:config", "about:crashes", "http://localhost:8080/index.html"
@@ -47,6 +48,11 @@ class DomainMatcherTest {
         assertEquals(
             DomainMatch("https://m.youtube.com", "youtube.com"),
             segmentAwareDomainMatch("yo", urls)
+        )
+        // Subdomain stripping for path segments
+        assertEquals(
+            DomainMatch("https://www.github.com/mozilla-mobile/fenix", "github.com/mozilla-mobile/fenix"),
+            segmentAwareDomainMatch("github.com/moz", urls)
         )
         // Case insensitivity in the host and in the path. Subdomain matching and stripping.
         assertEquals(

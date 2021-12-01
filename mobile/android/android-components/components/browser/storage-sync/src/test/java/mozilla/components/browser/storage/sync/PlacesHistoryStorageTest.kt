@@ -419,6 +419,13 @@ class PlacesHistoryStorageTest {
         assertEquals("placesHistory", res.source)
         assertEquals(1, res.totalItems)
 
+        history.recordVisit("https://www.github.com/mozilla-mobile/fenix", PageVisit(VisitType.LINK))
+        res = history.getAutocompleteSuggestion("github.com/moz")!!
+        assertEquals("github.com/mozilla-mobile/", res.text)
+        assertEquals("https://www.github.com/mozilla-mobile/", res.url)
+        assertEquals("placesHistory", res.source)
+        assertEquals(1, res.totalItems)
+
         assertNull(history.getAutocompleteSuggestion("hello"))
     }
 
