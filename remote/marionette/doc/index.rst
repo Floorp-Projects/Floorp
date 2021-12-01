@@ -46,7 +46,6 @@ Some further documentation can be found here:
    CodeStyle.md
    SeleniumAtoms.md
    Prefs.md
-   internals/index
 
 
 Bugs
