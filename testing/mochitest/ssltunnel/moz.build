@@ -18,6 +18,3 @@ USE_LIBS += [
 # This isn't XPCOM code, but it wants to use STL, so disable the STL
 # wrappers
 DisableStlWrapping()
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-shadow"]

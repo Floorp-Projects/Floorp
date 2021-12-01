@@ -42,9 +42,6 @@ EXPORTS.mozilla.a11y += [
     "IPCTypes.h",
 ]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
-
 if CONFIG["ACCESSIBILITY"]:
     EXPORTS.mozilla.a11y += [
         "DocAccessibleChildBase.h",

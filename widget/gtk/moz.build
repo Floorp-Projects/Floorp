@@ -162,8 +162,6 @@ if CONFIG["MOZ_WAYLAND"]:
 
 if CONFIG["MOZ_ENABLE_DBUS"]:
     CXXFLAGS += CONFIG["MOZ_DBUS_GLIB_CFLAGS"]
-
-CXXFLAGS += ["-Wno-error=shadow"]
 CXXFLAGS += ["-Werror=switch"]
 
 REQUIRES_UNIFIED_BUILD = True

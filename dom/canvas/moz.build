@@ -199,9 +199,6 @@ CXXFLAGS += CONFIG["TK_CFLAGS"]
 
 LOCAL_INCLUDES += CONFIG["SKIA_INCLUDES"]
 
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-error=shadow"]
-
 if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
     CXXFLAGS += ["-Werror=implicit-int-conversion"]
     CXXFLAGS += ["-Werror=switch"]

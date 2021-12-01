@@ -106,7 +106,7 @@ if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     ]
 
 if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-shadow", "-Wno-error=stack-protector"]
+    CXXFLAGS += ["-Wno-error=stack-protector"]
     SOURCES["../chromium/sandbox/linux/services/syscall_wrappers.cc"].flags += [
         "-Wno-empty-body",
     ]

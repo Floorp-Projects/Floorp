@@ -193,7 +193,6 @@ if CONFIG["ENABLE_TESTS"]:
 
 if CONFIG["CC_TYPE"] in ("clang", "gcc"):
     CXXFLAGS += [
-        "-Wno-error=shadow",
         "-Wno-error=stack-protector",
         "-Wno-ignored-qualifiers",  # due to use of breakpad headers
     ]

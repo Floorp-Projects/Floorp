@@ -34,6 +34,3 @@ FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
     "/dom/media/webaudio",
 ]
-
-if CONFIG["CC_TYPE"] in ("clang", "gcc"):
-    CXXFLAGS += ["-Wno-shadow"]

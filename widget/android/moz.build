@@ -194,8 +194,6 @@ LOCAL_INCLUDES += [
     "/xpcom/threads",
 ]
 
-CXXFLAGS += ["-Wno-error=shadow"]
-
 OS_LIBS += ["android"]
 
 if CONFIG["MOZ_NATIVE_DEVICES"]:

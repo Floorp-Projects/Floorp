@@ -109,7 +109,6 @@ include("/ipc/chromium/chromium-config.mozbuild")
 #    android API types
 CXXFLAGS += [
     "-Wno-error=attributes",
-    "-Wno-error=shadow",
 ]
 
 DEFINES["TRACING"] = True
