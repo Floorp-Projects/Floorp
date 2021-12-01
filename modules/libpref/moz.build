@@ -60,6 +60,7 @@ pref_groups = [
     "layout",
     "mathml",
     "media",
+    "midi",
     "mousewheel",
     "network",
     "nglayout",
