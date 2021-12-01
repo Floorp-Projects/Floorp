@@ -632,6 +632,7 @@ bool shell::enableChangeArrayByCopy = false;
 bool shell::enableNewSetMethods = true;
 #endif
 bool shell::enableClassStaticBlocks = true;
+bool shell::enableImportAssertions = false;
 #ifdef JS_GC_ZEAL
 uint32_t shell::gZealBits = 0;
 uint32_t shell::gZealFrequency = 0;
@@ -11299,6 +11300,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableNewSetMethods = op.getBoolOption("enable-new-set-methods");
 #endif
   enableClassStaticBlocks = !op.getBoolOption("disable-class-static-blocks");
+  enableImportAssertions = op.getBoolOption("enable-import-assertions");
   useFdlibmForSinCosTan = op.getBoolOption("use-fdlibm-for-sin-cos-tan");
 
   JS::ContextOptionsRef(cx)
@@ -11332,7 +11334,8 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
       .setChangeArrayByCopy(enableChangeArrayByCopy)
 #endif
-      .setClassStaticBlocks(enableClassStaticBlocks);
+      .setClassStaticBlocks(enableClassStaticBlocks)
+      .setImportAssertions(enableImportAssertions);
 
   JS::SetUseFdlibmForSinCosTan(useFdlibmForSinCosTan);
 
@@ -12320,6 +12323,8 @@ int main(int argc, char** argv) {
                         "Disable class static blocks") ||
       !op.addBoolOption('\0', "enable-class-static-blocks",
                         "(no-op) Enable class static blocks") ||
+      !op.addBoolOption('\0', "enable-import-assertions",
+                        "Enable import assertions") ||
       !op.addBoolOption('\0', "no-large-arraybuffers",
                         "Disallow creating ArrayBuffers larger than 2 GB on "
                         "64-bit platforms") ||

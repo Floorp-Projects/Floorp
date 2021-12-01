@@ -148,6 +148,8 @@ class JS_PUBLIC_API TransitiveCompileOptions {
 
   bool classStaticBlocks = false;
 
+  bool importAssertions = false;
+
   // When decoding from XDR into a Stencil, directly reference data in the
   // buffer (where possible) instead of copying it. This is an optional
   // performance optimization, and may also reduce memory if the buffer is going

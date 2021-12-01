@@ -54,7 +54,8 @@ class JS_PUBLIC_API ContextOptions {
  #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
         changeArrayByCopy_(false),
  #endif
-        ergonomicBrandChecks_(false) {
+        ergonomicBrandChecks_(false),
+        importAssertions_(false) {
   }
   // clang-format on
 
@@ -178,6 +179,12 @@ class JS_PUBLIC_API ContextOptions {
     return *this;
   }
 
+  bool importAssertions() const { return importAssertions_; }
+  ContextOptions& setImportAssertions(bool enabled) {
+    importAssertions_ = enabled;
+    return *this;
+  }
+
   // Override to allow disabling the eval restriction security checks for
   // this context.
   bool disableEvalSecurityChecks() const { return disableEvalSecurityChecks_; }
@@ -292,6 +299,7 @@ class JS_PUBLIC_API ContextOptions {
 #endif
   bool ergonomicBrandChecks_ : 1;
   bool classStaticBlocks_ : 1;
+  bool importAssertions_ : 1;
 };
 
 JS_PUBLIC_API ContextOptions& ContextOptionsRef(JSContext* cx);

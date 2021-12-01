@@ -203,6 +203,12 @@ static bool GetRealmConfiguration(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
+  bool importAssertions = cx->options().importAssertions();
+  if (!JS_SetProperty(cx, info, "importAssertions",
+                      importAssertions ? TrueHandleValue : FalseHandleValue)) {
+    return false;
+  }
+
 #ifdef ENABLE_CHANGE_ARRAY_BY_COPY
   bool changeArrayByCopy = cx->options().changeArrayByCopy();
   if (!JS_SetProperty(cx, info, "enableChangeArrayByCopy",

@@ -2304,6 +2304,7 @@ void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
   privateClassFields = rhs.privateClassFields;
   privateClassMethods = rhs.privateClassMethods;
   classStaticBlocks = rhs.classStaticBlocks;
+  importAssertions = rhs.importAssertions;
   useFdlibmForSinCosTan = rhs.useFdlibmForSinCosTan;
 };
 
@@ -2388,6 +2389,8 @@ JS::CompileOptions::CompileOptions(JSContext* cx) : ReadOnlyCompileOptions() {
   privateClassMethods = cx->options().privateClassMethods();
 
   classStaticBlocks = cx->options().classStaticBlocks();
+
+  importAssertions = cx->options().importAssertions();
 
   useFdlibmForSinCosTan = math_use_fdlibm_for_sin_cos_tan();
 
