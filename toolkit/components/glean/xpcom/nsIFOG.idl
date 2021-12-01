@@ -118,4 +118,11 @@ interface nsIFOG : nsISupports
    * Reset FOG and the Glean SDK, clearing storage.
    */
   void testResetFOG([optional] in AUTF8String aDataPathOverride, [optional] in AUTF8String aAppIdOverride);
+
+  /**
+   * ** Test-only Method **
+   *
+   * Trigger test metric instrumentation on the GPU process.
+   */
+  void testTriggerGPUMetrics();
 };

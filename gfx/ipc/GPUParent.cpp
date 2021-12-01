@@ -39,6 +39,7 @@
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/image/ImageMemoryReporter.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
@@ -621,6 +622,11 @@ mozilla::ipc::IPCResult GPUParent::RecvCollectPerfStatsJSON(
 mozilla::ipc::IPCResult GPUParent::RecvFlushFOGData(
     FlushFOGDataResolver&& aResolver) {
   glean::FlushFOGData(std::move(aResolver));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult GPUParent::RecvTestTriggerMetrics() {
+  mozilla::glean::test_only_ipc::a_counter.Add(45326);
   return IPC_OK();
 }
 

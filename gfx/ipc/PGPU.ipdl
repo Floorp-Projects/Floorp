@@ -118,6 +118,10 @@ parent:
   // https://firefox-source-docs.mozilla.org/toolkit/components/glean/dev/ipc.html
   async FlushFOGData() returns (ByteBuf buf);
 
+  // Test-only method.
+  // Asks the gpu process to trigger test-only instrumentation.
+  async TestTriggerMetrics();
+
 child:
   // Sent when the GPU process has initialized devices. This occurs once, after
   // Init().
