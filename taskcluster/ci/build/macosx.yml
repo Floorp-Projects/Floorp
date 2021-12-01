@@ -53,7 +53,7 @@ macosx64/debug:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
-            - macosx64-sdk-11.0
+            - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
 
 macosx64-hybrid/plain:
@@ -82,7 +82,7 @@ macosx64-hybrid/plain:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
-            - macosx64-sdk-11.0
+            - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
 
 macosx64/opt:
@@ -111,7 +111,7 @@ macosx64/opt:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
-            - macosx64-sdk-11.0
+            - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
 
 macosx64-asan-fuzzing/opt:
@@ -138,7 +138,7 @@ macosx64-asan-fuzzing/opt:
             - linux64-clang-macosx-cross
             - linux64-sccache
             - macosx64-llvm-symbolizer
-            - macosx64-sdk-11.0
+            - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
     optimization:
         skip-unless-expanded: null
@@ -168,7 +168,7 @@ macosx64-fuzzing/debug:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
-            - macosx64-sdk-11.0
+            - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
     optimization:
         skip-unless-expanded: null
@@ -206,7 +206,7 @@ macosx64-x64-devedition/opt:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
-            - macosx64-sdk-11.0
+            - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
 
 macosx64-aarch64-devedition/opt:
@@ -410,7 +410,7 @@ macosx64-noopt/debug:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
-            - macosx64-sdk-11.0
+            - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
 
 macosx64-add-on-devel/opt:
@@ -436,7 +436,7 @@ macosx64-add-on-devel/opt:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
-            - macosx64-sdk-11.0
+            - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
 
 macosx64-x64-shippable/opt:
@@ -468,7 +468,7 @@ macosx64-x64-shippable/opt:
         toolchain:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
-            - macosx64-sdk-11.0
+            - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
 
 macosx64-aarch64-shippable/opt:
@@ -670,7 +670,7 @@ macosx64-ccov/opt:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
-            - macosx64-sdk-11.0
+            - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
 
 macosx64-gcp/debug:
@@ -700,7 +700,7 @@ macosx64-gcp/debug:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
-            - macosx64-sdk-11.0
+            - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
     optimization:
         skip-unless-backstop: null
@@ -731,5 +731,5 @@ macosx64-gcp/opt:
             - linux64-cctools-port
             - linux64-clang-macosx-cross
             - linux64-sccache
-            - macosx64-sdk-11.0
+            - macosx64-sdk-10.12
             - sysroot-wasm32-wasi
