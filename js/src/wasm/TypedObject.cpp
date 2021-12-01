@@ -186,7 +186,7 @@ void TypedObject::visitReferences(JSContext* cx, V& visitor) {
     case TypeDefKind::Struct: {
       const auto& structType = typeDef.structType();
       for (const StructField& field : structType.fields_) {
-        if (field.type.isReference()) {
+        if (field.type.isRefRepr()) {
           visitor.visitReference(base, field.offset);
         }
       }
@@ -195,7 +195,7 @@ void TypedObject::visitReferences(JSContext* cx, V& visitor) {
     case TypeDefKind::Array: {
       const auto& arrayType = typeDef.arrayType();
       MOZ_ASSERT(is<OutlineTypedObject>());
-      if (arrayType.elementType_.isReference()) {
+      if (arrayType.elementType_.isRefRepr()) {
         uint8_t* elemBase = base + OutlineTypedObject::offsetOfArrayLength() +
                             sizeof(OutlineTypedObject::ArrayLength);
         uint32_t length = as<OutlineTypedObject>().arrayLength();

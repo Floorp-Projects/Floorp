@@ -612,7 +612,7 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
           imports->globalObjs[index] = obj;
           val = obj->val();
         } else {
-          if (IsNumberType(global.type())) {
+          if (!global.type().isRefType()) {
             if (global.type() == ValType::I64 && !v.isBigInt()) {
               return ThrowBadImportType(cx, import.field.get(), "BigInt");
             }
@@ -620,7 +620,6 @@ bool js::wasm::GetImports(JSContext* cx, const Module& module,
               return ThrowBadImportType(cx, import.field.get(), "Number");
             }
           } else {
-            MOZ_ASSERT(global.type().isReference());
             if (!global.type().isExternRef() && !v.isObjectOrNull()) {
               return ThrowBadImportType(cx, import.field.get(),
                                         "Object-or-null value required for "
@@ -3569,7 +3568,7 @@ bool WasmGlobalObject::construct(JSContext* cx, unsigned argc, Value* vp) {
   // Override with non-undefined value, if provided.
   RootedValue valueVal(cx, args.get(1));
   if (!valueVal.isUndefined() ||
-      (args.length() >= 2 && globalType.isReference())) {
+      (args.length() >= 2 && globalType.isRefType())) {
     if (!Val::fromJSValue(cx, globalType, valueVal, &globalVal)) {
       return false;
     }
@@ -3994,7 +3993,7 @@ bool WasmExceptionObject::construct(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (params[i].isReference()) {
+    if (params[i].isRefRepr()) {
       ASSERT_ANYREF_IS_JSOBJECT;
       RootedAnyRef anyref(cx, AnyRef::null());
       if (!ToWebAssemblyValue(cx, nextArg, params[i],
@@ -4117,7 +4116,7 @@ bool WasmExceptionObject::getArgImpl(JSContext* cx, const CallArgs& args) {
 
   uint32_t offset = exnTag->tagType().argOffsets[index];
   RootedValue result(cx);
-  if (params[index].isReference()) {
+  if (params[index].isRefRepr()) {
     ASSERT_ANYREF_IS_JSOBJECT;
     RootedValue val(cx, exnObj->refs().getDenseElement(offset / sizeof(Value)));
     RootedAnyRef anyref(cx, AnyRef::fromJSObject(val.toObjectOrNull()));
