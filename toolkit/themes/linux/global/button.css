@@ -46,6 +46,12 @@ button:where([disabled="true"]) {
   color: GrayText;
 }
 
+/* .......... focused state .......... */
+
+button:where(:focus-visible) {
+  outline: auto;
+}
+
 /* ::::: menu buttons ::::: */
 
 .button-menu-dropmarker {
