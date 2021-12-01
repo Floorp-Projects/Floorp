@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/Logging.h"
+#include "nsString.h"
 #include "prtime.h"
 
 #include "IMContextWrapper.h"
@@ -1455,8 +1456,12 @@ void IMContextWrapper::Blur() {
 
 void IMContextWrapper::OnSelectionChange(
     nsWindow* aCaller, const IMENotification& aIMENotification) {
+  const bool isSelectionRangeChanged =
+      mSelection.mOffset != aIMENotification.mSelectionChangeData.mOffset ||
+      mSelection.mString != *aIMENotification.mSelectionChangeData.mString;
   mSelection.Assign(aIMENotification);
-  bool retrievedSurroundingSignalReceived = mRetrieveSurroundingSignalReceived;
+  const bool retrievedSurroundingSignalReceived =
+      mRetrieveSurroundingSignalReceived;
   mRetrieveSurroundingSignalReceived = false;
 
   if (MOZ_UNLIKELY(IsDestroyed())) {
@@ -1470,10 +1475,11 @@ void IMContextWrapper::OnSelectionChange(
           ("0x%p OnSelectionChange(aCaller=0x%p, aIMENotification={ "
            "mSelectionChangeData=%s }), "
            "mCompositionState=%s, mIsDeletingSurrounding=%s, "
-           "mRetrieveSurroundingSignalReceived=%s",
+           "mRetrieveSurroundingSignalReceived=%s, isSelectionRangeChanged=%s",
            this, aCaller, ToString(selectionChangeData).c_str(),
            GetCompositionStateName(), ToChar(mIsDeletingSurrounding),
-           ToChar(retrievedSurroundingSignalReceived)));
+           ToChar(retrievedSurroundingSignalReceived),
+           ToChar(isSelectionRangeChanged)));
 
   if (aCaller != mLastFocusedWindow) {
     MOZ_LOG(gGtkIMLog, LogLevel::Error,
@@ -1532,8 +1538,18 @@ void IMContextWrapper::OnSelectionChange(
   // When the selection change is caused by dispatching composition event,
   // selection set event and/or occurred before starting current composition,
   // we shouldn't notify IME of that and commit existing composition.
+  // Don't do this even if selection is not changed actually.  For example,
+  // fcitx has direct input mode which does not insert composing string, but
+  // inserts commited text for each key sequence (i.e., there is "invisible"
+  // composition string).  In the world after bug 1712269, we don't use a
+  // set of composition events for this kind of IME.  Therefore,
+  // SelectionChangeData.mCausedByComposition is not expected value for here
+  // if this call is caused by a preceding commit.  And if the preceding commit
+  // is triggered by a key type for next word, resetting IME state makes fcitx
+  // discard the pending input for the next word.  Thus, we need to check
+  // whether the selection range is actually changed here.
   if (!selectionChangeData.mCausedByComposition &&
-      !selectionChangeData.mCausedBySelectionEvent &&
+      !selectionChangeData.mCausedBySelectionEvent && isSelectionRangeChanged &&
       !occurredBeforeComposition) {
     // Hack for ibus-pinyin.  ibus-pinyin will synthesize a set of
     // composition which commits with empty string after calling
@@ -2332,12 +2348,34 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
                this));
       return true;
     }
+    if (MOZ_UNLIKELY(!EnsureToCacheSelection())) {
+      MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+              ("0x%p   DispatchCompositionCommitEvent(), Warning, "
+               "Failed to cache selection before dispatching "
+               "eContentCommandInsertText event",
+               this));
+    }
     if (!MaybeDispatchKeyEventAsProcessedByIME(eContentCommandInsertText)) {
       MOZ_LOG(gGtkIMLog, LogLevel::Warning,
               ("0x%p   DispatchCompositionCommitEvent(), Warning, "
                "MaybeDispatchKeyEventAsProcessedByIME() returned false",
                this));
       return false;
+    }
+    // Emulate selection until receiving actual selection range.  This is
+    // important for OnSelectionChange.  If selection is not changed by web
+    // apps, i.e., selection range is same as what selection expects, we
+    // shouldn't reset IME because the trigger of causing this commit may be an
+    // input for next composition and we shouldn't cancel it.
+    if (mSelection.IsValid()) {
+      mSelection.CollapseTo(mSelection.mOffset + aCommitString->Length(),
+                            mSelection.mWritingMode);
+      MOZ_LOG(gGtkIMLog, LogLevel::Info,
+              ("0x%p   DispatchCompositionCommitEvent(), "
+               "mSelection={ mOffset=%u, mString=\"%s\", mWritingMode=%s }",
+               this, mSelection.mOffset,
+               NS_ConvertUTF16toUTF8(mSelection.mString).get(),
+               ToString(mSelection.mWritingMode).c_str()));
     }
     MOZ_ASSERT(!dispatcher);
   } else {
@@ -2379,14 +2417,14 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
                this));
       return false;
     }
-  }
 
-  // Emulate selection until receiving actual selection range.
-  mSelection.CollapseTo(
-      mCompositionStart + (aCommitString
-                               ? aCommitString->Length()
-                               : mDispatchedCompositionString.Length()),
-      mSelection.mWritingMode);
+    // Emulate selection until receiving actual selection range.
+    mSelection.CollapseTo(
+        mCompositionStart + (aCommitString
+                                 ? aCommitString->Length()
+                                 : mDispatchedCompositionString.Length()),
+        mSelection.mWritingMode);
+  }
 
   mCompositionState = eCompositionState_NotComposing;
   // Reset dead key sequence too because GTK doesn't support dead key chain
