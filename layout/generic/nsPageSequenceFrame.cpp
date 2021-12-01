@@ -6,13 +6,13 @@
 
 #include "nsPageSequenceFrame.h"
 
+#include "mozilla/intl/AppDateTimeFormat.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PrintedSheetFrame.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/StaticPresData.h"
 
-#include "DateTimeFormat.h"
 #include "nsCOMPtr.h"
 #include "nsDeviceContext.h"
 #include "nsPresContext.h"
@@ -387,8 +387,11 @@ void nsPageSequenceFrame::Reflow(nsPresContext* aPresContext,
 
   nsAutoString formattedDateString;
   PRTime now = PR_Now();
-  if (NS_SUCCEEDED(DateTimeFormat::FormatPRTime(
-          kDateFormatShort, kTimeFormatShort, now, formattedDateString))) {
+  mozilla::intl::DateTimeFormat::StyleBag style;
+  style.date = Some(mozilla::intl::DateTimeFormat::Style::Short);
+  style.time = Some(mozilla::intl::DateTimeFormat::Style::Short);
+  if (NS_SUCCEEDED(mozilla::intl::AppDateTimeFormat::Format(
+          style, now, formattedDateString))) {
     SetDateTimeStr(formattedDateString);
   }
 
