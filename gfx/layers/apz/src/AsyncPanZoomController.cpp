@@ -5805,9 +5805,14 @@ bool AsyncPanZoomController::IsInPanningState() const {
 
 void AsyncPanZoomController::UpdateZoomConstraints(
     const ZoomConstraints& aConstraints) {
-  APZC_LOG("%p updating zoom constraints to %d %d %f %f\n", this,
-           aConstraints.mAllowZoom, aConstraints.mAllowDoubleTapZoom,
-           aConstraints.mMinZoom.scale, aConstraints.mMaxZoom.scale);
+  if ((MOZ_LOG_TEST(sApzCtlLog, LogLevel::Debug) &&
+       (aConstraints != mZoomConstraints)) ||
+      MOZ_LOG_TEST(sApzCtlLog, LogLevel::Verbose)) {
+    APZC_LOG("%p updating zoom constraints to %d %d %f %f\n", this,
+             aConstraints.mAllowZoom, aConstraints.mAllowDoubleTapZoom,
+             aConstraints.mMinZoom.scale, aConstraints.mMaxZoom.scale);
+  }
+
   if (IsNaN(aConstraints.mMinZoom.scale) ||
       IsNaN(aConstraints.mMaxZoom.scale)) {
     NS_WARNING("APZC received zoom constraints with NaN values; dropping...");
