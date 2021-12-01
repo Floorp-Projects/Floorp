@@ -63,6 +63,8 @@ ASTDEF(AST_TRY_STMT,              "TryStatement",                   "tryStatemen
 ASTDEF(AST_THROW_STMT,            "ThrowStatement",                 "throwStatement")
 ASTDEF(AST_DEBUGGER_STMT,         "DebuggerStatement",              "debuggerStatement")
 ASTDEF(AST_LET_STMT,              "LetStatement",                   "letStatement")
+ASTDEF(AST_MODULE_REQUEST,        "ModuleRequest",                  "moduleRequest")
+ASTDEF(AST_IMPORT_ASSERTION,      "ImportAssertion",                "importAssertion")
 ASTDEF(AST_IMPORT_DECL,           "ImportDeclaration",              "importDeclaration")
 ASTDEF(AST_IMPORT_SPEC,           "ImportSpecifier",                "importSpecifier")
 ASTDEF(AST_IMPORT_NAMESPACE_SPEC, "ImportNamespaceSpecifier",       "importNamespaceSpecifier")
