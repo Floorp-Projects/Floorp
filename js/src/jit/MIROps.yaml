@@ -1001,6 +1001,7 @@
 - name: DynamicImport
   operands:
     specifier: Value
+    options: Value
   result_type: Object
 
 - name: Lambda

@@ -70,10 +70,16 @@ function assertParseThrowsSyntaxError(source)
 assertParseThrowsSyntaxError("import");
 assertParseThrowsSyntaxError("import(");
 assertParseThrowsSyntaxError("import(1,");
-assertParseThrowsSyntaxError("import(1, 2");
-assertParseThrowsSyntaxError("import(1, 2)");
 assertParseThrowsSyntaxError("x = import");
 assertParseThrowsSyntaxError("x = import(");
 assertParseThrowsSyntaxError("x = import(1,");
 assertParseThrowsSyntaxError("x = import(1, 2");
-assertParseThrowsSyntaxError("x = import(1, 2)");
+
+if (!getRealmConfiguration()['importAssertions']) {
+    assertParseThrowsSyntaxError("import(1, 2");
+    assertParseThrowsSyntaxError("import(1, 2)");
+    assertParseThrowsSyntaxError("x = import(1, 2)");
+}
+else {
+    assertParseThrowsSyntaxError("import(1, 2, 3)");
+}

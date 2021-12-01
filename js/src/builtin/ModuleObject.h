@@ -442,7 +442,7 @@ bool AsyncModuleExecutionRejectedHandler(JSContext* cx, unsigned argc,
                                          Value* vp);
 
 JSObject* StartDynamicModuleImport(JSContext* cx, HandleScript script,
-                                   HandleValue specifier);
+                                   HandleValue specifier, HandleValue options);
 
 bool OnModuleEvaluationFailure(JSContext* cx, HandleObject evaluationPromise);
 

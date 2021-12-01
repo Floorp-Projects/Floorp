@@ -12076,11 +12076,64 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
       return null();
     }
 
+    if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
+      return null();
+    }
+
+    Node optionalArg;
+    if (options().importAssertions) {
+      if (next == TokenKind::Comma) {
+        tokenStream.consumeKnownToken(TokenKind::Comma,
+                                      TokenStream::SlashIsRegExp);
+
+        if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
+          return null();
+        }
+
+        if (next != TokenKind::RightParen) {
+          optionalArg =
+              assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+          if (!optionalArg) {
+            return null();
+          }
+
+          if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
+            return null();
+          }
+
+          if (next == TokenKind::Comma) {
+            tokenStream.consumeKnownToken(TokenKind::Comma,
+                                          TokenStream::SlashIsRegExp);
+          }
+        } else {
+          optionalArg = handler_.newPosHolder(TokenPos(pos().end, pos().end));
+          if (!optionalArg) {
+            return null();
+          }
+        }
+      } else {
+        optionalArg = handler_.newPosHolder(TokenPos(pos().end, pos().end));
+        if (!optionalArg) {
+          return null();
+        }
+      }
+    } else {
+      optionalArg = handler_.newPosHolder(TokenPos(pos().end, pos().end));
+      if (!optionalArg) {
+        return null();
+      }
+    }
+
     if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_ARGS)) {
       return null();
     }
 
-    return handler_.newCallImport(importHolder, arg);
+    Node spec = handler_.newCallImportSpec(arg, optionalArg);
+    if (!spec) {
+      return null();
+    }
+
+    return handler_.newCallImport(importHolder, spec);
   } else {
     error(JSMSG_UNEXPECTED_TOKEN_NO_EXPECT, TokenKindToDesc(next));
     return null();
