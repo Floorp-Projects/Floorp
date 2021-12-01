@@ -76,6 +76,10 @@ button:disabled {
   display: none;
 }
 
+#openInNewWindowContainer > p {
+  margin-bottom: 0;
+}
+
 #certErrorAndCaptivePortalButtonContainer {
   display: none;
 }
@@ -126,8 +130,10 @@ body:not(.neterror) #advancedButton {
 }
 
 #blockingErrorReporting {
-  display: none;
   padding-bottom: 10px;
+  /* Pull a bit closer to the top than the other .advanced-panel containers
+   * as this is just a checkbox. */
+  margin-top: 1.2em;
 }
 
 #advancedPanelContainer {
@@ -136,24 +142,15 @@ body:not(.neterror) #advancedButton {
   left: 0;
 }
 
-.advanced-panel {
-  /* Hidden until the link is clicked */
-  display: none;
+#badCertAdvancedPanel {
   background-color: var(--in-content-box-background);
   border: 1px solid var(--in-content-box-border-color);
+}
+
+.advanced-panel {
   margin: 48px auto;
   min-width: var(--in-content-container-min-width);
   max-width: var(--in-content-container-max-width);
-}
-
-#overrideWeakCryptoPanel {
-  display: none;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-content: space-between;
-  align-items: flex-start;
-  margin-top: 1em;
 }
 
 .mitm-name,
@@ -179,7 +176,7 @@ body:not(.neterror) #advancedButton {
   background-color: var(--in-content-box-info-background) !important;
   border-top: 1px solid var(--in-content-border-color);
   width: 100%;
-  padding: 1em 17.5%;
+  padding: 1em 3%;
   box-sizing: border-box;
 }
 

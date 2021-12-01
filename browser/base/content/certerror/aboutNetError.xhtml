@@ -179,7 +179,7 @@
       </div>
 
       <div id="advancedPanelContainer">
-        <div id="badCertAdvancedPanel" class="advanced-panel">
+        <div id="badCertAdvancedPanel" class="advanced-panel" hidden="">
           <p id="badCertTechnicalInfo"/>
           <a id="viewCertificate" href="javascript:void(0)">&viewCertificate.label;</a>
           <div id="advancedPanelButtonContainer" class="button-container">
@@ -191,14 +191,14 @@
           </div>
         </div>
 
-        <div id="blockingErrorReporting">
+        <div id="blockingErrorReporting" class="advanced-panel" hidden="">
             <p class="toggle-container-with-text">
                 <input type="checkbox" id="automaticallyReportBlockingInFuture" role="checkbox"/>
                 <label for="automaticallyReportBlockingInFuture" >&errorReporting.automatic2;</label>
             </p>
         </div>
 
-        <div id="certificateErrorDebugInformation" hidden="">
+        <div id="certificateErrorDebugInformation" class="advanced-panel" hidden="">
           <button id="copyToClipboardTop" data-telemetry-id="clipboard_button_top">&certerror.copyToClipboard.label;</button>
           <div id="certificateErrorText"/>
           <button id="copyToClipboardBottom" data-telemetry-id="clipboard_button_bot">&certerror.copyToClipboard.label;</button>
