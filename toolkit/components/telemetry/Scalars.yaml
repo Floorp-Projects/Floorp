@@ -4674,51 +4674,6 @@ sw:
       - 'main'
       - 'content'
 
-serviceworker:
-  registrations:
-    description: >
-      Count how many registrations occur. File bugs in Core::DOM in case of a Telemetry regression.
-
-    record_in_processes:
-      - 'main'
-    products:
-      - 'firefox'
-      - 'fennec'
-    expires: "102"
-    kind: uint
-    bug_numbers:
-      - 1740335
-    notification_emails:
-      - sw-telemetry@mozilla.com
-      - rjesup@mozilla.com
-      - echuang@mozilla.com
-    keyed: true
-    keys:
-      - All
-      - Fetch
-
-  running_max:
-    description: >
-      The maximum number of simultaneous running ServiceWorkers in a session.
-
-    record_in_processes:
-      - 'main'
-    products:
-      - 'firefox'
-      - 'fennec'
-    expires: "102"
-    kind: uint
-    bug_numbers:
-      - 1740335
-    notification_emails:
-      - sw-telemetry@mozilla.com
-      - rjesup@mozilla.com
-      - echuang@mozilla.com
-    keyed: true
-    keys:
-      - All
-      - Fetch
-
 widget:
   ime_name_on_windows:
     bug_numbers:
@@ -7942,7 +7897,7 @@ content:
       The maximum number of content processes, submitted when a
       new maximum is reached.  Replaces CONTENT_PROCESS_MAX and
       CONTENT_PROCESS_PRECISE_MAX.
-
+      
     notification_emails:
       - kmadan@mozilla.com
       - perf-telemetry-alerts@mozilla.com
