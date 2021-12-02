@@ -201,18 +201,32 @@ function assertSnapshot(actual, expected) {
       "Should have the Snapshot URL's common name."
     );
   }
-  if (expected.overlappingVisitScoreIs) {
+  if (expected.overlappingVisitScoreIs != null) {
     Assert.equal(
       actual.overlappingVisitScore,
       expected.overlappingVisitScoreIs,
       "Should have an overlappingVisitScore equal to the expected score"
     );
   }
-  if (expected.overlappingVisitScoreGreaterThan) {
+  if (expected.overlappingVisitScoreGreaterThan != null) {
     Assert.greater(
       actual.overlappingVisitScore,
       expected.overlappingVisitScoreGreaterThan,
       "Should have an overlappingVisitScore greater than the expected score"
+    );
+  }
+  if (expected.overlappingVisitScoreLessThan != null) {
+    Assert.less(
+      actual.overlappingVisitScore,
+      expected.overlappingVisitScoreLessThan,
+      "Should have an overlappingVisitScore less than the expected score"
+    );
+  }
+  if (expected.overlappingVisitScoreLessThanEqualTo != null) {
+    Assert.lessOrEqual(
+      actual.overlappingVisitScore,
+      expected.overlappingVisitScoreLessThanEqualTo,
+      "Should have an overlappingVisitScore less than or equal to the expected score"
     );
   }
   if (expected.removedAt) {
