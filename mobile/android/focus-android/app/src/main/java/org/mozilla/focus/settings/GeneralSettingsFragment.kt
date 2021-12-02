@@ -18,9 +18,12 @@ import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.ListPreference
 import androidx.preference.Preference
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.support.locale.LocaleManager
+import mozilla.components.support.locale.LocaleUseCases
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.requirePreference
-import org.mozilla.focus.locale.LocaleManager
 import org.mozilla.focus.locale.Locales
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.widget.DefaultBrowserPreference
@@ -39,10 +42,14 @@ class GeneralSettingsFragment :
     private lateinit var radioDefaultTheme: RadioButtonPreference
 
     private lateinit var defaultBrowserPreference: DefaultBrowserPreference
+    private lateinit var browserStore: BrowserStore
+    private lateinit var localeUseCase: LocaleUseCases
 
     override fun onCreatePreferences(p0: Bundle?, p1: String?) {
         addPreferencesFromResource(R.xml.general_settings)
         setupPreferences()
+        browserStore = requireContext().components.store
+        localeUseCase = LocaleUseCases(browserStore)
     }
 
     override fun onResume() {
@@ -76,17 +83,13 @@ class GeneralSettingsFragment :
                 findPreference(getString(R.string.pref_key_locale)) as? ListPreference
             val value = languagePreference?.value
 
-            val localeManager = LocaleManager.getInstance()
-
             val locale: Locale?
             if (TextUtils.isEmpty(value)) {
-                localeManager.resetToSystemLocale(activity)
-                locale = localeManager.getCurrentLocale(activity)
+                LocaleManager.resetToSystemDefault(requireContext(), localeUseCase)
             } else {
                 locale = Locales.parseLocaleCode(value)
-                localeManager.setSelectedLocale(activity, value)
+                LocaleManager.setNewLocale(requireContext(), localeUseCase, locale)
             }
-            localeManager.updateConfiguration(activity, locale)
 
             requireActivity().recreate()
         }
