@@ -146,14 +146,13 @@ class SerializedTaskDispatcher {
   struct Data {
     std::queue<RefPtr<SerializedRunnable>> mTasks;
     bool mDestroyed = false;
+    RefPtr<Runnable> mCurrentRunnable;
   };
 
-  void PostTasks(nsISerialEventTarget* aEventTarget,
-                 const DataMutex<Data>::AutoLock& aProofOfLock);
+  void PostTasksIfNecessary(nsISerialEventTarget* aEventTarget,
+                            const DataMutex<Data>::AutoLock& aProofOfLock);
   void HandleDelayedTask(already_AddRefed<nsIRunnable> aTask);
   void HandleTasks();
-  already_AddRefed<SerializedRunnable> GetNextTask(
-      const RefPtr<SerializedRunnable>& aPrevTask);
 
   // Hold current EventTarget during calling nsIRunnable::Run().
   nsISerialEventTarget* mCurrentEventTarget = nullptr;
@@ -199,10 +198,9 @@ void SerializedTaskDispatcher::PostTaskToMain(
 
   nsISerialEventTarget* eventTarget = GetMainThreadSerialEventTarget();
   data->mTasks.push(new SerializedRunnable(std::move(aTask), eventTarget));
-  // Post task when there was no pending tasks.
-  if (data->mTasks.size() == 1) {
-    PostTasks(eventTarget, data);
-  }
+
+  MOZ_ASSERT_IF(!data->mCurrentRunnable, data->mTasks.size() == 1);
+  PostTasksIfNecessary(eventTarget, data);
 }
 
 void SerializedTaskDispatcher::PostTaskToCalculator(
@@ -215,10 +213,9 @@ void SerializedTaskDispatcher::PostTaskToCalculator(
   nsISerialEventTarget* eventTarget =
       WinWindowOcclusionTracker::OcclusionCalculatorLoop()->SerialEventTarget();
   data->mTasks.push(new SerializedRunnable(std::move(aTask), eventTarget));
-  // Post task when there was no pending tasks.
-  if (data->mTasks.size() == 1) {
-    PostTasks(eventTarget, data);
-  }
+
+  MOZ_ASSERT_IF(!data->mCurrentRunnable, data->mTasks.size() == 1);
+  PostTasksIfNecessary(eventTarget, data);
 }
 
 void SerializedTaskDispatcher::PostDelayedTaskToCalculator(
@@ -238,12 +235,19 @@ bool SerializedTaskDispatcher::IsOnCurrentThread() {
   return !!mCurrentEventTarget;
 }
 
-void SerializedTaskDispatcher::PostTasks(
+void SerializedTaskDispatcher::PostTasksIfNecessary(
     nsISerialEventTarget* aEventTarget,
     const DataMutex<Data>::AutoLock& aProofOfLock) {
+  MOZ_ASSERT(!aProofOfLock->mTasks.empty());
+
+  if (aProofOfLock->mCurrentRunnable) {
+    return;
+  }
+
   RefPtr<Runnable> runnable =
       WrapRunnable(RefPtr<SerializedTaskDispatcher>(this),
                    &SerializedTaskDispatcher::HandleTasks);
+  aProofOfLock->mCurrentRunnable = runnable;
   aEventTarget->Dispatch(runnable.forget());
 }
 
@@ -252,34 +256,38 @@ void SerializedTaskDispatcher::HandleDelayedTask(
   MOZ_ASSERT(WinWindowOcclusionTracker::IsInWinWindowOcclusionThread());
   CALC_LOG(LogLevel::Debug, "SerializedTaskDispatcher::HandleDelayedTask()");
 
-  bool callHandleTasks = false;
+  auto data = mData.Lock();
+  if (data->mDestroyed) {
+    return;
+  }
+
+  nsISerialEventTarget* eventTarget =
+      WinWindowOcclusionTracker::OcclusionCalculatorLoop()->SerialEventTarget();
+  data->mTasks.push(new SerializedRunnable(std::move(aTask), eventTarget));
+
+  MOZ_ASSERT_IF(!data->mCurrentRunnable, data->mTasks.size() == 1);
+  PostTasksIfNecessary(eventTarget, data);
+}
+
+void SerializedTaskDispatcher::HandleTasks() {
+  RefPtr<SerializedRunnable> frontTask;
+
+  // Get front task
   {
     auto data = mData.Lock();
     if (data->mDestroyed) {
       return;
     }
+    MOZ_RELEASE_ASSERT(data->mCurrentRunnable);
+    MOZ_RELEASE_ASSERT(!data->mTasks.empty());
 
-    nsISerialEventTarget* eventTarget =
-        WinWindowOcclusionTracker::OcclusionCalculatorLoop()
-            ->SerialEventTarget();
-    data->mTasks.push(new SerializedRunnable(std::move(aTask), eventTarget));
-    if (data->mTasks.size() == 1) {
-      callHandleTasks = true;
-    }
+    frontTask = data->mTasks.front();
+
+    MOZ_RELEASE_ASSERT(!mCurrentEventTarget);
+    mCurrentEventTarget = frontTask->mEventTarget;
   }
-  // Handle task when there was no pending tasks.
-  if (callHandleTasks) {
-    HandleTasks();
-  }
-}
 
-void SerializedTaskDispatcher::HandleTasks() {
-  MOZ_RELEASE_ASSERT(!mCurrentEventTarget);
-
-  RefPtr<SerializedRunnable> frontTask;
-  RefPtr<SerializedRunnable> prevTask;
-
-  while ((frontTask = GetNextTask(prevTask))) {
+  while (frontTask) {
     if (NS_IsMainThread()) {
       LOG(LogLevel::Debug, "SerializedTaskDispatcher::HandleTasks()");
     } else {
@@ -292,41 +300,37 @@ void SerializedTaskDispatcher::HandleTasks() {
         !NS_IsMainThread(),
         frontTask->mEventTarget == MessageLoop::current()->SerialEventTarget());
 
-    mCurrentEventTarget = frontTask->mEventTarget;
     frontTask->Run();
+
+    // Get next task
+    {
+      auto data = mData.Lock();
+
+      frontTask = nullptr;
+      data->mTasks.pop();
+      // Check if next task could be handled on current thread
+      if (!data->mTasks.empty() &&
+          data->mTasks.front()->mEventTarget == mCurrentEventTarget) {
+        frontTask = data->mTasks.front();
+      }
+    }
+  }
+
+  MOZ_ASSERT(!frontTask);
+
+  // Post tasks to different thread if pending tasks exist.
+  {
+    auto data = mData.Lock();
+    data->mCurrentRunnable = nullptr;
     mCurrentEventTarget = nullptr;
 
-    prevTask = frontTask;
+    if (data->mDestroyed || data->mTasks.empty()) {
+      return;
+    }
+
+    auto& frontTask = data->mTasks.front();
+    PostTasksIfNecessary(frontTask->mEventTarget, data);
   }
-}
-
-already_AddRefed<SerializedRunnable> SerializedTaskDispatcher::GetNextTask(
-    const RefPtr<SerializedRunnable>& aPrevTask) {
-  auto data = mData.Lock();
-
-  if (data->mDestroyed) {
-    return nullptr;
-  }
-  MOZ_RELEASE_ASSERT(!data->mTasks.empty());
-
-  // Pop previous task if it exists.
-  if (aPrevTask) {
-    MOZ_RELEASE_ASSERT(aPrevTask == data->mTasks.front());
-    data->mTasks.pop();
-  }
-
-  if (data->mTasks.empty()) {
-    return nullptr;
-  }
-
-  RefPtr<SerializedRunnable> frontTask = data->mTasks.front();
-  if (!aPrevTask || aPrevTask->mEventTarget == frontTask->mEventTarget) {
-    return frontTask.forget();
-  }
-
-  // Current front task needs to be run on different thread.
-  PostTasks(frontTask->mEventTarget, data);
-  return nullptr;
 }
 
 // static
