@@ -8,6 +8,7 @@ import WhyPaused from "../SecondaryPanes/WhyPaused.js";
 
 function render(why, delay) {
   const props = { why, delay };
+
   const component = shallow(<WhyPaused.WrappedComponent {...props} />);
 
   return { component, props };
