@@ -120,6 +120,11 @@ if CONFIG["OS_TARGET"] == "Darwin":
         "TestMacNSURLEscaping.mm",
     ]
 
+if CONFIG["OS_TARGET"] == "Linux":
+    UNIFIED_SOURCES += [
+        "TestAvailableMemoryWatcherLinux.cpp",
+    ]
+
 if (
     CONFIG["WRAP_STL_INCLUDES"]
     and CONFIG["CC_TYPE"] != "clang-cl"

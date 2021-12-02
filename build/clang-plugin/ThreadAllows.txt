@@ -46,6 +46,7 @@ MWQThread
 MediaCache
 MediaTelemetry
 MediaTrackGrph
+MemoryPoller
 mtransport
 NamedPipeSrv
 Netlink Monitor
