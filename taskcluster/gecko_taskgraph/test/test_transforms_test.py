@@ -36,7 +36,7 @@ def make_test_task():
 def test_split_variants(monkeypatch, run_transform, make_test_task):
     # mock out variant definitions
     monkeypatch.setattr(
-        test_transforms,
+        test_transforms.variant,
         "TEST_VARIANTS",
         {
             "foo": {
@@ -82,7 +82,7 @@ def test_split_variants(monkeypatch, run_transform, make_test_task):
             }
         )
 
-    run_split_variants = partial(run_transform, test_transforms.split_variants)
+    run_split_variants = partial(run_transform, test_transforms.variant.split_variants)
 
     # test no variants
     input_task = make_test_task()
