@@ -6,7 +6,7 @@
 // Test that multiple messages are copied into the clipboard and that they are
 // separated by new lines. See bug 916997.
 const TEST_URI =
-  "data:text/html,<meta charset=utf8>" +
+  "data:text/html,<!DOCTYPE html><meta charset=utf8>" +
   "Test copy multiple messages to clipboard";
 
 add_task(async function() {
