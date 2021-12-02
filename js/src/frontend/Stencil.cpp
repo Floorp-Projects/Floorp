@@ -1899,7 +1899,7 @@ CompilationStencil::CompilationStencil(
     : alloc(LifoAllocChunkSize) {
   ownedBorrowStencil = std::move(extensibleStencil);
 
-  hasExternalDependency = false;
+  storageType = StorageType::OwnedExtensible;
 
   borrowFromExtensibleCompilationStencil(*ownedBorrowStencil);
 
@@ -2287,7 +2287,7 @@ CompilationState::CompilationState(JSContext* cx,
 BorrowingCompilationStencil::BorrowingCompilationStencil(
     ExtensibleCompilationStencil& extensibleStencil)
     : CompilationStencil(extensibleStencil.source) {
-  hasExternalDependency = true;
+  storageType = StorageType::Borrowed;
 
   borrowFromExtensibleCompilationStencil(extensibleStencil);
 }
@@ -2569,11 +2569,45 @@ BaseParserScopeData* CopyScopeData(JSContext* cx, LifoAlloc& alloc,
 bool ExtensibleCompilationStencil::steal(JSContext* cx,
                                          CompilationStencil&& other) {
   MOZ_ASSERT(alloc.isEmpty());
+  using StorageType = CompilationStencil::StorageType;
+
+  if (other.storageType == StorageType::OwnedExtensible) {
+    auto& otherExtensible = other.ownedBorrowStencil;
+
+    canLazilyParse = otherExtensible->canLazilyParse;
+    functionKey = otherExtensible->functionKey;
+
+    alloc.steal(&otherExtensible->alloc);
+
+    source = std::move(otherExtensible->source);
+
+    scriptData = std::move(otherExtensible->scriptData);
+    scriptExtra = std::move(otherExtensible->scriptExtra);
+    gcThingData = std::move(otherExtensible->gcThingData);
+    scopeData = std::move(otherExtensible->scopeData);
+    scopeNames = std::move(otherExtensible->scopeNames);
+    regExpData = std::move(otherExtensible->regExpData);
+    bigIntData = std::move(otherExtensible->bigIntData);
+    objLiteralData = std::move(otherExtensible->objLiteralData);
+
+    parserAtoms = std::move(otherExtensible->parserAtoms);
+    parserAtoms.fixupAlloc(alloc);
+
+    sharedData = std::move(otherExtensible->sharedData);
+    moduleMetadata = std::move(otherExtensible->moduleMetadata);
+    asmJS = std::move(otherExtensible->asmJS);
+
+#ifdef DEBUG
+    assertNoExternalDependency();
+#endif
+
+    return true;
+  }
 
   canLazilyParse = other.canLazilyParse;
   functionKey = other.functionKey;
 
-  if (!other.hasExternalDependency) {
+  if (other.storageType == StorageType::Owned) {
 #ifdef DEBUG
     other.assertNoExternalDependency();
 #endif
@@ -2595,7 +2629,7 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
     return false;
   }
 
-  if (other.hasExternalDependency) {
+  if (other.storageType == StorageType::Borrowed) {
     size_t scopeSize = other.scopeData.size();
 
     if (!CopySpanToVector(cx, scopeData, other.scopeData)) {
@@ -2630,7 +2664,7 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
     return false;
   }
 
-  if (other.hasExternalDependency) {
+  if (other.storageType == StorageType::Borrowed) {
     // If CompilationStencil has external dependency, peform deep copy.
 
     size_t bigIntSize = other.bigIntData.size();
@@ -2649,7 +2683,7 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
     }
   }
 
-  if (other.hasExternalDependency) {
+  if (other.storageType == StorageType::Borrowed) {
     size_t objLiteralSize = other.objLiteralData.size();
     if (!objLiteralData.reserve(objLiteralSize)) {
       js::ReportOutOfMemory(cx);
@@ -2689,9 +2723,7 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
   }
 
   sharedData = std::move(other.sharedData);
-
   moduleMetadata = std::move(other.moduleMetadata);
-
   asmJS = std::move(other.asmJS);
 
 #ifdef DEBUG
@@ -4357,7 +4389,7 @@ JSScript* JS::InstantiateGlobalStencil(JSContext* cx,
 }
 
 JS_PUBLIC_API bool JS::StencilIsBorrowed(Stencil* stencil) {
-  return stencil->hasExternalDependency;
+  return stencil->storageType == CompilationStencil::StorageType::Borrowed;
 }
 
 JS_PUBLIC_API bool JS::StencilCanLazilyParse(Stencil* stencil) {
