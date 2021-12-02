@@ -228,6 +228,11 @@ class SessionData {
     return removedValues;
   }
 
+  updateSessionData(moduleName, category, contextDescriptor, added, removed) {
+    this.addSessionData(moduleName, category, contextDescriptor, added);
+    this.removeSessionData(moduleName, category, contextDescriptor, removed);
+  }
+
   _isSameItem(item1, item2) {
     const descriptor1 = item1.contextDescriptor;
     const descriptor2 = item2.contextDescriptor;
