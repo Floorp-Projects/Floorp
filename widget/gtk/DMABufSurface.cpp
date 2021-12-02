@@ -507,10 +507,10 @@ bool DMABufSurfaceRGBA::Serialize(
     refCountFDs.AppendElement(ipc::FileDescriptor(mGlobalRefCountFd));
   }
 
-  aOutDescriptor =
-      SurfaceDescriptorDMABuf(mSurfaceType, mBufferModifier, mGbmBufferFlags,
-                              fds, width, height, format, strides, offsets,
-                              GetYUVColorSpace(), fenceFDs, mUID, refCountFDs);
+  aOutDescriptor = SurfaceDescriptorDMABuf(
+      mSurfaceType, mBufferModifier, mGbmBufferFlags, fds, width, height,
+      format, strides, offsets, GetYUVColorSpace(), mColorRange, fenceFDs, mUID,
+      refCountFDs);
   return true;
 }
 
@@ -1044,6 +1044,7 @@ bool DMABufSurfaceYUV::ImportSurfaceDescriptor(
   mSurfaceType = (mBufferPlaneCount == 2) ? SURFACE_NV12 : SURFACE_YUV420;
   mBufferModifier = aDesc.modifier();
   mColorSpace = aDesc.yUVColorSpace();
+  mColorRange = aDesc.colorRange();
   mUID = aDesc.uid();
 
   LOGDMABUF(("DMABufSurfaceYUV::ImportSurfaceDescriptor() UID %d", mUID));
@@ -1120,7 +1121,7 @@ bool DMABufSurfaceYUV::Serialize(
 
   aOutDescriptor = SurfaceDescriptorDMABuf(
       mSurfaceType, mBufferModifier, 0, fds, width, height, format, strides,
-      offsets, GetYUVColorSpace(), fenceFDs, mUID, refCountFDs);
+      offsets, GetYUVColorSpace(), mColorRange, fenceFDs, mUID, refCountFDs);
   return true;
 }
 
