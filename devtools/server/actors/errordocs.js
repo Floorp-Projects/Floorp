@@ -124,6 +124,9 @@ const X_FRAME_OPTIONS_LEARN_MORE =
   "https://developer.mozilla.org/docs/Web/HTTP/Headers/X-Frame-Options";
 const REQUEST_STORAGE_ACCESS_LEARN_MORE =
   "https://developer.mozilla.org/docs/Web/API/Document/requestStorageAccess";
+const DOCTYPE_MODES_LEARN_MORE =
+  "https://developer.mozilla.org/docs/Web/HTML/Quirks_Mode_and_Standards_Mode";
+
 const ErrorCategories = {
   "X-Frame-Options": X_FRAME_OPTIONS_LEARN_MORE,
   "Insecure Password Field": INSECURE_PASSWORDS_LEARN_MORE,
@@ -138,6 +141,7 @@ const ErrorCategories = {
   TLS: TLS_LEARN_MORE,
   requestStorageAccess: REQUEST_STORAGE_ACCESS_LEARN_MORE,
   HTTPSOnly: supportBaseURL + "https-only-prefs",
+  HTML_PARSER__DOCTYPE: DOCTYPE_MODES_LEARN_MORE,
 };
 
 const baseCorsErrorUrl =
