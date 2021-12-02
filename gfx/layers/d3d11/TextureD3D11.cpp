@@ -288,7 +288,9 @@ D3D11TextureData::D3D11TextureData(ID3D11Texture2D* aTexture,
     : mSize(aSize),
       mFormat(aFormat),
       mNeedsClear(aFlags & ALLOC_CLEAR_BUFFER),
+      mNeedsClearWhite(aFlags & ALLOC_CLEAR_BUFFER_WHITE),
       mHasSynchronization(HasKeyedMutex(aTexture)),
+      mIsForOutOfBandContent(aFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT),
       mTexture(aTexture),
       mAllocationFlags(aFlags) {
   MOZ_ASSERT(aTexture);
@@ -319,7 +321,7 @@ bool D3D11TextureData::Lock(OpenMode aMode) {
     return false;
   }
 
-  if (NS_IsMainThread()) {
+  if (NS_IsMainThread() && !mIsForOutOfBandContent) {
     if (!PrepareDrawTargetInLock(aMode)) {
       Unlock();
       return false;
@@ -332,7 +334,8 @@ bool D3D11TextureData::Lock(OpenMode aMode) {
 bool D3D11TextureData::PrepareDrawTargetInLock(OpenMode aMode) {
   // Make sure that successful write-lock means we will have a DrawTarget to
   // write into.
-  if (!mDrawTarget && (aMode & OpenMode::OPEN_WRITE || mNeedsClear)) {
+  if (!mDrawTarget &&
+      (aMode & OpenMode::OPEN_WRITE || mNeedsClear || mNeedsClearWhite)) {
     mDrawTarget = BorrowDrawTarget();
     if (!mDrawTarget) {
       return false;
@@ -345,6 +348,11 @@ bool D3D11TextureData::PrepareDrawTargetInLock(OpenMode aMode) {
   if (mNeedsClear) {
     mDrawTarget->ClearRect(Rect(0, 0, mSize.width, mSize.height));
     mNeedsClear = false;
+  }
+  if (mNeedsClearWhite) {
+    mDrawTarget->FillRect(Rect(0, 0, mSize.width, mSize.height),
+                          ColorPattern(DeviceColor(1.0, 1.0, 1.0, 1.0)));
+    mNeedsClearWhite = false;
   }
 
   return true;
@@ -453,7 +461,7 @@ D3D11TextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
   }
 
   newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
-  if (!NS_IsMainThread()) {
+  if (!NS_IsMainThread() || !!(aFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT)) {
     // On the main thread we use the syncobject to handle synchronization.
     if (!(aFlags & ALLOC_MANUAL_SYNCHRONIZATION)) {
       newDesc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
