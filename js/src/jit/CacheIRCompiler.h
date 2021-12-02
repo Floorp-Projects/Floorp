@@ -1034,6 +1034,11 @@ class MOZ_RAII AutoScratchRegisterMaybeOutput {
       scratchReg_ = scratch_.ref();
     }
   }
+  AutoScratchRegisterMaybeOutput(CacheRegisterAllocator& alloc,
+                                 MacroAssembler& masm) {
+    scratch_.emplace(alloc, masm);
+    scratchReg_ = scratch_.ref();
+  }
 
   Register get() const { return scratchReg_; }
   operator Register() const { return scratchReg_; }
