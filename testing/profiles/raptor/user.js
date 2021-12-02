@@ -43,3 +43,11 @@ user_pref('datareporting.healthreport.uploadEnabled', false);
 // profiles we use to analyze performance regressions.
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1706180
 user_pref('toolkit.telemetry.initDelay', 99999999);
+
+// disable autoplay for raptor tests
+user_pref('media.autoplay.default', 5);
+user_pref('media.autoplay.ask-permission', true);
+user_pref('media.autoplay.blocking_policy', 1);
+user_pref('media.autoplay.block-webaudio', true);
+user_pref('media.allowed-to-play.enabled', false);
+user_pref('media.block-autoplay-until-in-foreground', true);
