@@ -24,7 +24,6 @@ class ImageContainer;
 class PTextureChild;
 class SurfaceDescriptorTiles;
 class TextureClient;
-class ThebesBufferData;
 
 /**
  * A transaction is a set of changes that happenned on the content side, that
