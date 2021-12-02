@@ -413,13 +413,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 
   void ScheduleComposition(wr::RenderReasons aReasons);
 
-  void NotifyShadowTreeTransaction(LayersId aId, bool aIsFirstPaint,
-                                   const FocusTarget& aFocusTarget,
-                                   bool aScheduleComposite,
-                                   uint32_t aPaintSequenceNumber,
-                                   bool aIsRepeatTransaction,
-                                   bool aHitTestUpdate);
-
   /**
    * Check rotation info and schedule a rendering task if needed.
    * Only can be called from compositor thread.
