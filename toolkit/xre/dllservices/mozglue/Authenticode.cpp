@@ -166,6 +166,13 @@ bool SignedBinary::QueryObject(const wchar_t* aFilePath) {
  */
 /* static */
 bool SignedBinary::VerifySignatureInternal(WINTRUST_DATA& aTrustData) {
+  static const mozilla::StaticDynamicallyLinkedFunctionPtr<
+      decltype(&::WinVerifyTrust)>
+      pWinVerifyTrust(L"wintrust.dll", "WinVerifyTrust");
+  if (!pWinVerifyTrust) {
+    return false;
+  }
+
   aTrustData.dwUIChoice = WTD_UI_NONE;
   aTrustData.fdwRevocationChecks = WTD_REVOKE_NONE;
   aTrustData.dwStateAction = WTD_STATEACTION_VERIFY;
@@ -173,10 +180,10 @@ bool SignedBinary::VerifySignatureInternal(WINTRUST_DATA& aTrustData) {
 
   const HWND hwnd = (HWND)INVALID_HANDLE_VALUE;
   GUID policyGUID = WINTRUST_ACTION_GENERIC_VERIFY_V2;
-  LONG result = ::WinVerifyTrust(hwnd, &policyGUID, &aTrustData);
+  LONG result = pWinVerifyTrust(hwnd, &policyGUID, &aTrustData);
 
   aTrustData.dwStateAction = WTD_STATEACTION_CLOSE;
-  ::WinVerifyTrust(hwnd, &policyGUID, &aTrustData);
+  pWinVerifyTrust(hwnd, &policyGUID, &aTrustData);
 
   return result == ERROR_SUCCESS;
 }
