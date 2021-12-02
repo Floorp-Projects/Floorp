@@ -15,6 +15,7 @@ SOURCES += [
     "primary-selection-unstable-v1-protocol.c",
     "relative-pointer-unstable-v1-protocol.c",
     "viewporter-protocol.c",
+    "xdg-activation-v1-protocol.c",
     "xdg-output-unstable-v1-protocol.c",
 ]
 
@@ -28,6 +29,7 @@ EXPORTS.mozilla.widget += [
     "relative-pointer-unstable-v1-client-protocol.h",
     "va_drmcommon.h",
     "viewporter-client-protocol.h",
+    "xdg-activation-v1-client-protocol.h",
     "xdg-output-unstable-v1-client-protocol.h",
 ]
 
