@@ -40,6 +40,22 @@ class Log extends Module {
         throw new Error(`Unsupported event for log module ${params.event}`);
     }
   }
+
+  _unsubscribeEvent(params) {
+    switch (params.event) {
+      case "log.entryAdded":
+        return this.messageHandler.removeSessionData({
+          moduleName: "log",
+          category: "event",
+          contextDescriptor: {
+            type: CONTEXT_DESCRIPTOR_TYPES.ALL,
+          },
+          values: ["log.entryAdded"],
+        });
+      default:
+        throw new Error(`Unsupported event for log module ${params.event}`);
+    }
+  }
 }
 
 const log = Log;
