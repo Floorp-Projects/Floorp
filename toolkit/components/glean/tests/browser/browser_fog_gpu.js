@@ -18,13 +18,15 @@ add_task(async () => {
   }
   ok(true, "GPU Process found: Let's test.");
 
+  let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
+  FOG.testResetFOG();
+
   is(
     undefined,
     Glean.testOnlyIpc.aCounter.testGetValue(),
     "Ensure we begin without value."
   );
 
-  let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
   FOG.testTriggerGPUMetrics();
   await FOG.testFlushAllChildren();
 
