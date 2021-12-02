@@ -385,8 +385,7 @@ static bool InitBuffer(uint8_t* buf, size_t bufSize, gfx::SurfaceFormat aFormat,
     return false;
   }
 
-  if ((aAllocFlags & ALLOC_CLEAR_BUFFER) ||
-      (aAllocFlags & ALLOC_CLEAR_BUFFER_BLACK)) {
+  if (aAllocFlags & ALLOC_CLEAR_BUFFER) {
     if (aFormat == gfx::SurfaceFormat::B8G8R8X8) {
       // Even though BGRX was requested, XRGB_UINT32 is what is meant,
       // so use 0xFF000000 to put alpha in the right place.
@@ -395,10 +394,6 @@ static bool InitBuffer(uint8_t* buf, size_t bufSize, gfx::SurfaceFormat aFormat,
     } else if (!aAlreadyZero) {
       memset(buf, 0, bufSize);
     }
-  }
-
-  if (aAllocFlags & ALLOC_CLEAR_BUFFER_WHITE) {
-    memset(buf, 0xFF, bufSize);
   }
 
   return true;
