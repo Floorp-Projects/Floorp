@@ -43,6 +43,8 @@ class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
 
   virtual uint32_t StartOffset() override;
 
+  virtual int32_t LinkIndexAtOffset(uint32_t aOffset) override;
+
  protected:
   explicit RemoteAccessible(DocAccessibleParent* aThisAsDoc)
       : RemoteAccessibleBase(aThisAsDoc) {

@@ -716,14 +716,13 @@ xpcAccessibleHyperText::GetLinkIndexAtOffset(int32_t aOffset,
 
   if (!mIntl) return NS_ERROR_FAILURE;
 
-  if (mIntl->IsLocal()) {
-    *aLinkIndex = IntlLocal()->LinkIndexAtOffset(aOffset);
-  } else {
 #if defined(XP_WIN)
+  if (mIntl->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    *aLinkIndex = mIntl->AsRemote()->LinkIndexAtOffset(aOffset);
-#endif
   }
+#endif
+
+  *aLinkIndex = Intl()->LinkIndexAtOffset(aOffset);
   return NS_OK;
 }

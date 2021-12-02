@@ -97,7 +97,7 @@ ia2AccessibleHypertext::get_hyperlinkIndex(long aCharIndex,
 
   *aHyperlinkIndex = 0;
 
-  HyperTextAccessibleWrap* hyperAcc = LocalTextAcc();
+  HyperTextAccessibleBase* hyperAcc = TextAcc();
   if (!hyperAcc) return CO_E_OBJNOTCONNECTED;
 
   *aHyperlinkIndex = hyperAcc->LinkIndexAtOffset(aCharIndex);

@@ -84,14 +84,6 @@ class HyperTextAccessible : public AccessibleWrap,
    */
   LocalAccessible* LinkAt(uint32_t aIndex) { return EmbeddedChildAt(aIndex); }
 
-  /**
-   * Return link accessible at the given text offset.
-   */
-  int32_t LinkIndexAtOffset(uint32_t aOffset) {
-    LocalAccessible* child = GetChildAtOffset(aOffset);
-    return child ? LinkIndexOf(child) : -1;
-  }
-
   //////////////////////////////////////////////////////////////////////////////
   // HyperTextAccessible: DOM point to text offset conversions.
 

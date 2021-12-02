@@ -422,6 +422,9 @@ RemoteAccessible* RemoteAccessible::LinkAt(const uint32_t& aIndex) {
 }
 
 int32_t RemoteAccessible::LinkIndexAtOffset(uint32_t aOffset) {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::LinkIndexAtOffset(aOffset);
+  }
   int32_t retVal = -1;
   Unused << mDoc->SendLinkIndexAtOffset(mID, aOffset, &retVal);
   return retVal;
