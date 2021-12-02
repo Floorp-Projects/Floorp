@@ -4678,7 +4678,54 @@
     "releaseChannelCollection": "opt-out",
     "description": "When in TRR-first mode, if TRR was skipped and native failed, it lists the reason we may have skipped TRR, keyed by the provider. Does not include requests that intentionally skip TRR."
   },
-
+  "TRR_SKIP_REASON_STRICT_MODE": {
+    "record_in_processes": ["main", "socket"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "nhnt11@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "keyed": true,
+    "n_values": 50,
+    "bug_numbers": [1737198],
+    "releaseChannelCollection": "opt-out",
+    "description": "When in TRR-first mode, it lists the reason we may have skipped TRR. The key is like `<provider>|<skip reason of first attempt>` or just `<provider>` used when there was no second attempt."
+  },
+  "TRR_SKIP_REASON_RETRY_SUCCESS": {
+    "record_in_processes": ["main", "socket"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "nhnt11@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "keyed": true,
+    "n_values": 50,
+    "bug_numbers": [1737198],
+    "releaseChannelCollection": "opt-out",
+    "description": "When in TRR-first mode, if TRR failed once and was successfully retried, it lists the reason for the first failure, keyed by the provider."
+  },
+  "TRR_SKIP_REASON_RETRY_FAILED": {
+    "record_in_processes": ["main", "socket"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "nhnt11@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "keyed": true,
+    "n_values": 50,
+    "bug_numbers": [1737198],
+    "releaseChannelCollection": "opt-out",
+    "description": "When in TRR-first mode, if TRR failed once and retried unsuccessfully, it lists the reason for the first failure, keyed by the provider."
+  },
+  "TRR_ATTEMPT_COUNT": {
+    "record_in_processes": ["main", "socket"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "nhnt11@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "keyed": true,
+    "n_values": 10,
+    "bug_numbers": [1737198],
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of times we attempted TRR for a successful lookup in TRR-first mode. Keyed by provider."
+  },
   "DNS_TRR_FIRST4": {
     "record_in_processes": ["main", "socket"],
     "products": ["firefox", "fennec"],

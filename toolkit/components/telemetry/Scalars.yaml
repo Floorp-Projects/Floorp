@@ -6094,6 +6094,25 @@ networking:
     record_in_processes:
       - 'main'
 
+  trr_connection_cycle_count:
+    bug_numbers:
+      - 1737198
+    description: >
+      Number of times we cycled the TRR connection during a subsession.
+      Keyed by TRR provider URL.
+    expires: never
+    keyed: true
+    kind: uint
+    release_channel_collection: opt-out
+    notification_emails:
+      - necko@mozilla.com
+      - nhnt11@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+      - 'socket'
+
 blocklist:
   lastModified_rs_addons:
     bug_numbers:
