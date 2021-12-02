@@ -50,8 +50,6 @@ class ServiceWorkerPrivateImpl final : public ServiceWorkerPrivate::Inner,
 
   RefPtr<GenericPromise> SetSkipWaitingFlag();
 
-  static void ReportRunning();
-
  private:
   class RAIIActorPtrHolder;
 
@@ -245,15 +243,6 @@ class ServiceWorkerPrivateImpl final : public ServiceWorkerPrivate::Inner,
   RemoteWorkerData mRemoteWorkerData;
 
   TimeStamp mServiceWorkerLaunchTimeStart;
-
-  // Counters for Telemetry - totals running simultaneously, and those that
-  // handle Fetch, plus Max values for each
-  static uint32_t sRunningServiceWorkers;
-  static uint32_t sRunningServiceWorkersFetch;
-  static uint32_t sRunningServiceWorkersMax;
-  static uint32_t sRunningServiceWorkersFetchMax;
-
-  bool mHandlesFetch{false};
 };
 
 }  // namespace dom
