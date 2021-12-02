@@ -27,7 +27,7 @@ linux64-minidump-stackwalk:
         toolchain:
             - linux64-binutils
             - linux64-clang-13
-            - linux64-rust-1.56
+            - linux64-rust-1.57
             - sysroot-x86_64-linux-gnu
 
 macosx64-minidump-stackwalk:
@@ -37,7 +37,7 @@ macosx64-minidump-stackwalk:
         arguments: ['x86_64-apple-darwin']
     fetches:
         toolchain:
-            - linux64-rust-macos-1.56
+            - linux64-rust-macos-1.57
             - linux64-clang-13
             - linux64-cctools-port-clang-13
             - macosx64-sdk-11.0
@@ -49,7 +49,7 @@ macosx64-aarch64-minidump-stackwalk:
         arguments: ['aarch64-apple-darwin']
     fetches:
         toolchain:
-            - linux64-rust-macos-1.56
+            - linux64-rust-macos-1.57
             - linux64-clang-13
             - linux64-cctools-port-clang-13
             - macosx64-sdk-11.0
@@ -69,7 +69,7 @@ win32-minidump-stackwalk:
         toolchain:
             - linux64-clang-13
             - linux64-liblowercase
-            - linux64-rust-windows-1.56
+            - linux64-rust-windows-1.57
 
 win64-minidump-stackwalk:
     treeherder:
@@ -86,7 +86,7 @@ win64-minidump-stackwalk:
         toolchain:
             - linux64-clang-13
             - linux64-liblowercase
-            - linux64-rust-windows-1.56
+            - linux64-rust-windows-1.57
 
 # This is a totally different thing but it used to share common code with
 # minidump-stackwalk, so it lives here for historical reasons.
