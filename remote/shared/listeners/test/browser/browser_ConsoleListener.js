@@ -37,10 +37,10 @@ async function logMessage(options = {}) {
       listener = (eventName, data) => {
         is(eventName, level, "Expected event has been fired");
 
-        const { level: currentLevel, message, timestamp } = data;
+        const { level: currentLevel, message, timeStamp } = data;
         is(typeof currentLevel, "string", "level is of type string");
         is(typeof message, "string", "message is of type string");
-        is(typeof timestamp, "number", "timestamp is of type number");
+        is(typeof timeStamp, "number", "timeStamp is of type number");
 
         resolve(data);
       };
