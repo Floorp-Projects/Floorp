@@ -8,53 +8,11 @@ use neqo_common::event::Provider;
 
 use neqo_crypto::AuthenticationStatus;
 use neqo_http3::{
-    Header, Http3Client, Http3ClientEvent, Http3Parameters, Http3Server, Http3ServerEvent,
-    Http3State, Priority,
+    Header, Http3Client, Http3ClientEvent, Http3Server, Http3ServerEvent, Http3State, Priority,
 };
-use neqo_qpack::QpackSettings;
-use neqo_transport::ConnectionParameters;
-use std::cell::RefCell;
-
-use std::rc::Rc;
 
 use std::time::Instant;
 use test_fixture::*;
-
-const DEFAULT_SETTINGS: QpackSettings = QpackSettings {
-    max_table_size_encoder: 65536,
-    max_table_size_decoder: 65536,
-    max_blocked_streams: 100,
-};
-
-pub fn default_http3_client() -> Http3Client {
-    fixture_init();
-    Http3Client::new(
-        DEFAULT_SERVER_NAME,
-        Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
-        addr(),
-        addr(),
-        ConnectionParameters::default(),
-        &Http3Parameters {
-            qpack_settings: DEFAULT_SETTINGS,
-            max_concurrent_push_streams: 5,
-        },
-        now(),
-    )
-    .expect("create a default client")
-}
-
-pub fn default_http3_server() -> Http3Server {
-    Http3Server::new(
-        now(),
-        DEFAULT_KEYS,
-        DEFAULT_ALPN_H3,
-        anti_replay(),
-        Rc::new(RefCell::new(CountingConnectionIdGenerator::default())),
-        DEFAULT_SETTINGS,
-        None,
-    )
-    .expect("create a server")
-}
 
 fn exchange_packets(client: &mut Http3Client, server: &mut Http3Server) {
     let mut out = None;
@@ -128,18 +86,18 @@ fn priority_update() {
 
     match header_event {
         Http3ServerEvent::Headers {
-            request: _,
+            stream: _,
             headers,
             fin,
         } => {
-            let expected_headers = vec![
+            let expected_headers = &[
                 Header::new(":method", "GET"),
                 Header::new(":scheme", "https"),
                 Header::new(":authority", "something.com"),
                 Header::new(":path", "/"),
                 Header::new("priority", "u=4,i"),
             ];
-            assert_eq!(headers, expected_headers);
+            assert_eq!(&headers, expected_headers);
             assert!(!fin);
         }
         other => panic!("unexpected server event: {:?}", other),
@@ -184,7 +142,7 @@ fn priority_update_dont_send_for_cancelled_stream() {
 
     let update_priority = Priority::new(6, false);
     client.priority_update(stream_id, update_priority).unwrap();
-    client.stream_reset(stream_id, 11).unwrap();
+    client.cancel_fetch(stream_id, 11).unwrap();
     exchange_packets(&mut client, &mut server);
 
     while let Some(event) = server.next_event() {
