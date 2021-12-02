@@ -562,18 +562,25 @@ const Snapshots = new (class Snapshots {
       document_type, first_interaction_at, last_interaction_at,
       user_persisted, description, site_name, preview_image_url, group_concat(e.data, ",") AS page_data,
       h.visit_count
-      FROM moz_places_metadata_snapshots s JOIN moz_places h ON h.id = s.place_id JOIN (
-        SELECT place_id, 1.0 AS overlappingVisitScore
+      FROM moz_places_metadata_snapshots s
+      JOIN moz_places h ON h.id = s.place_id
+      JOIN (
+        SELECT place_id,
+        MIN(SUM(CASE
+          WHEN (page_start > snapshot_end) > 0 THEN MAX(1.0 - (page_start - snapshot_end) / CAST(:snapshot_overlap_limit as float), 0.0)
+          WHEN (page_end < snapshot_start) > 0 THEN MAX(1.0 - (snapshot_start - page_end) / CAST(:snapshot_overlap_limit as float), 0.0)
+        ELSE 1.0
+        END), 1.0) overlappingVisitScore
         FROM
-          (SELECT created_at - :snapshot_overlap_limit AS page_start, updated_at + :snapshot_overlap_limit AS page_end FROM moz_places_metadata WHERE place_id = :current_id) AS current_page
+          (SELECT created_at AS page_start, created_at - :snapshot_overlap_limit AS page_start_limit, updated_at AS page_end, updated_at + :snapshot_overlap_limit AS page_end_limit FROM moz_places_metadata WHERE place_id = :current_id) AS current_page
           JOIN
           (SELECT place_id, created_at AS snapshot_start, updated_at AS snapshot_end FROM moz_places_metadata WHERE place_id != :current_id) AS suggestion
         WHERE
-          snapshot_start BETWEEN page_start AND page_end
+          snapshot_start BETWEEN page_start_limit AND page_end_limit
           OR
-          snapshot_end BETWEEN page_start AND page_end
+          snapshot_end BETWEEN page_start_limit AND page_end_limit
           OR
-          (snapshot_start < page_start AND snapshot_end > page_end)
+          (snapshot_start < page_start_limit AND snapshot_end > page_end_limit)
         GROUP BY place_id
       ) o ON s.place_id = o.place_id
       LEFT JOIN moz_places_metadata_snapshots_extra e ON e.place_id = s.place_id
