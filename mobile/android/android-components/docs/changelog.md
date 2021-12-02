@@ -13,6 +13,7 @@ permalink: /changelog/
 
 * **browser-engine-gecko**:
   * Removes deprecated `GeckoLoginDelegateWrapper`. Please use `GeckoAutocompleteStorageDelegate`. [#11311](https://github.com/mozilla-mobile/android-components/issues/11311)
+  * Added setting for HTTPS-Only mode [#5935](https://github.com/mozilla-mobile/focus-android/issues/5935)
 
 # 95.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v94.0.0...v95.0.0)

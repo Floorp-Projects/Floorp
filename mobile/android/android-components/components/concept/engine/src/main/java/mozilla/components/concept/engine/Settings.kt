@@ -184,6 +184,11 @@ abstract class Settings {
      * Setting to control whether enterprise root certs are enabled.
      */
     open var enterpriseRootsEnabled: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting the HTTPS-Only mode for upgrading connections to HTTPS.
+     */
+    open var httpsOnlyMode: Engine.HttpsOnlyMode by UnsupportedSetting()
 }
 
 /**
@@ -220,7 +225,8 @@ data class DefaultSettings(
     override var forceUserScalableContent: Boolean = false,
     override var loginAutofillEnabled: Boolean = false,
     override var clearColor: Int? = null,
-    override var enterpriseRootsEnabled: Boolean = false
+    override var enterpriseRootsEnabled: Boolean = false,
+    override var httpsOnlyMode: Engine.HttpsOnlyMode = Engine.HttpsOnlyMode.DISABLED
 ) : Settings()
 
 class UnsupportedSetting<T> {

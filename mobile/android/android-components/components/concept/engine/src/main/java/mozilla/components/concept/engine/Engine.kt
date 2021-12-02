@@ -60,6 +60,27 @@ interface Engine : WebExtensionRuntime, DataCleanable {
     }
 
     /**
+     * HTTPS-Only mode: Connections will be upgraded to HTTPS.
+     */
+    enum class HttpsOnlyMode {
+        /**
+         * HTTPS-Only Mode disabled: Allow all insecure connections.
+         */
+        DISABLED,
+
+        /**
+         * HTTPS-Only Mode enabled only in private tabs: Allow insecure connections in normal
+         * browsing, but only HTTPS in private browsing.
+         */
+        ENABLED_PRIVATE_ONLY,
+
+        /**
+         * HTTPS-Only Mode enabled: Only allow HTTPS connections.
+         */
+        ENABLED
+    }
+
+    /**
      * Makes sure all required engine initialization logic is executed. The
      * details are specific to individual implementations, but the following must be true:
      *

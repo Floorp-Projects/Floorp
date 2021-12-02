@@ -366,6 +366,26 @@ class GeckoEngineTest {
     }
 
     @Test
+    fun `WHEN an HTTPS-Only mode is set THEN allowInsecureConnections is getting set on GeckoRuntime`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        whenever(mockRuntime.settings).thenReturn(mock())
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        reset(mockRuntime.settings)
+        engine.settings.httpsOnlyMode = Engine.HttpsOnlyMode.ENABLED_PRIVATE_ONLY
+        verify(mockRuntime.settings).allowInsecureConnections = GeckoRuntimeSettings.HTTPS_ONLY_PRIVATE
+
+        reset(mockRuntime.settings)
+        engine.settings.httpsOnlyMode = Engine.HttpsOnlyMode.ENABLED
+        verify(mockRuntime.settings).allowInsecureConnections = GeckoRuntimeSettings.HTTPS_ONLY
+
+        reset(mockRuntime.settings)
+        engine.settings.httpsOnlyMode = Engine.HttpsOnlyMode.DISABLED
+        verify(mockRuntime.settings).allowInsecureConnections = GeckoRuntimeSettings.ALLOW_ALL
+    }
+
+    @Test
     fun `setAntiTracking is only invoked when the value is changed`() {
         val mockRuntime = mock<GeckoRuntime>()
         val settings = spy(ContentBlocking.Settings.Builder().build())
