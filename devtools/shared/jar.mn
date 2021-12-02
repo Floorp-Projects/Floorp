@@ -5,6 +5,11 @@
 devtools.jar:
 %   content devtools %content/
     content/shared/webextension-fallback.html (webextension-fallback.html)
+# Those images are in devtools/shared (and not in devtools/client/debugger/images like
+# the other debugger images) because they are used in both the debugger UI and in the
+# PausedDebuggerOverlay (which is in devtools/server).
+    content/shared/images/resume.svg (images/resume.svg)
+    content/shared/images/stepOver.svg (images/stepOver.svg)
 %   resource devtools %modules/devtools/
 %   resource devtools-client-jsonview resource://devtools/client/jsonview/ contentaccessible=yes
 %   resource devtools-client-shared resource://devtools/client/shared/ contentaccessible=yes
