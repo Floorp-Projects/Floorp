@@ -2866,7 +2866,7 @@ def path_remapping(value):
     target,
     check_build_environment,
     target_sysroot.path,
-    windows_sdk_dir,
+    valid_windows_sdk_dir,
     vc_path,
     when="--enable-path-remapping",
 )
@@ -2890,7 +2890,9 @@ def path_remappings(target, build_env, sysroot_path, windows_sdk_dir, vc_path):
     if sysroot_path:
         path_remappings.append((sysroot_path, "k:/" if win else "/sysroot/"))
     if windows_sdk_dir:
-        path_remappings.append((windows_sdk_dir, "k:/" if win else "/windows_sdk/"))
+        path_remappings.append(
+            (windows_sdk_dir.path, "k:/" if win else "/windows_sdk/")
+        )
     if vc_path:
         path_remappings.append((vc_path, "v:/" if win else "/vc/"))
 

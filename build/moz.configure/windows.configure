@@ -41,7 +41,7 @@ def windows_sdk_dir(value, host, compiler):
         return ()
 
     return set(
-        x[1]
+        normalize_path(x[1])
         for x in get_registry_values(
             r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows Kits\Installed Roots"
             r"\KitsRoot*",
