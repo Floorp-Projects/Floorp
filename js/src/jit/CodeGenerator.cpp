@@ -12534,6 +12534,20 @@ void CodeGenerator::visitAllocateAndStoreSlot(LAllocateAndStoreSlot* ins) {
   masm.storeValue(value, slot);
 }
 
+void CodeGenerator::visitAddSlotAndCallAddPropHook(
+    LAddSlotAndCallAddPropHook* ins) {
+  const Register obj = ToRegister(ins->object());
+  const ValueOperand value =
+      ToValue(ins, LAddSlotAndCallAddPropHook::ValueIndex);
+
+  pushArg(ImmGCPtr(ins->mir()->shape()));
+  pushArg(value);
+  pushArg(obj);
+
+  using Fn = bool (*)(JSContext*, HandleNativeObject, HandleValue, HandleShape);
+  callVM<Fn, AddSlotAndCallAddPropHook>(ins);
+}
+
 void CodeGenerator::visitStoreFixedSlotV(LStoreFixedSlotV* ins) {
   const Register obj = ToRegister(ins->getOperand(0));
   size_t slot = ins->mir()->slot();

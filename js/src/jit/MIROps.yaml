@@ -1688,6 +1688,14 @@
   possibly_calls: true
   alias_set: custom
 
+- name: AddSlotAndCallAddPropHook
+  operands:
+    object: Object
+    value: Value
+  arguments:
+    shape: Shape*
+  possibly_calls: true
+
 - name: StoreDynamicSlot
   gen_boilerplate: false
 
