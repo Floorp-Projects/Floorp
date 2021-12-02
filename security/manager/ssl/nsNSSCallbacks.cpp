@@ -700,31 +700,24 @@ nsCString getSignatureName(uint32_t aSignatureScheme) {
 // call with shutdown prevention lock held
 static void PreliminaryHandshakeDone(PRFileDesc* fd) {
   nsNSSSocketInfo* infoObject = (nsNSSSocketInfo*)fd->higher->secret;
-  if (!infoObject) return;
-
-  SSLChannelInfo channelInfo;
-  if (SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo)) == SECSuccess) {
-    infoObject->SetSSLVersionUsed(channelInfo.protocolVersion);
-    infoObject->SetEarlyDataAccepted(channelInfo.earlyDataAccepted);
-    infoObject->SetResumed(channelInfo.resumed);
-
-    SSLCipherSuiteInfo cipherInfo;
-    if (SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
-                               sizeof cipherInfo) == SECSuccess) {
-      /* Set the Status information */
-      infoObject->mHaveCipherSuiteAndProtocol = true;
-      infoObject->mCipherSuite = channelInfo.cipherSuite;
-      infoObject->mProtocolVersion = channelInfo.protocolVersion & 0xFF;
-      infoObject->mKeaGroup.Assign(getKeaGroupName(channelInfo.keaGroup));
-      infoObject->mSignatureSchemeName.Assign(
-          getSignatureName(channelInfo.signatureScheme));
-      infoObject->SetKEAUsed(channelInfo.keaType);
-      infoObject->SetKEAKeyBits(channelInfo.keaKeyBits);
-      infoObject->SetMACAlgorithmUsed(cipherInfo.macAlgorithm);
-      infoObject->mIsDelegatedCredential = channelInfo.peerDelegCred;
-      infoObject->mIsAcceptedEch = channelInfo.echAccepted;
-    }
+  if (!infoObject) {
+    return;
   }
+  SSLChannelInfo channelInfo;
+  if (SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo)) != SECSuccess) {
+    return;
+  }
+  SSLCipherSuiteInfo cipherInfo;
+  if (SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
+                             sizeof(cipherInfo)) != SECSuccess) {
+    return;
+  }
+  infoObject->SetPreliminaryHandshakeInfo(channelInfo, cipherInfo);
+  infoObject->SetSSLVersionUsed(channelInfo.protocolVersion);
+  infoObject->SetEarlyDataAccepted(channelInfo.earlyDataAccepted);
+  infoObject->SetKEAUsed(channelInfo.keaType);
+  infoObject->SetKEAKeyBits(channelInfo.keaKeyBits);
+  infoObject->SetMACAlgorithmUsed(cipherInfo.macAlgorithm);
 
   // Don't update NPN details on renegotiation.
   if (infoObject->IsPreliminaryHandshakeDone()) {
