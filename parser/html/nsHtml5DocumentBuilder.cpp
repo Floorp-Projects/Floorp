@@ -81,18 +81,27 @@ void nsHtml5DocumentBuilder::UpdateStyleSheet(nsIContent* aElement) {
 
 void nsHtml5DocumentBuilder::SetDocumentMode(nsHtml5DocumentMode m) {
   nsCompatibility mode = eCompatibility_NavQuirks;
+  const char* errMsgId = nullptr;
+
   switch (m) {
     case STANDARDS_MODE:
       mode = eCompatibility_FullStandards;
       break;
     case ALMOST_STANDARDS_MODE:
       mode = eCompatibility_AlmostStandards;
+      errMsgId = "errAlmostStandardsDoctypeVerbose";
       break;
     case QUIRKS_MODE:
       mode = eCompatibility_NavQuirks;
+      errMsgId = "errQuirkyDoctypeVerbose";
       break;
   }
   mDocument->SetCompatibilityMode(mode);
+  if (errMsgId) {
+    nsContentUtils::ReportToConsole(
+        nsIScriptError::warningFlag, "HTML_PARSER__DOCTYPE"_ns, mDocument,
+        nsContentUtils::eHTMLPARSER_PROPERTIES, errMsgId);
+  }
 }
 
 // nsContentSink overrides
