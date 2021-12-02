@@ -629,6 +629,9 @@
     <!-- Title of the active section on the studies list -->
     <string name="studies_active">Актив</string>
 
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">Тәмамланды</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">USB/Wi-Fi аркылы хаталарны ерактан төзәтү</string>
 

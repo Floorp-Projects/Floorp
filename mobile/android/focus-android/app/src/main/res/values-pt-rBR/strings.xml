@@ -809,7 +809,7 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Tracking protection bottom sheet -->
 
     <!-- Label for the total number of trackers blocked. %s represents the app install date -->
-    <string name="trackers_count_note">Bloqueados desde %s</string>
+    <string name="trackers_count_note">Rastreadores bloqueados desde %s</string>
     <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
     <string name="content">Conteúdo</string>
     <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
