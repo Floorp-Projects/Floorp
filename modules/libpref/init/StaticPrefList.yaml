@@ -9874,6 +9874,15 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+# If false, the temporary blocklisting feature is disabled.
+# This is useful for tests to prevent bleeding extra reqs
+# between tasks, since we may attempt to look up the
+# parent domain in the background when blocklisting a host.
+- name: network.trr.temp_blocklist
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Single TRR request timeout, in milliseconds
 - name: network.trr.request_timeout_ms
   type: RelaxedAtomicUint32
