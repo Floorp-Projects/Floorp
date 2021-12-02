@@ -535,6 +535,11 @@
 }
 
 .urlbarView-row[firefox-suggest-sponsored] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title {
+  /* The width of favicon + this title element + help icon is over than total
+     displayed width, favicon and title will collapse as different row, the style
+     will be broken. To avoid it, we specify the max displayable width for title
+     explicitly. */
+  flex-basis: calc(100% - @urlbarViewFaviconWidth@ - @urlbarViewIconMarginEnd@);
   /* Move the title away from the action a little. This does not affect the
      height of the row. */
   margin-top: -0.3em;
