@@ -843,6 +843,8 @@ def ensure_java(os_name, os_arch):
     # One we migrate to Java 17 we will be able to use native arm64 binaries
     arch = "x64"
 
+    ext = "zip" if os_name == "windows" else "tar.gz"
+
     java_path = java_bin_path(os_name, mozbuild_path)
     if not java_path:
         raise NotImplementedError(f"Could not bootstrap java for {os_name}.")
@@ -853,13 +855,14 @@ def ensure_java(os_name, os_arch):
         java_url = (
             "https://github.com/adoptium/temurin{major}-binaries/releases/"
             "download/jdk{major}{minor}-{patch}/"
-            "OpenJDK{major}U-jdk_{arch}_{os}_hotspot_{major}{minor}{patch}.tar.gz"
+            "OpenJDK{major}U-jdk_{arch}_{os}_hotspot_{major}{minor}{patch}.{ext}"
         ).format(
             major=JAVA_VERSION_MAJOR,
             minor=JAVA_VERSION_MINOR,
             patch=JAVA_VERSION_PATCH,
             os=os_tag,
             arch=arch,
+            ext=ext,
         )
         install_mobile_android_sdk_or_ndk(java_url, os.path.join(mozbuild_path, "jdk"))
     return java_path
