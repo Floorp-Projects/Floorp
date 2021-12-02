@@ -89,7 +89,7 @@ class WindowGlobalMessageHandler extends MessageHandler {
             // moduleName & category, but with different values. Instead we can
             // use the fact that _applySessionData supports arrays of values,
             // though it will make the implementation more complex.
-            values: [value],
+            added: [value],
           },
           destination: {
             type: WindowGlobalMessageHandler.type,

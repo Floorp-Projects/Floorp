@@ -32,6 +32,17 @@ class Command extends Module {
     });
   }
 
+  testRemoveSessionData(params) {
+    return this.messageHandler.removeSessionData({
+      moduleName: "command",
+      category: "testCategory",
+      contextDescriptor: {
+        type: CONTEXT_DESCRIPTOR_TYPES.ALL,
+      },
+      values: params.values,
+    });
+  }
+
   testRootModule() {
     return "root-value";
   }
