@@ -16,6 +16,7 @@
 
 let filter;
 let systemProxySettings;
+let trrProxy;
 const pps = Cc["@mozilla.org/network/protocol-proxy-service;1"].getService();
 
 function setup() {
@@ -30,6 +31,9 @@ registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.proxy.type");
   Services.prefs.clearUserPref("network.proxy.autoconfig_url");
   Services.prefs.clearUserPref("network.trr.async_connInfo");
+  if (trrProxy) {
+    await trrProxy.stop();
+  }
 });
 
 class ProxyFilter {
@@ -70,11 +74,11 @@ async function doTest(proxySetup, delay) {
   dns.clearCache(true);
   setModeAndURI(2, "doh?responseIP=2.2.2.2"); // TRR-first
 
-  let proxy = new TRRProxy();
-  await proxy.start(h2Port);
-  info("port=" + proxy.port);
+  trrProxy = new TRRProxy();
+  await trrProxy.start(h2Port);
+  info("port=" + trrProxy.port);
 
-  await proxySetup(proxy.port);
+  await proxySetup(trrProxy.port);
 
   if (delay) {
     await new Promise(resolve => do_timeout(delay, resolve));
@@ -84,7 +88,7 @@ async function doTest(proxySetup, delay) {
 
   // Session count is 2 because of we send two TRR queries (A and AAAA).
   Assert.equal(
-    await proxy.proxy_session_counter(),
+    await trrProxy.proxy_session_counter(),
     2,
     `Session count should be 2`
   );
@@ -101,7 +105,8 @@ async function doTest(proxySetup, delay) {
     systemProxySettings = null;
   }
 
-  await proxy.stop();
+  await trrProxy.stop();
+  trrProxy = null;
 }
 
 add_task(async function test_trr_proxy() {
