@@ -1831,6 +1831,13 @@
   call_instruction: true
   mir_op: true
 
+- name: AddSlotAndCallAddPropHook
+  operands:
+    object: WordSized
+    value: BoxedValue
+  call_instruction: true
+  mir_op: true
+
 # Store a boxed value to an object's fixed slot.
 - name: StoreFixedSlotV
   operands:
