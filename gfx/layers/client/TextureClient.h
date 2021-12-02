@@ -62,6 +62,8 @@ class PTextureChild;
 class TextureChild;
 class TextureData;
 class GPUVideoTextureData;
+struct RawTextureBuffer;
+class RawYCbCrTextureBuffer;
 class TextureClient;
 class ITextureClientRecycleAllocator;
 #ifdef GFX_DEBUG_TRACK_CLIENTS_IN_POOL
