@@ -983,6 +983,8 @@ struct ExtensibleCompilationStencil;
 // The dependent XDR buffer or ExtensibleCompilationStencil must be kept
 // alive manually.
 struct CompilationStencil {
+  friend struct ExtensibleCompilationStencil;
+
   static constexpr ScriptIndex TopLevelIndex = ScriptIndex(0);
 
   static constexpr size_t LifoAllocChunkSize = 512;
@@ -1003,9 +1005,18 @@ struct CompilationStencil {
   UniquePtr<ExtensibleCompilationStencil> ownedBorrowStencil;
 
  public:
-  // Set to true if any pointer/span contains external data instead of
-  // LifoAlloc or owned ExtensibleCompilationStencil.
-  bool hasExternalDependency = false;
+  enum class StorageType {
+    // Pointers and spans point LifoAlloc or owned buffer.
+    Owned,
+
+    // Pointers and spans point external data, such as XDR buffer, or not-owned
+    // ExtensibleCompilationStencil (see BorrowingCompilationStencil).
+    Borrowed,
+
+    // Pointers and spans point data owned by ownedBorrowStencil.
+    OwnedExtensible,
+  };
+  StorageType storageType = StorageType::Owned;
 
   // Value of CanLazilyParse(CompilationInput) on compilation.
   // Used during instantiation.
