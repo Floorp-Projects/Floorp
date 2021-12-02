@@ -2753,13 +2753,6 @@ bool LocalAccessible::IsLink() const {
   return mParent && mParent->IsHyperText() && !IsText();
 }
 
-uint32_t LocalAccessible::StartOffset() {
-  MOZ_ASSERT(IsLink(), "StartOffset is called not on hyper link!");
-
-  HyperTextAccessible* hyperText = mParent ? mParent->AsHyperText() : nullptr;
-  return hyperText ? hyperText->GetChildOffset(this) : 0;
-}
-
 uint32_t LocalAccessible::EndOffset() {
   MOZ_ASSERT(IsLink(), "EndOffset is called on not hyper link!");
 

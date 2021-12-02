@@ -7,6 +7,7 @@
 #include "xpcAccessibleHyperLink.h"
 
 #include "LocalAccessible-inl.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "nsNetUtil.h"
 #include "xpcAccessibleDocument.h"
 
@@ -19,20 +20,14 @@ xpcAccessibleHyperLink::GetStartIndex(int32_t* aStartIndex) {
 
   if (!Intl()) return NS_ERROR_FAILURE;
 
-  if (Intl()->IsLocal()) {
-    *aStartIndex = Intl()->AsLocal()->StartOffset();
-  } else {
 #if defined(XP_WIN)
+  if (Intl()->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    bool isIndexValid = false;
-    uint32_t startOffset = Intl()->AsRemote()->StartOffset(&isIndexValid);
-    if (!isIndexValid) return NS_ERROR_FAILURE;
-
-    *aStartIndex = startOffset;
-#endif
   }
+#endif
 
+  *aStartIndex = static_cast<int32_t>(Intl()->StartOffset());
   return NS_OK;
 }
 

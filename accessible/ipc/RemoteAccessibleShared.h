@@ -137,8 +137,6 @@ nsIntPoint ImagePosition(uint32_t aCoordType);
 
 nsIntSize ImageSize();
 
-uint32_t StartOffset(bool* aOk);
-
 uint32_t EndOffset(bool* aOk);
 
 bool IsLinkValid();

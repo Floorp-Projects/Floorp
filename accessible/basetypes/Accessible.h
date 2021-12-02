@@ -152,6 +152,12 @@ class Accessible {
    */
   virtual uint64_t State() = 0;
 
+  /**
+   * Return the start offset of the embedded object within the parent
+   * HyperTextAccessibleBase.
+   */
+  virtual uint32_t StartOffset();
+
   // Methods that interact with content.
 
   virtual void TakeFocus() const = 0;

@@ -94,9 +94,10 @@ addAccessibleTask(
     const container = findAccessibleChildByID(docAcc, "container", [
       nsIAccessibleHyperText,
     ]);
-    let embeddedAcc = container.getLinkAt(0);
-    queryInterfaces(embeddedAcc, [nsIAccessible]);
-    is(getAccessibleDOMNodeID(embeddedAcc), "link", "LinkAt 0 is the link");
+    let link = container.getLinkAt(0);
+    queryInterfaces(link, [nsIAccessible]);
+    is(getAccessibleDOMNodeID(link), "link", "LinkAt 0 is the link");
+    is(link.startIndex, 1, "link's startIndex is 1");
   },
   {
     chrome: true,
