@@ -9,9 +9,10 @@ use neqo_common::{self as common, qlog::NeqoQlog, qwarn, Datagram, Header, Role}
 use neqo_crypto::{init, PRErrorCode};
 use neqo_http3::{Error as Http3Error, Priority};
 use neqo_http3::{Http3Client, Http3ClientEvent, Http3Parameters, Http3State};
+use neqo_qpack::QpackSettings;
 use neqo_transport::{
     stream_id::StreamType, CongestionControlAlgorithm, ConnectionParameters,
-    Error as TransportError, Output, QuicVersion, RandomConnectionIdGenerator, StreamId,
+    Error as TransportError, Output, QuicVersion, RandomConnectionIdGenerator,
 };
 use nserror::*;
 use nsstring::*;
@@ -105,6 +106,15 @@ impl NeqoHttp3Conn {
 
         let remote: SocketAddr = netaddr_to_socket_addr(remote_addr)?;
 
+        let http3_settings = Http3Parameters {
+            qpack_settings: QpackSettings {
+                max_table_size_encoder: max_table_size,
+                max_table_size_decoder: max_table_size,
+                max_blocked_streams,
+            },
+            max_concurrent_push_streams: 0,
+        };
+
         let quic_version = match alpn_conv {
             "h3-32" => QuicVersion::Draft32,
             "h3-31" => QuicVersion::Draft31,
@@ -127,19 +137,13 @@ impl NeqoHttp3Conn {
             params = params.idle_timeout(Duration::from_millis(10));
         }
 
-        let http3_settings = Http3Parameters::default()
-            .max_table_size_encoder(max_table_size)
-            .max_table_size_decoder(max_table_size)
-            .max_blocked_streams(max_blocked_streams)
-            .max_concurrent_push_streams(0)
-            .connection_parameters(params);
-
         let mut conn = match Http3Client::new(
             origin_conv,
             Rc::new(RefCell::new(RandomConnectionIdGenerator::new(3))),
             local,
             remote,
-            http3_settings,
+            params,
+            &http3_settings,
             Instant::now(),
         ) {
             Ok(c) => c,
@@ -409,7 +413,7 @@ pub extern "C" fn neqo_http3conn_fetch(
         priority,
     ) {
         Ok(id) => {
-            *stream_id = id.as_u64();
+            *stream_id = id;
             NS_OK
         }
         Err(Http3Error::StreamLimitError) => NS_BASE_STREAM_WOULD_BLOCK,
@@ -428,7 +432,7 @@ pub extern "C" fn neqo_http3conn_priority_update(
         return NS_ERROR_INVALID_ARG;
     }
     let priority = Priority::new(urgency, incremental);
-    match conn.conn.priority_update(StreamId::from(stream_id), priority) {
+    match conn.conn.priority_update(stream_id, priority) {
         Ok(_) => NS_OK,
         Err(_) => NS_ERROR_UNEXPECTED,
     }
@@ -443,7 +447,7 @@ pub extern "C" fn neqo_htttp3conn_send_request_body(
     read: &mut u32,
 ) -> nsresult {
     let array = unsafe { slice::from_raw_parts(buf, len as usize) };
-    match conn.conn.send_data(StreamId::from(stream_id), array) {
+    match conn.conn.send_request_body(stream_id, array) {
         Ok(amount) => {
             *read = u32::try_from(amount).unwrap();
             if amount == 0 {
@@ -563,12 +567,12 @@ impl From<neqo_transport::ConnectionError> for CloseError {
 
 // Reset a stream with streamId.
 #[no_mangle]
-pub extern "C" fn neqo_http3conn_cancel_fetch(
+pub extern "C" fn neqo_http3conn_reset_stream(
     conn: &mut NeqoHttp3Conn,
     stream_id: u64,
     error: u64,
 ) -> nsresult {
-    match conn.conn.cancel_fetch(StreamId::from(stream_id), error) {
+    match conn.conn.stream_reset(stream_id, error) {
         Ok(()) => NS_OK,
         Err(_) => NS_ERROR_INVALID_ARG,
     }
@@ -580,7 +584,7 @@ pub extern "C" fn neqo_http3conn_close_stream(
     conn: &mut NeqoHttp3Conn,
     stream_id: u64,
 ) -> nsresult {
-    match conn.conn.stream_close_send(StreamId::from(stream_id)) {
+    match conn.conn.stream_close_send(stream_id) {
         Ok(()) => NS_OK,
         Err(_) => NS_ERROR_INVALID_ARG,
     }
@@ -693,11 +697,9 @@ pub extern "C" fn neqo_http3conn_event(
 ) -> nsresult {
     while let Some(evt) = conn.conn.next_event() {
         let fe = match evt {
-            Http3ClientEvent::DataWritable { stream_id } => {
-                Http3Event::DataWritable { stream_id: stream_id.as_u64() }
-            }
+            Http3ClientEvent::DataWritable { stream_id } => Http3Event::DataWritable { stream_id },
             Http3ClientEvent::StopSending { stream_id, error } => {
-                Http3Event::StopSending { stream_id: stream_id.as_u64(), error }
+                Http3Event::StopSending { stream_id, error }
             }
             Http3ClientEvent::HeaderReady {
                 stream_id,
@@ -713,18 +715,16 @@ pub extern "C" fn neqo_http3conn_event(
                     if res != NS_OK {
                         return res;
                     }
-                    Http3Event::HeaderReady { stream_id: stream_id.as_u64(), fin }
+                    Http3Event::HeaderReady { stream_id, fin }
                 }
             }
-            Http3ClientEvent::DataReadable { stream_id } => {
-                Http3Event::DataReadable { stream_id: stream_id.as_u64() }
-            }
+            Http3ClientEvent::DataReadable { stream_id } => Http3Event::DataReadable { stream_id },
             Http3ClientEvent::Reset {
                 stream_id,
                 error,
                 local,
             } => Http3Event::Reset {
-                stream_id: stream_id.as_u64(),
+                stream_id,
                 error,
                 local,
             },
@@ -739,7 +739,7 @@ pub extern "C" fn neqo_http3conn_event(
                 }
                 Http3Event::PushPromise {
                     push_id,
-                    request_stream_id: request_stream_id.as_u64(),
+                    request_stream_id,
                 }
             }
             Http3ClientEvent::PushHeaderReady {
@@ -825,7 +825,6 @@ pub extern "C" fn neqo_http3conn_event(
                 data.extend_from_slice(public_name.as_ref());
                 Http3Event::EchFallbackAuthenticationNeeded
             }
-            Http3ClientEvent::WebTransport(_) => Http3Event::NoEvent,
         };
 
         if !matches!(fe, Http3Event::NoEvent) {
@@ -851,7 +850,7 @@ pub extern "C" fn neqo_http3conn_read_response_data(
     let array = unsafe { slice::from_raw_parts_mut(buf, len as usize) };
     match conn
         .conn
-        .read_data(Instant::now(), StreamId::from(stream_id), &mut array[..])
+        .read_response_data(Instant::now(), stream_id, &mut array[..])
     {
         Ok((amount, fin_recvd)) => {
             *read = u32::try_from(amount).unwrap();

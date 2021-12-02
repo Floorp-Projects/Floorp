@@ -6,9 +6,10 @@
 use crate::client_events::{Http3ClientEvent, Http3ClientEvents};
 use crate::connection::Http3Connection;
 use crate::hframe::HFrame;
-use crate::{CloseType, Error, Http3StreamInfo, HttpRecvStreamEvents, RecvStreamEvents, Res};
-use neqo_common::{qerror, qinfo, qtrace, Header};
-use neqo_transport::{Connection, StreamId};
+use crate::{Error, Header, Res};
+use crate::{RecvMessageEvents, ResetType};
+use neqo_common::{qerror, qinfo, qtrace};
+use neqo_transport::{AppError, Connection};
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::convert::TryFrom;
@@ -34,11 +35,11 @@ enum PushState {
         headers: Vec<Header>,
     },
     OnlyPushStream {
-        stream_id: StreamId,
+        stream_id: u64,
         events: Vec<Http3ClientEvent>,
     },
     Active {
-        stream_id: StreamId,
+        stream_id: u64,
         headers: Vec<Header>,
     },
     Closed,
@@ -176,7 +177,7 @@ impl PushController {
     pub fn new_push_promise(
         &mut self,
         push_id: u64,
-        ref_stream_id: StreamId,
+        ref_stream_id: u64,
         new_headers: Vec<Header>,
     ) -> Res<()> {
         qtrace!(
@@ -230,7 +231,7 @@ impl PushController {
         }
     }
 
-    pub fn add_new_push_stream(&mut self, push_id: u64, stream_id: StreamId) -> Res<bool> {
+    pub fn add_new_push_stream(&mut self, push_id: u64, stream_id: u64) -> Res<bool> {
         qtrace!(
             "A new push stream with push_id={} stream_id={}",
             push_id,
@@ -304,7 +305,7 @@ impl PushController {
                 }
                 PushState::OnlyPushStream { stream_id, .. }
                 | PushState::Active { stream_id, .. } => {
-                    mem::drop(base_handler.stream_stop_sending(
+                    mem::drop(base_handler.stream_reset(
                         conn,
                         stream_id,
                         Error::HttpRequestCancelled.code(),
@@ -358,7 +359,7 @@ impl PushController {
             Some(PushState::Active { stream_id, .. }) => {
                 self.conn_events.remove_events_for_push_id(push_id);
                 // Cancel the stream. the transport steam may already be done, so ignore an error.
-                mem::drop(base_handler.stream_stop_sending(
+                mem::drop(base_handler.stream_reset(
                     conn,
                     *stream_id,
                     Error::HttpRequestCancelled.code(),
@@ -370,7 +371,7 @@ impl PushController {
         }
     }
 
-    pub fn push_stream_reset(&mut self, push_id: u64, close_type: CloseType) {
+    pub fn push_stream_reset(&mut self, push_id: u64, app_error: AppError, reset_type: ResetType) {
         qtrace!("Push stream has been reset, push_id={}", push_id);
 
         if let Some(push_state) = self.push_streams.get(push_id) {
@@ -381,7 +382,7 @@ impl PushController {
                 PushState::Active { .. } => {
                     self.push_streams.close(push_id);
                     self.conn_events.remove_events_for_push_id(push_id);
-                    if let CloseType::LocalError(app_error) = close_type {
+                    if reset_type == ResetType::Local {
                         self.conn_events.push_reset(push_id, app_error);
                     } else {
                         self.conn_events.push_canceled(push_id);
@@ -397,7 +398,7 @@ impl PushController {
         }
     }
 
-    pub fn get_active_stream_id(&mut self, push_id: u64) -> Option<StreamId> {
+    pub fn get_active_stream_id(&mut self, push_id: u64) -> Option<u64> {
         match self.push_streams.get(push_id) {
             Some(PushState::Active { stream_id, .. }) => Some(*stream_id),
             _ => None,
@@ -446,11 +447,6 @@ impl PushController {
     }
 }
 
-/// `RecvPushEvents` relays a push stream events to `PushController`.
-/// It informs `PushController` when a push stream is done or canceled.
-/// Also when headers or data is ready and `PushController` decide whether to post
-/// `PushHeaderReady` and `PushDataReadable` events or to postpone them if
-/// a `push_promise` has not been yet received for the stream.
 #[derive(Debug)]
 pub(crate) struct RecvPushEvents {
     push_id: u64,
@@ -466,36 +462,8 @@ impl RecvPushEvents {
     }
 }
 
-impl RecvStreamEvents for RecvPushEvents {
-    fn data_readable(&self, _stream_info: Http3StreamInfo) {
-        self.push_handler.borrow_mut().new_stream_event(
-            self.push_id,
-            Http3ClientEvent::PushDataReadable {
-                push_id: self.push_id,
-            },
-        );
-    }
-
-    fn recv_closed(&self, _stream_info: Http3StreamInfo, close_type: CloseType) {
-        match close_type {
-            CloseType::ResetApp(_) => {}
-            CloseType::ResetRemote(_) | CloseType::LocalError(_) => self
-                .push_handler
-                .borrow_mut()
-                .push_stream_reset(self.push_id, close_type),
-            CloseType::Done => self.push_handler.borrow_mut().close(self.push_id),
-        }
-    }
-}
-
-impl HttpRecvStreamEvents for RecvPushEvents {
-    fn header_ready(
-        &self,
-        _stream_info: Http3StreamInfo,
-        headers: Vec<Header>,
-        interim: bool,
-        fin: bool,
-    ) {
+impl RecvMessageEvents for RecvPushEvents {
+    fn header_ready(&self, _stream_id: u64, headers: Vec<Header>, interim: bool, fin: bool) {
         self.push_handler.borrow_mut().new_stream_event(
             self.push_id,
             Http3ClientEvent::PushHeaderReady {
@@ -506,4 +474,15 @@ impl HttpRecvStreamEvents for RecvPushEvents {
             },
         );
     }
+
+    fn data_readable(&self, _stream_id: u64) {
+        self.push_handler.borrow_mut().new_stream_event(
+            self.push_id,
+            Http3ClientEvent::PushDataReadable {
+                push_id: self.push_id,
+            },
+        );
+    }
+
+    fn reset(&self, _stream_id: u64, _error: AppError, _local: bool) {}
 }

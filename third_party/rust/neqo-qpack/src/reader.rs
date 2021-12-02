@@ -8,7 +8,7 @@ use crate::huffman::decode_huffman;
 use crate::prefix::Prefix;
 use crate::{Error, Res};
 use neqo_common::{qdebug, qerror};
-use neqo_transport::{Connection, StreamId};
+use neqo_transport::Connection;
 use std::convert::TryInto;
 use std::mem;
 use std::str;
@@ -29,7 +29,7 @@ pub trait Reader {
 
 pub(crate) struct ReceiverConnWrapper<'a> {
     conn: &'a mut Connection,
-    stream_id: StreamId,
+    stream_id: u64,
 }
 
 impl<'a> ReadByte for ReceiverConnWrapper<'a> {
@@ -53,7 +53,7 @@ impl<'a> Reader for ReceiverConnWrapper<'a> {
 }
 
 impl<'a> ReceiverConnWrapper<'a> {
-    pub fn new(conn: &'a mut Connection, stream_id: StreamId) -> Self {
+    pub fn new(conn: &'a mut Connection, stream_id: u64) -> Self {
         Self { conn, stream_id }
     }
 }

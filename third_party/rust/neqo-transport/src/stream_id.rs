@@ -113,12 +113,6 @@ impl PartialEq<u64> for StreamId {
     }
 }
 
-impl AsRef<u64> for StreamId {
-    fn as_ref(&self) -> &u64 {
-        &self.0
-    }
-}
-
 impl ::std::fmt::Display for StreamId {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "{}", self.as_u64())

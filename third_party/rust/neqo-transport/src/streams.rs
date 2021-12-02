@@ -377,7 +377,7 @@ impl Streams {
         ))
     }
 
-    pub fn stream_create(&mut self, st: StreamType) -> Res<StreamId> {
+    pub fn stream_create(&mut self, st: StreamType) -> Res<u64> {
         match self.local_stream_limits.take_stream_id(st) {
             None => Err(Error::StreamLimitError),
             Some(new_id) => {
@@ -416,7 +416,7 @@ impl Streams {
                         ),
                     );
                 }
-                Ok(new_id)
+                Ok(new_id.as_u64())
             }
         }
     }
