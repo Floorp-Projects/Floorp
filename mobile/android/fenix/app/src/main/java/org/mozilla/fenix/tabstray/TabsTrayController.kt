@@ -205,8 +205,6 @@ class DefaultTabsTrayController(
         dismissTray()
 
         navController.navigate(R.id.recentlyClosedFragment)
-
-        metrics.track(Event.TabsTrayRecentlyClosedPressed)
     }
 
     /**

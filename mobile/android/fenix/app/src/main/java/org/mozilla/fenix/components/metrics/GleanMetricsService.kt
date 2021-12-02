@@ -614,9 +614,6 @@ private val Event.wrapper: EventWrapper<*>?
         is Event.TabsTrayCloseAllTabsPressed -> EventWrapper<NoExtraKeys>(
             { TabsTray.closeAllTabs.record(it) }
         )
-        is Event.TabsTrayRecentlyClosedPressed -> EventWrapper<NoExtraKeys>(
-            { TabsTray.inactiveTabsRecentlyClosed.record(it) }
-        )
         is Event.TabsTrayInactiveTabsExpanded -> EventWrapper<NoExtraKeys>(
             { TabsTray.inactiveTabsExpanded.record(it) }
         )

@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.components.metrics
 
-import io.mockk.MockKAnnotations
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -34,8 +33,6 @@ class GleanMetricsServiceTest {
 
     @Before
     fun setup() {
-        MockKAnnotations.init(this)
-
         gleanService = GleanMetricsService(testContext)
     }
 
@@ -286,10 +283,6 @@ class GleanMetricsServiceTest {
         assertFalse(TabsTray.closeAllTabs.testHasValue())
         gleanService.track(Event.TabsTrayCloseAllTabsPressed)
         assertTrue(TabsTray.closeAllTabs.testHasValue())
-
-        assertFalse(TabsTray.inactiveTabsRecentlyClosed.testHasValue())
-        gleanService.track(Event.TabsTrayRecentlyClosedPressed)
-        assertTrue(TabsTray.inactiveTabsRecentlyClosed.testHasValue())
     }
 
     @Test
