@@ -32,6 +32,8 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.historymetadata.HistoryMetadataMiddleware
+import org.mozilla.fenix.historymetadata.HistoryMetadataService
 
 @RunWith(FenixRobolectricTestRunner::class)
 class HistoryMetadataMiddlewareTest {

@@ -19,6 +19,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.historymetadata.DefaultHistoryMetadataService
+import org.mozilla.fenix.historymetadata.HistoryMetadataService
 
 class HistoryMetadataServiceTest {
 
