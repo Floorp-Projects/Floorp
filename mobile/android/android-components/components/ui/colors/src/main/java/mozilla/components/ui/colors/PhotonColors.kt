@@ -114,6 +114,7 @@ object PhotonColors {
 
     // Light grey should primarily be used for the Light Theme and secondary buttons.
     val LightGrey05 = Color(0xFFFBFBFE)
+    val LightGrey05A40 = Color(0x66FBFBFE)
     val LightGrey10 = Color(0xFFF9F9FB)
     val LightGrey20 = Color(0xFFF0F0F4)
     val LightGrey30 = Color(0xFFE0E0E6)
@@ -126,6 +127,7 @@ object PhotonColors {
 
     // Dark grey should primarily be used for the Dark theme and secondary buttons.
     val DarkGrey05 = Color(0xFF5B5B66)
+    val DarkGrey05A45 = Color(0x735B5B66)
     val DarkGrey10 = Color(0xFF52525E)
     val DarkGrey20 = Color(0xFF4A4A55)
     val DarkGrey30 = Color(0xFF42414D)
@@ -135,6 +137,7 @@ object PhotonColors {
     val DarkGrey70 = Color(0xFF23222B)
     val DarkGrey80 = Color(0xFF1C1B22)
     val DarkGrey90 = Color(0xFF15141A)
+    val DarkGrey90A40 = Color(0x6615141A)
 
     // Violet
     val Violet05 = Color(0xFFE7DFFF)
@@ -142,6 +145,8 @@ object PhotonColors {
     val Violet20 = Color(0xFFCB9EFF)
     val Violet30 = Color(0xFFC689FF)
     val Violet40 = Color(0xFFAB71FF)
+    val Violet40A12 = Color(0x1FAB71FF)
+    val Violet40A30 = Color(0x4DAB71FF)
     val Violet50 = Color(0xFF9059FF)
     val Violet50A32 = Color(0x529059FF)
     val Violet50A48 = Color(0x7A9059FF)
@@ -150,6 +155,7 @@ object PhotonColors {
     val Violet70A12 = Color(0x1F592ACB)
     val Violet80 = Color(0xFF45278D)
     val Violet90 = Color(0xFF321C64)
+    val Violet90A20 = Color(0x33321C64)
 
     val White = Color(0xFFFFFFFF)
     val Black = Color(0xFF000000)
