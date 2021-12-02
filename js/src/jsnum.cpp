@@ -855,7 +855,7 @@ JSAtom* js::Int32ToAtom(JSContext* cx, int32_t si) {
     indexValue.emplace(si);
   }
 
-  JSAtom* atom = Atomize(cx, start, length, js::DoNotPinAtom, indexValue);
+  JSAtom* atom = Atomize(cx, start, length, indexValue);
   if (!atom) {
     return nullptr;
   }
