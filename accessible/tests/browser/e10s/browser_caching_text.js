@@ -97,6 +97,7 @@ addAccessibleTask(
     let link = container.getLinkAt(0);
     queryInterfaces(link, [nsIAccessible]);
     is(getAccessibleDOMNodeID(link), "link", "LinkAt 0 is the link");
+    is(container.getLinkIndex(link), 0, "getLinkIndex for link is 0");
     is(link.startIndex, 1, "link's startIndex is 1");
   },
   {

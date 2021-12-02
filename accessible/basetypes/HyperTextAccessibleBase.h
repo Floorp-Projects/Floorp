@@ -126,6 +126,11 @@ class HyperTextAccessibleBase {
   Accessible* LinkAt(uint32_t aIndex);
 
   /**
+   * Return index for the given link accessible.
+   */
+  int32_t LinkIndexOf(Accessible* aLink);
+
+  /**
    * Return text attributes for the given text range.
    */
   virtual already_AddRefed<AccAttributes> TextAttributes(bool aIncludeDefAttrs,
