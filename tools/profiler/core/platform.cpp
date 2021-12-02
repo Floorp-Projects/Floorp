@@ -570,8 +570,7 @@ ProfileChunkedBuffer& profiler_get_core_buffer() {
 class SamplerThread;
 
 static SamplerThread* NewSamplerThread(PSLockRef aLock, uint32_t aGeneration,
-                                       double aInterval, bool aStackWalkEnabled,
-                                       bool aNoTimerResolutionChange);
+                                       double aInterval, uint32_t aFeatures);
 
 struct LiveProfiledThreadData {
   UniquePtr<ProfiledThreadData> mProfiledThreadData;
@@ -687,10 +686,8 @@ class ActivePS {
         // The new sampler thread doesn't start sampling immediately because the
         // main loop within Run() is blocked until this function's caller
         // unlocks gPSMutex.
-        mSamplerThread(NewSamplerThread(
-            aLock, mGeneration, aInterval,
-            ProfilerFeature::HasStackWalk(aFeatures),
-            ProfilerFeature::HasNoTimerResolutionChange(aFeatures))),
+        mSamplerThread(
+            NewSamplerThread(aLock, mGeneration, aInterval, aFeatures)),
         mInterposeObserver((ProfilerFeature::HasMainThreadIO(aFeatures) ||
                             ProfilerFeature::HasFileIO(aFeatures) ||
                             ProfilerFeature::HasFileIOAll(aFeatures))
@@ -3417,8 +3414,7 @@ class SamplerThread {
  public:
   // Creates a sampler thread, but doesn't start it.
   SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
-                double aIntervalMilliseconds, bool aStackWalkEnabled,
-                bool aNoTimerResolutionChange);
+                double aIntervalMilliseconds, uint32_t aFeatures);
   ~SamplerThread();
 
   // This runs on (is!) the sampler thread.
@@ -3525,10 +3521,8 @@ bool ActivePS::AppendPostSamplingCallback(PSLockRef aLock,
 // ActivePS's constructor, but SamplerThread is defined after ActivePS. It
 // could probably be removed by moving some code around.
 static SamplerThread* NewSamplerThread(PSLockRef aLock, uint32_t aGeneration,
-                                       double aInterval, bool aStackWalkEnabled,
-                                       bool aNoTimerResolutionChange) {
-  return new SamplerThread(aLock, aGeneration, aInterval, aStackWalkEnabled,
-                           aNoTimerResolutionChange);
+                                       double aInterval, uint32_t aFeatures) {
+  return new SamplerThread(aLock, aGeneration, aInterval, aFeatures);
 }
 
 // This function is the sampler thread.  This implementation is used for all
