@@ -2564,9 +2564,6 @@ impl TileCacheInstance {
         if !transform.is_2d_scale_translation() {
             return SurfacePromotionResult::Failed;
         }
-        if transform.m11 < 0.0 {
-            return SurfacePromotionResult::Failed;
-        }
 
         if self.slice_flags.contains(SliceFlags::IS_BLEND_CONTAINER) {
             return SurfacePromotionResult::Failed;
