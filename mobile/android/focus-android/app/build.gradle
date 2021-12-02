@@ -253,6 +253,7 @@ dependencies {
     implementation "org.mozilla.components:feature-webcompat:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:feature-webcompat-reporter:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:support-webextensions:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:support-locale:${AndroidComponents.VERSION}"
 
     implementation project(':service-telemetry')
 

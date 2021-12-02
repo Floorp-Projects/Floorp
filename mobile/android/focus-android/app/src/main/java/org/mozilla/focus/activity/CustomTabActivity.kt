@@ -12,11 +12,11 @@ import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
+import mozilla.components.support.locale.LocaleAwareAppCompatActivity
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.fragment.BrowserFragment
-import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 
 /**
  * The main entry point for "custom tabs" opened by third-party apps.
@@ -87,10 +87,6 @@ class CustomTabActivity : LocaleAwareAppCompatActivity() {
             ),
             this, engineView.asView()
         )
-    }
-
-    override fun applyLocale() {
-        // We don't care here: all our fragments update themselves as appropriate
     }
 
     companion object {

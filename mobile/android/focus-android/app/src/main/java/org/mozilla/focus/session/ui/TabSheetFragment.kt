@@ -12,6 +12,7 @@ import android.view.View
 import android.view.ViewAnimationUtils
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
@@ -22,11 +23,10 @@ import mozilla.components.lib.state.ext.flowScoped
 import org.mozilla.focus.GleanMetrics.TabCount
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.locale.LocaleAwareFragment
 import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.utils.OneShotOnPreDrawListener
 
-class TabSheetFragment : LocaleAwareFragment(), View.OnClickListener {
+class TabSheetFragment : Fragment(), View.OnClickListener {
 
     private lateinit var backgroundView: View
     private lateinit var cardView: View
@@ -132,8 +132,6 @@ class TabSheetFragment : LocaleAwareFragment(), View.OnClickListener {
 
         return true
     }
-
-    override fun applyLocale() {}
 
     override fun onClick(view: View) {
         if (isAnimating) {

@@ -21,6 +21,7 @@ import mozilla.components.lib.crash.Crash
 import mozilla.components.service.glean.private.NoExtras
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.view.getWindowInsetsController
+import mozilla.components.support.locale.LocaleAwareAppCompatActivity
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.GleanMetrics.AppOpened
 import org.mozilla.focus.GleanMetrics.Notifications
@@ -30,7 +31,6 @@ import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.settings
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.fragment.UrlInputFragment
-import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.navigation.MainActivityNavigation
 import org.mozilla.focus.navigation.Navigator
 import org.mozilla.focus.perf.Performance
@@ -103,10 +103,6 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             .apply()
 
         lifecycle.addObserver(navigator)
-    }
-
-    override fun applyLocale() {
-        // We don't care here: all our fragments update themselves as appropriate
     }
 
     override fun onResume() {

@@ -45,6 +45,7 @@ import mozilla.components.lib.crash.service.SentryService
 import mozilla.components.service.location.LocationService
 import mozilla.components.service.location.MozillaLocationService
 import mozilla.components.service.nimbus.NimbusApi
+import mozilla.components.support.locale.LocaleManager
 import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.browser.BlockedTrackersMiddleware
 import org.mozilla.focus.components.EngineProvider
@@ -56,7 +57,6 @@ import org.mozilla.focus.experiments.ExperimentalFeatures
 import org.mozilla.focus.experiments.createNimbus
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.settings
-import org.mozilla.focus.locale.LocaleManager
 import org.mozilla.focus.notification.PrivateNotificationMiddleware
 import org.mozilla.focus.search.SearchFilterMiddleware
 import org.mozilla.focus.search.SearchMigration
@@ -253,7 +253,7 @@ private fun createCrashReporter(context: Context): CrashReporter {
 }
 
 private fun getLocaleTag(context: Context): String {
-    val currentLocale = LocaleManager.getInstance().getCurrentLocale(context)
+    val currentLocale = LocaleManager.getCurrentLocale(context)
     return if (currentLocale != null) {
         currentLocale.toLanguageTag()
     } else {
