@@ -1616,9 +1616,6 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   }
 };
 
-template <XDRMode mode>
-XDRResult XDRSourceExtent(XDRState<mode>* xdr, SourceExtent* extent);
-
 extern void SweepScriptData(JSRuntime* rt);
 
 } /* namespace js */
