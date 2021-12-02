@@ -1145,6 +1145,7 @@ class GeckoEngineSession(
                 WebRequestError.ERROR_SAFEBROWSING_UNWANTED_URI -> ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI
                 WebRequestError.ERROR_SAFEBROWSING_HARMFUL_URI -> ErrorType.ERROR_SAFEBROWSING_HARMFUL_URI
                 WebRequestError.ERROR_SAFEBROWSING_PHISHING_URI -> ErrorType.ERROR_SAFEBROWSING_PHISHING_URI
+                WebRequestError.ERROR_HTTPS_ONLY -> ErrorType.ERROR_HTTPS_ONLY
                 else -> ErrorType.UNKNOWN
             }
     }

@@ -1948,6 +1948,10 @@ class GeckoEngineSessionTest {
             ErrorType.UNKNOWN,
             GeckoEngineSession.geckoErrorToErrorType(-500)
         )
+        assertEquals(
+            ErrorType.ERROR_HTTPS_ONLY,
+            GeckoEngineSession.geckoErrorToErrorType(WebRequestError.ERROR_HTTPS_ONLY)
+        )
     }
 
     @Test

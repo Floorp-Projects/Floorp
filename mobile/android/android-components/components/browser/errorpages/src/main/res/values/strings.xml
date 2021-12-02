@@ -276,4 +276,11 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
       <p>This web page at %1$s has been reported as a deceptive site and has been blocked based on your security preferences.</p>
     ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Secure Site Not Available</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[You’ve enabled HTTPS-Only Mode for enhanced security, and a HTTPS version of <em>%1$s</em> is not available.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Continue to HTTP Site</string>
 </resources>

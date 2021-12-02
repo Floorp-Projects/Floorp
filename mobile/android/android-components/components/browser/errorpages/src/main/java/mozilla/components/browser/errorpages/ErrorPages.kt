@@ -28,6 +28,7 @@ object ErrorPages {
         val button = context.getString(errorType.refreshButtonRes)
         val description = context.getString(errorType.messageRes, uri)
         val imageName = if (errorType.imageNameRes != null) context.getString(errorType.imageNameRes) + ".svg" else ""
+        val continueHttpButton = context.getString(R.string.mozac_browser_errorpages_httpsonly_button)
         val badCertAdvanced = context.getString(R.string.mozac_browser_errorpages_security_bad_cert_advanced)
         val badCertTechInfo = context.getString(
             R.string.mozac_browser_errorpages_security_bad_cert_techInfo,
@@ -43,6 +44,8 @@ object ErrorPages {
             else -> false
         }.toString()
 
+        val showContinueHttp: String = (errorType == ErrorType.ERROR_HTTPS_ONLY).toString()
+
         /**
          * Warning: When updating these params you WILL cause breaking changes that are undetected
          * by consumers. Update the README accordingly.
@@ -56,7 +59,9 @@ object ErrorPages {
             "&badCertAdvanced=${badCertAdvanced.urlEncode()}" +
             "&badCertTechInfo=${badCertTechInfo.urlEncode()}" +
             "&badCertGoBack=${badCertGoBack.urlEncode()}" +
-            "&badCertAcceptTemporary=${badCertAcceptTemporary.urlEncode()}"
+            "&badCertAcceptTemporary=${badCertAcceptTemporary.urlEncode()}" +
+            "&showContinueHttp=${showContinueHttp.urlEncode()}" +
+            "&continueHttpButton=${continueHttpButton.urlEncode()}"
 
         urlEncodedErrorPage = urlEncodedErrorPage
             .replace("<ul>".urlEncode(), "<ul role=\"presentation\">".urlEncode())
@@ -203,5 +208,9 @@ enum class ErrorType(
     ERROR_SAFEBROWSING_PHISHING_URI(
         R.string.mozac_browser_errorpages_safe_phishing_uri_title,
         R.string.mozac_browser_errorpages_safe_phishing_uri_message
+    ),
+    ERROR_HTTPS_ONLY(
+        R.string.mozac_browser_errorpages_httpsonly_title,
+        R.string.mozac_browser_errorpages_httpsonly_message
     )
 }

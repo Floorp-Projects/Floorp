@@ -44,6 +44,7 @@ class ErrorPagesTest {
         assertUrlEncodingIsValid(ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI)
         assertUrlEncodingIsValid(ErrorType.ERROR_SAFEBROWSING_HARMFUL_URI)
         assertUrlEncodingIsValid(ErrorType.ERROR_SAFEBROWSING_PHISHING_URI)
+        assertUrlEncodingIsValid(ErrorType.ERROR_HTTPS_ONLY)
     }
 
     private fun assertUrlEncodingIsValid(errorType: ErrorType) {

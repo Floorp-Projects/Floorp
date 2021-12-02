@@ -124,6 +124,7 @@ open class DefaultComponents(private val applicationContext: Context) {
             remoteDebuggingEnabled = true
             supportMultipleWindows = true
             preferredColorScheme = PreferredColorScheme.Dark
+            httpsOnlyMode = Engine.HttpsOnlyMode.ENABLED
         }
     }
 
