@@ -32,13 +32,13 @@ skip-if(Android) fuzzy-if(Android,255-255,273726-273726) fuzzy-if(appleSilicon,3
 skip-if(Android) fuzzy(33-49,2346-2579) fuzzy-if(swgl,34-52,181053-270528) fuzzy-if(appleSilicon,49-49,2263-2263) fuzzy-if(useDrawSnapshot,16-16,183840-183840) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm ../reftest_img.html?src=color_quads/720p.png
 skip-if(Android) fuzzy-if(appleSilicon,38-38,273726-273726) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.vp9.webm ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm
 skip-if(Android) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.mp4 ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm
-#[2] skip-if(!webrender||Android) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.h264.mp4  ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm
+#[2] skip-if(Android) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.h264.mp4  ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm
 skip-if(Android) fuzzy-if(appleSilicon,38-38,273726-273726) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.vp9.mp4 ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.yuv420p10.av1.webm
 
 skip-if(Android) fuzzy(33-49,174699-175092) fuzzy-if(swgl&&!winWidget,36-52,11553-11555) fuzzy-if(swgl&&winWidget,40-52,11555-187200) fuzzy-if(useDrawSnapshot,20-20,186800-186800) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.av1.webm ../reftest_img.html?src=color_quads/720p.png
 skip-if(Android) fuzzy-if(appleSilicon,30-30,187328-187328) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.vp9.webm ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.av1.webm
 skip-if(Android) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.av1.mp4 ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.av1.webm
-#[2] skip-if(!webrender||Android) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.h264.mp4  ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.av1.webm
+#[2] skip-if(Android) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.h264.mp4  ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.av1.webm
 skip-if(Android) fuzzy-if(appleSilicon,30-30,187328-187328) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.vp9.mp4 ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.yuv420p10.av1.webm
 
 # Android is really broken in a variety of ways for p10.
@@ -50,7 +50,6 @@ skip-if(Android) fuzzy-if(appleSilicon,30-30,187328-187328) == ../reftest_video.
 # Note: tv-gbrp doesn't really make sense, and we should consider dropping it.
 # Specifically, we should probably do (gbrp, ...(tv,pc)x(yuv,yuv10)) instead of (tv,pc)x(gbrp,yuv,yuv10)
 # That said, we should probably test a couple combos, at least. (But then again, why not all!)
-# !webrender does not support gbr
 
 skip-if(winWidget&&swgl) fuzzy(0-1,0-3600) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.tv.gbrp.av1.webm ../reftest_img.html?src=color_quads/720p.png
 skip-if(winWidget&&swgl) fuzzy(0-1,0-7200) == ../reftest_video.html?src=color_quads/720p.png.bt709.bt709.pc.gbrp.av1.webm ../reftest_img.html?src=color_quads/720p.png
