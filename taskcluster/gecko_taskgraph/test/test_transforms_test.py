@@ -214,7 +214,7 @@ def test_set_test_setting(run_transform, task, expected):
         json.dumps(expected, sort_keys=True).encode("utf-8")
     ).hexdigest()[:12]
 
-    task = list(run_transform(test_transforms.set_test_setting, task))[0]
+    task = list(run_transform(test_transforms.other.set_test_setting, task))[0]
     assert "test-setting" in task
     assert task["test-setting"] == expected
 
