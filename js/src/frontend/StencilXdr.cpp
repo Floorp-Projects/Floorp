@@ -735,7 +735,7 @@ template <XDRMode mode>
   MOZ_ASSERT(!stencil.asmJS);
 
   if (mode == XDR_DECODE) {
-    stencil.hasExternalDependency = true;
+    stencil.storageType = CompilationStencil::StorageType::Borrowed;
   }
 
   MOZ_TRY(CodeMarker(xdr, SectionMarker::ParserAtomData));
