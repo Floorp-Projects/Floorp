@@ -158,6 +158,10 @@ void nsWaylandDisplay::SetDmabuf(zwp_linux_dmabuf_v1* aDmabuf) {
   mDmabuf = aDmabuf;
 }
 
+void nsWaylandDisplay::SetXdgActivation(xdg_activation_v1* aXdgActivation) {
+  mXdgActivation = aXdgActivation;
+}
+
 static void global_registry_handler(void* data, wl_registry* registry,
                                     uint32_t id, const char* interface,
                                     uint32_t version) {
@@ -236,6 +240,10 @@ static void global_registry_handler(void* data, wl_registry* registry,
         registry, id, &zwp_linux_dmabuf_v1_interface, 3);
     wl_proxy_set_queue((struct wl_proxy*)dmabuf, display->GetEventQueue());
     display->SetDmabuf(dmabuf);
+  } else if (strcmp(interface, "xdg_activation_v1") == 0) {
+    auto* activation = WaylandRegistryBind<xdg_activation_v1>(
+        registry, id, &xdg_activation_v1_interface, 1);
+    display->SetXdgActivation(activation);
   }
 }
 
@@ -344,6 +352,7 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
       mPointerConstraints(nullptr),
       mViewporter(nullptr),
       mDmabuf(nullptr),
+      mXdgActivation(nullptr),
       mExplicitSync(false) {
   // GTK sets the log handler on display creation, thus we overwrite it here
   // in a similar fashion
