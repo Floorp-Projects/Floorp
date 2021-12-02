@@ -18,13 +18,6 @@ import androidx.test.espresso.web.sugar.Web
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
-import java.io.BufferedReader
-import java.io.File
-import java.io.FileInputStream
-import java.io.IOException
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.nio.charset.StandardCharsets
 import okhttp3.mockwebserver.MockResponse
 import okio.Buffer
 import okio.Okio
@@ -34,6 +27,13 @@ import org.junit.Assert
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.utils.AppConstants.isKlarBuild
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileInputStream
+import java.io.IOException
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.nio.charset.StandardCharsets
 
 @Suppress("TooManyFunctions")
 object TestHelper {

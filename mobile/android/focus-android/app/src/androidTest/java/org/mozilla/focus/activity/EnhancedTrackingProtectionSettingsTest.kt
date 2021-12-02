@@ -5,7 +5,6 @@ package org.mozilla.focus.activity
 
 import androidx.test.espresso.Espresso.pressBack
 import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
-import java.io.IOException
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
@@ -21,6 +20,7 @@ import org.mozilla.focus.helpers.TestHelper.exitToBrowser
 import org.mozilla.focus.helpers.TestHelper.exitToTop
 import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
 import org.mozilla.focus.testAnnotations.SmokeTest
+import java.io.IOException
 
 @RunWith(AndroidJUnit4ClassRunner::class)
 class EnhancedTrackingProtectionSettingsTest {
