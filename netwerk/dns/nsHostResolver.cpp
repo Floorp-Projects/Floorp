@@ -1080,9 +1080,9 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
   }
 
   // Make sure we reset the reason each time we attempt to do a new lookup
-  // so we don't wronly report the reason for the previous one.
+  // so we don't wrongly report the reason for the previous one.
   rec->mTRRSkippedReason = TRRSkippedReason::TRR_UNSET;
-
+  rec->mFirstTRRSkippedReason = TRRSkippedReason::TRR_UNSET;
   rec->mTrrAttempts = 0;
 
   ComputeEffectiveTRRMode(rec);
@@ -1352,6 +1352,7 @@ bool nsHostResolver::MaybeRetryTRRLookup(
     auto trrQuery = aAddrRec->mTRRQuery.Lock();
     trrQuery.ref() = nullptr;
   }
+  aAddrRec->NotifyRetryingTrr();
   TrrLookup(aAddrRec, aLock, nullptr /* pushedTRR */);
   return true;
 }
