@@ -235,6 +235,8 @@ class TRRService : public TRRServiceBase,
     // confirmation.
     nsCString mFailedLookups;
 
+    void SetState(enum ConfirmationState aNewState);
+
    public:
     // Called when a confirmation completes successfully or when the
     // confirmation context changes.
