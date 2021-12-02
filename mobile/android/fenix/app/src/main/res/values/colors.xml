@@ -3,6 +3,90 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Design system color variables -->
+
+    <!-- Layers -->
+    <!-- Default Screen, Search, Frontlayer background -->
+    <color name="fx_mobile_layer_color_1" tools:ignore="UnusedResources">@color/photonLightGrey20</color>
+    <!-- Card background, Menu background -->
+    <color name="fx_mobile_layer_color_2" tools:ignore="UnusedResources">@color/photonWhite</color>
+    <!-- App Bar Top, App Bar Bottom, Toolbar background, Frontlayer header -->
+    <color name="fx_mobile_layer_color_3" tools:ignore="UnusedResources">@color/photonLightGrey10</color>
+    <!-- Frontlayer header (edit), Header (edit) -->
+    <color name="fx_mobile_layer_color_accent" tools:ignore="UnusedResources">@color/photonViolet90</color>
+    <!-- Selected tab -->
+    <color name="fx_mobile_layer_color_accent_nonopaque" tools:ignore="UnusedResources">@color/photonViolet90A20</color>
+    <color name="fx_mobile_layer_color_scrim" tools:ignore="UnusedResources">@color/photonDarkGrey05A45</color>
+    <color name="fx_mobile_layer_color_scrim_start" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
+    <color name="fx_mobile_layer_color_scrim_end" tools:ignore="UnusedResources">@color/photonDarkGrey30</color>
+    <!-- Tooltip -->
+    <color name="fx_mobile_layer_color_gradient_start" tools:ignore="UnusedResources">@color/photonViolet40</color>
+    <!-- Tooltip -->
+    <color name="fx_mobile_layer_color_gradient_end" tools:ignore="UnusedResources">@color/photonViolet70</color>
+
+    <!-- Action -->
+    <!-- Primary button, Snackbar, Floating action button, Controls -->
+    <color name="fx_mobile_action_color_primary" tools:ignore="UnusedResources">@color/photonViolet90</color>
+    <!-- Secondary button, Pill button -->
+    <color name="fx_mobile_action_color_secondary" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
+    <!-- Checkbox enabled, Radio enabled -->
+    <color name="fx_mobile_action_color_tertiary" tools:ignore="UnusedResources">@color/photonDarkGrey05</color>
+    <!-- Checkbox disabled, Radio disabled -->
+    <color name="fx_mobile_action_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey50</color>
+    <!-- Switch background OFF, Indicator OFF -->
+    <color name="fx_mobile_action_color_control" tools:ignore="UnusedResources">@color/photonLightGrey30</color>
+    <!-- Switch background ON -->
+    <color name="fx_mobile_action_color_control_dark" tools:ignore="UnusedResources">@color/photonViolet40A30</color>
+    <!-- Indicator active -->
+    <color name="fx_mobile_action_color_control_active" tools:ignore="UnusedResources">@color/photonLightGrey50</color>
+
+    <!-- Text -->
+    <!-- Primary text -->
+    <color name="fx_mobile_text_color_primary" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
+    <!-- Secondary text -->
+    <color name="fx_mobile_text_color_secondary" tools:ignore="UnusedResources">@color/photonDarkGrey05</color>
+    <!-- Disabled text -->
+    <color name="fx_mobile_text_color_disabled" tools:ignore="UnusedResources">@color/photonDarkGrey90A40</color>
+    <!-- Warning text -->
+    <color name="fx_mobile_text_color_warning" tools:ignore="UnusedResources">@color/photonRed80</color>
+    <!-- Text link -->
+    <color name="fx_mobile_text_color_action" tools:ignore="UnusedResources">@color/photonViolet70</color>
+    <!-- Small heading -->
+    <color name="fx_mobile_text_color_accent" tools:ignore="UnusedResources">@color/photonViolet90</color>
+    <!-- Text/Icon inverted (on color) -->
+    <color name="fx_mobile_text_color_inverted" tools:ignore="UnusedResources">@color/photonWhite</color>
+
+    <!-- Icon -->
+    <!-- Primary icon -->
+    <color name="fx_mobile_icon_color_primary" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
+    <!-- Secondary icon -->
+    <color name="fx_mobile_icon_color_secondary" tools:ignore="UnusedResources">@color/photonDarkGrey05</color>
+    <!-- Disabled icon -->
+    <color name="fx_mobile_icon_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey70</color>
+    <!-- Icon inverted (on color) -->
+    <color name="fx_mobile_icon_color_inverted" tools:ignore="UnusedResources">@color/photonWhite</color>
+    <!-- New -->
+    <color name="fx_mobile_icon_color_notice" tools:ignore="UnusedResources">@color/photonBlue30</color>
+    <!-- Icon button -->
+    <color name="fx_mobile_icon_color_button" tools:ignore="UnusedResources">@color/photonViolet90</color>
+    <color name="fx_mobile_icon_color_warning" tools:ignore="UnusedResources">@color/photonRed80</color>
+    <color name="fx_mobile_icon_color_accent_violet" tools:ignore="UnusedResources">@color/photonViolet60</color>
+    <color name="fx_mobile_icon_color_accent_blue" tools:ignore="UnusedResources">@color/photonBlue60</color>
+    <color name="fx_mobile_icon_color_accent_pink" tools:ignore="UnusedResources">@color/photonPink60</color>
+    <color name="fx_mobile_icon_color_accent_green" tools:ignore="UnusedResources">@color/photonGreen60</color>
+    <color name="fx_mobile_icon_color_accent_yellow" tools:ignore="UnusedResources">@color/photonYellow60</color>
+
+    <!-- Border -->
+    <!-- Form parts -->
+    <color name="fx_mobile_border_color_default" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
+    <!-- Selected tab -->
+    <color name="fx_mobile_border_color_selected" tools:ignore="UnusedResources">@color/photonViolet90</color>
+    <!-- Form parts -->
+    <color name="fx_mobile_border_color_disabled" tools:ignore="UnusedResources">@color/photonLightGrey70</color>
+    <!-- Form parts -->
+    <color name="fx_mobile_border_color_warning" tools:ignore="UnusedResources">@color/photonRed80</color>
+    <color name="fx_mobile_border_color_divider" tools:ignore="UnusedResources">@color/photonLightGrey40</color>
+
     <!-- Light theme color palette -->
     <color name="primary_text_light_theme">@color/photonInk80</color>
     <color name="contrast_text_light_theme">@color/primary_text_dark_theme</color>
