@@ -663,6 +663,16 @@ void TRRService::RebuildSuffixList(nsTArray<nsCString>&& aSuffixList) {
   }
 }
 
+void TRRService::ConfirmationContext::SetState(
+    enum ConfirmationState aNewState) {
+  mState = aNewState;
+  TRRServiceChild* child = TRRServiceChild::GetSingleton();
+  if (child && child->CanSend()) {
+    LOG(("TRRService::SendSetConfirmationState"));
+    Unused << child->SendSetConfirmationState(mState);
+  }
+}
+
 void TRRService::ConfirmationContext::HandleEvent(ConfirmationEvent aEvent) {
   MutexAutoLock lock(OwningObject()->mLock);
   HandleEvent(aEvent, lock);
@@ -686,26 +696,26 @@ void TRRService::ConfirmationContext::HandleEvent(ConfirmationEvent aEvent,
 
     if (TRR_DISABLED(mode)) {
       LOG(("TRR is disabled. mConfirmation.mState -> CONFIRM_OFF"));
-      mState = CONFIRM_OFF;
+      SetState(CONFIRM_OFF);
       return;
     }
 
     if (mode == nsIDNSService::MODE_TRRONLY) {
       LOG(("TRR_ONLY_MODE. mConfirmation.mState -> CONFIRM_DISABLED"));
-      mState = CONFIRM_DISABLED;
+      SetState(CONFIRM_DISABLED);
       return;
     }
 
     if (service->mConfirmationNS.Equals("skip"_ns)) {
       LOG((
           "mConfirmationNS == skip. mConfirmation.mState -> CONFIRM_DISABLED"));
-      mState = CONFIRM_DISABLED;
+      SetState(CONFIRM_DISABLED);
       return;
     }
 
     // The next call to maybeConfirm will transition to CONFIRM_TRYING_OK
     LOG(("mConfirmation.mState -> CONFIRM_OK"));
-    mState = CONFIRM_OK;
+    SetState(CONFIRM_OK);
   };
 
   auto maybeConfirm = [&](const char* aReason) {
@@ -729,10 +739,10 @@ void TRRService::ConfirmationContext::HandleEvent(ConfirmationEvent aEvent,
 
     if (mState == CONFIRM_FAILED) {
       LOG(("mConfirmation.mState -> CONFIRM_TRYING_FAILED"));
-      mState = CONFIRM_TRYING_FAILED;
+      SetState(CONFIRM_TRYING_FAILED);
     } else {
       LOG(("mConfirmation.mState -> CONFIRM_TRYING_OK"));
-      mState = CONFIRM_TRYING_OK;
+      SetState(CONFIRM_TRYING_OK);
     }
 
     nsCOMPtr<nsITimer> timer = std::move(mTimer);
@@ -807,13 +817,13 @@ void TRRService::ConfirmationContext::HandleEvent(ConfirmationEvent aEvent,
       }
       break;
     case ConfirmationEvent::ConfirmOK:
-      mState = CONFIRM_OK;
+      SetState(CONFIRM_OK);
       mTask = nullptr;
       break;
     case ConfirmationEvent::ConfirmFail:
       MOZ_ASSERT(mState == CONFIRM_TRYING_OK ||
                  mState == CONFIRM_TRYING_FAILED);
-      mState = CONFIRM_FAILED;
+      SetState(CONFIRM_FAILED);
       mTask = nullptr;
       // retry failed NS confirmation
 
