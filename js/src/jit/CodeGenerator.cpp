@@ -16037,9 +16037,9 @@ void CodeGenerator::visitToHashableString(LToHashableString* ins) {
   Register input = ToRegister(ins->input());
   Register output = ToRegister(ins->output());
 
-  using Fn = JSAtom* (*)(JSContext*, JSString*, PinningBehavior);
-  auto* ool = oolCallVM<Fn, js::AtomizeString>(
-      ins, ArgList(input, Imm32(DoNotPinAtom)), StoreRegisterTo(output));
+  using Fn = JSAtom* (*)(JSContext*, JSString*);
+  auto* ool = oolCallVM<Fn, js::AtomizeString>(ins, ArgList(input),
+                                               StoreRegisterTo(output));
 
   masm.branchTest32(Assembler::Zero, Address(input, JSString::offsetOfFlags()),
                     Imm32(JSString::ATOM_BIT), ool->entry());
@@ -16054,9 +16054,9 @@ void CodeGenerator::visitToHashableValue(LToHashableValue* ins) {
 
   Register str = output.scratchReg();
 
-  using Fn = JSAtom* (*)(JSContext*, JSString*, PinningBehavior);
-  auto* ool = oolCallVM<Fn, js::AtomizeString>(
-      ins, ArgList(str, Imm32(DoNotPinAtom)), StoreRegisterTo(str));
+  using Fn = JSAtom* (*)(JSContext*, JSString*);
+  auto* ool =
+      oolCallVM<Fn, js::AtomizeString>(ins, ArgList(str), StoreRegisterTo(str));
 
   masm.toHashableValue(input, output, tempFloat, ool->entry(), ool->rejoin());
 }

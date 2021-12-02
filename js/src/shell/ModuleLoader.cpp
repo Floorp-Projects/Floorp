@@ -43,8 +43,8 @@ static JSString* ExtractJavaScriptURLSource(JSContext* cx,
 }
 
 bool ModuleLoader::init(JSContext* cx, HandleString loadPath) {
-  loadPathStr = AtomizeString(cx, loadPath, PinAtom);
-  if (!loadPathStr) {
+  loadPathStr = AtomizeString(cx, loadPath);
+  if (!loadPathStr || !PinAtom(cx, loadPathStr)) {
     return false;
   }
 
@@ -52,7 +52,7 @@ bool ModuleLoader::init(JSContext* cx, HandleString loadPath) {
 
   char16_t sep = PathSeparator;
   pathSeparatorStr = AtomizeChars(cx, &sep, 1);
-  if (!pathSeparatorStr) {
+  if (!pathSeparatorStr || !PinAtom(cx, pathSeparatorStr)) {
     return false;
   }
 

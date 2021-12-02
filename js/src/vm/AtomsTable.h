@@ -83,7 +83,7 @@ class AtomsTable {
 
   template <typename CharT>
   MOZ_ALWAYS_INLINE JSAtom* atomizeAndCopyChars(
-      JSContext* cx, const CharT* chars, size_t length, PinningBehavior pin,
+      JSContext* cx, const CharT* chars, size_t length,
       const mozilla::Maybe<uint32_t>& indexValue,
       const AtomHasher::Lookup& lookup);
 
