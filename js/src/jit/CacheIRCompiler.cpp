@@ -8689,11 +8689,17 @@ AutoCallVM::AutoCallVM(MacroAssembler& masm, CacheIRCompiler* compiler,
     save_.emplace(*compiler_->asIon());
   }
 
-  output_.emplace(*compiler);
+  if (compiler->outputUnchecked_.isSome()) {
+    output_.emplace(*compiler);
+  }
 
   if (compiler_->mode_ == CacheIRCompiler::Mode::Baseline) {
     stubFrame_.emplace(*compiler_->asBaseline());
-    scratch_.emplace(allocator_, masm_, output_.ref());
+    if (output_.isSome()) {
+      scratch_.emplace(allocator_, masm_, output_.ref());
+    } else {
+      scratch_.emplace(allocator_, masm_);
+    }
   }
 }
 
