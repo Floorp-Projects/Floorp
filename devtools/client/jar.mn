@@ -191,7 +191,7 @@ devtools.jar:
     skin/images/rules-view-print-simulation.svg (themes/images/rules-view-print-simulation.svg)
     skin/markup.css (themes/markup.css)
 
-    # Inspector 
+    # Inspector
     content/inspector/markup/markup.xhtml (inspector/markup/markup.xhtml)
     content/inspector/components/InspectorTabPanel.css (inspector/components/InspectorTabPanel.css)
     content/styleeditor/index.xhtml (styleeditor/index.xhtml)
@@ -206,7 +206,7 @@ devtools.jar:
     # Storage
     content/storage/index.xhtml (storage/index.xhtml)
 
-    # Source Editor 
+    # Source Editor
     content/shared/sourceeditor/codemirror/addon/dialog/dialog.css (shared/sourceeditor/codemirror/addon/dialog/dialog.css)
     content/shared/sourceeditor/codemirror/keymap/emacs.js (shared/sourceeditor/codemirror/keymap/emacs.js)
     content/shared/sourceeditor/codemirror/keymap/vim.js (shared/sourceeditor/codemirror/keymap/vim.js)
@@ -216,7 +216,7 @@ devtools.jar:
     content/shared/sourceeditor/codemirror/mozilla.css (shared/sourceeditor/codemirror/mozilla.css)
     content/shared/sourceeditor/codemirror/cmiframe.html (shared/sourceeditor/codemirror/cmiframe.html)
 
-    # Debugger 
+    # Debugger
     content/debugger/index.html (debugger/index.html)
     content/debugger/dist/vendors.css (debugger/dist/vendors.css)
     content/debugger/images/arrow-down.svg (debugger/images/arrow-down.svg)
@@ -247,11 +247,9 @@ devtools.jar:
     content/debugger/images/prettyPrint.svg (debugger/images/prettyPrint.svg)
     content/debugger/images/regex-match.svg (debugger/images/regex-match.svg)
     content/debugger/images/reload.svg (debugger/images/reload.svg)
-    content/debugger/images/resume.svg (debugger/images/resume.svg)
     content/debugger/images/search.svg (debugger/images/search.svg)
     content/debugger/images/stepIn.svg (debugger/images/stepIn.svg)
     content/debugger/images/stepOut.svg (debugger/images/stepOut.svg)
-    content/debugger/images/stepOver.svg (debugger/images/stepOver.svg)
     content/debugger/images/tab.svg (debugger/images/tab.svg)
     content/debugger/images/webconsole-logpoint.svg (debugger/images/webconsole-logpoint.svg)
     content/debugger/images/whole-word-match.svg (debugger/images/whole-word-match.svg)
@@ -404,7 +402,7 @@ devtools.jar:
     content/aboutdebugging/src/components/sidebar/SidebarItem.css (aboutdebugging/src/components/sidebar/SidebarItem.css)
     content/aboutdebugging/src/components/sidebar/SidebarRuntimeItem.css (aboutdebugging/src/components/sidebar/SidebarRuntimeItem.css)
 
-    # Webconsole 
+    # Webconsole
     skin/webconsole.css (themes/webconsole.css)
     skin/images/webconsole/editor.svg (themes/images/webconsole/editor.svg)
     skin/images/webconsole/input.svg (themes/images/webconsole/input.svg)
