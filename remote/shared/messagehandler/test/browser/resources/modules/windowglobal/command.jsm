@@ -25,11 +25,16 @@ class Command extends Module {
 
   _applySessionData(params) {
     if (params.category === "testCategory") {
-      this._testCategorySessionData = this._testCategorySessionData.concat(
-        params.values
-      );
+      const added = params.added || [];
+      const removed = params.removed || [];
+
+      this._testCategorySessionData = this._testCategorySessionData
+        .concat(added)
+        .filter(value => !removed.includes(value));
+
       return {
-        newData: params.values.join(", "),
+        addedData: added.join(", "),
+        removedData: removed.join(", "),
         sessionData: this._testCategorySessionData.join(", "),
         contextId: this.messageHandler.contextId,
       };
