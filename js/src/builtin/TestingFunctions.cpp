@@ -2869,6 +2869,77 @@ static bool SetTestFilenameValidationCallback(JSContext* cx, unsigned argc,
   return true;
 }
 
+static JSAtom* GetPropertiesAddedName(JSContext* cx) {
+  const char* propName = "_propertiesAdded";
+  return Atomize(cx, propName, strlen(propName));
+}
+
+static bool NewObjectWithAddPropertyHook(JSContext* cx, unsigned argc,
+                                         Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  auto addPropHook = [](JSContext* cx, HandleObject obj, HandleId id,
+                        HandleValue v) -> bool {
+    RootedAtom propName(cx, GetPropertiesAddedName(cx));
+    if (!propName) {
+      return false;
+    }
+    // Don't do anything if we're adding the _propertiesAdded property.
+    RootedId propId(cx, AtomToId(propName));
+    if (id == propId) {
+      return true;
+    }
+    // Increment _propertiesAdded.
+    RootedValue val(cx);
+    if (!JS_GetPropertyById(cx, obj, propId, &val)) {
+      return false;
+    }
+    if (!val.isInt32() || val.toInt32() == INT32_MAX) {
+      return true;
+    }
+    val.setInt32(val.toInt32() + 1);
+    return JS_DefinePropertyById(cx, obj, propId, val, 0);
+  };
+
+  static const JSClassOps classOps = {
+      addPropHook,  // addProperty
+      nullptr,      // delProperty
+      nullptr,      // enumerate
+      nullptr,      // newEnumerate
+      nullptr,      // resolve
+      nullptr,      // mayResolve
+      nullptr,      // finalize
+      nullptr,      // call
+      nullptr,      // hasInstance
+      nullptr,      // construct
+      nullptr,      // trace
+  };
+  static const JSClass cls = {
+      "ObjectWithAddPropHook",
+      0,
+      &classOps,
+  };
+
+  RootedObject obj(cx, JS_NewObject(cx, &cls));
+  if (!obj) {
+    return false;
+  }
+
+  // Initialize _propertiesAdded to 0.
+  RootedAtom propName(cx, GetPropertiesAddedName(cx));
+  if (!propName) {
+    return false;
+  }
+  RootedId propId(cx, AtomToId(propName));
+  RootedValue val(cx, Int32Value(0));
+  if (!JS_DefinePropertyById(cx, obj, propId, val, 0)) {
+    return false;
+  }
+
+  args.rval().setObject(*obj);
+  return true;
+}
+
 struct TestExternalString : public JSExternalStringCallbacks {
   void finalize(char16_t* chars) const override { js_free(chars); }
   size_t sizeOfBuffer(const char16_t* chars,
@@ -7850,6 +7921,12 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "setTestFilenameValidationCallback()",
 "  Set the filename validation callback to a callback that accepts only\n"
 "  filenames starting with 'safe' or (only in system realms) 'system'."),
+
+    JS_FN_HELP("newObjectWithAddPropertyHook", NewObjectWithAddPropertyHook, 0, 0,
+"newObjectWithAddPropertyHook()",
+"  Returns a new object with an addProperty JSClass hook. This hook\n"
+"  increments the value of the _propertiesAdded data property on the object\n"
+"  when a new property is added."),
 
     JS_FN_HELP("newString", NewString, 2, 0,
 "newString(str[, options])",
