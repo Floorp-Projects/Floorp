@@ -348,7 +348,7 @@ async function test_strict_native_fallback() {
   setModeAndURI(2, "doh?responseIP=2.2.2.2&corruptedAnswer=true");
   await new TRRDNSListener("bar.example.com", "127.0.0.1"); // Should fallback
 
-  Services.prefs.clearUserPref("network.trr.strict_native_fallback");
+  Services.prefs.setBoolPref("network.trr.strict_native_fallback", false);
   Services.prefs.clearUserPref("network.trr.request_timeout_ms");
   Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
 }
