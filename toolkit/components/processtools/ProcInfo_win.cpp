@@ -90,6 +90,160 @@ nsresult GetGpuTimeSinceProcessStartInMs(uint64_t* aResult) {
   return gfxWindowsPlatform::GetGpuTimeSinceProcessStartInMs(aResult);
 }
 
+ProcInfoPromise::ResolveOrRejectValue GetProcInfoSync(
+    nsTArray<ProcInfoRequest>&& aRequests) {
+  ProcInfoPromise::ResolveOrRejectValue result;
+
+  HashMap<base::ProcessId, ProcInfo> gathered;
+  if (!gathered.reserve(aRequests.Length())) {
+    result.SetReject(NS_ERROR_OUT_OF_MEMORY);
+    return result;
+  }
+
+  int frequencyInMHz = GetCycleTimeFrequency();
+
+  // ---- Copying data on processes (minus threads).
+
+  for (const auto& request : aRequests) {
+    nsAutoHandle handle(OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+                                    FALSE, request.pid));
+
+    if (!handle) {
+      // Ignore process, it may have died.
+      continue;
+    }
+
+    uint64_t cpuCycleTime;
+    if (!QueryProcessCycleTime(handle.get(), &cpuCycleTime)) {
+      // Ignore process, it may have died.
+      continue;
+    }
+
+    uint64_t cpuTime;
+    if (frequencyInMHz) {
+      cpuTime = cpuCycleTime * PR_USEC_PER_NSEC / frequencyInMHz;
+    } else {
+      FILETIME createTime, exitTime, kernelTime, userTime;
+      if (!GetProcessTimes(handle.get(), &createTime, &exitTime, &kernelTime,
+                           &userTime)) {
+        // Ignore process, it may have died.
+        continue;
+      }
+      cpuTime = ToNanoSeconds(kernelTime) + ToNanoSeconds(userTime);
+    }
+
+    PROCESS_MEMORY_COUNTERS_EX memoryCounters;
+    if (!GetProcessMemoryInfo(handle.get(),
+                              (PPROCESS_MEMORY_COUNTERS)&memoryCounters,
+                              sizeof(memoryCounters))) {
+      // Ignore process, it may have died.
+      continue;
+    }
+
+    // Assumption: values of `pid` are distinct between processes,
+    // regardless of any race condition we might have stumbled upon. Even
+    // if it somehow could happen, in the worst case scenario, we might
+    // end up overwriting one process info and we might end up with too
+    // many threads attached to a process, as the data is not crucial, we
+    // do not need to defend against that (unlikely) scenario.
+    ProcInfo info;
+    info.pid = request.pid;
+    info.childId = request.childId;
+    info.type = request.processType;
+    info.origin = request.origin;
+    info.windows = std::move(request.windowInfo);
+    info.cpuTime = cpuTime;
+    info.cpuCycleCount = cpuCycleTime;
+    info.memory = memoryCounters.PrivateUsage;
+
+    if (!gathered.put(request.pid, std::move(info))) {
+      result.SetReject(NS_ERROR_OUT_OF_MEMORY);
+      return result;
+    }
+  }
+
+  // ---- Add thread data to already-copied processes.
+
+  // First, we need to capture a snapshot of all the threads on this
+  // system.
+  nsAutoHandle hThreadSnap(CreateToolhelp32Snapshot(
+      /* dwFlags */ TH32CS_SNAPTHREAD, /* ignored */ 0));
+  if (!hThreadSnap) {
+    result.SetReject(NS_ERROR_UNEXPECTED);
+    return result;
+  }
+
+  // `GetThreadDescription` is available as of Windows 10.
+  // We attempt to import it dynamically, knowing that it
+  // may be `nullptr`.
+  auto getThreadDescription =
+      reinterpret_cast<GETTHREADDESCRIPTION>(::GetProcAddress(
+          ::GetModuleHandleW(L"Kernel32.dll"), "GetThreadDescription"));
+
+  THREADENTRY32 te32;
+  te32.dwSize = sizeof(THREADENTRY32);
+
+  // Now, walk through the threads.
+  for (auto success = Thread32First(hThreadSnap.get(), &te32); success;
+       success = Thread32Next(hThreadSnap.get(), &te32)) {
+    auto processLookup = gathered.lookup(te32.th32OwnerProcessID);
+    if (!processLookup) {
+      // Not one of the processes we're interested in.
+      continue;
+    }
+    ThreadInfo* threadInfo =
+        processLookup->value().threads.AppendElement(fallible);
+    if (!threadInfo) {
+      result.SetReject(NS_ERROR_OUT_OF_MEMORY);
+      return result;
+    }
+
+    nsAutoHandle hThread(
+        OpenThread(/* dwDesiredAccess = */ THREAD_QUERY_INFORMATION,
+                   /* bInheritHandle = */ FALSE,
+                   /* dwThreadId = */ te32.th32ThreadID));
+    if (!hThread) {
+      // Cannot open thread. Not sure why, but let's erase this thread
+      // and attempt to find data on other threads.
+      processLookup->value().threads.RemoveLastElement();
+      continue;
+    }
+
+    threadInfo->tid = te32.th32ThreadID;
+
+    // Attempt to get thread times.
+    // If we fail, continue without this piece of information.
+    if (QueryThreadCycleTime(hThread.get(), &threadInfo->cpuCycleCount) &&
+        frequencyInMHz) {
+      threadInfo->cpuTime =
+          threadInfo->cpuCycleCount * PR_USEC_PER_NSEC / frequencyInMHz;
+    } else {
+      FILETIME createTime, exitTime, kernelTime, userTime;
+      if (GetThreadTimes(hThread.get(), &createTime, &exitTime, &kernelTime,
+                         &userTime)) {
+        threadInfo->cpuTime =
+            ToNanoSeconds(kernelTime) + ToNanoSeconds(userTime);
+      }
+    }
+
+    // Attempt to get thread name.
+    // If we fail, continue without this piece of information.
+    if (getThreadDescription) {
+      PWSTR threadName = nullptr;
+      if (getThreadDescription(hThread.get(), &threadName) && threadName) {
+        threadInfo->name = threadName;
+      }
+      if (threadName) {
+        LocalFree(threadName);
+      }
+    }
+  }
+
+  // ----- We're ready to return.
+  result.SetResolve(std::move(gathered));
+  return result;
+}
+
 RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
   auto holder = MakeUnique<MozPromiseHolder<ProcInfoPromise>>();
   RefPtr<ProcInfoPromise> promise = holder->Ensure(__func__);
@@ -105,155 +259,9 @@ RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
 
   RefPtr<nsIRunnable> r = NS_NewRunnableFunction(
       __func__,
-      [holder = std::move(holder), requests = std::move(aRequests)]() -> void {
-        HashMap<base::ProcessId, ProcInfo> gathered;
-        if (!gathered.reserve(requests.Length())) {
-          holder->Reject(NS_ERROR_OUT_OF_MEMORY, __func__);
-          return;
-        }
-
-        int frequencyInMHz = GetCycleTimeFrequency();
-
-        // ---- Copying data on processes (minus threads).
-
-        for (const auto& request : requests) {
-          nsAutoHandle handle(OpenProcess(
-              PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, request.pid));
-
-          if (!handle) {
-            // Ignore process, it may have died.
-            continue;
-          }
-
-          uint64_t cpuCycleTime;
-          if (!QueryProcessCycleTime(handle.get(), &cpuCycleTime)) {
-            // Ignore process, it may have died.
-            continue;
-          }
-
-          uint64_t cpuTime;
-          if (frequencyInMHz) {
-            cpuTime = cpuCycleTime * PR_USEC_PER_NSEC / frequencyInMHz;
-          } else {
-            FILETIME createTime, exitTime, kernelTime, userTime;
-            if (!GetProcessTimes(handle.get(), &createTime, &exitTime,
-                                 &kernelTime, &userTime)) {
-              // Ignore process, it may have died.
-              continue;
-            }
-            cpuTime = ToNanoSeconds(kernelTime) + ToNanoSeconds(userTime);
-          }
-
-          PROCESS_MEMORY_COUNTERS_EX memoryCounters;
-          if (!GetProcessMemoryInfo(handle.get(),
-                                    (PPROCESS_MEMORY_COUNTERS)&memoryCounters,
-                                    sizeof(memoryCounters))) {
-            // Ignore process, it may have died.
-            continue;
-          }
-
-          // Assumption: values of `pid` are distinct between processes,
-          // regardless of any race condition we might have stumbled upon. Even
-          // if it somehow could happen, in the worst case scenario, we might
-          // end up overwriting one process info and we might end up with too
-          // many threads attached to a process, as the data is not crucial, we
-          // do not need to defend against that (unlikely) scenario.
-          ProcInfo info;
-          info.pid = request.pid;
-          info.childId = request.childId;
-          info.type = request.processType;
-          info.origin = request.origin;
-          info.windows = std::move(request.windowInfo);
-          info.cpuTime = cpuTime;
-          info.cpuCycleCount = cpuCycleTime;
-          info.memory = memoryCounters.PrivateUsage;
-
-          if (!gathered.put(request.pid, std::move(info))) {
-            holder->Reject(NS_ERROR_OUT_OF_MEMORY, __func__);
-            return;
-          }
-        }
-
-        // ---- Add thread data to already-copied processes.
-
-        // First, we need to capture a snapshot of all the threads on this
-        // system.
-        nsAutoHandle hThreadSnap(CreateToolhelp32Snapshot(
-            /* dwFlags */ TH32CS_SNAPTHREAD, /* ignored */ 0));
-        if (!hThreadSnap) {
-          holder->Reject(NS_ERROR_UNEXPECTED, __func__);
-          return;
-        }
-
-        // `GetThreadDescription` is available as of Windows 10.
-        // We attempt to import it dynamically, knowing that it
-        // may be `nullptr`.
-        auto getThreadDescription =
-            reinterpret_cast<GETTHREADDESCRIPTION>(::GetProcAddress(
-                ::GetModuleHandleW(L"Kernel32.dll"), "GetThreadDescription"));
-
-        THREADENTRY32 te32;
-        te32.dwSize = sizeof(THREADENTRY32);
-
-        // Now, walk through the threads.
-        for (auto success = Thread32First(hThreadSnap.get(), &te32); success;
-             success = Thread32Next(hThreadSnap.get(), &te32)) {
-          auto processLookup = gathered.lookup(te32.th32OwnerProcessID);
-          if (!processLookup) {
-            // Not one of the processes we're interested in.
-            continue;
-          }
-          ThreadInfo* threadInfo =
-              processLookup->value().threads.AppendElement(fallible);
-          if (!threadInfo) {
-            holder->Reject(NS_ERROR_OUT_OF_MEMORY, __func__);
-            return;
-          }
-
-          nsAutoHandle hThread(
-              OpenThread(/* dwDesiredAccess = */ THREAD_QUERY_INFORMATION,
-                         /* bInheritHandle = */ FALSE,
-                         /* dwThreadId = */ te32.th32ThreadID));
-          if (!hThread) {
-            // Cannot open thread. Not sure why, but let's erase this thread
-            // and attempt to find data on other threads.
-            processLookup->value().threads.RemoveLastElement();
-            continue;
-          }
-
-          threadInfo->tid = te32.th32ThreadID;
-
-          // Attempt to get thread times.
-          // If we fail, continue without this piece of information.
-          if (QueryThreadCycleTime(hThread.get(), &threadInfo->cpuCycleCount) &&
-              frequencyInMHz) {
-            threadInfo->cpuTime =
-                threadInfo->cpuCycleCount * PR_USEC_PER_NSEC / frequencyInMHz;
-          } else {
-            FILETIME createTime, exitTime, kernelTime, userTime;
-            if (GetThreadTimes(hThread.get(), &createTime, &exitTime,
-                               &kernelTime, &userTime)) {
-              threadInfo->cpuTime =
-                  ToNanoSeconds(kernelTime) + ToNanoSeconds(userTime);
-            }
-          }
-
-          // Attempt to get thread name.
-          // If we fail, continue without this piece of information.
-          if (getThreadDescription) {
-            PWSTR threadName = nullptr;
-            if (getThreadDescription(hThread.get(), &threadName) &&
-                threadName) {
-              threadInfo->name = threadName;
-            }
-            if (threadName) {
-              LocalFree(threadName);
-            }
-          }
-        }
-
-        // ----- We're ready to return.
-        holder->Resolve(std::move(gathered), __func__);
+      [holder = std::move(holder),
+       requests = std::move(aRequests)]() mutable -> void {
+        holder->ResolveOrReject(GetProcInfoSync(std::move(requests)), __func__);
       });
 
   rv = target->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
