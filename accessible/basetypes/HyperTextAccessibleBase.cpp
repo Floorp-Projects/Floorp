@@ -312,6 +312,10 @@ Accessible* HyperTextAccessibleBase::LinkAt(uint32_t aIndex) {
   return Acc()->EmbeddedChildAt(aIndex);
 }
 
+int32_t HyperTextAccessibleBase::LinkIndexOf(Accessible* aLink) {
+  return Acc()->IndexOfEmbeddedChild(aLink);
+}
+
 already_AddRefed<AccAttributes> HyperTextAccessibleBase::TextAttributes(
     bool aIncludeDefAttrs, int32_t aOffset, int32_t* aStartOffset,
     int32_t* aEndOffset) {
