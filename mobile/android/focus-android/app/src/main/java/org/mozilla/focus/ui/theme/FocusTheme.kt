@@ -51,8 +51,8 @@ private fun darkColorPalette(): FocusColors = FocusColors(
     topSiteBackground = PhotonColors.Ink05,
     topSiteFaviconText = PhotonColors.LightGrey05,
     topSiteTitle = PhotonColors.LightGrey05,
-    topSiteMenuBackground = PhotonColors.Ink05,
-    topSiteMenuText = PhotonColors.White,
+    menuBackground = PhotonColors.Ink05,
+    menuText = PhotonColors.White,
     aboutPageText = PhotonColors.White,
     aboutPageLink = PhotonColors.Pink70,
 )
@@ -62,8 +62,8 @@ private fun lightColorPalette(): FocusColors = FocusColors(
     topSiteBackground = PhotonColors.White,
     topSiteFaviconText = PhotonColors.Ink50,
     topSiteTitle = PhotonColors.DarkGrey05,
-    topSiteMenuBackground = PhotonColors.White,
-    topSiteMenuText = PhotonColors.Black,
+    menuBackground = PhotonColors.White,
+    menuText = PhotonColors.Black,
     aboutPageText = PhotonColors.Black,
     aboutPageLink = PhotonColors.Pink70,
 )

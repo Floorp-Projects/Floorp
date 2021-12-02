@@ -16,8 +16,8 @@ data class FocusColors(
     val topSiteBackground: Color,
     val topSiteFaviconText: Color,
     val topSiteTitle: Color,
-    val topSiteMenuBackground: Color,
-    val topSiteMenuText: Color,
+    val menuBackground: Color,
+    val menuText: Color,
     val aboutPageText: Color,
     val aboutPageLink: Color
 ) {

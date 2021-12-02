@@ -40,7 +40,6 @@ import org.mozilla.focus.ext.defaultSearchEngineName
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.ext.settings
-import org.mozilla.focus.home.HomeScreen
 import org.mozilla.focus.input.InputToolbarIntegration
 import org.mozilla.focus.menu.home.HomeMenu
 import org.mozilla.focus.menu.home.HomeMenuItem
@@ -50,6 +49,8 @@ import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.state.Screen
 import org.mozilla.focus.tips.TipManager
 import org.mozilla.focus.topsites.DefaultTopSitesView
+import org.mozilla.focus.topsites.TopSitesOverlay
+import org.mozilla.focus.ui.theme.FocusTheme
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.OneShotOnPreDrawListener
@@ -251,7 +252,11 @@ class UrlInputFragment :
     ): View {
         _binding = FragmentUrlinputBinding.inflate(inflater, container, false)
 
-        binding.topSites.setContent { HomeScreen() }
+        binding.topSites.setContent {
+            FocusTheme {
+                TopSitesOverlay()
+            }
+        }
 
         return binding.root
     }

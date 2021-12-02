@@ -5,7 +5,6 @@
 package org.mozilla.focus.topsites
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -16,8 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -31,27 +28,29 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import mozilla.components.browser.state.state.SessionState
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.ktx.kotlin.getRepresentativeCharacter
-import org.mozilla.focus.GleanMetrics.Shortcuts
 import org.mozilla.focus.R
-import org.mozilla.focus.components
+import org.mozilla.focus.ui.menu.CustomDropdownMenu
+import org.mozilla.focus.ui.menu.MenuItem
 import org.mozilla.focus.ui.theme.focusColors
 
 /**
  * A list of top sites.
  *
  * @param topSites List of [TopSite] to display.
+ * @param onTopSiteClicked Invoked when the user clicked the top site
+ * @param onRemoveTopSiteClicked Invoked when the user clicked 'Remove' item from drop down menu
+ * @param onRenameTopSiteClicked Invoked when the user clicked 'Rename' item from drop down menu
  */
-@OptIn(DelicateCoroutinesApi::class)
+
 @Composable
-fun TopSites(topSites: List<TopSite>) {
-    val components = components
+fun TopSites(
+    topSites: List<TopSite>,
+    onTopSiteClicked: (TopSite) -> Unit,
+    onRemoveTopSiteClicked: (TopSite) -> Unit,
+    onRenameTopSiteClicked: (TopSite) -> Unit
+) {
 
     Row(
         modifier = Modifier
@@ -64,27 +63,16 @@ fun TopSites(topSites: List<TopSite>) {
             TopSiteItem(
                 topSite = topSite,
                 menuItems = listOfNotNull(
-                    TopSiteMenuItem(
+                    MenuItem(
+                        title = stringResource(R.string.rename_top_site_item),
+                        onClick = { onRenameTopSiteClicked(topSite) }
+                    ),
+                    MenuItem(
                         title = stringResource(R.string.remove_top_site),
-                        onClick = { item ->
-                            Shortcuts.shortcutRemovedCounter["removed_from_home_screen"].add()
-
-                            GlobalScope.launch(Dispatchers.IO) {
-                                components.topSitesUseCases.removeTopSites(item)
-                            }
-                        }
+                        onClick = { onRemoveTopSiteClicked(topSite) }
                     )
                 ),
-                onTopSiteClick = { item ->
-                    Shortcuts.shortcutOpenedCounter.add()
-
-                    components.tabsUseCases.addTab(
-                        url = item.url,
-                        source = SessionState.Source.Internal.HomeScreen,
-                        selectTab = true,
-                        private = true
-                    )
-                }
+                onTopSiteClick = { item -> onTopSiteClicked(item) }
             )
         }
     }
@@ -94,14 +82,14 @@ fun TopSites(topSites: List<TopSite>) {
  * A top site item.
  *
  * @param topSite The [TopSite] to display.
- * @param menuItems List of [TopSiteMenuItem] to display in a top site dropdown menu.
+ * @param menuItems List of [MenuItem] to display in a top site dropdown menu.
  * @param onTopSiteClick Invoked when the user clicks on a top site.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun TopSiteItem(
     topSite: TopSite,
-    menuItems: List<TopSiteMenuItem>,
+    menuItems: List<MenuItem>,
     onTopSiteClick: (TopSite) -> Unit = {}
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
@@ -128,26 +116,12 @@ private fun TopSiteItem(
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1
             )
-        }
 
-        DropdownMenu(
-            expanded = menuExpanded,
-            onDismissRequest = { menuExpanded = false },
-            modifier = Modifier.background(color = focusColors.topSiteMenuBackground)
-        ) {
-            for (item in menuItems) {
-                DropdownMenuItem(
-                    onClick = {
-                        menuExpanded = false
-                        item.onClick(topSite)
-                    }
-                ) {
-                    Text(
-                        text = item.title,
-                        color = focusColors.topSiteMenuText
-                    )
-                }
-            }
+            CustomDropdownMenu(
+                menuItems = menuItems,
+                isExpanded = menuExpanded,
+                onDismissClicked = { menuExpanded = false }
+            )
         }
     }
 }

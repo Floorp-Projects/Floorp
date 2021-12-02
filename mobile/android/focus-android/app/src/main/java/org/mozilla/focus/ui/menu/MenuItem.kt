@@ -2,17 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.focus.topsites
-
-import mozilla.components.feature.top.sites.TopSite
+package org.mozilla.focus.ui.menu
 
 /**
- * A menu item in the top site dropdown menu.
+ * A menu item in dropdown menu.
  *
  * @property title The menu item title.
  * @property onClick Invoked when the user clicks on the menu item.
  */
-data class TopSiteMenuItem(
+data class MenuItem(
     val title: String,
-    val onClick: (TopSite) -> Unit
+    val onClick: () -> Unit
 )
