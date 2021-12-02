@@ -405,8 +405,7 @@ JS_PUBLIC_API bool JS_DefineUCProperty(JSContext* cx, JS::Handle<JSObject*> obj,
 }
 
 extern bool PropertySpecNameToId(JSContext* cx, JSPropertySpec::Name name,
-                                 MutableHandleId id,
-                                 js::PinningBehavior pin = js::DoNotPinAtom);
+                                 MutableHandleId id);
 
 static bool DefineSelfHostedProperty(JSContext* cx, JS::Handle<JSObject*> obj,
                                      JS::Handle<jsid> id,

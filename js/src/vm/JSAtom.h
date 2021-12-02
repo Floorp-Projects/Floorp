@@ -37,20 +37,15 @@ void TraceAtoms(JSTracer* trc);
 
 void TraceWellKnownSymbols(JSTracer* trc);
 
-/* N.B. must correspond to boolean tagging behavior. */
-enum PinningBehavior { DoNotPinAtom = false, PinAtom = true };
-
 extern JSAtom* Atomize(
     JSContext* cx, const char* bytes, size_t length,
-    js::PinningBehavior pin = js::DoNotPinAtom,
     const mozilla::Maybe<uint32_t>& indexValue = mozilla::Nothing());
 
 extern JSAtom* Atomize(JSContext* cx, HashNumber hash, const char* bytes,
-                       size_t length, PinningBehavior pin);
+                       size_t length);
 
 template <typename CharT>
-extern JSAtom* AtomizeChars(JSContext* cx, const CharT* chars, size_t length,
-                            js::PinningBehavior pin = js::DoNotPinAtom);
+extern JSAtom* AtomizeChars(JSContext* cx, const CharT* chars, size_t length);
 
 /* Atomize characters when the value of HashString is already known. */
 template <typename CharT>
@@ -66,12 +61,18 @@ extern JSAtom* AtomizeChars(JSContext* cx, mozilla::HashNumber hash,
 extern JSAtom* AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars,
                                 size_t utf8ByteLength);
 
-extern JSAtom* AtomizeString(JSContext* cx, JSString* str,
-                             js::PinningBehavior pin = js::DoNotPinAtom);
+extern JSAtom* AtomizeString(JSContext* cx, JSString* str);
 
 template <AllowGC allowGC>
 extern JSAtom* ToAtom(JSContext* cx,
                       typename MaybeRooted<JS::Value, allowGC>::HandleType v);
+
+/*
+ * Pin an atom so that it is never collected. Avoid using this if possible.
+ *
+ * This function does not GC.
+ */
+extern bool PinAtom(JSContext* cx, JSAtom* atom);
 
 extern JS::Handle<PropertyName*> ClassName(JSProtoKey key, JSContext* cx);
 

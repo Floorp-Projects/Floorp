@@ -39,7 +39,7 @@ using mozilla::NumberEqualsInt32;
 bool HashableValue::setValue(JSContext* cx, HandleValue v) {
   if (v.isString()) {
     // Atomize so that hash() and operator==() are fast and infallible.
-    JSString* str = AtomizeString(cx, v.toString(), DoNotPinAtom);
+    JSString* str = AtomizeString(cx, v.toString());
     if (!str) {
       return false;
     }
