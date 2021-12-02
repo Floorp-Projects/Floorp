@@ -322,12 +322,7 @@ ChildDNSService::GetCurrentTrrMode(nsIDNSService::ResolverMode* aMode) {
 
 NS_IMETHODIMP
 ChildDNSService::GetCurrentTrrConfirmationState(uint32_t* aConfirmationState) {
-  if (!mTRRServiceParent) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  *aConfirmationState = mTRRServiceParent->GetConfirmationState();
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
