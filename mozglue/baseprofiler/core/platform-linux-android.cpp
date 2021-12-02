@@ -390,16 +390,14 @@ static void* ThreadEntry(void* aArg) {
 }
 
 SamplerThread::SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
-                             double aIntervalMilliseconds,
-                             bool aStackWalkEnabled,
-                             bool aNoTimerResolutionChange)
+                             double aIntervalMilliseconds, uint32_t aFeatures)
     : mSampler(aLock),
       mActivityGeneration(aActivityGeneration),
       mIntervalMicroseconds(
           std::max(1, int(floor(aIntervalMilliseconds * 1000 + 0.5)))) {
 #if defined(USE_LUL_STACKWALK)
   lul::LUL* lul = CorePS::Lul(aLock);
-  if (!lul && aStackWalkEnabled) {
+  if (!lul && ProfilerFeature::HasStackWalkEnabled(aFeatures)) {
     CorePS::SetLul(aLock, MakeUnique<lul::LUL>(logging_sink_for_LUL));
     // Read all the unwind info currently available.
     lul = CorePS::Lul(aLock);
