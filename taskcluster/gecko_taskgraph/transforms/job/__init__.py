@@ -249,38 +249,29 @@ def use_fetches(config, jobs):
     artifact_names = {}
     extra_env = {}
     aliases = {}
+    tasks = []
 
     if config.kind in ("toolchain", "fetch"):
         jobs = list(jobs)
-        for job in jobs:
-            attributes = job.get("attributes", {})
-            label = job["label"]
-            get_attribute(artifact_names, label, attributes, "toolchain-artifact")
-            get_attribute(extra_env, label, attributes, "toolchain-env")
-            value = attributes.get(f"{config.kind}-alias")
-            if not value:
-                value = []
-            elif isinstance(value, str):
-                value = [value]
-            for alias in value:
-                aliases[f"{config.kind}-{alias}"] = label
+        tasks.extend((config.kind, j) for j in jobs)
 
-    for task in config.kind_dependencies_tasks.values():
-        if task.kind in ("fetch", "toolchain"):
-            get_attribute(
-                artifact_names,
-                task.label,
-                task.attributes,
-                f"{task.kind}-artifact",
-            )
-            get_attribute(extra_env, task.label, task.attributes, f"{task.kind}-env")
-            value = task.attributes.get(f"{task.kind}-alias")
-            if not value:
-                value = []
-            elif isinstance(value, str):
-                value = [value]
-            for alias in value:
-                aliases[f"{task.kind}-{alias}"] = task.label
+    tasks.extend(
+        (task.kind, task.__dict__)
+        for task in config.kind_dependencies_tasks.values()
+        if task.kind in ("fetch", "toolchain")
+    )
+    for (kind, task) in tasks:
+        get_attribute(
+            artifact_names, task["label"], task["attributes"], f"{kind}-artifact"
+        )
+        get_attribute(extra_env, task["label"], task["attributes"], f"{kind}-env")
+        value = task["attributes"].get(f"{kind}-alias")
+        if not value:
+            value = []
+        elif isinstance(value, str):
+            value = [value]
+        for alias in value:
+            aliases[f"{kind}-{alias}"] = task["label"]
 
     artifact_prefixes = {}
     for job in order_tasks(config, jobs):
