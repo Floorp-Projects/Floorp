@@ -72,6 +72,8 @@
 #define HASHMGR_HXX_
 
 #include <stdio.h>
+#include <stdint.h>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -153,6 +155,22 @@ class HashMgr {
   bool parse_aliasm(const std::string& line, FileMgr* af);
   bool parse_reptable(const std::string& line, FileMgr* af);
   int remove_forbidden_flag(const std::string& word);
+
+  // Our Mozilla fork uses a simple arena allocator for certain strings which
+  // persist for the lifetime of the HashMgr in order to avoid heap fragmentation.
+  // It's a simple bump-allocator, so we can't actually free() memory midway
+  // through the lifecycle, but we have a dummy free() implementation to ensure
+  // that our calls to arena_alloc() and arena_free() are balanced.
+  void* arena_alloc(int num_bytes);
+  void* arena_alloc(int num_bytes) const {
+    return const_cast<HashMgr*>(this)->arena_alloc(num_bytes);
+  }
+  void arena_free(void* ptr);
+
+  static const int CHUNK_SIZE = 4096;
+  std::vector<std::unique_ptr<uint8_t[]>> arena;
+  int current_chunk_offset = 0;
+  int outstanding_arena_allocations = 0;
 };
 
 #endif
