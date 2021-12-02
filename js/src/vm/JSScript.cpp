@@ -35,6 +35,7 @@
 #include "frontend/CompilationStencil.h"  // frontend::CompilationStencil
 #include "frontend/ParseContext.h"
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
+#include "frontend/StencilXdr.h"   // XDRStencilEncoder
 #include "gc/AllocKind.h"          // gc::InitialHeap
 #include "gc/FreeOp.h"
 #include "jit/BaselineJIT.h"
@@ -75,7 +76,6 @@
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/Warnings.h"  // js::WarnNumberLatin1
-#include "vm/Xdr.h"       // XDRResult, XDRStencilEncoder
 #ifdef MOZ_VTUNE
 #  include "vtune/VTuneWrapper.h"
 #endif

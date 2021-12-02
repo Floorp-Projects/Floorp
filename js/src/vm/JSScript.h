@@ -45,7 +45,7 @@
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/SharedStencil.h"  // js::GCThingIndex, js::SourceExtent, js::SharedImmutableScriptData, MemberInitializers
-#include "vm/StencilEnums.h"  // SourceRetrievable
+#include "vm/StencilEnums.h"   // SourceRetrievable
 #include "vm/Time.h"
 
 namespace JS {
