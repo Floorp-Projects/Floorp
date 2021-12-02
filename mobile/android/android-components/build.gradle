@@ -150,6 +150,7 @@ subprojects {
             tasks.matching {it instanceof Test}.configureEach() {
                 systemProperty "robolectric.logging", "stdout"
                 systemProperty "logging.test-mode", "true"
+                systemProperty "javax.net.ssl.trustStoreType", "JKS"
 
                 testLogging.events = []
 
