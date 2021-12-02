@@ -16,9 +16,16 @@
 #include "vm/SharedStencil.h"  // SharedImmutableScriptData
 #include "vm/Xdr.h"            // XDRMode, XDRResult, XDRState
 
+namespace JS {
+
+class DecodeOptions;
+
+}  // namespace JS
+
 namespace js {
 
 class LifoAlloc;
+class ScriptSource;
 
 namespace frontend {
 
@@ -46,7 +53,38 @@ struct CanCopyDataToDisk {
 // so that the statically declared XDR methods within have access to the
 // relevant struct internals.
 class StencilXDR {
+ private:
+  template <XDRMode mode>
+  [[nodiscard]] static XDRResult codeSourceUnretrievableUncompressed(
+      XDRState<mode>* xdr, ScriptSource* ss, uint8_t sourceCharSize,
+      uint32_t uncompressedLength);
+
+  template <typename Unit,
+            template <typename U, SourceRetrievable CanRetrieve> class Data,
+            XDRMode mode>
+  static void codeSourceRetrievable(ScriptSource* ss);
+
+  template <typename Unit, XDRMode mode>
+  [[nodiscard]] static XDRResult codeSourceUncompressedData(
+      XDRState<mode>* const xdr, ScriptSource* const ss);
+
+  template <typename Unit, XDRMode mode>
+  [[nodiscard]] static XDRResult codeSourceCompressedData(
+      XDRState<mode>* const xdr, ScriptSource* const ss);
+
+  template <typename Unit, XDRMode mode>
+  static void codeSourceRetrievableData(ScriptSource* ss);
+
+  template <XDRMode mode>
+  [[nodiscard]] static XDRResult codeSourceData(XDRState<mode>* const xdr,
+                                                ScriptSource* const ss);
+
  public:
+  template <XDRMode mode>
+  static XDRResult codeSource(XDRState<mode>* xdr,
+                              const JS::DecodeOptions* maybeOptions,
+                              RefPtr<ScriptSource>& source);
+
   template <XDRMode mode>
   static XDRResult codeBigInt(XDRState<mode>* xdr, LifoAlloc& alloc,
                               BigIntStencil& stencil);

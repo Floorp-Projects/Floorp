@@ -253,7 +253,7 @@ static XDRResult XDRStencilHeader(XDRState<mode>* xdr,
   // computed at the end the incremental-encoding process.
 
   MOZ_TRY(VersionCheck(xdr));
-  MOZ_TRY(ScriptSource::XDR(xdr, maybeOptions, source));
+  MOZ_TRY(frontend::StencilXDR::codeSource(xdr, maybeOptions, source));
 
   return Ok();
 }

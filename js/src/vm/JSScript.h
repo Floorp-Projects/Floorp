@@ -46,7 +46,7 @@
 #include "vm/SharedStencil.h"  // js::GCThingIndex, js::SourceExtent, js::SharedImmutableScriptData, MemberInitializers
 #include "vm/StencilEnums.h"  // SourceRetrievable
 #include "vm/Time.h"
-#include "vm/Xdr.h"  // XDRMode, XDRResult, XDRIncrementalStencilEncoder
+#include "vm/Xdr.h"  // XDRIncrementalStencilEncoder
 
 namespace JS {
 struct ScriptSourceInfo;
@@ -85,6 +85,7 @@ class DebugScript;
 namespace frontend {
 struct CompilationStencil;
 struct CompilationGCOutput;
+class StencilXDR;
 }  // namespace frontend
 
 class ScriptCounts {
@@ -389,6 +390,8 @@ class ScriptSource {
   friend class SourceCompressionTask;
   friend bool SynchronouslyCompressSource(JSContext* cx,
                                           JS::Handle<BaseScript*> script);
+
+  friend class frontend::StencilXDR;
 
  private:
   // Common base class of the templated variants of PinnedUnits<T>.
@@ -957,16 +960,6 @@ class ScriptSource {
   void triggerConvertToCompressedSourceFromTask(
       SharedImmutableString compressed);
 
- private:
-  // It'd be better to make this function take <XDRMode, Unit>, as both
-  // specializations of this function contain nested Unit-parametrized
-  // helper classes that do everything the function needs to do.  But then
-  // we'd need template function partial specialization to hold XDRMode
-  // constant while varying Unit, so that idea's no dice.
-  template <XDRMode mode>
-  [[nodiscard]] XDRResult xdrUnretrievableUncompressedSource(
-      XDRState<mode>* xdr, uint8_t sourceCharSize, uint32_t uncompressedLength);
-
  public:
   const char* filename() const {
     return filename_ ? filename_.chars() : nullptr;
@@ -1027,33 +1020,6 @@ class ScriptSource {
   // |xdrEncodeTopLevel|, and free the XDR encoder.  In case of errors, the
   // |buffer| is considered undefined.
   bool xdrFinalizeEncoder(JSContext* cx, JS::TranscodeBuffer& buffer);
-
- private:
-  template <typename Unit,
-            template <typename U, SourceRetrievable CanRetrieve> class Data,
-            XDRMode mode>
-  static void codeRetrievable(ScriptSource* ss);
-
-  template <typename Unit, XDRMode mode>
-  [[nodiscard]] static XDRResult codeUncompressedData(XDRState<mode>* const xdr,
-                                                      ScriptSource* const ss);
-
-  template <typename Unit, XDRMode mode>
-  [[nodiscard]] static XDRResult codeCompressedData(XDRState<mode>* const xdr,
-                                                    ScriptSource* const ss);
-
-  template <typename Unit, XDRMode mode>
-  static void codeRetrievableData(ScriptSource* ss);
-
-  template <XDRMode mode>
-  [[nodiscard]] static XDRResult xdrData(XDRState<mode>* const xdr,
-                                         ScriptSource* const ss);
-
- public:
-  template <XDRMode mode>
-  [[nodiscard]] static XDRResult XDR(XDRState<mode>* xdr,
-                                     const JS::DecodeOptions* maybeOptions,
-                                     RefPtr<ScriptSource>& source);
 };
 
 // [SMDOC] ScriptSourceObject
