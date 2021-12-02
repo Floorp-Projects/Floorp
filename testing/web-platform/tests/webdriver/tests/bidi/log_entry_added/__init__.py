@@ -67,3 +67,23 @@ def assert_javascript_entry(entry,
     assert "type" in entry
     assert isinstance(entry["type"], str)
     assert entry["type"] == "javascript"
+
+
+def create_console_api_message(current_session, inline, text):
+    current_session.execute_script(f"console.log('{text}')")
+    return text
+
+
+def create_javascript_error(current_session, inline, error_message="foo"):
+    expected_text = current_session.execute_script(
+        f"const err = new Error('{error_message}'); return err.toString()")
+    current_session.url = inline(
+        f"<script>function bar() {{ throw new Error('{error_message}'); }}; bar();</script>")
+    return expected_text
+
+
+def create_log(current_session, inline, log_type, text="foo"):
+    if log_type == "console_api_log":
+        return create_console_api_message(current_session, inline, text)
+    if log_type == "javascript_error":
+        return create_javascript_error(current_session, inline, text)
