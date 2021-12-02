@@ -68,7 +68,6 @@
  * SUCH DAMAGE.
  */
 
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -124,8 +123,8 @@ HashMgr::~HashMgr() {
         nt = pt->next;
         if (pt->astr &&
             (!aliasf || TESTAFF(pt->astr, ONLYUPCASEFLAG, pt->alen)))
-          arena_free(pt->astr);
-        arena_free(pt);
+          free(pt->astr);
+        free(pt);
         pt = nt;
       }
     }
@@ -135,18 +134,18 @@ HashMgr::~HashMgr() {
 
   if (aliasf) {
     for (int j = 0; j < (numaliasf); j++)
-      arena_free(aliasf[j]);
-    arena_free(aliasf);
+      free(aliasf[j]);
+    free(aliasf);
     aliasf = NULL;
     if (aliasflen) {
-      arena_free(aliasflen);
+      free(aliasflen);
       aliasflen = NULL;
     }
   }
   if (aliasm) {
     for (int j = 0; j < (numaliasm); j++)
-      arena_free(aliasm[j]);
-    arena_free(aliasm);
+      free(aliasm[j]);
+    free(aliasm);
     aliasm = NULL;
   }
 
@@ -160,8 +159,6 @@ HashMgr::~HashMgr() {
 #ifdef MOZILLA_CLIENT
   delete[] csconv;
 #endif
-
-  assert(outstanding_arena_allocations == 0);
 }
 
 // lookup a root word in the hashtable
@@ -230,7 +227,7 @@ int HashMgr::add_word(const std::string& in_word,
   int descl = desc ? (aliasm ? sizeof(char*) : desc->size() + 1) : 0;
   // variable-length hash record with word and optional fields
   struct hentry* hp =
-      (struct hentry*)arena_alloc(sizeof(struct hentry) + word->size() + descl);
+      (struct hentry*)malloc(sizeof(struct hentry) + word->size() + descl);
   if (!hp) {
     delete desc_copy;
     delete word_copy;
@@ -374,10 +371,10 @@ int HashMgr::add_word(const std::string& in_word,
       // remove hidden onlyupcase homonym
       if (!onlyupcase) {
         if ((dp->astr) && TESTAFF(dp->astr, ONLYUPCASEFLAG, dp->alen)) {
-          arena_free(dp->astr);
+          free(dp->astr);
           dp->astr = hp->astr;
           dp->alen = hp->alen;
-          arena_free(hp);
+          free(hp);
           delete desc_copy;
           delete word_copy;
           return 0;
@@ -394,10 +391,10 @@ int HashMgr::add_word(const std::string& in_word,
     // remove hidden onlyupcase homonym
     if (!onlyupcase) {
       if ((dp->astr) && TESTAFF(dp->astr, ONLYUPCASEFLAG, dp->alen)) {
-        arena_free(dp->astr);
+        free(dp->astr);
         dp->astr = hp->astr;
         dp->alen = hp->alen;
-        arena_free(hp);
+        free(hp);
         delete desc_copy;
         delete word_copy;
         return 0;
@@ -413,8 +410,8 @@ int HashMgr::add_word(const std::string& in_word,
   } else {
     // remove hidden onlyupcase homonym
     if (hp->astr)
-      arena_free(hp->astr);
-    arena_free(hp);
+      free(hp->astr);
+    free(hp);
   }
 
   delete desc_copy;
@@ -438,7 +435,7 @@ int HashMgr::add_hidden_capitalized_word(const std::string& word,
        ((captype == ALLCAP) && (flagslen != 0))) &&
       !((flagslen != 0) && TESTAFF(flags, forbiddenword, flagslen))) {
     unsigned short* flags2 =
-        (unsigned short*)arena_alloc(sizeof(unsigned short) * (flagslen + 1));
+        (unsigned short*)malloc(sizeof(unsigned short) * (flagslen + 1));
     if (!flags2)
       return 1;
     if (flagslen)
@@ -487,13 +484,13 @@ int HashMgr::remove(const std::string& word) {
   while (dp) {
     if (dp->alen == 0 || !TESTAFF(dp->astr, forbiddenword, dp->alen)) {
       unsigned short* flags =
-          (unsigned short*)arena_alloc(sizeof(unsigned short) * (dp->alen + 1));
+          (unsigned short*)malloc(sizeof(unsigned short) * (dp->alen + 1));
       if (!flags)
         return 1;
       for (int i = 0; i < dp->alen; i++)
         flags[i] = dp->astr[i];
       flags[dp->alen] = forbiddenword;
-      arena_free(dp->astr);
+      free(dp->astr);
       dp->astr = flags;
       dp->alen++;
       std::sort(flags, flags + dp->alen);
@@ -541,7 +538,7 @@ int HashMgr::add_with_affix(const std::string& word, const std::string& example)
       add_word(word, wcl, dp->astr, dp->alen, NULL, false, captype);
     } else {
       unsigned short* flags =
-          (unsigned short*) arena_alloc(dp->alen * sizeof(unsigned short));
+          (unsigned short*)malloc(dp->alen * sizeof(unsigned short));
       if (flags) {
         memcpy((void*)flags, (void*)dp->astr,
                dp->alen * sizeof(unsigned short));
@@ -730,7 +727,7 @@ int HashMgr::decode_flags(unsigned short** result, const std::string& flags, Fil
         HUNSPELL_WARNING(stderr, "error: line %d: bad flagvector\n",
                          af->getlinenum());
       len /= 2;
-      *result = (unsigned short*)arena_alloc(len * sizeof(unsigned short));
+      *result = (unsigned short*)malloc(len * sizeof(unsigned short));
       if (!*result)
         return -1;
       for (int i = 0; i < len; i++) {
@@ -747,7 +744,7 @@ int HashMgr::decode_flags(unsigned short** result, const std::string& flags, Fil
         if (flags[i] == ',')
           len++;
       }
-      *result = (unsigned short*)arena_alloc(len * sizeof(unsigned short));
+      *result = (unsigned short*)malloc(len * sizeof(unsigned short));
       if (!*result)
         return -1;
       dest = *result;
@@ -782,7 +779,7 @@ int HashMgr::decode_flags(unsigned short** result, const std::string& flags, Fil
       std::vector<w_char> w;
       u8_u16(w, flags);
       len = w.size();
-      *result = (unsigned short*)arena_alloc(len * sizeof(unsigned short));
+      *result = (unsigned short*)malloc(len * sizeof(unsigned short));
       if (!*result)
         return -1;
       memcpy(*result, &w[0], len * sizeof(short));
@@ -791,7 +788,7 @@ int HashMgr::decode_flags(unsigned short** result, const std::string& flags, Fil
     default: {  // Ispell's one-character flags (erfg -> e r f g)
       unsigned short* dest;
       len = flags.size();
-      *result = (unsigned short*)arena_alloc(len * sizeof(unsigned short));
+      *result = (unsigned short*)malloc(len * sizeof(unsigned short));
       if (!*result)
         return -1;
       dest = *result;
@@ -1078,15 +1075,15 @@ bool HashMgr::parse_aliasf(const std::string& line, FileMgr* af) {
           return false;
         }
         aliasf =
-            (unsigned short**)arena_alloc(numaliasf * sizeof(unsigned short*));
+            (unsigned short**)malloc(numaliasf * sizeof(unsigned short*));
         aliasflen =
-            (unsigned short*)arena_alloc(numaliasf * sizeof(unsigned short));
+            (unsigned short*)malloc(numaliasf * sizeof(unsigned short));
         if (!aliasf || !aliasflen) {
           numaliasf = 0;
           if (aliasf)
-            arena_free(aliasf);
+            free(aliasf);
           if (aliasflen)
-            arena_free(aliasflen);
+            free(aliasflen);
           aliasf = NULL;
           aliasflen = NULL;
           return false;
@@ -1102,8 +1099,8 @@ bool HashMgr::parse_aliasf(const std::string& line, FileMgr* af) {
   }
   if (np != 2) {
     numaliasf = 0;
-    arena_free(aliasf);
-    arena_free(aliasflen);
+    free(aliasf);
+    free(aliasflen);
     aliasf = NULL;
     aliasflen = NULL;
     HUNSPELL_WARNING(stderr, "error: line %d: missing data\n",
@@ -1127,8 +1124,8 @@ bool HashMgr::parse_aliasf(const std::string& line, FileMgr* af) {
         case 0: {
           if (nl.compare(start_piece - nl.begin(), 2, "AF", 2) != 0) {
             numaliasf = 0;
-            arena_free(aliasf);
-            arena_free(aliasflen);
+            free(aliasf);
+            free(aliasflen);
             aliasf = NULL;
             aliasflen = NULL;
             HUNSPELL_WARNING(stderr, "error: line %d: table is corrupt\n",
@@ -1151,8 +1148,8 @@ bool HashMgr::parse_aliasf(const std::string& line, FileMgr* af) {
       start_piece = mystrsep(nl, iter);
     }
     if (!aliasf[j]) {
-      arena_free(aliasf);
-      arena_free(aliasflen);
+      free(aliasf);
+      free(aliasflen);
       aliasf = NULL;
       aliasflen = NULL;
       numaliasf = 0;
@@ -1203,7 +1200,7 @@ bool HashMgr::parse_aliasm(const std::string& line, FileMgr* af) {
                            af->getlinenum());
           return false;
         }
-        aliasm = (char**)arena_alloc(numaliasm * sizeof(char*));
+        aliasm = (char**)malloc(numaliasm * sizeof(char*));
         if (!aliasm) {
           numaliasm = 0;
           return false;
@@ -1219,7 +1216,7 @@ bool HashMgr::parse_aliasm(const std::string& line, FileMgr* af) {
   }
   if (np != 2) {
     numaliasm = 0;
-    arena_free(aliasm);
+    free(aliasm);
     aliasm = NULL;
     HUNSPELL_WARNING(stderr, "error: line %d: missing data\n",
                      af->getlinenum());
@@ -1243,7 +1240,7 @@ bool HashMgr::parse_aliasm(const std::string& line, FileMgr* af) {
             HUNSPELL_WARNING(stderr, "error: line %d: table is corrupt\n",
                              af->getlinenum());
             numaliasm = 0;
-            arena_free(aliasm);
+            free(aliasm);
             aliasm = NULL;
             return false;
           }
@@ -1270,7 +1267,7 @@ bool HashMgr::parse_aliasm(const std::string& line, FileMgr* af) {
     }
     if (!aliasm[j]) {
       numaliasm = 0;
-      arena_free(aliasm);
+      free(aliasm);
       aliasm = NULL;
       HUNSPELL_WARNING(stderr, "error: line %d: table is corrupt\n",
                        af->getlinenum());
@@ -1389,26 +1386,4 @@ bool HashMgr::parse_reptable(const std::string& line, FileMgr* af) {
 // return replacing table
 const std::vector<replentry>& HashMgr::get_reptable() const {
   return reptable;
-}
-
-void* HashMgr::arena_alloc(int num_bytes) {
-  if (num_bytes > CHUNK_SIZE) {
-    assert(false);
-    return nullptr;
-  }
-
-  if (arena.empty() || (CHUNK_SIZE - current_chunk_offset < num_bytes)) {
-    arena.push_back(std::make_unique<uint8_t[]>(CHUNK_SIZE));
-    current_chunk_offset = 0;
-  }
-
-  uint8_t* ptr = &arena.back()[current_chunk_offset];
-  current_chunk_offset += num_bytes;
-  outstanding_arena_allocations++;
-  return ptr;
-}
-
-void HashMgr::arena_free(void* ptr) {
-  --outstanding_arena_allocations;
-  assert(outstanding_arena_allocations >= 0);
 }
