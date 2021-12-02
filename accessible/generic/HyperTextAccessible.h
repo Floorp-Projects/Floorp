@@ -88,7 +88,7 @@ class HyperTextAccessible : public AccessibleWrap,
    * Return index for the given link accessible.
    */
   int32_t LinkIndexOf(LocalAccessible* aLink) {
-    return GetIndexOfEmbeddedChild(aLink);
+    return IndexOfEmbeddedChild(aLink);
   }
 
   /**

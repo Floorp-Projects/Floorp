@@ -2731,17 +2731,18 @@ LocalAccessible* LocalAccessible::EmbeddedChildAt(uint32_t aIndex) {
   return LocalChildAt(aIndex);
 }
 
-int32_t LocalAccessible::GetIndexOfEmbeddedChild(LocalAccessible* aChild) {
+int32_t LocalAccessible::IndexOfEmbeddedChild(Accessible* aChild) {
+  MOZ_ASSERT(aChild->IsLocal());
   if (mStateFlags & eHasTextKids) {
     if (!mEmbeddedObjCollector) {
       mEmbeddedObjCollector.reset(new EmbeddedObjCollector(this));
     }
     return mEmbeddedObjCollector.get()
-               ? mEmbeddedObjCollector->GetIndexAt(aChild)
+               ? mEmbeddedObjCollector->GetIndexAt(aChild->AsLocal())
                : -1;
   }
 
-  return GetIndexOf(aChild);
+  return GetIndexOf(aChild->AsLocal());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

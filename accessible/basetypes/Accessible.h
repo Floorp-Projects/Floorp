@@ -115,6 +115,11 @@ class Accessible {
    */
   virtual Accessible* EmbeddedChildAt(uint32_t aIndex) = 0;
 
+  /**
+   * Return index of the given embedded accessible child.
+   */
+  virtual int32_t IndexOfEmbeddedChild(Accessible* aChild) = 0;
+
   // Methods that potentially access a cache.
 
   /*
