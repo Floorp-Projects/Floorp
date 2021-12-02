@@ -775,27 +775,18 @@ AtkObject* refChildCB(AtkObject* aAtkObj, gint aChildIndex) {
 gint getIndexInParentCB(AtkObject* aAtkObj) {
   // We don't use LocalAccessible::IndexInParent() because we don't include text
   // leaf nodes as children in ATK.
-  if (RemoteAccessible* proxy = GetProxy(aAtkObj)) {
-    if (RemoteAccessible* parent = proxy->RemoteParent()) {
-      return parent->IndexOfEmbeddedChild(proxy);
-    }
-
-    if (proxy->OuterDocOfRemoteBrowser()) {
-      return 0;
-    }
-
+  Accessible* acc = GetInternalObj(aAtkObj);
+  if (!acc) {
     return -1;
   }
-
-  AccessibleWrap* accWrap = GetAccessibleWrap(aAtkObj);
-  if (!accWrap) {
+  if (acc->IsDoc()) {
+    return 0;
+  }
+  Accessible* parent = acc->Parent();
+  if (!parent) {
     return -1;
   }
-
-  LocalAccessible* parent = accWrap->LocalParent();
-  if (!parent) return -1;  // No parent
-
-  return parent->GetIndexOfEmbeddedChild(accWrap);
+  return parent->IndexOfEmbeddedChild(acc);
 }
 
 static void TranslateStates(uint64_t aState, roles::Role aRole,

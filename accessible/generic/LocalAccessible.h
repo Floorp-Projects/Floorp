@@ -400,10 +400,7 @@ class LocalAccessible : public nsISupports, public Accessible {
    */
   virtual LocalAccessible* EmbeddedChildAt(uint32_t aIndex) override;
 
-  /**
-   * Return index of the given embedded accessible child.
-   */
-  int32_t GetIndexOfEmbeddedChild(LocalAccessible* aChild);
+  virtual int32_t IndexOfEmbeddedChild(Accessible* aChild) override;
 
   /**
    * Return number of content children/content child at index. The content
