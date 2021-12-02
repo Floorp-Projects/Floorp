@@ -77,11 +77,6 @@ struct TargetConfig {
   nsIntRegion clearRegion;
 };
 
-// Create a shadow layer for |layer|
-struct OpCreatePaintedLayer    { LayerHandle layer; };
-struct OpCreateContainerLayer  { LayerHandle layer; };
-struct OpCreateRefLayer        { LayerHandle layer; };
-
 struct OpAttachCompositable {
   LayerHandle layer;
   CompositableHandle compositable;
@@ -90,11 +85,6 @@ struct OpAttachCompositable {
 struct OpAttachAsyncCompositable {
   LayerHandle layer;
   CompositableHandle compositable;
-};
-
-struct ThebesBufferData {
-  IntRect rect;
-  IntPoint rotation;
 };
 
 struct CubicBezierFunction {
