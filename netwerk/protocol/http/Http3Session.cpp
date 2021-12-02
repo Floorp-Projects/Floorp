@@ -1336,7 +1336,7 @@ void Http3Session::CloseStream(Http3Stream* aStream, nsresult aResult) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   if (!aStream->RecvdFin() && !aStream->RecvdReset() &&
       (aStream->HasStreamId())) {
-    mHttp3Connection->ResetStream(aStream->StreamId(),
+    mHttp3Connection->CancelFetch(aStream->StreamId(),
                                   HTTP3_APP_ERROR_REQUEST_CANCELLED);
   }
   aStream->Close(aResult);
