@@ -9,36 +9,36 @@ const MAX_RESULTS = 10;
 const RESULT_GROUPS_PREF = "browser.urlbar.resultGroups";
 const MAX_RICH_RESULTS_PREF = "browser.urlbar.maxRichResults";
 
+// Default result groups used in the tests below.
+const RESULT_GROUPS = {
+  children: [
+    {
+      group: UrlbarUtils.RESULT_GROUP.GENERAL_PARENT,
+      flexChildren: true,
+      children: [
+        {
+          flex: 1,
+          group: UrlbarUtils.RESULT_GROUP.FORM_HISTORY,
+        },
+        {
+          flex: 1,
+          group: UrlbarUtils.RESULT_GROUP.GENERAL,
+        },
+        {
+          flex: 1,
+          group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
+        },
+      ],
+    },
+  ],
+};
+
 add_task(async function test() {
   // Set a specific maxRichResults for sanity's sake.
   Services.prefs.setIntPref(MAX_RICH_RESULTS_PREF, MAX_RESULTS);
 
-  // Set the result groups we'll test with.
-  setResultGroups({
-    children: [
-      {
-        group: UrlbarUtils.RESULT_GROUP.GENERAL_PARENT,
-        flexChildren: true,
-        children: [
-          {
-            flex: 1,
-            group: UrlbarUtils.RESULT_GROUP.FORM_HISTORY,
-          },
-          {
-            flex: 1,
-            group: UrlbarUtils.RESULT_GROUP.GENERAL,
-          },
-          {
-            flex: 1,
-            group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
-          },
-        ],
-      },
-    ],
-  });
-
-  // Create the non-suggestedIndex results we'll use in all tests. For each test
-  // we'll copy this array and append suggestedIndex results.
+  // Create the default non-suggestedIndex results we'll use for tests that
+  // don't specify `otherResults`.
   let basicResults = [
     ...makeHistoryResults(),
     ...makeFormHistoryResults(),
@@ -64,6 +64,11 @@ add_task(async function test() {
   //       The number of results in the slice.
   //     * {number} [offset]
   //       Can be used to offset the starting index of the slice in the results.
+  // * {array} [otherResults]
+  //   An array of results besides the group-relative suggestedIndex results
+  //   that the provider should return. If not specified `basicResults` is used.
+  // * {array} [resultGroups]
+  //   The result groups to use. If not specified `RESULT_GROUPS` is used.
   let tests = [
     {
       desc: "First result in GENERAL",
@@ -305,15 +310,166 @@ add_task(async function test() {
         },
       ],
     },
+
+    {
+      desc: "Results in sibling group, no other results in same group",
+      otherResults: makeFormHistoryResults(),
+      suggestedIndexResults: [
+        {
+          suggestedIndex: -1,
+          group: UrlbarUtils.RESULT_GROUP.GENERAL,
+        },
+      ],
+      expected: [
+        {
+          group: UrlbarUtils.RESULT_GROUP.FORM_HISTORY,
+          count: 9,
+        },
+        {
+          group: UrlbarUtils.RESULT_GROUP.GENERAL,
+          suggestedIndex: -1,
+        },
+      ],
+    },
+
+    {
+      desc:
+        "Results in sibling group, no other results in same group, has child group",
+      resultGroups: {
+        flexChildren: true,
+        children: [
+          {
+            flex: 2,
+            group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
+          },
+          {
+            flex: 1,
+            group: UrlbarUtils.RESULT_GROUP.GENERAL_PARENT,
+            children: [{ group: UrlbarUtils.RESULT_GROUP.GENERAL }],
+          },
+        ],
+      },
+      otherResults: makeRemoteSuggestionResults(),
+      suggestedIndexResults: [
+        {
+          suggestedIndex: -1,
+          group: UrlbarUtils.RESULT_GROUP.GENERAL_PARENT,
+        },
+      ],
+      expected: [
+        {
+          group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
+          count: 9,
+        },
+        {
+          group: UrlbarUtils.RESULT_GROUP.GENERAL_PARENT,
+          suggestedIndex: -1,
+        },
+      ],
+    },
+
+    {
+      desc: "Complex group nesting with global suggestedIndex with resultSpan",
+      resultGroups: {
+        children: [
+          {
+            maxResultCount: 1,
+            children: [{ group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST }],
+          },
+          {
+            flexChildren: true,
+            children: [
+              {
+                flex: 2,
+                group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
+              },
+              {
+                flex: 1,
+                group: UrlbarUtils.RESULT_GROUP.GENERAL_PARENT,
+                children: [{ group: UrlbarUtils.RESULT_GROUP.GENERAL }],
+              },
+            ],
+          },
+        ],
+      },
+      otherResults: [
+        // heuristic
+        Object.assign(
+          new UrlbarResult(
+            UrlbarUtils.RESULT_TYPE.SEARCH,
+            UrlbarUtils.RESULT_SOURCE.SEARCH,
+            {
+              engine: "test",
+              suggestion: "foo",
+              lowerCaseSuggestion: "foo",
+            }
+          ),
+          {
+            heuristic: true,
+            group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST,
+          }
+        ),
+        // global suggestedIndex with resultSpan = 2
+        Object.assign(
+          new UrlbarResult(
+            UrlbarUtils.RESULT_TYPE.SEARCH,
+            UrlbarUtils.RESULT_SOURCE.SEARCH,
+            {
+              engine: "test",
+            }
+          ),
+          {
+            suggestedIndex: 1,
+            resultSpan: 2,
+          }
+        ),
+        // remote suggestions
+        ...makeRemoteSuggestionResults(),
+      ],
+      suggestedIndexResults: [
+        {
+          suggestedIndex: -1,
+          group: UrlbarUtils.RESULT_GROUP.GENERAL_PARENT,
+        },
+      ],
+      expected: [
+        {
+          group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST,
+          count: 1,
+        },
+        {
+          group: UrlbarUtils.RESULT_GROUP.SUGGESTED_INDEX,
+          suggestedIndex: 1,
+          resultSpan: 2,
+          count: 1,
+        },
+        {
+          group: UrlbarUtils.RESULT_GROUP.REMOTE_SUGGESTION,
+          count: 6,
+        },
+        {
+          group: UrlbarUtils.RESULT_GROUP.GENERAL_PARENT,
+          suggestedIndex: -1,
+        },
+      ],
+    },
   ];
 
   let controller = UrlbarTestUtils.newMockController();
 
-  for (let { desc, suggestedIndexResults, expected } of tests) {
+  for (let {
+    desc,
+    suggestedIndexResults,
+    expected,
+    resultGroups,
+    otherResults,
+  } of tests) {
     info(`Running test: ${desc}`);
 
+    setResultGroups(resultGroups || RESULT_GROUPS);
+
     // Make the array of all results and do a search.
-    let results = basicResults.concat(
+    let results = (otherResults || basicResults).concat(
       makeSuggestedIndexResults(suggestedIndexResults)
     );
     let provider = registerBasicTestProvider(results);
