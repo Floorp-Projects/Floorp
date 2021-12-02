@@ -266,8 +266,7 @@ static TextureType GetTextureType(gfx::SurfaceFormat aFormat,
   if ((layersBackend == LayersBackend::LAYERS_WR &&
        !aKnowsCompositor->UsingSoftwareWebRender()) &&
       (moz2DBackend == gfx::BackendType::DIRECT2D ||
-       moz2DBackend == gfx::BackendType::DIRECT2D1_1 ||
-       (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT))) &&
+       moz2DBackend == gfx::BackendType::DIRECT2D1_1) &&
       aSize.width <= maxTextureSize && aSize.height <= maxTextureSize &&
       !(aAllocFlags & ALLOC_UPDATE_FROM_SURFACE)) {
     return TextureType::D3D11;
@@ -1195,8 +1194,7 @@ already_AddRefed<TextureClient> TextureClient::CreateFromSurface(
   if (layersBackend == LayersBackend::LAYERS_WR &&
       (moz2DBackend == gfx::BackendType::DIRECT2D ||
        moz2DBackend == gfx::BackendType::DIRECT2D1_1 ||
-       (!!(aAllocFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT) &&
-        DeviceManagerDx::Get()->GetContentDevice())) &&
+       DeviceManagerDx::Get()->GetContentDevice()) &&
       size.width <= maxTextureSize && size.height <= maxTextureSize) {
     data = D3D11TextureData::Create(aSurface, aAllocFlags);
   }
@@ -1245,10 +1243,6 @@ already_AddRefed<TextureClient> TextureClient::CreateForRawBufferAccess(
     TextureAllocationFlags aAllocFlags) {
   // also test the validity of aAllocator
   if (!aAllocator || !aAllocator->IPCOpen()) {
-    return nullptr;
-  }
-
-  if (aAllocFlags & ALLOC_DISALLOW_BUFFERTEXTURECLIENT) {
     return nullptr;
   }
 

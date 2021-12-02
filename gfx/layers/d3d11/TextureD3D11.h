@@ -124,9 +124,7 @@ class D3D11TextureData final : public TextureData {
   gfx::YUVColorSpace mYUVColorSpace = gfx::YUVColorSpace::Identity;
   gfx::ColorRange mColorRange = gfx::ColorRange::LIMITED;
   bool mNeedsClear = false;
-  bool mNeedsClearWhite = false;
   const bool mHasSynchronization;
-  const bool mIsForOutOfBandContent;
 
   RefPtr<ID3D11Texture2D> mTexture;
   const TextureAllocationFlags mAllocationFlags;
