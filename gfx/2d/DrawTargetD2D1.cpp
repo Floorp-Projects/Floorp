@@ -1640,6 +1640,8 @@ void DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp,
       return;
     }
 
+    PushAllClips();
+
     blendEffect->SetInput(0, tmpImage);
     blendEffect->SetInput(1, source);
     blendEffect->SetValue(D2D1_BLEND_PROP_MODE, D2DBlendMode(aOp));
