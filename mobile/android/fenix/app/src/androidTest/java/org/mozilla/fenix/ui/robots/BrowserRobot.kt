@@ -160,18 +160,9 @@ class BrowserRobot {
         )
     }
 
-    fun verifyNavURLBar() = assertNavURLBar()
-
     fun verifyNavURLBarHidden() = assertNavURLBarHidden()
 
     fun verifySecureConnectionLockIcon() = assertSecureConnectionLockIcon()
-
-    fun verifyEnhancedTrackingProtectionSwitch() = assertEnhancedTrackingProtectionSwitch()
-
-    fun verifyEnhancedTrackingOptions() {
-        onView(withId(R.id.mozac_browser_toolbar_security_indicator)).click()
-        verifyEnhancedTrackingProtectionSwitch()
-    }
 
     fun verifyMenuButton() = assertMenuButton()
 
@@ -673,16 +664,6 @@ private fun assertSearchBar() = searchBar().check(matches(withEffectiveVisibilit
 private fun assertNavURLBar() = assertTrue(navURLBar().waitForExists(waitingTime))
 
 private fun assertNavURLBarHidden() = assertTrue(navURLBar().waitUntilGone(waitingTime))
-
-private fun assertEnhancedTrackingProtectionSwitch() {
-    withText(R.id.trackingProtectionSwitch)
-        .matches(withEffectiveVisibility(Visibility.VISIBLE))
-}
-
-private fun assertProtectionSettingsButton() {
-    onView(withId(R.id.protection_settings))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
 
 private fun assertSecureConnectionLockIcon() {
     onView(withId(R.id.mozac_browser_toolbar_security_indicator))

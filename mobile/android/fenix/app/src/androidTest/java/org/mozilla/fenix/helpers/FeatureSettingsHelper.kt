@@ -25,6 +25,10 @@ class FeatureSettingsHelper {
         settings.showRecentTabsFeature = enabled
     }
 
+    fun setStrictETPEnabled() {
+        settings.setStrictETP()
+    }
+
     // Important:
     // Use this after each test if you have modified these feature settings
     // to make sure the app goes back to the default state

@@ -448,7 +448,7 @@ class SmokeTest {
         }.openThreeDotMenu {
         }.openSettings {
         }.openEnhancedTrackingProtectionSubMenu {
-            verifyEnhancedTrackingProtectionOptions()
+            verifyEnhancedTrackingProtectionOptionsEnabled()
             selectTrackingProtectionOption("Custom")
             verifyCustomTrackingProtectionSettings()
         }.goBackToHomeScreen {}

@@ -9,8 +9,9 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.FeatureSettingsHelper
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.ui.robots.enhancedTrackingProtection
@@ -33,6 +34,7 @@ import org.mozilla.fenix.ui.robots.settingsSubMenuEnhancedTrackingProtection
 
 class StrictEnhancedTrackingProtectionTest {
     private lateinit var mockWebServer: MockWebServer
+    private val featureSettingsHelper = FeatureSettingsHelper()
 
     @get:Rule
     val activityTestRule = HomeActivityTestRule()
@@ -43,15 +45,14 @@ class StrictEnhancedTrackingProtectionTest {
             dispatcher = AndroidAssetDispatcher()
             start()
         }
-
-        val settings = activityTestRule.activity.settings()
-        settings.setStrictETP()
-        settings.shouldShowJumpBackInCFR = false
+        featureSettingsHelper.setStrictETPEnabled()
+        featureSettingsHelper.setJumpBackCFREnabled(false)
     }
 
     @After
     fun tearDown() {
         mockWebServer.shutdown()
+        featureSettingsHelper.resetAllFeatureFlags()
     }
 
     @Test
@@ -63,10 +64,43 @@ class StrictEnhancedTrackingProtectionTest {
             verifyEnhancedTrackingProtectionValue("On")
         }.openEnhancedTrackingProtectionSubMenu {
             verifyEnhancedTrackingProtectionHeader()
-            verifyEnhancedTrackingProtectionOptions()
+            verifyEnhancedTrackingProtectionOptionsEnabled()
             verifyTrackingProtectionSwitchEnabled()
         }.openExceptions {
             verifyDefault()
+        }
+    }
+
+    @SmokeTest
+    @Test
+    fun testETPOffGlobally() {
+        val genericPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openEnhancedTrackingProtectionSubMenu {
+            switchEnhancedTrackingProtectionToggle()
+            verifyEnhancedTrackingProtectionOptionsEnabled(false)
+        }.goBack {
+        }.goBack { }
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericPage.url) { }
+        enhancedTrackingProtection {
+        }.openEnhancedTrackingProtectionSheet {
+            verifyETPSwitchVisibility(false)
+        }.closeEnhancedTrackingProtectionSheet {
+        }.openThreeDotMenu {
+        }.openSettings {
+        }.openEnhancedTrackingProtectionSubMenu {
+            switchEnhancedTrackingProtectionToggle()
+            verifyEnhancedTrackingProtectionOptionsEnabled(true)
+        }.goBack {
+        }.goBackToBrowser { }
+        enhancedTrackingProtection {
+        }.openEnhancedTrackingProtectionSheet {
+            verifyETPSwitchVisibility(true)
         }
     }
 
@@ -113,7 +147,7 @@ class StrictEnhancedTrackingProtectionTest {
             verifyEnhancedTrackingProtectionSheetStatus("OFF", false)
         }.openProtectionSettings {
             verifyEnhancedTrackingProtectionHeader()
-            verifyEnhancedTrackingProtectionOptions()
+            verifyEnhancedTrackingProtectionOptionsEnabled()
             verifyTrackingProtectionSwitchEnabled()
         }
 

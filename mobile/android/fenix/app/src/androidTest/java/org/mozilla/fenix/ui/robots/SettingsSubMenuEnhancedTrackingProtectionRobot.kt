@@ -25,7 +25,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import org.hamcrest.CoreMatchers.allOf
-import org.hamcrest.CoreMatchers.not
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.scrollToElementByText
 import org.mozilla.fenix.helpers.assertIsChecked
@@ -48,7 +47,7 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
 
     fun verifyEnhancedTrackingProtectionTextWithSwitchWidget() = assertEnhancedTrackingProtectionTextWithSwitchWidget()
 
-    fun verifyEnhancedTrackingProtectionOptions() = assertEnhancedTrackingProtectionOptions()
+    fun verifyEnhancedTrackingProtectionOptionsEnabled(enabled: Boolean = true) = assertEnhancedTrackingProtectionOptionsState(enabled)
 
     fun verifyTrackingProtectionSwitchEnabled() = assertTrackingProtectionSwitchEnabled()
 
@@ -63,7 +62,7 @@ class SettingsSubMenuEnhancedTrackingProtectionRobot {
         verifyEnhancedTrackingProtectionTextWithSwitchWidget()
         verifyTrackingProtectionSwitchEnabled()
         verifyRadioButtonDefaults()
-        verifyEnhancedTrackingProtectionOptions()
+        verifyEnhancedTrackingProtectionOptionsEnabled()
     }
 
     fun verifyCustomTrackingProtectionSettings() = assertCustomTrackingProtectionSettings()
@@ -153,48 +152,24 @@ private fun assertEnhancedTrackingProtectionTextWithSwitchWidget() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertEnhancedTrackingProtectionOptions() {
+private fun assertEnhancedTrackingProtectionOptionsState(enabled: Boolean) {
     onView(withText("Standard (default)"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(isEnabled(enabled)))
 
     onView(withText(org.mozilla.fenix.R.string.preference_enhanced_tracking_protection_standard_description_4))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(isEnabled(enabled)))
 
     onView(withText("Strict"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(isEnabled(enabled)))
 
     onView(withText(org.mozilla.fenix.R.string.preference_enhanced_tracking_protection_strict_description_3))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(isEnabled(enabled)))
 
     onView(withText("Custom"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
+        .check(matches(isEnabled(enabled)))
 
-    val customText =
-        "Choose which trackers and scripts to block."
-    onView(withText(customText))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
-private fun assertEnhancedTrackingProtectionOptionsGrayedOut() {
-    onView(withText("Standard (default)"))
-        .check(matches(not(isEnabled(true))))
-
-    onView(withText(org.mozilla.fenix.R.string.preference_enhanced_tracking_protection_standard_description_4))
-        .check(matches(not(isEnabled(true))))
-
-    onView(withText("Strict"))
-        .check(matches(not(isEnabled(true))))
-
-    onView(withText(org.mozilla.fenix.R.string.preference_enhanced_tracking_protection_strict_description_3))
-        .check(matches(not(isEnabled(true))))
-
-    onView(withText("Custom"))
-        .check(matches(not(isEnabled(true))))
-
-    val customText =
-        "Choose which trackers and scripts to block."
-    onView(withText(customText))
-        .check(matches(not(isEnabled(true))))
+    onView(withText(org.mozilla.fenix.R.string.preference_enhanced_tracking_protection_custom_description_2))
+        .check(matches(isEnabled(enabled)))
 }
 
 private fun assertTrackingProtectionSwitchEnabled() {
