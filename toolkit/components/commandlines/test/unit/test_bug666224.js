@@ -1,9 +1,5 @@
 function run_test() {
-  var cmdLine = Cu.createCommandLine(
-    [],
-    null,
-    Ci.nsICommandLine.STATE_INITIAL_LAUNCH
-  );
+  var cmdLine = Cu.createCommandLine();
   try {
     cmdLine.getArgument(cmdLine.length);
   } catch (e) {}

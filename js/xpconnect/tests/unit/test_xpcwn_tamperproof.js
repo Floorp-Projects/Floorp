@@ -149,7 +149,7 @@ function run_test() {
     attribute: "callback"
   });
 
-  let cmdline = Cu.createCommandLine([], null, Ci.nsICommandLine.STATE_INITIAL_LAUNCH);
+  let cmdline = Cu.createCommandLine();
   test_twice(cmdline, {});
 
   test_twice(Object.getPrototypeOf(cmdline), {
