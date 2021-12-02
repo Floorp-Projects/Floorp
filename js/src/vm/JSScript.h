@@ -29,6 +29,7 @@
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
 #include "js/CompileOptions.h"
+#include "js/Transcoding.h"
 #include "js/UbiNode.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
@@ -46,7 +47,6 @@
 #include "vm/SharedStencil.h"  // js::GCThingIndex, js::SourceExtent, js::SharedImmutableScriptData, MemberInitializers
 #include "vm/StencilEnums.h"  // SourceRetrievable
 #include "vm/Time.h"
-#include "vm/Xdr.h"  // XDRIncrementalStencilEncoder
 
 namespace JS {
 struct ScriptSourceInfo;
@@ -55,6 +55,8 @@ class SourceText;
 }  // namespace JS
 
 namespace js {
+
+class ScriptSource;
 
 class VarScope;
 class LexicalScope;
@@ -84,7 +86,9 @@ class DebugScript;
 
 namespace frontend {
 struct CompilationStencil;
+struct ExtensibleCompilationStencil;
 struct CompilationGCOutput;
+struct CompilationStencilMerger;
 class StencilXDR;
 }  // namespace frontend
 
@@ -190,7 +194,28 @@ using ScriptFinalWarmUpCountMap =
                        DefaultHasher<HeapPtr<BaseScript*>>, SystemAllocPolicy>;
 #endif
 
-class ScriptSource;
+// As we execute JS sources that used lazy parsing, we may generate additional
+// bytecode that we would like to include in caches if they are being used.
+// There is a dependency cycle between JSScript / ScriptSource /
+// CompilationStencil for this scenario so introduce this smart-ptr wrapper to
+// avoid needing the full details of the stencil-merger in this file.
+class StencilIncrementalEncoderPtr {
+ public:
+  frontend::CompilationStencilMerger* merger_ = nullptr;
+
+  StencilIncrementalEncoderPtr() = default;
+  ~StencilIncrementalEncoderPtr() { reset(); }
+
+  bool hasEncoder() const { return bool(merger_); }
+
+  void reset();
+
+  bool setInitial(JSContext* cx,
+                  UniquePtr<frontend::ExtensibleCompilationStencil>&& initial);
+
+  bool addDelazification(JSContext* cx,
+                         const frontend::CompilationStencil& delazification);
+};
 
 struct ScriptSourceChunk {
   ScriptSource* ss = nullptr;
@@ -557,7 +582,7 @@ class ScriptSource {
   // The bytecode cache encoder is used to encode only the content of function
   // which are delazified.  If this value is not nullptr, then each delazified
   // function should be recorded before their first execution.
-  UniquePtr<XDRIncrementalStencilEncoder> xdrEncoder_ = nullptr;
+  StencilIncrementalEncoderPtr xdrEncoder_;
 
   // A string indicating how this source code was introduced into the system.
   // This is a constant, statically allocated C string, so does not need memory
@@ -1007,7 +1032,7 @@ class ScriptSource {
   }
 
   // Return wether an XDR encoder is present or not.
-  bool hasEncoder() const { return bool(xdrEncoder_); }
+  bool hasEncoder() const { return xdrEncoder_.hasEncoder(); }
 
   [[nodiscard]] bool startIncrementalEncoding(
       JSContext* cx,

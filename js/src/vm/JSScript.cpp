@@ -75,6 +75,7 @@
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/Warnings.h"  // js::WarnNumberLatin1
+#include "vm/Xdr.h"       // XDRResult, XDRStencilEncoder
 #ifdef MOZ_VTUNE
 #  include "vtune/VTuneWrapper.h"
 #endif
@@ -1757,23 +1758,15 @@ bool ScriptSource::startIncrementalEncoding(
   // Remove the reference to the source, to avoid the circular reference.
   initial->source = nullptr;
 
-  xdrEncoder_ = js::MakeUnique<XDRIncrementalStencilEncoder>();
-  if (!xdrEncoder_) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
   AutoIncrementalTimer timer(cx->realm()->timers.xdrEncodingTime);
-  auto failureCase =
-      mozilla::MakeScopeExit([&] { xdrEncoder_.reset(nullptr); });
+  auto failureCase = mozilla::MakeScopeExit([&] { xdrEncoder_.reset(); });
 
-  XDRResult res = xdrEncoder_->setInitial(
-      cx,
-      std::forward<UniquePtr<frontend::ExtensibleCompilationStencil>>(initial));
-  if (res.isErr()) {
+  if (!xdrEncoder_.setInitial(
+          cx, std::forward<UniquePtr<frontend::ExtensibleCompilationStencil>>(
+                  initial))) {
     // On encoding failure, let failureCase destroy encoder and return true
     // to avoid failing any currently executing script.
-    return JS::IsTranscodeFailureResult(res.unwrapErr());
+    return false;
   }
 
   failureCase.release();
@@ -1784,14 +1777,12 @@ bool ScriptSource::addDelazificationToIncrementalEncoding(
     JSContext* cx, const frontend::CompilationStencil& stencil) {
   MOZ_ASSERT(hasEncoder());
   AutoIncrementalTimer timer(cx->realm()->timers.xdrEncodingTime);
-  auto failureCase =
-      mozilla::MakeScopeExit([&] { xdrEncoder_.reset(nullptr); });
+  auto failureCase = mozilla::MakeScopeExit([&] { xdrEncoder_.reset(); });
 
-  XDRResult res = xdrEncoder_->addDelazification(cx, stencil);
-  if (res.isErr()) {
+  if (!xdrEncoder_.addDelazification(cx, stencil)) {
     // On encoding failure, let failureCase destroy encoder and return true
     // to avoid failing any currently executing script.
-    return JS::IsTranscodeFailureResult(res.unwrapErr());
+    return false;
   }
 
   failureCase.release();
@@ -1805,9 +1796,13 @@ bool ScriptSource::xdrFinalizeEncoder(JSContext* cx,
     return false;
   }
 
-  auto cleanup = mozilla::MakeScopeExit([&] { xdrEncoder_.reset(nullptr); });
+  auto cleanup = mozilla::MakeScopeExit([&] { xdrEncoder_.reset(); });
 
-  XDRResult res = xdrEncoder_->linearize(cx, buffer, this);
+  XDRStencilEncoder encoder(cx, buffer);
+
+  frontend::BorrowingCompilationStencil borrowingStencil(
+      xdrEncoder_.merger_->getResult());
+  XDRResult res = encoder.codeStencil(this, borrowingStencil);
   if (res.isErr()) {
     if (JS::IsTranscodeFailureResult(res.unwrapErr())) {
       JS_ReportErrorASCII(cx, "XDR encoding failure");

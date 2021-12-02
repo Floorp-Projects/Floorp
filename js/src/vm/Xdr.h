@@ -466,8 +466,6 @@ class XDRStencilDecoder : public XDRState<XDR_DECODE> {
   const JS::DecodeOptions* options_ = nullptr;
 };
 
-class XDRIncrementalStencilEncoder;
-
 class XDRStencilEncoder : public XDRState<XDR_ENCODE> {
   using Base = XDRState<XDR_ENCODE>;
 
@@ -480,31 +478,10 @@ class XDRStencilEncoder : public XDRState<XDR_ENCODE> {
     MOZ_ASSERT(JS::IsTranscodingBytecodeOffsetAligned(buffer.length()));
   }
 
- private:
   XDRResult codeStencil(const RefPtr<ScriptSource>& source,
                         const frontend::CompilationStencil& stencil);
-  friend class XDRIncrementalStencilEncoder;
 
- public:
   XDRResult codeStencil(const frontend::CompilationStencil& stencil);
-};
-
-class XDRIncrementalStencilEncoder {
-  frontend::CompilationStencilMerger* merger_ = nullptr;
-
- public:
-  XDRIncrementalStencilEncoder() = default;
-
-  ~XDRIncrementalStencilEncoder();
-
-  XDRResult linearize(JSContext* cx, JS::TranscodeBuffer& buffer,
-                      js::ScriptSource* ss);
-
-  XDRResult setInitial(
-      JSContext* cx,
-      UniquePtr<frontend::ExtensibleCompilationStencil>&& initial);
-  XDRResult addDelazification(
-      JSContext* cx, const frontend::CompilationStencil& delazification);
 };
 
 } /* namespace js */

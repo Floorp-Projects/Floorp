@@ -284,52 +284,29 @@ XDRResult XDRStencilEncoder::codeStencil(
   return codeStencil(stencil.source, stencil);
 }
 
-XDRIncrementalStencilEncoder::~XDRIncrementalStencilEncoder() {
+void StencilIncrementalEncoderPtr::reset() {
   if (merger_) {
     js_delete(merger_);
   }
+  merger_ = nullptr;
 }
 
-XDRResult XDRIncrementalStencilEncoder::setInitial(
+bool StencilIncrementalEncoderPtr::setInitial(
     JSContext* cx,
     UniquePtr<frontend::ExtensibleCompilationStencil>&& initial) {
-  MOZ_TRY(frontend::StencilXDR::checkCompilationStencil(*initial));
-
   merger_ = cx->new_<frontend::CompilationStencilMerger>();
   if (!merger_) {
-    return mozilla::Err(JS::TranscodeResult::Throw);
+    return false;
   }
 
-  if (!merger_->setInitial(
-          cx, std::forward<UniquePtr<frontend::ExtensibleCompilationStencil>>(
-                  initial))) {
-    return mozilla::Err(JS::TranscodeResult::Throw);
-  }
-
-  return Ok();
+  return merger_->setInitial(
+      cx,
+      std::forward<UniquePtr<frontend::ExtensibleCompilationStencil>>(initial));
 }
 
-XDRResult XDRIncrementalStencilEncoder::addDelazification(
+bool StencilIncrementalEncoderPtr::addDelazification(
     JSContext* cx, const frontend::CompilationStencil& delazification) {
-  if (!merger_->addDelazification(cx, delazification)) {
-    return mozilla::Err(JS::TranscodeResult::Throw);
-  }
-
-  return Ok();
-}
-
-XDRResult XDRIncrementalStencilEncoder::linearize(JSContext* cx,
-                                                  JS::TranscodeBuffer& buffer,
-                                                  ScriptSource* ss) {
-  XDRStencilEncoder encoder(cx, buffer);
-  RefPtr<ScriptSource> source(ss);
-  {
-    frontend::BorrowingCompilationStencil borrowingStencil(
-        merger_->getResult());
-    MOZ_TRY(encoder.codeStencil(source, borrowingStencil));
-  }
-
-  return Ok();
+  return merger_->addDelazification(cx, delazification);
 }
 
 XDRResult XDRStencilDecoder::codeStencil(
