@@ -4441,6 +4441,31 @@ bool CacheIRCompiler::emitNewTypedArrayFromArrayResult(
   return true;
 }
 
+bool CacheIRCompiler::emitAddSlotAndCallAddPropHook(ObjOperandId objId,
+                                                    ValOperandId rhsId,
+                                                    uint32_t newShapeOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoCallVM callvm(masm, this, allocator);
+
+  AutoScratchRegister scratch(allocator, masm);
+  Register obj = allocator.useRegister(masm, objId);
+  ValueOperand rhs = allocator.useValueRegister(masm, rhsId);
+
+  StubFieldOffset shapeField(newShapeOffset, StubField::Type::Shape);
+  emitLoadStubField(shapeField, scratch);
+
+  callvm.prepare();
+
+  masm.Push(scratch);
+  masm.Push(rhs);
+  masm.Push(obj);
+
+  using Fn = bool (*)(JSContext*, HandleNativeObject, HandleValue, HandleShape);
+  callvm.callNoResult<Fn, AddSlotAndCallAddPropHook>();
+  return true;
+}
+
 bool CacheIRCompiler::emitMathAbsInt32Result(Int32OperandId inputId) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
