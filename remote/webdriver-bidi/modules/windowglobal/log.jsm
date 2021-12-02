@@ -53,9 +53,13 @@ class Log extends Module {
   _applySessionData(params) {
     // TODO: Bug 1741861. Move this logic to a shared module or the an abstract
     // class.
-    if (params.category === "event") {
-      for (const event of params.values) {
+    const { category, added = [], removed = [] } = params;
+    if (category === "event") {
+      for (const event of added) {
         this._subscribeEvent(event);
+      }
+      for (const event of removed) {
+        this._unsubscribeEvent(event);
       }
     }
   }
@@ -67,19 +71,26 @@ class Log extends Module {
     }
   }
 
+  _unsubscribeEvent(event) {
+    if (event === "log.entryAdded") {
+      this.#consoleAPIListener.stopListening();
+      this.#consoleMessageListener.stopListening();
+    }
+  }
+
   #onConsoleAPIMessage = (eventName, data = {}) => {
-    const { message } = data;
+    // `arguments` cannot be used as variable name in functions
+    // `level` corresponds to the console method used
+    const { arguments: messageArguments, level: method, timeStamp } = data;
 
     // Step numbers below refer to the specifications at
     //   https://w3c.github.io/webdriver-bidi/#event-log-entryAdded
 
-    // 1. The console method used to create the message is stored in the
-    // `level` property. Translate it to a log.LogEntry level
-    const method = message.level;
-    const level = this._getLogEntryLevelFromConsoleMethod(method);
+    // 1. Translate the console message method to a log.LogEntry level
+    const logEntrylevel = this._getLogEntryLevelFromConsoleMethod(method);
 
     // 2. Use the message's timeStamp or fallback on the current time value.
-    const timestamp = message.timeStamp || Date.now();
+    const timestamp = timeStamp || Date.now();
 
     // 3. Start assembling the text representation of the message.
     let text = "";
@@ -91,7 +102,7 @@ class Log extends Module {
     // 5. Concatenate all formatted arguments in text
     // TODO: For m1 we only support string arguments, so we rely on the builtin
     // toString for each argument which will be available in message.arguments.
-    const args = message.arguments || [];
+    const args = messageArguments || [];
     text += args.map(String).join(" ");
 
     // Step 6 and 7: Serialize each arg as remote value.
@@ -107,7 +118,7 @@ class Log extends Module {
     // 10. Build the ConsoleLogEntry
     const entry = {
       type: "console",
-      level,
+      level: logEntrylevel,
       text,
       timestamp,
       method,
