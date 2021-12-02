@@ -28,6 +28,7 @@ class VideoFrameSurface {
   virtual bool IsUsed() const = 0;
 
   virtual void SetYUVColorSpace(mozilla::gfx::YUVColorSpace aColorSpace) = 0;
+  virtual void SetColorRange(mozilla::gfx::ColorRange aColorRange) = 0;
 
   virtual RefPtr<DMABufSurfaceYUV> GetDMABufSurface() { return nullptr; };
 
@@ -55,6 +56,10 @@ class VideoFrameSurfaceDMABuf : public VideoFrameSurface {
 
   void SetYUVColorSpace(mozilla::gfx::YUVColorSpace aColorSpace) {
     mSurface->GetAsDMABufSurfaceYUV()->SetYUVColorSpace(aColorSpace);
+  }
+
+  void SetColorRange(mozilla::gfx::ColorRange aColorRange) {
+    mSurface->GetAsDMABufSurfaceYUV()->SetColorRange(aColorRange);
   }
 
   RefPtr<DMABufSurfaceYUV> GetDMABufSurface() {

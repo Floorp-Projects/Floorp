@@ -88,7 +88,11 @@ class DMABufSurface {
   virtual mozilla::gfx::YUVColorSpace GetYUVColorSpace() {
     return mozilla::gfx::YUVColorSpace::Default;
   };
-  virtual bool IsFullRange() { return false; };
+
+  bool IsFullRange() { return mColorRange == mozilla::gfx::ColorRange::FULL; };
+  void SetColorRange(mozilla::gfx::ColorRange aColorRange) {
+    mColorRange = aColorRange;
+  };
 
   void FenceSet();
   void FenceWait();
@@ -178,6 +182,8 @@ class DMABufSurface {
   int mGlobalRefCountFd;
   uint32_t mUID;
   mozilla::Mutex mSurfaceLock;
+
+  mozilla::gfx::ColorRange mColorRange = mozilla::gfx::ColorRange::LIMITED;
 };
 
 class DMABufSurfaceRGBA : public DMABufSurface {
