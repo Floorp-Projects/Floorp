@@ -23,12 +23,22 @@ add_task(async function() {
   await waitForSelectedSource(dbg, "doc-scripts.html");
   await waitForPaused(dbg);
 
+  let whyPaused = await waitFor(
+    () => dbg.win.document.querySelector(".why-paused")?.innerText
+  );
+  is(whyPaused, "Paused on breakpoint");
+
   assertPausedLocation(dbg);
   await resume(dbg);
 
   info("Create an eval script that pauses itself.");
   invokeInTab("doEval");
   await waitForPaused(dbg);
+
+  whyPaused = await waitFor(
+    () => dbg.win.document.querySelector(".why-paused")?.innerText
+  );
+  is(whyPaused, "Paused on debugger statement");
 
   await resume(dbg);
   const source = getSelectedSource();

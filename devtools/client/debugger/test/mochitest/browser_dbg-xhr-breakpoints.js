@@ -12,7 +12,7 @@ add_task(async function() {
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [EXAMPLE_REMOTE_URL + "doc-early-xhr.html"],
-    (remoteUrl) => {
+    remoteUrl => {
       const firstIframe = content.document.createElement("iframe");
       content.document.body.append(firstIframe);
       firstIframe.src = remoteUrl;
@@ -21,6 +21,12 @@ add_task(async function() {
 
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
+
+  const whyPaused = await waitFor(
+    () => dbg.win.document.querySelector(".why-paused")?.innerText
+  );
+  is(whyPaused, `Paused on XMLHttpRequest`);
+
   await resume(dbg);
 
   await dbg.actions.removeXHRBreakpoint(0);
@@ -28,7 +34,7 @@ add_task(async function() {
   await SpecialPowers.spawn(
     gBrowser.selectedBrowser,
     [EXAMPLE_REMOTE_URL + "doc-early-xhr.html"],
-    (remoteUrl) => {
+    remoteUrl => {
       const secondIframe = content.document.createElement("iframe");
       content.document.body.append(secondIframe);
       secondIframe.src = remoteUrl;
@@ -57,7 +63,6 @@ add_task(async function() {
   await dbg.actions.removeXHRBreakpoint(0);
   await invokeInTab("main", "doc-xhr.html");
   assertNotPaused(dbg);
-
 
   info("Test that we do not pause on different method type");
   await addXHRBreakpoint(dbg, "doc", "POST");
@@ -157,7 +162,9 @@ async function removeXHRBreakpoint(dbg, index) {
 
 function getXHRBreakpointsElements(dbg) {
   return [
-    ...dbg.win.document.querySelectorAll(".xhr-breakpoints-pane .xhr-container")
+    ...dbg.win.document.querySelectorAll(
+      ".xhr-breakpoints-pane .xhr-container"
+    ),
   ];
 }
 

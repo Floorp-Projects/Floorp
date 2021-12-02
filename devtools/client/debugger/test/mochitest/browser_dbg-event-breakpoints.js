@@ -28,6 +28,12 @@ add_task(async function() {
   invokeInTab("clickHandler");
   await waitForPaused(dbg);
   assertPauseLocation(dbg, 12);
+
+  const whyPaused = await waitFor(
+    () => dbg.win.document.querySelector(".why-paused")?.innerText
+  );
+  is(whyPaused, `Paused on event breakpoint\nDOM 'click' event`);
+
   await resume(dbg);
 
   invokeInTab("xhrHandler");
@@ -90,7 +96,11 @@ function assertPauseLocation(dbg, line, url = "event-breakpoints.js") {
 
 async function invokeOnElement(selector, action) {
   await SpecialPowers.focus(gBrowser.selectedBrowser);
-  await SpecialPowers.spawn(gBrowser.selectedBrowser, [selector, action], (_selector, _action) => {
-    content.document.querySelector(_selector)[_action]();
-  });
+  await SpecialPowers.spawn(
+    gBrowser.selectedBrowser,
+    [selector, action],
+    (_selector, _action) => {
+      content.document.querySelector(_selector)[_action]();
+    }
+  );
 }
