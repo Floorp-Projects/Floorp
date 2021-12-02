@@ -216,6 +216,12 @@ struct ProcInfoRequest {
 RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests);
 
 /**
+ * Synchronous version of GetProcInfo.
+ */
+ProcInfoPromise::ResolveOrRejectValue GetProcInfoSync(
+    nsTArray<ProcInfoRequest>&& aRequests);
+
+/**
  * Utility function: copy data from a `ProcInfo` and into either a
  * `ParentProcInfoDictionary` or a `ChildProcInfoDictionary`.
  */
