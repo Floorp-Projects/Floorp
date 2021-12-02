@@ -107,7 +107,7 @@ jobs:
 
   run-ui:
     runs-on: macos-11
-    if: ${{ false }} # disable for now'
+    if: github.event.pull_request.head.repo.full_name != github.repository && github.actor != 'MickeyMoz'
 
     timeout-minutes: 60
     strategy:
@@ -118,12 +118,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Run subset of UI Tests
-        uses: reactivecircus/android-emulator-runner@v2
+        uses: reactivecircus/android-emulator-runner@v2.21.0
         with:
           api-level: ${{ matrix.api-level }}
           target: ${{ matrix.target }}
           arch: x86_64
-          profile: pixel_3a
+          profile: pixel_2
           script:
             "JAVA_HOME=$JAVA_HOME_11_X64 && ./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=\
             org.mozilla.fenix.ui.NavigationToolbarTest#visitURLTest"
