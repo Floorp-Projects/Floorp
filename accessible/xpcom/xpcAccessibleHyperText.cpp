@@ -697,21 +697,14 @@ xpcAccessibleHyperText::GetLinkIndex(nsIAccessibleHyperLink* aLink,
   if (!mIntl) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIAccessible> xpcLink(do_QueryInterface(aLink));
-  if (LocalAccessible* accLink = xpcLink->ToInternalAccessible()) {
-    *aIndex = IntlLocal()->LinkIndexOf(accLink);
-  } else {
+  Accessible* accLink = xpcLink->ToInternalGeneric();
 #if defined(XP_WIN)
+  if (accLink->IsRemote() &&
+      !StaticPrefs::accessibility_cache_enabled_AtStartup()) {
     return NS_ERROR_NOT_IMPLEMENTED;
-#else
-    xpcAccessibleHyperText* linkHyperText =
-        static_cast<xpcAccessibleHyperText*>(xpcLink.get());
-    RemoteAccessible* proxyLink = linkHyperText->mIntl->AsRemote();
-    if (proxyLink) {
-      *aIndex = mIntl->AsRemote()->LinkIndexOf(proxyLink);
-    }
-#endif
   }
-
+#endif
+  *aIndex = Intl()->LinkIndexOf(accLink);
   return NS_OK;
 }
 

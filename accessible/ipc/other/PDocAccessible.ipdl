@@ -244,7 +244,6 @@ child:
 
   [Nested=inside_sync] sync LinkCount(uint64_t aID) returns(uint32_t aCount);
   [Nested=inside_sync] sync LinkAt(uint64_t aID, uint32_t aIndex) returns(uint64_t aIDOfLink, bool aOk);
-  [Nested=inside_sync] sync LinkIndexOf(uint64_t aID, uint64_t aLinkID) returns(int32_t aIndex);
   [Nested=inside_sync] sync LinkIndexAtOffset(uint64_t aID, uint32_t aOffset) returns(int32_t aIndex);
 
   [Nested=inside_sync] sync TableOfACell(uint64_t aID) returns(uint64_t aTableID, bool aOk);

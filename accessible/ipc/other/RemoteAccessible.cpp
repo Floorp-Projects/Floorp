@@ -421,15 +421,6 @@ RemoteAccessible* RemoteAccessible::LinkAt(const uint32_t& aIndex) {
   return ok ? mDoc->GetAccessible(linkID) : nullptr;
 }
 
-int32_t RemoteAccessible::LinkIndexOf(RemoteAccessible* aLink) {
-  int32_t retVal = -1;
-  if (aLink) {
-    Unused << mDoc->SendLinkIndexOf(mID, aLink->ID(), &retVal);
-  }
-
-  return retVal;
-}
-
 int32_t RemoteAccessible::LinkIndexAtOffset(uint32_t aOffset) {
   int32_t retVal = -1;
   Unused << mDoc->SendLinkIndexAtOffset(mID, aOffset, &retVal);
