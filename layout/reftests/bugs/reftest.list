@@ -2092,6 +2092,7 @@ fuzzy(0-145,0-48536) == 1614788-1.svg 1614788-1-ref.svg # large fuzz necesary to
 fuzzy-if(OSX,0-42,0-4) == 1617515-1.html 1617515-1-ref.html
 fuzzy(0-2,0-21184) == 1626259-1.html 1626259-1-ref.html
 fuzzy(0-2,0-21184) == 1626259-2.html 1626259-2-ref.html
+!= 1642583-1.html 1642583-1-ref.html
 == 1642603-1.html 1642603-1-ref.html
 == 1645549-2.html 1645549-2-ref.html
 == 1641769-1.html 1641769-1-ref.html
