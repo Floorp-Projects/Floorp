@@ -591,11 +591,6 @@ class LocalAccessible : public nsISupports, public Accessible {
   virtual bool IsLink() const override;
 
   /**
-   * Return the start offset of the link within the parent accessible.
-   */
-  virtual uint32_t StartOffset();
-
-  /**
    * Return the end offset of the link within the parent accessible.
    */
   virtual uint32_t EndOffset();

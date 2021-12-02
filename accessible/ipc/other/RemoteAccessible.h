@@ -41,6 +41,8 @@ class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
 
   virtual already_AddRefed<AccAttributes> DefaultTextAttributes() override;
 
+  virtual uint32_t StartOffset() override;
+
  protected:
   explicit RemoteAccessible(DocAccessibleParent* aThisAsDoc)
       : RemoteAccessibleBase(aThisAsDoc) {
