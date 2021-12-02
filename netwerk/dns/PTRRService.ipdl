@@ -19,6 +19,7 @@ namespace net {
 parent:
   async NotifyNetworkConnectivityServiceObservers(nsCString aTopic);
   async InitTRRConnectionInfo();
+  async SetConfirmationState(uint32_t aNewState);
 
 child:
   async __delete__();
