@@ -85,8 +85,8 @@ class NeqoHttp3Conn final {
                                              aFin);
   }
 
-  void ResetStream(uint64_t aStreamId, uint64_t aError) {
-    neqo_http3conn_reset_stream(this, aStreamId, aError);
+  void CancelFetch(uint64_t aStreamId, uint64_t aError) {
+    neqo_http3conn_cancel_fetch(this, aStreamId, aError);
   }
 
   void SetResumptionToken(nsTArray<uint8_t>& aToken) {
