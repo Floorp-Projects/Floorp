@@ -394,26 +394,6 @@ ImmutableScriptData::ImmutableScriptData(uint32_t codeLength,
   MOZ_ASSERT(endOffset() == cursor);
 }
 
-template <XDRMode mode>
-XDRResult js::XDRSourceExtent(XDRState<mode>* xdr, SourceExtent* extent) {
-  MOZ_TRY(xdr->codeUint32(&extent->sourceStart));
-  MOZ_TRY(xdr->codeUint32(&extent->sourceEnd));
-  MOZ_TRY(xdr->codeUint32(&extent->toStringStart));
-  MOZ_TRY(xdr->codeUint32(&extent->toStringEnd));
-  MOZ_TRY(xdr->codeUint32(&extent->lineno));
-  MOZ_TRY(xdr->codeUint32(&extent->column));
-
-  return Ok();
-}
-
-template /* static */
-    XDRResult
-    js::XDRSourceExtent(XDRState<XDR_ENCODE>* xdr, SourceExtent* extent);
-
-template /* static */
-    XDRResult
-    js::XDRSourceExtent(XDRState<XDR_DECODE>* xdr, SourceExtent* extent);
-
 void js::FillImmutableFlagsFromCompileOptionsForTopLevel(
     const ReadOnlyCompileOptions& options, ImmutableScriptFlags& flags) {
   using ImmutableFlags = ImmutableScriptFlagsEnum;

@@ -87,7 +87,6 @@
 #include "vm/StringType.h"
 #include "vm/ToSource.h"
 #include "vm/WrapperObject.h"
-#include "vm/Xdr.h"
 #include "wasm/WasmModule.h"
 #include "wasm/WasmProcess.h"
 

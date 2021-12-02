@@ -52,7 +52,7 @@
 #include "vm/StaticStrings.h"
 #include "vm/StencilEnums.h"  // ImmutableScriptFlagsEnum
 #include "vm/StringType.h"    // JSAtom, js::CopyChars
-#include "vm/Xdr.h"  // XDRMode, XDRResult, XDRStencilEncoder, XDRStencilDecoder
+#include "vm/Xdr.h"           // XDRResult, XDRStencilEncoder, XDRStencilDecoder
 #include "wasm/AsmJS.h"       // InstantiateAsmJS
 #include "wasm/WasmModule.h"  // wasm::Module
 

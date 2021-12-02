@@ -37,7 +37,6 @@
 #include "vm/JSFunction.h"  // JSFunction
 #include "vm/ScopeKind.h"   // ScopeKind
 #include "vm/Shape.h"       // Shape
-#include "vm/Xdr.h"         // XDRResult, XDRState
 #include "wasm/WasmJS.h"    // WasmInstanceObject
 
 class JSAtom;
@@ -330,11 +329,6 @@ class Scope : public gc::TenuredCellWithNonGCPointer<BaseScopeData> {
   static Scope* create(JSContext* cx, ScopeKind kind, HandleScope enclosing,
                        HandleShape envShape);
 
-  template <typename ConcreteScope, XDRMode mode>
-  static XDRResult XDRSizedBindingNames(
-      XDRState<mode>* xdr, Handle<ConcreteScope*> scope,
-      MutableHandle<typename ConcreteScope::RuntimeData*> data);
-
   template <typename ConcreteScope>
   void initData(
       MutableHandle<UniquePtr<typename ConcreteScope::RuntimeData>> data);
@@ -536,10 +530,6 @@ class LexicalScope : public Scope {
       typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
                                   RuntimeData, ParserData>;
 
-  template <XDRMode mode>
-  static XDRResult XDR(XDRState<mode>* xdr, ScopeKind kind,
-                       HandleScope enclosing, MutableHandleScope scope);
-
  private:
   static LexicalScope* createWithData(
       JSContext* cx, ScopeKind kind, MutableHandle<UniquePtr<RuntimeData>> data,
@@ -621,11 +611,6 @@ class ClassBodyScope : public Scope {
   using AbstractData =
       typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
                                   RuntimeData, ParserData>;
-
-  template <XDRMode mode>
-  static XDRResult XDR(XDRState<mode>* xdr, ScopeKind kind,
-                       HandleScope enclosing, MutableHandleScope scope);
-
  private:
   static ClassBodyScope* createWithData(
       JSContext* cx, ScopeKind kind, MutableHandle<UniquePtr<RuntimeData>> data,
@@ -756,10 +741,6 @@ class FunctionScope : public Scope {
       bool hasParameterExprs, bool needsEnvironment, HandleFunction fun,
       ShapeT envShape);
 
-  template <XDRMode mode>
-  static XDRResult XDR(XDRState<mode>* xdr, HandleFunction fun,
-                       HandleScope enclosing, MutableHandleScope scope);
-
  private:
   static FunctionScope* createWithData(
       JSContext* cx, MutableHandle<UniquePtr<RuntimeData>> data,
@@ -826,10 +807,6 @@ class VarScope : public Scope {
   using AbstractData =
       typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
                                   RuntimeData, ParserData>;
-
-  template <XDRMode mode>
-  static XDRResult XDR(XDRState<mode>* xdr, ScopeKind kind,
-                       HandleScope enclosing, MutableHandleScope scope);
 
  private:
   static VarScope* createWithData(JSContext* cx, ScopeKind kind,
@@ -910,10 +887,6 @@ class GlobalScope : public Scope {
     return create(cx, kind, nullptr);
   }
 
-  template <XDRMode mode>
-  static XDRResult XDR(XDRState<mode>* xdr, ScopeKind kind,
-                       MutableHandleScope scope);
-
  private:
   static GlobalScope* createWithData(
       JSContext* cx, ScopeKind kind,
@@ -947,10 +920,6 @@ class WithScope : public Scope {
 
  public:
   static WithScope* create(JSContext* cx, HandleScope enclosing);
-
-  template <XDRMode mode>
-  static XDRResult XDR(XDRState<mode>* xdr, HandleScope enclosing,
-                       MutableHandleScope scope);
 };
 
 //
@@ -993,10 +962,6 @@ class EvalScope : public Scope {
   using AbstractData =
       typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
                                   RuntimeData, ParserData>;
-
-  template <XDRMode mode>
-  static XDRResult XDR(XDRState<mode>* xdr, ScopeKind kind,
-                       HandleScope enclosing, MutableHandleScope scope);
 
  private:
   static EvalScope* createWithData(JSContext* cx, ScopeKind kind,
@@ -1090,10 +1055,6 @@ class ModuleScope : public Scope {
   using AbstractData =
       typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
                                   RuntimeData, ParserData>;
-
-  template <XDRMode mode>
-  static XDRResult XDR(XDRState<mode>* xdr, HandleModuleObject module,
-                       HandleScope enclosing, MutableHandleScope scope);
 
  private:
   static ModuleScope* createWithData(JSContext* cx,
