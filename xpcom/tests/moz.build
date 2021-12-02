@@ -11,6 +11,13 @@ TEST_DIRS += [
 if CONFIG["OS_ARCH"] == "WINNT":
     TEST_DIRS += ["windows"]
 
+if CONFIG["OS_TARGET"] == "Linux":
+    CppUnitTests(
+        [
+            "TestMemoryPressureWatcherLinux",
+        ]
+    )
+
 EXPORTS.testing += [
     "TestHarness.h",
 ]
@@ -39,6 +46,7 @@ XPIDL_SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
+    "../base",
     "../ds",
 ]
 
