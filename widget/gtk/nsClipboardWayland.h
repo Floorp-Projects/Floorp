@@ -109,8 +109,8 @@ class nsRetrievalContextWayland : public nsRetrievalContext {
   virtual const char* GetClipboardText(int32_t aWhichClipboard) override;
   virtual void ReleaseClipboardData(const char* aClipboardData) override;
 
-  virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
-                              int* aTargetNum) override;
+  virtual GdkAtom* GetTargetsImpl(int32_t aWhichClipboard,
+                                  int* aTargetNum) override;
   virtual bool HasSelectionSupport(void) override;
 
   void RegisterNewDataOffer(wl_data_offer* aDataOffer);
