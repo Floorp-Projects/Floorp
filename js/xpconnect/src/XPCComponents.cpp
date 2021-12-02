@@ -2442,15 +2442,28 @@ nsXPCComponents_Utils::CreateSpellChecker(nsIEditorSpellCheck** aSpellChecker) {
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::CreateCommandLine(nsIFile* aWorkingDir,
+nsXPCComponents_Utils::CreateCommandLine(const nsTArray<nsCString>& aArgs,
+                                         nsIFile* aWorkingDir, uint32_t aState,
                                          nsISupports** aCommandLine) {
+  NS_ENSURE_ARG_MAX(aState, nsICommandLine::STATE_REMOTE_EXPLICIT);
   NS_ENSURE_ARG_POINTER(aCommandLine);
+
   nsCOMPtr<nsISupports> commandLine = new nsCommandLine();
-  if (aWorkingDir) {
-    nsCOMPtr<nsICommandLineRunner> runner = do_QueryInterface(commandLine);
-    char* argv[] = {nullptr};
-    runner->Init(0, argv, aWorkingDir, nsICommandLine::STATE_REMOTE_EXPLICIT);
+  nsCOMPtr<nsICommandLineRunner> runner = do_QueryInterface(commandLine);
+
+  nsTArray<const char*> fakeArgv(aArgs.Length() + 2);
+
+  // Prepend a dummy argument for the program name, which will be ignored.
+  fakeArgv.AppendElement(nullptr);
+  for (const nsCString& arg : aArgs) {
+    fakeArgv.AppendElement(arg.get());
   }
+  // Append a null terminator.
+  fakeArgv.AppendElement(nullptr);
+
+  nsresult rv = runner->Init(fakeArgv.Length() - 1, fakeArgv.Elements(),
+                             aWorkingDir, aState);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   commandLine.forget(aCommandLine);
   return NS_OK;

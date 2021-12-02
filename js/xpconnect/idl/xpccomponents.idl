@@ -670,8 +670,22 @@ interface nsIXPCComponents_Utils : nsISupports
     /* Create a spellchecker object. */
     nsIEditorSpellCheck createSpellChecker();
 
-    /* Create a commandline object. */
-    nsISupports createCommandLine([optional] in nsIFile aWorkingDir);
+    /* Create a commandline object.
+     *
+     * @return a new `nsICommandLine` instance.
+     *
+     * @param args
+     *   The arguments of the command line, not including the app/program itself.
+     * @param workingDir
+     *   An optional working directory for the command line.
+     * @param state
+     *   The command line's state, one of `nsICommandLine.STATE_INITIAL_LAUNCH`,
+     *   `nsICommandLine.STATE_REMOTE_AUTO`, or
+     *   `nsICommandLine.STATE_REMOTE_EXPLICIT`.
+     */
+    nsISupports createCommandLine(in Array<ACString> args,
+                                  in nsIFile workingDir,
+                                  in unsigned long state);
 
     /* Create a command params object. */
     nsICommandParams createCommandParams();
