@@ -11,6 +11,12 @@ add_task(async function test() {
   await waitForPaused(dbg, "bundle.js");
 
   await stepIn(dbg);
+
+  const whyPaused = await waitFor(
+    () => dbg.win.document.querySelector(".why-paused")?.innerText
+  );
+  is(whyPaused, `Paused while stepping`);
+
   await stepIn(dbg);
   await stepIn(dbg);
   await stepIn(dbg);

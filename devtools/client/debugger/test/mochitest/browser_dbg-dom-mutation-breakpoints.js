@@ -21,7 +21,6 @@ async function enableMutationBreakpoints() {
   await pushPref("devtools.debugger.dom-mutation-breakpoints-visible", true);
 }
 
-
 add_task(async function() {
   // Enable features
   await enableMutationBreakpoints();
@@ -68,6 +67,14 @@ add_task(async function() {
     content.document.querySelector("#attribute").click();
   });
   await waitForPaused(dbg);
+  let whyPaused = await waitFor(
+    () => dbg.win.document.querySelector(".why-paused")?.innerText
+  );
+  is(
+    whyPaused,
+    `Paused on DOM mutation\nDOM Mutation: 'attributeModified'\nbody`
+  );
+
   await resume(dbg);
 
   info("Changing style to trigger debugger pause");
@@ -77,11 +84,34 @@ add_task(async function() {
   await waitForPaused(dbg);
   await resume(dbg);
 
-  info("Changing subtree to trigger debugger pause");
+  info("Adding element in subtree to trigger debugger pause");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
-    content.document.querySelector("#subtree").click();
+    content.document.querySelector("#add-in-subtree").click();
   });
   await waitForPaused(dbg);
+  whyPaused = await waitFor(
+    () => dbg.win.document.querySelector(".why-paused")?.innerText
+  );
+  is(
+    whyPaused,
+    `Paused on DOM mutation\nDOM Mutation: 'subtreeModified'\nbodyAdded:div`
+  );
+
+  await resume(dbg);
+
+  info("Removing element in subtree to trigger debugger pause");
+  SpecialPowers.spawn(gBrowser.selectedBrowser, [], function() {
+    content.document.querySelector("#remove-in-subtree").click();
+  });
+  await waitForPaused(dbg);
+  whyPaused = await waitFor(
+    () => dbg.win.document.querySelector(".why-paused")?.innerText
+  );
+  is(
+    whyPaused,
+    `Paused on DOM mutation\nDOM Mutation: 'subtreeModified'\nbodyRemoved:div`
+  );
+
   await resume(dbg);
 
   info("Blackboxing the source prevents debugger pause");
@@ -107,5 +137,4 @@ add_task(async function() {
   info("Removing breakpoints works");
   dbg.win.document.querySelector(".dom-mutation-list .close-btn").click();
   await waitForAllElements(dbg, "domMutationItem", 1, true);
-
 });
