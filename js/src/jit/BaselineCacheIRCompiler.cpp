@@ -1972,6 +1972,7 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
     case CacheKind::NewObject:
     case CacheKind::GetIntrinsic:
       MOZ_ASSERT(numInputs == 0);
+      outputUnchecked_.emplace(R0);
       break;
     case CacheKind::GetProp:
     case CacheKind::TypeOf:
@@ -1982,16 +1983,22 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
     case CacheKind::UnaryArith:
       MOZ_ASSERT(numInputs == 1);
       allocator.initInputLocation(0, R0);
+      outputUnchecked_.emplace(R0);
       break;
     case CacheKind::Compare:
     case CacheKind::GetElem:
     case CacheKind::GetPropSuper:
-    case CacheKind::SetProp:
     case CacheKind::In:
     case CacheKind::HasOwn:
     case CacheKind::CheckPrivateField:
     case CacheKind::InstanceOf:
     case CacheKind::BinaryArith:
+      MOZ_ASSERT(numInputs == 2);
+      allocator.initInputLocation(0, R0);
+      allocator.initInputLocation(1, R1);
+      outputUnchecked_.emplace(R0);
+      break;
+    case CacheKind::SetProp:
       MOZ_ASSERT(numInputs == 2);
       allocator.initInputLocation(0, R0);
       allocator.initInputLocation(1, R1);
@@ -2001,6 +2008,7 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
       allocator.initInputLocation(0, BaselineFrameSlot(0));
       allocator.initInputLocation(1, R1);
       allocator.initInputLocation(2, R0);
+      outputUnchecked_.emplace(R0);
       break;
     case CacheKind::SetElem:
       MOZ_ASSERT(numInputs == 3);
@@ -2017,6 +2025,7 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
       // the payloadReg and not typeReg on x86.
       available.add(R0.typeReg());
 #endif
+      outputUnchecked_.emplace(R0);
       break;
     case CacheKind::Call:
       MOZ_ASSERT(numInputs == 1);
@@ -2026,6 +2035,7 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
       // the payloadReg and not typeReg on x86.
       available.add(R0.typeReg());
 #endif
+      outputUnchecked_.emplace(R0);
       break;
   }
 
@@ -2033,7 +2043,6 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
   liveFloatRegs_ = LiveFloatRegisterSet(FloatRegisterSet());
 
   allocator.initAvailableRegs(available);
-  outputUnchecked_.emplace(R0);
   return true;
 }
 
