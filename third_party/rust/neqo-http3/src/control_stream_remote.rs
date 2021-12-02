@@ -5,14 +5,16 @@
 // except according to those terms.
 
 use crate::hframe::{HFrame, HFrameReader};
-use crate::{CloseType, Error, Http3StreamType, ReceiveOutput, RecvStream, Res, Stream};
+use crate::{
+    AppError, Error, Http3StreamType, HttpRecvStream, ReceiveOutput, RecvStream, Res, ResetType,
+};
 use neqo_common::qdebug;
-use neqo_transport::{Connection, StreamId};
+use neqo_transport::Connection;
 
 /// The remote control stream is responsible only for reading frames. The frames are handled by `Http3Connection`.
 #[derive(Debug)]
 pub(crate) struct ControlStreamRemote {
-    stream_id: StreamId,
+    stream_id: u64,
     frame_reader: HFrameReader,
 }
 
@@ -23,7 +25,7 @@ impl ::std::fmt::Display for ControlStreamRemote {
 }
 
 impl ControlStreamRemote {
-    pub fn new(stream_id: StreamId) -> Self {
+    pub fn new(stream_id: u64) -> Self {
         Self {
             stream_id,
             frame_reader: HFrameReader::new(),
@@ -40,27 +42,33 @@ impl ControlStreamRemote {
     }
 }
 
-impl Stream for ControlStreamRemote {
-    fn stream_type(&self) -> Http3StreamType {
-        Http3StreamType::Control
-    }
-}
-
 impl RecvStream for ControlStreamRemote {
-    fn reset(&mut self, _close_type: CloseType) -> Res<()> {
+    fn stream_reset(&mut self, _error: AppError, _reset_type: ResetType) -> Res<()> {
         Err(Error::HttpClosedCriticalStream)
     }
 
     #[allow(clippy::vec_init_then_push)] // Clippy fail.
-    fn receive(&mut self, conn: &mut Connection) -> Res<(ReceiveOutput, bool)> {
+    fn receive(&mut self, conn: &mut Connection) -> Res<ReceiveOutput> {
         let mut control_frames = Vec::new();
 
         loop {
             if let Some(f) = self.receive_single(conn)? {
                 control_frames.push(f);
             } else {
-                return Ok((ReceiveOutput::ControlFrames(control_frames), false));
+                return Ok(ReceiveOutput::ControlFrames(control_frames));
             }
         }
+    }
+
+    fn done(&self) -> bool {
+        false
+    }
+
+    fn stream_type(&self) -> Http3StreamType {
+        Http3StreamType::Control
+    }
+
+    fn http_stream(&mut self) -> Option<&mut dyn HttpRecvStream> {
+        None
     }
 }
