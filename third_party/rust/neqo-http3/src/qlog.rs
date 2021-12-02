@@ -9,8 +9,9 @@ use std::convert::TryFrom;
 use qlog::{self, event::Event, H3DataRecipient};
 
 use neqo_common::qlog::NeqoQlog;
+use neqo_transport::StreamId;
 
-pub fn h3_data_moved_up(qlog: &mut NeqoQlog, stream_id: u64, amount: usize) {
+pub fn h3_data_moved_up(qlog: &mut NeqoQlog, stream_id: StreamId, amount: usize) {
     qlog.add_event(|| {
         Some(Event::h3_data_moved(
             stream_id.to_string(),
@@ -23,7 +24,7 @@ pub fn h3_data_moved_up(qlog: &mut NeqoQlog, stream_id: u64, amount: usize) {
     });
 }
 
-pub fn h3_data_moved_down(qlog: &mut NeqoQlog, stream_id: u64, amount: usize) {
+pub fn h3_data_moved_down(qlog: &mut NeqoQlog, stream_id: StreamId, amount: usize) {
     qlog.add_event(|| {
         Some(Event::h3_data_moved(
             stream_id.to_string(),
