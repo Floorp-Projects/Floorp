@@ -25,16 +25,14 @@
         app:layout_constraintEnd_toStartOf="@id/showAllBookmarksButton"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.button.MaterialButton
+    <TextView
         android:id="@+id/showAllBookmarksButton"
         style="@style/Button14TextStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:background="?android:attr/selectableItemBackground"
         android:contentDescription="@string/recently_saved_show_all_content_description"
-        android:gravity="top"
         android:insetTop="0dp"
-        android:minHeight="16dp"
         android:paddingStart="16dp"
         android:paddingEnd="0dp"
         android:maxLines="1"
@@ -42,5 +40,6 @@
         android:text="@string/recently_saved_show_all"
         android:textColor="@color/home_show_all_button_text"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintBottom_toBottomOf="@id/header" />
+    
 </androidx.constraintlayout.widget.ConstraintLayout>
