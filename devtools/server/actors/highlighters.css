@@ -675,8 +675,7 @@
 }
 
 :-moz-native-anonymous .paused-dbg-toolbar {
-  /* Show the toolbar at the top, but not too high to prevent it overlaping OS toolbar on Android */
-  margin-top: 30px;
+  margin-top: 15px;
   display: inline-flex;
   user-select: none;
 
@@ -728,14 +727,14 @@
 :-moz-native-anonymous button.paused-dbg-step-button {
   margin-left: 6px;
   margin-right: 6px;
-  mask-image: url(chrome://devtools/content/shared/images/stepOver.svg);
+  mask-image: url(chrome://devtools/content/debugger/images/stepOver.svg);
   padding: 0;
 }
 
 :-moz-native-anonymous button.paused-dbg-resume-button {
   margin-right: 6px;
   margin-right: 6px;
-  mask-image: url(chrome://devtools/content/shared/images/resume.svg);
+  mask-image: url(chrome://devtools/content/debugger/images/resume.svg);
   padding: 0;
 }
 

@@ -1,35 +1,29 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`WhyPaused should pause reason with message 1`] = `
-<LocalizationProvider
-  bundles={Array []}
+<div
+  className="pane why-paused"
 >
-  <div
-    className="pane why-paused"
-  >
-    <div>
+  <div>
+    <div
+      className="info icon"
+    >
+      <AccessibleImage
+        className="info"
+      />
+    </div>
+    <div
+      className="pause reason"
+    >
+      Paused on breakpoint
       <div
-        className="info icon"
+        className="message"
       >
-        <AccessibleImage
-          className="info"
-        />
-      </div>
-      <div
-        className="pause reason"
-      >
-        <Localized
-          id="whypaused-breakpoint"
-        />
-        <div
-          className="message"
-        >
-          bla is hit
-        </div>
+        bla is hit
       </div>
     </div>
   </div>
-</LocalizationProvider>
+</div>
 `;
 
 exports[`WhyPaused should show an empty div when there is no pause reason 1`] = `
@@ -39,65 +33,53 @@ exports[`WhyPaused should show an empty div when there is no pause reason 1`] = 
 `;
 
 exports[`WhyPaused should show pause reason with exception details 1`] = `
-<LocalizationProvider
-  bundles={Array []}
+<div
+  className="pane why-paused"
 >
-  <div
-    className="pane why-paused"
-  >
-    <div>
+  <div>
+    <div
+      className="info icon"
+    >
+      <AccessibleImage
+        className="info"
+      />
+    </div>
+    <div
+      className="pause reason"
+    >
+      Paused on exception
       <div
-        className="info icon"
+        className="message warning"
       >
-        <AccessibleImage
-          className="info"
-        />
-      </div>
-      <div
-        className="pause reason"
-      >
-        <Localized
-          id="whypaused-exception"
-        />
-        <div
-          className="message warning"
-        >
-          ReferenceError: o is not defined
-        </div>
+        ReferenceError: o is not defined
       </div>
     </div>
   </div>
-</LocalizationProvider>
+</div>
 `;
 
 exports[`WhyPaused should show pause reason with exception string 1`] = `
-<LocalizationProvider
-  bundles={Array []}
+<div
+  className="pane why-paused"
 >
-  <div
-    className="pane why-paused"
-  >
-    <div>
+  <div>
+    <div
+      className="info icon"
+    >
+      <AccessibleImage
+        className="info"
+      />
+    </div>
+    <div
+      className="pause reason"
+    >
+      Paused on exception
       <div
-        className="info icon"
+        className="message warning"
       >
-        <AccessibleImage
-          className="info"
-        />
-      </div>
-      <div
-        className="pause reason"
-      >
-        <Localized
-          id="whypaused-exception"
-        />
-        <div
-          className="message warning"
-        >
-          Not Available
-        </div>
+        Not Available
       </div>
     </div>
   </div>
-</LocalizationProvider>
+</div>
 `;
