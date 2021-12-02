@@ -35,7 +35,7 @@
 #include "frontend/CompilationStencil.h"  // frontend::CompilationStencil
 #include "frontend/ParseContext.h"
 #include "frontend/SourceNotes.h"  // SrcNote, SrcNoteType, SrcNoteIterator
-#include "gc/AllocKind.h"  // gc::InitialHeap
+#include "gc/AllocKind.h"          // gc::InitialHeap
 #include "gc/FreeOp.h"
 #include "jit/BaselineJIT.h"
 #include "jit/CacheIRHealth.h"
@@ -721,7 +721,6 @@ void JSScript::resetScriptCounts() {
 void ScriptSourceObject::finalize(JSFreeOp* fop, JSObject* obj) {
   MOZ_ASSERT(fop->onMainThread());
   ScriptSourceObject* sso = &obj->as<ScriptSourceObject>();
-  sso->source()->finalizeGCData();
   sso->source()->Release();
 
   // Clear the private value, calling the release hook if necessary.
@@ -1541,30 +1540,6 @@ template bool ScriptSource::assignSource(JSContext* cx,
 template bool ScriptSource::assignSource(JSContext* cx,
                                          const ReadOnlyCompileOptions& options,
                                          SourceText<Utf8Unit>& srcBuf);
-
-void ScriptSource::finalizeGCData() {
-  // This should be kept in sync with ScriptSource::trace above.
-
-  // When the ScriptSourceObject's finalizer runs, this
-  // ScriptSource can no longer be accessed from the main
-  // thread. However, an offthread source compression task may still
-  // hold a reference. We must clean up any GC pointers owned by this
-  // ScriptSource now, because trying to run those prebarriers
-  // offthread later will fail.
-  MOZ_ASSERT(TlsContext.get() && TlsContext.get()->isMainThreadContext());
-
-  if (xdrEncoder_) {
-    xdrEncoder_.reset();
-  }
-}
-
-ScriptSource::~ScriptSource() {
-  MOZ_ASSERT(refs == 0);
-
-  // GC pointers must have been cleared earlier, because this destructor could
-  // be called off-thread by SweepCompressionTasks. See above.
-  MOZ_ASSERT(!xdrEncoder_);
-}
 
 [[nodiscard]] static bool reallocUniquePtr(UniqueChars& unique, size_t size) {
   auto newPtr = static_cast<char*>(js_realloc(unique.get(), size));

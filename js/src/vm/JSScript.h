@@ -608,9 +608,7 @@ class ScriptSource {
   static const size_t SourceDeflateLimit = 100;
 
   explicit ScriptSource() : id_(++idCount_) {}
-
-  void finalizeGCData();
-  ~ScriptSource();
+  ~ScriptSource() { MOZ_ASSERT(refs == 0); }
 
   void AddRef() { refs++; }
   void Release() {
