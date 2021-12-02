@@ -77,13 +77,6 @@ loader.lazyRequireGetter(
   true
 );
 
-loader.lazyRequireGetter(
-  this,
-  "isDocumentReady",
-  "devtools/server/actors/inspector/utils",
-  true
-);
-
 const PROMISE_REACTIONS = new WeakMap();
 function cacheReactionsForFrame(frame) {
   if (frame.asyncPromise) {
@@ -474,15 +467,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // We might have access to a non-chrome window getter that is a Sandox (e.g. in the
     // case of ContentProcessTargetActor).
     if (!window?.document?.documentElement) {
-      return false;
-    }
-
-    // Document#insertAnonymousContent requires an access to a CustomContentContainer, which
-    // is only available once the DOM is loaded.
-    // If that's not the case, we simply don't show the overlay. We can't wait for the
-    // DOM to be loaded _and then_ show the overlay, as this will only happen once we resume
-    // and might get the overlay in the page while we're not paused anymore.
-    if (!isDocumentReady(window.document)) {
       return false;
     }
 
