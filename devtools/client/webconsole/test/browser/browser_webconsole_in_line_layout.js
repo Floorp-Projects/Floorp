@@ -6,7 +6,7 @@
 // Test that the in-line layout works as expected
 
 const TEST_URI =
-  "data:text/html,<meta charset=utf8>Test in-line console layout";
+  "data:text/html,<!DOCTYPE html><meta charset=utf8>Test in-line console layout";
 
 const MINIMUM_MESSAGE_HEIGHT = 20;
 
