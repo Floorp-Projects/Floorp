@@ -1095,12 +1095,17 @@ class AbortException extends BaseException {
 }
 
 exports.AbortException = AbortException;
-const NullCharactersRegExp = /\x00/g;
+const NullCharactersRegExp = /\x00+/g;
+const InvisibleCharactersRegExp = /[\x01-\x1F]/g;
 
-function removeNullCharacters(str) {
+function removeNullCharacters(str, replaceInvisible = false) {
   if (typeof str !== "string") {
     warn("The argument for removeNullCharacters must be a string.");
     return str;
+  }
+
+  if (replaceInvisible) {
+    str = str.replace(InvisibleCharactersRegExp, " ");
   }
 
   return str.replace(NullCharactersRegExp, "");
@@ -1974,7 +1979,6 @@ function getDocument(src) {
       }
 
       const messageHandler = new _message_handler.MessageHandler(docId, workerId, worker.port);
-      messageHandler.postMessageTransfers = worker.postMessageTransfers;
       const transport = new WorkerTransport(messageHandler, task, networkStream, params);
       task._transport = transport;
       messageHandler.send("Ready", null);
@@ -1997,7 +2001,7 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   const workerId = await worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.12.126',
+    apiVersion: '2.12.248',
     source: {
       data: source.data,
       url: source.url,
@@ -2008,7 +2012,6 @@ async function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
     },
     maxImageSize: source.maxImageSize,
     disableFontFace: source.disableFontFace,
-    postMessageTransfers: worker.postMessageTransfers,
     docBaseUrl: source.docBaseUrl,
     ignoreErrors: source.ignoreErrors,
     isEvalSupported: source.isEvalSupported,
@@ -2155,6 +2158,10 @@ class PDFDocumentProxy {
     return this._pdfInfo.fingerprints;
   }
 
+  get stats() {
+    return this._transport.stats;
+  }
+
   get isPureXfa() {
     return !!this._transport._htmlForXfa;
   }
@@ -2237,10 +2244,6 @@ class PDFDocumentProxy {
 
   getDownloadInfo() {
     return this._transport.downloadInfoCapability.promise;
-  }
-
-  getStats() {
-    return this._transport.getStats();
   }
 
   cleanup(keepLoadedFonts = false) {
@@ -2366,7 +2369,8 @@ class PDFPageProxy {
     imageLayer = null,
     canvasFactory = null,
     background = null,
-    optionalContentConfigPromise = null
+    optionalContentConfigPromise = null,
+    annotationCanvasMap = null
   }) {
     if (this._stats) {
       this._stats.time("Overall");
@@ -2451,6 +2455,7 @@ class PDFPageProxy {
       },
       objs: this.objs,
       commonObjs: this.commonObjs,
+      annotationCanvasMap,
       operatorList: intentState.operatorList,
       pageIndex: this._pageIndex,
       canvasFactory: canvasFactoryInstance,
@@ -2862,7 +2867,6 @@ class PDFWorker {
 
     this.name = name;
     this.destroyed = false;
-    this.postMessageTransfers = true;
     this.verbosity = verbosity;
     this._readyCapability = (0, _util.createPromiseCapability)();
     this._port = null;
@@ -2941,10 +2945,6 @@ class PDFWorker {
             this._port = worker;
             this._webWorker = worker;
 
-            if (!data.supportTransfers) {
-              this.postMessageTransfers = false;
-            }
-
             this._readyCapability.resolve();
 
             messageHandler.send("configure", {
@@ -2973,7 +2973,7 @@ class PDFWorker {
         });
 
         const sendTest = () => {
-          const testObj = new Uint8Array([this.postMessageTransfers ? 255 : 0]);
+          const testObj = new Uint8Array([255]);
 
           try {
             messageHandler.send("test", testObj, [testObj.buffer]);
@@ -3102,6 +3102,8 @@ exports.PDFWorker = PDFWorker;
 ;
 
 class WorkerTransport {
+  #docStats = null;
+
   constructor(messageHandler, loadingTask, networkStream, params) {
     this.messageHandler = messageHandler;
     this.loadingTask = loadingTask;
@@ -3138,6 +3140,10 @@ class WorkerTransport {
 
   get annotationStorage() {
     return (0, _util.shadow)(this, "annotationStorage", new _annotation_storage.AnnotationStorage());
+  }
+
+  get stats() {
+    return this.#docStats;
   }
 
   getRenderingIntent(intent, annotationMode = _util.AnnotationMode.ENABLE, isOpList = false) {
@@ -3527,6 +3533,16 @@ class WorkerTransport {
         total: data.total
       });
     });
+    messageHandler.on("DocStats", data => {
+      if (this.destroyed) {
+        return;
+      }
+
+      this.#docStats = Object.freeze({
+        streamTypes: Object.freeze(data.streamTypes),
+        fontTypes: Object.freeze(data.fontTypes)
+      });
+    });
     messageHandler.on("UnsupportedFeature", this._onUnsupportedFeature.bind(this));
     messageHandler.on("FetchBuiltInCMap", data => {
       if (this.destroyed) {
@@ -3715,10 +3731,6 @@ class WorkerTransport {
     return this.messageHandler.sendWithPromise("GetMarkInfo", null);
   }
 
-  getStats() {
-    return this.messageHandler.sendWithPromise("GetStats", null);
-  }
-
   async startCleanup(keepLoadedFonts = false) {
     await this.messageHandler.sendWithPromise("Cleanup", null);
 
@@ -3840,6 +3852,7 @@ class InternalRenderTask {
     params,
     objs,
     commonObjs,
+    annotationCanvasMap,
     operatorList,
     pageIndex,
     canvasFactory,
@@ -3850,6 +3863,7 @@ class InternalRenderTask {
     this.params = params;
     this.objs = objs;
     this.commonObjs = commonObjs;
+    this.annotationCanvasMap = annotationCanvasMap;
     this.operatorListIdx = null;
     this.operatorList = operatorList;
     this._pageIndex = pageIndex;
@@ -3902,7 +3916,7 @@ class InternalRenderTask {
       imageLayer,
       background
     } = this.params;
-    this.gfx = new _canvas.CanvasGraphics(canvasContext, this.commonObjs, this.objs, this.canvasFactory, imageLayer, optionalContentConfig);
+    this.gfx = new _canvas.CanvasGraphics(canvasContext, this.commonObjs, this.objs, this.canvasFactory, imageLayer, optionalContentConfig, this.annotationCanvasMap);
     this.gfx.beginDrawing({
       transform,
       viewport,
@@ -4000,9 +4014,9 @@ class InternalRenderTask {
 
 }
 
-const version = '2.12.126';
+const version = '2.12.248';
 exports.version = version;
-const build = 'e1a35e7bb';
+const build = 'e9e4b913c';
 exports.build = build;
 
 /***/ }),
@@ -4431,7 +4445,6 @@ var _display_utils = __w_pdfjs_require__(1);
 const MIN_FONT_SIZE = 16;
 const MAX_FONT_SIZE = 100;
 const MAX_GROUP_SIZE = 4096;
-const MAX_CACHED_CANVAS_PATTERNS = 2;
 const EXECUTION_TIME = 15;
 const EXECUTION_STEPS = 10;
 const COMPILE_TYPE3_GLYPHS = true;
@@ -4716,46 +4729,6 @@ class CachedCanvases {
 
 }
 
-class LRUCache {
-  constructor(maxSize = 0) {
-    this._cache = new Map();
-    this._maxSize = maxSize;
-  }
-
-  has(key) {
-    return this._cache.has(key);
-  }
-
-  get(key) {
-    if (this._cache.has(key)) {
-      const value = this._cache.get(key);
-
-      this._cache.delete(key);
-
-      this._cache.set(key, value);
-    }
-
-    return this._cache.get(key);
-  }
-
-  set(key, value) {
-    if (this._maxSize <= 0) {
-      return;
-    }
-
-    if (this._cache.size + 1 > this._maxSize) {
-      this._cache.delete(this._cache.keys().next().value);
-    }
-
-    this._cache.set(key, value);
-  }
-
-  clear() {
-    this._cache.clear();
-  }
-
-}
-
 function compileType3Glyph(imgData) {
   const POINT_TO_PROCESS_LIMIT = 1000;
   const POINT_TYPES = new Uint8Array([0, 2, 4, 0, 1, 0, 5, 4, 8, 10, 0, 8, 0, 2, 1, 0]);
@@ -4984,8 +4957,25 @@ class CanvasExtraState {
     this.updatePathMinMax(transform, box[2], box[3]);
   }
 
-  getPathBoundingBox() {
-    return [this.minX, this.minY, this.maxX, this.maxY];
+  getPathBoundingBox(pathType = _pattern_helper.PathType.FILL, transform = null) {
+    const box = [this.minX, this.minY, this.maxX, this.maxY];
+
+    if (pathType === _pattern_helper.PathType.STROKE) {
+      if (!transform) {
+        (0, _util.unreachable)("Stroke bounding box must include transform.");
+      }
+
+      const scale = _util.Util.singularValueDecompose2dScale(transform);
+
+      const xStrokePad = scale[0] * this.lineWidth / 2;
+      const yStrokePad = scale[1] * this.lineWidth / 2;
+      box[0] -= xStrokePad;
+      box[1] -= yStrokePad;
+      box[2] += xStrokePad;
+      box[3] += yStrokePad;
+    }
+
+    return box;
   }
 
   updateClipFromPath() {
@@ -5002,8 +4992,8 @@ class CanvasExtraState {
     this.maxY = 0;
   }
 
-  getClippedPathBoundingBox() {
-    return _util.Util.intersect(this.clipBox, this.getPathBoundingBox());
+  getClippedPathBoundingBox(pathType = _pattern_helper.PathType.FILL, transform = null) {
+    return _util.Util.intersect(this.clipBox, this.getPathBoundingBox(pathType, transform));
   }
 
 }
@@ -5373,7 +5363,7 @@ const NORMAL_CLIP = {};
 const EO_CLIP = {};
 
 class CanvasGraphics {
-  constructor(canvasCtx, commonObjs, objs, canvasFactory, imageLayer, optionalContentConfig) {
+  constructor(canvasCtx, commonObjs, objs, canvasFactory, imageLayer, optionalContentConfig, annotationCanvasMap) {
     this.ctx = canvasCtx;
     this.current = new CanvasExtraState(this.ctx.canvas.width, this.ctx.canvas.height);
     this.stateStack = [];
@@ -5398,8 +5388,11 @@ class CanvasGraphics {
     this.markedContentStack = [];
     this.optionalContentConfig = optionalContentConfig;
     this.cachedCanvases = new CachedCanvases(this.canvasFactory);
-    this.cachedCanvasPatterns = new LRUCache(MAX_CACHED_CANVAS_PATTERNS);
     this.cachedPatterns = new Map();
+    this.annotationCanvasMap = annotationCanvasMap;
+    this.viewportScale = 1;
+    this.outputScaleX = 1;
+    this.outputScaleY = 1;
 
     if (canvasCtx) {
       addContextCurrentTransform(canvasCtx);
@@ -5435,9 +5428,12 @@ class CanvasGraphics {
 
     if (transform) {
       this.ctx.transform.apply(this.ctx, transform);
+      this.outputScaleX = transform[0];
+      this.outputScaleY = transform[0];
     }
 
     this.ctx.transform.apply(this.ctx, viewport.transform);
+    this.viewportScale = viewport.scale;
     this.baseTransform = this.ctx.mozCurrentTransform.slice();
     this._combinedScaleFactor = Math.hypot(this.baseTransform[0], this.baseTransform[2]);
 
@@ -5518,7 +5514,6 @@ class CanvasGraphics {
     }
 
     this.cachedCanvases.clear();
-    this.cachedCanvasPatterns.clear();
     this.cachedPatterns.clear();
 
     if (this.imageLayer) {
@@ -5605,7 +5600,7 @@ class CanvasGraphics {
 
     const inverse = _util.Util.transform(fillCtx.mozCurrentTransformInverse, [1, 0, 0, 1, -offsetX, -offsetY]);
 
-    fillCtx.fillStyle = isPatternFill ? fillColor.getPattern(ctx, this, inverse, false) : fillColor;
+    fillCtx.fillStyle = isPatternFill ? fillColor.getPattern(ctx, this, inverse, _pattern_helper.PathType.FILL) : fillColor;
     fillCtx.fillRect(0, 0, width, height);
     return {
       canvas: fillCanvas.canvas,
@@ -5896,7 +5891,7 @@ class CanvasGraphics {
       if (typeof strokeColor === "object" && strokeColor?.getPattern) {
         const lineWidth = this.getSinglePixelWidth();
         ctx.save();
-        ctx.strokeStyle = strokeColor.getPattern(ctx, this, ctx.mozCurrentTransformInverse);
+        ctx.strokeStyle = strokeColor.getPattern(ctx, this, ctx.mozCurrentTransformInverse, _pattern_helper.PathType.STROKE);
         ctx.lineWidth = Math.max(lineWidth, this.current.lineWidth);
         ctx.stroke();
         ctx.restore();
@@ -5937,7 +5932,7 @@ class CanvasGraphics {
 
     if (isPatternFill) {
       ctx.save();
-      ctx.fillStyle = fillColor.getPattern(ctx, this, ctx.mozCurrentTransformInverse);
+      ctx.fillStyle = fillColor.getPattern(ctx, this, ctx.mozCurrentTransformInverse, _pattern_helper.PathType.FILL);
       needRestore = true;
     }
 
@@ -6244,16 +6239,6 @@ class CanvasGraphics {
     const widthAdvanceScale = fontSize * current.fontMatrix[0];
     const simpleFillText = current.textRenderingMode === _util.TextRenderingMode.FILL && !font.disableFontFace && !current.patternFill;
     ctx.save();
-    let patternTransform;
-
-    if (current.patternFill) {
-      ctx.save();
-      const pattern = current.fillColor.getPattern(ctx, this, ctx.mozCurrentTransformInverse);
-      patternTransform = ctx.mozCurrentTransform;
-      ctx.restore();
-      ctx.fillStyle = pattern;
-    }
-
     ctx.transform.apply(ctx, current.textMatrix);
     ctx.translate(current.x, current.y + current.textRise);
 
@@ -6261,6 +6246,16 @@ class CanvasGraphics {
       ctx.scale(textHScale, -1);
     } else {
       ctx.scale(textHScale, 1);
+    }
+
+    let patternTransform;
+
+    if (current.patternFill) {
+      ctx.save();
+      const pattern = current.fillColor.getPattern(ctx, this, ctx.mozCurrentTransformInverse, _pattern_helper.PathType.FILL);
+      patternTransform = ctx.mozCurrentTransform;
+      ctx.restore();
+      ctx.fillStyle = pattern;
     }
 
     let lineWidth = current.lineWidth;
@@ -6489,7 +6484,7 @@ class CanvasGraphics {
     if (this.cachedPatterns.has(objId)) {
       pattern = this.cachedPatterns.get(objId);
     } else {
-      pattern = (0, _pattern_helper.getShadingPattern)(this.objs.get(objId), this.cachedCanvasPatterns);
+      pattern = (0, _pattern_helper.getShadingPattern)(this.objs.get(objId));
       this.cachedPatterns.set(objId, pattern);
     }
 
@@ -6510,7 +6505,7 @@ class CanvasGraphics {
 
     const pattern = this._getPattern(objId);
 
-    ctx.fillStyle = pattern.getPattern(ctx, this, ctx.mozCurrentTransformInverse, true);
+    ctx.fillStyle = pattern.getPattern(ctx, this, ctx.mozCurrentTransformInverse, _pattern_helper.PathType.SHADING);
     const inv = ctx.mozCurrentTransformInverse;
 
     if (inv) {
@@ -6726,24 +6721,62 @@ class CanvasGraphics {
     this.restore();
   }
 
-  beginAnnotation(id, rect, transform, matrix) {
+  beginAnnotation(id, rect, transform, matrix, hasOwnCanvas) {
     this.save();
-    resetCtxToDefault(this.ctx);
-    this.current = new CanvasExtraState(this.ctx.canvas.width, this.ctx.canvas.height);
 
     if (Array.isArray(rect) && rect.length === 4) {
       const width = rect[2] - rect[0];
       const height = rect[3] - rect[1];
-      this.ctx.rect(rect[0], rect[1], width, height);
-      this.clip();
-      this.endPath();
+
+      if (hasOwnCanvas && this.annotationCanvasMap) {
+        transform = transform.slice();
+        transform[4] -= rect[0];
+        transform[5] -= rect[1];
+        rect = rect.slice();
+        rect[0] = rect[1] = 0;
+        rect[2] = width;
+        rect[3] = height;
+
+        const [scaleX, scaleY] = _util.Util.singularValueDecompose2dScale(this.ctx.mozCurrentTransform);
+
+        const {
+          viewportScale
+        } = this;
+        const canvasWidth = Math.ceil(width * this.outputScaleX * viewportScale);
+        const canvasHeight = Math.ceil(height * this.outputScaleY * viewportScale);
+        this.annotationCanvas = this.canvasFactory.create(canvasWidth, canvasHeight);
+        const {
+          canvas,
+          context
+        } = this.annotationCanvas;
+        canvas.style.width = `calc(${width}px * var(--viewport-scale-factor))`;
+        canvas.style.height = `calc(${height}px * var(--viewport-scale-factor))`;
+        this.annotationCanvasMap.set(id, canvas);
+        this.annotationCanvas.savedCtx = this.ctx;
+        this.ctx = context;
+        this.ctx.setTransform(scaleX, 0, 0, -scaleY, 0, height * scaleY);
+        addContextCurrentTransform(this.ctx);
+        resetCtxToDefault(this.ctx);
+      } else {
+        resetCtxToDefault(this.ctx);
+        this.ctx.rect(rect[0], rect[1], width, height);
+        this.clip();
+        this.endPath();
+      }
     }
 
+    this.current = new CanvasExtraState(this.ctx.canvas.width, this.ctx.canvas.height);
     this.transform.apply(this, transform);
     this.transform.apply(this, matrix);
   }
 
   endAnnotation() {
+    if (this.annotationCanvas) {
+      this.ctx = this.annotationCanvas.savedCtx;
+      delete this.annotationCanvas.savedCtx;
+      delete this.annotationCanvas;
+    }
+
     this.restore();
   }
 
@@ -6828,7 +6861,7 @@ class CanvasGraphics {
       maskCtx.save();
       putBinaryImageMask(maskCtx, image);
       maskCtx.globalCompositeOperation = "source-in";
-      maskCtx.fillStyle = isPatternFill ? fillColor.getPattern(maskCtx, this, ctx.mozCurrentTransformInverse, false) : fillColor;
+      maskCtx.fillStyle = isPatternFill ? fillColor.getPattern(maskCtx, this, ctx.mozCurrentTransformInverse, _pattern_helper.PathType.FILL) : fillColor;
       maskCtx.fillRect(0, 0, width, height);
       maskCtx.restore();
       ctx.save();
@@ -7083,10 +7116,17 @@ for (const op in _util.OPS) {
 Object.defineProperty(exports, "__esModule", ({
   value: true
 }));
-exports.TilingPattern = void 0;
+exports.TilingPattern = exports.PathType = void 0;
 exports.getShadingPattern = getShadingPattern;
 
 var _util = __w_pdfjs_require__(2);
+
+const PathType = {
+  FILL: "Fill",
+  STROKE: "Stroke",
+  SHADING: "Shading"
+};
+exports.PathType = PathType;
 
 function applyBoundingBox(ctx, bbox) {
   if (!bbox || typeof Path2D === "undefined") {
@@ -7114,7 +7154,7 @@ class BaseShadingPattern {
 }
 
 class RadialAxialShadingPattern extends BaseShadingPattern {
-  constructor(IR, cachedCanvasPatterns) {
+  constructor(IR) {
     super();
     this._type = IR[1];
     this._bbox = IR[2];
@@ -7124,7 +7164,6 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
     this._r0 = IR[6];
     this._r1 = IR[7];
     this.matrix = null;
-    this.cachedCanvasPatterns = cachedCanvasPatterns;
   }
 
   _createGradient(ctx) {
@@ -7143,36 +7182,30 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
     return grad;
   }
 
-  getPattern(ctx, owner, inverse, shadingFill = false) {
+  getPattern(ctx, owner, inverse, pathType) {
     let pattern;
 
-    if (!shadingFill) {
-      if (this.cachedCanvasPatterns.has(this)) {
-        pattern = this.cachedCanvasPatterns.get(this);
-      } else {
-        const tmpCanvas = owner.cachedCanvases.getCanvas("pattern", owner.ctx.canvas.width, owner.ctx.canvas.height, true);
-        const tmpCtx = tmpCanvas.context;
-        tmpCtx.clearRect(0, 0, tmpCtx.canvas.width, tmpCtx.canvas.height);
-        tmpCtx.beginPath();
-        tmpCtx.rect(0, 0, tmpCtx.canvas.width, tmpCtx.canvas.height);
-        tmpCtx.setTransform.apply(tmpCtx, owner.baseTransform);
+    if (pathType === PathType.STROKE || pathType === PathType.FILL) {
+      const ownerBBox = owner.current.getClippedPathBoundingBox(pathType, ctx.mozCurrentTransform) || [0, 0, 0, 0];
+      const width = Math.ceil(ownerBBox[2] - ownerBBox[0]) || 1;
+      const height = Math.ceil(ownerBBox[3] - ownerBBox[1]) || 1;
+      const tmpCanvas = owner.cachedCanvases.getCanvas("pattern", width, height, true);
+      const tmpCtx = tmpCanvas.context;
+      tmpCtx.clearRect(0, 0, tmpCtx.canvas.width, tmpCtx.canvas.height);
+      tmpCtx.beginPath();
+      tmpCtx.rect(0, 0, tmpCtx.canvas.width, tmpCtx.canvas.height);
+      tmpCtx.translate(-ownerBBox[0], -ownerBBox[1]);
+      inverse = _util.Util.transform(inverse, [1, 0, 0, 1, ownerBBox[0], ownerBBox[1]]);
+      tmpCtx.transform.apply(tmpCtx, owner.baseTransform);
 
-        if (this.matrix) {
-          tmpCtx.transform.apply(tmpCtx, this.matrix);
-        }
-
-        applyBoundingBox(tmpCtx, this._bbox);
-        tmpCtx.fillStyle = this._createGradient(tmpCtx);
-        tmpCtx.fill();
-        pattern = ctx.createPattern(tmpCanvas.canvas, "repeat");
-        this.cachedCanvasPatterns.set(this, pattern);
+      if (this.matrix) {
+        tmpCtx.transform.apply(tmpCtx, this.matrix);
       }
-    } else {
-      applyBoundingBox(ctx, this._bbox);
-      pattern = this._createGradient(ctx);
-    }
 
-    if (!shadingFill) {
+      applyBoundingBox(tmpCtx, this._bbox);
+      tmpCtx.fillStyle = this._createGradient(tmpCtx);
+      tmpCtx.fill();
+      pattern = ctx.createPattern(tmpCanvas.canvas, "no-repeat");
       const domMatrix = new DOMMatrix(inverse);
 
       try {
@@ -7180,6 +7213,9 @@ class RadialAxialShadingPattern extends BaseShadingPattern {
       } catch (ex) {
         (0, _util.warn)(`RadialAxialShadingPattern.getPattern: "${ex?.message}".`);
       }
+    } else {
+      applyBoundingBox(ctx, this._bbox);
+      pattern = this._createGradient(ctx);
     }
 
     return pattern;
@@ -7410,11 +7446,11 @@ class MeshShadingPattern extends BaseShadingPattern {
     };
   }
 
-  getPattern(ctx, owner, inverse, shadingFill = false) {
+  getPattern(ctx, owner, inverse, pathType) {
     applyBoundingBox(ctx, this._bbox);
     let scale;
 
-    if (shadingFill) {
+    if (pathType === PathType.SHADING) {
       scale = _util.Util.singularValueDecompose2dScale(ctx.mozCurrentTransform);
     } else {
       scale = _util.Util.singularValueDecompose2dScale(owner.baseTransform);
@@ -7426,9 +7462,9 @@ class MeshShadingPattern extends BaseShadingPattern {
       }
     }
 
-    const temporaryPatternCanvas = this._createMeshCanvas(scale, shadingFill ? null : this._background, owner.cachedCanvases);
+    const temporaryPatternCanvas = this._createMeshCanvas(scale, pathType === PathType.SHADING ? null : this._background, owner.cachedCanvases);
 
-    if (!shadingFill) {
+    if (pathType !== PathType.SHADING) {
       ctx.setTransform.apply(ctx, owner.baseTransform);
 
       if (this.matrix) {
@@ -7450,10 +7486,10 @@ class DummyShadingPattern extends BaseShadingPattern {
 
 }
 
-function getShadingPattern(IR, cachedCanvasPatterns) {
+function getShadingPattern(IR) {
   switch (IR[0]) {
     case "RadialAxial":
-      return new RadialAxialShadingPattern(IR, cachedCanvasPatterns);
+      return new RadialAxialShadingPattern(IR);
 
     case "Mesh":
       return new MeshShadingPattern(IR);
@@ -7598,10 +7634,10 @@ class TilingPattern {
     }
   }
 
-  getPattern(ctx, owner, inverse, shadingFill = false) {
+  getPattern(ctx, owner, inverse, pathType) {
     let matrix = inverse;
 
-    if (!shadingFill) {
+    if (pathType !== PathType.SHADING) {
       matrix = _util.Util.transform(matrix, owner.baseTransform);
 
       if (this.matrix) {
@@ -7707,7 +7743,6 @@ class MessageHandler {
     this.comObj = comObj;
     this.callbackId = 1;
     this.streamId = 1;
-    this.postMessageTransfers = true;
     this.streamSinks = Object.create(null);
     this.streamControllers = Object.create(null);
     this.callbackCapabilities = Object.create(null);
@@ -7801,7 +7836,7 @@ class MessageHandler {
   }
 
   send(actionName, data, transfers) {
-    this._postMessage({
+    this.comObj.postMessage({
       sourceName: this.sourceName,
       targetName: this.targetName,
       action: actionName,
@@ -7815,7 +7850,7 @@ class MessageHandler {
     this.callbackCapabilities[callbackId] = capability;
 
     try {
-      this._postMessage({
+      this.comObj.postMessage({
         sourceName: this.sourceName,
         targetName: this.targetName,
         action: actionName,
@@ -7844,8 +7879,7 @@ class MessageHandler {
           cancelCall: null,
           isClosed: false
         };
-
-        this._postMessage({
+        comObj.postMessage({
           sourceName,
           targetName,
           action: actionName,
@@ -7853,7 +7887,6 @@ class MessageHandler {
           data,
           desiredSize: controller.desiredSize
         }, transfers);
-
         return startCapability.promise;
       },
       pull: controller => {
@@ -7906,7 +7939,7 @@ class MessageHandler {
           this.ready = this.sinkCapability.promise;
         }
 
-        self._postMessage({
+        comObj.postMessage({
           sourceName,
           targetName,
           stream: StreamKind.ENQUEUE,
@@ -8123,14 +8156,6 @@ class MessageHandler {
   async _deleteStreamController(streamController, streamId) {
     await Promise.allSettled([streamController.startCall && streamController.startCall.promise, streamController.pullCall && streamController.pullCall.promise, streamController.cancelCall && streamController.cancelCall.promise]);
     delete this.streamControllers[streamId];
-  }
-
-  _postMessage(message, transfers) {
-    if (transfers && this.postMessageTransfers) {
-      this.comObj.postMessage(message, transfers);
-    } else {
-      this.comObj.postMessage(message);
-    }
   }
 
   destroy() {
@@ -8977,7 +9002,25 @@ class AnnotationElement {
 
     const rect = _util.Util.normalizeRect([data.rect[0], page.view[3] - data.rect[1] + page.view[1], data.rect[2], page.view[3] - data.rect[3] + page.view[1]]);
 
-    container.style.transform = `matrix(${viewport.transform.join(",")})`;
+    if (data.hasOwnCanvas) {
+      const transform = viewport.transform.slice();
+
+      const [scaleX, scaleY] = _util.Util.singularValueDecompose2dScale(transform);
+
+      width = Math.ceil(width * scaleX);
+      height = Math.ceil(height * scaleY);
+      rect[0] *= scaleX;
+      rect[1] *= scaleY;
+
+      for (let i = 0; i < 4; i++) {
+        transform[i] = Math.sign(transform[i]);
+      }
+
+      container.style.transform = `matrix(${transform.join(",")})`;
+    } else {
+      container.style.transform = `matrix(${viewport.transform.join(",")})`;
+    }
+
     container.style.transformOrigin = `${-rect[0]}px ${-rect[1]}px`;
 
     if (!ignoreBorder && data.borderStyle.width > 0) {
@@ -9032,8 +9075,14 @@ class AnnotationElement {
 
     container.style.left = `${rect[0]}px`;
     container.style.top = `${rect[1]}px`;
-    container.style.width = `${width}px`;
-    container.style.height = `${height}px`;
+
+    if (data.hasOwnCanvas) {
+      container.style.width = container.style.height = "auto";
+    } else {
+      container.style.width = `${width}px`;
+      container.style.height = `${height}px`;
+    }
+
     return container;
   }
 
@@ -10870,10 +10919,12 @@ class AnnotationLayer {
       sortedAnnotations.push(...popupAnnotations);
     }
 
+    const div = parameters.div;
+
     for (const data of sortedAnnotations) {
       const element = AnnotationElementFactory.create({
         data,
-        layer: parameters.div,
+        layer: div,
         page: parameters.page,
         viewport: parameters.viewport,
         linkService: parameters.linkService,
@@ -10899,33 +10950,93 @@ class AnnotationLayer {
 
         if (Array.isArray(rendered)) {
           for (const renderedElement of rendered) {
-            parameters.div.appendChild(renderedElement);
+            div.appendChild(renderedElement);
           }
         } else {
           if (element instanceof PopupAnnotationElement) {
-            parameters.div.prepend(rendered);
+            div.prepend(rendered);
           } else {
-            parameters.div.appendChild(rendered);
+            div.appendChild(rendered);
           }
         }
       }
     }
+
+    this.#setAnnotationCanvasMap(div, parameters.annotationCanvasMap);
   }
 
   static update(parameters) {
-    const transform = `matrix(${parameters.viewport.transform.join(",")})`;
+    const {
+      page,
+      viewport,
+      annotations,
+      annotationCanvasMap,
+      div
+    } = parameters;
+    const transform = viewport.transform;
+    const matrix = `matrix(${transform.join(",")})`;
+    let scale, ownMatrix;
 
-    for (const data of parameters.annotations) {
-      const elements = parameters.div.querySelectorAll(`[data-annotation-id="${data.id}"]`);
+    for (const data of annotations) {
+      const elements = div.querySelectorAll(`[data-annotation-id="${data.id}"]`);
 
       if (elements) {
         for (const element of elements) {
-          element.style.transform = transform;
+          if (data.hasOwnCanvas) {
+            const rect = _util.Util.normalizeRect([data.rect[0], page.view[3] - data.rect[1] + page.view[1], data.rect[2], page.view[3] - data.rect[3] + page.view[1]]);
+
+            if (!ownMatrix) {
+              scale = Math.abs(transform[0] || transform[1]);
+              const ownTransform = transform.slice();
+
+              for (let i = 0; i < 4; i++) {
+                ownTransform[i] = Math.sign(ownTransform[i]);
+              }
+
+              ownMatrix = `matrix(${ownTransform.join(",")})`;
+            }
+
+            const left = rect[0] * scale;
+            const top = rect[1] * scale;
+            element.style.left = `${left}px`;
+            element.style.top = `${top}px`;
+            element.style.transformOrigin = `${-left}px ${-top}px`;
+            element.style.transform = ownMatrix;
+          } else {
+            element.style.transform = matrix;
+          }
         }
       }
     }
 
-    parameters.div.hidden = false;
+    this.#setAnnotationCanvasMap(div, annotationCanvasMap);
+    div.hidden = false;
+  }
+
+  static #setAnnotationCanvasMap(div, annotationCanvasMap) {
+    if (!annotationCanvasMap) {
+      return;
+    }
+
+    for (const [id, canvas] of annotationCanvasMap) {
+      const element = div.querySelector(`[data-annotation-id="${id}"]`);
+
+      if (!element) {
+        continue;
+      }
+
+      const {
+        firstChild
+      } = element;
+
+      if (firstChild.nodeName === "CANVAS") {
+        element.replaceChild(canvas, firstChild);
+      } else {
+        element.insertBefore(canvas, firstChild);
+      }
+    }
+
+    annotationCanvasMap.clear();
   }
 
 }
@@ -12336,8 +12447,8 @@ var _svg = __w_pdfjs_require__(22);
 
 var _xfa_layer = __w_pdfjs_require__(20);
 
-const pdfjsVersion = '2.12.126';
-const pdfjsBuild = 'e1a35e7bb';
+const pdfjsVersion = '2.12.248';
+const pdfjsBuild = 'e9e4b913c';
 ;
 })();
 
