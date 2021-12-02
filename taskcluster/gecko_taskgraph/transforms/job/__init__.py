@@ -259,7 +259,7 @@ def use_fetches(config, jobs):
             continue
 
         job_fetches = []
-        name = job.get("name", job.get("label"))
+        name = job.get("name") or job.get("label").replace(f"{config.kind}-", "")
         dependencies = job.setdefault("dependencies", {})
         worker = job.setdefault("worker", {})
         env = worker.setdefault("env", {})
