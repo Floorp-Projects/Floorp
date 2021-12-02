@@ -202,11 +202,5 @@ mozilla::ipc::IPCResult TRRServiceParent::RecvInitTRRConnectionInfo() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult TRRServiceParent::RecvSetConfirmationState(
-    uint32_t aNewState) {
-  mConfirmationState = aNewState;
-  return IPC_OK();
-}
-
 }  // namespace net
 }  // namespace mozilla

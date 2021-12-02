@@ -57,14 +57,6 @@ function trr_test_setup() {
   );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
 
-  // Turn off strict fallback mode for most tests, it is tested specifically.
-  Services.prefs.setBoolPref("network.trr.strict_native_fallback", false);
-
-  // Turn off temp blocklist feature in tests. When enabled we may issue a
-  // lookup to resolve a parent name when blocklisting, which may bleed into
-  // and interfere with subsequent tasks.
-  Services.prefs.setBoolPref("network.trr.temp_blocklist", false);
-
   // We intentionally don't set the TRR mode. Each test should set it
   // after setup in the first test.
 
@@ -99,8 +91,6 @@ function trr_clear_prefs() {
   Services.prefs.clearUserPref(
     "network.trr.send_empty_accept-encoding_headers"
   );
-  Services.prefs.clearUserPref("network.trr.strict_native_fallback");
-  Services.prefs.clearUserPref("network.trr.temp_blocklist");
 }
 
 /// This class sends a DNS query and can be awaited as a promise to get the
