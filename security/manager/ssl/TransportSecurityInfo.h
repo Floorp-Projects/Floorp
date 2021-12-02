@@ -43,6 +43,9 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO
 
+  void SetPreliminaryHandshakeInfo(const SSLChannelInfo& channelInfo,
+                                   const SSLCipherSuiteInfo& cipherInfo);
+
   void SetSecurityState(uint32_t aState);
 
   inline int32_t GetErrorCode() {
@@ -102,14 +105,6 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
 
   void SetResumed(bool aResumed);
 
-  uint16_t mCipherSuite;
-  uint16_t mProtocolVersion;
-  uint16_t mCertificateTransparencyStatus;
-  nsCString mKeaGroup;
-  nsCString mSignatureSchemeName;
-
-  Atomic<bool> mIsAcceptedEch;
-  Atomic<bool> mIsDelegatedCredential;
   Atomic<bool> mIsDomainMismatch;
   Atomic<bool> mIsNotValidAtThisTime;
   Atomic<bool> mIsUntrusted;
@@ -131,12 +126,21 @@ class TransportSecurityInfo : public nsITransportSecurityInfo,
  protected:
   mutable ::mozilla::Mutex mMutex;
 
+  uint16_t mCipherSuite;
+  uint16_t mProtocolVersion;
+  uint16_t mCertificateTransparencyStatus;
+  nsCString mKeaGroup;
+  nsCString mSignatureSchemeName;
+
+  bool mIsAcceptedEch;
+  bool mIsDelegatedCredential;
+
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsTArray<RefPtr<nsIX509Cert>> mSucceededCertChain;
-  Atomic<bool> mNPNCompleted;
+  bool mNPNCompleted;
   nsCString mNegotiatedNPN;
-  Atomic<bool> mResumed;
-  Atomic<bool> mIsBuiltCertChainRootBuiltInRoot;
+  bool mResumed;
+  bool mIsBuiltCertChainRootBuiltInRoot;
   nsCString mPeerId;
 
  private:
