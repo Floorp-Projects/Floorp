@@ -83,11 +83,6 @@ void WriteSnapshotToDumpFile(Compositor* aCompositor, DrawTarget* aTarget) {
 }
 #endif
 
-//--------------------------------------------------
-// LayerManager
-
-void SetAntialiasingFlags(Layer* aLayer, DrawTarget* aTarget) {}
-
 IntRect ToOutsideIntRect(const gfxRect& aRect) {
   return IntRect::RoundOut(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
 }

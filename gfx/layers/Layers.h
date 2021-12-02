@@ -119,8 +119,6 @@ class Layer {
   };
 };
 
-void SetAntialiasingFlags(Layer* aLayer, gfx::DrawTarget* aTarget);
-
 #ifdef MOZ_DUMP_PAINTING
 void WriteSnapshotToDumpFile(Layer* aLayer, gfx::DataSourceSurface* aSurf);
 void WriteSnapshotToDumpFile(Compositor* aCompositor, gfx::DrawTarget* aTarget);
