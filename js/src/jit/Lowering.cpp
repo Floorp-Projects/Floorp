@@ -4097,6 +4097,17 @@ void LIRGenerator::visitAllocateAndStoreSlot(MAllocateAndStoreSlot* ins) {
   add(lir, ins);
 }
 
+void LIRGenerator::visitAddSlotAndCallAddPropHook(
+    MAddSlotAndCallAddPropHook* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+  MOZ_ASSERT(ins->value()->type() == MIRType::Value);
+
+  auto* lir = new (alloc()) LAddSlotAndCallAddPropHook(
+      useRegisterAtStart(ins->object()), useBoxAtStart(ins->value()));
+  add(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitStoreFixedSlot(MStoreFixedSlot* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
