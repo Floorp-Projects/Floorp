@@ -868,6 +868,15 @@
     newShape: ShapeField
     numNewSlots: RawInt32Field
 
+- name: AddSlotAndCallAddPropHook
+  shared: true
+  transpile: false
+  cost_estimate: 6
+  args:
+    obj: ObjId
+    rhs: ValId
+    newShape: ShapeField
+
 - name: StoreDenseElement
   shared: true
   transpile: true

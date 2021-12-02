@@ -4556,14 +4556,6 @@ bool SetPropIRGenerator::canAttachAddSlotStub(HandleObject obj, HandleId id) {
     return false;
   }
 
-  // Also watch out for addProperty hooks. Ignore the Array addProperty hook,
-  // because it doesn't do anything for non-index properties.
-  DebugOnly<uint32_t> index;
-  MOZ_ASSERT_IF(obj->is<ArrayObject>(), !IdIsIndex(id, &index));
-  if (!obj->is<ArrayObject>() && obj->getClass()->getAddProperty()) {
-    return false;
-  }
-
   // Walk up the object prototype chain and ensure that all prototypes are
   // native, and that all prototypes have no setter defined on the property.
   for (JSObject* proto = obj->staticPrototype(); proto;
@@ -4668,7 +4660,18 @@ AttachDecision SetPropIRGenerator::tryAttachAddSlotStub(HandleShape oldShape) {
 
   ShapeGuardProtoChain(writer, nobj, objId);
 
-  if (holder->isFixedSlot(propInfo.slot())) {
+  // If the JSClass has an addProperty hook, we need to call a VM function to
+  // invoke this hook. Ignore the Array addProperty hook, because it doesn't do
+  // anything for non-index properties.
+  DebugOnly<uint32_t> index;
+  MOZ_ASSERT_IF(obj->is<ArrayObject>(), !IdIsIndex(id, &index));
+  bool mustCallAddPropertyHook =
+      obj->getClass()->getAddProperty() && !obj->is<ArrayObject>();
+
+  if (mustCallAddPropertyHook) {
+    writer.addSlotAndCallAddPropHook(objId, rhsValId, newShape);
+    trackAttached("AddSlotWithAddPropertyHook");
+  } else if (holder->isFixedSlot(propInfo.slot())) {
     size_t offset = NativeObject::getFixedSlotOffset(propInfo.slot());
     writer.addAndStoreFixedSlot(objId, offset, rhsValId, newShape);
     trackAttached("AddSlot");
