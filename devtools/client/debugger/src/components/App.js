@@ -62,6 +62,7 @@ class App extends Component {
 
   getChildContext() {
     return {
+      fluentBundles: this.props.fluentBundles,
       toolboxDoc: this.props.toolboxDoc,
       shortcuts,
       l10n: L10N,
@@ -300,6 +301,7 @@ App.childContextTypes = {
   toolboxDoc: PropTypes.object,
   shortcuts: PropTypes.object,
   l10n: PropTypes.object,
+  fluentBundles: PropTypes.array,
 };
 
 const mapStateToProps = state => ({
