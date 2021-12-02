@@ -449,7 +449,12 @@ const AVAILABLE_UA_OVERRIDES = [
         "*://rolb.santanderbank.com/*",
       ],
       uaTransformer: originalUA => {
-        return originalUA.replace("Gecko", "like Gecko");
+        // The two lines related to Firefox 100 are for Bug 1743445.
+        // [TODO]: Remove when bug 1743429 gets backed out.
+        return originalUA
+          .replace("Gecko", "like Gecko")
+          .replace("Firefox/100.0", "Firefox/96.0")
+          .replace("rv:100.0", "rv:96.0");
       },
     },
   },
@@ -680,6 +685,129 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://*.yebocasino.co.za/*"],
       uaTransformer: () => {
         return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1743627 - Add UA override for renaud-bray.com
+     * Webcompat issue #55276 - https://github.com/webcompat/web-bugs/issues/55276
+     *
+     * Firefox for Android depends on "Version/" being there in the UA string,
+     * or it'll throw a runtime error.
+     */
+    id: "bug1743627",
+    platform: "android",
+    domain: "renaud-bray.com",
+    bug: "1743627",
+    config: {
+      matches: ["*://*.renaud-bray.com/*"],
+      uaTransformer: originalUA => {
+        return originalUA + " Version/0";
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1741892 - Add UA override for goal.com
+     *
+     * This site needs to have Chrome into its UA string to be able
+     * to serve the right experience on both desktop and mobile.
+     */
+    id: "bug1741892",
+    platform: "all",
+    domain: "goal.com",
+    bug: "1741892",
+    config: {
+      matches: ["*://goal.com/*"],
+      uaTransformer: originalUA => {
+        return originalUA + " Chrome/98.0.1086.0";
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1743745 - Add UA override for www.automesseweb.jp
+     * Webcompat issue #70386 - https://github.com/webcompat/web-bugs/issues/70386
+     *
+     * On Firefox Android, the browser is receiving the desktop layout.
+     *
+     */
+    id: "bug1743745",
+    platform: "android",
+    domain: "automesseweb.jp",
+    bug: "1743745",
+    config: {
+      matches: ["*://*.automesseweb.jp/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1743751 - Add UA override for slrclub.com
+     * Webcompat issue #91373 - https://github.com/webcompat/web-bugs/issues/91373
+     *
+     * On Firefox Android, the browser is receiving the desktop layout.
+     * Spoofing as Chrome works fine.
+     */
+    id: "bug1743751",
+    platform: "android",
+    domain: "slrclub.com",
+    bug: "1743751",
+    config: {
+      matches: ["*://*.slrclub.com/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1743754 - Add UA override for slrclub.com
+     * Webcompat issue #86839 - https://github.com/webcompat/web-bugs/issues/86839
+     *
+     * On Firefox Android, the browser is failing a UA parsing on Firefox UA.
+     */
+    id: "bug1743754",
+    platform: "android",
+    domain: "workflow.base.vn",
+    bug: "1743754",
+    config: {
+      matches: ["*://workflow.base.vn/*"],
+      uaTransformer: () => {
+        return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1743429 - Add UA override for sites broken with the Version 100 User Agent
+     *
+     * We're running an experiment on Desktop with Beta and Nightly, to investigate
+     * how much the web breaks with a Version 100 User Agent. Some sites do not
+     * like this, so let's override for now
+     */
+    id: "bug1743429",
+    platform: "desktop",
+    domain: "Sites with known Version 100 User Agent breakage",
+    bug: "1743429",
+    config: {
+      matches: [
+        "*://*.wordpress.org/*", // Bug 1743431,
+      ],
+      uaTransformer: originalUA => {
+        if (!originalUA.includes("Firefox/100.0")) {
+          return originalUA;
+        }
+
+        // We do not have a good way to determine the original version number.
+        // since the experiment is short-lived, however, we can just set 96 here
+        // and be done with it.
+        return originalUA
+          .replace("Firefox/100.0", "Firefox/96.0")
+          .replace("rv:100.0", "rv:96.0");
       },
     },
   },
