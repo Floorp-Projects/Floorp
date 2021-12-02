@@ -194,6 +194,10 @@ class nsHostRecord : public mozilla::LinkedListElement<RefPtr<nsHostRecord>>,
   // counter of outstanding resolving calls
   mozilla::Atomic<int32_t> mResolving{0};
 
+  // Number of times we've attempted TRR. Reset when we refresh.
+  // TRR is attempted at most twice - first attempt and retry.
+  mozilla::Atomic<int32_t> mTrrAttempts{0};
+
   // True if this record is a cache of a failed lookup.  Negative cache
   // entries are valid just like any other (though never for more than 60
   // seconds), but a use of that negative entry forces an asynchronous refresh.
