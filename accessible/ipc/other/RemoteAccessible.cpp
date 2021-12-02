@@ -368,9 +368,13 @@ nsIntSize RemoteAccessible::ImageSize() {
   return retVal;
 }
 
-uint32_t RemoteAccessible::StartOffset(bool* aOk) {
+uint32_t RemoteAccessible::StartOffset() {
+  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
+    return RemoteAccessibleBase<RemoteAccessible>::StartOffset();
+  }
   uint32_t retVal = 0;
-  Unused << mDoc->SendStartOffset(mID, &retVal, aOk);
+  bool ok;
+  Unused << mDoc->SendStartOffset(mID, &retVal, &ok);
   return retVal;
 }
 

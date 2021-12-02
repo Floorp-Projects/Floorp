@@ -720,18 +720,6 @@ void RemoteAccessible::ScrollSubstringToPoint(int32_t aStartOffset,
                               static_cast<long>(aX), static_cast<long>(aY));
 }
 
-uint32_t RemoteAccessible::StartOffset(bool* aOk) {
-  RefPtr<IAccessibleHyperlink> acc = QueryInterface<IAccessibleHyperlink>(this);
-  if (!acc) {
-    *aOk = false;
-    return 0;
-  }
-
-  long startOffset;
-  *aOk = SUCCEEDED(acc->get_startIndex(&startOffset));
-  return static_cast<uint32_t>(startOffset);
-}
-
 uint32_t RemoteAccessible::EndOffset(bool* aOk) {
   RefPtr<IAccessibleHyperlink> acc = QueryInterface<IAccessibleHyperlink>(this);
   if (!acc) {
