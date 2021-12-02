@@ -260,7 +260,7 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     if not worker.get("skip-artifacts", False):
         generic_worker_add_artifacts(config, job, taskdesc)
 
-    env = worker["env"]
+    env = worker.setdefault("env", {})
     env.update(
         {
             "MOZ_BUILD_DATE": config.params["moz_build_date"],

@@ -203,6 +203,39 @@ def add_resource_monitor(config, jobs):
         yield job
 
 
+@transforms.add
+def make_task_description(config, jobs):
+    """Given a build description, create a task description"""
+    # import plugin modules first, before iterating over jobs
+    import_sibling_modules(exceptions=("common.py",))
+
+    for job in jobs:
+        # only docker-worker uses a fixed absolute path to find directories
+        if job["worker"]["implementation"] == "docker-worker":
+            job["run"].setdefault("workdir", "/builds/worker")
+
+        taskdesc = copy.deepcopy(job)
+
+        # fill in some empty defaults to make run implementations easier
+        taskdesc.setdefault("attributes", {})
+        taskdesc.setdefault("dependencies", {})
+        taskdesc.setdefault("if-dependencies", [])
+        taskdesc.setdefault("soft-dependencies", [])
+        taskdesc.setdefault("routes", [])
+        taskdesc.setdefault("scopes", [])
+        taskdesc.setdefault("extra", {})
+
+        # give the function for job.run.using on this worker implementation a
+        # chance to set up the task description.
+        configure_taskdesc_for_run(
+            config, job, taskdesc, job["worker"]["implementation"]
+        )
+        del taskdesc["run"]
+
+        # yield only the task description, discarding the job description
+        yield taskdesc
+
+
 def get_attribute(dict, key, attributes, attribute_name):
     """Get `attribute_name` from the given `attributes` dict, and if there
     is a corresponding value, set `key` in `dict` to that value."""
@@ -220,11 +253,11 @@ def use_fetches(config, jobs):
     if config.kind in ("toolchain", "fetch"):
         jobs = list(jobs)
         for job in jobs:
-            run = job.get("run", {})
+            attributes = job.get("attributes", {})
             label = job["label"]
-            get_attribute(artifact_names, label, run, "toolchain-artifact")
-            get_attribute(extra_env, label, run, "toolchain-env")
-            value = run.get(f"{config.kind}-alias")
+            get_attribute(artifact_names, label, attributes, "toolchain-artifact")
+            get_attribute(extra_env, label, attributes, "toolchain-env")
+            value = attributes.get(f"{config.kind}-alias")
             if not value:
                 value = []
             elif isinstance(value, str):
@@ -380,39 +413,6 @@ def use_fetches(config, jobs):
         env.setdefault("MOZ_FETCHES_DIR", "fetches")
 
         yield job
-
-
-@transforms.add
-def make_task_description(config, jobs):
-    """Given a build description, create a task description"""
-    # import plugin modules first, before iterating over jobs
-    import_sibling_modules(exceptions=("common.py",))
-
-    for job in jobs:
-        # only docker-worker uses a fixed absolute path to find directories
-        if job["worker"]["implementation"] == "docker-worker":
-            job["run"].setdefault("workdir", "/builds/worker")
-
-        taskdesc = copy.deepcopy(job)
-
-        # fill in some empty defaults to make run implementations easier
-        taskdesc.setdefault("attributes", {})
-        taskdesc.setdefault("dependencies", {})
-        taskdesc.setdefault("if-dependencies", [])
-        taskdesc.setdefault("soft-dependencies", [])
-        taskdesc.setdefault("routes", [])
-        taskdesc.setdefault("scopes", [])
-        taskdesc.setdefault("extra", {})
-
-        # give the function for job.run.using on this worker implementation a
-        # chance to set up the task description.
-        configure_taskdesc_for_run(
-            config, job, taskdesc, job["worker"]["implementation"]
-        )
-        del taskdesc["run"]
-
-        # yield only the task description, discarding the job description
-        yield taskdesc
 
 
 # A registry of all functions decorated with run_job_using
