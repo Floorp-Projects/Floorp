@@ -97,7 +97,7 @@ uint32_t RemoteAccessibleBase<Derived>::EmbeddedChildCount() const {
 
 template <class Derived>
 int32_t RemoteAccessibleBase<Derived>::IndexOfEmbeddedChild(
-    const Derived* aChild) {
+    Accessible* aChild) {
   size_t index = 0, kids = mChildren.Length();
   for (size_t i = 0; i < kids; i++) {
     if (mChildren[i]->IsEmbeddedObject()) {
