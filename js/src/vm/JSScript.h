@@ -44,6 +44,7 @@
 #include "vm/Shape.h"
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/SharedStencil.h"  // js::GCThingIndex, js::SourceExtent, js::SharedImmutableScriptData, MemberInitializers
+#include "vm/StencilEnums.h"  // SourceRetrievable
 #include "vm/Time.h"
 #include "vm/Xdr.h"  // XDRMode, XDRResult, XDRIncrementalStencilEncoder
 
@@ -371,11 +372,6 @@ struct SourceTypeTraits<char16_t> {
 // Synchronously compress the source of |script|, for testing purposes.
 [[nodiscard]] extern bool SynchronouslyCompressSource(
     JSContext* cx, JS::Handle<BaseScript*> script);
-
-// Retrievable source can be retrieved using the source hook (and therefore
-// need not be XDR'd, can be discarded if desired because it can always be
-// reconstituted later, etc.).
-enum class SourceRetrievable { Yes, No };
 
 // [SMDOC] ScriptSource
 //

@@ -325,6 +325,11 @@ enum class MutableScriptFlagsEnum : uint32_t {
   HadUnboxFoldingBailout = 1 << 27,
 };
 
+// Retrievable source can be retrieved using the source hook (and therefore
+// need not be XDR'd, can be discarded if desired because it can always be
+// reconstituted later, etc.).
+enum class SourceRetrievable { No = 0, Yes };
+
 }  // namespace js
 
 #endif /* vm_StencilEnums_h */
