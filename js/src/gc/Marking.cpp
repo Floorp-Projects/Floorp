@@ -2784,6 +2784,7 @@ void GCMarker::checkZone(void* p) {
 size_t GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const {
   size_t size = stack.sizeOfExcludingThis(mallocSizeOf);
   size += auxStack.sizeOfExcludingThis(mallocSizeOf);
+  size += barrierBuffer_.ref().sizeOfExcludingThis(mallocSizeOf);
   return size;
 }
 
