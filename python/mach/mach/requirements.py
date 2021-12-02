@@ -168,7 +168,9 @@ def _parse_mach_env_requirements(
         requirements_path, is_thunderbird_packages_txt
     ):
         """Parse requirements file into list of requirements"""
-        assert os.path.isfile(requirements_path)
+        if not os.path.isfile(requirements_path):
+            raise Exception(f'Missing requirements file at "{requirements_path}"')
+
         requirements_output.requirements_paths.append(requirements_path)
 
         with open(requirements_path, "r") as requirements_file:
