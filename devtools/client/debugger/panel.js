@@ -3,6 +3,9 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 const { MultiLocalizationHelper } = require("devtools/shared/l10n");
+const {
+  FluentL10n,
+} = require("devtools/client/shared/fluent-l10n/fluent-l10n");
 
 loader.lazyRequireGetter(
   this,
@@ -45,11 +48,16 @@ class DebuggerPanel {
   constructor(iframeWindow, toolbox, commands) {
     this.panelWin = iframeWindow;
     this.panelWin.L10N = L10N;
+
     this.toolbox = toolbox;
     this.commands = commands;
   }
 
   async open() {
+    // whypaused-* strings are in devtools/shared as they're used in the PausedDebuggerOverlay as well
+    const fluentL10n = new FluentL10n();
+    await fluentL10n.init(["devtools/shared/debugger-paused-reasons.ftl"]);
+
     const {
       actions,
       store,
@@ -57,6 +65,7 @@ class DebuggerPanel {
       client,
     } = await this.panelWin.Debugger.bootstrap({
       commands: this.commands,
+      fluentBundles: fluentL10n.getBundles(),
       resourceCommand: this.toolbox.resourceCommand,
       workers: {
         sourceMaps: this.toolbox.sourceMapService,
