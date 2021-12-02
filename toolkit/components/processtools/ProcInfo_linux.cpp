@@ -10,7 +10,6 @@
 #include "mozilla/ScopeExit.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "nsMemoryReporterManager.h"
-#include "nsNetCID.h"
 #include "nsWhitespaceTokenizer.h"
 
 #include <cstdio>
@@ -286,31 +285,6 @@ ProcInfoPromise::ResolveOrRejectValue GetProcInfoSync(
   // ... and we're done!
   result.SetResolve(std::move(gathered));
   return result;
-}
-
-RefPtr<ProcInfoPromise> GetProcInfo(nsTArray<ProcInfoRequest>&& aRequests) {
-  auto holder = MakeUnique<MozPromiseHolder<ProcInfoPromise>>();
-  RefPtr<ProcInfoPromise> promise = holder->Ensure(__func__);
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIEventTarget> target =
-      do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to get stream transport service");
-    holder->Reject(rv, __func__);
-    return promise;
-  }
-
-  RefPtr<nsIRunnable> r = NS_NewRunnableFunction(
-      __func__,
-      [holder = std::move(holder), requests = std::move(aRequests)]() mutable {
-        holder->ResolveOrReject(GetProcInfoSync(std::move(requests)), __func__);
-      });
-
-  rv = target->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to dispatch the LoadDataRunnable.");
-  }
-  return promise;
 }
 
 }  // namespace mozilla
