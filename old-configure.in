@@ -519,7 +519,7 @@ case "$target" in
         LDFLAGS=$_SAVE_LDFLAGS
     fi
 
-    MOZ_FIX_LINK_PATHS="-Wl,-executable_path,${DIST}/bin"
+    MOZ_FIX_LINK_PATHS=
     ;;
 
 *-android*|*-linuxandroid*)
