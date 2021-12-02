@@ -14,9 +14,7 @@ use crate::events::ConnectionEvent;
 use crate::path::PATH_MTU_V6;
 use crate::recovery::ACK_ONLY_SIZE_LIMIT;
 use crate::stats::{FrameStats, Stats, MAX_PTO_COUNTS};
-use crate::{
-    ConnectionIdDecoder, ConnectionIdGenerator, ConnectionParameters, Error, StreamId, StreamType,
-};
+use crate::{ConnectionIdDecoder, ConnectionIdGenerator, ConnectionParameters, Error, StreamType};
 
 use std::cell::RefCell;
 use std::cmp::min;
@@ -289,7 +287,7 @@ fn connect_force_idle(client: &mut Connection, server: &mut Connection) {
     connect_rtt_idle(client, server, Duration::new(0, 0));
 }
 
-fn fill_stream(c: &mut Connection, stream: StreamId) {
+fn fill_stream(c: &mut Connection, stream: u64) {
     const BLOCK_SIZE: usize = 4_096;
     loop {
         let bytes_sent = c.stream_send(stream, &[0x42; BLOCK_SIZE]).unwrap();
@@ -306,7 +304,7 @@ fn fill_stream(c: &mut Connection, stream: StreamId) {
 /// from the return value whether a timeout is an ACK delay, PTO, or
 /// pacing, this looks at the congestion window to tell when to stop.
 /// Returns a list of datagrams and the new time.
-fn fill_cwnd(c: &mut Connection, stream: StreamId, mut now: Instant) -> (Vec<Datagram>, Instant) {
+fn fill_cwnd(c: &mut Connection, stream: u64, mut now: Instant) -> (Vec<Datagram>, Instant) {
     // Train wreck function to get the remaining congestion window on the primary path.
     fn cwnd(c: &Connection) -> usize {
         c.paths.primary().borrow().sender().cwnd_avail()
@@ -345,7 +343,7 @@ fn fill_cwnd(c: &mut Connection, stream: StreamId, mut now: Instant) -> (Vec<Dat
 fn increase_cwnd(
     sender: &mut Connection,
     receiver: &mut Connection,
-    stream: StreamId,
+    stream: u64,
     mut now: Instant,
 ) -> Instant {
     fill_stream(sender, stream);
@@ -379,7 +377,7 @@ fn increase_cwnd(
 /// The caller is responsible for ensuring that `dest` has received
 /// enough data that it wants to generate an ACK.  This panics if
 /// no ACK frame is generated.
-fn ack_bytes<D>(dest: &mut Connection, stream: StreamId, in_dgrams: D, now: Instant) -> Datagram
+fn ack_bytes<D>(dest: &mut Connection, stream: u64, in_dgrams: D, now: Instant) -> Datagram
 where
     D: IntoIterator<Item = Datagram>,
     D::IntoIter: ExactSizeIterator,
@@ -414,7 +412,7 @@ fn cwnd_avail(c: &Connection) -> usize {
 fn induce_persistent_congestion(
     client: &mut Connection,
     server: &mut Connection,
-    stream: StreamId,
+    stream: u64,
     mut now: Instant,
 ) -> Instant {
     // Note: wait some arbitrary time that should be longer than pto

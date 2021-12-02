@@ -13,7 +13,7 @@ use crate::stats::Stats;
 use crate::table::HeaderTable;
 use crate::{Error, QpackSettings, Res};
 use neqo_common::{qdebug, Header};
-use neqo_transport::{Connection, StreamId};
+use neqo_transport::Connection;
 use std::convert::TryFrom;
 
 pub const QPACK_UNI_STREAM_TYPE_DECODER: u64 = 0x3;
@@ -25,10 +25,10 @@ pub struct QPackDecoder {
     acked_inserts: u64,
     max_entries: u64,
     send_buf: QpackData,
-    local_stream_id: Option<StreamId>,
+    local_stream_id: Option<u64>,
     max_table_size: u64,
     max_blocked_streams: usize,
-    blocked_streams: Vec<(StreamId, u64)>, //stream_id and requested inserts count.
+    blocked_streams: Vec<(u64, u64)>, //stream_id and requested inserts count.
     stats: Stats,
 }
 
@@ -36,7 +36,7 @@ impl QPackDecoder {
     /// # Panics
     /// If settings include invalid values.
     #[must_use]
-    pub fn new(qpack_settings: &QpackSettings) -> Self {
+    pub fn new(qpack_settings: QpackSettings) -> Self {
         qdebug!("Decoder: creating a new qpack decoder.");
         let mut send_buf = QpackData::default();
         send_buf.encode_varint(QPACK_UNI_STREAM_TYPE_DECODER);
@@ -75,7 +75,7 @@ impl QPackDecoder {
     /// # Errors
     /// May return: `ClosedCriticalStream` if stream has been closed or `EncoderStream`
     /// in case of any other transport error.
-    pub fn receive(&mut self, conn: &mut Connection, stream_id: StreamId) -> Res<Vec<StreamId>> {
+    pub fn receive(&mut self, conn: &mut Connection, stream_id: u64) -> Res<Vec<u64>> {
         let base_old = self.table.base();
         self.read_instructions(conn, stream_id)
             .map_err(|e| map_error(&e))?;
@@ -93,7 +93,7 @@ impl QPackDecoder {
         Ok(r)
     }
 
-    fn read_instructions(&mut self, conn: &mut Connection, stream_id: StreamId) -> Res<()> {
+    fn read_instructions(&mut self, conn: &mut Connection, stream_id: u64) -> Res<()> {
         let mut recv = ReceiverConnWrapper::new(conn, stream_id);
         loop {
             match self.instruction_reader.read_instructions(&mut recv) {
@@ -147,14 +147,14 @@ impl QPackDecoder {
         self.table.set_capacity(cap)
     }
 
-    fn header_ack(&mut self, stream_id: StreamId, required_inserts: u64) {
+    fn header_ack(&mut self, stream_id: u64, required_inserts: u64) {
         DecoderInstruction::HeaderAck { stream_id }.marshal(&mut self.send_buf);
         if required_inserts > self.acked_inserts {
             self.acked_inserts = required_inserts;
         }
     }
 
-    pub fn cancel_stream(&mut self, stream_id: StreamId) {
+    pub fn cancel_stream(&mut self, stream_id: u64) {
         if self.table.capacity() > 0 {
             self.blocked_streams.retain(|(id, _)| *id != stream_id);
             DecoderInstruction::StreamCancellation { stream_id }.marshal(&mut self.send_buf);
@@ -195,11 +195,7 @@ impl QPackDecoder {
     /// May return `DecompressionFailed` if header block is incorrect or incomplete.
     /// # Panics
     /// When there is a programming error.
-    pub fn decode_header_block(
-        &mut self,
-        buf: &[u8],
-        stream_id: StreamId,
-    ) -> Res<Option<Vec<Header>>> {
+    pub fn decode_header_block(&mut self, buf: &[u8], stream_id: u64) -> Res<Option<Vec<Header>>> {
         qdebug!([self], "decode header block.");
         let mut decoder = HeaderDecoder::new(buf);
 
@@ -235,7 +231,7 @@ impl QPackDecoder {
 
     /// # Panics
     /// When a stream has already been added.
-    pub fn add_send_stream(&mut self, stream_id: StreamId) {
+    pub fn add_send_stream(&mut self, stream_id: u64) {
         if self.local_stream_id.is_some() {
             panic!("Adding multiple local streams");
         }
@@ -243,7 +239,7 @@ impl QPackDecoder {
     }
 
     #[must_use]
-    pub fn local_stream_id(&self) -> Option<StreamId> {
+    pub fn local_stream_id(&self) -> Option<u64> {
         self.local_stream_id
     }
 
@@ -269,20 +265,17 @@ fn map_error(err: &Error) -> Error {
 
 #[cfg(test)]
 mod tests {
-    use super::{Connection, Error, QPackDecoder, Res};
+    use super::{Connection, Error, Header, QPackDecoder, Res};
     use crate::QpackSettings;
-    use neqo_common::Header;
-    use neqo_transport::{StreamId, StreamType};
-    use std::convert::TryFrom;
+    use neqo_transport::StreamType;
+    use std::convert::TryInto;
     use std::mem;
     use test_fixture::now;
 
-    const STREAM_0: StreamId = StreamId::new(0);
-
     struct TestDecoder {
         decoder: QPackDecoder,
-        send_stream_id: StreamId,
-        recv_stream_id: StreamId,
+        send_stream_id: u64,
+        recv_stream_id: u64,
         conn: Connection,
         peer_conn: Connection,
     }
@@ -295,7 +288,7 @@ mod tests {
         let send_stream_id = conn.stream_create(StreamType::UniDi).unwrap();
 
         // create a decoder
-        let mut decoder = QPackDecoder::new(&QpackSettings {
+        let mut decoder = QPackDecoder::new(QpackSettings {
             max_table_size_encoder: 0,
             max_table_size_decoder: 300,
             max_blocked_streams: 100,
@@ -343,7 +336,7 @@ mod tests {
         decoder: &mut TestDecoder,
         header_block: &[u8],
         headers: &[Header],
-        stream_id: StreamId,
+        stream_id: u64,
     ) {
         let decoded_headers = decoder
             .decoder
@@ -493,7 +486,7 @@ mod tests {
 
         recv_instruction(&mut decoder, second_encoder_inst, &Ok(()));
 
-        decode_headers(&mut decoder, header_block, &headers, STREAM_0);
+        decode_headers(&mut decoder, header_block, &headers, 0);
 
         send_instructions_and_check(&mut decoder, &[0x80, 0x1]);
     }
@@ -529,7 +522,7 @@ mod tests {
 
         recv_instruction(&mut decoder, second_encoder_inst, &Ok(()));
 
-        decode_headers(&mut decoder, header_block, &headers, STREAM_0);
+        decode_headers(&mut decoder, header_block, &headers, 0);
 
         send_instructions_and_check(&mut decoder, &[0x80]);
     }
@@ -555,7 +548,7 @@ mod tests {
 
         recv_instruction(&mut decoder, encoder_inst, &Ok(()));
 
-        decode_headers(&mut decoder, header_block, &headers, STREAM_0);
+        decode_headers(&mut decoder, header_block, &headers, 0);
 
         send_instructions_and_check(&mut decoder, &[0x03, 0x80]);
     }
@@ -579,7 +572,7 @@ mod tests {
 
         recv_instruction(&mut decoder, encoder_inst, &Ok(()));
 
-        decode_headers(&mut decoder, header_block, &headers, STREAM_0);
+        decode_headers(&mut decoder, header_block, &headers, 0);
 
         send_instructions_and_check(&mut decoder, &[0x03, 0x80, 0x01]);
     }
@@ -656,7 +649,7 @@ mod tests {
                 &mut decoder,
                 t.header_block,
                 &t.headers,
-                StreamId::from(u64::try_from(i).unwrap()),
+                i.try_into().unwrap(),
             );
         }
 
@@ -734,7 +727,7 @@ mod tests {
                 &mut decoder,
                 t.header_block,
                 &t.headers,
-                StreamId::from(u64::try_from(i).unwrap()),
+                i.try_into().unwrap(),
             );
         }
 
@@ -767,11 +760,11 @@ mod tests {
 
         recv_instruction(&mut decoder, ENCODER_INST, &Ok(()));
 
-        decode_headers(&mut decoder, HEADER_BLOCK_1, &headers, STREAM_0);
+        decode_headers(&mut decoder, HEADER_BLOCK_1, &headers, 0);
 
         let headers = vec![Header::new("my-headera", "my-valuea")];
 
-        decode_headers(&mut decoder, HEADER_BLOCK_2, &headers, STREAM_0);
+        decode_headers(&mut decoder, HEADER_BLOCK_2, &headers, 0);
     }
 
     #[test]
@@ -798,6 +791,6 @@ mod tests {
 
         recv_instruction(&mut decoder, ENCODER_INST, &Ok(()));
 
-        decode_headers(&mut decoder, HEADER_BLOCK, &headers, STREAM_0);
+        decode_headers(&mut decoder, HEADER_BLOCK, &headers, 0);
     }
 }

@@ -12,9 +12,9 @@ use super::{
 };
 use crate::packet::PacketBuilder;
 use crate::stats::FrameStats;
-use crate::stream_id::{StreamId, StreamType};
 use crate::tparams::{self, TransportParameter};
 use crate::tracking::PacketNumberSpace;
+use crate::StreamType;
 
 use neqo_common::{qtrace, Encoder};
 use std::mem;
@@ -239,14 +239,13 @@ fn idle_recv_packet() {
     let res = client.process(None, now);
     assert_eq!(res, Output::Callback(default_timeout()));
 
-    let stream = client.stream_create(StreamType::BiDi).unwrap();
-    assert_eq!(stream, 0);
-    assert_eq!(client.stream_send(stream, b"hello").unwrap(), 5);
+    assert_eq!(client.stream_create(StreamType::BiDi).unwrap(), 0);
+    assert_eq!(client.stream_send(0, b"hello").unwrap(), 5);
 
     // Respond with another packet
     let out = client.process(None, now + Duration::from_secs(10));
     server.process_input(out.dgram().unwrap(), now + Duration::from_secs(10));
-    assert_eq!(server.stream_send(stream, b"world").unwrap(), 5);
+    assert_eq!(server.stream_send(0, b"world").unwrap(), 5);
     let out = server.process_output(now + Duration::from_secs(10));
     assert_ne!(out.as_dgram_ref(), None);
 
@@ -351,7 +350,7 @@ fn create_stream_idle_rtt(
     responder: &mut Connection,
     mut now: Instant,
     rtt: Duration,
-) -> (Instant, StreamId) {
+) -> (Instant, u64) {
     let check_idle = |endpoint: &mut Connection, now: Instant| {
         let delay = endpoint.process_output(now).callback();
         qtrace!([endpoint], "idle timeout {:?}", delay);
@@ -390,7 +389,7 @@ fn create_stream_idle_rtt(
     (now, stream)
 }
 
-fn create_stream_idle(initiator: &mut Connection, responder: &mut Connection) -> StreamId {
+fn create_stream_idle(initiator: &mut Connection, responder: &mut Connection) -> u64 {
     let (_, stream) = create_stream_idle_rtt(initiator, responder, now(), Duration::new(0, 0));
     stream
 }

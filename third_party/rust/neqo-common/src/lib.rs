@@ -98,9 +98,3 @@ impl ::std::fmt::Display for Role {
         write!(f, "{:?}", self)
     }
 }
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum MessageType {
-    Request,
-    Response,
-}
