@@ -38,7 +38,6 @@
 #include "vm/SharedImmutableStringsCache.h"
 #include "vm/Time.h"
 #include "vm/TraceLogging.h"
-#include "vm/Xdr.h"
 #include "wasm/WasmGenerator.h"
 
 #include "debugger/DebugAPI-inl.h"
@@ -773,10 +772,13 @@ void ScriptDecodeTask::parse(JSContext* cx) {
     return;
   }
 
-  XDRStencilDecoder decoder(cx, range);
-  JS::DecodeOptions options(stencilInput_->options);
-  XDRResult res = decoder.codeStencil(options, *stencil_);
-  if (!res.isOk()) {
+  // NOTE: Decoding can fail for either internal errors (eg. OOM), or because
+  // the data is invalid. In either case, fail the task by clearing out the
+  // stencil. We ignore the normal return value since helper-threads do not have
+  // JS exceptions to propagate.
+  bool succeeded = false;
+  (void)stencil_->deserializeStencils(cx, *stencilInput_, range, &succeeded);
+  if (!succeeded) {
     stencil_.reset();
     return;
   }
