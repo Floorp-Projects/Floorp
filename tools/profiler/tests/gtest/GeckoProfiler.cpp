@@ -4011,7 +4011,8 @@ TEST(GeckoProfiler, FeatureCombinations)
                             ProfilerFeature::CPUUtilization,
                             ProfilerFeature::CPUAllThreads,
                             ProfilerFeature::SamplingAllThreads,
-                            ProfilerFeature::MarkersAllThreads};
+                            ProfilerFeature::MarkersAllThreads,
+                            ProfilerFeature::UnregisteredThreads};
   constexpr uint32_t featureCount = uint32_t(MOZ_ARRAY_LENGTH(featureList));
 
   auto testFeatures = [&](uint32_t features,
