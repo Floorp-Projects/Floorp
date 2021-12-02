@@ -108,93 +108,24 @@ def get_digest_data(config, run, taskdesc):
     return data
 
 
-toolchain_defaults = {
-    "tooltool-downloads": False,
-    "sparse-profile": "toolchain-build",
-}
-
-
-@run_job_using(
-    "docker-worker",
-    "toolchain-script",
-    schema=toolchain_run_schema,
-    defaults=toolchain_defaults,
-)
-def docker_worker_toolchain(config, job, taskdesc):
+def common_toolchain(config, job, taskdesc, is_docker):
     run = job["run"]
 
     worker = taskdesc["worker"] = job["worker"]
     worker["chain-of-trust"] = True
 
-    # If the task doesn't have a docker-image, set a default
-    worker.setdefault("docker-image", {"in-tree": "deb11-toolchain-build"})
+    if is_docker:
+        # If the task doesn't have a docker-image, set a default
+        worker.setdefault("docker-image", {"in-tree": "deb11-toolchain-build"})
 
     # Allow the job to specify where artifacts come from, but add
     # public/build if it's not there already.
     artifacts = worker.setdefault("artifacts", [])
     if not artifacts:
-        docker_worker_add_artifacts(config, job, taskdesc)
-
-    # Toolchain checkouts don't live under {workdir}/checkouts
-    workspace = "{workdir}/workspace/build".format(**run)
-    gecko_path = f"{workspace}/src"
-
-    env = worker.setdefault("env", {})
-    env.update(
-        {
-            "MOZ_BUILD_DATE": config.params["moz_build_date"],
-            "MOZ_SCM_LEVEL": config.params["level"],
-            "GECKO_PATH": gecko_path,
-            "TOOLCHAIN_ARTIFACT": run["toolchain-artifact"],
-        }
-    )
-
-    attributes = taskdesc.setdefault("attributes", {})
-    attributes["toolchain-artifact"] = run.pop("toolchain-artifact")
-    if "toolchain-alias" in run:
-        attributes["toolchain-alias"] = run.pop("toolchain-alias")
-    if "toolchain-env" in run:
-        attributes["toolchain-env"] = run.pop("toolchain-env")
-
-    digest_data = get_digest_data(config, run, taskdesc)
-
-    if (
-        job.get("attributes", {}).get("cached_task") is not False
-        and not gecko_taskgraph.fast
-    ):
-        name = taskdesc["label"].replace(f"{config.kind}-", "", 1)
-        taskdesc["cache"] = {
-            "type": CACHE_TYPE,
-            "name": name,
-            "digest-data": digest_data,
-        }
-
-    run["using"] = "run-task"
-    run["cwd"] = run["workdir"]
-    run["command"] = [
-        "workspace/build/src/taskcluster/scripts/misc/{}".format(run.pop("script"))
-    ] + run.pop("arguments", [])
-
-    configure_taskdesc_for_run(config, job, taskdesc, worker["implementation"])
-
-
-@run_job_using(
-    "generic-worker",
-    "toolchain-script",
-    schema=toolchain_run_schema,
-    defaults=toolchain_defaults,
-)
-def generic_worker_toolchain(config, job, taskdesc):
-    run = job["run"]
-
-    worker = taskdesc["worker"] = job["worker"]
-    worker["chain-of-trust"] = True
-
-    # Allow the job to specify where artifacts come from, but add
-    # public/build if it's not there already.
-    artifacts = worker.setdefault("artifacts", [])
-    if not artifacts:
-        generic_worker_add_artifacts(config, job, taskdesc)
+        if is_docker:
+            docker_worker_add_artifacts(config, job, taskdesc)
+        else:
+            generic_worker_add_artifacts(config, job, taskdesc)
 
     if job["worker"]["os"] == "windows":
         # There were no caches on generic-worker before bug 1519472, and they cause
@@ -211,11 +142,10 @@ def generic_worker_toolchain(config, job, taskdesc):
         }
     )
 
-    # Use `mach` to invoke python scripts so in-tree libraries are available.
-    if run["script"].endswith(".py"):
-        raise NotImplementedError(
-            "Python toolchain scripts aren't supported on generic-worker"
-        )
+    if is_docker:
+        # Toolchain checkouts don't live under {workdir}/checkouts
+        workspace = "{workdir}/workspace/build".format(**run)
+        env["GECKO_PATH"] = f"{workspace}/src"
 
     attributes = taskdesc.setdefault("attributes", {})
     attributes["toolchain-artifact"] = run.pop("toolchain-artifact")
@@ -238,18 +168,45 @@ def generic_worker_toolchain(config, job, taskdesc):
         }
 
     run["using"] = "run-task"
-
-    args = run.pop("arguments", "")
-    if args:
-        args = " " + shell_quote(*args)
-
-    if job["worker"]["os"] == "windows":
+    if is_docker:
+        gecko_path = "workspace/build/src"
+    elif job["worker"]["os"] == "windows":
         gecko_path = "%GECKO_PATH%"
     else:
         gecko_path = "$GECKO_PATH"
 
-    run["command"] = "{}/taskcluster/scripts/misc/{}{}".format(
-        gecko_path, run.pop("script"), args
-    )
+    if is_docker:
+        run["cwd"] = run["workdir"]
+    run["command"] = [
+        "{}/taskcluster/scripts/misc/{}".format(gecko_path, run.pop("script"))
+    ] + run.pop("arguments", [])
+    if not is_docker:
+        run["command"] = shell_quote(*run["command"])
 
     configure_taskdesc_for_run(config, job, taskdesc, worker["implementation"])
+
+
+toolchain_defaults = {
+    "tooltool-downloads": False,
+    "sparse-profile": "toolchain-build",
+}
+
+
+@run_job_using(
+    "docker-worker",
+    "toolchain-script",
+    schema=toolchain_run_schema,
+    defaults=toolchain_defaults,
+)
+def docker_worker_toolchain(config, job, taskdesc):
+    common_toolchain(config, job, taskdesc, is_docker=True)
+
+
+@run_job_using(
+    "generic-worker",
+    "toolchain-script",
+    schema=toolchain_run_schema,
+    defaults=toolchain_defaults,
+)
+def generic_worker_toolchain(config, job, taskdesc):
+    common_toolchain(config, job, taskdesc, is_docker=False)
