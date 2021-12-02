@@ -47,6 +47,7 @@
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/InternalRequest.h"
 #include "mozilla/dom/ReferrerInfo.h"
+#include "mozilla/dom/RemoteType.h"
 #include "mozilla/dom/RemoteWorkerControllerChild.h"
 #include "mozilla/dom/RemoteWorkerManager.h"  // RemoteWorkerManager::GetRemoteType
 #include "mozilla/dom/ServiceWorkerBinding.h"
@@ -57,11 +58,34 @@
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/RemoteLazyInputStreamStorage.h"
 
+extern mozilla::LazyLogModule sWorkerTelemetryLog;
+
+#ifdef LOG
+#  undef LOG
+#endif
+#define LOG(_args) MOZ_LOG(sWorkerTelemetryLog, LogLevel::Debug, _args);
+
 namespace mozilla {
 
 using namespace ipc;
 
 namespace dom {
+
+uint32_t ServiceWorkerPrivateImpl::sRunningServiceWorkers = 0;
+uint32_t ServiceWorkerPrivateImpl::sRunningServiceWorkersFetch = 0;
+uint32_t ServiceWorkerPrivateImpl::sRunningServiceWorkersMax = 0;
+uint32_t ServiceWorkerPrivateImpl::sRunningServiceWorkersFetchMax = 0;
+
+/*static*/ void ServiceWorkerPrivateImpl::ReportRunning() {
+  if (sRunningServiceWorkers > 0) {
+    LOG(("ServiceWorkers running %d (%d Fetch)", sRunningServiceWorkers,
+         sRunningServiceWorkersFetch));
+  }
+  Telemetry::Accumulate(Telemetry::SERVICE_WORKER_RUNNING, "All"_ns,
+                        sRunningServiceWorkers);
+  Telemetry::Accumulate(Telemetry::SERVICE_WORKER_RUNNING, "Fetch"_ns,
+                        sRunningServiceWorkersFetch);
+}
 
 ServiceWorkerPrivateImpl::RAIIActorPtrHolder::RAIIActorPtrHolder(
     already_AddRefed<RemoteWorkerControllerChild> aActor)
@@ -955,6 +979,19 @@ void ServiceWorkerPrivateImpl::TerminateWorker() {
   mOuter->mIdleWorkerTimer->Cancel();
   mOuter->mIdleKeepAliveToken = nullptr;
 
+  if (!WorkerIsDead()) {
+    // we end up calling either Terminated *or* TerminateWorker, so decrement in
+    // both places
+    MOZ_ASSERT(sRunningServiceWorkers > 0);
+    sRunningServiceWorkers--;
+    if (mHandlesFetch) {
+      MOZ_ASSERT(sRunningServiceWorkersFetch > 0);
+      sRunningServiceWorkersFetch--;
+    }
+    LOG(("(TerminateWorker): ServiceWorkers running now %d/%d",
+         sRunningServiceWorkers, sRunningServiceWorkersFetch));
+  }
+
   Shutdown();
 }
 
@@ -1057,8 +1094,15 @@ void ServiceWorkerPrivateImpl::CreationFailed() {
   MOZ_ASSERT(mOuter);
   MOZ_ASSERT(mControllerChild);
 
-  Telemetry::AccumulateTimeDelta(Telemetry::SERVICE_WORKER_LAUNCH_TIME_2,
-                                 mServiceWorkerLaunchTimeStart);
+  if (mRemoteWorkerData.remoteType().Find(SERVICEWORKER_REMOTE_TYPE) !=
+      kNotFound) {
+    Telemetry::AccumulateTimeDelta(
+        Telemetry::SERVICE_WORKER_ISOLATED_LAUNCH_TIME,
+        mServiceWorkerLaunchTimeStart);
+  } else {
+    Telemetry::AccumulateTimeDelta(Telemetry::SERVICE_WORKER_LAUNCH_TIME_2,
+                                   mServiceWorkerLaunchTimeStart);
+  }
 
   Shutdown();
 }
@@ -1069,10 +1113,44 @@ void ServiceWorkerPrivateImpl::CreationSucceeded() {
   MOZ_ASSERT(mOuter);
   MOZ_ASSERT(mControllerChild);
 
-  Telemetry::AccumulateTimeDelta(Telemetry::SERVICE_WORKER_LAUNCH_TIME_2,
-                                 mServiceWorkerLaunchTimeStart);
+  if (mRemoteWorkerData.remoteType().Find(SERVICEWORKER_REMOTE_TYPE) !=
+      kNotFound) {
+    Telemetry::AccumulateTimeDelta(
+        Telemetry::SERVICE_WORKER_ISOLATED_LAUNCH_TIME,
+        mServiceWorkerLaunchTimeStart);
+  } else {
+    Telemetry::AccumulateTimeDelta(Telemetry::SERVICE_WORKER_LAUNCH_TIME_2,
+                                   mServiceWorkerLaunchTimeStart);
+  }
 
   mOuter->RenewKeepAliveToken(ServiceWorkerPrivate::WakeUpReason::Unknown);
+
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  nsCOMPtr<nsIPrincipal> principal = mOuter->mInfo->Principal();
+  RefPtr<ServiceWorkerRegistrationInfo> regInfo =
+      swm->GetRegistration(principal, mOuter->mInfo->Scope());
+  if (regInfo) {
+    mHandlesFetch = regInfo->GetActive()->HandlesFetch();
+  }
+
+  sRunningServiceWorkers++;
+  if (sRunningServiceWorkers > sRunningServiceWorkersMax) {
+    sRunningServiceWorkersMax = sRunningServiceWorkers;
+    LOG(("ServiceWorker max now %d", sRunningServiceWorkersMax));
+    Telemetry::ScalarSet(Telemetry::ScalarID::SERVICEWORKER_RUNNING_MAX,
+                         u"All"_ns, sRunningServiceWorkersMax);
+  }
+  if (mHandlesFetch) {
+    sRunningServiceWorkersFetch++;
+    if (sRunningServiceWorkersFetch > sRunningServiceWorkersFetchMax) {
+      sRunningServiceWorkersFetchMax = sRunningServiceWorkersFetch;
+      LOG(("ServiceWorker Fetch max now %d", sRunningServiceWorkersFetchMax));
+      Telemetry::ScalarSet(Telemetry::ScalarID::SERVICEWORKER_RUNNING_MAX,
+                           u"Fetch"_ns, sRunningServiceWorkersFetchMax);
+    }
+  }
+  LOG(("ServiceWorkers running now %d/%d", sRunningServiceWorkers,
+       sRunningServiceWorkersFetch));
 }
 
 void ServiceWorkerPrivateImpl::ErrorReceived(const ErrorValue& aError) {
@@ -1095,6 +1173,17 @@ void ServiceWorkerPrivateImpl::Terminated() {
   AssertIsOnMainThread();
   MOZ_ASSERT(mOuter);
   MOZ_ASSERT(mControllerChild);
+
+  // we end up calling either Terminated *or* TerminateWorker, so decrement in
+  // both places
+  MOZ_ASSERT(sRunningServiceWorkers > 0);
+  sRunningServiceWorkers--;
+  if (mHandlesFetch) {
+    MOZ_ASSERT(sRunningServiceWorkersFetch > 0);
+    sRunningServiceWorkersFetch--;
+  }
+  LOG(("ServiceWorkers running now %d/%d", sRunningServiceWorkers,
+       sRunningServiceWorkersFetch));
 
   Shutdown();
 }
