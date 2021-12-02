@@ -16,6 +16,7 @@ import mozilla.components.support.locale.LocaleAwareAppCompatActivity
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.updateSecureWindowFlags
 import org.mozilla.focus.fragment.BrowserFragment
 
 /**
@@ -59,6 +60,12 @@ class CustomTabActivity : LocaleAwareAppCompatActivity() {
         if (isFinishing) {
             components.customTabsUseCases.remove(customTabId)
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        updateSecureWindowFlags()
     }
 
     override fun onBackPressed() {

@@ -5,6 +5,7 @@
 package org.mozilla.focus.ext
 
 import android.app.Activity
+import android.view.WindowManager
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 
@@ -18,5 +19,16 @@ fun Activity.setNavigationIcon(
     (this as? AppCompatActivity)?.supportActionBar?.let {
         it.setDisplayHomeAsUpEnabled(true)
         it.setHomeAsUpIndicator(icon)
+    }
+}
+
+/**
+ * Sets or clears the secure flags for the activity's window.
+ */
+fun Activity.updateSecureWindowFlags() {
+    if (this.settings.shouldUseSecureMode()) {
+        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+    } else {
+        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
     }
 }

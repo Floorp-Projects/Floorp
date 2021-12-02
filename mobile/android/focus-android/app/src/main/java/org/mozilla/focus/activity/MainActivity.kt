@@ -29,6 +29,7 @@ import org.mozilla.focus.R
 import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.settings
+import org.mozilla.focus.ext.updateSecureWindowFlags
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.fragment.UrlInputFragment
 import org.mozilla.focus.navigation.MainActivityNavigation
@@ -110,6 +111,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
         TelemetryWrapper.startSession()
         checkBiometricStillValid()
+        updateSecureWindowFlags()
     }
 
     override fun onPause() {
