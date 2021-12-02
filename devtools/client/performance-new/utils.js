@@ -479,6 +479,14 @@ const featureDescriptions = [
     title: "Record markers in ALL registered threads.",
     experimental: true,
   },
+  {
+    name: "Unregistered Threads",
+    value: "unregisteredthreads",
+    title:
+      "Periodically discover unregistered threads and record them and their " +
+      "CPU utilization as markers in the main thread -- Beware: expensive!",
+    experimental: true,
+  },
 ];
 
 module.exports = {
