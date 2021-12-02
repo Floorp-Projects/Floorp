@@ -56,7 +56,7 @@ class SearchSettingsFragment :
         TelemetryWrapper.settingsEvent(key, sharedPreferences.all[key].toString())
 
         when (key) {
-            resources.getString(R.string.pref_key_screen_autocomplete) ->
+            resources.getString(R.string.pref_key_show_search_suggestions) ->
                 ShowSearchSuggestions.changedFromSettings.record(
                     ShowSearchSuggestions.ChangedFromSettingsExtra(sharedPreferences.getBoolean(key, false))
                 )
