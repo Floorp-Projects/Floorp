@@ -8,7 +8,7 @@ use super::super::{Connection, Error, Output};
 use super::{connect, default_client, default_server, fill_cwnd, maybe_authenticate};
 use crate::addr_valid::{AddressValidation, ValidateAddress};
 use crate::send_stream::{RetransmissionPriority, TransmissionPriority};
-use crate::{ConnectionEvent, StreamType};
+use crate::{ConnectionEvent, StreamId, StreamType};
 
 use neqo_common::event::Provider;
 use std::cell::RefCell;
@@ -18,7 +18,7 @@ use test_fixture::{self, now};
 
 const BLOCK_SIZE: usize = 4_096;
 
-fn fill_stream(c: &mut Connection, id: u64) {
+fn fill_stream(c: &mut Connection, id: StreamId) {
     loop {
         if c.stream_send(id, &[0x42; BLOCK_SIZE]).unwrap() < BLOCK_SIZE {
             return;
