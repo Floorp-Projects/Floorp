@@ -64,6 +64,10 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["css"] += [
     "injections/css/bug1728140-map-size-fix.css",
     "injections/css/bug1738313-curriculum.gov.bc.ca-bootstrap-fix.css",
     "injections/css/bug1738316-vuoriclothing.com-flexbox-fix.css",
+    "injections/css/bug1740542-tesla.com-footer-links.css",
+    "injections/css/bug1741234-patient.alphalabs.ca-height-fix.css",
+    "injections/css/bug1743041-lu.ma-display-fix.css",
+    "injections/css/bug1743614-storytel.com-flex-min-width.css",
 ]
 
 FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
