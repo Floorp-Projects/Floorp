@@ -1180,13 +1180,23 @@
   value: 16777216
   mirror: always
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(XP_LINUX)
   # Notify TabUnloader or send the memory pressure if the memory resource
   # notification is signaled AND the available commit space is lower than
   # this value.
 -   name: browser.low_commit_space_threshold_mb
     type: RelaxedAtomicUint32
     value: 200
+    mirror: always
+#endif
+
+#ifdef XP_LINUX
+  # On Linux we also check available memory in comparison to total memory,
+  # and use this percent value (out of 100) to determine if we are in a
+  # low memory scenario.
+-   name: browser.low_commit_space_threshold_percent
+    type: RelaxedAtomicUint32
+    value: 5
     mirror: always
 #endif
 
