@@ -4709,8 +4709,8 @@ Browsertime tests that interact with the webpage. Includes responsiveness tests 
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm6-windows-firefox-cnn-nav.manifest
-   * **playback version**: 6.0.2
+   * **playback pageset manifest**: mitm7-linux-firefox-cnn-nav.manifest
+   * **playback version**: 7.0.4
    * **test cmds**:  ["measure.start", "landing"], ["navigate", "https://www.cnn.com"], ["wait.byTime", 4000], ["measure.stop", ""], ["measure.start", "world"], ["click.byXpathAndWait", "/html/body/div[5]/div/div/header/div/div[1]/div/div[2]/nav/ul/li[2]/a"], ["wait.byTime", 1000], ["measure.stop", ""],
    * **test url**: `<https://www.cnn.com/>`__
    * **type**: pageload
