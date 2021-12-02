@@ -204,27 +204,25 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *   as described above. They will be used as the limits for the group.
    * @param {object} state
    *   The muxer state.
-   * @param {array} [flexDataArray]
-   *   Non-recursive callers should leave this null. See `_updateFlexData` for a
-   *   description.
    * @returns {array}
    *   `[results, usedLimits, hasMoreResults]` -- see `_addResults`.
    */
-  _fillGroup(group, limits, state, flexDataArray = null) {
-    // Get the group's suggestedIndex results.
+  _fillGroup(group, limits, state) {
+    // Get the group's suggestedIndex results. Reminder: `group.group` is a
+    // `RESULT_GROUP` constant.
     let suggestedIndexResults;
     if ("group" in group) {
-      // Reminder: `group.group` is a `RESULT_GROUP`.
       suggestedIndexResults = state.suggestedIndexResultsByGroup.get(
         group.group
       );
       if (suggestedIndexResults) {
-        // Subtract their span and count from the group's limits so there will
-        // be room for them later.
+        // Subtract them from the group's limits so there will be room for them
+        // later. Create a new `limits` object so we don't modify the caller's.
         let span = suggestedIndexResults.reduce((sum, result) => {
           sum += UrlbarUtils.getSpanForResult(result);
           return sum;
         }, 0);
+        limits = { ...limits };
         limits.availableSpan = Math.max(limits.availableSpan - span, 0);
         limits.maxResultCount = Math.max(
           limits.maxResultCount - suggestedIndexResults.length,
@@ -233,15 +231,43 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       }
     }
 
-    // If there are no child groups, fill the group directly.
-    if (!group.children) {
-      let [results, ...rest] = this._addResults(group.group, limits, state);
-      if (suggestedIndexResults) {
-        this._addSuggestedIndexResults(suggestedIndexResults, results, state);
+    // Fill the group. If it has children, fill them recursively. Otherwise fill
+    // the group directly.
+    let [results, usedLimits, hasMoreResults] = group.children
+      ? this._fillGroupChildren(group, limits, state)
+      : this._addResults(group.group, limits, state);
+
+    // Add the group's suggestedIndex results.
+    if (suggestedIndexResults) {
+      let suggestedIndexUsedLimits = this._addSuggestedIndexResults(
+        suggestedIndexResults,
+        results,
+        state
+      );
+      for (let [key, value] of Object.entries(suggestedIndexUsedLimits)) {
+        usedLimits[key] += value;
       }
-      return [results, ...rest];
     }
 
+    return [results, usedLimits, hasMoreResults];
+  }
+
+  /**
+   * Helper for `_fillGroup` that fills a group's children.
+   *
+   * @param {object} group
+   *   The result group to fill. It's assumed to have a `children` property.
+   * @param {object} limits
+   *   An object with optional `availableSpan` and `maxResultCount` properties
+   *   as described in `_fillGroup`.
+   * @param {object} state
+   *   The muxer state.
+   * @param {array} flexDataArray
+   *   See `_updateFlexData`.
+   * @returns {array}
+   *   `[results, usedLimits, hasMoreResults]` -- see `_addResults`.
+   */
+  _fillGroupChildren(group, limits, state, flexDataArray = null) {
     // If the group has flexed children, update the data we use during flex
     // calculations.
     //
@@ -320,7 +346,7 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
     // If the children are flexed and some underfilled but others still have
     // more results, do another pass.
     if (anyChildUnderfilled && anyChildHasMoreResults) {
-      [results, usedLimits, anyChildHasMoreResults] = this._fillGroup(
+      [results, usedLimits, anyChildHasMoreResults] = this._fillGroupChildren(
         group,
         limits,
         stateCopy,
@@ -331,10 +357,6 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       for (let [key, value] of Object.entries(stateCopy)) {
         state[key] = value;
       }
-    }
-
-    if (suggestedIndexResults) {
-      this._addSuggestedIndexResults(suggestedIndexResults, results, state);
     }
 
     return [results, usedLimits, anyChildHasMoreResults];
@@ -520,10 +542,6 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *       the same `RESULT_GROUP`. This is not related to the group's limits.
    */
   _addResults(groupConst, limits, state) {
-    // We modify `limits` below. As a defensive measure, don't modify the
-    // caller's object.
-    limits = { ...limits };
-
     let usedLimits = {};
     for (let key of Object.keys(limits)) {
       usedLimits[key] = 0;
@@ -537,6 +555,8 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
       groupConst == UrlbarUtils.RESULT_GROUP.FORM_HISTORY &&
       !UrlbarPrefs.get("maxHistoricalSearchSuggestions")
     ) {
+      // Create a new `limits` object so we don't modify the caller's.
+      limits = { ...limits };
       limits.maxResultCount = 0;
     }
 
@@ -1037,11 +1057,19 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
    *   inserted.
    * @param {object} state
    *   Global state that we use to make decisions during this sort.
+   * @returns {object}
+   *   A `usedLimits` object that describes the total span and count of all the
+   *   added results. See `_addResults`.
    */
   _addSuggestedIndexResults(suggestedIndexResults, sortedResults, state) {
+    let usedLimits = {
+      availableSpan: 0,
+      maxResultCount: 0,
+    };
+
     if (!suggestedIndexResults?.length) {
       // This is just a slight optimization; no need to continue.
-      return;
+      return usedLimits;
     }
 
     // Partition the results into positive- and negative-index arrays. Positive
@@ -1075,10 +1103,14 @@ class MuxerUnifiedComplete extends UrlbarMuxer {
               ? Math.min(result.suggestedIndex, sortedResults.length)
               : Math.max(result.suggestedIndex + sortedResults.length + 1, 0);
           sortedResults.splice(index, 0, result);
+          usedLimits.availableSpan += UrlbarUtils.getSpanForResult(result);
+          usedLimits.maxResultCount++;
           this._updateStatePostAdd(result, state);
         }
       }
     }
+
+    return usedLimits;
   }
 }
 
