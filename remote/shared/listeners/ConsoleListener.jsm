@@ -118,7 +118,7 @@ class ConsoleListener {
       level,
       message: message.errorMessage,
       rawMessage: message,
-      timestamp: message.timestamp || Date.now(),
+      timeStamp: message.timeStamp,
     });
   };
 

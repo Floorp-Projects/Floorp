@@ -20,6 +20,7 @@ remote.jar:
   content/shared/TabManager.jsm (shared/TabManager.jsm)
   content/shared/WebSocketConnection.jsm (shared/WebSocketConnection.jsm)
   content/shared/WindowManager.jsm (shared/WindowManager.jsm)
+  content/shared/listeners/ConsoleAPIListener.jsm (shared/listeners/ConsoleAPIListener.jsm)
   content/shared/listeners/ConsoleListener.jsm (shared/listeners/ConsoleListener.jsm)
 
   # shared modules (messagehandler architecture)
