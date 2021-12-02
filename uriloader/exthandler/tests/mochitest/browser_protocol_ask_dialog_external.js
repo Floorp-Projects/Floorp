@@ -52,43 +52,11 @@ function initTestHandlers() {
 }
 
 function makeCmdLineHelper(url) {
-  return {
-    length: 1,
-    _arg: url,
-
-    getArgument(aIndex) {
-      if (aIndex == 0) {
-        return this._arg;
-      }
-      throw Components.Exception("", Cr.NS_ERROR_INVALID_ARG);
-    },
-
-    findFlag() {
-      return -1;
-    },
-
-    handleFlagWithParam() {
-      if (this._argCount) {
-        this._argCount = 0;
-        return this._arg;
-      }
-
-      return "";
-    },
-
-    state: 2,
-
-    STATE_INITIAL_LAUNCH: 0,
-    STATE_REMOTE_AUTO: 1,
-    STATE_REMOTE_EXPLICIT: 2,
-
-    preventDefault: false,
-
-    resolveURI() {
-      return Services.io.newURI(this._arg);
-    },
-    QueryInterface: ChromeUtils.generateQI(["nsICommandLine"]),
-  };
+  return Cu.createCommandLine(
+    ["-url", url],
+    null,
+    Ci.nsICommandLine.STATE_REMOTE_EXPLICIT
+  );
 }
 
 add_task(async function setup() {
