@@ -3,10 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 function run_test() {
-  var commandLine = Cu.createCommandLine(
-    [],
-    null,
-    Ci.nsICommandLine.STATE_INITIAL_LAUNCH
-  );
+  var commandLine = Cu.createCommandLine();
   Assert.ok("length" in commandLine);
 }
