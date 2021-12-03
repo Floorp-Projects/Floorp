@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 import tempfile
 from contextlib import contextmanager
-from typing import Optional
+from typing import Optional, Callable
 
 from mach.requirements import (
     MachEnvRequirements,
@@ -219,11 +219,12 @@ class MachSiteManager:
         )
 
     @classmethod
-    def from_environment(cls, topsrcdir: str, state_dir: str):
+    def from_environment(cls, topsrcdir: str, get_state_dir: Callable[[], str]):
         """
         Args:
             topsrcdir: The path to the Firefox repo
-            state_dir: The path to the state_dir, generally ~/.mozbuild
+            get_state_dir: A function that resolve the path to the workdir-scoped
+                state_dir, generally ~/.mozbuild/srcdirs/<worktree-based-dir>/
         """
 
         requirements = resolve_requirements(topsrcdir, "mach")
@@ -243,14 +244,17 @@ class MachSiteManager:
 
         if not _system_python_env_variable_present():
             source = SitePackagesSource.VENV
+            state_dir = get_state_dir()
         elif not external_python.has_pip():
             source = SitePackagesSource.NONE
+            state_dir = None
         else:
             source = (
                 SitePackagesSource.SYSTEM
                 if external_python.provides_any_package("mach", requirements)
                 else SitePackagesSource.NONE
             )
+            state_dir = None
 
         return cls(
             topsrcdir,
