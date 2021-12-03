@@ -177,8 +177,7 @@ enum HSType {
 };
 
 static HSType GetHangulSyllableType(uint32_t aCh) {
-  return HSType(intl::UnicodeProperties::GetIntPropertyValue(
-      aCh, intl::UnicodeProperties::IntProperty::HangulSyllableType));
+  return HSType(u_getIntPropertyValue(aCh, UCHAR_HANGUL_SYLLABLE_TYPE));
 }
 
 void ClusterIterator::Next() {

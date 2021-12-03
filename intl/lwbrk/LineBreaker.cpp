@@ -11,7 +11,6 @@
 #include "nsUnicodeProperties.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/intl/Segmenter.h"
-#include "mozilla/intl/UnicodeProperties.h"
 
 using namespace mozilla::unicode;
 using namespace mozilla::intl;
@@ -463,12 +462,10 @@ static int8_t GetClass(uint32_t u, LineBreakRule aLevel,
         return CLASS_CLOSE_LIKE_CHARACTER;
       }
       if (aIsChineseOrJapanese) {
-        if (cls == U_LB_POSTFIX_NUMERIC &&
-            UnicodeProperties::IsEastAsianWidthAFW(u)) {
+        if (cls == U_LB_POSTFIX_NUMERIC && IsEastAsianWidthAFW(u)) {
           return CLASS_CLOSE_LIKE_CHARACTER;
         }
-        if (cls == U_LB_PREFIX_NUMERIC &&
-            UnicodeProperties::IsEastAsianWidthAFW(u)) {
+        if (cls == U_LB_PREFIX_NUMERIC && IsEastAsianWidthAFW(u)) {
           return CLASS_OPEN_LIKE_CHARACTER;
         }
         if (u == 0x2010 || u == 0x2013 || u == 0x301C || u == 0x30A0) {
@@ -488,12 +485,10 @@ static int8_t GetClass(uint32_t u, LineBreakRule aLevel,
         return CLASS_CLOSE_LIKE_CHARACTER;
       }
       if (aIsChineseOrJapanese) {
-        if (cls == U_LB_POSTFIX_NUMERIC &&
-            UnicodeProperties::IsEastAsianWidthAFW(u)) {
+        if (cls == U_LB_POSTFIX_NUMERIC && IsEastAsianWidthAFW(u)) {
           return CLASS_CLOSE_LIKE_CHARACTER;
         }
-        if (cls == U_LB_PREFIX_NUMERIC &&
-            UnicodeProperties::IsEastAsianWidthAFW(u)) {
+        if (cls == U_LB_PREFIX_NUMERIC && IsEastAsianWidthAFW(u)) {
           return CLASS_OPEN_LIKE_CHARACTER;
         }
         if (u == 0x2010 || u == 0x2013 || u == 0x301C || u == 0x30A0) {
@@ -518,12 +513,10 @@ static int8_t GetClass(uint32_t u, LineBreakRule aLevel,
             u == 0xFF01 || u == 0xFF1F) {
           return CLASS_BREAKABLE;
         }
-        if (cls == U_LB_POSTFIX_NUMERIC &&
-            UnicodeProperties::IsEastAsianWidthAFW(u)) {
+        if (cls == U_LB_POSTFIX_NUMERIC && IsEastAsianWidthAFW(u)) {
           return CLASS_BREAKABLE;
         }
-        if (cls == U_LB_PREFIX_NUMERIC &&
-            UnicodeProperties::IsEastAsianWidthAFW(u)) {
+        if (cls == U_LB_PREFIX_NUMERIC && IsEastAsianWidthAFW(u)) {
           return CLASS_BREAKABLE;
         }
         if (u == 0x2010 || u == 0x2013 || u == 0x301C || u == 0x30A0) {

@@ -11,14 +11,14 @@
 #include "nsServiceManagerUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsUnicodeProperties.h"
+#include "nsUnicodeScriptCodes.h"
 #include "harfbuzz/hb.h"
 #include "punycode.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
-#include "mozilla/intl/UnicodeProperties.h"
-#include "mozilla/intl/UnicodeScriptCodes.h"
+#include "mozilla/intl/Script.h"
 
 // Currently we use the non-transitional processing option -- see
 // http://unicode.org/reports/tr46/
@@ -30,7 +30,6 @@ const bool kIDNA2008_TransitionalProcessing = false;
 #include "ICUUtils.h"
 
 using namespace mozilla;
-using namespace mozilla::intl;
 using namespace mozilla::unicode;
 using namespace mozilla::net;
 using mozilla::Preferences;
@@ -764,7 +763,7 @@ bool nsIDNService::isLabelSafe(const nsAString& label) {
     MOZ_ASSERT(idType == IDTYPE_ALLOWED);
 
     // Check for mixed script
-    Script script = UnicodeProperties::GetScriptCode(ch);
+    Script script = GetScriptCode(ch);
     if (script != Script::COMMON && script != Script::INHERITED &&
         script != lastScript) {
       if (illegalScriptCombo(script, savedScript)) {
@@ -775,8 +774,7 @@ bool nsIDNService::isLabelSafe(const nsAString& label) {
     // Check for mixed numbering systems
     auto genCat = GetGeneralCategory(ch);
     if (genCat == HB_UNICODE_GENERAL_CATEGORY_DECIMAL_NUMBER) {
-      uint32_t zeroCharacter =
-          ch - mozilla::intl::UnicodeProperties::GetNumericValue(ch);
+      uint32_t zeroCharacter = ch - GetNumericValue(ch);
       if (savedNumberingSystem == 0) {
         // If we encounter a decimal number, save the zero character from that
         // numbering system.
@@ -793,8 +791,8 @@ bool nsIDNService::isLabelSafe(const nsAString& label) {
       }
       // Check for marks whose expected script doesn't match the base script.
       if (lastScript != Script::INVALID) {
-        UnicodeProperties::ScriptExtensionVector scripts;
-        auto extResult = UnicodeProperties::GetExtensions(ch, scripts);
+        mozilla::intl::ScriptExtensionVector scripts;
+        auto extResult = mozilla::intl::Script::GetExtensions(ch, scripts);
         MOZ_ASSERT(extResult.isOk());
         if (extResult.isErr()) {
           return false;
