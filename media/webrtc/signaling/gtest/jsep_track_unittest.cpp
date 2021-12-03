@@ -12,6 +12,7 @@
 
 #include "jsep/JsepTrack.h"
 #include "sdp/SipccSdp.h"
+#include "sdp/SipccSdpParser.h"
 #include "sdp/SdpHelper.h"
 
 namespace mozilla {
@@ -1440,6 +1441,81 @@ TEST_F(JsepTrackTest, NonDefaultOpusParameters) {
   VERIFY_OPUS_FORCE_MONO(mRecvOff, false);
   VERIFY_OPUS_MAX_PLAYBACK_RATE(mRecvAns, 16000U);
   VERIFY_OPUS_FORCE_MONO(mRecvAns, true);
+}
+
+TEST_F(JsepTrackTest, RtcpFbWithPayloadTypeAsymmetry) {
+  std::vector<std::string> expectedAckFbTypes;
+  std::vector<std::string> expectedNackFbTypes{"", "pli"};
+  std::vector<std::string> expectedCcmFbTypes{"fir"};
+  std::vector<SdpRtcpFbAttributeList::Feedback> expectedOtherFbTypes{
+      {"", SdpRtcpFbAttributeList::kRemb, "", ""},
+      {"", SdpRtcpFbAttributeList::kTransportCC, "", ""}};
+
+  InitCodecs();
+
+  // On offerer, configure to support remb and transport-cc on video codecs
+  for (auto& codec : mOffCodecs) {
+    if (codec->mType == SdpMediaSection::kVideo) {
+      auto& videoCodec = static_cast<JsepVideoCodecDescription&>(*codec);
+      videoCodec.EnableRemb();
+      videoCodec.EnableTransportCC();
+    }
+  }
+
+  InitTracks(SdpMediaSection::kVideo);
+  InitSdp(SdpMediaSection::kVideo);
+
+  CreateOffer();
+  // We do not bother trying to bamboozle the answerer into doing asymmetric
+  // payload types, we just use a raw SDP.
+  const std::string answer =
+      "v=0\r\n"
+      "o=- 0 0 IN IP4 127.0.0.1\r\n"
+      "s=-\r\n"
+      "t=0 0\r\n"
+      "a=msid-semantic:WMS *\r\n"
+      "m=video 0 UDP/TLS/RTP/SAVPF 136\r\n"
+      "c=IN IP4 0.0.0.0\r\n"
+      "a=sendrecv\r\n"
+      "a=fmtp:136 "
+      "profile-level-id=42e00d;level-asymmetry-allowed=1;packetization-mode="
+      "1\r\n"
+      "a=msid:stream_id\r\n"
+      "a=rtcp-fb:136 nack\r\n"
+      "a=rtcp-fb:136 nack pli\r\n"
+      "a=rtcp-fb:136 ccm fir\r\n"
+      "a=rtcp-fb:136 goog-remb\r\n"
+      "a=rtcp-fb:136 transport-cc\r\n"
+      "a=rtpmap:136 H264/90000\r\n"
+      "a=ssrc:2025549043 cname:\r\n";
+
+  UniquePtr<SdpParser> parser(new SipccSdpParser);
+  mAnswer = std::move(parser->Parse(answer)->Sdp());
+  ASSERT_TRUE(mAnswer);
+
+  std::cerr << "Offer SDP: " << std::endl;
+  mOffer->Serialize(std::cerr);
+
+  std::cerr << "Answer SDP: " << std::endl;
+  mAnswer->Serialize(std::cerr);
+
+  mRecvOff.UpdateRecvTrack(*mAnswer, GetAnswer());
+  mRecvOff.Negotiate(GetAnswer(), GetAnswer());
+  mSendOff.Negotiate(GetAnswer(), GetAnswer());
+
+  ASSERT_TRUE(mSendOff.GetNegotiatedDetails());
+  ASSERT_TRUE(mRecvOff.GetNegotiatedDetails());
+
+  UniquePtr<JsepVideoCodecDescription> codec;
+  ASSERT_TRUE((codec = GetVideoCodec(mSendOff)));
+  ASSERT_EQ("136", codec->mDefaultPt)
+      << "Offerer should have seen answer asymmetry!";
+  ASSERT_TRUE((codec = GetVideoCodec(mRecvOff)));
+  ASSERT_EQ("126", codec->mDefaultPt);
+  ASSERT_EQ(expectedAckFbTypes, codec->mAckFbTypes);
+  ASSERT_EQ(expectedNackFbTypes, codec->mNackFbTypes);
+  ASSERT_EQ(expectedCcmFbTypes, codec->mCcmFbTypes);
+  ASSERT_EQ(expectedOtherFbTypes, codec->mOtherFbTypes);
 }
 
 }  // namespace mozilla
