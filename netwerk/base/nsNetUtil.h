@@ -1022,6 +1022,7 @@ struct LinkHeader {
 
   LinkHeader();
   void Reset();
+  bool operator==(const LinkHeader& rhs) const;
 };
 
 nsTArray<LinkHeader> ParseLinkHeader(const nsAString& aLinkData);

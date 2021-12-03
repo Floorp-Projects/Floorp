@@ -7,6 +7,73 @@
 
 #include "nsNetUtil.h"
 
+LinkHeader LinkHeaderSetAll(nsAString const& v) {
+  LinkHeader l;
+  l.mHref = v;
+  l.mRel = v;
+  l.mTitle = v;
+  l.mIntegrity = v;
+  l.mSrcset = v;
+  l.mSizes = v;
+  l.mType = v;
+  l.mMedia = v;
+  l.mAnchor = v;
+  l.mCrossOrigin = v;
+  l.mReferrerPolicy = v;
+  l.mAs = v;
+  return l;
+}
+
+LinkHeader LinkHeaderSetTitle(nsAString const& v) {
+  LinkHeader l;
+  l.mHref = v;
+  l.mRel = v;
+  l.mTitle = v;
+  return l;
+}
+
+LinkHeader LinkHeaderSetMinimum(nsAString const& v) {
+  LinkHeader l;
+  l.mHref = v;
+  l.mRel = v;
+  return l;
+}
+
+TEST(TestLinkHeader, MultipleLinkHeaders)
+{
+  nsString link =
+      u"<a>; rel=a; title=a; integrity=a; imagesrcset=a; imagesizes=a; type=a; media=a; anchor=a; crossorigin=a; referrerpolicy=a; as=a,"_ns
+      u"<b>; rel=b; title=b; integrity=b; imagesrcset=b; imagesizes=b; type=b; media=b; anchor=b; crossorigin=b; referrerpolicy=b; as=b,"_ns
+      u"<c>; rel=c"_ns;
+
+  nsTArray<LinkHeader> linkHeaders = ParseLinkHeader(link);
+
+  nsTArray<LinkHeader> expected;
+  expected.AppendElement(LinkHeaderSetAll(u"a"_ns));
+  expected.AppendElement(LinkHeaderSetAll(u"b"_ns));
+  expected.AppendElement(LinkHeaderSetMinimum(u"c"_ns));
+
+  ASSERT_EQ(linkHeaders, expected);
+}
+
+// title* has to be tested separately
+TEST(TestLinkHeader, MultipleLinkHeadersTitleStar)
+{
+  nsString link =
+      u"<d>; rel=d; title*=UTF-8'de'd,"_ns
+      u"<e>; rel=e; title*=UTF-8'de'e; title=g,"_ns
+      u"<f>; rel=f"_ns;
+
+  nsTArray<LinkHeader> linkHeaders = ParseLinkHeader(link);
+
+  nsTArray<LinkHeader> expected;
+  expected.AppendElement(LinkHeaderSetTitle(u"d"_ns));
+  expected.AppendElement(LinkHeaderSetTitle(u"e"_ns));
+  expected.AppendElement(LinkHeaderSetMinimum(u"f"_ns));
+
+  ASSERT_EQ(linkHeaders, expected);
+}
+
 struct SimpleParseTestData {
   nsString link;
   bool valid;

@@ -3476,6 +3476,14 @@ void LinkHeader::Reset() {
   mCrossOrigin.SetIsVoid(true);
 }
 
+bool LinkHeader::operator==(const LinkHeader& rhs) const {
+  return mHref == rhs.mHref && mRel == rhs.mRel && mTitle == rhs.mTitle &&
+         mIntegrity == rhs.mIntegrity && mSrcset == rhs.mSrcset &&
+         mSizes == rhs.mSizes && mType == rhs.mType && mMedia == rhs.mMedia &&
+         mAnchor == rhs.mAnchor && mCrossOrigin == rhs.mCrossOrigin &&
+         mReferrerPolicy == rhs.mReferrerPolicy && mAs == rhs.mAs;
+}
+
 nsTArray<LinkHeader> ParseLinkHeader(const nsAString& aLinkData) {
   nsTArray<LinkHeader> linkHeaders;
 
