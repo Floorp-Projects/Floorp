@@ -62,6 +62,7 @@ class WebrtcMediaDataDecoder : public WebrtcVideoDecoder {
   MediaResult mError = NS_OK;
   MediaDataDecoder::DecodedData mResults;
   const nsCString mCodecType;
+  bool mDisabledHardwareAcceleration = false;
 };
 
 }  // namespace mozilla
