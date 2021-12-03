@@ -43,11 +43,11 @@ use webdriver::command::WebDriverCommand::{
     FindElement, FindElementElement, FindElementElements, FindElements, FullscreenWindow, Get,
     GetActiveElement, GetAlertText, GetCSSValue, GetCookies, GetCurrentUrl, GetElementAttribute,
     GetElementProperty, GetElementRect, GetElementTagName, GetElementText, GetNamedCookie,
-    GetPageSource, GetTimeouts, GetTitle, GetWindowHandle, GetWindowHandles, GetWindowRect, GoBack,
-    GoForward, IsDisplayed, IsEnabled, IsSelected, MaximizeWindow, MinimizeWindow, NewSession,
-    NewWindow, PerformActions, Print, Refresh, ReleaseActions, SendAlertText, SetTimeouts,
-    SetWindowRect, Status, SwitchToFrame, SwitchToParentFrame, SwitchToWindow,
-    TakeElementScreenshot, TakeScreenshot,
+    GetPageSource, GetShadowRoot, GetTimeouts, GetTitle, GetWindowHandle, GetWindowHandles,
+    GetWindowRect, GoBack, GoForward, IsDisplayed, IsEnabled, IsSelected, MaximizeWindow,
+    MinimizeWindow, NewSession, NewWindow, PerformActions, Print, Refresh, ReleaseActions,
+    SendAlertText, SetTimeouts, SetWindowRect, Status, SwitchToFrame, SwitchToParentFrame,
+    SwitchToWindow, TakeElementScreenshot, TakeScreenshot,
 };
 use webdriver::command::{
     ActionsParameters, AddCookieParameters, GetNamedCookieParameters, GetParameters,
@@ -57,7 +57,8 @@ use webdriver::command::{
 };
 use webdriver::command::{WebDriverCommand, WebDriverMessage};
 use webdriver::common::{
-    Cookie, Date, FrameId, LocatorStrategy, WebElement, ELEMENT_KEY, FRAME_KEY, WINDOW_KEY,
+    Cookie, Date, FrameId, LocatorStrategy, ShadowRoot, WebElement, ELEMENT_KEY, FRAME_KEY,
+    SHADOW_KEY, WINDOW_KEY,
 };
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
 use webdriver::response::{
@@ -320,6 +321,30 @@ impl MarionetteSession {
         )
         .to_string();
         Ok(WebElement(id))
+    }
+
+    /// Converts a Marionette JSON response into a `ShadowRoot`.
+    fn to_shadow_root(&self, json_data: &Value) -> WebDriverResult<ShadowRoot> {
+        let data = try_opt!(
+            json_data.as_object(),
+            ErrorStatus::UnknownError,
+            "Failed to convert data to an object"
+        );
+
+        let shadow_root = data.get(SHADOW_KEY);
+
+        let value = try_opt!(
+            shadow_root,
+            ErrorStatus::UnknownError,
+            "Failed to extract shadow root from Marionette response"
+        );
+        let id = try_opt!(
+            value.as_str(),
+            ErrorStatus::UnknownError,
+            "Failed to convert shadow root reference value to string"
+        )
+        .to_string();
+        Ok(ShadowRoot(id))
     }
 
     fn next_command_id(&mut self) -> MessageId {
@@ -631,6 +656,14 @@ impl MarionetteSession {
                         .collect(),
                 )))
             }
+            GetShadowRoot(_) => {
+                let shadow_root = self.to_shadow_root(try_opt!(
+                    resp.result.get("value"),
+                    ErrorStatus::UnknownError,
+                    "Failed to find value field"
+                ))?;
+                WebDriverResponse::Generic(ValueResponse(serde_json::to_value(shadow_root)?))
+            }
             GetActiveElement => {
                 let element = self.to_web_element(try_opt!(
                     resp.result.get("value"),
@@ -805,6 +838,11 @@ fn try_convert_to_marionette_message(
         )),
         GetPageSource => Some(Command::WebDriver(
             MarionetteWebDriverCommand::GetPageSource,
+        )),
+        GetShadowRoot(ref e) => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::GetShadowRoot {
+                id: e.clone().to_string(),
+            },
         )),
         GetTitle => Some(Command::WebDriver(MarionetteWebDriverCommand::GetTitle)),
         GetWindowHandle => Some(Command::WebDriver(
