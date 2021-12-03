@@ -276,7 +276,7 @@ class NetErrorParent extends JSWindowActorParent {
         this.browser.reload();
         break;
       case "Browser:OpenCaptivePortalPage":
-        Services.obs.notifyObservers(null, "ensure-captive-portal-tab");
+        this.browser.ownerGlobal.CaptivePortalWatcher.ensureCaptivePortalTab();
         break;
       case "Browser:PrimeMitm":
         this.primeMitm(this.browser);
