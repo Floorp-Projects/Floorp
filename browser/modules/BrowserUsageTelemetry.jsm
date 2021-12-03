@@ -814,7 +814,10 @@ let BrowserUsageTelemetry = {
 
     // Find the actual element we're interested in.
     let node = sourceEvent.target;
-    while (!UI_TARGET_ELEMENTS.includes(node.localName)) {
+    while (
+      !UI_TARGET_ELEMENTS.includes(node.localName) &&
+      !node.classList?.contains("wants-telemetry")
+    ) {
       node = node.parentNode;
       if (!node) {
         // A click on a space or label or something we're not interested in.
