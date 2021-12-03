@@ -277,6 +277,7 @@
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">חסימת עוגיות מעקב צד־שלישי בלבד</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">חסימת עוגיות צד־שלישי בלבד</string>
 
+    <string name="preference_privacy_should_block_cookies_cross_site_option">חסימת עוגיות חוצות אתרים</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">כן בבקשה</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
@@ -439,7 +440,7 @@
     <string name="external_app_prompt_no_app_title">חיפוש יישומון שיוכל לפתוח את הקישור</string>
     <!-- This text is shown in a dialog if no app could be found for a custom link protocol. %1$s is the name of the app (i.e. Firefox Focus) and %2$s is the name of
          the app store installed on the device (usually that's Google Play). -->
-    <string name="external_app_prompt_no_app">אף אחד מהיישומים שבהתקן שלך יכולים לפתוח את הקישור הזה. ניתן לעזוב את %1$s כדי לחפש תחת %2$s יישומון שיכול לבצע זאת.</string>
+    <string name="external_app_prompt_no_app">אף אחד מהיישומים שבמכשיר שלך יכולים לפתוח את הקישור הזה. ניתן לעזוב את %1$s כדי לחפש תחת %2$s יישומון שיכול לבצע זאת.</string>
     <!-- This label is shown above a list of apps that can be used to open a given link -->
     <string name="external_multiple_apps_matched_exit">לצאת ממצב גלישה פרטית?</string>
 

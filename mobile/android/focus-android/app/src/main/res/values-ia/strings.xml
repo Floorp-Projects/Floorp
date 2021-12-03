@@ -290,6 +290,7 @@
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blocar solo le cookies traciator de tertie partes</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloca solo le cookies de tertie partes</string>
 
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Blocar le cookies inter sitos</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">Si per favor</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
