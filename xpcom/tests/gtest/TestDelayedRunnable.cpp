@@ -42,7 +42,8 @@ TEST(DelayedRunnable, TaskQueueShutdownLeak)
 {
   Atomic<bool> active{false};
   auto taskQueue = MakeRefPtr<TaskQueue>(
-      GetMediaThreadPool(mozilla::MediaThreadType::SUPERVISOR));
+      GetMediaThreadPool(mozilla::MediaThreadType::SUPERVISOR),
+      "TestDelayedRunnable TaskQueueShutdownLeak");
   taskQueue->DelayedDispatch(
       NS_NewRunnableFunction(__func__, [release = ReleaseDetector(&active)] {}),
       60e3 /* 1 minute */);
@@ -118,11 +119,14 @@ TEST(DelayedRunnable, TimerFiresBeforeRunnableRuns)
   RefPtr<mozilla::SharedThreadPool> pool =
       mozilla::SharedThreadPool::Get("Test Pool"_ns);
   auto tailTaskQueue1 = MakeRefPtr<TaskQueue>(
-      do_AddRef(pool), /* aSupportsTailDispatch = */ true);
+      do_AddRef(pool), "TestDelayedRunnable tailTaskQueue1",
+      /* aSupportsTailDispatch = */ true);
   auto tailTaskQueue2 = MakeRefPtr<TaskQueue>(
-      do_AddRef(pool), /* aSupportsTailDispatch = */ true);
+      do_AddRef(pool), "TestDelayedRunnable tailTaskQueue2",
+      /* aSupportsTailDispatch = */ true);
   auto noTailTaskQueue = MakeRefPtr<TaskQueue>(
-      do_AddRef(pool), /* aSupportsTailDispatch = */ false);
+      do_AddRef(pool), "TestDelayedRunnable noTailTaskQueue",
+      /* aSupportsTailDispatch = */ false);
   Monitor outerMonitor(__func__);
   MonitorAutoLock lock(outerMonitor);
   MOZ_ALWAYS_SUCCEEDS(
