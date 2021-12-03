@@ -802,9 +802,9 @@
      *   Category: Expressions
      *   Type: Other expressions
      *   Operands:
-     *   Stack: moduleId => promise
+     *   Stack: moduleId, options => promise
      */ \
-    MACRO(DynamicImport, dynamic_import, NULL, 1, 1, 1, JOF_BYTE) \
+    MACRO(DynamicImport, dynamic_import, NULL, 1, 2, 1, JOF_BYTE) \
     /*
      * Push the `import.meta` object.
      *
