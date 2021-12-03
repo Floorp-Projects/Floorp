@@ -40,33 +40,27 @@ mozilla::dom::ValidityState* nsIConstraintValidation::Validity() {
   return mValidity;
 }
 
-bool nsIConstraintValidation::CheckValidity() {
+bool nsIConstraintValidation::CheckValidity(nsIContent& aEventTarget,
+                                            bool* aEventDefaultAction) {
   if (!IsCandidateForConstraintValidation() || IsValid()) {
     return true;
   }
 
-  nsCOMPtr<nsIContent> content = do_QueryInterface(this);
-  NS_ASSERTION(content,
-               "This class should be inherited by HTML elements only!");
-
-  nsContentUtils::DispatchTrustedEvent(content->OwnerDoc(), content,
-                                       u"invalid"_ns, CanBubble::eNo,
-                                       Cancelable::eYes);
+  nsContentUtils::DispatchTrustedEvent(
+      aEventTarget.OwnerDoc(), &aEventTarget, u"invalid"_ns, CanBubble::eNo,
+      Cancelable::eYes, Composed::eDefault, aEventDefaultAction);
   return false;
 }
 
 bool nsIConstraintValidation::ReportValidity() {
-  if (!IsCandidateForConstraintValidation() || IsValid()) {
-    return true;
-  }
-
   nsCOMPtr<Element> element = do_QueryInterface(this);
   MOZ_ASSERT(element, "This class should be inherited by HTML elements only!");
 
   bool defaultAction = true;
-  nsContentUtils::DispatchTrustedEvent(element->OwnerDoc(), element,
-                                       u"invalid"_ns, CanBubble::eNo,
-                                       Cancelable::eYes, &defaultAction);
+  if (CheckValidity(*element, &defaultAction)) {
+    return true;
+  }
+
   if (!defaultAction) {
     return false;
   }

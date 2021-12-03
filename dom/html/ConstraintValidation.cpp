@@ -8,6 +8,7 @@
 
 #include "mozilla/ErrorResult.h"
 #include "nsAString.h"
+#include "nsIContent.h"
 
 namespace mozilla::dom {
 
@@ -47,6 +48,12 @@ void ConstraintValidation::GetValidationMessage(nsAString& aValidationMessage,
   } else {
     aValidationMessage.Truncate();
   }
+}
+
+bool ConstraintValidation::CheckValidity() {
+  nsCOMPtr<nsIContent> content = do_QueryInterface(this);
+  MOZ_ASSERT(content, "This class should be inherited by HTML elements only!");
+  return nsIConstraintValidation::CheckValidity(*content);
 }
 
 ConstraintValidation::ConstraintValidation() : nsIConstraintValidation() {}
