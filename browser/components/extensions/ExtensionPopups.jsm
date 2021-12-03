@@ -495,7 +495,6 @@ class PanelPopup extends BasePopup {
     if (extension.remote) {
       panel.setAttribute("remote", "true");
     }
-    panel.setAttribute("neverhidden", "true");
 
     document.getElementById("mainPopupSet").appendChild(panel);
 
@@ -551,7 +550,6 @@ class ViewPopup extends BasePopup {
       if (remote) {
         panel.setAttribute("remote", "true");
       }
-      panel.setAttribute("neverhidden", "true");
 
       document.getElementById("mainPopupSet").appendChild(panel);
       return panel;
