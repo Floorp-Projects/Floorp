@@ -12,6 +12,7 @@ import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
@@ -39,6 +40,7 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoNetworkManager;
 import org.mozilla.gecko.GeckoScreenOrientation;
+import org.mozilla.gecko.GeckoScreenOrientation.ScreenOrientation;
 import org.mozilla.gecko.GeckoSystemStateListener;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.annotation.WrapForJNI;
@@ -169,6 +171,7 @@ public final class GeckoRuntime implements Parcelable {
   private ServiceWorkerDelegate mServiceWorkerDelegate;
   private WebNotificationDelegate mNotificationDelegate;
   private ActivityDelegate mActivityDelegate;
+  private OrientationController mOrientationController;
   private StorageController mStorageController;
   private final WebExtensionController mWebExtensionController;
   private WebPushController mPushController;
@@ -790,6 +793,68 @@ public final class GeckoRuntime implements Parcelable {
   public void orientationChanged(final int newOrientation) {
     ThreadUtils.assertOnUiThread();
     GeckoScreenOrientation.getInstance().update(newOrientation);
+  }
+
+  /**
+   * Get the orientation controller for this runtime. The orientation controller can be used to
+   * manage changes to and locking of the screen orientation.
+   *
+   * @return The {@link OrientationController} for this instance.
+   */
+  @UiThread
+  public @NonNull OrientationController getOrientationController() {
+    ThreadUtils.assertOnUiThread();
+
+    if (mOrientationController == null) {
+      mOrientationController = new OrientationController();
+    }
+    return mOrientationController;
+  }
+
+  /**
+   * Converts GeckoScreenOrientation to ActivityInfo orientation
+   *
+   * @return A {@link ActivityInfo} orientation.
+   */
+  @AnyThread
+  private int toAndroidOrientation(final int geckoOrientation) {
+    if (geckoOrientation == ScreenOrientation.PORTRAIT_PRIMARY.value) {
+      return ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+    } else if (geckoOrientation == ScreenOrientation.PORTRAIT_SECONDARY.value) {
+      return ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT;
+    } else if (geckoOrientation == ScreenOrientation.LANDSCAPE_PRIMARY.value) {
+      return ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+    } else if (geckoOrientation == ScreenOrientation.LANDSCAPE_SECONDARY.value) {
+      return ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE;
+    }
+    return ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+  }
+
+  /**
+   * Lock screen orientation using OrientationController's onOrientationLock.
+   *
+   * @return A {@link GeckoResult} that resolves an orientation lock.
+   */
+  @WrapForJNI(calledFrom = "gecko")
+  private @NonNull GeckoResult<Boolean> lockScreenOrientation(final int aOrientation) {
+    final GeckoResult<Boolean> res = new GeckoResult<>();
+    ThreadUtils.runOnUiThread(
+        () -> {
+          final OrientationController.OrientationDelegate delegate =
+              getOrientationController().getDelegate();
+          if (delegate == null) {
+            res.complete(false);
+          } else {
+            final GeckoResult<AllowOrDeny> response =
+                delegate.onOrientationLock(toAndroidOrientation(aOrientation));
+            if (response == null) {
+              res.complete(false);
+            } else {
+              res.completeFrom(response.map(v -> v == AllowOrDeny.ALLOW));
+            }
+          }
+        });
+    return res;
   }
 
   /**

@@ -407,9 +407,10 @@ void NotifyScreenConfigurationChange(
   ScreenConfigurationObservers()->BroadcastCachedInformation();
 }
 
-bool LockScreenOrientation(const ScreenOrientation& aOrientation) {
+RefPtr<mozilla::MozPromise<bool, bool, false>> LockScreenOrientation(
+    const ScreenOrientation& aOrientation) {
   AssertMainThread();
-  RETURN_PROXY_IF_SANDBOXED(LockScreenOrientation(aOrientation), false);
+  RETURN_PROXY_IF_SANDBOXED(LockScreenOrientation(aOrientation), nullptr);
 }
 
 void UnlockScreenOrientation() {
