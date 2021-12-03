@@ -68,8 +68,6 @@ class nsIConstraintValidation : public nsISupports {
   // You can't instantiate an object from that class.
   nsIConstraintValidation();
 
-  nsresult CheckValidity(bool* aValidity);
-
   bool GetValidityState(ValidityStateType aState) const {
     return mValidityBitField & aState;
   }

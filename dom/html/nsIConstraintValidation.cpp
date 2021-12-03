@@ -55,14 +55,6 @@ bool nsIConstraintValidation::CheckValidity() {
   return false;
 }
 
-nsresult nsIConstraintValidation::CheckValidity(bool* aValidity) {
-  NS_ENSURE_ARG_POINTER(aValidity);
-
-  *aValidity = CheckValidity();
-
-  return NS_OK;
-}
-
 bool nsIConstraintValidation::ReportValidity() {
   if (!IsCandidateForConstraintValidation() || IsValid()) {
     return true;
