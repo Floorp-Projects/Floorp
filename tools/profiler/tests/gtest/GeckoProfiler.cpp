@@ -4070,6 +4070,39 @@ TEST(GeckoProfiler, FeatureCombinations)
   }
 }
 
+static void CountCPUDeltas(const Json::Value& aThread, size_t& aOutSamplings,
+                           unsigned& aOutCPUDeltaZeroCount,
+                           unsigned& aOutCPUDeltaNonZeroCount) {
+  GET_JSON(samples, aThread["samples"], Object);
+  {
+    Json::ArrayIndex threadCPUDeltaIndex = 0;
+    GET_JSON(schema, samples["schema"], Object);
+    {
+      GET_JSON(jsonThreadCPUDeltaIndex, schema["threadCPUDelta"], UInt);
+      threadCPUDeltaIndex = jsonThreadCPUDeltaIndex.asUInt();
+    }
+
+    aOutSamplings = 0;
+    aOutCPUDeltaZeroCount = 0;
+    aOutCPUDeltaNonZeroCount = 0;
+    GET_JSON(data, samples["data"], Array);
+    aOutSamplings = data.size();
+    for (const Json::Value& sample : data) {
+      ASSERT_TRUE(sample.isArray());
+      if (sample.isValidIndex(threadCPUDeltaIndex)) {
+        if (!sample[threadCPUDeltaIndex].isNull()) {
+          GET_JSON(cpuDelta, sample[threadCPUDeltaIndex], UInt64);
+          if (cpuDelta == 0) {
+            ++aOutCPUDeltaZeroCount;
+          } else {
+            ++aOutCPUDeltaNonZeroCount;
+          }
+        }
+      }
+    }
+  }
+}
+
 TEST(GeckoProfiler, CPUUsage)
 {
   profiler_init_main_thread_id();
@@ -4078,39 +4111,51 @@ TEST(GeckoProfiler, CPUUsage)
 
   const char* filters[] = {"GeckoMain", "Idle test"};
 
-  enum class IdleThreadState {
+  enum class TestThreadsState {
     // Initial state, while constructing and starting the idle thread.
     STARTING,
     // Set by the idle thread just before running its main mostly-idle loop.
-    RUNNING,
+    RUNNING1,
+    RUNNING2,
     // Set by the main thread when it wants the idle thread to stop.
     STOPPING
   };
-  Atomic<IdleThreadState> idleThreadState{IdleThreadState::STARTING};
+  Atomic<TestThreadsState> testThreadsState{TestThreadsState::STARTING};
 
   std::thread idle([&]() {
     AUTO_PROFILER_REGISTER_THREAD("Idle test");
     // Add a label to ensure that we have a non-empty stack, even if native
     // stack-walking is not available.
     AUTO_PROFILER_LABEL("Idle test", PROFILER);
-    idleThreadState = IdleThreadState::RUNNING;
+    ASSERT_TRUE(testThreadsState.compareExchange(TestThreadsState::STARTING,
+                                                 TestThreadsState::RUNNING1) ||
+                testThreadsState.compareExchange(TestThreadsState::RUNNING1,
+                                                 TestThreadsState::RUNNING2));
 
-    while (idleThreadState == IdleThreadState::RUNNING) {
+    while (testThreadsState != TestThreadsState::STOPPING) {
       // Sleep for multiple profiler intervals, so the profiler should have
       // samples with zero CPU utilization.
       PR_Sleep(PR_MillisecondsToInterval(PROFILER_DEFAULT_INTERVAL * 10));
+    }
+  });
 
-      // Do a busy wait for more than 1ms, to ensure that there are non-zero CPU
-      // utilization periods.
-      const TimeStamp target =
-          TimeStamp::Now() + TimeDuration::FromMilliseconds(2);
-      while (TimeStamp::Now() < target) {
-      }
+  std::thread busy([&]() {
+    AUTO_PROFILER_REGISTER_THREAD("Busy test");
+    // Add a label to ensure that we have a non-empty stack, even if native
+    // stack-walking is not available.
+    AUTO_PROFILER_LABEL("Busy test", PROFILER);
+    ASSERT_TRUE(testThreadsState.compareExchange(TestThreadsState::STARTING,
+                                                 TestThreadsState::RUNNING1) ||
+                testThreadsState.compareExchange(TestThreadsState::RUNNING1,
+                                                 TestThreadsState::RUNNING2));
+
+    while (testThreadsState != TestThreadsState::STOPPING) {
+      // Stay busy!
     }
   });
 
   // Wait for idle thread to start running its main loop.
-  while (idleThreadState != IdleThreadState::RUNNING) {
+  while (testThreadsState != TestThreadsState::RUNNING2) {
     PR_Sleep(PR_MillisecondsToInterval(1));
   }
 
@@ -4258,75 +4303,75 @@ TEST(GeckoProfiler, CPUUsage)
 #  endif
           }
         } else if (name.asString() == "Idle test") {
-          GET_JSON(samples, thread["samples"], Object);
-          {
-            Json::ArrayIndex threadCPUDeltaIndex = 0;
-            GET_JSON(schema, samples["schema"], Object);
-            {
-              GET_JSON(jsonThreadCPUDeltaIndex, schema["threadCPUDelta"], UInt);
-              threadCPUDeltaIndex = jsonThreadCPUDeltaIndex.asUInt();
-            }
-
-            unsigned threadCPUDeltaZeroCount = 0;
-            unsigned threadCPUDeltaNonZeroCount = 0;
-            GET_JSON(data, samples["data"], Array);
-            if (testWithNoStackSampling) {
-              // When not sampling stacks, the first sampling loop will have no
-              // running times, so it won't output anything.
-              EXPECT_GE(data.size(), scMinSamplings - 1);
-            } else {
-              EXPECT_GE(data.size(), scMinSamplings);
-            }
-            for (const Json::Value& sample : data) {
-              ASSERT_TRUE(sample.isArray());
-              if (sample.isValidIndex(threadCPUDeltaIndex)) {
-                if (!sample[threadCPUDeltaIndex].isNull()) {
-                  GET_JSON(cpuDelta, sample[threadCPUDeltaIndex], UInt64);
-                  if (cpuDelta == 0) {
-                    ++threadCPUDeltaZeroCount;
-                  } else {
-                    ++threadCPUDeltaNonZeroCount;
-                  }
-                }
-              }
-            }
-
+          size_t samplings;
+          unsigned threadCPUDeltaZeroCount;
+          unsigned threadCPUDeltaNonZeroCount;
+          CountCPUDeltas(thread, samplings, threadCPUDeltaZeroCount,
+                         threadCPUDeltaNonZeroCount);
+          if (testWithNoStackSampling) {
+            // When not sampling stacks, the first sampling loop will have no
+            // running times, so it won't output anything.
+            EXPECT_GE(samplings, scMinSamplings - 1);
+          } else {
+            EXPECT_GE(samplings, scMinSamplings);
+          }
 #  if defined(GP_OS_windows) || defined(GP_OS_darwin) || \
       defined(GP_OS_linux) || defined(GP_OS_android) || defined(GP_OS_freebsd)
-            EXPECT_GE(threadCPUDeltaZeroCount + threadCPUDeltaNonZeroCount,
-                      data.size() - 1u)
-                << "There should be 'threadCPUDelta' values in all but 1 "
-                   "samples";
+          EXPECT_GE(threadCPUDeltaZeroCount + threadCPUDeltaNonZeroCount,
+                    samplings - 1u)
+              << "There should be 'threadCPUDelta' values in all but 1 "
+                 "samples";
 #    if defined(GP_OS_windows)
-            // On Windows, sampling threads makes them work a little bit, even
-            // when removing the CPU values around the sampling itself, so we
-            // cannot expect any zeroes!
-            // TODO: Would it be possible to reliably test that the values are
-            // at least "small"? (Whatever that means for cycles.)
-            if (testWithNoStackSampling) {
-              // Note: This test is a bit hand-wavy, and may not be reliable. If
-              // intermittents happen, it may need tweaking (by increasing the
-              // loop count, or re-trying the whole test).
-              EXPECT_GT(threadCPUDeltaZeroCount, 0u)
-                  << "There should be some zero-CPUs due to the idle loop body";
-              EXPECT_GT(threadCPUDeltaNonZeroCount, 0u)
-                  << "There should be some non-zero due to inter-loop work";
-            }
+          // On Windows, sampling threads makes them work a little bit, even
+          // when removing the CPU values around the sampling itself, so we
+          // cannot expect any zeroes!
+          // TODO: Would it be possible to reliably test that the values are
+          // at least "small"? (Whatever that means for cycles.)
+          if (testWithNoStackSampling) {
+            // Note: This test is a bit hand-wavy, and may not be reliable. If
+            // intermittents happen, it may need tweaking (by increasing the
+            // loop count, or re-trying the whole test).
+            EXPECT_GT(threadCPUDeltaZeroCount, 0u)
+                << "There should be some zero-CPUs due to the idle loop body";
+          }
 #    else
             // Note: This test is a bit hand-wavy, and may not be reliable. If
             // intermittents happen, it may need tweaking (by increasing the
             // loop count, or re-trying the whole test).
             EXPECT_GT(threadCPUDeltaZeroCount, 0u)
                 << "There should be some zero-CPUs due to the idle loop body";
-            EXPECT_GT(threadCPUDeltaNonZeroCount, 0u)
-                << "There should be some non-zero due to inter-loop work";
 #    endif
 #  else
           // All "threadCPUDelta" data should be absent or null on unsupported
           // platforms.
           EXPECT_EQ(threadCPUDeltaCount, 0u);
 #  endif
+        } else if (name.asString() == "Busy test") {
+          size_t samplings;
+          unsigned threadCPUDeltaZeroCount;
+          unsigned threadCPUDeltaNonZeroCount;
+          CountCPUDeltas(thread, samplings, threadCPUDeltaZeroCount,
+                         threadCPUDeltaNonZeroCount);
+          if (testWithNoStackSampling) {
+            // When not sampling stacks, the first sampling loop will have no
+            // running times, so it won't output anything.
+            EXPECT_GE(samplings, scMinSamplings - 1);
+          } else {
+            EXPECT_GE(samplings, scMinSamplings);
           }
+#  if defined(GP_OS_windows) || defined(GP_OS_darwin) || \
+      defined(GP_OS_linux) || defined(GP_OS_android) || defined(GP_OS_freebsd)
+          EXPECT_GE(threadCPUDeltaZeroCount + threadCPUDeltaNonZeroCount,
+                    samplings - 1u)
+              << "There should be 'threadCPUDelta' values in all but 1 "
+                 "samples";
+          EXPECT_GT(threadCPUDeltaNonZeroCount, 0u)
+              << "There should be some non-zero CPU values";
+#  else
+          // All "threadCPUDelta" data should be absent or null on unsupported
+          // platforms.
+          EXPECT_EQ(threadCPUDeltaCount, 0u);
+#  endif
         }
       }
     });
@@ -4342,7 +4387,8 @@ TEST(GeckoProfiler, CPUUsage)
         [&](SamplingState) { ASSERT_TRUE(false); }));
   }
 
-  idleThreadState = IdleThreadState::STOPPING;
+  testThreadsState = TestThreadsState::STOPPING;
+  busy.join();
   idle.join();
 }
 
