@@ -580,6 +580,7 @@ nsresult nsContentSink::ProcessLinkHeader(const nsAString& aLinkData) {
       href.Truncate();
       rel.Truncate();
       title.Truncate();
+      titleStar.Truncate();
       type.Truncate();
       integrity.Truncate();
       srcset.Truncate();
