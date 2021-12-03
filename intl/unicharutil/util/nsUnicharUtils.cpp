@@ -5,7 +5,6 @@
 
 #include "nsUnicharUtils.h"
 #include "nsUTF8Utils.h"
-#include "nsUnicodeProperties.h"
 #include "mozilla/Likely.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/intl/UnicodeProperties.h"
@@ -518,7 +517,7 @@ uint32_t HashUTF8AsUTF16(const char* aUTF8, uint32_t aLength, bool* aErr) {
 
 bool IsSegmentBreakSkipChar(uint32_t u) {
   return intl::UnicodeProperties::IsEastAsianWidthFHWexcludingEmoji(u) &&
-         unicode::GetScriptCode(u) != unicode::Script::HANGUL;
+         intl::UnicodeProperties::GetScriptCode(u) != intl::Script::HANGUL;
 }
 
 }  // namespace mozilla

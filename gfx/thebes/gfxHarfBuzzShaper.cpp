@@ -12,8 +12,8 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/intl/String.h"
 #include "mozilla/intl/UnicodeProperties.h"
+#include "mozilla/intl/UnicodeScriptCodes.h"
 #include "nsUnicodeProperties.h"
-#include "nsUnicodeScriptCodes.h"
 
 #include "harfbuzz/hb.h"
 #include "harfbuzz/hb-ot.h"
@@ -992,7 +992,8 @@ static hb_unicode_general_category_t HBGetGeneralCategory(
 
 static hb_script_t HBGetScript(hb_unicode_funcs_t* ufuncs, hb_codepoint_t aCh,
                                void* user_data) {
-  return hb_script_t(GetScriptTagForCode(GetScriptCode(aCh)));
+  return hb_script_t(
+      GetScriptTagForCode(intl::UnicodeProperties::GetScriptCode(aCh)));
 }
 
 static hb_unicode_combining_class_t HBGetCombiningClass(
