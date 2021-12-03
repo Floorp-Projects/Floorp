@@ -42,6 +42,7 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     FindElementElement(WebElement, LocatorParameters),
     FindElementElements(WebElement, LocatorParameters),
     GetActiveElement,
+    GetShadowRoot(WebElement),
     IsDisplayed(WebElement),
     IsSelected(WebElement),
     GetElementAttribute(WebElement, String),
@@ -167,6 +168,15 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 WebDriverCommand::FindElementElements(element, serde_json::from_str(raw_body)?)
             }
             Route::GetActiveElement => WebDriverCommand::GetActiveElement,
+            Route::GetShadowRoot => {
+                let element_id = try_opt!(
+                    params.get("elementId"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing elementId parameter"
+                );
+                let element = WebElement(element_id.as_str().into());
+                WebDriverCommand::GetShadowRoot(element)
+            }
             Route::IsDisplayed => {
                 let element_id = try_opt!(
                     params.get("elementId"),
