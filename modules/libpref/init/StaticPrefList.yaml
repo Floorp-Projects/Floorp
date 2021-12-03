@@ -8342,7 +8342,7 @@
 #ifdef MOZ_FFMPEG
 - name: media.rdd-ffmpeg.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 #endif
 
