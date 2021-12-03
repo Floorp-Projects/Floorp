@@ -51,7 +51,7 @@ tpids! {
     MAX_DATAGRAM_FRAME_SIZE = 0x0020,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Copy)]
 pub struct PreferredAddress {
     v4: Option<SocketAddr>,
     v6: Option<SocketAddr>,
@@ -761,6 +761,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn preferred_address_neither() {
+        #[allow(clippy::drop_copy)]
         mem::drop(PreferredAddress::new(None, None));
     }
 
