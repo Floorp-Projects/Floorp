@@ -5,16 +5,7 @@ const PAGE =
 
 async function assertIsAtRestartRequiredPage(browser) {
   let doc = browser.contentDocument;
-  // There's no guarantee that the about:restartrequired page
-  // has finished loading yet after the crash. If that's the
-  // case, wait for it. We wait for DOMContentLoaded, since error
-  // pages don't fire "load" events.
-  if (doc.readyState == "loading") {
-    await BrowserTestUtils.waitForEvent(
-      browser.contentWindow,
-      "DOMContentLoaded"
-    );
-  }
+
   // Since about:restartRequired will run in the parent process, we can safely
   // manipulate its DOM nodes directly
   let title = doc.getElementById("title");
@@ -46,7 +37,15 @@ function crashTabTestHelper() {
       // Simulate buildID mismatch.
       TabCrashHandler.testBuildIDMismatch = true;
 
+      let restartRequiredLoaded = BrowserTestUtils.waitForContentEvent(
+        browser,
+        "AboutRestartRequiredLoad",
+        false,
+        null,
+        true
+      );
       await BrowserTestUtils.crashFrame(browser, false);
+      await restartRequiredLoaded;
       await assertIsAtRestartRequiredPage(browser);
 
       // Reset
@@ -105,7 +104,13 @@ add_task(async function test_launchfail_background() {
       TabCrashHandler.queuedCrashedBrowsers,
       "No crashed browsers should be queued."
     );
-    let loaded = BrowserTestUtils.browserLoaded(browser, false, null, true);
+    let loaded = BrowserTestUtils.waitForContentEvent(
+      browser,
+      "AboutRestartRequiredLoad",
+      false,
+      null,
+      true
+    );
     await BrowserTestUtils.switchTab(gBrowser, tab);
     await loaded;
 
