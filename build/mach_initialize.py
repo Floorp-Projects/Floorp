@@ -166,13 +166,12 @@ install a recent enough Python 3.
 """.strip()
 
 
-def _activate_python_environment(topsrcdir, state_dir):
+def _activate_python_environment(topsrcdir, get_state_dir):
     from mach.site import MachSiteManager
 
     mach_environment = MachSiteManager.from_environment(
         topsrcdir,
-        # normpath state_dir to normalize msys-style slashes.
-        os.path.normpath(state_dir),
+        get_state_dir,
     )
     mach_environment.activate()
 
@@ -215,7 +214,11 @@ def initialize(topsrcdir):
     from mach.util import setenv, get_state_dir
 
     state_dir = _create_state_dir()
-    _activate_python_environment(topsrcdir, get_state_dir(True, topsrcdir=topsrcdir))
+
+    # normpath state_dir to normalize msys-style slashes.
+    _activate_python_environment(
+        topsrcdir, lambda: os.path.normpath(get_state_dir(True, topsrcdir=topsrcdir))
+    )
 
     import mach.base
     import mach.main

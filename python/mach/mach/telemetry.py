@@ -16,13 +16,12 @@ import requests
 import six.moves.urllib.parse as urllib_parse
 
 from mach.config import ConfigSettings
+from mach.site import MozSiteMetadata
 from mach.telemetry_interface import NoopTelemetry, GleanTelemetry
 from mach.util import get_state_dir
-from mozboot.util import get_mach_virtualenv_binary
 from mozbuild.base import MozbuildObject, BuildEnvironmentNotFoundException
 from mozbuild.settings import TelemetrySettings
 from mozbuild.telemetry import filter_args
-import mozpack.path
 
 from mozversioncontrol import get_repository_object, InvalidRepoPath
 
@@ -39,9 +38,8 @@ def create_telemetry_from_environment(settings):
     doesn't support it.
     """
 
-    is_mach_virtualenv = mozpack.path.normpath(sys.executable) == mozpack.path.normpath(
-        get_mach_virtualenv_binary()
-    )
+    active_metadata = MozSiteMetadata.from_runtime()
+    is_mach_virtualenv = active_metadata and active_metadata.site_name == "mach"
 
     if not (
         is_applicable_telemetry_environment()
