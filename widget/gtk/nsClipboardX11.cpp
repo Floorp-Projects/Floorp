@@ -286,9 +286,9 @@ bool nsRetrievalContextX11::WaitForClipboardData(ClipboardDataType aDataType,
   return WaitForX11Content();
 }
 
-GdkAtom* nsRetrievalContextX11::GetTargetsImpl(int32_t aWhichClipboard,
-                                               int* aTargetNums) {
-  LOGCLIP("nsRetrievalContextX11::GetTargetsImpl(%s)\n",
+GdkAtom* nsRetrievalContextX11::GetTargets(int32_t aWhichClipboard,
+                                           int* aTargetNums) {
+  LOGCLIP("nsRetrievalContextX11::GetTargets(%s)\n",
           aWhichClipboard == nsClipboard::kSelectionClipboard ? "primary"
                                                               : "clipboard");
 
