@@ -1186,15 +1186,28 @@ richlistitem .text-link:hover {
 }
 
 #moreFromMozillaCategory .product-title {
+  margin: 4px 0;
   background-repeat: no-repeat;
   background-size: contain;
   padding-inline-start: 30px;
-  margin: 4px 0;
   -moz-context-properties: fill;
   fill: currentColor;
 }
 
-#moreFromMozillaCategory .product-title:-moz-locale-dir(rtl) {
+#moreFromMozillaCategory .advanced .product-title {
+  background-size: initial;
+  padding-inline-start: 0;
+  padding-top: 33px;
+}
+
+#moreFromMozillaCategory .product-img {
+  background-repeat: no-repeat;
+  background-size: 150px;
+  padding-inline-start: 174px;
+}
+
+#moreFromMozillaCategory .product-title:-moz-locale-dir(rtl),
+#moreFromMozillaCategory .product-img:-moz-locale-dir(rtl) {
   background-position-x: right;
 }
 
@@ -1204,13 +1217,46 @@ richlistitem .text-link:hover {
   margin: 4px 0;
 }
 
-#moreFromMozillaCategory button {
+#moreFromMozillaCategory .advanced .description {
+  padding-inline-start: 0;
+}
+
+#moreFromMozillaCategory .small-button {
   margin-block: 16px;
   margin-inline: 30px 0;
 }
 
+#moreFromMozillaCategory .advanced .small-button {
+  margin: 24px 0;
+}
+
+#moreFromMozillaCategory vbox.advanced {
+  box-shadow: 0 2px 6px rgba(58, 57, 68, 0.2);
+  border-radius: 4px;
+  margin-block: 20px 10px;
+  margin-inline: 2px 0;
+  padding: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  #moreFromMozillaCategory vbox.advanced {
+    background-color: rgb(66, 65, 77);
+  }
+}
+
+#moreFromMozillaCategory .advanced .product-info {
+  min-height: 200px;
+}
+
+#moreFromMozillaCategory .simple .text-link {
+  display: block;
+  margin-block: 4px 0;
+  margin-inline-start: 4px;
+}
+
 #firefox-mobile {
-  background-image: url("chrome://branding/content/about-logo.svg");
+  background-image: url("chrome://devtools/skin/images/browsers/mobile.svg");
+  padding-top: 5px;
 }
 
 #mozilla-vpn {
@@ -1219,4 +1265,16 @@ richlistitem .text-link:hover {
 
 #mozilla-rally {
   background-image: url("chrome://browser/skin/preferences/rally-logo.svg");
+}
+
+#firefox-mobile-image {
+  background-image: url("chrome://browser/skin/preferences/img-mobile.svg");
+}
+
+#mozilla-vpn-image {
+  background-image: url("chrome://browser/skin/preferences/img-vpn.svg");
+}
+
+#mozilla-rally-image {
+  background-image: url("chrome://browser/skin/preferences/img-rally.png");
 }

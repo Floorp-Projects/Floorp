@@ -112,6 +112,10 @@ moreFromMozilla:
       type: boolean
       fallbackPref: browser.preferences.moreFromMozilla
       description: Should users see the new more from Mozilla section.
+    template:
+      type: string
+      fallbackPref: browser.preferences.moreFromMozilla.template
+      description: UI template used to display Mozilla products. Possible values simple, advanced. Default is simple.
 abouthomecache:
   description: "The startup about:home cache."
   hasExposure: false

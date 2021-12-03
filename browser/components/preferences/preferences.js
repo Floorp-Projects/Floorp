@@ -205,6 +205,9 @@ function init_all() {
   NimbusFeatures.moreFromMozilla.recordExposureEvent({ once: true });
   if (NimbusFeatures.moreFromMozilla.getVariable("enabled")) {
     document.getElementById("category-more-from-mozilla").hidden = false;
+    gMoreFromMozillaPane.option = NimbusFeatures.moreFromMozilla.getVariable(
+      "template"
+    );
     register_module("paneMoreFromMozilla", gMoreFromMozillaPane);
   }
   // The Sync category needs to be the last of the "real" categories
