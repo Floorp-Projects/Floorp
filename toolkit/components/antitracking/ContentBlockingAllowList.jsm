@@ -103,14 +103,6 @@ const ContentBlockingAllowList = {
   },
 
   /**
-   * Remove the given principal from the Content Blocking allow list if present.
-   */
-  removeByPrincipal(principal) {
-    Services.perms.removeFromPrincipal(principal, "trackingprotection");
-    Services.perms.removeFromPrincipal(principal, "trackingprotection-pb");
-  },
-
-  /**
    * Returns true if the current browser has loaded a document that is on the
    * Content Blocking allow list.
    */
@@ -121,42 +113,5 @@ const ContentBlockingAllowList = {
       Services.perms.testExactPermissionFromPrincipal(prin, type) ==
       Services.perms.ALLOW_ACTION
     );
-  },
-
-  /**
-   * Returns a list of all non-private browsing principals that are on the
-   * content blocking allow list.
-   */
-  getAllowListedPrincipals() {
-    const exceptions = Services.perms
-      .getAllWithTypePrefix("trackingprotection")
-      .filter(
-        // Only export non-private exceptions for security reasons.
-        p => p.type == "trackingprotection"
-      );
-    return exceptions.map(e => e.principal);
-  },
-
-  /**
-   * Takes a list of nsIPrincipals and uses it to update the content blocking allow
-   * list.
-   */
-  addAllowListPrincipals(principals) {
-    principals.forEach(p =>
-      Services.perms.addFromPrincipal(
-        p,
-        "trackingprotection",
-        Services.perms.ALLOW_ACTION,
-        Ci.nsIPermissionManager.EXPIRE_NEVER
-      )
-    );
-  },
-
-  /**
-   * Removes all content blocking exceptions.
-   */
-  wipeLists() {
-    Services.perms.removeByType("trackingprotection");
-    Services.perms.removeByType("trackingprotection-pb");
   },
 };

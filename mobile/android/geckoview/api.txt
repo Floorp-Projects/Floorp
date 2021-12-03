@@ -517,20 +517,7 @@ package org.mozilla.geckoview {
 
   @AnyThread public class ContentBlockingController {
     ctor public ContentBlockingController();
-    method @Deprecated @DeprecationSchedule(version=96,id="content-blocking-exception") @UiThread public void addException(@NonNull GeckoSession);
-    method @Deprecated @DeprecationSchedule(version=96,id="content-blocking-exception") @NonNull @UiThread public GeckoResult<Boolean> checkException(@NonNull GeckoSession);
-    method @Deprecated @DeprecationSchedule(version=96,id="content-blocking-exception") @UiThread public void clearExceptionList();
     method @NonNull @UiThread public GeckoResult<List<ContentBlockingController.LogEntry>> getLog(@NonNull GeckoSession);
-    method @Deprecated @DeprecationSchedule(version=96,id="content-blocking-exception") @UiThread public void removeException(@NonNull GeckoSession);
-    method @AnyThread @Deprecated @DeprecationSchedule(version=96,id="content-blocking-exception") public void removeException(@NonNull ContentBlockingController.ContentBlockingException);
-    method @AnyThread @Deprecated @DeprecationSchedule(version=96,id="content-blocking-exception") public void restoreExceptionList(@NonNull List<ContentBlockingController.ContentBlockingException>);
-    method @Deprecated @DeprecationSchedule(version=96,id="content-blocking-exception") @NonNull @UiThread public GeckoResult<List<ContentBlockingController.ContentBlockingException>> saveExceptionList();
-  }
-
-  @Deprecated @DeprecationSchedule(version=96,id="content-blocking-exception") @AnyThread public static class ContentBlockingController.ContentBlockingException {
-    method @NonNull public static ContentBlockingController.ContentBlockingException fromJson(@NonNull JSONObject);
-    method @NonNull public JSONObject toJson();
-    field @NonNull public final String uri;
   }
 
   public static class ContentBlockingController.Event {
