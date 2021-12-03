@@ -95,7 +95,8 @@ class Components(
             trackingProtectionPolicy = settings.createTrackingProtectionPolicy(),
             javascriptEnabled = !settings.shouldBlockJavaScript(),
             remoteDebuggingEnabled = settings.shouldEnableRemoteDebugging(),
-            webFontsEnabled = !settings.shouldBlockWebFonts()
+            webFontsEnabled = !settings.shouldBlockWebFonts(),
+            httpsOnlyMode = settings.getHttpsOnlyMode()
         )
     }
 

@@ -355,6 +355,17 @@ class Settings(
         false
     )
 
+    fun getHttpsOnlyMode(): Engine.HttpsOnlyMode {
+        return if (
+            Features.HTTPS_ONLY_MODE &&
+            preferences.getBoolean(getPreferenceKey(R.string.pref_key_https_only), true)
+        ) {
+            Engine.HttpsOnlyMode.ENABLED
+        } else {
+            Engine.HttpsOnlyMode.DISABLED
+        }
+    }
+
     private fun getPreferenceKey(resourceId: Int): String =
         context.getString(resourceId)
 }

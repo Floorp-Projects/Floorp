@@ -9,4 +9,10 @@ package org.mozilla.focus.utils
  */
 object Features {
     const val SEARCH_TERMS_OR_URL: Boolean = true
+
+    /**
+     * HTTPS-Only mode.
+     * https://support.mozilla.org/en-US/kb/https-only-prefs
+     */
+    val HTTPS_ONLY_MODE = AppConstants.isDevOrNightlyBuild
 }
