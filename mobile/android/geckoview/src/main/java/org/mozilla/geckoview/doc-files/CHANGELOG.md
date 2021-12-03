@@ -24,6 +24,8 @@ exclude: true
   ([bug 1740634]({{bugzilla}}1740634)).
 - Added [`SelectionActionDelegate.Selection.pasteAsPlainText`][96.4] to paste
   HTML content as plain text.
+- Removed deprecated Content Blocking APIs.
+  ([bug 1743706]({{bugzilla}}1743706)).
 
 [96.1]: {{javadoc_uri}}/Autocomplete.StorageDelegate.html#onLoginFetch--
 [96.2]: {{javadoc_uri}}/GeckoResult.html#finally_-java.lang.Runnable-
@@ -1089,4 +1091,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 59458dfdb55ae869b0e7b55535c9742f0ad0c4bd
+[api-version]: f8a31bdc9d6debf2e34c1a231d13bfaad76a08aa
