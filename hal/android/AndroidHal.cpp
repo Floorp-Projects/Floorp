@@ -9,7 +9,6 @@
 #include "AndroidBridge.h"
 #include "mozilla/dom/network/Constants.h"
 #include "mozilla/java/GeckoAppShellWrappers.h"
-#include "mozilla/java/GeckoRuntimeWrappers.h"
 #include "nsIScreenManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
@@ -124,40 +123,8 @@ void GetCurrentScreenConfiguration(ScreenConfiguration* aScreenConfiguration) {
                                orientation, angle, colorDepth, pixelDepth);
 }
 
-RefPtr<MozPromise<bool, bool, false>> LockScreenOrientation(
-    const hal::ScreenOrientation& aOrientation) {
-  // Force the default orientation to be portrait-primary.
-  hal::ScreenOrientation orientation =
-      aOrientation == eScreenOrientation_Default
-          ? eScreenOrientation_PortraitPrimary
-          : aOrientation;
-
-  switch (orientation) {
-    // The Android backend only supports these orientations.
-    case eScreenOrientation_PortraitPrimary:
-    case eScreenOrientation_PortraitSecondary:
-    case eScreenOrientation_PortraitPrimary |
-        eScreenOrientation_PortraitSecondary:
-    case eScreenOrientation_LandscapePrimary:
-    case eScreenOrientation_LandscapeSecondary:
-    case eScreenOrientation_LandscapePrimary |
-        eScreenOrientation_LandscapeSecondary:
-    case eScreenOrientation_Default: {
-      java::GeckoRuntime::LocalRef runtime = java::GeckoRuntime::GetInstance();
-      if (runtime != NULL) {
-        auto result = runtime->LockScreenOrientation(orientation);
-        auto geckoResult = java::GeckoResult::LocalRef(std::move(result));
-        return geckoResult
-                   ? MozPromise<bool, bool, false>::FromGeckoResult(geckoResult)
-                   : MozPromise<bool, bool, false>::CreateAndReject(false,
-                                                                    __func__);
-      } else {
-        return MozPromise<bool, bool, false>::CreateAndReject(false, __func__);
-      }
-    }
-    default:
-      return nullptr;
-  }
+bool LockScreenOrientation(const hal::ScreenOrientation& aOrientation) {
+  return false;
 }
 
 void UnlockScreenOrientation() {}

@@ -3109,12 +3109,6 @@
   value: true
   mirror: always
 
-# Enable Screen Orientation lock
-- name: dom.screenorientation.allow-lock
-  type: bool
-  value: false
-  mirror: always
-
 # Whether to enable the JavaScript start-up cache. This causes one of the first
 # execution to record the bytecode of the JavaScript function used, and save it
 # in the existing cache entry. On the following loads of the same script, the
