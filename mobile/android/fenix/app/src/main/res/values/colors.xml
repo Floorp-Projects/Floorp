@@ -74,11 +74,11 @@
     <!-- Icon button -->
     <color name="fx_mobile_icon_color_button" tools:ignore="UnusedResources">@color/photonInk20</color>
     <color name="fx_mobile_icon_color_warning" tools:ignore="UnusedResources">@color/photonRed80</color>
-    <color name="fx_mobile_icon_color_accent_violet" tools:ignore="UnusedResources">@color/photonViolet60</color>
-    <color name="fx_mobile_icon_color_accent_blue" tools:ignore="UnusedResources">@color/photonBlue60</color>
-    <color name="fx_mobile_icon_color_accent_pink" tools:ignore="UnusedResources">@color/photonPink60</color>
-    <color name="fx_mobile_icon_color_accent_green" tools:ignore="UnusedResources">@color/photonGreen60</color>
-    <color name="fx_mobile_icon_color_accent_yellow" tools:ignore="UnusedResources">@color/photonYellow60</color>
+    <color name="fx_mobile_icon_color_accent_violet">@color/photonViolet60</color>
+    <color name="fx_mobile_icon_color_accent_blue">@color/photonBlue60</color>
+    <color name="fx_mobile_icon_color_accent_pink">@color/photonPink60</color>
+    <color name="fx_mobile_icon_color_accent_green">@color/photonGreen60</color>
+    <color name="fx_mobile_icon_color_accent_yellow">@color/photonYellow60</color>
     <!-- Reader, ETP Shield -->
     <color name="fx_mobile_icon_color_gradient_start">@color/photonViolet50</color>
     <!-- Reader, ETP Shield -->
@@ -268,17 +268,12 @@
     <color name="top_sites_border_color">@color/photonLightGrey30</color>
 
     <!-- Collection icons-->
-    <color name="collection_icon_color_violet">@color/photonViolet60</color>
-    <color name="collection_icon_color_blue">@color/photonBlue60</color>
-    <color name="collection_icon_color_pink">@color/photonPink60</color>
-    <color name="collection_icon_color_green">@color/photonGreen60</color>
-    <color name="collection_icon_color_yellow">@color/photonYellow60</color>
     <array name="collection_icon_colors">
-        <item>@color/collection_icon_color_violet</item>
-        <item>@color/collection_icon_color_blue</item>
-        <item>@color/collection_icon_color_pink</item>
-        <item>@color/collection_icon_color_green</item>
-        <item>@color/collection_icon_color_yellow</item>
+        <item>@color/fx_mobile_icon_color_accent_violet</item>
+        <item>@color/fx_mobile_icon_color_accent_blue</item>
+        <item>@color/fx_mobile_icon_color_accent_pink</item>
+        <item>@color/fx_mobile_icon_color_accent_green</item>
+        <item>@color/fx_mobile_icon_color_accent_yellow</item>
     </array>
 
     <!-- Quick action buttons-->

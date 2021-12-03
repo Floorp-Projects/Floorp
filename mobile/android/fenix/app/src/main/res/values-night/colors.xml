@@ -74,11 +74,11 @@
     <!-- Icon button -->
     <color name="fx_mobile_icon_color_button" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
     <color name="fx_mobile_icon_color_warning" tools:ignore="UnusedResources">@color/photonRed40</color>
-    <color name="fx_mobile_icon_color_accent_violet" tools:ignore="UnusedResources">@color/photonViolet20</color>
-    <color name="fx_mobile_icon_color_accent_blue" tools:ignore="UnusedResources">@color/photonBlue20</color>
-    <color name="fx_mobile_icon_color_accent_pink" tools:ignore="UnusedResources">@color/photonPink20</color>
-    <color name="fx_mobile_icon_color_accent_green" tools:ignore="UnusedResources">@color/photonGreen20</color>
-    <color name="fx_mobile_icon_color_accent_yellow" tools:ignore="UnusedResources">@color/photonYellow20</color>
+    <color name="fx_mobile_icon_color_accent_violet">@color/photonViolet20</color>
+    <color name="fx_mobile_icon_color_accent_blue">@color/photonBlue20</color>
+    <color name="fx_mobile_icon_color_accent_pink">@color/photonPink20</color>
+    <color name="fx_mobile_icon_color_accent_green">@color/photonGreen20</color>
+    <color name="fx_mobile_icon_color_accent_yellow">@color/photonYellow20</color>
     <!-- Reader, ETP Shield -->
     <color name="fx_mobile_icon_color_gradient_start">@color/photonViolet20</color>
     <!-- Reader, ETP Shield -->
@@ -165,13 +165,6 @@
     <color name="top_site_pager_dot_selected">@color/photonDarkGrey05</color>
     <color name="top_site_pin_icon_color">@color/photonLightGrey20</color>
     <color name="top_sites_border_color">@color/photonDarkGrey90</color>
-
-    <!-- Collection icons-->
-    <color name="collection_icon_color_violet">@color/photonViolet40</color>
-    <color name="collection_icon_color_blue">@color/photonBlue30</color>
-    <color name="collection_icon_color_pink">@color/photonPink30</color>
-    <color name="collection_icon_color_green">#88FFD1</color>
-    <color name="collection_icon_color_yellow">#FFDE67</color>
 
     <!-- Search Widget -->
     <color name="search_widget_background">@color/inset_normal_theme</color>
