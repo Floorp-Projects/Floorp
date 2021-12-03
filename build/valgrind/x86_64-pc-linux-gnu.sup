@@ -948,6 +948,7 @@
    Memcheck:Leak
    match-leak-kinds: definite
    fun:malloc
+   ...
    fun:wr_thread_pool_new
    fun:WebRenderThreadPool
    fun:RenderThread
