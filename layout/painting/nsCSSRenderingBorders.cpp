@@ -3638,8 +3638,8 @@ ImgDrawResult nsCSSBorderImageRenderer::CreateWebRenderCommands(
       }
 
       Maybe<wr::ImageKey> key =
-          aManager->CommandBuilder().CreateImageProviderKey(aItem, provider,
-                                                            aResources);
+          aManager->CommandBuilder().CreateImageProviderKey(
+              aItem, provider, drawResult, aResources);
       if (key.isNothing()) {
         break;
       }

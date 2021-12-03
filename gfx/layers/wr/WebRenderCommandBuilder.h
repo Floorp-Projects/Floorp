@@ -18,6 +18,7 @@
 #include "nsIFrame.h"
 #include "nsTHashSet.h"
 #include "DisplayItemCache.h"
+#include "ImgDrawResult.h"
 
 namespace mozilla {
 
@@ -71,6 +72,7 @@ class WebRenderCommandBuilder final {
 
   Maybe<wr::ImageKey> CreateImageProviderKey(
       nsDisplayItem* aItem, image::WebRenderImageProvider* aProvider,
+      image::ImgDrawResult aDrawResult,
       mozilla::wr::IpcResourceUpdateQueue& aResources);
 
   WebRenderUserDataRefTable* GetWebRenderUserDataTable() {
@@ -85,6 +87,7 @@ class WebRenderCommandBuilder final {
 
   bool PushImageProvider(nsDisplayItem* aItem,
                          image::WebRenderImageProvider* aProvider,
+                         image::ImgDrawResult aDrawResult,
                          mozilla::wr::DisplayListBuilder& aBuilder,
                          mozilla::wr::IpcResourceUpdateQueue& aResources,
                          const LayoutDeviceRect& aRect,
