@@ -139,6 +139,11 @@ pub fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'static st
         ),
         (
             Method::GET,
+            "/session/{sessionId}/element/{elementId}/shadow",
+            Route::GetShadowRoot,
+        ),
+        (
+            Method::GET,
             "/session/{sessionId}/element/{elementId}/displayed",
             Route::IsDisplayed,
         ),
@@ -319,6 +324,7 @@ pub enum Route<U: WebDriverExtensionRoute> {
     FindElementElement,
     FindElementElements,
     GetActiveElement,
+    GetShadowRoot,
     IsDisplayed,
     IsSelected,
     GetElementAttribute,

@@ -231,6 +231,8 @@ pub enum Command {
     GetElementText(LegacyWebElement),
     #[serde(rename = "WebDriver:GetPageSource")]
     GetPageSource,
+    #[serde(rename = "WebDriver:GetShadowRoot")]
+    GetShadowRoot { id: String },
     #[serde(rename = "WebDriver:GetTimeouts")]
     GetTimeouts,
     #[serde(rename = "WebDriver:GetTitle")]
