@@ -14,3 +14,8 @@ user_pref("browser.sessionstore.resume_from_crash", false);
 // is suppressed, synthetic click events and co. go to the old page, which can
 // be confusing for tests that send click events before the first paint.
 user_pref("nglayout.initialpaint.unsuppress_with_no_background", true);
+
+// Explicitly turn off fission so we don't accidentally use the wrong default
+// value. This can be removed once harnesses and tasks assume fission by
+// default.
+user_pref("fission.autostart", false);
