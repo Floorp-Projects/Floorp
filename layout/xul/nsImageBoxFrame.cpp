@@ -442,7 +442,7 @@ ImgDrawResult nsImageBoxFrame::CreateWebRenderCommands(
   wr::LayoutRect fill = wr::ToLayoutRect(fillRect);
 
   Maybe<wr::ImageKey> key = aManager->CommandBuilder().CreateImageProviderKey(
-      aItem, provider, aResources);
+      aItem, provider, result, aResources);
   if (key.isNothing()) {
     return result;
   }

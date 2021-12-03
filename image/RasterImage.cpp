@@ -631,7 +631,13 @@ RasterImage::GetImageProvider(WindowRenderer* aRenderer,
   }
 
   result.Surface().TakeProvider(aProvider);
-  return ImgDrawResult::SUCCESS;
+  switch (result.Type()) {
+    case MatchType::SUBSTITUTE_BECAUSE_NOT_FOUND:
+    case MatchType::SUBSTITUTE_BECAUSE_PENDING:
+      return ImgDrawResult::WRONG_SIZE;
+    default:
+      return ImgDrawResult::SUCCESS;
+  }
 }
 
 size_t RasterImage::SizeOfSourceWithComputedFallback(
