@@ -20,8 +20,8 @@ class nsRetrievalContextX11 : public nsRetrievalContext {
   virtual const char* GetClipboardText(int32_t aWhichClipboard) override;
   virtual void ReleaseClipboardData(const char* aClipboardData) override;
 
-  virtual GdkAtom* GetTargetsImpl(int32_t aWhichClipboard,
-                                  int* aTargetNums) override;
+  virtual GdkAtom* GetTargets(int32_t aWhichClipboard,
+                              int* aTargetNums) override;
 
   virtual bool HasSelectionSupport(void) override;
 
