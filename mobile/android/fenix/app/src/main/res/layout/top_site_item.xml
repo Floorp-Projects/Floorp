@@ -36,7 +36,7 @@
         android:gravity="center"
         android:textAlignment="center"
         android:singleLine="true"
-        android:textColor="@color/top_site_title_text"
+        android:textColor="@color/fx_mobile_text_color_primary"
         android:textSize="12sp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"

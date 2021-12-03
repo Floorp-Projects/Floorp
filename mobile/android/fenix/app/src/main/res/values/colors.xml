@@ -42,7 +42,7 @@
 
     <!-- Text -->
     <!-- Primary text -->
-    <color name="fx_mobile_text_color_primary" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
+    <color name="fx_mobile_text_color_primary">@color/photonDarkGrey90</color>
     <!-- Secondary text -->
     <color name="fx_mobile_text_color_secondary" tools:ignore="UnusedResources">@color/photonDarkGrey05</color>
     <!-- Disabled text -->
@@ -240,7 +240,6 @@
     <color name="bookmark_favicon_background">#DFDFE3</color>
 
     <!-- Top site colors -->
-    <color name="top_site_title_text">@color/photonDarkGrey90</color>
     <color name="top_site_pager_dot">@color/photonLightGrey30</color>
     <color name="top_site_pager_dot_selected">@color/photonLightGrey50</color>
     <color name="top_site_pin_icon_color">@color/photonDarkGrey80</color>
