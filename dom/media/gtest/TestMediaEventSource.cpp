@@ -19,7 +19,8 @@ using namespace mozilla;
 TEST(MediaEventSource, SingleListener)
 {
   RefPtr<TaskQueue> queue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestMediaEventSource SingleListener");
 
   MediaEventProducer<int> source;
   int i = 0;
@@ -43,7 +44,8 @@ TEST(MediaEventSource, SingleListener)
 TEST(MediaEventSource, MultiListener)
 {
   RefPtr<TaskQueue> queue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestMediaEventSource MultiListener");
 
   MediaEventProducer<int> source;
   int i = 0;
@@ -74,7 +76,8 @@ TEST(MediaEventSource, MultiListener)
 TEST(MediaEventSource, DisconnectAfterNotification)
 {
   RefPtr<TaskQueue> queue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestMediaEventSource DisconnectAfterNotification");
 
   MediaEventProducer<int> source;
   int i = 0;
@@ -101,7 +104,8 @@ TEST(MediaEventSource, DisconnectAfterNotification)
 TEST(MediaEventSource, DisconnectBeforeNotification)
 {
   RefPtr<TaskQueue> queue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestMediaEventSource DisconnectBeforeNotification");
 
   MediaEventProducer<int> source;
   int i = 0;
@@ -133,7 +137,8 @@ TEST(MediaEventSource, DisconnectBeforeNotification)
 TEST(MediaEventSource, DisconnectAndConnect)
 {
   RefPtr<TaskQueue> queue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestMediaEventSource DisconnectAndConnect");
 
   MediaEventProducerExc<int> source;
   MediaEventListener listener = source.Connect(queue, []() {});
@@ -148,7 +153,8 @@ TEST(MediaEventSource, DisconnectAndConnect)
 TEST(MediaEventSource, VoidEventType)
 {
   RefPtr<TaskQueue> queue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestMediaEventSource VoidEventType");
 
   MediaEventProducer<void> source;
   int i = 0;
@@ -185,7 +191,8 @@ TEST(MediaEventSource, VoidEventType)
 TEST(MediaEventSource, ListenerType1)
 {
   RefPtr<TaskQueue> queue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestMediaEventSource ListenerType1");
 
   MediaEventProducer<int> source;
   int i = 0;
@@ -213,7 +220,8 @@ TEST(MediaEventSource, ListenerType1)
 TEST(MediaEventSource, ListenerType2)
 {
   RefPtr<TaskQueue> queue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestMediaEventSource ListenerType2");
 
   MediaEventProducer<int> source;
 
@@ -263,7 +271,8 @@ struct SomeEvent {
 TEST(MediaEventSource, CopyEvent1)
 {
   RefPtr<TaskQueue> queue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestMediaEventSource CopyEvent1");
 
   MediaEventProducer<SomeEvent> source;
   int i = 0;
@@ -290,7 +299,8 @@ TEST(MediaEventSource, CopyEvent1)
 TEST(MediaEventSource, CopyEvent2)
 {
   RefPtr<TaskQueue> queue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestMediaEventSource CopyEvent2");
 
   MediaEventProducer<SomeEvent> source;
   int i = 0;
@@ -319,7 +329,8 @@ TEST(MediaEventSource, CopyEvent2)
 TEST(MediaEventSource, MoveOnly)
 {
   RefPtr<TaskQueue> queue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestMediaEventSource MoveOnly");
 
   MediaEventProducerExc<UniquePtr<int>> source;
 
@@ -353,7 +364,8 @@ struct RefCounter {
 TEST(MediaEventSource, NoMove)
 {
   RefPtr<TaskQueue> queue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestMediaEventSource NoMove");
 
   MediaEventProducer<RefPtr<RefCounter>> source;
 
@@ -378,7 +390,8 @@ TEST(MediaEventSource, NoMove)
 TEST(MediaEventSource, MoveLambda)
 {
   RefPtr<TaskQueue> queue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestMediaEventSource MoveLambda");
 
   MediaEventProducer<void> source;
 
@@ -430,7 +443,8 @@ class ClassForDestroyCheck final : private DestroyChecker<bool> {
 TEST(MediaEventSource, ResetFuncReferenceAfterDisconnect)
 {
   const RefPtr<TaskQueue> queue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestMediaEventSource ResetFuncReferenceAfterDisconnect");
   MediaEventProducer<void> source;
 
   // Using a class that supports refcounting to check the object destruction.
@@ -462,7 +476,9 @@ class TestTaskQueue : public TaskQueue, private DestroyChecker<Atomic<bool>> {
  public:
   TestTaskQueue(already_AddRefed<nsIEventTarget> aTarget,
                 Atomic<bool>* aIsDestroyed)
-      : TaskQueue(std::move(aTarget)), DestroyChecker(aIsDestroyed) {}
+      : TaskQueue(std::move(aTarget),
+                  "TestMediaEventSource ResetTargetAfterDisconnect"),
+        DestroyChecker(aIsDestroyed) {}
 };
 
 TEST(MediaEventSource, ResetTargetAfterDisconnect)

@@ -28,7 +28,8 @@ struct Foo {
 TEST(WatchManager, Shutdown)
 {
   RefPtr<TaskQueue> queue =
-      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR));
+      new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                    "TestWatchManager Shutdown");
 
   RefPtr<Foo> p = new Foo;
   WatchManager<Foo> manager(p, queue);

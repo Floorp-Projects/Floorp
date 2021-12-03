@@ -192,7 +192,7 @@ nsCertOverrideService::nsCertOverrideService()
       do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
   MOZ_ASSERT(target);
 
-  mWriterTaskQueue = new TaskQueue(target.forget());
+  mWriterTaskQueue = new TaskQueue(target.forget(), "CertOverrideService");
 }
 
 nsCertOverrideService::~nsCertOverrideService() = default;

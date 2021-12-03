@@ -41,8 +41,8 @@ class MP4DemuxerBinding {
   explicit MP4DemuxerBinding(const char* aFileName = "dash_dashinit.mp4")
       : resource(new MockMediaResource(aFileName)),
         mDemuxer(new MP4Demuxer(resource)),
-        mTaskQueue(
-            new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR))),
+        mTaskQueue(new TaskQueue(
+            GetMediaThreadPool(MediaThreadType::SUPERVISOR), "TestMP4Demuxer")),
         mIndex(0) {
     EXPECT_EQ(NS_OK, resource->Open());
   }

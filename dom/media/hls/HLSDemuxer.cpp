@@ -128,6 +128,7 @@ class HLSDemuxer::HLSDemuxerCallbacksSupport
 
 HLSDemuxer::HLSDemuxer(int aPlayerId)
     : mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::SUPERVISOR),
+                               "HLSDemuxer",
                                /* aSupportsTailDispatch = */ false)) {
   MOZ_ASSERT(NS_IsMainThread());
   HLSDemuxerCallbacksSupport::Init();

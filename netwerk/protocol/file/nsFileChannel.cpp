@@ -428,7 +428,7 @@ nsresult nsFileChannel::ListenerBlockingPromise(BlockingPromise** aPromise) {
     return FixupContentLength(true);
   }
 
-  RefPtr<TaskQueue> taskQueue = new TaskQueue(sts.forget());
+  RefPtr<TaskQueue> taskQueue = new TaskQueue(sts.forget(), "FileChannel");
   RefPtr<nsFileChannel> self = this;
   RefPtr<BlockingPromise> promise =
       mozilla::InvokeAsync(taskQueue, __func__, [self{std::move(self)}]() {
