@@ -60,8 +60,8 @@ inline uint8_t GetGeneralCategory(uint32_t aCh) {
   return sICUtoHBcategory[intl::UnicodeProperties::CharType(aCh)];
 }
 
-inline nsCharType GetBidiCat(uint32_t aCh) {
-  return nsCharType(u_charDirection(aCh));
+inline int8_t GetNumericValue(uint32_t aCh) {
+  return intl::UnicodeProperties::GetNumericValue(aCh);
 }
 
 inline uint8_t GetLineBreakClass(uint32_t aCh) {

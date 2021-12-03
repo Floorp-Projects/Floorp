@@ -4,6 +4,8 @@
 #ifndef intl_components_UnicodeProperties_h_
 #define intl_components_UnicodeProperties_h_
 
+#include "mozilla/intl/BidiClass.h"
+
 #include "unicode/uchar.h"
 #include "unicode/uscript.h"
 
@@ -14,6 +16,13 @@ namespace mozilla::intl {
  */
 class UnicodeProperties final {
  public:
+  /**
+   * Return the BidiClass for the character.
+   */
+  static inline BidiClass GetBidiClass(uint32_t aCh) {
+    return BidiClass(u_charDirection(aCh));
+  }
+
   /**
    * Maps the specified character to a "mirror-image" character.
    */
