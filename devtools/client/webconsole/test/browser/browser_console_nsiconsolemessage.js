@@ -5,7 +5,7 @@
 
 "use strict";
 
-const TEST_URI = `data:text/html;charset=utf8,
+const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html>
 <title>browser_console_nsiconsolemessage.js</title>
 <p>hello world<p>
 nsIConsoleMessages ftw!`;

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const TEST_URI = `data:text/html;charset=utf-8,Test that eager evaluation can't log warnings in the output`;
+const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>Test that eager evaluation can't log warnings in the output`;
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 

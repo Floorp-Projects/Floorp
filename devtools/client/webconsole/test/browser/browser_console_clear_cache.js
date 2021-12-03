@@ -6,7 +6,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,Test browser console clear cache";
+const TEST_URI =
+  "data:text/html;charset=utf8,<!DOCTYPE html>Test browser console clear cache";
 
 add_task(async function() {
   await pushPref("devtools.browserconsole.contentMessages", true);

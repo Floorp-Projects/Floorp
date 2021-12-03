@@ -5,7 +5,7 @@
 
 // Check evaluating shadowed getters in the console.
 const TEST_URI =
-  "data:text/html;charset=utf8,<h1>Object Inspector on Getters</h1>";
+  "data:text/html;charset=utf8,<!DOCTYPE html><h1>Object Inspector on Getters</h1>";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

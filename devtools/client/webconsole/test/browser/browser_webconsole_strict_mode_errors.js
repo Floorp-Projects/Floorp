@@ -7,7 +7,7 @@
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(
-    "data:text/html;charset=utf8,empty page"
+    "data:text/html;charset=utf8,<!DOCTYPE html>empty page"
   );
 
   await loadScriptURI("'use strict';var arguments;");
@@ -40,6 +40,9 @@ function loadScriptURI(script) {
   if (!Services.appinfo.browserTabsRemoteAutostart) {
     expectUncaughtException();
   }
-  const uri = "data:text/html;charset=utf8,<script>" + script + "</script>";
+  const uri =
+    "data:text/html;charset=utf8,<!DOCTYPE html><script>" +
+    script +
+    "</script>";
   return navigateTo(uri);
 }

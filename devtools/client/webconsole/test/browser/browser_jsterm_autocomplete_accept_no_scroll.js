@@ -5,7 +5,7 @@
 
 // Test that the accepting an autocompletion does not scroll the input.
 
-const TEST_URI = `data:text/html;charset=utf-8,
+const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
   <script>
     /* Create a prototype-less object so popup does not contain native
      * Object prototype properties.

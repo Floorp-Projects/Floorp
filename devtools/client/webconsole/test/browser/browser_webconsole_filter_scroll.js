@@ -3,7 +3,7 @@
 
 "use strict";
 
-const TEST_URI = `data:text/html;charset=utf-8,
+const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
   <p>Web Console test for scroll when filtering.</p>
   <script>
   for (let i = 0; i < 100; i++) {

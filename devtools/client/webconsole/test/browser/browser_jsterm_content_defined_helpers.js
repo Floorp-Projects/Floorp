@@ -24,7 +24,7 @@ const HELPERS = [
 ];
 
 // The page script sets a global function for each known helper (except print).
-const TEST_URI = `data:text/html,<meta charset=utf8>
+const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>
   <script>
     const helpers = ${JSON.stringify(HELPERS)};
     for (const helper of helpers) {

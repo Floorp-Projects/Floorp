@@ -6,7 +6,7 @@
 "use strict";
 
 const MESSAGE = "Error with longString stack";
-const TEST_URI = `data:text/html;charset=utf8,<script>
+const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html><script>
   const x = new Error("longString stack");
   x.stack = "s@http://exampl.com:1:1\\n".repeat(1000);
   console.log("${MESSAGE}", x);

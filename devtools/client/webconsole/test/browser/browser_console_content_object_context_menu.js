@@ -6,7 +6,7 @@
 
 "use strict";
 
-const TEST_URI = `data:text/html,<meta charset=utf8>console API calls<script>
+const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>console API calls<script>
   console.log({
     contentObject: "YAY!",
     deep: ["hello", "world"]

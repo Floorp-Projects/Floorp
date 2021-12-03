@@ -6,7 +6,7 @@
 // See Bugs 594497 and 619598.
 
 const TEST_URI =
-  "data:text/html;charset=utf-8,Web Console test for " +
+  "data:text/html;charset=utf-8,<!DOCTYPE html>Web Console test for " +
   "bug 594497 and bug 619598";
 
 const TEST_VALUES = [

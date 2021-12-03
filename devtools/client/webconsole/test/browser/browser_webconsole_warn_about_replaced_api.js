@@ -4,9 +4,9 @@
 "use strict";
 
 const TEST_URI_REPLACED =
-  "data:text/html;charset=utf8,<script>console = {log: () => ''}</script>";
+  "data:text/html;charset=utf8,<!DOCTYPE html><script>console = {log: () => ''}</script>";
 const TEST_URI_NOT_REPLACED =
-  "data:text/html;charset=utf8,<script>console.log('foo')</script>";
+  "data:text/html;charset=utf8,<!DOCTYPE html><script>console.log('foo')</script>";
 
 add_task(async function() {
   await pushPref("devtools.webconsole.timestampMessages", true);

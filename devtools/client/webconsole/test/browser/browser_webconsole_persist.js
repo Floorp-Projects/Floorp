@@ -70,9 +70,9 @@ add_task(async function() {
 add_task(async function() {
   info("Testing that messages disappear on bfcache navigations");
   const firstLocation =
-    "data:text/html,<script>console.log('first document load');window.onpageshow=()=>console.log('first document show');</script>";
+    "data:text/html,<!DOCTYPE html><script>console.log('first document load');window.onpageshow=()=>console.log('first document show');</script>";
   const secondLocation =
-    "data:text/html,<script>console.log('second document load');window.onpageshow=()=>console.log('second document show');</script>";
+    "data:text/html,<!DOCTYPE html><script>console.log('second document load');window.onpageshow=()=>console.log('second document show');</script>";
   const hud = await openNewTabAndConsole(firstLocation);
 
   info("Wait for first page messages");

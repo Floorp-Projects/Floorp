@@ -8,7 +8,7 @@
 
 const { PrefObserver } = require("devtools/client/shared/prefs");
 
-const TEST_URI = `data:text/html;charset=utf-8,
+const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
   Web Console test for bug 1307871 - preference for toggling timestamps in messages`;
 const PREF_MESSAGE_TIMESTAMP = "devtools.webconsole.timestampMessages";
 

@@ -4,7 +4,7 @@
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf8,Test that 'Resend Request' context menu " +
+  "data:text/html;charset=utf8,<!DOCTYPE html>Test that 'Resend Request' context menu " +
   "item resends the selected request and select it in netmonitor panel.";
 
 const TEST_FILE = "test-network-request.html";

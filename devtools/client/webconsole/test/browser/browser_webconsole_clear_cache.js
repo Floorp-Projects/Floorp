@@ -7,7 +7,7 @@
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf8,Test clear cache<script>abcdef</script>";
+  "data:text/html;charset=utf8,<!DOCTYPE html>Test clear cache<script>abcdef</script>";
 const EXPECTED_REPORT = "ReferenceError: abcdef is not defined";
 
 add_task(async function() {

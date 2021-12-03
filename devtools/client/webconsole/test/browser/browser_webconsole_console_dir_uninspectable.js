@@ -7,7 +7,7 @@
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf8,test console.dir on uninspectable object";
+  "data:text/html;charset=utf8,<!DOCTYPE html>test console.dir on uninspectable object";
 const FIRST_LOG_MESSAGE = "fooBug773466a";
 const SECOND_LOG_MESSAGE = "fooBug773466b";
 

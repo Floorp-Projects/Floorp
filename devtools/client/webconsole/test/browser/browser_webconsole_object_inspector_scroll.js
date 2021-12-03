@@ -4,7 +4,8 @@
 "use strict";
 
 // Check that expanding an objectInspector node doesn't alter the output scroll position.
-const TEST_URI = "data:text/html;charset=utf8,test Object Inspector";
+const TEST_URI =
+  "data:text/html;charset=utf8,<!DOCTYPE html>test Object Inspector";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

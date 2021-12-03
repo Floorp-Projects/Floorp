@@ -3,7 +3,7 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html,Test evaluating document";
+const TEST_URI = "data:text/html,<!DOCTYPE html>Test evaluating document";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
