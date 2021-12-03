@@ -2289,29 +2289,39 @@ extern JS_PUBLIC_API bool JS_IsConstructor(JSFunction* fun) {
 
 void JS::TransitiveCompileOptions::copyPODTransitiveOptions(
     const TransitiveCompileOptions& rhs) {
+  // filename_, introducerFilename_, sourceMapURL_ should be handled in caller.
+
   mutedErrors_ = rhs.mutedErrors_;
   forceFullParse_ = rhs.forceFullParse_;
   forceStrictMode_ = rhs.forceStrictMode_;
-  skipFilenameValidation_ = rhs.skipFilenameValidation_;
   sourcePragmas_ = rhs.sourcePragmas_;
+  skipFilenameValidation_ = rhs.skipFilenameValidation_;
+  hideScriptFromDebugger_ = rhs.hideScriptFromDebugger_;
+  deferDebugMetadata_ = rhs.deferDebugMetadata_;
+
   selfHostingMode = rhs.selfHostingMode;
   asmJSOption = rhs.asmJSOption;
   throwOnAsmJSValidationFailureOption = rhs.throwOnAsmJSValidationFailureOption;
   forceAsync = rhs.forceAsync;
   discardSource = rhs.discardSource;
   sourceIsLazy = rhs.sourceIsLazy;
+  allowHTMLComments = rhs.allowHTMLComments;
+  nonSyntacticScope = rhs.nonSyntacticScope;
+
+  privateClassFields = rhs.privateClassFields;
+  privateClassMethods = rhs.privateClassMethods;
+  topLevelAwait = rhs.topLevelAwait;
+  classStaticBlocks = rhs.classStaticBlocks;
+  importAssertions = rhs.importAssertions;
+  useFdlibmForSinCosTan = rhs.useFdlibmForSinCosTan;
+
+  borrowBuffer = rhs.borrowBuffer;
+  usePinnedBytecode = rhs.usePinnedBytecode;
+
   introductionType = rhs.introductionType;
   introductionLineno = rhs.introductionLineno;
   introductionOffset = rhs.introductionOffset;
   hasIntroductionInfo = rhs.hasIntroductionInfo;
-  hideScriptFromDebugger_ = rhs.hideScriptFromDebugger_;
-  deferDebugMetadata_ = rhs.deferDebugMetadata_;
-  nonSyntacticScope = rhs.nonSyntacticScope;
-  privateClassFields = rhs.privateClassFields;
-  privateClassMethods = rhs.privateClassMethods;
-  classStaticBlocks = rhs.classStaticBlocks;
-  importAssertions = rhs.importAssertions;
-  useFdlibmForSinCosTan = rhs.useFdlibmForSinCosTan;
 };
 
 void JS::ReadOnlyCompileOptions::copyPODNonTransitiveOptions(
