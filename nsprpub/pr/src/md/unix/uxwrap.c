@@ -187,10 +187,10 @@ int select(int width, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *tv)
 
         needToLockXAgain = 0;
         if (rd && (_pr_xt_hack_fd != -1)
-            && FD_ISSET(_pr_xt_hack_fd, rd) && PR_XIsLocked()
+            && FD_ISSET(_pr_xt_hack_fd, rd) && _PR_XIsLocked()
             && (!_pr_xt_hack_okayToReleaseXLock
                 || _pr_xt_hack_okayToReleaseXLock())) {
-            PR_XUnlock();
+            _PR_XUnlock();
             needToLockXAgain = 1;
         }
 
@@ -198,7 +198,7 @@ int select(int width, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *tv)
         retVal = _PR_WaitForMultipleFDs(unixpds, pdcnt, timeout);
 
         if (needToLockXAgain) {
-            PR_XLock();
+            _PR_XLock();
         }
     }
 
