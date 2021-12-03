@@ -28,7 +28,7 @@ const DEFAULT_IDLE_TIMEOUT: Duration = Duration::from_secs(30);
 const MAX_QUEUED_DATAGRAMS_DEFAULT: usize = 10;
 
 /// What to do with preferred addresses.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum PreferredAddressConfig {
     /// Disabled, whether for client or server.
     Disabled,
@@ -41,7 +41,7 @@ pub enum PreferredAddressConfig {
 /// ConnectionParameters use for setting intitial value for QUIC parameters.
 /// This collects configuration like initial limits, protocol version, and
 /// congestion control algorithm.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct ConnectionParameters {
     quic_version: QuicVersion,
     cc_algorithm: CongestionControlAlgorithm,

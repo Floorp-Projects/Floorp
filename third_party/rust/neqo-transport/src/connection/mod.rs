@@ -2698,7 +2698,7 @@ impl Connection {
     /// # Errors
     /// `ConnectionState` if the connecton stat does not allow to create streams.
     /// `StreamLimitError` if we are limiied by server's stream concurence.
-    pub fn stream_create(&mut self, st: StreamType) -> Res<u64> {
+    pub fn stream_create(&mut self, st: StreamType) -> Res<StreamId> {
         // Can't make streams while closing, otherwise rely on the stream limits.
         match self.state {
             State::Closing { .. } | State::Draining { .. } | State::Closed { .. } => {
@@ -2721,12 +2721,12 @@ impl Connection {
     /// `InvalidStreamId` the stream does not exist.
     pub fn stream_priority(
         &mut self,
-        stream_id: u64,
+        stream_id: StreamId,
         transmission: TransmissionPriority,
         retransmission: RetransmissionPriority,
     ) -> Res<()> {
         self.streams
-            .get_send_stream_mut(stream_id.into())?
+            .get_send_stream_mut(stream_id)?
             .set_priority(transmission, retransmission);
         Ok(())
     }
@@ -2738,10 +2738,8 @@ impl Connection {
     /// `InvalidStreamId` the stream does not exist,
     /// `InvalidInput` if length of `data` is zero,
     /// `FinalSizeError` if the stream has already been closed.
-    pub fn stream_send(&mut self, stream_id: u64, data: &[u8]) -> Res<usize> {
-        self.streams
-            .get_send_stream_mut(stream_id.into())?
-            .send(data)
+    pub fn stream_send(&mut self, stream_id: StreamId, data: &[u8]) -> Res<usize> {
+        self.streams.get_send_stream_mut(stream_id)?.send(data)
     }
 
     /// Send all data or nothing on a stream. May cause DATA_BLOCKED or
@@ -2751,10 +2749,10 @@ impl Connection {
     /// `InvalidStreamId` the stream does not exist,
     /// `InvalidInput` if length of `data` is zero,
     /// `FinalSizeError` if the stream has already been closed.
-    pub fn stream_send_atomic(&mut self, stream_id: u64, data: &[u8]) -> Res<bool> {
+    pub fn stream_send_atomic(&mut self, stream_id: StreamId, data: &[u8]) -> Res<bool> {
         let val = self
             .streams
-            .get_send_stream_mut(stream_id.into())?
+            .get_send_stream_mut(stream_id)?
             .send_atomic(data);
         if let Ok(val) = val {
             debug_assert!(
@@ -2770,21 +2768,19 @@ impl Connection {
     /// Bytes that stream_send() is guaranteed to accept for sending.
     /// i.e. that will not be blocked by flow credits or send buffer max
     /// capacity.
-    pub fn stream_avail_send_space(&self, stream_id: u64) -> Res<usize> {
-        Ok(self.streams.get_send_stream(stream_id.into())?.avail())
+    pub fn stream_avail_send_space(&self, stream_id: StreamId) -> Res<usize> {
+        Ok(self.streams.get_send_stream(stream_id)?.avail())
     }
 
     /// Close the stream. Enqueued data will be sent.
-    pub fn stream_close_send(&mut self, stream_id: u64) -> Res<()> {
-        self.streams.get_send_stream_mut(stream_id.into())?.close();
+    pub fn stream_close_send(&mut self, stream_id: StreamId) -> Res<()> {
+        self.streams.get_send_stream_mut(stream_id)?.close();
         Ok(())
     }
 
     /// Abandon transmission of in-flight and future stream data.
-    pub fn stream_reset_send(&mut self, stream_id: u64, err: AppError) -> Res<()> {
-        self.streams
-            .get_send_stream_mut(stream_id.into())?
-            .reset(err);
+    pub fn stream_reset_send(&mut self, stream_id: StreamId, err: AppError) -> Res<()> {
+        self.streams.get_send_stream_mut(stream_id)?.reset(err);
         Ok(())
     }
 
@@ -2793,16 +2789,16 @@ impl Connection {
     /// # Errors
     /// `InvalidStreamId` if the stream does not exist.
     /// `NoMoreData` if data and fin bit were previously read by the application.
-    pub fn stream_recv(&mut self, stream_id: u64, data: &mut [u8]) -> Res<(usize, bool)> {
-        let stream = self.streams.get_recv_stream_mut(stream_id.into())?;
+    pub fn stream_recv(&mut self, stream_id: StreamId, data: &mut [u8]) -> Res<(usize, bool)> {
+        let stream = self.streams.get_recv_stream_mut(stream_id)?;
 
         let rb = stream.read(data)?;
         Ok((rb.0 as usize, rb.1))
     }
 
     /// Application is no longer interested in this stream.
-    pub fn stream_stop_sending(&mut self, stream_id: u64, err: AppError) -> Res<()> {
-        let stream = self.streams.get_recv_stream_mut(stream_id.into())?;
+    pub fn stream_stop_sending(&mut self, stream_id: StreamId, err: AppError) -> Res<()> {
+        let stream = self.streams.get_recv_stream_mut(stream_id)?;
 
         stream.stop_sending(err);
         Ok(())
@@ -2812,8 +2808,8 @@ impl Connection {
     /// # Errors
     /// Returns `InvalidStreamId` if a stream does not exist or the receiving
     /// side is closed.
-    pub fn set_stream_max_data(&mut self, stream_id: u64, max_data: u64) -> Res<()> {
-        let stream = self.streams.get_recv_stream_mut(stream_id.into())?;
+    pub fn set_stream_max_data(&mut self, stream_id: StreamId, max_data: u64) -> Res<()> {
+        let stream = self.streams.get_recv_stream_mut(stream_id)?;
 
         stream.set_stream_max_data(max_data);
         Ok(())
@@ -2826,8 +2822,8 @@ impl Connection {
     /// # Errors
     /// Returns `InvalidStreamId` if a stream does not exist or the receiving
     /// side is closed.
-    pub fn stream_keep_alive(&mut self, stream_id: u64, keep: bool) -> Res<()> {
-        self.streams.keep_alive(stream_id.into(), keep)
+    pub fn stream_keep_alive(&mut self, stream_id: StreamId, keep: bool) -> Res<()> {
+        self.streams.keep_alive(stream_id, keep)
     }
 
     pub fn remote_datagram_size(&self) -> u64 {

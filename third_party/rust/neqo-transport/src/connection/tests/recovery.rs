@@ -344,8 +344,9 @@ fn pto_handshake_frames() {
     now += Duration::from_millis(10);
     client.authenticated(AuthenticationStatus::Ok, now);
 
-    assert_eq!(client.stream_create(StreamType::UniDi).unwrap(), 2);
-    assert_eq!(client.stream_send(2, b"zero").unwrap(), 4);
+    let stream = client.stream_create(StreamType::UniDi).unwrap();
+    assert_eq!(stream, 2);
+    assert_eq!(client.stream_send(stream, b"zero").unwrap(), 4);
     qdebug!("---- client: SH..FIN -> FIN and 1RTT packet");
     let pkt1 = client.process(None, now).dgram();
     assert!(pkt1.is_some());

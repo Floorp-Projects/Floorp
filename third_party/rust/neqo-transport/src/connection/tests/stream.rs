@@ -15,7 +15,7 @@ use crate::send_stream::{SendStreamState, SEND_BUFFER_SIZE};
 use crate::tparams::{self, TransportParameter};
 use crate::tracking::DEFAULT_ACK_PACKET_TOLERANCE;
 use crate::{Connection, ConnectionError, ConnectionParameters};
-use crate::{Error, StreamId, StreamType};
+use crate::{Error, StreamType};
 
 use neqo_common::{event::Provider, qdebug};
 use std::cmp::max;
@@ -101,16 +101,14 @@ fn transfer() {
         .next()
         .expect("should have a second new stream event");
     assert!(stream_ids.next().is_none());
-    let (received1, fin1) = server.stream_recv(first_stream.as_u64(), &mut buf).unwrap();
+    let (received1, fin1) = server.stream_recv(first_stream, &mut buf).unwrap();
     assert_eq!(received1, 4000);
     assert!(!fin1);
-    let (received2, fin2) = server.stream_recv(first_stream.as_u64(), &mut buf).unwrap();
+    let (received2, fin2) = server.stream_recv(first_stream, &mut buf).unwrap();
     assert_eq!(received2, 140);
     assert!(!fin2);
 
-    let (received3, fin3) = server
-        .stream_recv(second_stream.as_u64(), &mut buf)
-        .unwrap();
+    let (received3, fin3) = server.stream_recv(second_stream, &mut buf).unwrap();
     assert_eq!(received3, 60);
     assert!(fin3);
 }
@@ -228,13 +226,13 @@ fn max_data() {
     assert_eq!(client.stream_send(stream_id, b"hello").unwrap(), 0);
     client
         .streams
-        .get_send_stream_mut(stream_id.into())
+        .get_send_stream_mut(stream_id)
         .unwrap()
         .mark_as_sent(0, 4096, false);
     assert_eq!(client.events().count(), 0);
     client
         .streams
-        .get_send_stream_mut(stream_id.into())
+        .get_send_stream_mut(stream_id)
         .unwrap()
         .mark_as_acked(0, 4096, false);
     assert_eq!(client.events().count(), 0);
@@ -253,7 +251,7 @@ fn max_data() {
     // Increase max stream data. Avail space now limited by tx buffer
     client
         .streams
-        .get_send_stream_mut(stream_id.into())
+        .get_send_stream_mut(stream_id)
         .unwrap()
         .set_max_stream_data(100_000_000);
     assert_eq!(
@@ -506,10 +504,7 @@ fn stream_data_blocked_generates_max_stream_data() {
     assert!(!end);
 
     // Now send `STREAM_DATA_BLOCKED`.
-    let internal_stream = server
-        .streams
-        .get_send_stream_mut(StreamId::from(stream_id))
-        .unwrap();
+    let internal_stream = server.streams.get_send_stream_mut(stream_id).unwrap();
     if let SendStreamState::Send { fc, .. } = internal_stream.state() {
         fc.blocked();
     } else {
