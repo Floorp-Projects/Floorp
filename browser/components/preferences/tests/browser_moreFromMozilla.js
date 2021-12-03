@@ -88,3 +88,68 @@ add_task(async function test_aboutpreferences_event_telemetry() {
   TelemetryTestUtils.assertNumberOfEvents(2);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
+
+add_task(async function test_aboutpreferences_simple_template() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.preferences.moreFromMozilla", true],
+      ["browser.preferences.moreFromMozilla.template", "simple"],
+    ],
+  });
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+  let moreFromMozillaCategory = doc.getElementById(
+    "category-more-from-mozilla"
+  );
+
+  let clickedPromise = ContentTaskUtils.waitForEvent(
+    moreFromMozillaCategory,
+    "click"
+  );
+  moreFromMozillaCategory.click();
+  await clickedPromise;
+
+  let productCards = doc.querySelectorAll("vbox.simple");
+  Assert.ok(productCards, "The product cards from simple template found");
+  Assert.equal(productCards.length, 3, "3 product cards displayed");
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
+add_task(async function test_aboutpreferences_advanced_template() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.preferences.moreFromMozilla", true],
+      ["browser.preferences.moreFromMozilla.template", "advanced"],
+    ],
+  });
+  await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+  let moreFromMozillaCategory = doc.getElementById(
+    "category-more-from-mozilla"
+  );
+
+  let clickedPromise = ContentTaskUtils.waitForEvent(
+    moreFromMozillaCategory,
+    "click"
+  );
+  moreFromMozillaCategory.click();
+  await clickedPromise;
+
+  let productCards = doc.querySelectorAll("vbox.advanced");
+  Assert.ok(productCards, "The product cards from advanced template found");
+  Assert.equal(productCards.length, 3, "3 product cards displayed");
+  Assert.deepEqual(
+    Array.from(productCards).map(
+      node => node.querySelector(".product-img")?.id
+    ),
+    ["firefox-mobile-image", "mozilla-vpn-image", "mozilla-rally-image"],
+    "Advanced template product marketing images"
+  );
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
