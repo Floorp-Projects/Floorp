@@ -60,7 +60,7 @@ macro_rules! using_opcode_database {
                 (GlobalThis, global_this, NULL, 1, 0, 1, JOF_BYTE),
                 (NonSyntacticGlobalThis, non_syntactic_global_this, NULL, 1, 0, 1, JOF_BYTE),
                 (NewTarget, new_target, NULL, 1, 0, 1, JOF_BYTE),
-                (DynamicImport, dynamic_import, NULL, 1, 1, 1, JOF_BYTE),
+                (DynamicImport, dynamic_import, NULL, 1, 2, 1, JOF_BYTE),
                 (ImportMeta, import_meta, NULL, 1, 0, 1, JOF_BYTE),
                 (NewInit, new_init, NULL, 1, 0, 1, JOF_BYTE|JOF_IC),
                 (NewObject, new_object, NULL, 5, 0, 1, JOF_SHAPE|JOF_IC),
