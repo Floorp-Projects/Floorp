@@ -4714,6 +4714,14 @@ AMTelemetry = {
       extra.error = AddonManager.errorToString(install.error);
     }
 
+    if (
+      eventMethod === "install" &&
+      Services.prefs.getBoolPref("extensions.install_origins.enabled", true)
+    ) {
+      // This is converted to "1" / "0".
+      extra.install_origins = Array.isArray(install.addon?.installOrigins);
+    }
+
     if (eventMethod === "update") {
       // For "update" telemetry events, also include an extra var which determine
       // if the update has been requested by the user.

@@ -125,6 +125,29 @@ server.registerFile(
   })
 );
 
+function testInstallEvent(expectTelemetry) {
+  const snapshot = Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+    true
+  );
+
+  ok(
+    snapshot.parent && !!snapshot.parent.length,
+    "Got parent telemetry events in the snapshot"
+  );
+
+  let events = snapshot.parent
+    .filter(
+      ([timestamp, category, method, object, value, extra]) =>
+        category === "addonsManager" &&
+        method == "install" &&
+        extra.step == expectTelemetry.step
+    )
+    .map(event => event[5]);
+  equal(events.length, 1, "one event for install completion");
+  Assert.deepEqual(events[0], expectTelemetry, "telemetry matches");
+}
+
 function promiseCompleteWebInstall(
   install,
   triggeringPrincipal,
@@ -183,12 +206,16 @@ function promiseCompleteWebInstall(
 }
 
 async function testAddonInstall(test) {
-  let { name, xpiUrl, installPrincipal, expectState } = test;
+  let { name, xpiUrl, installPrincipal, expectState, expectTelemetry } = test;
   let expectInstall = expectState == AddonManager.STATE_INSTALLED;
   let install = await AddonManager.getInstallForURL(xpiUrl, {
     triggeringPrincipal: installPrincipal,
   });
   await promiseCompleteWebInstall(install, installPrincipal, expectInstall);
+
+  // Test origins telemetry
+  testInstallEvent(expectTelemetry);
+
   if (expectInstall) {
     equal(
       install.state,
@@ -225,42 +252,80 @@ const TESTS = [
     xpiUrl: "http://example.com/addons/origins.xpi",
     installPrincipal: PRINCIPAL_COM,
     expectState: AddonManager.STATE_INSTALLED,
+    expectTelemetry: {
+      step: "completed",
+      addon_id: "origins@example.com",
+      install_origins: "1",
+    },
   },
   {
     name: "Install MV2 without install_origins",
     xpiUrl: "http://example.com/addons/no_origins.xpi",
     installPrincipal: PRINCIPAL_COM,
     expectState: AddonManager.STATE_INSTALLED,
+    expectTelemetry: {
+      step: "completed",
+      addon_id: "no_origins@example.com",
+      install_origins: "0",
+    },
   },
   {
     name: "Install valid xpi location from invalid website",
     xpiUrl: "http://example.com/addons/origins.xpi",
     installPrincipal: PRINCIPAL_ORG,
     expectState: AddonManager.STATE_INSTALL_FAILED,
+    expectTelemetry: {
+      step: "failed",
+      addon_id: "origins@example.com",
+      error: "ERROR_INVALID_DOMAIN",
+      install_origins: "1",
+    },
   },
   {
     name: "Install invalid xpi location from valid website",
     xpiUrl: "http://example.org/addons/origins.xpi",
     installPrincipal: PRINCIPAL_COM,
     expectState: AddonManager.STATE_INSTALL_FAILED,
+    expectTelemetry: {
+      step: "failed",
+      addon_id: "origins@example.com",
+      error: "ERROR_INVALID_DOMAIN",
+      install_origins: "1",
+    },
   },
   {
     name: "Install MV3 with install_origins",
     xpiUrl: "http://example.com/addons/v3_origins.xpi",
     installPrincipal: PRINCIPAL_COM,
     expectState: AddonManager.STATE_INSTALLED,
+    expectTelemetry: {
+      step: "completed",
+      addon_id: "v3_origins@example.com",
+      install_origins: "1",
+    },
   },
   {
     name: "Install MV3 with install_origins from AMO",
     xpiUrl: "http://example.com/addons/v3_origins.xpi",
     installPrincipal: PRINCIPAL_AMO,
     expectState: AddonManager.STATE_INSTALLED,
+    expectTelemetry: {
+      step: "completed",
+      addon_id: "v3_origins@example.com",
+      install_origins: "1",
+    },
   },
   {
     name: "Install MV3 without install_origins",
     xpiUrl: "http://example.com/addons/v3_no_origins.xpi",
     installPrincipal: PRINCIPAL_COM,
     expectState: AddonManager.STATE_INSTALL_FAILED,
+    expectTelemetry: {
+      step: "failed",
+      addon_id: "v3_no_origins@example.com",
+      error: "ERROR_INVALID_DOMAIN",
+      install_origins: "0",
+    },
   },
   {
     // An installing principal with install permission is
@@ -269,42 +334,75 @@ const TESTS = [
     xpiUrl: "http://example.com/addons/v3_no_origins.xpi",
     installPrincipal: PRINCIPAL_AMO,
     expectState: AddonManager.STATE_INSTALLED,
+    expectTelemetry: {
+      step: "completed",
+      addon_id: "v3_no_origins@example.com",
+      install_origins: "0",
+    },
   },
   {
     name: "Install MV3 without install_origins from null principal",
     xpiUrl: "http://example.com/addons/v3_no_origins.xpi",
     installPrincipal: Services.scriptSecurityManager.createNullPrincipal({}),
     expectState: AddonManager.STATE_CANCELLED,
+    expectTelemetry: { step: "site_blocked", install_origins: "0" },
   },
   {
     name: "Install addon with two install_origins",
     xpiUrl: "http://example.com/addons/two_origins.xpi",
     installPrincipal: PRINCIPAL_ORG,
     expectState: AddonManager.STATE_INSTALLED,
+    expectTelemetry: {
+      step: "completed",
+      addon_id: "two_origins@example.com",
+      install_origins: "1",
+    },
   },
   {
     name: "Install addon with two install_origins",
     xpiUrl: "http://example.com/addons/two_origins.xpi",
     installPrincipal: PRINCIPAL_COM,
     expectState: AddonManager.STATE_INSTALLED,
+    expectTelemetry: {
+      step: "completed",
+      addon_id: "two_origins@example.com",
+      install_origins: "1",
+    },
   },
   {
     name: "Install from site with empty install_origins",
     xpiUrl: "http://example.com/addons/empty_origins.xpi",
     installPrincipal: PRINCIPAL_COM,
     expectState: AddonManager.STATE_INSTALL_FAILED,
+    expectTelemetry: {
+      step: "failed",
+      addon_id: "no_origins@example.com",
+      error: "ERROR_INVALID_DOMAIN",
+      install_origins: "1",
+    },
   },
   {
     name: "Install from site with empty install_origins",
     xpiUrl: "http://example.com/addons/empty_origins.xpi",
     installPrincipal: PRINCIPAL_ORG,
     expectState: AddonManager.STATE_INSTALL_FAILED,
+    expectTelemetry: {
+      step: "failed",
+      addon_id: "no_origins@example.com",
+      error: "ERROR_INVALID_DOMAIN",
+      install_origins: "1",
+    },
   },
   {
     name: "Install with empty install_origins from AMO",
     xpiUrl: "http://amo.example.com/addons/empty_origins.xpi",
     installPrincipal: PRINCIPAL_AMO,
     expectState: AddonManager.STATE_INSTALLED,
+    expectTelemetry: {
+      step: "completed",
+      addon_id: "no_origins@example.com",
+      install_origins: "1",
+    },
   },
 ];
 
@@ -329,5 +427,9 @@ add_task(async function test_install_origins_disabled() {
     xpiUrl: "http://example.com/addons/v3_no_origins.xpi",
     installPrincipal: PRINCIPAL_COM,
     expectState: AddonManager.STATE_INSTALLED,
+    expectTelemetry: {
+      step: "completed",
+      addon_id: "v3_no_origins@example.com",
+    },
   });
 });
