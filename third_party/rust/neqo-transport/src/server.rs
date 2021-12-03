@@ -491,7 +491,7 @@ impl Server {
             &self.certs,
             &self.protocols,
             Rc::clone(&cid_mgr) as _,
-            self.conn_params.clone().quic_version(initial.quic_version),
+            self.conn_params.quic_version(initial.quic_version),
         );
 
         if let Ok(mut c) = sconn {

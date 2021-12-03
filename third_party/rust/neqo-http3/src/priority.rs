@@ -1,4 +1,5 @@
 use crate::{Error, HFrame, Header, Res};
+use neqo_transport::StreamId;
 use sfv::{BareItem, Item, ListEntry, Parser};
 use std::convert::TryFrom;
 use std::fmt;
@@ -129,17 +130,17 @@ impl PriorityHandler {
     }
 
     /// Returns `HFrame` if an priority update is outstanding
-    pub fn maybe_encode_frame(&self, stream_id: u64) -> Option<HFrame> {
+    pub fn maybe_encode_frame(&self, stream_id: StreamId) -> Option<HFrame> {
         if self.priority == self.last_send_priority {
             None
         } else if self.push_stream {
             Some(HFrame::PriorityUpdatePush {
-                element_id: stream_id,
+                element_id: stream_id.as_u64(),
                 priority: self.priority,
             })
         } else {
             Some(HFrame::PriorityUpdateRequest {
-                element_id: stream_id,
+                element_id: stream_id.as_u64(),
                 priority: self.priority,
             })
         }
@@ -150,13 +151,14 @@ impl PriorityHandler {
 mod test {
     use crate::priority::PriorityHandler;
     use crate::{HFrame, Priority};
+    use neqo_transport::StreamId;
 
     #[test]
     fn priority_updates_ignore_same() {
         let mut p = PriorityHandler::new(false, Priority::new(5, false));
         assert!(!p.maybe_update_priority(Priority::new(5, false)));
         // updating with the same priority -> there should not be any priority frame sent
-        assert!(p.maybe_encode_frame(4).is_none());
+        assert!(p.maybe_encode_frame(StreamId::new(4)).is_none());
     }
 
     #[test]
@@ -164,7 +166,7 @@ mod test {
         let mut p = PriorityHandler::new(false, Priority::new(5, false));
         assert!(p.maybe_update_priority(Priority::new(6, false)));
         // updating with the a different priority -> there should be a priority frame sent
-        assert!(p.maybe_encode_frame(4).is_some());
+        assert!(p.maybe_encode_frame(StreamId::new(4)).is_some());
     }
 
     #[test]
@@ -173,7 +175,7 @@ mod test {
         assert!(p.maybe_update_priority(Priority::new(6, false)));
         assert!(p.maybe_update_priority(Priority::new(5, false)));
         // initial and last priority same -> there should not be any priority frame sent
-        assert!(p.maybe_encode_frame(4).is_none());
+        assert!(p.maybe_encode_frame(StreamId::new(4)).is_none());
     }
 
     #[test]
@@ -186,7 +188,7 @@ mod test {
             element_id: 4,
             priority: Priority::new(7, false),
         };
-        assert_eq!(p.maybe_encode_frame(4), Some(expected));
+        assert_eq!(p.maybe_encode_frame(StreamId::new(4)), Some(expected));
     }
 
     #[test]
@@ -198,6 +200,6 @@ mod test {
             element_id: 4,
             priority: Priority::new(5, true),
         };
-        assert_eq!(p.maybe_encode_frame(4), Some(expected));
+        assert_eq!(p.maybe_encode_frame(StreamId::new(4)), Some(expected));
     }
 }

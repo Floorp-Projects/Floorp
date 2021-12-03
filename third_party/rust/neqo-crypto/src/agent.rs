@@ -710,6 +710,7 @@ impl SecretAgent {
         Ok(*Pin::into_inner(records))
     }
 
+    #[allow(unknown_lints, clippy::branches_sharing_code)]
     pub fn close(&mut self) {
         // It should be safe to close multiple times.
         if self.fd.is_null() {
