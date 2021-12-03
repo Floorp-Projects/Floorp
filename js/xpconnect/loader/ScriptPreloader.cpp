@@ -1132,6 +1132,7 @@ void ScriptPreloader::DecodeNextBatch(size_t chunkSize,
 
   // All XDR buffers are mmapped and live longer than JS runtime.
   // The bytecode can be borrowed from the buffer.
+  options.borrowBuffer = true;
   options.usePinnedBytecode = true;
 
   if (!JS::CanCompileOffThread(cx, options, size) ||
