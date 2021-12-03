@@ -329,25 +329,40 @@ add_task(async function test_iframe_navigate() {
     gBrowser,
     iframeURI2
   );
-  let newIFrameTabChildID = browsingContextChildID(
+  let firstTabChildID = browsingContextChildID(
     gBrowser.selectedBrowser.browsingContext
   );
 
   Assert.equal(
-    gTabPriorityWatcher.currentPriority(newIFrameTabChildID),
+    gTabPriorityWatcher.currentPriority(firstTabChildID),
     PROCESS_PRIORITY_FOREGROUND,
     "Loading a new tab should make it prioritized"
   );
+
+  if (SpecialPowers.useRemoteSubframes) {
+    // There must be only one process with a remote type for the tab we loaded
+    // to ensure that when we load a new page into the iframe with that host
+    // that it will end up in the same process as the initial tab.
+    let remoteType = gBrowser.selectedBrowser.remoteType;
+    await TestUtils.waitForCondition(() => {
+      return (
+        ChromeUtils.getAllDOMProcesses().filter(
+          process => process.remoteType == remoteType
+        ).length == 1
+      );
+    }, `Waiting for there to be only one process with remote type ${remoteType}`);
+  }
 
   await BrowserTestUtils.withNewTab(
     "https://example.com/browser/dom/ipc/tests/file_cross_frame.html",
     async browser => {
       Assert.equal(
-        gTabPriorityWatcher.currentPriority(newIFrameTabChildID),
+        gTabPriorityWatcher.currentPriority(firstTabChildID),
         PROCESS_PRIORITY_BACKGROUND,
         "Switching to a new tab should deprioritize the old one"
       );
 
+      let secondTabChildID = browsingContextChildID(browser.browsingContext);
       let iframe = browser.browsingContext.children[0];
       let iframeChildID1 = browsingContextChildID(iframe);
 
@@ -365,16 +380,53 @@ add_task(async function test_iframe_navigate() {
       let iframePriority2 = gTabPriorityWatcher.currentPriority(iframeChildID2);
 
       if (SpecialPowers.useRemoteSubframes) {
+        // Basic process uniqueness checks for the state after both tabs are loaded.
+        Assert.notEqual(
+          secondTabChildID,
+          firstTabChildID,
+          "file_cross_frame.html should be loaded into a different process " +
+            "than iframeURI2"
+        );
+
+        Assert.notEqual(
+          secondTabChildID,
+          iframeChildID1,
+          "file_cross_frame.html should be loaded into a different process " +
+            "than its initial iframe"
+        );
+
+        Assert.notEqual(
+          iframeChildID1,
+          firstTabChildID,
+          "The initial iframe loaded by file_cross_frame.html should be " +
+            "loaded into a different process than iframeURI2"
+        );
+
+        // Basic process uniqueness check for the state after navigating the
+        // iframe. There's no need to check the top level pages because they
+        // have not navigated. We could check iframeChildID1 != iframeChildID2,
+        // but that is implied by iframeChildID1 != firstTabChildID
+        // and firstTabChildID == iframeChildID2. We also could check
+        // iframeChildID2 != secondTabChildID, but that is implied by
+        // secondTabChildID != firstTabChildID and
+        // firstTabChildID == iframeChildID2.
+        //
+        // Note: this assertion depends on our process selection logic.
+        // Specifically, that we reuse an existing process for an iframe if
+        // possible. If that changes, this test may need to be carefully
+        // rewritten, as the whole point of the test is to check what happens
+        // with the priority manager when an iframe shares a process with
+        // a page in another tab.
         Assert.equal(
-          newIFrameTabChildID,
+          firstTabChildID,
           iframeChildID2,
           "The same site should get loaded into the same process"
         );
-        Assert.notEqual(
-          iframeChildID1,
-          iframeChildID2,
-          "Navigation should have switched processes"
-        );
+
+        // Check that the priority of the process of the old iframe
+        // has been deprioritized.
+        // Note: There could be a race here because nothing ensures that the
+        // process stays alive.
         Assert.equal(
           iframePriority1,
           PROCESS_PRIORITY_BACKGROUND,
