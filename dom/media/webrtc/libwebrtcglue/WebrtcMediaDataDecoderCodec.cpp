@@ -61,6 +61,9 @@ int32_t WebrtcMediaDataDecoder::Decode(const webrtc::EncodedImage& aInputImage,
     }
   }
 
+  auto disabledHardwareAcceleration =
+      MakeScopeExit([&] { mDisabledHardwareAcceleration = true; });
+
   RefPtr<MediaRawData> compressedFrame =
       new MediaRawData(aInputImage.data(), aInputImage.size());
   if (!compressedFrame->Data()) {
@@ -108,8 +111,12 @@ int32_t WebrtcMediaDataDecoder::Decode(const webrtc::EncodedImage& aInputImage,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
-  return NS_SUCCEEDED(mError) ? WEBRTC_VIDEO_CODEC_OK
-                              : WEBRTC_VIDEO_CODEC_ERROR;
+  if (NS_FAILED(mError)) {
+    return WEBRTC_VIDEO_CODEC_ERROR;
+  }
+
+  disabledHardwareAcceleration.release();
+  return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int32_t WebrtcMediaDataDecoder::RegisterDecodeCompleteCallback(
@@ -157,7 +164,11 @@ int32_t WebrtcMediaDataDecoder::CreateDecoder() {
                                   CreateDecoderParams::Option::LowLatency,
                                   CreateDecoderParams::Option::FullH264Parsing,
                                   CreateDecoderParams::Option::
-                                      ErrorIfNoInitializationData),
+                                      ErrorIfNoInitializationData,
+                                  mDisabledHardwareAcceleration
+                                      ? CreateDecoderParams::Option::
+                                            HardwareDecoderNotAllowed
+                                      : CreateDecoderParams::Option::Default),
                               mTrackType, mImageContainer, knowsCompositor})
                          ->Then(
                              tq, __func__,
