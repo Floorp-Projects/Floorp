@@ -1105,10 +1105,10 @@ static void HasLookupRuleWithGlyph(hb_face_t* aFace, hb_tag_t aTableTag,
   hb_set_destroy(otherLookups);
 }
 
-nsTHashMap<nsUint32HashKey, Script>* gfxFont::sScriptTagToCode = nullptr;
+nsTHashMap<nsUint32HashKey, intl::Script>* gfxFont::sScriptTagToCode = nullptr;
 nsTHashSet<uint32_t>* gfxFont::sDefaultFeatures = nullptr;
 
-static inline bool HasSubstitution(uint32_t* aBitVector, Script aScript) {
+static inline bool HasSubstitution(uint32_t* aBitVector, intl::Script aScript) {
   return (aBitVector[static_cast<uint32_t>(aScript) >> 5] &
           (1 << (static_cast<uint32_t>(aScript) & 0x1f))) != 0;
 }
@@ -1165,9 +1165,9 @@ void gfxFont::CheckForFeaturesInvolvingSpace() {
       // Ensure that we don't try to look at script codes beyond what the
       // current version of ICU (at runtime -- in case of system ICU)
       // knows about.
-      Script scriptCount =
-          Script(std::min<int>(u_getIntPropertyMaxValue(UCHAR_SCRIPT) + 1,
-                               int(Script::NUM_SCRIPT_CODES)));
+      Script scriptCount = Script(
+          std::min<int>(intl::UnicodeProperties::GetMaxNumberOfScripts() + 1,
+                        int(Script::NUM_SCRIPT_CODES)));
       for (Script s = Script::ARABIC; s < scriptCount;
            s = Script(static_cast<int>(s) + 1)) {
         hb_script_t script = hb_script_t(GetScriptTagForCode(s));

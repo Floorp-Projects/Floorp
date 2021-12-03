@@ -8,11 +8,11 @@
 
 #include "nsIIDNService.h"
 #include "nsCOMPtr.h"
-#include "nsUnicodeScriptCodes.h"
 #include "nsWeakReference.h"
 
 #include "unicode/uidna.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/intl/UnicodeScriptCodes.h"
 #include "mozilla/net/IDNBlocklistUtils.h"
 
 #include "nsString.h"
@@ -147,8 +147,7 @@ class nsIDNService final : public nsIIDNService,
    * For the "Moderately restrictive" profile, Latin is also allowed
    *  with other scripts except Cyrillic and Greek
    */
-  bool illegalScriptCombo(mozilla::unicode::Script script,
-                          int32_t& savedScript);
+  bool illegalScriptCombo(mozilla::intl::Script script, int32_t& savedScript);
 
   /**
    * Convert a DNS label from ASCII to Unicode using IDNA2008
