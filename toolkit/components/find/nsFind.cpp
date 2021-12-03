@@ -31,7 +31,6 @@
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLSelectElement.h"
 #include "mozilla/dom/Text.h"
-#include "mozilla/intl/UnicodeProperties.h"
 #include "mozilla/intl/WordBreaker.h"
 #include "mozilla/StaticPrefs_browser.h"
 
@@ -776,7 +775,7 @@ nsFind::Find(const nsAString& aPatText, nsRange* aSearchRange,
     // already guaranteed to not be a combining diacritical mark.)
     c = (t2b ? DecodeChar(t2b, &findex) : CHAR_TO_UNICHAR(t1b[findex]));
     if (!mMatchDiacritics && IsCombiningDiacritic(c) &&
-        !intl::UnicodeProperties::IsMathOrMusicSymbol(prevChar)) {
+        !IsMathOrMusicSymbol(prevChar)) {
       continue;
     }
     patc = DecodeChar(patStr, &pindex);

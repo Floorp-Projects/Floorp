@@ -5,9 +5,9 @@
 
 #include "nsUnicharUtils.h"
 #include "nsUTF8Utils.h"
+#include "nsUnicodeProperties.h"
 #include "mozilla/Likely.h"
 #include "mozilla/HashFunctions.h"
-#include "mozilla/intl/UnicodeProperties.h"
 
 // We map x -> x, except for upper-case letters,
 // which we map to their lower-case equivalents.
@@ -33,7 +33,7 @@ static MOZ_ALWAYS_INLINE uint32_t ToLowerCase_inline(uint32_t aChar) {
     return gASCIIToLower[aChar];
   }
 
-  return mozilla::intl::UnicodeProperties::ToLower(aChar);
+  return mozilla::unicode::GetLowercase(aChar);
 }
 
 static MOZ_ALWAYS_INLINE uint32_t
@@ -244,8 +244,7 @@ void ToLowerCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen) {
   for (uint32_t i = 0; i < aLen; i++) {
     uint32_t ch = aIn[i];
     if (i < aLen - 1 && NS_IS_SURROGATE_PAIR(ch, aIn[i + 1])) {
-      ch = mozilla::intl::UnicodeProperties::ToLower(
-          SURROGATE_TO_UCS4(ch, aIn[i + 1]));
+      ch = mozilla::unicode::GetLowercase(SURROGATE_TO_UCS4(ch, aIn[i + 1]));
       NS_ASSERTION(!IS_IN_BMP(ch), "case mapping crossed BMP/SMP boundary!");
       aOut[i++] = H_SURROGATE(ch);
       aOut[i] = L_SURROGATE(ch);
@@ -270,15 +269,14 @@ uint32_t ToUpperCase(uint32_t aChar) {
     return aChar;
   }
 
-  return mozilla::intl::UnicodeProperties::ToUpper(aChar);
+  return mozilla::unicode::GetUppercase(aChar);
 }
 
 void ToUpperCase(const char16_t* aIn, char16_t* aOut, uint32_t aLen) {
   for (uint32_t i = 0; i < aLen; i++) {
     uint32_t ch = aIn[i];
     if (i < aLen - 1 && NS_IS_SURROGATE_PAIR(ch, aIn[i + 1])) {
-      ch = mozilla::intl::UnicodeProperties::ToUpper(
-          SURROGATE_TO_UCS4(ch, aIn[i + 1]));
+      ch = mozilla::unicode::GetUppercase(SURROGATE_TO_UCS4(ch, aIn[i + 1]));
       NS_ASSERTION(!IS_IN_BMP(ch), "case mapping crossed BMP/SMP boundary!");
       aOut[i++] = H_SURROGATE(ch);
       aOut[i] = L_SURROGATE(ch);
@@ -364,7 +362,7 @@ static MOZ_ALWAYS_INLINE uint32_t GetLowerUTF8Codepoint_inline(
 
     // we don't go through ToLowerCase here, because we know this isn't
     // an ASCII character so the ASCII fast-path there is useless
-    c = mozilla::intl::UnicodeProperties::ToLower(c);
+    c = mozilla::unicode::GetLowercase(c);
 
     *aNext = aStr + 2;
     return c;
@@ -379,7 +377,7 @@ static MOZ_ALWAYS_INLINE uint32_t GetLowerUTF8Codepoint_inline(
     c += (str[1] & 0x3F) << 6;
     c += (str[2] & 0x3F);
 
-    c = mozilla::intl::UnicodeProperties::ToLower(c);
+    c = mozilla::unicode::GetLowercase(c);
 
     *aNext = aStr + 3;
     return c;
@@ -394,7 +392,7 @@ static MOZ_ALWAYS_INLINE uint32_t GetLowerUTF8Codepoint_inline(
     c += (str[2] & 0x3F) << 6;
     c += (str[3] & 0x3F);
 
-    c = mozilla::intl::UnicodeProperties::ToLower(c);
+    c = mozilla::unicode::GetLowercase(c);
 
     *aNext = aStr + 4;
     return c;
@@ -516,8 +514,8 @@ uint32_t HashUTF8AsUTF16(const char* aUTF8, uint32_t aLength, bool* aErr) {
 }
 
 bool IsSegmentBreakSkipChar(uint32_t u) {
-  return intl::UnicodeProperties::IsEastAsianWidthFHWexcludingEmoji(u) &&
-         intl::UnicodeProperties::GetScriptCode(u) != intl::Script::HANGUL;
+  return unicode::IsEastAsianWidthFHWexcludingEmoji(u) &&
+         unicode::GetScriptCode(u) != unicode::Script::HANGUL;
 }
 
 }  // namespace mozilla
