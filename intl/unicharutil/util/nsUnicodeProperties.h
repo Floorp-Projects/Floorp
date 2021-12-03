@@ -11,8 +11,15 @@
 
 #include "nsBidiUtils.h"
 #include "nsUGenCategory.h"
-#include "nsUnicodeScriptCodes.h"
 #include "harfbuzz/hb.h"
+
+struct nsCharProps2 {
+  // Currently only 4 bits are defined here, so 4 more could be added without
+  // affecting the storage requirements for this struct. Or we could pack two
+  // records per byte, at the cost of a slightly more complex accessor.
+  unsigned char mVertOrient : 2;
+  unsigned char mIdType : 2;
+};
 
 const nsCharProps2& GetCharProps2(uint32_t aCh);
 
@@ -69,17 +76,8 @@ inline uint8_t GetLineBreakClass(uint32_t aCh) {
       aCh, intl::UnicodeProperties::IntProperty::LineBreak);
 }
 
-inline Script GetScriptCode(uint32_t aCh) {
-  UErrorCode err = U_ZERO_ERROR;
-  return Script(uscript_getScript(aCh, &err));
-}
-
-inline bool HasScript(uint32_t aCh, Script aScript) {
-  return uscript_hasScript(aCh, UScriptCode(aScript));
-}
-
-inline uint32_t GetScriptTagForCode(Script aScriptCode) {
-  const char* tag = uscript_getShortName(UScriptCode(aScriptCode));
+inline uint32_t GetScriptTagForCode(intl::Script aScriptCode) {
+  const char* tag = intl::UnicodeProperties::GetScriptShortName(aScriptCode);
   if (tag) {
     return HB_TAG(tag[0], tag[1], tag[2], tag[3]);
   }
