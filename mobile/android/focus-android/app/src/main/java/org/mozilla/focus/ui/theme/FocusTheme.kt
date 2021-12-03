@@ -72,13 +72,17 @@ private fun lightColorPalette(): FocusColors = FocusColors(
  * Material baseline colors can be overridden here.
  */
 private fun darkColorsMaterial(): Colors = darkColors(
+    secondary = PhotonColors.Ink05,
     surface = PhotonColors.Ink60,
     onSurface = PhotonColors.LightGrey05,
-    onBackground = PhotonColors.LightGrey05
+    onBackground = PhotonColors.LightGrey05,
+    onPrimary = PhotonColors.LightGrey05
 )
 
 private fun lightColorsMaterial(): Colors = lightColors(
+    secondary = PhotonColors.LightGrey05,
     surface = PhotonColors.Violet05,
     onSurface = PhotonColors.Ink50,
-    onBackground = PhotonColors.Ink50
+    onBackground = PhotonColors.Ink50,
+    onPrimary = PhotonColors.Ink50
 )
