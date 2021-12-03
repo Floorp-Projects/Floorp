@@ -3437,10 +3437,11 @@ gfx.canvas.remote:
       - 1641722
       - 1672582
       - 1706844
+      - 1739290
     description: >
       Number of times remote canvas 2D has been activated.
     kind: uint
-    expires: "97"
+    expires: "103"
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - bowen@mozilla.com
@@ -3455,10 +3456,11 @@ gfx.canvas.remote:
       - 1641722
       - 1672582
       - 1706844
+      - 1739290
     description: >
       Number of times remote canvas 2D has been deactivated due to device creation failure.
     kind: uint
-    expires: "97"
+    expires: "103"
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - bowen@mozilla.com
@@ -3473,10 +3475,11 @@ gfx.canvas.remote:
       - 1641722
       - 1672582
       - 1706844
+      - 1739290
     description: >
       Number of times remote canvas 2D has been deactivated due to a stream read failure.
     kind: uint
-    expires: "97"
+    expires: "103"
     notification_emails:
       - gfx-telemetry-alerts@mozilla.com
       - bowen@mozilla.com
