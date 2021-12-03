@@ -30,6 +30,7 @@ EXPORTS.mozilla.intl = [
     "src/Script.h",
     "src/String.h",
     "src/TimeZone.h",
+    "src/UnicodeProperties.h",
 ]
 
 UNIFIED_SOURCES += [

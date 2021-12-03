@@ -215,6 +215,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLSlotElement.h"
 #include "mozilla/dom/ShadowRoot.h"
+#include "mozilla/intl/UnicodeProperties.h"
 #include "nsUnicodeProperties.h"
 #include "nsTextFragment.h"
 #include "nsAttrValue.h"
