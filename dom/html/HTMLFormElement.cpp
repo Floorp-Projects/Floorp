@@ -1855,14 +1855,9 @@ bool HTMLFormElement::CheckFormValidity(
   for (uint32_t i = 0; i < len; ++i) {
     nsCOMPtr<nsIConstraintValidation> cvElmt =
         do_QueryObject(sortedControls[i]);
-    if (cvElmt && cvElmt->IsCandidateForConstraintValidation() &&
-        !cvElmt->IsValid()) {
+    bool defaultAction = true;
+    if (cvElmt && !cvElmt->CheckValidity(*sortedControls[i], &defaultAction)) {
       ret = false;
-      bool defaultAction = true;
-      nsContentUtils::DispatchTrustedEvent(
-          sortedControls[i]->OwnerDoc(),
-          static_cast<nsIContent*>(sortedControls[i]), u"invalid"_ns,
-          CanBubble::eNo, Cancelable::eYes, &defaultAction);
 
       // Add all unhandled invalid controls to aInvalidElements if the caller
       // requested them.
