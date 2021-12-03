@@ -11582,6 +11582,19 @@
 #endif
   mirror: always
 
+#ifdef MOZ_WIDGET_GTK
+# Only GtkTextView (native multiline text viewer/editor) supports "select-all"
+# signal so that we cannot know "select-all" key bindings only with GtkEntry.
+# When this pref is set to true, if a key combination does not cause any
+# signals in GtkEntry, try to check the key combination is mapped to
+# "select-all" in GtkTextView or not.  If it's mapped to other commands, they
+# are just ignored.
+- name: ui.key.use_select_all_in_single_line_editor
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+#endif
+
 # Duration of timeout of incremental search in menus (ms).  0 means infinite.
 - name: ui.menu.incremental_search.timeout
   type: uint32_t
