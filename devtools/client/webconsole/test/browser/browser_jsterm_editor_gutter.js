@@ -7,7 +7,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,Test JsTerm editor line gutters";
+const TEST_URI =
+  "data:text/html;charset=utf-8,<!DOCTYPE html>Test JsTerm editor line gutters";
 
 add_task(async function() {
   await pushPref("devtools.webconsole.input.editor", true);

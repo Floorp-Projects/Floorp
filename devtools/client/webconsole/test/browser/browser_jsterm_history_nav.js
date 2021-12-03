@@ -7,7 +7,7 @@
 // autocompletion.
 
 const TEST_URI =
-  "data:text/html;charset=utf-8,<p>bug 660806 - history " +
+  "data:text/html;charset=utf-8,<!DOCTYPE html><p>bug 660806 - history " +
   "navigation must not show the autocomplete popup";
 
 add_task(async function() {

@@ -6,7 +6,7 @@
 "use strict";
 
 const LONGSTRING = "a ".repeat(10000);
-const TEST_URI = `data:text/html,Test expanding longString getter property
+const TEST_URI = `data:text/html,<!DOCTYPE html>Test expanding longString getter property
   <svg>
     <image xlink:href="data:image/png;base64,${LONGSTRING}"></image>
   </svg>

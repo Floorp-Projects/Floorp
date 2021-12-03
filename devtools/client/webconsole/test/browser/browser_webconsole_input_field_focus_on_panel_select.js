@@ -6,7 +6,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,<p>Test console input focus";
+const TEST_URI =
+  "data:text/html;charset=utf8,<!DOCTYPE html><p>Test console input focus";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

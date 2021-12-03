@@ -4,7 +4,7 @@
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf-8,Web Console test for bug 1567372";
+  "data:text/html;charset=utf-8,<!DOCTYPE html>Web Console test for bug 1567372";
 
 add_task(async function() {
   await pushPref("devtools.webconsole.input.editor", true);

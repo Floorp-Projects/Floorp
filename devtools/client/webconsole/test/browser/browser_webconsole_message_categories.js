@@ -7,7 +7,7 @@
 const { MESSAGE_CATEGORY } = require("devtools/shared/constants");
 
 const TEST_URI =
-  "data:text/html;charset=utf-8,Web Console test for " +
+  "data:text/html;charset=utf-8,<!DOCTYPE html>Web Console test for " +
   "bug 595934 - message categories coverage.";
 const TESTS_PATH =
   "https://example.com/browser/devtools/client/webconsole/test/browser/";

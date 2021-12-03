@@ -26,7 +26,9 @@ add_task(async function() {
     info("Wait for the 'foobar' message to be logged by the frame");
     node = await waitFor(() => findMessage(hud, "foobar"));
   } else {
-    hud = await openNewTabAndConsole("data:text/html;charset=utf8,<p>hello");
+    hud = await openNewTabAndConsole(
+      "data:text/html;charset=utf8,<!DOCTYPE html><p>hello"
+    );
     info(
       "Navigate and wait for the 'foobar' message to be logged by the frame"
     );

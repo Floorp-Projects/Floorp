@@ -3,7 +3,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html,Test evaluating null and undefined";
+const TEST_URI =
+  "data:text/html,<!DOCTYPE html>Test evaluating null and undefined";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

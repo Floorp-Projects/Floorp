@@ -7,7 +7,7 @@
 "use strict";
 
 // Log 1 message every 50ms, until we reach 50 messages.
-const TEST_URI = `data:text/html,<meta charset=utf8><script>
+const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8><script>
     var i = 0;
     var intervalId = setInterval(() => {
       if (i >= 50) {

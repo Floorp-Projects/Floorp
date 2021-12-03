@@ -4,7 +4,7 @@
 
 "use strict";
 
-const TEST_URI = `data:text/html;charset=utf8,
+const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html>
 <h1 class="title">hello</h1>
 <div id="mydiv">mydivtext</div>
 <script>

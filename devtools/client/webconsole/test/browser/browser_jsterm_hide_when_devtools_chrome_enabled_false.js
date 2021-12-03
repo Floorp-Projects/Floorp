@@ -43,7 +43,9 @@ add_task(async function() {
   testInputRelatedElementsAreVisibile(browserConsole);
   await testObjectInspectorPropertiesAreSet(objInspector);
 
-  const browserTab = await addTab("data:text/html;charset=utf8,hello world");
+  const browserTab = await addTab(
+    "data:text/html;charset=utf8,<!DOCTYPE html>hello world"
+  );
   webConsole = await openConsole(browserTab);
   objInspector = await logObject(webConsole);
   testInputRelatedElementsAreVisibile(webConsole);

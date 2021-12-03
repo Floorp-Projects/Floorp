@@ -9,7 +9,8 @@ const {
 } = require("devtools/client/performance/test/helpers/actions");
 
 // Check console.profile() shows a warning with the new performance panel.
-const TEST_URI = "data:text/html;charset=utf8,<h1>test console.profile</h1>";
+const TEST_URI =
+  "data:text/html;charset=utf8,<!DOCTYPE html><h1>test console.profile</h1>";
 
 const EXPECTED_WARNING =
   "console.profile is not compatible with the new Performance recorder";

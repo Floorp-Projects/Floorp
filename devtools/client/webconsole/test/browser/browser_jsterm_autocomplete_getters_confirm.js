@@ -6,7 +6,7 @@
 // Test that accessing properties with getters displays the confirm dialog to invoke them,
 // and then displays the autocomplete popup with the results.
 
-const TEST_URI = `data:text/html;charset=utf-8,
+const TEST_URI = `data:text/html;charset=utf-8,<!DOCTYPE html>
 <head>
   <script>
     /* Create a prototype-less object so popup does not contain native

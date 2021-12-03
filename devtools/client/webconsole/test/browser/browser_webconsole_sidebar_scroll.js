@@ -5,7 +5,7 @@
 
 "use strict";
 
-const TEST_URI = `data:text/html;charset=utf8,Test sidebar scroll`;
+const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html>Test sidebar scroll`;
 
 add_task(async function() {
   // Should be removed when sidebar work is complete

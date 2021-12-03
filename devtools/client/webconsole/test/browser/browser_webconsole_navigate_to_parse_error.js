@@ -7,7 +7,7 @@
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf8,Web Console navigate-to parse error test";
+  "data:text/html;charset=utf8,<!DOCTYPE html>Web Console navigate-to parse error test";
 const TEST_VIOLATION =
   "https://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-navigate-to-parse-error.html";

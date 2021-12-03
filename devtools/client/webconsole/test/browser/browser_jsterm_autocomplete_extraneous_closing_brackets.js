@@ -6,7 +6,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,test for bug 592442";
+const TEST_URI =
+  "data:text/html;charset=utf-8,<!DOCTYPE html>test for bug 592442";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

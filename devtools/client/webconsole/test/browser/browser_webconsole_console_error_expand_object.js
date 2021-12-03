@@ -5,7 +5,7 @@
 
 // Check console.error calls with expandable object.
 const TEST_URI =
-  "data:text/html;charset=utf8,<h1>test console.error with objects</h1>";
+  "data:text/html;charset=utf8,<!DOCTYPE html><h1>test console.error with objects</h1>";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

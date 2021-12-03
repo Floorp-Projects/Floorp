@@ -6,6 +6,7 @@
 // See Bug 585991.
 
 const TEST_URI = `data:text/html;charset=utf-8,
+<!DOCTYPE html>
 <head>
   <script>
     window.foo = [1,2,3];

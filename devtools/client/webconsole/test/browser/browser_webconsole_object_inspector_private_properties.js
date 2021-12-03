@@ -4,7 +4,7 @@
 "use strict";
 
 // Check expanding/collapsing object with symbol properties in the console.
-const TEST_URI = "data:text/html;charset=utf8,";
+const TEST_URI = "data:text/html;charset=utf8,<!DOCTYPE html>";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

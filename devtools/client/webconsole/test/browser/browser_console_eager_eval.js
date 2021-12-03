@@ -5,7 +5,7 @@
 "use strict";
 
 // Check evaluating eager-evaluation values.
-const TEST_URI = "data:text/html;charset=utf8,";
+const TEST_URI = "data:text/html;charset=utf8,<!DOCTYPE html>";
 
 add_task(async function() {
   await addTab(TEST_URI);

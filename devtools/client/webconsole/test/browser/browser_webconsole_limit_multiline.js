@@ -19,7 +19,7 @@ fib(3);`;
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(
-    "data:text/html,<meta charset=utf8>Test multi-line commands expandability"
+    "data:text/html,<!DOCTYPE html><meta charset=utf8>Test multi-line commands expandability"
   );
   info("Test that we don't slice messages with <= 5 lines");
   const message = await executeAndWaitForMessage(

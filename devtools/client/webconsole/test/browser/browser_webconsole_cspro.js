@@ -16,7 +16,8 @@ See Bug 1010953.
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,Web Console CSP report only test";
+const TEST_URI =
+  "data:text/html;charset=utf8,<!DOCTYPE html>Web Console CSP report only test";
 const TEST_VIOLATION =
   "http://example.com/browser/devtools/client/webconsole/" +
   "test/browser/test-cspro.html";

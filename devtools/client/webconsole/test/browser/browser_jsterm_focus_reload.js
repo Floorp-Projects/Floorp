@@ -6,7 +6,7 @@
 
 "use strict";
 
-const TEST_URI = `data:text/html,<meta charset=utf8>Focus test`;
+const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>Focus test`;
 
 add_task(async function() {
   info("Testing that messages disappear on a refresh if logs aren't persisted");
