@@ -208,6 +208,7 @@ addonsManager:
         "management-webext-api", "sideload", "url", "product-updates".
       num_strings: The number of permission description strings in the extension permission doorhanger
       updated_from: Determine if an update has been requested by the user or the application ("app" / "user")
+      install_origins: This flag indicates whether install_origins is defined in the addon manifest. ("1" / "0")
       step: >
         The current step in the install or update flow:
           - started, postponed, cancelled, failed, permissions_prompt, completed
