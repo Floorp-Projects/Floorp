@@ -6,6 +6,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/WritingModes.h"
 
@@ -331,6 +332,23 @@ void NativeKeyBindings::GetEditCommands(const WidgetKeyboardEvent& aEvent,
       if (GetEditCommandsInternal(aEvent, aCommands, keyval)) {
         return;
       }
+    }
+  }
+
+  // If the key event does not cause any commands, and we're for single line
+  // editor, let's check whether the key combination is for "select-all" in
+  // GtkTextView because the signal is not supported by GtkEntry.
+  if (aCommands.IsEmpty() && this == sInstanceForSingleLineEditor &&
+      StaticPrefs::ui_key_use_select_all_in_single_line_editor()) {
+    if (NativeKeyBindings* bindingsForMultilineEditor =
+            GetInstance(nsIWidget::NativeKeyBindingsForMultiLineEditor)) {
+      bindingsForMultilineEditor->GetEditCommands(aEvent, aWritingMode,
+                                                  aCommands);
+      if (aCommands.Length() == 1u &&
+          aCommands[0u] == static_cast<CommandInt>(Command::SelectAll)) {
+        return;
+      }
+      aCommands.Clear();
     }
   }
 
