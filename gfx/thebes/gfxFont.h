@@ -24,7 +24,6 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/MatrixFwd.h"
 #include "mozilla/gfx/Point.h"
-#include "mozilla/intl/UnicodeScriptCodes.h"
 #include "nsCOMPtr.h"
 #include "nsColor.h"
 #include "nsTHashMap.h"
@@ -38,6 +37,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
+#include "nsUnicodeScriptCodes.h"
 #include "nscore.h"
 
 // Only required for function bodys
@@ -672,7 +672,7 @@ class gfxTextRunFactory {
 class gfxFontShaper {
  public:
   typedef mozilla::gfx::DrawTarget DrawTarget;
-  typedef mozilla::intl::Script Script;
+  typedef mozilla::unicode::Script Script;
 
   enum class RoundingFlags : uint8_t { kRoundX = 0x01, kRoundY = 0x02 };
 
@@ -731,7 +731,7 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(gfxFontShaper::RoundingFlags)
  */
 class gfxShapedText {
  public:
-  typedef mozilla::intl::Script Script;
+  typedef mozilla::unicode::Script Script;
 
   gfxShapedText(uint32_t aLength, mozilla::gfx::ShapedTextFlags aFlags,
                 uint16_t aAppUnitsPerDevUnit)
@@ -1261,7 +1261,7 @@ class gfxShapedText {
  */
 class gfxShapedWord final : public gfxShapedText {
  public:
-  typedef mozilla::intl::Script Script;
+  typedef mozilla::unicode::Script Script;
 
   // Create a ShapedWord that can hold glyphs for aLength characters,
   // with mCharacterGlyphs sized appropriately.
@@ -1426,7 +1426,7 @@ class gfxFont {
 
  protected:
   using DrawTarget = mozilla::gfx::DrawTarget;
-  using Script = mozilla::intl::Script;
+  using Script = mozilla::unicode::Script;
   using SVGContextPaint = mozilla::SVGContextPaint;
 
   using RoundingFlags = gfxFontShaper::RoundingFlags;
