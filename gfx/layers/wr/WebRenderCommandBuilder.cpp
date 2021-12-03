@@ -1997,20 +1997,21 @@ bool WebRenderCommandBuilder::PushImage(
 
 Maybe<wr::ImageKey> WebRenderCommandBuilder::CreateImageProviderKey(
     nsDisplayItem* aItem, image::WebRenderImageProvider* aProvider,
+    image::ImgDrawResult aDrawResult,
     mozilla::wr::IpcResourceUpdateQueue& aResources) {
   RefPtr<WebRenderImageProviderData> imageData =
       CreateOrRecycleWebRenderUserData<WebRenderImageProviderData>(aItem);
   MOZ_ASSERT(imageData);
-  return imageData->UpdateImageKey(aProvider, aResources);
+  return imageData->UpdateImageKey(aProvider, aDrawResult, aResources);
 }
 
 bool WebRenderCommandBuilder::PushImageProvider(
     nsDisplayItem* aItem, image::WebRenderImageProvider* aProvider,
-    mozilla::wr::DisplayListBuilder& aBuilder,
+    image::ImgDrawResult aDrawResult, mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
     const LayoutDeviceRect& aRect, const LayoutDeviceRect& aClip) {
   Maybe<wr::ImageKey> key =
-      CreateImageProviderKey(aItem, aProvider, aResources);
+      CreateImageProviderKey(aItem, aProvider, aDrawResult, aResources);
   if (!key) {
     return false;
   }

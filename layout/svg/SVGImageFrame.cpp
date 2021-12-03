@@ -649,8 +649,9 @@ bool SVGImageFrame::CreateWebRenderCommands(
     // failure will be due to resource constraints and fallback is unlikely to
     // help us. Hence we can ignore the return value from PushImage.
     if (provider) {
-      aManager->CommandBuilder().PushImageProvider(
-          aItem, provider, aBuilder, aResources, destRect, clipRect);
+      aManager->CommandBuilder().PushImageProvider(aItem, provider, drawResult,
+                                                   aBuilder, aResources,
+                                                   destRect, clipRect);
     }
 
     nsDisplayItemGenericImageGeometry::UpdateDrawResult(aItem, drawResult);
