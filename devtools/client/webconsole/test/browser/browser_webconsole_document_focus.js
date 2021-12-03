@@ -5,7 +5,7 @@
 
 // Check that focus is restored to content page after closing the console. See Bug 588342.
 const TEST_URI =
-  "data:text/html;charset=utf-8,Test content focus after closing console";
+  "data:text/html;charset=utf-8,<!DOCTYPE html>Test content focus after closing console";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
@@ -64,7 +64,7 @@ add_task(async function testSeparateWindowToolboxInactiveTab() {
 
   info("Focus after console is opened");
   const firstTab = gBrowser.selectedTab;
-  await addTab(`data:text/html,<meta charset=utf8>New tab XXX`);
+  await addTab(`data:text/html,<!DOCTYPE html><meta charset=utf8>New tab XXX`);
 
   await SpecialPowers.spawn(firstTab.linkedBrowser, [], async () => {
     // For some reason, there is no blur event fired on the document

@@ -14,7 +14,7 @@ const TEST_FILE =
   "test/browser/test_console_csp_ignore_reflected_xss_message.html";
 
 const TEST_URI =
-  "data:text/html;charset=utf8,Web Console CSP ignoring reflected XSS (bug 1045902)";
+  "data:text/html;charset=utf8,<!DOCTYPE html>Web Console CSP ignoring reflected XSS (bug 1045902)";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

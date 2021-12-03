@@ -11,7 +11,7 @@ const L10N = new LocalizationHelper(
 );
 
 const TEST_URI =
-  "data:text/html;charset=utf-8,<p>Web Console test for splitting</p>";
+  "data:text/html;charset=utf-8,<!DOCTYPE html><p>Web Console test for splitting</p>";
 
 add_task(async function() {
   info("Opening a tab while there is no user setting on split console pref");

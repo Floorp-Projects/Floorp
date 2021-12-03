@@ -6,7 +6,7 @@
 
 "use strict";
 
-const TEST_URI = `data:text/html,<meta charset=utf8>Test reverse search toggle`;
+const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8>Test reverse search toggle`;
 const isMacOS = AppConstants.platform === "macosx";
 
 add_task(async function() {

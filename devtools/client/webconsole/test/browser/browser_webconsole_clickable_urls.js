@@ -8,7 +8,7 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf8,Clickable URLS";
+const TEST_URI = "data:text/html;charset=utf8,<!DOCTYPE html>Clickable URLS";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

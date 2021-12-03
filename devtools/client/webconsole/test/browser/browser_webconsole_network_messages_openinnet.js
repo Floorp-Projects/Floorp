@@ -4,7 +4,7 @@
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf8,Test that 'Open in Network Panel' " +
+  "data:text/html;charset=utf8,<!DOCTYPE html>Test that 'Open in Network Panel' " +
   "context menu item opens the selected request in netmonitor panel.";
 
 const TEST_FILE = "test-network-request.html";

@@ -5,7 +5,8 @@
 
 // Check that messages are displayed in the console when RDM is enabled
 
-const TEST_URI = "data:text/html,<meta charset=utf8>Test logging in RDM";
+const TEST_URI =
+  "data:text/html,<!DOCTYPE html><meta charset=utf8>Test logging in RDM";
 
 const ResponsiveUIManager = require("devtools/client/responsive/manager");
 const message = require("devtools/client/responsive/utils/message");

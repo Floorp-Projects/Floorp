@@ -6,7 +6,7 @@
 // Check that calling console.table on a variable which is modified after the
 // console.table call only shows data for when the variable was logged.
 
-const TEST_URI = `data:text/html,Test console.table with modified variable`;
+const TEST_URI = `data:text/html,<!DOCTYPE html>Test console.table with modified variable`;
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

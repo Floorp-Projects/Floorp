@@ -6,7 +6,7 @@
 
 "use strict";
 
-const TEST_URI = `data:text/html;charset=utf8,<script>
+const TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html><script>
     x = Object.create(null, Object.getOwnPropertyDescriptors({
       dog: "woof",
       dos: "-",

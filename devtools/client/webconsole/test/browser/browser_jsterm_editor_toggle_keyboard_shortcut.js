@@ -7,7 +7,7 @@
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf-8,Test editor mode toggle keyboard shortcut";
+  "data:text/html;charset=utf-8,<!DOCTYPE html>Test editor mode toggle keyboard shortcut";
 const EDITOR_PREF = "devtools.webconsole.input.editor";
 
 // See Bug 1631529

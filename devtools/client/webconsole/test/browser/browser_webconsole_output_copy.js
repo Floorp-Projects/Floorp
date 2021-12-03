@@ -4,7 +4,8 @@
 "use strict";
 
 // Test copy to clipboard on the console output. See Bug 587617.
-const TEST_URI = "data:text/html,Test copy to clipboard on the console output";
+const TEST_URI =
+  "data:text/html,<!DOCTYPE html>Test copy to clipboard on the console output";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

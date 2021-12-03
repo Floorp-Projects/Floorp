@@ -3,7 +3,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,Web Console test for splitting";
+const TEST_URI =
+  "data:text/html;charset=utf-8,<!DOCTYPE html>Web Console test for splitting";
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const L10N = new LocalizationHelper(
   "devtools/client/locales/toolbox.properties"

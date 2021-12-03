@@ -6,7 +6,7 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html,Test repeated objects";
+const TEST_URI = "data:text/html,<!DOCTYPE html>Test repeated objects";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);

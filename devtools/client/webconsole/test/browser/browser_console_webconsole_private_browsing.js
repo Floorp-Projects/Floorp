@@ -11,8 +11,9 @@ const PRIVATE_MESSAGE = "This is a private message";
 const PRIVATE_UNDEFINED_FN = "privateException";
 const PRIVATE_EXCEPTION = `${PRIVATE_UNDEFINED_FN} is not defined`;
 
-const NON_PRIVATE_TEST_URI = "data:text/html;charset=utf8,Not private";
-const PRIVATE_TEST_URI = `data:text/html;charset=utf8,Test console in private windows
+const NON_PRIVATE_TEST_URI =
+  "data:text/html;charset=utf8,<!DOCTYPE html>Not private";
+const PRIVATE_TEST_URI = `data:text/html;charset=utf8,<!DOCTYPE html>Test console in private windows
   <script>
     function logMessages() {
       /* Wrap the exception so we don't throw in ContentTask. */

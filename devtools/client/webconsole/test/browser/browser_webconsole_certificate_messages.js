@@ -6,7 +6,7 @@
 "use strict";
 
 const TEST_URI =
-  "data:text/html;charset=utf8,Web Console weak crypto warnings test";
+  "data:text/html;charset=utf8,<!DOCTYPE html>Web Console weak crypto warnings test";
 const TEST_URI_PATH =
   "/browser/devtools/client/webconsole/test/" +
   "browser/test-certificate-messages.html";

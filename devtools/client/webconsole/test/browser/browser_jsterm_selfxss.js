@@ -3,7 +3,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,<p>Test self-XSS protection</p>";
+const TEST_URI =
+  "data:text/html;charset=utf-8,<!DOCTYPE html><p>Test self-XSS protection</p>";
 
 XPCOMUtils.defineLazyServiceGetter(
   this,

@@ -5,7 +5,7 @@
 
 // Check that opening a group does not scroll the console output.
 
-const TEST_URI = `data:text/html,<meta charset=utf8><script>
+const TEST_URI = `data:text/html,<!DOCTYPE html><meta charset=utf8><script>
   Array.from({length: 100}, (_, i) => console.log("log-"+i));
   console.groupCollapsed("GROUP");
   console.log("in group");
