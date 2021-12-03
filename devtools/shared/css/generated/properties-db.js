@@ -2993,7 +2993,6 @@ exports.CSS_PROPERTIES = {
       "outline-width",
       "outline-offset",
       "size",
-      "page",
       "padding-top",
       "padding-right",
       "padding-bottom",
@@ -8909,20 +8908,6 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
-  "page": {
-    "isInherited": false,
-    "subproperties": [
-      "page"
-    ],
-    "supports": [],
-    "values": [
-      "auto",
-      "inherit",
-      "initial",
-      "revert",
-      "unset"
-    ]
-  },
   "page-break-after": {
     "isInherited": false,
     "subproperties": [
@@ -11107,10 +11092,6 @@ exports.PREFERENCES = [
   [
     "offset-path",
     "layout.css.motion-path.enabled"
-  ],
-  [
-    "page",
-    "layout.css.named-pages.enabled"
   ],
   [
     "rotate",
