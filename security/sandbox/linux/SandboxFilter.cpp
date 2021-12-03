@@ -856,9 +856,7 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
         return Allow();
 
         // Signal handling
-#if defined(ANDROID) || defined(MOZ_ASAN)
       case __NR_sigaltstack:
-#endif
       CASES_FOR_sigreturn:
       CASES_FOR_sigprocmask:
       CASES_FOR_sigaction:
@@ -1432,9 +1430,6 @@ class ContentSandboxPolicy : public SandboxPolicyCommon {
         return If(length == getpagesize(), Allow())
             .Else(SandboxPolicyCommon::EvaluateSyscall(sysno));
       }
-
-      case __NR_sigaltstack:
-        return Allow();
 
 #ifdef __NR_set_thread_area
       case __NR_set_thread_area:
