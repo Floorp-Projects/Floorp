@@ -30,6 +30,8 @@ interface ElementInternals {
   readonly attribute ValidityState validity;
   [Pref="dom.webcomponents.formAssociatedCustomElement.enabled", Throws]
   readonly attribute DOMString validationMessage;
+  [Pref="dom.webcomponents.formAssociatedCustomElement.enabled", Throws]
+  boolean checkValidity();
 
   [Pref="dom.webcomponents.formAssociatedCustomElement.enabled", Throws]
   readonly attribute NodeList labels;
