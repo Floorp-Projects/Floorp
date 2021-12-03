@@ -58,6 +58,7 @@ class ElementInternals final : public nsIFormControl,
   ValidityState* GetValidity(ErrorResult& aRv);
   void GetValidationMessage(nsAString& aValidationMessage,
                             ErrorResult& aRv) const;
+  bool CheckValidity(ErrorResult& aRv);
   already_AddRefed<nsINodeList> GetLabels(ErrorResult& aRv) const;
 
   // nsIFormControl
