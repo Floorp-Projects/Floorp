@@ -9,7 +9,7 @@
 {
   class MozPanel extends MozElements.MozElementMixin(XULPopupElement) {
     static get markup() {
-      return `<html:slot part="content" style="display: none"/>`;
+      return `<html:slot part="content" style="display: none !important"/>`;
     }
     constructor() {
       super();
@@ -59,13 +59,9 @@
 
       this.attachShadow({ mode: "open" });
 
-      if (!this.isArrowPanel) {
-        let slot = document.createElement("slot");
-        slot.part = "content";
-        slot.style.display = "none";
-        this.shadowRoot.appendChild(slot);
-      } else {
-        this.shadowRoot.appendChild(this.constructor.fragment);
+      this.shadowRoot.appendChild(this.constructor.fragment);
+      if (this.hasAttribute("neverhidden")) {
+        this.panelContent.style.display = "";
       }
     }
 
@@ -214,8 +210,8 @@
     }
 
     on_popuphidden(event) {
-      if (event.target == this) {
-        this.panelContent.style.display = "none";
+      if (event.target == this && !this.hasAttribute("neverhidden")) {
+        this.panelContent.style.setProperty("display", "none", "important");
       }
       if (this.isArrowPanel && event.target == this) {
         this.removeAttribute("panelopen");
