@@ -197,7 +197,7 @@ class IOUtils final {
    *         error.
    */
   static Result<JsBuffer, IOError> ReadSync(nsIFile* aFile,
-                                            const uint32_t aOffset,
+                                            const uint64_t aOffset,
                                             const Maybe<uint32_t> aMaxBytes,
                                             const bool aDecompress,
                                             BufferKind aBufferKind);
