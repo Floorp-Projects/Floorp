@@ -829,7 +829,7 @@ already_AddRefed<Promise> IOUtils::CreateJSPromise(GlobalObject& aGlobal) {
 
 /* static */
 Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
-    nsIFile* aFile, const uint32_t aOffset, const Maybe<uint32_t> aMaxBytes,
+    nsIFile* aFile, const uint64_t aOffset, const Maybe<uint32_t> aMaxBytes,
     const bool aDecompress, IOUtils::BufferKind aBufferKind) {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -840,6 +840,15 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
                 "The `maxBytes` and `decompress` options are not compatible"));
   }
 
+  if (aOffset > static_cast<uint64_t>(INT64_MAX)) {
+    return Err(IOError(NS_ERROR_ILLEGAL_INPUT)
+                   .WithMessage("Requested offset is too large (%" PRIu64
+                                " > %" PRId64 ")",
+                                aOffset, INT64_MAX));
+  }
+
+  const int64_t offset = static_cast<int64_t>(aOffset);
+
   RefPtr<nsFileStream> stream = new nsFileStream();
   if (nsresult rv =
           stream->Init(aFile, PR_RDONLY | nsIFile::OS_READAHEAD, 0666, 0);
@@ -847,43 +856,45 @@ Result<IOUtils::JsBuffer, IOUtils::IOError> IOUtils::ReadSync(
     return Err(IOError(rv).WithMessage("Could not open the file at %s",
                                        aFile->HumanReadablePath().get()));
   }
-  int64_t bufSize = 0;
+
+  uint32_t bufSize = 0;
 
   if (aMaxBytes.isNothing()) {
-    // Limitation: We cannot read files that are larger than the max size of a
-    //             TypedArray (UINT32_MAX bytes). Reject if the file is too
-    //             big to be read.
+    // Limitation: We cannot read more than the maximum size of a TypedArray
+    //            (UINT32_MAX bytes). Reject if we have been requested to
+    //            perform too large of a read.
 
-    int64_t streamSize = -1;
-    if (nsresult rv = stream->GetSize(&streamSize); NS_FAILED(rv)) {
+    int64_t rawStreamSize = -1;
+    if (nsresult rv = stream->GetSize(&rawStreamSize); NS_FAILED(rv)) {
       return Err(IOError(NS_ERROR_FILE_ACCESS_DENIED)
                      .WithMessage("Could not get info for the file at %s",
                                   aFile->HumanReadablePath().get()));
     }
-    MOZ_RELEASE_ASSERT(streamSize >= 0);
+    MOZ_RELEASE_ASSERT(rawStreamSize >= 0);
 
-    if (streamSize > static_cast<int64_t>(UINT32_MAX)) {
-      return Err(
-          IOError(NS_ERROR_FILE_TOO_BIG)
-              .WithMessage("Could not read the file at %s because it is too "
-                           "large(size=%" PRId64 " bytes)",
-                           aFile->HumanReadablePath().get(), streamSize));
-    }
-    bufSize = static_cast<uint32_t>(streamSize);
-
-    if (aOffset >= bufSize) {
+    uint64_t streamSize = static_cast<uint64_t>(rawStreamSize);
+    if (aOffset >= streamSize) {
       bufSize = 0;
     } else {
-      bufSize = bufSize - aOffset;
+      if (streamSize - offset > static_cast<int64_t>(UINT32_MAX)) {
+        return Err(IOError(NS_ERROR_FILE_TOO_BIG)
+                       .WithMessage(
+                           "Could not read the file at %s with offset %" PRIu32
+                           " because it is too large(size=%" PRIu64 " bytes)",
+                           aFile->HumanReadablePath().get(), offset,
+                           streamSize));
+      }
+
+      bufSize = static_cast<uint32_t>(streamSize - offset);
     }
   } else {
     bufSize = aMaxBytes.value();
   }
 
-  if (aOffset > 0) {
-    if (nsresult rv = stream->Seek(PR_SEEK_SET, aOffset); NS_FAILED(rv)) {
+  if (offset > 0) {
+    if (nsresult rv = stream->Seek(PR_SEEK_SET, offset); NS_FAILED(rv)) {
       return Err(IOError(rv).WithMessage(
-          "Could not seek to position %" PRId64 " in file %s", aOffset,
+          "Could not seek to position %" PRId64 " in file %s", offset,
           aFile->HumanReadablePath().get()));
     }
   }

@@ -284,7 +284,7 @@ dictionary ReadOptions : ReadUTF8Options {
    * The offset into the file to read from. If unspecified, the file will be read
    * from the start.
    */
-  unsigned long offset = 0;
+  unsigned long long offset = 0;
 
   /**
    * The max bytes to read from the file at path. If unspecified, the entire
