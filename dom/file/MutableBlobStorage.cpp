@@ -631,7 +631,7 @@ nsresult MutableBlobStorage::DispatchToIOThread(
         do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
     MOZ_ASSERT(target);
 
-    mTaskQueue = new TaskQueue(target.forget());
+    mTaskQueue = new TaskQueue(target.forget(), "BlobStorage");
   }
 
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
