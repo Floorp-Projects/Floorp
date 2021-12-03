@@ -127,6 +127,9 @@ impl From<PrefReaderError> for RunnerError {
 #[derive(Debug)]
 pub struct FirefoxProcess {
     process: Child,
+    // The profile field is not directly used, but it is kept to avoid its
+    // Drop removing the (temporary) profile directory.
+    #[allow(dead_code)]
     profile: Profile,
 }
 
