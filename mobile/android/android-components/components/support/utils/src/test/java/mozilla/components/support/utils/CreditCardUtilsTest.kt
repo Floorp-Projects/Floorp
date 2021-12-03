@@ -70,7 +70,8 @@ class CreditCardUtilsTest {
             Pair("6278592974938779", "unionpay"),
             Pair("8171999927660000", "unionpay"),
             Pair("30569309025904", "diners"),
-            Pair("38520000023237", "diners")
+            Pair("38520000023237", "diners"),
+            Pair("3   8 5 2 0 0 0 0 0 2 3 2 3 7", "diners")
         )
 
         for ((cardNumber, cardType) in recognizedCards) {

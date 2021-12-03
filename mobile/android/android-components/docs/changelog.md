@@ -15,6 +15,10 @@ permalink: /changelog/
   * Removes deprecated `GeckoLoginDelegateWrapper`. Please use `GeckoAutocompleteStorageDelegate`. [#11311](https://github.com/mozilla-mobile/android-components/issues/11311)
   * Added setting for HTTPS-Only mode [#5935](https://github.com/mozilla-mobile/focus-android/issues/5935)
 
+* **support-utils**
+  * 🌟️ Add `String.toCreditCardNumber` for removing characters other than digits from a credit card string number.
+  * 🚒 Bug fixed [issue #11360](https://github.com/mozilla-mobile/android-components/issues/11360) - Crash when saving credit cards
+
 # 95.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v94.0.0...v95.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/142?closed=1)

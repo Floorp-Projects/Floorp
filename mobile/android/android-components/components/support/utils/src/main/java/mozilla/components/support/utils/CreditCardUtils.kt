@@ -5,6 +5,7 @@
 package mozilla.components.support.utils
 
 import androidx.annotation.DrawableRes
+import mozilla.components.support.utils.ext.toCreditCardNumber
 import kotlin.math.floor
 import kotlin.math.log10
 
@@ -253,22 +254,23 @@ internal object CreditCardUtils {
      */
     @Suppress("ComplexMethod")
     fun getCreditCardIIN(cardNumber: String): CreditCardIIN? {
+        val safeCardNumber = cardNumber.toCreditCardNumber()
         for (issuer in creditCardIINs) {
             if (issuer.cardNumberMaxLength.size == 1 &&
-                issuer.cardNumberMaxLength[0] != cardNumber.length
+                issuer.cardNumberMaxLength[0] != safeCardNumber.length
             ) {
                 continue
             } else if (issuer.cardNumberMaxLength.size > 1 &&
                 (
-                    cardNumber.length < issuer.cardNumberMaxLength[0] ||
-                        cardNumber.length > issuer.cardNumberMaxLength[1]
+                    safeCardNumber.length < issuer.cardNumberMaxLength[0] ||
+                        safeCardNumber.length > issuer.cardNumberMaxLength[1]
                     )
             ) {
                 continue
             }
 
             val prefixLength = floor(log10(issuer.startRange.toDouble())) + 1
-            val prefix = cardNumber.substring(0, prefixLength.toInt()).toInt()
+            val prefix = safeCardNumber.substring(0, prefixLength.toInt()).toInt()
 
             if (prefix >= issuer.startRange && prefix <= issuer.endRange) {
                 return issuer
