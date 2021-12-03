@@ -1004,6 +1004,11 @@ class SdpRtcpFbAttributeList : public SdpAttribute {
     Type type;
     std::string parameter;
     std::string extra;
+    // TODO(bug 1744307): Use =default here once it is supported
+    bool operator==(const Feedback& aOther) const {
+      return pt == aOther.pt && type == aOther.type &&
+             parameter == aOther.parameter && extra == aOther.extra;
+    }
   };
 
   void PushEntry(const std::string& pt, Type type,
