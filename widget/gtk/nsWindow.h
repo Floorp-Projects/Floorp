@@ -385,6 +385,11 @@ class nsWindow final : public nsBaseWidget {
   static nsWindow* GetFocusedWindow();
 
 #ifdef MOZ_WAYLAND
+  // Use xdg-activation protocol to transfer focus from gFocusWindow to aWindow.
+  // RequestFocusWaylandWindow needs to be called on focused window only.
+  void RequestFocusWaylandWindow(RefPtr<nsWindow> aWindow);
+  void FocusWaylandWindow(const char* aTokenID);
+
   bool GetCSDDecorationOffset(int* aDx, int* aDy);
   void SetEGLNativeWindowSize(const LayoutDeviceIntSize& aEGLWindowSize);
   void WaylandDragWorkaround(GdkEventButton* aEvent);
@@ -887,6 +892,7 @@ class nsWindow final : public nsBaseWidget {
   LayoutDeviceIntPoint mNativePointerLockCenter;
   zwp_locked_pointer_v1* mLockedPointer;
   zwp_relative_pointer_v1* mRelativePointer;
+  xdg_activation_token_v1* mXdgToken;
 #endif
   mozilla::widget::WindowSurfaceProvider mSurfaceProvider;
 };

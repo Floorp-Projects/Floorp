@@ -494,7 +494,8 @@ nsWindow::nsWindow()
       ,
       mNativePointerLockCenter(LayoutDeviceIntPoint()),
       mLockedPointer(nullptr),
-      mRelativePointer(nullptr)
+      mRelativePointer(nullptr),
+      mXdgToken(nullptr)
 #endif
 {
   mWindowType = eWindowType_child;
@@ -656,6 +657,7 @@ void nsWindow::Destroy() {
     mWaylandVsyncSource->Shutdown();
     mWaylandVsyncSource = nullptr;
   }
+  g_clear_pointer(&mXdgToken, xdg_activation_token_v1_destroy);
 #endif
 
   if (mCompositorPauseTimeoutID) {
@@ -2826,6 +2828,79 @@ guint32 nsWindow::GetLastUserInputTime() {
   return timestamp;
 }
 
+#ifdef MOZ_WAYLAND
+void nsWindow::FocusWaylandWindow(const char* aTokenID) {
+  auto releaseToken = mozilla::MakeScopeExit(
+      [&]() { g_clear_pointer(&mXdgToken, xdg_activation_token_v1_destroy); });
+
+  LOG("nsWindow::SetFocusWayland");
+  if (IsDestroyed()) {
+    LOG("  already destroyed, quit.");
+    return;
+  }
+  wl_surface* surface =
+      mGdkWindow ? gdk_wayland_window_get_wl_surface(mGdkWindow) : nullptr;
+  if (!surface) {
+    LOG("  mGdkWindow is not visible, quit.");
+    return;
+  }
+
+  xdg_activation_v1* xdg_activation = WaylandDisplayGet()->GetXdgActivation();
+  xdg_activation_v1_activate(xdg_activation, aTokenID, surface);
+}
+
+// We've got activation token from Wayland compositor so it's time to use it.
+static void token_done(gpointer data, struct xdg_activation_token_v1* provider,
+                       const char* token) {
+  // Compensate aWindow->AddRef() from nsWindow::RequestFocusWaylandWindow().
+  RefPtr<nsWindow> window = dont_AddRef(static_cast<nsWindow*>(data));
+  window->FocusWaylandWindow(token);
+}
+
+static const struct xdg_activation_token_v1_listener token_listener = {
+    token_done,
+};
+
+void nsWindow::RequestFocusWaylandWindow(RefPtr<nsWindow> aWindow) {
+  LOG("nsWindow::RequestWindowFocusWayland(%p) gFocusWindow [%p]",
+      (void*)aWindow, gFocusWindow);
+
+  RefPtr<nsWaylandDisplay> display = WaylandDisplayGet();
+  xdg_activation_v1* xdg_activation = display->GetXdgActivation();
+  if (!xdg_activation) {
+    LOG("  xdg-activation is missing, quit.");
+    return;
+  }
+
+  // We use xdg-activation protocol to transfer focus from gFocusWindow to
+  // aWindow. Quit if no window is focused.
+  if (gFocusWindow != this) {
+    LOG("  there isn't any focused window to transfer focus from, quit.");
+    return;
+  }
+
+  wl_surface* surface =
+      mGdkWindow ? gdk_wayland_window_get_wl_surface(mGdkWindow) : nullptr;
+  if (!surface) {
+    LOG("  requesting window is hidden/unmapped, quit.");
+    return;
+  }
+
+  // Store activation token at activated window for further release.
+  g_clear_pointer(&aWindow->mXdgToken, xdg_activation_token_v1_destroy);
+  aWindow->mXdgToken = xdg_activation_v1_get_activation_token(xdg_activation);
+
+  // Addref aWindow to avoid potential release untill we get token_done
+  // callback.
+  xdg_activation_token_v1_add_listener(aWindow->mXdgToken, &token_listener,
+                                       do_AddRef(aWindow).take());
+  xdg_activation_token_v1_set_serial(aWindow->mXdgToken, GetLastUserInputTime(),
+                                     display->GetSeat());
+  xdg_activation_token_v1_set_surface(aWindow->mXdgToken, surface);
+  xdg_activation_token_v1_commit(aWindow->mXdgToken);
+}
+#endif
+
 // Request activation of this window or give focus to this widget.
 // aRaise means whether we should request activation of this widget's
 // toplevel window.
@@ -2839,6 +2914,7 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
   // set properly.
   GtkWidget* toplevelWidget = gtk_widget_get_toplevel(GTK_WIDGET(mContainer));
 
+  LOG("  gFocusWindow [%p]\n", gFocusWindow);
   LOG("  mContainer [%p]\n", GTK_WIDGET(mContainer));
   LOG("  Toplevel widget [%p]\n", toplevelWidget);
 
@@ -2867,20 +2943,6 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
     // widget will get a focus-in-event signal.
     if (gRaiseWindows && toplevelWindow->mIsShown && toplevelWindow->mShell &&
         !gtk_window_is_active(GTK_WINDOW(toplevelWindow->mShell))) {
-      if (GdkIsWaylandDisplay() &&
-          Preferences::GetBool("widget.wayland.test-workarounds.enabled",
-                               false)) {
-        // Wayland does not support focus changes so we need to workaround it
-        // by window hide/show sequence.
-        toplevelWindow->NativeShow(false);
-        NS_DispatchToMainThread(NS_NewRunnableFunction(
-            "nsWindow::NativeShow()",
-            [self = RefPtr<nsWindow>(toplevelWindow)]() -> void {
-              self->NativeShow(true);
-            }));
-        return;
-      }
-
       uint32_t timestamp = GDK_CURRENT_TIME;
 
       nsGTKToolkit* GTKToolkit = nsGTKToolkit::GetToolkit();
@@ -2890,6 +2952,15 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
       gtk_window_present_with_time(GTK_WINDOW(toplevelWindow->mShell),
                                    timestamp);
 
+#ifdef MOZ_WAYLAND
+      if (GdkIsWaylandDisplay()) {
+        if (gFocusWindow) {
+          gFocusWindow->RequestFocusWaylandWindow(toplevelWindow);
+        } else {
+          LOG("  RequestFocusWaylandWindow(): we're missing focused window!");
+        }
+      }
+#endif
       if (GTKToolkit) GTKToolkit->SetFocusTimestamp(0);
     }
     return;
@@ -6728,6 +6799,7 @@ void nsWindow::SetUrgencyHint(GtkWidget* top_window, bool state) {
 
   if (!top_window) return;
 
+  // TODO: Use xdg-activation on Wayland?
   gdk_window_set_urgency_hint(gtk_widget_get_window(top_window), state);
 }
 
