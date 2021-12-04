@@ -66,7 +66,7 @@
     <!-- Icon inverted (on color) -->
     <color name="fx_mobile_icon_color_inverted" tools:ignore="UnusedResources">@color/photonWhite</color>
     <!-- New -->
-    <color name="fx_mobile_icon_color_notice" tools:ignore="UnusedResources">@color/photonBlue30</color>
+    <color name="fx_mobile_icon_color_notice">@color/photonBlue30</color>
     <!-- Icon button -->
     <color name="fx_mobile_icon_color_button" tools:ignore="UnusedResources">@color/photonLightGrey05</color>
     <color name="fx_mobile_icon_color_warning" tools:ignore="UnusedResources">@color/photonRed40</color>

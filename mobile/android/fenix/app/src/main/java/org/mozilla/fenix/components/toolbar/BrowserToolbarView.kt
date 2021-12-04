@@ -124,7 +124,7 @@ class BrowserToolbarView(
                     trackingProtection = primaryTextColor,
                     highlight = ContextCompat.getColor(
                         context,
-                        R.color.whats_new_notification_color
+                        R.color.fx_mobile_icon_color_notice
                     )
                 )
 

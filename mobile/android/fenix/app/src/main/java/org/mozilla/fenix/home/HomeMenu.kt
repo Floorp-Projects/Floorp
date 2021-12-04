@@ -153,7 +153,7 @@ class HomeMenu(
             R.drawable.ic_whats_new,
             iconTintColorResource = primaryTextColor,
             highlight = BrowserMenuHighlight.LowPriority(
-                notificationTint = getColor(context, R.color.whats_new_notification_color)
+                notificationTint = getColor(context, R.color.fx_mobile_icon_color_notice)
             ),
             isHighlighted = { WhatsNew.shouldHighlightWhatsNew(context) }
         ) {

@@ -66,7 +66,7 @@
     <!-- Icon inverted (on color) -->
     <color name="fx_mobile_icon_color_inverted" tools:ignore="UnusedResources">@color/photonWhite</color>
     <!-- New -->
-    <color name="fx_mobile_icon_color_notice" tools:ignore="UnusedResources">@color/photonBlue30</color>
+    <color name="fx_mobile_icon_color_notice">@color/photonBlue30</color>
     <!-- Icon button -->
     <color name="fx_mobile_icon_color_button" tools:ignore="UnusedResources">@color/photonViolet90</color>
     <color name="fx_mobile_icon_color_warning" tools:ignore="UnusedResources">@color/photonRed80</color>
@@ -308,9 +308,6 @@
 
     <!-- Private Browsing Mode Persistent Notification -->
     <color name="pbm_notification_color">@color/photonViolet70</color>
-
-    <!-- Notification Color -->
-    <color name="whats_new_notification_color">@color/photonBlue30</color>
 
     <!-- Static Shortcut Background Color -->
     <color name="static_shortcut_background">#F5F5F5</color>
