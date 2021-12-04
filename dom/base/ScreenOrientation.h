@@ -11,7 +11,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/ScreenOrientationBinding.h"
 #include "mozilla/HalScreenConfiguration.h"
-#include "mozilla/MozPromise.h"
 
 class nsScreen;
 
@@ -75,8 +74,8 @@ class ScreenOrientation final
 
   // This method calls into the HAL to lock the device and sets
   // up listeners for full screen change.
-  RefPtr<MozPromise<bool, bool, false>> LockDeviceOrientation(
-      hal::ScreenOrientation aOrientation, bool aIsFullscreen);
+  bool LockDeviceOrientation(hal::ScreenOrientation aOrientation,
+                             bool aIsFullscreen, ErrorResult& aRv);
 
   // This method calls in to the HAL to unlock the device and removes
   // full screen change listener.
