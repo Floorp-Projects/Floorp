@@ -37,12 +37,25 @@ var gMoreFromMozillaPane = {
         id: "firefox-mobile",
         title_string_id: "firefox-mobile-title",
         description_string_id: "firefox-mobile-description",
-        qrcode: null,
         button: {
           id: "fxMobile",
           type: "link",
           label_string_id: "more-mozilla-learn-more-link",
           actionURL: "https://www.mozilla.org/firefox/browsers/mobile/",
+        },
+        qrcode: {
+          title: {
+            string_id: "qr-code-box-firefox-mobile-title",
+          },
+          image_src_prefix:
+            "chrome://browser/content/preferences/more-from-mozilla-qr-code",
+          button: {
+            id: "qr-code-send-email",
+            label: {
+              string_id: "qr-code-box-firefox-mobile-button",
+            },
+            actionURL: "https://www.mozilla.org/en-US/firefox/mobile/get-app",
+          },
         },
       },
       {
@@ -72,8 +85,8 @@ var gMoreFromMozillaPane = {
     let frag = document.createDocumentFragment();
     this._template = document.getElementById(this.option || "simple");
 
-    // Exit when template is not found
-    if (!this._template) {
+    // Exit when internal data is incomplete
+    if (!this._template || !this.option) {
       return;
     }
 
@@ -87,6 +100,10 @@ var gMoreFromMozillaPane = {
 
       // Handle advanced template display of product details
       if (this.option === "advanced") {
+        // So that we can build a selector that applies to .product-info differently
+        // for different products.
+        template.querySelector("vbox.advanced").id = `${product.id}-vbox`;
+
         template.querySelector(".product-img").id = `${product.id}-image`;
         desc.setAttribute(
           "data-l10n-id",
@@ -130,8 +147,34 @@ var gMoreFromMozillaPane = {
       }
 
       if (product.qrcode) {
-        template.querySelector(".qrcode-section").hidden = false;
+        let qrcode = template.querySelector(".qr-code-box");
+        qrcode.setAttribute("hidden", "false");
+
+        let qrcode_title = template.querySelector(".qr-code-box-title");
+        qrcode_title.setAttribute(
+          "data-l10n-id",
+          product.qrcode.title.string_id
+        );
+
+        let img = template.querySelector(".qr-code-box-image");
+        img.src = product.qrcode.image_src_prefix + "-" + this.option + ".svg";
+
+        // Note that the QR code image itself is _not_ a link; this is a link that
+        // is directly below the image.
+        let qrc_btn = template.querySelector(".qr-code-button");
+
+        // So the telemetry includes info about which option is being used
+        qrc_btn.id = `${this.option}-${product.qrcode.button.id}`;
+        qrc_btn.setAttribute(
+          "data-l10n-id",
+          product.qrcode.button.label.string_id
+        );
+        qrc_btn.setAttribute(
+          "href",
+          this.getURL(product.qrcode.button.actionURL, this.option)
+        );
       }
+
       frag.appendChild(template);
     }
     this._productsContainer.appendChild(frag);
