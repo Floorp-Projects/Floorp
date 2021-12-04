@@ -74,7 +74,7 @@ add_task(async function keep_home() {
 
     // Click the pre-selected checkbox to keep custom homepage.
     win.document.getElementById("checkbox").click();
-    win.document.getElementById("secondary").click();
+    win.document.getElementById("primary").click();
     await BrowserTestUtils.waitForEvent(win, "ready");
     win.close();
   });
@@ -88,7 +88,7 @@ add_task(async function keep_home() {
 add_task(async function revert_home() {
   await showAndWaitForDialog(async win => {
     await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("secondary").click();
+    win.document.getElementById("primary").click();
     await BrowserTestUtils.waitForEvent(win, "ready");
     win.close();
   });
@@ -99,13 +99,31 @@ add_task(async function revert_home() {
   );
 });
 
+add_task(async function keep_newtab() {
+  Services.prefs.setBoolPref("browser.newtabpage.enabled", false);
+
+  await showAndWaitForDialog(async win => {
+    await BrowserTestUtils.waitForEvent(win, "ready");
+
+    // Click secondary to ignore pre-selected checkbox.
+    win.document.getElementById("secondary").click();
+    await BrowserTestUtils.waitForEvent(win, "ready");
+    win.close();
+  });
+
+  Assert.ok(
+    Services.prefs.prefHasUserValue("browser.newtabpage.enabled"),
+    "New tab kept disabled"
+  );
+});
+
 add_task(async function revert_newtab() {
   Services.telemetry.clearEvents();
   Services.prefs.setBoolPref("browser.newtabpage.enabled", false);
 
   await showAndWaitForDialog(async win => {
     await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("secondary").click();
+    win.document.getElementById("primary").click();
     await BrowserTestUtils.waitForEvent(win, "ready");
     win.close();
   });
@@ -120,7 +138,7 @@ add_task(async function revert_newtab() {
     ["content", "show", "random-1"],
     ["content", "show", "upgrade-dialog-colorway-home-checkbox"],
     ["content", "show", "upgrade-dialog-colorway-primary-button"],
-    ["content", "button", "upgrade-dialog-colorway-secondary-button"],
+    ["content", "button", "upgrade-dialog-colorway-primary-button"],
     ["content", "button", "upgrade-dialog-colorway-home-checkbox"],
     ["content", "show", "upgrade-dialog-thankyou-primary-button"],
     ["content", "close", "external"]
