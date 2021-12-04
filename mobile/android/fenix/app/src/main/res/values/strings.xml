@@ -805,9 +805,9 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Open tabs menu</string>
     <!-- Open tabs menu item to close all tabs -->
-    <string name="tabs_menu_close_all_tabs">Close all tabs</string>
+    <string name="tabs_menu_close_all_tabs" moz:removedIn="96" tools:ignore="UnusedResources">Close all tabs</string>
     <!-- Open tabs menu item to share all tabs -->
-    <string name="tabs_menu_share_tabs">Share tabs</string>
+    <string name="tabs_menu_share_tabs" moz:removedIn="96" tools:ignore="UnusedResources">Share tabs</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Save tabs to collection</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->

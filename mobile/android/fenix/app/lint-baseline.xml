@@ -7831,28 +7831,6 @@
 
     <issue
         id="UnusedResources"
-        message="The resource `R.string.tabs_menu_close_all_tabs` appears to be unused"
-        errorLine1="    &lt;string name=&quot;tabs_menu_close_all_tabs&quot;>Close all tabs&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="706"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
-        message="The resource `R.string.tabs_menu_share_tabs` appears to be unused"
-        errorLine1="    &lt;string name=&quot;tabs_menu_share_tabs&quot;>Share tabs&lt;/string>"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="708"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
         message="The resource `R.string.tab_share` appears to be unused"
         errorLine1="    &lt;string name=&quot;tab_share&quot;>Share tab&lt;/string>"
         errorLine2="            ~~~~~~~~~~~~~~~~">
@@ -9048,17 +9026,6 @@
             file="src/main/res/values/strings.xml"
             line="1777"
             column="13"/>
-    </issue>
-
-    <issue
-        id="UnusedResources"
-        message="The resource `R.layout.tab_header` appears to be unused"
-        errorLine1="&lt;androidx.constraintlayout.widget.ConstraintLayout"
-        errorLine2="^">
-        <location
-            file="src/main/res/layout/tab_header.xml"
-            line="5"
-            column="1"/>
     </issue>
 
     <issue
