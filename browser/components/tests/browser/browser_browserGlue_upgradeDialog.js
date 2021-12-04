@@ -33,8 +33,6 @@ add_task(async function theme_change() {
   );
 
   await showAndWaitForDialog(async win => {
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("primary").click();
     await BrowserTestUtils.waitForEvent(win, "variations");
     win.document.querySelectorAll("[name=theme]")[3].click();
     await TestUtils.waitForCondition(() => theme.isActive, "Theme is active");
@@ -49,14 +47,6 @@ add_task(async function theme_change() {
 
 add_task(async function keyboard_focus_okay() {
   await showAndWaitForDialog(async win => {
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    Assert.equal(
-      win.document.activeElement,
-      win.document.getElementById("primary"),
-      "Primary button has focus"
-    );
-
-    win.document.getElementById("primary").click();
     await BrowserTestUtils.waitForEvent(win, "ready");
     Assert.equal(
       win.document.activeElement.name,
@@ -81,8 +71,6 @@ add_task(async function keep_home() {
 
   await showAndWaitForDialog(async win => {
     await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("primary").click();
-    await BrowserTestUtils.waitForEvent(win, "ready");
 
     // Click the pre-selected checkbox to keep custom homepage.
     win.document.getElementById("checkbox").click();
@@ -100,8 +88,6 @@ add_task(async function keep_home() {
 add_task(async function revert_home() {
   await showAndWaitForDialog(async win => {
     await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("primary").click();
-    await BrowserTestUtils.waitForEvent(win, "ready");
     win.document.getElementById("secondary").click();
     await BrowserTestUtils.waitForEvent(win, "ready");
     win.close();
@@ -118,11 +104,6 @@ add_task(async function revert_newtab() {
   Services.prefs.setBoolPref("browser.newtabpage.enabled", false);
 
   await showAndWaitForDialog(async win => {
-    // Always "randomly" select the first colorway.
-    win.Math.random = () => 0;
-
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("primary").click();
     await BrowserTestUtils.waitForEvent(win, "ready");
     win.document.getElementById("secondary").click();
     await BrowserTestUtils.waitForEvent(win, "ready");
@@ -135,9 +116,7 @@ add_task(async function revert_newtab() {
   );
   AssertEvents(
     "Checkbox shown and kept checked",
-    ["content", "show", "3-screens"],
-    ["content", "show", "upgrade-dialog-start-primary-button"],
-    ["content", "button", "upgrade-dialog-start-primary-button"],
+    ["content", "show", "2-screens"],
     ["content", "show", "random-1"],
     ["content", "show", "upgrade-dialog-colorway-home-checkbox"],
     ["content", "show", "upgrade-dialog-colorway-primary-button"],
@@ -148,34 +127,10 @@ add_task(async function revert_newtab() {
   );
 });
 
-add_task(async function skip_screens() {
-  await showAndWaitForDialog(async win => {
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("secondary").click();
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("primary").click();
-  });
-
-  AssertEvents(
-    "Skipped over colorway screen",
-    ["content", "show", "3-screens"],
-    ["content", "show", "upgrade-dialog-start-primary-button"],
-    ["content", "button", "upgrade-dialog-start-secondary-button"],
-    ["content", "show", "upgrade-dialog-thankyou-primary-button"],
-    ["content", "button", "upgrade-dialog-thankyou-primary-button"],
-    ["content", "close", "complete"]
-  );
-});
-
-add_task(async function all_3_screens() {
+add_task(async function all_2_screens() {
   let accessibleVariant = false;
 
   await showAndWaitForDialog(async win => {
-    // Always "randomly" select the first colorway.
-    win.Math.random = () => 0;
-
-    await BrowserTestUtils.waitForEvent(win, "ready");
-    win.document.getElementById("primary").click();
     await BrowserTestUtils.waitForEvent(win, "variations");
 
     const variant = win.document.querySelectorAll("[name=variation]")[1];
@@ -189,10 +144,8 @@ add_task(async function all_3_screens() {
   });
 
   AssertEvents(
-    "Shows all 3 screens with variations",
-    ["content", "show", "3-screens"],
-    ["content", "show", "upgrade-dialog-start-primary-button"],
-    ["content", "button", "upgrade-dialog-start-primary-button"],
+    "Shows all 2 screens with variations",
+    ["content", "show", "2-screens"],
     ["content", "show", "random-1"],
     ["content", "show", "upgrade-dialog-colorway-primary-button"],
     ["content", "theme", "variant-1"],
@@ -220,8 +173,9 @@ add_task(async function quit_app() {
 
   AssertEvents(
     "Dialog closed on quit request",
-    ["content", "show", "3-screens"],
-    ["content", "show", "upgrade-dialog-start-primary-button"],
+    ["content", "show", "2-screens"],
+    ["content", "show", "random-1"],
+    ["content", "show", "upgrade-dialog-colorway-primary-button"],
     ["content", "close", "quit-application-requested"]
   );
 });
@@ -240,8 +194,9 @@ add_task(async function window_warning() {
 
   AssertEvents(
     "Dialog closed when close warning wants to open",
-    ["content", "show", "3-screens"],
-    ["content", "show", "upgrade-dialog-start-primary-button"],
+    ["content", "show", "2-screens"],
+    ["content", "show", "random-1"],
+    ["content", "show", "upgrade-dialog-colorway-primary-button"],
     ["content", "close", "external"]
   );
 });
