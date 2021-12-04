@@ -25,17 +25,15 @@ class TenuringTracer final : public GenericTracer {
   Nursery& nursery_;
 
   // Amount of data moved to the tenured generation during collection.
-  size_t tenuredSize;
+  size_t tenuredSize = 0;
   // Number of cells moved to the tenured generation.
-  size_t tenuredCells;
+  size_t tenuredCells = 0;
 
   // These lists are threaded through the Nursery using the space from
   // already moved things. The lists are used to fix up the moved things and
   // to find things held live by intra-Nursery pointers.
-  gc::RelocationOverlay* objHead;
-  gc::RelocationOverlay** objTail;
-  gc::StringRelocationOverlay* stringHead;
-  gc::StringRelocationOverlay** stringTail;
+  gc::RelocationOverlay* objHead = nullptr;
+  gc::StringRelocationOverlay* stringHead = nullptr;
 
   JSObject* onObjectEdge(JSObject* obj) override;
   JSString* onStringEdge(JSString* str) override;
