@@ -298,7 +298,10 @@ function onLoad(ready) {
     logo.classList.remove("hidden");
     colorways.remove();
     checkbox.remove();
+  }
 
+  // Handle checkbox being checked.
+  function handleCheckbox() {
     // Revert both homepage and newtab if still checked (potentially doing
     // nothing if each pref is already the default value).
     if (checkbox.firstElementChild.checked) {
@@ -346,6 +349,7 @@ function onLoad(ready) {
         // New theme is confirmed, so don't revert to previous.
         case "upgrade-dialog-colorway-primary-button":
           gPrevTheme = null;
+          handleCheckbox();
           removeColorways();
           break;
 
