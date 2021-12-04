@@ -50,7 +50,7 @@
     <!-- Warning text -->
     <color name="fx_mobile_text_color_warning" tools:ignore="UnusedResources">@color/photonRed80</color>
     <!-- Text link -->
-    <color name="fx_mobile_text_color_action" tools:ignore="UnusedResources">@color/photonViolet70</color>
+    <color name="fx_mobile_text_color_action">@color/photonViolet70</color>
     <!-- Small heading -->
     <color name="fx_mobile_text_color_accent" tools:ignore="UnusedResources">@color/photonViolet90</color>
     <!-- Text/Icon inverted (on color) -->
@@ -257,11 +257,7 @@
         <item>@color/collection_icon_color_yellow</item>
     </array>
 
-    <!-- Home screen -->
-    <color name="home_show_all_button_text">@color/photonViolet70</color>
-
     <!-- Quick action buttons-->
-
     <color name="quick_action_reader_appearance_icon">#482166</color>
 
     <!-- Toggle Colors -->

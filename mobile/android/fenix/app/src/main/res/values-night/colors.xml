@@ -50,7 +50,7 @@
     <!-- Warning text -->
     <color name="fx_mobile_text_color_warning" tools:ignore="UnusedResources">@color/photonRed40</color>
     <!-- Text link -->
-    <color name="fx_mobile_text_color_action" tools:ignore="UnusedResources">@color/photonViolet40</color>
+    <color name="fx_mobile_text_color_action">@color/photonViolet40</color>
     <!-- Small heading -->
     <color name="fx_mobile_text_color_accent" tools:ignore="UnusedResources">@color/photonViolet40</color>
     <!-- Text/Icon inverted (on color) -->
@@ -170,9 +170,6 @@
     <color name="collection_icon_color_pink">@color/photonPink30</color>
     <color name="collection_icon_color_green">#88FFD1</color>
     <color name="collection_icon_color_yellow">#FFDE67</color>
-
-    <!-- Home screen -->
-    <color name="home_show_all_button_text">@color/photonViolet40</color>
 
     <!-- Search Widget -->
     <color name="search_widget_background">@color/inset_normal_theme</color>

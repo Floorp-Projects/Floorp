@@ -37,7 +37,7 @@
         android:maxLines="1"
         android:nestedScrollingEnabled="false"
         android:text="@string/recent_tabs_show_all"
-        android:textColor="@color/home_show_all_button_text"
+        android:textColor="@color/fx_mobile_text_color_action"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="@id/header" />
 </androidx.constraintlayout.widget.ConstraintLayout>
