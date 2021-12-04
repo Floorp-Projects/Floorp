@@ -89,7 +89,7 @@
 
     <!-- Light theme color palette -->
     <color name="primary_text_light_theme">@color/photonInk80</color>
-    <color name="contrast_text_light_theme">@color/primary_text_dark_theme</color>
+    <color name="contrast_text_light_theme">@color/photonLightGrey05</color>
     <color name="foundation_light_theme">@color/photonLightGrey20</color>
     <color name="inset_light_theme">@color/photonLightGrey30</color>
     <color name="accent_light_theme">@color/photonInk20</color>
@@ -108,7 +108,6 @@
     <color name="tab_tray_item_media_stroke">@color/photonWhite</color>
 
     <!-- Dark theme color palette -->
-    <color name="primary_text_dark_theme">@color/photonLightGrey05</color>
     <color name="above_dark_theme">@color/photonDarkGrey50</color>
     <color name="accent_bright_dark_theme">@color/photonViolet70</color>
     <color name="accent_high_contrast_dark_theme">@color/photonViolet40</color>

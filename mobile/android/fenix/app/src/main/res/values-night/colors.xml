@@ -88,7 +88,7 @@
     <color name="fx_mobile_border_color_divider" tools:ignore="UnusedResources">@color/photonDarkGrey05</color>
 
     <!-- Normal theme colors for dark mode -->
-    <color name="primary_text_normal_theme">@color/primary_text_dark_theme</color>
+    <color name="primary_text_normal_theme">@color/fx_mobile_text_color_primary</color>
     <color name="secondary_text_normal_theme">#A7A2B7</color>
     <color name="contrast_text_normal_theme">@color/primary_text_normal_theme</color>
     <color name="caption_text_normal_theme">@color/photonLightGrey70</color>
@@ -173,13 +173,13 @@
 
     <!-- Search Widget -->
     <color name="search_widget_background">@color/inset_normal_theme</color>
-    <color name="search_widget_mic_fill_color">@color/primary_text_dark_theme</color>
-    <color name="search_widget_text">@color/primary_text_dark_theme</color>
+    <color name="search_widget_mic_fill_color">@color/photonLightGrey05</color>
+    <color name="search_widget_text">@color/fx_mobile_text_color_primary</color>
 
     <!-- Reader View colors -->
-    <color name="mozac_feature_readerview_text_color">@color/primary_text_dark_theme</color>
+    <color name="mozac_feature_readerview_text_color">@color/fx_mobile_text_color_primary</color>
 
     <!-- Tab Counter colors -->
-    <color name="mozac_ui_tabcounter_default_tint">@color/primary_text_dark_theme</color>
-    <color name="mozac_ui_tabcounter_default_text">@color/primary_text_dark_theme</color>
+    <color name="mozac_ui_tabcounter_default_tint">@color/photonLightGrey05</color>
+    <color name="mozac_ui_tabcounter_default_text">@color/fx_mobile_text_color_primary</color>
 </resources>
