@@ -1558,7 +1558,7 @@
     <!-- Description of social media trackers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_social_media_trackers_description">Limiteghja a capacità di e rete suciale à seguità a vostra navigazione nant’à u Web.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_title">Canistrelli impiegati per u spiunagiu tra i siti</string>
+    <string name="etp_cookies_title">Canistrelli impiegati per u spiunagiu intersiti</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Bluccechja i canistrelli chì e rete di publicità è e sucietà d’analisa di dati impieganu per cumpilà i vostri dati di navigazione nant’à parechji siti.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->

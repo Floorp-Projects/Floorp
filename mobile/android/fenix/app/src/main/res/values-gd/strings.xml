@@ -22,7 +22,7 @@
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">Tha taba fosgailte. Thoir gnogag airson leum a ghearradh gu taba eile.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">Tha tabaichean (%1$s) fosgailte. Thoir gnogag airson leum a ghearradh gu taba eile.</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">Tha tabaichean (%1$s) fosgailte. Thoir gnogag airson leum a ghearradh gu taba eile.</string>
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d air an taghadh</string>
     <!-- Label of button in create collection dialog for creating a new collection  -->
@@ -106,9 +106,22 @@
     <string name="tab_tray_close_tabs_banner_negative_button_text">Leig seachad</string>
 
     <!-- Text for the banner message to tell users about our inactive tabs feature. -->
-    <string name="tab_tray_inactive_onboarding_message" tools:ignore="UnusedResources">Thèid tabaichean nach dug thu sùil orra fad cola-deug a ghluasad an-seo. </string>
+    <string name="tab_tray_inactive_onboarding_message">Thèid tabaichean nach dug thu sùil orra fad cola-deug a ghluasad an-seo. </string>
     <!-- Text for the action link to go to Settings for inactive tabs. -->
-    <string name="tab_tray_inactive_onboarding_button_text" tools:ignore="UnusedResources">Cuir dheth sna roghainnean</string>
+    <string name="tab_tray_inactive_onboarding_button_text">Cuir dheth sna roghainnean</string>
+
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">A bheil thu airson an dùnadh an dèidh mìos?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_body">Dùnaidh Firefox tabaichean nach tug thu sùil orra thairis air a’ mhìos seo chaidh.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Dùin</string>
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string moz:removedIn="95" name="tab_tray_inactive_turn_on_auto_close_button" tools:ignore="UnusedResources">Cuir gleus an fhèin-dùnaidh air</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">Cuir gleus an fhèin-dùnaidh air</string>
+
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -117,7 +130,7 @@
     <string name="home_screen_shortcut_open_new_private_tab_2">Taba prìobhaideach ùr</string>
 
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Brod nan làrach</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">Brod nan làrach</string>
 
     <!-- Recent Tabs -->
     <!-- Header text for jumping back into the recent tab in the home screen -->
@@ -131,8 +144,12 @@
         The first parameter is the search term that the user used. (for example: your search for "cat")-->
     <string name="recent_tabs_search_term">Rinn thu lorg airson “%1$s”</string>
     <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
-        The first parameter is the count for number of sites in the group.  This number will always be more than one. -->
-    <string name="recent_tabs_search_term_count">Làraichean: %1$s</string>
+    The first parameter is the count for number of sites in the group.  This number will always be more than one. -->
+    <string moz:removedIn="96" name="recent_tabs_search_term_count" tools:ignore="UnusedResources">Làraichean: %1$s</string>
+
+    <!-- Text for the number of tabs in a group in the 'Jump back in' section of the new tab
+        %d is a placeholder for the number of sites in the group. This number will always be more than one. -->
+    <string name="recent_tabs_search_term_count_2">%d làrach</string>
 
     <!-- History Metadata -->
     <!-- Header text for a section on the home screen that displays grouped highlights from the
@@ -140,10 +157,10 @@
     <string moz:removedIn="94" name="history_metadata_header" tools:ignore="UnusedResources">Na rùraich thu roimhe</string>
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string moz:removedIn="94" name="history_metadata_header_2" tools:ignore="UnusedResources">Air tadhal orra o chionn goirid</string>
+    <string name="history_metadata_header_2">Air tadhal orra o chionn goirid</string>
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header_3">Luirg o chionn goirid</string>
+    <string moz:removedIn="96" name="history_metadata_header_3" tools:ignore="UnusedResources">Luirg o chionn goirid</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">Thoir air falbh</string>
@@ -162,7 +179,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Sguir dheth</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Comharra-lìn</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">Comharra-lìn</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">Deasaich an comharra-lìn</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -281,6 +298,20 @@
     <!-- Onboarding home screen dialog title text for the home section. Firefox is intentionally hardcoded. -->
     <string name="onboarding_home_screen_section_home_title_2">Duilleag-dhachaigh Firefox ghnàthaichte</string>
 
+    <!-- Onboarding home screen dialog description text for the home section. -->
+    <string name="onboarding_home_screen_section_home_description_2">Leum gu na tabaichean fosgailte, comharran-lìn is eachdraidh a’ bhrabhsaidh agad.</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_title_2">Tabaichean glan sgiobalta</string>
+    <!-- Onboarding home screen dialog description text for the tab tray section. -->
+    <string name="onboarding_home_screen_section_cleaner_tab_tray_description_2">Nas lugha de bhrolamas le co-dhealbhachd nas fheàrr is tabaichean a nì dùnadh gu fèin-obrachail.</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_title_2">Luirg o chionn goirid</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_description_2">Ath-thadhail air na luirg a rinn thu o chionn goirid air an duilleag-dhachaigh agad.</string>
+
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint" tools:ignore="UnusedResources">Leis gu bheil duilleag-dhachaigh phearsantaichte agad ann am Firefox a-nis, tha e nas fhasa cumail a’ dol far an do stad thu roimhe. Faigh greim air na tabaichean, comharran-lìn is toraidhean-luirg a bh’ agad o chionn goirid.</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">Fosgail taba Firefox ùr</string>
@@ -360,7 +391,9 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">An t-ùrlar</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">Dhachaigh</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">Dhachaigh</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">An duilleag-dhachaigh</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Gluasadan</string>
     <!-- Preference for settings related to visual options -->
@@ -427,6 +460,24 @@
 
     <!-- Toast shown after confirming the custom add-on collection configuration -->
     <string name="toast_customize_addon_collection_done">Chaidh cruinneachadh nan tuilleadan atharrachadh. Fàg an aplacaid gus na h-atharraichean a chur an gnìomh…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">Till gu far an robh thu</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">Air a shàbhaladh o chionn goirid</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string moz:removedIn="94" name="customize_toggle_recently_bookmarked" tools:ignore="UnusedResources">Comharran-lìn ùra</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">Comharran-lìn ùra</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">Air tadhal orra o chionn goirid</string>
+    <!-- Title for the customize home screen settings section for recent searches. Recent searches
+     is a section where users see a list of groups of tabs that they have visited in the past few days -->
+    <string moz:removedIn="96" name="customize_toggle_recent_searches" tools:ignore="UnusedResources">Luirg o chionn goirid</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket">Pocket</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -535,7 +586,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Cuir an sioncronachadh air</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Sganaich an còd paidhreachaidh ann am Firefox desktop</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">Sganaich an còd paidhreachaidh ann am Firefox desktop</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Clàraich a-steach</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -611,6 +662,13 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Dùin</string>
 
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d làrach</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d làraichean</string>
+
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">Tabaichean a dhùin thu o chionn goirid</string>
     <!-- Option in library to open Recently Closed Tabs page -->
@@ -633,6 +691,10 @@
     <string name="tab_view_list">Liosta</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">Griod</string>
+    <!-- Option for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups">Buidhnean luirg</string>
+    <!-- Summary text for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups_summary">Buidhnich làraichean co-cheangailte còmhla</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Dùin na tabaichean</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -644,15 +706,26 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">An dèidh mìos</string>
 
-    <!-- Start on Home -->
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Dùin tabaichean fosgailte gu fèin-obrachail</string>
+
+    <!-- Opening screen -->
     <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home">Tòisich air an sgrìn dachaigh</string>
+    <string moz:removedIn="94" name="preferences_start_on_home" tools:ignore="UnusedResources">Tòisich air an sgrìn dachaigh</string>
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">An sgrìn fosglaidh</string>
     <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours">Às dèidh ceithir uairean a thìde</string>
+    <string moz:removedIn="94" name="start_on_home_after_four_hours" tools:ignore="UnusedResources">Às dèidh ceithir uairean a thìde</string>
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">An duilleag-dhachaigh</string>
     <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always">An-còmhnaidh</string>
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">An-còmhnaidh</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">An taba mu dheireadh</string>
     <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never">Chan ann idir</string>
+    <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">Chan ann idir</string>
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">An duilleag-dhachaigh an dèidh ceithir uairean a thìde gun ghnìomhachd</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">Dùin de làimh</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -661,6 +734,20 @@
     <string name="close_tabs_after_one_week_summary">Dùin an dèidh seachdain</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">Dùin an dèidh mìos</string>
+
+    <!-- Studies -->
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Thoir air falbh</string>
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Gnìomhach</string>
+    <!-- Description for studies, it indicates why Firefox use studies -->
+    <string name="studies_description">Dh’fhaoidte gun stàlaich is ruith Firefox rannsachadh o àm gu àm.</string>
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Barrachd fiosrachaidh</string>
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">Ceart ma-thà</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">Sguir dheth</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -684,11 +771,13 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">Sàbhail ann an cruinneachadh</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">Tagh</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">Tagh</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Co-roinn a h-uile taga</string>
     <!-- Text shown in the menu to view recently closed tabs -->
     <string name="tab_tray_menu_recently_closed">Tabaichean a dhùin thu o chionn goirid</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Air a dhùnadh o chionn goirid</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">Roghainnean a’ chunntais</string>
     <!-- Text shown in the menu to view tab settings -->
@@ -761,6 +850,11 @@
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string name="tab_tray_save_to_collection">Sàbhail</string>
 
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string moz:removedIn="94" name="tab_tray_header_title" tools:ignore="UnusedResources">Eile</string>
+    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
+    <string name="tab_tray_header_title_1">Tabaichean eile</string>
+
     <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Sguab an eachdraidh às</string>
@@ -780,8 +874,8 @@
     <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">Fosgail ann an taba ùr</string>
     <!-- History overflow menu open in private tab button -->
     <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">Fosgail ann an taba prìobhaideach</string>
-    <!-- Text for the button to delete a single history item -->
-    <string moz:removedIn="94" name="history_delete_item" tools:ignore="UnusedResources">Sguab às</string>
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">Sguab às</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d air an taghadh</string>
@@ -804,10 +898,6 @@
     <string name="history_empty_message">Chan eil eachdraidh an-seo</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">Sguab às sìos uaithe seo</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">A bheil thu cinnteach gu bheil thu airson na luchdaich thu a-nuas fhalamhachadh?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">Chaidh na luchdaich thu a-nuas a thoirt air falbh</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -847,7 +937,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">Clàr-taice nan comharra-lìn</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">Deasaich an comharra-lìn</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">Deasaich an comharra-lìn</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">Tagh pasgan</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -980,6 +1070,11 @@
     <string name="delete_browsing_data_quit_on">Air</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
     <string name="delete_browsing_data_quit_off">Dheth</string>
+
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">Air</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">Dheth</string>
 
     <!-- Collections -->
     <!-- Collections header on home fragment -->
@@ -1133,6 +1228,8 @@
     <string name="qr_scanner_dialog_positive">CEADAICH</string>
     <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
     <string name="qr_scanner_dialog_negative">DIÙLT</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">Ceart ma-thà</string>
     <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
     <string name="tab_collection_dialog_message">A bheil thu cinnteach gu bheil thu airson %1$s a sguabadh às?</string>
     <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
@@ -1260,11 +1357,11 @@
     <!-- text for the firefox account onboarding card header when we detect you're already signed in to
         another Firefox browser. (The word `Firefox` should not be translated)
         The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_3">Rinn thu clàradh a-steach mar %s air brabhsair Firefox eile air an uidheam seo. Am bu toil leat clàradh a-steach leis a’ cunntas ud?</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_auto_signin_header_3" tools:ignore="UnusedResources">Rinn thu clàradh a-steach mar %s air brabhsair Firefox eile air an uidheam seo. Am bu toil leat clàradh a-steach leis a’ cunntas ud?</string>
     <!-- text for the button to confirm automatic sign-in -->
-    <string name="onboarding_firefox_account_auto_signin_confirm">Bu toil, clàraich a-steach mi</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_auto_signin_confirm" tools:ignore="UnusedResources">Bu toil, clàraich a-steach mi</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
-    <string name="onboarding_firefox_account_signing_in">Gad chlàradh a-steach…</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_signing_in" tools:ignore="UnusedResources">Gad chlàradh a-steach…</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Clàraich leinn</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
@@ -1272,7 +1369,7 @@
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Tha an sioncronachadh air</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
-    <string name="onboarding_firefox_account_automatic_signin_failed">Dh’fhàillig an logadh a-steach</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_automatic_signin_failed" tools:ignore="UnusedResources">Dh’fhàillig an logadh a-steach</string>
     <!-- text for the tracking protection onboarding card header -->
     <string name="onboarding_tracking_protection_header_3">Tha prìobhaideachd air an-còmhnaidh</string>
     <!-- text for the tracking protection card description. 'Firefox' intentionally hardcoded here -->
@@ -1413,6 +1510,8 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Criopto-mhèinneadairean</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Lorgaichean-meur</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">Mion-fhiosrachadh</string>
     <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Bacte</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
@@ -1463,6 +1562,12 @@
     <string name="etp_redirect_trackers_title">Ath-stiùirich tracaichean</string>
     <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_redirect_trackers_description">Falamhaich briosgaidean a chaidh a shuidheachadh an cois ath-stiùiridh gu làraichean-lìn a tha nan tracaichean aithnichte.</string>
+
+    <!-- Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
+         as we use it on the UI to indicate which trackers have been partially unblocked.  -->
+    <string name="preference_etp_smartblock_description">Chaidh pàirt dhe na tracaichean comharraichte gu h-ìosal a dhì-bhacadh air an duilleag seo on a ghabh thu eadar-ghnìomh leotha *.</string>
+    <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
+    <string name="preference_etp_smartblock_learn_more">Barrachd fiosrachaidh</string>
 
     <!-- About page link text to open support link -->
     <string name="about_support">Taic</string>
@@ -1521,6 +1626,9 @@
     <string name="preferences_passwords_save_logins_never_save">Na sàbhail idir</string>
     <!-- Preference for autofilling saved logins in Fenix -->
     <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">Fèin-lìonadh</string>
+
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">Cuir clàradh a-steach ris</string>
 
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sioncronaich na clàraidhean a-steach</string>
@@ -1750,6 +1858,10 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Cuir <b>%1$s</b> AIR]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection_2">Tha an ceangal tèarainte</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection_2">Chan eil an ceangal tèarainte</string>
+    <!-- Label that indicates a site is using a secure connection -->
     <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">Ceangal tèarainte</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">Ceangal nach eil tèarainte</string>
@@ -1795,6 +1907,10 @@
     <string name="edit">Deasaich</string>
     <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Tha feum air facal-faire</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">Tha feum air ainm-cleachdaiche</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">Tha feum air ainm òstair</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Lorg-gutha</string>
     <!-- Voice search prompt description displayed after the user presses the voice search button -->
@@ -1802,6 +1918,11 @@
 
     <!--  The error message in edit login view when a duplicate username exists. -->
     <string name="saved_login_duplicate">Tha clàradh a-steach ann mu thràth aig a bheil an t-ainm-cleachdaiche seo</string>
+
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">Tha feum air ainm òstair dligheach</string>
 
     <!-- Synced Tabs -->
     <!-- Text displayed to ask user to connect another device as no devices found with account -->
@@ -1838,6 +1959,33 @@
 	<!-- Dialog button text for canceling the rename top site prompt. -->
 	<string name="top_sites_rename_dialog_cancel">Sguir dheth</string>
 
+    <!-- Inactive tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
+    <string name="inactive_tabs_title">Tabaichean neo-ghnìomhach</string>
+    <!-- Content description for closing all inactive tabs -->
+    <string name="inactive_tabs_delete_all">Dùin gach taba neo-ghnìomhach</string>
+    <!-- A description below the section of "inactive" tabs to notify the user when those tabs will be closed, if appropriate. See strings inactive_tabs_30_days and inactive_tabs_7_days for placeholders options. -->
+    <string moz:removedIn="95" name="inactive_tabs_description" tools:ignore="UnusedResources">Bidh na tabaichean ri làimh dhut an-seo fad %s. Thèid na tabaichean a dhùnadh gu fèin-obrachail an uairsin.</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string moz:removedIn="95" name="inactive_tabs_30_days" tools:ignore="UnusedResources">30 latha</string>
+    <!-- The amount of time until a tab in the "inactive" section of the tabs tray will be closed. See string inactive_tabs_description as well -->
+    <string moz:removedIn="95" name="inactive_tabs_7_days" tools:ignore="UnusedResources">seachdain</string>
+
+    <!-- Inactive tabs auto-close message in the tabs tray -->
+    <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">A bheil thu airson an dùnadh an dèidh mìos?</string>
+    <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Dùnaidh Firefox tabaichean nach tug thu sùil orra thairis air a’ mhìos seo chaidh.</string>
+    <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">CUIR GLEUS AN FHÈIN-DÙNAIDH AIR</string>
+
+    <!-- One of the feedback option that can be selected as a responses to the inactive tabs survey question. -->
+    <string name="inactive_tabs_survey_do_not_understand">Chan eil mi a’ tuigsinn mar a tha e ag obair</string>
+    <!-- Confirmation button text to submit the feedback for the inactive tabs survey. -->
+    <string name="inactive_tabs_survey_send_button">Cuir</string>
+    <!-- Content description for inactive tabs survey close button -->
+    <string name="inactive_tabs_survey_close_button_content_description">Dùin</string>
+
     <!-- Default browser experiment -->
     <string name="default_browser_experiment_card_text">Suidhich ceanglaichean o làraichean-lìn, puist-d agus teachdaireachdan airson ’s gun tèid am fosgladh gu fèin-obrachail ann am Firefox.</string>
 
@@ -1853,4 +2001,10 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">Dùin</string>
 
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_categories_header">Sgeulachdan a-rèir cuspair</string>
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">Fidir barrachd</string>
+    <!-- Title of an app feature. Smaller than a heading.-->
+    <string name="pocket_stories_feature_title">Le cumhachd Pocket.</string>
     </resources>
