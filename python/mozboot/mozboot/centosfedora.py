@@ -67,10 +67,7 @@ class CentOSFedoraBootstrapper(LinuxBootstrapper, BaseBootstrapper):
 
             self.mobile_android_packages += ["ncurses-compat-libs"]
 
-        if self.distro in ("centos", "rocky") and self.version == 8:
-            self.packages += ["python3-devel"]
-        else:
-            self.packages += ["python-devel"]
+        self.packages += ["python3-devel"]
 
     def install_system_packages(self):
         self.dnf_groupinstall(*self.group_packages)
