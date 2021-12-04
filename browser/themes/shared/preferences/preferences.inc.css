@@ -1179,8 +1179,6 @@ richlistitem .text-link:hover {
 #moreFromMozillaCategory .subtitle {
   color: var(--in-content-deemphasized-text);
   margin: 4px 0 10px;
-  font-size: .87em;
-  line-height: 1.4em;
 }
 
 #moreFromMozillaCategory .list-item {
@@ -1202,13 +1200,6 @@ richlistitem .text-link:hover {
   padding-top: 33px;
 }
 
-/* The firefox-mobile product has three columns and needs to constrain the
- * .product-info section to one of them.
- */
-#firefox-mobile-vbox.advanced .product-info {
-  max-width: 200px;
-}
-
 #moreFromMozillaCategory .product-img {
   background-repeat: no-repeat;
   background-size: 150px;
@@ -1223,9 +1214,7 @@ richlistitem .text-link:hover {
 #moreFromMozillaCategory .description {
   color: var(--in-content-deemphasized-text);
   padding-inline-start: 30px;
-  margin: 2px 0;
-  font-size: .87em;
-  line-height: 1.4em;
+  margin: 4px 0;
 }
 
 #moreFromMozillaCategory .advanced .description {
@@ -1244,14 +1233,9 @@ richlistitem .text-link:hover {
 #moreFromMozillaCategory vbox.advanced {
   box-shadow: 0 2px 6px rgba(58, 57, 68, 0.2);
   border-radius: 4px;
-
   margin-block: 20px 10px;
   margin-inline: 2px 0;
   padding: 16px;
-
-  min-width: 725px;
-  max-width: 725px;
-  height: 219px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1266,6 +1250,7 @@ richlistitem .text-link:hover {
 
 #moreFromMozillaCategory .simple .text-link {
   display: block;
+  margin-block: 4px 0;
   margin-inline-start: 4px;
 }
 
@@ -1292,128 +1277,4 @@ richlistitem .text-link:hover {
 
 #mozilla-rally-image {
   background-image: url("chrome://browser/skin/preferences/img-rally.png");
-}
-
-/*
- * The :not clause is required because hiding an element with `display: flex` only
- * partially hides it.
- */
-.qr-code-box:not([hidden="true"]) {
-  max-width: 320px; /* a unit better than px for this & next? */
-  min-height: 204px;
-  margin-block: 10px;
-  margin-inline-start: 30px;
-  background-color: #f9f9fb;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-around;
-}
-
-.advanced .qr-code-box {
-  align-items: flex-start;
-  max-width: 307px;
-  min-height: 187px;
-  margin-inline-start: 12px;
-}
-
-.qr-code-top-box {
-  display: flex;
-}
-
-.advanced .qr-code-top-box {
-  align-items: center;
-}
-
-.qr-code-box-image {
-  border-radius: 4px;
-  padding: 2px;
-  width: 80px;
-  flex: 0 0 auto;
-}
-
-.advanced .qr-code-box-image {
-  max-width: 86px;
-  height: 86px;
-  margin-inline-end: 16px;
-  margin-block: 18px;
-
-  fill: rgb(87, 77, 77);
-}
-
-#moreFromMozillaCategory .advanced .text-link {
-  margin-inline-start: 0;
-}
-
-.qr-code-title-label {
-  flex: 1 1 auto;
-}
-
-.qr-code-box-title {
-  font-size: .675em;
-  font-weight: 600;
-  line-height: 1.42em;
-
-  text-align: center;
-
-  margin-block: 20px 0;
-  margin-inline: 40px;
-}
-
-.advanced .qr-code-box-title {
-  text-align: start;
-  margin-inline: 16px;
-  margin-block: revert;
-}
-
-#moreFromMozillaCategory .qr-code-button {
-  font-size: .675em;
-  font-weight: 400;
-  line-height: 1.42em;
-  text-decoration: underline;
-  color: #5b5b66;
-
-  flex: 2 0 auto;
-  margin-block-start: 10px;
-  margin-inline: 0; /* make sure we're correctly centered by overriding button rule */
-}
-
-#moreFromMozillaCategory .advanced .qr-code-button {
-  margin-inline: 16px;
-  padding-block-start: 30px;
-}
-
-#moreFromMozillaCategory #simple-fxMobile,#advanced-fxMobile {
-  font-size: .87em;
-  line-height: 1.4em;
-
-  text-decoration: underline;
-
-  margin-block: 2px 0;
-  margin-inline: 6px 0;
-}
-
-
-@media (prefers-color-scheme: dark) {
-  .qr-code-box:not([hidden="true"]) {
-    background-color: rgba(91,91,102,0.45);
-  }
-
-  .qr-code-box-image {
-    -moz-context-properties: fill;
-    fill: white;
-  }
-
-  .advanced .qr-code-box-image {
-    background-color: white;
-    fill: black;
-  }
-
-  #moreFromMozillaCategory .qr-code-button {
-    color: #fbfbfe;
-  }
-
-  .qr-code-box-title {
-    color: #fbfbfe;
-  }
 }
