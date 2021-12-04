@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <canvas id="pdf" width="200" height="200"></canvas>
+    <script>
+      const canvas = document.getElementById("pdf");
+      const ctx = canvas.getContext("2d");
+
+      ctx.transform(6.4, 0, 0, -6.4, 30, 60);
+
+      ctx.beginPath();
+      ctx.moveTo(3.34488, -15.90236);
+      ctx.lineTo(22.36535, -2.94803);
+      ctx.lineTo(13.01102, 7.14331);
+      ctx.lineTo(1.33228, 0.34016);
+      ctx.lineTo(5.10236, -7.08661);
+      ctx.lineTo(-1.38898, -9.41102);
+      ctx.lineTo(1.24724, -15.10866);
+      ctx.closePath();
+      ctx.clip("evenodd");
+
+      var gradient = ctx.createRadialGradient(10, 10, 10, 20, 20, 40);
+      gradient.addColorStop(0, '#FF0000');
+      gradient.addColorStop(1, '#00FF00');
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(-1.78583, -16.46929, 23.21575, 24.20787);
+    </script>
+  </body>
+</html>
+
