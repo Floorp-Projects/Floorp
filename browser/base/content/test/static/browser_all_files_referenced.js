@@ -125,7 +125,17 @@ var whitelist = [
   // extensions/pref/autoconfig/src/nsReadConfig.cpp
   { file: "resource://gre/defaults/autoconfig/prefcalls.js" },
 
-  // modules/libpref/Preferences.cpp
+  // browser/components/preferences/moreFromMozilla.js
+  // These files URLs are constructed programatically at run time.
+  {
+    file:
+      "chrome://browser/content/preferences/more-from-mozilla-qr-code-advanced.svg",
+  },
+  {
+    file:
+      "chrome://browser/content/preferences/more-from-mozilla-qr-code-simple.svg",
+  },
+
   { file: "resource://gre/greprefs.js" },
 
   // layout/mathml/nsMathMLChar.cpp
