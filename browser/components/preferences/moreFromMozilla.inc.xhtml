@@ -26,12 +26,16 @@
       <html:p class="description" />
       <html:a class="text-link wants-telemetry" hidden="true" />
     </hbox>
-    <hbox>
+    <html:div>
       <button class="primary small-button" hidden="true" />
-    </hbox>
-    <hbox>
-      <html:div class="qrcode-section" hidden="true" />
-    </hbox>
+    </html:div>
+    <html:div class="qr-code-box" hidden="true">
+      <label class="qr-code-title-label">
+        <html:h3 class="qr-code-box-title" />
+      </label>
+      <html:img class="qr-code-box-image" role="presentation" />
+      <html:a class="wants-telemetry qr-code-button text-link" target="_blank"/>
+    </html:div>
   </vbox>
 </html:template>
 
@@ -46,7 +50,13 @@
         <html:a class="text-link wants-telemetry" hidden="true" />
         <html:div><button class="primary small-button" hidden="true"/></html:div>
       </vbox>
-      <html:div class="qrcode-section" hidden="true" />
+      <html:div class="qr-code-box" hidden="true">
+        <html:div class="qr-code-top-box">
+          <html:h3 class="qr-code-box-title" />
+          <html:img class="qr-code-box-image" role="presentation" />
+        </html:div>
+        <html:a class="qr-code-button text-link wants-telemetry" target="_blank" />
+      </html:div>
     </hbox>
   </vbox>
 </html:template>
