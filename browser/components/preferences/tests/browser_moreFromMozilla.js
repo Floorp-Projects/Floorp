@@ -115,6 +115,10 @@ add_task(async function test_aboutpreferences_simple_template() {
   let productCards = doc.querySelectorAll("vbox.simple");
   Assert.ok(productCards, "The product cards from simple template found");
   Assert.equal(productCards.length, 3, "3 product cards displayed");
+
+  let qrCodeButtons = doc.querySelectorAll('.qr-code-box[hidden="false"]');
+  Assert.equal(qrCodeButtons.length, 1, "1 qr-code box displayed");
+
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -151,5 +155,9 @@ add_task(async function test_aboutpreferences_advanced_template() {
     ["firefox-mobile-image", "mozilla-vpn-image", "mozilla-rally-image"],
     "Advanced template product marketing images"
   );
+
+  let qrCodeButtons = doc.querySelectorAll('.qr-code-box[hidden="false"]');
+  Assert.equal(qrCodeButtons.length, 1, "1 qr-code box displayed");
+
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
