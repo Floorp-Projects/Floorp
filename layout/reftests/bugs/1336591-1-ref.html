@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <canvas id="pdf" width="200" height="200"></canvas>
+    <script>
+      const canvas = document.getElementById("pdf");
+      const ctx = canvas.getContext("2d");
+
+      ctx.transform(6.4, 0, 0, -6.4, 30, 60);
+
+      var gradient = ctx.createRadialGradient(10, 10, 10, 20, 20, 40);
+      gradient.addColorStop(0, '#FF0000');
+      gradient.addColorStop(1, '#00FF00');
+
+      ctx.fillStyle = gradient;
+      ctx.fillRect(-1.78583, -16.46929, 23.21575, 24.20787);
+    </script>
+  </body>
+</html>
+

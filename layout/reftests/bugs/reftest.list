@@ -1963,6 +1963,7 @@ fuzzy(0-13,0-40000) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-13,0-4
 != 1318769-1.html 1318769-1-ref.html
 == 1322512-1.html 1322512-1-ref.html
 skip-if(isDebugBuild&&winWidget) == 1330051.svg 1330051-ref.svg
+!= 1336591-1.html 1336591-1-ref.html
 == 1348481-1.html 1348481-ref.html
 == 1348481-2.html 1348481-ref.html
 == 1351924-1.html 1351924-1-ref.html
