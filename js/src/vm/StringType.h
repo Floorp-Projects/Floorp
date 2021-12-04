@@ -1856,9 +1856,9 @@ class StringRelocationOverlay : public RelocationOverlay {
     return static_cast<StringRelocationOverlay*>(cell);
   }
 
-  StringRelocationOverlay*& nextRef() {
+  void setNext(StringRelocationOverlay* next) {
     MOZ_ASSERT(isForwarded());
-    return (StringRelocationOverlay*&)next_;
+    next_ = next;
   }
 
   StringRelocationOverlay* next() const {

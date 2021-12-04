@@ -44,13 +44,7 @@ constexpr size_t MAX_DEDUPLICATABLE_STRING_LENGTH = 500;
 TenuringTracer::TenuringTracer(JSRuntime* rt, Nursery* nursery)
     : GenericTracer(rt, JS::TracerKind::Tenuring,
                     JS::WeakMapTraceAction::TraceKeysAndValues),
-      nursery_(*nursery),
-      tenuredSize(0),
-      tenuredCells(0),
-      objHead(nullptr),
-      objTail(&objHead),
-      stringHead(nullptr),
-      stringTail(&stringHead) {}
+      nursery_(*nursery) {}
 
 size_t TenuringTracer::getTenuredSize() const {
   return tenuredSize + tenuredCells * sizeof(NurseryCellHeader);
@@ -463,9 +457,8 @@ static inline ptrdiff_t OffsetToChunkEnd(void* p) {
 /* Insert the given relocation entry into the list of things to visit. */
 inline void js::TenuringTracer::insertIntoObjectFixupList(
     RelocationOverlay* entry) {
-  *objTail = entry;
-  objTail = &entry->nextRef();
-  *objTail = nullptr;
+  entry->setNext(objHead);
+  objHead = entry;
 }
 
 template <typename T>
@@ -684,9 +677,8 @@ size_t js::TenuringTracer::moveElementsToTenured(NativeObject* dst,
 
 inline void js::TenuringTracer::insertIntoStringFixupList(
     StringRelocationOverlay* entry) {
-  *stringTail = entry;
-  stringTail = &entry->nextRef();
-  *stringTail = nullptr;
+  entry->setNext(stringHead);
+  stringHead = entry;
 }
 
 JSString* js::TenuringTracer::moveToTenured(JSString* src) {
@@ -857,14 +849,17 @@ JS::BigInt* js::TenuringTracer::moveToTenured(JS::BigInt* src) {
 }
 
 void js::TenuringTracer::collectToObjectFixedPoint() {
-  for (RelocationOverlay* p = objHead; p; p = p->next()) {
+  while (RelocationOverlay* p = objHead) {
+    objHead = objHead->next();
     auto* obj = static_cast<JSObject*>(p->forwardingAddress());
     traceObject(obj);
   }
 }
 
 void js::TenuringTracer::collectToStringFixedPoint() {
-  for (StringRelocationOverlay* p = stringHead; p; p = p->next()) {
+  while (StringRelocationOverlay* p = stringHead) {
+    stringHead = stringHead->next();
+
     auto* tenuredStr = static_cast<JSString*>(p->forwardingAddress());
     // To ensure the NON_DEDUP_BIT was reset properly.
     MOZ_ASSERT(tenuredStr->isDeduplicatable());
