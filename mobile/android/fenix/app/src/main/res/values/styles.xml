@@ -78,7 +78,6 @@
         <item name="mozacPromptLoginEditTextCursorColor">@color/prompt_login_edit_text_cursor_color_normal_theme</item>
         <item name="readerModeStartGradient">@color/readermode_start_gradient_normal_theme</item>
         <item name="readerModeEndGradient">@color/readermode_end_gradient_normal_theme</item>
-        <item name="syncedTabsSeparator">@color/synced_tabs_separator</item>
         <item name="awesomeBarIndicatorColor">@color/search_suggestion_indicator_icon_color_normal_theme</item>
         <item name="awesomeBarIndicatorBookmarkColor">@color/search_suggestion_indicator_icon_bookmark_color_normal_theme</item>
         <item name="selectLoginHeaderTextColor">@color/select_login_header_normal_theme</item>

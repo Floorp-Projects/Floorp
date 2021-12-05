@@ -55,7 +55,6 @@
     <attr name="addOnPrivateBrowsingInteriorIconBackground" format="reference"/>
     <attr name="readerModeStartGradient" format="reference"/>
     <attr name="readerModeEndGradient" format="reference"/>
-    <attr name="syncedTabsSeparator" format="reference"/>
     <attr name="awesomeBarIndicatorColor" format="reference|color"/>
     <attr name="awesomeBarIndicatorBookmarkColor" format="reference|color"/>
 

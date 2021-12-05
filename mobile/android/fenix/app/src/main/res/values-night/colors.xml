@@ -165,9 +165,6 @@
     <color name="top_site_pin_icon_color">@color/foundation_light_theme</color>
     <color name="top_sites_border_color">@color/photonDarkGrey90</color>
 
-    <!-- Synced tabs colors-->
-    <color name="synced_tabs_separator">@color/photonDarkGrey10</color>
-
     <!-- Collection icons-->
     <color name="collection_icon_color_violet">@color/photonViolet40</color>
     <color name="collection_icon_color_blue">@color/photonBlue30</color>

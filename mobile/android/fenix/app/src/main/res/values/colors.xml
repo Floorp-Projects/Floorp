@@ -245,9 +245,6 @@
     <color name="top_site_pin_icon_color">@color/photonDarkGrey80</color>
     <color name="top_sites_border_color">@color/photonLightGrey30</color>
 
-    <!-- Synced tabs colors-->
-    <color name="synced_tabs_separator">@color/photonLightGrey30</color>
-
     <!-- Collection icons-->
     <color name="collection_icon_color_violet">@color/photonViolet60</color>
     <color name="collection_icon_color_blue">@color/photonBlue60</color>
