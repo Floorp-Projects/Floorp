@@ -25,7 +25,6 @@
     <attr name="scrimStart" format="reference"/>
     <attr name="scrimEnd" format="reference"/>
     <attr name="toolbarDivider" format="reference"/>
-    <attr name="menuCategoryText" format="reference"/>
     <attr name="preferenceSectionHeader" format="reference"/>
     <attr name="recentlyUsedShareMenu" format="reference" />
 
