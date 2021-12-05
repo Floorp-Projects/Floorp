@@ -33,7 +33,7 @@ class ParserAtomsTable;
 class TaggedParserAtomIndex;
 class WellKnownParserAtoms;
 struct CompilationAtomCache;
-}
+}  // namespace frontend
 
 class StaticStrings {
   // NOTE: The WellKnownParserAtoms rely on these tables and may need to be
