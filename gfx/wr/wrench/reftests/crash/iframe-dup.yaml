@@ -1,0 +1,21 @@
+# Ensure that a duplicated iframe reference doesn't cause a panic in WR
+---
+root:
+  items:
+    -
+      type: iframe
+      id: [1, 2]
+      bounds: [100, 100, 100, 100]
+    -
+      type: iframe
+      id: [1, 2]
+      bounds: [100, 100, 100, 100]
+
+pipelines:
+  -
+    id: [1, 2]
+    items:
+      -
+        type: "rect"
+        color: [255, 0, 0, 1]
+        bounds: [100, 100, 100, 100]
