@@ -611,6 +611,7 @@ class ClassBodyScope : public Scope {
   using AbstractData =
       typename std::conditional_t<std::is_same<NameT, JSAtom>::value,
                                   RuntimeData, ParserData>;
+
  private:
   static ClassBodyScope* createWithData(
       JSContext* cx, ScopeKind kind, MutableHandle<UniquePtr<RuntimeData>> data,

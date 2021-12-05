@@ -17,7 +17,7 @@
 #include "frontend/SharedContext.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "vm/GeneratorAndAsyncKind.h"  // js::GeneratorKind, js::FunctionAsyncKind
-#include "vm/WellKnownAtom.h"    // js_*_str
+#include "vm/WellKnownAtom.h"          // js_*_str
 
 namespace js {
 

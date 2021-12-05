@@ -28,8 +28,7 @@ struct LangGroupFontPrefs {
         mDefaultMonospaceFont(StyleGenericFontFamily::Monospace, {0}),
         mDefaultCursiveFont(StyleGenericFontFamily::Cursive, {0}),
         mDefaultFantasyFont(StyleGenericFontFamily::Fantasy, {0}),
-        mDefaultSystemUiFont(StyleGenericFontFamily::SystemUi, {0}) {
-  }
+        mDefaultSystemUiFont(StyleGenericFontFamily::SystemUi, {0}) {}
 
   StyleGenericFontFamily GetDefaultGeneric() const {
     return mDefaultVariableFont.family.families.list.AsSpan()[0].AsGeneric();

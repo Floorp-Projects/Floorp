@@ -423,7 +423,8 @@ bool DrawTargetWebgl::CreateShaders() {
   }
   if (!mVertexBuffer) {
     mVertexBuffer = mWebgl->CreateBuffer();
-    static const float rectData[8] = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
+    static const float rectData[8] = {0.0f, 0.0f, 1.0f, 0.0f,
+                                      0.0f, 1.0f, 1.0f, 1.0f};
     mWebgl->BindVertexArray(mVertexArray.get());
     mWebgl->BindBuffer(LOCAL_GL_ARRAY_BUFFER, mVertexBuffer.get());
     mWebgl->RawBufferData(LOCAL_GL_ARRAY_BUFFER,
