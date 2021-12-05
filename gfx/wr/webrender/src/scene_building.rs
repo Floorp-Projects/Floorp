@@ -55,7 +55,7 @@ use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
 use crate::glyph_rasterizer::FontInstance;
 use crate::hit_test::HitTestingScene;
 use crate::intern::Interner;
-use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter, PlaneSplitter, PlaneSplitterIndex, FastHashSet};
+use crate::internal_types::{FastHashMap, LayoutPrimitiveInfo, Filter, PlaneSplitter, PlaneSplitterIndex, PipelineInstanceId};
 use crate::picture::{Picture3DContext, PictureCompositeMode, PicturePrimitive, PictureOptions};
 use crate::picture::{BlitReason, OrderedPictureChild, PrimitiveList};
 use crate::picture_graph::PictureGraph;
@@ -132,7 +132,7 @@ pub struct NodeIdToIndexMapper {
 impl NodeIdToIndexMapper {
     fn add_spatial_node(&mut self, id: SpatialId, index: SpatialNodeIndex) {
         let _old_value = self.spatial_node_map.insert(id, index);
-        debug_assert!(_old_value.is_none());
+        assert!(_old_value.is_none());
     }
 
     fn get_spatial_node_index(&self, id: SpatialId) -> SpatialNodeIndex {
@@ -383,7 +383,7 @@ pub struct SceneBuilder<'a> {
 
     /// The data structure that converts between ClipId/SpatialId and the various
     /// index types that the SpatialTree uses.
-    id_to_index_mapper: NodeIdToIndexMapper,
+    id_to_index_mapper_stack: Vec<NodeIdToIndexMapper>,
 
     /// A stack of stacking context properties.
     sc_stack: Vec<FlattenedStackingContext>,
@@ -460,10 +460,9 @@ pub struct SceneBuilder<'a> {
     /// animation bindings) can store index buffers to prim instances.
     prim_instances: Vec<PrimitiveInstance>,
 
-    /// A map of pipeline ids encountered during scene build - panic early if we
-    /// encounter an iframe that is referenced twice, as that breaks assumptions
-    /// related to unique spatial node keys.
-    seen_pipeline_ids: FastHashSet<PipelineId>,
+    /// A map of pipeline ids encountered during scene build - used to create unique
+    /// pipeline instance ids as they are encountered.
+    pipeline_instance_ids: FastHashMap<PipelineId, u32>,
 }
 
 impl<'a> SceneBuilder<'a> {
@@ -499,7 +498,7 @@ impl<'a> SceneBuilder<'a> {
             spatial_tree,
             font_instances,
             config: *frame_builder_config,
-            id_to_index_mapper: NodeIdToIndexMapper::default(),
+            id_to_index_mapper_stack: Vec::new(),
             hit_testing_scene: HitTestingScene::new(&stats.hit_test_stats),
             pending_shadow_items: VecDeque::new(),
             sc_stack: Vec::new(),
@@ -518,7 +517,7 @@ impl<'a> SceneBuilder<'a> {
             picture_graph: PictureGraph::new(),
             plane_splitters: Vec::new(),
             prim_instances: Vec::new(),
-            seen_pipeline_ids: FastHashSet::default(),
+            pipeline_instance_ids: FastHashMap::default(),
         };
 
         builder.build_all(&root_pipeline);
@@ -579,6 +578,7 @@ impl<'a> SceneBuilder<'a> {
         &mut self,
         dl: &BuiltDisplayList,
         pipeline_id: PipelineId,
+        instance_id: PipelineInstanceId,
     ) {
         dl.iter_spatial_tree(|item| {
             match item {
@@ -588,6 +588,7 @@ impl<'a> SceneBuilder<'a> {
                         descriptor,
                         parent_space,
                         pipeline_id,
+                        instance_id,
                     );
                 }
                 SpatialTreeItem::ReferenceFrame(descriptor) => {
@@ -596,6 +597,7 @@ impl<'a> SceneBuilder<'a> {
                         descriptor,
                         parent_space,
                         pipeline_id,
+                        instance_id,
                     );
                 }
                 SpatialTreeItem::StickyFrame(descriptor) => {
@@ -603,6 +605,7 @@ impl<'a> SceneBuilder<'a> {
                     self.build_sticky_frame(
                         descriptor,
                         parent_space,
+                        instance_id,
                     );
                 }
                 SpatialTreeItem::Invalid => {
@@ -631,20 +634,19 @@ impl<'a> SceneBuilder<'a> {
         let root_clip_id = ClipId::root(root_pipeline.pipeline_id);
         self.clip_store.register_clip_template(root_clip_id, root_clip_id, &[]);
         self.clip_store.push_clip_root(Some(root_clip_id), false);
+        self.id_to_index_mapper_stack.push(NodeIdToIndexMapper::default());
 
-        // Related to bug #1736069 - try to verify that the assert later on is being
-        // caused by a display list where a single iframe pipeline id is being referenced
-        // by >1 iframe display item. If we see any crash reports here, we know this is
-        // the root issue.
-        assert!(self.seen_pipeline_ids.insert(root_pipeline.pipeline_id));
+        let instance_id = self.get_next_instance_id_for_pipeline(root_pipeline.pipeline_id);
 
         self.push_root(
             root_pipeline.pipeline_id,
             &root_pipeline.viewport_size,
+            instance_id,
         );
         self.build_spatial_tree_for_display_list(
             &root_pipeline.display_list.display_list,
             root_pipeline.pipeline_id,
+            instance_id,
         );
 
         let mut stack = vec![BuildContext {
@@ -767,6 +769,8 @@ impl<'a> SceneBuilder<'a> {
                         self.add_tile_cache_barrier_if_needed(SliceFlags::empty());
                     }
 
+                    self.id_to_index_mapper_stack.pop().unwrap();
+
                     traversal = parent_traversal;
                 }
             }
@@ -790,12 +794,16 @@ impl<'a> SceneBuilder<'a> {
 
         self.clip_store.pop_clip_root();
         debug_assert!(self.sc_stack.is_empty());
+
+        self.id_to_index_mapper_stack.pop().unwrap();
+        assert!(self.id_to_index_mapper_stack.is_empty());
     }
 
     fn build_sticky_frame(
         &mut self,
         info: &StickyFrameDescriptor,
         parent_node_index: SpatialNodeIndex,
+        instance_id: PipelineInstanceId,
     ) {
         let sticky_frame_info = StickyFrameInfo::new(
             info.bounds,
@@ -810,8 +818,9 @@ impl<'a> SceneBuilder<'a> {
             sticky_frame_info,
             info.id.pipeline_id(),
             info.key,
+            instance_id,
         );
-        self.id_to_index_mapper.add_spatial_node(info.id, index);
+        self.id_to_index_mapper_stack.last_mut().unwrap().add_spatial_node(info.id, index);
     }
 
     fn build_reference_frame(
@@ -819,6 +828,7 @@ impl<'a> SceneBuilder<'a> {
         info: &ReferenceFrameDescriptor,
         parent_space: SpatialNodeIndex,
         pipeline_id: PipelineId,
+        instance_id: PipelineInstanceId,
     ) {
         let transform = match info.reference_frame.transform {
             ReferenceTransformBinding::Static { binding } => binding,
@@ -874,7 +884,7 @@ impl<'a> SceneBuilder<'a> {
             transform,
             info.reference_frame.kind,
             info.origin.to_vector(),
-            SpatialNodeUid::external(info.reference_frame.key, pipeline_id),
+            SpatialNodeUid::external(info.reference_frame.key, pipeline_id, instance_id),
         );
     }
 
@@ -883,6 +893,7 @@ impl<'a> SceneBuilder<'a> {
         info: &ScrollFrameDescriptor,
         parent_node_index: SpatialNodeIndex,
         pipeline_id: PipelineId,
+        instance_id: PipelineInstanceId,
     ) {
         // This is useful when calculating scroll extents for the
         // SpatialNode::scroll(..) API as well as for properly setting sticky
@@ -898,8 +909,23 @@ impl<'a> SceneBuilder<'a> {
             &content_size,
             ScrollFrameKind::Explicit,
             info.external_scroll_offset,
-            SpatialNodeUid::external(info.key, pipeline_id),
+            SpatialNodeUid::external(info.key, pipeline_id, instance_id),
         );
+    }
+
+    /// Advance and return the next instance id for a given pipeline id
+    fn get_next_instance_id_for_pipeline(
+        &mut self,
+        pipeline_id: PipelineId,
+    ) -> PipelineInstanceId {
+        let next_instance = self.pipeline_instance_ids
+            .entry(pipeline_id)
+            .or_insert(0);
+
+        let instance_id = PipelineInstanceId::new(*next_instance);
+        *next_instance += 1;
+
+        instance_id
     }
 
     fn push_iframe(
@@ -927,16 +953,14 @@ impl<'a> SceneBuilder<'a> {
             true,
         );
 
+        let instance_id = self.get_next_instance_id_for_pipeline(iframe_pipeline_id);
+
+        self.id_to_index_mapper_stack.push(NodeIdToIndexMapper::default());
+
         let bounds = self.snap_rect(
             &info.bounds,
             spatial_node_index,
         );
-
-        // Related to bug #1736069 - try to verify that the assert later on is being
-        // caused by a display list where a single iframe pipeline id is being referenced
-        // by >1 iframe display item. If we see any crash reports here, we know this is
-        // the root issue.
-        assert!(self.seen_pipeline_ids.insert(iframe_pipeline_id));
 
         let spatial_node_index = self.push_reference_frame(
             SpatialId::root_reference_frame(iframe_pipeline_id),
@@ -949,7 +973,7 @@ impl<'a> SceneBuilder<'a> {
                 should_snap: true,
             },
             bounds.min.to_vector(),
-            SpatialNodeUid::root_reference_frame(iframe_pipeline_id),
+            SpatialNodeUid::root_reference_frame(iframe_pipeline_id, instance_id),
         );
 
         let iframe_rect = LayoutRect::from_size(bounds.size());
@@ -966,7 +990,7 @@ impl<'a> SceneBuilder<'a> {
                 is_root_pipeline,
             },
             LayoutVector2D::zero(),
-            SpatialNodeUid::root_scroll_frame(iframe_pipeline_id),
+            SpatialNodeUid::root_scroll_frame(iframe_pipeline_id, instance_id),
         );
 
         // Get a clip-chain id for the root clip for this pipeline. We will
@@ -990,6 +1014,7 @@ impl<'a> SceneBuilder<'a> {
         self.build_spatial_tree_for_display_list(
             &pipeline.display_list.display_list,
             iframe_pipeline_id,
+            instance_id,
         );
 
         Some(pipeline.display_list.iter())
@@ -999,7 +1024,7 @@ impl<'a> SceneBuilder<'a> {
         &self,
         spatial_id: SpatialId,
     ) -> SpatialNodeIndex {
-        self.id_to_index_mapper.get_spatial_node_index(spatial_id)
+        self.id_to_index_mapper_stack.last().unwrap().get_spatial_node_index(spatial_id)
     }
 
     fn get_clip_chain(
@@ -2364,15 +2389,16 @@ impl<'a> SceneBuilder<'a> {
             pipeline_id,
             uid,
         );
-        self.id_to_index_mapper.add_spatial_node(reference_frame_id, index);
+        self.id_to_index_mapper_stack.last_mut().unwrap().add_spatial_node(reference_frame_id, index);
 
         index
     }
 
-    pub fn push_root(
+    fn push_root(
         &mut self,
         pipeline_id: PipelineId,
         viewport_size: &LayoutSize,
+        instance: PipelineInstanceId,
     ) {
         if let ChasePrimitive::Id(id) = self.config.chase_primitive {
             println!("Chasing {:?} by index", id);
@@ -2390,7 +2416,7 @@ impl<'a> SceneBuilder<'a> {
                 should_snap: true,
             },
             LayoutVector2D::zero(),
-            SpatialNodeUid::root_reference_frame(pipeline_id),
+            SpatialNodeUid::root_reference_frame(pipeline_id, instance),
         );
 
         let viewport_rect = self.snap_rect(
@@ -2409,7 +2435,7 @@ impl<'a> SceneBuilder<'a> {
                 is_root_pipeline: true,
             },
             LayoutVector2D::zero(),
-            SpatialNodeUid::root_scroll_frame(pipeline_id),
+            SpatialNodeUid::root_scroll_frame(pipeline_id, instance),
         );
     }
 
@@ -2421,7 +2447,7 @@ impl<'a> SceneBuilder<'a> {
         fill_rule: FillRule,
         points_range: ItemRange<LayoutPoint>,
     ) {
-        let spatial_node_index = self.id_to_index_mapper.get_spatial_node_index(space_and_clip.spatial_id);
+        let spatial_node_index = self.get_space(space_and_clip.spatial_id);
 
         let snapped_mask_rect = self.snap_rect(
             &image_mask.rect,
@@ -2475,7 +2501,7 @@ impl<'a> SceneBuilder<'a> {
         space_and_clip: &SpaceAndClipInfo,
         clip_rect: &LayoutRect,
     ) {
-        let spatial_node_index = self.id_to_index_mapper.get_spatial_node_index(space_and_clip.spatial_id);
+        let spatial_node_index = self.get_space(space_and_clip.spatial_id);
 
         let snapped_clip_rect = self.snap_rect(
             clip_rect,
@@ -2514,7 +2540,7 @@ impl<'a> SceneBuilder<'a> {
         space_and_clip: &SpaceAndClipInfo,
         clip: &ComplexClipRegion,
     ) {
-        let spatial_node_index = self.id_to_index_mapper.get_spatial_node_index(space_and_clip.spatial_id);
+        let spatial_node_index = self.get_space(space_and_clip.spatial_id);
 
         let snapped_region_rect = self.snap_rect(
             &clip.rect,
@@ -2573,7 +2599,7 @@ impl<'a> SceneBuilder<'a> {
             external_scroll_offset,
             uid,
         );
-        self.id_to_index_mapper.add_spatial_node(new_node_id, node_index);
+        self.id_to_index_mapper_stack.last_mut().unwrap().add_spatial_node(new_node_id, node_index);
         node_index
     }
 

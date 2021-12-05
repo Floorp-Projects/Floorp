@@ -1679,14 +1679,6 @@ impl SpatialId {
     pub fn pipeline_id(&self) -> PipelineId {
         self.1
     }
-
-    pub fn is_root_reference_frame(&self) -> bool {
-        self.0 == ROOT_REFERENCE_FRAME_SPATIAL_ID
-    }
-
-    pub fn is_root_scroll_node(&self) -> bool {
-        self.0 == ROOT_SCROLL_NODE_SPATIAL_ID
-    }
 }
 
 /// An external identifier that uniquely identifies a scroll frame independent of its ClipId, which
