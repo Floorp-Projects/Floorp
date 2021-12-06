@@ -51,7 +51,7 @@
 #endif
 #include "builtin/Promise.h"
 #include "builtin/SelfHostingDefines.h"
-#include "builtin/TestingUtility.h"        // js::ParseCompileOptions
+#include "builtin/TestingUtility.h"  // js::ParseCompileOptions, js::ParseDebugMetadata
 #include "frontend/BytecodeCompilation.h"  // frontend::CanLazilyParse,
 // frontend::CompileGlobalScriptToExtensibleStencil,
 // frontend::DelazifyCanonicalScriptedFunction
@@ -6194,7 +6194,7 @@ static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
 
   // Start at 1, as the script 0 is the top-level.
   for (uint32_t index = 1; index < nScripts; index++) {
-    UniquePtr<CompilationStencil> innerStencil;
+    RefPtr<CompilationStencil> innerStencil;
     {
       BorrowingCompilationStencil borrow(merger.getResult());
       ScriptIndex scriptIndex{index};
@@ -6214,19 +6214,19 @@ static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
       }
     }
 
-    if (!merger.addDelazification(cx, *innerStencil.get())) {
+    if (!merger.addDelazification(cx, *innerStencil)) {
       return false;
     }
   }
 
-  UniquePtr<CompilationStencil> result =
-      cx->make_unique<CompilationStencil>(merger.takeResult());
+  RefPtr<CompilationStencil> result =
+      cx->new_<CompilationStencil>(merger.takeResult());
   if (!result) {
     return false;
   }
 
-  Rooted<js::StencilObject*> stencilObj(
-      cx, js::StencilObject::create(cx, do_AddRef(result.release())));
+  Rooted<js::StencilObject*> stencilObj(cx,
+                                        js::StencilObject::create(cx, result));
   if (!stencilObj) {
     return false;
   }
@@ -6259,6 +6259,8 @@ static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
 
   CompileOptions options(cx);
   UniqueChars fileNameBytes;
+  Rooted<JS::Value> privateValue(cx);
+  Rooted<JSString*> elementAttributeName(cx);
   if (args.length() == 2) {
     if (!args[1].isObject()) {
       JS_ReportErrorASCII(cx,
@@ -6271,6 +6273,10 @@ static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
       return false;
     }
+    if (!js::ParseDebugMetadata(cx, opts, &privateValue,
+                                &elementAttributeName)) {
+      return false;
+    }
   }
 
   if (stencilObj->stencil()->canLazilyParse !=
@@ -6280,22 +6286,26 @@ static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
     return false;
   }
 
-  /* Prepare the CompilationStencil for decoding. */
-  Rooted<frontend::CompilationInput> input(cx,
-                                           frontend::CompilationInput(options));
-  if (!input.get().initForGlobal(cx)) {
+  bool useDebugMetadata = !privateValue.isUndefined() || elementAttributeName;
+
+  JS::InstantiateOptions instantiateOptions(options);
+  if (useDebugMetadata) {
+    instantiateOptions.hideScriptFromDebugger = true;
+  }
+  RootedScript script(cx, JS::InstantiateGlobalStencil(cx, instantiateOptions,
+                                                       stencilObj->stencil()));
+  if (!script) {
     return false;
   }
 
-  /* Instantiate the stencil. */
-  Rooted<frontend::CompilationGCOutput> output(cx);
-  if (!frontend::CompilationStencil::instantiateStencils(
-          cx, input.get(), *stencilObj->stencil(), output.get())) {
-    return false;
+  if (useDebugMetadata) {
+    instantiateOptions.hideScriptFromDebugger = false;
+    if (!JS::UpdateDebugMetadata(cx, script, instantiateOptions, privateValue,
+                                 elementAttributeName, nullptr, nullptr)) {
+      return false;
+    }
   }
 
-  /* Obtain the JSScript and evaluate it. */
-  RootedScript script(cx, output.get().script);
   RootedValue retVal(cx);
   if (!JS_ExecuteScript(cx, script, &retVal)) {
     return false;
@@ -6409,6 +6419,8 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
 
   CompileOptions options(cx);
   UniqueChars fileNameBytes;
+  Rooted<JS::Value> privateValue(cx);
+  Rooted<JSString*> elementAttributeName(cx);
   if (args.length() == 2) {
     if (!args[1].isObject()) {
       JS_ReportErrorASCII(cx,
@@ -6419,6 +6431,10 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
     RootedObject opts(cx, &args[1].toObject());
 
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
+      return false;
+    }
+    if (!js::ParseDebugMetadata(cx, opts, &privateValue,
+                                &elementAttributeName)) {
       return false;
     }
   }
@@ -6449,16 +6465,27 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
     return false;
   }
 
-  /* Instantiate the stencil. */
-  Rooted<frontend::CompilationGCOutput> output(cx);
-  if (!frontend::CompilationStencil::instantiateStencils(
-          cx, input.get(), stencil, output.get())) {
+  bool useDebugMetadata = !privateValue.isUndefined() || elementAttributeName;
+
+  JS::InstantiateOptions instantiateOptions(options);
+  if (useDebugMetadata) {
+    instantiateOptions.hideScriptFromDebugger = true;
+  }
+  RootedScript script(
+      cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, &stencil));
+  if (!script) {
     return false;
   }
 
-  /* Obtain the JSScript and evaluate it. */
-  RootedScript script(cx, output.get().script);
-  RootedValue retVal(cx, UndefinedValue());
+  if (useDebugMetadata) {
+    instantiateOptions.hideScriptFromDebugger = false;
+    if (!JS::UpdateDebugMetadata(cx, script, instantiateOptions, privateValue,
+                                 elementAttributeName, nullptr, nullptr)) {
+      return false;
+    }
+  }
+
+  RootedValue retVal(cx);
   if (!JS_ExecuteScript(cx, script, &retVal)) {
     return false;
   }

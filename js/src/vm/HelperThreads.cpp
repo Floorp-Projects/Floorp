@@ -766,8 +766,7 @@ void ScriptDecodeTask::parse(JSContext* cx) {
     return;
   }
 
-  stencil_ =
-      cx->make_unique<frontend::CompilationStencil>(stencilInput_->source);
+  stencil_ = cx->new_<frontend::CompilationStencil>(stencilInput_->source);
   if (!stencil_) {
     return;
   }
@@ -779,13 +778,13 @@ void ScriptDecodeTask::parse(JSContext* cx) {
   bool succeeded = false;
   (void)stencil_->deserializeStencils(cx, *stencilInput_, range, &succeeded);
   if (!succeeded) {
-    stencil_.reset();
+    stencil_ = nullptr;
     return;
   }
 
   if (!frontend::PrepareForInstantiate(cx, *stencilInput_, *stencil_,
                                        gcOutput_)) {
-    stencil_.reset();
+    stencil_ = nullptr;
   }
 }
 
@@ -1850,7 +1849,7 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
         ReportOutOfMemory(cx);
         return nullptr;
       }
-      if (!initial->steal(cx, std::move(*parseTask->stencil_))) {
+      if (!initial->steal(cx, std::move(parseTask->stencil_))) {
         return nullptr;
       }
 
@@ -1869,7 +1868,7 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
   return script;
 }
 
-UniquePtr<frontend::CompilationStencil>
+already_AddRefed<frontend::CompilationStencil>
 GlobalHelperThreadState::finishCompileToStencilTask(JSContext* cx,
                                                     ParseTaskKind kind,
                                                     JS::OffThreadToken* token) {
@@ -1882,13 +1881,14 @@ GlobalHelperThreadState::finishCompileToStencilTask(JSContext* cx,
   MOZ_ASSERT(parseTask->stencilInput_.get());
   MOZ_ASSERT(parseTask->extensibleStencil_.get());
 
-  auto stencil = cx->make_unique<frontend::CompilationStencil>(
-      std::move(parseTask->extensibleStencil_));
+  RefPtr<frontend::CompilationStencil> stencil =
+      cx->new_<frontend::CompilationStencil>(
+          std::move(parseTask->extensibleStencil_));
   if (!stencil) {
     return nullptr;
   }
 
-  return stencil;
+  return stencil.forget();
 }
 
 bool GlobalHelperThreadState::finishMultiParseTask(
@@ -1934,7 +1934,7 @@ JSScript* GlobalHelperThreadState::finishScriptParseTask(
   return script;
 }
 
-UniquePtr<frontend::CompilationStencil>
+already_AddRefed<frontend::CompilationStencil>
 GlobalHelperThreadState::finishCompileToStencilTask(JSContext* cx,
                                                     JS::OffThreadToken* token) {
   return finishCompileToStencilTask(cx, ParseTaskKind::ScriptStencil, token);
@@ -1965,8 +1965,9 @@ JSObject* GlobalHelperThreadState::finishModuleParseTask(
   return script->module();
 }
 
-frontend::CompilationStencil* GlobalHelperThreadState::finishStencilParseTask(
-    JSContext* cx, JS::OffThreadToken* token) {
+already_AddRefed<frontend::CompilationStencil>
+GlobalHelperThreadState::finishStencilParseTask(JSContext* cx,
+                                                JS::OffThreadToken* token) {
   // TODO: The Script and Module task kinds should be combined in future since
   //       they both generate the same Stencil type.
   auto task = static_cast<ParseTask*>(token);
@@ -1981,14 +1982,14 @@ frontend::CompilationStencil* GlobalHelperThreadState::finishStencilParseTask(
 
   MOZ_ASSERT(parseTask->extensibleStencil_);
 
-  UniquePtr<frontend::CompilationStencil> stencil =
-      cx->make_unique<frontend::CompilationStencil>(
+  RefPtr<frontend::CompilationStencil> stencil =
+      cx->new_<frontend::CompilationStencil>(
           std::move(parseTask->extensibleStencil_));
   if (!stencil) {
     return nullptr;
   }
 
-  return stencil.release();
+  return stencil.forget();
 }
 
 void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,

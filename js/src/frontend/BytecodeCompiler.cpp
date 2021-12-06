@@ -209,7 +209,7 @@ class MOZ_STACK_CLASS ScriptCompiler : public SourceAwareCompiler<Unit> {
 
 using BytecodeCompilerOutput =
     mozilla::Variant<UniquePtr<ExtensibleCompilationStencil>,
-                     UniquePtr<CompilationStencil>, CompilationGCOutput*>;
+                     RefPtr<CompilationStencil>, CompilationGCOutput*>;
 
 // Compile global script, and return it as one of:
 //   * ExtensibleCompilationStencil (without instantiation)
@@ -229,14 +229,15 @@ template <typename Unit>
       if (output.is<UniquePtr<ExtensibleCompilationStencil>>()) {
         output.as<UniquePtr<ExtensibleCompilationStencil>>() =
             std::move(extensibleStencil);
-      } else if (output.is<UniquePtr<CompilationStencil>>()) {
-        auto stencil = cx->make_unique<frontend::CompilationStencil>(
-            std::move(extensibleStencil));
+      } else if (output.is<RefPtr<CompilationStencil>>()) {
+        RefPtr<CompilationStencil> stencil =
+            cx->new_<frontend::CompilationStencil>(
+                std::move(extensibleStencil));
         if (!stencil) {
           return false;
         }
 
-        output.as<UniquePtr<CompilationStencil>>() = std::move(stencil);
+        output.as<RefPtr<CompilationStencil>>() = std::move(stencil);
       } else {
         BorrowingCompilationStencil borrowingStencil(*extensibleStencil);
         if (!InstantiateStencils(cx, input, borrowingStencil,
@@ -284,21 +285,24 @@ template <typename Unit>
       return false;
     }
     output.as<UniquePtr<ExtensibleCompilationStencil>>() = std::move(stencil);
-  } else if (output.is<UniquePtr<CompilationStencil>>()) {
+  } else if (output.is<RefPtr<CompilationStencil>>()) {
     AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
     auto extensibleStencil =
         cx->make_unique<frontend::ExtensibleCompilationStencil>(
             std::move(compiler.stencil()));
+    if (!extensibleStencil) {
+      return false;
+    }
 
-    auto stencil =
-        cx->make_unique<CompilationStencil>(std::move(extensibleStencil));
+    RefPtr<CompilationStencil> stencil =
+        cx->new_<CompilationStencil>(std::move(extensibleStencil));
     if (!stencil) {
       return false;
     }
 
-    output.as<UniquePtr<CompilationStencil>>() = std::move(stencil);
+    output.as<RefPtr<CompilationStencil>>() = std::move(stencil);
   } else {
     BorrowingCompilationStencil borrowingStencil(compiler.stencil());
     if (!InstantiateStencils(cx, input, borrowingStencil,
@@ -312,25 +316,25 @@ template <typename Unit>
 }
 
 template <typename Unit>
-static UniquePtr<CompilationStencil> CompileGlobalScriptToStencilImpl(
+static already_AddRefed<CompilationStencil> CompileGlobalScriptToStencilImpl(
     JSContext* cx, CompilationInput& input, JS::SourceText<Unit>& srcBuf,
     ScopeKind scopeKind) {
-  using OutputType = UniquePtr<CompilationStencil>;
+  using OutputType = RefPtr<CompilationStencil>;
   BytecodeCompilerOutput output((OutputType()));
   if (!CompileGlobalScriptToStencilAndMaybeInstantiate(cx, input, srcBuf,
                                                        scopeKind, output)) {
     return nullptr;
   }
-  return std::move(output.as<OutputType>());
+  return output.as<OutputType>().forget();
 }
 
-UniquePtr<CompilationStencil> frontend::CompileGlobalScriptToStencil(
+already_AddRefed<CompilationStencil> frontend::CompileGlobalScriptToStencil(
     JSContext* cx, CompilationInput& input, JS::SourceText<char16_t>& srcBuf,
     ScopeKind scopeKind) {
   return CompileGlobalScriptToStencilImpl(cx, input, srcBuf, scopeKind);
 }
 
-UniquePtr<CompilationStencil> frontend::CompileGlobalScriptToStencil(
+already_AddRefed<CompilationStencil> frontend::CompileGlobalScriptToStencil(
     JSContext* cx, CompilationInput& input, JS::SourceText<Utf8Unit>& srcBuf,
     ScopeKind scopeKind) {
   return CompileGlobalScriptToStencilImpl(cx, input, srcBuf, scopeKind);
@@ -886,21 +890,24 @@ template <typename Unit>
       return false;
     }
     output.as<UniquePtr<ExtensibleCompilationStencil>>() = std::move(stencil);
-  } else if (output.is<UniquePtr<CompilationStencil>>()) {
+  } else if (output.is<RefPtr<CompilationStencil>>()) {
     AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
     auto extensibleStencil =
         cx->make_unique<frontend::ExtensibleCompilationStencil>(
             std::move(compiler.stencil()));
+    if (!extensibleStencil) {
+      return false;
+    }
 
-    auto stencil =
-        cx->make_unique<CompilationStencil>(std::move(extensibleStencil));
+    RefPtr<CompilationStencil> stencil =
+        cx->new_<CompilationStencil>(std::move(extensibleStencil));
     if (!stencil) {
       return false;
     }
 
-    output.as<UniquePtr<CompilationStencil>>() = std::move(stencil);
+    output.as<RefPtr<CompilationStencil>>() = std::move(stencil);
   } else {
     BorrowingCompilationStencil borrowingStencil(compiler.stencil());
     if (!InstantiateStencils(cx, input, borrowingStencil,
@@ -914,22 +921,22 @@ template <typename Unit>
 }
 
 template <typename Unit>
-UniquePtr<CompilationStencil> ParseModuleToStencilImpl(
+already_AddRefed<CompilationStencil> ParseModuleToStencilImpl(
     JSContext* cx, CompilationInput& input, SourceText<Unit>& srcBuf) {
-  using OutputType = UniquePtr<CompilationStencil>;
+  using OutputType = RefPtr<CompilationStencil>;
   BytecodeCompilerOutput output((OutputType()));
   if (!ParseModuleToStencilAndMaybeInstantiate(cx, input, srcBuf, output)) {
     return nullptr;
   }
-  return std::move(output.as<OutputType>());
+  return output.as<OutputType>().forget();
 }
 
-UniquePtr<CompilationStencil> frontend::ParseModuleToStencil(
+already_AddRefed<CompilationStencil> frontend::ParseModuleToStencil(
     JSContext* cx, CompilationInput& input, SourceText<char16_t>& srcBuf) {
   return ParseModuleToStencilImpl(cx, input, srcBuf);
 }
 
-UniquePtr<CompilationStencil> frontend::ParseModuleToStencil(
+already_AddRefed<CompilationStencil> frontend::ParseModuleToStencil(
     JSContext* cx, CompilationInput& input, SourceText<Utf8Unit>& srcBuf) {
   return ParseModuleToStencilImpl(cx, input, srcBuf);
 }
@@ -1054,21 +1061,24 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
       return false;
     }
     output.as<UniquePtr<ExtensibleCompilationStencil>>() = std::move(stencil);
-  } else if (output.is<UniquePtr<CompilationStencil>>()) {
+  } else if (output.is<RefPtr<CompilationStencil>>()) {
     AutoGeckoProfilerEntry pseudoFrame(cx, "script emit",
                                        JS::ProfilingCategoryPair::JS_Parsing);
 
     auto extensibleStencil =
         cx->make_unique<frontend::ExtensibleCompilationStencil>(
             std::move(compilationState));
+    if (!extensibleStencil) {
+      return false;
+    }
 
-    auto stencil =
-        cx->make_unique<CompilationStencil>(std::move(extensibleStencil));
+    RefPtr<CompilationStencil> stencil =
+        cx->new_<CompilationStencil>(std::move(extensibleStencil));
     if (!stencil) {
       return false;
     }
 
-    output.as<UniquePtr<CompilationStencil>>() = std::move(stencil);
+    output.as<RefPtr<CompilationStencil>>() = std::move(stencil);
   } else {
     // We do check the type, but do not write anything to it as this is not
     // necessary for lazy function, as the script is patched inside the
@@ -1175,8 +1185,10 @@ bool frontend::DelazifyCanonicalScriptedFunction(JSContext* cx,
 }
 
 template <typename Unit>
-static UniquePtr<CompilationStencil> DelazifyCanonicalScriptedFunctionImpl(
-    JSContext* cx, CompilationStencil& context, ScriptIndex scriptIndex) {
+static already_AddRefed<CompilationStencil>
+DelazifyCanonicalScriptedFunctionImpl(JSContext* cx,
+                                      CompilationStencil& context,
+                                      ScriptIndex scriptIndex) {
   ScriptStencilRef script{context, scriptIndex};
   const ScriptStencilExtra& extra = script.scriptExtra();
 
@@ -1216,17 +1228,19 @@ static UniquePtr<CompilationStencil> DelazifyCanonicalScriptedFunctionImpl(
   Rooted<CompilationInput> input(cx, CompilationInput(options));
   input.get().initFromStencil(context, scriptIndex, ss);
 
-  using OutputType = UniquePtr<CompilationStencil>;
+  using OutputType = RefPtr<CompilationStencil>;
   BytecodeCompilerOutput output((OutputType()));
   if (!CompileLazyFunctionToStencilMaybeInstantiate(
           cx, input.get(), units.get(), sourceLength, output)) {
     return nullptr;
   }
-  return std::move(output.as<OutputType>());
+  return output.as<OutputType>().forget();
 }
 
-UniquePtr<CompilationStencil> frontend::DelazifyCanonicalScriptedFunction(
-    JSContext* cx, CompilationStencil& context, ScriptIndex scriptIndex) {
+already_AddRefed<CompilationStencil>
+frontend::DelazifyCanonicalScriptedFunction(JSContext* cx,
+                                            CompilationStencil& context,
+                                            ScriptIndex scriptIndex) {
   AutoGeckoProfilerEntry pseudoFrame(cx, "stencil script delazify",
                                      JS::ProfilingCategoryPair::JS_Parsing);
 

@@ -10238,25 +10238,25 @@ bool nsTextFrame::IsEmpty() {
 
 #ifdef DEBUG_FRAME_DUMP
 // Translate the mapped content into a string that's printable
-void nsTextFrame::ToCString(nsCString& aBuf,
-                            int32_t* aTotalContentLength) const {
+void nsTextFrame::ToCString(nsCString& aBuf) const {
   // Get the frames text content
   const nsTextFragment* frag = TextFragment();
   if (!frag) {
     return;
   }
 
-  // Compute the total length of the text content.
-  *aTotalContentLength = frag->GetLength();
-
   const uint32_t contentLength = AssertedCast<uint32_t>(GetContentLength());
-  // Set current fragment and current fragment offset
   if (0 == contentLength) {
     return;
   }
+
+  // Limit the length to fragment length in case the text has not been reflowed.
+  const uint32_t fragLength =
+      std::min(frag->GetLength(), AssertedCast<uint32_t>(GetContentEnd()));
+
   uint32_t fragOffset = AssertedCast<uint32_t>(GetContentOffset());
-  const uint32_t n = fragOffset + contentLength;
-  while (fragOffset < n) {
+
+  while (fragOffset < fragLength) {
     char16_t ch = frag->CharAt(fragOffset++);
     if (ch == '\r') {
       aBuf.AppendLiteral("\\r");
@@ -10274,9 +10274,8 @@ void nsTextFrame::ToCString(nsCString& aBuf,
 
 nsresult nsTextFrame::GetFrameName(nsAString& aResult) const {
   MakeFrameName(u"Text"_ns, aResult);
-  int32_t totalContentLength;
   nsAutoCString tmp;
-  ToCString(tmp, &totalContentLength);
+  ToCString(tmp);
   tmp.SetLength(std::min(tmp.Length(), 50u));
   aResult += u"\""_ns + NS_ConvertASCIItoUTF16(tmp) + u"\""_ns;
   return NS_OK;

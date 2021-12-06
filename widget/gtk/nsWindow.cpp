@@ -2946,7 +2946,12 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
       uint32_t timestamp = GDK_CURRENT_TIME;
 
       nsGTKToolkit* GTKToolkit = nsGTKToolkit::GetToolkit();
-      if (GTKToolkit) timestamp = GTKToolkit->GetFocusTimestamp();
+      if (GTKToolkit) {
+        timestamp = GTKToolkit->GetFocusTimestamp();
+      }
+      if (!timestamp) {
+        timestamp = GetLastUserInputTime();
+      }
 
       LOG("  requesting toplevel activation [%p]\n", (void*)toplevelWindow);
       gtk_window_present_with_time(GTK_WINDOW(toplevelWindow->mShell),

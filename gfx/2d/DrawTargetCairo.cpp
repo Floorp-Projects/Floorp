@@ -1621,7 +1621,7 @@ void DrawTargetCairo::PushLayerWithBlend(bool aOpaque, Float aOpacity,
 }
 
 void DrawTargetCairo::PopLayer() {
-  MOZ_ASSERT(mPushedLayers.size());
+  MOZ_ASSERT(!mPushedLayers.empty());
 
   cairo_set_operator(mContext, CAIRO_OPERATOR_OVER);
 
