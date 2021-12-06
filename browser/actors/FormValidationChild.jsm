@@ -51,10 +51,6 @@ class FormValidationChild extends JSWindowActorChild {
     }
   }
 
-  /*
-   * nsIFormSubmitObserver
-   */
-
   notifyInvalidSubmit(aFormElement, aInvalidElements) {
     // Show a validation message on the first focusable element.
     for (let element of aInvalidElements) {
