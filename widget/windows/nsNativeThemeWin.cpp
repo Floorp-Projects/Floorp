@@ -2124,8 +2124,8 @@ bool nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext,
       if (aFrame->GetContent()->IsXULElement()) {
         top = 2;
         bottom = 3;
-        left = right = 5;
       }
+      left = right = 5;
       break;
     default:
       return false;

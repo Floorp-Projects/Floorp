@@ -16,9 +16,6 @@
 #include "nsISimpleEnumerator.h"
 #include "nsContentUtils.h"
 
-#include "nsIFormSubmitObserver.h"
-#include "nsIObserverService.h"
-
 const uint16_t nsIConstraintValidation::sContentSpecifiedMaxLengthMessage = 256;
 
 using namespace mozilla;
@@ -86,36 +83,6 @@ bool nsIConstraintValidation::ReportValidity() {
   event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
 
   element->DispatchEvent(*event);
-
-  nsCOMPtr<nsIObserverService> service =
-      mozilla::services::GetObserverService();
-  if (!service) {
-    NS_WARNING("No observer service available!");
-    return true;
-  }
-
-  nsCOMPtr<nsISimpleEnumerator> theEnum;
-  nsresult rv = service->EnumerateObservers(NS_INVALIDFORMSUBMIT_SUBJECT,
-                                            getter_AddRefs(theEnum));
-
-  // Return true on error here because that's what we always did
-  NS_ENSURE_SUCCESS(rv, true);
-
-  bool hasObserver = false;
-  rv = theEnum->HasMoreElements(&hasObserver);
-
-  NS_ENSURE_SUCCESS(rv, true);
-  nsCOMPtr<nsISupports> inst;
-  nsCOMPtr<nsIFormSubmitObserver> observer;
-  bool more = true;
-  while (NS_SUCCEEDED(theEnum->HasMoreElements(&more)) && more) {
-    theEnum->GetNext(getter_AddRefs(inst));
-    observer = do_QueryInterface(inst);
-
-    if (observer) {
-      observer->NotifyInvalidSubmit(nullptr, invalidElements);
-    }
-  }
 
   auto* inputElement = HTMLInputElement::FromNode(element);
   if (inputElement && inputElement->State().HasState(NS_EVENT_STATE_FOCUS)) {

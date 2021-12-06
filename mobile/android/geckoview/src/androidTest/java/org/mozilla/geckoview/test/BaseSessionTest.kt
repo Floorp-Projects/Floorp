@@ -22,6 +22,7 @@ import org.json.JSONObject
 import org.junit.Assume.assumeThat
 import org.junit.Rule
 import org.junit.rules.ErrorCollector
+import org.junit.rules.RuleChain
 
 import kotlin.reflect.KClass
 
@@ -117,7 +118,11 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val TEST_PORT = GeckoSessionTestRule.TEST_PORT
     }
 
-    @get:Rule val sessionRule = GeckoSessionTestRule()
+    val sessionRule = GeckoSessionTestRule()
+
+    // Override this to include more `evaluate` rules in the chain
+    @get:Rule
+    open val rules = RuleChain.outerRule(sessionRule)
 
     @get:Rule var temporaryProfile = TemporaryProfileRule()
 

@@ -2567,12 +2567,16 @@ BaseParserScopeData* CopyScopeData(JSContext* cx, LifoAlloc& alloc,
 }
 
 bool ExtensibleCompilationStencil::steal(JSContext* cx,
-                                         CompilationStencil&& other) {
+                                         RefPtr<CompilationStencil>&& other) {
   MOZ_ASSERT(alloc.isEmpty());
   using StorageType = CompilationStencil::StorageType;
+  StorageType storageType = other->storageType;
+  if (other->refCount > 1) {
+    storageType = StorageType::Borrowed;
+  }
 
-  if (other.storageType == StorageType::OwnedExtensible) {
-    auto& otherExtensible = other.ownedBorrowStencil;
+  if (storageType == StorageType::OwnedExtensible) {
+    auto& otherExtensible = other->ownedBorrowStencil;
 
     canLazilyParse = otherExtensible->canLazilyParse;
     functionKey = otherExtensible->functionKey;
@@ -2604,35 +2608,36 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
     return true;
   }
 
-  canLazilyParse = other.canLazilyParse;
-  functionKey = other.functionKey;
+  canLazilyParse = other->canLazilyParse;
+  functionKey = other->functionKey;
 
-  if (other.storageType == StorageType::Owned) {
+  if (storageType == StorageType::Owned) {
 #ifdef DEBUG
-    other.assertNoExternalDependency();
+    other->assertNoExternalDependency();
+    MOZ_ASSERT(other->refCount == 1);
 #endif
 
     // If CompilationStencil has no external dependency,
     // steal LifoAlloc and perform shallow copy.
-    alloc.steal(&other.alloc);
+    alloc.steal(&other->alloc);
   }
 
-  if (!CopySpanToVector(cx, scriptData, other.scriptData)) {
+  if (!CopySpanToVector(cx, scriptData, other->scriptData)) {
     return false;
   }
 
-  if (!CopySpanToVector(cx, scriptExtra, other.scriptExtra)) {
+  if (!CopySpanToVector(cx, scriptExtra, other->scriptExtra)) {
     return false;
   }
 
-  if (!CopySpanToVector(cx, gcThingData, other.gcThingData)) {
+  if (!CopySpanToVector(cx, gcThingData, other->gcThingData)) {
     return false;
   }
 
-  if (other.storageType == StorageType::Borrowed) {
-    size_t scopeSize = other.scopeData.size();
+  if (storageType == StorageType::Borrowed) {
+    size_t scopeSize = other->scopeData.size();
 
-    if (!CopySpanToVector(cx, scopeData, other.scopeData)) {
+    if (!CopySpanToVector(cx, scopeData, other->scopeData)) {
       return false;
     }
     if (!scopeNames.reserve(scopeSize)) {
@@ -2640,9 +2645,9 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
       return false;
     }
     for (size_t i = 0; i < scopeSize; i++) {
-      if (other.scopeNames[i]) {
+      if (other->scopeNames[i]) {
         BaseParserScopeData* data = CopyScopeData(
-            cx, alloc, other.scopeData[i].kind(), other.scopeNames[i]);
+            cx, alloc, other->scopeData[i].kind(), other->scopeNames[i]);
         if (!data) {
           return false;
         }
@@ -2652,44 +2657,44 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
       }
     }
   } else {
-    if (!CopySpanToVector(cx, scopeData, other.scopeData)) {
+    if (!CopySpanToVector(cx, scopeData, other->scopeData)) {
       return false;
     }
-    if (!CopySpanToVector(cx, scopeNames, other.scopeNames)) {
+    if (!CopySpanToVector(cx, scopeNames, other->scopeNames)) {
       return false;
     }
   }
 
-  if (!CopySpanToVector(cx, regExpData, other.regExpData)) {
+  if (!CopySpanToVector(cx, regExpData, other->regExpData)) {
     return false;
   }
 
-  if (other.storageType == StorageType::Borrowed) {
+  if (storageType == StorageType::Borrowed) {
     // If CompilationStencil has external dependency, peform deep copy.
 
-    size_t bigIntSize = other.bigIntData.size();
+    size_t bigIntSize = other->bigIntData.size();
     if (!bigIntData.resize(bigIntSize)) {
       js::ReportOutOfMemory(cx);
       return false;
     }
     for (size_t i = 0; i < bigIntSize; i++) {
-      if (!bigIntData[i].init(cx, alloc, other.bigIntData[i].source())) {
+      if (!bigIntData[i].init(cx, alloc, other->bigIntData[i].source())) {
         return false;
       }
     }
   } else {
-    if (!CopySpanToVector(cx, bigIntData, other.bigIntData)) {
+    if (!CopySpanToVector(cx, bigIntData, other->bigIntData)) {
       return false;
     }
   }
 
-  if (other.storageType == StorageType::Borrowed) {
-    size_t objLiteralSize = other.objLiteralData.size();
+  if (storageType == StorageType::Borrowed) {
+    size_t objLiteralSize = other->objLiteralData.size();
     if (!objLiteralData.reserve(objLiteralSize)) {
       js::ReportOutOfMemory(cx);
       return false;
     }
-    for (const auto& data : other.objLiteralData) {
+    for (const auto& data : other->objLiteralData) {
       size_t length = data.code().size();
       auto* code = alloc.newArrayUninitialized<uint8_t>(length);
       if (!code) {
@@ -2701,14 +2706,14 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
                                            data.flags(), data.propertyCount());
     }
   } else {
-    if (!CopySpanToVector(cx, objLiteralData, other.objLiteralData)) {
+    if (!CopySpanToVector(cx, objLiteralData, other->objLiteralData)) {
       return false;
     }
   }
 
   // Regardless of whether CompilationStencil has external dependency or not,
   // ParserAtoms should be interned, to populate internal HashMap.
-  for (const auto* entry : other.parserAtomData) {
+  for (const auto* entry : other->parserAtomData) {
     if (!entry) {
       if (!parserAtoms.addPlaceholder(cx)) {
         return false;
@@ -2722,9 +2727,9 @@ bool ExtensibleCompilationStencil::steal(JSContext* cx,
     }
   }
 
-  sharedData = std::move(other.sharedData);
-  moduleMetadata = std::move(other.moduleMetadata);
-  asmJS = std::move(other.asmJS);
+  sharedData = std::move(other->sharedData);
+  moduleMetadata = std::move(other->moduleMetadata);
+  asmJS = std::move(other->asmJS);
 
 #ifdef DEBUG
   assertNoExternalDependency();
@@ -4323,14 +4328,14 @@ static already_AddRefed<JS::Stencil> CompileGlobalScriptToStencilImpl(
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
   Rooted<CompilationInput> input(cx, CompilationInput(options));
-  auto stencil = js::frontend::CompileGlobalScriptToStencil(cx, input.get(),
-                                                            srcBuf, scopeKind);
+  RefPtr<JS::Stencil> stencil = js::frontend::CompileGlobalScriptToStencil(
+      cx, input.get(), srcBuf, scopeKind);
   if (!stencil) {
     return nullptr;
   }
 
   // Convert the UniquePtr to a RefPtr and increment the count (to 1).
-  return do_AddRef(stencil.release());
+  return stencil.forget();
 }
 
 already_AddRefed<JS::Stencil> JS::CompileGlobalScriptToStencil(
@@ -4353,13 +4358,14 @@ static already_AddRefed<JS::Stencil> CompileModuleScriptToStencilImpl(
   options.setModule();
 
   Rooted<CompilationInput> input(cx, CompilationInput(options));
-  auto stencil = js::frontend::ParseModuleToStencil(cx, input.get(), srcBuf);
+  RefPtr<JS::Stencil> stencil =
+      js::frontend::ParseModuleToStencil(cx, input.get(), srcBuf);
   if (!stencil) {
     return nullptr;
   }
 
   // Convert the UniquePtr to a RefPtr and increment the count (to 1).
-  return do_AddRef(stencil.release());
+  return stencil.forget();
 }
 
 already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
@@ -4430,7 +4436,7 @@ JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
   if (!source) {
     return TranscodeResult::Throw;
   }
-  UniquePtr<JS::Stencil> stencil(MakeUnique<CompilationStencil>(source));
+  RefPtr<JS::Stencil> stencil(cx->new_<CompilationStencil>(source));
   if (!stencil) {
     return TranscodeResult::Throw;
   }
@@ -4439,7 +4445,7 @@ JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
   if (res.isErr()) {
     return res.unwrapErr();
   }
-  *stencilOut = do_AddRef(stencil.release()).take();
+  *stencilOut = stencil.forget().take();
   return TranscodeResult::Ok;
 }
 
@@ -4447,7 +4453,7 @@ already_AddRefed<JS::Stencil> JS::FinishOffThreadStencil(
     JSContext* cx, JS::OffThreadToken* token) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-  return do_AddRef(HelperThreadState().finishStencilParseTask(cx, token));
+  return HelperThreadState().finishStencilParseTask(cx, token);
 }
 
 JS_PUBLIC_API size_t JS::SizeOfStencil(Stencil* stencil,

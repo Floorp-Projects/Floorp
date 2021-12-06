@@ -58,6 +58,7 @@
 #include "js/Date.h"
 #include "js/ErrorReport.h"  // JS::PrintError
 #include "js/Exception.h"
+#include "js/experimental/JSStencil.h"  // RefPtrTraits<JS::Stencil>
 #include "js/experimental/TypedData.h"  // JS_GetArrayBufferViewType
 #include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
 #include "js/Modules.h"                 // JS::GetModulePrivate
@@ -2686,7 +2687,7 @@ bool JSRuntime::initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache,
       return false;
     }
 
-    UniquePtr<frontend::CompilationStencil> stencil(
+    RefPtr<frontend::CompilationStencil> stencil(
         cx->new_<frontend::CompilationStencil>(input->source));
     if (!stencil) {
       return false;
@@ -2702,7 +2703,7 @@ bool JSRuntime::initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache,
 
       // Move it to the runtime.
       cx->runtime()->selfHostStencilInput_ = input.release();
-      cx->runtime()->selfHostStencil_ = stencil.release();
+      cx->runtime()->selfHostStencil_ = stencil.forget().take();
 
       return true;
     }
@@ -2732,8 +2733,9 @@ bool JSRuntime::initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache,
   if (!input) {
     return false;
   }
-  auto stencil = frontend::CompileGlobalScriptToStencil(cx, *input, srcBuf,
-                                                        ScopeKind::Global);
+  RefPtr<frontend::CompilationStencil> stencil =
+      frontend::CompileGlobalScriptToStencil(cx, *input, srcBuf,
+                                             ScopeKind::Global);
   if (!stencil) {
     return false;
   }
@@ -2758,7 +2760,7 @@ bool JSRuntime::initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache,
 
   // Move it to the runtime.
   cx->runtime()->selfHostStencilInput_ = input.release();
-  cx->runtime()->selfHostStencil_ = stencil.release();
+  cx->runtime()->selfHostStencil_ = stencil.forget().take();
 
   return true;
 }
@@ -2766,7 +2768,13 @@ bool JSRuntime::initSelfHosting(JSContext* cx, JS::SelfHostedCache xdrCache,
 void JSRuntime::finishSelfHosting() {
   if (!parentRuntime) {
     js_delete(selfHostStencilInput_.ref());
-    js_delete(selfHostStencil_.ref());
+    if (selfHostStencil_) {
+      // delete selfHostStencil_ by decrementing the ref-count of the last
+      // instance.
+      RefPtr<frontend::CompilationStencil> stencil;
+      *getter_AddRefs(stencil) = selfHostStencil_;
+      MOZ_ASSERT(stencil->refCount == 1);
+    }
   }
 
   selfHostStencilInput_ = nullptr;
