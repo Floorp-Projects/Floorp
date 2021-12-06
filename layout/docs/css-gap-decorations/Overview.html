@@ -8,10 +8,11 @@
   <meta content="This is a proposal to extend <a href=&quot;https://drafts.csswg.org/css-align&quot;>CSS Box Alignment</a> to support gap decorations." name="abstract">
   <link href="../default.css" rel="stylesheet" type="text/css">
   <link href="../csslogo.ico" rel="shortcut icon" type="image/x-icon">
-  <link href="https://www.w3.org/StyleSheets/TR/2016/W3C-ED" rel="stylesheet" type="text/css">
-  <meta content="Bikeshed version d7036035b, updated Fri Oct 8 17:07:11 2021 -0700" name="generator">
+  <link href="https://www.w3.org/StyleSheets/TR/2021/W3C-ED" rel="stylesheet" type="text/css">
+  <meta content="Bikeshed version dfbc2b297, updated Thu Nov 11 15:52:32 2021 -0800" name="generator">
   <link href="https://matspalmgren.github.io/css-gap-decorations/Overview.html" rel="canonical">
-  <meta content="c1e56c61b4848a0a5f07159d3f21b96236447c53" name="document-revision">
+  <link href="https://drafts.csswg.org/csslogo.ico" rel="icon">
+  <meta content="277b3facc9955090e33b0dc0af17266e29f3f34b" name="document-revision">
 <style>/* style-autolinks */
 
 .css.css, .property.property, .descriptor.descriptor {
@@ -492,7 +493,7 @@ dd:not(:last-child) > .wpt-tests-block:not([open]):last-child {
     display: grid;
     margin: 0;
     padding: 0;
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: 1fr max-content auto auto;
     grid-column-gap: .5em;
 }
 .wpt-tests-block hr:last-child {
@@ -506,8 +507,21 @@ dd:not(:last-child) > .wpt-tests-block:not([open]):last-child {
     border: none;
 }
 .wpt-test > .wpt-name { grid-column: 1; }
-.wpt-test > .wpt-live { grid-column: 2; }
-.wpt-test > .wpt-source { grid-column: 3; }
+.wpt-test > .wpt-results { grid-column: 2; }
+.wpt-test > .wpt-live { grid-column: 3; }
+.wpt-test > .wpt-source { grid-column: 4; }
+
+.wpt-test > .wpt-results {
+    display: flex;
+    gap: .1em;
+}
+.wpt-test .wpt-result {
+    display: inline-block;
+    height: 1em;
+    width: 1em;
+    border-radius: 50%;
+    position: relative;
+}
 </style>
 <style>/* style-darkmode */
 
@@ -701,9 +715,9 @@ dd:not(:last-child) > .wpt-tests-block:not([open]):last-child {
 </style>
  <body class="h-entry">
   <div class="head">
-   <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2016/logos/W3C" width="72"> </a> </p>
+   <p data-fill-with="logo"><a class="logo" href="https://www.w3.org/"> <img alt="W3C" height="48" src="https://www.w3.org/StyleSheets/TR/2021/logos/W3C" width="72"> </a> </p>
    <h1 class="p-name no-ref" id="title">CSS Gap Decorations</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Editor’s Draft, <time class="dt-updated" datetime="2021-10-22">22 October 2021</time></span></h2>
+   <p id="w3c-state"><a href="https://www.w3.org/standards/types#ED">Editor’s Draft</a>, <time class="dt-updated" datetime="2021-11-18">18 November 2021</time></p>
    <details>
     <summary>Specification Metadata</summary>
     <div data-fill-with="spec-metadata">
@@ -744,7 +758,7 @@ on screen, on paper, etc.
 	“[css-gap-decorations] <i>…summary of comment…</i>”.
 	All issues and comments are <a href="https://lists.w3.org/Archives/Public/public-css-archive/">archived</a>.
 	Alternately, feedback can be sent to the (<a href="https://lists.w3.org/Archives/Public/www-style/">archived</a>) public mailing list <a href="mailto:www-style@w3.org?Subject=%5Bcss-gap-decorations%5D%20PUT%20SUBJECT%20HERE">www-style@w3.org</a>. </p>
-   <p>This document is governed by the <a href="https://www.w3.org/2020/Process-20200915/" id="w3c_process_revision">15 September 2020 W3C Process Document</a>. </p>
+   <p>This document is governed by the <a href="https://www.w3.org/2021/Process-20211102/" id="w3c_process_revision">2 November 2021 W3C Process Document</a>. </p>
    <p></p>
   </div>
   <div data-fill-with="at-risk"></div>
@@ -756,6 +770,7 @@ on screen, on paper, etc.
      <ol class="toc">
       <li><a href="#overview"><span class="secno">1.1</span> <span class="content">Overview</span></a>
       <li><a href="#placement"><span class="secno">1.2</span> <span class="content">Module Interactions</span></a>
+      <li><a href="#definitions"><span class="secno">1.3</span> <span class="content">Definitions</span></a>
      </ol>
     <li>
      <a href="#rule-image"><span class="secno">2</span> <span class="content">Rule Images and Gradients</span></a>
@@ -862,6 +877,12 @@ on screen, on paper, etc.
     the <a href="https://drafts.csswg.org/css-align">Box Alignment</a> spec.
     Additionally, all new properties and shorthands in this proposal are intended
     as additions to the <a href="https://drafts.csswg.org/css-align">Box Alignment</a> spec.</p>
+   <h3 class="heading settled" data-level="1.3" id="definitions"><span class="secno">1.3. </span><span class="content">Definitions</span><a class="self-link" href="#definitions"></a></h3>
+   <p>In this specification, we will use the term <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="lateral-axis">lateral axis</dfn> to refer to
+    the axis in which the rule’s thickness grows (i.e. the axis <span class="css">column-rule-width</span> use).  The other axis is the rule’s <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="longitudinal-axis">longitudinal axis</dfn> and
+    its size in this axis is the <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="rule-length">rule length</dfn>.
+    These definitions are relative to the rule itself and does not depend on if
+    the rule is a row or column rule, or what the <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-writing-modes-4/#propdef-writing-mode" id="ref-for-propdef-writing-mode">writing-mode</a> is.</p>
    <h2 class="heading settled" data-level="2" id="rule-image"><span class="secno">2. </span><span class="content">Rule Images and Gradients</span><a class="self-link" href="#rule-image"></a></h2>
    <p>Authors may specify an image or gradient to be used in place of the <span class="css">column-rule-style</span>.
     These properties are loosely modeled after the corresponding <a href="https://drafts.csswg.org/css-backgrounds/#border-images"><a class="property" data-link-type="propdesc">border-image-*</a></a> properties.
@@ -892,7 +913,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>the keyword <span class="css">none</span> or the computed <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-images-3/#typedef-image" id="ref-for-typedef-image①">&lt;image></a> 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
      <tr>
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
@@ -921,25 +942,25 @@ on screen, on paper, etc.
       <td>no 
      <tr>
       <th><a href="https://www.w3.org/TR/css-values/#percentages">Percentages:</a>
-      <td>refer to size of the image 
+      <td>refer to image size in the rule’s longitudinal axis 
      <tr>
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>one or two values, each either a number or percentage 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
      <tr>
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
       <td>discrete 
    </table>
-   <p><a class="property" data-link-type="propdesc" href="#propdef-column-rule-image-slice" id="ref-for-propdef-column-rule-image-slice①">column-rule-image-slice</a> specify inward offsets from the block axis
-    start and end edges of the image, dividing it into three regions:
+   <p><a class="property" data-link-type="propdesc" href="#propdef-column-rule-image-slice" id="ref-for-propdef-column-rule-image-slice①">column-rule-image-slice</a> specify inward offsets from the start and end edges
+    of the image in the rule’s longitudinal axis, dividing it into three regions:
     two edge areas and one middle area.</p>
    <p>When two values are specified, they set the offsets on the start and end sides in
     that order. If the end value is missing, it is the same as the start value.</p>
    <dl>
     <dt><dfn class="css" data-dfn-for="column-rule-image-slice" data-dfn-type="value" data-export id="valdef-column-rule-image-slice-percentage-0"><a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-values-4/#percentage-value" id="ref-for-percentage-value②">&lt;percentage [0,∞]></a><a class="self-link" href="#valdef-column-rule-image-slice-percentage-0"></a></dfn> 
-    <dd>Percentages are relative to the block-size of the image. 
+    <dd>Percentages are relative to the image size in the rule’s longitudinal axis 
     <dt><dfn class="css" data-dfn-for="column-rule-image-slice" data-dfn-type="value" data-export id="valdef-column-rule-image-slice-number-0"><a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-values-4/#number-value" id="ref-for-number-value①">&lt;number [0,∞]></a><a class="self-link" href="#valdef-column-rule-image-slice-number-0"></a></dfn> 
     <dd>Numbers represent pixels in the image (if the image is a raster
         image) or vector coordinates (if the image is a vector image). 
@@ -952,7 +973,6 @@ on screen, on paper, etc.
    <p>The regions given by the <a class="property" data-link-type="propdesc" href="#propdef-column-rule-image-slice" id="ref-for-propdef-column-rule-image-slice②">column-rule-image-slice</a> values may overlap.
     However if the sum of the start and end values is equal to or greater than
     the size of the image, the middle part becomes empty.</p>
-   <p><a class="property" data-link-type="propdesc" href="#propdef-row-rule-image-slice" id="ref-for-propdef-row-rule-image-slice①">row-rule-image-slice</a> works the same but in the inline axis.</p>
    <h3 class="heading settled" data-level="2.3" id="column-rule-image-repeat"><span class="secno">2.3. </span><span class="content">The <a class="property" data-link-type="propdesc" href="#propdef-column-rule-image-repeat" id="ref-for-propdef-column-rule-image-repeat">column-rule-image-repeat</a> and <a class="property" data-link-type="propdesc" href="#propdef-row-rule-image-repeat" id="ref-for-propdef-row-rule-image-repeat">row-rule-image-repeat</a> Properties</span><a class="self-link" href="#column-rule-image-repeat"></a></h3>
    <table class="def propdef" data-link-for-hint="column-rule-image-repeat">
     <tbody>
@@ -978,7 +998,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>the specified keyword 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
      <tr>
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
@@ -1030,7 +1050,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
       <td>see individual properties 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
    </table>
    <aside class="example" id="example-c9ee9e2e">
@@ -1066,11 +1086,6 @@ on screen, on paper, etc.
     </figure>
    </aside>
    <h2 class="heading settled" data-level="3" id="size"><span class="secno">3. </span><span class="content">Rule Positioning and Sizing</span><a class="self-link" href="#size"></a></h2>
-   <p>In this specification, we will use the term <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="lateral-axis">lateral axis</dfn> to refer to
-    the axis in which the rule’s thickness grows (i.e. the axis <span class="css">column-rule-width</span> use).  The other axis is the rule’s <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="longitudinal-axis">longitudinal axis</dfn> and
-    its size in this axis is the <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="rule-length">rule length</dfn>.
-    These definitions are relative to the rule itself and does not depend on if
-    the rule is a row or column rule, or what the <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-writing-modes-4/#propdef-writing-mode" id="ref-for-propdef-writing-mode">writing-mode</a> is.</p>
    <h3 class="heading settled" data-level="3.1" id="column-rule-width"><span class="secno">3.1. </span><span class="content">The <a class="property" data-link-type="propdesc" href="https://drafts.csswg.org/css-multicol-1/#propdef-column-rule-width" id="ref-for-propdef-column-rule-width②">column-rule-width</a> and <a class="property" data-link-type="propdesc" href="#propdef-row-rule-width" id="ref-for-propdef-row-rule-width">row-rule-width</a> Properties</span><a class="self-link" href="#column-rule-width"></a></h3>
    <table class="def propdef partial" data-link-for-hint="column-rule-width">
     <tbody>
@@ -1123,7 +1138,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>absolute length if the specified value is <a class="production css" data-link-type="type" href="https://drafts.csswg.org/css-backgrounds-3/#typedef-line-width" id="ref-for-typedef-line-width②" title="Expands to: medium | thick | thin">&lt;line-width></a>; <span class="css">0px</span> if the column rule style is <span class="css">none</span> or <span class="css">hidden</span>. Otherwise, the specified value. 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
      <tr>
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
@@ -1132,6 +1147,7 @@ on screen, on paper, etc.
    <p>These properties sets the thickness (lateral size) of a rule in the column and row axis, respectively.
     Negative specified values are not allowed.
     The <a data-link-type="dfn" href="https://drafts.csswg.org/css-cascade-5/#used-value" id="ref-for-used-value">used value</a> is floored at zero (in case a 'calc()' expression evaluates to a negative value for example).</p>
+   <p>See <a href="#resolving-position-and-size-algo">§ 3.4 Resolving a rule’s position and size</a> below for how <a class="property" data-link-type="propdesc">auto</a> is resolved.</p>
    <h3 class="heading settled" data-level="3.2" id="column-rule-length"><span class="secno">3.2. </span><span class="content">The <a class="property" data-link-type="propdesc" href="#propdef-column-rule-length" id="ref-for-propdef-column-rule-length">column-rule-length</a> and <a class="property" data-link-type="propdesc" href="#propdef-row-rule-length" id="ref-for-propdef-row-rule-length">row-rule-length</a> Properties</span><a class="self-link" href="#column-rule-length"></a></h3>
    <table class="def propdef" data-link-for-hint="column-rule-length">
     <tbody>
@@ -1157,7 +1173,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>the specified value 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
      <tr>
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
@@ -1166,6 +1182,7 @@ on screen, on paper, etc.
    <p>These properties sets the <a data-link-type="dfn" href="#rule-length" id="ref-for-rule-length">rule length</a> (longitudinal size) of a rule in the column and row axis, respectively.
     Negative specified values are not allowed.
     The <a data-link-type="dfn" href="https://drafts.csswg.org/css-cascade-5/#used-value" id="ref-for-used-value①">used value</a> is floored at zero (in case a 'calc()' expression evaluates to a negative value for example).</p>
+   <p>See <a href="#resolving-position-and-size-algo">§ 3.4 Resolving a rule’s position and size</a> below for how <a class="property" data-link-type="propdesc">auto</a> is resolved.</p>
    <p class="note" role="note"><span>Note:</span> These properties work the same as the <a class="property" data-link-type="propdesc">*-rule-width</a> properties in the <a data-link-type="dfn" href="#lateral-axis" id="ref-for-lateral-axis②">lateral axis</a>, except that they have a different initial value.</p>
    <h3 class="heading settled" data-level="3.3" id="column-rule-lateral-inset-start"><span class="secno">3.3. </span><span class="content">The Rule Lateral Inset Properties</span><a class="self-link" href="#column-rule-lateral-inset-start"></a></h3>
    <table class="def propdef" data-link-for-hint="column-rule-lateral-inset-start">
@@ -1192,7 +1209,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>the specified value 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
      <tr>
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
@@ -1262,7 +1279,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
       <td>see individual properties 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
    </table>
    <table class="def propdef" data-link-for-hint="row-rule-lateral-inset">
@@ -1292,7 +1309,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
       <td>see individual properties 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
    </table>
    <p>These are shortands for specifying the corresponding start/end values.
@@ -1322,7 +1339,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>the specified value 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
      <tr>
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
@@ -1381,7 +1398,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
       <td>see individual properties 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
    </table>
    <table class="def propdef" data-link-for-hint="row-rule-longitudinal-inset">
@@ -1411,7 +1428,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
       <td>see individual properties 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
    </table>
    <p>These shortands specify the corresponding start/end values. If one value is specified it is used for both start/end.</p>
@@ -1440,7 +1457,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>the specified value 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
      <tr>
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
@@ -1478,7 +1495,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
       <td>see individual properties 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
    </table>
    <table class="def propdef" data-link-for-hint="row-rule-longitudinal-edge-inset">
@@ -1508,7 +1525,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
       <td>see individual properties 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
    </table>
    <p>These shortands specify the corresponding start/end values. If one value is specified it is used for both start/end.</p>
@@ -1538,7 +1555,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>specified keyword 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
      <tr>
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
@@ -1568,7 +1585,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>computed color 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
      <tr>
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
@@ -1604,7 +1621,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
       <td>see individual properties 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
    </table>
    <p class="issue" id="issue-53073ff7"><a class="self-link" href="#issue-53073ff7"></a> lots of new possible shorthands... we now have many
@@ -1639,7 +1656,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>the specified value 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
      <tr>
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
@@ -1693,7 +1710,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>the specified value 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
      <tr>
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
@@ -1760,7 +1777,7 @@ on screen, on paper, etc.
       <th><a href="https://www.w3.org/TR/css-cascade/#computed">Computed value:</a>
       <td>the specified value 
      <tr>
-      <th>Canonical order:
+      <th><a href="https://www.w3.org/TR/cssom/#serializing-css-values">Canonical order:</a>
       <td>per grammar 
      <tr>
       <th><a href="https://www.w3.org/TR/web-animations/#animation-type">Animation type:</a>
@@ -1769,7 +1786,7 @@ on screen, on paper, etc.
    <p class="issue" id="issue-70dc1ba4"><a class="self-link" href="#issue-70dc1ba4"></a> perhaps make <a class="css" data-link-type="maybe" href="https://drafts.csswg.org/css-box-4/#valdef-margin-trim-all" id="ref-for-valdef-margin-trim-all">all</a> a separate keyword? like so: <span class="css">[segment | [[start | end | short | long] all?] ] allow-overlap?</span></p>
    <p>These properties specify the extent of the rule in its <a data-link-type="dfn" href="#longitudinal-axis" id="ref-for-longitudinal-axis⑥">longitudinal axis</a>. <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="segment">segment</dfn> is an abstract term to describe the distance between two consecutive gaps.
     An extent can cover one or more segments and the <dfn class="dfn-paneled" data-dfn-type="dfn" data-noexport id="extent-size">extent size</dfn> is the distance between
-    the start position of the start-most of those segments and the end position of the end-most segment.
+    the start position of the first of those segments and the end position of the last segment.
     We’ll define <span class="css">segment</span> in more detail in the container-specific sub-sections that follow.</p>
    <p>The <span class="css">allow-overlap</span> only affects rules in grid and table layout with spanning items/cells.
     It controls whether a rule should continue through such a span.</p>
@@ -2140,7 +2157,7 @@ on screen, on paper, etc.
         Both grids have large negative insets to extend the rules outside of the container.
         The right grid has <a class="css" data-link-type="propdesc" href="https://drafts.csswg.org/css-overflow-3/#propdef-overflow" id="ref-for-propdef-overflow">overflow: hidden</a> which clips its rules at the padding area edge. 
     <figure>
-      <img height="693" src="media/grid-longitudinal-003.png" width="760"> 
+      <img height="680" src="media/grid-longitudinal-003.png" width="771"> 
      <figcaption> Examples of rule overflow and clipping. </figcaption>
     </figure>
    </aside>
@@ -2239,7 +2256,7 @@ on screen, on paper, etc.
   <p>Further information on submitting testcases and implementation reports
     can be found from on the CSS Working Group’s website at <a href="http://www.w3.org/Style/CSS/Test/">http://www.w3.org/Style/CSS/Test/</a>.
     Questions should be directed to the <a href="http://lists.w3.org/Archives/Public/public-css-testsuite">public-css-testsuite@w3.org</a> mailing list.</p>
-<script src="https://www.w3.org/scripts/TR/2016/fixup.js"></script>
+<script src="https://www.w3.org/scripts/TR/2021/fixup.js"></script>
   <h2 class="no-num no-ref heading settled" id="index"><span class="content">Index</span><a class="self-link" href="#index"></a></h2>
   <h3 class="no-num no-ref heading settled" id="index-defined-here"><span class="content">Terms defined by this specification</span><a class="self-link" href="#index-defined-here"></a></h3>
   <ul class="index">
@@ -2267,9 +2284,9 @@ on screen, on paper, etc.
    <li><a href="#propdef-column-rule-longitudinal-inset-start">column-rule-longitudinal-inset-start</a><span>, in § 3.6</span>
    <li><a href="#valdef-row-rule-extent-end">end</a><span>, in § 6.1.1</span>
    <li><a href="#extent-size">extent size</a><span>, in § 6.1</span>
-   <li><a href="#lateral-axis">lateral axis</a><span>, in § 3</span>
+   <li><a href="#lateral-axis">lateral axis</a><span>, in § 1.3</span>
    <li><a href="#valdef-row-rule-extent-long">long</a><span>, in § 6.1.1</span>
-   <li><a href="#longitudinal-axis">longitudinal axis</a><span>, in § 3</span>
+   <li><a href="#longitudinal-axis">longitudinal axis</a><span>, in § 1.3</span>
    <li><a href="#next-flex-line-item">next flex line item</a><span>, in § 6.1.2</span>
    <li><a href="#next-grid-cell-span">next grid cell span</a><span>, in § 6.1.1</span>
    <li><a href="#valdef-column-rule-image-slice-number-0">&lt;number [0,∞]></a><span>, in § 2.2</span>
@@ -2298,7 +2315,7 @@ on screen, on paper, etc.
    <li><a href="#propdef-row-rule-style">row-rule-style</a><span>, in § 4.1</span>
    <li><a href="#propdef-row-rule-width">row-rule-width</a><span>, in § 3.1</span>
    <li><a href="#rule-containing-rectangle①">rule containing rectangle</a><span>, in § 7</span>
-   <li><a href="#rule-length">rule length</a><span>, in § 3</span>
+   <li><a href="#rule-length">rule length</a><span>, in § 1.3</span>
    <li>
     segment
     <ul>
@@ -2700,7 +2717,7 @@ on screen, on paper, etc.
   <aside class="dfn-panel" data-for="term-for-propdef-writing-mode">
    <a href="https://drafts.csswg.org/css-writing-modes-4/#propdef-writing-mode">https://drafts.csswg.org/css-writing-modes-4/#propdef-writing-mode</a><b>Referenced in:</b>
    <ul>
-    <li><a href="#ref-for-propdef-writing-mode">3. Rule Positioning and Sizing</a>
+    <li><a href="#ref-for-propdef-writing-mode">1.3. Definitions</a>
    </ul>
   </aside>
   <h3 class="no-num no-ref heading settled" id="index-defined-elsewhere"><span class="content">Terms defined by reference</span><a class="self-link" href="#index-defined-elsewhere"></a></h3>
@@ -2831,7 +2848,7 @@ on screen, on paper, etc.
    <dt id="biblio-css-box-4">[CSS-BOX-4]
    <dd>Elika Etemad. <a href="https://www.w3.org/TR/css-box-4/"><cite>CSS Box Model Module Level 4</cite></a>. 21 April 2020. WD. URL: <a href="https://www.w3.org/TR/css-box-4/">https://www.w3.org/TR/css-box-4/</a>
    <dt id="biblio-css-cascade-5">[CSS-CASCADE-5]
-   <dd>Elika Etemad; Miriam Suzanne; Tab Atkins Jr.. <a href="https://www.w3.org/TR/css-cascade-5/"><cite>CSS Cascading and Inheritance Level 5</cite></a>. 29 August 2021. WD. URL: <a href="https://www.w3.org/TR/css-cascade-5/">https://www.w3.org/TR/css-cascade-5/</a>
+   <dd>Elika Etemad; Miriam Suzanne; Tab Atkins Jr.. <a href="https://www.w3.org/TR/css-cascade-5/"><cite>CSS Cascading and Inheritance Level 5</cite></a>. 15 October 2021. WD. URL: <a href="https://www.w3.org/TR/css-cascade-5/">https://www.w3.org/TR/css-cascade-5/</a>
    <dt id="biblio-css-color-4">[CSS-COLOR-4]
    <dd>Tab Atkins Jr.; Chris Lilley. <a href="https://www.w3.org/TR/css-color-4/"><cite>CSS Color Module Level 4</cite></a>. 1 June 2021. WD. URL: <a href="https://www.w3.org/TR/css-color-4/">https://www.w3.org/TR/css-color-4/</a>
    <dt id="biblio-css-display-3">[CSS-DISPLAY-3]
@@ -2853,7 +2870,7 @@ on screen, on paper, etc.
    <dt id="biblio-css-tables-3">[CSS-TABLES-3]
    <dd>François Remy; Greg Whitworth; David Baron. <a href="https://www.w3.org/TR/css-tables-3/"><cite>CSS Table Module Level 3</cite></a>. 27 July 2019. WD. URL: <a href="https://www.w3.org/TR/css-tables-3/">https://www.w3.org/TR/css-tables-3/</a>
    <dt id="biblio-css-values-4">[CSS-VALUES-4]
-   <dd>Tab Atkins Jr.; Elika Etemad. <a href="https://www.w3.org/TR/css-values-4/"><cite>CSS Values and Units Module Level 4</cite></a>. 30 September 2021. WD. URL: <a href="https://www.w3.org/TR/css-values-4/">https://www.w3.org/TR/css-values-4/</a>
+   <dd>Tab Atkins Jr.; Elika Etemad. <a href="https://www.w3.org/TR/css-values-4/"><cite>CSS Values and Units Module Level 4</cite></a>. 16 October 2021. WD. URL: <a href="https://www.w3.org/TR/css-values-4/">https://www.w3.org/TR/css-values-4/</a>
    <dt id="biblio-css-writing-modes-4">[CSS-WRITING-MODES-4]
    <dd>Elika Etemad; Koji Ishii. <a href="https://www.w3.org/TR/css-writing-modes-4/"><cite>CSS Writing Modes Level 4</cite></a>. 30 July 2019. CR. URL: <a href="https://www.w3.org/TR/css-writing-modes-4/">https://www.w3.org/TR/css-writing-modes-4/</a>
    <dt id="biblio-rfc2119">[RFC2119]
@@ -2937,7 +2954,7 @@ on screen, on paper, etc.
       <td>0
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
-      <td>refer to size of the image
+      <td>refer to image size in the rule’s longitudinal axis
       <td>discrete
       <td>per grammar
       <td>one or two values, each either a number or percentage
@@ -3122,12 +3139,12 @@ on screen, on paper, etc.
       <td>per grammar
       <td>the specified keyword
      <tr>
-      <th scope="row"><a class="css" data-link-type="property" href="#propdef-row-rule-image-slice" id="ref-for-propdef-row-rule-image-slice②">row-rule-image-slice</a>
+      <th scope="row"><a class="css" data-link-type="property" href="#propdef-row-rule-image-slice" id="ref-for-propdef-row-rule-image-slice①">row-rule-image-slice</a>
       <td>[&lt;number [0,∞]> | &lt;percentage [0,∞]>]{1,2}
       <td>0
       <td>multi-column containers, flex containers, grid containers, table and table-row-group containers
       <td>no
-      <td>refer to size of the image
+      <td>refer to image size in the rule’s longitudinal axis
       <td>discrete
       <td>per grammar
       <td>one or two values, each either a number or percentage
@@ -3280,57 +3297,6 @@ on screen, on paper, etc.
    <div class="issue"> this proposal makes the assumption that the related proposal that <span class="css">row-gap</span> should apply to multi-column containers is also adopted
     (<a href="https://github.com/w3c/csswg-drafts/issues/6746">issue #6746</a>). <a class="issue-return" href="#issue-409a7220" title="Jump to section">↵</a></div>
   </div>
-  <aside class="dfn-panel" data-for="propdef-column-rule-image-source">
-   <b><a href="#propdef-column-rule-image-source">#propdef-column-rule-image-source</a></b><b>Referenced in:</b>
-   <ul>
-    <li><a href="#ref-for-propdef-column-rule-image-source">2.1. The column-rule-image-source and row-rule-image-source Properties</a>
-    <li><a href="#ref-for-propdef-column-rule-image-source①">2.4. The column-rule-image and row-rule-image Shorthands</a>
-   </ul>
-  </aside>
-  <aside class="dfn-panel" data-for="propdef-row-rule-image-source">
-   <b><a href="#propdef-row-rule-image-source">#propdef-row-rule-image-source</a></b><b>Referenced in:</b>
-   <ul>
-    <li><a href="#ref-for-propdef-row-rule-image-source">2.1. The column-rule-image-source and row-rule-image-source Properties</a>
-   </ul>
-  </aside>
-  <aside class="dfn-panel" data-for="propdef-column-rule-image-slice">
-   <b><a href="#propdef-column-rule-image-slice">#propdef-column-rule-image-slice</a></b><b>Referenced in:</b>
-   <ul>
-    <li><a href="#ref-for-propdef-column-rule-image-slice">2.2. The column-rule-image-slice and row-rule-image-slice Properties</a> <a href="#ref-for-propdef-column-rule-image-slice①">(2)</a> <a href="#ref-for-propdef-column-rule-image-slice②">(3)</a>
-    <li><a href="#ref-for-propdef-column-rule-image-slice③">2.4. The column-rule-image and row-rule-image Shorthands</a>
-   </ul>
-  </aside>
-  <aside class="dfn-panel" data-for="propdef-row-rule-image-slice">
-   <b><a href="#propdef-row-rule-image-slice">#propdef-row-rule-image-slice</a></b><b>Referenced in:</b>
-   <ul>
-    <li><a href="#ref-for-propdef-row-rule-image-slice">2.2. The column-rule-image-slice and row-rule-image-slice Properties</a> <a href="#ref-for-propdef-row-rule-image-slice①">(2)</a>
-   </ul>
-  </aside>
-  <aside class="dfn-panel" data-for="propdef-column-rule-image-repeat">
-   <b><a href="#propdef-column-rule-image-repeat">#propdef-column-rule-image-repeat</a></b><b>Referenced in:</b>
-   <ul>
-    <li><a href="#ref-for-propdef-column-rule-image-repeat">2.3. The column-rule-image-repeat and row-rule-image-repeat Properties</a>
-    <li><a href="#ref-for-propdef-column-rule-image-repeat①">2.4. The column-rule-image and row-rule-image Shorthands</a>
-   </ul>
-  </aside>
-  <aside class="dfn-panel" data-for="propdef-row-rule-image-repeat">
-   <b><a href="#propdef-row-rule-image-repeat">#propdef-row-rule-image-repeat</a></b><b>Referenced in:</b>
-   <ul>
-    <li><a href="#ref-for-propdef-row-rule-image-repeat">2.3. The column-rule-image-repeat and row-rule-image-repeat Properties</a>
-   </ul>
-  </aside>
-  <aside class="dfn-panel" data-for="propdef-column-rule-image">
-   <b><a href="#propdef-column-rule-image">#propdef-column-rule-image</a></b><b>Referenced in:</b>
-   <ul>
-    <li><a href="#ref-for-propdef-column-rule-image">2.4. The column-rule-image and row-rule-image Shorthands</a>
-   </ul>
-  </aside>
-  <aside class="dfn-panel" data-for="propdef-row-rule-image">
-   <b><a href="#propdef-row-rule-image">#propdef-row-rule-image</a></b><b>Referenced in:</b>
-   <ul>
-    <li><a href="#ref-for-propdef-row-rule-image">2.4. The column-rule-image and row-rule-image Shorthands</a>
-   </ul>
-  </aside>
   <aside class="dfn-panel" data-for="lateral-axis">
    <b><a href="#lateral-axis">#lateral-axis</a></b><b>Referenced in:</b>
    <ul>
@@ -3356,6 +3322,57 @@ on screen, on paper, etc.
    <b><a href="#rule-length">#rule-length</a></b><b>Referenced in:</b>
    <ul>
     <li><a href="#ref-for-rule-length">3.2. The column-rule-length and row-rule-length Properties</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="propdef-column-rule-image-source">
+   <b><a href="#propdef-column-rule-image-source">#propdef-column-rule-image-source</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-propdef-column-rule-image-source">2.1. The column-rule-image-source and row-rule-image-source Properties</a>
+    <li><a href="#ref-for-propdef-column-rule-image-source①">2.4. The column-rule-image and row-rule-image Shorthands</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="propdef-row-rule-image-source">
+   <b><a href="#propdef-row-rule-image-source">#propdef-row-rule-image-source</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-propdef-row-rule-image-source">2.1. The column-rule-image-source and row-rule-image-source Properties</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="propdef-column-rule-image-slice">
+   <b><a href="#propdef-column-rule-image-slice">#propdef-column-rule-image-slice</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-propdef-column-rule-image-slice">2.2. The column-rule-image-slice and row-rule-image-slice Properties</a> <a href="#ref-for-propdef-column-rule-image-slice①">(2)</a> <a href="#ref-for-propdef-column-rule-image-slice②">(3)</a>
+    <li><a href="#ref-for-propdef-column-rule-image-slice③">2.4. The column-rule-image and row-rule-image Shorthands</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="propdef-row-rule-image-slice">
+   <b><a href="#propdef-row-rule-image-slice">#propdef-row-rule-image-slice</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-propdef-row-rule-image-slice">2.2. The column-rule-image-slice and row-rule-image-slice Properties</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="propdef-column-rule-image-repeat">
+   <b><a href="#propdef-column-rule-image-repeat">#propdef-column-rule-image-repeat</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-propdef-column-rule-image-repeat">2.3. The column-rule-image-repeat and row-rule-image-repeat Properties</a>
+    <li><a href="#ref-for-propdef-column-rule-image-repeat①">2.4. The column-rule-image and row-rule-image Shorthands</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="propdef-row-rule-image-repeat">
+   <b><a href="#propdef-row-rule-image-repeat">#propdef-row-rule-image-repeat</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-propdef-row-rule-image-repeat">2.3. The column-rule-image-repeat and row-rule-image-repeat Properties</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="propdef-column-rule-image">
+   <b><a href="#propdef-column-rule-image">#propdef-column-rule-image</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-propdef-column-rule-image">2.4. The column-rule-image and row-rule-image Shorthands</a>
+   </ul>
+  </aside>
+  <aside class="dfn-panel" data-for="propdef-row-rule-image">
+   <b><a href="#propdef-row-rule-image">#propdef-row-rule-image</a></b><b>Referenced in:</b>
+   <ul>
+    <li><a href="#ref-for-propdef-row-rule-image">2.4. The column-rule-image and row-rule-image Shorthands</a>
    </ul>
   </aside>
   <aside class="dfn-panel" data-for="propdef-row-rule-width">
@@ -3658,3 +3675,108 @@ document.body.addEventListener("click", function(e) {
 
 });
 </script>
+<script>/* script-wpt */
+let wptPath = "/";
+"use strict";
+
+document.addEventListener("DOMContentLoaded", async ()=>{
+    if(wptPath == "/") return;
+
+    const runsUrl = "https://wpt.fyi/api/runs?label=master&label=stable&max-count=1&product=chrome&product=firefox&product=safari&product=edge";
+    const runs = await (await fetch(runsUrl)).json();
+
+    const testResults = await( await fetch("https://wpt.fyi/api/search", {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json",
+        },
+        body: JSON.stringify({
+            "run_ids": runs.map(x=>x.id),
+            "query": {"path": wptPath},
+        })
+    })).json();
+
+    const browsers = runs.map(x=>({name:x.browser_name, version:x.browser_version, passes:0, total: 0}));
+    const resultsFromPath = new Map(testResults.results.map(result=>{
+        const testPath = result.test;
+        const passes = result.legacy_status.map(x=>[x.passes, x.total]);
+        return [testPath, passes];
+    }));
+    document.querySelectorAll(".wpt-name").forEach(nameEl=>{
+        const passData = resultsFromPath.get("/" + nameEl.getAttribute("title"));
+        const numTests = passData[0][1];
+        if(numTests > 1) {
+            nameEl.insertAdjacentElement("beforeend",
+                el("small", {}, ` (${numTests} tests)`));
+        }
+        if(passData == undefined) return;
+        passData.forEach((p,i) => {
+            browsers[i].passes += p[0];
+            browsers[i].total += p[1];
+        })
+        const resultsEl = el("span",{"class":"wpt-results"},
+            ...passData.map((p,i) => el("span",
+            {
+                "title": `${browsers[i].name} ${p[0]}/${p[1]}`,
+                "class": "wpt-result",
+                "style": `background: conic-gradient(forestgreen ${p[0]/p[1]*360}deg, darkred 0deg);`,
+            })),
+        );
+        nameEl.insertAdjacentElement("afterend", resultsEl);
+    });
+    const overview = document.querySelector(".wpt-overview");
+    if(overview) {
+        overview.appendChild(el('ul',{}, ...browsers.map(formatWptResult)));
+        document.head.appendChild(el('style', {},
+            `.wpt-overview ul { display: flex; flex-flow: row wrap; gap: .2em; justify-content: start; list-style: none; padding: 0; margin: 0;}
+             .wpt-overview li { padding: .25em 1em; color: black; text-align: center; }
+             .wpt-overview img { height: 1.5em; height: max(1.5em, 32px); background: transparent; }
+             .wpt-overview .browser { font-weight: bold; }
+             .wpt-overview .passes-none { background: #e57373; }
+             .wpt-overview .passes-hardly { background: #ffb74d; }
+             .wpt-overview .passes-a-few { background: #ffd54f; }
+             .wpt-overview .passes-half { background: #fff176; }
+             .wpt-overview .passes-lots { background: #dce775; }
+             .wpt-overview .passes-most { background: #aed581; }
+             .wpt-overview .passes-all { background: #81c784; }`));
+    }
+});
+function el(name, attrs, ...content) {
+    const x = document.createElement(name);
+    for(const [k,v] of Object.entries(attrs)) {
+        x.setAttribute(k, v);
+    }
+    for(let child of content) {
+        if(typeof child == "string") child = document.createTextNode(child);
+        try {
+        x.appendChild(child);
+        } catch(e) { console.log({x, child}); }
+    }
+    return x;
+}
+function formatWptResult({name, version, passes, total}) {
+    const passRate = passes/total;
+    let passClass = "";
+    if(passRate == 0)      passClass = "passes-none";
+    else if(passRate < .2) passClass = "passes-hardly";
+    else if(passRate < .4) passClass = "passes-a-few";
+    else if(passRate < .6) passClass = "passes-half";
+    else if(passRate < .8) passClass = "passes-lots";
+    else if(passRate < 1)  passClass = "passes-most";
+    else                   passClass = "passes-all";
+
+    name = name[0].toUpperCase() + name.slice(1);
+    const shortVersion = /^\d+/.exec(version);
+    const icon = []
+
+    if(name == "Chrome") icon.push(el('img', {alt:"", src:"https://wpt.fyi/static/chrome-dev_64x64.png"}));
+    if(name == "Edge") icon.push(el('img', {alt:"", src:"https://wpt.fyi/static/edge-dev_64x64.png"}));
+    if(name == "Safari") icon.push(el('img', {alt:"", src:"https://wpt.fyi/static/safari-preview_64x64.png"}));
+    if(name == "Firefox") icon.push(el('img', {alt:"", src:"https://wpt.fyi/static/firefox-nightly_64x64.png"}));
+
+    return el('li', {"class":passClass},
+        el('nobr', {'class':'browser'}, ...icon, ` ${name} ${shortVersion}`),
+        el('br', {}),
+        el('nobr', {'class':'pass-rate'}, `${passes}/${total}`)
+    );
+}</script>
