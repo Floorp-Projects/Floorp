@@ -304,12 +304,12 @@ static bool DoesNotAffectDirectionOfAncestors(const Element* aElement) {
  * Returns the directionality of a Unicode character
  */
 static Directionality GetDirectionFromChar(uint32_t ch) {
-  switch (mozilla::unicode::GetBidiCat(ch)) {
-    case eCharType_RightToLeft:
-    case eCharType_RightToLeftArabic:
+  switch (intl::UnicodeProperties::GetBidiClass(ch)) {
+    case intl::BidiClass::RightToLeft:
+    case intl::BidiClass::RightToLeftArabic:
       return eDir_RTL;
 
-    case eCharType_LeftToRight:
+    case intl::BidiClass::LeftToRight:
       return eDir_LTR;
 
     default:

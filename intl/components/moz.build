@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 EXPORTS.mozilla.intl = [
     "src/Bidi.h",
+    "src/BidiClass.h",
     "src/BidiEmbeddingLevel.h",
     "src/Calendar.h",
     "src/Collator.h",
