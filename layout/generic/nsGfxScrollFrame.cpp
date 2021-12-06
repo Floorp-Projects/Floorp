@@ -523,19 +523,28 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput& aState,
     ReflowScrolledFrame(aState, aAssumeHScroll, aAssumeVScroll, aKidMetrics);
   }
 
-  nscoord vScrollbarDesiredWidth =
-      aAssumeVScroll ? aState.VScrollbarPrefWidth() : 0;
-  nscoord hScrollbarDesiredHeight =
-      aAssumeHScroll ? aState.HScrollbarPrefHeight() : 0;
+  // Bug 1715112: Consider the space occupied by scrollbar-gutter in this
+  // variable.
+  nsMargin scrollbarOrGutterSpace;
+  if (aAssumeVScroll) {
+    if (IsScrollbarOnRight()) {
+      scrollbarOrGutterSpace.right = aState.VScrollbarPrefWidth();
+    } else {
+      scrollbarOrGutterSpace.left = aState.VScrollbarPrefWidth();
+    }
+  }
+  if (aAssumeHScroll) {
+    scrollbarOrGutterSpace.bottom = aState.HScrollbarPrefHeight();
+  }
+  const nsSize scrollbarOrGutterSize(scrollbarOrGutterSpace.LeftRight(),
+                                     scrollbarOrGutterSpace.TopBottom());
 
   // First, compute our inside-border size and scrollport size
   // XXXldb Can we depend more on ComputeSize here?
   nsSize kidSize = aState.mReflowInput.mStyleDisplay->IsContainSize()
                        ? nsSize(0, 0)
                        : aKidMetrics->PhysicalSize();
-  nsSize desiredInsideBorderSize;
-  desiredInsideBorderSize.width = vScrollbarDesiredWidth + kidSize.width;
-  desiredInsideBorderSize.height = hScrollbarDesiredHeight + kidSize.height;
+  const nsSize desiredInsideBorderSize = kidSize + scrollbarOrGutterSize;
   aState.mInsideBorderSize =
       ComputeInsideBorderSize(aState, desiredInsideBorderSize);
 
@@ -544,12 +553,10 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput& aState,
                           : aState.mInsideBorderSize;
 
   const nsSize scrollPortSize =
-      nsSize(std::max(0, layoutSize.width - vScrollbarDesiredWidth),
-             std::max(0, layoutSize.height - hScrollbarDesiredHeight));
+      Max(nsSize(0, 0), layoutSize - scrollbarOrGutterSize);
   if (mHelper.mIsUsingMinimumScaleSize) {
-    mHelper.mICBSize = nsSize(
-        std::max(0, aState.mInsideBorderSize.width - vScrollbarDesiredWidth),
-        std::max(0, aState.mInsideBorderSize.height - hScrollbarDesiredHeight));
+    mHelper.mICBSize =
+        Max(nsSize(0, 0), aState.mInsideBorderSize - scrollbarOrGutterSize);
   }
 
   nsSize visualViewportSize = scrollPortSize;
@@ -565,10 +572,8 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput& aState,
   if (mHelper.mIsRoot && presShell->GetMobileViewportManager()) {
     visualViewportSize = nsLayoutUtils::CalculateCompositionSizeForFrame(
         this, false, &layoutSize);
-
-    visualViewportSize = nsSize(
-        std::max(0, visualViewportSize.width - vScrollbarDesiredWidth),
-        std::max(0, visualViewportSize.height - hScrollbarDesiredHeight));
+    visualViewportSize =
+        Max(nsSize(0, 0), visualViewportSize - scrollbarOrGutterSize);
 
     float resolution = presShell->GetResolution();
     visualViewportSize.width /= resolution;
@@ -647,12 +652,9 @@ bool nsHTMLScrollFrame::TryLayout(ScrollReflowInput& aState,
 
   aState.mShowHScrollbar = aAssumeHScroll;
   aState.mShowVScrollbar = aAssumeVScroll;
-  nsPoint scrollPortOrigin(aState.mComputedBorder.left,
-                           aState.mComputedBorder.top);
-  if (!IsScrollbarOnRight()) {
-    nscoord vScrollbarActualWidth = layoutSize.width - scrollPortSize.width;
-    scrollPortOrigin.x += vScrollbarActualWidth;
-  }
+  const nsPoint scrollPortOrigin(
+      aState.mComputedBorder.left + scrollbarOrGutterSpace.left,
+      aState.mComputedBorder.top + scrollbarOrGutterSpace.top);
   mHelper.SetScrollPort(nsRect(scrollPortOrigin, scrollPortSize));
 
   if (mHelper.mIsRoot && gfxPlatform::UseDesktopZoomingScrollbars()) {
