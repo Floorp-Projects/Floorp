@@ -179,6 +179,11 @@ class nsFontMetrics final {
   nscoord SpaceWidth();
 
   /**
+   * Return the typical width of ideographic characters.
+   */
+  nscoord IcWidth();
+
+  /**
    * Returns the font associated with these metrics. The return value
    * is only defined after Init() has been called.
    */
@@ -252,6 +257,10 @@ class nsFontMetrics final {
   // created.
   nsPresContext* MOZ_NON_OWNING_REF mPresContext;
   int32_t mP2A;
+
+  // Cached value for IcWidth(), as computing this requires a font fallback
+  // search that may be expensive.
+  nscoord mIcWidth = -1;
 
   // The font orientation (horizontal or vertical) for which these metrics
   // have been initialized. This determines which line metrics (ascent and
