@@ -6194,7 +6194,7 @@ static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
 
   // Start at 1, as the script 0 is the top-level.
   for (uint32_t index = 1; index < nScripts; index++) {
-    UniquePtr<CompilationStencil> innerStencil;
+    RefPtr<CompilationStencil> innerStencil;
     {
       BorrowingCompilationStencil borrow(merger.getResult());
       ScriptIndex scriptIndex{index};
@@ -6214,19 +6214,19 @@ static bool CompileAndDelazifyAllToStencil(JSContext* cx, uint32_t argc,
       }
     }
 
-    if (!merger.addDelazification(cx, *innerStencil.get())) {
+    if (!merger.addDelazification(cx, *innerStencil)) {
       return false;
     }
   }
 
-  UniquePtr<CompilationStencil> result =
-      cx->make_unique<CompilationStencil>(merger.takeResult());
+  RefPtr<CompilationStencil> result =
+      cx->new_<CompilationStencil>(merger.takeResult());
   if (!result) {
     return false;
   }
 
-  Rooted<js::StencilObject*> stencilObj(
-      cx, js::StencilObject::create(cx, do_AddRef(result.release())));
+  Rooted<js::StencilObject*> stencilObj(cx,
+                                        js::StencilObject::create(cx, result));
   if (!stencilObj) {
     return false;
   }
