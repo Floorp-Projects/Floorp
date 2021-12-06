@@ -352,6 +352,19 @@ class nsContentUtils {
   static bool ShouldResistFingerprinting(const Document* aDoc);
   static bool ShouldResistFingerprinting(nsIChannel* aChannel);
 
+  /**
+   *Implement a legacy RFP function to provide an explination as to
+   * why they are using the original RFP call. Given that there is a gradual
+   *carry over of ShouldResistFingerprinting calls to a nuanced API, some
+   *features still require a legacy function. In this case, the context of the
+   *call is not reviewed. The intent of this is to have an explanation as to why
+   *the developer is using the legacy function call over of the nuanced one. The
+   *implementation of this function will include accepting a char* to provide
+   *the explanation o why the developer is using the legacy function as opposed
+   *to nuanced preference.
+   */
+  static bool ShouldResistFingerprinting(char* aChar);
+
   // Prevent system colors from being exposed to CSS or canvas.
   static bool UseStandinsForNativeColors();
 
