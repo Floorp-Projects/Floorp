@@ -49,6 +49,7 @@
 
 #include "gfxScriptItemizer.h"
 #include "mozilla/intl/Script.h"
+#include "mozilla/intl/UnicodeProperties.h"
 #include "nsUnicodeProperties.h"
 #include "nsCharTraits.h"
 #include "harfbuzz/hb.h"
@@ -177,12 +178,12 @@ bool gfxScriptItemizer::Next(uint32_t& aRunStart, uint32_t& aRunLimit,
        */
       gc = GetGeneralCategory(ch);
       if (gc == HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION) {
-        uint32_t endPairChar = mozilla::unicode::GetMirroredChar(ch);
+        uint32_t endPairChar = mozilla::intl::UnicodeProperties::CharMirror(ch);
         if (endPairChar != ch) {
           push(endPairChar, scriptCode);
         }
       } else if (gc == HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION &&
-                 HasMirroredChar(ch)) {
+                 mozilla::intl::UnicodeProperties::IsMirrored(ch)) {
         while (STACK_IS_NOT_EMPTY() && TOP().endPairChar != ch) {
           pop();
         }
@@ -220,7 +221,7 @@ bool gfxScriptItemizer::Next(uint32_t& aRunStart, uint32_t& aRunLimit,
        * pop the matching open character from the stack
        */
       if (gc == HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION &&
-          HasMirroredChar(ch)) {
+          mozilla::intl::UnicodeProperties::IsMirrored(ch)) {
         pop();
       }
     } else {
