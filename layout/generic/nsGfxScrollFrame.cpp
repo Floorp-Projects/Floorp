@@ -5849,18 +5849,29 @@ bool nsXULScrollFrame::AddRemoveScrollbar(nsBoxLayoutState& aState,
     nsSize hSize = mHelper.mHScrollbarBox->GetXULPrefSize(aState);
     nsIFrame::AddXULMargin(mHelper.mHScrollbarBox, hSize);
 
-    ScrollFrameHelper::SetScrollbarVisibility(mHelper.mHScrollbarBox, aAdd);
+    nsRect newScrollPort = mHelper.mScrollPort;
+    MOZ_ASSERT(newScrollPort.height != NS_UNCONSTRAINEDSIZE,
+               "The scroll port shouldn't have unconstrained height!");
 
-    // We can't directly pass mHasHorizontalScrollbar as the bool outparam for
-    // AddRemoveScrollbar() because it's a bool:1 bitfield. Hence this var:
-    bool hasHorizontalScrollbar;
-    bool fit = AddRemoveScrollbar(hasHorizontalScrollbar, mHelper.mScrollPort.y,
-                                  mHelper.mScrollPort.height, hSize.height,
-                                  aOnRightOrBottom, aAdd);
-    mHelper.mHasHorizontalScrollbar = hasHorizontalScrollbar;
-    if (!fit) {
-      ScrollFrameHelper::SetScrollbarVisibility(mHelper.mHScrollbarBox, !aAdd);
+    // Removing a scrollbar should always fit.
+    const bool fit = !aAdd || newScrollPort.height >= hSize.height;
+    if (fit) {
+      if (aAdd) {
+        newScrollPort.height -= hSize.height;
+      } else {
+        newScrollPort.height += hSize.height;
+      }
+      // No need to adjust newScrollPort.y because we don't support scrollbar on
+      // top side.
+      MOZ_ASSERT(aOnRightOrBottom,
+                 "We don't support a horizontal scrollbar on top side!");
+      mHelper.mScrollPort = newScrollPort;
     }
+
+    const bool showHScrollbar = aAdd && fit;
+    mHelper.mHasHorizontalScrollbar = showHScrollbar;
+    ScrollFrameHelper::SetScrollbarVisibility(mHelper.mHScrollbarBox,
+                                              showHScrollbar);
     return fit;
   } else {
     if (!mHelper.mVScrollbarBox) {
@@ -5870,48 +5881,34 @@ bool nsXULScrollFrame::AddRemoveScrollbar(nsBoxLayoutState& aState,
     nsSize vSize = mHelper.mVScrollbarBox->GetXULPrefSize(aState);
     nsIFrame::AddXULMargin(mHelper.mVScrollbarBox, vSize);
 
-    ScrollFrameHelper::SetScrollbarVisibility(mHelper.mVScrollbarBox, aAdd);
+    nsRect newScrollPort = mHelper.mScrollPort;
+    MOZ_ASSERT(newScrollPort.width != NS_UNCONSTRAINEDSIZE,
+               "The scroll port shouldn't have unconstrained width!");
 
-    // We can't directly pass mHasVerticalScrollbar as the bool outparam for
-    // AddRemoveScrollbar() because it's a bool:1 bitfield. Hence this var:
-    bool hasVerticalScrollbar;
-    bool fit = AddRemoveScrollbar(hasVerticalScrollbar, mHelper.mScrollPort.x,
-                                  mHelper.mScrollPort.width, vSize.width,
-                                  aOnRightOrBottom, aAdd);
-    mHelper.mHasVerticalScrollbar = hasVerticalScrollbar;
-    if (!fit) {
-      ScrollFrameHelper::SetScrollbarVisibility(mHelper.mVScrollbarBox, !aAdd);
+    // Removing a scrollbar should always fit.
+    const bool fit = !aAdd || newScrollPort.width >= vSize.width;
+    const bool scrollbarOnLeft = !aOnRightOrBottom;
+    if (fit) {
+      if (aAdd) {
+        newScrollPort.width -= vSize.width;
+        if (scrollbarOnLeft) {
+          newScrollPort.x += vSize.width;
+        }
+      } else {
+        newScrollPort.width += vSize.width;
+        if (scrollbarOnLeft) {
+          newScrollPort.x -= vSize.width;
+        }
+      }
+      mHelper.mScrollPort = newScrollPort;
     }
+
+    const bool showVScrollbar = aAdd && fit;
+    mHelper.mHasVerticalScrollbar = showVScrollbar;
+    ScrollFrameHelper::SetScrollbarVisibility(mHelper.mVScrollbarBox,
+                                              showVScrollbar);
     return fit;
   }
-}
-
-bool nsXULScrollFrame::AddRemoveScrollbar(bool& aHasScrollbar, nscoord& aXY,
-                                          nscoord& aSize, nscoord aSbSize,
-                                          bool aOnRightOrBottom, bool aAdd) {
-  nscoord size = aSize;
-  nscoord xy = aXY;
-
-  if (size != NS_UNCONSTRAINEDSIZE) {
-    if (aAdd) {
-      size -= aSbSize;
-      if (!aOnRightOrBottom && size >= 0) xy += aSbSize;
-    } else {
-      size += aSbSize;
-      if (!aOnRightOrBottom) xy -= aSbSize;
-    }
-  }
-
-  // not enough room? Yes? Return true.
-  if (size >= 0) {
-    aHasScrollbar = aAdd;
-    aSize = size;
-    aXY = xy;
-    return true;
-  }
-
-  aHasScrollbar = false;
-  return false;
 }
 
 void nsXULScrollFrame::LayoutScrollArea(nsBoxLayoutState& aState,
