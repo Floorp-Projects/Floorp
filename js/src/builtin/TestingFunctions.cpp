@@ -51,7 +51,7 @@
 #endif
 #include "builtin/Promise.h"
 #include "builtin/SelfHostingDefines.h"
-#include "builtin/TestingUtility.h"        // js::ParseCompileOptions
+#include "builtin/TestingUtility.h"  // js::ParseCompileOptions, js::ParseDebugMetadata
 #include "frontend/BytecodeCompilation.h"  // frontend::CanLazilyParse,
 // frontend::CompileGlobalScriptToExtensibleStencil,
 // frontend::DelazifyCanonicalScriptedFunction
@@ -6259,6 +6259,8 @@ static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
 
   CompileOptions options(cx);
   UniqueChars fileNameBytes;
+  Rooted<JS::Value> privateValue(cx);
+  Rooted<JSString*> elementAttributeName(cx);
   if (args.length() == 2) {
     if (!args[1].isObject()) {
       JS_ReportErrorASCII(cx,
@@ -6269,6 +6271,10 @@ static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
     RootedObject opts(cx, &args[1].toObject());
 
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
+      return false;
+    }
+    if (!js::ParseDebugMetadata(cx, opts, &privateValue,
+                                &elementAttributeName)) {
       return false;
     }
   }
@@ -6294,8 +6300,16 @@ static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
     return false;
   }
 
-  /* Obtain the JSScript and evaluate it. */
   RootedScript script(cx, output.get().script);
+
+  if (!privateValue.isUndefined() || elementAttributeName) {
+    JS::InstantiateOptions instantiateOptions(options);
+    if (!JS::UpdateDebugMetadata(cx, script, instantiateOptions, privateValue,
+                                 elementAttributeName, nullptr, nullptr)) {
+      return false;
+    }
+  }
+
   RootedValue retVal(cx);
   if (!JS_ExecuteScript(cx, script, &retVal)) {
     return false;
@@ -6409,6 +6423,8 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
 
   CompileOptions options(cx);
   UniqueChars fileNameBytes;
+  Rooted<JS::Value> privateValue(cx);
+  Rooted<JSString*> elementAttributeName(cx);
   if (args.length() == 2) {
     if (!args[1].isObject()) {
       JS_ReportErrorASCII(cx,
@@ -6419,6 +6435,10 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
     RootedObject opts(cx, &args[1].toObject());
 
     if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
+      return false;
+    }
+    if (!js::ParseDebugMetadata(cx, opts, &privateValue,
+                                &elementAttributeName)) {
       return false;
     }
   }
@@ -6456,8 +6476,16 @@ static bool EvalStencilXDR(JSContext* cx, uint32_t argc, Value* vp) {
     return false;
   }
 
-  /* Obtain the JSScript and evaluate it. */
   RootedScript script(cx, output.get().script);
+
+  if (!privateValue.isUndefined() || elementAttributeName) {
+    JS::InstantiateOptions instantiateOptions(options);
+    if (!JS::UpdateDebugMetadata(cx, script, instantiateOptions, privateValue,
+                                 elementAttributeName, nullptr, nullptr)) {
+      return false;
+    }
+  }
+
   RootedValue retVal(cx, UndefinedValue());
   if (!JS_ExecuteScript(cx, script, &retVal)) {
     return false;

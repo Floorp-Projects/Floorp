@@ -264,9 +264,6 @@ extern ShellContext* GetShellContext(JSContext* cx);
 [[nodiscard]] extern bool PrintStackTrace(JSContext* cx,
                                           JS::Handle<JSObject*> stackObj);
 
-extern JSObject* CreateScriptPrivate(JSContext* cx,
-                                     HandleString path = nullptr);
-
 } /* namespace shell */
 } /* namespace js */
 
