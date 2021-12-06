@@ -20,6 +20,8 @@
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
     <string name="feedback_erase">Din browser-historik er blevet slettet.</string>
 
+    <string name="feedback_erase2">Browserhistorik blev ryddet</string>
+
     <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
     <string name="feedback_erase_custom_tab">Fanebladets historik er slettet.</string>
 
@@ -45,6 +47,11 @@
 
     <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
     <string name="menu_add_to_home_screen">Føj til startskærmen</string>
+
+    <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+    <string name="menu_add_to_shortcuts">Føj til genveje</string>
+    <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+    <string name="menu_remove_from_shortcuts">Fjern fra genveje</string>
 
     <!-- Menu item: Shows information about features and changes that are new to this version -->
     <string name="menu_whats_new">Nyheder</string>
@@ -116,6 +123,19 @@
          Clicking this action will launch Focus and perform a search in the default search engine. -->
     <string name="text_selection_search_action">Søg privat</string>
 
+    <!-- Content of about focus. Argument 1 is the app name (Firefox Focus/Firefox Klar/etc).
+         Argument 2 is the url for the learn-more link. -->
+    <string name="about_content"><![CDATA[<p>%1$s giver dig fuld kontrol.</p>
+<p>Anvend den som privat browser:
+  <ul>
+    <li>Søg og surf direkte i appen</li>
+    <li>Bloker sporing (eller opdater indstillingerne og tillad sporing)</li>
+    <li>Fjern nemt cookies samt søge- og browser-historik</li>
+  </ul>
+</p>
+<p>%1$s er udviklet af Mozilla. Vores formål er at fremme et sundt, åbent internet.<br/>
+<a href="%2$s">Læs mere</a></p>]]></string>
+
     <!-- Header for the Privacy and Security settings menu -->
     <string name="preference_privacy_and_security_header">Privatliv og sikkerhed</string>
 
@@ -131,6 +151,9 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">Om %1$s, hjælp</string>
 
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Udvidet beskyttelse mod sporing</string>
+
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Webindhold</string>
 
@@ -139,6 +162,9 @@
 
     <!-- Preference category for General Settings -->
     <string name="preference_category_general">Generelt</string>
+
+    <!-- Preference summary for General Settings category; the two things users can find in this category -->
+    <string name="preference_general_summary2">Standard-browser, sprog</string>
 
     <!-- Preference category for settings about sending usage data -->
     <string name="preference_category_data_collection_use">Dataindsamling og brug</string>
@@ -169,8 +195,16 @@
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
     <string name="preference_switch_autocomplete_topsites">For populære websteder</string>
 
+    <!-- Summary for the toggle to enable autocomplete for the topsites list
+    %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_topsite_summary2">Slå til for at få %s til at autofuldføre over 450 populære URLer i adressefeltet.</string>
+
     <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
     <string name="preference_switch_autocomplete_user_list">For websteder du tilføjer</string>
+
+    <!-- Summary for the toggle to enable autocomplete for the user-defined list
+     %s is a placeholder for the app name (e.g. Firefox Focus)-->
+    <string name="preference_autocomplete_user_list_summary2">Slå til for at få %s til at autofuldføre dine foretrukne URLer.</string>
 
     <!-- Preference category: Manage (user-defined) sites -->
     <string name="preference_category_autocomplete_manage_sites">Administrer websteder</string>
@@ -180,6 +214,12 @@
 
     <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
     <string name="preference_autocomplete_action_add">+ Tilføj brugerdefineret URL</string>
+
+    <!-- Explanation text above the list of custom autocomplete URLs. -->
+    <string name="preference_autocomplete_explanation_text">Din autofuldførelses-liste:</string>
+
+    <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+    <string name="preference_autocomplete_action_add2">Tilføj URL</string>
 
     <!-- Title of the screen for adding custom autocomplete URLs. -->
     <string name="preference_autocomplete_title_add">Tilføj brugerdefineret URL</string>
@@ -245,8 +285,13 @@
     <string name="preference_privacy_block_content_summary2">Aktivering kan medføre, at visse sider opfører sig uventet</string>
     <string name="preference_privacy_category_cookies">Bloker cookies</string>
 
+    <!-- Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked) -->
+    <string name="preference_privacy_should_block_cookies_no_option2">Nej tak</string>
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Bloker kun sporings-cookies fra tredjepart</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloker kun cookies fra tredjepart</string>
+
+    <string name="preference_privacy_should_block_cookies_yes_option2">Ja tak</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
     <string name="preference_security_biometric">Brug fingeraftryk til at låse appen op</string>
@@ -299,6 +344,9 @@
     <!-- Header for the list of installed search engines -->
     <string name="preference_search_installed_search_engines">Installerede søgetjenester</string>
 
+    <!-- Header for the list of installed search engines -->
+    <string name="preference_choose_search_engine">Vælg søgetjeneste</string>
+
     <!-- Action for restoring the default list of search engines -->
     <string name="preference_search_restore">Gendan standard-søgetjenester</string>
 
@@ -307,6 +355,11 @@
     <string name="preference_search_add2">+ Tilføj en ny søgetjeneste</string>
     <string name="preference_search_remove_title">Fjern søgetjenester</string>
     <string name="preference_search_remove">Fjern</string>
+
+    <!-- Action for dding an additional search engine to the list -->
+    <string name="preference_search_add3">Tilføj en ny søgetjeneste</string>
+    <!-- Explanation text above the list of search engines-->
+    <string name="preference_select_preferred_engine">Vælg din foretrukne søgetjeneste:</string>
 
     <!-- Title: Homescreen tips settings toggle to determine whether or not tips are displayed when
      a user first launches the app. -->
@@ -468,8 +521,18 @@
     <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_add">Tilføj</string>
 
+    <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_yes">JA</string>
+
     <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
     <string name="dialog_addtohomescreen_action_cancel">Annuller</string>
+
+    <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+    <string name="dialog_addtohomescreen_action_no">NEJ</string>
+
+    <!-- When enhanced tracking protection is disabled for the current session then we will show this warning in the "Add to home screen" dialog to
+         let the user know that the shortcut will always be opened with enhanced tracking protection disabled. -->
+    <string name="dialog_addtohomescreen_tracking_protection2">Når genvejen åbnes vil Udvidet Sporingsbeskyttelse være slået fra</string>
 
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active.
     The recommended maximum length is 40 characters; the value may be truncated if it is too long.
@@ -503,8 +566,24 @@
 
   <!-- Text shown in the "Your rights" screen.
     %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the MPL (e.g. https://www.mozilla.org/en-US/MPL/) -->
+    <string name="your_rights_content2"><![CDATA[%1$s er tilgængelig under de vilkår, der er fastsat i <a href="%2$s">Mozilla Public License</a> og andre licenser til åben kildekode.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the trademark policy (e.g. https://www.mozilla.org/foundation/trademarks/policy/) -->
+    <string name="your_rights_content3"><![CDATA[Du bliver ikke givet nogen ret eller licens til varemærker tilhørende Mozilla Foundation eller tredjepart, herunder navn og logo for Mozilla, Firefox og %1$s. Få flere oplysninger <a href="%2$s">her</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
     %2$s will be replaced with a URL linking to the list of licenses used by the dependencies.-->
     <string name="your_rights_content4"><![CDATA[Yderligere gratis og åben kildekode til %1$s er tilgængelig under diverse <a href="%2$s">licenser</a>.]]></string>
+
+    <!-- Text shown in the "Your rights" screen.
+    %1$s will be replaced with the name of the app (e.g. Firefox Focus)
+    %2$s will be replaced with a URL linking to the GPL
+    %3$s will be replaced with a URL linking to the tracking protection wiki page (e.g. https://wiki.mozilla.org/Security/Tracking_protection#Lists) -->
+    <string name="your_rights_content5"><![CDATA[%1$s benytter sig også af blokeringslister fra Disconnect, Inc. som adskilte og uafhængige værker under <a href="%2$s">GNU General Public License v3</a>. Listerne er tilgængelige <a href="%3$s">her</a>.]]></string>
 
     <!-- Text shown in prompts for GeckoView -->
     <string name="gv_prompt_username_hint">Brugernavn</string>
@@ -547,14 +626,41 @@
   <!-- Checkbox menu item text to request desktop site -->
     <string name="preference_performance_request_desktop_site">Bed om desktop-version</string>
 
+    <!-- Checkbox menu item text to request desktop site -->
+    <string name="preference_performance_request_desktop_site2">Desktop-version</string>
+
     <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
     <string name="custom_tab_copy_url_action">URL kopieret</string>
 
     <!-- Description of what a user may find in the Advanced Setting category, used for debugging -->
     <string name="preference_advanced_summary">Udviklerværktøj</string>
 
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">Åbn links i apps</string>
+
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Avanceret</string>
+
+    <!-- Preference for studies -->
+    <string name="preference_studies">Undersøgelser</string>
+
+    <!-- Preference for studies summary-->
+    <string name="preference_studies_summary">Firefox kan installere og afvikle undersøgelser.</string>
+
+    <!-- Learn more link for studies, links to an article for more information about studies. -->
+    <string name="studies_learn_more">Læs mere</string>
+
+    <!-- Dialog message shown when some changes are made on studies -->
+    <string name="studies_restart_app">Appen afsluttes for at anvende ændringerne</string>
+
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Fjern</string>
+
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">Aktive</string>
+
+    <!-- Title of the completed section on the studies list -->
+    <string name="studies_completed">Gennemførte</string>
 
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Ekstern debugging via USB/wi-fi</string>
@@ -570,6 +676,10 @@
      When pressed, the user's previous session is cleared, and authentication is not required. -->
     <string name="biometric_auth_new_session">Ny session</string>
 
+    <!-- Button for the fingerprint authentication dialog box that is shown to the user when sharing a link to the app
+    while the user has biometric authentication enabled. When pressed, the user's previous session is cleared, and the shared link is opened. -->
+    <string name="biometric_auth_open_link_new_session">Åbn link i en ny session</string>
+
     <!-- Description for the fingerprint authentication image. Used for accessibility purposes. -->
     <string name="biometric_auth_image_description">Fingeraftryks-ikon</string>
 
@@ -580,6 +690,13 @@
     <!-- Error text displayed when the user's fingerprint moved too quickly upon re-entering the app
     This is displayed during the authentication flow as the app launches.-->
     <string name="biometric_auth_moved_too_quickly">Fingeren bevægede sig for hurtigt. Prøv igen.</string>
+
+    <!-- Title for the prompt to enable search suggestions -->
+    <string name="enable_search_suggestion_title2">Vis søgeforslag?</string>
+
+    <!-- Description for the prompt to enable search suggestions
+        %1$s will be replaced by the app name (e.g. Firefox Focus) -->
+    <string name="enable_search_suggestion_description">For at kunne vise søgeforslag sender %1$s dine indtastninger i søgefeltet til søgetjenesten.</string>
 
     <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
     <string name="enable_search_suggestions_no">Nej</string>
@@ -599,6 +716,11 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_disable_tracking_protection">Opfører siden sig uventet?\n Prøv at deaktivere beskyttelse mod sporing</string>
 
+    <!-- Tip displayed on home view explaining how to disable enhanced tracking protection
+The new line here must be kept as the second half of the string is clickable for the user. -->
+    <string name="tip_disable_tracking_protection3">Mangler webstedet indhold eller opfører det sig sært?\n
+    Prøv at deaktivere Udvidet beskyttelse mod sporing</string>
+
     <!-- Tip displayed on home view explaining how to add sites to homescreen
     Argument 1 will be replaced with a line break in the application.-->
     <string name="tip_add_to_homescreen"><![CDATA[Få adgang til dine mest brugte sider med et enkelt tryk%1$s Menu > Føj til startskærmen]]></string>
@@ -616,8 +738,28 @@
     The new line here must be kept as the second half of the string is clickable for the user. -->
     <string name="tip_open_in_new_tab">Åbn link i et nyt faneblad\n Tryk og hold links på en side</string>
 
+    <!-- Tip displayed on home view explaining how to request the desktop version of a website.
+      %1$s is a placeholder for the app name. -->
+    <string name="tip_request_desktop2">Vil du se den fulde version af et webstedet?\n
+        Vælg at få vist desktop-versionen i %1$s-menuen</string>
+
     <!-- Tip displayed on home view explaining how to add a custom autocomplete URL -->
     <string name="tip_disable_tips2">Slå tips på startskærmen fra</string>
+
+    <!-- Tip displayed on the home view explaining how to use the Allowlist feature.
+     "Allowlist" is a replacement for the word whitelist. -->
+    <string name="tip_explain_allowlist3">Vil du deaktivere Udvidet beskyttelse mod sporing for et websted, du stoler på?\n
+        Tilføj det til listen over tilladte websteder i Indstillinger
+    </string>
+
+    <!-- Tip displayed on the home view about the changes in the new release.
+    %1$s is a placeholder for the app name -->
+    <string name="tip_fresh_look">Vi har fået et nyt look!\n Læs mere om det samt andre opdateringer i %1$s.</string>
+
+    <!-- Tip displayed on the home view about shortcuts
+    %1$s is a placeholder for the app name -->
+    <string name="tip_about_shortcuts">Opret genveje til websteder, du besøger ofte:\n
+    Vælg Føj til genveje i %1$s-menuen</string>
 
     <!-- Label for the snackbar when a user opens a new tab -->
     <string name="new_tab_opened_snackbar">Nyt faneblad er åbnet</string>
@@ -644,6 +786,12 @@
     <!-- Button to remove all websites from the exception list -->
     <string name="preference_exceptions_remove_all_button_label">Fjern alle websteder</string>
 
+    <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_block_cookies_title">Bloker cookies</string>
+
+    <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+    <string name="preference_category_block_cookies">Vil du blokere cookies?</string>
+
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">Fanebladet gik ned</string>
     <!-- Headline for the tab crash report screen -->
@@ -661,4 +809,49 @@
 
     <!-- Tracking protection bottom sheet -->
 
-    </resources>
+    <!-- Label for the total number of trackers blocked. %s represents the app install date -->
+    <string name="trackers_count_note">Blokerede sporings-mekanismer blokeret siden %s</string>
+    <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="content">Indhold</string>
+    <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
+    <string name="social">Social</string>
+    <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->
+    <string name="analytics">Analyse</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="enhanced_tracking_protection">Udvidet beskyttelse mod sporing</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is disabled for this site-->
+    <string name="enhanced_tracking_protection_state_off">Beskyttelse er slået FRA for dette websted</string>
+    <!-- Enhanced tracking protection preference description when the tracking protection is enabled for this site-->
+    <string name="enhanced_tracking_protection_state_on">Beskyttelse er slået TIL for dette websted</string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="secure_connection">Forbindelsen er sikker</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="insecure_connection">Forbindelsen er ikke sikker</string>
+    <!-- Title for the list of trackers enhanced tracking ptotection can block-->
+    <string name="trackers_and_scripts">Sporings-mekanismer og scripts, der skal blokeres</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Navigate back button description -->
+    <string name="go_back">Gå tilbage</string>
+
+    <!-- Top Sites -->
+    <!-- Text for the menu button to remove a top site -->
+    <string name="remove_top_site">Fjern</string>
+
+    <!-- Text for context menu additional note.
+    %1$s is a placeholder for the app name. -->
+    <string name="contextmenu_erased_images_note2">Gemte og delte billeder &lt;b&gt;vil ikke blive slettet,&lt;/b&gt; når du sletter historikken i %1$s</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference category for changing default theme to dark or light mode -->
+    <string name="preferences_theme">Tema</string>
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">Lyst</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">Mørkt</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">Indstil med strømstyring</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">Samme som enhedens tema</string>
+
+</resources>

@@ -290,6 +290,7 @@
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Rhwystro cwcis trydydd parti\'n unig</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Rhwystro cwcis trydydd parti\'n unig</string>
 
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Rhwystro cwcis traws-gwefan</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">Iawn!</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->

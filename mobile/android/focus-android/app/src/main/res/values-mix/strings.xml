@@ -579,6 +579,9 @@
     <!-- Title of Advanced Setting category -->
     <string name="preference_category_advanced">Nchichi</string>
 
+    <!-- Title of the remove studies button -->
+    <string name="studies_remove">Xitaá</string>
+
     <!-- Preference to enable remote debugging of the app via USB or Wi-Fi -->
     <string name="preference_remote_debugging">Nta sa vaà tsi USBWi-Fi</string>
 

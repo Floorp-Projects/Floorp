@@ -290,6 +290,7 @@
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">サードバーティの追跡 Cookie のみブロック</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">サードパーティ Cookie のみブロック</string>
 
+    <string name="preference_privacy_should_block_cookies_cross_site_option">クロスサイト Cookie をブロック</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">はい</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->

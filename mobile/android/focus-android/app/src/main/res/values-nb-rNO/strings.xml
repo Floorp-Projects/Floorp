@@ -290,6 +290,7 @@
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blokker bare tredjepartssporingsinfokapsler</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Blokker bare tredjepartsinfokapsler</string>
 
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Blokker infokapsler på tvers av nettsteder</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">Ja takk</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->

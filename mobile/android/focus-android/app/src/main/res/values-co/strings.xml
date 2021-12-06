@@ -290,6 +290,7 @@
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Bluccà solu i canistrelli terzi impiegati per u spiunagiu</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Bluccà solu i canistrelli terzi</string>
 
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Bluccà i canistrelli intersiti</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">Iè, per piacè</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->

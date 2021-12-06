@@ -291,6 +291,7 @@
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Не принимать только куки от сторонних трекеров</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Не принимать только куки со сторонних веб-сайтов</string>
 
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Блокировать межсайтовые куки</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">Да, пожалуйста</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
