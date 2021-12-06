@@ -9,6 +9,7 @@ import androidx.test.internal.runner.junit4.AndroidJUnit4ClassRunner
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -56,6 +57,8 @@ class FirstRunDialogueTest {
     }
 
     @Test
+    @Ignore("This test should be updated since kotlin extensions were migrated to view binding")
+    // https://github.com/mozilla-mobile/focus-android/issues/5767
     fun skipFirstRunOnboardingTest() {
         homeScreen {
             verifyOnboardingFirstSlide()
@@ -68,6 +71,8 @@ class FirstRunDialogueTest {
 
     @SmokeTest
     @Test
+    @Ignore("This test should be updated since kotlin extensions were migrated to view binding")
+    // https://github.com/mozilla-mobile/focus-android/issues/5767
     fun homeScreenTipsTest() {
         // Scrolling left/right through the tips carousel to check the tips displaying order
         homeScreen {
@@ -96,6 +101,8 @@ class FirstRunDialogueTest {
 
     @SmokeTest
     @Test
+    @Ignore("This test should be updated since kotlin extensions were migrated to view binding")
+    // https://github.com/mozilla-mobile/focus-android/issues/5767
     fun verifyWhatsNewLinkFromTips() {
         homeScreen {
             skipFirstRun()
@@ -109,6 +116,8 @@ class FirstRunDialogueTest {
 
     @SmokeTest
     @Test
+    @Ignore("This test should be updated since kotlin extensions were migrated to view binding")
+    // https://github.com/mozilla-mobile/focus-android/issues/5767
     fun verifyAllowListLinkFromTips() {
         homeScreen {
             skipFirstRun()
@@ -123,6 +132,8 @@ class FirstRunDialogueTest {
 
     @SmokeTest
     @Test
+    @Ignore("This test should be updated since kotlin extensions were migrated to view binding")
+    // https://github.com/mozilla-mobile/focus-android/issues/5767
     fun verifySwitchToDesktopSiteLinkFromTips() {
         homeScreen {
             skipFirstRun()
@@ -139,6 +150,8 @@ class FirstRunDialogueTest {
 
     @SmokeTest
     @Test
+    @Ignore("This test should be updated since kotlin extensions were migrated to view binding")
+    // https://github.com/mozilla-mobile/focus-android/issues/5767
     fun firstTipIsAlwaysDisplayedTest() {
         webServer.enqueue(createMockResponseFromAsset("tab1.html"))
         val pageUrl = webServer.url("tab1.html").toString()

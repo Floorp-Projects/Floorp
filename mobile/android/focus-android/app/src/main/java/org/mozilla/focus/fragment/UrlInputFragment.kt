@@ -14,11 +14,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModelProvider
 import androidx.preference.PreferenceManager
-import kotlinx.android.synthetic.main.fragment_urlinput.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -37,6 +35,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.GleanMetrics.SearchBar
 import org.mozilla.focus.R
+import org.mozilla.focus.databinding.FragmentUrlinputBinding
 import org.mozilla.focus.ext.defaultSearchEngineName
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
@@ -126,6 +125,8 @@ class UrlInputFragment :
         get() = job + Dispatchers.Main
     private val shippedDomainsProvider = ShippedDomainsProvider()
     private val customDomainsProvider = CustomDomainsProvider()
+    private var _binding: FragmentUrlinputBinding? = null
+    private val binding get() = _binding!!
 
     @Volatile
     private var isAnimating: Boolean = false
@@ -160,7 +161,7 @@ class UrlInputFragment :
         searchSuggestionsViewModel = ViewModelProvider(this).get(SearchSuggestionsViewModel::class.java)
 
         childFragmentManager.beginTransaction()
-            .replace(searchViewContainer.id, SearchSuggestionsFragment.create())
+            .replace(binding.searchViewContainer.id, SearchSuggestionsFragment.create())
             .commit()
 
         searchSuggestionsViewModel.selectedSearchSuggestion.observe(
@@ -179,7 +180,7 @@ class UrlInputFragment :
         searchSuggestionsViewModel.autocompleteSuggestion.observe(viewLifecycleOwner) { text ->
             if (text != null) {
                 searchSuggestionsViewModel.clearAutocompleteSuggestion()
-                browserToolbar.setSearchTerms(text)
+                binding.browserToolbar.setSearchTerms(text)
             }
         }
     }
@@ -196,14 +197,14 @@ class UrlInputFragment :
             customDomainsProvider.initialize(it.applicationContext)
         }
 
-        StatusBarUtils.getStatusBarHeight(landingLayout) {
+        StatusBarUtils.getStatusBarHeight(binding.landingLayout) {
             adjustViewToStatusBarHeight(it)
         }
 
         if (!isInitialized) {
             // Explicitly switching to "edit mode" here in order to focus the toolbar and select
             // all text in it. We only want to do this once per fragment.
-            browserToolbar.editMode()
+            binding.browserToolbar.editMode()
             isInitialized = true
         }
     }
@@ -214,26 +215,31 @@ class UrlInputFragment :
         view?.hideKeyboard()
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     private fun updateTipsLabel() {
         val context = context ?: return
         val tips = TipManager.getAvailableTips(context)
-        home_tips.tipsAdapter.submitList(tips)
+        binding.homeTips.tipsAdapter.submitList(tips)
     }
 
     private fun adjustViewToStatusBarHeight(statusBarHeight: Int) {
         val inputHeight = resources.getDimension(R.dimen.urlinput_height)
 
-        urlInputLayout.layoutParams.height = (inputHeight + statusBarHeight).toInt()
+        binding.urlInputLayout.layoutParams.height = (inputHeight + statusBarHeight).toInt()
 
         val topMargin = (inputHeight + statusBarHeight).toInt()
 
-        if (searchViewContainer.layoutParams is ViewGroup.MarginLayoutParams) {
-            val marginParams = searchViewContainer.layoutParams as ViewGroup.MarginLayoutParams
+        if (binding.searchViewContainer.layoutParams is ViewGroup.MarginLayoutParams) {
+            val marginParams = binding.searchViewContainer.layoutParams as ViewGroup.MarginLayoutParams
             marginParams.topMargin = topMargin
         }
 
-        if (landingLayout.layoutParams is ViewGroup.MarginLayoutParams) {
-            val marginParams = landingLayout.layoutParams as ViewGroup.MarginLayoutParams
+        if (binding.landingLayout.layoutParams is ViewGroup.MarginLayoutParams) {
+            val marginParams = binding.landingLayout.layoutParams as ViewGroup.MarginLayoutParams
             marginParams.topMargin = topMargin
         }
     }
@@ -242,28 +248,27 @@ class UrlInputFragment :
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        val view = inflater.inflate(R.layout.fragment_urlinput, container, false)
+    ): View {
+        _binding = FragmentUrlinputBinding.inflate(inflater, container, false)
 
-        val topSites = view.findViewById<ComposeView>(R.id.topSites)
-        topSites.setContent { HomeScreen() }
+        binding.topSites.setContent { HomeScreen() }
 
-        return view
+        return binding.root
     }
 
     @Suppress("LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        browserToolbar.private = true
+        binding.browserToolbar.private = true
 
         toolbarIntegration.set(
             InputToolbarIntegration(
-                browserToolbar,
+                binding.browserToolbar,
                 fragment = this,
                 shippedDomainsProvider = shippedDomainsProvider,
                 customDomainsProvider = customDomainsProvider
             ),
             owner = this,
-            view = browserToolbar
+            view = binding.browserToolbar
         )
 
         topSitesFeature.set(
@@ -281,33 +286,31 @@ class UrlInputFragment :
             view = view
         )
 
-        dismissView.setOnClickListener(this)
+        binding.dismissView.setOnClickListener(this)
 
-        if (urlInputContainerView != null) {
-            OneShotOnPreDrawListener(urlInputContainerView) {
-                animateFirstDraw()
-                true
-            }
+        OneShotOnPreDrawListener(binding.urlInputContainerView) {
+            animateFirstDraw()
+            true
         }
 
         if (isOverlay) {
-            landingLayout?.visibility = View.GONE
+            binding.landingLayout.visibility = View.GONE
         } else {
-            backgroundView?.background = AppCompatResources.getDrawable(
+            binding.backgroundView.background = AppCompatResources.getDrawable(
                 requireContext(),
                 R.drawable.home_background
             )
 
-            dismissView?.visibility = View.GONE
+            binding.dismissView.visibility = View.GONE
 
-            menuView?.visibility = View.VISIBLE
+            binding.menuView.visibility = View.VISIBLE
         }
 
         val isDDG: Boolean =
             requireComponents.store.state.search.selectedOrDefaultSearchEngine?.name == duckDuckGo
 
         tab?.let { tab ->
-            browserToolbar.url =
+            binding.browserToolbar.url =
                 if (tab.content.isSearch &&
                     !isDDG &&
                     Features.SEARCH_TERMS_OR_URL
@@ -317,17 +320,17 @@ class UrlInputFragment :
                     tab.content.url
                 }
 
-            searchViewContainer?.visibility = View.GONE
-            menuView?.visibility = View.GONE
+            binding.searchViewContainer.visibility = View.GONE
+            binding.menuView.visibility = View.GONE
         }
 
-        browserToolbar.editMode()
+        binding.browserToolbar.editMode()
         setHomeMenu()
         updateTipsLabel()
     }
 
     private fun setHomeMenu() {
-        menuView.menuBuilder = HomeMenu(requireContext()) { menuItem ->
+        binding.menuView.menuBuilder = HomeMenu(requireContext()) { menuItem ->
             when (menuItem) {
                 is HomeMenuItem.Help -> openHelpPage()
                 is HomeMenuItem.Settings -> openSettingsPage()
@@ -371,7 +374,7 @@ class UrlInputFragment :
 
         if (newConfig.orientation != Configuration.ORIENTATION_UNDEFINED) {
             // Make sure we update the background for landscape / portrait orientations.
-            backgroundView?.background = AppCompatResources.getDrawable(
+            binding.backgroundView.background = AppCompatResources.getDrawable(
                 requireContext(),
                 R.drawable.home_background
             )
@@ -395,7 +398,7 @@ class UrlInputFragment :
             // This is a bit hacky, but emulates what the legacy toolbar did before we replaced
             // it with `browser-toolbar`. First we clear the text and then we invoke the "text
             // changed" callback manually for this change.
-            browserToolbar.edit.updateUrl("", false)
+            binding.browserToolbar.edit.updateUrl("", false)
             onTextChange("")
         }
     }
@@ -418,7 +421,7 @@ class UrlInputFragment :
         // but we don't want to restart animations and/or trigger hiding again (which could potentially
         // cause crashes since we don't know what state we're in). Ignoring further clicks is the simplest
         // solution, since dismissView is about to disappear anyway.
-        dismissView?.isClickable = false
+        binding.dismissView.isClickable = false
 
         if (ANIMATION_BROWSER_SCREEN == arguments?.getString(ARGUMENT_ANIMATION)) {
             playVisibilityAnimation(true)
@@ -446,54 +449,54 @@ class UrlInputFragment :
 
         val xyOffset = (
             if (isOverlay)
-                (urlInputContainerView?.layoutParams as FrameLayout.LayoutParams).bottomMargin
+                (binding.urlInputContainerView.layoutParams as FrameLayout.LayoutParams).bottomMargin
             else
                 0
             ).toFloat()
 
-        if (urlInputBackgroundView != null) {
-            val width = urlInputBackgroundView.width.toFloat()
-            val height = urlInputBackgroundView.height.toFloat()
+        val width = binding.urlInputBackgroundView.width.toFloat()
+        val height = binding.urlInputBackgroundView.height.toFloat()
 
-            val widthScale = if (isOverlay)
-                (width + 2 * xyOffset) / width
-            else
-                1f
+        val widthScale = if (isOverlay)
+            (width + 2 * xyOffset) / width
+        else
+            1f
 
-            val heightScale = if (isOverlay)
-                (height + 2 * xyOffset) / height
-            else
-                1f
+        val heightScale = if (isOverlay)
+            (height + 2 * xyOffset) / height
+        else
+            1f
 
-            if (!reverse) {
-                urlInputBackgroundView?.pivotX = 0f
-                urlInputBackgroundView?.pivotY = 0f
-                urlInputBackgroundView?.scaleX = widthScale
-                urlInputBackgroundView?.scaleY = heightScale
-                urlInputBackgroundView?.translationX = -xyOffset
-                urlInputBackgroundView?.translationY = -xyOffset
+        if (!reverse) {
+            binding.urlInputBackgroundView.apply {
+                pivotX = 0f
+                pivotY = 0f
+                scaleX = widthScale
+                scaleY = heightScale
+                translationX = -xyOffset
+                translationY = -xyOffset
             }
-
-            // Let the URL input use the full width/height and then shrink to the actual size
-            urlInputBackgroundView.animate()
-                .setDuration(ANIMATION_DURATION.toLong())
-                .scaleX(if (reverse) widthScale else 1f)
-                .scaleY(if (reverse) heightScale else 1f)
-                .alpha((if (reverse && isOverlay) 0 else 1).toFloat())
-                .translationX(if (reverse) -xyOffset else 0f)
-                .translationY(if (reverse) -xyOffset else 0f)
-                .setListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) {
-                        if (reverse) {
-                            if (isOverlay) {
-                                dismiss()
-                            }
-                        }
-
-                        isAnimating = false
-                    }
-                })
         }
+
+        // Let the URL input use the full width/height and then shrink to the actual size
+        binding.urlInputBackgroundView.animate()
+            .setDuration(ANIMATION_DURATION.toLong())
+            .scaleX(if (reverse) widthScale else 1f)
+            .scaleY(if (reverse) heightScale else 1f)
+            .alpha((if (reverse && isOverlay) 0 else 1).toFloat())
+            .translationX(if (reverse) -xyOffset else 0f)
+            .translationY(if (reverse) -xyOffset else 0f)
+            .setListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    if (reverse) {
+                        if (isOverlay) {
+                            dismiss()
+                        }
+                    }
+
+                    isAnimating = false
+                }
+            })
 
         // We only need to animate the toolbar if we are an overlay.
         /*
@@ -518,18 +521,15 @@ class UrlInputFragment :
         }
         */
 
-        if (toolbarBackgroundView != null) {
+        if (reverse) {
+            binding.toolbarBottomBorder.visibility = View.VISIBLE
 
-            if (reverse) {
-                toolbarBottomBorder?.visibility = View.VISIBLE
-
-                if (!isOverlay) {
-                    dismissView?.visibility = View.GONE
-                    menuView?.visibility = View.VISIBLE
-                }
-            } else {
-                toolbarBottomBorder?.visibility = View.GONE
+            if (!isOverlay) {
+                binding.dismissView.visibility = View.GONE
+                binding.menuView.visibility = View.VISIBLE
             }
+        } else {
+            binding.toolbarBottomBorder.visibility = View.GONE
         }
     }
 
@@ -547,7 +547,7 @@ class UrlInputFragment :
         if (input.trim { it <= ' ' }.isNotEmpty()) {
             handleCrashTrigger(input)
 
-            ViewUtils.hideKeyboard(browserToolbar)
+            ViewUtils.hideKeyboard(binding.browserToolbar)
 
             if (handleL10NTrigger(input)) return
 
@@ -574,17 +574,17 @@ class UrlInputFragment :
         var triggerHandled = true
 
         when (input) {
-            "l10n:tip:1" -> home_tips.scrollToPosition(TIP_ONE_CAROUSEL_POSITION)
-            "l10n:tip:2" -> home_tips.scrollToPosition(TIP_TWO_CAROUSEL_POSITION)
-            "l10n:tip:3" -> home_tips.scrollToPosition(TIP_THREE_CAROUSEL_POSITION)
-            "l10n:tip:4" -> home_tips.scrollToPosition(TIP_FOUR_CAROUSEL_POSITION)
-            "l10n:tip:5" -> home_tips.scrollToPosition(TIP_FIVE_CAROUSEL_POSITION)
+            "l10n:tip:1" -> binding.homeTips.scrollToPosition(TIP_ONE_CAROUSEL_POSITION)
+            "l10n:tip:2" -> binding.homeTips.scrollToPosition(TIP_TWO_CAROUSEL_POSITION)
+            "l10n:tip:3" -> binding.homeTips.scrollToPosition(TIP_THREE_CAROUSEL_POSITION)
+            "l10n:tip:4" -> binding.homeTips.scrollToPosition(TIP_FOUR_CAROUSEL_POSITION)
+            "l10n:tip:5" -> binding.homeTips.scrollToPosition(TIP_FIVE_CAROUSEL_POSITION)
             else -> triggerHandled = false
         }
 
         if (triggerHandled) {
-            browserToolbar.displayMode()
-            browserToolbar.editMode()
+            binding.browserToolbar.displayMode()
+            binding.browserToolbar.editMode()
         }
         return triggerHandled
     }
@@ -663,7 +663,7 @@ class UrlInputFragment :
 
     internal fun onStartEditing() {
         if (tab != null) {
-            searchViewContainer?.isVisible = true
+            binding.searchViewContainer.isVisible = true
         }
     }
 
@@ -675,20 +675,20 @@ class UrlInputFragment :
         searchSuggestionsViewModel.setSearchQuery(text)
 
         if (text.trim { it <= ' ' }.isEmpty()) {
-            searchViewContainer?.visibility = View.GONE
+            binding.searchViewContainer.visibility = View.GONE
 
             if (!isOverlay) {
                 playVisibilityAnimation(true)
             }
         } else {
-            menuView?.visibility = View.GONE
+            binding.menuView.visibility = View.GONE
 
-            if (!isOverlay && dismissView?.visibility != View.VISIBLE) {
+            if (!isOverlay && binding.dismissView.visibility != View.VISIBLE) {
                 playVisibilityAnimation(false)
-                dismissView?.visibility = View.VISIBLE
+                binding.dismissView.visibility = View.VISIBLE
             }
 
-            searchViewContainer?.visibility = View.VISIBLE
+            binding.searchViewContainer.visibility = View.VISIBLE
         }
     }
 

@@ -8,7 +8,6 @@ import android.content.Context
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
-import kotlinx.android.synthetic.main.fragment_autocomplete_customdomains.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Main
@@ -40,7 +39,7 @@ class AutocompleteRemoveFragment : AutocompleteListFragment(), CoroutineScope {
     }
 
     private fun removeSelectedDomains(context: Context) {
-        val domains = (domainList.adapter as DomainListAdapter).selection()
+        val domains = (binding.domainList.adapter as DomainListAdapter).selection()
         if (domains.isNotEmpty()) {
             launch(Main) {
                 async {

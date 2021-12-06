@@ -25,7 +25,8 @@ import org.mozilla.focus.utils.SupportUtils
 import kotlin.system.exitProcess
 
 class StudiesFragment : BaseSettingsLikeFragment() {
-    private lateinit var binding: FragmentStudiesBinding
+    private var _binding: FragmentStudiesBinding? = null
+    private val binding get() = _binding!!
     private lateinit var viewModel: StudiesViewModel
 
     override fun onCreateView(
@@ -33,7 +34,7 @@ class StudiesFragment : BaseSettingsLikeFragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        binding = FragmentStudiesBinding.inflate(inflater, container, false)
+        _binding = FragmentStudiesBinding.inflate(inflater, container, false)
         viewModel = ViewModelProvider(
             this
         ).get(StudiesViewModel::class.java)
@@ -149,5 +150,10 @@ class StudiesFragment : BaseSettingsLikeFragment() {
                 setStudiesTitleByState(state)
             }
         )
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

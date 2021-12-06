@@ -1,7 +1,6 @@
 package org.mozilla.focus.searchsuggestions
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.Observer
@@ -32,7 +31,6 @@ class SearchSuggestionsViewModelTest {
     @Before
     fun setup() {
         lifecycle = LifecycleRegistry(mock(LifecycleOwner::class.java))
-        lifecycle.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
         MockitoAnnotations.openMocks(this)
 
         viewModel = SearchSuggestionsViewModel(ApplicationProvider.getApplicationContext())

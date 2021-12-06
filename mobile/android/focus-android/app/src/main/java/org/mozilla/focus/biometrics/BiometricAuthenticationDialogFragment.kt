@@ -16,15 +16,17 @@ import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.LifecycleObserver
-import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.*
-import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.view.*
 import org.mozilla.focus.R
+import org.mozilla.focus.databinding.BiometricPromptDialogContentBinding
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.state.AppAction
 
 @RequiresApi(api = Build.VERSION_CODES.M)
+@Suppress("TooManyFunctions")
 class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), LifecycleObserver {
     private var handler: BiometricAuthenticationHandler? = null
+    private var _binding: BiometricPromptDialogContentBinding? = null
+    private val binding get() = _binding!!
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,9 +45,9 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        val v = inflater.inflate(
-            R.layout.biometric_prompt_dialog_content,
+    ): View {
+        _binding = BiometricPromptDialogContentBinding.inflate(
+            inflater,
             container,
             false
         )
@@ -57,15 +59,15 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
             getString(R.string.biometric_auth_title, getString(R.string.app_name))
         )
 
-        v.description.setText(R.string.biometric_auth_description)
-        v.newSessionButton.setText(R.string.biometric_auth_new_session)
-        v.newSessionButton.setOnClickListener {
+        binding.description.setText(R.string.biometric_auth_description)
+        binding.newSessionButton.setText(R.string.biometric_auth_new_session)
+        binding.newSessionButton.setOnClickListener {
             biometricNewSessionButtonClicked()
             dismiss()
         }
 
-        v.fingerprintIcon.setImageResource(R.drawable.ic_fingerprint)
-        return v
+        binding.fingerprintIcon.setImageResource(R.drawable.ic_fingerprint)
+        return binding.root
     }
 
     override fun onResume() {
@@ -84,6 +86,11 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
         handler = null
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     private fun biometricNewSessionButtonClicked() {
         requireComponents.tabsUseCases.removePrivateTabs()
         dismiss()
@@ -91,10 +98,10 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
 
     fun displayError(errorText: String) {
         // Display the error text
-        biometricErrorText.text = errorText
-        biometricErrorText.setTextColor(
+        binding.biometricErrorText.text = errorText
+        binding.biometricErrorText.setTextColor(
             ContextCompat.getColor(
-                biometricErrorText.context,
+                requireContext(),
                 R.color.error
             )
         )
@@ -111,7 +118,7 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
     }
 
     private fun resetErrorText() {
-        biometricErrorText.text = ""
+        binding.biometricErrorText.text = ""
     }
 
     companion object {

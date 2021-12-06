@@ -21,7 +21,6 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.SimpleCallback
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.fragment_autocomplete_customdomains.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
@@ -32,6 +31,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.CustomDomains
 import org.mozilla.focus.GleanMetrics.Autocomplete
 import org.mozilla.focus.R
+import org.mozilla.focus.databinding.FragmentAutocompleteCustomdomainsBinding
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.settings.BaseSettingsLikeFragment
 import org.mozilla.focus.state.AppAction
@@ -48,6 +48,8 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope
     private var job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
+    private var _binding: FragmentAutocompleteCustomdomainsBinding? = null
+    protected val binding get() = _binding!!
 
     /**
      * ItemTouchHelper for reordering items in the domain list.
@@ -117,18 +119,26 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope
      */
     open fun isSelectionMode() = false
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        inflater.inflate(R.layout.fragment_autocomplete_customdomains, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentAutocompleteCustomdomainsBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        domainList.layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
-        domainList.adapter = DomainListAdapter()
-        domainList.setHasFixedSize(true)
+        binding.domainList.apply {
+            layoutManager = LinearLayoutManager(activity, RecyclerView.VERTICAL, false)
+            adapter = DomainListAdapter()
+            setHasFixedSize(true)
 
-        if (!isSelectionMode()) {
-            itemTouchHelper.attachToRecyclerView(domainList)
+            if (!isSelectionMode()) {
+                itemTouchHelper.attachToRecyclerView(this)
+            }
         }
     }
 
@@ -141,7 +151,7 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope
 
         updateTitle(R.string.preference_autocomplete_subitem_manage_sites)
 
-        (domainList.adapter as DomainListAdapter).refresh(requireActivity()) {
+        (binding.domainList.adapter as DomainListAdapter).refresh(requireActivity()) {
             activity?.invalidateOptionsMenu()
         }
     }
@@ -149,6 +159,11 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope
     override fun onPause() {
         job.cancel()
         super.onPause()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -159,8 +174,10 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment(), CoroutineScope
         val removeItem = menu.findItem(R.id.remove)
 
         removeItem?.let {
-            it.isVisible = isSelectionMode() || domainList.adapter!!.itemCount > 1
-            val isEnabled = !isSelectionMode() || (domainList.adapter as DomainListAdapter).selection().isNotEmpty()
+            it.isVisible = isSelectionMode() || binding.domainList.adapter!!.itemCount > 1
+            val isEnabled =
+                !isSelectionMode() || (binding.domainList.adapter as DomainListAdapter).selection()
+                    .isNotEmpty()
             ViewUtils.setMenuItemEnabled(it, isEnabled)
         }
     }

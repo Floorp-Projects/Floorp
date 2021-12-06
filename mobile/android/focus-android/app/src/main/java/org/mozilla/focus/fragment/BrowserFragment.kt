@@ -16,12 +16,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
 import android.webkit.MimeTypeMap
-import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.preference.PreferenceManager
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -32,8 +30,6 @@ import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.createTab
-import mozilla.components.browser.toolbar.BrowserToolbar
-import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.HitResult
 import mozilla.components.feature.app.links.AppLinksFeature
 import mozilla.components.feature.contextmenu.ContextMenuFeature
@@ -65,6 +61,7 @@ import org.mozilla.focus.browser.integration.BrowserToolbarIntegration
 import org.mozilla.focus.browser.integration.FindInPageIntegration
 import org.mozilla.focus.browser.integration.FullScreenIntegration
 import org.mozilla.focus.contextmenu.ContextMenuCandidates
+import org.mozilla.focus.databinding.FragmentBrowserBinding
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.EngineSharedPreferencesListener
 import org.mozilla.focus.ext.accessibilityManager
@@ -97,11 +94,8 @@ class BrowserFragment :
     BaseFragment(),
     AccessibilityManager.AccessibilityStateChangeListener {
 
-    private var statusBar: View? = null
-    private var popupTint: FrameLayout? = null
-
-    private lateinit var engineView: EngineView
-    private lateinit var toolbar: BrowserToolbar
+    private var _binding: FragmentBrowserBinding? = null
+    private val binding get() = _binding!!
 
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val fullScreenIntegration = ViewBoundFeatureWrapper<FullScreenIntegration>()
@@ -135,30 +129,23 @@ class BrowserFragment :
             ?: createTab("about:blank")
 
     @Suppress("LongMethod", "ComplexMethod")
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val view = inflater.inflate(R.layout.fragment_browser, container, false)
-
-        statusBar = view.findViewById(R.id.status_bar_background)
-
-        popupTint = view.findViewById(R.id.popup_tint)
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        _binding = FragmentBrowserBinding.inflate(inflater, container, false)
 
         requireContext().accessibilityManager.addAccessibilityStateChangeListener(this)
 
-        return view
+        return binding.root
     }
 
     @Suppress("ComplexCondition", "LongMethod")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val components = requireComponents
 
-        engineView = (view.findViewById<View>(R.id.engineView) as EngineView)
-        toolbar = view.findViewById(R.id.browserToolbar)
-
         findInPageIntegration.set(
             FindInPageIntegration(
                 components.store,
-                view.findViewById(R.id.find_in_page),
-                engineView
+                binding.findInPage,
+                binding.engineView
             ),
             this, view
         )
@@ -170,9 +157,9 @@ class BrowserFragment :
                 tab.id,
                 components.sessionUseCases,
                 requireContext().settings,
-                toolbar,
-                statusBar!!,
-                engineView
+                binding.browserToolbar,
+                binding.statusBarBackground,
+                binding.engineView
             ),
             this, view
         )
@@ -189,7 +176,7 @@ class BrowserFragment :
                     view,
                     FocusSnackbarDelegate(view)
                 ),
-                engineView,
+                binding.engineView,
                 requireComponents.contextMenuUseCases,
                 tabId,
                 additionalNote = { hitResult -> getAdditionalNote(hitResult) }
@@ -201,7 +188,7 @@ class BrowserFragment :
             SessionFeature(
                 components.store,
                 components.sessionUseCases.goBack,
-                engineView,
+                binding.engineView,
                 tab.id
             ),
             this, view
@@ -299,7 +286,7 @@ class BrowserFragment :
             view = view
         )
 
-        customizeToolbar(view)
+        customizeToolbar()
 
         val customTabConfig = tab.ifCustomTab()?.config
         if (customTabConfig != null) {
@@ -357,10 +344,12 @@ class BrowserFragment :
     }
 
     override fun onAccessibilityStateChanged(enabled: Boolean) = when (enabled) {
-        false -> toolbar.enableDynamicBehavior(requireContext(), engineView)
+        false -> binding.browserToolbar.enableDynamicBehavior(requireContext(), binding.engineView)
         true -> {
-            toolbar.disableDynamicBehavior(engineView)
-            toolbar.showAsFixed(requireContext(), engineView)
+            with(binding.browserToolbar) {
+                disableDynamicBehavior(binding.engineView)
+                showAsFixed(requireContext(), binding.engineView)
+            }
         }
     }
 
@@ -374,8 +363,7 @@ class BrowserFragment :
         }
     }
 
-    private fun customizeToolbar(view: View) {
-        val browserToolbar = view.findViewById<BrowserToolbar>(R.id.browserToolbar)
+    private fun customizeToolbar() {
         val controller = BrowserMenuController(
             requireComponents.sessionUseCases,
             requireComponents.appStore,
@@ -400,13 +388,13 @@ class BrowserFragment :
                 ),
                 onItemTapped = { controller.handleMenuInteraction(it) }
             )
-            browserToolbar.display.menuBuilder = browserMenu.menuBuilder
+            binding.browserToolbar.display.menuBuilder = browserMenu.menuBuilder
         }
 
         toolbarIntegration.set(
             BrowserToolbarIntegration(
                 requireComponents.store,
-                toolbar = browserToolbar,
+                toolbar = binding.browserToolbar,
                 fragment = this,
                 controller = controller,
                 customTabId = tryGetCustomTabId(),
@@ -417,29 +405,30 @@ class BrowserFragment :
                 tabCounterListener = ::tabCounterListener
             ),
             owner = this,
-            view = browserToolbar
+            view = binding.browserToolbar
         )
     }
 
     private fun initialiseNormalBrowserUi() {
         if (!requireContext().settings.isAccessibilityEnabled()) {
-            toolbar.enableDynamicBehavior(requireContext(), engineView)
+            binding.browserToolbar.enableDynamicBehavior(requireContext(), binding.engineView)
         } else {
-            toolbar.showAsFixed(requireContext(), engineView)
+            binding.browserToolbar.showAsFixed(requireContext(), binding.engineView)
         }
     }
 
     private fun initialiseCustomTabUi(customTabConfig: CustomTabConfig) {
         if (customTabConfig.enableUrlbarHiding && !requireContext().settings.isAccessibilityEnabled()) {
-            toolbar.enableDynamicBehavior(requireContext(), engineView)
+            binding.browserToolbar.enableDynamicBehavior(requireContext(), binding.engineView)
         } else {
-            toolbar.showAsFixed(requireContext(), engineView)
+            binding.browserToolbar.showAsFixed(requireContext(), binding.engineView)
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         requireContext().accessibilityManager.removeAccessibilityStateChangeListener(this)
+        _binding = null
     }
 
     override fun onDestroy() {
@@ -484,7 +473,7 @@ class BrowserFragment :
             .add(R.id.crash_container, crashReporterFragment, CrashReporterFragment.FRAGMENT_TAG)
             .commit()
 
-        crash_container.visibility = View.VISIBLE
+        binding.crashContainer.visibility = View.VISIBLE
     }
 
     private fun hideCrashReporter() {
@@ -497,7 +486,7 @@ class BrowserFragment :
             .remove(fragment)
             .commit()
 
-        crash_container.visibility = View.GONE
+        binding.crashContainer.visibility = View.GONE
     }
 
     fun crashReporterIsVisible(): Boolean = requireActivity().supportFragmentManager.let {
@@ -605,8 +594,8 @@ class BrowserFragment :
     override fun onResume() {
         super.onResume()
 
-        StatusBarUtils.getStatusBarHeight(statusBar) { statusBarHeight ->
-            statusBar!!.layoutParams.height = statusBarHeight
+        StatusBarUtils.getStatusBarHeight(binding.statusBarBackground) { statusBarHeight ->
+            binding.statusBarBackground.layoutParams.height = statusBarHeight
         }
     }
 

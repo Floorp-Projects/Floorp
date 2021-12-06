@@ -8,7 +8,6 @@ import android.content.Context
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
-import kotlinx.android.synthetic.main.fragment_exceptions_domains.*
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import org.mozilla.focus.GleanMetrics.TrackingProtectionExceptions
@@ -33,7 +32,7 @@ class ExceptionsRemoveFragment : ExceptionsListFragment() {
     }
 
     private fun removeSelectedDomains(context: Context) {
-        val exceptions = (exceptionList.adapter as DomainListAdapter).selection()
+        val exceptions = (binding.exceptionList.adapter as DomainListAdapter).selection()
         TrackingProtectionExceptions.selectedItemsRemoved.record(
             TrackingProtectionExceptions.SelectedItemsRemovedExtra(exceptions.size)
         )

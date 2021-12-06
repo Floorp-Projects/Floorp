@@ -31,7 +31,6 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import kotlinx.android.synthetic.main.fragment_search_suggestions.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -47,6 +46,7 @@ import mozilla.components.support.ktx.android.view.hideKeyboard
 import org.mozilla.focus.GleanMetrics.ShowSearchSuggestions
 import org.mozilla.focus.R
 import org.mozilla.focus.components
+import org.mozilla.focus.databinding.FragmentSearchSuggestionsBinding
 import org.mozilla.focus.ext.defaultSearchEngineName
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
@@ -61,6 +61,8 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
 
+    private var _binding: FragmentSearchSuggestionsBinding? = null
+    private val binding get() = _binding!!
     lateinit var searchSuggestionsViewModel: SearchSuggestionsViewModel
 
     private val defaultSearchEngineName: String
@@ -81,6 +83,11 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
         super.onPause()
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     @Suppress("DEPRECATION") // https://github.com/mozilla-mobile/focus-android/issues/4958
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
@@ -91,24 +98,25 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
         searchSuggestionsViewModel.state.observe(
             viewLifecycleOwner,
             Observer { state ->
-                enable_search_suggestions_container.visibility = View.GONE
-                no_suggestions_container.visibility = View.GONE
+                binding.enableSearchSuggestionsContainer.visibility = View.GONE
+                binding.noSuggestionsContainer.visibility = View.GONE
 
                 when (state) {
                     is State.ReadyForSuggestions -> { /* Handled by Jetpack Compose implementation */
                     }
                     is State.NoSuggestionsAPI ->
-                        no_suggestions_container.visibility = if (state.givePrompt) {
+                        binding.noSuggestionsContainer.visibility = if (state.givePrompt) {
                             View.VISIBLE
                         } else {
                             View.GONE
                         }
                     is State.Disabled ->
-                        enable_search_suggestions_container.visibility = if (state.givePrompt) {
-                            View.VISIBLE
-                        } else {
-                            View.GONE
-                        }
+                        binding.enableSearchSuggestionsContainer.visibility =
+                            if (state.givePrompt) {
+                                View.VISIBLE
+                            } else {
+                                View.GONE
+                            }
                 }
             }
         )
@@ -118,29 +126,32 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? = inflater.inflate(R.layout.fragment_search_suggestions, container, false)
+    ): View {
+        _binding = FragmentSearchSuggestionsBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         val appName = resources.getString(R.string.app_name)
 
-        enable_search_suggestions_subtitle.text =
-            resources.getString(R.string.enable_search_suggestion_description, appName)
-        enable_search_suggestions_subtitle.movementMethod = LinkMovementMethod.getInstance()
-        enable_search_suggestions_subtitle.highlightColor = android.graphics.Color.TRANSPARENT
-
-        enable_search_suggestions_button.setOnClickListener {
+        binding.enableSearchSuggestionsSubtitle.apply {
+            text = resources.getString(R.string.enable_search_suggestion_description, appName)
+            movementMethod = LinkMovementMethod.getInstance()
+            highlightColor = android.graphics.Color.TRANSPARENT
+        }
+        binding.enableSearchSuggestionsButton.setOnClickListener {
             searchSuggestionsViewModel.enableSearchSuggestions()
             ShowSearchSuggestions.enabledFromPanel.record(NoExtras())
         }
 
-        disable_search_suggestions_button.setOnClickListener {
+        binding.disableSearchSuggestionsButton.setOnClickListener {
             searchSuggestionsViewModel.disableSearchSuggestions()
             ShowSearchSuggestions.disabledFromPanel.record(NoExtras())
         }
 
-        dismiss_no_suggestions_message.setOnClickListener {
+        binding.dismissNoSuggestionsMessage.setOnClickListener {
             searchSuggestionsViewModel.dismissNoSuggestionsMessage()
         }
 

@@ -12,7 +12,6 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import kotlinx.android.synthetic.main.fragment_autocomplete_add_domain.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
@@ -22,6 +21,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.CustomDomains
 import org.mozilla.focus.GleanMetrics.Autocomplete
 import org.mozilla.focus.R
+import org.mozilla.focus.databinding.FragmentAutocompleteAddDomainBinding
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.settings.BaseSettingsLikeFragment
 import org.mozilla.focus.state.AppAction
@@ -35,6 +35,8 @@ class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
     private var job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
+    private var _binding: FragmentAutocompleteAddDomainBinding? = null
+    private val binding get() = _binding!!
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,18 +53,29 @@ class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
         updateTitle(R.string.preference_autocomplete_title_add)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View =
-        inflater.inflate(R.layout.fragment_autocomplete_add_domain, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentAutocompleteAddDomainBinding.inflate(inflater, container, false)
+        return binding.root
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        ViewUtils.showKeyboard(domainView)
+        ViewUtils.showKeyboard(binding.domainView)
     }
 
     override fun onPause() {
         job.cancel()
         ViewUtils.hideKeyboard(activity?.currentFocus)
         super.onPause()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -72,7 +85,7 @@ class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.save) {
 
-            val domain = domainView.text.toString()
+            val domain = binding.domainView.text.toString()
                 .trim()
                 .lowercase()
 
@@ -86,7 +99,7 @@ class AutocompleteAddFragment : BaseSettingsLikeFragment(), CoroutineScope {
 
                 launch(Main) {
                     if (error != null) {
-                        domainView.error = error
+                        binding.domainView.error = error
                     } else {
                         saveDomainAndClose(requireActivity().applicationContext, domain)
                     }
