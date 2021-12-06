@@ -98,8 +98,9 @@ JS_PUBLIC_API already_AddRefed<JS::Stencil> JS::FinishOffThreadCompileToStencil(
     JSContext* cx, JS::OffThreadToken* token) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-  auto stencil = HelperThreadState().finishCompileToStencilTask(cx, token);
-  return do_AddRef(stencil.release());
+  RefPtr<JS::Stencil> stencil =
+      HelperThreadState().finishCompileToStencilTask(cx, token);
+  return stencil.forget();
 }
 
 JS_PUBLIC_API JSScript* JS::FinishOffThreadScriptAndStartIncrementalEncoding(

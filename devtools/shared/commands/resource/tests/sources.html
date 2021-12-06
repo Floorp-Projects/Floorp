@@ -6,17 +6,46 @@
     <meta charset="utf-8"/>
   </head>
   <body>
+    <!-- introductionType=eventHandler -->
+    <div onclick="console.log('link')">link</div>
+
+    <!-- introductionType=inlineScript mapped to scriptElement -->
     <script type="text/javascript">
       "use strict";
       /* eslint-disable */
       function inlineSource() {}
+
+      // introductionType=eval
       // Assign it to a global in order to avoid it being GCed
       eval("this.global = function evalFunction() {}");
+
+      // introductionType=Function
+      // Also assign to a global to avoid being GCed
+      this.global2 = new Function("return 42;");
+
+      // introductionType=injectedScript mapped to scriptElement
+      const script = document.createElement("script");
+      script.textContent = "console.log('inline-script')";
+      document.documentElement.appendChild(script);
+
+      // introductionType=Worker, but ends up being null on SourceActor's form
       // Assign the worker to a global variable in order to avoid
       // having it be GCed.
       this.worker = new Worker("worker-sources.js");
+
       window.registrationPromise = navigator.serviceWorker.register("service-worker-sources.js");
+
+      // introductionType=domTimer
+      setTimeout(`console.log("timeout")`, 0);
+
+      // introductionType=eventHandler
+      window.addEventListener("DOMContentLoaded", () => {
+        document.querySelector("div[onclick]").click();
+      });
     </script>
-     <script src="sources.js"></script>
+    <!-- introductionType=srcScript mapped to scriptElement -->
+    <script src="sources.js"></script>
+    <!-- introductionType=javascriptURL -->
+    <iframe src="javascript:666"></iframe>
   </body>
 </html>
