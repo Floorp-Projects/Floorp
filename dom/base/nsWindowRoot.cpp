@@ -51,13 +51,17 @@ nsWindowRoot::~nsWindowRoot() {
     mListenerManager->Disconnect();
   }
 
-  JSActorService::UnregisterChromeEventTarget(this);
+  if (XRE_IsContentProcess()) {
+    JSActorService::UnregisterChromeEventTarget(this);
+  }
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsWindowRoot)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsWindowRoot)
-  JSActorService::UnregisterChromeEventTarget(tmp);
+  if (XRE_IsContentProcess()) {
+    JSActorService::UnregisterChromeEventTarget(tmp);
+  }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mListenerManager)
@@ -391,8 +395,10 @@ void nsWindowRoot::EnumerateBrowsers(BrowserEnumerator aEnumFunc, void* aArg) {
 already_AddRefed<EventTarget> NS_NewWindowRoot(nsPIDOMWindowOuter* aWindow) {
   nsCOMPtr<EventTarget> result = new nsWindowRoot(aWindow);
 
-  RefPtr<JSActorService> wasvc = JSActorService::GetSingleton();
-  wasvc->RegisterChromeEventTarget(result);
+  if (XRE_IsContentProcess()) {
+    RefPtr<JSActorService> wasvc = JSActorService::GetSingleton();
+    wasvc->RegisterChromeEventTarget(result);
+  }
 
   return result.forget();
 }
