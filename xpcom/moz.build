@@ -9,7 +9,6 @@ with Files("**"):
 
 DIRS += [
     "idl-parser/xpidl",
-    "geckoprocesstypes_generator/geckoprocesstypes",
 ]
 
 DIRS += [
