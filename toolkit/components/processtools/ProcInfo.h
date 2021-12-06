@@ -69,6 +69,11 @@ enum class ProcType {
   Max = Unknown,
 };
 
+/* Get the CPU frequency to use to convert cycle time values to actual time.
+ * @returns the TSC (Time Stamp Counter) frequency in MHz, or 0 if converting
+ * cycle time values should not be attempted. */
+int GetCycleTimeFrequencyMHz();
+
 struct ThreadInfo {
   // Thread Id.
   base::ProcessId tid = 0;
@@ -76,6 +81,7 @@ struct ThreadInfo {
   nsString name;
   // CPU time in ns.
   uint64_t cpuTime = 0;
+  // CPU time in cycles if available.
   uint64_t cpuCycleCount = 0;
 };
 
