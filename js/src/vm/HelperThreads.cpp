@@ -1849,7 +1849,7 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
         ReportOutOfMemory(cx);
         return nullptr;
       }
-      if (!initial->steal(cx, std::move(*parseTask->stencil_))) {
+      if (!initial->steal(cx, std::move(parseTask->stencil_))) {
         return nullptr;
       }
 
