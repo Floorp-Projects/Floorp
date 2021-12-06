@@ -42,12 +42,10 @@ pub enum MinMaxOp {
 pub enum SortKey {
     Number,
     Percentage,
-    Cap,
     Ch,
     Deg,
     Em,
     Ex,
-    Ic,
     Px,
     Rem,
     Sec,
