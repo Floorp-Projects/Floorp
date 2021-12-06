@@ -778,15 +778,13 @@ pub unsafe extern "C" fn wgpu_client_create_bind_group_layout(
                     has_dynamic_offset: entry.has_dynamic_offset,
                     min_binding_size: entry.min_binding_size,
                 },
-                RawBindingType::Sampler => wgt::BindingType::Sampler(
-                    if entry.sampler_compare {
-                        wgt::SamplerBindingType::Comparison
-                    } else if entry.sampler_filter {
-                        wgt::SamplerBindingType::Filtering
-                    } else {
-                        wgt::SamplerBindingType::NonFiltering
-                    }
-                ),
+                RawBindingType::Sampler => wgt::BindingType::Sampler(if entry.sampler_compare {
+                    wgt::SamplerBindingType::Comparison
+                } else if entry.sampler_filter {
+                    wgt::SamplerBindingType::Filtering
+                } else {
+                    wgt::SamplerBindingType::NonFiltering
+                }),
                 RawBindingType::SampledTexture => wgt::BindingType::Texture {
                     //TODO: the spec has a bug here
                     view_dimension: *entry
