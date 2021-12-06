@@ -35,6 +35,7 @@
 #include "nsNSSCertHelper.h"
 #include "nsNSSCertificate.h"
 #include "nsNSSCertificateDB.h"
+#include "nsNSSIOLayer.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
@@ -1604,8 +1605,12 @@ void DisableMD5() {
       NSS_USE_ALG_IN_CERT_SIGNATURE | NSS_USE_ALG_IN_CMS_SIGNATURE);
 }
 
+// Load a given PKCS#11 module located in the given directory. It will be named
+// the given module name. Optionally pass some string parameters to it via
+// 'params'. This argument will be provided to C_Initialize when called on the
+// module.
 bool LoadUserModuleAt(const char* moduleName, const char* libraryName,
-                      const nsCString& dir) {
+                      const nsCString& dir, /* optional */ const char* params) {
   // If a module exists with the same name, make a best effort attempt to delete
   // it. Note that it isn't possible to delete the internal module, so checking
   // the return value would be detrimental in that case.
@@ -1629,6 +1634,11 @@ bool LoadUserModuleAt(const char* moduleName, const char* libraryName,
   pkcs11ModuleSpec.AppendLiteral("\" library=\"");
   pkcs11ModuleSpec.Append(fullLibraryPath);
   pkcs11ModuleSpec.AppendLiteral("\"");
+  if (params) {
+    pkcs11ModuleSpec.AppendLiteral("\" parameters=\"");
+    pkcs11ModuleSpec.Append(params);
+    pkcs11ModuleSpec.AppendLiteral("\"");
+  }
 
   UniqueSECMODModule userModule(SECMOD_LoadUserModule(
       const_cast<char*>(pkcs11ModuleSpec.get()), nullptr, false));
@@ -1643,6 +1653,19 @@ bool LoadUserModuleAt(const char* moduleName, const char* libraryName,
   return true;
 }
 
+const char* kIPCClientCertsModuleName = "IPC Client Cert Module";
+
+bool LoadIPCClientCertsModule(const nsCString& dir) {
+  // The IPC client certs module needs to be able to call back into gecko to be
+  // able to communicate with the parent process over IPC. This is achieved by
+  // serializing the addresses of the relevant functions and passing them as an
+  // extra string parameter that will be available when C_Initialize is called
+  // on IPC client certs.
+  nsPrintfCString addrs("%p,%p", DoFindObjects, DoSign);
+  return LoadUserModuleAt(kIPCClientCertsModuleName, "ipcclientcerts", dir,
+                          addrs.get());
+}
+
 const char* kOSClientCertsModuleName = "OS Client Cert Module";
 
 bool LoadOSClientCertsModule(const nsCString& dir) {
@@ -1652,7 +1675,8 @@ bool LoadOSClientCertsModule(const nsCString& dir) {
     return false;
   }
 #endif
-  return LoadUserModuleAt(kOSClientCertsModuleName, "osclientcerts", dir);
+  return LoadUserModuleAt(kOSClientCertsModuleName, "osclientcerts", dir,
+                          nullptr);
 }
 
 bool LoadLoadableRoots(const nsCString& dir) {
@@ -1663,7 +1687,7 @@ bool LoadLoadableRoots(const nsCString& dir) {
   // "Root Certs" module allows us to load the correct one. See bug 1406396.
   int unusedModType;
   Unused << SECMOD_DeleteModule("Root Certs", &unusedModType);
-  return LoadUserModuleAt(kRootModuleName, "nssckbi", dir);
+  return LoadUserModuleAt(kRootModuleName, "nssckbi", dir, nullptr);
 }
 
 nsresult DefaultServerNicknameForCert(const CERTCertificate* cert,
