@@ -24,7 +24,8 @@ class DomainMatcherTest {
             "https://www.github.com/mozilla-mobile/fenix",
             "http://192.168.254.254:8000", "http://192.168.254.254:8000/admin",
             "http://иННая.локаль", // TODO add more test data for non-english locales
-            "about:config", "about:crashes", "http://localhost:8080/index.html"
+            "about:config", "about:crashes", "http://localhost:8080/index.html",
+            "https://www.reddit.com/r/vancouver/comments/quu9lt/hwy_1_just_north_of_lytton_is_gone/"
         )
         // Full url matching.
         assertEquals(
@@ -49,23 +50,43 @@ class DomainMatcherTest {
             DomainMatch("https://m.youtube.com", "youtube.com"),
             segmentAwareDomainMatch("yo", urls)
         )
-        // Subdomain stripping for path segments
-        assertEquals(
-            DomainMatch("https://www.github.com/mozilla-mobile/fenix", "github.com/mozilla-mobile/fenix"),
-            segmentAwareDomainMatch("github.com/moz", urls)
-        )
-        // Case insensitivity in the host and in the path. Subdomain matching and stripping.
-        assertEquals(
-            DomainMatch("https://en.wikipedia.org/wiki/mozilla", "en.wikipedia.org/wiki/mozilla"),
-            segmentAwareDomainMatch("en", urls)
-        )
-        assertEquals(
-            DomainMatch("https://en.wikipedia.org/wiki/mozilla", "en.wikipedia.org/wiki/mozilla"),
-            segmentAwareDomainMatch("en.wikipedia.org/wi", urls)
-        )
+        // Case insensitivity.
         assertEquals(
             DomainMatch("http://firefox.com", "firefox.com"),
             segmentAwareDomainMatch("fire", urls)
+        )
+        // Path segment matching
+        // Walking the path of this url:
+        // https://www.reddit.com/r/vancouver/comments/quu9lt/hwy_1_just_north_of_lytton_is_gone/
+        assertEquals(
+            DomainMatch("https://www.reddit.com/r/", "reddit.com/r/"),
+            segmentAwareDomainMatch("reddit.com/r", urls)
+        )
+        assertEquals(
+            DomainMatch("https://www.reddit.com/r/vancouver/", "reddit.com/r/vancouver/"),
+            segmentAwareDomainMatch("reddit.com/r/van", urls)
+        )
+        assertEquals(
+            DomainMatch("https://www.reddit.com/r/vancouver/comments/", "reddit.com/r/vancouver/comments/"),
+            segmentAwareDomainMatch("reddit.com/r/vancouver/comm", urls)
+        )
+        assertEquals(
+            DomainMatch("https://www.reddit.com/r/vancouver/quu9lt/", "reddit.com/r/vancouver/comments/quu9lt/"),
+            segmentAwareDomainMatch("reddit.com/r/vancouver/comments/q", urls)
+        )
+        assertEquals(
+            DomainMatch("https://www.reddit.com/r/vancouver/quu9lt/hwy_1_just_north_of_lytton_is_gone/", "reddit.com/r/vancouver/comments/quu9lt/hwy_1_just_north_of_lytton_is_gone/"),
+            segmentAwareDomainMatch("reddit.com/r/vancouver/comments/quu9lt/hwy", urls)
+        )
+        // ... this one, for good measure: https://en.wikipedia.org/wiki/mozilla
+        // (also tests case insensitivity and subdomain stripping)
+        assertEquals(
+            DomainMatch("https://en.wikipedia.org/wiki/", "wikipedia.org/wiki/"),
+            segmentAwareDomainMatch("wikipedia.org/w", urls)
+        )
+        assertEquals(
+            DomainMatch("https://en.wikipedia.org/wiki/mozilla", "wikipedia.org/wiki/mozilla"),
+            segmentAwareDomainMatch("wikipedia.org/wiki/m", urls)
         )
         // Urls with ports.
         assertEquals(
