@@ -689,19 +689,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleList {
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePage {
   using StylePageSize = mozilla::StylePageSize;
-  using StylePageName = mozilla::StylePageName;
   nsStylePage(const nsStylePage& aOther) = default;
   nsStylePage& operator=(const nsStylePage& aOther) = default;
   explicit nsStylePage(const mozilla::dom::Document&)
-      : mSize(StylePageSize::Auto()), mPage(StylePageName::Auto()) {}
+      : mSize(StylePageSize::Auto()) {}
 
   static constexpr bool kHasTriggerImageLoads = false;
   nsChangeHint CalcDifference(const nsStylePage& aNewData) const;
 
   // page-size property.
   StylePageSize mSize;
-  // page-name property.
-  StylePageName mPage;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {

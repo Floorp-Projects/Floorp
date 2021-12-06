@@ -38,6 +38,7 @@ COUNTED_UNKNOWN_PROPERTIES = [
     "-webkit-writing-mode",
     "baseline-shift",
     "-webkit-hyphenate-character",
+    "page",
     "-webkit-highlight",
     "background-repeat-x",
     "-webkit-padding-end",
