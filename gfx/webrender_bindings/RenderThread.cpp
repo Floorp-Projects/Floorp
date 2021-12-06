@@ -737,8 +737,17 @@ void RenderThread::AddRenderTextureOp(
 
   RefPtr<RenderTextureHost> texture = it->second;
   mRenderTextureOps.emplace_back(aOp, std::move(texture));
-  PostRunnable(NewRunnableMethod("RenderThread::HandleRenderTextureOps", this,
-                                 &RenderThread::HandleRenderTextureOps));
+
+  if (mRenderTextureOpsRunnable) {
+    // Runnable was already triggered
+    return;
+  }
+
+  RefPtr<nsIRunnable> runnable =
+      NewRunnableMethod("RenderThread::HandleRenderTextureOps", this,
+                        &RenderThread::HandleRenderTextureOps);
+  mRenderTextureOpsRunnable = runnable;
+  PostRunnable(runnable.forget());
 }
 
 void RenderThread::HandleRenderTextureOps() {
@@ -749,6 +758,7 @@ void RenderThread::HandleRenderTextureOps() {
   {
     MutexAutoLock lock(mRenderTextureMapLock);
     mRenderTextureOps.swap(renderTextureOps);
+    mRenderTextureOpsRunnable = nullptr;
   }
 
   for (auto& it : renderTextureOps) {
