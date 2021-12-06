@@ -84,6 +84,42 @@ add_task(async function() {
       },
     },
     {
+      description: "DOM Timer",
+      sourceForm: {
+        introductionType: "domTimer",
+        sourceMapBaseURL:
+          "https://example.com/browser/devtools/shared/commands/resource/tests/sources.html",
+        url: null,
+        isBlackBoxed: false,
+        sourceMapURL: null,
+        extensionName: null,
+      },
+      sourceContent: {
+        contentType: "text/javascript",
+        /* the domTimer is prefixed by many empty lines in order to be positioned at the same line
+           as in the HTML file where setTimeout is called.
+           This is probably done by SourceActor.actualText().
+           So the array size here, should be updated to match the line number of setTimeout call */
+        source: new Array(39).join("\n") + `console.log("timeout")`,
+      },
+    },
+    {
+      description: "Event Handler",
+      sourceForm: {
+        introductionType: "eventHandler",
+        sourceMapBaseURL:
+          "https://example.com/browser/devtools/shared/commands/resource/tests/sources.html",
+        url: null,
+        isBlackBoxed: false,
+        sourceMapURL: null,
+        extensionName: null,
+      },
+      sourceContent: {
+        contentType: "text/javascript",
+        source: "console.log('link')",
+      },
+    },
+    {
       description: "inline JS inserted at runtime",
       sourceForm: {
         introductionType: "scriptElement", // This is an injectedScript at SpiderMonkey level, but is translated into scriptElement by SourceActor.form()
@@ -185,6 +221,14 @@ add_task(async function() {
       },
     },
   ];
+
+  // Some sources may be created after the document is done loading (like eventHandler usecase)
+  // so we may be received *after* watchResource resolved
+  await waitFor(
+    () => availableResources.length >= expectedExistingResources.length,
+    "Got all the sources"
+  );
+
   await assertResources(availableResources, expectedExistingResources);
 
   await targetCommand.stopListening();
