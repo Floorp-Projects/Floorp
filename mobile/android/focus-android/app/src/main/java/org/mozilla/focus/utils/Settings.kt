@@ -66,19 +66,21 @@ class Settings(
         }
 
         val cookiePolicy = when (shouldBlockCookiesValue) {
-            context.getString(R.string.preference_privacy_should_block_cookies_yes_option2) ->
+            context.getString(R.string.yes) ->
                 EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE
 
-            context.getString(R.string.preference_privacy_should_block_cookies_third_party_tracker_cookies_option) ->
+            context.getString(R.string.third_party_tracker) ->
                 EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_NON_TRACKERS
 
-            context.getString(R.string.preference_privacy_should_block_cookies_third_party_only_option) ->
+            context.getString(R.string.third_party_only) ->
                 EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_ONLY_FIRST_PARTY
 
-            context.getString(R.string.preference_privacy_should_block_cookies_cross_site_option) ->
+            context.getString(R.string.cross_site) ->
                 EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS
 
-            else -> EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL
+            else -> {
+                EngineSession.TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL
+            }
         }
 
         return EngineSession.TrackingProtectionPolicy.select(
