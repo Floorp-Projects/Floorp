@@ -456,6 +456,14 @@ void CodeGenerator::visitNotI64(LNotI64* lir) {
   masm.ma_cmp_set(output, input.reg, zero, Assembler::Equal);
 }
 
+void CodeGenerator::visitBitNotI64(LBitNotI64* ins) {
+  const LAllocation* input = ins->getOperand(0);
+  MOZ_ASSERT(!input->isConstant());
+  Register inputReg = ToRegister(input);
+  MOZ_ASSERT(inputReg == ToRegister(ins->output()));
+  masm.ma_not(inputReg, inputReg);
+}
+
 void CodeGenerator::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir) {
   FloatRegister input = ToFloatRegister(lir->input());
   Register64 output = ToOutRegister64(lir);
