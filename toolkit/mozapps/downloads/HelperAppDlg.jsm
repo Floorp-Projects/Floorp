@@ -502,15 +502,18 @@ nsUnknownContentTypeDialog.prototype = {
     this.mDialog.document.addEventListener("dialogaccept", this);
     this.mDialog.document.addEventListener("dialogcancel", this);
 
-    // Some URIs do not implement nsIURL, so we can't just QI.
     var url = this.mLauncher.source;
     if (url instanceof Ci.nsINestedURI) {
       url = url.innermostURI;
+    }
+    if (url.scheme == "blob") {
+      url = Services.io.newURI(new URL(url.spec).origin);
     }
 
     var fname = "";
     var iconPath = "goat";
     this.mSourcePath = url.prePath;
+    // Some URIs do not implement nsIURL, so we can't just QI.
     if (url instanceof Ci.nsIURL) {
       // A url, use file name from it.
       fname = iconPath = url.fileName;
