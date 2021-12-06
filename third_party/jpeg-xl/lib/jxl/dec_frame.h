@@ -63,6 +63,7 @@ class FrameDecoder {
     constraints_ = constraints;
   }
   void SetRenderSpotcolors(bool rsc) { render_spotcolors_ = rsc; }
+  void SetCoalescing(bool c) { coalescing_ = c; }
 
   // Read FrameHeader and table of contents from the given BitReader.
   // Also checks frame dimensions for their limits, and sets the output
@@ -254,6 +255,7 @@ class FrameDecoder {
   bool allow_partial_frames_;
   bool allow_partial_dc_global_;
   bool render_spotcolors_ = true;
+  bool coalescing_ = true;
 
   std::vector<uint8_t> processed_section_;
   std::vector<uint8_t> decoded_passes_per_ac_group_;

@@ -49,7 +49,7 @@ void HistogramEntropy(const Histogram& a) {
     const auto counts = LoadU(di, &a.data_[i]);
     entropy_lanes += Entropy(ConvertTo(df, counts), inv_tot, total);
   }
-  a.entropy_ += GetLane(SumOfLanes(entropy_lanes));
+  a.entropy_ += GetLane(SumOfLanes(df, entropy_lanes));
 }
 
 float HistogramDistance(const Histogram& a, const Histogram& b) {
@@ -71,7 +71,7 @@ float HistogramDistance(const Histogram& a, const Histogram& b) {
     const auto counts = ConvertTo(df, a_counts + b_counts);
     distance_lanes += Entropy(counts, inv_tot, total);
   }
-  const float total_distance = GetLane(SumOfLanes(distance_lanes));
+  const float total_distance = GetLane(SumOfLanes(df, distance_lanes));
   return total_distance - a.entropy_ - b.entropy_;
 }
 

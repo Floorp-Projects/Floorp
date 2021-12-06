@@ -14,7 +14,7 @@ Build-Depends:
  libgmock-dev,
  libgoogle-perftools-dev,
  libgtest-dev,
- libhwy-dev,
+ libhwy-dev (>= 0.15.0),
  libjpeg-dev,
  libopenexr-dev,
  libpng-dev,

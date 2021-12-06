@@ -15,7 +15,7 @@ set(JPEGXL_LIBRARY_VERSION
 # It is important to update this value when making incompatible API/ABI changes
 # so that programs that depend on libjxl can update their dependencies. Semantic
 # versioning allows 0.y.z to have incompatible changes in minor versions.
-set(JPEGXL_SO_MINOR_VERSION 6)
+set(JPEGXL_SO_MINOR_VERSION 7)
 if (JPEGXL_MAJOR_VERSION EQUAL 0)
 set(JPEGXL_LIBRARY_SOVERSION
     "${JPEGXL_MAJOR_VERSION}.${JPEGXL_SO_MINOR_VERSION}")

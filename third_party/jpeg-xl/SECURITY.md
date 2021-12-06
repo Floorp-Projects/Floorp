@@ -1,37 +1,73 @@
-# Security and Vulnerability Policy for JPEG XL
+# Security and Vulnerability Policy for libjxl
 
-The current focus of the reference implementation is to provide a vehicle for
-evaluating the JPEG XL codec compression density, quality, features and its
-actual performance on different platforms. With this focus in mind we provide
-source code releases with improvements on performance and quality so developers
-can evaluate the codec.
+## TL;DR:
 
-At this time, **we don't provide security and vulnerability support** for any
-of these releases. This means that the source code may contain bugs, including
-security bugs, that may be added or fixed between releases and will **not** be
-individually documented. All of these
-[releases](https://gitlab.com/wg1/jpeg-xl/-/releases) include the following
-note to that effect:
+CPE prefix: `cpe:2.3:a:libjxl_project:libjxl`
 
-* Note: This release is for evaluation purposes and may contain bugs, including
-  security bugs, that will *not* be individually documented when fixed. Always
-  prefer to use the latest release. Please provide feedback and report bugs
-  [here](https://gitlab.com/wg1/jpeg-xl/-/issues).
+To report a security issue, please email libjxl-security@google.com.
 
-To be clear, this means that because a release doesn't mention any CVE it
-doesn't mean that no security issues in previous versions were fixed. You should
-assume that any previous release contains security issues if that's a concern
-for your use case.
+Include in your email a description of the issue, the steps you took to create
+the issue, affected versions, and if known, mitigations for the issue. Our
+vulnerability management team will acknowledge receiving your email within 3
+working days.
 
-This however doesn't impede you from evaluating the codec with your own trusted
-inputs, such as `.jxl` you encoded yourself, or when taking appropriate measures
-for your application like sandboxing if processing untrusted inputs.
+This project follows a 90 day disclosure timeline.
 
-## Future plans
+For all other bugs, where there are no security implications about disclosing
+the unpatched bug, open a [new issue](https://github.com/libjxl/libjxl/issues)
+checking first for existing similar issues. If in doubt about the security
+impact of a bug you discovered, email first.
 
-To help our users and developers integrating this implementation into their
-software we plan to provide support for security and vulnerability tracking of
-this implementation in the future.
+## Policy overview
 
-When we can provide such support we will update this Policy with the details and
-expectations and clearly mention that fact in the release notes.
+libjxl's Security Policy is based on the [Google Open Source program
+guidelines](https://github.com/google/oss-vulnerability-guide) for coordinated
+vulnerability disclosure.
+
+Early versions of `libjxl` had a different security policy that didn't provide
+security and vulnerability disclosure support. Versions up to and including
+0.3.7 are not covered and won't receive any security advisory.
+
+Only released versions, starting from version 0.5, are covered by this policy.
+Development branches, arbitrary commits from `main` branch or even releases with
+backported features externally patched on top are not covered. Only those
+versions with a release tag in `libjxl`'s repository are covered, starting from
+version 0.5.
+
+## What's a "Security bug"
+
+A security bug is a bug that can potentially be exploited to let an attacker
+gain unauthorized access or privileges such as disclosing information or
+arbitrary code execution. Not all fuzzer-found bugs and not all assert()
+failures are considered security bugs in libjxl. For a detailed explanation and
+examples see our [Security Vulnerabilities Playbook](doc/vuln_playbook.md).
+
+## What to expect
+
+To report a security issue, please email libjxl-security@google.com with all the
+details about the bug you encountered.
+
+ * Include a description of the issue, steps to reproduce, etc. Compiler
+   versions, flags, exact version used and even CPU are often relevant given our
+   usage of SIMD and run-time dispatch of SIMD instructions.
+
+ * A member of our security team will reply to you within 3 business days. Note
+   that business days are different in different countries.
+
+ * We will evaluate the issue and we may require more input from your side to
+   reproduce it.
+
+ * If the issue fits in the description of a security bug, we will issue a
+   CVE, publish a fix and make a new minor or patch release with it. There is
+   a maximum of 90 day disclosure timeline, we ask you to not publish the
+   details before the 90 day deadline or the release date (whichever comes
+   first).
+
+ * In the case that we publish a CVE we will credit the external researcher who
+   reported the issue. When reporting security issues please let us know if you
+   need to include specific information while doing so, like for example a
+   company affiliation.
+
+Our security team follows the [Security Vulnerabilities
+Playbook](doc/vuln_playbook.md). For more details about the process and policies
+please take a look at it.
