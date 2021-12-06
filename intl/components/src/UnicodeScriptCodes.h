@@ -1,5 +1,3 @@
-
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,7 +9,7 @@
  */
 
 /*
- * Created on Thu Nov 18 12:50:48 2021 from UCD data files with version info:
+ * Created on Thu Dec  2 15:20:26 2021 from UCD data files with version info:
  *
 
 # Unicode Character Database
@@ -45,20 +43,10 @@ for the Unicode Character Database, for Version 14.0.0 of the Unicode Standard.
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
  */
 
-#ifndef NS_UNICODE_SCRIPT_CODES
-#define NS_UNICODE_SCRIPT_CODES
+#ifndef intl_components_UnicodeScriptCodes_h_
+#define intl_components_UnicodeScriptCodes_h_
 
-
-struct nsCharProps2 {
-  // Currently only 4 bits are defined here, so 4 more could be added without
-  // affecting the storage requirements for this struct. Or we could pack two
-  // records per byte, at the cost of a slightly more complex accessor.
-  unsigned char mVertOrient:2;
-  unsigned char mIdType:2;
-};
-
-namespace mozilla {
-namespace unicode {
+namespace mozilla::intl {
 enum class Script : int16_t {
   COMMON = 0,
   INHERITED = 1,
@@ -263,13 +251,7 @@ enum class Script : int16_t {
 
   INVALID = -1
 };
-
-// mozilla::intl::ScriptExtensionVector assumes sizeof(Script) is equal to
-// sizeof(int16_t), so if the data type of Script is changed then
-// ScriptExtensionVector needs to be updated accordingly.
-static_assert(sizeof(Script) == sizeof(int16_t));
-} // namespace unicode
-} // namespace mozilla
+} // namespace mozilla::intl
 
 #endif
 /*

@@ -35,9 +35,9 @@ layout/style/nsStyleStructList.h
 gfx/gl/GLConsts.h
 gfx/webrender_bindings/webrender_ffi_generated.h
 dom/webgpu/ffi/wgpu_ffi_generated.h
+intl/components/src/UnicodeScriptCodes.h
 intl/unicharutil/util/nsSpecialCasingData.cpp
 intl/unicharutil/util/nsUnicodePropertyData.cpp
-intl/unicharutil/util/nsUnicodeScriptCodes.h
 media/mp4parse-rust/mp4parse.h
 security/manager/ssl/StaticHPKPins.h
 widget/gtk/wayland/gtk-primary-selection-client-protocol.h

@@ -24,6 +24,7 @@
 #include "mozilla/Likely.h"
 #include "gfx2DGlue.h"
 #include "mozilla/gfx/Logging.h"  // for gfxCriticalError
+#include "mozilla/intl/UnicodeProperties.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "SharedFontList-impl.h"
@@ -37,6 +38,7 @@
 
 using namespace mozilla;
 using namespace mozilla::gfx;
+using namespace mozilla::intl;
 using namespace mozilla::unicode;
 using mozilla::services::GetObserverService;
 
