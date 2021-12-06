@@ -1180,13 +1180,7 @@ public class GeckoAppShell {
 
   @WrapForJNI(calledFrom = "gecko")
   private static void enableNetworkNotifications() {
-    ThreadUtils.runOnUiThread(
-        new Runnable() {
-          @Override
-          public void run() {
-            GeckoNetworkManager.getInstance().enableNotifications();
-          }
-        });
+    ThreadUtils.runOnUiThread(() -> GeckoNetworkManager.getInstance().enableNotifications());
   }
 
   @WrapForJNI(calledFrom = "gecko")
