@@ -1382,10 +1382,6 @@ class nsXULScrollFrame final : public nsBoxFrame,
   void LayoutScrollArea(nsBoxLayoutState& aState,
                         const nsPoint& aScrollPosition);
 
-  static bool AddRemoveScrollbar(bool& aHasScrollbar, nscoord& aXY,
-                                 nscoord& aSize, nscoord aSbSize,
-                                 bool aOnRightOrBottom, bool aAdd);
-
   bool AddRemoveScrollbar(nsBoxLayoutState& aState, bool aOnRightOrBottom,
                           bool aHorizontal, bool aAdd);
 
