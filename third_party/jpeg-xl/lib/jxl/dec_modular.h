@@ -91,7 +91,8 @@ class ModularFrameDecoder {
                           bool allow_truncated_group);
   Status DecodeGroup(const Rect& rect, BitReader* reader, int minShift,
                      int maxShift, const ModularStreamId& stream, bool zerofill,
-                     PassesDecoderState* dec_state, ImageBundle* output);
+                     PassesDecoderState* dec_state, ImageBundle* output,
+                     bool allow_truncated);
   // Decodes a VarDCT DC group (`group_id`) from the given `reader`.
   Status DecodeVarDCTDC(size_t group_id, BitReader* reader,
                         PassesDecoderState* dec_state);

@@ -26,7 +26,7 @@
 HWY_BEFORE_NAMESPACE();
 namespace hwy {
 namespace HWY_NAMESPACE {
-size_t GetVectorSize() { return Lanes(HWY_FULL(uint8_t)()); }
+size_t GetVectorSize() { return Lanes(ScalableTag<uint8_t>()); }
 // NOLINTNEXTLINE(google-readability-namespace-comments)
 }  // namespace HWY_NAMESPACE
 
@@ -58,7 +58,7 @@ size_t ImageBase::BytesPerRow(const size_t xsize, const size_t sizeof_t) {
   }
 
   // Round up to vector and cache line size.
-  const size_t align = std::max<size_t>(vec_size, HWY_ALIGNMENT);
+  const size_t align = HWY_MAX(vec_size, HWY_ALIGNMENT);
   size_t bytes_per_row = RoundUpTo(valid_bytes, align);
 
   // During the lengthy window before writes are committed to memory, CPUs

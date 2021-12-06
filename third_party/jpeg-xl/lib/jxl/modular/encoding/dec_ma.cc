@@ -5,6 +5,7 @@
 
 #include "lib/jxl/modular/encoding/dec_ma.h"
 
+#include "lib/jxl/base/printf_macros.h"
 #include "lib/jxl/dec_ans.h"
 #include "lib/jxl/modular/encoding/ma_common.h"
 #include "lib/jxl/modular/modular_image.h"
@@ -41,7 +42,9 @@ Status DecodeTree(BitReader *br, ANSSymbolReader *reader,
   while (to_decode > 0) {
     JXL_RETURN_IF_ERROR(br->AllReadsWithinBounds());
     if (tree->size() > tree_size_limit) {
-      return JXL_FAILURE("Tree is too large");
+      return JXL_FAILURE("Tree is too large: %" PRIuS " nodes vs %" PRIuS
+                         " max nodes",
+                         tree->size(), tree_size_limit);
     }
     to_decode--;
     uint32_t prop1 = reader->ReadHybridUint(kPropertyContext, br, context_map);

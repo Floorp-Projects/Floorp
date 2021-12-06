@@ -50,7 +50,7 @@ struct EvalLog2 {
     const HWY_FULL(int32_t) di;
     const auto x_bits = BitCast(di, vx);
     // Cannot handle negative numbers / NaN.
-    JXL_DASSERT(AllTrue(Abs(x_bits) == x_bits));
+    JXL_DASSERT(AllTrue(di, Abs(x_bits) == x_bits));
 
     // Range reduction to [-1/3, 1/3] - 3 integer, 2 float ops
     const auto exp_bits = x_bits - Set(di, 0x3f2aaaab);  // = 2/3
