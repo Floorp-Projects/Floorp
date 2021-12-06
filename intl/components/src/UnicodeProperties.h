@@ -5,6 +5,9 @@
 #define intl_components_UnicodeProperties_h_
 
 #include "mozilla/intl/BidiClass.h"
+#include "mozilla/intl/ICU4CGlue.h"
+#include "mozilla/intl/UnicodeScriptCodes.h"
+#include "mozilla/Vector.h"
 
 #include "unicode/uchar.h"
 #include "unicode/uscript.h"
@@ -220,6 +223,81 @@ class UnicodeProperties final {
   static inline bool IsMathOrMusicSymbol(uint32_t aCh) {
     // Keep this function in sync with is_math_symbol in base_chars.py.
     return CharType(aCh) == U_MATH_SYMBOL || CharType(aCh) == U_OTHER_SYMBOL;
+  }
+
+  static inline Script GetScriptCode(uint32_t aCh) {
+    // We can safely ignore the error code here because uscript_getScript
+    // returns USCRIPT_INVALID_CODE in the event of an error.
+    UErrorCode err = U_ZERO_ERROR;
+    return Script(uscript_getScript(aCh, &err));
+  }
+
+  static inline bool HasScript(uint32_t aCh, Script aScript) {
+    return uscript_hasScript(aCh, UScriptCode(aScript));
+  }
+
+  static inline const char* GetScriptShortName(Script aScript) {
+    return uscript_getShortName(UScriptCode(aScript));
+  }
+
+  static inline int32_t GetMaxNumberOfScripts() {
+    return u_getIntPropertyMaxValue(UCHAR_SCRIPT);
+  }
+
+  // The code point which has the most script extensions is 0x0965, which has 21
+  // script extensions, so choose the vector size as 32 to prevent heap
+  // allocation.
+  static constexpr size_t kMaxScripts = 32;
+
+  using ScriptExtensionVector = Vector<Script, kMaxScripts>;
+
+  /**
+   * Get the script extensions for the given code point, and write the script
+   * extensions to aExtensions vector. If the code point has script extensions,
+   * the script code (Script::COMMON or Script::INHERITED) will be excluded.
+   *
+   * If the code point doesn't have any script extension, then its script code
+   * will be written to aExtensions vector.
+   *
+   * If the code point is invalid, Script::UNKNOWN will be written to
+   * aExtensions vector.
+   *
+   * Note: aExtensions will be cleared after calling this method regardless of
+   * failure.
+   *
+   * See [1] for the script code of the code point, [2] for the script
+   * extensions.
+   *
+   * https://www.unicode.org/Public/UNIDATA/Scripts.txt
+   * https://www.unicode.org/Public/UNIDATA/ScriptExtensions.txt
+   */
+  static ICUResult GetExtensions(char32_t aCodePoint,
+                                 ScriptExtensionVector& aExtensions) {
+    // Clear the vector first.
+    aExtensions.clear();
+
+    // We cannot pass aExtensions to uscript_getScriptExtension as USCriptCode
+    // takes 4 bytes, so create a local UScriptCode array to get the extensions.
+    UScriptCode ext[kMaxScripts];
+    UErrorCode status = U_ZERO_ERROR;
+    int32_t len = uscript_getScriptExtensions(static_cast<UChar32>(aCodePoint),
+                                              ext, kMaxScripts, &status);
+    if (U_FAILURE(status)) {
+      // kMaxScripts should be large enough to hold the maximun number of script
+      // extensions.
+      MOZ_DIAGNOSTIC_ASSERT(status != U_BUFFER_OVERFLOW_ERROR);
+      return Err(ToICUError(status));
+    }
+
+    if (!aExtensions.reserve(len)) {
+      return Err(ICUError::OutOfMemory);
+    }
+
+    for (int32_t i = 0; i < len; i++) {
+      aExtensions.infallibleAppend(Script(ext[i]));
+    }
+
+    return Ok();
   }
 };
 

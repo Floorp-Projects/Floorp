@@ -8,10 +8,10 @@
 
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/gfx/Types.h"
+#include "mozilla/intl/UnicodeScriptCodes.h"
 #include "nsTArray.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsUnicodeScriptCodes.h"
 
 #include "gfxTelemetry.h"
 #include "gfxTypes.h"
@@ -186,7 +186,7 @@ class gfxPlatform : public mozilla::layers::MemoryPressureListener {
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::IntSize IntSize;
   typedef mozilla::gfx::SourceSurface SourceSurface;
-  typedef mozilla::unicode::Script Script;
+  typedef mozilla::intl::Script Script;
 
   /**
    * Return a pointer to the current active platform.

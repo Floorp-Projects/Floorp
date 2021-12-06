@@ -69,10 +69,9 @@ gfxCoreTextShaper::~gfxCoreTextShaper() {
   }
 }
 
-static bool IsBuggyIndicScript(unicode::Script aScript) {
-  return aScript == unicode::Script::BENGALI ||
-         aScript == unicode::Script::KANNADA ||
-         aScript == unicode::Script::ORIYA || aScript == unicode::Script::KHMER;
+static bool IsBuggyIndicScript(intl::Script aScript) {
+  return aScript == intl::Script::BENGALI || aScript == intl::Script::KANNADA ||
+         aScript == intl::Script::ORIYA || aScript == intl::Script::KHMER;
 }
 
 bool gfxCoreTextShaper::ShapeText(DrawTarget* aDrawTarget,
