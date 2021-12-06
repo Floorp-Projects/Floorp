@@ -4323,14 +4323,14 @@ static already_AddRefed<JS::Stencil> CompileGlobalScriptToStencilImpl(
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
   Rooted<CompilationInput> input(cx, CompilationInput(options));
-  auto stencil = js::frontend::CompileGlobalScriptToStencil(cx, input.get(),
-                                                            srcBuf, scopeKind);
+  RefPtr<JS::Stencil> stencil = js::frontend::CompileGlobalScriptToStencil(
+      cx, input.get(), srcBuf, scopeKind);
   if (!stencil) {
     return nullptr;
   }
 
   // Convert the UniquePtr to a RefPtr and increment the count (to 1).
-  return do_AddRef(stencil.release());
+  return stencil.forget();
 }
 
 already_AddRefed<JS::Stencil> JS::CompileGlobalScriptToStencil(
@@ -4353,13 +4353,14 @@ static already_AddRefed<JS::Stencil> CompileModuleScriptToStencilImpl(
   options.setModule();
 
   Rooted<CompilationInput> input(cx, CompilationInput(options));
-  auto stencil = js::frontend::ParseModuleToStencil(cx, input.get(), srcBuf);
+  RefPtr<JS::Stencil> stencil =
+      js::frontend::ParseModuleToStencil(cx, input.get(), srcBuf);
   if (!stencil) {
     return nullptr;
   }
 
   // Convert the UniquePtr to a RefPtr and increment the count (to 1).
-  return do_AddRef(stencil.release());
+  return stencil.forget();
 }
 
 already_AddRefed<JS::Stencil> JS::CompileModuleScriptToStencil(
@@ -4430,7 +4431,7 @@ JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
   if (!source) {
     return TranscodeResult::Throw;
   }
-  UniquePtr<JS::Stencil> stencil(MakeUnique<CompilationStencil>(source));
+  RefPtr<JS::Stencil> stencil(cx->new_<CompilationStencil>(source));
   if (!stencil) {
     return TranscodeResult::Throw;
   }
@@ -4439,7 +4440,7 @@ JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
   if (res.isErr()) {
     return res.unwrapErr();
   }
-  *stencilOut = do_AddRef(stencil.release()).take();
+  *stencilOut = stencil.forget().take();
   return TranscodeResult::Ok;
 }
 
@@ -4447,7 +4448,7 @@ already_AddRefed<JS::Stencil> JS::FinishOffThreadStencil(
     JSContext* cx, JS::OffThreadToken* token) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-  return do_AddRef(HelperThreadState().finishStencilParseTask(cx, token));
+  return HelperThreadState().finishStencilParseTask(cx, token);
 }
 
 JS_PUBLIC_API size_t JS::SizeOfStencil(Stencil* stencil,

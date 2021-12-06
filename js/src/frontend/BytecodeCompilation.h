@@ -27,11 +27,11 @@ struct CompilationGCOutput;
 struct CompilationStencil;
 struct ExtensibleCompilationStencil;
 
-extern UniquePtr<CompilationStencil> CompileGlobalScriptToStencil(
+extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
     JSContext* cx, CompilationInput& input, JS::SourceText<char16_t>& srcBuf,
     ScopeKind scopeKind);
 
-extern UniquePtr<CompilationStencil> CompileGlobalScriptToStencil(
+extern already_AddRefed<CompilationStencil> CompileGlobalScriptToStencil(
     JSContext* cx, CompilationInput& input,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf, ScopeKind scopeKind);
 
@@ -78,7 +78,7 @@ extern JSScript* CompileEvalScript(JSContext* cx,
 extern bool DelazifyCanonicalScriptedFunction(JSContext* cx,
                                               JS::Handle<JSFunction*> fun);
 
-extern UniquePtr<CompilationStencil> DelazifyCanonicalScriptedFunction(
+extern already_AddRefed<CompilationStencil> DelazifyCanonicalScriptedFunction(
     JSContext* cx, CompilationStencil& context, ScriptIndex scriptIndex);
 
 // Certain compile options will disable the syntax parser entirely.
