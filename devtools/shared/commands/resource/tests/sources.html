@@ -6,6 +6,9 @@
     <meta charset="utf-8"/>
   </head>
   <body>
+    <!-- introductionType=eventHandler -->
+    <div onclick="console.log('link')">link</div>
+
     <!-- introductionType=inlineScript mapped to scriptElement -->
     <script type="text/javascript">
       "use strict";
@@ -29,7 +32,16 @@
       // Assign the worker to a global variable in order to avoid
       // having it be GCed.
       this.worker = new Worker("worker-sources.js");
+
       window.registrationPromise = navigator.serviceWorker.register("service-worker-sources.js");
+
+      // introductionType=domTimer
+      setTimeout(`console.log("timeout")`, 0);
+
+      // introductionType=eventHandler
+      window.addEventListener("DOMContentLoaded", () => {
+        document.querySelector("div[onclick]").click();
+      });
     </script>
     <!-- introductionType=srcScript mapped to scriptElement -->
     <script src="sources.js"></script>
