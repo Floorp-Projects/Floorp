@@ -872,7 +872,7 @@ class Settings(private val appContext: Context) : PreferencesHolder {
      */
     var shouldShowInactiveTabsTurnOffSurvey by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_should_show_inactive_tabs_turn_off_survey),
-        default = true
+        default = false
     )
 
     fun getSitePermissionsPhoneFeatureAction(
