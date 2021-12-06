@@ -1991,7 +1991,7 @@ void nsBidiPresUtils::RemoveBidiContinuation(BidiParagraphData* aBpd,
 nsresult nsBidiPresUtils::FormatUnicodeText(nsPresContext* aPresContext,
                                             char16_t* aText,
                                             int32_t& aTextLength,
-                                            nsCharType aCharType) {
+                                            intl::BidiClass aBidiClass) {
   nsresult rv = NS_OK;
   // ahmed
   // adjusted for correct numeral shaping
@@ -2011,12 +2011,12 @@ nsresult nsBidiPresUtils::FormatUnicodeText(nsPresContext* aPresContext,
 
     case IBMBIDI_NUMERAL_REGULAR:
 
-      switch (aCharType) {
-        case eCharType_EuropeanNumber:
+      switch (aBidiClass) {
+        case intl::BidiClass::EuropeanNumber:
           HandleNumbers(aText, aTextLength, IBMBIDI_NUMERAL_ARABIC);
           break;
 
-        case eCharType_ArabicNumber:
+        case intl::BidiClass::ArabicNumber:
           HandleNumbers(aText, aTextLength, IBMBIDI_NUMERAL_HINDI);
           break;
 
@@ -2029,20 +2029,22 @@ nsresult nsBidiPresUtils::FormatUnicodeText(nsPresContext* aPresContext,
       if (((GET_BIDI_OPTION_DIRECTION(bidiOptions) ==
             IBMBIDI_TEXTDIRECTION_RTL) &&
            (IS_ARABIC_DIGIT(aText[0]))) ||
-          (eCharType_ArabicNumber == aCharType))
+          (intl::BidiClass::ArabicNumber == aBidiClass)) {
         HandleNumbers(aText, aTextLength, IBMBIDI_NUMERAL_HINDI);
-      else if (eCharType_EuropeanNumber == aCharType)
+      } else if (intl::BidiClass::EuropeanNumber == aBidiClass) {
         HandleNumbers(aText, aTextLength, IBMBIDI_NUMERAL_ARABIC);
+      }
       break;
 
     case IBMBIDI_NUMERAL_PERSIANCONTEXT:
       if (((GET_BIDI_OPTION_DIRECTION(bidiOptions) ==
             IBMBIDI_TEXTDIRECTION_RTL) &&
            (IS_ARABIC_DIGIT(aText[0]))) ||
-          (eCharType_ArabicNumber == aCharType))
+          (intl::BidiClass::ArabicNumber == aBidiClass)) {
         HandleNumbers(aText, aTextLength, IBMBIDI_NUMERAL_PERSIAN);
-      else if (eCharType_EuropeanNumber == aCharType)
+      } else if (intl::BidiClass::EuropeanNumber == aBidiClass) {
         HandleNumbers(aText, aTextLength, IBMBIDI_NUMERAL_ARABIC);
+      }
       break;
 
     case IBMBIDI_NUMERAL_NOMINAL:
@@ -2074,64 +2076,40 @@ void nsBidiPresUtils::StripBidiControlCharacters(char16_t* aText,
   aTextLength -= stripLen;
 }
 
-#if 0  // XXX: for the future use ???
-void
-RemoveDiacritics(char16_t* aText,
-                 int32_t&   aTextLength)
-{
-  if (aText && (aTextLength > 0) ) {
-    int32_t offset = 0;
-
-    for (int32_t i = 0; i < aTextLength && aText[i]; i++) {
-      if (IS_BIDI_DIACRITIC(aText[i]) ) {
-        ++offset;
-        continue;
-      }
-      aText[i - offset] = aText[i];
-    }
-    aTextLength = i - offset;
-    aText[aTextLength] = 0;
-  }
-}
-#endif
-
-void nsBidiPresUtils::CalculateCharType(intl::Bidi* aBidiEngine,
-                                        const char16_t* aText, int32_t& aOffset,
-                                        int32_t aCharTypeLimit,
-                                        int32_t& aRunLimit, int32_t& aRunLength,
-                                        int32_t& aRunCount, uint8_t& aCharType,
-                                        uint8_t& aPrevCharType)
-
-{
+void nsBidiPresUtils::CalculateBidiClass(
+    intl::Bidi* aBidiEngine, const char16_t* aText, int32_t& aOffset,
+    int32_t aBidiClassLimit, int32_t& aRunLimit, int32_t& aRunLength,
+    int32_t& aRunCount, intl::BidiClass& aBidiClass,
+    intl::BidiClass& aPrevBidiClass) {
   bool strongTypeFound = false;
   int32_t offset;
-  nsCharType charType;
+  intl::BidiClass bidiClass;
 
-  aCharType = eCharType_OtherNeutral;
+  aBidiClass = intl::BidiClass::OtherNeutral;
 
   int32_t charLen;
-  for (offset = aOffset; offset < aCharTypeLimit; offset += charLen) {
+  for (offset = aOffset; offset < aBidiClassLimit; offset += charLen) {
     // Make sure we give RTL chartype to all characters that would be classified
     // as Right-To-Left by a bidi platform.
     // (May differ from the UnicodeData, eg we set RTL chartype to some NSMs.)
     charLen = 1;
     uint32_t ch = aText[offset];
     if (IS_HEBREW_CHAR(ch)) {
-      charType = eCharType_RightToLeft;
+      bidiClass = intl::BidiClass::RightToLeft;
     } else if (IS_ARABIC_ALPHABETIC(ch)) {
-      charType = eCharType_RightToLeftArabic;
+      bidiClass = intl::BidiClass::RightToLeftArabic;
     } else {
-      if (offset + 1 < aCharTypeLimit &&
+      if (offset + 1 < aBidiClassLimit &&
           NS_IS_SURROGATE_PAIR(ch, aText[offset + 1])) {
         ch = SURROGATE_TO_UCS4(ch, aText[offset + 1]);
         charLen = 2;
       }
-      charType = unicode::GetBidiCat(ch);
+      bidiClass = intl::UnicodeProperties::GetBidiClass(ch);
     }
 
-    if (!CHARTYPE_IS_WEAK(charType)) {
-      if (strongTypeFound && (charType != aPrevCharType) &&
-          (CHARTYPE_IS_RTL(charType) || CHARTYPE_IS_RTL(aPrevCharType))) {
+    if (!BIDICLASS_IS_WEAK(bidiClass)) {
+      if (strongTypeFound && (bidiClass != aPrevBidiClass) &&
+          (BIDICLASS_IS_RTL(bidiClass) || BIDICLASS_IS_RTL(aPrevBidiClass))) {
         // Stop at this point to ensure uni-directionality of the text
         // (from platform's point of view).
         // Also, don't mix Arabic and Hebrew content (since platform may
@@ -2142,18 +2120,18 @@ void nsBidiPresUtils::CalculateCharType(intl::Bidi* aBidiEngine,
         break;
       }
 
-      if ((eCharType_RightToLeftArabic == aPrevCharType ||
-           eCharType_ArabicNumber == aPrevCharType) &&
-          eCharType_EuropeanNumber == charType) {
-        charType = eCharType_ArabicNumber;
+      if ((intl::BidiClass::RightToLeftArabic == aPrevBidiClass ||
+           intl::BidiClass::ArabicNumber == aPrevBidiClass) &&
+          intl::BidiClass::EuropeanNumber == bidiClass) {
+        bidiClass = intl::BidiClass::ArabicNumber;
       }
 
-      // Set PrevCharType to the last strong type in this frame
+      // Set PrevBidiClass to the last strong type in this frame
       // (for correct numeric shaping)
-      aPrevCharType = charType;
+      aPrevBidiClass = bidiClass;
 
       strongTypeFound = true;
-      aCharType = charType;
+      aBidiClass = bidiClass;
     }
   }
   aOffset = offset;
@@ -2188,8 +2166,8 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
   nscoord totalWidth = 0;
   int32_t i, start, limit, length;
   uint32_t visualStart = 0;
-  uint8_t charType;
-  uint8_t prevType = eCharType_LeftToRight;
+  intl::BidiClass bidiClass;
+  intl::BidiClass prevClass = intl::BidiClass::LeftToRight;
 
   for (int nPosResolve = 0; nPosResolve < aPosResolveCount; ++nPosResolve) {
     aPosResolve[nPosResolve].visualIndex = kNotFound;
@@ -2231,17 +2209,17 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t* aText, size_t aLength,
     }
 
     while (subRunCount > 0) {
-      // CalculateCharType can increment subRunCount if the run
+      // CalculateBidiClass can increment subRunCount if the run
       // contains mixed character types
-      CalculateCharType(aBidiEngine, text, lineOffset, typeLimit, subRunLimit,
-                        subRunLength, subRunCount, charType, prevType);
+      CalculateBidiClass(aBidiEngine, text, lineOffset, typeLimit, subRunLimit,
+                         subRunLength, subRunCount, bidiClass, prevClass);
 
       nsAutoString runVisualText;
       runVisualText.Assign(text + start, subRunLength);
       if (int32_t(runVisualText.Length()) < subRunLength)
         return NS_ERROR_OUT_OF_MEMORY;
       FormatUnicodeText(aPresContext, runVisualText.BeginWriting(),
-                        subRunLength, (nsCharType)charType);
+                        subRunLength, bidiClass);
 
       aprocessor.SetText(runVisualText.get(), subRunLength, dir);
       width = aprocessor.GetWidth();
