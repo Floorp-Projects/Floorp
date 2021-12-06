@@ -991,8 +991,7 @@ impl FontMetricsProvider for GeckoFontMetricsProvider {
         };
 
         let vertical_metrics = match orientation {
-            FontMetricsOrientation::MatchContextPreferHorizontal => wm.is_vertical() && wm.is_upright(),
-            FontMetricsOrientation::MatchContextPreferVertical => wm.is_vertical() && !wm.is_sideways(),
+            FontMetricsOrientation::MatchContext => wm.is_vertical() && wm.is_upright(),
             FontMetricsOrientation::Horizontal => false,
         };
         let gecko_metrics = unsafe {
@@ -1012,17 +1011,6 @@ impl FontMetricsProvider for GeckoFontMetricsProvider {
             } else {
                 None
             },
-            cap_height: if gecko_metrics.mCapHeight.px() >= 0. {
-                Some(gecko_metrics.mCapHeight)
-            } else {
-                None
-            },
-            ideographic_advance: if gecko_metrics.mIcWidth.px() >= 0. {
-                Some(gecko_metrics.mIcWidth)
-            } else {
-                None
-            },
-            ascent: gecko_metrics.mAscent,
         }
     }
 }
