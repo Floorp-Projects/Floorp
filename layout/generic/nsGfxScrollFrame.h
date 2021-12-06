@@ -204,6 +204,11 @@ class ScrollFrameHelper : public nsIReflowCallback {
   nsRect GetVisualScrollRange() const;
   nsRect GetScrollRangeForUserInputEvents() const;
 
+  const nsRect& ScrollPort() const { return mScrollPort; }
+  void SetScrollPort(const nsRect& aNewScrollPort) {
+    mScrollPort = aNewScrollPort;
+  }
+
   /**
    * Return the 'optimal viewing region' as a rect suitable for use by
    * scroll anchoring. This rect is in the same coordinate space as
@@ -583,9 +588,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   nsTArray<ScrollPositionUpdate> mScrollUpdates;
 
-  // NOTE: On mobile this value might be factoring into overflow:hidden region
-  // in the case of the top level document.
-  nsRect mScrollPort;
   nsSize mMinimumScaleSize;
 
   // Stores the ICB size for the root document if this frame is using the
@@ -801,6 +803,11 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   // Removes any RefreshDriver observers we might have registered.
   void RemoveObservers();
+
+ private:
+  // NOTE: On mobile this value might be factoring into overflow:hidden region
+  // in the case of the top level document.
+  nsRect mScrollPort;
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ScrollFrameHelper::OverflowState)
@@ -1734,7 +1741,7 @@ class nsXULScrollFrame final : public nsBoxFrame,
      * edge, then subtract the current width to find the physical position.
      */
     if (!mHelper.IsPhysicalLTR()) {
-      aRect.x = mHelper.mScrollPort.XMost() - aScrollPosition.x - aRect.width;
+      aRect.x = mHelper.ScrollPort().XMost() - aScrollPosition.x - aRect.width;
     }
     mHelper.mScrolledFrame->SetXULBounds(aState, aRect, aRemoveOverflowAreas);
   }
