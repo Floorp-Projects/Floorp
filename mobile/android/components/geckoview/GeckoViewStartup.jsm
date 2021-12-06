@@ -38,6 +38,15 @@ const JSWINDOWACTORS = {
     },
     allFrames: true,
   },
+  GeckoViewFormValidation: {
+    child: {
+      moduleURI: "resource:///actors/GeckoViewFormValidationChild.jsm",
+      events: {
+        MozInvalidForm: {},
+      },
+    },
+    allFrames: true,
+  },
 };
 
 class GeckoViewStartup {
@@ -122,21 +131,6 @@ class GeckoViewStartup {
           {
             handler: _ => this.GeckoViewConsole,
           }
-        );
-
-        // Handle invalid form submission. If we don't hook up to this,
-        // invalid forms are allowed to be submitted!
-        Services.obs.addObserver(
-          {
-            QueryInterface: ChromeUtils.generateQI([
-              "nsIObserver",
-              "nsIFormSubmitObserver",
-            ]),
-            notifyInvalidSubmit: (form, element) => {
-              // We should show the validation message here, bug 1510450.
-            },
-          },
-          "invalidformsubmit"
         );
 
         if (
