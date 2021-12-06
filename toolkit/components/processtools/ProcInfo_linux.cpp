@@ -21,6 +21,8 @@
 
 namespace mozilla {
 
+int GetCycleTimeFrequencyMHz() { return 0; }
+
 // StatReader can parse and tokenize a POSIX stat file.
 // see http://man7.org/linux/man-pages/man5/proc.5.html
 //
