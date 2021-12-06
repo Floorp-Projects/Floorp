@@ -79,7 +79,7 @@ add_task(async function test_process_ping() {
   Assert.ok(!m.isPingAllowed("remotesandboxbroker"));
   Assert.ok(!m.isPingAllowed("forkserver"));
 
-  Assert.ok(m.isPingAllowed("tab"));
+  Assert.ok(m.isPingAllowed("content"));
   Assert.ok(m.isPingAllowed("gpu"));
 });
 
@@ -893,6 +893,23 @@ add_task(async function test_setRemoteCrashID() {
   Assert.equal((await m.getCrashes())[0].remoteID, "bp-1");
 });
 
+add_task(async function test_addCrashWrong() {
+  let m = await getManager();
+
+  let crashes = await m.getCrashes();
+  Assert.equal(crashes.length, 0);
+
+  await m.addCrash(
+    m.processTypes[-1], // passing a wrong type to force 'undefined', it should
+    m.CRASH_TYPE_CRASH, // fail in the end and not record it
+    "wrong-content-crash",
+    DUMMY_DATE
+  );
+
+  crashes = await m.getCrashes();
+  Assert.equal(crashes.length, 0);
+});
+
 add_task(async function test_telemetryHistogram() {
   let Telemetry = Services.telemetry;
   let h = Telemetry.getKeyedHistogramById("PROCESS_CRASH_SUBMIT_ATTEMPT");
@@ -903,11 +920,16 @@ add_task(async function test_telemetryHistogram() {
   let processTypes = [];
   let crashTypes = [];
 
-  // Gather all process and crash types
+  // Gather all process types
+  for (let field in m.processTypes) {
+    if (m.isPingAllowed(m.processTypes[field])) {
+      processTypes.push(m.processTypes[field]);
+    }
+  }
+
+  // Gather all crash types
   for (let field in m) {
-    if (field.startsWith("PROCESS_TYPE_")) {
-      processTypes.push(m[field]);
-    } else if (field.startsWith("CRASH_TYPE_")) {
+    if (field.startsWith("CRASH_TYPE_")) {
       crashTypes.push(m[field]);
     }
   }
@@ -924,6 +946,10 @@ add_task(async function test_telemetryHistogram() {
       keysCount++;
     }
   }
+
+  // Ensure that we have generated some crash, otherwise it could indicate
+  // something silently regressing
+  Assert.greater(keysCount, 2);
 
   // Check that we have the expected keys.
   let snap = h.snapshot();
