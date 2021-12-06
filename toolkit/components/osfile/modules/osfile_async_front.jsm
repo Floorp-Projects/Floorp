@@ -1371,29 +1371,10 @@ File.Info = function Info(value) {
   // Note that we can't just do this[k] = value[k] because our
   // prototype defines getters for all of these fields.
   for (let k in value) {
-    if (k != "creationDate") {
-      Object.defineProperty(this, k, { value: value[k] });
-    }
+    Object.defineProperty(this, k, { value: value[k] });
   }
-  Object.defineProperty(this, "_deprecatedCreationDate", {
-    value: value.creationDate,
-  });
 };
 File.Info.prototype = SysAll.AbstractInfo.prototype;
-
-// Deprecated
-Object.defineProperty(File.Info.prototype, "creationDate", {
-  get: function creationDate() {
-    let { Deprecated } = ChromeUtils.import(
-      "resource://gre/modules/Deprecated.jsm"
-    );
-    Deprecated.warning(
-      "Field 'creationDate' is deprecated.",
-      "https://developer.mozilla.org/en-US/docs/JavaScript_OS.File/OS.File.Info#Cross-platform_Attributes"
-    );
-    return this._deprecatedCreationDate;
-  },
-});
 
 File.Info.fromMsg = function fromMsg(value) {
   return new File.Info(value);
