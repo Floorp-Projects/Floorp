@@ -73,7 +73,7 @@
 #include "builtin/ModuleObject.h"
 #include "builtin/RegExp.h"
 #include "builtin/TestingFunctions.h"
-#include "builtin/TestingUtility.h"  // js::ParseCompileOptions
+#include "builtin/TestingUtility.h"  // js::ParseCompileOptions, js::ParseDebugMetadata, js::CreateScriptPrivate
 #include "debugger/DebugAPI.h"
 #include "frontend/BytecodeCompilation.h"
 #include "frontend/BytecodeCompiler.h"
@@ -972,22 +972,6 @@ void EnvironmentPreparer::invoke(HandleObject global, Closure& closure) {
   }
 }
 
-JSObject* js::shell::CreateScriptPrivate(JSContext* cx, HandleString path) {
-  RootedObject info(cx, JS_NewPlainObject(cx));
-  if (!info) {
-    return nullptr;
-  }
-
-  if (path) {
-    RootedValue pathValue(cx, StringValue(path));
-    if (!JS_DefineProperty(cx, info, "path", pathValue, JSPROP_ENUMERATE)) {
-      return nullptr;
-    }
-  }
-
-  return info;
-}
-
 static bool RegisterScriptPathWithModuleLoader(JSContext* cx,
                                                HandleScript script,
                                                const char* filename) {
@@ -1001,7 +985,7 @@ static bool RegisterScriptPathWithModuleLoader(JSContext* cx,
   }
 
   MOZ_ASSERT(JS::GetScriptPrivate(script).isUndefined());
-  RootedObject infoObject(cx, CreateScriptPrivate(cx, path));
+  RootedObject infoObject(cx, js::CreateScriptPrivate(cx, path));
   if (!infoObject) {
     return false;
   }
@@ -1998,44 +1982,6 @@ static bool Load(JSContext* cx, unsigned argc, Value* vp) {
 static bool LoadScriptRelativeToScript(JSContext* cx, unsigned argc,
                                        Value* vp) {
   return LoadScript(cx, argc, vp, true);
-}
-
-static bool ParseDebugMetadata(JSContext* cx, HandleObject opts,
-                               MutableHandleValue privateValue,
-                               MutableHandleString elementAttributeName) {
-  RootedValue v(cx);
-  RootedString s(cx);
-
-  if (!JS_GetProperty(cx, opts, "element", &v)) {
-    return false;
-  }
-  if (v.isObject()) {
-    RootedObject infoObject(cx, CreateScriptPrivate(cx));
-    if (!infoObject) {
-      return false;
-    }
-    RootedValue elementValue(cx, v);
-    if (!JS_WrapValue(cx, &elementValue)) {
-      return false;
-    }
-    if (!JS_DefineProperty(cx, infoObject, "element", elementValue, 0)) {
-      return false;
-    }
-    privateValue.set(ObjectValue(*infoObject));
-  }
-
-  if (!JS_GetProperty(cx, opts, "elementAttributeName", &v)) {
-    return false;
-  }
-  if (!v.isUndefined()) {
-    s = ToString(cx, v);
-    if (!s) {
-      return false;
-    }
-    elementAttributeName.set(s);
-  }
-
-  return true;
 }
 
 static void my_LargeAllocFailCallback() {
