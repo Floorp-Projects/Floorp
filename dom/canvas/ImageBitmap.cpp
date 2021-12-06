@@ -590,7 +590,6 @@ already_AddRefed<SourceSurface> ImageBitmap::PrepareForDrawTarget(
     }
   }
 
-  RefPtr<DrawTarget> target = aTarget;
   IntRect surfRect(0, 0, mSurface->GetSize().width, mSurface->GetSize().height);
 
   // Check if we still need to crop our surface
@@ -600,8 +599,7 @@ already_AddRefed<SourceSurface> ImageBitmap::PrepareForDrawTarget(
     // the crop lies entirely outside the surface area, nothing to draw
     if (surfPortion.IsEmpty()) {
       mSurface = nullptr;
-      RefPtr<gfx::SourceSurface> surface(mSurface);
-      return surface.forget();
+      return nullptr;
     }
 
     IntPoint dest(std::max(0, surfPortion.X() - mPictureRect.X()),
@@ -609,18 +607,28 @@ already_AddRefed<SourceSurface> ImageBitmap::PrepareForDrawTarget(
 
     // We must initialize this target with mPictureRect.Size() because the
     // specification states that if the cropping area is given, then return an
-    // ImageBitmap with the size equals to the cropping area.
-    target = target->CreateSimilarDrawTarget(mPictureRect.Size(),
-                                             target->GetFormat());
-
-    if (!target) {
+    // ImageBitmap with the size equals to the cropping area. Ensure that the
+    // format matches the surface, even though the DT type is similar to the
+    // destination, i.e. blending an alpha surface to an opaque DT. However,
+    // any pixels outside the surface portion must be filled with transparent
+    // black, even if the surface is opaque, so force to an alpha format in
+    // that case.
+    SurfaceFormat format = mSurface->GetFormat();
+    if (!surfPortion.IsEqualEdges(mPictureRect) && IsOpaque(format)) {
+      format = SurfaceFormat::B8G8R8A8;
+    }
+    RefPtr<DrawTarget> cropped =
+        aTarget->CreateSimilarDrawTarget(mPictureRect.Size(), format);
+    if (!cropped) {
       mSurface = nullptr;
-      RefPtr<gfx::SourceSurface> surface(mSurface);
-      return surface.forget();
+      return nullptr;
     }
 
-    target->CopySurface(mSurface, surfPortion, dest);
-    mSurface = target->Snapshot();
+    cropped->CopySurface(mSurface, surfPortion, dest);
+    mSurface = cropped->Snapshot();
+    if (!mSurface) {
+      return nullptr;
+    }
 
     // Make mCropRect match new surface we've cropped to
     mPictureRect.MoveTo(0, 0);
@@ -636,9 +644,12 @@ already_AddRefed<SourceSurface> ImageBitmap::PrepareForDrawTarget(
                mSurface->GetFormat() == SurfaceFormat::A8R8G8B8);
 
     RefPtr<DataSourceSurface> srcSurface = mSurface->GetDataSurface();
+    if (NS_WARN_IF(!srcSurface)) {
+      return nullptr;
+    }
     RefPtr<DataSourceSurface> dstSurface = Factory::CreateDataSourceSurface(
         srcSurface->GetSize(), srcSurface->GetFormat());
-    if (NS_WARN_IF(!srcSurface) || NS_WARN_IF(!dstSurface)) {
+    if (NS_WARN_IF(!dstSurface)) {
       return nullptr;
     }
 
@@ -667,10 +678,8 @@ already_AddRefed<SourceSurface> ImageBitmap::PrepareForDrawTarget(
   // Replace our surface with one optimized for the target we're about to draw
   // to, under the assumption it'll likely be drawn again to that target.
   // This call should be a no-op for already-optimized surfaces
-  mSurface = target->OptimizeSourceSurface(mSurface);
-
-  RefPtr<gfx::SourceSurface> surface(mSurface);
-  return surface.forget();
+  mSurface = aTarget->OptimizeSourceSurface(mSurface);
+  return do_AddRef(mSurface);
 }
 
 already_AddRefed<layers::Image> ImageBitmap::TransferAsImage() {
