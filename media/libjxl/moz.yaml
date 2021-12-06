@@ -20,12 +20,12 @@ origin:
 
   # Human-readable identifier for this version/release
   # Generally "version NNN", "tag SSS", "bookmark SSS"
-  release: commit 9e8c5766ba32c008ddcaf11f0fac591aa7964f7b (2021-11-10T07:51:06Z).
+  release: commit a9100da7143e4f367d2e26f4d11e457e85343543 (2021-11-25T17:57:37Z).
 
   # Revision to pull in
   # Must be a long or short commit SHA (long preferred)
   # NOTE(krosylight): Update highway together when updating this!
-  revision: 9e8c5766ba32c008ddcaf11f0fac591aa7964f7b
+  revision: a9100da7143e4f367d2e26f4d11e457e85343543
 
   # The package's license, where possible using the mnemonic from
   # https://spdx.org/licenses/
@@ -52,4 +52,5 @@ vendoring:
     - doc/
     - third_party/testdata/
     - tools/
+
 

@@ -53,7 +53,7 @@ float ContinuousIDCT(const float dct[32], float t) {
     auto local_res = LoadU(df, dct + i) * cos;
     result = MulAdd(Set(df, square_root<2>::value), local_res, result);
   }
-  return GetLane(SumOfLanes(result));
+  return GetLane(SumOfLanes(df, result));
 }
 
 template <typename DF>

@@ -42,7 +42,7 @@ struct TestAlignedT {
   void operator()(T /*unused*/) const {
     std::mt19937 rng(129);
     std::uniform_int_distribution<int> dist(0, 16);
-    const HWY_FULL(T) d;
+    const ScalableTag<T> d;
 
     for (size_t ysize = 1; ysize < 4; ++ysize) {
       for (size_t xsize = 1; xsize < 64; ++xsize) {
@@ -73,7 +73,7 @@ struct TestUnalignedT {
   void operator()(T /*unused*/) const {
     std::mt19937 rng(129);
     std::uniform_int_distribution<int> dist(0, 3);
-    const HWY_FULL(T) d;
+    const ScalableTag<T> d;
 
     for (size_t ysize = 1; ysize < 4; ++ysize) {
       for (size_t xsize = 1; xsize < 128; ++xsize) {
@@ -87,7 +87,7 @@ struct TestUnalignedT {
         for (size_t y = 0; y < ysize; ++y) {
           T* HWY_RESTRICT row = img.MutableRow(y);
           for (size_t x = 0; x < xsize; ++x) {
-            row[x] = 1 << dist(rng);
+            row[x] = static_cast<T>(1u << dist(rng));
           }
         }
 
@@ -96,7 +96,7 @@ struct TestUnalignedT {
         for (size_t y = 0; y < ysize; ++y) {
           T* HWY_RESTRICT row = img.MutableRow(y);
           for (size_t x = 0; x < xsize; ++x) {
-            accum |= LoadU(d, row + x);
+            accum = Or(accum, LoadU(d, row + x));
           }
         }
 
@@ -143,9 +143,17 @@ void TestUnaligned() { ForUnsignedTypes(TestUnalignedT()); }
 HWY_AFTER_NAMESPACE();
 
 #if HWY_ONCE
+
 namespace hwy {
 HWY_BEFORE_TEST(ImageTest);
 HWY_EXPORT_AND_TEST_P(ImageTest, TestAligned);
 HWY_EXPORT_AND_TEST_P(ImageTest, TestUnaligned);
 }  // namespace hwy
+
+// Ought not to be necessary, but without this, no tests run on RVV.
+int main(int argc, char** argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+
 #endif

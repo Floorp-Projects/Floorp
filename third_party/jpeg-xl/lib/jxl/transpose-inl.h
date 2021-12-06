@@ -137,25 +137,26 @@ JXL_INLINE_TRANSPOSE void GenericTransposeBlock(TransposeSimdTag<true>,
   static_assert(COLS_or_0 % 4 == 0, "Invalid number of columns");
   for (size_t n = 0; n < ROWS; n += 4) {
     for (size_t m = 0; m < COLS; m += 4) {
-      const auto p0 = from.LoadPart(BlockDesc<4>(), n + 0, m + 0);
-      const auto p1 = from.LoadPart(BlockDesc<4>(), n + 1, m + 0);
-      const auto p2 = from.LoadPart(BlockDesc<4>(), n + 2, m + 0);
-      const auto p3 = from.LoadPart(BlockDesc<4>(), n + 3, m + 0);
+      const BlockDesc<4> d;
+      const auto p0 = from.LoadPart(d, n + 0, m + 0);
+      const auto p1 = from.LoadPart(d, n + 1, m + 0);
+      const auto p2 = from.LoadPart(d, n + 2, m + 0);
+      const auto p3 = from.LoadPart(d, n + 3, m + 0);
 
-      const auto q0 = InterleaveLower(p0, p2);
-      const auto q1 = InterleaveLower(p1, p3);
-      const auto q2 = InterleaveUpper(p0, p2);
-      const auto q3 = InterleaveUpper(p1, p3);
+      const auto q0 = InterleaveLower(d, p0, p2);
+      const auto q1 = InterleaveLower(d, p1, p3);
+      const auto q2 = InterleaveUpper(d, p0, p2);
+      const auto q3 = InterleaveUpper(d, p1, p3);
 
-      const auto r0 = InterleaveLower(q0, q1);
-      const auto r1 = InterleaveUpper(q0, q1);
-      const auto r2 = InterleaveLower(q2, q3);
-      const auto r3 = InterleaveUpper(q2, q3);
+      const auto r0 = InterleaveLower(d, q0, q1);
+      const auto r1 = InterleaveUpper(d, q0, q1);
+      const auto r2 = InterleaveLower(d, q2, q3);
+      const auto r3 = InterleaveUpper(d, q2, q3);
 
-      to.StorePart(BlockDesc<4>(), r0, m + 0, n + 0);
-      to.StorePart(BlockDesc<4>(), r1, m + 1, n + 0);
-      to.StorePart(BlockDesc<4>(), r2, m + 2, n + 0);
-      to.StorePart(BlockDesc<4>(), r3, m + 3, n + 0);
+      to.StorePart(d, r0, m + 0, n + 0);
+      to.StorePart(d, r1, m + 1, n + 0);
+      to.StorePart(d, r2, m + 2, n + 0);
+      to.StorePart(d, r3, m + 3, n + 0);
     }
   }
 }

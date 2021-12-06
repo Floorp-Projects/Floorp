@@ -421,7 +421,7 @@ ImageF ConvolveXSampleAndTranspose(const ImageF& in,
       for (int i = -r; i <= r; i += Lanes(df)) {
         sum = MulAdd(LoadU(df, rowp + x + i), LoadU(df, kernelp + i), sum);
       }
-      out.Row(ox)[y] = GetLane(SumOfLanes(sum));
+      out.Row(ox)[y] = GetLane(SumOfLanes(df, sum));
     }
     for (; x < in.xsize(); x += res, ++ox) {
       float sum = 0.0f;

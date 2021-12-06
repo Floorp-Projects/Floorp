@@ -173,11 +173,20 @@ template <typename T>
 void VerifyRoundtripCompression(const size_t xsize, const size_t ysize,
                                 const JxlPixelFormat& input_pixel_format,
                                 const JxlPixelFormat& output_pixel_format,
-                                const bool lossless, const bool use_container) {
+                                const bool lossless, const bool use_container,
+                                const uint32_t resampling = 1,
+                                const bool already_downsampled = false) {
+  size_t orig_xsize = xsize;
+  size_t orig_ysize = ysize;
+  if (already_downsampled) {
+    orig_xsize = jxl::DivCeil(xsize, resampling);
+    orig_ysize = jxl::DivCeil(ysize, resampling);
+  }
+
   const std::vector<uint8_t> original_bytes =
-      GetTestImage<T>(xsize, ysize, input_pixel_format);
-  jxl::CodecInOut original_io =
-      ConvertTestImage(original_bytes, xsize, ysize, input_pixel_format, {});
+      GetTestImage<T>(orig_xsize, orig_ysize, input_pixel_format);
+  jxl::CodecInOut original_io = ConvertTestImage(
+      original_bytes, orig_xsize, orig_ysize, input_pixel_format, {});
 
   JxlEncoder* enc = JxlEncoderCreate(nullptr);
   EXPECT_NE(nullptr, enc);
@@ -201,6 +210,14 @@ void VerifyRoundtripCompression(const size_t xsize, const size_t ysize,
   EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderSetColorEncoding(enc, &color_encoding));
   JxlEncoderOptions* opts = JxlEncoderOptionsCreate(enc, nullptr);
   JxlEncoderOptionsSetLossless(opts, lossless);
+  if (resampling > 1) {
+    EXPECT_EQ(JXL_ENC_SUCCESS,
+              JxlEncoderOptionsSetInteger(opts, JXL_ENC_OPTION_RESAMPLING,
+                                          resampling));
+    EXPECT_EQ(JXL_ENC_SUCCESS, JxlEncoderOptionsSetInteger(
+                                   opts, JXL_ENC_OPTION_ALREADY_DOWNSAMPLED,
+                                   already_downsampled));
+  }
   EXPECT_EQ(JXL_ENC_SUCCESS,
             JxlEncoderAddImageFrame(opts, &input_pixel_format,
                                     (void*)original_bytes.data(),
@@ -227,7 +244,7 @@ void VerifyRoundtripCompression(const size_t xsize, const size_t ysize,
   size_t buffer_size;
   EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderImageOutBufferSize(
                                  dec, &output_pixel_format, &buffer_size));
-  if (&input_pixel_format == &output_pixel_format) {
+  if (&input_pixel_format == &output_pixel_format && !already_downsampled) {
     EXPECT_EQ(buffer_size, original_bytes.size());
   }
 
@@ -258,16 +275,29 @@ void VerifyRoundtripCompression(const size_t xsize, const size_t ysize,
                                  decoded_bytes.data(), decoded_bytes.size()));
 
   EXPECT_EQ(JXL_DEC_FULL_IMAGE, JxlDecoderProcessInput(dec));
+  // Check if there are no further errors after getting the full image, e.g.
+  // check that the final codestream box is actually marked as last.
+  EXPECT_EQ(JXL_DEC_SUCCESS, JxlDecoderProcessInput(dec));
 
   JxlDecoderDestroy(dec);
 
   jxl::CodecInOut decoded_io = ConvertTestImage(
       decoded_bytes, xsize, ysize, output_pixel_format, icc_profile);
 
+  if (already_downsampled) {
+    jxl::Image3F* color = decoded_io.Main().color();
+    jxl::DownsampleImage(color, resampling);
+    if (decoded_io.Main().HasAlpha()) {
+      jxl::ImageF* alpha = decoded_io.Main().alpha();
+      jxl::DownsampleImage(alpha, resampling);
+    }
+    decoded_io.SetSize(color->xsize(), color->ysize());
+  }
+
   jxl::ButteraugliParams ba;
   float butteraugli_score = ButteraugliDistance(original_io, decoded_io, ba,
                                                 /*distmap=*/nullptr, nullptr);
-  if (lossless) {
+  if (lossless && !already_downsampled) {
     EXPECT_LE(butteraugli_score, 0.0f);
   } else {
     EXPECT_LE(butteraugli_score, 2.0f);
@@ -334,6 +364,23 @@ TEST(RoundtripTest, TestNonlinearSrgbAsXybEncoded) {
           /*lossless=*/false, (bool)use_container);
     }
   }
+}
+
+TEST(RoundtripTest, Resampling) {
+  JxlPixelFormat pixel_format =
+      JxlPixelFormat{3, JXL_TYPE_UINT8, JXL_NATIVE_ENDIAN, 0};
+  VerifyRoundtripCompression<uint8_t>(63, 129, pixel_format, pixel_format,
+                                      /*lossless=*/false,
+                                      /*use_container=*/false, 2,
+                                      /*already_downsampled=*/false);
+
+  // TODO(lode): also make this work for odd sizes. This requires a fix in
+  // enc_frame.cc to not set custom_size_or_origin to true due to even/odd
+  // mismatch.
+  VerifyRoundtripCompression<uint8_t>(64, 128, pixel_format, pixel_format,
+                                      /*lossless=*/true,
+                                      /*use_container=*/false, 2,
+                                      /*already_downsampled=*/true);
 }
 
 TEST(RoundtripTest, ExtraBoxesTest) {

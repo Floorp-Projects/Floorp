@@ -157,7 +157,7 @@ void ProcessTile(const Image3F& opsin, PassesEncoderState* enc_state,
           sum += LoadU(df4, rows_in[iy] + x * 4 + ix + 2);
         }
       }
-      row_out[x] = GetLane(Sqrt(SumOfLanes(sum))) * (1.0f / 4.0f);
+      row_out[x] = GetLane(Sqrt(SumOfLanes(df4, sum))) * (1.0f / 4.0f);
     }
   }
   // Indexing iy and ix is a bit tricky as we include a 2 pixel border
@@ -193,7 +193,7 @@ void ProcessTile(const Image3F& opsin, PassesEncoderState* enc_state,
             sum += Load(df4, rows_in[iy] + sx + ix);
           }
         }
-        row_out[x] = GetLane(Sqrt(SumOfLanes(sum))) * (1.0f / 4.0f);
+        row_out[x] = GetLane(Sqrt(SumOfLanes(df4, sum))) * (1.0f / 4.0f);
       } else {
         float sum = 0;
         for (size_t iy = sy; iy < ey; iy++) {

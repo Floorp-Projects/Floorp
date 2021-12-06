@@ -20,11 +20,11 @@ origin:
 
   # Human-readable identifier for this version/release
   # Generally "version NNN", "tag SSS", "bookmark SSS"
-  release: commit e2397743fe092df68b760d358253773699a16c93 (2021-06-09T08:56:32Z).
+  release: commit e69083a12a05caf037cabecdf1b248b7579705a5 (2021-11-11T08:20:00Z).
 
   # Revision to pull in
   # Must be a long or short commit SHA (long preferred)
-  revision: e2397743fe092df68b760d358253773699a16c93
+  revision: e69083a12a05caf037cabecdf1b248b7579705a5
 
   # The package's license, where possible using the mnemonic from
   # https://spdx.org/licenses/
@@ -41,3 +41,4 @@ vendoring:
 
   exclude:
     - g3doc/
+
