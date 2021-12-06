@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ServiceWorkerRegistrar.h"
+#include "ServiceWorkerManager.h"
 #include "mozilla/dom/ServiceWorkerRegistrarTypes.h"
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/net/MozURL.h"
@@ -44,6 +45,13 @@
 #include "ServiceWorkerUtils.h"
 
 using namespace mozilla::ipc;
+
+extern mozilla::LazyLogModule sWorkerTelemetryLog;
+
+#ifdef LOG
+#  undef LOG
+#endif
+#define LOG(_args) MOZ_LOG(sWorkerTelemetryLog, LogLevel::Debug, _args);
 
 namespace mozilla {
 namespace dom {
@@ -281,6 +289,18 @@ void ServiceWorkerRegistrar::UnregisterServiceWorker(
 
     for (uint32_t i = 0; i < mData.Length(); ++i) {
       if (Equivalent(tmp, mData[i])) {
+        gServiceWorkersRegistered--;
+        if (mData[i].currentWorkerHandlesFetch()) {
+          gServiceWorkersRegisteredFetch--;
+        }
+        // Update Telemetry
+        Telemetry::ScalarSet(Telemetry::ScalarID::SERVICEWORKER_REGISTRATIONS,
+                             u"All"_ns, gServiceWorkersRegistered);
+        Telemetry::ScalarSet(Telemetry::ScalarID::SERVICEWORKER_REGISTRATIONS,
+                             u"Fetch"_ns, gServiceWorkersRegisteredFetch);
+        LOG(("Unregister ServiceWorker: %u, fetch %u\n",
+             gServiceWorkersRegistered, gServiceWorkersRegisteredFetch));
+
         mData.RemoveElementAt(i);
         mDataGeneration = GetNextGeneration();
         deleted = true;
@@ -900,8 +920,14 @@ void ServiceWorkerRegistrar::RegisterServiceWorkerInternal(
   bool found = false;
   for (uint32_t i = 0, len = mData.Length(); i < len; ++i) {
     if (Equivalent(aData, mData[i])) {
-      mData[i] = aData;
       found = true;
+      if (mData[i].currentWorkerHandlesFetch()) {
+        // Decrement here if we found it, in case the new registration no
+        // longer handles Fetch.  If it continues to handle fetch, we'll
+        // bump it back later.
+        gServiceWorkersRegisteredFetch--;
+      }
+      mData[i] = aData;
       break;
     }
   }
@@ -909,7 +935,20 @@ void ServiceWorkerRegistrar::RegisterServiceWorkerInternal(
   if (!found) {
     MOZ_ASSERT(ServiceWorkerRegistrationDataIsValid(aData));
     mData.AppendElement(aData);
+    // We didn't find an entry to update, so we have 1 more
+    gServiceWorkersRegistered++;
   }
+  // Handles bumping both for new registrations and updates
+  if (aData.currentWorkerHandlesFetch()) {
+    gServiceWorkersRegisteredFetch++;
+  }
+  // Update Telemetry
+  Telemetry::ScalarSet(Telemetry::ScalarID::SERVICEWORKER_REGISTRATIONS,
+                       u"All"_ns, gServiceWorkersRegistered);
+  Telemetry::ScalarSet(Telemetry::ScalarID::SERVICEWORKER_REGISTRATIONS,
+                       u"Fetch"_ns, gServiceWorkersRegisteredFetch);
+  LOG(("Register: %u, fetch %u\n", gServiceWorkersRegistered,
+       gServiceWorkersRegisteredFetch));
 
   mDataGeneration = GetNextGeneration();
 }
