@@ -262,21 +262,6 @@ nscoord nsFontMetrics::SpaceWidth() {
           .spaceWidth);
 }
 
-nscoord nsFontMetrics::IcWidth() {
-  if (mIcWidth < 0) {
-    const char16_t ch = 0x6C34;
-    FontMatchType matchType;
-    RefPtr<gfxFont> font = GetThebesFontGroup()->FindFontForChar(
-        ch, 0, 0, unicode::Script::HAN, nullptr, &matchType);
-    if (!font) {
-      mIcWidth = EmHeight();
-    } else {
-      mIcWidth = ROUND_TO_TWIPS(font->GetCharAdvance(ch, mOrientation));
-    }
-  }
-  return mIcWidth;
-}
-
 int32_t nsFontMetrics::GetMaxStringLength() {
   const gfxFont::Metrics& m = GetMetrics(this);
   const double x = 32767.0 / std::max(1.0, m.maxAdvance);
