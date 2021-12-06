@@ -973,15 +973,22 @@ nsXULAppInfo::GetWidgetToolkit(nsACString& aResult) {
 // Ensure that the GeckoProcessType enum, defined in xpcom/build/nsXULAppAPI.h,
 // is synchronized with the const unsigned longs defined in
 // xpcom/system/nsIXULRuntime.idl.
-#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, proc_typename, \
-                           process_bin_type, procinfo_typename,               \
-                           webidl_typename, allcaps_name)                     \
-  static_assert(nsIXULRuntime::PROCESS_TYPE_##allcaps_name ==                 \
-                    static_cast<int>(GeckoProcessType_##enum_name),           \
-                "GeckoProcessType in nsXULAppAPI.h not synchronized with "    \
+#define SYNC_ENUMS(a, b)                                                   \
+  static_assert(nsIXULRuntime::PROCESS_TYPE_##a ==                         \
+                    static_cast<int>(GeckoProcessType_##b),                \
+                "GeckoProcessType in nsXULAppAPI.h not synchronized with " \
                 "nsIXULRuntime.idl");
-#include "mozilla/GeckoProcessTypes.h"
-#undef GECKO_PROCESS_TYPE
+
+SYNC_ENUMS(DEFAULT, Default)
+SYNC_ENUMS(CONTENT, Content)
+SYNC_ENUMS(IPDLUNITTEST, IPDLUnitTest)
+SYNC_ENUMS(GMPLUGIN, GMPlugin)
+SYNC_ENUMS(GPU, GPU)
+SYNC_ENUMS(VR, VR)
+SYNC_ENUMS(RDD, RDD)
+SYNC_ENUMS(SOCKET, Socket)
+SYNC_ENUMS(SANDBOX_BROKER, RemoteSandboxBroker)
+SYNC_ENUMS(FORKSERVER, ForkServer)
 
 // .. and ensure that that is all of them:
 static_assert(GeckoProcessType_ForkServer + 1 == GeckoProcessType_End,
@@ -5632,11 +5639,10 @@ bool XRE_IsE10sParentProcess() {
 #endif
 }
 
-#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, proc_typename, \
-                           process_bin_type, procinfo_typename,               \
-                           webidl_typename, allcaps_name)                     \
-  bool XRE_Is##proc_typename##Process() {                                     \
-    return XRE_GetProcessType() == GeckoProcessType_##enum_name;              \
+#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, xre_name, \
+                           bin_type)                                     \
+  bool XRE_Is##xre_name##Process() {                                     \
+    return XRE_GetProcessType() == GeckoProcessType_##enum_name;         \
   }
 #include "mozilla/GeckoProcessTypes.h"
 #undef GECKO_PROCESS_TYPE
@@ -5741,11 +5747,10 @@ mozilla::BinPathType XRE_GetChildProcBinPathType(
   }
 
   switch (aProcessType) {
-#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, proc_typename, \
-                           process_bin_type, procinfo_typename,               \
-                           webidl_typename, allcaps_name)                     \
-  case GeckoProcessType_##enum_name:                                          \
-    return BinPathType::process_bin_type;
+#define GECKO_PROCESS_TYPE(enum_value, enum_name, string_name, xre_name, \
+                           bin_type)                                     \
+  case GeckoProcessType_##enum_name:                                     \
+    return BinPathType::bin_type;
 #include "mozilla/GeckoProcessTypes.h"
 #undef GECKO_PROCESS_TYPE
     default:
