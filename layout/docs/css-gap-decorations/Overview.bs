@@ -61,6 +61,16 @@ Module Interactions {#placement}
     as additions to the <a href="https://drafts.csswg.org/css-align">Box Alignment</a> spec.
 
 
+Definitions {#definitions}
+--------------------------------
+
+    In this specification, we will use the term <dfn>lateral axis</dfn> to refer to
+    the axis in which the rule's thickness grows (i.e. the axis ''column-rule-width''
+    use).  The other axis is the rule's <dfn>longitudinal axis</dfn> and
+    its size in this axis is the <dfn>rule length</dfn>.
+    These definitions are relative to the rule itself and does not depend on if
+    the rule is a row or column rule, or what the 'writing-mode' is.
+
 Rule Images and Gradients {#rule-image}
 =======================================
 
@@ -98,13 +108,13 @@ The 'column-rule-image-slice' and 'row-rule-image-slice' Properties {#column-rul
         Initial: 0
         Applies to: <a>multi-column containers</a>, <a>flex containers</a>, <a>grid containers</a>, <a spec=css-tables>table</a> and <a spec=css-tables>table-row-group</a> containers
         Inherited: no
-        Percentages: refer to size of the image
+        Percentages: refer to image size in the rule's longitudinal axis
         Computed value: one or two values, each either a number or percentage
         Animation type: discrete
     </pre>
 
-    'column-rule-image-slice' specify inward offsets from the block axis
-    start and end edges of the image, dividing it into three regions:
+    'column-rule-image-slice' specify inward offsets from the start and end edges
+    of the image in the rule's longitudinal axis, dividing it into three regions:
     two edge areas and one middle area.
 
     When two values are specified, they set the offsets on the start and end sides in
@@ -112,7 +122,7 @@ The 'column-rule-image-slice' and 'row-rule-image-slice' Properties {#column-rul
 
     <dl dfn-for=column-rule-image-slice dfn-type=value>
       <dt><dfn><<percentage [0,&infin;]>></dfn>
-      <dd>Percentages are relative to the block-size of the image.
+      <dd>Percentages are relative to the image size in the rule's longitudinal axis
 
       <dt><dfn><<number [0,&infin;]>></dfn>
       <dd>Numbers represent pixels in the image (if the image is a raster
@@ -130,8 +140,6 @@ The 'column-rule-image-slice' and 'row-rule-image-slice' Properties {#column-rul
     The regions given by the 'column-rule-image-slice' values may overlap.
     However if the sum of the start and end values is equal to or greater than
     the size of the image, the middle part becomes empty.
-
-    'row-rule-image-slice' works the same but in the inline axis.
 
 
 The 'column-rule-image-repeat' and 'row-rule-image-repeat' Properties {#column-rule-image-repeat}
@@ -234,14 +242,6 @@ The 'column-rule-image' and 'row-rule-image' Shorthands {#column-rule-image}
 Rule Positioning and Sizing {#size}
 ===================================
 
-    In this specification, we will use the term <dfn>lateral axis</dfn> to refer to
-    the axis in which the rule's thickness grows (i.e. the axis ''column-rule-width''
-    use).  The other axis is the rule's <dfn>longitudinal axis</dfn> and
-    its size in this axis is the <dfn>rule length</dfn>.
-    These definitions are relative to the rule itself and does not depend on if
-    the rule is a row or column rule, or what the 'writing-mode' is.
-
-
 The 'column-rule-width' and 'row-rule-width' Properties {#column-rule-width}
 ----------------------------------------------------------------------------
 
@@ -271,6 +271,8 @@ The 'column-rule-width' and 'row-rule-width' Properties {#column-rule-width}
     Negative specified values are not allowed.
     The [=used value=] is floored at zero (in case a 'calc()' expression evaluates to a negative value for example).
 
+    See [[#resolving-position-and-size-algo]] below for how 'auto' is resolved.
+
 
 The 'column-rule-length' and 'row-rule-length' Properties {#column-rule-length}
 -------------------------------------------------------------------------------
@@ -289,6 +291,8 @@ The 'column-rule-length' and 'row-rule-length' Properties {#column-rule-length}
     These properties sets the [=rule length=] (longitudinal size) of a rule in the column and row axis, respectively.
     Negative specified values are not allowed.
     The [=used value=] is floored at zero (in case a 'calc()' expression evaluates to a negative value for example).
+
+    See [[#resolving-position-and-size-algo]] below for how 'auto' is resolved.
 
     Note: These properties work the same as the '*-rule-width' properties in the [=lateral axis=], except that they have a different initial value.
 
@@ -663,7 +667,7 @@ The 'column-rule-extent' and 'row-rule-extent' Properties {#column-rule-extent}
     These properties specify the extent of the rule in its [=longitudinal axis=].
     <dfn>segment</dfn> is an abstract term to describe the distance between two consecutive gaps.
     An extent can cover one or more segments and the <dfn>extent size</dfn> is the distance between
-    the start position of the start-most of those segments and the end position of the end-most segment.
+    the start position of the first of those segments and the end position of the last segment.
     We'll define ''column-rule-extent/segment'' in more detail in the container-specific sub-sections that follow.
 
     The ''column-rule-extent/allow-overlap'' only affects rules in grid and table layout with spanning items/cells.
