@@ -221,8 +221,5 @@ tools/update-packaging/**/*refs.js
 # Ignore backgroundtasks preferences files.
 toolkit/components/backgroundtasks/defaults
 
-# Uses preprocessing
-toolkit/components/crashes/CrashManager.jsm
-
 # Ignore pre-generated webpack and typescript transpiled files for translations
 browser/extensions/translations/extension/
