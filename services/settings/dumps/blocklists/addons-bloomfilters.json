@@ -3,6 +3,68 @@
     {
       "stash": {
         "blocked": [
+          "{a429d8a4-2625-49af-b123-31a212ea37fa}:1.0.0",
+          "{6d73693b-0b6e-4490-84a2-343452c14e84}:1.2.4",
+          "{201f0e07-69be-4cc3-bbf7-c095b9d06096}:1.2.1",
+          "{c89b2328-5750-4acf-9e70-2256af1119b2}:1.0.0.0",
+          "{a8b6843d-3cf4-4591-9853-6577c844e951}:1.2.4",
+          "{5ee07636-d704-4853-b5f4-598b355dc0f8}:1.2.4",
+          "{d36a5bab-b0c5-4d55-86ba-cd24c4d1c5b6}:2.18.4",
+          "{ead42d59-5b4a-4f48-a522-f61772afdf11}:1.5",
+          "{88e11351-ae39-4798-962b-363e7965a813}:1.1.0",
+          "{5c964575-2c47-46f2-b6be-07ad660874e2}:1.0.0",
+          "{cd4099aa-7a2a-450b-8ec5-05e94f52d0a8}:2.2.4",
+          "{095b4be8-7b75-45c1-a256-d64e565fbdb2}:0.0.1",
+          "{ead42d59-5b4a-4f48-a522-f61772afdf11}:1.6",
+          "{b18f6e6d-6dff-4190-92a4-643d52c1e6e4}:1.0.0",
+          "{fc34b7ee-cec3-448f-a9a3-233f674601f9}:1.3.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1638464125746,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1638470108620,
+      "id": "e1b14f47-b405-4137-83ad-2557822a2d8d",
+      "last_modified": 1638470268997
+    },
+    {
+      "stash": {
+        "blocked": [
+          "search@goodshop.com:1.4.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1638297473914,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1638383708683,
+      "id": "a67786cb-f298-499c-ad23-3897b9149a8f",
+      "last_modified": 1638383878130
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{cdca5dd7-377f-44f1-a37c-4d9380d4a37a}:1.1.0",
+          "{93e6e47c-6fba-48ac-b811-e8859d903a41}:1.2.1",
+          "{cdca5dd7-377f-44f1-a37c-4d9380d4a37a}:1.1.1",
+          "{61fcbd20-64e7-4078-a4c1-d494e326a548}:2.1.0",
+          "{cdca5dd7-377f-44f1-a37c-4d9380d4a37a}:1.1.2",
+          "{cdca5dd7-377f-44f1-a37c-4d9380d4a37a}:1.2.0",
+          "{cdca5dd7-377f-44f1-a37c-4d9380d4a37a}:1.0.1",
+          "{cdca5dd7-377f-44f1-a37c-4d9380d4a37a}:1.0.0",
+          "{cdca5dd7-377f-44f1-a37c-4d9380d4a37a}:2.0.0",
+          "{cdca5dd7-377f-44f1-a37c-4d9380d4a37a}:1.2.1"
+        ],
+        "unblocked": []
+      },
+      "schema": 1638269626443,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1638297309383,
+      "id": "cd2699fe-222d-4709-ae2c-209b665304d2",
+      "last_modified": 1638297473834
+    },
+    {
+      "stash": {
+        "blocked": [
           "@easy-tabs:1.1.5",
           "@easy-tabs:1.2.2",
           "@easy-tabs:1.1.1",
