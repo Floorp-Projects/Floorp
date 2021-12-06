@@ -1042,34 +1042,8 @@
         unixGroup,
         unixMode
       );
-
-      // Some platforms (e.g. MacOS X, some BSDs) store a file creation date
-      if ("OSFILE_OFFSETOF_STAT_ST_BIRTHTIME" in Const) {
-        let date = new Date(stat.st_birthtime * 1000);
-
-        /**
-         * The date of creation of this file.
-         *
-         * Note that the date returned by this method is not always
-         * reliable. Not all file systems are able to provide this
-         * information.
-         *
-         * @type {Date}
-         */
-        this.macBirthDate = date;
-      }
     };
     File.Info.prototype = Object.create(SysAll.AbstractInfo.prototype);
-
-    // Deprecated, use macBirthDate/winBirthDate instead
-    Object.defineProperty(File.Info.prototype, "creationDate", {
-      get: function creationDate() {
-        // On the Macintosh, returns the birth date if available.
-        // On other Unix, as the birth date is not available,
-        // returns the epoch.
-        return this.macBirthDate || new Date(0);
-      },
-    });
 
     /**
      * Return a version of an instance of File.Info that can be sent
