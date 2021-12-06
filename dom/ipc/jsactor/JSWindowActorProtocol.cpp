@@ -190,18 +190,6 @@ NS_IMETHODIMP JSWindowActorProtocol::HandleEvent(Event* aEvent) {
     return NS_ERROR_FAILURE;
   }
 
-  if (XRE_IsParentProcess()) {
-    EventTarget* currentTarget = aEvent->GetCurrentTarget();
-    if (NS_WARN_IF(!currentTarget)) {
-      return NS_ERROR_FAILURE;
-    }
-    // In the parent process, nsWindowRoot might receive events we've already
-    // handled via InProcessBrowserChildMessageManager.
-    if (currentTarget->IsRootWindow() && wgc->BrowsingContext()->IsContent()) {
-      return NS_OK;
-    }
-  }
-
   // Ensure our actor is present.
   RefPtr<JSActor> actor = wgc->GetExistingActor(mName);
   if (!actor) {
