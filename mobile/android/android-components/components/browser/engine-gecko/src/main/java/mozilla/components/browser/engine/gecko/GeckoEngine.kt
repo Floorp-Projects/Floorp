@@ -72,7 +72,7 @@ class GeckoEngine(
     private val runtime: GeckoRuntime = GeckoRuntime.getDefault(context),
     executorProvider: () -> GeckoWebExecutor = { GeckoWebExecutor(runtime) },
     override val trackingProtectionExceptionStore: TrackingProtectionExceptionStorage =
-        TrackingProtectionExceptionFileStorage(context, runtime)
+        GeckoTrackingProtectionExceptionStorage(runtime)
 ) : Engine, WebExtensionRuntime {
     private val executor by lazy { executorProvider.invoke() }
     private val localeUpdater = LocaleSettingUpdater(context, runtime)
@@ -116,7 +116,6 @@ class GeckoEngine(
             @Suppress("TooGenericExceptionThrown")
             throw RuntimeException("GeckoRuntime is shutting down")
         }
-        trackingProtectionExceptionStore.restore()
     }
 
     /**

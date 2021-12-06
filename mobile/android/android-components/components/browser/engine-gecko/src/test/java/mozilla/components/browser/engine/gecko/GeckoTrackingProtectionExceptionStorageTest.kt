@@ -1,12 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-@file:Suppress("DEPRECATION")
 package mozilla.components.browser.engine.gecko
 
-import android.app.Activity
-import android.content.Context
-import android.util.AtomicFile
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -14,16 +10,10 @@ import mozilla.components.browser.engine.gecko.content.blocking.GeckoTrackingPro
 import mozilla.components.browser.engine.gecko.permission.geckoContentPermission
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.content.blocking.TrackingProtectionException
-import mozilla.components.support.ktx.util.readAndDeserialize
-import mozilla.components.support.ktx.util.writeString
-import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -31,10 +21,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito.anyString
 import org.mockito.Mockito.doNothing
 import org.mockito.Mockito.spy
-import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mozilla.geckoview.ContentBlockingController
-import org.mozilla.geckoview.ContentBlockingController.ContentBlockingException
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoSession
@@ -43,73 +30,20 @@ import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission.V
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.ContentPermission.VALUE_DENY
 import org.mozilla.geckoview.GeckoSession.PermissionDelegate.PERMISSION_TRACKING
 import org.mozilla.geckoview.StorageController
-import org.robolectric.Robolectric.buildActivity
-import java.io.File
 
 @RunWith(AndroidJUnit4::class)
-class TrackingProtectionExceptionFileStorageTest {
+class GeckoTrackingProtectionExceptionStorageTest {
 
     private lateinit var runtime: GeckoRuntime
 
-    private lateinit var storage: TrackingProtectionExceptionFileStorage
-
-    private val context: Context
-        get() = buildActivity(Activity::class.java).get()
+    private lateinit var storage: GeckoTrackingProtectionExceptionStorage
 
     @Before
     fun setup() {
         runtime = mock()
         whenever(runtime.settings).thenReturn(mock())
-        storage = spy(TrackingProtectionExceptionFileStorage(testContext, runtime))
+        storage = spy(GeckoTrackingProtectionExceptionStorage(runtime))
         storage.scope = CoroutineScope(Dispatchers.Main)
-    }
-
-    @Test
-    fun `GIVEN the migration has not been completed WHEN restoring THEN migrate exceptions`() {
-
-        whenever(storage.isMigrationOver(testContext)).thenReturn(false)
-        doNothing().`when`(storage).migrateExceptions()
-
-        storage.restore()
-
-        verify(storage).migrateExceptions()
-    }
-
-    @Test
-    fun `GIVEN the migration has been completed WHEN restoring THEN not migrate exceptions`() {
-
-        whenever(storage.isMigrationOver(testContext)).thenReturn(true)
-
-        storage.restore()
-
-        verify(storage, times(0)).migrateExceptions()
-    }
-
-    @Test
-    @Deprecated("Remove migration code on 96 as GeckoView is going to remove restoreExceptionList on that version")
-    fun `WHEN migrating exceptions THEN exceptions on disk will be restored on gecko and removed from disk`() {
-        val exceptionsFile = AtomicFile(
-            File(context.filesDir, STORE_FILE_NAME)
-        )
-        val exceptionStringJSON =
-            "[{\"principal\":\"eyIxIjp7IjAiOiJodHRwczovL3d3dy5jbm4uY29tLyJ9fQ==\",\"uri\":\"https:\\/\\/www.cnn.com\\/\"}]"
-
-        exceptionsFile.writeString { exceptionStringJSON }
-
-        val mockContentBlocking = mock<ContentBlockingController>()
-
-        whenever(runtime.contentBlockingController).thenReturn(mockContentBlocking)
-
-        storage.scope = CoroutineScope(Dispatchers.Main)
-
-        assertNotNull(storage.getFile(context).readAndDeserialize { })
-
-        storage.migrateExceptions()
-
-        verify(mockContentBlocking).restoreExceptionList(any<List<ContentBlockingException>>())
-        verify(storage).removeFileFromDisk(any())
-
-        assertNull(storage.getFile(context).readAndDeserialize { })
     }
 
     @Test

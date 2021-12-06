@@ -54,9 +54,4 @@ interface TrackingProtectionExceptionStorage {
      * @param onRemove A callback to inform that the list of active sessions has been removed
      */
     fun removeAll(activeSessions: List<EngineSession>? = null, onRemove: () -> Unit = {})
-
-    /**
-     * Restore all domains stored in the storage.
-     */
-    fun restore()
 }

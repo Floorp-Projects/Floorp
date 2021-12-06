@@ -22,7 +22,6 @@ import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.content.blocking.TrackerLog
-import mozilla.components.concept.engine.content.blocking.TrackingProtectionExceptionStorage
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.WebExtension
@@ -639,12 +638,12 @@ class GeckoEngineTest {
         engine.settings.safeBrowsingPolicy = arrayOf(SafeBrowsingPolicy.PHISHING)
         engine.settings.trackingProtectionPolicy =
             TrackingProtectionPolicy.select(
-                trackingCategories = arrayOf(TrackingProtectionPolicy.TrackingCategory.AD),
+                trackingCategories = arrayOf(TrackingCategory.AD),
                 cookiePolicy = CookiePolicy.ACCEPT_ONLY_FIRST_PARTY
             )
 
         assertEquals(
-            TrackingProtectionPolicy.TrackingCategory.AD.id,
+            TrackingCategory.AD.id,
             contentBlockingSettings.antiTrackingCategories
         )
 
@@ -1379,7 +1378,7 @@ class GeckoEngineTest {
             metaData = mockNativeWebExtensionMetaData(allowedInPrivateBrowsing = false)
         )
 
-        val installedExtensions = listOf<GeckoWebExtension>(installedExtension)
+        val installedExtensions = listOf(installedExtension)
         val installedExtensionResult = GeckoResult<List<GeckoWebExtension>>()
 
         val runtime = mock<GeckoRuntime>()
@@ -1745,15 +1744,6 @@ class GeckoEngineTest {
 
         assertTrue(version.major >= 69)
         assertTrue(version.isAtLeast(69, 0, 0))
-    }
-
-    @Test
-    fun `after init is called the trackingProtectionExceptionStore must be restored`() {
-        val mockStore: TrackingProtectionExceptionStorage = mock()
-        val runtime: GeckoRuntime = mock()
-        GeckoEngine(context, runtime = runtime, trackingProtectionExceptionStore = mockStore)
-
-        verify(mockStore).restore()
     }
 
     @Test
