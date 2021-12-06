@@ -1146,6 +1146,13 @@ struct CompilationStencil {
   CompilationStencil(CompilationStencil&&) = delete;
   CompilationStencil& operator=(const CompilationStencil&) = delete;
   CompilationStencil& operator=(CompilationStencil&&) = delete;
+#ifdef DEBUG
+  ~CompilationStencil() {
+    // We can mix UniquePtr<..> and RefPtr<..>. This asserts that a UniquePtr
+    // does not delete a reference-counted stencil.
+    MOZ_ASSERT(!refCount);
+  }
+#endif
 
   static inline ScriptStencilIterable functionScriptStencils(
       const CompilationStencil& stencil, CompilationGCOutput& gcOutput);
