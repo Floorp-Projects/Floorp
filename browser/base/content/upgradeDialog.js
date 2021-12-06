@@ -18,7 +18,7 @@ const NEWTAB_PREF = "browser.newtabpage.enabled";
 // Strings for various elements with matching ids on each screen.
 const SCREEN_STRINGS = [
   {
-    title: "upgrade-dialog-colorway-title",
+    title: "upgrade-dialog-start-title",
     subtitle: "upgrade-dialog-start-subtitle",
     primary: "upgrade-dialog-colorway-primary-button",
     secondary: "upgrade-dialog-colorway-secondary-button",
