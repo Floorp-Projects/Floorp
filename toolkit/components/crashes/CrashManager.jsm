@@ -440,6 +440,14 @@ CrashManager.prototype = Object.freeze({
    */
   addCrash(processType, crashType, id, date, metadata) {
     let promise = (async () => {
+      if (!this.isValidProcessType(processType)) {
+        Cu.reportError(
+          "Unhandled process type. Please file a bug: '" + processType +
+          "'. Ignore in the context of " +
+	  "test_crash_manager.js:test_addCrashWrong().");
+        return;
+      }
+
       let store = await this._getStore();
       if (store.addCrash(processType, crashType, id, date, metadata)) {
         await store.save();
@@ -452,9 +460,7 @@ CrashManager.prototype = Object.freeze({
         deferred.resolve();
       }
 
-      if (
-        this.isValidProcessType(processType) && this.isPingAllowed(processType)
-      ) {
+      if (this.isPingAllowed(processType)) {
         this._sendCrashPing(id, processType, date, metadata);
       }
     })();

@@ -174,7 +174,7 @@ CrashService.prototype = Object.freeze({
       return;
     }
 
-    processType = Services.crashmanager[processType];
+    processType = Services.crashmanager.processTypes[processType];
 
     let allThreads = false;
 
