@@ -291,6 +291,9 @@ template <typename Unit>
     auto extensibleStencil =
         cx->make_unique<frontend::ExtensibleCompilationStencil>(
             std::move(compiler.stencil()));
+    if (!extensibleStencil) {
+      return false;
+    }
 
     auto stencil =
         cx->make_unique<CompilationStencil>(std::move(extensibleStencil));
@@ -893,6 +896,9 @@ template <typename Unit>
     auto extensibleStencil =
         cx->make_unique<frontend::ExtensibleCompilationStencil>(
             std::move(compiler.stencil()));
+    if (!extensibleStencil) {
+      return false;
+    }
 
     auto stencil =
         cx->make_unique<CompilationStencil>(std::move(extensibleStencil));
@@ -1061,6 +1067,9 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     auto extensibleStencil =
         cx->make_unique<frontend::ExtensibleCompilationStencil>(
             std::move(compilationState));
+    if (!extensibleStencil) {
+      return false;
+    }
 
     auto stencil =
         cx->make_unique<CompilationStencil>(std::move(extensibleStencil));
