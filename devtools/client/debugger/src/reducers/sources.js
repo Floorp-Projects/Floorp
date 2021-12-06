@@ -508,7 +508,7 @@ export function getSource(state, id) {
 export function getSourceFromId(state, id) {
   const source = getSource(state, id);
   if (!source) {
-    throw new Error(`source ${id} does not exist`);
+    console.warn(`source ${id} does not exist`);
   }
   return source;
 }
