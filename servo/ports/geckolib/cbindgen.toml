@@ -231,7 +231,6 @@ include = [
   "AspectRatio",
   "DefaultFontSizes",
   "RuleChangeKind",
-  "PageName",
   "PageSize",
   "DProperty",
   "ImageRendering",

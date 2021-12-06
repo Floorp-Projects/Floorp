@@ -2993,7 +2993,6 @@ exports.CSS_PROPERTIES = {
       "outline-width",
       "outline-offset",
       "size",
-      "page",
       "padding-top",
       "padding-right",
       "padding-bottom",
@@ -11093,10 +11092,6 @@ exports.PREFERENCES = [
   [
     "offset-path",
     "layout.css.motion-path.enabled"
-  ],
-  [
-    "page",
-    "layout.css.named-pages.enabled"
   ],
   [
     "rotate",
