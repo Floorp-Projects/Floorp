@@ -1075,10 +1075,12 @@ bool Instance::initElems(JSContext* cx, uint32_t tableIndex,
     // - if it's an imported JS function, the current instance is correct,
     //   because that's how we've always done it
     //
-    // - if it's an indirect stub, the current instance is correct, and the
-    //   indirect stub holds the correct remote instance for that call.
+    // - if it's an indirect stub for an imported function, the current instance
+    //   is correct because it keeps the stub code alive, and the indirect stub
+    //   holds the correct remote instance for that call.
     //
-    // - otherwise it's a local function, and the current instance is correct
+    // - otherwise it's a local function, and the current instance is correct in
+    //   either case.
 
     // Utter paranoia to use _RELEASE_ here but we must never store null, all
     // null stores should be handled above.
