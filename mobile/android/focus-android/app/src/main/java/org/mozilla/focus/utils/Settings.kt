@@ -161,7 +161,7 @@ class Settings(
                 R.string
                     .pref_key_performance_enable_cookies
             ),
-            resources.getString(R.string.preference_privacy_should_block_cookies_third_party_tracker_cookies_option)
+            context.getString(R.string.third_party_tracker)
         )!!
 
     fun shouldBlockCookies(): Boolean =
@@ -307,5 +307,5 @@ class Settings(
     )
 
     private fun getPreferenceKey(resourceId: Int): String =
-        resources.getString(resourceId)
+        context.getString(resourceId)
 }

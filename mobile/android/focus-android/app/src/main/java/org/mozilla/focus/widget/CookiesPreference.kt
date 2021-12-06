@@ -4,13 +4,13 @@
 
 package org.mozilla.focus.widget
 
-import android.R
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.view.isVisible
 import androidx.preference.ListPreference
 import androidx.preference.PreferenceViewHolder
+import org.mozilla.focus.R
 import org.mozilla.focus.ext.settings
 
 /**
@@ -31,11 +31,16 @@ class CookiesPreference(context: Context?, attrs: AttributeSet?) : ListPreferenc
 
     fun updateSummary() {
         val settings = context.settings
-        super.setSummary(settings.shouldBlockCookiesValue())
+
+        val cookieOptionIndex =
+            context.resources.getStringArray(R.array.cookies_options_entry_values)
+                .asList().indexOf(settings.shouldBlockCookiesValue())
+        this.summary =
+            context.resources.getStringArray(R.array.cookies_options_entries)[cookieOptionIndex]
     }
 
     private fun showIcon(holder: PreferenceViewHolder?) {
-        val widgetFrame: View? = holder?.findViewById(R.id.widget_frame)
+        val widgetFrame: View? = holder?.findViewById(android.R.id.widget_frame)
         widgetFrame?.isVisible = true
     }
 }
