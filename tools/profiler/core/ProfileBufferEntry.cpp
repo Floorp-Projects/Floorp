@@ -577,7 +577,7 @@ static void WriteSample(SpliceableJSONWriter& aWriter,
   }
 
 #define RUNNING_TIME_STREAM(index, name, unit, jsonProperty) \
-  aSample.mRunningTimes.Get##name##unit().apply(             \
+  aSample.mRunningTimes.GetJson##name##unit().apply(         \
       [&writer](const uint64_t& aValue) {                    \
         Write##unit(writer, name, aValue);                   \
       });
