@@ -7132,7 +7132,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-11-13T15:12:42Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-12-04T15:13:28Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -7196,9 +7196,6 @@ aeg
 
 // aetna : 2015-05-21 Aetna Life Insurance Company
 aetna
-
-// afamilycompany : 2015-07-23 Johnson Shareholdings, Inc.
-afamilycompany
 
 // afl : 2014-10-02 Australian Football League
 afl
@@ -8016,9 +8013,6 @@ dtv
 // dubai : 2015-01-01 Dubai Smart Government Department
 dubai
 
-// duck : 2015-07-23 Johnson Shareholdings, Inc.
-duck
-
 // dunlop : 2015-07-02 The Goodyear Tire & Rubber Company
 dunlop
 
@@ -8345,9 +8339,6 @@ gives
 
 // giving : 2014-11-13 Giving Limited
 giving
-
-// glade : 2015-07-23 Johnson Shareholdings, Inc.
-glade
 
 // glass : 2013-11-07 Binky Moon, LLC
 glass
@@ -9216,9 +9207,6 @@ obi
 // observer : 2015-04-30 Dog Beach, LLC
 observer
 
-// off : 2015-07-23 Johnson Shareholdings, Inc.
-off
-
 // office : 2015-03-12 Microsoft Corporation
 office
 
@@ -9462,9 +9450,6 @@ racing
 // radio : 2016-07-21 European Broadcasting Union (EBU)
 radio
 
-// raid : 2015-07-23 Johnson Shareholdings, Inc.
-raid
-
 // read : 2014-12-18 Amazon Registry Services, Inc.
 read
 
@@ -9668,9 +9653,6 @@ schwarz
 
 // science : 2014-09-11 dot Science Limited
 science
-
-// scjohnson : 2015-07-23 Johnson Shareholdings, Inc.
-scjohnson
 
 // scot : 2014-01-23 Dot Scot Registry Limited
 scot
@@ -10873,6 +10855,18 @@ rs.ba
 app.banzaicloud.io
 *.backyards.banzaicloud.io
 
+// BASE, Inc. : https://binc.jp
+// Submitted by Yuya NAGASAWA <public-suffix-list@binc.jp>
+base.ec
+official.ec
+buyshop.jp
+fashionstore.jp
+handcrafted.jp
+kawaiishop.jp
+supersale.jp
+theshop.jp
+shopselect.net
+base.shop
 
 // BetaInABox
 // Submitted by Adrian <adrian@betainabox.com>
@@ -12201,6 +12195,11 @@ homesklep.pl
 // Submitted by SECaaS Team <summchan@hkpc.org>
 secaas.hk
 
+// Hoplix : https://www.hoplix.com
+// Submitted by Danilo De Franco<info@hoplix.shop>
+hoplix.shop
+
+
 // HOSTBIP REGISTRY : https://www.hostbip.com/
 // Submitted by Atanunu Igbunuroghene <publicsuffixlist@hostbip.com>
 orx.biz
@@ -12445,6 +12444,10 @@ uni5.net
 // KnightPoint Systems, LLC : http://www.knightpoint.com/
 // Submitted by Roy Keene <rkeene@knightpoint.com>
 knightpoint.systems
+
+// KoobinEvent, SL: https://www.koobin.com
+// Submitted by Iván Oliva <ivan.oliva@koobin.com>
+koobin.events
 
 // KUROKU LTD : https://kuroku.ltd/
 // Submitted by DisposaBoy <security@oya.to>
@@ -12714,6 +12717,10 @@ that.win
 from.work
 to.work
 
+// Net at Work Gmbh : https://www.netatwork.de
+// Submitted by Jan Jaeschke <jan.jaeschke@netatwork.de>
+cloud.nospamproxy.com
+
 // Netlify : https://www.netlify.com
 // Submitted by Jessica Parsons <jessica@netlify.com>
 netlify.app
@@ -12872,11 +12879,6 @@ zapto.org
 // NodeArt : https://nodeart.io
 // Submitted by Konstantin Nosov <Nosov@nodeart.io>
 stage.nodeart.io
-
-// Nodum B.V. : https://nodum.io/
-// Submitted by Wietse Wind <hello+publicsuffixlist@nodum.io>
-nodum.co
-nodum.io
 
 // Nucleos Inc. : https://nucleos.com
 // Submitted by Piotr Zduniak <piotr@nucleos.com>
@@ -13478,7 +13480,8 @@ sopot.pl
 
 // Teckids e.V. : https://www.teckids.org
 // Submitted by Dominik George <dominik.george@teckids.org>
-edugit.org
+edugit.io
+s3.teckids.org
 
 // Telebit : https://telebit.cloud
 // Submitted by AJ ONeal <aj@telebit.cloud>
@@ -13575,6 +13578,10 @@ my-wan.de
 syno-ds.de
 synology-diskstation.de
 synology-ds.de
+
+// Typeform : https://www.typeform.com
+// Submitted by Sergi Ferriz <sergi.ferriz@typeform.com>
+pro.typeform.com
 
 // Uberspace : https://uberspace.de
 // Submitted by Moritz Werner <mwerner@jonaspasche.com>
