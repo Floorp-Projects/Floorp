@@ -42,7 +42,15 @@ export class MultiStageProtonScreen extends React.PureComponent {
     }
 
     return (
-      <main className={`screen ${this.props.id} ${screenClassName}`}>
+      <main
+        className={`screen ${this.props.id} ${screenClassName}`}
+        role="dialog"
+        tabIndex="-1"
+        aria-labelledby="mainContentHeader"
+        ref={input => {
+          this.mainContentHeader = input;
+        }}
+      >
         {isWelcomeScreen ? (
           <div className="section-left">
             <div className="message-text">
@@ -88,12 +96,7 @@ export class MultiStageProtonScreen extends React.PureComponent {
                 }`}
               >
                 <Localized text={content.title}>
-                  <h1
-                    tabIndex="-1"
-                    ref={input => {
-                      this.mainContentHeader = input;
-                    }}
-                  />
+                  <h1 id="mainContentHeader" />
                 </Localized>
                 {!isWelcomeScreen ? (
                   <Localized text={content.subtitle}>
