@@ -19,6 +19,7 @@
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
 #include "mozilla/intl/Script.h"
+#include "mozilla/intl/UnicodeProperties.h"
 
 // Currently we use the non-transitional processing option -- see
 // http://unicode.org/reports/tr46/
@@ -774,7 +775,8 @@ bool nsIDNService::isLabelSafe(const nsAString& label) {
     // Check for mixed numbering systems
     auto genCat = GetGeneralCategory(ch);
     if (genCat == HB_UNICODE_GENERAL_CATEGORY_DECIMAL_NUMBER) {
-      uint32_t zeroCharacter = ch - GetNumericValue(ch);
+      uint32_t zeroCharacter =
+          ch - mozilla::intl::UnicodeProperties::GetNumericValue(ch);
       if (savedNumberingSystem == 0) {
         // If we encounter a decimal number, save the zero character from that
         // numbering system.

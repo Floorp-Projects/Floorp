@@ -11,6 +11,7 @@
 #include "gfxTextRun.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/intl/String.h"
+#include "mozilla/intl/UnicodeProperties.h"
 #include "nsUnicodeProperties.h"
 #include "nsUnicodeScriptCodes.h"
 
@@ -981,7 +982,7 @@ static hb_position_t HBGetHKerning(hb_font_t* font, void* font_data,
 
 static hb_codepoint_t HBGetMirroring(hb_unicode_funcs_t* ufuncs,
                                      hb_codepoint_t aCh, void* user_data) {
-  return GetMirroredChar(aCh);
+  return intl::UnicodeProperties::CharMirror(aCh);
 }
 
 static hb_unicode_general_category_t HBGetGeneralCategory(
@@ -996,13 +997,14 @@ static hb_script_t HBGetScript(hb_unicode_funcs_t* ufuncs, hb_codepoint_t aCh,
 
 static hb_unicode_combining_class_t HBGetCombiningClass(
     hb_unicode_funcs_t* ufuncs, hb_codepoint_t aCh, void* user_data) {
-  return hb_unicode_combining_class_t(GetCombiningClass(aCh));
+  return hb_unicode_combining_class_t(
+      intl::UnicodeProperties::GetCombiningClass(aCh));
 }
 
 static hb_bool_t HBUnicodeCompose(hb_unicode_funcs_t* ufuncs, hb_codepoint_t a,
                                   hb_codepoint_t b, hb_codepoint_t* ab,
                                   void* user_data) {
-  char32_t ch = mozilla::intl::String::ComposePairNFC(a, b);
+  char32_t ch = intl::String::ComposePairNFC(a, b);
   if (ch > 0) {
     *ab = ch;
     return true;
@@ -1025,7 +1027,7 @@ static hb_bool_t HBUnicodeDecompose(hb_unicode_funcs_t* ufuncs,
 #endif
 
   char32_t decomp[2] = {0};
-  if (mozilla::intl::String::DecomposeRawNFD(ab, decomp)) {
+  if (intl::String::DecomposeRawNFD(ab, decomp)) {
     if (decomp[1] || decomp[0] != ab) {
       *a = decomp[0];
       *b = decomp[1];
