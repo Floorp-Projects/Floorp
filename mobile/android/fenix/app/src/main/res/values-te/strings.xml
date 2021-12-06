@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">అంతరంగిక %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (అంతరంగికం)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">మరిన్ని ఎంపికలు</string>
@@ -23,7 +24,7 @@
     <string name="open_tab_tray_single">1 తెరిచివున్న ట్యాబు. ట్యాబుల మధ్య మారడానికి తాకండి.</string>
 
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s తెరిచివున్న ట్యాబులు. ట్యాబుల మధ్య మారడానికి తాకండి.</string>
+    <string moz:removedIn="95" name="open_tab_tray_plural" tools:ignore="UnusedResources">%1$s తెరిచివున్న ట్యాబులు. ట్యాబుల మధ్య మారడానికి తాకండి.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d ఎంచుకున్నారు</string>
@@ -48,6 +49,9 @@
     <string name="tab_tray_enter_multiselect_content_description">బహుళఎంపిక రీతిలో ఉన్నారు, సేకరణలో భద్రపరచాల్సిన ట్యాబులను ఎంచుకోండి</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">ఎంచుకున్నారు</string>
+
+    <!-- Title for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all">అన్నీ చూపించు</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s‌ని తయారుచేసినది మొజిల్లా.</string>
@@ -88,10 +92,6 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">విస్మరించు</string>
 
-    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
-    <string name="tab_tray_grid_view_banner_positive_button_text">అమరికలకు వెళ్ళు</string>
-    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">విస్మరించు</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -99,7 +99,7 @@
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">కొత్త అంతరంగిక ట్యాబు</string>
     <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">మేటి సైట్లు</string>
+    <string moz:removedIn="95" name="home_screen_top_sites_heading" tools:ignore="UnusedResources">మేటి సైట్లు</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
@@ -113,7 +113,7 @@
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">ఆపివేయి</string>
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">ఇష్టాంశం చేయి</string>
+    <string moz:removedIn="95" name="browser_menu_bookmark" tools:ignore="UnusedResources">ఇష్టాంశం చేయి</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
     <string name="browser_menu_edit_bookmark">ఇష్టాంశాన్ని సవరించు</string>
     <!-- Browser menu button that opens the addon manager -->
@@ -172,6 +172,10 @@
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">మార్చు</string>
 
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">ముంగిలి తెర</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">అనుసంధానమవ్వలేక పోతున్నాం. గుర్తించేలేని URL పథకం.</string>
@@ -211,6 +215,12 @@
 
     <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
     <string name="search_engine_suggestions_title">%s‌లో వెతకండి</string>
+
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen dialog title text. Firefox is intentionally hardcoded. -->
+    <string name="onboarding_home_screen_title_2">Firefoxలో కొత్తవి ఏమిటి</string>
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_title_2">ఇటీవలి వెతుకులాటలు</string>
 
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
@@ -290,7 +300,9 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">అలంకారం</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">ముంగిలి</string>
+    <string moz:removedIn="94" name="preferences_home" tools:ignore="UnusedResources">ముంగిలి</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home_2">ముంగిలిపేజీ</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">సైగలు</string>
     <!-- Preference for settings related to visual options -->
@@ -354,6 +366,17 @@
     <string name="customize_addon_collection_hint">సేకరణ పేరు</string>
     <!-- Hint displayed on input field for custom collection user ID-->
     <string name="customize_addon_collection_user_hint">సేకరణ యజమాని (వాడుకరి ID)</string>
+
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string moz:removedIn="94" name="customize_toggle_recently_saved_bookmarks" tools:ignore="UnusedResources">ఇటీవల భద్రపరచినవి</string>
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">ఇటీవలి ఇష్టాంశాలు</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">ఇటీవల చూసినవి</string>
+    <!-- Title for the customize home screen settings section for recent searches. Recent searches
+     is a section where users see a list of groups of tabs that they have visited in the past few days -->
+    <string moz:removedIn="96" name="customize_toggle_recent_searches" tools:ignore="UnusedResources">ఇటీవలి వెతుకులాటలు</string>
 
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
@@ -462,7 +485,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">సింక్‌ను చేతనించు</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">జతపరిచే కోడును డెస్క్‌టాప్ Firefoxలో స్కాన్ చేయండి</string>
+    <string moz:removedIn="95" name="preferences_sync_pair" tools:ignore="UnusedResources">జతపరిచే కోడును డెస్క్‌టాప్ Firefoxలో స్కాన్ చేయండి</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">ప్రవేశించండి</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -526,8 +549,6 @@
     <string name="library_new_tab">కొత్త ట్యాబు</string>
     <!-- Option in Library to find text in page -->
     <string name="library_find_in_page">పేజీలో వెతుకు</string>
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">సింకైన ట్యాబులు</string>
     <!-- Option in Library to open Reading List -->
     <string name="library_reading_list">చదువుతూన్న జాబితా</string>
     <!-- Menu Item Label for Search in Library -->
@@ -538,6 +559,13 @@
     <string name="content_description_history_menu">చరిత్ర అంశపు మెనూ</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">మూసివేయి</string>
+
+    <!-- Text to show users they have one site in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_site">%d సైటు</string>
+    <!-- Text to show users they have multiple sites in the history group section of the History fragment.
+    %d is a placeholder for the number of sites in the group. -->
+    <string name="history_search_group_sites">%d సైట్లు</string>
 
     <!-- Option in library for Recently Closed Tabs -->
     <string name="library_recently_closed_tabs">ఇటీవల మూసిన ట్యాబులు</string>
@@ -573,6 +601,12 @@
     <!-- Option for auto closing tabs that will auto close tabs after one month -->
     <string name="close_tabs_after_one_month">ఒక నెల తరువాత</string>
 
+    <!-- Option for always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage">ముంగిలిపేజీ</string>
+    <!-- Option for always starting on the home screen -->
+    <string moz:removedIn="94" name="start_on_home_always" tools:ignore="UnusedResources">ఎల్లప్పుడూ</string>
+    <!-- Option for always opening the user's last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab">మునుపటి ట్యాబు</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">మానవీయంగా మూసివేయండి</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
@@ -581,6 +615,11 @@
     <string name="close_tabs_after_one_week_summary">ఒక వారం తర్వాత మూసివేయి</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
     <string name="close_tabs_after_one_month_summary">ఒక నెల తర్వాత మూసివేయి</string>
+
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">సరే</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">రద్దుచేయి</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -602,7 +641,7 @@
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">సేకరణకు భద్రపరుచు</string>
     <!-- Text shown in the menu for the collection selector -->
-    <string name="tab_tray_menu_select">ఎంచుకోండి</string>
+    <string moz:removedIn="95" name="tab_tray_menu_select" tools:ignore="UnusedResources">ఎంచుకోండి</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">అన్ని ట్యాబులను పంచుకో</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -692,14 +731,14 @@
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">తుడిచివేయి</string>
     <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">కాపీచేయి</string>
+    <string moz:removedIn="94" name="history_menu_copy_button" tools:ignore="UnusedResources">కాపీచేయి</string>
     <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">పంచుకోండి</string>
+    <string moz:removedIn="94" name="history_menu_share_button" tools:ignore="UnusedResources">పంచుకోండి</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">కొత్త ట్యాబులో తెరువు</string>
+    <string moz:removedIn="94" name="history_menu_open_in_new_tab_button" tools:ignore="UnusedResources">కొత్త ట్యాబులో తెరువు</string>
     <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">అంతరంగిక ట్యాబులో తెరువు</string>
-    <!-- Text for the button to delete a single history item -->
+    <string moz:removedIn="94" name="history_menu_open_in_private_tab_button" tools:ignore="UnusedResources">అంతరంగిక ట్యాబులో తెరువు</string>
+    <!-- Context description text for the button to delete a single history item -->
     <string name="history_delete_item">తొలగించు</string>
 
     <!-- History multi select title in app bar
@@ -725,10 +764,6 @@
     <string name="history_empty_message">ఇక్కడ చరిత్రేమీ లేదు</string>
 
     <!-- Downloads -->
-    <!-- Text for the button to clear all downloads -->
-    <string name="download_delete_all">దింపుకోళ్ళను తొలగించు</string>
-    <!-- Text for the dialog to confirm clearing all downloads -->
-    <string name="download_delete_all_dialog">నిజంగానే మీ దింపుకోళ్ళను తుడిచేయాలనుకుంటున్నారా?</string>
     <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
     <string name="download_delete_multiple_items_snackbar_1">దింపుకోళ్ళు తొలగించబడ్డాయి</string>
     <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
@@ -771,7 +806,7 @@
     <!-- Content description for bookmarks library menu -->
     <string name="bookmark_menu_content_description">ఇష్టాంశాల మెనూ</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">ఇష్టాంశ సవరణ</string>
+    <string moz:removedIn="95" name="bookmark_edit" tools:ignore="UnusedResources">ఇష్టాంశ సవరణ</string>
     <!-- Screen title for selecting a bookmarks folder -->
     <string name="bookmark_select_folder">సంచయపు ఎంపిక</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
@@ -1007,6 +1042,8 @@
     <string name="notification_pbm_action_delete_and_open">తొలగించి, తెరువు</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_powered_by_channel_name">దీనితో శక్తిమంతం</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">సేకరణ తొలగించబడింది</string>
     <!-- Text shown in snackbar when user renames a collection -->
@@ -1057,7 +1094,7 @@
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">తొలగించు</string>
     <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">రద్దుచేయి</string>
+    <string moz:removedIn="93" name="tab_collection_dialog_negative" tools:ignore="UnusedResources">రద్దుచేయి</string>
 
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">నిండు తెర రీతిలోకి వెళ్తున్నారు</string>
@@ -1166,16 +1203,16 @@
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header">ఇప్పటికే ఖాతా ఉందా?</string>
     <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">కొత్తవేమిటో చూడండి</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_header1" tools:ignore="UnusedResources">కొత్తవేమిటో చూడండి</string>
     <!-- text for the "what's new" onboarding card description
     The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">పునఃరూపకల్పన చేసిన %s గురించి ప్రశ్నలు ఉన్నాయా? ఏమి మార్చబడిందో తెలుసుకోవాలనుకుంటున్నారా?</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description" tools:ignore="UnusedResources">పునఃరూపకల్పన చేసిన %s గురించి ప్రశ్నలు ఉన్నాయా? ఏమి మార్చబడిందో తెలుసుకోవాలనుకుంటున్నారా?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">ఇక్కడ సమాధానాలు పొందండి</string>
+    <string moz:removedIn="94" name="onboarding_whats_new_description_linktext" tools:ignore="UnusedResources">ఇక్కడ సమాధానాలు పొందండి</string>
     <!-- text for the button to confirm automatic sign-in -->
-    <string name="onboarding_firefox_account_auto_signin_confirm">అవును, నన్ను ప్రవేశింపజేయి</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_auto_signin_confirm" tools:ignore="UnusedResources">అవును, నన్ను ప్రవేశింపజేయి</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
-    <string name="onboarding_firefox_account_signing_in">ప్రవేశింపజేస్తూంది…</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_signing_in" tools:ignore="UnusedResources">ప్రవేశింపజేస్తూంది…</string>
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">నమోదవ్వండి</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
@@ -1183,7 +1220,7 @@
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">సింక్ చేతనంగా ఉంది</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
-    <string name="onboarding_firefox_account_automatic_signin_failed">ప్రవేశం విఫలమైంది</string>
+    <string moz:removedIn="96" name="onboarding_firefox_account_automatic_signin_failed" tools:ignore="UnusedResources">ప్రవేశం విఫలమైంది</string>
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">ప్రామాణికం (అప్రమేయం)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
@@ -1193,20 +1230,20 @@
     <!-- text for the toolbar position card header  -->
     <string name="onboarding_toolbar_placement_header_1">పనిముట్లపట్టీ ఎక్కడ ఉండాలో ఎంచుకోండి</string>
     <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">అంతరంగికంగా విహరించండి</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_header" tools:ignore="UnusedResources">అంతరంగికంగా విహరించండి</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">అంతరంగిక ట్యాబును ఒకసారి తెరవండి: %s చిహ్నాన్ని తాకండి.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_description1" tools:ignore="UnusedResources">అంతరంగిక ట్యాబును ఒకసారి తెరవండి: %s చిహ్నాన్ని తాకండి.</string>
     <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">ప్రతిసారీ అంతరంగిక ట్యాబులనే తెరవండి: మీ అంతరంగిత విహరణ అమరికలను తాజాకరించుకోండి.</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_always_description" tools:ignore="UnusedResources">ప్రతిసారీ అంతరంగిక ట్యాబులనే తెరవండి: మీ అంతరంగిత విహరణ అమరికలను తాజాకరించుకోండి.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">అమరికలను తెరువు</string>
+    <string moz:removedIn="94" name="onboarding_private_browsing_button" tools:ignore="UnusedResources">అమరికలను తెరువు</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">మీ అంతరంగికత</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">మా గోప్యతా నోటీసును చదవండి</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">మూసివేయి</string>
+    <string moz:removedIn="93" name="onboarding_close" tools:ignore="UnusedResources">మూసివేయి</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">విహరించడం మొదలుపెట్టండి</string>
@@ -1308,6 +1345,7 @@
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">క్రిప్టోమైనర్లు</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">ఫింగర్‌ప్రింటర్లు</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">నిరోధించబడినవి</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">అనుమతించినవి</string>
@@ -1333,7 +1371,7 @@
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">ట్రాకింగ్ సంకేతం కలిగివున్న బయటి ప్రకటనలను, వీడియోలను, ఇతర విషయాలను నిలిపివేస్తుంది. కొన్ని వెబ్‌సైట్ల పనితీరు ప్రభావితం కావచ్చు.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">%s ఒక సైటులో ట్రాకర్లను నిరోధించినప్పుడల్లా, షీల్డు ఉదా రంగులోకి మారుతుంది. మరింత సమాచారం కోసం తట్టండి.</string>
+    <string moz:removedIn="93" name="etp_onboarding_cfr_message" tools:ignore="UnusedResources">%s ఒక సైటులో ట్రాకర్లను నిరోధించినప్పుడల్లా, షీల్డు ఉదా రంగులోకి మారుతుంది. మరింత సమాచారం కోసం తట్టండి.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">సంరక్షణలు ఈ సైటులో చేతనంగా ఉన్నాయి</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1417,7 +1455,8 @@
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">ఎప్పుడూ భద్రపరచవద్దు</string>
     <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">స్వయంపూరణ</string>
+    <string moz:removedIn="93" name="preferences_passwords_autofill" tools:ignore="UnusedResources">స్వయంపూరణ</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">ప్రవేశాలను సింక్ చేయి</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
@@ -1570,7 +1609,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint">వాడాల్సిన శోధన పదబంధం</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example">వెతుకుడు పదాన్ని “%s”తో పూరించండి. ఉదాహరణ:\nhttps://www.google.com/search?q=%s</string>
+    <string formatted="false" name="search_add_custom_engine_search_string_example">వెతుకుడు పదాన్ని “%s”తో పూరించండి. ఉదాహరణ:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
     <string name="search_add_custom_engine_learn_more_label">ఇంకా తెలుసుకోండి</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
@@ -1619,9 +1658,9 @@
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. చేతనించడానికి <b>%1$s</b>ను ఎంచుకోండి]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">సురక్షిత అనుసంధానం</string>
+    <string moz:removedIn="94" name="quick_settings_sheet_secure_connection" tools:ignore="UnusedResources">సురక్షిత అనుసంధానం</string>
     <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">అరక్షిత అనుసంధానం</string>
+    <string moz:removedIn="94" name="quick_settings_sheet_insecure_connection" tools:ignore="UnusedResources">అరక్షిత అనుసంధానం</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">నిజంగానే సైట్లన్నిటిలోనూ అనుమతులన్నింటినీ తుడిచివేయాలనుకుంటున్నారా?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1662,7 +1701,7 @@
     <string name="discard_changes">మార్పులను విస్మరించు</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">మార్చు</string>
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">సంకేతపదం తప్పనిసరి</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">స్వర శోధన</string>
@@ -1696,7 +1735,7 @@
     <string name="top_sites_max_limit_confirmation_button">సరే, అర్థమయ్యింది</string>
 
     <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">ఎక్కువగా చూసిన సైట్లను చూపించు</string>
+    <string moz:removedIn="93" name="top_sites_toggle_top_frecent_sites" tools:ignore="UnusedResources">ఎక్కువగా చూసిన సైట్లను చూపించు</string>
 
     <!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">పేరు</string>
@@ -1716,4 +1755,4 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">మూసివేయి</string>
 
-</resources>
+    </resources>
