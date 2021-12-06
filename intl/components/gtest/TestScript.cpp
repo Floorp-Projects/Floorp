@@ -3,60 +3,60 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "gtest/gtest.h"
 
-#include "mozilla/intl/Script.h"
-#include "nsUnicodeScriptCodes.h"
+#include "mozilla/intl/UnicodeProperties.h"
+#include "mozilla/intl/UnicodeScriptCodes.h"
 
 namespace mozilla::intl {
 TEST(IntlScript, GetExtensions)
 {
-  ScriptExtensionVector extensions;
+  UnicodeProperties::ScriptExtensionVector extensions;
 
   // 0x0000..0x0040 are Common.
   for (char32_t ch = 0; ch < 0x0041; ch++) {
-    ASSERT_TRUE(Script::GetExtensions(ch, extensions).isOk());
+    ASSERT_TRUE(UnicodeProperties::GetExtensions(ch, extensions).isOk());
     ASSERT_EQ(extensions.length(), 1u);
-    ASSERT_EQ(unicode::Script(extensions[0]), unicode::Script::COMMON);
+    ASSERT_EQ(Script(extensions[0]), Script::COMMON);
   }
 
   // 0x0300..0x0341 are Inherited.
   for (char32_t ch = 0x300; ch < 0x0341; ch++) {
-    ASSERT_TRUE(Script::GetExtensions(ch, extensions).isOk());
+    ASSERT_TRUE(UnicodeProperties::GetExtensions(ch, extensions).isOk());
     ASSERT_EQ(extensions.length(), 1u);
-    ASSERT_EQ(unicode::Script(extensions[0]), unicode::Script::INHERITED);
+    ASSERT_EQ(Script(extensions[0]), Script::INHERITED);
   }
 
   // 0x1cf7's script code is Common, but its script extension is Beng.
-  ASSERT_TRUE(Script::GetExtensions(0x1cf7, extensions).isOk());
+  ASSERT_TRUE(UnicodeProperties::GetExtensions(0x1cf7, extensions).isOk());
   ASSERT_EQ(extensions.length(), 1u);
-  ASSERT_EQ(unicode::Script(extensions[0]), unicode::Script::BENGALI);
+  ASSERT_EQ(Script(extensions[0]), Script::BENGALI);
 
   // ؿ
   // https://unicode-table.com/en/063F/
   // This character doesn't have any script extension, so the script code is
   // returned.
-  ASSERT_TRUE(Script::GetExtensions(0x063f, extensions).isOk());
+  ASSERT_TRUE(UnicodeProperties::GetExtensions(0x063f, extensions).isOk());
   ASSERT_EQ(extensions.length(), 1u);
-  ASSERT_EQ(unicode::Script(extensions[0]), unicode::Script::ARABIC);
+  ASSERT_EQ(Script(extensions[0]), Script::ARABIC);
 
   // 0xff65 is the unicode character '･', see https://unicode-table.com/en/FF65/
   // Halfwidth Katakana Middle Dot.
-  ASSERT_TRUE(Script::GetExtensions(0xff65, extensions).isOk());
+  ASSERT_TRUE(UnicodeProperties::GetExtensions(0xff65, extensions).isOk());
 
   // 0xff65 should have the following script extensions:
   // Bopo Hang Hani Hira Kana Yiii.
   ASSERT_EQ(extensions.length(), 6u);
 
-  ASSERT_EQ(unicode::Script(extensions[0]), unicode::Script::BOPOMOFO);
-  ASSERT_EQ(unicode::Script(extensions[1]), unicode::Script::HAN);
-  ASSERT_EQ(unicode::Script(extensions[2]), unicode::Script::HANGUL);
-  ASSERT_EQ(unicode::Script(extensions[3]), unicode::Script::HIRAGANA);
-  ASSERT_EQ(unicode::Script(extensions[4]), unicode::Script::KATAKANA);
-  ASSERT_EQ(unicode::Script(extensions[5]), unicode::Script::YI);
+  ASSERT_EQ(Script(extensions[0]), Script::BOPOMOFO);
+  ASSERT_EQ(Script(extensions[1]), Script::HAN);
+  ASSERT_EQ(Script(extensions[2]), Script::HANGUL);
+  ASSERT_EQ(Script(extensions[3]), Script::HIRAGANA);
+  ASSERT_EQ(Script(extensions[4]), Script::KATAKANA);
+  ASSERT_EQ(Script(extensions[5]), Script::YI);
 
   // The max code point is 0x10ffff, so 0x110000 should be invalid.
   // Script::UNKNOWN should be returned for an invalid code point.
-  ASSERT_TRUE(Script::GetExtensions(0x110000, extensions).isOk());
+  ASSERT_TRUE(UnicodeProperties::GetExtensions(0x110000, extensions).isOk());
   ASSERT_EQ(extensions.length(), 1u);
-  ASSERT_EQ(unicode::Script(extensions[0]), unicode::Script::UNKNOWN);
+  ASSERT_EQ(Script(extensions[0]), Script::UNKNOWN);
 }
 }  // namespace mozilla::intl

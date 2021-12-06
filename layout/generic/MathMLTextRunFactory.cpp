@@ -10,12 +10,12 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/ComputedStyleInlines.h"
+#include "mozilla/intl/UnicodeScriptCodes.h"
 
 #include "nsStyleConsts.h"
 #include "nsTextFrameUtils.h"
 #include "nsFontMetrics.h"
 #include "nsDeviceContext.h"
-#include "nsUnicodeScriptCodes.h"
 
 using namespace mozilla;
 
@@ -564,7 +564,7 @@ void MathMLTextRunFactory::RebuildTextRun(
         // character is actually available.
         FontMatchType matchType;
         RefPtr<gfxFont> mathFont = fontGroup->FindFontForChar(
-            ch2, 0, 0, unicode::Script::COMMON, nullptr, &matchType);
+            ch2, 0, 0, intl::Script::COMMON, nullptr, &matchType);
         if (mathFont) {
           // Don't apply the CSS style if there is a math font for at least one
           // of the transformed character in this text run.
@@ -573,7 +573,7 @@ void MathMLTextRunFactory::RebuildTextRun(
           // We fallback to the original character.
           ch2 = ch;
           if (aMFR) {
-            aMFR->RecordScript(unicode::Script::MATHEMATICAL_NOTATION);
+            aMFR->RecordScript(intl::Script::MATHEMATICAL_NOTATION);
           }
         }
       }
