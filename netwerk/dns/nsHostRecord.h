@@ -256,6 +256,8 @@ class AddrHostRecord final : public nsHostRecord {
 
   nsIRequest::TRRMode EffectiveTRRMode() const { return mEffectiveTRRMode; }
 
+  nsresult GetTtl(uint32_t* aResult);
+
  private:
   friend class nsHostResolver;
   friend class mozilla::net::HostRecordQueue;
