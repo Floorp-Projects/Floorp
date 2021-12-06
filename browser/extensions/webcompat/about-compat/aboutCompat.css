@@ -57,6 +57,26 @@
     font: message-box;
     font-size: 14px;
     -moz-text-size-adjust: none;
+    display: grid;
+    grid-template-areas: "a b c" "d d d";
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: fit-content() 1fr;
+  }
+
+  .tab[data-l10n-id="label-overrides"] {
+    grid-area: a;
+  }
+
+  .tab[data-l10n-id="label-interventions"] {
+    grid-area: b;
+  }
+
+  .tab[data-l10n-id="label-smartblock"] {
+    grid-area: c;
+  }
+
+  table {
+    grid-area: d;
   }
 
   table,
@@ -68,16 +88,14 @@
   table {
     border-top: 2px solid var(--border-color);
     margin-top: -2px;
-    position: absolute;
     width: 100%;
     z-index: 1;
     display: none;
   }
 
   tr {
-    position: relative;
     border-bottom: 1px solid var(--border-color);
-    padding: 1em;
+    padding: 0;
   }
 
   a {
@@ -87,7 +105,6 @@
 
   .tab {
     cursor: pointer;
-    position: relative;
     z-index: 2;
     display: inline-block;
     text-align: left;
@@ -110,9 +127,24 @@
   }
 
   td {
-    display: block;
-    position: relative;
-    padding-inline-end: 6.5em;
+    grid-area: b;
+    padding-left: 1em;
+  }
+
+  td:first-child {
+    grid-area: a;
+    padding-top: 1em;
+  }
+
+  td:last-child {
+    grid-area: c;
+    padding-bottom: 1em;
+  }
+
+  tr {
+    display: grid;
+    grid-template-areas: "a c" "b c";
+    grid-template-columns: 1fr 6.5em;
   }
 
   td[colspan="4"] {
@@ -123,24 +155,27 @@
 
   td:not([colspan]):nth-child(1) {
     font-weight: bold;
-  }
-
-  td:not([colspan]):nth-child(1) {
     padding-bottom: 0.25em;
   }
 
+  td:nth-child(2) {
+    padding-bottom: 1em;
+  }
+
   td:nth-child(3) {
-    display: contents;
+    display: flex;
+    padding: 0;
   }
 
   button {
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
     background: var(--button-background-color);
     color: inherit;
-    position: absolute;
-    top: 0;
-    bottom: 0;
     inset-inline-end: 0;
-    width: 6em;
+    margin: 0;
+    padding: 0;
     border: 0;
     border-inline-start: 1px solid var(--border-color);
     font-weight: 600;
