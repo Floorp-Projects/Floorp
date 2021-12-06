@@ -2055,13 +2055,14 @@ security.ui.protections:
       - 1650468
       - 1661756
       - 1678201
+      - 1739287
     description: >
       User arrived on the protection report. This also includes a 'value' attribute which defaults to 'direct' or will be the value that a referring website addds to the url. This also indicates if the vpn banner has been seen.
-    expiry_version: "97"
+    expiry_version: "107"
     record_in_processes: ["content"]
     release_channel_collection: opt-out
     notification_emails:
-      - ewright@mozilla.com
+      - pbz@mozilla.com
       - seceng-telemetry@mozilla.com
     products:
       - firefox
@@ -2077,13 +2078,14 @@ security.ui.protections:
       - 1612091
       - 1643428
       - 1678201
+      - 1739287
     description: >
       User closed on the protection report.
-    expiry_version: "97"
+    expiry_version: "107"
     record_in_processes: ["content"]
     release_channel_collection: opt-out
     notification_emails:
-      - ewright@mozilla.com
+      - pbz@mozilla.com
       - seceng-telemetry@mozilla.com
     products:
       - firefox
@@ -2100,6 +2102,7 @@ security.ui.protections:
       - 1643428
       - 1661756
       - 1678201
+      - 1739287
     description: >
       User interaction by click events on the protection report.
     objects: [
@@ -2118,11 +2121,11 @@ security.ui.protections:
       "vpn_app_link_android",
       "vpn_app_link_ios",
     ]
-    expiry_version: "97"
+    expiry_version: "107"
     record_in_processes: ["content"]
     release_channel_collection: opt-out
     notification_emails:
-      - ewright@mozilla.com
+      - pbz@mozilla.com
       - seceng-telemetry@mozilla.com
     products:
       - firefox
@@ -2136,17 +2139,18 @@ security.ui.app_menu:
       - 1616229
       - 1643428
       - 1678201
+      - 1739287
     description: >
       Privacy and Security click events on app menu.
     objects: [
       "open_full_report",
     ]
-    expiry_version: "97"
+    expiry_version: "107"
     record_in_processes:
       - main
     release_channel_collection: opt-out
     notification_emails:
-      - ewright@mozilla.com
+      - pbz@mozilla.com
       - seceng-telemetry@mozilla.com
     products:
       - firefox
@@ -2159,13 +2163,12 @@ security.ui.protectionspopup:
       - 1607488
       - 1643428
       - 1678201
+      - 1739287
     description: >
       How many times the protections panel was opened.
-    expiry_version: "97"
+    expiry_version: "107"
     notification_emails:
-      - ewright@mozilla.com
-      - nhnt11@mozilla.com
-      - jhofmann@mozilla.com
+      - pbz@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-out
     record_in_processes:
@@ -2195,13 +2198,12 @@ security.ui.protectionspopup:
       - 1607488
       - 1643428
       - 1678201
+      - 1739287
     description: >
       User interaction by click events in the protections panel.
-    expiry_version: "97"
+    expiry_version: "107"
     notification_emails:
-      - ewright@mozilla.com
-      - nhnt11@mozilla.com
-      - jhofmann@mozilla.com
+      - pbz@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-out
     record_in_processes:
