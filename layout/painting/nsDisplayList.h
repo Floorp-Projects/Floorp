@@ -875,9 +875,8 @@ class nsDisplayListBuilder {
     return mEffectsUpdates;
   }
 
-  void AddEffectUpdate(dom::RemoteBrowser* aBrowser, dom::EffectsInfo aUpdate) {
-    mEffectsUpdates.InsertOrUpdate(aBrowser, aUpdate);
-  }
+  void AddEffectUpdate(dom::RemoteBrowser* aBrowser,
+                       const dom::EffectsInfo& aUpdate);
 
   /**
    * Allocate memory in our arena. It will only be freed when this display list
