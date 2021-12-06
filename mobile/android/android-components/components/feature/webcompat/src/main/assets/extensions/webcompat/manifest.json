@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Mozilla Android Components - Web Compatibility Interventions",
   "description": "Urgent post-release fixes for web compatibility.",
-  "version": "28.0.0",
+  "version": "29.1.0",
   "applications": {
     "gecko": {
       "id": "webcompat@mozilla.org",
@@ -76,6 +76,7 @@
       "lib/module_shim.js",
       "lib/messaging_helper.js",
       "lib/intervention_helpers.js",
+      "lib/requestStorageAccess_helper.js",
       "lib/ua_helpers.js",
       "data/injections.js",
       "data/shims.js",
@@ -113,9 +114,11 @@
     "shims/google-publisher-tags.js",
     "shims/google-safeframe.html",
     "shims/hamropatro.js",
+    "shims/humblebundle.js",
     "shims/iaspet.js",
     "shims/kinja.js",
     "shims/live-test-shim.js",
+    "shims/microsoftLogin.js",
     "shims/moat.js",
     "shims/mochitest-shim-1.js",
     "shims/mochitest-shim-2.js",

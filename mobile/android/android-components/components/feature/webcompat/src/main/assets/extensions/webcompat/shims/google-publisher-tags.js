@@ -181,9 +181,16 @@ if (window.googletag?.apiReady === undefined) {
       getSizes: () => sizes,
       getSlotElementId: () => opt_div,
       getSlotId: () => slot,
-      getTargeting: k => targeting.get(k) || [],
-      getTargetingKeys: () => Array.from(targeting.keys()),
-      getTargetingMap: () => targeting.keys(),
+      getTargeting: k => targeting.get(k) || gTargeting.get(k) || [],
+      getTargetingKeys: () =>
+        Array.from(
+          new Set(Array.of(...gTargeting.keys(), ...targeting.keys()))
+        ),
+      getTargetingMap: () =>
+        Object.assign(
+          Object.fromEntries(gTargeting.entries()),
+          Object.fromEntries(targeting.entries())
+        ),
       set(k, v) {
         attributes.set(k, v);
         return slot;
@@ -271,7 +278,7 @@ if (window.googletag?.apiReady === undefined) {
     getTagSessionCorrelator() {},
     getTargeting: k => gTargeting.get(k) || [],
     getTargetingKeys: () => Array.from(gTargeting.keys()),
-    getTargetingMap: () => gTargeting.keys(),
+    getTargetingMap: () => Object.fromEntries(gTargeting.entries()),
     getVersion: () => version,
     getVideoContent: () => videoContent,
     isInitialLoadDisabled: () => initialLoadDisabled,

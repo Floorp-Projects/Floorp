@@ -8,6 +8,7 @@
 
 const AVAILABLE_SHIMS = [
   {
+    hiddenInAboutCompat: true,
     id: "LiveTestShim",
     platform: "all",
     name: "Live test shim",
@@ -17,6 +18,7 @@ const AVAILABLE_SHIMS = [
     needsShimHelpers: ["getOptions", "optIn"],
   },
   {
+    hiddenInAboutCompat: true,
     id: "MochitestShim",
     platform: "all",
     branch: ["all:ignoredOtherPlatform"],
@@ -36,6 +38,7 @@ const AVAILABLE_SHIMS = [
     unblocksOnOptIn: ["*://trackertest.org/*"],
   },
   {
+    hiddenInAboutCompat: true,
     disabled: true,
     id: "MochitestShim2",
     platform: "all",
@@ -55,6 +58,7 @@ const AVAILABLE_SHIMS = [
     unblocksOnOptIn: ["*://trackertest.org/*"],
   },
   {
+    hiddenInAboutCompat: true,
     id: "MochitestShim3",
     platform: "all",
     name: "Test shim for Mochitests (host)",
@@ -66,6 +70,7 @@ const AVAILABLE_SHIMS = [
     ],
   },
   {
+    hiddenInAboutCompat: true,
     id: "MochitestShim4",
     platform: "all",
     name: "Test shim for Mochitests (notHost)",
@@ -77,6 +82,7 @@ const AVAILABLE_SHIMS = [
     ],
   },
   {
+    hiddenInAboutCompat: true,
     id: "MochitestShim5",
     platform: "all",
     name: "Test shim for Mochitests (branch)",
@@ -88,6 +94,7 @@ const AVAILABLE_SHIMS = [
     ],
   },
   {
+    hiddenInAboutCompat: true,
     id: "MochitestShim6",
     platform: "never matches",
     name: "Test shim for Mochitests (platform)",
@@ -313,7 +320,7 @@ const AVAILABLE_SHIMS = [
   {
     id: "GoogleAnalyticsLegacy",
     platform: "all",
-    name: "Legacy Google Analytics",
+    name: "Google Analytics (legacy version)",
     bug: "1487072",
     file: "google-analytics-legacy.js",
     matches: ["*://ssl.google-analytics.com/ga.js"],
@@ -373,7 +380,7 @@ const AVAILABLE_SHIMS = [
   {
     id: "GoogleTrends",
     platform: "all",
-    name: "GoogleTrends",
+    name: "Google Trends",
     bug: "1624914",
     custom: "google-trends-dfpi-fix",
     onlyIfDFPIActive: true,
@@ -522,6 +529,44 @@ const AVAILABLE_SHIMS = [
         ],
         runAt: "document_start",
         allFrames: true,
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
+    id: "MicrosoftLogin",
+    platform: "desktop",
+    name: "Microsoft Login",
+    bug: "1638383",
+    requestStorageAccessForRedirect: [
+      ["*://web.powerva.microsoft.com/*", "*://login.microsoftonline.com/*"],
+      ["*://teams.microsoft.com/*", "*://login.microsoftonline.com/*"],
+    ],
+    contentScripts: [
+      {
+        js: "microsoftLogin.js",
+        matches: [
+          "*://web.powerva.microsoft.com/*",
+          "*://teams.microsoft.com/*",
+        ],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
+  {
+    id: "Humblebundle",
+    platform: "desktop",
+    name: "Humblebundle",
+    bug: "1742553",
+    contentScripts: [
+      {
+        js: "humblebundle.js",
+        matches: [
+          "*://www.humblebundle.com/login*",
+          "*://www.humblebundle.com/signup*",
+        ],
+        runAt: "document_start",
       },
     ],
     onlyIfDFPIActive: true,

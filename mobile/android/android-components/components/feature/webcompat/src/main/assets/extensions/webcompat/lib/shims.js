@@ -35,13 +35,16 @@ let warn = async function() {
 };
 
 class Shim {
-  constructor(opts) {
+  constructor(opts, manager) {
+    this.manager = manager;
+
     const { contentScripts, matches, unblocksOnOptIn } = opts;
 
     this.branches = opts.branches;
     this.bug = opts.bug;
     this.isGoogleTrendsDFPIFix = opts.custom == "google-trends-dfpi-fix";
     this.file = opts.file;
+    this.hiddenInAboutCompat = opts.hiddenInAboutCompat;
     this.hosts = opts.hosts;
     this.id = opts.id;
     this.logos = opts.logos || [];
@@ -54,11 +57,13 @@ class Shim {
     this.needsShimHelpers = opts.needsShimHelpers;
     this.platform = opts.platform || "all";
     this.unblocksOnOptIn = unblocksOnOptIn;
+    this.requestStorageAccessForRedirect = opts.requestStorageAccessForRedirect;
 
     this._hostOptIns = new Set();
 
     this._disabledByConfig = opts.disabled;
     this._disabledGlobally = false;
+    this._disabledForSession = false;
     this._disabledByPlatform = false;
     this._disabledByReleaseBranch = false;
 
@@ -145,7 +150,7 @@ class Shim {
   }
 
   get enabled() {
-    if (this._disabledGlobally) {
+    if (this._disabledGlobally || this._disabledForSession) {
       return false;
     }
 
@@ -160,7 +165,38 @@ class Shim {
     );
   }
 
-  enable() {
+  get disabledReason() {
+    if (this._disabledGlobally) {
+      return "globalPref";
+    }
+
+    if (this._disabledForSession) {
+      return "session";
+    }
+
+    if (this._disabledPrefValue !== undefined) {
+      if (this._disabledPrefValue === true) {
+        return "pref";
+      }
+      return false;
+    }
+
+    if (this._disabledByConfig) {
+      return "config";
+    }
+
+    if (this._disabledByPlatform) {
+      return "platform";
+    }
+
+    if (this._disabledByReleaseBranch) {
+      return "releaseBranch";
+    }
+
+    return false;
+  }
+
+  onAllShimsEnabled() {
     const wasEnabled = this.enabled;
     this._disabledGlobally = false;
     if (!wasEnabled) {
@@ -168,7 +204,7 @@ class Shim {
     }
   }
 
-  disable() {
+  onAllShimsDisabled() {
     const wasEnabled = this.enabled;
     this._disabledGlobally = true;
     if (wasEnabled) {
@@ -176,7 +212,24 @@ class Shim {
     }
   }
 
+  enableForSession() {
+    const wasEnabled = this.enabled;
+    this._disabledForSession = false;
+    if (!wasEnabled) {
+      this._onEnabledStateChanged();
+    }
+  }
+
+  disableForSession() {
+    const wasEnabled = this.enabled;
+    this._disabledForSession = true;
+    if (wasEnabled) {
+      this._onEnabledStateChanged();
+    }
+  }
+
   async _onEnabledStateChanged() {
+    this.manager?.onShimStateChanged(this.id);
     if (!this.enabled) {
       await this._unregisterContentScripts();
       return this._revokeRequestsInETP();
@@ -369,6 +422,48 @@ class Shims {
     this._haveCheckedEnabledPref = this._checkEnabledPref();
   }
 
+  bindAboutCompatBroker(broker) {
+    this._aboutCompatBroker = broker;
+  }
+
+  getShimInfoForAboutCompat(shim) {
+    const { bug, disabledReason, hiddenInAboutCompat, id, name } = shim;
+    const type = "smartblock";
+    return { bug, disabledReason, hidden: hiddenInAboutCompat, id, name, type };
+  }
+
+  disableShimForSession(id) {
+    const shim = this.shims.get(id);
+    shim?.disableForSession();
+  }
+
+  enableShimForSession(id) {
+    const shim = this.shims.get(id);
+    shim?.enableForSession();
+  }
+
+  onShimStateChanged(id) {
+    if (!this._aboutCompatBroker) {
+      return;
+    }
+
+    const shim = this.shims.get(id);
+    if (!shim) {
+      return;
+    }
+
+    const shimsChanged = [this.getShimInfoForAboutCompat(shim)];
+    this._aboutCompatBroker.portsToAboutCompatTabs.broadcast({ shimsChanged });
+  }
+
+  getAvailableShims() {
+    const shims = Array.from(this.shims.values()).map(
+      this.getShimInfoForAboutCompat
+    );
+    shims.sort((a, b) => a.name.localeCompare(b.name));
+    return shims;
+  }
+
   _registerShims(shims) {
     if (this.shims) {
       throw new Error("_registerShims has already been called");
@@ -378,8 +473,29 @@ class Shims {
     for (const shimOpts of shims) {
       const { id } = shimOpts;
       if (!this.shims.has(id)) {
-        this.shims.set(shimOpts.id, new Shim(shimOpts));
+        this.shims.set(shimOpts.id, new Shim(shimOpts, this));
       }
+    }
+
+    // Register onBeforeRequest listener which handles storage access requests
+    // on matching redirects.
+    let redirectTargetUrls = Array.from(shims.values())
+      .filter(shim => shim.requestStorageAccessForRedirect)
+      .flatMap(shim => shim.requestStorageAccessForRedirect)
+      .map(([, dstUrl]) => dstUrl);
+
+    // Unique target urls.
+    redirectTargetUrls = Array.from(new Set(redirectTargetUrls));
+
+    if (redirectTargetUrls.length) {
+      debug("Registering redirect listener for requestStorageAccess helper", {
+        redirectTargetUrls,
+      });
+      browser.webRequest.onBeforeRequest.addListener(
+        this._onRequestStorageAccessRedirect.bind(this),
+        { urls: redirectTargetUrls, types: ["main_frame"] },
+        ["blocking"]
+      );
     }
 
     function addTypePatterns(type, patterns, set) {
@@ -495,11 +611,92 @@ class Shims {
 
     for (const shim of this.shims.values()) {
       if (enabled) {
-        shim.enable();
+        shim.onAllShimsEnabled();
       } else {
-        shim.disable();
+        shim.onAllShimsDisabled();
       }
     }
+  }
+
+  async _onRequestStorageAccessRedirect({
+    originUrl: srcUrl,
+    url: dstUrl,
+    tabId,
+  }) {
+    debug("Detected redirect", { srcUrl, dstUrl, tabId });
+
+    // Check if a shim needs to request storage access for this redirect. This
+    // handler is called when the *source url* matches a shims redirect pattern,
+    // but we still need to check if the *destination url* matches.
+    const matchingShims = Array.from(this.shims.values()).filter(shim => {
+      const { enabled, requestStorageAccessForRedirect } = shim;
+
+      if (!enabled || !requestStorageAccessForRedirect) {
+        return false;
+      }
+
+      return requestStorageAccessForRedirect.some(
+        ([srcPattern, dstPattern]) =>
+          browser.matchPatterns.getMatcher([srcPattern]).matches(srcUrl) &&
+          browser.matchPatterns.getMatcher([dstPattern]).matches(dstUrl)
+      );
+    });
+
+    // For each matching shim, find out if its enabled in regard to dFPI state.
+    const bugNumbers = new Set();
+    let isDFPIActive = null;
+    await Promise.all(
+      matchingShims.map(async shim => {
+        if (shim.onlyIfDFPIActive) {
+          // Only get the dFPI state for the first shim which requires it.
+          if (isDFPIActive === null) {
+            const tabIsPB = (await browser.tabs.get(tabId)).incognito;
+            isDFPIActive = await browser.trackingProtection.isDFPIActive(
+              tabIsPB
+            );
+          }
+          if (!isDFPIActive) {
+            return;
+          }
+        }
+        bugNumbers.add(shim.bug);
+      })
+    );
+
+    // If there is no shim which needs storage access for this redirect src/dst
+    // pair, resume it.
+    if (!bugNumbers.size) {
+      return;
+    }
+
+    // Inject the helper to call requestStorageAccessForOrigin on the document.
+    await browser.tabs.executeScript(tabId, {
+      file: "/lib/requestStorageAccess_helper.js",
+      runAt: "document_start",
+    });
+
+    const bugUrls = Array.from(bugNumbers)
+      .map(bugNo => `https://bugzilla.mozilla.org/show_bug.cgi?id=${bugNo}`)
+      .join(", ");
+    const warning = `Firefox calls the Storage Access API for ${dstUrl} on behalf of ${srcUrl}. See the following bugs for details: ${bugUrls}`;
+
+    // Request storage access for the origin of the destination url of the
+    // redirect.
+    const { origin: requestStorageAccessOrigin } = new URL(dstUrl);
+
+    // Wait for the requestStorageAccess request to finish before resuming the
+    // redirect.
+    const { success } = await browser.tabs.sendMessage(tabId, {
+      requestStorageAccessOrigin,
+      warning,
+    });
+    debug("requestStorageAccess callback", {
+      success,
+      requestStorageAccessOrigin,
+      srcUrl,
+      dstUrl,
+      bugNumbers,
+    });
   }
 
   async _onMessageFromShim(payload, sender, sendResponse) {

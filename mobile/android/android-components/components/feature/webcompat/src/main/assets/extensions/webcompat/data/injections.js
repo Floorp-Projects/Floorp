@@ -581,6 +581,62 @@ const AVAILABLE_INJECTIONS = [
       ],
     },
   },
+  {
+    id: "bug1741234",
+    platform: "all",
+    domain: "patient.alphalabs.ca",
+    bug: "1741234",
+    contentScripts: {
+      matches: ["*://patient.alphalabs.ca/*"],
+      css: [
+        {
+          file: "injections/css/bug1741234-patient.alphalabs.ca-height-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1743041",
+    platform: "all",
+    domain: "lu.ma",
+    bug: "1743041",
+    contentScripts: {
+      matches: ["*://lu.ma/*"],
+      css: [
+        {
+          file: "injections/css/bug1743041-lu.ma-display-fix.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1740542",
+    platform: "desktop",
+    domain: "tesla.com",
+    bug: "1740542",
+    contentScripts: {
+      matches: ["*://*.tesla.com/*"],
+      css: [
+        {
+          file: "injections/css/bug1740542-tesla.com-footer-links.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1743614",
+    platform: "android",
+    domain: "storytel.com",
+    bug: "1743614",
+    contentScripts: {
+      matches: ["*://*.storytel.com/*"],
+      css: [
+        {
+          file: "injections/css/bug1743614-storytel.com-flex-min-width.css",
+        },
+      ],
+    },
+  },
 ];
 
 module.exports = AVAILABLE_INJECTIONS;
