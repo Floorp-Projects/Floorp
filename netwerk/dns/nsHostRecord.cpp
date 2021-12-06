@@ -430,6 +430,12 @@ AddrHostRecord::DnsPriority AddrHostRecord::GetPriority(uint16_t aFlags) {
   return AddrHostRecord::DNS_PRIORITY_LOW;
 }
 
+nsresult AddrHostRecord::GetTtl(uint32_t* aResult) {
+  NS_ENSURE_ARG(aResult);
+  *aResult = mTtl;
+  return NS_OK;
+}
+
 //----------------------------------------------------------------------------
 // TypeHostRecord
 //----------------------------------------------------------------------------
