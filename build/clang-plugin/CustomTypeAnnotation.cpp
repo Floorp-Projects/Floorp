@@ -75,13 +75,22 @@ void CustomTypeAnnotation::dumpAnnotationReason(BaseCheck &Check, QualType T,
 
 CustomTypeAnnotation::AnnotationReason
 CustomTypeAnnotation::directAnnotationReason(QualType T) {
+  VisitFlags ToVisit = VISIT_FIELDS | VISIT_BASES;
+
   if (const TagDecl *D = T->getAsTagDecl()) {
+    // Recurse into template arguments if the annotation
+    // MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS is present
+    if (hasCustomAttribute<moz_inherit_type_annotations_from_template_args>(
+            D)) {
+      ToVisit |= VISIT_TMPL_ARGS;
+    }
+
     if (hasCustomAttribute(D, Attribute)) {
       AnnotationReason Reason = {T, RK_Direct, nullptr, ""};
       return Reason;
     }
 
-    std::string ImplAnnotReason = getImplicitReason(D);
+    std::string ImplAnnotReason = getImplicitReason(D, ToVisit);
     if (!ImplAnnotReason.empty()) {
       AnnotationReason Reason = {T, RK_Implicit, nullptr, ImplAnnotReason};
       return Reason;
@@ -98,8 +107,8 @@ CustomTypeAnnotation::directAnnotationReason(QualType T) {
   // Check if we have a type which we can recurse into
   if (const clang::ArrayType *Array = T->getAsArrayTypeUnsafe()) {
     if (hasEffectiveAnnotation(Array->getElementType())) {
-      AnnotationReason Reason = {Array->getElementType(), RK_ArrayElement,
-                                 nullptr, ""};
+      AnnotationReason Reason{Array->getElementType(), RK_ArrayElement, nullptr,
+                              ""};
       Cache[Key] = Reason;
       return Reason;
     }
@@ -110,27 +119,27 @@ CustomTypeAnnotation::directAnnotationReason(QualType T) {
     if (Declaration->hasDefinition()) {
       Declaration = Declaration->getDefinition();
 
-      for (const CXXBaseSpecifier &Base : Declaration->bases()) {
-        if (hasEffectiveAnnotation(Base.getType())) {
-          AnnotationReason Reason = {Base.getType(), RK_BaseClass, nullptr, ""};
-          Cache[Key] = Reason;
-          return Reason;
+      if (ToVisit & VISIT_BASES) {
+        for (const CXXBaseSpecifier &Base : Declaration->bases()) {
+          if (hasEffectiveAnnotation(Base.getType())) {
+            AnnotationReason Reason{Base.getType(), RK_BaseClass, nullptr, ""};
+            Cache[Key] = Reason;
+            return Reason;
+          }
         }
       }
 
-      // Recurse into members
-      for (const FieldDecl *Field : Declaration->fields()) {
-        if (hasEffectiveAnnotation(Field->getType())) {
-          AnnotationReason Reason = {Field->getType(), RK_Field, Field, ""};
-          Cache[Key] = Reason;
-          return Reason;
+      if (ToVisit & VISIT_FIELDS) {
+        for (const FieldDecl *Field : Declaration->fields()) {
+          if (hasEffectiveAnnotation(Field->getType())) {
+            AnnotationReason Reason{Field->getType(), RK_Field, Field, ""};
+            Cache[Key] = Reason;
+            return Reason;
+          }
         }
       }
 
-      // Recurse into template arguments if the annotation
-      // MOZ_INHERIT_TYPE_ANNOTATIONS_FROM_TEMPLATE_ARGS is present
-      if (hasCustomAttribute<moz_inherit_type_annotations_from_template_args>(
-              Declaration)) {
+      if (ToVisit & VISIT_TMPL_ARGS) {
         const ClassTemplateSpecializationDecl *Spec =
             dyn_cast<ClassTemplateSpecializationDecl>(Declaration);
         if (Spec) {
@@ -146,7 +155,7 @@ CustomTypeAnnotation::directAnnotationReason(QualType T) {
     }
   }
 
-  AnnotationReason Reason = {QualType(), RK_None, nullptr, ""};
+  AnnotationReason Reason{QualType(), RK_None, nullptr, ""};
   Cache[Key] = Reason;
   return Reason;
 }

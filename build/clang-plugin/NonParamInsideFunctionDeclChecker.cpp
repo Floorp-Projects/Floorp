@@ -14,7 +14,8 @@ protected:
   // MSVC limitations which prevent passing explcitly aligned types by value as
   // parameters. This overload of hasFakeAnnotation injects fake MOZ_NON_PARAM
   // annotations onto these types.
-  std::string getImplicitReason(const TagDecl *D) const override {
+  std::string getImplicitReason(const TagDecl *D,
+                                VisitFlags &ToVisit) const override {
     // Check if the decl itself has an AlignedAttr on it.
     for (const Attr *A : D->attrs()) {
       if (isa<AlignedAttr>(A)) {
