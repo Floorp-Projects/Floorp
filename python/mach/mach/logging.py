@@ -127,10 +127,10 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
             else ""
         )
 
+        rv = elapsed_time + self._colorize(formatted_msg) + self._sgr0
         formatted_stack_trace_result = formatted_stack_trace(record, self)
 
         if formatted_stack_trace_result != "":
-            rv = elapsed_time + self._colorize(formatted_msg) + self.sgr0
             stack_trace = "\n" + elapsed_time + formatted_stack_trace_result
             rv += stack_trace.replace("\n", f"\n{elapsed_time}")
 
@@ -140,7 +140,7 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
         # line to reset all attributes. For programs that rely on the next line
         # inheriting the same attributes, this will prevent that from happening.
         # But that's better than "corrupting" the terminal.
-        return rv + self.sgr0
+        return rv + self._sgr0
 
     def _colorize(self, s):
         if not self.terminal:
