@@ -129,7 +129,7 @@ impl Payload {
         // from_value. In general a more strongly typed API would help us avoid
         // this sort of thing... But also concretely this could probably be
         // avoided? At least in some cases.
-        Ok(Payload::from_json(serde_json::to_value(v)?)?)
+        Payload::from_json(serde_json::to_value(v)?)
     }
 
     pub fn into_json_string(self) -> String {

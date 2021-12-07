@@ -7,8 +7,8 @@ use crate::schema;
 use rusqlite::types::{FromSql, ToSql};
 use rusqlite::Connection;
 use rusqlite::OpenFlags;
+use sql_support::open_database::open_database_with_flags;
 use sql_support::{ConnExt, SqlInterruptHandle, SqlInterruptScope};
-use std::fs;
 use std::ops::{Deref, DerefMut};
 use std::path::{Path, PathBuf};
 use std::result;
@@ -50,22 +50,11 @@ impl StorageDb {
             | OpenFlags::SQLITE_OPEN_CREATE
             | OpenFlags::SQLITE_OPEN_READ_WRITE;
 
-        let conn = Connection::open_with_flags(db_path.clone(), flags)?;
-        match init_sql_connection(&conn, true) {
-            Ok(()) => Ok(Self {
-                writer: conn,
-                interrupt_counter: Arc::new(AtomicUsize::new(0)),
-            }),
-            Err(e) => {
-                // like with places, failure to upgrade means "you lose your data"
-                if let ErrorKind::DatabaseUpgradeError = e.kind() {
-                    fs::remove_file(&db_path)?;
-                    Self::new_named(db_path)
-                } else {
-                    Err(e)
-                }
-            }
-        }
+        let conn = open_database_with_flags(db_path, flags, &schema::WebExtMigrationLogin)?;
+        Ok(Self {
+            writer: conn,
+            interrupt_counter: Arc::new(AtomicUsize::new(0)),
+        })
     }
 
     /// Returns an interrupt handle for this database connection. This handle
@@ -127,38 +116,6 @@ impl DerefMut for StorageDb {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.writer
     }
-}
-
-fn init_sql_connection(conn: &Connection, is_writable: bool) -> Result<()> {
-    let initial_pragmas = "
-        -- We don't care about temp tables being persisted to disk.
-        PRAGMA temp_store = 2;
-        -- we unconditionally want write-ahead-logging mode
-        PRAGMA journal_mode=WAL;
-        -- foreign keys seem worth enforcing!
-        PRAGMA foreign_keys = ON;
-    ";
-
-    conn.execute_batch(initial_pragmas)?;
-    define_functions(&conn)?;
-    conn.set_prepared_statement_cache_capacity(128);
-    if is_writable {
-        let tx = conn.unchecked_transaction()?;
-        schema::init(&conn)?;
-        tx.commit()?;
-    };
-    Ok(())
-}
-
-fn define_functions(c: &Connection) -> Result<()> {
-    use rusqlite::functions::FunctionFlags;
-    c.create_scalar_function(
-        "generate_guid",
-        0,
-        FunctionFlags::SQLITE_UTF8,
-        sql_fns::generate_guid,
-    )?;
-    Ok(())
 }
 
 pub(crate) mod sql_fns {
