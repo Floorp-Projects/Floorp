@@ -29,37 +29,21 @@ var ScreenshotsUtils = {
     let { gBrowser } = subj;
     let browser = gBrowser.selectedBrowser;
 
-    let currDialogBox = browser.tabDialogBox;
-
     let zoom = subj.ZoomManager.getZoomForBrowser(browser);
 
     switch (topic) {
       case "menuitem-screenshot":
-        // if dialog box exists then find the correct dialog box and close it
-        if (currDialogBox) {
-          let manager = currDialogBox.getTabDialogManager();
-          let dialogs = manager.hasDialogs && manager.dialogs;
-          if (dialogs.length) {
-            for (let dialog of dialogs) {
-              if (
-                dialog._openedURL.endsWith(
-                  `browsingContextId=${browser.browsingContext.id}`
-                ) &&
-                dialog._openedURL.includes("screenshots.html")
-              ) {
-                dialog.close();
-                return null;
-              }
-            }
-          }
+        let success = this.closeDialogBox(browser);
+        if (!success || data === "retry") {
+          // only toggle the buttons if no dialog box is found because
+          // if dialog box is found then the buttons are hidden and we return early
+          // else no dialog box is found and we need to toggle the buttons
+          // or if retry because the dialog box was closed and we need to show the panel
+          this.togglePreview(browser);
         }
-        // only toggle the buttons if no dialog box is found because
-        // if dialog box is found then the buttons are hidden and we return early
-        // else no dialog box is found and we need to toggle the buttons
-        this.togglePreview(browser);
         break;
       case "screenshots-take-screenshot":
-        // need to toggle because take visible button was clicked
+        // need to toggle because panel button was clicked
         // and we need to hide the buttons
         this.togglePreview(browser);
 
@@ -120,6 +104,45 @@ var ScreenshotsUtils = {
       return actor.sendQuery("Screenshots:HideOverlay");
     }
     return this.createOrDisplayButtons(browser);
+  },
+  /**
+   * Gets the screenshots dialog box
+   * @param browser The selected browser
+   * @returns Screenshots dialog box if it exists otherwise null
+   */
+  getDialog(browser) {
+    let currTabDialogBox = browser.tabDialogBox;
+    let browserContextId = browser.browsingContext.id;
+    if (currTabDialogBox) {
+      currTabDialogBox.getTabDialogManager();
+      let manager = currTabDialogBox.getTabDialogManager();
+      let dialogs = manager.hasDialogs && manager.dialogs;
+      if (dialogs.length) {
+        for (let dialog of dialogs) {
+          if (
+            dialog._openedURL.endsWith(
+              `browsingContextId=${browserContextId}`
+            ) &&
+            dialog._openedURL.includes("screenshots.html")
+          ) {
+            return dialog;
+          }
+        }
+      }
+    }
+    return null;
+  },
+  /**
+   * Closes the dialog box it it exists
+   * @param browser The selected browser
+   */
+  closeDialogBox(browser) {
+    let dialog = this.getDialog(browser);
+    if (dialog) {
+      dialog.close();
+      return true;
+    }
+    return false;
   },
   /**
    * If the buttons panel does not exist then we will replace the buttons
