@@ -792,6 +792,22 @@ LoadInfo::Release() {
 
 NS_IMPL_QUERY_INTERFACE(LoadInfo, nsILoadInfo)
 
+void LoadInfo::ReleaseMembers() {
+  mCSPEventListener = nullptr;
+  mCookieJarSettings = nullptr;
+  mPerformanceStorage = nullptr;
+  mLoadingPrincipal = nullptr;
+  mTriggeringPrincipal = nullptr;
+  mPrincipalToInherit = nullptr;
+  mTopLevelPrincipal = nullptr;
+  mResultPrincipalURI = nullptr;
+  mCspToInherit = nullptr;
+  mUnstrippedURI = nullptr;
+  mAncestorPrincipals.Clear();
+}
+
+LoadInfo::~LoadInfo() { ReleaseMembers(); }
+
 already_AddRefed<nsILoadInfo> LoadInfo::Clone() const {
   RefPtr<LoadInfo> copy(new LoadInfo(*this));
   return copy.forget();
