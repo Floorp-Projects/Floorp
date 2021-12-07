@@ -51,7 +51,7 @@ impl Field {
 
         Ok(Some(Field {
             label: label.unwrap_or(Label::Optional),
-            tag: tag,
+            tag,
         }))
     }
 
@@ -126,7 +126,7 @@ impl Field {
 
     pub fn clear(&self, ident: TokenStream) -> TokenStream {
         match self.label {
-            Label::Optional => quote!(#ident = ::std::option::Option::None),
+            Label::Optional => quote!(#ident = ::core::option::Option::None),
             Label::Required => quote!(#ident.clear()),
             Label::Repeated => quote!(#ident.clear()),
         }

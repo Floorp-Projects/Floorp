@@ -44,7 +44,7 @@ fn trim_string<S: AsRef<str> + Into<String>>(s: S) -> String {
 }
 
 fn is_valid_header_value(value: &str) -> bool {
-    value.bytes().all(|b| (32 <= b && b < 127) || b == b'\t')
+    value.bytes().all(|b| (32..127).contains(&b) || b == b'\t')
 }
 
 impl Header {
@@ -84,7 +84,7 @@ impl Header {
     #[inline]
     fn set_value<V: AsRef<str>>(&mut self, s: V) -> Result<(), crate::Error> {
         let value = s.as_ref();
-        if !is_valid_header_value(&value) {
+        if !is_valid_header_value(value) {
             Err(crate::Error::RequestHeaderError(self.name.clone()))
         } else {
             self.value.clear();

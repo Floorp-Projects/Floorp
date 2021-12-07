@@ -65,7 +65,7 @@ impl Field {
             None => bail!("oneof field is missing a tags attribute"),
         };
 
-        Ok(Some(Field { ty: ty, tags: tags }))
+        Ok(Some(Field { ty, tags }))
     }
 
     /// Returns a statement which encodes the oneof field.
@@ -94,6 +94,6 @@ impl Field {
     }
 
     pub fn clear(&self, ident: TokenStream) -> TokenStream {
-        quote!(#ident = ::std::option::Option::None)
+        quote!(#ident = ::core::option::Option::None)
     }
 }

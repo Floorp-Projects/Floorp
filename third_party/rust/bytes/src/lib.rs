@@ -3,7 +3,6 @@
     no_crate_inject,
     attr(deny(warnings, rust_2018_idioms), allow(dead_code, unused_variables))
 ))]
-#![doc(html_root_url = "https://docs.rs/bytes/0.5.6")]
 #![no_std]
 
 //! Provides abstractions for working with bytes.
