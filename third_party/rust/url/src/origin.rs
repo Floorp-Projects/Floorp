@@ -6,11 +6,11 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use host::Host;
+use crate::host::Host;
+use crate::parser::default_port;
+use crate::Url;
 use idna::domain_to_unicode;
-use parser::default_port;
 use std::sync::atomic::{AtomicUsize, Ordering};
-use Url;
 
 pub fn url_origin(url: &Url) -> Origin {
     let scheme = url.scheme();
@@ -22,7 +22,7 @@ pub fn url_origin(url: &Url) -> Origin {
                 Err(_) => Origin::new_opaque(),
             }
         }
-        "ftp" | "gopher" | "http" | "https" | "ws" | "wss" => Origin::Tuple(
+        "ftp" | "http" | "https" | "ws" | "wss" => Origin::Tuple(
             scheme.to_owned(),
             url.host().unwrap().to_owned(),
             url.port_or_known_default().unwrap(),
@@ -44,7 +44,7 @@ pub fn url_origin(url: &Url) -> Origin {
 /// - If the scheme is "blob" the origin is the origin of the
 ///   URL contained in the path component. If parsing fails,
 ///   it is an opaque origin.
-/// - If the scheme is "ftp", "gopher", "http", "https", "ws", or "wss",
+/// - If the scheme is "ftp", "http", "https", "ws", or "wss",
 ///   then the origin is a tuple of the scheme, host, and port.
 /// - If the scheme is anything else, the origin is opaque, meaning
 ///   the URL does not have the same origin as any other URL.

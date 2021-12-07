@@ -13,8 +13,10 @@
 //! Converts between a string (such as an URL’s query string)
 //! and a sequence of (name, value) pairs.
 
+#[macro_use]
+extern crate matches;
+
 use percent_encoding::{percent_decode, percent_encode_byte};
-use query_encoding::{self, decode_utf8_lossy, EncodingOverride};
 use std::borrow::{Borrow, Cow};
 use std::str;
 
@@ -26,7 +28,7 @@ use std::str;
 /// The names and values are percent-decoded. For instance, `%23first=%25try%25` will be
 /// converted to `[("#first", "%try%")]`.
 #[inline]
-pub fn parse(input: &[u8]) -> Parse {
+pub fn parse(input: &[u8]) -> Parse<'_> {
     Parse { input }
 }
 /// The return type of `parse()`.
@@ -57,7 +59,7 @@ impl<'a> Iterator for Parse<'a> {
     }
 }
 
-fn decode(input: &[u8]) -> Cow<str> {
+fn decode(input: &[u8]) -> Cow<'_, str> {
     let replaced = replace_plus(input);
     decode_utf8_lossy(match percent_decode(&replaced).into() {
         Cow::Owned(vec) => Cow::Owned(vec),
@@ -66,7 +68,7 @@ fn decode(input: &[u8]) -> Cow<str> {
 }
 
 /// Replace b'+' with b' '
-fn replace_plus(input: &[u8]) -> Cow<[u8]> {
+fn replace_plus(input: &[u8]) -> Cow<'_, [u8]> {
     match input.iter().position(|&b| b == b'+') {
         None => Cow::Borrowed(input),
         Some(first_position) => {
@@ -108,7 +110,7 @@ impl<'a> Iterator for ParseIntoOwned<'a> {
 /// https://url.spec.whatwg.org/#concept-urlencoded-byte-serializer).
 ///
 /// Return an iterator of `&str` slices.
-pub fn byte_serialize(input: &[u8]) -> ByteSerialize {
+pub fn byte_serialize(input: &[u8]) -> ByteSerialize<'_> {
     ByteSerialize { bytes: input }
 }
 
@@ -142,6 +144,10 @@ impl<'a> Iterator for ByteSerialize<'a> {
                 None => (self.bytes, &[][..]),
             };
             self.bytes = remaining;
+            // This unsafe is appropriate because we have already checked these
+            // bytes in byte_serialized_unchanged, which checks for a subset
+            // of UTF-8. So we know these bytes are valid UTF-8, and doing
+            // another UTF-8 check would be wasteful.
             Some(unsafe { str::from_utf8_unchecked(unchanged_slice) })
         } else {
             None
@@ -191,30 +197,6 @@ impl<'a> Target for &'a mut String {
     type Finished = Self;
 }
 
-// `as_mut_string` string here exposes the internal serialization of an `Url`,
-// which should not be exposed to users.
-// We achieve that by not giving users direct access to `UrlQuery`:
-// * Its fields are private
-//   (and so can not be constructed with struct literal syntax outside of this crate),
-// * It has no constructor
-// * It is only visible (on the type level) to users in the return type of
-//   `Url::query_pairs_mut` which is `Serializer<UrlQuery>`
-// * `Serializer` keeps its target in a private field
-// * Unlike in other `Target` impls, `UrlQuery::finished` does not return `Self`.
-impl<'a> Target for ::UrlQuery<'a> {
-    fn as_mut_string(&mut self) -> &mut String {
-        &mut self.url.as_mut().unwrap().serialization
-    }
-
-    fn finish(mut self) -> &'a mut ::Url {
-        let url = self.url.take().unwrap();
-        url.restore_already_parsed_fragment(self.fragment.take());
-        url
-    }
-
-    type Finished = &'a mut ::Url;
-}
-
 impl<'a, T: Target> Serializer<'a, T> {
     /// Create a new `application/x-www-form-urlencoded` serializer for the given target.
     ///
@@ -230,7 +212,14 @@ impl<'a, T: Target> Serializer<'a, T> {
     /// If that suffix is non-empty,
     /// its content is assumed to already be in `application/x-www-form-urlencoded` syntax.
     pub fn for_suffix(mut target: T, start_position: usize) -> Self {
-        &target.as_mut_string()[start_position..]; // Panic if out of bounds
+        if target.as_mut_string().len() < start_position {
+            panic!(
+                "invalid length {} for target of length {}",
+                start_position,
+                target.as_mut_string().len()
+            );
+        }
+
         Serializer {
             target: Some(target),
             start_position,
@@ -266,6 +255,19 @@ impl<'a, T: Target> Serializer<'a, T> {
         self
     }
 
+    /// Serialize and append a name of parameter without any value.
+    ///
+    /// Panics if called after `.finish()`.
+    pub fn append_key_only(&mut self, name: &str) -> &mut Self {
+        append_key_only(
+            string(&mut self.target),
+            self.start_position,
+            self.encoding,
+            name,
+        );
+        self
+    }
+
     /// Serialize and append a number of name/value pairs.
     ///
     /// This simply calls `append_pair` repeatedly.
@@ -296,10 +298,33 @@ impl<'a, T: Target> Serializer<'a, T> {
         self
     }
 
+    /// Serialize and append a number of names without values.
+    ///
+    /// This simply calls `append_key_only` repeatedly.
+    /// This can be more convenient, so the user doesn’t need to introduce a block
+    /// to limit the scope of `Serializer`’s borrow of its string.
+    ///
+    /// Panics if called after `.finish()`.
+    pub fn extend_keys_only<I, K>(&mut self, iter: I) -> &mut Self
+    where
+        I: IntoIterator,
+        I::Item: Borrow<K>,
+        K: AsRef<str>,
+    {
+        {
+            let string = string(&mut self.target);
+            for key in iter {
+                let k = key.borrow().as_ref();
+                append_key_only(string, self.start_position, self.encoding, k);
+            }
+        }
+        self
+    }
+
     /// If this serializer was constructed with a string, take and return that string.
     ///
     /// ```rust
-    /// use url::form_urlencoded;
+    /// use form_urlencoded;
     /// let encoded: String = form_urlencoded::Serializer::new(String::new())
     ///     .append_pair("foo", "bar & baz")
     ///     .append_pair("saison", "Été+hiver")
@@ -332,7 +357,7 @@ fn string<T: Target>(target: &mut Option<T>) -> &mut String {
 fn append_pair(
     string: &mut String,
     start_position: usize,
-    encoding: EncodingOverride,
+    encoding: EncodingOverride<'_>,
     name: &str,
     value: &str,
 ) {
@@ -342,6 +367,54 @@ fn append_pair(
     append_encoded(value, string, encoding);
 }
 
-fn append_encoded(s: &str, string: &mut String, encoding: EncodingOverride) {
-    string.extend(byte_serialize(&query_encoding::encode(encoding, s.into())))
+fn append_key_only(
+    string: &mut String,
+    start_position: usize,
+    encoding: EncodingOverride,
+    name: &str,
+) {
+    append_separator_if_needed(string, start_position);
+    append_encoded(name, string, encoding);
 }
+
+fn append_encoded(s: &str, string: &mut String, encoding: EncodingOverride<'_>) {
+    string.extend(byte_serialize(&encode(encoding, s)))
+}
+
+pub(crate) fn encode<'a>(encoding_override: EncodingOverride<'_>, input: &'a str) -> Cow<'a, [u8]> {
+    if let Some(o) = encoding_override {
+        return o(input);
+    }
+    input.as_bytes().into()
+}
+
+pub(crate) fn decode_utf8_lossy(input: Cow<'_, [u8]>) -> Cow<'_, str> {
+    // Note: This function is duplicated in `percent_encoding/lib.rs`.
+    match input {
+        Cow::Borrowed(bytes) => String::from_utf8_lossy(bytes),
+        Cow::Owned(bytes) => {
+            match String::from_utf8_lossy(&bytes) {
+                Cow::Borrowed(utf8) => {
+                    // If from_utf8_lossy returns a Cow::Borrowed, then we can
+                    // be sure our original bytes were valid UTF-8. This is because
+                    // if the bytes were invalid UTF-8 from_utf8_lossy would have
+                    // to allocate a new owned string to back the Cow so it could
+                    // replace invalid bytes with a placeholder.
+
+                    // First we do a debug_assert to confirm our description above.
+                    let raw_utf8: *const [u8];
+                    raw_utf8 = utf8.as_bytes();
+                    debug_assert!(raw_utf8 == &*bytes as *const [u8]);
+
+                    // Given we know the original input bytes are valid UTF-8,
+                    // and we have ownership of those bytes, we re-use them and
+                    // return a Cow::Owned here.
+                    Cow::Owned(unsafe { String::from_utf8_unchecked(bytes) })
+                }
+                Cow::Owned(s) => Cow::Owned(s),
+            }
+        }
+    }
+}
+
+pub type EncodingOverride<'a> = Option<&'a dyn Fn(&str) -> Cow<'_, [u8]>>;
