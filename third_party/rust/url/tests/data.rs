@@ -8,83 +8,146 @@
 
 //! Data-driven tests
 
-extern crate rustc_test as test;
-extern crate serde_json;
-extern crate url;
+use std::ops::Deref;
+use std::str::FromStr;
 
 use serde_json::Value;
-use std::str::FromStr;
 use url::{quirks, Url};
 
-fn check_invariants(url: &Url) {
-    url.check_invariants().unwrap();
+#[test]
+fn urltestdata() {
+    // Copied form https://github.com/w3c/web-platform-tests/blob/master/url/
+    let mut json = Value::from_str(include_str!("urltestdata.json"))
+        .expect("JSON parse error in urltestdata.json");
+
+    let mut passed = true;
+    for entry in json.as_array_mut().unwrap() {
+        if entry.is_string() {
+            continue; // ignore comments
+        }
+
+        let base = entry.take_string("base");
+        let input = entry.take_string("input");
+        let failure = entry.take_key("failure").is_some();
+
+        let base = match Url::parse(&base) {
+            Ok(base) => base,
+            Err(_) if failure => continue,
+            Err(message) => {
+                eprint_failure(
+                    format!("  failed: error parsing base {:?}: {}", base, message),
+                    &format!("parse base for {:?}", input),
+                    None,
+                );
+                passed = false;
+                continue;
+            }
+        };
+
+        let url = match (base.join(&input), failure) {
+            (Ok(url), false) => url,
+            (Err(_), true) => continue,
+            (Err(message), false) => {
+                eprint_failure(
+                    format!("  failed: {}", message),
+                    &format!("parse URL for {:?}", input),
+                    None,
+                );
+                passed = false;
+                continue;
+            }
+            (Ok(_), true) => {
+                eprint_failure(
+                    format!("  failed: expected parse error for URL {:?}", input),
+                    &format!("parse URL for {:?}", input),
+                    None,
+                );
+                passed = false;
+                continue;
+            }
+        };
+
+        passed &= check_invariants(&url, &format!("invariants for {:?}", input), None);
+
+        for &attr in ATTRIBS {
+            passed &= test_eq_eprint(
+                entry.take_string(attr),
+                get(&url, attr),
+                &format!("{:?} - {}", input, attr),
+                None,
+            );
+        }
+
+        if let Some(expected_origin) = entry.take_key("origin").map(|s| s.string()) {
+            passed &= test_eq_eprint(
+                expected_origin,
+                &quirks::origin(&url),
+                &format!("origin for {:?}", input),
+                None,
+            );
+        }
+    }
+
+    assert!(passed)
+}
+
+#[allow(clippy::option_as_ref_deref)] // introduced in 1.40, MSRV is 1.36
+#[test]
+fn setters_tests() {
+    let mut json = Value::from_str(include_str!("setters_tests.json"))
+        .expect("JSON parse error in setters_tests.json");
+
+    let mut passed = true;
+    for &attr in ATTRIBS {
+        if attr == "href" {
+            continue;
+        }
+
+        let mut tests = json.take_key(attr).unwrap();
+        for mut test in tests.as_array_mut().unwrap().drain(..) {
+            let comment = test.take_key("comment").map(|s| s.string());
+            let href = test.take_string("href");
+            let new_value = test.take_string("new_value");
+            let name = format!("{:?}.{} = {:?}", href, attr, new_value);
+            let mut expected = test.take_key("expected").unwrap();
+
+            let mut url = Url::parse(&href).unwrap();
+            let comment_ref = comment.as_ref().map(|s| s.deref());
+            passed &= check_invariants(&url, &name, comment_ref);
+            let _ = set(&mut url, attr, &new_value);
+
+            for attr in ATTRIBS {
+                if let Some(value) = expected.take_key(attr) {
+                    passed &= test_eq_eprint(value.string(), get(&url, attr), &name, comment_ref);
+                };
+            }
+
+            passed &= check_invariants(&url, &name, comment_ref);
+        }
+    }
+
+    assert!(passed);
+}
+
+fn check_invariants(url: &Url, name: &str, comment: Option<&str>) -> bool {
+    let mut passed = true;
+    if let Err(e) = url.check_invariants() {
+        passed = false;
+        eprint_failure(
+            format!("  failed: invariants checked -> {:?}", e),
+            name,
+            comment,
+        );
+    }
+
     #[cfg(feature = "serde")]
     {
         let bytes = serde_json::to_vec(url).unwrap();
         let new_url: Url = serde_json::from_slice(&bytes).unwrap();
-        assert_eq!(url, &new_url);
-    }
-}
-
-fn run_parsing(input: &str, base: &str, expected: Result<ExpectedAttributes, ()>) {
-    let base = match Url::parse(&base) {
-        Ok(base) => base,
-        Err(_) if expected.is_err() => return,
-        Err(message) => panic!("Error parsing base {:?}: {}", base, message),
-    };
-    let (url, expected) = match (base.join(&input), expected) {
-        (Ok(url), Ok(expected)) => (url, expected),
-        (Err(_), Err(())) => return,
-        (Err(message), Ok(_)) => panic!("Error parsing URL {:?}: {}", input, message),
-        (Ok(_), Err(())) => panic!("Expected a parse error for URL {:?}", input),
-    };
-
-    check_invariants(&url);
-
-    macro_rules! assert_eq {
-        ($expected: expr, $got: expr) => {{
-            let expected = $expected;
-            let got = $got;
-            assert!(
-                expected == got,
-                "\n{:?}\n!= {}\n{:?}\nfor URL {:?}\n",
-                got,
-                stringify!($expected),
-                expected,
-                url
-            );
-        }};
+        passed &= test_eq_eprint(url.to_string(), &new_url.to_string(), name, comment);
     }
 
-    macro_rules! assert_attributes {
-        ($($attr: ident)+) => {
-            {
-                $(
-                    assert_eq!(expected.$attr, quirks::$attr(&url));
-                )+;
-            }
-        }
-    }
-
-    assert_attributes!(href protocol username password host hostname port pathname search hash);
-
-    if let Some(expected_origin) = expected.origin {
-        assert_eq!(expected_origin, quirks::origin(&url));
-    }
-}
-
-struct ExpectedAttributes {
-    href: String,
-    origin: Option<String>,
-    protocol: String,
-    username: String,
-    password: String,
-    host: String,
-    hostname: String,
-    port: String,
-    pathname: String,
-    search: String,
-    hash: String,
+    passed
 }
 
 trait JsonExt {
@@ -111,100 +174,60 @@ impl JsonExt for Value {
     }
 }
 
-fn collect_parsing<F: FnMut(String, test::TestFn)>(add_test: &mut F) {
-    // Copied form https://github.com/w3c/web-platform-tests/blob/master/url/
-    let mut json = Value::from_str(include_str!("urltestdata.json"))
-        .expect("JSON parse error in urltestdata.json");
-    for entry in json.as_array_mut().unwrap() {
-        if entry.is_string() {
-            continue; // ignore comments
-        }
-        let base = entry.take_string("base");
-        let input = entry.take_string("input");
-        let expected = if entry.take_key("failure").is_some() {
-            Err(())
-        } else {
-            Ok(ExpectedAttributes {
-                href: entry.take_string("href"),
-                origin: entry.take_key("origin").map(|s| s.string()),
-                protocol: entry.take_string("protocol"),
-                username: entry.take_string("username"),
-                password: entry.take_string("password"),
-                host: entry.take_string("host"),
-                hostname: entry.take_string("hostname"),
-                port: entry.take_string("port"),
-                pathname: entry.take_string("pathname"),
-                search: entry.take_string("search"),
-                hash: entry.take_string("hash"),
-            })
-        };
-        add_test(
-            format!("{:?} @ base {:?}", input, base),
-            test::TestFn::dyn_test_fn(move || run_parsing(&input, &base, expected)),
-        );
+fn get<'a>(url: &'a Url, attr: &str) -> &'a str {
+    match attr {
+        "href" => quirks::href(url),
+        "protocol" => quirks::protocol(url),
+        "username" => quirks::username(url),
+        "password" => quirks::password(url),
+        "hostname" => quirks::hostname(url),
+        "host" => quirks::host(url),
+        "port" => quirks::port(url),
+        "pathname" => quirks::pathname(url),
+        "search" => quirks::search(url),
+        "hash" => quirks::hash(url),
+        _ => unreachable!(),
     }
 }
 
-fn collect_setters<F>(add_test: &mut F)
-where
-    F: FnMut(String, test::TestFn),
-{
-    let mut json = Value::from_str(include_str!("setters_tests.json"))
-        .expect("JSON parse error in setters_tests.json");
-
-    macro_rules! setter {
-        ($attr: expr, $setter: ident) => {{
-            let mut tests = json.take_key($attr).unwrap();
-            for mut test in tests.as_array_mut().unwrap().drain(..) {
-                let comment = test.take_key("comment")
-                    .map(|s| s.string())
-                    .unwrap_or(String::new());
-                let href = test.take_string("href");
-                let new_value = test.take_string("new_value");
-                let name = format!("{:?}.{} = {:?} {}", href, $attr, new_value, comment);
-                let mut expected = test.take_key("expected").unwrap();
-                add_test(name, test::TestFn::dyn_test_fn(move || {
-                    let mut url = Url::parse(&href).unwrap();
-                    check_invariants(&url);
-                    let _ = quirks::$setter(&mut url, &new_value);
-                    assert_attributes!(url, expected,
-                        href protocol username password host hostname port pathname search hash);
-                    check_invariants(&url);
-                }))
-            }
-        }}
-    }
-    macro_rules! assert_attributes {
-        ($url: expr, $expected: expr, $($attr: ident)+) => {
-            $(
-                if let Some(value) = $expected.take_key(stringify!($attr)) {
-                    assert_eq!(quirks::$attr(&$url), value.string())
-                }
-            )+
-        }
-    }
-    setter!("protocol", set_protocol);
-    setter!("username", set_username);
-    setter!("password", set_password);
-    setter!("hostname", set_hostname);
-    setter!("host", set_host);
-    setter!("port", set_port);
-    setter!("pathname", set_pathname);
-    setter!("search", set_search);
-    setter!("hash", set_hash);
+#[allow(clippy::unit_arg)]
+fn set<'a>(url: &'a mut Url, attr: &str, new: &str) {
+    let _ = match attr {
+        "protocol" => quirks::set_protocol(url, new),
+        "username" => quirks::set_username(url, new),
+        "password" => quirks::set_password(url, new),
+        "hostname" => quirks::set_hostname(url, new),
+        "host" => quirks::set_host(url, new),
+        "port" => quirks::set_port(url, new),
+        "pathname" => Ok(quirks::set_pathname(url, new)),
+        "search" => Ok(quirks::set_search(url, new)),
+        "hash" => Ok(quirks::set_hash(url, new)),
+        _ => unreachable!(),
+    };
 }
 
-fn main() {
-    let mut tests = Vec::new();
-    {
-        let mut add_one = |name: String, run: test::TestFn| {
-            tests.push(test::TestDescAndFn {
-                desc: test::TestDesc::new(test::DynTestName(name)),
-                testfn: run,
-            })
-        };
-        collect_parsing(&mut add_one);
-        collect_setters(&mut add_one);
+fn test_eq_eprint(expected: String, actual: &str, name: &str, comment: Option<&str>) -> bool {
+    if expected == actual {
+        return true;
     }
-    test::test_main(&std::env::args().collect::<Vec<_>>(), tests)
+    eprint_failure(
+        format!("expected: {}\n  actual: {}", expected, actual),
+        name,
+        comment,
+    );
+    false
 }
+
+fn eprint_failure(err: String, name: &str, comment: Option<&str>) {
+    eprintln!("    test: {}\n{}", name, err);
+    if let Some(comment) = comment {
+        eprintln!("{}\n", comment);
+    } else {
+        eprintln!();
+    }
+}
+
+const ATTRIBS: &[&str] = &[
+    "href", "protocol", "username", "password", "host", "hostname", "port", "pathname", "search",
+    "hash",
+];
