@@ -291,6 +291,7 @@
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Bloker kun sporings-cookies fra tredjepart</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Bloker kun cookies fra tredjepart</string>
 
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Bloker cookies på tværs af websteder</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">Ja tak</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->
@@ -813,6 +814,8 @@ The new line here must be kept as the second half of the string is clickable for
     <string name="trackers_count_note">Blokerede sporings-mekanismer blokeret siden %s</string>
     <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection -->
     <string name="content">Indhold</string>
+    <!-- Category of trackers (advertising) that can be blocked by Enhanced Tracking Protection -->
+    <string name="advertising">Reklamer</string>
     <!-- Category of trackers (social media) that can be blocked by Enhanced Tracking Protection -->
     <string name="social">Social</string>
     <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection -->

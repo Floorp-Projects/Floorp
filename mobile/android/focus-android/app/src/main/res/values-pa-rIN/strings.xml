@@ -291,6 +291,7 @@
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">ਸਿਰਫ਼ 3ਜੀ ਧਿਰ ਦੇ ਟਰੈਕਰ ਕੂਕੀਜ਼ ਉੱਤੇ ਪਾਬੰਦੀ ਲਗਾਓ</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">ਸਿਰਫ 3ਜੀ ਪਾਰਟੀ ਕੂਕੀਜ਼ ਤੇ ਪਾਬੰਦੀ ਲਗਾਓ</string>
 
+    <string name="preference_privacy_should_block_cookies_cross_site_option">ਅੰਤਰ-ਸਾਈਟ ਕੂਕੀਜ਼ ਉੱਤੇ ਪਾਬੰਦੀ ਲਾਓ</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">ਹਾਂ ਜੀ</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->

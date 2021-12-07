@@ -137,6 +137,9 @@
     <!-- %1$s will be replaced by the app name (e.g. Firefox Focus) -->
     <string name="preference_mozilla_summary">Ipanpa %1$s, tapalewilis</string>
 
+    <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+    <string name="preference_category_tracking_protection3">Timutajpiya  ukchupi yek keman kinekit yawit mupan</string>
+
     <!-- Preference category for settings related to controlling web content -->
     <string name="preference_category_web_content">Tay nemi ijtik ne Matapan</string>
 
