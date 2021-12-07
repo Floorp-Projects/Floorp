@@ -15,8 +15,14 @@
  */
 int main() {
   jemalloc_stats_t stats;
-  jemalloc_bin_stats_t bin_stats[JEMALLOC_MAX_STATS_BINS];
 
+  const size_t num_bins = jemalloc_stats_num_bins();
+  const size_t MAX_NUM_BINS = 100;
+  if (num_bins > MAX_NUM_BINS) {
+    fprintf(stderr, "Exceeded maximum number of jemalloc stats bins");
+    return 1;
+  }
+  jemalloc_bin_stats_t bin_stats[MAX_NUM_BINS] = {{0}};
   jemalloc_stats(&stats, bin_stats);
 
   printf("Page size:    %5zu\n", stats.page_size);
@@ -28,7 +34,8 @@ int main() {
   printf("Large max:    %5zuKiB\n", stats.large_max / 1024);
 
   printf("\nBin stats:\n");
-  for (auto& bin : bin_stats) {
+  for (unsigned i = 0; i < num_bins; i++) {
+    auto& bin = bin_stats[i];
     if (bin.size) {
       printf("  Bin %5zu has runs of %3zuKiB\n", bin.size,
              bin.bytes_per_run / 1024);
