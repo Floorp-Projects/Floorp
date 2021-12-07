@@ -36,47 +36,70 @@ if (!project.ext.has('topsrcdir')) {
     throw new GradleException("ext.topsrcdir must be specified to substitute for a local GeckoView")
 }
 
-apply from: "${topsrcdir}/mobile/android/gradle/mach_env.gradle"
+/**
+ * Loads the mozconfig and returns any variables derived from it, avoiding side effects.
+ *
+ * This method is relatively slow because it calls mach, which starts a python interpreter, will
+ * becomes very slow if called for numerous subprojects. Therefore, it should only be called once
+ * per build.
+ */
+def loadMozconfig() {
+    apply from: "${topsrcdir}/mobile/android/gradle/mach_env.gradle"
 
-// Cribbed from https://hg.mozilla.org/mozilla-central/file/tip/settings.gradle.  When run in
-// topobjdir, `mach environment` correctly finds the mozconfig corresponding to that object
-// directory.
-def commandLine = ["${topsrcdir}/mach", "environment", "--format", "json", "--verbose"]
-def proc = commandLine.execute(
-      machEnv(topsrcdir),
-      new File(ext.has('topobjdir') ? ext.get('topobjdir') : topsrcdir))
-def standardOutput = new ByteArrayOutputStream()
-proc.consumeProcessOutput(standardOutput, standardOutput)
-proc.waitFor()
+    // Cribbed from https://hg.mozilla.org/mozilla-central/file/tip/settings.gradle.  When run in
+    // topobjdir, `mach environment` correctly finds the mozconfig corresponding to that object
+    // directory.
+    def commandLine = ["${topsrcdir}/mach", "environment", "--format", "json", "--verbose"]
+    def proc = commandLine.execute(
+            machEnv(topsrcdir),
+            new File(ext.has('topobjdir') ? ext.get('topobjdir') : topsrcdir))
+    def standardOutput = new ByteArrayOutputStream()
+    proc.consumeProcessOutput(standardOutput, standardOutput)
+    proc.waitFor()
 
-// Only show the output if something went wrong.
-if (proc.exitValue() != 0) {
-    throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${proc.exitValue()}:\n\n${standardOutput.toString()}")
+    // Only show the output if something went wrong.
+    if (proc.exitValue() != 0) {
+        throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${proc.exitValue()}:\n\n${standardOutput.toString()}")
+    }
+
+    def slurper = new JsonSlurper()
+    def mozconfig = slurper.parseText(standardOutput.toString())
+
+    if (topsrcdir != mozconfig.topsrcdir) {
+        throw new GradleException("Specified topsrcdir ('${topsrcdir}') is not mozconfig topsrcdir ('${mozconfig.topsrcdir}')")
+    }
+
+    def topobjdir
+    if (ext.has('topobjdir')) {
+        topobjdir = ext.topobjdir
+    } else {
+        topobjdir = mozconfig.topobjdir
+        log("Found topobjdir ${topobjdir} from topsrcdir ${topsrcdir}")
+    }
+
+    if (mozconfig.substs.MOZ_BUILD_APP != 'mobile/android') {
+        throw new GradleException("Building with Gradle is only supported for GeckoView, i.e., MOZ_BUILD_APP == 'mobile/android'.")
+    }
+
+    log("Will substitute GeckoView (geckoview-{nightly,beta}) with local GeckoView (geckoview-default) from ${topobjdir}/gradle/build/mobile/android/geckoview/maven")
+
+    if (!mozconfig.substs.COMPILE_ENVIRONMENT) {
+        log("To update the local GeckoView, run `./mach gradle geckoview:publishWithGeckoBinariesDebugPublicationToMavenRepository` in ${topsrcdir}")
+    } else {
+        log("To update the local GeckoView, run `./mach build binaries && ./mach gradle geckoview:publishWithGeckoBinariesDebugPublicationToMavenRepository` in ${topsrcdir}")
+    }
+
+    return [mozconfig, topobjdir]
 }
 
-def slurper = new JsonSlurper()
-def mozconfig = slurper.parseText(standardOutput.toString())
-
-if (topsrcdir != mozconfig.topsrcdir) {
-    throw new GradleException("Specified topsrcdir ('${topsrcdir}') is not mozconfig topsrcdir ('${mozconfig.topsrcdir}')")
+// This script is expected to be called for every subproject in the build (in ac, this is over 100)
+// but loadMozconfig should only be called once per build (see the javadoc) so we store the output
+// of that call as a global variable and re-use it when this script is called again.
+def LOAD_MOZCONFIG_CACHE = "substitute-local-geckoview-mozconfig-cache"
+if (!rootProject.ext.has(LOAD_MOZCONFIG_CACHE)) {
+    rootProject.ext.set(LOAD_MOZCONFIG_CACHE, loadMozconfig())
 }
-
-if (!ext.has('topobjdir')) {
-    ext.topobjdir = mozconfig.topobjdir
-    log("Found topobjdir ${topobjdir} from topsrcdir ${topsrcdir}")
-}
-
-if (mozconfig.substs.MOZ_BUILD_APP != 'mobile/android') {
-    throw new GradleException("Building with Gradle is only supported for GeckoView, i.e., MOZ_BUILD_APP == 'mobile/android'.")
-}
-
-log("Will substitute GeckoView (geckoview-{nightly,beta}) with local GeckoView (geckoview-default) from ${topobjdir}/gradle/build/mobile/android/geckoview/maven")
-
-if (!mozconfig.substs.COMPILE_ENVIRONMENT) {
-    log("To update the local GeckoView, run `./mach gradle geckoview:publishWithGeckoBinariesDebugPublicationToMavenRepository` in ${topsrcdir}")
-} else {
-    log("To update the local GeckoView, run `./mach build binaries && ./mach gradle geckoview:publishWithGeckoBinariesDebugPublicationToMavenRepository` in ${topsrcdir}")
-}
+def (mozconfig, topobjdir) = rootProject.ext.get(LOAD_MOZCONFIG_CACHE)
 
 repositories {
     maven {
