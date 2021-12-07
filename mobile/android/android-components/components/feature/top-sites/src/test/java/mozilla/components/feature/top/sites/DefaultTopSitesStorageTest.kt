@@ -37,10 +37,10 @@ class DefaultTopSitesStorageTest {
         )
 
         DefaultTopSitesStorage(
-            pinnedSitesStorage,
-            historyStorage,
-            defaultTopSites,
-            coroutineContext
+            pinnedSitesStorage = pinnedSitesStorage,
+            historyStorage = historyStorage,
+            defaultTopSites = defaultTopSites,
+            coroutineContext = coroutineContext
         )
 
         verify(pinnedSitesStorage).addAllPinnedSites(defaultTopSites, isDefault = true)
@@ -49,10 +49,10 @@ class DefaultTopSitesStorageTest {
     @Test
     fun `addPinnedSite`() = runBlockingTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
-            pinnedSitesStorage,
-            historyStorage,
-            listOf(),
-            coroutineContext
+            pinnedSitesStorage = pinnedSitesStorage,
+            historyStorage = historyStorage,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext
         )
         defaultTopSitesStorage.addTopSite("Mozilla", "https://mozilla.com", isDefault = false)
 
@@ -66,10 +66,10 @@ class DefaultTopSitesStorageTest {
     @Test
     fun `removeTopSite`() = runBlockingTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
-            pinnedSitesStorage,
-            historyStorage,
-            listOf(),
-            coroutineContext
+            pinnedSitesStorage = pinnedSitesStorage,
+            historyStorage = historyStorage,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext
         )
 
         val frecentSite = TopSite(
@@ -111,10 +111,10 @@ class DefaultTopSitesStorageTest {
     @Test
     fun `updateTopSite`() = runBlockingTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
-            pinnedSitesStorage,
-            historyStorage,
-            listOf(),
-            coroutineContext
+            pinnedSitesStorage = pinnedSitesStorage,
+            historyStorage = historyStorage,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext
         )
 
         val defaultSite = TopSite(
@@ -154,10 +154,10 @@ class DefaultTopSitesStorageTest {
     @Test
     fun `getTopSites returns only default and pinned sites when frecencyConfig is null`() = runBlockingTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
-            pinnedSitesStorage,
-            historyStorage,
-            listOf(),
-            coroutineContext
+            pinnedSitesStorage = pinnedSitesStorage,
+            historyStorage = historyStorage,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext
         )
 
         val defaultSite = TopSite(
@@ -207,10 +207,10 @@ class DefaultTopSitesStorageTest {
     @Test
     fun `getTopSites returns pinned and frecent sites when frecencyConfig is specified`() = runBlockingTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
-            pinnedSitesStorage,
-            historyStorage,
-            listOf(),
-            coroutineContext
+            pinnedSitesStorage = pinnedSitesStorage,
+            historyStorage = historyStorage,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext
         )
 
         val defaultSite = TopSite(
@@ -301,10 +301,10 @@ class DefaultTopSitesStorageTest {
     @Test
     fun `getTopSites filters out frecent sites that already exist in pinned sites`() = runBlockingTest {
         val defaultTopSitesStorage = DefaultTopSitesStorage(
-            pinnedSitesStorage,
-            historyStorage,
-            listOf(),
-            coroutineContext
+            pinnedSitesStorage = pinnedSitesStorage,
+            historyStorage = historyStorage,
+            defaultTopSites = listOf(),
+            coroutineContext = coroutineContext
         )
 
         val defaultSiteFirefox = TopSite(

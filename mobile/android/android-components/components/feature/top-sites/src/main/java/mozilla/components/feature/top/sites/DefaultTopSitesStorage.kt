@@ -23,12 +23,15 @@ import kotlin.coroutines.CoroutineContext
  * @param pinnedSitesStorage An instance of [PinnedSiteStorage], used for storing pinned sites.
  * @param historyStorage An instance of [PlacesHistoryStorage], used for retrieving top frecent
  * sites from history.
+ * @param topSitesProvider An optional instance of [TopSitesProvider], used for retrieving
+ * additional top sites from a provider.
  * @param defaultTopSites A list containing a title to url pair of default top sites to be added
  * to the [PinnedSiteStorage].
  */
 class DefaultTopSitesStorage(
     private val pinnedSitesStorage: PinnedSiteStorage,
     private val historyStorage: PlacesHistoryStorage,
+    private val topSitesProvider: TopSitesProvider? = null,
     private val defaultTopSites: List<Pair<String, String>> = listOf(),
     coroutineContext: CoroutineContext = Dispatchers.IO
 ) : TopSitesStorage, Observable<TopSitesStorage.Observer> by ObserverRegistry() {
@@ -83,8 +86,15 @@ class DefaultTopSitesStorage(
     ): List<TopSite> {
         val topSites = ArrayList<TopSite>()
         val pinnedSites = pinnedSitesStorage.getPinnedSites().take(totalSites)
-        val numSitesRequired = totalSites - pinnedSites.size
+        var numSitesRequired = totalSites - pinnedSites.size
+
         topSites.addAll(pinnedSites)
+
+        topSitesProvider?.let { provider ->
+            val providerTopSites = provider.getTopSites()
+            topSites.addAll(providerTopSites.take(numSitesRequired))
+            numSitesRequired -= providerTopSites.size
+        }
 
         if (frecencyConfig != null && numSitesRequired > 0) {
             // Get 'totalSites' sites for duplicate entries with
