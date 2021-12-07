@@ -1647,10 +1647,10 @@ nsresult nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction* trans) {
   if (pushedStreamWrapper) {
     Http2PushedStream* pushedStream = pushedStreamWrapper->GetStream();
     if (pushedStream) {
+      RefPtr<Http2Session> session = pushedStream->Session();
       LOG(("  ProcessNewTransaction %p tied to h2 session push %p\n", trans,
-           pushedStream->Session()));
-      return pushedStream->Session()->AddStream(trans, trans->Priority(), false,
-                                                false, nullptr)
+           session.get()));
+      return session->AddStream(trans, trans->Priority(), false, false, nullptr)
                  ? NS_OK
                  : NS_ERROR_UNEXPECTED;
     }
