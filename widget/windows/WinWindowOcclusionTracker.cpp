@@ -107,25 +107,6 @@ class UpdateOcclusionStateRunnable : public Runnable {
   const bool mShowAllWindows;
 };
 
-class SerializedRunnable : public Runnable {
- public:
-  SerializedRunnable(already_AddRefed<nsIRunnable> aTask,
-                     nsISerialEventTarget* aEventTarget)
-      : Runnable("SerializedRunnable"),
-        mEventTarget(aEventTarget),
-        mTask(aTask) {}
-
-  NS_IMETHOD Run() override {
-    mTask->Run();
-    return NS_OK;
-  }
-
-  RefPtr<nsISerialEventTarget> mEventTarget;
-
- private:
-  RefPtr<nsIRunnable> mTask;
-};
-
 // Used to serialize tasks related to mRootWindowHwndsOcclusionState.
 class SerializedTaskDispatcher {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SerializedTaskDispatcher)
@@ -144,7 +125,8 @@ class SerializedTaskDispatcher {
   ~SerializedTaskDispatcher();
 
   struct Data {
-    std::queue<RefPtr<SerializedRunnable>> mTasks;
+    std::queue<std::pair<RefPtr<nsIRunnable>, RefPtr<nsISerialEventTarget>>>
+        mTasks;
     bool mDestroyed = false;
     RefPtr<Runnable> mCurrentRunnable;
   };
@@ -155,7 +137,7 @@ class SerializedTaskDispatcher {
   void HandleTasks();
 
   // Hold current EventTarget during calling nsIRunnable::Run().
-  nsISerialEventTarget* mCurrentEventTarget = nullptr;
+  RefPtr<nsISerialEventTarget> mCurrentEventTarget = nullptr;
 
   DataMutex<Data> mData;
 };
@@ -185,7 +167,8 @@ void SerializedTaskDispatcher::Destroy() {
   }
 
   data->mDestroyed = true;
-  std::queue<RefPtr<SerializedRunnable>> empty;
+  std::queue<std::pair<RefPtr<nsIRunnable>, RefPtr<nsISerialEventTarget>>>
+      empty;
   std::swap(data->mTasks, empty);
 }
 
@@ -197,7 +180,7 @@ void SerializedTaskDispatcher::PostTaskToMain(
   }
 
   nsISerialEventTarget* eventTarget = GetMainThreadSerialEventTarget();
-  data->mTasks.push(new SerializedRunnable(std::move(aTask), eventTarget));
+  data->mTasks.push({std::move(aTask), eventTarget});
 
   MOZ_ASSERT_IF(!data->mCurrentRunnable, data->mTasks.size() == 1);
   PostTasksIfNecessary(eventTarget, data);
@@ -212,7 +195,7 @@ void SerializedTaskDispatcher::PostTaskToCalculator(
 
   nsISerialEventTarget* eventTarget =
       WinWindowOcclusionTracker::OcclusionCalculatorLoop()->SerialEventTarget();
-  data->mTasks.push(new SerializedRunnable(std::move(aTask), eventTarget));
+  data->mTasks.push({std::move(aTask), eventTarget});
 
   MOZ_ASSERT_IF(!data->mCurrentRunnable, data->mTasks.size() == 1);
   PostTasksIfNecessary(eventTarget, data);
@@ -263,14 +246,14 @@ void SerializedTaskDispatcher::HandleDelayedTask(
 
   nsISerialEventTarget* eventTarget =
       WinWindowOcclusionTracker::OcclusionCalculatorLoop()->SerialEventTarget();
-  data->mTasks.push(new SerializedRunnable(std::move(aTask), eventTarget));
+  data->mTasks.push({std::move(aTask), eventTarget});
 
   MOZ_ASSERT_IF(!data->mCurrentRunnable, data->mTasks.size() == 1);
   PostTasksIfNecessary(eventTarget, data);
 }
 
 void SerializedTaskDispatcher::HandleTasks() {
-  RefPtr<SerializedRunnable> frontTask;
+  RefPtr<nsIRunnable> frontTask;
 
   // Get front task
   {
@@ -281,10 +264,10 @@ void SerializedTaskDispatcher::HandleTasks() {
     MOZ_RELEASE_ASSERT(data->mCurrentRunnable);
     MOZ_RELEASE_ASSERT(!data->mTasks.empty());
 
-    frontTask = data->mTasks.front();
+    frontTask = data->mTasks.front().first;
 
     MOZ_RELEASE_ASSERT(!mCurrentEventTarget);
-    mCurrentEventTarget = frontTask->mEventTarget;
+    mCurrentEventTarget = data->mTasks.front().second;
   }
 
   while (frontTask) {
@@ -295,10 +278,10 @@ void SerializedTaskDispatcher::HandleTasks() {
     }
 
     MOZ_ASSERT_IF(NS_IsMainThread(),
-                  frontTask->mEventTarget == GetMainThreadSerialEventTarget());
+                  mCurrentEventTarget == GetMainThreadSerialEventTarget());
     MOZ_ASSERT_IF(
         !NS_IsMainThread(),
-        frontTask->mEventTarget == MessageLoop::current()->SerialEventTarget());
+        mCurrentEventTarget == MessageLoop::current()->SerialEventTarget());
 
     frontTask->Run();
 
@@ -310,8 +293,8 @@ void SerializedTaskDispatcher::HandleTasks() {
       data->mTasks.pop();
       // Check if next task could be handled on current thread
       if (!data->mTasks.empty() &&
-          data->mTasks.front()->mEventTarget == mCurrentEventTarget) {
-        frontTask = data->mTasks.front();
+          data->mTasks.front().second == mCurrentEventTarget) {
+        frontTask = data->mTasks.front().first;
       }
     }
   }
@@ -328,8 +311,7 @@ void SerializedTaskDispatcher::HandleTasks() {
       return;
     }
 
-    auto& frontTask = data->mTasks.front();
-    PostTasksIfNecessary(frontTask->mEventTarget, data);
+    PostTasksIfNecessary(data->mTasks.front().second, data);
   }
 }
 
