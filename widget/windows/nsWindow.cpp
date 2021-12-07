@@ -1657,7 +1657,20 @@ void nsWindow::Show(bool bState) {
           // the popup.
           flags |= SWP_NOACTIVATE;
           HWND owner = ::GetWindow(mWnd, GW_OWNER);
-          ::SetWindowPos(mWnd, owner ? 0 : HWND_TOPMOST, 0, 0, 0, 0, flags);
+          if (owner) {
+            // ePopupLevelTop popups should be above all else.  All other
+            // types should be placed in front of their owner, without
+            // changing the owner's z-level relative to other windows.
+            if (PopupLevel() != ePopupLevelTop) {
+              ::SetWindowPos(mWnd, owner, 0, 0, 0, 0, flags);
+              ::SetWindowPos(owner, mWnd, 0, 0, 0, 0,
+                             SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+            } else {
+              ::SetWindowPos(mWnd, HWND_TOP, 0, 0, 0, 0, flags);
+            }
+          } else {
+            ::SetWindowPos(mWnd, HWND_TOPMOST, 0, 0, 0, 0, flags);
+          }
         } else {
           if (mWindowType == eWindowType_dialog && !CanTakeFocus())
             flags |= SWP_NOACTIVATE;
