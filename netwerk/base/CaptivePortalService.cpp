@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/CaptivePortalService.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
@@ -61,6 +62,9 @@ nsresult CaptivePortalService::PerformCheck() {
   if (mRequestInProgress || !mInitialized || !mStarted) {
     return NS_OK;
   }
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   nsresult rv;
   if (!mCaptivePortalDetector) {
@@ -84,6 +88,11 @@ nsresult CaptivePortalService::RearmTimer() {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   if (mTimer) {
     mTimer->Cancel();
+  }
+
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    mTimer = nullptr;
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
   // If we have successfully determined the state, and we have never detected
@@ -123,6 +132,7 @@ nsresult CaptivePortalService::Initialize() {
     observerService->AddObserver(this, kOpenCaptivePortalLoginEvent, true);
     observerService->AddObserver(this, kAbortCaptivePortalLoginEvent, true);
     observerService->AddObserver(this, kCaptivePortalLoginSuccessEvent, true);
+    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
   }
 
   LOG(("Initialized CaptivePortalService\n"));
@@ -146,6 +156,10 @@ nsresult CaptivePortalService::Start() {
 
   if (mStarted) {
     return NS_OK;
+  }
+
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
   MOZ_ASSERT(mState == UNKNOWN, "Initial state should be UNKNOWN");
@@ -317,6 +331,9 @@ CaptivePortalService::Observe(nsISupports* aSubject, const char* aTopic,
     StateTransition(UNKNOWN);
     mLastChecked = TimeStamp::Now();
     mSlackCount = 0;
+  } else if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
+    Stop();
+    return NS_OK;
   }
 
   // Send notification so that the captive portal state is mirrored in the
@@ -347,6 +364,9 @@ NS_IMETHODIMP
 CaptivePortalService::Prepare() {
   LOG(("CaptivePortalService::Prepare\n"));
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownConfirmed)) {
+    return NS_OK;
+  }
   // XXX: Finish preparation shouldn't be called until dns and routing is
   // available.
   if (mCaptivePortalDetector) {
