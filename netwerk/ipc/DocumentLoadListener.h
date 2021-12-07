@@ -59,7 +59,6 @@ struct StreamFilterRequest {
     }
   }
   RefPtr<ChildEndpointPromise::Private> mPromise;
-  base::ProcessId mChildProcessId = 0;
   mozilla::ipc::Endpoint<extensions::PStreamFilterChild> mChildEndpoint;
 };
 }  // namespace net
@@ -270,8 +269,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // or 0 initiated from a parent process load.
   base::ProcessId OtherPid() const;
 
-  [[nodiscard]] RefPtr<ChildEndpointPromise> AttachStreamFilter(
-      base::ProcessId aChildProcessId);
+  [[nodiscard]] RefPtr<ChildEndpointPromise> AttachStreamFilter();
 
   // Serializes all data needed to setup the new replacement channel
   // in the content process into the RedirectToRealChannelArgs struct.

@@ -2571,13 +2571,12 @@ bool DocumentLoadListener::HasCrossOriginOpenerPolicyMismatch() const {
   return isCOOPMismatch;
 }
 
-auto DocumentLoadListener::AttachStreamFilter(base::ProcessId aChildProcessId)
+auto DocumentLoadListener::AttachStreamFilter()
     -> RefPtr<ChildEndpointPromise> {
   LOG(("DocumentLoadListener AttachStreamFilter [this=%p]", this));
 
   StreamFilterRequest* request = mStreamFilterRequests.AppendElement();
   request->mPromise = new ChildEndpointPromise::Private(__func__);
-  request->mChildProcessId = aChildProcessId;
   return request->mPromise;
 }
 

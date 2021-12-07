@@ -1600,8 +1600,8 @@ nsresult nsHttpChannel::CallOnStartRequest() {
       }
     } else {
       if (docListener) {
-        docListener->AttachStreamFilter(request.mChildProcessId)
-            ->ChainTo(request.mPromise.forget(), __func__);
+        docListener->AttachStreamFilter()->ChainTo(request.mPromise.forget(),
+                                                   __func__);
       } else {
         request.mPromise->Reject(false, __func__);
       }
@@ -6388,8 +6388,7 @@ base::ProcessId nsHttpChannel::ProcessId() {
   return base::GetCurrentProcId();
 }
 
-auto nsHttpChannel::AttachStreamFilter(base::ProcessId aChildProcessId)
-    -> RefPtr<ChildEndpointPromise> {
+auto nsHttpChannel::AttachStreamFilter() -> RefPtr<ChildEndpointPromise> {
   LOG(("nsHttpChannel::AttachStreamFilter [this=%p]", this));
   MOZ_ASSERT(!LoadOnStartRequestCalled());
 
@@ -6408,7 +6407,6 @@ auto nsHttpChannel::AttachStreamFilter(base::ProcessId aChildProcessId)
   if (RefPtr<DocumentLoadListener> docParent = do_QueryObject(parentChannel)) {
     StreamFilterRequest* request = mStreamFilterRequests.AppendElement();
     request->mPromise = new ChildEndpointPromise::Private(__func__);
-    request->mChildProcessId = aChildProcessId;
     return request->mPromise;
   }
 
