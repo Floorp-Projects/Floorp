@@ -101,7 +101,7 @@ nsresult MediaEngineWebRTCMicrophoneSource::EvaluateSettings(
   // Determine an actual channel count to use for this source. Three factors at
   // play here: the device capabilities, the constraints passed in by content,
   // and a pref that can force things (for testing)
-  int32_t maxChannels = mDeviceInfo->MaxChannels();
+  int32_t maxChannels = static_cast<int32_t>(mDeviceInfo->MaxChannels());
 
   // First, check channelCount violation wrt constraints. This fails in case of
   // error.
