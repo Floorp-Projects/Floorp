@@ -434,3 +434,21 @@ async function synthesizeUrlKeyInput(toolbox, inputEl, url) {
   info("Submit URL to navigate to");
   EventUtils.synthesizeKey("KEY_Enter");
 }
+
+/**
+ * Click on a given add-on widget button so that its browser actor is fired.
+ * Typically a popup would open, or a listener would be called in the background page.
+ *
+ * @param {String} addonId
+ *        The ID of the add-on to click on.
+ */
+function clickOnAddonWidget(addonId) {
+  // Find the browserAction button that will show the webextension popup.
+  const widgetId = addonId.toLowerCase().replace(/[^a-z0-9_-]/g, "_");
+  const browserActionId = widgetId + "-browser-action";
+  const browserActionEl = window.document.getElementById(browserActionId);
+  ok(browserActionEl, "Got the browserAction button from the browser UI");
+
+  info("Show the web extension popup");
+  browserActionEl.click();
+}
