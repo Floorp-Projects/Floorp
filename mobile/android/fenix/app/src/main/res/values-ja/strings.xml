@@ -254,7 +254,7 @@
     <string name="browser_menu_edit">編集</string>
 
     <!-- Browser menu button that opens the Customize menu -->
-    <string name="browser_menu_customize_home">カスタマイズホーム</string>
+    <string name="browser_menu_customize_home">ホームをカスタマイズ</string>
     <!-- Button shown on the home page that opens the Customize home settings -->
     <string name="browser_menu_customize_home_1">ホームページをカスタマイズ</string>
     <!-- Browser Toolbar -->
@@ -744,7 +744,7 @@
     <!-- Option for never starting on the home screen -->
     <string moz:removedIn="94" name="start_on_home_never" tools:ignore="UnusedResources">使用しない</string>
     <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
-    <string name="opening_screen_after_four_hours_of_inactivity">操作せずに 4 時間経つとホームページへ戻ります</string>
+    <string name="opening_screen_after_four_hours_of_inactivity">ホームページ (操作せずに 4 時間経過後)</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
     <string name="close_tabs_manually_summary">手動で閉じる</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->

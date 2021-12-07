@@ -317,6 +317,9 @@
     <!-- Onboarding home screen dialog description text for the history section. -->
     <string name="onboarding_home_screen_section_useful_history_title_2">ᱱᱤᱛᱚᱜᱟᱜ ᱥᱮᱸᱫᱽᱨᱟ ᱠᱚ</string>
 
+    <!-- Onboarding home screen dialog description text for the history section. -->
+    <string name="onboarding_home_screen_section_useful_history_description_2">ᱟᱢᱟᱜ ᱚᱲᱟᱜ ᱥᱟᱦᱴᱟ ᱟᱨ ᱴᱮᱵ ᱠᱷᱚᱱ ᱱᱤᱛᱚᱜᱟᱜ ᱥᱮᱸᱫᱽᱨᱟ ᱛᱮ ᱫᱩᱦᱲᱟᱹ ᱪᱟᱞᱟᱜ ᱞᱟᱹᱜᱤᱫ ᱾</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">ᱱᱟᱶᱟ Firefox ᱴᱮᱵᱽ ᱠᱷᱩᱞᱟᱹᱭ ᱢᱮ</string>
@@ -475,6 +478,9 @@
     <!-- Title for the customize home screen section with recently visited. Recently visited is
     a section where users see a list of tabs that they have visited in the past few days -->
     <string name="customize_toggle_recently_visited">ᱱᱤᱛᱚᱜᱟᱜ ᱦᱤᱨᱤᱭᱟᱜ</string>
+    <!-- Title for the customize home screen settings section for recent searches. Recent searches
+     is a section where users see a list of groups of tabs that they have visited in the past few days -->
+    <string moz:removedIn="96" name="customize_toggle_recent_searches" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜᱟᱜ ᱥᱮᱸᱫᱽᱨᱟ ᱠᱚ</string>
     <!-- Title for the customize home screen section with Pocket. -->
     <string name="customize_toggle_pocket">ᱯᱚᱠᱮᱴ</string>
 
@@ -695,6 +701,8 @@
     <string name="tab_view_list">ᱞᱤᱥᱴᱤ</string>
     <!-- Option for a grid tab view -->
     <string name="tab_view_grid">ᱡᱟᱸᱜᱞᱟ</string>
+    <!-- Option for search term tab groups -->
+    <string name="tab_view_search_term_tab_groups">ᱥᱮᱸᱫᱽᱨᱟ ᱫᱳᱞ ᱠᱚ</string>
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">ᱴᱮᱵᱽ ᱠᱚ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -2023,6 +2031,12 @@
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">ᱵᱚᱸᱫ</string>
 
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">ᱟᱨᱦᱚᱸ ᱯᱟᱱᱛᱮ ᱧᱟᱢ ᱢᱮ</string>
+    <!-- Title of an app feature. Smaller than a heading.-->
+    <string name="pocket_stories_feature_title">ᱜᱚᱲᱚᱤᱭᱟᱹ Pocket</string>
+    <!-- Caption for describing a certain feature. The placeholder is for a clickable text (eg: Learn more) which will load an url in a new tab when clicked.  -->
+    <string name="pocket_stories_feature_caption">Firefox  ᱜᱷᱟᱨᱚᱧᱡᱽ ᱨᱤᱱᱤᱡ ᱦᱟᱹᱴᱤᱧ ᱾ %s</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">ᱰᱷᱮᱨ ᱥᱮᱬᱟᱭ ᱢᱮ</string>
 </resources>
