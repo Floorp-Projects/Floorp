@@ -153,10 +153,10 @@ def cargo_info(cargo):
     )
 
 
-@depends(rustc_info, cargo_info)
+@depends(rustc_info, cargo_info, target)
 @imports(_from="mozboot.util", _import="MINIMUM_RUST_VERSION")
 @imports(_from="textwrap", _import="dedent")
-def rust_compiler(rustc_info, cargo_info):
+def rust_compiler(rustc_info, cargo_info, target):
     if not rustc_info:
         die(
             dedent(
@@ -200,6 +200,19 @@ def rust_compiler(rustc_info, cargo_info):
         """.format(
                     version, rustc_min_version, rustc_min_version
                 )
+            )
+        )
+
+    if target.kernel == "WINNT" and (version.major, version.minor) == (1, 56):
+        die(
+            dedent(
+                """\
+        Rust compiler 1.56.* is not supported for Windows builds.
+
+        Use a newer or an older version.
+
+        See https://github.com/rust-lang/rust/issues/88576.
+        """
             )
         )
 
