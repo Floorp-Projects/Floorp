@@ -27,6 +27,7 @@ const OTHER_ADDON_NAME = "other-test-devtools-webextension";
  *   has a working webconsole with the background page as default target;
  */
 add_task(async function testWebExtensionsToolboxWebConsole() {
+  await pushPref("devtools.webconsole.filter.css", true);
   await enableExtensionDebugging();
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
@@ -40,6 +41,11 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
             this.browser.runtime.getManifest()
           );
         };
+
+        const style = document.createElement("style");
+        style.textContent = "* { color: error; }";
+        document.documentElement.appendChild(style);
+
         throw new Error("Background page exception");
       },
       extraProperties: {
@@ -62,6 +68,11 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
       `,
         "popup.js": function() {
           console.log("Popup log");
+
+          const style = document.createElement("style");
+          style.textContent = "* { color: popup-error; }";
+          document.documentElement.appendChild(style);
+
           throw new Error("Popup exception");
         },
       },
@@ -76,6 +87,11 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
     {
       background: function() {
         console.log("Other addon log");
+
+        const style = document.createElement("style");
+        style.textContent = "* { background-color: error; }";
+        document.documentElement.appendChild(style);
+
         throw new Error("Other addon exception");
       },
       extraProperties: {
@@ -98,6 +114,11 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
       `,
         "other-popup.js": function() {
           console.log("Other popup log");
+
+          const style = document.createElement("style");
+          style.textContent = "* { background-color: popup-error; }";
+          document.documentElement.appendChild(style);
+
           throw new Error("Other popup exception");
         },
       },
@@ -145,6 +166,22 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
     1,
     "We get the popup exception"
   );
+  is(
+    findMessages(
+      hud,
+      "Expected color but found ‘error’.  Error in parsing value for ‘color’.  Declaration dropped."
+    ).length,
+    1,
+    "We get the addon's background page CSS error message"
+  );
+  is(
+    findMessages(
+      hud,
+      "Expected color but found ‘popup-error’.  Error in parsing value for ‘color’.  Declaration dropped."
+    ).length,
+    1,
+    "We get the addon's popup CSS error message"
+  );
 
   // Verify that we don't get the other addon log and errors
   is(
@@ -166,6 +203,22 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
     findMessages(hud, "Other popup exception").length,
     0,
     "We don't get the other addon popup exception"
+  );
+  is(
+    findMessages(
+      hud,
+      "Expected color but found ‘error’.  Error in parsing value for ‘background-color’.  Declaration dropped."
+    ).length,
+    0,
+    "We don't get the other addon's background page CSS error message"
+  );
+  is(
+    findMessages(
+      hud,
+      "Expected color but found ‘popup-error’.  Error in parsing value for ‘background-color’.  Declaration dropped."
+    ).length,
+    0,
+    "We don't get the other addon's popup CSS error message"
   );
 
   // Verify that console evaluations still work after reloading the page
