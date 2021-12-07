@@ -9,6 +9,7 @@ mod conn_ext;
 mod each_chunk;
 mod interrupt;
 mod maybe_cached;
+pub mod open_database;
 mod query_plan;
 mod repeat;
 
