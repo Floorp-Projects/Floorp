@@ -880,7 +880,8 @@ void AudioInputProcessing::PacketizeAndProcess(MediaTrackGraphImpl* aGraph,
     MOZ_ASSERT(processedOutputChannelPointers.Length() == channelCountInput);
     RefPtr<SharedBuffer> other = buffer;
     mSegment.AppendFrames(other.forget(), processedOutputChannelPointersConst,
-                          mPacketizerInput->mPacketSize, mPrincipal);
+                          static_cast<int32_t>(mPacketizerInput->mPacketSize),
+                          mPrincipal);
   }
 }
 
