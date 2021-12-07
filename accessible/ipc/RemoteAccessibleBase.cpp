@@ -468,6 +468,12 @@ uint64_t RemoteAccessibleBase<Derived>::State() {
 }
 
 template <class Derived>
+already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
+  RefPtr<AccAttributes> attributes = new AccAttributes();
+  return attributes.forget();
+}
+
+template <class Derived>
 void RemoteAccessibleBase<Derived>::TakeFocus() const {
   Unused << mDoc->SendTakeFocus(mID);
 }
