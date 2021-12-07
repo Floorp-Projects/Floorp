@@ -667,6 +667,17 @@ MozDocumentMatcher::MozDocumentMatcher(GlobalObject& aGlobal,
       return;
     }
   }
+
+  if (!aInit.mOriginAttributesPatterns.IsNull()) {
+    Sequence<OriginAttributesPattern>& arr =
+        mOriginAttributesPatterns.SetValue();
+    for (const auto& pattern : aInit.mOriginAttributesPatterns.Value()) {
+      if (!arr.AppendElement(OriginAttributesPattern(pattern), fallible)) {
+        aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+        return;
+      }
+    }
+  }
 }
 
 WebExtensionContentScript::WebExtensionContentScript(
@@ -696,6 +707,21 @@ bool MozDocumentMatcher::Matches(const DocInfo& aDoc) const {
   nsCOMPtr<nsILoadContext> loadContext = aDoc.GetLoadContext();
   if (loadContext && mExtension && !mExtension->CanAccessContext(loadContext)) {
     return false;
+  }
+
+  if (loadContext && !mOriginAttributesPatterns.IsNull()) {
+    OriginAttributes docShellAttrs;
+    loadContext->GetOriginAttributes(docShellAttrs);
+    bool patternMatch = false;
+    for (const auto& pattern : mOriginAttributesPatterns.Value()) {
+      if (pattern.Matches(docShellAttrs)) {
+        patternMatch = true;
+        break;
+      }
+    }
+    if (!patternMatch) {
+      return false;
+    }
   }
 
   if (!mMatchAboutBlank && aDoc.URL().InheritsPrincipal()) {
@@ -758,6 +784,14 @@ bool MozDocumentMatcher::MatchesWindowGlobal(WindowGlobalChild& aWindow) const {
     return false;
   }
   return Matches(inner->GetOuterWindow());
+}
+
+void MozDocumentMatcher::GetOriginAttributesPatterns(
+    JSContext* aCx, JS::MutableHandle<JS::Value> aVal,
+    ErrorResult& aError) const {
+  if (!ToJSValue(aCx, mOriginAttributesPatterns, aVal)) {
+    aError.NoteJSContextException(aCx);
+  }
 }
 
 JSObject* MozDocumentMatcher::WrapObject(JSContext* aCx,
