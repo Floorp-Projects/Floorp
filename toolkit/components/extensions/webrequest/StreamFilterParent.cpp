@@ -108,6 +108,7 @@ StreamFilterParent::~StreamFilterParent() {
   NS_ReleaseOnMainThread("StreamFilterParent::mOrigListener",
                          mOrigListener.forget());
   NS_ReleaseOnMainThread("StreamFilterParent::mContext", mContext.forget());
+  mQueue->NotifyReleasingOwner();
 }
 
 auto StreamFilterParent::Create(dom::ContentParent* aContentParent,
