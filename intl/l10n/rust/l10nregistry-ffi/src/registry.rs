@@ -440,7 +440,7 @@ pub unsafe extern "C" fn l10nregistry_generate_bundles(
             // Immediately spawn the task which will handle the async calls, and use an `UnboundedSender`
             // to send callbacks for specific `next()` calls to it.
             let (sender, mut receiver) = unbounded::<NextRequest>();
-            moz_task::spawn_current_thread(async move {
+            moz_task::spawn_local("l10nregistry_generate_bundles", async move {
                 use futures::StreamExt;
                 while let Some(req) = receiver.next().await {
                     let result = match iter.next().await {
@@ -450,7 +450,7 @@ pub unsafe extern "C" fn l10nregistry_generate_bundles(
                     (req.callback)(&req.promise, result);
                 }
             })
-            .expect("Failed to spawn a task");
+            .detach();
             let iter = GeckoFluentBundleAsyncIteratorWrapper(sender);
             Box::into_raw(Box::new(iter))
         }
