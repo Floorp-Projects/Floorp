@@ -626,9 +626,11 @@ class TextInputDelegateTest : BaseSessionTest() {
         promise.value
 
         // TODO(m_kato)
-        // Since geckoview-junit doesn't attach View, there is no way to wait for correct selection data
-        // assertTextAndSelection("Can select using key event", ic,
-        //                        "frabar", 6, 5)
+        // Since geckoview-junit doesn't attach View, there is no way to wait for correct selection data.
+        // So Sync shadow text to avoid failures.
+        syncShadowText(ic)
+        assertTextAndSelection("Can select using key event", ic,
+                               "frabar", 6, 5)
 
         promise = mainSession.evaluatePromiseJS(
             when (id) {
