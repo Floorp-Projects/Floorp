@@ -12365,7 +12365,7 @@
 
 - name: widget.windows.window_occlusion_tracking.enabled
   type: bool
-  value: @EARLY_BETA_OR_EARLIER@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 - name: widget.windows.window_occlusion_tracking_display_state.enabled
