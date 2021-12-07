@@ -49,10 +49,6 @@
 
     <!-- Home - Recently saved bookmarks -->
     <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_saved_bookmarks" moz:removedIn="94" tools:ignore="UnusedResources">Recently saved</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
-    <string name="recently_bookmarked" moz:removedIn="94" tools:ignore="UnusedResources">Recently bookmarked</string>
-    <!-- Title for the home screen section with recently saved bookmarks. -->
     <string name="recent_bookmarks_title">Recent bookmarks</string>
     <!-- Content description for the recently saved bookmarks section on the home screen. -->
     <string name="recently_saved_bookmarks_content_description">Recently saved bookmarks</string>
@@ -149,9 +145,6 @@
     <string name="recent_tabs_search_term_count_2">%d sites</string>
 
     <!-- History Metadata -->
-    <!-- Header text for a section on the home screen that displays grouped highlights from the
-         user's browsing history, such as topics they have researched or explored on the web -->
-    <string name="history_metadata_header" moz:removedIn="94" tools:ignore="UnusedResources">Past explorations</string>
     <!-- Header text for a section on the home screen that displays grouped highlights from the
          user's browsing history, such as topics they have researched or explored on the web -->
     <string name="history_metadata_header_2">Recently visited</string>
@@ -382,8 +375,6 @@
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Theme</string>
     <!-- Preference for customizing the home screen -->
-    <string name="preferences_home" moz:removedIn="94" tools:ignore="UnusedResources">Home</string>
-    <!-- Preference for customizing the home screen -->
     <string name="preferences_home_2">Homepage</string>
     <!-- Preference for gestures based actions -->
     <string name="preferences_gestures">Gestures</string>
@@ -453,10 +444,6 @@
     <!-- Customize Home -->
     <!-- Header text for jumping back into the recent tab in customize the home screen -->
     <string name="customize_toggle_jump_back_in">Jump back in</string>
-    <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recently_saved_bookmarks" moz:removedIn="94" tools:ignore="UnusedResources">Recently saved</string>
-    <!-- Title for the customize home screen section with recently saved bookmarks. -->
-    <string name="customize_toggle_recently_bookmarked" moz:removedIn="94" tools:ignore="UnusedResources">Recently bookmarked</string>
     <!-- Title for the customize home screen section with recently saved bookmarks. -->
     <string name="customize_toggle_recent_bookmarks">Recent bookmarks</string>
     <!-- Title for the customize home screen section with recently visited. Recently visited is
@@ -696,20 +683,12 @@
     <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">Auto-close open tabs</string>
 
     <!-- Opening screen -->
-    <!-- Title of a preference that allows a user to indicate after a specified amount of time when the app should start on the home screen -->
-    <string name="preferences_start_on_home" moz:removedIn="94" tools:ignore="UnusedResources">Start on home</string>
     <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
     <string name="preferences_opening_screen">Opening screen</string>
-    <!-- Option for starting on the home screen after after four hours or inactivity -->
-    <string name="start_on_home_after_four_hours" moz:removedIn="94" tools:ignore="UnusedResources">After four hours</string>
     <!-- Option for always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage">Homepage</string>
-    <!-- Option for always starting on the home screen -->
-    <string name="start_on_home_always" moz:removedIn="94" tools:ignore="UnusedResources">Always</string>
     <!-- Option for always opening the user's last-open tab when re-opening the app -->
     <string name="opening_screen_last_tab">Last tab</string>
-    <!-- Option for never starting on the home screen -->
-    <string name="start_on_home_never" moz:removedIn="94" tools:ignore="UnusedResources">Never</string>
     <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
     <string name="opening_screen_after_four_hours_of_inactivity">Homepage after four hours of inactivity</string>
     <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
@@ -843,8 +822,6 @@
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
     <string name="tab_tray_save_to_collection" moz:removedIn="96" tools:ignore="UnusedResources">Save</string>
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
-    <string name="tab_tray_header_title" moz:removedIn="94" tools:ignore="UnusedResources">Other</string>
-    <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
     <string name="tab_tray_header_title_1">Other tabs</string>
 
     <!-- History -->
@@ -858,14 +835,6 @@
     <string name="history_delete_single_item_snackbar">Deleted %1$s</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog" moz:removedIn="96" tools:ignore="UnusedResources">Clear</string>
-    <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button" moz:removedIn="94" tools:ignore="UnusedResources">Copy</string>
-    <!-- History overflow menu share button -->
-    <string name="history_menu_share_button" moz:removedIn="94" tools:ignore="UnusedResources">Share</string>
-    <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button" moz:removedIn="94" tools:ignore="UnusedResources">Open in new tab</string>
-    <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button" moz:removedIn="94" tools:ignore="UnusedResources">Open in private tab</string>
     <!-- Context description text for the button to delete a single history item -->
     <string name="history_delete_item">Delete</string>
     <!-- History multi select title in app bar
@@ -1227,8 +1196,6 @@
     <string name="delete_tab_and_collection_dialog_title">Delete %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Delete</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative" moz:removedIn="93" tools:ignore="UnusedResources">Cancel</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Entering full screen mode</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -1331,13 +1298,6 @@
     <string name="onboarding_header">Welcome to %s!</string>
     <!-- text for the Firefox Accounts section header -->
     <string name="onboarding_fxa_section_header" moz:removedIn="96" tools:ignore="UnusedResources">Already have an account?</string>
-    <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1" moz:removedIn="94" tools:ignore="UnusedResources">See what’s new</string>
-    <!-- text for the "what's new" onboarding card description
-    The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description" moz:removedIn="94" tools:ignore="UnusedResources">Have questions about the redesigned %s? Want to know what’s changed?</string>
-    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext" moz:removedIn="94" tools:ignore="UnusedResources">Get answers here</string>
     <!-- text for the Firefox account onboarding sign in card header. The word "Firefox" should not be translated -->
     <string name="onboarding_account_sign_in_header_1">Sync Firefox between devices</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
@@ -1376,15 +1336,6 @@
     <string name="onboarding_toolbar_placement_header_1">Pick your toolbar placement</string>
     <!-- text for the toolbar position card description -->
     <string name="onboarding_toolbar_placement_description_1">Put the toolbar within easy reach. Keep it on the bottom, or move it to the top.</string>
-    <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header" moz:removedIn="94" tools:ignore="UnusedResources">Browse privately</string>
-    <!-- text for the private browsing onboarding card description
-    The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1" moz:removedIn="94" tools:ignore="UnusedResources">Open a private tab once: Tap the %s icon.</string>
-    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description" moz:removedIn="94" tools:ignore="UnusedResources">Open private tabs every time: Update your private browsing settings.</string>
-    <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button" moz:removedIn="94" tools:ignore="UnusedResources">Open settings</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Your privacy</string>
     <!-- text for the privacy notice onboarding card description
@@ -1392,8 +1343,6 @@
     <string name="onboarding_privacy_notice_description2">We’ve designed %s to give you control over what you share online and what you share with us.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Read our privacy notice</string>
-    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close" moz:removedIn="93" tools:ignore="UnusedResources">Close</string>
 
     <!-- text for the button to finish onboarding -->
     <string name="onboarding_finish">Start browsing</string>
@@ -1521,8 +1470,6 @@
     <string name="etp_tracking_content_title">Tracking Content</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Stops outside ads, videos, and other content from loading that contains tracking code. May affect some website functionality.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message" moz:removedIn="93" tools:ignore="UnusedResources">Every time the shield is purple, %s has blocked trackers on a site. Tap for more info.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Protections are ON for this site</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1604,8 +1551,6 @@
     <string name="preferences_passwords_save_logins_ask_to_save">Ask to save</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Never save</string>
-    <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill" moz:removedIn="93" tools:ignore="UnusedResources">Autofill</string>
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Autofill in %1$s</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
@@ -1845,10 +1790,6 @@
     <string name="quick_settings_sheet_secure_connection_2">Connection is secure</string>
     <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection_2">Connection is not secure</string>
-    <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection" moz:removedIn="94" tools:ignore="UnusedResources">Secure Connection</string>
-    <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection" moz:removedIn="94" tools:ignore="UnusedResources">Insecure Connection</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Are you sure that you want to clear all the permissions on all sites?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1905,8 +1846,6 @@
     <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
     <string name="add_login_hostname_hint_text">https://www.example.com</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
-    <string name="add_login_hostname_invalid_text_1" moz:removedIn="94" tools:ignore="UnusedResources">Web address must contain "https://" or "http://"</string>
-    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
     <string name="add_login_hostname_invalid_text_3">Web address must contain "https://" or "http://"</string>
     <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
     <string name="add_login_hostname_invalid_text_2">Valid hostname required</string>
@@ -1936,10 +1875,6 @@
     <string name="top_sites_max_limit_confirmation_button">OK, Got It</string>
     <!-- Label for the preference to show the most visited top sites on the homepage -->
     <string name="top_sites_toggle_top_recent_sites_3">Most visited top sites</string>
-    <!-- Label for the show most visited top sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites_2" moz:removedIn="94" tools:ignore="UnusedResources">Show most visited top sites</string>
-    <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites" moz:removedIn="93" tools:ignore="UnusedResources">Show most visited sites</string>
 	<!-- Title text displayed in the rename top site dialog. -->
 	<string name="top_sites_rename_dialog_title">Name</string>
 	<!-- Hint for renaming title of a top site -->
@@ -2012,8 +1947,6 @@
     <string name="privacy_content_close_button_content_description">Close</string>
 
     <!-- Pocket recommended stories -->
-    <!-- Header text for a section on the home screen. -->
-    <string name="pocket_stories_header" moz:removedIn="94" tools:ignore="UnusedResources">Thought provoking stories</string>
     <!-- Header text for a section on the home screen. -->
     <string name="pocket_stories_header_1">Thought-provoking stories</string>
     <!-- Header text for a section on the home screen. -->
