@@ -14,7 +14,7 @@
 #include "mozilla/dom/ClonedErrorHolderBinding.h"
 #include "mozilla/dom/ExtensionBrowserBinding.h"
 #include "mozilla/dom/FunctionBinding.h"
-#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/dom/ServiceWorkerInfo.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
