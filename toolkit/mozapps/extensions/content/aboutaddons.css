@@ -209,7 +209,7 @@ message-bar-stack > * {
   margin-bottom: 16px;
 }
 
-addon-list:not([type="theme"]) addon-card:not([expanded]) > .addon.card[active="false"] {
+addon-card:not([expanded]) > .addon.card[active="false"] {
   opacity: 0.6;
   transition: opacity 150ms, box-shadow 150ms;
 }

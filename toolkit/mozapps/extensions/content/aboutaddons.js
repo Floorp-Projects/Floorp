@@ -3291,8 +3291,7 @@ class AddonCard extends HTMLElement {
 
     // Update the name.
     let name = this.addonNameEl;
-    let setDisabledStyle = !(addon.isActive || addon.type === "theme");
-    if (!setDisabledStyle) {
+    if (addon.isActive) {
       name.textContent = addon.name;
       name.removeAttribute("data-l10n-id");
     } else {
