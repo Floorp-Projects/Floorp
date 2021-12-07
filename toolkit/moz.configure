@@ -1811,14 +1811,36 @@ with only_when(compile_environment):
             return ("-march=armv8-a",)
 
     @depends("--with-system-jpeg", target)
-    def in_tree_jpeg(system_jpeg, target):
+    def in_tree_jpeg_mips64(system_jpeg, target):
         if system_jpeg:
             return
 
-        if target.cpu == "arm":
-            return ("-march=armv7-a", "-mfpu=neon")
-        elif target.cpu == "aarch64":
-            return ("-march=armv8-a",)
+        if target.cpu == "mips64":
+            return ("-Wa,-mloongson-mmi", "-mloongson-ext")
+
+    # Compiler check from https://github.com/libjpeg-turbo/libjpeg-turbo/blob/57ba02a408a9a55ccff25aae8b164632a3a4f177/simd/CMakeLists.txt#L419
+    jpeg_mips64_mmi = c_compiler.try_compile(
+        body='int c = 0, a = 0, b = 0; asm("paddb %0, %1, %2" : "=f" (c) : "f" (a), "f" (b));',
+        check_msg="for loongson mmi support",
+        flags=in_tree_jpeg_mips64,
+        when=in_tree_jpeg_mips64,
+    )
+
+    @depends(
+        "--with-system-jpeg",
+        target,
+        in_tree_jpeg_arm,
+        in_tree_jpeg_mips64,
+        jpeg_mips64_mmi,
+    )
+    def in_tree_jpeg(
+        system_jpeg, target, in_tree_jpeg_arm, in_tree_jpeg_mips64, jpeg_mips64_mmi
+    ):
+        if system_jpeg:
+            return
+
+        if target.cpu in ("arm", "aarch64"):
+            return in_tree_jpeg_arm
         elif target.kernel == "Darwin":
             if target.cpu == "x86":
                 return ("-DPIC", "-DMACHO")
@@ -1831,19 +1853,20 @@ with only_when(compile_environment):
                 return ("-D__x86_64__", "-DPIC", "-DWIN64", "-DMSVC")
         elif target.cpu == "mips32":
             return ("-mdspr2",)
-        elif target.cpu == "mips64":
-            return ("-Wa,-mloongson-mmi", "-mloongson-ext")
+        elif target.cpu == "mips64" and jpeg_mips64_mmi:
+            return in_tree_jpeg_mips64
         elif target.cpu == "x86":
             return ("-DPIC", "-DELF")
         elif target.cpu == "x86_64":
             return ("-D__x86_64__", "-DPIC", "-DELF")
 
-    @depends(target, when=in_tree_jpeg)
+    @depends(target, when=depends("--with-system-jpeg")(lambda x: not x))
     def jpeg_nasm(target):
         if target.cpu in ("x86", "x86_64"):
             # libjpeg-turbo 2.0.6 requires nasm 2.10.
             return namespace(version="2.10", what="JPEG")
 
+    # Compiler checks from https://github.com/libjpeg-turbo/libjpeg-turbo/blob/57ba02a408a9a55ccff25aae8b164632a3a4f177/simd/CMakeLists.txt#L258
     jpeg_arm_neon_vld1_s16_x3 = c_compiler.try_compile(
         includes=["arm_neon.h"],
         body="int16_t input[12] = {}; int16x4x3_t output = vld1_s16_x3(input);",
