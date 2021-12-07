@@ -1596,6 +1596,7 @@ nsDocShell::ForceEncodingDetection() {
       }
       break;
     case kCharsetFromXmlDeclaration:
+    case kCharsetFromMetaPrescan:
     case kCharsetFromMetaTag:
       if (isFileURL) {
         LOGCHARSETMENU(("LocalLabeled"));
