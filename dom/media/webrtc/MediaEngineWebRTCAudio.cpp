@@ -495,7 +495,8 @@ AudioInputProcessing::AudioInputProcessing(
       mLiveBufferingAppended(Nothing()),
       mPrincipal(aPrincipalHandle),
       mEnabled(false),
-      mEnded(false) {}
+      mEnded(false),
+      mPacketCount(0) {}
 
 void AudioInputProcessing::Disconnect(MediaTrackGraphImpl* aGraph) {
   // This method is just for asserts.
