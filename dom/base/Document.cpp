@@ -6798,11 +6798,14 @@ void Document::TryChannelCharset(nsIChannel* aChannel, int32_t& aCharsetSource,
     if (NS_SUCCEEDED(rv)) {
       const Encoding* preferred = Encoding::ForLabel(charsetVal);
       if (preferred) {
+        if (aExecutor && preferred == REPLACEMENT_ENCODING) {
+          aExecutor->ComplainAboutBogusProtocolCharset(this, false);
+        }
         aEncoding = WrapNotNull(preferred);
         aCharsetSource = kCharsetFromChannel;
         return;
       } else if (aExecutor && !charsetVal.IsEmpty()) {
-        aExecutor->ComplainAboutBogusProtocolCharset(this);
+        aExecutor->ComplainAboutBogusProtocolCharset(this, true);
       }
     }
   }

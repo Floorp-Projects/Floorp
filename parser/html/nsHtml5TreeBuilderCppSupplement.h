@@ -992,6 +992,12 @@ void nsHtml5TreeBuilder::elementPushed(int32_t aNamespace, nsAtom* aName,
     //
     // See comments in nsHtml5SpeculativeLoad.h about <picture> preloading
     mSpeculativeLoadQueue.AppendElement()->InitOpenPicture();
+    return;
+  }
+  if (aName == nsGkAtoms::_template) {
+    if (tokenizer->TemplatePushedOrHeadPopped()) {
+      requestSuspension();
+    }
   }
 }
 
@@ -1059,6 +1065,11 @@ void nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsAtom* aName,
     }
     opDoneAddingChildren operation(aElement);
     treeOp->Init(mozilla::AsVariant(operation));
+    if (aNamespace == kNameSpaceID_XHTML && aName == nsGkAtoms::head) {
+      if (tokenizer->TemplatePushedOrHeadPopped()) {
+        requestSuspension();
+      }
+    }
     return;
   }
   if (aName == nsGkAtoms::style ||
@@ -1112,6 +1123,7 @@ void nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsAtom* aName,
     //
     // See comments in nsHtml5SpeculativeLoad.h about <picture> preloading
     mSpeculativeLoadQueue.AppendElement()->InitEndPicture();
+    return;
   }
 }
 
@@ -1285,9 +1297,15 @@ void nsHtml5TreeBuilder::MaybeComplainAboutCharset(const char* aMsgId,
     MOZ_ASSERT_UNREACHABLE("Must never complain about charset with builder.");
     return;
   }
-  opMaybeComplainAboutCharset opeartion(const_cast<char*>(aMsgId), aError,
-                                        aLineNumber);
-  mOpQueue.AppendElement()->Init(mozilla::AsVariant(opeartion));
+
+  if (mSpeculativeLoadStage) {
+    mSpeculativeLoadQueue.AppendElement()->InitMaybeComplainAboutCharset(
+        aMsgId, aError, aLineNumber);
+  } else {
+    opMaybeComplainAboutCharset opeartion(const_cast<char*>(aMsgId), aError,
+                                          aLineNumber);
+    mOpQueue.AppendElement()->Init(mozilla::AsVariant(opeartion));
+  }
 }
 
 void nsHtml5TreeBuilder::TryToEnableEncodingMenu() {

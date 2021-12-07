@@ -60,6 +60,21 @@ class nsHtml5TreeOpExecutor final
    */
   bool mSuppressEOF;
 
+  /**
+   * Set to true if CommitToInternalEncoding() was unable to flush all
+   * pending operations. In that case, this flag signals to
+   * ContinueInterruptedParsingAsync() that another attempt to call
+   * CommitToInternalEncoding() (from the event loop) is need.
+   *
+   * This may happen in particular when extensions inject scripts
+   * to the document, and the script injection prevents
+   * CommitToInternalEncoding() from completing in one attempt.
+   *
+   * This can also happen as a result of the flush being slow enough
+   * that the flush is interrupted based on time.
+   */
+  bool mPendingEncodingCommitment;
+
   bool mReadingFromStage;
   nsTArray<nsHtml5TreeOperation> mOpQueue;
   nsHtml5StreamParser* mStreamParser;
@@ -179,7 +194,11 @@ class nsHtml5TreeOpExecutor final
 
   void RunFlushLoop();
 
+  void RunFlushLoopOrCommitToInternalEncoding();
+
   nsresult FlushDocumentWrite();
+
+  void CommitToInternalEncoding();
 
   void MaybeSuspend();
 
@@ -191,7 +210,8 @@ class nsHtml5TreeOpExecutor final
   void MaybeComplainAboutCharset(const char* aMsgId, bool aError,
                                  uint32_t aLineNumber);
 
-  void ComplainAboutBogusProtocolCharset(mozilla::dom::Document*);
+  void ComplainAboutBogusProtocolCharset(mozilla::dom::Document* aDoc,
+                                         bool aUnrecognized);
 
   void MaybeComplainAboutDeepTree(uint32_t aLineNumber);
 

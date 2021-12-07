@@ -61,6 +61,19 @@ bool nsHtml5Tokenizer::EnsureBufferSpace(int32_t aLength) {
   return true;
 }
 
+bool nsHtml5Tokenizer::TemplatePushedOrHeadPopped() {
+  if (encodingDeclarationHandler) {
+    return encodingDeclarationHandler->TemplatePushedOrHeadPopped();
+  }
+  return false;
+}
+
+void nsHtml5Tokenizer::RememberGt(int32_t aPos) {
+  if (encodingDeclarationHandler) {
+    return encodingDeclarationHandler->RememberGt(aPos);
+  }
+}
+
 void nsHtml5Tokenizer::StartPlainText() {
   stateSave = nsHtml5Tokenizer::PLAINTEXT;
 }
@@ -75,7 +88,17 @@ void nsHtml5Tokenizer::StartViewSource(const nsAutoString& aTitle) {
   mViewSource->Start(aTitle);
 }
 
+void nsHtml5Tokenizer::StartViewSourceCharacters() {
+  mViewSource->StartCharacters();
+}
+
 void nsHtml5Tokenizer::EndViewSource() { mViewSource->End(); }
+
+void nsHtml5Tokenizer::SetViewSourceOpSink(nsAHtml5TreeOpSink* aOpSink) {
+  mViewSource->SetOpSink(aOpSink);
+}
+
+void nsHtml5Tokenizer::RewindViewSource() { mViewSource->Rewind(); }
 
 void nsHtml5Tokenizer::errWarnLtSlashInRcdata() {}
 

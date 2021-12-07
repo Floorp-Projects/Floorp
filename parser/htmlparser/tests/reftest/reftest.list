@@ -30,3 +30,43 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == view-source:bug673094-1.
 == view-source:bug1650087-1.html bug1650087-1-ref.html
 == view-source:bug1726374-1.html bug1726374-1-ref.html
 == view-source:bug1153920-1.html bug1153920-1-ref.html
+== after-1kb.html after-1kb-ref.html
+!= after-bogus-after-1kb.html after-bogus-after-1kb-ref.html
+== after-bogus.html after-bogus-ref.html
+!= after-head-after-1kb-crlf.html after-head-after-1kb-crlf-ref.html
+!= after-head-after-1kb.html after-head-after-1kb-ref.html
+== after-head-in-1kb-crlf.html after-head-in-1kb-crlf-ref.html
+== after-head-in-1kb.html after-head-in-1kb-ref.html
+== baseline.html baseline-ref.html
+!= document-write.html document-write-ref.html
+!= in-comment.html in-comment-ref.html
+!= in-noscript-after-template-after-1kb.html in-noscript-after-template-after-1kb-ref.html
+!= in-noscript-after-template.html in-noscript-after-template-ref.html
+!= in-noscript.html in-noscript-ref.html
+!= in-noscript-ncr.html in-noscript-ncr-ref.html
+== in-object.html in-object-ref.html
+!= in-script.html in-script-ref.html
+!= in-style.html in-style-ref.html
+== in-svg.html in-svg-ref.html
+!= in-svg-in-cdata-after-gt.html in-svg-in-cdata-after-gt-ref.html
+!= in-svg-in-cdata.html in-svg-in-cdata-ref.html
+!= in-template-after-1kb.html in-template-after-1kb-ref.html
+== in-template.html in-template-ref.html
+!= in-title.html in-title-ref.html
+== ncr.html ncr-ref.html
+== non-ascii-in-comment-before.html non-ascii-in-comment-before-ref.html
+== non-ascii-in-title-before.html non-ascii-in-title-before-ref.html
+== view-source:xml-1.xml xml-ref.html
+HTTP(..) == view-source:xml-trickle-1.sjs xml-ref.html
+HTTP(..) == view-source:xml-trickle-2.sjs xml-ref.html
+HTTP(..) == view-source:xml-trickle-3.sjs xml-ref.html
+HTTP(..) == view-source:xml-trickle-4.sjs xml-utf-ref.html
+HTTP(..) == view-source:xml-trickle-5.sjs xml-utf-ref.html
+HTTP(..) == view-source:xml-trickle-6.sjs xml-utf-ref.html
+skip-if(Android) HTTP(..) == view-source:vs-after-head-in-1kb.html vs-after-head-in-1kb-ref.html # Skipped on Android due to inconsistent scrollbar display
+HTTP(..) != view-source:vs-after-head-after-1kb.html vs-after-head-after-1kb-ref.html
+HTTP(..) == view-source:vs-non-ascii-in-comment-before.html vs-non-ascii-in-comment-before-ref.html
+HTTP(..) == view-source:vs-non-ascii-in-comment-before.sjs vs-non-ascii-in-comment-before-ref.html
+== view-source:xml-without-tags.xml xml-without-tags-ref.html
+== view-source:incomplete-xml-decl.xml incomplete-xml-decl-ref.html
+== view-source:view-source-bom.html view-source-bom-ref.html

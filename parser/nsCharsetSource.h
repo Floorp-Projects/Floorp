@@ -6,32 +6,33 @@
 #define nsCharsetSource_h_
 
 // note: the value order defines the priority; higher numbers take priority
-enum {
+enum nsCharsetSource {
   kCharsetUninitialized,
   kCharsetFromFallback,
   kCharsetFromDocTypeDefault,  // This and up confident for XHR
-  // Start subdividing source for telementry purposes
+  // Start subdividing source for telemetry purposes
   kCharsetFromInitialAutoDetectionASCII,
   kCharsetFromInitialAutoDetectionWouldHaveBeenUTF8,
   kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Generic,
   kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8Content,
   kCharsetFromInitialAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD,
+  // End subdividing source for telemetry purposes
+  kCharsetFromParentFrame,  // Same-origin parent takes precedence over detector
+                            // to avoid breaking tests. (Also, the HTML spec
+                            // says so.)
+  kCharsetFromXmlDeclaration,
+  kCharsetFromMetaTag,
+  kCharsetFromChannel,
+  kCharsetFromOtherComponent,
+  kCharsetFromInitialUserForcedAutoDetection,
+  // Start subdividing source for telemetry purposes
   // Deliberately no Final version of ASCII
   kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8,
   kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Generic,
   kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8Content,
   kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD,
   kCharsetFromFinalAutoDetectionFile,
-  // End subdividing source for telementry purposes
-  kCharsetFromParentFrame,  // Same-origin parent takes precedence over detector
-                            // to avoid breaking tests. (Also, the HTML spec
-                            // says so.)
-  kCharsetFromXmlDeclaration,
-  kCharsetFromMetaPrescan,  // this one and smaller: HTML5 Tentative
-  kCharsetFromMetaTag,      // this one and greater: HTML5 Confident
-  kCharsetFromChannel,
-  kCharsetFromOtherComponent,
-  kCharsetFromInitialUserForcedAutoDetection,
+  // End subdividing source for telemetry purposes
   kCharsetFromFinalUserForcedAutoDetection,
   kCharsetFromXmlDeclarationUtf16,  // This one is overridden by
                                     // kCharsetFromChannel
