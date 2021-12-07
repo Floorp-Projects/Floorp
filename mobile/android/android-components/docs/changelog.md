@@ -4,12 +4,19 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 96.0.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v94.0.0...main)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/143?closed=1)
+# 97.0.0 (In Development)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v96.0.0...main)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/144?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
+
+# 96.0.0
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v95.0.0...v96.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/143?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v96.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v96.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v96.0.0/.config.yml)
 
 * **browser-engine-gecko**:
   * Removes deprecated `GeckoLoginDelegateWrapper`. Please use `GeckoAutocompleteStorageDelegate`. [#11311](https://github.com/mozilla-mobile/android-components/issues/11311)
