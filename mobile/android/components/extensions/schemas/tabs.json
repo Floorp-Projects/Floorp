@@ -565,7 +565,15 @@
                 "description": "The position of the tabs within their windows."
               },
               "cookieStoreId": {
-                "type": "string",
+                "choices": [ 
+                  {
+                    "type": "array",
+                    "items": { "type": "string" }
+                  },
+                  {
+                    "type": "string"
+                  }          
+                ],
                 "optional": true,
                 "description": "The CookieStoreId used for the tab."
               }
