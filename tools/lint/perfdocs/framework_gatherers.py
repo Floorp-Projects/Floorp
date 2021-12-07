@@ -84,7 +84,7 @@ class FrameworkGatherer(object):
         :param content: content of section paragraph
         :param header_type: type of the title heading
         """
-        heading_map = {"H3": "=", "H4": "-", "H5": "^"}
+        heading_map = {"H2": "*", "H3": "=", "H4": "-", "H5": "^"}
         return [title, heading_map.get(header_type, "^") * len(title), content, ""]
 
 
@@ -364,20 +364,42 @@ class TalosGatherer(FrameworkGatherer):
 
     def build_test_description(self, title, test_description="", suite_name=""):
         result = f".. dropdown:: {title}\n"
-        result += f"   :container: + anchor-id-{title}-{suite_name.split()[0]}\n\n"
+        result += f"   :container: + anchor-id-{title}\n\n"
 
-        for key in sorted(self._descriptions[title]):
-            if key.startswith("__") and key.endswith("__"):
-                continue
-            elif key == "filters":
-                continue
+        yml_descriptions = [s.strip() for s in test_description.split("- ") if s]
+        for description in yml_descriptions:
+            if "Example Data" in description:
+                # Example Data for using code block
+                example_list = [s.strip() for s in description.split("* ")]
+                result += f"   * {example_list[0]}\n"
+                result += "   .. code-block:: None\n\n"
+                for example in example_list[1:]:
+                    result += f"      {example}\n"
 
-            result += f"   * **{key}**: {self._descriptions[title][key]}\n"
+            elif "    * " in description:
+                # Sub List
+                sub_list = [s.strip() for s in description.split(" * ")]
+                result += f"   * {sub_list[0]}\n"
+                for sub in sub_list[1:]:
+                    result += f"      * {sub}\n"
+
+            else:
+                # General List
+                result += f"   * {description}\n"
+
+        if title in self._descriptions:
+            for key in sorted(self._descriptions[title]):
+                if key.startswith("__") and key.endswith("__"):
+                    continue
+                elif key == "filters":
+                    continue
+
+                result += f"   * {key}: {self._descriptions[title][key]}\n"
 
         return [result]
 
     def build_suite_section(self, title, content):
-        return self._build_section_with_header(title, content, header_type="H3")
+        return self._build_section_with_header(title, content, header_type="H2")
 
 
 class AwsyGatherer(FrameworkGatherer):
