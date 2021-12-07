@@ -99,16 +99,6 @@ struct TenuredChunkInfo {
   TenuredChunk* prev = nullptr;
 
  public:
-  /* List of free committed arenas, linked together with arena.next. */
-  Arena* freeArenasHead;
-
-  /*
-   * Decommitted pages are tracked by a bitmap in the TenuredChunkBase. We use
-   * this offset to start our search iteration close to a decommitted arena that
-   * we can allocate.
-   */
-  uint32_t lastDecommittedPageOffset;
-
   /* Number of free arenas, either committed or decommitted. */
   uint32_t numArenasFree;
 
@@ -123,9 +113,10 @@ struct TenuredChunkInfo {
  * extra space is available after we allocate the header data. This is a problem
  * because the header size depends on the number of arenas in the chunk.
  *
- * The two dependent fields are bitmap and decommittedPages. bitmap needs
- * ArenaBitmapBytes bytes per arena and decommittedPages needs one bit per
- * page.
+ * The dependent fields are markBits, decommittedPages and
+ * freeCommittedArenas. markBits needs ArenaBitmapBytes bytes per arena,
+ * decommittedPages needs one bit per page and freeCommittedArenas needs one
+ * bit per arena.
  *
  * We can calculate an approximate value by dividing the number of bits of free
  * space in the chunk by the number of bits needed per arena. This is an
@@ -138,18 +129,22 @@ struct TenuredChunkInfo {
  * the arena count down by one to allow more space for the padding.
  */
 const size_t BitsPerPageWithHeaders =
-    (ArenaSize + ArenaBitmapBytes) * ArenasPerPage * CHAR_BIT + 1;
+    (ArenaSize + ArenaBitmapBytes) * ArenasPerPage * CHAR_BIT + ArenasPerPage +
+    1;
 const size_t ChunkBitsAvailable =
     (ChunkSize - sizeof(ChunkBase) - sizeof(TenuredChunkInfo)) * CHAR_BIT;
 const size_t PagesPerChunk = ChunkBitsAvailable / BitsPerPageWithHeaders;
-const size_t DecommitBits = PagesPerChunk;
 const size_t ArenasPerChunk = PagesPerChunk * ArenasPerPage;
+const size_t FreeCommittedBits = ArenasPerChunk;
+const size_t DecommitBits = PagesPerChunk;
 const size_t BitsPerArenaWithHeaders =
-    (ArenaSize + ArenaBitmapBytes) * CHAR_BIT + (DecommitBits / ArenasPerChunk);
+    (ArenaSize + ArenaBitmapBytes) * CHAR_BIT +
+    (DecommitBits / ArenasPerChunk) + 1;
 
 const size_t CalculatedChunkSizeRequired =
     sizeof(ChunkBase) + sizeof(TenuredChunkInfo) +
     RoundUp(ArenasPerChunk * ArenaBitmapBytes, sizeof(uintptr_t)) +
+    RoundUp(FreeCommittedBits, sizeof(uint32_t) * CHAR_BIT) / CHAR_BIT +
     RoundUp(DecommitBits, sizeof(uint32_t) * CHAR_BIT) / CHAR_BIT +
     ArenasPerChunk * ArenaSize;
 static_assert(CalculatedChunkSizeRequired <= ChunkSize,
@@ -215,15 +210,19 @@ struct MarkBitmap {
 static_assert(ArenaBitmapBytes * ArenasPerChunk == sizeof(MarkBitmap),
               "Ensure our MarkBitmap actually covers all arenas.");
 
-// Decommit bitmap for a heap chunk.
-using DecommitBitmap = mozilla::BitSet<PagesPerChunk, uint32_t>;
+// Bitmap with one bit per page used for decommitted page set.
+using ChunkPageBitmap = mozilla::BitSet<PagesPerChunk, uint32_t>;
+
+// Bitmap with one bit per arena used for free committed arena set.
+using ChunkArenaBitmap = mozilla::BitSet<ArenasPerChunk, uint32_t>;
 
 // Base class containing data members for a tenured heap chunk.
 class TenuredChunkBase : public ChunkBase {
  public:
   TenuredChunkInfo info;
   MarkBitmap markBits;
-  DecommitBitmap decommittedPages;
+  ChunkArenaBitmap freeCommittedArenas;
+  ChunkPageBitmap decommittedPages;
 
  protected:
   explicit TenuredChunkBase(JSRuntime* runtime) : ChunkBase(runtime, nullptr) {}
