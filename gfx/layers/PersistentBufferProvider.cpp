@@ -326,9 +326,7 @@ PersistentBufferProviderShared::BorrowDrawTarget(
 
   // First try to reuse the current back buffer. If we can do that it means
   // we can skip copying its content to the new back buffer.
-  if ((mTextureLockIsUnreliable.isSome() &&
-       mTextureLockIsUnreliable == mBack) ||
-      (tex && tex->IsReadLocked())) {
+  if (tex && tex->IsReadLocked()) {
     // The back buffer is currently used by the compositor, we can't draw
     // into it.
     tex = nullptr;
@@ -337,9 +335,7 @@ PersistentBufferProviderShared::BorrowDrawTarget(
   if (!tex) {
     // Try to grab an already allocated texture if any is available.
     for (uint32_t i = 0; i < mTextures.length(); ++i) {
-      if (!mTextures[i]->IsReadLocked() &&
-          !(mTextureLockIsUnreliable.isSome() &&
-            mTextureLockIsUnreliable.ref() == i)) {
+      if (!mTextures[i]->IsReadLocked()) {
         mBack = Some(i);
         tex = mTextures[i];
         break;
@@ -428,9 +424,6 @@ PersistentBufferProviderShared::BorrowDrawTarget(
       MOZ_ASSERT(success);
     }
   }
-
-  // Clear dirty texture, since new back texture is selected.
-  mTextureLockIsUnreliable = Nothing();
 
   mDrawTarget = tex->BorrowDrawTarget();
   if (mDrawTarget) {
@@ -590,9 +583,6 @@ void PersistentBufferProviderShared::ClearCachedResources() {
       mFront = Some<uint32_t>(mTextures.length() - 1);
     }
   }
-  // Set front texture as dirty texture.
-  // The texture's read lock is unreliable after this function call.
-  mTextureLockIsUnreliable = mFront;
 }
 
 void PersistentBufferProviderShared::Destroy() {
