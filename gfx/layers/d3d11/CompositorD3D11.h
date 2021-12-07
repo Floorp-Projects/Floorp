@@ -116,8 +116,6 @@ class CompositorD3D11 : public Compositor {
 
   SyncObjectHost* GetSyncObject();
 
-  void UseForSoftwareWebRender() { mUseForSoftwareWebRender = true; }
-
  private:
   enum Severity {
     Recoverable,
@@ -213,8 +211,6 @@ class CompositorD3D11 : public Compositor {
   bool mVerifyBuffersFailed;
   bool mUseMutexOnPresent;
   bool mAllowFrameRecording;
-
-  bool mUseForSoftwareWebRender;
 };
 
 namespace TexSlot {
