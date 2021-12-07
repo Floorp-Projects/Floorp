@@ -32,8 +32,7 @@ enum eHtml5SpeculativeLoad {
   eSpeculativeLoadSetDocumentMode,
   eSpeculativeLoadPreconnect,
   eSpeculativeLoadFont,
-  eSpeculativeLoadFetch,
-  eSpeculativeLoadMaybeComplainAboutCharset
+  eSpeculativeLoadFetch
 };
 
 class nsHtml5SpeculativeLoad {
@@ -276,24 +275,6 @@ class nsHtml5SpeculativeLoad {
         (char16_t)aCharsetSource);
   }
 
-  inline void InitMaybeComplainAboutCharset(const char* aMsgId, bool aError,
-                                            int32_t aLineNumber) {
-    MOZ_ASSERT(mOpCode == eSpeculativeLoadUninitialized,
-               "Trying to reinitialize a speculative load!");
-    mOpCode = eSpeculativeLoadMaybeComplainAboutCharset;
-    mCharsetOrSrcset.~nsString();
-    mMsgId = aMsgId;
-    mIsError = aError;
-    // Transport a 32-bit integer as two 16-bit code units of a string
-    // in order to avoid adding an integer field to the object.
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1733043 for a better
-    // eventual approach.
-    char16_t high = (char16_t)(((uint32_t)aLineNumber) >> 16);
-    char16_t low = (char16_t)(((uint32_t)aLineNumber) & 0xFFFF);
-    mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity.Assign(high);
-    mTypeOrCharsetSourceOrDocumentModeOrMetaCSPOrSizesOrIntegrity.Append(low);
-  }
-
   /**
    * Speculative document mode setting isn't really speculative. Once it
    * happens, we are committed to it. However, this information needs to
@@ -325,13 +306,9 @@ class nsHtml5SpeculativeLoad {
   eHtml5SpeculativeLoad mOpCode;
 
   /**
-   * Whether the refering element has async attribute.
+   * Whether the refering element has async and/or defer attributes.
    */
   bool mIsAsync;
-
-  /**
-   * Whether the refering element has defer attribute.
-   */
   bool mIsDefer;
 
   /**
@@ -340,11 +317,6 @@ class nsHtml5SpeculativeLoad {
    * indication to raise the priority.
    */
   bool mIsLinkPreload;
-
-  /**
-   * Whether the charset complaint is an error.
-   */
-  bool mIsError;
 
   /* If mOpCode is eSpeculativeLoadPictureSource, this is the value of the
    * "sizes" attribute. If the attribute is not set, this will be a void
@@ -365,12 +337,10 @@ class nsHtml5SpeculativeLoad {
    * or eSpeculativeLoadPictureSource, this is the value of the "srcset"
    * attribute. If the attribute is not set, this will be a void string.
    * Otherwise it's empty.
-   * For eSpeculativeLoadMaybeComplainAboutCharset mMsgId is used.
    */
   union {
     nsString mCharsetOrSrcset;
     const Encoding* mEncoding;
-    const char* mMsgId;
   };
   /**
    * If mOpCode is eSpeculativeLoadSetDocumentCharset, this is a
