@@ -85,9 +85,7 @@ pref("webextensions.storage.sync.kinto", true);
 // This value is derived from the calculation:
 // MOZ_ANDROID_CONTENT_SERVICE_COUNT - dom.ipc.processCount
 // (dom.ipc.processCount is set in GeckoRuntimeSettings.java)
-#ifdef NIGHTLY_BUILD
-  pref("dom.ipc.processCount.webCOOP+COEP", 38);
-#endif
+pref("dom.ipc.processCount.webCOOP+COEP", 38);
 
 // Form autofill prefs.
 pref("extensions.formautofill.addresses.capture.enabled", true);
