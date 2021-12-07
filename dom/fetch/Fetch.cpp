@@ -1081,15 +1081,16 @@ nsresult ExtractByteStreamFromBody(const fetch::ResponseBodyInit& aBodyInit,
 template <class Derived>
 FetchBody<Derived>::FetchBody(nsIGlobalObject* aOwner)
     : mOwner(aOwner),
+      mWorkerPrivate(nullptr),
       mReadableStreamBody(nullptr),
       mReadableStreamReader(nullptr),
       mBodyUsed(false) {
   MOZ_ASSERT(aOwner);
 
   if (!NS_IsMainThread()) {
-    WorkerPrivate* wp = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(wp);
-    mMainThreadEventTarget = wp->MainThreadEventTarget();
+    mWorkerPrivate = GetCurrentThreadWorkerPrivate();
+    MOZ_ASSERT(mWorkerPrivate);
+    mMainThreadEventTarget = mWorkerPrivate->MainThreadEventTarget();
   } else {
     mMainThreadEventTarget = aOwner->EventTargetFor(TaskCategory::Other);
   }
