@@ -10137,11 +10137,7 @@
 # If 0 that means no limit.
 - name: network.url.max-length
   type: RelaxedAtomicUint32
-#if defined(EARLY_BETA_OR_EARLIER)
   value: 32 * 1024 * 1024
-#else
-  value: 0
-#endif
   mirror: always
 
 # Force remapping of remote port numbers to allow reaching local testing
