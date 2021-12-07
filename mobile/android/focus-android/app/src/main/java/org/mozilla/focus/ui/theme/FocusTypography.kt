@@ -29,8 +29,8 @@ val metropolis = FontFamily(
 data class FocusTypography(
     val materialTypography: Typography,
     val links: TextStyle,
-    val dialogTitle: TextStyle
-
+    val dialogTitle: TextStyle,
+    val dialogInput: TextStyle
 ) {
     val h1: TextStyle get() = materialTypography.h1
     val h2: TextStyle get() = materialTypography.h2
@@ -66,5 +66,10 @@ val focusTypography: FocusTypography
             fontFamily = metropolis,
             fontWeight = FontWeight.SemiBold,
             fontSize = 20.sp
+        ),
+        dialogInput = TextStyle(
+            fontFamily = metropolis,
+            fontSize = 20.sp,
+            color = focusColors.onPrimary
         )
     )

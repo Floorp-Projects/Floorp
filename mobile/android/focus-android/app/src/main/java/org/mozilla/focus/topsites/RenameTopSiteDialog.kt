@@ -4,6 +4,7 @@
 
 package org.mozilla.focus.topsites
 
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,7 +34,8 @@ fun RenameTopSiteDialog(
         dialogTitle = stringResource(R.string.rename_top_site),
         dialogTextComposable = {
             DialogInputField(
-                text = text
+                text = text,
+                placeholder = { Text(stringResource(id = R.string.placeholder_rename_top_site)) }
             ) { newText -> text = newText }
         },
         onDismissRequest = { onDismiss.invoke() },

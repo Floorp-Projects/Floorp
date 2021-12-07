@@ -103,7 +103,7 @@ fun DialogText(
         modifier = modifier,
         color = focusColors.onPrimary,
         text = text,
-        style = MaterialTheme.typography.h1
+        style = focusTypography.dialogInput
     )
 }
 
@@ -125,7 +125,11 @@ fun DialogTextButton(
     ) {
         Text(
             modifier = modifier,
-            color = focusColors.onPrimary,
+            color = if (enabled) {
+                focusColors.onPrimary
+            } else {
+                focusColors.onPrimary.copy(alpha = 0.5f)
+            },
             text = text,
             style = MaterialTheme.typography.button
         )
@@ -139,14 +143,16 @@ fun DialogTextButton(
 fun DialogInputField(
     modifier: Modifier = Modifier,
     text: String,
+    placeholder: @Composable () -> Unit,
     onValueChange: (String) -> Unit
 ) {
     TextField(
         modifier = modifier
             .wrapContentHeight(),
         value = text,
+        placeholder = placeholder,
         onValueChange = onValueChange,
-        textStyle = MaterialTheme.typography.h1,
+        textStyle = focusTypography.dialogInput,
         colors = TextFieldDefaults.textFieldColors(
             backgroundColor = focusColors.secondary,
             textColor = focusColors.onSecondary
