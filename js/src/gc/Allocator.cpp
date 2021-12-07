@@ -637,37 +637,57 @@ Arena* TenuredChunk::allocateArena(GCRuntime* gc, Zone* zone,
     commitOnePage(gc);
     MOZ_ASSERT(info.numArenasFreeCommitted == ArenasPerPage);
   }
+
   MOZ_ASSERT(info.numArenasFreeCommitted > 0);
   Arena* arena = fetchNextFreeArena(gc);
 
   arena->init(zone, thingKind, lock);
   updateChunkListAfterAlloc(gc, lock);
+
+  verify();
+
   return arena;
+}
+
+template <size_t N>
+static inline size_t FindFirstBitSet(
+    const mozilla::BitSet<N, uint32_t>& bitset) {
+  MOZ_ASSERT(!bitset.IsEmpty());
+
+  const auto& words = bitset.Storage();
+  for (size_t i = 0; i < words.Length(); i++) {
+    uint32_t word = words[i];
+    if (word) {
+      return i * 32 + mozilla::CountTrailingZeroes32(word);
+    }
+  }
+
+  MOZ_CRASH("No bits found");
 }
 
 void TenuredChunk::commitOnePage(GCRuntime* gc) {
   MOZ_ASSERT(info.numArenasFreeCommitted == 0);
-  MOZ_ASSERT(!info.freeArenasHead);
-  MOZ_ASSERT(info.numArenasFree > 0);
+  MOZ_ASSERT(info.numArenasFree >= ArenasPerPage);
 
-  unsigned offset = findDecommittedPageOffset();
-  info.lastDecommittedPageOffset = offset + 1;
+  uint32_t pageIndex = FindFirstBitSet(decommittedPages);
+  MOZ_ASSERT(decommittedPages[pageIndex]);
 
   if (DecommitEnabled()) {
-    MarkPagesInUseSoft(pageAddress(offset), PageSize);
+    MarkPagesInUseSoft(pageAddress(pageIndex), PageSize);
   }
 
-  size_t arenaIndex = offset * ArenasPerPage;
-  decommittedPages[offset] = false;
+  decommittedPages[pageIndex] = false;
+
   for (size_t i = 0; i < ArenasPerPage; i++) {
-    arenas[arenaIndex + i].setAsNotAllocated();
+    size_t arenaIndex = pageIndex * ArenasPerPage + i;
+    MOZ_ASSERT(!freeCommittedArenas[arenaIndex]);
+    freeCommittedArenas[arenaIndex] = true;
+    arenas[arenaIndex].setAsNotAllocated();
+    ++info.numArenasFreeCommitted;
+    gc->updateOnArenaFree();
   }
 
-  // numArenasFreeCommitted will be updated in addArenasInPageToFreeList.
-  // No need to update numArenasFree, as the arena is still free, it just
-  // changes from decommitted to committed free. Later fetchNextFreeArena should
-  // update the numArenasFree.
-  addArenasInPageToFreeList(gc, offset);
+  verify();
 }
 
 inline void GCRuntime::updateOnFreeArenaAlloc(const TenuredChunkInfo& info) {
@@ -678,36 +698,16 @@ inline void GCRuntime::updateOnFreeArenaAlloc(const TenuredChunkInfo& info) {
 Arena* TenuredChunk::fetchNextFreeArena(GCRuntime* gc) {
   MOZ_ASSERT(info.numArenasFreeCommitted > 0);
   MOZ_ASSERT(info.numArenasFreeCommitted <= info.numArenasFree);
-  MOZ_ASSERT(info.freeArenasHead);
 
-  Arena* arena = info.freeArenasHead;
-  info.freeArenasHead = arena->next;
+  size_t index = FindFirstBitSet(freeCommittedArenas);
+  MOZ_ASSERT(freeCommittedArenas[index]);
+
+  freeCommittedArenas[index] = false;
   --info.numArenasFreeCommitted;
   --info.numArenasFree;
   gc->updateOnFreeArenaAlloc(info);
 
-  return arena;
-}
-
-/*
- * Search for and return the next decommitted page. Our goal is to keep
- * lastDecommittedPageOffset "close" to a free page. We do this by setting
- * it to the most recently freed page when we free, and forcing it to
- * the last alloc + 1 when we allocate.
- */
-uint32_t TenuredChunk::findDecommittedPageOffset() {
-  /* Note: lastFreeArenaOffset can be past the end of the list. */
-  for (unsigned i = info.lastDecommittedPageOffset; i < PagesPerChunk; i++) {
-    if (decommittedPages[i]) {
-      return i;
-    }
-  }
-  for (unsigned i = 0; i < info.lastDecommittedPageOffset; i++) {
-    if (decommittedPages[i]) {
-      return i;
-    }
-  }
-  MOZ_CRASH("No decommitted arenas found.");
+  return &arenas[index];
 }
 
 // ///////////  System -> TenuredChunk Allocator  //////////////////////////////
@@ -822,13 +822,12 @@ void TenuredChunk::init(GCRuntime* gc) {
 }
 
 void TenuredChunk::decommitAllArenas() {
-  decommittedPages.SetAll();
   if (DecommitEnabled()) {
     MarkPagesUnusedSoft(&arenas[0], ArenasPerChunk * ArenaSize);
   }
 
-  info.freeArenasHead = nullptr;
-  info.lastDecommittedPageOffset = 0;
+  decommittedPages.SetAll();
+  freeCommittedArenas.ResetAll();
   info.numArenasFree = ArenasPerChunk;
   info.numArenasFreeCommitted = 0;
 }
