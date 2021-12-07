@@ -216,7 +216,7 @@ const Snapshots = new (class Snapshots {
       } else {
         // TODO: queuing a fetch will notify page-data once done, if any data
         // was found, but we're not yet handling that, see the constructor.
-        PageDataService.queueFetch(url).catch(console.error);
+        PageDataService.queueFetch(url);
       }
 
       this.#downloadPageImage(url, pageData?.image);

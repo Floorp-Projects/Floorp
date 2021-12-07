@@ -2440,18 +2440,34 @@ nsresult nsHttpTransaction::ProcessData(char* buf, uint32_t count,
     if (count && bytesConsumed) memmove(buf, buf + bytesConsumed, count);
 
     // report the completed response header
-    if (mActivityDistributor && mResponseHead && mHaveAllHeaders &&
-        !mReportedResponseHeader) {
-      mReportedResponseHeader = true;
-      nsAutoCString completeResponseHeaders;
-      mResponseHead->Flatten(completeResponseHeaders, false);
-      completeResponseHeaders.AppendLiteral("\r\n");
-      rv = mActivityDistributor->ObserveActivityWithArgs(
-          HttpActivityArgs(mChannelId), NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION,
-          NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_HEADER, PR_Now(), 0,
-          completeResponseHeaders);
-      if (NS_FAILED(rv)) {
-        LOG3(("ObserveActivity failed (%08x)", static_cast<uint32_t>(rv)));
+    if (mActivityDistributor && mResponseHead && mHaveAllHeaders) {
+      auto reportResponseHeader = [&](uint32_t aSubType) {
+        nsAutoCString completeResponseHeaders;
+        mResponseHead->Flatten(completeResponseHeaders, false);
+        completeResponseHeaders.AppendLiteral("\r\n");
+        rv = mActivityDistributor->ObserveActivityWithArgs(
+            HttpActivityArgs(mChannelId),
+            NS_HTTP_ACTIVITY_TYPE_HTTP_TRANSACTION, aSubType, PR_Now(), 0,
+            completeResponseHeaders);
+        if (NS_FAILED(rv)) {
+          LOG3(("ObserveActivity failed (%08x)", static_cast<uint32_t>(rv)));
+        }
+      };
+
+      if (mConnection->IsProxyConnectInProgress()) {
+        nsCOMPtr<nsIHttpActivityDistributor> distributor =
+            do_QueryInterface(mActivityDistributor);
+        bool observeProxyResponse = false;
+        if (distributor) {
+          Unused << distributor->GetObserveProxyResponse(&observeProxyResponse);
+          if (observeProxyResponse) {
+            reportResponseHeader(
+                NS_HTTP_ACTIVITY_SUBTYPE_PROXY_RESPONSE_HEADER);
+          }
+        }
+      } else if (!mReportedResponseHeader) {
+        mReportedResponseHeader = true;
+        reportResponseHeader(NS_HTTP_ACTIVITY_SUBTYPE_RESPONSE_HEADER);
       }
     }
   }

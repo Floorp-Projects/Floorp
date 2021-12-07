@@ -468,6 +468,20 @@ uint64_t RemoteAccessibleBase<Derived>::State() {
 }
 
 template <class Derived>
+already_AddRefed<AccAttributes> RemoteAccessibleBase<Derived>::Attributes() {
+  RefPtr<AccAttributes> attributes = new AccAttributes();
+  if (mCachedFields) {
+    // We use GetAttribute instead of GetAttributeRefPtr because we need
+    // nsAtom, not const nsAtom.
+    if (auto tag =
+            mCachedFields->GetAttribute<RefPtr<nsAtom>>(nsGkAtoms::tag)) {
+      attributes->SetAttribute(nsGkAtoms::tag, *tag);
+    }
+  }
+  return attributes.forget();
+}
+
+template <class Derived>
 void RemoteAccessibleBase<Derived>::TakeFocus() const {
   Unused << mDoc->SendTakeFocus(mID);
 }

@@ -1730,7 +1730,6 @@ void GCRuntime::decommitFreeArenas(const bool& cancel, AutoLockGC& lock) {
   }
 
   for (TenuredChunk* chunk : chunksToDecommit) {
-    chunk->rebuildFreeArenasList();
     chunk->decommitFreeArenas(this, cancel, lock);
   }
 }
